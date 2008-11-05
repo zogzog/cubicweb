@@ -207,13 +207,13 @@ class NewGoogleAppCommand(Command):
             create_symlink(join(CW_SOFTWARE_ROOT, 'goa', 'overrides', fpath),
                            join(appldir, 'cubicweb', subfpath))
         # link every supported components
-        cubesdir = join(appldir, 'cubes')
+        packagesdir = join(appldir, 'cubes')
         cubesdir = CubicWebConfiguration.cubes_dir()
-        for include in ('eaddressbook','ebasket', 'eblog','eclassfolders',
-                        'eclasstags', 'ecomment', 'efile', 'elink',
-                        'emailinglist', 'eperson', 'etask', 'ezone',
+        for include in ('addressbook','basket', 'blog','classfolders',
+                        'classtags', 'comment', 'file', 'link',
+                        'mailinglist', 'person', 'task', 'zone',
                         ):
-            create_symlink(join(cubesdir, include), join(cubesdir, include))
+            create_symlink(join(cubesdir, include), join(packagesdir, include))
         # generate sample config
         from cubicweb.goa.goaconfig import GAEConfiguration
         from cubicweb.common.migration import MigrationHelper
