@@ -1,0 +1,17 @@
+/var/log/cubicweb/*.log {
+        weekly
+        missingok
+        rotate 10
+        compress
+        delaycompress
+        notifempty
+        create 640 root adm
+        sharedscripts
+        postrotate
+           if [ -x /usr/sbin/invoke-rc.d ]; then \
+              invoke-rc.d cubicweb reload > /dev/null; \
+           else \
+              /etc/init.d/cubicweb reload > /dev/null; \
+           fi; \
+        endscript
+}

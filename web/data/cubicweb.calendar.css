@@ -1,0 +1,341 @@
+/* styles for the calendar views
+ *
+ *  :organization: Logilab
+ *  :copyright: 2003-2008 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+ *  :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
+ */
+
+/******************************************************************************/
+/* one month calendar                                                         */
+/******************************************************************************/
+
+table.omcalendar {
+  background: #eeeeff;
+  width: 100%;
+  table-layout: fixed;
+  border: 1px solid #ccc;
+  border-collapse: separate;
+}
+
+table.omcalendar tr th {
+  background:  #e7e7e7;
+  color: #2952A3;
+  font-weight: bold;
+  border-bottom: 1px solid #ddd;
+}
+
+table.omcalendar tr td {
+  border: 1px solid #f0faff;
+  padding: 0px;
+  font-family: Arial, Sans-Serif;
+  color: #2952A3;
+  background: #fff;
+  border-bottom: 1px solid #ddd;
+}
+
+table.omcalendar tr td a {
+  font-family: Arial, Sans-Serif;
+  color: #2952A3;
+}
+
+table.omcalendar tr td div.cellContent {
+  margin: 0px;
+  padding: 0px;
+}
+
+table.omcalendar tr td div.calCellTitle {
+  width: 100%;
+}
+
+table.omcalendar tr td div.calCellTitle div.day {
+  display: block;
+  float: left;
+  clear: both;
+  text-align: left;
+}
+
+table.omcalendar tr td div.calCellTitle div.cmd {
+/*  display: none;
+  float: right;
+  clear: both; */
+  text-align: right;
+}
+
+table.omcalendar tr td div.calCellTitle div.cmd a {
+  display: none;
+}
+
+table.omcalendar tr td:hover div.calCellTitle div.cmd a {
+/* XXX to tweak (doesn't work! what a surprise)*/
+  display: inline;
+  float: right;
+  clear: none;
+  text-align: right;
+}
+
+table.omcalendar tr td div.calCellTitle div.stopper {
+  clear:pos;
+}
+
+table.omcalendar tr td {
+  padding: 3px 0.5em 1em;                         
+}
+
+table.omcalendar tr td div.task {
+  border-top: 1px solid #ddd;
+  height: 2.5ex;
+}
+
+table.omcalendar tr td div.task div.tooltip { 
+  display: none; 
+}
+
+table.omcalendar tr td:hover div.task:hover div.tooltip { 
+  font-style: normal;
+  display: block;
+  position: absolute;
+  padding: 5px;
+  color: #000;
+  border: 1px solid #bbb;
+  background: #ffc;
+  width:200px;
+  z-index: 100;
+  overflow: visible;
+}
+
+
+table.omcalendar tr td.outOfRange { background-color: #ddd; }
+
+
+table.omcalendar div.col0       { background-color: #FFB117; }
+table.omcalendar div.col1       { background-color: #FFF07D; }
+table.omcalendar div.col2       { background-color: #E0FF7D; }
+table.omcalendar div.col3       { background-color: #C1FF7D; }
+table.omcalendar div.col4       { background-color: #02FF7D; }
+table.omcalendar div.col5       { background-color: #7DFF97; }
+table.omcalendar div.colb       { background-color: #7DFFC6; }
+table.omcalendar div.col7       { background-color: #7DDBFF; }
+table.omcalendar div.col8       { background-color: #7DACFF; }
+table.omcalendar div.col9       { background-color: #7D8DFF; }
+table.omcalendar div.cola       { background-color: #9C7DFF; }
+table.omcalendar div.col6       { background-color: #BC7DFF; }
+
+table.omcalendar div.col0:hover { background-color: #EFE117; }
+table.omcalendar div.col1:hover { background-color: #EFE07D; }
+table.omcalendar div.col2:hover { background-color: #E0DF7D; }
+table.omcalendar div.col3:hover { background-color: #C1DF7D; }
+table.omcalendar div.col4:hover { background-color: #02DF7D; }
+table.omcalendar div.col5:hover { background-color: #70EF97; }
+table.omcalendar div.colb:hover { background-color: #70EFC6; }
+table.omcalendar div.col7:hover { background-color: #70DBEF; }
+table.omcalendar div.col8:hover { background-color: #70ACEF; }
+table.omcalendar div.col9:hover { background-color: #708DEF; }
+table.omcalendar div.cola:hover { background-color: #9C70EF; }
+table.omcalendar div.col6:hover { background-color: #BC70EF; }
+
+
+/******************************************************************************/
+/* one week calendar                                                          */
+/******************************************************************************/
+
+table#week {
+  min-height: 600px;
+  width: 100%;
+  table-layout: auto;
+  
+}
+
+
+table#week tr td div.hour {
+  vertical-align: top;
+  height: 8ex;
+  width: 100%;
+  position: relative;
+  border-bottom: 1px dotted #ccc;
+  /*padding-top: 1ex;*/
+}
+
+table#week tr th.today {
+  color: red;
+}
+
+table#week tr td div.hourline {
+  height: 0px;
+  width: 100%;
+  position: relative;
+  border-bottom: 1px dotted #ccc;
+  z-index: 10;
+  left: 0;
+}
+
+table#week tr td {
+  vertical-align: top;
+  height: 96ex;
+  width: 14.2%;
+  position: relative;
+}
+
+table#week tr td div.columndiv {
+  position: relative;
+  height: 102%;
+}
+
+table#week tr td div.columndiv div.task {
+  position: absolute;
+  overflow: hidden;
+}
+
+table#week tr td div.columndiv div.task div.bottommarker {
+  position: absolute;
+  bottom: 0;
+  width: 100%;
+  left: 0;
+  z-index: 5;
+  background: transparent;
+}
+table#week tr td div.columndiv div.task div.bottommarkerline {
+  background: red;
+  z-index: 5;
+  padding: 0;
+}
+table#week tr td div.columndiv div.task:hover {
+  overflow: visible;
+}
+
+table#week tr th.transparent {
+  background: transparent;
+  border: none;
+}
+
+
+/******************************************************************************/
+/* XXX old calendar views, to remove once old_calendar.py is removed          */
+/******************************************************************************/
+
+table.calendarPageHeader,
+table.smallCalendars, 
+ table.bigCalendars {
+ width: 90%;
+ border-collapse:separate; 
+ margin: 0px 1em;
+}
+
+
+table.smallCalendars td.calendar{
+ width: 33%;
+}
+
+td.calendar table {
+ margin: 1em 2em;
+ width: 80%;
+}
+
+.calendar th.month {
+ font-weight:bold;
+ padding-bottom:0.2em;
+ background: #cfceb7;
+}
+
+.calendar th.month a{ 
+ font: bold 110%  Georgia, Verdana;
+ color : #fff;
+ }
+
+table.weekCalendar{ 
+}
+
+table.weekCalendar th{ 
+ text-align : left;
+ padding: 0.6em 0.4em;
+ }
+
+table.weekCalendar td{ 
+ padding: 0.2em 0.4em }
+
+.semesterCalendar .amCell, .semesterCalendar .amCellEmpty{
+  margin-bottom:0;
+  border-style: none;
+  border-right:thin dotted;
+}
+
+table.semesterCalendar th{ 
+ padding: 0.6em 0.4em;
+}
+
+.semesterCalendar .pmCell, .semesterCalendar .pmCellEmpty{
+  border: none;
+  border-left:1px dotted #ccc;
+}
+
+.weeknum{ 
+ width:10%
+ }
+
+.cell, .cellEmpty{ 
+ border:1px solid #ccc;
+ padding: 3px 0.5em 2em;
+ width:10%;
+}
+
+.cellDay{ 
+ border:1px solid #ccc;
+ border-bottom : none;
+ padding: 3px 0.5em 3px;  
+ width:10%;}
+
+.amCell, .pmCell,
+.amCellEmpty, .pmCellEmpty{
+ padding: 3px 0.5em 3px;  
+ border:1px solid #ccc;
+ border-top:none;
+ width:10%;
+}
+
+.amCell, .amCellEmpty{
+ border-bottom:none;
+}
+
+.pmCell, .pmCellEmpty{
+ border-top:none;
+}
+
+.cellTitle {
+ font: bold 100% Arial, sans-serif;
+}
+
+.weekTitle {
+  padding:1em;
+}
+
+.weekCell, .weekEmptyCell {
+  border-top: 0px;
+}
+
+.cell span.cellTitle,
+.cellEmpty span.cellTitle {
+ background-color:transparent; 
+}
+
+div.cellContent{ 
+ padding: 0.1em;
+ font-size:90%;
+ }
+
+.weeknum, th.weekday{ 
+ padding:0.2em 0.4em;
+ color : #666;
+ font-size:90%;}
+
+div.event{ 
+ padding : 0.1em 0px;
+ margin:0.2em 0px; 
+ background: #eee;
+}
+
+td.prev {
+  text-align: left;
+}
+
+td.next {
+  text-align: right;
+}

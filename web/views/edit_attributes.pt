@@ -1,0 +1,13 @@
+  <table class="attributeForm" style="width:100%;"
+	 tal:attributes="id tab_id | nothing;
+			 class tab_class | nothing;">
+    <tr tal:iter="widget lines">
+      <th class="labelCol" tal:content="structure python:widget.render_label(entity)">attrname</th>
+      <td tal:define="error python:widget.render_error(entity)" style="width:100%;"
+          tal:attributes="class python:error and 'error' or nothing">
+	<div tal:replace="structure error">error message if any</div>
+	<div tal:replace="structure python:widget.edit_render(entity)" >widget (input, textarea, etc.)</div>
+	<div tal:replace="structure python:widget.render_help(entity)">format help if any</div>
+      </td>
+    </tr>
+  </table>

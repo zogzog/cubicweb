@@ -1,0 +1,158 @@
+.. -*- coding: utf-8 -*-
+
+=============
+LAX Tutorial
+=============
+
+Introduction
+------------
+
+LAX is a web framework on top of the Google AppEngine datastore.
+
+
+features: schema/data-model at core of app, selection/view mechanism,
+reuseable components, very fast development
+
+
+Since we are french, let us develop an example application that deals
+with wine and will allow any wine enthusiast to track the content of
+its cellar and share his tasting experiences.
+
+Schema
+------
+
+With LAX, the core of the application is the schema/datamodel.
+
+laxctl newapp ? XXX
+
+We will start by something simple and define three entities: WineMaker,
+Wine and Bottle.
+
+::
+
+  class WineMaker(EntityType):
+      name = String(maxsize=50, required=True)
+
+  class Wine(EntityType):
+      name = String(required=True, maxsize=100, fulltextindexed=True)
+      vintage = Int(required=True, constraints=[IntervalBoundConstraint(1850,2100)])
+      grown_by = SubjectRelation('WineMaker', cardinality='?*',
+                                 description=_('Winemaker who grew the wine'))
+
+  class Bottle(EntityType):
+      buy_date = Date(description=_('Date when the bottle was bought.'),
+                      default='TODAY')
+      bottle_of = SubjectRelation('Wine', cardinality='?*')
+
+A WineMaker only has a name which is a string that is required and
+must be less than 50 characters.
+
+A Wine has a name, which is a string that is required, must be less
+than 100 characters and will be indexed in the full-text index XXX
+fulltextindex marche pas encore. A Wine
+also has a vintage year which is an integer that is required and must
+be between 1850 and 2100. A Wine also has a relationship ``grown_by``
+that link it to a WineMaker. Cardinality ``?*`` means that a Wine can
+have zero or one WineMaker (``?`` means `zero or one`) and that a
+WineMaker can have any number of Wine entities (``*`` means `any number
+including zero`).
+
+A Bottle has a buy_date attribute, which is a date with a default
+value of TODAY, meaning that when a new bottle is created, it will
+have its creation date as buy_date unless the user changes it to some
+other date. A Bottle also has a relationship ``bottle_of`` that link
+it to a Wine. The cardinality of that relationship implies that a
+Bottle can be linked to zero or one Wine and that a Wine can by linked
+to any number of Bottle entities.
+
+
+Defining this simple schema is enough to get us started, launch the
+application with the command::
+
+   laxctl start Winopedia
+
+and point your browser at localhost:8080
+
+You will see the home page of your application. It lists the entity
+types: WineMaker, Wine, Bottle.
+
+Let us create a few of these. Click on the [+] at the right of the
+link WineMaker. Call this new WineMaker ``Domaine du château`` and
+validate the form by clicking on ``button_ok``. 
+
+Click on the logo at top left to get back to the home page, then
+follow the WineMaker link. You should be seeing a list with a single
+item ``Domaine du château``. Clicking on this item will get you to 
+its detailed description except that in this case, there is not much
+to display besides the name.
+
+Now get back to the home page by clicking on the top-left logo, then
+create a new WineMaker called ``Vallon de la Dame`` and get back to the
+home page again to follow the WineMaker link for the second time. The
+list now has two items.
+
+Get back to the home page and click on [+] at the right of the link
+Wine. Call this new wine ``Cuvée du Roi`` and enter 2008 as vintage,
+then click on ``button_ok``. You added a new wine without saying who
+made it. There is a box on the left entitled "actions", click on the
+menu item `modify`. You are back to the form to edit the wine entity
+you just created, except that the form now has another section with a
+combobox titled "add a relationship". Chose "grown_by" in this
+menu and a second combobox appears where you pick ``Domaine du
+château``. Validate the changes by clicking  ``button_ok``. The entity
+Wine that is displayed now includes a link to the entity WineMaker
+named ``Domaine du château``.
+
+Exercise
+~~~~~~~~
+
+Create new entities Wine and Bottle.
+
+What we learned
+~~~~~~~~~~~~~~~
+
+Creating a simple schema was enough to set up a new application that
+can store WineMaker, Wine, Bottle. 
+
+What is next ?
+--------------
+
+Althought the application is fully functionnal, its look is very
+basic. We will now improve how information is displayed by writing
+views.
+
+
+Views
+======
+
+...
+
+Defining views with selection/views
+
+implementing interfaces, calendar for bottles bought and for tasting.
+calendar with export icalput attribute drink_date on bottle 
+
+add attribute wine color
+
+create view "bottle table" with color, buy_date, drink_date.
+
+in view wine, select Wine.bottles and apply view "bottle table"
+
+demo ajax with filter on bottle table
+
+Components
+===========
+
+...
+
+
+
+customize MainTemplate
+
+rss channel of new bottles or wines
+
+use URLRewriting for nice urls
+
+talk about security access rights
+
+talk about rql

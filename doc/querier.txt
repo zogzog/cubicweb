@@ -1,0 +1,62 @@
+.. -*- coding: utf-8 -*-
+
+Déroulement de l'éxecution d'une requête en multi-source avec insertion de sécurité
+===================================================================================
+
+
+* 3 sources (system, ldap (Euser) et rql (Card)
+* permission en lecture Card is elle appartient à l'utilisateur
+
+Soit la requête de départ: ::
+
+  Any X,T WHERE X owned_by U, U login "syt", X title T
+
+1. récupération arbre de syntaxe et solution (+cache) ::
+
+     -> {X: Card, U: Euser}, {X: Blog, U: Euser}, {X: Bookmark, U: Euser}
+
+2. insertion sécurité ::
+
+     -> Any X,T WHERE X owned_by U, U login "syt", X title T, EXISTS(X owned_by UEID) / {X: Card, U: Euser}
+        Any X,T WHERE X owned_by U, U login "syt", X title T / {X: Blog, U: Euser}, {X: Bookmark, U: Euser}
+   
+3. construction plan
+   0. preprocessing (annotation des arbres de syntaxe)
+   
+   1. Any U WHERE U login "syt" / {U: Euser}
+      [system+ldap] => table1/varmap1{U:U2}
+      
+   2. Any X,T WHERE X owned_by U2, X title T / {X: Blog, U: Euser}, {X: Bookmark, U: Euser}
+      [varmap1|system] => TABLE2
+      
+   3 Deux alernatives:
+   
+     1. Any X,T WHERE X is Card, X title T {X: Card} ::
+
+          [system+rql] => table3/varmap3{X:X3, T:T3}
+	   
+        Any X3,T3 WHERE X3 owned_by U2, X3 title T3, EXISTS(X owned_by UEID) / {X3: Card, U2: Euser} ::
+
+          [(varmap1, varmap3)|system] => TABLE2
+       
+     2 Any X WHERE X is Card X owned_by U2, EXISTS(X owned_by UEID) / {X: Card, U2: Euser} ::
+
+          [varmap1|system] => EIDS
+	   
+       Any X,T WHERE X title T, X eid IN(EIDS) {X: Card} ::
+	 
+          [system+rql] => TABLE2
+   
+   4. renvoie contenu TABLE2.
+      Note : si aggrégat / tri / distinct TABLE2 est nécessairement une table temporaire et besoin d'une
+      étape AggrStep supplémentaire
+      
+4. éxécution du plan
+
+5. [construction description]
+
+6. renvoie ResultSet
+
+Notes sur UNION
+===============
+* en multi-sources, les résultats des unions peuvent être mélangés

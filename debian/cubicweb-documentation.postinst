@@ -1,0 +1,13 @@
+#! /bin/sh -e
+#
+
+if [ "$1" = configure ]; then
+  if which install-docs >/dev/null 2>&1; then
+    install-docs -i /usr/share/doc-base/cubicweb-doc
+  fi
+fi
+
+
+#DEBHELPER#
+
+exit 0

@@ -1,0 +1,12 @@
+#! /bin/sh -e
+
+if [ "$1" = configure ]; then
+    # XXX bw compat: erudi -> cubicweb migration
+    if [ -e "/usr/share/erudi/templates/" ]; then
+      mv /usr/share/erudi/templates/* /usr/share/cubicweb/cubes/
+      echo 'moved /usr/share/erudi/templates/* to /usr/share/cubicweb/cubes/'
+    fi
+fi 
+#DEBHELPER#
+ 
+exit 0

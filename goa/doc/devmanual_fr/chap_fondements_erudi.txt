@@ -1,0 +1,71 @@
+Fondements CubicWeb
+================
+
+Concepts et vocabulaire
+-----------------------
+
+*schéma*
+  le schéma définit le modèle de données d'une application sous forme d'entités
+  et de relations, grâce au package `yams`_. C'est l'élément central d'une
+  application. Il est initialement défini sur le système de fichiers et est
+  stocké dans la base de données lors de la création d'une instance. CubicWeb 
+  fournit un certain nombres de types d'entités inclus systématiquement 
+  car nécessaire au noyau CubicWeb et une librairie de composants devant être
+  inclus explicitement le cas échéant.
+
+*source*
+  une source de données est un conteneur de données quelquonque (SGBD, annuaire
+  LDAP...) intégré par l'entrepôt CubicWeb. Un entrepôt possède au moins une source
+  dite "system" contenant le schéma de l'application, l'index plein-texte et
+  d'autres informations vitales au système.
+
+*composant*
+  un composant est un modèle regroupant un ou plusieurs types de données et/ou
+  des vues afin de fournir une fonctionalité précise, ou une application CubicWeb
+  complète utilisant éventuellement d'autres composants. Les différents
+  composants disponibles sur une machine sont installés dans
+  `/usr/share/cubicweb/templates`
+
+*result set*
+  objet encaspulant les résultats d'une requête RQL et des informations sur
+  cette requête.
+
+.. _`Python Remote Object`: http://pyro.sourceforge.net/
+.. _`yams`: http://www.logilab.org/project/name/yams/
+
+
+Structure générale d'une application LAX
+----------------------------------------
+
+Un composant complexe est structuré selon le modèle suivant :
+
+::
+    
+  .
+  |-- app.yaml
+  |-- custom.py
+  |-- data
+  |-- cubicweb/
+  |-- i18n/
+  |-- logilab/
+  |-- main.py
+  |-- mx/
+  |-- rql/
+  |-- schema.py
+  |-- simplejson/
+  |-- tools/
+  |   |-- generate_schema_img.py
+  |   `-- i18ncompile.py
+  |-- views.py
+  |-- yams/
+  `-- yapps/
+        
+
+où :
+
+* ``schema.py`` contient la définition du schéma
+* ``views.py`` contient les définitions des vues
+* ``i18n`` contient les catalogues de messages pour les langues supportées (coté
+  serveur et interface web) 
+* ``data`` contient des fichiers de données arbitraires servis statiquement
+  (images, css, fichiers javascripts)... (coté interface web uniquement)

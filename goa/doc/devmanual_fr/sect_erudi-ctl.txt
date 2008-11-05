@@ -1,0 +1,70 @@
+L'outil `cubicweb-ctl`
+-------------------
+`cubicweb-ctl` est le couteau suisse pour la gestion d'instances CubicWeb.
+La syntaxe générale est ::
+
+  cubicweb-ctl <commande> [options commande] <arguments commandes>
+
+Pour voir les commandes disponibles ::
+
+  cubicweb-ctl
+  cubicweb-ctl --help
+
+A noter que les commandes disponibles varient en fonction des parties de CubicWeb
+qui sont installées.
+
+Pour voir l'aide pour une commande spécifiques ::
+
+  cubicweb-ctl <commande> --help
+
+Commandes pour la création d'un composant
+````````````````````````````````````````
+* ``newtemplate``, crée un nouveau composant sur le système de fichiers
+  à partir du nom passé en paramètre. Cette commande crée le composant à partir
+  d'une squelette d'application, incluant également les fichiers pour le
+  packaging debian)
+  
+Commandes pour la création d'une instance
+`````````````````````````````````````````
+* ``create``, crée les fichiers de configuration d'une instance
+* ``db-create``, crée la base de données système d'une instance (tables et
+  extensions uniquement)
+* ``db-init``, initialise la base de données système d'une instance (schéma,
+  groupes, utilisateurs, workflows...)
+
+Par défaut ces trois commandes sont enchainées.
+
+Commandes pour le lancement des instances
+`````````````````````````````````````````
+* ``start``, démarre une, plusieurs, ou toutes les instances
+* ``stop``, arrêt une, plusieurs, ou toutes les instances
+* ``restart``, redémarre une, plusieurs, ou toutes les instances
+* ``status``, donne l'état des instances
+
+Commandes pour la maintenance des instances
+```````````````````````````````````````````
+* ``upgrade``, lance la migration d'instance(s) existante(s) lorsqu'une nouvelle
+  version d'CubicWeb ou du composant est installée
+* ``shell``, ouvre un shell de migration pour maintenance manuelle d'une instance
+* ``db-dump``, crée un dump de la base de données système
+* ``db-restore``, restore un dump de la base de données système
+* ``db-check``, vérifie l'intégrité des données d'une instance. Si la correction
+  automatique est activée, il est conseillé de faire un dump avant cette
+  opération
+* ``schema-sync``, , synchronise le schéma persistent d'une instance avec le schéma
+  de l'application. Il est conseillé de faire un dump avant cette opération
+
+Commandes pour la maintenance des catalogues i18n
+`````````````````````````````````````````````````
+* ``i18nlibupdate``, regénère les catalogues de messages de la librairie CubicWeb
+* ``i18nupdate``, regénère les catalogues de messages d'un composant
+* ``i18ncompile``, recompile les catalogues de messages d'une instance. Cela est
+  effectué automatiquement lors d'une upgrade
+
+Cf Internationalisation_.
+
+Autres commandes
+````````````````
+* ``list``, donne la liste des configurations, des composants et des instances
+  disponibles
+* ``delete``, supprime une instance (fichiers de configuration et base de données)

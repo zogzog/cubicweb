@@ -1,0 +1,58 @@
+.. -*- coding: utf-8 -*-
+
+.. _contents:
+
+=======================================
+Index de la documentation pour CubicWeb
+=======================================
+:authors: Nicolas Chauvat, Sylvain Thénault, Adrien Di Mascio
+:date: 2008-07-12
+:version: 3.0.0 
+:organisation: Logilab
+:copyright: © 2008 Logilab
+:contact: contact@logilab.fr
+
+
+Documentation générale de Cubicweb
+==================================
+
+.. toctree::
+   :maxdepth: 3
+
+   index-content.txt
+
+Tutoriel : créer votre première application web
+===============================================
+
+.. toctree::
+   :maxdepth: 1
+
+   tutmanual_fr/tut-create-app.fr.txt
+
+FAQ
+===
+.. toctree::
+   :maxdepth: 1
+
+   faq.fr.txt
+
+
+HOW TO
+======
+.. toctree::
+   :maxdepth: 1
+
+   howto.fr.txt
+
+Références API
+==============
+
+
+
+Indices and tables
+==================
+
+* :ref:`genindex`
+* :ref:`modindex`
+* :ref:`search`
+

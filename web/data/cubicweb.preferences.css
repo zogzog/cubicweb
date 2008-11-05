@@ -1,0 +1,28 @@
+/* styles for preferences form (views/management.py)
+ *
+ *  :organization: Logilab
+ *  :copyright: 2003-2008 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+ *  :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
+ */
+
+.componentTitle{
+ font-weight:bold;
+ color: #ff7700;
+ padding:0px 4px;
+}
+
+h2.propertiesform a{
+ display:block;
+ margin: 10px 0px 6px 0px;
+ font-weight: bold;
+ color: #222211;
+ padding: 0.2em 0.2em 0.2em 16px;
+ background:#eeedd9 url("puce_down.png") 3px center no-repeat;
+ font-size:76%;
+}
+
+h2.propertiesform a:hover{
+ color:#000;
+ background-color:#cfceb7;
+ text-decoration:none;
+}

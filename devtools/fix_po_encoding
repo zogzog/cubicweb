@@ -1,0 +1,38 @@
+#!/usr/bin/python
+
+"""usage: fix-po-encodings [filename...]
+change the encoding of the po files passed as arguments to utf-8
+"""
+import sys
+import re
+import codecs
+
+def change_encoding(filename, target='UTF-8'):
+    fdesc = open(filename)
+    data = fdesc.read()
+    fdesc.close()
+    encoding = find_encoding(data)
+    if encoding == target:
+        return
+    data = fix_encoding(data, target)
+    data = unicode(data, encoding)
+    fdesc = codecs.open(filename, 'wb', encoding=target)
+    fdesc.write(data)
+    fdesc.close()
+
+def find_encoding(data):
+    regexp = re.compile(r'"Content-Type:.* charset=([a-zA-Z0-9-]+)\\n"', re.M)
+    mo = regexp.search(data)
+    if mo is None:
+        raise ValueError('No encoding declaration')
+    return mo.group(1)
+
+def fix_encoding(data, target_encoding):
+    regexp = re.compile(r'("Content-Type:.* charset=)(.*)(\\n")', re.M)
+    return regexp.sub(r'\1%s\3' % target_encoding, data)
+    
+
+
+for filename in sys.argv[1:]:
+    print filename
+    change_encoding(filename)

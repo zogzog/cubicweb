@@ -1,0 +1,180 @@
+=======================
+ Specification cubicwebfs
+=======================
+
+Remarque: cubicwebfs c'est le siamois de yamsfs
+en fait c'est un yamsfs avec une interrogation
+de base RQL
+
+Modèle
+-------
+
+Description du modèle;
+::
+  societe
+  nom
+  ville
+
+  affaire
+  ref
+
+  document
+  annee 
+  mois 
+  jour
+  type {RAP,CLI,OFR,FCT}
+  fichier
+
+document concerne affaire
+affaire concerne societe
+
+Contenu de la base exemple
+---------------------------
+
+societe  | nom     | ville    |
+         | CETIAD  | Dijon    |
+         | EDF R&D | Clamart  |
+         | Logilab | Paris    |
+
+affaire  | ref    | concerne  |
+         | CTIA01 | CETIAD    |
+         | EDFR01 | EDF R&D   |
+         | EDFR02 | EDF R&D   |
+
+document | annee | mois | jour | type | concerne | fichier                                     |
+         | 2004  | 09   | 06   | PRE  | CTIA01   | depodoc/2004/09/CTIA01-040906-PRE-1-01.pdf  |  
+         | 2005  | 02   | 01   | CLI  | EDFR01   | depodoc/2005/02/EDFR01-050201-CLI-1-01.pdf  |  
+         | 2005  | 03   | 22   | OFR  | EDFR01   | depodoc/2005/02/EDFR01-050322-OFR-1-01.pdf  |  
+
+
+Exemples de chemins/recherches
+-------------------------------
+
+Cherche documents de mars 2005;
+::
+  /document/annee/2005/mois/03/
+
+
+Dont le contenu successif serait;
+
+Test::
+
+  $ ls /document
+  annee/	mois/		jour/		type/
+  affaire/	concerne/	CTIA01-040906-PRE-1-01.pdf
+  EDFR01-050201-CLI-1-01.pdf	EDFR01-050322-OFR-1-01.pdf	
+
+  $ ls /document/annee/
+  2004/		2005/
+
+  $ ls /document/annee/2005/
+  mois/		jour/		type/		affaire/
+  concerne/	EDFR01-050201-CLI-1-01.pdf	EDFR01-050322-OFR-1-01.pdf
+
+  $ ls /document/annee/2005/mois/
+  02/		03/
+
+  $ ls /document/annee/2005/mois/03/
+  jour/		type/		affaire/	concerne/
+  EDFR01-050322-OFR-1-01.pdf
+
+
+Question: est-ce que fichier/ ne va pas nous manquer ?
+
+
+Cherche documents relatifs à CTIA01; 
+::
+  /affaire/ref/CTIA01/document/
+
+Dont le contenu des répertoires successifs serait:
+
+Test::
+
+  $ ls /affaire/
+  ref/		societe/	concerne/	document/
+  concerne_par/	CTIA01		EDFR01		EDFR02
+
+  $ ls /affaire/ref/
+  CTIA01/	EDFR01/		EDFR02/
+
+  $ ls /affaire/ref/CTIA01/
+  societe/	concerne/	document/	concerne_par/
+  
+  $ ls /affaire/ref/CTIA01/document/
+  annee/	mois/		jour/		type/
+  CTIA01-040906-PRE-1-01.pdf
+
+
+Cherche documents des affaires qui concernent CETIAD;
+::
+  /societe/nom/CETIAD/affaire/document/
+
+Dont le contenu des répertoires successifs serait;
+
+Test::
+
+  $ ls /societe/
+  nom/		ville/		affaire/	concerne_par/
+  CETIAD	EDF R&D		Logilab
+
+  $ ls /societe/nom/
+  CETIAD	EDF R&D		Logilab
+
+  $ ls /societe/nom/CETIAD/
+  ville/	affaire/	concerne_par/	CETIAD		Logilab
+
+  $ ls /societe/nom/CETIAD/affaire/
+  ref/		societe/	concerne/	document/
+  concerne_par/	CTIA01		
+
+  $ ls /societe/nom/CETIAD/affaire/document/
+  annee/	mois/		jour/		type/
+  affaire/	concerne/	CTIA01-040906-PRE-1-01.pdf
+
+
+En particulier, pour la recherche ci-dessus on ne peut pas écrire;
+::
+  /document/affaire/concerne/societe/CETIAD/
+
+La logique est que si on est dans un répertoire document, il faut
+qu'il contienne des documents.
+
+Cherche documents de 2002 qui concernent des affaires 
+qui concernent CETIAD;
+::
+  /societe/CETIAD/affaire/document/annee/2002/
+
+Question: est-ce que les relations doivent être des composants
+du chemin ?
+Question : si les relations ne font pas partie du chemin, il faudrait
+pouvoir faire des recherches en utilisant des relations anonymes (ce
+qui est impossible en RQL par exemple);
+::
+  /document/affaire/... s'il existe plusieurs relations entre
+  les entités document et affaire, on ne peut pas s'en sortir
+
+Question: que va-t-il se passer pour des chemins du type;
+::
+  /affaire/CTIA*/document/
+
+Nicolas: à mon avis on a rien à faire, car c'est le shell qui
+s'en occupe. De la même façon, le système de fichier n'a pas
+à se préoccuper de ~/ et les programmes reçoivent pas le "qqch*"
+en argument, mais directement la liste.
+
+Attention: si jamais l'arborescence est sans fond, les
+commandes récursives vont prendre du temps...
+
+Attention: dans un premier temps, un système de fichiers en
+lecture seule est satisfaisant. on verra ensuite pour l'édition.
+pour l'édition, on peut s'inspirer du external editor de zope
+et avoir un format d'échange XML entre le serveur et l'éditeur.
+
+Le cas suivant est débile, faut-il l'interdire ?
+::
+  /document/affaire/societe/concerne_par/affaire/concerne_par/document
+
+
+NB: manque détail d'un cas comme /document/annee/2005/concerne/affaire/
+
+

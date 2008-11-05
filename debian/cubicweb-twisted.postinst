@@ -1,0 +1,10 @@
+#! /bin/sh -e
+
+if [ -x "/etc/init.d/cubicweb-ctl" ]; then
+    invoke-rc.d cubicweb-ctl restart || true
+fi
+ 
+ 
+#DEBHELPER#
+ 
+exit 0

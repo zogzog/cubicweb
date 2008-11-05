@@ -1,0 +1,84 @@
+/*
+ *  :organization: Logilab
+ *  :copyright: 2003-2008 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+ *  :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
+ */
+
+/******************************************************************************/
+/* progressbar                                                                */
+/******************************************************************************/
+
+.done{ background:red }
+
+.inprogress{ background:green }
+
+.overpassed{ background: yellow}
+
+
+.progressbar {
+ height: 10px;
+ background: #008000;
+}
+
+.progressbarback {
+ border: 1px solid #000000;
+ background: transparent;
+ height: 10px;
+ width: 100px;
+}
+
+/******************************************************************************/
+/* progress table                                                             */
+/******************************************************************************/
+
+table.progress{
+ /* The default table view */
+ margin: 10px 0px;
+ color : #000;
+ width:100%;
+ font-size:98%;
+ border:2px solid #ebe8d9;
+}
+
+table.progress th{ 
+ text-align:left;
+ white-space:nowrap;
+ font-weight : bold;
+ background:#ebe8d9 url("button.png") repeat-x;
+ padding:2px 3px;
+}
+
+table.progress th,
+table.progress td{ 
+ border: 1px solid #dedede;
+ margin:0px;
+}
+
+table.progress td{ 
+ text-align:right;
+ padding:2px 5px 2px 2px;
+}
+
+table.progress th.tdleft,
+table.progress td.tdleft{ 
+ text-align:left;
+ padding:2px 3px 2px 5px;
+}
+
+
+table.progress tr.highlighted{
+ background-color: #f4f5ed; 
+}
+
+table.progress tr.highlighted .progressbarback {
+ border: 1px solid #555;
+}
+
+table.progress .progressbarback {
+ border: 1px solid #777;
+}
+
+.progress_data{ 
+ padding-right:3px;
+}
+

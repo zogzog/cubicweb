@@ -1,0 +1,31 @@
+.. -*- coding: utf-8 -*-
+.. _`préférences utilisateurs`: myprefs#fieldset_ui
+
+2008-09-25  --  2.50.0
+    * jQuery remplace MochiKit
+    * support de l'héritage de schéma
+
+2008-05-13  --  2.48.0
+    * les pages sont servies en tant que ``xhtml+xml`` pour certains navigateurs
+
+2008-03-27  --  2.47.0
+    * fckeditor est enfin intégré pour éditer les champs de type texte riche. Si
+      vous ne le voyez pas apparaître, vérifiez vos `préférences utilisateurs`_.
+
+2008-03-13  --  2.46.0
+    * nouvelle vues calendrier et emploi du temps
+    
+    * fonctionalité "click-et-édite" : si vous voyez apparaitre le curseur
+      d'édition de texte en survolant un champ, essayez de double-cliquer !
+      
+    * recherche par facettes : une boîte de filtrage devrait apparaitre
+      automatiquement lorsque vous effectuez une recherche qui ramène plus d'une
+      entité
+
+2008-02-15  --  2.44.0
+    * nouveau système d'aide internationalisé. Cliquez sur le point
+      d'interrogation en haut à droite. Reste à enrichir le contenu de cette
+      documentation, mais cela devrait arriver avec le temps.
+
+
+      

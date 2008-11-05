@@ -1,0 +1,16 @@
+.. -*- coding: utf-8 -*-
+
+AJAX
+====
+JSON bla  bla
+XXX FILLME
+
+
+Le contrôleur 'json'
+--------------------
+XXX FILLME
+
+
+API Javascript
+--------------
+XXX FILLME

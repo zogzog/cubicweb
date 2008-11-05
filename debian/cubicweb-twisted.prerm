@@ -1,0 +1,13 @@
+#! /bin/sh -e
+ 
+case "$1" in
+    remove)
+	if [ -x "/etc/init.d/cubicweb-ctl" ]; then
+	    invoke-rc.d cubicweb-ctl stop || true
+	fi
+    ;;
+esac
+ 
+#DEBHELPER#
+ 
+exit 0

@@ -1,0 +1,54 @@
+<toc resource="main">
+  <title xml:lang="en">Site documentation</title>
+  <title xml:lang="fr">Documentation du site</title>
+
+  <section resource="standard_usage">
+    <title xml:lang="en">Standard use</title>
+    <title xml:lang="fr">Utilisation standard</title>
+
+    <section resource="bookmarks">
+      <title xml:lang="en">Using bookmarks</title>
+      <title xml:lang="fr">Utilisation des signets</title>
+    </section>
+
+    <section resource="search">
+      <title xml:lang="en">Search</title>
+      <title xml:lang="fr">Recherche</title>
+    </section>
+
+    <section resource="userprefs">
+      <title xml:lang="en">User preferences</title>
+      <title xml:lang="fr">Préférences utilisateur</title>
+    </section>
+
+    <section resource="add_content">
+      <title xml:lang="en">Add content to the site</title>
+      <title xml:lang="fr">Ajouter du contenu au site</title>
+    </section>
+  </section>
+
+  <section resource="advanced_usage">
+    <title xml:lang="en">Advanced use</title>
+    <title xml:lang="fr">Utilisation avancée</title>
+
+    <section resource="tut_rql">
+      <title xml:lang="en">"Relation Query Language" tutorial</title>
+      <title xml:lang="fr">Tutoriel "Relation Query Language"</title>
+    </section>
+
+    <section resource="custom_view">
+      <title xml:lang="en">Defining your own views</title>
+      <title xml:lang="fr">Définir ses propres vues</title>
+    </section>
+  </section>
+
+  <section resource="glossary">
+    <title xml:lang="en">Glossary</title>
+    <title xml:lang="fr">Glossaire</title>
+  </section>
+
+  <section resource="about">
+    <title xml:lang="fr">A propos de ce site</title>
+    <title xml:lang="en">About this site</title>
+  </section>
+</toc>

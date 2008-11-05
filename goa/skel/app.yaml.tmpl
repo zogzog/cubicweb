@@ -1,0 +1,72 @@
+application: %(appname)s
+version: 0-1
+runtime: python
+api_version: 1
+
+handlers:
+- url: /admin/.*
+  script: $PYTHON_LIB/google/appengine/ext/admin
+  login: admin
+- url: /data
+  static_dir: data
+- url: /fckeditor
+  static_dir: fckeditor
+- url: /_load
+  script: loader.py
+  login: admin
+- url: .*
+  script: main.py
+  # comment the line below to allow anonymous access or if you don't want to use
+  # google authentication service
+  login: required
+
+skip_files: |
+ ^(.*/)?(
+ (app\.yaml)|
+ (app\.yml)|
+ (index\.yaml)|
+ (index\.yml)|
+ (#.*#)|
+ (.*~)|
+ (.*\.py[co])|
+ (.*\.xcf)|
+ (.*\.asp)|
+ (.*\.aspx)|
+ (.*\.cfm)|
+ (.*\.po)|
+ (.*/RCS/.*)|
+ (\..*)|
+ (.*ChangeLog)|
+ (.*README)|
+ (.*TODO)|
+ (.*DEPENDS)|
+ (.*MANIFEST)|
+ (.*MANIFEST.in)|
+ (.*setup\.py)|
+ (.*,cover)|
+ (.*\.orig)|
+ (.*/test/.*)|
+ (.*/tests/.*)|
+ (.*/bin/.*)|
+ (.*/build/.*)|
+ (.*/debian/.*)|
+ (.*/doc/.*)|
+ (.*/skins/office2003/.*)|
+ (.*/editor/skins/silver/.*)|
+ (.*/editor/filemanager/.*)|
+ (.*/editor/plugins/.*)|
+ (.*/editor/images/smiley/.*)|
+ (.*/editor/.*spellerpages.*)|
+ (.*/docutils/writers/s5_html/.*)|
+ (.*/docutils/writers/latex2e/.*)|
+ (.*/docutils/writers/newlatex2e/.*)|
+ (.*/docutils/writers/pep_html/.*)|
+ (bin/.*)|
+ (tools/.*)|
+ (cubicweb.*/data/.*\.js)|
+ (cubicweb.*/data/.*\.css)|
+ (cubicweb.*/data/.*\.png)|
+ (cubicweb.*/data/.*\.gif)|
+ (cubicweb.*/data/.*\.gif)|
+ )$
+

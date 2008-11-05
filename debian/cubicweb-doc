@@ -1,0 +1,9 @@
+Document: cubicweb-doc
+Title: CubicWeb documentation
+Author: Logilab
+Abstract: Some base documentation for CubicWeb users and developpers
+Section: Apps/Programming
+
+Format: HTML
+Index: /usr/share/doc/cubicweb-documentation/index.html
+Files: /usr/share/doc/cubicweb-documentation/*.html

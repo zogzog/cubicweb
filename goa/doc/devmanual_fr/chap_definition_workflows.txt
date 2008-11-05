@@ -1,0 +1,16 @@
+Définition de workflow
+======================
+On peut mettre une condition rql ou/et un groupe auquel doit appartenir l'utilisateur.
+
+Si on met à la fois un(ou plusieurs) groupe et une condition RQL, il faut que les deux soient respectés.
+
+Si on met plusieurs groupes, il faut que l'utilisateur soit dans un des groupes.
+
+Pour la condition RQL sur une transition, on peut y mettre les substitutions suivantes :
+
+* `%(eid)s`, eid de l'objet
+* `%(ueid)s`, eid de l'utilisateur qui fait la requête
+* `%(seid)s`, eid de l'état courant de l'objet
+
+Dans le script de création d'un workflow, penser à mettre `_()` autour des noms d'états et de transitions
+pour que ceux si soient pris en compte par les scripts de gestion des catalogues i18n.

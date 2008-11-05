@@ -1,0 +1,6 @@
+.. -*- coding: utf-8 -*-
+
+La différence entre la classe `AppRsetObject` et la classe `AppObject` est que
+les instances de la premières sont séléctionnées pour une requête et un "result
+set" et alors que les secondes ne sont séléctionnées qu'en fonction de leur
+identifiant.

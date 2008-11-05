@@ -1,0 +1,65 @@
+/* styles for the calendar popup widget used to edit date fields
+ *
+ *  :organization: Logilab
+ *  :copyright: 2003-2008 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+ *  :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
+ */
+
+div.calhelper {
+  background: url("calendar.gif") no-repeat;
+  border: 4px solid red;
+  padding-left:18px;
+  width: 10px;
+  height: 10px;
+  display: inline;
+}
+
+div.calpopup {
+  position: absolute;
+  margin-left: 130px;
+  margin-top: -16px;
+  width: 17em;
+}
+
+table.popupCalendar {
+  text-align: center;
+  border: 1px solid #ccc;
+  z-index: 100;
+}
+
+
+table.popupCalendar th {
+  background : #d9d9c1;
+  color: black;
+  padding: 2px 3px;
+}
+
+
+table.popupCalendar th.calTitle,
+table.popupCalendar th.prev,
+table.popupCalendar th.next {
+  color: white;
+  padding: 0px;
+  background : #acac95;
+}
+
+table.popupCalendar th.prev,
+table.popupCalendar th.next {
+  color: orangered;
+  font-size: 50%;
+  font-weight: bold;
+  padding: 2px 0px;
+}
+
+
+table.popupCalendar td {
+  width: 2em;
+  height: 2em;
+  background : #f6f5e1;
+  font-size: 85%;
+}
+
+table.popupCalendar td.today {
+  border: 2px solid black;
+}
+

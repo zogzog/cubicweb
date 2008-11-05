@@ -1,0 +1,14 @@
+# LAX application po file
+
+msgid ""
+msgstr ""
+"Project-Id-Version: erudi 2.48.2\n"
+"PO-Revision-Date: 2008-03-28 18:14+0100\n"
+"Last-Translator: Logilab Team <contact@logilab.fr>\n"
+"Language-Team: fr <contact@logilab.fr>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: ginco-devtools\n"
+"Plural-Forms: nplurals=2; plural=(n > 1);\n"
+

@@ -1,0 +1,169 @@
+.. -*- coding: utf-8 -*-
+
+Fondements `CubicWeb`
+=====================
+
+Architecture globale
+--------------------
+.. image:: archi_globale.png
+
+**Note**: en pratique la partie cliente et la partie serveur sont
+généralement intégrées dans le même processus et communiquent donc
+directement, sans nécessiter des appels distants via Pyro. Il est
+cependant important de retenir que ces deux parties sont disjointes
+et qu'il est même possible d'en exécuter plusieurs exemplaires dans
+des processus distincts pour répartir la charge globale d'un site
+sur une ou plusieurs machines.
+
+Concepts et vocabulaire
+-----------------------
+
+*schéma*
+  le schéma définit le modèle de données d'une application sous forme
+  d'entités et de relations, grâce à la biblithèque `yams`_. C'est
+  l'élément central d'une application. Il est initialement défini sur
+  le système de fichiers et est stocké dans la base de données lors de
+  la création d'une instance. `CubicWeb` fournit un certain nombres de
+  types d'entités inclus systématiquement car nécessaire au noyau
+  `CubicWeb` et une librairie de composants devant être inclus
+  explicitement le cas échéant.
+
+*type d'entité* 
+  une entité est un ensemble d'attributs ; l'attribut de
+  base de toute entité, qui est sa clef, est l'eid
+
+*type de relation*
+  les entités sont liées entre elles par des relations. Dans cubicweb les
+  relations sont binaires : par convention on nomme le premier terme
+  d'une relation son 'sujet' et le second son 'objet'.
+
+*type d'entité final*
+  les types finaux correspondent aux types de bases comme les chaînes
+  de caractères, les nombres entiers... Une propriété de ces types est
+  qu'ils ne peuvent être utilisés qu'uniquement comme objet d'une
+  relation. Les attributs d'une entité (non finale) sont des entités
+  (finales).
+
+*type de relation finale*
+  une relation est dite finale si son objet est un type final. Cela revient à
+  un attribut d'une entité.
+
+*entrepôt*
+  ou *repository*, c'est la partie serveur RQL de `CubicWeb`. Attention à ne pas
+  confondre avec un entrepôt mercurial ou encore un entrepôt debian.
+
+*source*
+  une source de données est un conteneur de données quelquonque (SGBD, annuaire
+  LDAP...) intégré par l'entrepôt `CubicWeb`. Un entrepôt possède au moins une source
+  dite "system" contenant le schéma de l'application, l'index plein-texte et
+  d'autres informations vitales au système.
+
+*configuration*
+  il est possible de créer différentes configurations pour une instance :
+
+  - ``repository`` : entrepôt uniquement, accessible pour les clients via Pyro
+  - ``twisted`` : interface web uniquement, communiquant avec un entrepôt via Pyro
+  - ``all-in-one`` : interface web et entrepôt dans un seul processus. L'entrepôt
+     peut ou non être accessible via Pyro
+
+*composant*
+  un composant est un modèle regroupant un ou plusieurs types de données et/ou
+  des vues afin de fournir une fonctionalité précise, ou une application `CubicWeb`
+  complète utilisant éventuellement d'autres composants. Les différents
+  composants disponibles sur une machine sont installés dans
+  `/usr/share/cubicweb/cubes`
+
+*instance*
+  une instance est une installation spécifique d'un template. Par exemple 
+  intranet/jpl et logilab.org sont deux instances du composant jpl. Les
+  instances sont définies dans le répertoire `/etc/cubicweb.d`.
+
+*application*
+  le mot application est utilisé parfois pour parler d'une instance et parfois
+  d'un composant, en fonction du contexte... Mieux vaut donc éviter de
+  l'utiliser et utiliser plutôt *composant* et *instance*.
+
+*result set*
+  objet encaspulant les résultats d'une requête RQL et des informations sur
+  cette requête.
+
+*Pyro*
+  `Python Remote Object`_, système d'objets distribués pur Python similaire à
+  Java's RMI (Remote Method Invocation), pouvant être utilisé pour la
+  communication entre la partie web du framework et l'entrepôt RQL.
+
+.. _`Python Remote Object`: http://pyro.sourceforge.net/
+.. _`yams`: http://www.logilab.org/project/name/yams/
+
+
+Structure standard d'un composant
+---------------------------------
+
+Un composant complexe est structuré selon le modèle suivant :
+
+::
+  
+  moncomposant/
+  |
+  |-- schema.py
+  |
+  |-- entities/
+  |
+  |-- sobjects/
+  |
+  |-- views/
+  |
+  |-- test/
+  |
+  |-- i18n/
+  |
+  |-- data/
+  |
+  |-- migration/
+  | |- postcreate.py
+  | \- depends.map
+  |
+  |-- debian/
+  |
+  \-- __pkginfo__.py
+    
+On peut utiliser de simple module python plutôt que des répertoires (packages),
+par ex.:
+
+::
+  
+  moncomposant/
+  |
+  |-- entities.py
+  |-- hooks.py
+  \-- views.py
+    
+
+où :
+
+* ``schema`` contient la définition du schéma (coté serveur uniquement)
+* ``entities`` contient les définitions d'entités (coté serveur et interface web)
+* ``sobjects`` contient les crochets et/ou vues de notification (coté serveur
+  uniquement) 
+* ``views`` contient les différents composants de l'interface web (coté interface
+  web uniquement)  
+* ``test`` contient les tests spécifiques à l'application (non installé)
+* ``i18n`` contient les catalogues de messages pour les langues supportées (coté
+  serveur et interface web) 
+* ``data`` contient des fichiers de données arbitraires servis statiquement
+  (images, css, fichiers javascripts)... (coté interface web uniquement)
+* ``migration`` contient le fichier d'initialisation de nouvelles instances
+  (``postcreate.py``) et générallement un fichier donnant les dépendances `CubicWeb` du
+  composant en fonction de la version de celui-ci (``depends.map``)
+* ``debian`` contient les fichiers contrôlant le packaging debian (vous y
+  trouverez les fichiers classiques ``control``, ``rules``, ``changelog``... (non
+  installé) 
+* le fichier ``__pkginfo__.py`` donne un certain nombre de méta-données sur le
+  composant, notamment le nom de la distribution et la version courante (coté
+  serveur et interface web) ou encore les sous-composants utilisés par ce
+  composant. 
+
+Le strict minimum étant :
+
+* le fichier ``__pkginfo__.py``
+* la définition du schéma

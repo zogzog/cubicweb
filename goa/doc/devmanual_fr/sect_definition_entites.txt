@@ -1,0 +1,166 @@
+Paramétrages et extensions spécifiques
+--------------------------------------
+
+Valeurs par défaut dynamiques
+`````````````````````````````
+Il est possible de définir dans le schéma des valeurs par défaut *statiques*.
+Il est également possible de définir des valeurs par défaut *dynamiques* en 
+définissant sur la classe d'entité une méthode `default_<nom attribut>` pour
+un attribut donnée.
+
+
+Contrôle des attributs chargés et du tri par défaut
+```````````````````````````````````````````````````
+* l'attribut de classe `fetch_attrs` permet de définir sur une classe d'entité
+  la liste des noms des attributs ou relations devant être chargés 
+  automatiquement lors de la récupération d'entité(s) de ce type. Dans le cas 
+  des relations, on est limité aux relations *sujets de cardinalité `?` ou `1`*.
+
+* la méthode de classe `fetch_order(attr, var)` prend en argument un nom 
+  d'attribut (ou de relation) et un nom de variable et doit retourner une chaine
+  à utiliser dans la close "ORDERBY" d'une requête RQL pour trier 
+  automatiquement les listes d'entités de ce type selon cet attribut, ou `None`
+  si l'on ne veut pas de tri sur l'attribut passé en argument. Par défaut les 
+  entités sont triées selon leur date de création
+
+* la méthode de classe `fetch_unrelated_order(attr, var)` est similaire à la 
+  méthode `fetch_order` mais est utilisée essentiellement pour contrôler le tri
+  des listes déroulantes permettant de créer des relations dans la vue d'édition
+  d'une entité
+
+La fonction `fetch_config(fetchattrs, mainattr=None)` permet de simplifier la 
+définition des attributs à précharger et du tri en retournant une liste des 
+attributs à précharger (en considérant ceux de la classe  `AnyEntity`
+automatiquement) et une fonction de tri sur l'attribut "principal" (le 2eme 
+argument si spécifié ou sinon le premier attribut de la liste `fetchattrs`).
+Cette fonction est définie dans le package `cubicweb.entities`.
+
+Par exemple : ::
+
+  class Transition(AnyEntity):
+    """..."""
+    id = 'Transition'
+    fetch_attrs, fetch_order = fetch_config(['name'])
+
+Indique que pour le type d'entité "Transition" il faut précharger l'attribut
+"name" et trier par défaut selon cet attribut.
+
+
+Contrôle des formulaires d'édition
+``````````````````````````````````
+Il est possible de contrôler les attributs/relations dans la vue d'édition
+simple ou multiple à l'aide des *rtags* suivants :
+
+* `primary`, indique qu'un attribut ou une relation doit être incorporé dans
+  les formulaires d'édition simple et multiple. Dans le cas d'une relation,
+  le formulaire d'édition de l'entité liée sera inclus dans le formulaire
+
+* `secondary`, indique qu'un attribut ou une relation doit être incorporé dans
+  le formulaire d'édition simple uniquement. Dans le cas d'une relation,
+  le formulaire d'édition de l'entité liée sera inclus dans le formulaire
+
+* `generic`, indique qu'une relation doit être incorporé dans le formulaire 
+  d'édition simple dans la boite générique d'ajout de relation
+
+* `generated`, indique qu'un attribut est caculé dynamiquement ou autre, et 
+  qu'il ne doit donc pas être présent dans les formulaires d'édition
+
+Au besoin il est possible de surcharger la méthode 
+`relation_category(rtype, x='subject')` pour calculer dynamiquement la catégorie
+d'édition d'une relation.
+
+
+Contrôle de la boîte "add_related"
+``````````````````````````````````
+La boite `add related` est une boite automatique proposant de créer une entité
+qui sera automatiquement liée à l'entité de départ (le contexte dans lequel 
+s'affiche la boite). Par défaut, les liens présents dans cette boite sont 
+calculés en fonction des propriétés du schéma de l'entité visualisée, mais il
+est possible de les spécifier explicitement à l'aide des *rtags* suivants :
+
+* `link`, indique qu'une relation est généralement créée vers une entité
+  existante et qu'il ne faut donc pas faire apparaitre de lien pour cette 
+  relation
+
+* `create`, indique qu'une relation est généralement créée vers de nouvelles
+  entités et qu'il faut donc faire apparaitre un lien pour créer une nouvelle
+  entité et la lier automatiquement
+
+Au besoin il est possible de surcharger la méthode  
+`relation_mode(rtype, targettype, x='subject')` pour caculer dynamiquement la
+catégorie de création d'une relation.
+
+A noter également que si au moins une action dans la catégorie "addrelated" est
+trouvée pour le contexte courant, le fonctionnement automatique est désactivé
+en faveur du fonctionnement explicite (i.e. affichage des actions de la
+catégorie "addrelated" uniquement).
+
+Contrôle des formulaires de filtrage de table
+`````````````````````````````````````````````
+La vue "table" par défaut gère dynamiquement un formulaire de filtrage du
+contenu de celle-ci. L'algorithme est le suivant : 
+
+1. on considère que la première colonne contient les entités à restreindre
+2. on recupère la première entité de la table (ligne 0) pour "représenter"
+   toutes les autres
+3. pour toutes les autres variables définies dans la requête originale :
+
+   1. si la variable est liée à la variable principale par au moins une
+      n'importe quelle relation
+   2. on appelle la méthode `filterform_vocabulary(rtype, x)` sur l'entité
+      et si rien est retourné (ou plus exactement un tuple de valeur `None`,
+      voir ci-dessous) on passe à la variable suivante, sinon un élément de
+      formulaire de filtrage sera créé avec les valeurs de vocabulaire
+      retournées
+
+4. il n'y a pas d'autres limitations sur le rql, il peut comporter des clauses
+   de tris, de groupes... Des fonctions javascripts sont utilisées pour
+   regénérer une requête à partir de la requête de départ et des valeurs
+   séléctionnées dans les filtres de formulaire.
+
+   
+La méthode `filterform_vocabulary(rtype, x, var, rqlst, args, cachekey)` prend
+en argument le nom d'une relation et la "cible", qui indique si l'entité sur
+laquelle la méthode est appellée est sujet ou objet de la relation. Elle doit
+retourner :
+
+* un 2-uple de None si elle ne sait pas gérer cette relation
+
+* un type et une liste contenant le vocabulaire
+
+  * la liste doit contenir des couples (valeur, label)
+  * le type indique si la valeur désigne un nombre entier (`type == 'int'`), une
+    chaîne de  caractères (`type == 'string'`) ou une entité non finale (`type
+    == 'eid'`)
+
+Par exemple dans notre application de gestion de tickets, on veut pouvoir
+filtrés ceux-ci par : 
+
+* type
+* priorité
+* état (in_state)
+* étiquette (tags)
+* version (done_in)
+
+On définit donc la méthode suivante : ::
+
+
+    class Ticket(AnyEntity):
+
+	...
+
+	def filterform_vocabulary(self, rtype, x, var, rqlst, args, cachekey):
+	    _ = self.req._
+	    if rtype == 'type':
+		return 'string', [(x, _(x)) for x in ('bug', 'story')]
+	    if rtype == 'priority':
+		return 'string', [(x, _(x)) for x in ('minor', 'normal', 'important')]
+	    if rtype == 'done_in':
+		rql = insert_attr_select_relation(rqlst, var, rtype, 'num')
+		return 'eid', self.req.execute(rql, args, cachekey)
+	    return super(Ticket, self).filterform_vocabulary(rtype, x, var, rqlst,
+							     args, cachekey)
+
+							     
+NOTE: Le support du filtrage sur les étiquettes et l'état est installé
+automatiquement, pas besoin de le gérer ici.

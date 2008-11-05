@@ -1,0 +1,27 @@
+#!/bin/sh -e
+
+delete_pyo_pyc () {
+  find /usr/share/cubicweb/cubes/%(cubename)s -name "*.pyc" | xargs rm -f
+  find /usr/share/cubicweb/cubes/%(cubename)s -name "*.pyo" | xargs rm -f
+}
+
+
+case "$1" in
+    failed-upgrade|abort-install|abort-upgrade|disappear)
+    ;;
+    upgrade)
+    delete_pyo_pyc
+    ;;
+    remove)
+    delete_pyo_pyc
+    ;;
+    purge)
+    ;;
+
+    *)
+        echo "postrm called with unknown argument \`$1'" >&2
+        exit 1
+
+esac
+
+#DEBHELPER#

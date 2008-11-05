@@ -1,0 +1,114 @@
+/* styles for the timetable view
+ *
+ *  :organization: Logilab
+ *  :copyright: 2003-2008 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+ *  :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
+ */
+
+table.timetable { 
+  width: auto;
+  table-layout: fixed;
+}
+
+table.timetable th { 
+  padding:1pt;
+  align:center;
+}
+
+
+table.timetable td { 
+  width:10px; 
+}
+
+table.timetable td.ttlf { 
+  border-right:none;
+  border-left-width:2pt;
+  border-bottom:none;
+  border-top:none;
+}
+
+table.timetable td.ttrf { 
+  border-left: none;
+  border-right-width:2pt;
+  border-bottom:none;
+  border-top:none;
+}
+
+table.timetable td.ttmf { 
+  border: none;
+}
+
+table.timetable td.ttle { 
+  border-left-width:2pt;
+}
+
+table.timetable td.ttre { 
+  border-right-width:2pt;
+}
+
+table.timetable th.ttdate {
+  font-size :90%;
+  font-weight : normal;
+  font-family: Verdana, sans-serif;
+  padding-left: 4pt;
+  padding-right: 4pt;
+  align: left;
+  width: auto;
+}
+
+
+table.timetable td.ttempty { 
+  border:none;
+  border-top:1px solid #DFDFDF;
+  border-bottom:1px solid #DFDFDF;
+}
+
+/* div blocks in timetable are used as tooltips */
+table.timetable td.ttlf div,
+table.timetable td.ttmf div,
+table.timetable td.ttrf div,
+table.timetable td.ttle div,
+table.timetable td.ttme div,
+table.timetable td.ttre div { 
+  display: none; 
+}
+
+table.timetable td.ttlf:hover div,
+table.timetable td.ttmf:hover div,
+table.timetable td.ttrf:hover div
+{
+  font-style: normal;
+  display: block;
+  position: absolute;
+  padding: 5px;
+  color: #000;
+  border: 1px solid #bbb;
+  background: #ffc;
+  width:200px;
+}
+
+table.timetable td.col0 { background-color: #C33; }
+table.timetable td.col1 { background-color: #3C3; }
+table.timetable td.col2 { background-color: #33C; }
+table.timetable td.col3 { background-color: #CC3; }
+table.timetable td.col4 { background-color: #C3C; }
+table.timetable td.col5 { background-color: #3CC; }
+table.timetable td.colb { background-color: #2AA; }
+table.timetable td.col7 { background-color: #F2A; }
+table.timetable td.col8 { background-color: #AA2; }
+table.timetable td.col9 { background-color: #22A; }
+table.timetable td.cola { background-color: #2A2; }
+table.timetable td.col6 { background-color: #A22; }
+
+table.timetable td.col0:hover { background-color: #933; }
+table.timetable td.col1:hover { background-color: #393; }
+table.timetable td.col2:hover { background-color: #339; }
+table.timetable td.col3:hover { background-color: #993; }
+table.timetable td.col4:hover { background-color: #939; }
+table.timetable td.col5:hover { background-color: #399; }
+table.timetable td.colb:hover { background-color: #266; }
+table.timetable td.col7:hover { background-color: #626; }
+table.timetable td.col8:hover { background-color: #662; }
+table.timetable td.col9:hover { background-color: #226; }
+table.timetable td.cola:hover { background-color: #262; }
+table.timetable td.col6:hover { background-color: #622; }

@@ -1,0 +1,1 @@
+# cube's specific schema

@@ -1,0 +1,339 @@
+
+Définition d'un type d'entité
+-----------------------------
+
+Un type d'entité est définit par une classe python héritant de `EntityType`. Le
+nom de la classe correspond au nom du type. Ensuite le corps de la classe
+contient la description des attributs et des relations pour ce type d'entité,
+par exemple ::
+
+  class Personne(EntityType):
+    """une personne avec les propriétés et relations nécessaires à mon
+    application"""
+
+    nom = String(required=True, fulltextindexed=True)
+    prenom = String(required=True, fulltextindexed=True)
+    civilite = String(vocabulary=('M', 'Mme', 'Mlle'))
+    date_naiss = Date()
+    travaille_pour = SubjectRelation('Company', cardinality='?*')
+
+* le nom de l'attribut python correspond au nom de l'attribut ou de la relation
+  dans cubicweb.
+
+* tout les types de bases sont disponibles nativement : `String`, `Int`, `Float`,
+  `Boolean`, `Date`, `Datetime`, `Time`, `Byte`.
+
+* Chaque type d'entité a au moins les méta-relations suivantes :
+  - `eid` (`Int`)
+  - `creation_date` (`Datetime`)
+  - `modification_date` (`Datetime`)
+  - `owned_by` (`EUser`)
+  - `is` (`EEType`)
+
+* il est également possible de définir des relations dont le type d'entité est
+  l'objet en utilisant `ObjectRelation` plutôt que `SubjectRelation`
+
+* le premier argument de `SubjectRelation` et `ObjectRelation` donne
+  respectivement le type d'entité objet /sujet de la relation. Cela
+  peut être : 
+
+  * une chaine de caractères correspondant à un type d'entité
+
+  * un tuple de chaines de caractères correspondant à plusieurs types d'entité
+
+  * les chaînes de caractères spéciales suivantes :
+
+    - "**" : tout les types d'entité
+    - "*" : tout les types d'entité non méta
+    - "@" : tout les types d'entité méta mais non "système" (i.e. servant à la
+      description du schema en base)
+
+* il est possible d'utiliser l'attribut possible `meta` pour marquer un type
+  d'entité comme étant "méta" (i.e. servant à décrire / classifier d'autre
+  entités) 
+
+* propriétés optionnelles des attributs et relations : 
+
+  - `description` : chaine de caractères décrivant un attribut ou une
+    relation. Par défaut cette chaine sera utilisée dans le formulaire de saisie
+    de l'entité, elle est donc destinée à aider l'utilisateur final et doit être
+    marquée par la fonction `_` pour être correctement internationalisée.
+
+  - `constraints` : liste de contraintes devant être respecté par la relation
+    (c.f. `Contraintes`_)
+
+  - `cardinality` : chaine de 2 caractères spécifiant la cardinalité de la
+    relation. Le premier caractère donne la cardinalité de la relation sur le
+    sujet, le 2eme sur l'objet. Quand une relation possède plusieurs sujets ou
+    objets possibles, la cardinalité s'applique sur l'ensemble et non un à un (et
+    doit donc à priori être cohérente...). Les valeurs possibles sont inspirées
+    des expressions régulières :
+
+    * `1`: 1..1
+    * `?`: 0..1
+    * `+`: 1..n
+    * `*`: 0..n
+
+  - `meta` : booléen indiquant que la relation est une méta relation (faux par
+    défaut)
+
+* propriétés optionnelles des attributs : 
+
+  - `required` : booléen indiquant si l'attribut est obligatoire (faux par
+    défaut)
+
+  - `unique` : booléen indiquant si la valeur de l'attribut doit être unique
+    parmi toutes les entités de ce type (faux par défaut)
+
+  - `indexed` : booléen indiquant si un index doit être créé dans la base de
+    données sur cette attribut (faux par défaut). C'est utile uniquement si vous
+    savez que vous allez faire de nombreuses recherche sur la valeur de cet
+    attribut. 
+
+  - `default` : valeur par défaut de l'attribut. A noter que dans le cas des
+    types date, les chaines de caractères correspondant aux mots-clés RQL
+    `TODAY` et `NOW` sont utilisables.
+
+  - `vocabulary` : spécifie statiquement les valeurs possibles d'un attribut
+
+* propriétés optionnelles des attributs de type `String` : 
+
+  - `fulltextindexed` : booléen indiquant si l'attribut participe à l'index plein
+    texte (faux par défaut) (*valable également sur le type `Byte`*)
+
+  - `internationalizable` : booléen indiquant si la valeur de cet attribut est
+    internationalisable (faux par défaut) 
+
+  - `maxsize` : entier donnant la taille maximum de la chaine (pas de limite par
+    défaut)  
+
+* propriétés optionnelles des relations : 
+
+  - `composite` : chaîne indiquant que le sujet (composite == 'subject') est
+    composé de ou des objets de la relation. Pour le cas opposé (l'objet est
+    composé de ou des sujets de la relation, il suffit de mettre 'object' comme
+    valeur. La composition implique que quand la relation est supprimé (et donc
+    aussi quand le composite est supprimé), le ou les composés le sont
+    également. 
+
+
+Contraintes
+```````````
+Par défaut les types de contraintes suivant sont disponibles :
+
+* `SizeConstraint` : permet de spécifier une taille minimale et/ou maximale sur
+  les chaines de caractères (cas générique de `maxsize`)
+
+* `BoundConstraint` : permet de spécifier une valeur minimale et/ou maximale sur
+  les types numériques
+
+* `UniqueConstraint` : identique à "unique=True"
+
+* `StaticVocabularyConstraint` : identique à "vocabulary=(...)"
+
+* `RQLConstraint` : permet de spécifier une requête RQL devant être satisfaite
+  par le sujet et/ou l'objet de la relation. Dans cette requête les variables `S`
+  et `O` sont préféfinies respectivement comme l'entité sujet et objet de la
+  relation
+
+* `RQLVocabularyConstraint` : similaire à la précédente, mais exprimant une
+  contrainte "faible", i.e. servant uniquement à limiter les valeurs apparaissant
+  dans la liste déroulantes du formulaire d'édition, mais n'empêchant pas une
+  autre entité d'être séléctionnée
+
+
+Définition d'un type de relation
+--------------------------------
+
+Un type de relation est définit par une classe python héritant de `RelationType`. Le
+nom de la classe correspond au nom du type. Ensuite le corps de la classe
+contient la description des propriétés de ce type de relation, ainsi
+qu'éventuellement une chaine pour le sujet et une autre pour l'objet permettant
+de créer des définitions de relations associées (auquel cas il est possibles de
+donner sur la classe les propriétés de définition de relation explicitées
+ci-dessus), par exemple ::
+
+  class verrouille_par(RelationType):
+    """relation sur toutes les entités applicatives indiquant que celles-ci sont vérouillées
+    inlined = True
+    cardinality = '?*'
+    subject = '*'
+    object = 'EUser'
+
+En plus des permissions, les propriétés propres aux types de relation (et donc
+partagés par toutes les définitions de relation de ce type) sont :
+
+* `inlined` : booléen contrôlant l'optimisation physique consistant à stocker la
+  relation dans la table de l'entité sujet au lieu de créer une table spécifique
+  à la relation. Cela se limite donc aux relations dont la cardinalité
+  sujet->relation->objet vaut 0..1 ('?') ou 1..1 ('1')
+
+* `symetric` : booléen indiquant que la relation est symétrique, i.e. "X relation
+   Y" implique "Y relation X"
+
+Dans le cas de définitions de relations simultanée, `sujet` et `object` peuvent
+tout deux valoir la même chose que décrite pour le 1er argument de
+`SubjectRelation` et `ObjectRelation`.
+
+A partir du moment où une relation n'est ni mise en ligne, ni symétrique, et
+ne nécessite pas de permissions particulières, sa définition (en utilisant
+`SubjectRelation` ou `ObjectRelation`) est suffisante.
+
+
+Définition des permissions
+--------------------------
+
+La définition des permissions se fait à l'aide de l'attribut `permissions` des
+types d'entité ou de relation. Celui-ci est un dictionnaire dont les clés sont
+les types d'accès (action), et les valeurs les groupes ou expressions autorisées. 
+
+Pour un type d'entité, les actions possibles sont `read`, `add`, `update` et
+`delete`.
+
+Pour un type de relation, les actions possibles sont `read`, `add`, et `delete`.
+
+Pour chaque type d'accès, un tuple indique le nom des groupes autorisés et/ou
+une ou plusieurs expressions RQL devant être vérifiées pour obtenir
+l'accès. L'accès est donné à partir du moment où l'utilisateur fait parti d'un
+des groupes requis ou dès qu'une expression RQL est vérifiée.
+
+Les groupes standards sont :
+
+* `guests`
+
+* `users`
+
+* `managers`
+
+* `owners` : groupe virtuel correspondant au propriétaire d'une entité. Celui-ci
+  ne peut être utilisé que pour les actions `update` et `delete` d'un type
+  d'entité. 
+
+Il est également possible d'utiliser des groupes spécifiques devant être pour
+cela créés dans le precreate de l'application (`migration/precreate.py`).
+
+Utilisation d'expression RQL sur les droits en écriture
+```````````````````````````````````````````````````````
+Il est possible de définir des expressions RQL donnant des droits de
+modification (`add`, `delete`, `update`) sur les types d'entité et de relation.
+
+Expression RQL pour les permissions sur un type d'entité :
+
+* il faut utiliser la classe `ERQLExpression`
+
+* l'expression utilisée correspond à la clause WHERE d'une requête RQL
+
+* dans cette expression, les variables X et U sont des références prédéfinies
+  respectivement sur l'entité courante (sur laquelle l'action est vérifiée) et
+  sur l'utilisateur ayant effectué la requête
+
+* il est possible d'utiliser dans cette expression les relations spéciales
+  "has_<ACTION>_permission" dont le sujet est l'utilisateur et l'objet une
+  variable quelquonque, signifiant ainsi que l'utilisateur doit avoir la
+  permission d'effectuer l'action <ACTION> sur la ou les entités liées cette
+  variable
+
+Pour les expressions RQL sur un type de relation, les principes sont les mêmes
+avec les différences suivantes :
+
+* il faut utiliser la classe `RRQLExpression` dans le cas d'une relation non
+  finale
+
+* dans cette expression, les variables S, O et U sont des références
+  prédéfinies respectivement sur le sujet et l'objet de la relation
+  courante (sur laquelle l'action est vérifiée) et sur l'utilisateur
+  ayant effectué la requête
+
+* On peut aussi définir des droits sur les attributs d'une entité (relation non
+  finale), sachant les points suivants :
+
+  - pour définir des expressions rql, il faut utiliser la classe `ERQLExpression`
+    dans laquelle X représentera l'entité auquel appartient l'attribut
+
+  - les permissions 'add' et 'delete' sont équivalentes. En pratique seul
+    'add'/'read' son pris en considération
+
+
+En plus de cela, le type d'entité `EPermission` de la librairie standard permet
+de construire des modèles de sécurités très complexes et dynamiques. Le schéma
+de ce type d'entité est le suivant : ::
+
+
+    class EPermission(MetaEntityType):
+	"""entity type that may be used to construct some advanced security configuration
+	"""
+	name = String(required=True, indexed=True, internationalizable=True, maxsize=100)
+	require_group = SubjectRelation('EGroup', cardinality='+*',
+					description=_('groups to which the permission is granted'))
+	require_state = SubjectRelation('State',
+				    description=_("entity'state in which the permission is applyable"))
+	# can be used on any entity
+	require_permission = ObjectRelation('**', cardinality='*1', composite='subject',
+					    description=_("link a permission to the entity. This "
+							  "permission should be used in the security "
+							  "definition of the entity's type to be useful."))
+
+
+Exemple de configuration extrait de *jpl* ::
+
+    ...
+
+    class Version(EntityType):
+	"""a version is defining the content of a particular project's release"""
+
+	permissions = {'read':   ('managers', 'users', 'guests',),
+		       'update': ('managers', 'logilab', 'owners',),
+		       'delete': ('managers', ),
+		       'add':    ('managers', 'logilab',
+				  ERQLExpression('X version_of PROJ, U in_group G,'
+						 'PROJ require_permission P, P name "add_version",'
+						 'P require_group G'),)}
+
+    ...
+
+    class version_of(RelationType):
+	"""link a version to its project. A version is necessarily linked to one and only one project.
+	"""
+	permissions = {'read':   ('managers', 'users', 'guests',),
+		       'delete': ('managers', ),
+		       'add':    ('managers', 'logilab',
+				  RRQLExpression('O require_permission P, P name "add_version",'
+						 'U in_group G, P require_group G'),)
+		       }
+	inlined = True
+
+Cette configuration suppose indique qu'une entité `EPermission` de nom
+"add_version" peut-être associée à un projet et donner le droit de créer des
+versions sur ce projet à des groupes spécifiques. Il est important de noter les
+points suivants :
+
+* dans ce cas il faut protéger à la fois le type d'entité "Version" et la
+  relation liant une version à un projet ("version_of")
+
+* du fait de la généricité du type d'entité `EPermission`, il faut effectuer
+  l'unification avec les groupes et / ou les états le cas échéant dans
+  l'expression ("U in_group G, P require_group G" dans l'exemple ci-dessus)
+
+
+Utilisation d'expression RQL sur les droits en lecture
+``````````````````````````````````````````````````````
+Les principes sont les mêmes mais avec les restrictions suivantes :
+
+* on ne peut de `RRQLExpression` sur les types de relation en lecture
+
+* les relations spéciales "has_<ACTION>_permission" ne sont pas utilisables
+
+
+Note sur l'utilisation d'expression RQL sur la permission 'add'
+```````````````````````````````````````````````````````````````
+L'utilisation d'expression RQL sur l'ajout d'entité ou de relation pose
+potentiellement un problème pour l'interface utilisateur car si l'expression
+utilise l'entité ou la relation à créer, on est pas capable de vérifier les
+droits avant d'avoir effectué l'ajout (noter que cela n'est pas un problème coté
+serveur rql car la vérification des droits est effectuée après l'ajout
+effectif). Dans ce cas les méthodes de vérification des droits (check_perm,
+has_perm) peuvent inidquer qu'un utilisateur n'a pas le droit d'ajout alors
+qu'il pourrait effectivement l'obtenir. Pour palier à ce soucis il est en général
+nécessaire dans tel cas d'utiliser une action reflétant les droits du schéma
+mais permettant de faire la vérification correctement afin qu'elle apparaisse
+bien le cas échéant.

@@ -1,0 +1,146 @@
+Source: erudi
+Section: web
+Priority: optional
+Maintainer: Logilab Packaging Team <contact@logilab.fr>
+Uploaders: Sylvain Thenault <sylvain.thenault@logilab.fr> 
+Build-Depends: debhelper (>= 5.0.37.1), python (>=2.4), python-dev (>=2.4), python-central (>= 0.5)
+Standards-Version: 3.7.3
+XS-Python-Version: >= 2.4, << 2.6
+
+Package: erudi
+Architecture: all
+XB-Python-Version: ${python:Versions}
+Depends: ${python:Depends}, erudi-server (= ${source:Version}), erudi-twisted (= ${source:Version}), erudi-client (= ${source:Version}), postgresql-8.1, postgresql-plpython-8.1, postgresql-contrib-8.1
+Description: the full Erudi knowledge management system
+ Erudi is a entities / relations based knowledge management system
+ developed at Logilab.
+ .
+ This package will install all the components you need to run erudi on
+ a single machine. You can also deploy erudi by running the different
+ process on different computers, in which case you need to install the
+ corresponding packages on the different hosts.
+
+
+Package: erudi-server
+Architecture: all
+Conflicts: erudi-server-common, python2.3-erudi-server
+Replaces: erudi-server-common, python2.3-erudi-server
+XB-Python-Version: ${python:Versions}
+Depends: ${python:Depends}, erudi-common (= ${source:Version}), erudi-ctl (= ${source:Version}), python-indexer (>= 0.6.1), python-psycopg2
+Recommends: pyro, postgresql-8.1, postgresql-plpython-8.1, postgresql-contrib-8.1, erudi-documentation (= ${source:Version})
+Description: the Erudi repository server
+ Erudi is a entities / relations based knowledge management system
+ developed at Logilab.
+ .
+ This package provides the repository server part of the system.
+ .
+ This package provides the repository server part of the library and
+ necessary shared data files such as the schema library.
+
+
+Package: erudi-twisted
+Architecture: all
+XB-Python-Version: ${python:Versions}
+Provides: erudi-web-frontend
+Depends: ${python:Depends}, erudi-web (= ${source:Version}), erudi-ctl (= ${source:Version}), python-twisted-web2
+Recommends: pyro, erudi-documentation (= ${source:Version})
+Description: twisted interface for Erudi
+ Erudi is a entities / relations bases knowledge management system
+ developed at Logilab.
+ .
+ This package provides a twisted based HTTP server embedding the 
+ adaptative web interface to the Erudi repository server.
+ .
+ This package provides only the twisted server part of the library. 
+
+
+Package: erudi-web
+Architecture: all
+XB-Python-Version: ${python:Versions}
+Depends: ${python:Depends}, erudi-common (= ${source:Version}), python-simplejson (>= 1.3), python-docutils, python-vobject, python-elementtree
+Recommends: fckeditor
+Description: web interface library for Erudi
+ Erudi is a entities / relations bases knowledge management system
+ developed at Logilab.
+ .
+ This package provides an adaptative web interface to the Erudi server.
+ You'll have to install the erudi-twisted package to serve this interface.
+ .
+ This package provides the web interface part of the library and
+ necessary shared data files such as defaut views, images...
+
+
+Package: erudi-common
+Architecture: all
+XB-Python-Version: ${python:Versions}
+Conflicts: python2.3-erudi-common
+Replaces: python2.3-erudi-common
+Depends: ${python:Depends}, erudi-core (= ${source:Version}), python-logilab-mtconverter (>= 0.4.0), python-simpletal (>= 4.0), graphviz, gettext, python-lxml
+Recommends: python-psyco
+Description: common library for repository/web framework of the Erudi knowledge management 
+ Erudi is a entities / relations based knowledge management system
+ developed at Logilab.
+ .
+ This package provides common part of the library used by both repository
+ and web application code.
+
+
+Package: erudi-ctl
+Architecture: all
+XB-Python-Version: ${python:Versions}
+Depends: ${python:Depends}, erudi-core (= ${source:Version})
+Conflicts: erudi-dev (<< ${source:Version})
+Description: all in one control script for the Erudi system
+ Erudi is a entities / relations based knowledge management system
+ developed at Logilab.
+ .
+ This package provides a control script to create, upgrade, start,
+ stop, etc... Erudi application. It also include the init.d script
+ to automatically start and stop Erudi applications on boot or shutdown.
+
+
+Package: erudi-client
+Architecture: all
+XB-Python-Version: ${python:Versions}
+Depends: ${python:Depends}, erudi-ctl (= ${source:Version}), pyro
+Description: a RQL command line client
+ Erudi is a entities / relations based knowledge management system
+ developed at Logilab.
+ .
+ This package provides a RQL command line client using pyro to connect
+ to a repository server.
+
+
+Package: erudi-core
+Architecture: all
+XB-Python-Version: ${python:Versions}
+Depends: ${python:Depends}, python-logilab-common (>= 0.35.3), python-yams (>= 0.20.0), python-rql (>= 0.20.2)
+Description: core library for the Erudi knowledge management framework
+ Erudi is a entities / relations based knowledge management system
+ developed at Logilab.
+ .
+ This package provides core part of the library used by anyone having 
+ to do some erudi programming in Python
+
+
+Package: erudi-dev
+Architecture: all
+XB-Python-Version: ${python:Versions}
+Depends: ${python:Depends}, erudi-server (= ${source:Version}), erudi-web (= ${source:Version}), python-pysqlite2
+Suggests: w3c-dtd-xhtml
+Description: tests suite and development tools for Erudi
+ Erudi is a entities / relations bases knowledge management system
+ developed at Logilab.
+ .
+ This package provides the Erudi tests suite and some development tools
+ helping  in the creation of application.
+
+
+Package: erudi-documentation
+Architecture: all
+Recommends: doc-base
+Description: documentation for the Erudi knowledge management tool
+ Erudi is a entities / relations based knowledge management system
+ developed at Logilab.
+ .
+ This package provides the system's documentation.

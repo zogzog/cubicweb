@@ -1,0 +1,14 @@
+#! /bin/sh -e
+ 
+case "$1" in
+    purge)
+        rm -rf /etc/cubicweb.d/
+    	rm -rf /var/run/cubicweb/
+	rm -rf /var/log/cubicweb/
+	rm -rf /var/lib/cubicweb/
+    ;;
+esac
+ 
+#DEBHELPER#
+ 
+exit 0

@@ -1,0 +1,64 @@
+
+Vues prédéfinies dans la librairie
+----------------------------------
+Un certain nombre de vues sont utilisées pour construire l'interface web, qui
+s'appliquent à une ou plusieurs entités. On les distingue par leur identifiant,
+et les principales sont : 
+
+:primary:
+    vue principale pour une entité, elle est appelée par défaut lorsqu'il n'y a
+    qu'un seul élément correspondant à la recherche. Cette vue est censée
+    afficher le maximum d'informations à propos de l'objet.
+:secondary:
+    vue secondaire d'une entité. Par défaut, Elle affiche les deux premiers
+    attributs de l'entité sous la forme d'un lien cliquable amenant sur la vue
+    primaire.
+:oneline:
+    similaire à la vue `secondary`, mais appelée dans des cas où l'on désire que
+    la vue tient sur une ligne, ou de manière générale juste avoir une vue plus
+    abbrégée. Par défaut, cette vue utilise le paramètre de configuration
+    `MAX_LINE_CHAR` pour contrôler la taille du résultat.
+:text:
+    similaire à la vue `oneline`, mais ne devant pas contenir de html.
+:incontext, outofcontext:
+    similaire à la vue `secondary`, mais appelé si l'entité est considérée comme
+    en dehors ou dans son contexte. Par défault renvoie respectivement le
+    résultat de `textincontext` et `textoutofcontext` entouré par un lien
+    permettant d'accéder à la vue primaire de l'entité
+:textincontext, textoutofcontext:
+    similaire à la vue `text`, mais appelé si l'entité est considérée comme
+    en dehors ou dans son contexte. Par défault renvoie respectivement le
+    résultat des méthodes `.dc_title` et `.dc_long_title` de l'entité
+:list:
+    crée une liste html (<ul>) et appelle la vue `listitem` pour chaque entité
+:listitem:
+    redirige par défaut vers la vue `outofcontext`
+:rss:
+    crée unvue RSS/XML et appelle la vue `rssitem` pour chaque entité
+:rssitem:
+    crée unvue RSS/XML pour une entité à partir des résultats renvoyés par les
+    méthodes dublin core de l'objet (`dc_*`)
+
+Vues de départ :
+
+:index:
+    page d'acceuil
+:schema:
+    affiche le schéma de l'application
+
+Vues particulières :
+
+:noresult:
+    appelé si le result set est vide
+:finall:
+    affiche la valeur de la cellule sans transformation (dans le cas d'une
+    entité non finale, on voit son eid). Appelable sur n'importe quel result
+    set.
+:table:
+    crée une table html (<table>) et appelle la vue `cell` pour chaque cellule
+    du résultat. Appelable sur n'importe quel result set.
+:cell:
+    par défaut redirige sur la vue `final` si c'est une entité finale
+    ou sur la vue `outofcontext` sinon
+:null:
+    vue toujours appelable et ne retournant rien

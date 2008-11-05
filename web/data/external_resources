@@ -1,0 +1,53 @@
+# -*- shell-script -*-
+###############################################################################
+#
+# external resources file for core library resources
+#
+# Commented values are default values used by the application.
+#
+###############################################################################
+
+
+# CSS stylesheets to include in HTML headers
+#STYLESHEETS = DATADIR/cubicweb.css
+
+# CSS stylesheets for print
+#STYLESHEETS_PRINT = DATADIR/cubicweb.print.css
+
+#CSS stylesheets for IE
+#IE_STYLESHEETS = DATADIR/cubicweb.ie.css
+
+# Javascripts files to include in HTML headers
+#JAVASCRIPTS = DATADIR/jqyery.js, DATADIR/cubicweb.python.js, DATADIR/jquery.json.js, DATADIR/cubicweb.compat.js, DATADIR/cubicweb.htmlhelpers.js
+
+# path to favicon (relative to the application main script, seen as a
+# directory, hence .. when you are not using an absolute path)
+#FAVICON = DATADIR/favicon.ico
+
+# path to the logo (relative to the application main script, seen as a
+# directory, hence .. when you are not using an absolute path)
+LOGO = DATADIR/logo.png
+
+# rss logo (link to get the rss view of a selection)
+RSS_LOGO = DATADIR/rss.png
+RSS_LOGO_16 = DATADIR/feed-icon16x16.png
+RSS_LOGO_32 = DATADIR/feed-icon32x32.png
+
+# path to search image
+SEARCH_GO =  DATADIR/go.png
+
+#FCKEDITOR_PATH = /usr/share/fckeditor/
+
+
+# icons for entity types
+BOOKMARK_ICON = DATADIR/icon_bookmark.gif
+EMAILADDRESS_ICON = DATADIR/icon_emailaddress.gif
+EUSER_ICON = DATADIR/icon_euser.gif
+STATE_ICON = DATADIR/icon_state.gif
+
+# other icons
+CALENDAR_ICON = DATADIR/calendar.gif
+CANCEL_EMAIL_ICON = DATADIR/sendcancel.png
+SEND_EMAIL_ICON = DATADIR/sendok.png
+DOWNLOAD_ICON = DATADIR/download.gif
+GMARKER_ICON = DATADIR/gmap_blue_marker.png

@@ -1,0 +1,43 @@
+/* styles for input with suggestions (as for tags and keywords)
+ *
+ *  :organization: Logilab
+ *  :copyright: 2003-2008 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+ *  :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
+ */
+
+div.sgform div.combobox {
+  z-index: 300;
+  margin-left: 3px;
+  width: 150px;
+}
+
+div.sgform div.combobox input.suggestions {
+  width: 100%;
+}
+
+div.sgform  select{
+  width: 155px;
+}
+
+div.sgformbuttons {
+  margin-left: 3px;
+}
+
+div.sgformbuttons a {
+  font-weight: bold;
+  padding:2px 0px;
+}
+
+a.sglink {
+  color: #000;
+  font-weight: bold;
+  display: block;
+  background: url("puce.png") 98% 5px no-repeat;
+  margin-left: 3px;
+  padding: 2px 16px 2px 0px;
+}
+
+div.suggholder {
+  z-index: 300;
+  position: absolute;
+}

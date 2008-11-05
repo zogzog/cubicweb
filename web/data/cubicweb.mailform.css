@@ -1,0 +1,66 @@
+/* styles for the email form (views/massmailing.py)
+ *
+ *  :organization: Logilab
+ *  :copyright: 2003-2008 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+ *  :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
+ */
+
+div#compose {
+  border: 1px solid #DBDCE3;
+  background-color: #E9F5F7;
+  font-family:Verdana,Tahoma,Arial,sans-serif;
+  padding: 1em 1ex;
+}
+
+table.headersform {
+  width: 100%;
+}
+
+div#compose td#buttonbar {
+  padding: 0.5ex 0ex;
+}
+
+table.headersform td.hlabel {
+  padding-top: 0.5ex;
+  color: #444444;
+  text-align: right;
+}
+
+table.headersform td.hvalue {
+  padding-top: 0.5ex;
+  padding-left: 0.5em;
+  width: 100%;
+}
+
+table.headersform td.hvalue input#mailsubj {
+  width: 47em; 
+}
+
+div#compose div#toolbar {
+  margin: 0.5em 0em;
+  height: 29px;
+}
+
+div#compose div#toolbar ul {
+  list-style-image: none;
+  list-style-position: outside;
+  list-style-type:none;
+  margin:0px;
+  padding:0px;
+  /* border: 1px solid #DBDCE3; */
+}
+
+div#compose div#toolbar li {
+  background: none;
+  padding-left: 1em;
+  float: left;
+}
+
+div#compose div#toolbar li a {
+  font-family: Verdana,Tahoma,Arial,sans-serif;
+  color: #444444;
+}
+
+div#substitutions {
+  padding-left: 1em;
+}

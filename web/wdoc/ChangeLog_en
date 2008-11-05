@@ -1,0 +1,27 @@
+.. -*- coding: utf-8 -*-
+.. _`user preferences`: myprefs#fieldset_ui
+
+2008-09-25  --  2.50.0
+    * jQuery replaces MochiKit
+    * schema inheritance support
+
+2008-05-13  --  2.48.0
+    * web pages are now served with the ``xhtml+xml`` content type
+
+2008-03-27  --  2.47.0
+    * fckeditor is now integrated to edit rich text fields. If you don't see it,
+      check your `user preferences`_.
+
+2008-03-13  --  2.46.0
+    * new calendar and timetable views.
+    
+    * click-and-edit functionalities : if you see the text edit cursor when
+      you're over a fied, try to double-click!
+      
+    * automatic facets oriented search : a filter box should appear when you're
+      looking for something and more than one entity are displayed.
+
+2008-02-15  --  2.44.0
+    * new internationalized online help system. Click the question mark on the
+      right top corner! Hopefuly some new documentation will appear as time is
+      going. 

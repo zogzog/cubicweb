@@ -1,0 +1,11 @@
+Personne travaille Societe
+Personne evaluee Note
+EUser evaluee Note
+Societe evaluee Note
+Personne concerne Affaire
+Affaire concerne Societe
+Personne concerne2 Affaire
+
+Personne connait Personne symetric
+
+Societe in_state State inline

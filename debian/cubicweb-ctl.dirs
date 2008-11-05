@@ -1,0 +1,10 @@
+usr/lib/python2.4/site-packages/cubicweb/
+etc/init.d
+etc/cubicweb.d
+etc/bash_completion.d
+usr/bin
+usr/share/doc/cubicweb-ctl
+var/run/cubicweb
+var/log/cubicweb
+var/lib/cubicweb/backup
+var/lib/cubicweb/instances

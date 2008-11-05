@@ -1,0 +1,26 @@
+msgid "__msg state changed"
+msgstr ""
+
+msgid "managers"
+msgstr ""
+
+msgid "users"
+msgstr ""
+
+msgid "guests"
+msgstr ""
+
+msgid "owners"
+msgstr ""
+
+msgid "read_perm"
+msgstr ""
+
+msgid "add_perm"
+msgstr ""
+
+msgid "update_perm"
+msgstr ""
+
+msgid "delete_perm"
+msgstr ""

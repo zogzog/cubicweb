@@ -1,0 +1,11 @@
+/* specific workarounds for Internet Explorer */
+div.calpopup {
+  margin-left: 0px;
+  margin-top: 0px;
+}
+
+/* quick and dirty solution for pop to be 
+   correctly displayed on right edge of window */
+div.popupWrapper{ 
+  direction:rtl;
+}

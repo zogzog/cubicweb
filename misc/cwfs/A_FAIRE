@@ -1,0 +1,14 @@
+TACHES
+======
+
+-- écrire objet stocke/manipule les données
+
+-- extraire tests de chaîne de caractère
+
+* utiliser sqlite 
+
+* écrire fonction prend chemin en argument et renvoie contenu
+
+* extraire tests (chaîne de caractère) de spec 
+
+* utiliser yams pour schéma

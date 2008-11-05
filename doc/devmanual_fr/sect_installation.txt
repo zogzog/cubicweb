@@ -1,0 +1,82 @@
+.. -*- coding: utf-8 -*-
+
+============
+Installation
+============
+
+Installation de Cubicweb et de ses dépendances
+----------------------------------------------
+Tout le système Cubicweb est préparé pour l'installation sur une machine
+debian. L'installation manuelle est un peu pénible du fait des nombreuses
+dépendances à installer (twisted, postgres, autres paquets python...). Nous
+supposerons donc ici que l'installation se fait sur une machine debian ayant
+dans ses sources apt un entrepôt contenant les paquets pour Erudi.
+
+Pour tout installer sur le système ::
+
+  apt-get install cubicweb
+
+On peut également n'installer que les paquets erudi-server ou erudi-twisted pour
+n'avoir que la partie serveur ou client web sur une machine.
+
+Pour tout installer la documentation et les librairies/outils de développement ::
+
+  apt-get install cubicweb-documentation cubicweb-dev
+
+On pourra ensuite installer les paquets suivants :
+
+* `pyro` si vous voulez que l'entrepôt soit accessible via Pyro ou si le client
+  et le serveur ne sont pas sur la même machine (auquel cas il faut installer ce
+  paquet sur les machines clientes et serveur)
+
+* `python-ldap` si vous voulez utiliser une source ldap sur le serveur
+
+* `postgresql-8.1`, `postgresql-contrib-8.1` et `postgresql-plpython-8.1` la
+  machine devant héberger la base de données système
+
+Configuration de l'environnement
+--------------------------------
+Ajouter les lignes suivantes à son `.bashrc` ou `.bash_profile` pour configurer
+votre environnement de développement ::
+
+  export ERUDI_REGISTRY=~/etc/erudi.d/
+  export ERUDI_TEMPLATES=~/hg/
+  export ERUDI_RUNTIME=/tmp/
+
+Cela suppose que le composant erudi que vous développez est dans un
+sous-répertoire de *~/hg/* et que vous avez créé le répertoire *~/etc/erudi.d/*
+pour que `cubicweb-ctl` y place vos instances de test.
+
+
+Configuration Postgres
+----------------------
+* création d'un super utilisateur pour la création d'instance (**root**) ::
+
+    createuser --superuser --createdb -P pgadmin
+
+  Un mot de passe de connection pour cet utilisateur vous sera demandé. Il
+  faudra utiliser ce login / mot de passe à la création d'instance via
+  `cubicweb-ctl`
+
+* installation des extensions pour l'index plein texte ::
+
+    cat /usr/share/postgresql/8.1/contrib/tsearch2.sql | psql -U pgadmin template1
+
+* installation du langage plpythonu par défaut ::
+
+    createlang -U pgadmin plpythonu template1
+
+
+Configuration Pyro
+------------------
+Si vous utilisez Pyro, il est nécessaire d'avoir un serveur de noms Pyro
+tournant sur votre réseau (par défaut celui-ci est repéré par une requête
+broadcast). Pour cela il faut soit :
+
+* le lancer à la main avant le démarrage de erudi avec la commande `pyro-ns`
+
+* le lancer à la main avant le démarrage de erudi sous forme d'un serveur avec
+  la commande `pyro-nsd start`
+
+* éditer le fichier */etc/default/pyro-nsd* pour que le serveur de nom pyro soit
+  lancé automatiquement au démarrage de la machine

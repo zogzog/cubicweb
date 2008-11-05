@@ -1,0 +1,120 @@
+.. -*- coding: utf-8 -*-
+
+
+Définition de vues
+==================
+
+Les classes de base des vues
+----------------------------
+
+La class `View` (`ginco.common.view`)
+`````````````````````````````````````
+Un vue écrit dans son flux de sortie via son attribut `w` (`UStreamIO`).
+
+L'interface de base des vues est la suivante :
+
+* `dispatch(**context)`, appelle ("rend") la vue en appellent `call` ou
+  `cell_call` en fonction des arguments passé
+* `call(**kwargs)`, appelle la vue pour un result set complet ou nul
+* `cell_call(row, col, **kwargs)`, appelle la vue pour une cellule donnée d'un
+  result set
+* `url()`, retourne l'url permettant d'obtenir cette vue avec le result set en
+  cours 
+* `view(__vid, rset, __fallback_vid=None, **kwargs)`, appelle la vue
+  d'identificant `__vid` sur le result set donné. Il est possible de données un
+  identificant de vue de "fallback" qui sera utilisé si la vue demandée n'est
+  pas applicable au result set
+  
+* `wview(__vid, rset, __fallback_vid=None, **kwargs)`, pareil que `view` mais
+  passe automatiquement le flux en argument
+  
+* `html_headers()`, retourne une liste d'en-tête HTML à placer par le template
+  principal 
+
+* `page_title()`, retourne le titre à utiliser dans l'en tête HTML `title`
+
+* `creator(eid)`, retourne l'eid et le login du créateur de l'entité ayant
+  l'eid passé en argument
+
+Autres classes de base :
+
+* `EntityView`, vue s'appliquant à aux lignes ou cellule contenant une entité
+  (eg un eid)
+* `StartupView`, vue de départ n'ayant pas besoin de result set
+* `AnyRsetView`, vue s'appliquant à n'importe quelle result set
+
+
+Les templates ou patron
+-----------------------
+
+Les patrons (ou *template*) sont des cas particulier de vue ne dépendant a
+priori pas d'un result set. La classe de base `Template` (`ginco.common.view`)
+est une classe dérivée de la classe `View`.
+
+Pour construire une page HTML, un *template principal* est utilisé. Généralement
+celui possédant l'identifiant 'main' est utilisé (ce n'est pas le cas lors
+d'erreur dans celui-ci ou pour le formulaire de login par exemple). Ce patron
+utilise d'autres patrons en plus des vues dépendants du contenu pour générer la
+page à renvoyer.
+
+C'est ce template qui est chargé :
+
+1. d'éxécuter la requête RQL des données à afficher le cas échéant
+2. éventuellement de déterminer la vue à utiliser pour l'afficher si non
+   spécifiée
+3. de composer la page à retourner
+
+
+Le patron principal par défaut (`ginco.web.views.basetemplates.TheMainTemplate`)
+--------------------------------------------------------------------------------
+
+Le template principal par défaut construit la page selon la décomposition
+suivante :
+
+.. image:: main_template_layout.png
+
+Le rectancle contenant le `view.dispatch()` représente l'emplacement où est
+inséré la vue de contenu à afficher. Les autres représentent des sous-templates
+appelé pour construire la page. Les implémentations par défaut de tout ces
+templates sont dans le module `ginco.web.views.basetemplates`. Vous pouvez
+évidemment surcharger l'un des sous-templates pour modifier l'aspect visuel
+d'une partie désirée de la page.
+
+On peut également contrôler certains comportements du template principal à
+l'aide des paramètres de formulaire suivante :
+
+* `__notemplate`, si présente (quelque soit la valeur associée), seule la vue de
+  contenu est renvoyée
+* `__force_display`, si présente et contient une valeur non nulle, pas de
+  navigation quelque soit le nombre d'entités à afficher
+* `__method`, si le result set à afficher ne contient qu'une entité et que ce
+  paramètre est spécifié, celui-ci désigne une méthode à appeler sur l'entité
+  en lui donnant en argument le dictionnaire des paramètres de formulaire, avant
+  de reprendre le comportement classique (s'insère entre les étapes 1. et
+  2. décrites ci-dessus)
+
+
+.. include:: sect_stdlib_vues.txt
+
+
+Vues xml, binaires...
+---------------------
+Pour les vues générants autre que du html  (une image générée dynamiquement par
+exemple), et qui ne peuvent donc généralement pas être incluse dans la page
+HTML générée par le template principal (voir ci-dessus), il faut :
+
+* placer l'attribut `templatable` de la classe à `False`
+* indiquer via l'attribut `content_type` de la classe le type MIME généré par la
+  vue 'application/octet-stream'
+
+Pour les vues générants un contenu binaire (une image générée dynamiquement par
+exemple), il faut également placer l'attribut `binary` de la classe à `True` (ce
+qui implique `templatable == False` afin que l'attribut `w` de la vue soit
+remplacé par un flux binaire plutôt que unicode.
+
+
+Quelques trucs (X)HTML à respecter
+----------------------------------
+Certains navigateurs (dont firefox) n'aime pas les `<div>` vides (par vide
+j'entend sans contenu dans la balise, il peut y avoir des attributs), faut
+toujours mettre `<div></div>` même s'il n'y a rien dedans, et non `<div/>`. 

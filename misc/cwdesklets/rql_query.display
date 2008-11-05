@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<display window-flags="sticky, below" width="185" height="200">
+
+	<sensor id="r" module="rqlsensor"/>
+        <sensor id="FS" module="FontSelector,1,Sans 10  black"/>
+	
+	<!-- left border -->
+	<group x="0" width="5" height="200" bg-uri="gfx/border-left.png"/>
+	
+	<image x="10" y="0" uri="gfx/logo_erudi.png"/>
+
+        <array id="results" x="10" y="30"
+               watch="layout=r:layout, length=r:length">
+	  <label id="lbls1" color="black"
+		 on-enter="r:enter-line"
+		 on-leave="r:leave-line"  
+		 on-click="r:click-line"
+  		 watch="value=r:result, font=FS:font0, color=r:resultbg"/>
+        </array>
+
+</display>

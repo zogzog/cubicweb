@@ -1,0 +1,19 @@
+Source: %(distname)s
+Section: web
+Priority: optional
+Maintainer: Logilab Packaging Team <contact@logilab.fr>
+Uploaders: Sylvain Thenault <sylvain.thenault@logilab.fr> 
+Build-Depends: debhelper (>= 5.0.37.1), python (>=2.4), python-dev (>=2.4)
+Standards-Version: 3.8.0
+
+
+Package: %(distname)s
+Architecture: all
+Depends: cubicweb-common (>= %(version)s)
+Description: %(shortdesc)s
+ CubicWeb is a semantic web application framework.
+ .
+ %(longdesc)s
+ .
+ This package will install all the components you need to run the
+ %(distname)s application (cube :)..

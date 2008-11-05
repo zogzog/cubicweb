@@ -1,0 +1,1 @@
+"""common to all configuration"""

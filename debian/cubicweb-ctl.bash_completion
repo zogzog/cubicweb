@@ -1,0 +1,116 @@
+# -*- shell-script -*-
+
+_ec_commands()
+{
+    local commands
+    commands="$("$ec" listcommands 2>/dev/null)" || commands=""
+    COMPREPLY=(${COMPREPLY[@]:-} $(compgen -W '$commands' -- "$cur"))
+}
+
+_ec()
+{
+    local cur prev cmd cmd_index opts i
+    local ec="$1"
+
+    COMPREPLY=()
+    cur="$2"
+    prev="$3"
+
+    # searching for the command
+    # (first non-option argument that doesn't follow a global option that
+    #  receives an argument)
+    for ((i=1; $i<=$COMP_CWORD; i++)); do
+	if [[ ${COMP_WORDS[i]} != -* ]]; then
+	    cmd="${COMP_WORDS[i]}"
+	    cmd_index=$i
+	    break
+	fi
+    done
+
+    if [[ "$cur" == -* ]]; then
+        if [ -z "$cmd" ]; then
+	    COMPREPLY=(${COMPREPLY[@]:-} $(compgen -W '--help' -- "$cur"))
+	else
+	    options="$("$ec" listcommands "$cmd" 2>/dev/null)" || commands=""
+	    COMPREPLY=(${COMPREPLY[@]:-} $(compgen -W '$options' -- "$cur"))
+	fi
+	return
+    fi
+
+    if [ -z "$cmd" ] || [ $COMP_CWORD -eq $i ]; then
+	_ec_commands
+	return
+    fi
+
+    # try to generate completion candidates for whatever command the user typed
+    if _ec_command_specific; then
+	return
+    fi
+}
+
+_ec_command_specific()
+{
+    if [ "$(type -t "_ec_cmd_$cmd")" = function ]; then
+	"_ec_cmd_$cmd"
+	return 0
+    fi
+
+    case "$cmd" in
+	client)
+	    if [ "$prev" == "-b" ] || [ "$prev" == "--batch" ]; then
+		COMPREPLY=( $( compgen -o filenames -G "$cur*" ) )
+		return
+	    fi
+	    options="$("$ec" listcommands "$cmd" 2>/dev/null)" || options=""
+	    instances="$("$ec" listinstances 2>/dev/null)" || instances=""
+	    COMPREPLY=(${COMPREPLY[@]:-} $(compgen -W '$options $instances' -- "$cur"))
+	;;
+	db-dump)
+	    if [ "$prev" == "-o" ] || [ "$prev" == "--output" ]; then
+		COMPREPLY=( $( compgen -o filenames -G "$cur*" ) )
+		return
+	    fi
+	    options="$("$ec" listcommands "$cmd" 2>/dev/null)" || options=""
+	    instances="$("$ec" listinstances 2>/dev/null)" || instances=""
+	    COMPREPLY=(${COMPREPLY[@]:-} $(compgen -W '$options $instances' -- "$cur"))
+	;;
+	# commands with template as argument
+ 	i18nupdate)
+	    cubes="$("$ec" listcubes 2>/dev/null)" || cubes=""
+	    COMPREPLY=(${COMPREPLY[@]:-} $(compgen -W '$options $cubes' -- "$cur"))
+ 	;;
+	# generic commands with instance as argument
+ 	start|stop|reload|restart|upgrade|start-repository|db-create|db-init|db-check|db-grant-user)
+	    options="$("$ec" listcommands "$cmd" 2>/dev/null)" || options=""
+	    instances="$("$ec" listinstances 2>/dev/null)" || instances=""
+	    COMPREPLY=(${COMPREPLY[@]:-} $(compgen -W '$options $instances' -- "$cur"))
+ 	;;
+	# generic commands without argument
+ 	list|newtemplate|i18nlibupdate|live-server)
+	    options="$("$ec" listcommands "$cmd" 2>/dev/null)" || options=""
+	    COMPREPLY=(${COMPREPLY[@]:-} $(compgen -W '$options $instances' -- "$cur"))
+ 	;;
+	# generic commands without option
+ 	shell|i18ncompile|delete|status|schema-sync)
+	    instances="$("$ec" listinstances 2>/dev/null)" || instances=""
+	    COMPREPLY=(${COMPREPLY[@]:-} $(compgen -W '$options $instances' -- "$cur"))
+ 	;;
+	# XXX should do better
+ 	create)
+	    options="$("$ec" listcommands "$cmd" 2>/dev/null)" || options=""
+	    COMPREPLY=(${COMPREPLY[@]:-} $(compgen -W '$options $instances' -- "$cur"))
+ 	;;
+ 	db-copy,db-restore,mboximport)
+	    instances="$("$ec" listinstances 2>/dev/null)" || instances=""
+	    COMPREPLY=(${COMPREPLY[@]:-} $(compgen -W '$options $instances' -- "$cur"))
+ 	;;
+ 	*)
+ 	    return 1
+ 	;;
+    esac
+
+    return 0
+}
+
+complete -o bashdefault -o default -F _ec cubicweb-ctl 2>/dev/null \
+    || complete -o default -F _ec cubicweb-ctl

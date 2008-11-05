@@ -1,0 +1,51 @@
+#!/usr/bin/make -f
+# Sample debian/rules that uses debhelper.
+# GNU copyright 1997 to 1999 by Joey Hess.
+
+# Uncomment this to turn on verbose mode.
+#export DH_VERBOSE=1
+build: build-stamp
+build-stamp: 
+	dh_testdir
+	python setup.py -q build
+	touch build-stamp
+
+clean: 
+	dh_testdir
+	dh_testroot
+	rm -f build-stamp configure-stamp
+	rm -rf build
+	find . -name "*.pyc" | xargs rm -f
+	dh_clean
+
+install: build
+	dh_testdir
+	dh_testroot
+	dh_clean -k
+	dh_installdirs -i
+	python setup.py -q install --no-compile --prefix=debian/%(distname)s/usr/
+
+
+# Build architecture-independent files here.
+binary-indep: build install
+	dh_testdir
+	dh_testroot
+	dh_install -i
+	dh_installchangelogs -i
+	dh_installexamples -i
+	dh_installdocs -i
+	dh_installman -i
+	dh_link -i
+	dh_compress -i -X.py -X.ini -X.xml -Xtest
+	dh_fixperms -i
+	dh_installdeb -i
+	dh_gencontrol -i 
+	dh_md5sums -i
+	dh_builddeb -i
+
+
+# Build architecture-dependent files here.
+binary-arch: 
+
+binary: binary-indep 
+.PHONY: build clean binary-arch binary-indep binary

@@ -1,0 +1,8 @@
+#!/bin/sh -e
+if [ "$1" = "purge" ] ; then
+        update-rc.d cubicweb remove >/dev/null
+fi
+ 
+#DEBHELPER#
+ 
+exit 0

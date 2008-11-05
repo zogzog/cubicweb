@@ -1,0 +1,131 @@
+Gestion de formulaires
+======================
+
+Contrôle de la génération automatique de formulaire pour les entités manipulée
+------------------------------------------------------------------------------
+XXX FILLME
+
+* les formulaires 'edition' et 'creation'
+
+Le formulaire généré par défaut ne vous convient pas ? Vous êtes peut-être pas
+obligé de le refaire à la main ! :)
+
+* rtags primary, secondary, generated, generic,
+  `Entity.relation_category(rtype, x='subject')`
+* inline_view (now a rtag?)
+* spécification widget
+
+
+Fonctionnement du contrôleur d'édition par défaut (id: 'edit')
+--------------------------------------------------------------
+
+Contrôle de l'édition
+`````````````````````
+Prérequis: les paramètres liés aux entités à éditer sont spécifiés de la forme ::
+
+  <nom de champ>:<eid de l'entité>
+
+où l'eid de l'entité pourra être une lettre dans le cas d'une entité à créer. On
+dénommera ces paramètres comme *qualifié*.
+
+1. récupération des entités à éditer en cherchant les paramètres de formulaire
+   commençant par 'eid:' ayant également un paramètre '__type' associé
+   (également *qualifié* par l'eid évidemment)
+
+2. pour tous les attributs et relations de chaque entité à éditer
+
+   1. recherche d'un paramètre 'edits-<nom relation>' ou 'edito-<nom relation>'
+      qualifié dans le cas d'une relation dont l'entité est objet
+   2. si trouvé, la valeur récupérée est considérée comme la valeur originale
+      pour cette relation, et on cherche la (ou les) nouvelle(s) valeur(s) dans
+      le paramètre <nom relation> (qualifié)
+   3. si la valeur est différente de l'originale, une requête de modification en
+      base est effectuée
+
+3. pour chaque entité à éditer
+
+   1. si un paramètre `__linkto` qualifié est spécifié, sa valeur doit être une
+      chaine (ou une liste de chaine) de la forme : ::
+
+        <relation type>:<eids>:<target>
+
+      où <target> vaut 'subject' ou 'object' et chaque eid peut-être séparé d'un
+      autre par un '_'. Target spécifie *l'entité éditée* est sujet ou objet de la
+      relation et chaque relation ainsi spécifiée sera insérée.
+
+   2. si un paramètre `__cloned_eid` qualifié est spécifié pour une entité, les
+      relations de l'entité spécifiée en valeur de cette argument sont copiées sur
+      l'entité éditée
+
+
+   3. si un paramètre `__delete` qualifié est spécifié, sa valeur doit être une
+      chaine (ou une liste de chaine) de la forme : ::
+
+	<subject eids>:<relation type>:<object eids>
+
+      où chaque eid sujet ou objet peut-être séparé d'un autre par un '_'. Chaque
+      relation ainsi spécifiée sera supprimée.
+
+   4. si un paramètre `__insert` qualifié est spécifié, sa valeur doit être de
+      même format que pour `__delete`, mais chaque relation ainsi spécifiée sera 
+      insérée.
+
+4. si les paramètres `__insert` et/ou  `__delete` sont trouvés non qualifiés,
+   ils sont interprétés comme décrit ci-dessus (quelque soit le nombre d'entité
+   édité)
+
+5. si aucune entité n'est éditée mais que le formulaire contient les paramètres
+   `__linkto` et `eid`, celui-ci est interprété en prenant la valeur spécifié
+   par le paramètre `eid` pour désigner l'entité sur laquelle ajouter les
+   relations
+
+
+A noter que :
+
+* si le paramètre `__action_delete` est trouvé, toutes les entités comme
+  spécifiées à éditer seront supprimées
+
+* si le paramètre `__action_cancel` est trouvé, aucune action n'est effectuée
+
+* si le paramètre `__action_apply` est trouvé, l'édition est effectuée
+  normalement mais la redirection sera effectuée sur le formulaire (cf `Contrôle
+  de la redirection`_)
+
+* le paramètre `__method` est également supporté comme sur le template principal
+  (XXX not very consistent, maybe __method should be dealed in the view controller) 
+
+* si aucune entité à éditer n'est trouvée et qu'il n'y a pas de paramètre
+  `__action_delete`, `__action_cancel`, `__linkto`, `__delete` ou `__insert`,
+  une erreur est levée
+
+* placer dans le formulaire le paramètre `__message` permettra d'utiliser la
+  valeur de ce paramètre comme message d'information à l'utilisateur une fois
+  l'édition effectuée.
+
+
+Contrôle de la redirection
+``````````````````````````
+Une fois que l'édition s'est bien passé, reste un problème : c'est bien beau
+tout ça, mais où qu'on va maintenant ?? Si rien n'est spécifié, le controlleur
+se débrouille, mais comme il fait pas toujours ce qu'on voudrait, on peut
+controller ça en utilisant les paramètres suivant :
+
+* `__redirectpath`: chemin de l'url (relatif à la racine du site, sans paramètre
+  de formulaire
+  
+* `__redirectparams`: paramètres de formulaires à ajouter au chemin
+  
+* `__redirectrql`: requête RQL de redirection
+
+* `__redirectvid`: identifiant de vue de redirection
+
+* `__errorurl`: url du formulaire original, utilisé pour la redirection en cas
+  d'erreur de validation pendant l'édition. Si celui-ci n'est pas spécifié, une
+  page d'erreur sera présentée plutot qu'un retour sur le formulaire (qui est le
+  cas échéant responsable d'afficher les erreurs)
+
+* `__form_id`: identifiant de vue du formulaire original, utilisée si
+  `__action_apply` est trouvé
+
+En général on utilise soit `__redirectpath et `__redirectparams` soit
+`__redirectrql` et `__redirectvid`.

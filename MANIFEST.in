@@ -1,0 +1,28 @@
+include README
+include pylintrc
+include bin/cubicweb-*
+include man/cubicweb-ctl.1
+
+recursive-include doc *.txt *.zargo *.png *.html makefile
+
+recursive-include misc *
+
+recursive-include web/data *
+recursive-include web/wdoc *.rst *.png *.xml ChangeLog*
+
+include web/views/*.pt
+
+recursive-include etwist *.xml *.html
+
+recursive-include i18n *.pot *.po
+recursive-include schemas *.py *.rel *.sql.*
+
+recursive-include common/test/data *
+recursive-include entities/test/data *
+recursive-include sobjects/test/data *
+recursive-include server/test/data *
+recursive-include server/test sources*
+recursive-include web/test/data *.js *.css *.png *.gif *.jpg *.ico external_resources
+recursive-include devtools/test/data *
+
+prune misc/cwfs

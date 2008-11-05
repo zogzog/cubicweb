@@ -1,0 +1,16 @@
+[MESSAGES CONTROL]
+disable-msg = C0301
+
+[VARIABLES]
+# Enable / disable this checker
+enable-variables = yes
+additional-builtins = _, display_name
+
+[BASIC]
+required-attributes=
+attr-rgx = (w|[a-z_][a-z0-9_]{2,30})
+variable-rgx = (w|[a-z_][a-z0-9_]{2,30})$
+argument-rgx = (w|[a-z_][a-z0-9_]{2,30})$
+
+[TYPECHECK]
+generated-members=debug,info,notice,warning,error,critical,exception

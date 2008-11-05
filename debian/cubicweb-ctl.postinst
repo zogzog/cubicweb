@@ -1,0 +1,35 @@
+#! /bin/sh -e
+
+case "$1" in
+    configure|abort-upgrade|abort-remove|abort-deconfigure)
+        update-rc.d cubicweb defaults >/dev/null
+    ;;
+    *)
+        echo "postinst called with unknown argument \`$1'" >&2
+        exit 1
+    ;;
+esac
+
+if [ "$1" = configure ]; then
+    # XXX bw compat: erudi -> cubicweb migration
+    if [ -e "/etc/erudi.d/" ]; then
+      mv /etc/erudi.d/* /etc/cubicweb.d/
+      echo 'moved /etc/erudi.d/* to /etc/cubicweb.d/'
+    fi
+    if [ -e "/var/log/erudi/" ]; then
+      mv /var/log/erudi/* /var/log/cubicweb/
+      echo 'moved /var/log/erudi/* to /var/log/cubicweb/'
+    fi
+    if [ -e "/var/lib/erudi/backup" ]; then
+      mv /var/lib/erudi/backup/* /var/lib/cubicweb/backup/
+      echo 'moved /var/lib/erudi/backup/* to /var/lib/cubicweb/backup/'
+    fi
+    if [ -e "/var/lib/erudi/instances" ]; then
+      mv /var/lib/erudi/instances/* /var/lib/cubicweb/instances/
+      echo 'moved /var/lib/erudi/instances/* to /var/lib/cubicweb/instances/'
+    fi
+fi
+  
+#DEBHELPER#
+ 
+exit 0

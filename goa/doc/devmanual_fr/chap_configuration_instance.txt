@@ -1,0 +1,160 @@
+Configuration d'une instance
+============================
+
+À la création d'une instance, un fichier de configuration est généré dans ::
+
+   $(CW_REGISTRY)/<instance>/<nom configuration>.conf
+
+par exemple ::
+
+   /etc/cubicweb.d/jpl/all-in-one.conf
+
+C'est un simple fichier texte au format INI. Dans la description suivante,
+chaque nom d'option est préfixé de sa section et suivi de sa valeur par défaut
+le cas échéant, e.g. "`<section>.<option>` [valeur]".
+
+
+Configuration du serveur web
+----------------------------
+:`web.auth-mode` [cookie]: 
+   mode d'authentification, cookie ou http
+:`web.realm`: 
+   realm de l'application en mode d'authentification http
+:`web.http-session-time` [0]:
+   délai d'inactivité d'une session HTTP avant sa fermeture automatique. Durée
+   en secondes, 0 signifiant pas d'expiration (ou plus exactement lors de la
+   fermeture du navigateur du client)
+
+:`main.anonymous-user`, `main.anonymous-password`:
+   login et mot de passe à utiliser pour se connecter au serveur RQL lors des
+   connexions HTTP anonymes. Il faut que le compte EUser associé existe.
+
+:`main.base-url`:
+   url de base du site, à utiliser pour générer les urls des pages web
+
+Configuration https
+```````````````````
+Il est possible de rendre un site accessible en http pour les connections 
+anonymes et en https pour les utilisateurs authentifié. Il faut pour cela
+utiliser apache (par ex.) pour la redirection et la variable `main.https-url` du
+fichier de configuration.
+
+:Exemple:
+
+  pour une redirection apache d'un site accessible via `http://localhost/demo`
+  et `https://localhost/demo` et qui tourne en réalité sur le port 8080, il 
+  faut avoir pour la version http : ::
+
+    RewriteCond %{REQUEST_URI} ^/demo
+    RewriteRule ^/demo$ /demo/
+    RewriteRule ^/demo/(.*) http://127.0.0.1:8080/$1 [L,P]
+  
+  et pour la version https : ::
+
+    RewriteCond %{REQUEST_URI} ^/demo
+    RewriteRule ^/demo$ /demo/
+    RewriteRule ^/demo/(.*) http://127.0.0.1:8080/https/$1 [L,P]
+
+
+  et on aura dans le fichier all-in-one.conf de l'instance : ::
+
+    base-url = http://localhost/demo
+    https-url = `https://localhost/demo`
+
+Configuration de l'interface web
+--------------------------------
+:`web.embed-allowed`:
+   expression régulière correspondant aux sites pouvant être "incorporé" dans
+   le site (controleur 'embed')
+:`web.submit-url`:
+   url à laquelle les bugs rencontrés dans l'application peuvent être posté
+
+
+Configuration du serveur RQL
+----------------------------
+:`main.host`:
+   nom de l'hôte s'il ne peut être détecter correctement
+:`main.pid-file`:
+   fichier où sera écrit le pid du serveur
+:`main.uid`:
+   compte utilisateur à utiliser pour le lancement du serveur quand il est
+   lancé en root par init
+:`main.session-time [30*60]`:
+   temps d'expiration d'une session RQL
+:`main.query-log-file`:
+   fichier dans lequel écrire toutes les requêtes RQL éxécutées par le serveur
+
+
+Configuration Pyro pour l'instance
+-----------------------------------
+Coté serveur web :
+
+:`pyro-client.pyro-application-id`: 
+   identifiant pyro du serveur RQL (e.g. le nom de l'instance)
+
+Coté serveur RQL :
+
+:`pyro-server.pyro-port`:
+   numéro de port pyro. Si aucune valeur n'est spécifiée, un port est attribué
+   automatiquement.
+
+Coté serveur RQL et serveur web :
+
+:`pyro-name-server.pyro-ns-host`:
+   nom de l'hôte hébergeant le serveur de nom pyro. Si aucune valeur n'est
+   spécifié, il est localisé par une requête de broadcast
+:`pyro-name-server.pyro-ns-group` [cubicweb]:
+   groupe pyro sous lequel enregistrer l'application
+
+
+Configuration courriel
+----------------------
+Coté serveur RQL et serveur web :
+
+:`email.mangle-emails [no]`:
+   indique si les adresses email doivent être affichées telle quelle ou
+   transformée
+
+Coté serveur RQL :
+
+:`email.smtp-host [mail]`:
+   nom de l'hôte hébergeant le serveur SMTP à utiliser pour le courriel sortant
+:`email.smtp-port [25]`:
+   port du serveur SMTP à utiliser pour le courriel sortant
+:`email.sender-name`:
+   nom à utiliser pour les courriels sortant de l'application
+:`email.sender-addr`:
+   adresse à utiliser pour les courriels sortant de l'application
+:`email.default-dest-addrs`:
+   adresses de destination par défaut, si utilisé par la configuration de la 
+   diffusion du modèle (séparées par des virgules)
+:`email.supervising-addrs`:
+   addresses de destination des courriels de supervision (séparées par des 
+   virgules)
+
+
+Configuration journalisation
+----------------------------
+:`main.log-threshold`:
+   niveau de filtrage des messages (DEBUG, INFO, WARNING, ERROR)
+:`main.log-file`:
+   fichier dans lequel écrire les messages
+
+
+Configuration Eproperties
+-------------------------
+D'autres paramètres de configuration sont sous la forme d'entités `EProperty`
+dans la base de données. Il faut donc les éditer via l'interface web ou par des
+requêtes rql.
+
+:`ui.encoding`:
+   encodage de caractères à utiliser pour l'interface web
+:`navigation.short-line-size`: # XXX should be in ui
+   nombre de caractères maximum pour les affichages "courts"
+:`navigation.page-size`:
+   nombre d'entités maximum à afficher par page de résultat
+:`navigation.related-limit`:
+   nombre d'entités liées maximum à afficher sur la vue primaire d'une entité
+:`navigation.combobox-limit`:
+   nombre d'entités non liées maximum à afficher sur les listes déroulantes de
+   la vue d'édition d'une entité

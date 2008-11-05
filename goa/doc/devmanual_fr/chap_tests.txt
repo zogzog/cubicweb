@@ -1,0 +1,36 @@
+Tests
+=====
+
+Écriture de tests unitaires
+---------------------------
+Le framework de test fournit principalement deux classes de tests dans le module
+`cubicweb.devtools.apptest`:
+
+* `EnvBasedTC`, pour simuler un environnement complet (web + repository)
+* `RepositoryBasedTC`, pour simuler un environnement de repository uniquement
+
+Ces deux classes ont quasiment la même interface et proposent un certain nombre de méthodes
+rendant l'écriture de test puissante et rapide.
+
+XXXFILLME describe API
+
+Dans la plupart des cas, vous allez vouloir hériter de `EnvBasedTC` pour écrire des tests
+unitaires ou fonctionnels pour vos entités, vues, crochets...
+
+
+Test des courriels de notifications
+```````````````````````````````````
+Lors de l'éxécution de tests les courriels potentiellement générés ne sont pas réellement
+envoyé mais se retrouve dans la liste `MAILBOX` du module `cubicweb.devtools.apptest`. Cette
+liste est remise à zéro au *setUp* de chaque test (par le setUp des classes `EnvBasedTC`
+et `RepositoryBasedTC`).
+
+Vous pouvez donc tester vos notifications en analysant le contenu de cette liste, qui
+contient des objets ayant deux attributs :
+* `recipients`, la liste des destinataires
+* `msg`, l'objet email.Message
+
+
+Tests automatiques
+------------------
+XXXFILLME

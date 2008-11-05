@@ -1,0 +1,54 @@
+/* styles for access control forms)
+ *
+ *  :organization: Logilab
+ *  :copyright: 2003-2008 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+ *  :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
+ */
+
+/******************************************************************************/
+/* security edition form (views/management.py)                                */
+/******************************************************************************/
+
+table.schemaInfo {
+  margin: 1ex 1em;
+  text-align: left;
+  border: 1px solid black;
+  border-collapse: collapse;
+}
+
+table.schemaInfo th,
+table.schemaInfo td {
+  padding: 0em 1em;
+  border: 1px solid black;
+}
+
+/******************************************************************************/
+/* user groups edition form (views/euser.py)                                  */
+/******************************************************************************/
+
+table#groupedit {
+  margin: 1ex 1em;
+  text-align: left;
+  border: 1px solid black;
+  border-collapse: collapse;
+}
+
+table#groupedit th,
+table#groupedit td {
+  padding: 0.5em 1em;
+}
+
+table#groupedit tr {
+  border-bottom: 1px solid black;
+}
+
+table#groupedit tr.nogroup {
+  border: 1px solid red;
+  margin: 1px;
+}
+
+table#groupedit td {
+  text-align: center;
+  padding: 0.5em;
+}
+

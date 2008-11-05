@@ -1,0 +1,196 @@
+Le langage RQL (Relation Query Language)
+========================================
+
+Présentation
+------------
+* langage mettant l'accent sur le parcours de relations.
+* Les attributs sont considérés comme des cas particuliers de relations.
+* RQL s'inspire de SQL mais se veut plus haut niveau.
+* Une connaissance du schéma CubicWeb définissant l'application est nécessaire.
+
+
+Les différents types de requêtes
+--------------------------------
+Recherche (`Any`)
+  interroger l'entrepôt afin d'extraire des entités et/ou des attributs
+  d'entités.
+
+Insertion (`INSERT`)
+  insérer de nouvelles entités dans la base.
+
+Mise à jour d'entités, création de relations (`SET`)
+  mettre à jours des entités existantes dans la base, ou de créer des
+  relations entres des entités existantes.
+
+Suppression d'entités ou de relation (`DELETE`)
+  supprimer des entités et relations existantes dans la base.
+
+
+Variables et typage
+-------------------
+Les entités et valeurs à parcourir et / ou séléctionner sont représentées dans
+la requête par des *variables* qui doivent être écrites en majuscule.
+
+Les types possibles pour chaque variable sont déduits à partir du schéma en
+fonction des contraintes présentes dans la requête.
+
+On peut contraindre les types possibles pour une variable à l'aide de la
+relation spéciale `is`.
+
+Types de bases
+--------------
+* `String` (litéral: entre doubles ou simples quotes).
+* `Int`, `Float` (le séparateur étant le '.').
+* `Date`, `Datetime`, `Time` (litéral: chaîne YYYY/MM/DD[ hh:mm] ou mots-clés
+  `TODAY` et `NOW`).
+* `Boolean` (mots-clés `TRUE` et `FALSE`).
+* mot-clé `NULL`.
+
+Opérateurs
+----------
+* Opérateurs logiques : `AND`, `OR`, `,`.
+* Opérateurs mathématiques: `+`, `-`, `*`, `/`.
+* Operateur de comparaisons: `=`, `<`, `<=`, `>=`, `>`, `~=`, `LIKE`, `IN`.
+
+  * L'opérateur `=` est l'opérateur par défaut.
+
+  * L'opérateur `LIKE` / `~=` permet d'utiliser le caractère `%` dans une chaine
+    de caractère pour indiquer que la chaîne doit commencer ou terminer par un
+    préfix/suffixe::
+    
+      Any X WHERE X nom ~= 'Th%'
+      Any X WHERE X nom LIKE '%lt'
+
+  * L'opérateur `IN` permet de donner une liste de valeurs possibles::
+
+      Any X WHERE X nom IN ('chauvat', 'fayolle', 'di mascio', 'thenault')
+
+Requête de recherche
+--------------------
+
+  [`DISTINCT`] <type d'entité> V1(, V2)\*
+  [`GROUPBY` V1(, V2)\*]  [`ORDERBY` <orderterms>]
+  [`WHERE` <restriction>] 
+  [`LIMIT` <value>] [`OFFSET` <value>]
+
+:type d'entité:
+  Type de la ou des variables séléctionnées. 
+  Le type spécial `Any`, revient à ne pas spécifier de type.
+:restriction:
+  liste des relations à parcourir sous la forme 
+    `V1 relation V2|<valeur constante>`
+:orderterms:
+  Définition de l'ordre de selection : variable ou n° de colonne suivie de la
+  méthode de tri (`ASC`, `DESC`), ASC étant la valeur par défaut.
+:note pour les requêtes groupées:
+  Pour les requêtes groupées (i.e. avec une clause `GROUPBY`), toutes les
+  variables sélectionnée doivent être soit groupée soit aggrégée.
+
+Exemples - recherche
+`````````````````````
+::
+
+      Any X WHERE X eid 53
+      Personne X
+      Personne X WHERE X travaille_pour S, S nom "logilab"
+      Any E,COUNT(X) GROUPBY E ORDERBY EN WHERE X is E, E name EN 
+      Any E,COUNT(X) GROUPBY E ORDERBY 2 WHERE X is E 
+
+
+Fonctionnalités avancées
+````````````````````````
+* Fonctions d'aggrégat : `COUNT`, `MIN`, `MAX`, `SUM`.
+* Fonctions sur les chaines :`UPPER`, `LOWER`.
+* Relations optionnelles :
+
+  * Elles permettent de sélectionner des entités liées ou non à une autre.
+
+  * Il faut utiliser le `?` derrière la variable pour spécifier que la relation
+    vers celle-ci est optionnelle :
+
+    - Anomalies d'un projet attachées ou non à une version ::
+
+        Any X,V WHERE X concerns P, P eid 42, X corrected_in V?
+
+    - Toutes les fiches et le projet qu'elles documentent le cas échéant ::
+
+        Any C,P WHERE C is Card, P? documented_by C
+
+Négation
+````````
+* Une requête du type `Document X WHERE NOT X owned_by U` revient à dire "les
+  documents n'ayant pas de relation `owned_by`". 
+* En revanche la requête `Document X WHERE NOT X owned_by U, U login "syt"`
+  revient à dire "les  documents n'ayant pas de relation `owned_by` avec
+  l'utilisateur syt". Ils peuvent avoir une relation "owned_by" avec un autre
+  utilisateur.
+
+
+Requête d'insertion
+-------------------
+   `INSERT` <type d'entité> V1(, <type d'entité> V2)\* `:` <assignements>
+   [`WHERE` <restriction>] 
+
+:assignements:
+  liste des relations à assigner sous la forme `V1 relation V2|<valeur constante>`
+
+La restriction permet de définir des variables utilisées dans les assignements.
+
+Attention, si une restriction est spécifiée, l'insertion est effectuée *pour
+chaque ligne de résultat renvoyée par la restriction*.
+
+Exemples - insertion
+`````````````````````
+* Insertion d'une nouvelle personne nommée 'bidule'::
+
+       INSERT Personne X: X nom 'bidule'
+
+* Insertion d'une nouvelle personne nommée 'bidule', d'une autre nommée
+  'chouette' et d'une relation 'ami' entre eux::
+
+       INSERT Personne X, Personne Y: X nom 'bidule', Y nom 'chouette', X ami Y
+
+* Insertion d'une nouvelle personne nommée 'bidule' et d'une relation 'ami' avec
+  une personne existante nommée 'chouette'::
+
+       INSERT Personne X: X nom 'bidule', X ami Y WHERE Y nom 'chouette'
+
+
+Requête de mise à jour
+----------------------
+   `SET` <assignements>
+   [`WHERE` <restriction>] 
+
+Attention, si une restriction est spécifiée, la mise à jour est effectuée *pour
+chaque ligne de résultat renvoyée par la restriction*.
+
+Exemples - mise à jour 
+````````````````````````
+* Renommage de la personne nommée 'bidule' en 'toto', avec modification du
+  prénom::
+
+       SET X nom 'toto', X prenom 'original' WHERE X is 'Person', X nom 'bidule'
+
+* Insertion d'une relation de type 'connait' entre les objets reliés par la
+  relation de type 'ami'::
+
+       SET X know Y WHERE X ami Y
+
+Requête de suppression
+----------------------
+   `DELETE` (<type d''entité> V) | (V1 relation v2),...
+   [`WHERE` <restriction>] 
+
+Attention, si une restriction est spécifiée, la suppression est effectuée *pour
+chaque ligne de résultat renvoyée par la restriction*.
+
+Exemples
+````````
+* Suppression de la personne nommé 'toto'::
+
+       DELETE Person X WHERE X nom 'toto'
+
+* Suppression de toutes les relations de type 'ami' partant de la personne
+  nommée 'toto'::
+
+       DELETE X ami Y WHERE X is 'Person', X nom 'toto'

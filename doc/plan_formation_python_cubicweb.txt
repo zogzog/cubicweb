@@ -1,0 +1,99 @@
+.. -*- coding: utf-8 -*-
+
+Formation Python-CubicWeb 5 jours
+==============================
+
+Bases Python
+------------
+
+Syntaxe de base
+~~~~~~~~~~~~~~~
+:durée: 1j
+
+Modèle objet
+~~~~~~~~~~~~
+:durée: 0.5j
+
+Traitement de chaînes
+~~~~~~~~~~~~~~~~~~~~~
+:durée: 0.3j
+  Formattage de chaînes
+  Unicode
+
+Entrées/Sorties
+~~~~~~~~~~~~~~~
+:durée: 0.2j
+  Fichiers
+  `StringIO`
+
+Structures avancées
+~~~~~~~~~~~~~~~~~~~
+:durée: 0.5j
+  `object`, `super`
+  iterateurs
+  générateurs
+  list comprehension / generator expression
+  descripteurs, properties (`classmethod`, `property`)
+  décorateurs
+
+
+Développement CubicWeb
+-------------------
+
+Mise en place d'un environnement de développement CubicWeb
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+:durée: 0.5j
+  Introduction mercurial
+  Installation de cubicweb et de ses dépendances (debian !)
+  Postgres
+  Notion de template et d'instance
+  L'outil `cubicweb-ctl`
+  Création du modèle
+  Création d'une instance de développement
+
+Fondements CubicWeb
+~~~~~~~~~~~~~~~~
+:durée: 0.1j
+  Vocabulaire
+  Le langage RQL
+  Client/Serveur
+
+Définition du modèle de données
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+:durée: 0.4j
+  Définition d'entité
+  Définition de relation
+  Persistence du schéma
+  Migration de schéma
+
+Fondements du framework CubicWeb
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+:durée: 0.1j
+  La classe `appobject`
+  La base de registres
+  Chargement dynamique des classes
+  
+Manipulation des données stockées
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+:durée: 0.4j
+  Les classes `Entity` et `AnyEntity`
+  Paramétrages et extensions spécifiques
+  Écriture de tests unitaires
+
+Définition de vues
+~~~~~~~~~~~~~~~~~~
+:durée: 0.5j
+  Les classes de base des vues
+  Les vues prédéfinies dans la librairie
+  Les patrons
+  Vues binaires ou autre
+  Écriture de tests unitaires
+  Tests automatiques
+
+Autres composants de l'interface web
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+:durée: 0.5j
+  Actions
+  Component, VComponent
+  Forms, Controller
+  Eproperty

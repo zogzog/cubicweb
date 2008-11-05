@@ -1,0 +1,125 @@
+/* styles for schema views
+ *
+ *  :organization: Logilab
+ *  :copyright: 2003-2008 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+ *  :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
+ */
+
+div.relationDefinition { 
+  float: left;   
+  position: relative;
+  width: 60%;
+  padding: 0;
+}
+
+div.acl{ 
+  position: relative;
+/*  right: 20%;*/
+  float: right; 
+  width: 10%;
+  padding:0px 0px 0px 2em;
+}
+
+div.schema table {
+  width : 100%;
+}
+
+div.entityAttributes{ 
+ margin: 3em 0 5em; 
+ font: normal 9pt Arial;
+}
+
+div.box div.title{
+ border-bottom:1px solid black;
+ padding:0.2em 0.2em;
+ margin: 0 auto;
+}
+
+span.stereotype {
+  font-style: italic;
+  font-size:  80%;
+}
+
+div.box div.line span{
+ padding: 0 1em;
+}
+
+div.body{
+ padding : 0.2em;
+ padding-bottom : 0.4em; 
+ overflow: auto;
+}
+
+div.body table td{
+ padding:0.4em; 
+ }
+
+div.box{
+ float:left;
+ border:1px solid black;
+ width:50%; 
+}
+
+div.vl{
+ float:left;
+ position:relative; 
+ margin-top:1em; 
+ border-top:1px solid black; 
+ line-height : 1px; 
+ width: 1em; 
+ height : 0px}
+
+div.hl{
+ float:left;
+ position:relative; 
+ margin-top:1em;  
+ border-left:1px solid black; 
+ width: 1px; 
+ height : 10px
+}
+
+div.rels{
+ float:left; 
+ position:relative; 
+ margin-top:1em; 
+ border-left:1px solid black;  
+ margin-left:-2px;}
+
+div.firstrel, div.rel, div.lastrel{
+ line-height:1em;
+ border:1px solid white;
+ border-bottom:1px solid black;
+ padding: 0px 0.6em 0.2em;
+}
+
+/* FIXME set to 9em or an image*/
+div.rel, div.lastrel{ 
+ margin-top:0.7em}
+
+div.vars{
+ float:left;
+}
+
+div.firstvar, div.var, div.lastvar{
+ line-height:1em;
+ border:1px solid black; 
+ padding:0.2em}
+
+div.firstvar{
+ margin-top:1em;}
+
+div.var{
+ margin-top:0.5em; 
+}
+
+div.lastvar{
+ border:none;
+}
+
+div.firstvar a, 
+div.var a,
+div.rel a,
+div.firstrel a{ 
+ padding:0px ! important;
+ margin : 0px ! important; 
+}

@@ -1,0 +1,47 @@
+.. -*- coding: utf-8 -*-
+
+.. _contents:
+
+Utilisateur
+===========
+
+Description du modèle de sécurité
+---------------------------------
+
+.. toctree::
+   :maxdepth: 1
+   
+   securite.txt
+
+
+
+Développeur
+===========
+
+Développement d'applications CubicWeb
+-------------------------------------
+
+.. toctree::
+   :maxdepth: 1
+
+   devmanual_fr/index.txt
+   devmanual_fr/gae.txt
+
+
+
+Détails d'implémentations
+=========================
+
+.. toctree::
+   :maxdepth: 1
+
+   cubicweb-uml.txt
+
+Détail sur l'éxécution d'une requête complexe en multi-sources
+--------------------------------------------------------------
+
+.. toctree::
+   :maxdepth: 1
+   
+   querier.txt
+

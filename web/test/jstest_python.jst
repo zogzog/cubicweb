@@ -1,0 +1,47 @@
+
+crosscheck.addTest({
+
+    setup: function() {
+        crosscheck.load("testutils.js");
+        crosscheck.load("../data/jquery.js");
+        crosscheck.load("../data/compat.js");
+        crosscheck.load("../data/python.js");
+    },
+
+    test_basic_number_parsing: function () {
+	var d = strptime('2008/08/08', '%Y/%m/%d');
+	assertArrayEquals(datetuple(d), [2008, 8, 8, 0, 0])
+	d = strptime('2008/8/8', '%Y/%m/%d');
+	assertArrayEquals(datetuple(d), [2008, 8, 8, 0, 0])
+	d = strptime('8/8/8', '%Y/%m/%d');
+	assertArrayEquals(datetuple(d), [8, 8, 8, 0, 0])
+	d = strptime('0/8/8', '%Y/%m/%d');
+	assertArrayEquals(datetuple(d), [0, 8, 8, 0, 0])
+	d = strptime('-10/8/8', '%Y/%m/%d');
+	assertArrayEquals(datetuple(d), [-10, 8, 8, 0, 0])
+	d = strptime('-35000', '%Y');
+	assertArrayEquals(datetuple(d), [-35000, 1, 1, 0, 0])
+    },
+
+    test_custom_format_parsing: function () {
+	var d = strptime('2008-08-08', '%Y-%m-%d');
+	assertArrayEquals(datetuple(d), [2008, 8, 8, 0, 0])
+ 	d = strptime('2008 - !  08: 08', '%Y - !  %m: %d');
+ 	assertArrayEquals(datetuple(d), [2008, 8, 8, 0, 0])
+ 	d = strptime('2008-08-08 12:14', '%Y-%m-%d %H:%M');
+ 	assertArrayEquals(datetuple(d), [2008, 8, 8, 12, 14])
+ 	d = strptime('2008-08-08 1:14', '%Y-%m-%d %H:%M');
+ 	assertArrayEquals(datetuple(d), [2008, 8, 8, 1, 14])
+ 	d = strptime('2008-08-08 01:14', '%Y-%m-%d %H:%M');
+ 	assertArrayEquals(datetuple(d), [2008, 8, 8, 1, 14])
+   }
+//,
+//
+//  test_gregorian_parsing: function() {
+//     var d = parseGregorianDateTime("May 28 0100 09:00:00 GMT");
+//     assertArrayEquals(datetuple(d), [100, 5, 28, 10, 0]);
+//     d = parseGregorianDateTime("May 28 0099 09:00:00 GMT");
+//     assertArrayEquals(datetuple(d), [99, 5, 28, 10, 0]);
+//   }
+
+})

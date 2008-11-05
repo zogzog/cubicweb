@@ -1,0 +1,110 @@
+Présentation de Mercurial
+-------------------------
+
+Introduction
+````````````
+Mercurial_ gère un ensemble distribué d'entrepôts contenant des arbres de
+révisions (chaque révision indique les changements à effectuer pour obtenir la
+version suivante, et ainsi de suite). Localement, on dispose d'un entrepôt
+contenant un arbre de révisions, et d'un répertoire de travail. Il est possible
+de mettre dans son répertoire de travail, une des versions issue de son entrepôt
+local, de la modifier puis de la verser dans son entrepôt. Il est également
+possible de récuprer dans son entrepôt local des révisions venant d'un autre
+entrepôt, ou d'exporter ses propres révisions depuis son entrepôt local vers un
+autre entrepôt.
+
+A noter que contrairement à CVS/Subversion, on crée généralement un entrepôt par
+projet à gérer.
+
+Lors d'un développement collaboratif, on crée généralement un entrepôt central
+accessible à tout les développeurs du projet. Ces entrepôts centraux servent de
+référence. Selon ses besoins, chacun peut ensuite disposer d'un entrepôt local,
+qu'il faudra penser à synchroniser avec l'entrepôt central de temps à autre. 
+
+
+Principales commandes
+`````````````````````
+* Créer un entrepôt local ::
+
+    hg clone ssh://orion//home/src/prive/rep
+
+* Voir le contenu de l'entrepôt local (outil graphique en Tk) ::
+
+    hg view
+
+* Ajouter un sous-répertoire ou un fichier dans le répertoire courant ::
+
+    hg add rep
+
+* Placer dans son répertoire de travail une révision spécifique (ou la dernière
+  revision) issue de l'entrepôt local ::
+
+    hg update [identifiant-revision]
+    hg up [identifiant-revision]
+
+* Récupérer dans son entrepôt local, l'arbre de révisions contenu dans un
+  entrepôt distant (cette opération ne modifie pas le répertoire local) ::
+
+    hg pull ssh://orion//home/src/prive/rep
+    hg pull -u ssh://orion//home/src/prive/rep # équivalent à pull + update
+
+* Voir quelles sont les têtes de branches de l'entrepôt local si un `pull` a
+  tiré une nouvelle branche ::
+
+    hg heads
+
+* Verser le répertoire de travail dans l'entrepôt local (et créer une nouvelle
+  révision) ::
+
+    hg commit
+    hg ci
+
+* Fusionner, avec la révision mère du répertoire local, une autre révision issue
+  de l'entrepôt local (la nouvelle révision qui en résultera aura alors deux
+  révisions mères) ::
+
+    hg merge identifiant-revision
+
+* Exporter dans un entrepôt distant, l'arbre de révisions contenu dans son
+  entrepôt local (cette opération ne modifie pas le répertoire local) ::
+
+    hg push ssh://orion//home/src/prive/rep
+
+* Voir quelle sont les révisions locales non présentes dans un autre entrepôt ::
+
+    hg outgoing ssh://orion//home/src/prive/rep
+
+* Voir quelle sont les révisions d'un autre entrepôt non présentes localement ::
+
+    hg incoming ssh://orion//home/src/prive/rep
+
+* Voir quelle est la révision issue de l'entrepôt local qui a été sortie dans le
+  répertoire de travail et modifiée ::
+
+    hg parent
+
+* Voir les différences entre le répertoire de travail et la révision mère de
+  l'entrepôt local, éventuellement permettant de les verser dans l'entrepôt
+  local ::
+
+    hg diff
+    hg commit-tool
+    hg ct
+
+
+Bonnes pratiques
+````````````````
+* penser à faire un `hg pull -u` régulièrement et particulièrement avant de
+  faire un `hg commit`
+
+* penser à faire un `hg push` lorsque votre entrepôt contient une version
+  relativement stable de vos modifications
+
+* si un `hg pull -u` a créé une nouvelle tête de branche :
+
+  1. identifier l'identifiant de celle-ci avec `hg head`
+  2. fusionner avec `hg merge`
+  3. `hg ci`
+  4. `hg push`
+
+.. _Mercurial: http://www.selenic.com/mercurial/

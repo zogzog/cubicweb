@@ -1,0 +1,1 @@
+synchronize_permissions('EmailAddress')

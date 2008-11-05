@@ -1,0 +1,112 @@
+#!/usr/bin/make -f
+# Sample debian/rules that uses debhelper.
+# GNU copyright 1997 to 1999 by Joey Hess.
+
+# Uncomment this to turn on verbose mode.
+#export DH_VERBOSE=1
+build: build-stamp
+build-stamp: 
+	dh_testdir
+	# XXX doesn't work if logilab-doctools, logilab-xml are not in build depends
+	# and I can't get pbuilder find them in its chroot :(
+	#cd doc && make
+	python setup.py -q build
+	touch build-stamp
+
+clean: 
+	dh_testdir
+	dh_testroot
+	rm -f build-stamp configure-stamp
+	rm -rf build
+	rm -rf debian/cubicweb-*/
+	find . -name "*.pyc" | xargs rm -f
+	dh_clean
+
+install: build
+	dh_testdir
+	dh_testroot
+	dh_clean -k
+	dh_installdirs
+	########## core package #############################################
+	# put : 
+	# * all the python library and data in cubicweb-core
+	# * scripts in cubicweb-server
+	#
+	# pick from each latter to construct each package
+	python setup.py -q install_lib --no-compile --install-dir=debian/cubicweb-core/usr/lib/python2.4/site-packages/
+	python setup.py -q install_data --install-dir=debian/cubicweb-core/usr/
+	python setup.py -q install_scripts --install-dir=debian/cubicweb-server/usr/bin/
+	########## common package #############################################
+	mv debian/cubicweb-core/usr/lib/python2.4/site-packages/cubicweb/common/ debian/cubicweb-common/usr/lib/python2.4/site-packages/cubicweb
+	mv debian/cubicweb-core/usr/lib/python2.4/site-packages/cubicweb/entities/ debian/cubicweb-common/usr/lib/python2.4/site-packages/cubicweb
+	# data
+	mv debian/cubicweb-core/usr/share/cubicweb/cubes/shared/i18n debian/cubicweb-common/usr/share/cubicweb/cubes/shared/
+	touch debian/cubicweb-common/usr/share/cubicweb/cubes/__init__.py
+	########## server package #############################################
+	# library
+	mv debian/cubicweb-core/usr/lib/python2.4/site-packages/cubicweb/server/ debian/cubicweb-server/usr/lib/python2.4/site-packages/cubicweb
+	mv debian/cubicweb-core/usr/lib/python2.4/site-packages/cubicweb/sobjects/ debian/cubicweb-server/usr/lib/python2.4/site-packages/cubicweb
+	# data
+	mv debian/cubicweb-core/usr/share/cubicweb/schemas/ debian/cubicweb-server/usr/share/cubicweb/
+	mv debian/cubicweb-core/usr/share/cubicweb/migration/ debian/cubicweb-server/usr/share/cubicweb/
+	########## twisted package ############################################
+	# library
+	mv debian/cubicweb-core/usr/lib/python2.4/site-packages/cubicweb/etwist/ debian/cubicweb-twisted/usr/lib/python2.4/site-packages/cubicweb/
+	########## web package ################################################
+	# library
+	mv debian/cubicweb-core/usr/lib/python2.4/site-packages/cubicweb/web/ debian/cubicweb-web/usr/lib/python2.4/site-packages/cubicweb/
+	# data / web documentation
+	mv debian/cubicweb-core/usr/share/cubicweb/cubes/shared/data debian/cubicweb-web/usr/share/cubicweb/cubes/shared/
+	mv debian/cubicweb-core/usr/share/cubicweb/cubes/shared/wdoc debian/cubicweb-web/usr/share/cubicweb/cubes/shared/
+	########## ctl package ################################################
+	# scripts
+	mv debian/cubicweb-server/usr/bin/cubicweb-ctl debian/cubicweb-ctl/usr/bin/
+	mv debian/cubicweb-core/usr/lib/python2.4/site-packages/cubicweb/cwctl.py debian/cubicweb-ctl/usr/lib/python2.4/site-packages/cubicweb
+	mv debian/cubicweb-ctl.bash_completion debian/cubicweb-ctl/etc/bash_completion.d/cubicweb-ctl
+	########## client package #############################################
+	# library
+	mv debian/cubicweb-core/usr/lib/python2.4/site-packages/cubicweb/hercule.py debian/cubicweb-client/usr/lib/python2.4/site-packages/cubicweb
+	########## dev package ################################################
+	# devtools package
+	mv debian/cubicweb-core/usr/lib/python2.4/site-packages/cubicweb/devtools/ debian/cubicweb-dev/usr/lib/python2.4/site-packages/cubicweb/
+	# tests directories
+	mv debian/cubicweb-core/usr/lib/python2.4/site-packages/cubicweb/test debian/cubicweb-dev/usr/lib/python2.4/site-packages/cubicweb/
+	mv debian/cubicweb-common/usr/lib/python2.4/site-packages/cubicweb/common/test debian/cubicweb-dev/usr/lib/python2.4/site-packages/cubicweb/common/
+	mv debian/cubicweb-server/usr/lib/python2.4/site-packages/cubicweb/server/test debian/cubicweb-dev/usr/lib/python2.4/site-packages/cubicweb/server/
+	mv debian/cubicweb-server/usr/lib/python2.4/site-packages/cubicweb/sobjects/test debian/cubicweb-dev/usr/lib/python2.4/site-packages/cubicweb/sobjects/
+	mv debian/cubicweb-web/usr/lib/python2.4/site-packages/cubicweb/web/test debian/cubicweb-dev/usr/lib/python2.4/site-packages/cubicweb/web/
+	########## documentation package ######################################
+	cp doc/*.html doc/*.txt debian/cubicweb-documentation/usr/share/doc/cubicweb-documentation/
+	cp doc/devmanual_fr/*.html doc/devmanual_fr/*.txt doc/devmanual_fr/*.png debian/cubicweb-documentation/usr/share/doc/cubicweb-documentation/devmanual_fr
+	########## core package ###############################################
+	# small cleanup
+	rm -rf debian/cubicweb-core/usr/share/cubicweb/
+	# undistributed for now
+	rm -rf debian/cubicweb-core/usr/lib/python2.4/site-packages/cubicweb/goa
+	rm -rf debian/cubicweb-core/usr/lib/python2.4/site-packages/cubicweb/wsgi
+
+# Build architecture-independent files here.
+binary-indep: build install
+	dh_testdir
+	dh_testroot -i
+	dh_install -i
+	dh_pycentral -i
+	dh_python -i
+	dh_installinit -i -n --name cubicweb -u"defaults 99"
+	dh_installlogrotate -i
+	dh_installdocs -i -A README
+	dh_installman -i
+	dh_installchangelogs -i
+	dh_link -i
+	dh_compress -i -X.py -X.ini -X.xml
+	dh_fixperms -i
+	dh_installdeb -i
+	dh_gencontrol  -i
+	dh_md5sums -i
+	dh_builddeb -i
+
+binary-arch:
+
+binary: binary-indep 
+.PHONY: build clean binary binary-indep binary-arch
+

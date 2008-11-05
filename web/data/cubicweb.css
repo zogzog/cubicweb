@@ -1,0 +1,1011 @@
+/*
+ *  :organization: Logilab
+ *  :copyright: 2003-2008 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+ *  :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
+ */
+
+/******************************************************************************/
+/* main styles                                                                */
+/******************************************************************************/
+
+*{
+  margin:0px;
+  padding :0px;
+}
+
+html, body {  
+  background: #e2e2e2;
+}
+
+body {
+  font-size: 69%;
+  font-weight: normal;
+  font-family: Verdana, sans-serif;
+}
+
+
+h1 {
+  font-size: 188%;
+  margin: 0.2em 0px 0.3em;
+  border-bottom: 1px solid #000;
+}
+
+
+h2, h3 {
+  margin-top: 0.2em;
+  margin-bottom: 0.3em;
+}
+
+h2 {
+  font-size: 135%;
+}
+
+h3 {
+  font-size: 130%;
+}
+
+h4 {
+  font-size: 120%;
+  margin: 0.2em 0px;
+}
+
+h5 {
+  font-size:110%;
+}
+
+h6{
+  font-size:105%;
+}
+
+a, a:active, a:link, a:visited {
+  color: #ff4500;
+  text-decoration: none;
+}
+
+a:hover{
+  text-decoration: underline;
+}
+
+a.grayedout {
+  display: block;
+  padding-left: 2px;
+  color: #808080;
+}
+
+a.grayedout:visited{
+  color: #808080;
+}
+
+a.grayedout:hover {
+  color: #000;
+}
+
+a img {
+  border: none;
+  text-align: center;
+}
+
+p {
+  margin-top: 0em;
+  margin-bottom: 0.2em;
+  padding-top: 2px;
+}
+
+
+table, td, input, select {
+  font-size: 100%;
+}
+
+table {
+  border-collapse: collapse;
+  border: none;
+}
+
+table th, table td {
+  vertical-align: top;
+}
+
+table td img {
+  vertical-align: middle;
+}
+
+ol {
+  margin: 1px 0px 1px 16px;
+}
+
+ul{
+  margin: 1px 0px 1px 4px;
+  list-style-type: none;
+}
+
+ul li {
+  margin-top: 2px;
+  padding: 0px 0px 2px 8px;
+  background: url("bullet_orange.png") 0% 6px no-repeat;
+}
+
+pre {
+  font-family: Courier, "Courier New", Monaco, monospace;
+  font-size: 100%;
+  color: #000;
+  background-color: #f2f2f2;
+  border: 1px solid #ccc;
+  /*overflow:auto; */
+}
+
+blockquote {
+  font-family: Courier, "Courier New", serif;
+  font-size: 120%;
+  margin: 5px 0px;
+  padding: 0.8em;
+  background-color: #f2f2f2;
+  border: 1px solid #ccc;
+}
+
+note, code {
+  font-size: 120%;
+  color: #000;
+  background-color: #f2f2f2;
+  border: 1px solid #ccc;
+}
+
+input, textarea {
+  padding: 0.2em;
+  vertical-align: middle;
+  border: 1px solid #ccc;
+}
+
+fieldset {
+  border: none;
+}
+
+legend {
+  padding: 0px 2px;
+  font: bold 1em Verdana, sans-serif;
+}
+
+label, .label {
+  font-weight: bold ! important;
+}
+
+iframe {
+  border: 0px;
+}
+
+dt {
+	font-size:	1.17em;
+	font-weight:	600;
+}
+
+dd {
+	margin: 0.6em 0 1.5em 2em;
+}
+
+/******************************************************************************/
+/* generic classes                                                            */
+/******************************************************************************/
+
+.odd {
+  background-color: #f7f6f1;
+}
+
+.even {
+  background-color: transparent;
+}
+
+.hr {
+  border-bottom: 1px dotted #ccc;
+  margin: 1em 0px;
+}
+
+.left {
+  float: left;
+}
+
+.right {
+  float: right;
+}
+
+.clear {
+  clear: both;
+}
+
+.noborder {
+  border: none;
+}
+
+.strong{
+  font-weight:bold;
+}
+
+.title {
+  text-align: left;
+  font-size:  large;
+  font-weight: bold;
+}
+
+.titleUnderline {
+  color: #000;
+  clear: left;
+  margin: 0px;
+  padding-top: 0.5em;
+  border-bottom: 1px solid black;
+}
+
+.helper{
+  font-size: 96%;
+  color: #555544;
+}
+
+.helper:hover {
+  color: #000;
+  cursor: default;
+}
+
+.hidden {
+  display: none;
+  visibility: hidden;
+}
+
+.needsvalidation {
+  font-style: italic;
+  color: grey ! important;
+}
+
+.folder {
+  /* disable odd/even under folder class */
+  background-color: transparent;
+}
+
+li.invisible {
+  list-style: none;
+  background: none;
+  padding: 0px 0px 1px 1px;
+}
+
+li.invisible div {
+  display: inline;
+}
+
+div.row {
+ clear: both;
+ padding-bottom:0.4px
+}
+
+div.row span.label{ 
+ padding-right:1em
+}
+
+div.field {
+  margin-left: 0.2em;
+  display: inline;
+}
+
+div.popup {
+  position: absolute;
+  z-index: 400;
+  background: #fff;
+  border: 1px solid black;
+  text-align: left;
+  float:left;
+}
+
+div.popup ul li a {
+  text-decoration: none;
+  color: black;
+}
+
+/******************************************************************************/
+/* header / layout                                                            */
+/******************************************************************************/
+
+.logo {
+ background: #fff;
+ border-left: #f2f2f2;
+}
+
+span#appliName {
+ font-weight: bold;
+ color: #000;
+ white-space: nowrap;
+}
+
+#header {
+  background: #ff7700 url("banner.png") left top repeat-x;
+  text-align: left;
+}
+
+table#header td {
+  vertical-align: middle;
+}
+
+table#header a {
+color: #000;
+}
+
+td#headtext {
+  width: 100%;
+}
+
+/*FIXME appear with 4px width in IE6*/
+div#stateheader{
+  width: 66%;
+}
+
+div#page {
+  background: #e2e2e2;
+  position: relative;
+  min-height: 800px;
+}
+ 
+td#contentcol {
+  padding: 8px 5px 5px 10px;
+}
+
+
+div#pageContent {
+  clear: both;
+  padding: 10px 1em 2em;
+  background: #ffffff;
+  border: 1px solid #ccc;
+}
+
+#contentheader {
+  margin: 0px;
+  padding: 0.2em 0.5em 0.5em 0.5em;
+}
+
+#contentheader a {
+  color: #000;
+}
+
+td.firstcolumn {
+  width: 220px;
+}
+
+td.navcol {
+  width: 16em;
+}
+
+div.footer {
+  text-align: center;
+}
+div.footer a {
+  color: #000;
+  text-decoration: none;
+}
+
+/******************************************************************************/
+/* help button                                                                */
+/******************************************************************************/
+
+a.help{
+  display: block;
+  margin: 0px 5px 0px 8px;
+  height: 17px;
+  width: 17px;
+  background: url('help.png') 0% 0% no-repeat;
+}
+
+a.help:hover {
+  background-position: 0px -16px;
+  text-decoration: none;
+}
+
+/******************************************************************************/
+/* rql bar                                                                    */
+/******************************************************************************/
+
+div#rqlform {
+  width: 100%;
+}
+
+input#rql{
+ border: 1px solid #ccc;
+ width: 80%;
+ margin-left: 12px;
+}
+
+/******************************************************************************/
+/* user actions menu                                                          */
+/******************************************************************************/
+
+a.logout, a.logout:visited, a.logout:hover{
+  color: #fff;
+  text-decoration: none;
+}
+
+div#userActionsBox {
+  width: 14em;
+  text-align: right;
+}
+
+div#userActionsBox a.popupMenu {
+  color: black;
+  text-decoration: underline;
+}
+
+/******************************************************************************/
+/* buttons                                                                    */
+/******************************************************************************/
+
+input#rqlboxsubmit, input#rqlboxsubmit2 {
+  background: #fffff8 url("go.png") 50% 50% no-repeat;
+  width: 20px;
+  height: 20px;
+  margin: 0px;
+}
+
+input.button,
+input.formButton,
+input.validateButton,
+input.searchButton,
+input.loginButton {
+  border-top: 1px solid #edecd2;
+  border-left: 1px solid #edecd2;
+  border-right: 1px solid #cfceb7;
+  border-bottom: 1px solid #cfceb7;
+  background: #fffff8 url("button.png") bottom left repeat-x;
+}
+
+input.searchButton {
+  background: #f0eff0 url("gradient-grey-up.png") left top repeat-x;
+}
+
+input.button,
+input.validateButton {
+  margin: 1em 1em 0px 0px ! important;
+}
+
+/******************************************************************************/
+/* primary view                                                               */
+/******************************************************************************/
+
+.mainInfo  {
+  margin-right: 1em;
+  padding: 0.2em;
+}
+
+div.mainRelated {
+  border: none;
+  margin-right: 1em;
+  padding: 0.5em 0.2em 0.2em;
+}
+
+div.sideRelated h4,
+div.sideRelated h5 {
+  margin-top: 0px;
+  margin-bottom: 0px;
+}
+
+div.sideRelated {
+  margin-right: 1em;
+  padding: 12px 0px 12px 12px;
+}
+
+div.metadata {
+  font-size: 90%;
+  margin: 5px 0px 3px;
+  color: #666;
+  font-style: italic;
+  text-align: right;
+}
+
+div.section {
+  margin-top: 0.5em;
+  width:100%;
+}
+
+div.section a:hover {
+  text-decoration: none;
+}
+
+
+
+/******************************************************************************/
+/* boxes                                                                      */
+/******************************************************************************/
+
+div.navboxes {
+  padding-left: 3px;
+  margin-top: 8px;
+}
+
+div.boxFrame {
+  width: 100%;
+}
+
+div.boxTitle {
+  padding-top: 0px;
+  padding-bottom: 0.2em;
+  font: bold 100% Georgia;
+  overflow: hidden;
+  color: #fff;
+  background: #ff9900 url("search.png") left bottom repeat-x;
+}
+
+div.searchBoxFrame div.boxTitle,
+div.greyBoxFrame div.boxTitle {
+  background: #cfceb7;
+}
+
+div.boxTitle span,
+div.sideBoxTitle span {
+  padding: 0px 5px;
+  white-space: nowrap;
+}
+
+div.sideBoxTitle span,
+div.searchBoxFrame div.boxTitle span,
+div.greyBoxFrame div.boxTitle span {
+  color: #222211;
+}
+
+.boxFrame a {
+  color: #000;
+}
+
+div.boxContent {
+  padding: 3px 0px;
+  background: #fff;
+  border-top: none;
+}
+
+ul.boxListing {
+  margin: 0px;
+  padding: 0px 3px;
+}
+
+ul.boxListing li,
+ul.boxListing ul li {
+  display: inline;
+  margin: 0px;
+  padding: 0px;
+  background-image: none;
+}
+
+ul.boxListing ul {
+  margin: 0px 0px 0px 7px;
+  padding: 1px 3px;
+}
+
+ul.boxListing a {
+  color: #000;
+  display: block;
+  padding: 1px 9px 1px 3px;
+}
+
+ul.boxListing a.selected {
+  color: #FF4500;
+  font-weight: bold;
+}
+
+ul.boxListing a.boxBookmark:hover,
+ul.boxListing a:hover,
+ul.boxListing ul li a:hover {
+  text-decoration: none;
+  background: #eeedd9;
+  color: #111100;
+}
+
+a.boxMenu {
+  background: transparent url("puce_down.png") 98% 6px no-repeat;
+  display: block;
+  padding: 1px 9px 1px 3px;
+}
+
+a.popupMenu {
+  background: transparent url("puce_down_black.png") 2% 6px no-repeat;
+  padding-left: 2em;
+}
+
+ul.boxListing ul li a:hover {
+  background: #eeedd9  url("bullet_orange.png") 0% 6px no-repeat;
+}
+
+a.boxMenu:hover {
+  background: #eeedd9 url("puce_down.png") 98% 6px no-repeat;
+  cursor: pointer;
+}
+
+ul.boxListing a.boxBookmark {
+  padding-left: 3px;
+  background-image:none;
+  background:#fff;
+}
+
+ul.boxListing ul li a {
+  background: #fff url("bullet_orange.png") 0% 6px no-repeat;
+  padding: 1px 3px 0px 10px;
+}
+
+div.searchBoxFrame div.boxContent {
+  padding: 4px 4px 3px;
+  background: #f0eff0 url("gradient-grey-up.png") left top repeat-x;
+}
+
+div.shadow{
+  height: 14px;
+  background: url("shadow.gif") no-repeat top right;
+}
+
+div.sideBoxTitle {
+  padding: 0.2em 0px;
+  background: #cfceb7;
+  display: block;
+  font: bold 100% Georgia;
+}
+
+div.sideBox {
+  padding: 0.2em 0px;
+  margin-bottom: 0.5em;
+  background: #eeedd9;
+}
+
+div.sideBoxBody {
+  padding: 0.2em 5px;
+}
+
+div.sideBoxBody a {
+  color:#555544;
+}
+
+div.sideBoxBody a:hover {
+  text-decoration: underline;
+}
+
+div.sideBox table td {
+  padding-right: 1em;
+}
+
+div.boxPref {
+  margin: 10px 0px 0px;
+}
+
+div.boxPrefTitle {
+  font-weight: bold;
+  background: #cfceb7;
+  margin-bottom: 6px;
+  padding-bottom: 0.2em;
+  overflow: hidden;
+}
+
+div.boxPrefTitle span{
+ padding:0px 5px;
+}
+
+/******************************************************************************/
+/* inline edition and generic form classes                                    */
+/******************************************************************************/
+
+div.inlineedit {
+  display: none;
+}
+
+div.editableField {
+  display: inline;
+}
+
+div.editableField:hover,
+div.editableField p:hover {
+  background-color: #eeedd9;
+}
+
+option.separator {
+  font-weight: bold;
+  background: #ccc;
+  text-align: center;
+}
+
+input.error {
+  background: transparent url("error.png") 100% 50% no-repeat;
+}
+
+span.error {
+  display: block;
+  font-weight: bold;
+  color: #ed0d0d;
+}
+
+/******************************************************************************/
+/* navigation                                                                 */
+/******************************************************************************/
+
+div#etyperestriction {
+  margin-bottom: 1ex;
+  border-bottom: 1px solid #ccc;
+}
+
+div.navigation a {
+  text-align: center;
+  text-decoration: none;
+}
+
+div.prevnext {
+  width: 100%;
+  margin-bottom: 1em;
+}
+
+div.prevnext a {
+  color: #000;
+}
+
+span.slice a:visited,
+span.slice a:hover{
+  color: #555544;
+}
+
+span.selectedSlice a:visited,
+span.selectedSlice a {
+  color: #000;
+}
+
+/******************************************************************************/
+/* messages                                                                   */
+/******************************************************************************/
+
+.warning,
+.message,
+.errorMessage,
+.searchMessage,
+.statemessage {
+  padding: 0.3em 0.3em 0.3em 1em;
+  font-weight: bold;
+}
+
+.simpleMessage {
+  margin: 4px 0px;
+  font-weight: bold;
+  color: #ff7700;
+}
+
+div#appMsg, div.appMsg {
+  border: 1px solid #cfceb7;
+  margin-bottom: 8px;
+  padding: 3px;
+  background: #f8f8ee;
+}
+
+div#rqlinput {
+  border: 1px solid #cfceb7;
+  margin-bottom: 8px;
+  padding: 3px;
+  background: #cfceb7;
+}
+
+.message {
+  margin: 0px;
+  background: #f8f8ee url("information.png") 5px center no-repeat;
+  padding-left: 15px;
+}
+
+.errorMessage {
+  margin: 10px 0px;
+  padding-left: 25px;
+  background: #f7f6f1 url("critical.png") 2px center no-repeat;
+  color: #ed0d0d;
+  border: 1px solid #cfceb7;
+}
+
+.searchMessage {
+  margin-top: 0.5em;
+  border-top: 1px solid #cfceb7;
+  background: #eeedd9 url("information.png") 0% 50% no-repeat; /*dcdbc7*/
+}
+
+.stateMessage {
+  border: 1px solid #ccc;
+  background: #f8f8ee url("information.png") 10px 50% no-repeat;
+  padding:4px 0px 4px 20px;
+  border-width: 1px 0px 1px 0px;
+}
+
+/* warning messages like "There are too many results ..." */
+.warning {
+  padding-left: 25px;
+  background: #f2f2f2 url("critical.png") 3px 50% no-repeat;
+}
+
+/* label shown in the top-right hand corner during form validation */
+div#progress {
+  position: fixed;
+  right: 5px;
+  top: 0px;
+  background: #222211;
+  color: white;
+  font-weight: bold;
+  display: none;
+}
+
+/******************************************************************************/
+/* listing table                                                              */
+/******************************************************************************/
+
+table.listing {
+ margin: 10px 0em;
+ color: #000;
+ width: 100%;
+ border-right: 1px solid #dfdfdf;
+}
+
+
+table.listing thead th.over {
+  background-color: #746B6B;
+  cursor: pointer;
+}
+
+table.listing th,
+table.listing td {
+  padding: 3px 0px 3px 5px;
+  border: 1px solid #dfdfdf;
+  border-right: none;
+}
+
+table.listing th {
+  font-weight: bold;
+  background: #ebe8d9 url("button.png") repeat-x;
+}
+
+table.listing td a,
+table.listing td a:visited {
+  color: #666;
+}
+
+table.listing a:hover,
+table.listing tr.highlighted td a {
+  color:#000;
+}
+
+table.listing td.top {
+  border: 1px solid white;
+  border-bottom: none;
+  text-align: right ! important;
+  /* insane IE row bug workaround */
+  position: relative;
+  left: -1px;
+  top: -1px;
+}
+
+/******************************************************************************/
+/* drag and drop zone (XXX only used in seo for now)                          */
+/******************************************************************************/
+
+div.droppable {
+  border: 1px dashed black;
+  margin: 2px;
+  padding: 2px;
+  height: 15px;
+}
+
+div.drophover {
+  background: #f4f5ed;
+}
+
+/******************************************************************************/
+/* search box                                                                 */
+/******************************************************************************/
+
+input#norql{
+  width:13em;
+  margin-right: 2px;
+}
+
+/******************************************************************************/
+/* filter box                                                                 */
+/******************************************************************************/
+
+#filter_box input {
+  width: 180px;
+}
+#filter_box label {
+  float: left;
+}
+#filter_box select.radio {
+  width: 47px;
+  float: right;
+}
+#filter_box select {
+  width: 185px;
+}
+#filter_box option.disabled {
+  background: lightgray;
+}
+
+/******************************************************************************/
+/* table filter form                                                          */
+/******************************************************************************/
+
+table.filter th {
+  font-weight: bold;
+  background: #ebe8d9 url("button.png") repeat-x;
+  padding: 0.3em;
+  border-bottom: 1px solid #cfceb7;
+  text-align: left;
+}
+
+table.filter td {
+  padding: 0.6em 0.2em;
+}
+
+table.filter td select {
+  padding:1px 2px;
+}
+
+div#tableActionsBox {
+ direction:rtl;
+ float:right
+}
+
+/******************************************************************************/
+/* error view (views/management.py)                                           */
+/******************************************************************************/
+
+div.pycontext { /* html traceback */
+  font-family: Verdana, sans-serif;
+  font-size: 80%;
+  padding: 1em;
+  margin: 10px 0px 5px 20px;
+  background-color: #dee7ec;
+}
+
+div.pycontext span.name {
+  color: #ff0000;
+}
+
+/******************************************************************************/
+/* index view (views/startup.py)                                              */
+/******************************************************************************/
+
+table.startup {
+  width: 100%;
+}
+
+table.startup td {
+  padding: 0.1em 0.2em;
+}
+
+table.startup td.addcol {
+  text-align: right;
+  width: 0.5em;
+}
+
+table.startup th{
+  padding-top: 3px;
+  padding-bottom: 3px;
+  text-align: left;
+}
+
+/******************************************************************************/
+/* addcombobox                                                                */
+/******************************************************************************/
+
+input#newopt{ 
+ width:120px ; 
+ display:block;
+ float:left;
+ }
+
+div#newvalue{ 
+ margin-top:2px;
+ }
+
+#add_newopt{
+ background: #fffff8 url("go.png") 50% 50% no-repeat;
+ width: 20px;
+ line-height: 20px; 
+ display:block;
+ float:left;
+}
+
+/******************************************************************************/
+/* facets (XXX to continue)                                                   */
+/******************************************************************************/
+
+div.facetBody {
+  height: 10em;
+  overflow: auto;
+}
+
+.facetValueDisabled {
+  text-decoration: underline;
+}

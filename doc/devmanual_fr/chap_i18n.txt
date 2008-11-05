@@ -1,0 +1,66 @@
+Internationalisation
+====================
+
+Le système d'internationalisation de l'interface web d'cubicweb est basé sur le
+système `GNU gettext`_.
+
+.. _`GNU gettext`: http://www.gnu.org/software/gettext/
+
+Messages à internationaliser
+----------------------------
+
+Marquage des messages à internaliser
+````````````````````````````````````
+Les chaines de caractères à internationaliser sont marqués par l'appel à la
+fonction `_` *OU* par la méthode équivalent de la requête dans le code python ou
+dans les expressions python de template TAL. 
+
+Dans les templates cubicweb-tal, il est également possible d'insérer une chaine à
+traduire via les balises `i18n:content` et  `i18n:replace`.
+
+De plus des messages correspondant aux entités/relations utilisés par le schéma
+de l'application seront automatiquement ajoutés.
+
+Renvoi d'un message internationalisé lors de la construction d'une page
+```````````````````````````````````````````````````````````````````````
+La fonction *built-in* `_` ne doit servir qu'**à marquer les messages à
+traduire**, non pas à récupérer une traduction. Il faut pour cela utiliser la
+méthode `_` de l'objet requête, sans quoi vous récupérerez l'identifiant de
+message au lieu de sa traduction dans la langue propre à la requête.1
+
+
+Gestion des catalogues de traduction
+------------------------------------
+Une fois l'application rendu internationalisable coté code, reste à gérer les
+catalogues de traductions. cubicweb-ctl intègre pour cela les commandes suivantes : 
+
+* `i18nlibupdate`, met à jour les catalogues de messages *de la librairie
+  cubicweb*. Sauf si vous développez sur le framework (et non votre propre
+  application), vous ne devriez pas avoir à utiliser cette commande
+
+* `i18nupdate`, met à jour les catalogues de messages *du composant* (ou de tous
+  les composants). A la suite de cette commande, vous devez mettre à jour les
+  fichiers de traduction *.po* dans le sous-répertoire "i18n" de votre
+  template. Évidemment les traductions précédentes toujours utilisées ont été
+  conservées.
+
+* `i18ncompile`, recompile les catalogues de messages *d'une instance* (ou de
+  toutes les instances) après mise à jour des catalogues de son composant. Cela
+  est effectué automatiquement lors d'une création ou d'une mise à jour. Les
+  catalogues de messages compilés se trouvent dans le répertoire
+  "i18n/<lang>/LC_MESSAGES/cubicweb.mo" de l'application où `lang` est
+  l'identifiant de la langue sur 2 lettres ('en' ou 'fr' par exemple)
+
+
+Le cas classique
+````````````````
+Vous avez ajouté et/ou modifié des messages d'un composant utilisé par votre
+application (en ajoutant une nouvelle vue ou en ayant modifié le schéma par
+exemple) :
+
+1. `cubicweb-ctl i18nupdate <composant>`
+2. éditer les fichiers <composant>/xxx.po dans pour y rajouter les traductions
+   manquantes (`msgstr` vide) 
+3. `hg ci -m "updated i18n catalogs"`
+4. `cubicweb-ctl i18n compile <monapplication>`
+

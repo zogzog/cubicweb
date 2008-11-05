@@ -1,0 +1,228 @@
+.. -*- coding: utf-8 -*-
+
+Fondements du framework CubicWeb
+================================
+
+Le moteur web d'cubicweb consiste en quelques classes gérant un ensemble d'objets
+chargés dynamiquement au lancement d'cubicweb. Ce sont ces objets dynamiques, issus
+du modèle ou de la librairie, qui construisent le site web final. Les différents
+composants dynamiques sont par exemple : 
+
+* coté client et serveur
+
+ - les définitions d'entités, contenant la logique permettant la manipulation des
+   données de l'application
+
+* coté client
+
+  - les *vues* , ou encore plus spécifiquement 
+
+    - les boites
+    - l'en-tête et le pied de page
+    - les formulaires
+    - les gabarits de pages
+
+  - les *actions*
+  - les *controleurs*
+
+* coté serveur
+
+  - les crochets de notification
+  - les vues de notification
+
+Les différents composants du moteur sont :
+
+* un frontal web (seul twisted disponible pour le moment), transparent du point
+  de vue des objets dynamiques
+* un objet encapsulant la configuration
+* un `vregistry` (`cubicweb.cwvreg`) contenant les objets chargés dynamiquements
+
+
+Détail de la procédure d'enregistrement
+---------------------------------------
+Au démarage le `vregistry` ou base de registres inspecte un certain nombre de
+répertoires à la recherche de définition de classes "compatible". Après une
+procédure d'enregistrement les objets sont affectés dans différents registres
+afin d'être ensuite séléctionné dynamiquement pendant le fonctionnement de
+l'application.
+
+La classe de base de tout ces objets est la classe `AppRsetObject` (module
+`cubicweb.common.appobject`). 
+
+
+API Python/RQL
+--------------
+
+Inspiré de la db-api standard, avec un object Connection possédant les méthodes
+cursor, rollback et commit principalement. La méthode importante est la méthode
+`execute` du curseur :
+
+`execute(rqlstring, args=None, eid_key=None, build_descr=True)`
+
+:rqlstring: la requête rql à éxécuter (unicode)
+:args: si la requête contient des substitutions, un dictionnaire contenant les
+       valeurs à utiliser
+:eid_key: 
+   un détail d'implémentation du cache de requêtes RQL fait que si une substitution est
+   utilisée pour introduire un eid *levant des ambiguités dans la résolution de
+   type de la requête*, il faut spécifier par cet argument la clé correspondante
+   dans le dictionnaire
+
+C'est l'objet Connection qui possède les méthodes classiques `commit` et
+`rollback`. Vous ne *devriez jamais avoir à les utiliser* lors du développement
+d'interface web sur la base du framework CubicWeb étant donné que la fin de la
+transaction est déterminée par celui-ci en fonction du succès d'éxécution de la
+requête. 
+
+NOTE : lors de l'éxécution de requêtes de modification (SET,INSERT,DELETE), si une
+requête génère une erreur liée à la sécurité, un rollback est systématiquement
+effectuée sur la transaction courante.
+
+
+La classe `Request` (`cubicweb.web`)
+------------------------------------
+Une instance de requête est créée lorsque une requête HTTP est transmise au
+serveur web. Elle contient des informations telles que les paramètres de
+formulaires, l'utilisateur connecté, etc. 
+
+**De manière plus générale une requête représente une demande d'un utilisateur,
+que se soit par HTTP ou non (on parle également de requête rql coté serveur par
+exemple)**
+
+Une instance de la classe `Request` possède les attributs :
+
+* `user`, instance de`cubicweb.common.utils.User` correspondant à l'utilisateur
+  connecté 
+* `form`, dictionaire contenant les valeurs de formulaire web
+* `encoding`, l'encodage de caractère à utiliser dans la réponse
+
+Mais encore :
+
+:Gestion des données de session:        
+  * `session_data()`, retourne un dictionaire contenant l'intégralité des
+    données de la session
+  * `get_session_data(key, default=None)`, retourne la valeur associée à
+    la clé ou la valeur `default` si la clé n'est pas définie
+  * `set_session_data(key, value)`, associe une valeur à une clé
+  * `del_session_data(key)`,  supprime la valeur associé à une clé
+    
+
+:Gestion de cookie:
+  * `get_cookie()`, retourne un dictionnaire contenant la valeur de l'entête
+    HTTP 'Cookie'
+  * `set_cookie(cookie, key, maxage=300)`, ajoute un en-tête HTTP `Set-Cookie`,
+    avec une durée de vie 5 minutes par défault (`maxage` = None donne un cooke
+    *de session"* expirant quand l'utilisateur ferme son navigateur
+  * `remove_cookie(cookie, key)`, fait expirer une valeur
+
+:Gestion d'URL:
+  * `url()`, retourne l'url complète de la requête HTTP
+  * `base_url()`, retourne l'url de la racine de l'application
+  * `relative_path()`, retourne chemin relatif de la requête
+
+:Et encore...:
+  * `set_content_type(content_type, filename=None)`, place l'en-tête HTTP
+    'Content-Type'
+  * `get_header(header)`, retourne la valeur associé à un en-tête HTTP
+    arbitraire de la requête
+  * `set_header(header, value)`, ajoute un en-tête HTTP arbitraire dans la
+    réponse 
+  * `cursor()` retourne un curseur RQL sur la session
+  * `execute(*args, **kwargs)`, raccourci vers .cursor().execute()
+  * `property_value(key)`, gestion des propriétés (`EProperty`)
+  * le dictionaire `data` pour stocker des données pour partager de
+    l'information entre les composants *durant l'éxécution de la requête*.
+
+A noter que cette classe est en réalité abstraite et qu'une implémentation
+concrète sera fournie par le *frontend* web utilisé (en l'occurent *twisted*
+aujourd'hui). Enfin pour les vues ou autres qui sont éxécutés coté serveur,
+la majeure partie de l'interface de `Request` est définie sur la session
+associée au client. 
+
+
+La classe `AppObject`
+---------------------
+
+En général :
+
+* on n'hérite pas directement des cette classe mais plutôt d'une classe
+  plus spécifique comme par exemple `AnyEntity`, `EntityView`, `AnyRsetView`,
+  `Action`...
+
+* pour être enregistrable, un classe fille doit définir son registre (attribut
+  `__registry__`) et son identifiant (attribut `id`). Généralement on n'a pas à
+  s'occuper du registre, uniquement de l'identifiant `id` :) 
+
+On trouve un certain nombre d'attributs et de méthodes définis dans cette classe
+et donc commune à tous les objets de l'application :
+
+A l'enregistrement, les attributs suivants sont ajoutés dynamiquement aux
+*classes* filles:
+
+* `vreg`, le `vregistry` de l'application
+* `schema`, le schéma de l'application
+* `config`, la configuration de l'application
+
+On trouve également sur les instances les attributs :
+
+* `req`, instance de `Request`
+* `rset`, le "result set" associé à l'objet le cas échéant
+* `cursor`, curseur rql sur la session
+
+
+:Gestion d'URL:
+  * `build_url(method=None, **kwargs)`, retourne une URL absolue construites à
+    partir des arguments donnés. Le *controleur* devant gérer la réponse
+    peut-être spécifié via l'argument spécial `method` (le branchement est
+    théoriquement bien effectué automatiquement :).
+
+  * `datadir_url()`, retourne l'url du répertoire de données de l'application
+    (contenant les fichiers statiques tels que les images, css, js...)
+
+  * `base_url()`, raccourci sur `req.base_url()`
+
+  * `url_quote(value)`, version *unicode safe* de de la fonction `urllib.quote`
+
+:Manipulation de données:
+
+  * `etype_rset(etype, size=1)`, raccourci vers `vreg.etype_rset()`
+
+  * `eid_rset(eid, rql=None, descr=True)`, retourne un objet result set pour
+    l'eid donné
+  * `entity(row, col=0)`, retourne l'entité correspondant à la position données
+    du "result set" associé à l'objet
+
+  * `complete_entity(row, col=0, skip_bytes=True)`, équivalent à `entity` mais
+    appelle également la méthode `complete()` sur l'entité avant de la retourner
+
+:Formattage de données:
+  * `format_date(date, date_format=None, time=False)`
+  * `format_time(time)`,
+
+:Et encore...:
+
+  * `external_resource(rid, default=_MARKER)`, accède à une valeur définie dans
+    le fichier de configuration `external_resource`
+    
+  * `tal_render(template, variables)`, 
+
+
+**NOTE IMPORTANTE**
+Lorsqu'on hérite d'`AppObject` (même indirectement), il faut **toujours**
+utiliser **super()** pour récupérer les méthodes et attributs des classes
+parentes, et pas passer par l'identifiant de classe parente directement.
+(sous peine de tomber sur des bugs bizarres lors du rechargement automatique
+des vues). Par exemple, plutôt que d'écrire::
+
+      class Truc(PrimaryView):
+          def f(self, arg1):
+              PrimaryView.f(self, arg1)
+
+Il faut écrire::
+      
+      class Truc(PrimaryView):
+          def f(self, arg1):
+              super(Truc, self).f(arg1)
+
+
+XXX FILLME diagramme interaction application/controller/template/view

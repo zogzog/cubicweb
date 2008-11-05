@@ -1,0 +1,51 @@
+<fieldset class="subentity">
+<legend class="iformTitle" tal:content="python: label">relations</legend>
+<table id="relatedEntities"
+       tal:define="pendings python: list(self.restore_pending_inserts(entity))">
+  <span tal:iter="row python: self.relations_table(entity)" tal:omit-tag="python: True">
+    <tr tal:condition="python: row[2]">
+      <th class="labelCol" tal:content="python: display_name(req, row[0].type, row[1])">relation name</th>
+      <td>
+	<ul>
+	  <li tal:iter="viewparams python: row[2]" class="invisible">
+	    <span tal:replace="structure python:viewparams[1]">[del it if you can]</span>
+	    <div tal:attributes="id python: 'span'+viewparams[0]; class python: viewparams[2]"
+                 tal:content="structure python: viewparams[3]">related entity view</div>
+	  </li>
+	  <li class="invisible"
+	      tal:condition="python: not self.force_display and self.maxrelitems &lt; len(row[2])"
+	      tal:content="structure python:self.force_display_link()"/>
+	</ul>
+      </td>
+    </tr>
+  </span>
+  <tr tal:iter="row pendings"
+      tal:attributes="id python: 'tr' + row[1]">
+    <!-- row: (relname, nodeid, js, url, eview) -->
+    <th tal:content="python: row[3]">relation name</th>
+    <td>
+      <a class="handle" title="cancel this insert"
+	 tal:attributes="href python: row[2]">[x]</a>
+      <a class="editionPending"
+	 tal:attributes="href python: row[4]; id python: 'a' + row[1]"
+	 tal:content="python: row[5]">entity\'s text_view</a>
+    </td>
+  </tr>
+  <tr tal:condition="not:pendings"><th>&nbsp;</th><td>&nbsp;</td></tr>
+  <tr class="separator" tal:attributes="id string: relationSelectorRow_$eid;">
+    <th class="labelCol">
+      <span i18n:content="add relation"></span>
+      <select tal:attributes="id string: relationSelector_${eid};
+                              tabindex req/next_tabindex;
+			      onchange string: javascript:showMatchingSelect(this.options[this.selectedIndex].value,${eid});">
+	<option value="" i18n:content="select a relation">select a relation</option>
+	<option tal:iter="rel python: entity.srelations_by_category(('generic', 'metadata'), 'add')" 
+                tal:attributes="value python: '%s_%s' % (rel[1], rel[2])"
+		tal:content="python: rel[0]">rel</option>
+      </select>
+    </th>
+    <td tal:attributes="id string: unrelatedDivs_$eid">
+    </td>
+  </tr>
+</table>
+</fieldset>

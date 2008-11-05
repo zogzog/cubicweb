@@ -1,0 +1,14 @@
+.. -*- coding: utf-8 -*-
+
+
+Diagramme UML
+=============
+
+.. image:: cubicweb.png
+
+`Diagramme ArgoUML`_
+
+[FIXME]
+Make a downloadable source of zargo file.
+
+.. _`Diagramme ArgoUML`: cubicweb.zargo

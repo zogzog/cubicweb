@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+
+<display window-flags="sticky, below" bg-color="#FFFFFF00">
+    <meta author="Sylvain Thénault" name="web_query" version="1.0" category="net/www">
+    
+    <!-- Sensors -->
+    <sensor id="w" module="webquery"/>
+
+    <!-- gfx -->
+    <image id="top_left_corner" uri="gfx/top_left_corner.png"/>
+    <image id="top_right_corner" relative-to="desklet, x" anchor="sw" uri="gfx/top_right_corner.png"/>
+    <image id="bottom_left_corner" relative-to="desklet, y" anchor="ne" uri="gfx/bottom_left_corner.png"/>
+    <image id="bottom_right_corner" relative-to="desklet, xy" anchor="nw" uri="gfx/bottom_right_corner.png"/>
+    <group relative-to="top_left_corner, x" height="10" bg-uri="gfx/top_edge.png" watch="width=s:border_width"/>
+    <group relative-to="bottom_left_corner, x" height="20" bg-uri="gfx/bottom_edge.png" watch="width=s:border_width"/>
+    <group relative-to="top_left_corner, y" width="14" bg-uri="gfx/left_edge.png" watch="height=s:border_height"/>
+    <group relative-to="top_right_corner, y" width="15" bg-uri="gfx/right_edge.png" watch="height=s:border_height"/>
+
+    <!-- Main -->
+    <group id="desklet" relative-to="top_left_corner, xy" bg-color="#ffffff11" on-click="s:show_or_hide_message_window" on-enter="s:show_message_window" on-leave="s:hide_message_window" on-menu="s:on_menu">
+        <group id="left_corner_spacer1" width="5" height="5"/>
+        <group id="header" relative-to="left_corner_spacer1, xy">
+            <label id="channel" watch="value=s:channel, font=f:font2, color=f:color2"/>
+            <label id="topic" relative-to="channel, x" x="15" watch="value=s:topic, font=f:font2, color=f:color2"/>
+        </group>
+        <group id="right_corner_spacer1" relative-to="header, x" width="5" height="5"/>
+        
+        <group id="horizontal_divider_1" relative-to="header, y" height="1" x="30" y="5" bg-color="#ffffff11" watch="width=s:horizontal_divider_width"/>
+        <group id="horizontal_divider_2" relative-to="horizontal_divider_1, y" height="2" bg-color="#ffffff33" watch="width=s:horizontal_divider_width"/>
+        <group id="horizontal_divider_3" relative-to="horizontal_divider_2, y" height="1" bg-color="#ffffff11" watch="width=s:horizontal_divider_width"/>
+        <group id="horizontal_divider_4" relative-to="horizontal_divider_3, y" height="1" bg-color="#00000033" watch="width=s:horizontal_divider_width"/>
+        
+        <label id="clients" relative-to="header, y" y="16" watch="value=s:clients, font=f:font1, color=f:color1" on-scroll="s:scroll_clients"/>
+        <label id="msg" relative-to="clients, x" x="15" watch="value=s:msg, font=f:font0, color=f:color0" on-scroll="s:scroll_history"/>
+        <group id="left_corner_spacer2" relative-to="clients, y" width="5" height="5"/>
+        <group id="right_corner_spacer2" relative-to="msg, xy" width="5" height="5"/>
+    </group>
+
+</display>

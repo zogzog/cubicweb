@@ -1,0 +1,43 @@
+Personne travaille Societe
+Personne evaluee Note
+EUser evaluee Note
+Societe evaluee Note
+Personne concerne Affaire
+Affaire concerne Societe
+Affaire concerne Note
+
+Note ecrit_par Personne inline CONSTRAINT E concerns P, X version_of P
+Note ecrit_par EUser inline CONSTRAINT
+Personne connait Personne symetric
+
+# not inlined intentionaly
+Comment comments Personne
+
+Note inline1 Affaire inline
+Personne inline2 Affaire inline
+
+Note todo_by EUser
+Affaire todo_by Personne
+
+Folder see_also Folder
+
+
+Affaire documented_by Card
+
+EUser copain EUser
+
+Tag tags EUser
+Tag tags EGroup
+Tag tags State
+Tag tags Note
+Tag tags Card
+Tag tags Affaire
+
+Note filed_under Folder
+Affaire filed_under Folder
+
+Card require_permission EPermission
+Note require_permission EPermission
+Personne require_permission EPermission
+
+EPermission require_state State

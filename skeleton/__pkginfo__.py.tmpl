@@ -1,0 +1,65 @@
+# pylint: disable-msg=W0622
+"""%(distname)s application packaging information"""
+
+distname = '%(distname)s'
+
+numversion = (0, 1, 0)
+version = '.'.join(str(num) for num in numversion)
+
+license = 'LCL'
+copyright = '''Copyright (c) 2008 LOGILAB S.A. (Paris, FRANCE).
+http://www.logilab.fr/ -- mailto:contact@logilab.fr'''
+
+author = 'Logilab'
+author_email = 'contact@logilab.fr'
+
+short_desc = '%(shortdesc)s'
+long_desc = '''%(longdesc)s'''
+
+from os import listdir as _listdir
+from os.path import join, isdir
+
+from glob import glob
+scripts = glob(join('bin', '%(cubename)s-*'))
+
+web, ftp = '', ''
+
+pyversions = ['2.4']
+
+#from cubicweb.devtools.pkginfo import get_distutils_datafiles
+CUBES_DIR = join('share', 'cubicweb', 'cubes')
+THIS_CUBE_DIR = join(CUBES_DIR, '%(cubename)s')
+
+def listdir(dirpath):
+    return [join(dirpath, fname) for fname in _listdir(dirpath)
+            if fname[0] != '.' and not fname.endswith('.pyc')
+            and not fname.endswith('~')]
+
+
+try:
+    data_files = [
+        # common files
+        [THIS_CUBE_DIR, [fname for fname in glob('*.py') if fname != 'setup.py']],
+        
+        # client (web) files
+        [join(THIS_CUBE_DIR, 'data'),  listdir('data')],
+        [join(THIS_CUBE_DIR, 'i18n'),  listdir('i18n')],
+        
+        # server files
+        [join(THIS_CUBE_DIR, 'migration'), listdir('migration')],
+        ]
+    
+    # check for possible extended cube layout
+    for dirname in ('entities', 'views', 'sobjects', 'schema'):
+        if isdir(dirname):
+            data_files.append([join(THIS_CUBE_DIR, dirname), listdir(dirname)])
+    # Note: here, you'll need to add subdirectories if you want
+    # them to be included in the debian package
+except OSError:
+    # we are in an installed directory
+    pass
+
+
+cube_eid = None # <=== FIXME if you need direct bug-subscription
+__use__ = (%(dependancies)s)
+

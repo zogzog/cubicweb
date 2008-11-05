@@ -1,0 +1,101 @@
+from logilab.common.testlib import TestCase, unittest_main
+
+from cubicweb.devtools._apptest import FakeRequest
+from cubicweb.devtools.apptest import EnvBasedTC
+
+from cubicweb.web.views.urlrewrite import SimpleReqRewriter, SchemaBasedRewriter, rgx, rgx_action
+
+
+class UrlRewriteTC(TestCase):
+
+    def test_auto_extend_rules(self):
+        class Rewriter(SimpleReqRewriter):
+            rules = [
+                ('foo', dict(rql='Foo F')),
+                ('/index', dict(vid='index2')),
+                ]
+        rules = []
+        for pattern, values in Rewriter.rules:
+            if hasattr(pattern, 'pattern'):
+                pattern = pattern.pattern
+            rules.append((pattern, values))
+        self.assertListEquals(rules, [
+            ('foo' , dict(rql='Foo F')),
+            ('/index' , dict(vid='index2')),
+            ('/schema', {'vid': 'schema'}),
+            ('/myprefs', dict(vid='epropertiesform')),
+            ('/siteconfig', dict(vid='systemepropertiesform')),
+            ('/manage', dict(vid='manage')),
+            ('/notfound', {'vid': '404'}),
+            ('/error', {'vid': 'error'}),
+            ('/schema/([^/]+?)/?$', {'rql': r'Any X WHERE X is EEType, X name "\1"', 'vid': 'eschema'}),
+            ('/add/([^/]+?)/?$' , dict(vid='creation', etype=r'\1')),
+            ('/doc/images/(.+?)/?$', dict(fid='\\1', vid='wdocimages')),
+            ('/doc/?$', dict(fid='main', vid='wdoc')),
+            ('/doc/(.+?)/?$', dict(fid='\\1', vid='wdoc')),
+            ('/changelog/?$', dict(vid='changelog')),
+            # now in SchemaBasedRewriter
+            #('/search/(.+)$', dict(rql=r'Any X WHERE X has_text "\1"')), 
+            ])
+
+
+    def test_no_extend_rules(self):
+        class Rewriter(SimpleReqRewriter):
+            ignore_baseclass_rules = True
+            rules = [
+                ('foo', dict(rql='Foo F')),
+                ('/index', dict(vid='index2')),
+                ]
+        self.assertListEquals(Rewriter.rules, [
+            ('foo' , dict(rql='Foo F')),
+            ('/index' , dict(vid='index2')),
+            ])
+
+    def test_basic_transformation(self):
+        """test simple string-based rewrite"""
+        rewriter = SimpleReqRewriter()
+        req = FakeRequest()
+        self.assertRaises(KeyError, rewriter.rewrite, req, '/view?vid=whatever')
+        self.assertEquals(req.form, {})
+        rewriter.rewrite(req, '/index')
+        self.assertEquals(req.form, {'vid' : "index"})
+
+    def test_regexp_transformation(self):
+        """test regexp-based rewrite"""
+        rewriter = SimpleReqRewriter()
+        req = FakeRequest()
+        rewriter.rewrite(req, '/add/Task')
+        self.assertEquals(req.form, {'vid' : "creation", 'etype' : "Task"})
+        req = FakeRequest()
+        rewriter.rewrite(req, '/add/Task/')
+        self.assertEquals(req.form, {'vid' : "creation", 'etype' : "Task"})
+
+
+
+
+class RgxActionRewriteTC(EnvBasedTC):
+
+    def setup_database(self):
+        self.p1 = self.create_user(u'user1')
+        self.p1.set_attributes(firstname=u'joe', surname=u'Dalton')
+        self.p2 = self.create_user(u'user2')
+        self.p2.set_attributes(firstname=u'jack', surname=u'Dalton')
+
+    def test_rgx_action_with_transforms(self):
+        class TestSchemaBasedRewriter(SchemaBasedRewriter):
+            rules = [
+                (rgx('/(?P<sn>\w+)/(?P<fn>\w+)'), rgx_action(r'Any X WHERE X surname %(sn)s, X firstname %(fn)s',
+                                                                             argsgroups=('sn', 'fn'),
+                                                                             transforms={'sn' : unicode.capitalize,
+                                                                                         'fn' : unicode.lower,})),
+                ]
+        rewriter = TestSchemaBasedRewriter()
+        req = self.request()
+        pmid, rset = rewriter.rewrite(req, u'/DaLToN/JoE')
+        self.assertEquals(len(rset), 1)
+        self.assertEquals(rset[0][0], self.p1.eid)
+        
+    
+
+if __name__ == '__main__':
+    unittest_main()

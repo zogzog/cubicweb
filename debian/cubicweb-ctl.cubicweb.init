@@ -1,0 +1,15 @@
+#!/bin/sh -e
+
+### BEGIN INIT INFO
+# Provides:          cubicweb
+# Required-Start:    $syslog $local_fs $network
+# Required-Stop:     $syslog $local_fs $network
+# Should-Start:      $postgresql $pyro-nsd
+# Should-Stop:       $postgresql $pyro-nsd
+# Default-Start:     2 3 4 5
+# Default-Stop:      0 1 6
+# Short-Description: Start cubicweb application at boot time
+### END INIT INFO
+
+cd /tmp
+/usr/bin/cubicweb-ctl $1 --force

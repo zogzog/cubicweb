@@ -1,0 +1,227 @@
+.. -*- coding: utf-8 -*-
+
+=============
+LAX Tutorial
+=============
+
+Introduction
+============
+
+LAX stands for Logilab App engine eXtension. It is a web framework
+running on top of the Google AppEngine datastore.
+
+Distinctive features include a data-model driven engine, a query
+language, a selection/view mechanism for HTML/XML/text generation,
+reuseable components, etc. It all sums up to very fast and efficient
+development.
+
+This tutorial will guide you to build a blog application step by step
+to discover the unique features of LAX. It assumes that you followed
+the installation guidelines and that both the AppEngine SDK and the
+LAX framework are setup on your computer.
+
+Creating a very simple application
+==================================
+
+Creating a new application
+--------------------------
+
+When you installed lax, you saw a directory named skel. Make a copy of
+this directory and call it BlogDemo.
+
+Defining a schema
+-----------------
+
+With LAX, the schema/datamodel is the core of the application.
+
+Let us start with something simple and improve on it later. First, we
+make sure that in appconfig.py we have a line ::
+
+  schema_type = 'yams'
+
+Then, in schema.py, we define two entities : ``Blog`` and ``BlogEntry``.
+
+::
+				   
+  class Blog(EntityType):
+      title = String(maxsize=50, required=True)
+      description = String()
+
+  class BlogEntry(EntityType):
+      title = String(maxsize=100, required=True)
+      publish_date = Date(default='TODAY')
+      text = String(fulltextindexed=True)
+      category = String(vocabulary=('important','business'))
+      entry_of = SubjectRelation('Blog', cardinality='?*')
+
+A Blog has a title and a description. The title is a string that is
+required and must be less than 50 characters. The description is a
+string that is not constrained.
+
+A BlogEntry has a title, a publish_date and a text. The title is a
+string that is required and must be less than 100 characters. The
+publish_date is a Date with a default value of TODAY, meaning that
+when a BlogEntry is created, its publish_date will be the current day
+unless it is modified. The text is a string that will be indexed in
+the full-text index and has no constraint.
+
+A BlogEntry also has a relationship ``entry_of`` that link it to a
+Blog. The cardinality ``?*`` means that a BlogEntry can be part of
+zero or one Blog (``?`` means `zero or one`) and that a Blog can
+have any number of BlogEntry (``*`` means `any number including
+zero`). For completeness, remember that ``+`` means `one or more`.
+
+:note: in lax-0.3.0, cardinality checking is not fully ported to
+AppEngine, so cardinality limits are not enforced. This should be
+fixed in lax-0.4.0 available at the beginning of June.
+
+Using the application
+---------------------
+
+Defining this simple schema is enough to get us started. Launch the
+application with the command::
+
+   python dev_appserver.py BlogDemo
+
+and point your browser at localhost:8080
+
+You will see the home page of your application. It lists the entity
+types: Blog and BlogEntry.
+
+Let us create a few of these. Click on the [+] at the right of the
+link Blog. Call this new Blog ``Tech-blog`` and type in
+``everything about technology`` as the description, then validate the
+form by clicking on ``button_ok``.
+
+Click on the logo at top left to get back to the home page, then
+follow the Blog link. If this link reads ``blog_plural`` it is because
+i18n is not working for you yet. Let us ignore this for a while. After
+following the link, you should be seeing a list with a single item
+``Tech-blog``. Clicking on this item will get you to its detailed
+description except that in this case, there is not much to display
+besides the name and the phrase ``everything about technology``.
+
+Now get back to the home page by clicking on the top-left logo, then
+create a new Blog called ``MyLife`` and get back to the home page
+again to follow the Blog link for the second time. The list now
+has two items.
+
+Get back to the home page and click on [+] at the right of the link
+BlogEntry. Call this new entry ``Hello World`` and type in some text
+before clicking on ``button_ok``. You added a new blog entry without
+saying to what blog it belongs. There is a box on the left entitled
+``actions``, click on the menu item ``modify``. You are back to the form
+to edit the blog entry you just created, except that the form now has
+another section with a combobox titled ``add relation``. Chose
+``entry_of`` in this menu and a second combobox appears where you pick
+``MyLife``. Validate the changes by clicking
+``button_ok``. The entity BlogEntry that is displayed now includes a link
+to the entity Blog named ``MyLife``.
+
+Conclusion
+----------
+
+Exercise
+~~~~~~~~
+
+Create new blog entries in ``Tech-blog``.
+
+What we learned
+~~~~~~~~~~~~~~~
+
+Creating a simple schema was enough to set up a new application that
+can store blogs and blog entries. 
+
+What is next ?
+--------------
+
+Althought the application is fully functionnal, its look is very
+basic. We will now improve how information is displayed by writing
+views.
+
+
+Developing the user interface with Views
+========================================
+
+[WRITE ME]
+
+* Defining views with selection/views
+
+* implementing interfaces, calendar for blog entries.
+
+* show that a calendar view can export data to ical. 
+
+* create view "blogentry table" with title, publish_date, category.
+
+* in view blog, select blogentries and apply view "blogentry table"
+
+* demo ajax by filtering blogentry table on category
+
+Components
+===========
+
+[WRITE ME]
+
+* explain the component architecture
+
+* add comments to the blog by importing the comments component
+
+Boxes
+======
+
+[WRITE ME]
+
+* explain how to build a box
+
+* add an blogentry archives box
+
+Preferences
+============
+
+[WRITE ME]
+
+* talk about the user preferences
+
+* add an example on how to hide / display / move a component or a box
+
+MainTemplate
+============
+
+[WRITE ME]
+
+* customize MainTemplate and show that everything in the user
+  interface can be changed
+
+
+RSS Channel
+===========
+
+[WRITE ME]
+
+* show that the RSS view can be used to display an ordered selection
+  of blog entries, thus providing a RSS channel
+
+* show that a different selection (by category) means a different channel
+
+RQL
+====
+
+[WRITE ME]
+
+* talk about the Relation Query Language
+
+URL Rewriting
+=============
+
+[WRITE ME]
+
+* show how urls are mapped to selections and views and explain URLRewriting 
+
+Security
+=========
+
+[WRITE ME]
+
+* talk about security access rights and show that security is defined
+  using RQL
+

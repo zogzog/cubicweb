@@ -1,0 +1,70 @@
+.. -*- coding: utf-8 -*-
+
+Schémas prédéfinies dans la librairie
+-------------------------------------
+
+La librairie définit un certain nombre de schémas d'entités nécessaires
+au système ou bien couramment utilisées dans les application `cubicweb`.
+Vous pouvez bien entendu étendre ces schémas au besoin.
+
+
+Schémas "systèmes"
+``````````````````
+
+* `EUser`, utilisateurs du système
+* `EGroup`, groupes d'utilisateurs
+* `EEType`, types d'entité
+* `ERType`, types de relation
+
+* `State`, état d'un workflow
+* `Transition`, transition d'un workflow
+* `TrInfo`, enregistrement d'un passage de transition pour une entité
+
+* `EmailAddress`, adresse électronique, utilisé par le système de notification
+  pour les utilisateurs et par d'autres schéma optionnels
+
+* `EProperty`, utilisé pour configurer l'application
+* `EPermission`, utilisé pour configurer la sécurité de l'application
+
+* `Card`, fiche documentaire générique
+* `Bookmark`, un type d'entité utilisé pour permetter à un utilisateur de
+  personnaliser ses liens de navigation dans l'application.
+
+
+Composants de la librairie
+``````````````````````````
+Une application est construite sur la base de plusieurs composants de base.
+Parmi les composants de base disponible, on trouve par exemple :
+
+* `ecomment`, fournit le type d'entité `Comment` permettant de commenter les
+  entités du site
+  
+* `emailinglist`, fournit le type d'entité `Mailinglist` regroupant des
+  informations sur une liste de discussion
+
+* `efile`, fournit les types d'entités `File` et `Image` utilisés pour
+  représenter des fichiers (texte ou binaire) avec quelques données
+  supplémentaires comme le type MIME ou l'encodage le cas échéant ().
+  
+* `elink`, fournit le type d'entité lien internet (`Link`)
+
+* `eblog`, fournit le type d'entité weblog (`Blog`)
+
+* `eperson`, fournit le type d'entité personne physique (`Person`)
+
+* `eaddressbook`, fournit les types d'entités utilisés pour représenter des n°
+  de téléphone (`PhoneNumber`) et des adresses postales (`PostalAddress`)
+  
+* `eclasstags`, système de classfication à base d'étiquettes (`Tag`)
+
+* `eclassfolders`, système de classification à base de dossiers hiérarchiques
+  destinés à créer des rubriques de navigation (`Folder`)
+
+* `eemail`, gestion d'archives de courriers électroniques (`Email`, `Emailpart`,
+  `Emailthread`)
+
+* `ebasket`, gestion de paniers (`Basket`) permettant de regrouper des entités
+
+Pour déclarer l'utilisation d'un composant, une fois celui-ci installé, ajoutez
+le nom du composant à la variable `__use__` du fichier `__pkginfo__.py` de
+votre propre composant.

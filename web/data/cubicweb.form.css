@@ -1,0 +1,191 @@
+/* styles for generated forms
+ *
+ *  :organization: Logilab
+ *  :copyright: 2003-2008 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+ *  :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
+ */
+
+div.formTitle {
+  width: 100%;
+  font-size : 160%;
+  font-weight: bold;
+  color: orangered;
+  padding-bottom : 0.4em;
+  text-transform: capitalize;
+  background: url("bg_trame_grise.png") left bottom repeat-x;
+  margin-bottom: 0.6em
+}
+
+div.formTitle span {
+  padding: 4px 0px;
+  display: block;
+}
+
+div.iformTitle {
+  font-weight: bold;
+  font-size: 110%;
+  color: #222211;
+  background: #e4ead8;
+  border: 1px solid #E4EAD8;  /*#b7b6a3 */
+  border-bottom: none;
+}
+
+div.iformTitle span {
+  margin: 0.5em;
+}
+
+div.iformTitle span.icounter {
+  margin: 0em;
+}
+
+div.iformTitle a {
+  font-size: 80%;
+}
+
+div.formBody {
+  width:100%;
+}
+
+fieldset.subentity {
+  border: 1px solid #E4EAD8;
+  display: block;
+  margin-bottom: 1em;
+  padding: 0.4em;
+}
+
+table.attributeForm {
+  border: 1px solid #E4EAD8;
+  margin-bottom: 1em;
+  padding: 0.8em;
+}
+
+fieldset.subentity table td {
+  padding: 2px;
+  vertical-align: top;
+}
+
+fieldset.subentity table.attributeForm {
+    border: none;
+    padding: 0em;
+}
+
+.attributeForm,
+.attributeForm th,
+.attributeForm td {
+  border-collapse: separate;
+}
+
+table.attributeForm th,
+table.attributeForm td {
+  padding : 0px 2px;
+}
+
+table.attributeForm th {
+  text-align: right;
+}
+
+table.attributeForm div#comfirmPsw {
+}
+
+table.attributeForm input,
+table.attributeForm textarea,
+table.attributeForm select {
+  border: 1px solid #E4EAD8;  /*#b7b6a3*/
+}
+
+table.attributeForm textarea {
+  font: 100% normal Courier, monospace;
+  width: 100%;
+}
+
+table.attributeForm label,
+.entityForm .label {
+  padding : 0.2em  10px 0.2em 0.4em;
+}
+
+table.attributeForm label.required {
+  background: url("required.png") 100% 50% no-repeat;
+}
+
+.entityForm input.validateButton {
+  margin: 5px 10px 5px 0px;
+}
+
+a.addEntity {
+  display:block ;
+  margin-bottom:1em ;
+  padding-left:0.2em ;
+  font-weight: bold ;
+}
+
+table#relatedEntities {
+  margin: 10px 0px;
+  border-collapse: separate;
+}
+
+table#relatedEntities th,
+table#relatedEntities td {
+  padding : 0px 2px;
+}
+
+table#relatedEntities tr.separator {
+  border-bottom: none;
+  text-align: center;
+}
+
+table#relatedEntities th {
+  text-align: right;
+  width:200em;
+}
+
+table#relatedEntities th.warning {
+  border: none;
+  text-align: center;
+}
+
+table#relatedEntities td span {
+  display: inline;
+}
+
+table#relatedEntities ul {
+  margin: 0px;
+  padding: 0px;
+}
+
+table#relatedEntities td {
+  width: 100%;
+}
+
+a.handle {
+ font-family: Courier;
+ font-size: 120%;
+}
+
+a.editionPending {
+  color: #557755;
+  font-weight: bold;
+}
+
+div.pendingDelete {
+  text-decoration: line-through;
+}
+
+div.notransform {
+  text-transform: none;
+}
+
+div.inlinedform {
+  margin-left: 2em;
+}
+
+div.trame_grise {
+  background: url("bg_trame_grise.png") left top repeat-x;
+}
+
+div.notice {
+  display: none;
+  font-style: italic;
+  font-size: 110%;
+  padding-left: 2em;
+  background : #f8f8ee url("information.png") 5px center no-repeat ;
+}

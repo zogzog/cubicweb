@@ -1,0 +1,7 @@
+#! /bin/sh -e
+
+ln -sf /usr/share/fckeditor/fckeditor.js /usr/share/cubicweb/cubes/shared/data
+ 
+#DEBHELPER#
+ 
+exit 0
