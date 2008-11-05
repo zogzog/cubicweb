@@ -23,8 +23,8 @@ import sys, os
 
 # Add any Sphinx extension module names here, as strings. They can be extensions
 # coming with Sphinx (named 'sphinx.ext.*') or your custom ones.
-extensions = []
-
+extensions = ['sphinx.ext.autodoc']
+autoclass_content = 'both'
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['.templates']
 
@@ -122,7 +122,7 @@ html_last_updated_fmt = '%b %d, %Y'
 #html_additional_pages = {}
 
 # If false, no module index is generated.
-#html_use_modindex = True
+html_use_modindex = True
 
 # If false, no index is generated.
 #html_use_index = True
@@ -139,7 +139,7 @@ html_last_updated_fmt = '%b %d, %Y'
 #html_use_opensearch = ''
 
 # If nonempty, this is the file name suffix for HTML files (e.g. ".xhtml").
-#html_file_suffix = ''
+html_file_suffix = '.html'
 
 # Output file base name for HTML help builder.
 htmlhelp_basename = 'Cubicwebdoc'

@@ -10,7 +10,8 @@ HOW TO
   * Modification d'une relation non finale
 
   * Modification d'une relation finale 
-  [TO COMPLETE]
+
+[TO COMPLETE]
 
 * Comment créer un utilisateur anonyme?
   
