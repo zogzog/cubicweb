@@ -76,9 +76,10 @@ class FilterBox(BoxTemplate):
             if eschema.has_perm(req, 'add'):
                 bk_path = 'view?rql=%s' % rset.printable_rql()
                 bk_title = req._('my custom search')
-                bk_add_url = self.build_url('add/Bookmark', path=bk_path, title=bk_title)
-                bk_base_url = self.build_url('add/Bookmark', title=bk_title)
-                w(u'<div class="bkSearch"><a cubicweb:target="%s" id="facetBkLink" href="%s">%s</a></div>' % (
+                linkto = 'bookmarked_by:%s:subject' % self.req.user.eid
+                bk_add_url = self.build_url('add/Bookmark', path=bk_path, title=bk_title, __linkto=linkto)
+                bk_base_url = self.build_url('add/Bookmark', title=bk_title, __linkto=linkto)
+                w(u'<div class="facetTitle"><a cubicweb:target="%s" id="facetBkLink" href="%s">%s</a></div>' % (
                     html_escape(bk_base_url),
                     html_escape(bk_add_url),
                     req._('bookmark this search')))
