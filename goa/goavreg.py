@@ -16,7 +16,7 @@ from cubicweb.cwvreg import CubicWebRegistry
 def _pkg_name(cube, module):
     if cube is None:
         return module
-    return '%s.%s' % (cube, module)
+    return 'cubes.%s.%s' % (cube, module)
 
 class GAERegistry(CubicWebRegistry):
     
