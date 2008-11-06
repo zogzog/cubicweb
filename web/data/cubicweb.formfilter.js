@@ -17,35 +17,43 @@ function copyParam(origparams, newparams, param) {
 }
 
 function facetFormContent(form) {
-  var names = [];
-  var values = [];
-  jQuery(form).find('.facet').each(function () {
-      var facetName = jQuery(this).find('.facetTitle').attr('cubicweb:facetName');
-      var facetValues = jQuery(this).find('.facetValueSelected').each(function(x) {
-	  names.push(facetName);
-	  values.push(this.getAttribute('cubicweb:value'));
-      });
-  });
-  jQuery(form).find('input').each(function () {
-      names.push(this.name);
-      values.push(this.value);
-  });
+    var names = [];
+    var values = [];
+    jQuery(form).find('.facet').each(function () {
+        var facetName = jQuery(this).find('.facetTitle').attr('cubicweb:facetName');
+        var facetValues = jQuery(this).find('.facetValueSelected').each(function(x) {
+  	    names.push(facetName);
+  	    values.push(this.getAttribute('cubicweb:value'));
+        });
+    });
+    jQuery(form).find('input').each(function () {
+        names.push(this.name);
+        values.push(this.value);
+    });
     jQuery(form).find('select option[@selected]').each(function () {
 	names.push(this.parentNode.name);
 	values.push(this.value);
     });
-  return [names, values];
+    return [names, values];
 }
 
 function buildRQL(divid, vid, paginate, vidargs) {
     jQuery(CubicWeb).trigger('facets-content-loading', [divid, vid, paginate, vidargs]);
     var form = getNode(divid+'Form');
     var zipped = facetFormContent(form);
-    zipped[0].push('facetargs')
-    zipped[1].push(vidargs)
+    zipped[0].push('facetargs');
+    zipped[1].push(vidargs);
     var d = async_remote_exec('filter_build_rql', zipped[0], zipped[1]);
     d.addCallback(function(result) {
 	var rql = result[0];
+	var $bkLink = jQuery('#facetBkLink');
+	if ($bkLink.length) {
+	    var bkUrl = $bkLink.attr('cubicweb:target') + '&path=view?rql=' + rql;
+	    if (vid) {
+		bkUrl += '&vid=' + vid;
+	    }
+	    $bkLink.attr('href', bkUrl);
+	}
 	var toupdate = result[1];
 	var extraparams = vidargs;
 	var displayactions = jQuery('#' + divid).attr('cubicweb:displayactions');
@@ -172,7 +180,7 @@ function reorderFacetsItems(root){
 	var facetargs = form.attr('cubicweb:facetargs');
 	if (facetargs) {
 	    form.find('div.facet').each(function() {
-		var facet = jQuery(this);	
+		var facet = jQuery(this);
 		var lastSelected = null;
 		facet.find('div.facetCheckBox').each(function (i) {
 		    var $this = jQuery(this);

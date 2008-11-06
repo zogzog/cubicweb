@@ -52,12 +52,13 @@ class FilterBox(BoxTemplate):
         return rset, vid, divid, paginate
         
     def call(self, view=None):
-        self.req.add_js( ('cubicweb.ajax.js', 'cubicweb.formfilter.js') )
+        req = self.req
+        req.add_js( ('cubicweb.ajax.js', 'cubicweb.formfilter.js') )
         rset, vid, divid, paginate = self._get_context(view)
         if rset.rowcount < 2: # XXX done by selectors, though maybe necessary when rset has been hijacked
             return
         if vid is None:
-            vid = self.req.form.get('vid')
+            vid = req.form.get('vid')
         rqlst = rset.syntax_tree()
         rqlst.save_state()
         try:
@@ -71,14 +72,24 @@ class FilterBox(BoxTemplate):
             if not widgets:
                 return
             w = self.w
+            eschema = self.schema.eschema('Bookmark')
+            if eschema.has_perm(req, 'add'):
+                bk_path = 'view?rql=%s' % rset.printable_rql()
+                bk_title = req._('my custom search')
+                bk_add_url = self.build_url('add/Bookmark', path=bk_path, title=bk_title)
+                bk_base_url = self.build_url('add/Bookmark', title=bk_title)
+                w(u'<div class="bkSearch"><a cubicweb:target="%s" id="facetBkLink" href="%s">%s</a></div>' % (
+                    html_escape(bk_base_url),
+                    html_escape(bk_add_url),
+                    req._('bookmark this search')))
             w(u'<form method="post" id="%sForm" cubicweb:facetargs="%s" action="">'  % (
                 divid, html_escape(dumps([divid, vid, paginate, self.facetargs()]))))
             w(u'<fieldset>')
             hiddens = {'facets': ','.join(wdg.facet.id for wdg in widgets),
                        'baserql': baserql}
             for param in ('subvid', 'vtitle'):
-                if param in self.req.form:
-                    hiddens[param] = self.req.form[param]
+                if param in req.form:
+                    hiddens[param] = req.form[param]
             filter_hiddens(w, **hiddens)
             for wdg in widgets:
                 wdg.render(w=self.w)
