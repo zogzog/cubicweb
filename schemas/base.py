@@ -309,6 +309,13 @@ class see_also(RelationType):
     symetric = True
 
 class ECache(EntityType):
+    permissions = {
+        'read':   ('managers', 'users', 'guests'),
+        'add':    ('managers',),
+        'update': ('managers', 'users',),
+        'delete': ('managers',),
+        }
+
     name = String(required=True, unique=True, indexed=True, 
                   description=_('name of the cache'))
     timestamp = Datetime(default='NOW')
