@@ -46,6 +46,14 @@ function buildRQL(divid, vid, paginate, vidargs) {
     var d = async_remote_exec('filter_build_rql', zipped[0], zipped[1]);
     d.addCallback(function(result) {
 	var rql = result[0];
+	var $bkLink = jQuery('#facetBkLink');
+	if ($bkLink.length) {
+	    var bkUrl = $bkLink.attr('cubicweb:target') + '&path=view?rql=' + rql;
+	    if (vid) {
+		bkUrl += '&vid=' + vid;
+	    }
+	    $bkLink.attr('href', bkUrl);
+	}
 	var toupdate = result[1];
 	var extraparams = vidargs;
 	var displayactions = jQuery('#' + divid).attr('cubicweb:displayactions');
