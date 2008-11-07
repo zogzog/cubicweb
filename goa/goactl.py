@@ -89,6 +89,7 @@ COPY_CW_FILES = (
     'entities/authobjs.py',
     'entities/lib.py',
     'entities/schemaobjs.py',
+    'entities/wfobjs.py',
 
     'sobjects/__init__.py',
     'sobjects/notification.py',
@@ -129,6 +130,7 @@ COPY_CW_FILES = (
     'web/views/management.py',
     'web/views/navigation.py',
     'web/views/startup.py',
+    'web/views/vcard.py',
     'web/views/wdoc.py',
     'web/views/urlpublishing.py',
     'web/views/urlrewrite.py',
@@ -208,6 +210,7 @@ class NewGoogleAppCommand(Command):
                            join(appldir, 'cubicweb', subfpath))
         # link every supported components
         packagesdir = join(appldir, 'cubes')
+        create_init_file(join(appldir, 'cubes'), 'cubes')
         cubesdir = CubicWebConfiguration.cubes_dir()
         for include in ('addressbook','basket', 'blog','classfolders',
                         'classtags', 'comment', 'file', 'link',
