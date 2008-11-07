@@ -8,6 +8,8 @@ __docformat__ = "restructuredtext en"
 
 from cubicweb.common.view import EntityView
 
+_ = unicode 
+
 VCARD_PHONE_TYPES = {'home': 'HOME', 'office': 'WORK', 'mobile': 'CELL', 'fax': 'FAX'}
 
 class VCardEUserView(EntityView):
