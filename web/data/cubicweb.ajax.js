@@ -222,7 +222,6 @@ function reloadComponent(compid, rql, registry, nodeid, extraargs) {
     rql = rql || '';
     nodeid = nodeid || (compid + 'Component');
     extraargs = extraargs || {};
-  log('extraargs =', extraargs);
     var node = getNode(nodeid);
     var d = async_rawremote_exec('component', compid, rql, registry, extraargs);
     d.addCallback(function(result, req) {
