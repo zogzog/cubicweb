@@ -142,7 +142,7 @@ class SQLSchemaReaderClassTest(TestCase):
         entities.sort()
         expected_entities = ['Bookmark', 'Boolean', 'Bytes', 'Card', 
                              'Date', 'Datetime', 'Decimal',
-                             'EConstraint', 'EConstraintType', 'EEType',
+                             'ECache', 'EConstraint', 'EConstraintType', 'EEType',
                              'EFRDef', 'EGroup', 'EmailAddress', 'ENFRDef',
                              'EPermission', 'EProperty', 'ERType', 'EUser',
                              'Float', 'Int', 'Interval', 
@@ -186,7 +186,7 @@ class SQLSchemaReaderClassTest(TestCase):
                               
                               'specializes', 'state_of', 'surname', 'symetric', 'synopsis',
 
-                              'title', 'to_entity', 'to_state', 'transition_of',
+                              'timestamp', 'title', 'to_entity', 'to_state', 'transition_of',
 
                               'upassword', 'update_permission', 'use_email',
 

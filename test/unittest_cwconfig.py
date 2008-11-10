@@ -16,40 +16,40 @@ def unabsolutize(path):
 class CubicWebConfigurationTC(TestCase):
     def setUp(self):
         self.config = ApptestConfiguration('data')
-        self.config._cubes = ('eemail', 'efile')
+        self.config._cubes = ('email', 'file')
 
     def test_reorder_cubes(self):
-        # jpl depends on eemail and efile and ecomment
-        # eemail depends on efile
-        self.assertEquals(self.config.reorder_cubes(['efile', 'eemail', 'jpl']),
-                          ('jpl', 'eemail', 'efile'))
-        self.assertEquals(self.config.reorder_cubes(['eemail', 'efile', 'jpl']),
-                          ('jpl', 'eemail', 'efile'))
-        self.assertEquals(self.config.reorder_cubes(['eemail', 'jpl', 'efile']),
-                          ('jpl', 'eemail', 'efile'))
-        self.assertEquals(self.config.reorder_cubes(['efile', 'jpl', 'eemail']),
-                          ('jpl', 'eemail', 'efile'))
-        self.assertEquals(self.config.reorder_cubes(['jpl', 'efile', 'eemail']),
-                          ('jpl', 'eemail', 'efile'))
-        self.assertEquals(self.config.reorder_cubes(('jpl', 'eemail', 'efile')),
-                          ('jpl', 'eemail', 'efile'))
+        # jpl depends on email and file and comment
+        # email depends on file
+        self.assertEquals(self.config.reorder_cubes(['file', 'email', 'jpl']),
+                          ('jpl', 'email', 'file'))
+        self.assertEquals(self.config.reorder_cubes(['email', 'file', 'jpl']),
+                          ('jpl', 'email', 'file'))
+        self.assertEquals(self.config.reorder_cubes(['email', 'jpl', 'file']),
+                          ('jpl', 'email', 'file'))
+        self.assertEquals(self.config.reorder_cubes(['file', 'jpl', 'email']),
+                          ('jpl', 'email', 'file'))
+        self.assertEquals(self.config.reorder_cubes(['jpl', 'file', 'email']),
+                          ('jpl', 'email', 'file'))
+        self.assertEquals(self.config.reorder_cubes(('jpl', 'email', 'file')),
+                          ('jpl', 'email', 'file'))
         
     def test_reorder_cubes_recommends(self):
-        from ecomment import __pkginfo__ as ecomment_pkginfo
-        ecomment_pkginfo.__recommend__ = ('efile',)
+        from cubes.comment import __pkginfo__ as comment_pkginfo
+        comment_pkginfo.__recommend__ = ('file',)
         try:
-            # eemail recommends ecomment
-            # ecomment recommends efile
-            self.assertEquals(self.config.reorder_cubes(('jpl', 'eemail', 'efile', 'ecomment')),
-                              ('jpl', 'eemail', 'ecomment', 'efile'))
-            self.assertEquals(self.config.reorder_cubes(('jpl', 'eemail', 'ecomment', 'efile')),
-                              ('jpl', 'eemail', 'ecomment', 'efile'))
-            self.assertEquals(self.config.reorder_cubes(('jpl', 'ecomment', 'eemail', 'efile')),
-                              ('jpl', 'eemail', 'ecomment', 'efile'))
-            self.assertEquals(self.config.reorder_cubes(('ecomment', 'jpl', 'eemail', 'efile')),
-                              ('jpl', 'eemail', 'ecomment', 'efile'))
+            # email recommends comment
+            # comment recommends file
+            self.assertEquals(self.config.reorder_cubes(('jpl', 'email', 'file', 'comment')),
+                              ('jpl', 'email', 'comment', 'file'))
+            self.assertEquals(self.config.reorder_cubes(('jpl', 'email', 'comment', 'file')),
+                              ('jpl', 'email', 'comment', 'file'))
+            self.assertEquals(self.config.reorder_cubes(('jpl', 'comment', 'email', 'file')),
+                              ('jpl', 'email', 'comment', 'file'))
+            self.assertEquals(self.config.reorder_cubes(('comment', 'jpl', 'email', 'file')),
+                              ('jpl', 'email', 'comment', 'file'))
         finally:
-            ecomment_pkginfo.__use__ = ()
+            comment_pkginfo.__use__ = ()
             
         
 #     def test_vc_config(self):
@@ -61,14 +61,14 @@ class CubicWebConfigurationTC(TestCase):
 #         self.assertRaises(KeyError, vcconf.__getitem__, 'CRM')
         
     def test_expand_cubes(self):
-        self.assertEquals(self.config.expand_cubes(('eemail', 'eblog')),
-                          ['eemail', 'eblog', 'efile'])
+        self.assertEquals(self.config.expand_cubes(('email', 'eblog')),
+                          ['email', 'eblog', 'file'])
 
     def test_vregistry_path(self):
         self.assertEquals([unabsolutize(p) for p in self.config.vregistry_path()],
                           ['entities', 'web/views', 'sobjects',
-                           'efile/entities.py', 'efile/views', 'efile/hooks.py',
-                           'eemail/entities.py', 'eemail/views', 'eemail/hooks.py'])
+                           'file/entities.py', 'file/views', 'file/hooks.py',
+                           'email/entities.py', 'email/views', 'email/hooks.py'])
             
 if __name__ == '__main__':
     unittest_main()
