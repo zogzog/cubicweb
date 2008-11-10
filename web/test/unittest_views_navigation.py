@@ -5,7 +5,7 @@ from cubicweb.devtools.apptest import EnvBasedTC
 
 from cubicweb.web.views.navigation import PageNavigation, SortedNavigation
 
-from eclasstags.views import TagsBarVComponent
+from cubes.tag.views import TagsBarVComponent
 TagsBarVComponent.visible = True
 
 class NavigationTC(EnvBasedTC):
@@ -26,7 +26,7 @@ class NavigationTC(EnvBasedTC):
         navcomp = self.vreg.select_component('navigation', req, rset)
         self.assertIsInstance(navcomp, SortedNavigation)
         req.set_search_state('normal')
-        rset = self.execute('Any X,N WHERE X name N LIMIT 10')
+        rset = self.execute('Any X,N LIMIT 10 WHERE X name N')
         navcomp = self.vreg.select_component('navigation', req, rset)
         self.assertEquals(navcomp, None)
         req.set_search_state('W:X:Y:Z')
@@ -75,13 +75,13 @@ class ContentNavigationTC(EnvBasedTC):
                                            view=view, context='navtop')
         # tagbar should be in headers by default
         clsids = set(obj.id for obj in objs)
-        self.failUnless('tagsbar' in clsids)
+        self.failUnless('tagbar' in clsids)
         objs = self.vreg.possible_vobjects('contentnavigation', req, rset,
                                           view=view, context='navbottom')
         # tagbar should _NOT_ be in footers by default
         clsids = set(obj.id for obj in objs)
-        self.failIf('tagsbar' in clsids)
-        self.execute('INSERT EProperty P: P pkey "contentnavigation.tagsbar.context", '
+        self.failIf('tagbar' in clsids)
+        self.execute('INSERT EProperty P: P pkey "contentnavigation.tagbar.context", '
                      'P value "navbottom"')
         # tagbar should now be in footers
         req.cnx.commit()
@@ -89,12 +89,12 @@ class ContentNavigationTC(EnvBasedTC):
                                           view=view, context='navbottom')
         
         clsids = [obj.id for obj in objs]
-        self.failUnless('tagsbar' in clsids)
+        self.failUnless('tagbar' in clsids)
         objs = self.vreg.possible_vobjects('contentnavigation', req, rset,
                                           view=view, context='navtop')
         
         clsids = [obj.id for obj in objs]
-        self.failIf('tagsbar' in clsids)
+        self.failIf('tagbar' in clsids)
         
 
 if __name__ == '__main__':
