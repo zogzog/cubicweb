@@ -402,11 +402,10 @@ class DBInitTC(RepositoryBasedTC):
     def test_versions_inserted(self):
         inserted = [r[0] for r in self.execute('Any K ORDERBY K WHERE P pkey K, P pkey ~= "system.version.%"')]
         self.assertEquals(inserted,
-                          [u'system.version.ebasket', u'system.version.eclassfolders',
-                           u'system.version.eclasstags', u'system.version.ecomment',
-                           u'system.version.eemail', u'system.version.efile',
-                           u'system.version.cubicweb'])
-
+                          [u'system.version.basket', u'system.version.comment', 
+                           u'system.version.cubicweb', u'system.version.email', 
+                           u'system.version.file', u'system.version.folder', 
+                           u'system.version.tag'])
         
 class InlineRelHooksTC(RepositoryBasedTC):
     """test relation hooks are called for inlined relations

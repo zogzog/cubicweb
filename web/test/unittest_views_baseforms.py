@@ -203,7 +203,7 @@ method="post" onsubmit="return freezeFormButtons('entityForm')" enctype="applica
 
 
     def test_nonregr_check_add_permission_on_relation(self):
-        from eblog.entities import BlogEntry
+        from cubes.blog.entities import BlogEntry
         class BlogEntryPlus(BlogEntry):
             __rtags__ = {'checked_by': 'primary'}
         self.vreg.register_vobject_class(BlogEntryPlus)

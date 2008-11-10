@@ -49,14 +49,14 @@ function removeElementClass(node, klass) {
     jQuery(node).removeClass(klass);
 }
 
-hasElementClass = jQuery.className.has
+hasElementClass = jQuery.className.has;
 
 
 function partial(func) {
     var args = sliceList(arguments, 1);
     return function() {
 	return func.apply(null, merge(args, arguments));
-    }
+    };
 }
 
 

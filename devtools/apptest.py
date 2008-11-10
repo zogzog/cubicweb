@@ -58,7 +58,7 @@ def get_versions(self, checkversions=False):
     vcconf = {'cubicweb': self.config.cubicweb_version()}
     self.config.bootstrap_cubes()
     for pk in self.config.cubes():
-        version = self.config.template_version(pk)
+        version = self.config.cube_version(pk)
         vcconf[pk] = version
     self.config._cubes = None
     return vcconf

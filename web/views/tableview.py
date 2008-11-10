@@ -41,7 +41,6 @@ class TableView(AnyRsetView):
         self.w(u'<tr>\n')
         for facet in facets:
             wdg = facet.get_widget()
-            print 'FACT WIDGET', wdg
             if wdg is not None:
                 self.w(u'<td>')
                 wdg.render(w=self.w)
@@ -118,7 +117,7 @@ class TableView(AnyRsetView):
             if title:
                 self.w(u'<h2 class="tableTitle">%s</h2>\n' % title)
             if displayfilter:
-                rqslt.save_state()
+                rqlst.save_state()
                 try:
                     mainvar, baserql = prepare_facets_rqlst(rqlst, rset.args)
                 except NotImplementedError:

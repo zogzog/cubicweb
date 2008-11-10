@@ -48,13 +48,13 @@ class FilterBox(BoxTemplate):
         else:
             rset = self.rset
             vid, divid = None, 'pageContent'
-            paginate = view.need_navigation
+            paginate = view and view.need_navigation
         return rset, vid, divid, paginate
         
     def call(self, view=None):
         req = self.req
         req.add_js( ('cubicweb.ajax.js', 'cubicweb.formfilter.js') )
-        rset, vid, divid, paginate = self._get_context(view)
+        rset, vid, divid, paginate=self._get_context(view)
         if rset.rowcount < 2: # XXX done by selectors, though maybe necessary when rset has been hijacked
             return
         if vid is None:

@@ -163,7 +163,7 @@ class TheMainTemplate(MainTemplate):
                                                  self.req, self.rset)
         if etypefilter and etypefilter.propval('visible'):
             etypefilter.dispatch(w=self.w)
-        self.pagination(self.req, self.rset, self.w, not view.need_navigation)
+        self.pagination(self.req, self.rset, self.w, not (view and view.need_navigation))
         self.w(u'<div id="contentmain">\n')
     
     def template_html_header(self, content_type, page_title, additional_headers=()):

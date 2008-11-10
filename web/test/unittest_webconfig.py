@@ -8,7 +8,7 @@ from cubicweb.devtools import ApptestConfiguration
 class WebconfigTC(TestCase):
     def setUp(self):
         self.config = ApptestConfiguration('data')
-        self.config._cubes = ['efile']
+        self.config._cubes = ['file']
         self.config.load_configuration()
         
     def test_nonregr_print_css_as_list(self):
@@ -23,7 +23,7 @@ class WebconfigTC(TestCase):
     def test_locate_resource(self):
         self.failUnless('FILE_ICON' in self.config.ext_resources)
         rname = self.config.ext_resources['FILE_ICON'].replace('DATADIR/', '')
-        self.failUnless('efile' in self.config.locate_resource(rname).split(os.sep))
+        self.failUnless('file' in self.config.locate_resource(rname).split(os.sep))
         cubicwebcsspath = self.config.locate_resource('cubicweb.css').split(os.sep)
         self.failUnless('web' in cubicwebcsspath or 'shared' in cubicwebcsspath) # 'shared' if tests under apycot
         
