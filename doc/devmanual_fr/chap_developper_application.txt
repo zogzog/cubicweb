@@ -14,7 +14,6 @@ Les indispensables
    chap_configuration_instance.txt
    chap_definition_schema.txt
    chap_definition_workflows.txt
-   chap_bases_framework_cubicweb.txt
    chap_visualisation_donnees.txt
    chap_manipulation_donnees.txt
    chap_ui_gestion_formulaire.txt
@@ -22,3 +21,4 @@ Les indispensables
    chap_autres_composants_ui.txt
    chap_serveur_crochets.txt
    chap_serveur_notification.txt
+   

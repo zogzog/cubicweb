@@ -5,8 +5,8 @@ Les crochets (*hooks*)
 
 XXX FILLME
 
-Les crochets sont appelÃ©s avant ou aprÃ¨s la mise Ã  jour d'une entitÃ© ou d'une
-relations dans le dÃ©pot
+Les crochets sont appelés avant ou après la mise à jour d'une entité ou d'une
+relations dans le dépot
 
 Leur prototypes sont les suivants
 
