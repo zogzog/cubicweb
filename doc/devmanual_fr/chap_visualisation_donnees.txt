@@ -43,6 +43,17 @@ Autres classes de base :
 * `StartupView`, vue de départ n'ayant pas besoin de result set
 * `AnyRsetView`, vue s'appliquant à n'importe quelle result set
 
+Le mecanisme de selection de vues
+---------------------------------
+
+Pour un identifiant de vue donne, plusieurs vues peuvent etre definies.
+`CubicWeb` utilise un selecteur qui permet de calculer un score et d'identifier
+la vue la plus appropriee a appliquer dans le contexte. La librairie du selecteur
+se trouve dans ``cubicweb.common.selector`` et une librairie des methodes utilisees
+pour calculer les scores est dans ``cubicweb.vregistry.vreq``.
+
+
+[FILLME]
 
 Les templates ou patron
 -----------------------

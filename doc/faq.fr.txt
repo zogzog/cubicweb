@@ -5,4 +5,13 @@ Frequently Asked Questions
 
 [FILL ME]
 
+* A quoi servent les crochets?
+  
+  Les crochets sont appeles lorsqu'une requete RQL est executee. Cela
+  permet d'executer des actions specifiques lors d'un acces a la base
+  de donnees, ce qui donne un controle de la base de donnees afin de
+  prevenir l'insertion de `mauvaises` entites dans la base.
+
+* 
+
 
