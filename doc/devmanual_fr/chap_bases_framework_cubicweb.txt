@@ -4,7 +4,7 @@ Fondements du framework CubicWeb
 ================================
 
 Le moteur web d'cubicweb consiste en quelques classes gérant un ensemble d'objets
-chargés dynamiquement au lancement d'cubicweb. Ce sont ces objets dynamiques, issus
+chargés dynamiquement au lancement de cubicweb. Ce sont ces objets dynamiques, issus
 du modèle ou de la librairie, qui construisent le site web final. Les différents
 composants dynamiques sont par exemple : 
 

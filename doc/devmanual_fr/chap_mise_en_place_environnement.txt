@@ -1,218 +1,96 @@
-.. -*- coding: utf-8 -*-
+Mise en place d'un environnement de développement Erudi
+=======================================================
+
+.. toctree::
+   :maxdepth: 1
+
+   sect_mercurial.txt
+   sect_installation.txt
+   sect_cubicweb-ctl.txt
 
 
-Migration
-=========
 
-Une des idées de base d'Erudi est la création incrémentale d'application, et
-pour cela de nombreuses actions sont fournies afin de facilement faire évoluer
-une application et tout particulièrement le modèle de données manipulé sans
-perdre les données des instances existantes.
+Création d'un composant
+-----------------------
+Commençons par créer un squelette qui nous servira de base au développement de
+notre composant ou application ::
 
-La version courante d'un modèle d'application est données dans le fichier
-`__pkginfo__.py` sous forme d'un tuple de 3 entiers.
+  cd ~/hg
+  erudi-ctl newtemplate moncomposant
+  # répondre aux questions
+  hg init moncomposant
+  cd moncomposant
+  hg add .
+  hg ci
 
+A partir de là si tout va bien, votre composant devrait être affiché par
+`erudi-ctl list` dans la section *Available components*, si ce n'est pas le cas
+revoir la section `Configuration de l'environnement`_.
 
-Gestion des scripts de migrations
----------------------------------
-Les scripts des migrations doivent être placés dans le répertoire `migration` de
-l'application, et nommé de la manière suivante :
+Pour utiliser un composant, il faut le mentionner dans la variable
+__use__ du fichier __pkginfo__ de l'application. Cette variable
+contrôle à la fois le packaging de l'application (dépendances gérées
+par les utilitaires système comme les outils APT) et les composants
+effectivement utilisables lors de la création de la base
+(import_erschema('Moncomposant') ne fonctionne pas sinon).
 
-::
+Création d'une instance de développement
+----------------------------------------
 
-  <n° de version X.Y.Z>[_<description>]_<mode>.py
+Maintenant que nous avons notre squelette de modèle, on peut en créer une
+instance afin de voir ce que tout ça donne dans un simple navigateur web.
+Nous allons utiliser une configuration `all-in-one` afin de simplifier les
+choses ::
 
-dans lequel : 
+  erudi-ctl create -c all-in-one moncomposant moninstance
 
-* X.Y.Z correspond au n° de version du modèle vers lequel le script permet de
-  migrer,
+Une série de questions vont être posées, la réponse par défaut est généralement
+suffisante. Vous pourrez de toute façon modifier la configuration par la suite
+en éditant les fichiers générés. Lorsqu'un login/mot de passe d'accès au sgbd
+vous est demandé, il est recommandé d'utilisé l'utilisateur créé lors de la
+`Configuration Postgres`_.
 
-* le *mode* (entre le dernier "_" et l'extension ".py") indique à quelle partie
-  de l'application (serveur RQL, serveur web) le script s'applique en cas
-  d'installation distribuée. Il peut valoir : 
+Il est important de distinguer ici l'utilisateur utilisé pour accéder au sgbd,
+et l'utilisateur utilisé pour s'authentifier dans l'application erudi. Lorsque
+l'application erudi démarre, elle utilise le login/mot de passe sgdb pour
+récupérer le schéma et gérer les transactions bas-niveau. En revanche, lorsque
+`erudi-ctl create` vous demande un login/mot de passe `manager` pour erudi, il
+s'agit d'un utilisateur qui sera créé dans l'application `erudi` pour pouvoir
+s'y connecter dans un premier temps et l'administrer. Il sera par la suite possible
+de créer des utilisateurs différents pour l'application.
 
-  * `common`, s'applique aussi bien sur le serveur RQL que sur le serveur web,
-    et met à jour des fichiers sur le disque (migration de fichier de
-    configuration par exemple).
+A l'issue de cette commande, la définition de votre instance se trouve dans
+*~/etc/erudi.d/moninstance/*. Pour la lancer, il suffit de taper ::
 
-  * `web`, s'applique uniquement sur le serveur web, et met à jour des fichiers
-    sur le disque 
+  erudi-ctl start -D moninstance
 
-  * `repository`, s'applique uniquement sur le serveur RQL, et met à jour des
-    fichiers sur le disque 
+L'option `-D` indique le *debug mode* : l'instance ne passe pas en mode serveur
+et ne se déconnecte pas du terminal, ce qui simplifie le dépannage en cas de non
+démarrage de l'instance. Vous pouvez ensuite allez voir ce que ça donne en
+pointant votre navigateur sur l'url `http://localhost:8080` (le n° de port
+dépend de votre configuration). Pour vous authentifier vous pouvez utiliser le
+login/mot de passe administrateur que vous avez spécifié lors de la création de
+l'instance.
 
-  * `Any`, s'applique uniquement sur le serveur RQL, et met à jour des
-    données en base (migrations de schéma et de données par ex.)
+Pour arrêter l'instance, un Ctrl-C dans la fenêtre où vous l'avez lancé
+suffit. Si l'option `-D` a été omise, il faut taper ::
 
+  erudi-ctl stop moninstance
 
-Toujours dans le répertoire `migration`, le fichier spécial `depends.map` permet
-d'indiquer que pour migrer vers une version spécifique du modèle, il faut tout
-d'abord avoir migrer vers une version données de erudi. Ce fichier peut contenir
-des commentaires (lignes commençant par un "#"), et une dépendance est notée sur
-une ligne de la manière suivante : ::
-
-  <n° de version du modèle X.Y.Z> : <n° de version erudi X.Y.Z>
-
-Par exemple ::
-
-  0.12.0: 2.26.0
-  0.13.0: 2.27.0
-  # 0.14 works with 2.27 <= erudi <= 2.28 at least
-  0.15.0: 2.28.0
-
-
-Contexte de base
-----------------
-Les identifiants suivants sont préféfinis dans les scripts de migration : 
-
-* `config`, configuration de l'instance
-
-* `interactive_mode`, booléen indiquant si le script est éxécuté en mode
-  interactif ou non
-
-* `appltemplversion`, version du modèle d'application de l'instance
-
-* `applerudiversion`, version erudi de l'instance
-
-* `templversion`, version du modéle d'application installée
-
-* `erudiversion`, version erudi installée
-
-* `confirm(question)`, fonction posant une question et retournant vrai si
-  l'utilisateur a répondu oui, faux sinon (retourne toujours vrai en mode non
-  interactif) 
-
-* `_`, fonction équivalente à `unicode` permettant de marquer des chaines à
-  internationaliser dans les scripts de migration
-
-Dans les scripts "repository", les identifiants suivant sont également définis :
-
-* `checkpoint`, demande confirmant et effectue un "commit" au point d'appel
-
-* `repo_schema`, schéma persistent de l'instance (i.e. schéma de l'instance en
-  cours de migration)
-
-* `newschema`, schéma installé sur le système de fichier (i.e. schéma de la
-  version à jour du modèle et de erudi)
-
-* `sqlcursor`, un curseur SQL pour les très rares cas où il est réellement
-  nécessaire ou avantageux de passer par du sql
-
-* `repo`, l'objet repository
-
-                        
-Migration de schéma
--------------------
-Les fonctions de migration de schéma suivantes sont disponibles dans les scripts
-"repository" : 
-
-* `add_attribute(etype, attrname, attrtype=None, commit=True)`, ajoute un
-  nouvel attribut à un type d'entité existante. Si le type de celui-ci n'est pas
-  spécifié il est extrait du schéma à jour.
-        
-* `drop_attribute(etype, attrname, commit=True)`, supprime un
-  attribut à un type d'entité existante.
-
-* `rename_attribute(etype, oldname, newname, commit=True)`, renomme un attribut
-            
-* `add_entity_type(etype, auto=True, commit=True)`, ajoute un nouveau type
-  d'entité. Si `auto` est vrai, toutes les relations utilisant ce type d'entité
-  et ayant un type d'entité connu à l'autre extrémité vont également être
-  ajoutées.
-
-* `drop_entity_type(etype, commit=True)`, supprime un type d'entité et toutes
-  les relations l'utilisant.
-
-* `rename_entity_type(oldname, newname, commit=True)`, renomme un type d'entité
-            
-* `add_relation_type(rtype, addrdef=True, commit=True)`, ajoute un nouveau type
-  de relation. Si `addrdef` est vrai, toutes les définitions de relation de ce
-  type seront également ajoutées.
-
-* `drop_relation_type(rtype, commit=True)`, supprime un type de relation et
-  toutes les définitions de ce type.
-
-* `rename_relation(oldname, newname, commit=True)`, renomme une relation.
-
-* `add_relation_definition(subjtype, rtype, objtype, commit=True)`, ajoute une
-  définition de relation.
-
-* `drop_relation_definition(subjtype, rtype, objtype, commit=True)`, supprime
-  une définition de relation.
-
-* `synchronize_permissions(ertype, commit=True)`, synchronise les permissions
-  d'un type d'entité ou de relation
-        
-* `synchronize_rschema(rtype, commit=True)`, synchronise les propriétés et
-  permissions d'un type de relation.
-                
-* `synchronize_eschema(etype, commit=True)`, synchronise les propriétés et
-  permissions d'un type d'entité.
-    
-* `synchronize_schema(commit=True)`, synchronise le schéma persistent avec le
-  schéma à jour (mais sans ajouter ni supprimer de nouveaux types d'entités ou
-  de relations ni de définitions de relation).
-        
-* `change_relation_props(subjtype, rtype, objtype, commit=True, **kwargs)`, change
-  les propriétés d'une definition de relation en utilisant les arguments nommés
-  pour les propriétés à changer.
-
-* `set_widget(etype, rtype, widget, commit=True)`, change le widget à utiliser
-  pour la relation <rtype> du type d'entité <etype>
-
-* `set_size_constraint(etype, rtype, size, commit=True)`, change la contrainte
-  de taille pour la relation <rtype> du type d'entité <etype>
+Voilà, tout est en place pour démarrer le développement du modèle...
 
 
-Migration de données
---------------------
-Les fonctions de migration de données suivantes sont disponibles dans les scripts
-"repository" : 
+Utilisation de erudi-liveserver
+-------------------------------
 
-* `rql(rql, kwargs=None, cachekey=None, ask_confirm=True)`, éxécute une
-  requête rql arbitraire, d'interrogation ou de modification. Un objet result
-  set est retourné.
+Afin de tester rapidement un nouveau composant, on peut également
+utiliser le script `erudi-liveserver` qui permet de créer une
+application en mémoire (utilisant une base de données SQLite par
+défaut) et la rendre accessible via un serveur web::
 
-* `add_entity(etype, *args, **kwargs)`, ajoute une nouvelle entité du type
-  données. La valeur des attributs et relations est spécifiée en utilisant les
-  arguments nommés et positionnels.
+  erudi-liveserver moncomposant
 
-  
-Création de workflow
---------------------
-Les fonctions de création de workflow suivantes sont disponibles dans les scripts
-"repository" : 
+ou bien, pour utiliser une base de données existante (SQLite ou postgres)::
 
-* `add_state(name, stateof, initial=False, commit=False, **kwargs)`, ajoute un
-  nouvel état de workflow
-    
-* `add_transition(name, transitionof, fromstates, tostate, requiredgroups=(), commit=False, **kwargs)`, 
-  ajoute une nouvelle transtion de workflow
+  erudi-liveserver -s monfichier_sources moncomposant
 
-Migration de configuration
---------------------------
-Les fonctions de migration de configuration suivantes sont disponibles dans tout
-les scripts : 
-
-* `option_renamed(oldname, newname)`, indique qu'une option a été renommée
-
-* `option_group_change(option, oldgroup, newgroup)`, indique qu'une option a
-  changé de groupe
-
-* `option_added(oldname, newname)`, indique qu'une option a été ajoutée
-
-* `option_removed(oldname, newname)`, indique qu'une option a été supprimée
-
-
-Autres fonctions de migration
------------------------------
-Ces fonctions ne sont utilisés que pour des opérations de bas niveau
-irréalisables autrement ou pour réparer des bases cassées lors de session
-interactive. Elles sont disponibles dans les scripts "repository".
-
-* `sqlexec(sql, args=None, ask_confirm=True)`, éxécute une requête sql
-  arbitraire, à n'utiliser 
-
-* `add_entity_type_table(etype, commit=True)`
-* `add_relation_type_table(rtype, commit=True)`
-* `uninline_relation(rtype, commit=True)`
