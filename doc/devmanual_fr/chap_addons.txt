@@ -1,0 +1,17 @@
+.. -*- coding: utf-8 -*-
+
+.. _contents:
+
+==========
+References
+==========
+
+.. toctree::
+   :maxdepth: 1
+  
+   chap_rql.txt
+   chap_migration.txt
+   chap_tests.txt
+   chap_i18n.txt
+   
+

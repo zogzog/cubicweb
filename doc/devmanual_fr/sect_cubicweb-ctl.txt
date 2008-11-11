@@ -3,7 +3,7 @@
 .. _cubicweb-ctl:
 
 L'outil `cubicweb-ctl`
-----------------------
+======================
 `cubicweb-ctl` est le couteau suisse pour la gestion d'instances CubicWeb.
 La syntaxe générale est ::
 
@@ -22,14 +22,14 @@ Pour voir l'aide pour une commande spécifiques ::
   cubicweb-ctl <commande> --help
 
 Commandes pour la création d'un cube
-````````````````````````````````````
+------------------------------------
 * ``newcube``, crée un nouveau cube sur le système de fichiers
   à partir du nom passé en paramètre. Cette commande crée le cube à partir
   d'une squelette d'application, incluant également les fichiers pour le
   packaging debian)
   
 Commandes pour la création d'une instance
-`````````````````````````````````````````
+-----------------------------------------
 * ``create``, crée les fichiers de configuration d'une instance
 * ``db-create``, crée la base de données système d'une instance (tables et
   extensions uniquement)
@@ -39,7 +39,7 @@ Commandes pour la création d'une instance
 Par défaut ces trois commandes sont enchainées.
 
 Commande pour la création d'une instance pour Google App Engine
-```````````````````````````````````````````````````````````````
+---------------------------------------------------------------
 * ``newgapp``, crée les fichiers de configuration d'une instance
 
 Cette commande doit être suivie de l'exécution de commandes
@@ -50,14 +50,14 @@ Pour plus de détails veuillez vous référer à `LAX <>`_
 
 
 Commandes pour le lancement des instances
-`````````````````````````````````````````
+-----------------------------------------
 * ``start``, démarre une, plusieurs, ou toutes les instances
 * ``stop``, arrêt une, plusieurs, ou toutes les instances
 * ``restart``, redémarre une, plusieurs, ou toutes les instances
 * ``status``, donne l'état des instances
 
 Commandes pour la maintenance des instances
-```````````````````````````````````````````
+-------------------------------------------
 * ``upgrade``, lance la migration d'instance(s) existante(s) lorsqu'une nouvelle
   version d'CubicWeb ou du composant est installée
 * ``shell``, ouvre un shell de migration pour la maintenance manuelle d'une instance
@@ -70,7 +70,7 @@ Commandes pour la maintenance des instances
   de l'application. Il est conseillé de faire un dump avant cette opération
 
 Commandes pour la maintenance des catalogues i18n
-`````````````````````````````````````````````````
+-------------------------------------------------
 * ``i18nlibupdate``, regénère les catalogues de messages de la librairie CubicWeb
 * ``i18nupdate``, regénère les catalogues de messages d'un composant
 * ``i18ncompile``, recompile les catalogues de messages d'une instance. Cela est
@@ -79,7 +79,7 @@ Commandes pour la maintenance des catalogues i18n
 Cf :ref:`Internationalisation`.
 
 Autres commandes
-````````````````
+----------------
 * ``list``, donne la liste des configurations, des composants et des instances
   disponibles
 * ``delete``, supprime une instance (fichiers de configuration et base de données)
@@ -87,10 +87,10 @@ Autres commandes
 
 
 Exemples
-````````
+--------
 
 Creation d'une instance a partir de cube existant
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+`````````````````````````````````````````````````
 
 Afin de creer une instance a partir d'un cube existant, executez la commande
 suivant ::
@@ -110,7 +110,7 @@ votre installation ne sera pas complete.
 
 
 Creation d'une instance a partir d'une nouveau cube
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+```````````````````````````````````````````````````
 
 Creez avant tout votre nouveau cube ::
 

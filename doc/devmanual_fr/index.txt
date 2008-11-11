@@ -11,27 +11,9 @@ Développement d'applications avec CubicWeb
 :Organization: Logilab
 
 .. toctree::
-   :maxdepth: 1
+   :maxdepth: 2
   
-   chap_fondements_cubicweb.txt
-   chap_creation_instance.txt
-   chap_configuration_instance.txt
-   chap_mise_en_place_environnement.txt
-   chap_rql.txt
-   chap_definition_schema.txt
-   chap_definition_workflows.txt
-   chap_bases_framework_cubicweb.txt
-   chap_visualisation_donnees.txt
-   chap_manipulation_donnees.txt
-   chap_ui_gestion_formulaire.txt
-   chap_ui_js_json.txt
-   chap_autres_composants_ui.txt
-   chap_serveur_crochets.txt
-   chap_serveur_notification.txt
-   
-   chap_tests.txt
-   chap_i18n.txt
-   chap_migration.txt
-   
+   chap_developper_application.txt
+   chap_addons.txt
 
 XXX: XXX FILLME, CSS, API sécurité
