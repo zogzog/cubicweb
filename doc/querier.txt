@@ -1,8 +1,7 @@
 .. -*- coding: utf-8 -*-
 
 Déroulement de l'éxecution d'une requête en multi-source avec insertion de sécurité
-===================================================================================
-
+```````````````````````````````````````````````````````````````````````````````````
 
 * 3 sources (system, ldap (Euser) et rql (Card)
 * permission en lecture Card is elle appartient à l'utilisateur
@@ -58,5 +57,6 @@ Soit la requête de départ: ::
 6. renvoie ResultSet
 
 Notes sur UNION
-===============
+```````````````
+
 * en multi-sources, les résultats des unions peuvent être mélangés

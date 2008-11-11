@@ -2,7 +2,7 @@
 
 
 Diagramme UML
-=============
+-------------
 
 .. image:: cubicweb.png
 

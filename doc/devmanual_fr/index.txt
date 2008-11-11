@@ -12,8 +12,10 @@ Développement d'applications avec CubicWeb
 
 .. toctree::
    :maxdepth: 1
-   
+  
    chap_fondements_cubicweb.txt
+   chap_creation_instance.txt
+   chap_configuration_instance.txt
    chap_mise_en_place_environnement.txt
    chap_rql.txt
    chap_definition_schema.txt
@@ -31,7 +33,5 @@ Développement d'applications avec CubicWeb
    chap_i18n.txt
    chap_migration.txt
    
-   chap_creation_instance.txt
-   chap_configuration_instance.txt
 
 XXX: XXX FILLME, CSS, API sécurité

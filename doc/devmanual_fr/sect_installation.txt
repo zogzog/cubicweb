@@ -6,6 +6,10 @@ Installation
 
 Installation de Cubicweb et de ses dépendances
 ----------------------------------------------
+[TODO]
+Decrire l'installation de la foret mercurial plutot qu'avec
+les paquets debian
+
 Tout le système Cubicweb est préparé pour l'installation sur une machine
 debian. L'installation manuelle est un peu pénible du fait des nombreuses
 dépendances à installer (twisted, postgres, autres paquets python...). Nous
@@ -36,6 +40,10 @@ On pourra ensuite installer les paquets suivants :
 
 Configuration de l'environnement
 --------------------------------
+[FIXME]
+Ces variables ne sont plus requises pour le bon fonctionnement de cubicweb, non?
+A part rajouter la foret dans le PYTHONPATH, rien de plus ne doit etre fait?
+ 
 Ajouter les lignes suivantes à son `.bashrc` ou `.bash_profile` pour configurer
 votre environnement de développement ::
 
@@ -80,3 +88,5 @@ broadcast). Pour cela il faut soit :
 
 * éditer le fichier */etc/default/pyro-nsd* pour que le serveur de nom pyro soit
   lancé automatiquement au démarrage de la machine
+
+

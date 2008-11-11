@@ -1,5 +1,7 @@
 .. -*- coding: utf-8 -*-
 
+.. _cubicweb-ctl:
+
 L'outil `cubicweb-ctl`
 ----------------------
 `cubicweb-ctl` est le couteau suisse pour la gestion d'instances CubicWeb.
@@ -19,10 +21,10 @@ Pour voir l'aide pour une commande spécifiques ::
 
   cubicweb-ctl <commande> --help
 
-Commandes pour la création d'un composant
-`````````````````````````````````````````
-* ``newtemplate``, crée un nouveau composant sur le système de fichiers
-  à partir du nom passé en paramètre. Cette commande crée le composant à partir
+Commandes pour la création d'un cube
+````````````````````````````````````
+* ``newcube``, crée un nouveau cube sur le système de fichiers
+  à partir du nom passé en paramètre. Cette commande crée le cube à partir
   d'une squelette d'application, incluant également les fichiers pour le
   packaging debian)
   
@@ -74,10 +76,46 @@ Commandes pour la maintenance des catalogues i18n
 * ``i18ncompile``, recompile les catalogues de messages d'une instance. Cela est
   effectué automatiquement lors d'une upgrade
 
-Cf Internationalisation_.
+Cf :ref:`Internationalisation`.
 
 Autres commandes
 ````````````````
 * ``list``, donne la liste des configurations, des composants et des instances
   disponibles
 * ``delete``, supprime une instance (fichiers de configuration et base de données)
+
+
+
+Exemples
+````````
+
+Creation d'une instance a partir de cube existant
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Afin de creer une instance a partir d'un cube existant, executez la commande
+suivant ::
+
+   cubicweb-ctl create <nom_cube> <nom_instance>
+
+Cette commande va creer les fichiers de configuration d'une instance dans
+``~/etc/cubicweb.d/<nom_instance>``.
+L'outil ``cubicweb-ctl`` va vous autoriser a executer au sein de ``create``
+les commandes ``db-create`` et ``db-init`` afin de completer la creation de
+votre instance en une seule commande.
+
+Si vous decidez de ne pas le faire lorsque ``cubicweb-ctl create`` vous le 
+propose, alors n'oubliez pas de lancer ces commandes (``cubicweb-ctl db-create``,
+``cubicweb-ctl db-init`` ) par la suite, sinon
+votre installation ne sera pas complete.
+
+
+Creation d'une instance a partir d'une nouveau cube
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Creez avant tout votre nouveau cube ::
+
+   cubicweb-ctl newcube <nom_cube>
+
+Cette commande va creer un nouveau cube dans ``/path/to/forest/cubicweb/cubes/<nom_cube>``.
+
+

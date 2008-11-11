@@ -25,7 +25,7 @@ Concepts et vocabulaire
   le système de fichiers et est stocké dans la base de données lors de
   la création d'une instance. `CubicWeb` fournit un certain nombres de
   types d'entités inclus systématiquement car nécessaire au noyau
-  `CubicWeb` et une librairie de composants devant être inclus
+  `CubicWeb` et une librairie de cubes devant être inclus
   explicitement le cas échéant.
 
 *type d'entité* 
@@ -66,22 +66,26 @@ Concepts et vocabulaire
   - ``all-in-one`` : interface web et entrepôt dans un seul processus. L'entrepôt
      peut ou non être accessible via Pyro
 
-*composant*
-  un composant est un modèle regroupant un ou plusieurs types de données et/ou
+*cube*
+  un cube est un modèle regroupant un ou plusieurs types de données et/ou
   des vues afin de fournir une fonctionalité précise, ou une application `CubicWeb`
-  complète utilisant éventuellement d'autres composants. Les différents
-  composants disponibles sur une machine sont installés dans
-  `/usr/share/cubicweb/cubes`
+  complète utilisant éventuellement d'autres cube. Les différents
+  cubes disponibles sur une machine sont installés dans
+  `/path/to/forest/cubicweb/cubes`
 
 *instance*
-  une instance est une installation spécifique d'un template. Par exemple 
-  intranet/jpl et logilab.org sont deux instances du composant jpl. Les
-  instances sont définies dans le répertoire `/etc/cubicweb.d`.
+  une instance est une installation spécifique d'un template. Sont regroupes
+  dans une instance tous les fichiers de configurations necessaires au bon
+  fonctionnement de votre application web. Elle referrera au(x) cube(s) sur 
+  le(s)quel(s) votre application se base.
+  Par exemple intranet/jpl et logilab.org sont deux instances du cube jpl que
+  nous avons developpes en interne. 
+  Les instances sont définies dans le répertoire `~/etc/cubicweb.d`.
 
 *application*
   le mot application est utilisé parfois pour parler d'une instance et parfois
   d'un composant, en fonction du contexte... Mieux vaut donc éviter de
-  l'utiliser et utiliser plutôt *composant* et *instance*.
+  l'utiliser et utiliser plutôt *cube* et *instance*.
 
 *result set*
   objet encaspulant les résultats d'une requête RQL et des informations sur
@@ -96,14 +100,14 @@ Concepts et vocabulaire
 .. _`yams`: http://www.logilab.org/project/name/yams/
 
 
-Structure standard d'un composant
----------------------------------
+Structure standard d'un cube
+----------------------------
 
-Un composant complexe est structuré selon le modèle suivant :
+Un cube complexe est structuré selon le modèle suivant :
 
 ::
   
-  moncomposant/
+  moncube/
   |
   |-- schema.py
   |
@@ -132,7 +136,7 @@ par ex.:
 
 ::
   
-  moncomposant/
+  moncube/
   |
   |-- entities.py
   |-- hooks.py
@@ -160,8 +164,8 @@ où :
   installé) 
 * le fichier ``__pkginfo__.py`` donne un certain nombre de méta-données sur le
   composant, notamment le nom de la distribution et la version courante (coté
-  serveur et interface web) ou encore les sous-composants utilisés par ce
-  composant. 
+  serveur et interface web) ou encore les sous-cubes utilisés par ce
+  cube. 
 
 Le strict minimum étant :
 
