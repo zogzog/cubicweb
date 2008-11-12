@@ -502,9 +502,7 @@ class LogFormTemplate(Template):
         self.w(u'</tr>\n')
         self.w(u'</table>\n')
         self.w(u'</form>\n')
-        # XXX doesn't seem to work, rewrite this
-        self.w(u'''<script type="text/javascript">if(document.getElementById("%s").className != "hidden")
-                   {$('login_form').__login.focus()}</script>''' % id)
+        self.req.html_headers.add_onload('jQuery("#__login:visible").focus()')
 
     
 def login_form_url(config, req):

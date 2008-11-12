@@ -113,7 +113,7 @@ function updateMessage(msg) {
 /* builds an url from an object (used as a dictionnary)
  * Notable difference with MochiKit's queryString: as_url does not
  * *url_quote* each value found in the dictionnary
- * 
+ *
  * >>> as_url({'rql' : "RQL", 'x': [1, 2], 'itemvid' : "oneline"})
  * rql=RQL&vid=list&itemvid=oneline&x=1&x=2
  */
@@ -133,7 +133,7 @@ function as_url(props) {
     return chunks.join('&');
 }
 
-/* return selected value of a combo box if any 
+/* return selected value of a combo box if any
  */
 function firstSelected(selectNode) {
     var selection = filter(attrgetter('selected'), selectNode.options);
@@ -144,6 +144,13 @@ function firstSelected(selectNode) {
  */
 function toggleVisibility(elemId) {
     jqNode(elemId).toggleClass('hidden');
+}
+
+
+/* toggles visibility of login popup div */
+function popupLoginBox() {
+    toggleVisibility('popupLoginBox');
+    jQuery('#__login:visible').focus();
 }
 
 /*
@@ -160,7 +167,7 @@ function elementMatches(properties, element) {
 
 /* returns the list of elements in the document matching the tag name
  * and the properties provided
- * 
+ *
  * @param tagName the tag's name
  * @param properties a js Object used as a dict
  * @return an iterator (if a *real* array is needed, you can use the
@@ -173,7 +180,7 @@ function getElementsMatching(tagName, properties, /* optional */ parent) {
 }
 
 /*
- * sets checked/unchecked status of checkboxes 
+ * sets checked/unchecked status of checkboxes
  */
 function setCheckboxesState(nameprefix, checked){
     // XXX: this looks in *all* the document for inputs
@@ -242,14 +249,14 @@ function autogrow(area) {
 
 //============= page loading events ==========================================//
 function roundedCornersOnLoad() {
-    roundClass("div", "sideBox", {corners: "bottom", compact:false}); 
-    roundClass("div", "boxTitle", {corners: "top",  compact:true}); 
-    roundClass("div", "boxPrefTitle", {corners: "top",  compact:true}); 
-    roundClass("div", "sideBoxTitle", {corners: "top",  compact:true}); 
+    roundClass("div", "sideBox", {corners: "bottom", compact:false});
+    roundClass("div", "boxTitle", {corners: "top",  compact:true});
+    roundClass("div", "boxPrefTitle", {corners: "top",  compact:true});
+    roundClass("div", "sideBoxTitle", {corners: "top",  compact:true});
     roundClass("th", "month", {corners: "top",  compact:true});
 }
 
-// jQuery(document).ready(roundedCornersOnLoad); 
+// jQuery(document).ready(roundedCornersOnLoad);
 
 
 CubicWeb.provide('htmlhelpers.js');

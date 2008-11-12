@@ -102,7 +102,7 @@ class UserLink(SingletonVComponent):
     def anon_user_link(self):
         if self.config['auth-mode'] == 'cookie':
             self.w(self.req._('anonymous'))
-            self.w(u'''&nbsp;[<a class="logout" href="javascript:toggleVisibility('popupLoginBox'); document.login_form.__login.focus() ">%s</a>]'''
+            self.w(u'''&nbsp;[<a class="logout" href="javascript: popupLoginBox();">%s</a>]'''
                    % (self.req._('i18n_login_popup')))
         else:
             self.w(self.req._('anonymous'))
