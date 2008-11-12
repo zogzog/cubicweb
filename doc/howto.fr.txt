@@ -15,6 +15,7 @@ HOW TO
 
 * Comment créer un utilisateur anonyme?
   
+  Cela vous permet d'acceder a votre site sans avoir besoin de vous authentifier.
   Dans le fichier ``all-in-one.conf`` de votre instance, définir l'utilisateur
   anonyme en initilisant les valeurs des variables suivantes ::
   

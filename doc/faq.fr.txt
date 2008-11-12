@@ -12,6 +12,14 @@ Frequently Asked Questions
   de donnees, ce qui donne un controle de la base de donnees afin de
   prevenir l'insertion de `mauvaises` entites dans la base.
 
-* 
+* Quand utiliser un template HTML plutot qu'un composant graphique?
+
+  Un template HTML ne peut contenir de logique, il ne permettra donc
+  que de definir une vue statique. Un composant permet lui de gerer
+  plus de logique et d'operations sur le contexte dans lequel il 
+  s'applique. Il faut donc bien reflechir avant de decider de l'un ou
+  de l'autre, mais vous avez la possibilite de choisir.
+
+
 
 
