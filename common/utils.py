@@ -141,6 +141,12 @@ class HTMLHead(UStringIO):
 
     def add_post_inline_script(self, content):
         self.post_inlined_scripts.append(content)
+
+    def add_onload(self, jscode):
+        self.add_post_inline_script(u"""jQuery(document).ready(function () {
+ %s
+ });""" % jscode)
+        
     
     def add_js(self, jsfile):
         """adds `jsfile` to the list of javascripts used in the webpage
