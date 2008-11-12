@@ -7,7 +7,7 @@ Définition de vues
 Les classes de base des vues
 ----------------------------
 
-La class `View` (`ginco.common.view`)
+La class `View` (`cubicweb.common.view`)
 `````````````````````````````````````
 Un vue écrit dans son flux de sortie via son attribut `w` (`UStreamIO`).
 
@@ -59,7 +59,7 @@ Les templates ou patron
 -----------------------
 
 Les patrons (ou *template*) sont des cas particulier de vue ne dépendant a
-priori pas d'un result set. La classe de base `Template` (`ginco.common.view`)
+priori pas d'un result set. La classe de base `Template` (`cubicweb.common.view`)
 est une classe dérivée de la classe `View`.
 
 Pour construire une page HTML, un *template principal* est utilisé. Généralement
@@ -76,7 +76,7 @@ C'est ce template qui est chargé :
 3. de composer la page à retourner
 
 
-Le patron principal par défaut (`ginco.web.views.basetemplates.TheMainTemplate`)
+Le patron principal par défaut (`cubicweb.web.views.basetemplates.TheMainTemplate`)
 --------------------------------------------------------------------------------
 
 Le template principal par défaut construit la page selon la décomposition
@@ -87,7 +87,7 @@ suivante :
 Le rectancle contenant le `view.dispatch()` représente l'emplacement où est
 inséré la vue de contenu à afficher. Les autres représentent des sous-templates
 appelé pour construire la page. Les implémentations par défaut de tout ces
-templates sont dans le module `ginco.web.views.basetemplates`. Vous pouvez
+templates sont dans le module `cubicweb.web.views.basetemplates`. Vous pouvez
 évidemment surcharger l'un des sous-templates pour modifier l'aspect visuel
 d'une partie désirée de la page.
 
