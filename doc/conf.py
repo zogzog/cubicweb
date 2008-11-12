@@ -36,7 +36,7 @@ master_doc = 'index'
 
 # General substitutions.
 project = 'Cubicweb'
-copyright = '2008, Logilab Inc.'
+copyright = '2008, Logilab'
 
 # The default replacements for |version| and |release|, also used in various
 # other places throughout the built documents.
@@ -158,7 +158,7 @@ htmlhelp_basename = 'Cubicwebdoc'
 # (source start file, target name, title, author, document class [howto/manual]).
 latex_documents = [
   ('index', 'Cubicweb.tex', 'Cubicweb Documentation',
-   'Logilab Inc.', 'manual'),
+   'Logilab', 'manual'),
 ]
 
 # The name of an image file (relative to this directory) to place at the top of
