@@ -2,24 +2,8 @@
 
 .. _contents:
 
-Utilisateur
-===========
-
-Description du modèle de sécurité
----------------------------------
-
-.. toctree::
-   :maxdepth: 1
-   
-   securite.txt
-
-
-
-Développeur
-===========
-
 Développement d'applications CubicWeb
--------------------------------------
+=====================================
 
 .. toctree::
    :maxdepth: 1

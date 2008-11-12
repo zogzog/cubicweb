@@ -19,6 +19,7 @@ Les indispensables
    chap_ui_gestion_formulaire.txt
    chap_ui_js_json.txt
    chap_autres_composants_ui.txt
+   chap_securite.txt
    chap_serveur_crochets.txt
    chap_serveur_notification.txt
    

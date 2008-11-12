@@ -2,15 +2,37 @@
 
 .. _contents:
 
-=======================================
-Index de la documentation pour CubicWeb
-=======================================
-:authors: Nicolas Chauvat, Sylvain Thénault, Adrien Di Mascio
-:date: 2008-07-12
-:version: 3.0.0 
-:organisation: Logilab
-:copyright: © 2008 Logilab
-:contact: contact@logilab.fr
+=====================================================================
+`CubicWeb`, plate-forme logicielle de développement d'application web 
+=====================================================================
+
+`CubicWeb` est une plate-forme logicielle de développement d'application web
+qui est développée par Logilab_ depuis 2001. Entièrement développée en Python,
+`CubicWeb` publie des données provenant de plusieurs sources telles que des
+bases de données SQL, des répertoire LDAP et des systèmes de gestion de versions
+tels que subversion.
+
+`CubicWeb` concurrence les autres plate-formes de développement d'application web 
+pour attirer l'attention et le support des développeurs. C'est le résultat
+de presque dix années d'expérience dans le développement de larges applications web.
+
+Ce qui nous rend unique? Un moteur piloté par un modèle de données, un
+véritable langage de requête, un mécanisme de sélection des vues pour la
+génération automatique de HTML/XML/text, des composants ré-utilisables...
+Autant d'arguments pour promouvoir un développement rapide et efficace.
+
+Nous pouvons citer par exemple : http://www.118000.fr/ , 
+http://garde-partagee.atoukontact.fr/ et http://www.logilab.org/
+
+Si vous aimez Python et sa librairie standard, vous avez des chances d'aimer
+`CubicWeb` qui inclut sa propre librairie standard de composants.
+
+
+En 2008, `CubicWeb` a été porté pour GoogleAppEngine_ et a donné naissance
+à `LAX`, `Logilab Appengine eXtension`.
+
+.. _Logilab: http://www.logilab.fr/
+.. _GoogleAppEngine: http://code.google.com/appengine/
 
 
 Documentation générale de Cubicweb
