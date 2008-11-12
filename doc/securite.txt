@@ -1,10 +1,13 @@
+.. -*- coding: utf-8 -*-
+
 Le contrôle d'accès
 ===================
 
-
 Vocabulaire
 -----------
+
 * Personne, Societe définissent deux *types* d'entité 
+
 * "Personne travaille_pour Societé" déclare qu'une relation
   travaille_pour peut exister entre une entité de type Personne et une
   entité de type Societe. L'ensemble des règles de ce type appliqué
@@ -15,7 +18,7 @@ Vocabulaire
 Description du modèle de sécurité
 ---------------------------------
 
-Le modèle de sécurité de cubicweb est un modèle fondé sur des `Access
+Le modèle de sécurité de `CubicWeb` est un modèle fondé sur des `Access
 Control List`. Les notions sont les suivantes :
 
 * utilisateurs et groupes d'utilisateurs
@@ -23,7 +26,7 @@ Control List`. Les notions sont les suivantes :
 * droits (lire, modifier, créer, supprimer) 
 * les droits sont attribués aux groupes (et non aux utilisateurs)
 
-Pour CubicWeb plus spécifiquement :
+Pour `CubicWeb` plus spécifiquement :
 
 * on associe les droits au niveau des schemas d'entites / relations
 * pour chaque type d'entité, on distingue les droits de lecture,

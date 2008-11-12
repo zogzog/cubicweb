@@ -1,7 +1,7 @@
 .. -*- coding: utf-8 -*-
 
 Formation Python-CubicWeb 5 jours
-==============================
+==================================
 
 Bases Python
 ------------
@@ -38,13 +38,13 @@ Structures avancées
 
 
 Développement CubicWeb
--------------------
+-----------------------
 
 Mise en place d'un environnement de développement CubicWeb
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 :durée: 0.5j
   Introduction mercurial
-  Installation de cubicweb et de ses dépendances (debian !)
+  Installation de CubicWeb et de ses dépendances (debian !)
   Postgres
   Notion de template et d'instance
   L'outil `cubicweb-ctl`
@@ -52,7 +52,7 @@ Mise en place d'un environnement de développement CubicWeb
   Création d'une instance de développement
 
 Fondements CubicWeb
-~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~
 :durée: 0.1j
   Vocabulaire
   Le langage RQL
@@ -67,7 +67,7 @@ Définition du modèle de données
   Migration de schéma
 
 Fondements du framework CubicWeb
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 :durée: 0.1j
   La classe `appobject`
   La base de registres

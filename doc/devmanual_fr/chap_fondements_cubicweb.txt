@@ -33,8 +33,8 @@ Concepts et vocabulaire
   base de toute entité, qui est sa clef, est l'eid
 
 *type de relation*
-  les entités sont liées entre elles par des relations. Dans cubicweb les
-  relations sont binaires : par convention on nomme le premier terme
+  les entités sont liées entre elles par des relations. Dans `CubicWeb` 
+  les relations sont binaires : par convention on nomme le premier terme
   d'une relation son 'sujet' et le second son 'objet'.
 
 *type d'entité final*
@@ -102,8 +102,9 @@ Concepts et vocabulaire
 
 Moteur `CubicWeb`
 -----------------
-Le moteur web de cubicweb consiste en quelques classes gérant un ensemble d'objets
-chargés dynamiquement au lancement de cubicweb. Ce sont ces objets dynamiques, issus
+
+Le moteur web de `CubicWeb` consiste en quelques classes gérant un ensemble d'objets
+chargés dynamiquement au lancement de `CubicWeb`. Ce sont ces objets dynamiques, issus
 du modèle ou de la librairie, qui construisent le site web final. Les différents
 composants dynamiques sont par exemple : 
 
@@ -168,7 +169,7 @@ cursor, rollback et commit principalement. La méthode importante est la méthod
 
 C'est l'objet Connection qui possède les méthodes classiques `commit` et
 `rollback`. Vous ne *devriez jamais avoir à les utiliser* lors du développement
-d'interface web sur la base du framework CubicWeb étant donné que la fin de la
+d'interface web sur la base du framework `CubicWeb` étant donné que la fin de la
 transaction est déterminée par celui-ci en fonction du succès d'éxécution de la
 requête. 
 
