@@ -6,9 +6,38 @@ Installation
 
 Installation de Cubicweb et de ses dépendances
 ----------------------------------------------
-[TODO]
-Decrire l'installation de la foret mercurial plutot qu'avec
-les paquets debian
+
+`CubicWeb` est disponible via un entrepôt Mercurial utilisant l'extension forest.
+Vous devez donc dans un premier temps vous assurer que Mercurial est bien installé
+et que vous avez l'extension forest.
+
+Installation de Mercurial
+`````````````````````````
+Veuillez vous référer a la documentation en ligne du projet Mercurial_.
+
+.. _Mercurial: http://www.selenic.com/mercurial/wiki/
+
+Installation de l'extension forest
+``````````````````````````````````
+Dans un premier temps, récupérez une copie des sources via: http://hg.akoha.org/hgforest/.
+Ensuite, ajoutez a votre ``~/.hgrc`` les lignes suivantes ::
+
+   [extensions]
+   hgext.forest=
+   # or, if forest.py is not in the hgext dir:
+   # forest=/path/to/forest.py
+
+
+Installation de Postgres
+````````````````````````
+Veuillez vous référer a la documentation en ligne du projet Postgres_.
+
+.. _Postgres: http://www.postgresql.org/
+
+
+[FIXME]
+Supprimer tout ce qui fait reference a l'installation des paquets debian des
+que le fclone sur logilab.org fonctionne.
 
 Tout le système `Cubicweb` est préparé pour l'installation sur une machine
 debian. L'installation manuelle est un peu pénible du fait des nombreuses
@@ -38,8 +67,11 @@ On pourra ensuite installer les paquets suivants :
 * `postgresql-8.1`, `postgresql-contrib-8.1` et `postgresql-plpython-8.1` la
   machine devant héberger la base de données système
 
+.. _ConfigurationEnv:
+
 Configuration de l'environnement
 --------------------------------
+
 [FIXME]
 Ces variables ne sont plus requises pour le bon fonctionnement de `CubicWeb`, non?
 A part rajouter la foret dans le PYTHONPATH, rien de plus ne doit etre fait?
@@ -55,6 +87,7 @@ Cela suppose que le composant erudi que vous développez est dans un
 sous-répertoire de *~/hg/* et que vous avez créé le répertoire *~/etc/erudi.d/*
 pour que `cubicweb-ctl` y place vos instances de test.
 
+.. _ConfigurationPostgres:
 
 Configuration Postgres
 ----------------------

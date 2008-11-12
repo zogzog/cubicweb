@@ -1,0 +1,127 @@
+.. -*- coding: utf-8 -*-
+
+===================================
+Creation de votre premiere instance
+===================================
+
+
+Qu'est-ce qu'une instance?
+==========================
+
+Une instance CubicWeb consiste en un dossier situe dans ``~/etc/cubicweb.d``
+qui permettra de lancer une application web. Une instance est cree a partir
+d'un ou plusieurs cubes.
+
+Nous recommandons de ne pas definir de schema, entites ou vues dans l'instance 
+meme si cela est possible dans un but de re-utilisabilite des entities et de leurs
+vues. Nous conseillons plutot de developper des cubes qui pourront par la suite
+etre utilises dans d'autres instances (approche modulaire).
+
+L'instance n'est qu'un conteneur referrant a des cubes et a des parametres
+des configuration de l'application web.
+
+Qu'est-ce qu'un cube?
+=====================
+
+Un cube definit des entities, leur vues, leur schemas et leur workflow 
+dans un repertoire independant situe dans ``/path/to/forest/cubicweb/cubes/``.
+
+Lors de la creation d'une instance, vous avez la possibilite de lister
+le ou les cubes que votre instance va utiliser. Utiliser un cube signifie
+avoir a disposition dans votre instance les entites definies dans le schema
+de votre cube ainsi que les vues et les workflows.
+
+
+.. note::
+   Les commandes utilisees ci-apres sont detaillees dans la section
+   dediee a :ref:`cubicweb-ctl`.
+
+
+Création d'un cube
+==================
+
+Commençons par créer un squelette qui nous servira de base au développement de
+notre cube ou application ::
+
+  cd ~/hg
+
+  cubicweb-ctl newtemplate moncube
+
+  # répondre aux questions
+  hg init moncube
+  cd moncube
+  hg add .
+  hg ci
+
+A partir de là si tout va bien, votre cube devrait être affiché par
+`cubicweb-ctl list` dans la section *Available components*, si ce n'est pas le cas
+revoir la section :ref:`ConfigurationEnv`.
+
+
+Pour utiliser un cube, il faut le mentionner dans la variable
+__use__ du fichier __pkginfo__ de l'application. Cette variable
+contrôle à la fois le packaging de l'application (dépendances gérées
+par les utilitaires système comme les outils APT) et les composants
+effectivement utilisables lors de la création de la base
+(import_erschema('Moncomposant') ne fonctionne pas sinon).
+
+Création d'une instance de développement
+========================================
+
+Maintenant que nous avons notre squelette de modèle, on peut en créer une
+instance afin de voir ce que tout ça donne dans un simple navigateur web.
+Nous allons utiliser une configuration `all-in-one` afin de simplifier les
+choses ::
+
+  cubicweb-ctl create -c all-in-one moncube moninstance
+
+Une série de questions vont être posées, la réponse par défaut est généralement
+suffisante. Vous pourrez de toute façon modifier la configuration par la suite
+en éditant les fichiers générés. Lorsqu'un login/mot de passe d'accès au sgbd
+vous est demandé, il est recommandé d'utiliser l'utilisateur créé lors de la
+:ref:`ConfigurationPostgres`.
+
+Il est important de distinguer ici l'utilisateur utilisé pour accéder au sgbd,
+et l'utilisateur utilisé pour s'authentifier dans l'application cubicweb. Lorsque
+l'application cubicweb démarre, elle utilise le login/mot de passe sgdb pour
+récupérer le schéma et gérer les transactions bas-niveau. En revanche, lorsque
+`cubicweb-ctl create` vous demande un login/mot de passe `manager` pour cubicweb, il
+s'agit d'un utilisateur qui sera créé dans l'application `cubicweb` pour pouvoir
+s'y connecter dans un premier temps et l'administrer. Il sera par la suite possible
+de créer des utilisateurs différents pour l'application.
+
+A l'issue de cette commande, la définition de votre instance se trouve dans
+*~/etc/cubicweb.d/moninstance/*. Pour la lancer, il suffit de taper ::
+
+  cubicweb-ctl start -D moninstance
+
+L'option `-D` indique le *debug mode* : l'instance ne passe pas en mode serveur
+et ne se déconnecte pas du terminal, ce qui simplifie le dépannage en cas de non
+démarrage de l'instance. Vous pouvez ensuite allez voir ce que ça donne en
+pointant votre navigateur sur l'url `http://localhost:8080` (le n° de port
+dépend de votre configuration). Pour vous authentifier vous pouvez utiliser le
+login/mot de passe administrateur que vous avez spécifié lors de la création de
+l'instance.
+
+Pour arrêter l'instance, un Ctrl-C dans la fenêtre où vous l'avez lancé
+suffit. Si l'option `-D` a été omise, il faut taper ::
+
+  cubicweb-ctl stop moninstance
+
+Voilà, tout est en place pour démarrer le développement du modèle...
+
+
+Utilisation de cubicweb-liveserver
+----------------------------------
+
+Afin de tester rapidement un nouveau cube, on peut également
+utiliser le script `cubicweb-liveserver` qui permet de créer une
+application en mémoire (utilisant une base de données SQLite par
+défaut) et la rendre accessible via un serveur web::
+
+  cubicweb-ctl live-server moncomposant
+
+ou bien, pour utiliser une base de données existante (SQLite ou postgres)::
+
+  cubicweb-ctl live-server -s monfichier_sources moncomposant
+

@@ -31,6 +31,9 @@ Si vous aimez Python et sa librairie standard, vous avez des chances d'aimer
 En 2008, `CubicWeb` a été porté pour GoogleAppEngine_ et a donné naissance
 à `LAX`, `Logilab Appengine eXtension`.
 
+
+Pour les impatients, :ref:`MiseEnPlaceEnv`.
+
 .. _Logilab: http://www.logilab.fr/
 .. _GoogleAppEngine: http://code.google.com/appengine/
 

@@ -1,96 +1,17 @@
-Mise en place d'un environnement de développement Erudi
-=======================================================
+.. -*- coding: utf-8 -*-
+
+.. _MiseEnPlaceEnv:
+
+Installation et mise en place d'un environnement `CubicWeb`
+===========================================================
+
+
 
 .. toctree::
    :maxdepth: 1
 
-   sect_mercurial.txt
    sect_installation.txt
+   sect_creation_instance.txt
    sect_cubicweb-ctl.txt
-
-
-
-Création d'un composant
------------------------
-Commençons par créer un squelette qui nous servira de base au développement de
-notre composant ou application ::
-
-  cd ~/hg
-  erudi-ctl newtemplate moncomposant
-  # répondre aux questions
-  hg init moncomposant
-  cd moncomposant
-  hg add .
-  hg ci
-
-A partir de là si tout va bien, votre composant devrait être affiché par
-`erudi-ctl list` dans la section *Available components*, si ce n'est pas le cas
-revoir la section `Configuration de l'environnement`_.
-
-Pour utiliser un composant, il faut le mentionner dans la variable
-__use__ du fichier __pkginfo__ de l'application. Cette variable
-contrôle à la fois le packaging de l'application (dépendances gérées
-par les utilitaires système comme les outils APT) et les composants
-effectivement utilisables lors de la création de la base
-(import_erschema('Moncomposant') ne fonctionne pas sinon).
-
-Création d'une instance de développement
-----------------------------------------
-
-Maintenant que nous avons notre squelette de modèle, on peut en créer une
-instance afin de voir ce que tout ça donne dans un simple navigateur web.
-Nous allons utiliser une configuration `all-in-one` afin de simplifier les
-choses ::
-
-  erudi-ctl create -c all-in-one moncomposant moninstance
-
-Une série de questions vont être posées, la réponse par défaut est généralement
-suffisante. Vous pourrez de toute façon modifier la configuration par la suite
-en éditant les fichiers générés. Lorsqu'un login/mot de passe d'accès au sgbd
-vous est demandé, il est recommandé d'utilisé l'utilisateur créé lors de la
-`Configuration Postgres`_.
-
-Il est important de distinguer ici l'utilisateur utilisé pour accéder au sgbd,
-et l'utilisateur utilisé pour s'authentifier dans l'application erudi. Lorsque
-l'application erudi démarre, elle utilise le login/mot de passe sgdb pour
-récupérer le schéma et gérer les transactions bas-niveau. En revanche, lorsque
-`erudi-ctl create` vous demande un login/mot de passe `manager` pour erudi, il
-s'agit d'un utilisateur qui sera créé dans l'application `erudi` pour pouvoir
-s'y connecter dans un premier temps et l'administrer. Il sera par la suite possible
-de créer des utilisateurs différents pour l'application.
-
-A l'issue de cette commande, la définition de votre instance se trouve dans
-*~/etc/erudi.d/moninstance/*. Pour la lancer, il suffit de taper ::
-
-  erudi-ctl start -D moninstance
-
-L'option `-D` indique le *debug mode* : l'instance ne passe pas en mode serveur
-et ne se déconnecte pas du terminal, ce qui simplifie le dépannage en cas de non
-démarrage de l'instance. Vous pouvez ensuite allez voir ce que ça donne en
-pointant votre navigateur sur l'url `http://localhost:8080` (le n° de port
-dépend de votre configuration). Pour vous authentifier vous pouvez utiliser le
-login/mot de passe administrateur que vous avez spécifié lors de la création de
-l'instance.
-
-Pour arrêter l'instance, un Ctrl-C dans la fenêtre où vous l'avez lancé
-suffit. Si l'option `-D` a été omise, il faut taper ::
-
-  erudi-ctl stop moninstance
-
-Voilà, tout est en place pour démarrer le développement du modèle...
-
-
-Utilisation de erudi-liveserver
--------------------------------
-
-Afin de tester rapidement un nouveau composant, on peut également
-utiliser le script `erudi-liveserver` qui permet de créer une
-application en mémoire (utilisant une base de données SQLite par
-défaut) et la rendre accessible via un serveur web::
-
-  erudi-liveserver moncomposant
-
-ou bien, pour utiliser une base de données existante (SQLite ou postgres)::
-
-  erudi-liveserver -s monfichier_sources moncomposant
+   sect_mercurial.txt
 
