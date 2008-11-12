@@ -89,7 +89,6 @@ div.related ul {
     margin: 0;
     padding: 0 0 0 10px;
     list-style: none;
-    color: black;
 }
 
 div.related li {
@@ -102,7 +101,7 @@ div.related li.right {
 }
 
 div.related a {
-    color: black;
+    color: white;
     font-weight:bold;
 }
 
