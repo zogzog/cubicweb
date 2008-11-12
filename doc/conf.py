@@ -44,7 +44,7 @@ copyright = '2008, Logilab'
 # The short X.Y version.
 version = '0.54'
 # The full version, including alpha/beta/rc tags.
-release = '2'
+release = '3.0'
 
 # There are two options for replacing |today|: either, you set today to some
 # non-false value, then it is used:
@@ -87,7 +87,7 @@ html_style = 'sphinx-default.css'
 
 # The name for this set of Sphinx documents.  If None, it defaults to
 # "<project> v<release> documentation".
-#html_title = None
+html_title = '%s %s' % (project, release)
 
 # A shorter title for the navigation bar.  Default is the same as html_title.
 #html_short_title = None
