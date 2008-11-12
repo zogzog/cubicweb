@@ -238,8 +238,9 @@ if you want to allow everything',
         'STYLESHEETS_PRINT': ['DATADIR/cubicweb.print.css'],
         
         'JAVASCRIPTS':       ['DATADIR/jquery.js',
-                              'DATADIR/cubicweb.compat.js',
+                              'DATADIR/jquery.corner.js',
                               'DATADIR/jquery.json.js',
+                              'DATADIR/cubicweb.compat.js',
                               'DATADIR/cubicweb.python.js',
                               'DATADIR/cubicweb.htmlhelpers.js'],
         }

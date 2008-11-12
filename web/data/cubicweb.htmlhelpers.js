@@ -249,14 +249,11 @@ function autogrow(area) {
 
 //============= page loading events ==========================================//
 function roundedCornersOnLoad() {
-    roundClass("div", "sideBox", {corners: "bottom", compact:false});
-    roundClass("div", "boxTitle", {corners: "top",  compact:true});
-    roundClass("div", "boxPrefTitle", {corners: "top",  compact:true});
-    roundClass("div", "sideBoxTitle", {corners: "top",  compact:true});
-    roundClass("th", "month", {corners: "top",  compact:true});
+    jQuery('div.sideBox').corner('bottom 6px');
+    jQuery('div.boxTitle, div.boxPrefTitle, div.sideBoxTitle, th.month').corner('top 6px');
 }
 
-// jQuery(document).ready(roundedCornersOnLoad);
+jQuery(document).ready(roundedCornersOnLoad);
 
 
 CubicWeb.provide('htmlhelpers.js');
