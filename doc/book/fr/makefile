@@ -33,16 +33,13 @@ help:
 clean:
 	rm -rf apidoc/
 	rm -f *.html
-	cd devmanual_fr && make	clean
 	-rm -rf build/*
 
-all: ${TARGET} devmanual apidoc html
+all: ${TARGET} apidoc html
 
 %.html: %.txt
 	${MKHTML} ${MKHTMLOPTS} $<
 
-devmanual:
-	cd devmanual_fr && make	
 #apydoc: 
 #	epydoc --html -o epydoc/ -n ../server/*.py ../core/*.py ../common/*.py ../server/*/*.py ../modpython/*/*.py ../common/*/*.py
 apidoc:
