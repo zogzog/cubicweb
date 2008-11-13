@@ -783,8 +783,10 @@ class DateTimeWidget(DateWidget):
     def render_example(self, req):
         formatstr1 = req.property_value('ui.datetime-format')
         formatstr2 = req.property_value('ui.date-format')
-        return req._('%s, or without time: %s') % (now().strftime(formatstr1),
-                                                   now().strftime(formatstr2))
+        return req._('%(fmt1)s, or without time: %(fmt2)s') % {
+            'fmt1': now().strftime(formatstr1),
+            'fmt2': now().strftime(formatstr2),
+            }
 
 
 

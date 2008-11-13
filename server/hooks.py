@@ -245,9 +245,10 @@ class CheckRequiredRelationOperation(LateOperation):
             return
         if self.session.unsafe_execute(*self._rql()).rowcount < 1:
             etype = self.session.describe(self.eid)[0]
-            msg = self.session._('at least one relation %s is required on %s(%s)')
-            raise ValidationError(self.eid, {self.rtype: msg % (self.rtype,
-                                                                etype, self.eid)})
+            msg = self.session._('at least one relation %(rtype)s is required on %(etype)s (%(eid)s)')
+            raise ValidationError(self.eid, {self.rtype: msg % {'rtype': self.rtype,
+                                                                'etype': etype,
+                                                                'eid': self.eid}})
     
     def commit_event(self):
         pass

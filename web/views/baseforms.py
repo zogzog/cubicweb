@@ -101,8 +101,10 @@ class ChangeStateForm(EntityForm):
         _ = self.req._
         self.w(self.error_message())
         self.w(u'<h4>%s %s</h4>\n' % (_(transition.name), entity.view('oneline')))
-        self.w(u'<p>%s</p>\n' % (_('status will change from %s to %s')
-                               % (_(state.name), _(dest.name))))
+        msg = _('status will change from %(st1)s to %(st2)s') % {
+            'st1': _(state.name),
+            'st2': _(dest.name)}
+        self.w(u'<p>%s</p>\n' % msg)
         self.w(u'<form action="%s" onsubmit="return freezeFormButtons(\'entityForm\');" method="post" id="entityForm">\n'
                % self.build_url('edit'))
         self.w(u'<div id="progress">%s</div>' % _('validating...'))

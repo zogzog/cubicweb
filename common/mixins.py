@@ -289,8 +289,10 @@ def _done_init(done, view, row, col):
         done = set()
     entity = view.entity(row, col)
     if entity.eid in done:
-        msg = entity.req._('loop in %s relation (%s)'
-                           % (entity.tree_attribute, entity.eid))
+        msg = entity.req._('loop in %(rel)s relation (%(eid)s)') % {
+            'rel': entity.tree_attribute,
+            'eid': entity.eid
+            }
         return None, msg
     done.add(entity.eid)
     return done, entity
