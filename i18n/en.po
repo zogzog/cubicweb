@@ -5,7 +5,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: 2.0\n"
 "POT-Creation-Date: 2006-01-12 17:35+CET\n"
-"PO-Revision-Date: 2008-02-29 09:26+0100\n"
+"PO-Revision-Date: 2008-11-13 12:32+0100\n"
 "Last-Translator: Sylvain Thenault <sylvain.thenault@logilab.fr>\n"
 "Language-Team: English <devel@logilab.fr.org>\n"
 "MIME-Version: 1.0\n"
@@ -31,7 +31,15 @@ msgid "  from state %(fromstate)s to state %(tostate)s\n"
 msgstr ""
 
 #, python-format
+msgid "%(cstr)s constraint failed for value %(value)r"
+msgstr ""
+
+#, python-format
 msgid "%(firstname)s %(surname)s"
+msgstr ""
+
+#, python-format
+msgid "%(fmt1)s, or without time: %(fmt2)s"
 msgstr ""
 
 #, python-format
@@ -48,10 +56,6 @@ msgstr ""
 
 #, python-format
 msgid "%d years"
-msgstr ""
-
-#, python-format
-msgid "%s constraint failed for value %r"
 msgstr ""
 
 #, python-format
@@ -84,10 +88,6 @@ msgstr ""
 
 #, python-format
 msgid "%s software version of the database"
-msgstr ""
-
-#, python-format
-msgid "%s, or without time: %s"
 msgstr ""
 
 msgid "**"
@@ -199,6 +199,12 @@ msgstr "Decimal numbers"
 msgid "Do you want to delete the following element(s) ?"
 msgstr ""
 
+msgid "ECache"
+msgstr ""
+
+msgid "ECache_plural"
+msgstr ""
+
 msgid "EConstraint"
 msgstr "Constraint"
 
@@ -300,6 +306,9 @@ msgstr "New bookmark"
 
 msgid "New Card"
 msgstr "New card"
+
+msgid "New ECache"
+msgstr ""
 
 msgid "New EConstraint"
 msgstr "New constraint"
@@ -437,6 +446,9 @@ msgstr "This bookmark"
 msgid "This Card"
 msgstr "This card"
 
+msgid "This ECache"
+msgstr ""
+
 msgid "This EConstraint"
 msgstr "This constraint"
 
@@ -520,10 +532,26 @@ msgstr ""
 msgid "You are now connected to %s"
 msgstr ""
 
+msgid ""
+"You can either submit a new file using the browse button above, or choose to "
+"remove already uploaded file by checking the \"detach attached file\" check-"
+"box, or edit file content online with the widget below."
+msgstr ""
+
+msgid ""
+"You can either submit a new file using the browse button above, or edit file "
+"content online with the widget below."
+msgstr ""
+
 msgid "You can use any of the following substitutions in your text"
 msgstr ""
 
-msgid "You have no access to this view"
+msgid "You have no access to this view or it's not applyable to current data"
+msgstr ""
+
+msgid ""
+"You're not authorized to access this page. If you think you should, please "
+"contact the site administrator."
 msgstr ""
 
 #, python-format
@@ -542,6 +570,13 @@ msgstr ""
 msgid ""
 "a card is a textual content used as documentation, reference, procedure "
 "reminder"
+msgstr ""
+
+msgid ""
+"a simple cache entity characterized by a name and a validity date. The "
+"target application is responsible for updating timestamp when necessary to "
+"invalidate the cache (typically in hooks). Also, checkout the AppRsetObject."
+"get_cache() method."
 msgstr ""
 
 msgid "about this site"
@@ -629,6 +664,12 @@ msgid "actions_myprefs"
 msgstr "my preferences"
 
 msgid "actions_myprefs_description"
+msgstr ""
+
+msgid "actions_prefs"
+msgstr ""
+
+msgid "actions_prefs_description"
 msgstr ""
 
 msgid "actions_schema"
@@ -744,6 +785,9 @@ msgstr "add a bookmark"
 
 msgid "add a Card"
 msgstr "add a card"
+
+msgid "add a ECache"
+msgstr ""
 
 msgid "add a EConstraint"
 msgstr "add a constraint"
@@ -865,6 +909,9 @@ msgstr ""
 msgid "and linked"
 msgstr ""
 
+msgid "and/or between different values"
+msgstr ""
+
 msgid "anonymous"
 msgstr ""
 
@@ -878,7 +925,7 @@ msgid "april"
 msgstr ""
 
 #, python-format
-msgid "at least one relation %s is required on %s(%s)"
+msgid "at least one relation %(rtype)s is required on %(etype)s (%(eid)s)"
 msgstr ""
 
 msgid "attribute"
@@ -903,6 +950,9 @@ msgid "bookmark has been removed"
 msgstr ""
 
 msgid "bookmark this page"
+msgstr ""
+
+msgid "bookmark this search"
 msgstr ""
 
 msgid "bookmarked_by"
@@ -1224,6 +1274,10 @@ msgstr ""
 msgid "core relation indicating the type of an entity"
 msgstr ""
 
+msgid ""
+"core relation indicating the types (including specialized types) of an entity"
+msgstr ""
+
 msgid "cost"
 msgstr ""
 
@@ -1478,10 +1532,16 @@ msgstr ""
 msgid "download"
 msgstr ""
 
+msgid "download icon"
+msgstr ""
+
 msgid "edit bookmarks"
 msgstr ""
 
 msgid "edit the index page"
+msgstr ""
+
+msgid "editable-table"
 msgstr ""
 
 msgid "edition"
@@ -1515,6 +1575,9 @@ msgid "entities deleted"
 msgstr ""
 
 msgid "entity deleted"
+msgstr ""
+
+msgid "entity type"
 msgstr ""
 
 msgid ""
@@ -1557,10 +1620,40 @@ msgstr "expression's type"
 msgid "external page"
 msgstr ""
 
-msgid "february"
+msgid "facetbox"
 msgstr ""
 
-msgid "filter"
+msgid "facets_created_by-facet"
+msgstr "\"created by\" facet"
+
+msgid "facets_created_by-facet_description"
+msgstr ""
+
+msgid "facets_etype-facet"
+msgstr "\"entity type\" facet"
+
+msgid "facets_etype-facet_description"
+msgstr ""
+
+msgid "facets_has_text-facet"
+msgstr "\"has text\" facet"
+
+msgid "facets_has_text-facet_description"
+msgstr ""
+
+msgid "facets_in_group-facet"
+msgstr "\"in group\" facet"
+
+msgid "facets_in_group-facet_description"
+msgstr ""
+
+msgid "facets_in_state-facet"
+msgstr "\"in state\" facet"
+
+msgid "facets_in_state-facet_description"
+msgstr ""
+
+msgid "february"
 msgstr ""
 
 msgid "final"
@@ -1750,7 +1843,7 @@ msgid "incontext"
 msgstr ""
 
 #, python-format
-msgid "incorrect value (%r) for type \"%s\""
+msgid "incorrect value (%(value)s) for type \"%(type)s\""
 msgstr ""
 
 msgid "index"
@@ -1786,6 +1879,9 @@ msgstr "initial state of"
 msgid "inlined"
 msgstr ""
 
+msgid "inlined view"
+msgstr ""
+
 msgid "internationalizable"
 msgstr ""
 
@@ -1819,6 +1915,12 @@ msgstr ""
 msgid ""
 "is this relation physically inlined? you should know what you're doing if "
 "you are changing this!"
+msgstr ""
+
+msgid "is_instance_of"
+msgstr ""
+
+msgid "is_instance_of_object"
 msgstr ""
 
 msgid "is_object"
@@ -1896,7 +1998,7 @@ msgid "logout"
 msgstr ""
 
 #, python-format
-msgid "loop in %s relation (%s)"
+msgid "loop in %(rel)s relation (%(eid)s)"
 msgstr ""
 
 msgid "main informations"
@@ -1960,7 +2062,13 @@ msgstr ""
 msgid "multiple edit"
 msgstr ""
 
+msgid "my custom search"
+msgstr ""
+
 msgid "name"
+msgstr ""
+
+msgid "name of the cache"
 msgstr ""
 
 msgid ""
@@ -1996,6 +2104,9 @@ msgid "no"
 msgstr ""
 
 msgid "no associated epermissions"
+msgstr ""
+
+msgid "no possible transition"
 msgstr ""
 
 msgid "no related project"
@@ -2163,6 +2274,9 @@ msgstr "remove this bookmark"
 msgid "remove this Card"
 msgstr "remove this card"
 
+msgid "remove this ECache"
+msgstr ""
+
 msgid "remove this EConstraint"
 msgstr "remove this constraint"
 
@@ -2266,6 +2380,9 @@ msgstr ""
 msgid "search"
 msgstr ""
 
+msgid "search for association"
+msgstr ""
+
 msgid "searching for"
 msgstr ""
 
@@ -2330,6 +2447,9 @@ msgstr ""
 msgid "show %s results"
 msgstr ""
 
+msgid "show advanced fields"
+msgstr ""
+
 msgid "show filter form"
 msgstr ""
 
@@ -2354,6 +2474,12 @@ msgstr ""
 msgid "sorry, the server is unable to handle this query"
 msgstr ""
 
+msgid "specializes"
+msgstr ""
+
+msgid "specializes_object"
+msgstr ""
+
 msgid "startup views"
 msgstr ""
 
@@ -2373,7 +2499,7 @@ msgid "status changed"
 msgstr ""
 
 #, python-format
-msgid "status will change from %s to %s"
+msgid "status will change from %(st1)s to %(st2)s"
 msgstr ""
 
 msgid "subject"
@@ -2398,6 +2524,9 @@ msgid "system entities"
 msgstr ""
 
 msgid "table"
+msgstr ""
+
+msgid "tablefilter"
 msgstr ""
 
 msgid "task progression"
@@ -2435,6 +2564,9 @@ msgid "this resource does not exist"
 msgstr ""
 
 msgid "thursday"
+msgstr ""
+
+msgid "timestamp"
 msgstr ""
 
 msgid "timestamp of the latest source synchronization."
@@ -2485,10 +2617,16 @@ msgstr ""
 msgid "ui"
 msgstr ""
 
+msgid "unaccessible"
+msgstr ""
+
 msgid "unauthorized value"
 msgstr ""
 
 msgid "unique identifier used to connect to the application"
+msgstr ""
+
+msgid "unknown external entity"
 msgstr ""
 
 msgid "unknown property key"

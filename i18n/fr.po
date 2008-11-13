@@ -4,7 +4,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: cubicweb 2.46.0\n"
-"PO-Revision-Date: 2008-03-28 18:14+0100\n"
+"PO-Revision-Date: 2008-11-13 12:28+0100\n"
 "Last-Translator: Logilab Team <contact@logilab.fr>\n"
 "Language-Team: fr <contact@logilab.fr>\n"
 "MIME-Version: 1.0\n"
@@ -36,8 +36,16 @@ msgid "  from state %(fromstate)s to state %(tostate)s\n"
 msgstr "  de l'état %(fromstate)s vers l'état %(tostate)s\n"
 
 #, python-format
+msgid "%(cstr)s constraint failed for value %(value)r"
+msgstr "la valeur %(value)r ne satisfait pas la contrainte %(cstr)s"
+
+#, python-format
 msgid "%(firstname)s %(surname)s"
 msgstr "%(firstname)s %(surname)s"
+
+#, python-format
+msgid "%(fmt1)s, or without time: %(fmt2)s"
+msgstr "%(fmt1)s, ou bien sans spécifier l'heure: %(fmt2)s"
 
 #, python-format
 msgid "%(subject)s %(etype)s #%(eid)s (%(login)s)"
@@ -54,10 +62,6 @@ msgstr "%d semaines"
 #, python-format
 msgid "%d years"
 msgstr "%d années"
-
-#, python-format
-msgid "%s constraint failed for value %r"
-msgstr "contrainte %s n'est pas respectée par valeur %r"
 
 #, python-format
 msgid "%s days"
@@ -90,10 +94,6 @@ msgstr "%s secondes"
 #, python-format
 msgid "%s software version of the database"
 msgstr "version logicielle de la base pour %s"
-
-#, python-format
-msgid "%s, or without time: %s"
-msgstr "%s, ou bien sans préciser d'heure: %s"
 
 msgid "**"
 msgstr "0..n 0..n"
@@ -204,6 +204,12 @@ msgstr "Nombres décimaux"
 msgid "Do you want to delete the following element(s) ?"
 msgstr "Voulez vous supprimer le(s) élément(s) suivant(s)"
 
+msgid "ECache"
+msgstr "Cache applicatif"
+
+msgid "ECache_plural"
+msgstr "Caches applicatifs"
+
 msgid "EConstraint"
 msgstr "Contrainte"
 
@@ -305,6 +311,9 @@ msgstr "Nouveau signet"
 
 msgid "New Card"
 msgstr "Nouvelle fiche"
+
+msgid "New ECache"
+msgstr "Nouveau cache applicatif"
 
 msgid "New EConstraint"
 msgstr "Nouvelle contrainte"
@@ -442,6 +451,9 @@ msgstr "Ce signet"
 msgid "This Card"
 msgstr "Cette fiche"
 
+msgid "This ECache"
+msgstr "Ce cache applicatif"
+
 msgid "This EConstraint"
 msgstr "Cette contrainte"
 
@@ -525,13 +537,39 @@ msgstr "Vous n'êtes pas connecté à une application"
 msgid "You are now connected to %s"
 msgstr "Vous êtes connecté à l'application %s"
 
+msgid ""
+"You can either submit a new file using the browse button above, or choose to "
+"remove already uploaded file by checking the \"detach attached file\" check-"
+"box, or edit file content online with the widget below."
+msgstr ""
+"Vous pouvez soit soumettre un nouveau fichier en utilisant le bouton\n"
+"\"parcourir\" ci-dessus, soit suprrimer le fichier déjà présent en\n"
+"cochant la case \"détacher fichier attaché\", soit éditer le contenu\n"
+"du fichier en ligne avec le champ ci-dessous."
+
+msgid ""
+"You can either submit a new file using the browse button above, or edit file "
+"content online with the widget below."
+msgstr ""
+"Vous pouvez soit soumettre un nouveau fichier en utilisant le bouton\n"
+"\"parcourir\" ci-dessu, soit éditer le contenu du fichier en ligne\n"
+"avec le champ ci-dessous."
+
 msgid "You can use any of the following substitutions in your text"
 msgstr ""
 "Vous pouvez utiliser n'importe quelle substitution parmi la liste suivante "
 "dans le contenu de votre courriel."
 
 msgid "You have no access to this view or it's not applyable to current data"
-msgstr "Vous n'avez pas accès à cette vue ou elle ne s'applique pas aux données"
+msgstr ""
+"Vous n'avez pas accès à cette vue ou elle ne s'applique pas aux données"
+
+msgid ""
+"You're not authorized to access this page. If you think you should, please "
+"contact the site administrator."
+msgstr ""
+"Vous n'êtes pas autorisé à accéder à cette page. Si toutefois vous pensez\n"
+"que c'est une erreur, veuillez contacter l'administrateur du site."
 
 #, python-format
 msgid "[%s supervision] changes summary"
@@ -556,6 +594,13 @@ msgid ""
 msgstr ""
 "une fiche est un texte utilisé comme documentation, référence, rappel de "
 "procédure..."
+
+msgid ""
+"a simple cache entity characterized by a name and a validity date. The "
+"target application is responsible for updating timestamp when necessary to "
+"invalidate the cache (typically in hooks). Also, checkout the AppRsetObject."
+"get_cache() method."
+msgstr ""
 
 msgid "about this site"
 msgstr "à propos de ce site"
@@ -642,6 +687,12 @@ msgid "actions_myprefs"
 msgstr "préférences utilisateur"
 
 msgid "actions_myprefs_description"
+msgstr ""
+
+msgid "actions_prefs"
+msgstr "préférences"
+
+msgid "actions_prefs_description"
 msgstr ""
 
 msgid "actions_schema"
@@ -757,6 +808,9 @@ msgstr "ajouter un signet"
 
 msgid "add a Card"
 msgstr "ajouter une fiche"
+
+msgid "add a ECache"
+msgstr "ajouter un cache applicatif"
 
 msgid "add a EConstraint"
 msgstr "ajouter une contrainte"
@@ -880,6 +934,9 @@ msgstr "une erreur est survenue, la requête ne peut être complétée"
 msgid "and linked"
 msgstr "et lié"
 
+msgid "and/or between different values"
+msgstr "et/ou entre les différentes valeurs"
+
 msgid "anonymous"
 msgstr "anonyme"
 
@@ -893,8 +950,10 @@ msgid "april"
 msgstr "avril"
 
 #, python-format
-msgid "at least one relation %s is required on %s(%s)"
-msgstr "au moins une relation %s est nécessaire sur %s(%s)"
+msgid "at least one relation %(rtype)s is required on %(etype)s (%(eid)s)"
+msgstr ""
+"L'entité #%(eid)s de type %(etype)s doit nécessairement être reliée à une\n"
+"autre via la relation %(rtype)s"
 
 msgid "attribute"
 msgstr "attribut"
@@ -919,6 +978,9 @@ msgstr "le signet a été retiré"
 
 msgid "bookmark this page"
 msgstr "poser un signet ici"
+
+msgid "bookmark this search"
+msgstr "mémoriser cette recherche"
 
 msgid "bookmarked_by"
 msgstr "utilisé par"
@@ -1260,6 +1322,10 @@ msgstr "relation système indiquant le créateur d'une entité."
 msgid "core relation indicating the type of an entity"
 msgstr "relation système indiquant le type de l'entité"
 
+msgid ""
+"core relation indicating the types (including specialized types) of an entity"
+msgstr "relation système indiquant les types (y compris les types parents) d'une entité"
+
 msgid "cost"
 msgstr "coût"
 
@@ -1536,11 +1602,17 @@ msgstr ""
 msgid "download"
 msgstr "télécharger"
 
+msgid "download icon"
+msgstr "icône de téléchargement"
+
 msgid "edit bookmarks"
 msgstr "éditer les signets"
 
 msgid "edit the index page"
 msgstr "éditer la page d'accueil"
+
+msgid "editable-table"
+msgstr "table éditable"
 
 msgid "edition"
 msgstr "édition"
@@ -1575,6 +1647,9 @@ msgstr "entités supprimées"
 msgid "entity deleted"
 msgstr "entité supprimée"
 
+msgid "entity type"
+msgstr "type d'entité"
+
 msgid ""
 "entity type that may be used to construct some advanced security "
 "configuration"
@@ -1601,6 +1676,8 @@ msgstr ""
 #, python-format
 msgid "error while querying source %s, some data may be missing"
 msgstr ""
+"une erreur est survenue en interrogeant %s, il est possible que les\n"
+"données affichées soient incomplètes"
 
 msgid "eta_date"
 msgstr "date de fin"
@@ -1617,11 +1694,41 @@ msgstr "type de l'expression"
 msgid "external page"
 msgstr "page externe"
 
+msgid "facetbox"
+msgstr "boîte à facettes"
+
+msgid "facets_created_by-facet"
+msgstr "facette \"créé par\""
+
+msgid "facets_created_by-facet_description"
+msgstr ""
+
+msgid "facets_etype-facet"
+msgstr "facette \"est de type\""
+
+msgid "facets_etype-facet_description"
+msgstr ""
+
+msgid "facets_has_text-facet"
+msgstr "facette \"contient le texte\""
+
+msgid "facets_has_text-facet_description"
+msgstr ""
+
+msgid "facets_in_group-facet"
+msgstr "facette \"fait partie du groupe\""
+
+msgid "facets_in_group-facet_description"
+msgstr ""
+
+msgid "facets_in_state-facet"
+msgstr "facette \"dans l'état\""
+
+msgid "facets_in_state-facet_description"
+msgstr ""
+
 msgid "february"
 msgstr "février"
-
-msgid "filter"
-msgstr "filtrer"
 
 msgid "final"
 msgstr "final"
@@ -1666,7 +1773,7 @@ msgid "fulltextindexed"
 msgstr "indexation du texte"
 
 msgid "generic plot"
-msgstr ""
+msgstr "tracé de courbes standard"
 
 msgid "go back to the index page"
 msgstr "retourner sur la page d'accueil"
@@ -1856,6 +1963,9 @@ msgstr "état initial de"
 msgid "inlined"
 msgstr "mise en ligne"
 
+msgid "inlined view"
+msgstr "vue embarquée (en ligne)"
+
 msgid "internationalizable"
 msgstr "internationalisable"
 
@@ -1895,6 +2005,12 @@ msgid ""
 msgstr ""
 "est ce que cette relation est mise en ligne dans la base de données ?vous "
 "devez savoir ce que vous faites si vous changez cela !"
+
+msgid "is_instance_of"
+msgstr "est une instance de"
+
+msgid "is_instance_of_object"
+msgstr "type de"
 
 msgid "is_object"
 msgstr "a pour instance"
@@ -1974,8 +2090,8 @@ msgid "logout"
 msgstr "se déconnecter"
 
 #, python-format
-msgid "loop in %s relation (%s)"
-msgstr "boucle dans la relation %s (%s)"
+msgid "loop in %(rel)s relation (%(eid)s)"
+msgstr "boucle détectée en parcourant la relation %(rel)s de l'entité #%(eid)s"
 
 msgid "main informations"
 msgstr "Informations générales"
@@ -2038,8 +2154,14 @@ msgstr "plus d'actions"
 msgid "multiple edit"
 msgstr "édition multiple"
 
+msgid "my custom search"
+msgstr "ma recherche personnalisée"
+
 msgid "name"
 msgstr "nom"
+
+msgid "name of the cache"
+msgstr "nom du cache applicatif"
 
 msgid ""
 "name of the main variables which should be used in the selection if "
@@ -2077,6 +2199,9 @@ msgstr "non"
 
 msgid "no associated epermissions"
 msgstr "aucune permission spécifique n'est définie"
+
+msgid "no possible transition"
+msgstr "aucune transition possible"
 
 msgid "no related project"
 msgstr "pas de projet rattaché"
@@ -2244,6 +2369,9 @@ msgstr "supprimer ce signet"
 msgid "remove this Card"
 msgstr "supprimer cette fiche"
 
+msgid "remove this ECache"
+msgstr "supprimer ce cache applicatif"
+
 msgid "remove this EConstraint"
 msgstr "supprimer cette contrainte"
 
@@ -2356,6 +2484,9 @@ msgstr "permissions définies dans le schéma"
 msgid "search"
 msgstr "rechercher"
 
+msgid "search for association"
+msgstr "rechercher pour associer"
+
 msgid "searching for"
 msgstr "Recherche de"
 
@@ -2423,6 +2554,9 @@ msgstr ""
 msgid "show %s results"
 msgstr "montrer %s résultats"
 
+msgid "show advanced fields"
+msgstr "montrer les champs avancés"
+
 msgid "show filter form"
 msgstr "afficher le filtre"
 
@@ -2447,6 +2581,12 @@ msgstr "une propriété spécifique au site ne peut être propre à un utilisate
 msgid "sorry, the server is unable to handle this query"
 msgstr "désolé, le serveur ne peut traiter cette requête"
 
+msgid "specializes"
+msgstr "dérive de"
+
+msgid "specializes_object"
+msgstr "parent de"
+
 msgid "startup views"
 msgstr "vues de départ"
 
@@ -2466,8 +2606,8 @@ msgid "status changed"
 msgstr "changement d'état"
 
 #, python-format
-msgid "status will change from %s to %s"
-msgstr "l'état va passer de %s à %s"
+msgid "status will change from %(st1)s to %(st2)s"
+msgstr "l'entité passera de l'état %(st1)s à l'état %(st2)s"
 
 msgid "subject"
 msgstr "sujet"
@@ -2492,6 +2632,9 @@ msgstr "entités systèmes"
 
 msgid "table"
 msgstr "table"
+
+msgid "tablefilter"
+msgstr "filtre de tableau"
 
 msgid "task progression"
 msgstr "avancement de la tâche"
@@ -2530,6 +2673,9 @@ msgstr "cette ressource est introuvable"
 
 msgid "thursday"
 msgstr "jeudi"
+
+msgid "timestamp"
+msgstr "date"
 
 msgid "timestamp of the latest source synchronization."
 msgstr "date de la dernière synchronisation avec la source."
@@ -2579,11 +2725,17 @@ msgstr "type"
 msgid "ui"
 msgstr "propriétés génériques de l'interface"
 
+msgid "unaccessible"
+msgstr "inaccessible"
+
 msgid "unauthorized value"
 msgstr "valeur non autorisée"
 
 msgid "unique identifier used to connect to the application"
 msgstr "identifiant unique utilisé pour se connecter à l'application"
+
+msgid "unknown external entity"
+msgstr "entité (externe) introuvable"
 
 msgid "unknown property key"
 msgstr "clé de propriété inconnue"
@@ -2747,6 +2899,12 @@ msgstr "vous avez été déconnecté"
 #~ msgid "%s constraint failed"
 #~ msgstr "La contrainte %s n'est pas satisfaite"
 
+#~ msgid "%s constraint failed for value %r"
+#~ msgstr "contrainte %s n'est pas respectée par valeur %r"
+
+#~ msgid "%s, or without time: %s"
+#~ msgstr "%s, ou bien sans préciser d'heure: %s"
+
 #~ msgid "Loading"
 #~ msgstr "chargement"
 
@@ -2755,6 +2913,9 @@ msgstr "vous avez été déconnecté"
 
 #~ msgid "and"
 #~ msgstr "et"
+
+#~ msgid "at least one relation %s is required on %s(%s)"
+#~ msgstr "au moins une relation %s est nécessaire sur %s(%s)"
 
 #~ msgid "cancel edition"
 #~ msgstr "annuler l'édition"
@@ -2765,6 +2926,9 @@ msgstr "vous avez été déconnecté"
 #~ msgstr ""
 #~ "langue par défaut (regarder le répertoire i18n de l'application pour voir "
 #~ "les langues disponibles)"
+
+#~ msgid "filter"
+#~ msgstr "filtrer"
 
 #~ msgid "footer"
 #~ msgstr "pied de page"
@@ -2781,6 +2945,9 @@ msgstr "vous avez été déconnecté"
 #~ msgid "linked"
 #~ msgstr "lié"
 
+#~ msgid "loop in %s relation (%s)"
+#~ msgstr "boucle dans la relation %s (%s)"
+
 #~ msgid ""
 #~ "maximum number of related entities to display in in the restriction view"
 #~ msgstr ""
@@ -2788,6 +2955,9 @@ msgstr "vous avez été déconnecté"
 
 #~ msgid "see also"
 #~ msgstr "voir aussi"
+
+#~ msgid "status will change from %s to %s"
+#~ msgstr "l'état va passer de %s à %s"
 
 #~ msgid "workflow history"
 #~ msgstr "historique du workflow"
