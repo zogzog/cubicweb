@@ -1,4 +1,10 @@
-cubicweb (2.99.0-1) unstable; urgency=low
+cubicweb (2.99.1-1) DISTRIBUTION; urgency=low
+
+  * new upstream release
+
+ -- Nicolas Chauvat <nicolas.chauvat@logilab.fr>  Thu, 13 Nov 2008 11:02:16 +0100
+
+cubicweb (2.99.0-1) DISTRIBUTION; urgency=low
 
   * initial public release
 
