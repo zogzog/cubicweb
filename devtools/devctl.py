@@ -229,7 +229,7 @@ class UpdateCubicWebCatalogCommand(Command):
         tali18nfile = join(tempdir, 'tali18n.py')
         extract_from_tal(find(join(BASEDIR, 'web'), ('.py', '.pt')), tali18nfile)
         print '******** .pot files generation'
-        for id, files, lang in [('cubicweb', get_module_files(BASEDIR) + list(globfind(join(BASEDIR, 'misc', 'migration'), '*.py')), None),
+        for id, files, lang in [('pycubicweb', get_module_files(BASEDIR) + list(globfind(join(BASEDIR, 'misc', 'migration'), '*.py')), None),
                                 ('schemadescr', globfind(join(BASEDIR, 'schemas'), '*.py'), None),
                                 ('yams', get_module_files(yams.__path__[0]), None),
                                 ('tal', [tali18nfile], None),
