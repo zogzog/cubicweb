@@ -2,30 +2,33 @@
 
 .. _contents:
 
-Développement d'applications CubicWeb
-=====================================
 
 .. toctree::
    :maxdepth: 1
 
-   devmanual_fr/index.txt
+   devmanual_fr/chap_fondements_cubicweb.txt
+   devmanual_fr/chap_mise_en_place_environnement.txt
+   devmanual_fr/chap_configuration_instance.txt
+   devmanual_fr/chap_definition_schema.txt
+   devmanual_fr/chap_definition_workflows.txt
+   devmanual_fr/chap_visualisation_donnees.txt
+   devmanual_fr/chap_manipulation_donnees.txt
+   devmanual_fr/chap_ui_gestion_formulaire.txt
+   devmanual_fr/chap_ui_js_json.txt
+   devmanual_fr/chap_autres_composants_ui.txt
+   devmanual_fr/chap_securite.txt
+   devmanual_fr/chap_serveur_crochets.txt
+   devmanual_fr/chap_serveur_notification.txt
+  
+   devmanual_fr/chap_rql.txt
+   devmanual_fr/chap_migration.txt
+   devmanual_fr/chap_tests.txt
+   devmanual_fr/chap_i18n.txt
    devmanual_fr/gae.txt
 
+   tutmanual_fr/tut-create-app.fr.txt
+   devmanual_fr/references.txt
 
 
-Détails d'implémentations
-=========================
 
-.. toctree::
-   :maxdepth: 1
-
-   cubicweb-uml.txt
-
-Détail sur l'éxécution d'une requête complexe en multi-sources
---------------------------------------------------------------
-
-.. toctree::
-   :maxdepth: 1
-   
-   querier.txt
 
