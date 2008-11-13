@@ -5,7 +5,7 @@ Fondements `CubicWeb`
 
 Architecture globale
 --------------------
-.. image:: archi_globale.png
+.. image:: images/archi_globale.png
 
 **Note**: en pratique la partie cliente et la partie serveur sont
 généralement intégrées dans le même processus et communiquent donc
