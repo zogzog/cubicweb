@@ -212,7 +212,7 @@ class UpdateCubicWebCatalogCommand(Command):
         from tempfile import mktemp
         import yams
         from logilab.common.fileutils import ensure_fs_mode
-        from logilab.common.shellutils import find, rm
+        from logilab.common.shellutils import globfind, find, rm
         from cubicweb.common.i18n import extract_from_tal, execute
         tempdir = mktemp()
         mkdir(tempdir)
@@ -229,13 +229,13 @@ class UpdateCubicWebCatalogCommand(Command):
         tali18nfile = join(tempdir, 'tali18n.py')
         extract_from_tal(find(join(BASEDIR, 'web'), ('.py', '.pt')), tali18nfile)
         print '******** .pot files generation'
-        for id, files, lang in [('cubicweb', get_module_files(BASEDIR) + find(join(BASEDIR, 'misc', 'migration'), '.py'), None),
-                                ('schemadescr', find(join(BASEDIR, 'schemas'), '.py'), None),
+        for id, files, lang in [('cubicweb', get_module_files(BASEDIR) + list(globfind(join(BASEDIR, 'misc', 'migration'), '*.py')), None),
+                                ('schemadescr', globfind(join(BASEDIR, 'schemas'), '*.py'), None),
                                 ('yams', get_module_files(yams.__path__[0]), None),
                                 ('tal', [tali18nfile], None),
-                                ('js', find(join(BASEDIR, 'web'), '.js'), 'java'),
+                                ('js', globfind(join(BASEDIR, 'web'), 'cub*.js'), 'java'),
                                 ]:
-            cmd = 'xgettext --no-location --omit-header -k_ -o %s %s'
+            cmd = 'xgettext --add-location --omit-header -k_ -o %s %s'
             if lang is not None:
                 cmd += ' -L %s' % lang
             potfiles.append(join(tempdir, '%s.pot' % id))
@@ -253,7 +253,7 @@ class UpdateCubicWebCatalogCommand(Command):
             shutil.move('%snew' % target, target)
             toedit.append(abspath(target))
         # cleanup
-        rm(tempdir)
+        # rm(tempdir)
         # instructions pour la suite
         print '*' * 72
         print 'you can now edit the following files:'
@@ -310,7 +310,7 @@ def update_cubes_catalogs(cubes):
         tali18nfile = join(tempdir, 'tali18n.py')
         extract_from_tal(find('.', ('.py', '.pt'), blacklist=STD_BLACKLIST+('test',)), tali18nfile)
         print '******** extract Javascript messages'
-        jsfiles =  find('.', '.js')
+        jsfiles =  [jsfile for jsfile in find('.', '.js') if basename(jsfile).startswith('cub')]
         if jsfiles:
             tmppotfile = join(tempdir, 'js.pot')
             execute('xgettext --no-location --omit-header -k_ -L java --from-code=utf-8 -o %s %s'
