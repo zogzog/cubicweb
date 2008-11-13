@@ -32,7 +32,7 @@ templates_path = ['.templates']
 source_suffix = '.txt'
 
 # The master toctree document.
-master_doc = 'index'
+master_doc = 'index.fr'
 
 # General substitutions.
 project = 'Cubicweb'

@@ -37,7 +37,7 @@ Table des matieres
 .. toctree::
    :maxdepth: 1
 
-   index-content.txt
+   index-content.fr.txt
 
 
 FAQ

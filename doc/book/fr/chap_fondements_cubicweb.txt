@@ -20,7 +20,7 @@ Concepts et vocabulaire
 
 *schéma*
   le schéma définit le modèle de données d'une application sous forme
-  d'entités et de relations, grâce à la biblithèque `yams`_. C'est
+  d'entités et de relations, grâce à la bibliothèque `yams`_. C'est
   l'élément central d'une application. Il est initialement défini sur
   le système de fichiers et est stocké dans la base de données lors de
   la création d'une instance. `CubicWeb` fournit un certain nombres de
