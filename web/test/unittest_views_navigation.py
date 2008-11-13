@@ -4,9 +4,9 @@ from logilab.common.testlib import unittest_main, mock_object
 from cubicweb.devtools.apptest import EnvBasedTC
 
 from cubicweb.web.views.navigation import PageNavigation, SortedNavigation
+from cubicweb.web.views.ibreadcrumbs import BreadCrumbEntityVComponent
 
-from cubes.tag.views import TagsBarVComponent
-TagsBarVComponent.visible = True
+BreadCrumbEntityVComponent.visible = True
 
 class NavigationTC(EnvBasedTC):
     
@@ -73,28 +73,28 @@ class ContentNavigationTC(EnvBasedTC):
         req = self.request()
         objs = self.vreg.possible_vobjects('contentnavigation', req, rset,
                                            view=view, context='navtop')
-        # tagbar should be in headers by default
+        # breadcrumbs should be in headers by default
         clsids = set(obj.id for obj in objs)
-        self.failUnless('tagbar' in clsids)
+        self.failUnless('breadcrumbs' in clsids)
         objs = self.vreg.possible_vobjects('contentnavigation', req, rset,
                                           view=view, context='navbottom')
-        # tagbar should _NOT_ be in footers by default
+        # breadcrumbs should _NOT_ be in footers by default
         clsids = set(obj.id for obj in objs)
-        self.failIf('tagbar' in clsids)
-        self.execute('INSERT EProperty P: P pkey "contentnavigation.tagbar.context", '
+        self.failIf('breadcrumbs' in clsids)
+        self.execute('INSERT EProperty P: P pkey "contentnavigation.breadcrumbs.context", '
                      'P value "navbottom"')
-        # tagbar should now be in footers
+        # breadcrumbs should now be in footers
         req.cnx.commit()
         objs = self.vreg.possible_vobjects('contentnavigation', req, rset,
                                           view=view, context='navbottom')
         
         clsids = [obj.id for obj in objs]
-        self.failUnless('tagbar' in clsids)
+        self.failUnless('breadcrumbs' in clsids)
         objs = self.vreg.possible_vobjects('contentnavigation', req, rset,
                                           view=view, context='navtop')
         
         clsids = [obj.id for obj in objs]
-        self.failIf('tagbar' in clsids)
+        self.failIf('breadcrumbs' in clsids)
         
 
 if __name__ == '__main__':

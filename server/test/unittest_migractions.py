@@ -134,8 +134,8 @@ class MigrationCommandsTC(RepositoryBasedTC):
         self.assertEquals([str(rs) for rs in self.schema['Folder2'].object_relations()],
                           ['filed_under2', 'identity'])
         self.assertEquals(sorted(str(e) for e in self.schema['filed_under2'].subjects()),
-                          ['Affaire', 'Card', 'Division', 'Email', 'EmailThread', 'File', 'Folder2',
-                           'Image', 'Note', 'Personne', 'Societe', 'SubDivision'])
+                          ['Affaire', 'Card', 'Division', 'ECache', 'Email', 'EmailThread', 'File', 
+                           'Folder2', 'Image', 'Note', 'Personne', 'Societe', 'SubDivision'])
         self.assertEquals(self.schema['filed_under2'].objects(), ('Folder2',))
         eschema = self.schema.eschema('Folder2')
         for cstr in eschema.constraints('name'):
@@ -161,8 +161,8 @@ class MigrationCommandsTC(RepositoryBasedTC):
         self.mh.cmd_add_relation_type('filed_under2')
         self.failUnless('filed_under2' in self.schema)
         self.assertEquals(sorted(str(e) for e in self.schema['filed_under2'].subjects()),
-                          ['Affaire', 'Card', 'Division', 'Email', 'EmailThread', 'File', 'Folder2',
-                           'Image', 'Note', 'Personne', 'Societe', 'SubDivision'])
+                          ['Affaire', 'Card', 'Division', 'ECache', 'Email', 'EmailThread', 'File', 
+                           'Folder2', 'Image', 'Note', 'Personne', 'Societe', 'SubDivision'])
         self.assertEquals(self.schema['filed_under2'].objects(), ('Folder2',))
 
 
@@ -365,10 +365,10 @@ class MigrationCommandsTC(RepositoryBasedTC):
         cubes = set(self.config.cubes())
         schema = self.repo.schema
         try:
-            self.mh.cmd_remove_cube('eemail')
-            # efile was there because it's an eemail dependancy, should have been removed
-            cubes.remove('eemail')
-            cubes.remove('efile')
+            self.mh.cmd_remove_cube('email')
+            # file was there because it's an email dependancy, should have been removed
+            cubes.remove('email')
+            cubes.remove('file')
             self.assertEquals(set(self.config.cubes()), cubes)
             for ertype in ('Email', 'EmailThread', 'EmailPart', 'File', 'Image', 
                            'sender', 'in_thread', 'reply_to', 'data_format'):
@@ -377,14 +377,14 @@ class MigrationCommandsTC(RepositoryBasedTC):
                               [('Folder', 'Folder')])
             self.assertEquals(schema['see_also'].subjects(), ('Folder',))
             self.assertEquals(schema['see_also'].objects(), ('Folder',))
-            self.assertEquals(self.execute('Any X WHERE X pkey "system.version.eemail"').rowcount, 0)
-            self.assertEquals(self.execute('Any X WHERE X pkey "system.version.efile"').rowcount, 0)
-            self.failIf('eemail' in self.config.cubes())
-            self.failIf('efile' in self.config.cubes())
+            self.assertEquals(self.execute('Any X WHERE X pkey "system.version.email"').rowcount, 0)
+            self.assertEquals(self.execute('Any X WHERE X pkey "system.version.file"').rowcount, 0)
+            self.failIf('email' in self.config.cubes())
+            self.failIf('file' in self.config.cubes())
         finally:
-            self.mh.cmd_add_cube('eemail')
-            cubes.add('eemail')
-            cubes.add('efile')
+            self.mh.cmd_add_cube('email')
+            cubes.add('email')
+            cubes.add('file')
             self.assertEquals(set(self.config.cubes()), cubes)
             for ertype in ('Email', 'EmailThread', 'EmailPart', 'File', 'Image', 
                            'sender', 'in_thread', 'reply_to', 'data_format'):
@@ -393,14 +393,14 @@ class MigrationCommandsTC(RepositoryBasedTC):
                               [('EmailThread', 'EmailThread'), ('Folder', 'Folder')])
             self.assertEquals(sorted(schema['see_also'].subjects()), ['EmailThread', 'Folder'])
             self.assertEquals(sorted(schema['see_also'].objects()), ['EmailThread', 'Folder'])
-            from eemail.__pkginfo__ import version as eemail_version
-            from efile.__pkginfo__ import version as efile_version
-            self.assertEquals(self.execute('Any V WHERE X value V, X pkey "system.version.eemail"')[0][0],
-                              eemail_version)
-            self.assertEquals(self.execute('Any V WHERE X value V, X pkey "system.version.efile"')[0][0],
-                              efile_version)
-            self.failUnless('eemail' in self.config.cubes())
-            self.failUnless('efile' in self.config.cubes())
+            from cubes.email.__pkginfo__ import version as email_version
+            from cubes.file.__pkginfo__ import version as file_version
+            self.assertEquals(self.execute('Any V WHERE X value V, X pkey "system.version.email"')[0][0],
+                              email_version)
+            self.assertEquals(self.execute('Any V WHERE X value V, X pkey "system.version.file"')[0][0],
+                              file_version)
+            self.failUnless('email' in self.config.cubes())
+            self.failUnless('file' in self.config.cubes())
             # trick: overwrite self.maxeid to avoid deletion of just reintroduced
             #        types (and their associated tables!)
             self.maxeid = self.execute('Any MAX(X)')[0][0]

@@ -340,6 +340,9 @@ WHERE X.login=admin'''),
 FROM Basket AS X
 UNION ALL
 SELECT X.name
+FROM ECache AS X
+UNION ALL
+SELECT X.name
 FROM EConstraintType AS X
 UNION ALL
 SELECT X.name
@@ -463,6 +466,9 @@ WHERE X.name=EGroup AND Y.eid IN(1, 2, 3) AND NOT EXISTS(SELECT 1 FROM read_perm
     ('Any MAX(X)+MIN(X), N GROUPBY N WHERE X name N;',
      '''SELECT (MAX(T1.C0) + MIN(T1.C0)), T1.C1 FROM (SELECT X.eid AS C0, X.name AS C1
 FROM Basket AS X
+UNION ALL
+SELECT X.eid AS C0, X.name AS C1
+FROM ECache AS X
 UNION ALL
 SELECT X.eid AS C0, X.name AS C1
 FROM EConstraintType AS X

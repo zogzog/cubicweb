@@ -97,7 +97,8 @@ class FilterBox(BoxTemplate):
             w(u'</fieldset>\n</form>\n')
         finally:
             rqlst.recover()
-            print 'after facets', rqlst
+            import cubicweb
+            cubicweb.info('after facets with rql: %s' % repr(rqlst))
 
     def get_facets(self, rset, mainvar):
         return self.vreg.possible_vobjects('facets', self.req, rset,

@@ -107,12 +107,13 @@ class UtilsTC(BaseQuerierTC):
                                        'ET': 'EEType', 'ETN': 'String'}])
         rql, solutions = partrqls[1]
         self.assertEquals(rql,  'Any ETN,X WHERE X is ET, ET name ETN, ET is EEType, '
-                          'X is IN(Bookmark, Card, Comment, Division, EConstraint, EConstraintType, EEType, EFRDef, EGroup, ENFRDef, EPermission, EProperty, ERType, EUser, Email, EmailAddress, EmailPart, EmailThread, File, Folder, Image, Note, Personne, RQLExpression, Societe, State, SubDivision, Tag, TrInfo, Transition)')
+                          'X is IN(Bookmark, Card, Comment, Division, ECache, EConstraint, EConstraintType, EEType, EFRDef, EGroup, ENFRDef, EPermission, EProperty, ERType, EUser, Email, EmailAddress, EmailPart, EmailThread, File, Folder, Image, Note, Personne, RQLExpression, Societe, State, SubDivision, Tag, TrInfo, Transition)')
         self.assertListEquals(sorted(solutions),
                               sorted([{'X': 'Bookmark', 'ETN': 'String', 'ET': 'EEType'},
                                       {'X': 'Card', 'ETN': 'String', 'ET': 'EEType'},
                                       {'X': 'Comment', 'ETN': 'String', 'ET': 'EEType'},
                                       {'X': 'Division', 'ETN': 'String', 'ET': 'EEType'},
+                                      {'X': 'ECache', 'ETN': 'String', 'ET': 'EEType'},
                                       {'X': 'EConstraint', 'ETN': 'String', 'ET': 'EEType'},
                                       {'X': 'EConstraintType', 'ETN': 'String', 'ET': 'EEType'},
                                       {'X': 'EEType', 'ETN': 'String', 'ET': 'EEType'},
@@ -453,10 +454,10 @@ class QuerierTC(BaseQuerierTC):
                             'WHERE RT name N, RDEF relation_type RT '
                             'HAVING COUNT(RDEF) > 10')
         self.assertListEquals(rset.rows,
-                              [[u'description', 11], ['in_basket', 11],
-                               [u'name', 12], [u'created_by', 32],
-                               [u'creation_date', 32], [u'is', 32], [u'is_instance_of', 32],
-                               [u'modification_date', 32], [u'owned_by', 32]])
+                              [[u'description', 11], ['in_basket', 12],
+                               [u'name', 13], [u'created_by', 33],
+                               [u'creation_date', 33], [u'is', 33], [u'is_instance_of', 33],
+                               [u'modification_date', 33], [u'owned_by', 33]])
 
     def test_select_aggregat_having_dumb(self):
         # dumb but should not raise an error
