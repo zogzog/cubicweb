@@ -308,7 +308,15 @@ class see_also(RelationType):
     """generic relation to link one entity to another"""
     symetric = True
 
-class ECache(EntityType):
+class ECache(MetaEntityType):
+    """a simple cache entity characterized by a name and
+    a validity date.
+
+    The target application is responsible for updating timestamp
+    when necessary to invalidate the cache (typically in hooks).
+
+    Also, checkout the AppRsetObject.get_cache() method.
+    """
     permissions = {
         'read':   ('managers', 'users', 'guests'),
         'add':    ('managers',),
