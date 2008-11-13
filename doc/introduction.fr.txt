@@ -1,0 +1,26 @@
+.. -*- coding: utf-8 -*-
+
+.. _Overview:
+
+Apercu rapide de `CubicWeb`
+===========================
+
+Un peu d'histoire...
+--------------------
+
+`CubicWeb` est une plate-forme logicielle de développement d'application web
+qui est développée par Logilab_ depuis 2001. 
+
+
+Entièrement développée en Python, `CubicWeb` publie des données provenant
+de plusieurs sources telles que des bases de données SQL, des répertoire 
+LDAP et des systèmes de gestion de versions tels que subversion. 
+
+
+L'interface utilisateur de Logilab SDW a été spécialement conçue pour laisser à l'utilisateur final toute latitude pour sélectionner puis présenter les données. Elle permet d'explorer aisément la base de connaissances et d'afficher les résultats avec la présentation la mieux adaptée à la tâche en cours. La flexibilité de cette interface redonne à l'utilisateur le contrôle de paramètres d'affichage et de présentation qui sont habituellement réservés aux développeurs.
+
+En 2008, `CubicWeb` a été porté pour un nouveau type de source: le datastore 
+de GoogleAppEngine_.
+
+.. _GoogleAppEngine: http://code.google.com/appengine/
+
