@@ -6,7 +6,7 @@
 Internationalisation
 ====================
 
-Le système d'internationalisation de l'interface web d'cubicweb est basé sur le
+Le système d'internationalisation de l'interface web de CubicWeb est basé sur le
 système `GNU gettext`_.
 
 .. _`GNU gettext`: http://www.gnu.org/software/gettext/

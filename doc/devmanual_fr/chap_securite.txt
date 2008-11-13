@@ -17,7 +17,7 @@ Vocabulaire
 Description du modèle de sécurité
 ---------------------------------
 
-Le modèle de sécurité de cubicweb est un modèle fondé sur des `Access
+Le modèle de sécurité de CubicWeb est un modèle fondé sur des `Access
 Control List`. Les notions sont les suivantes :
 
 * utilisateurs et groupes d'utilisateurs
