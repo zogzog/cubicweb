@@ -1,10 +1,10 @@
 .. -*- coding: utf-8 -*-
 
 
-Diagramme UML
--------------
+Architecture du serveur
+-----------------------
 
-.. image:: cubicweb.png
+.. image:: images/server-class-diagram.png
 
 `Diagramme ArgoUML`_
 
