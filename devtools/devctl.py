@@ -123,6 +123,7 @@ def _generate_schema_pot(w, vreg, schema, libschema=None, cube=None):
     for rschema in sorted(set(relations)):
         rtype = rschema.type
         add_msg(w, rtype)
+        done.add(rtype)
         if not (schema.rschema(rtype).is_final() or rschema.symetric):
             add_msg(w, '%s_object' % rtype)
         if rschema.description and rschema.description not in done:
