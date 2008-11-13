@@ -10,7 +10,7 @@ build-stamp:
 	# XXX doesn't work if logilab-doctools, logilab-xml are not in build depends
 	# and I can't get pbuilder find them in its chroot :(
 	#cd doc && make
-	python setup.py -q build
+	python setup.py build
 	touch build-stamp
 
 clean: 
@@ -76,8 +76,7 @@ install: build
 	mv debian/cubicweb-server/usr/lib/python2.4/site-packages/cubicweb/sobjects/test debian/cubicweb-dev/usr/lib/python2.4/site-packages/cubicweb/sobjects/
 	mv debian/cubicweb-web/usr/lib/python2.4/site-packages/cubicweb/web/test debian/cubicweb-dev/usr/lib/python2.4/site-packages/cubicweb/web/
 	########## documentation package ######################################
-	cp doc/*.html doc/*.txt debian/cubicweb-documentation/usr/share/doc/cubicweb-documentation/
-	cp doc/devmanual_fr/*.html doc/devmanual_fr/*.txt doc/devmanual_fr/*.png debian/cubicweb-documentation/usr/share/doc/cubicweb-documentation/devmanual_fr
+	cp -r doc/book debian/cubicweb-documentation/usr/share/doc/cubicweb-documentation/
 	########## core package ###############################################
 	# small cleanup
 	rm -rf debian/cubicweb-core/usr/share/cubicweb/

@@ -26,3 +26,4 @@ recursive-include web/test/data *.js *.css *.png *.gif *.jpg *.ico external_reso
 recursive-include devtools/test/data *
 
 prune misc/cwfs
+prune server/msplanner.py server/mssteps.py server/sources/ldapuser.py server/sources/pyrorql.py server/sources/extlite.py
