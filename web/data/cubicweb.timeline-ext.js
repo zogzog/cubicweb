@@ -38,7 +38,6 @@ Timeline.CubicWebEventPainter = function(params) {
    this._frc = null;
 
    this._eventIdToElmt = {};
-  this.foo = 'bar';
 };
 
 Timeline.CubicWebEventPainter.prototype = new Timeline.OriginalEventPainter();
