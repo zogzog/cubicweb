@@ -235,7 +235,7 @@ class UpdateCubicWebCatalogCommand(Command):
                                 ('tal', [tali18nfile], None),
                                 ('js', globfind(join(BASEDIR, 'web'), 'cub*.js'), 'java'),
                                 ]:
-            cmd = 'xgettext --add-location --omit-header -k_ -o %s %s'
+            cmd = 'xgettext --no-location --omit-header -k_ -o %s %s'
             if lang is not None:
                 cmd += ' -L %s' % lang
             potfiles.append(join(tempdir, '%s.pot' % id))
@@ -253,7 +253,7 @@ class UpdateCubicWebCatalogCommand(Command):
             shutil.move('%snew' % target, target)
             toedit.append(abspath(target))
         # cleanup
-        # rm(tempdir)
+        rm(tempdir)
         # instructions pour la suite
         print '*' * 72
         print 'you can now edit the following files:'
