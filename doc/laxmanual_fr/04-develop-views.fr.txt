@@ -1,0 +1,103 @@
+.. -*- coding: utf-8 -*-
+
+Définir l'interface utilisateur avec des vues
+=============================================
+
+`LAX` provides out-of-the-box a web interface that is generated from
+the schema definition: entities can be created, displayed, updated and
+deleted. As display views are not very fancy, it is usually necessary
+to develop your own.
+
+
+With `LAX`, views are defined by Python classes. A view includes :
+
+- an identifier (all objects in `LAX` are entered in a registry
+  and this identifier will be used as a key)
+  
+- a filter to select the resulsets it can be applied to
+
+`LAX` provides a lot of standard views, for a complete list, you
+will have to read the code in directory views (XXX improve doc).
+For example, the view named ``primary`` is the one used to display
+a single entity.
+
+If you want to change the way a ``BlogEntry`` is displayed, just
+override the view ``primary`` in ``BlogDemo/views.py`` ::
+
+  from ginco.web.views import baseviews
+  
+  class BlogEntryPrimaryView(baseviews.PrimaryView):
+
+      accepts = ('BlogEntry',)
+      
+      def cell_call(self, row, col):
+          entity = self.entity(row, col)
+          self.w(u'<h1>%s</h1>' % entity.title)
+          self.w(u'<div>%s</div>' % entity.publish_date)
+          self.w(u'<div>%s</div>' % entity.category)
+          self.w(u'<div>%s</div>' entity.content)
+
+[WRITE ME]
+
+* Defining views with selection/views
+
+* implementing interfaces, calendar for blog entries
+
+* show that a calendar view can export data to ical
+
+* create view "blogentry table" with title, publish_date, category
+
+* in view blog, select blogentries and apply view "blogentry table"
+
+* demo ajax by filtering blogentry table on category
+
+Components
+===========
+
+[WRITE ME]
+
+* explain the component architecture
+
+* add comments to the blog by importing the comments component
+
+MainTemplate
+============
+
+[WRITE ME]
+
+* customize MainTemplate and show that everything in the user
+  interface can be changed
+
+
+RSS Channel
+===========
+
+[WRITE ME]
+
+* show that the RSS view can be used to display an ordered selection
+  of blog entries, thus providing a RSS channel
+
+* show that a different selection (by category) means a different channel
+
+RQL
+====
+
+[WRITE ME]
+
+* talk about the Relation Query Language
+
+URL Rewriting
+=============
+
+[WRITE ME]
+
+* show how urls are mapped to selections and views and explain URLRewriting 
+
+Security
+=========
+
+[WRITE ME]
+
+* talk about security access rights and show that security is defined
+  using RQL
+
