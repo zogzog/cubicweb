@@ -8,6 +8,7 @@ __docformat__ = "restructuredtext en"
 
 import os
 from tempfile import mktemp
+from itertools import cycle
 
 from logilab.common.graph import escape, GraphGenerator, DotBackend
 from yams import schema2dot as s2d
@@ -17,6 +18,9 @@ from cubicweb.common.view import EntityView, StartupView
 
 class RestrictedSchemaDotPropsHandler(s2d.SchemaDotPropsHandler):
     def __init__(self, req):
+        # FIXME: colors are arbitrary
+        self.nextcolor = cycle( ('#aa0000', '#00aa00', '#0000aa',
+                                 '#000000', '#888888') ).next
         self.req = req
         
     def display_attr(self, rschema):
@@ -32,7 +36,19 @@ class RestrictedSchemaDotPropsHandler(s2d.SchemaDotPropsHandler):
         label.append(r'\l}') # trailing \l ensure alignement of the last one
         return {'label' : ''.join(label), 'shape' : "record",
                 'fontname' : "Courier", 'style' : "filled"}
+
+    def edge_properties(self, rschema, subjnode, objnode):
+        kwargs = super(RestrictedSchemaDotPropsHandler, self).edge_properties(rschema, subjnode, objnode)
+        # symetric rels are handled differently, let yams decide what's best
+        if not rschema.symetric:
+            kwargs['color'] = self.nextcolor()
+        kwargs['fontcolor'] = kwargs['color']
+        # dot label decoration is just awful (1 line underlining the label
+        # + 1 line going to the closest edge spline point)
+        kwargs['decorate'] = 'false'
+        return kwargs
     
+
 class RestrictedSchemaVisitorMiIn:
     def __init__(self, req, *args, **kwargs):
         # hack hack hack
