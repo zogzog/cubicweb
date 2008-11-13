@@ -1,0 +1,6 @@
+.. -*- coding: utf-8 -*-
+
+Créer une application simple
+============================
+
+[TRADUISEZ-MOI]

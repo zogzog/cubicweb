@@ -2,16 +2,19 @@
 
 .. _contents:
 
-==================================
-LAX - Logilab App engine eXtension
-==================================
-:authors: Nicolas Chauvat, Sylvain Thénault, Adrien Di Mascio
-:date: 2008-07-12
-:version: 0.4
-:organisation: Logilab
-:copyright: © 2008 Logilab
-:contact: contact@logilab.fr
+==========================
+Google AppEngine Datastore
+==========================
 
 
-Voir la `documentation de LAX <file:///home/sandrine/src/lax/doc/html-en/lax-book.en.html>`_ .
-
+.. include:: ../laxmanual_fr/01-intro.fr.txt
+.. include:: ../laxmanual_fr/02-install.fr.txt
+.. include:: ../laxmanual_fr/03-create-app.fr.txt
+.. include:: ../laxmanual_fr/04-develop-views.fr.txt
+.. include:: ../laxmanual_fr/05-components.fr.txt
+.. include:: ../laxmanual_fr/06-maintemplate.fr.txt
+.. include:: ../laxmanual_fr/07-rss-xml.fr.txt
+.. include:: ../laxmanual_fr/08-rql.fr.txt
+.. include:: ../laxmanual_fr/09-urlrewrite.fr.txt
+.. include:: ../laxmanual_fr/10-security.fr.txt
+.. include:: ../laxmanual_fr/11-faq.fr.txt
