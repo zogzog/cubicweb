@@ -50,25 +50,23 @@ Widgets.GMapWidget = defclass('GMapWidget', null, {
     if(marker.icon[3]){
       icon.shadow4 =  marker.icon[3];
     }
-
-    var gmarker = new LabeledMarker(point, {
-      icon: icon,
-      title: marker.title,
-      labelText: uselabel?'<strong>' + i + '</strong>':'',
-      labelOffset: new GSize(2, -32)
-    });
+    if (typeof LabeledMarker == "undefined") {
+	var gmarker = new GMarker(point, {icon: icon,
+	title: marker.title});
+    } else {
+        var gmarker = new LabeledMarker(point, {
+          icon: icon,
+          title: marker.title,
+          labelText: uselabel?'<strong>' + i + '</strong>':'',
+          labelOffset: new GSize(2, -32)
+        });
+    }
     map.addOverlay(gmarker);
     GEvent.addListener(gmarker, 'click', function() {
       jQuery.post(marker.bubbleUrl, function(data) {
 	map.openInfoWindowHtml(point, data);
       });
     });
-  },
-
-  appendLegendItem: function(marker, i) {
-    var ul = this.legendBox.firstChild;
-    ul.appendChild(LI(null, [SPAN({'class': "itemNo"}, i),
-                             SPAN(null, marker.title)]));
   }
 
 });
