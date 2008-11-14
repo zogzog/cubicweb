@@ -1,10 +1,18 @@
 .. -*- coding: utf-8 -*-
 
 
-Tutoriel : créer votre première application web pour Google AppEngine
-=====================================================================
+Tutoriel : créer votre première application web pour Postgres
+=============================================================
+
 
 [TRANSLATE ME TO FRENCH]
+
+Ce tutoriel va vous guider pas à pas a construire une apllication web 
+de gestion de Blog afin de vous faire découvrir les fonctionnalités de
+`CubicWeb`.
+
+Nous supposons que vous avec déjà suivi le guide :ref:`MiseEnPlaceEnv`
+
 
 This tutorial will guide you step by step to build a blog application 
 and discover the unique features of `LAX`. It assumes that you followed

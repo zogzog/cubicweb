@@ -1,7 +1,9 @@
 .. -*- coding: utf-8 -*-
 
-Installation de `LAX`
-=====================
+.. _installationGAE:
+
+Installation de `CubicWeb` pour GoogleAppEngine
+===============================================
 
 Qu'est-ce que `LAX` ?
 =======================

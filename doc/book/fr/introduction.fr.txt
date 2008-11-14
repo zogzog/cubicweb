@@ -2,34 +2,21 @@
 
 .. _Overview:
 
-Apercu rapide de `CubicWeb`
+Aperçu rapide de `CubicWeb`
 ===========================
 
-Un peu d'histoire...
---------------------
+`CubicWeb` nous permet de développer des instances d'applications web
+basées sur un ou plusieurs `cube`. 
 
-`CubicWeb` est une plate-forme logicielle de développement d'application web
-qui est développée par Logilab_ depuis 2001. 
+Ce à quoi nous réferrons en parlant de `cube` est un modèle définissant 
+des types de données et des vues. Un `cube` est un composant re-utilisable 
+regroupé avec d'autres cubes sur le système de fichiers.
 
+Un `instance` réferre à une installation spécifique d'un cube où sont regroupés
+tous les fichiers de configuration de l'application web finale.
 
-Entièrement développée en Python, `CubicWeb` publie des données provenant
-de plusieurs sources telles que des bases de données SQL, des répertoire 
-LDAP et des systèmes de gestion de versions tels que subversion. 
-
-
-L'interface utilisateur de Logilab SDW a été spécialement conçue pour laisser 
-à l'utilisateur final toute latitude pour sélectionner puis présenter les données. 
-Elle permet d'explorer aisément la base de connaissances et d'afficher les 
-résultats avec la présentation la mieux adaptée à la tâche en cours. 
-La flexibilité de cette interface redonne à l'utilisateur le contrôle de 
-paramètres d'affichage et de présentation qui sont habituellement réservés 
-aux développeurs.
-
-En 2008, `CubicWeb` a été porté pour un nouveau type de source: le datastore 
-de GoogleAppEngine_.
-
-.. _GoogleAppEngine: http://code.google.com/appengine/
-
+Dans ce document, nous allons vous montrer comment créer un cube et l'utiliser
+dans une instance pour votre application web.
 
 Créez votre cube
 ----------------
@@ -90,22 +77,16 @@ Cela va créer dans ``/path/to/forest/cubes`` une répertoire contenant ::
   |-- views.py
 
 Toute modification apportée à votre modele de données devra
-etre effectue dans ce répertoire. 
+etre effectué dans ce répertoire. 
 
 
-Créez votre instance
---------------------
-
-::
-  
-  cubicweb-ctl create blogdemo
-
-Cette commande va créer un répertoire ``~/etc/cubicweb.d/blogdemo``
-contenant tous les fichiers de configuration nécessaire au lancement
-de votre application web.
 
 Définissez votre schéma de données
 ----------------------------------
+
+Le modèle de données ou schéma est au coeur d'une application `CubicWeb`.
+C'est là où vous allez devoir définir le type de contenu que votre application
+devra gérer.
 
 Votre modele de données est défini dans le fichier ``schema.py`` de votre cube
 ``blog`` comme suit.
@@ -119,10 +100,73 @@ Votre modele de données est défini dans le fichier ``schema.py`` de votre cube
 
   class BlogEntry(EntityType):
     title = String(required=True, fulltextindexed=True, maxsize=256)
-    content_format = String(meta=True, internationalizable=True, maxsize=50,
-                            default='text/rest', constraints=[format_constraint])
+    publish_date = Date(default='TODAY')
     content = String(required=True, fulltextindexed=True)
     entry_of = SubjectRelation('Blog', cardinality='?*') 
+
+Un ``Blog`` a un titre et une description. Le titre est une chaîne 
+de caractères requise par la classe parente EntityType et ne doit
+pas excéder 50 caractères. La description est une chaîne de 
+caractères sans contraintes.
+
+Une ``BlogEntry`` a un titre, une date de publication et du texte
+étant son contenu. Le titre est une chaîne de caractères qui ne 
+doit pas excéder 100 caractères. La date de publication est de type Date et a
+pour valeur par défaut TODAY, ce qui signifie que lorsqu'une 
+``BlogEntry`` sera créée, sa date de publication sera la date
+courante a moins de modifier ce champ. Le texte est une chaîne de
+caractères qui sera indexée en plein texte et sans contraintes.
+
+Une ``BlogEntry`` a aussi une relation nommée ``entry_of`` qui la
+relie à un ``Blog``. La cardinalité ``?*`` signifie que BlogEntry
+peut faire partie de zero a un Blog (``?`` signifie `zero ou un`) et
+qu'un Blog peut avoir une infinité de BlogEntry (``*`` signifie
+`n'importe quel nombre incluant zero`). 
+Par soucis de complétude, nous rappellerons que ``+`` signifie
+`un ou plus`.
+
+
+Créez votre instance
+--------------------
+
+::
+  
+  cubicweb-ctl create blog blogdemo
+
+Cette commande va créer un répertoire ``~/etc/cubicweb.d/blogdemo``
+contenant tous les fichiers de configuration nécessaire au lancement
+de votre application web.
+
+L'instance ``blogdemo`` est construite sur le cube ``blog``.
+
+Bienvenue dans votre application web
+------------------------------------
+
+Lancez votre application en exécutant : ::
+
+  cubicweb-ctl start -D blogdemo
+
+
+Vous pouvez à présent accéder  à votre application web vous permettant de
+créer des blogs et d'y poster des messages en visitant l'URL http://localhost:8080/.
+Un premier formulaire d'authentification va vous être proposé. Par défaut,
+l'application n'autorisera pas d'utilisateur anonyme à accéder a votre 
+application. Vous devrez donc utiliser l'utilisateur administrateur que
+vous aurez crée lors de l'initialisation de votre base de données via
+``cubicweb-ctl create``.
+
+.. image:: ../images/login-form.png
+
+
+Une fois authentifié, vous pouvez commencer à jouer avec votre
+application et créer des entités. Bravo !
+
+.. image:: ../images/blog-demo-first-page.png
+
+
+Vous trouverez de plus amples explications de ces étapes dans notre
+tutoriel (:ref:`tutorielGAE`).
+
 
 
 
@@ -170,31 +214,5 @@ de votre cube ``blog``.
 
     def content_format(self, entity):
         return entity.view('reledit', rtype='content_format')
-
-
-Bienvenue dans votre application web
-------------------------------------
-
-Lancez votre application en exécutant : ::
-
-  cubicweb-ctl start -D blogdemo
-
-
-Vous pouvez à présent accéder a votre application web vous permettant de
-créer des blogs et d'y poster des messages en visitant l'URL http://localhost:8080/.
-Un premier formulaire d'authentification va vous être proposé. Par défaut,
-l'application n'autorisera pas d'utilisateur anonyme à accéder a votre 
-application. Vous devrez donc utiliser l'utilisateur administrateur que
-vous aurez crée lors de l'initialisation de votre base de données via
-``cubicweb-ctl create``.
-
-.. image:: ../images/login-form.png
-
-
-Une fois authentifié, vous pouvez commencer à jouer avec votre
-application. Bravo !
-
-.. image:: ../images/blog-demo-first-page.png
-
 
 

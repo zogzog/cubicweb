@@ -1,0 +1,218 @@
+.. -*- coding: utf-8 -*-
+
+.. _tutorielGAE:
+
+Tutoriel : créer votre première application web pour Google AppEngine
+=====================================================================
+
+Ce tutoriel va vous guider pas à pas a construire une apllication web 
+de gestion de Blog afin de vous faire découvrir les fonctionnalités de
+`CubicWeb`.
+
+Nous supposons que vous avec déjà suivi le guide :ref:`installationGAE`.
+
+
+Créez une nouvelle application
+------------------------------
+
+Nous choisissons dans ce tutoriel de développer un blog comme un exemple
+d'application web et nous allons expliciter toutes les étapes nécessaires
+à sa réalisation.  
+
+::
+  
+  cubicweb-ctl newgapp blogdemo
+
+`newgapp` est la commande permettant de créer une instance `CubicWeb` pour
+le datastore.
+
+Assurez-vous que votre variable d'environnement ``PYTHONPATH`` est correctement
+initialisée (:ref:`installationGAE`)
+
+Définissez un schéma
+--------------------
+
+Le modèle de données ou schéma est au coeur d'une application `CubicWeb`.
+C'est là où vous allez devoir définir le type de contenu que votre application
+devra gérer.
+
+Commençons par un schéma simple que nous améliorerons progressivemment.
+
+Une fois votre instance ``blogdemo`` crée, vous trouverez un fichier ``schema.py``
+contenant la définition des entités suivantes : ``Blog`` and ``BlogEntry``.
+
+::
+
+  class Blog(EntityType):
+      title = String(maxsize=50, required=True)
+      description = String()
+
+  class BlogEntry(EntityType):
+      title = String(maxsize=100, required=True)
+      publish_date = Date(default='TODAY')
+      text = String(fulltextindexed=True)
+      category = String(vocabulary=('important','business'))
+      entry_of = SubjectRelation('Blog', cardinality='?*')
+
+
+Un ``Blog`` a un titre et une description. Le titre est une chaîne 
+de caractères requise par la classe parente EntityType and ne doit
+pas excéder 50 caractères. La description est une chaîne de 
+caractères sans contraintes.
+
+Une ``BlogEntry`` a un titre, une date de publication et du texte
+étant son contenu. Le titre est une chaîne de caractères qui ne 
+doit pas excéder 100 caractères. La date de publication est de type Date et a
+pour valeur par défaut TODAY, ce qui signifie que lorsqu'une 
+``BlogEntry`` sera créée, sa date de publication sera la date
+courante a moins de modifier ce champ. Le texte est une chaîne de
+caractères qui sera indexée en plein texte et sans contraintes.
+
+Une ``BlogEntry`` a aussi une relation nommée ``entry_of`` qui la
+relie à un ``Blog``. La cardinalité ``?*`` signifie que BlogEntry
+peut faire partie de zero a un Blog (``?`` signifie `zero ou un`) et
+qu'un Blog peut avoir une infinité de BlogEntry (``*`` signifie
+`n'importe quel nombre incluant zero`). 
+Par soucis de complétude, nous rappellerons que ``+`` signifie
+`un ou plus`.
+
+Lancez l'application
+--------------------
+
+Définir ce simple schéma est suffisant pour commencer. Assurez-vous 
+que vous avez suivi les étapes décrites dans la section installation
+(en particulier visitez http://localhost:8080/_load en tant qu'administrateur
+afin d'initialiser le datastore), puis lancez votre application avec la commande ::
+   
+   python dev_appserver.py BlogDemo
+
+puis dirigez vous vers http://localhost:8080/ (ou si c'est plus facile
+vous pouvez utiliser la démo en ligne http://lax.appspot.com/).
+[FIXME] -- changer la demo en ligne en quelque chose qui marche (!)
+
+.. image:: ../images/lax-book.00-login.en.png
+   :alt: login screen
+
+Après vous être authentifié, vous arrivez sur la page d'accueil de votre 
+application. Cette page liste les types d'entités accessibles dans votre
+application, en l'occurrence : Blog et Articles. Si vous lisez ``blog_plural``
+et ``blogentry_plural`` cela signifie que l'internationalisation (i18n)
+n'a pas encore fonctionné. Ignorez cela pour le moment.
+
+.. image:: ../images/lax-book.01-start.en.png
+   :alt: home page
+
+Créez des entités système
+-------------------------
+
+Vous ne pourrez créer de nouveaux utilisateurs que dans le cas où vous
+avez choisi de ne pas utiliser l'authentification Google.
+
+
+[WRITE ME : create users manages permissions etc]
+
+
+
+Créez des entités applicatives
+------------------------------
+
+Créez un Blog
+~~~~~~~~~~~~~
+
+Créons à présent quelques entités. Cliquez sur `[+]` sur la
+droite du lien Blog. Appelez cette nouvelle entité Blog ``Tech-Blog``
+et tapez pour la description ``everything about technology``,
+puis validez le formulaire d'édition en cliquant sur le bouton
+``Validate``.
+
+
+.. image:: ../images/lax-book.02-create-blog.en.png
+   :alt: from to create blog
+
+En cliquant sur le logo situé dans le coin gauche de la fenêtre,
+vous allez être redirigé vers la page d'accueil. Ensuite, si vous allez 
+sur le lien Blog, vous devriez voir la liste des entités Blog, en particulier
+celui que vous venez juste de créer ``Tech-Blog``.
+
+.. image:: ../images/lax-book.03-list-one-blog.en.png
+   :alt: displaying a list of a single blog
+
+Si vous cliquez sur ``Tech-Blog`` vous devriez obtenir une description
+détaillée, ce qui dans notre cas, n'est rien de plus que le titre
+et la phrase ``everything about technology``
+
+
+.. image:: ../images/lax-book.04-detail-one-blog.en.png
+   :alt: displaying the detailed view of a blog
+
+Maintenant retournons sur la page d'accueil et créons un nouveau
+Blog ``MyLife`` et retournons sur la page d'accueil, puis suivons
+le lien Blog et nous constatons qu'à présent deux blogs sont listés.
+
+.. image:: ../images/lax-book.05-list-two-blog.en.png
+   :alt: displaying a list of two blogs
+
+Créons un article
+~~~~~~~~~~~~~~~~~
+
+Revenons sur la page d'accueil et cliquons sur `[+]` à droite du lien
+`articles`. Appellons cette nouvelle entité ``Hello World`` et introduisons
+un peut de texte avant de ``Valider``. Vous venez d'ajouter un article
+sans avoir précisé à quel Blog il appartenait. Dans la colonne de gauche
+se trouve une boite intitulé ``actions``, cliquez sur le menu ``modifier``.
+Vous êtes de retour sur le formulaire d'édition de l'article que vous 
+venez de créer, à ceci près que ce formulaire a maintenant une nouvelle
+section intitulée ``ajouter relation``. Choisissez ``entry_of`` dans ce menu,
+cela va faire apparaitre une deuxième menu déroulant dans lequel vous
+allez pouvoir séléctionner le Blog ``MyLife``.
+
+Vous auriez pu aussi, au moment où vous avez crée votre article, sélectionner
+``appliquer`` au lieu de ``valider`` et le menu ``ajouter relation`` serait apparu.
+
+.. image:: ../images/lax-book.06-add-relation-entryof.en.png
+   :alt: editing a blog entry to add a relation to a blog
+
+Validez vos modifications en cliquant sur ``Valider``. L'entité article
+qui est listée contient maintenant un lien vers le Blog auquel il 
+appartient, ``MyLife``.
+
+.. image:: ../images/lax-book.07-detail-one-blogentry.en.png
+   :alt: displaying the detailed view of a blogentry
+
+Rappelez-vous que pour le moment, tout a été géré par la plate-forme
+`CubicWeb` et que la seule chose qui a été fournie est le schéma de
+données. D'ailleurs pour obtenir une vue graphique du schéma, exécutez
+la commande ``laxctl genschema blogdemo`` et vous pourrez visualiser
+votre schéma a l'URL suivante : http://localhost:8080/schema
+
+.. image:: ../images/lax-book.08-schema.en.png
+   :alt: graphical view of the schema (aka data-model)
+
+
+Change view permission
+~~~~~~~~~~~~~~~~~~~~~~
+
+
+
+Conclusion
+----------
+
+Exercise
+~~~~~~~~
+
+Create new blog entries in ``Tech-blog``.
+
+What we learned
+~~~~~~~~~~~~~~~
+
+Creating a simple schema was enough to set up a new application that
+can store blogs and blog entries. 
+
+What is next ?
+~~~~~~~~~~~~~~
+
+Although the application is fully functionnal, its look is very
+basic. In the following section we will learn to create views to
+customize how data is displayed.
+
+
