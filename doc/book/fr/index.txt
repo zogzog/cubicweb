@@ -9,21 +9,18 @@
 `CubicWeb` permet de déployer rapidement des applications Web de gestion de 
 connaissances, à partir du schéma des données manipulées.
 
-
-Parmi les applications déjà réalisées, on dénombre un annuaire en ligne pour le grand public (voir http://www.118000.fr/), un système de gestion d'études numériques et de simulations pour un bureau d'études, un service de garde partagée d'enfants (voir http://garde-partagee.atoukontact.fr/), la gestion du développement de projets logiciels (voir http://www.logilab.org), etc.
-
-
-Ce qui nous rend unique? Un moteur piloté par un modèle de données, un
+Avec un moteur piloté par un modèle de données, un
 véritable langage de requête, un mécanisme de sélection des vues pour la
-génération automatique de HTML/XML/text, des composants ré-utilisables...
-Autant d'arguments pour promouvoir un développement rapide et efficace.
+génération automatique de HTML/XML/text, des composants ré-utilisables,
+`CubicWeb` constitue une solution clefs en main pour promouvoir un 
+développement rapide et efficace.
 
 Si vous aimez Python et sa librairie standard, vous avez des chances d'aimer
 `CubicWeb` qui inclut sa propre librairie standard de cubes.
 
-Pour les impatients, :ref:`MiseEnPlaceEnv`.
-
 Pour les curieux, un :ref:`Overview` et de sa simplicité.
+
+Pour les impatients, :ref:`MiseEnPlaceEnv`.
 
 .. _Logilab: http://www.logilab.fr/
 .. _GoogleAppEngine: http://code.google.com/appengine/
