@@ -1,0 +1,10 @@
+.. -*- coding: utf-8 -*-
+
+Security
+=========
+
+[WRITE ME]
+
+* talk about security access rights and show that security is defined
+  using RQL
+

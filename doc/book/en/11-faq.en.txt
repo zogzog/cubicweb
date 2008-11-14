@@ -1,0 +1,54 @@
+.. -*- coding: utf-8 -*-
+
+Frequently Asked Questions
+==========================
+
+* Why does not LAX have a template language ?
+
+  It does. Actually, you can use your preferred template language if you
+  want. [explain how to use a template language]
+
+  The reason template languages are not used in this book is that
+  experience has proved us that using pure python was more efficient.
+
+* Why do you think using pure python is better than using a template language ?
+
+  [copy answer from forum]
+
+  code is easier to maintain, does not have to learn a new dialect
+  each time, real function/classes etc -> real development
+
+* Why do you use the GPL license to prevent me from doing X ?
+
+  [copy answer from forum]
+
+* LAX looks pretty recent. Is it stable ?
+
+  [answer that framework has evolved over the past seven years and that
+  data migrated from one schema to the other ever since]
+
+* Why is the RQL query language looking similar to X ?
+
+  [copy answer from forum, explain why similar to sparql and why better
+  than django and SQL]
+
+* which ajax library
+
+  [we use mochikit and things on top of that]
+
+* `Error while publishing rest text ...`
+  
+  While modifying the description of an entity, you get an error message in 
+  the application `Error while publishing ...` for Rest text and plain text.
+  The server returns a traceback like as follows :
+      2008-10-06 15:05:08 - (erudi.rest) ERROR: error while publishing ReST text
+      Traceback (most recent call last):
+      File "/home/sandrine/src/blogdemo/ginco/common/rest.py", line 217, in rest_publish
+      File "/usr/lib/python2.5/codecs.py", line 817, in open
+      file = __builtin__.open(filename, mode, buffering)
+      TypeError: __init__() takes at most 3 arguments (4 given)
+
+  
+  This can be fixed by applying the patch described in :
+  http://code.google.com/p/googleappengine/issues/detail?id=48
+[ADD MORE FAQ]

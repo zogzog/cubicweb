@@ -1,0 +1,85 @@
+.. -*- coding: utf-8 -*-
+
+Introduction
+============
+
+This book uses version 0.4.0 of `LAX`.
+
+What is  `LAX` ?
+----------------
+
+`LAX` stands for `Logilab Appengine eXtension`. It is a web application framework 
+based on `Google AppEngine`.
+
+`LAX` is a port of the web framework Logilab_ has been developping since 2001.
+This framework originally published data queried from different sources including
+SQL databases, LDAP directories and concurrent versionning systems
+(like subversion). In April/May 2008, it was adapted to run also on
+top of `Google AppEngine`'s datastore.
+
+`Google AppEngine` is provided with a partial port of the `Django`
+framework, but Google stated at Google IO 2008 that it would not
+support a specific Python web framework and that all
+community-supported frameworks would be more than welcome[1]_. 
+
+`LAX` competes with other Python web application frameworks to get
+developers' attention and support. It originates from Logilab and is
+the result of about ten years of experience in developing large-scale
+web applications.
+
+Distinctive features include a data-model driven engine, a full-blown
+query language, a selection/view mechanism for HTML/XML/text
+generation, reuseable components, etc. It all sums up to very fast and
+efficient development.
+
+If you like Python and its standard library, chances are you will like
+`LAX` for it comes with batteries included thanks to its standard
+component library.
+
+Compare `LAX` with other frameworks and see for yourself what is your
+best option.
+
+.. _Logilab: http://www.logilab.fr/
+.. [1] for more on this matter, read our blog at http://www.logilab.org/blog/5216
+
+Essentials
+----------
+
+Schema
+
+  The schema defines the data model of an application as entities and
+  relationships. It is the core of an application.  Entities and
+  relationships are modeled with a comprehensive language made of
+  Python classes. 
+
+Query language
+
+  A full-blown query language named RQL is used to formulate 
+  requests to the datastore.
+
+Result set
+
+  A resultset encapsulates the results of a request sent to
+  the datastore and informations about this request.  
+
+Views 
+
+  A view is applied to a `result set` to present it as HTML, XML,
+  JSON, CSV, etc. Views are implemented as Python classes. There is no
+  templating language.
+
+Generated user interface
+
+  A user interface is generated on-the-fly from the schema definition:
+  entities can be created, displayed, updated and deleted. As display
+  views are not very fancy, it is usually necessary to develop your
+  own. Any generated view can be overridden by defining a new one with
+  the same identifier.
+
+Components
+
+  Pieces of schema and sets of views can be combined into
+  components. Larger applications can be built faster by importing
+  components, adding entities and relationships and overriding the
+  views that need to display or edit informations not provided by
+  components.

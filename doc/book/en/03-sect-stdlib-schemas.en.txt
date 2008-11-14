@@ -1,0 +1,86 @@
+.. -*- coding: utf-8 -*-
+
+Pre-defined schemas in the library
+----------------------------------
+
+The library defines a set of entities schemas that are required by the system
+or commonly used in `LAX` applications.
+Of course, you can extend those schemas if necessarry.
+
+System schemas
+``````````````
+Those are defined in::
+
+  ./myapp/ginco/schemas/
+  ./myapp/ginco/entities/
+
+``schemas/`` defines the data model you will use in your application. 
+It allows you to describre the entities and the relations you will need.
+
+``entities/`` deifnes the methods you might need on the entities you 
+defined in your schema.
+
+The system entities available are :
+
+* `EUser`, system users
+* `EGroup`, users groups
+* `EEType`, entity type
+* `ERType`, relation type
+
+* `State`, workflow state
+* `Transition`, workflow transition
+* `TrInfo`, record of a transition trafic for an entity 
+
+* `EmailAddress`, email address, used by the system to send notifications
+  to the users and also used by others optionnals schemas
+
+* `EProperty`, used to configure the application
+* `EPermission`, used to configure the security of the application
+
+* `Card`, generic documenting card
+* `Bookmark`, an entity type used to allow a user to customize his links within
+  the application
+
+
+Components in the library
+`````````````````````````
+
+Those are defined in::
+
+  ./myapp/ginco-apps/
+
+An application is based on several basic components. In the set of available
+basic components we can find by example :
+
+* `ecomment`, provides an entity type for `Comment` allowing us to comment others
+  site's entities
+
+* `emailinglist`, provides an entity type for `Mailinglist` which groups informations
+  in a discussion list
+
+* `efile`, provides entity types for `File` et `Image` used to represent
+  files (text or binary) with additionnal informations such as MIME type or
+  encoding.
+  
+* `elink`, provides an entity type for hypertext link (`Link`)
+
+* `eblog`, provides an entity type weblog (`Blog`)
+
+* `eperson`, provides an entity type for a person (`Person`)
+
+* `eaddressbook`, provides an entity type used to represent phone 
+  numbers (`PhoneNumber`) and mailing address (`PostalAddress`)
+  
+* `eclasstags`, categorization system based on tags (`Tag`)
+
+* `eclassfolders`, categorization system based on folders hierarchy in order 
+  to create navigation sections (`Folder`)
+
+* `eemail`, archiving management for emails (`Email`, `Emailpart`,
+  `Emailthread`)
+
+* `ebasket`, basket management (`Basket`) allowing to group entities
+
+To declare the use of a component, once installed, add the name of the component
+to the variable `__use__` in the file `__pkginfo__.py` of your own component.
+

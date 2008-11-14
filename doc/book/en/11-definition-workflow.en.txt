@@ -1,0 +1,43 @@
+.. -*- coding: utf-8 -*-
+
+Defining a Workflow
+===================
+
+General
+-------
+
+A workflow can be defined in a `LAX` application thanks to the system 
+entities ``State`` and ``Transition``. Those are defined within all 
+LAX application and can be set-up through the main administrator interface.
+
+Once your schema is defined, you can start creating the set of states and
+the required transitions for your applications entities.
+
+You first need to define the states and then the transitions between those
+to complete your workflow.
+
+A ``State`` defines the status of an entity. While creating a new state, 
+you will be first given the option to select the entity type the state
+can be applied to. By choosing ``Apply``, a new section will be displayed
+in the editing screen to enable you to add relation to the state you are
+creating.
+
+A ``Transition`` is also based on an entity type it can be applied to.
+By choosing ``Apply``, a new section will be displayed in the editing 
+screen to enable you to add relation to the transition you are
+creating.
+
+At the transition level you will also define the group of user which can
+aplly this transition to an object.
+
+
+Example of a simple workflow
+----------------------------
+
+Please see the tutorial to view and example of a simple workflow.
+
+
+[Create a simple workflow for BlogDemo, to have a moderator approve new blog 
+entry to be published. This implies, specify a dedicated group of blog
+moderator as well as hide the view of a blog entry to the user until
+it reaches the state published]

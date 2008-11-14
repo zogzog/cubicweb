@@ -1,0 +1,27 @@
+.. LAX documentation master file, created by sphinx-quickstart on Wed Sep 10 08:23:04 2008.
+   You can adapt this file completely to your liking, but it should at least
+   contain the root `toctree` directive.
+
+.. _contents:
+
+LAX book
+========
+
+   
+.. toctree::
+   :maxdepth: 2
+
+
+   01-intro.en.txt
+   02-install.en.txt
+   03-definition-schema.en.txt
+   04-develop-views.en.txt
+   05-components.en.txt
+   06-maintemplate.en.txt
+   07-rss-xml.en.txt
+   08-rql.en.txt
+   09-urlrewrite.en.txt
+   10-security.en.txt
+   11-definition-workflow.en.txt
+   12-internationalization.en.txt
+

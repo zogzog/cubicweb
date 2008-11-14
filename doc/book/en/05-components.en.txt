@@ -1,0 +1,150 @@
+.. -*- coding: utf-8 -*-
+
+.. _components:
+
+Components
+===========
+
+What is a component
+-------------------
+
+A component is a model grouping one or more entity types and/or views associated
+in order to provide a specific feature or even a complete application using
+others components.
+You can decide to write your own set of components if you wish to re-use the 
+entity types you develop. By default, LAX comes with its owns set of components
+that you can start using right away.
+
+
+Standard library
+----------------
+
+A library of standard components is part of the `LAX` release (look at
+``lax/skel/ginco-apps``). Components provide entities and views. With
+``lax-0.4``, you should get a set of application entities and system
+entities you can re-use.
+
+The available application entities are :
+
+* addressbook: PhoneNumber and PostalAddress
+
+* ebasket: Basket (like a shopping cart)
+
+* eblog: Blog (a *very* basic blog)
+
+* eclassfolder: Folder (to organize things but grouping them in folders)
+
+* eclasstags: Tag (to tag anything)
+
+
+* efile: File (to allow users to upload and store binary or text files)
+
+* elink: Link (to collect links to web resources)
+
+* emailinglist: MailingList (to reference a mailing-list and the URLs
+  for its archives and its admin interface)
+
+* eperson: Person (easily mixed with addressbook)
+
+* etask: Task (something to be done between start and stop date)
+
+* ezone: Zone (to define places within larger places, for example a
+  city in a state in a country)
+
+The available system entities are :
+
+* ecomment: Comment (to attach comment threads to entities)
+
+
+
+Adding comments to BlogDemo
+---------------------------
+
+To import a component in your application just change the line in the
+``app.conf`` file. For example::
+
+    included-yams-components=ecomment
+
+Will make the ``Comment`` entity available in your ``BlogDemo``
+application.
+
+Change the schema to add a relationship between ``BlogEntry`` and
+``Comment`` and you are done. Since the ecomment component defines the
+``comments`` relationship, adding the line::
+
+    comments = ObjectRelation('Comment', cardinality='1*', composite='object')
+
+to the definition of a ``BlogEntry`` will be enough.
+
+Clear the datastore and restart.
+
+Component structure
+-------------------
+
+A complex component is structured as follows :
+::
+
+  mycomponent/
+  |
+  |-- schema.py
+  |
+  |-- entities/
+  |
+  |-- sobjects/
+  |
+  |-- views/
+  |
+  |-- test/
+  |
+  |-- i18n/
+  |
+  |-- data/
+  |
+  |-- migration/
+  | |- postcreate.py
+  | \- depends.map
+  |
+  |-- debian/
+  |
+  \-- __pkginfo__.py
+
+We can also define simple Python module instead of directories (packages), for example :
+::
+
+  mycomponent/
+  |
+  |-- entities.py
+  |-- hooks.py
+  \-- views.py
+
+
+where :
+
+* ``schema`` contains the definition of the schema (server side only)
+* ``entities`` contains entities definition (server side and web interface)
+* ``sobjects`` contains hooks and/or notification views (server side only)
+* ``views`` contains the web interface components (web interface only)
+* ``test`` contains tests related to the application (not installed)
+* ``i18n`` contains messages catalogs for supported languages (server side and
+  web interface)
+* ``data`` contains data files for static content (images, css, javascripts)
+  ...(web interface only)
+* ``migration`` contains initialization file for new instances (``postcreate.py``)
+  and a file containing dependencies of the component depending on the version
+  (``depends.map``)
+* ``debian`` contains all the files managing debian packaging (you will find
+  the usual files ``control``, ``rules``, ``changelog``... not installed)
+* file ``__pkginfo__.py`` provides component meta-data, especially the distribution
+  and the current version(server side and web interface) or sub-components used by
+  the component.
+ 
+At least you should have :
+
+* the file ``__pkginfo__.py``
+* schema definition
+
+[WRITE ME]
+
+* explain the component architecture
+
+* add comments to the blog by importing the comments component
