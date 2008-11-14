@@ -2,6 +2,36 @@
 
 Fondements `CubicWeb`
 =====================
+Un peu d'histoire...
+--------------------
+
+`CubicWeb` est une plate-forme logicielle de développement d'application web
+qui est développée par Logilab_ depuis 2001. 
+
+
+Entièrement développée en Python, `CubicWeb` publie des données provenant
+de plusieurs sources telles que des bases de données SQL, des répertoire 
+LDAP et des systèmes de gestion de versions tels que subversion. 
+
+L'interface utilisateur de `CubicWeb` a été spécialement conçue pour laisser 
+à l'utilisateur final toute latitude pour sélectionner puis présenter les données. 
+Elle permet d'explorer aisément la base de connaissances et d'afficher les 
+résultats avec la présentation la mieux adaptée à la tâche en cours. 
+La flexibilité de cette interface redonne à l'utilisateur le contrôle de 
+paramètres d'affichage et de présentation qui sont habituellement réservés 
+aux développeurs.
+
+Parmi les applications déjà réalisées, on dénombre un annuaire en ligne pour 
+le grand public (voir http://www.118000.fr/), un système de gestion d'études 
+numériques et de simulations pour un bureau d'études, un service de garde 
+partagée d'enfants (voir http://garde-partagee.atoukontact.fr/), la gestion 
+du développement de projets logiciels (voir http://www.logilab.org), etc.
+
+En 2008, `CubicWeb` a été porté pour un nouveau type de source: le datastore 
+de GoogleAppEngine_.
+
+.. _GoogleAppEngine: http://code.google.com/appengine/
+
 
 Architecture globale
 --------------------
@@ -74,7 +104,7 @@ Concepts et vocabulaire
   `/path/to/forest/cubicweb/cubes`
 
 *instance*
-  une instance est une installation spécifique d'un template. Sont regroupes
+  une instance est une installation spécifique d'un cube. Sont regroupes
   dans une instance tous les fichiers de configurations necessaires au bon
   fonctionnement de votre application web. Elle referrera au(x) cube(s) sur 
   le(s)quel(s) votre application se base.

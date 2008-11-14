@@ -6,13 +6,15 @@
 .. toctree::
    :maxdepth: 1
 
+   introduction.fr.txt
    chap_fondements_cubicweb.txt
    chap_mise_en_place_environnement.txt
-   chap_configuration_instance.txt
    chap_definition_schema.txt
-   chap_definition_workflows.txt
    chap_visualisation_donnees.txt
+   chap_definition_workflows.txt
    chap_manipulation_donnees.txt
+   chap_site_configuration.txt
+   chap_configuration_instance.txt
    chap_ui_gestion_formulaire.txt
    chap_ui_js_json.txt
    chap_autres_composants_ui.txt
@@ -24,8 +26,6 @@
    chap_tests.txt
    chap_i18n.txt
    gae.txt
-
-   tut-create-app.fr.txt
    references.txt
 
 
