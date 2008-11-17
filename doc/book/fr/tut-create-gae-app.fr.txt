@@ -90,7 +90,7 @@ puis dirigez vous vers http://localhost:8080/ (ou si c'est plus facile
 vous pouvez utiliser la démo en ligne http://lax.appspot.com/).
 [FIXME] -- changer la demo en ligne en quelque chose qui marche (!)
 
-.. image:: images/lax-book.00-login.en.png
+.. image:: images/lax-book.00-login.fr.png
    :alt: login screen
 
 Après vous être authentifié, vous arrivez sur la page d'accueil de votre 
@@ -99,7 +99,7 @@ application, en l'occurrence : Blog et Articles. Si vous lisez ``blog_plural``
 et ``blogentry_plural`` cela signifie que l'internationalisation (i18n)
 n'a pas encore fonctionné. Ignorez cela pour le moment.
 
-.. image:: images/lax-book.01-start.en.png
+.. image:: images/lax-book.01-start.fr.png
    :alt: home page
 
 Créez des entités système
@@ -126,7 +126,7 @@ puis validez le formulaire d'édition en cliquant sur le bouton
 ``Validate``.
 
 
-.. image:: images/lax-book.02-create-blog.en.png
+.. image:: images/lax-book.02-create-blog.fr.png
    :alt: from to create blog
 
 En cliquant sur le logo situé dans le coin gauche de la fenêtre,
@@ -134,7 +134,7 @@ vous allez être redirigé vers la page d'accueil. Ensuite, si vous allez
 sur le lien Blog, vous devriez voir la liste des entités Blog, en particulier
 celui que vous venez juste de créer ``Tech-Blog``.
 
-.. image:: images/lax-book.03-list-one-blog.en.png
+.. image:: images/lax-book.03-list-one-blog.fr.png
    :alt: displaying a list of a single blog
 
 Si vous cliquez sur ``Tech-Blog`` vous devriez obtenir une description
@@ -142,14 +142,14 @@ détaillée, ce qui dans notre cas, n'est rien de plus que le titre
 et la phrase ``everything about technology``
 
 
-.. image:: images/lax-book.04-detail-one-blog.en.png
+.. image:: images/lax-book.04-detail-one-blog.fr.png
    :alt: displaying the detailed view of a blog
 
 Maintenant retournons sur la page d'accueil et créons un nouveau
 Blog ``MyLife`` et retournons sur la page d'accueil, puis suivons
 le lien Blog et nous constatons qu'à présent deux blogs sont listés.
 
-.. image:: images/lax-book.05-list-two-blog.en.png
+.. image:: images/lax-book.05-list-two-blog.fr.png
    :alt: displaying a list of two blogs
 
 Créons un article
@@ -169,14 +169,14 @@ allez pouvoir séléctionner le Blog ``MyLife``.
 Vous auriez pu aussi, au moment où vous avez crée votre article, sélectionner
 ``appliquer`` au lieu de ``valider`` et le menu ``ajouter relation`` serait apparu.
 
-.. image:: images/lax-book.06-add-relation-entryof.en.png
+.. image:: images/lax-book.06-add-relation-entryof.fr.png
    :alt: editing a blog entry to add a relation to a blog
 
 Validez vos modifications en cliquant sur ``Valider``. L'entité article
 qui est listée contient maintenant un lien vers le Blog auquel il 
 appartient, ``MyLife``.
 
-.. image:: images/lax-book.07-detail-one-blogentry.en.png
+.. image:: images/lax-book.07-detail-one-blogentry.fr.png
    :alt: displaying the detailed view of a blogentry
 
 Rappelez-vous que pour le moment, tout a été géré par la plate-forme
@@ -185,7 +185,7 @@ données. D'ailleurs pour obtenir une vue graphique du schéma, exécutez
 la commande ``laxctl genschema blogdemo`` et vous pourrez visualiser
 votre schéma a l'URL suivante : http://localhost:8080/schema
 
-.. image:: images/lax-book.08-schema.en.png
+.. image:: images/lax-book.08-schema.fr.png
    :alt: graphical view of the schema (aka data-model)
 
 

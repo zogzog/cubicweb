@@ -25,9 +25,9 @@
    chap_migration.txt
    chap_tests.txt
    chap_i18n.txt
-   gae.txt
-   references.txt
-
+   gae.fr.txt
+   references.fr.txt
+   faq.fr.txt
 
 
 

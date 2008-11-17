@@ -102,7 +102,7 @@ The view has a ``self.w()`` method that is used to output data. Here `lines
 When displaying same blog entry as before, you will notice that the
 page is now looking much nicer.
 
-.. image:: images/lax-book.09-new-view-blogentry.en.png
+.. image:: images/lax-book.09-new-view-blogentry.fr.png
    :alt: blog entries now look much nicer
 
 Let us now improve the primary view of a blog ::
@@ -139,7 +139,7 @@ view with that name that can accepts the entity.**
 Assuming we added entries to the blog titled `MyLife`, displaying it
 now allows to read its description and all its entries.
 
-.. image:: images/lax-book.10-blog-with-two-entries.en.png
+.. image:: images/lax-book.10-blog-with-two-entries.fr.png
    :alt: a blog and all its entries
 
 **Before we move forward, remember that the selection/view principle is

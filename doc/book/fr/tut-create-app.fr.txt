@@ -83,7 +83,7 @@ administrator), then launch the application with the command::
 and point your browser at http://localhost:8080/ (if it is easier for
 you, use the on-line demo at http://lax.appspot.com/).
 
-.. image:: images/lax-book.00-login.en.png
+.. image:: images/lax-book.00-login.fr.png
    :alt: login screen
 
 After you log in, you will see the home page of your application. It
@@ -92,7 +92,7 @@ lists the entity types: Blog and BlogEntry. If these links read
 internationalization (i18n) is not working for you yet. Please ignore
 this for now.
 
-.. image:: images/lax-book.01-start.en.png
+.. image:: images/lax-book.01-start.fr.png
    :alt: home page
 
 Creating system entities
@@ -115,7 +115,7 @@ of the link Blog.  Call this new Blog ``Tech-blog`` and type in
 ``everything about technology`` as the description, then validate the
 form by clicking on ``Validate``.
 
-.. image:: images/lax-book.02-create-blog.en.png
+.. image:: images/lax-book.02-create-blog.fr.png
    :alt: from to create blog
 
 Click on the logo at top left to get back to the home page, then
@@ -123,14 +123,14 @@ follow the Blog link that will list for you all the existing Blog.
 You should be seeing a list with a single item ``Tech-blog`` you
 just created.
 
-.. image:: images/lax-book.03-list-one-blog.en.png
+.. image:: images/lax-book.03-list-one-blog.fr.png
    :alt: displaying a list of a single blog
 
 Clicking on this item will get you to its detailed description except
 that in this case, there is not much to display besides the name and
 the phrase ``everything about technology``.
 
-.. image:: images/lax-book.04-detail-one-blog.en.png
+.. image:: images/lax-book.04-detail-one-blog.fr.png
    :alt: displaying the detailed view of a blog
 
 Now get back to the home page by clicking on the top-left logo, then
@@ -138,7 +138,7 @@ create a new Blog called ``MyLife`` and get back to the home page
 again to follow the Blog link for the second time. The list now
 has two items.
 
-.. image:: images/lax-book.05-list-two-blog.en.png
+.. image:: images/lax-book.05-list-two-blog.fr.png
    :alt: displaying a list of two blogs
 
 
@@ -159,14 +159,14 @@ You could also have, at the time you started to fill the form for a
 new entity BlogEntry, hit ``Apply`` instead of ``Validate`` and the 
 combobox titled ``add relation`` would have showed up.
 
-.. image:: images/lax-book.06-add-relation-entryof.en.png
+.. image:: images/lax-book.06-add-relation-entryof.fr.png
    :alt: editing a blog entry to add a relation to a blog
 
 Validate the changes by clicking ``Validate``. The entity BlogEntry
 that is displayed now includes a link to the entity Blog named
 ``MyLife``.
 
-.. image:: images/lax-book.07-detail-one-blogentry.en.png
+.. image:: images/lax-book.07-detail-one-blogentry.fr.png
    :alt: displaying the detailed view of a blogentry
 
 Remember that all of this was handled by the framework and that the
@@ -175,13 +175,13 @@ view of the schema, run the ``laxctl genschema BlogDemo`` command as
 explained in the installation section and point your browser to the
 URL http://localhost:8080/schema
 
-.. image:: images/lax-book.08-schema.en.png
+.. image:: images/lax-book.08-schema.fr.png
    :alt: graphical view of the schema (aka data-model)
 
 Site configuration
 ------------------
 
-.. image:: images/lax-book.03-site-config-panel.en.png
+.. image:: images/lax-book.03-site-config-panel.fr.png
 
 This panel allows you to configure the appearance of your application site.
 Six menus are available and we will go through each of them to explain how
@@ -357,7 +357,7 @@ then the list of possible initial states from which the transition
 can be applied, the target state of the transition, and the permissions
 (e.g. list of the groups of users who can apply the transition).
 
-.. image:: images/lax-book.03-transitions-view.en.png
+.. image:: images/lax-book.03-transitions-view.fr.png
 
 You can now notice that in the actions box of a BlogEntry, the state
 is now listed as well as the possible transitions from this state

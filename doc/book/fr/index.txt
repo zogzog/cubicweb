@@ -36,15 +36,6 @@ Table des matieres
 
    index-content.fr.txt
 
-
-FAQ
-===
-.. toctree::
-   :maxdepth: 1
-
-   faq.fr.txt
-
-
 Indices and tables
 ==================
 
