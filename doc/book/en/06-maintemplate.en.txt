@@ -7,7 +7,7 @@ Views & Templates
 Look at ``lax/skel/ginco/web/views/basetemplates.py`` and you will
 find the base templates used to generate HTML for your application.
 
-A page is composed as indicated on the schema below :
+A page is composed as indicated on the schema below:
 
 .. image:: images/lax-book.06-main-template-layout.en.png
 
@@ -49,7 +49,7 @@ prefer it to be in the left column just below the logo. As the left column is
 rendered by ``TheMainTemplate``, we will show how to do it in TheMainTemplate_. 
 
 First, to remove the login menu, we just need to comment out the display of the
-login component such as follows : ::
+login component such as follows: ::
 
   class MyHTMLPageHeader(HTMLPageHeader):
     
@@ -152,7 +152,7 @@ HTMLPageFooter
 --------------
 
 If you want to change the footer for example, look
-for HTMLPageFooter and override it in your views file as in : 
+for HTMLPageFooter and override it in your views file as in: 
 ::
 
   form ginco.web.views.basetemplates import HTMLPageFooter

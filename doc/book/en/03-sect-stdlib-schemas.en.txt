@@ -20,7 +20,7 @@ It allows you to describre the entities and the relations you will need.
 ``entities/`` deifnes the methods you might need on the entities you 
 defined in your schema.
 
-The system entities available are :
+The system entities available are:
 
 * `EUser`, system users
 * `EGroup`, users groups
@@ -50,7 +50,7 @@ Those are defined in::
   ./myapp/ginco-apps/
 
 An application is based on several basic components. In the set of available
-basic components we can find by example :
+basic components we can find by example:
 
 * `ecomment`, provides an entity type for `Comment` allowing us to comment others
   site's entities

@@ -14,7 +14,7 @@ browser to see the changes.
 The selection/view principle
 ----------------------------
 
-With `LAX`, views are defined by Python classes. A view includes :
+With `LAX`, views are defined by Python classes. A view includes:
 
 - an identifier (all objects in `LAX` are entered in a registry
   and this identifier will be used as a key)
@@ -54,7 +54,7 @@ coordinates (`line 08`). We will get to this in more detail later.
 The view has a ``self.w()`` method that is used to output data. Here `lines
 09-12` output HTML tags and values of the entity's attributes.
 
-When displaying same blog entry as before, you will notice that the
+When displaying same blog entries as before, you will notice that the
 page is now looking much nicer.
 
 .. image:: images/lax-book.09-new-view-blogentry.en.png

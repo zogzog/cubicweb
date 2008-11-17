@@ -24,7 +24,7 @@ A library of standard components is part of the `LAX` release (look at
 ``lax-0.4``, you should get a set of application entities and system
 entities you can re-use.
 
-The available application entities are :
+The available application entities are:
 
 * addressbook: PhoneNumber and PostalAddress
 
@@ -51,7 +51,7 @@ The available application entities are :
 * ezone: Zone (to define places within larger places, for example a
   city in a state in a country)
 
-The available system entities are :
+The available system entities are:
 
 * ecomment: Comment (to attach comment threads to entities)
 
@@ -65,7 +65,7 @@ To import a component in your application just change the line in the
 
     included-yams-components=ecomment
 
-Will make the ``Comment`` entity available in your ``BlogDemo``
+will make the ``Comment`` entity available in your ``BlogDemo``
 application.
 
 Change the schema to add a relationship between ``BlogEntry`` and
@@ -81,7 +81,7 @@ Clear the datastore and restart.
 Component structure
 -------------------
 
-A complex component is structured as follows :
+A complex component is structured as follows:
 ::
 
   mycomponent/
@@ -108,7 +108,7 @@ A complex component is structured as follows :
   |
   \-- __pkginfo__.py
 
-We can also define simple Python module instead of directories (packages), for example :
+We can also define simple Python module instead of directories (packages), for example:
 ::
 
   mycomponent/
@@ -118,7 +118,7 @@ We can also define simple Python module instead of directories (packages), for e
   \-- views.py
 
 
-where :
+where:
 
 * ``schema`` contains the definition of the schema (server side only)
 * ``entities`` contains entities definition (server side and web interface)
@@ -138,7 +138,7 @@ where :
   and the current version(server side and web interface) or sub-components used by
   the component.
  
-At least you should have :
+At least you should have:
 
 * the file ``__pkginfo__.py``
 * schema definition

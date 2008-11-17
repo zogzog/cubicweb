@@ -1,7 +1,7 @@
 .. -*- coding: utf-8 -*-
 
 RQL language (Relation Query Language)
-========================================
+======================================
 
 Introduction
 ------------
@@ -102,16 +102,16 @@ Examples - search
 
 Advanced features
 `````````````````
-* Aggregate functions : `COUNT`, `MIN`, `MAX`, `SUM`.
-* String functions :`UPPER`, `LOWER`.
-* Optional relations :
+* Aggregate functions: `COUNT`, `MIN`, `MAX`, `SUM`.
+* String functions:`UPPER`, `LOWER`.
+* Optional relations:
 
   * They allow to select entities related to others or not.
 
   * You should use `?` behind the variable to specify the relation to itself is
     optional.
 
-    - Project anomalies related to a version or not ::
+    - Project anomalies related to a version or not::
 
         Any X,V WHERE X concerns P, P eid 42, X corrected_in V?
 

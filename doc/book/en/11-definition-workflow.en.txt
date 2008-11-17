@@ -40,4 +40,4 @@ Please see the tutorial to view and example of a simple workflow.
 [Create a simple workflow for BlogDemo, to have a moderator approve new blog 
 entry to be published. This implies, specify a dedicated group of blog
 moderator as well as hide the view of a blog entry to the user until
-it reaches the state published]
+it reaches the published state.]
