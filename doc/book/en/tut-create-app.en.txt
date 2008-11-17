@@ -30,7 +30,7 @@ you will define the type of content you have to hanlde in your application.
 
 Let us start with something simple and improve on it iteratively. 
 
-In schema.py, we define two entities : ``Blog`` and ``BlogEntry``.
+In schema.py, we define two entities: ``Blog`` and ``BlogEntry``.
 
 ::
 
@@ -123,7 +123,7 @@ that in this case, there is not much to display besides the name and
 the phrase ``everything about technology``.
 
 .. image:: images/lax-book.04-detail-one-blog.en.png
-   :alt: displaying the detailed view of a blog
+  :alt: displaying the detailed view of a blog
 
 Now get back to the home page by clicking on the top-left logo, then
 create a new Blog called ``MyLife`` and get back to the home page
@@ -183,29 +183,29 @@ Navigation
 ~~~~~~~~~~
 This menu provides you a way to adjust some navigation options depending on
 your needs, such as the number of entities to display by page of results.
-Follows the detailled list of available options :
+Follows the detailled list of available options:
   
-* navigation.combobox-limit : maximum number of entities to display in related
+* navigation.combobox-limit: maximum number of entities to display in related
   combo box (sample format: 23)
-* navigation.page-size : maximum number of objects displayed by page of results 
+* navigation.page-size: maximum number of objects displayed by page of results 
   (sample format: 23)
-* navigation.related-limit : maximum number of related entities to display in 
+* navigation.related-limit: maximum number of related entities to display in 
   the primary view (sample format: 23)
-* navigation.short-line-size : maximum number of characters in short description
+* navigation.short-line-size: maximum number of characters in short description
   (sample format: 23)
 
 UI
 ~~
 This menu provides you a way to customize the user interface settings such as
 date format or encoding in the produced html.
-Follows the detailled list of available options :
+Follows the detailled list of available options:
 
 * ui.date-format : how to format date in the ui ("man strftime" for format description)
 * ui.datetime-format : how to format date and time in the ui ("man strftime" for format
   description)
 * ui.default-text-format : default text format for rich text fields.
 * ui.encoding : user interface encoding
-* ui.fckeditor :should html fields being edited using fckeditor (a HTML WYSIWYG editor).
+* ui.fckeditor : should html fields being edited using fckeditor (a HTML WYSIWYG editor).
   You should also select text/html as default text format to actually get fckeditor.
 * ui.float-format : how to format float numbers in the ui
 * ui.language : language of the user interface
@@ -222,7 +222,7 @@ You must have notice that when you view a list of entities, an action box is
 available on the left column which display some actions as well as a drop-down 
 menu for more actions. 
 
-The context available are :
+The context available are:
 
 * mainactions : actions listed in the left box
 * moreactions : actions listed in the `more` menu of the left box
@@ -239,7 +239,7 @@ The application has already a pre-defined set of boxes you can use right away.
 This configuration section allows you to place those boxes where you want in the
 application interface to customize it. 
 
-The available boxes are :
+The available boxes are:
 
 * actions box : box listing the applicable actions on the displayed data
 

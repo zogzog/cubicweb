@@ -21,10 +21,10 @@ by example ::
 * the name of the Python attribute corresponds to the name of the attribute
   or the relation in `LAX` application.
 
-* all built-in types are available : `String`, `Int`, `Float`,
+* all built-in types are available: `String`, `Int`, `Float`,
   `Boolean`, `Date`, `Datetime`, `Time`, `Byte`.
 
-* each entity has at least the following meta-relations :
+* each entity has at least the following meta-relations:
 
   - `eid` (`Int`)
   
@@ -44,13 +44,13 @@ by example ::
   instead of `SubjectRelation`
 
 * the first argument of `SubjectRelation` and `ObjectRelation` gives respectively
-  the object/subject entity type of the relation. This could be :  
+  the object/subject entity type of the relation. This could be:  
 
   * a string corresponding to an entity type
 
   * a tuple of string correponding to multiple entities types
 
-  * special string such as follows :
+  * special string such as follows:
 
     - "**" : all types of entities
     - "*" : all types of entities non meta
@@ -60,7 +60,7 @@ by example ::
 * it is possible to use the attribute `meta` to flag an entity type as a `meta`
   (e.g. used to describe/categorize other entities)
 
-* optional properties for attributes and relations : 
+* optional properties for attributes and relations: 
 
   - `description` : string describing an attribute or a relation. By default
     this string will be used in the editing form of the entity, which means
@@ -75,7 +75,7 @@ by example ::
     the subject, the second on the object of the relation. When a relation
     has multiple possible subjects or objects, the cardinality applies to all
     and not on a one to one basis (so it must be consistent...). The possible
-    values are inspired from regular expressions syntax :
+    values are inspired from regular expressions syntax:
 
     * `1`: 1..1
     * `?`: 0..1
@@ -85,7 +85,7 @@ by example ::
   - `meta` : boolean indicating that the relation is a meta-relation (false by
     default)
 
-* optionnal properties for attributes : 
+* optionnal properties for attributes: 
 
   - `required` : boolean indicating if the attribute is required (false by default)
 
@@ -102,7 +102,7 @@ by example ::
   
   - `vocabulary` : specify static possible values of an attribute
 
-* optionnal properties of type `String` : 
+* optionnal properties of type `String`: 
 
   - `fulltextindexed` : boolean indicating if the attribute is part of
     the full text index (false by default) (*applicable on the type `Byte`
@@ -113,7 +113,7 @@ by example ::
 
   - `maxsize` : integer providing the maximum size of the string (no limit by default)
 
-* optionnal properties for relations : 
+* optionnal properties for relations: 
 
   - `composite` : string indicating that the subject (composite == 'subject')
     is composed of the objects of the relations. For the opposite case (when
@@ -124,7 +124,7 @@ by example ::
   
 Contraints
 ``````````
-By default, the available constraints types are :
+By default, the available constraints types are:
 
 * `SizeConstraint` : allows to specify a minimum and/or maximum size on
   string (generic case of `maxsize`)
@@ -166,7 +166,7 @@ definition properties from the relation)[PAS CLAIR] by example ::
     object = 'EUser'
 
 In addition to the permissions, the own properties of the relation types
-(shared also by all definition of relation of this type) are :
+(shared also by all definition of relation of this type) are:
 
 
 * `inlined` : boolean handling the physical optimization for archiving
@@ -202,7 +202,7 @@ one or multiple RQL expressions to satisfy to grant access. The access is
 provided once the user is in the listed groups or one of the RQL condition is
 satisfied.
 
-The standard groups are :
+The standard groups are:
 
 * `guests`
 
@@ -222,7 +222,7 @@ Use of RQL expression for writing rights
 It is possible to define RQL expression to provide update permission 
 (`add`, `delete` and `update`) on relation and entity types.
 
-RQL expression for entity type permission :
+RQL expression for entity type permission:
 
 * you have to use the class `ERQLExpression`
 
@@ -239,7 +239,7 @@ RQL expression for entity type permission :
   to this variable 
 
 For RQL expressions on a relation type, the principles are the same except 
-for the following :
+for the following:
 
 * you have to use the class `RQLExpression` in the case of a non-final relation
   [WHAT IS A NON FINALE RELATION]
@@ -249,7 +249,7 @@ for the following :
   which the action is being verified) and the user who executed the query
 
 * we can also defined rights on attributes of an entity (non-final relation),
-  knowing that : 
+  knowing that: 
 
   - to defines RQL expression, we have to use the class `ERQLExpression`
     in which X represents the entity the attribute belongs to
@@ -261,7 +261,7 @@ for the following :
 
 In addition to thatm the entity type `EPermission` from the standard library
 allow to build very complex and dynamic security architecture. The schema of
-this entity type is as follow : ::
+this entity type is as follow: ::
 
     class EPermission(MetaEntityType):
 	"""entity type that may be used to construct some advanced security configuration
@@ -308,7 +308,7 @@ Example of configuration ::
 
 This configuration assumes/indicates [???] that an entity `EPermission` named
 "add_version" can be associated to a project and provides rights to create
-new versions on this project to specific groups. It is important to notice that :
+new versions on this project to specific groups. It is important to notice that:
 
 * in such case, we have to protect both the entity type "Version" and the relation
   associating a version to a project ("version_of")
@@ -321,7 +321,7 @@ new versions on this project to specific groups. It is important to notice that 
 Use of RQL expression for reading rights
 ````````````````````````````````````````
 
-The principles are the same but with the following restrictions :
+The principles are the same but with the following restrictions:
 
 * we can not [??] `RRQLExpression` on relation types for reading
 
