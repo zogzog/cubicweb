@@ -143,7 +143,7 @@ then the list of possible initial states from which the transition
 can be applied, the target state of the transition, and the permissions
 (e.g. list of the groups of users who can apply the transition).
 
-.. image:: images/lax-book.03-transitions-view.en.png
+.. image:: images/lax-book.03-transitions-view.fr.png
 
 You can now notice that in the actions box of a BlogEntry, the state
 is now listed as well as the possible transitions from this state

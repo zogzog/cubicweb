@@ -3,7 +3,7 @@
 Interface de configuration du site
 ==================================
 
-.. image:: images/lax-book.03-site-config-panel.en.png
+.. image:: images/lax-book.03-site-config-panel.fr.png
 
 This panel allows you to configure the appearance of your application site.
 Six menus are available and we will go through each of them to explain how

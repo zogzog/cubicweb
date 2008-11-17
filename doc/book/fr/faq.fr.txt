@@ -20,10 +20,6 @@ Frequently Asked Questions
   s'applique. Il faut donc bien reflechir avant de decider de l'un ou
   de l'autre, mais vous avez la possibilite de choisir.
 
-
-HOW TO
-======
-
 * Comment mettre à jour une base de données après avoir modifié le schéma?
   
   Cela dépend de ce qui a été modifié dans le schéma. 
