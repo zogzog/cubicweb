@@ -12,8 +12,8 @@ Ce à quoi nous réferrons en parlant de `cube` est un modèle définissant
 des types de données et des vues. Un `cube` est un composant re-utilisable 
 regroupé avec d'autres cubes sur le système de fichiers.
 
-Un `instance` réferre à une installation spécifique d'un cube où sont regroupés
-tous les fichiers de configuration de l'application web finale.
+Un `instance` réferre à une installation spécifique d'un ou plusieurs cubes 
+où sont regroupés tous les fichiers de configuration de l'application web finale.
 
 Dans ce document, nous allons vous montrer comment créer un cube et l'utiliser
 dans une instance pour votre application web.
@@ -155,64 +155,189 @@ application. Vous devrez donc utiliser l'utilisateur administrateur que
 vous aurez crée lors de l'initialisation de votre base de données via
 ``cubicweb-ctl create``.
 
-.. image:: ../images/login-form.png
+.. image:: images/login-form.png
 
 
 Une fois authentifié, vous pouvez commencer à jouer avec votre
 application et créer des entités. Bravo !
 
-.. image:: ../images/blog-demo-first-page.png
+.. image:: images/blog-demo-first-page.png
 
 
-Vous trouverez de plus amples explications de ces étapes dans notre
-tutoriel (:ref:`tutorielGAE`).
+Rappelez-vous que pour le moment, tout a été géré par la plate-forme
+`CubicWeb` et que la seule chose qui a été fournie est le schéma de
+données. 
 
+Créons des entités
+------------------
 
+Nous allons maintenant créer quelques entités dans notre application.
+
+Créez un Blog
+~~~~~~~~~~~~~
+
+Créons à présent quelques entités. Cliquez sur `[+]` sur la
+droite du lien Blog. Appelez cette nouvelle entité Blog ``Tech-Blog``
+et tapez pour la description ``everything about technology``,
+puis validez le formulaire d'édition en cliquant sur le bouton
+``Validate``.
+
+.. image:: images/cbw-create-blog.en.png
+   :alt: from to create blog
+
+En cliquant sur le logo situé dans le coin gauche de la fenêtre,
+vous allez être redirigé vers la page d'accueil. Ensuite, si vous allez 
+sur le lien Blog, vous devriez voir la liste des entités Blog, en particulier
+celui que vous venez juste de créer ``Tech-Blog``.
+
+.. image:: images/cbw-list-one-blog.en.png
+   :alt: displaying a list of a single blog
+
+Si vous cliquez sur ``Tech-Blog`` vous devriez obtenir une description
+détaillée, ce qui dans notre cas, n'est rien de plus que le titre
+et la phrase ``everything about technology``
+
+Maintenant retournons sur la page d'accueil et créons un nouveau
+Blog ``MyLife`` et retournons sur la page d'accueil, puis suivons
+le lien Blog et nous constatons qu'à présent deux blogs sont listés.
+
+.. image:: images/cbw-list-two-blog.en.png
+   :alt: displaying a list of two blogs
+
+Créons un article
+~~~~~~~~~~~~~~~~~
+
+Revenons sur la page d'accueil et cliquons sur `[+]` à droite du lien
+`articles`. Appellons cette nouvelle entité ``Hello World`` et introduisons
+un peut de texte avant de ``Valider``. Vous venez d'ajouter un article
+sans avoir précisé à quel Blog il appartenait. Dans la colonne de gauche
+se trouve une boite intitulé ``actions``, cliquez sur le menu ``modifier``.
+Vous êtes de retour sur le formulaire d'édition de l'article que vous 
+venez de créer, à ceci près que ce formulaire a maintenant une nouvelle
+section intitulée ``ajouter relation``. Choisissez ``entry_of`` dans ce menu,
+cela va faire apparaitre une deuxième menu déroulant dans lequel vous
+allez pouvoir séléctionner le Blog ``MyLife``.
+
+Vous auriez pu aussi, au moment où vous avez crée votre article, sélectionner
+``appliquer`` au lieu de ``valider`` et le menu ``ajouter relation`` serait apparu.
+
+.. image:: images/cbw-add-relation-entryof.en.png
+   :alt: editing a blog entry to add a relation to a blog
+
+Validez vos modifications en cliquant sur ``Valider``. L'entité article
+qui est listée contient maintenant un lien vers le Blog auquel il 
+appartient, ``MyLife``.
+
+.. image:: images/cbw-detail-one-blogentry.en.png
+   :alt: displaying the detailed view of a blogentry
+
+Rappelez-vous que pour le moment, tout a été géré par la plate-forme
+`CubicWeb` et que la seule chose qui a été fournie est le schéma de
+données. D'ailleurs pour obtenir une vue graphique du schéma, visitez
+le lien `Application schema`` a l'URL suivante :
+http://localhost:8080/view?vid=schema
+
+.. image:: images/cbw-schema.en.png
+   :alt: graphical view of the schema (aka data-model)
 
 
 Définissez les vues de vos données
 ----------------------------------
 
-Les vues correspondantes au modele de données sont définies dans ``views.py``
-de votre cube ``blog``.
+Le principe de sélection des vues
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Une vue est une classe Python qui inclut:
+  
+  - un identifiant (tous les objets dans `CubicWeb` sont listés
+    dans un registre et cet identifiant est utilisé comme la clé)
+
+  - un filtre de sélection de `result sets` auxquels il
+    peut s'appliquer
+
+`CubicWeb` fournit un ensemble de vues standard pour le type d'objet
+`EntityView`. vous poubez les trouver listées dans ``cubicweb/web/views``.
+
+Une vue est appliquée sur un `result set` qui représente l'ensemble
+des entités que nous cherchons à appliquer. `CubicWeb` utilise un
+sélecteur qui permet de calculer un score et d'identifier la vue
+la plus adaptée au `result set` que nous voulons afficher. La librarie
+standard des sélecteurs se trouve dans ``cubicweb.common.selector`` 
+et une librairie des méthodes utilisées pour calculer les scores 
+est dans ``cubicweb.vregistry.vreq``.
+
+
+Il est possible de définir plusieurs vues ayant le meme identifiant
+et d'y associer des sélecteurs et des filtres afin de permettre à 
+l'application de s'adapter au mieux aux données que nous avons 
+besoin d'afficher. Nous verrons cela plus en détails dans :ref:`DefinitionVues`.
+
+On peut citer l'exemple de la vue nommée ``primary`` qui est celle utilisée
+pour visualiser une entité seule. Nous allons vous montrer comment modifier 
+cette vue.
+
+Modification des vues
+~~~~~~~~~~~~~~~~~~~~~
+Si vous souhaitez modifier la manière dont est rendue un article (`Blogentry`),
+vous devez surcharger la vue ``primary`` définie dans le module ``views`` de 
+votre cube, ``cubes/blog/views.py``.
+
+Nous pourrions par exemple ajouter devant la date de publication un préfixe
+indiquant que la date visualisée est la date de publication.
+
+Pour cela appliquez les modifications suivantes: 
 
 :: 
 
-  __docformat__ = "restructuredtext en"
-
-  from mx.DateTime import DateTime
-  from logilab.mtconverter import html_escape
-
-  from cubicweb.common.uilib import text_cut
-  from cubicweb.common.view import EntityView
   from cubicweb.web.views import baseviews
-  from cubicweb.web.views.boxes import BoxTemplate, BoxHtml
-  from cubicweb.web.views.calendar import MONTHNAMES
-  from cubicweb.web.htmlwidgets import BoxLink, BoxWidget
 
-
-  class BlogPrimaryView(baseviews.PrimaryView):
-    accepts = ('Blog',)
-    skip_attrs = baseviews.PrimaryView.skip_attrs + ('title',)
-
-    def render_entity_title(self, entity):
-        self.w(u'<h1>%s</h1>' % html_escape(entity.dc_title()))
-
-    def render_entity_relations(self, entity, siderelations):
-        rset = entity.related('entry_of', 'object')
-        self.pagination(self.req, rset, self.w)
-        self.wview('list', rset, 'null', title='')
-    
 
   class BlogEntryPrimaryView(baseviews.PrimaryView):
+
     accepts = ('BlogEntry',)
-    skip_attrs = baseviews.PrimaryView.skip_attrs + ('title',)
-    show_attr_label = False
 
     def render_entity_title(self, entity):
         self.w(u'<h1>%s</h1>' % html_escape(entity.dc_title()))
 
     def content_format(self, entity):
         return entity.view('reledit', rtype='content_format')
+
+    def cell_call(self, row, col):
+        entity = self.entity(row, col)
+
+        # display entity attributes with prefixes
+        self.w(u'<h1>%s</h1>' % entity.title)
+        self.w(u'<p>published on %s</p>' % entity.publish_date.strftime('%Y-%m-%d'))
+        self.w(u'<p>%s</p>' % entity.content)
+        
+        # display relations
+        siderelations = []
+        if self.main_related_section:
+            self.render_entity_relations(entity, siderelations)
+
+.. note::
+  Lors qu'une vue est modifiée il n'est pas nécessaire de relancer
+  l'application. Sauvez juste le fichier Python et rechargez la page
+  dans votre navigateur afin de visualiser les modifications.
+
+
+Nous pouvons voir que la date de publication est préfixée comme souhaitée.
+
+
+.. image:: images/cbw-update-primary-view.en.png
+   :alt: modified primary view
+
+
+
+Le code que nous avons modifié définit une vue primaire pour une entité de 
+type `BlogEntry`. 
+
+Etant donné que les vues sont appliquées sur des `result sets` et que 
+les `result sets` peuvent être des tableaux de données, il est indispensable
+de récupérer l'entité selon ses coordonnées (row,col).
+
+La méthode ``self.w()`` est utilisée pour afficher des données. En particulier
+dans notre exemple, nous l'utilisons pour afficher des tags HTML et des valeurs
+des attributs de notre entité.
 
 

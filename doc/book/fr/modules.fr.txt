@@ -213,6 +213,13 @@
 .. automodule:: cubicweb.web
    :members:
 
+:mod:`cubicweb.web.views`
+=========================
+
+.. automodule:: cubicweb.web.views
+   :members:
+
+
 :mod:`cubicweb.wsgi`
 ====================
 
