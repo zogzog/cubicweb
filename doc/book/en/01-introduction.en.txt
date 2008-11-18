@@ -326,9 +326,6 @@ You can now see that the publication date has a prefix.
 The above source code defines a new primary view for
 ``BlogEntry``. 
 
-Le code que nous avons modifié définit une vue primaire pour une entité de 
-type `BlogEntry`. 
-
 Since views are applied to resultsets and resulsets can be tables of
 data, it is needed to recover the entity from its (row,col)
 coordinates. We will get to this in more detail later.
