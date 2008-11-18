@@ -2,8 +2,8 @@
 
 .. _MiseEnPlaceEnv:
 
-Installation et mise en place d'un environnement `CubicWeb`
-===========================================================
+Installation and set-up of a `CubicWeb` environment
+===================================================
 
 .. toctree::
    :maxdepth: 1
