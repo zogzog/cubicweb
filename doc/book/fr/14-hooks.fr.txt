@@ -1,0 +1,31 @@
+.. -*- coding: utf-8 -*-
+
+Les crochets (*hooks*)
+======================
+
+XXX FILLME
+
+Les crochets sont appelés avant ou après la mise à jour d'une entité ou d'une
+relations dans le dépot
+
+Leur prototypes sont les suivants
+
+
+    * after_add_entity     (session, entity)
+    * after_update_entity  (session, entity)
+    * after_delete_entity  (session, eid)
+    * before_add_entity    (session, entity)
+    * before_update_entity (session, entity)
+    * before_delete_entity (session, eid)
+
+    * after_add_relation     (session, fromeid, rtype, toeid)
+    * after_delete_relation  (session, fromeid, rtype, toeid)
+    * before_add_relation    (session, fromeid, rtype, toeid)
+    * before_delete_relation (session, fromeid, rtype, toeid)
+    
+    * server_startup
+    * server_shutdown
+    
+    * session_open
+    * session_close
+

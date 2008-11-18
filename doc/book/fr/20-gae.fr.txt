@@ -1,0 +1,19 @@
+.. -*- coding: utf-8 -*-
+
+.. _contents:
+
+==========================
+Google AppEngine Datastore
+==========================
+
+
+.. include:: 01-intro.fr.txt
+.. include:: 02-install.fr.txt
+.. include:: 03-create-app.fr.txt
+.. include:: 04-develop-views.fr.txt
+.. include:: 05-components.fr.txt
+.. include:: 06-maintemplate.fr.txt
+.. include:: 07-rss-xml.fr.txt
+.. include:: 08-rql.fr.txt
+.. include:: 09-urlrewrite.fr.txt
+.. include:: 10-security.fr.txt

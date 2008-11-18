@@ -1,0 +1,15 @@
+.. -*- coding: utf-8 -*-
+
+.. _MiseEnPlaceEnv:
+
+Installation et mise en place d'un environnement `CubicWeb`
+===========================================================
+
+.. toctree::
+   :maxdepth: 1
+
+   03-01-installation.fr.txt
+   03-02-create-instance.fr.txt
+   03-03-cubicweb-ctl.fr.txt
+   03-04-mercurial.fr.txt
+

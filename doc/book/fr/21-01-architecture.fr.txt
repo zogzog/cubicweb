@@ -1,0 +1,14 @@
+.. -*- coding: utf-8 -*-
+
+
+Architecture du serveur
+-----------------------
+
+.. image:: images/server-class-diagram.png
+
+`Diagramme ArgoUML`_
+
+[FIXME]
+Make a downloadable source of zargo file.
+
+.. _`Diagramme ArgoUML`: cubicweb.zargo

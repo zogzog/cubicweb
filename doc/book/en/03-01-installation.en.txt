@@ -1,0 +1,150 @@
+.. -*- coding: utf-8 -*-
+
+Installation
+============
+
+Installation de Cubicweb et de ses dépendances
+----------------------------------------------
+
+`CubicWeb` est disponible via un entrepôt Mercurial utilisant l'extension forest.
+Vous devez donc dans un premier temps vous assurer que Mercurial est bien installé
+et que vous avez l'extension forest.
+
+Installation de Mercurial
+`````````````````````````
+Veuillez vous référer a la documentation en ligne du projet Mercurial_.
+
+.. _Mercurial: http://www.selenic.com/mercurial/wiki/
+
+Installation de l'extension forest
+``````````````````````````````````
+Dans un premier temps, récupérez une copie des sources via: http://hg.akoha.org/hgforest/.
+Ensuite, ajoutez a votre ``~/.hgrc`` les lignes suivantes ::
+
+   [extensions]
+   hgext.forest=
+   # or, if forest.py is not in the hgext dir:
+   # forest=/path/to/forest.py
+
+Récupération des sources
+````````````````````````
+Clonez la foret dans votre répertoire de travail. 
+
+::
+
+  hg fclone http://www.logilab.org/hg/forests/cubicweb
+
+.. note:: 
+  Nous vous recommandons de créer un lien symbolique vers l'outil ``cubicweb-ctl``
+  que vous allez etre amené a utiliser.
+
+  ::
+    
+    $ ln -s /path/to/forest/cubicweb/bin/cubicweb-ctl ~/bin
+
+Installation de Postgres
+````````````````````````
+Veuillez vous référer a la documentation en ligne du projet Postgres_.
+
+.. _Postgres: http://www.postgresql.org/
+
+Vous allez devoir installer les trois paquets suivants: `postgres-8.3`,
+`postgres-contrib-8.3` and `postgresql-plpython-8.3`.
+
+
+On pourra ensuite installer les paquets suivants :
+
+* `pyro` si vous voulez que l'entrepôt soit accessible via Pyro ou si le client
+  et le serveur ne sont pas sur la même machine (auquel cas il faut installer ce
+  paquet sur les machines clientes et serveur)
+
+* `python-ldap` si vous voulez utiliser une source ldap sur le serveur
+
+
+.. _ConfigurationEnv:
+
+Configuration de l'environnement
+--------------------------------
+
+[FIXME]
+Ces variables ne sont plus requises pour le bon fonctionnement de `CubicWeb`, non?
+A part rajouter la foret dans le PYTHONPATH, rien de plus ne doit etre fait?
+
+Mettez à jour votre variable d'environemment PYTHONPATH afin d'y ajouter
+le chemin d'acces a votre foret ``cubicweb``. 
+
+Ajouter les lignes suivantes à son `.bashrc` ou `.bash_profile` pour configurer
+votre environnement de développement ::
+  
+  export PYTHONPATH=/full/path/to/cubicweb-forest
+  
+  export ERUDI_REGISTRY=~/etc/erudi.d/
+  export ERUDI_TEMPLATES=~/hg/
+  export ERUDI_RUNTIME=/tmp/
+
+Cela suppose que le composant erudi que vous développez est dans un
+sous-répertoire de *~/hg/* et que vous avez créé le répertoire *~/etc/erudi.d/*
+pour que `cubicweb-ctl` y place vos instances de test.
+
+.. _ConfigurationPostgres:
+
+Configuration Postgres
+----------------------
+* Tout d'abord vous devez initialiser votre base de données Postgres via la
+  commande ``initidb``.
+  ::
+
+    $ initdb -D /path/to/pgsql
+
+  Une fois ces paquets installés vous pouvez lancer votre server de base de 
+  données Postgres avec la commande suivante: ::
+  
+    $ postgres -D /path/to/psql
+
+  Si vous ne pouvez exécuter cette commande pour des raisons de permissions
+  assurez-vous que votre utilisateur a droit d'écriture sur les la base de données.
+
+  ::
+ 
+    $ chown username /path/to/pgsql
+
+* Création d'un super utilisateur pour la création d'instance (**root**) ::
+
+    createuser -s username
+
+  Initialisez le mot de passe de ce superutilisateur ``username`` via
+  ``su - postgres`` puis ``psql``.
+
+  Un mot de passe de connection pour cet utilisateur vous sera demandé. Il
+  faudra utiliser ce login / mot de passe à la création d'instance via
+  `cubicweb-ctl`
+
+[XXX]
+Est-ce que ces etapes sont vraiment necessaires? 
+sand : lors de l'installation de ma bdd cela n'a pas ete fait
+et il semble que tout aille bien. Doit etre verifie avec les experts.
+
+* installation des extensions pour l'index plein texte ::
+
+    cat /usr/share/postgresql/8.1/contrib/tsearch2.sql | psql -U pgadmin template1
+
+* installation du langage plpythonu par défaut ::
+
+    createlang -U pgadmin plpythonu template1
+
+
+Configuration Pyro
+------------------
+Si vous utilisez Pyro, il est nécessaire d'avoir un serveur de noms Pyro
+tournant sur votre réseau (par défaut celui-ci est repéré par une requête
+broadcast). Pour cela il faut soit :
+
+* le lancer à la main avant le démarrage de erudi avec la commande `pyro-ns`
+
+* le lancer à la main avant le démarrage de erudi sous forme d'un serveur avec
+  la commande `pyro-nsd start`
+
+* éditer le fichier */etc/default/pyro-nsd* pour que le serveur de nom pyro soit
+  lancé automatiquement au démarrage de la machine
+
+

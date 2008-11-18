@@ -1,0 +1,13 @@
+.. -*- coding: utf-8 -*-
+
+.. _contents:
+
+Références
+==========
+
+.. toctree::
+   :maxdepth: 1
+
+   21-01-architecture.fr.txt
+   21-02-querier.fr.txt
+   21-03-modules.fr.txt

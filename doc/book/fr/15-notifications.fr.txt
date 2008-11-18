@@ -1,0 +1,6 @@
+.. -*- coding: utf-8 -*-
+
+Gestion de notifications
+========================
+
+XXX FILLME

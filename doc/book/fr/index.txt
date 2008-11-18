@@ -34,7 +34,29 @@ Table des matieres
 .. toctree::
    :maxdepth: 1
 
-   index-content.fr.txt
+   01-introduction.fr.txt
+   02-foundation.fr.txt
+   03-setup.fr.txt
+   04-define-schema.fr.txt
+   05-define-views.fr.txt
+   06-define-workflows.fr.txt
+   07-data-as-objects.fr.txt
+   08-site-config.fr.txt
+   09-instance-config.fr.txt
+   10-form-management.fr.txt
+   11-ajax-json.fr.txt
+   12-ui-components.fr.txt
+   13-security.fr.txt
+   14-hooks.fr.txt
+   15-notifications.fr.txt
+   16-rql.fr.txt
+   17-migration.fr.txt
+   18-tests.fr.txt
+   19-i18n.fr.txt
+   20-gae.fr.txt
+   21-references.fr.txt
+   22-faq.fr.txt
+
 
 Indices and tables
 ==================

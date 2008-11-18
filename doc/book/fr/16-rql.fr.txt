@@ -1,0 +1,11 @@
+.. -*- coding: utf-8 -*-
+
+Le langage RQL (Relation Query Language)
+========================================
+
+Voir la `documentation de RQL <file:///home/sandrine/src/fcubicweb/rql/doc/build/html/index.html>`_ .
+
+
+[TODO]
+Specific link to RQL complete documentation to remove duplicated content.
+

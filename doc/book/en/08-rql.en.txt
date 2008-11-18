@@ -90,7 +90,7 @@ Search query
   variables must be grouped or aggregated.
 
 Examples - search
-`````````````````
+~~~~~~~~~~~~~~~~~
 ::
 
       Any X WHERE X eid 53
@@ -101,7 +101,7 @@ Examples - search
 
 
 Advanced features
-`````````````````
+~~~~~~~~~~~~~~~~~
 * Aggregate functions: `COUNT`, `MIN`, `MAX`, `SUM`.
 * String functions:`UPPER`, `LOWER`.
 * Optional relations:
@@ -120,7 +120,7 @@ Advanced features
         Any C,P WHERE C is Card, P? documented_by C
 
 Negation
-````````
+~~~~~~~~
 * A query such as `Document X WHERE NOT X owned_by U` is equivalent to 
   "the documents which do not have relation `owned_by`".
 * Whereas the query `Document X WHERE NOT X owned_by U, U login "syt"`
@@ -129,7 +129,7 @@ Negation
 
 
 Identity
-````````
+~~~~~~~~
 
 We could use the special relation `identity` in a query in order to add a
 condition of identity between two variables. This is equivalent to ``is``
@@ -154,7 +154,7 @@ Be careful, if a condition is specified, the insertion is done *for each result
 returned by the condition*.
  
 Examples - insertion
-`````````````````````
+~~~~~~~~~~~~~~~~~~~~~
 * Insertion of a new person named 'bidule'::
 
        INSERT Person X: X name 'bidule'
@@ -179,7 +179,7 @@ Be careful, if a condition is specified, the update is done *for each result
 returned by the condition*.
 
 Examples - update 
-`````````````````
+~~~~~~~~~~~~~~~~~
 * Renaming of the person named 'bidule' to 'toto', with change on the first name::
 
        SET X name 'toto', X firstname 'original' WHERE X is 'Person', X name 'bidule'
@@ -200,7 +200,7 @@ returned by the condition*.
 
 
 Examples
-````````
+~~~~~~~~
 * Deletion of the person named 'toto'::
 
        DELETE Person X WHERE X name 'toto'

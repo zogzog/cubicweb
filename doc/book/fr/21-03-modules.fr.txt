@@ -1,0 +1,253 @@
+.. -*- coding: utf-8 -*-
+
+
+:mod:`cubes.addressbook` 
+========================
+
+.. automodule:: cubes.addressbook
+   :members:
+
+:mod:`cubes.basket` 
+========================
+
+.. automodule:: cubes.basket
+   :members:
+
+:mod:`cubes.blog` 
+========================
+
+.. automodule:: cubes.blog
+   :members:
+
+:mod:`cubes.book` 
+========================
+
+.. automodule:: cubes.book
+   :members:
+
+:mod:`cubes.comment` 
+========================
+
+.. automodule:: cubes.comment
+   :members:
+
+:mod:`cubes.company` 
+========================
+
+.. automodule:: cubes.company
+   :members:
+
+
+:mod:`cubes.conference` 
+========================
+
+.. automodule:: cubes.conference
+   :members:
+
+:mod:`cubes.email` 
+========================
+
+.. automodule:: cubes.email
+   :members:
+
+:mod:`cubes.event` 
+========================
+
+.. automodule:: cubes.event
+   :members:
+
+:mod:`cubes.expense` 
+========================
+
+.. automodule:: cubes.expense
+   :members:
+
+
+:mod:`cubes.file` 
+========================
+
+.. automodule:: cubes.file
+   :members:
+
+:mod:`cubes.folder` 
+========================
+
+.. automodule:: cubes.folder
+   :members:
+
+:mod:`cubes.i18ncontent` 
+========================
+
+.. automodule:: cubes.i18ncontent
+   :members:
+
+:mod:`cubes.invoice` 
+========================
+
+.. automodule:: cubes.invoice
+   :members:
+
+:mod:`cubes.keyword` 
+========================
+
+.. automodule:: cubes.keyword
+   :members:
+
+:mod:`cubes.link` 
+========================
+
+.. automodule:: cubes.link
+   :members:
+
+:mod:`cubes.mailinglist` 
+========================
+
+.. automodule:: cubes.mailinglist
+   :members:
+
+:mod:`cubes.person` 
+========================
+
+.. automodule:: cubes.person
+   :members:
+
+:mod:`cubes.shopcart` 
+========================
+
+.. automodule:: cubes.shopcart
+   :members:
+
+:mod:`cubes.skillmat` 
+========================
+
+.. automodule:: cubes.skillmat
+   :members:
+
+:mod:`cubes.tag` 
+========================
+
+.. automodule:: cubes.tag
+   :members:
+
+:mod:`cubes.task` 
+========================
+
+.. automodule:: cubes.task
+   :members:
+
+:mod:`cubes.workcase` 
+========================
+
+.. automodule:: cubes.workcase
+   :members:
+
+:mod:`cubes.workorder` 
+========================
+
+.. automodule:: cubes.workorder
+   :members:
+
+:mod:`cubes.zone` 
+========================
+
+.. automodule:: cubes.zone
+   :members:
+
+:mod:`cubicweb` 
+===============
+
+.. automodule:: cubicweb
+   :members:
+
+:mod:`cubicweb.common`
+======================
+
+.. automodule:: cubicweb.common
+   :members:
+
+:mod:`cubicweb.devtools`
+========================
+
+.. automodule:: cubicweb.devtools
+   :members:
+
+:mod:`cubicweb.entities`
+========================
+
+.. automodule:: cubicweb.entities
+   :members:
+
+:mod:`cubicweb.etwist`
+======================
+
+.. automodule:: cubicweb.etwist
+   :members:
+
+:mod:`cubicweb.goa`
+===================
+
+.. automodule:: cubicweb.goa
+   :members:
+
+:mod:`cubicweb.schemas`
+=======================
+
+.. automodule:: cubicweb.schemas
+   :members:
+
+:mod:`cubicweb.server`
+======================
+
+.. automodule:: cubicweb.server
+   :members:
+
+:mod:`cubicweb.sobjects`
+========================
+
+.. automodule:: cubicweb.sobjects
+   :members:
+
+:mod:`cubicweb.web`
+===================
+
+.. automodule:: cubicweb.web
+   :members:
+
+:mod:`cubicweb.web.views`
+=========================
+
+.. automodule:: cubicweb.web.views
+   :members:
+
+
+:mod:`cubicweb.wsgi`
+====================
+
+.. automodule:: cubicweb.wsgi
+   :members:
+
+:mod:`indexer`
+==============
+
+.. automodule:: indexer
+   :members:
+
+:mod:`logilab`
+==============
+
+.. automodule:: logilab
+   :members:
+
+
+
+:mod:`rql`
+==========
+
+.. automodule:: rql
+   :members:
+
+:mod:`yams`
+===========
+
+.. automodule:: yams
+   :members:

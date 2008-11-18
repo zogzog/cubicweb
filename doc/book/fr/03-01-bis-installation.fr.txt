@@ -1,0 +1,79 @@
+.. -*- coding: utf-8 -*-
+
+.. _installationGAE:
+
+Installation de `CubicWeb` pour GoogleAppEngine
+===============================================
+
+Qu'est-ce que `LAX` ?
+=======================
+
+`LAX` (Logilab Appengine eXtension) est un framework d'application
+web basé sur `Google AppEngine`.
+
+`LAX` est un portage de la partie web de la plate-forme applicative
+développée par Logilab depuis 2001.  Cette plate-forme publie des
+données tirées de bases SQL, d'annuaires LDAP et de systèmes de
+gestion de version. En avril 2008, elle a été portée pour fonctionner
+sur le "datastore" de `Google AppEngine`.
+
+XXX: faire un parallèle entre Django/GAE et LAX/GAE
+
+
+Téléchargement des sources
+==========================
+
+- Les sources de `Google AppEngine` peuvent être récupérées à l'adresse
+  suivante : http://code.google.com/appengine/downloads.html
+
+- Les sources de `LAX` se trouvent à l'adresse suivante :
+  http://lax.logilab.org/
+
+
+Installation
+============
+
+Une fois décompactée, l'archive `lax-0.1.0-alpha.tar.gz`, on obtient
+l'arborescence suivante::
+  
+  .
+  |-- app.yaml
+  |-- custom.py
+  |-- data
+  |-- ginco/
+  |-- i18n/
+  |-- logilab/
+  |-- main.py
+  |-- mx/
+  |-- rql/
+  |-- schema.py
+  |-- simplejson/
+  |-- tools/
+  |   |-- generate_schema_img.py
+  |   `-- i18ncompile.py
+  |-- views.py
+  |-- yams/
+  `-- yapps/
+
+  
+On retrouve le squelette d'une application web de `Google AppEngine`
+(fichiers ``app.yaml``, ``main.py`` en particulier) avec les dépendances
+supplémentaires nécessaires à l'utilisation du framework `LAX`
+
+
+Lancement de l'application de base
+==================================
+
+Plusieurs répertoires doivent être accessibles via la variable 
+d'environnement ``PYTHONPATH`` ::
+
+  $ export PYTHONPATH=/path/to/google_appengine:/path/to/google_appengine/lib/yaml/lib:/path/to/myapp/
+
+Le répertoire yaml n'est nécessaire que pour le lancement des scripts
+qui se trouvent dans lax/tools et pour l'exécution des tests unitaires.
+
+Pour démarrer::
+
+  $ python /path/to/google_appengine/dev_appserver.py /path/to/lax
+
+
