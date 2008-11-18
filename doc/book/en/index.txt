@@ -1,0 +1,67 @@
+.. -*- coding: utf-8 -*-
+
+.. _contents:
+
+=====================================================
+`CubicWeb` - The Semantic Web is a construction game!
+=====================================================
+
+`CubicWeb` permet de déployer rapidement des applications Web de gestion de 
+connaissances, à partir du schéma des données manipulées.
+
+Avec un moteur piloté par un modèle de données, un
+véritable langage de requête, un mécanisme de sélection des vues pour la
+génération automatique de HTML/XML/text, des composants ré-utilisables,
+`CubicWeb` constitue une solution clefs en main pour promouvoir un 
+développement rapide et efficace.
+
+Si vous aimez Python et sa librairie standard, vous avez des chances d'aimer
+`CubicWeb` qui inclut sa propre librairie standard de cubes.
+
+Pour les curieux, un :ref:`Overview` et de sa simplicité.
+
+Pour les impatients, :ref:`MiseEnPlaceEnv`.
+
+.. _Logilab: http://www.logilab.fr/
+.. _GoogleAppEngine: http://code.google.com/appengine/
+
+
+
+Table des matieres
+==================
+
+
+.. toctree::
+   :maxdepth: 1
+
+   01-introduction.en.txt
+   02-foundation.en.txt
+   03-setup.en.txt
+   04-define-schema.en.txt
+   05-define-views.en.txt
+   06-define-workflows.en.txt
+   07-data-as-objects.en.txt
+   08-site-config.en.txt
+   09-instance-config.en.txt
+   10-form-management.en.txt
+   11-ajax-json.en.txt
+   12-ui-components.en.txt
+   13-security.en.txt
+   14-hooks.en.txt
+   15-notifications.en.txt
+   16-rql.en.txt
+   17-migration.en.txt
+   18-tests.en.txt
+   19-i18n.en.txt
+   20-gae.en.txt
+   21-references.en.txt
+   22-faq.en.txt
+
+
+Indices and tables
+==================
+
+* :ref:`genindex`
+* :ref:`modindex`
+* :ref:`search`
+
