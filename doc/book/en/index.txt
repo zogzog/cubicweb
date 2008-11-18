@@ -6,20 +6,25 @@
 `CubicWeb` - The Semantic Web is a construction game!
 =====================================================
 
-`CubicWeb` allows us to quickly develop content management web
-application, based on a data model, the schema.
+`CubicWeb` is a semantic web application framework that empowers developers
+to efficiently build web applications by reusing components (called `cubes`)
+and following the well known object-oriented design principles.
 
-With a data model driven engine, a real query language, a 
-view selection mecanism for automatic HTML/XML/text generation, 
-reusables components, `CubicWeb` is an end to end solution
-to promote quick and efficient development.
+Its main features:
 
-If you like Python and its standard libraey, you will like `CubicWeb`
-which includes its own `cubes` standard library.
+* a engine driven by the explicit data model of the application, 
+* a query language similar to W3C's SPARQL, 
+* a selection+view mechanism for semi-automatic XHTML/XML/JSON/text generation, 
+* a library of reusable components (data model and views) that fulfill common needs,
+* the power and flexibility of the Python programming language,
 
-For curious, a :ref:`Overview` and its simplicity.
+make `CubicWeb` a mature end to end solution for web 
+application development that promotes quality, reusability and 
+efficiency.
 
-For impatients, :ref:`MiseEnPlaceEnv`.
+The unbeliever will read the :ref:`Overview`.
+
+The impatient will move right away to :ref:`MiseEnPlaceEnv`.
 
 .. _Logilab: http://www.logilab.fr/
 .. _GoogleAppEngine: http://code.google.com/appengine/
