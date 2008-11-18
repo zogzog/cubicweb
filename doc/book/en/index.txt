@@ -6,29 +6,28 @@
 `CubicWeb` - The Semantic Web is a construction game!
 =====================================================
 
-`CubicWeb` permet de déployer rapidement des applications Web de gestion de 
-connaissances, à partir du schéma des données manipulées.
+`CubicWeb` allows us to quickly develop content management web
+application, based on a data model, the schema.
 
-Avec un moteur piloté par un modèle de données, un
-véritable langage de requête, un mécanisme de sélection des vues pour la
-génération automatique de HTML/XML/text, des composants ré-utilisables,
-`CubicWeb` constitue une solution clefs en main pour promouvoir un 
-développement rapide et efficace.
+With a data model driven engine, a real query language, a 
+view selection mecanism for automatic HTML/XML/text generation, 
+reusables components, `CubicWeb` is an end to end solution
+to promote quick and efficient development.
 
-Si vous aimez Python et sa librairie standard, vous avez des chances d'aimer
-`CubicWeb` qui inclut sa propre librairie standard de cubes.
+If you like Python and its standard libraey, you will like `CubicWeb`
+which includes its own `cubes` standard library.
 
-Pour les curieux, un :ref:`Overview` et de sa simplicité.
+For curious, a :ref:`Overview` and its simplicity.
 
-Pour les impatients, :ref:`MiseEnPlaceEnv`.
+For impatients, :ref:`MiseEnPlaceEnv`.
 
 .. _Logilab: http://www.logilab.fr/
 .. _GoogleAppEngine: http://code.google.com/appengine/
 
 
 
-Table des matieres
-==================
+Table of contents
+=================
 
 
 .. toctree::
