@@ -2,120 +2,122 @@
 
 .. _cubicweb-ctl:
 
-L'outil `cubicweb-ctl`
-======================
-`cubicweb-ctl` est le couteau suisse pour la gestion d'instances CubicWeb.
-La syntaxe générale est ::
+``cubicweb-ctl`` tool
+=====================
 
-  cubicweb-ctl <commande> [options commande] <arguments commandes>
+`cubicweb-ctl` is the swiss knife to manage `CubicWeb` instances.
+The general syntax is ::
 
-Pour voir les commandes disponibles ::
+  cubicweb-ctl <command> [options command] <arguments commands>
+
+To view available commands ::
 
   cubicweb-ctl
   cubicweb-ctl --help
 
-A noter que les commandes disponibles varient en fonction des parties d'CubicWeb
-qui sont installées.
+Please note that the commands available depends on the `CubicWeb` packages
+and cubes that have been installed.
 
-Pour voir l'aide pour une commande spécifiques ::
+To view the help menu on specific command ::
 
-  cubicweb-ctl <commande> --help
+  cubicweb-ctl <command> --help
 
-Commandes pour la création d'un cube
-------------------------------------
-* ``newcube``, crée un nouveau cube sur le système de fichiers
-  à partir du nom passé en paramètre. Cette commande crée le cube à partir
-  d'une squelette d'application, incluant également les fichiers pour le
-  packaging debian)
+Command to create a cube
+------------------------
+
+* ``newcube``, create a new cube on the file system based on the name
+  given in the parameters. This command create a cube from an application
+  skeleton that includes default files required for debian packaging.
   
-Commandes pour la création d'une instance
------------------------------------------
-* ``create``, crée les fichiers de configuration d'une instance
-* ``db-create``, crée la base de données système d'une instance (tables et
-  extensions uniquement)
-* ``db-init``, initialise la base de données système d'une instance (schéma,
-  groupes, utilisateurs, workflows...)
 
-Par défaut ces trois commandes sont enchainées.
+Command to create an instance
+-----------------------------
+* ``create``, creates the files for the instance configuration
+* ``db-create``, creates the system database of an instance (tables and
+  extensions only)
+* ``db-init``, initializes the system database of an instance
+  (schema, groups, users, workflows...)
 
-Commande pour la création d'une instance pour Google App Engine
----------------------------------------------------------------
-* ``newgapp``, crée les fichiers de configuration d'une instance
+By default, those three commandes are encapsulated in ``create`` so
+that they can be executed consecutively.
 
-Cette commande doit être suivie de l'exécution de commandes
-permettant l'initialisation de la base de données spécifique à  
-Google App Engine, appellée ``datastore``.
+Command to create an instance for Google AppEngine datastore source
+-------------------------------------------------------------------
+* ``newgapp``, creates the configuration files for an instance
 
-Pour plus de détails veuillez vous référer à `LAX <>`_
+This command needs to be followed by the commands responsible for
+the database initialization. As those are specific to the `datastore`,
+specific Google AppEgine database, they are not available for now
+in cubicweb-ctl, but they are available in the instance created.
 
+[FIXME] - add link to gae install
+For more details, please see :ref:`` .
 
-Commandes pour le lancement des instances
------------------------------------------
-* ``start``, démarre une, plusieurs, ou toutes les instances
-* ``stop``, arrêt une, plusieurs, ou toutes les instances
-* ``restart``, redémarre une, plusieurs, ou toutes les instances
-* ``status``, donne l'état des instances
+Commands to launch instance
+---------------------------
+* ``start``, starts one or more or all instances
+* ``stop``, stops one or more or all instances
+* ``restart``, restarts one or more or all instances
+* ``status``, returns the status of the instance
 
-Commandes pour la maintenance des instances
--------------------------------------------
-* ``upgrade``, lance la migration d'instance(s) existante(s) lorsqu'une nouvelle
-  version d'CubicWeb ou du composant est installée
-* ``shell``, ouvre un shell de migration pour la maintenance manuelle d'une instance
-* ``db-dump``, crée un dump de la base de données système
-* ``db-restore``, restore un dump de la base de données système
-* ``db-check``, vérifie l'intégrité des données d'une instance. Si la correction
-  automatique est activée, il est conseillé de faire un dump avant cette
-  opération
-* ``schema-sync``, , synchronise le schéma persistent d'une instance avec le schéma
-  de l'application. Il est conseillé de faire un dump avant cette opération
+Commands to maintain instances
+------------------------------
+* ``upgrade``, launches the existing instances migration when a new version
+  of `CubicWeb` or the cubes installed is available
+* ``shell``, opens a migration shell for manual maintenance of the instance
+* ``db-dump``, creates a dump of the system database
+* ``db-restore``, restores a dump of the system database
+* ``db-check``, checks data integrity of an instance. If the automatic correction
+  is activated, it is recommanded to create a dump before this operation.
+* ``schema-sync``, synchronizes the persistent schema of an instance with
+  the application schema. It is recommanded to create a dump before this operation.
 
-Commandes pour la maintenance des catalogues i18n
--------------------------------------------------
-* ``i18nlibupdate``, regénère les catalogues de messages de la librairie CubicWeb
-* ``i18nupdate``, regénère les catalogues de messages d'un composant
-* ``i18ncompile``, recompile les catalogues de messages d'une instance. Cela est
-  effectué automatiquement lors d'une upgrade
+Commands to maintain i18n catalogs
+----------------------------------
+* ``i18nlibupdate``, regenerates messages catalogs of the `CubicWeb` library
+* ``i18nupdate``, regenerates the messages catalogs of a cube
+* ``i18ncompile``, recompiles the messages catalogs of an instance. 
+  This is automatically done while upgrading.
 
 Cf :ref:`Internationalisation`.
 
-Autres commandes
-----------------
-* ``list``, donne la liste des configurations, des composants et des instances
-  disponibles
-* ``delete``, supprime une instance (fichiers de configuration et base de données)
+Other commands
+--------------
+* ``list``, provides a list of the available configuration, cubes
+  and instances.
+* ``delete``, deletes an instance (configuration files and database)
 
-
-
-Exemples
+Examples
 --------
 
-Creation d'une instance a partir de cube existant
-`````````````````````````````````````````````````
+Create an instance from an existing cube
+````````````````````````````````````````
 
-Afin de creer une instance a partir d'un cube existant, executez la commande
-suivant ::
+To create an instance from an existing cube, execute the following
+command ::
 
-   cubicweb-ctl create <nom_cube> <nom_instance>
+   cubicweb-ctl create <cube_name> <instance_name>
 
-Cette commande va creer les fichiers de configuration d'une instance dans
-``~/etc/cubicweb.d/<nom_instance>``.
-L'outil ``cubicweb-ctl`` va vous autoriser a executer au sein de ``create``
-les commandes ``db-create`` et ``db-init`` afin de completer la creation de
-votre instance en une seule commande.
+This command will create the configuration files of an instance in
+``~/etc/cubicweb.d/<instance_name>``.
+The tool ``cubicweb-ctl`` allows you to execute the command ``db-create``
+and ``db-init`` when you run ``create`` so that you can complete an
+instance creation in a single command.
 
-Si vous decidez de ne pas le faire lorsque ``cubicweb-ctl create`` vous le 
-propose, alors n'oubliez pas de lancer ces commandes (``cubicweb-ctl db-create``,
-``cubicweb-ctl db-init`` ) par la suite, sinon
-votre installation ne sera pas complete.
+If you decide not to execut those commands while ``cubicweb-ctl create``,
+then you will have to execute them seperately(``cubicweb-ctl db-create``,
+``cubicweb-ctl db-init`` ) otherwise your installation will not be complete
+and you will not be able to launch your instance.
 
 
-Creation d'une instance a partir d'une nouveau cube
-```````````````````````````````````````````````````
+Creation of an instance from a new cube
+```````````````````````````````````````
 
-Creez avant tout votre nouveau cube ::
+Create first your new cube cube ::
 
-   cubicweb-ctl newcube <nom_cube>
+   cubicweb-ctl newcube <mycube>
 
-Cette commande va creer un nouveau cube dans ``/path/to/forest/cubicweb/cubes/<nom_cube>``.
+This will create a new cube in ``/path/to/forest/cubicweb/cubes/<mycube>``
+and then create an instance as explained just above.
 
 
