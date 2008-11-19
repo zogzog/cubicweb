@@ -1,30 +1,30 @@
 .. -*- coding: utf-8 -*-
 
-Définition d'un type d'entité
------------------------------
+Entity type definition
+----------------------
 
-Un type d'entité est définit par une classe python héritant de `EntityType`. Le
-nom de la classe correspond au nom du type. Ensuite le corps de la classe
-contient la description des attributs et des relations pour ce type d'entité,
-par exemple ::
+An entity type is defined by a Python class which inherits `EntityType`. The
+class name correponds to the type name. Then the content of the class contains
+the description of attributes and relations for the defined entity type,
+by example ::
 
   class Personne(EntityType):
-    """une personne avec les propriétés et relations nécessaires à mon
+    """A person with the properties and the relations necessarry for my
     application"""
 
-    nom = String(required=True, fulltextindexed=True)
-    prenom = String(required=True, fulltextindexed=True)
-    civilite = String(vocabulary=('M', 'Mme', 'Mlle'))
-    date_naiss = Date()
-    travaille_pour = SubjectRelation('Company', cardinality='?*')
+    last_name = String(required=True, fulltextindexed=True)
+    first_name = String(required=True, fulltextindexed=True)
+    title = String(vocabulary=('M', 'Mme', 'Mlle'))
+    date_of_birth = Date()
+    works_for = SubjectRelation('Company', cardinality='?*')
 
-* le nom de l'attribut python correspond au nom de l'attribut ou de la relation
-  dans cubicweb.
+* the name of the Python attribute corresponds to the name of the attribute
+  or the relation in `CubicWeb` application.
 
-* tout les types de bases sont disponibles nativement : `String`, `Int`, `Float`,
+* all built-in types are available : `String`, `Int`, `Float`,
   `Boolean`, `Date`, `Datetime`, `Time`, `Byte`.
 
-* Chaque type d'entité a au moins les méta-relations suivantes :
+* each entity type has at least the following meta-relations :
 
   - `eid` (`Int`)
   
@@ -32,181 +32,175 @@ par exemple ::
   
   - `modification_date` (`Datetime`)
   
-  - `created_by` (`EUser`) (quel utilisateur a créé l'entité)
+  - `created_by` (`EUser`) (which user created the entity)
   
-  - `owned_by` (`EUser`) (à qui appartient l'entité, par défaut le
-     créateur mais pas forcément et il peut exister plusieurs propriétaires)
+  - `owned_by` (`EUser`) (who does the entity belongs to, by default the 
+     creator but not necessarry and it could have multiple owners)
      
   - `is` (`EEType`)
 
   
-* il est également possible de définir des relations dont le type d'entité est
-  l'objet en utilisant `ObjectRelation` plutôt que `SubjectRelation`
+* it is also possible to define relations of type object by using `ObjectRelation`
+  instead of `SubjectRelation`
 
-* le premier argument de `SubjectRelation` et `ObjectRelation` donne
-  respectivement le type d'entité objet /sujet de la relation. Cela
-  peut être : 
+* the first argument of `SubjectRelation` and `ObjectRelation` gives respectively
+  the object/subject entity type of the relation. This could be :  
 
-  * une chaine de caractères correspondant à un type d'entité
+  * a string corresponding to an entity type
 
-  * un tuple de chaines de caractères correspondant à plusieurs types d'entité
+  * a tuple of string correponding to multiple entities types
 
-  * les chaînes de caractères spéciales suivantes :
+  * special string such as follows :
 
-    - "**" : tout les types d'entité
-    - "*" : tout les types d'entité non méta
-    - "@" : tout les types d'entité méta mais non "système" (i.e. servant à la
-      description du schema en base)
+    - "**" : all types of entities
+    - "*" : all types of non-meta entities 
+    - "@" : all types of meta entities but not system entities (e.g. used for
+      the basic schema description)
 
-* il est possible d'utiliser l'attribut possible `meta` pour marquer un type
-  d'entité comme étant "méta" (i.e. servant à décrire / classifier d'autre
-  entités) 
+* it is possible to use the attribute `meta` to flag an entity type as a `meta`
+  (e.g. used to describe/categorize other entities)
 
-* propriétés optionnelles des attributs et relations : 
+* optional properties for attributes and relations : 
 
-  - `description` : chaine de caractères décrivant un attribut ou une
-    relation. Par défaut cette chaine sera utilisée dans le formulaire de saisie
-    de l'entité, elle est donc destinée à aider l'utilisateur final et doit être
-    marquée par la fonction `_` pour être correctement internationalisée.
+  - `description` : string describing an attribute or a relation. By default
+    this string will be used in the editing form of the entity, which means
+    that it is supposed to help the end-user and should be flagged by the
+    function `_` to be properly internationalized.
 
-  - `constraints` : liste de contraintes devant être respecté par la relation
-    (c.f. `Contraintes`_)
+  - `constraints` : list of conditions/constraints that the relation needs to
+    satisfy (c.f. `Contraints`_)
 
-  - `cardinality` : chaine de 2 caractères spécifiant la cardinalité de la
-    relation. Le premier caractère donne la cardinalité de la relation sur le
-    sujet, le 2eme sur l'objet. Quand une relation possède plusieurs sujets ou
-    objets possibles, la cardinalité s'applique sur l'ensemble et non un à un (et
-    doit donc à priori être cohérente...). Les valeurs possibles sont inspirées
-    des expressions régulières :
+  - `cardinality` : two characters string which specify the cardinality of the
+    relation. The first character defines the cardinality of the relation on
+    the subject, the second on the object of the relation. When a relation
+    has multiple possible subjects or objects, the cardinality applies to all
+    and not on a one to one basis (so it must be consistent...). The possible
+    values are inspired from regular expressions syntax :
 
     * `1`: 1..1
     * `?`: 0..1
     * `+`: 1..n
     * `*`: 0..n
 
-  - `meta` : booléen indiquant que la relation est une méta relation (faux par
-    défaut)
+  - `meta` : boolean indicating that the relation is a meta-relation (false by
+    default)
 
-* propriétés optionnelles des attributs : 
+* optionnal properties for attributes : 
 
-  - `required` : booléen indiquant si l'attribut est obligatoire (faux par
-    défaut)
+  - `required` : boolean indicating if the attribute is required (false by default)
 
-  - `unique` : booléen indiquant si la valeur de l'attribut doit être unique
-    parmi toutes les entités de ce type (faux par défaut)
+  - `unique` : boolean indicating if the value of the attribute has to be unique
+    or not within all entities of the same type (false by default)
 
-  - `indexed` : booléen indiquant si un index doit être créé dans la base de
-    données sur cette attribut (faux par défaut). C'est utile uniquement si vous
-    savez que vous allez faire de nombreuses recherche sur la valeur de cet
-    attribut. 
+  - `indexed` : boolean indicating if an index needs to be created for this 
+    attribute in the database (false by default). This is usefull only if
+    you know that you will have to run numerous searches on the value of this
+    attribute.
 
-  - `default` : valeur par défaut de l'attribut. A noter que dans le cas des
-    types date, les chaines de caractères correspondant aux mots-clés RQL
-    `TODAY` et `NOW` sont utilisables.
+  - `default` : default value of the attribute. In case of date types, the values
+    which could be used correpond to the RQL keywords `TODAY` and `NOW`.
+  
+  - `vocabulary` : specify static possible values of an attribute
 
-  - `vocabulary` : spécifie statiquement les valeurs possibles d'un attribut
+* optionnal properties of type `String` : 
 
-* propriétés optionnelles des attributs de type `String` : 
+  - `fulltextindexed` : boolean indicating if the attribute is part of
+    the full text index (false by default) (*applicable on the type `Byte`
+    as well*)
 
-  - `fulltextindexed` : booléen indiquant si l'attribut participe à l'index plein
-    texte (faux par défaut) (*valable également sur le type `Byte`*)
+  - `internationalizable` : boolean indicating if the value of the attribute
+    is internationalizable (false by default)
 
-  - `internationalizable` : booléen indiquant si la valeur de cet attribut est
-    internationalisable (faux par défaut) 
+  - `maxsize` : integer providing the maximum size of the string (no limit by default)
 
-  - `maxsize` : entier donnant la taille maximum de la chaine (pas de limite par
-    défaut)  
+* optionnal properties for relations : 
 
-* propriétés optionnelles des relations : 
+  - `composite` : string indicating that the subject (composite == 'subject')
+    is composed of the objects of the relations. For the opposite case (when
+    the object is composed of the subjects of the relation), we just need
+    to set 'object' as the value. The composition implies that when the relation
+    is deleted (so when the composite is deleted), the composed are also deleted.
 
-  - `composite` : chaîne indiquant que le sujet (composite == 'subject') est
-    composé de ou des objets de la relation. Pour le cas opposé (l'objet est
-    composé de ou des sujets de la relation, il suffit de mettre 'object' comme
-    valeur. La composition implique que quand la relation est supprimé (et donc
-    aussi quand le composite est supprimé), le ou les composés le sont
-    également. 
+Contraints
+``````````
+By default, the available constraints types are :
 
-Contraintes
-```````````
-Par défaut les types de contraintes suivant sont disponibles :
+* `SizeConstraint` : allows to specify a minimum and/or maximum size on
+  string (generic case of `maxsize`)
 
-* `SizeConstraint` : permet de spécifier une taille minimale et/ou maximale sur
-  les chaines de caractères (cas générique de `maxsize`)
+* `BoundConstraint` : allows to specify a minimum and/or maximum value on 
+  numeric types
 
-* `BoundConstraint` : permet de spécifier une valeur minimale et/ou maximale sur
-  les types numériques
+* `UniqueConstraint` : identical to "unique=True"
 
-* `UniqueConstraint` : identique à "unique=True"
+* `StaticVocabularyConstraint` : identical to "vocabulary=(...)"
 
-* `StaticVocabularyConstraint` : identique à "vocabulary=(...)"
+* `RQLConstraint` : allows to specify a RQL query that needs to be satisfied
+  by the subject and/or the object of the relation. In this query the variables
+  `S` and `O` are reserved for the entities subject and object of the 
+  relation.
 
-* `RQLConstraint` : permet de spécifier une requête RQL devant être satisfaite
-  par le sujet et/ou l'objet de la relation. Dans cette requête les variables `S`
-  et `O` sont préféfinies respectivement comme l'entité sujet et objet de la
-  relation
-
-* `RQLVocabularyConstraint` : similaire à la précédente, mais exprimant une
-  contrainte "faible", i.e. servant uniquement à limiter les valeurs apparaissant
-  dans la liste déroulantes du formulaire d'édition, mais n'empêchant pas une
-  autre entité d'être séléctionnée
+* `RQLVocabularyConstraint` : similar to the previous type of constraint except
+  that it does not express a "strong" constraint, which means it is only used to
+  restrict the values listed in the drop-down menu of editing form, but it does
+  not prevent another entity to be selected
 
 
-Définition d'un type de relation
---------------------------------
+Relation type definition
+------------------------
 
-Un type de relation est définit par une classe python héritant de `RelationType`. Le
-nom de la classe correspond au nom du type. Ensuite le corps de la classe
-contient la description des propriétés de ce type de relation, ainsi
-qu'éventuellement une chaine pour le sujet et une autre pour l'objet permettant
-de créer des définitions de relations associées (auquel cas il est possibles de
-donner sur la classe les propriétés de définition de relation explicitées
-ci-dessus), par exemple ::
+A relation is defined by a Python class heriting `RelationType`. The name
+of the class corresponds to the name of the type. The class then contains
+a description of the properties of this type of relation, and could as well 
+contains a string for the subject and a string for the object. This allows to create
+new definition of associated relations, (so that the class can have the 
+definition properties from the relation) by example ::
 
-  class verrouille_par(RelationType):
-    """relation sur toutes les entités applicatives indiquant que celles-ci sont vérouillées
+  class locked_by(RelationType):
+    """relation on all entities indicating that they are locked"""
     inlined = True
     cardinality = '?*'
     subject = '*'
     object = 'EUser'
 
-En plus des permissions, les propriétés propres aux types de relation (et donc
-partagés par toutes les définitions de relation de ce type) sont :
-
-* `inlined` : booléen contrôlant l'optimisation physique consistant à stocker la
-  relation dans la table de l'entité sujet au lieu de créer une table spécifique
-  à la relation. Cela se limite donc aux relations dont la cardinalité
-  sujet->relation->objet vaut 0..1 ('?') ou 1..1 ('1')
-
-* `symetric` : booléen indiquant que la relation est symétrique. i.e.
-  `X relation Y` implique `Y relation X`
-
-Dans le cas de définitions de relations simultanée, `sujet` et `object` peuvent
-tout deux valoir la même chose que décrite pour le 1er argument de
-`SubjectRelation` et `ObjectRelation`.
-
-A partir du moment où une relation n'est ni mise en ligne, ni symétrique, et
-ne nécessite pas de permissions particulières, sa définition (en utilisant
-`SubjectRelation` ou `ObjectRelation`) est suffisante.
+In addition to the permissions, the properties of the relation types
+(shared also by all definition of relation of this type) are :
 
 
-Définition des permissions
---------------------------
+* `inlined` : boolean handling the physical optimization for archiving
+  the relation in the subject entity table, instead of creating a specific
+  table for the relation. This applies to the relation when the cardinality
+  of subject->relation->object is 0..1 (`?`) or 1..1 (`1`)
 
-La définition des permissions se fait à l'aide de l'attribut `permissions` des
-types d'entité ou de relation. Celui-ci est un dictionnaire dont les clés sont
-les types d'accès (action), et les valeurs les groupes ou expressions autorisées. 
+* `symetric` : boolean indication that the relation is symetrical, which
+  means `X relation Y` implies `Y relation X`
 
-Pour un type d'entité, les actions possibles sont `read`, `add`, `update` et
+In the case of simultaneous relations definitions, `subject` and `object`
+can both be equal to the value of the first argument of `SubjectRelation`
+and `ObjectRelation`.
+
+When a relation is not inlined and not symetrical, and it does not require
+specific permissions, its definition (by using `SubjectRelation` and
+`ObjectRelation`) is all we need.
+
+Permissions definition
+----------------------
+
+Define permissions is set through to the attribute `permissions` of entities and
+relations types. It defines a dictionnary where the keys are the access types
+(action), and the values are the authorized groups or expressions.
+
+For an entity type, the possible actions are `read`, `add`, `update` and
 `delete`.
 
-Pour un type de relation, les actions possibles sont `read`, `add`, et `delete`.
+For a relation type, the possible actions are `read`, `add`, and `delete`.
 
-Pour chaque type d'accès, un tuple indique le nom des groupes autorisés et/ou
-une ou plusieurs expressions RQL devant être vérifiées pour obtenir
-l'accès. L'accès est donné à partir du moment où l'utilisateur fait parti d'un
-des groupes requis ou dès qu'une expression RQL est vérifiée.
+For each access type, a tuple indicates the name of the authorized groups and/or
+one or multiple RQL expressions to satisfy to grant access. The access is
+provided once the user is in the listed groups or one of the RQL condition is
+satisfied.
 
-Les groupes standards sont :
+The standard groups are :
 
 * `guests`
 
@@ -214,59 +208,55 @@ Les groupes standards sont :
 
 * `managers`
 
-* `owners` : groupe virtuel correspondant au propriétaire d'une entité. Celui-ci
-  ne peut être utilisé que pour les actions `update` et `delete` d'un type
-  d'entité. 
+* `owners` : virtual group corresponding to the entity's owner.
+  This can only be used for the actions `update` and `delete` of an entity
+  type.
 
-Il est également possible d'utiliser des groupes spécifiques devant être pour
-cela créés dans le precreate de l'application (`migration/precreate.py`).
+It is also possible to use specific groups if they are define in the precreate 
+of the application (``migration/precreate.py``).
 
-Utilisation d'expression RQL sur les droits en écriture
-```````````````````````````````````````````````````````
-Il est possible de définir des expressions RQL donnant des droits de
-modification (`add`, `delete`, `update`) sur les types d'entité et de relation.
+Use of RQL expression for writing rights
+````````````````````````````````````````
+It is possible to define RQL expression to provide update permission 
+(`add`, `delete` and `update`) on relation and entity types.
 
-Expression RQL pour les permissions sur un type d'entité :
+RQL expression for entity type permission :
 
-* il faut utiliser la classe `ERQLExpression`
+* you have to use the class `ERQLExpression`
 
-* l'expression utilisée correspond à la clause WHERE d'une requête RQL
+* the used expression corresponds to the WHERE statement of an RQL query
 
-* dans cette expression, les variables X et U sont des références prédéfinies
-  respectivement sur l'entité courante (sur laquelle l'action est vérifiée) et
-  sur l'utilisateur ayant effectué la requête
+* in this expression, the variables X and U are pre-defined references
+  respectively on the current entity (on which the action is verified) and
+  on the user who send the request
 
-* il est possible d'utiliser dans cette expression les relations spéciales
-  "has_<ACTION>_permission" dont le sujet est l'utilisateur et l'objet une
-  variable quelquonque, signifiant ainsi que l'utilisateur doit avoir la
-  permission d'effectuer l'action <ACTION> sur la ou les entités liées cette
-  variable
+* it is possible to use, in this expression, a special relation 
+  "has_<ACTION>_permission" where the subject is the user and the 
+  object is a any variable, meaning that the user needs to have
+  permission to execute the action <ACTION> on the entities related
+  to this variable 
 
-Pour les expressions RQL sur un type de relation, les principes sont les mêmes
-avec les différences suivantes :
+For RQL expressions on a relation type, the principles are the same except 
+for the following :
 
-* il faut utiliser la classe `RRQLExpression` dans le cas d'une relation non
-  finale
+* you have to use the class `RQLExpression` in the case of a non-final relation
 
-* dans cette expression, les variables S, O et U sont des références
-  prédéfinies respectivement sur le sujet et l'objet de la relation
-  courante (sur laquelle l'action est vérifiée) et sur l'utilisateur
-  ayant effectué la requête
+* in the expression, the variables S, O and U are pre-defined references
+  to respectively the subject and the object of the current relation (on
+  which the action is being verified) and the user who executed the query
 
-* On peut aussi définir des droits sur les attributs d'une entité (relation non
-  finale), sachant les points suivants :
+* we can also defined rights on attributes of an entity (non-final relation),
+  knowing that : 
 
-  - pour définir des expressions rql, il faut utiliser la classe `ERQLExpression`
-    dans laquelle X représentera l'entité auquel appartient l'attribut
+  - to defines RQL expression, we have to use the class `ERQLExpression`
+    in which X represents the entity the attribute belongs to
 
-  - les permissions 'add' et 'delete' sont équivalentes. En pratique seul
-    'add'/'read' son pris en considération
+  - the permissions `add` and `delete` are equivalent. Only `add`/`read`
+    are actually taken in consideration.
 
-
-En plus de cela, le type d'entité `EPermission` de la librairie standard permet
-de construire des modèles de sécurités très complexes et dynamiques. Le schéma
-de ce type d'entité est le suivant : ::
-
+In addition to that the entity type `EPermission` from the standard library
+allow to build very complex and dynamic security architecture. The schema of
+this entity type is as follow : ::
 
     class EPermission(MetaEntityType):
 	"""entity type that may be used to construct some advanced security configuration
@@ -283,7 +273,8 @@ de ce type d'entité est le suivant : ::
 							  "definition of the entity's type to be useful."))
 
 
-Exemple de configuration extrait de *jpl* ::
+Example of configuration ::
+
 
     ...
 
@@ -311,38 +302,37 @@ Exemple de configuration extrait de *jpl* ::
 		       }
 	inlined = True
 
-Cette configuration suppose indique qu'une entité `EPermission` de nom
-"add_version" peut-être associée à un projet et donner le droit de créer des
-versions sur ce projet à des groupes spécifiques. Il est important de noter les
-points suivants :
+This configuration indicates that an entity `EPermission` named
+"add_version" can be associated to a project and provides rights to create
+new versions on this project to specific groups. It is important to notice that :
 
-* dans ce cas il faut protéger à la fois le type d'entité "Version" et la
-  relation liant une version à un projet ("version_of")
+* in such case, we have to protect both the entity type "Version" and the relation
+  associating a version to a project ("version_of")
 
-* du fait de la généricité du type d'entité `EPermission`, il faut effectuer
-  l'unification avec les groupes et / ou les états le cas échéant dans
-  l'expression ("U in_group G, P require_group G" dans l'exemple ci-dessus)
+* because of the genricity of the entity type `EPermission`, we have to execute
+  a unification with the groups and/or the states if necessary in the expression
+  ("U in_group G, P require_group G" in the above example)
+
+Use of RQL expression for reading rights
+````````````````````````````````````````
+
+The principles are the same but with the following restrictions :
+
+* we can not use `RRQLExpression` on relation types for reading
+
+* special relations "has_<ACTION>_permission" can not be used
 
 
-Utilisation d'expression RQL sur les droits en lecture
+Note on the use of RQL expression for `add` permission
 ``````````````````````````````````````````````````````
-Les principes sont les mêmes mais avec les restrictions suivantes :
-
-* on ne peut de `RRQLExpression` sur les types de relation en lecture
-
-* les relations spéciales "has_<ACTION>_permission" ne sont pas utilisables
-
-
-Note sur l'utilisation d'expression RQL sur la permission 'add'
-```````````````````````````````````````````````````````````````
-L'utilisation d'expression RQL sur l'ajout d'entité ou de relation pose
-potentiellement un problème pour l'interface utilisateur car si l'expression
-utilise l'entité ou la relation à créer, on est pas capable de vérifier les
-droits avant d'avoir effectué l'ajout (noter que cela n'est pas un problème coté
-serveur rql car la vérification des droits est effectuée après l'ajout
-effectif). Dans ce cas les méthodes de vérification des droits (check_perm,
-has_perm) peuvent inidquer qu'un utilisateur n'a pas le droit d'ajout alors
-qu'il pourrait effectivement l'obtenir. Pour palier à ce soucis il est en général
-nécessaire dans tel cas d'utiliser une action reflétant les droits du schéma
-mais permettant de faire la vérification correctement afin qu'elle apparaisse
-bien le cas échéant.
+Potentially, the use of an RQL expression to add an entity or a relation
+can cause problems for the user interface, because if the expression uses
+the entity or the relation to create, then we are not able to verify the 
+permissions before we actually add the entity (please note that this is
+not a problem for the RQL server at all, because the permissions checks are
+done after the creation). In such case, the permission check methods 
+(check_perm, has_perm) can indicate that the user is not allowed to create 
+this entity but can obtain the permission. 
+To compensate this problem, it is usually necessary, for such case,
+to use an action that reflects the schema permissions but which enables
+to check properly the permissions so that it would show up if necessary.

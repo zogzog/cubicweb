@@ -1,70 +1,71 @@
 .. -*- coding: utf-8 -*-
 
-Schémas prédéfinies dans la librairie
--------------------------------------
+Pre-defined schemas in the library
+----------------------------------
 
-La librairie définit un certain nombre de schémas d'entités nécessaires
-au système ou bien couramment utilisées dans les application `cubicweb`.
-Vous pouvez bien entendu étendre ces schémas au besoin.
-
-
-Schémas "systèmes"
-``````````````````
-
-* `EUser`, utilisateurs du système
-* `EGroup`, groupes d'utilisateurs
-* `EEType`, types d'entité
-* `ERType`, types de relation
-
-* `State`, état d'un workflow
-* `Transition`, transition d'un workflow
-* `TrInfo`, enregistrement d'un passage de transition pour une entité
-
-* `EmailAddress`, adresse électronique, utilisé par le système de notification
-  pour les utilisateurs et par d'autres schéma optionnels
-
-* `EProperty`, utilisé pour configurer l'application
-* `EPermission`, utilisé pour configurer la sécurité de l'application
-
-* `Card`, fiche documentaire générique
-* `Bookmark`, un type d'entité utilisé pour permetter à un utilisateur de
-  personnaliser ses liens de navigation dans l'application.
+The library defines a set of entities schemas that are required by the system
+or commonly used in `CubicWeb` applications.
+Of course, you can extend those schemas if necessarry.
 
 
-Composants de la librairie
-``````````````````````````
-Une application est construite sur la base de plusieurs composants de base.
-Parmi les composants de base disponible, on trouve par exemple :
+System schemas
+``````````````
+The system entities available are :
 
-* `ecomment`, fournit le type d'entité `Comment` permettant de commenter les
-  entités du site
+* `EUser`, system users
+* `EGroup`, users groups
+* `EEType`, entity type
+* `ERType`, relation type
+
+* `State`, workflow state
+* `Transition`, workflow transition
+* `TrInfo`, record of a transition trafic for an entity 
+
+* `EmailAddress`, email address, used by the system to send notifications
+  to the users and also used by others optionnals schemas
+
+* `EProperty`, used to configure the application
+* `EPermission`, used to configure the security of the application
+
+* `Card`, generic documenting card
+* `Bookmark`, an entity type used to allow a user to customize his links within
+  the application
+
+Cubes in the library
+````````````````````
+
+An application is based on several basic cubes. In the set of available
+basic cubes we can find by example :
+
+* `comment`, provides an entity type for `Comment` allowing us to comment others
+  site's entities
+
+* `mailinglist`, provides an entity type for `Mailinglist` which groups informations
+  in a discussion list
+
+* `file`, provides entity types for `File` et `Image` used to represent
+  files (text or binary) with additionnal informations such as MIME type or
+  encoding.
   
-* `emailinglist`, fournit le type d'entité `Mailinglist` regroupant des
-  informations sur une liste de discussion
+* `link`, provides an entity type for hypertext link (`Link`)
 
-* `efile`, fournit les types d'entités `File` et `Image` utilisés pour
-  représenter des fichiers (texte ou binaire) avec quelques données
-  supplémentaires comme le type MIME ou l'encodage le cas échéant ().
+* `blog`, provides an entity type weblog (`Blog`)
+
+* `person`, provides an entity type for a person (`Person`)
+
+* `addressbook`, provides an entity type used to represent phone 
+  numbers (`PhoneNumber`) and mailing address (`PostalAddress`)
   
-* `elink`, fournit le type d'entité lien internet (`Link`)
+* `classtags`, categorization system based on tags (`Tag`)
 
-* `eblog`, fournit le type d'entité weblog (`Blog`)
+* `classfolders`, categorization system based on folders hierarchy in order 
+  to create navigation sections (`Folder`)
 
-* `eperson`, fournit le type d'entité personne physique (`Person`)
-
-* `eaddressbook`, fournit les types d'entités utilisés pour représenter des n°
-  de téléphone (`PhoneNumber`) et des adresses postales (`PostalAddress`)
-  
-* `eclasstags`, système de classfication à base d'étiquettes (`Tag`)
-
-* `eclassfolders`, système de classification à base de dossiers hiérarchiques
-  destinés à créer des rubriques de navigation (`Folder`)
-
-* `eemail`, gestion d'archives de courriers électroniques (`Email`, `Emailpart`,
+* `email`, archiving management for emails (`Email`, `Emailpart`,
   `Emailthread`)
 
-* `ebasket`, gestion de paniers (`Basket`) permettant de regrouper des entités
+* `basket`, basket management (`Basket`) allowing to group entities
 
-Pour déclarer l'utilisation d'un composant, une fois celui-ci installé, ajoutez
-le nom du composant à la variable `__use__` du fichier `__pkginfo__.py` de
-votre propre composant.
+To declare the use of a component, once installed, add the name of the component
+to the variable `__use__` in the file `__pkginfo__.py` of your own component.
+

@@ -1,20 +1,21 @@
 .. -*- coding: utf-8 -*-
 
-Définition du modèle de données (*schéma*)
-==========================================
+Data model definition (*schema*)
+================================
 
-Le schéma est l'élément central d'une application d'CubicWeb, définissant le modèle
-de données manipulé. Il est généralement défini à partir de type d'entités
-existants dans la librairie et d'autres spécifiques, généralement décrites dans
-un ou plusieurs fichiers python dans le sous-répertoire `schema` du modèle.
+The schema is the core piece of a `CubicWeb` application as it defines
+the data model handled. It is based on entities types already defined
+in the `CubicWeb` standard library and others, more specific, we would 
+expect to find in one or more Python files under the `schema` directory.
 
-A ce niveau il est important de noter la différence entre type de relation et
-définition de relation : un type de relation est uniquement un nom de relation
-avec éventuellement quelques propriétés supplémentaires (voir plus bas), alors
-qu'une définition de relation est un triplet complet "<type d'entité sujet>
-<type de relation> <type d'entité objet>". Eventuellement un type de relation
-sera créé implicitement si aucun n'est associé à une définition de relation du
-schema.
+At this point, it is important to make clear the difference between
+relation type and relation definition: a relation type is only a relation
+name with potentially other additionnal properties (see XXXX), whereas a 
+relation definition is a complete triplet 
+"<subject entity type> <relation type> <object entity type>". 
+A relation type could have been implied if none is related to a 
+relation definition of the schema.
+
 
 .. include:: 04-01-schema-stdlib.en.txt
 .. include:: 04-02-schema-definition.en.txt
