@@ -2,72 +2,67 @@
 
 .. _DefinitionVues:
 
-Définition de vues
-==================
+Views definition
+================
 
-Les classes de base des vues
+Basic class for views
+---------------------
+
+Class `View` (`cubicweb.common.view`)
+`````````````````````````````````````
+
+A view writes in its output exit thanks to its attribute `w` (`UStreamIO`).
+
+The basic interface for views is as follows:
+
+* `dispatch(**context)`, render the view by calling `call` or
+  `cell_call` depending on the given parameters
+* `call(**kwargs)`, call the view for a complete result set or null
+* `cell_call(row, col, **kwargs)`, call the view for a given cell of a result set
+* `url()`, returns the URL enabling us to get the view with the current
+  result set 
+* `view(__vid, rset, __fallback_vid=None, **kwargs)`, call the view of identifier 
+  `__vid` on the given result set. It is possible to give a view identifier
+  of fallback that will be used if the view requested is not applicable to the
+  result set
+  
+* `wview(__vid, rset, __fallback_vid=None, **kwargs)`, similar to `view` except
+  the flow is automatically passed in the parameters
+  
+* `html_headers()`, returns a list of HTML headers to set by the main template
+
+* `page_title()`, returns the title to use in the HTML header `title`
+
+* `creator(eid)`, returns the eid and the login of the entity creator of the entity
+  having the eid given in the parameter 
+
+Other basic classes:
+
+* `EntityView`, view applying to lines or cell containing an entity (e.g. an eid)
+* `StartupView`, start view that does not require a result set to apply to
+* `AnyRsetView`, view applied to any result set 
+
+
+The selection view principle
 ----------------------------
 
-La class `View` (`cubicweb.common.view`)
-````````````````````````````````````````
-Un vue écrit dans son flux de sortie via son attribut `w` (`UStreamIO`).
-
-L'interface de base des vues est la suivante :
-
-* `dispatch(**context)`, appelle ("rend") la vue en appellent `call` ou
-  `cell_call` en fonction des arguments passé
-* `call(**kwargs)`, appelle la vue pour un result set complet ou nul
-* `cell_call(row, col, **kwargs)`, appelle la vue pour une cellule donnée d'un
-  result set
-* `url()`, retourne l'url permettant d'obtenir cette vue avec le result set en
-  cours 
-* `view(__vid, rset, __fallback_vid=None, **kwargs)`, appelle la vue
-  d'identificant `__vid` sur le result set donné. Il est possible de données un
-  identificant de vue de "fallback" qui sera utilisé si la vue demandée n'est
-  pas applicable au result set
-  
-* `wview(__vid, rset, __fallback_vid=None, **kwargs)`, pareil que `view` mais
-  passe automatiquement le flux en argument
-  
-* `html_headers()`, retourne une liste d'en-tête HTML à placer par le template
-  principal 
-
-* `page_title()`, retourne le titre à utiliser dans l'en tête HTML `title`
-
-* `creator(eid)`, retourne l'eid et le login du créateur de l'entité ayant
-  l'eid passé en argument
-
-Autres classes de base :
-
-* `EntityView`, vue s'appliquant à aux lignes ou cellule contenant une entité
-  (eg un eid)
-* `StartupView`, vue de départ n'ayant pas besoin de result set
-* `AnyRsetView`, vue s'appliquant à n'importe quelle result set
-
-Le mecanisme de selection de vues
----------------------------------
-
-Pour un identifiant de vue donne, plusieurs vues peuvent etre definies.
-`CubicWeb` utilise un selecteur qui permet de calculer un score et d'identifier
-la vue la plus appropriee a appliquer dans le contexte. La librairie du selecteur
-se trouve dans ``cubicweb.common.selector`` et une librairie des methodes utilisees
-pour calculer les scores est dans ``cubicweb.vregistry.vreq``.
-
-[FROM-LAX-BOOK]
-
-Tip: when modifying views, you do not need to restart the local 
-server. Just save the file in your editor and reload the page in your
-browser to see the changes.
-
-With `LAX`, views are defined by Python classes. A view includes :
+A view includes :
 
 - an identifier (all objects in `LAX` are entered in a registry
   and this identifier will be used as a key)
   
 - a filter to select the resulsets it can be applied to
 
-`LAX` provides a lot of standard views, for a complete list, you
-will have to read the code in directory ``ginco/web/views/`` (XXX
+
+For a given identifier, multiple views can be defined. `CubicWeb` uses
+a selector which computes scores so that it can identify and select the
+best view to apply in context. The selector library is in 
+``cubicweb.common.selector`` and a library of the methods used to
+compute scores is in ``cubicweb.vregistry.vreq``.
+
+
+`CubicWeb` provides a lot of standard views, for a complete list, you
+will have to read the code in directory ``cubicweb/web/views/`` (XXX
 improve doc).
 
 For example, the view named ``primary`` is the one used to display
@@ -143,7 +138,7 @@ now allows to read its description and all its entries.
    :alt: a blog and all its entries
 
 **Before we move forward, remember that the selection/view principle is
-at the core of `LAX`. Everywhere in the engine, data is requested
+at the core of `CubicWeb`. Everywhere in the engine, data is requested
 using the RQL language, then HTML/XML/text/PNG is output by applying a
 view to the resultset returned by the query. That is where most of the
 flexibility comes from.**
@@ -153,7 +148,7 @@ flexibility comes from.**
 * implementing interfaces, calendar for blog entries
 * show that a calendar view can export data to ical
 
-We will implement the ginco.interfaces.ICalendarable interfaces on
+We will implement the cubicwweb.interfaces.ICalendarable interfaces on
 entities.BloEntry and apply the OneMonthCalendar and iCalendar views
 to resultsets like "Any E WHERE E is BlogEntry"
 
@@ -171,77 +166,73 @@ we did the same with 'primary', but with tables we can turn on filters
 and show that ajax comes for free.
 [FILLME]
 
-Les templates ou patron
------------------------
 
-Les patrons (ou *template*) sont des cas particulier de vue ne dépendant a
-priori pas d'un result set. La classe de base `Template` (`cubicweb.common.view`)
-est une classe dérivée de la classe `View`.
+Templates
+---------
 
-Pour construire une page HTML, un *template principal* est utilisé. Généralement
-celui possédant l'identifiant 'main' est utilisé (ce n'est pas le cas lors
-d'erreur dans celui-ci ou pour le formulaire de login par exemple). Ce patron
-utilise d'autres patrons en plus des vues dépendants du contenu pour générer la
-page à renvoyer.
+*Templates* are specific view that does not depend on a result set. The basic
+class `Template` (`cubicweb.common.view`) is derived from the class `View`.
 
-C'est ce template qui est chargé :
+To build a HTML page, a *main template* is used. In general, the template of
+identifier `main` is the one (it is not used in case an error is raised or for
+the login form by example). This template uses other templates in addition
+to the views which depends on the content to generate the HTML page to return.
 
-1. d'éxécuter la requête RQL des données à afficher le cas échéant
-2. éventuellement de déterminer la vue à utiliser pour l'afficher si non
-   spécifiée
-3. de composer la page à retourner
+A *template* is responsible for:
+
+1. executing RQL query of data to render if necessarry
+2. identifying the view to use to render data if it is not specified
+3. composing the HTML page to return
 
 
-Le patron principal par défaut (`cubicweb.web.views.basetemplates.TheMainTemplate`)
------------------------------------------------------------------------------------
+The default main template (`cubicweb.web.views.basetemplates.TheMainTemplate`)
+------------------------------------------------------------------------------
 
-Le template principal par défaut construit la page selon la décomposition
-suivante :
+The default main template build the page based on the following pattern:
 
 .. image:: images/main_template_layout.png
 
-Le rectancle contenant le `view.dispatch()` représente l'emplacement où est
-inséré la vue de contenu à afficher. Les autres représentent des sous-templates
-appelé pour construire la page. Les implémentations par défaut de tout ces
-templates sont dans le module `cubicweb.web.views.basetemplates`. Vous pouvez
-évidemment surcharger l'un des sous-templates pour modifier l'aspect visuel
-d'une partie désirée de la page.
+The rectangle containing `view.dispathc()` represents the area where the content
+view has to be displayed. The others represents sub-templates called to complete
+the page. A default implementation of those is provided in 
+`cubicweb.views.basetemplates`. You can, of course, overload those sub-templates
+to implement your own customization of the HTML page.
 
-On peut également contrôler certains comportements du template principal à
-l'aide des paramètres de formulaire suivante :
+We can also control certain aspects of the main template thanks to the following
+forms parameters:
 
-* `__notemplate`, si présente (quelque soit la valeur associée), seule la vue de
-  contenu est renvoyée
-* `__force_display`, si présente et contient une valeur non nulle, pas de
-  navigation quelque soit le nombre d'entités à afficher
-* `__method`, si le result set à afficher ne contient qu'une entité et que ce
-  paramètre est spécifié, celui-ci désigne une méthode à appeler sur l'entité
-  en lui donnant en argument le dictionnaire des paramètres de formulaire, avant
-  de reprendre le comportement classique (s'insère entre les étapes 1. et
-  2. décrites ci-dessus)
-
+* `__notemplate`, if present (whatever the value assigned), only the content view
+  is returned
+* `__force_display`, if present and its value is not null, no navigation 
+  whatever the number of entities to display
+* `__method`, if the result set to render contains only one entity and this 
+  parameter is set, it refers to a method to call on the entity by passing it
+  the dictionnary of the forms parameters, before going the classic way (through
+  step 1 and 2 described juste above)
 
 .. include:: 05-01-views-stdlib.en.txt
 
 
-Vues xml, binaires...
----------------------
-Pour les vues générants autre que du html  (une image générée dynamiquement par
-exemple), et qui ne peuvent donc généralement pas être incluse dans la page
-HTML générée par le template principal (voir ci-dessus), il faut :
+XML views, binaries...
+----------------------
+For the views generating other formats that HTML (an image generated dynamically
+by example), and which can not usually be included in the HTML page generated
+by the main template (see above), you have to:
 
-* placer l'attribut `templatable` de la classe à `False`
-* indiquer via l'attribut `content_type` de la classe le type MIME généré par la
-  vue 'application/octet-stream'
+* set the atribute `templatable` of the class to `False`
+* set, through the attribute `content_type` of the class, the MIME type generated
+  by the view to `application/octet-stream`
 
-Pour les vues générants un contenu binaire (une image générée dynamiquement par
-exemple), il faut également placer l'attribut `binary` de la classe à `True` (ce
-qui implique `templatable == False` afin que l'attribut `w` de la vue soit
-remplacé par un flux binaire plutôt que unicode.
+For the views dedicated to binary content creation (an image dynamically generated
+by example), we have to set the attribute `binary` of the class to `True` (which
+implies that `templateable == False`, so that the attribute `w` of the view could be
+replaced by a binary flow instead of unicode).
 
+(X)HTML tricks to apply
+-----------------------
 
-Quelques trucs (X)HTML à respecter
-----------------------------------
-Certains navigateurs (dont firefox) n'aime pas les `<div>` vides (par vide
-j'entend sans contenu dans la balise, il peut y avoir des attributs), faut
-toujours mettre `<div></div>` même s'il n'y a rien dedans, et non `<div/>`. 
+Some web browser (Firefox by example) are not happy with empty `<div>`
+(by empty we mean that there is no content in the tag, but there
+could be attributes), so we should always use `<div></div>` even if
+it is empty and not use `<div/>`.
+

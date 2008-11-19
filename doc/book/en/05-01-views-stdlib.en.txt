@@ -1,65 +1,65 @@
 .. -*- coding: utf-8 -*-
 
-Vues prédéfinies dans la librairie
-----------------------------------
-Un certain nombre de vues sont utilisées pour construire l'interface web, qui
-s'appliquent à une ou plusieurs entités. On les distingue par leur identifiant,
-et les principales sont : 
+Predefined views in the library
+-------------------------------
+
+A certain number of views are used to build the web interface, which apply
+to one or more entities. Their identifier is what distinguish them from
+each others and the main ones are:
 
 :primary:
-    vue principale pour une entité, elle est appelée par défaut lorsqu'il n'y a
-    qu'un seul élément correspondant à la recherche. Cette vue est censée
-    afficher le maximum d'informations à propos de l'objet.
+    primary view of an entity, this is the view called by default when a single
+    entity is in the result set and needs to be displayed. This view is supposed
+    to render a maximum of informations about the entity.
 :secondary:
-    vue secondaire d'une entité. Par défaut, Elle affiche les deux premiers
-    attributs de l'entité sous la forme d'un lien cliquable amenant sur la vue
-    primaire.
+    secondary view of an entity. By default it renders the two first attributes
+     of the entity as a clickable link redirecting to the primary view.
 :oneline:
-    similaire à la vue `secondary`, mais appelée dans des cas où l'on désire que
-    la vue tient sur une ligne, ou de manière générale juste avoir une vue plus
-    abbrégée. Par défaut, cette vue utilise le paramètre de configuration
-    `MAX_LINE_CHAR` pour contrôler la taille du résultat.
+    similar to the `secondary` view, but called when we want the view to stand
+    on a single line, or just get a brief view. By default this view uses the
+    parameter `MAX_LINE_CHAR` to control the result size.
 :text:
-    similaire à la vue `oneline`, mais ne devant pas contenir de html.
+    similar to the `oneline` view, but should not contain HTML.
 :incontext, outofcontext:
-    similaire à la vue `secondary`, mais appelé si l'entité est considérée comme
-    en dehors ou dans son contexte. Par défault renvoie respectivement le
-    résultat de `textincontext` et `textoutofcontext` entouré par un lien
-    permettant d'accéder à la vue primaire de l'entité
+    similar to the `secondary` view, but called when an entity is considered
+    as in or out of context. By default it respectively returns the result of 
+    `textincontext` and `textoutofcontext` wrapped in a link leading to 
+    the primary view of the entity.
 :textincontext, textoutofcontext:
-    similaire à la vue `text`, mais appelé si l'entité est considérée comme
-    en dehors ou dans son contexte. Par défault renvoie respectivement le
-    résultat des méthodes `.dc_title` et `.dc_long_title` de l'entité
+    similar to the `text` view, but called is an entity is considered out or
+    in context. By default it returns respectively the result of the 
+    methods `.dc_title` and `.dc_long_title` of the entity.
 :list:
-    crée une liste html (<ul>) et appelle la vue `listitem` pour chaque entité
+    creates a HTML list (`<ul>`) and call the view `listitem` for each entity
+    of the result set
 :listitem:
-    redirige par défaut vers la vue `outofcontext`
+    redirects by default to the `outofcontext` view
 :rss:
-    crée unvue RSS/XML et appelle la vue `rssitem` pour chaque entité
+    creates a RSS/XML view and call the view `rssitem` for each entity of
+    the result set
 :rssitem:
-    crée unvue RSS/XML pour une entité à partir des résultats renvoyés par les
-    méthodes dublin core de l'objet (`dc_*`)
+    create a RSS/XML view for each entity based on the results of the dunblin core
+    methods of the entity (`dc_*`)
 
-Vues de départ :
+Start view:
 
 :index:
-    page d'acceuil
+    home page
 :schema:
-    affiche le schéma de l'application
+    display the schema of the application
 
-Vues particulières :
+Special views:
 
 :noresult:
-    appelé si le result set est vide
+    called if the result set is empty
 :finall:
-    affiche la valeur de la cellule sans transformation (dans le cas d'une
-    entité non finale, on voit son eid). Appelable sur n'importe quel result
-    set.
+    display the value of a cell without trasnformation (in case of a non final
+    entity, we see the eid). Applicable on any result set.
 :table:
-    crée une table html (<table>) et appelle la vue `cell` pour chaque cellule
-    du résultat. Appelable sur n'importe quel result set.
+    creates a HTML table (`<table>`) and call the view `cell` for each cell of
+    the result set. Applicable on any result set.
 :cell:
-    par défaut redirige sur la vue `final` si c'est une entité finale
-    ou sur la vue `outofcontext` sinon
+    by default redirects to the `final` view if this is a final entity or
+    `outofcontext` view otherwise
 :null:
-    vue toujours appelable et ne retournant rien
+    view always applicable and which does not return anything
