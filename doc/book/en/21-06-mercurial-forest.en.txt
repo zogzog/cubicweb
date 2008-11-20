@@ -1,0 +1,52 @@
+.. -*- coding: utf-8 -*-
+
+.. _MercurialForestInstall:
+
+Installation of `CubicWeb` with Mercurial
+=========================================
+
+`CubicWeb` is available as a Mercurial repository using the forest extension.
+First make sure Mercurial is installed and that the forest extension is
+available.
+
+Mercurial installation
+``````````````````````
+
+Please refer to the project online documentation Mercurial_.
+
+.. _Mercurial: http://www.selenic.com/mercurial/wiki/
+
+We also provide in this book a quick guide on how to use
+Mercurial (:ref:`MercurialPresentation`).
+
+
+Installation of the forest extension
+````````````````````````````````````
+
+Set up the forest extension by getting a copy of the sources 
+from http://hg.akoha.org/hgforest/ and adding the following 
+lines to your ``~/.hgrc``: ::
+
+   [extensions]
+   hgext.forest=
+   # or, if forest.py is not in the hgext dir:
+   # forest=/path/to/forest.py
+
+Get `CubicWeb` source code
+``````````````````````````
+
+Clone the forest in you working directory.
+
+::
+
+  hg fclone http://www.logilab.org/hg/forests/cubicweb
+
+.. note:: 
+  We recommand you to create a symbolic link to the command ``cubicweb-ctl``
+  as you will use it pretty often.
+
+  ::
+    
+    $ ln -s /path/to/forest/cubicweb/bin/cubicweb-ctl ~/bin
+
+

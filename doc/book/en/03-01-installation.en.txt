@@ -6,48 +6,47 @@ Installation
 Installation of `Cubicweb` and its dependancies
 -----------------------------------------------
 
-`CubicWeb` is available as a Mercurial repository using the forest extension.
-First make sure Mercurial is installed and that the forest extension is
-available.
+`CubicWeb` is available as a debian package as well as an archive.
+We will detail here the two easiest way to set-up `CubciWeb` 
+environment.
 
-Mercurial installation
-``````````````````````
+Debian packages
+```````````````
+You need first to make sure that you added our public repository
+in the list of sources you packages manager will search in.
 
-Please refer to the project online documentation Mercurial_.
-.. _Mercurial: http://www.selenic.com/mercurial/wiki/
+Depending on the debian distribution you are using here are all the
+available options: ::
 
-We also provide in this book a quick guide on how to use
-Mercurial (:ref:`Mercurial`).
+  deb http://ftp.logilab.org/dists/ lenny/
+  deb http://ftp.logilab.org/dists/ hardy/
+  deb http://ftp.logilab.org/dists/ sid/
+
+As we assume you are installing `CubciWeb` on a debian machine, please
+add the appropriate line from above in ``/etc/apt/sources.list``.
+
+You can now install the required packages with the follwoing command: ::
+
+  apt-get install cubicweb
+
+This is it!
+
+``tar.gz`` archive
+``````````````````
+
+You can download our sources at: ::
+
+  http://ftp.logilab.org/pub/cubicweb/
+
+Unpack the sources
 
 
-Installation of the forest extension
-````````````````````````````````````
 
-Set up the forest extension by getting a copy of the sources 
-from http://hg.akoha.org/hgforest/ and adding the following 
-lines to your ``~/.hgrc``: ::
 
-   [extensions]
-   hgext.forest=
-   # or, if forest.py is not in the hgext dir:
-   # forest=/path/to/forest.py
+.. note::
+  `CubicWeb` is also available as a Mercurial repository using the forest
+  extension (see :ref:`MercurialForestInstall` for more details).
 
-Get `CubicWeb` source code
-``````````````````````````
-
-Clone the forest in you working directory.
-
-::
-
-  hg fclone http://www.logilab.org/hg/forests/cubicweb
-
-.. note:: 
-  We recommand you to create a symbolic link to the command ``cubicweb-ctl``
-  as you will use it pretty often.
-
-  ::
-    
-    $ ln -s /path/to/forest/cubicweb/bin/cubicweb-ctl ~/bin
 
 Postgres installation
 `````````````````````
