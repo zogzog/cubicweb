@@ -1,0 +1,9 @@
+.. -*- coding: utf-8 -*-
+
+The Registry
+============
+
+[WRITE ME]
+
+* talk about the vreg singleton, appobjects, registration and selection
+

@@ -1,0 +1,9 @@
+.. -*- coding: utf-8 -*-
+
+Templates
+=========
+
+[WRITE ME]
+
+* talk about main templates, etc.
+

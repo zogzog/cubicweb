@@ -16,5 +16,5 @@ type could have been implied if none is related to a relation definition of the
 schema.
 
 
-.. include:: 03-sect-stdlib-schemas.en.txt
-.. include:: 03-sect-definition-schema.en.txt
+.. include:: 03-10-stdlib-schemas.en.txt
+.. include:: 03-11-definition-schema.en.txt
