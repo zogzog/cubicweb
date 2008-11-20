@@ -227,11 +227,9 @@ that is displayed now includes a link to the entity Blog named
 .. image:: images/cbw-detail-one-blogentry.en.png
    :alt: displaying the detailed view of a blogentry
 
-Please notice that so far, `CubicWeb` franework managed all aspects of 
-the web application based in the schema provided at first.
-Also if you wish to get a graphical view of the schema, visit
-the link `Application schema`` which will direct you to :
-http://localhost:8080/view?vid=schema
+Note that all of this was handled by the framework and that the only input
+that was provided so far is the schema. To get a graphical view of the schema,
+point your browser to the URL http://localhost:8080/schema
 
 .. image:: images/cbw-schema.en.png
    :alt: graphical view of the schema (aka data-model)

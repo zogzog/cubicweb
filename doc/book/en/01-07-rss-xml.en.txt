@@ -3,8 +3,6 @@
 RSS Channel
 ===========
 
-XXXFIXME TURN THIS INTO A CHAPTER
-
 Assuming you have several blog entries, click on the title of the
 search box in the left column. A larger search box should appear. Enter::
 

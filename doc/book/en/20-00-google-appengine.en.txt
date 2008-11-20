@@ -9,11 +9,3 @@ Google AppEngine Datastore
 
 .. include:: 20-01-intro.en.txt
 .. include:: 20-02-install.en.txt
-.. include:: 20-03-create-app.en.txt
-.. include:: 20-04-develop-views.en.txt
-.. include:: 20-05-components.en.txt
-.. include:: 20-06-maintemplate.en.txt
-.. include:: 20-07-rss-xml.en.txt
-.. include:: 20-08-rql.en.txt
-.. include:: 20-09-urlrewrite.en.txt
-.. include:: 20-10-security.en.txt

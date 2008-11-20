@@ -3,8 +3,6 @@
 Views & Templates
 =================
 
-XXXFIXME TURN THIS INTO A CHAPTER
-
 Look at ``lax/skel/ginco/web/views/basetemplates.py`` and you will
 find the base templates used to generate HTML for your application.
 

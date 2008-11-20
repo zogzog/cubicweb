@@ -5,9 +5,6 @@
 Installation
 ============
 
-XXXFIXME KEEP WHAT IS SPECIFIC TO APPENGINE AND MERGE THE REST WITH
-03-setup.en.txt
-
 Download the source
 -------------------
 
