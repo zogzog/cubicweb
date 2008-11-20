@@ -6,7 +6,7 @@ Introduction
 What is  `Google AppEngine` ?
 ------------------------------
 
-`Google AppEngine` is provided with a partial port of the `Django`
+`Google AppEngine`_ is provided with a partial port of the `Django`
 framework, but Google stated at Google IO 2008 that it would not
 support a specific Python web framework and that all
 community-supported frameworks would be more than welcome[1]_. 
@@ -14,8 +14,9 @@ community-supported frameworks would be more than welcome[1]_.
 Therefore Logilab_ ported `CubicWeb` to run on top of `Google AppEngine`'s
 datastore.
 
+.. _`Google AppEngine`: http://code.google.com/appengine/docs/whatisgoogleappengine.html
 .. _Logilab: http://www.logilab.fr/
-.. [1] for more on this matter, read our blog at http://www.logilab.org/blog/5216
+.. [1] for more on this matter, read our blog at http://www.logilab.org/blogentry/5216
 
 
 Essentials
