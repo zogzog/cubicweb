@@ -57,7 +57,7 @@ Table of contents
    17-migration.en.txt
    18-tests.en.txt
    19-i18n.en.txt
-   20-gae.en.txt
+   20-google-appengine.en.txt
    21-appendix.en.txt
    22-faq.en.txt
 

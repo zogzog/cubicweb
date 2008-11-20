@@ -4,6 +4,8 @@
 Developing the user interface with Views
 ========================================
 
+XXXFIXME MERGE THIS WITH 05-define-views.en.txt
+
 Before moving to this section, make sure you read the `Essentials`
 section in the Introduction.
 

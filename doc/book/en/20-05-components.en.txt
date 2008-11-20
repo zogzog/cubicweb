@@ -5,6 +5,8 @@
 Components
 ===========
 
+XXXFIXME TURN THIS INTO A CHAPTER
+
 What is a component
 -------------------
 

@@ -4,6 +4,9 @@
 Creating your first application
 ===============================
 
+XXXFIXME KEEP WHAT IS SPECIFIC TO APPENGINE AND MERGE THE REST WITH OVERVIEW OR
+MAKE A NEW CHAPTER
+
 This tutorial will guide you step by step to build a blog application 
 and discover the unique features of `LAX`. It assumes that you followed
 the installation guidelines and that both the `AppEngine SDK` and the

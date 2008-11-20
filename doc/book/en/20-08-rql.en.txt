@@ -3,6 +3,8 @@
 RQL language (Relation Query Language)
 ======================================
 
+XXXFIXME MERGE WITH 16-rql.en.txt
+
 Introduction
 ------------
 * RQL language focuses on browsing relations.
