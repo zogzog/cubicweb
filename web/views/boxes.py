@@ -194,10 +194,15 @@ class RSSIconBox(ExtResourcesBoxTemplate):
     visible = False
     
     def call(self, **kwargs):
-        url = html_escape(self.build_url(rql=self.limited_rql(), vid='rss'))
+        eid = self
+        if len(self.rset)==1:
+            eid = self.rset[0][0]
+            rql = 'Any E WHERE E is BlogEntry, E entry_of X, X eid %s' % eid
+        else:
+            rql = self.limited_rql()
+        url = html_escape(self.build_url(rql=rql, vid='rss'))
         rss = self.req.external_resource('RSS_LOGO')
         self.w(u'<a href="%s"><img src="%s" border="0" /></a>\n' % (url, rss))
-
 
 ## warning("schemabox ne marche plus pour le moment")
 ## class SchemaBox(BoxTemplate):
