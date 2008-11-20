@@ -41,13 +41,15 @@ Global architecture
   a couple of calls in distincts processes to balance the load of
   your web site on one or more machines.
 
+.. _TermsVocabulary:
 
 Terms and vocabulary
 --------------------
 
 *schema*
-  the schema defines the data model of an application based on entities
-  and relations, thanks to the `yams`_ library. This is the core piece
+  The schema defines the data model of an application based on entities
+  and relations, modeled with a comprehensive language made of Python
+  classes based on `yams`_ library. This is the core piece
   of an application. It is initially defined in the file system and is
   stored in the database at the time an instance is created. `CubicWeb`
   provides a certain number of system entities included automatically as
@@ -56,36 +58,37 @@ Terms and vocabulary
 
 
 *entity type*
-  an entity is a set of attributes; the essential attribute of
+  An entity is a set of attributes; the essential attribute of
   an entity is its key, named eid
 
 *relation type*
-  entities are linked to each others by relations. In `CubicWeb`
+  Entities are linked to each others by relations. In `CubicWeb`
   relations are binary: by convention we name the first item of
   a relation the `subject` and the second the `object`.
 
 *final entity type*
-  final types corresponds to the basic types such as string of characters,
+  Final types corresponds to the basic types such as string of characters,
   integers... Those types have a main property which is that they can
   only be used as `object` of a relation. The attributes of an entity
   (non final) are entities (finals).
 
 *final relation type*
-  a relation is said final if its `object` is a final type. This is equivalent
+  A relation is said final if its `object` is a final type. This is equivalent
   to an entity attribute.
 
 *repository*
-  this is the RQL server side of `CubicWeb`. Be carefull not to get
+  This is the RQL server side of `CubicWeb`. Be carefull not to get
   confused with a Mercurial repository or a debian repository.
 
 *source*
-  a data source is a container of data (SGBD, LDAP directory...) integrated in the
+  A data source is a container of data (SGBD, LDAP directory, `Google
+  App Engine`'s datastore ...) integrated in the
   `CubicWeb` repository. This repository has at least one source, `system` which 
   contains the schema of the application, plain-text index and others
   vital informations for the system.
 
 *configuration*
-  it is possible to create differents configurations for an instance:
+  It is possible to create differents configurations for an instance:
 
   - ``repository`` : repository only, accessible for clients using Pyro
   - ``twisted`` : web interface only, access the repository using Pyro
@@ -93,13 +96,17 @@ Terms and vocabulary
      The repository could be or not accessible using Pyro.
 
 *cube*
-  a cube is a model grouping one or multiple data types and/or views
+  A cube is a model grouping one or multiple data types and/or views
   to provide a specific functionnality or a complete `CubicWeb` application
   potentially using other cubes. The available subes are located in the file
-  system at `/path/to/forest/cubicweb/cubes`
+  system at `/path/to/forest/cubicweb/cubes`.
+  Larger applications can be built faster by importing cubes,
+  adding entities and relationships and overriding the
+  views that need to display or edit informations not provided by
+  cubes.
 
 *instance*
-  an instance is a specific installation of a cube. All the required 
+  An instance is a specific installation of a cube. All the required 
   configuration files necessarry for the well being of your web application
   are grouped in an instance. This will refer to the cube(s) your application
   is based on.
@@ -108,19 +115,38 @@ Terms and vocabulary
   The instances are defined in the directory `~/etc/cubicweb.d`.
 
 *application*
-  the term application is sometime used to talk about an instance
+  The term application is sometime used to talk about an instance
   and sometimes to talk of a cube depending on the context. 
   So we would like to avoid using this term and try to use *cube* and
   *instance* instead.
 
 *result set*
-  this object contains the results of an RQL query and information on the query.
+  This object contains the results of an RQL query sent to the source
+  and information on the query.
 
 *Pyro*
   `Python Remote Object`_, distributed objects system similar to Java's RMI
   (Remote Method Invocation), which can be used for the dialog between the web
   side of the framework and the RQL repository.
 
+*query language*
+  A full-blown query language named RQL is used to formulate requests
+  to the database or any sources such as LDAP or `Google App Engine`'s 
+  datastore.
+
+*views*
+  A view is applied to a `result set` to present it as HTML, XML,
+  JSON, CSV, etc. Views are implemented as Python classes. There is no
+  templating language.
+
+*generated user interface*
+  A user interface is generated on-the-fly from the schema definition:
+  entities can be created, displayed, updated and deleted. As display
+  views are not very fancy, it is usually necessary to develop your
+  own. Any generated view can be overridden by defining a new one with
+  the same identifier.
+
+  
 .. _`Python Remote Object`: http://pyro.sourceforge.net/
 .. _`yams`: http://www.logilab.org/project/name/yams/
 

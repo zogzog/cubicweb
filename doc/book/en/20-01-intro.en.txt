@@ -9,9 +9,9 @@ What is  `Google AppEngine` ?
 `Google AppEngine`_ is provided with a partial port of the `Django`
 framework, but Google stated at Google IO 2008 that it would not
 support a specific Python web framework and that all
-community-supported frameworks would be more than welcome[1]_. 
+community-supported frameworks would be more than welcome [1]_. 
 
-Therefore Logilab_ ported `CubicWeb` to run on top of `Google AppEngine`'s
+Therefore `Logilab`_ ported `CubicWeb` to run on top of `Google AppEngine`'s
 datastore.
 
 .. _`Google AppEngine`: http://code.google.com/appengine/docs/whatisgoogleappengine.html
@@ -22,43 +22,23 @@ datastore.
 Essentials
 ----------
 
-XXXFIXME MERGE WITH 02-foundation.en.txt
+To build a web application for `Google App Engine`'s datastore, you
+need to have a good understanding of the main concepts of our 
+`CubicWeb` framework.
 
-Schema
+The main concepts are:
 
-  The schema defines the data model of an application as entities and
-  relationships. It is the core of an application.  Entities and
-  relationships are modeled with a comprehensive language made of
-  Python classes. 
+  - *schema*
 
-Query language
+  - *query language*
 
-  A full-blown query language named RQL is used to formulate 
-  requests to the datastore.
+  - *result set*
 
-Result set
+  - *views*
 
-  A resultset encapsulates the results of a request sent to
-  the datastore and informations about this request.  
+  - *generated user interface*
 
-Views 
+  - *cube*
 
-  A view is applied to a `result set` to present it as HTML, XML,
-  JSON, CSV, etc. Views are implemented as Python classes. There is no
-  templating language.
+You can find detailled explanation of those concepts in :ref:`TermsVocabulary`.
 
-Generated user interface
-
-  A user interface is generated on-the-fly from the schema definition:
-  entities can be created, displayed, updated and deleted. As display
-  views are not very fancy, it is usually necessary to develop your
-  own. Any generated view can be overridden by defining a new one with
-  the same identifier.
-
-Components
-
-  Pieces of schema and sets of views can be combined into
-  components. Larger applications can be built faster by importing
-  components, adding entities and relationships and overriding the
-  views that need to display or edit informations not provided by
-  components.
