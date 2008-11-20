@@ -2,13 +2,12 @@
 
 .. _MiseEnPlaceEnv:
 
+===================================================
 Installation and set-up of a `CubicWeb` environment
 ===================================================
+.. contents::
 
-.. toctree::
-   :maxdepth: 1
-
-   03-01-installation.en.txt
-   03-02-create-instance.en.txt
-   03-03-cubicweb-ctl.en.txt
+.. include:: 03-01-installation.en.txt
+.. include:: 03-02-create-instance.en.txt
+.. include:: 03-03-cubicweb-ctl.en.txt
 

@@ -1,11 +1,10 @@
 .. -*- coding: utf-8 -*-
 
-===============================
 Creation of your first instance
 ===============================
 
 What is an instance?
-====================
+--------------------
 
 A `CubicWeb` instance is a directory in ``~/etc/cubicweb.d``
 which enables us to run a web application. An instance is based on
@@ -21,7 +20,7 @@ could be used in other instances (modular approach).
 
 
 What is a cube?
-===============
+---------------
 
 A cube defines entities, their views, their schems and workflows
 in an independant directory located in ``/path/to/forest/cubicweb/cubes/``.
@@ -36,7 +35,7 @@ available in your instance as well as their views and workflows.
 
 
 Create a cube
-=============
+-------------
 
 Let's start by creating the cube environment in which we will develop ::
 
@@ -62,7 +61,7 @@ at the time the base is created (import_erschema('MyCube') will
 not properly work otherwise).
 
 Instance creation
-=================
+-----------------
 
 Now that we created our cube, we can create an instance to view our
 application in a web browser. To do so we will use a `all-in-on` 
@@ -110,7 +109,7 @@ This is it! All is settled down to start developping your data model...
 
 
 Usage of `cubicweb-liveserver`
-------------------------------
+``````````````````````````````
 
 To quickly test a new cube, you can also use the script `cubicweb-liveserver`
 which allows to create an application in memory (use of SQLite database by 
