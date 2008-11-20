@@ -2,12 +2,15 @@
 
 .. _contents:
 
-Références
-==========
+Appendix
+========
 
 .. toctree::
    :maxdepth: 1
 
    21-01-architecture.en.txt
    21-02-querier.en.txt
-   21-03-modules.en.txt
+   21-03-modules-stdlib.en.txt
+   21-04-modules-cbw-api.en.txt
+   21-05-mercurial.en.txt
+   
