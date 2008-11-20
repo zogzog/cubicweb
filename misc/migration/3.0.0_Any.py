@@ -7,3 +7,5 @@ for pk, in rql('Any K WHERE X is EProperty, X pkey IN (%s), X pkey K'
     rql('SET X pkey %(newk)s WHERE X pkey %(oldk)s',
         {'oldk': pk, 'newk': newk})
     print 'renamed', pk, 'to', newk
+
+add_entity_type('ECache')
