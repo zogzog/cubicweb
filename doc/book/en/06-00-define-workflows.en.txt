@@ -1,7 +1,8 @@
 .. -*- coding: utf-8 -*-
 
-Définition de workflow
+Workflow definition
 ======================
+
 On peut mettre une condition rql ou/et un groupe auquel doit appartenir l'utilisateur.
 
 Si on met à la fois un(ou plusieurs) groupe et une condition RQL, il faut que les deux soient respectés.

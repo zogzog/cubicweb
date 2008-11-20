@@ -1,18 +1,66 @@
 .. -*- coding: utf-8 -*-
 
-Foire Aux Questions
-===================
+Frequently Asked Questions
+==========================
 
-[FILL ME]
+* Why does not LAX have a template language ?
 
-* A quoi servent les crochets?
+  It does. Actually, you can use your preferred template language if you
+  want. [explain how to use a template language]
+
+  The reason template languages are not used in this book is that
+  experience has proved us that using pure python was more efficient.
+
+* Why do you think using pure python is better than using a template language ?
+
+  [copy answer from forum]
+
+  code is easier to maintain, does not have to learn a new dialect
+  each time, real function/classes etc -> real development
+
+* Why do you use the GPL license to prevent me from doing X ?
+
+  [copy answer from forum]
+
+* LAX looks pretty recent. Is it stable ?
+
+  [answer that framework has evolved over the past seven years and that
+  data migrated from one schema to the other ever since]
+
+* Why is the RQL query language looking similar to X ?
+
+  [copy answer from forum, explain why similar to sparql and why better
+  than django and SQL]
+
+* which ajax library
+
+  [we use mochikit and things on top of that]
+
+* `Error while publishing rest text ...`
+  
+  While modifying the description of an entity, you get an error message in 
+  the application `Error while publishing ...` for Rest text and plain text.
+  The server returns a traceback like as follows ::
+
+      2008-10-06 15:05:08 - (erudi.rest) ERROR: error while publishing ReST text
+      Traceback (most recent call last):
+      File "/home/sandrine/src/blogdemo/ginco/common/rest.py", line 217, in rest_publish
+      File "/usr/lib/python2.5/codecs.py", line 817, in open
+      file = __builtin__.open(filename, mode, buffering)
+      TypeError: __init__() takes at most 3 arguments (4 given)
+
+  
+  This can be fixed by applying the patch described in :
+  http://code.google.com/p/googleappengine/issues/detail?id=48
+
+* What are hooks used for?
   
   Les crochets sont appeles lorsqu'une requete RQL est executee. Cela
   permet d'executer des actions specifiques lors d'un acces a la base
   de donnees, ce qui donne un controle de la base de donnees afin de
   prevenir l'insertion de `mauvaises` entites dans la base.
 
-* Quand utiliser un template HTML plutot qu'un composant graphique?
+* When should you define an HTML template rather than define a graphical component?
 
   Un template HTML ne peut contenir de logique, il ne permettra donc
   que de definir une vue statique. Un composant permet lui de gerer
@@ -20,7 +68,7 @@ Foire Aux Questions
   s'applique. Il faut donc bien reflechir avant de decider de l'un ou
   de l'autre, mais vous avez la possibilite de choisir.
 
-* Comment mettre à jour une base de données après avoir modifié le schéma?
+* How to update a database after a schema modification?
   
   Cela dépend de ce qui a été modifié dans le schéma. 
   
@@ -30,7 +78,7 @@ Foire Aux Questions
 
 [TO COMPLETE]
 
-* Comment créer un utilisateur anonyme?
+* How to create an anonymous user?
   
   Cela vous permet d'acceder a votre site sans avoir besoin de vous authentifier.
   Dans le fichier ``all-in-one.conf`` de votre instance, définir l'utilisateur
@@ -47,9 +95,10 @@ Foire Aux Questions
   de données, le plus simple étant de s'identifier sur votre application en
   administrateur et de rajouter l'utilisateur `anon` via l'interface d'administration.
 
-* Quelle est la différence entre `AppRsetObject` et `AppObject` ?
+* What is the difference between `AppRsetObject` and `AppObject` ?
 
   La différence entre la classe `AppRsetObject` et la classe `AppObject` est que
   les instances de la premières sont séléctionnées pour une requête et un "result
   set" et alors que les secondes ne sont séléctionnées qu'en fonction de leur
   identifiant.
+

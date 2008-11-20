@@ -3,12 +3,10 @@
 .. _components:
 
 Components
-===========
-
-XXXFIXME TURN THIS INTO A CHAPTER
+----------
 
 What is a component
--------------------
+~~~~~~~~~~~~~~~~~~~
 
 A component is a model grouping one or more entity types and/or views associated
 in order to provide a specific feature or even a complete application using
@@ -19,7 +17,7 @@ that you can start using right away.
 
 
 Standard library
-----------------
+~~~~~~~~~~~~~~~~
 
 A library of standard components is part of the `LAX` release (look at
 ``lax/skel/ginco-apps``). Components provide entities and views. With
@@ -60,7 +58,7 @@ The available system entities are:
 
 
 Adding comments to BlogDemo
----------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 To import a component in your application just change the line in the
 ``app.conf`` file. For example::
@@ -81,7 +79,7 @@ to the definition of a ``BlogEntry`` will be enough.
 Clear the datastore and restart.
 
 Component structure
--------------------
+~~~~~~~~~~~~~~~~~~~
 
 A complex component is structured as follows:
 ::

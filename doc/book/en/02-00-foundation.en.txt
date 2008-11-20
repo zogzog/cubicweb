@@ -565,3 +565,6 @@ The only required files are:
 * the file ``__pkginfo__.py``
 * the schema definition
   XXX false, we may want to have cubes which are only adding a service, no persistent data (eg embeding for instance)
+
+.. include:: 02-01-registry.en.txt
+.. include:: 02-02-configuration.en.txt

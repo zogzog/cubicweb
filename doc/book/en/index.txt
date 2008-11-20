@@ -36,7 +36,7 @@ Table of contents
 
 
 .. toctree::
-   :maxdepth: 1
+   :maxdepth: 2
 
    01-00-introduction.en.txt
    02-00-foundation.en.txt
@@ -60,6 +60,17 @@ Table of contents
    20-00-google-appengine.en.txt
    21-00-appendix.en.txt
    22-00-faq.en.txt
+   XX-XX-actions.en.txt
+   XX-XX-repository-operations.en.txt
+   XX-XX-sessions.en.txt
+   XX-XX-boxes.en.txt
+   XX-XX-repository-session.en.txt     
+   XX-XX-templates.en.txt
+   XX-XX-dbapi.en.txt                    
+   XX-XX-repository-tasks.en.txt       
+   XX-XX-urlrewrite.en.txt
+   XX-XX-embedding-external-page.en.txt  
+   XX-XX-request.en.txt
 
 
 Indices and tables
