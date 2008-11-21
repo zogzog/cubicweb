@@ -124,7 +124,9 @@ Terms and vocabulary
   own. Any generated view can be overridden by defining a new one with
   the same identifier.
 
-  
+*rql*
+ XXX
+ 
 .. _`Python Remote Object`: http://pyro.sourceforge.net/
 .. _`yams`: http://www.logilab.org/project/yams/
 
@@ -166,144 +168,6 @@ The components of the engine are:
 
 Every *appobject* may access to the instance configuration using its *config* attribute
 and to the registry using its *vreg* attribute.
-
-Details of the recording process
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-At startup, the `registry` or registers base, inspects a number of directories
-looking for compatible classes definition. After a recording process, the objects
-are assigned to registers so that they can be selected dynamically while the
-application is running.
-
-The base class of those objects is `AppRsetObject` (module `cubicweb.common.appobject`).
-
-XXX registers example
-XXX actual details of the recording process!
-
-Runtime objects selection
-~~~~~~~~~~~~~~~~~~~~~~~~~
-
-XXX tell why it's a cw foundation!
-
-Application objects are stored in the registry using a two level hierarchy :
-
-  object's `__registry__` : object's `id` : [list of app objects]
-
-The following rules are applied to select an object given a register and an id and an input context:
-* each object has a selector
-  - its selector may be derivated from a set of basic (or not :)
-    selectors using `chainall` or `chainfirst` combinators
-* a selector return a score >= 0
-* a score of 0 means the objects can't be applied to the input context
-* the object with the greatest score is selected. If multiple objects have an
-  identical score, one of them is selected randomly (this is usually a bug)
-
-The object's selector is the `__select__` class method on the object's class.
-
-The score is used to choose the most pertinent objects where there are more than
-one selectable object. For instance, if you're selecting the primary
-(eg `id = 'primary'`) view (eg `__registry__ = 'view'`) for a result set containing
-a `Card` entity, 2 objects will probably be selectable:
-
-* the default primary view (`accepts = 'Any'`)
-* the specific `Card` primary view (`accepts = 'Card'`)
-
-This is because primary views are using the `accept_selector` which is considering the
-`accepts` class attribute of the object's class. Other primary views specific to other
-entity types won't be selectable in this case. And among selectable objects, the
-accept selector will return a higher score the the second view since it's more
-specific, so it will be selected as expected.
-
-Usually, you won't define it directly but by defining the `__selectors__` tuple
-on the class, with ::
-
-  __selectors__ = (sel1, sel2)
-
-which is equivalent to ::
-
-  __select__ = chainall(sel1, sel2)
-
-The former is prefered since it's shorter and it's ease overriding in
-subclasses (you have access to sub-selectors instead of the wrapping function).
-
-:chainall(selectors...): if one selector return 0, return 0, else return the sum of scores
-
-:chainfirst(selectors...): return the score of the first selector which has a non zero score
-
-XXX describe standard selector (link to generated api doc!)
-
-Example
-````````
-
-Le but final : quand on est sur un Blog, on veut que le lien rss de celui-ci pointe
-vers les entrées de ce blog, non vers l'entité blog elle-même.
-
-L'idée générale pour résoudre ça : on définit une méthode sur les classes d'entité
-qui renvoie l'url du flux rss pour l'entité en question. Avec une implémentation
-par défaut sur AnyEntity et une implémentation particulière sur Blog qui fera ce
-qu'on veut.
-
-La limitation : on est embêté dans le cas ou par ex. on a un result set qui contient
-plusieurs entités Blog (ou autre chose), car on ne sait pas sur quelle entité appeler
-la méthode sus-citée. Dans ce cas, on va conserver le comportement actuel (eg appel
-à limited_rql)
-
-Donc : on veut deux cas ici, l'un pour un rset qui contient une et une seule entité,
-l'autre pour un rset qui contient plusieurs entité.
-
-Donc... On a déja dans web/views/boxes.py la classe RSSIconBox qui fonctionne. Son
-sélecteur ::
-
-  class RSSIconBox(ExtResourcesBoxTemplate):
-    """just display the RSS icon on uniform result set"""
-    __selectors__ = ExtResourcesBoxTemplate.__selectors__ + (nfentity_selector,)
-
-
-indique qu'il prend en compte :
-
-* les conditions d'apparition de la boite (faut remonter dans les classes parentes
-  pour voir le détail)
-* nfentity_selector, qui filtre sur des rset contenant une liste d'entité non finale
-
-ça correspond donc à notre 2eme cas. Reste à fournir un composant plus spécifique
-pour le 1er cas ::
-
-  class EntityRSSIconBox(RSSIconBox):
-    """just display the RSS icon on uniform result set for a single entity"""
-    __selectors__ = RSSIconBox.__selectors__ + (onelinerset_selector,)
-
-
-Ici, on ajoute onelinerset_selector, qui filtre sur des rset de taille 1. Il faut
-savoir que quand on chaine des selecteurs, le score final est la somme des scores
-renvoyés par chaque sélecteur (sauf si l'un renvoie zéro, auquel cas l'objet est
-non sélectionnable). Donc ici, sur un rset avec plusieurs entités, onelinerset_selector
-rendra la classe EntityRSSIconBox non sélectionnable, et on obtiendra bien la
-classe RSSIconBox. Pour un rset avec une entité, la classe EntityRSSIconBox aura un
-score supérieur à RSSIconBox et c'est donc bien elle qui sera sélectionnée.
-
-Voili voilou, il reste donc pour finir tout ça :
-
-* à définir le contenu de la méthode call de EntityRSSIconBox
-* fournir l'implémentation par défaut de la méthode renvoyant l'url du flux rss sur
-  AnyEntity
-* surcharger cette methode dans blog.Blog
-
-
-When to use selectors?
-```````````````````````
-
-Il faut utiliser les sélecteurs pour faire des choses différentes en
-fonction de ce qu'on a en entrée. Dès qu'on a un "if" qui teste la
-nature de `self.rset` dans un objet, il faut très sérieusement se
-poser la question s'il ne vaut pas mieux avoir deux objets différent
-avec des sélecteurs approprié.
-
-If this is so fundamental, why don't I see them more often?
-```````````````````````````````````````````````````````````
-
-Because you're usually using base classes which are hiding the plumbing
-of __registry__ (almost always), id (often when using "standard" object),
-register and selector.
 
 API Python/RQL
 ~~~~~~~~~~~~~~
