@@ -17,7 +17,7 @@ __docformat__ = "restructuredtext en"
 
 from logilab.mtconverter import html_escape
 
-from cubicweb.common.selectors import rset_selector, nfentity_selector
+from cubicweb.common.selectors import rset_selector, nfentity_selector, onelinerset_selector
 from cubicweb.web.htmlwidgets import BoxWidget, BoxMenu, BoxHtml, RawBoxItem
 from cubicweb.web.box import BoxTemplate, ExtResourcesBoxTemplate
 
@@ -194,15 +194,21 @@ class RSSIconBox(ExtResourcesBoxTemplate):
     visible = False
     
     def call(self, **kwargs):
-        eid = self
-        if len(self.rset)==1:
-            eid = self.rset[0][0]
-            rql = 'Any E WHERE E is BlogEntry, E entry_of X, X eid %s' % eid
-        else:
-            rql = self.limited_rql()
-        url = html_escape(self.build_url(rql=rql, vid='rss'))
+        url = html_escape(self.build_url(rql=self.limited_rql(), vid='rss'))
         rss = self.req.external_resource('RSS_LOGO')
         self.w(u'<a href="%s"><img src="%s" border="0" /></a>\n' % (url, rss))
+
+class EntityRSSIconBox(RSSIconBox):
+    """just display the RSS icon on uniform result set for a single entity"""
+    __selectors__ = RSSIconBox.__selectors__ + (onelinerset_selector,)
+
+    def call(self, **kwargs):
+        entity = self.entity(0, 0)
+        url = entity.rss_feed_url()
+        eid = entity.eid
+        rss = self.req.external_resource('RSS_LOGO')
+        self.w(u'<a href="%s"><img src="%s" border="0" /></a>\n' %
+               (html_escape(url), rss))
 
 ## warning("schemabox ne marche plus pour le moment")
 ## class SchemaBox(BoxTemplate):
@@ -220,7 +226,6 @@ class RSSIconBox(ExtResourcesBoxTemplate):
 ##                                       view.url(), etype=etype))
 ##         if not box.is_empty():
 ##             box.render(self.w)
-
 
 class StartupViewsBox(BoxTemplate):
     """display a box containing links to all startup views"""

@@ -16,7 +16,8 @@ from cubicweb.common.utils import dump_class
 from cubicweb.common.entity import Entity
 from cubicweb.schema import FormatConstraint
 
-from cubicweb.interfaces import IBreadCrumbs
+from cubicweb.interfaces import IBreadCrumbs, IFeed
+
 
 class AnyEntity(Entity):
     """an entity instance has e_schema automagically set on the class and
@@ -52,7 +53,7 @@ class AnyEntity(Entity):
         ('comments',           '*', 'object')  : ('generated', 'link'),
         }
 
-    __implements__ = (IBreadCrumbs,)
+    __implements__ = (IBreadCrumbs, IFeed)
     
     @classmethod
     def selected(cls, etype):
@@ -197,6 +198,10 @@ class AnyEntity(Entity):
                 path.append( self.req._(view.title) )
         return path
 
+    ## IFeed interface ########################################################
+
+    def rss_feed_url(self):
+        return self.absolute_url(vid='rss')
     # abstractions making the whole things (well, some at least) working ######
     
     @classmethod

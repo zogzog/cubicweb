@@ -232,3 +232,9 @@ class IGeocodable(Interface):
         (returns None for default)
         """
         
+class IFeed(Interface):
+    """interface for entities with rss flux"""
+    
+    def rss_feed_url(self):
+        """return an url which layout sub-entities item
+        """
