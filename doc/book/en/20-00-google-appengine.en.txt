@@ -1,0 +1,11 @@
+.. -*- coding: utf-8 -*-
+
+.. _contents:
+
+==========================
+Google AppEngine Datastore
+==========================
+
+
+.. include:: 20-01-intro.en.txt
+.. include:: 20-02-install.en.txt

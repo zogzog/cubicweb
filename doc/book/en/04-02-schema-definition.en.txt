@@ -146,8 +146,10 @@ By default, the available constraints types are :
   not prevent another entity to be selected
 
 
-Relation type definition
-------------------------
+Relation definition
+-------------------
+
+XXX add note about defining relation type / definition
 
 A relation is defined by a Python class heriting `RelationType`. The name
 of the class corresponds to the name of the type. The class then contains
@@ -183,8 +185,46 @@ When a relation is not inlined and not symetrical, and it does not require
 specific permissions, its definition (by using `SubjectRelation` and
 `ObjectRelation`) is all we need.
 
+
+The security model
+------------------
+
+Le modèle de sécurité de CubicWeb est un modèle fondé sur des `Access
+Control List`. Les notions sont les suivantes :
+
+* utilisateurs et groupes d'utilisateurs
+* un utilisateur appartient à au moins un groupe
+* droits (lire, modifier, créer, supprimer) 
+* les droits sont attribués aux groupes (et non aux utilisateurs)
+
+Pour CubicWeb plus spécifiquement :
+
+* on associe les droits au niveau des schemas d'entites / relations
+
+* pour chaque type d'entité, on distingue les droits de lecture,
+  ajout, modification et suppression
+  
+* pour chaque type de relation, on distingue les droits de lecture,
+  ajout et suppression (on ne peut pas modifer une relation)
+  
+* les groupes de base sont : Administrateurs, Utilisateurs, Invités
+
+* les utilisateurs font par défaut parti du groupe Utilisateurs
+
+* on a un groupe virtuel "Utilisateurs Propriétaires", auquel on peut
+  associer uniquement les droits de suppression et de modification
+  
+* on ne peut pas mettre d'utilisateurs dans ce groupe, ils y sont
+  ajoutés implicitement dans le contexte des objets dont ils sont
+  propriétaires
+  
+* les droits de ce groupe ne sont vérifiés que sur
+  modification / suppression si tous les autres groupes auxquels
+  l'utilisateur appartient se sont vu interdir l'accès
+
+  
 Permissions definition
-----------------------
+``````````````````````
 
 Define permissions is set through to the attribute `permissions` of entities and
 relations types. It defines a dictionnary where the keys are the access types
@@ -212,11 +252,12 @@ The standard groups are :
   This can only be used for the actions `update` and `delete` of an entity
   type.
 
-It is also possible to use specific groups if they are define in the precreate 
-of the application (``migration/precreate.py``).
+It is also possible to use specific groups if they are defined in the precreate 
+of the cube (``migration/precreate.py``).
+
 
 Use of RQL expression for writing rights
-````````````````````````````````````````
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 It is possible to define RQL expression to provide update permission 
 (`add`, `delete` and `update`) on relation and entity types.
 
@@ -314,7 +355,7 @@ new versions on this project to specific groups. It is important to notice that 
   ("U in_group G, P require_group G" in the above example)
 
 Use of RQL expression for reading rights
-````````````````````````````````````````
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The principles are the same but with the following restrictions :
 
@@ -324,7 +365,7 @@ The principles are the same but with the following restrictions :
 
 
 Note on the use of RQL expression for `add` permission
-``````````````````````````````````````````````````````
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Potentially, the use of an RQL expression to add an entity or a relation
 can cause problems for the user interface, because if the expression uses
 the entity or the relation to create, then we are not able to verify the 

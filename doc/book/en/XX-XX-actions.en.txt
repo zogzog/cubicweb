@@ -1,0 +1,9 @@
+.. -*- coding: utf-8 -*-
+
+Actions
+=========
+
+[WRITE ME]
+
+* talk about actions that appear in the action box
+

@@ -36,30 +36,41 @@ Table of contents
 
 
 .. toctree::
-   :maxdepth: 1
+   :maxdepth: 2
 
-   01-introduction.en.txt
-   02-foundation.en.txt
-   03-setup.en.txt
-   04-define-schema.en.txt
-   05-define-views.en.txt
-   06-define-workflows.en.txt
-   07-data-as-objects.en.txt
-   08-site-config.en.txt
-   09-instance-config.en.txt
-   10-form-management.en.txt
-   11-ajax-json.en.txt
-   12-ui-components.en.txt
-   13-security.en.txt
-   14-hooks.en.txt
-   15-notifications.en.txt
-   16-rql.en.txt
-   17-migration.en.txt
-   18-tests.en.txt
-   19-i18n.en.txt
-   20-gae.en.txt
-   21-appendix.en.txt
-   22-faq.en.txt
+   01-08-book-map.en.txt
+   01-00-introduction.en.txt
+   02-00-foundation.en.txt
+   03-00-setup.en.txt
+   04-00-define-schema.en.txt
+   05-00-define-views.en.txt
+   06-00-define-workflows.en.txt
+   07-00-data-as-objects.en.txt
+   08-00-site-config.en.txt
+   09-00-instance-config.en.txt
+   10-00-form-management.en.txt
+   11-00-ajax-json.en.txt
+   12-00-ui-components.en.txt
+   14-00-hooks.en.txt
+   15-00-notifications.en.txt
+   16-00-rql.en.txt
+   17-00-migration.en.txt
+   18-00-tests.en.txt
+   19-00-i18n.en.txt
+   20-00-google-appengine.en.txt
+   21-00-appendix.en.txt
+   22-00-faq.en.txt
+   XX-XX-actions.en.txt
+   XX-XX-repository-operations.en.txt
+   XX-XX-sessions.en.txt
+   XX-XX-boxes.en.txt
+   XX-XX-repository-session.en.txt     
+   XX-XX-templates.en.txt
+   XX-XX-dbapi.en.txt                    
+   XX-XX-repository-tasks.en.txt       
+   XX-XX-urlrewrite.en.txt
+   XX-XX-embedding-external-page.en.txt  
+   XX-XX-request.en.txt
 
 
 Indices and tables

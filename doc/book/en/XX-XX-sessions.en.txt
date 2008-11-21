@@ -1,0 +1,9 @@
+.. -*- coding: utf-8 -*-
+
+sessions
+========
+
+[WRITE ME]
+
+* authentication and management of sessions
+

@@ -1,8 +1,7 @@
 .. -*- coding: utf-8 -*-
 
 Views & Templates
-=================
-
+-----------------
 
 Look at ``lax/skel/ginco/web/views/basetemplates.py`` and you will
 find the base templates used to generate HTML for your application.
@@ -17,13 +16,13 @@ the HTMLPageFooter and the TheMainTemplate.
 
 
 HTMLPageHeader
---------------
+~~~~~~~~~~~~~~~
 
 Let's use a different logo than the default one provided with LAX
 and customize our header.
 
 Change logo
-~~~~~~~~~~~
+```````````
 
 The easiest way to use a different logo is to replace the existing
 ``logo.png`` in ``myapp/data`` by your prefered icon and refresh.
@@ -39,7 +38,7 @@ customized external_resources in myapp/data cd crih for reference
 ADD how to use external_resources variables used in ginco/web/webconfig.py
 
 Customize header
-~~~~~~~~~~~~~~~~
+`````````````````
 
 Let's now move the search box in the header and remove the login form
 from the header. We'll show how to move it to the left column of the application.
@@ -149,7 +148,7 @@ table.
 
 
 HTMLPageFooter
---------------
+~~~~~~~~~~~~~~
 
 If you want to change the footer for example, look
 for HTMLPageFooter and override it in your views file as in: 
@@ -167,7 +166,8 @@ the page you can see your new page footer.
 
 
 TheMainTemplate
----------------
+~~~~~~~~~~~~~~~
+
 .. _TheMainTemplate:
 
 The MainTemplate is a bit complex as it tries to accomodate many
@@ -183,7 +183,7 @@ a top section.
 .. image:: images/lax-book.06-simple-main-template.en.png
 
 CSS changes
------------
+~~~~~~~~~~~
 
 We cannot modify the order in which the application is reading the CSS. In
 the case we want to create new CSS style, the best is to define it a in a new
@@ -194,7 +194,6 @@ If you want to modify an existing CSS styling property, you will have to use
 apply a higher priority on the default CSS and you can not change that. 
 Customized CSS will not be read first.
 
-1
 [TODO]
 Add login menu in left column
 

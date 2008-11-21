@@ -3,6 +3,8 @@
 URL Rewriting
 =============
 
+XXX FIXME this should be a chapter
+
 [WRITE ME]
 
 * show how urls are mapped to selections and views and explain URLRewriting 

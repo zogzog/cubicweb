@@ -1,23 +1,5 @@
 .. -*- coding: utf-8 -*-
 
-.. _Overview:
-
-Quick overview of `CubicWeb`
-============================
-
-`CubicWeb` allows us to develop web applications instances based on
-one or more `cubes`.
-
-What we call a `cube` is a model defining the data types and views. 
-A `cube` is a reusable component grouped with others cubes in the file
-system.
-
-An `instance` refers to a specific installation of one or more `cubes`
- where are grouped configuration files of the final web application.
-
-In this document, we will show you how to create a `cube` and how to use it
-in an `instance` for your web application.
-
 Create your cube
 ----------------
 
@@ -227,11 +209,9 @@ that is displayed now includes a link to the entity Blog named
 .. image:: images/cbw-detail-one-blogentry.en.png
    :alt: displaying the detailed view of a blogentry
 
-Please notice that so far, `CubicWeb` franework managed all aspects of 
-the web application based in the schema provided at first.
-Also if you wish to get a graphical view of the schema, visit
-the link `Application schema`` which will direct you to :
-http://localhost:8080/view?vid=schema
+Note that all of this was handled by the framework and that the only input
+that was provided so far is the schema. To get a graphical view of the schema,
+point your browser to the URL http://localhost:8080/schema
 
 .. image:: images/cbw-schema.en.png
    :alt: graphical view of the schema (aka data-model)
@@ -332,4 +312,3 @@ coordinates. We will get to this in more detail later.
 
 The view has a ``self.w()`` method that is used to output data. In our
 example we use it to output HTML tags and values of the entity's attributes.
-

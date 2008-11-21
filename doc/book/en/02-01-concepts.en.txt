@@ -1,36 +1,10 @@
 .. -*- coding: utf-8 -*-
 
-`CubicWeb` concepts
-===================
-
-A little history...
--------------------
-
-`CubicWeb` is a web application framework developped by Logilab_ since 2001.
-
-Entirely written in Python, `CubicWeb` publishes data from all sorts
-of sources such as SQL database, LDAP directory and versioning system such
-as subversion.
-
-`CubicWeb` user interface was designed to let the final user a huge flexibility
-on how to select and how to display content. It allows to browse the knowledge
-database and to display the results with the best rendering according to
-the context.
-This interface flexibility gives back the user the control of the 
-rendering parameters that are usually reserved for developpers.
-
-
-We can list a couple of web applications developped with `CubicWeb`, an online
-public phone directory (see http://www.118000.fr/), a system for managing 
-digital studies and simulations for a research lab, a tool for shared children
-babysitting (see http://garde-partagee.atoukontact.fr/), a tool to manage
-software developpment (see http://www.logilab.org), etc.
-
-In 2008, `CubicWeb` was ported for a new type of source : the datastore 
-from GoogleAppEngine_.
+Concepts
+--------
 
 Global architecture
--------------------
+~~~~~~~~~~~~~~~~~~~
 .. image:: images/archi_globale.png
 
 .. note::
@@ -41,51 +15,58 @@ Global architecture
   a couple of calls in distincts processes to balance the load of
   your web site on one or more machines.
 
+.. _TermsVocabulary:
 
 Terms and vocabulary
---------------------
+~~~~~~~~~~~~~~~~~~~~~
 
 *schema*
-  the schema defines the data model of an application based on entities
-  and relations, thanks to the `yams`_ library. This is the core piece
+  The schema defines the data model of an application based on entities
+  and relations, modeled with a comprehensive language made of Python
+  classes based on `yams`_ library. This is the core piece
   of an application. It is initially defined in the file system and is
   stored in the database at the time an instance is created. `CubicWeb`
   provides a certain number of system entities included automatically as
   it is necessarry for the core of `CubicWeb` and a library of
-  cubes that can be explicitely included if necessarry.
+  cubes that can be explicitely included if necessary.
 
 
 *entity type*
-  an entity is a set of attributes; the essential attribute of
+  An entity is a set of attributes; the essential attribute of
   an entity is its key, named eid
 
 *relation type*
-  entities are linked to each others by relations. In `CubicWeb`
+  Entities are linked to each others by relations. In `CubicWeb`
   relations are binary: by convention we name the first item of
   a relation the `subject` and the second the `object`.
 
 *final entity type*
-  final types corresponds to the basic types such as string of characters,
+  Final types corresponds to the basic types such as string of characters,
   integers... Those types have a main property which is that they can
   only be used as `object` of a relation. The attributes of an entity
   (non final) are entities (finals).
 
 *final relation type*
-  a relation is said final if its `object` is a final type. This is equivalent
+  A relation is said final if its `object` is a final type. This is equivalent
   to an entity attribute.
 
+*relation definition*
+  a relation definition is a 3-uple (subject entity type, relation type, object entity type),
+  with an associated set of property such as cardinality, constraints...
+  
 *repository*
-  this is the RQL server side of `CubicWeb`. Be carefull not to get
+  This is the RQL server side of `CubicWeb`. Be carefull not to get
   confused with a Mercurial repository or a debian repository.
 
 *source*
-  a data source is a container of data (SGBD, LDAP directory...) integrated in the
+  A data source is a container of data (SGBD, LDAP directory, `Google
+  App Engine`'s datastore ...) integrated in the
   `CubicWeb` repository. This repository has at least one source, `system` which 
   contains the schema of the application, plain-text index and others
   vital informations for the system.
 
 *configuration*
-  it is possible to create differents configurations for an instance:
+  It is possible to create differents configurations for an instance:
 
   - ``repository`` : repository only, accessible for clients using Pyro
   - ``twisted`` : web interface only, access the repository using Pyro
@@ -93,13 +74,17 @@ Terms and vocabulary
      The repository could be or not accessible using Pyro.
 
 *cube*
-  a cube is a model grouping one or multiple data types and/or views
+  A cube is a model grouping one or multiple data types and/or views
   to provide a specific functionnality or a complete `CubicWeb` application
   potentially using other cubes. The available subes are located in the file
-  system at `/path/to/forest/cubicweb/cubes`
+  system at `/path/to/forest/cubicweb/cubes`.
+  Larger applications can be built faster by importing cubes,
+  adding entities and relationships and overriding the
+  views that need to display or edit informations not provided by
+  cubes.
 
 *instance*
-  an instance is a specific installation of a cube. All the required 
+  An instance is a specific installation of a cube. All the required 
   configuration files necessarry for the well being of your web application
   are grouped in an instance. This will refer to the cube(s) your application
   is based on.
@@ -108,29 +93,50 @@ Terms and vocabulary
   The instances are defined in the directory `~/etc/cubicweb.d`.
 
 *application*
-  the term application is sometime used to talk about an instance
+  The term application is sometime used to talk about an instance
   and sometimes to talk of a cube depending on the context. 
   So we would like to avoid using this term and try to use *cube* and
   *instance* instead.
 
 *result set*
-  this object contains the results of an RQL query and information on the query.
+  This object contains the results of an RQL query sent to the source
+  and information on the query.
 
 *Pyro*
   `Python Remote Object`_, distributed objects system similar to Java's RMI
   (Remote Method Invocation), which can be used for the dialog between the web
   side of the framework and the RQL repository.
 
+*query language*
+  A full-blown query language named RQL is used to formulate requests
+  to the database or any sources such as LDAP or `Google App Engine`'s 
+  datastore.
+
+*views*
+  A view is applied to a `result set` to present it as HTML, XML,
+  JSON, CSV, etc. Views are implemented as Python classes. There is no
+  templating language.
+
+*generated user interface*
+  A user interface is generated on-the-fly from the schema definition:
+  entities can be created, displayed, updated and deleted. As display
+  views are not very fancy, it is usually necessary to develop your
+  own. Any generated view can be overridden by defining a new one with
+  the same identifier.
+
+*rql*
+ XXX
+ 
 .. _`Python Remote Object`: http://pyro.sourceforge.net/
-.. _`yams`: http://www.logilab.org/project/name/yams/
+.. _`yams`: http://www.logilab.org/project/yams/
 
 
 `CubicWeb` engine
------------------
+~~~~~~~~~~~~~~~~~
 
-The web engine in `CubicWeb` is a set of classes managing a set of objects loaded
-dynamically at the startup of `CubicWeb`. Those dynamics objects, based on the schema
-or the library, are building the final web site. The differents dymanic components are
+The engine in `CubicWeb` is a set of classes managing a set of objects loaded
+dynamically at the startup of `CubicWeb` (*appobjects*). Those dynamics objects, based on the schema
+or the library, are building the final application. The differents dymanic components are
 by example:
 
 * client and server side
@@ -158,21 +164,13 @@ The components of the engine are:
 
 * a frontal web (only twisted is available so far), transparent for dynamic objects
 * an object that encapsulates the configuration
-* a `vregistry` (`cubicweb.cwvreg`) containing the dynamic objects loaded automatically
+* a `registry` (`cubicweb.cwvreg`) containing the dynamic objects loaded automatically
 
-
-Details of a recording process
-------------------------------
-
-At startup, the `vregistry` or registers base, inspects a number of directories
-looking for compatible classes definition. After a recording process, the objects
-are assigned to registers so that they can be selected dynamically while the
-application is running.
-
-The base class of those objects is `AppRsetObject` (module `cubicweb.common.appobject`).
+Every *appobject* may access to the instance configuration using its *config* attribute
+and to the registry using its *vreg* attribute.
 
 API Python/RQL
---------------
+~~~~~~~~~~~~~~
 
 Inspired from the standard db-api, with a Connection object having the methods
 cursor, rollback and commit essentially. The most important method is
@@ -201,7 +199,7 @@ on the query execution success.
   
 
 The `Request` class (`cubicweb.web`)
-------------------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 A request instance is created when an HTPP request is sent to the web server.
 It contains informations such as forms parameters, user authenticated, etc.
@@ -259,7 +257,7 @@ most of the interface of `Request` is defined in the session associated
 to the client.
 
 The `AppObject` class
----------------------
+~~~~~~~~~~~~~~~~~~~~~
 
 In general:
 
@@ -343,7 +341,7 @@ We also find on instances, the following attributes:
 
 
 Standard structure for a cube
------------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 A complex cube is structured as follows:
 
@@ -409,3 +407,5 @@ The only required files are:
 
 * the file ``__pkginfo__.py``
 * the schema definition
+  XXX false, we may want to have cubes which are only adding a service, no persistent data (eg embeding for instance)
+

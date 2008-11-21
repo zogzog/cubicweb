@@ -3,6 +3,9 @@
 RQL language (Relation Query Language)
 ======================================
 
+XXX see also RQL documentation in source rql/doc.
+
+
 Introduction
 ------------
 * RQL language focuses on browsing relations.
@@ -209,3 +212,5 @@ Examples
   'toto'::
 
        DELETE X friend Y WHERE X is 'Person', X name 'toto'
+
+
