@@ -198,7 +198,7 @@ The following rules are applied to select an object given a register and an id a
 * the object with the greatest score is selected. If multiple objects have an
   identical score, one of them is selected randomly (this is usually a bug)
 
-The object's selector is the `__selector__` class method on the object's class.
+The object's selector is the `__select__` class method on the object's class.
 
 The score is used to choose the most pertinent objects where there are more than
 one selectable object. For instance, if you're selecting the primary
@@ -221,7 +221,7 @@ on the class, with ::
 
 which is equivalent to ::
 
-  __selector__ = chainall(sel1, sel2)
+  __select__ = chainall(sel1, sel2)
 
 The former is prefered since it's shorter and it's ease overriding in
 subclasses (you have access to sub-selectors instead of the wrapping function).
