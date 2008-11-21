@@ -38,6 +38,7 @@ Table of contents
 .. toctree::
    :maxdepth: 2
 
+   01-08-book-map.en.txt
    01-00-introduction.en.txt
    02-00-foundation.en.txt
    03-00-setup.en.txt
@@ -50,7 +51,6 @@ Table of contents
    10-00-form-management.en.txt
    11-00-ajax-json.en.txt
    12-00-ui-components.en.txt
-   13-00-security.en.txt
    14-00-hooks.en.txt
    15-00-notifications.en.txt
    16-00-rql.en.txt
