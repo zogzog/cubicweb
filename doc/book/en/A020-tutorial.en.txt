@@ -18,7 +18,7 @@ An `instance` refers to a specific installation of one or more `cubes`
 In this document, we will show you how to create a `cube` and how to use it
 in an `instance` for your web application.
 
-.. include:: 01-01-create-cube.en.txt
-.. include:: 01-05-components.en.txt
-.. include:: 01-06-maintemplate.en.txt
-.. include:: 01-07-rss-xml.en.txt
+.. include:: A02a-create-cube.en.txt
+.. include:: A02b-components.en.txt
+.. include:: A02c-maintemplate.en.txt
+.. include:: A02d-rss-xml.en.txt

@@ -29,6 +29,4 @@ software developpment (see http://www.logilab.org), etc.
 In 2008, `CubicWeb` was ported for a new type of source : the datastore 
 from GoogleAppEngine_.
 
-.. include:: 02-01-concepts.en.txt
-.. include:: 02-02-registry.en.txt
-.. include:: 02-03-configuration.en.txt
+.. include:: A03a-concepts.en.txt

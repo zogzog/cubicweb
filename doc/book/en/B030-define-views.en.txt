@@ -210,7 +210,7 @@ forms parameters:
   the dictionnary of the forms parameters, before going the classic way (through
   step 1 and 2 described juste above)
 
-.. include:: 05-01-views-stdlib.en.txt
+.. include:: B031-views-stdlib.en.txt
 
 
 XML views, binaries...

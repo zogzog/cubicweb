@@ -139,4 +139,4 @@ besoin de copier celui de la classe parent pour le modifier). De même modifier
 celui-ci après création de la classe n'aura aucun effet...
 
 
-.. include:: 07-01-define-entities.en.txt
+.. include:: B051-define-entities.en.txt

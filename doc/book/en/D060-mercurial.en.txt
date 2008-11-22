@@ -112,3 +112,5 @@ Bonnes pratiques
   4. `hg push`
 
 .. _Mercurial: http://www.selenic.com/mercurial/
+
+.. include:: D061-mercurial-forest.en.txt
