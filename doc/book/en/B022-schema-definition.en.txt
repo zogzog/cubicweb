@@ -189,38 +189,31 @@ specific permissions, its definition (by using `SubjectRelation` and
 The security model
 ------------------
 
-Le modèle de sécurité de CubicWeb est un modèle fondé sur des `Access
-Control List`. Les notions sont les suivantes :
+The security model of `cubicWeb` is based on `Access Control List`. 
+The main principles are:
 
-* utilisateurs et groupes d'utilisateurs
-* un utilisateur appartient à au moins un groupe
-* droits (lire, modifier, créer, supprimer) 
-* les droits sont attribués aux groupes (et non aux utilisateurs)
+* users and groups of users
+* a user belongs to at least one group of user
+* permissions (read, update, create, delete)
+* permissions are assigned to groups (and not to users)
 
-Pour CubicWeb plus spécifiquement :
+For `CubicWeb` in particular:
 
-* on associe les droits au niveau des schemas d'entites / relations
-
-* pour chaque type d'entité, on distingue les droits de lecture,
-  ajout, modification et suppression
-  
-* pour chaque type de relation, on distingue les droits de lecture,
-  ajout et suppression (on ne peut pas modifer une relation)
-  
-* les groupes de base sont : Administrateurs, Utilisateurs, Invités
-
-* les utilisateurs font par défaut parti du groupe Utilisateurs
-
-* on a un groupe virtuel "Utilisateurs Propriétaires", auquel on peut
-  associer uniquement les droits de suppression et de modification
-  
-* on ne peut pas mettre d'utilisateurs dans ce groupe, ils y sont
-  ajoutés implicitement dans le contexte des objets dont ils sont
-  propriétaires
-  
-* les droits de ce groupe ne sont vérifiés que sur
-  modification / suppression si tous les autres groupes auxquels
-  l'utilisateur appartient se sont vu interdir l'accès
+* we associate rights at the enttities/relations schema level
+* for each entity, we distinguish four kind of permissions: read,
+  add, update and delete
+* for each relation, we distinguish three king of permissions: read,
+  add and delete (we can not modify a relation)
+* the basic groups are: Administrators, Users and Guests
+* by default, users belongs to the group Users
+* there is a virtual group called `Owners users` to which we
+  can associate only deletion and update permissions
+* we can not add users to the `Owners users` group, they are
+  implicetely added to it according to the context of the objects
+  they own
+* the permissions of this group are only be checked on update/deletion
+  actions if all the other groups the user belongs does not provide
+  those permissions
 
   
 Permissions definition
