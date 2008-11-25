@@ -362,7 +362,7 @@ class LiveServerCommand(Command):
         runserver()
 
 
-class NewTemplateCommand(Command):
+class NewCubeCommand(Command):
     """Create a new cube.
 
     <cubename>
@@ -431,5 +431,5 @@ class NewTemplateCommand(Command):
 register_commands((UpdateCubicWebCatalogCommand,
                    UpdateTemplateCatalogCommand,
                    LiveServerCommand,
-                   NewTemplateCommand,
+                   NewCubeCommand,
                    ))
