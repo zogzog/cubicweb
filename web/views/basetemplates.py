@@ -335,7 +335,7 @@ class HTMLHeader(Template):
         if urlgetter is not None:
             url = urlgetter.feed_url()
             self.whead(u'<link rel="alternate" type="application/rss+xml" title="RSS feed" href="%s"/>\n'
-                   % html_escape(url))
+                       %  html_escape(url))
 
     def pageid(self):
         req = self.req
