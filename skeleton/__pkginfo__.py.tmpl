@@ -19,10 +19,7 @@ long_desc = '''%(longdesc)s'''
 from os import listdir as _listdir
 from os.path import join, isdir
 
-from glob import glob
-scripts = glob(join('bin', '%(cubename)s-*'))
-
-web, ftp = '', ''
+web = ''
 
 pyversions = ['2.4']
 
@@ -40,17 +37,9 @@ try:
     data_files = [
         # common files
         [THIS_CUBE_DIR, [fname for fname in glob('*.py') if fname != 'setup.py']],
-        
-        # client (web) files
-        [join(THIS_CUBE_DIR, 'data'),  listdir('data')],
-        [join(THIS_CUBE_DIR, 'i18n'),  listdir('i18n')],
-        
-        # server files
-        [join(THIS_CUBE_DIR, 'migration'), listdir('migration')],
-        ]
-    
+        ]    
     # check for possible extended cube layout
-    for dirname in ('entities', 'views', 'sobjects', 'schema'):
+    for dirname in ('entities', 'views', 'sobjects', 'schema', 'data', 'i18n', 'migration'):
         if isdir(dirname):
             data_files.append([join(THIS_CUBE_DIR, dirname), listdir(dirname)])
     # Note: here, you'll need to add subdirectories if you want
@@ -62,4 +51,5 @@ except OSError:
 
 cube_eid = None # <=== FIXME if you need direct bug-subscription
 __use__ = (%(dependancies)s)
+__recommend__ = ()
 

@@ -52,7 +52,7 @@ def install(**kwargs):
     """setup entry point"""
     return setup(name=distname,
                  version=version,
-                 license =license,
+                 license=license,
                  description=short_desc,
                  long_description=long_desc,
                  author=author,
