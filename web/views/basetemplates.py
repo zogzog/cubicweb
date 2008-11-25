@@ -11,7 +11,6 @@ from logilab.mtconverter import html_escape
 
 from cubicweb import NoSelectableObject, ObjectNotFound
 from cubicweb.common.view import Template, MainTemplate,  NOINDEX, NOFOLLOW
-from cubicweb.common.selectors import nfentity_selector, onelinerset_selector 
 from cubicweb.common.utils import make_uid
 
 from cubicweb.web.views.baseviews import vid_from_rset
