@@ -390,6 +390,9 @@ def primaryview_selector(cls, req, rset, row=None, col=None, view=None,
     return 1
 
 def appobject_selectable(registry, oid):
+    """return a selector that will have a positive score if an object for the
+    given registry and object id is selectable for the input context
+    """
     @lltrace
     def selector(cls, req, rset, *args, **kwargs):
         try:
