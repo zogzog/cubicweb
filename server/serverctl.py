@@ -18,7 +18,7 @@ from cubicweb.server.serverconfig import ServerConfiguration
 
 # utility functions ###########################################################
 
-def source_cnx(source, dbname=None, special_privs=False):
+def source_cnx(source, dbname=None, special_privs=False, verbose=True):
     """open and return a connection to the system database defined in the
     given server.serverconfig
     """
@@ -29,7 +29,7 @@ def source_cnx(source, dbname=None, special_privs=False):
         dbname = source['db-name']
     driver = source['db-driver']
     print '**** connecting to %s database %s@%s' % (driver, dbname, dbhost),
-    if not special_privs and source.get('db-user'):
+    if not verbose or (not special_privs and source.get('db-user')):
         user = source['db-user']
         print 'as', user
         if source.get('db-password'):
@@ -53,7 +53,8 @@ def source_cnx(source, dbname=None, special_privs=False):
     return get_connection(driver, dbhost, dbname, user, password=password,
                           port=source.get('db-port'))
 
-def system_source_cnx(source, dbms_system_base=False, special_privs=None):
+def system_source_cnx(source, dbms_system_base=False,
+                      special_privs='CREATE/DROP DATABASE', verbose=True):
     """shortcut to get a connextion to the application system database
     defined in the given config. If <dbms_system_base> is True,
     connect to the dbms system database instead (for task such as
@@ -62,11 +63,10 @@ def system_source_cnx(source, dbms_system_base=False, special_privs=None):
     if dbms_system_base:
         from logilab.common.adbh import get_adv_func_helper
         system_db = get_adv_func_helper(source['db-driver']).system_database()
-        special_privs = special_privs or 'CREATE/DROP DATABASE'
-        return source_cnx(source, system_db, special_privs=special_privs)
-    return source_cnx(source, special_privs=special_privs)
+        return source_cnx(source, system_db, special_privs=special_privs, verbose=verbose)
+    return source_cnx(source, special_privs=special_privs, verbose=verbose)
 
-def _db_sys_cnx(source, what, db=None, user=None):
+def _db_sys_cnx(source, what, db=None, user=None, verbose=True):
     """return a connection on the RDMS system table (to create/drop a user
     or a database
     """
@@ -79,7 +79,7 @@ def _db_sys_cnx(source, what, db=None, user=None):
     if db is not None:
         special_privs += ' %s DATABASE' % what
     # connect on the dbms system base to create our base
-    cnx = system_source_cnx(source, True, special_privs=special_privs)
+    cnx = system_source_cnx(source, True, special_privs=special_privs, verbose=verbose)
     # disable autocommit (isolation_level(1)) because DROP and
     # CREATE DATABASE can't be executed in a transaction
     try:
@@ -189,7 +189,8 @@ class RepositoryCreateHandler(CommandHandler):
         
     def postcreate(self):
         if confirm('do you want to create repository\'s system database?'):
-            cmd_run('db-create', self.config.appid)
+            verbosity = (self.config.mode == 'installed') and 'y' or 'n'
+            cmd_run('db-create', self.config.appid, '--verbose=%s' % verbosity)
         else:
             print 'nevermind, you can do it later using the db-create command'
             
@@ -280,11 +281,18 @@ class CreateApplicationDBCommand(Command):
          {'short': 'c', 'type': "yn", 'metavar': '<y or n>',
           'default': True,
           'help': 'create the database (yes by default)'}),
+        ("verbose",
+         {'short': 'v', 'type' : 'yn', 'metavar': '<verbose>',
+          'default': 'n',
+          'help': 'verbose mode: will ask all possible configuration questions',
+          }
+         ),
         )
     def run(self, args):
         """run the command with its specific arguments"""
         from logilab.common.adbh import get_adv_func_helper
         from indexer import get_indexer
+        verbose = self.get('verbose')
         appid = pop_arg(args, msg="No application specified !")
         config = ServerConfiguration.config_for(appid)
         create_db = self.config.create_db
@@ -293,7 +301,7 @@ class CreateApplicationDBCommand(Command):
         helper = get_adv_func_helper(driver)
         if create_db:
             # connect on the dbms system base to create our base
-            dbcnx = _db_sys_cnx(source, 'CREATE DATABASE and / or USER')
+            dbcnx = _db_sys_cnx(source, 'CREATE DATABASE and / or USER', verbose=verbose)
             cursor = dbcnx.cursor()
             try:
                 if helper.users_support:
@@ -319,7 +327,7 @@ class CreateApplicationDBCommand(Command):
             except:
                 dbcnx.rollback()
                 raise
-        cnx = system_source_cnx(source, special_privs='LANGUAGE C') 
+        cnx = system_source_cnx(source, special_privs='LANGUAGE C', verbose=verbose) 
         cursor = cnx.cursor()
         indexer = get_indexer(driver)
         indexer.init_extensions(cursor)
