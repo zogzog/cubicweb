@@ -378,6 +378,7 @@ class TextView(EntityView):
         self.w(cut(entity.dc_title(),
                    self.req.property_value('navigation.short-line-size')))
 
+
 class MetaDataView(EntityView):
     """paragraph view of some metadata"""
     id = 'metadata'
@@ -400,19 +401,8 @@ class MetaDataView(EntityView):
             self.w(u'<span class="value">%s</span>'
                    % self.format_date(entity.creation_date))
         if entity.creator:
-            creatoreid = entity.creator.eid
             self.w(u'&nbsp;<span>%s</span> ' % _('by'))
             self.w(u'<span class="value">%s</span>' % entity.creator.name())
-        else:
-            creatoreid = None            
-        try:
-            owners = ','.join(u.name() for u in entity.owned_by
-                              if u.eid != creatoreid)
-            if owners:
-                self.w(u',&nbsp;<span>%s</span> ' % _('owned by'))
-                self.w(u'<span class="value">%s</span>' % owners)
-        except Unauthorized:
-            pass
         self.w(u'</div>')
 
 
