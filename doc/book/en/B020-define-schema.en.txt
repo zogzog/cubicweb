@@ -17,6 +17,6 @@ A relation type could have been implied if none is related to a
 relation definition of the schema.
 
 
-.. include:: 04-01-schema-stdlib.en.txt
-.. include:: 04-02-schema-definition.en.txt
+.. include:: B021-schema-stdlib.en.txt
+.. include:: B022-schema-definition.en.txt
 

@@ -3,27 +3,12 @@
 Workflow definition
 ======================
 
-On peut mettre une condition rql ou/et un groupe auquel doit appartenir l'utilisateur.
-
-Si on met à la fois un(ou plusieurs) groupe et une condition RQL, il faut que les deux soient respectés.
-
-Si on met plusieurs groupes, il faut que l'utilisateur soit dans un des groupes.
-
-Pour la condition RQL sur une transition, on peut y mettre les substitutions suivantes :
-
-* `%(eid)s`, eid de l'objet
-* `%(ueid)s`, eid de l'utilisateur qui fait la requête
-* `%(seid)s`, eid de l'état courant de l'objet
-
-Dans le script de création d'un workflow, penser à mettre `_()` autour des noms d'états et de transitions
-pour que ceux si soient pris en compte par les scripts de gestion des catalogues i18n.
-
 General
 -------
 
-A workflow can be defined in a `LAX` application thanks to the system 
+A workflow can be defined in a `CubicWeb` application thanks to the system 
 entities ``State`` and ``Transition``. Those are defined within all 
-LAX application and can be set-up through the main administrator interface.
+`CubicWeb` application and can be set-up through the main administrator interface.
 
 Once your schema is defined, you can start creating the set of states and
 the required transitions for your applications entities.
@@ -127,6 +112,10 @@ to ``migration/postcreate.py``::
 
   checkpoint()
 
+.. note::
+  Do not forget to add the `_()` in front of all states and transitions names while creating
+  a workflow so that they will be identified by the i18n catalog scripts.
+
 ``add_entity`` is used here to define the new group of users that we
 need to define the transitions, `moderators`.
 If this group required by the transition is not defined before the
@@ -142,7 +131,23 @@ of the entity type or not.
 transition, then the entity type on which we can apply the transition,
 then the list of possible initial states from which the transition
 can be applied, the target state of the transition, and the permissions
-(e.g. list of the groups of users who can apply the transition).
+(e.g. list of the groups of users who can apply the transition, the user
+needs to belong to at least one of the listed group).
+
+
+We could have also added a RQL condition in addition to a group to 
+which the user should belong to. 
+
+If we use both RQL condition and group, the two must be satisfied 
+for the user to be allowed to apply the transition.
+
+If we use a RQL condition on a transition, we can use the following 
+variables:
+
+* `%(eid)s`, object's eid
+* `%(ueid)s`, user executing the query eid
+* `%(seid)s`, the object's current state eid
+
 
 .. image:: images/lax-book.03-transitions-view.en.png
 
@@ -151,5 +156,4 @@ is now listed as well as the possible transitions from this state
 defined by the workflow. This transition, as defined in the workflow,
 will only being displayed for the users belonging to the group
 moderators of managers.
-
 

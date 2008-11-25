@@ -1,0 +1,17 @@
+.. -*- coding: utf-8 -*-
+
+
+==========================
+Part III - Administration
+==========================
+
+This part is for installation and administration of the `CubicWeb` framework and
+applications based on that framework.
+ 
+.. toctree::
+   :maxdepth: 1
+
+   C010-setup.en.txt
+   C020-site-config.en.txt
+   C030-instance-config.en.txt
+   C040-rql.en.txt

@@ -52,7 +52,7 @@ class ServerConfiguration(CubicWebConfiguration):
           'default': None,
           'help': 'if this option is set, use the specified user to start \
 the repository rather than the user running the command',
-          'group': 'main', 'inputlevel': 0,
+          'group': 'main', 'inputlevel': (CubicWebConfiguration.mode == 'installed') and 0 or 1,
           }),
         ('session-time',
          {'type' : 'int',

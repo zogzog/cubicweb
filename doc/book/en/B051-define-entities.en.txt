@@ -1,43 +1,45 @@
 .. -*- coding: utf-8 -*-
 
-Paramétrages et extensions spécifiques
---------------------------------------
+Parametrization and specific extensions
+---------------------------------------
 
-Valeurs par défaut dynamiques
-`````````````````````````````
-Il est possible de définir dans le schéma des valeurs par défaut *statiques*.
-Il est également possible de définir des valeurs par défaut *dynamiques* en 
-définissant sur la classe d'entité une méthode `default_<nom attribut>` pour
-un attribut donnée.
+Dynamic default values
+``````````````````````
+It is possible to define in the schema *static* default values.
+It is also possible to define in the schema *dynamic* default values
+by defining in the entity class a method `default_<attribut name>` for
+a given attribute.
 
 
-Contrôle des attributs chargés et du tri par défaut
-```````````````````````````````````````````````````
-* l'attribut de classe `fetch_attrs` permet de définir sur une classe d'entité
-  la liste des noms des attributs ou relations devant être chargés 
-  automatiquement lors de la récupération d'entité(s) de ce type. Dans le cas 
-  des relations, on est limité aux relations *sujets de cardinalité `?` ou `1`*.
+Control of loaded attributes and default sorting
+````````````````````````````````````````````````
 
-* la méthode de classe `fetch_order(attr, var)` prend en argument un nom 
-  d'attribut (ou de relation) et un nom de variable et doit retourner une chaine
-  à utiliser dans la close "ORDERBY" d'une requête RQL pour trier 
-  automatiquement les listes d'entités de ce type selon cet attribut, ou `None`
-  si l'on ne veut pas de tri sur l'attribut passé en argument. Par défaut les 
-  entités sont triées selon leur date de création
+* The class attribute `fetch_attrs` allows to defined in an entity class
+  a list of names of attributes or relations that should be automatically
+  loaded when we recover the entities of this type. In the case of relations,
+  we are limited to *subject of cardinality `?` or `1`* relations.
 
-* la méthode de classe `fetch_unrelated_order(attr, var)` est similaire à la 
-  méthode `fetch_order` mais est utilisée essentiellement pour contrôler le tri
-  des listes déroulantes permettant de créer des relations dans la vue d'édition
-  d'une entité
+* The class method `fetch_order(attr, var)` expects an attribute (or relation)
+  name as a parameter and a variable name, and it should return a string
+  to use in the requirement `ORDER BY` of an RQL query to automatically
+  sort the list of entities of such type according to this attribute, or
+  `None` if we do not want to sort on the attribute given in the parameter.
+  By default, the entities are sorted according to their creation date.
 
-La fonction `fetch_config(fetchattrs, mainattr=None)` permet de simplifier la 
-définition des attributs à précharger et du tri en retournant une liste des 
-attributs à précharger (en considérant ceux de la classe  `AnyEntity`
-automatiquement) et une fonction de tri sur l'attribut "principal" (le 2eme 
-argument si spécifié ou sinon le premier attribut de la liste `fetchattrs`).
-Cette fonction est définie dans le package `ginco.entities`.
+* The class method `fetch_unrelated_order(attr, var)` is similar to the 
+  method `fetch_order` except that it is essentially used to control
+  the sorting of drop-down lists enabling relations creation in 
+  the editing view of an entity.
 
-Par exemple : ::
+The function `fetch_config(fetchattrs, mainattr=None)` simplifies the
+definition of the attributes to load and the sorting by returning a 
+list of attributes to pre-load (considering automatically the attributes
+of `AnyEntity`) and a sorting function based on the main attribute
+(the second parameter if specified otherwisethe first attribute from
+the list `fetchattrs`).
+This function is defined in `cubicweb.entities`.
+
+By example: ::
 
   class Transition(AnyEntity):
     """..."""
