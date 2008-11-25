@@ -183,6 +183,7 @@ class PossibleViewsBox(BoxTemplate):
             box.render(self.w)
 
 
+        
 class RSSIconBox(ExtResourcesBoxTemplate):
     """just display the RSS icon on uniform result set"""
     __selectors__ = ExtResourcesBoxTemplate.__selectors__ + (appobject_selectable('components', 'rss_feed_url'),)
@@ -198,17 +199,6 @@ class RSSIconBox(ExtResourcesBoxTemplate):
         rss = self.req.external_resource('RSS_LOGO')
         self.w(u'<a href="%s"><img src="%s" border="0" /></a>\n' % (html_escape(url), rss))
 
-class EntityRSSIconBox(RSSIconBox):
-    """just display the RSS icon on uniform result set for a single entity"""
-    __selectors__ = RSSIconBox.__selectors__ + (onelinerset_selector,)
-
-    def call(self, **kwargs):
-        entity = self.entity(0, 0)
-        url = entity.rss_feed_url()
-        eid = entity.eid
-        rss = self.req.external_resource('RSS_LOGO')
-        self.w(u'<a href="%s"><img src="%s" border="0" /></a>\n' %
-               (html_escape(url), rss))
 
 ## warning("schemabox ne marche plus pour le moment")
 ## class SchemaBox(BoxTemplate):
