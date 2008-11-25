@@ -371,6 +371,15 @@ class NewCubeCommand(Command):
     name = 'newcube'
     arguments = '<cubename>'
 
+    options = (
+        ("verbose",
+         {'short': 'v', 'type' : 'yn', 'metavar': '<verbose>',
+          'default': 'n',
+          'help': 'verbose mode: will ask all possible configuration questions',
+          }
+         ),
+        )
+
     
     def run(self, args):
         if len(args) != 1:
@@ -378,6 +387,7 @@ class NewCubeCommand(Command):
         cubename, = args
         if ServerConfiguration.mode != "dev":
             self.fail("you can only create new cubes in development mode")
+        verbose = self.get('verbose')
         cubedir = ServerConfiguration.CUBES_DIR
         if not isdir(cubedir):
             print "creating apps directory", cubedir
@@ -389,19 +399,27 @@ class NewCubeCommand(Command):
         if exists(cubedir):
             self.fail("%s already exists !" % (cubedir))
         skeldir = join(BASEDIR, 'skeleton')
-        distname = raw_input('Debian name for your cube (just type enter to use the cube name): ').strip()
-        if not distname:
-            distname = 'cubicweb-%s' % cubename.lower()
-        elif not distname.startswith('cubicweb-'):
-            if confirm('do you mean cubicweb-%s ?' % distname):
-                distname = 'cubicweb-' + distname
-        shortdesc = raw_input('Enter a short description for your cube: ')
-        longdesc = raw_input('Enter a long description (or nothing if you want to reuse the short one): ')
-        includes = self._ask_for_dependancies()
-        if len(includes) == 1:
-            dependancies = '%r,' % includes[0]
+        if verbose:
+            distname = raw_input('Debian name for your cube (just type enter to use the cube name): ').strip()
+            if not distname:
+                distname = 'cubicweb-%s' % cubename.lower()
+            elif not distname.startswith('cubicweb-'):
+                if confirm('do you mean cubicweb-%s ?' % distname):
+                    distname = 'cubicweb-' + distname
         else:
-            dependancies = ', '.join(repr(cube) for cube in includes)
+            distname = 'cubicweb-%s' % cubename.lower()
+        
+        longdesc = shortdesc = raw_input('Enter a short description for your cube: ')
+        if verbose:
+            longdesc = raw_input('Enter a long description (or nothing if you want to reuse the short one): ')
+        if verbose:
+            includes = self._ask_for_dependancies()
+            if len(includes) == 1:
+                dependancies = '%r,' % includes[0]
+            else:
+                dependancies = ', '.join(repr(cube) for cube in includes)
+        else:
+            dependancies = ''
         from mx.DateTime import now
         context = {'cubename' : cubename,
                    'distname' : distname,
