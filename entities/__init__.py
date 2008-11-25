@@ -202,6 +202,7 @@ class AnyEntity(Entity):
 
     def rss_feed_url(self):
         return self.absolute_url(vid='rss')
+    
     # abstractions making the whole things (well, some at least) working ######
     
     @classmethod

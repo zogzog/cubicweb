@@ -11,7 +11,7 @@ from logilab.mtconverter import html_escape
 
 from cubicweb import NoSelectableObject, ObjectNotFound
 from cubicweb.common.view import Template, MainTemplate,  NOINDEX, NOFOLLOW
-from cubicweb.common.selectors import nfentity_selector
+from cubicweb.common.selectors import nfentity_selector, onelinerset_selector 
 from cubicweb.common.utils import make_uid
 
 from cubicweb.web.views.baseviews import vid_from_rset
@@ -331,9 +331,9 @@ class HTMLHeader(Template):
             self.req.add_js(jscript, localfile=False)
             
     def alternates(self):
-        # nfentity_selector is used by the rss icon box as well
-        if nfentity_selector(self, self.req, self.rset):
-            url = self.build_url(rql=self.limited_rql(), vid='rss')
+        urlgetter = self.vreg.select_component('rss_feed_url', self.req, self.rset)
+        if urlgetter is not None:
+            url = urlgetter.feed_url()
             self.whead(u'<link rel="alternate" type="application/rss+xml" title="RSS feed" href="%s"/>\n'
                    % html_escape(url))
 

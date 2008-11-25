@@ -14,14 +14,14 @@ from rql import parse
 
 from cubicweb import Unauthorized
 from cubicweb.common.uilib import html_escape, toggle_action
-from cubicweb.common.selectors import yes_selector
+from cubicweb.common.selectors import yes_selector, nfentity_selector, onelinerset_selector
 from cubicweb.schema import display_name
 from cubicweb.common.selectors import (chainfirst, multitype_selector,
                                     req_form_params_selector)
 
 from cubicweb.web.htmlwidgets import MenuWidget, PopupBoxMenu, BoxSeparator, BoxLink
-from cubicweb.web.component import (SingletonVComponent, EntityVComponent, 
-                                 RelatedObjectsVComponent)
+from cubicweb.web.component import (VComponent, SingletonVComponent, EntityVComponent, 
+                                    RelatedObjectsVComponent)
 
 _ = unicode
 

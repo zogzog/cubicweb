@@ -389,6 +389,16 @@ def primaryview_selector(cls, req, rset, row=None, col=None, view=None,
         return 0
     return 1
 
+def appobject_selectable(registry, oid):
+    @lltrace
+    def selector(cls, req, rset, *args, **kwargs):
+        try:
+            cls.vreg.select_object(registry, oid, req, rset, *args, **kwargs)
+            return 1
+        except NoSelectableObject:
+            return 0
+    return selector
+
 
 # compound selectors ##########################################################
 

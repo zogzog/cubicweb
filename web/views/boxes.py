@@ -17,7 +17,7 @@ __docformat__ = "restructuredtext en"
 
 from logilab.mtconverter import html_escape
 
-from cubicweb.common.selectors import rset_selector, nfentity_selector, onelinerset_selector
+from cubicweb.common.selectors import (rset_selector, appobject_selectable)
 from cubicweb.web.htmlwidgets import BoxWidget, BoxMenu, BoxHtml, RawBoxItem
 from cubicweb.web.box import BoxTemplate, ExtResourcesBoxTemplate
 
@@ -165,7 +165,6 @@ class PossibleViewsBox(BoxTemplate):
     """display a box containing links to all possible views"""
     id = 'possible_views_box'
     
-    
     title = _('possible views')
     order = 10
     require_groups = ('users', 'managers')
@@ -186,7 +185,7 @@ class PossibleViewsBox(BoxTemplate):
 
 class RSSIconBox(ExtResourcesBoxTemplate):
     """just display the RSS icon on uniform result set"""
-    __selectors__ = ExtResourcesBoxTemplate.__selectors__ + (nfentity_selector,)
+    __selectors__ = ExtResourcesBoxTemplate.__selectors__ + (appobject_selectable('components', 'rss_feed_url'),)
     
     id = 'rss'
     order = 999
@@ -194,9 +193,10 @@ class RSSIconBox(ExtResourcesBoxTemplate):
     visible = False
     
     def call(self, **kwargs):
-        url = html_escape(self.build_url(rql=self.limited_rql(), vid='rss'))
+        urlgetter = self.vreg.select_component('rss_feed_url', self.req, self.rset)
+        url = urlgetter.feed_url()
         rss = self.req.external_resource('RSS_LOGO')
-        self.w(u'<a href="%s"><img src="%s" border="0" /></a>\n' % (url, rss))
+        self.w(u'<a href="%s"><img src="%s" border="0" /></a>\n' % (html_escape(url), rss))
 
 class EntityRSSIconBox(RSSIconBox):
     """just display the RSS icon on uniform result set for a single entity"""
