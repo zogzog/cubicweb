@@ -264,9 +264,9 @@ this option is set to yes",
         cube = CW_MIGRATION_MAP.get(cube, cube)
         try:
             return getattr(__import__('cubes.%s.__pkginfo__' % cube), cube).__pkginfo__
-        except ImportError:
+        except Exception, ex:
             raise ConfigurationError('unable to find packaging information for '
-                                     'cube %s' % cube)
+                                     'cube %s (%s: %s)' % (cube, ex.__class__.__name__, ex))
 
     @classmethod
     def cube_version(cls, cube):
