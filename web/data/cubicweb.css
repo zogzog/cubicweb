@@ -155,6 +155,10 @@ input, textarea {
   border: 1px solid #ccc;
 }
 
+input:focus {
+  border: 1px inset #ff7700;
+}
+
 fieldset {
   border: none;
 }
@@ -401,7 +405,6 @@ div#rqlform {
 }
 
 input#rql{
- border: 1px solid #ccc;
  width: 80%;
  margin-left: 12px;
 }
