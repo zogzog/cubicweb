@@ -7,7 +7,7 @@
 __docformat__ = "restructuredtext en"
 
 import os
-from os.path import join, dirname, exists
+from os.path import join, dirname, exists, split
 from urlparse import urljoin
 
 from logilab.common.configuration import Method
@@ -320,3 +320,31 @@ if you want to allow everything',
             if isinstance(val, str):
                 files = [w.strip() for w in val.split(',') if w.strip()]
                 self.ext_resources[resource] = files
+
+
+    # static files handling ###################################################
+    
+    @property
+    def static_directory(self):
+        return join(self.appdatahome, 'static')
+    
+    def static_file_exists(self, rpath):
+        return exists(join(self.static_directory, rpath))
+
+    def static_file_open(self, rpath, mode='wb'):
+        staticdir = self.static_directory
+        rdir, filename = split(rpath)
+        if rdir:
+            staticdir = join(staticdir, rdir)
+            os.makedirs(staticdir)
+        return file(join(staticdir, filename), mode)
+
+    def static_file_add(self, rpath, data):
+        stream = self.static_file_open(rpath)
+        stream.write(data)
+        stream.close()
+
+    def static_file_del(self, rpath):
+        if static_file_exists(rpath):
+            os.remove(join(self.static_directory, rpath))
+        

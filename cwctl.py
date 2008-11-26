@@ -10,7 +10,7 @@ from os.path import exists, join, isfile, isdir
 from cubicweb import ConfigurationError, ExecutionError, BadCommandUsage
 from cubicweb.cwconfig import CubicWebConfiguration, CONFIGURATIONS
 from cubicweb.toolsutils import (Command, register_commands, main_run, 
-                              rm, create_dir, pop_arg, confirm)
+                                 rm, create_dir, pop_arg, confirm)
     
 def wait_process_end(pid, maxtry=10, waittime=1):
     """wait for a process to actually die"""

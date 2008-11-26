@@ -123,11 +123,16 @@ class CubicWebRootResource(resource.PostableResource):
             if segments[0] == 'https':
                 segments = segments[1:]
             if len(segments) >= 2:
-                if segments[0] in (self.versioned_datadir, 'data'):
-                    # Anything in data/ is treated as static files
-                    datadir = self.config.locate_resource(segments[1])
-                    if datadir is None:
-                        return None, []
+                if segments[0] in (self.versioned_datadir, 'data', 'static'):
+                    # Anything in data/, static/ is treated as static files
+                    if segments[0] == 'static':
+                        # instance static directory
+                        datadir = self.config.static_directory
+                    else:
+                        # cube static data file
+                        datadir = self.config.locate_resource(segments[1])
+                        if datadir is None:
+                            return None, []
                     self.info('static file %s from %s', segments[-1], datadir)
                     if segments[0] == 'data':
                         return static.File(str(datadir)), segments[1:]
