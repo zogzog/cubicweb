@@ -4,9 +4,13 @@ from cubicweb.interfaces import ITree
 from cubicweb.common.selectors import interface_selector, yes_selector
 from cubicweb.common.view import EntityView
 
+from cubicweb.web.views.baseviews import OneLineView
+
 class TreeView(EntityView):
     id = 'treeview'
     accepts = ('Any',)
+    fstree = False
+    itemvid = 'treeitemview'
     
     def call(self, subvid=None):
         if subvid is None and 'subvid' in self.req.form:
@@ -15,10 +19,43 @@ class TreeView(EntityView):
             subvid = 'oneline'
         self.req.add_css('jquery.treeview.css')
         self.req.add_js(('cubicweb.ajax.js', 'jquery.treeview.js', 'cubicweb.widgets.js'))
-        self.w(u'<ul class="treeview widget" cubicweb:loadtype="auto" cubicweb:wdgtype="TreeView">')
+        css_classes = 'treeview widget'
+        if self.fstree:
+            css_classes += ' filetree'
+        self.w(u'<ul class="%s" cubicweb:loadtype="auto" cubicweb:wdgtype="TreeView">'
+               % css_classes)
         for rowidx in xrange(len(self.rset)):
-            self.wview('treeitemview', self.rset, row=rowidx, col=0, vid=subvid)
+            self.wview(self.itemvid, self.rset, row=rowidx, col=0,
+                       vid=subvid, parentvid=self.id)
         self.w(u'</ul>')
+        
+
+class FileTreeView(TreeView):
+    """specific version of the treeview to display file trees
+    """
+    id = 'filetree'
+    fstree = True
+
+    def call(self, subvid=None):
+        super(FileTreeView, self).call(subvid='filetree-oneline')
+
+
+
+class FileItemInnerView(OneLineView):
+    """inner view used by the TreeItemView instead of oneline view
+
+    This view adds an enclosing <span> with some specific CSS classes
+    around the oneline view. This is needed by the jquery treeview plugin.
+    """
+    id = 'filetree-oneline'
+
+    def cell_call(self, row, col):
+        entity = self.entity(row, col)
+        if ITree.is_implemented_by(entity.__class__) and not entity.is_leaf():
+            self.w(u'<span class="folder">%s</span>' % entity.view('oneline'))
+        else:
+            # XXX define specific CSS classes according to mime types
+            self.w(u'<span class="file">%s</span>' % entity.view('oneline'))
 
 
 class DefaultTreeViewItemView(EntityView):
@@ -27,13 +64,13 @@ class DefaultTreeViewItemView(EntityView):
     id = 'treeitemview'
     accepts = ('Any',)
     
-    def cell_call(self, row, col, vid='oneline'):
+    def cell_call(self, row, col, vid='oneline', parentvid='treeview'):
         entity = self.entity(row, col)
         itemview = self.view(vid, self.rset, row=row, col=col)
         if row == len(self.rset) - 1:
             self.w(u'<li class="last">%s</li>' % itemview)
         else:
-            self.w(u'<li>%s</li>' % itemview)
+            self.w(u'<li><span>%s</span></li>' % itemview)
 
 
 class TreeViewItemView(EntityView):
@@ -47,7 +84,7 @@ class TreeViewItemView(EntityView):
     __selectors__ = (interface_selector, yes_selector)
     accepts_interfaces = (ITree,)
     
-    def cell_call(self, row, col, vid='oneline'):
+    def cell_call(self, row, col, vid='oneline', parentvid='treeview'):
         entity = self.entity(row, col)
         cssclasses = []
         is_leaf = False
@@ -58,7 +95,7 @@ class TreeViewItemView(EntityView):
             self.w(u'<li class="%s">' % u' '.join(cssclasses))
         else:
             rql = entity.children_rql() % {'x': entity.eid}
-            url = html_escape(self.build_url('json', rql=rql, vid='treeview',
+            url = html_escape(self.build_url('json', rql=rql, vid=parentvid,
                                              pageid=self.req.pageid,
                                              subvid=vid))
             cssclasses.append('expandable')
