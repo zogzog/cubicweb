@@ -10,24 +10,18 @@ Installation of `Cubicweb` and its dependancies
 We will detail here the two easiest way to set-up `CubciWeb` 
 environment.
 
-Debian packages
-```````````````
-You need first to make sure that you added our public repository
-in the list of sources you packages manager will search in.
-
-Depending on the debian distribution you are using here are all the
-available options: ::
+Debian and Ubuntu packages
+```````````````````````````
+Depending on the distribution you are using, add the appropriate line to your list
+of sources (for example by editing ``/etc/apt/sources.list``) ::
 
   deb http://ftp.logilab.org/dists/ lenny/
   deb http://ftp.logilab.org/dists/ hardy/
   deb http://ftp.logilab.org/dists/ sid/
 
-As we assume you are installing `CubciWeb` on a debian machine, please
-add the appropriate line from above in ``/etc/apt/sources.list``.
+You can now install the required packages with the following command: ::
 
-You can now install the required packages with the follwoing command: ::
-
-  apt-get install cubicweb
+  apt-get update ; apt-get install cubicweb
 
 This is it!
 
