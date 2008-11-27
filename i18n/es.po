@@ -4,7 +4,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: cubicweb 2.46.0\n"
-"PO-Revision-Date: 2008-11-27 07:45+0100\n"
+"PO-Revision-Date: 2008-11-27 07:59+0100\n"
 "Last-Translator: Celso <contact@logilab.fr>\n"
 "Language-Team: fr <contact@logilab.fr>\n"
 "MIME-Version: 1.0\n"
@@ -1409,13 +1409,13 @@ msgid "creating State (State state_of EEType %(linkto)s)"
 msgstr "creación de un estado por el tipo %(linkto)s"
 
 msgid "creating State (Transition %(linkto)s destination_state State)"
-msgstr ""creación de un estado destinación de la transición %(linkto)s"
+msgstr "creación de un estado destinación de la transición %(linkto)s"
 
 msgid "creating Transition (State %(linkto)s allowed_transition Transition)"
-msgstr ""creación de una transición autorizada desde el estado %(linkto)s"
+msgstr "creación de una transición autorizada desde el estado %(linkto)s"
 
 msgid "creating Transition (Transition destination_state State %(linkto)s)"
-msgstr ""creación de un transición hacia el estado %(linkto)s"
+msgstr "creación de un transición hacia el estado %(linkto)s"
 
 msgid "creating Transition (Transition transition_of EEType %(linkto)s)"
 msgstr "creación de una transición para el tipo %(linkto)s"
