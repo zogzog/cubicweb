@@ -12,7 +12,7 @@ __docformat__ = "restructuredtext en"
 
 from logilab.common.compat import all
 
-from cubicweb import Unauthorized
+from cubicweb import Unauthorized, NoSelectableObject
 from cubicweb.cwvreg import DummyCursorError
 from cubicweb.vregistry import chainall, chainfirst, NoSelectableObject
 from cubicweb.cwconfig import CubicWebConfiguration
