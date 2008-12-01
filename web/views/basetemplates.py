@@ -169,6 +169,7 @@ class TheMainTemplate(MainTemplate):
         w = self.whead
         lang = self.req.lang
         self.write_doctype()
+        page_title = 'posted'
         w(u'<base href="%s" />' % html_escape(self.req.base_url()))
         w(u'<meta http-equiv="content-type" content="%s; charset=%s"/>\n'
           % (content_type, self.req.encoding))
@@ -259,8 +260,7 @@ class SimpleMainTemplate(TheMainTemplate):
 
     id = 'main-no-top'
     
-    def template_header(self, content_type, view=None, page_title='', additional_headers=()):
-        page_title = page_title or view.page_title()
+    def template_header(self, content_type, view=None, page_title='oui', additional_headers=()):
         additional_headers = additional_headers or view.html_headers()
         whead = self.whead
         lang = self.req.lang
