@@ -16,7 +16,6 @@ import re
 from urllib import quote as urlquote
 from cStringIO import StringIO
 from xml.parsers.expat import ExpatError
-from lxml import etree
 from copy import deepcopy
 
 import simplejson
@@ -114,7 +113,19 @@ except ImportError:
     
     def soup2xhtml(data, encoding):
         return data
-    
+
+    def safe_cut(text, length):
+        """returns a string of length <length> based on <text>, removing any html
+        tags from given text if cut is necessary."""
+        if text is None:
+            return u''
+        text_nohtml = remove_html_tags(text)
+        # try to keep html tags if text is short enough
+        if len(text_nohtml) <= length:
+            return text
+        # else if un-tagged text is too long, cut it
+        return text_nohtml[:length-3] + u'...'
+
 else:
 
     def soup2xhtml(data, encoding):
@@ -129,6 +140,41 @@ else:
         body = etree.tostring(xmltree[0], encoding=encoding)
         # remove <body> and </body> and decode to unicode
         return body[11:-13].decode(encoding)
+
+    def safe_cut(text, length):
+        """returns an html document of length <length> based on <text>,
+        and cut is necessary.
+        """
+        if text is None:
+            return u''
+        textParse = etree.HTML(text)
+        compteur = 0
+
+        for element in textParse.iter():
+            if compteur > length:
+                parent = element.getparent()
+                parent.remove(element)
+            else:
+                if element.text is not None:
+                    text_resum = text_cut_letters(element.text,length)
+                    len_text_resum = len(''.join(text_resum.split()))
+                    compteur = compteur + len_text_resum
+                    element.text = text_resum
+                         
+                if element.tail is not None:
+                    if compteur < length:
+                        text_resum = text_cut_letters(element.tail,length)
+                        len_text_resum = len(''.join(text_resum.split()))
+                        compteur = compteur + len_text_resum
+                        element.tail = text_resum
+                    else:
+                        element.tail = ''
+                     
+        div = etree.HTML('<div></div>')[0][0]
+        listNode = textParse[0].getchildren()
+        for node in listNode:
+            div.append(deepcopy(node))
+        return etree.tounicode(div)
 
     
 # HTML generation helper functions ############################################
@@ -169,41 +215,6 @@ def ajax_replace_url(nodeid, rql, vid=None, swap=False, **extraparams):
     if swap:
         params.append('true')
     return "javascript: replacePageChunk(%s);" % ', '.join(params)
-
-def safe_cut(text, length):
-    """returns a string of length <length> based on <text>, removing any html
-    tags from given text if cut is necessary.
-    """
-    if text is None:
-        return u''
-    textParse = etree.HTML(text)
-    compteur = 0
-
-    for element in textParse.iter():
-         if compteur > length:
-             parent = element.getparent()
-             parent.remove(element)
-         else:
-             if element.text is not None:
-                 text_resum = text_cut_letters(element.text,length)
-                 len_text_resum = len(''.join(text_resum.split()))
-                 compteur = compteur + len_text_resum
-                 element.text = text_resum
-                         
-             if element.tail is not None:
-                 if compteur < length:
-                     text_resum = text_cut_letters(element.tail,length)
-                     len_text_resum = len(''.join(text_resum.split()))
-                     compteur = compteur + len_text_resum
-                     element.tail = text_resum
-                 else:
-                     element.tail = ''
-                     
-    div = etree.HTML('<div></div>')[0][0]
-    listNode = textParse[0].getchildren()
-    for node in listNode:
-         div.append(deepcopy(node))
-    return etree.tounicode(div)
 
 def text_cut(text, nbwords=30):
     if text is None:
