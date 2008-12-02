@@ -32,7 +32,7 @@ def listdir(dirpath):
             if fname[0] != '.' and not fname.endswith('.pyc')
             and not fname.endswith('~')]
 
-
+from glob import glob
 try:
     data_files = [
         # common files
