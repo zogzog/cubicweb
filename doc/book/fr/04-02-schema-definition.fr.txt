@@ -346,3 +346,16 @@ qu'il pourrait effectivement l'obtenir. Pour palier à ce soucis il est en gén�
 nécessaire dans tel cas d'utiliser une action reflétant les droits du schéma
 mais permettant de faire la vérification correctement afin qu'elle apparaisse
 bien le cas échéant.
+
+Mise à jour du schema
+`````````````````````
+
+Il faut ensuite lancer son cubicweb en mode shell ::
+
+   cubicweb-ctl shell moninstance
+
+Et taper ::
+
+   add_entity_type('Personne')
+
+Et on relance l'application!
