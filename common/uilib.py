@@ -16,6 +16,8 @@ import re
 from urllib import quote as urlquote
 from cStringIO import StringIO
 from xml.parsers.expat import ExpatError
+from lxml import etree
+from copy import deepcopy
 
 import simplejson
 
@@ -167,9 +169,6 @@ def ajax_replace_url(nodeid, rql, vid=None, swap=False, **extraparams):
     if swap:
         params.append('true')
     return "javascript: replacePageChunk(%s);" % ', '.join(params)
-
-from lxml import etree
-from copy import deepcopy
 
 def safe_cut(text, length):
     """returns a string of length <length> based on <text>, removing any html
