@@ -59,10 +59,10 @@ class ResultSet(object):
     
     def __repr__(self):
         if not self.rows:
-            return '<empty resultset for %s>' % self.rql
+            return '<empty resultset for %r>' % self.rql
         if not self.description:
-            return '<resultset %s: %s>' % (self.rql, '\n'.join(str(r) for r in self.rows))
-        return '<resultset %s: %s>' % (self.rql,
+            return '<resultset %r: %s>' % (self.rql, '\n'.join(str(r) for r in self.rows))
+        return '<resultset %r: %s>' % (self.rql,
                                        '\n'.join('%s (%s)' % (r, d)
                                                  for r, d in zip(self.rows, self.description)))
 
