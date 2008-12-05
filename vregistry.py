@@ -334,14 +334,24 @@ class VRegistry(object):
 
         raise NoSelectableObject if not object apply
         """
-        score, winner = 0, None
+        score, winners = 0, []
         for vobject in vobjects:
             vobjectscore = vobject.__select__(*args, **kwargs)
             if vobjectscore > score:
-                score, winner = vobjectscore, vobject
-        if winner is None:
+                score, winners = vobjectscore, [vobject]
+            elif vobjectscore > 0 and vobjectscore == score:
+                winners.append(vobject)
+        if not winners:
             raise NoSelectableObject('args: %s\nkwargs: %s %s'
                                      % (args, kwargs.keys(), [repr(v) for v in vobjects]))
+        if len(winners) > 1:
+            if self.config.mode == 'installed':
+                self.error('select ambiguity, args: %s\nkwargs: %s %s',
+                           args, kwargs.keys(), [repr(v) for v in winners])
+            else:
+                raise Exception('select ambiguity, args: %s\nkwargs: %s %s'
+                                % (args, kwargs.keys(), [repr(v) for v in winners]))
+        winner = winners[0]
         # return the result of the .selected method of the vobject
         return winner.selected(*args, **kwargs)
     
