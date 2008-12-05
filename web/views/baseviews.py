@@ -200,8 +200,7 @@ class PrimaryView(EntityView):
     
     def summary(self, entity):
         """default implementation return an empty string"""
-        return u''
-    
+        return u''    
                
     def render_entity_attributes(self, entity, siderelations):
         for rschema, targetschema in self.iter_attributes(entity):
