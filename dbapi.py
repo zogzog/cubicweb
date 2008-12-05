@@ -74,7 +74,8 @@ def repo_connect(repo, user, password, cnxprops=None):
     return cnx
     
 def connect(database=None, user=None, password=None, host=None,
-            group=None, cnxprops=None, port=None, setvreg=True, mulcnx=True):
+            group=None, cnxprops=None, port=None, setvreg=True, mulcnx=True,
+            initlog=True):
     """Constructor for creating a connection to the CubicWeb repository.
     Returns a Connection object.
 
@@ -97,9 +98,9 @@ def connect(database=None, user=None, password=None, host=None,
         vreg = repo.vreg
     elif setvreg:
         if mulcnx:
-            vreg = MulCnxCubicWebRegistry(config)
+            vreg = MulCnxCubicWebRegistry(config, initlog=initlog)
         else:
-            vreg = CubicWebRegistry(config)
+            vreg = CubicWebRegistry(config, initlog=initlog)
         vreg.set_schema(repo.get_schema())
     else:
         vreg = None
