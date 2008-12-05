@@ -48,8 +48,8 @@ notre cube ou application ::
   cubicweb-ctl newtemplate moncube
 
   # répondre aux questions
-  hg init moncube
   cd moncube
+  hg init 
   hg add .
   hg ci
 
@@ -64,6 +64,10 @@ contrôle à la fois le packaging de l'application (dépendances gérées
 par les utilitaires système comme les outils APT) et les composants
 effectivement utilisables lors de la création de la base
 (import_erschema('Moncomposant') ne fonctionne pas sinon).
+
+FIXME - need example code ::
+
+  __use__ = ('blog', 'file')
 
 Création d'une instance de développement
 ========================================

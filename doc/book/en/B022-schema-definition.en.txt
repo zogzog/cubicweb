@@ -370,3 +370,17 @@ this entity but can obtain the permission.
 To compensate this problem, it is usually necessary, for such case,
 to use an action that reflects the schema permissions but which enables
 to check properly the permissions so that it would show up if necessary.
+
+
+Updating your application with your new schema
+``````````````````````````````````````````````
+
+You have to get a shell on your application ::
+
+   cubicweb-ctl shell moninstance
+
+and type ::
+
+   add_entity_type('Personne')
+
+And restart your application!
