@@ -31,9 +31,9 @@ class AbstractSessionManager(SingletonComponent):
     def __init__(self):
         self.session_time = self.vreg.config['http-session-time'] or None
         assert self.session_time is None or self.session_time > 0
-        self.cleanup_session_time = self.vreg.config['cleanup-session-time'] or 120
+        self.cleanup_session_time = self.vreg.config['cleanup-session-time'] or 43200
         assert self.cleanup_session_time > 0
-        self.cleanup_anon_session_time = self.vreg.config['cleanup-anonymous-session-time'] or 720
+        self.cleanup_anon_session_time = self.vreg.config['cleanup-anonymous-session-time'] or 120
         assert self.cleanup_anon_session_time > 0
         if self.session_time:
             assert self.cleanup_session_time < self.session_time
