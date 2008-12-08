@@ -118,7 +118,7 @@ class ChangeStateForm(EntityForm):
         self.w(u'<input type="hidden" name="%s" value="%s"/>\n'
                % (eid_param('state', eid), dest.eid))
         self.w(u'<input type="hidden" name="__redirectpath" value="%s"/>\n'
-               % html_escape(entity.rest_path()))
+               % html_escape(self.redirectpath(entity)))
         self.fill_form(entity, state, dest)
         self.w(u'<input type="hidden" name="__method" value="set_state"/>\n')
         self.w(self.button_ok(label=stdmsgs.YES, tabindex=self.req.next_tabindex()))
@@ -143,6 +143,9 @@ class ChangeStateForm(EntityForm):
         self.w(u'<label for="%s">%s</label>\n' % (cformname, self.req._('comment:')))
         self.w(u'<textarea rows="10" cols="80" name="%s" tabindex="%s"></textarea><br/>\n'
                % (cformname, self.req.next_tabindex()))
+
+    def redirectpath(self, entity):
+        return entity.rest_path()
 
 
 class ClickAndEditForm(EntityForm):
