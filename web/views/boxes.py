@@ -68,24 +68,8 @@ class EditBox(BoxTemplate):
                 # way to avoid this is to override add_related_schemas() on the
                 # entity class to return an empty list
                 for action in self.schema_actions(entity):
-                    add_menu.append(action)            
-            if 'in_state' in entity.e_schema.subject_relations() and entity.in_state:
-                state = entity.in_state[0]
-                transitions = list(state.transitions(entity))
-                if transitions:
-                    menu_title = u'%s: %s' % (_('state'), state.view('text'))
-                    menu_items = []
-                    for tr in state.transitions(entity):
-                        url = entity.absolute_url(vid='statuschange', treid=tr.eid)
-                        menu_items.append(self.mk_action(_(tr.name), url))
-                    state_menu = BoxMenu(menu_title, menu_items)
-                    box.append(state_menu)
-                # when there are no possible transition, put state if the menu if
-                # there are some other actions
-                elif not box.is_empty():
-                    menu_title = u'<a title="%s">%s: <i>%s</i></a>' % (
-                        _('no possible transition'), _('state'), state.view('text'))
-                    box.append(RawBoxItem(menu_title, 'boxMainactions'))
+                    add_menu.append(action)
+            self.workflow_actions(entity, box)
         if box.is_empty() and not other_menu.is_empty():
             box.items = other_menu.items
             other_menu.items = []
@@ -119,8 +103,26 @@ class EditBox(BoxTemplate):
         return actions
 
 
+    def workflow_actions(self, entity, box):
+        if 'in_state' in entity.e_schema.subject_relations() and entity.in_state:
+            state = entity.in_state[0]
+            transitions = list(state.transitions(entity))
+            if transitions:
+                menu_title = u'%s: %s' % (_('state'), state.view('text'))
+                menu_items = []
+                for tr in state.transitions(entity):
+                    url = entity.absolute_url(vid='statuschange', treid=tr.eid)
+                    menu_items.append(self.mk_action(_(tr.name), url))
+                box.append(BoxMenu(menu_title, menu_items))
+            # when there are no possible transition, put state if the menu if
+            # there are some other actions
+            elif not box.is_empty():
+                menu_title = u'<a title="%s">%s: <i>%s</i></a>' % (
+                    _('no possible transition'), _('state'), state.view('text'))
+                box.append(RawBoxItem(menu_title, 'boxMainactions'))
+        return None
+
     def linkto_url(self, entity, rtype, etype, target):
-        
         return self.build_url(vid='creation', etype=etype,
                               __linkto='%s:%s:%s' % (rtype, entity.eid, target),
                               __redirectpath=entity.rest_path(), # should not be url quoted!
