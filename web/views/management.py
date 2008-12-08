@@ -199,11 +199,17 @@ class ErrorView(AnyRsetView):
         self.w(u'<h2>%s</h2>' % title)
         if 'errmsg' in req.data:
             ex = req.data['errmsg']
+            exclass = None
         else:
+            exclass = ex.__class__.__name__
             ex = exc_message(ex, req.encoding)
         if excinfo is not None and self.config['print-traceback']:
-            exclass = ex.__class__.__name__
-            self.w(u'<div class="tb">%s: %s</div>' % (exclass, html_escape(ex).replace("\n","<br />")))
+            if exclass is None:
+                self.w(u'<div class="tb">%s</div>'
+                       % html_escape(ex).replace("\n","<br />"))
+            else:
+                self.w(u'<div class="tb">%s: %s</div>'
+                       % (exclass, html_escape(ex).replace("\n","<br />")))
             self.w(u'<hr />')
             self.w(u'<div class="tb">%s</div>' % html_traceback(excinfo, ex, ''))
         else:

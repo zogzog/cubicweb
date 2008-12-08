@@ -85,7 +85,7 @@ class ManageView(StartupView):
         if manager:
             self.w(u'<tr><th colspan="4">%s</th></tr>\n' % self.req._('application entities'))
         self.entity_types_table(eschema for eschema in schema.entities()
-                                if not eschema.meta and not eschema.is_subobject())
+                                if not eschema.meta and not eschema.is_subobject(strict=True))
         if manager: 
             self.w(u'<tr><th colspan="4">%s</th></tr>\n' % self.req._('system entities'))
             self.entity_types_table(eschema for eschema in schema.entities()

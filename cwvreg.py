@@ -27,9 +27,10 @@ class RaiseCursor:
 class CubicWebRegistry(VRegistry):
     """extend the generic VRegistry with some cubicweb specific stuff"""
     
-    def __init__(self, config, debug=None):
-        # first init log service
-        config.init_log(debug=debug)
+    def __init__(self, config, debug=None, initlog=True):
+        if initlog:
+            # first init log service
+            config.init_log(debug=debug)
         super(CubicWebRegistry, self).__init__(config)
         self.schema = None
         self.reset()
@@ -341,6 +342,7 @@ class CubicWebRegistry(VRegistry):
     def rqlhelper(self):
         return RQLHelper(self.schema,
                          special_relations={'eid': 'uid', 'has_text': 'fti'})
+
 
 class MulCnxCubicWebRegistry(CubicWebRegistry):
     """special registry to be used when an application has to deal with

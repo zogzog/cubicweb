@@ -12,6 +12,7 @@ import logging
 from os.path import exists, join, expanduser, abspath, basename
 
 from logilab.common.decorators import cached
+from logilab.common.logging_ext import set_log_methods, init_log
 from logilab.common.configuration import (Configuration, Method,
                                           ConfigurationMixIn, merge_options)
 
@@ -443,49 +444,12 @@ this option is set to yes",
     def init_log(self, logthreshold=None, debug=False, 
                  logfile=None, syslog=False):
         """init the log service"""
-        if os.environ.get('APYCOT_ROOT'):
-            logthreshold = logging.CRITICAL
-            # redirect logs to stdout to avoid apycot output parsing failure
-            handler = logging.StreamHandler(sys.stdout)
-        else:
+        if logthreshold is None:
             if debug:
-                if logthreshold is None:
-                    logthreshold = logging.DEBUG # LLDEBUG
-                handler = logging.StreamHandler()
-            elif logfile is None:
-                if syslog:
-                    from logging import handlers
-                    handler = handlers.SysLogHandler()
-                else:
-                    handler = logging.StreamHandler()
+                logthreshold = 'DEBUG'
             else:
-                try:
-                    handler = logging.FileHandler(logfile)
-                except IOError:
-                    handler = logging.StreamHandler()
-            if logthreshold is None:
-                thresholdname = self['log-threshold']
-                logthreshold = getattr(logging, THRESHOLD_MAP.get(thresholdname,
-                                                                  thresholdname))
-        # configure the root logger
-        logger = logging.getLogger()
-        logger.setLevel(logthreshold)
-        # only addHandler and removeHandler method while I would like a
-        # setHandler method, so do it this way :$
-        logger.handlers = [handler]
-        isatty = hasattr(sys.__stdout__, 'isatty') and sys.__stdout__.isatty()
-        if debug and isatty:
-            from logilab.common.logging_ext import ColorFormatter
-            fmt = ColorFormatter(self.log_format, '%Y-%m-%d %H:%M:%S')
-            def col_fact(record):
-                if 'XXX' in record.message:
-                    return 'cyan'
-                if 'kick' in record.message:
-                    return 'red'
-            fmt.colorfilters.append(col_fact)
-        else:
-            fmt = logging.Formatter(self.log_format, '%Y-%m-%d %H:%M:%S')
-        logger.handlers[0].setFormatter(fmt)
+                logthreshold = self['log-threshold']
+        init_log(debug, syslog, logthreshold, logfile, self.log_format)
         # configure simpleTal logger
         logging.getLogger('simpleTAL').setLevel(logging.ERROR)
 
@@ -839,18 +803,8 @@ the repository',
         sourcedirs.append(self.i18n_lib_dir())
         return i18n.compile_i18n_catalogs(sourcedirs, i18ndir, langs)
 
+set_log_methods(CubicWebConfiguration, logging.getLogger('cubicweb.configuration'))
         
 # alias to get a configuration instance from an application id
 application_configuration = CubicWebConfiguration.config_for        
 
-# map logilab.common.logger thresholds to logging thresholds
-THRESHOLD_MAP = {'LOG_DEBUG':  'DEBUG',
-                 'LOG_INFO':   'INFO',
-                 'LOG_NOTICE': 'INFO',
-                 'LOG_WARN':   'WARNING',
-                 'LOG_ERR':    'ERROR',
-                 'LOG_CRIT':   'CRITICAL',
-                 }
-
-from cubicweb import set_log_methods
-set_log_methods(CubicWebConfiguration, logging.getLogger('cubicweb.configuration'))

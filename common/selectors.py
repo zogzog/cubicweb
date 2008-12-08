@@ -234,6 +234,8 @@ def _interface_selector(cls, req, rset, row=None, col=None, **kwargs):
     * if row is specified, return the value returned by the method with
       the entity's class of this row
     """
+    # XXX this selector can be refactored : extract the code testing
+    #     for entity schema / interface compliance
     score = 0
     # check 'accepts' to give priority to more specific classes
     if row is None:
@@ -245,8 +247,15 @@ def _interface_selector(cls, req, rset, row=None, col=None, **kwargs):
             if not escore:
                 return 0
             score += escore
-            if eclass.id in getattr(cls, 'accepts', ()):
-                score += 2
+            accepts = set(getattr(cls, 'accepts', ()))
+            # if accepts is defined on the vobject, eclass must match
+            if accepts:
+                eschema = eclass.e_schema
+                etypes = set([eschema] + eschema.ancestors())
+                if accepts & etypes:
+                    score += 2
+                elif 'Any' not in accepts:
+                    return 0
         return score + 1
     etype = rset.description[row][col or 0]
     if etype is None: # outer join
@@ -255,10 +264,16 @@ def _interface_selector(cls, req, rset, row=None, col=None, **kwargs):
     for iface in cls.accepts_interfaces:
         score += iface.is_implemented_by(eclass)
     if score:
-        if eclass.id in getattr(cls, 'accepts', ()):
-            score += 2
-        else:
-            score += 1
+        accepts = set(getattr(cls, 'accepts', ()))
+        # if accepts is defined on the vobject, eclass must match
+        if accepts:
+            eschema = eclass.e_schema
+            etypes = set([eschema] + eschema.ancestors())
+            if accepts & etypes:
+                score += 1
+            elif 'Any' not in accepts:
+                return 0
+        score += 1
     return score
 
 @lltrace

@@ -95,6 +95,16 @@ class TreeMixIn(object):
         path.reverse()
         return path
     
+    def iterparents(self):
+        def _uptoroot(self):
+            curr = self
+            while True:
+                curr = curr.parent()
+                if curr is None:
+                    break
+                yield curr
+        return _uptoroot(self)
+
     def notification_references(self, view):
         """used to control References field of email send on notification
         for this entity. `view` is the notification view.

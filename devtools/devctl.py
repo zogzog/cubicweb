@@ -179,7 +179,7 @@ def defined_in_library(libschema, etype, rtype, tetype, x):
         return False
 
 
-LANGS = ('en', 'fr')
+LANGS = ('en', 'fr', 'es')
 I18NDIR = join(BASEDIR, 'i18n')
 DEFAULT_POT_HEAD = r'''msgid ""
 msgstr ""

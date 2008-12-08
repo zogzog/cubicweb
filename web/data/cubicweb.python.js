@@ -110,7 +110,7 @@ function strptime(datestring, format) {
 	return null;
     }
     // create initial date (!!! year=0 means 1900 !!!)
-    date = new Date(0, 0, 1, 0, 0);
+    var date = new Date(0, 0, 1, 0, 0);
     date.setFullYear(0); // reset to year 0
     if (parsed.Y) {
 	date.setFullYear(parsed.Y);
@@ -126,19 +126,19 @@ function strptime(datestring, format) {
 	if (parsed.m < 1 || parsed.m > 31) {
 	    return null;
 	}
-	date.setDate(parsed.d)
+	date.setDate(parsed.d);
     }
     if (parsed.H) {
 	if (parsed.H < 0 || parsed.H > 23) {
 	    return null;
 	}
-	date.setHours(parsed.H)
+	date.setHours(parsed.H);
     }
     if (parsed.M) {
 	if (parsed.M < 0 || parsed.M > 59) {
 	    return null;
 	}
-	date.setMinutes(parsed.M)
+	date.setMinutes(parsed.M);
     }
     return date;
 }

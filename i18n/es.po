@@ -1,0 +1,2961 @@
+# cubicweb i18n catalog
+# Copyright 2003-2008 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+# Logilab <contact@logilab.fr>
+msgid ""
+msgstr ""
+"Project-Id-Version: cubicweb 2.46.0\n"
+"PO-Revision-Date: 2008-11-27 07:59+0100\n"
+"Last-Translator: Celso <contact@logilab.fr>\n"
+"Language-Team: fr <contact@logilab.fr>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#, python-format
+msgid ""
+"\n"
+"%(user)s changed status from <%(previous_state)s> to <%(current_state)s> for "
+"entity\n"
+"'%(title)s'\n"
+"\n"
+"%(comment)s\n"
+"\n"
+"url: %(url)s\n"
+msgstr ""
+"\n"
+"%(user)s a cambiado su estado de <%(previous_state)s> hacia <%(current_state)s> "
+"por la entidad\n"
+"'%(title)s'\n"
+"\n"
+"%(comment)s\n"
+"\n"
+"url: %(url)s\n"
+
+#, python-format
+msgid "  from state %(fromstate)s to state %(tostate)s\n"
+msgstr "  de el estado %(fromstate)s hacia el estado %(tostate)s\n"
+
+#, python-format
+msgid "%(cstr)s constraint failed for value %(value)r"
+msgstr "el valor %(value)r no satisface la condición %(cstr)s"
+
+#, python-format
+msgid "%(firstname)s %(surname)s"
+msgstr "%(firstname)s %(surname)s"
+
+#, python-format
+msgid "%(fmt1)s, or without time: %(fmt2)s"
+msgstr "%(fmt1)s, o bien sin especificar horario: %(fmt2)s"
+
+#, python-format
+msgid "%(subject)s %(etype)s #%(eid)s (%(login)s)"
+msgstr "%(subject)s %(etype)s #%(eid)s (%(login)s)"
+
+#, python-format
+msgid "%d months"
+msgstr "%d meses"
+
+#, python-format
+msgid "%d weeks"
+msgstr "%d semanas"
+
+#, python-format
+msgid "%d years"
+msgstr "%d años"
+
+#, python-format
+msgid "%s days"
+msgstr "%d días"
+
+#, python-format
+msgid "%s error report"
+msgstr "%s reporte de errores"
+
+#, python-format
+msgid "%s hours"
+msgstr "%s horas"
+
+#, python-format
+msgid "%s minutes"
+msgstr "%s minutos"
+
+#, python-format
+msgid "%s not estimated"
+msgstr "%s no estimado(s)"
+
+#, python-format
+msgid "%s results matching query"
+msgstr "%s resultados de la demanda"
+
+#, python-format
+msgid "%s seconds"
+msgstr "%s segundos"
+
+#, python-format
+msgid "%s software version of the database"
+msgstr "version sistema de la base para %s"
+
+msgid "**"
+msgstr "0..n 0..n"
+
+msgid "*+"
+msgstr "0..n 1..n"
+
+msgid "*1"
+msgstr "0..n 1"
+
+msgid "*?"
+msgstr "0..n 0..1"
+
+msgid "+*"
+msgstr "1..n 0..n"
+
+msgid "++"
+msgstr "1..n 1..n"
+
+msgid "+1"
+msgstr "1..n 1"
+
+msgid "+?"
+msgstr "1..n 0..1"
+
+msgid "1*"
+msgstr "1 0..n"
+
+msgid "1+"
+msgstr "1 1..n"
+
+msgid "11"
+msgstr "1 1"
+
+msgid "1?"
+msgstr "1 0..1"
+
+msgid "?*"
+msgstr "0..1 0..n"
+
+msgid "?+"
+msgstr "0..1 1..n"
+
+msgid "?1"
+msgstr "0..1 1"
+
+msgid "??"
+msgstr "0..1 0..1"
+
+msgid "AND"
+msgstr "Y"
+
+msgid "Any"
+msgstr "Cualquiera"
+
+msgid "Application"
+msgstr "Aplicación"
+
+msgid "Bookmark"
+msgstr "Atajo"
+
+msgid "Bookmark_plural"
+msgstr "Atajos"
+
+msgid "Boolean"
+msgstr "Booleano"
+
+msgid "Boolean_plural"
+msgstr "Booleanos"
+
+msgid "Browse by category"
+msgstr "Selecciona por categoría"
+
+msgid "Bytes"
+msgstr "Datos binarios"
+
+msgid "Bytes_plural"
+msgstr "Datos binarios"
+
+msgid "Card"
+msgstr "Ficha"
+
+msgid "Card_plural"
+msgstr "Fichas"
+
+msgid "Date"
+msgstr "Fecha"
+
+msgid "Date_plural"
+msgstr "Fechas"
+
+msgid "Datetime"
+msgstr "Fecha y hora"
+
+msgid "Datetime_plural"
+msgstr "Fechas y horas"
+
+#, python-format
+msgid "Debug level set to %s"
+msgstr "Nivel de debug puesto a %s"
+
+msgid "Decimal"
+msgstr "Número decimal"
+
+msgid "Decimal_plural"
+msgstr "Números decimales"
+
+msgid "Do you want to delete the following element(s) ?"
+msgstr "Desea suprimir el(los) elemento(s) siguiente(s)"
+
+msgid "ECache"
+msgstr "Memoria Cache"
+
+msgid "ECache_plural"
+msgstr "Memorias Caches"
+
+msgid "EConstraint"
+msgstr "Condición"
+
+msgid "EConstraintType"
+msgstr "Tipo de condición"
+
+msgid "EConstraintType_plural"
+msgstr "Tipos de condición"
+
+msgid "EConstraint_plural"
+msgstr "Condiciones"
+
+msgid "EEType"
+msgstr "Tipo de entidades"
+
+msgid "EEType_plural"
+msgstr "Tipos de entidades"
+
+msgid "EFRDef"
+msgstr "Atributo"
+
+msgid "EFRDef_plural"
+msgstr "Atributos"
+
+msgid "EGroup"
+msgstr "Groupo"
+
+msgid "EGroup_plural"
+msgstr "Groupos"
+
+msgid "ENFRDef"
+msgstr "Relación"
+
+msgid "ENFRDef_plural"
+msgstr "Relaciones"
+
+msgid "EPermission"
+msgstr "Autorización"
+
+msgid "EPermission_plural"
+msgstr "Autorizaciones"
+
+msgid "EProperty"
+msgstr "Propiedad"
+
+msgid "EProperty_plural"
+msgstr "Propiedades"
+
+msgid "ERType"
+msgstr "Tipo de relación"
+
+msgid "ERType_plural"
+msgstr "Tipos de relación"
+
+msgid "EUser"
+msgstr "Usuario"
+
+msgid "EUser_plural"
+msgstr "Usuarios"
+
+msgid "Email body: "
+msgstr "Contenido del correo electrónico : "
+
+msgid "EmailAddress"
+msgstr "Correo Electrónico"
+
+msgid "EmailAddress_plural"
+msgstr "Direcciónes de Correo Electrónico"
+
+msgid "Entities"
+msgstr "entidades"
+
+msgid "Environment"
+msgstr "Ambiente"
+
+msgid "Float"
+msgstr "Número flotante"
+
+msgid "Float_plural"
+msgstr "Números flotantes"
+
+msgid "From: "
+msgstr "De : "
+
+msgid "Int"
+msgstr "Número entero"
+
+msgid "Int_plural"
+msgstr "Números enteros"
+
+msgid "Interval"
+msgstr "Duración"
+
+msgid "Interval_plural"
+msgstr "Duraciones"
+
+msgid "New Bookmark"
+msgstr "Nuevo Atajo"
+
+msgid "New Card"
+msgstr "Nueva ficha"
+
+msgid "New ECache"
+msgstr "Nueva memoria cache"
+
+msgid "New EConstraint"
+msgstr "Nueva condición"
+
+msgid "New EConstraintType"
+msgstr "Nuevo tipo de condición"
+
+msgid "New EEType"
+msgstr "Nuevo tipo de entidad"
+
+msgid "New EFRDef"
+msgstr "Nueva definición de relación final"
+
+msgid "New EGroup"
+msgstr "Nuevo grupo"
+
+msgid "New ENFRDef"
+msgstr "Nueva definición de relación final"
+
+msgid "New EPermission"
+msgstr "Nueva autorización"
+
+msgid "New EProperty"
+msgstr "Nueva Propiedad"
+
+msgid "New ERType"
+msgstr "Nuevo tipo de relación"
+
+msgid "New EUser"
+msgstr "Nuevo usuario"
+
+msgid "New EmailAddress"
+msgstr "Nuevo Email"
+
+msgid "New RQLExpression"
+msgstr "Nueva expresión rql"
+
+msgid "New State"
+msgstr "Nuevo Estado"
+
+msgid "New TrInfo"
+msgstr "Nueva Información de Transición"
+
+msgid "New Transition"
+msgstr "Nueva transición"
+
+msgid "No query has been executed"
+msgstr "Ninguna búsqueda ha sido ejecutada"
+
+msgid "No result matching query"
+msgstr "Ningún resultado corresponde a su búsqueda"
+
+msgid "OR"
+msgstr "O"
+
+msgid "Password"
+msgstr "Contraseña"
+
+msgid "Password_plural"
+msgstr "Contraseñas"
+
+msgid "Please note that this is only a shallow copy"
+msgstr "Recuerde que no es más que una copia superficial"
+
+msgid "Problem occured"
+msgstr "Ha ocurrido un error"
+
+msgid "RQLExpression"
+msgstr "Expresión RQL"
+
+msgid "RQLExpression_plural"
+msgstr "Expresiones RQL"
+
+msgid "Recipients: "
+msgstr "Destinatarios : "
+
+msgid "Relations"
+msgstr "Relaciones"
+
+msgid "Request"
+msgstr "Búsqueda"
+
+#, python-format
+msgid "Schema %s"
+msgstr "Esquema %s"
+
+msgid "Search for"
+msgstr "Buscar"
+
+msgid "Server"
+msgstr "Servidor"
+
+msgid "Startup views"
+msgstr "Vistas de inicio"
+
+msgid "State"
+msgstr "Estado"
+
+msgid "State_plural"
+msgstr "Estados"
+
+msgid "String"
+msgstr "Cadena de caractéres"
+
+msgid "String_plural"
+msgstr "Cadenas de caractéres"
+
+msgid "Subject: "
+msgstr "Objeto : "
+
+msgid "Submit bug report"
+msgstr "Enviar un reporte de error (bug)"
+
+msgid "Submit bug report by mail"
+msgstr "Enviar este reporte por email"
+
+msgid "The repository holds the following entities"
+msgstr "El repositorio contiene las entidades siguientes"
+
+#, python-format
+msgid "The view %s can not be applied to this query"
+msgstr "La vista %s no puede ser aplicada a esta búsqueda"
+
+#, python-format
+msgid "The view %s could not be found"
+msgstr "La vista %s no ha podido ser encontrada"
+
+#, python-format
+msgid "This %s"
+msgstr "Este %s"
+
+msgid "This Bookmark"
+msgstr "Este atajo"
+
+msgid "This Card"
+msgstr "Esta Ficha"
+
+msgid "This ECache"
+msgstr "Esta Memoria Cache"
+
+msgid "This EConstraint"
+msgstr "Esta condición"
+
+msgid "This EConstraintType"
+msgstr "Este tipo de condición"
+
+msgid "This EEType"
+msgstr "Este tipo de Entidad"
+
+msgid "This EFRDef"
+msgstr "Esta definición de relación final"
+
+msgid "This EGroup"
+msgstr "Este grupo"
+
+msgid "This ENFRDef"
+msgstr "Esta definición de relación no final"
+
+msgid "This EPermission"
+msgstr "Esta autorización"
+
+msgid "This EProperty"
+msgstr "Esta propiedad"
+
+msgid "This ERType"
+msgstr "Este tipo de relación"
+
+msgid "This EUser"
+msgstr "Este usuario"
+
+msgid "This EmailAddress"
+msgstr "Esta dirección electrónica"
+
+msgid "This RQLExpression"
+msgstr "Esta expresión RQL"
+
+msgid "This State"
+msgstr "Este estado"
+
+msgid "This TrInfo"
+msgstr "Esta información de transición"
+
+msgid "This Transition"
+msgstr "Esta transición"
+
+msgid "Time"
+msgstr "Hora"
+
+msgid "Time_plural"
+msgstr "Horas"
+
+msgid "TrInfo"
+msgstr "Información Transición"
+
+msgid "TrInfo_plural"
+msgstr "Información Transiciones"
+
+msgid "Transition"
+msgstr "Transición"
+
+msgid "Transition_plural"
+msgstr "Transiciones"
+
+#, python-format
+msgid "Unable to find anything named \"%s\" in the schema !"
+msgstr "No encontramos el nombre \"%s\" en el esquema"
+
+msgid "Used by:"
+msgstr "Utilizado por :"
+
+msgid "What's new?"
+msgstr "Ultimas Noticias"
+
+msgid "Workflow history"
+msgstr "Registro de cambios de estado"
+
+msgid "You are not connected to an application !"
+msgstr "Usted no esta conectado a una aplicación"
+
+#, python-format
+msgid "You are now connected to %s"
+msgstr "Usted esta conectado a %s"
+
+msgid ""
+"You can either submit a new file using the browse button above, or choose to "
+"remove already uploaded file by checking the \"detach attached file\" check-"
+"box, or edit file content online with the widget below."
+msgstr ""
+"Usted puede proponer un nuevo archivo utilizando el botón\n"
+"\"buscar\" aqui arriba, o eliminar el archivo ya elegido al\n"
+"seleccionar el cuadro \"soltar archivo adjunto\", o editar el contenido\n"
+"del archivo en línea con el componente inferior."
+
+msgid ""
+"You can either submit a new file using the browse button above, or edit file "
+"content online with the widget below."
+msgstr ""
+"Puede proponer un nuevo archivo utilizando el botón buscar \n"
+"\"buscar\" en la parte superior, o editar el contenido del archivo en línea\n"
+"en el campo siguiente."
+
+msgid "You can use any of the following substitutions in your text"
+msgstr ""
+"Puede realizar cualquiera de las siguietes sustituciones "
+"en el contenido de su email."
+
+msgid "You have no access to this view or it's not applyable to current data"
+msgstr ""
+"No tiene acceso a esta vista o No es aplicable a los datos actuales"
+
+msgid ""
+"You're not authorized to access this page. If you think you should, please "
+"contact the site administrator."
+msgstr ""
+"Usted no esta autorizado a acceder a esta página. Si Usted cree aue \n"
+"es un error, favor de contactar al administrador del sitio."
+
+#, python-format
+msgid "[%s supervision] changes summary"
+msgstr "[%s supervision] descripción de cambios"
+
+msgid "__msg state changed"
+msgstr "El estado a cambiado"
+
+msgid ""
+"a RQL expression which should return some results, else the transition won't "
+"be available. This query may use X and U variables that will respectivly "
+"represents the current entity and the current user"
+msgstr ""
+"una expresión RQL deviendo regresado resultado para que la transición "
+"pueda ser realizada. Esta expresión puede utilizar las variables X y U "
+"que representan respectivamente la entidad en transición y el usuario" "actual. "
+
+
+msgid ""
+"a card is a textual content used as documentation, reference, procedure "
+"reminder"
+msgstr ""
+"una ficha es un texto utilizado como documentación, referencia, memoria "
+"de procedimiento..."
+
+msgid ""
+"a simple cache entity characterized by a name and a validity date. The "
+"target application is responsible for updating timestamp when necessary to "
+"invalidate the cache (typically in hooks). Also, checkout the AppRsetObject."
+"get_cache() method."
+msgstr ""
+
+msgid "about this site"
+msgstr "Sobre este espacio"
+
+msgid "access type"
+msgstr "tipo de acceso"
+
+msgid "account state"
+msgstr "Estado de la Cuenta"
+
+msgid "action(s) on this selection"
+msgstr "acción(es) en esta selección"
+
+msgid "actions"
+msgstr "acciones"
+
+msgid "actions_addentity"
+msgstr "agregar una entidad de este tipo"
+
+msgid "actions_addentity_description"
+msgstr ""
+
+msgid "actions_cancel"
+msgstr "Anular la selección"
+
+msgid "actions_cancel_description"
+msgstr ""
+
+msgid "actions_copy"
+msgstr "copiar"
+
+msgid "actions_copy_description"
+msgstr ""
+
+msgid "actions_delete"
+msgstr "eliminar"
+
+msgid "actions_delete_description"
+msgstr ""
+
+msgid "actions_edit"
+msgstr "modificar"
+
+msgid "actions_edit_description"
+msgstr ""
+
+msgid "actions_embed"
+msgstr "embarcar"
+
+msgid "actions_embed_description"
+msgstr ""
+
+msgid "actions_follow"
+msgstr "seguir"
+
+msgid "actions_follow_description"
+msgstr ""
+
+msgid "actions_logout"
+msgstr "desconectarse"
+
+msgid "actions_logout_description"
+msgstr ""
+
+msgid "actions_manage"
+msgstr "administración del sitio"
+
+msgid "actions_manage_description"
+msgstr ""
+
+msgid "actions_muledit"
+msgstr "Edición múltiple"
+
+msgid "actions_muledit_description"
+msgstr ""
+
+msgid "actions_myinfos"
+msgstr "información personal"
+
+msgid "actions_myinfos_description"
+msgstr ""
+
+msgid "actions_myprefs"
+msgstr "preferencias del usuario"
+
+msgid "actions_myprefs_description"
+msgstr ""
+
+msgid "actions_prefs"
+msgstr "preferencias"
+
+msgid "actions_prefs_description"
+msgstr ""
+
+msgid "actions_schema"
+msgstr "ver el esquema"
+
+msgid "actions_schema_description"
+msgstr ""
+
+msgid "actions_select"
+msgstr "seleccionar"
+
+msgid "actions_select_description"
+msgstr ""
+
+msgid "actions_sendemail"
+msgstr "enviar un email"
+
+msgid "actions_sendemail_description"
+msgstr ""
+
+msgid "actions_siteconfig"
+msgstr "configuración del sitio"
+
+msgid "actions_siteconfig_description"
+msgstr ""
+
+msgid "actions_view"
+msgstr "ver"
+
+msgid "actions_view_description"
+msgstr ""
+
+msgid "actions_workflow"
+msgstr "ver el workflow"
+
+msgid "actions_workflow_description"
+msgstr ""
+
+msgid "activate"
+msgstr "activar"
+
+msgid "activated"
+msgstr "activado"
+
+msgid "add"
+msgstr "agregar"
+
+msgid "add EEType add_permission RQLExpression subject"
+msgstr "Definir una expresión RQL de agregación"
+
+msgid "add EEType delete_permission RQLExpression subject"
+msgstr "Definir una expresión RQL de eliminación"
+
+msgid "add EEType read_permission RQLExpression subject"
+msgstr "Definir una expresión RQL de lectura"
+
+msgid "add EEType update_permission RQLExpression subject"
+msgstr "Definir una expresión RQL de actualización"
+
+msgid "add EFRDef constrained_by EConstraint subject"
+msgstr "condición"
+
+msgid "add EFRDef relation_type ERType object"
+msgstr "definición de atributo"
+
+msgid "add ENFRDef constrained_by EConstraint subject"
+msgstr "condición"
+
+msgid "add ENFRDef relation_type ERType object"
+msgstr "definición de relación"
+
+msgid "add EProperty for_user EUser object"
+msgstr "propiedad"
+
+msgid "add ERType add_permission RQLExpression subject"
+msgstr "expresión RQL de agregación"
+
+msgid "add ERType delete_permission RQLExpression subject"
+msgstr "expresión RQL de eliminación"
+
+msgid "add ERType read_permission RQLExpression subject"
+msgstr "expresión RQL de lectura"
+
+msgid "add EUser in_group EGroup object"
+msgstr "usuario"
+
+msgid "add EUser use_email EmailAddress subject"
+msgstr "agregar email"
+
+msgid "add State allowed_transition Transition object"
+msgstr "agregar un estado en entrada"
+
+msgid "add State allowed_transition Transition subject"
+msgstr "agregar una transición en salida"
+
+msgid "add State state_of EEType object"
+msgstr "agregar un estado"
+
+msgid "add Transition condition RQLExpression subject"
+msgstr "agregar una condición"
+
+msgid "add Transition destination_state State object"
+msgstr "agregar una transición de entrada"
+
+msgid "add Transition destination_state State subject"
+msgstr "agregar el estado de salida"
+
+msgid "add Transition transition_of EEType object"
+msgstr "agregar una transición"
+
+msgid "add a Bookmark"
+msgstr "agregar un atajo"
+
+msgid "add a Card"
+msgstr "agregar una ficha"
+
+msgid "add a ECache"
+msgstr "agregar una memoria cache"
+
+msgid "add a EConstraint"
+msgstr "agregar una condición"
+
+msgid "add a EConstraintType"
+msgstr "aun tipo de condición"
+
+msgid "add a EEType"
+msgstr "agregar un tipo de entidad"
+
+msgid "add a EFRDef"
+msgstr "agregar un tipo de relación"
+
+msgid "add a EGroup"
+msgstr "agregar un grupo de usuarios"
+
+msgid "add a ENFRDef"
+msgstr "agregar una relación"
+
+msgid "add a EPermission"
+msgstr "agregar una autorización"
+
+msgid "add a EProperty"
+msgstr "agregar una propiedad"
+
+msgid "add a ERType"
+msgstr "agregar un tipo de relación"
+
+msgid "add a EUser"
+msgstr "agregar un usuario"
+
+msgid "add a EmailAddress"
+msgstr "agregar un email"
+
+msgid "add a RQLExpression"
+msgstr "agregar una expresión rql"
+
+msgid "add a State"
+msgstr "agregar un estado"
+
+msgid "add a TrInfo"
+msgstr "agregar una información de transición"
+
+msgid "add a Transition"
+msgstr "agregar una transición"
+
+msgid "add a new permission"
+msgstr "agregar una autorización"
+
+msgid "add relation"
+msgstr "agregar una relación"
+
+msgid "add_perm"
+msgstr "agregado"
+
+# subject and object forms for each relation type
+# (no object form for final relation types)
+msgid "add_permission"
+msgstr "autorización para agregar"
+
+msgid "add_permission_object"
+msgstr "tiene la autorización para agregar"
+
+#, python-format
+msgid "added %(etype)s #%(eid)s (%(title)s)"
+msgstr "agregado de la entidad %(etype)s #%(eid)s (%(title)s)"
+
+#, python-format
+msgid ""
+"added relation %(rtype)s from %(frometype)s #%(fromeid)s to %(toetype)s #%"
+"(toeid)s"
+msgstr ""
+"agregado de la relación %(rtype)s de %(frometype)s #%(fromeid)s hacia %(toetype)"
+"s #%(toeid)s"
+
+msgid "address"
+msgstr "dirección"
+
+msgid "alias"
+msgstr "alias"
+
+msgid "allowed transition from this state"
+msgstr "transición autorizada desde este estado"
+
+msgid "allowed transitions from this state"
+msgstr "transiciones autorizadas desde este estado"
+
+msgid "allowed_transition"
+msgstr "transición autorizada"
+
+msgid "allowed_transition_object"
+msgstr "Estados de entrada"
+
+msgid "am/pm calendar (month)"
+msgstr "calendario am/pm (mes)"
+
+msgid "am/pm calendar (semester)"
+msgstr "calendario am/pm (semestre)"
+
+msgid "am/pm calendar (week)"
+msgstr "calendario am/pm (semana)"
+
+msgid "am/pm calendar (year)"
+msgstr "calendario am/pm (año)"
+
+msgid "an abstract for this card"
+msgstr "un resumen para esta ficha"
+
+msgid "an electronic mail address associated to a short alias"
+msgstr "una dirección electrónica asociada a este alias"
+
+msgid "an error occured"
+msgstr "a ocurrido un error"
+
+msgid "an error occured while processing your request"
+msgstr "un error ocurrió al procesar su demanda"
+
+msgid "an error occured, the request cannot be fulfilled"
+msgstr "un error ha ocurrido, la búsqueda no ha podido ser realizada"
+
+msgid "and linked"
+msgstr "y ligada"
+
+msgid "and/or between different values"
+msgstr "y/o entre los diferentes valores"
+
+msgid "anonymous"
+msgstr "anónimo"
+
+msgid "application entities"
+msgstr "entidades de la aplicación"
+
+msgid "application schema"
+msgstr "esquema de la aplicación"
+
+msgid "april"
+msgstr "abril"
+
+#, python-format
+msgid "at least one relation %(rtype)s is required on %(etype)s (%(eid)s)"
+msgstr ""
+"La entidad #%(eid)s de tipo %(etype)s debe necesariamente estar ligada a \n"
+"otra via la relación %(rtype)s"
+
+msgid "attribute"
+msgstr "atributo"
+
+msgid "august"
+msgstr "agosto"
+
+msgid "authentication failure"
+msgstr "Usuario o contraseña incorrecta"
+
+msgid "automatic"
+msgstr "automático"
+
+msgid "bad value"
+msgstr "valor erróneo"
+
+msgid "base url"
+msgstr "url de base"
+
+msgid "bookmark has been removed"
+msgstr "el atajo ha sido eliminado"
+
+msgid "bookmark this page"
+msgstr "Agregue un atajo a esta página"
+
+msgid "bookmark this search"
+msgstr "Guarde esta búsqueda"
+
+msgid "bookmarked_by"
+msgstr "utilizada por"
+
+msgid "bookmarked_by_object"
+msgstr "tiene como atajo"
+
+msgid "bookmarks"
+msgstr "atajos"
+
+msgid "boxes"
+msgstr "cajas"
+
+msgid "boxes_bookmarks_box"
+msgstr "caja de atajos"
+
+msgid "boxes_bookmarks_box_description"
+msgstr "Caja que contiene los atajos del usuario"
+
+msgid "boxes_edit_box"
+msgstr "caja de acciones"
+
+msgid "boxes_edit_box_description"
+msgstr ""
+"caja aue muestra las diferentes acciones posibles sobre los datos presentes"
+
+msgid "boxes_filter_box"
+msgstr "filtrar"
+
+msgid "boxes_filter_box_description"
+msgstr "caja permitiendo de realizar filtros sobre los resultados de una búsqueda"
+
+msgid "boxes_possible_views_box"
+msgstr "caja de vistas posibles"
+
+msgid "boxes_possible_views_box_description"
+msgstr "caja mostrando las vistas posibles para los datos actuales"
+
+msgid "boxes_rss"
+msgstr "ícono RSS"
+
+msgid "boxes_rss_description"
+msgstr "el ícono RSS permite recuperar las vistas RSS de los datos presentes"
+
+msgid "boxes_search_box"
+msgstr "caja de búsqueda"
+
+msgid "boxes_search_box_description"
+msgstr "caja con un espacio de búsqueda simple"
+
+msgid "boxes_startup_views_box"
+msgstr "caja de las vistas de inicio"
+
+msgid "boxes_startup_views_box_description"
+msgstr "caja mostrando las vistas de inicio de la aplicación"
+
+msgid "bug report sent"
+msgstr "reporte de error enviado"
+
+msgid "button_apply"
+msgstr "aplicar"
+
+msgid "button_cancel"
+msgstr "anular"
+
+msgid "button_delete"
+msgstr "eliminar"
+
+msgid "button_ok"
+msgstr "validar"
+
+msgid "button_reset"
+msgstr "anular los cambios"
+
+msgid "by"
+msgstr "por"
+
+msgid "by relation"
+msgstr "por la relación"
+
+msgid "calendar"
+msgstr "mostrar un calendario"
+
+msgid "calendar (month)"
+msgstr "calendario (mensual)"
+
+msgid "calendar (semester)"
+msgstr "calendario (semestral)"
+
+msgid "calendar (week)"
+msgstr "calendario (semanal)"
+
+msgid "calendar (year)"
+msgstr "calendario (anual)"
+
+#, python-format
+msgid "can't change the %s attribute"
+msgstr "no puede modificar el atributo %s"
+
+#, python-format
+msgid "can't connect to source %s, some data may be missing"
+msgstr "no se puede conectar a la fuente %s, algunos datos pueden faltar"
+
+#, python-format
+msgid "can't display data, unexpected error: %s"
+msgstr "imposible de mostrar los datos, a causa del siguiente error: %s"
+
+#, python-format
+msgid ""
+"can't set inlined=%(inlined)s, %(stype)s %(rtype)s %(otype)s has cardinality="
+"%(card)s"
+msgstr ""
+"no puede poner 'inlined' = %(inlined)s, %(stype)s %(rtype)s %(otype)s tiene "
+"cardinalidad %(card)s"
+
+msgid "cancel select"
+msgstr "anular la selección"
+
+msgid "cancel this insert"
+msgstr "anular esta inserción"
+
+msgid "canonical"
+msgstr "canónico"
+
+msgid "cardinality"
+msgstr "cardinalidad"
+
+#, python-format
+msgid "changed state of %(etype)s #%(eid)s (%(title)s)"
+msgstr "cambiar del estado de %(etype)s #%(eid)s (%(title)s)"
+
+msgid "changes applied"
+msgstr "cambios realizados"
+
+msgid "click on the box to cancel the deletion"
+msgstr "seleccione la zona de edición para anular la eliminación"
+
+msgid "comment"
+msgstr "comentario"
+
+msgid "comment:"
+msgstr "comentario :"
+
+msgid "comment_format"
+msgstr "formato"
+
+msgid "components"
+msgstr "componentes"
+
+msgid "components_appliname"
+msgstr "título de la aplicación"
+
+msgid "components_appliname_description"
+msgstr "muestra el título de la aplicación en el encabezado de la página"
+
+msgid "components_applmessages"
+msgstr "mensajes de la aplicación"
+
+msgid "components_applmessages_description"
+msgstr "muestra los mensajes de la aplicación"
+
+msgid "components_breadcrumbs"
+msgstr "hilo de Ariadna"
+
+msgid "components_breadcrumbs_description"
+msgstr ""
+"muestra un camino que permite identificar el lugar donde se encuentra la página en el sitio"
+
+msgid "components_etypenavigation"
+msgstr "filtro por tipo"
+
+msgid "components_etypenavigation_description"
+msgstr "permite filtrar por tipo de entidad los resultados de búsqueda"
+
+msgid "components_help"
+msgstr "botón de ayuda"
+
+msgid "components_help_description"
+msgstr "el botón de ayuda, en el encabezado de página"
+
+msgid "components_loggeduserlink"
+msgstr "liga usuario"
+
+msgid "components_loggeduserlink_description"
+msgstr ""
+"muestra un enlace hacia el formulario de conexión para los usuarios "
+"anónimos, o una caja que contiene las ligas propias a el usuario" "conectado. "
+
+msgid "components_logo"
+msgstr "logo"
+
+msgid "components_logo_description"
+msgstr "el logo de la aplicación, en el encabezado de página"
+
+msgid "components_navigation"
+msgstr "navigación por página"
+
+msgid "components_navigation_description"
+msgstr ""
+"componente aue permite distribuir sobre varias páginas las búsquedas "
+"que arrojan mayores resultados a un número previamente elegido"
+
+msgid "components_rqlinput"
+msgstr "barra rql"
+
+msgid "components_rqlinput_description"
+msgstr "la barre de demanda rql, en el encabezado de página"
+
+msgid "composite"
+msgstr "composite"
+
+msgid "condition"
+msgstr "condición"
+
+msgid "condition:"
+msgstr "condición :"
+
+msgid "condition_object"
+msgstr "condición de"
+
+msgid "confirm password"
+msgstr "confirmar contraseña"
+
+msgid "constrained_by"
+msgstr "condicionado por"
+
+msgid "constrained_by_object"
+msgstr "condición de"
+
+msgid "constraint factory"
+msgstr "fabrica de condiciones"
+
+msgid "constraints"
+msgstr "condiciones"
+
+msgid "constraints applying on this relation"
+msgstr "condiciones que se aplican a esta relación"
+
+msgid "content"
+msgstr "contenido"
+
+msgid "content_format"
+msgstr "formato"
+
+msgid "contentnavigation"
+msgstr "composantes contextuales"
+
+msgid "contentnavigation_breadcrumbs"
+msgstr "hilo de Ariadna"
+
+msgid "contentnavigation_breadcrumbs_description"
+msgstr ""
+"muestra un camino que permite localizar la página actual en el sitio"
+
+msgid "contentnavigation_prevnext"
+msgstr "Elemento anterior / siguiente"
+
+msgid "contentnavigation_prevnext_description"
+msgstr ""
+"muestra las ligas que permiten pasar de una entidad a otra en las"
+"entidades que implementan la interface \"anterior/siguiente\"."
+
+msgid "contentnavigation_seealso"
+msgstr "vea también"
+
+msgid "contentnavigation_seealso_description"
+msgstr ""
+"sección aue muestra las entidades ligadas por la relación \"vea también\" " ", si la entidad soporta esta relación."
+
+msgid "contentnavigation_wfhistory"
+msgstr "histórico del workflow."
+
+msgid "contentnavigation_wfhistory_description"
+msgstr ""
+"sección que ofrece el reporte histórico del workflow para las entidades"
+" que posean un workflow."
+
+msgid "context"
+msgstr "contexto"
+
+msgid "context where this box should be displayed"
+msgstr "contexto en el cual la caja debe aparecer en el sistema"
+
+msgid "context where this component should be displayed"
+msgstr "contexto en el cual el componente debe aparecer en el sistema"
+
+msgid "control subject entity's relations order"
+msgstr "controla el orden de relaciones de la entidad sujeto"
+
+msgid "copy"
+msgstr "copiar"
+
+msgid "copy edition"
+msgstr "Edición de una copia"
+
+msgid ""
+"core relation giving to a group the permission to add an entity or relation "
+"type"
+msgstr ""
+"relación sistema que otorga a un grupo la autorización de agregar una"
+"entidad o una relación"
+
+msgid ""
+"core relation giving to a group the permission to delete an entity or "
+"relation type"
+msgstr ""
+"relación sistema que otorga a un grupo la autorización de eliminar una " "entidad o relación"
+
+msgid ""
+"core relation giving to a group the permission to read an entity or relation "
+"type"
+msgstr ""
+"relación sistema que otorga a un grupo la autorización de leer una "
+"entidad o una relación "
+
+msgid "core relation giving to a group the permission to update an entity type"
+msgstr ""
+"relación sistema que otorga a un grupo la autorización de actualizar una "
+"entidad"
+
+msgid "core relation indicating a user's groups"
+msgstr ""
+"relación sistema que indica los grupos a los cuales pertenece un usuario"
+
+msgid ""
+"core relation indicating owners of an entity. This relation implicitly put "
+"the owner into the owners group for the entity"
+msgstr ""
+"relación sistema que indica el(los) propietario(s) de una entidad. "
+"Esta relación pone de manera implícita al propietario en el grupo "
+"de propietarios por una entidad"
+
+msgid "core relation indicating the original creator of an entity"
+msgstr "relación sistema que indica el creador de una entidad."
+
+msgid "core relation indicating the type of an entity"
+msgstr "relación sistema que indica el tipo de entidad"
+
+msgid ""
+"core relation indicating the types (including specialized types) of an entity"
+msgstr "relación sistema indicando los tipos (incluídos los tipos padres) de una entidad"
+
+msgid "cost"
+msgstr "costo"
+
+msgid "could not connect to the SMTP server"
+msgstr "imposible de conectarse al servidor SMTP"
+
+msgid "create an index for quick search on this attribute"
+msgstr "crear un índice para accelerar las búsquedas sobre este atributo"
+
+msgid "create an index page"
+msgstr "crear una página de inicio"
+
+msgid "created on"
+msgstr "creado el"
+
+msgid "created_by"
+msgstr "creado por"
+
+msgid "created_by_object"
+msgstr "ha creado"
+
+msgid "creating EConstraint (EFRDef %(linkto)s constrained_by EConstraint)"
+msgstr "creación condicionada por el atributo %(linkto)s"
+
+msgid "creating EConstraint (ENFRDef %(linkto)s constrained_by EConstraint)"
+msgstr "creación condicionada por la relación %(linkto)s"
+
+msgid "creating EFRDef (EFRDef relation_type ERType %(linkto)s)"
+msgstr "creación atributo %(linkto)s"
+
+msgid "creating ENFRDef (ENFRDef relation_type ERType %(linkto)s)"
+msgstr "creación relación %(linkto)s"
+
+msgid "creating EProperty (EProperty for_user EUser %(linkto)s)"
+msgstr "creación de una propiedad por el usuario %(linkto)s"
+
+msgid "creating EUser (EUser in_group EGroup %(linkto)s)"
+msgstr "creación de un usuario para agregar al grupo %(linkto)s"
+
+msgid "creating EmailAddress (EUser %(linkto)s use_email EmailAddress)"
+msgstr "creación de una dirección electrónica para el usuario %(linkto)s"
+
+msgid "creating RQLExpression (EEType %(linkto)s add_permission RQLExpression)"
+msgstr "creación de una expresión RQL para la autorización de agregar %(linkto)s"
+
+msgid ""
+"creating RQLExpression (EEType %(linkto)s delete_permission RQLExpression)"
+msgstr ""
+"creación de una expresión RQL para la autorización de eliminar %(linkto)s"
+
+msgid ""
+"creating RQLExpression (EEType %(linkto)s read_permission RQLExpression)"
+msgstr "creación de una expresión RQL para la autorización de leer %(linkto)s"
+
+msgid ""
+"creating RQLExpression (EEType %(linkto)s update_permission RQLExpression)"
+msgstr ""
+"creación de una expresión RQL para la autorización de actualizar %(linkto)s"
+
+msgid "creating RQLExpression (ERType %(linkto)s add_permission RQLExpression)"
+msgstr ""
+"creación de una expresión RQL para la autorización de agregar relaciones %"
+"(linkto)s"
+
+msgid ""
+"creating RQLExpression (ERType %(linkto)s delete_permission RQLExpression)"
+msgstr ""
+"creación de una expresión RQL para autorizar la eliminación de "
+"relaciones %(linkto)s"
+
+msgid ""
+"creating RQLExpression (ERType %(linkto)s read_permission RQLExpression)"
+msgstr ""
+"creación de una expresión RQL para autorizar la lectura de relaciones %"
+"(linkto)s"
+
+msgid "creating RQLExpression (Transition %(linkto)s condition RQLExpression)"
+msgstr "creación de una expresión RQL para la transición %(linkto)s"
+
+msgid "creating State (State allowed_transition Transition %(linkto)s)"
+msgstr "creación de un estado que pueda ir hacia la transición %(linkto)s"
+
+msgid "creating State (State state_of EEType %(linkto)s)"
+msgstr "creación de un estado por el tipo %(linkto)s"
+
+msgid "creating State (Transition %(linkto)s destination_state State)"
+msgstr "creación de un estado destinación de la transición %(linkto)s"
+
+msgid "creating Transition (State %(linkto)s allowed_transition Transition)"
+msgstr "creación de una transición autorizada desde el estado %(linkto)s"
+
+msgid "creating Transition (Transition destination_state State %(linkto)s)"
+msgstr "creación de un transición hacia el estado %(linkto)s"
+
+msgid "creating Transition (Transition transition_of EEType %(linkto)s)"
+msgstr "creación de una transición para el tipo %(linkto)s"
+
+msgid "creation"
+msgstr "creación"
+
+msgid "creation time of an entity"
+msgstr "fecha de creación de una entidad"
+
+msgid "creation_date"
+msgstr "fecha de creación"
+
+msgid "cstrtype"
+msgstr "tipo de condición"
+
+msgid "cstrtype_object"
+msgstr "utilizado por"
+
+msgid "csv entities export"
+msgstr "exportar entidades en csv"
+
+msgid "csv export"
+msgstr "exportar CSV"
+
+msgid "data directory url"
+msgstr "url del repertorio de datos"
+
+msgid "date"
+msgstr "fecha"
+
+msgid "deactivate"
+msgstr "desactivar"
+
+msgid "deactivated"
+msgstr "desactivado"
+
+msgid "december"
+msgstr "diciembre"
+
+msgid "default"
+msgstr "valor por default"
+
+msgid "default text format for rich text fields."
+msgstr "formato de texto como opción por defecto para los campos texto"
+
+msgid "defaultval"
+msgstr "valor por defecto"
+
+msgid "define a CubicWeb user"
+msgstr "define un usuario CubicWeb"
+
+msgid "define a CubicWeb users group"
+msgstr "define un grupo de usuarios CubicWeb"
+
+msgid ""
+"define a final relation: link a final relation type from a non final entity "
+"to a final entity type. used to build the application schema"
+msgstr ""
+"define una relación no final: liga un tipo de relación no final desde "
+"una entidad hacia un tipo de entidad no final. Utilizada para construir "
+"el esquema de la aplicación"
+
+msgid ""
+"define a non final relation: link a non final relation type from a non final "
+"entity to a non final entity type. used to build the application schema"
+msgstr ""
+"define una relación 'atributo', utilizada para construir el esquema de"
+"la aplicación"
+
+msgid "define a relation type, used to build the application schema"
+msgstr ""
+"define un tipo de relación, utilizada para construir el esquema de "
+"la aplicación"
+
+msgid "define a rql expression used to define permissions"
+msgstr "Expresión RQL utilizada para definir los derechos de acceso"
+
+msgid "define a schema constraint"
+msgstr "define una condición de esquema"
+
+msgid "define a schema constraint type"
+msgstr "define un tipo de condición de esquema"
+
+msgid "define an entity type, used to build the application schema"
+msgstr ""
+"define un tipo de entidad, utilizada para construir el esquema de " 
+"la aplicación"
+
+msgid ""
+"defines what's the property is applied for. You must select this first to be "
+"able to set value"
+msgstr ""
+"define a que se aplica la propiedad . Usted debe seleccionar esto "
+"antes de poder fijar un valor"
+
+msgid "delete"
+msgstr "eliminar"
+
+msgid "delete this bookmark"
+msgstr "eliminar este atajo"
+
+msgid "delete this permission"
+msgstr "eliminar esta autorización"
+
+msgid "delete this relation"
+msgstr "eliminar estar relación"
+
+msgid "delete_perm"
+msgstr "eliminar"
+
+msgid "delete_permission"
+msgstr "autorización de eliminar"
+
+msgid "delete_permission_object"
+msgstr "posee la autorización de eliminar"
+
+#, python-format
+msgid "deleted %(etype)s #%(eid)s (%(title)s)"
+msgstr "eliminación de la entidad %(etype)s #%(eid)s (%(title)s)"
+
+#, python-format
+msgid ""
+"deleted relation %(rtype)s from %(frometype)s #%(fromeid)s to %(toetype)s #%"
+"(toeid)s"
+msgstr ""
+"eliminación de la relación %(rtype)s de %(frometype)s #%(fromeid)s hacia %"
+"(toetype)s #%(toeid)s"
+
+msgid "depends on the constraint type"
+msgstr "depende del tipo de condición"
+
+msgid "description"
+msgstr "descripción"
+
+msgid "description_format"
+msgstr "formato"
+
+msgid "destination state for this transition"
+msgstr "Estado destino para esta transición"
+
+msgid "destination state of a transition"
+msgstr "Estado destino de una transición"
+
+msgid "destination_state"
+msgstr "Estado destino"
+
+msgid "destination_state_object"
+msgstr "destino de"
+
+msgid "detach attached file"
+msgstr "soltar el archivo existente"
+
+msgid "detailed schema view"
+msgstr "vista detallada del esquema"
+
+msgid "display order of the action"
+msgstr "orden de aparición de la acción"
+
+msgid "display order of the box"
+msgstr "orden de aparición de la caja"
+
+msgid "display order of the component"
+msgstr "orden de aparición del componente"
+
+msgid "display the action or not"
+msgstr "mostrar la acción o no"
+
+msgid "display the box or not"
+msgstr "mostrar la caja o no"
+
+msgid "display the component or not"
+msgstr "mostrar el componente o no"
+
+msgid ""
+"distinct label to distinguate between other permission entity of the same "
+"name"
+msgstr ""
+"etiqueta que permite distinguir esta autorización de otras que posean "
+"el mismo nombre"
+
+msgid "download"
+msgstr "descargar"
+
+msgid "download icon"
+msgstr "ícono de descarga"
+
+msgid "edit bookmarks"
+msgstr "editar los atajos"
+
+msgid "edit the index page"
+msgstr "editar la página de inicio"
+
+msgid "editable-table"
+msgstr "tabla modificable"
+
+msgid "edition"
+msgstr "edición"
+
+msgid "eid"
+msgstr "eid"
+
+msgid "element copied"
+msgstr "elemeto copiado"
+
+msgid "element created"
+msgstr "elemento creado"
+
+msgid "element edited"
+msgstr "elemento editado"
+
+msgid "email address to use for notification"
+msgstr "dirección electrónica a utilizarse para notificar"
+
+msgid "emails successfully sent"
+msgstr "mensajes enviados con éxito"
+
+msgid "embed"
+msgstr "incrustrado"
+
+msgid "embedding this url is forbidden"
+msgstr "la inclusión de este url esta prohibida"
+
+msgid "entities deleted"
+msgstr "entidades eliminadas"
+
+msgid "entity deleted"
+msgstr "entidad eliminada"
+
+msgid "entity type"
+msgstr "tipo de entidad"
+
+msgid ""
+"entity type that may be used to construct some advanced security "
+"configuration"
+msgstr ""
+"tipo de entidqd utilizada para definir una configuración de seguridad " "avanzada"
+
+msgid "entity types which may use this state"
+msgstr "tipo de entidades que pueden utilizar este estado"
+
+msgid "entity types which may use this transition"
+msgstr "entidades que pueden utilizar esta transición"
+
+msgid "error while embedding page"
+msgstr "error durante la inclusión de la página"
+
+#, python-format
+msgid "error while handling __method: %s"
+msgstr "error ocurrido durante el tratamiento del formulario (%s)"
+
+msgid "error while publishing ReST text"
+msgstr ""
+"se ha producido un error durante la interpretación del texto en formato" "ReST"
+
+#, python-format
+msgid "error while querying source %s, some data may be missing"
+msgstr ""
+"un error ha ocurrido al interrogar  %s, es posible que los \n"
+"datos visibles se encuentren incompletos"
+
+msgid "eta_date"
+msgstr "fecha de fin"
+
+msgid "expected:"
+msgstr "previsto :"
+
+msgid "expression"
+msgstr "expresión"
+
+msgid "exprtype"
+msgstr "tipo de la expresión"
+
+msgid "external page"
+msgstr "página externa"
+
+msgid "facetbox"
+msgstr "caja de facetas"
+
+msgid "facets_created_by-facet"
+msgstr "faceta \"creada por\""
+
+msgid "facets_created_by-facet_description"
+msgstr ""
+
+msgid "facets_etype-facet"
+msgstr "faceta \"es de tipo\""
+
+msgid "facets_etype-facet_description"
+msgstr ""
+
+msgid "facets_has_text-facet"
+msgstr "faceta \"contiene el texto\""
+
+msgid "facets_has_text-facet_description"
+msgstr ""
+
+msgid "facets_in_group-facet"
+msgstr "faceta \"forma parte del grupo\""
+
+msgid "facets_in_group-facet_description"
+msgstr ""
+
+msgid "facets_in_state-facet"
+msgstr "faceta \"en el estado\""
+
+msgid "facets_in_state-facet_description"
+msgstr ""
+
+msgid "february"
+msgstr "febrero"
+
+msgid "final"
+msgstr "final"
+
+msgid "firstname"
+msgstr "nombre"
+
+msgid "follow"
+msgstr "seguir la liga"
+
+msgid "for_user"
+msgstr "para el usuario"
+
+msgid "for_user_object"
+msgstr "utiliza las propiedades"
+
+msgid "friday"
+msgstr "viernes"
+
+msgid "from"
+msgstr "de"
+
+msgid "from_entity"
+msgstr "de la entidad"
+
+msgid "from_entity_object"
+msgstr "relación sujeto"
+
+msgid "from_state"
+msgstr "de el estado"
+
+msgid "from_state_object"
+msgstr "transiciones desde este estado"
+
+msgid "full text or RQL query"
+msgstr "texto de búsqueda o demanda RQL"
+
+msgid "fulltext_container"
+msgstr "contenedor de texto indexado"
+
+msgid "fulltextindexed"
+msgstr "indexación de texto"
+
+msgid "generic plot"
+msgstr "trazado de curbas estándares"
+
+msgid "go back to the index page"
+msgstr "regresar a la página de inicio"
+
+msgid "granted to groups"
+msgstr "otorgado a los grupos"
+
+msgid "graphical representation of the application'schema"
+msgstr "representación gráfica del esquema de la aplicación"
+
+#, python-format
+msgid "graphical schema for %s"
+msgstr "gráfica del esquema por %s"
+
+#, python-format
+msgid "graphical workflow for %s"
+msgstr "gráfica del workflow por %s"
+
+msgid "group in which a user should be to be allowed to pass this transition"
+msgstr ""
+"grupo en el cual el usuario debe estar para poder pasar la transición"
+
+msgid "groups"
+msgstr "grupos"
+
+msgid "groups allowed to add entities/relations of this type"
+msgstr "grupos autorizados a agregar entidades/relaciones de este tipo"
+
+msgid "groups allowed to delete entities/relations of this type"
+msgstr "grupos autorizados a eliminar entidades/relaciones de este tipo"
+
+msgid "groups allowed to read entities/relations of this type"
+msgstr "grupos autorizados a leer entidades/relaciones de este tipo"
+
+msgid "groups allowed to update entities of this type"
+msgstr "grupos autorizados a actualizar entidades de este tipo"
+
+msgid "groups grant permissions to the user"
+msgstr "los grupos otorgan las autorizaciones al usuario"
+
+msgid "groups to which the permission is granted"
+msgstr "grupos quienes tienen otorgada esta autorización"
+
+msgid "groups:"
+msgstr "grupos :"
+
+msgid "guests"
+msgstr "invitados"
+
+msgid "hCalendar"
+msgstr "hCalendar"
+
+msgid "has_text"
+msgstr "contiene el texto"
+
+msgid "help"
+msgstr "ayuda"
+
+msgid "hide filter form"
+msgstr "esconder el filtro"
+
+msgid "hide meta-data"
+msgstr "esconder los meta-datos"
+
+msgid "home"
+msgstr "inicio"
+
+msgid ""
+"how to format date and time in the ui (\"man strftime\" for format "
+"description)"
+msgstr ""
+"como formatear la fecha en la interface (\"man strftime\" por la "
+"descripción del formato)"
+
+msgid "how to format date in the ui (\"man strftime\" for format description)"
+msgstr ""
+"como formatear la fecha en la interface (\"man strftime\" por la "
+"descripción del formato)"
+
+msgid "how to format float numbers in the ui"
+msgstr "como formatear los números flotantes en la interface"
+
+msgid "how to format time in the ui (\"man strftime\" for format description)"
+msgstr ""
+"como formatear la hora en la interface (\"man strftime\" por la "
+"descripción del formato)"
+
+msgid "html class of the component"
+msgstr "clase HTML de este componente"
+
+msgid "htmlclass"
+msgstr "clase html"
+
+msgid "i18n_login_popup"
+msgstr "identificarse"
+
+msgid "i18nprevnext_next"
+msgstr "siguiente"
+
+msgid "i18nprevnext_previous"
+msgstr "anterior"
+
+msgid "i18nprevnext_up"
+msgstr "padre"
+
+msgid "iCalendar"
+msgstr "iCalendar"
+
+msgid "id of main template used to render pages"
+msgstr "id del template principal"
+
+msgid "identical_to"
+msgstr "idéntico a"
+
+msgid "identity"
+msgstr "es idéntico a"
+
+msgid "identity_object"
+msgstr "es idéntico a"
+
+msgid ""
+"if full text content of subject/object entity should be added to other side "
+"entity (the container)."
+msgstr ""
+"si el texto indexado de la entidad sujeto/objeto debe ser agregado a la "
+"entidad a el otro extremo de la relación (el contenedor)."
+
+msgid "image"
+msgstr "imagen"
+
+msgid "in memory entity schema"
+msgstr "esquema de la entidad en memoria"
+
+msgid "in memory relation schema"
+msgstr "esquema de la relación en memoria"
+
+msgid "in_group"
+msgstr "en el grupo"
+
+msgid "in_group_object"
+msgstr "miembros"
+
+msgid "in_state"
+msgstr "estado"
+
+msgid "in_state_object"
+msgstr "estado de"
+
+msgid "incontext"
+msgstr "en el contexto"
+
+#, python-format
+msgid "incorrect value (%(value)s) for type \"%(type)s\""
+msgstr "valor %(value)s incorrecto para el tipo \"%(type)s\""
+
+msgid "index"
+msgstr "índice"
+
+msgid "index this attribute's value in the plain text index"
+msgstr "indexar el valor de este atributo en el índice de texto simple"
+
+msgid "indexed"
+msgstr "indexado"
+
+msgid "indicate the current state of an entity"
+msgstr "indica el estado actual de una entidad"
+
+msgid ""
+"indicate which state should be used by default when an entity using states "
+"is created"
+msgstr ""
+"indica cual estado deberá ser utilizado por defecto al crear una entidad"
+
+#, python-format
+msgid "initial estimation %s"
+msgstr "estimación inicial %s"
+
+msgid "initial state for entities of this type"
+msgstr "estado inicial para las entidades de este tipo"
+
+msgid "initial_state"
+msgstr "estado inicial"
+
+msgid "initial_state_object"
+msgstr "estado inicial de"
+
+msgid "inlined"
+msgstr "puesto en línea"
+
+msgid "inlined view"
+msgstr "vista incluída (en línea)"
+
+msgid "internationalizable"
+msgstr "internacionalizable"
+
+#, python-format
+msgid "invalid action %r"
+msgstr "acción %r invalida"
+
+msgid "invalid date"
+msgstr "esta fecha no es válida"
+
+msgid "is"
+msgstr "de tipo"
+
+msgid "is it an application entity type or not ?"
+msgstr "es una entidad aplicativa o no ?"
+
+msgid "is it an application relation type or not ?"
+msgstr "es una relación aplicativa o no ?"
+
+msgid ""
+"is the subject/object entity of the relation composed of the other ? This "
+"implies that when the composite is deleted, composants are also deleted."
+msgstr ""
+"Es la entidad sujeto/objeto de la relación une agregación de el otro ? "
+"De ser así, el destruir el composite destruirá de igual manera "
+"sus componentes "
+
+msgid "is this attribute's value translatable"
+msgstr "es el valor de este atributo traducible ?"
+
+msgid "is this relation equivalent in both direction ?"
+msgstr "es esta relación equivalente en los ambos sentidos ?"
+
+msgid ""
+"is this relation physically inlined? you should know what you're doing if "
+"you are changing this!"
+msgstr ""
+"es esta relación puesta en línea en la base de datos  ? Usted debe saber "
+"lo que hace si cambia esto !"
+
+msgid "is_instance_of"
+msgstr "es una instancia de"
+
+msgid "is_instance_of_object"
+msgstr "tipo de"
+
+msgid "is_object"
+msgstr "tiene por instancia"
+
+msgid "january"
+msgstr "enero"
+
+msgid "july"
+msgstr "julio"
+
+msgid "june"
+msgstr "junio"
+
+msgid "label"
+msgstr "etiqueta"
+
+msgid "language of the user interface"
+msgstr "idioma para la interface del usuario"
+
+msgid "last connection date"
+msgstr "última fecha de conexión"
+
+msgid "last_login_time"
+msgstr "última fecha de conexión"
+
+msgid "latest modification time of an entity"
+msgstr "fecha de la última modificación de una entidad "
+
+msgid "latest update on"
+msgstr "última actualización"
+
+msgid "left"
+msgstr "izquierda"
+
+msgid ""
+"link a property to the user which want this property customization. Unless "
+"you're a site manager, this relation will be handled automatically."
+msgstr ""
+"liga una propiedad a el usuario que desea esta personalización. A menos "
+"que usted sea un administrador del sistema, esta relación es gestionada "
+"automáticamente."
+
+msgid "link a relation definition to its object entity type"
+msgstr "liga una definición de relación a su tipo de entidad objeto"
+
+msgid "link a relation definition to its relation type"
+msgstr "liga una definición de relación a su tipo de relación"
+
+msgid "link a relation definition to its subject entity type"
+msgstr "lie une dÈfinition de relation ‡ son type d'entitÈ sujet"
+
+msgid "link a state to one or more entity type"
+msgstr "lier un Ètat ‡ une ou plusieurs entitÈs"
+
+msgid "link a transition information to its object"
+msgstr "liÈ une enregistrement de transition vers l'objet associÈ"
+
+msgid "link a transition to one or more entity type"
+msgstr "lie une transition ‡ un ou plusieurs types d'entitÈs"
+
+msgid "link to each item in"
+msgstr "lier vers chaque ÈlÈment dans"
+
+msgid "list"
+msgstr "liste"
+
+msgid "log in"
+msgstr "s'identifier"
+
+msgid "login"
+msgstr "identifiant"
+
+msgid "login_action"
+msgstr "identifiez vous"
+
+msgid "logout"
+msgstr "se dÈconnecter"
+
+#, python-format
+msgid "loop in %(rel)s relation (%(eid)s)"
+msgstr "boucle dÈtectÈe en parcourant la relation %(rel)s de l'entitÈ #%(eid)s"
+
+msgid "main informations"
+msgstr "Informations gÈnÈrales"
+
+msgid "mainvars"
+msgstr "variables principales"
+
+msgid "manage"
+msgstr "gestion du site"
+
+msgid "manage bookmarks"
+msgstr "gÈrer les signets"
+
+msgid "manage security"
+msgstr "gestion de la sÈcuritÈ"
+
+msgid "managers"
+msgstr "administrateurs"
+
+msgid "march"
+msgstr "mars"
+
+msgid "maximum number of characters in short description"
+msgstr "nombre maximum de caractËres dans les descriptions courtes"
+
+msgid "maximum number of entities to display in related combo box"
+msgstr "nombre maximum d'entitÈs ‡ afficher dans les listes dÈroulantes"
+
+msgid "maximum number of objects displayed by page of results"
+msgstr "nombre maximum d'entitÈs affichÈes par pages"
+
+msgid "maximum number of related entities to display in the primary view"
+msgstr "nombre maximum d'entitÈs liÈes ‡ afficher dans la vue primaire"
+
+msgid "may"
+msgstr "mai"
+
+msgid "meta"
+msgstr "mÈta"
+
+msgid "milestone"
+msgstr "jalon"
+
+#, python-format
+msgid "missing parameters for entity %s"
+msgstr "paramËtres manquants pour l'entitÈ %s"
+
+msgid "modification_date"
+msgstr "date de modification"
+
+msgid "modify"
+msgstr "modifier"
+
+msgid "monday"
+msgstr "lundi"
+
+msgid "more actions"
+msgstr "plus d'actions"
+
+msgid "multiple edit"
+msgstr "Èdition multiple"
+
+msgid "my custom search"
+msgstr "ma recherche personnalisÈe"
+
+msgid "name"
+msgstr "nom"
+
+msgid "name of the cache"
+msgstr "nom du cache applicatif"
+
+msgid ""
+"name of the main variables which should be used in the selection if "
+"necessary (comma separated)"
+msgstr ""
+"nom des variables principaes qui devrait Ítre utilisÈes dans la sÈlection si "
+"nÈcessaire (les sÈparer par des virgules)"
+
+msgid "name or identifier of the permission"
+msgstr "nom (identifiant) de la permission"
+
+msgid "navbottom"
+msgstr "bas de page"
+
+msgid "navcontentbottom"
+msgstr "bas de page du contenu principal"
+
+msgid "navcontenttop"
+msgstr "haut de page"
+
+msgid "navigation"
+msgstr "navigation"
+
+msgid "navtop"
+msgstr "haut de page du contenu principal"
+
+msgid "new"
+msgstr "nouveau"
+
+msgid "next_results"
+msgstr "rÈsultats suivants"
+
+msgid "no"
+msgstr "non"
+
+msgid "no associated epermissions"
+msgstr "aucune permission spÈcifique n'est dÈfinie"
+
+msgid "no possible transition"
+msgstr "aucune transition possible"
+
+msgid "no related project"
+msgstr "pas de projet rattachÈ"
+
+msgid "no selected entities"
+msgstr "pas d'entitÈ sÈlectionnÈe"
+
+#, python-format
+msgid "no such entity type %s"
+msgstr "le type d'entitÈ '%s' n'existe pas"
+
+msgid "no version information"
+msgstr "pas d'information de version"
+
+msgid "not authorized"
+msgstr "non autorisÈ"
+
+msgid "not specified"
+msgstr "non spÈcifiÈ"
+
+msgid "not the initial state for this entity"
+msgstr "n'est pas l'Ètat initial pour cette entitÈ"
+
+msgid "nothing to edit"
+msgstr "rien ‡ Èditer"
+
+msgid "november"
+msgstr "novembre"
+
+msgid "object"
+msgstr "objet"
+
+msgid "october"
+msgstr "octobre"
+
+msgid "one month"
+msgstr "un mois"
+
+msgid "one week"
+msgstr "une semaine"
+
+msgid "oneline"
+msgstr "une ligne"
+
+msgid "only select queries are authorized"
+msgstr "seules les requÍtes de sÈlections sont autorisÈes"
+
+msgid "order"
+msgstr "ordre"
+
+msgid "ordernum"
+msgstr "ordre"
+
+msgid "owned by"
+msgstr "appartient ‡"
+
+msgid "owned_by"
+msgstr "appartient ‡"
+
+msgid "owned_by_object"
+msgstr "possËde"
+
+msgid "owners"
+msgstr "propriÈtaires"
+
+msgid "ownership"
+msgstr "propriÈtÈ"
+
+msgid "ownerships have been changed"
+msgstr "les droits de propriÈtÈ ont ÈtÈ modifiÈs"
+
+msgid "pageid-not-found"
+msgstr ""
+"des donnÈes nÈcessaires semblent expirÈes, veuillez recharger la page et "
+"recommencer."
+
+msgid "password"
+msgstr "mot de passe"
+
+msgid "password and confirmation don't match"
+msgstr "le mot de passe et la confirmation sont diffÈrents"
+
+msgid "path"
+msgstr "chemin"
+
+msgid "permission"
+msgstr "permission"
+
+msgid "permissions for this entity"
+msgstr "permissions pour cette entitÈ"
+
+msgid "personnal informations"
+msgstr "informations personnelles"
+
+msgid "pick existing bookmarks"
+msgstr "rÈcupÈrer des signets existants"
+
+msgid "pkey"
+msgstr "clÈ"
+
+msgid "please correct errors below"
+msgstr "veuillez corriger les erreurs ci-dessous"
+
+msgid "please correct the following errors:"
+msgstr "veuillez corriger les erreurs suivantes :"
+
+msgid "possible views"
+msgstr "vues possibles"
+
+msgid "preferences"
+msgstr "prÈfÈrences"
+
+msgid "previous_results"
+msgstr "rÈsultats prÈcÈdents"
+
+msgid "primary"
+msgstr "primaire"
+
+msgid "primary_email"
+msgstr "adresse email principale"
+
+msgid "primary_email_object"
+msgstr "adresse email principale (object)"
+
+msgid "progress"
+msgstr "avancement"
+
+msgid "progress bar"
+msgstr "barre d'avancement"
+
+msgid "project"
+msgstr "projet"
+
+msgid "read"
+msgstr "lecture"
+
+msgid "read_perm"
+msgstr "lecture"
+
+msgid "read_permission"
+msgstr "permission de lire"
+
+msgid "read_permission_object"
+msgstr "a la permission de lire"
+
+#, python-format
+msgid "relation %(relname)s of %(ent)s"
+msgstr "relation %(relname)s de %(ent)s"
+
+msgid "relation_type"
+msgstr "type de relation"
+
+msgid "relation_type_object"
+msgstr "dÈfinition"
+
+msgid "relations deleted"
+msgstr "relations supprimÈes"
+
+msgid "relative url of the bookmarked page"
+msgstr "url relative de la page"
+
+msgid "remove this Bookmark"
+msgstr "supprimer ce signet"
+
+msgid "remove this Card"
+msgstr "supprimer cette fiche"
+
+msgid "remove this ECache"
+msgstr "supprimer ce cache applicatif"
+
+msgid "remove this EConstraint"
+msgstr "supprimer cette contrainte"
+
+msgid "remove this EConstraintType"
+msgstr "supprimer ce type de contrainte"
+
+msgid "remove this EEType"
+msgstr "supprimer ce type d'entitÈ"
+
+msgid "remove this EFRDef"
+msgstr "supprimer cet attribut"
+
+msgid "remove this EGroup"
+msgstr "supprimer ce groupe"
+
+msgid "remove this ENFRDef"
+msgstr "supprimer cette relation"
+
+msgid "remove this EPermission"
+msgstr "supprimer cette permission"
+
+msgid "remove this EProperty"
+msgstr "supprimer cette propriÈtÈ"
+
+msgid "remove this ERType"
+msgstr "supprimer cette dÈfinition de relation"
+
+msgid "remove this EUser"
+msgstr "supprimer cet utilisateur"
+
+msgid "remove this EmailAddress"
+msgstr "supprimer cette adresse email"
+
+msgid "remove this RQLExpression"
+msgstr "supprimer cette expression rql"
+
+msgid "remove this State"
+msgstr "supprimer cet Ètat"
+
+msgid "remove this TrInfo"
+msgstr "retirer cette information de transition"
+
+msgid "remove this Transition"
+msgstr "supprimer cette transition"
+
+msgid "require_group"
+msgstr "nÈcessite le groupe"
+
+msgid "require_group_object"
+msgstr "‡ les droits"
+
+msgid "required attribute"
+msgstr "attribut requis"
+
+msgid "required field"
+msgstr "champ requis"
+
+msgid ""
+"restriction part of a rql query. For entity rql expression, X and U are "
+"predefined respectivly to the current object and to the request user. For "
+"relation rql expression, S, O and U are predefined respectivly to the "
+"current relation'subject, object and to the request user. "
+msgstr ""
+"partie restriction de la requÍte rql. Pour une expression s'appliquant ‡ une "
+"entitÈ, X et U sont respectivement prÈfÈfinis ‡ l'entitÈ et ‡ l'utilisateur "
+"courant. Pour une expression s'appliquant ‡ une relation, S, O et U sont "
+"respectivement prÈfÈfinis au sujet/objet de la relation et ‡ l'utilisateur "
+"courant."
+
+msgid "revert changes"
+msgstr "annuler les changements"
+
+msgid "right"
+msgstr "droite"
+
+msgid "rql expression allowing to add entities/relations of this type"
+msgstr ""
+"expression RQL donnant le droit d'ajouter des entitÈs/relations de ce type"
+
+msgid "rql expression allowing to delete entities/relations of this type"
+msgstr ""
+"expression RQL donnant le droit de supprimer des entitÈs/relations de ce type"
+
+msgid "rql expression allowing to read entities/relations of this type"
+msgstr ""
+"expression RQL donnant le droit de lire des entitÈs/relations de ce type"
+
+msgid "rql expression allowing to update entities of this type"
+msgstr ""
+"expression RQL donnant le droit de modifier des entitÈs/relations de ce type"
+
+msgid "rql expressions"
+msgstr "conditions rql"
+
+msgid "rss"
+msgstr "RSS"
+
+msgid "sample format"
+msgstr "exemple"
+
+msgid "saturday"
+msgstr "samedi"
+
+msgid "schema entities"
+msgstr "entitÈs dÈfinissant le schÈma"
+
+msgid "schema's permissions definitions"
+msgstr "permissions dÈfinies dans le schÈma"
+
+msgid "search"
+msgstr "rechercher"
+
+msgid "search for association"
+msgstr "rechercher pour associer"
+
+msgid "searching for"
+msgstr "Recherche de"
+
+msgid "secondary"
+msgstr "secondaire"
+
+msgid "security"
+msgstr "sÈcuritÈ"
+
+msgid "see them all"
+msgstr "les voir toutes"
+
+msgid "select"
+msgstr "sÈlectionner"
+
+msgid "select a"
+msgstr "sÈlectionner un"
+
+msgid "select a relation"
+msgstr "sÈlectionner une relation"
+
+msgid "select this entity"
+msgstr "sÈlectionner cette entitÈ"
+
+msgid "semantic description of this attribute"
+msgstr "description sÈmantique de cet attribut"
+
+msgid "semantic description of this entity type"
+msgstr "description sÈmantique de ce type d'entitÈ"
+
+msgid "semantic description of this relation"
+msgstr "description sÈmantique de cette relation"
+
+msgid "semantic description of this relation type"
+msgstr "description sÈmantique de ce type de relation"
+
+msgid "semantic description of this state"
+msgstr "description sÈmantique de cet Ètat"
+
+msgid "semantic description of this transition"
+msgstr "description sÈmantique de cette transition"
+
+msgid "send email"
+msgstr "envoyer un courriel"
+
+msgid "september"
+msgstr "septembre"
+
+msgid "server debug information"
+msgstr "informations de dÈboguage serveur"
+
+msgid "server information"
+msgstr "informations serveur"
+
+msgid ""
+"should html fields being edited using fckeditor (a HTML WYSIWYG editor).  "
+"You should also select text/html as default text format to actually get "
+"fckeditor."
+msgstr ""
+"indique si les champs HTML doivent Ítre Èditer avec fckeditor (un\n"
+"Èditer HTML WYSIWYG). Il est Ègalement conseill'de choisir text/html\n"
+"comme format de texte par dÈfaut pour pouvoir utiliser fckeditor."
+
+#, python-format
+msgid "show %s results"
+msgstr "montrer %s rÈsultats"
+
+msgid "show advanced fields"
+msgstr "montrer les champs avancÈs"
+
+msgid "show filter form"
+msgstr "afficher le filtre"
+
+msgid "show meta-data"
+msgstr "afficher les mÈta-donnÈes"
+
+msgid "site configuration"
+msgstr "configuration du site"
+
+msgid "site documentation"
+msgstr "documentation du site"
+
+msgid "site schema"
+msgstr "schÈma du site"
+
+msgid "site title"
+msgstr "titre du site"
+
+msgid "site-wide property can't be set for user"
+msgstr "une propriÈtÈ spÈcifique au site ne peut Ítre propre ‡ un utilisateur"
+
+msgid "sorry, the server is unable to handle this query"
+msgstr "dÈsolÈ, le serveur ne peut traiter cette requÍte"
+
+msgid "specializes"
+msgstr "dÈrive de"
+
+msgid "specializes_object"
+msgstr "parent de"
+
+msgid "startup views"
+msgstr "vues de dÈpart"
+
+msgid "state"
+msgstr "Ètat"
+
+msgid "state_of"
+msgstr "Ètat de"
+
+msgid "state_of_object"
+msgstr "a pour Ètat"
+
+msgid "status change"
+msgstr "changer l'Ètat"
+
+msgid "status changed"
+msgstr "changement d'Ètat"
+
+#, python-format
+msgid "status will change from %(st1)s to %(st2)s"
+msgstr "l'entitÈ passera de l'Ètat %(st1)s ‡ l'Ètat %(st2)s"
+
+msgid "subject"
+msgstr "sujet"
+
+msgid "subject/object cardinality"
+msgstr "cardinalitÈ sujet/objet"
+
+msgid "sunday"
+msgstr "dimanche"
+
+msgid "surname"
+msgstr "nom"
+
+msgid "symetric"
+msgstr "symÈtrique"
+
+msgid "synopsis"
+msgstr "synopsis"
+
+msgid "system entities"
+msgstr "entitÈs systËmes"
+
+msgid "table"
+msgstr "table"
+
+msgid "tablefilter"
+msgstr "filtre de tableau"
+
+msgid "task progression"
+msgstr "avancement de la t‚che"
+
+msgid "text"
+msgstr "text"
+
+msgid "text/cubicweb-page-template"
+msgstr "contenu dynamique"
+
+msgid "text/html"
+msgstr "html"
+
+msgid "text/plain"
+msgstr "texte pur"
+
+msgid "text/rest"
+msgstr "ReST"
+
+msgid "the prefered email"
+msgstr "l'adresse Èlectronique principale"
+
+#, python-format
+msgid "the value \"%s\" is already used, use another one"
+msgstr "la valeur \"%s\" est dÈj‡ utilisÈe, veuillez utiliser une autre valeur"
+
+msgid "this action is not reversible!"
+msgstr ""
+"Attention ! Cette opÈration va dÈtruire les donnÈes de faÁon irrÈversible."
+
+msgid "this entity is currently owned by"
+msgstr "cette entitÈ appartient ‡"
+
+msgid "this resource does not exist"
+msgstr "cette ressource est introuvable"
+
+msgid "thursday"
+msgstr "jeudi"
+
+msgid "timestamp"
+msgstr "date"
+
+msgid "timestamp of the latest source synchronization."
+msgstr "date de la derniËre synchronisation avec la source."
+
+msgid "timetable"
+msgstr "emploi du temps"
+
+msgid "title"
+msgstr "titre"
+
+msgid "to"
+msgstr "‡"
+
+msgid "to associate with"
+msgstr "pour associer ‡"
+
+msgid "to_entity"
+msgstr "vers l'entitÈ"
+
+msgid "to_entity_object"
+msgstr "relation objet"
+
+msgid "to_state"
+msgstr "vers l'Ètat"
+
+msgid "to_state_object"
+msgstr "transitions vers cette Ètat"
+
+msgid "todo_by"
+msgstr "‡ faire par"
+
+msgid "transition is not allowed"
+msgstr "transition non permise"
+
+msgid "transition_of"
+msgstr "transition de"
+
+msgid "transition_of_object"
+msgstr "a pour transition"
+
+msgid "tuesday"
+msgstr "mardi"
+
+msgid "type"
+msgstr "type"
+
+msgid "ui"
+msgstr "propriÈtÈs gÈnÈriques de l'interface"
+
+msgid "unaccessible"
+msgstr "inaccessible"
+
+msgid "unauthorized value"
+msgstr "valeur non autorisÈe"
+
+msgid "unique identifier used to connect to the application"
+msgstr "identifiant unique utilisÈ pour se connecter ‡ l'application"
+
+msgid "unknown external entity"
+msgstr "entitÈ (externe) introuvable"
+
+msgid "unknown property key"
+msgstr "clÈ de propriÈtÈ inconnue"
+
+msgid "upassword"
+msgstr "mot de passe"
+
+msgid "update"
+msgstr "modification"
+
+msgid "update_perm"
+msgstr "modification"
+
+msgid "update_permission"
+msgstr "permission de modification"
+
+msgid "update_permission_object"
+msgstr "‡ la permission de modifier"
+
+#, python-format
+msgid "updated %(etype)s #%(eid)s (%(title)s)"
+msgstr "modification de l'entitÈ %(etype)s #%(eid)s (%(title)s)"
+
+msgid "use template languages"
+msgstr "utiliser les langages de template"
+
+msgid ""
+"use to define a transition from one or multiple states to a destination "
+"states in workflow's definitions."
+msgstr ""
+"utiliser dans une dÈfinition de processus pour ajouter une transition depuis "
+"un ou plusieurs Ètats vers un Ètat de destination."
+
+msgid "use_email"
+msgstr "adresse Èlectronique"
+
+msgid "use_email_object"
+msgstr "adresse utilisÈe par"
+
+msgid "use_template_format"
+msgstr "utilisation du format 'cubicweb template'"
+
+msgid ""
+"used for cubicweb configuration. Once a property has been created you can't "
+"change the key."
+msgstr ""
+"utilisÈ pour la configuration de l'application. Une fois qu'une propriÈtÈ a "
+"ÈtÈ crÈÈe, vous ne pouvez plus changez la clÈ associÈe"
+
+msgid ""
+"used to associate simple states to an entity type and/or to define workflows"
+msgstr "associe les Ètats ‡ un type d'entitÈ pour dÈfinir un workflow"
+
+msgid "used to grant a permission to a group"
+msgstr "utiliser pour donner une permission ‡ un groupe"
+
+#, python-format
+msgid ""
+"user %s has made the following change(s):\n"
+"\n"
+msgstr ""
+"l'utilisateur %s a effectuÈ le(s) changement(s) suivant(s):\n"
+"\n"
+
+msgid ""
+"user for which this property is applying. If this relation is not set, the "
+"property is considered as a global property"
+msgstr ""
+"utilisateur a qui s'applique cette propriÈtÈ. Si cette relation n'est pas "
+"spÈcifiÈe la propriÈtÈ est considÈrÈe comme globale."
+
+msgid "user interface encoding"
+msgstr "encodage utilisÈ dans l'interface utilisateur"
+
+msgid "user preferences"
+msgstr "prÈfÈrences utilisateur"
+
+msgid "users"
+msgstr "utilisateurs"
+
+msgid "users using this bookmark"
+msgstr "utilisateurs utilisant ce signet"
+
+msgid "validate modifications on selected items"
+msgstr "valider les modifications apportÈes aux ÈlÈments sÈlectionnÈs"
+
+msgid "validating..."
+msgstr "chargement en cours ..."
+
+msgid "value"
+msgstr "valeur"
+
+msgid "value associated to this key is not editable manually"
+msgstr "la valeur associÈe ‡ cette clÈ n'est pas Èditable manuellement"
+
+msgid "vcard"
+msgstr "vcard"
+
+msgid "view"
+msgstr "voir"
+
+msgid "view all"
+msgstr "voir tous"
+
+msgid "view detail for this entity"
+msgstr "voir les dÈtails de cette entitÈ"
+
+msgid "view workflow"
+msgstr "voir les Ètats possibles"
+
+msgid "views"
+msgstr "vues"
+
+msgid "visible"
+msgstr "visible"
+
+msgid "wednesday"
+msgstr "mercredi"
+
+msgid "week"
+msgstr "sem."
+
+#, python-format
+msgid "welcome %s !"
+msgstr "bienvenue %s !"
+
+msgid "wf_info_for"
+msgstr "historique de"
+
+msgid "wf_info_for_object"
+msgstr "historique des transitions"
+
+msgid ""
+"when multiple addresses are equivalent (such as python-projects@logilab.org "
+"and python-projects@lists.logilab.org), set this to true on one of them "
+"which is the preferred form."
+msgstr ""
+"quand plusieurs adresses sont Èquivalentes (comme python-projects@logilab."
+"org et python-projects@lists.logilab.org), mettez cette propriÈtÈ ‡ vrai sur "
+"l'une d'entre-elle qui sera la forme canonique"
+
+msgid "wikiid"
+msgstr "identifiant wiki"
+
+#, python-format
+msgid "workflow for %s"
+msgstr "workflow pour %s"
+
+msgid "xbel"
+msgstr "xbel"
+
+msgid "xml"
+msgstr "xml"
+
+msgid "yes"
+msgstr "oui"
+
+msgid "you have been logged out"
+msgstr "vous avez ÈtÈ dÈconnectÈ"
+
+#~ msgid "%s constraint failed"
+#~ msgstr "La contrainte %s n'est pas satisfaite"
+
+#~ msgid "%s constraint failed for value %r"
+#~ msgstr "contrainte %s n'est pas respectÈe par valeur %r"
+
+#~ msgid "%s, or without time: %s"
+#~ msgstr "%s, ou bien sans prÈciser d'heure: %s"
+
+#~ msgid "Loading"
+#~ msgstr "chargement"
+
+#~ msgid "Problem occured while setting new value"
+#~ msgstr "Un problËme est survenu lors de la mise ‡ jour"
+
+#~ msgid "and"
+#~ msgstr "et"
+
+#~ msgid "at least one relation %s is required on %s(%s)"
+#~ msgstr "au moins une relation %s est nÈcessaire sur %s(%s)"
+
+#~ msgid "cancel edition"
+#~ msgstr "annuler l'Èdition"
+
+#~ msgid ""
+#~ "default language (look at the i18n directory of the application to see "
+#~ "available languages)"
+#~ msgstr ""
+#~ "langue par dÈfaut (regarder le rÈpertoire i18n de l'application pour voir "
+#~ "les langues disponibles)"
+
+#~ msgid "filter"
+#~ msgstr "filtrer"
+
+#~ msgid "footer"
+#~ msgstr "pied de page"
+
+#~ msgid "header"
+#~ msgstr "en-tÍte de page"
+
+#~ msgid "iCal"
+#~ msgstr "iCal"
+
+#~ msgid "incorrect value for type \"%s\""
+#~ msgstr "valeur incorrecte pour le type \"%s\""
+
+#~ msgid "linked"
+#~ msgstr "liÈ"
+
+#~ msgid "loop in %s relation (%s)"
+#~ msgstr "boucle dans la relation %s (%s)"
+
+#~ msgid ""
+#~ "maximum number of related entities to display in in the restriction view"
+#~ msgstr ""
+#~ "nombre maximum d'entitÈs liÈes ‡ afficher dans la vue de restriction"
+
+#~ msgid "see also"
+#~ msgstr "voir aussi"
+
+#~ msgid "status will change from %s to %s"
+#~ msgstr "l'Ètat va passer de %s ‡ %s"
+
+#~ msgid "workflow history"
+#~ msgstr "historique du workflow"

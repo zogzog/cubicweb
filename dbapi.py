@@ -45,20 +45,20 @@ def get_repository(method, database=None, config=None, vreg=None):
         from Pyro import core, naming, config as pyroconfig
         from Pyro.errors import NamingError, ProtocolError
         core.initClient(banner=0)
-        pyroconfig.PYRO_NS_DEFAULTGROUP = ':' + config['pyro-ns-group']
+        nsid = ':%s.%s' % (config['pyro-ns-group'], database)
         locator = naming.NameServerLocator()
         # resolve the Pyro object
         try:
             nshost, nsport = config['pyro-ns-host'], config['pyro-ns-port']
-            uri = locator.getNS(nshost, nsport).resolve(database)
+            uri = locator.getNS(nshost, nsport) .resolve(nsid)
         except ProtocolError:
             raise ConnectionError('Could not connect to the Pyro name server '
                                   '(host: %s:%i)' % (nshost, nsport))
-        except NamingError:
+        except NamingError, ex:
             raise ConnectionError('Could not get repository for %s '
-                                  '(not registered in Pyro),'
+                                  '(not registered in Pyro), '
                                   'you may have to restart your server-side '
-                                  'application' % database)
+                                  'application' % nsid)
         return core.getProxyForURI(uri)
         
 def repo_connect(repo, user, password, cnxprops=None):
@@ -74,7 +74,8 @@ def repo_connect(repo, user, password, cnxprops=None):
     return cnx
     
 def connect(database=None, user=None, password=None, host=None,
-            group=None, cnxprops=None, port=None, setvreg=True, mulcnx=True):
+            group=None, cnxprops=None, port=None, setvreg=True, mulcnx=True,
+            initlog=True):
     """Constructor for creating a connection to the CubicWeb repository.
     Returns a Connection object.
 
@@ -97,9 +98,9 @@ def connect(database=None, user=None, password=None, host=None,
         vreg = repo.vreg
     elif setvreg:
         if mulcnx:
-            vreg = MulCnxCubicWebRegistry(config)
+            vreg = MulCnxCubicWebRegistry(config, initlog=initlog)
         else:
-            vreg = CubicWebRegistry(config)
+            vreg = CubicWebRegistry(config, initlog=initlog)
         vreg.set_schema(repo.get_schema())
     else:
         vreg = None
