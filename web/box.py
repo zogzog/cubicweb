@@ -156,6 +156,7 @@ class EntityBoxTemplate(BoxTemplate):
                      _rqlcondition_selector)
     accepts = ('Any',)
     context = 'incontext'
+    condition = None
     
     def call(self, row=0, col=0, **kwargs):
         """classes inheriting from EntityBoxTemplate should defined cell_call,
