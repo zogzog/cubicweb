@@ -96,66 +96,55 @@ If necessarry, it is possible to overwrite the method
 `relation_mode(rtype, targettype, x='subject')` to dynamically
 compute a relation creation category.
 
-Please note that if at least on action belongs to the `addrelated` category,
+Please note that if at least one action belongs to the `addrelated` category,
 the automatic behavior is desactivated in favor of an explicit behavior
 (e.g. display of `addrelated` category actions only).
 
-pour caculer dynamiquement la
-catégorie de création d'une relation.
 
-A noter également que si au moins une action dans la catégorie "addrelated" est
-trouvée pour le contexte courant, le fonctionnement automatique est désactivé
-en faveur du fonctionnement explicite (i.e. affichage des actions de la
-catégorie "addrelated" uniquement).
+Filtering table forms management
+````````````````````````````````
 
-Contrôle des formulaires de filtrage de table
-`````````````````````````````````````````````
-La vue "table" par défaut gère dynamiquement un formulaire de filtrage du
-contenu de celle-ci. L'algorithme est le suivant : 
+By default, the view ``table`` manages automatically a filtering
+form of its content. The algorithm is as follows:
 
-1. on considère que la première colonne contient les entités à restreindre
-2. on recupère la première entité de la table (ligne 0) pour "représenter"
-   toutes les autres
-3. pour toutes les autres variables définies dans la requête originale :
-
-   1. si la variable est liée à la variable principale par au moins une
-      n'importe quelle relation
-   2. on appelle la méthode `filterform_vocabulary(rtype, x)` sur l'entité
-      et si rien est retourné (ou plus exactement un tuple de valeur `None`,
-      voir ci-dessous) on passe à la variable suivante, sinon un élément de
-      formulaire de filtrage sera créé avec les valeurs de vocabulaire
-      retournées
-
-4. il n'y a pas d'autres limitations sur le rql, il peut comporter des clauses
-   de tris, de groupes... Des fonctions javascripts sont utilisées pour
-   regénérer une requête à partir de la requête de départ et des valeurs
-   séléctionnées dans les filtres de formulaire.
-
+1. we consider that the first column contains the entities to constraint
+2. we collect the first entity of the table (row 0) to represent all the 
+   others
+3. for all the others variables defined in the original request:
    
-La méthode `filterform_vocabulary(rtype, x, var, rqlst, args, cachekey)` prend
-en argument le nom d'une relation et la "cible", qui indique si l'entité sur
-laquelle la méthode est appellée est sujet ou objet de la relation. Elle doit
-retourner :
+   1. if the varaible is related to the main variable by at least one relation
+   2. we call the method ``filterform_vocabulary(rtype, x)`` on the entity,
+      if nothing is returned (meaning a tuple `Non`, see below), we go to the
+      next variable, otherwise a form filtering element is created based on
+      the vocabulary values returned
 
-* un 2-uple de None si elle ne sait pas gérer cette relation
+4. there is no others limitations to the `RQL`, it can include sorting, grouping
+   conditions... Javascripts functions are used to regenerate a request based on the
+   initial request and on the selected values from the filtering form.
 
-* un type et une liste contenant le vocabulaire
+The method ``filterform_vocabulary(rtype, x, var, rqlst, args, cachekey)`` takes 
+the name of a relation and the target as parameters, which indicates of the
+entity on which we apply the method is subject or object of the relation. It
+has to return:
 
-  * la liste doit contenir des couples (valeur, label)
-  * le type indique si la valeur désigne un nombre entier (`type == 'int'`), une
-    chaîne de  caractères (`type == 'string'`) ou une entité non finale (`type
-    == 'eid'`)
+* a 2-uple of None if it does not know how to handle the relation
 
-Par exemple dans notre application de gestion de tickets, on veut pouvoir
-filtrés ceux-ci par : 
+* a type and a list containing the vocabulary
+  
+  * the list has to contain couples (value, label)
+  * the type indicates if the value designate an integer (`type == 'int'`),
+    a string (`type =='string'` or a non-final relation (`type == 'eid'`)
+
+By example in our application managing tickets, we want to be able to filter
+them by :
 
 * type
-* priorité
-* état (in_state)
-* étiquette (tags)
+* priority
+* state (in_state)
+* tag (tags)
 * version (done_in)
 
-On définit donc la méthode suivante : ::
+For that we define the following method: ::
 
 
     class Ticket(AnyEntity):
@@ -174,6 +163,6 @@ On définit donc la méthode suivante : ::
 	    return super(Ticket, self).filterform_vocabulary(rtype, x, var, rqlst,
 							     args, cachekey)
 
-							     
-NOTE: Le support du filtrage sur les étiquettes et l'état est installé
-automatiquement, pas besoin de le gérer ici.
+.. note::
+  Filtering on state and tags is automatically installed, no need to handle it.
+
