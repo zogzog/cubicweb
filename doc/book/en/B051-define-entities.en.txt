@@ -11,7 +11,7 @@ by defining in the entity class a method `default_<attribut name>` for
 a given attribute.
 
 
-Control of loaded attributes and default sorting
+Loaded attributes and default sorting management
 ````````````````````````````````````````````````
 
 * The class attribute `fetch_attrs` allows to defined in an entity class
@@ -46,52 +46,61 @@ By example: ::
     id = 'Transition'
     fetch_attrs, fetch_order = fetch_config(['name'])
 
-Indique que pour le type d'entité "Transition" il faut précharger l'attribut
-"name" et trier par défaut selon cet attribut.
+Indicates that for the entity type "Transition", you have to pre-load
+the attribute `name` and sort by default on this attribute.
 
 
-Contrôle des formulaires d'édition
-``````````````````````````````````
-Il est possible de contrôler les attributs/relations dans la vue d'édition
-simple ou multiple à l'aide des *rtags* suivants :
+Editing forms management
+````````````````````````
+It is possible to manage attributes/relations in the simple or multiple
+editing form thanks to the following *rtags*: 
 
-* `primary`, indique qu'un attribut ou une relation doit être incorporé dans
-  les formulaires d'édition simple et multiple. Dans le cas d'une relation,
-  le formulaire d'édition de l'entité liée sera inclus dans le formulaire
+* `primary`, indicates that an attribute or a relation has to be inserted
+  in the simple or multiple editing forms. In the case of a relation,
+  the related entity editing form will be included in the editing form.
 
-* `secondary`, indique qu'un attribut ou une relation doit être incorporé dans
-  le formulaire d'édition simple uniquement. Dans le cas d'une relation,
-  le formulaire d'édition de l'entité liée sera inclus dans le formulaire
+* `secondary`, indicates that an attribute or a relation has to be inserted
+  in the simple editing form only. In the case of a relation, the related
+  entity editing form sill be included in the editing form.
 
-* `generic`, indique qu'une relation doit être incorporé dans le formulaire 
-  d'édition simple dans la boite générique d'ajout de relation
+* `generic`, indicates that a relation has to be inserted in the simple
+  editing form, in the generic box of relation creation.
 
-* `generated`, indique qu'un attribut est caculé dynamiquement ou autre, et 
-  qu'il ne doit donc pas être présent dans les formulaires d'édition
+* `generated`, indicates that an attribute is dynamically computed
+  or other,  and that it should not be displayed in the editing form.
 
-Au besoin il est possible de surcharger la méthode 
-`relation_category(rtype, x='subject')` pour calculer dynamiquement la catégorie
-d'édition d'une relation.
+If necessarry, it is possible to overwrite the method  
+`relation_category(rtype, x='subject')` to dynamically compute
+a relation editing category.
+
+``add_related`` box management
+``````````````````````````````
+
+The box ``add_related`` is an automatic box that allows to create
+an entity automatically related to the initial entity (context in
+which the box is displayed). By default, the links generated in this
+box are computed from the schema properties of the displayed entity,
+but it is possible to explicitely specify them thanks to the
+following *rtags*:
+
+* `link`, indicates that a relation is in general created pointing
+  to an existing entity and that we should not to display a link
+  for this relation
+
+* `create`, indicates that a relation is in general created pointing
+  to new entities and that we should display a link to create a new
+  entity and link to it automatically
 
 
-Contrôle de la boîte "add_related"
-``````````````````````````````````
-La boite `add related` est une boite automatique proposant de créer une entité
-qui sera automatiquement liée à l'entité de départ (le contexte dans lequel 
-s'affiche la boite). Par défaut, les liens présents dans cette boite sont 
-calculés en fonction des propriétés du schéma de l'entité visualisée, mais il
-est possible de les spécifier explicitement à l'aide des *rtags* suivants :
+If necessarry, it is possible to overwrite the method  
+`relation_mode(rtype, targettype, x='subject')` to dynamically
+compute a relation creation category.
 
-* `link`, indique qu'une relation est généralement créée vers une entité
-  existante et qu'il ne faut donc pas faire apparaitre de lien pour cette 
-  relation
+Please note that if at least on action belongs to the `addrelated` category,
+the automatic behavior is desactivated in favor of an explicit behavior
+(e.g. display of `addrelated` category actions only).
 
-* `create`, indique qu'une relation est généralement créée vers de nouvelles
-  entités et qu'il faut donc faire apparaitre un lien pour créer une nouvelle
-  entité et la lier automatiquement
-
-Au besoin il est possible de surcharger la méthode  
-`relation_mode(rtype, targettype, x='subject')` pour caculer dynamiquement la
+pour caculer dynamiquement la
 catégorie de création d'une relation.
 
 A noter également que si au moins une action dans la catégorie "addrelated" est
