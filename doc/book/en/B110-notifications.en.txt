@@ -1,6 +1,6 @@
 .. -*- coding: utf-8 -*-
 
-Gestion de notifications
+Notifications management
 ========================
 
 XXX FILLME

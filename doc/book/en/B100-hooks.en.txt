@@ -1,16 +1,15 @@
 .. -*- coding: utf-8 -*-
 
-Les crochets (*hooks*)
-======================
+Hooks
+=====
 
 XXX FILLME
 
-Les crochets sont appelés avant ou après la mise à jour d'une entité ou d'une
-relations dans le dépot
+*Hooks* are executed before or after updating an entity or a relation in the
+repository.
 
-Leur prototypes sont les suivants
-
-
+Their prototypes are as follows: 
+    
     * after_add_entity     (session, entity)
     * after_update_entity  (session, entity)
     * after_delete_entity  (session, eid)

@@ -18,42 +18,42 @@ Cubicweb' internalization involves two steps:
 
 * in your application : handle the translation catalog
  
-String internalization
-----------------------
+String internationalization
+---------------------------
 
 In the Python code and cubicweb-tal templates translatable strings can be
 marked in one of the following ways :
 
  * by using the *built-in* function `_` ::
 
-   class PrimaryView(EntityView):
-       """the full view of an non final entity"""
-       id = 'primary'
-       title = _('primary')
+     class PrimaryView(EntityView):
+         """the full view of an non final entity"""
+         id = 'primary'
+         title = _('primary')
 
   OR
 
  * by using the equivalent request's method ::
    
-   class NoResultView(EmptyRsetView):
-       """default view when no result has been found"""
-       id = 'noresult'
+     class NoResultView(EmptyRsetView):
+         """default view when no result has been found"""
+         id = 'noresult'
     
-       def call(self, **kwargs):
-           self.w(u'<div class="searchMessage"><strong>%s</strong></div>\n'
-               % self.req._('No result matching query'))
+         def call(self, **kwargs):
+             self.w(u'<div class="searchMessage"><strong>%s</strong></div>\n'
+                 % self.req._('No result matching query'))
 
 The goal of the *built-in* function `_` is only **to mark the
-translatable strings**, it will only return the translation string
-it-self, but not it's translation.
+translatable strings**, it will only return the string to translate
+it-self, but not its translation.
 
-In the other hand the request's method `_` is ment to retrive the
+In the other hand the request's method `self.req._` is meant to retrieve the
 proper translation of translation strings in the requested language.
 
 Translations in cubicweb-tal template can also be done with TAL tags
 `i18n:content` and `i18n:replace`.
 
-Note ::
+.. note::
 
    We dont need to mark the translation strings of entities/relations
    used by a particular application's schema as they are generated
@@ -63,22 +63,22 @@ Note ::
 Handle the translation catalog 
 ------------------------------
 
-Once the internalization is done in your application's code, you need
+Once the internationalization is done in your application's code, you need
 to populate and update the translation catalog. Cubicweb provides the
 following commands for this purpose:
 
 
 * `i18nlibupdate` updates Cubicweb framework's translation
-  catalogs. Unless you work on the framework development, you dont
+  catalogs. Unless you work on the framework development, you don't
   need to use this command.
 
 * `i18nupdate` updates the translation catalogs of *one particular
-  component* (or of all components). FIXME After this command is
+  component* (or of all components). After this command is
   executed you must update the translation files *.po* in the "i18n"
   directory of your template. This command will of course not remove
-  existing translations still in use
+  existing translations still in use.
 
-* `i18ncompile` recompile the transaltion catalogs of *one particular
+* `i18ncompile` recompile the translation catalogs of *one particular
   instance* (or of all instances) after the translation catalogs of
   its components have been updated. This command is automatically
   called every time you create or update your instance. The compiled

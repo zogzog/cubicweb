@@ -1,5 +1,5 @@
-Autres composants de l'interface web
-====================================
+Others web interface components
+===============================
 
 Actions
 -------
