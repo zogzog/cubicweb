@@ -106,10 +106,10 @@ name those parameters as *qualified*.
      as a message to provide the user once the editing is completed.
 
 
+.. _RedirectionControl:
+
 Redirection control
 ```````````````````
-.. RedirectionControl::
-
 Once editing is completed, there is still an issue left: where should we go
 now? If nothing is specified, the controller will do his job but it does not
 mean we will be happy with the result. We can control that by using the
