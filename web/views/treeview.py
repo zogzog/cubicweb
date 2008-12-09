@@ -22,8 +22,14 @@ class TreeView(EntityView):
         css_classes = 'treeview widget'
         if self.fstree:
             css_classes += ' filetree'
-        self.w(u'<ul class="%s" cubicweb:loadtype="auto" cubicweb:wdgtype="TreeView">'
-               % css_classes)
+        # XXX noautoload is a quick hack to avoid treeview to be rebuilt
+        #     after a json query and avoid double toggling bugs.
+        #     Need to find a way to do that cleanly.
+        if 'noautoload' in self.req.form:
+            self.w(u'<ul class="%s" cubicweb:wdgtype="TreeView">' % css_classes)
+        else:
+            self.w(u'<ul class="%s" cubicweb:loadtype="auto" cubicweb:wdgtype="TreeView">'
+                   % css_classes)
         for rowidx in xrange(len(self.rset)):
             self.wview(self.itemvid, self.rset, row=rowidx, col=0,
                        vid=subvid, parentvid=self.id)
@@ -97,7 +103,8 @@ class TreeViewItemView(EntityView):
             rql = entity.children_rql() % {'x': entity.eid}
             url = html_escape(self.build_url('json', rql=rql, vid=parentvid,
                                              pageid=self.req.pageid,
-                                             subvid=vid))
+                                             subvid=vid,
+                                             noautoload=True))
             cssclasses.append('expandable')
             divclasses = ['hitarea expandable-hitarea']
             if is_leaf :
