@@ -3,36 +3,36 @@
 Tests
 =====
 
-Écriture de tests unitaires
----------------------------
-Le framework de test fournit principalement deux classes de tests dans le module
-`ginco.devtools.apptest`:
+Unit tests
+----------
 
-* `EnvBasedTC`, pour simuler un environnement complet (web + repository)
-* `RepositoryBasedTC`, pour simuler un environnement de repository uniquement
+`CubicWeb` framework provides essentially two Python test classes in the
+module `cubicweb.devtools.apptest`:
 
-Ces deux classes ont quasiment la même interface et proposent un certain nombre de méthodes
-rendant l'écriture de test puissante et rapide.
+* `EnvBasedTC`, to simulate a complete environment (web + repository)
+* `RepositoryBasedTC`, to simulate a repository environment only
 
-XXXFILLME describe API
+Thos two classes almost have the same interface and offers numerous methods to
+write tests rapidely and efficiently.
 
-Dans la plupart des cas, vous allez vouloir hériter de `EnvBasedTC` pour écrire des tests
-unitaires ou fonctionnels pour vos entités, vues, crochets...
+XXX FILLME describe API
 
+In most of the cases, you will inherit `EnvBasedTC` to write Unittest or
+functional tests for your entities, views, hooks, etc...
 
-Test des courriels de notifications
-```````````````````````````````````
-Lors de l'éxécution de tests les courriels potentiellement générés ne sont pas réellement
-envoyé mais se retrouve dans la liste `MAILBOX` du module `ginco.devtools.apptest`. Cette
-liste est remise à zéro au *setUp* de chaque test (par le setUp des classes `EnvBasedTC`
-et `RepositoryBasedTC`).
+Email notifications tests
+-------------------------
+When running tests potentially generated e-mails are not really
+sent but is found in the list `MAILBOX` of module `cubicweb.devtools.apptest`. 
+This list is reset at each test *setUp* (by the setUp of classes `EnvBasedTC`
+and `RepositoryBasedTC`).
 
-Vous pouvez donc tester vos notifications en analysant le contenu de cette liste, qui
-contient des objets ayant deux attributs :
-* `recipients`, la liste des destinataires
-* `msg`, l'objet email.Message
+	
+You can test your notifications by analyzing the contents of this list, which
+contains objects with two attributes:
+* `recipients`, the list of recipients
+* `msg`, object email.Message
 
-
-Tests automatiques
-------------------
+Automatic testing
+-----------------
 XXXFILLME
