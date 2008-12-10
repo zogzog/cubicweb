@@ -307,7 +307,7 @@ class VocabularyFacet(AbstractFacet):
             if value is None:
                 wdg.append(FacetSeparator(label))
             else:
-                wdg.append(FacetItem(label, value, value in selected))
+                wdg.append(FacetItem(self.req, label, value, value in selected))
         return wdg
     
     def vocabulary(self):
@@ -532,10 +532,11 @@ class FacetStringWidget(HTMLWidget):
 
 class FacetItem(HTMLWidget):
 
-    selected_img = "http://static.simile.mit.edu/exhibit/api-2.0/images/black-check.png"
-    unselected_img = "http://static.simile.mit.edu/exhibit/api-2.0/images/no-check-no-border.png"
+    selected_img = "black-check.png"
+    unselected_img = "no-check-no-border.png"
 
-    def __init__(self, label, value, selected=False):
+    def __init__(self, req, label, value, selected=False):
+        self.req = req
         self.label = label
         self.value = value
         self.selected = selected
@@ -543,10 +544,10 @@ class FacetItem(HTMLWidget):
     def _render(self):
         if self.selected:
             cssclass = ' facetValueSelected'
-            imgsrc = self.selected_img
+            imgsrc = self.req.datadir_url + self.selected_img
         else:
             cssclass = ''
-            imgsrc = self.unselected_img            
+            imgsrc = self.req.datadir_url + self.unselected_img            
         self.w(u'<div class="facetValue facetCheckBox%s" cubicweb:value="%s">\n'
                % (cssclass, html_escape(unicode(self.value))))
         self.w(u'<img src="%s" />&nbsp;' % imgsrc)

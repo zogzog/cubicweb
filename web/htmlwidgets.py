@@ -13,6 +13,8 @@ from logilab.mtconverter import html_escape
 from cubicweb.common.utils import UStringIO
 from cubicweb.common.uilib import toggle_action
 
+# XXX HTMLWidgets should have access to req (for datadir / static urls,
+#     i18n strings, etc.)
 class HTMLWidget(object):
 
     def _initialize_stream(self, w=None):
