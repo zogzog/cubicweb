@@ -34,6 +34,7 @@ class FilterBox(BoxTemplate):
     title = _('boxes_filter_box')
     visible = True # functionality provided by the search box by default
     order = 1
+    roundcorners = True
 
     def facetargs(self):
         """this method returns the list of extra arguments that should
@@ -55,7 +56,8 @@ class FilterBox(BoxTemplate):
         req = self.req
         req.add_js( ('cubicweb.ajax.js', 'cubicweb.formfilter.js') )
         req.add_css('cubicweb.facets.css')
-        req.html_headers.add_onload('jQuery(".facet").corner("tl br 10px");')
+        if self.roundcorners:
+            req.html_headers.add_onload('jQuery(".facet").corner("tl br 10px");')
         rset, vid, divid, paginate=self._get_context(view)
         if rset.rowcount < 2: # XXX done by selectors, though maybe necessary when rset has been hijacked
             return
