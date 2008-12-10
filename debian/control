@@ -104,7 +104,7 @@ Description: RQL command line client for the CubicWeb framework
 Package: cubicweb-core
 Architecture: all
 XB-Python-Version: ${python:Versions}
-Depends: ${python:Depends}, python-logilab-common (>= 0.35.3), python-yams (>= 0.20.0), python-rql (>= 0.20.2)
+Depends: ${python:Depends}, python-logilab-common (>= 0.37.0), python-yams (>= 0.20.2), python-rql (>= 0.20.2)
 Description: core library for the CubicWeb framework
  CubicWeb is a semantic web application framework.
  .
