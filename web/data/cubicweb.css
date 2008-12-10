@@ -1002,16 +1002,3 @@ div#newvalue{
  display:block;
  float:left;
 }
-
-/******************************************************************************/
-/* facets (XXX to continue)                                                   */
-/******************************************************************************/
-
-div.facetBody {
-  height: 10em;
-  overflow: auto;
-}
-
-.facetValueDisabled {
-  text-decoration: underline;
-}
