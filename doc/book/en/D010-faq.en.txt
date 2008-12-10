@@ -68,6 +68,19 @@ Frequently Asked Questions
   s'applique. Il faut donc bien reflechir avant de decider de l'un ou
   de l'autre, mais vous avez la possibilite de choisir.
 
+* What is the difference between `AppRsetObject` and `AppObject` ?
+
+  La différence entre la classe `AppRsetObject` et la classe `AppObject` est que
+  les instances de la premières sont séléctionnées pour une requête et un "result
+  set" et alors que les secondes ne sont séléctionnées qu'en fonction de leur
+  identifiant.
+
+HOW TO
+======
+
+[TO COMPLETE]
+
+
 * How to update a database after a schema modification?
   
   Cela dépend de ce qui a été modifié dans le schéma. 
@@ -76,7 +89,6 @@ Frequently Asked Questions
 
   * Modification d'une relation finale 
 
-[TO COMPLETE]
 
 * How to create an anonymous user?
   
@@ -95,10 +107,24 @@ Frequently Asked Questions
   de données, le plus simple étant de s'identifier sur votre application en
   administrateur et de rajouter l'utilisateur `anon` via l'interface d'administration.
 
-* What is the difference between `AppRsetObject` and `AppObject` ?
 
-  La différence entre la classe `AppRsetObject` et la classe `AppObject` est que
-  les instances de la premières sont séléctionnées pour une requête et un "result
-  set" et alors que les secondes ne sont séléctionnées qu'en fonction de leur
-  identifiant.
+* How to change the application logo?
+  
+  There are two ways of changing the logo.
 
+  1. The easiest way to use a different logo is to replace the existing
+     ``logo.png`` in ``myapp/data`` by your prefered icon and refresh.
+     By default all application will look for a ``logo.png`` to be 
+     rendered in the logo section.
+
+     .. image:: images/lax-book.06-main-template-logo.en.png
+
+  2. In your cube directory, you can specify which file to use for the logo.
+     This is configurable in ``mycube/data/external_resources``: ::
+        
+       LOGO = DATADIR/path/to/mylogo.gif
+
+     where DATADIR is ``mycubes/data``.
+
+
+ 
