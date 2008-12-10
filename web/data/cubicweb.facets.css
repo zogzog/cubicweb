@@ -9,11 +9,6 @@ div.facet {
  padding: 5px;
 }
 
-div.facetBody {
-  height: 10em;
-  overflow: auto;
-}
-
 div.facetTitle, div.bkSearch  {
  font-size: 80%;
  width:220px;
