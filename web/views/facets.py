@@ -54,6 +54,8 @@ class FilterBox(BoxTemplate):
     def call(self, view=None):
         req = self.req
         req.add_js( ('cubicweb.ajax.js', 'cubicweb.formfilter.js') )
+        req.add_css('cubicweb.facets.css')
+        req.html_headers.add_onload('jQuery(".facet").corner("tl br 10px");')
         rset, vid, divid, paginate=self._get_context(view)
         if rset.rowcount < 2: # XXX done by selectors, though maybe necessary when rset has been hijacked
             return
