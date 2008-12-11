@@ -1,7 +1,7 @@
 .. -*- coding: utf-8 -*-
 
-Interface de configuration du site
-==================================
+User interface for web site configuration
+=========================================
 
 .. image:: images/lax-book.03-site-config-panel.en.png
 

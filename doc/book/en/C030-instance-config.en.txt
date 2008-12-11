@@ -1,162 +1,163 @@
 .. -*- coding: utf-8 -*-
 
-Configuration d'une instance
-============================
 
-À la création d'une instance, un fichier de configuration est généré dans ::
+Configure an instance
+=====================
 
-   $(CW_REGISTRY)/<instance>/<nom configuration>.conf
+While creating an instance, a configuration file is generated in::
 
-par exemple ::
+    $ (CW_REGISTRY) / <instance> / <configuration name>.conf
 
-   /etc/cubicweb.d/jpl/all-in-one.conf
+For example::
 
-C'est un simple fichier texte au format INI. Dans la description suivante,
-chaque nom d'option est préfixé de sa section et suivi de sa valeur par défaut
-le cas échéant, e.g. "`<section>.<option>` [valeur]".
+    /etc/cubicweb.d/JPL/all-in-one.conf
+
+It is a simple text file format INI. In the following description,
+each option name is prefixed with its own section and followed by its
+default value if necessarry, e.g. "`<section>.<option>` [value]."
 
 
-Configuration du serveur web
-----------------------------
-:`web.auth-mode` [cookie]: 
-   mode d'authentification, cookie ou http
-:`web.realm`: 
-   realm de l'application en mode d'authentification http
+Configuring the Web server
+--------------------------
+:`web.auth-model` [cookie]:
+    authentication mode, cookie or http
+:`web.realm`:
+    realm of the application in http authentication mode
 :`web.http-session-time` [0]:
-   délai d'inactivité d'une session HTTP avant sa fermeture automatique. Durée
-   en secondes, 0 signifiant pas d'expiration (ou plus exactement lors de la
-   fermeture du navigateur du client)
+    period of inactivity of an HTTP session before it closes automatically.
+    Duration in seconds, 0 meaning no expiration (or more exactly at the
+    closing of the browser client)
 
 :`main.anonymous-user`, `main.anonymous-password`:
-   login et mot de passe à utiliser pour se connecter au serveur RQL lors des
-   connexions HTTP anonymes. Il faut que le compte EUser associé existe.
+    login and password to use to connect to the RQL server with
+    HTTP anonymous connection. EUser account should exist.
 
 :`main.base-url`:
-   url de base du site, à utiliser pour générer les urls des pages web
+    url base site to be used to generate the urls of web pages
 
-Configuration https
+Https configuration
 ```````````````````
-Il est possible de rendre un site accessible en http pour les connections 
-anonymes et en https pour les utilisateurs authentifié. Il faut pour cela
-utiliser apache (par ex.) pour la redirection et la variable `main.https-url` du
-fichier de configuration.
+It is possible to make a site accessible for anonymous http connections
+and https for authenticated users. This requires to
+use apache (by example) for redirection and the variable `main.https-url`
+of configuration file.
 
-:Exemple:
+:Example:
 
-  pour une redirection apache d'un site accessible via `http://localhost/demo`
-  et `https://localhost/demo` et qui tourne en réalité sur le port 8080, il 
-  faut avoir pour la version http : ::
+   For an apache redirection of a site accessible via `http://localhost/demo`
+   and `https://localhost/demo` and actually running on port 8080, it
+   takes to the http:::
 
-    RewriteCond %{REQUEST_URI} ^/demo
-    RewriteRule ^/demo$ /demo/
-    RewriteRule ^/demo/(.*) http://127.0.0.1:8080/$1 [L,P]
+     RewriteCond %(REQUEST_URI) ^/demo
+     RewriteRule ^/demo$/demo/
+     RewriteRule ^/demo/(.*) http://127.0.0.1:8080/$1 [L,P]
   
-  et pour la version https : ::
+   and for the https:::
 
-    RewriteCond %{REQUEST_URI} ^/demo
-    RewriteRule ^/demo$ /demo/
-    RewriteRule ^/demo/(.*) http://127.0.0.1:8080/https/$1 [L,P]
+     RewriteCond %(REQUEST_URI) ^/ demo
+     RewriteRule ^/demo$/demo/
+     RewriteRule ^/demo/(.*) http://127.0.0.1:8080/https/$1 [L,P]
 
 
-  et on aura dans le fichier all-in-one.conf de l'instance : ::
+   and we will file in the all-in-one.conf of the instance:::
 
-    base-url = http://localhost/demo
-    https-url = `https://localhost/demo`
+     base-url = http://localhost/demo
+     https-url = `https://localhost/demo`
 
-Configuration de l'interface web
+Setting up the web
 --------------------------------
 :`web.embed-allowed`:
-   expression régulière correspondant aux sites pouvant être "incorporé" dans
-   le site (controleur 'embed')
+    regular expression matching sites which could be "embedded" in
+    the site (controllers 'embed')
 :`web.submit-url`:
-   url à laquelle les bugs rencontrés dans l'application peuvent être posté
+    url where the bugs encountered in the application can be mailed to
 
 
-Configuration du serveur RQL
-----------------------------
+RQL server configuration
+------------------------
 :`main.host`:
-   nom de l'hôte s'il ne peut être détecter correctement
+    host name if it can not be detected correctly
 :`main.pid-file`:
-   fichier où sera écrit le pid du serveur
+    file where will be written the server pid
 :`main.uid`:
-   compte utilisateur à utiliser pour le lancement du serveur quand il est
-   lancé en root par init
+    user account to use for launching the server when it is
+    root launched by init
 :`main.session-time [30*60]`:
-   temps d'expiration d'une session RQL
+    timeout of a RQL session
 :`main.query-log-file`:
-   fichier dans lequel écrire toutes les requêtes RQL éxécutées par le serveur
+    file where all requests RQL executed by the server are written
 
 
-Configuration Pyro pour l'instance
+Pyro configuration for the instance
 -----------------------------------
-Coté serveur web :
+Web server side:
 
-:`pyro-client.pyro-application-id`: 
-   identifiant pyro du serveur RQL (e.g. le nom de l'instance)
+:`pyro-client.pyro-application-id`:
+    pyro identifier of RQL server (e.g. the instance name)
 
-Coté serveur RQL :
+RQL server side:
 
 :`pyro-server.pyro-port`:
-   numéro de port pyro. Si aucune valeur n'est spécifiée, un port est attribué
-   automatiquement.
+    pyro port number. If none is specified, a port is assigned
+    automatically.
 
-Coté serveur RQL et serveur web :
+RQL and web servers side:
 
 :`pyro-name-server.pyro-ns-host`:
-   nom de l'hôte hébergeant le serveur de nom pyro. Si aucune valeur n'est
-   spécifié, il est localisé par une requête de broadcast
+    hostname hosting pyro server name. If no value is
+    specified, it is located by a request from broadcast
 :`pyro-name-server.pyro-ns-group` [cubicweb]:
-   groupe pyro sous lequel enregistrer l'application
+    pyro group in which to save the application
 
 
-Configuration courriel
-----------------------
-Coté serveur RQL et serveur web :
+Configuring e-mail
+------------------
+RQL and web server side:
 
-:`email.mangle-emails [no]`:
-   indique si les adresses email doivent être affichées telle quelle ou
-   transformée
+:`email.mangle-mails [no]`:
+    indicates whether the email addresses must be displayed as is or
+    transformed
 
-Coté serveur RQL :
+RQL server side:
 
 :`email.smtp-host [mail]`:
-   nom de l'hôte hébergeant le serveur SMTP à utiliser pour le courriel sortant
+    hostname hosting the SMTP server to use for outgoing mail
 :`email.smtp-port [25]`:
-   port du serveur SMTP à utiliser pour le courriel sortant
+    SMTP server port to use for outgoing mail
 :`email.sender-name`:
-   nom à utiliser pour les courriels sortant de l'application
+    name to use for outgoing mail of the application
 :`email.sender-addr`:
-   adresse à utiliser pour les courriels sortant de l'application
-:`email.default-dest-addrs`:
-   adresses de destination par défaut, si utilisé par la configuration de la 
-   diffusion du modèle (séparées par des virgules)
+    address for outgoing mail of the application
+:`email.default dest-addrs`:
+    destination addresses by default, if used by the configuration of the
+    dissemination of the model (separated by commas)
 :`email.supervising-addrs`:
-   addresses de destination des courriels de supervision (séparées par des 
-   virgules)
+    destination addresses of e-mails of supervision (separated by
+    commas)
 
 
-Configuration journalisation
-----------------------------
+Configuring logging
+-------------------
 :`main.log-threshold`:
-   niveau de filtrage des messages (DEBUG, INFO, WARNING, ERROR)
+    level of filtering messages (DEBUG, INFO, WARNING, ERROR)
 :`main.log-file`:
-   fichier dans lequel écrire les messages
+    file to write messages
 
 
-Configuration Eproperties
--------------------------
-D'autres paramètres de configuration sont sous la forme d'entités `EProperty`
-dans la base de données. Il faut donc les éditer via l'interface web ou par des
-requêtes rql.
+Configuring Eproperties
+-----------------------
+Other configuration settings are in the form of entities `EProperty`
+in the database. It must be edited via the web interface or by
+RQL queries.
 
 :`ui.encoding`:
-   encodage de caractères à utiliser pour l'interface web
+    Character encoding to use for the web
 :`navigation.short-line-size`: # XXX should be in ui
-   nombre de caractères maximum pour les affichages "courts"
+    number of characters for "short" display
 :`navigation.page-size`:
-   nombre d'entités maximum à afficher par page de résultat
+    maximum number of entities to show per results page
 :`navigation.related-limit`:
-   nombre d'entités liées maximum à afficher sur la vue primaire d'une entité
+    number of related entities to show up on primary entity view
 :`navigation.combobox-limit`:
-   nombre d'entités non liées maximum à afficher sur les listes déroulantes de
-   la vue d'édition d'une entité
+    number of entities unrelated to show up on the drop-down lists of
+    the sight on an editing entity view
