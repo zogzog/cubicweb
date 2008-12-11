@@ -2,115 +2,113 @@
 
 .. _MercurialPresentation:
 
-Présentation de Mercurial
-=========================
+Introducing Mercurial
+=====================
 
 Introduction
 ````````````
-Mercurial_ gère un ensemble distribué d'entrepôts contenant des arbres de
-révisions (chaque révision indique les changements à effectuer pour obtenir la
-version suivante, et ainsi de suite). Localement, on dispose d'un entrepôt
-contenant un arbre de révisions, et d'un répertoire de travail. Il est possible
-de mettre dans son répertoire de travail, une des versions issue de son entrepôt
-local, de la modifier puis de la verser dans son entrepôt. Il est également
-possible de récuprer dans son entrepôt local des révisions venant d'un autre
-entrepôt, ou d'exporter ses propres révisions depuis son entrepôt local vers un
-autre entrepôt.
-
-A noter que contrairement à CVS/Subversion, on crée généralement un entrepôt par
-projet à gérer.
-
-Lors d'un développement collaboratif, on crée généralement un entrepôt central
-accessible à tout les développeurs du projet. Ces entrepôts centraux servent de
-référence. Selon ses besoins, chacun peut ensuite disposer d'un entrepôt local,
-qu'il faudra penser à synchroniser avec l'entrepôt central de temps à autre. 
+Mercurial_ manages a distributed repository containing revisions
+trees (each revision indicates the changes required to obtain the
+next, and so on). Locally, we have a repository containing revisions
+tree, and a working directory. It is possible
+to put in its working directory, one of the versions of its local repository,
+modify and then push it in its repository. 
+It is also possible to get revisions from another repository or to export
+its own revisions from the local repository to another repository.
 
 
-Principales commandes
-`````````````````````
-* Créer un entrepôt local ::
+In contrast to CVS/Subversion, we usually create a repository by
+project to manage.
 
-    hg clone ssh://orion//home/src/prive/rep
-
-* Voir le contenu de l'entrepôt local (outil graphique en Tk) ::
-
-    hg view
-
-* Ajouter un sous-répertoire ou un fichier dans le répertoire courant ::
-
-    hg add rep
-
-* Placer dans son répertoire de travail une révision spécifique (ou la dernière
-  revision) issue de l'entrepôt local ::
-
-    hg update [identifiant-revision]
-    hg up [identifiant-revision]
-
-* Récupérer dans son entrepôt local, l'arbre de révisions contenu dans un
-  entrepôt distant (cette opération ne modifie pas le répertoire local) ::
-
-    hg pull ssh://orion//home/src/prive/rep
-    hg pull -u ssh://orion//home/src/prive/rep # équivalent à pull + update
-
-* Voir quelles sont les têtes de branches de l'entrepôt local si un `pull` a
-  tiré une nouvelle branche ::
-
-    hg heads
-
-* Verser le répertoire de travail dans l'entrepôt local (et créer une nouvelle
-  révision) ::
-
-    hg commit
-    hg ci
-
-* Fusionner, avec la révision mère du répertoire local, une autre révision issue
-  de l'entrepôt local (la nouvelle révision qui en résultera aura alors deux
-  révisions mères) ::
-
-    hg merge identifiant-revision
-
-* Exporter dans un entrepôt distant, l'arbre de révisions contenu dans son
-  entrepôt local (cette opération ne modifie pas le répertoire local) ::
-
-    hg push ssh://orion//home/src/prive/rep
-
-* Voir quelle sont les révisions locales non présentes dans un autre entrepôt ::
-
-    hg outgoing ssh://orion//home/src/prive/rep
-
-* Voir quelle sont les révisions d'un autre entrepôt non présentes localement ::
-
-    hg incoming ssh://orion//home/src/prive/rep
-
-* Voir quelle est la révision issue de l'entrepôt local qui a été sortie dans le
-  répertoire de travail et modifiée ::
-
-    hg parent
-
-* Voir les différences entre le répertoire de travail et la révision mère de
-  l'entrepôt local, éventuellement permettant de les verser dans l'entrepôt
-  local ::
-
-    hg diff
-    hg commit-tool
-    hg ct
+In a collaborative development, we usually create a central repository
+accessible to all developers of the project. These central repository is used
+as a reference. According to its needs, then everyone can have a local repository,
+that you will have to synchronize with the central repository from time to time.
 
 
-Bonnes pratiques
-````````````````
-* penser à faire un `hg pull -u` régulièrement et particulièrement avant de
-  faire un `hg commit`
+Major commands
+``````````````
+* Create a local repository::
 
-* penser à faire un `hg push` lorsque votre entrepôt contient une version
-  relativement stable de vos modifications
+     hg clone ssh://orion//home/src/private/rep
 
-* si un `hg pull -u` a créé une nouvelle tête de branche :
+* See the contents of the local repository (graphical tool in Tk)::
 
-  1. identifier l'identifiant de celle-ci avec `hg head`
-  2. fusionner avec `hg merge`
-  3. `hg ci`
-  4. `hg push`
+     hgview
 
-.. _Mercurial: http://www.selenic.com/mercurial/
+* Add a sub-directory or file in the current directory::
+
+     hg add rep
+
+* Move to the working directory a specific revision (or last
+  revision) from the local repository::
+
+     hg update [identifier-revision]
+     hg up [identifier-revision]
+
+* Get in its local repository, the tree of revisions contained in a
+  remote repository (this does not change the local directory)::
+
+     hg pull ssh://orion//home/src/private/rep
+     hg pull-u ssh://orion//home/src/private/rep # equivalent to pull + update
+
+* See what are the heads of branches of the local repository if a `pull`
+  returned a new branch::
+
+     hg heads
+
+* Submit the working directory in the local repository (and create a new
+  revision)::
+
+     hg commit
+     hg ci
+
+* Merge with the mother revision of local directory, another revision from
+  the local respository (the new revision will be then two mothers
+  revisions)::
+
+     hg merge identifier-revision
+
+* Export to a remote repository, the tree of revisions in its content
+  local respository (this does not change the local directory)::
+
+     hg push ssh://orion//home/src/private/rep
+
+* See what local revisions are not in another repository::
+
+     hg outgoing ssh://orion//home/src/private/rep
+
+* See what are the revisions of a repository not found locally::
+
+     hg incoming ssh://orion//home/src/private/rep
+
+* See what is the revision of the local repository which has been taken out 
+  from the working directory and amended::
+
+     hg parent
+
+* See the differences between the working directory and the mother revision
+  of the local repository, possibly to submit them in the local repository::
+
+     hg diff
+     hg commit-tool
+     hg ct
+
+
+Best Practices
+``````````````
+* Think of making a `hg pull -u` regularly, and particularly before
+   a `hg commit`.
+
+* Think of a `hg push` when your repository contains a version
+  relatively stable of your changes.
+
+* If a `hg pull u` created a new branch head:
+
+   1. identify its identifier with `hg head`
+   2. merge with `hg merge`
+   3. `hg ci`
+   4. `hg push`
+
 
 .. include:: D061-mercurial-forest.en.txt
