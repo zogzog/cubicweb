@@ -1,216 +1,587 @@
 .. -*- coding: utf-8 -*-
 
+======================================
 RQL language (Relation Query Language)
 ======================================
 
-XXX see also RQL documentation in source rql/doc.
-
-
 Introduction
-------------
-* RQL language focuses on browsing relations.
-* Attributes are considered as particular relations.
-* RQL is inspired from SQL but is a high level language.
-* A good knowledge of Erudi's schemas defining the application is required.
+============
+
+Goals RQL
+---------
+
+The goal is to have a language emphasizing the way of browsing
+relations. As such, attributes will be regarded as cases of
+special relations (in terms of implementation, the user
+language not to see virtually no difference between an attribute and a
+relation).
+
+RQL is inspired by SQL but is the highest level. A knowledge of the 
+`CubicWeb` schema defining the application is necessary.
+
+Comparison with existing languages
+----------------------------------
+
+SQL
+```
+RQL builds on the features of SQL but is at a higher level
+(the current implementation of RQL generates SQL). For that it is limited
+to the way of browsing relations and introduces variables. 
+The user does not need to know the model underlying SQL, but the `CubicWeb` 
+scheam defining the application.
+
+Versa
+`````
+Should I look in more detail, but here is already some ideas for
+the moment ... Versa_ is the language most similar to what we wanted
+to do, but the model underlying data being RDF, there is some
+number of things such as namespaces or handling of the RDF types which 
+does not interest us. On the functionality level, Versa_ is very comprehensive
+including through many functions of conversion and basic types manipulation,
+which may need to be guided at one time or another. 
+Finally, the syntax is a little esoteric.
+
+See also
+``````````
+RDFQL_
 
 
-Types of requests
------------------
+The different types of queries
+------------------------------
 
-Search (`Any`)
-  query the repository to extract entities and/or attributes.
+Search ( `Any`)
+   This type of query can extract entities and attributes of entities.
 
-Insertion (`INSERT`)
-  insert new entities in the database.
+Inserting entities ( `INSERT`)
+   This type of query is used to insert new entities in the database. It
+   will also create direct relationships entities newly created.
 
-Updates of entities, creation of relations (`SET`)
-  update existing entities in the database, or create relations between existing
-  entities
+Update entities, relations creation( `SET`)
+   This type of query updates existing entities in the database,
+   or create relations between existing entities.
 
-Deletion of entities or relations (`DELETE`)
-  delete existing entities and relations from the database.
+Deletion of entities or relationship ( `DELETE`)
+   This type of query allows for the removal of entities and relations existing
+   in the database.
 
-
-Variables and typing
---------------------
-
-Entities and values to browse and/or select are set in the query through *variables*
-which should be written in capital letters.
-
-The possible types for each variable can be deducted from the schema depending on
-the conditions expressed in the query.
-
-You can force the possible types for a variable thanks to the special relation `is`.
-
-
-
-Built-in types
---------------
-* `String` (literal: between double or single quotes).
-* `Int`, `Float` (separator is '.').
-* `Date`, `Datetime`, `Time` (literal: pattern YYYY/MM/DD[ hh:mm] or keywords
-  `TODAY` and `NOW`).
-* `Boolean` (keywords `TRUE` et `FALSE`).
-* keyword `NULL`.
-
-Operators
-----------
-* Logical operators: `AND`, `OR`, `,`.
-* Mathematical operators: `+`, `-`, `*`, `/`.
-* Comparison operators: `=`, `<`, `<=`, `>=`, `>`, `~=`, `LIKE`, `IN`.
-
-  * The operator `=` is the default operator.
-
-  * The operator `LIKE` / `~=` allows the use of the character `%` in a string
-    to indicate that the string should start/end with a prefix/suffix::
-    
-      Any X WHERE X nom ~= 'Th%'
-      Any X WHERE X nom LIKE '%lt'
-
-  * The operator `IN` allows to provide a list of possible values::
-
-      Any X WHERE X nom IN ('chauvat', 'fayolle', 'di mascio', 'thenault')
-
-Search query
-------------
-
-  [`DISTINCT`] <entity type> V1(, V2)\*
-  [`GROUPBY` V1(, V2)\*]  [`ORDERBY` <orderterms>]
-  [`WHERE` <condition>] 
-  [`LIMIT` <value>] [`OFFSET` <value>]
-
-:entity type:
-  Type of the selected variable
-  Special type `Any` is equivalent to not specify a type
-:condition:
-  list of relations to browse following the pattern 
-    `V1 relation V2|<static value>`
-:orderterms:
-  Setting of the selection order : variable or column number followed by the
-  sorting method (`ASC`, `DESC`), ASC being the default value.
-:note  for grouped queries:
-  For grouped queries (e.g. using function `GROUPBY`), all the selected 
-  variables must be grouped or aggregated.
-
-Examples - search
-~~~~~~~~~~~~~~~~~
-::
-
-      Any X WHERE X eid 53
-      Personne X
-      Personne X WHERE X travaille_pour S, S nom "logilab"
-      Any E,COUNT(X) GROUPBY E ORDERBY EN WHERE X is E, E name EN 
-      Any E,COUNT(X) GROUPBY E ORDERBY 2 WHERE X is E 
-
-
-Advanced features
-~~~~~~~~~~~~~~~~~
-* Aggregate functions: `COUNT`, `MIN`, `MAX`, `SUM`.
-* String functions:`UPPER`, `LOWER`.
-* Optional relations:
-
-  * They allow to select entities related to others or not.
-
-  * You should use `?` behind the variable to specify the relation to itself is
-    optional.
-
-    - Project anomalies related to a version or not::
-
-        Any X,V WHERE X concerns P, P eid 42, X corrected_in V?
-
-    - All the cards and the project they document otherwise ::
-
-        Any C,P WHERE C is Card, P? documented_by C
-
-Negation
-~~~~~~~~
-* A query such as `Document X WHERE NOT X owned_by U` is equivalent to 
-  "the documents which do not have relation `owned_by`".
-* Whereas the query `Document X WHERE NOT X owned_by U, U login "syt"`
-  is equivalent to "the documents which do not have relation `owned_by`
-  with the user syt". They could have a relation with other users.
-
-
-Identity
-~~~~~~~~
-
-We could use the special relation `identity` in a query in order to add a
-condition of identity between two variables. This is equivalent to ``is``
-in Python.
-
-  Any A WHERE A comments B, A identity B
-
-returns the set of objects which comment themselves. The relation `identity`
-is very usefull while defining security rules with `RQLExpressions`.
-
-Insertion queries
------------------
-   `INSERT` <entity type> V1(, <entity type> V2)\* `:` <assignments>
-   [`WHERE` <condition>] 
-
-:assignments:
-  list of relations to assign such as `V1 relation V2|<static value>`
-
-The condition allow to define the variables we would use in assignments.
-
-Be careful, if a condition is specified, the insertion is done *for each result
-returned by the condition*.
- 
-Examples - insertion
-~~~~~~~~~~~~~~~~~~~~~
-* Insertion of a new person named 'bidule'::
-
-       INSERT Person X: X name 'bidule'
-
-* Insertion of a new person named 'bidule', another named
-  'chouette' and a relation 'friend' between them::
-
-       INSERT Person X, Person Y: X name 'bidule', Y name 'chouette', X friend Y
-
-* Insertion of a new person named 'bidule' and a relation 'friend'with an 
-  existing person 'chouette'::
-
-       INSERT Person X: X name 'bidule', X friend Y WHERE Y name 'chouette'
-
-
-Update queries
---------------
-   `SET` <assignments>
-   [`WHERE` <condition>] 
-
-Be careful, if a condition is specified, the update is done *for each result
-returned by the condition*.
-
-Examples - update 
-~~~~~~~~~~~~~~~~~
-* Renaming of the person named 'bidule' to 'toto', with change on the first name::
-
-       SET X name 'toto', X firstname 'original' WHERE X is 'Person', X name 'bidule'
-
-* Insertion of a relation of type 'know' between two objects linked with the relation
-  of type 'friend' ::
-
-       SET X know Y WHERE X friend Y
-
-Deletion queries
-----------------
-   `DELETE` (<entity type> V) | (V1 relation v2),...
-   [`WHERE` <condition>] 
-
-
-Be careful, if a condition is specified, the deletion is done *for each result
-returned by the condition*.
 
 
 Examples
-~~~~~~~~
-* Deletion of the person named 'toto'::
+========
 
-       DELETE Person X WHERE X name 'toto'
+(see the tutorial: ref: `tutorielRQL` for more examples)
 
-* Deletion of all the relations of type 'friend' linked to the person named 
-  'toto'::
+Search Query
+------------
 
-       DELETE X friend Y WHERE X is 'Person', X name 'toto'
+   [ `DISTINCT`] <entity type> V1 (V2) \ *
+   [ `GROUPBY` V1 (V2) \*] [ `ORDERBY` <orderterms>]
+   [ `WHERE` <restriction>]
+   [ `LIMIT` <value>] [ `OFFSET` <value>]
+
+:entity type:
+   Type of selected variables.
+   The special type `Any` is equivalent to not specify a type.
+:restriction:
+   list of relations to go through whic follow the pattern
+     `V1 relation V2 | <static value>`
+:orderterms:
+   Definition of the selection order: variable or column number followed by
+   sorting method ( `ASC`, `DESC`), ASC is the default.
+:note for grouped queries:
+   For grouped queries (e.g., a clause `GROUPBY`), all
+   selected variables must be aggregated or grouped.
 
 
+
+- *Search for the object of identifier 53*
+   ::
+
+        Any WHERE X
+        X eid 53
+
+- *Search material such as comics, owned by syt and available*
+   ::
+
+        WHERE X Document
+        X occurence_of F, F class C, C name 'Comics'
+        X owned_by U, U login 'syt'
+        X available true
+
+- *Looking for people working for eurocopter interested in training*
+   ::
+
+        Person P WHERE
+        P work_for P, S name 'Eurocopter'
+        P interested_by T, T name 'training'
+
+- *Search note less than 10 days old written by jphc or ocy*
+   ::
+
+        Note N WHERE
+        N written_on D, D day> (today -10),
+        N written_by P, P name 'jphc' or P name 'ocy'
+
+- *Looking for people interested in training or living in Paris*
+   ::
+
+        Person P WHERE
+        (P interested_by T, T name 'training') or
+        (P city 'Paris')
+
+- *The name and surname of all people*
+   ::
+
+        Any N, P WHERE
+        X is Person, X name N, X first_name P
+
+   Note that the selection of several entities generally force
+   the use of "Any" because the type specification applies otherwise
+   to all the selected variables. We could write here
+   ::
+
+        String N, P WHERE
+        X is Person, X name N, X first_name P
+
+
+Insertion query
+---------------
+
+    `INSERT` <entity type> V1 (, <entity type> V2) \ * `:` <assignments>
+    [ `WHERE` <restriction>]
+
+: assignments:
+   list of relations to assign in the form `V1 relationship V2 | <static value>`
+
+The restriction can define variables used in assignments.
+
+Caution, if a restriction is specified, the insertion is done for 
+*each line results returned by the restriction*.
+
+- *Insert a new person named 'foo'*
+   ::
+
+        INSERT Person X: X name 'widget'
+
+- *Insert a new person named 'foo', another called 'nice' and a 'friend' relation
+  between them*
+  ::
+
+        INSERT Person X, Person Y: X name 'foo', Y name 'nice', X friend Y
+
+- *Insert a new person named 'foo' and a 'friend' relation with an existing 
+  person called 'nice'*
+  ::
+
+        INSERT Person X: X name 'foo', X friend  Y WHERE name 'nice'
+
+Update and relation creation queries
+------------------------------------
+    `SET` <assignements>
+    [ `WHERE` <restriction>]
+
+Caution, if a restriction is specified, the update is done *for
+each line results returned by the restriction*.
+
+- *Renaming of the person named 'foo' to 'bar' with the first name changed*
+  ::
+
+        SET X name 'bar', X first_name 'original' where X is Person X name 'foo'
+
+- *Insert a relation of type 'know' between objects linked by 
+  the relation of type 'friend'*
+  ::
+
+        SET X know Y  WHERE X friend Y
+
+
+Deletion query
+--------------
+    `DELETE` (<entity type> V) | (V1 relation v2 ),...
+    [ `WHERE` <restriction>]
+
+Caution, if a restriction is specified, the deletion is made *for
+each line results returned by the restriction*.
+
+- *Deletion of the person named 'foo'*
+  ::
+
+        DELETE Person X WHERE X name 'foo'
+
+- *Removal of all relations of type 'friend' from the person named 'foo'*
+  ::
+
+        DELETE X friend Y WHERE X is Person, X name 'foo'
+
+
+
+Language definition
+===================
+
+Reserved keywords
+-----------------
+The keywords are not case sensitive.
+
+::
+
+     DISTINCT, INSERT, SET, DELETE,
+     WHERE, AND, OR, NOT
+     IN, LIKE,
+     TRUE, FALSE, NULL, TODAY, NOW
+     GROUPBY, ORDERBY, ASC, DESC
+
+
+Variables and Typing
+--------------------
+
+With RQL, we do not distinguish between entities and attributes. The
+value of an attribute is considered an entity of a particular type (see
+below), linked to one (real) entity by a relation called the name of
+the attribute.
+
+Entities and values to browse and/or select are represented in
+the query by *variables* that must be written in capital letters.
+
+There is a special type **Any**, referring to a non specific type.
+
+We can restrict the possible types for a variable using the
+special relation **is**.
+The possible type(s) for each variable is derived from the schema
+according to the constraints expressed above and thanks to the relations between
+each variable.
+
+Built-in types
+``````````````
+
+The base types supported are string (between double or single quotes),
+integers or floats (the separator is the'.'), dates and
+boolean. We expect to receive a schema in which types String,
+Int, Float, Date and Boolean are defined.
+
+* `String` (literal: between double or single quotes).
+* `Int`, `Float` (separator being'.').
+* `Date`, `Datetime`, `Time` (literal: string YYYY/MM/DD [hh:mm] or keywords
+   `TODAY` and `NOW`).
+* `Boolean` (keywords `TRUE` and `FALSE`).
+* `Keyword` NULL.
+
+
+Operators
+---------
+
+Logical Operators
+```````````````````
+::
+
+     AND, OR, ','
+
+',' is equivalent to 'AND' but with the smallest among the priority
+of logical operators (see :ref:`PriorityOperators`).
+
+Mathematical Operators
+``````````````````````
+::
+
+     +, -, *, /
+
+Comparison operators
+````````````````````
+::
+
+     =, <, <=, >=, > = ~, IN, LIKE
+
+* The operator `=` is the default operator.
+
+* The operator `LIKE` equivalent to `~=` can be used with the
+  special character `%` in a string to indicate that the chain 
+  must start or finish by a prefix/suffix:
+  ::
+
+     Any X WHERE X name =~ 'Th%'
+     Any X WHERE X name LIKE '%lt'
+
+* The operator `IN` provides a list of possible values:
+  ::
+  
+    Any X WHERE X name IN ( 'chauvat', 'fayolle', 'di mascio', 'thenault')
+
+
+XXX nico: A trick <> 'bar' would not it be more convenient than NOT A
+trick 'bar'?
+
+.. _PriorityOperators:
+
+Operators priority
+``````````````````
+
+1. '*', '/'
+
+2. '+', '-'
+
+3. 'and'
+
+4. 'or'
+
+5. ','
+
+
+Advanced Features
+-----------------
+
+Functions aggregates
+````````````````````
+::
+
+     COUNT, MIN, MAX, AVG, SUM
+
+Functions on string
+```````````````````
+::
+
+     UPPER, LOWER
+
+Optional relations
+``````````````````
+
+* They allow you to select entities related or not to another.
+
+* You must use the `?` behind the variable to specify that the relation
+  toward it is optional:
+
+   - Anomalies of a project attached or not to a version ::
+
+       Any X, V WHERE X concerns P, P eid 42, X corrected_in V?
+
+   - All cards and the project they document if necessary ::
+
+       Any C, P WHERE C is Card, P? documented_by C
+
+
+
+BNF grammar
+-----------
+
+The terminal elements are in capital letters, non-terminal in lowercase.
+The value of the terminal elements (between quotes) is a Python regular
+expression.
+::
+
+     statement:: = (select | delete | insert | update) ';'
+
+
+     # select specific rules
+     select      ::= 'DISTINCT'? E_TYPE selected_terms restriction? group? sort?
+
+     selected_terms ::= expression ( ',' expression)*
+
+     group       ::= 'GROUPBY' VARIABLE ( ',' VARIABLE)*
+
+     sort        ::= 'ORDERBY' sort_term ( ',' sort_term)*
+
+     sort_term   ::=  VARIABLE sort_method =?
+
+     sort_method ::= 'ASC' | 'DESC'
+
+
+     # delete specific rules
+     delete ::= 'DELETE' (variables_declaration | relations_declaration) restriction?
+
+
+     # insert specific rules
+     insert ::= 'INSERT' variables_declaration ( ':' relations_declaration)? restriction?
+
+
+     # update specific rules
+     update ::= 'SET' relations_declaration restriction
+
+
+     # common rules
+     variables_declaration ::= E_TYPE VARIABLE (',' E_TYPE VARIABLE)*
+
+     relations_declaration ::= simple_relation (',' simple_relation)*
+
+     simple_relation ::= VARIABLE R_TYPE expression
+
+     restriction ::= 'WHERE' relations
+
+     relations   ::= relation (LOGIC_OP relation)*
+                   | '(' relations')'
+
+     relation    ::= 'NOT'? VARIABLE R_TYPE COMP_OP? expression
+                   | 'NOT'? R_TYPE VARIABLE 'IN' '(' expression (',' expression)* ')'
+                   
+     expression  ::= var_or_func_or_const (MATH_OP var_or_func_or_const) *
+                   | '(' expression ')'
+
+     var_or_func_or_const ::= VARIABLE | function | constant
+
+     function    ::= FUNCTION '(' expression ( ',' expression) * ')'
+
+     constant    ::= KEYWORD | STRING | FLOAT | INT
+
+     # tokens
+     LOGIC_OP ::= ',' | 'GOLD' | 'AND'
+     MATH_OP  ::= '+' | '-' | '/' | '*'
+     COMP_OP  ::= '>' | '>=' | '=' | '<=' | '<' | '~=' | 'LIKE'
+
+     FUNCTION ::= 'MIN' | 'MAX' | 'SUM' | 'AVG' | 'COUNT' | 'upper' | 'LOWER'
+
+     VARIABLE ::= '[A-Z][A-Z0-9]*'
+     E_TYPE   ::= '[A-Z]\w*'
+     R_TYPE   ::= '[a-z_]+'
+
+     KEYWORD  ::= 'TRUE' | 'FALSE' | 'NULL' | 'TODAY' | 'NOW'
+     STRING   ::= "'([^'\]|\\.)*'" |'"([^\"]|\\.)*\"'
+     FLOAT    ::= '\d+\.\d*'
+     INT      ::= '\d+'
+
+
+Remarks
+-------
+
+Sorting and groups
+``````````````````
+
+- For grouped queries (e.g. with a GROUPBY clause), all
+  selected variables should be grouped.
+
+- To group and/or sort by attributes, we can do: "X,L user U, U
+  login L GROUPBY L, X ORDERBY L"
+
+- If the sorting method (SORT_METHOD) is not specified, then the sorting is
+  ascendant.
+
+Negation
+````````
+
+* A query such as `Document X WHERE NOT X owned_by U` means "the
+  documents have no relation `owned_by`".
+* But the query `Document X WHERE NOT X owned_by U, U login "syt"`
+  means "the documents have no relation `owned_by` with the user
+  syt". They may have a relation "owned_by" with another user.
+
+Identity
+````````
+
+You can use the special relation `identity` in a query to 
+add an identity constraint between two variables. This is equivalent
+to ``is`` in python::
+
+   Any A WHERE A comments B, A identity B
+
+return all objects that comment themselves. The relation
+`identity` is especially useful when defining the rules for securities
+with `RQLExpressions`.
+
+Implementation
+==============
+
+Internal representation (syntactic tree)
+----------------------------------------
+
+The tree research does not contain the selected variables 
+(e.g. there is only what follows "WHERE").
+
+The insertion tree does not contain the variables inserted or relations
+defined on these variables (e.g. there is only what follows "WHERE").
+
+The removal tree does not contain the deleted variables and relations
+(e.g. there is only what follows the "WHERE").
+
+The update tree does not contain the variables and relations updated
+(e.g. there is only what follows the "WHERE").
+
+::
+
+     Select         ((Relationship | And | Gold)?, Group?, Sort?)
+     Insert         (Relations | And | Gold)?
+     Delete         (Relationship | And | Gold)?
+     Update         (Relations | And | Gold)?
+
+     And            ((Relationship | And | Gold), (Relationship | And | Gold))
+     Or             ((Relationship | And | Gold), (Relationship | And | Gold))
+
+     Relationship   ((VariableRef, Comparison))
+
+     Comparison     ((Function | MathExpression | Keyword | Constant | VariableRef) +)
+
+     Function       (())
+     MathExpression ((MathExpression | Keyword | Constant | VariableRef), (MathExpression | Keyword | Constant | VariableRef))
+
+     Group          (VariableRef +)
+     Sort           (SortTerm +)
+     SortTerm       (VariableRef +)
+
+     VariableRef    ()
+     Variable       ()
+     Keyword        ()
+     Constant       ()
+
+
+Remarks
+-------
+
+- The current implementation does not support linking two relations of type
+  'is' with a OR. I do not think that the negation is  supported on this type 
+  of relation (XXX FIXME to be confirmed).
+
+- Relations defining the variables must be left to those using them. 
+  For example::
+
+     Point P where P abs X, P ord Y, P value X+Y
+
+   is valid, but::
+
+     Point P where P abs X, P value X+Y, P ord Y
+
+   is not.
+
+
+
+Conclusion
+==========
+
+Limitations
+-----------
+
+It lacks at the moment:
+
+- COALESCE
+
+- restrictions on groups (HAVING)
+
+and certainly other things ...
+
+A disadvantage is that to use this language we must know the
+format used (with real relation names and entities, not those viewing
+in the user interface). On the other hand, we can not really bypass
+that, and it is the job of a user interface to hide the RQL.
+
+
+Topics
+------
+
+It would be convenient to express the schema matching
+relations (non-recursive rules)::
+
+     Document class Type <-> Document occurence_of Fiche class Type
+     Sheet class Type    <-> Form collection Collection class Type
+    
+Therefore 1. becomes::
+
+     Document X where
+     X class C, C name 'Cartoon'
+     X owned_by U, U login 'syt'
+     X available true
+
+I'm not sure that we should handle this at RQL level ...
+
+There should also be a special relation 'anonymous'.
+
+
+
+.. _Versa: Http://uche.ogbuji.net/tech/rdf/versa/
+.. _RDFQL: Http://www.w3.org/TandS/QL/QL98/pp/rdfquery.html
+
+
+XXX see also RQL documentation in source rql/doc.
