@@ -314,3 +314,4 @@ class ProgressBarWidget(HTMLWidget):
         self.w(u'<div class="progressbarback" title="%i %%">' % real_pourcent)
         self.w(u'<div class="progressbar %s" style="width: %spx; align: left;" ></div>' % (color, pourcent))
         self.w(u'</div>')
+

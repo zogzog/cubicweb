@@ -175,7 +175,7 @@ class CubicWebRegistry(VRegistry):
         """
         return [x for x in sorted(self.possible_objects(registry, *args, **kwargs),
                                   key=lambda x: x.propval('order'))
-                if x.propval('visible')]    
+                if x.propval('visible')]
         
     def possible_actions(self, req, rset, **kwargs):
         if rset is None:

@@ -64,6 +64,10 @@ msgid "%d years"
 msgstr "%d années"
 
 #, python-format
+msgid "%s"
+msgstr ""
+
+#, python-format
 msgid "%s days"
 msgstr "%d jours"
 
@@ -1190,6 +1194,12 @@ msgstr "barre rql"
 msgid "components_rqlinput_description"
 msgstr "la barre de requête rql, dans l'en-tête de page"
 
+msgid "components_rss_feed_url"
+msgstr ""
+
+msgid "components_rss_feed_url_description"
+msgstr ""
+
 msgid "composite"
 msgstr "composite"
 
@@ -1324,7 +1334,9 @@ msgstr "relation système indiquant le type de l'entité"
 
 msgid ""
 "core relation indicating the types (including specialized types) of an entity"
-msgstr "relation système indiquant les types (y compris les types parents) d'une entité"
+msgstr ""
+"relation système indiquant les types (y compris les types parents) d'une "
+"entité"
 
 msgid "cost"
 msgstr "coût"
@@ -2255,9 +2267,6 @@ msgstr "ordre"
 msgid "ordernum"
 msgstr "ordre"
 
-msgid "owned by"
-msgstr "appartient à"
-
 msgid "owned_by"
 msgstr "appartient à"
 
@@ -2952,6 +2961,9 @@ msgstr "vous avez été déconnecté"
 #~ "maximum number of related entities to display in in the restriction view"
 #~ msgstr ""
 #~ "nombre maximum d'entités liées à afficher dans la vue de restriction"
+
+#~ msgid "owned by"
+#~ msgstr "appartient à"
 
 #~ msgid "see also"
 #~ msgstr "voir aussi"

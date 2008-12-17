@@ -59,6 +59,10 @@ msgid "%d years"
 msgstr ""
 
 #, python-format
+msgid "%s"
+msgstr ""
+
+#, python-format
 msgid "%s days"
 msgstr ""
 
@@ -1157,6 +1161,12 @@ msgstr "rql input box"
 msgid "components_rqlinput_description"
 msgstr "the rql box in the page's header"
 
+msgid "components_rss_feed_url"
+msgstr ""
+
+msgid "components_rss_feed_url_description"
+msgstr ""
+
 msgid "composite"
 msgstr ""
 
@@ -2160,9 +2170,6 @@ msgstr ""
 
 msgid "ordernum"
 msgstr "order"
-
-msgid "owned by"
-msgstr ""
 
 msgid "owned_by"
 msgstr "owned by"
