@@ -25,8 +25,7 @@ def lltrace(selector):
         return selector
     def traced(cls, *args, **kwargs):
         ret = selector(cls, *args, **kwargs)
-        if cls.id == 'seealso':
-            cls.warning('selector %s returned %s for %s', selector.__name__, ret, cls)
+        cls.lldebug('selector %s returned %s for %s', selector.__name__, ret, cls)
         return ret
     return traced
     
