@@ -2,6 +2,11 @@ from logilab.mtconverter import html_escape
 
 from cubicweb.common.view import EntityView
 
+# XXX
+# This is premature & tied to JPL
+# It should go away & be replaced by something like
+# a TabbedPrimaryView (that would really a primary view)
+
 class TabView(EntityView):
     id = 'tabview'
     accepts = ('Project',)
