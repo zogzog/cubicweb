@@ -107,6 +107,7 @@ table th, table td {
 
 table td img {
   vertical-align: middle;
+  margin: 0px 10px 0px 0px;
 }
 
 ol {
