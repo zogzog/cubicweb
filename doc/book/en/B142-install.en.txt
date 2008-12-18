@@ -14,7 +14,8 @@ Download the source
 - `LAX` is available as an extension of `CubicWeb` under the GPLv2
   license which can be downloaded from : http://cubicweb.org/
 
-Please follow instructions on how to install `CubicWeb` framework. 
+Please follow instructions on how to install `CubicWeb` framework
+(:ref:`CubicWebInstallation`). 
 
 Once ``cubicweb-ctl`` is installed, then you can create a Google
 App Engine extension of our framework by running the command ::

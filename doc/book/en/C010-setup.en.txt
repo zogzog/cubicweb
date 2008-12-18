@@ -5,7 +5,6 @@
 ===================================================
 Installation and set-up of a `CubicWeb` environment
 ===================================================
-.. contents::
 
 .. include:: C011-installation.en.txt
 .. include:: C012-create-instance.en.txt
