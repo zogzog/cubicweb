@@ -152,7 +152,6 @@ function _buildRemoteArgs(fname) {
  * @param mode: rawremote or remote
  */
 function _async_exec(fname, funcargs, mode) {
-    setProgressCursor();
     var props = {'mode' : mode, 'fname' : fname, 'pageid' : pageid};
     var args = map(urlEncode, map(jQuery.toJSON, funcargs));
     args.unshift(''); // this is to be able to use join() directly
