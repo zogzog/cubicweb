@@ -242,7 +242,7 @@ function reloadComponent(compid, rql, registry, nodeid, extraargs) {
 
 /* XXX: HTML architecture of cubicweb boxes is a bit strange */
 function reloadBox(boxid, rql) {
-    reloadComponent(boxid, rql, 'boxes', boxid);
+    return reloadComponent(boxid, rql, 'boxes', boxid);
 }
 
 function userCallbackThenUpdateUI(cbname, compid, rql, msg, registry, nodeid) {
