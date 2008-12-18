@@ -39,7 +39,7 @@ Https configuration
 ```````````````````
 It is possible to make a site accessible for anonymous http connections
 and https for authenticated users. This requires to
-use apache (by example) for redirection and the variable `main.https-url`
+use apache (for example) for redirection and the variable `main.https-url`
 of configuration file.
 
 :Example:

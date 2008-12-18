@@ -35,7 +35,7 @@ Cubes in the library
 ````````````````````
 
 An application is based on several basic cubes. In the set of available
-basic cubes we can find by example :
+basic cubes we can find for example :
 
 * `comment`, provides an entity type for `Comment` allowing us to comment others
   site's entities

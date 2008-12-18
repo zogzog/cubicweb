@@ -88,7 +88,7 @@ Terms and vocabulary
   configuration files necessarry for the well being of your web application
   are grouped in an instance. This will refer to the cube(s) your application
   is based on.
-  By example logilab.org and our intranet are two instances of a single
+  For example logilab.org and our intranet are two instances of a single
   cube jpl, developped internally.
   The instances are defined in the directory `~/etc/cubicweb.d`.
 
@@ -137,7 +137,7 @@ Terms and vocabulary
 The engine in `CubicWeb` is a set of classes managing a set of objects loaded
 dynamically at the startup of `CubicWeb` (*appobjects*). Those dynamics objects, based on the schema
 or the library, are building the final application. The differents dymanic components are
-by example:
+for example:
 
 * client and server side
 
@@ -205,7 +205,7 @@ A request instance is created when an HTPP request is sent to the web server.
 It contains informations such as forms parameters, user authenticated, etc.
 
 **Globally, a request represents a user query, either through HTTP or not
-(we also talk about RQL queries on the server side by example)**
+(we also talk about RQL queries on the server side for example)**
 
 An instance of `Request` has the following attributes:
 
@@ -327,7 +327,7 @@ We also find on instances, the following attributes:
   When we inherit from `AppObject` (even not directly), you *always* have to use
   **super()** to get the methods and attributes of the superclasses, and not
   use the class identifier.
-  By example, instead of writting: ::
+  For example, instead of writting: ::
 
       class Truc(PrimaryView):
           def f(self, arg1):
@@ -371,7 +371,7 @@ A complex cube is structured as follows:
   |
   \-- __pkginfo__.py
     
-We can use simple Python module instead of packages, by example: 
+We can use simple Python module instead of packages, for example: 
 
 ::
   

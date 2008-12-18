@@ -39,7 +39,7 @@ of `AnyEntity`) and a sorting function based on the main attribute
 the list `fetchattrs`).
 This function is defined in `cubicweb.entities`.
 
-By example: ::
+For example: ::
 
   class Transition(AnyEntity):
     """..."""
@@ -135,7 +135,7 @@ has to return:
   * the type indicates if the value designate an integer (`type == 'int'`),
     a string (`type =='string'` or a non-final relation (`type == 'eid'`)
 
-By example in our application managing tickets, we want to be able to filter
+For example in our application managing tickets, we want to be able to filter
 them by :
 
 * type

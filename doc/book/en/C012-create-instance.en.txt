@@ -72,7 +72,7 @@ configuration to simplify things ::
 .. note::
   Please note that we created a new cube for a demo purpose but
   you could have use an existing cube available in our standard library
-  such as blog or person by example.
+  such as blog or person for example.
 
 A serie of questions will be prompted to you, the default answer is usually
 sufficient. You can anyway modify the configuration later on by editing

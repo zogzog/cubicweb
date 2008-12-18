@@ -259,7 +259,7 @@ If you wish to modify the way a `BlogEntry` is rendered, you will have to
 overwrite the `primary` view defined in the module ``views`` of the cube
 ``cubes/blog/views.py``.
 
-We can by example add in front of the pulication date a prefix specifying
+We can for example add in front of the pulication date a prefix specifying
 the date we see is the publication date.
 
 To do so, please apply the following changes:

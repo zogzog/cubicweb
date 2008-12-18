@@ -31,7 +31,7 @@ in which :
   of distributed installation. Its value could be :
 
   * `common`, applies to the RQL server as well as the web server and updates
-    files on the hard drive (configuration files migration by example).
+    files on the hard drive (configuration files migration for example).
 
   * `web`, applies only to the web server and updates files on the hard drive
 
@@ -39,7 +39,7 @@ in which :
     hard drive
 
   * `Any`, applies only to the RQL server and updates data in the database
-    (schema and data migration by example)
+    (schema and data migration for example)
 
 Again in the directory `migration`, the file `depends.map` allows to indicate
 that to migrate to a particular model version, you always have to first migrate
@@ -48,7 +48,7 @@ starting by `#`) and a dependancy is listed as follows: ::
   
   <model version n° X.Y.Z> : <cubicweb version n° X.Y.Z>
 
-By example: ::
+For example: ::
 
   0.12.0: 2.26.0
   0.13.0: 2.27.0

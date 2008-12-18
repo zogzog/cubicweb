@@ -6,7 +6,7 @@ Entity type definition
 An entity type is defined by a Python class which inherits `EntityType`. The
 class name correponds to the type name. Then the content of the class contains
 the description of attributes and relations for the defined entity type,
-by example ::
+for example ::
 
   class Personne(EntityType):
     """A person with the properties and the relations necessarry for my
@@ -156,7 +156,7 @@ of the class corresponds to the name of the type. The class then contains
 a description of the properties of this type of relation, and could as well 
 contains a string for the subject and a string for the object. This allows to create
 new definition of associated relations, (so that the class can have the 
-definition properties from the relation) by example ::
+definition properties from the relation) for example ::
 
   class locked_by(RelationType):
     """relation on all entities indicating that they are locked"""

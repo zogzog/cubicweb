@@ -175,7 +175,7 @@ class `Template` (`cubicweb.common.view`) is derived from the class `View`.
 
 To build a HTML page, a *main template* is used. In general, the template of
 identifier `main` is the one (it is not used in case an error is raised or for
-the login form by example). This template uses other templates in addition
+the login form for example). This template uses other templates in addition
 to the views which depends on the content to generate the HTML page to return.
 
 A *template* is responsible for:
@@ -216,7 +216,7 @@ forms parameters:
 XML views, binaries...
 ----------------------
 For the views generating other formats that HTML (an image generated dynamically
-by example), and which can not usually be included in the HTML page generated
+for example), and which can not usually be included in the HTML page generated
 by the main template (see above), you have to:
 
 * set the atribute `templatable` of the class to `False`
@@ -224,14 +224,14 @@ by the main template (see above), you have to:
   by the view to `application/octet-stream`
 
 For the views dedicated to binary content creation (an image dynamically generated
-by example), we have to set the attribute `binary` of the class to `True` (which
+for example), we have to set the attribute `binary` of the class to `True` (which
 implies that `templateable == False`, so that the attribute `w` of the view could be
 replaced by a binary flow instead of unicode).
 
 (X)HTML tricks to apply
 -----------------------
 
-Some web browser (Firefox by example) are not happy with empty `<div>`
+Some web browser (Firefox for example) are not happy with empty `<div>`
 (by empty we mean that there is no content in the tag, but there
 could be attributes), so we should always use `<div></div>` even if
 it is empty and not use `<div/>`.
