@@ -108,7 +108,8 @@ def html_publish(view, text):
 
 try:
     from lxml import etree
-except ImportError:
+    etree.HTML('<div>test</div>').iter
+except (ImportError, AttributeError):
     # gae environment: lxml not availabel
     
     def soup2xhtml(data, encoding):
