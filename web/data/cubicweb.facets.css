@@ -12,12 +12,15 @@ div.facet {
 div.facetTitle, div.bkSearch  {
  font-size: 80%;
  width:220px;
- color: #AFB0B0;
- border-bottom: 1px solid #AFB0B0; /* AFB0B0 #2297A8; */
+ color: #000;
  margin-bottom:2px;
- text-transform: uppercase;
- cursor: pointer;
+ cursor: pointer; 
+ font: bold 100% Georgia;
 }
+div.facetTitle a{ 
+ padding-left: 10px;
+ background: transparent url("puce.png") 0% 50% no-repeat;
+ }
 
 .opened{  
  color: #000 !important; 
@@ -78,8 +81,7 @@ div.facetCheckBox{
 
 .facet input{ 
  margin-top:3px;
- background:#EDEFEF;
- border:1px solid gray;
+ border:1px solid #ccc;
  font-size:11px;
  }
 
