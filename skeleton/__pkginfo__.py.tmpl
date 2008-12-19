@@ -19,7 +19,7 @@ long_desc = '''%(longdesc)s'''
 from os import listdir as _listdir
 from os.path import join, isdir
 
-web = ''
+web = 'http://www.cubicweb.org/project/%s' % distname
 
 pyversions = ['2.4']
 
@@ -39,7 +39,7 @@ try:
         [THIS_CUBE_DIR, [fname for fname in glob('*.py') if fname != 'setup.py']],
         ]    
     # check for possible extended cube layout
-    for dirname in ('entities', 'views', 'sobjects', 'schema', 'data', 'i18n', 'migration'):
+    for dirname in ('entities', 'views', 'sobjects', 'hooks', 'schema', 'data', 'i18n', 'migration'):
         if isdir(dirname):
             data_files.append([join(THIS_CUBE_DIR, dirname), listdir(dirname)])
     # Note: here, you'll need to add subdirectories if you want

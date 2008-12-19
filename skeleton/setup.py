@@ -17,39 +17,24 @@
 # 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 """ Generic Setup script, takes package info from __pkginfo__.py file """
 
-import os
-import sys
-import shutil
 from distutils.core import setup
-from distutils import command
-from distutils.command import install_lib
-from os.path import isdir, exists, join, walk
 
 # import required features
 from __pkginfo__ import distname, version, license, short_desc, long_desc, \
      web, author, author_email
-try:
-    from __pkginfo__ import scripts
-except ImportError:
-    scripts = []
+# import optional features
 try:
     from __pkginfo__ import data_files
 except ImportError:
     data_files = None
-    
-def ensure_scripts(linux_scripts):
-    """creates the proper script names required for each platform
-    (taken from 4Suite)
-    """
-    from distutils import util
-    if util.get_platform()[:3] == 'win':
-        scripts_ = [script + '.bat' for script in linux_scripts]
-    else:
-        scripts_ = linux_scripts
-    return scripts_
+try:
+    from __pkginfo__ import include_dirs
+except ImportError:
+    include_dirs = []
 
 def install(**kwargs):
     """setup entry point"""
+    #kwargs['distname'] = modname
     return setup(name=distname,
                  version=version,
                  license=license,
@@ -58,7 +43,6 @@ def install(**kwargs):
                  author=author,
                  author_email=author_email,
                  url=web,
-                 scripts=ensure_scripts(scripts),
                  data_files=data_files,
                  **kwargs)
             
