@@ -359,8 +359,7 @@ def accept_rtype_selector(cls, req, rset, row=None, col=None, **kwargs):
 
 @lltrace
 def has_related_entities(cls, req, rset, row=None, col=None, **kwargs):
-    assert row is not None
-    return bool(rset.get_entity(row, col).related(cls.rtype, role(cls)))
+    return bool(rset.get_entity(row or 0, col or 0).related(cls.rtype, role(cls)))
     
 @lltrace
 def one_has_relation_selector(cls, req, rset, row=None, col=None, **kwargs):
