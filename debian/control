@@ -22,8 +22,6 @@ Description: the complete CubicWeb framework
 
 Package: cubicweb-server
 Architecture: all
-Conflicts: cubicweb-server-common, python2.3-cubicweb-server
-Replaces: cubicweb-server-common, python2.3-cubicweb-server
 XB-Python-Version: ${python:Versions}
 Depends: ${python:Depends}, cubicweb-common (= ${source:Version}), cubicweb-ctl (= ${source:Version}), python-indexer (>= 0.6.1), python-psycopg2
 Recommends: pyro, postgresql-8.3, postgresql-plpython-8.3, postgresql-contrib-8.3, cubicweb-documentation (= ${source:Version})
