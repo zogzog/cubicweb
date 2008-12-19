@@ -12,7 +12,7 @@ __docformat__ = "restructuredtext en"
 
 from logilab.common.compat import all
 
-from cubicweb import Unauthorized, NoSelectableObject
+from cubicweb import Unauthorized, NoSelectableObject, role
 from cubicweb.cwvreg import DummyCursorError
 from cubicweb.vregistry import chainall, chainfirst, NoSelectableObject
 from cubicweb.cwconfig import CubicWebConfiguration
@@ -337,6 +337,10 @@ def accept_rtype_selector(cls, req, rset, row=None, col=None, **kwargs):
             return 0
     return 1
 
+def has_related_entities(cls, req, rset, row=None, col=None, **kwargs):
+    assert row is not None
+    return bool(rset.get_entity(row, col).related(cls.rtype, role(cls)))
+    
 @lltrace
 def one_has_relation_selector(cls, req, rset, row=None, col=None, **kwargs):
     """check if the user has read access on the relations's type refered by the
