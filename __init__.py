@@ -297,3 +297,21 @@ CW_MIGRATION_MAP = {'erudi': 'cubicweb',
                     'folders': 'folder',
                     'tags': 'tag',
                     }
+
+def neg_role(role):
+    if role == 'subject':
+        return 'object'
+    return 'subject'
+
+def role(obj):
+    try:
+        return obj.role
+    except AttributeError:
+        return neg_role(obj.target)
+
+def target(obj):
+    try:
+        return obj.target
+    except AttributeError:
+        return neg_role(obj.role)
+        
