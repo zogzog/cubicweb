@@ -11,6 +11,7 @@ given result set (publishing time selection)
 __docformat__ = "restructuredtext en"
 
 from logilab.common.compat import all
+from logilab.common.deprecation import deprecated_function
 
 from cubicweb import Unauthorized, NoSelectableObject, role
 from cubicweb.cwvreg import DummyCursorError
@@ -31,97 +32,109 @@ def lltrace(selector):
     
 # very basic selectors ########################################################
 
-def yes_selector(cls, *args, **kwargs):
+def yes(cls, *args, **kwargs):
     """accept everything"""
     return 1
+yes_selector = deprecated_function(yes)
 
 @lltrace
-def norset_selector(cls, req, rset, *args, **kwargs):
+def none_rset(cls, req, rset, *args, **kwargs):
     """accept no result set"""
     if rset is None:
         return 1
     return 0
+norset_selector = deprecated_function(none_rset)
 
 @lltrace
-def rset_selector(cls, req, rset, *args, **kwargs):
+def rset(cls, req, rset, *args, **kwargs):
     """accept result set, whatever the number of result"""
     if rset is not None:
         return 1
     return 0
+rset_selector = deprecated_function(rset)
 
 @lltrace
-def anyrset_selector(cls, req, rset, *args, **kwargs):
+def nonempty_rset(cls, req, rset, *args, **kwargs):
     """accept any non empty result set"""
-    if rset and rset.rowcount: # XXX if rset is not None and rset.rowcount > 0:
+    if rset is not None and rset.rowcount:
         return 1
     return 0
+anyrset_selector = deprecated_function(nonempty_rset)
     
 @lltrace
-def emptyrset_selector(cls, req, rset, *args, **kwargs):
+def empty_rset(cls, req, rset, *args, **kwargs):
     """accept empty result set"""
     if rset is not None and rset.rowcount == 0:
         return 1
     return 0
+emptyrset_selector = deprecated_function(empty_rset)
 
 @lltrace
-def onelinerset_selector(cls, req, rset, row=None, *args, **kwargs):
+def one_line_rset(cls, req, rset, row=None, *args, **kwargs):
     """accept result set with a single line of result"""
     if rset is not None and (row is not None or rset.rowcount == 1):
         return 1
     return 0
+onelinerset_selector = deprecated_function(one_line_rset)
 
 @lltrace
-def twolinerset_selector(cls, req, rset, *args, **kwargs):
-    """accept result set with at least two lines of result"""
+def two_lines_rset(cls, req, rset, *args, **kwargs):
+    """accept result set with *at least* two lines of result"""
     if rset is not None and rset.rowcount > 1:
         return 1
     return 0
+twolinerset_selector = deprecated_function(two_lines_rset)
 
 @lltrace
-def twocolrset_selector(cls, req, rset, *args, **kwargs):
+def two_cols_rset(cls, req, rset, *args, **kwargs):
     """accept result set with at least one line and two columns of result"""
     if rset is not None and rset.rowcount > 0 and len(rset.rows[0]) > 1:
         return 1
     return 0
+twocolrset_selector = deprecated_function(two_cols_rset)
 
 @lltrace
-def largerset_selector(cls, req, rset, *args, **kwargs):
+def paginated_rset(cls, req, rset, *args, **kwargs):
     """accept result sets with more rows than the page size
     """
     if rset is None or len(rset) <= req.property_value('navigation.page-size'):
         return 0
     return 1
+largerset_selector = deprecated_function(paginated_rset)
 
 @lltrace
-def sortedrset_selector(cls, req, rset, row=None, col=None):
+def sorted_rset(cls, req, rset, row=None, col=None):
     """accept sorted result set"""
     rqlst = rset.syntax_tree()
     if len(rqlst.children) > 1 or not rqlst.children[0].orderby:
         return 0
     return 2
+sortedrset_selector = deprecated_function(sorted_rset)
 
 @lltrace
-def oneetyperset_selector(cls, req, rset, *args, **kwargs):
+def one_etype_rset(cls, req, rset, *args, **kwargs):
     """accept result set where entities in the first columns are all of the
     same type
     """
     if len(rset.column_types(0)) != 1:
         return 0
     return 1
+oneetyperset_selector = deprecated_function(one_etype_rset)
 
 @lltrace
-def multitype_selector(cls, req, rset, **kwargs):
+def two_etypes_rset(cls, req, rset, **kwargs):
     """accepts resultsets containing several entity types"""
     if rset:
         etypes = rset.column_types(0)
         if len(etypes) > 1:
             return 1
     return 0
+multitype_selector = deprecated_function(two_etypes_rset)
 
 @lltrace
-def searchstate_selector(cls, req, rset, row=None, col=None, **kwargs):
-    """extend the anyrset_selector by checking if the current search state
-    is in a .search_states attribute of the wrapped class
+def match_search_state(cls, req, rset, row=None, col=None, **kwargs):
+    """checks if the current search state is in a .search_states attribute of
+    the wrapped class
 
     search state should be either 'normal' or 'linksearch' (eg searching for an
     object to create a relation with another)
@@ -132,24 +145,24 @@ def searchstate_selector(cls, req, rset, row=None, col=None, **kwargs):
     except AttributeError:
         return 1 # class don't care about search state, accept it
     return 1
+searchstate_selector = deprecated_function(match_search_state)
 
 @lltrace
-def anonymous_selector(cls, req, *args, **kwargs):
+def anonymous_user(cls, req, *args, **kwargs):
     """accept if user is anonymous"""
     if req.cnx.anonymous_connection:
         return 1
     return 0
+anonymous_selector = deprecated_function(anonymous_user)
 
 @lltrace
-def not_anonymous_selector(cls, req, *args, **kwargs):
-    """accept if user is anonymous"""
+def authenticated_user(cls, req, *args, **kwargs):
+    """accept if user is authenticated"""
     return not anonymous_selector(cls, req, *args, **kwargs)
-
-
-# not so basic selectors ######################################################
+not_anonymous_selector = deprecated_function(authenticated_user)
 
 @lltrace
-def req_form_params_selector(cls, req, *args, **kwargs):
+def match_form_params(cls, req, *args, **kwargs):
     """check if parameters specified by the form_params attribute on
     the wrapped class are specified in request form parameters
     """
@@ -160,9 +173,10 @@ def req_form_params_selector(cls, req, *args, **kwargs):
             return 0
         score += 1
     return score + 1
+req_form_params_selector = deprecated_function(match_form_params)
 
 @lltrace
-def kwargs_selector(cls, req, *args, **kwargs):
+def match_kwargs(cls, req, *args, **kwargs):
     """check if arguments specified by the expected_kwargs attribute on
     the wrapped class are specified in given named parameters
     """
@@ -171,9 +185,13 @@ def kwargs_selector(cls, req, *args, **kwargs):
         if not arg in kwargs:
             return 0
     return 1
+kwargs_selector = deprecated_function(match_kwargs)
+
+
+# not so basic selectors ######################################################
 
 @lltrace
-def etype_form_selector(cls, req, *args, **kwargs):
+def etype_accepts(cls, req, *args, **kwargs):
     """check etype presence in request form *and* accepts conformance"""
     if 'etype' not in req.form and 'etype' not in kwargs:
         return 0
@@ -191,6 +209,7 @@ def etype_form_selector(cls, req, *args, **kwargs):
         return 0
     # exact match must return a greater value than 'Any'-match
     return 2
+etype_form_selector = deprecated_function(etype_accepts)
 
 @lltrace
 def _nfentity_selector(cls, req, rset, row=None, col=None, **kwargs):
@@ -360,7 +379,7 @@ def one_has_relation_selector(cls, req, rset, row=None, col=None, **kwargs):
     return 0
 
 @lltrace
-def in_group_selector(cls, req, rset=None, row=None, col=None, **kwargs):
+def match_user_group(cls, req, rset=None, row=None, col=None, **kwargs):
     """select according to user's groups"""
     if not cls.require_groups:
         return 1
@@ -381,32 +400,36 @@ def in_group_selector(cls, req, rset=None, row=None, col=None, **kwargs):
         # on an object without require_groups
         return score + 1 
     return 0
+in_group_selector = deprecated_function(match_user_group)
 
 @lltrace
-def add_etype_selector(cls, req, rset, row=None, col=None, **kwargs):
+def user_can_add_etype(cls, req, rset, row=None, col=None, **kwargs):
     """only check if the user has add access on the entity's type refered
     by the .etype attribute.
     """
     if not cls.schema.eschema(cls.etype).has_perm(req, 'add'):
         return 0
     return 1
+add_etype_selector = deprecated_function(user_can_add_etype)
 
 @lltrace
-def contextprop_selector(cls, req, rset, row=None, col=None, context=None,
-                          **kwargs):
+def match_context_prop(cls, req, rset, row=None, col=None, context=None,
+                       **kwargs):
     propval = req.property_value('%s.%s.context' % (cls.__registry__, cls.id))
     if not propval:
         propval = cls.context
     if context is not None and propval is not None and context != propval:
         return 0
     return 1
+contextprop_selector = deprecated_function(match_context_prop)
 
 @lltrace
-def primaryview_selector(cls, req, rset, row=None, col=None, view=None,
+def primary_view(cls, req, rset, row=None, col=None, view=None,
                           **kwargs):
     if view is not None and not view.is_primary():
         return 0
     return 1
+primaryview_selector = deprecated_function(primary_view)
 
 def appobject_selectable(registry, oid):
     """return a selector that will have a positive score if an object for the
