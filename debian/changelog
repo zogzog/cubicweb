@@ -1,4 +1,4 @@
-cubicweb (2.99.7-1) unstable; urgency=low
+cubicweb (2.99.7-1) DISTRIBUTION; urgency=low
 
   * remove buggy cubicweb-common.postinst
   * replace erudi|ginco by cubicweb where necessary in existing instance
