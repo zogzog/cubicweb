@@ -460,10 +460,11 @@ class EditionForm(EntityForm):
             if self.should_inline_relation_form(entity, rschema, targettype, x):
                 result.append(u'<div id="inline%sslot">' % rschema)
                 existant = entity.has_eid() and entity.related(rschema)
-                # display inline-edition view for all existing related entities
-                result.append(self.view('inline-edition', existant, 'null',
-                                        ptype=entity.e_schema, peid=entity.eid,
-                                        rtype=rschema, role=x, **kwargs))
+                if existant:
+                    # display inline-edition view for all existing related entities
+                    result.append(self.view('inline-edition', existant, 
+                                            ptype=entity.e_schema, peid=entity.eid,
+                                            rtype=rschema, role=x, **kwargs))
                 if x == 'subject':
                     card = rschema.rproperty(entity.e_schema, targettype, 'cardinality')[0]
                 else:
