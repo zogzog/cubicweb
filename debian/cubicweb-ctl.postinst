@@ -15,6 +15,8 @@ if [ "$1" = configure ]; then
     if [ -e "/etc/erudi.d/" ]; then
       mv /etc/erudi.d/* /etc/cubicweb.d/
       echo 'moved /etc/erudi.d/* to /etc/cubicweb.d/'
+      sed -i s/ginco/cubicweb/g /etc/*/*.py
+      sed -i s/erudi/cubicweb/ */*.conf
     fi
     if [ -e "/var/log/erudi/" ]; then
       mv /var/log/erudi/* /var/log/cubicweb/
