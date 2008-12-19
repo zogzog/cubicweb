@@ -10,7 +10,7 @@ from cubicweb.common.appobject import Component, SingletonComponent
 from cubicweb.common.utils import merge_dicts
 from cubicweb.common.view import VComponent, SingletonVComponent
 from cubicweb.common.registerers import action_registerer
-from cubicweb.common.selectors import (largerset_selector, onelinerset_selector, 
+from cubicweb.common.selectors import (paginated_rset, one_line_rset, 
                                     etype_rtype_selector, rqlcondition_selector,
                                     accept_selector, contextprop_selector,
                                     primaryview_selector, accept_rtype_selector)
@@ -32,7 +32,7 @@ class EntityVComponent(VComponent):
     
     __registry__ = 'contentnavigation'
     __registerer__ = action_registerer    
-    __selectors__ = (onelinerset_selector, primaryview_selector,
+    __selectors__ = (one_line_rset, primaryview_selector,
                      contextprop_selector, etype_rtype_selector,
                      accept_rtype_selector, accept_selector,
                      rqlcondition_selector)
@@ -61,7 +61,7 @@ class EntityVComponent(VComponent):
     
 class NavigationComponent(VComponent):
     """abstract base class for navigation components"""
-    __selectors__ = (largerset_selector,)
+    __selectors__ = (paginated_rset,)
     id = 'navigation'
     page_size_property = 'navigation.page-size'
     start_param = '__start'
@@ -135,7 +135,7 @@ class NavigationComponent(VComponent):
 
 class RelatedObjectsVComponent(EntityVComponent):
     """a section to display some related entities"""
-    __selectors__ = (onelinerset_selector, primaryview_selector,
+    __selectors__ = (one_line_rset, primaryview_selector,
                      etype_rtype_selector, accept_rtype_selector,
                      contextprop_selector, accept_selector)
     vid = 'list'

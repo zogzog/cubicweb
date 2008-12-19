@@ -21,8 +21,8 @@ from logilab.common.decorators import cached
 from logilab.mtconverter import html_escape, TransformError
 
 from cubicweb import Unauthorized, NoSelectableObject, typed_eid
-from cubicweb.common.selectors import (yes_selector, anyrset_selector, accept_selector,
-                                    onelinerset_selector, searchstate_selector, 
+from cubicweb.common.selectors import (yes, nonempty_rset, accept_selector,
+                                    one_line_rset, searchstate_selector, 
                                     req_form_params_selector, accept_rset_selector)
 from cubicweb.common.uilib import (cut, printable_value,  UnicodeCSVWriter,
                                 ajax_replace_url, rql_for_eid)
@@ -36,7 +36,7 @@ _ = unicode
 class NullView(AnyRsetView):
     """default view when no result has been found"""
     id = 'null'
-    __select__ = classmethod(yes_selector)
+    __select__ = classmethod(yes)
     def call(self, **kwargs):
         pass
     cell_call = call
@@ -761,7 +761,7 @@ class SearchForAssociationView(EntityView):
     """
     id = 'search-associate'
     title = _('search for association')
-    __selectors__ = (onelinerset_selector, searchstate_selector, accept_selector)
+    __selectors__ = (one_line_rset, searchstate_selector, accept_selector)
     accepts = ('Any',)
     search_states = ('linksearch',)
 

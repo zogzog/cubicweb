@@ -10,7 +10,7 @@ from logilab.mtconverter import BINARY_ENCODINGS, TransformError, html_escape
 
 from cubicweb.interfaces import IDownloadable
 from cubicweb.common.mttransforms import ENGINE
-from cubicweb.common.selectors import (onelinerset_selector, score_entity_selector,
+from cubicweb.common.selectors import (one_line_rset, score_entity_selector,
                                     interface_selector)
 from cubicweb.web.views import baseviews
 
@@ -33,7 +33,7 @@ class DownloadView(baseviews.EntityView):
     of entities providing the necessary interface
     """
     id = 'download'
-    __selectors__ = (onelinerset_selector, interface_selector)
+    __selectors__ = (one_line_rset, interface_selector)
     accepts_interfaces = (IDownloadable,)
 
     templatable = False

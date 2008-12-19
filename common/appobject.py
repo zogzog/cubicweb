@@ -19,7 +19,7 @@ from cubicweb.vregistry import VObject
 from cubicweb.common.utils import UStringIO
 from cubicweb.common.uilib import html_escape, ustrftime
 from cubicweb.common.registerers import yes_registerer, priority_registerer
-from cubicweb.common.selectors import yes_selector
+from cubicweb.common.selectors import yes
 
 _MARKER = object()
 
@@ -441,7 +441,7 @@ class ComponentMixIn(ReloadableMixIn):
     """simple mixin for component object"""
     __registry__ = 'components'
     __registerer__ = yes_registerer
-    __selectors__ = (yes_selector,)
+    __selectors__ = (yes,)
     __select__ = classmethod(*__selectors__)
 
     def div_class(self):

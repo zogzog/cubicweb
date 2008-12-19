@@ -18,7 +18,7 @@ from cubicweb.interfaces import IWorkflowable
 from cubicweb.common.utils import make_uid
 from cubicweb.common.uilib import cut
 from cubicweb.common.selectors import (etype_form_selector, kwargs_selector,
-                                    onelinerset_selector, interface_selector,
+                                    one_line_rset, interface_selector,
                                     req_form_params_selector, accept_selector)
 from cubicweb.common.view import EntityView
 from cubicweb.web import INTERNAL_FIELD_VALUE, stdmsgs, eid_param
@@ -216,7 +216,7 @@ class EditionForm(EntityForm):
     dynamic default values such as the 'tomorrow' date or the user's login
     being connected
     """    
-    __selectors__ = (onelinerset_selector, accept_selector)
+    __selectors__ = (one_line_rset, accept_selector)
 
     id = 'edition'
     title = _('edition')

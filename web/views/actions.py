@@ -78,7 +78,7 @@ class ViewAction(Action):
 
 class ModifyAction(EntityAction):
     category = 'mainactions'
-    __selectors__ = (onelinerset_selector, searchstate_accept_selector)
+    __selectors__ = (one_line_rset, searchstate_accept_selector)
     #__selectors__ = searchstate_accept_selector,
     schema_action = 'update'
     order = 10
@@ -135,7 +135,7 @@ class CopyAction(EntityAction):
 
 class MultipleEditAction(EntityAction):
     category = 'mainactions'
-    __selectors__ = (twolinerset_selector, oneetyperset_selector,
+    __selectors__ = (two_lines_rset, oneetyperset_selector,
                      searchstate_accept_selector)
     schema_action = 'update'
     order = 10
@@ -173,7 +173,7 @@ class AddNewAction(MultipleEditAction):
         return 0
     __selectors__ = (searchstate_selector,
                      chainfirst(etype_rset_selector,
-                                chainall(twolinerset_selector, oneetyperset_selector,
+                                chainall(two_lines_rset, oneetyperset_selector,
                                          has_add_perm_selector)))
     order = 40
     id = 'addentity'
@@ -214,7 +214,7 @@ class UserPreferencesAction(Action):
         return self.build_url(self.id)
 
 class UserPreferencesEntityAction(EntityAction):
-    __selectors__ = EntityAction.__selectors__ + (onelinerset_selector, in_group_selector,)
+    __selectors__ = EntityAction.__selectors__ + (one_line_rset, in_group_selector,)
     require_groups = ('owners', 'managers')
     category = 'mainactions'
     accepts = ('EUser',)
@@ -273,7 +273,7 @@ class ManageAction(ManagersAction):
 
 class ViewSchemaAction(Action):
     category = 'siteactions'
-    __selectors__ = yes_selector,
+    __selectors__ = yes,
     order = 30
     
     id = 'schema'

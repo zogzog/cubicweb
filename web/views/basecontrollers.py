@@ -18,7 +18,7 @@ from mx.DateTime.Parser import DateFromString
 from logilab.common.decorators import cached
 
 from cubicweb import NoSelectableObject, ValidationError, typed_eid
-from cubicweb.common.selectors import yes_selector
+from cubicweb.common.selectors import yes
 from cubicweb.common.mail import format_mail
 from cubicweb.common.view import STRICT_DOCTYPE, CW_XHTML_EXTENSIONS
 
@@ -505,7 +505,7 @@ class SendMailController(Controller):
 
 class MailBugReportController(SendMailController):
     id = 'reportbug'
-    __selectors__ = (yes_selector,)
+    __selectors__ = (yes,)
 
     def publish(self, rset=None):
         body = self.req.form['description']

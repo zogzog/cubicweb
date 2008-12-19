@@ -17,7 +17,7 @@ from cubicweb.vregistry import autoselectors
 from cubicweb.rset import ResultSet
 from cubicweb.common.appobject import AppRsetObject
 from cubicweb.common.registerers import id_registerer
-from cubicweb.common.selectors import yes_selector
+from cubicweb.common.selectors import yes
 from cubicweb.common.uilib import printable_value, html_escape, soup2xhtml
 from cubicweb.common.mixins import MI_REL_TRIGGERS
 from cubicweb.common.mttransforms import ENGINE
@@ -218,7 +218,7 @@ class Entity(AppRsetObject, dict):
     __metaclass__ = metaentity
     __registry__ = 'etypes'
     __registerer__ = id_registerer
-    __selectors__ = (yes_selector,)
+    __selectors__ = (yes,)
     widgets = {}
     id = None
     e_schema = None

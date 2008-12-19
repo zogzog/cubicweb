@@ -14,7 +14,7 @@ from logilab.mtconverter import html_escape
 from cubicweb.common.utils import make_uid
 from cubicweb.common.uilib import toggle_action, limitsize, jsonize, htmlescape
 from cubicweb.common.view import EntityView, AnyRsetView
-from cubicweb.common.selectors import (anyrset_selector,  req_form_params_selector,
+from cubicweb.common.selectors import (nonempty_rset,  req_form_params_selector,
                                     accept_rset_selector)
 from cubicweb.web.htmlwidgets import (TableWidget, TableColumn, MenuWidget,
                                    PopupBoxMenu, BoxLink)
@@ -249,7 +249,7 @@ class EditableTableView(TableView):
 
     
 class CellView(EntityView):
-    __selectors__ = (anyrset_selector, accept_rset_selector)
+    __selectors__ = (nonempty_rset, accept_rset_selector)
     
     id = 'cell'
     accepts = ('Any',)
@@ -285,7 +285,7 @@ class InitialTableView(TableView):
       displayed with default restrictions set
     """
     id = 'initialtable'
-    __selectors__ = anyrset_selector, req_form_params_selector
+    __selectors__ = nonempty_rset, req_form_params_selector
     form_params = ('actualrql',)
     # should not be displayed in possible view since it expects some specific
     # parameters

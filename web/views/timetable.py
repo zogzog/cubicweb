@@ -9,7 +9,7 @@ from logilab.mtconverter import html_escape
 
 from cubicweb.interfaces import ITimetableViews
 from cubicweb.common.utils import date_range
-from cubicweb.common.selectors import interface_selector, anyrset_selector
+from cubicweb.common.selectors import interface_selector
 from cubicweb.common.view import AnyRsetView
 
 
@@ -25,7 +25,7 @@ MIN_COLS = 3  # minimum number of task columns for a single user
 class TimeTableView(AnyRsetView):
     id = 'timetable'
     title = _('timetable')
-    __selectors__ = (interface_selector, anyrset_selector)
+    __selectors__ = (interface_selector,)
     accepts_interfaces = (ITimetableViews,)
     need_navigation = False
 

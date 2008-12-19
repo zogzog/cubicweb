@@ -11,8 +11,8 @@ from simplejson import dumps
 from logilab.mtconverter import html_escape
 
 from cubicweb.common.selectors import (chainfirst, chainall, nfentity_selector,
-                                    twolinerset_selector, contextprop_selector,
-                                    yes_selector, one_has_relation_selector)
+                                    two_lines_rset, contextprop_selector,
+                                    yes, one_has_relation_selector)
 from cubicweb.web.box import BoxTemplate
 from cubicweb.web.facet import (AbstractFacet, VocabularyFacet, FacetStringWidget,
                              RelationFacet, prepare_facets_rqlst, filter_hiddens)
@@ -28,7 +28,7 @@ class FilterBox(BoxTemplate):
     """filter results of a query"""
     id = 'filter_box'
     __selectors__ = (chainfirst(contextview_selector,
-                                chainall(nfentity_selector, twolinerset_selector)),
+                                chainall(nfentity_selector, two_lines_rset)),
                      contextprop_selector)
     context = 'left'
     title = _('boxes_filter_box')
@@ -129,7 +129,7 @@ class InStateFacet(RelationFacet):
 # inherit from RelationFacet to benefit from its possible_values implementation
 class ETypeFacet(RelationFacet):
     id = 'etype-facet'
-    __selectors__ = (yes_selector,)
+    __selectors__ = (yes,)
     order = 1
     rtype = 'is'
     target_attr = 'name'

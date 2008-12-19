@@ -14,7 +14,7 @@ from rql import parse
 
 from cubicweb import Unauthorized
 from cubicweb.common.uilib import html_escape, toggle_action
-from cubicweb.common.selectors import yes_selector, nfentity_selector, onelinerset_selector
+from cubicweb.common.selectors import yes, nfentity_selector, one_line_rset
 from cubicweb.schema import display_name
 from cubicweb.common.selectors import (chainfirst, multitype_selector,
                                     req_form_params_selector)
@@ -114,7 +114,7 @@ class ApplicationMessage(SingletonVComponent):
     """display application's messages given using the __message parameter
     into a special div section
     """
-    __selectors__ = yes_selector,
+    __selectors__ = yes,
     id = 'applmessages'
     site_wide = True # don't want user to hide this component using an eproperty
 
@@ -245,7 +245,7 @@ class RSSFeedURL(VComponent):
 
 class RSSEntityFeedURL(VComponent):
     id = 'rss_feed_url'
-    __selectors__ = (nfentity_selector, onelinerset_selector)
+    __selectors__ = (nfentity_selector, one_line_rset)
     
     def feed_url(self):
         return self.entity(0, 0).rss_feed_url()

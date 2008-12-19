@@ -13,7 +13,7 @@ from cubicweb import Unauthorized
 from cubicweb.common.registerers import (accepts_registerer,
                                       extresources_registerer,
                                       etype_rtype_priority_registerer)
-from cubicweb.common.selectors import (etype_rtype_selector, onelinerset_selector,
+from cubicweb.common.selectors import (etype_rtype_selector, one_line_rset,
                                        accept_selector, accept_rtype_selector,
                                        primaryview_selector, contextprop_selector,
                                        _rqlcondition_selector)
@@ -150,7 +150,7 @@ class ExtResourcesBoxTemplate(BoxTemplate):
 class EntityBoxTemplate(BoxTemplate):
     """base class for boxes related to a single entity"""
     __registerer__ = accepts_registerer
-    __selectors__ = (onelinerset_selector, primaryview_selector,
+    __selectors__ = (one_line_rset, primaryview_selector,
                      contextprop_selector, etype_rtype_selector,
                      accept_rtype_selector, accept_selector,
                      _rqlcondition_selector)

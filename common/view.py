@@ -13,9 +13,9 @@ from logilab.mtconverter import html_escape
 
 from cubicweb import NotAnEntity, NoSelectableObject
 from cubicweb.common.registerers import accepts_registerer, priority_registerer
-from cubicweb.common.selectors import (in_group_selector, anyrset_selector, 
-                                    emptyrset_selector, accept_selector,
-                                    norset_selector, chainfirst)
+from cubicweb.common.selectors import (in_group_selector, nonempty_rset, 
+                                       empty_rset, accept_selector,
+                                       none_rset, chainfirst)
 from cubicweb.common.appobject import AppRsetObject, ComponentMixIn
 from cubicweb.common.utils import UStringIO, HTMLStream
 
@@ -323,7 +323,7 @@ class StartupView(View):
     to be displayed (so they can always be displayed !)
     """
     __registerer__ = priority_registerer
-    __selectors__ = (in_group_selector, norset_selector)
+    __selectors__ = (in_group_selector, none_rset)
     require_groups = ()
     category = 'startupview'
     
@@ -345,7 +345,7 @@ class EntityStartupView(EntityView):
     result set (usually a default rql is provided by the view class)
     """
     __registerer__ = accepts_registerer
-    __selectors__ = (chainfirst(norset_selector, accept_selector),)
+    __selectors__ = (chainfirst(none_rset, accept_selector),)
     
     default_rql = None
     
@@ -381,7 +381,7 @@ class EntityStartupView(EntityView):
 class AnyRsetView(View):
     """base class for views applying on any non empty result sets"""
     __registerer__ = priority_registerer
-    __selectors__ = (anyrset_selector,)
+    __selectors__ = (nonempty_rset,)
     
     category = 'anyrsetview'
     
@@ -389,7 +389,7 @@ class AnyRsetView(View):
 class EmptyRsetView(View):
     """base class for views applying on any empty result sets"""
     __registerer__ = priority_registerer
-    __selectors__ = (emptyrset_selector,)
+    __selectors__ = (empty_rset,)
 
 
 # concrete template base classes ##############################################

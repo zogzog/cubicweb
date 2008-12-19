@@ -183,7 +183,7 @@ class HooksManager(object):
 from cubicweb.vregistry import autoselectors
 from cubicweb.common.appobject import AppObject
 from cubicweb.common.registerers import accepts_registerer, yes_registerer
-from cubicweb.common.selectors import yes_selector
+from cubicweb.common.selectors import yes
 
 class autoid(autoselectors):
     """metaclass to create an unique 'id' attribute on the class using it"""
@@ -196,7 +196,7 @@ class Hook(AppObject):
     __metaclass__ = autoid
     __registry__ = 'hooks'
     __registerer__ = accepts_registerer
-    __selectors__ = (yes_selector,)
+    __selectors__ = (yes,)
     # set this in derivated classes
     events = None
     accepts = None

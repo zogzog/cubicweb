@@ -15,8 +15,8 @@ from cubicweb.common.utils import UStringIO
 from cubicweb.common.view import AnyRsetView, StartupView, EntityView
 from cubicweb.common.uilib import (html_traceback, rest_traceback, html_escape,
                                 toggle_link)
-from cubicweb.common.selectors import (yes_selector, onelinerset_selector,
-                                    accept_rset_selector, norset_selector,
+from cubicweb.common.selectors import (yes, one_line_rset,
+                                    accept_rset_selector, none_rset,
                                     chainfirst, chainall)
 from cubicweb.web import INTERNAL_FIELD_VALUE, eid_param, stdmsgs
 from cubicweb.web.widgets import StaticComboBoxWidget
@@ -181,7 +181,7 @@ class SecurityManagementView(EntityView):
         
 class ErrorView(AnyRsetView):
     """default view when no result has been found"""
-    __selectors__ = (yes_selector,)
+    __selectors__ = (yes,)
     id = 'error'
     
     def page_title(self):
@@ -439,8 +439,8 @@ class EpropertiesForm(SystemEpropertiesForm):
     id = 'epropertiesform'
     title = _('preferences')    
     require_groups = ('users', 'managers') # we don't want guests to be able to come here
-    __selectors__ = chainfirst(norset_selector,
-                               chainall(onelinerset_selector, accept_rset_selector)),
+    __selectors__ = chainfirst(none_rset,
+                               chainall(one_line_rset, accept_rset_selector)),
     accepts = ('EUser',)
 
     @classmethod

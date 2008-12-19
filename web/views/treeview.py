@@ -1,7 +1,7 @@
 from logilab.mtconverter import html_escape
 
 from cubicweb.interfaces import ITree
-from cubicweb.common.selectors import interface_selector, yes_selector
+from cubicweb.common.selectors import interface_selector, yes
 from cubicweb.common.view import EntityView
 
 from cubicweb.web.views.baseviews import OneLineView
@@ -85,9 +85,9 @@ class TreeViewItemView(EntityView):
     (each item should be exandable if it's not a tree leaf)
     """
     id = 'treeitemview'
-    # XXX append yes_selector to make sure we get an higher score than
+    # XXX append yes to make sure we get an higher score than
     #     the default treeitem view
-    __selectors__ = (interface_selector, yes_selector)
+    __selectors__ = (interface_selector, yes)
     accepts_interfaces = (ITree,)
     
     def cell_call(self, row, col, vid='oneline', parentvid='treeview'):

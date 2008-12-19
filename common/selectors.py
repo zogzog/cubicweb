@@ -191,7 +191,7 @@ kwargs_selector = deprecated_function(match_kwargs)
 # not so basic selectors ######################################################
 
 @lltrace
-def etype_accepts(cls, req, *args, **kwargs):
+def accept_etype(cls, req, *args, **kwargs):
     """check etype presence in request form *and* accepts conformance"""
     if 'etype' not in req.form and 'etype' not in kwargs:
         return 0
@@ -209,7 +209,7 @@ def etype_accepts(cls, req, *args, **kwargs):
         return 0
     # exact match must return a greater value than 'Any'-match
     return 2
-etype_form_selector = deprecated_function(etype_accepts)
+etype_form_selector = deprecated_function(accept_etype)
 
 @lltrace
 def _nfentity_selector(cls, req, rset, row=None, col=None, **kwargs):
@@ -315,9 +315,10 @@ def score_entity_selector(cls, req, rset, row=None, col=None, **kwargs):
     return 1
 
 @lltrace
-def accept_rset_selector(cls, req, rset, row=None, col=None, **kwargs):
+def accept_rset(cls, req, rset, row=None, col=None, **kwargs):
     """simply delegate to cls.accept_rset method"""
     return cls.accept_rset(req, rset, row=row, col=col)
+accept_rset_selector = deprecated_function(accept_rset)
 
 @lltrace
 def but_etype_selector(cls, req, rset, row=None, col=None, **kwargs):
@@ -356,6 +357,7 @@ def accept_rtype_selector(cls, req, rset, row=None, col=None, **kwargs):
             return 0
     return 1
 
+@lltrace
 def has_related_entities(cls, req, rset, row=None, col=None, **kwargs):
     assert row is not None
     return bool(rset.get_entity(row, col).related(cls.rtype, role(cls)))
@@ -447,22 +449,25 @@ def appobject_selectable(registry, oid):
 
 # compound selectors ##########################################################
 
-nfentity_selector = chainall(anyrset_selector, _nfentity_selector)
-interface_selector = chainall(nfentity_selector, _interface_selector)
+nfentity_selector = chainall(nonempty_rset, _nfentity_selector)
 
-accept_selector = chainall(nfentity_selector, accept_rset_selector)
-accept_one_selector = chainall(onelinerset_selector, accept_selector)
+implement_interface = chainall(nfentity_selector, _interface_selector)
+interface_selector = deprecated_function(implement_interface)
 
-rqlcondition_selector = chainall(nfentity_selector,
-                                 onelinerset_selector,
+accept = chainall(nfentity_selector, accept_rset_selector)
+accept_selector = deprecated_function(accept)
+
+accept_one_selector = chainall(one_line_rset, accept_selector)
+
+rqlcondition_selector = chainall(nfentity_selector, one_line_rset,
                                  _rqlcondition_selector)
 
-searchstate_accept_selector = chainall(anyrset_selector, searchstate_selector,
+searchstate_accept_selector = chainall(nonempty_rset, searchstate_selector,
                                        accept_selector)
-searchstate_accept_one_selector = chainall(anyrset_selector, searchstate_selector,
+searchstate_accept_one_selector = chainall(nonempty_rset, searchstate_selector,
                                            accept_selector, rqlcondition_selector)
 searchstate_accept_one_but_etype_selector = chainall(searchstate_accept_one_selector,
                                                      but_etype_selector)
 
-__all__ = [name for name in globals().keys() if name.endswith('selector')]
-__all__ += ['chainall', 'chainfirst']
+#__all__ = [name for name in globals().keys() if name.endswith('selector')]
+#__all__ += ['chainall', 'chainfirst']
