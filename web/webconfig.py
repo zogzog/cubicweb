@@ -314,6 +314,10 @@ if you want to allow everything',
             if exists(resourcesfile):
                 self.debug('loading %s', resourcesfile)
                 self.ext_resources.update(read_config(resourcesfile))
+        resourcesfile = join(self.apphome, 'external_resources')
+        if exists(resourcesfile):
+            self.debug('loading %s', resourcesfile)
+            self.ext_resources.update(read_config(resourcesfile))
         for resource in ('STYLESHEETS', 'STYLESHEETS_PRINT',
                          'IE_STYLESHEETS', 'JAVASCRIPTS'):
             val = self.ext_resources[resource]
