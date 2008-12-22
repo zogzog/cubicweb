@@ -5,24 +5,24 @@
 Cubes
 -----
 
-What is a cube
-~~~~~~~~~~~~~~
+What is a cube ?
+~~~~~~~~~~~~~~~~
 
 A cube is a model grouping one or more entity types and/or views associated
 in order to provide a specific feature or even a complete application using
 others cubes.
-You can decide to write your own set of cubes if you wish to re-use the 
-entity types you develop. By default, LAX comes with its owns set of cubes
-that you can start using right away.
 
+You can decide to write your own set of cubes if you wish to re-use the 
+entity types you develop. Lots of cubes are available from the `CubicWeb
+Forge`_ under a free software license.
+
+.. _`CubicWeb Forge`: http://www.cubicweb.org/project/
 
 Standard library
 ~~~~~~~~~~~~~~~~
 
-A library of standard cubes is part of the `LAX` release (look at
-``lax/skel/ginco-apps``). Cubes provide entities and views. With
-``lax-0.4``, you should get a set of application entities and system
-entities you can re-use.
+A library of standard cubes is part of the `CubicWeb` release (look at the
+output of ``cubicweb-ctl list``). Cubes provide entities and views.
 
 The available application entities are:
 
@@ -35,7 +35,6 @@ The available application entities are:
 * classfolder: Folder (to organize things but grouping them in folders)
 
 * classtags: Tag (to tag anything)
-
 
 * file: File (to allow users to upload and store binary or text files)
 
@@ -54,7 +53,6 @@ The available application entities are:
 The available system entities are:
 
 * comment: Comment (to attach comment threads to entities)
-
 
 
 Adding comments to BlogDemo
