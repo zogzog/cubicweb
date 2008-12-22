@@ -531,7 +531,6 @@ class ListItemView(EntityView):
         except NoSelectableObject:
             if vid == self.redirect_vid:
                 raise
-            kwargs.pop('done', None)
             self.wview(self.redirect_vid, self.rset, row=row, col=col, **kwargs)
 
 
