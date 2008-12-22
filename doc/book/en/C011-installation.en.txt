@@ -31,7 +31,10 @@ For Ubuntu Hardy::
 
 You can now install the required packages with the following command: ::
 
-  apt-get update ; apt-get install cubicweb
+  apt-get update 
+  apt-get install cubicweb
+  apt-get install cubicweb-dev
+
 
 This is it!
 
