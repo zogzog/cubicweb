@@ -9,19 +9,19 @@ __docformat__ = "restructuredtext en"
 from logilab.common.decorators import cached
 from logilab.mtconverter import html_escape
 
-from cubicweb import Unauthorized
-from cubicweb.common.registerers import (accepts_registerer,
-                                      extresources_registerer,
-                                      etype_rtype_priority_registerer)
-from cubicweb.common.selectors import (etype_rtype_selector, one_line_rset,
-                                       accept_selector, accept_rtype_selector,
-                                       primaryview_selector, contextprop_selector,
-                                       _rqlcondition_selector)
+from cubicweb import Unauthorized, role as get_role
+from cubicweb.common.registerers import (
+    accepts_registerer, extresources_registerer,
+    etype_rtype_priority_registerer)
+from cubicweb.common.selectors import (
+    etype_rtype_selector, one_line_rset, accept_selector, accept_rtype_selector,
+    primaryview_selector, contextprop_selector, has_related_entities,
+    _rqlcondition_selector)
 from cubicweb.common.view import Template
 from cubicweb.common.appobject import ReloadableMixIn
 
 from cubicweb.web.htmlwidgets import (BoxLink, BoxWidget, SideBoxWidget,
-                                   RawBoxItem, BoxSeparator)
+                                      RawBoxItem, BoxSeparator)
 from cubicweb.web.action import UnregisteredAction
 
 _ = unicode
@@ -163,6 +163,18 @@ class EntityBoxTemplate(BoxTemplate):
         """
         self.cell_call(row, col, **kwargs)
 
+
+class RelatedEntityBoxTemplate(EntityBoxTemplate):
+    __selectors__ = EntityBoxTemplate.__selectors__ + (has_related_entities,)
+    
+    def cell_call(self, row, col, **kwargs):
+        entity = self.entity(row, col)
+        limit = self.req.property_value('navigation.related-limit') + 1
+        role = get_role(self)
+        self.w(u'<div class="sideRelated">')
+        self.wview('sidebox', entity.related(self.rtype, role, limit=limit),
+                   title=display_name(self.req, self.rtype, role))
+        self.w(u'</div>')
 
 
 class EditRelationBoxTemplate(ReloadableMixIn, EntityBoxTemplate):
