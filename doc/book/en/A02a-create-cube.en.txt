@@ -3,19 +3,19 @@
 Create your cube
 ----------------
 
-After you installed your `CubicWeb` development environment, you can start
-to build your first cube: ::
+Once your `CubicWeb` development environment is set up, you can create a new
+cube::
 
   cubicweb-ctl newcube blog
 
-This will create in ``/path/to/forest/cubes`` a directory containing: ::
+This will create in ``/path/to/forest/cubes`` a directory named ``blog`` containing::
 
   blog/
   |
   |-- data/
   |   |-- cubes.blog.css
   |   |-- cubes.blog.js  
-  |   |-- external_resources
+  |   `-- external_resources
   |
   |-- debian/
   |   |-- changelog
@@ -23,13 +23,13 @@ This will create in ``/path/to/forest/cubes`` a directory containing: ::
   |   |-- control
   |   |-- copyright
   |   |-- cubicweb-blog.prerm
-  |   |-- rules
+  |   `-- rules
   |
   |-- entities.py
   |
   |-- i18n/
   |   |-- en.po
-  |   |-- fr.po
+  |   `-- fr.po
   |
   |-- __init__.py
   |
@@ -37,7 +37,7 @@ This will create in ``/path/to/forest/cubes`` a directory containing: ::
   |
   |-- migration/
   |   |-- postcreate.py
-  |   |-- precreate.py
+  |   `-- precreate.py
   |
   |-- __pkginfo__.py
   |
@@ -51,30 +51,27 @@ This will create in ``/path/to/forest/cubes`` a directory containing: ::
   |
   |-- test/
   |   |-- data/
-  |       |-- bootstrap_cubes
+  |   |   `-- bootstrap_cubes
   |   |-- pytestconf.py
   |   |-- realdb_test_blog.py
-  |   |-- test_blog.py
+  |   `-- test_blog.py
   |
-  |-- views.py
-
-Any changes applied to your data model should be done in this
-directory.
+  `-- views.py
 
 .. _DefineDataModel:
 
-Define your data schema
------------------------
+Define your data model
+----------------------
 
-The data model or schema is hte core of your `CubicWeb` application.
-This is where is defined the type of content you application will handle.
+The data model or schema is the core of your `CubicWeb` application.
+It defines the type of content your application will handle.
 
-The data model is defined in the file ``schema.py`` of your cube
-``blog`` such as follows.
+The data model of your cube ``blog`` is defined in the file ``schema.py``:
 
 ::
 
   from cubicweb.schema import format_constraint
+  
   class Blog(EntityType):
     title = String(maxsize=50, required=True)
     description = String()
@@ -107,7 +104,7 @@ zero`). For completeness, remember that ``+`` means `one or more`.
 Create your instance
 --------------------
 
-::
+To use this cube as an application and create a new instance named ``blogdemo``, do::
   
   cubicweb-ctl create blog blogdemo
 
@@ -116,48 +113,46 @@ This command will create a directory ``~/etc/cubicweb.d/blogdemo``
 which will contain all the configuration files required to start
 you web application.
 
-The instance ``blogdemo`` is based on the cube ``blog``.
-
-
-Welcome in your web application
+Welcome to your web application
 -------------------------------
 
-Run your application with the following command: ::
+Start your application in debug mode with the following command: ::
 
   cubicweb-ctl start -D blogdemo
 
 
-You can now access to your web application to create blogs and post messages
-by visitin the URL http://localhost:8080/.
-A login form will first be prompted. By default, the application will not allow
-anonymous user to get in the application. You should then use the admin
-account you created at the time you initialized the database with
-``cubicweb-ctl create``.
+You can now access your web application to create blogs and post messages
+by visiting the URL http://localhost:8080/.
+
+A login form will appear. By default, the application will not allow anonymous
+users to enter the application. To login, you need then use the admin account
+you created at the time you initialized the database with ``cubicweb-ctl
+create``.
 
 .. image:: images/login-form.png
 
 
 Once authenticated, you can start playing with your application 
-and create entities. Bravo!
+and create entities.
 
 .. image:: images/blog-demo-first-page.png
 
-Please notice that so far, `CubicWeb` franework managed all aspects of 
-the web application based in the schema provided at first.
+Please notice that so far, the `CubicWeb` franework managed all aspects of 
+the web application based on the schema provided at first.
 
 
-Create entities
----------------
+Add entities
+------------
 
-We will now create a couple of entities in our web application.
+We will now add entities in our web application.
 
-Create a Blog
-~~~~~~~~~~~~~
+Add a Blog
+~~~~~~~~~~
 
-Let us create a few of these entities. Click on the `[+]` at the right
-of the link Blog.  Call this new Blog ``Tech-blog`` and type in
-``everything about technology`` as the description, then validate the
-form by clicking on ``Validate``.
+Let us create a few of these entities. Click on the `[+]` at the left of the
+link Blog on the home page. Call this new Blog ``Tech-blog`` and type in
+``everything about technology`` as the description, then validate the form by
+clicking on ``Validate``.
 
 .. image:: images/cbw-create-blog.en.png
    :alt: from to create blog
@@ -182,10 +177,10 @@ has two items.
 .. image:: images/cbw-list-two-blog.en.png
    :alt: displaying a list of two blogs
 
-Create a BlogEntry
-~~~~~~~~~~~~~~~~~~
+Add a BlogEntry
+~~~~~~~~~~~~~~~
 
-Get back to the home page and click on [+] at the right of the link
+Get back to the home page and click on [+] at the left of the link
 BlogEntry. Call this new entry ``Hello World`` and type in some text
 before clicking on ``Validate``. You added a new blog entry without
 saying to what blog it belongs. There is a box on the left entitled
@@ -240,7 +235,7 @@ will have to read the code in directory ``cubicweb/web/views/``
 
 A view is applied on a `result set` which contains a set of
 entities we are trying to display. `CubicWeb` uses a selector
-mecanism which computes a score used to identify which view
+mechanism which computes a score used to identify which view
 is the best to apply for the `result set` we are trying to 
 display. The standard library of selectors is in 
 ``cubicweb.common.selector`` and a library of methods used to
