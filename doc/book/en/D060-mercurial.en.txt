@@ -16,6 +16,7 @@ modify and then push it in its repository.
 It is also possible to get revisions from another repository or to export
 its own revisions from the local repository to another repository.
 
+.. _Mercurial: http://www.selenic.com/mercurial/
 
 In contrast to CVS/Subversion, we usually create a repository by
 project to manage.
@@ -30,7 +31,7 @@ Major commands
 ``````````````
 * Create a local repository::
 
-     hg clone ssh://orion//home/src/private/rep
+     hg clone ssh://myhost//home/src/repo
 
 * See the contents of the local repository (graphical tool in Tk)::
 
@@ -38,7 +39,7 @@ Major commands
 
 * Add a sub-directory or file in the current directory::
 
-     hg add rep
+     hg add subdir
 
 * Move to the working directory a specific revision (or last
   revision) from the local repository::
@@ -49,8 +50,8 @@ Major commands
 * Get in its local repository, the tree of revisions contained in a
   remote repository (this does not change the local directory)::
 
-     hg pull ssh://orion//home/src/private/rep
-     hg pull-u ssh://orion//home/src/private/rep # equivalent to pull + update
+     hg pull ssh://myhost//home/src/repo
+     hg pull -u ssh://myhost//home/src/repo # equivalent to pull + update
 
 * See what are the heads of branches of the local repository if a `pull`
   returned a new branch::
@@ -72,15 +73,15 @@ Major commands
 * Export to a remote repository, the tree of revisions in its content
   local respository (this does not change the local directory)::
 
-     hg push ssh://orion//home/src/private/rep
+     hg push ssh://myhost//home/src/repo
 
 * See what local revisions are not in another repository::
 
-     hg outgoing ssh://orion//home/src/private/rep
+     hg outgoing ssh://myhost//home/src/repo
 
 * See what are the revisions of a repository not found locally::
 
-     hg incoming ssh://orion//home/src/private/rep
+     hg incoming ssh://myhost//home/src/repo
 
 * See what is the revision of the local repository which has been taken out 
   from the working directory and amended::
@@ -97,18 +98,36 @@ Major commands
 
 Best Practices
 ``````````````
-* Think of making a `hg pull -u` regularly, and particularly before
+* Remember to `hg pull -u` regularly, and particularly before
    a `hg commit`.
 
-* Think of a `hg push` when your repository contains a version
+* Remember to `hg push` when your repository contains a version
   relatively stable of your changes.
 
-* If a `hg pull u` created a new branch head:
+* If a `hg pull -u` created a new branch head:
 
-   1. identify its identifier with `hg head`
+   1. find its identifier with `hg head`
    2. merge with `hg merge`
    3. `hg ci`
    4. `hg push`
 
+Installation of the forest extension
+````````````````````````````````````
 
-.. include:: D061-mercurial-forest.en.txt
+Set up the forest extension by getting a copy of the sources 
+from http://hg.akoha.org/hgforest/ and adding the following 
+lines to your ``~/.hgrc``: ::
+
+   [extensions]
+   hgext.forest=
+   # or, if forest.py is not in the hgext dir:
+   # forest=/path/to/forest.py
+
+
+More information
+````````````````
+
+For more information about Mercurial, please refer to the Mercurial project online documentation_.
+
+.. _documentation: http://www.selenic.com/mercurial/wiki/
+
