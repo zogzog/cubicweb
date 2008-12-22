@@ -31,8 +31,8 @@ The system entities available are :
 * `Bookmark`, an entity type used to allow a user to customize his links within
   the application
 
-Cubes in the library
-````````````````````
+Cubes available
+```````````````
 
 An application is based on several basic cubes. In the set of available
 basic cubes we can find for example :
@@ -69,3 +69,7 @@ basic cubes we can find for example :
 To declare the use of a component, once installed, add the name of the component
 to the variable `__use__` in the file `__pkginfo__.py` of your own component.
 
+.. note::
+  The listed cubes above are available as debian-packages on `CubicWeb's forge`_.
+
+.. _`CubicWeb's forge`: http://www.cubicweb.org/project?vtitle=All%20cubicweb%20projects

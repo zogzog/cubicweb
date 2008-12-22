@@ -59,7 +59,7 @@ Postgres installation
 
 Please refer to the `Postgresql project online documentation`_.
 
-.. _`Postgres project online documentation`: http://www.postgresql.org/
+.. _`Postgresql project online documentation`: http://www.postgresql.org/
 
 You need to install the three following packages: `postgres-8.3`,
 `postgres-contrib-8.3` and `postgresql-plpython-8.3`.
@@ -79,26 +79,18 @@ Then you can install:
 Environment configuration
 -------------------------
 
-[FIXME]
-Ces variables ne sont plus requises pour le bon fonctionnement de `CubicWeb`, non?
-A part rajouter la foret dans le PYTHONPATH, rien de plus ne doit etre fait?
-
-Update the environment variable PYTHONPATH to add to it the path to
-the forest ``cubicweb``.
+If you installed `CubicWeb` by cloning the Mercurial forest, then you
+will need to update the environment variable PYTHONPATH to add to it 
+the path to the forest ``cubicweb``.
 
 Add the following lines to either `.bashrc` or `.bash_profile` to configure
 your development environment ::
   
   export PYTHONPATH=/full/path/to/cubicweb-forest
-  
-  //deprecated??
-  export ERUDI_REGISTRY=~/etc/erudi.d/
-  export ERUDI_TEMPLATES=~/hg/
-  export ERUDI_RUNTIME=/tmp/
 
-Cela suppose que le composant erudi que vous développez est dans un
-sous-répertoire de *~/hg/* et que vous avez créé le répertoire *~/etc/erudi.d/*
-pour que `cubicweb-ctl` y place vos instances de test.
+If you installed the debian packages, no configuration is required.
+Your new cubes will be placed in `/usr/share/cubicweb/cubes` and
+your applications will be placed in `/etc/cubicweb.d`.
 
 .. _ConfigurationPostgres:
 
