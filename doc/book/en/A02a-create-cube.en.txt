@@ -61,6 +61,7 @@ This will create in ``/path/to/forest/cubes`` a directory containing: ::
 Any changes applied to your data model should be done in this
 directory.
 
+.. _DefineDataModel:
 
 Define your data schema
 -----------------------
@@ -216,6 +217,8 @@ point your browser to the URL http://localhost:8080/schema
 .. image:: images/cbw-schema.en.png
    :alt: graphical view of the schema (aka data-model)
 
+
+.. _DefineViews:
 
 Define your entities views
 --------------------------
