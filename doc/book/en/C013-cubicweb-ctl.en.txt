@@ -118,6 +118,8 @@ Create first your new cube cube ::
    cubicweb-ctl newcube <mycube>
 
 This will create a new cube in ``/path/to/forest/cubicweb/cubes/<mycube>``
-and then create an instance as explained just above.
+for a Mercurial forest installation, or in ``/usr/share/cubicweb/cubes``
+for a debian packages installation, and then create an instance as 
+explained just above.
 
 

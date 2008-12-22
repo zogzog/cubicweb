@@ -22,8 +22,10 @@ could be used in other instances (modular approach).
 What is a cube?
 ---------------
 
-A cube defines entities, their views, their schems and workflows
-in an independant directory located in ``/path/to/forest/cubicweb/cubes/``.
+A cube defines entities, their views, their schemas and workflows
+in an independant directory located in ``/path/to/forest/cubicweb/cubes/``
+for a Mercurila installation or in ``/usr/share/cubicweb/cubes`` for
+a debian packages installation.
 
 When an instance is created, you list one or more cubes that your instance
 will use. Use a cube means having the entities defined in your cube's schema

@@ -8,7 +8,9 @@ cube::
 
   cubicweb-ctl newcube blog
 
-This will create in ``/path/to/forest/cubes`` a directory named ``blog`` containing::
+This will create in the cubes directory (``/path/to/forest/cubes`` for Mercurial
+installation, ``/usr/share/cubicweb/cubes`` for debian packages installation) 
+a directory named ``blog`` containing::
 
   blog/
   |
