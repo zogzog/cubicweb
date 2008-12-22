@@ -385,8 +385,8 @@ class NewCubeCommand(Command):
         if len(args) != 1:
             raise BadCommandUsage("exactly one argument (cube name) is expected")
         cubename, = args
-        if ServerConfiguration.mode != "dev":
-            self.fail("you can only create new cubes in development mode")
+        #if ServerConfiguration.mode != "dev":
+        #    self.fail("you can only create new cubes in development mode")
         verbose = self.get('verbose')
         cubedir = ServerConfiguration.CUBES_DIR
         if not isdir(cubedir):

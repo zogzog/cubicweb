@@ -58,7 +58,9 @@ if environ.get('APYCOT_ROOT'):
     # --home install
     pydir = 'python'
 else:
-    pydir = join('python2.4', 'site-packages')
+    pydir = join('python2.4', 'site-packages')*
+
+include_dirs = ['skeleton']
 try:
     data_files = [
         # common data
@@ -86,6 +88,8 @@ try:
          [join(views_dir, fname) for fname in listdir(views_dir) if fname.endswith('.pt')]],
         [join('share', 'cubicweb', 'cubes', 'shared', 'i18n'),
          [join(i18n_dir, fname) for fname in listdir(i18n_dir)]],
+        # skeleton
+        
         ]
 except OSError:
     # we are in an installed directory, don't care about this

@@ -69,6 +69,7 @@ install: build
 	########## dev package ################################################
 	# devtools package
 	mv debian/cubicweb-core/usr/lib/python2.4/site-packages/cubicweb/devtools/ debian/cubicweb-dev/usr/lib/python2.4/site-packages/cubicweb/
+	mv debian/cubicweb-core/usr/lib/python2.4/site-packages/cubicweb/skeleton/ debian/cubicweb-dev/usr/lib/python2.4/site-packages/cubicweb/
 	# tests directories
 	mv debian/cubicweb-core/usr/lib/python2.4/site-packages/cubicweb/test debian/cubicweb-dev/usr/lib/python2.4/site-packages/cubicweb/
 	mv debian/cubicweb-common/usr/lib/python2.4/site-packages/cubicweb/common/test debian/cubicweb-dev/usr/lib/python2.4/site-packages/cubicweb/common/
