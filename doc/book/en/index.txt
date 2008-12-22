@@ -16,7 +16,7 @@ Its main features are:
 * an engine driven by the explicit :ref:`data model <DefineDataModel>` of the application, 
 * a query language name :ref:`RQL <RQL>` similar to W3C's SPARQL, 
 * a :ref:`selection+view <DefineViews>` mechanism for semi-automatic XHTML/XML/JSON/text generation, 
-* a library of reusable :ref:`components <components>` (data model and views) that fulfill common needs,
+* a library of reusable :ref:`cubes <cubes>` (data model and views) that fulfill common needs,
 * the power and flexibility of the Python_ programming language,
 * the reliability of SQL databases, LDAP directories, Subversion and Mercurial for storage backends.
 
