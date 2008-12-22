@@ -11,22 +11,37 @@ from logilab.mtconverter import BINARY_ENCODINGS, TransformError, html_escape
 from cubicweb.interfaces import IDownloadable
 from cubicweb.common.mttransforms import ENGINE
 from cubicweb.common.selectors import (one_line_rset, score_entity_selector,
-                                    interface_selector)
+                                       interface_selector)
+from cubicweb.web.box import EntityBoxTemplate
 from cubicweb.web.views import baseviews
 
 _ = unicode
 
-
-def download_box(w, entity):
+def download_box(w, entity, title=None, label=None):
+    req = entity.req
     w(u'<div class="sideRelated">')
-    w(u'<div class="sideBoxTitle downloadBoxTitle"><span>%s</span></div>' % _('download'))
+    if title is None:
+        title = req._('download')
+    w(u'<div class="sideBoxTitle downloadBoxTitle"><span>%s</span></div>'
+      % html_escape(title))
     w(u'<div class="sideBox downloadBox"><div class="sideBoxBody">')
     w(u'<a href="%s"><img src="%s" alt="%s"/> %s</a>'
       % (html_escape(entity.download_url()),
-         entity.req.external_resource('DOWNLOAD_ICON'),
-         _('download icon'), html_escape(entity.dc_title())))
+         req.external_resource('DOWNLOAD_ICON'),
+         _('download icon'), html_escape(label or entity.dc_title())))
     w(u'</div>')
     w(u'</div>\n</div>\n')
+
+    
+class DownloadBox(EntityBoxTemplate):
+    id = 'download_box'
+    __selectors__ = (one_line_rset, interface_selector)
+    accepts_interfaces = (IDownloadable,)
+    order = 10
+    def cell_call(self, row, col, title=None, label=None, **kwargs):
+        entity = self.entity(row, col)
+        download_box(self.w, entity, title, label)
+
 
 class DownloadView(baseviews.EntityView):
     """this view is replacing the deprecated 'download' controller and allow downloading
