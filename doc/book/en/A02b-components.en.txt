@@ -63,7 +63,7 @@ Adding comments to BlogDemo
 To import a cube in your application just change the line in the
 ``app.conf`` file. For example::
 
-    included-yams-cubes=ecomment
+    included-yams-cubes=comment
 
 will make the ``Comment`` entity available in your ``BlogDemo``
 application.
