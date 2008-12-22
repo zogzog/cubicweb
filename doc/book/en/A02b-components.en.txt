@@ -1,26 +1,26 @@
 .. -*- coding: utf-8 -*-
 
-.. _components:
+.. _cubes:
 
-Components
-----------
+Cubes
+-----
 
-What is a component
-~~~~~~~~~~~~~~~~~~~
+What is a cube
+~~~~~~~~~~~~~~
 
-A component is a model grouping one or more entity types and/or views associated
+A cube is a model grouping one or more entity types and/or views associated
 in order to provide a specific feature or even a complete application using
-others components.
-You can decide to write your own set of components if you wish to re-use the 
-entity types you develop. By default, LAX comes with its owns set of components
+others cubes.
+You can decide to write your own set of cubes if you wish to re-use the 
+entity types you develop. By default, LAX comes with its owns set of cubes
 that you can start using right away.
 
 
 Standard library
 ~~~~~~~~~~~~~~~~
 
-A library of standard components is part of the `LAX` release (look at
-``lax/skel/ginco-apps``). Components provide entities and views. With
+A library of standard cubes is part of the `LAX` release (look at
+``lax/skel/ginco-apps``). Cubes provide entities and views. With
 ``lax-0.4``, you should get a set of application entities and system
 entities you can re-use.
 
@@ -28,48 +28,48 @@ The available application entities are:
 
 * addressbook: PhoneNumber and PostalAddress
 
-* ebasket: Basket (like a shopping cart)
+* basket: Basket (like a shopping cart)
 
-* eblog: Blog (a *very* basic blog)
+* blog: Blog (a *very* basic blog)
 
-* eclassfolder: Folder (to organize things but grouping them in folders)
+* classfolder: Folder (to organize things but grouping them in folders)
 
-* eclasstags: Tag (to tag anything)
+* classtags: Tag (to tag anything)
 
 
-* efile: File (to allow users to upload and store binary or text files)
+* file: File (to allow users to upload and store binary or text files)
 
-* elink: Link (to collect links to web resources)
+* link: Link (to collect links to web resources)
 
-* emailinglist: MailingList (to reference a mailing-list and the URLs
+* mailinglist: MailingList (to reference a mailing-list and the URLs
   for its archives and its admin interface)
 
-* eperson: Person (easily mixed with addressbook)
+* person: Person (easily mixed with addressbook)
 
-* etask: Task (something to be done between start and stop date)
+* task: Task (something to be done between start and stop date)
 
-* ezone: Zone (to define places within larger places, for example a
+* zone: Zone (to define places within larger places, for example a
   city in a state in a country)
 
 The available system entities are:
 
-* ecomment: Comment (to attach comment threads to entities)
+* comment: Comment (to attach comment threads to entities)
 
 
 
 Adding comments to BlogDemo
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-To import a component in your application just change the line in the
+To import a cube in your application just change the line in the
 ``app.conf`` file. For example::
 
-    included-yams-components=ecomment
+    included-yams-cubes=comment
 
 will make the ``Comment`` entity available in your ``BlogDemo``
 application.
 
 Change the schema to add a relationship between ``BlogEntry`` and
-``Comment`` and you are done. Since the ecomment component defines the
+``Comment`` and you are done. Since the comment cube defines the
 ``comments`` relationship, adding the line::
 
     comments = ObjectRelation('Comment', cardinality='1*', composite='object')
@@ -78,13 +78,13 @@ to the definition of a ``BlogEntry`` will be enough.
 
 Clear the datastore and restart.
 
-Component structure
-~~~~~~~~~~~~~~~~~~~
+Cube structure
+~~~~~~~~~~~~~~
 
-A complex component is structured as follows:
+A complex  cube is structured as follows:
 ::
 
-  mycomponent/
+  mycube/
   |
   |-- schema.py
   |
@@ -111,7 +111,7 @@ A complex component is structured as follows:
 We can also define simple Python module instead of directories (packages), for example:
 ::
 
-  mycomponent/
+  mycube/
   |
   |-- entities.py
   |-- hooks.py
@@ -145,6 +145,6 @@ At least you should have:
 
 [WRITE ME]
 
-* explain the component architecture
+* explain the cube architecture
 
-* add comments to the blog by importing the comments component
+* add comments to the blog by importing the comments cube
