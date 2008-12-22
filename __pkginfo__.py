@@ -38,10 +38,12 @@ import glob
 
 scripts = [s for s in glob.glob(join('bin', 'cubicweb-*'))
            if not s.endswith('.bat')]
-include_dirs = [join('common', 'test', 'data'),
+include_dirs = [join('test', 'data'),
+                join('common', 'test', 'data'),
                 join('server', 'test', 'data'),
                 join('web', 'test', 'data'),
-                join('devtools', 'test', 'data'),]
+                join('devtools', 'test', 'data'),
+                'skeleton']
 
 
 entities_dir = 'entities'
@@ -58,9 +60,8 @@ if environ.get('APYCOT_ROOT'):
     # --home install
     pydir = 'python'
 else:
-    pydir = join('python2.4', 'site-packages')*
+    pydir = join('python2.4', 'site-packages')
 
-include_dirs = ['skeleton']
 try:
     data_files = [
         # common data
