@@ -6,30 +6,34 @@
 `CubicWeb` - The Semantic Web is a construction game!
 =====================================================
 
-`CubicWeb` is a semantic web application framework that empowers developers
-to efficiently build web applications by reusing components (called `cubes`)
-and following the well known object-oriented design principles.
+`CubicWeb` is a semantic web application framework, licensed under the LGPL,
+that empowers developers to efficiently build web applications by reusing
+components (called `cubes`) and following the well known object-oriented design
+principles.
 
-Its main features:
+Its main features are:
 
-* an engine driven by the explicit data model of the application, 
-* a query language similar to W3C's SPARQL, 
-* a selection+view mechanism for semi-automatic XHTML/XML/JSON/text generation, 
-* a library of reusable components (data model and views) that fulfill common needs,
-* the power and flexibility of the Python programming language,
+* an engine driven by the explicit :ref:`data model <DefineDataModel>` of the application, 
+* a query language name :ref:`RQL <RQL>` similar to W3C's SPARQL, 
+* a :ref:`selection+view <DefineViews>` mechanism for semi-automatic XHTML/XML/JSON/text generation, 
+* a library of reusable :ref:`components <components>` (data model and views) that fulfill common needs,
+* the power and flexibility of the Python_ programming language,
+* the reliability of SQL databases, LDAP directories, Subversion and Mercurial for storage backends.
 
-make `CubicWeb` a mature end to end solution for web 
-application development that promotes quality, reusability and 
+Built since 2000 from an R&D effort still continued, supporting 100,000s of
+daily visits at some production sites, `CubicWeb` is a proven end to end solution
+for semantic web application development that promotes quality, reusability and
 efficiency.
 
 The unbeliever will read the :ref:`Overview`.
 
+The hacker will join development at the forge_.
+
 The impatient will move right away to :ref:`MiseEnPlaceEnv`.
 
 .. _Logilab: http://www.logilab.fr/
-.. _GoogleAppEngine: http://code.google.com/appengine/
-
-
+.. _forge: http://www.cubicweb.org/project/
+.. _Python: http://www.python.org/
 
 Table of contents
 =================
