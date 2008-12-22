@@ -14,7 +14,7 @@ from logilab.common.decorators import cached
 from cubicweb import typed_eid
 from cubicweb.schema import display_name
 from cubicweb.common.view import StartupView, EntityView
-from cubicweb.common.selectors import (one_line_rset, searchstate_selector,
+from cubicweb.common.selectors import (one_line_rset, match_search_state,
                                     accept_selector)
 from cubicweb.web import Redirect
 from cubicweb.web.views import vid_from_rset
@@ -31,7 +31,7 @@ class SearchForAssociationView(EntityView):
     """
     id = 'search-associate'
     
-    __selectors__ = (one_line_rset, searchstate_selector, accept_selector)
+    __selectors__ = (one_line_rset, match_search_state, accept_selector)
     accepts = ('Any',)
     search_states = ('linksearch',)
 

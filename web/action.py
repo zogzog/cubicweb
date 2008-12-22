@@ -9,8 +9,8 @@ __docformat__ = "restructuredtext en"
 from cubicweb.common.appobject import AppRsetObject
 from cubicweb.common.registerers import action_registerer
 from cubicweb.common.selectors import add_etype_selector, \
-     searchstate_selector, searchstate_accept_one_selector, \
-     searchstate_accept_one_but_etype_selector
+     match_search_state, searchstate_accept_one, \
+     searchstate_accept_one_but_etype
     
 _ = unicode
 
@@ -21,7 +21,7 @@ class Action(AppRsetObject):
     """
     __registry__ = 'actions'
     __registerer__ = action_registerer
-    __selectors__ = (searchstate_selector,)
+    __selectors__ = (match_search_state,)
     # by default actions don't appear in link search mode
     search_states = ('normal',) 
     property_defs = {
@@ -115,7 +115,7 @@ class AddEntityAction(Action):
     """link to the entity creation form. Concrete class must set .etype and
     may override .vid
     """
-    __selectors__ = (add_etype_selector, searchstate_selector)
+    __selectors__ = (add_etype_selector, match_search_state)
     vid = 'creation'
     etype = None
     
@@ -127,7 +127,7 @@ class EntityAction(Action):
     """an action for an entity. By default entity actions are only
     displayable on single entity result if accept match.
     """
-    __selectors__ = (searchstate_accept_one_selector,)
+    __selectors__ = (searchstate_accept_one,)
     schema_action = None
     condition = None
     
@@ -217,5 +217,5 @@ class LinkToEntityAction2(LinkToEntityAction):
     """LinkToEntity action where the action is not usable on the same
     entity's type as the one refered by the .etype attribute
     """
-    __selectors__ = (searchstate_accept_one_but_etype_selector,)
+    __selectors__ = (searchstate_accept_one_but_etype,)
     

@@ -212,7 +212,7 @@ def accept_etype(cls, req, *args, **kwargs):
 etype_form_selector = deprecated_function(accept_etype)
 
 @lltrace
-def _nfentity_selector(cls, req, rset, row=None, col=None, **kwargs):
+def _non_final_entity(cls, req, rset, row=None, col=None, **kwargs):
     """accept non final entities
     if row is not specified, use the first one
     if col is not specified, use the first one
@@ -223,9 +223,10 @@ def _nfentity_selector(cls, req, rset, row=None, col=None, **kwargs):
     if cls.schema.eschema(etype).is_final():
         return 0
     return 1
+_nfentity_selector = deprecated_function(_non_final_entity)
 
 @lltrace
-def _rqlcondition_selector(cls, req, rset, row=None, col=None, **kwargs):
+def _rql_condition(cls, req, rset, row=None, col=None, **kwargs):
     """accept single entity result set if the entity match an rql condition
     """
     if cls.condition:
@@ -240,9 +241,10 @@ def _rqlcondition_selector(cls, req, rset, row=None, col=None, **kwargs):
             return 0
         
     return 1
+_rqlcondition_selector = deprecated_function(_rql_condition)
 
 @lltrace
-def _interface_selector(cls, req, rset, row=None, col=None, **kwargs):
+def _implement_interface(cls, req, rset, row=None, col=None, **kwargs):
     """accept uniform result sets, and apply the following rules:
 
     * wrapped class must have a accepts_interfaces attribute listing the
@@ -294,6 +296,7 @@ def _interface_selector(cls, req, rset, row=None, col=None, **kwargs):
                 return 0
         score += 1
     return score
+_interface_selector = deprecated_function(_implement_interface)
 
 @lltrace
 def score_entity_selector(cls, req, rset, row=None, col=None, **kwargs):
@@ -321,13 +324,14 @@ def accept_rset(cls, req, rset, row=None, col=None, **kwargs):
 accept_rset_selector = deprecated_function(accept_rset)
 
 @lltrace
-def but_etype_selector(cls, req, rset, row=None, col=None, **kwargs):
+def but_etype(cls, req, rset, row=None, col=None, **kwargs):
     """restrict the searchstate_accept_one_selector to exclude entity's type
     refered by the .etype attribute
     """
     if rset.description[row or 0][col or 0] == cls.etype:
         return 0
     return 1
+but_etype_selector = deprecated_function(but_etype)
 
 @lltrace
 def etype_rtype_selector(cls, req, rset, row=None, col=None, **kwargs):
@@ -347,8 +351,15 @@ def etype_rtype_selector(cls, req, rset, row=None, col=None, **kwargs):
     return 1
 
 @lltrace
-def accept_rtype_selector(cls, req, rset, row=None, col=None, **kwargs):
+def has_relation(cls, req, rset, row=None, col=None, **kwargs):
+    """check if the user has read access on the relations's type refered by the
+    .rtype attribute of the class, and if all entities types in the
+    result set has this relation.
+    """
     if hasattr(cls, 'rtype'):
+        perm = getattr(cls, 'require_permission', 'read')
+        if not schema.rschema(cls.rtype).has_perm(req, perm):
+            return 0
         if row is None:
             for etype in rset.column_types(col or 0):
                 if not cls.relation_possible(etype):
@@ -356,13 +367,10 @@ def accept_rtype_selector(cls, req, rset, row=None, col=None, **kwargs):
         elif not cls.relation_possible(rset.description[row][col or 0]):
             return 0
     return 1
+accept_rtype_selector = deprecated_function(has_relation)
 
 @lltrace
-def has_related_entities(cls, req, rset, row=None, col=None, **kwargs):
-    return bool(rset.get_entity(row or 0, col or 0).related(cls.rtype, role(cls)))
-    
-@lltrace
-def one_has_relation_selector(cls, req, rset, row=None, col=None, **kwargs):
+def one_has_relation(cls, req, rset, row=None, col=None, **kwargs):
     """check if the user has read access on the relations's type refered by the
     .rtype attribute of the class, and if at least one entity type in the
     result set has this relation.
@@ -378,6 +386,12 @@ def one_has_relation_selector(cls, req, rset, row=None, col=None, **kwargs):
     elif cls.relation_possible(rset.description[row][col or 0]):
         return 1
     return 0
+one_has_relation_selector = deprecated_function(one_has_relation)
+
+@lltrace
+def has_related_entities(cls, req, rset, row=None, col=None, **kwargs):
+    return bool(rset.get_entity(row or 0, col or 0).related(cls.rtype, role(cls)))
+
 
 @lltrace
 def match_user_group(cls, req, rset=None, row=None, col=None, **kwargs):
@@ -448,25 +462,32 @@ def appobject_selectable(registry, oid):
 
 # compound selectors ##########################################################
 
-nfentity_selector = chainall(nonempty_rset, _nfentity_selector)
+non_final_entity = chainall(nonempty_rset, _non_final_entity)
+nfentity_selector = deprecated_function(non_final_entity)
 
-implement_interface = chainall(nfentity_selector, _interface_selector)
+implement_interface = chainall(non_final_entity, _implement_interface)
 interface_selector = deprecated_function(implement_interface)
 
-accept = chainall(nfentity_selector, accept_rset_selector)
+accept = chainall(non_final_entity, accept_rset)
 accept_selector = deprecated_function(accept)
 
-accept_one_selector = chainall(one_line_rset, accept_selector)
+accept_one = chainall(one_line_rset, accept_selector)
+accept_one_selector = deprecated_function(accept_one)
 
-rqlcondition_selector = chainall(nfentity_selector, one_line_rset,
-                                 _rqlcondition_selector)
+rql_condition = chainall(non_final_entity, one_line_rset, _rql_condition)
+rqlcondition_selector = deprecated_function(rql_condition)
 
-searchstate_accept_selector = chainall(nonempty_rset, searchstate_selector,
-                                       accept_selector)
-searchstate_accept_one_selector = chainall(nonempty_rset, searchstate_selector,
-                                           accept_selector, rqlcondition_selector)
-searchstate_accept_one_but_etype_selector = chainall(searchstate_accept_one_selector,
-                                                     but_etype_selector)
+
+searchstate_accept = chainall(nonempty_rset, match_search_state, accept)
+searchstate_accept_selector = deprecated_function(searchstate_accept)
+
+searchstate_accept_one = chainall(one_line_rset, match_search_state,
+                                  accept, _rql_condition)
+searchstate_accept_one_selector = deprecated_function(searchstate_accept_one)
+
+searchstate_accept_one_but_etype = chainall(searchstate_accept_one, but_etype)
+searchstate_accept_one_but_etype_selector = deprecated_function(
+    searchstate_accept_one_but_etype)
 
 #__all__ = [name for name in globals().keys() if name.endswith('selector')]
 #__all__ += ['chainall', 'chainfirst']

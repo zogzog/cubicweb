@@ -23,7 +23,7 @@ class SelectAction(EntityAction):
     if accept match.
     """
     category = 'mainactions'    
-    __selectors__ = (searchstate_accept_selector,)
+    __selectors__ = (searchstate_accept,)
     search_states = ('linksearch',)
     order = 0
     
@@ -54,7 +54,7 @@ class CancelSelectAction(Action):
 
 class ViewAction(Action):
     category = 'mainactions'    
-    __selectors__ = (in_group_selector, searchstate_accept_selector)
+    __selectors__ = (in_group_selector, searchstate_accept)
     require_groups = ('users', 'managers')
     order = 0
     
@@ -78,8 +78,8 @@ class ViewAction(Action):
 
 class ModifyAction(EntityAction):
     category = 'mainactions'
-    __selectors__ = (one_line_rset, searchstate_accept_selector)
-    #__selectors__ = searchstate_accept_selector,
+    __selectors__ = (one_line_rset, searchstate_accept)
+    #__selectors__ = searchstate_accept,
     schema_action = 'update'
     order = 10
     
@@ -106,7 +106,7 @@ class ModifyAction(EntityAction):
     
 class DeleteAction(EntityAction):
     category = 'moreactions' 
-    __selectors__ = (searchstate_accept_selector,)
+    __selectors__ = (searchstate_accept,)
     schema_action = 'delete'
     order = 20
     
@@ -136,7 +136,7 @@ class CopyAction(EntityAction):
 class MultipleEditAction(EntityAction):
     category = 'mainactions'
     __selectors__ = (two_lines_rset, oneetyperset_selector,
-                     searchstate_accept_selector)
+                     searchstate_accept)
     schema_action = 'update'
     order = 10
     
@@ -171,7 +171,7 @@ class AddNewAction(MultipleEditAction):
         if not eschema.is_final() and eschema.has_perm(req, 'add'):
             return 1
         return 0
-    __selectors__ = (searchstate_selector,
+    __selectors__ = (match_search_state,
                      chainfirst(etype_rset_selector,
                                 chainall(two_lines_rset, oneetyperset_selector,
                                          has_add_perm_selector)))

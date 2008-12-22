@@ -18,7 +18,7 @@ from cubicweb import urlquote # XXX should use view.url_quote method
 from cubicweb.interfaces import IEmbedable
 from cubicweb.common.uilib import soup2xhtml
 from cubicweb.common.selectors import (one_line_rset, score_entity_selector,
-                                    searchstate_selector, interface_selector)
+                                    match_search_state, interface_selector)
 from cubicweb.common.view import NOINDEX, NOFOLLOW
 from cubicweb.web.controller import Controller
 from cubicweb.web.action import Action
@@ -81,7 +81,7 @@ class EmbedAction(Action):
     """
     id = 'embed'
     controller = 'embed'
-    __selectors__ = (one_line_rset, searchstate_selector,
+    __selectors__ = (one_line_rset, match_search_state,
                      interface_selector, score_entity_selector)
     accepts_interfaces = (IEmbedable,)
     
