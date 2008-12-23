@@ -91,7 +91,6 @@ binary-indep: build install
 	dh_testroot -i
 	dh_install -i
 	dh_pycentral -i
-	dh_python -i
 	dh_installinit -i -n --name cubicweb -u"defaults 99"
 	dh_installlogrotate -i
 	dh_installdocs -i -A README
