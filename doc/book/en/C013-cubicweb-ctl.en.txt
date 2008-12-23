@@ -50,8 +50,7 @@ the database initialization. As those are specific to the `datastore`,
 specific Google AppEgine database, they are not available for now
 in cubicweb-ctl, but they are available in the instance created.
 
-[FIXME] - add link to gae install
-For more details, please see :ref:`` .
+For more details, please see :ref:`gaecontents` .
 
 Commands to launch instance
 ---------------------------
@@ -94,9 +93,14 @@ Other commands
 ``cubicweb-ctl shell`` addon
 ----------------------------
 
-XXX
-[FIXME]
-Add list of commands available in cubicweb-ctl shell.
+This migration shell provides an interactive interface to all
+the migrations functions described in the chapter :ref:`migration`.
+
+Usage
+`````
+::
+  
+  ``cubicweb-ctl shell myapp``
 
 Examples
 --------
