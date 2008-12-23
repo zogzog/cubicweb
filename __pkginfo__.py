@@ -6,7 +6,7 @@ software
 distname = "cubicweb"
 modname = "cubicweb"
 
-numversion = (2, 99, 99)
+numversion = (3, 0, 0)
 version = '.'.join(str(num) for num in numversion)
 
 license = 'LCL'

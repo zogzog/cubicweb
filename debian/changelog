@@ -1,3 +1,9 @@
+cubicweb (3.0.0-1) DISTRIBUTION; urgency=low
+
+  * new upstream release
+
+ -- Adrien Di Mascio <Adrien.DiMascio@logilab.fr>  Tue, 23 Dec 2008 18:42:43 +0100
+
 cubicweb (2.99.99-1) DISTRIBUTION; urgency=low
 
   * new upstream release

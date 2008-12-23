@@ -4,7 +4,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: cubicweb 2.46.0\n"
-"PO-Revision-Date: 2008-11-13 12:28+0100\n"
+"PO-Revision-Date: 2008-12-23 18:41+0100\n"
 "Last-Translator: Logilab Team <contact@logilab.fr>\n"
 "Language-Team: fr <contact@logilab.fr>\n"
 "MIME-Version: 1.0\n"
@@ -62,10 +62,6 @@ msgstr "%d semaines"
 #, python-format
 msgid "%d years"
 msgstr "%d années"
-
-#, python-format
-msgid "%s"
-msgstr ""
 
 #, python-format
 msgid "%s days"
@@ -1003,6 +999,12 @@ msgstr "boîte signets"
 
 msgid "boxes_bookmarks_box_description"
 msgstr "boîte contenant les signets de l'utilisateur"
+
+msgid "boxes_download_box"
+msgstr "boîte de téléchargement"
+
+msgid "boxes_download_box_description"
+msgstr "boîte contenant un lien permettant de télécharger la ressource"
 
 msgid "boxes_edit_box"
 msgstr "boîte d'actions"

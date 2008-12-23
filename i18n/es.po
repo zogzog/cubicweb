@@ -64,10 +64,6 @@ msgid "%d years"
 msgstr "%d años"
 
 #, python-format
-msgid "%s"
-msgstr ""
-
-#, python-format
 msgid "%s days"
 msgstr "%d días"
 
@@ -1001,6 +997,12 @@ msgstr "caja de atajos"
 
 msgid "boxes_bookmarks_box_description"
 msgstr "Caja que contiene los atajos del usuario"
+
+msgid "boxes_download_box"
+msgstr ""
+
+msgid "boxes_download_box_description"
+msgstr ""
 
 msgid "boxes_edit_box"
 msgstr "caja de acciones"
