@@ -1,9 +1,0 @@
-.. -*- coding: utf-8 -*-
-
-Repository sessions
-===================
-
-[WRITE ME]
-
-* repository sessions
-
