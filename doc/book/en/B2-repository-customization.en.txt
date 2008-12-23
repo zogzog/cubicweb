@@ -5,11 +5,11 @@ Repository customization
 .. toctree::
    :maxdepth: 1
 
-   BXXX-sessions.en.txt
-   B100-hooks.en.txt
-   B110-notifications.en.txt
-   BXXX-repository-operations.en.txt
-   B140-google-appengine.en.txt
-   BXXX-repository-tasks.en.txt
+   B2010-sessions.en.txt
+   B2020-hooks.en.txt
+   B2030-notifications.en.txt
+   B2040-repository-operations.en.txt
+   B2050-google-appengine.en.txt
+   B2060-repository-tasks.en.txt
 
 
