@@ -10,30 +10,11 @@ This part is about developing web applications with the `CubicWeb` framework.
 .. toctree::
    :maxdepth: 1
 
-   B020-define-schema.en.txt
-   B030-define-views.en.txt
-   B040-define-workflows.en.txt
-   B050-data-as-objects.en.txt
-   B060-form-management.en.txt
-   B070-ajax-json.en.txt
-   B080-internationalization.en.txt
-   B090-ui-components.en.txt
-   B100-hooks.en.txt
-   B110-notifications.en.txt
-   B120-migration.en.txt
-   B130-tests.en.txt
-   B140-google-appengine.en.txt
-   BXXX-actions.en.txt
-   BXXX-boxes.en.txt
-   BXXX-configuration.en.txt
-   BXXX-dbapi.en.txt
-   BXXX-embedding-external-page.en.txt
-   BXXX-online-doc.en.txt
-   BXXX-registry.en.txt
-   BXXX-repository-operations.en.txt
-   BXXX-repository-session.en.txt
-   BXXX-repository-tasks.en.txt
-   BXXX-request.en.txt
-   BXXX-sessions.en.txt
-   BXXX-templates.en.txt
-   BXXX-urlrewrite.en.txt
+   B0-data-model.en.txt
+   B1-web-interface.en.txt
+   B2-repository-customization.en.txt
+   B3-test.en.txt
+   B4-advanced.en.txt
+
+
+
