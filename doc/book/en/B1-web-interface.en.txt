@@ -1,0 +1,19 @@
+.. -*- coding: utf-8 -*-
+
+Web interface
++++++++++++++
+.. toctree::
+   :maxdepth: 1
+
+   BXXX-request.en.txt
+   B030-define-views.en.txt
+   B060-form-management.en.txt
+   BXXX-actions.en.txt
+   BXXX-boxes.en.txt
+   BXXX-templates.en.txt
+   B090-ui-components.en.txt
+   B070-ajax-json.en.txt
+   B080-internationalization.en.txt
+   BXXX-online-doc.en.txt
+   BXXX-embedding-external-page.en.txt
+   BXXX-urlrewrite.en.txt

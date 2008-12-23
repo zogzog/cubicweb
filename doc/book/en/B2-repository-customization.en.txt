@@ -1,0 +1,15 @@
+.. -*- coding: utf-8 -*-
+
+Repository customization
+++++++++++++++++++++++++
+.. toctree::
+   :maxdepth: 1
+
+   BXXX-sessions.en.txt
+   B100-hooks.en.txt
+   B110-notifications.en.txt
+   BXXX-repository-operations.en.txt
+   B140-google-appengine.en.txt
+   BXXX-repository-tasks.en.txt
+
+

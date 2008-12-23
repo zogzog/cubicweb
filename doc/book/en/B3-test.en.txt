@@ -1,0 +1,9 @@
+.. -*- coding: utf-8 -*-
+
+Tests
++++++
+.. toctree::
+   :maxdepth: 1
+
+   B130-tests.en.txt
+
