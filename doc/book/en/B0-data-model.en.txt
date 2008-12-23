@@ -6,8 +6,8 @@ The data model
 .. toctree::
    :maxdepth: 1
 
-   B020-define-schema.en.txt
-   B040-define-workflows.en.txt
-   B050-data-as-objects.en.txt
-   B120-migration.en.txt
+   B010-define-schema.en.txt
+   B020-define-workflows.en.txt
+   B030-data-as-objects.en.txt
+   B040-migration.en.txt
 
