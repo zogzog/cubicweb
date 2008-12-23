@@ -60,6 +60,10 @@ a directory named ``blog`` containing::
   |
   `-- views.py
 
+.. note::
+  You will find a more detailled description of the `cube` concept in
+  :ref:`cubesConcepts`.
+
 .. _DefineDataModel:
 
 Define your data model
@@ -220,6 +224,12 @@ point your browser to the URL http://localhost:8080/schema
 Define your entities views
 --------------------------
 
+Each entity defined in a model inherits defaults views allowing
+different rendering of the data. You can redefine each of them
+according to your needs and preferences. If you feel like it then
+you have to know how a view is defined.
+
+
 The views selection principle
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -230,6 +240,8 @@ A view is defined by a Python class which includes:
   
   - a filter to select the resulsets it can be applied to
 
+A view has a set of methods complying
+with the `View` class interface (`cubicweb.common.view`).
 
 `CubicWeb` provides a lot of standard views for the type
 `EntityView`, for a complete list, you

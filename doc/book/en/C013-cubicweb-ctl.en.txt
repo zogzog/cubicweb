@@ -65,6 +65,7 @@ Commands to maintain instances
 * ``upgrade``, launches the existing instances migration when a new version
   of `CubicWeb` or the cubes installed is available
 * ``shell``, opens a migration shell for manual maintenance of the instance
+  (see :ref:`cubicweb-ctl-shell` for more details)
 * ``db-dump``, creates a dump of the system database
 * ``db-restore``, restores a dump of the system database
 * ``db-check``, checks data integrity of an instance. If the automatic correction
@@ -86,6 +87,16 @@ Other commands
 * ``list``, provides a list of the available configuration, cubes
   and instances.
 * ``delete``, deletes an instance (configuration files and database)
+
+
+.. _cubicweb-ctl-shell:
+
+``cubicweb-ctl shell`` addon
+----------------------------
+
+XXX
+[FIXME]
+Add list of commands available in cubicweb-ctl shell.
 
 Examples
 --------

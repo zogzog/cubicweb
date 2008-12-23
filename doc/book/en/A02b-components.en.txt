@@ -5,24 +5,11 @@
 Cubes
 -----
 
-What is a cube ?
-~~~~~~~~~~~~~~~~
-
-A cube is a model grouping one or more entity types and/or views associated
-in order to provide a specific feature or even a complete application using
-others cubes.
-
-You can decide to write your own set of cubes if you wish to re-use the 
-entity types you develop. Lots of cubes are available from the `CubicWeb
-Forge`_ under a free software license.
-
-.. _`CubicWeb Forge`: http://www.cubicweb.org/project/
-
 Standard library
 ~~~~~~~~~~~~~~~~
 
-A library of standard cubes is part of the `CubicWeb` release (look at the
-output of ``cubicweb-ctl list``). Cubes provide entities and views.
+A library of standard cubes are available from `CubicWeb Forge`_
+Cubes provide entities and views.
 
 The available application entities are:
 
@@ -59,9 +46,11 @@ Adding comments to BlogDemo
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 To import a cube in your application just change the line in the
-``app.conf`` file. For example::
+``__pkginfo__.py`` file and verify that the cube you are planning
+to use is listed by the command ``cubicweb-ctl list``.
+For example::
 
-    included-yams-cubes=comment
+    __use__ = ('comment',)
 
 will make the ``Comment`` entity available in your ``BlogDemo``
 application.
@@ -74,75 +63,19 @@ Change the schema to add a relationship between ``BlogEntry`` and
 
 to the definition of a ``BlogEntry`` will be enough.
 
-Clear the datastore and restart.
+Synchronize the data model
+~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Cube structure
-~~~~~~~~~~~~~~
-
-A complex  cube is structured as follows:
+Once you modified your data model, you need to synchronize the
+database with your model. For this purpose, `CubicWeb` provides
+a very usefull command ``cubicweb-ctl shell blogdemo`` which
+launches an interactive migration Python shell. (see 
+:ref:`cubicweb-ctl-shell` for more details))
+As you modified a relation from the `BlogEntry` schema,
+run the following command:
 ::
 
-  mycube/
-  |
-  |-- schema.py
-  |
-  |-- entities/
-  |
-  |-- sobjects/
-  |
-  |-- views/
-  |
-  |-- test/
-  |
-  |-- i18n/
-  |
-  |-- data/
-  |
-  |-- migration/
-  | |- postcreate.py
-  | \- depends.map
-  |
-  |-- debian/
-  |
-  \-- __pkginfo__.py
-
-We can also define simple Python module instead of directories (packages), for example:
-::
-
-  mycube/
-  |
-  |-- entities.py
-  |-- hooks.py
-  \-- views.py
-
-
-where:
-
-* ``schema`` contains the definition of the schema (server side only)
-* ``entities`` contains entities definition (server side and web interface)
-* ``sobjects`` contains hooks and/or notification views (server side only)
-* ``views`` contains the web interface components (web interface only)
-* ``test`` contains tests related to the application (not installed)
-* ``i18n`` contains messages catalogs for supported languages (server side and
-  web interface)
-* ``data`` contains data files for static content (images, css, javascripts)
-  ...(web interface only)
-* ``migration`` contains initialization file for new instances (``postcreate.py``)
-  and a file containing dependencies of the component depending on the version
-  (``depends.map``)
-* ``debian`` contains all the files managing debian packaging (you will find
-  the usual files ``control``, ``rules``, ``changelog``... not installed)
-* file ``__pkginfo__.py`` provides component meta-data, especially the distribution
-  and the current version(server side and web interface) or sub-components used by
-  the component.
- 
-At least you should have:
-
-* the file ``__pkginfo__.py``
-* schema definition
-
-[WRITE ME]
-
-* explain the cube architecture
-
-* add comments to the blog by importing the comments cube
+  synchronize_rschema('BlogEntry')
+  
+You can now start your application and add comments to each 
+`BlogEntry`.

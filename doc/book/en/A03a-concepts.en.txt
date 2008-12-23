@@ -341,9 +341,28 @@ We also find on instances, the following attributes:
           def f(self, arg1):
               super(Truc, self).f(arg1)
 
+.. _cubesConcepts:
+
+Cubes
+~~~~~
+
+What is a cube ?
+````````````````
+
+A cube is a model grouping one or more entity types and/or views associated
+in order to provide a specific feature or even a complete application using
+others cubes.
+
+You can decide to write your own set of cubes if you wish to re-use the 
+entity types you develop. Lots of cubes are available from the `CubicWeb
+Forge`_ under a free software license.
+
+.. _`CubicWeb Forge`: http://www.cubicweb.org/project/
+
+
 
 Standard structure for a cube
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+`````````````````````````````
 
 A complex cube is structured as follows:
 
@@ -389,25 +408,63 @@ where :
 * ``schema`` contains the schema definition (server side only)
 * ``entities`` contains the entities definition (server side and web interface)
 * ``sobjects`` contains hooks and/or views notifications (server side only)
-* ``views`` contains the different components of the web interface (web interface only)
-* ``test`` contains tests specifics to the application (not installed)
-* ``i18n`` contains the messages catalog for supported languages (server side and 
-  web interface) 
-* ``data`` contains arbitrary data files served statically
-  (images, css, javascripts files)... (web interface only)
-* ``migration`` contains the initialization file for new instances
-  (``postcreate.py``) and in general a file containing the `CubicWeb` dependancies 
-  of the cube depending on its version (``depends.map``)
-* ``debian`` contains all the files that manages the debian packaging
-  (you would find there the classical structure with ``control``, ``rules``, 
-  ``changelog``... (not installed)
-* the file ``__pkginfo__.py`` provides meta-data on the cube, especially the 
-  distribution name and the current version (server side and web interface) or
-  also the sub-cubes used by this cube
-
-The only required files are:
+* ``views`` contains the web interface components (web interface only)
+* ``test`` contains tests related to the application (not installed)
+* ``i18n`` contains messages catalogs for supported languages (server side and
+  web interface)
+* ``data`` contains data files for static content (images, css, javascripts)
+  ...(web interface only)
+* ``migration`` contains initialization file for new instances (``postcreate.py``)
+  and a file containing dependencies of the component depending on the version
+  (``depends.map``)
+* ``debian`` contains all the files managing debian packaging (you will find
+  the usual files ``control``, ``rules``, ``changelog``... not installed)
+* file ``__pkginfo__.py`` provides component meta-data, especially the distribution
+  and the current version (server side and web interface) or sub-cubes used by
+  the cube.
+ 
+ 
+At least you should have:
 
 * the file ``__pkginfo__.py``
 * the schema definition
   XXX false, we may want to have cubes which are only adding a service, no persistent data (eg embeding for instance)
+
+
+Standard library
+````````````````
+
+A library of standard cubes are available from `CubicWeb Forge`_
+Cubes provide entities and views.
+
+The available application entities are:
+
+* addressbook: PhoneNumber and PostalAddress
+
+* basket: Basket (like a shopping cart)
+
+* blog: Blog (a *very* basic blog)
+
+* classfolder: Folder (to organize things but grouping them in folders)
+
+* classtags: Tag (to tag anything)
+
+* file: File (to allow users to upload and store binary or text files)
+
+* link: Link (to collect links to web resources)
+
+* mailinglist: MailingList (to reference a mailing-list and the URLs
+  for its archives and its admin interface)
+
+* person: Person (easily mixed with addressbook)
+
+* task: Task (something to be done between start and stop date)
+
+* zone: Zone (to define places within larger places, for example a
+  city in a state in a country)
+
+The available system entities are:
+
+* comment: Comment (to attach comment threads to entities)
+
 
