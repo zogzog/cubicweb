@@ -59,10 +59,6 @@ msgid "%d years"
 msgstr ""
 
 #, python-format
-msgid "%s"
-msgstr ""
-
-#, python-format
 msgid "%s days"
 msgstr ""
 
@@ -976,6 +972,12 @@ msgstr "bookmarks box"
 
 msgid "boxes_bookmarks_box_description"
 msgstr "box listing the user's bookmarks"
+
+msgid "boxes_download_box"
+msgstr ""
+
+msgid "boxes_download_box_description"
+msgstr ""
 
 msgid "boxes_edit_box"
 msgstr "actions box"
