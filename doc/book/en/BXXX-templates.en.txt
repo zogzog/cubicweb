@@ -24,16 +24,13 @@ the HTMLPageFooter and the TheMainTemplate.
 HTMLPageHeader
 --------------
 
-Let's use a different logo than the default one provided with LAX
-and customize our header.
-
 Customize header
 ~~~~~~~~~~~~~~~~
 
 Let's now move the search box in the header and remove the login form
 from the header. We'll show how to move it to the left column of the application.
 
-Let's sat we do not want anymore the login menu to be in the header, but we 
+Let's say we do not want anymore the login menu to be in the header, but we 
 prefer it to be in the left column just below the logo. As the left column is
 rendered by ``TheMainTemplate``, we will show how to do it in TheMainTemplate_. 
 
@@ -165,7 +162,7 @@ our application.
 
 TheMainTemplate is responsible for the general layout of the entire application. 
 It defines the template of ``id = main`` that is used by the application. Is 
-also defined in ``ginco/web/views/basetemplates.py`` another template that can
+also defined in ``cubicweb/web/views/basetemplates.py`` another template that can
 be used based on TheMainTemplate called SimpleMainTemplate which does not have 
 a top section.
 
@@ -195,5 +192,5 @@ Add login menu in left column
 
 [TODO]
 Rajouter une section pour definir la terminologie utilisee.
-Dans ginco-doc rajouter une section pour erudi-ctl shell ou
+Dans ginco-doc rajouter une section pour cubciweb-ctl shell ou
 on liste les commandes dispos.

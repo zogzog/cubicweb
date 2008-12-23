@@ -5,51 +5,61 @@
 Installation
 ============
 
-Installation of `Cubicweb` and its dependancies
+Installation of `Cubicweb` and its dependencies
 -----------------------------------------------
 
-`CubicWeb` is available as a debian package as well as an archive.
-We will detail here the two easiest way to set-up `CubciWeb` 
-environment.
+`CubicWeb` is packaged for Debian and Ubuntu, but can be installed from source
+using a tarball or the Mercurial version control system.
 
 Debian and Ubuntu packages
 ```````````````````````````
 Depending on the distribution you are using, add the appropriate line to your list
-of sources (for example by editing ``/etc/apt/sources.list``) ::
+of sources (for example by editing ``/etc/apt/sources.list``).
+
+For Debian Lenny::
 
   deb http://ftp.logilab.org/dists/ lenny/
-  deb http://ftp.logilab.org/dists/ hardy/
+
+For Debian Sid::
+
   deb http://ftp.logilab.org/dists/ sid/
+
+For Ubuntu Hardy::
+
+  deb http://ftp.logilab.org/dists/ hardy/
+
 
 You can now install the required packages with the following command: ::
 
-  apt-get update ; apt-get install cubicweb
+  apt-get update 
+  apt-get install cubicweb
+  apt-get install cubicweb-dev
+
 
 This is it!
 
-``tar.gz`` archive
-``````````````````
+Install from source
+```````````````````
 
-You can download our sources at: ::
+You can download the archive containing the sources from our `ftp site`_ at: ::
 
   http://ftp.logilab.org/pub/cubicweb/
 
-Unpack the sources
+.. _`ftp site`: http://ftp.logilab.org/pub/cubicweb/
 
+or keep up to date with on-going development by using Mercurial and its forest
+extension::
 
+  hg fclone http://www.logilab.org/hg/forests/cubicweb
 
-
-.. note::
-  `CubicWeb` is also available as a Mercurial repository using the forest
-  extension (see :ref:`MercurialForestInstall` for more details).
-
+See :ref:`MercurialPresentation` for more details about Mercurial.
 
 Postgres installation
 `````````````````````
 
-Please refer to the project online documentation Postgres_.
+Please refer to the `Postgresql project online documentation`_.
 
-.. _Postgres: http://www.postgresql.org/
+.. _`Postgresql project online documentation`: http://www.postgresql.org/
 
 You need to install the three following packages: `postgres-8.3`,
 `postgres-contrib-8.3` and `postgresql-plpython-8.3`.
@@ -69,26 +79,18 @@ Then you can install:
 Environment configuration
 -------------------------
 
-[FIXME]
-Ces variables ne sont plus requises pour le bon fonctionnement de `CubicWeb`, non?
-A part rajouter la foret dans le PYTHONPATH, rien de plus ne doit etre fait?
-
-Update the environment variable PYTHONPATH to add to it the path to
-the forest ``cubicweb``.
+If you installed `CubicWeb` by cloning the Mercurial forest, then you
+will need to update the environment variable PYTHONPATH to add to it 
+the path to the forest ``cubicweb``.
 
 Add the following lines to either `.bashrc` or `.bash_profile` to configure
 your development environment ::
   
   export PYTHONPATH=/full/path/to/cubicweb-forest
-  
-  //deprecated??
-  export ERUDI_REGISTRY=~/etc/erudi.d/
-  export ERUDI_TEMPLATES=~/hg/
-  export ERUDI_RUNTIME=/tmp/
 
-Cela suppose que le composant erudi que vous développez est dans un
-sous-répertoire de *~/hg/* et que vous avez créé le répertoire *~/etc/erudi.d/*
-pour que `cubicweb-ctl` y place vos instances de test.
+If you installed the debian packages, no configuration is required.
+Your new cubes will be placed in `/usr/share/cubicweb/cubes` and
+your applications will be placed in `/etc/cubicweb.d`.
 
 .. _ConfigurationPostgres:
 
