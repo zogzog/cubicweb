@@ -106,27 +106,29 @@ def html_publish(view, text):
         return u''
     return REF_PROG.sub(lambda obj, view=view:_subst_rql(view, obj), text)
 
+# fallback implementation, nicer one defined below if lxml is available
+def soup2xhtml(data, encoding):
+    return data
+
+# fallback implementation, nicer one defined below if lxml> 2.0 is available
+def safe_cut(text, length):
+    """returns a string of length <length> based on <text>, removing any html
+    tags from given text if cut is necessary."""
+    if text is None:
+        return u''
+    text_nohtml = remove_html_tags(text)
+    # try to keep html tags if text is short enough
+    if len(text_nohtml) <= length:
+        return text
+    # else if un-tagged text is too long, cut it
+    return text_nohtml[:length-3] + u'...'
+
+
 try:
     from lxml import etree
-    etree.HTML('<div>test</div>').iter
 except (ImportError, AttributeError):
     # gae environment: lxml not availabel
-    
-    def soup2xhtml(data, encoding):
-        return data
-
-    def safe_cut(text, length):
-        """returns a string of length <length> based on <text>, removing any html
-        tags from given text if cut is necessary."""
-        if text is None:
-            return u''
-        text_nohtml = remove_html_tags(text)
-        # try to keep html tags if text is short enough
-        if len(text_nohtml) <= length:
-            return text
-        # else if un-tagged text is too long, cut it
-        return text_nohtml[:length-3] + u'...'
-
+    pass
 else:
 
     def soup2xhtml(data, encoding):
@@ -142,40 +144,42 @@ else:
         # remove <body> and </body> and decode to unicode
         return body[11:-13].decode(encoding)
 
-    def safe_cut(text, length):
-        """returns an html document of length <length> based on <text>,
-        and cut is necessary.
-        """
-        if text is None:
-            return u''
-        textParse = etree.HTML(text)
-        compteur = 0
+    if hasattr(etree.HTML('<div>test</div>'), 'iter'):
 
-        for element in textParse.iter():
-            if compteur > length:
-                parent = element.getparent()
-                parent.remove(element)
-            else:
-                if element.text is not None:
-                    text_resum = text_cut_letters(element.text,length)
-                    len_text_resum = len(''.join(text_resum.split()))
-                    compteur = compteur + len_text_resum
-                    element.text = text_resum
-                         
-                if element.tail is not None:
-                    if compteur < length:
-                        text_resum = text_cut_letters(element.tail,length)
+        def safe_cut(text, length):
+            """returns an html document of length <length> based on <text>,
+            and cut is necessary.
+            """
+            if text is None:
+                return u''
+            textParse = etree.HTML(text)
+            compteur = 0
+
+            for element in textParse.iter():
+                if compteur > length:
+                    parent = element.getparent()
+                    parent.remove(element)
+                else:
+                    if element.text is not None:
+                        text_resum = text_cut_letters(element.text,length)
                         len_text_resum = len(''.join(text_resum.split()))
                         compteur = compteur + len_text_resum
-                        element.tail = text_resum
-                    else:
-                        element.tail = ''
-                     
-        div = etree.HTML('<div></div>')[0][0]
-        listNode = textParse[0].getchildren()
-        for node in listNode:
-            div.append(deepcopy(node))
-        return etree.tounicode(div)
+                        element.text = text_resum
+
+                    if element.tail is not None:
+                        if compteur < length:
+                            text_resum = text_cut_letters(element.tail,length)
+                            len_text_resum = len(''.join(text_resum.split()))
+                            compteur = compteur + len_text_resum
+                            element.tail = text_resum
+                        else:
+                            element.tail = ''
+
+            div = etree.HTML('<div></div>')[0][0]
+            listNode = textParse[0].getchildren()
+            for node in listNode:
+                div.append(deepcopy(node))
+            return etree.tounicode(div)
 
     
 # HTML generation helper functions ############################################
