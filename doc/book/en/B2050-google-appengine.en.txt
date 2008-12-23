@@ -7,5 +7,5 @@ Google AppEngine Datastore
 ==========================
 
 
-.. include:: B141-intro.en.txt
-.. include:: B142-install.en.txt
+.. include:: B2051-intro.en.txt
+.. include:: B2052-install.en.txt

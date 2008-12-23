@@ -141,4 +141,4 @@ It is automatically merged with the parent class(es) (no need to copy the
 dictionnary from the parent class to modify it). Also, modify it after the 
 class is created will not have any effect...
 
-.. include:: B051-define-entities.en.txt
+.. include:: B0031-define-entities.en.txt
