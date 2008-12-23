@@ -5,5 +5,5 @@ Tests
 .. toctree::
    :maxdepth: 1
 
-   B130-tests.en.txt
+   B3010-tests.en.txt
 
