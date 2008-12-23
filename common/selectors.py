@@ -358,7 +358,7 @@ def has_relation(cls, req, rset, row=None, col=None, **kwargs):
     """
     if hasattr(cls, 'rtype'):
         perm = getattr(cls, 'require_permission', 'read')
-        if not schema.rschema(cls.rtype).has_perm(req, perm):
+        if not cls.schema.rschema(cls.rtype).has_perm(req, perm):
             return 0
         if row is None:
             for etype in rset.column_types(col or 0):
@@ -375,9 +375,8 @@ def one_has_relation(cls, req, rset, row=None, col=None, **kwargs):
     .rtype attribute of the class, and if at least one entity type in the
     result set has this relation.
     """
-    schema = cls.schema
     perm = getattr(cls, 'require_permission', 'read')
-    if not schema.rschema(cls.rtype).has_perm(req, perm):
+    if not cls.schema.rschema(cls.rtype).has_perm(req, perm):
         return 0
     if row is None:
         for etype in rset.column_types(col or 0):
