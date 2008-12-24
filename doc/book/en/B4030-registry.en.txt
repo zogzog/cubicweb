@@ -32,8 +32,10 @@ Application objects are stored in the registry using a two level hierarchy :
 
 The following rules are applied to select an object given a register and an id and an input context:
 * each object has a selector
+  
   - its selector may be derivated from a set of basic (or not :)
     selectors using `chainall` or `chainfirst` combinators
+
 * a selector return a score >= 0
 * a score of 0 means the objects can't be applied to the input context
 * the object with the greatest score is selected. If multiple objects have an
