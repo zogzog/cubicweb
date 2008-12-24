@@ -3,7 +3,6 @@
 URL Rewriting
 =============
 
-XXX FIXME this should be a chapter
 
 [WRITE ME]
 

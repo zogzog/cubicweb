@@ -24,7 +24,9 @@ We can list a couple of web applications developped with `CubicWeb`, an online
 public phone directory (see http://www.118000.fr/), a system for managing 
 digital studies and simulations for a research lab, a tool for shared children
 babysitting (see http://garde-partagee.atoukontact.fr/), a tool to manage
-software developpment (see http://www.logilab.org), etc.
+software developpment (see http://www.logilab.org), an application for
+managing museums collections (see 
+http://collections.musees-haute-normandie.fr/collections/), etc.
 
 In 2008, `CubicWeb` was ported for a new type of source : the datastore 
 from GoogleAppEngine_.

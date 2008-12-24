@@ -17,3 +17,4 @@ Web interface
    B1100-online-doc.en.txt
    B1110-embedding-external-page.en.txt
    B1120-urlrewrite.en.txt
+   B1130-css.en.txt

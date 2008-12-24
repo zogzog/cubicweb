@@ -8,4 +8,4 @@ Advanced
    B4010-configuration.en.txt
    B4020-dbapi.en.txt
    B4030-registry.en.txt
-
+   B4040-rss-xml.en.txt 
