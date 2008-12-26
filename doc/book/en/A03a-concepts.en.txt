@@ -359,7 +359,7 @@ Forge`_ under a free software license.
 
 .. _`CubicWeb Forge`: http://www.cubicweb.org/project/
 
-
+.. _foundationsCube:
 
 Standard structure for a cube
 `````````````````````````````
@@ -370,27 +370,52 @@ A complex cube is structured as follows:
   
   mycube/
   |
-  |-- schema.py
-  |
-  |-- entities/
-  |
-  |-- sobjects/
-  |
-  |-- views/
-  |
-  |-- test/
-  |
-  |-- i18n/
-  |
   |-- data/
-  |
-  |-- migration/
-  | |- postcreate.py
-  | \- depends.map
+  |   |-- cubes.mycube.css
+  |   |-- cubes.mycube.js  
+  |   `-- external_resources
   |
   |-- debian/
+  |   |-- changelog
+  |   |-- compat
+  |   |-- control
+  |   |-- copyright
+  |   |-- cubicweb-mycube.prerm
+  |   `-- rules
   |
-  \-- __pkginfo__.py
+  |-- entities.py
+  |
+  |-- i18n/
+  |   |-- en.po
+  |   `-- fr.po
+  |
+  |-- __init__.py
+  |
+  |-- MANIFEST.in
+  |
+  |-- migration/
+  |   |-- postcreate.py
+  |   `-- precreate.py
+  |
+  |-- __pkginfo__.py
+  |
+  |-- schema.py
+  |
+  |-- setup.py
+  |
+  |-- site_cubicweb.py
+  |
+  |-- sobjects.py
+  |
+  |-- test/
+  |   |-- data/
+  |   |   `-- bootstrap_cubes
+  |   |-- pytestconf.py
+  |   |-- realdb_test_mycube.py
+  |   `-- test_mycube.py
+  |
+  `-- views.py
+
     
 We can use simple Python module instead of packages, for example: 
 

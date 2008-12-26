@@ -10,59 +10,7 @@ cube::
 
 This will create in the cubes directory (``/path/to/forest/cubes`` for Mercurial
 installation, ``/usr/share/cubicweb/cubes`` for debian packages installation) 
-a directory named ``blog`` containing::
-
-  blog/
-  |
-  |-- data/
-  |   |-- cubes.blog.css
-  |   |-- cubes.blog.js  
-  |   `-- external_resources
-  |
-  |-- debian/
-  |   |-- changelog
-  |   |-- compat
-  |   |-- control
-  |   |-- copyright
-  |   |-- cubicweb-blog.prerm
-  |   `-- rules
-  |
-  |-- entities.py
-  |
-  |-- i18n/
-  |   |-- en.po
-  |   `-- fr.po
-  |
-  |-- __init__.py
-  |
-  |-- MANIFEST.in
-  |
-  |-- migration/
-  |   |-- postcreate.py
-  |   `-- precreate.py
-  |
-  |-- __pkginfo__.py
-  |
-  |-- schema.py
-  |
-  |-- setup.py
-  |
-  |-- site_cubicweb.py
-  |
-  |-- sobjects.py
-  |
-  |-- test/
-  |   |-- data/
-  |   |   `-- bootstrap_cubes
-  |   |-- pytestconf.py
-  |   |-- realdb_test_blog.py
-  |   `-- test_blog.py
-  |
-  `-- views.py
-
-.. note::
-  You will find a more detailled description of the `cube` concept in
-  :ref:`cubesConcepts`.
+a directory named ``blog`` reflecting the structure described in :ref:`cubesConcepts`.
 
 .. _DefineDataModel:
 
