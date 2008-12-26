@@ -257,8 +257,8 @@ CubicWebConfiguration.cls_adjust_sys_path()
                                                     
 def install_sqlite_path(querier):
     """This patch hotfixes the following sqlite bug :
-     - http://www.sqlite.org/cvstrac/tktview?tn=1327,33
-    (some dates are returned as strings rather thant date objects)
+       - http://www.sqlite.org/cvstrac/tktview?tn=1327,33
+       (some dates are returned as strings rather thant date objects)
     """
     def wrap_execute(base_execute):
         def new_execute(*args, **kwargs):
