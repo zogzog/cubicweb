@@ -1,15 +1,18 @@
 .. -*- coding: utf-8 -*-
 
 
-Stored data handling
-====================
+Data as objects
+===============
+
+We will in this chapter introduce the objects that are used to handle
+the data stored in the database.
 
 Classes `Entity` and `AnyEntity`
 --------------------------------
 
 To provide a specific behavior for each entity, we just need to define
-a class inheriting from `cubicweb.entities.EnyEntity`. In genera, we have
-to defined those classes in a module of `entites` package of an application
+a class inheriting from `cubicweb.entities.AnyEntity`. In general, we have
+to defined those classes in a module of `entities` package of an application
 so that it will be available on both server and client side.
 
 The class `AnyEntity` is loaded dynamically from the class `Entity` 
