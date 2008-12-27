@@ -4,58 +4,154 @@
 CubicWeb API
 ============
 
-:mod:`cubicweb` 
+:mod:`cubicweb.hercule`
+=======================
+
+.. automodule:: cubicweb.hercule
+   :members:
+
+:mod:`cubicweb.cwctl`
+=====================
+
+.. automodule:: cubicweb.cwctl
+   :members:
+
+:mod:`cubicweb.schema`
+======================
+
+.. automodule:: cubicweb.schema
+   :members:
+
+:mod:`cubicweb.cwconfig`
+========================
+
+.. automodule:: cubicweb.cwconfig
+   :members:
+
+:mod:`cubicweb.schemaviewer`
+============================
+
+.. automodule:: cubicweb.schemaviewer
+   :members:
+
+:mod:`cubicweb._exceptions`
+===========================
+
+.. automodule:: cubicweb._exceptions
+   :members:
+
+:mod:`cubicweb.dbapi`
+=====================
+
+.. automodule:: cubicweb.dbapi
+   :members:
+
+:mod:`cubicweb.toolsutils`
+==========================
+
+.. automodule:: cubicweb.toolsutils
+   :members:
+
+:mod:`cubicweb.cwvreg`
+======================
+
+.. automodule:: cubicweb.cwvreg
+   :members:
+
+:mod:`cubicweb.md5crypt`
+========================
+
+.. automodule:: cubicweb.md5crypt
+   :members:
+
+:mod:`cubicweb.rset`
+====================
+
+.. automodule:: cubicweb.rset
+   :members:
+
+:mod:`cubicweb`
 ===============
 
 .. automodule:: cubicweb
    :members:
 
-:mod:`cubicweb.common`
-======================
+:mod:`cubicweb.setup`
+=====================
 
-.. automodule:: cubicweb.common
+.. automodule:: cubicweb.setup
    :members:
 
-:mod:`cubicweb.devtools`
-========================
-
-.. automodule:: cubicweb.devtools
-   :members:
-
-:mod:`cubicweb.entities`
-========================
-
-.. automodule:: cubicweb.entities
-   :members:
-
-:mod:`cubicweb.etwist`
-======================
-
-.. automodule:: cubicweb.etwist
-   :members:
-
-:mod:`cubicweb.goa`
-===================
-
-.. automodule:: cubicweb.goa
-   :members:
-
-:mod:`cubicweb.schemas`
+:mod:`cubicweb.gettext`
 =======================
 
-.. automodule:: cubicweb.schemas
+.. automodule:: cubicweb.gettext
    :members:
 
-:mod:`cubicweb.server`
-======================
+:mod:`cubicweb.interfaces`
+==========================
 
-.. automodule:: cubicweb.server
+.. automodule:: cubicweb.interfaces
    :members:
 
-:mod:`cubicweb.sobjects`
-========================
+:mod:`cubicweb.vregistry`
+=========================
 
-.. automodule:: cubicweb.sobjects
+.. automodule:: cubicweb.vregistry
+   :members:
+
+:mod:`cubicweb.web.httpcache`
+=============================
+
+.. automodule:: cubicweb.web.httpcache
+   :members:
+
+:mod:`cubicweb.web.webconfig`
+=============================
+
+.. automodule:: cubicweb.web.webconfig
+   :members:
+
+:mod:`cubicweb.web.request`
+===========================
+
+.. automodule:: cubicweb.web.request
+   :members:
+
+:mod:`cubicweb.web._exceptions`
+===============================
+
+.. automodule:: cubicweb.web._exceptions
+   :members:
+
+:mod:`cubicweb.web.webctl`
+==========================
+
+.. automodule:: cubicweb.web.webctl
+   :members:
+
+:mod:`cubicweb.web.application`
+===============================
+
+.. automodule:: cubicweb.web.application
+   :members:
+
+:mod:`cubicweb.web.controller`
+==============================
+
+.. automodule:: cubicweb.web.controller
+   :members:
+
+:mod:`cubicweb.web.widgets`
+===========================
+
+.. automodule:: cubicweb.web.widgets
+   :members:
+
+:mod:`cubicweb.web.htmlwidgets`
+===============================
+
+.. automodule:: cubicweb.web.htmlwidgets
    :members:
 
 :mod:`cubicweb.web`
@@ -64,17 +160,994 @@ CubicWeb API
 .. automodule:: cubicweb.web
    :members:
 
+:mod:`cubicweb.web.form`
+========================
+
+.. automodule:: cubicweb.web.form
+   :members:
+
+:mod:`cubicweb.web.box`
+=======================
+
+.. automodule:: cubicweb.web.box
+   :members:
+
+:mod:`cubicweb.web.component`
+=============================
+
+.. automodule:: cubicweb.web.component
+   :members:
+
+:mod:`cubicweb.web.action`
+==========================
+
+.. automodule:: cubicweb.web.action
+   :members:
+
+:mod:`cubicweb.web.facet`
+=========================
+
+.. automodule:: cubicweb.web.facet
+   :members:
+
+:mod:`cubicweb.web.views.plots`
+===============================
+
+.. automodule:: cubicweb.web.views.plots
+   :members:
+
+:mod:`cubicweb.web.views.error`
+===============================
+
+.. automodule:: cubicweb.web.views.error
+   :members:
+
+:mod:`cubicweb.web.views.magicsearch`
+=====================================
+
+.. automodule:: cubicweb.web.views.magicsearch
+   :members:
+
+:mod:`cubicweb.web.views.basetemplates`
+=======================================
+
+.. automodule:: cubicweb.web.views.basetemplates
+   :members:
+
+:mod:`cubicweb.web.views.idownloadable`
+=======================================
+
+.. automodule:: cubicweb.web.views.idownloadable
+   :members:
+
+:mod:`cubicweb.web.views.ajaxedit`
+==================================
+
+.. automodule:: cubicweb.web.views.ajaxedit
+   :members:
+
+:mod:`cubicweb.web.views.wfentities`
+====================================
+
+.. automodule:: cubicweb.web.views.wfentities
+   :members:
+
+:mod:`cubicweb.web.views.navigation`
+====================================
+
+.. automodule:: cubicweb.web.views.navigation
+   :members:
+
+:mod:`cubicweb.web.views.schemaentities`
+========================================
+
+.. automodule:: cubicweb.web.views.schemaentities
+   :members:
+
+:mod:`cubicweb.web.views.treeview`
+==================================
+
+.. automodule:: cubicweb.web.views.treeview
+   :members:
+
+:mod:`cubicweb.web.views.startup`
+=================================
+
+.. automodule:: cubicweb.web.views.startup
+   :members:
+
+:mod:`cubicweb.web.views.iprogress`
+===================================
+
+.. automodule:: cubicweb.web.views.iprogress
+   :members:
+
+:mod:`cubicweb.web.views.euser`
+===============================
+
+.. automodule:: cubicweb.web.views.euser
+   :members:
+
+:mod:`cubicweb.web.views.facets`
+================================
+
+.. automodule:: cubicweb.web.views.facets
+   :members:
+
+:mod:`cubicweb.web.views.emailaddress`
+======================================
+
+.. automodule:: cubicweb.web.views.emailaddress
+   :members:
+
+:mod:`cubicweb.web.views.sessions`
+==================================
+
+.. automodule:: cubicweb.web.views.sessions
+   :members:
+
+:mod:`cubicweb.web.views.timetable`
+===================================
+
+.. automodule:: cubicweb.web.views.timetable
+   :members:
+
+:mod:`cubicweb.web.views.timeline`
+==================================
+
+.. automodule:: cubicweb.web.views.timeline
+   :members:
+
+:mod:`cubicweb.web.views.baseviews`
+===================================
+
+.. automodule:: cubicweb.web.views.baseviews
+   :members:
+
+:mod:`cubicweb.web.views.boxes`
+===============================
+
+.. automodule:: cubicweb.web.views.boxes
+   :members:
+
+:mod:`cubicweb.web.views.old_calendar`
+======================================
+
+.. automodule:: cubicweb.web.views.old_calendar
+   :members:
+
+:mod:`cubicweb.web.views.card`
+==============================
+
+.. automodule:: cubicweb.web.views.card
+   :members:
+
+:mod:`cubicweb.web.views.ibreadcrumbs`
+======================================
+
+.. automodule:: cubicweb.web.views.ibreadcrumbs
+   :members:
+
+:mod:`cubicweb.web.views.basecontrollers`
+=========================================
+
+.. automodule:: cubicweb.web.views.basecontrollers
+   :members:
+
+:mod:`cubicweb.web.views.embedding`
+===================================
+
+.. automodule:: cubicweb.web.views.embedding
+   :members:
+
+:mod:`cubicweb.web.views.actions`
+=================================
+
+.. automodule:: cubicweb.web.views.actions
+   :members:
+
+:mod:`cubicweb.web.views.editcontroller`
+========================================
+
+.. automodule:: cubicweb.web.views.editcontroller
+   :members:
+
+:mod:`cubicweb.web.views.debug`
+===============================
+
+.. automodule:: cubicweb.web.views.debug
+   :members:
+
+:mod:`cubicweb.web.views.urlpublishing`
+=======================================
+
+.. automodule:: cubicweb.web.views.urlpublishing
+   :members:
+
+:mod:`cubicweb.web.views.baseforms`
+===================================
+
+.. automodule:: cubicweb.web.views.baseforms
+   :members:
+
+:mod:`cubicweb.web.views.urlrewrite`
+====================================
+
+.. automodule:: cubicweb.web.views.urlrewrite
+   :members:
+
+:mod:`cubicweb.web.views.massmailing`
+=====================================
+
+.. automodule:: cubicweb.web.views.massmailing
+   :members:
+
 :mod:`cubicweb.web.views`
 =========================
 
 .. automodule:: cubicweb.web.views
    :members:
 
+:mod:`cubicweb.web.views.eproperties`
+=====================================
+
+.. automodule:: cubicweb.web.views.eproperties
+   :members:
+
+:mod:`cubicweb.web.views.tabs`
+==============================
+
+.. automodule:: cubicweb.web.views.tabs
+   :members:
+
+:mod:`cubicweb.web.views.vcard`
+===============================
+
+.. automodule:: cubicweb.web.views.vcard
+   :members:
+
+:mod:`cubicweb.web.views.wdoc`
+==============================
+
+.. automodule:: cubicweb.web.views.wdoc
+   :members:
+
+:mod:`cubicweb.web.views.authentication`
+========================================
+
+.. automodule:: cubicweb.web.views.authentication
+   :members:
+
+:mod:`cubicweb.web.views.tableview`
+===================================
+
+.. automodule:: cubicweb.web.views.tableview
+   :members:
+
+:mod:`cubicweb.web.views.management`
+====================================
+
+.. automodule:: cubicweb.web.views.management
+   :members:
+
+:mod:`cubicweb.web.views.igeocodable`
+=====================================
+
+.. automodule:: cubicweb.web.views.igeocodable
+   :members:
+
+:mod:`cubicweb.web.views.xbel`
+==============================
+
+.. automodule:: cubicweb.web.views.xbel
+   :members:
+
+:mod:`cubicweb.web.views.bookmark`
+==================================
+
+.. automodule:: cubicweb.web.views.bookmark
+   :members:
+
+:mod:`cubicweb.web.views.apacherewrite`
+=======================================
+
+.. automodule:: cubicweb.web.views.apacherewrite
+   :members:
+
+:mod:`cubicweb.web.views.dynimages`
+===================================
+
+.. automodule:: cubicweb.web.views.dynimages
+   :members:
+
+:mod:`cubicweb.web.views.searchrestriction`
+===========================================
+
+.. automodule:: cubicweb.web.views.searchrestriction
+   :members:
+
+:mod:`cubicweb.web.views.basecomponents`
+========================================
+
+.. automodule:: cubicweb.web.views.basecomponents
+   :members:
+
+:mod:`cubicweb.web.views.calendar`
+==================================
+
+.. automodule:: cubicweb.web.views.calendar
+   :members:
+
+:mod:`cubicweb.sobjects.supervising`
+====================================
+
+.. automodule:: cubicweb.sobjects.supervising
+   :members:
+
+:mod:`cubicweb.sobjects.hooks`
+==============================
+
+.. automodule:: cubicweb.sobjects.hooks
+   :members:
+
+:mod:`cubicweb.sobjects.email`
+==============================
+
+.. automodule:: cubicweb.sobjects.email
+   :members:
+
+:mod:`cubicweb.sobjects`
+========================
+
+.. automodule:: cubicweb.sobjects
+   :members:
+
+:mod:`cubicweb.sobjects.notification`
+=====================================
+
+.. automodule:: cubicweb.sobjects.notification
+   :members:
+
+:mod:`cubicweb.wsgi.request`
+============================
+
+.. automodule:: cubicweb.wsgi.request
+   :members:
 
 :mod:`cubicweb.wsgi`
 ====================
 
 .. automodule:: cubicweb.wsgi
+   :members:
+
+:mod:`cubicweb.wsgi.handler`
+============================
+
+.. automodule:: cubicweb.wsgi.handler
+   :members:
+
+:mod:`cubicweb.etwist.server`
+=============================
+
+.. automodule:: cubicweb.etwist.server
+   :members:
+
+:mod:`cubicweb.etwist.request`
+==============================
+
+.. automodule:: cubicweb.etwist.request
+   :members:
+
+:mod:`cubicweb.etwist.twconfig`
+===============================
+
+.. automodule:: cubicweb.etwist.twconfig
+   :members:
+
+:mod:`cubicweb.etwist`
+======================
+
+.. automodule:: cubicweb.etwist
+   :members:
+
+:mod:`cubicweb.etwist.twctl`
+============================
+
+.. automodule:: cubicweb.etwist.twctl
+   :members:
+
+:mod:`cubicweb.goa.goaconfig`
+=============================
+
+.. automodule:: cubicweb.goa.goaconfig
+   :members:
+
+:mod:`cubicweb.goa.rqlinterpreter`
+==================================
+
+.. automodule:: cubicweb.goa.rqlinterpreter
+   :members:
+
+:mod:`cubicweb.goa.dbmyams`
+===========================
+
+.. automodule:: cubicweb.goa.dbmyams
+   :members:
+
+:mod:`cubicweb.goa.db`
+======================
+
+.. automodule:: cubicweb.goa.db
+   :members:
+
+:mod:`cubicweb.goa.goactl`
+==========================
+
+.. automodule:: cubicweb.goa.goactl
+   :members:
+
+:mod:`cubicweb.goa.goavreg`
+===========================
+
+.. automodule:: cubicweb.goa.goavreg
+   :members:
+
+:mod:`cubicweb.goa`
+===================
+
+.. automodule:: cubicweb.goa
+   :members:
+
+:mod:`cubicweb.goa.gaesource`
+=============================
+
+.. automodule:: cubicweb.goa.gaesource
+   :members:
+
+:mod:`cubicweb.goa.dbinit`
+==========================
+
+.. automodule:: cubicweb.goa.dbinit
+   :members:
+
+:mod:`cubicweb.goa.testlib`
+===========================
+
+.. automodule:: cubicweb.goa.testlib
+   :members:
+
+:mod:`cubicweb.goa.appobjects.dbmgmt`
+=====================================
+
+.. automodule:: cubicweb.goa.appobjects.dbmgmt
+   :members:
+
+:mod:`cubicweb.goa.appobjects.gauthservice`
+===========================================
+
+.. automodule:: cubicweb.goa.appobjects.gauthservice
+   :members:
+
+:mod:`cubicweb.goa.appobjects.sessions`
+=======================================
+
+.. automodule:: cubicweb.goa.appobjects.sessions
+   :members:
+
+:mod:`cubicweb.goa.appobjects`
+==============================
+
+.. automodule:: cubicweb.goa.appobjects
+   :members:
+
+:mod:`cubicweb.goa.appobjects.components`
+=========================================
+
+.. automodule:: cubicweb.goa.appobjects.components
+   :members:
+
+:mod:`cubicweb.goa.tools.laxctl`
+================================
+
+.. automodule:: cubicweb.goa.tools.laxctl
+   :members:
+
+:mod:`cubicweb.goa.tools.generate_schema_img`
+=============================================
+
+.. automodule:: cubicweb.goa.tools.generate_schema_img
+   :members:
+
+:mod:`cubicweb.goa.tools`
+=========================
+
+.. automodule:: cubicweb.goa.tools
+   :members:
+
+:mod:`cubicweb.goa.tools.i18n`
+==============================
+
+.. automodule:: cubicweb.goa.tools.i18n
+   :members:
+
+:mod:`cubicweb.goa.overrides.mttransforms`
+==========================================
+
+.. automodule:: cubicweb.goa.overrides.mttransforms
+   :members:
+
+:mod:`cubicweb.goa.overrides.rqlannotation`
+===========================================
+
+.. automodule:: cubicweb.goa.overrides.rqlannotation
+   :members:
+
+:mod:`cubicweb.goa.overrides.toolsutils`
+========================================
+
+.. automodule:: cubicweb.goa.overrides.toolsutils
+   :members:
+
+:mod:`cubicweb.goa.overrides`
+=============================
+
+.. automodule:: cubicweb.goa.overrides
+   :members:
+
+:mod:`cubicweb.goa.overrides.server__init__`
+============================================
+
+.. automodule:: cubicweb.goa.overrides.server__init__
+   :members:
+
+:mod:`cubicweb.goa.overrides.server_utils`
+==========================================
+
+.. automodule:: cubicweb.goa.overrides.server_utils
+   :members:
+
+:mod:`cubicweb.common.mttransforms`
+===================================
+
+.. automodule:: cubicweb.common.mttransforms
+   :members:
+
+:mod:`cubicweb.common.utils`
+============================
+
+.. automodule:: cubicweb.common.utils
+   :members:
+
+:mod:`cubicweb.common.schema`
+=============================
+
+.. automodule:: cubicweb.common.schema
+   :members:
+
+:mod:`cubicweb.common.tal`
+==========================
+
+.. automodule:: cubicweb.common.tal
+   :members:
+
+:mod:`cubicweb.common.appobject`
+================================
+
+.. automodule:: cubicweb.common.appobject
+   :members:
+
+:mod:`cubicweb.common.migration`
+================================
+
+.. automodule:: cubicweb.common.migration
+   :members:
+
+:mod:`cubicweb.common.rest`
+===========================
+
+.. automodule:: cubicweb.common.rest
+   :members:
+
+:mod:`cubicweb.common.html4zope`
+================================
+
+.. automodule:: cubicweb.common.html4zope
+   :members:
+
+:mod:`cubicweb.common.view`
+===========================
+
+.. automodule:: cubicweb.common.view
+   :members:
+
+:mod:`cubicweb.common.selectors`
+================================
+
+.. automodule:: cubicweb.common.selectors
+   :members:
+
+:mod:`cubicweb.common.entity`
+=============================
+
+.. automodule:: cubicweb.common.entity
+   :members:
+
+:mod:`cubicweb.common.mail`
+===========================
+
+.. automodule:: cubicweb.common.mail
+   :members:
+
+:mod:`cubicweb.common.mixins`
+=============================
+
+.. automodule:: cubicweb.common.mixins
+   :members:
+
+:mod:`cubicweb.common`
+======================
+
+.. automodule:: cubicweb.common
+   :members:
+
+:mod:`cubicweb.common.uilib`
+============================
+
+.. automodule:: cubicweb.common.uilib
+   :members:
+
+:mod:`cubicweb.common.registerers`
+==================================
+
+.. automodule:: cubicweb.common.registerers
+   :members:
+
+:mod:`cubicweb.common.i18n`
+===========================
+
+.. automodule:: cubicweb.common.i18n
+   :members:
+
+:mod:`cubicweb.entities.schemaobjs`
+===================================
+
+.. automodule:: cubicweb.entities.schemaobjs
+   :members:
+
+:mod:`cubicweb.entities.wfobjs`
+===============================
+
+.. automodule:: cubicweb.entities.wfobjs
+   :members:
+
+:mod:`cubicweb.entities`
+========================
+
+.. automodule:: cubicweb.entities
+   :members:
+
+:mod:`cubicweb.entities.authobjs`
+=================================
+
+.. automodule:: cubicweb.entities.authobjs
+   :members:
+
+:mod:`cubicweb.entities.lib`
+============================
+
+.. automodule:: cubicweb.entities.lib
+   :members:
+
+:mod:`cubicweb.server.server`
+=============================
+
+.. automodule:: cubicweb.server.server
+   :members:
+
+:mod:`cubicweb.server.utils`
+============================
+
+.. automodule:: cubicweb.server.utils
+   :members:
+
+:mod:`cubicweb.server.checkintegrity`
+=====================================
+
+.. automodule:: cubicweb.server.checkintegrity
+   :members:
+
+:mod:`cubicweb.server.rqlrewrite`
+=================================
+
+.. automodule:: cubicweb.server.rqlrewrite
+   :members:
+
+:mod:`cubicweb.server.rqlannotation`
+====================================
+
+.. automodule:: cubicweb.server.rqlannotation
+   :members:
+
+:mod:`cubicweb.server.hooks`
+============================
+
+.. automodule:: cubicweb.server.hooks
+   :members:
+
+:mod:`cubicweb.server.hooksmanager`
+===================================
+
+.. automodule:: cubicweb.server.hooksmanager
+   :members:
+
+:mod:`cubicweb.server.securityhooks`
+====================================
+
+.. automodule:: cubicweb.server.securityhooks
+   :members:
+
+:mod:`cubicweb.server.schemahooks`
+==================================
+
+.. automodule:: cubicweb.server.schemahooks
+   :members:
+
+:mod:`cubicweb.server.session`
+==============================
+
+.. automodule:: cubicweb.server.session
+   :members:
+
+:mod:`cubicweb.server.serverctl`
+================================
+
+.. automodule:: cubicweb.server.serverctl
+   :members:
+
+:mod:`cubicweb.server.serverconfig`
+===================================
+
+.. automodule:: cubicweb.server.serverconfig
+   :members:
+
+:mod:`cubicweb.server.pool`
+===========================
+
+.. automodule:: cubicweb.server.pool
+   :members:
+
+:mod:`cubicweb.server.mssteps`
+==============================
+
+.. automodule:: cubicweb.server.mssteps
+   :members:
+
+:mod:`cubicweb.server.hookhelper`
+=================================
+
+.. automodule:: cubicweb.server.hookhelper
+   :members:
+
+:mod:`cubicweb.server`
+======================
+
+.. automodule:: cubicweb.server
+   :members:
+
+:mod:`cubicweb.server.sqlutils`
+===============================
+
+.. automodule:: cubicweb.server.sqlutils
+   :members:
+
+:mod:`cubicweb.server.schemaserial`
+===================================
+
+.. automodule:: cubicweb.server.schemaserial
+   :members:
+
+:mod:`cubicweb.server.repository`
+=================================
+
+.. automodule:: cubicweb.server.repository
+   :members:
+
+:mod:`cubicweb.server.ssplanner`
+================================
+
+.. automodule:: cubicweb.server.ssplanner
+   :members:
+
+:mod:`cubicweb.server.msplanner`
+================================
+
+.. automodule:: cubicweb.server.msplanner
+   :members:
+
+:mod:`cubicweb.server.querier`
+==============================
+
+.. automodule:: cubicweb.server.querier
+   :members:
+
+:mod:`cubicweb.server.migractions`
+==================================
+
+.. automodule:: cubicweb.server.migractions
+   :members:
+
+:mod:`cubicweb.server.sources.rql2sql`
+======================================
+
+.. automodule:: cubicweb.server.sources.rql2sql
+   :members:
+
+:mod:`cubicweb.server.sources.ldapuser`
+=======================================
+
+.. automodule:: cubicweb.server.sources.ldapuser
+   :members:
+
+:mod:`cubicweb.server.sources`
+==============================
+
+.. automodule:: cubicweb.server.sources
+   :members:
+
+:mod:`cubicweb.server.sources.pyrorql`
+======================================
+
+.. automodule:: cubicweb.server.sources.pyrorql
+   :members:
+
+:mod:`cubicweb.server.sources.native`
+=====================================
+
+.. automodule:: cubicweb.server.sources.native
+   :members:
+
+:mod:`cubicweb.server.sources.extlite`
+======================================
+
+.. automodule:: cubicweb.server.sources.extlite
+   :members:
+
+:mod:`cubicweb.devtools.devctl`
+===============================
+
+.. automodule:: cubicweb.devtools.devctl
+   :members:
+
+:mod:`cubicweb.devtools.pkginfo`
+================================
+
+.. automodule:: cubicweb.devtools.pkginfo
+   :members:
+
+:mod:`cubicweb.devtools.migrtest`
+=================================
+
+.. automodule:: cubicweb.devtools.migrtest
+   :members:
+
+:mod:`cubicweb.devtools.htmlparser`
+===================================
+
+.. automodule:: cubicweb.devtools.htmlparser
+   :members:
+
+:mod:`cubicweb.devtools`
+========================
+
+.. automodule:: cubicweb.devtools
+   :members:
+
+:mod:`cubicweb.devtools.fill`
+=============================
+
+.. automodule:: cubicweb.devtools.fill
+   :members:
+
+:mod:`cubicweb.devtools._apptest`
+=================================
+
+.. automodule:: cubicweb.devtools._apptest
+   :members:
+
+:mod:`cubicweb.devtools.stresstester`
+=====================================
+
+.. automodule:: cubicweb.devtools.stresstester
+   :members:
+
+:mod:`cubicweb.devtools.fake`
+=============================
+
+.. automodule:: cubicweb.devtools.fake
+   :members:
+
+:mod:`cubicweb.devtools.apptest`
+================================
+
+.. automodule:: cubicweb.devtools.apptest
+   :members:
+
+:mod:`cubicweb.devtools.livetest`
+=================================
+
+.. automodule:: cubicweb.devtools.livetest
+   :members:
+
+:mod:`cubicweb.devtools.testlib`
+================================
+
+.. automodule:: cubicweb.devtools.testlib
+   :members:
+
+:mod:`cubicweb.devtools.repotest`
+=================================
+
+.. automodule:: cubicweb.devtools.repotest
+   :members:
+
+:mod:`cubicweb.devtools.cwtwill`
+================================
+
+.. automodule:: cubicweb.devtools.cwtwill
+   :members:
+
+:mod:`cubicweb.misc.cwdesklets.rqlsensor`
+=========================================
+
+.. automodule:: cubicweb.misc.cwdesklets.rqlsensor
+   :members:
+
+:mod:`cubicweb.embedded.mx`
+===========================
+
+.. automodule:: cubicweb.embedded.mx
+   :members:
+
+:mod:`cubicweb.embedded.mx.DateTime.mxDateTime_python`
+======================================================
+
+.. automodule:: cubicweb.embedded.mx.DateTime.mxDateTime_python
+   :members:
+
+:mod:`cubicweb.embedded.mx.DateTime.ARPA`
+=========================================
+
+.. automodule:: cubicweb.embedded.mx.DateTime.ARPA
+   :members:
+
+:mod:`cubicweb.embedded.mx.DateTime.ISO`
+========================================
+
+.. automodule:: cubicweb.embedded.mx.DateTime.ISO
+   :members:
+
+:mod:`cubicweb.embedded.mx.DateTime.Parser`
+===========================================
+
+.. automodule:: cubicweb.embedded.mx.DateTime.Parser
+   :members:
+
+:mod:`cubicweb.embedded.mx.DateTime`
+====================================
+
+.. automodule:: cubicweb.embedded.mx.DateTime
+   :members:
+
+:mod:`cubicweb.embedded.mx.DateTime.Timezone`
+=============================================
+
+.. automodule:: cubicweb.embedded.mx.DateTime.Timezone
+   :members:
+
+:mod:`cubicweb.embedded.mx.DateTime.DateTime`
+=============================================
+
+.. automodule:: cubicweb.embedded.mx.DateTime.DateTime
    :members:
 
 :mod:`indexer`
@@ -83,13 +1156,707 @@ CubicWeb API
 .. automodule:: indexer
    :members:
 
+:mod:`indexer.indexable_objects`
+================================
+
+.. automodule:: indexer.indexable_objects
+   :members:
+
+:mod:`indexer.search`
+=====================
+
+.. automodule:: indexer.search
+   :members:
+
+:mod:`indexer.query_objects`
+============================
+
+.. automodule:: indexer.query_objects
+   :members:
+
+:mod:`indexer._exceptions`
+==========================
+
+.. automodule:: indexer._exceptions
+   :members:
+
+:mod:`indexer.setup`
+====================
+
+.. automodule:: indexer.setup
+   :members:
+
+:mod:`indexer.query`
+====================
+
+.. automodule:: indexer.query
+   :members:
+
 :mod:`logilab`
 ==============
 
 .. automodule:: logilab
    :members:
 
+:mod:`logilab.constraint.propagation`
+=====================================
 
+.. automodule:: logilab.constraint.propagation
+   :members:
+
+:mod:`logilab.constraint.psyco_wrapper`
+=======================================
+
+.. automodule:: logilab.constraint.psyco_wrapper
+   :members:
+
+:mod:`logilab.constraint.fd`
+============================
+
+.. automodule:: logilab.constraint.fd
+   :members:
+
+:mod:`logilab.constraint.fi`
+============================
+
+.. automodule:: logilab.constraint.fi
+   :members:
+
+:mod:`logilab.constraint`
+=========================
+
+.. automodule:: logilab.constraint
+   :members:
+
+:mod:`logilab.constraint.setup`
+===============================
+
+.. automodule:: logilab.constraint.setup
+   :members:
+
+:mod:`logilab.constraint.interfaces`
+====================================
+
+.. automodule:: logilab.constraint.interfaces
+   :members:
+
+:mod:`logilab.constraint.distributors`
+======================================
+
+.. automodule:: logilab.constraint.distributors
+   :members:
+
+:mod:`logilab.common.clcommands`
+================================
+
+.. automodule:: logilab.common.clcommands
+   :members:
+
+:mod:`logilab.common.table`
+===========================
+
+.. automodule:: logilab.common.table
+   :members:
+
+:mod:`logilab.common.interface`
+===============================
+
+.. automodule:: logilab.common.interface
+   :members:
+
+:mod:`logilab.common.logger`
+============================
+
+.. automodule:: logilab.common.logger
+   :members:
+
+:mod:`logilab.common.cli`
+=========================
+
+.. automodule:: logilab.common.cli
+   :members:
+
+:mod:`logilab.common.xmlrpcutils`
+=================================
+
+.. automodule:: logilab.common.xmlrpcutils
+   :members:
+
+:mod:`logilab.common.corbautils`
+================================
+
+.. automodule:: logilab.common.corbautils
+   :members:
+
+:mod:`logilab.common.cache`
+===========================
+
+.. automodule:: logilab.common.cache
+   :members:
+
+:mod:`logilab.common.astutils`
+==============================
+
+.. automodule:: logilab.common.astutils
+   :members:
+
+:mod:`logilab.common.daemon`
+============================
+
+.. automodule:: logilab.common.daemon
+   :members:
+
+:mod:`logilab.common.tree`
+==========================
+
+.. automodule:: logilab.common.tree
+   :members:
+
+:mod:`logilab.common.textutils`
+===============================
+
+.. automodule:: logilab.common.textutils
+   :members:
+
+:mod:`logilab.common.modutils`
+==============================
+
+.. automodule:: logilab.common.modutils
+   :members:
+
+:mod:`logilab.common.fileutils`
+===============================
+
+.. automodule:: logilab.common.fileutils
+   :members:
+
+:mod:`logilab.common.patricia`
+==============================
+
+.. automodule:: logilab.common.patricia
+   :members:
+
+:mod:`logilab.common.date`
+==========================
+
+.. automodule:: logilab.common.date
+   :members:
+
+:mod:`logilab.common.optparser`
+===============================
+
+.. automodule:: logilab.common.optparser
+   :members:
+
+:mod:`logilab.common.twisted_distutils`
+=======================================
+
+.. automodule:: logilab.common.twisted_distutils
+   :members:
+
+:mod:`logilab.common.decorators`
+================================
+
+.. automodule:: logilab.common.decorators
+   :members:
+
+:mod:`logilab.common.db`
+========================
+
+.. automodule:: logilab.common.db
+   :members:
+
+:mod:`logilab.common.deprecation`
+=================================
+
+.. automodule:: logilab.common.deprecation
+   :members:
+
+:mod:`logilab.common.tasksqueue`
+================================
+
+.. automodule:: logilab.common.tasksqueue
+   :members:
+
+:mod:`logilab.common.changelog`
+===============================
+
+.. automodule:: logilab.common.changelog
+   :members:
+
+:mod:`logilab.common.shellutils`
+================================
+
+.. automodule:: logilab.common.shellutils
+   :members:
+
+:mod:`logilab.common.sqlgen`
+============================
+
+.. automodule:: logilab.common.sqlgen
+   :members:
+
+:mod:`logilab.common.optik_ext`
+===============================
+
+.. automodule:: logilab.common.optik_ext
+   :members:
+
+:mod:`logilab.common.configuration`
+===================================
+
+.. automodule:: logilab.common.configuration
+   :members:
+
+:mod:`logilab.common.visitor`
+=============================
+
+.. automodule:: logilab.common.visitor
+   :members:
+
+:mod:`logilab.common.pytest`
+============================
+
+.. automodule:: logilab.common.pytest
+   :members:
+
+:mod:`logilab.common`
+=====================
+
+.. automodule:: logilab.common
+   :members:
+
+:mod:`logilab.common.setup`
+===========================
+
+.. automodule:: logilab.common.setup
+   :members:
+
+:mod:`logilab.common.logservice`
+================================
+
+.. automodule:: logilab.common.logservice
+   :members:
+
+:mod:`logilab.common.debugger`
+==============================
+
+.. automodule:: logilab.common.debugger
+   :members:
+
+:mod:`logilab.common.html`
+==========================
+
+.. automodule:: logilab.common.html
+   :members:
+
+:mod:`logilab.common.vcgutils`
+==============================
+
+.. automodule:: logilab.common.vcgutils
+   :members:
+
+:mod:`logilab.common.compat`
+============================
+
+.. automodule:: logilab.common.compat
+   :members:
+
+:mod:`logilab.common.logging_ext`
+=================================
+
+.. automodule:: logilab.common.logging_ext
+   :members:
+
+:mod:`logilab.common.umessage`
+==============================
+
+.. automodule:: logilab.common.umessage
+   :members:
+
+:mod:`logilab.common.proc`
+==========================
+
+.. automodule:: logilab.common.proc
+   :members:
+
+:mod:`logilab.common.monclient`
+===============================
+
+.. automodule:: logilab.common.monclient
+   :members:
+
+:mod:`logilab.common.bind`
+==========================
+
+.. automodule:: logilab.common.bind
+   :members:
+
+:mod:`logilab.common.graph`
+===========================
+
+.. automodule:: logilab.common.graph
+   :members:
+
+:mod:`logilab.common.testlib`
+=============================
+
+.. automodule:: logilab.common.testlib
+   :members:
+
+:mod:`logilab.common.contexts`
+==============================
+
+.. automodule:: logilab.common.contexts
+   :members:
+
+:mod:`logilab.common.adbh`
+==========================
+
+.. automodule:: logilab.common.adbh
+   :members:
+
+:mod:`logilab.common.pdf_ext`
+=============================
+
+.. automodule:: logilab.common.pdf_ext
+   :members:
+
+:mod:`logilab.common.monserver`
+===============================
+
+.. automodule:: logilab.common.monserver
+   :members:
+
+:mod:`logilab.common.ureports.nodes`
+====================================
+
+.. automodule:: logilab.common.ureports.nodes
+   :members:
+
+:mod:`logilab.common.ureports`
+==============================
+
+.. automodule:: logilab.common.ureports
+   :members:
+
+:mod:`logilab.common.ureports.html_writer`
+==========================================
+
+.. automodule:: logilab.common.ureports.html_writer
+   :members:
+
+:mod:`logilab.common.ureports.text_writer`
+==========================================
+
+.. automodule:: logilab.common.ureports.text_writer
+   :members:
+
+:mod:`logilab.common.ureports.docbook_writer`
+=============================================
+
+.. automodule:: logilab.common.ureports.docbook_writer
+   :members:
+
+:mod:`logilab.mtconverter.engine`
+=================================
+
+.. automodule:: logilab.mtconverter.engine
+   :members:
+
+:mod:`logilab.mtconverter.transform`
+====================================
+
+.. automodule:: logilab.mtconverter.transform
+   :members:
+
+:mod:`logilab.mtconverter`
+==========================
+
+.. automodule:: logilab.mtconverter
+   :members:
+
+:mod:`logilab.mtconverter.setup`
+================================
+
+.. automodule:: logilab.mtconverter.setup
+   :members:
+
+:mod:`logilab.mtconverter.transforms.html2text`
+===============================================
+
+.. automodule:: logilab.mtconverter.transforms.html2text
+   :members:
+
+:mod:`logilab.mtconverter.transforms.cmdtransforms`
+===================================================
+
+.. automodule:: logilab.mtconverter.transforms.cmdtransforms
+   :members:
+
+:mod:`logilab.mtconverter.transforms.python`
+============================================
+
+.. automodule:: logilab.mtconverter.transforms.python
+   :members:
+
+:mod:`logilab.mtconverter.transforms.pygmentstransforms`
+========================================================
+
+.. automodule:: logilab.mtconverter.transforms.pygmentstransforms
+   :members:
+
+:mod:`logilab.mtconverter.transforms`
+=====================================
+
+.. automodule:: logilab.mtconverter.transforms
+   :members:
+
+:mod:`logilab.mtconverter.transforms.piltransforms`
+===================================================
+
+.. automodule:: logilab.mtconverter.transforms.piltransforms
+   :members:
+
+:mod:`logilab.devtools.cvstatus`
+================================
+
+.. automodule:: logilab.devtools.cvstatus
+   :members:
+
+:mod:`logilab.devtools.changelog`
+=================================
+
+.. automodule:: logilab.devtools.changelog
+   :members:
+
+:mod:`logilab.devtools`
+=======================
+
+.. automodule:: logilab.devtools
+   :members:
+
+:mod:`logilab.devtools.setup`
+=============================
+
+.. automodule:: logilab.devtools.setup
+   :members:
+
+:mod:`logilab.devtools.cvslog`
+==============================
+
+.. automodule:: logilab.devtools.cvslog
+   :members:
+
+:mod:`logilab.devtools.lgp.utils`
+=================================
+
+.. automodule:: logilab.devtools.lgp.utils
+   :members:
+
+:mod:`logilab.devtools.lgp.tag`
+===============================
+
+.. automodule:: logilab.devtools.lgp.tag
+   :members:
+
+:mod:`logilab.devtools.lgp.setupinfo`
+=====================================
+
+.. automodule:: logilab.devtools.lgp.setupinfo
+   :members:
+
+:mod:`logilab.devtools.lgp.changelog`
+=====================================
+
+.. automodule:: logilab.devtools.lgp.changelog
+   :members:
+
+:mod:`logilab.devtools.lgp.preparedist`
+=======================================
+
+.. automodule:: logilab.devtools.lgp.preparedist
+   :members:
+
+:mod:`logilab.devtools.lgp.build`
+=================================
+
+.. automodule:: logilab.devtools.lgp.build
+   :members:
+
+:mod:`logilab.devtools.lgp.clean`
+=================================
+
+.. automodule:: logilab.devtools.lgp.clean
+   :members:
+
+:mod:`logilab.devtools.lgp`
+===========================
+
+.. automodule:: logilab.devtools.lgp
+   :members:
+
+:mod:`logilab.devtools.lgp.setup`
+=================================
+
+.. automodule:: logilab.devtools.lgp.setup
+   :members:
+
+:mod:`logilab.devtools.lgp.check`
+=================================
+
+.. automodule:: logilab.devtools.lgp.check
+   :members:
+
+:mod:`logilab.devtools.lgp.exceptions`
+======================================
+
+.. automodule:: logilab.devtools.lgp.exceptions
+   :members:
+
+:mod:`logilab.devtools.templates`
+=================================
+
+.. automodule:: logilab.devtools.templates
+   :members:
+
+:mod:`logilab.devtools.templates.setup`
+=======================================
+
+.. automodule:: logilab.devtools.templates.setup
+   :members:
+
+:mod:`logilab.devtools.lib.coverage`
+====================================
+
+.. automodule:: logilab.devtools.lib.coverage
+   :members:
+
+:mod:`logilab.devtools.lib.manifest`
+====================================
+
+.. automodule:: logilab.devtools.lib.manifest
+   :members:
+
+:mod:`logilab.devtools.lib.pkginfo`
+===================================
+
+.. automodule:: logilab.devtools.lib.pkginfo
+   :members:
+
+:mod:`logilab.devtools.lib`
+===========================
+
+.. automodule:: logilab.devtools.lib
+   :members:
+
+:mod:`logilab.devtools.vcslib.cvsparse`
+=======================================
+
+.. automodule:: logilab.devtools.vcslib.cvsparse
+   :members:
+
+:mod:`logilab.devtools.vcslib.svn`
+==================================
+
+.. automodule:: logilab.devtools.vcslib.svn
+   :members:
+
+:mod:`logilab.devtools.vcslib.node`
+===================================
+
+.. automodule:: logilab.devtools.vcslib.node
+   :members:
+
+:mod:`logilab.devtools.vcslib`
+==============================
+
+.. automodule:: logilab.devtools.vcslib
+   :members:
+
+:mod:`logilab.devtools.vcslib.interfaces`
+=========================================
+
+.. automodule:: logilab.devtools.vcslib.interfaces
+   :members:
+
+:mod:`logilab.devtools.vcslib.cvs`
+==================================
+
+.. automodule:: logilab.devtools.vcslib.cvs
+   :members:
+
+:mod:`logilab.devtools.vcslib.hg`
+=================================
+
+.. automodule:: logilab.devtools.vcslib.hg
+   :members:
+
+:mod:`rql.nodes`
+================
+
+.. automodule:: rql.nodes
+   :members:
+
+:mod:`rql.undo`
+===============
+
+.. automodule:: rql.undo
+   :members:
+
+:mod:`rql.utils`
+================
+
+.. automodule:: rql.utils
+   :members:
+
+:mod:`rql.base`
+===============
+
+.. automodule:: rql.base
+   :members:
+
+:mod:`rql.analyze`
+==================
+
+.. automodule:: rql.analyze
+   :members:
+
+:mod:`rql._exceptions`
+======================
+
+.. automodule:: rql._exceptions
+   :members:
+
+:mod:`rql.compare`
+==================
+
+.. automodule:: rql.compare
+   :members:
+
+:mod:`rql.stmts`
+================
+
+.. automodule:: rql.stmts
+   :members:
+
+:mod:`rql.parser_main`
+======================
+
+.. automodule:: rql.parser_main
+   :members:
+
+:mod:`rql.stcheck`
+==================
+
+.. automodule:: rql.stcheck
+   :members:
+
+:mod:`rql.parser`
+=================
+
+.. automodule:: rql.parser
+   :members:
 
 :mod:`rql`
 ==========
@@ -97,8 +1864,98 @@ CubicWeb API
 .. automodule:: rql
    :members:
 
+:mod:`rql.setup`
+================
+
+.. automodule:: rql.setup
+   :members:
+
+:mod:`rql.interfaces`
+=====================
+
+.. automodule:: rql.interfaces
+   :members:
+
+:mod:`rql.editextensions`
+=========================
+
+.. automodule:: rql.editextensions
+   :members:
+
+:mod:`rql.fol`
+==============
+
+.. automodule:: rql.fol
+   :members:
+
+:mod:`rqlgen`
+=============
+
+.. automodule:: rqlgen
+   :members:
+
+:mod:`yams.schema`
+==================
+
+.. automodule:: yams.schema
+   :members:
+
+:mod:`yams.reader`
+==================
+
+.. automodule:: yams.reader
+   :members:
+
+:mod:`yams.schema2sql`
+======================
+
+.. automodule:: yams.schema2sql
+   :members:
+
+:mod:`yams._exceptions`
+=======================
+
+.. automodule:: yams._exceptions
+   :members:
+
+:mod:`yams.sqlreader`
+=====================
+
+.. automodule:: yams.sqlreader
+   :members:
+
+:mod:`yams.schema2dot`
+======================
+
+.. automodule:: yams.schema2dot
+   :members:
+
 :mod:`yams`
 ===========
 
 .. automodule:: yams
+   :members:
+
+:mod:`yams.setup`
+=================
+
+.. automodule:: yams.setup
+   :members:
+
+:mod:`yams.interfaces`
+======================
+
+.. automodule:: yams.interfaces
+   :members:
+
+:mod:`yams.buildobjs`
+=====================
+
+.. automodule:: yams.buildobjs
+   :members:
+
+:mod:`yams.constraints`
+=======================
+
+.. automodule:: yams.constraints
    :members:
