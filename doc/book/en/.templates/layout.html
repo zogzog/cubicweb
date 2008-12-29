@@ -50,7 +50,7 @@
           {%- endif %}
           {%- endblock %}
           {%- if sourcename %}
-            <h3>This Page</h3>
+            <!--<h3>This Page</h3>
             <ul class="this-page-menu">
             {%- if builder == 'web' %}
               <li><a href="#comments">Comments ({{ comments|length }} so far)</a></li>
@@ -59,7 +59,7 @@
             {%- elif builder == 'html' %}
               <li><a href="{{ pathto('_sources/' + sourcename, true)|e }}">Show Source</a></li>
             {%- endif %}
-            </ul>
+            </ul>-->
           {%- endif %}
           {%- if customsidebar %}
           {{ rendertemplate(customsidebar) }}

@@ -164,6 +164,7 @@ div.sphinxsidebar ul ul {
 
 div.sphinxsidebar a {
     color: black;
+    text-decoration: none;
 }
 
 div.sphinxsidebar form {
@@ -526,7 +527,7 @@ p.subhead {
 
 a {
     color: black;
-    text-decoration: none;
+    text-decoration: underline;
 }
 
 a:hover {
