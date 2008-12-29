@@ -5,7 +5,7 @@ Pre-defined schemas in the library
 
 The library defines a set of entities schemas that are required by the system
 or commonly used in `CubicWeb` applications.
-Of course, you can extend those schemas if necessarry.
+Of course, you can extend those schemas if necessary.
 
 
 System schemas

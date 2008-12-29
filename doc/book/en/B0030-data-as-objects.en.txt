@@ -49,7 +49,7 @@ The methods defined for `AnyEntity` or `Entity` are the following ones:
 
   * `printable_value(attr, value=_marker, attrtype=None, format='text/html')`, 
     returns a string enabling the display of an attribute value in a given format
-    (the value is automatically recovered if necessarry)
+    (the value is automatically recovered if necessary)
 
   * `display_name(form='')`, returns a string to display the entity type by 
     specifying the preferred form (`plural` for a plural form)
@@ -129,7 +129,7 @@ apply to this relation.
 
 It is possible to simplify this dictionnary:
 
-* if we want to specifiy a single marker, it is not necessarry to
+* if we want to specifiy a single marker, it is not necessary to
   use a tuple as the value, the marker by itself (characters string)
   is enough
 * if we only care about a single type of relation and not about the target

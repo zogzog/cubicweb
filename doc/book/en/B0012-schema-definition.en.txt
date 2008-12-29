@@ -9,7 +9,7 @@ the description of attributes and relations for the defined entity type,
 for example ::
 
   class Personne(EntityType):
-    """A person with the properties and the relations necessarry for my
+    """A person with the properties and the relations necessary for my
     application"""
 
     last_name = String(required=True, fulltextindexed=True)
@@ -35,7 +35,7 @@ for example ::
   - `created_by` (`EUser`) (which user created the entity)
   
   - `owned_by` (`EUser`) (who does the entity belongs to, by default the 
-     creator but not necessarry and it could have multiple owners)
+     creator but not necessary and it could have multiple owners)
      
   - `is` (`EEType`)
 

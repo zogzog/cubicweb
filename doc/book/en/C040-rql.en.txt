@@ -30,7 +30,7 @@ RQL builds on the features of SQL but is at a higher level
 (the current implementation of RQL generates SQL). For that it is limited
 to the way of browsing relations and introduces variables. 
 The user does not need to know the model underlying SQL, but the `CubicWeb` 
-scheam defining the application.
+schema defining the application.
 
 Versa
 `````

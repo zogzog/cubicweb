@@ -126,7 +126,7 @@ following parameters:
 
 * `__errorurl`: initial form URL, used for redirecting in case a validation
   error is raised during editing. If this one is not specified, an error page
-  is displayed instead of going back to the form (which is, if necessarry,
+  is displayed instead of going back to the form (which is, if necessary,
   responsible for displaying the errors)
 
 * `__form_id`: initial view form identifier, used if `__action_apply` is

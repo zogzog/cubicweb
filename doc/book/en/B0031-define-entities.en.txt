@@ -69,7 +69,7 @@ editing form thanks to the following *rtags*:
 * `generated`, indicates that an attribute is dynamically computed
   or other,  and that it should not be displayed in the editing form.
 
-If necessarry, it is possible to overwrite the method  
+If necessary, it is possible to overwrite the method  
 `relation_category(rtype, x='subject')` to dynamically compute
 a relation editing category.
 
@@ -92,7 +92,7 @@ following *rtags*:
   entity and link to it automatically
 
 
-If necessarry, it is possible to overwrite the method  
+If necessary, it is possible to overwrite the method  
 `relation_mode(rtype, targettype, x='subject')` to dynamically
 compute a relation creation category.
 

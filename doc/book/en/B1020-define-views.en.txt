@@ -180,7 +180,7 @@ to the views which depends on the content to generate the HTML page to return.
 
 A *template* is responsible for:
 
-1. executing RQL query of data to render if necessarry
+1. executing RQL query of data to render if necessary
 2. identifying the view to use to render data if it is not specified
 3. composing the HTML page to return
 

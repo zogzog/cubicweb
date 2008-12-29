@@ -3,9 +3,20 @@
 Concepts
 --------
 
+This section aims to provide you the keys of success with `CubicWeb`
+by clarifying the terms specific to our framework.
+
 Global architecture
 ~~~~~~~~~~~~~~~~~~~
 .. image:: images/archi_globale.en.png
+
+
+`CubicWeb` framework is a server/client application framework. Those two 
+parties communicates through RQL (`CubicWeb` query language implementation)
+and ResultSet (which will be explained in :ref:`TermsVocabulary`).
+
+The server manages all interactions with sources.
+
 
 .. note::
   For real, the client and server sides are integrated in the same
@@ -20,6 +31,11 @@ Global architecture
 Terms and vocabulary
 ~~~~~~~~~~~~~~~~~~~~~
 
+`CubicWeb` defines its own terminology. To make sure there is no confusion
+while reading this book, we strongly recommand you take time to go through
+the following definitions that are the basics to understand while
+developing with `CubicWeb`.
+
 *schema*
   The schema defines the data model of an application based on entities
   and relations, modeled with a comprehensive language made of Python
@@ -27,13 +43,13 @@ Terms and vocabulary
   of an application. It is initially defined in the file system and is
   stored in the database at the time an instance is created. `CubicWeb`
   provides a certain number of system entities included automatically as
-  it is necessarry for the core of `CubicWeb` and a library of
-  cubes that can be explicitely included if necessary.
-
+  it is necessary for the core of `CubicWeb` and a library of
+  cubes (which defined application entities) that can be explicitely 
+  included if necessary.
 
 *entity type*
-  An entity is a set of attributes; the essential attribute of
-  an entity is its key, named eid
+  An entity type is a set of attributes; the essential attribute of
+  an entity is its key, named eid.
 
 *relation type*
   Entities are linked to each others by relations. In `CubicWeb`
@@ -51,8 +67,8 @@ Terms and vocabulary
   to an entity attribute.
 
 *relation definition*
-  a relation definition is a 3-uple (subject entity type, relation type, object entity type),
-  with an associated set of property such as cardinality, constraints...
+  A relation definition is a 3-uple (subject entity type, relation type, object
+  entity type), with an associated set of property such as cardinality, constraints...
   
 *repository*
   This is the RQL server side of `CubicWeb`. Be carefull not to get
@@ -76,7 +92,7 @@ Terms and vocabulary
 *cube*
   A cube is a model grouping one or multiple data types and/or views
   to provide a specific functionnality or a complete `CubicWeb` application
-  potentially using other cubes. The available subes are located in the file
+  potentially using other cubes. The available cubes are located in the file
   system at `/path/to/forest/cubicweb/cubes` for a Mercurial forest installation,
   for a debian packages installation they will be located in 
   `/usr/share/cubicweb/cubes`.
@@ -86,13 +102,13 @@ Terms and vocabulary
   cubes.
 
 *instance*
-  An instance is a specific installation of a cube. All the required 
-  configuration files necessarry for the well being of your web application
+  An instance is a specific installation of one or multiple cubes. All the required 
+  configuration files necessary for the well being of your web application
   are grouped in an instance. This will refer to the cube(s) your application
   is based on.
   For example logilab.org and our intranet are two instances of a single
   cube jpl, developped internally.
-  The instances are defined in the directory `~/etc/cubicweb.d`.
+  The instances are defined in the directory `/etc/cubicweb.d`.
 
 *application*
   The term application is sometime used to talk about an instance
@@ -102,7 +118,7 @@ Terms and vocabulary
 
 *result set*
   This object contains the results of an RQL query sent to the source
-  and information on the query.
+  and informations on the query.
 
 *Pyro*
   `Python Remote Object`_, distributed objects system similar to Java's RMI
@@ -127,7 +143,10 @@ Terms and vocabulary
   the same identifier.
 
 *rql*
- XXX
+ Relation Query Language in order to empasize the way of browsing relations.
+ This query language is inspired by SQL but is highest level, its implementation
+ generates SQL.
+
  
 .. _`Python Remote Object`: http://pyro.sourceforge.net/
 .. _`yams`: http://www.logilab.org/project/yams/
@@ -137,9 +156,9 @@ Terms and vocabulary
 ~~~~~~~~~~~~~~~~~
 
 The engine in `CubicWeb` is a set of classes managing a set of objects loaded
-dynamically at the startup of `CubicWeb` (*appobjects*). Those dynamics objects, based on the schema
-or the library, are building the final application. The differents dymanic components are
-for example:
+dynamically at the startup of `CubicWeb` (*appobjects*). Those dynamics objects,
+based on the schema or the library, are building the final application.
+The differents dymanic components are for example:
 
 * client and server side
 
@@ -174,9 +193,9 @@ and to the registry using its *vreg* attribute.
 API Python/RQL
 ~~~~~~~~~~~~~~
 
-Inspired from the standard db-api, with a Connection object having the methods
-cursor, rollback and commit essentially. The most important method is
-the `execute` method of a cursor :
+The Python API developped to interface with RQL is inspired from the standard db-api,
+with a Connection object having the methods cursor, rollback and commit essentially. 
+The most important method is the `execute` method of a cursor :
 
 `execute(rqlstring, args=None, eid_key=None, build_descr=True)`
 
@@ -203,11 +222,11 @@ on the query execution success.
 The `Request` class (`cubicweb.web`)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-A request instance is created when an HTPP request is sent to the web server.
+A request instance is created when an HTTP request is sent to the web server.
 It contains informations such as forms parameters, user authenticated, etc.
 
 **Globally, a request represents a user query, either through HTTP or not
-(we also talk about RQL queries on the server side for example)**
+(we also talk about RQL queries on the server side for example).**
 
 An instance of `Request` has the following attributes:
 
@@ -219,7 +238,7 @@ An instance of `Request` has the following attributes:
 But also:
 
 :Session data handling:
-  * `session_data()`, returns a dictinnary containing all the session data
+  * `session_data()`, returns a dictionnary containing all the session data
   * `get_session_data(key, default=None)`, returns a value associated to the given
     key or the value `default` if the key is not defined
   * `set_session_data(key, value)`, assign a value to a key
@@ -232,7 +251,7 @@ But also:
   * `set_cookie(cookie, key, maxage=300)`, adds a header HTTP `Set-Cookie`,
     with a minimal 5 minutes length of duration by default (`maxage` = None
     returns a *session* cookie which will expire when the user closes the browser
-    window
+    window)
   * `remove_cookie(cookie, key)`, forces a value to expire
 
 :URL handling:
@@ -252,7 +271,7 @@ But also:
   * dictionnary `data` to store data to share informations between components
     *while a request is executed*
 
-Please note down that this class is abstract and that a concrete implementation
+Please note that this class is abstract and that a concrete implementation
 will be provided by the *frontend* web used (in particular *twisted* as of
 today). For the views or others that are executed on the server side,
 most of the interface of `Request` is defined in the session associated
@@ -272,7 +291,7 @@ In general:
   to take care of the register, only the identifier `id`.
 
 We can find a certain number of attributes and methods defined in this class 
-and so common to all the application objects:
+and common to all the application objects.
 
 At the recording, the following attributes are dynamically added to
 the *subclasses*:
@@ -284,13 +303,13 @@ the *subclasses*:
 We also find on instances, the following attributes:
 
 * `req`, `Request` instance
-* `rset`, the *result set* associated to the object if necessarry
+* `rset`, the *result set* associated to the object if necessary
 * `cursor`, rql cursor on the session
 
 
 :URL handling:
   * `build_url(method=None, **kwargs)`, returns an absolute URL based on
-    the given arguments. The *controller* supposed to handle the response
+    the given arguments. The *controller* supposed to handle the response,
     can be specified through the special parameter `method` (the connection
     is theoretically done automatically :).
 
@@ -314,16 +333,18 @@ We also find on instances, the following attributes:
     also call the method `complete()` on the entity before returning it
 
 :Data formatting:
-  * `format_date(date, date_format=None, time=False)`
-  * `format_time(time)`
+  * `format_date(date, date_format=None, time=False)` returns a string for a 
+    mx date time according to application's configuration
+  * `format_time(time)` returns a string for a mx date time according to
+    application's configuration
 
 :And more...:
 
   * `external_resource(rid, default=_MARKER)`, access to a value defined in the
     configuration file `external_resource`
     
-  * `tal_render(template, variables)`, 
-
+  * `tal_render(template, variables)`, renders a precompiled page template with 
+    variables in the given dictionary as context
 
 .. note::
   When we inherit from `AppObject` (even not directly), you *always* have to use
@@ -453,7 +474,8 @@ At least you should have:
 
 * the file ``__pkginfo__.py``
 * the schema definition
-  XXX false, we may want to have cubes which are only adding a service, no persistent data (eg embeding for instance)
+  XXX false, we may want to have cubes which are only adding a service, 
+  no persistent data (eg embeding for instance)
 
 
 Standard library

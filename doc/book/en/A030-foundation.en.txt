@@ -29,6 +29,6 @@ managing museums collections (see
 http://collections.musees-haute-normandie.fr/collections/), etc.
 
 In 2008, `CubicWeb` was ported for a new type of source : the datastore 
-from GoogleAppEngine_.
+from `GoogleAppEngine`_.
 
 .. include:: A03a-concepts.en.txt

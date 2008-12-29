@@ -14,7 +14,7 @@ For example::
 
 It is a simple text file format INI. In the following description,
 each option name is prefixed with its own section and followed by its
-default value if necessarry, e.g. "`<section>.<option>` [value]."
+default value if necessary, e.g. "`<section>.<option>` [value]."
 
 
 Configuring the Web server
