@@ -5,7 +5,7 @@ Concepts
 
 Global architecture
 ~~~~~~~~~~~~~~~~~~~
-.. image:: images/archi_globale.png
+.. image:: images/archi_globale.en.png
 
 .. note::
   For real, the client and server sides are integrated in the same
