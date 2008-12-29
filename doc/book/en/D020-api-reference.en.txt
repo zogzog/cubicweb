@@ -13,7 +13,7 @@ Base types are defined as a set in yams.BASE_TYPES that includes:
 `String`, `Int`, `Float`, `Boolean`, `Date`, `Time`, `Datetime`,
 `Interval`, `Password`, `Bytes`.
 
-See `yams' API <http://lax.logilab.org/apidoc>`_
+See `yams' API <http://www.cubicweb.org/doc/en/modindex.html>`_
 
 Constraints
 ~~~~~~~~~~~
@@ -23,11 +23,11 @@ Constraints are defined in yams.constraints and include:
 `BoundConstraint`, `IntervalBoundConstraint`,
 `StaticVocabularyConstraint`, `MultipleStaticVocabularyConstraint`.
 
-See `yams' API <http://lax.logilab.org/apidoc>`_
+See `yams' API <http://www.cubicweb.org/doc/en/modindex.html>`_
 
 Views API
 ---------
 
-See `yams' API <http://lax.logilab.org/apidoc>`_
+See `yams' API <http://www.cubicweb.org/doc/en/modindex.html>`_
 [WRITE ME]
 

@@ -11,8 +11,6 @@ Download the source
 - The `Google AppEngine SDK` can be downloaded from:
   http://code.google.com/appengine/downloads.html
 
-- `LAX` is available as an extension of `CubicWeb` under the GPLv2
-  license which can be downloaded from : http://cubicweb.org/
 
 Please follow instructions on how to install `CubicWeb` framework
 (:ref:`CubicWebInstallation`). 
@@ -62,7 +60,7 @@ This will create a directory containing ::
   
 This skeleton directory is a working `AppEngine` application. You will
 recognize the files ``app.yaml`` and ``main.py``. All the rest is the
-`LAX` framework and its third-party libraries. You will notice that 
+`CubicWeb` framework and its third-party libraries. You will notice that 
 the directory ``cubes`` is a library of reusable cubes.
 
 The main directories that you should know about are:
@@ -101,7 +99,7 @@ You can have the details of available commands by running ::
 Generating translation files
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-`LAX` is fully internationalized. Translation catalogs are found in
+`CubicWeb` is fully internationalized. Translation catalogs are found in
 ``myapp/i18n``. To compile the translation files, use the `gettext` tools
 or the ``laxctl`` command ::
 

@@ -47,9 +47,6 @@ it reaches the state published]
 Set-up a workflow
 -----------------
 
-Before starting, make sure you refresh your mind by reading [link to
-definition_workflow chapter].
-
 We want to create a workflow to control the quality of the BlogEntry 
 submitted on your application. When a BlogEntry is created by a user
 its state should be `submitted`. To be visible to all, it needs to
@@ -62,8 +59,8 @@ this group will have appropriate permissions to approve BlogEntry
 to be published and visible to all.
 
 There are two ways to create a workflow, form the user interface,
-and also by defining it in ``migration/postcreate.py``. This script
-is executed each time a new ``./bin/laxctl db-init`` is done. 
+and also by defining it in ``migration/postcreate.py``. 
+This script is executed each time a new ``cubicweb-ctl db-init`` is done. 
 If you create the states and transitions through the user interface
 this means that next time you will need to initialize the database
 you will have to re-create all the entities. 
@@ -89,7 +86,7 @@ the line ``in_state (...)``::
       entry_of = SubjectRelation('Blog', cardinality='?*')
       in_state = SubjectRelation('State', cardinality='1*')
 
-As you updated the schema, you will have re-execute ``./bin/laxctl db-init``
+As you updated the schema, you will have re-execute ``cubicweb-ctl db-init``
 to initialize the database and migrate your existing entities.
 [WRITE ABOUT MIGRATION]
 

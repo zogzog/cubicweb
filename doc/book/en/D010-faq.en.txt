@@ -3,7 +3,7 @@
 Frequently Asked Questions
 ==========================
 
-* Why does not LAX have a template language ?
+* Why does not CubicWeb have a template language ?
 
   It does. Actually, you can use your preferred template language if you
   want. [explain how to use a template language]
@@ -22,7 +22,7 @@ Frequently Asked Questions
 
   [copy answer from forum]
 
-* LAX looks pretty recent. Is it stable ?
+* CubicWeb looks pretty recent. Is it stable ?
 
   [answer that framework has evolved over the past seven years and that
   data migrated from one schema to the other ever since]

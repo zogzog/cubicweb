@@ -48,7 +48,7 @@ The selection view principle
 
 A view includes :
 
-- an identifier (all objects in `LAX` are entered in a registry
+- an identifier (all objects in `CubicWeb` are entered in a registry
   and this identifier will be used as a key)
   
 - a filter to select the resulsets it can be applied to
@@ -64,6 +64,17 @@ compute scores is in ``cubicweb.vregistry.vreq``.
 `CubicWeb` provides a lot of standard views, for a complete list, you
 will have to read the code in directory ``cubicweb/web/views/`` (XXX
 improve doc).
+
+`CubicWeb` provides a lot of standard views for the default class
+`EntityType`. You can find them in ``cubicweb/web/views/``.
+
+The basic views defined are : 
+
+*null* 
+  
+
+
+
 
 For example, the view named ``primary`` is the one used to display
 a single entity.
