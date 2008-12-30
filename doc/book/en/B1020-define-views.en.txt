@@ -5,11 +5,38 @@
 Views definition
 ================
 
+This chapter aims to describe the concept of a `view` used all along
+the development of a web application and how it has been implemented
+in `CubicWeb`.
+
+We'll start with a description of the interface providing you a basic 
+understanding of the classes and methods available. We'll also
+take time to develop the view selection principle we implemented
+which is very unique to `CubicWeb` and makes it powerfull.
+
 Basic class for views
 ---------------------
 
 Class `View` (`cubicweb.common.view`)
 `````````````````````````````````````
+
+This class is an abstraction of a view class, used as a base for every 
+renderable object such as views, templates, graphic components... web.
+
+A `View` is  instantiated to render a or part of a result set. `View`
+subclasses may be parametrized using the following class attributes:
+
+    * `templatable` indicates if the view may be embeded in a main
+      template or if it has to be rendered standalone (i.e. XML for
+      instance)
+    * if the view is not templatable, it should set the `content_type` class
+      attribute to the correct MIME type (text/xhtml by default)
+    * the `category` attribute may be used in the interface to regroup related
+      objects together
+
+At instantiation time, the standard `req`, `rset`, and `cursor`
+attributes are added and the `w` attribute will be set at rendering
+time to a write function to use.
 
 A view writes in its output exit thanks to its attribute `w` (`UStreamIO`).
 
@@ -17,7 +44,8 @@ The basic interface for views is as follows:
 
 * `dispatch(**context)`, render the view by calling `call` or
   `cell_call` depending on the given parameters
-* `call(**kwargs)`, call the view for a complete result set or null
+* `call(**kwargs)`, call the view for a complete result set or null and call
+  the method `cell_call()` on each cell of the result set
 * `cell_call(row, col, **kwargs)`, call the view for a given cell of a result set
 * `url()`, returns the URL enabling us to get the view with the current
   result set 
@@ -36,12 +64,15 @@ The basic interface for views is as follows:
 * `creator(eid)`, returns the eid and the login of the entity creator of the entity
   having the eid given in the parameter 
 
-Other basic classes:
+Other basic views classes
+`````````````````````````
+Here are some of the subclasses of `View` defined in `cubicweb.common.view`
+that are more concrete as they relates to data rendering within the application:
 
 * `EntityView`, view applying to lines or cell containing an entity (e.g. an eid)
 * `StartupView`, start view that does not require a result set to apply to
 * `AnyRsetView`, view applied to any result set 
-
+* `EmptyRsetView`, view applied to an empty result set
 
 The selection view principle
 ----------------------------
@@ -49,9 +80,11 @@ The selection view principle
 A view includes :
 
 - an identifier (all objects in `CubicWeb` are entered in a registry
-  and this identifier will be used as a key)
+  and this identifier will be used as a key). This is defined in the class
+  attribute ``id``.
   
-- a filter to select the resulsets it can be applied to
+- a filter to select the resulsets it can be applied to. This is defined in
+  the class attribute ``__selectors__``
 
 
 For a given identifier, multiple views can be defined. `CubicWeb` uses
@@ -61,26 +94,19 @@ best view to apply in context. The selector library is in
 compute scores is in ``cubicweb.vregistry.vreq``.
 
 
-`CubicWeb` provides a lot of standard views, for a complete list, you
-will have to read the code in directory ``cubicweb/web/views/`` (XXX
-improve doc).
-
 `CubicWeb` provides a lot of standard views for the default class
 `EntityType`. You can find them in ``cubicweb/web/views/``.
 
-The basic views defined are : 
-
-*null* 
-  
+.. include:: B1021-views-stdlib.en.txt
 
 
+Example of a view customization
+-------------------------------
 
-
-For example, the view named ``primary`` is the one used to display
-a single entity.
+We'll show you now an example of a ``primary`` view and how to customize it.
 
 If you want to change the way a ``BlogEntry`` is displayed, just
-override the view ``primary`` in ``BlogDemo/views.py`` ::
+override the method ``cell_call()`` of the view ``primary`` in ``BlogDemo/views.py`` ::
 
   01. from ginco.web.views import baseviews
   02.
@@ -159,8 +185,8 @@ flexibility comes from.**
 * implementing interfaces, calendar for blog entries
 * show that a calendar view can export data to ical
 
-We will implement the cubicwweb.interfaces.ICalendarable interfaces on
-entities.BloEntry and apply the OneMonthCalendar and iCalendar views
+We will implement the `cubicweb.interfaces.ICalendarable` interfaces on
+entities.BlogEntry and apply the OneMonthCalendar and iCalendar views
 to resultsets like "Any E WHERE E is BlogEntry"
 
 * create view "blogentry table" with title, publish_date, category
@@ -185,7 +211,7 @@ Templates
 class `Template` (`cubicweb.common.view`) is derived from the class `View`.
 
 To build a HTML page, a *main template* is used. In general, the template of
-identifier `main` is the one (it is not used in case an error is raised or for
+identifier `main` is the one to use (it is not used in case an error is raised or for
 the login form for example). This template uses other templates in addition
 to the views which depends on the content to generate the HTML page to return.
 
@@ -195,34 +221,7 @@ A *template* is responsible for:
 2. identifying the view to use to render data if it is not specified
 3. composing the HTML page to return
 
-
-The default main template (`cubicweb.web.views.basetemplates.TheMainTemplate`)
-------------------------------------------------------------------------------
-
-The default main template build the page based on the following pattern:
-
-.. image:: images/main_template_layout.png
-
-The rectangle containing `view.dispathc()` represents the area where the content
-view has to be displayed. The others represents sub-templates called to complete
-the page. A default implementation of those is provided in 
-`cubicweb.views.basetemplates`. You can, of course, overload those sub-templates
-to implement your own customization of the HTML page.
-
-We can also control certain aspects of the main template thanks to the following
-forms parameters:
-
-* `__notemplate`, if present (whatever the value assigned), only the content view
-  is returned
-* `__force_display`, if present and its value is not null, no navigation 
-  whatever the number of entities to display
-* `__method`, if the result set to render contains only one entity and this 
-  parameter is set, it refers to a method to call on the entity by passing it
-  the dictionnary of the forms parameters, before going the classic way (through
-  step 1 and 2 described juste above)
-
-.. include:: B1021-views-stdlib.en.txt
-
+You will find out more about templates in :ref:`templates`. 
 
 XML views, binaries...
 ----------------------
@@ -236,7 +235,7 @@ by the main template (see above), you have to:
 
 For the views dedicated to binary content creation (an image dynamically generated
 for example), we have to set the attribute `binary` of the class to `True` (which
-implies that `templateable == False`, so that the attribute `w` of the view could be
+implies that `templatable == False`, so that the attribute `w` of the view could be
 replaced by a binary flow instead of unicode).
 
 (X)HTML tricks to apply
