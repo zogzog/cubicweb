@@ -11,7 +11,7 @@ in `CubicWeb`.
 
 We'll start with a description of the interface providing you with a basic
 understanding of the classes and methods available, then detail the view
-selection principle we makes is makes `CubicWeb` web interface very flexible.
+selection principle which makes `CubicWeb` web interface very flexible.
 
 Basic class for views
 ---------------------
@@ -77,28 +77,45 @@ that are more concrete as they relates to data rendering within the application:
 The selection view principle
 ----------------------------
 
-A view includes :
+A view is essentially defined by:
 
 - an identifier (all objects in `CubicWeb` are entered in a registry
   and this identifier will be used as a key). This is defined in the class
   attribute ``id``.
   
 - a filter to select the resulsets it can be applied to. This is defined in
-  the class attribute ``__selectors__``
+  the class attribute ``__selectors__``, which expects a tuple of selectors
+  as its value.
 
 
 For a given identifier, multiple views can be defined. `CubicWeb` uses
 a selector which computes scores so that it can identify and select the
-best view to apply in context. The selector library is in 
+best view to apply in context. The selectors library is in 
 ``cubicweb.common.selector`` and a library of the methods used to
 compute scores is in ``cubicweb.vregistry.vreq``.
+
+.. include:: B1021-views-selectors.en.txt
+
+Registerer
+``````````
+A view is also customizable through its attribute ``__registerer__``.
+This is used at the time the application is launched to manage how
+objects (views, graphic components, actions, etc.) 
+are registered in the `cubicWeb` registry.
+
+A `registerer` can, for example, identify when we register an 
+object that is equivalent to an already registered object, which
+could happen when we define two `primary` views for an entity type.
+
+The purpose of a `registerer` is to control objects registry
+at the application startup whereas `selectors` controls objects
+when they are selected for display.
 
 
 `CubicWeb` provides a lot of standard views for the default class
 `EntityType`. You can find them in ``cubicweb/web/views/``.
 
-.. include:: B1021-views-stdlib.en.txt
-
+.. include:: B1022-views-stdlib.en.txt
 
 Example of a view customization
 -------------------------------

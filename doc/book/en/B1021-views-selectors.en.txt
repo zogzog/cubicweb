@@ -1,0 +1,54 @@
+.. -*- coding: utf-8 -*-
+
+Selectors
+`````````
+
+A selector is responsible to score how well an object may be used with a
+given result set during publishing time selection. This enables the selection
+of the most appropriate views to a given result set.
+
+A selector is a method that computes a score. This score is used by
+`CubicWeb` engine to identify which view is the best to apply in the
+context. In the case, no score is higher than the others, then an
+exception is raised ``NoSelectableObject`` to let you know that the
+engine was not able to identify the view to apply. In such case
+you would need to review your design and make sure your views are
+properly defined.
+
+`CubicWeb` provides its own set of selectors that you can use and here
+is a description of some of the most common used:
+
+*yes_selector*
+    This selector accepts everything which basically means to any result
+    set.
+
+*norset_selector*
+    This selector accepts no result set, so it can be applied to any
+    object.
+
+*rset_selector*
+    This selector accepts result set, whatever the number of objects
+    in the result set.
+
+*anyrset_selector*
+    This selector accepts any non empty result set.
+
+*emptyrset_selector*
+    This selector accepts empty result set.
+
+*onelinerset_selector*
+    This selector accepts result set with a single line of result.
+
+*twolinerset_selector*
+    This selector accepts result set with *at least* two lines of result.
+
+*anonymous_selector*
+    This selector accepts if user is anonymous.
+
+*not_anonymous_selector*
+    This selector accepta if user is authenticated.
+
+
+Of course you can write your own set of selectors as you get familiar with the
+framework.
+
