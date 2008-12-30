@@ -3,6 +3,14 @@
 Frequently Asked Questions
 ==========================
 
+[XXX 'copy answer from forum' means reusing text from
+http://groups.google.com/group/google-appengine/browse_frm/thread/c9476925f5f66ec6
+and
+http://groups.google.com/group/google-appengine/browse_frm/thread/d791ce17e2716147/eb078f8cfe8426e0
+and
+http://groups.google.com/group/google-appengine/browse_frm/thread/f48cf6099973aef5/c28cd6934dd72457
+]
+
 * Why does not CubicWeb have a template language ?
 
   It does. Actually, you can use your preferred template language if you
