@@ -9,10 +9,9 @@ This chapter aims to describe the concept of a `view` used all along
 the development of a web application and how it has been implemented
 in `CubicWeb`.
 
-We'll start with a description of the interface providing you a basic 
-understanding of the classes and methods available. We'll also
-take time to develop the view selection principle we implemented
-which is very unique to `CubicWeb` and makes it powerfull.
+We'll start with a description of the interface providing you with a basic
+understanding of the classes and methods available, then detail the view
+selection principle we makes is makes `CubicWeb` web interface very flexible.
 
 Basic class for views
 ---------------------
@@ -20,15 +19,15 @@ Basic class for views
 Class `View` (`cubicweb.common.view`)
 `````````````````````````````````````
 
-This class is an abstraction of a view class, used as a base for every 
-renderable object such as views, templates, graphic components... web.
+This class is an abstraction of a view class, used as a base class for every
+renderable object such as views, templates, graphic components, etc.
 
-A `View` is  instantiated to render a or part of a result set. `View`
+A `View` is instantiated to render a result set or part of a result set. `View`
 subclasses may be parametrized using the following class attributes:
 
     * `templatable` indicates if the view may be embeded in a main
-      template or if it has to be rendered standalone (i.e. XML for
-      instance)
+      template or if it has to be rendered standalone (i.e. XML views
+      must not be embeded in the main template for HTML pages)
     * if the view is not templatable, it should set the `content_type` class
       attribute to the correct MIME type (text/xhtml by default)
     * the `category` attribute may be used in the interface to regroup related
@@ -36,16 +35,17 @@ subclasses may be parametrized using the following class attributes:
 
 At instantiation time, the standard `req`, `rset`, and `cursor`
 attributes are added and the `w` attribute will be set at rendering
-time to a write function to use.
+time.
 
-A view writes in its output exit thanks to its attribute `w` (`UStreamIO`).
+A view writes to its output stream thanks to its attribute `w` (`UStreamIO`).
 
-The basic interface for views is as follows:
+The basic interface for views is as follows (remember that the result set has a
+tabular structure with rows and columns, hence cells):
 
 * `dispatch(**context)`, render the view by calling `call` or
   `cell_call` depending on the given parameters
-* `call(**kwargs)`, call the view for a complete result set or null and call
-  the method `cell_call()` on each cell of the result set
+* `call(**kwargs)`, call the view for a complete result set or null (default 
+  implementation calls `cell_call()` on each cell of the result set)
 * `cell_call(row, col, **kwargs)`, call the view for a given cell of a result set
 * `url()`, returns the URL enabling us to get the view with the current
   result set 
@@ -105,8 +105,8 @@ Example of a view customization
 
 We'll show you now an example of a ``primary`` view and how to customize it.
 
-If you want to change the way a ``BlogEntry`` is displayed, just
-override the method ``cell_call()`` of the view ``primary`` in ``BlogDemo/views.py`` ::
+If you want to change the way a ``BlogEntry`` is displayed, just override 
+the method ``cell_call()`` of the view ``primary`` in ``BlogDemo/views.py`` ::
 
   01. from ginco.web.views import baseviews
   02.
