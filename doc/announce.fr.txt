@@ -1,0 +1,57 @@
+.. -*- coding: utf-8 -*-
+
+L'équipe de développement de CubicWeb a le plaisir de vous annoncer la
+publication de la version 3.0.0, surnommée ShowTime.
+
+Qu'est-ce que CubicWeb?
+-----------------------
+
+Avec CubicWeb, le Web Sémantique devient un jeu de construction !
+
+CubicWeb_ est une plate-forme de développement d'application web sémantique,
+disponible sous license LGPL, qui permet aux développeurs de construire
+efficacement des applications web en assemblant des composants (appelés cubes)
+et en suivant les principes bien connus de la programmation orientée-objet.
+
+Ses principales caractéristiques sont:
+
+    * un moteur qui utilise une représentation explicite du modèle de données de
+      l'application,
+    * un langage de requête nommé RQL qui est semblable au SPARQL du W3C,
+    * un mécanisme de sélection+vue qui permet la génération semi-automatique de XHTML/XML/JSON/text,
+    * une bibliothèque de composants réutilisables (modèle de donnée et vues)
+      qui satisfait les besoins les plus courants,
+    * la puissance et l'adaptabilité du langage de programmation Python,
+    * la solidité des bases SQL, des annuaires LDAP, de Subversion et Mercurial
+      pour le stockage des données.
+
+Développé depuis 2000 par un projet de R&D qui se poursuit encore aujourd'hui,
+servant plusieurs centaines de milliers de visiteurs par jour pour certains
+sites, CubicWeb est une solution complète et éprouvée pour développer des
+applications web, qui promeut la qualité, la réutilisabilité et l'efficacité.
+
+L'incrédule lira la présentation_ de CubicWeb.
+
+Le développeur se joindra au projet à la forge_.
+
+L'impatient sautera sur les consignes d'installation_.
+
+.. _CubicWeb: http://www.cubicweb.org/
+.. _présentation: http://www.cubicweb.org/doc/en/A020-tutorial.en.html#overview
+.. _forge: http://www.cubicweb.org/project?vtitle=All%20cubicweb%20projects
+.. _installation: http://www.cubicweb.org/doc/en/C010-setup.en.html#miseenplaceenv
+
+Site Web
+--------
+
+http://www.cubicweb.org/
+
+Téléchargement
+--------------
+
+http://ftp.logilab.org/pub/cubicweb/
+
+Liste de discussion
+-------------------
+
+http://lists.cubicweb.org/mailman/listinfo/cubicweb

@@ -1,0 +1,54 @@
+.. -*- coding: utf-8 -*-
+
+The development team is pleased to announce the 3.0.0 release of CubicWeb, also
+know as ShowTime.
+
+What is CubicWeb?
+-----------------
+
+With CubicWeb, the Semantic Web is a construction game!
+
+CubicWeb_ is a semantic web application framework, licensed under the LGPL, that
+empowers developers to efficiently build web applications by reusing components
+(called cubes) and following the well known object-oriented design principles.
+
+Its main features are:
+
+    * an engine driven by the explicit data model of the application,
+    * a query language named RQL similar to W3C’s SPARQL,
+    * a selection+view mechanism for semi-automatic XHTML/XML/JSON/text generation,
+    * a library of reusable components (data model and views) that fulfill common needs,
+    * the power and flexibility of the Python programming language,
+    * the reliability of SQL databases, LDAP directories, Subversion and Mercurial for storage backends.
+
+Being built since 2000 by an R&D project still going on today, supporting
+100,000s of daily visits at some production sites, CubicWeb is a proven end to
+end solution for semantic web application development that promotes quality,
+reusability and efficiency.
+
+The unbeliever will read the quick overview_ of CubicWeb.
+
+The hacker will join development at the forge_.
+
+The impatient will move right away to installation_ and set-up of a CubicWeb
+environment.
+
+.. _cubicweb: http://www.cubicweb.org/
+.. _overview: http://www.cubicweb.org/doc/en/A020-tutorial.en.html#overview
+.. _forge: http://www.cubicweb.org/project?vtitle=All%20cubicweb%20projects
+.. _installation: http://www.cubicweb.org/doc/en/C010-setup.en.html#miseenplaceenv
+
+Home page
+---------
+
+http://www.cubicweb.org/
+
+Download
+--------
+
+http://ftp.logilab.org/pub/cubicweb/
+
+Mailing list
+------------
+
+http://lists.cubicweb.org/mailman/listinfo/cubicweb
