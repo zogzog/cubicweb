@@ -42,7 +42,7 @@ http://groups.google.com/group/google-appengine/browse_frm/thread/f48cf6099973ae
 
 * which ajax library
 
-  [we use mochikit and things on top of that]
+  [we use jquery and things on top of that]
 
 * `Error while publishing rest text ...`
   
