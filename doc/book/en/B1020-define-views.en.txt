@@ -117,6 +117,44 @@ when they are selected for display.
 
 .. include:: B1022-views-stdlib.en.txt
 
+
+Examples of views class 
+-----------------------
+
+- Using the attribute `templatable`
+
+  ::
+    
+
+    class RssView(XmlView):
+        id = 'rss'
+        title = _('rss')
+        templatable = False
+        content_type = 'text/xml'
+        http_cache_manager = MaxAgeHTTPCacheManager
+        cache_max_age = 60*60*2 # stay in http cache for 2 hours by default
+    
+
+
+- Using the attribute `__selectors__`
+
+  ::
+    
+
+    class SearchForAssociationView(EntityView):
+        """view called by the edition view when the user asks
+        to search for something to link to the edited eid
+        """
+        id = 'search-associate'
+        title = _('search for association')
+        __selectors__ = (one_line_rset, match_search_state, accept_selector)
+        accepts = ('Any',)
+        search_states = ('linksearch',)
+
+    
+
+
+
 Example of a view customization
 -------------------------------
 
