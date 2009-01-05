@@ -235,7 +235,7 @@ class SecurityTC(BaseSecurityTC):
         self.assertRaises(Unauthorized,
                           cu.execute, 'Personne U where U nom "managers"')
 
-    def test_read_erqlexpr(self):
+    def test_read_erqlexpr_base(self):
         eid = self.execute("INSERT Affaire X: X sujet 'cool'")[0][0]
         self.commit()
         cnx = self.login('iaminusersgrouponly')
@@ -243,7 +243,7 @@ class SecurityTC(BaseSecurityTC):
         rset = cu.execute('Affaire X')
         self.assertEquals(rset.rows, [])
         self.assertRaises(Unauthorized, cu.execute, 'Any X WHERE X eid %(x)s', {'x': eid}, 'x')
-        #  cache test
+        # cache test
         self.assertRaises(Unauthorized, cu.execute, 'Any X WHERE X eid %(x)s', {'x': eid}, 'x')
         aff2 = cu.execute("INSERT Affaire X: X sujet 'cool'")[0][0]
         soc1 = cu.execute("INSERT Societe X: X nom 'chouette'")[0][0]
@@ -251,6 +251,11 @@ class SecurityTC(BaseSecurityTC):
         cnx.commit()
         rset = cu.execute('Any X WHERE X eid %(x)s', {'x': aff2}, 'x')
         self.assertEquals(rset.rows, [[aff2]])
+        # more cache test w/ NOT eid
+        rset = cu.execute('Affaire X WHERE NOT X eid %(x)s', {'x': eid}, 'x')
+        self.assertEquals(rset.rows, [])
+        rset = cu.execute('Affaire X WHERE NOT X eid %(x)s', {'x': aff2}, 'x')
+        self.assertEquals(rset.rows, [])
         
     def test_read_erqlexpr_has_text1(self):
         aff1 = self.execute("INSERT Affaire X: X sujet 'cool'")[0][0]
@@ -300,7 +305,6 @@ class SecurityTC(BaseSecurityTC):
         cu = cnx.cursor()
         rset = cu.execute('Any COUNT(X) WHERE X is Affaire')
         self.assertEquals(rset.rows, [[0]])        
-        cu = cnx.cursor()
         aff2 = cu.execute("INSERT Affaire X: X sujet 'cool'")[0][0]
         soc1 = cu.execute("INSERT Societe X: X nom 'chouette'")[0][0]
         cu.execute("SET A concerne S WHERE A is Affaire, S is Societe")
