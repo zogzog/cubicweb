@@ -146,7 +146,7 @@ class IndexView(ManageView):
     title = _('index')
     
     def display_folders(self):
-        return 'Folder' in self.schema
+        return 'Folder' in self.schema and self.req.execute('Any COUNT(X) WHERE X is Folder')[0][0]
     
 
 
