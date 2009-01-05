@@ -160,15 +160,17 @@ class AddNewAction(MultipleEditAction):
                 return 0
             select = rqlst.children[0]
             if len(select.defined_vars) == 1 and len(select.solutions) == 1:
-                    rset._searched_etype = select.solutions[0].itervalues().next()
-                    eschema = cls.schema.eschema(rset._searched_etype)
-                    if not eschema.is_final() and eschema.has_perm(req, 'add'):
-                        return 1
+                rset._searched_etype = select.solutions[0].itervalues().next()
+                eschema = cls.schema.eschema(rset._searched_etype)
+                if not (eschema.is_final() or eschema.is_subobject(strict=True)) \
+                       and eschema.has_perm(req, 'add'):
+                    return 1
         return 0
 
     def has_add_perm_selector(cls, req, rset, **kwargs):
         eschema = cls.schema.eschema(rset.description[0][0])
-        if not eschema.is_final() and eschema.has_perm(req, 'add'):
+        if not (eschema.is_final() or eschema.is_subobject(strict=True)) \
+               and eschema.has_perm(req, 'add'):
             return 1
         return 0
     __selectors__ = (match_search_state,
