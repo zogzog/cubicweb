@@ -48,7 +48,8 @@ class RemoteCallFailed(RequestError):
     """raised when a json remote call fails
     """
     def __init__(self, reason=''):
-        super(RequestError, self).__init__()
+        #super(RequestError, self).__init__() # XXX require py >= 2.5
+        RequestError.__init__(self)
         self.reason = reason
 
     def dumps(self):
