@@ -428,7 +428,7 @@ class Connection(object):
             raise ProgrammingError('Closed connection')
         return self._repo.source_defs()
 
-    def user(self, req, props=None):
+    def user(self, req=None, props=None):
         """return the User object associated to this connection"""
         # cnx validity is checked by the call to .user_info
         eid, login, groups, properties = self._repo.user_info(self.sessionid, props)
