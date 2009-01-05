@@ -11,7 +11,7 @@ from logilab.mtconverter import BINARY_ENCODINGS, TransformError, html_escape
 from cubicweb.interfaces import IDownloadable
 from cubicweb.common.mttransforms import ENGINE
 from cubicweb.common.selectors import (one_line_rset, score_entity_selector,
-                                       interface_selector)
+                                       interface_selector, contextprop_selector)
 from cubicweb.web.box import EntityBoxTemplate
 from cubicweb.web.views import baseviews
 
@@ -35,7 +35,7 @@ def download_box(w, entity, title=None, label=None):
     
 class DownloadBox(EntityBoxTemplate):
     id = 'download_box'
-    __selectors__ = (one_line_rset, interface_selector)
+    __selectors__ = (one_line_rset, interface_selector, contextprop_selector)
     accepts_interfaces = (IDownloadable,)
     order = 10
     def cell_call(self, row, col, title=None, label=None, **kwargs):
@@ -120,10 +120,6 @@ class IDownloadablePrimaryView(baseviews.PrimaryView):
         """display all relations as side related"""
         return True
 
-
-    def render_side_related(self, entity, siderelations):
-        download_box(self.w, entity)
-        super(IDownloadablePrimaryView, self).render_side_related(entity, siderelations)
 
 class IDownloadableLineView(baseviews.OneLineView):
     __selectors__ = (interface_selector,)
