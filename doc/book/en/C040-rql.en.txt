@@ -533,6 +533,17 @@ Remarks
 
    is not.
 
+RQL logs
+--------
+
+You can configure the `CubicWeb` application so that you keep a log
+of the queries executed against your database. To do so, you want to
+edit the configuration file of your application 
+``.../etc/cubicweb.d/myapp/all-in-one.conf`` and uncomment the
+variable ``query-log-file``: ::
+
+  # web application query log file
+  query-log-file=/tmp/rql-myapp.log
 
 
 Conclusion
