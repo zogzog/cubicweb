@@ -10,10 +10,10 @@ from cubicweb.common.appobject import Component, SingletonComponent
 from cubicweb.common.utils import merge_dicts
 from cubicweb.common.view import VComponent, SingletonVComponent
 from cubicweb.common.registerers import action_registerer
-from cubicweb.common.selectors import (paginated_rset, one_line_rset, 
-                                    etype_rtype_selector, rqlcondition_selector,
-                                    accept_selector, contextprop_selector,
-                                    primaryview_selector, accept_rtype_selector)
+from cubicweb.common.selectors import (paginated_rset, one_line_rset,
+                                       rql_condition, accept, primary_view,
+                                       match_context_prop, has_relation,
+                                       etype_rtype_selector)
 from cubicweb.common.uilib import html_escape
 
 _ = unicode
@@ -32,10 +32,10 @@ class EntityVComponent(VComponent):
     
     __registry__ = 'contentnavigation'
     __registerer__ = action_registerer    
-    __selectors__ = (one_line_rset, primaryview_selector,
-                     contextprop_selector, etype_rtype_selector,
-                     accept_rtype_selector, accept_selector,
-                     rqlcondition_selector)
+    __selectors__ = (one_line_rset, primary_view,
+                     match_context_prop, etype_rtype_selector,
+                     has_relation, accept,
+                     rql_condition)
     
     property_defs = {
         _('visible'):  dict(type='Boolean', default=True,
@@ -135,9 +135,9 @@ class NavigationComponent(VComponent):
 
 class RelatedObjectsVComponent(EntityVComponent):
     """a section to display some related entities"""
-    __selectors__ = (one_line_rset, primaryview_selector,
-                     etype_rtype_selector, accept_rtype_selector,
-                     contextprop_selector, accept_selector)
+    __selectors__ = (one_line_rset, primary_view,
+                     etype_rtype_selector, has_relation,
+                     match_context_prop, accept)
     vid = 'list'
 
     def rql(self):
