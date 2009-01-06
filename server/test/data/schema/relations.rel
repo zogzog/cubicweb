@@ -41,3 +41,5 @@ Note require_permission EPermission
 Personne require_permission EPermission
 
 EPermission require_state State
+
+Note migrated_from Note

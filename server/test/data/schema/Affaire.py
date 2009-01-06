@@ -20,6 +20,9 @@ class Affaire(EntityType):
                                 default='text/rest', constraints=[format_constraint])
     descr = String(fulltextindexed=True,
                    description=_('more detailed description'))
+
+    duration = Int()
+    invoiced = Int()
         
     wf_info_for = ObjectRelation('TrInfo', cardinality='1*', composite='object')
     depends_on = SubjectRelation('Affaire')
