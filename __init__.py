@@ -23,33 +23,11 @@ from urllib import quote as urlquote, unquote as urlunquote
 
 from logilab.common.decorators import cached
 
-
-LLDEBUG = 5
-logging.addLevelName(LLDEBUG, 'LLDEBUG')
-
-class CubicWebLogger(logging.Logger):
-
-    def lldebug(self, msg, *args, **kwargs):
-        """
-        Log 'msg % args' with severity 'DEBUG'.
-
-        To pass exception information, use the keyword argument exc_info with
-        a true value, e.g.
-
-        logger.debug("Houston, we have a %s", "thorny problem", exc_info=1)
-        """
-        if self.manager.disable >= LLDEBUG:
-            return
-        if LLDEBUG >= self.getEffectiveLevel():
-            self._log(LLDEBUG, msg, args, **kwargs)
-
-logging.setLoggerClass(CubicWebLogger)
-
 def set_log_methods(cls, logger):
     """bind standart logger's methods as static methods on the class
     """
     cls._logger = logger
-    for attr in ('lldebug', 'debug', 'info', 'warning', 'error', 'critical', 'exception'):
+    for attr in ('debug', 'info', 'warning', 'error', 'critical', 'exception'):
         setattr(cls, attr, getattr(logger, attr))
 
 if os.environ.get('APYCOT_ROOT'):
