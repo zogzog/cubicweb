@@ -3,12 +3,43 @@
 A selector is responsible to score how well an object may be used with a
 given result set (publishing time selection)
 
+If you have trouble with selectors, especially if the objet (typically
+a view or a component) you want to use is not selected and you want to
+know which one(s) of its selectors fail (e.g. returns 0), you can use
+`traced_selection` or even direclty `TRACED_OIDS`.
+
+`TRACED_OIDS` is a tuple of traced object ids. The special value
+'all' may be used to log selectors for all objects.
+
+For instance, say that the following code yields a `NoSelectableObject`
+exception::
+
+    self.view('calendar', myrset)
+
+You can log the selectors involved for *calendar* by replacing the line
+above by::
+
+    # in Python2.5
+    from cubicweb.selectors import traced_selection
+    with traced_selection():
+        self.view('calendar', myrset)
+
+    # in Python2.4
+    from cubicweb import selectors
+    selectors.TRACED_OIDS = ('calendar',)
+    self.view('calendar', myrset)
+    selectors.TRACED_OIDS = ()
+ 
+
+
 :organization: Logilab
 :copyright: 2001-2008 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 """
 
 __docformat__ = "restructuredtext en"
+
+import logging
 
 from logilab.common.compat import all
 from logilab.common.deprecation import deprecated_function
@@ -20,16 +51,49 @@ from cubicweb.cwconfig import CubicWebConfiguration
 from cubicweb.schema import split_expression
 
 
+# helpers for debugging selectors
+SELECTOR_LOGGER = logging.getLogger('cubicweb.selectors')
+TRACED_OIDS = ()
+
 def lltrace(selector):
     # don't wrap selectors if not in development mode
     if CubicWebConfiguration.mode == 'installed':
         return selector
     def traced(cls, *args, **kwargs):
         ret = selector(cls, *args, **kwargs)
-        cls.lldebug('selector %s returned %s for %s', selector.__name__, ret, cls)
+        if TRACED_OIDS == 'all' or cls.id in TRACED_OIDS:
+            SELECTOR_LOGGER.warning('selector %s returned %s for %s', selector.__name__, ret, cls)
         return ret
     return traced
+
+class traced_selection(object):
+    """selector debugging helper.
+
+    Typical usage is :
+
+    >>> with traced_selection():
+    ...     # some code in which you want to debug selectors
+    ...     # for all objects
+
+    or
+
+    >>> with traced_selection( ('oid1', 'oid2') ):
+    ...     # some code in which you want to debug selectors
+    ...     # for objects with id 'oid1' and 'oid2'
     
+    """
+    def __init__(self, traced='all'):
+        self.traced = traced
+        
+    def __enter__(self):
+        global TRACED_OIDS
+        TRACED_OIDS = self.traced
+
+    def __exit__(self, exctype, exc, traceback):
+        global TRACED_OIDS
+        TRACED_OIDS = ()
+        return traceback is None
+
 # very basic selectors ########################################################
 
 def yes(cls, *args, **kwargs):
