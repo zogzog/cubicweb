@@ -32,36 +32,38 @@ http://groups.google.com/group/google-appengine/browse_frm/thread/f48cf6099973ae
 
   Python is an Object Oriented Programming language and as such it
   already provides a consistent and strong architecture and syntax
-  a templating language would not reach. 
-  
+  a templating language would not reach.
+
   When doing development, you need a real language and template
   languages are not real languages.
 
-  Using Python enables developing applications for which code is 
-  easier to maintain with real functions/classes
+  Using Python enables developing applications for which code is
+  easier to maintain with real functions/classes/contexts
   without the need of learning a new dialect. By using Python,
-  we use standard OOP techniques and this is a key factor in a 
+  we use standard OOP techniques and this is a key factor in a
   robust application.
 
-* Why do you use the GPL license to prevent me from doing X?
+* Why do you use the GPL license to prevent me from doing X ?
 
-  GPL means that *if* you redistribute your application, you need to 
-  redistribute it *and* the changes you made *and* the code _linked_ 
-  to it under the GPL licence. 
-  
+  GPL means that *if* you redistribute your application, you need to
+  redistribute it *and* the changes you made *and* the code _linked_
+  to it under the GPL licence.
+
   Publishing a web site has nothing to do with redistributing
   source code. A fair amount of companies use modified GPL code
-  for internal use. And someone could publish a `CubicWeb` component 
-  under a BSD licence for others to plug into a GPL framework without 
+  for internal use. And someone could publish a `CubicWeb` component
+  under a BSD licence for others to plug into a GPL framework without
   any problem. The only thing we are trying to prevent here is someone
   taking the framework and packaging it as closed source to his own
   clients.
-  
+
 
 * CubicWeb looks pretty recent. Is it stable ?
 
-  [answer that framework has evolved over the past seven years and that
-  data migrated from one schema to the other ever since]
+  It is constantly evolving, piece by piece.  The framework has
+  evolved over the past seven years and data has been migrated from
+  one schema to the other ever since. There is a well-defined way to
+  handle data and schema migration.
 
 * Why is the RQL query language looking similar to X ?
 
@@ -92,8 +94,8 @@ http://groups.google.com/group/google-appengine/browse_frm/thread/f48cf6099973ae
   [we use jquery and things on top of that]
 
 * `Error while publishing rest text ...`
-  
-  While modifying the description of an entity, you get an error message in 
+
+  While modifying the description of an entity, you get an error message in
   the application `Error while publishing ...` for Rest text and plain text.
   The server returns a traceback like as follows ::
 
@@ -104,31 +106,34 @@ http://groups.google.com/group/google-appengine/browse_frm/thread/f48cf6099973ae
       file = __builtin__.open(filename, mode, buffering)
       TypeError: __init__() takes at most 3 arguments (4 given)
 
-  
+
   This can be fixed by applying the patch described in :
   http://code.google.com/p/googleappengine/issues/detail?id=48
 
 * What are hooks used for?
-  
-  Les crochets sont appeles lorsqu'une requete RQL est executee. Cela
-  permet d'executer des actions specifiques lors d'un acces a la base
-  de donnees, ce qui donne un controle de la base de donnees afin de
-  prevenir l'insertion de `mauvaises` entites dans la base.
+
+  Hooks are executed around (actually before or after) events.  The
+  most common events are data creation, update and deletion.  They
+  permit additional constraint checking (those not expressible at the
+  schema level), pre and post computations depending on data
+  movements.
+
+  As such, they are a vital part of the framework.
+
+  Other kinds of hooks, called Operations, are available
+  for execution just before commit.
 
 * When should you define an HTML template rather than define a graphical component?
 
-  Un template HTML ne peut contenir de logique, il ne permettra donc
-  que de definir une vue statique. Un composant permet lui de gerer
-  plus de logique et d'operations sur le contexte dans lequel il 
-  s'applique. Il faut donc bien reflechir avant de decider de l'un ou
-  de l'autre, mais vous avez la possibilite de choisir.
+  An HTML template cannot contain code, hence it is only about static
+  content.  A component is made of code and operations that apply on a
+  well defined context (request, result set). It enables much more
+  dynamic views.
 
 * What is the difference between `AppRsetObject` and `AppObject` ?
 
-  La différence entre la classe `AppRsetObject` et la classe `AppObject` est que
-  les instances de la premières sont séléctionnées pour une requête et un "result
-  set" et alors que les secondes ne sont séléctionnées qu'en fonction de leur
-  identifiant.
+  `AppRsetObject` instances are selected on a request and a result
+  set. `AppObject` instances are directly selected by id.
 
 HOW TO
 ======
@@ -137,20 +142,20 @@ HOW TO
 
 
 * How to update a database after a schema modification?
-  
-  Cela dépend de ce qui a été modifié dans le schéma. 
-  
-  * Modification d'une relation non finale
 
-  * Modification d'une relation finale 
+  It depends on what has been modified in the schema.
+
+  * Update of a non final relation.
+
+  * Update of a final relation.
 
 
 * How to create an anonymous user?
-  
-  Cela vous permet d'acceder a votre site sans avoir besoin de vous authentifier.
-  Dans le fichier ``all-in-one.conf`` de votre instance, définir l'utilisateur
-  anonyme en initilisant les valeurs des variables suivantes ::
-  
+
+  This allows to bypass authentication for your site. In the
+  ``all-in-one.conf`` file of your instance, define the anonymous user
+  as follows ::
+
     # login of the Erudi user account to use for anonymous user (if you want to
     # allow anonymous)
     anonymous-user=anon
@@ -158,25 +163,25 @@ HOW TO
     # password of the Erudi user account matching login
     anonymous-password=anon
 
-  Vous devez aussi vous assurer que cet utilisateur `anon` existe dans la base
-  de données, le plus simple étant de s'identifier sur votre application en
-  administrateur et de rajouter l'utilisateur `anon` via l'interface d'administration.
+  You also must ensure that this `anon` user is a registered user of
+  the DB backend. This could be the admin account (for development
+  purposes, of course).
 
 
 * How to change the application logo?
-  
+
   There are two ways of changing the logo.
 
   1. The easiest way to use a different logo is to replace the existing
      ``logo.png`` in ``myapp/data`` by your prefered icon and refresh.
-     By default all application will look for a ``logo.png`` to be 
+     By default all application will look for a ``logo.png`` to be
      rendered in the logo section.
 
      .. image:: images/lax-book.06-main-template-logo.en.png
 
   2. In your cube directory, you can specify which file to use for the logo.
      This is configurable in ``mycube/data/external_resources``: ::
-        
+
        LOGO = DATADIR/path/to/mylogo.gif
 
      where DATADIR is ``mycubes/data``.
@@ -185,7 +190,7 @@ HOW TO
 
   Here is a very usefull script which enables you to import LDAP users
   into your `CubicWeb` application by runing the following: ::
-  
+
 
     import os
     import pwd
@@ -236,4 +241,4 @@ HOW TO
         cnx.commit()
         cnx.close()
 
- 
+
