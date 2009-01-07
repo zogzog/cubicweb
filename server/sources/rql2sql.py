@@ -76,7 +76,7 @@ def rewrite_unstable_outer_join(select, solutions, unstable, schema):
         unstable.remove(varname)
         torewrite.add(var)
         newselect = Select()
-        newselect.need_distinct = False
+        newselect.need_distinct = newselect.need_intersect = False
         myunion = Union()
         myunion.append(newselect)
         # extract aliases / selection
@@ -487,7 +487,9 @@ class SQLGenerator(object):
             elif self._state.restrictions and self.dbms_helper.needs_from_clause:
                 sql.insert(1, 'FROM (SELECT 1) AS _T')
             sqls.append('\n'.join(sql))
-        if distinct:
+        if select.need_intersect:
+            return '\nINTERSECT\n'.join(sqls)
+        elif distinct:
             return '\nUNION\n'.join(sqls)
         else:
             return '\nUNION ALL\n'.join(sqls)

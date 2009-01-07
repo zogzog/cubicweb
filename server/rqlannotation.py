@@ -20,7 +20,7 @@ def _annotate_select(annotator, rqlst):
     #if server.DEBUG:
     #    print '-------- sql annotate', repr(rqlst)
     getrschema = annotator.schema.rschema
-    has_text_query = False
+    has_text_query = need_intersect = False
     need_distinct = rqlst.distinct
     for rel in rqlst.iget_nodes(Relation):
         if rel.neged(strict=True):
@@ -28,14 +28,23 @@ def _annotate_select(annotator, rqlst):
                 need_distinct = True
             else:
                 rschema = getrschema(rel.r_type)
-                if rschema.inlined:
-                    try:
-                        var = rel.children[1].children[0].variable
-                    except AttributeError:
-                        pass # rewritten variable
+                if not rschema.is_final():
+                    # if one of the relation's variable is ambiguous, an intersection
+                    # will be necessary
+                    for vref in rel.get_nodes(VariableRef):
+                        var = vref.variable
+                        if not var.stinfo['selected'] and len(var.stinfo['possibletypes']) > 1:
+                            need_intersect = True
+                            break
                     else:
-                        if not var.stinfo['constnode']:
-                            need_distinct = True
+                        if rschema.inlined:
+                            try:
+                                var = rel.children[1].children[0].variable
+                            except AttributeError:
+                                pass # rewritten variable
+                            else:
+                                if not var.stinfo['constnode']:
+                                    need_distinct = True
         elif getrschema(rel.r_type).symetric:
             for vref in rel.iget_nodes(VariableRef):
                 stinfo = vref.variable.stinfo
@@ -139,6 +148,7 @@ def _annotate_select(annotator, rqlst):
             except CantSelectPrincipal:
                 stinfo['invariant'] = False
     rqlst.need_distinct = need_distinct
+    rqlst.need_intersect = need_intersect
     return has_text_query
 
 
