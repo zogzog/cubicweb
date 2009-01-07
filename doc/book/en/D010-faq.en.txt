@@ -13,11 +13,12 @@ http://groups.google.com/group/google-appengine/browse_frm/thread/f48cf6099973ae
 
 * Why does not CubicWeb have a template language ?
 
-  It does. Actually, you can use your preferred template language if you
-  want. [explain how to use a template language]
+  There are enough template languages out there. You can use your
+  preferred template language if you want. [explain how to use a
+  template language]
 
   `CubicWeb` does not define its own templating language as this was
-  not our goal and emphasize. Based on our experience, we realized that
+  not our goal. Based on our experience, we realized that
   we could gain productivity by letting designers use design tools
   and developpers develop without the use of the templating language
   as an intermediary that could not be anyway efficient for both parties.
@@ -25,7 +26,7 @@ http://groups.google.com/group/google-appengine/browse_frm/thread/f48cf6099973ae
   it does not prevent you from using a templating language.
 
   The reason template languages are not used in this book is that
-  experience has proved us that using pure python was more efficient.
+  experience has proved us that using pure python was less cumbersome.
 
 * Why do you think using pure python is better than using a template language ?
 
@@ -34,7 +35,7 @@ http://groups.google.com/group/google-appengine/browse_frm/thread/f48cf6099973ae
   a templating language would not reach. 
   
   When doing development, you need a real language and template
-  languages are not real language.
+  languages are not real languages.
 
   Using Python enables developing applications for which code is 
   easier to maintain with real functions/classes
@@ -72,14 +73,16 @@ http://groups.google.com/group/google-appengine/browse_frm/thread/f48cf6099973ae
   like frameworks for several reasons.
 
   1. accessing data is *much* easier with it. One can write complex
-     queries with RQL that would just be impossible to define or unreadable
+     queries with RQL that would be tedious to define and hard to maintain
      using an object/filter suite of method calls.
 
-  2. it offers an abstraction layers that allows to have a single
-     framework that runs on multiple back-ends. We have not published the
-     SQL backend yet (still working on separating it clearly from other
-     backends), but we already have components (pieces of schema and views)
-     that run both on SQL and AppEngine. 
+  2. it offers an abstraction layer allowing your applications to run
+     on multiple back-ends. That means not only various SQL backends
+     (postgresql, sqlite, mysql), but also multiple databases at the
+     same time, and also non-SQL data stores like LDAP directories and
+     subversion/mercurial repositories (see the `vcsfile`
+     component). Google App Engine is yet another supported target for
+     RQL.
 
 [copy answer from forum, explain why similar to sparql and why better
   than django and SQL]
