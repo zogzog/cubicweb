@@ -1,0 +1,64 @@
+.. -*- coding: utf-8 -*-
+
+Cook book
+=========
+
+We gathered together some of our tricks and scripts that could make
+life easier.
+
+
+* How to import LDAP users in `CubicWeb`?
+
+  Here is a very usefull script which enables you to import LDAP users
+  into your `CubicWeb` application by runing the following: ::
+
+
+    import os
+    import pwd
+    import sys
+
+    from logilab.common.db import get_connection
+
+    def getlogin():
+        """avoid usinng os.getlogin() because of strange tty / stdin problems
+        (man 3 getlogin)
+        Another solution would be to use $LOGNAME, $USER or $USERNAME
+        """
+        return pwd.getpwuid(os.getuid())[0]
+
+
+    try:
+        database = sys.argv[1]
+    except IndexError:
+        print 'USAGE: python ldap2system.py <database>'
+        sys.exit(1)
+
+    if raw_input('update %s db ? [y/n]: ' % database).strip().lower().startswith('y'):
+        cnx = get_connection(user=getlogin(), database=database)
+        cursor = cnx.cursor()
+
+        insert = ('INSERT INTO euser (creation_date, eid, modification_date, login, firstname, surname, last_login_time, upassword) '
+                  "VALUES (%(mtime)s, %(eid)s, %(mtime)s, %(login)s, %(firstname)s, %(surname)s, %(mtime)s, './fqEz5LeZnT6');")
+        update = "UPDATE entities SET source='system' WHERE eid=%(eid)s;"
+        cursor.execute("SELECT eid,type,source,extid,mtime FROM entities WHERE source!='system'")
+        for eid, type, source, extid, mtime in cursor.fetchall():
+            if type != 'EUser':
+                print "don't know what to do with entity type", type
+                continue
+            if source != 'ldapuser':
+                print "don't know what to do with source type", source
+                continue
+            ldapinfos = dict(x.strip().split('=') for x in extid.split(','))
+            login = ldapinfos['uid']
+            firstname = ldapinfos['uid'][0].upper()
+            surname = ldapinfos['uid'][1:].capitalize()
+            if login != 'jcuissinat':
+                args = dict(eid=eid, type=type, source=source, login=login,
+                            firstname=firstname, surname=surname, mtime=mtime)
+                print args
+                cursor.execute(insert, args)
+                cursor.execute(update, args)
+
+        cnx.commit()
+        cnx.close()
+

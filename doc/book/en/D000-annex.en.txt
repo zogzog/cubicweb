@@ -16,3 +16,4 @@ The following chapters are reference material.
    D040-modules-stdlib.en.txt
    D050-modules-cbw-api.en.txt
    D060-mercurial.en.txt
+   D070-cookbook.en.txt
