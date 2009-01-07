@@ -15,7 +15,7 @@ import locale
 import re
 from urllib import quote as urlquote
 from cStringIO import StringIO
-from xml.parsers.expat import ExpatError
+from xml.sax.saxutils import unescape
 from copy import deepcopy
 
 import simplejson
@@ -23,6 +23,7 @@ import simplejson
 from mx.DateTime import DateTimeType, DateTimeDeltaType
 
 from logilab.common.textutils import unormalize
+from logilab.mtconverter import html_escape
 
 def ustrftime(date, fmt='%Y-%m-%d'):
     """like strftime, but returns a unicode string instead of an encoded
@@ -116,12 +117,15 @@ def safe_cut(text, length):
     tags from given text if cut is necessary."""
     if text is None:
         return u''
-    text_nohtml = remove_html_tags(text)
+    noenttext = unescape(text)
+    text_nohtml = remove_html_tags(noenttext)
     # try to keep html tags if text is short enough
     if len(text_nohtml) <= length:
         return text
     # else if un-tagged text is too long, cut it
-    return text_nohtml[:length-3] + u'...'
+    return html_escape(text_nohtml[:length] + u'...')
+
+fallback_safe_cut = safe_cut
 
 
 try:
@@ -152,39 +156,63 @@ else:
             """
             if text is None:
                 return u''
-            textParse = etree.HTML(text)
-            compteur = 0
-
-            for element in textParse.iter():
-                if compteur > length:
+            dom = etree.HTML(text)
+            curlength = 0
+            add_ellipsis = False
+            for element in dom.iter():
+                if curlength >= length:
                     parent = element.getparent()
                     parent.remove(element)
+                    if curlength == length and (element.text or element.tail):
+                        add_ellipsis = True
                 else:
                     if element.text is not None:
-                        text_resum = text_cut_letters(element.text,length)
-                        len_text_resum = len(''.join(text_resum.split()))
-                        compteur = compteur + len_text_resum
-                        element.text = text_resum
-
+                        element.text = cut(element.text, length - curlength)
+                        curlength += len(element.text)
                     if element.tail is not None:
-                        if compteur < length:
-                            text_resum = text_cut_letters(element.tail,length)
-                            len_text_resum = len(''.join(text_resum.split()))
-                            compteur = compteur + len_text_resum
-                            element.tail = text_resum
+                        if curlength < length:
+                            element.tail = cut(element.tail, length - curlength)
+                            curlength += len(element.tail)
+                        elif curlength == length:
+                            element.tail = '...'
                         else:
                             element.tail = ''
+            text = etree.tounicode(dom[0])[6:-7] # remove wrapping <body></body>
+            if add_ellipsis:
+                return text + u'...'
+            return text
+        
+def text_cut(text, nbwords=30):
+    """from the given plain text, return a text with at least <nbwords> words,
+    trying to go to the end of the current sentence.
 
-            div = etree.HTML('<div></div>')[0][0]
-            listNode = textParse[0].getchildren()
-            for node in listNode:
-                div.append(deepcopy(node))
-            return etree.tounicode(div)
+    Note that spaces are normalized.
+    """
+    if text is None:
+        return u''
+    words = text.split()
+    text = ' '.join(words) # normalize spaces
+    minlength = len(' '.join(words[:nbwords]))
+    textlength = text.find('.', minlength) + 1
+    if textlength == 0: # no point found
+        textlength = minlength 
+    return text[:textlength]
+
+def cut(text, length):
+    """returns a string of a maximum length <length> based on <text>
+    (approximatively, since if text has been  cut, '...' is added to the end of the string,
+    resulting in a string of len <length> + 3)
+    """
+    if text is None:
+        return u''
+    if len(text) <= length:
+        return text
+    # else if un-tagged text is too long, cut it
+    return text[:length] + u'...'
+
 
     
 # HTML generation helper functions ############################################
-
-from logilab.mtconverter import html_escape
 
 def tooltipize(text, tooltip, url=None):
     """make an HTML tooltip"""
@@ -220,41 +248,6 @@ def ajax_replace_url(nodeid, rql, vid=None, swap=False, **extraparams):
     if swap:
         params.append('true')
     return "javascript: replacePageChunk(%s);" % ', '.join(params)
-
-def text_cut(text, nbwords=30):
-    if text is None:
-        return u''
-    minlength = len(' '.join(text.split()[:nbwords]))
-    textlength = text.find('.', minlength) + 1
-    if textlength == 0: # no point found
-        textlength = minlength 
-    return text[:textlength]
-
-def text_cut_letters(text, nbletters):
-    if text is None:
-        return u''
-    if len(''.join(text.split())) <= nbletters:
-           return text
-    else:
-        text_nospace = ''.join(text.split())
-        textlength=text.find('.') + 1
-
-        if textlength==0:
-           textlength=text.find(' ', nbletters+5)
-           
-        return text[:textlength] 
-
-def cut(text, length):
-    """returns a string of length <length> based on <text>
-    post:
-      len(__return__) <= length
-    """
-    if text is None:
-        return u''
-    if len(text) <= length:
-        return text
-    # else if un-tagged text is too long, cut it
-    return text[:length-3] + u'...'
 
 
 from StringIO import StringIO

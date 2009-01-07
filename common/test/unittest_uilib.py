@@ -22,112 +22,54 @@ class UILIBTC(TestCase):
             got = uilib.remove_html_tags(text)
             self.assertEquals(got, expected)
        
-    def test_safe_cut(self):
-        """ tests uilib.safe_cut() behaviour with very long text"""
+    def test_fallback_safe_cut(self):
+        self.assertEquals(uilib.fallback_safe_cut(u'ab <a href="hello">cd</a>', 4), u'ab c...')
+        self.assertEquals(uilib.fallback_safe_cut(u'ab <a href="hello">cd</a>', 5), u'ab <a href="hello">cd</a>')
+        self.assertEquals(uilib.fallback_safe_cut(u'ab <a href="hello">&amp;d</a>', 4), u'ab &amp;...')
+        self.assertEquals(uilib.fallback_safe_cut(u'ab <a href="hello">&amp;d</a> ef', 5), u'ab &amp;d...')
+        self.assertEquals(uilib.fallback_safe_cut(u'&amp; <a href="hello">&amp;d</a> ef', 4), u'&amp; &amp;d...')
         
-        data = [
-            ('opkolk', '<div><p>opkolk</p></div>'),
-            ("""<p>Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod
- tempor incididunt <strong>ut</strong> labore et dolore magna aliqua. Ut enim ad minim veniam,
- quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo
- consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse
- cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non
- proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
- Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod
- tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam,
- quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo
- consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse
- cillum dolore eu fugiat nulla pariatur.</p> ""","""<div><p>Lorem ipsum dolor sit amet, consectetur</p></div>"""),
-            ("""<p>empor incididunt utlabore et dolore magna aliqua. Ut enim ad minim veniam,
-quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo
-consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse
-cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non
-proident, sunt in culpa qui officia d</p>""","""<div><p>empor incididunt utlabore et dolore magna aliqua.</p></div>"""),
-            ("""empor <strong>incididunt</strong> utlabore et dolore magna aliqua. Ut enim ad minim veniam,
-quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo
-consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse
-cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non
-proident, sunt in culpa qui officia""","""<div><p>empor <strong>incididunt</strong> utlabore et dolore magna aliqua.</p></div>"""),
-            ("""<p>Lorem <strong>ipsum</strong> dolor <it>sit</it> amet, <strong>consectetur</strong> adipisicing elit, sed do eiusmod
- tempor incididunt <strong>ut</strong> labore et dolore magna aliqua. Ut enim ad minim veniam,
- quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo
- consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse
- cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non
- proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
- Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod
- tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam,
- quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo
- consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse
- cillum dolore eu fugiat nulla pariatur.</p>""","""<div><p>Lorem <strong>ipsum</strong> dolor <it>sit</it> amet, <strong>consectetur</strong></p></div>"""),
-            ("""&iexcl;""",u"""<div><p>\xa1</p></div>"""),
-            ("""<strong>&iexcl; &iexcl; &iexcl; &iexcl;</strong>""",
-             u"""<div><strong>\xa1 \xa1 \xa1 \xa1</strong></div>"""),
-            ("""<strong>&iexcl; &iexcl; &iexcl; &iexcl;</strong><strong>&iexcl; &iexcl; &iexcl; &iexcl;</strong><strong>&iexcl; &iexcl; &iexcl; &iexcl;</strong><strong>&iexcl; &iexcl; &iexcl; &iexcl;</strong><strong>&iexcl; &iexcl; &iexcl; &iexcl;</strong><strong>&iexcl; &iexcl; &iexcl; &iexcl;</strong><strong>&iexcl; &iexcl; &iexcl; &iexcl;</strong><strong>&iexcl; &iexcl; &iexcl; &iexcl;</strong><strong>&iexcl; &iexcl; &iexcl; &iexcl;</strong><strong>&iexcl; &iexcl; &iexcl; &iexcl;</strong><strong>&iexcl; &iexcl; &iexcl; &iexcl;</strong><strong>&iexcl; &iexcl; &iexcl; &iexcl;</strong><strong>&iexcl; &iexcl; &iexcl; &iexcl;</strong><strong>&iexcl; &iexcl; &iexcl; &iexcl;</strong>""",
-             u"""<div><strong>\xa1 \xa1 \xa1 \xa1</strong><strong>\xa1 \xa1 \xa1 \xa1</strong><strong>\xa1 \xa1 \xa1 \xa1</strong><strong>\xa1 \xa1 \xa1 \xa1</strong><strong>\xa1 \xa1 \xa1 \xa1</strong><strong>\xa1 \xa1 \xa1 \xa1</strong><strong>\xa1 \xa1 \xa1 \xa1</strong><strong>\xa1 \xa1 \xa1 \xa1</strong></div>"""),
-                      
-                       
-            ]
-        for text, expected in data:
-            got = uilib.safe_cut(text, 30)
-            self.assertEquals(got, expected)
+    def test_lxml_safe_cut(self):
+        self.assertEquals(uilib.safe_cut(u'aaa<div>aaad</div> ef', 4), u'<p>aaa</p><div>a...</div>')
+        self.assertEquals(uilib.safe_cut(u'aaa<div>aaad</div> ef', 7), u'<p>aaa</p><div>aaad</div>...')
+        self.assertEquals(uilib.safe_cut(u'aaa<div>aaad</div>', 7), u'<p>aaa</p><div>aaad</div>')
+        # Missing ellipsis due to space management but we don't care
+        self.assertEquals(uilib.safe_cut(u'ab <a href="hello">&amp;d</a>', 4), u'<p>ab <a href="hello">&amp;...</a></p>')
 
     def test_cut(self):
         """tests uilib.cut() behaviour"""
         data = [
             ('hello', 'hello'),
-            ('hello world', 'hello...'),
-            ("hell<b>O'</b> world", "hell<..."),
+            ('hello world', 'hello wo...'),
+            ("hell<b>O'</b> world", "hell<b>O..."),
             ]
         for text, expected in data:
             got = uilib.cut(text, 8)
             self.assertEquals(got, expected)
 
-    def test_text_cut_no_text(self):
+    def test_text_cut(self):
         """tests uilib.text_cut() behaviour with no text"""
-        data = [('','')]
-        for text, expected in data:
-            got = uilib.text_cut(text, 8)
-            self.assertEquals(got, expected)
-
-    def test_text_cut_long_text(self):
-        """tests uilib.text_cut() behaviour with long text"""
-        data = [("""Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod
+        data = [('',''),
+                ("""Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod
 tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam,
 quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo
 consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse
-cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non
-proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
-Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod
-tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam,
-quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo
-consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse
-cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non
-proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
-""","""Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod
-tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam,
-quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo
-consequat.""")]
-        for text, expected in data:
-            got = uilib.text_cut(text, 30)
-            self.assertEquals(got, expected)
-
-    def  test_text_cut_no_point(self):
-        """tests uilib.text_cut() behaviour with no point"""
-        data = [("""Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod
+cillum dolore eu fugiat nulla pariatur.""",
+                 "Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod \
+tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, \
+quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo \
+consequat."),
+                ("""Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod
 tempor incididunt ut labore et dolore magna aliqua Ut enim ad minim veniam,
 quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo
 consequat Duis aute irure dolor in reprehenderit in voluptate velit esse
 cillum dolore eu fugiat nulla pariatur Excepteur sint occaecat cupidatat non
 proident, sunt in culpa qui officia deserunt mollit anim id est laborum
-Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod
-tempor incididunt ut labore et dolore magna aliqua Ut enim ad minim veniam,
-quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo
-consequat Duis aute irure dolor in reprehenderit in voluptate velit esse
-cillum dolore eu fugiat nulla pariatur Excepteur sint occaecat cupidatat non
-proident, sunt in culpa qui officia deserunt mollit anim id est laborum
-""","""Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod
-tempor incididunt ut labore et dolore magna aliqua Ut enim ad minim veniam,
-quis nostrud exercitation ullamco laboris nisi""")]
+""",
+                 "Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod \
+tempor incididunt ut labore et dolore magna aliqua Ut enim ad minim veniam, \
+quis nostrud exercitation ullamco laboris nisi"),
+                ]
         for text, expected in data:
             got = uilib.text_cut(text, 30)
             self.assertEquals(got, expected)
