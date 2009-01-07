@@ -356,7 +356,12 @@ class RelationFacet(VocabularyFacet):
             mainvar = self.filtered_variable
             insert_attr_select_relation(rqlst, mainvar, self.rtype, self.role,
                                         self.target_attr, self.sortfunc, self.sortasc)
-            rset = self.rqlexec(rqlst.as_string(), self.rset.args, self.rset.cachekey)
+            try:
+                rset = self.rqlexec(rqlst.as_string(), self.rset.args, self.rset.cachekey)
+            except:
+                self.exception('error while getting vocabulary for %s, rql: %s',
+                               self, rqlst.as_string())
+                return ()
         finally:
             rqlst.recover()
         return self.rset_vocabulary(rset)
@@ -436,8 +441,12 @@ class AttributeFacet(RelationFacet):
             _cleanup_rqlst(rqlst, mainvar)
             newvar, rel = _prepare_vocabulary_rqlst(rqlst, mainvar, self.rtype, self.role)
             _set_orderby(rqlst, newvar, self.sortasc, self.sortfunc)
-            rset = self.rqlexec(rqlst.as_string(), self.rset.args,
-                                self.rset.cachekey)
+            try:
+                rset = self.rqlexec(rqlst.as_string(), self.rset.args, self.rset.cachekey)
+            except:
+                self.exception('error while getting vocabulary for %s, rql: %s',
+                               self, rqlst.as_string())
+                return ()
         finally:
             rqlst.recover()
         return self.rset_vocabulary(rset)
