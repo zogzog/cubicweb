@@ -207,7 +207,7 @@ def match_search_state(cls, req, rset, row=None, col=None, **kwargs):
         if not req.search_state[0] in cls.search_states:
             return 0
     except AttributeError:
-        return 1 # class don't care about search state, accept it
+        return 1 # class doesn't care about search state, accept it
     return 1
 searchstate_selector = deprecated_function(match_search_state)
 
