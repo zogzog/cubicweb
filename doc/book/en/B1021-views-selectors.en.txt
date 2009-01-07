@@ -47,7 +47,7 @@ is a description of some of the most common used:
 *anonymous_user*
     This selector accepts if user is anonymous.
 
-*authencated_user*
+*authenticated_user*
     This selector accepts if user is authenticated.
 
 
