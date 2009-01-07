@@ -746,11 +746,11 @@ FROM EProperty AS P
 WHERE P.for_user IS NULL'''),
 
     ('Any S WHERE NOT X in_state S, X is IN(Affaire, EUser)',
-     '''SELECT S.eid
+     '''SELECT DISTINCT S.eid
 FROM Affaire AS X, State AS S
 WHERE (X.in_state IS NULL OR X.in_state!=S.eid)
 INTERSECT
-SELECT S.eid
+SELECT DISTINCT S.eid
 FROM EUser AS X, State AS S
 WHERE (X.in_state IS NULL OR X.in_state!=S.eid)'''),
     ]

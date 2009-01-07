@@ -488,7 +488,10 @@ class SQLGenerator(object):
                 sql.insert(1, 'FROM (SELECT 1) AS _T')
             sqls.append('\n'.join(sql))
         if select.need_intersect:
-            return '\nINTERSECT\n'.join(sqls)
+            if distinct:
+                return '\nINTERSECT\n'.join(sqls)
+            else:
+                return '\nINTERSECT ALL\n'.join(sqls)
         elif distinct:
             return '\nUNION\n'.join(sqls)
         else:

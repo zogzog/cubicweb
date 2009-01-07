@@ -36,15 +36,14 @@ def _annotate_select(annotator, rqlst):
                         if not var.stinfo['selected'] and len(var.stinfo['possibletypes']) > 1:
                             need_intersect = True
                             break
-                    else:
-                        if rschema.inlined:
-                            try:
-                                var = rel.children[1].children[0].variable
-                            except AttributeError:
-                                pass # rewritten variable
-                            else:
-                                if not var.stinfo['constnode']:
-                                    need_distinct = True
+                    if rschema.inlined:
+                        try:
+                            var = rel.children[1].children[0].variable
+                        except AttributeError:
+                            pass # rewritten variable
+                        else:
+                            if not var.stinfo['constnode']:
+                                need_distinct = True
         elif getrschema(rel.r_type).symetric:
             for vref in rel.iget_nodes(VariableRef):
                 stinfo = vref.variable.stinfo
