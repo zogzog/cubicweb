@@ -10,7 +10,6 @@ from cubicweb.common import uilib
 
 class UILIBTC(TestCase):
 
-
     def test_remove_tags(self):
         """make sure remove_tags remove all tags"""
         data = [
@@ -60,6 +59,13 @@ proident, sunt in culpa qui officia""","""<div><p>empor <strong>incididunt</stro
  quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo
  consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse
  cillum dolore eu fugiat nulla pariatur.</p>""","""<div><p>Lorem <strong>ipsum</strong> dolor <it>sit</it> amet, <strong>consectetur</strong></p></div>"""),
+            ("""&iexcl;""",u"""<div><p>\xa1</p></div>"""),
+            ("""<strong>&iexcl; &iexcl; &iexcl; &iexcl;</strong>""",
+             u"""<div><strong>\xa1 \xa1 \xa1 \xa1</strong></div>"""),
+            ("""<strong>&iexcl; &iexcl; &iexcl; &iexcl;</strong><strong>&iexcl; &iexcl; &iexcl; &iexcl;</strong><strong>&iexcl; &iexcl; &iexcl; &iexcl;</strong><strong>&iexcl; &iexcl; &iexcl; &iexcl;</strong><strong>&iexcl; &iexcl; &iexcl; &iexcl;</strong><strong>&iexcl; &iexcl; &iexcl; &iexcl;</strong><strong>&iexcl; &iexcl; &iexcl; &iexcl;</strong><strong>&iexcl; &iexcl; &iexcl; &iexcl;</strong><strong>&iexcl; &iexcl; &iexcl; &iexcl;</strong><strong>&iexcl; &iexcl; &iexcl; &iexcl;</strong><strong>&iexcl; &iexcl; &iexcl; &iexcl;</strong><strong>&iexcl; &iexcl; &iexcl; &iexcl;</strong><strong>&iexcl; &iexcl; &iexcl; &iexcl;</strong><strong>&iexcl; &iexcl; &iexcl; &iexcl;</strong>""",
+             u"""<div><strong>\xa1 \xa1 \xa1 \xa1</strong><strong>\xa1 \xa1 \xa1 \xa1</strong><strong>\xa1 \xa1 \xa1 \xa1</strong><strong>\xa1 \xa1 \xa1 \xa1</strong><strong>\xa1 \xa1 \xa1 \xa1</strong><strong>\xa1 \xa1 \xa1 \xa1</strong><strong>\xa1 \xa1 \xa1 \xa1</strong><strong>\xa1 \xa1 \xa1 \xa1</strong></div>"""),
+                      
+                       
             ]
         for text, expected in data:
             got = uilib.safe_cut(text, 30)
