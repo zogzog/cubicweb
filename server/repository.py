@@ -896,6 +896,11 @@ class Repository(object):
             source = subjsource
         return source
     
+    @cached
+    def rel_type_sources(self, rtype):
+        return [source for source in self.sources
+                if source.support_relation(rtype) or rtype in source.dont_cross_relations]
+    
     def locate_etype_source(self, etype):
         for source in self.sources:
             if source.support_entity(etype, 1):

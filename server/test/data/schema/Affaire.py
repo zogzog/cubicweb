@@ -26,6 +26,7 @@ class Affaire(EntityType):
         
     wf_info_for = ObjectRelation('TrInfo', cardinality='1*', composite='object')
     depends_on = SubjectRelation('Affaire')
+    require_permission = SubjectRelation('EPermission')
     
 class concerne(RelationType):
     permissions = {

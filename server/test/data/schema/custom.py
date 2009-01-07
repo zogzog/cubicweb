@@ -15,6 +15,12 @@ class multisource_rel(RelationDefinition):
     subject = ('Card', 'Note')
     object = 'Note'
 
+class multisource_inlined_rel(RelationType):
+    inlined = True
+    cardinality = '?*'
+    subject = ('Card', 'Note')
+    object = ('Affaire', 'Note')
+
 
 class see_also(RelationDefinition):
     subject = ('Bookmark', 'Note')

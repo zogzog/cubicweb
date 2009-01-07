@@ -264,6 +264,22 @@ class UnionStep(LimitOffsetMixIn, Step):
         return (self.__class__.__name__, self.limit, self.offset)
 
 
+class IntersectStep(UnionStep):
+    """return intersection of results of child in-memory steps (e.g. OneFetchStep / AggrStep)"""
+        
+    def execute(self):
+        """execute this step"""
+        result = set()
+        for step in self.children:
+            result &= frozenset(step.execute())
+        result = list(result)
+        if self.offset:
+            result = result[offset:]
+        if self.limit:
+            result = result[:limit]
+        return result
+
+
 class UnionFetchStep(Step):
     """union results of child steps using temporary tables (e.g. FetchStep)"""
 
@@ -272,4 +288,4 @@ class UnionFetchStep(Step):
         self.execute_children()
 
 
-__all__ = ('FetchStep', 'AggrStep', 'UnionStep', 'UnionFetchStep')
+__all__ = ('FetchStep', 'AggrStep', 'UnionStep', 'UnionFetchStep', 'IntersectStep')

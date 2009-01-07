@@ -180,8 +180,6 @@ class PartPlanInformation(object):
         # processing
         self._compute_sourcesvars()
         self._remove_invalid_sources()
-        #if server.DEBUG:
-        #    print 'planner sources vars', self._sourcesvars
         self._compute_needsplit()
         self._inputmaps = {}
         if rqlhelper is not None: # else test
@@ -212,6 +210,7 @@ class PartPlanInformation(object):
                          for solidx in self._solindices
                          if not (source.support_relation(rtype)
                                  or rtype in source.dont_cross_relations))
+        
     
     def _compute_sourcesvars(self):
         """compute for each variable/solution in the rqlst which sources support
@@ -277,11 +276,9 @@ class PartPlanInformation(object):
             # during bootstrap)
             if not rel.is_types_restriction() and not rschema(rel.r_type).is_final():
                 # nothing to do if relation is not supported by multiple sources
-                relsources = [source for source in repo.sources
-                              if source.support_relation(rel.r_type)
-                              or rel.r_type in source.dont_cross_relations]
+                relsources = repo.rel_type_sources(rel.r_type)
                 if len(relsources) < 2:
-                    if relsources:# and not relsources[0] in self._sourcesvars:
+                    if relsources:
                         # this means the relation is using a variable inlined as
                         # a constant and another unsupported variable, in which
                         # case we put the relation in sourcesvars
@@ -344,7 +341,7 @@ class PartPlanInformation(object):
                     for const in vconsts:
                         if const.scope in source_scopes:
                             self._set_source_for_var(source, const)
-        
+                            
     def _extern_term(self, term, vsources, inserted):
         var = term.variable
         if var.stinfo['constnode']:
@@ -361,13 +358,24 @@ class PartPlanInformation(object):
         return termv
         
     def _remove_sources_until_stable(self, var, vsources):
+        sourcesvars = self._sourcesvars
         for ovar, rel in self._linkedvars.get(var, ()):
             if not var.scope is ovar.scope and rel.scope.neged(strict=True):
                 # can't get information from relation inside a NOT exists
                 # where variables don't belong to the same scope
                 continue
-            if rel.neged(strict=True):
-                # neged relation doesn't allow to infer variable sources
+            relsources = self._session.repo.rel_type_sources(rel.r_type)
+            if rel.neged(strict=True) and (
+                len(relsources) < 2
+                or not isinstance(ovar, Variable)
+                or ovar.valuable_references() != 1
+                or any(sourcesvars[source][var] != sourcesvars[source][ovar]
+                       for source in relsources
+                       if var in sourcesvars.get(source, ())
+                       and ovar in sourcesvars.get(source, ()))):
+                # neged relation doesn't allow to infer variable sources unless we're
+                # on a multisource relation for a variable only used by this relation
+                # (eg "Any X WHERE NOT X multisource_rel Y" and over is Y), iif 
                 continue
             norelsup = self._norel_support_set(rel.r_type)
             # compute invalid sources for variables and remove them
@@ -898,10 +906,16 @@ class MSPlanner(SSPlanner):
             step = AggrStep(plan, selection, select, atemptable, temptable)
             step.children = steps
         elif len(steps) > 1:
-            if temptable:
-                step = UnionFetchStep(plan)
+            if select.need_intersect:
+                if temptable:
+                    step = IntersectFetchStep(plan)
+                else:
+                    step = IntersectStep(plan)
             else:
-                step = UnionStep(plan)
+                if temptable:
+                    step = UnionFetchStep(plan)
+                else:
+                    step = UnionStep(plan)
             step.children = steps
         else:
             step = steps[0]

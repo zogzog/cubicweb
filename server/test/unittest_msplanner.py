@@ -28,7 +28,7 @@ class FakeUserROSource(AbstractSource):
 class FakeCardSource(AbstractSource):
     uri = 'ccc'
     support_entities = {'Card': True, 'Note': True, 'State': True}
-    support_relations = {'in_state': True, 'multisource_rel': True}
+    support_relations = {'in_state': True, 'multisource_rel': True, 'multisource_inlined_rel': True}
     dont_cross_relations = set(('fiche',))
     
     def syntax_tree_search(self, *args, **kwargs):
@@ -60,6 +60,7 @@ class BaseMSPlannerTC(BasePlannerTC):
     
     def setUp(self):
         #_QuerierTC.setUp(self)
+        clear_cache(repo, 'rel_type_sources')
         self.o = repo.querier
         self.session = repo._sessions.values()[0]
         self.pool = self.session.set_pool()
@@ -1144,7 +1145,7 @@ class MSPlannerTC(BaseMSPlannerTC):
                     ('FetchStep', [('Any X WHERE X is Note', [{'X': 'Note'}])],
                      [self.rql, self.system], None, {'X': 'table1.C0'},
                      []),
-                    ('UnionStep', None, None,
+                    ('IntersectStep', None, None,
                      [('OneFetchStep',
                        [('Any SN WHERE NOT X in_state S, S name SN, S is State, X is IN(Affaire, EUser)',
                          [{'S': 'State', 'SN': 'String', 'X': 'Affaire'},
@@ -1435,7 +1436,29 @@ class MSPlannerTC(BaseMSPlannerTC):
                         ]),
                     ],
                    {'x': ueid, 'y': ueid})
+
+    def test_delete_entity1(self):
+        repo._type_source_cache[999999] = ('Note', 'system', 999999)
+        self._test('DELETE Note X WHERE X eid %(x)s, NOT Y multisource_rel X',
+                   [('DeleteEntitiesStep',
+                     [('OneFetchStep', [('Any 999999 WHERE NOT Y multisource_rel 999999, Y is IN(Card, Note)',
+                                         [{'Y': 'Card'}, {'Y': 'Note'}])],
+                       None, None, [self.system], {}, [])
+                      ])
+                    ],
+                   {'x': 999999})
         
+    def test_delete_entity2(self):
+        repo._type_source_cache[999999] = ('Note', 'system', 999999)
+        self._test('DELETE Note X WHERE X eid %(x)s, NOT X multisource_inlined_rel Y',
+                   [('DeleteEntitiesStep',
+                     [('OneFetchStep', [('Any X WHERE X eid 999999, NOT X multisource_inlined_rel Y, X is Note, Y is IN(Affaire, Note)',
+                                         [{'X': 'Note', 'Y': 'Affaire'}, {'X': 'Note', 'Y': 'Note'}])],
+                       None, None, [self.system], {}, [])
+                      ])
+                    ],
+                   {'x': 999999})
+                   
     def test_update(self):
         self._test('SET X copain Y WHERE X login "comme", Y login "cochon"',
                    [('FetchStep',
