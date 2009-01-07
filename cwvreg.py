@@ -103,7 +103,7 @@ class CubicWebRegistry(VRegistry):
                                             registerer.remove_all_equivalents(objects)
                                         break
                                 else:
-                                    self.debug('kicking vobject %s (unsupported interface)', obj.__name__)
+                                    self.debug('kicking vobject %s (unsupported interface)', obj)
                                     objects.remove(obj)
                     # if objects is empty, remove oid from registry
                     if not objects:
