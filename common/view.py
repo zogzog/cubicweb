@@ -160,6 +160,7 @@ class View(AppRsetObject):
         if rset is None:
             raise NotImplementedError, self
         wrap = self.templatable and len(rset) > 1 and self.add_div_section
+        print 'vid=%s | rset=%s (%s)' % (self.classid(), rset.printable_rql(), len(rset))
         for i in xrange(len(rset)):
             if wrap:
                 self.w(u'<div class="section">')
@@ -207,7 +208,11 @@ class View(AppRsetObject):
             if __fallback_vid is None:
                 raise
             view = self.vreg.select_view(__fallback_vid, self.req, rset, **kwargs)
-        return view.dispatch(**kwargs)
+        try:
+            return view.dispatch(**kwargs)
+        except:
+            print 'vid', __vid
+            raise
     
     def wview(self, __vid, rset, __fallback_vid=None, **kwargs):
         """shortcut to self.view method automatically passing self.w as argument

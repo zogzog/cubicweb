@@ -66,7 +66,7 @@ class registerer(vobject_helper):
         raise NotImplementedError(str(self.vobject))
         
     def kick(self, registered, kicked):
-        self.debug('kicking vobject %s', kicked)
+        self.debug('kicking vobject %s', kicked.__name__)
         registered.remove(kicked)
         self.kicked.add(kicked.classid())
         
