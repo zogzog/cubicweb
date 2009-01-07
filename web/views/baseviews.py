@@ -657,12 +657,12 @@ class RssItemView(EntityView):
         self._marker('description', entity.dc_description())
         self._marker('dc:date', entity.dc_date(self.date_format))
         if entity.creator:
-            self.w('<author>')
+            self.w(u'<author>')
             self._marker('name', entity.creator.name())
             email = entity.creator.get_email()
             if email:
                 self._marker('email', email)
-            self.w('</author>')
+            self.w(u'</author>')
         self.w(u'</item>\n')
         
     def _marker(self, marker, value):
