@@ -356,7 +356,6 @@ class JSonController(Controller):
             extraargs = dict((str(key), value)
                              for key, value in extraargs.items())
         extraargs = extraargs or {}
-        print 'extraargs =', extraargs
         return self._set_content_type(comp, comp.dispatch(**extraargs))
 
     @check_pageid
