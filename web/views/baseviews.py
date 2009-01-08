@@ -618,17 +618,25 @@ class XMLRsetView(AnyRsetView):
         
     def call(self):
         w = self.w
-        descr = self.rset.description
-        labels = self.columns_labels()
+        rset, descr = self.rset, self.rset.description
+        eschema = self.schema.eschema
+        labels = self.columns_labels(False)
         w(u'<?xml version="1.0" encoding="%s"?>\n' % self.req.encoding)
         w(u'<%s>\n' % self.xml_root)
         for rowindex, row in enumerate(self.rset):
             w(u' <row>\n')
             for colindex, val in enumerate(row):
-                content = self.display_value(descr[rowindex][colindex], val)
+                etype = descr[rowindex][colindex]
                 tag = labels[colindex]
-                w(u' <%s>%s<%s>\n' % (tag, content, tag)
-            writer.writerow(csvrow)
+                if val is not None and not eschema(etype).is_final():
+                    # csvrow.append(val) # val is eid in that case
+                    content = self.view('textincontext', rset, 
+                                        row=rowindex, col=colindex)
+                    w(u'  <%s eid="%s">%s</%s>\n' % (tag, val, html_escape(content), tag))
+                else:
+                    content = self.view('final', rset, displaytime=True,
+                                        row=rowindex, col=colindex)
+                    w(u'  <%s>%s</%s>\n' % (tag, html_escape(content), tag))
             w(u' </row>\n')
         w(u'</%s>\n' % self.xml_root)
     
@@ -724,11 +732,19 @@ class CSVRsetView(CSVMixIn, AnyRsetView):
     def call(self):
         writer = self.csvwriter()
         writer.writerow(self.columns_labels())
-        descr = self.rset.description
-        for rowindex, row in enumerate(self.rset):
+        rset, descr = self.rset, self.rset.description
+        eschema = self.schema.eschema
+        for rowindex, row in enumerate(rset):
             csvrow = []
             for colindex, val in enumerate(row):
-                content = self.display_value(descr[rowindex][colindex], val)
+                etype = descr[rowindex][colindex]
+                if val is not None and not eschema(etype).is_final():
+                    # csvrow.append(val) # val is eid in that case
+                    content = self.view('textincontext', rset, 
+                                        row=rowindex, col=colindex)
+                else:
+                    content = self.view('final', rset, displaytime=True,
+                                        row=rowindex, col=colindex)
                 csvrow.append(content)                    
             writer.writerow(csvrow)
     

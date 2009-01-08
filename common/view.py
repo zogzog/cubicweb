@@ -383,25 +383,21 @@ class AnyRsetView(View):
     __selectors__ = (nonempty_rset,)
     
     category = 'anyrsetview'
-
-    def display_value(self, etype, val):
-        if val is not None and not self.schema.eschema(etype).is_final():
-            # csvrow.append(val) # val is eid in that case
-            return self.view('textincontext', self.rset, 
-                             row=rowindex, col=colindex)
-        return self.view('final', self.rset, displaytime=True,
-                         row=rowindex, col=colindex)
     
-    def columns_labels(self):
+    def columns_labels(self, tr=True):
+        if tr:
+            translate = display_name
+        else:
+            translate = lambda req, val: val
         rqlstdescr = self.rset.syntax_tree().get_description()[0] # XXX missing Union support
         labels = []
         for colindex, attr in enumerate(rqlstdescr):
             # compute column header
             if colindex == 0 or attr == 'Any': # find a better label
-                label = ','.join(display_name(self.req, et)
+                label = ','.join(translate(self.req, et)
                                  for et in self.rset.column_types(colindex))
             else:
-                label = display_name(self.req, attr)
+                label = translate(self.req, attr)
             labels.append(label)
         return labels
     
