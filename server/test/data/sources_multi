@@ -1,0 +1,20 @@
+[system]
+
+db-driver   = sqlite
+db-host     = 
+adapter     = native
+db-name     = tmpdb
+db-encoding = UTF-8
+db-user     = admin
+db-password = gingkow
+
+[extern]
+adapter = pyrorql
+pyro-ns-id = extern
+cubicweb-user = admin
+cubicweb-password = gingkow
+mapping-file = extern_mapping.py
+
+[admin]
+login = admin
+password = gingkow

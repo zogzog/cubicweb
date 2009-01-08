@@ -1,0 +1,13 @@
+[system]
+
+db-driver   = sqlite
+db-host     = 
+adapter     = native
+db-name     = tmpdb-extern
+db-encoding = UTF-8
+db-user     = admin
+db-password = gingkow
+
+[admin]
+login = admin
+password = gingkow

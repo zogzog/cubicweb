@@ -1,0 +1,35 @@
+[system]
+adapter=native
+# database driver (postgres or sqlite)
+db-driver=sqlite
+# database host
+db-host=
+# database name
+db-name=tmpdb
+# database user
+db-user=admin
+# database password
+db-password=gingkow
+# database encoding
+db-encoding=utf8
+
+[admin]
+login = admin
+password = gingkow
+
+[ldapuser]
+adapter=ldapuser
+# ldap host
+host=ldap
+# base DN to lookup for usres
+user-base-dn=ou=People,dc=logilab,dc=fr
+# user search scope
+user-scope=ONELEVEL
+# classes of user
+user-classes=top,posixAccount
+# attribute used as login on authentication
+user-login-attr=uid
+# name of a group in which ldap users will be by default
+user-default-group=users
+# map from ldap user attributes to cubicweb attributes
+user-attrs-map=gecos:email,uid:login
