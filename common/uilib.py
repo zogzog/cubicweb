@@ -15,7 +15,6 @@ import locale
 import re
 from urllib import quote as urlquote
 from cStringIO import StringIO
-from xml.sax.saxutils import unescape
 from copy import deepcopy
 
 import simplejson
@@ -23,7 +22,7 @@ import simplejson
 from mx.DateTime import DateTimeType, DateTimeDeltaType
 
 from logilab.common.textutils import unormalize
-from logilab.mtconverter import html_escape
+from logilab.mtconverter import html_escape, html_unescape
 
 def ustrftime(date, fmt='%Y-%m-%d'):
     """like strftime, but returns a unicode string instead of an encoded
@@ -117,7 +116,7 @@ def safe_cut(text, length):
     tags from given text if cut is necessary."""
     if text is None:
         return u''
-    noenttext = unescape(text)
+    noenttext = html_unescape(text)
     text_nohtml = remove_html_tags(noenttext)
     # try to keep html tags if text is short enough
     if len(text_nohtml) <= length:
