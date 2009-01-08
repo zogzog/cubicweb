@@ -551,6 +551,3 @@ searchstate_accept_one_selector = deprecated_function(searchstate_accept_one)
 searchstate_accept_one_but_etype = chainall(searchstate_accept_one, but_etype)
 searchstate_accept_one_but_etype_selector = deprecated_function(
     searchstate_accept_one_but_etype)
-
-#__all__ = [name for name in globals().keys() if name.endswith('selector')]
-#__all__ += ['chainall', 'chainfirst']
