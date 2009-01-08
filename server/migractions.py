@@ -142,7 +142,6 @@ class ServerMigrationHelper(MigrationHelper):
             elif options.backup_db:
                 self.backup_database(askconfirm=False)
         super(ServerMigrationHelper, self).migrate(vcconf, toupgrade, options)
-        self.rewrite_configuration()
     
     def process_script(self, migrscript, funcname=None, *args, **kwargs):
         """execute a migration script
