@@ -868,7 +868,10 @@ class CubicWebSchemaLoader(BootstrapSchemaLoader):
         from <directory>
         """
         self.info('loading %s schemas', ', '.join(config.cubes()))
-        path = reversed([config.apphome] + config.cubes_path())
+        if config.apphome:
+            path = reversed([config.apphome] + config.cubes_path())
+        else:
+            path = reversed(config.cubes_path())
         return super(CubicWebSchemaLoader, self).load(config, path=path)
 
     def _load_definition_files(self, cubes):
