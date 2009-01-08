@@ -2780,6 +2780,9 @@ msgstr ""
 msgid "xml"
 msgstr ""
 
+msgid "xml export"
+msgstr ""
+
 msgid "yes"
 msgstr ""
 

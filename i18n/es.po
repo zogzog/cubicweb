@@ -2900,6 +2900,9 @@ msgstr "xbel"
 msgid "xml"
 msgstr "xml"
 
+msgid "xml export"
+msgstr ""
+
 msgid "yes"
 msgstr "oui"
 
