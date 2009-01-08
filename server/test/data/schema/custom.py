@@ -25,3 +25,6 @@ class multisource_inlined_rel(RelationType):
 class see_also(RelationDefinition):
     subject = ('Bookmark', 'Note')
     object = ('Bookmark', 'Note')
+
+_euser = import_schema('base').EUser
+_euser.__relations__[0].fulltextindexed = True
