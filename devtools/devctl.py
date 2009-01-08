@@ -8,7 +8,7 @@ cubes development
 __docformat__ = "restructuredtext en"
 
 import sys
-from os import walk, mkdir, chdir, listdir
+from os import walk, mkdir, chdir, listdir, getcwd
 from os.path import join, exists, abspath, basename, normpath, split, isdir
 
 
@@ -24,58 +24,46 @@ from cubicweb.web.webconfig import WebConfiguration
 from cubicweb.server.serverconfig import ServerConfiguration
 
 
-class DevConfiguration(ServerConfiguration, WebConfiguration):
+class DevCubeConfiguration(ServerConfiguration, WebConfiguration):
     """dummy config to get full library schema and entities"""
     creating = True
-    def __init__(self, appid=None, cube=None):
-        self._cube = cube
-        super(DevConfiguration, self).__init__(appid)
-        if self._cube is None:
+    cubicweb_vobject_path = ServerConfiguration.cubicweb_vobject_path | WebConfiguration.cubicweb_vobject_path
+    cube_vobject_path = ServerConfiguration.cube_vobject_path | WebConfiguration.cube_vobject_path
+
+    def __init__(self, cube):
+        super(DevCubeConfiguration, self).__init__(cube)
+        if cube is None:
             self._cubes = ()
         else:
-            self._cubes = self.expand_cubes(self.cube_dependencies(self._cube))
+            self._cubes = self.expand_cubes((cube,))
         
-#    def adjust_sys_path(self):
-#        # update python path if necessary
-#        if not self.cubes_dir() in sys.path:
-#            sys.path.insert(0, self.cubes_dir())
-    
     @property
     def apphome(self):
-        return self.appid
-    
+        return None
+    def main_config_file(self):
+        return None
     def init_log(self, debug=None):
         pass
     def load_configuration(self):
         pass
 
-    cubicweb_vobject_path = ServerConfiguration.cubicweb_vobject_path | WebConfiguration.cubicweb_vobject_path
-    cube_vobject_path = ServerConfiguration.cube_vobject_path | WebConfiguration.cube_vobject_path
 
-
-def generate_schema_pot(w, cubedir=None):
-    """generate a pot file with schema specific i18n messages
-
-    notice that relation definitions description and static vocabulary
-    should be marked using '_' and extracted using xgettext
+class DevDepConfiguration(DevCubeConfiguration):
+    """configuration to use to generate cubicweb po files or to use as "library" configuration
+    to filter out message ids from cubicweb and dependencies of a cube
     """
-    from cubicweb.cwvreg import CubicWebRegistry
-    cube = cubedir and split(cubedir)[-1]
-    config = DevConfiguration(join(BASEDIR, 'web'), cube)
-    if cubedir:
-        libschema = config.load_schema()
-        config = DevConfiguration(cubedir, cube)
-        schema = config.load_schema()
-    else:
-        schema = config.load_schema()
-        libschema = None
-        config.cleanup_interface_sobjects = False
-    vreg = CubicWebRegistry(config)
-    vreg.set_schema(schema)
-    vreg.register_objects(config.vregistry_path())
-    w(DEFAULT_POT_HEAD)
-    _generate_schema_pot(w, vreg, schema, libschema=libschema,
-                         cube=cube)
+    def __init__(self, cube=None):
+        super(DevDepConfiguration, self).__init__(cube)
+        if cube is None:
+            self._cubes = ()
+        else:
+            self._cubes = self.expand_cubes(self.cube_dependencies(cube))
+
+    def default_log_file(self):
+        return None
+
+
+def cleanup_sys_modules(config):
     # cleanup sys.modules, required when we're updating multiple cubes
     for name, mod in sys.modules.items():
         if mod is None:
@@ -88,6 +76,30 @@ def generate_schema_pot(w, cubedir=None):
             if mod.__file__.startswith(path):
                 del sys.modules[name]
                 break
+    
+def generate_schema_pot(w, cubedir=None):
+    """generate a pot file with schema specific i18n messages
+
+    notice that relation definitions description and static vocabulary
+    should be marked using '_' and extracted using xgettext
+    """
+    from cubicweb.cwvreg import CubicWebRegistry
+    cube = cubedir and split(cubedir)[-1]
+    config = DevDepConfiguration(cube)
+    cleanup_sys_modules(config)
+    if cubedir:
+        libschema = config.load_schema()
+        config = DevCubeConfiguration(cube)
+        schema = config.load_schema()
+    else:
+        schema = config.load_schema()
+        libschema = None
+        config.cleanup_interface_sobjects = False
+    vreg = CubicWebRegistry(config)
+    # set_schema triggers objects registrations
+    vreg.set_schema(schema)
+    w(DEFAULT_POT_HEAD)
+    _generate_schema_pot(w, vreg, schema, libschema=libschema, cube=cube)
                 
 def _generate_schema_pot(w, vreg, schema, libschema=None, cube=None):
     from mx.DateTime import now
@@ -152,7 +164,7 @@ def _generate_schema_pot(w, vreg, schema, libschema=None, cube=None):
                             label2 = "creating %s (%s %s %s %%(linkto)s)" % (teschema, teschema, rschema, eschema)
                         add_msg(w, label)
                         add_msg(w, label2)
-    cube = (cube or 'cubicweb') + '.'
+    cube = (cube and 'cubes.%s.' % cube or 'cubicweb.')
     done = set()
     for reg, objdict in vreg.items():
         for objects in objdict.values():
@@ -271,7 +283,7 @@ class UpdateTemplateCatalogCommand(Command):
     
     def run(self, args):
         """run the command with its specific arguments"""
-        CUBEDIR = DevConfiguration.cubes_dir()
+        CUBEDIR = DevCubeConfiguration.cubes_dir()
         if args:
             cubes = [join(CUBEDIR, app) for app in args]
         else:
