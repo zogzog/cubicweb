@@ -378,6 +378,24 @@ class NewCubeCommand(Command):
           'help': 'verbose mode: will ask all possible configuration questions',
           }
          ),
+        ("author",
+         {'short': 'a', 'type' : 'string', 'metavar': '<author>',
+          'default': 'LOGILAB S.A. (Paris, FRANCE)',
+          'help': 'cube author',
+          }
+         ),
+        ("author-email",
+         {'short': 'e', 'type' : 'string', 'metavar': '<email>',
+          'default': 'contact@logilab.fr',
+          'help': 'cube author\'s email',
+          }
+         ),
+        ("author-web-site",
+         {'short': 'w', 'type' : 'string', 'metavar': '<web site>',
+          'default': 'http://www.logilab.fr',
+          'help': 'cube author\'s web site',
+          }
+         ),
         )
 
     
@@ -428,6 +446,9 @@ class NewCubeCommand(Command):
                    'dependancies' : dependancies,
                    'version'  : cubicwebversion,
                    'year'  : str(now().year),
+                   'author': self['author'],
+                   'author-email': self['author-email'],
+                   'author-web-site': self['author-web-site'],
                    }
         copy_skeleton(skeldir, cubedir, context)
 
