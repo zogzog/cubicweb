@@ -176,6 +176,7 @@ def _generate_schema_pot(w, vreg, schema, libschema=None, cube=None):
                     add_msg(w, '%s_description' % objid)
                     add_msg(w, objid)
                     done.add(objid)
+
                     
 def defined_in_library(libschema, etype, rtype, tetype, x):
     """return true if the given relation definition exists in cubicweb's library"""
@@ -478,9 +479,54 @@ class NewCubeCommand(Command):
                 break
         return includes
     
+
+class ExamineLogCommand(Command):
+    """Examine a rql log file.
+
+    usage: python exlog.py < rql.log
+
+    will print out the following table
+
+      total execution time || number of occurences || rql query
+
+    sorted by descending total execution time
+
+    chances are the lines at the top are the ones that will bring
+    the higher benefit after optimisation. Start there.
+    """
+    name = 'exlog'
+    options = (
+        )
+    
+    def run(self, args):
+        if args:
+            raise BadCommandUsage("no argument expected")
+        import re
+        requests = {}
+        for line in sys.stdin:
+            if not ' WHERE ' in line:
+                continue
+            #sys.stderr.write( line )
+            rql, time = line.split('--')
+            rql = re.sub("(\'\w+': \d*)", '', rql)
+            req = requests.setdefault(rql, [])
+            time.strip()
+            chunks = time.split()
+            cputime = float(chunks[-3])
+            req.append( cputime )
+
+        stat = []
+        for rql, times in requests.items():
+            stat.append( (sum(times), len(times), rql) )
+
+        stat.sort()
+        stat.reverse()
+        for time, occ, rql in stat:
+            print time, occ, rql
         
 register_commands((UpdateCubicWebCatalogCommand,
                    UpdateTemplateCatalogCommand,
                    LiveServerCommand,
                    NewCubeCommand,
+                   ExamineLogCommand,
                    ))
