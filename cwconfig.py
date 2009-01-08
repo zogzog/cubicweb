@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """common configuration utilities for cubicweb
 
 :organization: Logilab
@@ -164,7 +165,7 @@ class CubicWebNoAppConfiguration(ConfigurationMixIn):
         # pyro name server
         ('pyro-ns-host',
          {'type' : 'string',
-          'default': '',
+          'default': u'hpoô',
           'help': 'Pyro name server\'s host. If not set, will be detected by a \
 broadcast query',
           'group': 'pyro-name-server', 'inputlevel': 1,

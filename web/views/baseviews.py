@@ -607,6 +607,32 @@ class XmlItemView(EntityView):
         self.w(u'</%s>\n' % (entity.e_schema))
 
 
+    
+class XMLRsetView(AnyRsetView):
+    """dumps xml in CSV"""
+    id = 'rsetxml'
+    title = _('xml export')
+    templatable = False
+    content_type = 'text/xml'
+    xml_root = 'rset'
+        
+    def call(self):
+        w = self.w
+        descr = self.rset.description
+        labels = self.columns_labels()
+        w(u'<?xml version="1.0" encoding="%s"?>\n' % self.req.encoding)
+        w(u'<%s>\n' % self.xml_root)
+        for rowindex, row in enumerate(self.rset):
+            w(u' <row>\n')
+            for colindex, val in enumerate(row):
+                content = self.display_value(descr[rowindex][colindex], val)
+                tag = labels[colindex]
+                w(u' <%s>%s<%s>\n' % (tag, content, tag)
+            writer.writerow(csvrow)
+            w(u' </row>\n')
+        w(u'</%s>\n' % self.xml_root)
+    
+
 class RssView(XmlView):
     id = 'rss'
     title = _('rss')
@@ -697,35 +723,15 @@ class CSVRsetView(CSVMixIn, AnyRsetView):
         
     def call(self):
         writer = self.csvwriter()
-        writer.writerow(self.get_headers_labels())
+        writer.writerow(self.columns_labels())
         descr = self.rset.description
         for rowindex, row in enumerate(self.rset):
             csvrow = []
             for colindex, val in enumerate(row):
-                etype = descr[rowindex][colindex]
-                if val is not None and not self.schema.eschema(etype).is_final():
-                    # csvrow.append(val) # val is eid in that case
-                    content = self.view('textincontext', self.rset, 
-                                        row=rowindex, col=colindex)
-                else:
-                    content = self.view('final', self.rset, displaytime=True,
-                                        row=rowindex, col=colindex)
+                content = self.display_value(descr[rowindex][colindex], val)
                 csvrow.append(content)                    
             writer.writerow(csvrow)
     
-    def get_headers_labels(self):
-        rqlstdescr = self.rset.syntax_tree().get_description()[0] # XXX missing Union support
-        labels = []
-        for colindex, attr in enumerate(rqlstdescr):
-            # compute column header
-            if colindex == 0 or attr == 'Any': # find a better label
-                label = ','.join(display_name(self.req, et)
-                                 for et in self.rset.column_types(colindex))
-            else:
-                label = display_name(self.req, attr)
-            labels.append(label)
-        return labels
-
     
 class CSVEntityView(CSVMixIn, EntityView):
     """dumps rset's entities (with full set of attributes) in CSV"""
