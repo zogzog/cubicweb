@@ -140,7 +140,7 @@ class PrimaryView(EntityView):
         # if the entity isn't meta itself
         self.w(u'<table border="0" width="100%">')
         self.w(u'<tr>')
-        self.w(u'<td style="width:75%" valign="top">')
+        self.w(u'<td valign="top">')
         self.w(u'<div class="mainInfo">')
         self.render_entity_attributes(entity, siderelations)
         self.w(u'</div>')
@@ -157,8 +157,6 @@ class PrimaryView(EntityView):
         self.w(u'<td valign="top">')
         self.render_side_related(entity, siderelations)
         self.w(u'</td>')
-        self.w(u'<td valign="top">')
-        self.w(u'</td>')        
         self.w(u'</tr>')
         self.w(u'</table>')        
         self.w(u'<div class="navcontentbottom">')
