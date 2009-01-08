@@ -13,9 +13,8 @@ from logilab.mtconverter import html_escape
 
 from cubicweb import NotAnEntity, NoSelectableObject
 from cubicweb.common.registerers import accepts_registerer, priority_registerer
-from cubicweb.common.selectors import (in_group_selector, nonempty_rset, 
-                                       empty_rset, accept_selector,
-                                       none_rset, chainfirst)
+from cubicweb.common.selectors import (chainfirst, match_user_group, accept,
+                                       nonempty_rset, empty_rset, none_rset)
 from cubicweb.common.appobject import AppRsetObject, ComponentMixIn
 from cubicweb.common.utils import UStringIO, HTMLStream
 
@@ -300,7 +299,7 @@ class EntityView(View):
     """base class for views applying on an entity (i.e. uniform result set)
     """
     __registerer__ = accepts_registerer
-    __selectors__ = (accept_selector,)
+    __selectors__ = (accept,)
     category = 'entityview'
     
     def field(self, label, value, row=True, show_label=True, w=None, tr=True):
@@ -323,7 +322,7 @@ class StartupView(View):
     to be displayed (so they can always be displayed !)
     """
     __registerer__ = priority_registerer
-    __selectors__ = (in_group_selector, none_rset)
+    __selectors__ = (match_user_group, none_rset)
     require_groups = ()
     category = 'startupview'
     
@@ -345,7 +344,7 @@ class EntityStartupView(EntityView):
     result set (usually a default rql is provided by the view class)
     """
     __registerer__ = accepts_registerer
-    __selectors__ = (chainfirst(none_rset, accept_selector),)
+    __selectors__ = (chainfirst(none_rset, accept),)
     
     default_rql = None
     
@@ -400,7 +399,7 @@ class Template(View):
     """
     __registry__ = 'templates'
     __registerer__ = priority_registerer
-    __selectors__ = (in_group_selector,)
+    __selectors__ = (match_user_group,)
 
     require_groups = ()
     

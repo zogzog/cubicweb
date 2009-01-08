@@ -9,7 +9,7 @@ __docformat__ = "restructuredtext en"
 
 from logilab.common.decorators import cached
 
-from cubicweb.common.selectors import interface_selector
+from cubicweb.common.selectors import implement_interface
 from cubicweb.interfaces import IWorkflowable, IEmailable, ITree
 
 
@@ -312,7 +312,7 @@ class TreeViewMixIn(object):
     """a recursive tree view"""
     id = 'tree'
     item_vid = 'treeitem'
-    __selectors__ = (interface_selector,)
+    __selectors__ = (implement_interface,)
     accepts_interfaces = (ITree,)
 
     def call(self, done=None, **kwargs):
