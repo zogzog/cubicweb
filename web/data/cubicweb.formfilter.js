@@ -107,12 +107,6 @@ var UNSELECTED_IMG = baseuri()+"data/no-check-no-border.png";
 
 function initFacetBoxEvents(root){
     root = root || document;
-    jQuery(root).find('div.facetBody').each(function (){
-    	 var height = jQuery(this).height();
-	 if (height > 160){
-	     jQuery(this).addClass('owerflowed');
-	 }
-    });
     jQuery(root).find('form').each(function () {
 	var form = jQuery(this);
 	var facetargs = form.attr('cubicweb:facetargs');
