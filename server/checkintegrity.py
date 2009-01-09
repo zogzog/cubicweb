@@ -198,7 +198,7 @@ def check_relations(schema, session, eids, fix=1):
                         if fix:
                             sql = 'UPDATE %s SET %s = NULL WHERE eid=%s;' % (
                                 subjtype, rtype, eid)
-                            session.system_sql()
+                            session.system_sql(sql)
             continue
         cursor = session.system_sql('SELECT eid_from FROM %s_relation;' % rtype)
         for row in cursor.fetchall():
