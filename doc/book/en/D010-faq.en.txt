@@ -211,3 +211,17 @@ HOW TO
 
   Any change applied to configuration file requires to restart your
   application.
+
+* I get NoSelectableObject exceptions: how do I debug selectors ?
+
+  You just need to put the appropriate context manager around view/component
+  selection: ::
+
+    from cubicweb.common.selectors import traced_selection
+    with traced_selection():
+        comp = self.vreg.select_object('contentnavigation', 'wfhistory',
+                                       self.req, rset, context='navcontentbottom')
+
+  This will yield additional WARNINGs, like this: ::
+
+    2009-01-09 16:43:52 - (cubicweb.selectors) WARNING: selector one_line_rset returned 0 for <class 'cubicweb.web.views.basecomponents.WFHistoryVComponent'>
