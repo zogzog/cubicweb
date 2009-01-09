@@ -100,14 +100,14 @@ def reindex_entities(schema, session):
     Entity.check = _check
 
     
-def check_schema(session):
+def check_schema(schema, session, eids, fix=1):
     """check serialized schema"""
     print 'Checking serialized schema'
     unique_constraints = ('SizeConstraint', 'FormatConstraint',
                           'VocabularyConstraint', 'RQLConstraint',
                           'RQLVocabularyConstraint')
     rql = ('Any COUNT(X),RN,EN,ECTN GROUPBY RN,EN,ECTN ORDERBY 1 '
-           'WHERE X is Econstraint, R constrained_by X, '
+           'WHERE X is EConstraint, R constrained_by X, '
            'R relation_type RT, R from_entity ET, RT name RN, '
            'ET name EN, X cstrtype ECT, ECT name ECTN')
     for count, rn, en, cstrname in session.execute(rql):
@@ -188,15 +188,17 @@ def check_relations(schema, session, eids, fix=1):
             continue
         if rschema.inlined:
             for subjtype in rschema.subjects():
-                cursor = session.system_sql('SELECT %s FROM %s WHERE %s IS NOT NULL;'
-                                            % (rtype, subjtype, rtype))
+                sql = 'SELECT %s FROM %s WHERE %s IS NOT NULL;' % (
+                    rtype, subjtype, rtype)
+                cursor = session.system_sql(sql)
                 for row in cursor.fetchall():
                     eid = row[0]
                     if not has_eid(cursor, eid, eids):
                         bad_related_msg(rtype, 'object', eid, fix)
                         if fix:
-                            session.system_sql('UPDATE %s SET %s = NULL WHERE eid=%s;'
-                                               % (subjtype, rtype, eid))
+                            sql = 'UPDATE %s SET %s = NULL WHERE eid=%s;' % (
+                                subjtype, rtype, eid)
+                            session.system_sql()
             continue
         cursor = session.system_sql('SELECT eid_from FROM %s_relation;' % rtype)
         for row in cursor.fetchall():
@@ -204,15 +206,18 @@ def check_relations(schema, session, eids, fix=1):
             if not has_eid(cursor, eid, eids):
                 bad_related_msg(rtype, 'subject', eid, fix)
                 if fix:
-                    session.system_sql(
-                        'DELETE FROM %s_relations WHERE eid_from=%s;' % (rtype, eid))
+                    sql = 'DELETE FROM %s_relation WHERE eid_from=%s;' % (
+                        rtype, eid)
+                    session.system_sql(sql)
         cursor = session.system_sql('SELECT eid_to FROM %s_relation;' % rtype)
         for row in cursor.fetchall():
             eid = row[0]
             if not has_eid(cursor, eid, eids):
                 bad_related_msg(rtype, 'object', eid, fix)
                 if fix:
-                    session.system_sql('DELETE FROM relations WHERE eid_to=%s;' % eid)
+                    sql = 'DELETE FROM %s_relation WHERE eid_to=%s;' % (
+                        rtype, eid)
+                    session.system_sql(sql)
 
 
 def check_metadata(schema, session, eids, fix=1):
