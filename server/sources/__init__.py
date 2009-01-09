@@ -134,8 +134,36 @@ class AbstractSource(object):
         this source. This should be called when a source is removed to
         properly cleanup the database
         """
+        cu = session.system_sql('SELECT eid FROM entities WHERE source=%(uri)s',
+                           {'uri': self.uri})
+        myeids = ','.join(str(r[0]) for r in cu.fetchall())
         # fti / entities tables cleanup
         dbhelper = session.pool.source('system').dbhelper
+        # delete relations referencing one of those eids
+        for rschema in self.schema.relations():
+            if rschema.is_final() or rschema.type == 'identity':
+                continue
+            if rschema.inlined:
+                for subjtype in rschema.subjects():
+                    for objtype in rschema.objects(subjtype):
+                        if self.support_entity(objtype):
+                            sql = 'UPDATE %s SET %s = NULL WHERE eid IN (%s);' % (
+                                subjtype, rschema.type, myeids)
+                            session.system_sql(sql)
+                            break
+                continue
+            for etype in rschema.subjects():
+                if self.support_entity(etype):
+                    sql = 'DELETE FROM %s_relation WHERE eid_from IN (%s);' % (
+                        rschema.type, myeids)
+                    session.system_sql(sql)
+                    break
+            for etype in rschema.objects():
+                if self.support_entity(etype):
+                    sql = 'DELETE FROM %s_relation WHERE eid_to IN (%s);' % (
+                        rschema.type, eid)
+                    session.system_sql(sql)
+                    break
         # sqlite doesn't support DELETE FROM xxx USING yyy
         session.system_sql('DELETE FROM %s WHERE %s.%s IN (SELECT eid FROM '
                            'entities WHERE entities.source=%%(uri)s)'
@@ -144,8 +172,8 @@ class AbstractSource(object):
                            {'uri': self.uri})
         session.system_sql('DELETE FROM entities WHERE source=%(uri)s',
                            {'uri': self.uri})
-
-    # abstract methods to overide (at least) in concrete source classes #######
+        
+    # abstract methods to override (at least) in concrete source classes #######
     
     def get_connection(self):
         """open and return a connection to the source"""
