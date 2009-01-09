@@ -161,7 +161,7 @@ class AbstractSource(object):
             for etype in rschema.objects():
                 if self.support_entity(etype):
                     sql = 'DELETE FROM %s_relation WHERE eid_to IN (%s);' % (
-                        rschema.type, eid)
+                        rschema.type, myeids)
                     session.system_sql(sql)
                     break
         # sqlite doesn't support DELETE FROM xxx USING yyy
