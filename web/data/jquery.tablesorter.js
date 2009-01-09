@@ -864,7 +864,11 @@ var Sortable = {};
 
 
 function cubicwebSortValueExtraction(node){
-    return jQuery(node).attr('cubicweb:sortvalue');
+    var sortvalue = jQuery(node).attr('cubicweb:sortvalue');
+    if (sortvalue === undefined) {
+	return '';
+    }
+    return sortvalue;
 }
 
 Sortable.sortTables = function() {
