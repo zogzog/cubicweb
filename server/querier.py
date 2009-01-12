@@ -44,6 +44,7 @@ def var_kwargs(restriction, args):
     for rel in restriction.iget_nodes(Relation):
         cmp = rel.children[1]
         if rel.r_type == 'eid' and cmp.operator == '=' and \
+               not rel.neged(strict=True) and \
                isinstance(cmp.children[0], Constant) and \
                cmp.children[0].type == 'Substitute':
             varkwargs[rel.children[0].name] = typed_eid(cmp.children[0].eval(args))

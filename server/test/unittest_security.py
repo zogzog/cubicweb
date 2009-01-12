@@ -253,7 +253,7 @@ class SecurityTC(BaseSecurityTC):
         self.assertEquals(rset.rows, [[aff2]])
         # more cache test w/ NOT eid
         rset = cu.execute('Affaire X WHERE NOT X eid %(x)s', {'x': eid}, 'x')
-        self.assertEquals(rset.rows, [])
+        self.assertEquals(rset.rows, [[aff2]])
         rset = cu.execute('Affaire X WHERE NOT X eid %(x)s', {'x': aff2}, 'x')
         self.assertEquals(rset.rows, [])
         
