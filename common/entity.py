@@ -957,11 +957,12 @@ class Entity(AppRsetObject, dict):
         relations = []
         for key in kwargs:
             relations.append('X %s %%(%s)s' % (key, key))
+        # update current local object
+        self.update(kwargs)
+        # and now update the database
         kwargs['x'] = self.eid
         self.req.execute('SET %s WHERE X eid %%(x)s' % ','.join(relations),
                          kwargs, 'x')
-        for key, val in kwargs.iteritems():
-            self[key] = val
             
     def delete(self):
         assert self.has_eid(), self.eid
