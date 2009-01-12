@@ -21,7 +21,7 @@ from cubicweb import RegistryException
 from cubicweb.common.view import EntityView
 from cubicweb.common.appobject import Component
 from cubicweb.common.registerers import accepts_registerer
-from cubicweb.common.selectors import accept_selector
+from cubicweb.common.selectors import accept
 from cubicweb.common.mail import format_mail
 
 from cubicweb.server.pool import PreCommitOperation
@@ -38,7 +38,7 @@ class RecipientsFinder(Component):
     """
     id = 'recipients_finder'
     __registerer__ = accepts_registerer
-    __selectors__ = (accept_selector,)
+    __selectors__ = (accept,)
     accepts = ('Any',)
     user_rql = ('Any X,E,A WHERE X is EUser, X in_state S, S name "activated",'
                 'X primary_email E, E address A')
