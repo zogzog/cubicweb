@@ -129,16 +129,15 @@ class AbstractSource(object):
             if not key in self.PUBLIC_KEYS:
                 sourcedef.pop(key)
 
-    def cleanup_entities_info(self, session):
-        """cleanup system tables from information for entities coming from
-        this source. This should be called when a source is removed to
-        properly cleanup the database
+    def _cleanup_system_relations(self, session):
+        """remove relation in the system source referencing entities coming from
+        this source
         """
         cu = session.system_sql('SELECT eid FROM entities WHERE source=%(uri)s',
-                           {'uri': self.uri})
+                                {'uri': self.uri})
         myeids = ','.join(str(r[0]) for r in cu.fetchall())
-        # fti / entities tables cleanup
-        dbhelper = session.pool.source('system').dbhelper
+        if not myeids:
+            return
         # delete relations referencing one of those eids
         for rschema in self.schema.relations():
             if rschema.is_final() or rschema.type == 'identity':
@@ -164,7 +163,16 @@ class AbstractSource(object):
                         rschema.type, myeids)
                     session.system_sql(sql)
                     break
+        
+    def cleanup_entities_info(self, session):
+        """cleanup system tables from information for entities coming from
+        this source. This should be called when a source is removed to
+        properly cleanup the database
+        """
+        self._cleanup_system_relations(session)
+        # fti / entities tables cleanup
         # sqlite doesn't support DELETE FROM xxx USING yyy
+        dbhelper = session.pool.source('system').dbhelper
         session.system_sql('DELETE FROM %s WHERE %s.%s IN (SELECT eid FROM '
                            'entities WHERE entities.source=%%(uri)s)'
                            % (dbhelper.fti_table, dbhelper.fti_table,
