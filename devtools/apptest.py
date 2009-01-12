@@ -111,8 +111,8 @@ class EnvBasedTC(TestCase):
     def create_user(self, *args, **kwargs):
         return self.env.create_user(*args, **kwargs)
 
-    def login(self, login):
-        return self.env.login(login)
+    def login(self, login, password=None):
+        return self.env.login(login, password)
 
     def restore_connection(self):
         self.env.restore_connection()

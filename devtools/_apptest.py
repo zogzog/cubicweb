@@ -130,11 +130,12 @@ class TestEnvironment(object):
         self._orig_cnx.commit()
         return user
 
-    def login(self, login):
+    def login(self, login, password=None):
         if login == self.admlogin:
             self.restore_connection()
         else:
-            self.cnx = repo_connect(self.repo, unicode(login), str(login),
+            self.cnx = repo_connect(self.repo, unicode(login),
+                                    password or str(login),
                                     ConnectionProperties('inmemory'))
         if login == self.vreg.config.anonymous_user()[0]:
             self.cnx.anonymous_connection = True
