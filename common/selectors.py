@@ -410,7 +410,8 @@ def etype_rtype_selector(cls, req, rset, row=None, col=None, **kwargs):
         if not (eschema.has_perm(req, perm) or eschema.has_local_role(perm)):
             return 0
     if hasattr(cls, 'rtype'):
-        if not schema.rschema(cls.rtype).has_perm(req, perm):
+        rschema = schema.rschema(cls.rtype)
+        if not (rschema.has_perm(req, perm) or rschema.has_local_role(perm)):
             return 0
     return 1
 
@@ -421,8 +422,9 @@ def has_relation(cls, req, rset, row=None, col=None, **kwargs):
     result set has this relation.
     """
     if hasattr(cls, 'rtype'):
+        rschema = cls.schema.rschema(cls.rtype)
         perm = getattr(cls, 'require_permission', 'read')
-        if not cls.schema.rschema(cls.rtype).has_perm(req, perm):
+        if not (rschema.has_perm(req, perm) or rschema.has_local_role(perm)):
             return 0
         if row is None:
             for etype in rset.column_types(col or 0):
@@ -439,8 +441,9 @@ def one_has_relation(cls, req, rset, row=None, col=None, **kwargs):
     .rtype attribute of the class, and if at least one entity type in the
     result set has this relation.
     """
+    rschema = cls.schema.rschema(cls.rtype)
     perm = getattr(cls, 'require_permission', 'read')
-    if not cls.schema.rschema(cls.rtype).has_perm(req, perm):
+    if not (rschema.has_perm(req, perm) or rschema.has_local_role(perm)):
         return 0
     if row is None:
         for etype in rset.column_types(col or 0):
