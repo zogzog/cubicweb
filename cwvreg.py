@@ -201,7 +201,10 @@ class CubicWebRegistry(VRegistry):
                     yield view
             except NoSelectableObject:
                 continue
-            
+            except Exception:
+                self.exception('error while trying to list possible %s views for %s',
+                               vid, rset)
+                
     def select_box(self, oid, *args, **kwargs):
         """return the most specific view according to the result set"""
         try:
