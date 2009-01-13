@@ -15,6 +15,10 @@ class multisource_rel(RelationDefinition):
     subject = ('Card', 'Note')
     object = 'Note'
 
+class multisource_crossed_rel(RelationDefinition):
+    subject = ('Card', 'Note')
+    object = 'Note'
+
 class multisource_inlined_rel(RelationType):
     inlined = True
     cardinality = '?*'

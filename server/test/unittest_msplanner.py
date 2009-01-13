@@ -28,8 +28,10 @@ class FakeUserROSource(AbstractSource):
 class FakeCardSource(AbstractSource):
     uri = 'ccc'
     support_entities = {'Card': True, 'Note': True, 'State': True}
-    support_relations = {'in_state': True, 'multisource_rel': True, 'multisource_inlined_rel': True}
+    support_relations = {'in_state': True, 'multisource_rel': True, 'multisource_inlined_rel': True,
+                         'multisource_crossed_rel': True}
     dont_cross_relations = set(('fiche',))
+    cross_relations = set(('multisource_crossed_rel',))
     
     def syntax_tree_search(self, *args, **kwargs):
         return []
@@ -1364,6 +1366,93 @@ class MSPlannerTC(BaseMSPlannerTC):
                                        [{'X': 'Personne', 'Y': 'Card', 'YT': 'String'}])],
                      None, None, [self.system], {}, [])],
                    {'x': 999999})
+
+
+    # external source w/ .cross_relations == ['multisource_crossed_rel'] ######
+    
+    def test_crossed_relation_eid_1_invariant(self):
+        repo._type_source_cache[999999] = ('Note', 'system', 999999)
+        ueid = self.session.user.eid
+        self._test('Any Y WHERE X eid %(x)s, X multisource_crossed_rel Y',
+                   [('OneFetchStep', [('Any Y WHERE 999999 multisource_crossed_rel Y', [{u'Y': 'Note'}])],
+                      None, None, [self.system], {}, [])
+                    ],
+                   {'x': 999999,})
+
+    def test_crossed_relation_eid_1_needattr(self):
+        repo._type_source_cache[999999] = ('Note', 'system', 999999)
+        ueid = self.session.user.eid
+        self._test('Any Y,T WHERE X eid %(x)s, X multisource_crossed_rel Y, Y type T',
+                   [('FetchStep', [('Any Y,T WHERE Y type T, Y is Note', [{'T': 'String', 'Y': 'Note'}])],
+                     [self.rql, self.system], None,
+                     {'T': 'table0.C1', 'Y': 'table0.C0', 'Y.type': 'table0.C1'}, []),
+                    ('OneFetchStep', [('Any Y,T WHERE 999999 multisource_crossed_rel Y, Y type T, Y is Note',
+                                       [{'T': 'String', 'Y': 'Note'}])],
+                     None, None, [self.system],
+                     {'T': 'table0.C1', 'Y': 'table0.C0', 'Y.type': 'table0.C1'}, []),
+                    ],
+                   {'x': 999999,})
+
+    def test_crossed_relation_eid_2_invariant(self):
+        repo._type_source_cache[999999] = ('Note', 'cards', 999999)
+        ueid = self.session.user.eid
+        self._test('Any Y WHERE X eid %(x)s, X multisource_crossed_rel Y',
+                   [('OneFetchStep', [('Any Y WHERE 999999 multisource_crossed_rel Y, Y is Note', [{'Y': 'Note'}])],
+                      None, None, [self.rql, self.system], {}, [])
+                    ],
+                   {'x': 999999,})
+
+    def test_crossed_relation_eid_2_needattr(self):
+        repo._type_source_cache[999999] = ('Note', 'cards', 999999)
+        ueid = self.session.user.eid
+        self._test('Any Y,T WHERE X eid %(x)s, X multisource_crossed_rel Y, Y type T',
+                   [('FetchStep', [('Any Y,T WHERE Y type T, Y is Note', [{'T': 'String', 'Y': 'Note'}])],
+                     [self.rql, self.system], None,
+                     {'T': 'table0.C1', 'Y': 'table0.C0', 'Y.type': 'table0.C1'}, []),
+                    ('OneFetchStep', [('Any Y,T WHERE 999999 multisource_crossed_rel Y, Y type T, Y is Note',
+                                       [{'T': 'String', 'Y': 'Note'}])],
+                     None, None, [self.rql, self.system],
+                     {'T': 'table0.C1', 'Y': 'table0.C0', 'Y.type': 'table0.C1'},
+                     [])
+                    ],
+                   {'x': 999999,})
+
+    def test_crossed_relation_eid_not_1(self):
+        repo._type_source_cache[999999] = ('Note', 'system', 999999)
+        ueid = self.session.user.eid
+        self._test('Any Y WHERE X eid %(x)s, NOT X multisource_crossed_rel Y',
+                   [('FetchStep', [('Any Y WHERE Y is Note', [{'Y': 'Note'}])],
+                     [self.rql, self.system], None, {'Y': 'table0.C0'}, []),
+                    ('OneFetchStep', [('Any Y WHERE NOT 999999 multisource_crossed_rel Y, Y is Note',
+                                       [{'Y': 'Note'}])],
+                     None, None, [self.system],
+                     {'Y': 'table0.C0'},  [])],
+                   {'x': 999999,})
+
+#     def test_crossed_relation_eid_not_2(self):
+#         repo._type_source_cache[999999] = ('Note', 'cards', 999999)
+#         ueid = self.session.user.eid
+#         self._test('Any Y WHERE X eid %(x)s, NOT X multisource_crossed_rel Y',
+#                    [],
+#                    {'x': 999999,})
+
+    def test_crossed_relation_base(self):
+        repo._type_source_cache[999999] = ('Note', 'system', 999999)
+        ueid = self.session.user.eid
+        self._test('Any X,Y,T WHERE X multisource_crossed_rel Y, Y type T, X type T',
+                   [('FetchStep', [('Any X,T WHERE X type T, X is Note', [{'T': 'String', 'X': 'Note'}])],
+                     [self.rql, self.system], None,
+                     {'T': 'table0.C1', 'X': 'table0.C0', 'X.type': 'table0.C1'}, []),
+                    ('FetchStep',  [('Any Y,T WHERE Y type T, Y is Note', [{'T': 'String', 'Y': 'Note'}])],
+                     [self.rql, self.system], None,
+                     {'T': 'table1.C1', 'Y': 'table1.C0', 'Y.type': 'table1.C1'},  []),
+                    ('OneFetchStep', [('Any X,Y,T WHERE X multisource_crossed_rel Y, Y type T, X type T, X is Note, Y is Note',
+                                       [{'T': 'String', 'X': 'Note', 'Y': 'Note'}])],
+                     None, None, [self.rql, self.system],
+                     {'T': 'table1.C1', 'X': 'table0.C0', 'X.type': 'table0.C1',
+                      'Y': 'table1.C0', 'Y.type': 'table1.C1'},
+                    [])],
+                    {'x': 999999,})
         
     # edition queries tests ###################################################
 
