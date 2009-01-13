@@ -341,7 +341,8 @@ class RQL2RQL(object):
     """translate a local rql query to be executed on a distant repository"""
     def __init__(self, source):
         self.source = source
-
+        self.current_operator = None
+        
     def _accept_children(self, node):
         res = []
         for child in node.children:
