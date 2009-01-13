@@ -35,8 +35,11 @@ class DevCubeConfiguration(ServerConfiguration, WebConfiguration):
         if cube is None:
             self._cubes = ()
         else:
-            self._cubes = self.expand_cubes((cube,))
-        
+            self._cubes = self.expand_cubes(self.my_cubes(cube))
+
+    def my_cubes(self, cube):
+        return (cube,) + self.cube_dependencies(cube) + self.cube_recommends(cube)
+    
     @property
     def apphome(self):
         return None
@@ -52,12 +55,9 @@ class DevDepConfiguration(DevCubeConfiguration):
     """configuration to use to generate cubicweb po files or to use as "library" configuration
     to filter out message ids from cubicweb and dependencies of a cube
     """
-    def __init__(self, cube=None):
-        super(DevDepConfiguration, self).__init__(cube)
-        if cube is None:
-            self._cubes = ()
-        else:
-            self._cubes = self.expand_cubes(self.cube_dependencies(cube))
+
+    def my_cubes(self, cube):
+        return self.cube_dependencies(cube) + self.cube_recommends(cube)
 
     def default_log_file(self):
         return None
