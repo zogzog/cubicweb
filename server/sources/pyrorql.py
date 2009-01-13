@@ -429,7 +429,13 @@ class RQL2RQL(object):
         try:
             if isinstance(node.children[0], Constant):
                 # simplified rqlst, reintroduce eid relation
-                restr, lhs = self.process_eid_const(node.children[0])
+                try:
+                    restr, lhs = self.process_eid_const(node.children[0])
+                except UnknownEid:
+                    # can safely skip not relation with an unsupported eid
+                    if node.neged(strict=True):
+                        return
+                    raise
             else:
                 lhs = node.children[0].accept(self)
                 restr = None
