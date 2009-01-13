@@ -1046,6 +1046,32 @@ class MSPlannerTC(BaseMSPlannerTC):
                      None, None, [self.system],
                      {'T': 'table0.C0', 'T2': 'table1.C0',
                       'X': 'table2.C1', 'X.login': 'table2.C0', 'L': 'table2.C0'}, [])])
+            
+    def test_exists_security_no_invariant(self):
+        ueid = self.session.user.eid
+        self._test('Any X,AA,AB,AC,AD ORDERBY AA WHERE X is EUser, X login AA, X firstname AB, X surname AC, X modification_date AD, A eid %(B)s, \
+    EXISTS(((X identity A) OR \
+            (EXISTS(X in_group C, C name IN("managers", "staff"), C is EGroup))) OR \
+            (EXISTS(X in_group D, A in_group D, NOT D name "users", D is EGroup)))',
+               [('FetchStep', [('Any X,AA,AB,AC,AD WHERE X login AA, X firstname AB, X surname AC, X modification_date AD, X is EUser',
+                                [{'AA': 'String', 'AB': 'String', 'AC': 'String', 'AD': 'Datetime',
+                                  'X': 'EUser'}])],
+                 [self.ldap, self.system], None, {'AA': 'table0.C1', 'AB': 'table0.C2',
+                                                  'AC': 'table0.C3', 'AD': 'table0.C4',
+                                                  'X': 'table0.C0',
+                                                  'X.firstname': 'table0.C2',
+                                                  'X.login': 'table0.C1',
+                                                  'X.modification_date': 'table0.C4',
+                                                  'X.surname': 'table0.C3'}, []),
+                ('OneFetchStep', [('Any X,AA,AB,AC,AD ORDERBY AA WHERE X login AA, X firstname AB, X surname AC, X modification_date AD, EXISTS(((X identity 5) OR (EXISTS(X in_group C, C name IN("managers", "staff"), C is EGroup))) OR (EXISTS(X in_group D, 5 in_group D, NOT D name "users", D is EGroup))), X is EUser',
+                                   [{'AA': 'String', 'AB': 'String', 'AC': 'String', 'AD': 'Datetime',
+                                     'C': 'EGroup', 'D': 'EGroup', 'X': 'EUser'}])],
+                 None, None, [self.system],
+                 {'AA': 'table0.C1', 'AB': 'table0.C2', 'AC': 'table0.C3', 'AD': 'table0.C4',
+                  'X': 'table0.C0',
+                  'X.firstname': 'table0.C2', 'X.login': 'table0.C1', 'X.modification_date': 'table0.C4', 'X.surname': 'table0.C3'},
+                 [])],
+                   {'B': ueid})
 
     def test_relation_need_split(self):
         self._test('Any X, S WHERE X in_state S',

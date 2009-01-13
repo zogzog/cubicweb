@@ -364,6 +364,8 @@ class PartPlanInformation(object):
                 # can't get information from relation inside a NOT exists
                 # where variables don't belong to the same scope
                 continue
+            if not (var.scope is rel.scope and ovar.scope is rel.scope) and rel.ored():
+                continue
             relsources = self._session.repo.rel_type_sources(rel.r_type)
             if rel.neged(strict=True) and (
                 len(relsources) < 2
