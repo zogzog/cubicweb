@@ -1,3 +1,9 @@
+cubicweb (3.0.3-1) DISTRIBUTION; urgency=low
+
+  * new upstream release
+
+ -- Aurélien Campéas <aurelien.campeas@logilab.fr>  Wed, 14 Jan 2009 18:25:21 +0100
+
 cubicweb (3.0.2-1) DISTRIBUTION; urgency=low
 
   * new upstream release
