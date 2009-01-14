@@ -108,22 +108,22 @@ Search Query
 - *Looking for people working for eurocopter interested in training*
    ::
 
-        Person P WHERE
-        P work_for P, S name 'Eurocopter'
+        Any P WHERE
+        P is Person, P work_for P, S name 'Eurocopter'
         P interested_by T, T name 'training'
 
 - *Search note less than 10 days old written by jphc or ocy*
    ::
 
-        Note N WHERE
-        N written_on D, D day> (today -10),
+        Any N WHERE
+        N is Note, N written_on D, D day> (today -10),
         N written_by P, P name 'jphc' or P name 'ocy'
 
 - *Looking for people interested in training or living in Paris*
    ::
 
-        Person P WHERE
-        (P interested_by T, T name 'training') or
+        Any P WHERE
+        P is Person, (P interested_by T, T name 'training') OR
         (P city 'Paris')
 
 - *The name and surname of all people*
@@ -158,7 +158,7 @@ Caution, if a restriction is specified, the insertion is done for
 - *Insert a new person named 'foo'*
    ::
 
-        INSERT Person X: X name 'widget'
+        INSERT Person X: X name 'foo'
 
 - *Insert a new person named 'foo', another called 'nice' and a 'friend' relation
   between them*
@@ -211,6 +211,56 @@ each line results returned by the restriction*.
         DELETE X friend Y WHERE X is Person, X name 'foo'
 
 
+Undocumented (yet) type of queries
+----------------------------------
+
+**Limit / offset**
+::
+    
+    Any P ORDERBY N LIMIT 5 OFFSET 10 WHERE P is Person, P firstname N
+
+**Function calls**
+::
+    
+    Any UPPER(N) WHERE P firstname N
+
+**Exists**
+::
+    
+    Any X ORDERBY PN,N
+    WHERE X num N, X version_of P, P name PN, 
+          EXISTS(X in_state S, S name IN ("dev", "ready"))
+          OR EXISTS(T tags X, T name "priority")
+
+**Left outer join**
+::
+
+    Any T,P,V WHERE T is Ticket, T concerns P, T done_in V?
+    
+    
+**Having**
+::
+    
+    Any X GROUPBY X WHERE X knows Y HAVING COUNT(Y) > 10
+
+**Simple union**
+::
+
+    (Any X WHERE X is Person) UNION (Any X WHERE X is Company)
+    
+**Complex union**
+::
+
+     DISTINCT Any W, REF
+        WITH W, REF BEING 
+            (
+	      (Any W, REF WHERE W is Workcase, W ref REF, 
+                                 W concerned_by D, D name "Logilab")
+               UNION 
+              (Any W, REF WHERE W is Workcase, W ref REF, '
+                                W split_into WP, WP name "WP1")
+            )
+
 
 Language definition
 ===================
@@ -222,10 +272,11 @@ The keywords are not case sensitive.
 ::
 
      DISTINCT, INSERT, SET, DELETE,
-     WHERE, AND, OR, NOT
-     IN, LIKE,
-     TRUE, FALSE, NULL, TODAY, NOW
-     GROUPBY, ORDERBY, ASC, DESC
+     WHERE, AND, OR, NOT, EXISTS,
+     IN, LIKE, UNION, WITH, BEING,
+     TRUE, FALSE, NULL, TODAY, NOW,
+     LIMIT, OFFSET,
+     HAVING, GROUPBY, ORDERBY, ASC, DESC
 
 
 Variables and Typing
