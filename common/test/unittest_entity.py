@@ -100,7 +100,7 @@ class EntityTC(EnvBasedTC):
         self.assertEquals(sorted(user._related_cache), ['in_group_subject', 'primary_email_subject'])
         for group in groups:
             self.failIf('in_group_subject' in group._related_cache, group._related_cache.keys())
-            
+
     def test_related_limit(self):
         p = self.add_entity('Personne', nom=u'di mascio', prenom=u'adrien')
         for tag in u'abcd':
@@ -164,7 +164,20 @@ class EntityTC(EnvBasedTC):
             Personne.fetch_attrs = pfetch_attrs
             Societe.fetch_attrs = sfetch_attrs
 
-            
+    def test_related_rql(self):
+        from cubicweb.entities import fetch_config
+        Personne = self.vreg.etype_class('Personne')
+        Societe = self.vreg.etype_class('Societe')
+        Personne.fetch_attrs, Personne.fetch_order = fetch_config(('nom', 'prenom', 'sexe'))
+        Societe.fetch_attrs, Societe.fetch_order = fetch_config(('nom', 'web'))
+        aff = self.add_entity('Affaire', sujet=u'my subject', ref=u'the ref')
+        self.assertEquals(aff.related_rql('liee_a'),
+                          'Any X,AA,AB ORDERBY AA ASC WHERE E eid %(x)s, E liee_a X, '
+                          'X nom AA, X modification_date AB')
+        Societe.fetch_attrs = ('web',)
+        self.assertEquals(aff.related_rql('liee_a'),
+                          'Any X ORDERBY Z DESC WHERE X modification_date Z, E eid %(x)s, E liee_a X')
+    
     def test_entity_unrelated(self):
         p = self.add_entity('Personne', nom=u'di mascio', prenom=u'adrien')
         e = self.add_entity('Tag', name=u'x')
@@ -275,6 +288,7 @@ class EntityTC(EnvBasedTC):
                                ('travaille', 'subject'),
                                ('ecrit_par', 'object'),
                                ('evaluee', 'object'),
+                               ('liee_a', 'object'),
                                ('tags', 'object')])
         self.assertListEquals(rbc(e.relations_by_category('generated')),
                               [('created_by', 'subject'),
