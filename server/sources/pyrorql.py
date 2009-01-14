@@ -117,6 +117,7 @@ repository (default to 5 minutes).',
         self.support_entities = mapping['support_entities']
         self.support_relations = mapping.get('support_relations', {})
         self.dont_cross_relations = mapping.get('dont_cross_relations', ())
+        self.cross_relations = mapping.get('cross_relations', ())
         baseurl = source_config.get('base-url')
         if baseurl and not baseurl.endswith('/'):
             source_config['base-url'] += '/'
