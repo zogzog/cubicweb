@@ -226,6 +226,8 @@ def _cleanup_rqlst(rqlst, mainvar):
         # we can also remove all variables which are linked to this variable
         # and have no path to the main variable
         for ovarname in linkedvars:
+            if ovarname == mainvar.name:
+                continue
             if not has_path(vargraph, ovarname, mainvar.name):
                 toremove.add(rqlst.defined_vars[ovarname])            
 
