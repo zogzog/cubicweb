@@ -1,3 +1,9 @@
+cubicweb (3.0.2-1) DISTRIBUTION; urgency=low
+
+  * new upstream release
+
+ -- Sylvain Thénault <sylvain.thenault@logilab.fr>  Wed, 14 Jan 2009 13:25:21 +0100
+
 cubicweb (3.0.1-1) DISTRIBUTION; urgency=low
 
   * new upstream release
