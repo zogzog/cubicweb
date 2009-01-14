@@ -1,7 +1,7 @@
 """Set of HTML base actions
 
 :organization: Logilab
-:copyright: 2001-2008 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+:copyright: 2001-2009 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 """
 __docformat__ = "restructuredtext en"
@@ -16,6 +16,7 @@ from cubicweb.web.views.baseviews import vid_from_rset
 
 _ = unicode
 
+# generic primary actions #####################################################
 
 class SelectAction(EntityAction):
     """base class for link search actions. By default apply on
@@ -73,7 +74,8 @@ class ViewAction(Action):
         params = self.req.form.copy()
         params.pop('vid', None)
         params.pop('__message', None)
-        return self.build_url(self.req.relative_path(includeparams=False), **params)
+        return self.build_url(self.req.relative_path(includeparams=False),
+                              **params)
 
 
 class ModifyAction(EntityAction):
@@ -92,9 +94,11 @@ class ModifyAction(EntityAction):
             return True
         # if user has no update right but it can modify some relation,
         # display action anyway
-        for dummy in entity.srelations_by_category(('generic', 'metadata'), 'add'):
+        for dummy in entity.srelations_by_category(('generic', 'metadata'),
+                                                   'add'):
             return True
-        for rschema, targetschemas, role in entity.relations_by_category(('primary', 'secondary'), 'add'):
+        for rschema, targetschemas, role in entity.relations_by_category(
+            ('primary', 'secondary'), 'add'):
             if not rschema.is_final():
                 return True
         return False
@@ -102,6 +106,37 @@ class ModifyAction(EntityAction):
     def url(self):
         entity = self.rset.get_entity(self.row or 0, self.col or 0)
         return entity.absolute_url(vid='edition')
+        
+
+class MultipleEditAction(EntityAction):
+    category = 'mainactions'
+    __selectors__ = (two_lines_rset, oneetyperset_selector,
+                     searchstate_accept)
+    schema_action = 'update'
+    order = 10
+    
+    id = 'muledit' # XXX get strange conflicts if id='edit'
+    title = _('modify')
+    
+    def url(self):
+        return self.build_url('view', rql=self.rset.rql, vid='muledit')
+
+
+# generic secondary actions ###################################################
+
+class ManagePermissions(LinkToEntityAction):
+    accepts = ('Any',)
+    category = 'moreactions'
+    id = 'addpermission'
+    title = _('manage permissions')
+    order = 100
+
+    etype = 'EPermission'
+    rtype = 'require_permission'
+    target = 'object'
+    
+    def url(self):
+        return self.rset.get_entity(0, 0).absolute_url(vid='security')
 
     
 class DeleteAction(EntityAction):
@@ -131,20 +166,6 @@ class CopyAction(EntityAction):
     def url(self):
         entity = self.rset.get_entity(self.row or 0, self.col or 0)
         return entity.absolute_url(vid='copy')
-        
-
-class MultipleEditAction(EntityAction):
-    category = 'mainactions'
-    __selectors__ = (two_lines_rset, oneetyperset_selector,
-                     searchstate_accept)
-    schema_action = 'update'
-    order = 10
-    
-    id = 'muledit' # XXX get strange conflicts if id='edit'
-    title = _('modify')
-    
-    def url(self):
-        return self.build_url('view', rql=self.rset.rql, vid='muledit')
 
 
 class AddNewAction(MultipleEditAction):
@@ -152,6 +173,8 @@ class AddNewAction(MultipleEditAction):
     add a new one
     """
     category = 'moreactions'
+    id = 'addentity'
+    order = 40
     
     def etype_rset_selector(cls, req, rset, **kwargs):
         if rset is not None and not rset.rowcount:
@@ -177,8 +200,6 @@ class AddNewAction(MultipleEditAction):
                      chainfirst(etype_rset_selector,
                                 chainall(two_lines_rset, oneetyperset_selector,
                                          has_add_perm_selector)))
-    order = 40
-    id = 'addentity'
 
     @property
     def rsettype(self):
@@ -194,15 +215,7 @@ class AddNewAction(MultipleEditAction):
         return self.build_url('add/%s' % self.rsettype)
 
 
-class FollowAction(EntityAction):
-    category = 'mainactions'
-    accepts = ('Bookmark',)
-    
-    id = 'follow'
-    title = _('follow')
-    
-    def url(self):
-        return self.rset.get_entity(self.row or 0, self.col or 0).actual_url()
+# logged user actions #########################################################
 
 class UserPreferencesAction(Action):
     category = 'useractions'
@@ -214,6 +227,78 @@ class UserPreferencesAction(Action):
 
     def url(self):
         return self.build_url(self.id)
+
+
+class UserInfoAction(Action):
+    category = 'useractions'
+    __selectors__ = not_anonymous_selector,
+    order = 20
+    
+    id = 'myinfos'
+    title = _('personnal informations')
+
+    def url(self):
+        return self.build_url('euser/%s'%self.req.user.login, vid='edition')
+
+
+class LogoutAction(Action):
+    category = 'useractions'
+    __selectors__ = not_anonymous_selector,
+    order = 30
+    
+    id = 'logout'
+    title = _('logout')
+
+    def url(self):
+        return self.build_url(self.id)
+
+    
+# site actions ################################################################
+
+class ManagersAction(Action):
+    category = 'siteactions'
+    __abstract__ = True
+    __selectors__ = in_group_selector,
+    require_groups = ('managers',)
+
+    def url(self):
+        return self.build_url(self.id)
+
+    
+class SiteConfigurationAction(ManagersAction):
+    order = 10
+    id = 'siteconfig'
+    title = _('site configuration')
+
+    
+class ManageAction(ManagersAction):
+    order = 20
+    id = 'manage'
+    title = _('manage')
+
+
+class ViewSchemaAction(Action):
+    category = 'siteactions'
+    id = 'schema'
+    title = _("site schema")
+    __selectors__ = yes,
+    order = 30
+    
+    def url(self):
+        return self.build_url(self.id)
+
+
+# content type specific actions ###############################################
+
+class FollowAction(EntityAction):
+    category = 'mainactions'
+    accepts = ('Bookmark',)
+    
+    id = 'follow'
+    title = _('follow')
+    
+    def url(self):
+        return self.rset.get_entity(self.row or 0, self.col or 0).actual_url()
 
 class UserPreferencesEntityAction(EntityAction):
     __selectors__ = EntityAction.__selectors__ + (one_line_rset, in_group_selector,)
@@ -227,60 +312,4 @@ class UserPreferencesEntityAction(EntityAction):
     def url(self):
         login = self.rset.get_entity(self.row or 0, self.col or 0).login
         return self.build_url('euser/%s'%login, vid='epropertiesform')
-
-class UserInfoAction(Action):
-    category = 'useractions'
-    __selectors__ = not_anonymous_selector,
-    order = 20
-    
-    id = 'myinfos'
-    title = _('personnal informations')
-
-    def url(self):
-        return self.build_url('euser/%s'%self.req.user.login, vid='edition')
-
-class LogoutAction(Action):
-    category = 'useractions'
-    __selectors__ = not_anonymous_selector,
-    order = 30
-    
-    id = 'logout'
-    title = _('logout')
-
-    def url(self):
-        return self.build_url(self.id)
-    
-
-class ManagersAction(Action):
-    category = 'siteactions'
-    __abstract__ = True
-    __selectors__ = in_group_selector,
-    require_groups = ('managers',)
-
-    def url(self):
-        return self.build_url(self.id)
-    
-class SiteConfigurationAction(ManagersAction):
-    order = 10
-    
-    id = 'siteconfig'
-    title = _('site configuration')
-    
-class ManageAction(ManagersAction):
-    order = 20
-    
-    id = 'manage'
-    title = _('manage')
-
-
-class ViewSchemaAction(Action):
-    category = 'siteactions'
-    __selectors__ = yes,
-    order = 30
-    
-    id = 'schema'
-    title = _("site schema")
-
-    def url(self):
-        return self.build_url(self.id)
 
