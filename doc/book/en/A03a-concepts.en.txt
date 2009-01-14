@@ -385,7 +385,7 @@ Forge`_ under a free software license.
 Standard structure for a cube
 `````````````````````````````
 
-A complex cube is structured as follows:
+A cube is structured as follows:
 
 ::
   
@@ -426,7 +426,7 @@ A complex cube is structured as follows:
   |
   |-- site_cubicweb.py
   |
-  |-- sobjects.py
+  |-- hooks.py
   |
   |-- test/
   |   |-- data/
@@ -438,7 +438,8 @@ A complex cube is structured as follows:
   `-- views.py
 
     
-We can use simple Python module instead of packages, for example: 
+We can use subpackages instead of python modules for ``views.py``, ``entities.py``,
+``schema.py`` or ``hooks.py``. For example, we could have:
 
 ::
   
@@ -446,8 +447,11 @@ We can use simple Python module instead of packages, for example:
   |
   |-- entities.py
   |-- hooks.py
-  \-- views.py
-    
+  `-- views/
+      |-- forms.py
+      |-- primary.py
+      `-- widgets.py
+  
 
 where :
 
@@ -486,32 +490,47 @@ Cubes provide entities and views.
 
 The available application entities are:
 
-* addressbook: PhoneNumber and PostalAddress
+* addressbook_: PhoneNumber and PostalAddress
 
-* basket: Basket (like a shopping cart)
+* basket_: Basket (like a shopping cart)
 
-* blog: Blog (a *very* basic blog)
+* blog_: Blog (a *very* basic blog)
 
-* classfolder: Folder (to organize things but grouping them in folders)
+* comment_: Comment (to attach comment threads to entities)
 
-* classtags: Tag (to tag anything)
+* event_: Event (define events, display them in calendars)
 
-* file: File (to allow users to upload and store binary or text files)
+* file_: File (to allow users to upload and store binary or text files)
 
-* link: Link (to collect links to web resources)
+* folder_: Folder (to organize things but grouping them in folders)
 
-* mailinglist: MailingList (to reference a mailing-list and the URLs
+* keyword_: Keyword (to define classification schemes)
+
+* link_: Link (to collect links to web resources)
+
+* mailinglist_: MailingList (to reference a mailing-list and the URLs
   for its archives and its admin interface)
 
-* person: Person (easily mixed with addressbook)
+* person_: Person (easily mixed with addressbook)
 
-* task: Task (something to be done between start and stop date)
+* tag_: Tag (to tag anything)
 
-* zone: Zone (to define places within larger places, for example a
+* task_: Task (something to be done between start and stop date)
+
+* zone_: Zone (to define places within larger places, for example a
   city in a state in a country)
 
-The available system entities are:
-
-* comment: Comment (to attach comment threads to entities)
-
-
+.. _addressbook: http://www.cubicweb.org/project/cubicweb-addressbook
+.. _basket: http://www.cubicweb.org/project/cubicweb-basket
+.. _blog: http://www.cubicweb.org/project/cubicweb-blog
+.. _comment: http://www.cubicweb.org/project/cubicweb-comment
+.. _event: http://www.cubicweb.org/project/cubicweb-event
+.. _file: http://www.cubicweb.org/project/cubicweb-file
+.. _folder: http://www.cubicweb.org/project/cubicweb-folder
+.. _keyword: http://www.cubicweb.org/project/cubicweb-keyword
+.. _link: http://www.cubicweb.org/project/cubicweb-link
+.. _mailinglist: http://www.cubicweb.org/project/cubicweb-mailinglist
+.. _person: http://www.cubicweb.org/project/cubicweb-person
+.. _tag: http://www.cubicweb.org/project/cubicweb-tag
+.. _task: http://www.cubicweb.org/project/cubicweb-task
+.. _zone: http://www.cubicweb.org/project/cubicweb-zone
