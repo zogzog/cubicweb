@@ -486,6 +486,7 @@ div.sideRelated {
   margin-right: 1em;
   padding: 12px 0px 12px 12px;
   min-width: 21em;
+  max-width: 50em;
 }
 
 div.metadata {
