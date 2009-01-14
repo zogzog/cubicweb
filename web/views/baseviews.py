@@ -32,7 +32,6 @@ from cubicweb.web.views import vid_from_rset, linksearch_select_url, linksearch_
 
 _ = unicode
 
-
 class NullView(AnyRsetView):
     """default view when no result has been found"""
     id = 'null'
@@ -765,8 +764,8 @@ class CSVEntityView(CSVMixIn, EntityView):
         for index in xrange(len(self.rset)):
             entity = self.complete_entity(index)
             if entity.e_schema not in rows_by_type:
-                rowdef_by_type[entity.e_schema] = [rs for rs, as in entity.e_schema.attribute_definitions()
-                                                   if as.type != 'Bytes']
+                rowdef_by_type[entity.e_schema] = [rs for rs, at in entity.e_schema.attribute_definitions()
+                                                   if at != 'Bytes']
                 rows_by_type[entity.e_schema] = [[display_name(req, rschema.type)
                                                   for rschema in rowdef_by_type[entity.e_schema]]]
             rows = rows_by_type[entity.e_schema]
