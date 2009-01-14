@@ -385,7 +385,7 @@ Forge`_ under a free software license.
 Standard structure for a cube
 `````````````````````````````
 
-A complex cube is structured as follows:
+A cube is structured as follows:
 
 ::
   
@@ -426,7 +426,7 @@ A complex cube is structured as follows:
   |
   |-- site_cubicweb.py
   |
-  |-- sobjects.py
+  |-- hooks.py
   |
   |-- test/
   |   |-- data/
@@ -438,7 +438,8 @@ A complex cube is structured as follows:
   `-- views.py
 
     
-We can use simple Python module instead of packages, for example: 
+We can use subpackages instead of python modules for ``views.py``, ``entities.py``,
+``schema.py`` or ``hooks.py``. For example, we could have:
 
 ::
   
@@ -446,8 +447,11 @@ We can use simple Python module instead of packages, for example:
   |
   |-- entities.py
   |-- hooks.py
-  \-- views.py
-    
+  `-- views/
+      |-- forms.py
+      |-- primary.py
+      `-- widgets.py
+  
 
 where :
 
