@@ -105,6 +105,7 @@ class EditBox(BoxTemplate):
 
     def workflow_actions(self, entity, box):
         if 'in_state' in entity.e_schema.subject_relations() and entity.in_state:
+            _ = self.req._
             state = entity.in_state[0]
             transitions = list(state.transitions(entity))
             if transitions:
