@@ -756,10 +756,11 @@ class Entity(AppRsetObject, dict):
             restriction = 'E eid %%(x)s, X %s E' % rtype
             card = greater_card(rschema, targettypes, (self.e_schema,), 1)
         if len(targettypes) > 1:
-            fetchattrs = set()
+            fetchattrs_list = []
             for ttype in targettypes:
                 etypecls = self.vreg.etype_class(ttype)
-                fetchattrs &= frozenset(etypecls.fetch_attrs)
+                fetchattrs_list.append(set(etypecls.fetch_attrs))
+            fetchattrs = reduce(set.intersection, fetchattrs_list)
             rql = etypecls.fetch_rql(self.req.user, [restriction], fetchattrs,
                                      settype=False)
         else:
