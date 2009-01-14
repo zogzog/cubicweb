@@ -4,7 +4,7 @@ object to handle publication.
 
 
 :organization: Logilab
-:copyright: 2001-2008 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+:copyright: 2001-2009 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 """
 __docformat__ = "restructuredtext en"
@@ -27,7 +27,7 @@ from cubicweb.web.controller import Controller
 from cubicweb.web.views import vid_from_rset
 try:
     from cubicweb.web.facet import (FilterRQLBuilder, get_facet,
-                                 prepare_facets_rqlst)
+                                    prepare_facets_rqlst)
     HAS_SEARCH_RESTRICTION = True
 except ImportError: # gae
     HAS_SEARCH_RESTRICTION = False

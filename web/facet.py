@@ -2,7 +2,7 @@
 a search
 
 :organization: Logilab
-:copyright: 2008 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+:copyright: 2008-2009 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 """
 __docformat__ = "restructuredtext en"
@@ -19,7 +19,7 @@ from logilab.common.compat import all
 from rql import parse, nodes
 
 from cubicweb import Unauthorized, typed_eid
-from cubicweb.common.selectors import contextprop_selector, one_has_relation_selector
+from cubicweb.common.selectors import match_context_prop, one_has_relation
 from cubicweb.common.registerers import priority_registerer
 from cubicweb.common.appobject import AppRsetObject
 from cubicweb.common.utils import AcceptMixIn
@@ -226,6 +226,8 @@ def _cleanup_rqlst(rqlst, mainvar):
         # we can also remove all variables which are linked to this variable
         # and have no path to the main variable
         for ovarname in linkedvars:
+            if ovarname == mainvar.name:
+                continue
             if not has_path(vargraph, ovarname, mainvar.name):
                 toremove.add(rqlst.defined_vars[ovarname])            
 
@@ -332,7 +334,7 @@ class VocabularyFacet(AbstractFacet):
         
 
 class RelationFacet(VocabularyFacet):
-    __selectors__ = (one_has_relation_selector, contextprop_selector)
+    __selectors__ = (one_has_relation, match_context_prop)
     # class attributes to configure the relation facet
     rtype = None
     role = 'subject'
