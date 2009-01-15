@@ -148,6 +148,8 @@ class CubicWebNoAppConfiguration(ConfigurationMixIn):
     if os.environ.get('APYCOT_ROOT'):
         mode = 'test'
         CUBES_DIR = '%(APYCOT_ROOT)s/local/share/cubicweb/cubes/' % os.environ
+        # create __init__ file
+        file(join(CUBES_DIR, '__init__.py'), 'w').close()
     elif exists(join(CW_SOFTWARE_ROOT, '.hg')):
         mode = 'dev'
         CUBES_DIR = join(CW_SOFTWARE_ROOT, '../cubes')
