@@ -12,8 +12,8 @@ from logilab.mtconverter import html_escape
 
 from cubicweb.interfaces import IPrevNext
 from cubicweb.common.selectors import (paginated_rset, sortedrset_selector,
-                                    primaryview_selector, contextprop_selector,
-                                    one_line_rset, interface_selector)
+                                    primary_view, match_context_prop,
+                                    one_line_rset, implement_interface)
 from cubicweb.common.uilib import cut
 from cubicweb.web.component import EntityVComponent, NavigationComponent
 
@@ -176,8 +176,8 @@ class NextPrevNavigationComponent(EntityVComponent):
     # itself
     title = _('contentnavigation_prevnext')
     help = _('contentnavigation_prevnext_description')
-    __selectors__ = (one_line_rset, primaryview_selector,
-                     contextprop_selector, interface_selector)
+    __selectors__ = (one_line_rset, primary_view,
+                     match_context_prop, implement_interface)
     accepts_interfaces = (IPrevNext,)
     context = 'navbottom'
     order = 10

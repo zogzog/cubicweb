@@ -11,14 +11,14 @@ from logilab.mtconverter import html_escape
 
 from cubicweb.interfaces import IEmailable
 from cubicweb.common.view import EntityView
-from cubicweb.common.selectors import interface_selector, in_group_selector
+from cubicweb.common.selectors import implement_interface, match_user_group
 from cubicweb.web.action import EntityAction
 from cubicweb.web import stdmsgs
 
 
 class SendEmailAction(EntityAction):
     category = 'mainactions'
-    __selectors__ = (interface_selector, in_group_selector)
+    __selectors__ = (implement_interface, match_user_group)
     accepts_interfaces = (IEmailable,) # XXX should check email is set as well
     require_groups = ('managers', 'users')
 
@@ -35,7 +35,7 @@ class SendEmailAction(EntityAction):
 
 class MassMailingForm(EntityView):
     id = 'massmailing'
-    __selectors__ = (interface_selector, in_group_selector)
+    __selectors__ = (implement_interface, match_user_group)
     accepts_interfaces = (IEmailable,)
     require_groups = ('managers', 'users')
     

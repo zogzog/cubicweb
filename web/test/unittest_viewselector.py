@@ -10,7 +10,7 @@ from cubicweb.devtools.apptest import EnvBasedTC
 
 
 from cubicweb import CW_SOFTWARE_ROOT as BASE, Binary
-from cubicweb.common.selectors import in_group_selector
+from cubicweb.common.selectors import match_user_group
 
 from cubicweb.web._exceptions import NoSelectableObject
 from cubicweb.web.action import Action
@@ -387,12 +387,12 @@ class VRegistryTC(ViewSelectorTC):
         
 
 
-    def test_owners_in_group_selector(self):
-        """tests usage of 'owners' group with in_group_selector"""
+    def test_owners_match_user_group(self):
+        """tests usage of 'owners' group with match_user_group"""
         class SomeAction(Action):
             id = 'yo'
             category = 'foo'
-            __selectors__ = (in_group_selector,)
+            __selectors__ = (match_user_group,)
             require_groups = ('owners', )            
         self.vreg.register_vobject_class(SomeAction)
         self.failUnless(SomeAction in self.vreg['actions']['yo'], self.vreg['actions'])

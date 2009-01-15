@@ -12,7 +12,7 @@ from logilab.mtconverter import html_escape
 from cubicweb.interfaces import IProgress, IMileStone
 from cubicweb.schema import display_name
 from cubicweb.common.view import EntityView
-from cubicweb.common.selectors import interface_selector, accept_selector
+from cubicweb.common.selectors import implement_interface, accept
 from cubicweb.web.htmlwidgets import ProgressBarWidget
 
 
@@ -35,7 +35,7 @@ class ProgressTableView(EntityView):
     
     id = 'progress_table_view'
     title = _('task progression')
-    __selectors__ = (accept_selector, interface_selector)
+    __selectors__ = (accept, implement_interface)
 
     accepts_interfaces = (IMileStone,)
 
@@ -182,7 +182,7 @@ class ProgressBarView(EntityView):
     """displays a progress bar"""
     id = 'progressbar'
     title = _('progress bar')
-    __selectors__ = (accept_selector, interface_selector)
+    __selectors__ = (accept, implement_interface)
 
     accepts_interfaces = (IProgress,)
 

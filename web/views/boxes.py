@@ -17,7 +17,7 @@ __docformat__ = "restructuredtext en"
 
 from logilab.mtconverter import html_escape
 
-from cubicweb.common.selectors import (rset_selector, appobject_selectable)
+from cubicweb.common.selectors import (any_rset, appobject_selectable)
 from cubicweb.web.htmlwidgets import BoxWidget, BoxMenu, BoxHtml, RawBoxItem
 from cubicweb.web.box import BoxTemplate, ExtResourcesBoxTemplate
 
@@ -29,7 +29,7 @@ class EditBox(BoxTemplate):
     box with all actions impacting the entity displayed: edit, copy, delete
     change state, add related entities
     """
-    __selectors__ = (rset_selector,) + BoxTemplate.__selectors__
+    __selectors__ = (any_rset,) + BoxTemplate.__selectors__
     id = 'edit_box'
     title = _('actions')
     order = 2

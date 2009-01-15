@@ -14,7 +14,7 @@ from logilab.mtconverter import html_escape
 
 from cubicweb.interfaces import ICalendarable
 from cubicweb.common.view import EntityView, StartupView
-from cubicweb.common.selectors import interface_selector
+from cubicweb.common.selectors import implement_interface
 
 
 # 
@@ -28,7 +28,7 @@ class TimelineJsonView(EntityView):
     templatable = False
     content_type = 'application/json'
 
-    __selectors__ = (interface_selector,)
+    __selectors__ = (implement_interface,)
     accepts_interfaces = (ICalendarable,)
     date_fmt = '%Y/%m/%d'
     
@@ -103,7 +103,7 @@ class TimelineViewMixIn(object):
 class TimelineView(TimelineViewMixIn, EntityView):
     """builds a cubicweb timeline widget node"""
     id = 'timeline'
-    __selectors__ = (interface_selector,)
+    __selectors__ = (implement_interface,)
     accepts_interfaces = (ICalendarable,)
     need_navigation = False
     def call(self, tlunit=None):

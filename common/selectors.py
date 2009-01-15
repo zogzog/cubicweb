@@ -50,7 +50,6 @@ from cubicweb.vregistry import chainall, chainfirst, NoSelectableObject
 from cubicweb.cwconfig import CubicWebConfiguration
 from cubicweb.schema import split_expression
 
-
 # helpers for debugging selectors
 SELECTOR_LOGGER = logging.getLogger('cubicweb.selectors')
 TRACED_OIDS = ()
@@ -223,7 +222,7 @@ anonymous_selector = deprecated_function(anonymous_user)
 @lltrace
 def authenticated_user(cls, req, *args, **kwargs):
     """accept if user is authenticated"""
-    return not anonymous_selector(cls, req, *args, **kwargs)
+    return not anonymous_user(cls, req, *args, **kwargs)
 not_anonymous_selector = deprecated_function(authenticated_user)
 
 @lltrace

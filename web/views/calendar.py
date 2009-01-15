@@ -15,7 +15,7 @@ from logilab.mtconverter import html_escape
 from cubicweb.interfaces import ICalendarable
 from cubicweb.common.utils import date_range
 from cubicweb.common.uilib import ajax_replace_url
-from cubicweb.common.selectors import interface_selector
+from cubicweb.common.selectors import implement_interface
 from cubicweb.common.registerers import priority_registerer
 from cubicweb.common.view import EntityView
 
@@ -83,7 +83,7 @@ class iCalView(EntityView):
     Does apply to ICalendarable compatible entities
     """
     __registerer__ = priority_registerer
-    __selectors__ = (interface_selector,)
+    __selectors__ = (implement_interface,)
     accepts_interfaces = (ICalendarable,)
     need_navigation = False
     content_type = 'text/calendar'
@@ -114,7 +114,7 @@ class hCalView(EntityView):
     Does apply to ICalendarable compatible entities
     """
     __registerer__ = priority_registerer
-    __selectors__ = (interface_selector,)
+    __selectors__ = (implement_interface,)
     accepts_interfaces = (ICalendarable,)
     need_navigation = False
     title = _('hCalendar')
@@ -146,7 +146,7 @@ class _TaskEntry(object):
 class OneMonthCal(EntityView):
     """At some point, this view will probably replace ampm calendars"""
     __registerer__ = priority_registerer
-    __selectors__ = (interface_selector, )
+    __selectors__ = (implement_interface, )
     accepts_interfaces = (ICalendarable,)
     need_navigation = False
     id = 'onemonthcal'
@@ -331,7 +331,7 @@ class OneMonthCal(EntityView):
 class OneWeekCal(EntityView):
     """At some point, this view will probably replace ampm calendars"""
     __registerer__ = priority_registerer
-    __selectors__ = (interface_selector, )
+    __selectors__ = (implement_interface, )
     accepts_interfaces = (ICalendarable,)
     need_navigation = False
     id = 'oneweekcal'

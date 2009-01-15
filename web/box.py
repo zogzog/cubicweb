@@ -14,8 +14,8 @@ from cubicweb.common.registerers import (
     accepts_registerer, extresources_registerer,
     etype_rtype_priority_registerer)
 from cubicweb.common.selectors import (
-    etype_rtype_selector, one_line_rset, accept_selector, accept_rtype_selector,
-    primaryview_selector, contextprop_selector, has_related_entities,
+    etype_rtype_selector, one_line_rset, accept, accept_rtype_selector,
+    primary_view, match_context_prop, has_related_entities,
     _rqlcondition_selector)
 from cubicweb.common.view import Template
 from cubicweb.common.appobject import ReloadableMixIn
@@ -42,7 +42,7 @@ class BoxTemplate(Template):
         box.render(self.w)
     """
     __registry__ = 'boxes'
-    __selectors__ = Template.__selectors__ + (contextprop_selector,)
+    __selectors__ = Template.__selectors__ + (match_context_prop,)
     
     categories_in_order = ()
     property_defs = {
@@ -150,9 +150,9 @@ class ExtResourcesBoxTemplate(BoxTemplate):
 class EntityBoxTemplate(BoxTemplate):
     """base class for boxes related to a single entity"""
     __registerer__ = accepts_registerer
-    __selectors__ = (one_line_rset, primaryview_selector,
-                     contextprop_selector, etype_rtype_selector,
-                     accept_rtype_selector, accept_selector,
+    __selectors__ = (one_line_rset, primary_view,
+                     match_context_prop, etype_rtype_selector,
+                     accept_rtype_selector, accept,
                      _rqlcondition_selector)
     accepts = ('Any',)
     context = 'incontext'
