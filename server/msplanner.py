@@ -661,7 +661,7 @@ class PartPlanInformation(object):
                 if not var.scope is self.rqlst:
                     if isinstance(var, Variable):
                         return var, sourcevars.pop(var)
-                    secondchoice = var, sourcevars.pop(var)
+                    secondchoice = var
         else:
             # priority to variable outer scope
             for var in sourcevars:
