@@ -64,6 +64,7 @@ def lltrace(selector):
         if TRACED_OIDS == 'all' or cls.id in TRACED_OIDS:
             SELECTOR_LOGGER.warning('selector %s returned %s for %s', selector.__name__, ret, cls)
         return ret
+    traced.__name__ = selector.__name__
     return traced
 
 class traced_selection(object):
@@ -529,28 +530,36 @@ def appobject_selectable(registry, oid):
 # compound selectors ##########################################################
 
 non_final_entity = chainall(nonempty_rset, _non_final_entity)
+non_final_entity.__name__ = 'non_final_entity'
 nfentity_selector = deprecated_function(non_final_entity)
 
 implement_interface = chainall(non_final_entity, _implement_interface)
+implement_interface.__name__ = 'implement_interface'
 interface_selector = deprecated_function(implement_interface)
 
 accept = chainall(non_final_entity, accept_rset)
+accept.__name__ = 'accept'
 accept_selector = deprecated_function(accept)
 
-accept_one = chainall(one_line_rset, accept_selector)
+accept_one = chainall(one_line_rset, accept)
+accept_one.__name__ = 'accept_one'
 accept_one_selector = deprecated_function(accept_one)
 
 rql_condition = chainall(non_final_entity, one_line_rset, _rql_condition)
+rql_condition.__name__ = 'rql_condition'
 rqlcondition_selector = deprecated_function(rql_condition)
 
 
 searchstate_accept = chainall(nonempty_rset, match_search_state, accept)
+searchstate_accept.__name__ = 'searchstate_accept'
 searchstate_accept_selector = deprecated_function(searchstate_accept)
 
 searchstate_accept_one = chainall(one_line_rset, match_search_state,
                                   accept, _rql_condition)
+searchstate_accept_one.__name__ = 'searchstate_accept_one'
 searchstate_accept_one_selector = deprecated_function(searchstate_accept_one)
 
 searchstate_accept_one_but_etype = chainall(searchstate_accept_one, but_etype)
+searchstate_accept_one_but_etype.__name__ = 'searchstate_accept_one_but_etype'
 searchstate_accept_one_but_etype_selector = deprecated_function(
     searchstate_accept_one_but_etype)
