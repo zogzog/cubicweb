@@ -136,6 +136,9 @@ title
         
     def generate_integer(self, attrname, index):
         """generates a consistent value for 'attrname' if it's an integer"""
+        choosed = self.generate_choice(attrname, index)
+        if choosed is not None:
+            return choosed
         minvalue, maxvalue = get_bounds(self.e_schema, attrname)
         if maxvalue is not None and maxvalue <= 0 and minvalue is None:
             minvalue = maxvalue - index # i.e. randint(-index, 0)
