@@ -194,7 +194,7 @@ class TheMainTemplate(MainTemplate):
         w(u'<div id="pageContent">\n')
         vtitle = self.req.form.get('vtitle')
         if vtitle:
-            w(u'<h1 class="vtitle">%s</h1>\n' % vtitle)
+            w(u'<h1 class="vtitle">%s</h1>\n' % html_escape(vtitle))
             
     def template_footer(self, view=None):
         self.w(u'</div>\n') # close id=contentmain
@@ -288,7 +288,7 @@ class SimpleMainTemplate(TheMainTemplate):
         w(u'<div id="pageContent">\n')
         vtitle = self.req.form.get('vtitle')
         if vtitle:
-            w(u'<h1 class="vtitle">%s</h1>' % (vtitle))
+            w(u'<h1 class="vtitle">%s</h1>' % html_escape(vtitle))
             
     def topleft_header(self):
         self.w(u'<table id="header"><tr>\n')
