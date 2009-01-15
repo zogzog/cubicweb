@@ -109,10 +109,9 @@ function initFacetBoxEvents(root){
     root = root || document;
     jQuery(root).find('form').each(function () {
 	var form = jQuery(this);
-	var facetargs = form.attr('cubicweb:facetargs');
-	if (facetargs) {
+	var facetargs = evalJSON(form.attr('cubicweb:facetargs'));
+	if (facetargs !== undefined && facetargs.length) {
 	    form.submit(function() {
-		var facetargs = evalJSON(form.attr('cubicweb:facetargs'));
 	        buildRQL.apply(null, facetargs); //(divid, vid, paginate, extraargs);
 	        return false;
 	    });
@@ -122,7 +121,6 @@ function initFacetBoxEvents(root){
 		    this.setAttribute('cubicweb:idx', i);
 		});
 		facet.find('div.facetCheckBox').click(function () {
-		    var facetargs = evalJSON(form.attr('cubicweb:facetargs'));
 		    var $this = jQuery(this);
 		    if ($this.hasClass('facetValueSelected')) {
 			$this.removeClass('facetValueSelected');
