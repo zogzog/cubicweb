@@ -111,12 +111,12 @@ def none_rset(cls, req, rset, *args, **kwargs):
 norset_selector = deprecated_function(none_rset)
 
 @lltrace
-def rset(cls, req, rset, *args, **kwargs):
+def any_rset(cls, req, rset, *args, **kwargs):
     """accept result set, whatever the number of result"""
     if rset is not None:
         return 1
     return 0
-rset_selector = deprecated_function(rset)
+rset_selector = deprecated_function(any_rset)
 
 @lltrace
 def nonempty_rset(cls, req, rset, *args, **kwargs):
