@@ -16,7 +16,7 @@ from cubicweb.common.view import AnyRsetView, StartupView, EntityView
 from cubicweb.common.uilib import (html_traceback, rest_traceback, html_escape,
                                 toggle_link)
 from cubicweb.common.selectors import (yes, one_line_rset,
-                                    accept_rset_selector, none_rset,
+                                    accept_rset, none_rset,
                                     chainfirst, chainall)
 from cubicweb.web import INTERNAL_FIELD_VALUE, eid_param, stdmsgs
 from cubicweb.web.widgets import StaticComboBoxWidget
@@ -440,7 +440,7 @@ class EpropertiesForm(SystemEpropertiesForm):
     title = _('preferences')    
     require_groups = ('users', 'managers') # we don't want guests to be able to come here
     __selectors__ = chainfirst(none_rset,
-                               chainall(one_line_rset, accept_rset_selector)),
+                               chainall(one_line_rset, accept_rset)),
     accepts = ('EUser',)
 
     @classmethod

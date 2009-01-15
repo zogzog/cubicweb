@@ -288,17 +288,21 @@ class PartPlanInformation(object):
                 flag = 0
                 for v in crossvars:
                     if isinstance(v, Constant):
-                        self._sourcesvars[ssource][v] = set(self._solindices)
+                        allsols = set(self._solindices)
+                        try:
+                            self._sourcesvars[ssource][v] = allsols
+                        except KeyError:
+                            self._sourcesvars[ssource] = {v: allsols}
                     if len(vsources[v]) == 1:
                         if iter(vsources[v]).next()[0].uri == 'system':
                             flag = 1
                             for ov in crossvars:
-                                if ov is not v and ov._q_invariant:
+                                if ov is not v and (isinstance(ov, Constant) or ov._q_invariant):
                                     ssset = frozenset((ssource,))
                                     self._remove_sources(ov, vsources[ov] - ssset)
                         else:
                             for ov in crossvars:
-                                if ov is not v and ov._q_invariant:
+                                if ov is not v and (isinstance(ov, Constant) or ov._q_invariant):
                                     needsplit = False
                                     break
                             else:
@@ -661,7 +665,7 @@ class PartPlanInformation(object):
                 if not var.scope is self.rqlst:
                     if isinstance(var, Variable):
                         return var, sourcevars.pop(var)
-                    secondchoice = var, sourcevars.pop(var)
+                    secondchoice = var
         else:
             # priority to variable outer scope
             for var in sourcevars:

@@ -21,9 +21,9 @@ from logilab.common.decorators import cached
 from logilab.mtconverter import html_escape, TransformError
 
 from cubicweb import Unauthorized, NoSelectableObject, typed_eid
-from cubicweb.common.selectors import (yes, nonempty_rset, accept_selector,
+from cubicweb.common.selectors import (yes, nonempty_rset, accept,
                                        one_line_rset, match_search_state, 
-                                       req_form_params_selector, accept_rset_selector)
+                                       match_form_params, accept_rset)
 from cubicweb.common.uilib import (cut, printable_value,  UnicodeCSVWriter,
                                    ajax_replace_url, rql_for_eid)
 from cubicweb.common.view import EntityView, AnyRsetView, EmptyRsetView
@@ -785,7 +785,7 @@ class SearchForAssociationView(EntityView):
     """
     id = 'search-associate'
     title = _('search for association')
-    __selectors__ = (one_line_rset, match_search_state, accept_selector)
+    __selectors__ = (one_line_rset, match_search_state, accept)
     accepts = ('Any',)
     search_states = ('linksearch',)
 
@@ -842,7 +842,7 @@ class EditRelationView(EntityView):
     """
     id = 'editrelation'
 
-    __selectors__ = (req_form_params_selector,)
+    __selectors__ = (match_form_params,)
     form_params = ('rtype',)
     
     # TODO: inlineview, multiple edit, (widget view ?)

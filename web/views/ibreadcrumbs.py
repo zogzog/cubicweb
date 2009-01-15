@@ -9,8 +9,8 @@ __docformat__ = "restructuredtext en"
 from logilab.mtconverter import html_escape
 
 from cubicweb.interfaces import IBreadCrumbs
-from cubicweb.common.selectors import (contextprop_selector, one_line_rset, 
-                                    interface_selector)
+from cubicweb.common.selectors import (match_context_prop, one_line_rset, 
+                                    implement_interface)
 from cubicweb.common.view import EntityView
 from cubicweb.common.uilib import cut
 # don't use AnyEntity since this may cause bug with isinstance() due to reloading
@@ -29,7 +29,7 @@ class BreadCrumbEntityVComponent(EntityVComponent):
     # register msg not generated since no entity implements IPrevNext in cubicweb itself
     title = _('contentnavigation_breadcrumbs')
     help = _('contentnavigation_breadcrumbs_description')
-    __selectors__ = (one_line_rset, contextprop_selector, interface_selector)
+    __selectors__ = (one_line_rset, match_context_prop, implement_interface)
     accepts_interfaces = (IBreadCrumbs,)
     context = 'navtop'
     order = 5
@@ -73,7 +73,7 @@ class BreadCrumbEntityVComponent(EntityVComponent):
 
 class BreadCrumbComponent(BreadCrumbEntityVComponent):
     __registry__ = 'components'
-    __selectors__ = (one_line_rset, interface_selector)
+    __selectors__ = (one_line_rset, implement_interface)
     visible = True
 
 

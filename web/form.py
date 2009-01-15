@@ -11,7 +11,7 @@ from simplejson import dumps
 from logilab.mtconverter import html_escape
 
 from cubicweb import typed_eid
-from cubicweb.common.selectors import req_form_params_selector
+from cubicweb.common.selectors import match_form_params
 from cubicweb.common.registerers import accepts_registerer
 from cubicweb.common.view import NOINDEX, NOFOLLOW, View, EntityView, AnyRsetView
 from cubicweb.web import stdmsgs
@@ -239,7 +239,7 @@ class Form(FormMixIn, View):
     should list necessary parameters in the form to be accepted.
     """
     __registerer__ = accepts_registerer
-    __select__ = classmethod(req_form_params_selector)
+    __select__ = classmethod(match_form_params)
 
     form_params = ()
 

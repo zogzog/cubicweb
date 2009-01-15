@@ -4,7 +4,7 @@ import simplejson
 
 from cubicweb.interfaces import IGeocodable
 from cubicweb.common.view import EntityView
-from cubicweb.common.selectors import interface_selector
+from cubicweb.common.selectors import implement_interface
 
 class GeocodingJsonView(EntityView):
     id = 'geocoding-json'
@@ -12,7 +12,7 @@ class GeocodingJsonView(EntityView):
     templatable = False
     content_type = 'application/json'
 
-    __selectors__ = (interface_selector,)
+    __selectors__ = (implement_interface,)
     accepts_interfaces = (IGeocodable,)
     
     def call(self):
@@ -44,7 +44,7 @@ class GeocodingJsonView(EntityView):
 class GoogleMapBubbleView(EntityView):
     id = 'gmap-bubble'
     
-    __selectors__ = (interface_selector,)
+    __selectors__ = (implement_interface,)
     accepts_interfaces = (IGeocodable,)
     
     def cell_call(self, row, col):
@@ -56,7 +56,7 @@ class GoogleMapBubbleView(EntityView):
 class GoogleMapsView(EntityView):
     id = 'gmap-view'
     
-    __selectors__ = (interface_selector,)
+    __selectors__ = (implement_interface,)
     accepts_interfaces = (IGeocodable,)
     need_navigation = False
     

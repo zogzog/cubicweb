@@ -11,7 +11,7 @@ from mx.DateTime import strptime, Error as MxDTError, TimeDelta
 
 from cubicweb import typed_eid
 from cubicweb.common.registerers import priority_registerer
-from cubicweb.common.selectors import in_group_selector
+from cubicweb.common.selectors import match_user_group
 from cubicweb.common.appobject import AppObject
 from cubicweb.web import LOGGER, Redirect, RequestError
 
@@ -68,7 +68,7 @@ class Controller(AppObject):
     """
     __registry__ = 'controllers'
     __registerer__ = priority_registerer
-    __selectors__ = (in_group_selector,)
+    __selectors__ = (match_user_group,)
     require_groups = ()
 
     def __init__(self, *args, **kwargs):

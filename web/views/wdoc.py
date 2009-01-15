@@ -15,7 +15,7 @@ from mx.DateTime import strptime, today
 from logilab.common.changelog import ChangeLog
 from logilab.mtconverter import CHARSET_DECL_RGX
 
-from cubicweb.common.selectors import req_form_params_selector
+from cubicweb.common.selectors import match_form_params
 from cubicweb.common.view import StartupView
 from cubicweb.common.uilib import rest_publish
 from cubicweb.web import NotFound
@@ -85,7 +85,7 @@ def subsections(node):
 # help views ##################################################################
 
 class InlineHelpView(StartupView):
-    __selectors__ = (req_form_params_selector,)
+    __selectors__ = (match_form_params,)
     form_params = ('fid',)
     id = 'wdoc'
     title = _('site documentation')
@@ -163,7 +163,7 @@ class InlineHelpView(StartupView):
 
 
 class InlineHelpImageView(StartupView):
-    __selectors__ = (req_form_params_selector,)
+    __selectors__ = (match_form_params,)
     form_params = ('fid',)
     id = 'wdocimages'
     binary = True

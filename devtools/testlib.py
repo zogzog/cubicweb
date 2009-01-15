@@ -259,10 +259,13 @@ class WebTest(EnvBasedTC):
                     msg+= '\nfor output:\n%s' % output
             raise AssertionError, msg, tcbk
 
-        
+
+    def to_test_etypes(self):
+        return unprotected_entities(self.schema, strict=True)
+    
     def iter_automatic_rsets(self):
         """generates basic resultsets for each entity type"""
-        etypes = unprotected_entities(self.schema, strict=True)
+        etypes = self.to_test_etypes()
         for etype in etypes:
             yield self.execute('Any X WHERE X is %s' % etype)
 

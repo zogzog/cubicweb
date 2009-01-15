@@ -17,9 +17,9 @@ from logilab.common.decorators import cached
 from cubicweb.interfaces import IWorkflowable
 from cubicweb.common.utils import make_uid
 from cubicweb.common.uilib import cut
-from cubicweb.common.selectors import (etype_form_selector, kwargs_selector,
-                                    one_line_rset, interface_selector,
-                                    req_form_params_selector, accept_selector)
+from cubicweb.common.selectors import (accept_etype, match_kwargs,
+                                    one_line_rset, implement_interface,
+                                    match_form_params, accept)
 from cubicweb.common.view import EntityView
 from cubicweb.web import INTERNAL_FIELD_VALUE, stdmsgs, eid_param
 from cubicweb.web.controller import NAV_FORM_PARAMETERS
@@ -87,7 +87,7 @@ class ChangeStateForm(EntityForm):
     id = 'statuschange'
     title = _('status change')
 
-    __selectors__ = (interface_selector, req_form_params_selector)
+    __selectors__ = (implement_interface, match_form_params)
     accepts_interfaces = (IWorkflowable,)
     form_params = ('treid',)
 
@@ -150,7 +150,7 @@ class ChangeStateForm(EntityForm):
 
 class ClickAndEditForm(EntityForm):
     id = 'reledit'
-    __selectors__ = (kwargs_selector, )
+    __selectors__ = (match_kwargs, )
     expected_kwargs = ('rtype',)
 
     #FIXME editableField class could be toggleable from userprefs
@@ -216,7 +216,7 @@ class EditionForm(EntityForm):
     dynamic default values such as the 'tomorrow' date or the user's login
     being connected
     """    
-    __selectors__ = (one_line_rset, accept_selector)
+    __selectors__ = (one_line_rset, accept)
 
     id = 'edition'
     title = _('edition')
@@ -517,7 +517,7 @@ class EditionForm(EntityForm):
 
     
 class CreationForm(EditionForm):
-    __selectors__ = (etype_form_selector, )
+    __selectors__ = (accept_etype, )
     id = 'creation'
     title = _('creation')
     
@@ -630,7 +630,7 @@ class InlineFormMixIn(object):
 
 class InlineEntityCreationForm(InlineFormMixIn, CreationForm):
     id = 'inline-creation'
-    __selectors__ = (kwargs_selector, etype_form_selector)
+    __selectors__ = (match_kwargs, accept_etype)
     expected_kwargs = ('ptype', 'peid', 'rtype')
     
     EDITION_BODY = u'''\
@@ -669,7 +669,7 @@ class InlineEntityCreationForm(InlineFormMixIn, CreationForm):
 
 class InlineEntityEditionForm(InlineFormMixIn, EditionForm):
     id = 'inline-edition'
-    __selectors__ = (accept_selector, kwargs_selector)
+    __selectors__ = (accept, match_kwargs)
     expected_kwargs = ('ptype', 'peid', 'rtype')
     
     EDITION_BODY = u'''\
@@ -872,7 +872,7 @@ class TableEditForm(EntityForm):
 
 class UnrelatedDivs(EntityView):
     id = 'unrelateddivs'
-    __selectors__ = (req_form_params_selector,)
+    __selectors__ = (match_form_params,)
     form_params = ('relation',)
 
     @property
