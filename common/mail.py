@@ -56,9 +56,10 @@ def format_mail(uinfo, to_addrs, content, subject="",
         msg['Reply-to'] = msg['From']
     if config is not None:
         msg['X-CW'] = config.appid
-    msg['To'] = ', '.join(addrheader(addr) for addr in to_addrs if addr is not None)
+    unique_addrs = lambda addrs: sorted(set(addr for addr in addrs if addr is not None))
+    msg['To'] = ', '.join(addrheader(addr) for addr in unique_addrs(to_addrs))
     if cc_addrs:
-        msg['Cc'] = ', '.join(addrheader(addr) for addr in cc_addrs if addr is not None)
+        msg['Cc'] = ', '.join(addrheader(addr) for addr in unique_addrs(cc_addrs))
     if msgid:
         msg['Message-id'] = msgid
     if references:
