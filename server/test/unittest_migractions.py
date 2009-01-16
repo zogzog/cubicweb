@@ -134,7 +134,7 @@ class MigrationCommandsTC(RepositoryBasedTC):
         self.assertEquals([str(rs) for rs in self.schema['Folder2'].object_relations()],
                           ['filed_under2', 'identity'])
         self.assertEquals(sorted(str(e) for e in self.schema['filed_under2'].subjects()),
-                          ['Affaire', 'Card', 'Division', 'ECache', 'Email', 'EmailThread', 'File', 
+                          ['Affaire', 'Card', 'Division', 'Email', 'EmailThread', 'File', 
                            'Folder2', 'Image', 'Note', 'Personne', 'Societe', 'SubDivision'])
         self.assertEquals(self.schema['filed_under2'].objects(), ('Folder2',))
         eschema = self.schema.eschema('Folder2')
@@ -161,7 +161,7 @@ class MigrationCommandsTC(RepositoryBasedTC):
         self.mh.cmd_add_relation_type('filed_under2')
         self.failUnless('filed_under2' in self.schema)
         self.assertEquals(sorted(str(e) for e in self.schema['filed_under2'].subjects()),
-                          ['Affaire', 'Card', 'Division', 'ECache', 'Email', 'EmailThread', 'File', 
+                          ['Affaire', 'Card', 'Division', 'Email', 'EmailThread', 'File', 
                            'Folder2', 'Image', 'Note', 'Personne', 'Societe', 'SubDivision'])
         self.assertEquals(self.schema['filed_under2'].objects(), ('Folder2',))
 
@@ -364,23 +364,36 @@ class MigrationCommandsTC(RepositoryBasedTC):
     def test_add_remove_cube(self):
         cubes = set(self.config.cubes())
         schema = self.repo.schema
+        self.assertEquals(sorted(schema['see_also']._rproperties.keys()),
+                          sorted([('EmailThread', 'EmailThread'), ('Folder', 'Folder'),
+                                  ('Bookmark', 'Bookmark'), ('Bookmark', 'Note'),
+                                  ('Note', 'Note'), ('Note', 'Bookmark')]))
         try:
-            self.mh.cmd_remove_cube('email')
-            # file was there because it's an email dependancy, should have been removed
-            cubes.remove('email')
-            cubes.remove('file')
-            self.assertEquals(set(self.config.cubes()), cubes)
-            for ertype in ('Email', 'EmailThread', 'EmailPart', 'File', 'Image', 
-                           'sender', 'in_thread', 'reply_to', 'data_format'):
-                self.failIf(ertype in schema, ertype)
-            self.assertEquals(sorted(schema['see_also']._rproperties.keys()),
-                              [('Folder', 'Folder')])
-            self.assertEquals(schema['see_also'].subjects(), ('Folder',))
-            self.assertEquals(schema['see_also'].objects(), ('Folder',))
-            self.assertEquals(self.execute('Any X WHERE X pkey "system.version.email"').rowcount, 0)
-            self.assertEquals(self.execute('Any X WHERE X pkey "system.version.file"').rowcount, 0)
-            self.failIf('email' in self.config.cubes())
-            self.failIf('file' in self.config.cubes())
+            try:
+                self.mh.cmd_remove_cube('email')
+                # file was there because it's an email dependancy, should have been removed
+                cubes.remove('email')
+                cubes.remove('file')
+                self.assertEquals(set(self.config.cubes()), cubes)
+                for ertype in ('Email', 'EmailThread', 'EmailPart', 'File', 'Image', 
+                               'sender', 'in_thread', 'reply_to', 'data_format'):
+                    self.failIf(ertype in schema, ertype)
+                self.assertEquals(sorted(schema['see_also']._rproperties.keys()),
+                                  sorted([('Folder', 'Folder'),
+                                          ('Bookmark', 'Bookmark'),
+                                          ('Bookmark', 'Note'),
+                                          ('Note', 'Note'),
+                                          ('Note', 'Bookmark')]))
+                self.assertEquals(sorted(schema['see_also'].subjects()), ['Bookmark', 'Folder', 'Note'])
+                self.assertEquals(sorted(schema['see_also'].objects()), ['Bookmark', 'Folder', 'Note'])
+                self.assertEquals(self.execute('Any X WHERE X pkey "system.version.email"').rowcount, 0)
+                self.assertEquals(self.execute('Any X WHERE X pkey "system.version.file"').rowcount, 0)
+                self.failIf('email' in self.config.cubes())
+                self.failIf('file' in self.config.cubes())
+            except :
+                import traceback
+                traceback.print_exc()
+                raise
         finally:
             self.mh.cmd_add_cube('email')
             cubes.add('email')
@@ -390,9 +403,13 @@ class MigrationCommandsTC(RepositoryBasedTC):
                            'sender', 'in_thread', 'reply_to', 'data_format'):
                 self.failUnless(ertype in schema, ertype)
             self.assertEquals(sorted(schema['see_also']._rproperties.keys()),
-                              [('EmailThread', 'EmailThread'), ('Folder', 'Folder')])
-            self.assertEquals(sorted(schema['see_also'].subjects()), ['EmailThread', 'Folder'])
-            self.assertEquals(sorted(schema['see_also'].objects()), ['EmailThread', 'Folder'])
+                              sorted([('EmailThread', 'EmailThread'), ('Folder', 'Folder'),
+                                      ('Bookmark', 'Bookmark'),
+                                      ('Bookmark', 'Note'),
+                                      ('Note', 'Note'),
+                                      ('Note', 'Bookmark')]))
+            self.assertEquals(sorted(schema['see_also'].subjects()), ['Bookmark', 'EmailThread', 'Folder', 'Note'])
+            self.assertEquals(sorted(schema['see_also'].objects()), ['Bookmark', 'EmailThread', 'Folder', 'Note'])
             from cubes.email.__pkginfo__ import version as email_version
             from cubes.file.__pkginfo__ import version as file_version
             self.assertEquals(self.execute('Any V WHERE X value V, X pkey "system.version.email"')[0][0],
