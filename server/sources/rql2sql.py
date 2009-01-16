@@ -488,7 +488,8 @@ class SQLGenerator(object):
                 sql.insert(1, 'FROM (SELECT 1) AS _T')
             sqls.append('\n'.join(sql))
         if select.need_intersect:
-            if distinct:
+            # XXX use getattr for lgc bw compat, remove once 0.37.3 is out
+            if distinct or not getattr(self.dbms_helper, 'intersect_all_support', True):
                 return '\nINTERSECT\n'.join(sqls)
             else:
                 return '\nINTERSECT ALL\n'.join(sqls)

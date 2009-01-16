@@ -196,7 +196,7 @@ class ExecutionPlan(object):
             self._insert_security(union, noinvariant)
         self.rqlhelper.simplify(union)
         self.sqlannotate(union)
-        set_qdata(union, noinvariant)
+        set_qdata(self.schema.rschema, union, noinvariant)
         if union.has_text_query:
             self.cache_key = None
 

@@ -20,7 +20,7 @@ def _annotate_select(annotator, rqlst):
     #if server.DEBUG:
     #    print '-------- sql annotate', repr(rqlst)
     getrschema = annotator.schema.rschema
-    has_text_query = need_intersect = False
+    has_text_query = False
     need_distinct = rqlst.distinct
     for rel in rqlst.iget_nodes(Relation):
         if rel.neged(strict=True):
@@ -29,13 +29,6 @@ def _annotate_select(annotator, rqlst):
             else:
                 rschema = getrschema(rel.r_type)
                 if not rschema.is_final():
-                    # if one of the relation's variable is ambiguous, an intersection
-                    # will be necessary
-                    for vref in rel.get_nodes(VariableRef):
-                        var = vref.variable
-                        if not var.stinfo['selected'] and len(var.stinfo['possibletypes']) > 1:
-                            need_intersect = True
-                            break
                     if rschema.inlined:
                         try:
                             var = rel.children[1].children[0].variable
@@ -147,7 +140,6 @@ def _annotate_select(annotator, rqlst):
             except CantSelectPrincipal:
                 stinfo['invariant'] = False
     rqlst.need_distinct = need_distinct
-    rqlst.need_intersect = need_intersect
     return has_text_query
 
 
@@ -207,12 +199,12 @@ def _select_main_var(relations):
     return principal
 
 
-def set_qdata(union, noinvariant):
+def set_qdata(getrschema, union, noinvariant):
     """recursive function to set querier data on variables in the syntax tree
     """
     for select in union.children:
         for subquery in select.with_:
-            set_qdata(subquery.query, noinvariant)
+            set_qdata(getrschema, subquery.query, noinvariant)
         for var in select.defined_vars.itervalues():
             if var.stinfo['invariant']:
                 if var in noinvariant and not var.stinfo['principal'].r_type == 'has_text':
@@ -221,6 +213,23 @@ def set_qdata(union, noinvariant):
                     var._q_invariant = True
             else:
                 var._q_invariant = False
+        for rel in select.iget_nodes(Relation):
+            if rel.neged(strict=True) and not rel.is_types_restriction():
+                rschema = getrschema(rel.r_type)
+                if not rschema.is_final():
+                    # if one of the relation's variable is ambiguous but not
+                    # invariant, an intersection will be necessary
+                    for vref in rel.get_nodes(VariableRef):
+                        var = vref.variable
+                        if (not var._q_invariant and var.valuable_references() == 1
+                            and len(var.stinfo['possibletypes']) > 1):
+                            select.need_intersect = True
+                            break
+                    else:
+                        continue
+                    break
+        else:
+            select.need_intersect = False
 
 
 class SQLGenAnnotator(object):

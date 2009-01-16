@@ -156,11 +156,6 @@ WHERE X.prenom=lulu AND NOT EXISTS(SELECT 1 FROM owned_by_relation AS rel_owned_
 ]
 
 ADVANCED= [
-    ('Any X WHERE X is ET, ET eid 2',
-     '''SELECT rel_is0.eid_from
-FROM is_relation AS rel_is0
-WHERE rel_is0.eid_to=2'''),
-
 
     ("Societe S WHERE S nom 'Logilab' OR S nom 'Caesium'",
      '''SELECT S.eid
@@ -1064,7 +1059,57 @@ WHERE S.eid=0 AND S.in_state IS NOT NULL''')
     
     ]
 
+INTERSECT = [
+    ('Any SN WHERE NOT X in_state S, S name SN',
+     '''SELECT DISTINCT S.name
+FROM Affaire AS X, State AS S
+WHERE (X.in_state IS NULL OR X.in_state!=S.eid)
+INTERSECT
+SELECT DISTINCT S.name
+FROM EUser AS X, State AS S
+WHERE (X.in_state IS NULL OR X.in_state!=S.eid)
+INTERSECT
+SELECT DISTINCT S.name
+FROM Note AS X, State AS S
+WHERE (X.in_state IS NULL OR X.in_state!=S.eid)'''),
 
+    ('Any PN WHERE NOT X travaille S, X nom PN, S is IN(Division, Societe)',
+     '''SELECT X.nom
+FROM Personne AS X
+WHERE NOT EXISTS(SELECT 1 FROM travaille_relation AS rel_travaille0,Division AS S WHERE rel_travaille0.eid_from=X.eid AND rel_travaille0.eid_to=S.eid)
+INTERSECT ALL
+SELECT X.nom
+FROM Personne AS X
+WHERE NOT EXISTS(SELECT 1 FROM travaille_relation AS rel_travaille0,Societe AS S WHERE rel_travaille0.eid_from=X.eid AND rel_travaille0.eid_to=S.eid)'''),
+    
+    ('Any PN WHERE NOT X travaille S, S nom PN, S is IN(Division, Societe)',
+     '''SELECT S.nom
+FROM Division AS S
+WHERE NOT EXISTS(SELECT 1 FROM travaille_relation AS rel_travaille0 WHERE rel_travaille0.eid_to=S.eid)
+UNION ALL
+SELECT S.nom
+FROM Societe AS S
+WHERE NOT EXISTS(SELECT 1 FROM travaille_relation AS rel_travaille0 WHERE rel_travaille0.eid_to=S.eid)'''),
+    
+    ('Personne X WHERE NOT X travaille S, S nom "chouette"',
+     '''SELECT X.eid
+FROM Division AS S, Personne AS X
+WHERE NOT EXISTS(SELECT 1 FROM travaille_relation AS rel_travaille0 WHERE rel_travaille0.eid_from=X.eid AND rel_travaille0.eid_to=S.eid) AND S.nom=chouette
+UNION ALL
+SELECT X.eid
+FROM Personne AS X, Societe AS S
+WHERE NOT EXISTS(SELECT 1 FROM travaille_relation AS rel_travaille0 WHERE rel_travaille0.eid_from=X.eid AND rel_travaille0.eid_to=S.eid) AND S.nom=chouette
+UNION ALL
+SELECT X.eid
+FROM Personne AS X, SubDivision AS S
+WHERE NOT EXISTS(SELECT 1 FROM travaille_relation AS rel_travaille0 WHERE rel_travaille0.eid_from=X.eid AND rel_travaille0.eid_to=S.eid) AND S.nom=chouette'''),
+    
+    ('Any X WHERE X is ET, ET eid 2',
+     '''SELECT rel_is0.eid_from
+FROM is_relation AS rel_is0
+WHERE rel_is0.eid_to=2'''),
+
+    ]
 from logilab.common.adbh import ADV_FUNC_HELPER_DIRECTORY
     
 class PostgresSQLGeneratorTC(RQLGeneratorTC):
@@ -1195,6 +1240,10 @@ WHERE rel_in_group0.eid_from=T00.x AND rel_in_group0.eid_to=G.eid''',
         
     def test_negation(self):
         for t in self._parse(NEGATIONS):
+            yield t
+        
+    def test_intersection(self):
+        for t in self._parse(INTERSECT):
             yield t
 
     def test_union(self):
@@ -1370,7 +1419,7 @@ class SqliteSQLGeneratorTC(PostgresSQLGeneratorTC):
         self.o = SQLGenerator(schema, dbms_helper)
 
     def _norm_sql(self, sql):
-        return sql.strip().replace(' ILIKE ', ' LIKE ')
+        return sql.strip().replace(' ILIKE ', ' LIKE ').replace('\nINTERSECT ALL\n', '\nINTERSECT\n')
 
     def test_union(self):
         for t in self._parse((
