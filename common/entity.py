@@ -998,6 +998,7 @@ class Entity(AppRsetObject, dict):
         _done.add(self.eid)
         containers = tuple(self.e_schema.fulltext_containers())
         if containers:
+            yielded = False
             for rschema, target in containers:
                 if target == 'object':
                     targets = getattr(self, rschema.type)
@@ -1008,6 +1009,9 @@ class Entity(AppRsetObject, dict):
                         continue
                     for container in entity.fti_containers(_done):
                         yield container
+                        yielded = True
+            if not yielded:
+                yield self
         else:
             yield self
                     
