@@ -11,9 +11,9 @@ from rql.nodes import VariableRef, Constant
 from logilab.mtconverter import html_escape
 
 from cubicweb.interfaces import IPrevNext
-from cubicweb.common.selectors import (paginated_rset, sortedrset_selector,
-                                    primary_view, match_context_prop,
-                                    one_line_rset, implement_interface)
+from cubicweb.common.selectors import (paginated_rset, sorted_rset,
+                                       primary_view, match_context_prop,
+                                       one_line_rset, implement_interface)
 from cubicweb.common.uilib import cut
 from cubicweb.web.component import EntityVComponent, NavigationComponent
 
@@ -49,7 +49,7 @@ class SortedNavigation(NavigationComponent):
     """sorted navigation apply if navigation is needed (according to page size)
     and if the result set is sorted
     """
-    __selectors__ = (paginated_rset, sortedrset_selector)
+    __selectors__ = (paginated_rset, sorted_rset)
     
     # number of considered chars to build page links
     nb_chars = 5
