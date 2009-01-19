@@ -7,7 +7,7 @@ from shutil import copy
 # additional monkey patches necessary in regular cubicweb environment
 from cubicweb.server import rqlannotation
 from cubicweb.goa.overrides import rqlannotation as goarqlannotation
-rqlannotation.sqlgen_annotate = goarqlannotation.sqlgen_annotate
+rqlannotation.SQLGenAnnotator = goarqlannotation.SQLGenAnnotator
 rqlannotation.set_qdata = goarqlannotation.set_qdata
 
 try:
