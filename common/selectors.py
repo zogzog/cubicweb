@@ -499,7 +499,7 @@ def match_context_prop(cls, req, rset, row=None, col=None, context=None,
     propval = req.property_value('%s.%s.context' % (cls.__registry__, cls.id))
     if not propval:
         propval = cls.context
-    if context is not None and propval is not None and context != propval:
+    if context is not None and propval and context != propval:
         return 0
     return 1
 contextprop_selector = deprecated_function(match_context_prop)

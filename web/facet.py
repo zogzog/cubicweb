@@ -245,11 +245,11 @@ class AbstractFacet(AcceptMixIn, AppRsetObject):
                            help=_('display order of the box')),
         _('context'): dict(type='String', default=None,
                            # None <-> both
-                           vocabulary=(_('tablefilter'), _('facetbox'), None),
+                           vocabulary=(_('tablefilter'), _('facetbox'), ''),
                            help=_('context where this box should be displayed')),
         }
     visible = True
-    context = None
+    context = ''
     needs_update = False
     start_unfolded = True
     
