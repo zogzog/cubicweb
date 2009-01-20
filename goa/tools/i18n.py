@@ -221,7 +221,7 @@ def update_cubes_catalog(vreg, appdirectory, langs):
     os.chdir(appdirectory)
     potfiles = []
     if osp.exists(osp.join('i18n', 'entities.pot')):
-        potfiles = potfiles.append( osp.join('i18n', scfile) )
+        potfiles = potfiles.append( osp.join('i18n', 'entities.pot') )
     print '******** extract schema messages'
     schemapot = osp.join(tempdir, 'schema.pot')
     potfiles.append(schemapot)

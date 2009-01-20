@@ -346,7 +346,7 @@ type "exit" or Ctrl-D to quit the shell and resume operation"""
             if optdescr[0] == 'added':
                 optdict = self.config.get_option_def(optdescr[1])
                 if optdict.get('default') is REQUIRED:
-                    self.config.input_option(option, optdict)
+                    self.config.input_option(optdescr[1], optdict)
         self.config.generate_config(open(newconfig, 'w'))
         show_diffs(configfile, newconfig)
         if exists(newconfig):
