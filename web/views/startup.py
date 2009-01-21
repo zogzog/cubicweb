@@ -245,10 +245,10 @@ class OWLView(StartupView):
 
     <owl:Ontology rdf:about="">
         <rdfs:comment>
-        Cubicweb OWL Ontology                           
-      Author: Laure Bourgois                                   
+        %s Cubicweb OWL Ontology                           
+                                        
         </rdfs:comment>
-        ''' % (self.schema.name, self.schema.name, self.schema.name, self.schema.name, self.schema.name, self.schema.name))
+        ''' % (self.schema.name, self.schema.name, self.schema.name, self.schema.name, self.schema.name, self.schema.name, self.schema.name))
         entities = [eschema for eschema in self.schema.entities()
                     if not eschema.is_final()]
         if skipmeta:
