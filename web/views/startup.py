@@ -15,11 +15,10 @@ from cubicweb.web.httpcache import EtagHTTPCacheManager
 
 _ = unicode
 
-OWL_CARD_MAP = {'1': '''<owl:minCardinality rdf:datatype="&xsd;nonNegativeInteger">1</owl:minCardinality>
-                        <owl:maxCardinality rdf:datatype="&xsd;nonNegativeInteger">1</owl:maxCardinality>''',
-                '?': '<owl:maxCardinality rdf:datatype="&xsd;nonNegativeInteger">1</owl:maxCardinality>',
-                '+': '<owl:minCardinality rdf:datatype="&xsd;nonNegativeInteger">1</owl:minCardinality>',
-                '*': '<owl:cardinality rdf:datatype="&xsd;nonNegativeInteger">n</owl:cardinality>'
+OWL_CARD_MAP = {'1': '<rdf:type rdf:resource="&owl;FunctionalProperty"/>',                      
+                '?': '<owl:maxCardinality rdf:datatype="&xsd;int">1</owl:maxCardinality>',
+                '+': '<owl:minCardinality rdf:datatype="&xsd;int">1</owl:minCardinality>',
+                '*': ''
                 }
 
 OWL_CARD_MAP_DATA = {'String': 'xsd:string',
@@ -241,13 +240,14 @@ class OWLView(StartupView):
             xmlns:owl="http://www.w3.org/2002/07/owl#"
             xmlns="http://logilab.org/owl/ontologies/%s#"
             xmlns:%s="http://logilab.org/owl/ontologies/%s#"
-            xml:base="http://logilab.org/owl/ontologies/%s#">
+            xml:base="http://logilab.org/owl/ontologies/%s">
 
     <owl:Ontology rdf:about="">
         <rdfs:comment>
         %s Cubicweb OWL Ontology                           
                                         
         </rdfs:comment>
+   </owl:Ontology>
         ''' % (self.schema.name, self.schema.name, self.schema.name, self.schema.name, self.schema.name, self.schema.name, self.schema.name))
         entities = [eschema for eschema in self.schema.entities()
                     if not eschema.is_final()]
@@ -265,7 +265,7 @@ class OWLView(StartupView):
         self.w(u'<!-- datatype property -->')
         for key, eschema in sorted(keys):
             self.visit_property_object_schemaOWL(eschema, skiprels)
-        self.w(u' </owl:Ontology></rdf:RDF>')
+        self.w(u'</rdf:RDF>')
            
     def eschema_link_url(self, eschema):
         return self.req.build_url('eetype/%s?vid=eschema' % eschema)
@@ -324,14 +324,14 @@ class OWLView(StartupView):
             card_data = aschema.type
             self.w(u'''<rdfs:subClassOf>
                               <owl:Restriction>
-                                  <owl:onProperty rdf:resource="#%s"/>
-                                  <owl:cardinality rdf:datatype="&xsd;nonNegativeInteger">1</owl:cardinality>
-                              </owl:Restriction>
+                                 <owl:onProperty rdf:resource="#%s"/>
+                                 <rdf:type rdf:resource="&owl;FunctionalProperty"/>
+                                 </owl:Restriction>
                         </rdfs:subClassOf>'''
                           
                    % aname)
         self.w(u'</owl:Class>')
-      
+    
     def visit_property_schemaOWL(self, eschema, skiprels=()):
         """get a layout for property entity OWL schema"""
         etype = eschema.type
@@ -365,8 +365,5 @@ class OWLView(StartupView):
                           <rdfs:range rdf:resource="%s"/>
                        </owl:DatatypeProperty>'''
                    % (aname, eschema, OWL_CARD_MAP_DATA[card_data]))
-# <owl:DatatypeProperty rdf:ID="%s"/>
-# </owl:DatatypeProperty>
 
-        
        
