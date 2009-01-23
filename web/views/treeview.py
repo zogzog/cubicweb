@@ -58,10 +58,10 @@ class FileItemInnerView(OneLineView):
     def cell_call(self, row, col):
         entity = self.entity(row, col)
         if ITree.is_implemented_by(entity.__class__) and not entity.is_leaf():
-            self.w(u'<span class="folder">%s</span>' % entity.view('oneline'))
+            self.w(u'<div class="folder">%s</div>' % entity.view('oneline'))
         else:
             # XXX define specific CSS classes according to mime types
-            self.w(u'<span class="file">%s</span>' % entity.view('oneline'))
+            self.w(u'<div class="file">%s</div>' % entity.view('oneline'))
 
 
 class DefaultTreeViewItemView(EntityView):
