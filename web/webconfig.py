@@ -1,7 +1,7 @@
 """common web configuration for twisted/modpython applications
 
 :organization: Logilab
-:copyright: 2001-2008 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+:copyright: 2001-2009 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 """
 __docformat__ = "restructuredtext en"
@@ -349,6 +349,6 @@ if you want to allow everything',
         stream.close()
 
     def static_file_del(self, rpath):
-        if static_file_exists(rpath):
+        if self.static_file_exists(rpath):
             os.remove(join(self.static_directory, rpath))
         

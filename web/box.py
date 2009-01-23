@@ -14,9 +14,9 @@ from cubicweb.common.registerers import (
     accepts_registerer, extresources_registerer,
     etype_rtype_priority_registerer)
 from cubicweb.common.selectors import (
-    etype_rtype_selector, one_line_rset, accept, accept_rtype_selector,
+    etype_rtype_selector, one_line_rset, accept, has_relation,
     primary_view, match_context_prop, has_related_entities,
-    _rqlcondition_selector)
+    _rql_condition)
 from cubicweb.common.view import Template
 from cubicweb.common.appobject import ReloadableMixIn
 
@@ -152,8 +152,7 @@ class EntityBoxTemplate(BoxTemplate):
     __registerer__ = accepts_registerer
     __selectors__ = (one_line_rset, primary_view,
                      match_context_prop, etype_rtype_selector,
-                     accept_rtype_selector, accept,
-                     _rqlcondition_selector)
+                     has_relation, accept, _rql_condition)
     accepts = ('Any',)
     context = 'incontext'
     condition = None
@@ -185,7 +184,7 @@ class EditRelationBoxTemplate(ReloadableMixIn, EntityBoxTemplate):
     class attributes.
     """
     
-    def cell_call(self, row, col):
+    def cell_call(self, row, col, view=None):
         self.req.add_js('cubicweb.ajax.js')
         entity = self.entity(row, col)
         box = SideBoxWidget(display_name(self.req, self.rtype), self.id)

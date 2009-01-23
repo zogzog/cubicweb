@@ -791,7 +791,7 @@ class Repository(object):
         # since the current session user may not have required permissions to
         # do necessary stuff and we don't want to commit user session.
         #
-        # More other, even if session is already an internal session but is
+        # Moreover, even if session is already an internal session but is
         # processing a commit, we have to use another one
         if not session.is_internal_session:
             session = self.internal_session()
@@ -803,6 +803,7 @@ class Repository(object):
             entity = source.before_entity_insertion(session, lid, etype, eid)
             if source.should_call_hooks:
                 self.hm.call_hooks('before_add_entity', etype, session, entity)
+            # XXX call add_info with complete=False ?
             self.add_info(session, entity, source, lid)
             source.after_entity_insertion(session, lid, entity)
             if source.should_call_hooks:

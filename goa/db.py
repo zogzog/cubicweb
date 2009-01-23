@@ -391,7 +391,7 @@ class Model(entities.AnyEntity):
 
     @classmethod
     def kind(cls):
-        return self.id
+        return cls.id
 
     @classmethod
     def properties(cls):

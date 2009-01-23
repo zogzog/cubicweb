@@ -15,9 +15,9 @@ from cubicweb.common.selectors import match_user_group
 from cubicweb.web._exceptions import NoSelectableObject
 from cubicweb.web.action import Action
 from cubicweb.web.views import (baseviews, tableview, baseforms, calendar, 
-                             management, embedding, actions, startup, 
-                             euser, schemaentities, xbel, vcard, 
-                             idownloadable, wdoc, debug)
+                                management, embedding, actions, startup, 
+                                euser, schemaentities, xbel, vcard,
+                                treeview, idownloadable, wdoc, debug)
 from cubicweb.entities.lib import Card
 from cubicweb.interfaces import IMileStone
 
@@ -94,14 +94,17 @@ class VRegistryTC(ViewSelectorTC):
                              [('csvexport', baseviews.CSVRsetView),
                               ('ecsvexport', baseviews.CSVEntityView),
                               ('editable-table', tableview.EditableTableView),
+                              ('filetree', treeview.FileTreeView),
                               ('list', baseviews.ListView),
                               ('oneline', baseviews.OneLineView),
                               ('primary', baseviews.PrimaryView),
+                              ('rsetxml', baseviews.XMLRsetView),
                               ('rss', baseviews.RssView),
                               ('secondary', baseviews.SecondaryView),
                               ('security', management.SecurityManagementView),
                               ('table', tableview.TableView),
                               ('text', baseviews.TextView),
+                              ('treeview', treeview.TreeView),
                               ('xbel', xbel.XbelView),
                               ('xml', baseviews.XmlView),
                               ])
@@ -111,14 +114,17 @@ class VRegistryTC(ViewSelectorTC):
                              [('csvexport', baseviews.CSVRsetView),
                               ('ecsvexport', baseviews.CSVEntityView),
                               ('editable-table', tableview.EditableTableView),
+                              ('filetree', treeview.FileTreeView),
                               ('list', baseviews.ListView),
                               ('oneline', baseviews.OneLineView),
                               ('primary', baseviews.PrimaryView),
+                              ('rsetxml', baseviews.XMLRsetView),
                               ('rss', baseviews.RssView),
                               ('secondary', baseviews.SecondaryView),
                               ('security', management.SecurityManagementView),
                               ('table', tableview.TableView),
                               ('text', baseviews.TextView),
+                              ('treeview', treeview.TreeView),
                               ('xbel', xbel.XbelView),
                               ('xml', baseviews.XmlView),
                               ])
@@ -128,14 +134,17 @@ class VRegistryTC(ViewSelectorTC):
                              [('csvexport', baseviews.CSVRsetView),
                               ('ecsvexport', baseviews.CSVEntityView),
                               ('editable-table', tableview.EditableTableView),
+                              ('filetree', treeview.FileTreeView),
                               ('list', baseviews.ListView),
                               ('oneline', baseviews.OneLineView),
                               ('primary', baseviews.PrimaryView),
+                              ('rsetxml', baseviews.XMLRsetView),
                               ('rss', baseviews.RssView),
                               ('secondary', baseviews.SecondaryView),
                               ('security', management.SecurityManagementView),
                               ('table', tableview.TableView),
                               ('text', baseviews.TextView),
+                              ('treeview', treeview.TreeView),
                               ('xbel', xbel.XbelView),
                               ('xml', baseviews.XmlView),
                               ])
@@ -144,6 +153,7 @@ class VRegistryTC(ViewSelectorTC):
         self.assertListEqual(self.pviews(req, rset),
                              [('csvexport', baseviews.CSVRsetView),
                               ('editable-table', tableview.EditableTableView),
+                              ('rsetxml', baseviews.XMLRsetView),
                               ('table', tableview.TableView),
                               ])
         # list of euser entities
@@ -152,14 +162,17 @@ class VRegistryTC(ViewSelectorTC):
                              [('csvexport', baseviews.CSVRsetView),
                               ('ecsvexport', baseviews.CSVEntityView),
                               ('editable-table', tableview.EditableTableView),
+                              ('filetree', treeview.FileTreeView),
                               ('list', baseviews.ListView),
                               ('oneline', baseviews.OneLineView),
                               ('primary', euser.EUserPrimaryView),
+                              ('rsetxml', baseviews.XMLRsetView),
                               ('rss', baseviews.RssView),
                               ('secondary', baseviews.SecondaryView),
                               ('security', management.SecurityManagementView),
                               ('table', tableview.TableView),
                               ('text', baseviews.TextView),
+                              ('treeview', treeview.TreeView),
                               ('vcard', vcard.VCardEUserView),
                               ('xbel', xbel.XbelView),
                               ('xml', baseviews.XmlView),

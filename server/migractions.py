@@ -11,7 +11,7 @@ The following data actions are supported for now:
 
 
 :organization: Logilab
-:copyright: 2001-2008 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+:copyright: 2001-2009 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 """
 __docformat__ = "restructuredtext en"
@@ -679,11 +679,11 @@ class ServerMigrationHelper(MigrationHelper):
         espschema = eschema.specializes()
         if repospschema and not espschema:
             self.rqlexec('DELETE X specializes Y WHERE X is EEType, X name %(x)s',
-                         {'x': str(repoechema)})
+                         {'x': str(repoeschema)})
         elif not repospschema and espschema:
             self.rqlexec('SET X specializes Y WHERE X is EEType, X name %(x)s, '
                          'Y is EEType, Y name %(y)s',
-                         {'x': str(repoechema), 'y': str(epschema)})
+                         {'x': str(repoeschema), 'y': str(espschema)})
         self.rqlexecall(ss.updateeschema2rql(eschema),
                         ask_confirm=self.verbosity >= 2)
         for rschema, targettypes, x in eschema.relation_definitions(True):

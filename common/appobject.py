@@ -1,7 +1,7 @@
 """Base class for dynamically loaded objects manipulated in the web interface
 
 :organization: Logilab
-:copyright: 2001-2008 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+:copyright: 2001-2009 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 """
 __docformat__ = "restructuredtext en"
@@ -12,6 +12,8 @@ from mx.DateTime import now, oneSecond
 from simplejson import dumps
 
 from logilab.common.deprecation import obsolete
+
+from rql.nodes import VariableRef, SubQuery
 from rql.stmts import Union, Select
 
 from cubicweb import Unauthorized

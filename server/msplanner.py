@@ -999,7 +999,9 @@ class MSPlanner(SSPlanner):
             step = AggrStep(plan, selection, select, atemptable, temptable)
             step.children = steps
         elif len(steps) > 1:
-            if select.need_intersect:
+            if select.need_intersect or any(select.need_intersect
+                                            for step in steps
+                                            for select in step.union.children):
                 if temptable:
                     step = IntersectFetchStep(plan)
                 else:
