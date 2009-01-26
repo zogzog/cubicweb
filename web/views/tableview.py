@@ -72,7 +72,7 @@ class TableView(AnyRsetView):
         return displaycols
     
     def call(self, title=None, subvid=None, displayfilter=None, headers=None,
-             displaycols=None, displayactions=None, actions=(),
+             displaycols=None, displayactions=None, actions=(), divid=None,
              cellvids=None, cellattrs=None):
         """Dumps a table displaying a composite query
 
@@ -93,7 +93,7 @@ class TableView(AnyRsetView):
         hidden = True
         if not subvid and 'subvid' in req.form:
             subvid = req.form.pop('subvid')
-        divid = req.form.get('divid') or 'rs%s' % make_uid(id(rset))
+        divid = divid or req.form.get('divid') or 'rs%s' % make_uid(id(rset))
         actions = list(actions)
         if mainindex is None:
             displayfilter, displayactions = False, False
@@ -208,7 +208,6 @@ class TableView(AnyRsetView):
             else:
                 column.append_renderer(subvid or 'incontext', colindex)
 
-
             if cellattrs and colindex in cellattrs:
                 for name, value in cellattrs[colindex].iteritems():
                     column.add_attr(name,value)
@@ -291,7 +290,7 @@ class InitialTableView(TableView):
     # parameters
     title = None
     
-    def call(self, title=None, subvid=None, headers=None,
+    def call(self, title=None, subvid=None, headers=None, divid=None,
              displaycols=None, displayactions=None):
         """Dumps a table displaying a composite query"""
         actrql = self.req.form['actualrql']
@@ -299,6 +298,8 @@ class InitialTableView(TableView):
         displaycols = self.displaycols(displaycols)
         if displayactions is None and 'displayactions' in self.req.form:
             displayactions = True
+        if divid is None and 'divid' in self.req.form:
+            divid = self.req.form['divid']
         self.w(u'<div class="section">')
         if not title and 'title' in self.req.form:
             # pop title so it's not displayed by the table view as well
@@ -317,7 +318,6 @@ class InitialTableView(TableView):
                                                           filtered_variable=mainvar))
                 
                 if facets:
-                    divid = self.req.form.get('divid', 'filteredTable')
                     self.generate_form(divid, baserql, facets, 
                                        vidargs={'displaycols': displaycols,
                                                 'displayactions': displayactions,
@@ -329,7 +329,7 @@ class InitialTableView(TableView):
         self.view('table', self.req.execute(actrql),
                   'noresult', w=self.w, displayfilter=False, subvid=subvid,
                   displayactions=displayactions, displaycols=displaycols,
-                  actions=actions, headers=headers)
+                  actions=actions, headers=headers, divid=divid)
         self.w(u'</div>\n')
 
 
