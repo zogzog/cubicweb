@@ -75,7 +75,7 @@ class DefaultTreeViewItemView(EntityView):
         if row == len(self.rset) - 1:
             self.w(u'<li class="last">%s</li>' % itemview)
         else:
-            self.w(u'<li><span>%s</span></li>' % itemview)
+            self.w(u'<li>%s</li>' % itemview)
 
 
 class TreeViewItemView(EntityView):

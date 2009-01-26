@@ -59,6 +59,8 @@ CW_XHTML_EXTENSIONS = '''[
  cubicweb:tlunit            CDATA   #IMPLIED
  cubicweb:loadurl           CDATA   #IMPLIED
  cubicweb:uselabel          CDATA   #IMPLIED
+ cubicweb:facetargs         CDATA   #IMPLIED
+ cubicweb:facetName         CDATA   #IMPLIED
   "> ] '''
 
 TRANSITIONAL_DOCTYPE = u'<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd" %s>\n'
