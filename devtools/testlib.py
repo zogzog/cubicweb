@@ -328,7 +328,6 @@ class WebTest(EnvBasedTC):
         """this method tries to find everything that can be tested
         for `rset` and yields a callable test (as needed in generative tests)
         """
-        rqlst = parse(rset.rql)
         propdefs = self.vreg['propertydefs']
         # make all components visible
         for k, v in propdefs.items():
