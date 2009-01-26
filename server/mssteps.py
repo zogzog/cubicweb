@@ -276,7 +276,7 @@ class IntersectStep(UnionStep):
         if self.offset:
             result = result[self.offset:]
         if self.limit:
-            result = result[:limit]
+            result = result[:self.limit]
         return result
 
 
