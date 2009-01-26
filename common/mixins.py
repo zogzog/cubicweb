@@ -145,7 +145,6 @@ class TreeMixIn(object):
         return self.iterchildren()
 
     def is_leaf(self):
-        print '*' * 80
         return len(self.children()) == 0
 
     def is_root(self):
