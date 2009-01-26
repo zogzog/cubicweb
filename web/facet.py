@@ -29,7 +29,7 @@ from cubicweb.web.htmlwidgets import HTMLWidget
 
 def prepare_facets_rqlst(rqlst, args=None):
     """prepare a syntax tree to generate facet filters
-    
+
     * remove ORDERBY clause
     * cleanup selection (remove everything)
     * undefine unnecessary variables
@@ -64,7 +64,7 @@ def filtered_variable(rqlst):
 def get_facet(req, facetid, rqlst, mainvar):
     return req.vreg.object_by_id('facets', facetid, req, rqlst=rqlst,
                                  filtered_variable=mainvar)
-    
+
 
 def filter_hiddens(w, **kwargs):
     for key, val in kwargs.items():
@@ -139,7 +139,7 @@ def _prepare_vocabulary_rqlst(rqlst, mainvar, rtype, role):
         rqlst.add_group_var(newvar)
     rqlst.add_selected(newvar)
     return newvar, rel
-        
+
 def _remove_relation(rqlst, rel, var):
     """remove a constraint relation from the syntax tree"""
     # remove the relation
@@ -229,10 +229,10 @@ def _cleanup_rqlst(rqlst, mainvar):
             if ovarname == mainvar.name:
                 continue
             if not has_path(vargraph, ovarname, mainvar.name):
-                toremove.add(rqlst.defined_vars[ovarname])            
+                toremove.add(rqlst.defined_vars[ovarname])
 
-        
-        
+
+
 ## base facet classes #########################################################
 class AbstractFacet(AcceptMixIn, AppRsetObject):
     __registerer__ = priority_registerer
@@ -252,7 +252,7 @@ class AbstractFacet(AcceptMixIn, AppRsetObject):
     context = ''
     needs_update = False
     start_unfolded = True
-    
+
     @classmethod
     def selected(cls, req, rset=None, rqlst=None, context=None,
                  filtered_variable=None):
@@ -280,20 +280,20 @@ class AbstractFacet(AcceptMixIn, AppRsetObject):
     def operator(self):
         # OR between selected values by default
         return self.req.form.get(self.id + '_andor', 'OR')
-    
+
     def get_widget(self):
         """return the widget instance to use to display this facet
         """
         raise NotImplementedError
-    
+
     def add_rql_restrictions(self):
         """add restriction for this facet into the rql syntax tree"""
         raise NotImplementedError
-    
+
 
 class VocabularyFacet(AbstractFacet):
     needs_update = True
-    
+
     def get_widget(self):
         """return the widget instance to use to display this facet
 
@@ -311,12 +311,12 @@ class VocabularyFacet(AbstractFacet):
             else:
                 wdg.append(FacetItem(self.req, label, value, value in selected))
         return wdg
-    
+
     def vocabulary(self):
         """return vocabulary for this facet, eg a list of 2-uple (label, value)
         """
         raise NotImplementedError
-    
+
     def possible_values(self):
         """return a list of possible values (as string since it's used to
         compare to a form value in javascript) for this facet
@@ -325,13 +325,13 @@ class VocabularyFacet(AbstractFacet):
 
     def support_and(self):
         return False
-    
+
     def rqlexec(self, rql, args=None, cachekey=None):
         try:
             return self.req.execute(rql, args, cachekey)
         except Unauthorized:
             return []
-        
+
 
 class RelationFacet(VocabularyFacet):
     __selectors__ = (one_has_relation, match_context_prop)
@@ -344,10 +344,10 @@ class RelationFacet(VocabularyFacet):
     sortfunc = None
     # ascendant/descendant sorting
     sortasc = True
-    
+
     @property
     def title(self):
-        return display_name(self.req, self.rtype, form=self.role)        
+        return display_name(self.req, self.rtype, form=self.role)
 
     def vocabulary(self):
         """return vocabulary for this facet, eg a list of 2-uple (label, value)
@@ -367,7 +367,7 @@ class RelationFacet(VocabularyFacet):
         finally:
             rqlst.recover()
         return self.rset_vocabulary(rset)
-    
+
     def possible_values(self):
         """return a list of possible values (as string since it's used to
         compare to a form value in javascript) for this facet
@@ -380,7 +380,7 @@ class RelationFacet(VocabularyFacet):
             return [str(x) for x, in self.rqlexec(rqlst.as_string())]
         finally:
             rqlst.recover()
-    
+
     def rset_vocabulary(self, rset):
         _ = self.req._
         return [(_(label), eid) for eid, label in rset]
@@ -432,7 +432,9 @@ class RelationFacet(VocabularyFacet):
 class AttributeFacet(RelationFacet):
     # attribute type
     attrtype = 'String'
-    
+    # type of comparison: default is an exact match on the attribute value
+    comparator = '=' # could be '<', '<=', '>', '>='
+
     def vocabulary(self):
         """return vocabulary for this facet, eg a list of 2-uple (label, value)
         """
@@ -452,14 +454,14 @@ class AttributeFacet(RelationFacet):
         finally:
             rqlst.recover()
         return self.rset_vocabulary(rset)
-    
+
     def rset_vocabulary(self, rset):
         _ = self.req._
         return [(_(value), value) for value, in rset]
 
     def support_and(self):
         return False
-            
+
     def add_rql_restrictions(self):
         """add restriction for this facet into the rql syntax tree"""
         value = self.req.form.get(self.id)
@@ -467,16 +469,16 @@ class AttributeFacet(RelationFacet):
             return
         mainvar = self.filtered_variable
         self.rqlst.add_constant_restriction(mainvar, self.rtype, value,
-                                            self.attrtype)
+                                            self.attrtype, self.comparator)
 
 
-        
+
 class FilterRQLBuilder(object):
     """called by javascript to get a rql string from filter form"""
 
     def __init__(self, req):
         self.req = req
-                
+
     def build_rql(self):#, tablefilter=False):
         form = self.req.form
         facetids = form['facets'].split(',')
@@ -490,18 +492,18 @@ class FilterRQLBuilder(object):
                 toupdate.append(facetid)
         return select.as_string(), toupdate
 
-        
+
 ## html widets ################################################################
 
 class FacetVocabularyWidget(HTMLWidget):
-    
+
     def __init__(self, facet):
         self.facet = facet
         self.items = []
 
     def append(self, item):
         self.items.append(item)
-            
+
     def _render(self):
         title = html_escape(self.facet.title)
         facetid = html_escape(self.facet.id)
@@ -527,7 +529,7 @@ class FacetVocabularyWidget(HTMLWidget):
         self.w(u'</div>\n')
         self.w(u'</div>\n')
 
-        
+
 class FacetStringWidget(HTMLWidget):
     def __init__(self, facet):
         self.facet = facet
@@ -560,7 +562,7 @@ class FacetItem(HTMLWidget):
             imgsrc = self.req.datadir_url + self.selected_img
         else:
             cssclass = ''
-            imgsrc = self.req.datadir_url + self.unselected_img            
+            imgsrc = self.req.datadir_url + self.unselected_img
         self.w(u'<div class="facetValue facetCheckBox%s" cubicweb:value="%s">\n'
                % (cssclass, html_escape(unicode(self.value))))
         self.w(u'<img src="%s" />&nbsp;' % imgsrc)
@@ -571,7 +573,7 @@ class FacetItem(HTMLWidget):
 class FacetSeparator(HTMLWidget):
     def __init__(self, label=None):
         self.label = label or u'&nbsp;'
-        
+
     def _render(self):
         pass
 
