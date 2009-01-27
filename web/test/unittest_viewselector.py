@@ -75,6 +75,7 @@ class VRegistryTC(ViewSelectorTC):
                               ('index', startup.IndexView),
                               ('info', management.ProcessInformationView),
                               ('manage', startup.ManageView),
+                              ('owl', startup.OWLView),
                               ('schema', startup.SchemaView),
                               ('systemepropertiesform', management.SystemEpropertiesForm)])
         # no entity but etype
