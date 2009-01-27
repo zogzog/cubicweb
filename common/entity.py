@@ -391,6 +391,10 @@ class Entity(AppRsetObject, dict):
         res['source'] = self.req.source_defs()[res['source']]
         return res
 
+    def clear_local_perm_cache(self, action):
+        for rqlexpr in self.e_schema.get_rqlexprs(action):
+            self.req.local_perm_cache.pop((rqlexpr.eid, (('x', self.eid),)), None)
+
     def check_perm(self, action):
         self.e_schema.check_perm(self.req, action, self.eid)
 
