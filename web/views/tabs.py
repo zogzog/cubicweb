@@ -10,24 +10,62 @@ __docformat__ = "restructuredtext en"
 from logilab.mtconverter import html_escape
 
 from cubicweb import NoSelectableObject, role
-from cubicweb.common.selectors import has_related_entities
 from cubicweb.common.view import EntityView
 
-class TabsMixIn(object):
-    
-    def active_tab(self, default):
+from cubicweb.common.utils import HTMLHead
+
+# the prepend hack only work for 1-level lazy views
+# a whole lot different thing must be done otherwise
+def prepend_post_inline_script(self, content):
+    self.post_inlined_scripts.insert(0, content)
+HTMLHead.prepend_post_inline_script = prepend_post_inline_script
+
+class LazyViewMixin(object):
+
+    def lazyview(self, vid, eid=None, show_spinbox=True, w=None):
+        """a lazy version of wview
+        first version only support lazy viewing for an entity at a time
+        """
+        w = w or self.w
+        self.req.add_js('cubicweb.lazy.js')
+        eid = eid if eid else ''
+        w(u'<div id="lazy-%s" cubicweb__loadurl="%s-%s">' % (vid, vid, eid))
+        if show_spinbox:
+            w(u'<img src="data/loading.gif" id="%s-hole"/>' % vid)
+        w(u'</div>')
+        self.req.html_headers.prepend_post_inline_script(u"""
+jQuery(document).ready(function () {
+  $('#lazy-%(vid)s').bind('%(event)s', function(event) {
+     load_now('#lazy-%(vid)s', '#%(vid)s-hole');
+  });});""" % {'event' : 'load_%s' % vid,
+               'vid' : vid})
+
+    def forceview(self, vid):
+        """trigger an event that will force immediate loading of the view
+        on dom readyness
+        """
+        self.req.add_js('.lazy.js')
+        self.req.html_headers.add_post_inline_script(u"""
+jQuery(document).ready(function() {
+  trigger_load('%(vid)s');})
+""" % {'vid' : vid})
+
+class TabsMixin(LazyViewMixin):
+
+    def active_tab(self, tabs, default):
         cookie = self.req.get_cookie()
         activetab = cookie.get('active_tab')
         if activetab is None:
             cookie['active_tab'] = default
             self.req.set_cookie(cookie, 'active_tab')
             return default
-        return activetab.value
+        tab = activetab.value
+        return tab if tab in tabs else default
 
-    def render_tabs(self, tabs, default, **kwargs):
+    def render_tabs(self, tabs, default, entity):
         self.req.add_css('ui.tabs.css')
         self.req.add_js( ('ui.core.js', 'ui.tabs.js', 'cubicweb.tabs.js') )
-        active_tab = self.active_tab(default)
+        active_tab = self.active_tab(tabs, default)
         self.req.html_headers.add_post_inline_script(u"""
  jQuery(document).ready(function() {
    jQuery('#entity-tabs > ul').tabs( { selected: %(tabindex)s });
@@ -39,13 +77,11 @@ class TabsMixIn(object):
         w = self.w
         w(u'<div id="entity-tabs">')
         w(u'<ul>')
-        tabviews = []
         for tab in tabs:
             try:
-                tabview = self.vreg.select_view(tab, self.req, self.rset, **kwargs)
+                tabview = self.vreg.select_view(tab, self.req, self.rset)
             except NoSelectableObject:
-                continue
-            tabviews.append(tabview)
+                self.info('no selectable view for id %s', tab)
             w(u'<li>')
             w(u'<a href="#as-%s">' % tab)
             w(u'<span onclick="set_tab(\'%s\')">' % tab)
@@ -55,19 +91,9 @@ class TabsMixIn(object):
             w(u'</li>')
         w(u'</ul>')
         w(u'</div>')
-        # XXX ajaxify !
-        for tabview in tabviews:
-            w(u'<div id="as-%s">' % tabview.id)
-            tabview.dispatch(w=self.w, **kwargs)
-            w(u'</div>')    
+        for tab in tabs:
+            w(u'<div id="as-%s">' % tab)
+            self.lazyview(tab, entity.eid)
+            w(u'</div>')
 
-  
-class EntityRelationTab(EntityView):
-    __selectors__ = EntityView.__selectors__ + (has_related_entities,)
-    vid = 'list'
 
-    def cell_call(self, row, col):
-        rset = self.rset.get_entity(row, col).related(self.rtype, role(self))
-        self.w(u'<div class="mainInfo">')
-        self.wview(self.vid, rset, 'noresult')
-        self.w(u'</div>')
