@@ -3,6 +3,5 @@ function set_tab(tabname) {
   // XXX see if we can no just do it with jQuery
   async_remote_exec('remember_active_tab', tabname);
   // trigger show + tabname event
-  log('set tab for ' + jQuery('#lazy-' + tabname).attr('cubicweb:loadurl'));
   trigger_load(tabname);
 }
