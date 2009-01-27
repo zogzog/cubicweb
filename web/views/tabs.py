@@ -58,8 +58,9 @@ class TabsMixin(LazyViewMixin):
         if activetab is None:
             cookie['active_tab'] = default
             self.req.set_cookie(cookie, 'active_tab')
-            return default
-        tab = activetab.value
+            tab = default
+        else:
+            tab = activetab.value
         return tab if tab in tabs else default
 
     def render_tabs(self, tabs, default, entity):
