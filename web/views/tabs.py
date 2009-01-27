@@ -64,9 +64,22 @@ class TabsMixin(LazyViewMixin):
             tab = activetab.value
         return tab if tab in tabs else default
 
+    def prune_tabs(self, tabs):
+        selected_tabs = []
+        for tab in tabs:
+            try:
+                tabview = self.vreg.select_view(tab, self.req, self.rset)
+                selected_tabs.append(tab)
+            except NoSelectableObject:
+                continue
+        return selected_tabs
+
     def render_tabs(self, tabs, default, entity):
         self.req.add_css('ui.tabs.css')
         self.req.add_js(('ui.core.js', 'ui.tabs.js', 'cubicweb.tabs.js', 'cubicweb.lazy.js'))
+        # prune tabs : not all are to be shown
+        tabs = self.prune_tabs(tabs)
+        # select a tab
         active_tab = self.active_tab(tabs, default)
         self.req.html_headers.add_post_inline_script(u"""
  jQuery(document).ready(function() {
@@ -79,14 +92,7 @@ class TabsMixin(LazyViewMixin):
         w = self.w
         w(u'<div id="entity-tabs">')
         w(u'<ul>')
-        selected_tabs = []
         for tab in tabs:
-            try:
-                tabview = self.vreg.select_view(tab, self.req, self.rset)
-                selected_tabs.append(tab)
-            except NoSelectableObject:
-                self.info('no selectable view for id %s', tab)
-                continue
             w(u'<li>')
             w(u'<a href="#as-%s">' % tab)
             w(u'<span onclick="set_tab(\'%s\')">' % tab)
@@ -96,7 +102,7 @@ class TabsMixin(LazyViewMixin):
             w(u'</li>')
         w(u'</ul>')
         w(u'</div>')
-        for tab in selected_tabs:
+        for tab in tabs:
             w(u'<div id="as-%s">' % tab)
             self.lazyview(tab, entity.eid)
             w(u'</div>')
