@@ -113,6 +113,7 @@ class WebTest(EnvBasedTC):
         'combobox' : None,
         'csvexport' : None,
         'ecsvexport' : None,
+        'owl' : None, # XXX
         }
     valmap = {None: None, 'dtd': DTDValidator, 'xml': SaxOnlyValidator}
     no_auto_populate = ()
