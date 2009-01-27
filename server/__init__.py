@@ -113,6 +113,8 @@ def init_repository(config, interactive=True, drop=False, vreg=None):
     for eid, etype in needisfix:
         handler.session.unsafe_execute('SET X is E WHERE X eid %(x)s, E name %(name)s',
                                        {'x': eid, 'name': etype}, 'x')
+        handler.session.unsafe_execute('SET X is_instance_of E WHERE X eid %(x)s, E name %(name)s',
+                                       {'x': eid, 'name': etype}, 'x')
     # insert versions
     handler.cmd_add_entity('EProperty', pkey=u'system.version.cubicweb',
                            value=unicode(config.cubicweb_version()))
