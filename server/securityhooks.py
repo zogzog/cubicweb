@@ -54,6 +54,7 @@ def after_update_entity(session, entity):
             entity.check_perm('update')
             check_entity_attributes(session, entity)
         except Unauthorized:
+            entity.clear_local_perm_cache('update')
             CheckEntityPermissionOp(session, entity=entity, action='update')
         
 def before_del_entity(session, eid):
