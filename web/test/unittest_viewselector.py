@@ -1,6 +1,5 @@
 # -*- coding: iso-8859-1 -*-
 """XXX rename, split, reorganize this
-
 """
 
 import os.path as osp
