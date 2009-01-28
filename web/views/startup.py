@@ -2,7 +2,7 @@
 apply to a result set.
 
 :organization: Logilab
-:copyright: 2001-2008 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+:copyright: 2001-2009 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 """
 __docformat__ = "restructuredtext en"
@@ -10,7 +10,7 @@ __docformat__ = "restructuredtext en"
 from logilab.mtconverter import html_escape
 
 from cubicweb.common.uilib import ureport_as_html, unormalize, ajax_replace_url
-from cubicweb.common.view import StartupView, EntityView
+from cubicweb.common.view import StartupView
 from cubicweb.web.httpcache import EtagHTTPCacheManager
 
 _ = unicode
@@ -176,7 +176,7 @@ class SchemaView(StartupView):
                 self.req._('detailed schema view')))
 
 
-class SchemaUreportsView(EntityView):
+class SchemaUreportsView(StartupView):
     id = 'schematext'
 
     def call(self):
