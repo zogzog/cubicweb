@@ -69,7 +69,7 @@ jQuery.fn.loadxhtml = function(url, data, reqtype, mode) {
  * the associated RQL to build them (Async call)
  */
 function loadDynamicFragments() {
-    var fragments = getElementsByTagAndClassName('div', 'dynamicFragment');
+    var fragments = jQuery('div.dynamicFragment');
     if (fragments.length == 0) {
 	return;
     }
@@ -277,7 +277,7 @@ function userCallbackThenReloadPage(cbname, msg) {
  * while the page was generated.
  */
 function unregisterUserCallback(cbname) {
-    d = async_remote_exec('unregister_user_callback', cbname);
+    var d = async_remote_exec('unregister_user_callback', cbname);
     d.addCallback(function() {resetCursor();});
     d.addErrback(function(xxx) {
 	updateMessage(_("an error occured"));
