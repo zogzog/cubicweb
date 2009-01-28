@@ -243,7 +243,7 @@ class AbstractFacet(AcceptMixIn, AppRsetObject):
                            help=_('display the box or not')),
         _('order'):   dict(type='Int', default=99,
                            help=_('display order of the box')),
-        _('context'): dict(type='String', default=None,
+        _('context'): dict(type='String', default='',
                            # None <-> both
                            vocabulary=(_('tablefilter'), _('facetbox'), ''),
                            help=_('context where this box should be displayed')),
