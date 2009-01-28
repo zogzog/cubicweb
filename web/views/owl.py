@@ -204,9 +204,9 @@ class OWLABOXView(EntityView):
         %s Cubicweb OWL Ontology                           
                                         
         </rdfs:comment>
-   </owl:Ontology>''' % (self.schema.name, self.schema.name, self.schema.name, self.schema.name, self.schema.name, self.schema.name, self.schema.name))
-        #self.view('owl', rset)
-
+   </owl:Ontology>''' % (self.schema.name, self.schema.name, self.schema.name, self.schema.name, self.schema.name,
+                         self.schema.name, self.schema.name))
+       
         for i in xrange(self.rset.rowcount):
             self.cell_call(i, 0, skiprels=('is', 'is_instance_of', 'identity',
                                        'owned_by', 'created_by'),
@@ -245,7 +245,8 @@ class OWLABOXView(EntityView):
             if rel:
                 for x in rel:
                     if hasattr(x, 'name'):
-                        self.w(u'''<%s>%s %s %s</%s> ''' % (reverse, targetschemas[0], html_escape(unicode(x.name)), html_escape(unicode(x.eid)), reverse))
+                        self.w(u'''<%s>%s %s %s</%s> ''' % (reverse, targetschemas[0], html_escape(unicode(x.name)),
+                                                            html_escape(unicode(x.eid)), reverse))
                     else :
                         self.w(u'''<%s>%s %s</%s> ''' % (reverse, targetschemas[0], html_escape(unicode(x.eid)), reverse))
                        
