@@ -242,7 +242,7 @@ class OWLABOXView(EntityView):
             else:
                 rel = getattr(entity, rschema.type)
                 reverse = '%s' % rschema.type        
-            if len(rel):
+            if rel:
                 for x in rel:
                     if hasattr(x, 'name'):
                         self.w(u'''<%s>%s %s %s</%s> ''' % (reverse, targetschemas[0], html_escape(unicode(x.name)), html_escape(unicode(x.eid)), reverse))
