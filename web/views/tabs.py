@@ -55,10 +55,11 @@ class TabsMixin(LazyViewMixin):
 
     def active_tab(self, tabs, default):
         cookie = self.req.get_cookie()
-        activetab = cookie.get('active_tab')
+        cookiename = '%s_active_tab' % self.config.appid
+        activetab = cookie.get(cookiename)
         if activetab is None:
-            cookie['active_tab'] = default
-            self.req.set_cookie(cookie, 'active_tab')
+            cookie[cookiename] = default
+            self.req.set_cookie(cookie, cookiename)
             tab = default
         else:
             tab = activetab.value
@@ -112,8 +113,9 @@ from cubicweb.web.views.basecontrollers import JSonController
 
 def js_remember_active_tab(self, tabname):
     cookie = self.req.get_cookie()
-    cookie['active_tab'] = tabname
-    self.req.set_cookie(cookie, 'active_tab')
+    cookiename = '%s_active_tab' % self.config.appid
+    cookie[cookiename] = tabname
+    self.req.set_cookie(cookie, cookiename)
 
 def js_lazily(self, vid_eid):
     vid, eid = vid_eid.split('-')
