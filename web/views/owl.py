@@ -33,13 +33,13 @@ class OWLView(StartupView):
 
     def call(self):
         skipmeta = int(self.req.form.get('skipmeta', True))
-        self.visit_schemaOWL(display_relations=True,
+        self.visit_schema(display_relations=True,
                              skiprels=('is', 'is_instance_of', 'identity',
                                        'owned_by', 'created_by'),
                              skipmeta=skipmeta)
 
 
-    def visit_schemaOWL(self, display_relations=0,
+    def visit_schema(self, display_relations=0,
                      skiprels=(), skipmeta=True):
         """get a layout for a whole schema"""
         self.w(u'''<?xml version="1.0" encoding="UTF-8"?>
@@ -74,31 +74,20 @@ class OWLView(StartupView):
         keys = [(eschema.type, eschema) for eschema in entities]
         self.w(u'<!-- classes definition -->')
         for key, eschema in sorted(keys):
-            self.visit_entityschemaOWL(eschema, skiprels)
+            self.visit_entityschema(eschema, skiprels)
         self.w(u'<!-- property definition -->')
         self.w(u'<!-- object property -->')
         for key, eschema in sorted(keys):
-             self.visit_property_schemaOWL(eschema, skiprels)
+             self.visit_property_schema(eschema, skiprels)
         self.w(u'<!-- datatype property -->')
         for key, eschema in sorted(keys):
-            self.visit_property_object_schemaOWL(eschema, skiprels)
+            self.visit_property_object_schema(eschema, skiprels)
         self.w(u'</rdf:RDF>')
-           
-    def eschema_link_url(self, eschema):
-        return self.req.build_url('eetype/%s?vid=eschema' % eschema)
-    
-    def rschema_link_url(self, rschema):
-        return self.req.build_url('ertype/%s?vid=eschema' % rschema)
-
-    def possible_views(self, etype):
-        rset = self.req.etype_rset(etype)
-        return [v for v in self._possible_views(self.req, rset)
-                if v.category != 'startupview']
-
+ 
     def stereotype(self, name):
         return Span((' <<%s>>' % name,), klass='stereotype')
                        
-    def visit_entityschemaOWL(self, eschema, skiprels=()):
+    def visit_entityschema(self, eschema, skiprels=()):
         """get a layout for an entity OWL schema"""
         etype = eschema.type
         
@@ -149,7 +138,7 @@ class OWLView(StartupView):
                    % aname)
         self.w(u'</owl:Class>')
     
-    def visit_property_schemaOWL(self, eschema, skiprels=()):
+    def visit_property_schema(self, eschema, skiprels=()):
         """get a layout for property entity OWL schema"""
         etype = eschema.type
 
@@ -158,7 +147,6 @@ class OWLView(StartupView):
                 continue
             if not (rschema.has_local_role('read') or rschema.has_perm(self.req, 'read')):
                 continue
-            rschemaurl = self.rschema_link_url(rschema)
             for oeschema in targetschemas:
                 label = rschema.type
                 self.w(u'''<owl:ObjectProperty rdf:ID="%s">
@@ -168,7 +156,7 @@ class OWLView(StartupView):
                              
                                 ''' % (label, eschema, oeschema.type ))
 
-    def visit_property_object_schemaOWL(self, eschema, skiprels=()):
+    def visit_property_object_schema(self, eschema, skiprels=()):
                
         for rschema, aschema in eschema.attribute_definitions():
             if not (rschema.has_local_role('read') or rschema.has_perm(self.req, 'read')):
@@ -182,6 +170,7 @@ class OWLView(StartupView):
                           <rdfs:range rdf:resource="%s"/>
                        </owl:DatatypeProperty>'''
                    % (aname, eschema, OWL_CARD_MAP_DATA[card_data]))
+            
 class OWLABOXView(EntityView):
     id = 'owlabox'
     title = _('owlabox')
