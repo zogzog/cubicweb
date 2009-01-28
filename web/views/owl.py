@@ -1,9 +1,9 @@
 from logilab.mtconverter import html_escape
 
-from cubicweb.common.uilib import ureport_as_html, unormalize, ajax_replace_url
+#from cubicweb.common.uilib import ureport_as_html, unormalize, ajax_replace_url
 from cubicweb.common.view import StartupView
 from cubicweb.common.view import EntityView
-from cubicweb.web.httpcache import EtagHTTPCacheManager
+#from cubicweb.web.httpcache import EtagHTTPCacheManager
 
 _ = unicode
 
@@ -57,7 +57,7 @@ class OWLView(StartupView):
             xmlns:owl="http://www.w3.org/2002/07/owl#"
             xmlns="http://logilab.org/owl/ontologies/%s#"
             xmlns:%s="http://logilab.org/owl/ontologies/%s#"
-            xml:base="http://logilab.org/owl/ontologies/%s">
+            xmlns:base="http://logilab.org/owl/ontologies/%s">
 
     <owl:Ontology rdf:about="">
         <rdfs:comment>
