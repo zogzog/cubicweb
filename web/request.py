@@ -640,7 +640,11 @@ class CubicWebRequestBase(DBAPIRequest):
     
     def xhtml_browser(self):
         useragent = self.useragent()
-        if useragent and ('MSIE' in useragent or 'KHTML' in useragent):
+        # MSIE does not support xml content-type
+        # quick fix: Opera supports xhtml and handles namespaces
+        # properly but it breaks jQuery.attr()
+        if useragent and ('MSIE' in useragent or 'KHTML' in useragent
+                          or 'Opera' in useragent):
             return False
         return True
 
