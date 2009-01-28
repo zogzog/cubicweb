@@ -29,7 +29,7 @@ class LazyViewMixin(object):
         """
         w = w or self.w
         self.req.add_js('cubicweb.lazy.js')
-        eid = eid if eid else ''
+        eid = eid or ''
         w(u'<div id="lazy-%s" cubicweb__loadurl="%s-%s">' % (vid, vid, eid))
         if show_spinbox:
             w(u'<img src="data/loading.gif" id="%s-hole"/>' % vid)
@@ -62,7 +62,7 @@ class TabsMixin(LazyViewMixin):
             tab = default
         else:
             tab = activetab.value
-        return tab if tab in tabs else default
+        return tab in tabs and tab or default
 
     def prune_tabs(self, tabs):
         selected_tabs = []
@@ -118,7 +118,7 @@ class TabsController(JSonController):
 
     def js_lazily(self, vid_eid):
         vid, eid = vid_eid.split('-')
-        rset = self.req.eid_rset(eid) if eid else None
+        rset = eid and self.req.eid_rset(eid) or None
         view = self.vreg.select_view(vid, self.req, rset)
         return self._set_content_type(view, view.dispatch())
 
