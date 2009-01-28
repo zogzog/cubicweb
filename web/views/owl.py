@@ -217,7 +217,6 @@ class OWLABOXView(EntityView):
         entity = self.complete_entity(row, col)
         eschema = entity.e_schema
         self.w(u'''<%s rdf:ID="%s">''' % (eschema, entity.name))
-        print 'i'*40
         self.w(u'<!--attributes-->')
         for rschema, aschema in eschema.attribute_definitions():
             if rschema.type in skiprels:
@@ -243,8 +242,7 @@ class OWLABOXView(EntityView):
             else:
                 rel = getattr(entity, rschema.type)
                 reverse = '%s' % rschema.type        
-            if len(rel)!=0:
-                print rel
+            if len(rel):
                 for x in rel:
                     if hasattr(x, 'name'):
                         self.w(u'''<%s>%s %s %s</%s> ''' % (reverse, targetschemas[0], html_escape(unicode(x.name)), html_escape(unicode(x.eid)), reverse))
