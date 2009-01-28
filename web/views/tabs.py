@@ -109,20 +109,22 @@ class TabsMixin(LazyViewMixin):
 
 
 from cubicweb.web.views.basecontrollers import JSonController
-class TabsController(JSonController):
 
-    def js_remember_active_tab(self, tabname):
-        cookie = self.req.get_cookie()
-        cookie['active_tab'] = tabname
-        self.req.set_cookie(cookie, 'active_tab')
+def js_remember_active_tab(self, tabname):
+    cookie = self.req.get_cookie()
+    cookie['active_tab'] = tabname
+    self.req.set_cookie(cookie, 'active_tab')
 
-    def js_lazily(self, vid_eid):
-        vid, eid = vid_eid.split('-')
-        rset = eid and self.req.eid_rset(eid) or None
-        view = self.vreg.select_view(vid, self.req, rset)
-        return self._set_content_type(view, view.dispatch())
+def js_lazily(self, vid_eid):
+    vid, eid = vid_eid.split('-')
+    rset = eid and self.req.eid_rset(eid) or None
+    view = self.vreg.select_view(vid, self.req, rset)
+    return self._set_content_type(view, view.dispatch())
 
-class DataDependantTab(EntityView):
+JSonController.js_remember_active_tab = js_remember_active_tab
+JSonController.js_lazily = js_lazily
+
+class EntityRelatedTab(EntityView):
     """A view you should inherit from leftmost,
     to wrap another actual view displaying entity related stuff.
     Such a view _must_ provide the rtype, target and vid attributes :
