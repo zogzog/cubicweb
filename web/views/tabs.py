@@ -22,6 +22,11 @@ def prepend_post_inline_script(self, content):
 HTMLHead.prepend_post_inline_script = prepend_post_inline_script
 
 class LazyViewMixin(object):
+    """provides two convenience methods for the tab machinery
+    can also be used to lazy-load arbitrary views
+    caveat : lazyview is not recursive, i.e : you can't (successfully)
+    lazyload a view that in turns does the same
+    """
 
     def lazyview(self, vid, eid=None, show_spinbox=True, w=None):
         """a lazy version of wview
@@ -69,7 +74,7 @@ class TabsMixin(LazyViewMixin):
         selected_tabs = []
         for tab in tabs:
             try:
-                tabview = self.vreg.select_view(tab, self.req, self.rset)
+                self.vreg.select_view(tab, self.req, self.rset)
                 selected_tabs.append(tab)
             except NoSelectableObject:
                 continue
