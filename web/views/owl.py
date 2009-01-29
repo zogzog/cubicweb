@@ -216,7 +216,7 @@ class OWLABOXView(EntityView):
     def cell_call(self, row, col, skiprels=(), skipmeta=True):
         entity = self.complete_entity(row, col)
         eschema = entity.e_schema
-        self.w(u'''<%s rdf:ID="%s">''' % (eschema, entity.name))
+        self.w(u'<%s rdf:ID="%s">' % (eschema, entity.eid))
         self.w(u'<!--attributes-->')
         for rschema, aschema in eschema.attribute_definitions():
             if rschema.type in skiprels:
@@ -228,27 +228,18 @@ class OWLABOXView(EntityView):
                 continue
             attr = getattr(entity, aname)
             if attr is not None:
-                self.w(u'''<%s>%s</%s>'''% (aname, html_escape(unicode(attr)), aname))
-            
+                self.w(u'<%s>%s</%s>' % (aname, html_escape(unicode(attr)), aname))
         self.w(u'<!--relations -->')
         for rschema, targetschemas, role in eschema.relation_definitions():
             if rschema.type in skiprels:
                 continue
             if not (rschema.has_local_role('read') or rschema.has_perm(self.req, 'read')):
                 continue
-            if role =='object':
-                reverse = 'reverse_%s' % rschema.type 
-                rel = getattr(entity, reverse)
+            if role == 'object':
+                attr = 'reverse_%s' % rschema.type 
             else:
-                rel = getattr(entity, rschema.type)
-                reverse = '%s' % rschema.type        
-            if rel:
-                for x in rel:
-                    if hasattr(x, 'name'):
-                        self.w(u'''<%s>%s %s %s</%s> ''' % (reverse, targetschemas[0], html_escape(unicode(x.name)),
-                                                            html_escape(unicode(x.eid)), reverse))
-                    else :
-                        self.w(u'''<%s>%s %s</%s> ''' % (reverse, targetschemas[0], html_escape(unicode(x.eid)), reverse))
-                       
-        self.w(u'''</%s>'''% eschema)
+                attr = rschema.type        
+            for x in getattr(entity, tag):
+                self.w(u'<%s>%s %s</%s>' % (attr, x.id, x.eid, attr))
+        self.w(u'</%s>'% eschema)
 
