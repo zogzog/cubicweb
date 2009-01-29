@@ -58,7 +58,7 @@ class GAEBasedTC(TestCase):
     _DS_TEMPL_FILE = 'tmpdb-template'
 
     def load_schema_hook(self, loader):
-        loader.import_yams_template_schema('data')
+        loader.import_yams_cube_schema('data')
     
     @property
     def DS_FILE(self):
