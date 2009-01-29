@@ -239,7 +239,7 @@ class OWLABOXView(EntityView):
                 attr = 'reverse_%s' % rschema.type 
             else:
                 attr = rschema.type        
-            for x in getattr(entity, tag):
+            for x in getattr(entity, attr):
                 self.w(u'<%s>%s %s</%s>' % (attr, x.id, x.eid, attr))
         self.w(u'</%s>'% eschema)
 
