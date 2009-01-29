@@ -10,10 +10,13 @@ class TwoSourcesConfiguration(TestServerConfiguration):
     sourcefile = 'sources_multi'
 
         
-class ExternalSourceConfiguration(TestServerConfiguration):
+class ExternalSource1Configuration(TestServerConfiguration):
     sourcefile = 'sources_extern'
+        
+class ExternalSource2Configuration(TestServerConfiguration):
+    sourcefile = 'sources_multi2'
 
-repo2, cnx2 = init_test_database('sqlite', config=ExternalSourceConfiguration('data'))
+repo2, cnx2 = init_test_database('sqlite', config=ExternalSource1Configuration('data'))
 cu = cnx2.cursor()
 ec1 = cu.execute('INSERT Card X: X title "C3: An external card", X wikiid "aaa"')[0][0]
 cu.execute('INSERT Card X: X title "C4: Ze external card", X wikiid "zzz"')
@@ -22,9 +25,11 @@ cnx2.commit()
 
 MTIME = now() - 0.1
 
+repo3, cnx3 = init_test_database('sqlite', config=ExternalSource2Configuration('data'))
+
 # XXX, access existing connection, no pyro connection
 from cubicweb.server.sources.pyrorql import PyroRQLSource
-PyroRQLSource.get_connection = lambda x: cnx2
+PyroRQLSource.get_connection = lambda x: x.uri == 'extern-multi' and cnx3 or cnx2
 # necessary since the repository is closing its initial connections pool though
 # we want to keep cnx2 valid
 from cubicweb.dbapi import Connection
@@ -47,6 +52,11 @@ class TwoSourcesTC(RepositoryBasedTC):
         self.ic2 = self.execute('INSERT Card X: X title "C2: Ze internal card", X wikiid "zzzi"')[0][0]
         self.commit()
         do_monkey_patch()
+        print 'main repo', self.repo
+        print 'external simple repo', repo2
+        print 'external multi repo', repo3
+        print 'ic1', self.ic1
+        print 'ic2', self.ic2
         
     def tearDown(self):
         RepositoryBasedTC.tearDown(self)
@@ -84,12 +94,12 @@ class TwoSourcesTC(RepositoryBasedTC):
         self.assertEquals(rset.rows, rsetbase.rows[2:4])
 
     def test_has_text(self):
-        self.repo.sources[-1].synchronize(MTIME) # in case fti_update has been run before
+        self.repo.sources_by_uri['extern'].synchronize(MTIME) # in case fti_update has been run before
         self.failUnless(self.execute('Any X WHERE X has_text "affref"'))
         self.failUnless(self.execute('Affaire X WHERE X has_text "affref"'))
 
     def test_anon_has_text(self):
-        self.repo.sources[-1].synchronize(MTIME) # in case fti_update has been run before
+        self.repo.sources_by_uri['extern'].synchronize(MTIME) # in case fti_update has been run before
         self.execute('INSERT Affaire X: X ref "no readable card"')[0][0]
         aff1 = self.execute('INSERT Affaire X: X ref "card"')[0][0]
         # grant read access
@@ -97,8 +107,9 @@ class TwoSourcesTC(RepositoryBasedTC):
         self.commit()
         cnx = self.login('anon')
         cu = cnx.cursor()
+        print '*'*80
         rset = cu.execute('Any X WHERE X has_text "card"')
-        self.assertEquals(len(rset), 5)
+        self.assertEquals(len(rset), 5, zip(rset.rows, rset.description))
 
     def test_synchronization(self):
         cu = cnx2.cursor()
@@ -107,13 +118,18 @@ class TwoSourcesTC(RepositoryBasedTC):
         cnx2.commit()
         try:
             # force sync
-            self.repo.sources[-1].synchronize(MTIME)
+            self.repo.sources_by_uri['extern'].synchronize(MTIME)
             self.failUnless(self.execute('Any X WHERE X has_text "blah"'))
             self.failUnless(self.execute('Any X WHERE X has_text "affreux"'))
+            print 'delete', aff2
             cu.execute('DELETE Affaire X WHERE X eid %(x)s', {'x': aff2})
             cnx2.commit()
-            self.repo.sources[-1].synchronize(MTIME)
-            self.failIf(self.execute('Any X WHERE X has_text "affreux"'))
+            print 'sync'
+            self.repo.sources_by_uri['extern'].synchronize(MTIME)
+            print 'query'
+            rset = self.execute('Any X WHERE X has_text "affreux"')
+            print zip(rset.rows, rset.description)
+            self.failIf(rset)
         finally:
             # restore state
             cu.execute('SET X ref "AFFREF" WHERE X eid %(x)s', {'x': aff1}, 'x')
@@ -139,8 +155,10 @@ class TwoSourcesTC(RepositoryBasedTC):
         self.execute('Any X ORDERBY DUMB_SORT(RF) WHERE X title RF')
 
     def test_in_eid(self):
-        iec1 = self.repo.extid2eid(self.repo.sources[-1], ec1, 'Card', self.session)
+        iec1 = self.repo.extid2eid(self.repo.sources_by_uri['extern'], ec1,
+                                   'Card', self.session)
         rset = self.execute('Any X WHERE X eid IN (%s, %s)' % (iec1, self.ic1))
+        print 'hop', iec1, self.ic1
         self.assertEquals(sorted(r[0] for r in rset.rows), sorted([iec1, self.ic1]))
         
     def test_greater_eid(self):

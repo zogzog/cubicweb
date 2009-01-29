@@ -15,6 +15,13 @@ cubicweb-user = admin
 cubicweb-password = gingkow
 mapping-file = extern_mapping.py
 
+[extern-multi]
+adapter = pyrorql
+pyro-ns-id = extern-multi
+cubicweb-user = admin
+cubicweb-password = gingkow
+mapping-file = extern_mapping.py
+
 [admin]
 login = admin
 password = gingkow
