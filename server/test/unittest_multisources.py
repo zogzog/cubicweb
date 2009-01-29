@@ -52,11 +52,6 @@ class TwoSourcesTC(RepositoryBasedTC):
         self.ic2 = self.execute('INSERT Card X: X title "C2: Ze internal card", X wikiid "zzzi"')[0][0]
         self.commit()
         do_monkey_patch()
-        print 'main repo', self.repo
-        print 'external simple repo', repo2
-        print 'external multi repo', repo3
-        print 'ic1', self.ic1
-        print 'ic2', self.ic2
         
     def tearDown(self):
         RepositoryBasedTC.tearDown(self)
@@ -107,7 +102,6 @@ class TwoSourcesTC(RepositoryBasedTC):
         self.commit()
         cnx = self.login('anon')
         cu = cnx.cursor()
-        print '*'*80
         rset = cu.execute('Any X WHERE X has_text "card"')
         self.assertEquals(len(rset), 5, zip(rset.rows, rset.description))
 
@@ -121,14 +115,10 @@ class TwoSourcesTC(RepositoryBasedTC):
             self.repo.sources_by_uri['extern'].synchronize(MTIME)
             self.failUnless(self.execute('Any X WHERE X has_text "blah"'))
             self.failUnless(self.execute('Any X WHERE X has_text "affreux"'))
-            print 'delete', aff2
             cu.execute('DELETE Affaire X WHERE X eid %(x)s', {'x': aff2})
             cnx2.commit()
-            print 'sync'
             self.repo.sources_by_uri['extern'].synchronize(MTIME)
-            print 'query'
             rset = self.execute('Any X WHERE X has_text "affreux"')
-            print zip(rset.rows, rset.description)
             self.failIf(rset)
         finally:
             # restore state
@@ -158,7 +148,6 @@ class TwoSourcesTC(RepositoryBasedTC):
         iec1 = self.repo.extid2eid(self.repo.sources_by_uri['extern'], ec1,
                                    'Card', self.session)
         rset = self.execute('Any X WHERE X eid IN (%s, %s)' % (iec1, self.ic1))
-        print 'hop', iec1, self.ic1
         self.assertEquals(sorted(r[0] for r in rset.rows), sorted([iec1, self.ic1]))
         
     def test_greater_eid(self):

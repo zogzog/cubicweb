@@ -298,7 +298,6 @@ repository (default to 5 minutes).',
                                 row[colindex] = eid
                             else:
                                 # skip this row
-                                print 'skip external', etype, exturi, extid, self.uri
                                 del rows[rowindex]
                                 del descr[rowindex]
                                 break
