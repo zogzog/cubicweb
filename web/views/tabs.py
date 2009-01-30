@@ -7,19 +7,17 @@
 
 __docformat__ = "restructuredtext en"
 
+from logilab.common.decorators import monkeypatch
 from logilab.mtconverter import html_escape
 
 from cubicweb import NoSelectableObject, role
 from cubicweb.common.view import EntityView
 from cubicweb.common.selectors import has_related_entities
-
 from cubicweb.common.utils import HTMLHead
+from cubicweb.common.uilib import rql_for_eid
 
-# the prepend hack only work for 1-level lazy views
-# a whole lot different thing must be done otherwise
-def prepend_post_inline_script(self, content):
-    self.post_inlined_scripts.insert(0, content)
-HTMLHead.prepend_post_inline_script = prepend_post_inline_script
+from cubicweb.web.views.basecontrollers import JSonController
+
 
 class LazyViewMixin(object):
     """provides two convenience methods for the tab machinery
@@ -34,28 +32,28 @@ class LazyViewMixin(object):
         """
         w = w or self.w
         self.req.add_js('cubicweb.lazy.js')
-        eid = eid or ''
-        w(u'<div id="lazy-%s" cubicweb:lazyloadurl="%s-%s">' % (vid, vid, eid))
+        urlparams = {'vid' : vid, 'mode' : 'html'}
+        if eid:
+            urlparams['rql'] = rql_for_eid(eid)
+        # w(u'<div id="lazy-%s" cubicweb:loadurl="%s-%s">' % (vid, vid, eid))
+        w(u'<div id="lazy-%s" cubicweb:loadurl="%s">' % (
+            vid, html_escape(self.build_url('json', **urlparams))))
         if show_spinbox:
             w(u'<img src="data/loading.gif" id="%s-hole" alt="%s"/>'
               % (vid, self.req._('loading')))
         w(u'</div>')
-        self.req.html_headers.prepend_post_inline_script(u"""
-jQuery(document).ready(function () {
-  $('#lazy-%(vid)s').bind('%(event)s', function(event) {
+        self.req.html_headers.add_onload(u"""
+  jQuery('#lazy-%(vid)s').bind('%(event)s', function(event) {
      load_now('#lazy-%(vid)s', '#%(vid)s-hole');
-  });});""" % {'event' : 'load_%s' % vid,
-               'vid' : vid})
+  });""" % {'event': 'load_%s' % vid, 'vid': vid})
 
     def forceview(self, vid):
         """trigger an event that will force immediate loading of the view
         on dom readyness
         """
         self.req.add_js('.lazy.js')
-        self.req.html_headers.add_post_inline_script(u"""
-jQuery(document).ready(function() {
-  trigger_load('%(vid)s');})
-""" % {'vid' : vid})
+        self.req.html_headers.add_onload("trigger_load('%s');" % vid)
+
 
 class TabsMixin(LazyViewMixin):
 
@@ -89,13 +87,6 @@ class TabsMixin(LazyViewMixin):
         tabs = self.prune_tabs(tabs)
         # select a tab
         active_tab = self.active_tab(tabs, default)
-        self.req.html_headers.add_post_inline_script(u"""
- jQuery(document).ready(function() {
-   jQuery('#entity-tabs > ul').tabs( { selected: %(tabindex)s });
-   set_tab('%(vid)s');
- });
- """ % {'tabindex' : tabs.index(active_tab),
-        'vid'      : active_tab})
         # build the html structure
         w = self.w
         w(u'<div id="entity-tabs">')
@@ -114,24 +105,29 @@ class TabsMixin(LazyViewMixin):
             w(u'<div id="as-%s">' % tab)
             self.lazyview(tab, entity.eid)
             w(u'</div>')
+        # call the set_tab() JS function *after* each tab is generated
+        # because the callback binding needs to be done before
+        self.req.html_headers.add_onload(u"""
+   jQuery('#entity-tabs > ul').tabs( { selected: %(tabindex)s });
+   set_tab('%(vid)s');
+ """ % {'tabindex' : tabs.index(active_tab),
+        'vid'      : active_tab})
 
 
-from cubicweb.web.views.basecontrollers import JSonController
-
+@monkeypatch(JSonController)
 def js_remember_active_tab(self, tabname):
     cookie = self.req.get_cookie()
     cookiename = '%s_active_tab' % self.config.appid
     cookie[cookiename] = tabname
     self.req.set_cookie(cookie, cookiename)
 
+@monkeypatch(JSonController)
 def js_lazily(self, vid_eid):
     vid, eid = vid_eid.split('-')
     rset = eid and self.req.eid_rset(eid) or None
     view = self.vreg.select_view(vid, self.req, rset)
     return self._set_content_type(view, view.dispatch())
 
-JSonController.js_remember_active_tab = js_remember_active_tab
-JSonController.js_lazily = js_lazily
 
 class EntityRelatedTab(EntityView):
     """A view you should inherit from leftmost,
@@ -141,7 +137,7 @@ class EntityRelatedTab(EntityView):
     Example :
 
     class ProjectScreenshotsView(EntityRelationView):
-        "display project's screenshots"
+        '''display project's screenshots'''
         id = title = _('projectscreenshots')
         accepts = ('Project',)
         rtype = 'screenshot'
@@ -160,7 +156,7 @@ class EntityRelatedTab(EntityView):
     vid = 'list'
 
     def cell_call(self, row, col):
-        rset = self.rset.get_entity(row, col).related(self.rtype, role(self))
+        rset = self.entity(row, col).related(self.rtype, role(self))
         self.w(u'<div class="mainInfo">')
         self.wview(self.vid, rset, 'noresult')
         self.w(u'</div>')

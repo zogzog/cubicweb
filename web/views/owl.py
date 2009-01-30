@@ -30,6 +30,7 @@ class OWLView(StartupView):
     id = 'owl'
     title = _('owl')
     templatable =False
+    content_type = 'application/xml' # 'text/xml'
 
     def call(self):
         skipmeta = int(self.req.form.get('skipmeta', True))
@@ -176,11 +177,10 @@ class OWLABOXView(EntityView):
     title = _('owlabox')
     templatable =False
     accepts = ('Any',)
+    content_type = 'application/xml' # 'text/xml'
     
     def call(self):
 
-        rql = ('Any X')
-        rset = self.req.execute(rql)
         skipmeta = int(self.req.form.get('skipmeta', True))
         self.w(u'''<?xml version="1.0" encoding="UTF-8"?>
         <!DOCTYPE rdf:RDF [
