@@ -121,14 +121,6 @@ def js_remember_active_tab(self, tabname):
     cookie[cookiename] = tabname
     self.req.set_cookie(cookie, cookiename)
 
-@monkeypatch(JSonController)
-def js_lazily(self, vid_eid):
-    vid, eid = vid_eid.split('-')
-    rset = eid and self.req.eid_rset(eid) or None
-    view = self.vreg.select_view(vid, self.req, rset)
-    return self._set_content_type(view, view.dispatch())
-
-
 class EntityRelatedTab(EntityView):
     """A view you should inherit from leftmost,
     to wrap another actual view displaying entity related stuff.
