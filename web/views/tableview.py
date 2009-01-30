@@ -33,26 +33,23 @@ class TableView(AnyRsetView):
             return ()
         rqlst.save_state()
         mainvar, baserql = prepare_facets_rqlst(rqlst, self.rset.args)
-        facets = [facet for facet in self.vreg.possible_vobjects(
+        wdgs = [facet.get_widget() for facet in self.vreg.possible_vobjects(
             'facets', self.req, self.rset, context='tablefilter',
-            filtered_variable=mainvar)
-                  if facet.get_widget()]
+            filtered_variable=mainvar)]
+        wdgs = [wdg for wdg in wdgs if wdg is not None]
         rqlst.recover()
-        if facets:
-            self._generate_form(divid, baserql, facets, hidden,
+        if wdgs:
+            self._generate_form(divid, baserql, wdgs, hidden,
                                vidargs={'displaycols': displaycols,
                                         'displayactions': displayactions,
                                         'displayfilter': displayfilter})
             return self.show_hide_actions(divid, not hidden)
         return ()
     
-    def _generate_form(self, divid, baserql, facets, hidden=True, vidargs={}):
+    def _generate_form(self, divid, baserql, fwidgets, hidden=True, vidargs={}):
         """display a form to filter table's content. This should only
         occurs when a context eid is given
         """
-        wdgs = [facet.get_widget() for facet in facets]
-        if not wdgs:
-            return
         self.req.add_js( ('cubicweb.ajax.js', 'cubicweb.formfilter.js'))
         # drop False / None values from vidargs
         vidargs = dict((k, v) for k, v in vidargs.iteritems() if v)
@@ -60,12 +57,12 @@ class TableView(AnyRsetView):
                html_escape(dumps([divid, 'table', False, vidargs])))
         self.w(u'<fieldset id="%sForm" class="%s">' % (divid, hidden and 'hidden' or ''))
         self.w(u'<input type="hidden" name="divid" value="%s" />' % divid)
-        filter_hiddens(self.w, facets=','.join(facet.id for facet in facets), baserql=baserql)
+        filter_hiddens(self.w, facets=','.join(wdg.facet.id for wdg in fwidgets), baserql=baserql)
         self.w(u'<table class="filter">\n')
         self.w(u'<tr>\n')
-        for facet in facets:
+        for wdg in fwidgets:
             self.w(u'<td>')
-            facet.get_widget().render(w=self.w)
+            wdg.render(w=self.w)
             self.w(u'</td>\n')
         self.w(u'</tr>\n')
         self.w(u'</table>\n')
