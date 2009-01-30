@@ -7,19 +7,23 @@
 
 __docformat__ = "restructuredtext en"
 
+from logilab.common.decorators import monkeypatch
 from logilab.mtconverter import html_escape
 
 from cubicweb import NoSelectableObject, role
 from cubicweb.common.view import EntityView
 from cubicweb.common.selectors import has_related_entities
-
 from cubicweb.common.utils import HTMLHead
+from cubicweb.common.uilib import rql_for_eid
+
+from cubicweb.web.views.basecontrollers import JSonController
 
 # the prepend hack only work for 1-level lazy views
 # a whole lot different thing must be done otherwise
+@monkeypatch(HTMLHead)
 def prepend_post_inline_script(self, content):
     self.post_inlined_scripts.insert(0, content)
-HTMLHead.prepend_post_inline_script = prepend_post_inline_script
+
 
 class LazyViewMixin(object):
     """provides two convenience methods for the tab machinery
@@ -116,22 +120,20 @@ class TabsMixin(LazyViewMixin):
             w(u'</div>')
 
 
-from cubicweb.web.views.basecontrollers import JSonController
-
+@monkeypatch(JSonController)
 def js_remember_active_tab(self, tabname):
     cookie = self.req.get_cookie()
     cookiename = '%s_active_tab' % self.config.appid
     cookie[cookiename] = tabname
     self.req.set_cookie(cookie, cookiename)
 
+@monkeypatch(JSonController)
 def js_lazily(self, vid_eid):
     vid, eid = vid_eid.split('-')
     rset = eid and self.req.eid_rset(eid) or None
     view = self.vreg.select_view(vid, self.req, rset)
     return self._set_content_type(view, view.dispatch())
 
-JSonController.js_remember_active_tab = js_remember_active_tab
-JSonController.js_lazily = js_lazily
 
 class EntityRelatedTab(EntityView):
     """A view you should inherit from leftmost,
@@ -141,7 +143,7 @@ class EntityRelatedTab(EntityView):
     Example :
 
     class ProjectScreenshotsView(EntityRelationView):
-        "display project's screenshots"
+        '''display project's screenshots'''
         id = title = _('projectscreenshots')
         accepts = ('Project',)
         rtype = 'screenshot'
@@ -160,7 +162,7 @@ class EntityRelatedTab(EntityView):
     vid = 'list'
 
     def cell_call(self, row, col):
-        rset = self.rset.get_entity(row, col).related(self.rtype, role(self))
+        rset = self.entity(row, col).related(self.rtype, role(self))
         self.w(u'<div class="mainInfo">')
         self.wview(self.vid, rset, 'noresult')
         self.w(u'</div>')
