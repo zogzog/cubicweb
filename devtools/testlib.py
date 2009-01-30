@@ -206,7 +206,10 @@ class WebTest(EnvBasedTC):
         elif template == 'main':
             _select_view_and_rset = TheMainTemplate._select_view_and_rset
             # patch TheMainTemplate.process_rql to avoid recomputing resultset
-            TheMainTemplate._select_view_and_rset = lambda *a, **k: (view, rset)
+            def __select_view_and_rset(self, view=view, rset=rset):
+                self.rset = rset
+                return view, rset
+            TheMainTemplate._select_view_and_rset = __select_view_and_rset
         try:
             return self._test_view(viewfunc, view, template, **kwargs)
         finally:
