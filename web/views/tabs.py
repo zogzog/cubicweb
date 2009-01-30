@@ -57,7 +57,7 @@ class LazyViewMixin(object):
         on dom readyness
         """
         self.req.add_js('.lazy.js')
-        self.req.html_headers.add_onload("trigger_load('%s');})" % vid)
+        self.req.html_headers.add_onload("trigger_load('%s');" % vid)
 
 
 class TabsMixin(LazyViewMixin):
