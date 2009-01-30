@@ -354,10 +354,10 @@ class OneLineView(EntityView):
         self.w(u'</a>')
 
 class TextView(EntityView):
-    """the simplest text view for an entity
-    """
+    """the simplest text view for an entity"""
     id = 'text'
     title = _('text')
+    content_type = 'text/plain'
     accepts = 'Any',
     def call(self, **kwargs):
         """the view is called for an entire result set, by default loop
