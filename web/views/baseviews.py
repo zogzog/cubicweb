@@ -19,14 +19,14 @@ from time import timezone
 from rql import nodes
 
 from logilab.common.decorators import cached
-from logilab.mtconverter import html_escape, TransformError
+from logilab.mtconverter import TransformError, html_escape, xml_escape
 
 from cubicweb import Unauthorized, NoSelectableObject, typed_eid
 from cubicweb.common.selectors import (yes, nonempty_rset, accept,
                                        one_line_rset, match_search_state, 
                                        match_form_params, accept_rset)
 from cubicweb.common.uilib import (cut, printable_value,  UnicodeCSVWriter,
-                                   ajax_replace_url, rql_for_eid)
+                                   ajax_replace_url, rql_for_eid, simple_sgml_tag)
 from cubicweb.common.view import EntityView, AnyRsetView, EmptyRsetView
 from cubicweb.web.httpcache import MaxAgeHTTPCacheManager
 from cubicweb.web.views import vid_from_rset, linksearch_select_url, linksearch_match
@@ -575,8 +575,7 @@ class XmlView(EntityView):
         self.wview(self.item_vid, self.rset, row=row, col=col)
         
     def call(self):
-        """display a list of entities by calling their <item_vid> view
-        """
+        """display a list of entities by calling their <item_vid> view"""
         self.w(u'<?xml version="1.0" encoding="%s"?>\n' % self.req.encoding)
         self.w(u'<%s size="%s">\n' % (self.xml_root, len(self.rset)))
         for i in xrange(self.rset.rowcount):
@@ -603,7 +602,7 @@ class XmlItemView(EntityView):
                     from base64 import b64encode
                     value = '<![CDATA[%s]]>' % b64encode(value.getvalue())
                 elif isinstance(value, basestring):
-                    value = value.replace('&', '&amp;').replace('<', '&lt;')
+                    value = xml_escape(value)
                 self.w(u'  <%s>%s</%s>\n' % (attr, value, attr))
         self.w(u'</%s>\n' % (entity.e_schema))
 
@@ -623,21 +622,25 @@ class XMLRsetView(AnyRsetView):
         eschema = self.schema.eschema
         labels = self.columns_labels(False)
         w(u'<?xml version="1.0" encoding="%s"?>\n' % self.req.encoding)
-        w(u'<%s>\n' % self.xml_root)
+        w(u'<%s query="%s">\n' % (self.xml_root, html_escape(rset.printable_rql())))
         for rowindex, row in enumerate(self.rset):
             w(u' <row>\n')
             for colindex, val in enumerate(row):
                 etype = descr[rowindex][colindex]
                 tag = labels[colindex]
+                attrs = {}
+                if '(' in tag:
+                    attrs['expr'] = tag
+                    tag = 'funccall'
                 if val is not None and not eschema(etype).is_final():
+                    attrs['eid'] = val
                     # csvrow.append(val) # val is eid in that case
-                    content = self.view('textincontext', rset, 
-                                        row=rowindex, col=colindex)
-                    w(u'  <%s eid="%s">%s</%s>\n' % (tag, val, html_escape(content), tag))
+                    val = self.view('textincontext', rset,
+                                    row=rowindex, col=colindex)
                 else:
-                    content = self.view('final', rset, displaytime=True,
-                                        row=rowindex, col=colindex)
-                    w(u'  <%s>%s</%s>\n' % (tag, html_escape(content), tag))
+                    val = self.view('final', rset, displaytime=True,
+                                    row=rowindex, col=colindex)
+                w(simple_sgml_tag(tag, val, **attrs))
             w(u' </row>\n')
         w(u'</%s>\n' % self.xml_root)
     
