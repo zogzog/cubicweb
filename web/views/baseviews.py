@@ -13,6 +13,7 @@
 """
 __docformat__ = "restructuredtext en"
 
+from warnings import warn
 from time import timezone
 
 from rql import nodes
@@ -143,12 +144,7 @@ class PrimaryView(EntityView):
         self.w(u'<div class="mainInfo">')
         self.render_entity_attributes(entity, siderelations)
         self.w(u'</div>')
-        self.w(u'<div class="navcontenttop">')
-        for comp in self.vreg.possible_vobjects('contentnavigation',
-                                                self.req, self.rset,
-                                                view=self, context='navcontenttop'):
-            comp.dispatch(w=self.w, view=self)
-        self.w(u'</div>')
+        self.content_navigation_components('navcontenttop')
         if self.main_related_section:
             self.render_entity_relations(entity, siderelations)
         self.w(u'</td>')
@@ -158,13 +154,21 @@ class PrimaryView(EntityView):
         self.w(u'</td>')
         self.w(u'</tr>')
         self.w(u'</table>')        
-        self.w(u'<div class="navcontentbottom">')
-        for comp in self.vreg.possible_vobjects('contentnavigation',
-                                                self.req, self.rset,
-                                                view=self, context='navcontentbottom'):
-            comp.dispatch(w=self.w, view=self)
-        self.w(u'</div>')
+        self.content_navigation_components('navcontentbottom')
 
+    def content_navigation_components(self, context):
+        self.w(u'<div class="%s">' % context)
+        for comp in self.vreg.possible_vobjects('contentnavigation',
+                                                self.req, self.rset, row=self.row,
+                                                view=self, context=context):
+            try:
+                comp.dispatch(w=self.w, row=self.row, view=self)
+            except NotImplementedError:
+                warn('component %s doesnt implement cell_call, please update'
+                     % comp.__class__, DeprecationWarning)
+                comp.dispatch(w=self.w, view=self)
+        self.w(u'</div>')
+        
     def iter_attributes(self, entity):
         for rschema, targetschema in entity.e_schema.attribute_definitions():
             attr = rschema.type
