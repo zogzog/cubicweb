@@ -56,7 +56,10 @@ class EntityVComponent(VComponent):
     condition = None
     
     def call(self, view):
-        raise RuntimeError()
+        return self.cell_call(0, 0, view)
+
+    def cell_call(self, row, col, view):
+        raise NotImplementedError()
 
     
 class NavigationComponent(VComponent):
@@ -145,17 +148,17 @@ class RelatedObjectsVComponent(EntityVComponent):
         """
         return None
     
-    def call(self, view=None):
+    def cell_call(self, row, col, view=None):
         rql = self.rql()
         if rql is None:
-            entity = self.rset.get_entity(0, 0)
+            entity = self.rset.get_entity(row, col)
             if self.target == 'object':
                 role = 'subject'
             else:
                 role = 'object'
             rset = entity.related(self.rtype, role)
         else:
-            eid = self.rset[0][0]
+            eid = self.rset[row][col]
             rset = self.req.execute(self.rql(), {'x': eid}, 'x')
         if not rset.rowcount:
             return

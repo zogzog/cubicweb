@@ -118,7 +118,7 @@ class hCalView(EntityView):
     accepts_interfaces = (ICalendarable,)
     need_navigation = False
     title = _('hCalendar')
-    templatable = False
+    #templatable = False
     id = 'hcal'
 
     def call(self):

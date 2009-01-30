@@ -158,8 +158,7 @@ class EntityBoxTemplate(BoxTemplate):
     condition = None
     
     def call(self, row=0, col=0, **kwargs):
-        """classes inheriting from EntityBoxTemplate should defined cell_call,
-        """
+        """classes inheriting from EntityBoxTemplate should define cell_call"""
         self.cell_call(row, col, **kwargs)
 
 

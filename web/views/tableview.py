@@ -325,7 +325,7 @@ class InitialTableView(TableView):
         self.w(u'</div>\n')
 
 
-class EditableInitiableTableView(InitialTableView):
+class EditableInitialTableTableView(InitialTableView):
     id = 'editable-initialtable'
     finalview = 'editable-final'
     

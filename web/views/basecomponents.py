@@ -138,9 +138,9 @@ class WFHistoryVComponent(EntityVComponent):
     target = 'subject'
     title = _('Workflow history')
 
-    def call(self, view=None):
+    def cell_call(self, row, col, view=None):
         _ = self.req._
-        eid = self.rset[0][0]
+        eid = self.rset[row][col]
         sel = 'Any FS,TS,WF,D'
         rql = ' ORDERBY D DESC WHERE WF wf_info_for X,'\
               'WF from_state FS, WF to_state TS, WF comment C,'\

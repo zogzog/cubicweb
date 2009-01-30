@@ -13,19 +13,20 @@
 """
 __docformat__ = "restructuredtext en"
 
+from warnings import warn
 from time import timezone
 
 from rql import nodes
 
 from logilab.common.decorators import cached
-from logilab.mtconverter import html_escape, TransformError
+from logilab.mtconverter import TransformError, html_escape, xml_escape
 
 from cubicweb import Unauthorized, NoSelectableObject, typed_eid
 from cubicweb.common.selectors import (yes, nonempty_rset, accept,
                                        one_line_rset, match_search_state, 
                                        match_form_params, accept_rset)
 from cubicweb.common.uilib import (cut, printable_value,  UnicodeCSVWriter,
-                                   ajax_replace_url, rql_for_eid)
+                                   ajax_replace_url, rql_for_eid, simple_sgml_tag)
 from cubicweb.common.view import EntityView, AnyRsetView, EmptyRsetView
 from cubicweb.web.httpcache import MaxAgeHTTPCacheManager
 from cubicweb.web.views import vid_from_rset, linksearch_select_url, linksearch_match
@@ -143,12 +144,7 @@ class PrimaryView(EntityView):
         self.w(u'<div class="mainInfo">')
         self.render_entity_attributes(entity, siderelations)
         self.w(u'</div>')
-        self.w(u'<div class="navcontenttop">')
-        for comp in self.vreg.possible_vobjects('contentnavigation',
-                                                self.req, self.rset,
-                                                view=self, context='navcontenttop'):
-            comp.dispatch(w=self.w, view=self)
-        self.w(u'</div>')
+        self.content_navigation_components('navcontenttop')
         if self.main_related_section:
             self.render_entity_relations(entity, siderelations)
         self.w(u'</td>')
@@ -158,13 +154,21 @@ class PrimaryView(EntityView):
         self.w(u'</td>')
         self.w(u'</tr>')
         self.w(u'</table>')        
-        self.w(u'<div class="navcontentbottom">')
-        for comp in self.vreg.possible_vobjects('contentnavigation',
-                                                self.req, self.rset,
-                                                view=self, context='navcontentbottom'):
-            comp.dispatch(w=self.w, view=self)
-        self.w(u'</div>')
+        self.content_navigation_components('navcontentbottom')
 
+    def content_navigation_components(self, context):
+        self.w(u'<div class="%s">' % context)
+        for comp in self.vreg.possible_vobjects('contentnavigation',
+                                                self.req, self.rset, row=self.row,
+                                                view=self, context=context):
+            try:
+                comp.dispatch(w=self.w, row=self.row, view=self)
+            except NotImplementedError:
+                warn('component %s doesnt implement cell_call, please update'
+                     % comp.__class__, DeprecationWarning)
+                comp.dispatch(w=self.w, view=self)
+        self.w(u'</div>')
+        
     def iter_attributes(self, entity):
         for rschema, targetschema in entity.e_schema.attribute_definitions():
             attr = rschema.type
@@ -251,11 +255,11 @@ class PrimaryView(EntityView):
                 #    continue
                 self._render_related_entities(entity, *relatedinfos)
             self.w(u'</div>')
-        for box in self.vreg.possible_vobjects('boxes', self.req, entity.rset,
-                                               col=entity.col, row=entity.row,
-                                               view=self, context='incontext'):
+        for box in self.vreg.possible_vobjects('boxes', self.req, self.rset,
+                                               row=self.row, view=self,
+                                               context='incontext'):
             try:
-                box.dispatch(w=self.w, col=entity.col, row=entity.row)
+                box.dispatch(w=self.w, row=self.row)
             except NotImplementedError:
                 # much probably a context insensitive box, which only implements
                 # .call() and not cell_call()
@@ -350,10 +354,10 @@ class OneLineView(EntityView):
         self.w(u'</a>')
 
 class TextView(EntityView):
-    """the simplest text view for an entity
-    """
+    """the simplest text view for an entity"""
     id = 'text'
     title = _('text')
+    content_type = 'text/plain'
     accepts = 'Any',
     def call(self, **kwargs):
         """the view is called for an entire result set, by default loop
@@ -571,8 +575,7 @@ class XmlView(EntityView):
         self.wview(self.item_vid, self.rset, row=row, col=col)
         
     def call(self):
-        """display a list of entities by calling their <item_vid> view
-        """
+        """display a list of entities by calling their <item_vid> view"""
         self.w(u'<?xml version="1.0" encoding="%s"?>\n' % self.req.encoding)
         self.w(u'<%s size="%s">\n' % (self.xml_root, len(self.rset)))
         for i in xrange(self.rset.rowcount):
@@ -599,7 +602,7 @@ class XmlItemView(EntityView):
                     from base64 import b64encode
                     value = '<![CDATA[%s]]>' % b64encode(value.getvalue())
                 elif isinstance(value, basestring):
-                    value = value.replace('&', '&amp;').replace('<', '&lt;')
+                    value = xml_escape(value)
                 self.w(u'  <%s>%s</%s>\n' % (attr, value, attr))
         self.w(u'</%s>\n' % (entity.e_schema))
 
@@ -619,21 +622,25 @@ class XMLRsetView(AnyRsetView):
         eschema = self.schema.eschema
         labels = self.columns_labels(False)
         w(u'<?xml version="1.0" encoding="%s"?>\n' % self.req.encoding)
-        w(u'<%s>\n' % self.xml_root)
+        w(u'<%s query="%s">\n' % (self.xml_root, html_escape(rset.printable_rql())))
         for rowindex, row in enumerate(self.rset):
             w(u' <row>\n')
             for colindex, val in enumerate(row):
                 etype = descr[rowindex][colindex]
                 tag = labels[colindex]
+                attrs = {}
+                if '(' in tag:
+                    attrs['expr'] = tag
+                    tag = 'funccall'
                 if val is not None and not eschema(etype).is_final():
+                    attrs['eid'] = val
                     # csvrow.append(val) # val is eid in that case
-                    content = self.view('textincontext', rset, 
-                                        row=rowindex, col=colindex)
-                    w(u'  <%s eid="%s">%s</%s>\n' % (tag, val, html_escape(content), tag))
+                    val = self.view('textincontext', rset,
+                                    row=rowindex, col=colindex)
                 else:
-                    content = self.view('final', rset, displaytime=True,
-                                        row=rowindex, col=colindex)
-                    w(u'  <%s>%s</%s>\n' % (tag, html_escape(content), tag))
+                    val = self.view('final', rset, displaytime=True,
+                                    row=rowindex, col=colindex)
+                w(simple_sgml_tag(tag, val, **attrs))
             w(u' </row>\n')
         w(u'</%s>\n' % self.xml_root)
     

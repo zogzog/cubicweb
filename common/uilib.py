@@ -4,7 +4,7 @@
 contains some functions designed to help implementation of cubicweb user interface
 
 :organization: Logilab
-:copyright: 2001-2008 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+:copyright: 2001-2009 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 """
 __docformat__ = "restructuredtext en"
@@ -212,6 +212,21 @@ def cut(text, length):
 
     
 # HTML generation helper functions ############################################
+
+def simple_sgml_tag(tag, content=None, **attrs):
+    """generation of a simple sgml tag (eg without children tags) easier
+
+    content and attributes will be escaped
+    """
+    value = u'<%s' % tag
+    if attrs:
+        value += u' ' + u' '.join(u'%s="%s"' % (attr, html_escape(unicode(value)))
+                                  for attr, value in attrs.items())
+    if content:
+        value += u'>%s</%s>' % (html_escape(unicode(content)), tag)
+    else:
+        value += u'/>'
+    return value
 
 def tooltipize(text, tooltip, url=None):
     """make an HTML tooltip"""
