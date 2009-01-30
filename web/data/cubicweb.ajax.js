@@ -9,6 +9,23 @@ CubicWeb.require('htmlhelpers.js');
 
 var JSON_BASE_URL = baseuri() + 'json?';
 
+function postAjaxLoad(node) {
+    // find sortable tables if there are some
+    if (typeof(Sortable) != 'undefined') {
+	Sortable.sortTables(node);
+    }
+    // find textareas and wrap them if there are some
+    if (typeof(FCKeditor) != 'undefined') {
+	buildWysiwygEditors(node);
+    }
+    if (typeof initFacetBoxEvents != 'undefined') {
+	initFacetBoxEvents(node);
+    }
+    if (typeof buildWidgets != 'undefined') {
+	buildWidgets(node);
+    }
+}
+
 // cubicweb loadxhtml plugin to make jquery handle xhtml response
 jQuery.fn.loadxhtml = function(url, data, reqtype, mode) {
     var ajax = null;
@@ -40,28 +57,12 @@ jQuery.fn.loadxhtml = function(url, data, reqtype, mode) {
 	} else if (mode == 'append') {
 	    jQuery(node).append(domnode);
 	}
-	// find sortable tables if there are some
-	if (typeof(Sortable) != 'undefined') {
-	    Sortable.sortTables(node);
-	}
-	// find textareas and wrap them if there are some
-	if (typeof(FCKeditor) != 'undefined') {
-	    buildWysiwygEditors(node);
-	}
-
-	if (typeof initFacetBoxEvents != 'undefined') {
-	    initFacetBoxEvents(node);
-	}
-
-	if (typeof buildWidgets != 'undefined') {
-	    buildWidgets(node);
-	}
-
+	postAjaxLoad(node);
 	while (jQuery.isFunction(callback)) {
 	    callback = callback.apply(this, [domnode]);
 	}
     });
-}
+};
 
 
 
