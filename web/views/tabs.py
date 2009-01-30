@@ -35,9 +35,10 @@ class LazyViewMixin(object):
         w = w or self.w
         self.req.add_js('cubicweb.lazy.js')
         eid = eid or ''
-        w(u'<div id="lazy-%s" cubicweb__loadurl="%s-%s">' % (vid, vid, eid))
+        w(u'<div id="lazy-%s" cubicweb:lazyloadurl="%s-%s">' % (vid, vid, eid))
         if show_spinbox:
-            w(u'<img src="data/loading.gif" id="%s-hole"/>' % vid)
+            w(u'<img src="data/loading.gif" id="%s-hole" alt="%s"/>'
+              % (vid, self.req._('loading')))
         w(u'</div>')
         self.req.html_headers.prepend_post_inline_script(u"""
 jQuery(document).ready(function () {
@@ -82,7 +83,8 @@ class TabsMixin(LazyViewMixin):
 
     def render_tabs(self, tabs, default, entity):
         self.req.add_css('ui.tabs.css')
-        self.req.add_js(('ui.core.js', 'ui.tabs.js', 'cubicweb.tabs.js', 'cubicweb.lazy.js'))
+        self.req.add_js(('ui.core.js', 'ui.tabs.js',
+                         'cubicweb.ajax.js', 'cubicweb.tabs.js', 'cubicweb.lazy.js'))
         # prune tabs : not all are to be shown
         tabs = self.prune_tabs(tabs)
         # select a tab

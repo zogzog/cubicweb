@@ -28,9 +28,9 @@ CW_XHTML_EXTENSIONS = '''[
   <!ATTLIST html xmlns:cubicweb CDATA  #FIXED \'http://www.logilab.org/2008/cubicweb\'  >
 
 <!ENTITY % coreattrs
- "id          ID             #IMPLIED
-  class       CDATA          #IMPLIED
-  style       CDATA   #IMPLIED
+ "id          ID            #IMPLIED
+  class       CDATA         #IMPLIED
+  style       CDATA         #IMPLIED
   title       CDATA         #IMPLIED
 
  cubicweb:sortvalue         CDATA   #IMPLIED
@@ -58,6 +58,7 @@ CW_XHTML_EXTENSIONS = '''[
  cubicweb:size              CDATA   #IMPLIED   
  cubicweb:tlunit            CDATA   #IMPLIED
  cubicweb:loadurl           CDATA   #IMPLIED
+ cubicweb:lazyloadurl       CDATA   #IMPLIED
  cubicweb:uselabel          CDATA   #IMPLIED
  cubicweb:facetargs         CDATA   #IMPLIED
  cubicweb:facetName         CDATA   #IMPLIED
