@@ -39,27 +39,26 @@ class LazyViewMixin(object):
         w = w or self.w
         self.req.add_js('cubicweb.lazy.js')
         eid = eid or ''
-        w(u'<div id="lazy-%s" cubicweb:lazyloadurl="%s-%s">' % (vid, vid, eid))
+        # w(u'<div id="lazy-%s" cubicweb:loadurl="%s-%s">' % (vid, vid, eid))
+        w(u'<div id="lazy-%s" cubicweb:loadurl="%s">' % (
+            vid, html_escape(self.build_url('json', rql=rql_for_eid(eid), vid=vid,
+                                            mode='html'))))
         if show_spinbox:
             w(u'<img src="data/loading.gif" id="%s-hole" alt="%s"/>'
               % (vid, self.req._('loading')))
         w(u'</div>')
-        self.req.html_headers.prepend_post_inline_script(u"""
-jQuery(document).ready(function () {
-  $('#lazy-%(vid)s').bind('%(event)s', function(event) {
+        self.req.html_headers.add_onload(u"""
+  jQuery('#lazy-%(vid)s').bind('%(event)s', function(event) {
      load_now('#lazy-%(vid)s', '#%(vid)s-hole');
-  });});""" % {'event' : 'load_%s' % vid,
-               'vid' : vid})
+  });""" % {'event': 'load_%s' % vid, 'vid': vid})
 
     def forceview(self, vid):
         """trigger an event that will force immediate loading of the view
         on dom readyness
         """
         self.req.add_js('.lazy.js')
-        self.req.html_headers.add_post_inline_script(u"""
-jQuery(document).ready(function() {
-  trigger_load('%(vid)s');})
-""" % {'vid' : vid})
+        self.req.html_headers.add_onload("trigger_load('%s');})" % vid)
+
 
 class TabsMixin(LazyViewMixin):
 
@@ -93,13 +92,6 @@ class TabsMixin(LazyViewMixin):
         tabs = self.prune_tabs(tabs)
         # select a tab
         active_tab = self.active_tab(tabs, default)
-        self.req.html_headers.add_post_inline_script(u"""
- jQuery(document).ready(function() {
-   jQuery('#entity-tabs > ul').tabs( { selected: %(tabindex)s });
-   set_tab('%(vid)s');
- });
- """ % {'tabindex' : tabs.index(active_tab),
-        'vid'      : active_tab})
         # build the html structure
         w = self.w
         w(u'<div id="entity-tabs">')
@@ -118,6 +110,13 @@ class TabsMixin(LazyViewMixin):
             w(u'<div id="as-%s">' % tab)
             self.lazyview(tab, entity.eid)
             w(u'</div>')
+        # call the set_tab() JS function *after* each tab is generated
+        # because the callback binding needs to be done before
+        self.req.html_headers.add_onload(u"""
+   jQuery('#entity-tabs > ul').tabs( { selected: %(tabindex)s });
+   set_tab('%(vid)s');
+ """ % {'tabindex' : tabs.index(active_tab),
+        'vid'      : active_tab})
 
 
 @monkeypatch(JSonController)
