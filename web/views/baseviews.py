@@ -255,11 +255,11 @@ class PrimaryView(EntityView):
                 #    continue
                 self._render_related_entities(entity, *relatedinfos)
             self.w(u'</div>')
-        for box in self.vreg.possible_vobjects('boxes', self.req, entity.rset,
-                                               col=entity.col, row=entity.row,
-                                               view=self, context='incontext'):
+        for box in self.vreg.possible_vobjects('boxes', self.req, self.rset,
+                                               row=self.row, view=self,
+                                               context='incontext'):
             try:
-                box.dispatch(w=self.w, col=entity.col, row=entity.row)
+                box.dispatch(w=self.w, row=self.row)
             except NotImplementedError:
                 # much probably a context insensitive box, which only implements
                 # .call() and not cell_call()
