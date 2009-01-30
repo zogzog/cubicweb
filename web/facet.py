@@ -560,12 +560,14 @@ class FacetItem(HTMLWidget):
         if self.selected:
             cssclass = ' facetValueSelected'
             imgsrc = self.req.datadir_url + self.selected_img
+            imgalt = self.req._('selected')
         else:
             cssclass = ''
             imgsrc = self.req.datadir_url + self.unselected_img
+            imgalt = self.req._('not selected')
         self.w(u'<div class="facetValue facetCheckBox%s" cubicweb:value="%s">\n'
                % (cssclass, html_escape(unicode(self.value))))
-        self.w(u'<img src="%s" />&nbsp;' % imgsrc)
+        self.w(u'<img src="%s" alt="%s"/>&nbsp;' % (imgsrc, imgalt))
         self.w(u'<a href="javascript: {}">%s</a>' % html_escape(self.label))
         self.w(u'</div>')
 

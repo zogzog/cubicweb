@@ -200,7 +200,7 @@ class RSSIconBox(ExtResourcesBoxTemplate):
         urlgetter = self.vreg.select_component('rss_feed_url', self.req, self.rset)
         url = urlgetter.feed_url()
         rss = self.req.external_resource('RSS_LOGO')
-        self.w(u'<a href="%s"><img src="%s" border="0" /></a>\n' % (html_escape(url), rss))
+        self.w(u'<a href="%s"><img src="%s" alt="rss"/></a>\n' % (html_escape(url), rss))
 
 
 ## warning("schemabox ne marche plus pour le moment")
