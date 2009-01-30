@@ -18,12 +18,6 @@ from cubicweb.common.uilib import rql_for_eid
 
 from cubicweb.web.views.basecontrollers import JSonController
 
-# the prepend hack only work for 1-level lazy views
-# a whole lot different thing must be done otherwise
-@monkeypatch(HTMLHead)
-def prepend_post_inline_script(self, content):
-    self.post_inlined_scripts.insert(0, content)
-
 
 class LazyViewMixin(object):
     """provides two convenience methods for the tab machinery
@@ -38,11 +32,12 @@ class LazyViewMixin(object):
         """
         w = w or self.w
         self.req.add_js('cubicweb.lazy.js')
-        eid = eid or ''
+        urlparams = {'vid' : vid, 'mode' : 'html'}
+        if eid:
+            urlparams['rql'] = rql_for_eid(eid)
         # w(u'<div id="lazy-%s" cubicweb:loadurl="%s-%s">' % (vid, vid, eid))
         w(u'<div id="lazy-%s" cubicweb:loadurl="%s">' % (
-            vid, html_escape(self.build_url('json', rql=rql_for_eid(eid), vid=vid,
-                                            mode='html'))))
+            vid, html_escape(self.build_url('json', **urlparams))))
         if show_spinbox:
             w(u'<img src="data/loading.gif" id="%s-hole" alt="%s"/>'
               % (vid, self.req._('loading')))
