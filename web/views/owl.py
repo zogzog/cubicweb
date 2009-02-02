@@ -1,9 +1,7 @@
 from logilab.mtconverter import html_escape
 
-#from cubicweb.common.uilib import ureport_as_html, unormalize, ajax_replace_url
 from cubicweb.common.view import StartupView
 from cubicweb.common.view import EntityView
-#from cubicweb.web.httpcache import EtagHTTPCacheManager
 
 _ = unicode
 
@@ -26,24 +24,7 @@ OWL_CARD_MAP_DATA = {'String': 'xsd:string',
                      'Interval': 'xsd:duration'
                      }
 
-class OWLView(StartupView):
-    id = 'owl'
-    title = _('owl')
-    templatable =False
-    content_type = 'application/xml' # 'text/xml'
-
-    def call(self):
-        skipmeta = int(self.req.form.get('skipmeta', True))
-        self.visit_schema(display_relations=True,
-                             skiprels=('is', 'is_instance_of', 'identity',
-                                       'owned_by', 'created_by'),
-                             skipmeta=skipmeta)
-
-
-    def visit_schema(self, display_relations=0,
-                     skiprels=(), skipmeta=True):
-        """get a layout for a whole schema"""
-        self.w(u'''<?xml version="1.0" encoding="UTF-8"?>
+OWL_OPENING_ROOT = u'''<?xml version="1.0" encoding="UTF-8"?>
         <!DOCTYPE rdf:RDF [
         <!ENTITY owl "http://www.w3.org/2002/07/owl#" >
         <!ENTITY xsd "http://www.w3.org/2001/XMLSchema#" >
@@ -65,8 +46,57 @@ class OWLView(StartupView):
         %s Cubicweb OWL Ontology                           
                                         
         </rdfs:comment>
-   </owl:Ontology>
-        ''' % (self.schema.name, self.schema.name, self.schema.name, self.schema.name, self.schema.name, self.schema.name, self.schema.name))
+   </owl:Ontology>'''
+
+OWL_CLOSING_ROOT = u'</rdf:RDF>'
+
+class OWLView(StartupView):
+    """This view export in owl format schema database. It is the TBOX"""
+    id = 'owl'
+    title = _('owl')
+    templatable =False
+    content_type = 'application/xml' # 'text/xml'
+
+    def call(self):
+        
+        skipmeta = int(self.req.form.get('skipmeta', True))
+        self.w(OWL_OPENING_ROOT % (self.schema.name, self.schema.name, self.schema.name, self.schema.name, self.schema.name, self.schema.name, self.schema.name))
+        self.wview('tbox', None, writeprefix=False)
+        entities = [eschema for eschema in self.schema.entities()
+                    if not eschema.is_final()]
+        if skipmeta:
+            entities = [eschema for eschema in entities
+                        if not eschema.meta]
+        for entity in entities:
+            rql = 'Any X where X is %s'
+            rset = self.req.execute(rql% entity)
+            if rset:
+                self.wview('owlaboxlight', rset, writeprefix=False)
+        self.w(OWL_CLOSING_ROOT)
+
+class TBoxView(StartupView):
+    """This view export in owl format the whole cubicweb ontologie. First part is the TBOX, second part is an ABOX ligth version."""
+    id = 'tbox'
+    title = _('tbox')
+    templatable =False
+    content_type = 'application/xml' # 'text/xml'
+
+    def call(self, writeprefix=True):
+        skipmeta = int(self.req.form.get('skipmeta', True))
+        if writeprefix:
+            self.w(OWL_OPENING_ROOT % (self.schema.name, self.schema.name, self.schema.name, self.schema.name, self.schema.name, self.schema.name, self.schema.name) )
+              
+        self.visit_schema(display_relations=True,
+                             skiprels=('is', 'is_instance_of', 'identity',
+                                       'owned_by', 'created_by'),
+                             skipmeta=skipmeta)
+        if writeprefix:
+            self.w(OWL_CLOSING_ROOT)
+        
+    def visit_schema(self, display_relations=0,
+                     skiprels=(), skipmeta=True):
+        """get a layout for a whole schema"""
+        
         entities = [eschema for eschema in self.schema.entities()
                     if not eschema.is_final()]
         if skipmeta:
@@ -83,8 +113,7 @@ class OWLView(StartupView):
         self.w(u'<!-- datatype property -->')
         for key, eschema in sorted(keys):
             self.visit_property_object_schema(eschema, skiprels)
-        self.w(u'</rdf:RDF>')
- 
+         
     def stereotype(self, name):
         return Span((' <<%s>>' % name,), klass='stereotype')
                        
@@ -172,46 +201,55 @@ class OWLView(StartupView):
                        </owl:DatatypeProperty>'''
                    % (aname, eschema, OWL_CARD_MAP_DATA[card_data]))
             
-class OWLABOXView(EntityView):
+class OWLABOXLightView(EntityView):
+    '''This view represents the lihgt part of the ABOX for a given entity'''
+    id = 'owlaboxlight'
+    title = _('owlaboxlight')
+    templatable =False
+    accepts = ('Any',)
+    content_type = 'application/xml' # 'text/xml'
+    
+    def call(self, writeprefix=True):
+
+        skipmeta = int(self.req.form.get('skipmeta', True))
+        if writeprefix:
+            self.w(OWL_OPENING_ROOT % (self.schema.name, self.schema.name, self.schema.name, self.schema.name, self.schema.name, self.schema.name, self.schema.name))
+        for i in xrange(self.rset.rowcount):
+            self.cell_call(i, 0, skiprels=('is', 'is_instance_of', 'identity',
+                                       'owned_by', 'created_by'),
+                             skipmeta=skipmeta)
+        if writeprefix:
+            self.w(OWL_CLOSING_ROOT)
+        
+
+    def cell_call(self, row, col, skiprels=(), skipmeta=True):
+        entity = self.complete_entity(row, col)
+        eschema = entity.e_schema
+        self.w(u'<%s rdf:ID="%s">' % (eschema, entity.eid))
+        self.w(u'</%s>'% eschema)
+
+
+class OWLABOXEView(EntityView):
+    '''This view represents a part of the ABOX for a given entity.'''
+    
     id = 'owlabox'
     title = _('owlabox')
     templatable =False
     accepts = ('Any',)
     content_type = 'application/xml' # 'text/xml'
     
-    def call(self):
+    def call(self, writeprefix=True):
 
         skipmeta = int(self.req.form.get('skipmeta', True))
-        self.w(u'''<?xml version="1.0" encoding="UTF-8"?>
-        <!DOCTYPE rdf:RDF [
-        <!ENTITY owl "http://www.w3.org/2002/07/owl#" >
-        <!ENTITY xsd "http://www.w3.org/2001/XMLSchema#" >
-        <!ENTITY rdfs "http://www.w3.org/2000/01/rdf-schema#" >
-        <!ENTITY rdf "http://www.w3.org/1999/02/22-rdf-syntax-ns#" >
-        <!ENTITY %s "http://logilab.org/owl/ontologies/%s#" >
-        
-        ]>        
-        <rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
-            xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#"
-            xmlns:xsd="http://www.w3.org/2001/XMLSchema#"
-            xmlns:owl="http://www.w3.org/2002/07/owl#"
-            xmlns="http://logilab.org/owl/ontologies/%s#"
-            xmlns:%s="http://logilab.org/owl/ontologies/%s#"
-            xmlns:base="http://logilab.org/owl/ontologies/%s">
-
-    <owl:Ontology rdf:about="">
-        <rdfs:comment>
-        %s Cubicweb OWL Ontology                           
-                                        
-        </rdfs:comment>
-   </owl:Ontology>''' % (self.schema.name, self.schema.name, self.schema.name, self.schema.name, self.schema.name,
-                         self.schema.name, self.schema.name))
-       
+        if writeprefix:
+            self.w(OWL_OPENING_ROOT % (self.schema.name, self.schema.name, self.schema.name, self.schema.name, self.schema.name, self.schema.name, self.schema.name))
         for i in xrange(self.rset.rowcount):
             self.cell_call(i, 0, skiprels=('is', 'is_instance_of', 'identity',
                                        'owned_by', 'created_by'),
                              skipmeta=skipmeta)
-        self.w(u'</rdf:RDF>')
+        if writeprefix:
+            self.w(OWL_CLOSING_ROOT)
+        
 
     def cell_call(self, row, col, skiprels=(), skipmeta=True):
         entity = self.complete_entity(row, col)
