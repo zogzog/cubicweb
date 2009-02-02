@@ -53,7 +53,7 @@ OWL_CLOSING_ROOT = u'</rdf:RDF>'
 class OWLView(StartupView):
     """This view export in owl format the whole cubicweb ontologie. First part is the TBOX, second part is an ABOX ligth version."""
     id = 'owl'
-    title = _('owl')
+    title = _('owl (tbox+abox)')
     templatable =False
     content_type = 'application/xml' # 'text/xml'
 
