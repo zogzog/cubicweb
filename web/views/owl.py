@@ -51,7 +51,7 @@ OWL_OPENING_ROOT = u'''<?xml version="1.0" encoding="UTF-8"?>
 OWL_CLOSING_ROOT = u'</rdf:RDF>'
 
 class OWLView(StartupView):
-    """This view export in owl format schema database. It is the TBOX"""
+    """This view export in owl format the whole cubicweb ontologie. First part is the TBOX, second part is an ABOX ligth version."""
     id = 'owl'
     title = _('owl')
     templatable =False
@@ -75,7 +75,7 @@ class OWLView(StartupView):
         self.w(OWL_CLOSING_ROOT)
 
 class TBoxView(StartupView):
-    """This view export in owl format the whole cubicweb ontologie. First part is the TBOX, second part is an ABOX ligth version."""
+    """This view export in owl format schema database. It is the TBOX"""
     id = 'tbox'
     title = _('tbox')
     templatable =False
