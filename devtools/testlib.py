@@ -117,6 +117,7 @@ class WebTest(EnvBasedTC):
     ignored_relations = ()
     
     def __init__(self, *args, **kwargs):
+        self.validators = {}
         EnvBasedTC.__init__(self, *args, **kwargs)
         for view, valkey in VIEW_VALIDATORS.iteritems():
             self.validators[view] = self.valmap[valkey]
