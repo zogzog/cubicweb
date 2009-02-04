@@ -6,11 +6,12 @@
 """
 __docformat__ = "restructuredtext en"
 
-from cubicweb import UnknownEid
-from cubicweb.common.selectors import *
+from cubicweb.common.selectors import (searchstate_accept, match_user_group, yes,
+                                       one_line_rset, two_lines_rset, one_etype_rset,
+                                       authenticated_user,
+                                       match_search_state, chainfirst, chainall)
 
-from cubicweb.web.action import (Action, EntityAction,  LinkToEntityAction,
-                              LinkToEntityAction2)
+from cubicweb.web.action import Action, EntityAction,  LinkToEntityAction
 from cubicweb.web.views import linksearch_select_url, linksearch_match
 from cubicweb.web.views.baseviews import vid_from_rset
 
