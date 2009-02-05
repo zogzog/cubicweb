@@ -37,6 +37,8 @@ class EUserPrimaryView(PrimaryView):
     def is_side_related(self, rschema, eschema):
         return  rschema.type in ['interested_in', 'tags', 
                                  'todo_by', 'bookmarked_by',
+                                 ]
+
 class FoafView(EntityView):
     id = 'foaf'
     accepts = ('EUser',)
@@ -74,7 +76,7 @@ class FoafView(EntityView):
             m.update(html_escape(emailaddr))
             crypt_sha1 = m.hexdigest()
             self.w(u'<foaf:mbox_sha1sum>%s</foaf:mbox_sha1sum>\n' % crypt_sha1)
-        self.w(u'</foaf:Person>\n')
+            self.w(u'</foaf:Person>\n')
 
 
 class EditGroups(EntityForm):
