@@ -13,6 +13,12 @@ from cubicweb.schema import display_name
 from cubicweb.web import INTERNAL_FIELD_VALUE
 from cubicweb.web.form import EntityForm
 from cubicweb.web.views.baseviews import PrimaryView, EntityView
+   
+try:
+    from hashlib import sha1 as sha
+
+except ImportError:
+    from sha import sha
 
 class EUserPrimaryView(PrimaryView):
     accepts = ('EUser',)
@@ -31,8 +37,6 @@ class EUserPrimaryView(PrimaryView):
     def is_side_related(self, rschema, eschema):
         return  rschema.type in ['interested_in', 'tags', 
                                  'todo_by', 'bookmarked_by',
-                                 ]
-
 class FoafView(EntityView):
     id = 'foaf'
     accepts = ('EUser',)
@@ -43,6 +47,7 @@ class FoafView(EntityView):
     def call(self):
         self.w(u'<?xml version="1.0" encoding="%s"?>\n' % self.req.encoding)
         self.w(u'<rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"\n')
+        self.w(u'xmlns:rdfs="http://www.w3org/2000/01/rdf-schema#"\n')
         self.w(u'xmlns:foaf="http://xmlns.com/foaf/0.1/">\n')
         for i in xrange(self.rset.rowcount):
             self.cell_call(i, 0)
@@ -50,17 +55,25 @@ class FoafView(EntityView):
 
     def cell_call(self, row, col):
         entity = self.complete_entity(row, col)
-        self.w(u'<foaf:Person>\n')
+        self.w(u'''<foaf:PersonalProfileDocument rdf:about="">
+                      <foaf:maker rdf:resource="%s"/>
+                      <foaf:primaryTopic rdf:resource="%s"/>
+                   </foaf:PersonalProfileDocument>''' % (entity.absolute_url(), entity.absolute_url()))
+                      
+        self.w(u'<foaf:Person rdf:ID="%s">\n' % entity.eid)
         self.w(u'<foaf:name>%s</foaf:name>\n' % html_escape(entity.dc_long_title()))
         if entity.surname:
-            self.w(u'<foaf:surname>%s</foaf:surname>\n'
+            self.w(u'<foaf:family_name>%s</foaf:family_name>\n'
                    % html_escape(entity.surname))
         if entity.firstname:
-            self.w(u'<foaf:firstname>%s</foaf:firstname>\n'
+            self.w(u'<foaf:givenname>%s</foaf:givenname>\n'
                    % html_escape(entity.firstname))
         emailaddr = entity.get_email()
         if emailaddr:
-            self.w(u'<foaf:mbox>%s</foaf:mbox>\n' % html_escape(emailaddr))
+            m = hashlib.sha1()
+            m.update(html_escape(emailaddr))
+            crypt_sha1 = m.hexdigest()
+            self.w(u'<foaf:mbox_sha1sum>%s</foaf:mbox_sha1sum>\n' % crypt_sha1)
         self.w(u'</foaf:Person>\n')
 
 
