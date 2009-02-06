@@ -13,12 +13,15 @@ from cubicweb.schema import display_name
 from cubicweb.web import INTERNAL_FIELD_VALUE
 from cubicweb.web.form import EntityForm
 from cubicweb.web.views.baseviews import PrimaryView, EntityView
-   
-try:
-    from hashlib import sha1 as sha
 
+import hashlib
+
+try:
+    from hashlib import sha1
+    
 except ImportError:
-    from sha import sha
+    from sha import sha as sha1
+
 
 class EUserPrimaryView(PrimaryView):
     accepts = ('EUser',)
