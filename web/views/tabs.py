@@ -26,7 +26,14 @@ class LazyViewMixin(object):
     lazyload a view that in turns does the same
     """
 
-    def lazyview(self, vid, eid=None, show_spinbox=True, w=None):
+    def _prepare_bindings(self, vid, reloadable):
+        self.req.html_headers.add_onload(u"""
+  jQuery('#lazy-%(vid)s').bind('%(event)s', function(event) {
+     load_now('#lazy-%(vid)s', '#%(vid)s-hole', %(reloadable)s);
+  });""" % {'event': 'load_%s' % vid, 'vid': vid,
+            'reloadable' : str(reloadable).lower()})
+
+    def lazyview(self, vid, eid=None, reloadable=False, show_spinbox=True, w=None):
         """a lazy version of wview
         first version only support lazy viewing for an entity at a time
         """
@@ -35,23 +42,19 @@ class LazyViewMixin(object):
         urlparams = {'vid' : vid, 'mode' : 'html'}
         if eid:
             urlparams['rql'] = rql_for_eid(eid)
-        # w(u'<div id="lazy-%s" cubicweb:loadurl="%s-%s">' % (vid, vid, eid))
         w(u'<div id="lazy-%s" cubicweb:loadurl="%s">' % (
             vid, html_escape(self.build_url('json', **urlparams))))
         if show_spinbox:
             w(u'<img src="data/loading.gif" id="%s-hole" alt="%s"/>'
               % (vid, self.req._('loading')))
         w(u'</div>')
-        self.req.html_headers.add_onload(u"""
-  jQuery('#lazy-%(vid)s').bind('%(event)s', function(event) {
-     load_now('#lazy-%(vid)s', '#%(vid)s-hole');
-  });""" % {'event': 'load_%s' % vid, 'vid': vid})
+        self._prepare_bindings(vid, reloadable)
 
     def forceview(self, vid):
         """trigger an event that will force immediate loading of the view
         on dom readyness
         """
-        self.req.add_js('.lazy.js')
+        self.req.add_js('cubicweb.lazy.js')
         self.req.html_headers.add_onload("trigger_load('%s');" % vid)
 
 

@@ -1,8 +1,8 @@
 
-function load_now(eltsel, holesel) {
+function load_now(eltsel, holesel, reloadable) {
     var lazydiv = jQuery(eltsel);
     var hole = lazydiv.children(holesel);
-    if (hole.length == 0) {
+    if ((hole.length == 0) && !reloadable) {
 	/* the hole is already filled */
 	return;
     }
