@@ -14,14 +14,11 @@ from cubicweb.web import INTERNAL_FIELD_VALUE
 from cubicweb.web.form import EntityForm
 from cubicweb.web.views.baseviews import PrimaryView, EntityView
 
-import hashlib
-
 try:
-    from hashlib import sha1
-    
-except ImportError:
-    from sha import sha as sha1
+    from hashlib import sha1 as sha 
 
+except ImportError:
+    from sha import sha
 
 class EUserPrimaryView(PrimaryView):
     accepts = ('EUser',)
@@ -75,7 +72,7 @@ class FoafView(EntityView):
                    % html_escape(entity.firstname))
         emailaddr = entity.get_email()
         if emailaddr:
-            m = hashlib.sha1()
+            m = sha()
             m.update(html_escape(emailaddr))
             crypt_sha1 = m.hexdigest()
             self.w(u'<foaf:mbox_sha1sum>%s</foaf:mbox_sha1sum>\n' % crypt_sha1)
