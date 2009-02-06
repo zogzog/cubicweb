@@ -20,12 +20,12 @@ You can log the selectors involved for *calendar* by replacing the line
 above by::
 
     # in Python2.5
-    from cubicweb.selectors import traced_selection
+    from cubicweb.common.selectors import traced_selection
     with traced_selection():
         self.view('calendar', myrset)
 
     # in Python2.4
-    from cubicweb import selectors
+    from cubicweb.common import selectors
     selectors.TRACED_OIDS = ('calendar',)
     self.view('calendar', myrset)
     selectors.TRACED_OIDS = ()
