@@ -93,6 +93,7 @@ class WebTest(EnvBasedTC):
     #  SaxOnlyValidator : guarantees XML is well formed
     #  None : do not try to validate anything
     # validators used must be imported from from.devtools.htmlparser
+    valmap = {None: None, 'dtd': DTDValidator, 'xml': SaxOnlyValidator}
     content_type_validators = {
         # maps MIME type : validator name
         #
@@ -109,18 +110,12 @@ class WebTest(EnvBasedTC):
         'application/json': None,
         'image/png': None,
         }
-    vid_validators = {
-        # maps vid : validator name (override content_type_validators)
-        }
-    valmap = {None: None, 'dtd': DTDValidator, 'xml': SaxOnlyValidator}
-    no_auto_populate = ()
-    ignored_relations = ()
+    # maps vid : validator name (override content_type_validators)
+    vid_validators = dict((vid, valmap[valkey])
+                          for vid, valkey in VIEW_VALIDATORS.iteritems())
     
-    def __init__(self, *args, **kwargs):
-        self.validators = {}
-        EnvBasedTC.__init__(self, *args, **kwargs)
-        for view, valkey in VIEW_VALIDATORS.iteritems():
-            self.validators[view] = self.valmap[valkey]
+    no_auto_populate = ()
+    ignored_relations = ()    
         
     def custom_populate(self, how_many, cursor):
         pass
