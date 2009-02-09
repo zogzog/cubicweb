@@ -78,6 +78,8 @@ def line_context_filter(line_no, center, before=3, after=None):
     return center - before <= line_no <= center + after
 
 ## base webtest class #########################################################
+VALMAP = {None: None, 'dtd': DTDValidator, 'xml': SaxOnlyValidator}
+
 class WebTest(EnvBasedTC):
     """base class for web tests"""
     __abstract__ = True
@@ -93,7 +95,6 @@ class WebTest(EnvBasedTC):
     #  SaxOnlyValidator : guarantees XML is well formed
     #  None : do not try to validate anything
     # validators used must be imported from from.devtools.htmlparser
-    valmap = {None: None, 'dtd': DTDValidator, 'xml': SaxOnlyValidator}
     content_type_validators = {
         # maps MIME type : validator name
         #
@@ -111,7 +112,7 @@ class WebTest(EnvBasedTC):
         'image/png': None,
         }
     # maps vid : validator name (override content_type_validators)
-    vid_validators = dict((vid, valmap[valkey])
+    vid_validators = dict((vid, VALMAP[valkey])
                           for vid, valkey in VIEW_VALIDATORS.iteritems())
     
     no_auto_populate = ()
