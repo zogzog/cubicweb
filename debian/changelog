@@ -1,3 +1,9 @@
+cubicweb (3.0.9-1) unstable; urgency=low
+
+  * new upstream (interim) release
+
+ -- Aurélien Campéas <aurelien.campeas@logilab.fr>  Tue, 10 Feb 2009 14:05:12 +0100
+
 cubicweb (3.0.4-1) unstable; urgency=low
 
   * new upstream release
