@@ -73,6 +73,17 @@ class NavigationComponent(VComponent):
     selected_page_link_templ = u'<span class="selectedSlice"><a href="%s" title="%s">%s</a></span>'
     previous_page_link_templ = next_page_link_templ = page_link_templ
     no_previous_page_link = no_next_page_link = u''
+
+    @classmethod
+    def selected(cls, req, rset, row=None, col=None, page_size=None, **kwargs):
+        """by default web app objects are usually instantiated on
+        selection according to a request, a result set, and optional
+        row and col
+        """
+        instance = super(NavigationComponent, cls).selected(req, rset, row, col, **kwargs)
+        if page_size is not None:
+            instance.page_size = page_size
+        return instance
     
     def __init__(self, req, rset):
         super(NavigationComponent, self).__init__(req, rset)
