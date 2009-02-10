@@ -85,6 +85,13 @@ class EUser(AnyEntity):
         """
         return self.matching_groups(group) == 1
 
+    def is_anonymous(self):
+        """ checks if user is an anonymous user"""
+        #FIXME on the web-side anonymous user is detected according
+        # to config['anonymous-user'], we don't have this info on
+        # the server side. 
+        return self.groups == frozenset(('guests', ))
+
     def owns(self, eid):
         if hasattr(self.req, 'unsafe_execute'):
             # use unsafe_execute on the repository side, in case
