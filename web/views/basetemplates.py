@@ -7,6 +7,8 @@
 """
 __docformat__ = "restructuredtext en"
 
+from StringIO import StringIO
+
 from logilab.mtconverter import html_escape
 
 from cubicweb import NoSelectableObject, ObjectNotFound
@@ -114,6 +116,7 @@ class TheMainTemplate(MainTemplate):
     def call(self):
         view, rset = self._select_view_and_rset()
         req = self.req
+        self.nav_html = StringIO()
         # update breadcrumps **before** validating cache, unless the view
         # specifies explicitly it should not be added to breadcrumb or the
         # view is a binary view
@@ -162,7 +165,9 @@ class TheMainTemplate(MainTemplate):
                                                  self.req, self.rset)
         if etypefilter and etypefilter.propval('visible'):
             etypefilter.dispatch(w=self.w)
-        self.pagination(self.req, self.rset, self.w, not (view and view.need_navigation))
+        self.pagination(self.req, self.rset, self.nav_html.write,
+                        not (view and view.need_navigation))
+        self.w(_(self.nav_html.getvalue()))
         self.w(u'<div id="contentmain">\n')
     
     def template_html_header(self, content_type, page_title, additional_headers=()):
@@ -198,6 +203,7 @@ class TheMainTemplate(MainTemplate):
             
     def template_footer(self, view=None):
         self.w(u'</div>\n') # close id=contentmain
+        self.w(_(self.nav_html.getvalue()))
         self.w(u'</div>\n') # closes id=pageContent
         self.content_footer(view)
         self.w(u'</td>\n')
