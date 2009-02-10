@@ -83,6 +83,8 @@ class NavigationComponent(VComponent):
         instance = super(NavigationComponent, cls).selected(req, rset, row, col, **kwargs)
         if page_size is not None:
             instance.page_size = page_size
+        elif 'page_size' in req.form:
+            instance.page_size = int(req.form['page_size'])
         return instance
     
     def __init__(self, req, rset):

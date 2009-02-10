@@ -163,7 +163,11 @@ def paginated_rset(cls, req, rset, *args, **kwargs):
     """
     page_size = kwargs.get('page_size')
     if page_size is None:
-        page_size = req.property_value('navigation.page-size')
+        page_size = req.form.get('page_size')
+        if page_size is None:
+            page_size = req.property_value('navigation.page-size')
+        else:
+            page_size = int(page_size)
     if rset is None or len(rset) <= page_size:
         return 0
     return 1
