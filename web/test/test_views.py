@@ -39,9 +39,9 @@ class ManualWebTests(WebTest):
         self.view('table', rset, template=None, displayfilter=True, displaycols=[0,2])
         rset = self.execute('Any P,F,S LIMIT 1 WHERE P is EUser, P firstname F, P surname S')
         rset.req.form['rtype'] = 'firstname'
-        self.view('editrelation', rset, template=None, htmlcheck=False)
+        self.view('editrelation', rset, template=None)
         rset.req.form['rtype'] = 'use_email'
-        self.view('editrelation', rset, template=None, htmlcheck=False)
+        self.view('editrelation', rset, template=None)
         
 
     def test_sortable_js_added(self):
