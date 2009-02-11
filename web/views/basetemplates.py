@@ -2,7 +2,7 @@
 """default templates for CubicWeb web client
 
 :organization: Logilab
-:copyright: 2001-2008 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+:copyright: 2001-2009 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 """
 __docformat__ = "restructuredtext en"
@@ -424,7 +424,7 @@ class HTMLPageFooter(Template):
                                             req._(ChangeLogView.title).lower()))
         self.w(u'<a href="%s">%s</a> | ' % (req.build_url('doc/about'),
                                             req._('about this site')))
-        self.w(u'© 2001-2008 <a href="http://www.logilab.fr">Logilab S.A.</a>')
+        self.w(u'© 2001-2009 <a href="http://www.logilab.fr">Logilab S.A.</a>')
         self.w(u'</div>')
 
 

@@ -381,6 +381,9 @@ msgstr "Attention, cela n'effectue qu'une copie de surface"
 msgid "Problem occured"
 msgstr "Une erreur est survenue"
 
+msgid "Project linked data"
+msgstr ""
+
 msgid "RQLExpression"
 msgstr "Expression RQL"
 
@@ -739,6 +742,9 @@ msgstr "activé"
 
 msgid "add"
 msgstr "ajouter"
+
+msgid "add Bookmark bookmarked_by EUser object"
+msgstr "signet"
 
 msgid "add EEType add_permission RQLExpression subject"
 msgstr "définir une expression RQL d'ajout"
@@ -1197,7 +1203,7 @@ msgid "components_rqlinput_description"
 msgstr "la barre de requête rql, dans l'en-tête de page"
 
 msgid "components_rss_feed_url"
-msgstr ""
+msgstr "syndication rss"
 
 msgid "components_rss_feed_url_description"
 msgstr ""
@@ -1361,14 +1367,17 @@ msgstr "créé par"
 msgid "created_by_object"
 msgstr "a créé"
 
+msgid "creating Bookmark (Bookmark bookmarked_by EUser %(linkto)s)"
+msgstr "création d'un signet pour %(linkto)s"
+
 msgid "creating EConstraint (EFRDef %(linkto)s constrained_by EConstraint)"
-msgstr "création contrainte pour l'attribut %(linkto)s"
+msgstr "création d'une contrainte pour l'attribut %(linkto)s"
 
 msgid "creating EConstraint (ENFRDef %(linkto)s constrained_by EConstraint)"
-msgstr "création contrainte pour la relation %(linkto)s"
+msgstr "création d'une contrainte pour la relation %(linkto)s"
 
 msgid "creating EFRDef (EFRDef relation_type ERType %(linkto)s)"
-msgstr "création attribut %(linkto)s"
+msgstr "création d'un attribut %(linkto)s"
 
 msgid "creating ENFRDef (ENFRDef relation_type ERType %(linkto)s)"
 msgstr "création relation %(linkto)s"
@@ -1744,11 +1753,17 @@ msgstr ""
 msgid "february"
 msgstr "février"
 
+msgid "file tree view"
+msgstr "arborescence (fichiers)"
+
 msgid "final"
 msgstr "final"
 
 msgid "firstname"
 msgstr "prénom"
+
+msgid "foaf"
+msgstr "foaf"
 
 msgid "follow"
 msgstr "suivre le lien"
@@ -2091,6 +2106,9 @@ msgstr "lier vers chaque élément dans"
 msgid "list"
 msgstr "liste"
 
+msgid "loading"
+msgstr "chargement"
+
 msgid "log in"
 msgstr "s'identifier"
 
@@ -2118,6 +2136,9 @@ msgstr "gestion du site"
 
 msgid "manage bookmarks"
 msgstr "gérer les signets"
+
+msgid "manage permissions"
+msgstr "gestion des permissions"
 
 msgid "manage security"
 msgstr "gestion de la sécurité"
@@ -2233,6 +2254,9 @@ msgstr "pas d'information de version"
 msgid "not authorized"
 msgstr "non autorisé"
 
+msgid "not selected"
+msgstr "non sélectionné"
+
 msgid "not specified"
 msgstr "non spécifié"
 
@@ -2268,6 +2292,15 @@ msgstr "ordre"
 
 msgid "ordernum"
 msgstr "ordre"
+
+msgid "owl (tbox+abox)"
+msgstr ""
+
+msgid "owlabox"
+msgstr ""
+
+msgid "owlaboxlight"
+msgstr ""
 
 msgid "owned_by"
 msgstr "appartient à"
@@ -2522,6 +2555,9 @@ msgstr "sélectionner une relation"
 msgid "select this entity"
 msgstr "sélectionner cette entité"
 
+msgid "selected"
+msgstr "sélectionné"
+
 msgid "semantic description of this attribute"
 msgstr "description sémantique de cet attribut"
 
@@ -2650,6 +2686,9 @@ msgstr "filtre de tableau"
 msgid "task progression"
 msgstr "avancement de la tâche"
 
+msgid "tbox"
+msgstr ""
+
 msgid "text"
 msgstr "text"
 
@@ -2726,6 +2765,9 @@ msgstr "transition de"
 
 msgid "transition_of_object"
 msgstr "a pour transition"
+
+msgid "tree view"
+msgstr "arborescence"
 
 msgid "tuesday"
 msgstr "mardi"

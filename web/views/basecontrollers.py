@@ -60,7 +60,6 @@ class ViewController(Controller):
     
     def publish(self, rset=None):
         """publish a request, returning an encoded string"""
-        self.req.update_search_state()
         template = self.req.property_value('ui.main-template')
         if template not in self.vreg.registry('templates') :
             template = self.template
