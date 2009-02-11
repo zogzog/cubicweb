@@ -2,7 +2,7 @@
 or a list of entities of the same type
 
 :organization: Logilab
-:copyright: 2001-2008 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+:copyright: 2001-2009 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 """
 __docformat__ = "restructuredtext en"
@@ -33,6 +33,9 @@ class DeleteConfForm(EntityForm):
     title = _('delete')
     domid = 'deleteconf'
     onsubmit = None
+    # don't use navigation, all entities asked to be deleted should be displayed
+    # else we will only delete the displayed page
+    need_navigation = False
     
     def call(self):
         """ask for confirmation before real deletion"""
