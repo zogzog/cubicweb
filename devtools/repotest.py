@@ -249,7 +249,8 @@ from cubicweb.server import rqlannotation
 _orig_select_principal = rqlannotation._select_principal
 
 def _select_principal(scope, relations):
-    return _orig_select_principal(scope, sorted(relations, key=lambda x: x.r_type))
+    return _orig_select_principal(scope, relations,
+                                  _sort=lambda rels: sorted(rels, key=lambda x: x.r_type))
 
 try:
     from cubicweb.server.msplanner import PartPlanInformation
