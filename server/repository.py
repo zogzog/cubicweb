@@ -490,7 +490,7 @@ class Repository(object):
         session = self.internal_session()
         try:
             if session.execute('EUser X WHERE X login %(login)s', {'login': login}):
-                return
+                return False
             # we have to create the user
             user = self.vreg.etype_class('EUser')(session, None)
             if isinstance(password, unicode):
@@ -505,6 +505,7 @@ class Repository(object):
             session.commit()
         finally:
             session.close()
+        return True
         
     def connect(self, login, password, cnxprops=None):
         """open a connection for a given user
