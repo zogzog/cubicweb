@@ -13,11 +13,10 @@ from logilab.common.decorators import cached
 
 from cubicweb.common.utils import UStringIO
 from cubicweb.common.view import AnyRsetView, StartupView, EntityView
-from cubicweb.common.uilib import (html_traceback, rest_traceback, html_escape,
-                                toggle_link)
+from cubicweb.common.uilib import html_traceback, rest_traceback
 from cubicweb.common.selectors import (yes, one_line_rset,
-                                    accept_rset, none_rset,
-                                    chainfirst, chainall)
+                                       accept_rset, none_rset,
+                                       chainfirst, chainall)
 from cubicweb.web import INTERNAL_FIELD_VALUE, eid_param, stdmsgs
 from cubicweb.web.widgets import StaticComboBoxWidget
 from cubicweb.web.form import FormMixIn
@@ -284,6 +283,13 @@ _('boxes')
 _('components')
 _('contentnavigation')
 
+
+def make_togglable_link(nodeid, label, cookiename, cookievalue):
+    """builds a HTML link that switches the visibility & remembers it"""
+    action = u"javascript: toggle_and_remember_visibility('%s', '%s', '%s')" % \
+        (nodeid, cookiename, cookievalue)
+    return u'<a href="%s">%s</a>' % (action, label)
+
 class SystemEpropertiesForm(FormMixIn, StartupView):
     controller = 'edit'
     id = 'systemepropertiesform'
@@ -298,9 +304,24 @@ class SystemEpropertiesForm(FormMixIn, StartupView):
         """return the url associated with this view. We can omit rql here"""
         return self.build_url('view', vid=self.id)
 
+    def _cookie_name_from_group(self, group):
+        return str('%s_property_%s' % (self.config.appid, group))
+
+    def _group_status(self, group, default=u'hidden'):
+        cookies = self.req.get_cookie()
+        cookiename = self._cookie_name_from_group(group)
+        cookie = cookies.get(cookiename)
+        if cookie is None:
+            cookies[cookiename] = default
+            self.req.set_cookie(cookies, cookiename, maxage=None)
+            status = default
+        else:
+            status = cookie.value
+        return status
+
     def call(self, **kwargs):
         """The default view representing the application's index"""
-        self.req.add_js('cubicweb.edition.js')
+        self.req.add_js(('cubicweb.edition.js', 'cubicweb.preferences.js'))
         self.req.add_css('cubicweb.preferences.css')
         vreg = self.vreg
         values = self.defined_keys
@@ -330,17 +351,23 @@ class SystemEpropertiesForm(FormMixIn, StartupView):
         w(self.error_message())
         for label, group, form in sorted((_(g), g, f)
                                          for g, f in mainopts.iteritems()):
+            status = self._group_status(group) #hidden, or not ?
             w(u'<h2 class="propertiesform">%s</h2>\n' %
-              (toggle_link('fieldset_' + group, label)))
-            w(u'<div id="fieldset_%s" class="hidden">' % group)
+              (make_togglable_link('fieldset_' + group, label,
+                                   self._cookie_name_from_group(group), status)))
+            statusclass = status and 'class="%s"' % status or ''
+            w(u'<div id="fieldset_%s" %s>' % (group, statusclass))
             w(u'<fieldset class="subentity">')
             w(form)
             w(u'</fieldset></div>')
         for label, group, objects in sorted((_(g), g, o)
                                             for g, o in groupedopts.iteritems()):
+            status = self._group_status(group)
             w(u'<h2 class="propertiesform">%s</h2>\n' %
-              (toggle_link('fieldset_' + group, label)))
-            w(u'<div id="fieldset_%s" class="hidden">' % group)
+              (make_togglable_link('fieldset_' + group, label,
+                                   self._cookie_name_from_group(group), status)))
+            statusclass = status and 'class="%s"' % status or ''
+            w(u'<div id="fieldset_%s" %s>' % (group, statusclass))
             for label, oid, form in sorted((self.req.__('%s_%s' % (group, o)), o, f)
                                            for o, f in objects.iteritems()):
                 w(u'<fieldset class="subentity">')
@@ -352,8 +379,6 @@ class SystemEpropertiesForm(FormMixIn, StartupView):
                 w(form)
                 w(u'</fieldset>')
             w(u'</div>')
-
-
 
     @property
     @cached
