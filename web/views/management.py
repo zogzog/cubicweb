@@ -284,11 +284,14 @@ _('components')
 _('contentnavigation')
 
 
-def make_togglable_link(nodeid, label, cookiename, cookievalue):
+def make_togglable_link(nodeid, label, cookiename):
     """builds a HTML link that switches the visibility & remembers it"""
-    action = u"javascript: toggle_and_remember_visibility('%s', '%s', '%s')" % \
-        (nodeid, cookiename, cookievalue)
+    action = u"javascript: toggle_and_remember_visibility('%s', '%s')" % \
+        (nodeid, cookiename)
     return u'<a href="%s">%s</a>' % (action, label)
+
+def css_class(someclass):
+    return someclass and 'class="%s"' % someclass or ''
 
 class SystemEpropertiesForm(FormMixIn, StartupView):
     controller = 'edit'
@@ -304,12 +307,12 @@ class SystemEpropertiesForm(FormMixIn, StartupView):
         """return the url associated with this view. We can omit rql here"""
         return self.build_url('view', vid=self.id)
 
-    def _cookie_name_from_group(self, group):
-        return str('%s_property_%s' % (self.config.appid, group))
+    def _cookie_name(self, somestr):
+        return str('%s_property_%s' % (self.config.appid, somestr))
 
     def _group_status(self, group, default=u'hidden'):
         cookies = self.req.get_cookie()
-        cookiename = self._cookie_name_from_group(group)
+        cookiename = self._cookie_name(group)
         cookie = cookies.get(cookiename)
         if cookie is None:
             cookies[cookiename] = default
@@ -351,23 +354,21 @@ class SystemEpropertiesForm(FormMixIn, StartupView):
         w(self.error_message())
         for label, group, form in sorted((_(g), g, f)
                                          for g, f in mainopts.iteritems()):
-            status = self._group_status(group) #hidden, or not ?
+            status = css_class(self._group_status(group)) #'hidden' (collapsed), or '' (open) ?
             w(u'<h2 class="propertiesform">%s</h2>\n' %
               (make_togglable_link('fieldset_' + group, label,
-                                   self._cookie_name_from_group(group), status)))
-            statusclass = status and 'class="%s"' % status or ''
-            w(u'<div id="fieldset_%s" %s>' % (group, statusclass))
+                                   self._cookie_name(group))))
+            w(u'<div id="fieldset_%s" %s>' % (group, status))
             w(u'<fieldset class="subentity">')
             w(form)
             w(u'</fieldset></div>')
         for label, group, objects in sorted((_(g), g, o)
                                             for g, o in groupedopts.iteritems()):
-            status = self._group_status(group)
+            status = css_class(self._group_status(group))
             w(u'<h2 class="propertiesform">%s</h2>\n' %
               (make_togglable_link('fieldset_' + group, label,
-                                   self._cookie_name_from_group(group), status)))
-            statusclass = status and 'class="%s"' % status or ''
-            w(u'<div id="fieldset_%s" %s>' % (group, statusclass))
+                                   self._cookie_name(group))))
+            w(u'<div id="fieldset_%s" %s>' % (group, status))
             for label, oid, form in sorted((self.req.__('%s_%s' % (group, o)), o, f)
                                            for o, f in objects.iteritems()):
                 w(u'<fieldset class="subentity">')
