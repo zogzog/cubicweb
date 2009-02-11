@@ -452,7 +452,14 @@ class JSonController(Controller):
         # link the new entity to the main entity
         rql = 'SET F %(rel)s T WHERE F eid %(eid_to)s, T eid %(eid_from)s' % {'rel' : rel, 'eid_to' : eid_to, 'eid_from' : eid_from}
         return eid_from
-    
+
+    def js_set_cookie(self, cookiename, cookievalue):
+        # XXX we should consider jQuery.Cookie
+        cookiename, cookievalue = str(cookiename), str(cookievalue)
+        cookies = self.req.get_cookie()
+        cookies[cookiename] = cookievalue
+        self.req.set_cookie(cookies, cookiename)
+
 class SendMailController(Controller):
     id = 'sendmail'
     require_groups = ('managers', 'users')
