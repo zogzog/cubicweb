@@ -5,6 +5,16 @@
  *  :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
  */
 
+
+.titleUnderline {
+  color: #000;
+  clear: left;
+  margin: 0px;
+  padding-top: 0.5em;
+  border-bottom: 1px solid black;
+}
+
+
 div.relationDefinition { 
   float: left;   
   position: relative;

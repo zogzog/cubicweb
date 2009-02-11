@@ -69,7 +69,7 @@ div.facetValueSelected a {
 }
 
 div#filter_box div.boxTitle {
-  visibility: none;
+  visibility: hidden;
   display: none;
 }
 
