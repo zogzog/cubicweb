@@ -1,3 +1,10 @@
+"""entity classes user and group entities
+
+:organization: Logilab
+:copyright: 2001-2009 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+:contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
+"""
+__docformat__ = "restructuredtext en"
 from logilab.common.decorators import cached
 
 from cubicweb import Unauthorized
@@ -26,6 +33,7 @@ class EUser(AnyEntity):
                   'in_group'   : 'primary', 
                   ('owned_by', '*', 'object') : ('generated', 'link'),
                   ('created_by','*','object') : ('generated', 'link'),
+                  ('bookmarked_by', '*', 'object'): ('generated', 'create'),
                   }
     
     # used by repository to check if  the user can log in or not
