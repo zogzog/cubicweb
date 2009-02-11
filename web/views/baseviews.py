@@ -57,14 +57,14 @@ class FinalView(AnyRsetView):
     """
     id = 'final'
             
-    def cell_call(self, row, col, props=None, displaytime=False):
+    def cell_call(self, row, col, props=None, displaytime=False, format='text/html'):
         etype = self.rset.description[row][col]
         value = self.rset.rows[row][col]
         if etype == 'String':
             entity, rtype = self.rset.related_entity(row, col)
             if entity is not None:
                 # yes !
-                self.w(entity.printable_value(rtype, value))
+                self.w(entity.printable_value(rtype, value, format=format))
                 return
         if etype in ('Time', 'Interval'):
             _ = self.req._
@@ -639,7 +639,7 @@ class XMLRsetView(AnyRsetView):
                                     row=rowindex, col=colindex)
                 else:
                     val = self.view('final', rset, displaytime=True,
-                                    row=rowindex, col=colindex)
+                                    row=rowindex, col=colindex, format='text/plain')
                 w(simple_sgml_tag(tag, val, **attrs))
             w(u' </row>\n')
         w(u'</%s>\n' % self.xml_root)
@@ -747,7 +747,8 @@ class CSVRsetView(CSVMixIn, AnyRsetView):
                     content = self.view('textincontext', rset, 
                                         row=rowindex, col=colindex)
                 else:
-                    content = self.view('final', rset, displaytime=True,
+                    content = self.view('final', rset,
+                                        displaytime=True, format='text/plain',
                                         row=rowindex, col=colindex)
                 csvrow.append(content)                    
             writer.writerow(csvrow)
