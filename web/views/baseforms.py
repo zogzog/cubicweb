@@ -392,10 +392,8 @@ class EditionForm(EntityForm):
                 if rschema != 'eid']
     
     def relations_form(self, entity, kwargs):
-        pendings = list(self.restore_pending_inserts(entity))
-        relations_table = list(self.relations_table(entity))
         srels_by_cat = entity.srelations_by_category(('generic', 'metadata'), 'add')
-        if not pendings and not relations_table and not srels_by_cat:
+        if not srels_by_cat:
             return u''
         req = self.req
         _ = self.req._
@@ -406,7 +404,7 @@ class EditionForm(EntityForm):
         w(u'<fieldset class="subentity">')
         w(u'<legend class="iformTitle">%s</legend>' % label)
         w(u'<table id="relatedEntities">')
-        for row in relations_table:
+        for row in self.relations_table(entity):
             # already linked entities
             if row[2]:
                 w(u'<tr><th class="labelCol">%s</th>' % row[0].display_name(req, row[1]))
@@ -420,6 +418,7 @@ class EditionForm(EntityForm):
                 w(u'</ul>')
                 w(u'</td>')
                 w(u'</tr>')
+        pendings = list(self.restore_pending_inserts(entity))
         if not pendings:
             w(u'<tr><th>&nbsp;</th><td>&nbsp;</td></tr>')
         else:
