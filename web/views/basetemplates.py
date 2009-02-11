@@ -7,13 +7,13 @@
 """
 __docformat__ = "restructuredtext en"
 
-from StringIO import StringIO
 
 from logilab.mtconverter import html_escape
 
 from cubicweb import NoSelectableObject, ObjectNotFound
 from cubicweb.common.view import Template, MainTemplate,  NOINDEX, NOFOLLOW
 from cubicweb.common.utils import make_uid
+from cubicweb.common.utils import UStringIO
 
 from cubicweb.web.views.baseviews import vid_from_rset
 
@@ -75,6 +75,7 @@ class TheMainTemplate(MainTemplate):
     - guess and call an appropriate view through the view manager
     """
     id = 'main'
+    nav_html = UStringIO()
 
     def _select_view_and_rset(self):
         req = self.req
@@ -116,7 +117,6 @@ class TheMainTemplate(MainTemplate):
     def call(self):
         view, rset = self._select_view_and_rset()
         req = self.req
-        self.nav_html = StringIO()
         # update breadcrumps **before** validating cache, unless the view
         # specifies explicitly it should not be added to breadcrumb or the
         # view is a binary view
