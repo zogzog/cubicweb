@@ -300,7 +300,13 @@ class ResultSetTC(EnvBasedTC):
             attr = etype == 'Bookmark' and 'title' or 'name'
             self.assertEquals(entity[attr], n)
         
-    
+    def test_related_entity_optional(self):
+        e = self.add_entity('Bookmark', title=u'aaaa', path=u'path')
+        rset = self.execute('Any B,U,L WHERE B bookmarked_by U?, U login L')
+        entity, rtype = rset.related_entity(0, 2)
+        self.assertEquals(entity, None)
+        self.assertEquals(rtype, None)
+        
     def test_related_entity_union_subquery(self):
         e = self.add_entity('Bookmark', title=u'aaaa', path=u'path')
         rset = self.execute('Any X,N ORDERBY N WITH X,N BEING '
