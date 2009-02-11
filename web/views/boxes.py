@@ -143,7 +143,7 @@ class SearchBox(BoxTemplate):
 <input type="hidden" name="__fromsearchbox" value="1" />
 <input type="hidden" name="subvid" value="tsearch" />
 </td><td>
-<input tabindex="%s" type="submit" id="rqlboxsubmit" value="" />
+<input tabindex="%s" type="submit" id="rqlboxsubmit" class="rqlsubmit" value="" />
 </td></tr></table>
 </form>"""
 
