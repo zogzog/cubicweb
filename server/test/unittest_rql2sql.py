@@ -805,7 +805,7 @@ FROM Personne AS C LEFT OUTER JOIN travaille_relation AS rel_travaille0 ON (rel_
      'F name "read", F require_group E, U in_group E)), U eid 1',
      '''SELECT A.eid, rel_documented_by0.eid_to
 FROM Affaire AS A LEFT OUTER JOIN documented_by_relation AS rel_documented_by0 ON (rel_documented_by0.eid_from=A.eid)
-WHERE ((rel_documented_by0.eid_to IS NULL) OR (EXISTS(SELECT 1 FROM require_permission_relation AS rel_require_permission1, EPermission AS F, require_group_relation AS rel_require_group2, in_group_relation AS rel_in_group3 WHERE rel_documented_by0.eid_to=rel_require_permission1.eid_from AND rel_require_permission1.eid_to=F.eid AND F.name=read AND rel_require_group2.eid_from=F.eid AND rel_in_group3.eid_from=1 AND rel_in_group3.eid_to=rel_require_group2.eid_to)))'''),
+WHERE ((rel_documented_by0.eid_to IS NULL) OR (EXISTS(SELECT 1 FROM require_permission_relation AS rel_require_permission1, EPermission AS F, require_group_relation AS rel_require_group2, in_group_relation AS rel_in_group3 WHERE rel_documented_by0.eid_to=rel_require_permission1.eid_from AND rel_require_permission1.eid_to=F.eid AND F.name=read AND rel_require_group2.eid_from=F.eid AND rel_in_group3.eid_to=rel_require_group2.eid_to AND rel_in_group3.eid_from=1)))'''),
 
     ("Any X WHERE X eid 12, P? connait X",
      '''SELECT X.eid

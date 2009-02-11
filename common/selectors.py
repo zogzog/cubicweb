@@ -161,13 +161,20 @@ twocolrset_selector = deprecated_function(two_cols_rset)
 def paginated_rset(cls, req, rset, *args, **kwargs):
     """accept result sets with more rows than the page size
     """
-    if rset is None or len(rset) <= req.property_value('navigation.page-size'):
+    page_size = kwargs.get('page_size')
+    if page_size is None:
+        page_size = req.form.get('page_size')
+        if page_size is None:
+            page_size = req.property_value('navigation.page-size')
+        else:
+            page_size = int(page_size)
+    if rset is None or len(rset) <= page_size:
         return 0
     return 1
 largerset_selector = deprecated_function(paginated_rset)
 
 @lltrace
-def sorted_rset(cls, req, rset, row=None, col=None):
+def sorted_rset(cls, req, rset, row=None, col=None, **kwargs):
     """accept sorted result set"""
     rqlst = rset.syntax_tree()
     if len(rqlst.children) > 1 or not rqlst.children[0].orderby:

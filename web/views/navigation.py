@@ -36,15 +36,17 @@ class PageNavigation(NavigationComponent):
         while start < rset.rowcount:
             stop = min(start + page_size - 1, rset.rowcount - 1)
             blocklist.append(self.page_link(basepath, params, start, stop,
-                                            u'%s - %s' % (start+1, stop+1)))
+                                            self.index_display(start, stop)))
             start = stop + 1
         w(u'<div class="pagination">')
         w(u'%s&nbsp;' % self.previous_link(params))
         w(u'[&nbsp;%s&nbsp;]' % u'&nbsp;| '.join(blocklist))
         w(u'&nbsp;%s' % self.next_link(params))
         w(u'</div>')
+        
+    def index_display(self, start, stop):
+        return u'%s - %s' % (start+1, stop+1)
 
-    
 class SortedNavigation(NavigationComponent):
     """sorted navigation apply if navigation is needed (according to page size)
     and if the result set is sorted
@@ -142,9 +144,11 @@ class SortedNavigation(NavigationComponent):
         self.w(u'</div>')
 
 
-def limit_rset_using_paged_nav(self, req, rset, w, forcedisplay=False, show_all_option=True):
+def limit_rset_using_paged_nav(self, req, rset, w, forcedisplay=False,
+                               show_all_option=True, page_size = None):
     showall = forcedisplay or req.form.get('__force_display') is not None
-    nav = not showall and self.vreg.select_component('navigation', req, rset)
+    nav = not showall and self.vreg.select_component('navigation', req, rset,
+                                                     page_size=page_size)
     if nav:
         # get boundaries before component rendering
         start, stop = nav.page_boundaries()

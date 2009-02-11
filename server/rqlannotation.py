@@ -146,16 +146,17 @@ def _annotate_select(annotator, rqlst):
 
 class CantSelectPrincipal(Exception): pass
 
-def _select_principal(sqlscope, relations):
+def _select_principal(sqlscope, relations, _sort=lambda x:x):
     """given a list of rqlst relations, select one which will be used to
     represent an invariant variable (e.g. using on extremity of the relation
     instead of the variable's type table
     """
+    # _sort argument is there for test
     diffscope_rels = {}
     has_same_scope_rel = False
     ored_rels = set()
     diffscope_rels = set()
-    for rel in relations:
+    for rel in _sort(relations):
         # note: only eid and has_text among all final relations may be there
         if rel.r_type in ('eid', 'identity'):
             has_same_scope_rel = rel.sqlscope is sqlscope
@@ -175,18 +176,17 @@ def _select_principal(sqlscope, relations):
                 if isinstance(common_parent(rel1, rel2), Or):
                     ored_rels.discard(rel1)
                     ored_rels.discard(rel2)
-    for rel in ored_rels:
+    for rel in _sort(ored_rels):
         if rel.sqlscope is sqlscope:
             return rel
         diffscope_rels.add(rel)
     # if DISTINCT query, can use variable from a different scope as principal
     # since introduced duplicates will be removed
     if sqlscope.stmt.distinct and diffscope_rels:
-        return iter(diffscope_rels).next()
+        return iter(_sort(diffscope_rels)).next()
     # XXX  could use a relation for a different scope if it can't generate
     # duplicates, so we would have to check cardinality
-    raise CantSelectPrincipal()
-    
+    raise CantSelectPrincipal()    
 
 def _select_main_var(relations):
     """given a list of rqlst relations, select one which will be used as main
