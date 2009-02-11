@@ -392,17 +392,22 @@ class EditionForm(EntityForm):
                 if rschema != 'eid']
     
     def relations_form(self, entity, kwargs):
+        pendings = list(self.restore_pending_inserts(entity))
+        relations_table = list(self.relations_table(entity))
+        srels_by_cat = entity.srelations_by_category(('generic', 'metadata'), 'add')
+        if not pendings and not relations_table and not srels_by_cat:
+            return u''
         req = self.req
         _ = self.req._
         label = u'%s :' % _('This %s' % entity.e_schema).capitalize()
         eid = entity.eid
         html = []
-        pendings = list(self.restore_pending_inserts(entity))
         w = html.append
         w(u'<fieldset class="subentity">')
         w(u'<legend class="iformTitle">%s</legend>' % label)
         w(u'<table id="relatedEntities">')
-        for row in self.relations_table(entity):
+        for row in relations_table:
+            # already linked entities
             if row[2]:
                 w(u'<tr><th class="labelCol">%s</th>' % row[0].display_name(req, row[1]))
                 w(u'<td>')
@@ -419,6 +424,7 @@ class EditionForm(EntityForm):
             w(u'<tr><th>&nbsp;</th><td>&nbsp;</td></tr>')
         else:
             for row in pendings:
+                # soon to be linked to entities
                 w(u'<tr id="tr%s">' % row[1])
                 w(u'<th>%s</th>' % row[3])
                 w(u'<td>')
@@ -434,7 +440,8 @@ class EditionForm(EntityForm):
         w(u'<select id="relationSelector_%s" tabindex="%s" onchange="javascript:showMatchingSelect(this.options[this.selectedIndex].value,%s);">'
           % (eid, req.next_tabindex(), html_escape(dumps(eid))))
         w(u'<option value="">%s</option>' % _('select a relation'))
-        for i18nrtype, rschema, target in entity.srelations_by_category(('generic', 'metadata'), 'add'):
+        for i18nrtype, rschema, target in srels_by_cat:
+            # more entities to link to
             w(u'<option value="%s_%s">%s</option>' % (rschema, target, i18nrtype))
         w(u'</select>')
         w(u'</th>')

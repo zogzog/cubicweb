@@ -72,10 +72,7 @@ class FoafView(EntityView):
                    % html_escape(entity.firstname))
         emailaddr = entity.get_email()
         if emailaddr:
-            m = sha()
-            m.update(html_escape(emailaddr))
-            crypt_sha1 = m.hexdigest()
-            self.w(u'<foaf:mbox_sha1sum>%s</foaf:mbox_sha1sum>\n' % crypt_sha1)
+            self.w(u'<foaf:mbox>%s</foaf:mbox>\n' % html_escape(unicode(emailaddr)))
             self.w(u'</foaf:Person>\n')
 
 

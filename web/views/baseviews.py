@@ -57,14 +57,14 @@ class FinalView(AnyRsetView):
     """
     id = 'final'
             
-    def cell_call(self, row, col, props=None, displaytime=False):
+    def cell_call(self, row, col, props=None, displaytime=False, format='text/html'):
         etype = self.rset.description[row][col]
         value = self.rset.rows[row][col]
         if etype == 'String':
             entity, rtype = self.rset.related_entity(row, col)
             if entity is not None:
                 # yes !
-                self.w(entity.printable_value(rtype, value))
+                self.w(entity.printable_value(rtype, value, format=format))
                 return
         if etype in ('Time', 'Interval'):
             _ = self.req._
@@ -639,7 +639,7 @@ class XMLRsetView(AnyRsetView):
                                     row=rowindex, col=colindex)
                 else:
                     val = self.view('final', rset, displaytime=True,
-                                    row=rowindex, col=colindex)
+                                    row=rowindex, col=colindex, format='text/plain')
                 w(simple_sgml_tag(tag, val, **attrs))
             w(u' </row>\n')
         w(u'</%s>\n' % self.xml_root)
@@ -747,7 +747,8 @@ class CSVRsetView(CSVMixIn, AnyRsetView):
                     content = self.view('textincontext', rset, 
                                         row=rowindex, col=colindex)
                 else:
-                    content = self.view('final', rset, displaytime=True,
+                    content = self.view('final', rset,
+                                        displaytime=True, format='text/plain',
                                         row=rowindex, col=colindex)
                 csvrow.append(content)                    
             writer.writerow(csvrow)
@@ -862,13 +863,8 @@ class EditRelationView(EntityView):
         assert rtype is not None, "rtype is mandatory for 'edirelation' view"
         targettype = self.req.form.get('targettype', targettype)
         role = self.req.form.get('role', role)
-        mode = entity.rtags.get_mode(rtype, targettype, role)
-        if mode == 'create':
-            return
         category = entity.rtags.get_category(rtype, targettype, role)
-        if category in ('generated', 'metadata'):
-            return
-        elif category in ('primary', 'secondary'):
+        if category in ('primary', 'secondary') or self.schema.rschema(rtype).is_final():
             if hasattr(entity, '%s_format' % rtype):
                 formatwdg = entity.get_widget('%s_format' % rtype, role)
                 self.w(formatwdg.edit_render(entity))
@@ -879,10 +875,8 @@ class EditRelationView(EntityView):
             self.w(u'%s %s %s' %
                    (wdg.render_error(entity), wdg.edit_render(entity),
                     wdg.render_help(entity),))
-        elif category == 'generic':
-            self._render_generic_relation(entity, rtype, role)
         else:
-            self.error("oops, wrong category %s", category)
+            self._render_generic_relation(entity, rtype, role)
 
     def _render_generic_relation(self, entity, relname, role):
         text = self.req.__('add %s %s %s' % (entity.e_schema, relname, role))
