@@ -376,6 +376,9 @@ msgstr ""
 msgid "Problem occured"
 msgstr ""
 
+msgid "Project linked data"
+msgstr ""
+
 msgid "RQLExpression"
 msgstr "RQL expression"
 
@@ -716,6 +719,9 @@ msgstr ""
 
 msgid "add"
 msgstr ""
+
+msgid "add Bookmark bookmarked_by EUser object"
+msgstr "bookmark"
 
 msgid "add EEType add_permission RQLExpression subject"
 msgstr "rql expression for the add permission"
@@ -1311,6 +1317,9 @@ msgstr "created by"
 msgid "created_by_object"
 msgstr "has created"
 
+msgid "creating Bookmark (Bookmark bookmarked_by EUser %(linkto)s)"
+msgstr "creating bookmark for %(linkto)s"
+
 msgid "creating EConstraint (EFRDef %(linkto)s constrained_by EConstraint)"
 msgstr "creating constraint for attribute %(linkto)s"
 
@@ -1668,10 +1677,16 @@ msgstr ""
 msgid "february"
 msgstr ""
 
+msgid "file tree view"
+msgstr ""
+
 msgid "final"
 msgstr ""
 
 msgid "firstname"
+msgstr ""
+
+msgid "foaf"
 msgstr ""
 
 msgid "follow"
@@ -1997,6 +2012,9 @@ msgstr ""
 msgid "list"
 msgstr ""
 
+msgid "loading"
+msgstr ""
+
 msgid "log in"
 msgstr ""
 
@@ -2023,6 +2041,9 @@ msgid "manage"
 msgstr ""
 
 msgid "manage bookmarks"
+msgstr ""
+
+msgid "manage permissions"
 msgstr ""
 
 msgid "manage security"
@@ -2137,6 +2158,9 @@ msgstr ""
 msgid "not authorized"
 msgstr ""
 
+msgid "not selected"
+msgstr ""
+
 msgid "not specified"
 msgstr ""
 
@@ -2172,6 +2196,15 @@ msgstr ""
 
 msgid "ordernum"
 msgstr "order"
+
+msgid "owl (tbox+abox)"
+msgstr ""
+
+msgid "owlabox"
+msgstr ""
+
+msgid "owlaboxlight"
+msgstr ""
 
 msgid "owned_by"
 msgstr "owned by"
@@ -2416,6 +2449,9 @@ msgstr ""
 msgid "select this entity"
 msgstr ""
 
+msgid "selected"
+msgstr ""
+
 msgid "semantic description of this attribute"
 msgstr ""
 
@@ -2541,6 +2577,9 @@ msgstr ""
 msgid "task progression"
 msgstr ""
 
+msgid "tbox"
+msgstr ""
+
 msgid "text"
 msgstr ""
 
@@ -2616,6 +2655,9 @@ msgstr "transition of"
 
 msgid "transition_of_object"
 msgstr "use transitions"
+
+msgid "tree view"
+msgstr ""
 
 msgid "tuesday"
 msgstr ""
