@@ -75,7 +75,6 @@ class TheMainTemplate(MainTemplate):
     - guess and call an appropriate view through the view manager
     """
     id = 'main'
-    nav_html = UStringIO()
 
     def _select_view_and_rset(self):
         req = self.req
@@ -165,6 +164,7 @@ class TheMainTemplate(MainTemplate):
                                                  self.req, self.rset)
         if etypefilter and etypefilter.propval('visible'):
             etypefilter.dispatch(w=self.w)
+        self.nav_html = UStringIO()
         self.pagination(self.req, self.rset, self.nav_html.write,
                         not (view and view.need_navigation))
         self.w(_(self.nav_html.getvalue()))
