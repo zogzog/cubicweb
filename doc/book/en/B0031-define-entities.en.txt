@@ -55,13 +55,20 @@ Editing forms management
 It is possible to manage attributes/relations in the simple or multiple
 editing form thanks to the following *rtags*: 
 
-* `primary`, indicates that an attribute or a relation has to be inserted
-  in the simple or multiple editing forms. In the case of a relation,
-  the related entity editing form will be included in the editing form.
+* `primary`, indicates that an attribute or a relation has to be
+  inserted **in the simple or multiple editing forms**. In the case of
+  a relation, the related entity editing form will be included in the
+  editing form and represented as a combobox. Each item of the
+  combobox is a link to an existing entity.
 
-* `secondary`, indicates that an attribute or a relation has to be inserted
-  in the simple editing form only. In the case of a relation, the related
-  entity editing form sill be included in the editing form.
+* `secondary`, indicates that an attribute or a relation has to be
+  inserted **in the simple editing form only**. In the case of a
+  relation, the related entity editing form will be included in the
+  editing form and represented as a combobox. Each item of the combobox
+  is a link to an existing entity.
+
+* `inlineview`, includes the target entity's form in the editing form
+  of the current entity.
 
 * `generic`, indicates that a relation has to be inserted in the simple
   editing form, in the generic box of relation creation.
