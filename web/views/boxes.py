@@ -10,7 +10,7 @@ additional (disabled by default) boxes
 * startup views box
 
 :organization: Logilab
-:copyright: 2001-2008 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+:copyright: 2001-2009 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 """
 __docformat__ = "restructuredtext en"
@@ -185,7 +185,6 @@ class PossibleViewsBox(BoxTemplate):
         if not box.is_empty():
             box.render(self.w)
 
-
         
 class RSSIconBox(ExtResourcesBoxTemplate):
     """just display the RSS icon on uniform result set"""
@@ -202,23 +201,6 @@ class RSSIconBox(ExtResourcesBoxTemplate):
         rss = self.req.external_resource('RSS_LOGO')
         self.w(u'<a href="%s"><img src="%s" alt="rss"/></a>\n' % (html_escape(url), rss))
 
-
-## warning("schemabox ne marche plus pour le moment")
-## class SchemaBox(BoxTemplate):
-##     """display a box containing link to list of entities by type"""
-##     id = 'schema_box'
-##     visible = False # disabled by default
-##     title = _('entity list')
-##     order = 60
-        
-##     def call(self, **kwargs):
-##         box = BoxWidget(self.req._(title), self.id)
-##         for etype in self.config.etypes(self.req.user, 'read'):
-##             view = self.vreg.select_view('list', self.req, self.etype_rset(etype))
-##             box.append(self.mk_action(display_name(self.req, etype, 'plural'),
-##                                       view.url(), etype=etype))
-##         if not box.is_empty():
-##             box.render(self.w)
 
 class StartupViewsBox(BoxTemplate):
     """display a box containing links to all startup views"""
