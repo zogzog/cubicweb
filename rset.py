@@ -1,7 +1,7 @@
 """The `ResultSet` class which is returned as result of a rql query
 
 :organization: Logilab
-:copyright: 2001-2008 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+:copyright: 2001-2009 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 """
 __docformat__ = "restructuredtext en"
@@ -60,11 +60,15 @@ class ResultSet(object):
     def __repr__(self):
         if not self.rows:
             return '<empty resultset for %r>' % self.rql
+        rows = self.rows
+        if len(rows) > 10:
+            rows = rows[:10] + ['...']
         if not self.description:
-            return '<resultset %r: %s>' % (self.rql, '\n'.join(str(r) for r in self.rows))
-        return '<resultset %r: %s>' % (self.rql,
-                                       '\n'.join('%s (%s)' % (r, d)
-                                                 for r, d in zip(self.rows, self.description)))
+            return '<resultset %r (%s rows): %s>' % (self.rql, len(self.rows),
+                                                     '\n'.join(str(r) for r in rows))
+        return '<resultset %r (%s rows): %s>' % (self.rql, len(self.rows),
+                                                 '\n'.join('%s (%s)' % (r, d)
+                                                           for r, d in zip(rows, self.description)))
 
     @cached
     def possible_actions(self):
