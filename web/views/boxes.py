@@ -17,7 +17,7 @@ __docformat__ = "restructuredtext en"
 
 from logilab.mtconverter import html_escape
 
-from cubicweb.common.selectors import (any_rset, appobject_selectable)
+from cubicweb.common.selectors import any_rset, appobject_selectable
 from cubicweb.web.htmlwidgets import BoxWidget, BoxMenu, BoxHtml, RawBoxItem
 from cubicweb.web.box import BoxTemplate, ExtResourcesBoxTemplate
 
@@ -175,12 +175,12 @@ class PossibleViewsBox(BoxTemplate):
 
     def call(self, **kwargs):
         box = BoxWidget(self.req._(self.title), self.id)
-        actions = [v for v in self.vreg.possible_views(self.req, self.rset)
-                   if v.category != 'startupview']
-        for category, actions in self.sort_actions(actions):
+        views = [v for v in self.vreg.possible_views(self.req, self.rset)
+                 if v.category != 'startupview']
+        for category, views in self.sort_actions(views):
             menu = BoxMenu(category)
-            for action in actions:
-                menu.append(self.box_action(action))
+            for view in views:
+                menu.append(self.box_action(view))
             box.append(menu)
         if not box.is_empty():
             box.render(self.w)
