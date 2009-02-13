@@ -68,7 +68,8 @@ editing form thanks to the following *rtags*:
   is a link to an existing entity.
 
 * `inlineview`, includes the target entity's form in the editing form
-  of the current entity.
+  of the current entity. It allows to create the target entity in the
+  same time as the current entity.
 
 * `generic`, indicates that a relation has to be inserted in the simple
   editing form, in the generic box of relation creation.
