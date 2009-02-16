@@ -513,7 +513,7 @@ set_log_methods(registerer, getLogger('cubicweb.registration'))
 
 # advanced selector building functions ########################################
 
-def chainall(*selectors):
+def chainall(*selectors, **kwargs):
     """return a selector chaining given selectors. If one of
     the selectors fail, selection will fail, else the returned score
     will be the sum of each selector'score
@@ -527,9 +527,11 @@ def chainall(*selectors):
                 return 0
             score += partscore
         return score
+    if 'name' in kwargs:
+        selector.__name__ = kwargs['name']
     return selector
 
-def chainfirst(*selectors):
+def chainfirst(*selectors, **kwargs):
     """return a selector chaining given selectors. If all
     the selectors fail, selection will fail, else the returned score
     will be the first non-zero selector score
@@ -541,5 +543,7 @@ def chainfirst(*selectors):
             if partscore:
                 return partscore
         return 0
+    if 'name' in kwargs:
+        selector.__name__ = kwargs['name']
     return selector
 
