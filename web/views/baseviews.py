@@ -22,9 +22,8 @@ from logilab.common.decorators import cached
 from logilab.mtconverter import TransformError, html_escape, xml_escape
 
 from cubicweb import Unauthorized, NoSelectableObject, typed_eid
-from cubicweb.common.selectors import (yes, empty_rset, nonempty_rset, one_line_rset,
-                                       accept, match_search_state, 
-                                       match_form_params, accept_rset)
+from cubicweb.selectors import (yes, empty_rset, nonempty_rset, one_line_rset,
+                                non_final_entity, match_search_state,  match_form_params)
 from cubicweb.common.uilib import (cut, printable_value,  UnicodeCSVWriter,
                                    ajax_replace_url, rql_for_eid, simple_sgml_tag)
 from cubicweb.common.view import EntityView, AnyRsetView, View
@@ -359,7 +358,7 @@ class TextView(EntityView):
     id = 'text'
     title = _('text')
     content_type = 'text/plain'
-    accepts = 'Any',
+
     def call(self, **kwargs):
         """the view is called for an entire result set, by default loop
         other rows of the result set and call the same view on the
@@ -384,7 +383,6 @@ class TextView(EntityView):
 class MetaDataView(EntityView):
     """paragraph view of some metadata"""
     id = 'metadata'
-    accepts = 'Any',
     show_eid = True
     
     def cell_call(self, row, col):
@@ -448,13 +446,13 @@ class OutOfContextView(EntityView):
 
 class NotClickableInContextView(EntityView):
     id = 'incontext'
-    accepts = ('State',)
+
     def cell_call(self, row, col):
         self.w(html_escape(self.view('textincontext', self.rset, row=row, col=col)))
 
 ## class NotClickableOutOfContextView(EntityView):
 ##     id = 'outofcontext'
-##     accepts = ('State',)
+
 ##     def cell_call(self, row, col):
 ##         self.w(html_escape(self.view('textoutofcontext', self.rset, row=row)))
 
@@ -555,7 +553,6 @@ class CSVView(SimpleListView):
 
 
 class TreeItemView(ListItemView):
-    accepts = ('Any',)
     id = 'treeitem'
     
     def cell_call(self, row, col):
@@ -793,10 +790,10 @@ class SearchForAssociationView(EntityView):
     to search for something to link to the edited eid
     """
     id = 'search-associate'
+    __selectors__ = (one_line_rset, match_search_state('linksearch'),
+                     non_final_entity())
+    
     title = _('search for association')
-    __selectors__ = (one_line_rset, match_search_state, accept)
-    accepts = ('Any',)
-    search_states = ('linksearch',)
 
     def cell_call(self, row, col):
         rset, vid, divid, paginate = self.filter_box_context_info()
@@ -953,7 +950,6 @@ class TextSearchResultView(EntityView):
     """
     id = 'tsearch'
 
-
     def cell_call(self, row, col, **kwargs):
         entity = self.complete_entity(row, col)
         self.w(entity.view('incontext'))
@@ -978,22 +974,6 @@ class TextSearchResultView(EntityView):
                         contexts.append(ctx)
                 value = u'\n' + highlighted.join(contexts)
                 self.w(value.replace('\n', '<br/>'))            
-
-
-class EntityRelationView(EntityView):
-    accepts = ()
-    vid = 'list'
-    
-    def cell_call(self, row, col):
-        if self.target == 'object':
-            role = 'subject'
-        else:
-            role = 'object'
-        rset = self.rset.get_entity(row, col).related(self.rtype, role)
-        self.w(u'<h1>%s</h1>' % self.req._(self.title).capitalize())
-        self.w(u'<div class="mainInfo">')
-        self.wview(self.vid, rset, 'noresult')
-        self.w(u'</div>')
 
 
 class TooltipView(OneLineView):
