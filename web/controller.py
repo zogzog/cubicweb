@@ -2,7 +2,7 @@
 
 
 :organization: Logilab
-:copyright: 2001-2008 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+:copyright: 2001-2009 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 """
 __docformat__ = "restructuredtext en"
@@ -11,7 +11,7 @@ from mx.DateTime import strptime, Error as MxDTError, TimeDelta
 
 from cubicweb import typed_eid
 from cubicweb.common.registerers import priority_registerer
-from cubicweb.common.selectors import match_user_group
+from cubicweb.common.selectors import yes, require_group_compat
 from cubicweb.common.appobject import AppObject
 from cubicweb.web import LOGGER, Redirect, RequestError
 
@@ -68,8 +68,8 @@ class Controller(AppObject):
     """
     __registry__ = 'controllers'
     __registerer__ = priority_registerer
-    __selectors__ = (match_user_group,)
-    require_groups = ()
+    __selectors__ = (yes,)
+    registered = require_group_compat(AppObject.registered.im_func)
 
     def __init__(self, *args, **kwargs):
         super(Controller, self).__init__(*args, **kwargs)

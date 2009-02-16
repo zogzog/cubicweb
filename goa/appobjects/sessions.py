@@ -1,7 +1,7 @@
 """persistent sessions stored in big table
 
 :organization: Logilab
-:copyright: 2008 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+:copyright: 2008-2009 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 
 XXX TODO:
@@ -18,6 +18,7 @@ from logilab.common.decorators import cached, clear_cache
 from cubicweb import UnknownEid, BadConnectionId
 from cubicweb.dbapi import Connection, ConnectionProperties, repo_connect
 from cubicweb.server.session import Session
+from cubicweb.common.selectors import none_rset, match_user_groups
 from cubicweb.web import InvalidSession
 from cubicweb.web.application import AbstractSessionManager
 from cubicweb.web.application import AbstractAuthenticationManager
@@ -254,7 +255,7 @@ from cubicweb.web import application
 
 class SessionsCleaner(StartupView):
     id = 'cleansessions'
-    require_groups = ('managers',)
+    __selectors__ = (none_rset, match_user_groups('managers'),)
     
     def call(self):
         # clean web session

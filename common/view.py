@@ -13,34 +13,14 @@ from warnings import warn
 from logilab.mtconverter import html_escape
 
 from cubicweb import NotAnEntity, NoSelectableObject
+from cubicweb.selectors import (yes, match_user_groups, implements,
+                                nonempty_rset, none_rset)
+from cubicweb.selectors import require_group_compat, accepts_compat
 from cubicweb.common.registerers import accepts_registerer, priority_registerer
-from cubicweb.common.selectors import (yes, match_user_groups, implements,
-                                       nonempty_rset, none_rset)
 from cubicweb.common.appobject import AppRsetObject, ComponentMixIn
 from cubicweb.common.utils import UStringIO, HTMLStream
 
 _ = unicode
-
-
-def require_group_compat(registered):
-    def plug_selector(cls, vreg):
-        cls = registered(cls, vreg)
-        if getattr(cls, 'require_groups', None):
-            warn('use "use match_user_groups(group1, group2)" instead of using require_groups',
-                 DeprecationWarning)
-            cls.__selectors__ += (match_user_groups(cls.require_groups),)
-        return cls
-    return classmethod(plug_selector)
-
-def accepts_compat(registered):
-    def plug_selector(cls, vreg):
-        cls = registered(cls, vreg)
-        if getattr(cls, 'accepts', None):
-            warn('use "use match_user_groups(group1, group2)" instead of using require_groups',
-                 DeprecationWarning)
-            cls.__selectors__ += (implements(*cls.accepts),)
-        return cls
-    return classmethod(plug_selector)
 
 
 # robots control

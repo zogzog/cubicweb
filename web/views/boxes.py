@@ -17,7 +17,7 @@ __docformat__ = "restructuredtext en"
 
 from logilab.mtconverter import html_escape
 
-from cubicweb.common.selectors import any_rset, appobject_selectable
+from cubicweb.selectors import any_rset, appobject_selectable, match_user_groups
 from cubicweb.web.htmlwidgets import BoxWidget, BoxMenu, BoxHtml, RawBoxItem
 from cubicweb.web.box import BoxTemplate, ExtResourcesBoxTemplate
 
@@ -167,10 +167,10 @@ class SearchBox(BoxTemplate):
 class PossibleViewsBox(BoxTemplate):
     """display a box containing links to all possible views"""
     id = 'possible_views_box'
+    __selectors__ = (match_user_groups('users', 'managers'),)
     
     title = _('possible views')
     order = 10
-    require_groups = ('users', 'managers')
     visible = False
 
     def call(self, **kwargs):

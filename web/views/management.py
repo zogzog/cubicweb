@@ -2,7 +2,7 @@
 
 
 :organization: Logilab
-:copyright: 2001-2008 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+:copyright: 2001-2009 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 """
 __docformat__ = "restructuredtext en"
@@ -11,12 +11,11 @@ from logilab.mtconverter import html_escape
 
 from logilab.common.decorators import cached
 
+from cubicweb.selectors import (yes, one_line_rset, none_rset,
+                                match_user_groups, chainfirst, chainall)
 from cubicweb.common.utils import UStringIO
 from cubicweb.common.view import AnyRsetView, StartupView, EntityView
 from cubicweb.common.uilib import html_traceback, rest_traceback
-from cubicweb.common.selectors import (yes, one_line_rset, match_user_groups,
-                                       accept_rset, none_rset,
-                                       chainfirst, chainall)
 from cubicweb.web import INTERNAL_FIELD_VALUE, eid_param, stdmsgs
 from cubicweb.web.widgets import StaticComboBoxWidget
 from cubicweb.web.form import FormMixIn
@@ -294,10 +293,11 @@ def css_class(someclass):
     return someclass and 'class="%s"' % someclass or ''
 
 class SystemEPropertiesForm(FormMixIn, StartupView):
-    controller = 'edit'
     id = 'systemepropertiesform'
+    __selectors__ = (none_rset, match_user_groups('managers'),)
+
     title = _('site configuration')
-    require_groups = ('managers',)
+    controller = 'edit'
     category = 'startupview'
 
     def linkable(self):
@@ -507,8 +507,9 @@ class EPropertiesForm(SystemEPropertiesForm):
 
 class ProcessInformationView(StartupView):
     id = 'info'
+    __selectors__ = (none_rset, match_user_groups('managers'),)
+    
     title = _('server information')
-    require_groups = ('managers',)
 
     def call(self, **kwargs):
         """display server information"""

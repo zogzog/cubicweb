@@ -2,7 +2,7 @@
 
 
 :organization: Logilab
-:copyright: 2001-2008 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+:copyright: 2001-2009 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 """
 __docformat__ = "restructuredtext en"
@@ -11,6 +11,7 @@ from time import strftime, localtime
 
 from logilab.mtconverter import html_escape
 
+from cubicweb.selectors import none_rset, match_user_groups
 from cubicweb.common.view import StartupView
 
 def dict_to_html(w, dict):
@@ -21,11 +22,12 @@ def dict_to_html(w, dict):
             w(u'<li><span class="label">%s</span>: <span>%s</span></li>' % (
                 html_escape(str(key)), html_escape(repr(dict[key]))))
         w(u'</ul>')
+
     
 class DebugView(StartupView):
     id = 'debug'
+    __selectors__ = (none_rset, match_user_groups('managers'),)
     title = _('server debug information')
-    require_groups = ('managers',)
 
     def call(self, **kwargs):
         """display server information"""

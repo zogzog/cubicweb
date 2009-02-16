@@ -2,7 +2,7 @@
 restoration).
 
 :organization: Logilab
-:copyright: 2008 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+:copyright: 2008-2009 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 """
 __docformat__ = "restructuredtext en"
@@ -13,6 +13,7 @@ from pickle import loads, dumps
 from logilab.common.decorators import cached
 from logilab.mtconverter import html_escape
 
+from cubicweb.common.selectors import none_rset, match_user_groups
 from cubicweb.common.view import StartupView
 from cubicweb.web import Redirect
 from cubicweb.goa.dbinit import fix_entities, init_persistent_schema, insert_versions
@@ -39,7 +40,7 @@ class AuthInfo(StartupView):
     which are doing datastore administration requests
     """
     id = 'authinfo'
-    require_groups = ('managers',)
+    __selectors__ = (none_rset, match_user_groups('managers'),)
 
     def call(self):
         cookie = self.req.get_cookie()
@@ -61,7 +62,7 @@ class ContentInit(StartupView):
     step by step to avoid depassing quotas
     """
     id = 'contentinit'
-    require_groups = ('managers',)
+    __selectors__ = (none_rset, match_user_groups('managers'),)
 
     def server_session(self):
         ssession = self.config.repo_session(self.req.cnx.sessionid)
@@ -166,7 +167,7 @@ class ContentInit(StartupView):
         
 class ContentClear(StartupView):
     id = 'contentclear'
-    require_groups = ('managers',)
+    __selectors__ = (none_rset, match_user_groups('managers'),)
     skip_etypes = ('EGroup', 'EUser')
     
     def call(self):

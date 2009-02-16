@@ -9,7 +9,7 @@ from cubicweb.devtools.apptest import EnvBasedTC
 
 
 from cubicweb import CW_SOFTWARE_ROOT as BASE, Binary
-from cubicweb.common.selectors import match_user_group
+from cubicweb.common.selectors import match_user_groups
 
 from cubicweb.web._exceptions import NoSelectableObject
 from cubicweb.web.action import Action
@@ -411,8 +411,7 @@ class VRegistryTC(ViewSelectorTC):
         class SomeAction(Action):
             id = 'yo'
             category = 'foo'
-            __selectors__ = (match_user_group,)
-            require_groups = ('owners', )            
+            __selectors__ = (match_user_groups('owners'),)
         self.vreg.register_vobject_class(SomeAction)
         self.failUnless(SomeAction in self.vreg['actions']['yo'], self.vreg['actions'])
         try:
