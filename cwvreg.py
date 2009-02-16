@@ -1,7 +1,7 @@
 """extend the generic VRegistry with some cubicweb specific stuff
 
 :organization: Logilab
-:copyright: 2001-2008 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+:copyright: 2001-2009 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 """
 __docformat__ = "restructuredtext en"
@@ -9,6 +9,7 @@ __docformat__ = "restructuredtext en"
 from warnings import warn
 
 from logilab.common.decorators import cached, clear_cache
+from logilab.common.interface import extend
 
 from rql import RQLHelper
 
@@ -129,6 +130,8 @@ class CubicWebRegistry(VRegistry):
         default to a dump of the class registered for 'Any'
         """
         etype = str(etype)
+        if etype == 'Any':
+            return self.select(self.registry_objects('etypes', 'Any'), 'Any')
         eschema = self.schema.eschema(etype)
         baseschemas = [eschema] + eschema.ancestors()
         # browse ancestors from most specific to most generic and
@@ -136,12 +139,21 @@ class CubicWebRegistry(VRegistry):
         for baseschema in baseschemas:
             btype = str(baseschema)
             try:
-                return self.select(self.registry_objects('etypes', btype), etype)
+                cls = self.select(self.registry_objects('etypes', btype), etype)
+                break
             except ObjectNotFound:
                 pass
-        # no entity class for any of the ancestors, fallback to the default one
-        return self.select(self.registry_objects('etypes', 'Any'), etype)
-
+        else:
+            # no entity class for any of the ancestors, fallback to the default
+            # one
+            cls = self.select(self.registry_objects('etypes', 'Any'), etype)
+        # add class itself to the list of implemented interfaces, as well as the
+        # Any entity class so we can select according to class using the
+        # `implements` selector
+        extend(cls, cls)
+        extend(cls, self.etype_class('Any'))
+        return cls
+    
     def render(self, registry, oid, req, **context):
         """select an object in a given registry and render it
 

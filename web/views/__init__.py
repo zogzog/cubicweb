@@ -1,7 +1,7 @@
 """Views/forms and actions for the CubicWeb web client
 
 :organization: Logilab
-:copyright: 2001-2008 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+:copyright: 2001-2009 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 """
 __docformat__ = "restructuredtext en"
@@ -67,30 +67,16 @@ def vid_from_rset(req, rset, schema):
             return 'outofcontext-search'
         return 'list'
     return 'table'
-
-def linksearch_match(req, rset):
-    """when searching an entity to create a relation, return True if entities in
-    the given rset may be used as relation end
-    """
-    try:
-        searchedtype = req.search_state[1][-1]
-    except IndexError:
-        return 0 # no searching for association
-    for etype in rset.column_types(0):
-        if etype != searchedtype:
-            return 0
-    return 1
     
 def linksearch_select_url(req, rset):
     """when searching an entity to create a relation, return an url to select
     entities in the given rset
     """
     req.add_js( ('cubicweb.ajax.js', 'cubicweb.edition.js') )
-    target, link_eid, r_type, searchedtype = req.search_state[1]
+    target, eid, r_type, searchedtype = req.search_state[1]
     if target == 'subject':
-        id_fmt = '%s:%s:%%s' % (link_eid, r_type)
+        id_fmt = '%s:%s:%%s' % (eid, r_type)
     else:
-        id_fmt = '%%s:%s:%s' % (r_type, link_eid)
+        id_fmt = '%%s:%s:%s' % (r_type, eid)
     triplets = '-'.join(id_fmt % row[0] for row in rset.rows)
-    return "javascript: selectForAssociation('%s', '%s');" % (triplets,
-                                                              link_eid)
+    return "javascript: selectForAssociation('%s', '%s');" % (triplets, eid)

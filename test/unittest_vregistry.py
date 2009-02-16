@@ -21,7 +21,8 @@ class VRegistryTC(TestCase):
     def test_load(self):
         self.vreg.load_file(join(BASE, 'web', 'views'), 'euser.py')
         self.vreg.load_file(join(BASE, 'web', 'views'), 'baseviews.py')
-        fpvc = [v for v in self.vreg.registry_objects('views', 'primary') if v.accepts[0] == 'EUser'][0]
+        fpvc = [v for v in self.vreg.registry_objects('views', 'primary')
+               i f v.__module__ == 'cubicweb.web.views.euser'][0]
         fpv = fpvc(None, None)
         # don't want a TypeError due to super call
         self.assertRaises(AttributeError, fpv.render_entity_attributes, None, None)

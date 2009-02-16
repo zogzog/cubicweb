@@ -3,7 +3,7 @@ functionality.
 
 
 :organization: Logilab
-:copyright: 2001-2008 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+:copyright: 2001-2009 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 """
 __docformat__ = "restructuredtext en"
@@ -17,8 +17,8 @@ from logilab.mtconverter import guess_encoding
 from cubicweb import urlquote # XXX should use view.url_quote method
 from cubicweb.interfaces import IEmbedable
 from cubicweb.common.uilib import soup2xhtml
-from cubicweb.common.selectors import (one_line_rset, score_entity_selector,
-                                    match_search_state, implement_interface)
+from cubicweb.common.selectors import (one_line_rset, score_entity,
+                                       match_search_state, implements)
 from cubicweb.common.view import NOINDEX, NOFOLLOW
 from cubicweb.web.controller import Controller
 from cubicweb.web.action import Action
@@ -75,30 +75,28 @@ class EmbedController(Controller):
         return self.vreg.main_template(req, self.template, body=body)
 
 
+def entity_has_embedable_url(entity):
+    """return 1 if the entity provides an allowed embedable url"""
+    url = entity.embeded_url()
+    if not url or not url.strip():
+        return 0
+    allowed = entity.config['embed-allowed']
+    if allowed is None or not allowed.match(url):
+        return 0
+    return 1
+
+
 class EmbedAction(Action):
     """display an 'embed' link on entity implementing `embeded_url` method
     if the returned url match embeding configuration
     """
     id = 'embed'
-    controller = 'embed'
-    __selectors__ = (one_line_rset, match_search_state,
-                     implement_interface, score_entity_selector)
-    accepts_interfaces = (IEmbedable,)
+    __selectors__ = (one_line_rset, match_search_state('normal'),
+                     implements(IEmbedable),
+                     score_entity(entity_has_embedable_url))
     
     title = _('embed')
-        
-    @classmethod
-    def score_entity(cls, entity):
-        """return a score telling how well I can display the given 
-        entity instance (required by the value_selector)
-        """
-        url = entity.embeded_url()
-        if not url or not url.strip():
-            return 0
-        allowed = cls.config['embed-allowed']
-        if allowed is None or not allowed.match(url):
-            return 0
-        return 1
+    controller = 'embed'
     
     def url(self, row=0):
         entity = self.rset.get_entity(row, 0)
@@ -132,6 +130,7 @@ class replace_href:
                 url = '%s?custom_css=%s' % (url, self.custom_css)
         return '<a href="%s"' % url
 
+
 class absolutize_links:
     def __init__(self, embedded_url, tag, custom_css=None):
         self.embedded_url = embedded_url
@@ -152,7 +151,8 @@ def prefix_links(body, prefix, embedded_url, custom_css=None):
     for rgx, repl in filters:
         body = rgx.sub(repl, body)
     return body
-    
+
+
 def embed_external_page(url, prefix, headers=None, custom_css=None):
     req = Request(url, headers=(headers or {}))
     content = urlopen(req).read()

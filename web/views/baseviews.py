@@ -29,7 +29,7 @@ from cubicweb.common.uilib import (cut, printable_value,  UnicodeCSVWriter,
                                    ajax_replace_url, rql_for_eid, simple_sgml_tag)
 from cubicweb.common.view import EntityView, AnyRsetView, EmptyRsetView
 from cubicweb.web.httpcache import MaxAgeHTTPCacheManager
-from cubicweb.web.views import vid_from_rset, linksearch_select_url, linksearch_match
+from cubicweb.web.views import vid_from_rset, linksearch_select_url
 
 _ = unicode
 
@@ -826,7 +826,7 @@ class OutOfContextSearch(EntityView):
     def cell_call(self, row, col):
         entity = self.entity(row, col)
         erset = entity.as_rset()
-        if linksearch_match(self.req, erset):
+        if self.req.match_search_state(erset):
             self.w(u'<a href="%s" title="%s">%s</a>&nbsp;<a href="%s" title="%s">[...]</a>' % (
                 html_escape(linksearch_select_url(self.req, erset)),
                 self.req._('select this entity'),

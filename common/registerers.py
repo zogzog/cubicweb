@@ -5,7 +5,7 @@ A registerer is responsible to tell if an object should be registered according
 to the application's schema or to already registered object
 
 :organization: Logilab
-:copyright: 2006-2008 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+:copyright: 2006-2009 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 """
 __docformat__ = "restructuredtext en"
@@ -84,13 +84,14 @@ class accepts_registerer(priority_registerer):
         # remove it latter if no object is implementing accepted interfaces
         if _accepts_interfaces(self.vobject):
             return self.vobject
-        if not 'Any' in self.vobject.accepts:
-            for ertype in self.vobject.accepts:
-                if ertype in self.schema:
-                    break
-            else:
-                self.skip()
-                return None
+# XXX no more .accepts attribute    
+#         if not 'Any' in self.vobject.accepts:
+#             for ertype in self.vobject.accepts:
+#                 if ertype in self.schema:
+#                     break
+#             else:
+#                 self.skip()
+#                 return None
         for required in getattr(self.vobject, 'requires', ()):
             if required not in self.schema:
                 self.skip()

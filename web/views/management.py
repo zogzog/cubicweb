@@ -14,7 +14,7 @@ from logilab.common.decorators import cached
 from cubicweb.common.utils import UStringIO
 from cubicweb.common.view import AnyRsetView, StartupView, EntityView
 from cubicweb.common.uilib import html_traceback, rest_traceback
-from cubicweb.common.selectors import (yes, one_line_rset,
+from cubicweb.common.selectors import (yes, one_line_rset, match_user_groups,
                                        accept_rset, none_rset,
                                        chainfirst, chainall)
 from cubicweb.web import INTERNAL_FIELD_VALUE, eid_param, stdmsgs
@@ -293,7 +293,7 @@ def make_togglable_link(nodeid, label, cookiename):
 def css_class(someclass):
     return someclass and 'class="%s"' % someclass or ''
 
-class SystemEpropertiesForm(FormMixIn, StartupView):
+class SystemEPropertiesForm(FormMixIn, StartupView):
     controller = 'edit'
     id = 'systemepropertiesform'
     title = _('site configuration')
@@ -461,24 +461,23 @@ class SystemEpropertiesForm(FormMixIn, StartupView):
         w(u'<input type="hidden" name="%s" value="%s"/>' % (eid_param('edits-pkey', eid), ''))
 
 
-class EpropertiesForm(SystemEpropertiesForm):
+
+def is_user_prefs(cls, req, rset, row, col):
+    return req.user.eid == rset[row or 0 ][col or 0]
+
+class EPropertiesForm(SystemEPropertiesForm):
     id = 'epropertiesform'
-    title = _('preferences')
-    require_groups = ('users', 'managers') # we don't want guests to be able to come here
-    __selectors__ = chainfirst(none_rset,
-                               chainall(one_line_rset, accept_rset)),
+    __selectors__ = (
+        # we don't want guests to be able to come here
+        match_user_groups('users', 'managers'), 
+        chainfirst(none_rset),
+                   chainall(one_line_rset, is_user_prefs),
+                   chainall(one_line_rset, match_user_groups('managers'))
+        )
+        
     accepts = ('EUser',)
 
-    @classmethod
-    def accept_rset(cls, req, rset, row, col):
-        if row is None:
-            row = 0
-        score = super(EpropertiesForm, cls).accept_rset(req, rset, row, col)
-        # check current user is the rset user or he is in the managers group
-        if score and (req.user.eid == rset[row][col or 0]
-                      or req.user.matching_groups('managers')):
-            return score
-        return 0
+    title = _('preferences')
 
     @property
     def user(self):
@@ -493,7 +492,7 @@ class EpropertiesForm(SystemEpropertiesForm):
                                 'P for_user U, U eid %(x)s', {'x': self.user.eid})
 
     def form_row_hiddens(self, w, entity, key):
-        super(EpropertiesForm, self).form_row_hiddens(w, entity, key)
+        super(EPropertiesForm, self).form_row_hiddens(w, entity, key)
         # if user is in the managers group and the property is being created,
         # we have to set for_user explicitly
         if not entity.has_eid() and self.user.matching_groups('managers'):

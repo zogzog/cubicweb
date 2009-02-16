@@ -9,13 +9,26 @@ __docformat__ = "restructuredtext en"
 from logilab.mtconverter import html_escape
 
 from cubicweb import Unauthorized
+from cubicweb.common.selectors import implements
 from cubicweb.web.htmlwidgets import BoxWidget, BoxMenu, RawBoxItem
+from cubicweb.web.action import Action
 from cubicweb.web.box import UserRQLBoxTemplate
 from cubicweb.web.views.baseviews import PrimaryView
 
 
+class FollowAction(Action):
+    id = 'follow'
+    __selectors__ = (implements('Bookmark'),)
+
+    title = _('follow')
+    category = 'mainactions'
+    
+    def url(self):
+        return self.rset.get_entity(self.row or 0, self.col or 0).actual_url()
+
+
 class BookmarkPrimaryView(PrimaryView):
-    accepts = ('Bookmark',)
+    __selectors__ = (implements('Bookmark'),)
         
     def cell_call(self, row, col):
         """the primary view for bookmark entity"""

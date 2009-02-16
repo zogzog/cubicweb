@@ -1,7 +1,7 @@
 """Specific views for entities implementing IDownloadable
 
 :organization: Logilab
-:copyright: 2001-2008 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+:copyright: 2001-2009 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 """
 __docformat__ = "restructuredtext en"
@@ -10,8 +10,8 @@ from logilab.mtconverter import BINARY_ENCODINGS, TransformError, html_escape
 
 from cubicweb.interfaces import IDownloadable
 from cubicweb.common.mttransforms import ENGINE
-from cubicweb.common.selectors import (one_line_rset, score_entity_selector,
-                                       implement_interface, match_context_prop)
+from cubicweb.common.selectors import (one_line_rset, score_entity,
+                                       implements, match_context_prop)
 from cubicweb.web.box import EntityBoxTemplate
 from cubicweb.web.views import baseviews
 
@@ -35,8 +35,7 @@ def download_box(w, entity, title=None, label=None):
     
 class DownloadBox(EntityBoxTemplate):
     id = 'download_box'
-    __selectors__ = (one_line_rset, implement_interface, match_context_prop)
-    accepts_interfaces = (IDownloadable,)
+    __selectors__ = (one_line_rset, implements(IDownloadable), match_context_prop)
     order = 10
     def cell_call(self, row, col, title=None, label=None, **kwargs):
         entity = self.entity(row, col)
@@ -44,12 +43,11 @@ class DownloadBox(EntityBoxTemplate):
 
 
 class DownloadView(baseviews.EntityView):
-    """this view is replacing the deprecated 'download' controller and allow downloading
-    of entities providing the necessary interface
+    """this view is replacing the deprecated 'download' controller and allow
+    downloading of entities providing the necessary interface
     """
     id = 'download'
-    __selectors__ = (one_line_rset, implement_interface)
-    accepts_interfaces = (IDownloadable,)
+    __selectors__ = (one_line_rset, implements(IDownloadable))
 
     templatable = False
     content_type = 'application/octet-stream'
@@ -76,10 +74,9 @@ class DownloadView(baseviews.EntityView):
 class DownloadLinkView(baseviews.EntityView):
     """view displaying a link to download the file"""
     id = 'downloadlink'
+    __selectors__ = (implements(IDownloadable),)
     title = None # should not be listed in possible views
-    __selectors__ = (implement_interface,)
 
-    accepts_interfaces = (IDownloadable,)
     
     def cell_call(self, row, col, title=None, **kwargs):
         entity = self.entity(row, col)
@@ -89,9 +86,8 @@ class DownloadLinkView(baseviews.EntityView):
 
                                                                                 
 class IDownloadablePrimaryView(baseviews.PrimaryView):
-    __selectors__ = (implement_interface,)
+    __selectors__ = (implements(IDownloadable),)
     #skip_attrs = ('eid', 'data',) # XXX
-    accepts_interfaces = (IDownloadable,)
 
     def render_entity_title(self, entity):
         self.w(u'<h1>%s %s</h1>'
@@ -122,10 +118,7 @@ class IDownloadablePrimaryView(baseviews.PrimaryView):
 
 
 class IDownloadableLineView(baseviews.OneLineView):
-    __selectors__ = (implement_interface,)
-    # don't kick default oneline view
-    accepts_interfaces = (IDownloadable,)
-    
+    __selectors__ = (implements(IDownloadable),)
 
     def cell_call(self, row, col, title=None, **kwargs):
         """the secondary view is a link to download the file"""
@@ -137,11 +130,18 @@ class IDownloadableLineView(baseviews.OneLineView):
                (url, name, durl, self.req._('download')))
 
 
+def is_image(entity):
+    mt = entity.download_content_type()
+    if not (mt and mt.startswith('image/')):
+        return 0
+    return 1
+    
 class ImageView(baseviews.EntityView):
-    __selectors__ = (implement_interface, score_entity_selector)
     id = 'image'
+    __selectors__ = (implements(IDownloadable),
+                     score_entity(is_image))
+    
     title = _('image')
-    accepts_interfaces = (IDownloadable,)
     
     def call(self):
         rset = self.rset
@@ -149,13 +149,6 @@ class ImageView(baseviews.EntityView):
             self.w(u'<div class="efile">')
             self.wview(self.id, rset, row=i, col=0)
             self.w(u'</div>')
-
-    @classmethod
-    def score_entity(cls, entity):
-        mt = entity.download_content_type()
-        if not (mt and mt.startswith('image/')):
-            return 0
-        return 1
     
     def cell_call(self, row, col):
         entity = self.entity(row, col)

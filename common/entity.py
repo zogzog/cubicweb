@@ -10,6 +10,7 @@ from logilab.common import interface
 from logilab.common.compat import all
 from logilab.common.decorators import cached
 from logilab.mtconverter import TransformData, TransformError
+
 from rql.utils import rqlvar_maker
 
 from cubicweb import Unauthorized
