@@ -177,7 +177,7 @@ class HTMLHead(UStringIO):
             self.post_inlined_scripts.append(self.js_unload_code)
             self.pagedata_unload = True
 
-    def getvalue(self):
+    def getvalue(self, skiphead=False):
         """reimplement getvalue to provide a consistent (and somewhat browser
         optimzed cf. http://stevesouders.com/cuzillion) order in external
         resources declaration
@@ -209,7 +209,10 @@ class HTMLHead(UStringIO):
             w(u'<script type="text/javascript">\n')
             w(u'\n\n'.join(self.post_inlined_scripts))
             w(u'\n</script>\n')
-        return u'<head>\n%s</head>\n' % super(HTMLHead, self).getvalue()
+        header = super(HTMLHead, self).getvalue()
+        if skiphead:
+            return header
+        return u'<head>\n%s</head>\n' % header
         
 
 class HTMLStream(object):
