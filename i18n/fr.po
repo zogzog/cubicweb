@@ -1899,6 +1899,9 @@ msgstr "classe html"
 msgid "i18n_login_popup"
 msgstr "s'authentifier"
 
+msgid "i18n_register_user"
+msgstr "s'enregister"
+
 msgid "i18nprevnext_next"
 msgstr "suivant"
 
@@ -2114,6 +2117,9 @@ msgstr "s'identifier"
 
 msgid "login"
 msgstr "identifiant"
+
+msgid "login or email"
+msgstr "identifiant ou email"
 
 msgid "login_action"
 msgstr "identifiez vous"

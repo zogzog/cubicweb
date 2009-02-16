@@ -1899,6 +1899,9 @@ msgstr "clase html"
 msgid "i18n_login_popup"
 msgstr "identificarse"
 
+msgid "i18n_register_user"
+msgstr "registrarse"
+
 msgid "i18nprevnext_next"
 msgstr "siguiente"
 
