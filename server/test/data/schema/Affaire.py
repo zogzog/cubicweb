@@ -1,6 +1,6 @@
 from cubicweb.schema import format_constraint
 
-class Affaire(EntityType):
+class Affaire(WorkflowableEntityType):
     permissions = {
         'read':   ('managers', 
                    ERQLExpression('X owned_by U'), ERQLExpression('X concerne S?, S owned_by U')),
@@ -13,9 +13,6 @@ class Affaire(EntityType):
                  constraints=[SizeConstraint(16)])
     sujet = String(fulltextindexed=True,
                    constraints=[SizeConstraint(256)])
-    in_state = SubjectRelation('State', cardinality='1*',
-                               constraints=[RQLConstraint('O state_of ET, ET name "Affaire"')],
-                               description=_('account state'))
     descr_format = String(meta=True, internationalizable=True,
                                 default='text/rest', constraints=[format_constraint])
     descr = String(fulltextindexed=True,
@@ -23,8 +20,7 @@ class Affaire(EntityType):
 
     duration = Int()
     invoiced = Int()
-        
-    wf_info_for = ObjectRelation('TrInfo', cardinality='1*', composite='object')
+
     depends_on = SubjectRelation('Affaire')
     require_permission = SubjectRelation('EPermission')
     

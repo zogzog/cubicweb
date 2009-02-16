@@ -9,8 +9,9 @@ __docformat__ = "restructuredtext en"
 from cubicweb.schema import format_constraint
 
 
-class EUser(RestrictedEntityType):
+class EUser(WorkflowableEntityType):
     """define a CubicWeb user"""
+    meta = True # XXX backported from old times, shouldn't be there anymore
     permissions = {
         'read':   ('managers', 'users', ERQLExpression('X identity U')),
         'add':    ('managers',),
@@ -33,11 +34,6 @@ class EUser(RestrictedEntityType):
     in_group = SubjectRelation('EGroup', cardinality='+*',
                                constraints=[RQLConstraint('NOT O name "owners"')],
                                description=_('groups grant permissions to the user'))
-    in_state = SubjectRelation('State', cardinality='1*',
-                               # XXX automatize this
-                               constraints=[RQLConstraint('S is ET, O state_of ET')],
-                               description=_('account state'))
-    wf_info_for = ObjectRelation('TrInfo', cardinality='1*', composite='object')
 
 
 class EmailAddress(MetaEntityType):

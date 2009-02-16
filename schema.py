@@ -840,7 +840,34 @@ class RRQLExpression(RQLExpression):
         
 PyFileReader.context['RRQLExpression'] = RRQLExpression
 
-        
+# workflow extensions #########################################################
+
+class workflowable_definition(ybo.metadefinition):
+    """extends default EntityType's metaclass to add workflow relations
+    (i.e. in_state and wf_info_for).
+    This is the default metaclass for WorkflowableEntityType
+    """
+    def __new__(mcs, name, bases, classdict):
+        abstract = classdict.pop('abstract', False)
+        defclass = super(workflowable_definition, mcs).__new__(mcs, name, bases, classdict)
+        if not abstract:
+            existing_rels = set(rdef.name for rdef in defclass.__relations__)
+            if 'in_state' not in existing_rels and 'wf_info_for' not in existing_rels:
+                in_state = ybo.SubjectRelation('State', cardinality='1*',
+                                               # XXX automatize this
+                                               constraints=[RQLConstraint('S is ET, O state_of ET')],
+                                               description=_('account state'))
+                yams_add_relation(defclass.__relations__, in_state, 'in_state')
+                wf_info_for = ybo.ObjectRelation('TrInfo', cardinality='1*', composite='object')
+                yams_add_relation(defclass.__relations__, wf_info_for, 'wf_info_for')
+        return defclass
+
+class WorkflowableEntityType(ybo.EntityType):
+    __metaclass__ = workflowable_definition
+    abstract = True
+    
+PyFileReader.context['WorkflowableEntityType'] = WorkflowableEntityType
+
 # schema loading ##############################################################
 
 class CubicWebRelationFileReader(RelationFileReader):
