@@ -138,10 +138,8 @@ class State(MetaEntityType):
     """
     name = String(required=True, indexed=True, internationalizable=True,
                   maxsize=256)
-    description_format = String(meta=True, internationalizable=True, maxsize=50,
-                                default='text/rest', constraints=[format_constraint])
-    description = String(fulltextindexed=True,
-                         description=_('semantic description of this state'))
+    description = RichString(fulltextindexed=True, default='text/rest',
+                             description=_('semantic description of this state'))
     
     state_of = SubjectRelation('EEType', cardinality='+*',
                     description=_('entity types which may use this state'),

@@ -14,10 +14,8 @@ class EEType(MetaEntityType):
     """define an entity type, used to build the application schema"""
     name = String(required=True, indexed=True, internationalizable=True,
                   unique=True, maxsize=64)
-    description_format = String(meta=True, internationalizable=True, maxsize=50,
-                                default='text/plain', constraints=[format_constraint])
-    description = String(internationalizable=True,
-                         description=_('semantic description of this entity type'))
+    description = RichString(internationalizable=True, 
+                             description=_('semantic description of this entity type'))
     meta = Boolean(description=_('is it an application entity type or not ?'))
     # necessary to filter using RQL
     final = Boolean(description=_('automatic'))
