@@ -543,3 +543,65 @@ def chainfirst(*selectors):
         return 0
     return selector
 
+
+# selector base classes and operations ########################################
+class Selector(object):
+    """base class for selector classes providing implementation
+    for operators ``&`` and ``|``
+
+    This class is only here to give access to binary operators, the
+    selector logic itself should be implemented in the __call__ method
+    """
+    def __init__(self, *selectors):
+        self.selectors = self.merge_selectors(selectors)
+
+    @classmethod
+    def merge_selectors(cls, selectors):
+        """merge selectors when possible :
+
+        AndSelector(AndSelector(sel1, sel2), AndSelector(sel3, sel4))
+        ==> AndSelector(sel1, sel2, sel3, sel4)
+        """
+        merged_selectors = []
+        for selector in selectors:
+            if isinstance(selector, cls):
+                merged_selectors += selector.selectors
+            else:
+                merged_selectors.append(selector)
+        return merged_selectors
+        
+    def __and__(self, other):
+        return AndSelector(self, other)
+
+    def __or__(self, other):
+        return OrSelector(self, other)
+
+    __ror__ = __or__    # for cases like (function | selector)
+    __rand__ = __and__  # for cases like (function & selector)
+    # XXX (function | function) or (function & function) not managed yet
+
+    def __call__(self, cls, *args, **kwargs):
+        return NotImplementedError("selector %s must implement its logic "
+                                   "in its __call__ method" % self.__class__.__name__)
+
+
+class AndSelector(Selector):
+    """and-chained selectors (formerly known as chainall)"""
+    def __call__(self, cls, *args, **kwargs):
+        score = 0
+        for selector in self.selectors:
+            partscore = selector(cls, *args, **kwargs)
+            if not partscore:
+                return 0
+            score += partscore
+        return score
+
+
+class OrSelector(Selector):
+    """or-chained selectors (formerly known as chainfirst)"""
+    def __call__(self, cls, *args, **kwargs):
+        for selector in self.selectors:
+            partscore = selector(cls, *args, **kwargs)
+            if partscore:
+                return partscore
+        return 0
