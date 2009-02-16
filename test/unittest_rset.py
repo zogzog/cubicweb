@@ -227,7 +227,8 @@ class ResultSetTC(EnvBasedTC):
         self.assertEquals(e.col, 0)
         self.assertEquals(e['title'], 'zou')
         self.assertRaises(KeyError, e.__getitem__, 'path')
-        self.assertEquals(e.view('text'), 'zou')
+        with traced_selection():
+            self.assertEquals(e.view('text'), 'zou')
         self.assertEquals(pprelcachedict(e._related_cache), [])
         
         e = rset.get_entity(0, 1)

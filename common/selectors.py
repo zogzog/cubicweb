@@ -70,7 +70,8 @@ def lltrace(selector):
             oid = cls.id
         ret = selector(cls, *args, **kwargs)
         if TRACED_OIDS == 'all' or oid in TRACED_OIDS:
-            SELECTOR_LOGGER.warning('selector %s returned %s for %s', selname, ret, cls)
+            #SELECTOR_LOGGER.warning('selector %s returned %s for %s', selname, ret, cls)
+            print 'selector %s returned %s for %s' % (selname, ret, cls)
         return ret
     traced.__name__ = selector.__name__
     return traced
@@ -213,9 +214,10 @@ multitype_selector = deprecated_function(two_etypes_rset)
 
 
 class match_search_state(Selector):
-    def __init__(self, *expected_states):
-        self.expected_states = expected_states
+    def __init__(self, *expected):
+        self.expected = expected
         
+    @lltrace
     def __call__(self, cls, req, rset, row=None, col=0, **kwargs):
         """checks if the current request search state is in one of the expected states
         the wrapped class
@@ -224,11 +226,39 @@ class match_search_state(Selector):
         object to create a relation with another)
         """
         try:
-            if not req.search_state[0] in cls.search_states:
+            if not req.search_state[0] in self.expected:
                 return 0
         except AttributeError:
             return 1 # class doesn't care about search state, accept it
         return 1
+
+
+class match_form_params(match_search_state):
+    """check if parameters specified as initializer arguments are specified
+    in request form parameters
+    """
+    @lltrace
+    def __call__(self, cls, req, *args, **kwargs):
+        score = 0
+        for param in self.expected:
+            val = req.form.get(param)
+            if not val:
+                return 0
+            score += 1
+        return len(self.expected)
+
+
+class match_kwargs(match_search_state):
+    """check if parameters specified as initializer arguments are specified
+    in named parameters
+    """
+    @lltrace
+    def __call__(self, cls, req, *args, **kwargs):
+        for arg in self.expected:
+            if not arg in kwargs:
+                return 0
+        return len(self.expected)
+
 
 @lltrace
 def anonymous_user(cls, req, *args, **kwargs):
@@ -243,32 +273,6 @@ def authenticated_user(cls, req, *args, **kwargs):
     """accept if user is authenticated"""
     return not anonymous_user(cls, req, *args, **kwargs)
 not_anonymous_selector = deprecated_function(authenticated_user)
-
-@lltrace
-def match_form_params(cls, req, *args, **kwargs):
-    """check if parameters specified by the form_params attribute on
-    the wrapped class are specified in request form parameters
-    """
-    score = 0
-    for param in cls.form_params:
-        val = req.form.get(param)
-        if not val:
-            return 0
-        score += 1
-    return score + 1
-req_form_params_selector = deprecated_function(match_form_params)
-
-@lltrace
-def match_kwargs(cls, req, *args, **kwargs):
-    """check if arguments specified by the expected_kwargs attribute on
-    the wrapped class are specified in given named parameters
-    """
-    values = []
-    for arg in cls.expected_kwargs:
-        if not arg in kwargs:
-            return 0
-    return 1
-kwargs_selector = deprecated_function(match_kwargs)
 
 # abstract selectors ##########################################################
 
@@ -364,17 +368,37 @@ class implements(EClassSelector):
             if implements_iface(eclass, iface):
                 score += 1
                 if getattr(iface, '__registry__', None) == 'etypes':
+                    score += 1
                     # adjust score if the interface is an entity class
                     if iface is eclass:
-                        score += len(eclass.e_schema.ancestors()) + 1
+                        score += len(eclass.e_schema.ancestors())
+                        print 'is majoration', len(eclass.e_schema.ancestors()) 
                     else:
                         parents = [e.type for e in eclass.e_schema.ancestors()]
                         for index, etype in enumerate(reversed(parents)):
                             basecls = eclass.vreg.etype_class(etype)
                             if iface is basecls:
-                                score += index + 1
+                                score += index
+                                print 'etype majoration', index
                                 break
         return score
+
+
+class specified_etype_implements(implements):
+    """return the "interface score" for class associated to 'etype' (expected in
+    request form or arguments)
+    """
+    
+    @lltrace
+    def __call__(cls, req, *args, **kwargs):
+        try:
+            etype = req.form['etype']
+        except KeyError:
+            try:
+                etype = kwargs['etype']
+            except KeyError:
+                return 0
+        return self.score_class(cls.vreg.etype_class(etype), req)
 
 
 class relation_possible(EClassSelector):
@@ -490,8 +514,8 @@ class has_editable_relation(EntitySelector):
 
 
 class may_add_relation(EntitySelector):
-    """initializer a relation type and optional role (default to 'subject') as
-    argument
+    """initializer takes a relation type and optional role (default to
+    'subject') as argument
 
     if row is specified check the relation may be added to the entity at the
     given row/col (if row specified) or to every entities in the given col (if
@@ -565,7 +589,9 @@ class has_permission(EntitySelector):
 
 
 class has_add_permission(EClassSelector):
-    
+    """return 1 if the user may add some entity of the types found in the
+    result set (0 else)
+    """
     def score_class(self, eclass, req):
         eschema = eclass.e_schema
         if not (eschema.is_final() or eschema.is_subobject(strict=True)) \
@@ -575,23 +601,18 @@ class has_add_permission(EClassSelector):
 
         
 class score_entity(EntitySelector):
+    """initializer takes a function as argument (which is expected to take an
+    entity as argument)
+
+    return the score returned by the function on the entity at the given row/col
+    (if row specified) or the sum of the score for every entities in the given
+    col (if row is not specified). Return 0 at the first entity scoring to zero.
+    """
     def __init__(self, scorefunc):
         self.score_entity = scorefunc
 
+    
 # XXX not so basic selectors ######################################################
-
-@lltrace
-def accept_etype(cls, req, *args, **kwargs):
-    """check etype presence in request form *and* accepts conformance"""
-    try:
-        etype = req.form['etype']
-    except KeyError:
-        try:
-            etype = kwargs['etype']
-        except KeyError:
-            return 0
-    return implements(*cls.accepts).score_class(cls.vreg.etype_class(etype), req)
-etype_form_selector = deprecated_function(accept_etype)
 
 @lltrace
 def _rql_condition(cls, req, rset, row=None, col=0, **kwargs):
@@ -697,14 +718,20 @@ def implement_interface(cls, req, rset, row=None, col=0, **kwargs):
     return implements(*cls.accepts_interfaces)(cls, req, rset, row, col)
 _interface_selector = deprecated_function(implement_interface)
 interface_selector = deprecated_function(implement_interface)
-implement_interface = deprecated_function(implement_interface)
+implement_interface = deprecated_function(implement_interface, 'use implements')
+
+def accept_etype(cls, req, *args, **kwargs):
+    """check etype presence in request form *and* accepts conformance"""
+    return specified_etype_implements(*cls.accepts)(cls, req, *args)
+etype_form_selector = deprecated_function(accept_etype)
+accept_etype = deprecated_function(accept_etype, 'use specified_etype_implements')
 
 def searchstate_selector(cls, req, rset, row=None, col=0, **kwargs):
     return match_search_state(cls.search_states)(cls, req, rset, row, col)
 searchstate_selector = deprecated_function(searchstate_selector)
 
 def match_user_group(cls, req, rset=None, row=None, col=0, **kwargs):
-    return match_user_groups(cls.require_groups)(cls, req, rset, row, col, **kwargs)
+    return match_user_groups(*cls.require_groups)(cls, req, rset, row, col, **kwargs)
 in_group_selector = deprecated_function(match_user_group)
 match_user_group = deprecated_function(match_user_group)
 
@@ -753,3 +780,6 @@ searchstate_accept_one_but_etype = chainall(searchstate_accept_one, but_etype,
                                             name='searchstate_accept_one_but_etype')
 searchstate_accept_one_but_etype_selector = deprecated_function(
     searchstate_accept_one_but_etype)
+
+#req_form_params_selector = deprecated_function(match_form_params) # form_params
+#kwargs_selector = deprecated_function(match_kwargs) # expected_kwargs

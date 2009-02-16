@@ -1,7 +1,7 @@
 """some hooks and views to handle notification on entity's changes
 
 :organization: Logilab
-:copyright: 2001-2008 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+:copyright: 2001-2009 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 """
 __docformat__ = "restructuredtext en"
@@ -21,7 +21,7 @@ from cubicweb import RegistryException
 from cubicweb.common.view import EntityView
 from cubicweb.common.appobject import Component
 from cubicweb.common.registerers import accepts_registerer
-from cubicweb.common.selectors import accept
+from cubicweb.common.selectors import implements
 from cubicweb.common.mail import format_mail
 
 from cubicweb.server.pool import PreCommitOperation
@@ -38,8 +38,7 @@ class RecipientsFinder(Component):
     """
     id = 'recipients_finder'
     __registerer__ = accepts_registerer
-    __selectors__ = (accept,)
-    accepts = ('Any',)
+    __selectors__ = (implements('Any'),)
     user_rql = ('Any X,E,A WHERE X is EUser, X in_state S, S name "activated",'
                 'X primary_email E, E address A')
     
@@ -299,7 +298,7 @@ class NormalizedTextView(ContentAddedMixIn, NotificationView):
 
 class CardAddedView(NormalizedTextView):
     """get notified from new cards"""
-    accepts = ('Card',)
+    __selectors__ = (implements('Card'),)
     content_attr = 'synopsis'
     
 

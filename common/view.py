@@ -8,17 +8,40 @@
 __docformat__ = "restructuredtext en"
 
 from cStringIO import StringIO
+from warnings import warn
 
 from logilab.mtconverter import html_escape
 
 from cubicweb import NotAnEntity, NoSelectableObject
 from cubicweb.common.registerers import accepts_registerer, priority_registerer
-from cubicweb.common.selectors import (chainfirst, match_user_group, accept,
-                                       nonempty_rset, empty_rset, none_rset)
+from cubicweb.common.selectors import (yes, match_user_groups, implements,
+                                       nonempty_rset, none_rset)
 from cubicweb.common.appobject import AppRsetObject, ComponentMixIn
 from cubicweb.common.utils import UStringIO, HTMLStream
 
 _ = unicode
+
+
+def require_group_compat(registered):
+    def plug_selector(cls, vreg):
+        cls = registered(cls, vreg)
+        if getattr(cls, 'require_groups', None):
+            warn('use "use match_user_groups(group1, group2)" instead of using require_groups',
+                 DeprecationWarning)
+            cls.__selectors__ += (match_user_groups(cls.require_groups),)
+        return cls
+    return classmethod(plug_selector)
+
+def accepts_compat(registered):
+    def plug_selector(cls, vreg):
+        cls = registered(cls, vreg)
+        if getattr(cls, 'accepts', None):
+            warn('use "use match_user_groups(group1, group2)" instead of using require_groups',
+                 DeprecationWarning)
+            cls.__selectors__ += (implements(*cls.accepts),)
+        return cls
+    return classmethod(plug_selector)
+
 
 # robots control
 NOINDEX = u'<meta name="ROBOTS" content="NOINDEX" />'
@@ -302,9 +325,11 @@ class EntityView(View):
     """base class for views applying on an entity (i.e. uniform result set)
     """
     __registerer__ = accepts_registerer
-    __selectors__ = (accept,)
-    category = 'entityview'
+    __selectors__ = (implements('Any'),)
+    registered = accepts_compat(View.registered.im_func)
 
+    category = 'entityview'
+    
     def field(self, label, value, row=True, show_label=True, w=None, tr=True):
         """ read-only field """
         if w is None:
@@ -325,10 +350,11 @@ class StartupView(View):
     to be displayed (so they can always be displayed !)
     """
     __registerer__ = priority_registerer
-    __selectors__ = (match_user_group, none_rset)
-    require_groups = ()
+    __selectors__ = (none_rset,)
+    registered = require_group_compat(View.registered.im_func)
+    
     category = 'startupview'
-
+    
     def url(self):
         """return the url associated with this view. We can omit rql here"""
         return self.build_url('view', vid=self.id)
@@ -347,7 +373,7 @@ class EntityStartupView(EntityView):
     result set (usually a default rql is provided by the view class)
     """
     __registerer__ = accepts_registerer
-    __selectors__ = (chainfirst(none_rset, accept),)
+    __selectors__ = ((none_rset | implements('Any')),)
 
     default_rql = None
 
@@ -404,7 +430,7 @@ class AnyRsetView(View):
             labels.append(label)
         return labels
 
-
+    
 # concrete template base classes ##############################################
 
 class Template(View):
@@ -413,9 +439,9 @@ class Template(View):
     """
     __registry__ = 'templates'
     __registerer__ = priority_registerer
-    __selectors__ = (match_user_group,)
+    __selectors__ = (yes,)
 
-    require_groups = ()
+    registered = require_group_compat(View.registered.im_func)
 
     def template(self, oid, **kwargs):
         """shortcut to self.registry.render method on the templates registry"""
