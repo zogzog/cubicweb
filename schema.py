@@ -102,7 +102,6 @@ def _add_relation(relations, rdef, name=None, insertidx=None):
                                     constraints=rdef.format_constraints)
         yams_add_relation(relations, format_attrdef, name+'_format', insertidx)
     yams_add_relation(relations, rdef, name, insertidx)
-
     
 def display_name(req, key, form=''):
     """return a internationalized string for the key (schema entity or relation
@@ -913,6 +912,7 @@ class CubicWebSchemaLoader(BootstrapSchemaLoader):
     def _load_definition_files(self, cubes):
         for filepath in (self.include_schema_files('bootstrap')
                          + self.include_schema_files('base')
+                         + self.include_schema_files('workflow')
                          + self.include_schema_files('Bookmark')
                          + self.include_schema_files('Card')):
             self.info('loading %s', filepath)
