@@ -83,7 +83,7 @@ class EntityAction(Action):
     # XXX deprecate
     
 
-class LinkToEntityAction(EntityAction):
+class LinkToEntityAction(Action):
     """base class for actions consisting to create a new object
     with an initial relation set to an entity.
     Additionaly to EntityAction behaviour, this class is parametrized
@@ -92,11 +92,12 @@ class LinkToEntityAction(EntityAction):
     """
     def my_selector(cls, req, rset, row=None, col=0, **kwargs):
         return chainall(match_search_state('normal'),
-                        one_line_rset, accept,
+                        one_line_rset, 
                         relation_possible(cls.rtype, role(cls), cls.etype,
                                           permission='add'),
                         may_add_relation(cls.rtype, role(cls)))
-    __selectors__ = my_selector,
+    __selectors__ = (my_selector,)
+    registered = accepts_compat(Action.registered.im_func)
     
     category = 'addrelated'
                 

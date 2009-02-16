@@ -8,7 +8,6 @@
 __docformat__ = "restructuredtext en"
 
 from cStringIO import StringIO
-from warnings import warn
 
 from logilab.mtconverter import html_escape
 
@@ -297,18 +296,6 @@ class View(AppRsetObject):
     def create_url(self, etype, **kwargs):
         """ return the url of the entity creation form for a given entity type"""
         return self.req.build_url('add/%s'%etype, **kwargs)
-
-
-# concrete views base classes #################################################
-
-class EntityView(View):
-    """base class for views applying on an entity (i.e. uniform result set)
-    """
-    __registerer__ = accepts_registerer
-    __selectors__ = (implements('Any'),)
-    registered = accepts_compat(View.registered.im_func)
-
-    category = 'entityview'
     
     def field(self, label, value, row=True, show_label=True, w=None, tr=True):
         """ read-only field """
@@ -323,6 +310,19 @@ class EntityView(View):
         w(u'<div class="field">%s</div>' % value)
         if row:
             w(u'</div>')
+
+
+# concrete views base classes #################################################
+
+class EntityView(View):
+    """base class for views applying on an entity (i.e. uniform result set)
+    """
+    # XXX deprecate
+    __registerer__ = accepts_registerer
+    __selectors__ = (implements('Any'),)
+    registered = accepts_compat(View.registered.im_func)
+
+    category = 'entityview'
 
 
 class StartupView(View):

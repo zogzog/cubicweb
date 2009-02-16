@@ -1,7 +1,7 @@
 """abstract component class and base components definition for CubicWeb web client
 
 :organization: Logilab
-:copyright: 2001-2008 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+:copyright: 2001-2009 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 """
 __docformat__ = "restructuredtext en"
@@ -11,9 +11,9 @@ from cubicweb.common.utils import merge_dicts
 from cubicweb.common.view import VComponent, SingletonVComponent
 from cubicweb.common.registerers import action_registerer
 from cubicweb.common.selectors import (paginated_rset, one_line_rset,
-                                       rql_condition, accept, primary_view,
-                                       match_context_prop, has_relation,
-                                       etype_rtype_selector)
+                                       primary_view, match_context_prop,
+                                       condition_compat)
+#rql_condition, accept, has_relation,  etype_rtype_selector
 from cubicweb.common.uilib import html_escape
 
 _ = unicode
@@ -33,9 +33,12 @@ class EntityVComponent(VComponent):
     __registry__ = 'contentnavigation'
     __registerer__ = action_registerer    
     __selectors__ = (one_line_rset, primary_view,
-                     match_context_prop, etype_rtype_selector,
-                     has_relation, accept,
-                     rql_condition)
+                     match_context_prop,
+#                     etype_rtype_selector,
+#                     has_relation, accept,
+#                     rql_condition)
+                     )
+    registered = accepts_compat(condition_compat(VComponent.registered.im_func))
     
     property_defs = {
         _('visible'):  dict(type='Boolean', default=True,
@@ -51,9 +54,7 @@ class EntityVComponent(VComponent):
                             help=_('html class of the component')),
     }
     
-    accepts = ('Any',)
     context = 'navcontentbottom' # 'footer' | 'header' | 'incontext'
-    condition = None
     
     def call(self, view):
         return self.cell_call(0, 0, view)
@@ -152,8 +153,10 @@ class NavigationComponent(VComponent):
 class RelatedObjectsVComponent(EntityVComponent):
     """a section to display some related entities"""
     __selectors__ = (one_line_rset, primary_view,
-                     etype_rtype_selector, has_relation,
-                     match_context_prop, accept)
+                     match_context_prop, 
+#                     etype_rtype_selector, has_relation,
+#                     accept)
+                     )
     vid = 'list'
 
     def rql(self):

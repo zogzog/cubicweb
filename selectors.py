@@ -324,7 +324,7 @@ class EntitySelector(Selector):
                 if rowvalue[col] is None: # outer join
                     continue
                 try:
-                    escore = self.score_entity(rset.get_entity(row, col))
+                    escore = self.score(req, rset, row, col))
                 except NotAnEntity:
                     return 0
                 if not escore:
@@ -333,12 +333,15 @@ class EntitySelector(Selector):
         else:
             etype = rset.description[row][col]
             if etype is not None: # outer join
-                try:
-                    score = self.score_entity(rset.get_entity(row, col))
-                except NotAnEntity:
-                    return 0
+                score = self.score(req, rset, row, col)
         return score and (score + 1)
 
+    def score(self, req, rset, row, col):
+        try:
+            return self.score_entity(rset.get_entity(row, col))
+        except NotAnEntity:
+            return 0
+                                 
     def score_entity(self, entity):
         raise NotImplementedError()
 
@@ -612,26 +615,23 @@ class score_entity(EntitySelector):
     def __init__(self, scorefunc):
         self.score_entity = scorefunc
 
-    
-# XXX not so basic selectors ######################################################
 
-@lltrace
-def _rql_condition(cls, req, rset, row=None, col=0, **kwargs):
-    """accept single entity result set if the entity match an rql condition
-    """
-    if cls.condition:
-        eid = rset[row or 0][col or 0]
+class rql_condition(EntitySelector):
+    def __init__(self, expression):
         if 'U' in frozenset(split_expression(cls.condition)):
-            rql = 'Any X WHERE X eid %%(x)s, U eid %%(u)s, %s' % cls.condition
+            rql = 'Any X WHERE X eid %%(x)s, U eid %%(u)s, %s' % expression
         else:
-            rql = 'Any X WHERE X eid %%(x)s, %s' % cls.condition
+            rql = 'Any X WHERE X eid %%(x)s, %s' % expression
+        self.rql = rql
+        
+    def score(self, req, rset, row, col):
         try:
-            return len(req.execute(rql, {'x': eid, 'u': req.user.eid}, 'x'))
+            return len(req.execute(self.rql, {'x': eid, 'u': req.user.eid}, 'x'))
         except Unauthorized:
             return 0
         
-    return 1
-_rqlcondition_selector = deprecated_function(_rql_condition)
+        
+# XXX not so basic selectors ######################################################
         
 @lltrace
 def but_etype(cls, req, rset, row=None, col=0, **kwargs):
@@ -757,16 +757,25 @@ accept = chainall(non_final_entity(), accept_rset, name='accept')
 accept_selector = deprecated_function(accept)
 accept = deprecated_function(accept, 'use implements selector')
 
-# compound selectors ##########################################################
-
 accept_one = deprecated_function(chainall(one_line_rset, accept,
                                           name='accept_one'))
 accept_one_selector = deprecated_function(accept_one)
 
-rql_condition = chainall(non_final_entity(), one_line_rset, _rql_condition,
-                         name='rql_condition')
-rqlcondition_selector = deprecated_function(rql_condition)
 
+@lltrace
+def _rql_condition(cls, req, rset, row=None, col=0, **kwargs):
+    if cls.condition:
+        return rql_condition(cls.condition)(cls, req, rset, row, col)
+    return 1
+_rqlcondition_selector = deprecated_function(_rql_condition)
+
+rqlcondition_selector = deprecated_function(chainall(non_final_entity(), one_line_rset, _rql_condition,
+                         name='rql_condition'))
+
+#req_form_params_selector = deprecated_function(match_form_params) # form_params
+#kwargs_selector = deprecated_function(match_kwargs) # expected_kwargs
+
+# compound selectors ##########################################################
 
 searchstate_accept = chainall(nonempty_rset, match_search_state, accept,
                               name='searchstate_accept')
@@ -781,9 +790,6 @@ searchstate_accept_one_but_etype = chainall(searchstate_accept_one, but_etype,
                                             name='searchstate_accept_one_but_etype')
 searchstate_accept_one_but_etype_selector = deprecated_function(
     searchstate_accept_one_but_etype)
-
-#req_form_params_selector = deprecated_function(match_form_params) # form_params
-#kwargs_selector = deprecated_function(match_kwargs) # expected_kwargs
 
 
 def require_group_compat(registered):
@@ -803,5 +809,15 @@ def accepts_compat(registered):
             warn('use "use match_user_groups(group1, group2)" instead of using require_groups',
                  DeprecationWarning)
             cls.__selectors__ += (implements(*cls.accepts),)
+        return cls
+    return classmethod(plug_selector)
+
+def condition_compat(registered):
+    def plug_selector(cls, vreg):
+        cls = registered(cls, vreg)
+        if getattr(cls, 'condition', None):
+            warn('use "use rql_condition(expression)" instead of using condition',
+                 DeprecationWarning)
+            cls.__selectors__ += (rql_condition(cls.condition),)
         return cls
     return classmethod(plug_selector)

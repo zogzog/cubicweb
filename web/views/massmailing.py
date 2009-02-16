@@ -1,7 +1,7 @@
 """Mass mailing form views
 
 :organization: Logilab
-:copyright: 2007-2008 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+:copyright: 2007-2009 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 """
 
@@ -12,11 +12,11 @@ from logilab.mtconverter import html_escape
 from cubicweb.interfaces import IEmailable
 from cubicweb.selectors import implements, match_user_groups
 from cubicweb.common.view import EntityView
-from cubicweb.web.action import EntityAction
+from cubicweb.web.action import Action
 from cubicweb.web import stdmsgs
 
 
-class SendEmailAction(EntityAction):
+class SendEmailAction(Action):
     category = 'mainactions'
     # XXX should check email is set as well
     __selectors__ = (implements(IEmailable), match_user_groups('managers', 'users'))

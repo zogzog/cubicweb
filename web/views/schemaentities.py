@@ -111,8 +111,10 @@ class EETypeOneLineView(baseviews.OneLineView):
 
 from cubicweb.web.action import EntityAction
 
-class ViewWorkflowAction(EntityAction):
+class ViewWorkflowAction(Action):
     id = 'workflow'
+    __selectors__ = (implements('EEType'), )
+    
     category = 'mainactions'
     title = _('view workflow')
     accepts = ('EEType',)
