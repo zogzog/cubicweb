@@ -1816,6 +1816,9 @@ msgstr ""
 msgid "i18n_login_popup"
 msgstr "login"
 
+msgid "i18n_register_user"
+msgstr "register"
+
 msgid "i18nprevnext_next"
 msgstr "next"
 
@@ -2019,6 +2022,9 @@ msgid "log in"
 msgstr ""
 
 msgid "login"
+msgstr ""
+
+msgid "login or email" 
 msgstr ""
 
 msgid "login_action"
