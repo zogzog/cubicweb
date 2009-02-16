@@ -10,7 +10,7 @@ import warnings
 import re
 from logging import getLogger
 
-from logilab.common.decorators import cached, clear_cache
+from logilab.common.decorators import cached, clear_cache, monkeypatch
 from logilab.common.compat import any
 
 from yams import BadSchemaDefinition, buildobjs as ybo
@@ -68,6 +68,42 @@ def _actual_types(self, schema, etype):
     return (etype,)
 ybo.RelationDefinition._actual_types = _actual_types
 
+
+## cubicweb provides a RichString class for convenience
+class RichString(ybo.String):
+    """Convenience RichString attribute type
+    The follwing declaration::
+      
+      class Card(EntityType):
+          content = RichString(fulltextindexed=True, default_format='text/rest')
+          
+    is equivalent to::
+      
+      class Card(EntityType):
+          content_format = String(meta=True, internationalizable=True,
+                                 default='text/rest', constraints=[format_constraint])
+          content  = String(fulltextindexed=True)
+    """
+    def __init__(self, default_format='text/plain', format_constraints=None, **kwargs):
+        self.default_format = default_format
+        self.format_constraints = format_constraints or [format_constraint]
+        super(RichString, self).__init__(**kwargs)
+
+PyFileReader.context['RichString'] = RichString
+
+## need to monkeypatch yams' _add_relation function to handle RichString
+yams_add_relation = ybo._add_relation
+@monkeypatch(ybo)
+def _add_relation(relations, rdef, name=None, insertidx=None):
+    if isinstance(rdef, RichString):
+        default_format = rdef.default_format
+        format_attrdef = ybo.String(meta=True, internationalizable=True,
+                                    default=rdef.default_format, maxsize=50,
+                                    constraints=rdef.format_constraints)
+        yams_add_relation(relations, format_attrdef, name+'_format', insertidx)
+    yams_add_relation(relations, rdef, name, insertidx)
+
+    
 def display_name(req, key, form=''):
     """return a internationalized string for the key (schema entity or relation
     name) in a given form

@@ -134,7 +134,6 @@ class SQLSchemaReaderClassTest(TestCase):
         self.assertListEquals([basename(f) for f in schema_files], ['Bookmark.py'])
 
     def test_knownValues_load_schema(self):
-        """read an url and return a Schema instance"""
         schema = loader.load(config)
         self.assert_(isinstance(schema, CubicWebSchema))
         self.assertEquals(schema.name, 'data')
