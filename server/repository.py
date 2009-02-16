@@ -491,6 +491,9 @@ class Repository(object):
         try:
             if session.execute('EUser X WHERE X login %(login)s', {'login': login}):
                 return False
+            if session.execute('EUser X WHERE X use_email C, C address %(login)s',
+                               {'login': login}):
+                return False
             # we have to create the user
             user = self.vreg.etype_class('EUser')(session, None)
             if isinstance(password, unicode):
@@ -502,6 +505,11 @@ class Repository(object):
             self.glob_add_entity(session, user)
             session.execute('SET X in_group G WHERE X eid %(x)s, G name "users"',
                             {'x': user.eid})
+            # FIXME this does not work yet
+            if '@' in login:
+                session.execute('INSERT EmailAddress X: X address "%(login)s", '
+                                'U primary_email X, U use_email X WHERE U login "%(login)s"',
+                                {'login':login})
             session.commit()
         finally:
             session.close()
