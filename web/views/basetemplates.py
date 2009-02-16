@@ -19,9 +19,8 @@ from cubicweb.web.views.baseviews import vid_from_rset
 
 # main templates ##############################################################
 
-
 class LogInOutTemplate(MainTemplate):
-    
+
     def call(self):
         self.set_request_content_type()
         w = self.w
@@ -43,7 +42,7 @@ class LogInOutTemplate(MainTemplate):
         w(u'\n'.join(additional_headers) + u'\n')
         self.template('htmlheader', rset=self.rset)
         w(u'<title>%s</title>\n' % html_escape(page_title))
-        
+
 
 class LogInTemplate(LogInOutTemplate):
     id = 'login'
@@ -51,7 +50,7 @@ class LogInTemplate(LogInOutTemplate):
 
     def content(self, w):
         self.template('logform', rset=self.rset, id='loginBox', klass='')
-        
+
 
 class LoggedOutTemplate(LogInOutTemplate):
     id = 'loggedout'
@@ -66,10 +65,10 @@ class LoggedOutTemplate(LogInOutTemplate):
                 html_escape(indexurl),
                 self.req._('go back to the index page')))
 
-        
+
 class TheMainTemplate(MainTemplate):
     """default main template :
-    
+
     - call header / footer templates
     - build result set
     - guess and call an appropriate view through the view manager
@@ -112,7 +111,7 @@ class TheMainTemplate(MainTemplate):
             vid = vid_from_rset(req, rset, self.schema)
             view = self.vreg.select_view(vid, req, rset)
         return view, rset
-    
+
     def call(self):
         view, rset = self._select_view_and_rset()
         req = self.req
@@ -123,8 +122,7 @@ class TheMainTemplate(MainTemplate):
             req.update_breadcrumbs()
         view.set_http_cache_headers()
         req.validate_cache()
-        with_templates = not view.binary and view.templatable and \
-                         not req.form.has_key('__notemplate')
+        with_templates = self.with_templates(view)
         if not with_templates:
             view.set_request_content_type()
             self.set_stream(templatable=False)
@@ -132,17 +130,14 @@ class TheMainTemplate(MainTemplate):
             self.set_request_content_type()
             content_type = self.content_type
             self.template_header(content_type, view)
-        if view.binary:
-            # have to replace our unicode stream using view's binary stream
-            view.dispatch()
-            assert self._stream, 'duh, template used as a sub-view ?? (%s)' % self._stream
-            self._stream = view._stream
-        else:
-            view.dispatch(w=self.w)
+        self.template('page-content', view=view, rset=rset)
         if with_templates:
             self.template_footer(view)
 
-            
+    def with_templates(self, view):
+        return (not view.binary and view.templatable and
+                not self.req.form.has_key('__notemplate'))
+
     def process_rql(self, rql):
         """execute rql if specified"""
         if rql:
@@ -159,17 +154,7 @@ class TheMainTemplate(MainTemplate):
         additional_headers = additional_headers or view.html_headers()
         self.template_html_header(content_type, page_title, additional_headers)
         self.template_body_header(view)
-        # display entity type restriction component
-        etypefilter = self.vreg.select_component('etypenavigation',
-                                                 self.req, self.rset)
-        if etypefilter and etypefilter.propval('visible'):
-            etypefilter.dispatch(w=self.w)
-        self.nav_html = UStringIO()
-        self.pagination(self.req, self.rset, self.nav_html.write,
-                        not (view and view.need_navigation))
-        self.w(_(self.nav_html.getvalue()))
-        self.w(u'<div id="contentmain">\n')
-    
+
     def template_html_header(self, content_type, page_title, additional_headers=()):
         w = self.whead
         lang = self.req.lang
@@ -196,15 +181,8 @@ class TheMainTemplate(MainTemplate):
         if msgcomp:
             msgcomp.dispatch(w=self.w)
         self.content_header(view)
-        w(u'<div id="pageContent">\n')
-        vtitle = self.req.form.get('vtitle')
-        if vtitle:
-            w(u'<h1 class="vtitle">%s</h1>\n' % html_escape(vtitle))
-            
+
     def template_footer(self, view=None):
-        self.w(u'</div>\n') # close id=contentmain
-        self.w(_(self.nav_html.getvalue()))
-        self.w(u'</div>\n') # closes id=pageContent
         self.content_footer(view)
         self.w(u'</td>\n')
         self.nav_column(view, 'right')
@@ -224,9 +202,46 @@ class TheMainTemplate(MainTemplate):
     def content_header(self, view=None):
         """by default, display informal messages in content header"""
         self.template('contentheader', rset=self.rset, view=view)
-            
+
     def content_footer(self, view=None):
         self.template('contentfooter', rset=self.rset, view=view)
+
+
+class PageContentTemplate(TheMainTemplate):
+    id = 'page-content'
+
+    def call(self, view=None, rset=None):
+        self.req.set_header('x-cubicweb-css', 'a.css;b.css')
+        if view is None:
+            view, rset = self._select_view_and_rset()
+        with_templates = self.with_templates(view)
+        w = self.w
+        if with_templates:
+            w(u'<div id="pageContent">\n')
+            vtitle = self.req.form.get('vtitle')
+            if vtitle:
+                w(u'<h1 class="vtitle">%s</h1>\n' % html_escape(vtitle))
+            # display entity type restriction component
+            etypefilter = self.vreg.select_component('etypenavigation',
+                                                     self.req, self.rset)
+            if etypefilter and etypefilter.propval('visible'):
+                etypefilter.dispatch(w=w)
+            self.nav_html = UStringIO()
+            self.pagination(self.req, self.rset, self.nav_html.write,
+                            not (view and view.need_navigation))
+            w(_(self.nav_html.getvalue()))
+            w(u'<div id="contentmain">\n')
+        if view.binary:
+            # have to replace our unicode stream using view's binary stream
+            view.dispatch()
+            assert self._stream, 'duh, template used as a sub-view ?? (%s)' % self._stream
+            self._stream = view._stream
+        else:
+            view.dispatch(w=w)
+        if with_templates:
+            w(u'</div>\n') # close id=contentmain
+            w(_(self.nav_html.getvalue()))
+            w(u'</div>\n') # closes id=pageContent
 
 
 class ErrorTemplate(TheMainTemplate):
@@ -235,7 +250,7 @@ class ErrorTemplate(TheMainTemplate):
     which means that req.cnx and req.user may not be set.
     """
     id = 'error'
-    
+
     def call(self):
         """display an unexpected error"""
         self.set_request_content_type()
@@ -245,7 +260,7 @@ class ErrorTemplate(TheMainTemplate):
                              [NOINDEX, NOFOLLOW])
         view.dispatch(w=self.w)
         self.template_footer(view)
-    
+
     def template_header(self, content_type, view=None, page_title='', additional_headers=()):
         w = self.whead
         lang = self.req.lang
@@ -264,7 +279,7 @@ class ErrorTemplate(TheMainTemplate):
 class SimpleMainTemplate(TheMainTemplate):
 
     id = 'main-no-top'
-    
+
     def template_header(self, content_type, view=None, page_title='', additional_headers=()):
         page_title = page_title or view.page_title()
         additional_headers = additional_headers or view.html_headers()
@@ -295,7 +310,7 @@ class SimpleMainTemplate(TheMainTemplate):
         vtitle = self.req.form.get('vtitle')
         if vtitle:
             w(u'<h1 class="vtitle">%s</h1>' % html_escape(vtitle))
-            
+
     def topleft_header(self):
         self.w(u'<table id="header"><tr>\n')
         self.w(u'<td>')
@@ -308,7 +323,7 @@ class SimpleMainTemplate(TheMainTemplate):
 class HTMLHeader(Template):
     """default html headers"""
     id = 'htmlheader'
-    
+
     def call(self, **kwargs):
         self.favicon()
         self.stylesheets()
@@ -320,7 +335,7 @@ class HTMLHeader(Template):
         favicon = self.req.external_resource('FAVICON', None)
         if favicon:
             self.whead(u'<link rel="shortcut icon" href="%s"/>\n' % favicon)
-            
+
     def stylesheets(self):
         req = self.req
         add_css = req.add_css
@@ -330,11 +345,11 @@ class HTMLHeader(Template):
             add_css(css, u'print', localfile=False)
         for css in req.external_resource('IE_STYLESHEETS'):
             add_css(css, localfile=False, ieonly=True)
-        
+
     def javascripts(self):
         for jscript in self.req.external_resource('JAVASCRIPTS'):
             self.req.add_js(jscript, localfile=False)
-            
+
     def alternates(self):
         urlgetter = self.vreg.select_component('rss_feed_url', self.req, self.rset)
         if urlgetter is not None:
@@ -352,7 +367,7 @@ class HTMLHeader(Template):
 class HTMLPageHeader(Template):
     """default html page header"""
     id = 'header'
-    
+
     def call(self, view, **kwargs):
         self.main_header(view)
         self.w(u'''
@@ -361,7 +376,7 @@ class HTMLPageHeader(Template):
         self.w(u'''
   </div>
   ''')
-        
+
     def main_header(self, view):
         """build the top menu with authentification info and the rql box"""
         self.w(u'<table id="header"><tr>\n')
@@ -392,7 +407,7 @@ class HTMLPageHeader(Template):
         self.w(u'</tr></table>\n')
         self.template('logform', rset=self.rset, id='popupLoginBox', klass='hidden',
                       title=False, message=False)
-        
+
     def state_header(self):
         state = self.req.search_state
         if state[0] == 'normal':
@@ -402,7 +417,7 @@ class HTMLPageHeader(Template):
         msg = ' '.join((_("searching for"),
                         display_name(self.req, state[1][3]),
                         _("to associate with"), value,
-                        _("by relation"), '"', 
+                        _("by relation"), '"',
                         display_name(self.req, state[1][2], state[1][0]),
                         '"'))
         return self.w(u'<div class="stateMessage">%s</div>' % msg)
@@ -413,7 +428,7 @@ class HTMLPageFooter(Template):
     """default html page footer: include logo if any, and close the HTML body
     """
     id = 'footer'
-    
+
     def call(self, **kwargs):
         req = self.req
         self.w(u'<div class="footer">')
@@ -434,7 +449,7 @@ class HTMLContentHeader(Template):
     * include selectable content navigation components
     """
     id = 'contentheader'
-    
+
     def call(self, view, **kwargs):
         """by default, display informal messages in content header"""
         components = self.vreg.possible_vobjects('contentnavigation',
@@ -452,7 +467,7 @@ class HTMLContentFooter(Template):
     components
     """
     id = 'contentfooter'
-    
+
     def call(self, view, **kwargs):
         components = self.vreg.possible_vobjects('contentnavigation',
                                                  self.req, self.rset,
@@ -474,7 +489,7 @@ class LogFormTemplate(Template):
         if title:
             self.w(u'<div id="loginTitle">%s</div>'
                    % self.req.property_value('ui.site-title'))
-        self.w(u'<div id="loginContent">\n')        
+        self.w(u'<div id="loginContent">\n')
 
         if message:
             self.display_message()
@@ -490,7 +505,7 @@ class LogFormTemplate(Template):
         message = self.req.message
         if message:
             self.w(u'<div class="simpleMessage">%s</div>\n' % message)
-                     
+
     def login_form(self, id):
         _ = self.req._
         self.w(u'<form method="post" action="%s" id="login_form">\n'
@@ -509,7 +524,7 @@ class LogFormTemplate(Template):
         self.w(u'</form>\n')
         self.req.html_headers.add_onload('jQuery("#__login:visible").focus()')
 
-    
+
 def login_form_url(config, req):
     if req.https:
         return req.url()
