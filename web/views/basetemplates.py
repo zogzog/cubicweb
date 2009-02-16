@@ -497,7 +497,7 @@ class LogFormTemplate(Template):
                % html_escape(login_form_url(self.config, self.req)))
         self.w(u'<table>\n')
         self.w(u'<tr>\n')
-        self.w(u'<td><label for="__login">%s</label></td>' % _('login'))
+        self.w(u'<td><label for="__login">%s</label></td>' % _('login or email'))
         self.w(u'<td><input name="__login" id="__login" class="data" type="text" /></td>')
         self.w(u'</tr><tr>\n')
         self.w(u'<td><label for="__password" >%s</label></td>' % _('password'))
