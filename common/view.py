@@ -86,6 +86,7 @@ class View(AppRsetObject):
     attributes are added and the `w` attribute will be set at rendering
     time to a write function to use.
     """
+    __registerer__ = priority_registerer
     __registry__ = 'views'
 
     templatable = True
@@ -404,12 +405,6 @@ class AnyRsetView(View):
         return labels
 
 
-class EmptyRsetView(View):
-    """base class for views applying on any empty result sets"""
-    __registerer__ = priority_registerer
-    __selectors__ = (empty_rset,)
-
-
 # concrete template base classes ##############################################
 
 class Template(View):
@@ -433,7 +428,6 @@ class MainTemplate(Template):
     There is usually at least a regular main template and a simple fallback
     one to display error if the first one failed
     """
-
     base_doctype = STRICT_DOCTYPE
 
     @property
