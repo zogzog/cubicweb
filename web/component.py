@@ -32,7 +32,7 @@ class EntityVComponent(Component):
     __registry__ = 'contentnavigation'
     __registerer__ = accepts_registerer    
     __selectors__ = (one_line_rset, primary_view, match_context_prop,)
-    registered = accepts_compat(has_relation_compat(condition_compat(View.registered.im_func)))
+    registered = accepts_compat(has_relation_compat(condition_compat(View.registered)))
     
     property_defs = {
         _('visible'):  dict(type='Boolean', default=True,
