@@ -48,7 +48,8 @@ from logilab.common.interface import implements as implements_iface
 from yams import BASE_TYPES
 
 from cubicweb import Unauthorized, NoSelectableObject, role
-from cubicweb.vregistry import NoSelectableObject, Selector, chainall, chainfirst
+from cubicweb.vregistry import (NoSelectableObject, Selector,
+                                chainall, chainfirst, objectify_selector)
 from cubicweb.cwvreg import DummyCursorError
 from cubicweb.cwconfig import CubicWebConfiguration
 from cubicweb.schema import split_expression
@@ -202,11 +203,12 @@ class EntitySelector(EClassSelector):
 
 
 # very basic selectors ########################################################
-
+@objectify_selector
 def yes(cls, *args, **kwargs):
     """accept everything"""
     return 1
 
+@objectify_selector
 @lltrace
 def none_rset(cls, req, rset, *args, **kwargs):
     """accept no result set (e.g. given rset is None)"""
@@ -214,6 +216,7 @@ def none_rset(cls, req, rset, *args, **kwargs):
         return 1
     return 0
 
+@objectify_selector
 @lltrace
 def any_rset(cls, req, rset, *args, **kwargs):
     """accept result set, whatever the number of result it contains"""
@@ -221,6 +224,7 @@ def any_rset(cls, req, rset, *args, **kwargs):
         return 1
     return 0
 
+@objectify_selector
 @lltrace
 def nonempty_rset(cls, req, rset, *args, **kwargs):
     """accept any non empty result set"""
@@ -228,6 +232,7 @@ def nonempty_rset(cls, req, rset, *args, **kwargs):
         return 1
     return 0
     
+@objectify_selector
 @lltrace
 def empty_rset(cls, req, rset, *args, **kwargs):
     """accept empty result set"""
@@ -235,6 +240,7 @@ def empty_rset(cls, req, rset, *args, **kwargs):
         return 1
     return 0
 
+@objectify_selector
 @lltrace
 def one_line_rset(cls, req, rset, row=None, *args, **kwargs):
     """if row is specified, accept result set with a single line of result,
@@ -244,6 +250,7 @@ def one_line_rset(cls, req, rset, row=None, *args, **kwargs):
         return 1
     return 0
 
+@objectify_selector
 @lltrace
 def two_lines_rset(cls, req, rset, *args, **kwargs):
     """accept result set with *at least* two lines of result"""
@@ -251,6 +258,7 @@ def two_lines_rset(cls, req, rset, *args, **kwargs):
         return 1
     return 0
 
+@objectify_selector
 @lltrace
 def two_cols_rset(cls, req, rset, *args, **kwargs):
     """accept result set with at least one line and two columns of result"""
@@ -258,6 +266,7 @@ def two_cols_rset(cls, req, rset, *args, **kwargs):
         return 1
     return 0
 
+@objectify_selector
 @lltrace
 def paginated_rset(cls, req, rset, *args, **kwargs):
     """accept result set with more lines than the page size.
@@ -278,6 +287,7 @@ def paginated_rset(cls, req, rset, *args, **kwargs):
         return 0
     return 1
 
+@objectify_selector
 @lltrace
 def sorted_rset(cls, req, rset, row=None, col=0, **kwargs):
     """accept sorted result set"""
@@ -286,6 +296,7 @@ def sorted_rset(cls, req, rset, row=None, col=0, **kwargs):
         return 0
     return 2
 
+@objectify_selector
 @lltrace
 def one_etype_rset(cls, req, rset, row=None, col=0, *args, **kwargs):
     """accept result set where entities in the specified column (or 0) are all
@@ -295,6 +306,7 @@ def one_etype_rset(cls, req, rset, row=None, col=0, *args, **kwargs):
         return 0
     return 1
 
+@objectify_selector
 @lltrace
 def two_etypes_rset(cls, req, rset, row=None, col=0, **kwargs):
     """accept result set where entities in the specified column (or 0) are not
@@ -316,6 +328,7 @@ class non_final_entity(EClassSelector):
             return 0
         return 1
 
+@objectify_selector
 @lltrace
 def anonymous_user(cls, req, *args, **kwargs):
     """accept if user is anonymous"""
@@ -323,11 +336,13 @@ def anonymous_user(cls, req, *args, **kwargs):
         return 1
     return 0
 
+@objectify_selector
 @lltrace
 def authenticated_user(cls, req, *args, **kwargs):
     """accept if user is authenticated"""
     return not anonymous_user(cls, req, *args, **kwargs)
 
+@objectify_selector
 @lltrace
 def primary_view(cls, req, rset, row=None, col=0, view=None, **kwargs):
     """accept if view given as named argument is a primary view, or if no view
@@ -337,6 +352,7 @@ def primary_view(cls, req, rset, row=None, col=0, view=None, **kwargs):
         return 0
     return 1
 
+@objectify_selector
 @lltrace
 def match_context_prop(cls, req, rset, row=None, col=0, context=None,
                        **kwargs):

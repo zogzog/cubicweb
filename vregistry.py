@@ -638,6 +638,19 @@ class Selector(object):
         return NotImplementedError("selector %s must implement its logic "
                                    "in its __call__ method" % self.__class__)
 
+    
+def objectify_selector(selector_func):
+    """convenience decorator for simple selectors where a class definition
+    would be overkill::
+
+        @objectify_selector
+        def yes(cls, *args, **kwargs):
+            return 1
+        
+    """
+    return type(selector_func.__name__, (Selector,),
+                {'__call__': lambda self, *args: selector_func(*args)})
+
 
 class AndSelector(Selector):
     """and-chained selectors (formerly known as chainall)"""
