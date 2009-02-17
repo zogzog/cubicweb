@@ -117,7 +117,7 @@ class autoselectors(type):
         if attr == '__selectors__':
             self.__select__ = classmethod(chainall(*value))
         super(autoselectors, self).__setattr__(attr, value)
-            
+
 
 class VObject(object):
     """visual object, use to be handled somehow by the visual components
@@ -575,7 +575,6 @@ class VRegistry(object):
 set_log_methods(VObject, getLogger('cubicweb'))
 set_log_methods(VRegistry, getLogger('cubicweb.registry'))
 set_log_methods(registerer, getLogger('cubicweb.registration'))
-
 
 
 # selector base classes and operations ########################################

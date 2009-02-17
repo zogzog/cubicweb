@@ -135,6 +135,7 @@ class ManagePermissionsAction(Action):
     order = 100
 
     def registered(cls, vreg):
+        super(ManagePermissionsAction, cls).registered(vreg)
         if 'require_permission' in vreg.schema:
             cls.__selectors__ |= relation_possible('require_permission', 'subject', 'EPermission',
                                                    action='add')

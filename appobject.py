@@ -58,6 +58,7 @@ class AppRsetObject(VObject):
 
     @classmethod
     def registered(cls, vreg):
+        super(AppRsetObject, cls).registered(vregistry)
         cls.vreg = vreg
         cls.schema = vreg.schema
         cls.config = vreg.config
