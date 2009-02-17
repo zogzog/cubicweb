@@ -3,7 +3,7 @@
 contains some functions and setup of docutils for cubicweb
 
 :organization: Logilab
-:copyright: 2001-2008 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+:copyright: 2001-2009 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 """
 __docformat__ = "restructuredtext en"
@@ -20,7 +20,7 @@ from docutils.parsers.rst.roles import register_canonical_role, set_classes
 
 from logilab.mtconverter import html_escape
 
-from cubicweb.common.html4zope import Writer
+from cubicweb.ext.html4zope import Writer
 
 # We provide our own parser as an attempt to get rid of
 # state machine reinstanciation

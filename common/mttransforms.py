@@ -31,16 +31,7 @@ class html_to_html(Transform):
     output = 'text/html'
     def _convert(self, trdata):
         return html_publish(trdata.appobject, trdata.data)
-
-class ept_to_html(Transform):
-    inputs = ('text/cubicweb-page-template',)
-    output = 'text/html'
-    output_encoding = 'utf-8'
-    def _convert(self, trdata):
-        from cubicweb.common.tal import compile_template
-        value = trdata.encode(self.output_encoding)
-        return trdata.appobject.tal_render(compile_template(value), {})
-
+    
 
 # Instantiate and configure the transformation engine
 
@@ -49,7 +40,23 @@ mtconverter.UNICODE_POLICY = 'replace'
 ENGINE = TransformEngine()
 ENGINE.add_transform(rest_to_html())
 ENGINE.add_transform(html_to_html())
-ENGINE.add_transform(ept_to_html())
+
+try:
+    from cubicweb.common.tal import compile_template
+except ImportError:
+    HAS_TAL = False
+else:
+    HAS_TAL = True
+    
+    class ept_to_html(Transform):
+        inputs = ('text/cubicweb-page-template',)
+        output = 'text/html'
+        output_encoding = 'utf-8'
+        def _convert(self, trdata):
+            value = trdata.encode(self.output_encoding)
+            return trdata.appobject.tal_render(compile_template(value), {})
+
+    ENGINE.add_transform(ept_to_html())
 
 if register_pil_transforms(ENGINE, verb=False):
     HAS_PIL_TRANSFORMS = True
