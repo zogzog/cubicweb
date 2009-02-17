@@ -74,21 +74,10 @@ class registerer(vobject_helper):
     def skip(self):
         self.debug('no schema compat, skipping %s', self.vobject)
 
-
-def selector(cls, *args, **kwargs):
-    """selector is called to help choosing the correct object for a
-    particular request and result set by returning a score.
-
-    it must implement a .score_method taking a request, a result set and
-    optionaly row and col arguments which return an int telling how well
-    the wrapped class apply to the given request and result set. 0 score
-    means that it doesn't apply.
-    
-    rset may be None. If not, row and col arguments may be optionally
-    given if the registry is scoring a given row or a given cell of
-    the result set (both row and col are int if provided).
-    """    
-    raise NotImplementedError(cls)
+class yes_registerer(registerer):
+    """register without any other action"""
+    def do_it_yourself(self, registered):
+        return self.vobject
 
 
 class VObject(object):
@@ -575,6 +564,13 @@ class Selector(object):
 
     This class is only here to give access to binary operators, the
     selector logic itself should be implemented in the __call__ method
+
+
+    a selector is called to help choosing the correct object for a
+    particular context by returning a score (`int`) telling how well
+    the class given as first argument apply to the given context.
+
+    0 score means that the class doesn't apply.
     """
 
     @property
@@ -609,8 +605,8 @@ class Selector(object):
                                    "in its __call__ method" % self.__class__)
 
 class MultiSelector(Selector):
-    """base class for compound selector classes
-    """
+    """base class for compound selector classes"""
+    
     def __init__(self, *selectors):
         self.selectors = self.merge_selectors(selectors)
 

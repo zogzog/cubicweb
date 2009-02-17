@@ -10,7 +10,7 @@ to the application's schema or to already registered object
 """
 __docformat__ = "restructuredtext en"
 
-from cubicweb.vregistry import registerer
+from cubicweb.vregistry import registerer, yes_registerer
 from cubicweb.selectors import implements
 
 def _accepts_interfaces(obj):
@@ -19,11 +19,6 @@ def _accepts_interfaces(obj):
         return sorted(impl.expected_ifaces)
     return sorted(getattr(obj, 'accepts_interfaces', ()))
 
-
-class yes_registerer(registerer):
-    """register without any other action"""
-    def do_it_yourself(self, registered):
-        return self.vobject
 
 class priority_registerer(registerer):
     """systematically kick previous registered class and register the

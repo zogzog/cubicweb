@@ -1,7 +1,11 @@
 """This file contains some basic selectors required by application objects.
 
 A selector is responsible to score how well an object may be used with a
-given result set (publishing time selection)
+given context by returning a score.
+
+In CubicWeb Usually the context consists for a request object, a result set
+or None, a specific row/col in the result set, etc...
+
 
 If you have trouble with selectors, especially if the objet (typically
 a view or a component) you want to use is not selected and you want to
