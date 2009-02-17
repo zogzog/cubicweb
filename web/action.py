@@ -10,9 +10,8 @@ from cubicweb import target
 from cubicweb.common.appobject import AppRsetObject
 from cubicweb.common.registerers import action_registerer
 from cubicweb.common.selectors import user_can_add_etype, \
-     match_search_state, searchstate_accept_one, \
-     searchstate_accept_one_but_etype
-    
+     match_search_state, searchstate_accept_one
+
 _ = unicode
 
 
@@ -62,18 +61,6 @@ class UnregisteredAction(Action):
         
     def url(self):
         return self._path
-
-
-class AddEntityAction(Action):
-    """link to the entity creation form. Concrete class must set .etype and
-    may override .vid
-    """
-    __selectors__ = (user_can_add_etype,)
-    vid = 'creation'
-    etype = None
-    
-    def url(self):
-        return self.build_url(vid=self.vid, etype=self.etype)
 
 
 class EntityAction(Action):
