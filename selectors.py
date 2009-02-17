@@ -617,8 +617,14 @@ class score_entity(EntitySelector):
 
 
 class rql_condition(EntitySelector):
+    """initializer takes a rql expression as argument (which should use X
+    variable to represent the context entity).
+
+    return the sum of the number of items returned by the rql condition as score
+    or 0 at the first entity scoring to zero.
+    """
     def __init__(self, expression):
-        if 'U' in frozenset(split_expression(cls.condition)):
+        if 'U' in frozenset(split_expression(expression)):
             rql = 'Any X WHERE X eid %%(x)s, U eid %%(u)s, %s' % expression
         else:
             rql = 'Any X WHERE X eid %%(x)s, %s' % expression
@@ -629,19 +635,41 @@ class rql_condition(EntitySelector):
             return len(req.execute(self.rql, {'x': eid, 'u': req.user.eid}, 'x'))
         except Unauthorized:
             return 0
+
         
+class but_etype(EntitySelector):
+    """initializer takes an entity type as argument.
+
+    return 0 if an entity type is this type, else 1.
+    """
+    def __init__(self, etype):
+        self.etype = etype
+        
+    def score(self, req, rset, row, col):
+        if rset.description[row][col] == self.etype:
+            return 0
+        return 1
+
+
+class appobject_selectable(Selector):
+    """initializer takes a registry and oid of another vobject
+    
+    return 1 if the given registry and object is selectable using selector's
+    input context, else 0
+    """
+    def __init__(self, registry, oid):
+        self.registry = registry
+        self.oid = oid
+        
+    def __call__(self, cls, req, rset, *args, **kwargs):
+        try:
+            cls.vreg.select_object(self.registry, self.oid, req, rset, *args, **kwargs)
+            return 1
+        except NoSelectableObject:
+            return 0
+
         
 # XXX not so basic selectors ######################################################
-        
-@lltrace
-def but_etype(cls, req, rset, row=None, col=0, **kwargs):
-    """restrict the searchstate_accept_one_selector to exclude entity's type
-    refered by the .etype attribute
-    """
-    if rset.description[row or 0][col or 0] == cls.etype:
-        return 0
-    return 1
-but_etype_selector = deprecated_function(but_etype)
 
 @lltrace
 def etype_rtype_selector(cls, req, rset, row=None, col=0, **kwargs):
@@ -687,25 +715,11 @@ def match_context_prop(cls, req, rset, row=None, col=0, context=None,
 contextprop_selector = deprecated_function(match_context_prop)
 
 @lltrace
-def primary_view(cls, req, rset, row=None, col=0, view=None,
-                          **kwargs):
+def primary_view(cls, req, rset, row=None, col=0, view=None, **kwargs):
     if view is not None and not view.is_primary():
         return 0
     return 1
 primaryview_selector = deprecated_function(primary_view)
-
-def appobject_selectable(registry, oid):
-    """return a selector that will have a positive score if an object for the
-    given registry and object id is selectable for the input context
-    """
-    @lltrace
-    def selector(cls, req, rset, *args, **kwargs):
-        try:
-            cls.vreg.select_object(registry, oid, req, rset, *args, **kwargs)
-            return 1
-        except NoSelectableObject:
-            return 0
-    return selector
 
 
 
@@ -762,7 +776,6 @@ accept_one = deprecated_function(chainall(one_line_rset, accept,
 accept_one_selector = deprecated_function(accept_one)
 
 
-@lltrace
 def _rql_condition(cls, req, rset, row=None, col=0, **kwargs):
     if cls.condition:
         return rql_condition(cls.condition)(cls, req, rset, row, col)
@@ -771,6 +784,11 @@ _rqlcondition_selector = deprecated_function(_rql_condition)
 
 rqlcondition_selector = deprecated_function(chainall(non_final_entity(), one_line_rset, _rql_condition,
                          name='rql_condition'))
+    
+def but_etype_selector(cls, req, rset, row=None, col=0, **kwargs):
+    return but_etype(cls.etype)(cls, req, rset, row, col)
+but_etype_selector = deprecated_function(but_etype_selector)
+
 
 #req_form_params_selector = deprecated_function(match_form_params) # form_params
 #kwargs_selector = deprecated_function(match_kwargs) # expected_kwargs
