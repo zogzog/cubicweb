@@ -131,12 +131,15 @@ class VObject(object):
         """returns a unique identifier for the vobject"""
         return '%s.%s' % (cls.__module__, cls.__name__)
 
+    # XXX bw compat code
     @classmethod
     def build___select__(cls):
         classdict = cls.__dict__
-        if '__select__' in classdict and '__selectors__' in classdict:
-            raise TypeError("__select__ and __selectors__ can't be used together")
+        if ('__select__' in classdict and '__selectors__' in classdict
+            and not '__selgenerated__' in classdict):
+            raise TypeError("__select__ and __selectors__ can't be used together on class %s" % cls)
         if '__selectors__' in classdict:
+            cls.__selgenerated__ = True
             # case where __selectors__ is defined locally (but __select__
             # is in a parent class)
             selectors = classdict['__selectors__']
