@@ -587,6 +587,11 @@ class Selector(object):
     selector logic itself should be implemented in the __call__ method
     """
 
+    @property
+    def func_name(self):
+        # backward compatibility
+        return self.__class__.__name__
+
     def search_selector(self, selector):
         """search for the given selector or selector instance in the selectors
         tree. Return it of None if not found
