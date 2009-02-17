@@ -653,7 +653,7 @@ def _instantiate_selector(selector):
     """
     if isinstance(selector, types.FunctionType):
         return objectify_selector(selector)()
-    if issubclass(selector, Selector):
+    if isinstance(selector, type) and issubclass(selector, Selector):
         return selector()
     return selector
 
