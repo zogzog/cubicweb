@@ -67,16 +67,12 @@ def lltrace(selector):
     if CubicWebConfiguration.mode == 'installed':
         return selector
     def traced(cls, *args, **kwargs):
-        if isinstance(cls, Selector):
-            selname = cls.__class__.__name__
-            oid = args[0].id
-        else:
-            selname = selector.__name__
-            oid = cls.id
+        selname = cls.__class__.__name__
+        oid = args[0].id
         ret = selector(cls, *args, **kwargs)
         if TRACED_OIDS == 'all' or oid in TRACED_OIDS:
             #SELECTOR_LOGGER.warning('selector %s returned %s for %s', selname, ret, cls)
-            print 'selector %s returned %s for %s' % (selname, ret, cls)
+            print 'selector %s returned %s for %s' % (selname, ret, args[0])
         return ret
     traced.__name__ = selector.__name__
     return traced
