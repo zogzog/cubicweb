@@ -10,7 +10,7 @@ from cubicweb import role, target
 from cubicweb.selectors import (relation_possible, match_search_state,
                                 one_line_rset, may_add_relation, yes,
                                 accepts_compat, condition_compat, deprecate)
-from cubicweb.common.appobject import AppRsetObject
+from cubicweb.appobject import AppRsetObject
 from cubicweb.common.registerers import accepts_registerer
 
 _ = unicode

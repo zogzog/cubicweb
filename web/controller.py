@@ -12,7 +12,7 @@ from mx.DateTime import strptime, Error as MxDTError, TimeDelta
 from cubicweb import typed_eid
 from cubicweb.common.registerers import priority_registerer
 from cubicweb.selectors import yes, require_group_compat
-from cubicweb.common.appobject import AppObject
+from cubicweb.appobject import AppObject
 from cubicweb.web import LOGGER, Redirect, RequestError
 
 

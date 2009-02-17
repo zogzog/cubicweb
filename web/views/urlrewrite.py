@@ -1,13 +1,13 @@
 """Rules based url rewriter component, to get configurable RESTful urls
 
 :organization: Logilab
-:copyright: 2007-2008 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+:copyright: 2007-2009 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 """
 import re
 
+from cubicweb.appobject import AppObject
 from cubicweb.common.registerers import accepts_registerer
-from cubicweb.common.appobject import AppObject
 
 
 def rgx(pattern, flags=0):
