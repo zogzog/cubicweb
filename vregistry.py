@@ -205,149 +205,6 @@ class VRegistry(object):
     def __contains__(self, key):
         return key in self._registries
 
-
-    ##########
-    def register(self, obj, registryname=None):
-        registryname = registryname or obj.__registry__
-        registry = self._registries.setdefault(registryname, {})
-        registry.setdefault(obj.id, []).append(obj)
-        # XXX automatic reloading management
-        self._registered['%s.%s' % (obj.__module__, obj.id)] = obj
-
-    def register_if_interface_found(self, obj, registryname, iface):
-        registry = self._registries.setdefault(registryname, {})
-        for etype in self.registry_object('etypes'):
-            if implements(etype, iface):
-                registry.setdefault(obj.id, []).append(obj)
-                # XXX automatic reloading management
-                self._registered['%s.%s' % (obj.__module__, obj.id)] = obj
-                break
-
-    def unregister(self, obj, registryname=None):
-        registryname = registryname or obj.__registry__
-        registry = self.registry(registryname)
-        removed_id = obj.classid()
-        for registered in registry[obj.id]:
-            # use classid() to compare classes because vreg will probably
-            # have its own version of the class, loaded through execfile
-            if registered.classid() == removed_id:
-                # XXX automatic reloading management
-                registry[obj.id].remove(registered)
-                break
-    
-    def register_and_replace(self, obj, replaced, registryname=None):
-        registryname = registryname or obj.__registry__
-        registry = self.registry(registryname)
-        registered_objs = registry[obj.id]
-        for index, registered in enumerate(registered_objs):
-            if registered.classid() == replaced:
-                registry[obj.id][index] = obj
-                self._registered['%s.%s' % (obj.__module__, obj.id)] = obj
-    ##########
-    
-    def register_vobject_class(self, cls, _kicked=set()):
-        """handle vobject class registration
-        
-        vobject class with __abstract__ == True in their local dictionnary or
-        with a name starting starting by an underscore are not registered.
-        Also a vobject class needs to have __registry__ and id attributes set
-        to a non empty string to be registered.
-
-        Registration is actually handled by vobject's registerer.
-        """
-        if (cls.__dict__.get('__abstract__') or cls.__name__[0] == '_'
-            or not cls.__registry__ or not cls.id):
-            return
-        # while reloading a module :
-        # if cls was previously kicked, it means that there is a more specific
-        # vobject defined elsewhere re-registering cls would kick it out
-        if cls.classid() in _kicked:
-            self.debug('not re-registering %s because it was previously kicked',
-                      cls.classid())
-        else:
-            regname = cls.__registry__
-            if cls.id in self.config['disable-%s' % regname]:
-                return
-            registry = self._registries.setdefault(regname, {})
-            vobjects = registry.setdefault(cls.id, [])
-            registerer = cls.__registerer__(self, cls)
-            cls = registerer.do_it_yourself(vobjects)
-            #_kicked |= registerer.kicked
-            if cls:
-                # registered() is technically a classmethod but is not declared
-                # as such because we need to compose registered in some cases
-                vobject = cls.registered.im_func(cls, self)
-                try:
-                    vname = vobject.__name__
-                except AttributeError:
-                    vname = vobject.__class__.__name__
-                self.debug('registered vobject %s in registry %s with id %s',
-                          vname, cls.__registry__, cls.id)
-                vobjects.append(vobject)
-            
-    def unregister_module_vobjects(self, modname):
-        """removes registered objects coming from a given module
-
-        returns a dictionnary classid/class of all classes that will need
-        to be updated after reload (i.e. vobjects referencing classes defined
-        in the <modname> module)
-        """
-        unregistered = {}
-        # browse each registered object
-        for registry, objdict in self.items():
-            for oid, objects in objdict.items():
-                for obj in objects[:]:
-                    objname = obj.classid()
-                    # if the vobject is defined in this module, remove it
-                    if objname.startswith(modname):
-                        unregistered[objname] = obj
-                        objects.remove(obj)
-                        self.debug('unregistering %s in %s registry',
-                                  objname, registry)
-                    # if not, check if the vobject can be found in baseclasses
-                    # (because we also want subclasses to be updated)
-                    else:
-                        if not isinstance(obj, type):
-                            obj = obj.__class__
-                        for baseclass in obj.__bases__:
-                            if hasattr(baseclass, 'classid'):
-                                baseclassid = baseclass.classid()
-                                if baseclassid.startswith(modname):
-                                    unregistered[baseclassid] = baseclass
-                # update oid entry
-                if objects:
-                    objdict[oid] = objects
-                else:
-                    del objdict[oid]
-        return unregistered
-
-
-    def update_registered_subclasses(self, oldnew_mapping):
-        """updates subclasses of re-registered vobjects
-
-        if baseviews.PrimaryView is changed, baseviews.py will be reloaded
-        automatically and the new version of PrimaryView will be registered.
-        But all existing subclasses must also be notified of this change, and
-        that's what this method does
-
-        :param oldnew_mapping: a dict mapping old version of a class to
-                               the new version
-        """
-        # browse each registered object
-        for objdict in self.values():
-            for objects in objdict.values():
-                for obj in objects:
-                    if not isinstance(obj, type):
-                        obj = obj.__class__
-                    # build new baseclasses tuple
-                    newbases = tuple(oldnew_mapping.get(baseclass, baseclass)
-                                     for baseclass in obj.__bases__)
-                    # update obj's baseclasses tuple (__bases__) if needed
-                    if newbases != obj.__bases__:
-                        self.debug('updating %s.%s base classes',
-                                  obj.__module__, obj.__name__)
-                        obj.__bases__ = newbases
-
     def registry(self, name):
         """return the registry (dictionary of class objects) associated to
         this name
@@ -372,7 +229,69 @@ class VRegistry(object):
             for objs in registry.values():
                 result += objs
             return result
-        
+
+    def object_by_id(self, registry, cid, *args, **kwargs):
+        """return the most specific component according to the resultset"""
+        objects = self[registry][cid]
+        assert len(objects) == 1, objects
+        return objects[0].selected(*args, **kwargs)
+
+    # methods for explicit (un)registration ###################################
+    
+    def register(self, obj, registryname=None, oid=None):
+        """base method to add an object in the registry"""
+        registryname = registryname or obj.__registry__
+        oid = oid or obj.id
+        registry = self._registries.setdefault(registryname, {})
+        vobjects = registry.setdefault(oid, [])
+        # registered() is technically a classmethod but is not declared
+        # as such because we need to compose registered in some cases
+        vobject = obj.registered.im_func(cls, self)
+        assert not vobject in vobjects
+        vobjects.append(vobject)
+        try:
+            vname = vobject.__name__
+        except AttributeError:
+            vname = vobject.__class__.__name__
+        self.debug('registered vobject %s in registry %s with id %s',
+                   vname, registryname, oid)
+        # automatic reloading management
+        self._registered['%s.%s' % (obj.__module__, oid)] = obj
+
+    def unregister(self, obj, registryname=None):
+        registryname = registryname or obj.__registry__
+        registry = self.registry(registryname)
+        removed_id = obj.classid()
+        for registered in registry[obj.id]:
+            # use classid() to compare classes because vreg will probably
+            # have its own version of the class, loaded through execfile
+            if registered.classid() == removed_id:
+                # XXX automatic reloading management
+                try:
+                    registry[obj.id].remove(registered)
+                except ValueError:
+                    self.warning('can\'t remove %s, no id %s in the %s registry',
+                                 removed_id, obj.id, registryname)
+                except ValueError:
+                    self.warning('can\'t remove %s, not in the %s registry with id %s',
+                                 removed_id, registryname, obj.id)
+#                 else:
+#                     # if objects is empty, remove oid from registry
+#                     if not registry[obj.id]:
+#                         del regcontent[oid]                    
+                break
+    
+    def register_and_replace(self, obj, replaced, registryname=None):
+        registryname = registryname or obj.__registry__
+        registry = self.registry(registryname)
+        registered_objs = registry[obj.id]
+        for index, registered in enumerate(registered_objs):
+            if registered.classid() == replaced:
+                registry[obj.id][index] = obj
+                self._registered['%s.%s' % (obj.__module__, obj.id)] = obj                
+
+    # dynamic selection methods ###############################################
+    
     def select(self, vobjects, *args, **kwargs):
         """return an instance of the most specific object according
         to parameters
@@ -414,15 +333,8 @@ class VRegistry(object):
     def select_object(self, registry, cid, *args, **kwargs):
         """return the most specific component according to the resultset"""
         return self.select(self.registry_objects(registry, cid), *args, **kwargs)
-
-    def object_by_id(self, registry, cid, *args, **kwargs):
-        """return the most specific component according to the resultset"""
-        objects = self[registry][cid]
-        assert len(objects) == 1, objects
-        return objects[0].selected(*args, **kwargs)
     
     # intialization methods ###################################################
-
     
     def register_objects(self, path, force_reload=None):
         if force_reload is None:
@@ -513,22 +425,18 @@ class VRegistry(object):
         return True
 
     def load_module(self, module):
+        self._registered = {}
         if hasattr(module, 'cw_register_objects'):
-            self._registered = {}
             module.cw_register_objects(self)
-            registered = self._resigtered
-            del self._registered
-            return registered
         else:
-            registered = {}
             self.info('loading %s', module)
             for objname, obj in vars(module).items():
                 if objname.startswith('_'):
                     continue
-                self.load_ancestors_then_object(module.__name__, registered, obj)
-            return registered
+                self.load_ancestors_then_object(module.__name__, obj)
+        return self._registered
     
-    def load_ancestors_then_object(self, modname, registered, obj):
+    def load_ancestors_then_object(self, modname, obj):
         # skip imported classes
         if getattr(obj, '__module__', None) != modname:
             return
@@ -539,11 +447,11 @@ class VRegistry(object):
         except TypeError:
             return
         objname = '%s.%s' % (modname, obj.__name__)
-        if objname in registered:
+        if objname in self._registered:
             return
-        registered[objname] = obj
+        self._registered[objname] = obj
         for parent in obj.__bases__:
-            self.load_ancestors_then_object(modname, registered, parent)
+            self.load_ancestors_then_object(modname, parent)
         self.load_object(obj)
             
     def load_object(self, obj):
@@ -553,6 +461,93 @@ class VRegistry(object):
             if self.config.mode in ('test', 'dev'):
                 raise
             self.exception('vobject %s registration failed: %s', obj, ex)
+        
+    # old automatic registration XXX deprecated ###############################
+    
+    def register_vobject_class(self, cls):
+        """handle vobject class registration
+        
+        vobject class with __abstract__ == True in their local dictionnary or
+        with a name starting starting by an underscore are not registered.
+        Also a vobject class needs to have __registry__ and id attributes set
+        to a non empty string to be registered.
+
+        Registration is actually handled by vobject's registerer.
+        """
+        if (cls.__dict__.get('__abstract__') or cls.__name__[0] == '_'
+            or not cls.__registry__ or not cls.id):
+            return
+        regname = cls.__registry__
+        if cls.id in self.config['disable-%s' % regname]:
+            return
+        registry = self._registries.setdefault(regname, {})
+        vobjects = registry.setdefault(cls.id, [])
+        registerer = cls.__registerer__(self, cls)
+        cls = registerer.do_it_yourself(vobjects)
+        if cls:
+            self.register(cls)
+            
+    def unregister_module_vobjects(self, modname):
+        """removes registered objects coming from a given module
+
+        returns a dictionnary classid/class of all classes that will need
+        to be updated after reload (i.e. vobjects referencing classes defined
+        in the <modname> module)
+        """
+        unregistered = {}
+        # browse each registered object
+        for registry, objdict in self.items():
+            for oid, objects in objdict.items():
+                for obj in objects[:]:
+                    objname = obj.classid()
+                    # if the vobject is defined in this module, remove it
+                    if objname.startswith(modname):
+                        unregistered[objname] = obj
+                        objects.remove(obj)
+                        self.debug('unregistering %s in %s registry',
+                                  objname, registry)
+                    # if not, check if the vobject can be found in baseclasses
+                    # (because we also want subclasses to be updated)
+                    else:
+                        if not isinstance(obj, type):
+                            obj = obj.__class__
+                        for baseclass in obj.__bases__:
+                            if hasattr(baseclass, 'classid'):
+                                baseclassid = baseclass.classid()
+                                if baseclassid.startswith(modname):
+                                    unregistered[baseclassid] = baseclass
+                # update oid entry
+                if objects:
+                    objdict[oid] = objects
+                else:
+                    del objdict[oid]
+        return unregistered
+
+    def update_registered_subclasses(self, oldnew_mapping):
+        """updates subclasses of re-registered vobjects
+
+        if baseviews.PrimaryView is changed, baseviews.py will be reloaded
+        automatically and the new version of PrimaryView will be registered.
+        But all existing subclasses must also be notified of this change, and
+        that's what this method does
+
+        :param oldnew_mapping: a dict mapping old version of a class to
+                               the new version
+        """
+        # browse each registered object
+        for objdict in self.values():
+            for objects in objdict.values():
+                for obj in objects:
+                    if not isinstance(obj, type):
+                        obj = obj.__class__
+                    # build new baseclasses tuple
+                    newbases = tuple(oldnew_mapping.get(baseclass, baseclass)
+                                     for baseclass in obj.__bases__)
+                    # update obj's baseclasses tuple (__bases__) if needed
+                    if newbases != obj.__bases__:
+                        self.debug('updating %s.%s base classes',
+                                  obj.__module__, obj.__name__)
+                        obj.__bases__ = newbases
         
 # init logging 
 set_log_methods(VObject, getLogger('cubicweb'))
