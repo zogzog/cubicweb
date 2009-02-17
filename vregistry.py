@@ -587,6 +587,36 @@ class Selector(object):
     This class is only here to give access to binary operators, the
     selector logic itself should be implemented in the __call__ method
     """
+
+    def search_selector(self, selector):
+        """search for the given selector or selector instance in the selectors
+        tree. Return it of None if not found
+        """
+        if self is selector:
+            return self
+        if isinstance(selector, type) and instance(self, selector):
+            return self
+        return None
+    
+    def __and__(self, other):
+        return AndSelector(self, other)
+    def __rand__(self, other):
+        return AndSelector(other, self)
+
+    def __or__(self, other):
+        return OrSelector(self, other)
+    def __ror__(self, other):
+        return OrSelector(other, self)
+    
+    # XXX (function | function) or (function & function) not managed yet
+
+    def __call__(self, cls, *args, **kwargs):
+        return NotImplementedError("selector %s must implement its logic "
+                                   "in its __call__ method" % self.__class__)
+
+class MultiSelector(Selector):
+    """base class for compound selector classes
+    """
     def __init__(self, *selectors):
         self.selectors = self.merge_selectors(selectors)
 
@@ -609,10 +639,6 @@ class Selector(object):
         """search for the given selector or selector instance in the selectors
         tree. Return it of None if not found
         """
-        if self is selector:
-            return self
-        if isinstance(selector, type) and instance(self, selector):
-            return self
         for childselector in self.selectors:
             try:
                 if childselector.use_selector(selector):
@@ -621,22 +647,6 @@ class Selector(object):
                 if childselector is selector:
                     return childselector
         return None
-    
-    def __and__(self, other):
-        return AndSelector(self, other)
-    def __rand__(self, other):
-        return AndSelector(other, self)
-
-    def __or__(self, other):
-        return OrSelector(self, other)
-    def __ror__(self, other):
-        return OrSelector(other, self)
-    
-    # XXX (function | function) or (function & function) not managed yet
-
-    def __call__(self, cls, *args, **kwargs):
-        return NotImplementedError("selector %s must implement its logic "
-                                   "in its __call__ method" % self.__class__)
 
     
 def objectify_selector(selector_func):
@@ -652,7 +662,7 @@ def objectify_selector(selector_func):
                 {'__call__': lambda self, *args: selector_func(*args)})
 
 
-class AndSelector(Selector):
+class AndSelector(MultiSelector):
     """and-chained selectors (formerly known as chainall)"""
     def __call__(self, cls, *args, **kwargs):
         score = 0
@@ -664,7 +674,7 @@ class AndSelector(Selector):
         return score
 
 
-class OrSelector(Selector):
+class OrSelector(MultiSelector):
     """or-chained selectors (formerly known as chainfirst)"""
     def __call__(self, cls, *args, **kwargs):
         for selector in self.selectors:
