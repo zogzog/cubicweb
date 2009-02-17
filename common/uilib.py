@@ -17,7 +17,6 @@ from urllib import quote as urlquote
 from cStringIO import StringIO
 from copy import deepcopy
 
-import simplejson
 
 from mx.DateTime import DateTimeType, DateTimeDeltaType
 
@@ -258,6 +257,7 @@ def ajax_replace_url(nodeid, rql, vid=None, swap=False, **extraparams):
     elif vid:
         params.append(repr(vid))
     if extraparams:
+        import simplejson
         params.append(simplejson.dumps(extraparams))
     if swap:
         params.append('true')
