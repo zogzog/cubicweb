@@ -17,8 +17,7 @@ from cubicweb.common.registerers import (
     accepts_registerer, extresources_registerer,
     etype_rtype_priority_registerer)
 #etype_rtype_selector, has_relation,
-from cubicweb.common.view import Template
-from cubicweb.common.appobject import ReloadableMixIn
+from cubicweb.common.view import Template, ReloadableMixIn
 
 from cubicweb.web.htmlwidgets import (BoxLink, BoxWidget, SideBoxWidget,
                                       RawBoxItem, BoxSeparator)
