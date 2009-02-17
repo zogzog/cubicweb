@@ -6,6 +6,7 @@
 """
 __docformat__ = "restructuredtext en"
 
+from cubicweb.selectors import implements
 from cubicweb.common.view import EntityView
 
 _ = unicode 
@@ -18,8 +19,7 @@ class VCardEUserView(EntityView):
     title = _('vcard')
     templatable = False
     content_type = 'text/x-vcard'
-    accepts = ('EUser',)
-        
+    __selectors__ = implements('EUser')        
 
     def set_request_content_type(self):
         """overriden to set a .vcf filename"""

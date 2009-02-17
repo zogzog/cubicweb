@@ -8,7 +8,6 @@ from cubicweb.web.views.baseviews import OneLineView
 
 class TreeView(EntityView):
     id = 'treeview'
-    accepts = ('Any',)
     itemvid = 'treeitemview'
     css_classes = 'treeview widget'
     title = _('tree view')
@@ -67,7 +66,6 @@ class DefaultTreeViewItemView(EntityView):
     """default treeitem view for entities which don't implement ITree
     """
     id = 'treeitemview'
-    accepts = ('Any',)
     
     def cell_call(self, row, col, vid='oneline', parentvid='treeview'):
         entity = self.entity(row, col)
@@ -84,10 +82,7 @@ class TreeViewItemView(EntityView):
     (each item should be exandable if it's not a tree leaf)
     """
     id = 'treeitemview'
-    # XXX append yes to make sure we get an higher score than
-    #     the default treeitem view
-    __selectors__ = (implement_interface, yes)
-    accepts_interfaces = (ITree,)
+    __selectors__ = implements(ITree)
     
     def cell_call(self, row, col, vid='oneline', parentvid='treeview'):
         entity = self.entity(row, col)

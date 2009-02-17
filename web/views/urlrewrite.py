@@ -59,7 +59,6 @@ class URLRewriter(AppObject):
     __abstract__ = True
 
     id = 'urlrewriting'
-    accepts = ('Any',)
     priority = 1
 
     def rewrite(self, req, uri):

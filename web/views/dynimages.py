@@ -13,6 +13,7 @@ from itertools import cycle
 from logilab.common.graph import escape, GraphGenerator, DotBackend
 from yams import schema2dot as s2d
 
+from cubicweb.selectors import implements
 from cubicweb.common.view import EntityView, StartupView
 
 
@@ -108,7 +109,7 @@ class SchemaImageView(TmpFileViewMixin, StartupView):
 class EETypeSchemaImageView(TmpFileViewMixin, EntityView):
     id = 'eschemagraph'
     content_type = 'image/png'
-    accepts = ('EEType',)
+    __selectors__ = implements('EEType')
     skip_rels = ('owned_by', 'created_by', 'identity', 'is', 'is_instance_of')
     
     def _generate(self, tmpfile):
@@ -120,7 +121,7 @@ class EETypeSchemaImageView(TmpFileViewMixin, EntityView):
                        prophdlr=RestrictedSchemaDotPropsHandler(self.req))
 
 class ERTypeSchemaImageView(EETypeSchemaImageView):
-    accepts = ('ERType',)
+    __selectors__ = implements('ERType')
     
     def _generate(self, tmpfile):
         """display schema information for an entity"""
@@ -186,7 +187,7 @@ class WorkflowVisitor:
 class EETypeWorkflowImageView(TmpFileViewMixin, EntityView):
     id = 'ewfgraph'
     content_type = 'image/png'
-    accepts = ('EEType',)
+    __selectors__ = implements('EEType')
     
     def _generate(self, tmpfile):
         """display schema information for an entity"""

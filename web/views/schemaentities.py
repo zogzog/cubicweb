@@ -8,7 +8,7 @@ __docformat__ = "restructuredtext en"
 
 from logilab.mtconverter import html_escape
 
-from cubicweb.selectors import implements
+from cubicweb.selectors import implements, rql_condition
 from cubicweb.schemaviewer import SchemaViewer
 from cubicweb.common.uilib import ureport_as_html
 from cubicweb.common.view import EntityView
@@ -16,7 +16,7 @@ from cubicweb.web.views import baseviews
 
 
 class ImageView(EntityView):
-    accepts = ('EEType',)
+    __selectors__ = implements('EEType')
     id = 'image'
     title = _('image')
 
@@ -36,16 +36,16 @@ class _SchemaEntityPrimaryView(baseviews.PrimaryView):
         return html_escape(entity.dc_long_title())
     
 class EETypePrimaryView(_SchemaEntityPrimaryView):
-    accepts = ('EEType',)
+    __selectors__ = implements('EEType')
     skip_attrs = _SchemaEntityPrimaryView.skip_attrs + ('name', 'meta', 'final')
 
 class ERTypePrimaryView(_SchemaEntityPrimaryView):
-    accepts = ('ERType',)
+    __selectors__ = implements('ERType')
     skip_attrs = _SchemaEntityPrimaryView.skip_attrs + ('name', 'meta', 'final',
                                                         'symetric', 'inlined')
 
 class ErdefPrimaryView(_SchemaEntityPrimaryView):
-    accepts = ('EFRDef', 'ENFRDef')
+    __selectors__ = implements('EEType', 'ENFRDef')
     show_attr_label = True
 
 class EETypeSchemaView(EETypePrimaryView):
@@ -85,7 +85,7 @@ class ERTypeSchemaView(ERTypePrimaryView):
         
 class EETypeWorkflowView(EntityView):
     id = 'workflow'
-    accepts = ('EEType',)
+    __selectors__ = implements('EEType')
     cache_max_age = 60*60*2 # stay in http cache for 2 hours by default 
     
     def cell_call(self, row, col, **kwargs):
@@ -98,7 +98,7 @@ class EETypeWorkflowView(EntityView):
 
 
 class EETypeOneLineView(baseviews.OneLineView):
-    accepts = ('EEType',)
+    __selectors__ = implements('EEType')
     
     def cell_call(self, row, col, **kwargs):
         entity = self.entity(row, col)
@@ -114,12 +114,10 @@ from cubicweb.web.action import Action
 
 class ViewWorkflowAction(Action):
     id = 'workflow'
-    __selectors__ = (implements('EEType'), )
+    __selectors__ = implements('EEType') & rql_condition('S state_of X')
     
     category = 'mainactions'
     title = _('view workflow')
-    accepts = ('EEType',)
-    condition = 'S state_of X' # must have at least one state associated
     def url(self):
         entity = self.rset.get_entity(self.row or 0, self.col or 0)
         return entity.absolute_url(vid='workflow')

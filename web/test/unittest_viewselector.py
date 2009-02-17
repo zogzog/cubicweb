@@ -9,7 +9,7 @@ from cubicweb.devtools.apptest import EnvBasedTC
 
 
 from cubicweb import CW_SOFTWARE_ROOT as BASE, Binary
-from cubicweb.common.selectors import match_user_groups
+from cubicweb.selectors import match_user_groups, implements, rql_condition
 
 from cubicweb.web._exceptions import NoSelectableObject
 from cubicweb.web.action import Action
@@ -253,7 +253,7 @@ class VRegistryTC(ViewSelectorTC):
         del req.form['etype']
         # custom creation form
         class EUserCreationForm(baseforms.CreationForm):
-            accepts = ('EUser',)
+            __selectors__ = implements('EUSer')
         self.vreg.register_vobject_class(EUserCreationForm)
         req.form['etype'] = 'EUser'
         self.assertIsInstance(self.vreg.select_view('creation', req, rset),
@@ -434,15 +434,11 @@ class VRegistryTC(ViewSelectorTC):
             del self.vreg[SomeAction.__registry__][SomeAction.id]
 
 
-        
-
-
-from cubicweb.web.action import EntityAction
+from cubicweb.web.action import Action
 
 class EETypeRQLAction(EntityAction):
     id = 'testaction'
-    accepts = ('EEType',)
-    condition = 'X name "EEType"'
+    __selectors__ = implements('EEType') & rql_condition('X name "EEType"')
     title = 'bla'
 
 class RQLActionTC(ViewSelectorTC):

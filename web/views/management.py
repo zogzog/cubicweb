@@ -475,7 +475,7 @@ class EPropertiesForm(SystemEPropertiesForm):
                    chainall(one_line_rset, match_user_groups('managers'))
         )
         
-    accepts = ('EUser',)
+    __selectors__ = (implements('EUser',))
 
     title = _('preferences')
 

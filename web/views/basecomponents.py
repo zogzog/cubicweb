@@ -17,7 +17,7 @@ from cubicweb.common.uilib import html_escape, toggle_action
 from cubicweb.common.selectors import yes, non_final_entity, one_line_rset
 from cubicweb.schema import display_name
 from cubicweb.common.selectors import (chainfirst, two_etypes_rset,
-                                    match_form_params)
+                                       match_form_params, relation_possible)
 
 from cubicweb.web.htmlwidgets import MenuWidget, PopupBoxMenu, BoxSeparator, BoxLink
 from cubicweb.web.component import (Component, EntityVComponent, 
@@ -136,10 +136,9 @@ class ApplicationMessage(Component):
 class WFHistoryVComponent(EntityVComponent):
     """display the workflow history for entities supporting it"""
     id = 'wfhistory'
-    accepts = ('Any',)
+    __selectors__ = EntityVComponent.__selectors__ + (
+        relation_possible('wf_info_for', role='object'),)
     context = 'navcontentbottom'
-    rtype = 'wf_info_for'
-    target = 'subject'
     title = _('Workflow history')
 
     def cell_call(self, row, col, view=None):

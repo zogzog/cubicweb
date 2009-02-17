@@ -6,11 +6,13 @@
 """
 __docformat__ = "restructuredtext en"
 
+from cubicweb.selectors import implements
 from cubicweb.common.view import EntityView
 
 class CellView(EntityView):
     id = 'cell'
-    accepts = ('TrInfo',)
+    __selectors__ = implements('TrInfo')
+    
     def cell_call(self, row, col, cellvid=None):
         entity = self.entity(row, col)
         self.w(entity.printable_value('comment'))

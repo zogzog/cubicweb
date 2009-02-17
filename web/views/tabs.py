@@ -132,7 +132,7 @@ class EntityRelatedTab(EntityView):
     class ProjectScreenshotsView(EntityRelationView):
         '''display project's screenshots'''
         id = title = _('projectscreenshots')
-        accepts = ('Project',)
+        __selectors__ = implements('Project')
         rtype = 'screenshot'
         target = 'object'
         vid = 'gallery'

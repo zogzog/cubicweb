@@ -258,9 +258,9 @@ class EditableTableView(TableView):
     
 class CellView(EntityView):
     __selectors__ = (nonempty_rset, accept_rset)
+    # XXX backport implements('Any') ??
     
     id = 'cell'
-    accepts = ('Any',)
     
     def cell_call(self, row, col, cellvid=None):
         """

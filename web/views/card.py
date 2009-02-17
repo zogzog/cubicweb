@@ -6,13 +6,14 @@
 """
 __docformat__ = "restructuredtext en"
 
+from cubicweb.selectors import implements
 from cubicweb.web.views import baseviews
 from logilab.mtconverter import html_escape
 
 _ = unicode
 
 class CardPrimaryView(baseviews.PrimaryView):
-    accepts = ('Card',)
+    __selectors__ = implements('Card')
     skip_attrs = baseviews.PrimaryView.skip_attrs + ('title', 'synopsis', 'wikiid')
     show_attr_label = False
 

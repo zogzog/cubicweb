@@ -7,8 +7,9 @@
 """
 __docformat__ = "restructuredtext en"
 
+from cubicweb.selectors import implements
 from cubicweb.web.views import baseviews
 
 class EPropertyPrimaryView(baseviews.PrimaryView):
-    accepts = ('EProperty',)
+    __selectors__ = implements('EProperty')
     skip_none = False

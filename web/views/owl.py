@@ -155,7 +155,6 @@ class OWLABOXView(EntityView):
     id = 'owlabox'
     title = _('owlabox')
     templatable = False
-    accepts = ('Any',)
     content_type = 'application/xml' # 'text/xml'
     
     def call(self):
@@ -170,11 +169,9 @@ class OWLABOXView(EntityView):
 
         
 class OWLABOXItemView(EntityView):
-    '''This view represents a part of the ABOX for a given entity.'''
-    
+    '''This view represents a part of the ABOX for a given entity.'''    
     id = 'owlaboxitem'
     templatable = False
-    accepts = ('Any',)
     content_type = 'application/xml' # 'text/xml'
 
     def cell_call(self, row, col, skiprels=DEFAULT_SKIP_RELS):

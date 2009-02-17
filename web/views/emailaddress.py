@@ -8,11 +8,12 @@ __docformat__ = "restructuredtext en"
 
 from logilab.mtconverter import html_escape
 
+from cubicweb.selectors import implements
 from cubicweb.common import Unauthorized
 from cubicweb.web.views import baseviews
 
 class EmailAddressPrimaryView(baseviews.PrimaryView):
-    accepts = ('EmailAddress',)
+    __selectors__ = implements('EmailAddress')
     
     def cell_call(self, row, col, skipeids=None):
         self.skipeids = skipeids
@@ -59,7 +60,7 @@ class EmailAddressPrimaryView(baseviews.PrimaryView):
 
 
 class EmailAddressShortPrimaryView(EmailAddressPrimaryView):
-    accepts = ('EmailAddress',)
+    __selectors__ = implements('EmailAddress')
     id = 'shortprimary'
     title = None # hidden view
     def render_entity_attributes(self, entity, siderelations):
@@ -69,7 +70,7 @@ class EmailAddressShortPrimaryView(EmailAddressPrimaryView):
 
     
 class EmailAddressOneLineView(baseviews.OneLineView):
-    accepts = ('EmailAddress',)
+    __selectors__ = implements('EmailAddress')
     
     def cell_call(self, row, col, **kwargs):
         entity = self.entity(row, col)
@@ -89,7 +90,7 @@ class EmailAddressMailToView(baseviews.OneLineView):
     'mailto:'"""
 
     id = 'mailto'
-    accepts = ('EmailAddress',)
+    __selectors__ = implements('EmailAddress')
     
     def cell_call(self, row, col, **kwargs):
         entity = self.entity(row, col)
@@ -113,7 +114,7 @@ class EmailAddressMailToView(baseviews.OneLineView):
 
     
 class EmailAddressTextView(baseviews.TextView):
-    accepts = ('EmailAddress',)
+    __selectors__ = implements('EmailAddress')
     
     def cell_call(self, row, col, **kwargs):
         self.w(self.entity(row, col).display_address())
