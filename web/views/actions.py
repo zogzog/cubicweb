@@ -51,8 +51,7 @@ class SelectAction(Action):
     if accept match.
     """
     id = 'select'
-    __selectors__ = (match_search_state('linksearch'),
-                     match_searched_etype)
+    __select__ = match_search_state('linksearch') & match_searched_etype()
     
     title = _('select')
     category = 'mainactions'    
@@ -64,7 +63,7 @@ class SelectAction(Action):
 
 class CancelSelectAction(Action):
     id = 'cancel'
-    __selectors__ = (match_search_state('linksearch'),)
+    __select__ = match_search_state('linksearch')
     
     title = _('cancel select')
     category = 'mainactions'
@@ -78,10 +77,10 @@ class CancelSelectAction(Action):
 
 class ViewAction(Action):
     id = 'view'
-    __selectors__ = (match_search_state('normal'),
-                     match_user_groups('users', 'managers'),
-                     view_is_not_default_view,
-                     non_final_entity())
+    __select__ = (match_search_state('normal') &
+                  match_user_groups('users', 'managers') &
+                  view_is_not_default_view() & 
+                  non_final_entity())
     
     title = _('view')
     category = 'mainactions'    
@@ -97,9 +96,9 @@ class ViewAction(Action):
 
 class ModifyAction(Action):
     id = 'edit'
-    __selectors__ = (match_search_state('normal'),
-                     one_line_rset, 
-                     has_permission('update') | has_editable_relation('add'))
+    __select__ = (match_search_state('normal') &
+                  one_line_rset() & 
+                  (has_permission('update') | has_editable_relation('add')))
     
     title = _('modify')
     category = 'mainactions'
@@ -112,9 +111,9 @@ class ModifyAction(Action):
 
 class MultipleEditAction(Action):
     id = 'muledit' # XXX get strange conflicts if id='edit'
-    __selectors__ = (match_search_state('normal'),
-                     two_lines_rset, one_etype_rset,
-                     has_permission('update'))
+    __select__ = (match_search_state('normal') &
+                     two_lines_rset(), one_etype_rset() &
+                  has_permission('update'))
 
     title = _('modify')
     category = 'mainactions'
@@ -128,24 +127,26 @@ class MultipleEditAction(Action):
 
 class ManagePermissionsAction(Action):
     id = 'addpermission'
-    __selectors__ = match_user_groups('managers') 
+    __select__ = match_user_groups('managers') 
 
     title = _('manage permissions')
     category = 'moreactions'
     order = 100
 
+    @classmethod
     def registered(cls, vreg):
         if 'require_permission' in vreg.schema:
-            cls.__selectors__ |= relation_possible('require_permission', 'subject', 'EPermission',
-                                                   action='add')
-            
+            cls.__select__ |= relation_possible('require_permission', 'subject', 'EPermission',
+                                                action='add')
+        return super(ManagePermissionsAction, cls).registered(vreg)
+    
     def url(self):
         return self.rset.get_entity(0, 0).absolute_url(vid='security')
 
     
 class DeleteAction(Action):
     id = 'delete'
-    __selectors__ = (one_line_rset, has_permission('delete'))
+    __select__ = one_line_rset() & has_permission('delete')
     
     title = _('delete')
     category = 'moreactions' 
@@ -160,7 +161,7 @@ class DeleteAction(Action):
         
 class CopyAction(Action):
     id = 'copy'
-    __selectors__ = (one_line_rset, has_permission('add'))
+    __select__ = one_line_rset() & has_permission('add')
     
     title = _('copy')
     category = 'moreactions'
@@ -176,11 +177,10 @@ class AddNewAction(MultipleEditAction):
     add a new one
     """
     id = 'addentity'
-    __selectors__ = (match_search_state('normal'),
-                     (addable_etype_empty_rset
-                      # XXX has_add_permission in the middle so '&' is available
-                      | (two_lines_rset & has_add_permission() & one_etype_rset ))
-                     )
+    __select__ = (match_search_state('normal') &
+                  (addable_etype_empty_rset()
+                   | (two_lines_rset() & one_etype_rset &  & has_add_permission()))
+                  )
 
     category = 'moreactions'
     order = 40
@@ -203,7 +203,7 @@ class AddNewAction(MultipleEditAction):
 
 class UserPreferencesAction(Action):
     id = 'myprefs'
-    __selectors__ = (authenticated_user,)
+    __select__ = authenticated_user()
     
     title = _('user preferences')
     category = 'useractions'
@@ -215,7 +215,7 @@ class UserPreferencesAction(Action):
 
 class UserInfoAction(Action):
     id = 'myinfos'
-    __selectors__ = (authenticated_user,)
+    __select__ = authenticated_user()
     
     title = _('personnal informations')
     category = 'useractions'
@@ -227,7 +227,7 @@ class UserInfoAction(Action):
 
 class LogoutAction(Action):
     id = 'logout'
-    __selectors__ = (authenticated_user,)
+    __select__ = authenticated_user()
     
     title = _('logout')
     category = 'useractions'
@@ -241,7 +241,7 @@ class LogoutAction(Action):
 
 class ManagersAction(Action):
     __abstract__ = True
-    __selectors__ = (match_user_groups('managers'),)
+    __select__ = match_user_groups('managers')
 
     category = 'siteactions'
 
@@ -263,7 +263,7 @@ class ManageAction(ManagersAction):
 
 class ViewSchemaAction(Action):
     id = 'schema'
-    __selectors__ = (yes,)
+    __select__ = yes()
     
     title = _("site schema")
     category = 'siteactions'

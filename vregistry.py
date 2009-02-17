@@ -256,6 +256,7 @@ class VRegistry(object):
                 
     def register(self, obj, registryname=None, oid=None, clear=False):
         """base method to add an object in the registry"""
+        assert not '__abstract__' in obj.__dict__
         registryname = registryname or obj.__registry__
         oid = oid or obj.id
         registry = self._registries.setdefault(registryname, {})

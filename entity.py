@@ -17,7 +17,7 @@ from cubicweb import Unauthorized
 from cubicweb.vregistry import autoselectors
 from cubicweb.rset import ResultSet
 from cubicweb.selectors import yes
-from cubicweb.common.appobject import AppRsetObject
+from cubicweb.appobject import AppRsetObject
 from cubicweb.common.registerers import id_registerer
 from cubicweb.common.uilib import printable_value, html_escape, soup2xhtml
 from cubicweb.common.mixins import MI_REL_TRIGGERS
