@@ -143,7 +143,7 @@ class ManagePermissions(Action):
     
 class DeleteAction(Action):
     id = 'delete'
-    __selectors__ = (has_permission('delete'),)
+    __selectors__ = (one_line_rset, has_permission('delete'))
     
     title = _('delete')
     category = 'moreactions' 
@@ -158,7 +158,7 @@ class DeleteAction(Action):
         
 class CopyAction(Action):
     id = 'copy'
-    __selectors__ = (has_permission('add'),)
+    __selectors__ = (one_line_rset, has_permission('add'))
     
     title = _('copy')
     category = 'moreactions'

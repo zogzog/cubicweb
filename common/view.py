@@ -418,7 +418,7 @@ class Template(View):
     is only used globally (i.e. no result set adaptation)
     """
     __registry__ = 'templates'
-    __registerer__ = priority_registerer
+    # __registerer__ = priority_registerer
     __selectors__ = (yes,)
 
     registered = require_group_compat(View.registered.im_func)

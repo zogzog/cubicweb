@@ -204,7 +204,47 @@ class VRegistry(object):
 
     def __contains__(self, key):
         return key in self._registries
-        
+
+
+    ##########
+    def register(self, obj, registryname=None):
+        registryname = registryname or obj.__registry__
+        registry = self._registries.setdefault(registryname, {})
+        registry.setdefault(obj.id, []).append(obj)
+        # XXX automatic reloading management
+        self._registered['%s.%s' % (obj.__module__, obj.id)] = obj
+
+    def register_if_interface_found(self, obj, registryname, iface):
+        registry = self._registries.setdefault(registryname, {})
+        for etype in self.registry_object('etypes'):
+            if implements(etype, iface):
+                registry.setdefault(obj.id, []).append(obj)
+                # XXX automatic reloading management
+                self._registered['%s.%s' % (obj.__module__, obj.id)] = obj
+                break
+
+    def unregister(self, obj, registryname=None):
+        registryname = registryname or obj.__registry__
+        registry = self.registry(registryname)
+        removed_id = obj.classid()
+        for registered in registry[obj.id]:
+            # use classid() to compare classes because vreg will probably
+            # have its own version of the class, loaded through execfile
+            if registered.classid() == removed_id:
+                # XXX automatic reloading management
+                registry[obj.id].remove(registered)
+                break
+    
+    def register_and_replace(self, obj, replaced, registryname=None):
+        registryname = registryname or obj.__registry__
+        registry = self.registry(registryname)
+        registered_objs = registry[obj.id]
+        for index, registered in enumerate(registered_objs):
+            if registered.classid() == replaced:
+                registry[obj.id][index] = obj
+                self._registered['%s.%s' % (obj.__module__, obj.id)] = obj
+    ##########
+    
     def register_vobject_class(self, cls, _kicked=set()):
         """handle vobject class registration
         
@@ -473,13 +513,20 @@ class VRegistry(object):
         return True
 
     def load_module(self, module):
-        registered = {}
-        self.info('loading %s', module)
-        for objname, obj in vars(module).items():
-            if objname.startswith('_'):
-                continue
-            self.load_ancestors_then_object(module.__name__, registered, obj)
-        return registered
+        if hasattr(module, 'cw_register_objects'):
+            self._registered = {}
+            module.cw_register_objects(self)
+            registered = self._resigtered
+            del self._registered
+            return registered
+        else:
+            registered = {}
+            self.info('loading %s', module)
+            for objname, obj in vars(module).items():
+                if objname.startswith('_'):
+                    continue
+                self.load_ancestors_then_object(module.__name__, registered, obj)
+            return registered
     
     def load_ancestors_then_object(self, modname, registered, obj):
         # skip imported classes

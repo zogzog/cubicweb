@@ -27,8 +27,7 @@ def contextview_selector(cls, req, rset, row=None, col=None, view=None,
 class FilterBox(BoxTemplate):
     """filter results of a query"""
     id = 'filter_box'
-    __selectors__ = (chainfirst(contextview_selector,
-                                chainall(non_final_entity, two_lines_rset)),
+    __selectors__ = ((non_final_entity() & two_lines_rset) | contextview_selector,
                      match_context_prop)
     context = 'left'
     title = _('boxes_filter_box')
