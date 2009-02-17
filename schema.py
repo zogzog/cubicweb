@@ -954,9 +954,14 @@ class CubicWebSchemaLoader(BootstrapSchemaLoader):
 # translation
 PERM_USE_TEMPLATE_FORMAT = _('use_template_format')
 
+from cubicweb.mttransforms import HAS_TAL
+
 class FormatConstraint(StaticVocabularyConstraint):
-    need_perm_formats = (_('text/cubicweb-page-template'),
-                         )
+    if HAS_TAL:
+        need_perm_formats = (_('text/cubicweb-page-template'),)
+    else:
+        need_perm_formats = ()
+        
     regular_formats = (_('text/rest'),
                        _('text/html'),
                        _('text/plain'),
