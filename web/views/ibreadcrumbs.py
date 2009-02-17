@@ -71,7 +71,7 @@ class BreadCrumbEntityVComponent(EntityVComponent):
 
 class BreadCrumbComponent(BreadCrumbEntityVComponent):
     __registry__ = 'components'
-    __selectors__ = (one_line_rset, implement_interface)
+    __select__ = (one_line_rset() & implements(IBreadCrumbs))
     visible = True
 
 

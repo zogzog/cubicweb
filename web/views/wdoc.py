@@ -85,7 +85,7 @@ def subsections(node):
 # help views ##################################################################
 
 class InlineHelpView(StartupView):
-    __selectors__ = match_form_params('fid')
+    __select__ = match_form_params('fid')
     id = 'wdoc'
     title = _('site documentation')
     
@@ -163,7 +163,7 @@ class InlineHelpView(StartupView):
 
 class InlineHelpImageView(StartupView):
     id = 'wdocimages'
-    __selectors__ = match_form_params('fid')
+    __select__ = match_form_params('fid')
     binary = True
     templatable = False
     content_type = 'image/png'

@@ -30,7 +30,7 @@ class SearchForAssociationView(EntityView):
     """
     id = 'search-associate'
     
-    __selectors__ = (one_line_rset, match_search_state('linksearch'), accept)
+    __select__ = one_line_rset() & match_search_state('linksearch') & accept
 
     def cell_call(self, row, col):
         entity = self.entity(0, 0)

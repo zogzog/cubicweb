@@ -174,7 +174,7 @@ class SecurityManagementView(EntityView):
 
 class ErrorView(AnyRsetView):
     """default view when no result has been found"""
-    __selectors__ = yes
+    __select__ = yes()
     id = 'error'
 
     def page_title(self):

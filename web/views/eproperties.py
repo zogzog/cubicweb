@@ -13,7 +13,7 @@ from logilab.common.decorators import cached
 
 from cubicweb.selectors import (one_line_rset, none_rset, implements,
                                 match_user_groups, chainfirst, chainall)
-<from cubicweb.common.utils import UStringIO
+from cubicweb.common.utils import UStringIO
 from cubicweb.common.view import StartupView
 from cubicweb.web import INTERNAL_FIELD_VALUE, eid_param, stdmsgs
 from cubicweb.web.views import baseviews

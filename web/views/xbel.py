@@ -9,6 +9,7 @@ _ = unicode
 
 from logilab.mtconverter import html_escape
 
+from cubicweb.selectors import implements
 from cubicweb.web.views.baseviews import XmlView, EntityView
 
 
