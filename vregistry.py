@@ -235,6 +235,7 @@ class VRegistry(object):
         assert not '__abstract__' in obj.__dict__
         registryname = registryname or obj.__registry__
         oid = oid or obj.id
+        assert oid
         registry = self._registries.setdefault(registryname, {})
         if clear:
             vobjects = registry[oid] =  []
