@@ -14,7 +14,6 @@ from logilab.mtconverter import TransformData, TransformError
 from rql.utils import rqlvar_maker
 
 from cubicweb import Unauthorized
-from cubicweb.vregistry import autoselectors
 from cubicweb.rset import ResultSet
 from cubicweb.selectors import yes
 from cubicweb.common.appobject import AppRsetObject
@@ -167,7 +166,7 @@ class RelationTags(object):
         return 'inlineview' in self.get_tags(rtype, targettype, role)
 
 
-class metaentity(autoselectors):
+class metaentity(type):
     """this metaclass sets the relation tags on the entity class
     and deals with the `widgets` attribute
     """

@@ -29,6 +29,7 @@ import sys
 from os import listdir, stat
 from os.path import dirname, join, realpath, split, isdir
 from logging import getLogger
+import types
 
 from cubicweb import CW_SOFTWARE_ROOT, set_log_methods
 from cubicweb import RegistryNotFound, ObjectNotFound, NoSelectableObject
@@ -90,35 +91,6 @@ def selector(cls, *args, **kwargs):
     raise NotImplementedError(cls)
 
 
-class autoselectors(type):
-    """implements __selectors__ / __select__ compatibility layer so that:
-
-    __select__ = chainall(classmethod(A, B, C))
-
-    can be replaced by something like:
-    
-    __selectors__ = (A, B, C)
-    """
-    def __new__(mcs, name, bases, classdict):
-        if '__select__' in classdict and '__selectors__' in classdict:
-            raise TypeError("__select__ and __selectors__ "
-                            "can't be used together")
-        if '__select__' not in classdict and '__selectors__' in classdict:
-            selectors = classdict['__selectors__']
-            if not isinstance(selectors, (tuple, list)):
-                selectors = (selectors,)
-            if len(selectors) > 1:
-                classdict['__select__'] = classmethod(chainall(*selectors))
-            else:
-                classdict['__select__'] = classmethod(selectors[0])
-        return super(autoselectors, mcs).__new__(mcs, name, bases, classdict)
-
-    def __setattr__(self, attr, value):
-        if attr == '__selectors__':
-            self.__select__ = classmethod(chainall(*value))
-        super(autoselectors, self).__setattr__(attr, value)
-
-
 class VObject(object):
     """visual object, use to be handled somehow by the visual components
     registry.
@@ -142,7 +114,6 @@ class VObject(object):
     Moreover, the `__abstract__` attribute may be set to True to indicate
     that a vobject is abstract and should not be registered
     """
-    __metaclass__ = autoselectors
     # necessary attributes to interact with the registry
     id = None
     __registry__ = None
@@ -157,6 +128,7 @@ class VObject(object):
         may be the right hook to create an instance for example). By
         default the vobject is returned without any transformation.
         """
+        cls.__select__ = cls.build___select__()
         return cls
 
     @classmethod
@@ -174,6 +146,23 @@ class VObject(object):
     def classid(cls):
         """returns a unique identifier for the vobject"""
         return '%s.%s' % (cls.__module__, cls.__name__)
+
+    @classmethod
+    def build___select__(cls):
+        classdict = cls.__dict__
+        if '__select__' in classdict and '__selectors__' in classdict:
+            raise TypeError("__select__ and __selectors__ can't be used together")
+        if '__selectors__' in classdict:
+            # case where __selectors__ is defined locally (but __select__
+            # is in a parent class)
+            selectors = classdict['__selectors__']
+            if len(selectors) == 1:
+                # micro optimization: don't bother with AndSelector if there's
+                # only one selector
+                return _instantiate_selector(selectors[0])
+            return AndSelector(_instantiate_selector(selector)
+                               for selector in selectors)
+        return cls.__select__
 
 
 class VRegistry(object):
@@ -664,6 +653,17 @@ def objectify_selector(selector_func):
     """
     return type(selector_func.__name__, (Selector,),
                 {'__call__': lambda self, *args: selector_func(*args)})
+
+def _instantiate_selector(selector):
+    """ensures `selector` is a `Selector` instance
+    
+    NOTE: This should only be used locally in build___select__()
+    """
+    if isinstance(selector, types.FunctionType):
+        return objectify_selector(selector)()
+    if issubclass(selector, Selector):
+        return selector()
+    return selector
 
 
 class AndSelector(MultiSelector):
