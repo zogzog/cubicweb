@@ -2,13 +2,14 @@
 
 
 :organization: Logilab
-:copyright: 2001-2008 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+:copyright: 2001-2009 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 """
 __docformat__ = "restructuredtext en"
 
 from cubicweb import UnknownEid
-from cubicweb.common.view import ComponentMixIn, StartupView
+from cubicweb.common.appobject import ComponentMixIn
+from cubicweb.common.view import StartupView
 from cubicweb.common.mail import format_mail
 from cubicweb.server.hooksmanager import Hook
 from cubicweb.server.hookhelper import SendMailOp

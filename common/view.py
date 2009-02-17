@@ -16,7 +16,7 @@ from cubicweb.selectors import (yes, match_user_groups, implements,
                                 nonempty_rset, none_rset)
 from cubicweb.selectors import require_group_compat, accepts_compat
 from cubicweb.common.registerers import accepts_registerer, priority_registerer
-from cubicweb.common.appobject import AppRsetObject, ComponentMixIn
+from cubicweb.common.appobject import AppRsetObject
 from cubicweb.common.utils import UStringIO, HTMLStream
 
 _ = unicode
@@ -466,15 +466,3 @@ class MainTemplate(Template):
         self._stream.doctype = self.doctype
         if not xmldecl:
             self._stream.xmldecl = u''
-
-# viewable components base classes ############################################
-
-class VComponent(ComponentMixIn, View):
-    """base class for displayable components"""
-    property_defs = {
-        'visible':  dict(type='Boolean', default=True,
-                         help=_('display the component or not')),}
-
-class SingletonVComponent(VComponent):
-    """base class for displayable unique components"""
-    __registerer__ = priority_registerer

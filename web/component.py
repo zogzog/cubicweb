@@ -6,20 +6,19 @@
 """
 __docformat__ = "restructuredtext en"
 
-from cubicweb.selectors import (paginated_rset, one_line_rset,
-                                primary_view, match_context_prop,
-                                condition_compat, accepts_compat)
-from cubicweb.common.appobject import Component, SingletonComponent
+from cubicweb.selectors import (
+    paginated_rset, one_line_rset, primary_view, match_context_prop,
+    condition_compat, accepts_compat, has_relation_compat)
+from cubicweb.common.appobject import Component, SingletonComponent, ComponentMixIn
 from cubicweb.common.utils import merge_dicts
-from cubicweb.common.view import VComponent, SingletonVComponent
+from cubicweb.common.view import View
 from cubicweb.common.registerers import action_registerer
-#rql_condition, accept, has_relation,  etype_rtype_selector
 from cubicweb.common.uilib import html_escape
 
 _ = unicode
 
 
-class EntityVComponent(VComponent):
+class EntityVComponent(ComponentMixIn, View):
     """abstract base class for additinal components displayed in content
     headers and footer according to:
     
@@ -32,13 +31,8 @@ class EntityVComponent(VComponent):
     
     __registry__ = 'contentnavigation'
     __registerer__ = action_registerer    
-    __selectors__ = (one_line_rset, primary_view,
-                     match_context_prop,
-#                     etype_rtype_selector,
-#                     has_relation, accept,
-#                     rql_condition)
-                     )
-    registered = accepts_compat(condition_compat(VComponent.registered.im_func))
+    __selectors__ = (one_line_rset, primary_view, match_context_prop,)
+    registered = accepts_compat(has_relation_compat(condition_compat(View.registered.im_func)))
     
     property_defs = {
         _('visible'):  dict(type='Boolean', default=True,
@@ -63,10 +57,11 @@ class EntityVComponent(VComponent):
         raise NotImplementedError()
 
     
-class NavigationComponent(VComponent):
+class NavigationComponent(ComponentMixIn, View):
     """abstract base class for navigation components"""
-    __selectors__ = (paginated_rset,)
     id = 'navigation'
+    __selectors__ = (paginated_rset,)
+    
     page_size_property = 'navigation.page-size'
     start_param = '__start'
     stop_param = '__stop'
@@ -152,16 +147,10 @@ class NavigationComponent(VComponent):
 
 class RelatedObjectsVComponent(EntityVComponent):
     """a section to display some related entities"""
-    __selectors__ = (one_line_rset, primary_view,
-                     match_context_prop, 
-#                     etype_rtype_selector, has_relation,
-#                     accept)
-                     )
     vid = 'list'
 
     def rql(self):
-        """override this method if you want to use a custom rql query.
-        """
+        """override this method if you want to use a custom rql query"""
         return None
     
     def cell_call(self, row, col, view=None):
