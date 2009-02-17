@@ -289,13 +289,16 @@ class VRegistry(object):
                 break
     
     def register_and_replace(self, obj, replaced, registryname=None):
+        if hasattr(replaced, 'classid'):
+            replaced = replaced.classid()
         registryname = registryname or obj.__registry__
         registry = self.registry(registryname)
         registered_objs = registry[obj.id]
         for index, registered in enumerate(registered_objs):
             if registered.classid() == replaced:
-                registry[obj.id][index] = obj
-                self._registered['%s.%s' % (obj.__module__, obj.id)] = obj                
+                del registry[obj.id][index]
+                break
+        self.register(obj, registryname=registryname)
 
     # dynamic selection methods ###############################################
     
