@@ -11,7 +11,7 @@ from cubicweb.selectors import (relation_possible, match_search_state,
                                 one_line_rset, may_add_relation, yes,
                                 accepts_compat, condition_compat, deprecate)
 from cubicweb.common.appobject import AppRsetObject
-from cubicweb.common.registerers import action_registerer
+from cubicweb.common.registerers import accepts_registerer
 
 _ = unicode
 
@@ -21,7 +21,7 @@ class Action(AppRsetObject):
     request search state. 
     """
     __registry__ = 'actions'
-    __registerer__ = action_registerer
+    __registerer__ = accepts_registerer
     __selectors__ = (yes,) 
     
     property_defs = {
