@@ -105,6 +105,8 @@ class autoselectors(type):
                             "can't be used together")
         if '__select__' not in classdict and '__selectors__' in classdict:
             selectors = classdict['__selectors__']
+            if not isinstance(selectors, (tuple, list)):
+                selectors = (selectors,)
             if len(selectors) > 1:
                 classdict['__select__'] = classmethod(chainall(*selectors))
             else:
