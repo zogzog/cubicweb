@@ -12,8 +12,8 @@ from logilab.common.deprecation import deprecated_function
 from logilab.common.decorators import cached
 
 from cubicweb import Unauthorized, typed_eid
+from cubicweb.entity import Entity
 from cubicweb.common.utils import dump_class
-from cubicweb.common.entity import Entity
 from cubicweb.schema import FormatConstraint
 
 from cubicweb.interfaces import IBreadCrumbs, IFeed

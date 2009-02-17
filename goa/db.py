@@ -25,7 +25,7 @@ following differences:
 * XXX ListProperty
 
 :organization: Logilab
-:copyright: 2008 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+:copyright: 2008-2009 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 """
 __docformat__ = "restructuredtext en"
@@ -37,7 +37,7 @@ from logilab.common.decorators import cached, iclassmethod
 
 from cubicweb import RequestSessionMixIn, Binary, entities
 from cubicweb.rset import ResultSet
-from cubicweb.common.entity import metaentity
+from cubicweb.entity import metaentity
 from cubicweb.server.utils import crypt_password
 from cubicweb.goa import use_mx_for_dates, mx2datetime, MODE
 from cubicweb.goa.dbinit import init_relations

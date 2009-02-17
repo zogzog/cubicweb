@@ -84,7 +84,7 @@ def reindex_entities(schema, session):
           ', '.join(sorted(str(e) for e in etypes))
     pb = ProgressBar(len(etypes) + 1)
     # first monkey patch Entity.check to disable validation
-    from cubicweb.common.entity import Entity
+    from cubicweb.entity import Entity
     _check = Entity.check
     Entity.check = lambda self, creation=False: True
     # clear fti table first
