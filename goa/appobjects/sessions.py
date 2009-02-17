@@ -17,8 +17,8 @@ from logilab.common.decorators import cached, clear_cache
 
 from cubicweb import UnknownEid, BadConnectionId
 from cubicweb.dbapi import Connection, ConnectionProperties, repo_connect
+from cubicweb.selectors import none_rset, match_user_groups
 from cubicweb.server.session import Session
-from cubicweb.common.selectors import none_rset, match_user_groups
 from cubicweb.web import InvalidSession
 from cubicweb.web.application import AbstractSessionManager
 from cubicweb.web.application import AbstractAuthenticationManager
@@ -269,4 +269,9 @@ class SessionsCleaner(StartupView):
         self.w(u'%s repository sessions closed<br/>\n' % nbclosed)
         self.w(u'%s remaining sessions<br/>\n' % remaining)
         self.w(u'</div>')
+
         
+def registration_callback(vreg):
+    vreg.register(SessionsCleaner)
+    vreg.register(GAEAuthenticationManager, clear=True)
+    vreg.register(GAEPersistentSessionManager, clear=True)
