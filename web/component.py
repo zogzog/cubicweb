@@ -17,8 +17,9 @@ from cubicweb.common.uilib import html_escape
 
 _ = unicode
 
+class VComponent(ComponentMixIn, View): pass
 
-class EntityVComponent(ComponentMixIn, View):
+class EntityVComponent(VComponent):
     """abstract base class for additinal components displayed in content
     headers and footer according to:
     
