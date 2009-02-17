@@ -8,8 +8,8 @@
 __docformat__ = "restructuredtext en"
 
 from cubicweb import UnknownEid
-from cubicweb.common.appobject import Component
-from cubicweb.common.view import StartupView
+from cubicweb.selectors import none_rset
+from cubicweb.common.view import Component
 from cubicweb.common.mail import format_mail
 from cubicweb.server.hooksmanager import Hook
 from cubicweb.server.hookhelper import SendMailOp
