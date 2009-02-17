@@ -100,7 +100,7 @@ class View(AppRsetObject):
     add_to_breadcrumbs = True
     category = 'view'
 
-    def __init__(self, req, rset):
+    def __init__(self, req=None, rset=None):
         super(View, self).__init__(req, rset)
         self.w = None
 

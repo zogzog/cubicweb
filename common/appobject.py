@@ -64,15 +64,15 @@ class AppRsetObject(VObject):
         return cls
 
     @classmethod
-    def selected(cls, req, rset, row=None, col=None, **kwargs):
+    def selected(cls, *args, **kwargs):
         """by default web app objects are usually instantiated on
         selection according to a request, a result set, and optional
         row and col
         """
-        instance = cls(req, rset)
-        instance.row = row
-        instance.col = col
-        instance.sel_kwargs = kwargs
+        instance = cls(*args)
+        instance.row = kwargs.pop('row', None)
+        instance.col = kwargs.pop('col', None)
+        instance.selection_kwargs = kwargs
         return instance
 
     # Eproperties definition:
@@ -100,7 +100,7 @@ class AppRsetObject(VObject):
         return '%s.%s.%s' % (cls.__registry__, cls.id, propid)
             
         
-    def __init__(self, req, rset):
+    def __init__(self, req=None, rset=None):
         super(AppRsetObject, self).__init__()
         self.req = req
         self.rset = rset
