@@ -126,17 +126,19 @@ class MultipleEditAction(Action):
 
 # generic secondary actions ###################################################
 
-class ManagePermissions(Action):
+class ManagePermissionsAction(Action):
     id = 'addpermission'
-    __selectors__ = (
-        (match_user_groups('managers') 
-         | relation_possible('require_permission', 'subject', 'EPermission')),
-                   )
+    __selectors__ = match_user_groups('managers') 
 
     title = _('manage permissions')
     category = 'moreactions'
     order = 100
-    
+
+    def registered(cls, vreg):
+        if 'require_permission' in vreg.schema:
+            cls.__selectors__ |= relation_possible('require_permission', 'subject', 'EPermission',
+                                                   action='add')
+            
     def url(self):
         return self.rset.get_entity(0, 0).absolute_url(vid='security')
 
@@ -269,4 +271,3 @@ class ViewSchemaAction(Action):
     
     def url(self):
         return self.build_url(self.id)
-
