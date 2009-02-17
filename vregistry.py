@@ -243,7 +243,17 @@ class VRegistry(object):
 #     def clear(self, key):
 #         regname, oid = key.split('.')
 #         self[regname].pop(oid, None)
-        
+    def register_all(self, objects, modname, butclasses=()):
+        for obj in objects:
+            try:
+                if obj.__module__ != modname or obj in butclasses:
+                    continue
+                oid = obj.id
+            except AttributeError:
+                continue
+            if oid:
+                self.register(obj)
+                
     def register(self, obj, registryname=None, oid=None, clear=False):
         """base method to add an object in the registry"""
         registryname = registryname or obj.__registry__
