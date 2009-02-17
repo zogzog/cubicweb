@@ -644,7 +644,7 @@ def objectify_selector(selector_func):
         
     """
     return type(selector_func.__name__, (Selector,),
-                {'__call__': lambda self, *args: selector_func(*args)})
+                {'__call__': lambda self, *args, **kwargs: selector_func(*args, **kwargs)})
 
 def _instantiate_selector(selector):
     """ensures `selector` is a `Selector` instance
