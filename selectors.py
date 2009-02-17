@@ -556,12 +556,12 @@ class relation_possible(EClassSelector):
         self.action = action
 
     @lltrace
-    def __call__(self, cls, *args, **kwargs):
+    def __call__(self, cls, req, *args, **kwargs):
         rschema = cls.schema.rschema(self.rtype)
         if not (rschema.has_perm(req, self.action)
                 or rschema.has_local_role(self.action)):
             return 0
-        return super(relation_possible, self)(cls, *args, **kwargs)
+        return super(relation_possible, self).__call__(cls, req, *args, **kwargs)
         
     def score_class(self, eclass, req):
         eschema = eclass.e_schema
@@ -906,14 +906,22 @@ def unbind_method(selector):
         # get the unbound method
         if hasattr(registered, 'im_func'):
             registered = registered.im_func
-        return selector(registered)
         # don't rebind since it will be done automatically during
         # the assignment, inside the destination class body
-        return plugged_selector
+        return selector(registered)
     new_selector.__name__ = selector.__name__
     return new_selector
 
 
+def deprecate(registered, msg):
+    # get the unbound method
+    if hasattr(registered, 'im_func'):
+        registered = registered.im_func
+    def _deprecate(cls, vreg):
+        warn(msg, DeprecationWarning)
+        return registered(cls, vreg)
+    return _deprecate
+    
 @unbind_method
 def require_group_compat(registered):
     def plug_selector(cls, vreg):

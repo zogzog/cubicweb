@@ -10,8 +10,8 @@ from logilab.common.deprecation import class_moved
 
 from cubicweb import role, target
 from cubicweb.selectors import (relation_possible, match_search_state,
-                                one_line_rset, may_add_relation,
-                                accepts_compat)
+                                one_line_rset, may_add_relation, yes,
+                                accepts_compat, condition_compat, deprecate)
 from cubicweb.common.appobject import AppRsetObject
 from cubicweb.common.registerers import action_registerer
 
@@ -24,7 +24,8 @@ class Action(AppRsetObject):
     """
     __registry__ = 'actions'
     __registerer__ = action_registerer
-
+    __selectors__ = (yes,) 
+    
     property_defs = {
         'visible':  dict(type='Boolean', default=True,
                          help=_('display the action or not')),
@@ -93,7 +94,10 @@ class LinkToEntityAction(Action):
                               __redirectpath=current_entity.rest_path(), # should not be url quoted!
                               __redirectvid=self.req.form.get('__redirectvid', ''))
 
-
-EntityAction = class_moved('EntityAction', Action,
-                           'EntityAction is deprecated, use Action with appropriate selectors')
+class EntityAction(Action):
+    """DEPRECATED / BACKWARD COMPAT
+    """
+    registered = deprecate(accepts_compat(condition_compat(Action.registered)),
+                           msg='EntityAction is deprecated, use Action with '
+                           'appropriate selectors')
     
