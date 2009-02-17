@@ -108,16 +108,4 @@ class LinkToEntityAction(Action):
                               __linkto=linkto,
                               __redirectpath=current_entity.rest_path(), # should not be url quoted!
                               __redirectvid=self.req.form.get('__redirectvid', ''))
-
-
-class LinkToEntityAction2(LinkToEntityAction):
-    """LinkToEntity action where the action is not usable on the same
-    entity's type as the one refered by the .etype attribute
-    """
-    def my_selector(cls, req, rset, row=None, col=0, **kwargs):
-        return chainall(match_search_state('normal'),
-                        but_etype, one_line_rset, accept,
-                        relation_possible(cls.rtype, role(cls), cls.etype),
-                        may_add_relation(cls.rtype, role(cls)))
-    __selectors__ = my_selector,
     
