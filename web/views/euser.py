@@ -19,8 +19,7 @@ from cubicweb.web.views.baseviews import PrimaryView, EntityView
 
 class UserPreferencesEntityAction(Action):
     id = 'prefs'
-    __selectors__ = (one_line_rset,
-                     implements('EUser'),
+    __selectors__ = (one_line_rset, implements('EUser'),
                      match_user_groups('owners', 'managers'))
     
     title = _('preferences')
