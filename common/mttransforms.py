@@ -42,9 +42,12 @@ ENGINE.add_transform(rest_to_html())
 ENGINE.add_transform(html_to_html())
 
 try:
-    from cubicweb.common.tal import compile_template
+    from cubicweb.ext.tal import compile_template
 except ImportError:
     HAS_TAL = False
+    from cubicweb.schema import FormatConstraint
+    FormatConstraint.need_perm_formats.remove('text/cubicweb-page-template')
+    
 else:
     HAS_TAL = True
     
