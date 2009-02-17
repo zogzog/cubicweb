@@ -14,10 +14,16 @@ from cubicweb.vregistry import registerer, yes_registerer
 from cubicweb.selectors import implements
 
 def _accepts_interfaces(obj):
-    impl = obj.__select__.search_selector(implements)
-    if impl:
-        return sorted(impl.expected_ifaces)
-    return sorted(getattr(obj, 'accepts_interfaces', ()))
+    try:
+        return sorted(obj.accepts_interfaces)
+    except AttributeError:
+        try:
+            impl = obj.__select__.search_selector(implements)
+            if impl:
+                return sorted(impl.expected_ifaces)
+        except AttributeError:
+            pass # old-style vobject classes with no accepts_interfaces
+        return ()
 
 
 class priority_registerer(registerer):
@@ -68,7 +74,7 @@ class accepts_registerer(priority_registerer):
     """
     def do_it_yourself(self, registered):
         # if object is accepting interface, we have register it now and
-        # remove it latter if no object is implementing accepted interfaces
+        # remove it later if no object is implementing accepted interfaces
         if _accepts_interfaces(self.vobject):
             return self.vobject
         self.remove_equivalents(registered)
