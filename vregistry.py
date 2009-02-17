@@ -92,10 +92,8 @@ class VObject(object):
     :id:
       object's identifier in the registry (string like 'main',
       'primary', 'folder_box')
-    :__registerer__:
-      registration helper class
     :__select__:
-      selection helper function
+      class'selector
     :__selectors__:
       tuple of selectors to be chained
       (__select__ and __selectors__ are mutually exclusive)
@@ -106,7 +104,7 @@ class VObject(object):
     # necessary attributes to interact with the registry
     id = None
     __registry__ = None
-    __registerer__ = None
+    __registerer__ = yes_registerer
     __select__ = None
 
     @classmethod

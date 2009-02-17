@@ -22,8 +22,6 @@ from cubicweb import Unauthorized
 from cubicweb.vregistry import VObject
 from cubicweb.selectors import yes
 from cubicweb.utils import UStringIO, ustrftime
-from cubicweb.common.registerers import yes_registerer, priority_registerer
-
 
 
 class Cache(dict):    

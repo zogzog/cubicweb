@@ -17,6 +17,7 @@ from cubicweb.selectors import (yes, match_user_groups, implements,
 from cubicweb.selectors import require_group_compat, accepts_compat
 from cubicweb.appobject import AppRsetObject
 from cubicweb.utils import UStringIO, HTMLStream
+from cubicweb.vregistry import yes_registerer
 from cubicweb.common.registerers import accepts_registerer, priority_registerer, yes_registerer
 
 _ = unicode
