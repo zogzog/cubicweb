@@ -18,7 +18,6 @@ from cubicweb.rset import ResultSet
 from cubicweb.selectors import yes
 from cubicweb.appobject import AppRsetObject
 from cubicweb.schema import RQLVocabularyConstraint, RQLConstraint, bw_normalize_etype
-from cubicweb.common.registerers import id_registerer
 
 try:
     from cubicweb.common.uilib import printable_value, soup2xhtml
@@ -222,8 +221,7 @@ class Entity(AppRsetObject, dict):
     """
     __metaclass__ = metaentity
     __registry__ = 'etypes'
-    __registerer__ = id_registerer
-    __selectors__ = (yes,)
+    __select__ = yes()
     widgets = {}
     id = None
     e_schema = None

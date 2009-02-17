@@ -97,28 +97,6 @@ class accepts_registerer(priority_registerer):
             return False
 
 
-class id_registerer(priority_registerer):
-    """register according to the "id" attribute of the wrapped class,
-    refering to an entity type.
-    
-    * if the type is not Any and is not defined the application'schema,
-      skip the wrapped class
-    * if an object previously registered has the same .id attribute,
-      kick it out
-    * register
-    """
-    def do_it_yourself(self, registered):
-        etype = self.vobject.id
-        if etype != 'Any' and not self.schema.has_entity(etype):
-            self.skip()
-            return
-        self.remove_equivalents(registered)
-        return self.vobject
-    
-    def equivalent(self, other):
-        return other.id == self.vobject.id
-    
-
 __all__ = [cls.__name__ for cls in globals().values()
            if isinstance(cls, type) and issubclass(cls, registerer)
            and not cls is registerer]

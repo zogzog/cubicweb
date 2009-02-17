@@ -87,6 +87,8 @@ class CubicWebRegistry(VRegistry):
         self.register(obj, **kwargs)
 
     def register(self, obj, **kwargs):
+        if kwargs.get('registryname', obj.__registry__) == 'etypes':
+            kwargs['clear'] = True
         super(CubicWebRegistry, self).register(obj, **kwargs)
         # XXX bw compat
         ifaces = getattr(obj, 'accepts_interfaces', None)
