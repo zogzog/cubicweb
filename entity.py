@@ -9,7 +9,7 @@ __docformat__ = "restructuredtext en"
 from logilab.common import interface
 from logilab.common.compat import all
 from logilab.common.decorators import cached
-from logilab.mtconverter import TransformData, TransformError
+from logilab.mtconverter import TransformData, TransformError, html_escape
 
 from rql.utils import rqlvar_maker
 
@@ -18,11 +18,16 @@ from cubicweb.vregistry import autoselectors
 from cubicweb.rset import ResultSet
 from cubicweb.selectors import yes
 from cubicweb.appobject import AppRsetObject
-from cubicweb.common.registerers import id_registerer
-from cubicweb.common.uilib import printable_value, html_escape, soup2xhtml
-from cubicweb.common.mixins import MI_REL_TRIGGERS
-from cubicweb.common.mttransforms import ENGINE
 from cubicweb.schema import RQLVocabularyConstraint, RQLConstraint, bw_normalize_etype
+from cubicweb.common.registerers import id_registerer
+
+try:
+    from cubicweb.common.uilib import printable_value, soup2xhtml
+    from cubicweb.common.mixins import MI_REL_TRIGGERS
+    from cubicweb.common.mttransforms import ENGINE
+except ImportError:
+    # missing -common
+    MI_REL_TRIGGERS = {}
 
 _marker = object()
 

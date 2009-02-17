@@ -6,6 +6,7 @@
 """
 __docformat__ = "restructuredtext en"
 
+import locale
 from md5 import md5
 from time import time
 from random import randint, seed
@@ -41,6 +42,16 @@ def date_range(begin, end, incr=1, include=None):
         if include is None or include(date): 
             yield date
         date += incr
+
+def ustrftime(date, fmt='%Y-%m-%d'):
+    """like strftime, but returns a unicode string instead of an encoded
+    string which may be problematic with localized date.
+    
+    encoding is guessed by locale.getpreferredencoding()
+    """
+    # date format may depend on the locale
+    encoding = locale.getpreferredencoding(do_setlocale=False) or 'UTF-8'
+    return unicode(date.strftime(fmt), encoding)
 
 
 def dump_class(cls, clsname):

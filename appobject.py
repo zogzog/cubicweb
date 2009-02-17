@@ -13,6 +13,7 @@ from simplejson import dumps
 
 from logilab.common.decorators import classproperty
 from logilab.common.deprecation import obsolete
+from logilab.mtconverter import html_escape
 
 from rql.nodes import VariableRef, SubQuery
 from rql.stmts import Union, Select
@@ -20,8 +21,7 @@ from rql.stmts import Union, Select
 from cubicweb import Unauthorized
 from cubicweb.vregistry import VObject
 from cubicweb.selectors import yes
-from cubicweb.utils import UStringIO
-from cubicweb.common.uilib import html_escape, ustrftime
+from cubicweb.utils import UStringIO, ustrftime
 from cubicweb.common.registerers import yes_registerer, priority_registerer
 
 

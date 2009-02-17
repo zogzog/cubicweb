@@ -11,7 +11,6 @@ __docformat__ = "restructuredtext en"
 
 import csv
 import decimal
-import locale
 import re
 from urllib import quote as urlquote
 from cStringIO import StringIO
@@ -23,16 +22,7 @@ from mx.DateTime import DateTimeType, DateTimeDeltaType
 from logilab.common.textutils import unormalize
 from logilab.mtconverter import html_escape, html_unescape
 
-def ustrftime(date, fmt='%Y-%m-%d'):
-    """like strftime, but returns a unicode string instead of an encoded
-    string which may be problematic with localized date.
-    
-    encoding is guessed by locale.getpreferredencoding()
-    """
-    # date format may depend on the locale
-    encoding = locale.getpreferredencoding(do_setlocale=False) or 'UTF-8'
-    return unicode(date.strftime(fmt), encoding)
-
+from cubicweb.utils import ustrftime
 
 def rql_for_eid(eid):
     """return the rql query necessary to fetch entity with the given eid.  This
