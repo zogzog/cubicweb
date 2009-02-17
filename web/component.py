@@ -17,7 +17,11 @@ from cubicweb.common.uilib import html_escape
 
 _ = unicode
 
-class VComponent(ComponentMixIn, View): pass
+class VComponent(ComponentMixIn, View):
+    property_defs = {
+        _('visible'):  dict(type='Boolean', default=True,
+                            help=_('display the box or not')),
+        }    
 
 class EntityVComponent(VComponent):
     """abstract base class for additinal components displayed in content
