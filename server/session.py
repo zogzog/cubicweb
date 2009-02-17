@@ -21,6 +21,18 @@ from cubicweb.dbapi import ConnectionProperties
 from cubicweb.common.utils import make_uid
 from cubicweb.server.rqlrewrite import RQLRewriter
 
+_ETYPE_PYOBJ_MAP = { bool: 'Boolean',
+                     int: 'Int',
+                     long: 'Int',
+                     float: 'Float',
+                     Decimal: 'Decimal',
+                     unicode: 'String',
+                     NoneType: None,
+                     Binary: 'Bytes',
+                     DateTimeType: 'Datetime',
+                     DateTimeDeltaType: 'Interval',
+                     }
+
 def etype_from_pyobj(value):
     """guess yams type from python value"""
     # note:
@@ -28,17 +40,7 @@ def etype_from_pyobj(value):
     # * use type(value) and not value.__class__ since mx instances have no
     #   __class__ attribute
     # * XXX Date, Time
-    return {bool: 'Boolean',
-            int: 'Int',
-            long: 'Int',
-            float: 'Float',
-            Decimal: 'Decimal',
-            unicode: 'String',
-            NoneType: None,
-            Binary: 'Bytes',
-            DateTimeType: 'Datetime',
-            DateTimeDeltaType: 'Interval',
-            }[type(value)]
+    return _ETYPE_PYOBJ_MAP[type(value)]
 
 def is_final(rqlst, variable, args):
     # try to find if this is a final var or not
