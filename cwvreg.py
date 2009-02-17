@@ -48,8 +48,10 @@ class CubicWebRegistry(VRegistry):
     def reset(self):
         self._registries = {}
         self._lastmodifs = {}
-        # two special registries, propertydefs which care all the property definitions, and
-        # propertyvals which contains values for those properties
+        self._needs_iface = {}
+        # two special registries, propertydefs which care all the property
+        # definitions, and propertyvals which contains values for those
+        # properties
         self._registries['propertydefs'] = {}
         self._registries['propertyvalues'] = self.eprop_values = {}
         for key, propdef in self.config.eproperty_definitions():
@@ -73,42 +75,42 @@ class CubicWebRegistry(VRegistry):
             for objects in regcontent.values():
                 for obj in objects:
                     obj.schema = schema
+
+    def register_if_interface_found(self, obj, ifaces, **kwargs):
+        """register an object but remove it if no entity class implements one of
+        the given interfaces
+        """
+        if not isinstance(ifaces,  (tuple, list)):
+            self._needs_iface[obj] = frozenset((ifaces,))
+        else:
+            self._needs_iface[obj] = frozenset(ifaces)
+        self.register(obj, **kwargs)
+
+    def register(self, obj, **kwargs):
+        super(CubicWebRegistry, self).register(obj, **kwargs)
+        # XXX bw compat
+        ifaces = getattr(obj, 'accepts_interfaces', None)
+        if ifaces:
+            self._needs_iface[obj] = frozenset(ifaces)
         
     def register_objects(self, path, force_reload=None):
-        """overriden to handle type class cache issue"""
-        if  super(CubicWebRegistry, self).register_objects(path, force_reload):
+        """overriden to remove objects requiring a missing interface"""
+        if super(CubicWebRegistry, self).register_objects(path, force_reload):
             # clear etype cache if you don't want to run into deep weirdness
             clear_cache(self, 'etype_class')
+            # we may want to keep interface dependent objects (e.g.for i18n
+            # catalog generation)
+            if not self.config.cleanup_interface_sobjects:
+                return
             # remove vobjects that don't support any available interface
             interfaces = set()
             for classes in self.get('etypes', {}).values():
                 for cls in classes:
                     interfaces.update(cls.__implements__)
-            if not self.config.cleanup_interface_sobjects:
-                return
-            for registry, regcontent in self._registries.items():
-                if registry in ('propertydefs', 'propertyvalues', 'etypes'):
-                    continue
-                for oid, objects in regcontent.items():
-                    for obj in reversed(objects[:]):
-                        if not obj in objects:
-                            continue # obj has been kicked by a previous one
-                        accepted = set(getattr(obj, 'accepts_interfaces', ()))
-                        if accepted:
-                            for accepted_iface in accepted:
-                                for found_iface in interfaces:
-                                    if issubclass(found_iface, accepted_iface):
-                                        # consider priority if necessary
-                                        if hasattr(obj.__registerer__, 'remove_all_equivalents'):
-                                            registerer = obj.__registerer__(self, obj)
-                                            registerer.remove_all_equivalents(objects)
-                                        break
-                                else:
-                                    self.debug('kicking vobject %s (unsupported interface)', obj)
-                                    objects.remove(obj)
-                    # if objects is empty, remove oid from registry
-                    if not objects:
-                        del regcontent[oid]
+            for obj, ifaces in self._needs_iface.items():
+                if not ifaces & interfaces:
+                    self.debug('kicking vobject %s (unsupported interface)', obj)
+                    self.unregister(obj)
 
     def eid_rset(self, cursor, eid, etype=None):
         """return a result set for the given eid without doing actual query
