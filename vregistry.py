@@ -253,7 +253,7 @@ class VRegistry(object):
             vobjects = registry.setdefault(oid, [])
         # registered() is technically a classmethod but is not declared
         # as such because we need to compose registered in some cases
-        vobject = obj.registered.im_func(cls, self)
+        vobject = obj.registered.im_func(obj, self)
         assert not vobject in vobjects
         vobjects.append(vobject)
         try:
