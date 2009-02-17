@@ -23,7 +23,6 @@ from cubicweb.common.uilib import html_escape, ustrftime
 from cubicweb.common.registerers import yes_registerer, priority_registerer
 from cubicweb.common.selectors import yes
 
-_MARKER = object()
 
 
 class Cache(dict):    
