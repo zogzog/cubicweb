@@ -6,8 +6,6 @@
 """
 import re
 
-from cubicweb.vregistry import autoselectors
-
 from cubicweb.common.registerers import accepts_registerer
 from cubicweb.common.appobject import AppObject
 
@@ -16,7 +14,7 @@ def rgx(pattern, flags=0):
     """this is just a convenient shortcout to add the $ sign"""
     return re.compile(pattern+'$', flags)
 
-class metarewriter(autoselectors):
+class metarewriter(type):
     """auto-extend rules dictionnary"""
     def __new__(mcs, name, bases, classdict):
         # collect baseclass' rules

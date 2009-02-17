@@ -1,7 +1,7 @@
 """cubicweb on appengine plugins for cubicweb-ctl
 
 :organization: Logilab
-:copyright: 2008 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+:copyright: 2008-2009 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 """
 __docformat__ = "restructuredtext en"
@@ -50,6 +50,7 @@ COPY_CW_FILES = (
     'dbapi.py',
     'cwvreg.py',
     'cwconfig.py',
+    'entity.py',
     'interfaces.py',
     'rset.py',
     'schema.py',
@@ -58,7 +59,6 @@ COPY_CW_FILES = (
     'vregistry.py',
     
     'common/appobject.py',
-    'common/entity.py',
     'common/html4zope.py',
     'common/mail.py',
     'common/migration.py',

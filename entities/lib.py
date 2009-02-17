@@ -11,7 +11,7 @@ from mx.DateTime import now
 
 from logilab.common.decorators import cached
 
-from cubicweb.common.entity import _marker
+from cubicweb.entity import _marker
 from cubicweb.entities import AnyEntity, fetch_config
 
 def mangle_email(address):
