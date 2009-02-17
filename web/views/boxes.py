@@ -19,7 +19,7 @@ from logilab.mtconverter import html_escape
 
 from cubicweb.selectors import any_rset, appobject_selectable, match_user_groups
 from cubicweb.web.htmlwidgets import BoxWidget, BoxMenu, BoxHtml, RawBoxItem
-from cubicweb.web.box import BoxTemplate, ExtResourcesBoxTemplate
+from cubicweb.web.box import BoxTemplate
 
 _ = unicode
 
@@ -136,7 +136,6 @@ class SearchBox(BoxTemplate):
     visible = True # enabled by default
     title = _('search')
     order = 0
-    need_resources = 'SEARCH_GO'
     formdef = u"""<form action="%s">
 <table id="tsearch"><tr><td>
 <input id="norql" type="text" accesskey="q" tabindex="%s" title="search text" value="%s" name="rql" />
@@ -186,19 +185,22 @@ class PossibleViewsBox(BoxTemplate):
             box.render(self.w)
 
         
-class RSSIconBox(ExtResourcesBoxTemplate):
+class RSSIconBox(BoxTemplate):
     """just display the RSS icon on uniform result set"""
-    __selectors__ = ExtResourcesBoxTemplate.__selectors__ + (appobject_selectable('components', 'rss_feed_url'),)
-    
     id = 'rss'
+    __selectors__ = BoxTemplate.__selectors__ + (appobject_selectable('components', 'rss_feed_url'),)
+    
     order = 999
-    need_resources = 'RSS_LOGO',
     visible = False
     
     def call(self, **kwargs):
+        try:
+            rss = self.req.external_resource('RSS_LOGO')
+        except KeyError:
+            self.error('missing RSS_LOGO external resource')
+            return
         urlgetter = self.vreg.select_component('rss_feed_url', self.req, self.rset)
         url = urlgetter.feed_url()
-        rss = self.req.external_resource('RSS_LOGO')
         self.w(u'<a href="%s"><img src="%s" alt="rss"/></a>\n' % (html_escape(url), rss))
 
 

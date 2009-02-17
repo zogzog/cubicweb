@@ -139,14 +139,6 @@ class UserRQLBoxTemplate(RQLBoxTemplate):
         return (self.rql, {'x': self.req.user.eid}, 'x')
     
 
-class ExtResourcesBoxTemplate(BoxTemplate):
-    """base class for boxes displaying external resources such as the RSS logo.
-    It should list necessary resources with the .need_resources attribute.
-    """
-    __registerer__ = extresources_registerer
-    need_resources = ()
-
-
 class EntityBoxTemplate(BoxTemplate):
     """base class for boxes related to a single entity"""
     __registerer__ = accepts_registerer
