@@ -567,42 +567,6 @@ set_log_methods(VRegistry, getLogger('cubicweb.registry'))
 set_log_methods(registerer, getLogger('cubicweb.registration'))
 
 
-# advanced selector building functions ########################################
-
-def chainall(*selectors, **kwargs):
-    """return a selector chaining given selectors. If one of
-    the selectors fail, selection will fail, else the returned score
-    will be the sum of each selector'score
-    """
-    assert selectors
-    def selector(cls, *args, **kwargs):
-        score = 0
-        for selector in selectors:
-            partscore = selector(cls, *args, **kwargs)
-            if not partscore:
-                return 0
-            score += partscore
-        return score
-    if 'name' in kwargs:
-        selector.__name__ = kwargs['name']
-    return selector
-
-def chainfirst(*selectors, **kwargs):
-    """return a selector chaining given selectors. If all
-    the selectors fail, selection will fail, else the returned score
-    will be the first non-zero selector score
-    """
-    assert selectors
-    def selector(cls, *args, **kwargs):
-        for selector in selectors:
-            partscore = selector(cls, *args, **kwargs)
-            if partscore:
-                return partscore
-        return 0
-    if 'name' in kwargs:
-        selector.__name__ = kwargs['name']
-    return selector
-
 
 # selector base classes and operations ########################################
 
@@ -630,20 +594,39 @@ class Selector(object):
             else:
                 merged_selectors.append(selector)
         return merged_selectors
-        
+
+    def search_selector(self, selector):
+        """search for the given selector or selector instance in the selectors
+        tree. Return it of None if not found
+        """
+        if self is selector:
+            return self
+        if isinstance(selector, type) and instance(self, selector):
+            return self
+        for childselector in self.selectors:
+            try:
+                if childselector.use_selector(selector):
+                    return childselector
+            except AttributeError: # simple function
+                if childselector is selector:
+                    return childselector
+        return None
+    
     def __and__(self, other):
         return AndSelector(self, other)
+    def __rand__(self, other):
+        return AndSelector(other, self)
 
     def __or__(self, other):
         return OrSelector(self, other)
-
-    __ror__ = __or__    # for cases like (function | selector)
-    __rand__ = __and__  # for cases like (function & selector)
+    def __ror__(self, other):
+        return OrSelector(other, self)
+    
     # XXX (function | function) or (function & function) not managed yet
 
     def __call__(self, cls, *args, **kwargs):
         return NotImplementedError("selector %s must implement its logic "
-                                   "in its __call__ method" % self.__class__.__name__)
+                                   "in its __call__ method" % self.__class__)
 
 
 class AndSelector(Selector):
@@ -666,3 +649,28 @@ class OrSelector(Selector):
             if partscore:
                 return partscore
         return 0
+
+
+# advanced selector building functions ########################################
+
+def chainall(*selectors, **kwargs):
+    """return a selector chaining given selectors. If one of
+    the selectors fail, selection will fail, else the returned score
+    will be the sum of each selector'score
+    """
+    assert selectors
+    selector = AndSelector(*selectors)
+    if 'name' in kwargs:
+        selector.__name__ = kwargs['name']
+    return selector
+
+def chainfirst(*selectors, **kwargs):
+    """return a selector chaining given selectors. If all
+    the selectors fail, selection will fail, else the returned score
+    will be the first non-zero selector score
+    """
+    assert selectors
+    selector = OrSelector(*selectors)
+    if 'name' in kwargs:
+        selector.__name__ = kwargs['name']
+    return selector
