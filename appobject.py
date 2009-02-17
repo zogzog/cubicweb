@@ -109,7 +109,6 @@ class AppRsetObject(VObject):
             selector = (selector,)
         return selector
     
-    @classmethod
     def __init__(self, req=None, rset=None):
         super(AppRsetObject, self).__init__()
         self.req = req
