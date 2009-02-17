@@ -237,13 +237,20 @@ class VRegistry(object):
         return objects[0].selected(*args, **kwargs)
 
     # methods for explicit (un)registration ###################################
-    
-    def register(self, obj, registryname=None, oid=None):
+
+#     def clear(self, key):
+#         regname, oid = key.split('.')
+#         self[regname].pop(oid, None)
+        
+    def register(self, obj, registryname=None, oid=None, clear=False):
         """base method to add an object in the registry"""
         registryname = registryname or obj.__registry__
         oid = oid or obj.id
         registry = self._registries.setdefault(registryname, {})
-        vobjects = registry.setdefault(oid, [])
+        if clear:
+            vobjects = registry[oid] =  []
+        else:
+            vobjects = registry.setdefault(oid, [])
         # registered() is technically a classmethod but is not declared
         # as such because we need to compose registered in some cases
         vobject = obj.registered.im_func(cls, self)
@@ -426,8 +433,8 @@ class VRegistry(object):
 
     def load_module(self, module):
         self._registered = {}
-        if hasattr(module, 'cw_register_objects'):
-            module.cw_register_objects(self)
+        if hasattr(module, 'registration_callback'):
+            module.registration_callback(self)
         else:
             self.info('loading %s', module)
             for objname, obj in vars(module).items():
