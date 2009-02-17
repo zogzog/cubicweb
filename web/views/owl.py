@@ -77,11 +77,10 @@ class OWLView(StartupView):
             self.visit_property_schema(eschema, skiprels)
             self.w(u'<!-- datatype property -->')
             self.visit_property_object_schema(eschema)
-                       
+
     def visit_entityschema(self, eschema, skiprels=()):
         """get a layout for an entity OWL schema"""
-        self.w(u'<owl:Class rdf:ID="%s"><rdfs:subClassOf rdf:resource="http://www.w3.org/2002/07/owl#Thing"/>'
-               % eschema)         
+        self.w(u'<owl:Class rdf:ID="%s">'% eschema)         
         self.w(u'<!-- relations -->')    
         for rschema, targetschemas, role in eschema.relation_definitions():
             if rschema.type in skiprels:
