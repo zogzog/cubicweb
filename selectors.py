@@ -954,8 +954,8 @@ def has_relation_compat(registered):
         if getattr(cls, 'type', None):
             warn('use relation_possible selector instead of using etype_rtype',
                  DeprecationWarning)
-            cls.__selectors__ += (relation_possible(cls.rtype), role(cls),
-                                  getattr(cls, 'etype', None),
-                                  action=getattr(cls, 'require_permission', 'read'))
+            cls.__selectors__ += (relation_possible(cls.rtype, role(cls),
+                                                    getattr(cls, 'etype', None),
+                                                    action=getattr(cls, 'require_permission', 'read')))
         return cls
     return plug_selector
