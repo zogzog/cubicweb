@@ -6,13 +6,15 @@
 """
 __docformat__ = "restructuredtext en"
 
+from logilab.common.deprecation import class_moved
+
 from cubicweb import role, target
-from cubicweb.vregistry import chainall
 from cubicweb.selectors import (relation_possible, match_search_state,
                                 one_line_rset, may_add_relation,
                                 accepts_compat)
 from cubicweb.common.appobject import AppRsetObject
 from cubicweb.common.registerers import action_registerer
+
 _ = unicode
 
 
@@ -64,13 +66,6 @@ class UnregisteredAction(Action):
         return self._path
 
 
-class EntityAction(Action):
-    """an action for an entity. By default entity actions are only
-    displayable on single entity result if accept match.
-    """
-    # XXX deprecate
-    
-
 class LinkToEntityAction(Action):
     """base class for actions consisting to create a new object
     with an initial relation set to an entity.
@@ -79,11 +74,10 @@ class LinkToEntityAction(Action):
     action apply and if the logged user has access to it
     """
     def my_selector(cls, req, rset, row=None, col=0, **kwargs):
-        selector = chainall(match_search_state('normal'),
-                            one_line_rset, 
-                            relation_possible(cls.rtype, role(cls), cls.etype,
-                                              permission='add'),
-                            may_add_relation(cls.rtype, role(cls)))
+        selector = (match_search_state('normal') & one_line_rset
+                    & relation_possible(cls.rtype, role(cls), cls.etype,
+                                        action='add')
+                    & may_add_relation(cls.rtype, role(cls)))
         return selector(cls, req, rset, row, col, **kwargs)
 
     __selectors__ = (my_selector,)
@@ -98,4 +92,8 @@ class LinkToEntityAction(Action):
                               __linkto=linkto,
                               __redirectpath=current_entity.rest_path(), # should not be url quoted!
                               __redirectvid=self.req.form.get('__redirectvid', ''))
+
+
+EntityAction = class_moved('EntityAction', Action,
+                           'EntityAction is deprecated, use Action with appropriate selectors')
     
