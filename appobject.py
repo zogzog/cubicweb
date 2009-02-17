@@ -104,7 +104,7 @@ class AppRsetObject(VObject):
     def __selectors__(cls):
         selector = cls.__select__
         if isinstance(selector, AndSelector):
-            return selector.selectors
+            return tuple(selector.selectors)
         if not isinstance(selector, tuple):
             selector = (selector,)
         return selector
