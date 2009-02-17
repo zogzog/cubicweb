@@ -6,14 +6,13 @@
 """
 __docformat__ = "restructuredtext en"
 
-from logilab.common.deprecation import class_moved
+from logilab.common.deprecation import class_renamed
 
 from cubicweb.selectors import (
     paginated_rset, one_line_rset, primary_view, match_context_prop,
     condition_compat, accepts_compat, has_relation_compat)
-from cubicweb.common.appobject import Component
 from cubicweb.common.utils import merge_dicts
-from cubicweb.common.view import View
+from cubicweb.common.view import View, Component
 from cubicweb.common.registerers import accepts_registerer
 from cubicweb.common.uilib import html_escape
 
@@ -173,7 +172,8 @@ class RelatedObjectsVComponent(EntityVComponent):
         self.w(u'</div>')
 
 
-VComponent = class_moved('VComponent', VComponent,
-                         'VComponent is deprecated, use Component')
-SingletonVComponent = class_moved('SingletonVComponent', VComponent,
-                                  'SingletonVComponent is deprecated, use Component and explicit registration control')
+VComponent = class_renamed('VComponent', Component,
+                           'VComponent is deprecated, use Component')
+SingletonVComponent = class_renamed('SingletonVComponent', Component,
+                                    'SingletonVComponent is deprecated, use '
+                                    'Component and explicit registration control')
