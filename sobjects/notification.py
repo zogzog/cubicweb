@@ -16,6 +16,7 @@ except ImportError:
         return 'XXX'
 
 from logilab.common.textutils import normalize_text
+from logilab.common.deprecation import class_renamed
 
 from cubicweb import RegistryException
 from cubicweb.selectors import implements
@@ -131,8 +132,6 @@ class NotificationView(EntityView):
     * set a content attribute to define the content of the email (unless you
       override call)
     """
-    accepts = ()
-    id = None
     msgid_timestamp = True
     
     def recipients(self):
@@ -256,9 +255,16 @@ url: %(url)s
 """)
 
 
-class ContentAddedMixIn(object):
-    """define emailcontent view for entity types for which you want to be notified
-    """
+###############################################################################
+# Actual notification views.                                                  #
+#                                                                             #
+# disable them at the recipients_finder level if you don't want them          #
+###############################################################################
+
+# XXX should be based on dc_title/dc_description, no?
+
+class ContentAddedView(NotificationView):
+    __abstract__ = True
     id = 'notif_after_add_entity' 
     msgid_timestamp = False
     message = _('new')
@@ -269,16 +275,7 @@ class ContentAddedMixIn(object):
 
 url: %(url)s
 """
-
-###############################################################################
-# Actual notification views.                                                  #
-#                                                                             #
-# disable them at the recipients_finder level if you don't want them          #
-###############################################################################
-
-# XXX should be based on dc_title/dc_description, no?
-
-class NormalizedTextView(ContentAddedMixIn, NotificationView):
+    
     def context(self, **kwargs):
         entity = self.entity(0, 0)
         content = entity.printable_value(self.content_attr, format='text/plain')
@@ -292,8 +289,9 @@ class NormalizedTextView(ContentAddedMixIn, NotificationView):
         return  u'%s #%s (%s)' % (self.req.__('New %s' % entity.e_schema),
                                   entity.eid, self.user_login())
 
+NormalizedTextView = class_renamed('NormalizedTextView', ContentAddedView)
 
-class CardAddedView(NormalizedTextView):
+class CardAddedView(ContentAddedView):
     """get notified from new cards"""
     __select__ = implements('Card')
     content_attr = 'synopsis'
