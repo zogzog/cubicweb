@@ -6,8 +6,6 @@
 """
 __docformat__ = "restructuredtext en"
 
-from logilab.common.deprecation import class_moved
-
 from cubicweb import role, target
 from cubicweb.selectors import (relation_possible, match_search_state,
                                 one_line_rset, may_add_relation, yes,

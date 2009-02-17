@@ -73,6 +73,7 @@ class AppRsetObject(VObject):
         instance = cls(req, rset)
         instance.row = row
         instance.col = col
+        instance.sel_kwargs = kwargs
         return instance
 
     # Eproperties definition:
@@ -323,56 +324,3 @@ class AppObject(AppRsetObject):
         self.req = req
         self.rset = rset
         self.__dict__.update(kwargs)
-
-
-class ReloadableMixIn(object):
-    """simple mixin for reloadable parts of UI"""
-    
-    def user_callback(self, cb, args, msg=None, nonify=False):
-        """register the given user callback and return an url to call it ready to be
-        inserted in html
-        """
-        self.req.add_js('cubicweb.ajax.js')
-        if nonify:
-            _cb = cb
-            def cb(*args):
-                _cb(*args)
-        cbname = self.req.register_onetime_callback(cb, *args)
-        return self.build_js(cbname, html_escape(msg or ''))
-        
-    def build_update_js_call(self, cbname, msg):
-        rql = html_escape(self.rset.printable_rql())
-        return "javascript:userCallbackThenUpdateUI('%s', '%s', '%s', '%s', '%s', '%s')" % (
-            cbname, self.id, rql, msg, self.__registry__, self.div_id())
-    
-    def build_reload_js_call(self, cbname, msg):
-        return "javascript:userCallbackThenReloadPage('%s', '%s')" % (cbname, msg)
-
-    build_js = build_update_js_call # expect updatable component by default
-    
-    def div_id(self):
-        return ''
-
-
-class ComponentMixIn(ReloadableMixIn):
-    """simple mixin for component object"""
-    __registry__ = 'components'
-    __registerer__ = yes_registerer
-    __selectors__ = (yes,)
-    __select__ = classmethod(*__selectors__)
-
-    def div_class(self):
-        return '%s %s' % (self.propval('htmlclass'), self.id)
-
-    def div_id(self):
-        return '%sComponent' % self.id
-
-
-class Component(ComponentMixIn, AppObject):
-    """base class for non displayable components
-    """
-
-class SingletonComponent(Component):
-    """base class for non displayable unique components
-    """
-    __registerer__ = priority_registerer

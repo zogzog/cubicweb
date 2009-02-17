@@ -2,7 +2,7 @@
 are much more limited for the moment)
 
 :organization: Logilab
-:copyright: 2007-2008 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+:copyright: 2007-2009 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 """
 
@@ -11,7 +11,7 @@ __docformat__ = "restructuredtext en"
 from re import compile
 
 from cubicweb.web import Redirect
-from cubicweb.web.component import SingletonComponent
+from cubicweb.web.component import Component
 
 class RewriteCond(object):
     def __init__(self, condition, match='host', rules=(), action='rewrite'):
@@ -46,7 +46,7 @@ class RewriteCond(object):
         return path
 
     
-class ApacheURLRewrite(SingletonComponent):
+class ApacheURLRewrite(Component):
     """inherit from this class with actual rules to activate apache style rewriting
 
     rules should have the form :

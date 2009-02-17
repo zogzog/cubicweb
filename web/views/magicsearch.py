@@ -15,7 +15,7 @@ from rql import RQLSyntaxError, BadRQLQuery, parse
 from rql.nodes import Relation
 
 from cubicweb import Unauthorized
-from cubicweb.common.appobject import Component, SingletonComponent
+from cubicweb.common.appobject import Component
 
 LOGGER = getLogger('cubicweb.magicsearch')
 
@@ -349,7 +349,7 @@ class FullTextTranslator(BaseQueryProcessor):
 
 
 
-class MagicSearchComponent(SingletonComponent):
+class MagicSearchComponent(Component):
     id  = 'magicsearch'
     def __init__(self, req, rset=None):
         super(MagicSearchComponent, self).__init__(req, rset)

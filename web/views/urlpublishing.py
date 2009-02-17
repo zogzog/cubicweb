@@ -18,7 +18,7 @@ XXX actionpath and folderpath execute a query whose results is lost
 because of redirecting instead of direct traversal
 
 :organization: Logilab
-:copyright: 2001-2008 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+:copyright: 2001-2009 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 """
 
@@ -28,7 +28,7 @@ from rql import TypeResolverException
 
 from cubicweb import RegistryException, typed_eid
 from cubicweb.web import NotFound, Redirect
-from cubicweb.web.component import SingletonComponent, Component
+from cubicweb.web.component import Component, Component
 
 
 class PathDontMatch(Exception):
@@ -36,7 +36,7 @@ class PathDontMatch(Exception):
     a path
     """
     
-class URLPublisherComponent(SingletonComponent):
+class URLPublisherComponent(Component):
     """associate url's path to view identifier / rql queries,
     by applying a chain of urlpathevaluator components.
 

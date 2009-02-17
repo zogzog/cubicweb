@@ -20,13 +20,13 @@ from cubicweb.common.selectors import (chainfirst, two_etypes_rset,
                                     match_form_params)
 
 from cubicweb.web.htmlwidgets import MenuWidget, PopupBoxMenu, BoxSeparator, BoxLink
-from cubicweb.web.component import (VComponent, EntityVComponent, 
+from cubicweb.web.component import (Component, EntityVComponent, 
                                     RelatedObjectsVComponent)
 
 _ = unicode
 
 
-class RQLInputForm(VComponent):
+class RQLInputForm(Component):
     """build the rql input form, usually displayed in the header"""
     id = 'rqlinput'
     visible = False
@@ -55,7 +55,7 @@ class RQLInputForm(VComponent):
         self.w(u'</form></div>')
 
 
-class ApplLogo(VComponent):
+class ApplLogo(Component):
     """build the application logo, usually displayed in the header"""
     id = 'logo'
     site_wide = True # don't want user to hide this component using an eproperty
@@ -64,7 +64,7 @@ class ApplLogo(VComponent):
                % (self.req.base_url(), self.req.external_resource('LOGO')))
 
 
-class ApplHelp(VComponent):
+class ApplHelp(Component):
     """build the help button, usually displayed in the header"""
     id = 'help'
     def call(self):
@@ -73,7 +73,7 @@ class ApplHelp(VComponent):
                   self.req._(u'help'),))
 
 
-class UserLink(VComponent):
+class UserLink(Component):
     """if the user is the anonymous user, build a link to login
     else a link to the connected user object with a loggout link
     """
@@ -114,7 +114,7 @@ class UserLink(VComponent):
                    % (self.build_url('login'), self.req._('login')))
 
 
-class ApplicationMessage(VComponent):
+class ApplicationMessage(Component):
     """display application's messages given using the __message parameter
     into a special div section
     """
@@ -169,7 +169,7 @@ class WFHistoryVComponent(EntityVComponent):
                        displaycols=displaycols, headers=headers)
 
 
-class ApplicationName(VComponent):
+class ApplicationName(Component):
     """display the application name"""
     id = 'appliname'
 
@@ -190,7 +190,7 @@ class SeeAlsoVComponent(RelatedObjectsVComponent):
     help = _('contentnavigation_seealso_description')
 
     
-class EtypeRestrictionComponent(VComponent):
+class EtypeRestrictionComponent(Component):
     """displays the list of entity types contained in the resultset
     to be able to filter accordingly.
     """
@@ -240,14 +240,14 @@ class EtypeRestrictionComponent(VComponent):
         
 
 
-class RSSFeedURL(VComponent):
+class RSSFeedURL(Component):
     id = 'rss_feed_url'
     __selectors__ = (non_final_entity(),)
     
     def feed_url(self):
         return self.build_url(rql=self.limited_rql(), vid='rss')
 
-class RSSEntityFeedURL(VComponent):
+class RSSEntityFeedURL(Component):
     id = 'rss_feed_url'
     __selectors__ = (non_final_entity(), one_line_rset)
     

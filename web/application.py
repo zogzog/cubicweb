@@ -18,13 +18,13 @@ from cubicweb.cwconfig import CubicWebConfiguration
 from cubicweb.cwvreg import CubicWebRegistry
 from cubicweb.web import (LOGGER, StatusResponse, DirectResponse, Redirect, NotFound,
                        RemoteCallFailed, ExplicitLogin, InvalidSession)
-from cubicweb.web.component import SingletonComponent
+from cubicweb.web.component import Component
 
 # make session manager available through a global variable so the debug view can
 # print information about web session
 SESSION_MANAGER = None
 
-class AbstractSessionManager(SingletonComponent):
+class AbstractSessionManager(Component):
     """manage session data associated to a session identifier"""
     id = 'sessionmanager'
     
@@ -87,7 +87,7 @@ class AbstractSessionManager(SingletonComponent):
         raise NotImplementedError()
 
 
-class AbstractAuthenticationManager(SingletonComponent):
+class AbstractAuthenticationManager(Component):
     """authenticate user associated to a request and check session validity"""
     id = 'authmanager'
 

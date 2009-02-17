@@ -6,10 +6,12 @@
 """
 __docformat__ = "restructuredtext en"
 
+from logilab.common.deprecation import class_moved
+
 from cubicweb.selectors import (
     paginated_rset, one_line_rset, primary_view, match_context_prop,
     condition_compat, accepts_compat, has_relation_compat)
-from cubicweb.common.appobject import Component, SingletonComponent, ComponentMixIn
+from cubicweb.common.appobject import Component
 from cubicweb.common.utils import merge_dicts
 from cubicweb.common.view import View
 from cubicweb.common.registerers import action_registerer
@@ -17,13 +19,7 @@ from cubicweb.common.uilib import html_escape
 
 _ = unicode
 
-class VComponent(ComponentMixIn, View):
-    property_defs = {
-        _('visible'):  dict(type='Boolean', default=True,
-                            help=_('display the box or not')),
-        }    
-
-class EntityVComponent(VComponent):
+class EntityVComponent(Component):
     """abstract base class for additinal components displayed in content
     headers and footer according to:
     
@@ -62,7 +58,7 @@ class EntityVComponent(VComponent):
         raise NotImplementedError()
 
     
-class NavigationComponent(ComponentMixIn, View):
+class NavigationComponent(Component):
     """abstract base class for navigation components"""
     id = 'navigation'
     __selectors__ = (paginated_rset,)
@@ -175,3 +171,9 @@ class RelatedObjectsVComponent(EntityVComponent):
         self.w(u'<div class="%s">' % self.div_class())
         self.wview(self.vid, rset, title=self.req._(self.title).capitalize())
         self.w(u'</div>')
+
+
+VComponent = class_moved('VComponent', VComponent,
+                         'VComponent is deprecated, use Component')
+SingletonVComponent = class_moved('SingletonVComponent', VComponent,
+                                  'SingletonVComponent is deprecated, use Component and explicit registration control')

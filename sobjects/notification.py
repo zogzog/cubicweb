@@ -18,8 +18,7 @@ except ImportError:
 from logilab.common.textutils import normalize_text
 
 from cubicweb import RegistryException
-from cubicweb.common.view import EntityView
-from cubicweb.common.appobject import Component
+from cubicweb.common.view import EntityView, Component
 from cubicweb.common.registerers import accepts_registerer
 from cubicweb.common.selectors import implements
 from cubicweb.common.mail import format_mail

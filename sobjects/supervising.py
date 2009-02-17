@@ -8,7 +8,7 @@
 __docformat__ = "restructuredtext en"
 
 from cubicweb import UnknownEid
-from cubicweb.common.appobject import ComponentMixIn
+from cubicweb.common.appobject import Component
 from cubicweb.common.view import StartupView
 from cubicweb.common.mail import format_mail
 from cubicweb.server.hooksmanager import Hook
@@ -138,9 +138,10 @@ def filter_changes(changes):
             yield change
 
 
-class SupervisionEmailView(ComponentMixIn, StartupView):
+class SupervisionEmailView(Component):
     """view implementing the email API for data changes supervision notification
     """
+    __selectors__ = (none_rset,)
     id = 'supervision_notif'
 
     def recipients(self):
