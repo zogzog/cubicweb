@@ -194,7 +194,7 @@ class autoid(type):
 class Hook(AppObject):
     __metaclass__ = autoid
     __registry__ = 'hooks'
-    __selectors__ = (yes,)
+    __select__ = yes()
     # set this in derivated classes
     events = None
     accepts = None

@@ -141,7 +141,7 @@ def filter_changes(changes):
 class SupervisionEmailView(Component):
     """view implementing the email API for data changes supervision notification
     """
-    __selectors__ = (none_rset,)
+    __select__ = none_rset()
     id = 'supervision_notif'
 
     def recipients(self):
