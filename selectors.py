@@ -20,17 +20,16 @@ You can log the selectors involved for *calendar* by replacing the line
 above by::
 
     # in Python2.5
-    from cubicweb.common.selectors import traced_selection
+    from cubicweb.selectors import traced_selection
     with traced_selection():
         self.view('calendar', myrset)
 
     # in Python2.4
-    from cubicweb.common import selectors
+    from cubicweb import selectors
     selectors.TRACED_OIDS = ('calendar',)
     self.view('calendar', myrset)
     selectors.TRACED_OIDS = ()
  
-
 
 :organization: Logilab
 :copyright: 2001-2009 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
@@ -484,16 +483,12 @@ class implements(EClassSelector):
         self.expected_ifaces = expected_ifaces
 
     def score_class(self, eclass, req):
-        print '***********************************'
         score = 0
         for iface in self.expected_ifaces:
-            print 'TESTING', iface, 'on', eclass
             if isinstance(iface, basestring):
                 # entity type
                 iface = eclass.vreg.etype_class(iface)
-                print 'found iface ===', iface
             if implements_iface(eclass, iface):
-                print 'and implementing !!!'
                 score += 1
                 if getattr(iface, '__registry__', None) == 'etypes':
                     score += 1
@@ -509,7 +504,6 @@ class implements(EClassSelector):
                                 score += index
 #                                print 'etype majoration', index
                                 break
-        print '***********************************', score
         return score
 
 

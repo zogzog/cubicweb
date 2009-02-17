@@ -181,9 +181,9 @@ class HooksManager(object):
 #         self.register_hook(tidy_html_fields('before_update_entity'), 'before_update_entity', '')
             
 from cubicweb.vregistry import autoselectors
+from cubicweb.selectors import yes
 from cubicweb.common.appobject import AppObject
 from cubicweb.common.registerers import yes_registerer
-from cubicweb.common.selectors import yes
 
 class autoid(autoselectors):
     """metaclass to create an unique 'id' attribute on the class using it"""

@@ -1,7 +1,7 @@
 """base classes to handle tabbed views
 
 :organization: Logilab
-:copyright: 2008 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+:copyright: 2008-2009 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 """
 
@@ -11,8 +11,8 @@ from logilab.common.decorators import monkeypatch
 from logilab.mtconverter import html_escape
 
 from cubicweb import NoSelectableObject, role
+from cubicweb.selectors import has_related_entities
 from cubicweb.common.view import EntityView
-from cubicweb.common.selectors import has_related_entities
 from cubicweb.common.utils import HTMLHead
 from cubicweb.common.uilib import rql_for_eid
 

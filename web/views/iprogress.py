@@ -1,7 +1,7 @@
 """Specific views for entities implementing IProgress
 
 :organization: Logilab
-:copyright: 2001-2008 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+:copyright: 2001-2009 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 """
 
@@ -9,10 +9,10 @@ __docformat__ = "restructuredtext en"
 
 from logilab.mtconverter import html_escape
 
+from cubicweb.selectors import implements, accept
 from cubicweb.interfaces import IProgress, IMileStone
 from cubicweb.schema import display_name
 from cubicweb.common.view import EntityView
-from cubicweb.common.selectors import implement_interface, accept
 from cubicweb.web.htmlwidgets import ProgressBarWidget
 
 
@@ -35,9 +35,7 @@ class ProgressTableView(EntityView):
     
     id = 'progress_table_view'
     title = _('task progression')
-    __selectors__ = (accept, implement_interface)
-
-    accepts_interfaces = (IMileStone,)
+    __selectors__ = implements(IMileStone)
 
     # default columns of the table
     columns = (_('project'), _('milestone'), _('state'), _('eta_date'),
@@ -182,9 +180,7 @@ class ProgressBarView(EntityView):
     """displays a progress bar"""
     id = 'progressbar'
     title = _('progress bar')
-    __selectors__ = (accept, implement_interface)
-
-    accepts_interfaces = (IProgress,)
+    __selectors__ = implements(IProgress)
 
     def cell_call(self, row, col):
         self.req.add_css('cubicweb.iprogress.css')

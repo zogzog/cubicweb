@@ -18,8 +18,7 @@ from mx.DateTime.Parser import DateFromString
 from logilab.common.decorators import cached
 
 from cubicweb import NoSelectableObject, ValidationError, typed_eid
-from cubicweb.selectors import match_user_groups
-from cubicweb.common.selectors import yes
+from cubicweb.selectors import yes, match_user_groups
 from cubicweb.common.mail import format_mail
 from cubicweb.common.view import STRICT_DOCTYPE, CW_XHTML_EXTENSIONS
 from cubicweb.web import ExplicitLogin, Redirect, RemoteCallFailed

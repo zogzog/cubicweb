@@ -6,7 +6,7 @@
 """
 __docformat__ = "restructuredtext en"
 
-from cubicweb.common.selectors import (
+from cubicweb.selectors import (
     yes, one_line_rset, two_lines_rset, one_etype_rset, relation_possible,
     non_final_entity,
     authenticated_user, match_user_groups, match_search_state,

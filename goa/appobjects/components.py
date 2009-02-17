@@ -12,10 +12,9 @@ from logilab.mtconverter import html_escape
 from logilab.common.decorators import cached
 
 from cubicweb import typed_eid
+from cubicweb.selectors import one_line_rset, match_search_state, accept
 from cubicweb.schema import display_name
 from cubicweb.common.view import StartupView, EntityView
-from cubicweb.common.selectors import (one_line_rset, match_search_state,
-                                    accept)
 from cubicweb.web import Redirect
 from cubicweb.web.views import vid_from_rset
 from cubicweb.goa.db import rset_from_objs
@@ -31,9 +30,7 @@ class SearchForAssociationView(EntityView):
     """
     id = 'search-associate'
     
-    __selectors__ = (one_line_rset, match_search_state, accept)
-    accepts = ('Any',)
-    search_states = ('linksearch',)
+    __selectors__ = (one_line_rset, match_search_state('linksearch'), accept)
 
     def cell_call(self, row, col):
         entity = self.entity(0, 0)

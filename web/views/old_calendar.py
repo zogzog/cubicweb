@@ -1,7 +1,7 @@
 """html calendar views
 
 :organization: Logilab
-:copyright: 2001-2008 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+:copyright: 2001-2009 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 """
 
@@ -11,7 +11,7 @@ from logilab.mtconverter import html_escape
 
 from cubicweb.interfaces import ICalendarViews
 from cubicweb.common.utils import date_range
-from cubicweb.common.selectors import implement_interface
+from cubicweb.selectors import implements
 from cubicweb.common.registerers import priority_registerer
 from cubicweb.common.view import EntityView
 
@@ -33,8 +33,7 @@ MONTHNAMES = [ _('january'), _('february'), _('march'), _('april'), _('may'),
 class _CalendarView(EntityView):
     """base calendar view containing helpful methods to build calendar views"""
     __registerer__ = priority_registerer
-    __selectors__ = (implement_interface,)
-    accepts_interfaces = (ICalendarViews,)
+    __selectors__ = implements(ICalendarViews)
     need_navigation = False
 
     # Navigation building methods / views ####################################

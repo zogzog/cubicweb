@@ -10,7 +10,7 @@ from logilab.common.decorators import cached
 from logilab.mtconverter import html_escape
 
 from cubicweb.schema import display_name
-from cubicweb.common.selectors import one_line_rset, implements, match_user_groups
+from cubicweb.selectors import one_line_rset, implements, match_user_groups
 from cubicweb.web import INTERNAL_FIELD_VALUE
 from cubicweb.web.form import EntityForm
 from cubicweb.web.action import Action

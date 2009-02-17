@@ -15,10 +15,10 @@ from urllib2 import urlopen, Request, HTTPError
 from logilab.mtconverter import guess_encoding
 
 from cubicweb import urlquote # XXX should use view.url_quote method
+from cubicweb.selectors import (one_line_rset, score_entity,
+                                match_search_state, implements)
 from cubicweb.interfaces import IEmbedable
 from cubicweb.common.uilib import soup2xhtml
-from cubicweb.common.selectors import (one_line_rset, score_entity,
-                                       match_search_state, implements)
 from cubicweb.common.view import NOINDEX, NOFOLLOW
 from cubicweb.web.controller import Controller
 from cubicweb.web.action import Action

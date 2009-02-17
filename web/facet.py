@@ -19,7 +19,7 @@ from logilab.common.compat import all
 from rql import parse, nodes
 
 from cubicweb import Unauthorized, typed_eid
-from cubicweb.common.selectors import match_context_prop, one_has_relation
+from cubicweb.selectors import match_context_prop, one_has_relation
 from cubicweb.common.registerers import priority_registerer
 from cubicweb.common.appobject import AppRsetObject
 from cubicweb.common.utils import AcceptMixIn

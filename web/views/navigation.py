@@ -1,7 +1,7 @@
 """navigation components definition for CubicWeb web client
 
 :organization: Logilab
-:copyright: 2001-2008 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+:copyright: 2001-2009 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 """
 __docformat__ = "restructuredtext en"
@@ -11,9 +11,9 @@ from rql.nodes import VariableRef, Constant
 from logilab.mtconverter import html_escape
 
 from cubicweb.interfaces import IPrevNext
-from cubicweb.common.selectors import (paginated_rset, sorted_rset,
-                                       primary_view, match_context_prop,
-                                       one_line_rset, implement_interface)
+from cubicweb.selectors import (paginated_rset, sorted_rset,
+                                primary_view, match_context_prop,
+                                one_line_rset, implements)
 from cubicweb.common.uilib import cut
 from cubicweb.web.component import EntityVComponent, NavigationComponent
 
@@ -181,8 +181,7 @@ class NextPrevNavigationComponent(EntityVComponent):
     title = _('contentnavigation_prevnext')
     help = _('contentnavigation_prevnext_description')
     __selectors__ = (one_line_rset, primary_view,
-                     match_context_prop, implement_interface)
-    accepts_interfaces = (IPrevNext,)
+                     match_context_prop, implements(IPrevNext))
     context = 'navbottom'
     order = 10
     def call(self, view=None):
