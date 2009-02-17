@@ -11,9 +11,12 @@ to the application's schema or to already registered object
 __docformat__ = "restructuredtext en"
 
 from cubicweb.vregistry import registerer
-
+from cubicweb.selectors import implements
 
 def _accepts_interfaces(obj):
+    impl = obj.__select__.search_selector(implements)
+    if impl:
+        return sorted(impl.expected_ifaces)
     return sorted(getattr(obj, 'accepts_interfaces', ()))
 
 
@@ -54,17 +57,6 @@ class priority_registerer(registerer):
 
     def equivalent(self, other):
         raise NotImplementedError(self, self.vobject)
-
-
-class kick_registerer(registerer):
-    """systematically kick previous registered class and don't register the
-    wrapped class. This is temporarily used to discard library object registrable
-    but that we don't want to use
-    """
-    def do_it_yourself(self, registered):
-        if registered:
-            self.kick(registered, registered[-1])
-        return 
     
 
 class accepts_registerer(priority_registerer):
