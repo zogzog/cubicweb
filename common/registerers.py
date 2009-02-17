@@ -84,18 +84,6 @@ class accepts_registerer(priority_registerer):
         # remove it latter if no object is implementing accepted interfaces
         if _accepts_interfaces(self.vobject):
             return self.vobject
-# XXX no more .accepts attribute    
-#         if not 'Any' in self.vobject.accepts:
-#             for ertype in self.vobject.accepts:
-#                 if ertype in self.schema:
-#                     break
-#             else:
-#                 self.skip()
-#                 return None
-        for required in getattr(self.vobject, 'requires', ()):
-            if required not in self.schema:
-                self.skip()
-                return
         self.remove_equivalents(registered)
         return self.vobject
     
@@ -185,20 +173,6 @@ class action_registerer(etype_rtype_registerer):
             registerer = accepts_registerer(self.registry, cls)
             cls = registerer.do_it_yourself(registered)
         return cls
-
-
-class extresources_registerer(priority_registerer):
-    """'registerer according to a .need_resources attributes which
-    should list necessary resource identifiers for the wrapped object.
-    If one of its resources is missing, don't register
-    """
-    def do_it_yourself(self, registered):
-        if not hasattr(self.config, 'has_resource'):
-            return
-        for resourceid in self.vobject.need_resources:
-            if not self.config.has_resource(resourceid):
-                return
-        return super(extresources_registerer, self).do_it_yourself(registered)
     
 
 __all__ = [cls.__name__ for cls in globals().values()
