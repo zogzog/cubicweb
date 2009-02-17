@@ -10,12 +10,12 @@ from logilab.common.decorators import cached
 from logilab.mtconverter import html_escape
 
 from cubicweb import Unauthorized, role as get_role
+from cubicweb.selectors import (one_line_rset,  primary_view,
+                                match_context_prop, has_related_entities,
+                                accepts_compat, condition_compat)
 from cubicweb.common.registerers import (
     accepts_registerer, extresources_registerer,
     etype_rtype_priority_registerer)
-from cubicweb.common.selectors import (
-    one_line_rset,  primary_view, match_context_prop, has_related_entities,
-    accept_compat)
 #etype_rtype_selector, has_relation,
 from cubicweb.common.view import Template
 from cubicweb.common.appobject import ReloadableMixIn
@@ -153,7 +153,7 @@ class EntityBoxTemplate(BoxTemplate):
     __selectors__ = (one_line_rset, primary_view,
                      match_context_prop,)
                      #etype_rtype_selector, has_relation)
-    registered = accepts_compat(condition_compat(BoxTemplate.registered.im_func))
+    registered = accepts_compat(condition_compat(BoxTemplate.registered))
     context = 'incontext'
     
     def call(self, row=0, col=0, **kwargs):

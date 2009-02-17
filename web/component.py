@@ -6,13 +6,13 @@
 """
 __docformat__ = "restructuredtext en"
 
+from cubicweb.selectors import (paginated_rset, one_line_rset,
+                                primary_view, match_context_prop,
+                                condition_compat, accepts_compat)
 from cubicweb.common.appobject import Component, SingletonComponent
 from cubicweb.common.utils import merge_dicts
 from cubicweb.common.view import VComponent, SingletonVComponent
 from cubicweb.common.registerers import action_registerer
-from cubicweb.common.selectors import (paginated_rset, one_line_rset,
-                                       primary_view, match_context_prop,
-                                       condition_compat)
 #rql_condition, accept, has_relation,  etype_rtype_selector
 from cubicweb.common.uilib import html_escape
 

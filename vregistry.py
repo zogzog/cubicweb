@@ -234,7 +234,9 @@ class VRegistry(object):
             cls = registerer.do_it_yourself(vobjects)
             #_kicked |= registerer.kicked
             if cls:
-                vobject = cls.registered(self)
+                # registered() is technically a classmethod but is not declared
+                # as such because we need to compose registered in some cases
+                vobject = cls.registered.im_func(cls, self)
                 try:
                     vname = vobject.__name__
                 except AttributeError:

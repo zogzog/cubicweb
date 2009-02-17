@@ -8,6 +8,7 @@ __docformat__ = "restructuredtext en"
 
 from logilab.mtconverter import html_escape
 
+from cubicweb.selectors import implements
 from cubicweb.schemaviewer import SchemaViewer
 from cubicweb.common.uilib import ureport_as_html
 from cubicweb.common.view import EntityView
@@ -109,7 +110,7 @@ class EETypeOneLineView(baseviews.OneLineView):
             self.w(u'</em>')
         
 
-from cubicweb.web.action import EntityAction
+from cubicweb.web.action import Action
 
 class ViewWorkflowAction(Action):
     id = 'workflow'

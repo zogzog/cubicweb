@@ -180,7 +180,7 @@ class EntitySelector(EClassSelector):
             for row, rowvalue in enumerate(rset.rows):
                 if rowvalue[col] is None: # outer join
                     continue
-                escore = self.score(req, rset, row, col))
+                escore = self.score(req, rset, row, col)
                 if not escore and not self.once_is_enough:
                     return 0
                 elif self.once_is_enough:
@@ -698,7 +698,7 @@ class has_permission(EntitySelector):
                 for i, row in enumerate(rset):
                     if not rset.description[i][0] in need_local_check:
                         continue
-                    if not self.score(req, rset, i, col)):
+                    if not self.score(req, rset, i, col):
                         return 0
                 score += 1
             return score
@@ -901,6 +901,20 @@ searchstate_accept = deprecated_function(searchstate_accept)
 searchstate_accept_one = deprecated_function(searchstate_accept_one)
 
 
+def unbind_method(selector):
+    def new_selector(registered):
+        # get the unbound method
+        if hasattr(registered, 'im_func'):
+            registered = registered.im_func
+        return selector(registered)
+        # don't rebind since it will be done automatically during
+        # the assignment, inside the destination class body
+        return plugged_selector
+    new_selector.__name__ = selector.__name__
+    return new_selector
+
+
+@unbind_method
 def require_group_compat(registered):
     def plug_selector(cls, vreg):
         cls = registered(cls, vreg)
@@ -909,8 +923,9 @@ def require_group_compat(registered):
                  DeprecationWarning)
             cls.__selectors__ += (match_user_groups(cls.require_groups),)
         return cls
-    return classmethod(plug_selector)
+    return plug_selector
 
+@unbind_method
 def accepts_compat(registered):
     def plug_selector(cls, vreg):
         cls = registered(cls, vreg)
@@ -919,8 +934,9 @@ def accepts_compat(registered):
                  DeprecationWarning)
             cls.__selectors__ += (implements(*cls.accepts),)
         return cls
-    return classmethod(plug_selector)
+    return plug_selector
 
+@unbind_method
 def condition_compat(registered):
     def plug_selector(cls, vreg):
         cls = registered(cls, vreg)
@@ -929,4 +945,4 @@ def condition_compat(registered):
                  DeprecationWarning)
             cls.__selectors__ += (rql_condition(cls.condition),)
         return cls
-    return classmethod(plug_selector)
+    return plug_selector

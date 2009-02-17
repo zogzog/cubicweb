@@ -6,12 +6,13 @@
 """
 __docformat__ = "restructuredtext en"
 
-from cubicweb import target
+from cubicweb import role, target
+from cubicweb.vregistry import chainall
+from cubicweb.selectors import (relation_possible, match_search_state,
+                                one_line_rset, may_add_relation,
+                                accepts_compat)
 from cubicweb.common.appobject import AppRsetObject
 from cubicweb.common.registerers import action_registerer
-from cubicweb.common.selectors import user_can_add_etype, \
-     match_search_state, searchstate_accept_one
-
 _ = unicode
 
 
@@ -78,11 +79,13 @@ class LinkToEntityAction(Action):
     action apply and if the logged user has access to it
     """
     def my_selector(cls, req, rset, row=None, col=0, **kwargs):
-        return chainall(match_search_state('normal'),
-                        one_line_rset, 
-                        relation_possible(cls.rtype, role(cls), cls.etype,
-                                          permission='add'),
-                        may_add_relation(cls.rtype, role(cls)))
+        selector = chainall(match_search_state('normal'),
+                            one_line_rset, 
+                            relation_possible(cls.rtype, role(cls), cls.etype,
+                                              permission='add'),
+                            may_add_relation(cls.rtype, role(cls)))
+        return selector(cls, req, rset, row, col, **kwargs)
+
     __selectors__ = (my_selector,)
     registered = accepts_compat(Action.registered.im_func)
     
