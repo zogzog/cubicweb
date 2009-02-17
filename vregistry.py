@@ -112,7 +112,7 @@ class VObject(object):
         may be the right hook to create an instance for example). By
         default the vobject is returned without any transformation.
         """
-        cls.__select__ = cls.build___select__()
+        cls.build___select__()
         return cls
 
     @classmethod
@@ -146,10 +146,11 @@ class VObject(object):
             if len(selectors) == 1:
                 # micro optimization: don't bother with AndSelector if there's
                 # only one selector
-                return _instantiate_selector(selectors[0])
-            return AndSelector(_instantiate_selector(selector)
-                               for selector in selectors)
-        return cls.__select__
+                select = _instantiate_selector(selectors[0])
+            else:
+                select = AndSelector(*[_instantiate_selector(selector)
+                                       for selector in selectors])
+            cls.__select__ = select
 
 
 class VRegistry(object):
