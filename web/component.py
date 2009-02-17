@@ -14,7 +14,7 @@ from cubicweb.selectors import (
 from cubicweb.common.appobject import Component
 from cubicweb.common.utils import merge_dicts
 from cubicweb.common.view import View
-from cubicweb.common.registerers import action_registerer
+from cubicweb.common.registerers import accepts_registerer
 from cubicweb.common.uilib import html_escape
 
 _ = unicode
@@ -31,7 +31,7 @@ class EntityVComponent(Component):
     """
     
     __registry__ = 'contentnavigation'
-    __registerer__ = action_registerer    
+    __registerer__ = accepts_registerer    
     __selectors__ = (one_line_rset, primary_view, match_context_prop,)
     registered = accepts_compat(has_relation_compat(condition_compat(View.registered.im_func)))
     

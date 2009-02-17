@@ -125,54 +125,6 @@ class id_registerer(priority_registerer):
     
     def equivalent(self, other):
         return other.id == self.vobject.id
-
-
-class etype_rtype_registerer(registerer):
-    """registerer handling optional .etype and .rtype attributes.:
-    
-    * if .etype is set and is not an entity type defined in the
-      application schema, skip the wrapped class
-    * if .rtype or .relname is set and is not a relation type defined in
-      the application schema, skip the wrapped class
-    * register
-    """
-    def do_it_yourself(self, registered):
-        cls = self.vobject
-        if hasattr(cls, 'etype'):
-            if not self.schema.has_entity(cls.etype):
-                return
-        rtype = getattr(cls, 'rtype', None)
-        if rtype and not self.schema.has_relation(rtype):
-            return
-        return cls
-
-class etype_rtype_priority_registerer(etype_rtype_registerer):
-    """add priority behaviour to the etype_rtype_registerer
-    """
-    def do_it_yourself(self, registered):
-        cls = super(etype_rtype_priority_registerer, self).do_it_yourself(registered)
-        if cls:
-            registerer = priority_registerer(self.registry, cls)
-            cls = registerer.do_it_yourself(registered)
-        return cls
-
-class action_registerer(etype_rtype_registerer):
-    """'all in one' actions registerer, handling optional .accepts,
-    .etype and .rtype attributes:
-    
-    * if .etype is set and is not an entity type defined in the
-      application schema, skip the wrapped class
-    * if .rtype or .relname is set and is not a relation type defined in
-      the application schema, skip the wrapped class
-    * if .accepts is set, delegate to the accepts_registerer
-    * register
-    """
-    def do_it_yourself(self, registered):
-        cls = super(action_registerer, self).do_it_yourself(registered)
-        if hasattr(cls, 'accepts'):
-            registerer = accepts_registerer(self.registry, cls)
-            cls = registerer.do_it_yourself(registered)
-        return cls
     
 
 __all__ = [cls.__name__ for cls in globals().values()
