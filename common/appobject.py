@@ -11,6 +11,7 @@ from warnings import warn
 from mx.DateTime import now, oneSecond
 from simplejson import dumps
 
+from logilab.common.decorators import classproperty
 from logilab.common.deprecation import obsolete
 
 from rql.nodes import VariableRef, SubQuery
@@ -98,8 +99,15 @@ class AppRsetObject(VObject):
     @classmethod
     def propkey(cls, propid):
         return '%s.%s.%s' % (cls.__registry__, cls.id, propid)
-            
-        
+
+    @classproperty
+    @obsolete('use __select__ and & or | operators')
+    def __selectors__(cls):
+        if isinstance(self.__select__, AndSelector):
+            return self.__select__.selectors
+        return self.__select__
+    
+    @classmethod
     def __init__(self, req=None, rset=None):
         super(AppRsetObject, self).__init__()
         self.req = req
