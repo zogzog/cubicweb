@@ -296,7 +296,7 @@ class VRegistry(object):
         """
         score, winners = 0, []
         for vobject in vobjects:
-            vobjectscore = vobject.__select__(*args, **kwargs)
+            vobjectscore = vobject.__select__(vobject, *args, **kwargs)
             if vobjectscore > score:
                 score, winners = vobjectscore, [vobject]
             elif vobjectscore > 0 and vobjectscore == score:
