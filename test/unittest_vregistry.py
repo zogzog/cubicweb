@@ -33,12 +33,13 @@ class VRegistryTC(TestCase):
         # check loading baseviews after idownloadable isn't kicking interface based views
         self.assertEquals(len(self.vreg['views']['primary']), 2)
                               
-    def test_autoselectors(self):
+    def test___selectors__compat(self):
         myselector1 = lambda *args: 1
         myselector2 = lambda *args: 1
         class AnAppObject(VObject):
             __selectors__ = (myselector1, myselector2)
-        self.assertEquals(AnAppObject.__select__(), 2)
+        AnAppObject.build___select__()
+        self.assertEquals(AnAppObject.__select__(AnAppObject), 2)
 
     def test_properties(self):
         self.failIf('system.version.cubicweb' in self.vreg['propertydefs'])
