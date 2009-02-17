@@ -480,6 +480,7 @@ class implements(EClassSelector):
           proximity so the most specific object'll be selected
     """
     def __init__(self, *expected_ifaces):
+        super(implements, self).__init__()
         self.expected_ifaces = expected_ifaces
 
     def score_class(self, eclass, req):
