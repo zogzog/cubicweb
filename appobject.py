@@ -19,7 +19,7 @@ from rql.nodes import VariableRef, SubQuery
 from rql.stmts import Union, Select
 
 from cubicweb import Unauthorized
-from cubicweb.vregistry import VObject
+from cubicweb.vregistry import VObject, AndSelector
 from cubicweb.selectors import yes
 from cubicweb.utils import UStringIO, ustrftime
 
@@ -102,9 +102,12 @@ class AppRsetObject(VObject):
     @classproperty
     @obsolete('use __select__ and & or | operators')
     def __selectors__(cls):
-        if isinstance(self.__select__, AndSelector):
-            return self.__select__.selectors
-        return self.__select__
+        selector = cls.__select__
+        if isinstance(selector, AndSelector):
+            return selector.selectors
+        if not isinstance(selector, tuple):
+            selector = (selector,)
+        return selector
     
     @classmethod
     def __init__(self, req=None, rset=None):
