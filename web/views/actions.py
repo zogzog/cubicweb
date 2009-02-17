@@ -6,6 +6,7 @@
 """
 __docformat__ = "restructuredtext en"
 
+from cubicweb.vregistry import objectify_selector
 from cubicweb.selectors import (
     yes, one_line_rset, two_lines_rset, one_etype_rset, relation_possible,
     non_final_entity,
@@ -19,9 +20,11 @@ from cubicweb.web.views.baseviews import vid_from_rset
 
 _ = unicode
 
+@objectify_selector
 def match_searched_etype(cls, req, rset, row=None, col=None, **kwargs):
     return req.match_search_state(rset)
 
+@objectify_selector
 def view_is_not_default_view(cls, req, rset, row, col, **kwargs):
     # interesting if it propose another view than the current one
     vid = req.form.get('vid')
@@ -29,6 +32,7 @@ def view_is_not_default_view(cls, req, rset, row, col, **kwargs):
         return 1
     return 0
 
+@objectify_selector
 def addable_etype_empty_rset(cls, req, rset, **kwargs):
     if rset is not None and not rset.rowcount:
         rqlst = rset.syntax_tree()
@@ -180,7 +184,7 @@ class AddNewAction(MultipleEditAction):
     id = 'addentity'
     __select__ = (match_search_state('normal') &
                   (addable_etype_empty_rset()
-                   | (two_lines_rset() & one_etype_rset &  & has_add_permission()))
+                   | (two_lines_rset() & one_etype_rset & has_add_permission()))
                   )
 
     category = 'moreactions'

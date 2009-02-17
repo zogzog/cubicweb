@@ -80,7 +80,7 @@ class TreeViewItemView(EntityView):
     (each item should be exandable if it's not a tree leaf)
     """
     id = 'treeitemview'
-    __selectors__ = implements(ITree)
+    __select__ = implements(ITree)
     
     def cell_call(self, row, col, vid='oneline', parentvid='treeview'):
         entity = self.entity(row, col)

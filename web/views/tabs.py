@@ -132,12 +132,10 @@ class EntityRelatedTab(EntityView):
     class ProjectScreenshotsView(EntityRelationView):
         '''display project's screenshots'''
         id = title = _('projectscreenshots')
-        __selectors__ = implements('Project')
+        __select__ = implements('Project')
         rtype = 'screenshot'
         target = 'object'
         vid = 'gallery'
-        __selectors__ = EntityRelationView.__selectors__ + (one_line_rset,)
-
 
     This is the view we want to have in a tab, only if there is something to show.
     Then, just define as below, and declare this being the tab content :
@@ -145,7 +143,7 @@ class EntityRelatedTab(EntityView):
     class ProjectScreenshotTab(DataDependantTab, ProjectScreenshotsView):
         id = 'screenshots_tab'
     """
-    __selectors__ = EntityView.__selectors__ + (has_related_entities,)
+    __select__ = EntityView.__select__ & (has_related_entities,)
     vid = 'list'
 
     def cell_call(self, row, col):

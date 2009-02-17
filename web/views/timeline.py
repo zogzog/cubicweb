@@ -28,7 +28,7 @@ class TimelineJsonView(EntityView):
     templatable = False
     content_type = 'application/json'
 
-    __selectors__ = implements(ICalendarable)
+    __select__ = implements(ICalendarable)
     date_fmt = '%Y/%m/%d'
     
     def call(self):
@@ -102,7 +102,7 @@ class TimelineViewMixIn(object):
 class TimelineView(TimelineViewMixIn, EntityView):
     """builds a cubicweb timeline widget node"""
     id = 'timeline'
-    __selectors__ = implements(ICalendarable)
+    __select__ = implements(ICalendarable)
     need_navigation = False
     def call(self, tlunit=None):
         self.req.html_headers.define_var('Timeline_urlPrefix', self.req.datadir_url)

@@ -16,7 +16,7 @@ from cubicweb.web.views import baseviews
 
 
 class ImageView(EntityView):
-    __selectors__ = implements('EEType')
+    __select__ = implements('EEType')
     id = 'image'
     title = _('image')
 
@@ -36,16 +36,16 @@ class _SchemaEntityPrimaryView(baseviews.PrimaryView):
         return html_escape(entity.dc_long_title())
     
 class EETypePrimaryView(_SchemaEntityPrimaryView):
-    __selectors__ = implements('EEType')
+    __select__ = implements('EEType')
     skip_attrs = _SchemaEntityPrimaryView.skip_attrs + ('name', 'meta', 'final')
 
 class ERTypePrimaryView(_SchemaEntityPrimaryView):
-    __selectors__ = implements('ERType')
+    __select__ = implements('ERType')
     skip_attrs = _SchemaEntityPrimaryView.skip_attrs + ('name', 'meta', 'final',
                                                         'symetric', 'inlined')
 
 class ErdefPrimaryView(_SchemaEntityPrimaryView):
-    __selectors__ = implements('EEType', 'ENFRDef')
+    __select__ = implements('EEType', 'ENFRDef')
     show_attr_label = True
 
 class EETypeSchemaView(EETypePrimaryView):
@@ -85,7 +85,7 @@ class ERTypeSchemaView(ERTypePrimaryView):
         
 class EETypeWorkflowView(EntityView):
     id = 'workflow'
-    __selectors__ = implements('EEType')
+    __select__ = implements('EEType')
     cache_max_age = 60*60*2 # stay in http cache for 2 hours by default 
     
     def cell_call(self, row, col, **kwargs):
@@ -98,7 +98,7 @@ class EETypeWorkflowView(EntityView):
 
 
 class EETypeOneLineView(baseviews.OneLineView):
-    __selectors__ = implements('EEType')
+    __select__ = implements('EEType')
     
     def cell_call(self, row, col, **kwargs):
         entity = self.entity(row, col)
@@ -114,7 +114,7 @@ from cubicweb.web.action import Action
 
 class ViewWorkflowAction(Action):
     id = 'workflow'
-    __selectors__ = implements('EEType') & rql_condition('S state_of X')
+    __select__ = implements('EEType') & rql_condition('S state_of X')
     
     category = 'mainactions'
     title = _('view workflow')

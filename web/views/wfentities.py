@@ -11,7 +11,7 @@ from cubicweb.common.view import EntityView
 
 class CellView(EntityView):
     id = 'cell'
-    __selectors__ = implements('TrInfo')
+    __select__ = implements('TrInfo')
     
     def cell_call(self, row, col, cellvid=None):
         entity = self.entity(row, col)

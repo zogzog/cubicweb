@@ -13,7 +13,7 @@ from logilab.common.decorators import cached
 
 from cubicweb.selectors import (one_line_rset, none_rset, implements,
                                 match_user_groups, chainfirst, chainall)
-from cubicweb.common.utils import UStringIO
+<from cubicweb.common.utils import UStringIO
 from cubicweb.common.view import StartupView
 from cubicweb.web import INTERNAL_FIELD_VALUE, eid_param, stdmsgs
 from cubicweb.web.views import baseviews
@@ -31,7 +31,7 @@ _('components')
 _('contentnavigation')
 
 class EPropertyPrimaryView(baseviews.PrimaryView):
-    __selectors__ = implements('EProperty')
+    __select__ = implements('EProperty')
     skip_none = False
 
 
@@ -46,7 +46,7 @@ def css_class(someclass):
 
 class SystemEPropertiesForm(FormMixIn, StartupView):
     id = 'systemepropertiesform'
-    __selectors__ = (none_rset, match_user_groups('managers'))
+    __select__ = none_rset & match_user_groups('managers')
 
     title = _('site configuration')
     controller = 'edit'
@@ -220,7 +220,7 @@ def is_user_prefs(cls, req, rset, row, col):
 
 class EPropertiesForm(SystemEPropertiesForm):
     id = 'epropertiesform'
-    __selectors__ = (
+    __select__ = (
         implements('EUser'),
         # we don't want guests to be able to come here
         match_user_groups('users', 'managers'), 

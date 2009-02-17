@@ -109,7 +109,7 @@ class SchemaImageView(TmpFileViewMixin, StartupView):
 class EETypeSchemaImageView(TmpFileViewMixin, EntityView):
     id = 'eschemagraph'
     content_type = 'image/png'
-    __selectors__ = implements('EEType')
+    __select__ = implements('EEType')
     skip_rels = ('owned_by', 'created_by', 'identity', 'is', 'is_instance_of')
     
     def _generate(self, tmpfile):
@@ -121,7 +121,7 @@ class EETypeSchemaImageView(TmpFileViewMixin, EntityView):
                        prophdlr=RestrictedSchemaDotPropsHandler(self.req))
 
 class ERTypeSchemaImageView(EETypeSchemaImageView):
-    __selectors__ = implements('ERType')
+    __select__ = implements('ERType')
     
     def _generate(self, tmpfile):
         """display schema information for an entity"""
@@ -187,7 +187,7 @@ class WorkflowVisitor:
 class EETypeWorkflowImageView(TmpFileViewMixin, EntityView):
     id = 'ewfgraph'
     content_type = 'image/png'
-    __selectors__ = implements('EEType')
+    __select__ = implements('EEType')
     
     def _generate(self, tmpfile):
         """display schema information for an entity"""

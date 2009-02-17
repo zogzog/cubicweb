@@ -18,7 +18,7 @@ class GeocodingJsonView(EntityView):
     templatable = False
     content_type = 'application/json'
 
-    __selectors__ = implements(IGeocodable)
+    __select__ = implements(IGeocodable)
 
     def call(self):
         zoomlevel = self.req.form.pop('zoomlevel', 8)
@@ -51,7 +51,7 @@ class GeocodingJsonView(EntityView):
 class GoogleMapBubbleView(EntityView):
     id = 'gmap-bubble'
 
-    __selectors__ = implements(IGeocodable)
+    __select__ = implements(IGeocodable)
 
     def cell_call(self, row, col):
         entity = self.entity(row, col)
@@ -62,7 +62,7 @@ class GoogleMapBubbleView(EntityView):
 class GoogleMapsView(EntityView):
     id = 'gmap-view'
 
-    __selectors__ = implements(IGeocodable)
+    __select__ = implements(IGeocodable)
     need_navigation = False
 
     def call(self, gmap_key, width=400, height=400, uselabel=True, urlparams=None):

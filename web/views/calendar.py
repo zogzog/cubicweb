@@ -83,7 +83,7 @@ class iCalView(EntityView):
     Does apply to ICalendarable compatible entities
     """
     __registerer__ = priority_registerer
-    __selectors__ = implements(ICalendarable)
+    __select__ = implements(ICalendarable)
     need_navigation = False
     content_type = 'text/calendar'
     title = _('iCalendar')
@@ -113,7 +113,7 @@ class hCalView(EntityView):
     Does apply to ICalendarable compatible entities
     """
     __registerer__ = priority_registerer
-    __selectors__ = implements(ICalendarable)
+    __select__ = implements(ICalendarable)
     need_navigation = False
     title = _('hCalendar')
     #templatable = False
@@ -144,7 +144,7 @@ class _TaskEntry(object):
 class OneMonthCal(EntityView):
     """At some point, this view will probably replace ampm calendars"""
     __registerer__ = priority_registerer
-    __selectors__ = implements(ICalendarable)
+    __select__ = implements(ICalendarable)
     need_navigation = False
     id = 'onemonthcal'
     title = _('one month')
@@ -328,7 +328,7 @@ class OneMonthCal(EntityView):
 class OneWeekCal(EntityView):
     """At some point, this view will probably replace ampm calendars"""
     __registerer__ = priority_registerer
-    __selectors__ = implements(ICalendarable)
+    __select__ = implements(ICalendarable)
     need_navigation = False
     id = 'oneweekcal'
     title = _('one week')

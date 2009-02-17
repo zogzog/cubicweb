@@ -13,7 +13,7 @@ from logilab.mtconverter import html_escape
 _ = unicode
 
 class CardPrimaryView(baseviews.PrimaryView):
-    __selectors__ = implements('Card')
+    __select__ = implements('Card')
     skip_attrs = baseviews.PrimaryView.skip_attrs + ('title', 'synopsis', 'wikiid')
     show_attr_label = False
 

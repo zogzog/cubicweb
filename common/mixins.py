@@ -315,7 +315,7 @@ class TreeViewMixIn(object):
     """a recursive tree view"""
     id = 'tree'
     item_vid = 'treeitem'
-    __selectors__ = implements(ITree)
+    __select__ = implements(ITree)
 
     def call(self, done=None, **kwargs):
         if done is None:

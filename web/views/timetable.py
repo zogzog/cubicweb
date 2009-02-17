@@ -25,7 +25,7 @@ MIN_COLS = 3  # minimum number of task columns for a single user
 class TimeTableView(AnyRsetView):
     id = 'timetable'
     title = _('timetable')
-    __selectors__ = implements(ITimetableViews)
+    __select__ = implements(ITimetableViews)
     need_navigation = False
 
     def call(self, title=None):

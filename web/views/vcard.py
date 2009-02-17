@@ -19,7 +19,7 @@ class VCardEUserView(EntityView):
     title = _('vcard')
     templatable = False
     content_type = 'text/x-vcard'
-    __selectors__ = implements('EUser')        
+    __select__ = implements('EUser')        
 
     def set_request_content_type(self):
         """overriden to set a .vcf filename"""

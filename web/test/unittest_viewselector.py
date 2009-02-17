@@ -253,7 +253,7 @@ class VRegistryTC(ViewSelectorTC):
         del req.form['etype']
         # custom creation form
         class EUserCreationForm(baseforms.CreationForm):
-            __selectors__ = implements('EUSer')
+            __select__ = implements('EUSer')
         self.vreg.register_vobject_class(EUserCreationForm)
         req.form['etype'] = 'EUser'
         self.assertIsInstance(self.vreg.select_view('creation', req, rset),
@@ -411,7 +411,7 @@ class VRegistryTC(ViewSelectorTC):
         class SomeAction(Action):
             id = 'yo'
             category = 'foo'
-            __selectors__ = (match_user_groups('owners'),)
+            __select__ = match_user_groups('owners'),
         self.vreg.register_vobject_class(SomeAction)
         self.failUnless(SomeAction in self.vreg['actions']['yo'], self.vreg['actions'])
         try:
@@ -438,7 +438,7 @@ from cubicweb.web.action import Action
 
 class EETypeRQLAction(EntityAction):
     id = 'testaction'
-    __selectors__ = implements('EEType') & rql_condition('X name "EEType"')
+    __select__ = implements('EEType') & rql_condition('X name "EEType"')
     title = 'bla'
 
 class RQLActionTC(ViewSelectorTC):

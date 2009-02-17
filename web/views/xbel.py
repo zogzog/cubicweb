@@ -47,7 +47,7 @@ class XbelItemView(EntityView):
         return entity.absolute_url()
         
 class XbelItemBookmarkView(XbelItemView):
-    __selectors__ = implements('Bookmark')
+    __select__ = implements('Bookmark')
 
     def url(self, entity):
         return entity.actual_url()

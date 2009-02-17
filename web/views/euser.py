@@ -19,8 +19,8 @@ from cubicweb.web.views.baseviews import PrimaryView, EntityView
 
 class UserPreferencesEntityAction(Action):
     id = 'prefs'
-    __selectors__ = (one_line_rset, implements('EUser'),
-                     match_user_groups('owners', 'managers'))
+    __select__ = (one_line_rset & implements('EUser') &
+                  match_user_groups('owners', 'managers'))
     
     title = _('preferences')
     category = 'mainactions'
@@ -31,7 +31,7 @@ class UserPreferencesEntityAction(Action):
 
 
 class EUserPrimaryView(PrimaryView):
-    __selectors__ = implements('EUser')
+    __select__ = implements('EUser')
     
     skip_attrs = ('firstname', 'surname')
     
@@ -51,7 +51,7 @@ class EUserPrimaryView(PrimaryView):
                                  ]
 class FoafView(EntityView):
     id = 'foaf'
-    __selectors__ = implements('EUser')
+    __select__ = implements('EUser')
     
     title = _('foaf')
     templatable = False
@@ -97,7 +97,7 @@ class EditGroups(EntityForm):
     """displays a simple euser / egroups editable table"""
     
     id = 'editgroups'
-    __selectors__ = implements('EUser')
+    __select__ = implements('EUser')
     
     def call(self):
         self.req.add_css('cubicweb.acl.css')            
