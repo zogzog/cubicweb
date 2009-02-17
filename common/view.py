@@ -15,7 +15,7 @@ from cubicweb import NotAnEntity, NoSelectableObject
 from cubicweb.selectors import (yes, match_user_groups, implements,
                                 nonempty_rset, none_rset)
 from cubicweb.selectors import require_group_compat, accepts_compat
-from cubicweb.common.registerers import accepts_registerer, priority_registerer
+from cubicweb.common.registerers import accepts_registerer, priority_registerer, yes_registerer
 from cubicweb.common.appobject import AppRsetObject
 from cubicweb.common.utils import UStringIO, HTMLStream
 
@@ -354,7 +354,6 @@ class EntityStartupView(EntityView):
     """base class for entity views which may also be applied to None
     result set (usually a default rql is provided by the view class)
     """
-    __registerer__ = accepts_registerer
     __selectors__ = ((none_rset | implements('Any')),)
 
     default_rql = None
@@ -390,7 +389,6 @@ class EntityStartupView(EntityView):
 
 class AnyRsetView(View):
     """base class for views applying on any non empty result sets"""
-    __registerer__ = priority_registerer
     __selectors__ = (nonempty_rset,)
 
     category = 'anyrsetview'
@@ -420,7 +418,6 @@ class Template(View):
     is only used globally (i.e. no result set adaptation)
     """
     __registry__ = 'templates'
-    # __registerer__ = priority_registerer
     __selectors__ = (yes,)
 
     registered = require_group_compat(View.registered.im_func)
