@@ -23,7 +23,7 @@ Here is the prototype of the different hooks:
 
 
 :organization: Logilab
-:copyright: 2001-2008 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+:copyright: 2001-2009 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 """
 __docformat__ = "restructuredtext en"
@@ -182,7 +182,7 @@ class HooksManager(object):
             
 from cubicweb.vregistry import autoselectors
 from cubicweb.common.appobject import AppObject
-from cubicweb.common.registerers import accepts_registerer, yes_registerer
+from cubicweb.common.registerers import yes_registerer
 from cubicweb.common.selectors import yes
 
 class autoid(autoselectors):
@@ -195,7 +195,7 @@ class autoid(autoselectors):
 class Hook(AppObject):
     __metaclass__ = autoid
     __registry__ = 'hooks'
-    __registerer__ = accepts_registerer
+    __registerer__ = yes_registerer
     __selectors__ = (yes,)
     # set this in derivated classes
     events = None
@@ -245,7 +245,6 @@ class Hook(AppObject):
         raise NotImplementedError
     
 class SystemHook(Hook):
-    __registerer__ = yes_registerer
     accepts = ('',)
 
 from logging import getLogger
