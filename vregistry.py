@@ -582,7 +582,7 @@ class Selector(object):
         """
         if self is selector:
             return self
-        if isinstance(selector, type) and instance(self, selector):
+        if isinstance(selector, type) and isinstance(self, selector):
             return self
         return None
     
