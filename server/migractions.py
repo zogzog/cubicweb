@@ -264,13 +264,15 @@ class ServerMigrationHelper(MigrationHelper):
             self.commit()
 
     def cmd_add_cube(self, cube, update_database=True):
+        self.cmd_add_cubes( (cube,), update_database)
+    
+    def cmd_add_cubes(self, cubes, update_database=True):
         """update_database is telling if the database schema should be updated
         or if only the relevant eproperty should be inserted (for the case where
         a cube has been extracted from an existing application, so the
         cube schema is already in there)
         """
-        newcubes = super(ServerMigrationHelper, self).cmd_add_cube(
-            cube)
+        newcubes = super(ServerMigrationHelper, self).cmd_add_cubes(cubes)
         if not newcubes:
             return
         for pack in newcubes:
@@ -279,22 +281,22 @@ class ServerMigrationHelper(MigrationHelper):
         if not update_database:
             self.commit()
             return
-        self.new_schema = self.config.load_schema()
+        with_new_cubes = self.config.load_schema()
         new = set()
         # execute pre-create files
         for pack in reversed(newcubes):
             self.exec_event_script('precreate', self.config.cube_dir(pack))
         # add new entity and relation types
-        for rschema in self.new_schema.relations():
+        for rschema in with_new_cubes.relations():
             if not rschema in self.repo.schema:
                 self.cmd_add_relation_type(rschema.type)
                 new.add(rschema.type)
-        for eschema in self.new_schema.entities():
+        for eschema in with_new_cubes.entities():
             if not eschema in self.repo.schema:
                 self.cmd_add_entity_type(eschema.type)
                 new.add(eschema.type)
         # check if attributes has been added to existing entities
-        for rschema in self.new_schema.relations():
+        for rschema in with_new_cubes.relations():
             existingschema = self.repo.schema.rschema(rschema.type)
             for (fromtype, totype) in rschema.iter_rdefs():
                 if existingschema.has_rdef(fromtype, totype):

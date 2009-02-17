@@ -312,12 +312,18 @@ type "exit" or Ctrl-D to quit the shell and resume operation"""
         """a configuration option's type has changed"""
         self._option_changes.append(('typechanged', optname, oldtype, newvalue))
         
-    def cmd_add_cube(self, cube):
+    def cmd_add_cubes(self, cubes):
+        """modify the list of used cubes in the in-memory config
+        returns newly inserted cubes, including dependencies
+        """
+        if isinstance(cubes, basestring):
+            cubes = (cubes,)
         origcubes = self.config.cubes()
-        newcubes = [p for p in self.config.expand_cubes([cube]) 
+        newcubes = [p for p in self.config.expand_cubes(cubes) 
                        if not p in origcubes]
         if newcubes:
-            assert cube in newcubes
+            for cube in cubes:
+                assert cube in newcubes
             self.config.add_cubes(newcubes)
         return newcubes
 
