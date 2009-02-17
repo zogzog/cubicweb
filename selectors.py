@@ -919,7 +919,7 @@ def require_group_compat(registered):
     def plug_selector(cls, vreg):
         cls = registered(cls, vreg)
         if getattr(cls, 'require_groups', None):
-            warn('use "use match_user_groups(group1, group2)" instead of using require_groups',
+            warn('use "match_user_groups(group1, group2)" instead of using require_groups',
                  DeprecationWarning)
             cls.__selectors__ += (match_user_groups(cls.require_groups),)
         return cls
@@ -930,7 +930,7 @@ def accepts_compat(registered):
     def plug_selector(cls, vreg):
         cls = registered(cls, vreg)
         if getattr(cls, 'accepts', None):
-            warn('use "use match_user_groups(group1, group2)" instead of using require_groups',
+            warn('use "match_user_groups(group1, group2)" instead of using require_groups',
                  DeprecationWarning)
             cls.__selectors__ += (implements(*cls.accepts),)
         return cls
@@ -944,5 +944,18 @@ def condition_compat(registered):
             warn('use "use rql_condition(expression)" instead of using condition',
                  DeprecationWarning)
             cls.__selectors__ += (rql_condition(cls.condition),)
+        return cls
+    return plug_selector
+     
+@unbind_method
+def has_relation_compat(registered):
+    def plug_selector(cls, vreg):
+        cls = registered(cls, vreg)
+        if getattr(cls, 'type', None):
+            warn('use relation_possible selector instead of using etype_rtype',
+                 DeprecationWarning)
+            cls.__selectors__ += (relation_possible(cls.rtype), role(cls),
+                                  getattr(cls, 'etype', None),
+                                  action=getattr(cls, 'require_permission', 'read'))
         return cls
     return plug_selector
