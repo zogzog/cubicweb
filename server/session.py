@@ -60,35 +60,8 @@ def _make_description(selected, args, solution):
         description.append(term.get_type(solution, args))
     return description
 
-#XXX rql <= 0.18.3 bw compat
 from rql import stmts
-if not hasattr(stmts.Union, 'get_variable_variables'):
-    def _union_get_variable_variables(self):
-        """return the set of variable names which take different type according to
-        the solution
-        """
-        change = set()
-        values = {}
-        for select in self.children:
-            change.update(select.get_variable_variables(values))
-        return change
-    stmts.Union.get_variable_variables = _union_get_variable_variables
-                        
-    def _select_get_variable_variables(self, _values=None):
-        """return the set of variable names which take different type according to
-        the solution
-        """
-        change = set()
-        if _values is None:
-            _values = {}
-        for solution in self.solutions:
-            for vname, etype in solution.iteritems():
-                if not vname in _values:
-                    _values[vname] = etype
-                elif _values[vname] != etype:
-                    change.add(vname)
-        return change
-    stmts.Select.get_variable_variables = _select_get_variable_variables
+assert hasattr(stmts.Union, 'get_variable_variables'), "You need RQL > 0.18.3"
 
 class Session(RequestSessionMixIn):
     """tie session id, user, connections pool and other session data all
