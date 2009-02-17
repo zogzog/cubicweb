@@ -9,7 +9,7 @@ __docformat__ = "restructuredtext en"
 from logilab.mtconverter import html_escape
 
 from cubicweb import Unauthorized
-from cubicweb.common.selectors import implements
+from cubicweb.selectors import implements
 from cubicweb.web.htmlwidgets import BoxWidget, BoxMenu, RawBoxItem
 from cubicweb.web.action import Action
 from cubicweb.web.box import UserRQLBoxTemplate

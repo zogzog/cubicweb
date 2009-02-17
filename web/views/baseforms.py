@@ -15,11 +15,11 @@ from logilab.mtconverter import html_escape
 from logilab.common.decorators import cached
 
 from cubicweb.interfaces import IWorkflowable
+from cubicweb.selectors import (specified_etype_implements,
+                                match_kwargs, match_form_params, 
+                                one_line_rset, implements)
 from cubicweb.common.utils import make_uid
 from cubicweb.common.uilib import cut
-from cubicweb.common.selectors import (specified_etype_implements,
-                                       match_kwargs, match_form_params, 
-                                       one_line_rset, implements)
 from cubicweb.common.view import EntityView
 from cubicweb.web import INTERNAL_FIELD_VALUE, stdmsgs, eid_param
 from cubicweb.web.controller import NAV_FORM_PARAMETERS

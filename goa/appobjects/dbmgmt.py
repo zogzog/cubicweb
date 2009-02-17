@@ -13,7 +13,7 @@ from pickle import loads, dumps
 from logilab.common.decorators import cached
 from logilab.mtconverter import html_escape
 
-from cubicweb.common.selectors import none_rset, match_user_groups
+from cubicweb.selectors import none_rset, match_user_groups
 from cubicweb.common.view import StartupView
 from cubicweb.web import Redirect
 from cubicweb.goa.dbinit import fix_entities, init_persistent_schema, insert_versions

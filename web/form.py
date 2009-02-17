@@ -11,7 +11,7 @@ from simplejson import dumps
 from logilab.mtconverter import html_escape
 
 from cubicweb import typed_eid
-from cubicweb.common.selectors import match_form_params
+from cubicweb.selectors import match_form_params
 from cubicweb.common.registerers import accepts_registerer
 from cubicweb.common.view import NOINDEX, NOFOLLOW, View, EntityView, AnyRsetView
 from cubicweb.web import stdmsgs

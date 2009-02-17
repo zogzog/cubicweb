@@ -1,15 +1,15 @@
 """html calendar views
 
 :organization: Logilab
-:copyright: 2001-2008 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+:copyright: 2001-2009 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 """
 
 from logilab.mtconverter import html_escape
 
 from cubicweb.interfaces import ITimetableViews
+from cubicweb.selectors import implements
 from cubicweb.common.utils import date_range
-from cubicweb.common.selectors import implement_interface
 from cubicweb.common.view import AnyRsetView
 
 
@@ -25,8 +25,7 @@ MIN_COLS = 3  # minimum number of task columns for a single user
 class TimeTableView(AnyRsetView):
     id = 'timetable'
     title = _('timetable')
-    __selectors__ = (implement_interface,)
-    accepts_interfaces = (ITimetableViews,)
+    __selectors__ = implements(ITimetableViews)
     need_navigation = False
 
     def call(self, title=None):

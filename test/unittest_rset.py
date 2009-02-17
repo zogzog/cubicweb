@@ -5,7 +5,7 @@ from __future__ import with_statement
 from logilab.common.testlib import TestCase, unittest_main
 
 from cubicweb.devtools.apptest import EnvBasedTC
-from cubicweb.common.selectors import traced_selection
+from cubicweb.selectors import traced_selection
 
 from urlparse import urlsplit
 from rql import parse

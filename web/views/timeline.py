@@ -3,7 +3,7 @@
 cf. http://code.google.com/p/simile-widgets/
 
 :organization: Logilab
-:copyright: 2008 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+:copyright: 2008-2009 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 """
 __docformat__ = "restructuredtext en"
@@ -13,8 +13,8 @@ import simplejson
 from logilab.mtconverter import html_escape
 
 from cubicweb.interfaces import ICalendarable
+from cubicweb.selectors import implements
 from cubicweb.common.view import EntityView, StartupView
-from cubicweb.common.selectors import implement_interface
 
 
 # 
@@ -28,8 +28,7 @@ class TimelineJsonView(EntityView):
     templatable = False
     content_type = 'application/json'
 
-    __selectors__ = (implement_interface,)
-    accepts_interfaces = (ICalendarable,)
+    __selectors__ = implements(ICalendarable)
     date_fmt = '%Y/%m/%d'
     
     def call(self):
@@ -103,8 +102,7 @@ class TimelineViewMixIn(object):
 class TimelineView(TimelineViewMixIn, EntityView):
     """builds a cubicweb timeline widget node"""
     id = 'timeline'
-    __selectors__ = (implement_interface,)
-    accepts_interfaces = (ICalendarable,)
+    __selectors__ = implements(ICalendarable)
     need_navigation = False
     def call(self, tlunit=None):
         self.req.html_headers.define_var('Timeline_urlPrefix', self.req.datadir_url)

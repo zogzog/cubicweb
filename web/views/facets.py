@@ -10,9 +10,9 @@ from simplejson import dumps
 
 from logilab.mtconverter import html_escape
 
-from cubicweb.common.selectors import (chainfirst, chainall, non_final_entity,
-                                    two_lines_rset, match_context_prop,
-                                    yes, one_has_relation)
+from cubicweb.selectors import (chainfirst, chainall, non_final_entity,
+                                two_lines_rset, match_context_prop,
+                                yes, one_has_relation)
 from cubicweb.web.box import BoxTemplate
 from cubicweb.web.facet import (AbstractFacet, VocabularyFacet, FacetStringWidget,
                              RelationFacet, prepare_facets_rqlst, filter_hiddens)

@@ -18,10 +18,10 @@ from rql.stmts import Union, Select
 
 from cubicweb import Unauthorized
 from cubicweb.vregistry import VObject
+from cubicweb.selectors import yes
 from cubicweb.common.utils import UStringIO
 from cubicweb.common.uilib import html_escape, ustrftime
 from cubicweb.common.registerers import yes_registerer, priority_registerer
-from cubicweb.common.selectors import yes
 
 
 

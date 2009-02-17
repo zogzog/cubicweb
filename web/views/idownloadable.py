@@ -8,10 +8,10 @@ __docformat__ = "restructuredtext en"
 
 from logilab.mtconverter import BINARY_ENCODINGS, TransformError, html_escape
 
+from cubicweb.selectors import (one_line_rset, score_entity,
+                                implements, match_context_prop)
 from cubicweb.interfaces import IDownloadable
 from cubicweb.common.mttransforms import ENGINE
-from cubicweb.common.selectors import (one_line_rset, score_entity,
-                                       implements, match_context_prop)
 from cubicweb.web.box import EntityBoxTemplate
 from cubicweb.web.views import baseviews
 

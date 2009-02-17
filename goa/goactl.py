@@ -11,7 +11,7 @@ from os.path import exists, join, split, dirname, basename, normpath, abspath
 from cubicweb import BadCommandUsage
 from cubicweb import CW_SOFTWARE_ROOT
 from cubicweb.toolsutils import (Command, register_commands, copy_skeleton,
-                              create_dir, create_symlink, create_copy)
+                                 create_dir, create_symlink, create_copy)
 from cubicweb.cwconfig import CubicWebConfiguration
 
 from logilab import common as lgc
@@ -54,6 +54,7 @@ COPY_CW_FILES = (
     'rset.py',
     'schema.py',
     'schemaviewer.py',
+    'selectors.py',
     'vregistry.py',
     
     'common/appobject.py',
@@ -65,7 +66,6 @@ COPY_CW_FILES = (
     'common/mttransforms.py',
     'common/registerers.py',
     'common/rest.py',
-    'common/selectors.py',
     'common/view.py',
     'common/uilib.py',
     'common/utils.py',
