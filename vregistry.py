@@ -94,9 +94,6 @@ class VObject(object):
       'primary', 'folder_box')
     :__select__:
       class'selector
-    :__selectors__:
-      tuple of selectors to be chained
-      (__select__ and __selectors__ are mutually exclusive)
       
     Moreover, the `__abstract__` attribute may be set to True to indicate
     that a vobject is abstract and should not be registered
