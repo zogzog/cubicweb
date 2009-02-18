@@ -75,15 +75,11 @@ def templatable_view(cls, req, rset, *args, **kwargs):
         return 0
     return view.templatable
 
-@objectify_selector
-def non_templatable_view(cls, req, rset, *args, **kwargs):
-    return not templatable_view()(cls, req, rset, *args, **kwargs)
-
 
 class NonTemplatableViewTemplate(MainTemplate):
     """main template for any non templatable views (xml, binaries, etc.)"""
     id = 'main-template'
-    __select__ = non_templatable_view()
+    __select__ = ~ templatable_view()
     
     def call(self, view):
         view.set_request_content_type()
