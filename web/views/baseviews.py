@@ -443,19 +443,6 @@ class OutOfContextView(EntityView):
         self.w(u'<a href="%s">' % self.entity(row, col).absolute_url())
         self.w(html_escape(self.view('textoutofcontext', self.rset, row=row, col=col)))
         self.w(u'</a>')
-
-class NotClickableInContextView(EntityView):
-    id = 'incontext'
-
-    def cell_call(self, row, col):
-        self.w(html_escape(self.view('textincontext', self.rset, row=row, col=col)))
-
-## class NotClickableOutOfContextView(EntityView):
-##     id = 'outofcontext'
-
-##     def cell_call(self, row, col):
-##         self.w(html_escape(self.view('textoutofcontext', self.rset, row=row)))
-
             
 # list and table related views ################################################
     
