@@ -11,7 +11,7 @@ class State(MetaEntityType):
     """
     name = String(required=True, indexed=True, internationalizable=True,
                   maxsize=256)
-    description = RichString(fulltextindexed=True, default='text/rest',
+    description = RichString(fulltextindexed=True, default_format='text/rest',
                              description=_('semantic description of this state'))
     
     state_of = SubjectRelation('EEType', cardinality='+*',
