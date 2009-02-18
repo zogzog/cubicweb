@@ -8,6 +8,9 @@
 from logilab.common.testlib import TestCase, unittest_main
 
 from cubicweb.vregistry import Selector, AndSelector, OrSelector
+from cubicweb.selectors import implements
+
+from cubicweb.interfaces import IDownloadable
 
 class _1_(Selector):
     def __call__(self, *args, **kwargs):
@@ -74,7 +77,26 @@ class SelectorsTC(TestCase):
         self.assertEquals(len(selector.selectors), 2)
         self.assertEquals(selector(None), 2)
 
+    def test_search_selectors(self):
+        sel = implements('something')
+        self.assertIs(sel.search_selector(implements), sel)
+        csel = AndSelector(sel, Selector())
+        self.assertIs(csel.search_selector(implements), sel)
+        csel = AndSelector(Selector(), sel)
+        self.assertIs(csel.search_selector(implements), sel)
+        
+from cubicweb.devtools.testlib import EnvBasedTC
 
+class ImplementsSelectorTC(EnvBasedTC):
+    def test_etype_priority(self):
+        req = self.request()
+        cls = self.vreg.etype_class('File')
+        anyscore = implements('Any').score_class(cls, req)
+        idownscore = implements(IDownloadable).score_class(cls, req)
+        self.failUnless(idownscore > anyscore, (idownscore, anyscore))
+        filescore = implements('File').score_class(cls, req)
+        self.failUnless(filescore > idownscore, (filescore, idownscore))
+    
 if __name__ == '__main__':
     unittest_main()
 
