@@ -216,12 +216,12 @@ class EditionForm(FormMixIn, EntityView):
     dynamic default values such as the 'tomorrow' date or the user's login
     being connected
     """    
+    id = 'edition'
     __select__ = one_line_rset() & implements('Any')
 
-    id = 'edition'
     title = _('edition')
     controller = 'edit'
-    skip_relations = EntityView.skip_relations.copy()
+    skip_relations = FormMixIn.skip_relations.copy()
     
     EDITION_BODY = u'''\
  %(errormsg)s
