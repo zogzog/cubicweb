@@ -20,9 +20,9 @@ class EntityTC(EnvBasedTC):
         self.failUnless(e)
 
     def test_yams_inheritance(self):
-        from entities import AnotherNote
+        from entities import Note
         e = self.etype_instance('SubNote')
-        self.assertIsInstance(e, AnotherNote)
+        self.assertIsInstance(e, Note)
         e2 = self.etype_instance('SubNote')
         self.assertIs(e.__class__, e2.__class__)
 
@@ -266,31 +266,17 @@ class EntityTC(EnvBasedTC):
                                ('owned_by', 'object'),
                                ('bookmarked_by', 'object')])
         e = self.etype_instance('Personne')
-        print rbc(e.relations_by_category('primary'))
         self.assertListEquals(rbc(e.relations_by_category('primary')),
                               [('nom', 'subject'), ('eid', 'subject')])
         self.assertListEquals(rbc(e.relations_by_category('secondary')),
                               [('prenom', 'subject'),
-                               ('sexe', 'subject'),
-                               ('promo', 'subject'),
-                               ('titre', 'subject'),
-                               ('adel', 'subject'),
-                               ('ass', 'subject'),
-                               ('web', 'subject'),
-                               ('tel', 'subject'),
-                               ('fax', 'subject'),
-                               ('datenaiss', 'subject'),
-                               ('test', 'subject'),
-                               ('description', 'subject'),
-                               ('salary', 'subject')])
+                               ('type', 'subject'),])
         self.assertListEquals(rbc(e.relations_by_category('generic')),
-                              [('concerne', 'subject'),
-                               ('connait', 'subject'),
+                              [('travaille', 'subject'),
                                ('evaluee', 'subject'),
-                               ('travaille', 'subject'),
+                               ('connait', 'subject'),
                                ('ecrit_par', 'object'),
                                ('evaluee', 'object'),
-                               ('liee_a', 'object'),
                                ('tags', 'object')])
         self.assertListEquals(rbc(e.relations_by_category('generated')),
                               [('created_by', 'subject'),

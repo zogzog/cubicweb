@@ -1,5 +1,5 @@
 class Personne(EntityType):
-    nom = String()
+    nom = String(required=True)
     prenom = String()
     type = String()
     travaille = SubjectRelation('Societe')
