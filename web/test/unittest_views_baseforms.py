@@ -3,13 +3,14 @@
 from StringIO import StringIO
 import re
 
-from logilab.common.testlib import unittest_main
-from cubicweb.devtools.apptest import EnvBasedTC
-
-from cubicweb.entities import AnyEntity
-
 from mx.DateTime import DateTime
+
+from logilab.common.testlib import unittest_main
+from logilab.common.decorators import clear_cache
+from cubicweb.devtools.apptest import EnvBasedTC
+from cubicweb.entities import AnyEntity
 from cubicweb.web import widgets
+
 orig_today = widgets.today
 orig_now = widgets.now
 
@@ -18,7 +19,7 @@ def setup_module(options):
         return DateTime(0000, 1, 1)
     widgets.today = widgets.now = _today
 
-def teardown_module(options):
+def teardown_module(options, result):
     widgets.today = orig_today
     widgets.now = orig_now
 
@@ -207,6 +208,7 @@ method="post" onsubmit="return freezeFormButtons('entityForm')" enctype="applica
         class BlogEntryPlus(BlogEntry):
             __rtags__ = {'checked_by': 'primary'}
         self.vreg.register_vobject_class(BlogEntryPlus)
+        clear_cache(self.vreg, 'etype_class')
         # an admin should be able to edit the checked_by relation
         html = self._build_creation_form('BlogEntry')
         self.failUnless('name="edits-checked_by:A"' in html)
