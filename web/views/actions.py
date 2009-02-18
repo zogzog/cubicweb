@@ -130,7 +130,7 @@ class MultipleEditAction(Action):
 
 class ManagePermissionsAction(Action):
     id = 'managepermission'
-    __select__ = match_user_groups('managers') 
+    __select__ = one_line_rset() & match_user_groups('managers')
 
     title = _('manage permissions')
     category = 'moreactions'
@@ -150,7 +150,7 @@ class ManagePermissionsAction(Action):
     
 class DeleteAction(Action):
     id = 'delete'
-    __select__ = one_line_rset() & has_permission('delete')
+    __select__ = has_permission('delete')
     
     title = _('delete')
     category = 'moreactions' 
