@@ -1,25 +1,21 @@
 # -*- coding: iso-8859-1 -*-
 """XXX rename, split, reorganize this
 """
+from __future__ import with_statement
 
-import os.path as osp
-
-from logilab.common.testlib import TestCase, unittest_main
+from logilab.common.testlib import unittest_main
 from cubicweb.devtools.apptest import EnvBasedTC
 
 
 from cubicweb import CW_SOFTWARE_ROOT as BASE, Binary
-from cubicweb.selectors import match_user_groups, implements, rql_condition
+from cubicweb.selectors import match_user_groups, implements, rql_condition, traced_selection
 
 from cubicweb.web._exceptions import NoSelectableObject
 from cubicweb.web.action import Action
 from cubicweb.web.views import (baseviews, tableview, baseforms, calendar, 
                                 management, embedding, actions, startup, 
-                                euser, schemaentities, xbel, vcard,
-                                treeview, idownloadable, wdoc, debug)
-from cubicweb.entities.lib import Card
-from cubicweb.interfaces import IMileStone
-from cubicweb.web.views import owl
+                                euser, schemaentities, xbel, vcard, owl,
+                                treeview, idownloadable, wdoc, debug, eproperties)
 
 USERACTIONS = [('myprefs', actions.UserPreferencesAction),
                ('myinfos', actions.UserInfoAction),
@@ -71,24 +67,17 @@ class VRegistryTC(ViewSelectorTC):
         self.assertListEqual(self.pviews(req, None),
                              [('changelog', wdoc.ChangeLogView),
                               ('debug', debug.DebugView),
-                              ('epropertiesform', management.EpropertiesForm),
+                              ('epropertiesform', eproperties.EPropertiesForm),
                               ('index', startup.IndexView),
                               ('info', management.ProcessInformationView),
                               ('manage', startup.ManageView),
                               ('owl', owl.OWLView),
                               ('schema', startup.SchemaView),
-                              ('systemepropertiesform', management.SystemEpropertiesForm)])
+                              ('systemepropertiesform', eproperties.SystemEPropertiesForm)])
         # no entity but etype
         rset, req = self.env.get_rset_and_req('Any X WHERE X eid 999999')
         self.assertListEqual(self.pviews(req, rset),
-                             [#('changelog', wdoc.ChangeLogView),
-                              #('epropertiesform', management.EpropertiesForm),
-                              #('index', startup.IndexView),
-                              #('info', management.ProcessInformationView),
-                              #('manage', startup.ManageView),
-                              #('schema', startup.SchemaView),
-                              #('systemepropertiesform', management.SystemEpropertiesForm)
-                                 ])
+                             [])
         # one entity
         rset, req = self.env.get_rset_and_req('EGroup X WHERE X name "managers"')
         self.assertListEqual(self.pviews(req, rset),
@@ -228,19 +217,6 @@ class VRegistryTC(ViewSelectorTC):
                               'moreactions': [('delete', actions.DeleteAction),
                                               ('copy', actions.CopyAction)],
                               })
-
-    def test_load_subinterface_based_vojects(self):
-        self.vreg._lastmodifs = {} # clear cache
-        self.vreg.register_objects([osp.join(BASE, 'web', 'views', 'iprogress.py')])
-        # check progressbar was kicked
-        self.failIf('progressbar' in self.vreg['views'])
-        class MyCard(Card):
-            __implements__ = (IMileStone,)
-        self.vreg.register_vobject_class(MyCard)
-        self.vreg._lastmodifs = {} # clear cache
-        self.vreg.register_objects([osp.join(BASE, 'web', 'views', 'iprogress.py')])
-        # check progressbar isn't kicked
-        self.assertEquals(len(self.vreg['views']['progressbar']), 1)
         
 
     def test_select_creation_form(self):
@@ -434,8 +410,6 @@ class VRegistryTC(ViewSelectorTC):
             del self.vreg[SomeAction.__registry__][SomeAction.id]
 
 
-from cubicweb.web.action import Action
-
 class EETypeRQLAction(Action):
     id = 'testaction'
     __select__ = implements('EEType') & rql_condition('X name "EEType"')
@@ -459,7 +433,8 @@ class RQLActionTC(ViewSelectorTC):
                               'mainactions': [('edit', actions.ModifyAction)],
                               'moreactions': [('delete', actions.DeleteAction),
                                               ('copy', actions.CopyAction),
-                                              ('testaction', EETypeRQLAction)],
+                                              ('testaction', EETypeRQLAction),
+                                              ('managepermission', actions.ManagePermissionsAction)],
                               })
         rset, req = self.env.get_rset_and_req('EEType X WHERE X name "ERType"')
         self.assertDictEqual(self.pactions(req, rset),
@@ -467,7 +442,8 @@ class RQLActionTC(ViewSelectorTC):
                               'siteactions': SITEACTIONS,
                               'mainactions': [('edit', actions.ModifyAction)],
                               'moreactions': [('delete', actions.DeleteAction),
-                                              ('copy', actions.CopyAction)],
+                                              ('copy', actions.CopyAction),
+                                              ('managepermission', actions.ManagePermissionsAction)],
                               })
         
 
