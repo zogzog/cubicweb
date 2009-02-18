@@ -72,7 +72,7 @@ class AppRsetObject(VObject):
         instance = cls(*args)
         instance.row = kwargs.pop('row', None)
         instance.col = kwargs.pop('col', None)
-        instance.selection_kwargs = kwargs
+        instance.extra_kwargs = kwargs
         return instance
 
     # Eproperties definition:
