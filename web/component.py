@@ -9,10 +9,12 @@ __docformat__ = "restructuredtext en"
 from logilab.common.deprecation import class_renamed
 from logilab.mtconverter import html_escape
 
+from cubicweb import role
 from cubicweb.utils import merge_dicts
 from cubicweb.view import View, Component
 from cubicweb.selectors import (
     paginated_rset, one_line_rset, primary_view, match_context_prop,
+    abstract_has_related_entities,
     condition_compat, accepts_compat, has_relation_compat)
 from cubicweb.common.registerers import accepts_registerer
 
@@ -69,19 +71,6 @@ class NavigationComponent(Component):
     selected_page_link_templ = u'<span class="selectedSlice"><a href="%s" title="%s">%s</a></span>'
     previous_page_link_templ = next_page_link_templ = page_link_templ
     no_previous_page_link = no_next_page_link = u''
-
-    @classmethod
-    def selected(cls, req, rset, row=None, col=None, page_size=None, **kwargs):
-        """by default web app objects are usually instantiated on
-        selection according to a request, a result set, and optional
-        row and col
-        """
-        instance = super(NavigationComponent, cls).selected(req, rset, row, col, **kwargs)
-        if page_size is not None:
-            instance.page_size = page_size
-        elif 'page_size' in req.form:
-            instance.page_size = int(req.form['page_size'])
-        return instance
     
     def __init__(self, req, rset):
         super(NavigationComponent, self).__init__(req, rset)
@@ -92,8 +81,14 @@ class NavigationComponent(Component):
         try:
             return self._page_size
         except AttributeError:
-            self._page_size = self.req.property_value(self.page_size_property)
-            return self._page_size
+            if 'page_size' in self.extra_kwargs:
+                page_size = self.extra_kwargs['page_size']
+            elif 'page_size' in self.req.form:
+                page_size = int(self.req.form['page_size'])
+            else:
+                page_size = self.req.property_value(self.page_size_property)
+            self._page_size = page_size
+            return page_size
 
     def set_page_size(self, page_size):
         self._page_size = page_size
@@ -148,7 +143,8 @@ class NavigationComponent(Component):
 class RelatedObjectsVComponent(EntityVComponent):
     """a section to display some related entities"""
     vid = 'list'
-
+    __select__ = abstract_has_related_entities()
+    
     def rql(self):
         """override this method if you want to use a custom rql query"""
         return None
@@ -157,11 +153,7 @@ class RelatedObjectsVComponent(EntityVComponent):
         rql = self.rql()
         if rql is None:
             entity = self.rset.get_entity(row, col)
-            if self.target == 'object':
-                role = 'subject'
-            else:
-                role = 'object'
-            rset = entity.related(self.rtype, role)
+            rset = entity.related(self.rtype, role(self))
         else:
             eid = self.rset[row][col]
             rset = self.req.execute(self.rql(), {'x': eid}, 'x')
