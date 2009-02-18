@@ -14,9 +14,9 @@ from logilab.mtconverter import html_escape
 
 from cubicweb.interfaces import ICalendarable
 from cubicweb.selectors import implements
-from cubicweb.common.utils import date_range
+from cubicweb.utils import date_range
+from cubicweb.view import EntityView
 from cubicweb.common.uilib import ajax_replace_url
-from cubicweb.common.view import EntityView
 
 
 # For backward compatibility
@@ -67,7 +67,8 @@ class CalendarItemView(EntityView):
         task.view('oneline', w=self.w)
         if dates:
             if task.start and task.stop:
-                self.w('<br/>from %s'%self.format_date(task.start))
+                self.w('<br/>' % self.req._('from %(date)s' % {'date': self.format_date(task.start)}))
+                self.w('<br/>' % self.req._('to %(date)s' % {'date': self.format_date(task.stop)}))
                 self.w('<br/>to %s'%self.format_date(task.stop))
                 
 class CalendarLargeItemView(CalendarItemView):
@@ -110,11 +111,11 @@ class hCalView(EntityView):
 
     Does apply to ICalendarable compatible entities
     """
+    id = 'hcal'
     __select__ = implements(ICalendarable)
     need_navigation = False
     title = _('hCalendar')
     #templatable = False
-    id = 'hcal'
 
     def call(self):
         self.w(u'<div class="hcalendar">')
@@ -140,9 +141,9 @@ class _TaskEntry(object):
 
 class OneMonthCal(EntityView):
     """At some point, this view will probably replace ampm calendars"""
+    id = 'onemonthcal'
     __select__ = implements(ICalendarable)
     need_navigation = False
-    id = 'onemonthcal'
     title = _('one month')
 
     def call(self):
@@ -323,9 +324,9 @@ class OneMonthCal(EntityView):
 
 class OneWeekCal(EntityView):
     """At some point, this view will probably replace ampm calendars"""
+    id = 'oneweekcal'
     __select__ = implements(ICalendarable)
     need_navigation = False
-    id = 'oneweekcal'
     title = _('one week')
     
     def call(self):

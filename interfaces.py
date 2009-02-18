@@ -1,7 +1,7 @@
 """Specific views for entities implementing IDownloadable
 
 :organization: Logilab
-:copyright: 2001-2008 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+:copyright: 2001-2009 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 """
 
@@ -193,8 +193,8 @@ class IEmbedable(Interface):
         """embed action interface"""
     
 class ICalendarable(Interface):
-    """interface for itms that do have a begin date 'start' and an end
-date 'stop'"""    
+    """interface for items that do have a begin date 'start' and an end date 'stop'
+    """    
     
 class ICalendarViews(Interface):
     """calendar views interface"""
