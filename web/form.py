@@ -239,9 +239,7 @@ class Form(FormMixIn, View):
     should list necessary parameters in the form to be accepted.
     """
     __registerer__ = accepts_registerer
-    __select__ = classmethod(match_form_params)
-
-    form_params = ()
+    __select__ = match_form_params()
 
 class EntityForm(FormMixIn, EntityView):
     """base class for forms applying on an entity (i.e. uniform result set)

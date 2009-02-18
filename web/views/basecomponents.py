@@ -194,8 +194,8 @@ class EtypeRestrictionComponent(Component):
     to be able to filter accordingly.
     """
     id = 'etypenavigation'
-    __select__ = classmethod(chainfirst(two_etypes_rset, match_form_params))
-    form_params = ('__restrtype', '__restrtypes', '__restrrql')
+    __select__ = two_etypes_rset() | match_form_params('__restrtype', '__restrtypes',
+                                                       '__restrrql')
     visible = False # disabled by default
     
     def call(self):

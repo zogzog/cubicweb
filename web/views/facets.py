@@ -30,8 +30,8 @@ class FilterBox(BoxTemplate):
     """filter results of a query"""
     id = 'filter_box'
     __select__ = (((non_final_entity() & two_lines_rset())
-                   | contextview_selector
-                   ) & match_context_prop)
+                   | contextview_selector()
+                   ) & match_context_prop())
     context = 'left'
     title = _('boxes_filter_box')
     visible = True # functionality provided by the search box by default

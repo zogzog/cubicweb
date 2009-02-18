@@ -35,7 +35,7 @@ _ = unicode
 class NullView(AnyRsetView):
     """default view when no result has been found"""
     id = 'null'
-    __select__ = classmethod(yes)
+    __select__ = yes()
     def call(self, **kwargs):
         pass
     cell_call = call
