@@ -24,9 +24,9 @@ from logilab.mtconverter import TransformError, html_escape, xml_escape
 from cubicweb import Unauthorized, NoSelectableObject, typed_eid
 from cubicweb.selectors import (yes, empty_rset, nonempty_rset, one_line_rset,
                                 non_final_entity, match_search_state,  match_form_params)
+from cubicweb.view import EntityView, AnyRsetView, View
 from cubicweb.common.uilib import (cut, printable_value,  UnicodeCSVWriter,
                                    ajax_replace_url, rql_for_eid, simple_sgml_tag)
-from cubicweb.common.view import EntityView, AnyRsetView, View
 from cubicweb.web.httpcache import MaxAgeHTTPCacheManager
 from cubicweb.web.views import vid_from_rset, linksearch_select_url
 
