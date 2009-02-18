@@ -94,11 +94,11 @@ class CubicWebRegistry(VRegistry):
         """register an object but remove it if no entity class implements one of
         the given interfaces
         """
-        if not isinstance(ifaces,  (tuple, list)):
-            self._needs_iface[obj] = frozenset((ifaces,))
-        else:
-            self._needs_iface[obj] = frozenset(ifaces)
         self.register(obj, **kwargs)
+        if not isinstance(ifaces,  (tuple, list)):
+            self._needs_iface[obj] = (ifaces,)
+        else:
+            self._needs_iface[obj] = ifaces
 
     def register(self, obj, **kwargs):
         if kwargs.get('registryname', obj.__registry__) == 'etypes':
@@ -107,7 +107,7 @@ class CubicWebRegistry(VRegistry):
         # XXX bw compat
         ifaces = use_interfaces(obj)
         if ifaces:
-            self._needs_iface[obj] = frozenset(ifaces)
+            self._needs_iface[obj] = ifaces
         
     def register_objects(self, path, force_reload=None):
         """overriden to remove objects requiring a missing interface"""
@@ -124,7 +124,10 @@ class CubicWebRegistry(VRegistry):
                 for cls in classes:
                     for iface in cls.__implements__:
                         interfaces.update(expand_parent_classes(iface))
+                    interfaces.update(expand_parent_classes(cls))
             for obj, ifaces in self._needs_iface.items():
+                ifaces = frozenset(isinstance(iface, basestring) and self.etype_class(iface) or iface
+                                   for iface in ifaces)
                 if not ifaces & interfaces:
                     self.debug('kicking vobject %s (unsupported interface)', obj)
                     self.unregister(obj)
