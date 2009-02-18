@@ -113,15 +113,15 @@ class traced_selection(object):
 
 
 # abstract selectors ##########################################################
-
-class AbstractSelectorMixIn(object):
-    """convenience mix-in for selectors that depends on class attributes
+class PartialSelectorMixIn(object):
+    """convenience mix-in for selectors that will look into the containing
+    class to find missing information.
+    
     cf. `cubicweb.web.action.LinkToEntityAction` for instance
     """
     def __call__(self, cls, *args, **kwargs):
-        self.concretize(cls)
-        return super(AbstractSelectorMixIn, self).__call__(cls, *args, **kwargs)
-
+        self.complete(cls)
+        return super(PartialSelectorMixIn, self).__call__(cls, *args, **kwargs)
 
 class EClassSelector(Selector):
     """abstract class for selectors working on the entity classes of the result
@@ -620,13 +620,29 @@ class relation_possible(EClassSelector):
                 return 0
         return 1
 
+class partial_relation_possible(PartialSelectorMixIn, relation_possible):
+    """partial version of the relation_possible selector
 
-class abstract_relation_possible(AbstractSelectorMixIn, relation_possible):
+    The selector will look for class attributes to find its missing
+    information. The list of attributes required on the class
+    for this selector are:
+
+    - `rtype`: same as `rtype` parameter of the `relation_possible` selector
+    
+    - `role`: this attribute will be passed to the `cubicweb.role` function
+      to determine the role of class in the relation
+
+    - `etype` (optional): the entity type on the other side of the relation
+    
+    :param action: a relation schema action (one of 'read', 'add', 'delete')
+                   which must be granted to the logged user, else a 0 score will
+                   be returned
+    """
     def __init__(self, action='read', once_is_enough=False):
-        super(abstract_relation_possible, self).__init__(None, None, None,
-                                                         action, once_is_enough)
+        super(partial_relation_possible, self).__init__(None, None, None,
+                                                        action, once_is_enough)
 
-    def concretize(self, cls):
+    def complete(self, cls):
         self.rtype = cls.rtype
         self.role = role(cls)
         self.target_etype = getattr(cls, 'etype', None)
@@ -677,11 +693,26 @@ class may_add_relation(EntitySelector):
             return 0
         return 1
 
-class abstract_may_add_relation(AbstractSelectorMixIn, may_add_relation):
-    def __init__(self, once_is_enough=False):
-        super(abstract_may_add_relation, self).__init__(None, None, once_is_enough)
+class partial_may_add_relation(PartialSelectorMixIn, may_add_relation):
+    """partial version of the may_add_relation selector
 
-    def concretize(self, cls):
+    The selector will look for class attributes to find its missing
+    information. The list of attributes required on the class
+    for this selector are:
+
+    - `rtype`: same as `rtype` parameter of the `relation_possible` selector
+    
+    - `role`: this attribute will be passed to the `cubicweb.role` function
+      to determine the role of class in the relation.
+    
+    :param action: a relation schema action (one of 'read', 'add', 'delete')
+                   which must be granted to the logged user, else a 0 score will
+                   be returned
+    """
+    def __init__(self, once_is_enough=False):
+        super(partial_may_add_relation, self).__init__(None, None, once_is_enough)
+
+    def complete(self, cls):
         self.rtype = cls.rtype
         self.role = role(cls)
 
@@ -713,11 +744,28 @@ class has_related_entities(EntitySelector):
         return rset and 1 or 0
 
 
-class abstract_has_related_entities(AbstractSelectorMixIn, has_related_entities):
+class partial_has_related_entities(PartialSelectorMixIn, has_related_entities):
+    """partial version of the has_related_entities selector
+
+    The selector will look for class attributes to find its missing
+    information. The list of attributes required on the class
+    for this selector are:
+
+    - `rtype`: same as `rtype` parameter of the `relation_possible` selector
+    
+    - `role`: this attribute will be passed to the `cubicweb.role` function
+      to determine the role of class in the relation.
+
+    - `etype` (optional): the entity type on the other side of the relation
+    
+    :param action: a relation schema action (one of 'read', 'add', 'delete')
+                   which must be granted to the logged user, else a 0 score will
+                   be returned
+    """
     def __init__(self, once_is_enough=False):
-        super(abstract_has_related_entities, self).__init__(None, None,
-                                                            None, once_is_enough)
-    def concretize(self, cls):
+        super(partial_has_related_entities, self).__init__(None, None,
+                                                           None, once_is_enough)
+    def complete(self, cls):
         self.rtype = cls.rtype
         self.role = role(cls)
         self.target_etype = getattr(cls, 'etype', None)

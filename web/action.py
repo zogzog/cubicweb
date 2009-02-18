@@ -7,8 +7,8 @@
 __docformat__ = "restructuredtext en"
 
 from cubicweb import target
-from cubicweb.selectors import (abstract_relation_possible, match_search_state,
-                                one_line_rset, abstract_may_add_relation, yes,
+from cubicweb.selectors import (partial_relation_possible, match_search_state,
+                                one_line_rset, partial_may_add_relation, yes,
                                 accepts_compat, condition_compat, deprecate)
 from cubicweb.appobject import AppRsetObject
 from cubicweb.common.registerers import accepts_registerer
@@ -73,8 +73,8 @@ class LinkToEntityAction(Action):
     action apply and if the logged user has access to it
     """
     __select__ = (match_search_state('normal') & one_line_rset()
-                  & abstract_relation_possible(action='add')
-                  & abstract_may_add_relation())
+                  & partial_relation_possible(action='add')
+                  & partial_may_add_relation())
     registered = accepts_compat(Action.registered)
     
     category = 'addrelated'
