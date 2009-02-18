@@ -17,7 +17,7 @@ __docformat__ = "restructuredtext en"
 
 from logilab.mtconverter import html_escape
 
-from cubicweb.selectors import any_rset, appobject_selectable, match_user_groups
+from cubicweb.selectors import (any_rset, appobject_selectable, match_user_groups, non_final_entity)
 from cubicweb.web.htmlwidgets import BoxWidget, BoxMenu, BoxHtml, RawBoxItem
 from cubicweb.web.box import BoxTemplate
 
@@ -29,7 +29,7 @@ class EditBox(BoxTemplate):
     box with all actions impacting the entity displayed: edit, copy, delete
     change state, add related entities
     """
-    __select__ = any_rset() & BoxTemplate.__select__
+    __select__ = BoxTemplate.__select__ & non_final_entity()
     id = 'edit_box'
     title = _('actions')
     order = 2
@@ -133,6 +133,7 @@ class EditBox(BoxTemplate):
 class SearchBox(BoxTemplate):
     """display a box with a simple search form"""
     id = 'search_box'
+
     visible = True # enabled by default
     title = _('search')
     order = 0
@@ -145,7 +146,6 @@ class SearchBox(BoxTemplate):
 <input tabindex="%s" type="submit" id="rqlboxsubmit" value="" />
 </td></tr></table>
 </form>"""
-
 
     def call(self, view=None, **kwargs):
         req = self.req
@@ -166,11 +166,11 @@ class SearchBox(BoxTemplate):
 class PossibleViewsBox(BoxTemplate):
     """display a box containing links to all possible views"""
     id = 'possible_views_box'
-    __select__ = match_user_groups('users', 'managers')
+    __select__ = BoxTemplate.__select__ & match_user_groups('users', 'managers')
     
+    visible = False
     title = _('possible views')
     order = 10
-    visible = False
 
     def call(self, **kwargs):
         box = BoxWidget(self.req._(self.title), self.id)
@@ -191,8 +191,8 @@ class RSSIconBox(BoxTemplate):
     __select__ = (BoxTemplate.__select__
                   & appobject_selectable('components', 'rss_feed_url'))
     
-    order = 999
     visible = False
+    order = 999
     
     def call(self, **kwargs):
         try:
@@ -208,6 +208,7 @@ class RSSIconBox(BoxTemplate):
 class StartupViewsBox(BoxTemplate):
     """display a box containing links to all startup views"""
     id = 'startup_views_box'
+
     visible = False # disabled by default
     title = _('startup views')
     order = 70

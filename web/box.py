@@ -37,7 +37,7 @@ class BoxTemplate(Template):
         box.render(self.w)
     """
     __registry__ = 'boxes'
-    __select__ = Template.__select__ & match_context_prop()
+    __select__ = match_context_prop()
     
     categories_in_order = ()
     property_defs = {
@@ -135,7 +135,7 @@ class UserRQLBoxTemplate(RQLBoxTemplate):
 
 class EntityBoxTemplate(BoxTemplate):
     """base class for boxes related to a single entity"""
-    __select__ = one_line_rset() & primary_view() & match_context_prop()
+    __select__ = BoxTemplate.__select__ & one_line_rset() & primary_view()
     registered = accepts_compat(has_relation_compat(condition_compat(BoxTemplate.registered)))
     context = 'incontext'
     
