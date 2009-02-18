@@ -561,7 +561,7 @@ class specified_etype_implements(implements):
     """
     
     @lltrace
-    def __call__(cls, req, *args, **kwargs):
+    def __call__(self, cls, req, *args, **kwargs):
         try:
             etype = req.form['etype']
         except KeyError:
