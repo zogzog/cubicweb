@@ -421,7 +421,7 @@ class HTMLContentFooter(View):
 
 class LogFormTemplate(View):
     id = 'logform'
-    __select__ = match_kwargs('id', 'title')
+    __select__ = match_kwargs('id', 'klass')
     
     title = 'log in'
     
