@@ -35,19 +35,8 @@ from cubicweb import CW_SOFTWARE_ROOT, set_log_methods
 from cubicweb import RegistryNotFound, ObjectNotFound, NoSelectableObject
 
 
-class vobject_helper(object):
-    """object instantiated at registration time to help a wrapped
-    VObject subclass
-    """
 
-    def __init__(self, registry, vobject):
-        self.registry = registry
-        self.vobject = vobject
-        self.config = registry.config
-        self.schema = registry.schema
-
-
-class registerer(vobject_helper):
+class registerer(object):
     """do whatever is needed at registration time for the wrapped
     class, according to current application schema and already
     registered objects of the same kind (i.e. same registry name and
@@ -60,7 +49,10 @@ class registerer(vobject_helper):
     """
 
     def __init__(self, registry, vobject):
-        super(registerer, self).__init__(registry, vobject)
+        self.registry = registry
+        self.vobject = vobject
+        self.config = registry.config
+        self.schema = registry.schema
         self.kicked = set()
     
     def do_it_yourself(self, registered):
