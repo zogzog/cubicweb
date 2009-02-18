@@ -95,8 +95,9 @@ class LinkToEntityAction(Action):
                               __redirectvid=self.req.form.get('__redirectvid', ''))
 
 class EntityAction(Action):
-    """DEPRECATED / BACKWARD COMPAT"""
-    registered = deprecate(accepts_compat(condition_compat(Action.registered)),
+    """DEPRECATED / BACKWARD COMPAT
+    """
+    registered = deprecate(condition_compat(accepts_compat(Action.registered)),
                            msg='EntityAction is deprecated, use Action with '
                            'appropriate selectors')
     
