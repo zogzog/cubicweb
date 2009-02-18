@@ -30,6 +30,8 @@ class MigrationToolsTC(TestCase):
         self.config = MigrTestConfig('data')
         from yams.schema import Schema
         self.config.load_schema = lambda expand_cubes=False: Schema('test')
+        self.config.__class__.cubicweb_vobject_path = frozenset()
+        self.config.__class__.cube_vobject_path = frozenset()
         
     def test_migration_files_base(self):
         self.assertListEquals(migration_files(self.config, [('cubicweb', (2,3,0), (2,4,0)),
