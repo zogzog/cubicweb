@@ -19,7 +19,7 @@ from logilab.common.textutils import normalize_text
 from logilab.common.deprecation import class_renamed
 
 from cubicweb import RegistryException
-from cubicweb.selectors import implements
+from cubicweb.selectors import implements, yes
 from cubicweb.common.view import EntityView, Component
 from cubicweb.common.mail import format_mail
 
@@ -36,7 +36,7 @@ class RecipientsFinder(Component):
     email addresses specified in the configuration are used
     """
     id = 'recipients_finder'
-    __select__ = implements('Any')
+    __select__ = yes()
     user_rql = ('Any X,E,A WHERE X is EUser, X in_state S, S name "activated",'
                 'X primary_email E, E address A')
     

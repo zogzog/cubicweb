@@ -15,9 +15,9 @@ from logilab.mtconverter import html_escape
 from logilab.common.decorators import cached
 
 from cubicweb.interfaces import IWorkflowable
-from cubicweb.selectors import (specified_etype_implements,
-                                match_kwargs, match_form_params, 
-                                one_line_rset, implements)
+from cubicweb.selectors import (specified_etype_implements, implements,
+                                match_kwargs, match_form_params, one_line_rset,
+                                non_final_entity)
 from cubicweb.utils import make_uid
 from cubicweb.view import EntityView
 from cubicweb.common.uilib import cut
@@ -217,7 +217,7 @@ class EditionForm(FormMixIn, EntityView):
     being connected
     """    
     id = 'edition'
-    __select__ = one_line_rset() & implements('Any')
+    __select__ = one_line_rset() & non_final_entity()
 
     title = _('edition')
     controller = 'edit'
@@ -676,8 +676,7 @@ class InlineEntityCreationForm(InlineFormMixIn, CreationForm):
 
 class InlineEntityEditionForm(InlineFormMixIn, EditionForm):
     id = 'inline-edition'
-    __select__ = (implements('Any')
-                  & match_kwargs('ptype', 'peid', 'rtype'))
+    __select__ = non_final_entity() & match_kwargs('ptype', 'peid', 'rtype')
     
     EDITION_BODY = u'''\
 <div onclick="restoreInlinedEntity('%(parenteid)s', '%(rtype)s', '%(eid)s')" id="div-%(parenteid)s-%(rtype)s-%(eid)s" class="inlinedform">   

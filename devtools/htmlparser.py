@@ -6,7 +6,7 @@ from StringIO import StringIO
 from lxml import etree
 from lxml.builder import E
 
-from cubicweb.common.view import STRICT_DOCTYPE, TRANSITIONAL_DOCTYPE, CW_XHTML_EXTENSIONS
+from cubicweb.view import STRICT_DOCTYPE, TRANSITIONAL_DOCTYPE, CW_XHTML_EXTENSIONS
 
 STRICT_DOCTYPE = str(STRICT_DOCTYPE % CW_XHTML_EXTENSIONS).strip()
 TRANSITIONAL_DOCTYPE = str(TRANSITIONAL_DOCTYPE % CW_XHTML_EXTENSIONS).strip()

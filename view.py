@@ -12,7 +12,7 @@ from cStringIO import StringIO
 from logilab.mtconverter import html_escape
 
 from cubicweb import NotAnEntity, NoSelectableObject
-from cubicweb.selectors import (yes, match_user_groups, implements,
+from cubicweb.selectors import (yes, match_user_groups, non_final_entity,
                                 nonempty_rset, none_rset)
 from cubicweb.selectors import require_group_compat, accepts_compat
 from cubicweb.appobject import AppRsetObject
@@ -322,7 +322,7 @@ class EntityView(View):
     """
     # XXX deprecate
     __registerer__ = accepts_registerer
-    __select__ = implements('Any')
+    __select__ = non_final_entity()
     registered = accepts_compat(View.registered)
 
     category = 'entityview'
@@ -355,7 +355,7 @@ class EntityStartupView(EntityView):
     """base class for entity views which may also be applied to None
     result set (usually a default rql is provided by the view class)
     """
-    __select__ = none_rset() | implements('Any')
+    __select__ = none_rset() | non_final_entity()
 
     default_rql = None
 

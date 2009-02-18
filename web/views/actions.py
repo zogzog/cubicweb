@@ -129,7 +129,7 @@ class MultipleEditAction(Action):
 # generic secondary actions ###################################################
 
 class ManagePermissionsAction(Action):
-    id = 'addpermission'
+    id = 'managepermission'
     __select__ = match_user_groups('managers') 
 
     title = _('manage permissions')
