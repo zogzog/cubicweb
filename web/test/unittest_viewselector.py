@@ -411,7 +411,7 @@ class VRegistryTC(ViewSelectorTC):
         class SomeAction(Action):
             id = 'yo'
             category = 'foo'
-            __select__ = match_user_groups('owners'),
+            __select__ = match_user_groups('owners')
         self.vreg.register_vobject_class(SomeAction)
         self.failUnless(SomeAction in self.vreg['actions']['yo'], self.vreg['actions'])
         try:
@@ -436,7 +436,7 @@ class VRegistryTC(ViewSelectorTC):
 
 from cubicweb.web.action import Action
 
-class EETypeRQLAction(EntityAction):
+class EETypeRQLAction(Action):
     id = 'testaction'
     __select__ = implements('EEType') & rql_condition('X name "EEType"')
     title = 'bla'

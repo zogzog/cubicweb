@@ -770,7 +770,8 @@ class rql_condition(EntitySelector):
         
     def score(self, req, rset, row, col):
         try:
-            return len(req.execute(self.rql, {'x': eid, 'u': req.user.eid}, 'x'))
+            return len(req.execute(self.rql, {'x': rset[row][col],
+                                              'u': req.user.eid}, 'x'))
         except Unauthorized:
             return 0
 
@@ -800,7 +801,8 @@ class score_entity(EntitySelector):
     :param scorefunc: callable expected to take an entity as argument and to
                       return a score >= 0 
     """
-    def __init__(self, scorefunc):
+    def __init__(self, scorefunc, once_is_enough=False):
+        super(EntitySelector, self).__init__(once_is_enough)
         self.score_entity = scorefunc
 
 
