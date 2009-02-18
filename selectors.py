@@ -708,6 +708,7 @@ class has_related_entities(EntitySelector):
             return any(x for x, in rset.description if x == self.target_etype)
         return bool(rset)
 
+
 class abstract_has_related_entities(AbstractSelectorMixIn, has_related_entities):
     def __init__(self, once_is_enough=False):
         super(abstract_has_related_entities, self).__init__(None, None,
@@ -1007,9 +1008,20 @@ def accepts_compat(registered):
     def plug_selector(cls, vreg):
         cls = registered(cls, vreg)
         if getattr(cls, 'accepts', None):
-            warn('use "match_user_groups(group1, group2)" instead of using require_groups',
+            warn('use "implements("EntityType", IFace)" instead of using accepts',
                  DeprecationWarning)
             cls.__select__ &= implements(*cls.accepts)
+        return cls
+    return plug_selector
+
+@unbind_method
+def accepts_etype_compat(registered):
+    def plug_selector(cls, vreg):
+        cls = registered(cls, vreg)
+        if getattr(cls, 'accepts', None):
+            warn('use "specified_etype_implements("EntityType", IFace)" instead of using accepts',
+                 DeprecationWarning)
+            cls.__select__ &= specified_etype_implements(*cls.accepts)
         return cls
     return plug_selector
 

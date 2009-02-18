@@ -17,9 +17,9 @@ from logilab.common.decorators import cached
 from cubicweb.interfaces import IWorkflowable
 from cubicweb.selectors import (specified_etype_implements, implements,
                                 match_kwargs, match_form_params, one_line_rset,
-                                non_final_entity)
+                                non_final_entity, accepts_etype_compat)
 from cubicweb.utils import make_uid
-from cubicweb.view import EntityView
+from cubicweb.view import View, EntityView
 from cubicweb.common.uilib import cut
 from cubicweb.web import INTERNAL_FIELD_VALUE, stdmsgs, eid_param
 from cubicweb.web.controller import NAV_FORM_PARAMETERS
@@ -524,6 +524,9 @@ class EditionForm(FormMixIn, EntityView):
     
 class CreationForm(EditionForm):
     __select__ = specified_etype_implements('Any')
+    # XXX bw compat, use View.registered since we don't want accept_compat
+    #    wrapper set in EntityView
+    registered = accepts_etype_compat(View.registered)
     id = 'creation'
     title = _('creation')
     
