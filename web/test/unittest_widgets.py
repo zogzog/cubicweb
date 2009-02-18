@@ -7,6 +7,7 @@ NOW = now()
 from logilab.common.testlib import unittest_main
 from cubicweb.devtools.apptest import EnvBasedTC
 
+from cubicweb.common.mttransforms import HAS_TAL
 from cubicweb.web.widgets import widget, AutoCompletionWidget
 
 
@@ -41,6 +42,10 @@ class WidgetsTC(EnvBasedTC):
         entity
         self.assertEquals(w.required(entity), False)
         self.assertEquals(w.render(entity), '')
+        if HAS_TAL:
+            tal_format = u'\n<option value="text/cubicweb-page-template" >text/cubicweb-page-template</option>'
+        else:
+            tal_format = u''
         self.assertTextEquals(w.edit_render(entity),
                            u'''<input type="hidden" name="edits-description:X" value="__cubicweb_internal_field__"/>
 <input type="hidden" name="edits-description_format:X" value="__cubicweb_internal_field__"/>
@@ -48,9 +53,8 @@ class WidgetsTC(EnvBasedTC):
 <select name="description_format:X" id="description_format:X" tabindex="0">
 <option value="text/rest" >text/rest</option>
 <option value="text/html" selected="selected">text/html</option>
-<option value="text/plain" >text/plain</option>
-<option value="text/cubicweb-page-template" >text/cubicweb-page-template</option>
-</select><br/><textarea onkeypress="autogrow(this)" name="description:X" accesskey="d" cols="80" id="description:X" rows="20" tabindex="1"></textarea>''')
+<option value="text/plain" >text/plain</option>%s
+</select><br/><textarea onkeypress="autogrow(this)" name="description:X" accesskey="d" cols="80" id="description:X" rows="20" tabindex="1"></textarea>''' % tal_format)
 
     def test_textarea_widget_previous_value(self):
         self.add_entity('EProperty', pkey=u'ui.fckeditor', value=u'')
@@ -62,6 +66,10 @@ class WidgetsTC(EnvBasedTC):
         entity.eid = 'X'
         self.assertEquals(w.required(entity), False)
         self.assertEquals(w.render(entity), '')
+        if HAS_TAL:
+            tal_format = u'\n<option value="text/cubicweb-page-template" >text/cubicweb-page-template</option>'
+        else:
+            tal_format = u''
         self.assertTextEquals(w.edit_render(entity),
                            u'''<input type="hidden" name="edits-description:X" value="__cubicweb_internal_field__"/>
 <input type="hidden" name="edits-description_format:X" value="__cubicweb_internal_field__"/>
@@ -69,9 +77,8 @@ class WidgetsTC(EnvBasedTC):
 <select name="description_format:X" id="description_format:X" tabindex="0">
 <option value="text/rest" >text/rest</option>
 <option value="text/html" selected="selected">text/html</option>
-<option value="text/plain" >text/plain</option>
-<option value="text/cubicweb-page-template" >text/cubicweb-page-template</option>
-</select><br/><textarea onkeypress="autogrow(this)" name="description:X" accesskey="d" cols="80" id="description:X" rows="20" tabindex="1">a description</textarea>''')
+<option value="text/plain" >text/plain</option>%s
+</select><br/><textarea onkeypress="autogrow(this)" name="description:X" accesskey="d" cols="80" id="description:X" rows="20" tabindex="1">a description</textarea>''' % tal_format)
 
     def test_fckeditor_widget(self):
         w = self.get_widget('State', 'description', 'String')
