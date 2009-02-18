@@ -160,7 +160,6 @@ class OWLABOXView(EntityView):
     
     def call(self):
         self.w(OWL_OPENING_ROOT % {'appid': self.schema.name})
-        self.wview('owl', None, writeprefix=False)
         for i in xrange(self.rset.rowcount):
             self.cell_call(i, 0)
         self.w(OWL_CLOSING_ROOT)
