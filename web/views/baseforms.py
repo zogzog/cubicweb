@@ -18,17 +18,17 @@ from cubicweb.interfaces import IWorkflowable
 from cubicweb.selectors import (specified_etype_implements,
                                 match_kwargs, match_form_params, 
                                 one_line_rset, implements)
-from cubicweb.common.utils import make_uid
+from cubicweb.utils import make_uid
+from cubicweb.view import EntityView
 from cubicweb.common.uilib import cut
-from cubicweb.common.view import EntityView
 from cubicweb.web import INTERNAL_FIELD_VALUE, stdmsgs, eid_param
 from cubicweb.web.controller import NAV_FORM_PARAMETERS
 from cubicweb.web.widgets import checkbox, InputWidget, ComboBoxWidget
-from cubicweb.web.form import EntityForm, relation_id
+from cubicweb.web.form import FormMixIn, relation_id
 
 _ = unicode
 
-class DeleteConfForm(EntityForm):
+class DeleteConfForm(FormMixIn, EntityView):
     id = 'deleteconf'
     title = _('delete')
     domid = 'deleteconf'
@@ -86,7 +86,7 @@ class DeleteConfForm(EntityForm):
         self.w(u'</li>')
 
 
-class ChangeStateForm(EntityForm):
+class ChangeStateForm(FormMixIn, EntityView):
     id = 'statuschange'
     title = _('status change')
 
@@ -149,7 +149,7 @@ class ChangeStateForm(EntityForm):
         return entity.rest_path()
 
 
-class ClickAndEditForm(EntityForm):
+class ClickAndEditForm(FormMixIn, EntityView):
     id = 'reledit'
     __select__ = match_kwargs('rtype')
 
@@ -207,7 +207,7 @@ class ClickAndEditForm(EntityForm):
                 })
 
 
-class EditionForm(EntityForm):
+class EditionForm(FormMixIn, EntityView):
     """primary entity edition form
 
     When generating a new attribute_input, the editor will look for a method
@@ -221,7 +221,7 @@ class EditionForm(EntityForm):
     id = 'edition'
     title = _('edition')
     controller = 'edit'
-    skip_relations = EntityForm.skip_relations.copy()
+    skip_relations = EntityView.skip_relations.copy()
     
     EDITION_BODY = u'''\
  %(errormsg)s
@@ -775,7 +775,7 @@ class CopyEditionForm(EditionForm):
        
     
 
-class TableEditForm(EntityForm):
+class TableEditForm(FormMixIn, EntityView):
     id = 'muledit'
     title = _('multiple edit')
 

@@ -232,20 +232,3 @@ def toggable_relation_link(eid, nodeid, label='x'):
     js = u"javascript: togglePendingDelete('%s', %s);" % (nodeid, html_escape(dumps(eid)))
     return u'[<a class="handle" href="%s" id="handle%s">%s</a>]' % (js, nodeid, label)
 
-
-class Form(FormMixIn, View):
-    """base class for forms. Apply by default according to request form
-    parameters specified using the `form_params` class attribute which
-    should list necessary parameters in the form to be accepted.
-    """
-    __registerer__ = accepts_registerer
-    __select__ = match_form_params()
-
-class EntityForm(FormMixIn, EntityView):
-    """base class for forms applying on an entity (i.e. uniform result set)
-    """
-
-class AnyRsetForm(FormMixIn, AnyRsetView):
-    """base class for forms applying on any empty result sets
-    """
-

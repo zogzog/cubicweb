@@ -11,8 +11,9 @@ from logilab.mtconverter import html_escape
 
 from cubicweb.schema import display_name
 from cubicweb.selectors import one_line_rset, implements, match_user_groups
+from cubicweb.view import EntityView
 from cubicweb.web import INTERNAL_FIELD_VALUE
-from cubicweb.web.form import EntityForm
+from cubicweb.web.form import FormMixIn
 from cubicweb.web.action import Action
 from cubicweb.web.views.baseviews import PrimaryView, EntityView
 
@@ -93,7 +94,7 @@ class FoafUsableView(FoafView):
         self.cell_call(0, 0)
 
             
-class EditGroups(EntityForm):
+class EditGroups(FormMixIn, EntityView):
     """displays a simple euser / egroups editable table"""
     
     id = 'editgroups'
