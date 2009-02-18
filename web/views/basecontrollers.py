@@ -54,15 +54,75 @@ class LogoutController(Controller):
 
 
 class ViewController(Controller):
+    """standard entry point :
+    - build result set
+    - select and call main template
+    """
     id = 'view'
-    template = 'main'
+    template = 'main-template'
     
     def publish(self, rset=None):
         """publish a request, returning an encoded string"""
+        view, rset = self._select_view_and_rset(rset)
+        self.add_to_breadcrumbs(view)
+        self.validate_cache(view)
         template = self.req.property_value('ui.main-template')
-        if template not in self.vreg.registry('templates') :
+        if template not in self.vreg.registry('views') :
             template = self.template
-        return self.vreg.main_template(self.req, template, rset=rset)
+        return self.vreg.main_template(self.req, template, rset=rset, view=view)
+
+    def _select_view_and_rset(self, rset):
+        req = self.req
+        if rset is None and not hasattr(req, '_rql_processed'):
+            req._rql_processed = True
+            rset = self.process_rql(req.form.get('rql'))
+        if rset and rset.rowcount == 1 and '__method' in req.form:
+            entity = rset.get_entity(0, 0)
+            try:
+                method = getattr(entity, req.form.pop('__method'))
+                method()
+            except Exception, ex:
+                self.exception('while handling __method')
+                req.set_message(req._("error while handling __method: %s") % req._(ex))
+        vid = req.form.get('vid') or vid_from_rset(req, rset, self.schema)
+        try:
+            view = self.vreg.select_view(vid, req, rset)
+        except ObjectNotFound:
+            self.warning("the view %s could not be found", vid)
+            req.set_message(req._("The view %s could not be found") % vid)
+            vid = vid_from_rset(req, rset, self.schema)
+            view = self.vreg.select_view(vid, req, rset)
+        except NoSelectableObject:
+            if rset:
+                req.set_message(req._("The view %s can not be applied to this query") % vid)
+            else:
+                req.set_message(req._("You have no access to this view or it's not applyable to current data"))
+            self.warning("the view %s can not be applied to this query", vid)
+            vid = vid_from_rset(req, rset, self.schema)
+            view = self.vreg.select_view(vid, req, rset)
+        return view, rset
+
+    def process_rql(self, rql):
+        """execute rql if specified"""
+        if rql:
+            self.ensure_ro_rql(rql)
+            if not isinstance(rql, unicode):
+                rql = unicode(rql, self.req.encoding)
+            pp = self.vreg.select_component('magicsearch', self.req)
+            self.rset = pp.process_query(rql, self.req)
+            return self.rset
+        return None
+
+    def add_to_breadcrumbs(self, view):
+        # update breadcrumps **before** validating cache, unless the view
+        # specifies explicitly it should not be added to breadcrumb or the
+        # view is a binary view
+        if view.add_to_breadcrumbs and not view.binary:
+            self.req.update_breadcrumbs()
+
+    def validate_cache(self, view):
+        view.set_http_cache_headers()
+        self.req.validate_cache()
 
     def execute_linkto(self, eid=None):
         """XXX __linkto parameter may cause security issue

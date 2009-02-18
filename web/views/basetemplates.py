@@ -11,10 +11,10 @@ __docformat__ = "restructuredtext en"
 from logilab.mtconverter import html_escape
 
 from cubicweb import NoSelectableObject, ObjectNotFound
+from cubicweb.vregistry import objectify_selector
 from cubicweb.selectors import match_kwargs
 from cubicweb.view import View, MainTemplate,  NOINDEX, NOFOLLOW
 from cubicweb.utils import make_uid, UStringIO
-from cubicweb.web.views.baseviews import vid_from_rset
 
 # main templates ##############################################################
 
@@ -64,89 +64,67 @@ class LoggedOutTemplate(LogInOutTemplate):
                 html_escape(indexurl),
                 self.req._('go back to the index page')))
 
+@objectify_selector
+def templatable_view(cls, req, rset, *args, **kwargs):
+    view = kwargs.pop('view', None)
+    if view is None:
+        return 1
+    if view.binary:
+        return 0
+    if req.form.has_key('__notemplate'):
+        return 0
+    return view.templatable
+
+@objectify_selector
+def non_templatable_view(cls, req, rset, *args, **kwargs):
+    return not templatable_view()(cls, req, rset, *args, **kwargs)
+
+
+class NonTemplatableViewTemplate(MainTemplate):
+    """main template for any non templatable views (xml, binaries, etc.)"""
+    id = 'main-template'
+    __select__ = non_templatable_view()
+    
+    def call(self, view):
+        view.set_request_content_type()
+        self.set_stream(templatable=False)
+        # have to replace our unicode stream using view's binary stream
+        view.dispatch()
+        assert self._stream, 'duh, template used as a sub-view ?? (%s)' % self._stream
+        self._stream = view._stream
+
 
 class TheMainTemplate(MainTemplate):
     """default main template :
 
     - call header / footer templates
-    - build result set
-    - guess and call an appropriate view through the view manager
     """
-    id = 'main'
-
-    def _select_view_and_rset(self):
-        req = self.req
-        if self.rset is None and not hasattr(req, '_rql_processed'):
-            req._rql_processed = True
-            rset = self.process_rql(req.form.get('rql'))
-        else:
-            rset = self.rset
-        # handle special "method" param when necessary
-        # XXX this should probably not be in the template (controller ?), however:
-        #     * we need to have the displayed rset
-        #     * we don't want to handle it in each view
-        if rset and rset.rowcount == 1 and '__method' in req.form:
-            entity = rset.get_entity(0, 0)
-            try:
-                method = getattr(entity, req.form.pop('__method'))
-                method()
-            except Exception, ex:
-                self.exception('while handling __method')
-                req.set_message(req._("error while handling __method: %s") % req._(ex))
-        vid = req.form.get('vid') or vid_from_rset(req, rset, self.schema)
-        try:
-            view = self.vreg.select_view(vid, req, rset)
-        except ObjectNotFound:
-            self.warning("the view %s could not be found", vid)
-            req.set_message(req._("The view %s could not be found") % vid)
-            vid = vid_from_rset(req, rset, self.schema)
-            view = self.vreg.select_view(vid, req, rset)
-        except NoSelectableObject:
-            if rset:
-                req.set_message(req._("The view %s can not be applied to this query") % vid)
-            else:
-                req.set_message(req._("You have no access to this view or it's not applyable to current data"))
-            self.warning("the view %s can not be applied to this query", vid)
-            vid = vid_from_rset(req, rset, self.schema)
-            view = self.vreg.select_view(vid, req, rset)
-        return view, rset
-
-    def call(self):
-        view, rset = self._select_view_and_rset()
-        req = self.req
-        # update breadcrumps **before** validating cache, unless the view
-        # specifies explicitly it should not be added to breadcrumb or the
-        # view is a binary view
-        if view.add_to_breadcrumbs and not view.binary:
-            req.update_breadcrumbs()
-        view.set_http_cache_headers()
-        req.validate_cache()
-        with_templates = self.with_templates(view)
-        if with_templates:
-            self.set_request_content_type()
-            content_type = self.content_type
-            self.template_header(content_type, view)
-        else:
-            view.set_request_content_type()
-            self.set_stream(templatable=False)
-        self.wview('page-content', view=view, rset=rset)
-        if with_templates:
-            self.template_footer(view)
-
-    def with_templates(self, view):
-        return (not view.binary and view.templatable and
-                not self.req.form.has_key('__notemplate'))
-
-    def process_rql(self, rql):
-        """execute rql if specified"""
-        if rql:
-            self.ensure_ro_rql(rql)
-            if not isinstance(rql, unicode):
-                rql = unicode(rql, self.req.encoding)
-            pp = self.vreg.select_component('magicsearch', self.req)
-            self.rset = pp.process_query(rql, self.req)
-            return self.rset
-        return None
+    id = 'main-template'
+    __select__ = templatable_view()
+    
+    def call(self, view):
+        self.set_request_content_type()
+        self.template_header(self.content_type, view)
+        w = self.w
+        w(u'<div id="pageContent">\n')
+        vtitle = self.req.form.get('vtitle')
+        if vtitle:
+            w(u'<h1 class="vtitle">%s</h1>\n' % html_escape(vtitle))
+        # display entity type restriction component
+        etypefilter = self.vreg.select_component('etypenavigation',
+                                                 self.req, self.rset)
+        if etypefilter and etypefilter.propval('visible'):
+            etypefilter.dispatch(w=w)
+        self.nav_html = UStringIO()
+        self.pagination(self.req, self.rset, self.nav_html.write,
+                        not (view and view.need_navigation))
+        w(_(self.nav_html.getvalue()))
+        w(u'<div id="contentmain">\n')
+        view.dispatch(w=w)
+        w(u'</div>\n') # close id=contentmain
+        w(_(self.nav_html.getvalue()))
+        w(u'</div>\n') # closes id=pageContent
+        self.template_footer(view)
 
     def template_header(self, content_type, view=None, page_title='', additional_headers=()):
         page_title = page_title or view.page_title()
@@ -204,44 +182,6 @@ class TheMainTemplate(MainTemplate):
 
     def content_footer(self, view=None):
         self.wview('contentfooter', rset=self.rset, view=view)
-
-
-class PageContentTemplate(TheMainTemplate):
-    id = 'page-content'
-
-    def call(self, view=None, rset=None):
-        if view is None:
-            view, rset = self._select_view_and_rset()
-        with_templates = self.with_templates(view)
-        w = self.w
-        if with_templates:
-            w(u'<div id="pageContent">\n')
-            vtitle = self.req.form.get('vtitle')
-            if vtitle:
-                w(u'<h1 class="vtitle">%s</h1>\n' % html_escape(vtitle))
-            # display entity type restriction component
-            etypefilter = self.vreg.select_component('etypenavigation',
-                                                     self.req, self.rset)
-            if etypefilter and etypefilter.propval('visible'):
-                etypefilter.dispatch(w=w)
-            self.nav_html = UStringIO()
-            self.pagination(self.req, self.rset, self.nav_html.write,
-                            not (view and view.need_navigation))
-            w(_(self.nav_html.getvalue()))
-            w(u'<div id="contentmain">\n')
-        else:
-            self.set_stream(templatable=False)            
-        if view.binary:
-            # have to replace our unicode stream using view's binary stream
-            view.dispatch()
-            assert self._stream, 'duh, template used as a sub-view ?? (%s)' % self._stream
-            self._stream = view._stream
-        else:
-            view.dispatch(w=w)
-        if with_templates:
-            w(u'</div>\n') # close id=contentmain
-            w(_(self.nav_html.getvalue()))
-            w(u'</div>\n') # closes id=pageContent
 
 
 class ErrorTemplate(TheMainTemplate):
@@ -534,3 +474,7 @@ def login_form_url(config, req):
         return req.url().replace(req.base_url(), config['https-url'])
     return req.url()
 
+
+## vregistry registration callback ############################################
+def registration_callback(vreg):
+    vreg.register_all(globals().values(), modname=__name__)

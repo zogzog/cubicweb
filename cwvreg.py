@@ -193,7 +193,7 @@ class CubicWebRegistry(VRegistry):
         selected = self.select(objclss, req, rset, **context)
         return selected.dispatch(**context)
         
-    def main_template(self, req, oid='main', **context):
+    def main_template(self, req, oid='main-template', **context):
         """display query by calling the given template (default to main),
         and returning the output as a string instead of requiring the [w]rite
         method as argument

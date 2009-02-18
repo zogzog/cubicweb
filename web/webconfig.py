@@ -26,7 +26,7 @@ register_persistent_options( (
       'sitewide': True, 'group': 'ui', 
       }),
     ('main-template',
-     {'type' : 'string', 'default': 'main',
+     {'type' : 'string', 'default': 'main-template',
       'help': _('id of main template used to render pages'),
       'sitewide': True, 'group': 'ui',
       }),
