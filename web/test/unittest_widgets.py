@@ -221,7 +221,7 @@ class WidgetsTC(EnvBasedTC):
     def test_float_widget(self):
         w = self.get_widget('Personne', 'salary', 'Float')
         self.assertEquals(w.name, 'salary')
-        format = now().strftime(self.vreg.property_value('ui.float-format'))
+        format = self.vreg.property_value('ui.float-format')
         self.assertEquals(w.render_example(self.request()), format % 1.23)
         self.assertDictEquals(w.attrs, {'accesskey': 's', 'maxlength': 15, 'size': 5})
         entity = self.etype_instance('Personne')
@@ -236,7 +236,7 @@ class WidgetsTC(EnvBasedTC):
     def test_float_widget_previous_value(self):
         w = self.get_widget('Personne', 'salary', 'Float')
         self.assertEquals(w.name, 'salary')
-        format = now().strftime(self.vreg.property_value('ui.float-format'))
+        format = self.vreg.property_value('ui.float-format')
         self.assertEquals(w.render_example(self.request()), format % 1.23)
         self.assertDictEquals(w.attrs, {'accesskey': 's', 'maxlength': 15, 'size': 5})
         req = self.request()
@@ -345,7 +345,7 @@ class WidgetsTC(EnvBasedTC):
     def test_nonregr_float_widget_with_none(self):
         w = self.get_widget('Personne', 'salary', 'Float')
         self.assertEquals(w.name, 'salary')
-        format = now().strftime(self.vreg.property_value('ui.float-format'))
+        format = self.vreg.property_value('ui.float-format')
         self.assertEquals(w.render_example(self.request()), format % 1.23)
         self.assertDictEquals(w.attrs, {'accesskey': 's', 'maxlength': 15, 'size': 5})
         req = self.request()
