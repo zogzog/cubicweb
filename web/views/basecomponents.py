@@ -253,3 +253,8 @@ class RSSEntityFeedURL(Component):
     def feed_url(self):
         return self.entity(0, 0).rss_feed_url()
 
+
+def registration_callback(vreg):
+    vreg.register_all(globals().values(), __name__, (SeeAlsoVComponent,))
+    if 'see_also' in vreg.schema:
+        vreg.register(SeeAlsoVComponent)
