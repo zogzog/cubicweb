@@ -12,19 +12,7 @@ __docformat__ = "restructuredtext en"
 
 from cubicweb.vregistry import registerer, yes_registerer
 from cubicweb.selectors import implements
-
-def _accepts_interfaces(obj):
-    try:
-        return sorted(obj.accepts_interfaces)
-    except AttributeError:
-        try:
-            impl = obj.__select__.search_selector(implements)
-            if impl:
-                return sorted(impl.expected_ifaces)
-        except AttributeError:
-            pass # old-style vobject classes with no accepts_interfaces
-        return ()
-
+from cubicweb.cwvreg import use_interfaces
 
 class priority_registerer(registerer):
     """systematically kick previous registered class and register the
@@ -75,13 +63,13 @@ class accepts_registerer(priority_registerer):
     def do_it_yourself(self, registered):
         # if object is accepting interface, we have register it now and
         # remove it later if no object is implementing accepted interfaces
-        if _accepts_interfaces(self.vobject):
+        if use_interfaces(self.vobject):
             return self.vobject
         self.remove_equivalents(registered)
         return self.vobject
     
     def equivalent(self, other):
-        if _accepts_interfaces(self.vobject) != _accepts_interfaces(other):
+        if use_interfaces(self.vobject) != use_interfaces(other):
             return False
         try:
             newaccepts = list(other.accepts)
