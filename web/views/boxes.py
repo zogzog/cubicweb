@@ -17,7 +17,8 @@ __docformat__ = "restructuredtext en"
 
 from logilab.mtconverter import html_escape
 
-from cubicweb.selectors import (any_rset, appobject_selectable, match_user_groups, non_final_entity)
+from cubicweb.selectors import (any_rset, appobject_selectable,
+                                match_user_groups, non_final_entity)
 from cubicweb.web.htmlwidgets import BoxWidget, BoxMenu, BoxHtml, RawBoxItem
 from cubicweb.web.box import BoxTemplate
 

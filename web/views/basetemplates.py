@@ -11,10 +11,8 @@ __docformat__ = "restructuredtext en"
 from logilab.mtconverter import html_escape
 
 from cubicweb import NoSelectableObject, ObjectNotFound
-from cubicweb.common.view import Template, MainTemplate,  NOINDEX, NOFOLLOW
-from cubicweb.common.utils import make_uid
-from cubicweb.common.utils import UStringIO
-
+from cubicweb.view import Template, MainTemplate,  NOINDEX, NOFOLLOW
+from cubicweb.utils import make_uid, UStringIO
 from cubicweb.web.views.baseviews import vid_from_rset
 
 # main templates ##############################################################
