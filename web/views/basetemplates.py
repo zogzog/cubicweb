@@ -121,13 +121,13 @@ class TheMainTemplate(MainTemplate):
         view.set_http_cache_headers()
         req.validate_cache()
         with_templates = self.with_templates(view)
-        if not with_templates:
-            view.set_request_content_type()
-            self.set_stream(templatable=False)
-        else:
+        if with_templates:
             self.set_request_content_type()
             content_type = self.content_type
             self.template_header(content_type, view)
+        else:
+            view.set_request_content_type()
+            self.set_stream(templatable=False)
         self.template('page-content', view=view, rset=rset)
         if with_templates:
             self.template_footer(view)
@@ -209,7 +209,6 @@ class PageContentTemplate(TheMainTemplate):
     id = 'page-content'
 
     def call(self, view=None, rset=None):
-        self.req.set_header('x-cubicweb-css', 'a.css;b.css')
         if view is None:
             view, rset = self._select_view_and_rset()
         with_templates = self.with_templates(view)
@@ -229,6 +228,8 @@ class PageContentTemplate(TheMainTemplate):
                             not (view and view.need_navigation))
             w(_(self.nav_html.getvalue()))
             w(u'<div id="contentmain">\n')
+        else:
+            self.set_stream(templatable=False)            
         if view.binary:
             # have to replace our unicode stream using view's binary stream
             view.dispatch()
