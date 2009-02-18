@@ -11,6 +11,7 @@ __docformat__ = "restructuredtext en"
 from logilab.mtconverter import html_escape
 
 from cubicweb import NoSelectableObject, ObjectNotFound
+from cubicweb.selectors import match_kwargs
 from cubicweb.view import View, MainTemplate,  NOINDEX, NOFOLLOW
 from cubicweb.utils import make_uid, UStringIO
 from cubicweb.web.views.baseviews import vid_from_rset
@@ -480,8 +481,10 @@ class HTMLContentFooter(View):
 
 class LogFormTemplate(View):
     id = 'logform'
+    __select__ = match_kwargs('id', 'title')
+    
     title = 'log in'
-
+    
     def call(self, id, klass, title=True, message=True):
         self.req.add_css('cubicweb.login.css')
         self.w(u'<div id="%s" class="%s">' % (id, klass))

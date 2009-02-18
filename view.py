@@ -458,6 +458,9 @@ class MainTemplate(View):
         if not xmldecl:
             self._stream.xmldecl = u''
 
+    def linkable(self):
+        return False
+    
 # concrete component base classes #############################################
 
 class ReloadableMixIn(object):

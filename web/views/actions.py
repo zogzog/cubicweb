@@ -130,7 +130,7 @@ class MultipleEditAction(Action):
 
 class ManagePermissionsAction(Action):
     id = 'managepermission'
-    __select__ = one_line_rset() & match_user_groups('managers')
+    __select__ = one_line_rset() & non_final_entity() & match_user_groups('managers')
 
     title = _('manage permissions')
     category = 'moreactions'
@@ -140,8 +140,10 @@ class ManagePermissionsAction(Action):
     def registered(cls, vreg):
         super(ManagePermissionsAction, cls).registered(vreg)
         if 'require_permission' in vreg.schema:
-            cls.__select__ |= relation_possible('require_permission', 'subject', 'EPermission',
-                                                action='add')
+            cls.__select__ = (one_line_rset() & non_final_entity() &
+                              (match_user_groups('managers')
+                               | relation_possible('require_permission', 'subject', 'EPermission',
+                                                   action='add')))
         return super(ManagePermissionsAction, cls).registered(vreg)
     
     def url(self):
