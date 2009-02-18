@@ -282,7 +282,7 @@ url: %(url)s
         if content:
             contentformat = getattr(entity, self.content_attr + '_format', 'text/rest')
             content = normalize_text(content, 80, rest=contentformat=='text/rest')
-        return super(NormalizedTextView, self).context(content=content, **kwargs)
+        return super(ContentAddedView, self).context(content=content, **kwargs)
     
     def subject(self):
         entity = self.entity(0, 0)
