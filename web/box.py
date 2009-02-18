@@ -12,8 +12,9 @@ from logilab.mtconverter import html_escape
 from cubicweb import Unauthorized, role as get_role
 from cubicweb.selectors import (one_line_rset,  primary_view,
                                 match_context_prop, abstract_has_related_entities,
-                                accepts_compat, has_relation_compat, condition_compat)
-from cubicweb.view import Template, ReloadableMixIn
+                                accepts_compat, has_relation_compat,
+                                condition_compat, require_group_compat)
+from cubicweb.view import View, ReloadableMixIn
 
 from cubicweb.web.htmlwidgets import (BoxLink, BoxWidget, SideBoxWidget,
                                       RawBoxItem, BoxSeparator)
@@ -22,7 +23,7 @@ from cubicweb.web.action import UnregisteredAction
 _ = unicode
 
 
-class BoxTemplate(Template):
+class BoxTemplate(View):
     """base template for boxes, usually a (contextual) list of possible
     
     actions. Various classes attributes may be used to control the box
@@ -38,6 +39,7 @@ class BoxTemplate(Template):
     """
     __registry__ = 'boxes'
     __select__ = match_context_prop()
+    registered = require_group_compat(View.registered)
     
     categories_in_order = ()
     property_defs = {

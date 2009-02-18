@@ -198,7 +198,7 @@ class CubicWebRegistry(VRegistry):
         and returning the output as a string instead of requiring the [w]rite
         method as argument
         """
-        res = self.render('templates', oid, req, **context)
+        res = self.render('views', oid, req, **context)
         if isinstance(res, unicode):
             return res.encode(req.encoding)
         assert isinstance(res, str)

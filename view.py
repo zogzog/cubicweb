@@ -9,6 +9,7 @@ __docformat__ = "restructuredtext en"
 
 from cStringIO import StringIO
 
+from logilab.common.deprecation import obsolete
 from logilab.mtconverter import html_escape
 
 from cubicweb import NotAnEntity, NoSelectableObject
@@ -91,8 +92,9 @@ class View(AppRsetObject):
     attributes are added and the `w` attribute will be set at rendering
     time to a write function to use.
     """
-    __registerer__ = priority_registerer
     __registry__ = 'views'
+    __registerer__ = priority_registerer
+    registered = require_group_compat(AppRsetObject.registered)
 
     templatable = True
     need_navigation = True
@@ -205,8 +207,8 @@ class View(AppRsetObject):
         self.req.set_content_type(self.content_type)
 
     # view utilities ##########################################################
-
-    def view(self, __vid, rset, __fallback_vid=None, **kwargs):
+        
+    def view(self, __vid, rset=None, __fallback_vid=None, **kwargs):
         """shortcut to self.vreg.render method avoiding to pass self.req"""
         try:
             view = self.vreg.select_view(__vid, self.req, rset, **kwargs)
@@ -215,7 +217,10 @@ class View(AppRsetObject):
                 raise
             view = self.vreg.select_view(__fallback_vid, self.req, rset, **kwargs)
         return view.dispatch(**kwargs)
-
+    
+    # XXX Template bw compat
+    template = obsolete('.template is deprecated, use .view')(view)
+    
     def wview(self, __vid, rset, __fallback_vid=None, **kwargs):
         """shortcut to self.view method automatically passing self.w as argument
         """
@@ -414,27 +419,13 @@ class AnyRsetView(View):
     
 # concrete template base classes ##############################################
 
-class Template(View):
-    """a template is almost like a view, except that by default a template
-    is only used globally (i.e. no result set adaptation)
-    """
-    __registry__ = 'templates'
-    __select__ = yes()
-
-    registered = require_group_compat(View.registered)
-
-    def template(self, oid, **kwargs):
-        """shortcut to self.registry.render method on the templates registry"""
-        w = kwargs.pop('w', self.w)
-        self.vreg.render('templates', oid, self.req, w=w, **kwargs)
-
-
-class MainTemplate(Template):
+class MainTemplate(View):
     """main template are primary access point to render a full HTML page.
     There is usually at least a regular main template and a simple fallback
     one to display error if the first one failed
     """
     base_doctype = STRICT_DOCTYPE
+    registered = require_group_compat(View.registered)
 
     @property
     def doctype(self):
