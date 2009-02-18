@@ -82,7 +82,7 @@ class LinkToEntityAction(Action):
         return selector(cls, req, rset, row, col, **kwargs)
 
     __select__ = my_selector()
-    registered = accepts_compat(Action.registered.im_func)
+    registered = accepts_compat(Action.registered)
     
     category = 'addrelated'
                 

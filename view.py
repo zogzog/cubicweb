@@ -323,7 +323,7 @@ class EntityView(View):
     # XXX deprecate
     __registerer__ = accepts_registerer
     __select__ = implements('Any')
-    registered = accepts_compat(View.registered.im_func)
+    registered = accepts_compat(View.registered)
 
     category = 'entityview'
 
@@ -334,7 +334,7 @@ class StartupView(View):
     """
     __registerer__ = priority_registerer
     __select__ = none_rset()
-    registered = require_group_compat(View.registered.im_func)
+    registered = require_group_compat(View.registered)
     
     category = 'startupview'
     
@@ -421,7 +421,7 @@ class Template(View):
     __registry__ = 'templates'
     __select__ = yes()
 
-    registered = require_group_compat(View.registered.im_func)
+    registered = require_group_compat(View.registered)
 
     def template(self, oid, **kwargs):
         """shortcut to self.registry.render method on the templates registry"""
