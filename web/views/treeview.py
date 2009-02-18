@@ -2,7 +2,7 @@ from logilab.mtconverter import html_escape
 
 from cubicweb.interfaces import ITree
 from cubicweb.selectors import implements
-from cubicweb.common.view import EntityView
+from cubicweb.view import EntityView
 
 class TreeView(EntityView):
     id = 'treeview'

@@ -10,7 +10,7 @@ __docformat__ = "restructuredtext en"
 from logilab.mtconverter import html_escape
 
 from cubicweb.selectors import yes, none_rset, match_user_groups
-from cubicweb.common.view import AnyRsetView, StartupView, EntityView
+from cubicweb.view import AnyRsetView, StartupView, EntityView
 from cubicweb.common.uilib import html_traceback, rest_traceback
 from cubicweb.web import INTERNAL_FIELD_VALUE, eid_param, stdmsgs
 from cubicweb.web.widgets import StaticComboBoxWidget
