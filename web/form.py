@@ -1,7 +1,7 @@
 """abstract form classes for CubicWeb web client
 
 :organization: Logilab
-:copyright: 2001-2008 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+:copyright: 2001-2009 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 """
 __docformat__ = "restructuredtext en"
@@ -12,8 +12,8 @@ from logilab.mtconverter import html_escape
 
 from cubicweb import typed_eid
 from cubicweb.selectors import match_form_params
+from cubicweb.view import NOINDEX, NOFOLLOW, View, EntityView, AnyRsetView
 from cubicweb.common.registerers import accepts_registerer
-from cubicweb.common.view import NOINDEX, NOFOLLOW, View, EntityView, AnyRsetView
 from cubicweb.web import stdmsgs
 from cubicweb.web.httpcache import NoHTTPCacheManager
 from cubicweb.web.controller import redirect_params
