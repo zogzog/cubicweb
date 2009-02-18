@@ -7,14 +7,14 @@
 __docformat__ = "restructuredtext en"
 
 from logilab.common.deprecation import class_renamed
+from logilab.mtconverter import html_escape
 
+from cubicweb.utils import merge_dicts
+from cubicweb.view import View, Component
 from cubicweb.selectors import (
     paginated_rset, one_line_rset, primary_view, match_context_prop,
     condition_compat, accepts_compat, has_relation_compat)
-from cubicweb.common.utils import merge_dicts
-from cubicweb.common.view import View, Component
 from cubicweb.common.registerers import accepts_registerer
-from cubicweb.common.uilib import html_escape
 
 _ = unicode
 
