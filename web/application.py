@@ -387,7 +387,7 @@ class CubicWebPublisher(object):
             errview = self.vreg.select_view('error', req, None)
             content = self.vreg.main_template(req, 'main-template', view=errview)
         except:
-            content = self.vreg.main_template(req, 'error')
+            content = self.vreg.main_template(req, 'error-template')
         raise StatusResponse(500, content)
     
     def need_login_content(self, req):

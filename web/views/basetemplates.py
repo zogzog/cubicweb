@@ -185,7 +185,7 @@ class ErrorTemplate(TheMainTemplate):
     main template. This template may be called for authentication error,
     which means that req.cnx and req.user may not be set.
     """
-    id = 'error'
+    id = 'error-template'
 
     def call(self):
         """display an unexpected error"""
