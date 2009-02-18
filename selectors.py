@@ -384,7 +384,8 @@ class match_search_state(Selector):
                      object to create a relation with another)
     """
     def __init__(self, *expected):
-        self.expected = expected
+        assert expected
+        self.expected = frozenset(expected)
         
     @lltrace
     def __call__(self, cls, req, rset, row=None, col=0, **kwargs):
@@ -431,7 +432,7 @@ class match_kwargs(match_search_state):
         return len(self.expected)
 
 
-class match_user_groups(Selector):
+class match_user_groups(match_search_state):
     """accept if logged users is in at least one of the given groups. Returned
     score is the number of groups in which the user is.
     
@@ -445,24 +446,21 @@ class match_user_groups(Selector):
                              user should be
     """
     
-    def __init__(self, *required_groups):
-        self.required_groups = required_groups
-    
     @lltrace
     def __call__(self, cls, req, rset=None, row=None, col=0, **kwargs):
         user = req.user
+        print 'match_user_groups', user.login, user._groups, self.expected
         if user is None:
-            return int('guests' in self.required_groups)
-        score = user.matching_groups(self.required_groups)
-        if not score and 'owners' in self.required_groups and rset:
-            nbowned = 0
+            return int('guests' in self.expected)
+        score = user.matching_groups(self.expected)
+        if not score and 'owners' in self.expected and rset:
             if row is not None:
                 if not user.owns(rset[row][col]):
                     return 0
                 score = 1
             else:
-                score = all(user.owns(r[col or 0]) for r in rset)
-        return 0
+                score = all(user.owns(r[col]) for r in rset)
+        return score
 
 
 class appobject_selectable(Selector):
@@ -761,7 +759,8 @@ class rql_condition(EntitySelector):
     return the sum of the number of items returned by the rql condition as score
     or 0 at the first entity scoring to zero.
     """
-    def __init__(self, expression):
+    def __init__(self, expression, once_is_enough=False):
+        super(rql_condition, self).__init__(once_is_enough)
         if 'U' in frozenset(split_expression(expression)):
             rql = 'Any X WHERE X eid %%(x)s, U eid %%(u)s, %s' % expression
         else:
@@ -913,12 +912,11 @@ etype_rtype_selector = deprecated_function(etype_rtype_selector)
 
 # compound selectors ##########################################################
 
-searchstate_accept = chainall(nonempty_rset, match_search_state, accept,
+searchstate_accept = chainall(nonempty_rset(), accept,
                               name='searchstate_accept')
 searchstate_accept_selector = deprecated_function(searchstate_accept)
 
-searchstate_accept_one = chainall(one_line_rset, match_search_state,
-                                  accept, _rql_condition,
+searchstate_accept_one = chainall(one_line_rset, accept, _rql_condition,
                                   name='searchstate_accept_one')
 searchstate_accept_one_selector = deprecated_function(searchstate_accept_one)
 
