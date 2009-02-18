@@ -741,6 +741,8 @@ class has_permission(EntitySelector):
         
     @lltrace
     def __call__(self, cls, req, rset, row=None, col=0, **kwargs):
+        if rset is None:
+            return 0
         user = req.user
         action = self.action
         if row is None:
