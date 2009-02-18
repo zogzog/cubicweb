@@ -384,7 +384,7 @@ class match_search_state(Selector):
                      object to create a relation with another)
     """
     def __init__(self, *expected):
-        assert expected
+        assert expected, self
         self.expected = frozenset(expected)
         
     @lltrace
