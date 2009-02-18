@@ -221,12 +221,10 @@ def is_user_prefs(cls, req, rset, row, col):
 class EPropertiesForm(SystemEPropertiesForm):
     id = 'epropertiesform'
     __select__ = (
-        implements('EUser'),
         # we don't want guests to be able to come here
-        match_user_groups('users', 'managers'), 
-        chainfirst(none_rset),
-                   chainall(one_line_rset, is_user_prefs),
-                   chainall(one_line_rset, match_user_groups('managers'))
+        match_user_groups('users', 'managers') &
+        (none_rset | ((one_line_rset() & is_user_prefs) &
+                      (one_line_rset() & match_user_groups('managers'))))
         )
     
     title = _('preferences')
