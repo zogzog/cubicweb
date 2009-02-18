@@ -4,7 +4,9 @@
 from cubicweb.devtools.apptest import EnvBasedTC
 
 from mx.DateTime import DateTimeType, now
+
 from cubicweb import Binary
+from cubicweb.common.mttransforms import HAS_TAL
 
 class EntityTC(EnvBasedTC):
 
@@ -301,11 +303,6 @@ class EntityTC(EnvBasedTC):
         self.assertEquals(e.printable_value('content'),
                           '<p>\ndu *texte*\n</p>')
         e['title'] = 'zou'
-        e['content'] = '<h1 tal:content="self/title">titre</h1>'
-        e['content_format'] = 'text/cubicweb-page-template'
-        self.assertEquals(e.printable_value('content'),
-                          '<h1>zou</h1>')
-        
         #e = self.etype_instance('Task')
         e['content'] = '''\
 a title
@@ -319,6 +316,12 @@ du :eid:`1:*ReST*`'''
         e['content_format'] = 'text/html'
         self.assertEquals(e.printable_value('content', format='text/plain').strip(),
                           u'**yo (zou éà ;)**')
+        if HAS_TAL:
+            e['content'] = '<h1 tal:content="self/title">titre</h1>'
+            e['content_format'] = 'text/cubicweb-page-template'
+            self.assertEquals(e.printable_value('content'),
+                              '<h1>zou</h1>')
+        
 
     def test_printable_value_bytes(self):
         e = self.add_entity('File', data=Binary('lambda x: 1'), data_format=u'text/x-python',
