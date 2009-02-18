@@ -105,7 +105,7 @@ class CubicWebRegistry(VRegistry):
             kwargs['clear'] = True
         super(CubicWebRegistry, self).register(obj, **kwargs)
         # XXX bw compat
-        ifaces = getattr(obj, 'accepts_interfaces', None)
+        ifaces = use_interfaces(obj)
         if ifaces:
             self._needs_iface[obj] = frozenset(ifaces)
         
@@ -122,12 +122,15 @@ class CubicWebRegistry(VRegistry):
             interfaces = set()
             for classes in self.get('etypes', {}).values():
                 for cls in classes:
-                    interfaces.update(cls.__implements__)
+                    for iface in cls.__implements__:
+                        interfaces.update(expand_parent_classes(iface))
             for obj, ifaces in self._needs_iface.items():
                 if not ifaces & interfaces:
                     self.debug('kicking vobject %s (unsupported interface)', obj)
                     self.unregister(obj)
-
+            
+        
+    
     def eid_rset(self, cursor, eid, etype=None):
         """return a result set for the given eid without doing actual query
         (we have the eid, we can suppose it exists and user has access to the

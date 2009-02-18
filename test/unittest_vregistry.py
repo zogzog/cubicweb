@@ -5,7 +5,9 @@ from os.path import join
 from cubicweb import CW_SOFTWARE_ROOT as BASE
 from cubicweb.vregistry import VObject
 from cubicweb.cwvreg import CubicWebRegistry, UnknownProperty
-from cubicweb.cwconfig import CubicWebConfiguration
+from cubicweb.devtools import TestServerConfiguration
+from cubicweb.entities.lib import Card
+from cubicweb.interfaces import IMileStone
 
 class YesSchema:
     def __contains__(self, something):
@@ -14,9 +16,10 @@ class YesSchema:
 class VRegistryTC(TestCase):
 
     def setUp(self):
-        config = CubicWebConfiguration('data')
+        config = TestServerConfiguration('data')
         self.vreg = CubicWebRegistry(config)
-        self.vreg.schema = YesSchema()
+        config.bootstrap_cubes()
+        self.vreg.schema = config.load_schema()
 
     def test_load(self):
         self.vreg.load_file(join(BASE, 'web', 'views'), 'euser.py')
@@ -45,6 +48,19 @@ class VRegistryTC(TestCase):
         self.failIf('system.version.cubicweb' in self.vreg['propertydefs'])
         self.failUnless(self.vreg.property_info('system.version.cubicweb'))
         self.assertRaises(UnknownProperty, self.vreg.property_info, 'a.non.existent.key')
+
+    def test_load_subinterface_based_vobjects(self):
+        self.vreg.reset()
+        self.vreg.register_objects([join(BASE, 'web', 'views', 'iprogress.py')])
+        # check progressbar was kicked
+        self.failIf(self.vreg['views'].get('progressbar'))
+        class MyCard(Card):
+            __implements__ = (IMileStone,)
+        self.vreg.reset()
+        self.vreg.register_vobject_class(MyCard)
+        self.vreg.register_objects([join(BASE, 'web', 'views', 'iprogress.py')])
+        # check progressbar isn't kicked
+        self.assertEquals(len(self.vreg['views']['progressbar']), 1)
         
 
 if __name__ == '__main__':
