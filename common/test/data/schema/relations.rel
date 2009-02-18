@@ -9,8 +9,5 @@ Personne evaluee Personne
 Note ecrit_par Personne inline CONSTRAINT E concerns P, X version_of P
 Personne connait Personne symetric
 
-Tag tags Note
-Tag tags Personne
-
 Affaire liee_a Societe
 Affaire liee_a Personne

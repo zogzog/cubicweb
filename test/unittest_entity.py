@@ -16,7 +16,7 @@ class EntityTC(EnvBasedTC):
 ##                         embed=False)
     
     def test_boolean_value(self):
-        e = self.etype_instance('Tag')
+        e = self.etype_instance('EUser')
         self.failUnless(e)
 
     def test_yams_inheritance(self):
@@ -27,7 +27,7 @@ class EntityTC(EnvBasedTC):
         self.assertIs(e.__class__, e2.__class__)
 
     def test_has_eid(self):
-        e = self.etype_instance('Tag')
+        e = self.etype_instance('EUser')
         self.assertEquals(e.eid, None)
         self.assertEquals(e.has_eid(), False)
         e.eid = 'X'
@@ -167,16 +167,17 @@ class EntityTC(EnvBasedTC):
     def test_related_rql(self):
         from cubicweb.entities import fetch_config
         Personne = self.vreg.etype_class('Personne')
-        Societe = self.vreg.etype_class('Societe')
-        Personne.fetch_attrs, Personne.fetch_order = fetch_config(('nom', 'prenom', 'sexe'))
-        Societe.fetch_attrs, Societe.fetch_order = fetch_config(('nom', 'web'))
-        aff = self.add_entity('Affaire', sujet=u'my subject', ref=u'the ref')
-        self.assertEquals(aff.related_rql('liee_a'),
-                          'Any X,AA,AB ORDERBY AA ASC WHERE E eid %(x)s, E liee_a X, '
-                          'X nom AA, X modification_date AB')
-        Societe.fetch_attrs = ('web',)
-        self.assertEquals(aff.related_rql('liee_a'),
-                          'Any X ORDERBY Z DESC WHERE X modification_date Z, E eid %(x)s, E liee_a X')
+        Note = self.vreg.etype_class('Note')
+        Personne.fetch_attrs, Personne.fetch_order = fetch_config(('nom', 'type'))
+        Note.fetch_attrs, Note.fetch_order = fetch_config(('type',))
+        aff = self.add_entity('Personne', nom=u'pouet')
+        self.assertEquals(aff.related_rql('evaluee'),
+                          'Any X,AA,AB ORDERBY AA ASC WHERE E eid %(x)s, E evaluee X, '
+                          'X type AA, X modification_date AB')
+        Personne.fetch_attrs, Personne.fetch_order = fetch_config(('nom', ))
+        # XXX
+        self.assertEquals(aff.related_rql('evaluee'),
+                          'Any X,AA ORDERBY Z DESC WHERE X modification_date Z, E eid %(x)s, E evaluee X, X modification_date AA')
     
     def test_entity_unrelated(self):
         p = self.add_entity('Personne', nom=u'di mascio', prenom=u'adrien')
@@ -265,6 +266,7 @@ class EntityTC(EnvBasedTC):
                                ('owned_by', 'object'),
                                ('bookmarked_by', 'object')])
         e = self.etype_instance('Personne')
+        print rbc(e.relations_by_category('primary'))
         self.assertListEquals(rbc(e.relations_by_category('primary')),
                               [('nom', 'subject'), ('eid', 'subject')])
         self.assertListEquals(rbc(e.relations_by_category('secondary')),
@@ -386,12 +388,10 @@ du :eid:`1:*ReST*`'''
         
 
     def test_entity_formatted_attrs(self):
-        e = self.etype_instance('Note')
+        e = self.etype_instance('EUser')
         self.assertEquals(e.formatted_attrs(), [])
         e = self.etype_instance('File')
         self.assertEquals(e.formatted_attrs(), ['description'])
-        e = self.etype_instance('AnotherNote')
-        self.assertEquals(e.formatted_attrs(), ['descr', 'descr2'])
         
         
     def test_fulltextindex(self):
