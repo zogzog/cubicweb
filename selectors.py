@@ -347,7 +347,7 @@ def anonymous_user(cls, req, *args, **kwargs):
 @lltrace
 def authenticated_user(cls, req, *args, **kwargs):
     """accept if user is authenticated"""
-    return not anonymous_user(cls, req, *args, **kwargs)
+    return not anonymous_user()(cls, req, *args, **kwargs)
 
 @objectify_selector
 @lltrace

@@ -693,7 +693,9 @@ def chainall(*selectors, **kwargs):
     will be the sum of each selector'score
     """
     assert selectors
-    selector = AndSelector(*selectors)
+    # XXX do we need to create the AndSelector here, a tuple might be enough
+    selector = AndSelector(*[_instantiate_selector(selector)
+                             for selector in selectors])
     if 'name' in kwargs:
         selector.__name__ = kwargs['name']
     return selector
@@ -704,7 +706,8 @@ def chainfirst(*selectors, **kwargs):
     will be the first non-zero selector score
     """
     assert selectors
-    selector = OrSelector(*selectors)
+    selector = OrSelector(*[_instantiate_selector(selector)
+                            for selector in selectors])
     if 'name' in kwargs:
         selector.__name__ = kwargs['name']
     return selector
