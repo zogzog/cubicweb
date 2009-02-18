@@ -59,7 +59,7 @@ def guess_configuration(directory):
 # XXX generate this according to the configuration (repository/all-in-one/web)
 VREGOPTIONS = []
 for registry in ('etypes', 'hooks', 'controllers', 'actions', 'components',
-                 'views', 'templates', 'boxes', 'contentnavigation', 'urlrewriting',
+                 'views', 'boxes', 'contentnavigation', 'urlrewriting',
                  'facets'):
     VREGOPTIONS.append(('disable-%s'%registry,
                         {'type' : 'csv', 'default': (),

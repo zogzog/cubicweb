@@ -218,13 +218,13 @@ class View(AppRsetObject):
             view = self.vreg.select_view(__fallback_vid, self.req, rset, **kwargs)
         return view.dispatch(**kwargs)
     
-    # XXX Template bw compat
-    template = obsolete('.template is deprecated, use .view')(view)
-    
     def wview(self, __vid, rset, __fallback_vid=None, **kwargs):
         """shortcut to self.view method automatically passing self.w as argument
         """
         self.view(__vid, rset, __fallback_vid, w=self.w, **kwargs)
+        
+    # XXX Template bw compat
+    template = obsolete('.template is deprecated, use .view')(wview)
 
     def whead(self, data):
         self.req.html_headers.write(data)
