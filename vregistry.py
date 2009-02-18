@@ -592,6 +592,9 @@ class Selector(object):
         return OrSelector(self, other)
     def __ror__(self, other):
         return OrSelector(other, self)
+
+    def __invert__(self):
+        return NotSelector(self)
     
     # XXX (function | function) or (function & function) not managed yet
 
@@ -685,6 +688,17 @@ class OrSelector(MultiSelector):
                 return partscore
         return 0
 
+class NotSelector(Selector):
+    """negation selector"""
+    def __init__(self, selector):
+        self.selector = selector
+
+    def __call__(self, cls, *args, **kwargs):
+        score = self.selector(cls, *args, **kwargs)
+        return not score
+
+    def __str__(self):
+        return 'NOT(%s)' % super(NotSelector, self).__str__()
 
 # advanced selector building functions ########################################
 
