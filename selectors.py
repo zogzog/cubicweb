@@ -51,7 +51,7 @@ from logilab.common.interface import implements as implements_iface
 
 from yams import BASE_TYPES
 
-from cubicweb import Unauthorized, NoSelectableObject, role
+from cubicweb import Unauthorized, NoSelectableObject, NotAnEntity, role
 from cubicweb.vregistry import (NoSelectableObject, Selector,
                                 chainall, chainfirst, objectify_selector)
 from cubicweb.cwconfig import CubicWebConfiguration
