@@ -6,10 +6,9 @@
 """
 __docformat__ = "restructuredtext en"
 
-from cubicweb import role, target
-from cubicweb.vregistry import objectify_selector
-from cubicweb.selectors import (relation_possible, match_search_state,
-                                one_line_rset, may_add_relation, yes,
+from cubicweb import target
+from cubicweb.selectors import (abstract_relation_possible, match_search_state,
+                                one_line_rset, abstract_may_add_relation, yes,
                                 accepts_compat, condition_compat, deprecate)
 from cubicweb.appobject import AppRsetObject
 from cubicweb.common.registerers import accepts_registerer
@@ -73,15 +72,9 @@ class LinkToEntityAction(Action):
     using .etype, .rtype and .target attributes to check if the
     action apply and if the logged user has access to it
     """
-    @objectify_selector
-    def my_selector(cls, req, rset, row=None, col=0, **kwargs):
-        selector = (match_search_state('normal') & one_line_rset()
-                    & relation_possible(cls.rtype, role(cls), cls.etype,
-                                        action='add')
-                    & may_add_relation(cls.rtype, role(cls)))
-        return selector(cls, req, rset, row, col, **kwargs)
-
-    __select__ = my_selector()
+    __select__ = (match_search_state('normal') & one_line_rset()
+                  & abstract_relation_possible(action='add')
+                  & abstract_may_add_relation())
     registered = accepts_compat(Action.registered)
     
     category = 'addrelated'

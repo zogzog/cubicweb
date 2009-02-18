@@ -11,8 +11,7 @@ from logilab.common.decorators import monkeypatch
 from logilab.mtconverter import html_escape
 
 from cubicweb import NoSelectableObject, role
-from cubicweb.vregistry import objectify_selector
-from cubicweb.selectors import has_related_entities
+from cubicweb.selectors import abstract_has_related_entities
 from cubicweb.common.view import EntityView
 from cubicweb.common.utils import HTMLHead
 from cubicweb.common.uilib import rql_for_eid
@@ -144,14 +143,8 @@ class EntityRelatedTab(EntityView):
     class ProjectScreenshotTab(DataDependantTab, ProjectScreenshotsView):
         id = 'screenshots_tab'
     """
-    # XXX needs to be generalized
-    @objectify_selector
-    def my_selector(cls, req, rset, row=None, col=0, **kwargs):
-        selector = (EntityView.__select__ &
-                    has_related_entities(cls.rtype, role(cls)))
-        return selector(cls, req, rset, row=None, col=0, **kwargs)
-
-    __select__ = my_selector()
+    __select__ = EntityView.__select__ & abstract_has_related_entities()
+                                                          
     vid = 'list'
 
     def cell_call(self, row, col):

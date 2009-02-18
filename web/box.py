@@ -10,9 +10,8 @@ from logilab.common.decorators import cached
 from logilab.mtconverter import html_escape
 
 from cubicweb import Unauthorized, role as get_role
-from cubicweb.vregistry import objectify_selector
 from cubicweb.selectors import (one_line_rset,  primary_view,
-                                match_context_prop, has_related_entities,
+                                match_context_prop, abstract_has_related_entities,
                                 accepts_compat, has_relation_compat, condition_compat)
 from cubicweb.view import Template, ReloadableMixIn
 
@@ -146,12 +145,7 @@ class EntityBoxTemplate(BoxTemplate):
 
 
 class RelatedEntityBoxTemplate(EntityBoxTemplate):
-    # XXX find a way to generalize access to cls.rtype
-    @objectify_selector
-    def my_selector(cls, req, rset, row=None, col=0, **kwargs):
-        return EntityBoxTemplate.__select__ & has_related_entities(cls.rtype)
-
-    __select__ = my_selector
+    __select__ = EntityBoxTemplate.__select__ & abstract_has_related_entities()
 
     def cell_call(self, row, col, **kwargs):
         entity = self.entity(row, col)
