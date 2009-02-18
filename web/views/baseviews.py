@@ -43,7 +43,7 @@ class NullView(AnyRsetView):
 
 class NoResultView(View):
     """default view when no result has been found"""
-    __selectors__ = (empty_rset,)
+    __select__ = empty_rset()
     id = 'noresult'
     
     def call(self, **kwargs):
@@ -790,8 +790,8 @@ class SearchForAssociationView(EntityView):
     to search for something to link to the edited eid
     """
     id = 'search-associate'
-    __selectors__ = (one_line_rset, match_search_state('linksearch'),
-                     non_final_entity())
+    __select__ = (one_line_rset() & match_search_state('linksearch')
+                  & non_final_entity())
     
     title = _('search for association')
 
@@ -848,8 +848,7 @@ class EditRelationView(EntityView):
     """
     id = 'editrelation'
 
-    __selectors__ = (match_form_params,)
-    form_params = ('rtype',)
+    __select__ = match_form_params('rtype')
     
     # TODO: inlineview, multiple edit, (widget view ?)
     def cell_call(self, row, col, rtype=None, role='subject', targettype=None,

@@ -26,7 +26,7 @@ def dict_to_html(w, dict):
     
 class DebugView(StartupView):
     id = 'debug'
-    __selectors__ = (none_rset, match_user_groups('managers'),)
+    __select__ = none_rset() & match_user_groups('managers')
     title = _('server debug information')
 
     def call(self, **kwargs):

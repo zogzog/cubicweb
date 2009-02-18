@@ -31,7 +31,7 @@ class EntityVComponent(Component):
     
     __registry__ = 'contentnavigation'
     __registerer__ = accepts_registerer    
-    __selectors__ = (one_line_rset, primary_view, match_context_prop,)
+    __select__ = one_line_rset() & primary_view() & match_context_prop()
     registered = accepts_compat(has_relation_compat(condition_compat(View.registered)))
     
     property_defs = {
@@ -60,7 +60,7 @@ class EntityVComponent(Component):
 class NavigationComponent(Component):
     """abstract base class for navigation components"""
     id = 'navigation'
-    __selectors__ = (paginated_rset,)
+    __select__ = paginated_rset()
     
     page_size_property = 'navigation.page-size'
     start_param = '__start'

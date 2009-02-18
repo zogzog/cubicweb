@@ -68,7 +68,7 @@ class Controller(AppObject):
     """
     __registry__ = 'controllers'
     __registerer__ = priority_registerer
-    __selectors__ = (yes,)
+    __select__ = yes()
     registered = require_group_compat(AppObject.registered.im_func)
 
     def __init__(self, *args, **kwargs):

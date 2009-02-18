@@ -37,7 +37,7 @@ class VRegistryTC(TestCase):
         myselector1 = lambda *args: 1
         myselector2 = lambda *args: 1
         class AnAppObject(VObject):
-            __selectors__ = (myselector1, myselector2)
+            __select__ = myselector1() & myselector2()
         self.assertEquals(AnAppObject.__select__(), 2)
 
     def test_properties(self):

@@ -255,7 +255,7 @@ from cubicweb.web import application
 
 class SessionsCleaner(StartupView):
     id = 'cleansessions'
-    __selectors__ = (none_rset, match_user_groups('managers'),)
+    __select__ = none_rset() & match_user_groups('managers')
     
     def call(self):
         # clean web session

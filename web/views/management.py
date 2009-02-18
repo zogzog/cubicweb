@@ -270,7 +270,7 @@ def text_error_description(ex, excinfo, req, eversion, cubes):
 
 class ProcessInformationView(StartupView):
     id = 'info'
-    __selectors__ = (none_rset, match_user_groups('managers'),)
+    __select__ = none_rset() & match_user_groups('managers')
     
     title = _('server information')
 

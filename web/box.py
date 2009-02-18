@@ -10,6 +10,7 @@ from logilab.common.decorators import cached
 from logilab.mtconverter import html_escape
 
 from cubicweb import Unauthorized, role as get_role
+from cubicweb.vregistry import objectify_selector
 from cubicweb.selectors import (one_line_rset,  primary_view,
                                 match_context_prop, has_related_entities,
                                 accepts_compat, condition_compat)
@@ -39,7 +40,7 @@ class BoxTemplate(Template):
         box.render(self.w)
     """
     __registry__ = 'boxes'
-    __selectors__ = Template.__selectors__ + (match_context_prop,)
+    __select__ = Template.__select__ & match_context_prop()
     
     categories_in_order = ()
     property_defs = {
@@ -139,9 +140,7 @@ class UserRQLBoxTemplate(RQLBoxTemplate):
 class EntityBoxTemplate(BoxTemplate):
     """base class for boxes related to a single entity"""
     __registerer__ = accepts_registerer
-    __selectors__ = (one_line_rset, primary_view,
-                     match_context_prop,)
-                     #etype_rtype_selector, has_relation)
+    __select__ = one_line_rset() & primary_view() & match_context_prop()
     registered = accepts_compat(condition_compat(BoxTemplate.registered))
     context = 'incontext'
     
@@ -151,8 +150,13 @@ class EntityBoxTemplate(BoxTemplate):
 
 
 class RelatedEntityBoxTemplate(EntityBoxTemplate):
-    __selectors__ = EntityBoxTemplate.__selectors__ + (has_related_entities,)
-    
+    # XXX find a way to generalize access to cls.rtype
+    @objectify_selector
+    def my_selector(cls, req, rset, row=None, col=0, **kwargs):
+        return EntityBoxTemplate.__select__ & has_related_entities(cls.rtype)
+
+    __select__ = my_selector
+
     def cell_call(self, row, col, **kwargs):
         entity = self.entity(row, col)
         limit = self.req.property_value('navigation.related-limit') + 1

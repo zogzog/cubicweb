@@ -465,7 +465,7 @@ class JSonController(Controller):
 
 class SendMailController(Controller):
     id = 'sendmail'
-    __selectors__ = (match_user_groups('managers', 'users'),)
+    __select__ = match_user_groups('managers', 'users')
 
     def recipients(self):
         """returns an iterator on email's recipients as entities"""
@@ -513,7 +513,7 @@ class SendMailController(Controller):
 
 class MailBugReportController(SendMailController):
     id = 'reportbug'
-    __selectors__ = (yes,)
+    __select__ = yes()
 
     def publish(self, rset=None):
         body = self.req.form['description']

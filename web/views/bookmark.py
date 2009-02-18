@@ -18,7 +18,7 @@ from cubicweb.web.views.baseviews import PrimaryView
 
 class FollowAction(Action):
     id = 'follow'
-    __selectors__ = (implements('Bookmark'),)
+    __select__ = implements('Bookmark')
 
     title = _('follow')
     category = 'mainactions'
@@ -28,7 +28,7 @@ class FollowAction(Action):
 
 
 class BookmarkPrimaryView(PrimaryView):
-    __selectors__ = (implements('Bookmark'),)
+    __select__ = implements('Bookmark')
         
     def cell_call(self, row, col):
         """the primary view for bookmark entity"""

@@ -17,7 +17,8 @@ class AddRelationView(EditRelationBoxTemplate):
     class attributes.
     """
     __registry__ = 'views'
-    __selectors__ = (chainfirst(match_form_params, match_kwargs),)
+    __select__ = (match_form_params('rtype', 'target')
+                  | match_kwargs('rtype', 'target'))
     property_defs = {} # don't want to inherit this from Box
     id = 'xaddrelation'
     expected_kwargs = form_params = ('rtype', 'target')

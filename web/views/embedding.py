@@ -91,9 +91,9 @@ class EmbedAction(Action):
     if the returned url match embeding configuration
     """
     id = 'embed'
-    __selectors__ = (one_line_rset, match_search_state('normal'),
-                     implements(IEmbedable),
-                     score_entity(entity_has_embedable_url))
+    __select__ = (one_line_rset() & match_search_state('normal')
+                  & implements(IEmbedable) 
+                  & score_entity(entity_has_embedable_url))
     
     title = _('embed')
     controller = 'embed'

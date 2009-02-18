@@ -19,7 +19,7 @@ from cubicweb.web import stdmsgs
 class SendEmailAction(Action):
     category = 'mainactions'
     # XXX should check email is set as well
-    __selectors__ = (implements(IEmailable), match_user_groups('managers', 'users'))
+    __select__ = implements(IEmailable) & match_user_groups('managers', 'users')
 
     id = 'sendemail'
     title = _('send email')
@@ -34,7 +34,7 @@ class SendEmailAction(Action):
 
 class MassMailingForm(EntityView):
     id = 'massmailing'
-    __selectors__ = (implements(IEmailable), match_user_groups('managers', 'users'))
+    __select__ = implements(IEmailable) & match_user_groups('managers', 'users')
 
     form_template = u"""
 <div id="compose">
