@@ -19,8 +19,7 @@ from logilab.common.compat import all
 from rql import parse, nodes
 
 from cubicweb import Unauthorized, typed_eid
-from cubicweb.vregistry import objectify_selector
-from cubicweb.selectors import match_context_prop, one_has_relation
+from cubicweb.selectors import match_context_prop, abstract_relation_possible
 from cubicweb.appobject import AppRsetObject
 from cubicweb.common.registerers import priority_registerer
 from cubicweb.web.htmlwidgets import HTMLWidget
@@ -334,14 +333,7 @@ class VocabularyFacet(AbstractFacet):
 
 
 class RelationFacet(VocabularyFacet):
-    # XXX find a way to generalize access to cls.rtype
-    @objectify_selector
-    def my_selector(cls, req, rset, row=None, col=0, **kwargs):
-        selector = (relation_possible(cls.rtype, role(cls))
-                    & match_context_prop())
-        return selector(cls, req, rset, row, col, **kwargs)
-    
-    __select__ = my_selector()
+    __select__ = abstract_relation_possible() & match_context_prop()
     # class attributes to configure the rel ation facet
     rtype = None
     role = 'subject' 

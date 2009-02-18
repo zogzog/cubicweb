@@ -114,6 +114,13 @@ class traced_selection(object):
 
 
 # abstract selectors ##########################################################
+class AbstractSelectorMixIn(object):
+    """convenience mix-in for selectors that depends on class attributes
+    cf. `cubicweb.web.action.LinkToEntityAction` for instance
+    """
+    def __call__(self, cls, *args, **kwargs):
+        self.concretize(cls)
+        super(AbstractSelectorMixIn, self).__call__(cls, *args, **kwargs)
 
 class EClassSelector(Selector):
     """abstract class for selectors working on the entity classes of the result
@@ -309,6 +316,8 @@ def one_etype_rset(cls, req, rset, row=None, col=0, *args, **kwargs):
     """accept result set where entities in the specified column (or 0) are all
     of the same type
     """
+    if rset is None:
+        return 0
     if len(rset.column_types(col)) != 1:
         return 0
     return 1
@@ -602,6 +611,15 @@ class relation_possible(EClassSelector):
                 return 0
         return 1
 
+class abstract_relation_possible(AbstractSelectorMixIn, relation_possible):
+    def __init__(self, action='read', once_is_enough=False):
+        super(abstract_relation_possible, self).__init__(None, None, None,
+                                                         action, once_is_enough)
+
+    def concretize(self, cls):
+        self.rtype = cls.rtype
+        self.role = role(cls)
+        self.target_etype = getattr(cls, 'etype', None)
 
 class has_editable_relation(EntitySelector):
     """accept if some relations for an entity found in the result set is
@@ -648,7 +666,15 @@ class may_add_relation(EntitySelector):
             return 0
         return 1
 
+class abstract_may_add_relation(AbstractSelectorMixIn, may_add_relation):
+    def __init__(self, once_is_enough=False):
+        super(abstract_may_add_relation, self).__init__(None, None, once_is_enough)
 
+    def concretize(self, cls):
+        self.rtype = cls.rtype
+        self.role = role(cls)
+
+    
 class has_related_entities(EntitySelector):
     """accept if entity found in the result set has some linked entities using
     the specified relation (optionaly filtered according to the specified target
@@ -675,7 +701,16 @@ class has_related_entities(EntitySelector):
             return any(x for x, in rset.description if x == self.target_etype)
         return bool(rset)
 
-        
+class abstract_has_related_entities(AbstractSelectorMixIn, has_related_entities):
+    def __init__(self, once_is_enough=False):
+        super(abstract_has_related_entities, self).__init__(None, None,
+                                                            None, once_is_enough)
+    def concretize(self, cls):
+        self.rtype = cls.rtype
+        self.role = role(cls)
+        self.target_etype = getattr(cls, 'etype', None)
+
+
 class has_permission(EntitySelector):
     """accept if user has the permission to do the requested action on a result
     set entity.
