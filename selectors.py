@@ -634,7 +634,8 @@ class may_add_relation(EntitySelector):
                  'object', default to 'subject'.
     """
     
-    def __init__(self, rtype, role='subject'):
+    def __init__(self, rtype, role='subject', once_is_enough=False):
+        super(may_add_relation, self).__init__(once_is_enough)
         self.rtype = rtype
         self.role = role
         
@@ -663,10 +664,10 @@ class has_related_entities(EntitySelector):
     """
     def __init__(self, rtype, role='subject', target_etype=None,
                  once_is_enough=False):
+        super(has_related_entities, self).__init__(once_is_enough)
         self.rtype = rtype
         self.role = role
         self.target_etype = target_etype
-        self.once_is_enough = once_is_enough
     
     def score_entity(self, entity):
         rset = entity.related(self.rtype, self.role)
@@ -689,7 +690,8 @@ class has_permission(EntitySelector):
     
     :param action: an entity schema action (eg 'read'/'add'/'delete'/'update')
     """
-    def __init__(self, action):
+    def __init__(self, action, once_is_enough=False):
+        super(has_permission, self).__init__(once_is_enough)
         self.action = action
         
     @lltrace
@@ -782,6 +784,7 @@ class but_etype(EntitySelector):
     :param *etypes: entity types (`basestring`) which should be refused
     """
     def __init__(self, *etypes):
+        super(but_etype, self).__init__()
         self.but_etypes = etypes
         
     def score(self, req, rset, row, col):
