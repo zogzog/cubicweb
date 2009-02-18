@@ -20,7 +20,7 @@ from logilab.common.deprecation import class_renamed
 
 from cubicweb import RegistryException
 from cubicweb.selectors import implements, yes
-from cubicweb.common.view import EntityView, Component
+from cubicweb.view import EntityView, Component
 from cubicweb.common.mail import format_mail
 
 from cubicweb.server.pool import PreCommitOperation
