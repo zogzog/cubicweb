@@ -140,8 +140,7 @@ class VObject(object):
                 # only one selector
                 select = _instantiate_selector(selectors[0])
             else:
-                select = AndSelector(*[_instantiate_selector(selector)
-                                       for selector in selectors])
+                select = AndSelector(*selectors)
             cls.__select__ = select
 
 
@@ -579,6 +578,9 @@ class Selector(object):
         if isinstance(selector, type) and isinstance(self, selector):
             return self
         return None
+
+    def __str__(self):
+        return self.__class__.__name__
     
     def __and__(self, other):
         return AndSelector(self, other)
@@ -602,15 +604,22 @@ class MultiSelector(Selector):
     def __init__(self, *selectors):
         self.selectors = self.merge_selectors(selectors)
 
+    def __str__(self):
+        return '%s(%s)' % (self.__class__.__name__,
+                           ','.join(str(s) for s in self.selectors))
+
     @classmethod
     def merge_selectors(cls, selectors):
-        """merge selectors when possible :
+        """deal with selector instanciation when necessary and merge
+        multi-selectors if possible:
 
         AndSelector(AndSelector(sel1, sel2), AndSelector(sel3, sel4))
         ==> AndSelector(sel1, sel2, sel3, sel4)
         """
         merged_selectors = []
         for selector in selectors:
+            selector = _instantiate_selector(selector)
+            assert isinstance(selector, Selector), selector
             if isinstance(selector, cls):
                 merged_selectors += selector.selectors
             else:
@@ -622,12 +631,11 @@ class MultiSelector(Selector):
         tree. Return it of None if not found
         """
         for childselector in self.selectors:
-            try:
-                if childselector.use_selector(selector):
-                    return childselector
-            except AttributeError: # simple function
-                if childselector is selector:
-                    return childselector
+            if childselector is selector:
+                return childselector
+            found = childselector.search_selector(selector)
+            if found is not None:
+                return found
         return None
 
     
@@ -686,8 +694,7 @@ def chainall(*selectors, **kwargs):
     """
     assert selectors
     # XXX do we need to create the AndSelector here, a tuple might be enough
-    selector = AndSelector(*[_instantiate_selector(selector)
-                             for selector in selectors])
+    selector = AndSelector(*selectors)
     if 'name' in kwargs:
         selector.__name__ = kwargs['name']
     return selector
@@ -698,8 +705,7 @@ def chainfirst(*selectors, **kwargs):
     will be the first non-zero selector score
     """
     assert selectors
-    selector = OrSelector(*[_instantiate_selector(selector)
-                            for selector in selectors])
+    selector = OrSelector(*selectors)
     if 'name' in kwargs:
         selector.__name__ = kwargs['name']
     return selector
