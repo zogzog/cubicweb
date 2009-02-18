@@ -13,7 +13,6 @@ from cubicweb.selectors import (
     authenticated_user, match_user_groups, match_search_state,
     has_editable_relation, has_permission, has_add_permission,
     )
-
 from cubicweb.web.action import Action
 from cubicweb.web.views import linksearch_select_url
 from cubicweb.web.views.baseviews import vid_from_rset
@@ -21,11 +20,11 @@ from cubicweb.web.views.baseviews import vid_from_rset
 _ = unicode
 
 @objectify_selector
-def match_searched_etype(cls, req, rset, row=None, col=None, **kwargs):
+def match_searched_etype(cls, req, rset, **kwargs):
     return req.match_search_state(rset)
 
 @objectify_selector
-def view_is_not_default_view(cls, req, rset, row, col, **kwargs):
+def view_is_not_default_view(cls, req, rset, **kwargs):
     # interesting if it propose another view than the current one
     vid = req.form.get('vid')
     if vid and vid != vid_from_rset(req, rset, cls.schema):
