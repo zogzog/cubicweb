@@ -13,10 +13,8 @@ from cubicweb import Unauthorized, role as get_role
 from cubicweb.vregistry import objectify_selector
 from cubicweb.selectors import (one_line_rset,  primary_view,
                                 match_context_prop, has_related_entities,
-                                accepts_compat, condition_compat)
-from cubicweb.common.registerers import accepts_registerer, priority_registerer
-#etype_rtype_selector, has_relation,
-from cubicweb.common.view import Template, ReloadableMixIn
+                                accepts_compat, has_relation_compat, condition_compat)
+from cubicweb.view import Template, ReloadableMixIn
 
 from cubicweb.web.htmlwidgets import (BoxLink, BoxWidget, SideBoxWidget,
                                       RawBoxItem, BoxSeparator)
@@ -103,7 +101,6 @@ class RQLBoxTemplate(BoxTemplate):
     according to application schema and display according to connected
     user's rights) and rql attributes
     """
-    __registerer__ = priority_registerer
 #XXX    __selectors__ = BoxTemplate.__selectors__ + (etype_rtype_selector,)
 
     rql  = None
@@ -139,9 +136,8 @@ class UserRQLBoxTemplate(RQLBoxTemplate):
 
 class EntityBoxTemplate(BoxTemplate):
     """base class for boxes related to a single entity"""
-    __registerer__ = accepts_registerer
     __select__ = one_line_rset() & primary_view() & match_context_prop()
-    registered = accepts_compat(condition_compat(BoxTemplate.registered))
+    registered = accepts_compat(has_relation_compat(condition_compat(BoxTemplate.registered)))
     context = 'incontext'
     
     def call(self, row=0, col=0, **kwargs):
