@@ -18,11 +18,25 @@ from cubicweb.vregistry import VRegistry, ObjectNotFound, NoSelectableObject
 
 _ = unicode
 
-class DummyCursorError(Exception): pass
-class RaiseCursor:
-    @classmethod
-    def execute(cls, rql, args=None, eid_key=None):
-        raise DummyCursorError()
+def use_interfaces(obj):
+    from cubicweb.selectors import implements
+    try:
+        # XXX deprecated
+        return sorted(obj.accepts_interfaces) 
+    except AttributeError:
+        try:
+            impl = obj.__select__.search_selector(implements)
+            if impl:
+                return sorted(impl.expected_ifaces)
+        except AttributeError:
+            pass # old-style vobject classes with no accepts_interfaces
+        return ()
+
+def expand_parent_classes(iface):
+    res = [iface]
+    for parent in iface.__bases__:
+        res += expand_parent_classes(parent)
+    return res
 
 
 class CubicWebRegistry(VRegistry):
