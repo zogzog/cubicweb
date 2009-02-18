@@ -976,7 +976,7 @@ class FormatConstraint(StaticVocabularyConstraint):
     
     def vocabulary(self, entity=None):
         if entity and entity.req.user.has_permission(PERM_USE_TEMPLATE_FORMAT):
-            return self.regular_formats + self.need_perm_formats
+            return self.regular_formats + tuple(self.need_perm_formats)
         return self.regular_formats
     
     def __str__(self):
