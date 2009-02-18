@@ -35,7 +35,7 @@ def download_box(w, entity, title=None, label=None):
     
 class DownloadBox(EntityBoxTemplate):
     id = 'download_box'
-    __selectors__ = (one_line_rset, implements(IDownloadable), match_context_prop)
+    __select__ = (one_line_rset() & implements(IDownloadable) & match_context_prop())
     order = 10
     def cell_call(self, row, col, title=None, label=None, **kwargs):
         entity = self.entity(row, col)
@@ -47,7 +47,7 @@ class DownloadView(baseviews.EntityView):
     downloading of entities providing the necessary interface
     """
     id = 'download'
-    __selectors__ = (one_line_rset, implements(IDownloadable))
+    __select__ = one_line_rset() & implements(IDownloadable)
 
     templatable = False
     content_type = 'application/octet-stream'
@@ -74,7 +74,7 @@ class DownloadView(baseviews.EntityView):
 class DownloadLinkView(baseviews.EntityView):
     """view displaying a link to download the file"""
     id = 'downloadlink'
-    __selectors__ = (implements(IDownloadable),)
+    __select__ = implements(IDownloadable)
     title = None # should not be listed in possible views
 
     
@@ -86,7 +86,7 @@ class DownloadLinkView(baseviews.EntityView):
 
                                                                                 
 class IDownloadablePrimaryView(baseviews.PrimaryView):
-    __selectors__ = (implements(IDownloadable),)
+    __select__ = implements(IDownloadable)
     #skip_attrs = ('eid', 'data',) # XXX
 
     def render_entity_title(self, entity):
@@ -118,7 +118,7 @@ class IDownloadablePrimaryView(baseviews.PrimaryView):
 
 
 class IDownloadableLineView(baseviews.OneLineView):
-    __selectors__ = (implements(IDownloadable),)
+    __select__ = implements(IDownloadable)
 
     def cell_call(self, row, col, title=None, **kwargs):
         """the secondary view is a link to download the file"""
@@ -138,8 +138,7 @@ def is_image(entity):
     
 class ImageView(baseviews.EntityView):
     id = 'image'
-    __selectors__ = (implements(IDownloadable),
-                     score_entity(is_image))
+    __select__ = implements(IDownloadable) & score_entity(is_image)
     
     title = _('image')
     

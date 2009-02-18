@@ -28,7 +28,7 @@ class BreadCrumbEntityVComponent(EntityVComponent):
     # register msg not generated since no entity implements IPrevNext in cubicweb itself
     title = _('contentnavigation_breadcrumbs')
     help = _('contentnavigation_breadcrumbs_description')
-    __selectors__ = (one_line_rset, match_context_prop, implements(IBreadCrumbs))
+    __select__ = (one_line_rset() & match_context_prop() & implements(IBreadCrumbs))
     context = 'navtop'
     order = 5
     visible = False

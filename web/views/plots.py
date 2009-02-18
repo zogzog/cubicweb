@@ -2,8 +2,10 @@ import os
 
 from logilab.common import flatten
 
+from cubicweb.vregistry import objectify_selector
 from cubicweb.web.views import baseviews
 
+@objectify_selector
 def plot_selector(cls, req, rset, *args, **kwargs):
     """accept result set with at least one line and two columns of result
     all columns after second must be of numerical types"""
@@ -34,7 +36,7 @@ else:
         binary = True
         content_type = 'image/png'
         _plot_count = 0
-        __selectors__ = (plot_selector,)
+        __select__ = plot_selector()
 
         def call(self, width=None, height=None):
             # compute dimensions

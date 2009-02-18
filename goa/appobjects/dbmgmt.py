@@ -40,7 +40,7 @@ class AuthInfo(StartupView):
     which are doing datastore administration requests
     """
     id = 'authinfo'
-    __selectors__ = (none_rset, match_user_groups('managers'),)
+    __select__ = none_rset() & match_user_groups('managers')
 
     def call(self):
         cookie = self.req.get_cookie()
@@ -62,7 +62,7 @@ class ContentInit(StartupView):
     step by step to avoid depassing quotas
     """
     id = 'contentinit'
-    __selectors__ = (none_rset, match_user_groups('managers'),)
+    __select__ = none_rset() & match_user_groups('managers')
 
     def server_session(self):
         ssession = self.config.repo_session(self.req.cnx.sessionid)
@@ -167,7 +167,7 @@ class ContentInit(StartupView):
         
 class ContentClear(StartupView):
     id = 'contentclear'
-    __selectors__ = (none_rset, match_user_groups('managers'),)
+    __select__ = none_rset() & match_user_groups('managers')
     skip_etypes = ('EGroup', 'EUser')
     
     def call(self):

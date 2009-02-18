@@ -5,8 +5,6 @@
 :copyright: 2001-2009 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 """
-from __future__ import with_statement
-
 __docformat__ = "restructuredtext en"
 
 from simplejson import dumps
@@ -223,9 +221,7 @@ class TableView(AnyRsetView):
         
 
     def render(self, cellvid, row, col, w):
-        from cubicweb.selectors import traced_selection
-        with traced_selection( ('cell',) ):
-            self.view('cell', self.rset, row=row, col=col, cellvid=cellvid, w=w)
+        self.view('cell', self.rset, row=row, col=col, cellvid=cellvid, w=w)
         
     def get_rows(self):
         return self.rset
@@ -256,8 +252,7 @@ class EditableTableView(TableView):
 
     
 class CellView(EntityView):
-    __selectors__ = (nonempty_rset, accept_rset)
-    # XXX backport implements('Any') ??
+    __select__ = nonempty_rset()
     
     id = 'cell'
     
@@ -292,8 +287,7 @@ class InitialTableView(TableView):
       displayed with default restrictions set
     """
     id = 'initialtable'
-    __selectors__ = nonempty_rset, match_form_params
-    form_params = ('actualrql',)
+    __select__ = nonempty_rset() & match_form_params('actualrql')
     # should not be displayed in possible view since it expects some specific
     # parameters
     title = None

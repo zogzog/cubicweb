@@ -51,7 +51,7 @@ class SortedNavigation(NavigationComponent):
     """sorted navigation apply if navigation is needed (according to page size)
     and if the result set is sorted
     """
-    __selectors__ = (paginated_rset, sorted_rset)
+    __select__ = paginated_rset() & sorted_rset()
     
     # number of considered chars to build page links
     nb_chars = 5
@@ -180,8 +180,8 @@ class NextPrevNavigationComponent(EntityVComponent):
     # itself
     title = _('contentnavigation_prevnext')
     help = _('contentnavigation_prevnext_description')
-    __selectors__ = (one_line_rset, primary_view,
-                     match_context_prop, implements(IPrevNext))
+    __select__ = (one_line_rset() & primary_view()
+                  & match_context_prop() & implements(IPrevNext))
     context = 'navbottom'
     order = 10
     def call(self, view=None):

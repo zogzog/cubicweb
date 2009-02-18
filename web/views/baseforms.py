@@ -90,7 +90,7 @@ class ChangeStateForm(EntityForm):
     id = 'statuschange'
     title = _('status change')
 
-    __selectors__ = (implements(IWorkflowable), match_form_params('treid'))
+    __select__ = implements(IWorkflowable) & match_form_params('treid')
 
     def cell_call(self, row, col, vid='secondary'):
         entity = self.entity(row, col)
@@ -151,7 +151,7 @@ class ChangeStateForm(EntityForm):
 
 class ClickAndEditForm(EntityForm):
     id = 'reledit'
-    __selectors__ = (match_kwargs('rtype'), )
+    __select__ = match_kwargs('rtype')
 
     #FIXME editableField class could be toggleable from userprefs
 
@@ -216,7 +216,7 @@ class EditionForm(EntityForm):
     dynamic default values such as the 'tomorrow' date or the user's login
     being connected
     """    
-    __selectors__ = (one_line_rset, implements('Any'))
+    __select__ = one_line_rset() & implements('Any')
 
     id = 'edition'
     title = _('edition')
@@ -523,7 +523,7 @@ class EditionForm(EntityForm):
 
     
 class CreationForm(EditionForm):
-    __selectors__ = (specified_etype_implements('Any'), )
+    __select__ = specified_etype_implements('Any')
     id = 'creation'
     title = _('creation')
     
@@ -636,7 +636,8 @@ class InlineFormMixIn(object):
 
 class InlineEntityCreationForm(InlineFormMixIn, CreationForm):
     id = 'inline-creation'
-    __selectors__ = (match_kwargs('ptype', 'peid', 'rtype'), specified_etype_implements('Any'))
+    __select__ = (match_kwargs('ptype', 'peid', 'rtype')
+                  & specified_etype_implements('Any'))
     
     
     EDITION_BODY = u'''\
@@ -675,7 +676,8 @@ class InlineEntityCreationForm(InlineFormMixIn, CreationForm):
 
 class InlineEntityEditionForm(InlineFormMixIn, EditionForm):
     id = 'inline-edition'
-    __selectors__ = (implements('Any'), match_kwargs('ptype', 'peid', 'rtype'))
+    __select__ = (implements('Any')
+                  & match_kwargs('ptype', 'peid', 'rtype'))
     
     EDITION_BODY = u'''\
 <div onclick="restoreInlinedEntity('%(parenteid)s', '%(rtype)s', '%(eid)s')" id="div-%(parenteid)s-%(rtype)s-%(eid)s" class="inlinedform">   
@@ -877,7 +879,7 @@ class TableEditForm(EntityForm):
 
 class UnrelatedDivs(EntityView):
     id = 'unrelateddivs'
-    __selectors__ = (match_form_params('relation',),)
+    __select__ = match_form_params('relation')
 
     @property
     def limit(self):

@@ -29,7 +29,7 @@ class EditBox(BoxTemplate):
     box with all actions impacting the entity displayed: edit, copy, delete
     change state, add related entities
     """
-    __selectors__ = (any_rset,) + BoxTemplate.__selectors__
+    __select__ = any_rset() & BoxTemplate.__select__
     id = 'edit_box'
     title = _('actions')
     order = 2
@@ -166,7 +166,7 @@ class SearchBox(BoxTemplate):
 class PossibleViewsBox(BoxTemplate):
     """display a box containing links to all possible views"""
     id = 'possible_views_box'
-    __selectors__ = (match_user_groups('users', 'managers'),)
+    __select__ = match_user_groups('users', 'managers')
     
     title = _('possible views')
     order = 10
@@ -188,7 +188,8 @@ class PossibleViewsBox(BoxTemplate):
 class RSSIconBox(BoxTemplate):
     """just display the RSS icon on uniform result set"""
     id = 'rss'
-    __selectors__ = BoxTemplate.__selectors__ + (appobject_selectable('components', 'rss_feed_url'),)
+    __select__ = (BoxTemplate.__select__
+                  & appobject_selectable('components', 'rss_feed_url'))
     
     order = 999
     visible = False
