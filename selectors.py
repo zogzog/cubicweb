@@ -449,7 +449,6 @@ class match_user_groups(match_search_state):
     @lltrace
     def __call__(self, cls, req, rset=None, row=None, col=0, **kwargs):
         user = req.user
-        print 'match_user_groups', user.login, user._groups, self.expected
         if user is None:
             return int('guests' in self.expected)
         score = user.matching_groups(self.expected)
@@ -515,7 +514,7 @@ class implements(EClassSelector):
                     score += 1
                     # adjust score if the interface is an entity class
                     if iface is eclass:
-                        score += len(eclass.e_schema.ancestors())
+                        score += (len(eclass.e_schema.ancestors()) + 1)
 #                        print 'is majoration', len(eclass.e_schema.ancestors()) 
                     else:
                         parents = [e.type for e in eclass.e_schema.ancestors()]
