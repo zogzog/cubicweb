@@ -1,7 +1,7 @@
 """Specific views for schema related entities
 
 :organization: Logilab
-:copyright: 2001-2008 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+:copyright: 2001-2009 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 """
 __docformat__ = "restructuredtext en"
@@ -10,8 +10,8 @@ from logilab.mtconverter import html_escape
 
 from cubicweb.selectors import implements, rql_condition
 from cubicweb.schemaviewer import SchemaViewer
+from cubicweb.view import EntityView
 from cubicweb.common.uilib import ureport_as_html
-from cubicweb.common.view import EntityView
 from cubicweb.web.views import baseviews
 
 
