@@ -116,7 +116,7 @@ class ModifyAction(Action):
 class MultipleEditAction(Action):
     id = 'muledit' # XXX get strange conflicts if id='edit'
     __select__ = (match_search_state('normal') &
-                     two_lines_rset(), one_etype_rset() &
+                  two_lines_rset() & one_etype_rset() &
                   has_permission('update'))
 
     title = _('modify')

@@ -75,7 +75,7 @@ class LinkToEntityAction(Action):
     """
     @objectify_selector
     def my_selector(cls, req, rset, row=None, col=0, **kwargs):
-        selector = (match_search_state('normal') & one_line_rset
+        selector = (match_search_state('normal') & one_line_rset()
                     & relation_possible(cls.rtype, role(cls), cls.etype,
                                         action='add')
                     & may_add_relation(cls.rtype, role(cls)))
