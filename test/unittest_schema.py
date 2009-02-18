@@ -144,10 +144,10 @@ class SQLSchemaReaderClassTest(TestCase):
                              'ECache', 'EConstraint', 'EConstraintType', 'EEType',
                              'EFRDef', 'EGroup', 'EmailAddress', 'ENFRDef',
                              'EPermission', 'EProperty', 'ERType', 'EUser',
-                             'Float', 'Int', 'Interval', 
-                             'Password', 
+                             'File', 'Float', 'Image', 'Int', 'Interval', 'Note',
+                             'Password', 'Personne',
                              'RQLExpression', 
-                             'State', 'String', 'Time', 
+                             'Societe', 'State', 'String', 'SubNote', 'Tag', 'Time', 
                              'Transition', 'TrInfo']
         self.assertListEquals(entities, sorted(expected_entities))
         relations = [str(r) for r in schema.relations()]
@@ -156,13 +156,13 @@ class SQLSchemaReaderClassTest(TestCase):
                               'allowed_transition', 'bookmarked_by', 'canonical',
 
                               'cardinality', 'comment', 'comment_format', 
-                              'composite', 'condition', 'constrained_by', 'content',
+                              'composite', 'condition', 'connait', 'constrained_by', 'content',
                               'content_format', 'created_by', 'creation_date', 'cstrtype',
 
-                              'defaultval', 'delete_permission', 'description',
-                              'description_format', 'destination_state',
+                              'data', 'data_encoding', 'data_format', 'defaultval', 'delete_permission',
+                              'description', 'description_format', 'destination_state',
 
-                              'eid', 'expression', 'exprtype',
+                              'ecrit_par', 'eid', 'evaluee', 'expression', 'exprtype',
 
                               'final', 'firstname', 'for_user',
                               'from_entity', 'from_state', 'fulltext_container', 'fulltextindexed',
@@ -175,17 +175,17 @@ class SQLSchemaReaderClassTest(TestCase):
 
                               'mainvars', 'meta', 'modification_date',
 
-                              'name', 
+                              'name', 'nom',
 
                               'ordernum', 'owned_by',
 
-                              'path', 'pkey', 'primary_email', 
+                              'path', 'pkey', 'prenom', 'primary_email', 
 
                               'read_permission', 'relation_type', 'require_group',
                               
                               'specializes', 'state_of', 'surname', 'symetric', 'synopsis',
 
-                              'timestamp', 'title', 'to_entity', 'to_state', 'transition_of',
+                              'tags', 'timestamp', 'title', 'to_entity', 'to_state', 'transition_of', 'travaille', 'type',
 
                               'upassword', 'update_permission', 'use_email',
 
@@ -198,7 +198,7 @@ class SQLSchemaReaderClassTest(TestCase):
         eschema = schema.eschema('EUser')
         rels = sorted(str(r) for r in eschema.subject_relations())
         self.assertListEquals(rels, ['created_by', 'creation_date', 'eid',
-                                     'firstname', 'has_text', 'identity',
+                                     'evaluee', 'firstname', 'has_text', 'identity',
                                      'in_group', 'in_state', 'is',
                                      'is_instance_of', 'last_login_time',
                                      'login', 'modification_date', 'owned_by',

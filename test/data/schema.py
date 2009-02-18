@@ -16,7 +16,7 @@ class Note(EntityType):
 
 class SubNote(Note):
     __specializes_schema__ = True
-    descr = String()
+    description = String()
 
 class tags(RelationDefinition):
     subject = 'Tag'
