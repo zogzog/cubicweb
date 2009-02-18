@@ -113,13 +113,15 @@ class traced_selection(object):
 
 
 # abstract selectors ##########################################################
+
 class AbstractSelectorMixIn(object):
     """convenience mix-in for selectors that depends on class attributes
     cf. `cubicweb.web.action.LinkToEntityAction` for instance
     """
     def __call__(self, cls, *args, **kwargs):
         self.concretize(cls)
-        super(AbstractSelectorMixIn, self).__call__(cls, *args, **kwargs)
+        return super(AbstractSelectorMixIn, self).__call__(cls, *args, **kwargs)
+
 
 class EClassSelector(Selector):
     """abstract class for selectors working on the entity classes of the result
@@ -134,9 +136,8 @@ class EClassSelector(Selector):
       - `once_is_enough` is False, in which case if score_class return 0, 0 is
         returned
     """
-    def __init__(self, once_is_enough=False, sumscores=True):
+    def __init__(self, once_is_enough=False):
         self.once_is_enough = once_is_enough
-        self.sumscores = sumscores
     
     @lltrace
     def __call__(self, cls, req, rset, row=None, col=0, **kwargs):
@@ -597,7 +598,8 @@ class relation_possible(EClassSelector):
         if not (rschema.has_perm(req, self.action)
                 or rschema.has_local_role(self.action)):
             return 0
-        return super(relation_possible, self).__call__(cls, req, *args, **kwargs)
+        score = super(relation_possible, self).__call__(cls, req, *args, **kwargs)
+        return score
         
     def score_class(self, eclass, req):
         eschema = eclass.e_schema
@@ -610,13 +612,14 @@ class relation_possible(EClassSelector):
             return 0
         if self.target_etype is not None:
             try:
-                if self.role == 'object':
-                    return self.target_etype in rschema.objects(eschema)
+                if self.role == 'subject':
+                    return int(self.target_etype in rschema.objects(eschema))
                 else:
-                    return self.target_etype in rschema.subjects(eschema)
+                    return int(self.target_etype in rschema.subjects(eschema))
             except KeyError, ex:
                 return 0
         return 1
+
 
 class abstract_relation_possible(AbstractSelectorMixIn, relation_possible):
     def __init__(self, action='read', once_is_enough=False):
@@ -627,6 +630,7 @@ class abstract_relation_possible(AbstractSelectorMixIn, relation_possible):
         self.rtype = cls.rtype
         self.role = role(cls)
         self.target_etype = getattr(cls, 'etype', None)
+
 
 class has_editable_relation(EntitySelector):
     """accept if some relations for an entity found in the result set is
@@ -667,9 +671,9 @@ class may_add_relation(EntitySelector):
     def score_entity(self, entity):
         rschema = entity.schema.rschema(self.rtype)
         if self.role == 'subject':
-            if not rschema.has_perm(req, 'add', fromeid=entity.eid):
+            if not rschema.has_perm(entity.req, 'add', fromeid=entity.eid):
                 return 0
-        elif not rschema.has_perm(req, 'add', toeid=entity.eid):
+        elif not rschema.has_perm(entity.req, 'add', toeid=entity.eid):
             return 0
         return 1
 
@@ -706,7 +710,7 @@ class has_related_entities(EntitySelector):
         rset = entity.related(self.rtype, self.role)
         if self.target_etype:
             return any(x for x, in rset.description if x == self.target_etype)
-        return bool(rset)
+        return rset and 1 or 0
 
 
 class abstract_has_related_entities(AbstractSelectorMixIn, has_related_entities):

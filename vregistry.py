@@ -695,12 +695,13 @@ class NotSelector(Selector):
 
     def __call__(self, cls, *args, **kwargs):
         score = self.selector(cls, *args, **kwargs)
-        return not score
+        return int(not score)
 
     def __str__(self):
         return 'NOT(%s)' % super(NotSelector, self).__str__()
 
-# advanced selector building functions ########################################
+
+# XXX bw compat functions #####################################################
 
 def chainall(*selectors, **kwargs):
     """return a selector chaining given selectors. If one of
