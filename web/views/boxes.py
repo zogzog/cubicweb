@@ -20,6 +20,7 @@ from logilab.mtconverter import html_escape
 from cubicweb.selectors import (any_rset, appobject_selectable,
                                 match_user_groups, non_final_entity)
 from cubicweb.web.htmlwidgets import BoxWidget, BoxMenu, BoxHtml, RawBoxItem
+from cubicweb.view import EntityView
 from cubicweb.web.box import BoxTemplate
 
 _ = unicode
@@ -223,3 +224,31 @@ class StartupViewsBox(BoxTemplate):
         if not box.is_empty():
             box.render(self.w)
 
+# helper classes ##############################################################
+
+class SideBoxView(EntityView):
+    """helper view class to display some entities in a sidebox"""
+    id = 'sidebox'
+    
+    def call(self, boxclass='sideBox', title=u''):
+        """display a list of entities by calling their <item_vid> view"""
+        if title:
+            self.w(u'<div class="sideBoxTitle"><span>%s</span></div>' % title)
+        self.w(u'<div class="%s"><div class="sideBoxBody">' % boxclass)
+        # if not too much entities, show them all in a list
+        maxrelated = self.req.property_value('navigation.related-limit')
+        if self.rset.rowcount <= maxrelated:
+            if len(self.rset) == 1:
+                self.wview('incontext', self.rset, row=0)
+            elif 1 < len(self.rset) < 5:
+                self.wview('csv', self.rset)
+            else:
+                self.wview('simplelist', self.rset)
+        # else show links to display related entities
+        else:
+            self.rset.limit(maxrelated)
+            rql = self.rset.printable_rql(encoded=False)
+            self.wview('simplelist', self.rset)
+            self.w(u'[<a href="%s">%s</a>]' % (self.build_url(rql=rql),
+                                               self.req._('see them all')))
+        self.w(u'</div>\n</div>\n')

@@ -14,8 +14,7 @@ from cubicweb.selectors import (
     has_editable_relation, has_permission, has_add_permission,
     )
 from cubicweb.web.action import Action
-from cubicweb.web.views import linksearch_select_url
-from cubicweb.web.views.baseviews import vid_from_rset
+from cubicweb.web.views import linksearch_select_url, vid_from_rset
 
 _ = unicode
 
