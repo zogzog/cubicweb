@@ -237,6 +237,7 @@ class VRegistry(object):
         # as such because we need to compose registered in some cases
         vobject = obj.registered.im_func(obj, self)
         assert not vobject in vobjects
+        assert callable(vobject.__select__), vobject
         vobjects.append(vobject)
         try:
             vname = vobject.__name__
