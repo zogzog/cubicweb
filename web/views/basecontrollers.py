@@ -19,8 +19,8 @@ from logilab.common.decorators import cached
 
 from cubicweb import NoSelectableObject, ValidationError, typed_eid
 from cubicweb.selectors import yes, match_user_groups
+from cubicweb.view import STRICT_DOCTYPE, CW_XHTML_EXTENSIONS
 from cubicweb.common.mail import format_mail
-from cubicweb.common.view import STRICT_DOCTYPE, CW_XHTML_EXTENSIONS
 from cubicweb.web import ExplicitLogin, Redirect, RemoteCallFailed
 from cubicweb.web.controller import Controller
 from cubicweb.web.views import vid_from_rset

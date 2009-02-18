@@ -12,11 +12,11 @@ from simplejson import dumps
 from logilab.mtconverter import html_escape
 
 from cubicweb.selectors import nonempty_rset, match_form_params, accept_rset
-from cubicweb.common.utils import make_uid
+from cubicweb.utils import make_uid
+from cubicweb.view import EntityView, AnyRsetView
 from cubicweb.common.uilib import toggle_action, limitsize, jsonize, htmlescape
-from cubicweb.common.view import EntityView, AnyRsetView
 from cubicweb.web.htmlwidgets import (TableWidget, TableColumn, MenuWidget,
-                                   PopupBoxMenu, BoxLink)
+                                      PopupBoxMenu, BoxLink)
 from cubicweb.web.facet import prepare_facets_rqlst, filter_hiddens
 
 class TableView(AnyRsetView):

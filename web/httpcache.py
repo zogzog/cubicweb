@@ -2,7 +2,7 @@
 
 
 :organization: Logilab
-:copyright: 2001-2008 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+:copyright: 2001-2009 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 """
 __docformat__ = "restructuredtext en"
@@ -92,7 +92,7 @@ __all__ = ('GMTOFFSET',
 # monkey patching, so view doesn't depends on this module and we have all
 # http cache related logic here
 
-from cubicweb.common import view
+from cubicweb import view
 
 def set_http_cache_headers(self):
     self.http_cache_manager(self).set_headers()
