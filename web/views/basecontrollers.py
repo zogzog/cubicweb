@@ -239,9 +239,10 @@ class JSonController(Controller):
                 stream.write(u'<div id="contentmain">')
         view.dispatch()
         extresources = req.html_headers.getvalue(skiphead=True)
-        stream.write(u'<div class="ajaxHtmlHead">\n') # XXX use a widget ?
-        stream.write(extresources)
-        stream.write(u'</div>\n')
+        if extresources:
+            stream.write(u'<div class="ajaxHtmlHead">\n') # XXX use a widget ?
+            stream.write(extresources)
+            stream.write(u'</div>\n')
         if req.form.get('paginate') and divid == 'pageContent':
             stream.write(u'</div></div>')
         source = stream.getvalue()
