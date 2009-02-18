@@ -13,7 +13,6 @@ from simplejson import dumps
 
 from logilab.common.decorators import classproperty
 from logilab.common.deprecation import obsolete
-from logilab.mtconverter import html_escape
 
 from rql.nodes import VariableRef, SubQuery
 from rql.stmts import Union, Select
@@ -53,6 +52,7 @@ class AppRsetObject(VObject):
     :rset:
       result set on which the object is applied
     """
+    __select__ = yes()
 
     @classmethod
     def registered(cls, vreg):
