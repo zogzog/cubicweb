@@ -276,3 +276,8 @@ class ViewSchemaAction(Action):
     
     def url(self):
         return self.build_url(self.id)
+
+
+from logilab.common.deprecation import class_moved
+from cubicweb.web.views.bookmark import FollowAction
+FollowAction = class_moved(FollowAction)
