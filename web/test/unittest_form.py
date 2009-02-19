@@ -12,10 +12,11 @@ class EntityFieldsFormTC(TestCase):
         def next_tabindex(self):
             self.count += 1
             return self.count
-        self.req = mock_object(build_url=lambda *args,**kwargs: 'myurl.com',
-                               _=lambda s,x: x,
+        self.req = mock_object(build_url=lambda *args,**kwargs: 'myurl.com/pouet',
+                               url=lambda *args,**kwargs: 'myurl.com/form',
+                               _=lambda s,x: x, form={},
                                next_tabindex=next_tabindex, count=0)
-        self.entity = mock_object(eid=1)
+        self.entity = mock_object(eid=1, has_eid=lambda x: False, id='Entity')
         
     def test(self):
         form = ChangeStateForm(self.req, redirect_path='perdu.com')

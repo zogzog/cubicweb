@@ -6,6 +6,7 @@
 """
 __docformat__ = "restructuredtext en"
 
+from warnings import warn
 from simplejson import dumps
 
 from logilab.common.compat import any
@@ -419,6 +420,8 @@ class FieldsForm(object):
         self.action = action
         self.redirect_path = None
         self.fields = list(self.__class__._fields_)
+        self.fields.append(TextField(name='__errorurl', widget=HiddenInput,
+                                     initial=req.url()))
         self.context = {}
         
     @property
@@ -439,7 +442,17 @@ class FieldsForm(object):
                               }
 
     def form_field_value(self, field, values):
-        value = values.get(field.name, field.initial)
+        """looks for field's value in
+        1. kw args given to render_form
+        2. req.form
+        3. field's initial value
+        """
+        if field.name in values:
+            value = values[field.name]
+        elif field.name in self.req.form:
+            value = self.req.form[field.name]
+        else:
+            value = field.initial
         return field.format_value(self.req, value) 
 
     def form_field_name(self, field, values):
@@ -488,10 +501,48 @@ class EntityFieldsForm(FieldsForm):
         return super(EntityFieldsForm, self).form_render(**values)
 
     def form_field_value(self, field, values):
-        try:
+        """look for field's value with the following rules:
+        1. handle special __type and eid fields
+        2. looks in kw args given to render_form
+        3. looks in req.form
+        4. if entity has an eid:
+             1. looks for an associated attribute / method
+             2. use field's initial value
+           else:
+             1. looks for a default_<fieldname> attribute / method on the form
+             2. use field's initial value
+             
+        values found in step 4 may be a callable which'll then be called.
+        """
+        if field.name == '__type':
+            value = self.entity.id
+        elif field.name == 'eid':
+            value = self.entity.eid
+        elif field.name in values:
             value = values[field.name]
-        except KeyError:
-            value = getattr(self.entity, field.name, field.initial)
+        elif field.name in self.req.form:
+            value = self.req.form[field.name]
+        else:
+            if self.entity.has_eid():
+                # use value found on the entity or field's initial value if it's
+                # not an attribute of the entity (XXX may conflicts and get
+                # undesired value)
+                value = getattr(self.entity, field.name, field.initial)
+            else:
+                defaultattr = 'default_%s' % field.name
+                if hasattr(self.entity, defaultattr):
+                    # XXX bw compat, default_<field name> on the entity
+                    warn('found %s on %s, should be set on a specific form'
+                         % (defaultattr, self.entity.id), DeprecationWarning)
+                    value = getattr(self.entity, defaultattr)
+                elif hasattr(self, defaultattr):
+                    # search for default_<field name> on the form instance
+                    value = getattr(self, defaultattr)
+                else:
+                    # use field's initial value
+                    value = field.initial
+            if callable(value):
+                values = value()
         return field.format_value(self.req, value) 
 
     def form_field_name(self, field, values):
