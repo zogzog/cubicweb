@@ -369,12 +369,12 @@ class EntityStartupView(EntityView):
             self.category = 'startupview'
 
     def startup_rql(self):
-        """return some rql to be executedif the result set is None"""
+        """return some rql to be executed if the result set is None"""
         return self.default_rql
 
     def call(self, **kwargs):
-        """override call to execute rql returned by the .startup_rql
-        method if necessary
+        """override call to execute rql returned by the .startup_rql method if
+        necessary
         """
         if self.rset is None:
             self.rset = self.req.execute(self.startup_rql())
@@ -383,8 +383,8 @@ class EntityStartupView(EntityView):
             self.wview(self.id, rset, row=i, **kwargs)
 
     def url(self):
-        """return the url associated with this view. We can omit rql if we
-        are on a result set on which we do not apply.
+        """return the url associated with this view. We can omit rql if we are
+        on a result set on which we do not apply.
         """
         if not self.__select__(self.req, self.rset):
             return self.build_url(vid=self.id)

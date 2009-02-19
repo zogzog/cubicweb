@@ -146,7 +146,7 @@ class SortedNavigation(NavigationComponent):
 
 
 def limit_rset_using_paged_nav(self, req, rset, w, forcedisplay=False,
-                               show_all_option=True, page_size = None):
+                               show_all_option=True, page_size=None):
     showall = forcedisplay or req.form.get('__force_display') is not None
     nav = not showall and self.vreg.select_component('navigation', req, rset,
                                                      page_size=page_size)
