@@ -8,6 +8,7 @@ __docformat__ = "restructuredtext en"
 
 from simplejson import dumps
 
+from logilab.common.compat import any
 from logilab.mtconverter import html_escape
 
 from cubicweb import typed_eid
@@ -17,12 +18,17 @@ from cubicweb.common.registerers import accepts_registerer
 from cubicweb.web import stdmsgs
 from cubicweb.web.httpcache import NoHTTPCacheManager
 from cubicweb.web.controller import redirect_params
+from cubicweb.web import eid_param
 
 
 def relation_id(eid, rtype, target, reid):
     if target == 'subject':
         return u'%s:%s:%s' % (eid, rtype, reid)
     return u'%s:%s:%s' % (reid, rtype, eid)
+        
+def toggable_relation_link(eid, nodeid, label='x'):
+    js = u"javascript: togglePendingDelete('%s', %s);" % (nodeid, html_escape(dumps(eid)))
+    return u'[<a class="handle" href="%s" id="handle%s">%s</a>]' % (js, nodeid, label)
 
 
 class FormMixIn(object):
@@ -227,8 +233,264 @@ class FormMixIn(object):
         label = self.req._(label or stdmsgs.BUTTON_CANCEL).capitalize()
         return u'<input class="validateButton" type="reset" value="%s" tabindex="%s"/>' % (
             label, tabindex or 4)
-        
-def toggable_relation_link(eid, nodeid, label='x'):
-    js = u"javascript: togglePendingDelete('%s', %s);" % (nodeid, html_escape(dumps(eid)))
-    return u'[<a class="handle" href="%s" id="handle%s">%s</a>]' % (js, nodeid, label)
 
+
+###############################################################################
+
+from cubicweb.common import tags
+
+# widgets ############
+
+class FieldWidget(object):
+    def __init__(self, attrs=None):
+        self.attrs = attrs or {}
+    
+    def render(self, form, field):
+        raise NotImplementedError
+    
+class Input(FieldWidget):
+    type = None
+    
+    def render(self, form, field):
+        name, value, attrs = self._render_attrs(form, field)
+        if attrs is None:
+            return tags.input(name=name, value=value)
+        return tags.input(name=name, value=value, type=self.type, **attrs)
+
+    def _render_attrs(self, form, field):
+        name = form.context[field]['name'] # qualified name
+        value = form.context[field]['value']
+        #fattrs = field.widget_attributes(self)
+        attrs = self.attrs.copy()
+        #attrs.update(fattrs)
+        # XXX id
+        return name, value, attrs
+    
+class TextInput(Input):
+    type = 'text'
+
+class PasswordInput(Input):
+    type = 'password'
+
+class FileInput(Input):
+    type = 'file'
+
+class HiddenInput(Input):
+    type = 'hidden'
+
+class Button(Input):
+    type = 'button'
+
+class TextArea(FieldWidget):
+    def render(self, form, field):
+        name, value, attrs = self._render_attrs(form, field)
+        if attrs is None:
+            return tags.textarea(value, name=name)
+        return tags.textarea(value, name=name, **attrs)
+
+class Select: 
+    def render(self, form, field):
+        name, value, attrs = self._render_attrs(form, field)
+        if self.vocabulary:
+            # static vocabulary defined in form definition
+            vocab = self.vocabulary
+        else:
+            vocab = form.get_vocabulary(field)
+        options = []
+        for label, value in vocab:
+            options.append(tags.option(label, value=value))
+        if attrs is None:
+            return tags.select(name=name, options=options)
+        return tags.select(name=name, options=options, **attrs)
+
+class CheckBox: pass
+
+class Radio: pass
+
+class DateTimePicker: pass
+
+
+# fields ############
+
+class Field(object):
+    """field class is introduced to control what's displayed in edition form
+    """
+    widget = TextInput
+    needs_multipart = False
+    creation_rank = 0
+    
+    def __init__(self, name=None, id=None, label=None,
+                 widget=None, required=False, initial=None, help=None,
+                 eidparam=True):
+        self.required = required
+        if widget is not None:
+            self.widget = widget
+        if isinstance(self.widget, type):
+            self.widget = self.widget()
+        self.name = name
+        self.label = label or name
+        self.id = id or name
+        self.initial = initial
+        self.help = help
+        self.eidparam = eidparam
+        # global fields ordering in forms
+        Field.creation_rank += 1
+
+    def set_name(self, name):
+        self.name = name
+        if not self.id:
+            self.id = name
+        if not self.label:
+            self.label = name
+
+    def format_value(self, req, value):
+        return unicode(value)
+
+    def render(self, form):
+        return self.widget.render(form, self)
+
+
+class StringField(Field):
+    def __init__(self, max_length=None, **kwargs):
+        super(StringField, self).__init__(**kwargs)
+        self.max_length = max_length
+        
+class TextField(Field):
+    widget = TextArea
+    def __init__(self, row=None, col=None, **kwargs):
+        super(TextField, self).__init__(**kwargs)
+        self.row = row
+        self.col = col
+
+class RichTextField(Field):
+    pass
+
+class IntField(Field):
+    def __init__(self, min=None, max=None, **kwargs):
+        super(IntField, self).__init__(**kwargs)
+        self.min = min
+        self.max = max
+
+class FloatField(IntField):
+    
+    def format_value(self, req, value):
+        if value is not None:
+            return ustrftime(value, req.property_value('ui.float-format'))
+        return u''
+
+class DateField(IntField):
+    
+    def format_value(self, req, value):
+        return value and ustrftime(value, req.property_value('ui.date-format')) or u''
+
+class DateTimeField(IntField):
+
+    def format_value(self, req, value):
+        return value and ustrftime(value, req.property_value('ui.datetime-format')) or u''
+
+class FileField(IntField):
+    needs_multipart = True
+                 
+# forms ############
+class metafieldsform(type):
+    def __new__(mcs, name, bases, classdict):
+        allfields = []
+        for base in bases:
+            if hasattr(base, '_fields_'):
+                allfields += base._fields_
+        clsfields = (item for item in classdict.items()
+                     if isinstance(item[1], Field))
+        for name, field in sorted(clsfields, key=lambda x: x[1].creation_rank):
+            if not field.name:
+                field.set_name(name)
+            allfields.append(field)
+        classdict['_fields_'] = allfields
+        return super(metafieldsform, mcs).__new__(mcs, name, bases, classdict)
+    
+
+class FieldsForm(object):
+    __metaclass__ = metafieldsform
+    
+    def __init__(self, req, id=None, title=None, action='edit',
+                 redirect_path=None):
+        self.req = req
+        self.id = id or 'form'
+        self.title = title
+        self.action = action
+        self.redirect_path = None
+        self.fields = list(self.__class__._fields_)
+        self.context = {}
+        
+    @property
+    def needs_multipart(self):
+        return any(field.needs_multipart for field in self.fields) 
+
+    def render(self, **values):
+        renderer = values.pop('renderer', FormRenderer())
+        self.build_context(values)
+        return renderer.render(self)
+
+    def build_context(self, values):
+        self.context = context = {}
+        for name, field in self.fields:
+            value = values.get(field.name, field.initial)
+            context[field] = {'value': field.format_value(self.req, value)}
+
+    def get_vocabulary(self, field):
+        raise NotImplementedError
+
+    
+class EntityFieldsForm(FieldsForm):
+    def __init__(self, *args, **kwargs):
+        kwargs.setdefault('id', 'entityForm')
+        super(EntityFieldsForm, self).__init__(*args, **kwargs)
+        self.fields.append(TextField(name='__type', widget=HiddenInput))
+        self.fields.append(TextField(name='eid', widget=HiddenInput))
+        
+    def render(self, entity, **values):
+        self.entity = entity
+        return super(EntityFieldsForm, self).render(**values)
+
+    def build_context(self, values):
+        self.context = context = {}
+        for field in self.fields:
+            try:
+                value = values[field.name]
+            except KeyError:
+                value = getattr(self.entity, field.name, field.initial)
+            if field.eidparam:
+                name = eid_param(field.name, self.entity.eid)
+            else:
+                name = field.name
+            context[field] = {'value': field.format_value(self.req, value),
+                              'name': name}
+        
+    def get_vocabulary(self, field):
+        choices = self.vocabfunc(entity)
+        if self.sort:
+            choices = sorted(choices)
+        if self.rschema.rproperty(self.subjtype, self.objtype, 'internationalizable'):
+            return zip((entity.req._(v) for v in choices), choices)
+        return zip(choices, choices)
+
+    
+# form renderers ############
+
+class FormRenderer(object):
+    def render(self, form):
+        data = []
+        w = data.append
+        w(u'<form action="%s" onsubmit="return freezeFormButtons(\'%s\');" method="post" id="%s">'
+          % (form.req.build_url(form.action), form.id, form.id))
+        w(u'<div id="progress">%s</div>' % _('validating...'))
+        w(u'<fieldset>')
+        w(tags.input(type='hidden', name='__form_id', value=form.id))
+        if form.redirect_path:
+            w(tags.input(type='hidden', name='__redirect_path', value=form.redirect_path))
+        for field in form.fields:
+            w(field.render(form))
+        for button in form.buttons():
+            w(button.render())
+        w(u'</fieldset>')
+        w(u'</form>')
+        return '\n'.join(data)
