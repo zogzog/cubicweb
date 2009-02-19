@@ -8,11 +8,13 @@ __docformat__ = "restructuredtext en"
 
 from warnings import warn
 from simplejson import dumps
+from mx.DateTime import today
 
 from logilab.common.compat import any
 from logilab.mtconverter import html_escape
 
 from cubicweb import typed_eid
+from cubicweb.utils import ustrftime
 from cubicweb.selectors import match_form_params
 from cubicweb.view import NOINDEX, NOFOLLOW, View, EntityView, AnyRsetView
 from cubicweb.common.registerers import accepts_registerer
@@ -20,7 +22,6 @@ from cubicweb.web import stdmsgs
 from cubicweb.web.httpcache import NoHTTPCacheManager
 from cubicweb.web.controller import redirect_params
 from cubicweb.web import INTERNAL_FIELD_VALUE, eid_param
-
 
 
 def relation_id(eid, rtype, target, reid):
@@ -347,22 +348,24 @@ class DateTimePicker(TextInput):
     
     def render(self, form, field):
         txtwidget = super(DateTimePicker, self).render(form, field)
-        cal_button - self._render_calendar_popup(form, field)
+        cal_button = self._render_calendar_popup(form, field)
         return txtwidget + cal_button
     
     def _render_calendar_popup(self, form, field):
         req = form.req
-        name, value, attrs = self._render_attrs(form, field)
-        helperid = '%shelper' % name
+        value = form.context[field]['rawvalue']
+        inputid = form.context[field]['id']
+        helperid = '%shelper' % inputid
         if not value:
-            value = _today()
+            value = today()
         year, month = value.year, value.month
         onclick = "toggleCalendar('%s', '%s', %s, %s);" % (
-            helperid, name, year, month)
+            helperid, inputid, year, month)
         return (u"""<a onclick="toggleCalendar('%s', '%s', %s, %s);" class="calhelper">
 <img src="%s" title="%s" alt="" /></a><div class="calpopup hidden" id="%s"></div>"""
                 % (helperid, inputid, year, month,
-                   self.iconurl, req._('calendar'), helperid) )
+                   req.external_resource('CALENDAR_ICON'),
+                   req._('calendar'), helperid) )
 
 
 # fields ############
@@ -505,7 +508,9 @@ class FieldsForm(object):
         if previous_values:
             values.update(previous_values)
         for field in self.fields:
-            context[field] = {'value': self.form_field_value(field, values),
+            value = self.form_field_value(field, values)
+            context[field] = {'value': field.format_value(self.req, value),
+                              'rawvalue': value,
                               'name': self.form_field_name(field),
                               'id': self.form_field_id(field),
                               }
@@ -523,7 +528,7 @@ class FieldsForm(object):
             value = self.req.form[field.name]
         else:
             value = field.initial
-        return field.format_value(self.req, value) 
+        return value # field.format_value(self.req, value) 
 
     def form_field_name(self, field):
         return field.name
@@ -640,7 +645,7 @@ class EntityFieldsForm(FieldsForm):
                     value = field.initial
             if callable(value):
                 values = value()
-        return field.format_value(self.req, value) 
+        return value # field.format_value(self.req, value) 
 
     def form_field_name(self, field):
         if field.eidparam:
