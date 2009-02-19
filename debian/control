@@ -77,6 +77,9 @@ Architecture: all
 XB-Python-Version: ${python:Versions}
 Depends: ${python:Depends}, python-logilab-mtconverter (>= 0.4.0), python-simpletal (>= 4.0), graphviz, gettext, python-lxml, python-logilab-common (>= 0.37.2), python-yams (>= 0.20.2), python-rql (>= 0.20.2)
 Recommends: python-psyco
+Conflicts: cubicweb-core
+Replaces: cubicweb-core
+Provides: cubicweb-core
 Description: common library for the CubicWeb framework
  CubicWeb is a semantic web application framework.
  .
