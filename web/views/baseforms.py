@@ -104,12 +104,12 @@ class ChangeStateFormView(EntityView):
             'st1': _(state.name),
             'st2': _(dest.name)}
         self.w(u'<p>%s</p>\n' % msg)
-        form = ChangeStateForm(redirect_path=self.redirectpath(entity)) # self.vreg.select_form('changestateform')
-        self.w(form.form_render(req, entity, state=dest.eid))
+        form = ChangeStateForm(req, entity=entity,
+                               redirect_path=self.redirectpath(entity))
+        self.w(form.form_render(entity, state=dest.eid))
 
     def redirectpath(self, entity):
         return entity.rest_path()
-
 
 class ClickAndEditForm(FormMixIn, EntityView):
     id = 'reledit'

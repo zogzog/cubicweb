@@ -407,7 +407,6 @@ class Field(object):
     def render(self, form):
         return self.widget.render(form, self)
 
-
 class StringField(Field):
     def __init__(self, max_length=None, **kwargs):
         super(StringField, self).__init__(**kwargs)
@@ -590,9 +589,8 @@ class EntityFieldsForm(FieldsForm):
         self.form_add_hidden('__type')
         self.form_add_hidden('eid', eidparam=False)
         
-    def form_render(self, entity, **values):
-        self.form_add_entity_hiddens(entity.e_schema)
-        self.entity = entity
+    def form_render(self, **values):
+        self.form_add_entity_hiddens(self.entity.e_schema)
         return super(EntityFieldsForm, self).form_render(**values)
 
     def form_add_entity_hiddens(self, eschema):
