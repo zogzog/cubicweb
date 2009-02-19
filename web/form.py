@@ -318,7 +318,51 @@ class Select(FieldWidget):
 
 class CheckBox(FieldWidget):
 
-class DateTimePicker: pass
+    def _render_attrs(self, form, field):
+        name, value, attrs = super(CheckBox, self)._render_attrs(form, field)
+        if value:
+            attrs['checked'] = u'checked'
+        return name, None, attrs
+        
+class Radio(FieldWidget):
+    pass
+
+class DateTimePicker(TextInput):
+    monthnames = ("january", "february", "march", "april",
+                  "may", "june", "july", "august",
+                  "september", "october", "november", "december")
+    
+    daynames = ("monday", "tuesday", "wednesday", "thursday",
+                "friday", "saturday", "sunday")
+
+    @classmethod
+    def add_localized_infos(cls, req):
+        """inserts JS variables defining localized months and days"""
+        # import here to avoid dependancy from cubicweb-common to simplejson
+        _ = req._
+        monthnames = [_(mname) for mname in cls.monthnames]
+        daynames = [_(dname) for dname in cls.daynames]
+        req.html_headers.define_var('MONTHNAMES', monthnames)
+        req.html_headers.define_var('DAYNAMES', daynames)
+    
+    def render(self, form, field):
+        txtwidget = super(DateTimePicker, self).render(form, field)
+        cal_button - self._render_calendar_popup(form, field)
+        return txtwidget + cal_button
+    
+    def _render_calendar_popup(self, form, field):
+        req = form.req
+        name, value, attrs = self._render_attrs(form, field)
+        helperid = '%shelper' % name
+        if not value:
+            value = _today()
+        year, month = value.year, value.month
+        onclick = "toggleCalendar('%s', '%s', %s, %s);" % (
+            helperid, name, year, month)
+        return (u"""<a onclick="toggleCalendar('%s', '%s', %s, %s);" class="calhelper">
+<img src="%s" title="%s" alt="" /></a><div class="calpopup hidden" id="%s"></div>"""
+                % (helperid, inputid, year, month,
+                   self.iconurl, req._('calendar'), helperid) )
 
 
 # fields ############
