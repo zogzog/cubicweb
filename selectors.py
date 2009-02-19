@@ -941,10 +941,6 @@ but_etype_selector = deprecated_function(but_etype_selector)
 
 @lltrace
 def etype_rtype_selector(cls, req, rset, row=None, col=0, **kwargs):
-    """only check if the user has read access on the entity's type refered
-    by the .etype attribute and on the relations's type refered by the
-    .rtype attribute if set.
-    """
     schema = cls.schema
     perm = getattr(cls, 'require_permission', 'read')
     if hasattr(cls, 'etype'):
@@ -1044,7 +1040,7 @@ def condition_compat(registered):
 def has_relation_compat(registered):
     def plug_selector(cls, vreg):
         cls = registered(cls, vreg)
-        if getattr(cls, 'type', None):
+        if getattr(cls, 'etype', None):
             warn('use relation_possible selector instead of using etype_rtype',
                  DeprecationWarning)
             cls.__select__ &= relation_possible(cls.rtype, role(cls),
