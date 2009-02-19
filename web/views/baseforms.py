@@ -86,7 +86,16 @@ class DeleteConfForm(FormMixIn, EntityView):
         self.w(u'</li>')
 
 
-class ChangeStateForm(FormMixIn, EntityView):
+class ChangeStateForm(EntityFieldsForm):
+    state = TextField(widget=HiddenWidget)
+    __method = TextField(widget=HiddenWidget, initial='set_state')
+    trcomment = RichTextField(eidparam=True)
+
+    def buttons(self):
+        return [Button(label=stdmsgs.YES),
+                Button(label=stdmsgs.NO)]
+        
+class ChangeStateFormView(FormMixIn, EntityView):
     id = 'statuschange'
     title = _('status change')
 
@@ -106,44 +115,49 @@ class ChangeStateForm(FormMixIn, EntityView):
             'st1': _(state.name),
             'st2': _(dest.name)}
         self.w(u'<p>%s</p>\n' % msg)
-        self.w(u'<form action="%s" onsubmit="return freezeFormButtons(\'entityForm\');" method="post" id="entityForm">\n'
-               % self.build_url('edit'))
-        self.w(u'<div id="progress">%s</div>' % _('validating...'))
-        self.w(u'<fieldset>\n')
-        #self.w(u'<input id="errorurl" type="hidden" name="__errorurl" value="%s"/>\n'
-        #       % html_escape(self.req.url()))
-        self.w(u'<input type="hidden" name="__form_id" value="%s"/>\n' % self.id)
-        self.w(u'<input type="hidden" name="eid" value="%s" />' % eid)
-        self.w(u'<input type="hidden" name="%s" value="%s"/>\n'
-               % (eid_param('__type', eid), entity.e_schema))
-        self.w(u'<input type="hidden" name="%s" value="%s"/>\n'
-               % (eid_param('state', eid), dest.eid))
-        self.w(u'<input type="hidden" name="__redirectpath" value="%s"/>\n'
-               % html_escape(self.redirectpath(entity)))
-        self.fill_form(entity, state, dest)
-        self.w(u'<input type="hidden" name="__method" value="set_state"/>\n')
-        self.w(self.button_ok(label=stdmsgs.YES, tabindex=self.req.next_tabindex()))
-        self.w(self.button_cancel(label=stdmsgs.NO, tabindex=self.req.next_tabindex()))
-        self.w(u'</fieldset>\n')
-        self.w(u'</form>')
+
+        form = ChangeStateForm(redirect_path=self.redirectpath(entity)) # self.vreg.select_form('changestateform')
+        self.w(form.render(req, entity, state=dest.eid))
+
         
-    def fill_form(self, entity, state, dest):
-        # hack to use the widget for comment_format
-        trinfo = self.vreg.etype_class('TrInfo')(self.req, None)
-        # widget are cached, copy it since we want to modify its name attribute
-        wdg = trinfo.get_widget('comment_format')
-        wdg.name = 'trcommentformat'
-        # set a value in entity to avoid lookup for a non existant attribute...
-        trinfo['trcommentformat'] = u''
-        # comment format/content have to be grouped using the original entity eid
-        wdg.rname = eid_param('trcommentformat', entity.eid)
-        self.w(wdg.render_label(trinfo))
-        self.w(wdg._edit_render(trinfo))
-        self.w(u'<br/>\n')
-        cformname = eid_param('trcomment', entity.eid)
-        self.w(u'<label for="%s">%s</label>\n' % (cformname, self.req._('comment:')))
-        self.w(u'<textarea rows="10" cols="80" name="%s" tabindex="%s"></textarea><br/>\n'
-               % (cformname, self.req.next_tabindex()))
+#         self.w(u'<form action="%s" onsubmit="return freezeFormButtons(\'entityForm\');" method="post" id="entityForm">\n'
+#                % self.build_url('edit'))
+#         self.w(u'<div id="progress">%s</div>' % _('validating...'))
+#         self.w(u'<fieldset>\n')
+#         #self.w(u'<input id="errorurl" type="hidden" name="__errorurl" value="%s"/>\n'
+#         #       % html_escape(self.req.url()))
+#         self.w(u'<input type="hidden" name="__form_id" value="%s"/>\n' % self.id)
+#         self.w(u'<input type="hidden" name="eid" value="%s" />' % eid)
+#         self.w(u'<input type="hidden" name="%s" value="%s"/>\n'
+#                % (eid_param('__type', eid), entity.e_schema))
+#         self.w(u'<input type="hidden" name="%s" value="%s"/>\n'
+#                % (eid_param('state', eid), dest.eid))
+#         self.w(u'<input type="hidden" name="__redirectpath" value="%s"/>\n'
+#                % html_escape(self.redirectpath(entity)))
+#         self.fill_form(entity, state, dest)
+#         self.w(u'<input type="hidden" name="__method" value="set_state"/>\n')
+#         self.w(self.button_ok(label=stdmsgs.YES, tabindex=self.req.next_tabindex()))
+#         self.w(self.button_cancel(label=stdmsgs.NO, tabindex=self.req.next_tabindex()))
+#         self.w(u'</fieldset>\n')
+#         self.w(u'</form>')
+        
+#     def fill_form(self, entity, state, dest):
+#         # hack to use the widget for comment_format
+#         trinfo = self.vreg.etype_class('TrInfo')(self.req, None)
+#         # widget are cached, copy it since we want to modify its name attribute
+#         wdg = trinfo.get_widget('comment_format')
+#         wdg.name = 'trcommentformat'
+#         # set a value in entity to avoid lookup for a non existant attribute...
+#         trinfo['trcommentformat'] = u''
+#         # comment format/content have to be grouped using the original entity eid
+#         wdg.rname = eid_param('trcommentformat', entity.eid)
+#         self.w(wdg.render_label(trinfo))
+#         self.w(wdg._edit_render(trinfo))
+#         self.w(u'<br/>\n')
+#         cformname = eid_param('trcomment', entity.eid)
+#         self.w(u'<label for="%s">%s</label>\n' % (cformname, self.req._('comment:')))
+#         self.w(u'<textarea rows="10" cols="80" name="%s" tabindex="%s"></textarea><br/>\n'
+#                % (cformname, self.req.next_tabindex()))
 
     def redirectpath(self, entity):
         return entity.rest_path()
