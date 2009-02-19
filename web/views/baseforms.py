@@ -86,14 +86,18 @@ class DeleteConfForm(FormMixIn, EntityView):
         self.w(u'</li>')
 
 
+from cubicweb.web.form import EntityFieldsForm, TextField, RichTextField, HiddenInput
+
 class ChangeStateForm(EntityFieldsForm):
-    state = TextField(widget=HiddenWidget)
-    __method = TextField(widget=HiddenWidget, initial='set_state')
+    state = TextField(widget=HiddenInput)
+    __method = TextField(widget=HiddenInput, initial='set_state')
     trcomment = RichTextField(eidparam=True)
 
     def buttons(self):
-        return [Button(label=stdmsgs.YES),
-                Button(label=stdmsgs.NO)]
+        return [self.button_ok(label=self.req._(stdmsgs.YES),
+                               tabindex=self.req.next_tabindex()),
+                self.button_cancel(label=self.req._(stdmsgs.NO),
+                                   tabindex=self.req.next_tabindex())]
         
 class ChangeStateFormView(FormMixIn, EntityView):
     id = 'statuschange'
@@ -115,9 +119,8 @@ class ChangeStateFormView(FormMixIn, EntityView):
             'st1': _(state.name),
             'st2': _(dest.name)}
         self.w(u'<p>%s</p>\n' % msg)
-
         form = ChangeStateForm(redirect_path=self.redirectpath(entity)) # self.vreg.select_form('changestateform')
-        self.w(form.render(req, entity, state=dest.eid))
+        self.w(form.form_render(req, entity, state=dest.eid))
 
         
 #         self.w(u'<form action="%s" onsubmit="return freezeFormButtons(\'entityForm\');" method="post" id="entityForm">\n'

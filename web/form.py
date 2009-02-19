@@ -435,15 +435,20 @@ class FieldsForm(object):
 
     def form_build_context(self, values):
         self.context = context = {}
+        # on validation error, we get a dictionnary of previously submitted values
+        previous_values = self.req.data.get('formvalues')
+        if previous_values:
+            values.update(previous_values)
         for field in self.fields:
-            context[field] = {'value': self.form_field_value(field, values),
-                              'name': self.form_field_name(field, values),
-                              'id': self.form_field_id(field, values),
+            context[field] = {'value': self.form_field_value(field, field_values),
+                              'name': self.form_field_name(field),
+                              'id': self.form_field_id(field),
                               }
 
     def form_field_value(self, field, values):
         """looks for field's value in
-        1. kw args given to render_form
+        1. kw args given to render_form (including previously submitted form
+           values if any)
         2. req.form
         3. field's initial value
         """
@@ -455,10 +460,10 @@ class FieldsForm(object):
             value = field.initial
         return field.format_value(self.req, value) 
 
-    def form_field_name(self, field, values):
+    def form_field_name(self, field):
         return field.name
 
-    def form_field_id(self, field, values):
+    def form_field_id(self, field):
         return field.id
    
     def form_field_vocabulary(self, field):
@@ -499,11 +504,12 @@ class EntityFieldsForm(FieldsForm):
     def form_render(self, entity, **values):
         self.entity = entity
         return super(EntityFieldsForm, self).form_render(**values)
-
+        
     def form_field_value(self, field, values):
         """look for field's value with the following rules:
         1. handle special __type and eid fields
-        2. looks in kw args given to render_form
+        2. looks in kw args given to render_form (including previously submitted
+           form values if any)
         3. looks in req.form
         4. if entity has an eid:
              1. looks for an associated attribute / method
@@ -545,12 +551,12 @@ class EntityFieldsForm(FieldsForm):
                 values = value()
         return field.format_value(self.req, value) 
 
-    def form_field_name(self, field, values):
+    def form_field_name(self, field):
         if field.eidparam:
             return eid_param(field.name, self.entity.eid)
         return field.name
 
-    def form_field_id(self, field, values):
+    def form_field_id(self, field):
         if field.eidparam:
             return eid_param(field.id, self.entity.eid)
         return field.id
