@@ -279,6 +279,10 @@ class PasswordInput(Input):
 
 class FileInput(Input):
     type = 'file'
+    
+    def _render_attrs(self, form, field):
+        name = form.context[field]['name'] # qualified name
+        return name, None, {}
 
 class HiddenInput(Input):
     type = 'hidden'
@@ -293,7 +297,10 @@ class TextArea(FieldWidget):
             return tags.textarea(value, name=name)
         return tags.textarea(value, name=name, **attrs)
 
-class Select: 
+class Select(FieldWidget):
+    def __init__(self, vocabulary=()):
+        self.vocabulary = ()
+        
     def render(self, form, field):
         name, value, attrs = self._render_attrs(form, field)
         if self.vocabulary:
@@ -308,9 +315,8 @@ class Select:
             return tags.select(name=name, options=options)
         return tags.select(name=name, options=options, **attrs)
 
-class CheckBox: pass
 
-class Radio: pass
+class CheckBox(FieldWidget):
 
 class DateTimePicker: pass
 
@@ -376,17 +382,25 @@ class IntField(Field):
         self.min = min
         self.max = max
 
-class FloatField(IntField):
-    
+class FloatField(IntField):    
     def format_value(self, req, value):
-        if value is not None:
-            return ustrftime(value, req.property_value('ui.float-format'))
-        return u''
+        formatstr = entity.req.property_value('ui.float-format')
+        if value is None:
+            return u''
+        return formatstr % float(value)
 
-class DateField(IntField):
+class DateField(StringField):
+    propname = 'ui.date-format'
     
     def format_value(self, req, value):
-        return value and ustrftime(value, req.property_value('ui.date-format')) or u''
+        return value and ustrftime(value, req.property_value(self.propname)) or u''
+
+class DateTimeField(DateField):
+    propname = 'ui.datetime-format'
+
+    
+class FileField(StringField):
+    needs_multipart = True
 
 class HiddenInitialValueField(Field):
     def __init__(self, visible_field, name):
@@ -506,7 +520,8 @@ class EntityFieldsForm(FieldsForm):
         kwargs.setdefault('id', 'entityForm')
         super(EntityFieldsForm, self).__init__(*args, **kwargs)
         self.fields.append(TextField(name='__type', widget=HiddenInput))
-        self.fields.append(TextField(name='eid', widget=HiddenInput))
+        self.fields.append(TextField(name='eid', widget=HiddenInput,
+                                     eidparam=False))
         
     def form_render(self, entity, **values):
         self.entity = entity
