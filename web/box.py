@@ -11,7 +11,7 @@ from logilab.mtconverter import html_escape
 
 from cubicweb import Unauthorized, role as get_role
 from cubicweb.selectors import (one_line_rset,  primary_view,
-                                match_context_prop, abstract_has_related_entities,
+                                match_context_prop, partial_has_related_entities,
                                 accepts_compat, has_relation_compat,
                                 condition_compat, require_group_compat)
 from cubicweb.view import View, ReloadableMixIn
@@ -147,7 +147,7 @@ class EntityBoxTemplate(BoxTemplate):
 
 
 class RelatedEntityBoxTemplate(EntityBoxTemplate):
-    __select__ = EntityBoxTemplate.__select__ & abstract_has_related_entities()
+    __select__ = EntityBoxTemplate.__select__ & partial_has_related_entities()
 
     def cell_call(self, row, col, **kwargs):
         entity = self.entity(row, col)

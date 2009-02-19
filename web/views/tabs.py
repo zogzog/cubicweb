@@ -11,7 +11,7 @@ from logilab.common.decorators import monkeypatch
 from logilab.mtconverter import html_escape
 
 from cubicweb import NoSelectableObject, role
-from cubicweb.selectors import abstract_has_related_entities
+from cubicweb.selectors import partial_has_related_entities
 from cubicweb.common.view import EntityView
 from cubicweb.common.utils import HTMLHead
 from cubicweb.common.uilib import rql_for_eid
@@ -143,7 +143,7 @@ class EntityRelatedTab(EntityView):
     class ProjectScreenshotTab(DataDependantTab, ProjectScreenshotsView):
         id = 'screenshots_tab'
     """
-    __select__ = EntityView.__select__ & abstract_has_related_entities()
+    __select__ = EntityView.__select__ & partial_has_related_entities()
                                                           
     vid = 'list'
 

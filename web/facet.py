@@ -19,7 +19,7 @@ from logilab.common.compat import all
 from rql import parse, nodes
 
 from cubicweb import Unauthorized, typed_eid
-from cubicweb.selectors import match_context_prop, abstract_relation_possible
+from cubicweb.selectors import match_context_prop, partial_relation_possible
 from cubicweb.appobject import AppRsetObject
 from cubicweb.common.registerers import priority_registerer
 from cubicweb.web.htmlwidgets import HTMLWidget
@@ -333,7 +333,7 @@ class VocabularyFacet(AbstractFacet):
 
 
 class RelationFacet(VocabularyFacet):
-    __select__ = abstract_relation_possible() & match_context_prop()
+    __select__ = partial_relation_possible() & match_context_prop()
     # class attributes to configure the rel ation facet
     rtype = None
     role = 'subject' 

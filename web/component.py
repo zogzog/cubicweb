@@ -14,7 +14,7 @@ from cubicweb.utils import merge_dicts
 from cubicweb.view import View, Component
 from cubicweb.selectors import (
     paginated_rset, one_line_rset, primary_view, match_context_prop,
-    abstract_has_related_entities, abstract_relation_possible,
+    partial_has_related_entities, partial_relation_possible,
     condition_compat, accepts_compat, has_relation_compat)
 from cubicweb.common.registerers import accepts_registerer
 
@@ -143,7 +143,7 @@ class NavigationComponent(Component):
 class RelatedObjectsVComponent(EntityVComponent):
     """a section to display some related entities"""
     vid = 'list'
-    __select__ = abstract_relation_possible() & abstract_has_related_entities()
+    __select__ = partial_relation_possible() & partial_has_related_entities()
     
     def rql(self):
         """override this method if you want to use a custom rql query"""
