@@ -2,16 +2,18 @@
 """default templates for CubicWeb web client
 
 :organization: Logilab
-:copyright: 2001-2008 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+:copyright: 2001-2009 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 """
 __docformat__ = "restructuredtext en"
+
 
 from logilab.mtconverter import html_escape
 
 from cubicweb import NoSelectableObject, ObjectNotFound
 from cubicweb.common.view import Template, MainTemplate,  NOINDEX, NOFOLLOW
 from cubicweb.common.utils import make_uid
+from cubicweb.common.utils import UStringIO
 
 from cubicweb.web.views.baseviews import vid_from_rset
 
@@ -163,7 +165,10 @@ class TheMainTemplate(MainTemplate):
                                                  self.req, self.rset)
         if etypefilter and etypefilter.propval('visible'):
             etypefilter.dispatch(w=self.w)
-        self.pagination(self.req, self.rset, self.w, not (view and view.need_navigation))
+        self.nav_html = UStringIO()
+        self.pagination(self.req, self.rset, self.nav_html.write,
+                        not (view and view.need_navigation))
+        self.w(_(self.nav_html.getvalue()))
         self.w(u'<div id="contentmain">\n')
     
     def template_html_header(self, content_type, page_title, additional_headers=()):
@@ -199,6 +204,7 @@ class TheMainTemplate(MainTemplate):
             
     def template_footer(self, view=None):
         self.w(u'</div>\n') # close id=contentmain
+        self.w(_(self.nav_html.getvalue()))
         self.w(u'</div>\n') # closes id=pageContent
         self.content_footer(view)
         self.w(u'</td>\n')
@@ -419,7 +425,7 @@ class HTMLPageFooter(Template):
                                             req._(ChangeLogView.title).lower()))
         self.w(u'<a href="%s">%s</a> | ' % (req.build_url('doc/about'),
                                             req._('about this site')))
-        self.w(u'© 2001-2008 <a href="http://www.logilab.fr">Logilab S.A.</a>')
+        self.w(u'© 2001-2009 <a href="http://www.logilab.fr">Logilab S.A.</a>')
         self.w(u'</div>')
 
 

@@ -17,7 +17,7 @@ class EditControllerTC(GAEBasedTC):
     config.global_set_option('use-google-auth', False)
     config.global_set_option('schema-type', 'yams')
     config.global_set_option('included-cubes', ())
-    config.global_set_option('included-yams-cubes', ('eblog',))
+    config.global_set_option('included-yams-cubes', ('blog',))
     
     MODEL_CLASSES = ()
     from cubicweb.web.views import editcontroller

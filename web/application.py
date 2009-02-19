@@ -1,7 +1,7 @@
 """CubicWeb web client application object
 
 :organization: Logilab
-:copyright: 2001-2008 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+:copyright: 2001-2009 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 """
 __docformat__ = "restructuredtext en"
@@ -317,6 +317,7 @@ class CubicWebPublisher(object):
             try:
                 ctrlid, rset = self.url_resolver.process(req, path)
                 controller = self.select_controller(ctrlid, req)
+                req.update_search_state()
                 result = controller.publish(rset=rset)
                 if req.cnx is not None:
                     # req.cnx is None if anonymous aren't allowed and we are

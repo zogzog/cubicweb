@@ -19,6 +19,7 @@ from cubicweb.web.views import (baseviews, tableview, baseforms, calendar,
                                 treeview, idownloadable, wdoc, debug)
 from cubicweb.entities.lib import Card
 from cubicweb.interfaces import IMileStone
+from cubicweb.web.views import owl
 
 USERACTIONS = [('myprefs', actions.UserPreferencesAction),
                ('myinfos', actions.UserInfoAction),
@@ -74,7 +75,7 @@ class VRegistryTC(ViewSelectorTC):
                               ('index', startup.IndexView),
                               ('info', management.ProcessInformationView),
                               ('manage', startup.ManageView),
-                              ('owl', startup.OWLView),
+                              ('owl', owl.OWLView),
                               ('schema', startup.SchemaView),
                               ('systemepropertiesform', management.SystemEpropertiesForm)])
         # no entity but etype
@@ -97,6 +98,7 @@ class VRegistryTC(ViewSelectorTC):
                               ('filetree', treeview.FileTreeView),
                               ('list', baseviews.ListView),
                               ('oneline', baseviews.OneLineView),
+                              ('owlabox', owl.OWLABOXView),
                               ('primary', baseviews.PrimaryView),
                               ('rsetxml', baseviews.XMLRsetView),
                               ('rss', baseviews.RssView),
@@ -117,6 +119,7 @@ class VRegistryTC(ViewSelectorTC):
                               ('filetree', treeview.FileTreeView),
                               ('list', baseviews.ListView),
                               ('oneline', baseviews.OneLineView),
+                              ('owlabox', owl.OWLABOXView),
                               ('primary', baseviews.PrimaryView),
                               ('rsetxml', baseviews.XMLRsetView),
                               ('rss', baseviews.RssView),
@@ -137,6 +140,7 @@ class VRegistryTC(ViewSelectorTC):
                               ('filetree', treeview.FileTreeView),
                               ('list', baseviews.ListView),
                               ('oneline', baseviews.OneLineView),
+                              ('owlabox', owl.OWLABOXView),
                               ('primary', baseviews.PrimaryView),
                               ('rsetxml', baseviews.XMLRsetView),
                               ('rss', baseviews.RssView),
@@ -163,8 +167,10 @@ class VRegistryTC(ViewSelectorTC):
                               ('ecsvexport', baseviews.CSVEntityView),
                               ('editable-table', tableview.EditableTableView),
                               ('filetree', treeview.FileTreeView),
+                              ('foaf', euser.FoafView),
                               ('list', baseviews.ListView),
                               ('oneline', baseviews.OneLineView),
+                              ('owlabox', owl.OWLABOXView),
                               ('primary', euser.EUserPrimaryView),
                               ('rsetxml', baseviews.XMLRsetView),
                               ('rss', baseviews.RssView),

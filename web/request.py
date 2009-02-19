@@ -201,7 +201,7 @@ class CubicWebRequestBase(DBAPIRequest):
     def update_search_state(self):
         """update the current search state"""
         searchstate = self.form.get('__mode')
-        if not searchstate:
+        if not searchstate and self.cnx is not None:
             searchstate = self.get_session_data('search_state', 'normal')
         self.set_search_state(searchstate)
 
@@ -212,7 +212,8 @@ class CubicWebRequestBase(DBAPIRequest):
         else:
             self.search_state = ('linksearch', searchstate.split(':'))
             assert len(self.search_state[-1]) == 4
-        self.set_session_data('search_state', searchstate)
+        if self.cnx is not None:
+            self.set_session_data('search_state', searchstate)
 
     def update_breadcrumbs(self):
         """stores the last visisted page in session data"""

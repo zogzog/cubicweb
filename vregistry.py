@@ -20,7 +20,7 @@
 
 
 :organization: Logilab
-:copyright: 2001-2008 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+:copyright: 2001-2009 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 """
 __docformat__ = "restructuredtext en"
@@ -105,7 +105,10 @@ class autoselectors(type):
                             "can't be used together")
         if '__select__' not in classdict and '__selectors__' in classdict:
             selectors = classdict['__selectors__']
-            classdict['__select__'] = classmethod(chainall(*selectors))
+            if len(selectors) > 1:
+                classdict['__select__'] = classmethod(chainall(*selectors))
+            else:
+                classdict['__select__'] = classmethod(selectors[0])
         return super(autoselectors, mcs).__new__(mcs, name, bases, classdict)
 
     def __setattr__(self, attr, value):

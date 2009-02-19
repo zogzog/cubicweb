@@ -1,0 +1,12 @@
+.. -*- coding: utf-8 -*-
+
+.. _QuickInstall:
+
+===========================================
+Quick Installation of a `CubicWeb` instance
+===========================================
+
+.. include:: C011-installation.en.txt
+.. include:: Z012-create-instance.en.txt
+
+

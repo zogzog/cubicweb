@@ -2,12 +2,12 @@
 web configuration
 
 :organization: Logilab
-:copyright: 2001-2008 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+:copyright: 2001-2009 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 """
 __docformat__ = "restructuredtext en"
 
-from cubicweb.toolsutils import CommandHandler
+from cubicweb.toolsutils import CommandHandler, confirm
 
 
 class WebCreateHandler(CommandHandler):
@@ -22,7 +22,10 @@ class WebCreateHandler(CommandHandler):
             print '** repository server configuration'
             print '-' * 72
             config.input_config('pyro-client', inputlevel)
-    
+        if confirm('allow anonymous access', False):
+           config.global_set_option('anonymous-user', 'anon') 
+           config.global_set_option('anonymous-password', 'anon') 
+        
     def postcreate(self):
         """hooks called once application's initialization has been completed"""
         

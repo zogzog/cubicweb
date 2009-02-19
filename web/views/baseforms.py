@@ -2,7 +2,7 @@
 or a list of entities of the same type
 
 :organization: Logilab
-:copyright: 2001-2008 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+:copyright: 2001-2009 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 """
 __docformat__ = "restructuredtext en"
@@ -33,6 +33,9 @@ class DeleteConfForm(EntityForm):
     title = _('delete')
     domid = 'deleteconf'
     onsubmit = None
+    # don't use navigation, all entities asked to be deleted should be displayed
+    # else we will only delete the displayed page
+    need_navigation = False
     
     def call(self):
         """ask for confirmation before real deletion"""
@@ -392,17 +395,20 @@ class EditionForm(EntityForm):
                 if rschema != 'eid']
     
     def relations_form(self, entity, kwargs):
+        srels_by_cat = entity.srelations_by_category(('generic', 'metadata'), 'add')
+        if not srels_by_cat:
+            return u''
         req = self.req
         _ = self.req._
         label = u'%s :' % _('This %s' % entity.e_schema).capitalize()
         eid = entity.eid
         html = []
-        pendings = list(self.restore_pending_inserts(entity))
         w = html.append
         w(u'<fieldset class="subentity">')
         w(u'<legend class="iformTitle">%s</legend>' % label)
         w(u'<table id="relatedEntities">')
         for row in self.relations_table(entity):
+            # already linked entities
             if row[2]:
                 w(u'<tr><th class="labelCol">%s</th>' % row[0].display_name(req, row[1]))
                 w(u'<td>')
@@ -415,10 +421,12 @@ class EditionForm(EntityForm):
                 w(u'</ul>')
                 w(u'</td>')
                 w(u'</tr>')
+        pendings = list(self.restore_pending_inserts(entity))
         if not pendings:
             w(u'<tr><th>&nbsp;</th><td>&nbsp;</td></tr>')
         else:
             for row in pendings:
+                # soon to be linked to entities
                 w(u'<tr id="tr%s">' % row[1])
                 w(u'<th>%s</th>' % row[3])
                 w(u'<td>')
@@ -434,7 +442,8 @@ class EditionForm(EntityForm):
         w(u'<select id="relationSelector_%s" tabindex="%s" onchange="javascript:showMatchingSelect(this.options[this.selectedIndex].value,%s);">'
           % (eid, req.next_tabindex(), html_escape(dumps(eid))))
         w(u'<option value="">%s</option>' % _('select a relation'))
-        for i18nrtype, rschema, target in entity.srelations_by_category(('generic', 'metadata'), 'add'):
+        for i18nrtype, rschema, target in srels_by_cat:
+            # more entities to link to
             w(u'<option value="%s_%s">%s</option>' % (rschema, target, i18nrtype))
         w(u'</select>')
         w(u'</th>')

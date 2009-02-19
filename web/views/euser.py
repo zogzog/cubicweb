@@ -14,12 +14,6 @@ from cubicweb.web import INTERNAL_FIELD_VALUE
 from cubicweb.web.form import EntityForm
 from cubicweb.web.views.baseviews import PrimaryView, EntityView
 
-try:
-    from hashlib import sha1 as sha 
-
-except ImportError:
-    from sha import sha
-
 class EUserPrimaryView(PrimaryView):
     accepts = ('EUser',)
     skip_attrs = ('firstname', 'surname')
@@ -38,7 +32,6 @@ class EUserPrimaryView(PrimaryView):
         return  rschema.type in ['interested_in', 'tags', 
                                  'todo_by', 'bookmarked_by',
                                  ]
-
 class FoafView(EntityView):
     id = 'foaf'
     accepts = ('EUser',)
@@ -47,10 +40,10 @@ class FoafView(EntityView):
     content_type = 'text/xml'
 
     def call(self):
-        self.w(u'<?xml version="1.0" encoding="%s"?>\n' % self.req.encoding)
-        self.w(u'<rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"\n')
-        self.w(u'xmlns:rdfs="http://www.w3org/2000/01/rdf-schema#"\n')
-        self.w(u'xmlns:foaf="http://xmlns.com/foaf/0.1/">\n')
+        self.w('''<?xml version="1.0" encoding="%s"?>
+<rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+         xmlns:rdfs="http://www.w3org/2000/01/rdf-schema#"
+         xmlns:foaf="http://xmlns.com/foaf/0.1/"> '''% self.req.encoding)
         for i in xrange(self.rset.rowcount):
             self.cell_call(i, 0)
         self.w(u'</rdf:RDF>\n')
@@ -72,10 +65,15 @@ class FoafView(EntityView):
                    % html_escape(entity.firstname))
         emailaddr = entity.get_email()
         if emailaddr:
-            self.w(u'<foaf:mbox>%s</foaf:mbox>\n' % html_escape(unicode(emailaddr)))
-            self.w(u'</foaf:Person>\n')
+            self.w(u'<foaf:mbox>%s</foaf:mbox>\n' % html_escape(emailaddr))
+        self.w(u'</foaf:Person>\n')
 
-
+class FoafUsableView(FoafView):
+    id = 'foaf_usable'
+  
+    def call(self):
+        self.cell_call(0, 0)
+            
 class EditGroups(EntityForm):
     """displays a simple euser / egroups editable table"""
     

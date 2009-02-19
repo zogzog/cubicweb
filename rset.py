@@ -1,7 +1,7 @@
 """The `ResultSet` class which is returned as result of a rql query
 
 :organization: Logilab
-:copyright: 2001-2008 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+:copyright: 2001-2009 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 """
 __docformat__ = "restructuredtext en"
@@ -60,11 +60,15 @@ class ResultSet(object):
     def __repr__(self):
         if not self.rows:
             return '<empty resultset for %r>' % self.rql
+        rows = self.rows
+        if len(rows) > 10:
+            rows = rows[:10] + ['...']
         if not self.description:
-            return '<resultset %r: %s>' % (self.rql, '\n'.join(str(r) for r in self.rows))
-        return '<resultset %r: %s>' % (self.rql,
-                                       '\n'.join('%s (%s)' % (r, d)
-                                                 for r, d in zip(self.rows, self.description)))
+            return '<resultset %r (%s rows): %s>' % (self.rql, len(self.rows),
+                                                     '\n'.join(str(r) for r in rows))
+        return '<resultset %r (%s rows): %s>' % (self.rql, len(self.rows),
+                                                 '\n'.join('%s (%s)' % (r, d)
+                                                           for r, d in zip(rows, self.description)))
 
     @cached
     def possible_actions(self):
@@ -464,7 +468,8 @@ class ResultSet(object):
         rqlst = self.syntax_tree()
         etype = self.description[row][col]
         if self.vreg.schema.eschema(etype).is_final():
-            # final type, find a better (ambiguous) one
+            # final type, find a better one to locate the correct subquery
+            # (ambiguous if possible) 
             for i in xrange(len(rqlst.children[0].selection)):
                 if i == col:
                     continue
@@ -476,18 +481,17 @@ class ResultSet(object):
                     locate_query_col = i
                     if len(self.column_types(i)) > 1:
                         break
-        # UNION query, find the subquery from which this entity has been
-        # found
+        # UNION query, find the subquery from which this entity has been found
         select = rqlst.locate_subquery(locate_query_col, etype, self.args)
         try:
             myvar = select.selection[col].variable
         except AttributeError:
-            # no .selection attribute is available
+            # not a variable
             return None, None
         rel = myvar.main_relation()
         if rel is not None:
             index = rel.children[0].variable.selected_index()
-            if index is not None:
+            if index is not None and self.rows[row][index]:
                 return self.get_entity(row, index), rel.r_type
         return None, None
 

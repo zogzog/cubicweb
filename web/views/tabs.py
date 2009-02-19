@@ -60,9 +60,13 @@ class LazyViewMixin(object):
 
 class TabsMixin(LazyViewMixin):
 
+    @property
+    def cookie_name(self):
+        return str('%s_active_tab' % self.config.appid)
+
     def active_tab(self, tabs, default):
         cookie = self.req.get_cookie()
-        cookiename = '%s_active_tab' % self.config.appid
+        cookiename = self.cookie_name
         activetab = cookie.get(cookiename)
         if activetab is None:
             cookie[cookiename] = default
@@ -97,7 +101,7 @@ class TabsMixin(LazyViewMixin):
         for tab in tabs:
             w(u'<li>')
             w(u'<a href="#as-%s">' % tab)
-            w(u'<span onclick="set_tab(\'%s\')">' % tab)
+            w(u'<span onclick="set_tab(\'%s\', \'%s\')">' % (tab, self.cookie_name))
             w(self.req._(tab))
             w(u'</span>')
             w(u'</a>')
@@ -112,17 +116,11 @@ class TabsMixin(LazyViewMixin):
         # because the callback binding needs to be done before
         self.req.html_headers.add_onload(u"""
    jQuery('#entity-tabs > ul').tabs( { selected: %(tabindex)s });
-   set_tab('%(vid)s');
- """ % {'tabindex' : tabs.index(active_tab),
-        'vid'      : active_tab})
+   set_tab('%(vid)s', '%(cookiename)s');
+ """ % {'tabindex'   : tabs.index(active_tab),
+        'vid'        : active_tab,
+        'cookiename' : self.cookie_name})
 
-
-@monkeypatch(JSonController)
-def js_remember_active_tab(self, tabname):
-    cookie = self.req.get_cookie()
-    cookiename = '%s_active_tab' % self.config.appid
-    cookie[cookiename] = tabname
-    self.req.set_cookie(cookie, cookiename)
 
 class EntityRelatedTab(EntityView):
     """A view you should inherit from leftmost,
