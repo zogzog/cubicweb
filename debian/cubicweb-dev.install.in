@@ -1,0 +1,7 @@
+usr/lib/PY_VERSION/site-packages/cubicweb/devtools/ debian/cubicweb-dev/usr/lib/PY_VERSION/site-packages/cubicweb/
+usr/lib/PY_VERSION/site-packages/cubicweb/skeleton/ debian/cubicweb-dev/usr/lib/PY_VERSION/site-packages/cubicweb/
+usr/lib/PY_VERSION/site-packages/cubicweb/test debian/cubicweb-dev/usr/lib/PY_VERSION/site-packages/cubicweb/
+usr/lib/PY_VERSION/site-packages/cubicweb/common/test debian/cubicweb-dev/usr/lib/PY_VERSION/site-packages/cubicweb/common/
+usr/lib/PY_VERSION/site-packages/cubicweb/server/test debian/cubicweb-dev/usr/lib/PY_VERSION/site-packages/cubicweb/server/
+usr/lib/PY_VERSION/site-packages/cubicweb/sobjects/test debian/cubicweb-dev/usr/lib/PY_VERSION/site-packages/cubicweb/sobjects/
+usr/lib/PY_VERSION/site-packages/cubicweb/web/test debian/cubicweb-dev/usr/lib/PY_VERSION/site-packages/cubicweb/web/

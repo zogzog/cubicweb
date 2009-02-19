@@ -1,0 +1,3 @@
+usr/bin/cubicweb-ctl debian/cubicweb-ctl/usr/bin/
+usr/lib/PY_VERSION/site-packages/cubicweb/cwctl.py debian/cubicweb-ctl/usr/lib/PY_VERSION/site-packages/cubicweb
+debian/cubicweb-ctl.bash_completion debian/cubicweb-ctl/etc/bash_completion.d/cubicweb-ctl

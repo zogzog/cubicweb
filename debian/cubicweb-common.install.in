@@ -1,0 +1,3 @@
+usr/lib/PY_VERSION/site-packages/cubicweb/common/ debian/cubicweb-common/usr/lib/PY_VERSION/site-packages/cubicweb
+usr/lib/PY_VERSION/site-packages/cubicweb/entities/ debian/cubicweb-common/usr/lib/PY_VERSION/site-packages/cubicweb
+usr/share/cubicweb/cubes/shared/i18n debian/cubicweb-common/usr/share/cubicweb/cubes/shared/
