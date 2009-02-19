@@ -2,7 +2,7 @@
 
 
 :organization: Logilab
-:copyright: 2001-2008 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+:copyright: 2001-2009 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 """
 __docformat__ = "restructuredtext en"
@@ -187,7 +187,7 @@ class WorkflowableMixIn(object):
         if rset:
             return rset.get_entity(0, 0)
         return None
-    
+
     def change_state(self, stateeid, trcomment=None, trcommentformat=None):
         """change the entity's state according to a state defined in given
         parameters

@@ -245,6 +245,7 @@ class TableView(AnyRsetView):
         entity = self.rset.get_entity(row, col)
         return entity.sortvalue()
 
+
 class EditableTableView(TableView):
     id = 'editable-table'
     finalview = 'editable-final'

@@ -323,9 +323,7 @@ class View(AppRsetObject):
 # concrete views base classes #################################################
 
 class EntityView(View):
-    """base class for views applying on an entity (i.e. uniform result set)
-    """
-    # XXX deprecate
+    """base class for views applying on an entity (i.e. uniform result set)"""
     __registerer__ = accepts_registerer
     __select__ = non_final_entity()
     registered = accepts_compat(View.registered)
@@ -334,8 +332,8 @@ class EntityView(View):
 
 
 class StartupView(View):
-    """base class for views which doesn't need a particular result set
-    to be displayed (so they can always be displayed !)
+    """base class for views which doesn't need a particular result set to be
+    displayed (so they can always be displayed !)
     """
     __registerer__ = priority_registerer
     __select__ = none_rset()
