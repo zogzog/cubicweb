@@ -9,8 +9,8 @@ __docformat__ = "restructuredtext en"
 
 from logilab.mtconverter import html_escape
 
+from cubicweb.view import StartupView
 from cubicweb.common.uilib import ureport_as_html, unormalize, ajax_replace_url
-from cubicweb.common.view import StartupView
 from cubicweb.web.httpcache import EtagHTTPCacheManager
 
 _ = unicode

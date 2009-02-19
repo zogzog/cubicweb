@@ -112,8 +112,8 @@ class TheMainTemplate(MainTemplate):
         if etypefilter and etypefilter.propval('visible'):
             etypefilter.dispatch(w=w)
         self.nav_html = UStringIO()
-        self.pagination(self.req, self.rset, self.nav_html.write,
-                        not (view and view.need_navigation))
+        if view and view.need_navigation:
+            view.paginate(w=self.nav_html.write)
         w(_(self.nav_html.getvalue()))
         w(u'<div id="contentmain">\n')
         view.dispatch(w=w)
