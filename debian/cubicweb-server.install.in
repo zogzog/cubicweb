@@ -1,4 +1,4 @@
-usr/lib/PY_VERSION/site-packages/cubicweb/server/ debian/cubicweb-server/usr/lib/PY_VERSION/site-packages/cubicweb
-usr/lib/PY_VERSION/site-packages/cubicweb/sobjects/ debian/cubicweb-server/usr/lib/PY_VERSION/site-packages/cubicweb
-usr/share/cubicweb/schemas/ debian/cubicweb-server/usr/share/cubicweb/
-usr/share/cubicweb/migration/ debian/cubicweb-server/usr/share/cubicweb/
+debian/tmp/usr/lib/PY_VERSION/site-packages/cubicweb/server/ usr/lib/PY_VERSION/site-packages/cubicweb
+debian/tmp/usr/lib/PY_VERSION/site-packages/cubicweb/sobjects/ usr/lib/PY_VERSION/site-packages/cubicweb
+debian/tmp/usr/share/cubicweb/schemas/ usr/share/cubicweb/
+debian/tmp/usr/share/cubicweb/migration/ usr/share/cubicweb/
