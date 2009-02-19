@@ -399,7 +399,7 @@ class CubicWebPublisher(object):
     def notfound_content(self, req):
         template = req.property_value('ui.main-template') or 'main-template'
         req.form['vid'] = '404'
-        view404 = self.vreg.select_view('404', req, None)
+        view = self.vreg.select_view('404', req, None)
         return self.vreg.main_template(req, template, view=view)
 
 
