@@ -20,6 +20,7 @@ from cubicweb.selectors import (specified_etype_implements, implements,
                                 non_final_entity, accepts_etype_compat)
 from cubicweb.utils import make_uid
 from cubicweb.view import View, EntityView
+from cubicweb.common import tags
 from cubicweb.common.uilib import cut
 from cubicweb.web import INTERNAL_FIELD_VALUE, stdmsgs, eid_param
 from cubicweb.web.controller import NAV_FORM_PARAMETERS
@@ -28,7 +29,11 @@ from cubicweb.web.form import FormMixIn, relation_id
 
 _ = unicode
 
-class DeleteConfForm(FormMixIn, EntityView):
+from cubicweb.web.form import MultipleFieldsForm, EntityFieldsForm, TextField, \
+     RichTextField, HiddenInput
+
+
+class DeleteConfForm(EntityView):
     id = 'deleteconf'
     title = _('delete')
     domid = 'deleteconf'
@@ -39,67 +44,47 @@ class DeleteConfForm(FormMixIn, EntityView):
     
     def call(self):
         """ask for confirmation before real deletion"""
-        _ = self.req._
-        self.req.add_js('cubicweb.edition.js')
-        self.w(u'<script type="text/javascript">updateMessage(\'%s\');</script>\n' % _('this action is not reversible!'))
+        req, w = self.req, self.w
+        _ = req._
+        req.add_js('cubicweb.edition.js')
+        w(u'<script type="text/javascript">updateMessage(\'%s\');</script>\n'
+          % _('this action is not reversible!'))
         # XXX above message should have style of a warning
-        self.w(u'<h4>%s</h4>\n' % _('Do you want to delete the following element(s) ?'))
-        if self.onsubmit:
-            self.w(u'<form id="deleteconf" action="%s" onsubmit="%s" method="post">'
-                   % (self.build_url(), self.onsubmit))
-        else:
-            self.w(u'<form id="deleteconf" action="%s" method="post">'
-                   % (self.build_url()))
-            
-        self.w(u'<fieldset>\n')
-        self.display_rset()
-        #self.w(u'<input type="hidden" name="rql" value="%s"/>' % self.req.form['rql'])
-        self.w(u'<input type="hidden" name="__form_id" value="%s"/>' % self.id)
-        self.w(self.button_delete(label=stdmsgs.YES))
-        self.w(self.button_cancel(label=stdmsgs.NO))
-        for param in NAV_FORM_PARAMETERS:
-            value = self.req.form.get(param)
-            if value:
-                self.w(u'<input type="hidden" name="%s" value="%s"/>' % (param, value))
-        self.w(u'</fieldset></form>\n')
-
-    def display_rset(self):
-        self.w(u'<ul>\n')
+        w(u'<h4>%s</h4>\n' % _('Do you want to delete the following element(s) ?'))
+        form = MultipleFieldsForm(req, id='deleteconf', action=self.build_url(),
+                                  onsubmit=self.onsubmit, copy_nav_params=True)
+        form.buttons.append(form.button_delete(label=stdmsgs.YES))
+        form.buttons.append(form.button_cancel(label=stdmsgs.NO))
         done = set()
+        w(u'<ul>\n')
         for i in xrange(self.rset.rowcount):
             if self.rset[i][0] in done:
                 continue
             done.add(self.rset[i][0])
-            self.cell_call(i, 0)
-        self.w(u'</ul>\n')
-        
-    def cell_call(self, row, col):
-        entity = self.entity(row, col)
-        self.w(u'<li>')
-        self.w(u'<input type="hidden" name="eid" value="%s" />' % entity.eid)
-        self.w(u'<input type="hidden" name="%s" value="%s"/>\n'
-               % (eid_param('__type', entity.eid), self.rset.description[row][0]))
-        self.w(u'<a href="%s">' % html_escape(entity.absolute_url()))
-        # don't use outofcontext view or any other that may contain inline edition form
-        self.w(html_escape(entity.view('textoutofcontext')))
-        self.w(u'</a>')
-        self.w(u'</li>')
+            entity = self.rset.get_entity(i, 0)
+            subform = EntityFieldsForm(req, set_error_url=False,
+                                       entity=entity)
+            form.form_add_subform(subform)
+            # don't use outofcontext view or any other that may contain inline edition form
+            w(u'<li>%s</li>' % tags.a(entity.view('textoutofcontext'),
+                                      href=entity.absolute_url()))
+        w(u'</ul>\n')
+        w(form.form_render())
 
-
-from cubicweb.web.form import EntityFieldsForm, TextField, RichTextField, HiddenInput
 
 class ChangeStateForm(EntityFieldsForm):
     state = TextField(widget=HiddenInput)
-    __method = TextField(widget=HiddenInput, initial='set_state')
+    __method = TextField(name='__method', initial='set_state', widget=HiddenInput)
     trcomment = RichTextField(eidparam=True)
 
-    def buttons(self):
-        return [self.button_ok(label=self.req._(stdmsgs.YES),
+    def form_buttons(self):
+        return [self.button_ok(label=stdmsgs.YES,
                                tabindex=self.req.next_tabindex()),
-                self.button_cancel(label=self.req._(stdmsgs.NO),
+                self.button_cancel(label=stdmsgs.NO,
                                    tabindex=self.req.next_tabindex())]
+
         
-class ChangeStateFormView(FormMixIn, EntityView):
+class ChangeStateFormView(EntityView):
     id = 'statuschange'
     title = _('status change')
 
@@ -121,46 +106,6 @@ class ChangeStateFormView(FormMixIn, EntityView):
         self.w(u'<p>%s</p>\n' % msg)
         form = ChangeStateForm(redirect_path=self.redirectpath(entity)) # self.vreg.select_form('changestateform')
         self.w(form.form_render(req, entity, state=dest.eid))
-
-        
-#         self.w(u'<form action="%s" onsubmit="return freezeFormButtons(\'entityForm\');" method="post" id="entityForm">\n'
-#                % self.build_url('edit'))
-#         self.w(u'<div id="progress">%s</div>' % _('validating...'))
-#         self.w(u'<fieldset>\n')
-#         #self.w(u'<input id="errorurl" type="hidden" name="__errorurl" value="%s"/>\n'
-#         #       % html_escape(self.req.url()))
-#         self.w(u'<input type="hidden" name="__form_id" value="%s"/>\n' % self.id)
-#         self.w(u'<input type="hidden" name="eid" value="%s" />' % eid)
-#         self.w(u'<input type="hidden" name="%s" value="%s"/>\n'
-#                % (eid_param('__type', eid), entity.e_schema))
-#         self.w(u'<input type="hidden" name="%s" value="%s"/>\n'
-#                % (eid_param('state', eid), dest.eid))
-#         self.w(u'<input type="hidden" name="__redirectpath" value="%s"/>\n'
-#                % html_escape(self.redirectpath(entity)))
-#         self.fill_form(entity, state, dest)
-#         self.w(u'<input type="hidden" name="__method" value="set_state"/>\n')
-#         self.w(self.button_ok(label=stdmsgs.YES, tabindex=self.req.next_tabindex()))
-#         self.w(self.button_cancel(label=stdmsgs.NO, tabindex=self.req.next_tabindex()))
-#         self.w(u'</fieldset>\n')
-#         self.w(u'</form>')
-        
-#     def fill_form(self, entity, state, dest):
-#         # hack to use the widget for comment_format
-#         trinfo = self.vreg.etype_class('TrInfo')(self.req, None)
-#         # widget are cached, copy it since we want to modify its name attribute
-#         wdg = trinfo.get_widget('comment_format')
-#         wdg.name = 'trcommentformat'
-#         # set a value in entity to avoid lookup for a non existant attribute...
-#         trinfo['trcommentformat'] = u''
-#         # comment format/content have to be grouped using the original entity eid
-#         wdg.rname = eid_param('trcommentformat', entity.eid)
-#         self.w(wdg.render_label(trinfo))
-#         self.w(wdg._edit_render(trinfo))
-#         self.w(u'<br/>\n')
-#         cformname = eid_param('trcomment', entity.eid)
-#         self.w(u'<label for="%s">%s</label>\n' % (cformname, self.req._('comment:')))
-#         self.w(u'<textarea rows="10" cols="80" name="%s" tabindex="%s"></textarea><br/>\n'
-#                % (cformname, self.req.next_tabindex()))
 
     def redirectpath(self, entity):
         return entity.rest_path()

@@ -20,7 +20,7 @@ from cubicweb.view import NOINDEX, NOFOLLOW, View, EntityView, AnyRsetView
 from cubicweb.common.registerers import accepts_registerer
 from cubicweb.web import stdmsgs
 from cubicweb.web.httpcache import NoHTTPCacheManager
-from cubicweb.web.controller import redirect_params
+from cubicweb.web.controller import NAV_FORM_PARAMETERS, redirect_params
 from cubicweb.web import INTERNAL_FIELD_VALUE, eid_param
 
 
@@ -469,9 +469,9 @@ class metafieldsform(type):
                 allfields += base._fields_
         clsfields = (item for item in classdict.items()
                      if isinstance(item[1], Field))
-        for name, field in sorted(clsfields, key=lambda x: x[1].creation_rank):
+        for fieldname, field in sorted(clsfields, key=lambda x: x[1].creation_rank):
             if not field.name:
-                field.set_name(name)
+                field.set_name(fieldname)
             allfields.append(field)
         classdict['_fields_'] = allfields
         return super(metafieldsform, mcs).__new__(mcs, name, bases, classdict)
@@ -481,25 +481,40 @@ class FieldsForm(object):
     __metaclass__ = metafieldsform
     
     def __init__(self, req, id=None, title=None, action='edit',
-                 redirect_path=None):
+                 onsubmit="return freezeFormButtons('%s');",
+                 cssclass=None, cssstyle=None, cwtarget=None, buttons=None,
+                 redirect_path=None, set_error_url=True, copy_nav_params=False):
         self.req = req
         self.id = id or 'form'
         self.title = title
         self.action = action
+        self.onsubmit = onsubmit
+        self.cssclass = cssclass
+        self.cssstyle = cssstyle
+        self.cwtarget = cwtarget
         self.redirect_path = None
         self.fields = list(self.__class__._fields_)
-        self.fields.append(TextField(name='__errorurl', widget=HiddenInput,
-                                     initial=req.url()))
+        if set_error_url:
+            self.form_add_hidden('__errorurl', req.url())
+        if copy_nav_params:
+            for param in NAV_FORM_PARAMETERS:
+                value = req.form.get(param)
+                if value:
+                    self.form_add_hidden('__errorurl', initial=value)
+        self.buttons = buttons or []
         self.context = {}
         
     @property
     def form_needs_multipart(self):
         return any(field.needs_multipart for field in self.fields) 
 
+    def form_add_hidden(self, name, value=None, **kwargs):
+        self.fields.append(TextField(name=name, widget=HiddenInput,
+                                     initial=value, **kwargs))
+
     def form_render(self, **values):
         renderer = values.pop('renderer', FormRenderer())
-        self.form_build_context(values)
-        return renderer.render(self)
+        return renderer.render(self, values)
 
     def form_build_context(self, values):
         self.context = context = {}
@@ -563,39 +578,43 @@ class FieldsForm(object):
         return u'<input class="validateButton" type="reset" value="%s" tabindex="%s"/>' % (
             label, tabindex or 4)
 
-    
+    def form_buttons(self):
+        return self.buttons
+
+   
 class EntityFieldsForm(FieldsForm):
     def __init__(self, *args, **kwargs):
         kwargs.setdefault('id', 'entityForm')
+        self.entity = kwargs.pop('entity', None)
         super(EntityFieldsForm, self).__init__(*args, **kwargs)
-        self.fields.append(TextField(name='__type', widget=HiddenInput))
-        self.fields.append(TextField(name='eid', widget=HiddenInput,
-                                     eidparam=False))
+        self.form_add_hidden('__type')
+        self.form_add_hidden('eid', eidparam=False)
         
     def form_render(self, entity, **values):
+        self.form_add_entity_hiddens(entity.e_schema)
         self.entity = entity
-        eschema = self.entity.e_schema
+        return super(EntityFieldsForm, self).form_render(**values)
+
+    def form_add_entity_hiddens(self, eschema):
         for field in self.fields[:]:
             fieldname = field.name
             if fieldname != 'eid' and (
                 (eschema.has_subject_relation(fieldname) or
-                eschema.has_object_relation(fieldname))):
-                self.fields.append(self.build_hidden_field(field))
-        return super(EntityFieldsForm, self).form_render(**values)
+                 eschema.has_object_relation(fieldname))):
+                self.fields.append(self.form_entity_hidden_field(field))
 
-    def build_hidden_field(self, field):
+    def form_entity_hidden_field(self, field):
         """returns the hidden field which will indicate the value
         before the modification
         """
         # Only RelationField has a `role` attribute, others are used
         # to describe attribute fields => role is 'subject'
-        role = getattr(field, 'role', 'subject')
-        if role == 'subject':
+        if getattr(field, 'role', 'subject') == 'subject':
             name = 'edits-%s' % field.name
         else:
             name = 'edito-%s' % field.name
         return HiddenInitialValueField(field, name=name)
-    
+        
     def form_field_value(self, field, values):
         """look for field's value with the following rules:
         1. handle special __type and eid fields
@@ -665,45 +684,74 @@ class EntityFieldsForm(FieldsForm):
             return zip((entity.req._(v) for v in choices), choices)
         return zip(choices, choices)
 
-    
+
+class MultipleFieldsForm(FieldsForm):
+    def __init__(self, *args, **kwargs):
+        super(MultipleFieldsForm, self).__init__(*args, **kwargs)
+        self.forms = []
+
+    def form_add_subform(self, subform):
+        self.forms.append(subform)
+        
 # form renderers ############
 
 class FormRenderer(object):
     
-    def render(self, form):
+    def render(self, form, values):
         data = []
         w = data.append
         # XXX form_needs_multipart
-        w(u'<form action="%s" onsubmit="return freezeFormButtons(\'%s\');" method="post" id="%s">'
-          % (form.req.build_url(form.action), form.id, form.id))
+        print 'render', form
+        w(self.open_form(form))
         w(u'<div id="progress">%s</div>' % _('validating...'))
         w(u'<fieldset>')
         w(tags.input(type='hidden', name='__form_id', value=form.id))
         if form.redirect_path:
             w(tags.input(type='hidden', name='__redirect_path', value=form.redirect_path))
-        self.render_fields(w, form)
+        self.render_fields(w, form, values)
         self.render_buttons(w, form)
         w(u'</fieldset>')
         w(u'</form>')
         return '\n'.join(data)
 
-    def render_fields(self, w, form):
+    def open_form(self, form):
+        if form.form_needs_multipart:
+            enctype = 'multipart/form-data'
+        else:
+            enctype = 'application/x-www-form-urlencoded'
+        tag = ('<form action="%s" method="post" id="%s" enctype="%s"' % (
+            html_escape(form.req.build_url(form.action)), form.id, enctype))
+        if form.onsubmit:
+            tag += ' onsubmit="%s"' % html_escape(form.onsubmit)
+        if form.cssstyle:
+            tag += ' style="%s"' % html_escape(form.cssstyle)
+        if form.cssclass:
+            tag += ' class="%s"' % html_escape(form.cssclass)
+        if form.cwtarget:
+            tag += ' cubicweb:target="%s"' % html_escape(form.cwtarget)
+        return tag + '>'
+        
+    def render_fields(self, w, form, values):
+        form.form_build_context(values)
         fields = form.fields[:]
         for field in form.fields:
             if isinstance(field.widget, HiddenInput):
                 w(field.render(form))
                 fields.remove(field)
-        w(u'<table>')
-        for field in fields:
-            w(u'<tr>')
-            w('<th>%s</th>' % self.render_label(form, field))
-            w(u'<td style="width:100%;">')
-            w(field.render(form))
-            w(u'</td></tr>')
-        w(u'</table>')
-
+        if fields:
+            w(u'<table>')
+            for field in fields:
+                w(u'<tr>')
+                w('<th>%s</th>' % self.render_label(form, field))
+                w(u'<td style="width:100%;">')
+                w(field.render(form))
+                w(u'</td></tr>')
+            w(u'</table>')
+        for childform in getattr(form, 'forms', []):
+            self.render_fields(w, childform, values)
+            
     def render_buttons(self, w, form):
-        for button in form.buttons():
+        for button in form.form_buttons():
             w(button)
         
     def render_label(self, form, field):
