@@ -19,7 +19,8 @@ from cubicweb.common.registerers import accepts_registerer
 from cubicweb.web import stdmsgs
 from cubicweb.web.httpcache import NoHTTPCacheManager
 from cubicweb.web.controller import redirect_params
-from cubicweb.web import eid_param
+from cubicweb.web import INTERNAL_FIELD_VALUE, eid_param
+
 
 
 def relation_id(eid, rtype, target, reid):
@@ -220,15 +221,18 @@ class FormMixIn(object):
     
     def button_apply(self, label=None, tabindex=None):
         label = self.req._(label or stdmsgs.BUTTON_APPLY).capitalize()
-        return self.ACTION_SUBMIT_STR % ('__action_apply', label, self.domid, label, tabindex or 3)
+        return self.ACTION_SUBMIT_STR % ('__action_apply', label, self.domid,
+                                         label, tabindex or 3)
 
     def button_delete(self, label=None, tabindex=None):
         label = self.req._(label or stdmsgs.BUTTON_DELETE).capitalize()
-        return self.ACTION_SUBMIT_STR % ('__action_delete', label, self.domid, label, tabindex or 3)
+        return self.ACTION_SUBMIT_STR % ('__action_delete', label, self.domid,
+                                         label, tabindex or 3)
     
     def button_cancel(self, label=None, tabindex=None):
         label = self.req._(label or stdmsgs.BUTTON_CANCEL).capitalize()
-        return self.ACTION_SUBMIT_STR % ('__action_cancel', label, self.domid, label, tabindex or 4)
+        return self.ACTION_SUBMIT_STR % ('__action_cancel', label, self.domid,
+                                         label, tabindex or 4)
     
     def button_reset(self, label=None, tabindex=None):
         label = self.req._(label or stdmsgs.BUTTON_CANCEL).capitalize()
@@ -384,14 +388,17 @@ class DateField(IntField):
     def format_value(self, req, value):
         return value and ustrftime(value, req.property_value('ui.date-format')) or u''
 
-class DateTimeField(IntField):
-
-    def format_value(self, req, value):
-        return value and ustrftime(value, req.property_value('ui.datetime-format')) or u''
-
-class FileField(IntField):
-    needs_multipart = True
+class HiddenInitialValueField(Field):
+    def __init__(self, visible_field, name):
+        super(HiddenInitialValueField, self).__init__(name=name,
+                                                      widget=HiddenInput)
+        self.visible_field = visible_field
                  
+class RelationField(Field):
+    def __init__(self, role='subject', **kwargs):
+        super(RelationField, self).__init__(**kwargs)
+        self.role = role
+        
 # forms ############
 class metafieldsform(type):
     def __new__(mcs, name, bases, classdict):
@@ -440,7 +447,7 @@ class FieldsForm(object):
         if previous_values:
             values.update(previous_values)
         for field in self.fields:
-            context[field] = {'value': self.form_field_value(field, field_values),
+            context[field] = {'value': self.form_field_value(field, values),
                               'name': self.form_field_name(field),
                               'id': self.form_field_id(field),
                               }
@@ -503,8 +510,28 @@ class EntityFieldsForm(FieldsForm):
         
     def form_render(self, entity, **values):
         self.entity = entity
+        eschema = self.entity.e_schema
+        for field in self.fields[:]:
+            fieldname = field.name
+            if fieldname != 'eid' and (
+                (eschema.has_subject_relation(fieldname) or
+                eschema.has_object_relation(fieldname))):
+                self.fields.append(self.build_hidden_field(field))
         return super(EntityFieldsForm, self).form_render(**values)
-        
+
+    def build_hidden_field(self, field):
+        """returns the hidden field which will indicate the value
+        before the modification
+        """
+        # Only RelationField has a `role` attribute, others are used
+        # to describe attribute fields => role is 'subject'
+        role = getattr(field, 'role', 'subject')
+        if role == 'subject':
+            name = 'edits-%s' % field.name
+        else:
+            name = 'edito-%s' % field.name
+        return HiddenInitialValueField(field, name=name)
+    
     def form_field_value(self, field, values):
         """look for field's value with the following rules:
         1. handle special __type and eid fields
@@ -520,22 +547,27 @@ class EntityFieldsForm(FieldsForm):
              
         values found in step 4 may be a callable which'll then be called.
         """
-        if field.name == '__type':
+        fieldname = field.name
+        if fieldname.startswith('edits-') or fieldname.startswith('edito-'):
+            value = self.form_field_value(field.visible_field, values)
+            if value is None or not self.entity.has_eid():
+                value = INTERNAL_FIELD_VALUE
+        elif fieldname == '__type':
             value = self.entity.id
-        elif field.name == 'eid':
+        elif fieldname == 'eid':
             value = self.entity.eid
-        elif field.name in values:
-            value = values[field.name]
-        elif field.name in self.req.form:
-            value = self.req.form[field.name]
+        elif fieldname in values:
+            value = values[fieldname]
+        elif fieldname in self.req.form:
+            value = self.req.form[fieldname]
         else:
             if self.entity.has_eid():
                 # use value found on the entity or field's initial value if it's
                 # not an attribute of the entity (XXX may conflicts and get
                 # undesired value)
-                value = getattr(self.entity, field.name, field.initial)
+                value = getattr(self.entity, fieldname, field.initial)
             else:
-                defaultattr = 'default_%s' % field.name
+                defaultattr = 'default_%s' % fieldname
                 if hasattr(self.entity, defaultattr):
                     # XXX bw compat, default_<field name> on the entity
                     warn('found %s on %s, should be set on a specific form'
@@ -592,8 +624,13 @@ class FormRenderer(object):
         return '\n'.join(data)
 
     def render_fields(self, w, form):
-        w(u'<table>')
+        fields = form.fields[:]
         for field in form.fields:
+            if isinstance(field.widget, HiddenInput):
+                w(field.render(form))
+                fields.remove(field)
+        w(u'<table>')
+        for field in fields:
             w(u'<tr>')
             w('<th>%s</th>' % self.render_label(form, field))
             w(u'<td style="width:100%;">')
