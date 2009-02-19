@@ -422,22 +422,58 @@ class FieldsForm(object):
         self.context = {}
         
     @property
-    def needs_multipart(self):
+    def form_needs_multipart(self):
         return any(field.needs_multipart for field in self.fields) 
 
-    def render(self, **values):
+    def form_render(self, **values):
         renderer = values.pop('renderer', FormRenderer())
-        self.build_context(values)
+        self.form_build_context(values)
         return renderer.render(self)
 
-    def build_context(self, values):
+    def form_build_context(self, values):
         self.context = context = {}
-        for name, field in self.fields:
-            value = values.get(field.name, field.initial)
-            context[field] = {'value': field.format_value(self.req, value)}
+        for field in self.fields:
+            context[field] = {'value': self.form_field_value(field, values),
+                              'name': self.form_field_name(field, values),
+                              'id': self.form_field_id(field, values),
+                              }
 
-    def get_vocabulary(self, field):
+    def form_field_value(self, field, values):
+        value = values.get(field.name, field.initial)
+        return field.format_value(self.req, value) 
+
+    def form_field_name(self, field, values):
+        return field.name
+
+    def form_field_id(self, field, values):
+        return field.id
+   
+    def form_field_vocabulary(self, field):
         raise NotImplementedError
+    
+    BUTTON_STR = u'<input class="validateButton" type="submit" name="%s" value="%s" tabindex="%s"/>'
+    ACTION_SUBMIT_STR = u'<input class="validateButton" type="button" onclick="postForm(\'%s\', \'%s\', \'%s\')" value="%s" tabindex="%s"/>'
+
+    def button_ok(self, label=None, tabindex=None):
+        label = self.req._(label or stdmsgs.BUTTON_OK).capitalize()
+        return self.BUTTON_STR % ('defaultsubmit', label, tabindex or 2)
+    
+    def button_apply(self, label=None, tabindex=None):
+        label = self.req._(label or stdmsgs.BUTTON_APPLY).capitalize()
+        return self.ACTION_SUBMIT_STR % ('__action_apply', label, self.id, label, tabindex or 3)
+
+    def button_delete(self, label=None, tabindex=None):
+        label = self.req._(label or stdmsgs.BUTTON_DELETE).capitalize()
+        return self.ACTION_SUBMIT_STR % ('__action_delete', label, self.id, label, tabindex or 3)
+    
+    def button_cancel(self, label=None, tabindex=None):
+        label = self.req._(label or stdmsgs.BUTTON_CANCEL).capitalize()
+        return self.ACTION_SUBMIT_STR % ('__action_cancel', label, self.id, label, tabindex or 4)
+    
+    def button_reset(self, label=None, tabindex=None):
+        label = self.req._(label or stdmsgs.BUTTON_CANCEL).capitalize()
+        return u'<input class="validateButton" type="reset" value="%s" tabindex="%s"/>' % (
+            label, tabindex or 4)
 
     
 class EntityFieldsForm(FieldsForm):
@@ -447,25 +483,28 @@ class EntityFieldsForm(FieldsForm):
         self.fields.append(TextField(name='__type', widget=HiddenInput))
         self.fields.append(TextField(name='eid', widget=HiddenInput))
         
-    def render(self, entity, **values):
+    def form_render(self, entity, **values):
         self.entity = entity
-        return super(EntityFieldsForm, self).render(**values)
+        return super(EntityFieldsForm, self).form_render(**values)
 
-    def build_context(self, values):
-        self.context = context = {}
-        for field in self.fields:
-            try:
-                value = values[field.name]
-            except KeyError:
-                value = getattr(self.entity, field.name, field.initial)
-            if field.eidparam:
-                name = eid_param(field.name, self.entity.eid)
-            else:
-                name = field.name
-            context[field] = {'value': field.format_value(self.req, value),
-                              'name': name}
+    def form_field_value(self, field, values):
+        try:
+            value = values[field.name]
+        except KeyError:
+            value = getattr(self.entity, field.name, field.initial)
+        return field.format_value(self.req, value) 
+
+    def form_field_name(self, field, values):
+        if field.eidparam:
+            return eid_param(field.name, self.entity.eid)
+        return field.name
+
+    def form_field_id(self, field, values):
+        if field.eidparam:
+            return eid_param(field.id, self.entity.eid)
+        return field.id
         
-    def get_vocabulary(self, field):
+    def form_field_vocabulary(self, field):
         choices = self.vocabfunc(entity)
         if self.sort:
             choices = sorted(choices)
@@ -477,9 +516,11 @@ class EntityFieldsForm(FieldsForm):
 # form renderers ############
 
 class FormRenderer(object):
+    
     def render(self, form):
         data = []
         w = data.append
+        # XXX form_needs_multipart
         w(u'<form action="%s" onsubmit="return freezeFormButtons(\'%s\');" method="post" id="%s">'
           % (form.req.build_url(form.action), form.id, form.id))
         w(u'<div id="progress">%s</div>' % _('validating...'))
@@ -487,10 +528,30 @@ class FormRenderer(object):
         w(tags.input(type='hidden', name='__form_id', value=form.id))
         if form.redirect_path:
             w(tags.input(type='hidden', name='__redirect_path', value=form.redirect_path))
-        for field in form.fields:
-            w(field.render(form))
-        for button in form.buttons():
-            w(button.render())
+        self.render_fields(w, form)
+        self.render_buttons(w, form)
         w(u'</fieldset>')
         w(u'</form>')
         return '\n'.join(data)
+
+    def render_fields(self, w, form):
+        w(u'<table>')
+        for field in form.fields:
+            w(u'<tr>')
+            w('<th>%s</th>' % self.render_label(form, field))
+            w(u'<td style="width:100%;">')
+            w(field.render(form))
+            w(u'</td></tr>')
+        w(u'</table>')
+
+    def render_buttons(self, w, form):
+        for button in form.buttons():
+            w(button)
+        
+    def render_label(self, form, field):
+        label = form.req._(field.label)
+        attrs = {'for': form.context[field]['id']}
+        if field.required:
+            attrs['class'] = 'required'
+        return tags.label(label, **attrs)
+        
