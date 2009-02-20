@@ -135,8 +135,7 @@ class NotificationView(EntityView):
     msgid_timestamp = True
     
     def recipients(self):
-        finder = self.vreg.select_component('recipients_finder',
-                                            req=self.req, rset=self.rset)
+        finder = self.vreg.select_component('recipients_finder', self.req, self.rset)
         return finder.recipients()
         
     def subject(self):
@@ -175,8 +174,7 @@ class NotificationView(EntityView):
         self._kwargs = kwargs
         recipients = self.recipients()
         if not recipients:
-            self.info('skipping %s%s notification which has no recipients',
-                      self.id, self.accepts)
+            self.info('skipping %s notification, no recipients', self.id)
             return
         if not isinstance(recipients[0], tuple):
             from warnings import warn
