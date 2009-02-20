@@ -70,7 +70,12 @@ class DefaultTreeViewItemView(EntityView):
             self.w(u'<li>%s</li>' % itemview)
 
 
-class TreeViewItemView(EntityView):
+class TreeStateMixin(object):
+
+    def open_state(self):
+        raise NotImplementedError
+
+class TreeViewItemView(EntityView, TreeStateMixin):
     """specific treeitem view for entities which implement ITree
 
     (each item should be exandable if it's not a tree leaf)
@@ -80,14 +85,17 @@ class TreeViewItemView(EntityView):
     #     the default treeitem view
     __selectors__ = (implement_interface, yes)
     accepts_interfaces = (ITree,)
-    opening = 'man_a/a1'.split('/')
+
+    def open_state(self):
+        """implements TreeState mixin"""
+        return ()
 
     def cell_call(self, row, col, vid='oneline', parentvid='treeview'):
         w = self.w
         entity = self.entity(row, col)
         liclasses = []
         is_leaf = False
-        is_open = entity.name in self.opening
+        is_open = str(entity.eid) in self.open_state()
         if row == len(self.rset) - 1:
             is_leaf = True
         if not hasattr(entity, 'is_leaf') or entity.is_leaf():
@@ -116,7 +124,11 @@ class TreeViewItemView(EntityView):
                 w(u'<li class="%s">' % u' '.join(liclasses))
             else:
                 w(u'<li cubicweb:loadurl="%s" class="%s">' % (url, u' '.join(liclasses)))
-            w(u'<div class="%s"> </div>' % u' '.join(divclasses))
+            if is_leaf:
+                divtail = ''
+            else:
+                divtail = ''' onclick="async_remote_exec('node_clicked', %s)"''' % entity.eid
+            w(u'<div class="%s"%s></div>' % (u' '.join(divclasses), divtail))
 
             # add empty <ul> because jquery's treeview plugin checks for
             # sublists presence
@@ -127,3 +139,26 @@ class TreeViewItemView(EntityView):
         if is_open: # recurse if needed
             self.wview(parentvid, self.req.execute(rql))
         w(u'</li>')
+
+from logilab.common.decorators import monkeypatch
+from cubicweb.web.views.basecontrollers import JSonController
+
+@monkeypatch(JSonController)
+def js_node_clicked(self, eid):
+    """add/remove eid in treestate cookie
+    XXX this deals with one tree per page
+        also check the treeid issue above
+    """
+    cookies = self.req.get_cookie()
+    treestate = cookies.get('treestate')
+    if treestate is None:
+        cookies['treestate'] = str(eid)
+        self.req.set_cookie(cookies, 'treestate')
+    else:
+        marked = set(treestate.value.split(';'))
+        if eid in marked:
+            marked.remove(eid)
+        else:
+            marked.add(eid)
+        cookies['treestate'] = ';'.join(str(x) for x in marked)
+        self.req.set_cookie(cookies, 'treestate')
