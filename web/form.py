@@ -275,7 +275,7 @@ class FieldWidget(object):
             values = (values,)
         attrs = dict(self.attrs)
         attrs['id'] = form.context[field]['id']
-        return name, values, dict(self.attrs)
+        return name, values, attrs
 
 class Input(FieldWidget):
     type = None
@@ -401,6 +401,7 @@ class DateTimePicker(TextInput):
     
     def render(self, form, field):
         txtwidget = super(DateTimePicker, self).render(form, field)
+        self.add_localized_infos(form.req)
         cal_button = self._render_calendar_popup(form, field)
         return txtwidget + cal_button
     
