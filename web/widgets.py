@@ -659,6 +659,7 @@ class AddComboBoxWidget(DynamicComboBoxWidget):
         res.append(u'<a href="javascript:noop()" id="add_newopt">&nbsp;</a></div>')
         return '\n'.join(res)
 
+
 class IntegerWidget(StringWidget):
     def __init__(self, vreg, subjschema, rschema, objschema, **kwattrs):
         kwattrs['size'] = 5
@@ -668,7 +669,6 @@ class IntegerWidget(StringWidget):
     def render_example(self, req):
         return '23'
     
-
         
 class FloatWidget(StringWidget):
     def __init__(self, vreg, subjschema, rschema, objschema, **kwattrs):
@@ -692,6 +692,7 @@ class FloatWidget(StringWidget):
             return [formatstr % value]
         return ()
 
+
 class DecimalWidget(StringWidget):
     def __init__(self, vreg, subjschema, rschema, objschema, **kwattrs):
         kwattrs['size'] = 5
@@ -700,17 +701,25 @@ class DecimalWidget(StringWidget):
         
     def render_example(self, req):
         return '345.0300'
-    
 
 
 class DateWidget(StringWidget):
     format_key = 'ui.date-format'
-    monthnames = ("january", "february", "march", "april",
-                  "may", "june", "july", "august",
-                  "september", "october", "november", "december")
-    
-    daynames = ("monday", "tuesday", "wednesday", "thursday",
-                "friday", "saturday", "sunday")
+    monthnames = ('january', 'february', 'march', 'april',
+                  'may', 'june', 'july', 'august',
+                  'september', 'october', 'november', 'december')
+    daynames = ('monday', 'tuesday', 'wednesday', 'thursday',
+                'friday', 'saturday', 'sunday')
+
+    @classmethod
+    def add_localized_infos(cls, req):
+        """inserts JS variables defining localized months and days"""
+        # import here to avoid dependancy from cubicweb-common to simplejson
+        _ = req._
+        monthnames = [_(mname) for mname in cls.monthnames]
+        daynames = [_(dname) for dname in cls.daynames]
+        req.html_headers.define_var('MONTHNAMES', monthnames)
+        req.html_headers.define_var('DAYNAMES', daynames)
     
     def __init__(self, vreg, subjschema, rschema, objschema, **kwattrs):
         kwattrs.setdefault('size', 10)
@@ -727,16 +736,6 @@ class DateWidget(StringWidget):
     def render_example(self, req):
         formatstr = req.property_value(self.format_key)
         return now().strftime(formatstr)
-
-    @classmethod
-    def add_localized_infos(cls, req):
-        """inserts JS variables defining localized months and days"""
-        # import here to avoid dependancy from cubicweb-common to simplejson
-        _ = req._
-        monthnames = [_(mname) for mname in cls.monthnames]
-        daynames = [_(dname) for dname in cls.daynames]
-        req.html_headers.define_var('MONTHNAMES', monthnames)
-        req.html_headers.define_var('DAYNAMES', daynames)
 
 
     def _edit_render(self, entity):
@@ -776,6 +775,11 @@ class DateWidget(StringWidget):
 
 class DateTimeWidget(DateWidget):
     format_key = 'ui.datetime-format'
+
+    def __init__(self, vreg, subjschema, rschema, objschema, **kwattrs):
+        kwattrs['size'] = 16
+        kwattrs['maxlength'] = 16
+        DateWidget.__init__(self, vreg, subjschema, rschema, objschema, **kwattrs)
     
     def render_example(self, req):
         formatstr1 = req.property_value('ui.datetime-format')
@@ -784,14 +788,6 @@ class DateTimeWidget(DateWidget):
             'fmt1': now().strftime(formatstr1),
             'fmt2': now().strftime(formatstr2),
             }
-
-
-
-
-    def __init__(self, vreg, subjschema, rschema, objschema, **kwattrs):
-        kwattrs['size'] = 16
-        kwattrs['maxlength'] = 16
-        DateWidget.__init__(self, vreg, subjschema, rschema, objschema, **kwattrs)
 
 
 class TimeWidget(StringWidget):
