@@ -805,61 +805,6 @@ class Entity(AppRsetObject, dict):
         #       cases, it doesn't make sense to sort results afterwards.
         return vocabfunc(rtype, limit)
             
-    def subject_relation_vocabulary(self, rtype, limit=None):
-        """defaut vocabulary method for the given relation, looking for
-        relation's object entities (i.e. self is the subject)
-        """
-        if isinstance(rtype, basestring):
-            rtype = self.schema.rschema(rtype)
-        done = None
-        assert not rtype.is_final(), rtype
-        if self.has_eid():
-            done = set(e.eid for e in getattr(self, str(rtype)))
-        result = []
-        rsetsize = None
-        for objtype in rtype.objects(self.e_schema):
-            if limit is not None:
-                rsetsize = limit - len(result)
-            result += self.relation_vocabulary(rtype, objtype, 'subject',
-                                               rsetsize, done)
-            if limit is not None and len(result) >= limit:
-                break
-        return result
-
-    def object_relation_vocabulary(self, rtype, limit=None):
-        """defaut vocabulary method for the given relation, looking for
-        relation's subject entities (i.e. self is the object)
-        """
-        if isinstance(rtype, basestring):
-            rtype = self.schema.rschema(rtype)
-        done = None
-        if self.has_eid():
-            done = set(e.eid for e in getattr(self, 'reverse_%s' % rtype))
-        result = []
-        rsetsize = None
-        for subjtype in rtype.subjects(self.e_schema):
-            if limit is not None:
-                rsetsize = limit - len(result)
-            result += self.relation_vocabulary(rtype, subjtype, 'object',
-                                               rsetsize, done)
-            if limit is not None and len(result) >= limit:
-                break
-        return result
-
-    def relation_vocabulary(self, rtype, targettype, role,
-                            limit=None, done=None):
-        if done is None:
-            done = set()
-        req = self.req
-        rset = self.unrelated(rtype, targettype, role, limit)
-        res = []
-        for entity in rset.entities():
-            if entity.eid in done:
-                continue
-            done.add(entity.eid)
-            res.append((entity.view('combobox'), entity.eid))
-        return res
-
     def unrelated_rql(self, rtype, targettype, role, ordermethod=None,
                       vocabconstraints=True):
         """build a rql to fetch `targettype` entities unrelated to this entity

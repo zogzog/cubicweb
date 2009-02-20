@@ -806,6 +806,64 @@ class EntityFieldsForm(FieldsForm):
             return zip((entity.req._(v) for v in choices), choices)
         return zip(choices, choices)
 
+    def subject_relation_vocabulary(self, rtype, limit=None):
+        """defaut vocabulary method for the given relation, looking for
+        relation's object entities (i.e. self is the subject)
+        """
+        entity = self.entity
+        if isinstance(rtype, basestring):
+            rtype = entity.schema.rschema(rtype)
+        done = None
+        assert not rtype.is_final(), rtype
+        if entity.has_eid():
+            done = set(e.eid for e in getattr(entity, str(rtype)))
+        result = []
+        rsetsize = None
+        for objtype in rtype.objects(entity.e_schema):
+            if limit is not None:
+                rsetsize = limit - len(result)
+            result += self.relation_vocabulary(rtype, objtype, 'subject',
+                                               rsetsize, done)
+            if limit is not None and len(result) >= limit:
+                break
+        return result
+
+    def object_relation_vocabulary(self, rtype, limit=None):
+        """defaut vocabulary method for the given relation, looking for
+        relation's subject entities (i.e. self is the object)
+        """
+        entity = self.entity
+        if isinstance(rtype, basestring):
+            rtype = entity.schema.rschema(rtype)
+        done = None
+        if entity.has_eid():
+            done = set(e.eid for e in getattr(entity, 'reverse_%s' % rtype))
+        result = []
+        rsetsize = None
+        for subjtype in rtype.subjects(entity.e_schema):
+            if limit is not None:
+                rsetsize = limit - len(result)
+            result += self.relation_vocabulary(rtype, subjtype, 'object',
+                                               rsetsize, done)
+            if limit is not None and len(result) >= limit:
+                break
+        return result
+
+    def relation_vocabulary(self, rtype, targettype, role,
+                            limit=None, done=None):
+        if done is None:
+            done = set()
+        req = self.req
+        rset = entity.unrelated(rtype, targettype, role, limit)
+        res = []
+        for entity in rset.entities():
+            if entity.eid in done:
+                continue
+            done.add(entity.eid)
+            res.append((entity.view('combobox'), entity.eid))
+        return res
+
+    
 
 class MultipleFieldsForm(FieldsForm):
     def __init__(self, *args, **kwargs):
