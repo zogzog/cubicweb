@@ -292,7 +292,16 @@ class TextInput(Input):
 
 class PasswordInput(Input):
     type = 'password'
-    # XXX password validation
+    
+    def render(self, form, field):
+        self.add_media(form)
+        name, values, attrs = self._render_attrs(form, field)
+        inputs = [tags.input(name=name, value=value, type=self.type, **attrs),
+                  '<br/>',
+                  tags.input(name=name+'-confirm', type=self.type, **attrs),
+                  '&nbsp;', tags.span(form.req._('confirm password'),
+                                      **{'class': 'emphasis'})]
+        return u'\n'.join(inputs)
 
 class FileInput(Input):
     type = 'file'
