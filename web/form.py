@@ -779,7 +779,7 @@ class FormRenderer(object):
         w = data.append
         # XXX form_needs_multipart
         w(self.open_form(form))
-        w(u'<div id="progress">%s</div>' % _('validating...'))
+        w(u'<div id="progress">%s</div>' % form.req._('validating...'))
         w(u'<fieldset>')
         w(tags.input(type='hidden', name='__form_id', value=form.domid))
         if form.redirect_path:
@@ -829,8 +829,10 @@ class FormRenderer(object):
     #def render_field(self, w, form, field):
         
     def render_buttons(self, w, form):
+        w(u'<table class="formButtonBar">\n<tr>\n')
         for button in form.form_buttons():
-            w(button)
+            w(u'<td>%s</td>\n' % button)
+        w(u'</tr></table>')
         
     def render_label(self, form, field):
         label = form.req._(field.label)
