@@ -8,7 +8,7 @@ __docformat__ = "restructuredtext en"
 
 from warnings import warn
 from simplejson import dumps
-from mx.DateTime import today
+from mx.DateTime import today, now
 
 from logilab.common.compat import any
 from logilab.mtconverter import html_escape
@@ -20,6 +20,7 @@ from cubicweb.utils import ustrftime
 from cubicweb.selectors import match_form_params
 from cubicweb.view import NOINDEX, NOFOLLOW, View, EntityView, AnyRsetView
 from cubicweb.common.registerers import accepts_registerer
+from cubicweb.common.uilib import toggle_action
 from cubicweb.web import stdmsgs
 from cubicweb.web.httpcache import NoHTTPCacheManager
 from cubicweb.web.controller import NAV_FORM_PARAMETERS, redirect_params
@@ -268,12 +269,12 @@ class FieldWidget(object):
         raise NotImplementedError
 
     def _render_attrs(self, form, field):
-        # name = form.form_field_name(field)
-        # values = form.form_field_value(field)
         name = form.context[field]['name']
         values = form.context[field]['value']
         if not isinstance(values, (tuple, list)):
             values = (values,)
+        attrs = dict(self.attrs)
+        attrs['id'] = form.context[field]['id']
         return name, values, dict(self.attrs)
 
 class Input(FieldWidget):
@@ -291,14 +292,20 @@ class TextInput(Input):
 
 class PasswordInput(Input):
     type = 'password'
+    # XXX password validation
 
 class FileInput(Input):
     type = 'file'
-
+    
+    def _render_attrs(self, form, field):
+        # ignore value which makes no sense here (XXX even on form validation error?)
+        name, values, attrs = super(FileInput, self)._render_attrs(form, field)
+        return name, ('',), attrs
+        
 class HiddenInput(Input):
     type = 'hidden'
     
-class Button(Input):
+class ButtonInput(Input):
     type = 'button'
 
 class TextArea(FieldWidget):
@@ -312,6 +319,7 @@ class TextArea(FieldWidget):
         else:
             raise ValueError('a textarea is not supposed to be multivalued')
         return tags.textarea(value, name=name, **attrs)
+
 
 class FCKEditor(TextArea):
     def __init__(self, attrs):
@@ -347,13 +355,14 @@ class Select(FieldWidget):
                            options=options, **attrs)
 
 
-class CheckBox(FieldWidget):
-
+class CheckBox(Input):
+    type = 'checkbox'
+    
     def _render_attrs(self, form, field):
-        name, value, attrs = super(CheckBox, self)._render_attrs(form, field)
-        if value:
+        name, values, attrs = super(CheckBox, self)._render_attrs(form, field)
+        if values and values[0]:
             attrs['checked'] = u'checked'
-        return name, None, attrs
+        return name, values, attrs
 
         
 class Radio(FieldWidget):
@@ -361,12 +370,11 @@ class Radio(FieldWidget):
 
 
 class DateTimePicker(TextInput):
-    monthnames = ("january", "february", "march", "april",
-                  "may", "june", "july", "august",
-                  "september", "october", "november", "december")
-    
-    daynames = ("monday", "tuesday", "wednesday", "thursday",
-                "friday", "saturday", "sunday")
+    monthnames = ('january', 'february', 'march', 'april',
+                  'may', 'june', 'july', 'august',
+                  'september', 'october', 'november', 'december')
+    daynames = ('monday', 'tuesday', 'wednesday', 'thursday',
+                'friday', 'saturday', 'sunday')
 
     needs_js = ('cubicweb.ajax.js', 'cubicweb.calendar.js')
     needs_css = ('cubicweb.calendar_popup.css',)
@@ -463,27 +471,33 @@ class Field(object):
             return u''
         return unicode(value)
 
-    def get_widget(self, req):
+    def get_widget(self, form):
         return self.widget
+    
+    def example_format(self, req):
+        return u''
 
-    def render(self, form):
-        return self.get_widget(form.req).render(form, self)
+    def render(self, form, renderer):
+        return self.get_widget(form).render(form, self)
 
 
     def vocabulary(self, form):
         return self.choices
+
     
 class StringField(Field):
     def __init__(self, max_length=None, **kwargs):
         super(StringField, self).__init__(**kwargs)
         self.max_length = max_length
 
+
 class TextField(Field):
+    widget = TextArea
     def __init__(self, rows=10, cols=80, **kwargs):
-        widget = TextArea(dict(rows=rows, cols=cols))
-        super(TextField, self).__init__(widget=widget, **kwargs)
+        super(TextField, self).__init__(**kwargs)
         self.rows = rows
         self.cols = cols
+
 
 class RichTextField(TextField):
     widget = None
@@ -491,25 +505,32 @@ class RichTextField(TextField):
         super(RichTextField, self).__init__(**kwargs)
         self.format_field = format_field
 
-    def get_widget(self, req):
+    def get_widget(self, form):
         if self.widget is None:
-            if self.use_fckeditor(req):
+            if self.use_fckeditor(form):
                 return FCKEditor()
             return TextArea()
         return self.widget
 
     def get_format_field(self, form):
-        if not self.format_field:
-            # if fckeditor is used and format field isn't explicitly
-            # deactivated, we want an hidden field for the format
-            if self.use_fckeditor(form):
-                widget = HiddenInput
-            # else we want a format selector
-            else:
-                widget = Select
-            return StringField(name=self.name + '_format', widget=widget)
-        else:
+        if self.format_field:
             return self.format_field
+        # we have to cache generated field since it's use as key in the
+        # context dictionnary
+        try:
+            return form.req.data[self]
+        except KeyError:
+            if self.use_fckeditor(form):
+                # if fckeditor is used and format field isn't explicitly
+                # deactivated, we want an hidden field for the format
+                widget = HiddenInput()
+            else:
+                # else we want a format selector
+                # XXX compute vocabulary
+                widget = Select
+            field = StringField(name=self.name + '_format', widget=widget)
+            form.req.data[self] = field
+            return field
     
     def actual_fields(self, form):
         yield self
@@ -525,14 +546,60 @@ class RichTextField(TextField):
             return form.form_format_field_value(self) == 'text/html'
         return False
 
-    def render(self, form):
+    def render(self, form, renderer):
         format_field = self.get_format_field(form)
         if format_field:
-            result = format_field.render(form)
+            result = format_field.render(form, renderer)
         else:
             result = u''
-        return result + self.get_widget(form.req).render(form, self)
+        return result + self.get_widget(form).render(form, self)
 
+    
+class FileField(StringField):
+    widget = FileInput
+    needs_multipart = True
+    
+    def __init__(self, format_field=None, encoding_field=None, **kwargs):
+        super(FileField, self).__init__(**kwargs)
+        self.format_field = format_field
+        self.encoding_field = encoding_field
+        
+    def actual_fields(self, form):
+        yield self
+        if self.format_field:
+            yield self.format_field
+        if self.encoding_field:
+            yield self.encoding_field
+
+    def render(self, form, renderer):
+        wdgs = [self.get_widget(form).render(form, self)]
+        if self.format_field or self.encoding_field:
+            divid = '%s-advanced' % form.context[self]['name']
+            wdgs.append(u'<a href="%s" title="%s"><img src="%s" alt="%s"/></a>' %
+                        (html_escape(toggle_action(divid)),
+                         form.req._('show advanced fields'),
+                         html_escape(form.req.build_url('data/puce_down.png')),
+                         form.req._('show advanced fields')))
+            wdgs.append(u'<div id="%s" class="hidden">' % divid)
+            if self.format_field:
+                wdgs.append(self.render_subfield(form, self.format_field, renderer))
+            if self.encoding_field:
+                wdgs.append(self.render_subfield(form, self.encoding_field, renderer))
+            wdgs.append(u'</div>')            
+        if not self.required and form.context[self]['value']:
+            # trick to be able to delete an uploaded file
+            wdgs.append(u'<br/>')
+            wdgs.append(tags.input(name=u'%s__detach' % form.context[self]['name'],
+                                   type=u'checkbox'))
+            wdgs.append(form.req._('detach attached file'))
+        return u'\n'.join(wdgs)
+
+    def render_subfield(self, form, field, renderer):
+        return (renderer.render_label(form, field)
+                + field.render(form, renderer)
+                + renderer.render_help(form, field)
+                + u'<br/>')
+        
     
 class IntField(Field):
     def __init__(self, min=None, max=None, **kwargs):
@@ -540,8 +607,10 @@ class IntField(Field):
         self.min = min
         self.max = max
 
+
 class BooleanField(Field):
     widget = Radio
+
 
 class FloatField(IntField):    
     def format_single_value(self, req, value):
@@ -550,6 +619,10 @@ class FloatField(IntField):
             return u''
         return formatstr % float(value)
 
+    def render_example(self, req):
+        return self.format_value(req, 1.234)
+
+
 class DateField(StringField):
     format_prop = 'ui.date-format'
     widget = DateTimePicker
@@ -557,14 +630,17 @@ class DateField(StringField):
     def format_single_value(self, req, value):
         return value and ustrftime(value, req.property_value(self.format_prop)) or u''
 
+    def render_example(self, req):
+        return self.format_value(req, now())
+
+
 class DateTimeField(DateField):
     format_prop = 'ui.datetime-format'
 
+
 class TimeField(DateField):
     format_prop = 'ui.datetime-format'
-    
-class FileField(StringField):
-    needs_multipart = True
+
 
 class HiddenInitialValueField(Field):
     def __init__(self, visible_field, name):
@@ -774,8 +850,6 @@ class EntityFieldsForm(FieldsForm):
             value = values[fieldname]
         elif fieldname in self.req.form:
             value = self.req.form[fieldname]
-        elif isinstance(field, FileField):
-            return None # XXX manage FileField
         else:
             if self.entity.has_eid() and field.eidparam:
                 # use value found on the entity or field's initial value if it's
@@ -810,6 +884,13 @@ class EntityFieldsForm(FieldsForm):
         attr = field.name 
         if field.role == 'object':
             attr += '_object'
+        else:
+            attrtype = self.entity.e_schema.destination(attr)
+            if attrtype == 'Password':
+                return self.entity.has_eid() and INTERNAL_FIELD_VALUE or ''
+            if attrtype == 'Bytes':
+                # XXX value should reflect if some file is already attached
+                return self.entity.has_eid()
         if default_initial:
             value = getattr(self.entity, attr, field.initial)
         else:
@@ -903,7 +984,6 @@ class EntityFieldsForm(FieldsForm):
             res.append((entity.view('combobox'), entity.eid))
         return res
 
-    
 
 class MultipleFieldsForm(FieldsForm):
     def __init__(self, *args, **kwargs):
@@ -912,26 +992,48 @@ class MultipleFieldsForm(FieldsForm):
 
     def form_add_subform(self, subform):
         self.forms.append(subform)
-        
+
+
 # form renderers ############
 class FormRenderer(object):
+
+    # renderer interface ######################################################
     
-    def render(self, form, values):
+    def render(self, form, values, display_help=True):
         data = []
         w = data.append
-        # XXX form_needs_multipart
         w(self.open_form(form))
         w(u'<div id="progress">%s</div>' % form.req._('validating...'))
         w(u'<fieldset>')
         w(tags.input(type='hidden', name='__form_id', value=form.domid))
         if form.redirect_path:
             w(tags.input(type='hidden', name='__redirectpath', value=form.redirect_path))
-        self.render_fields(w, form, values)
+        self.render_fields(w, form, values, display_help)
         self.render_buttons(w, form)
         w(u'</fieldset>')
         w(u'</form>')
         return '\n'.join(data)
+        
+    def render_label(self, form, field):
+        label = form.req._(field.label)
+        attrs = {'for': form.context[field]['id']}
+        if field.required:
+            attrs['class'] = 'required'
+        return tags.label(label, **attrs)
 
+    def render_help(self, form, field):
+        help = [ u'<br/>' ]
+        descr = field.help
+        if descr:
+            help.append('<span class="helper">%s</span>' % req._(descr))
+        example = field.example_format(form.req)
+        if example:
+            help.append('<span class="helper">(%s: %s)</span>'
+                        % (req._('sample format'), example))
+        return u'&nbsp;'.join(help)
+
+    # specific methods (mostly to ease overriding) #############################
+    
     def open_form(self, form):
         if form.form_needs_multipart:
             enctype = 'multipart/form-data'
@@ -949,12 +1051,12 @@ class FormRenderer(object):
             tag += ' cubicweb:target="%s"' % html_escape(form.cwtarget)
         return tag + '>'
         
-    def render_fields(self, w, form, values):
+    def render_fields(self, w, form, values, display_help=True):
         form.form_build_context(values)
         fields = form.fields[:]
         for field in form.fields:
             if not field.is_visible():
-                w(field.render(form))
+                w(field.render(form, self))
                 fields.remove(field)
         if fields:
             w(u'<table>')
@@ -962,26 +1064,19 @@ class FormRenderer(object):
                 w(u'<tr>')
                 w('<th>%s</th>' % self.render_label(form, field))
                 w(u'<td style="width:100%;">')
-                w(field.render(form))
+                w(field.render(form, self))
+                if display_help == True:
+                    w(self.render_help(form, field))
                 w(u'</td></tr>')
             w(u'</table>')
         for childform in getattr(form, 'forms', []):
             self.render_fields(w, childform, values)
-
-    #def render_field(self, w, form, field):
         
     def render_buttons(self, w, form):
         w(u'<table class="formButtonBar">\n<tr>\n')
         for button in form.form_buttons():
             w(u'<td>%s</td>\n' % button)
         w(u'</tr></table>')
-        
-    def render_label(self, form, field):
-        label = form.req._(field.label)
-        attrs = {'for': form.context[field]['id']}
-        if field.required:
-            attrs['class'] = 'required'
-        return tags.label(label, **attrs)
 
 
 def stringfield_from_constraints(constraints, **kwargs):

@@ -1,4 +1,5 @@
 from logilab.common.testlib import unittest_main, mock_object
+from cubicweb import Binary
 from cubicweb.devtools.testlib import WebTest
 from cubicweb.web.form import *
 from cubicweb.web.views.baseforms import ChangeStateForm
@@ -9,8 +10,15 @@ class CustomChangeStateForm(ChangeStateForm):
     creation_date = DateTimeField(widget=DateTimePicker)
 
 
-class RTFStateForm(EntityFieldsForm):
+class RTFForm(EntityFieldsForm):
     content = RichTextField()
+
+class FFForm(EntityFieldsForm):
+    data = FileField(format_field=StringField(name='data_format'),
+                     encoding_field=StringField(name='data_encoding'))
+
+class PFForm(EntityFieldsForm):
+    upassword = StringField(widget=PasswordInput)
 
     
 class EntityFieldsFormTC(WebTest):
@@ -40,8 +48,22 @@ class EntityFieldsFormTC(WebTest):
     def test_richtextfield(self):
         card = self.add_entity('Card', title=u"tls sprint fev 2009",
                                content=u'new widgets system')
-        form = CustomChangeStateForm(self.req, redirect_path='perdu.com',
-                                     entity=card)
+        form = RTFForm(self.req, redirect_path='perdu.com',
+                       entity=card)
+        self.assertEquals(form.form_render(),
+                          '''''')
+
+    def test_filefield(self):
+        file = self.add_entity('File', name=u"pouet.txt",
+                               data=Binary('new widgets system'))
+        form = FFForm(self.req, redirect_path='perdu.com',
+                      entity=file)
+        self.assertEquals(form.form_render(),
+                          '''''')
+
+    def test_passwordfield(self):
+        form = PFForm(self.req, redirect_path='perdu.com',
+                      entity=self.entity)
         self.assertEquals(form.form_render(),
                           '''''')
         

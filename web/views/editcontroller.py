@@ -196,7 +196,9 @@ class EditController(ViewController):
             value = Decimal(value)
         elif attrtype == 'Bytes':
             # if it is a file, transport it using a Binary (StringIO)
-            if formparams.has_key('__%s_detach' % attr):
+            # XXX later __detach is for the new widget system, the former is to
+            # be removed once web/widgets.py has been dropped
+            if formparams.has_key('__%s_detach' % attr) or formparams.has_key('%s__detach' % attr):
                 # drop current file value
                 value = None
             # no need to check value when nor explicit detach nor new file submitted,
