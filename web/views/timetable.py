@@ -9,8 +9,8 @@ from logilab.mtconverter import html_escape
 
 from cubicweb.interfaces import ITimetableViews
 from cubicweb.selectors import implements
-from cubicweb.common.utils import date_range
-from cubicweb.common.view import AnyRsetView
+from cubicweb.utils import date_range
+from cubicweb.view import AnyRsetView
 
 
 class _TaskEntry(object):
