@@ -29,7 +29,7 @@ from cubicweb.web.form import FormMixIn, relation_id
 
 _ = unicode
 
-from cubicweb.web.form import MultipleFieldsForm, EntityFieldsForm, TextField, \
+from cubicweb.web.form import MultipleFieldsForm, EntityFieldsForm, StringField, \
      RichTextField, HiddenInput
 
 
@@ -73,8 +73,9 @@ class DeleteConfForm(EntityView):
 
 
 class ChangeStateForm(EntityFieldsForm):
-    __method = TextField(name='__method', initial='set_state', widget=HiddenInput)
-    state = TextField(widget=HiddenInput, eidparam=True)
+    __method = StringField(name='__method', initial='set_state', widget=HiddenInput)
+    state = StringField(widget=HiddenInput, eidparam=True)
+    # XXX format field
     trcomment = RichTextField(eidparam=True)
 
     def form_buttons(self):
