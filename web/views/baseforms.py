@@ -51,7 +51,7 @@ class DeleteConfForm(EntityView):
           % _('this action is not reversible!'))
         # XXX above message should have style of a warning
         w(u'<h4>%s</h4>\n' % _('Do you want to delete the following element(s) ?'))
-        form = MultipleFieldsForm(req, id='deleteconf', action=self.build_url(),
+        form = MultipleFieldsForm(req, domid='deleteconf', action=self.build_url('edit'),
                                   onsubmit=self.onsubmit, copy_nav_params=True)
         form.buttons.append(form.button_delete(label=stdmsgs.YES))
         form.buttons.append(form.button_cancel(label=stdmsgs.NO))
@@ -73,8 +73,8 @@ class DeleteConfForm(EntityView):
 
 
 class ChangeStateForm(EntityFieldsForm):
-    state = TextField(widget=HiddenInput)
     __method = TextField(name='__method', initial='set_state', widget=HiddenInput)
+    state = TextField(widget=HiddenInput, eidparam=True)
     trcomment = RichTextField(eidparam=True)
 
     def form_buttons(self):
@@ -98,15 +98,15 @@ class ChangeStateFormView(EntityView):
         dest = transition.destination()
         self.req.add_js('cubicweb.edition.js')
         _ = self.req._
-        self.w(self.error_message())
+        form = ChangeStateForm(self.req, entity=entity,
+                               redirect_path=self.redirectpath(entity))
+        self.w(form.error_message())
         self.w(u'<h4>%s %s</h4>\n' % (_(transition.name), entity.view('oneline')))
         msg = _('status will change from %(st1)s to %(st2)s') % {
             'st1': _(state.name),
             'st2': _(dest.name)}
         self.w(u'<p>%s</p>\n' % msg)
-        form = ChangeStateForm(req, entity=entity,
-                               redirect_path=self.redirectpath(entity))
-        self.w(form.form_render(entity, state=dest.eid))
+        self.w(form.form_render(state=dest.eid))
 
     def redirectpath(self, entity):
         return entity.rest_path()

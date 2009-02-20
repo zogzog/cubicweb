@@ -379,7 +379,7 @@ class Field(object):
     
     def __init__(self, name=None, id=None, label=None,
                  widget=None, required=False, initial=None, help=None,
-                 eidparam=True):
+                 eidparam=False):
         self.required = required
         if widget is not None:
             self.widget = widget
@@ -476,22 +476,22 @@ class metafieldsform(type):
         return super(metafieldsform, mcs).__new__(mcs, name, bases, classdict)
     
 
-class FieldsForm(object):
+class FieldsForm(FormMixIn):
     __metaclass__ = metafieldsform
     
-    def __init__(self, req, id=None, title=None, action='edit',
+    def __init__(self, req, domid=None, title=None, action='edit',
                  onsubmit="return freezeFormButtons('%s');",
                  cssclass=None, cssstyle=None, cwtarget=None, buttons=None,
                  redirect_path=None, set_error_url=True, copy_nav_params=False):
         self.req = req
-        self.id = id or 'form'
+        self.domid = domid or 'form'
         self.title = title
         self.action = action
         self.onsubmit = onsubmit
         self.cssclass = cssclass
         self.cssstyle = cssstyle
         self.cwtarget = cwtarget
-        self.redirect_path = None
+        self.redirect_path = redirect_path
         self.fields = list(self.__class__._fields_)
         if set_error_url:
             self.form_add_hidden('__errorurl', req.url())
@@ -552,30 +552,6 @@ class FieldsForm(object):
    
     def form_field_vocabulary(self, field):
         raise NotImplementedError
-    
-    BUTTON_STR = u'<input class="validateButton" type="submit" name="%s" value="%s" tabindex="%s"/>'
-    ACTION_SUBMIT_STR = u'<input class="validateButton" type="button" onclick="postForm(\'%s\', \'%s\', \'%s\')" value="%s" tabindex="%s"/>'
-
-    def button_ok(self, label=None, tabindex=None):
-        label = self.req._(label or stdmsgs.BUTTON_OK).capitalize()
-        return self.BUTTON_STR % ('defaultsubmit', label, tabindex or 2)
-    
-    def button_apply(self, label=None, tabindex=None):
-        label = self.req._(label or stdmsgs.BUTTON_APPLY).capitalize()
-        return self.ACTION_SUBMIT_STR % ('__action_apply', label, self.id, label, tabindex or 3)
-
-    def button_delete(self, label=None, tabindex=None):
-        label = self.req._(label or stdmsgs.BUTTON_DELETE).capitalize()
-        return self.ACTION_SUBMIT_STR % ('__action_delete', label, self.id, label, tabindex or 3)
-    
-    def button_cancel(self, label=None, tabindex=None):
-        label = self.req._(label or stdmsgs.BUTTON_CANCEL).capitalize()
-        return self.ACTION_SUBMIT_STR % ('__action_cancel', label, self.id, label, tabindex or 4)
-    
-    def button_reset(self, label=None, tabindex=None):
-        label = self.req._(label or stdmsgs.BUTTON_CANCEL).capitalize()
-        return u'<input class="validateButton" type="reset" value="%s" tabindex="%s"/>' % (
-            label, tabindex or 4)
 
     def form_buttons(self):
         return self.buttons
@@ -583,11 +559,11 @@ class FieldsForm(object):
    
 class EntityFieldsForm(FieldsForm):
     def __init__(self, *args, **kwargs):
-        kwargs.setdefault('id', 'entityForm')
+        kwargs.setdefault('domid', 'entityForm')
         self.entity = kwargs.pop('entity', None)
         super(EntityFieldsForm, self).__init__(*args, **kwargs)
-        self.form_add_hidden('__type')
-        self.form_add_hidden('eid', eidparam=False)
+        self.form_add_hidden('__type', eidparam=True)
+        self.form_add_hidden('eid')
         
     def form_render(self, **values):
         self.form_add_entity_hiddens(self.entity.e_schema)
@@ -599,6 +575,7 @@ class EntityFieldsForm(FieldsForm):
             if fieldname != 'eid' and (
                 (eschema.has_subject_relation(fieldname) or
                  eschema.has_object_relation(fieldname))):
+                field.eidparam = True
                 self.fields.append(self.form_entity_hidden_field(field))
 
     def form_entity_hidden_field(self, field):
@@ -611,7 +588,7 @@ class EntityFieldsForm(FieldsForm):
             name = 'edits-%s' % field.name
         else:
             name = 'edito-%s' % field.name
-        return HiddenInitialValueField(field, name=name)
+        return HiddenInitialValueField(field, name=name, eidparam=True)
         
     def form_field_value(self, field, values):
         """look for field's value with the following rules:
@@ -699,13 +676,12 @@ class FormRenderer(object):
         data = []
         w = data.append
         # XXX form_needs_multipart
-        print 'render', form
         w(self.open_form(form))
         w(u'<div id="progress">%s</div>' % _('validating...'))
         w(u'<fieldset>')
-        w(tags.input(type='hidden', name='__form_id', value=form.id))
+        w(tags.input(type='hidden', name='__form_id', value=form.domid))
         if form.redirect_path:
-            w(tags.input(type='hidden', name='__redirect_path', value=form.redirect_path))
+            w(tags.input(type='hidden', name='__redirectpath', value=form.redirect_path))
         self.render_fields(w, form, values)
         self.render_buttons(w, form)
         w(u'</fieldset>')
@@ -717,8 +693,8 @@ class FormRenderer(object):
             enctype = 'multipart/form-data'
         else:
             enctype = 'application/x-www-form-urlencoded'
-        tag = ('<form action="%s" method="post" id="%s" enctype="%s"' % (
-            html_escape(form.req.build_url(form.action)), form.id, enctype))
+        tag = ('<form action="%s" methody="post" id="%s" enctype="%s"' % (
+            html_escape(form.action or '#'), form.domid, enctype))
         if form.onsubmit:
             tag += ' onsubmit="%s"' % html_escape(form.onsubmit)
         if form.cssstyle:
