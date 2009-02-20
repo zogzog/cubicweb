@@ -52,10 +52,10 @@ class EntityVComponent(Component):
     
     context = 'navcontentbottom' # 'footer' | 'header' | 'incontext'
     
-    def call(self, view):
+    def call(self, view=None):
         return self.cell_call(0, 0, view)
 
-    def cell_call(self, row, col, view):
+    def cell_call(self, row, col, view=None):
         raise NotImplementedError()
 
     
@@ -142,8 +142,9 @@ class NavigationComponent(Component):
 
 class RelatedObjectsVComponent(EntityVComponent):
     """a section to display some related entities"""
-    vid = 'list'
     __select__ = partial_relation_possible() & partial_has_related_entities()
+    
+    vid = 'list'
     
     def rql(self):
         """override this method if you want to use a custom rql query"""
