@@ -403,7 +403,6 @@ class Field(object):
         if widget is not None:
             self.widget = widget
         if isinstance(self.widget, type):
-            print 'widget', self.widget
             self.widget = self.widget()
         self.name = name
         self.label = label or name
@@ -428,6 +427,14 @@ class Field(object):
     def actual_fields(self, form):
         yield self
 
+    def __unicode__(self):
+        return u'<%s name=%r label=%r id=%r initial=%r>' % (
+            self.__class__.__name__, self.name, self.label,
+            self.id, self.initial)
+
+    def __repr__(self):
+        return self.__unicode__().encode('utf-8')
+    
     def format_value(self, req, value):
         return unicode(value)
 
