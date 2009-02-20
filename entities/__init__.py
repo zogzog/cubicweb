@@ -96,20 +96,6 @@ class AnyEntity(Entity):
             if not hasattr(cls, 'default_%s' % formatattr):
                 setattr(cls, 'default_%s' % formatattr, cls._default_format)
             eschema.format_fields[formatattr] = attr
-            
-    def _default_format(self):
-        return self.req.property_value('ui.default-text-format')
-
-    def use_fckeditor(self, attr):
-        """return True if fckeditor should be used to edit entity's attribute named
-        `attr`, according to user preferences
-        """
-        req = self.req
-        if req.property_value('ui.fckeditor') and self.has_format(attr):
-            if self.has_eid() or '%s_format' % attr in self:
-                return self.format(attr) == 'text/html'
-            return req.property_value('ui.default-text-format') == 'text/html'
-        return False
     
     # meta data api ###########################################################
 
@@ -236,12 +222,6 @@ class AnyEntity(Entity):
             return self.printable_value(rtype, format='text/plain').lower()
         return value
 
-    def after_deletion_path(self):
-        """return (path, parameters) which should be used as redirect
-        information when this entity is being deleted
-        """
-        return str(self.e_schema).lower(), {}
-
     def add_related_schemas(self):
         """this is actually used ui method to generate 'addrelated' actions from
         the schema.
@@ -343,6 +323,65 @@ class AnyEntity(Entity):
                 continue
             result.append( (rschema.display_name(self.req, target), rschema, target) )
         return sorted(result)
+
+    def linked_to(self, rtype, target, remove=True):
+        """if entity should be linked to another using __linkto form param for
+        the given relation/target, return eids of related entities
+
+        This method is consuming matching link-to information from form params
+        if `remove` is True (by default).
+        """
+        try:
+            return self.__linkto[(rtype, target)]
+        except AttributeError:
+            self.__linkto = {}
+        except KeyError:
+            pass
+        linktos = list(self.req.list_form_param('__linkto'))
+        linkedto = []
+        for linkto in linktos[:]:
+            ltrtype, eid, lttarget = linkto.split(':')
+            if rtype == ltrtype and target == lttarget:
+                # delete __linkto from form param to avoid it being added as
+                # hidden input
+                if remove:
+                    linktos.remove(linkto)
+                    self.req.form['__linkto'] = linktos
+                linkedto.append(typed_eid(eid))
+        self.__linkto[(rtype, target)] = linkedto
+        return linkedto
+    
+    # edit controller callbacks ###############################################
+    
+    def after_deletion_path(self):
+        """return (path, parameters) which should be used as redirect
+        information when this entity is being deleted
+        """
+        return str(self.e_schema).lower(), {}
+
+    def pre_web_edit(self):
+        """callback called by the web editcontroller when an entity will be
+        created/modified, to let a chance to do some entity specific stuff.
+
+        Do nothing by default.
+        """
+        pass
+    
+    # server side helpers #####################################################
+    
+    def notification_references(self, view):
+        """used to control References field of email send on notification
+        for this entity. `view` is the notification view.
+        
+        Should return a list of eids which can be used to generate message ids
+        of previously sent email
+        """
+        return ()
+            
+    # XXX deprecates, may be killed once old widgets system is gone ###########
+    
+    def _default_format(self):
+        return self.req.property_value('ui.default-text-format')
                 
     def attribute_values(self, attrname):
         if self.has_eid() or attrname in self:
@@ -372,51 +411,16 @@ class AnyEntity(Entity):
             values = (values,)
         return values
 
-    def linked_to(self, rtype, target, remove=True):
-        """if entity should be linked to another using __linkto form param for
-        the given relation/target, return eids of related entities
-
-        This method is consuming matching link-to information from form params
-        if `remove` is True (by default).
+    def use_fckeditor(self, attr):
+        """return True if fckeditor should be used to edit entity's attribute named
+        `attr`, according to user preferences
         """
-        try:
-            return self.__linkto[(rtype, target)]
-        except AttributeError:
-            self.__linkto = {}
-        except KeyError:
-            pass
-        linktos = list(self.req.list_form_param('__linkto'))
-        linkedto = []
-        for linkto in linktos[:]:
-            ltrtype, eid, lttarget = linkto.split(':')
-            if rtype == ltrtype and target == lttarget:
-                # delete __linkto from form param to avoid it being added as
-                # hidden input
-                if remove:
-                    linktos.remove(linkto)
-                    self.req.form['__linkto'] = linktos
-                linkedto.append(typed_eid(eid))
-        self.__linkto[(rtype, target)] = linkedto
-        return linkedto
-
-    def pre_web_edit(self):
-        """callback called by the web editcontroller when an entity will be
-        created/modified, to let a chance to do some entity specific stuff.
-
-        Do nothing by default.
-        """
-        pass
-    
-    # server side helpers #####################################################
-    
-    def notification_references(self, view):
-        """used to control References field of email send on notification
-        for this entity. `view` is the notification view.
-        
-        Should return a list of eids which can be used to generate message ids
-        of previously sent email
-        """
-        return ()
+        req = self.req
+        if req.property_value('ui.fckeditor') and self.has_format(attr):
+            if self.has_eid() or '%s_format' % attr in self:
+                return self.format(attr) == 'text/html'
+            return req.property_value('ui.default-text-format') == 'text/html'
+        return False
 
 # XXX:  store a reference to the AnyEntity class since it is hijacked in goa
 #       configuration and we need the actual reference to avoid infinite loops
