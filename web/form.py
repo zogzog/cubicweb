@@ -250,9 +250,20 @@ from cubicweb.common import tags
 # widgets ############
 
 class FieldWidget(object):
+    needs_js = ()
+    needs_css = ()
+    
     def __init__(self, attrs=None):
         self.attrs = attrs or {}
 
+    def add_media(self, form):
+        """adds media (CSS & JS) required by this widget"""
+        req = form.req
+        if self.needs_js:
+            req.add_js(self.needs_js)
+        if self.needs_css:
+            req.add_css(self.needs_css)
+        
     def render(self, form, field):
         raise NotImplementedError
 
@@ -269,6 +280,7 @@ class Input(FieldWidget):
     type = None
     
     def render(self, form, field):
+        self.add_media(form)
         name, values, attrs = self._render_attrs(form, field)
         inputs = [tags.input(name=name, value=value, type=self.type, **attrs)
                   for value in values]
@@ -356,6 +368,9 @@ class DateTimePicker(TextInput):
     daynames = ("monday", "tuesday", "wednesday", "thursday",
                 "friday", "saturday", "sunday")
 
+    needs_js = ('cubicweb.ajax.js', 'cubicweb.calendar.js')
+    needs_css = ('cubicweb.calendar_popup.css',)
+    
     @classmethod
     def add_localized_infos(cls, req):
         """inserts JS variables defining localized months and days"""
@@ -537,6 +552,7 @@ class FloatField(IntField):
 
 class DateField(StringField):
     format_prop = 'ui.date-format'
+    widget = DateTimePicker
     
     def format_single_value(self, req, value):
         return value and ustrftime(value, req.property_value(self.format_prop)) or u''
@@ -898,7 +914,6 @@ class MultipleFieldsForm(FieldsForm):
         self.forms.append(subform)
         
 # form renderers ############
-
 class FormRenderer(object):
     
     def render(self, form, values):
