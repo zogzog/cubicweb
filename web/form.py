@@ -255,26 +255,25 @@ class FieldWidget(object):
 
     def render(self, form, field):
         raise NotImplementedError
-    
+
+    def _render_attrs(self, form, field):
+        # name = form.form_field_name(field)
+        # values = form.form_field_value(field)
+        name = form.context[field]['name']
+        values = form.context[field]['value']
+        if not isinstance(values, (tuple, list)):
+            values = (values,)
+        return name, values, dict(self.attrs)
+
 class Input(FieldWidget):
     type = None
     
     def render(self, form, field):
-        name, value, attrs = self._render_attrs(form, field)
-        if attrs is None:
-            return tags.input(name=name, value=value)
-        return tags.input(name=name, value=value, type=self.type, **attrs)
+        name, values, attrs = self._render_attrs(form, field)
+        inputs = [tags.input(name=name, value=value, type=self.type, **attrs)
+                  for value in values]
+        return u'\n'.join(inputs)
 
-    def _render_attrs(self, form, field):
-        name = form.context[field]['name'] # qualified name
-        value = form.context[field]['value']
-        #fattrs = field.widget_attributes(self)
-        attrs = self.attrs.copy()
-        attrs['id'] = form.context[field]['id']
-        #attrs.update(fattrs)
-        # XXX id
-        return name, value, attrs
-    
 class TextInput(Input):
     type = 'text'
 
@@ -283,10 +282,6 @@ class PasswordInput(Input):
 
 class FileInput(Input):
     type = 'file'
-    
-    def _render_attrs(self, form, field):
-        name = form.context[field]['name'] # qualified name
-        return name, None, {}
 
 class HiddenInput(Input):
     type = 'hidden'
@@ -296,8 +291,14 @@ class Button(Input):
 
 class TextArea(FieldWidget):
     def render(self, form, field):
-        name, value, attrs = self._render_attrs(form, field)
+        name, values, attrs = self._render_attrs(form, field)
         attrs.setdefault('onkeypress', 'autogrow(this)')
+        if not values:
+            value = u''
+        elif len(values) == 1:
+            value = values[0]
+        else:
+            raise ValueError('a textarea is not supposed to be multivalued')
         return tags.textarea(value, name=name, **attrs)
 
 class FCKEditor(TextArea):
@@ -315,20 +316,19 @@ class FCKEditor(TextArea):
 #    pass
 
 class Select(FieldWidget):
-    def __init__(self, attrs=None, vocabulary=()):
+    def __init__(self, attrs=None, multiple=False):
         super(Select, self).__init__(attrs)
         self.multiple = multiple
         
     def render(self, form, field):
-        name, value, attrs = self._render_attrs(form, field)
-        if self.vocabulary:
-            # static vocabulary defined in form definition
-            vocab = self.vocabulary
-        else:
-            vocab = form.get_vocabulary(field)
+        name, curvalues, attrs = self._render_attrs(form, field)
+        vocab = field.vocabulary(form)
         options = []
         for label, value in vocab:
-            options.append(tags.option(label, value=value))
+            if value in curvalues:
+                options.append(tags.option(label, value=value, selected='selected'))
+            else:
+                options.append(tags.option(label, value=value))
         if attrs is None:
             return tags.select(name=name, options=options)
         return tags.select(name=name, multiple=self.multiple,
@@ -439,6 +439,13 @@ class Field(object):
         return self.__unicode__().encode('utf-8')
     
     def format_value(self, req, value):
+        if isinstance(value, (list, tuple)):
+            return [self.format_single_value(req, val) for val in value]
+        return self.format_single_value(req, value)
+    
+    def format_single_value(self, req, value):
+        if value is None:
+            return u''
         return unicode(value)
 
     def get_widget(self, req):
@@ -457,12 +464,11 @@ class StringField(Field):
         self.max_length = max_length
 
 class TextField(Field):
-    widget = TextArea
-    def __init__(self, row=None, col=None, **kwargs):
-        super(TextField, self).__init__(**kwargs)
-        self.row = row
-        self.col = col
-
+    def __init__(self, rows=10, cols=80, **kwargs):
+        widget = TextArea(dict(rows=rows, cols=cols))
+        super(TextField, self).__init__(widget=widget, **kwargs)
+        self.rows = rows
+        self.cols = cols
 
 class RichTextField(TextField):
     widget = None
@@ -519,8 +525,11 @@ class IntField(Field):
         self.min = min
         self.max = max
 
+class BooleanField(Field):
+    widget = Radio
+
 class FloatField(IntField):    
-    def format_value(self, req, value):
+    def format_single_value(self, req, value):
         formatstr = entity.req.property_value('ui.float-format')
         if value is None:
             return u''
@@ -550,7 +559,7 @@ class HiddenInitialValueField(Field):
     
                  
 class RelationField(Field):
-    def __init__(self, role='subject', **kwargs):
+    def __init__(self, **kwargs):
         super(RelationField, self).__init__(**kwargs)
 
     @staticmethod
@@ -631,8 +640,8 @@ class FieldsForm(FormMixIn):
         return any(field.needs_multipart for field in self.fields) 
 
     def form_add_hidden(self, name, value=None, **kwargs):
-        self.fields.append(TextField(name=name, widget=HiddenInput,
-                                     initial=value, **kwargs))
+        self.fields.append(StringField(name=name, widget=HiddenInput,
+                                       initial=value, **kwargs))
 
     def form_render(self, **values):
         renderer = values.pop('renderer', FormRenderer())
@@ -738,7 +747,7 @@ class EntityFieldsForm(FieldsForm):
         if fieldname.startswith('edits-') or fieldname.startswith('edito-'):
             # edit[s|o]- fieds must have the actual value stored on the entity
             if self.entity.has_eid():
-                value = self.form_field_entity_value(field, default_initial=False)
+                value = self.form_field_entity_value(field.visible_field, default_initial=False)
             else:
                 value = INTERNAL_FIELD_VALUE
         elif fieldname == '__type':
@@ -749,6 +758,8 @@ class EntityFieldsForm(FieldsForm):
             value = values[fieldname]
         elif fieldname in self.req.form:
             value = self.req.form[fieldname]
+        elif isinstance(field, FileField):
+            return None # XXX manage FileField
         else:
             if self.entity.has_eid() and field.eidparam:
                 # use value found on the entity or field's initial value if it's
@@ -784,10 +795,14 @@ class EntityFieldsForm(FieldsForm):
         if field.role == 'object':
             attr += '_object'
         if default_initial:
-            return getattr(self.entity, attr, field.initial)
+            value = getattr(self.entity, attr, field.initial)
         else:
-            return getattr(self.entity, attr)
-        
+            value = getattr(self.entity, attr)
+        if isinstance(field, RelationField):
+            # in this case, value is the list of related entities
+            value = [ent.eid for ent in value]
+        return value
+    
     def form_field_name(self, field):
         if field.eidparam:
             return eid_param(field.name, self.entity.eid)
@@ -799,12 +814,21 @@ class EntityFieldsForm(FieldsForm):
         return field.id
         
     def form_field_vocabulary(self, field):
-        choices = self.vocabfunc(entity)
-        if self.sort:
-            choices = sorted(choices)
-        if self.rschema.rproperty(self.subjtype, self.objtype, 'internationalizable'):
-            return zip((entity.req._(v) for v in choices), choices)
-        return zip(choices, choices)
+        role, rtype = field.role, field.name
+        try:
+            vocabfunc = getattr(self.entity, '%s_%s_vocabulary' % (role, rtype))
+        except AttributeError:
+            vocabfunc = getattr(self, '%s_relation_vocabulary' % role)
+        else:
+            # XXX bw compat, default_<field name> on the entity
+            warn('found %s_%s_vocabulary on %s, should be set on a specific form'
+                 % (role, rtype, self.entity.id), DeprecationWarning)
+        return vocabfunc(rtype)
+## XXX BACKPORT ME
+##         if self.sort:
+##             choices = sorted(choices)
+##         if self.rschema.rproperty(self.subjtype, self.objtype, 'internationalizable'):
+##             return zip((entity.req._(v) for v in choices), choices)
 
     def subject_relation_vocabulary(self, rtype, limit=None):
         """defaut vocabulary method for the given relation, looking for
