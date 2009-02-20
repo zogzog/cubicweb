@@ -296,7 +296,8 @@ class PasswordInput(Input):
     def render(self, form, field):
         self.add_media(form)
         name, values, attrs = self._render_attrs(form, field)
-        inputs = [tags.input(name=name, value=value, type=self.type, **attrs),
+        assert len(values) == 1
+        inputs = [tags.input(name=name, value=values[0], type=self.type, **attrs),
                   '<br/>',
                   tags.input(name=name+'-confirm', type=self.type, **attrs),
                   '&nbsp;', tags.span(form.req._('confirm password'),
