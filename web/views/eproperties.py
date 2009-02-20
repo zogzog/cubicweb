@@ -214,8 +214,8 @@ class SystemEPropertiesForm(FormMixIn, StartupView):
 
 
 
-def is_user_prefs(cls, req, rset, row, col):
-    return req.user.eid == rset[row or 0 ][col or 0]
+def is_user_prefs(cls, req, rset, row=None, col=0, **kwargs):
+    return req.user.eid == rset[row or 0][col]
 
 
 class EPropertiesForm(SystemEPropertiesForm):
