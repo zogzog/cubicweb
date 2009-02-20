@@ -391,11 +391,7 @@ class TextWidget(Widget):
         if not entity.has_eid():
             return u''
         return entity.printable_value(self.name)
-    
-    def add_fckeditor_info(self, req):
-        req.add_js('fckeditor.js')
-        req.fckeditor_config()
-    
+        
     def _edit_render(self, entity, with_format=True):
         req = entity.req
         editor = self._edit_render_textarea(entity, with_format)
@@ -411,7 +407,7 @@ class TextWidget(Widget):
         if isinstance(dvalue, basestring):
             dvalue = html_escape(dvalue)
         if entity.use_fckeditor(self.name):
-            self.add_fckeditor_info(entity.req)
+            entity.req.fckeditor_config()
             if with_format:
                 if entity.has_eid():
                     format = entity.format(self.name)

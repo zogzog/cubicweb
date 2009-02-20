@@ -265,9 +265,10 @@ class CubicWebRequestBase(DBAPIRequest):
     
     @cached # so it's writed only once
     def fckeditor_config(self):
+        self.add_js('fckeditor/fckeditor.js')
         self.html_headers.define_var('fcklang', self.lang)
         self.html_headers.define_var('fckconfigpath',
-                                     self.build_url('data/fckcwconfig.js'))
+                                     self.build_url('data/cubicweb.fckcwconfig.js'))
 
     def edited_eids(self, withtype=False):
         """return a list of edited eids"""

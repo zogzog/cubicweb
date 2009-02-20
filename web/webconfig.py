@@ -199,6 +199,15 @@ if you want to allow everything',
             return 'http://intranet.logilab.fr/jpl/view?__linkto=concerns:%s:subject&etype=Ticket&type=bug&vid=creation' % cubeeid
         return None
 
+    def fckeditor_installed(self):
+        return exists(self.ext_resources['FCKEDITOR_PATH'])
+    
+    def eproperty_definitions(self):
+        for key, pdef in super(WebConfiguration, self).eproperty_definitions(self):
+            if key == 'ui.fckeditor' and not self.fckeditor_installed():
+                continue
+            yield key, pdef
+                
     # method used to connect to the repository: 'inmemory' / 'pyro'
     # Pyro repository by default
     repo_method = 'pyro'
