@@ -122,10 +122,10 @@ class TabsMixin(LazyViewMixin):
         'cookiename' : self.cookie_name})
 
 
-class EntityRelatedTab(EntityView):
-    """A view you should inherit from leftmost,
-    to wrap another actual view displaying entity related stuff.
-    Such a view _must_ provide the rtype, target and vid attributes :
+
+class EntityRelationView(EntityView):
+    """view displaying entity related stuff. Such a view _must_ provide rtype
+    and target attributes
 
     Example :
 
@@ -135,20 +135,16 @@ class EntityRelatedTab(EntityView):
         __select__ = implements('Project')
         rtype = 'screenshot'
         target = 'object'
-        vid = 'gallery'
-
-    This is the view we want to have in a tab, only if there is something to show.
-    Then, just define as below, and declare this being the tab content :
-
-    class ProjectScreenshotTab(DataDependantTab, ProjectScreenshotsView):
-        id = 'screenshots_tab'
     """
     __select__ = EntityView.__select__ & partial_has_related_entities()
-                                                          
     vid = 'list'
-
+    
     def cell_call(self, row, col):
-        rset = self.entity(row, col).related(self.rtype, role(self))
+        rset = self.rset.get_entity(row, col).related(self.rtype, role(self))
+        self.w(u'<h1>%s</h1>' % self.req._(self.title).capitalize())
         self.w(u'<div class="mainInfo">')
         self.wview(self.vid, rset, 'noresult')
         self.w(u'</div>')
+
+from logilab.common.deprecation import class_moved
+EntityRelatedTab = class_moved(EntityRelationView)
