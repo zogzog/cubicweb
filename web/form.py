@@ -268,6 +268,7 @@ class Input(FieldWidget):
         value = form.context[field]['value']
         #fattrs = field.widget_attributes(self)
         attrs = self.attrs.copy()
+        attrs['id'] = form.context[field]['id']
         #attrs.update(fattrs)
         # XXX id
         return name, value, attrs
@@ -294,12 +295,26 @@ class Button(Input):
 class TextArea(FieldWidget):
     def render(self, form, field):
         name, value, attrs = self._render_attrs(form, field)
-        if attrs is None:
-            return tags.textarea(value, name=name)
+        attrs.setdefault('onkeypress', 'autogrow(this)')
         return tags.textarea(value, name=name, **attrs)
 
+class FCKEditor(TextArea):
+    def __init__(self, attrs):
+        super(FCKEditor, self).__init__(attrs)
+        self.attrs['cubicweb:type'] = 'wysiwyg'
+    
+    def render(self, form, field):
+        form.req.fckeditor_config()
+        return super(self, FCKEditor, self).render(form, field)
+
+
+class EditableFile(Widget):
+    # XXX
+    pass
+
 class Select(FieldWidget):
-    def __init__(self, vocabulary=()):
+    def __init__(self, attrs, vocabulary=()):
+        super(Select, self).__init__(attrs)
         self.vocabulary = ()
         
     def render(self, form, field):
@@ -324,9 +339,11 @@ class CheckBox(FieldWidget):
         if value:
             attrs['checked'] = u'checked'
         return name, None, attrs
+
         
 class Radio(FieldWidget):
     pass
+
 
 class DateTimePicker(TextInput):
     monthnames = ("january", "february", "march", "april",
@@ -395,22 +412,34 @@ class Field(object):
         Field.creation_rank += 1
 
     def set_name(self, name):
+        assert name
         self.name = name
         if not self.id:
             self.id = name
         if not self.label:
             self.label = name
+            
+    def is_visible(self):
+        return isinstance(self.widget, HiddenInput)
+    
+    def actual_fields(self, form):
+        yield self
 
     def format_value(self, req, value):
         return unicode(value)
 
+    def get_widget(self, req):
+        return self.widget
+
     def render(self, form):
-        return self.widget.render(form, self)
+        return self.get_widget(form.req).render(form, self)
+
 
 class StringField(Field):
     def __init__(self, max_length=None, **kwargs):
         super(StringField, self).__init__(**kwargs)
         self.max_length = max_length
+
         
 class TextField(Field):
     widget = TextArea
@@ -419,9 +448,56 @@ class TextField(Field):
         self.row = row
         self.col = col
 
-class RichTextField(Field):
-    pass
 
+class RichTextField(TextField):
+    widget = None
+    def __init__(self, format_field=None, **kwargs):
+        super(RichTextField, self).__init__(**kwargs)
+        self.format_field = format_field
+
+    def get_widget(self, req):
+        if self.widget is None:
+            if self.use_fckeditor(req):
+                return FCKEditor()
+            return TextArea()
+        return self.widget
+
+    def get_format_field(self, form):
+        if self.format_field is _MARKER:
+            # if fckeditor is used and format field isn't explicitly
+            # deactivated, we want an hidden field for the format
+            if self.use_fckeditor(form):
+                widget = HiddenInput
+            # else we want a format selector
+            else:
+                widget = Select
+            return StringField(name=self.name + '_format', widget=widget)
+        else:
+            return self.format_field
+    
+    def actual_fields(self, form):
+        yield self
+        format_field = self.get_format_field(self, form)
+        if format_field:
+            yield format_field
+            
+    def use_fckeditor(self, form):
+        """return True if fckeditor should be used to edit entity's attribute named
+        `attr`, according to user preferences
+        """
+        if form.config.fckeditor_installed() and form.req.property_value('ui.fckeditor'):
+            return form.form_format_field_value(self) == 'text/html'
+        return False
+
+    def render(self, form):
+        format_field = self.get_format_field()
+        if format_field:
+            result = format_field.render(form)
+        else:
+            result = u''
+        return result + self.get_widget(form.req).render(form, self)
+
+    
 class IntField(Field):
     def __init__(self, min=None, max=None, **kwargs):
         super(IntField, self).__init__(**kwargs)
@@ -484,6 +560,7 @@ class FieldsForm(FormMixIn):
                  cssclass=None, cssstyle=None, cwtarget=None, buttons=None,
                  redirect_path=None, set_error_url=True, copy_nav_params=False):
         self.req = req
+        self.config = req.vreg.config
         self.domid = domid or 'form'
         self.title = title
         self.action = action
@@ -499,7 +576,7 @@ class FieldsForm(FormMixIn):
             for param in NAV_FORM_PARAMETERS:
                 value = req.form.get(param)
                 if value:
-                    self.form_add_hidden('__errorurl', initial=value)
+                    self.form_add_hidden(param, initial=value)
         self.buttons = buttons or []
         self.context = {}
         
@@ -522,12 +599,13 @@ class FieldsForm(FormMixIn):
         if previous_values:
             values.update(previous_values)
         for field in self.fields:
-            value = self.form_field_value(field, values)
-            context[field] = {'value': field.format_value(self.req, value),
-                              'rawvalue': value,
-                              'name': self.form_field_name(field),
-                              'id': self.form_field_id(field),
-                              }
+            for field in field.actual_fields(form):
+                value = self.form_field_value(field, values)
+                context[field] = {'value': field.format_value(self.req, value),
+                                  'rawvalue': value,
+                                  'name': self.form_field_name(field),
+                                  'id': self.form_field_id(field),
+                                  }
 
     def form_field_value(self, field, values):
         """looks for field's value in
@@ -542,8 +620,11 @@ class FieldsForm(FormMixIn):
             value = self.req.form[field.name]
         else:
             value = field.initial
-        return value # field.format_value(self.req, value) 
-
+        return value # field.format_value(self.req, value)
+    
+    def form_format_field_value(self, field, values):
+        return self.req.property_value('ui.default-text-format')
+    
     def form_field_name(self, field):
         return field.name
 
@@ -558,6 +639,7 @@ class FieldsForm(FormMixIn):
 
    
 class EntityFieldsForm(FieldsForm):
+    
     def __init__(self, *args, **kwargs):
         kwargs.setdefault('domid', 'entityForm')
         self.entity = kwargs.pop('entity', None)
@@ -571,12 +653,13 @@ class EntityFieldsForm(FieldsForm):
 
     def form_add_entity_hiddens(self, eschema):
         for field in self.fields[:]:
-            fieldname = field.name
-            if fieldname != 'eid' and (
-                (eschema.has_subject_relation(fieldname) or
-                 eschema.has_object_relation(fieldname))):
-                field.eidparam = True
-                self.fields.append(self.form_entity_hidden_field(field))
+            for field in field.actual_fields(form):
+                fieldname = field.name
+                if fieldname != 'eid' and (
+                    (eschema.has_subject_relation(fieldname) or
+                     eschema.has_object_relation(fieldname))):
+                    field.eidparam = True
+                    self.fields.append(self.form_entity_hidden_field(field))
 
     def form_entity_hidden_field(self, field):
         """returns the hidden field which will indicate the value
@@ -641,7 +724,14 @@ class EntityFieldsForm(FieldsForm):
                     value = field.initial
             if callable(value):
                 values = value()
-        return value # field.format_value(self.req, value) 
+        return value # field.format_value(self.req, value)
+    
+    def form_format_field_value(self, field, values):
+        entity = self.entity
+        if field.eidparam and entity.has_format(field.name) and (
+            entity.has_eid() or '%s_format' % field.name in entity):
+            return self.entity.format(field.name) == 'text/html'
+        return self.req.property_value('ui.default-text-format')
 
     def form_field_entity_value(self, field, default_initial=True):
         attr = field.name 
@@ -720,7 +810,7 @@ class FormRenderer(object):
         form.form_build_context(values)
         fields = form.fields[:]
         for field in form.fields:
-            if isinstance(field.widget, HiddenInput):
+            if not field.is_visible():
                 w(field.render(form))
                 fields.remove(field)
         if fields:
@@ -734,7 +824,9 @@ class FormRenderer(object):
             w(u'</table>')
         for childform in getattr(form, 'forms', []):
             self.render_fields(w, childform, values)
-            
+
+    #def render_field(self, w, form, field):
+        
     def render_buttons(self, w, form):
         for button in form.form_buttons():
             w(button)
