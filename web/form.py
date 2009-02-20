@@ -13,6 +13,8 @@ from mx.DateTime import today
 from logilab.common.compat import any
 from logilab.mtconverter import html_escape
 
+from yams.constraints import SizeConstraint, StaticVocabularyConstraint
+
 from cubicweb import typed_eid
 from cubicweb.utils import ustrftime
 from cubicweb.selectors import match_form_params
@@ -250,7 +252,7 @@ from cubicweb.common import tags
 class FieldWidget(object):
     def __init__(self, attrs=None):
         self.attrs = attrs or {}
-    
+
     def render(self, form, field):
         raise NotImplementedError
     
@@ -288,7 +290,7 @@ class FileInput(Input):
 
 class HiddenInput(Input):
     type = 'hidden'
-
+    
 class Button(Input):
     type = 'button'
 
@@ -441,7 +443,6 @@ class StringField(Field):
         super(StringField, self).__init__(**kwargs)
         self.max_length = max_length
 
-        
 class TextField(Field):
     widget = TextArea
     def __init__(self, row=None, col=None, **kwargs):
@@ -530,11 +531,16 @@ class HiddenInitialValueField(Field):
         super(HiddenInitialValueField, self).__init__(name=name,
                                                       widget=HiddenInput)
         self.visible_field = visible_field
+    
                  
 class RelationField(Field):
     def __init__(self, role='subject', **kwargs):
         super(RelationField, self).__init__(**kwargs)
-        self.role = role
+
+    @staticmethod
+    def fromcardinality(card, role, **kwargs):
+        return RelationField(widget=Select(multiple=card in '*+'),
+                             **kwargs)
         
 # forms ############
 class metafieldsform(type):
@@ -621,8 +627,8 @@ class FieldsForm(FormMixIn):
             value = self.req.form[field.name]
         else:
             value = field.initial
-        return value # field.format_value(self.req, value)
-    
+        return value
+
     def form_format_field_value(self, field, values):
         return self.req.property_value('ui.default-text-format')
     
@@ -725,7 +731,7 @@ class EntityFieldsForm(FieldsForm):
                     value = field.initial
             if callable(value):
                 values = value()
-        return value # field.format_value(self.req, value)
+        return value
     
     def form_format_field_value(self, field, values):
         entity = self.entity
@@ -840,4 +846,67 @@ class FormRenderer(object):
         if field.required:
             attrs['class'] = 'required'
         return tags.label(label, **attrs)
+
+
+def stringfield_from_constraints(constraints, **kwargs):
+    field = None
+    for cstr in constraints:
+        if isinstance(cstr, StaticVocabularyConstraint):
+            return StringField(widget=Select(vocabulary=cstr.vocabulary),
+                               **kwargs)
+        if isinstance(cstr, SizeConstraint) and cstr.max is not None:
+            if cstr.max > 257:
+                field = textfield_from_constraint(cstr, **kwargs)
+            else:
+                field = StringField(max_length=cstr.max, **kwargs)
+    return field or TextField(**kwargs)
         
+
+def textfield_from_constraint(constraint, **kwargs):
+    if 256 < constraint.max < 513:
+        rows, cols = 5, 60
+    else:
+        rows, cols = 10, 80
+    return TextField(rows, cols, **kwargs)
+
+
+def find_field(eclass, subjschema, rschema, role='subject'):
+    """return the most adapated widget to edit the relation
+    'subjschema rschema objschema' according to information found in the schema
+    """
+    fieldclass = None
+    if role == 'subject':
+        objschema = rschema.objects(subjschema)[0]
+        cardidx = 0
+    else:
+        objschema = rschema.subjects(subjschema)[0]
+        cardidx = 1
+    card = rschema.rproperty(subjschema, objschema, 'cardinality')[cardidx]
+    required = card in '1+'
+    if rschema in eclass.widgets:
+        fieldclass = eclass.widgets[rschema]
+        if isinstance(fieldclass, basestring):
+            return StringField(name=rschema.type)
+    elif not rschema.is_final():
+        return RelationField.fromcardinality(card, role,name=rschema.type,
+                                             required=required)
+    else:
+        fieldclass = FIELDS[objschema]
+    if fieldclass is StringField:
+        constraints = rschema.rproperty(subjschema, objschema, 'constraints')
+        return stringfield_from_constraints(constraints, name=rschema.type,
+                                            required=required)
+    return fieldclass(name=rschema.type, required=required)
+
+FIELDS = {
+    'Boolean':  BooleanField,
+    'Bytes':    FileField,
+    'Date':     DateField,
+    'Datetime': DateTimeField,
+    'Int':      IntField,
+    'Float':    FloatField,
+    'Decimal':  StringField,
+    'Password': StringField,
+    'String' :  StringField,
+    'Time':     TimeField,
+    }
