@@ -396,7 +396,7 @@ class Field(object):
     widget = TextInput
     needs_multipart = False
     creation_rank = 0
-    
+
     def __init__(self, name=None, id=None, label=None,
                  widget=None, required=False, initial=None,
                  choices=None, help=None, eidparam=False):
@@ -425,7 +425,7 @@ class Field(object):
             self.label = name
             
     def is_visible(self):
-        return isinstance(self.widget, HiddenInput)
+        return not isinstance(self.widget, HiddenInput)
     
     def actual_fields(self, form):
         yield self
