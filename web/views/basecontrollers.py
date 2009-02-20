@@ -66,9 +66,7 @@ class ViewController(Controller):
         view, rset = self._select_view_and_rset(rset)
         self.add_to_breadcrumbs(view)
         self.validate_cache(view)
-        template = self.req.property_value('ui.main-template')
-        if template not in self.vreg.registry('views') :
-            template = self.template
+        template = self.appli.main_template_id(self.req)
         return self.vreg.main_template(self.req, template, rset=rset, view=view)
 
     def _select_view_and_rset(self, rset):

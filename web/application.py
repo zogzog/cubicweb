@@ -385,7 +385,8 @@ class CubicWebPublisher(object):
                 req.data['excinfo'] = excinfo
             req.form['vid'] = 'error'
             errview = self.vreg.select_view('error', req, None)
-            content = self.vreg.main_template(req, 'main-template', view=errview)
+            template = self.main_template_id(req)
+            content = self.vreg.main_template(req, template, view=errview)
         except:
             content = self.vreg.main_template(req, 'error-template')
         raise StatusResponse(500, content)
@@ -397,11 +398,17 @@ class CubicWebPublisher(object):
         return self.vreg.main_template(req, 'loggedout')
     
     def notfound_content(self, req):
-        template = req.property_value('ui.main-template') or 'main-template'
         req.form['vid'] = '404'
         view = self.vreg.select_view('404', req, None)
+        template = self.main_template_id(req)
         return self.vreg.main_template(req, template, view=view)
 
+    def main_template_id(self, req):
+        template = req.property_value('ui.main-template')
+        if template not in self.vreg.registry('views') :
+            template = 'main-template'
+        return template
+        
 
 set_log_methods(CubicWebPublisher, LOGGER)
 set_log_methods(CookieSessionHandler, LOGGER)
