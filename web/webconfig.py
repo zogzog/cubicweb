@@ -203,7 +203,7 @@ if you want to allow everything',
         return exists(self.ext_resources['FCKEDITOR_PATH'])
     
     def eproperty_definitions(self):
-        for key, pdef in super(WebConfiguration, self).eproperty_definitions(self):
+        for key, pdef in super(WebConfiguration, self).eproperty_definitions():
             if key == 'ui.fckeditor' and not self.fckeditor_installed():
                 continue
             yield key, pdef
