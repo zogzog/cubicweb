@@ -514,14 +514,16 @@ class FloatField(IntField):
         return formatstr % float(value)
 
 class DateField(StringField):
-    propname = 'ui.date-format'
+    format_prop = 'ui.date-format'
     
-    def format_value(self, req, value):
-        return value and ustrftime(value, req.property_value(self.propname)) or u''
+    def format_single_value(self, req, value):
+        return value and ustrftime(value, req.property_value(self.format_prop)) or u''
 
 class DateTimeField(DateField):
-    propname = 'ui.datetime-format'
+    format_prop = 'ui.datetime-format'
 
+class TimeField(DateField):
+    format_prop = 'ui.datetime-format'
     
 class FileField(StringField):
     needs_multipart = True
