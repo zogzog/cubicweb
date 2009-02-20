@@ -69,6 +69,10 @@ class AppRsetObject(VObject):
         selection according to a request, a result set, and optional
         row and col
         """
+        assert len(args) <= 2
+#         for key in ('req', 'rset'):
+#             if key in kwargs:
+#                 args += (kwargs.pop(key),)
         instance = cls(*args)
         instance.row = kwargs.pop('row', None)
         instance.col = kwargs.pop('col', None)
