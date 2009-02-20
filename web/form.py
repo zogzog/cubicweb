@@ -607,8 +607,10 @@ class EntityFieldsForm(FieldsForm):
         """
         fieldname = field.name
         if fieldname.startswith('edits-') or fieldname.startswith('edito-'):
-            value = self.form_field_value(field.visible_field, values)
-            if value is None or not self.entity.has_eid():
+            # edit[s|o]- fieds must have the actual value stored on the entity
+            if self.entity.has_eid():
+                value = self.form_field_entity_value(field, default_initial=False)
+            else:
                 value = INTERNAL_FIELD_VALUE
         elif fieldname == '__type':
             value = self.entity.id
@@ -619,11 +621,11 @@ class EntityFieldsForm(FieldsForm):
         elif fieldname in self.req.form:
             value = self.req.form[fieldname]
         else:
-            if self.entity.has_eid():
+            if self.entity.has_eid() and field.eidparam:
                 # use value found on the entity or field's initial value if it's
                 # not an attribute of the entity (XXX may conflicts and get
                 # undesired value)
-                value = getattr(self.entity, fieldname, field.initial)
+                value = self.form_field_entity_value(field, default_initial=True)
             else:
                 defaultattr = 'default_%s' % fieldname
                 if hasattr(self.entity, defaultattr):
@@ -641,6 +643,15 @@ class EntityFieldsForm(FieldsForm):
                 values = value()
         return value # field.format_value(self.req, value) 
 
+    def form_field_entity_value(self, field, default_initial=True):
+        attr = field.name 
+        if field.role == 'object':
+            attr += '_object'
+        if default_initial:
+            return getattr(self.entity, attr, field.initial)
+        else:
+            return getattr(self.entity, attr)
+        
     def form_field_name(self, field):
         if field.eidparam:
             return eid_param(field.name, self.entity.eid)
