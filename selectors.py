@@ -620,6 +620,7 @@ class relation_possible(EClassSelector):
                 return 0
         return 1
 
+
 class partial_relation_possible(PartialSelectorMixIn, relation_possible):
     """partial version of the relation_possible selector
 
@@ -693,6 +694,7 @@ class may_add_relation(EntitySelector):
             return 0
         return 1
 
+
 class partial_may_add_relation(PartialSelectorMixIn, may_add_relation):
     """partial version of the may_add_relation selector
 
@@ -720,7 +722,7 @@ class partial_may_add_relation(PartialSelectorMixIn, may_add_relation):
 class has_related_entities(EntitySelector):
     """accept if entity found in the result set has some linked entities using
     the specified relation (optionaly filtered according to the specified target
-    type).
+    type). Checks first if the relation is possible.
     
     See `EntitySelector` documentation for behaviour when row is not specified.
 
@@ -738,6 +740,9 @@ class has_related_entities(EntitySelector):
         self.target_etype = target_etype
     
     def score_entity(self, entity):
+        relpossel = relation_possible(self.rtype, self.role, self.target_etype)
+        if not relpossel.score_class(entity.__class__, entity.req):
+            return 0
         rset = entity.related(self.rtype, self.role)
         if self.target_etype:
             return any(x for x, in rset.description if x == self.target_etype)
@@ -821,7 +826,7 @@ class has_permission(EntitySelector):
                         return 0
                 score += 1
             return score
-        return self.score(req, rset, i, col)
+        return self.score(req, rset, row, col)
     
     def score_entity(self, entity):
         if entity.has_perm(self.action):
