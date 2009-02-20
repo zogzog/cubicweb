@@ -529,7 +529,8 @@ class FileField(StringField):
 class HiddenInitialValueField(Field):
     def __init__(self, visible_field, name):
         super(HiddenInitialValueField, self).__init__(name=name,
-                                                      widget=HiddenInput)
+                                                      widget=HiddenInput,
+                                                      eidparam=True)
         self.visible_field = visible_field
     
                  
@@ -678,7 +679,7 @@ class EntityFieldsForm(FieldsForm):
             name = 'edits-%s' % field.name
         else:
             name = 'edito-%s' % field.name
-        return HiddenInitialValueField(field, name=name, eidparam=True)
+        return HiddenInitialValueField(field, name=name)
         
     def form_field_value(self, field, values):
         """look for field's value with the following rules:
