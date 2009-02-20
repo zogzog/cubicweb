@@ -26,17 +26,14 @@ class EditController(ViewController):
     def publish(self, rset=None, fromjson=False):
         """edit / create / copy / delete entity / relations"""
         self.fromjson = fromjson
-        req = self.req
-        form = req.form
-        for key in form:
+        for key in self.req.form:
             # There should be 0 or 1 action
             if key.startswith('__action_'):
                 cbname = key[1:]
                 try:
                     callback = getattr(self, cbname)
                 except AttributeError:
-                    raise ValidationError(None,
-                                          {None: req._('invalid action %r' % key)})
+                    raise RequestError(self.req._('invalid action %r' % key))
                 else:
                     return callback()
         self._default_publish()
