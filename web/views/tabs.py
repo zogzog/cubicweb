@@ -145,6 +145,3 @@ class EntityRelationView(EntityView):
         self.w(u'<div class="mainInfo">')
         self.wview(self.vid, rset, 'noresult')
         self.w(u'</div>')
-
-from logilab.common.deprecation import class_moved
-EntityRelatedTab = class_moved(EntityRelationView)
