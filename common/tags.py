@@ -13,9 +13,13 @@ a = tag('a')
 span = tag('span')
 img = tag('img')
 label = tag('label')
+option = tag('option')
 
-def select(name, options=[]):
-    html = [u'<select name="%s">' % name]
+def select(name, multiple=False, options=[]):
+    if multiple:
+        html = [u'<select name="%s" multiple="multiple">' % name]
+    else:
+        html = [u'<select name="%s">' % name]
     html += options
     html.append(u'</select>')
     return u'\n'.join(html)
