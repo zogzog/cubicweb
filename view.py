@@ -386,7 +386,7 @@ class EntityStartupView(EntityView):
         """return the url associated with this view. We can omit rql if we are
         on a result set on which we do not apply.
         """
-        if not self.__select__(self.req, self.rset):
+        if self.rset is None:
             return self.build_url(vid=self.id)
         return super(EntityStartupView, self).url()
 
