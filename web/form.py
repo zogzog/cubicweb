@@ -308,12 +308,12 @@ class FCKEditor(TextArea):
         return super(self, FCKEditor, self).render(form, field)
 
 
-class EditableFile(Widget):
-    # XXX
-    pass
+#class EditableFile(Widget):
+#    # XXX
+#    pass
 
 class Select(FieldWidget):
-    def __init__(self, attrs, vocabulary=()):
+    def __init__(self, attrs=None, vocabulary=()):
         super(Select, self).__init__(attrs)
         self.vocabulary = ()
         
@@ -401,6 +401,7 @@ class Field(object):
         if widget is not None:
             self.widget = widget
         if isinstance(self.widget, type):
+            print 'widget', self.widget
             self.widget = self.widget()
         self.name = name
         self.label = label or name
@@ -463,7 +464,7 @@ class RichTextField(TextField):
         return self.widget
 
     def get_format_field(self, form):
-        if self.format_field is _MARKER:
+        if not self.format_field:
             # if fckeditor is used and format field isn't explicitly
             # deactivated, we want an hidden field for the format
             if self.use_fckeditor(form):
@@ -477,7 +478,7 @@ class RichTextField(TextField):
     
     def actual_fields(self, form):
         yield self
-        format_field = self.get_format_field(self, form)
+        format_field = self.get_format_field(form)
         if format_field:
             yield format_field
             
@@ -490,7 +491,7 @@ class RichTextField(TextField):
         return False
 
     def render(self, form):
-        format_field = self.get_format_field()
+        format_field = self.get_format_field(form)
         if format_field:
             result = format_field.render(form)
         else:
@@ -599,7 +600,7 @@ class FieldsForm(FormMixIn):
         if previous_values:
             values.update(previous_values)
         for field in self.fields:
-            for field in field.actual_fields(form):
+            for field in field.actual_fields(self):
                 value = self.form_field_value(field, values)
                 context[field] = {'value': field.format_value(self.req, value),
                                   'rawvalue': value,
@@ -653,7 +654,7 @@ class EntityFieldsForm(FieldsForm):
 
     def form_add_entity_hiddens(self, eschema):
         for field in self.fields[:]:
-            for field in field.actual_fields(form):
+            for field in field.actual_fields(self):
                 fieldname = field.name
                 if fieldname != 'eid' and (
                     (eschema.has_subject_relation(fieldname) or
