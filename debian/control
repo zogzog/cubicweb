@@ -79,7 +79,6 @@ Depends: ${python:Depends}, python-logilab-mtconverter (>= 0.4.0), python-simple
 Recommends: python-psyco
 Conflicts: cubicweb-core
 Replaces: cubicweb-core
-Provides: cubicweb-core
 Description: common library for the CubicWeb framework
  CubicWeb is a semantic web application framework.
  .
