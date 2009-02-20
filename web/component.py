@@ -142,7 +142,7 @@ class NavigationComponent(Component):
 
 class RelatedObjectsVComponent(EntityVComponent):
     """a section to display some related entities"""
-    __select__ = partial_relation_possible() & partial_has_related_entities()
+    __select__ = EntityVComponent.__select__ & partial_has_related_entities()
     
     vid = 'list'
     
