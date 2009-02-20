@@ -317,7 +317,7 @@ class FCKEditor(TextArea):
 class Select(FieldWidget):
     def __init__(self, attrs=None, vocabulary=()):
         super(Select, self).__init__(attrs)
-        self.vocabulary = ()
+        self.multiple = multiple
         
     def render(self, form, field):
         name, value, attrs = self._render_attrs(form, field)
@@ -331,7 +331,8 @@ class Select(FieldWidget):
             options.append(tags.option(label, value=value))
         if attrs is None:
             return tags.select(name=name, options=options)
-        return tags.select(name=name, options=options, **attrs)
+        return tags.select(name=name, multiple=self.multiple,
+                           options=options, **attrs)
 
 
 class CheckBox(FieldWidget):
@@ -397,8 +398,8 @@ class Field(object):
     creation_rank = 0
     
     def __init__(self, name=None, id=None, label=None,
-                 widget=None, required=False, initial=None, help=None,
-                 eidparam=False):
+                 widget=None, required=False, initial=None,
+                 choices=None, help=None, eidparam=False):
         self.required = required
         if widget is not None:
             self.widget = widget
@@ -408,8 +409,10 @@ class Field(object):
         self.label = label or name
         self.id = id or name
         self.initial = initial
+        self.choices = choices or ()
         self.help = help
         self.eidparam = eidparam
+        self.role = 'subject'
         # global fields ordering in forms
         Field.creation_rank += 1
 
@@ -445,6 +448,9 @@ class Field(object):
         return self.get_widget(form.req).render(form, self)
 
 
+    def vocabulary(self, form):
+        return self.choices
+    
 class StringField(Field):
     def __init__(self, max_length=None, **kwargs):
         super(StringField, self).__init__(**kwargs)
@@ -552,6 +558,29 @@ class RelationField(Field):
         return RelationField(widget=Select(multiple=card in '*+'),
                              **kwargs)
         
+    def vocabulary(self, form):
+        entity = form.entity
+        req = entity.req
+        # first see if its specified by __linkto form parameters
+        linkedto = entity.linked_to(self.name, self.role)
+        if linkedto:
+            entities = (req.eid_rset(eid).get_entity(0, 0) for eid in linkedto)
+            return [(entity.view('combobox'), entity.eid) for entity in entities]
+        # it isn't, check if the entity provides a method to get correct values
+        res = []
+        if not self.required:
+            res.append(('', INTERNAL_FIELD_VALUE))
+        # vocabulary doesn't include current values, add them
+        if entity.has_eid():
+            rset = entity.related(self.name, self.role)
+            relatedvocab = [(e.view('combobox'), e.eid) for e in rset.entities()]
+        else:
+            relatedvocab = []
+        return res + form.form_field_vocabulary(self) + relatedvocab
+    
+    def format_single_value(self, req, value):
+        return value
+    
 # forms ############
 class metafieldsform(type):
     def __new__(mcs, name, bases, classdict):
