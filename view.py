@@ -497,7 +497,7 @@ class Component(ReloadableMixIn, View):
     __select__ = yes()
     property_defs = {
         _('visible'):  dict(type='Boolean', default=True,
-                            help=_('display the box or not')),
+                            help=_('display the component or not')),
         }    
 
     def div_class(self):
