@@ -67,13 +67,7 @@ class FoafView(EntityView):
         if emailaddr:
             self.w(u'<foaf:mbox>%s</foaf:mbox>\n' % html_escape(emailaddr))
         self.w(u'</foaf:Person>\n')
-
-class FoafUsableView(FoafView):
-    id = 'foaf_usable'
-  
-    def call(self):
-        self.cell_call(0, 0)
-            
+                   
 class EditGroups(EntityForm):
     """displays a simple euser / egroups editable table"""
     
