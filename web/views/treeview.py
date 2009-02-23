@@ -22,11 +22,13 @@ class TreeView(EntityView):
     title = _('tree view')
 
     def call(self, subvid=None, treeid=None):
-        assert treeid is not None
         if subvid is None and 'subvid' in self.req.form:
             subvid = self.req.form.pop('subvid') # consume it
         if subvid is None:
             subvid = 'oneline'
+        if treeid is None and 'treeid' in self.req.form:
+            treeid = self.req.form.pop('treeid')
+        assert treeid is not None
         self.req.add_css('jquery.treeview.css')
         self.req.add_js(('cubicweb.ajax.js', 'jquery.treeview.js'))
         self.req.html_headers.add_onload(u"""
@@ -96,7 +98,7 @@ class TreeViewItemView(EntityView):
         cookies = self.req.get_cookie()
         treestate = cookies.get(treecookiename(treeid))
         if treestate:
-            return eeid in set(treestate.value.split(';'))
+            return str(eeid) in treestate.value
         return False
 
     def cell_call(self, row, col, treeid, vid='oneline', parentvid='treeview'):
@@ -114,6 +116,7 @@ class TreeViewItemView(EntityView):
             rql = entity.children_rql() % {'x': entity.eid}
             url = html_escape(self.build_url('json', rql=rql, vid=parentvid,
                                              pageid=self.req.pageid,
+                                             treeid=treeid,
                                              subvid=vid,
                                              noautoload=True))
             if is_open:
@@ -136,7 +139,8 @@ class TreeViewItemView(EntityView):
             if is_leaf:
                 divtail = ''
             else:
-                divtail = ''' onclick="async_remote_exec('node_clicked', %s)"''' % entity.eid
+                divtail = ''' onclick="async_remote_exec('node_clicked', '%s', '%s')"''' % \
+                    (treeid, entity.eid)
             w(u'<div class="%s"%s></div>' % (u' '.join(divclasses), divtail))
 
             # add empty <ul> because jquery's treeview plugin checks for
@@ -153,7 +157,7 @@ from logilab.common.decorators import monkeypatch
 from cubicweb.web.views.basecontrollers import JSonController
 
 @monkeypatch(JSonController)
-def js_node_clicked(self, eid):
+def js_node_clicked(self, treeid, eid):
     """add/remove eid in treestate cookie
     XXX this deals with one tree per page
         also check the treeid issue above
