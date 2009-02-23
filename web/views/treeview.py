@@ -1,7 +1,18 @@
+"""Set of tree-building widgets, based on jQuery treeview plugin
+
+:organization: Logilab
+:copyright: 2001-2009 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+:contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
+"""
+__docformat__ = "restructuredtext en"
+
 from logilab.mtconverter import html_escape
 from cubicweb.interfaces import ITree
 from cubicweb.common.selectors import implement_interface, yes
 from cubicweb.common.view import EntityView
+
+def treecookiename(treeid):
+    return str('treestate-%s' % treeid)
 
 class TreeView(EntityView):
     id = 'treeview'
@@ -11,21 +22,20 @@ class TreeView(EntityView):
     title = _('tree view')
 
     def call(self, subvid=None, treeid=None):
+        assert treeid is not None
         if subvid is None and 'subvid' in self.req.form:
             subvid = self.req.form.pop('subvid') # consume it
         if subvid is None:
             subvid = 'oneline'
         self.req.add_css('jquery.treeview.css')
         self.req.add_js(('cubicweb.ajax.js', 'jquery.treeview.js'))
-        # XXX find a way, an id is MANDATORY
-        treeid = 'TREE' #treeid or self.rset.rows[0][0]
         self.req.html_headers.add_onload(u"""
              $("#tree-%s").treeview({toggle: toggleTree,
 		                     prerendered: true});""" % treeid)
         self.w(u'<ul id="tree-%s" class="%s">' % (treeid, self.css_classes))
         for rowidx in xrange(len(self.rset)):
             self.wview(self.itemvid, self.rset, row=rowidx, col=0,
-                       vid=subvid, parentvid=self.id)
+                       vid=subvid, parentvid=self.id, treeid=treeid)
         self.w(u'</ul>')
 
 class FileTreeView(TreeView):
@@ -35,8 +45,8 @@ class FileTreeView(TreeView):
     css_classes = 'treeview widget filetree'
     title = _('file tree view')
 
-    def call(self, subvid=None):
-        super(FileTreeView, self).call(subvid='filetree-oneline')
+    def call(self, subvid=None, treeid=None):
+        super(FileTreeView, self).call(treeid=treeid, subvid='filetree-oneline')
 
 class FileItemInnerView(EntityView):
     """inner view used by the TreeItemView instead of oneline view
@@ -61,7 +71,8 @@ class DefaultTreeViewItemView(EntityView):
     id = 'treeitemview'
     accepts = ('Any',)
 
-    def cell_call(self, row, col, vid='oneline', parentvid='treeview'):
+    def cell_call(self, row, col, vid='oneline', parentvid='treeview', treeid=None):
+        assert treeid is not None
         entity = self.entity(row, col)
         itemview = self.view(vid, self.rset, row=row, col=col)
         if row == len(self.rset) - 1:
@@ -70,12 +81,7 @@ class DefaultTreeViewItemView(EntityView):
             self.w(u'<li>%s</li>' % itemview)
 
 
-class TreeStateMixin(object):
-
-    def open_state(self):
-        raise NotImplementedError
-
-class TreeViewItemView(EntityView, TreeStateMixin):
+class TreeViewItemView(EntityView):
     """specific treeitem view for entities which implement ITree
 
     (each item should be exandable if it's not a tree leaf)
@@ -86,16 +92,19 @@ class TreeViewItemView(EntityView, TreeStateMixin):
     __selectors__ = (implement_interface, yes)
     accepts_interfaces = (ITree,)
 
-    def open_state(self):
-        """implements TreeState mixin"""
-        return ()
+    def open_state(self, eeid, treeid):
+        cookies = self.req.get_cookie()
+        treestate = cookies.get(treecookiename(treeid))
+        if treestate:
+            return eeid in set(treestate.value.split(';'))
+        return False
 
-    def cell_call(self, row, col, vid='oneline', parentvid='treeview'):
+    def cell_call(self, row, col, treeid, vid='oneline', parentvid='treeview'):
         w = self.w
         entity = self.entity(row, col)
         liclasses = []
         is_leaf = False
-        is_open = str(entity.eid) in self.open_state()
+        is_open = self.open_state(entity.eid, treeid)
         if row == len(self.rset) - 1:
             is_leaf = True
         if not hasattr(entity, 'is_leaf') or entity.is_leaf():
@@ -137,7 +146,7 @@ class TreeViewItemView(EntityView, TreeStateMixin):
         # the local node info
         self.wview(vid, self.rset, row=row, col=col)
         if is_open: # recurse if needed
-            self.wview(parentvid, self.req.execute(rql))
+            self.wview(parentvid, self.req.execute(rql), treeid=treeid)
         w(u'</li>')
 
 from logilab.common.decorators import monkeypatch
@@ -150,15 +159,16 @@ def js_node_clicked(self, eid):
         also check the treeid issue above
     """
     cookies = self.req.get_cookie()
-    treestate = cookies.get('treestate')
+    statename = treecookiename(treeid)
+    treestate = cookies.get(statename)
     if treestate is None:
-        cookies['treestate'] = str(eid)
-        self.req.set_cookie(cookies, 'treestate')
+        cookies[statename] = str(eid)
+        self.req.set_cookie(cookies, statename)
     else:
         marked = set(treestate.value.split(';'))
         if eid in marked:
             marked.remove(eid)
         else:
             marked.add(eid)
-        cookies['treestate'] = ';'.join(str(x) for x in marked)
-        self.req.set_cookie(cookies, 'treestate')
+        cookies[statename] = ';'.join(marked)
+        self.req.set_cookie(cookies, statename)
