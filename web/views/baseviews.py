@@ -243,11 +243,17 @@ class PrimaryView(EntityView):
         non-meta in a first step, meta in a second step
         """
         if hasattr(self, 'get_side_boxes_defs'):
-            for label, rset in self.get_side_boxes_defs(entity):
-                if rset:
+            if rset:
+                self.w(u'<table align="right" with="100%">')
+                print 'u'*80
+                print 'right'
+                for label, rset in self.get_side_boxes_defs(entity):
+                    self.w(u'<tr><td>')
                     self.w(u'<div class="sideRelated">')
                     self.wview('sidebox', rset, title=label)
                     self.w(u'</div>')
+                    self.w(u'</td></tr>')
+                self.w(u'</table>')
         elif siderelations:
             self.w(u'<div class="sideRelated">')
             for relatedinfos in siderelations:
@@ -255,15 +261,19 @@ class PrimaryView(EntityView):
                 #    continue
                 self._render_related_entities(entity, *relatedinfos)
             self.w(u'</div>')
+        self.w(u'<table  align="right" with="100%">')
         for box in self.vreg.possible_vobjects('boxes', self.req, self.rset,
                                                row=self.row, view=self,
                                                context='incontext'):
+            self.w(u'<tr><td>')
             try:
                 box.dispatch(w=self.w, row=self.row)
             except NotImplementedError:
                 # much probably a context insensitive box, which only implements
                 # .call() and not cell_call()
                 box.dispatch(w=self.w)
+            self.w(u'</td></tr>')
+        self.w(u'</table>')
                 
     def is_side_related(self, rschema, eschema):
         return rschema.meta and \
