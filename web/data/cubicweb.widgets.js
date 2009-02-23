@@ -181,6 +181,14 @@ function toggleTree(event) {
     }
 }
 
+Widgets.TreeView = defclass("TreeView", null, {
+    __init__: function(wdgnode) {
+	jQuery(wdgnode).treeview({toggle: toggleTree,
+				  prerendered: true
+				 });
+    }
+});
+
 
 /* widget based on SIMILE's timeline widget
  * http://code.google.com/p/simile-widgets/
