@@ -245,8 +245,6 @@ class PrimaryView(EntityView):
         if hasattr(self, 'get_side_boxes_defs'):
             if rset:
                 self.w(u'<table align="right" with="100%">')
-                print 'u'*80
-                print 'right'
                 for label, rset in self.get_side_boxes_defs(entity):
                     self.w(u'<tr><td>')
                     self.w(u'<div class="sideRelated">')
