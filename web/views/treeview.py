@@ -21,7 +21,7 @@ class TreeView(EntityView):
     css_classes = 'treeview widget'
     title = _('tree view')
 
-    def call(self, subvid=None, treeid=None):
+    def call(self, subvid=None, treeid=None, initial_load=True):
         if subvid is None and 'subvid' in self.req.form:
             subvid = self.req.form.pop('subvid') # consume it
         if subvid is None:
@@ -29,11 +29,12 @@ class TreeView(EntityView):
         if treeid is None and 'treeid' in self.req.form:
             treeid = self.req.form.pop('treeid')
         assert treeid is not None
-        self.req.add_css('jquery.treeview.css')
-        self.req.add_js(('cubicweb.ajax.js', 'jquery.treeview.js'))
-        self.req.html_headers.add_onload(u"""
-             $("#tree-%s").treeview({toggle: toggleTree,
-		                     prerendered: true});""" % treeid)
+        if initial_load:
+            self.req.add_css('jquery.treeview.css')
+            self.req.add_js(('cubicweb.ajax.js', 'jquery.treeview.js'))
+            self.req.html_headers.add_onload(u"""
+                 jQuery("#tree-%s").treeview({toggle: toggleTree,
+                                              prerendered: true});""" % treeid)
         self.w(u'<ul id="tree-%s" class="%s">' % (treeid, self.css_classes))
         for rowidx in xrange(len(self.rset)):
             self.wview(self.itemvid, self.rset, row=rowidx, col=0,
@@ -47,8 +48,8 @@ class FileTreeView(TreeView):
     css_classes = 'treeview widget filetree'
     title = _('file tree view')
 
-    def call(self, subvid=None, treeid=None):
-        super(FileTreeView, self).call(treeid=treeid, subvid='filetree-oneline')
+    def call(self, subvid=None, treeid=None, initial_load=True):
+        super(FileTreeView, self).call(treeid=treeid, subvid='filetree-oneline', initial_load=initial_load)
 
 class FileItemInnerView(EntityView):
     """inner view used by the TreeItemView instead of oneline view
@@ -117,17 +118,14 @@ class TreeViewItemView(EntityView):
             url = html_escape(self.build_url('json', rql=rql, vid=parentvid,
                                              pageid=self.req.pageid,
                                              treeid=treeid,
-                                             subvid=vid,
-                                             noautoload=True))
-            if is_open:
-                liclasses.append('collapsable')
-            else:
-                liclasses.append('expandable')
+                                             subvid=vid))
             divclasses = ['hitarea']
             if is_open:
+                liclasses.append('collapsable')
                 divclasses.append('collapsable-hitarea')
             else:
-                divclasses.append('expandable-hitarea')
+                liclasses.append('expandable')
+                divclasses.append('closed-hitarea expandable-hitarea')
             if is_last:
                 if is_open:
                     liclasses.append('lastCollapsable')
@@ -153,7 +151,7 @@ class TreeViewItemView(EntityView):
         # the local node info
         self.wview(vid, self.rset, row=row, col=col)
         if is_open: # recurse if needed
-            self.wview(parentvid, self.req.execute(rql), treeid=treeid)
+            self.wview(parentvid, self.req.execute(rql), treeid=treeid, initial_load=False)
         w(u'</li>')
 
 from logilab.common.decorators import monkeypatch
