@@ -98,7 +98,7 @@ class TreeViewItemView(EntityView):
         cookies = self.req.get_cookie()
         treestate = cookies.get(treecookiename(treeid))
         if treestate:
-            return str(eeid) in treestate.value
+            return str(eeid) in treestate.value.split(';')
         return False
 
     def cell_call(self, row, col, treeid, vid='oneline', parentvid='treeview'):
@@ -106,11 +106,11 @@ class TreeViewItemView(EntityView):
         entity = self.entity(row, col)
         liclasses = []
         is_leaf = False
+        is_last = row == len(self.rset) - 1
         is_open = self.open_state(entity.eid, treeid)
-        if row == len(self.rset) - 1:
-            is_leaf = True
         if not hasattr(entity, 'is_leaf') or entity.is_leaf():
-            if is_leaf : liclasses.append('last')
+            if is_last:
+                liclasses.append('last')
             w(u'<li class="%s">' % u' '.join(liclasses))
         else:
             rql = entity.children_rql() % {'x': entity.eid}
@@ -128,9 +128,12 @@ class TreeViewItemView(EntityView):
                 divclasses.append('collapsable-hitarea')
             else:
                 divclasses.append('expandable-hitarea')
-            if is_leaf:
-                liclasses.append('lastExpandable')
-                if not is_open:
+            if is_last:
+                if is_open:
+                    liclasses.append('lastCollapsable')
+                    divclasses.append('lastCollapsable-hitarea')
+                else:
+                    liclasses.append('lastExpandable')
                     divclasses.append('lastExpandable-hitarea')
             if is_open:
                 w(u'<li class="%s">' % u' '.join(liclasses))
@@ -157,22 +160,19 @@ from logilab.common.decorators import monkeypatch
 from cubicweb.web.views.basecontrollers import JSonController
 
 @monkeypatch(JSonController)
-def js_node_clicked(self, treeid, eid):
-    """add/remove eid in treestate cookie
-    XXX this deals with one tree per page
-        also check the treeid issue above
-    """
+def js_node_clicked(self, treeid, nodeeid):
+    """add/remove eid in treestate cookie"""
     cookies = self.req.get_cookie()
     statename = treecookiename(treeid)
     treestate = cookies.get(statename)
     if treestate is None:
-        cookies[statename] = str(eid)
+        cookies[statename] = nodeeid
         self.req.set_cookie(cookies, statename)
     else:
-        marked = set(treestate.value.split(';'))
-        if eid in marked:
-            marked.remove(eid)
+        marked = set(filter(None, treestate.value.split(';')))
+        if nodeeid in marked:
+            marked.remove(nodeeid)
         else:
-            marked.add(eid)
+            marked.add(nodeeid)
         cookies[statename] = ';'.join(marked)
         self.req.set_cookie(cookies, statename)
