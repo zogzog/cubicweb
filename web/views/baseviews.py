@@ -244,7 +244,7 @@ class PrimaryView(EntityView):
         """
         if hasattr(self, 'get_side_boxes_defs'):
             if rset:
-                self.w(u'<table align="right" with="100%">')
+                self.w(u'<table align="right" width="100%">')
                 for label, rset in self.get_side_boxes_defs(entity):
                     self.w(u'<tr><td>')
                     self.w(u'<div class="sideRelated">')
@@ -253,13 +253,17 @@ class PrimaryView(EntityView):
                     self.w(u'</td></tr>')
                 self.w(u'</table>')
         elif siderelations:
+            self.w(u'<table align="right" width="100%">')
+            self.w(u'<tr><td>')
             self.w(u'<div class="sideRelated">')
             for relatedinfos in siderelations:
                 # if not relatedinfos[0].meta:
                 #    continue
                 self._render_related_entities(entity, *relatedinfos)
             self.w(u'</div>')
-        self.w(u'<table  align="right" with="100%">')
+            self.w(u'</td></tr>')
+            self.w(u'</table>')
+        self.w(u'<table  align="right" width="100%">')
         for box in self.vreg.possible_vobjects('boxes', self.req, self.rset,
                                                row=self.row, view=self,
                                                context='incontext'):
