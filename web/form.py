@@ -38,7 +38,8 @@ def toggable_relation_link(eid, nodeid, label='x'):
 
 
 class FormMixIn(object):
-    """abstract form mix-in"""
+    """abstract form mix-in
+    XXX: you should inherit from this FIRST (obscure pb with super call)"""
     category = 'form'
     controller = 'edit'
     domid = 'entityForm'
