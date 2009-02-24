@@ -625,8 +625,11 @@ class MultiSelector(Selector):
         """
         merged_selectors = []
         for selector in selectors:
-            selector = _instantiate_selector(selector)
-            assert isinstance(selector, Selector), selector
+            try:
+                selector = _instantiate_selector(selector)
+            except:
+                pass
+            #assert isinstance(selector, Selector), selector
             if isinstance(selector, cls):
                 merged_selectors += selector.selectors
             else:
@@ -662,6 +665,7 @@ def _instantiate_selector(selector):
     """ensures `selector` is a `Selector` instance
     
     NOTE: This should only be used locally in build___select__()
+    XXX: then, why not do it ??
     """
     if isinstance(selector, types.FunctionType):
         return objectify_selector(selector)()
