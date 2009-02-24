@@ -10,7 +10,7 @@ serialization time
 
 from logilab.mtconverter import html_escape
 
-from cubicweb.common.utils import UStringIO
+from cubicweb.utils import UStringIO
 from cubicweb.common.uilib import toggle_action
 
 # XXX HTMLWidgets should have access to req (for datadir / static urls,

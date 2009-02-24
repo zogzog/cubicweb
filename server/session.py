@@ -18,7 +18,7 @@ from yams import BASE_TYPES
 
 from cubicweb import RequestSessionMixIn, Binary
 from cubicweb.dbapi import ConnectionProperties
-from cubicweb.common.utils import make_uid
+from cubicweb.utils import make_uid
 from cubicweb.server.rqlrewrite import RQLRewriter
 
 _ETYPE_PYOBJ_MAP = { bool: 'Boolean',

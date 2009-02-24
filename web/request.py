@@ -21,7 +21,7 @@ from logilab.common.decorators import cached
 from cubicweb.dbapi import DBAPIRequest
 from cubicweb.common.mail import header
 from cubicweb.common.uilib import remove_html_tags
-from cubicweb.common.utils import SizeConstrainedList, HTMLHead
+from cubicweb.utils import SizeConstrainedList, HTMLHead
 from cubicweb.web import (INTERNAL_FIELD_VALUE, LOGGER, NothingToEdit, RequestError,
                        StatusResponse)
 

@@ -64,7 +64,7 @@ from rql.stmts import Union, Select
 from rql.nodes import VariableRef, Comparison, Relation, Constant, Exists, Variable
 
 from cubicweb import server
-from cubicweb.common.utils import make_uid
+from cubicweb.utils import make_uid
 from cubicweb.server.utils import cleanup_solutions
 from cubicweb.server.ssplanner import SSPlanner, OneFetchStep, add_types_restriction
 from cubicweb.server.mssteps import *

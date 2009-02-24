@@ -12,9 +12,9 @@ from logilab.mtconverter import html_escape
 
 from cubicweb import NoSelectableObject, role
 from cubicweb.selectors import partial_has_related_entities
+from cubicweb.utils import HTMLHead
 from cubicweb.common.view import EntityView
 from cubicweb.common.selectors import has_related_entities
-from cubicweb.common.utils import HTMLHead
 from cubicweb.common.uilib import rql_for_eid
 
 from cubicweb.web.views.basecontrollers import JSonController
