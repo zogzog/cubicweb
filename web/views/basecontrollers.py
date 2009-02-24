@@ -17,7 +17,7 @@ from mx.DateTime.Parser import DateFromString
 
 from logilab.common.decorators import cached
 
-from cubicweb import NoSelectableObject, ValidationError, typed_eid
+from cubicweb import NoSelectableObject, ValidationError, ObjectNotFound, typed_eid
 from cubicweb.selectors import yes, match_user_groups
 from cubicweb.view import STRICT_DOCTYPE, CW_XHTML_EXTENSIONS
 from cubicweb.common.mail import format_mail
