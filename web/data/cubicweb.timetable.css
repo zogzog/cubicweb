@@ -12,7 +12,7 @@ table.timetable {
 
 table.timetable th { 
   padding:1pt;
-  align:center;
+  text-align:center;
 }
 
 
@@ -52,7 +52,7 @@ table.timetable th.ttdate {
   font-family: Verdana, sans-serif;
   padding-left: 4pt;
   padding-right: 4pt;
-  align: left;
+  text-align: left;
   width: auto;
 }
 

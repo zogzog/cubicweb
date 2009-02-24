@@ -196,11 +196,9 @@ We cannot modify the order in which the application is reading the CSS. In
 the case we want to create new CSS style, the best is to define it a in a new
 CSS located under ``myapp/data/``.
 
-If you want to modify an existing CSS styling property, you will have to use
-``!important`` declaration to override the existing property. The application
-apply a higher priority on the default CSS and you can not change that. 
-Customized CSS will not be read first.
 
+.. [TRANSLATE ME FROM FRENCH]
+.. 03-XX-external_resources.fr.txt
 
 [TODO]
 Add login menu in left column

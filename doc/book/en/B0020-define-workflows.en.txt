@@ -155,4 +155,3 @@ is now listed as well as the possible transitions from this state
 defined by the workflow. This transition, as defined in the workflow,
 will only being displayed for the users belonging to the group
 moderators of managers.
-

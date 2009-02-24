@@ -2,8 +2,9 @@ Source: cubicweb
 Section: web
 Priority: optional
 Maintainer: Logilab Packaging Team <contact@logilab.fr>
-Uploaders: Sylvain Thenault <sylvain.thenault@logilab.fr> 
-Build-Depends: debhelper (>= 5.0.37.1), python (>=2.4), python-dev (>=2.4), python-central (>= 0.5)
+Uploaders: Sylvain Thenault <sylvain.thenault@logilab.fr>,
+           Julien Jehannet <julien.jehannet@logilab.fr>
+Build-Depends: debhelper (>= 7), python-dev (>=2.4), python-central (>= 0.5)
 Standards-Version: 3.8.0
 Homepage: http://www.cubicweb.org
 XS-Python-Version: >= 2.4, << 2.6
@@ -12,7 +13,7 @@ Package: cubicweb
 Architecture: all
 XB-Python-Version: ${python:Versions}
 Depends: ${python:Depends}, cubicweb-server (= ${source:Version}), cubicweb-twisted (= ${source:Version}), cubicweb-client (= ${source:Version})
-XBS-Recommends: (postgresql, postgresql-plpython, postgresql-contrib) | mysql | sqlite3
+XB-Recommends: (postgresql, postgresql-plpython, postgresql-contrib) | mysql | sqlite3
 Recommends: postgresql | mysql | sqlite3
 Description: the complete CubicWeb framework
  CubicWeb is a semantic web application framework.
@@ -73,8 +74,10 @@ Description: web interface library for the CubicWeb framework
 Package: cubicweb-common
 Architecture: all
 XB-Python-Version: ${python:Versions}
-Depends: ${python:Depends}, cubicweb-core (= ${source:Version}), python-logilab-mtconverter (>= 0.4.0), graphviz, gettext, python-lxml
-Recommends: python-psyco, python-simpletal (>= 4.0)
+Depends: ${python:Depends}, python-logilab-mtconverter (>= 0.4.0), python-simpletal (>= 4.0), graphviz, gettext, python-lxml, python-logilab-common (>= 0.37.2), python-yams (>= 0.20.2), python-rql (>= 0.20.2)
+Recommends: python-psyco
+Conflicts: cubicweb-core
+Replaces: cubicweb-core
 Description: common library for the CubicWeb framework
  CubicWeb is a semantic web application framework.
  .
@@ -85,7 +88,7 @@ Description: common library for the CubicWeb framework
 Package: cubicweb-ctl
 Architecture: all
 XB-Python-Version: ${python:Versions}
-Depends: ${python:Depends}, cubicweb-core (= ${source:Version})
+Depends: ${python:Depends}, cubicweb-common (= ${source:Version})
 Description: tool to manage the CubicWeb framework
  CubicWeb is a semantic web application framework.
  .
@@ -103,17 +106,6 @@ Description: RQL command line client for the CubicWeb framework
  .
  This package provides a RQL (Relation Query Language) command line client using 
  pyro to connect to a repository server.
-
-
-Package: cubicweb-core
-Architecture: all
-XB-Python-Version: ${python:Versions}
-Depends: ${python:Depends}, python-logilab-common (>= 0.37.2), python-yams (>= 0.20.2), python-rql (>= 0.20.2)
-Description: core library for the CubicWeb framework
- CubicWeb is a semantic web application framework.
- .
- This package provides the core part of the library used by anyone having 
- to do some cubicweb programming in Python.
 
 
 Package: cubicweb-dev

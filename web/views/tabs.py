@@ -13,6 +13,7 @@ from logilab.mtconverter import html_escape
 from cubicweb import NoSelectableObject, role
 from cubicweb.selectors import partial_has_related_entities
 from cubicweb.common.view import EntityView
+from cubicweb.common.selectors import has_related_entities
 from cubicweb.common.utils import HTMLHead
 from cubicweb.common.uilib import rql_for_eid
 
@@ -33,15 +34,22 @@ class LazyViewMixin(object):
   });""" % {'event': 'load_%s' % vid, 'vid': vid,
             'reloadable' : str(reloadable).lower()})
 
-    def lazyview(self, vid, eid=None, reloadable=False, show_spinbox=True, w=None):
+    def lazyview(self, vid, rql=None, eid=None, rset=None, static=False,
+                 reloadable=False, show_spinbox=True, w=None):
         """a lazy version of wview
         first version only support lazy viewing for an entity at a time
         """
+        assert rql or eid or rset or static, \
+            'lazyview wants at least : rql, or an eid, or an rset -- or call it with static=True'
         w = w or self.w
         self.req.add_js('cubicweb.lazy.js')
         urlparams = {'vid' : vid, 'mode' : 'html'}
-        if eid:
+        if rql:
+            urlparams['rql'] = rql
+        elif eid:
             urlparams['rql'] = rql_for_eid(eid)
+        elif rset:
+            urlparams['rql'] = rset.printable_rql()
         w(u'<div id="lazy-%s" cubicweb:loadurl="%s">' % (
             vid, html_escape(self.build_url('json', **urlparams))))
         if show_spinbox:
@@ -65,12 +73,12 @@ class TabsMixin(LazyViewMixin):
         return str('%s_active_tab' % self.config.appid)
 
     def active_tab(self, tabs, default):
-        cookie = self.req.get_cookie()
+        cookies = self.req.get_cookie()
         cookiename = self.cookie_name
-        activetab = cookie.get(cookiename)
+        activetab = cookies.get(cookiename)
         if activetab is None:
-            cookie[cookiename] = default
-            self.req.set_cookie(cookie, cookiename)
+            cookies[cookiename] = default
+            self.req.set_cookie(cookies, cookiename)
             tab = default
         else:
             tab = activetab.value
@@ -96,7 +104,7 @@ class TabsMixin(LazyViewMixin):
         active_tab = self.active_tab(tabs, default)
         # build the html structure
         w = self.w
-        w(u'<div id="entity-tabs">')
+        w(u'<div id="entity-tabs-%s">' % entity.eid)
         w(u'<ul>')
         for tab in tabs:
             w(u'<li>')
@@ -110,38 +118,47 @@ class TabsMixin(LazyViewMixin):
         w(u'</div>')
         for tab in tabs:
             w(u'<div id="as-%s">' % tab)
-            self.lazyview(tab, entity.eid)
+            self.lazyview(tab, eid=entity.eid)
             w(u'</div>')
         # call the set_tab() JS function *after* each tab is generated
         # because the callback binding needs to be done before
         self.req.html_headers.add_onload(u"""
-   jQuery('#entity-tabs > ul').tabs( { selected: %(tabindex)s });
+   jQuery('#entity-tabs-%(eeid)s > ul').tabs( { selected: %(tabindex)s });
    set_tab('%(vid)s', '%(cookiename)s');
  """ % {'tabindex'   : tabs.index(active_tab),
         'vid'        : active_tab,
+        'eeid'       : entity.eid,
         'cookiename' : self.cookie_name})
 
 
-
-class EntityRelationView(EntityView):
-    """view displaying entity related stuff. Such a view _must_ provide rtype
-    and target attributes
+class EntityRelatedTab(EntityView):
+    """A view you should inherit from leftmost,
+    to wrap another actual view displaying entity related stuff.
+    Such a view _must_ provide the rtype, target and vid attributes :
 
     Example :
 
     class ProjectScreenshotsView(EntityRelationView):
         '''display project's screenshots'''
         id = title = _('projectscreenshots')
-        __select__ = implements('Project')
+        accepts = ('Project',)
         rtype = 'screenshot'
         target = 'object'
+        vid = 'gallery'
+        __selectors__ = EntityRelationView.__selectors__ + (one_line_rset,)
+
+
+    This is the view we want to have in a tab, only if there is something to show.
+    Then, just define as below, and declare this being the tab content :
+
+    class ProjectScreenshotTab(EntityRelatedTab, ProjectScreenshotsView):
+        id = 'screenshots_tab'
     """
     __select__ = EntityView.__select__ & partial_has_related_entities()
     vid = 'list'
     
     def cell_call(self, row, col):
-        rset = self.rset.get_entity(row, col).related(self.rtype, role(self))
-        self.w(u'<h1>%s</h1>' % self.req._(self.title).capitalize())
+        rset = self.entity(row, col).related(self.rtype, role(self))
         self.w(u'<div class="mainInfo">')
         self.wview(self.vid, rset, 'noresult')
         self.w(u'</div>')

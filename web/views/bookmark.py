@@ -81,9 +81,9 @@ class BookmarksBox(UserRQLBoxTemplate):
                 dlink = u'[<a href="javascript:removeBookmark(%s)" title="%s">-</a>]' % (
                     bookmark.eid, _('delete this bookmark'))
                 label = '%s %s' % (dlink, label)
-            box.append(RawBoxItem(label, liclass=u'invisible'))
+            box.append(RawBoxItem(label))
         if eschema.has_perm(req, 'add') and rschema.has_perm(req, 'add', toeid=ueid):
-            boxmenu = BoxMenu(req._('manage bookmarks'), liclass=u'invisible')
+            boxmenu = BoxMenu(req._('manage bookmarks'))
             linkto = 'bookmarked_by:%s:subject' % ueid
             # use a relative path so that we can move the application without
             # loosing bookmarks

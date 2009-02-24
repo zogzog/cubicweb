@@ -102,7 +102,7 @@ class TableView(AnyRsetView):
         rset = self.rset
         req = self.req
         req.add_js('jquery.tablesorter.js')
-        req.add_css('cubicweb.tablesorter.css')
+        req.add_css(('cubicweb.tablesorter.css', 'cubicweb.tableview.css'))
         rqlst = rset.syntax_tree()
         # get rql description first since the filter form may remove some
         # necessary information

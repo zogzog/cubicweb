@@ -56,8 +56,9 @@ class LoggedOutTemplate(LogInOutTemplate):
     title = 'logged out'
 
     def content(self, w):
+        # FIXME Deprecated code ?
         msg = self.req._('you have been logged out')
-        w(u'<h1 class="noborder">%s</h1>\n' % msg)
+        w(u'<h2>%s</h2>\n' % msg)
         if self.config['anonymous-user']:
             indexurl = self.build_url('view', vid='index', __message=msg)
             w(u'<p><a href="%s">%s</a><p>' % (

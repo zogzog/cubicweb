@@ -11,5 +11,22 @@
 # Short-Description: Start cubicweb application at boot time
 ### END INIT INFO
 
+# FIXME Seems to be inadequate here
+# FIXME If related to pyro, try instead:
+# export PYRO_STORAGE="/tmp"
 cd /tmp
-/usr/bin/cubicweb-ctl $1 --force
+
+# FIXME Work-around about the following lintian error
+#     E: cubicweb-ctl: init.d-script-does-not-implement-required-option /etc/init.d/cubicweb start
+#
+# Check if we are sure to not want the start-stop-daemon machinery here
+# Refer to Debian Policy Manual section 9.3.2 (Writing the scripts) for details.
+
+case "$1" in
+	"force-reload")
+		/usr/bin/cubicweb-ctl reload --force
+		;;
+	"*|restart")
+		/usr/bin/cubicweb-ctl $1 --force
+		;;
+esac

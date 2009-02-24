@@ -1,4 +1,4 @@
-from logilab.mtconverter import TransformError, html_escape
+from logilab.mtconverter import TransformError, xml_escape
 
 from cubicweb.common.view import StartupView
 from cubicweb.common.view import EntityView
@@ -159,7 +159,6 @@ class OWLABOXView(EntityView):
     
     def call(self):
         self.w(OWL_OPENING_ROOT % {'appid': self.schema.name})
-        self.wview('owl', None, writeprefix=False)
         for i in xrange(self.rset.rowcount):
             self.cell_call(i, 0)
         self.w(OWL_CLOSING_ROOT)
@@ -190,7 +189,7 @@ class OWLABOXItemView(EntityView):
             try:
                 attr = entity.printable_value(aname, format='text/plain')
                 if attr:
-                    self.w(u'<%s>%s</%s>' % (aname, html_escape(attr), aname))
+                    self.w(u'<%s>%s</%s>' % (aname, xml_escape(attr), aname))
             except TransformError:
                 pass
         self.w(u'<!--relations -->')

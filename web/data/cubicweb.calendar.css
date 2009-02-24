@@ -74,7 +74,7 @@ table.omcalendar tr td:hover div.calCellTitle div.cmd a {
 }
 
 table.omcalendar tr td div.calCellTitle div.stopper {
-  clear:pos;
+ /* clear:pos; # FIXME : pos is not a clear value*/
 }
 
 table.omcalendar tr td {
