@@ -507,10 +507,7 @@ class FacetVocabularyWidget(HTMLWidget):
     def _render(self):
         title = html_escape(self.facet.title)
         facetid = html_escape(self.facet.id)
-        if len(self.items) > 6:
-            self.w(u'<div id="%s" class="facet overflowed">\n' % facetid)
-        else:
-            self.w(u'<div id="%s" class="facet">\n' % facetid)
+        self.w(u'<div id="%s" class="facet">\n' % facetid)
         self.w(u'<div class="facetTitle" cubicweb:facetName="%s">%s</div>\n' %
                (html_escape(facetid), title))
         if self.facet.support_and():
@@ -523,6 +520,8 @@ class FacetVocabularyWidget(HTMLWidget):
         cssclass = ''
         if not self.facet.start_unfolded:
             cssclass += ' hidden'
+        if len(self.items) > 6:
+            cssclass +=' overflowed'
         self.w(u'<div class="facetBody%s">\n' % cssclass)
         for item in self.items:
             item.render(self.w)
