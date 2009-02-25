@@ -1003,7 +1003,8 @@ class EntityRelationView(EntityView):
         else:
             role = 'object'
         rset = self.rset.get_entity(row, col).related(self.rtype, role)
-        self.w(u'<h1>%s</h1>' % self.req._(self.title).capitalize())
+        if self.title:
+            self.w(u'<h1>%s</h1>' % self.req._(self.title).capitalize())
         self.w(u'<div class="mainInfo">')
         self.wview(self.vid, rset, 'noresult')
         self.w(u'</div>')
