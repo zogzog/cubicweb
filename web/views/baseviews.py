@@ -244,7 +244,7 @@ class PrimaryView(EntityView):
         """
         if hasattr(self, 'get_side_boxes_defs'):
             if rset:
-                self.w(u'<table align="right" width="100%">')
+                self.w(u'<table width="100%">')
                 for label, rset in self.get_side_boxes_defs(entity):
                     self.w(u'<tr><td>')
                     self.w(u'<div class="sideRelated">')
@@ -253,7 +253,7 @@ class PrimaryView(EntityView):
                     self.w(u'</td></tr>')
                 self.w(u'</table>')
         elif siderelations:
-            self.w(u'<table align="right" width="100%">')
+            self.w(u'<table width="100%">')
             self.w(u'<tr><td>')
             self.w(u'<div class="sideRelated">')
             for relatedinfos in siderelations:
@@ -263,19 +263,21 @@ class PrimaryView(EntityView):
             self.w(u'</div>')
             self.w(u'</td></tr>')
             self.w(u'</table>')
-        self.w(u'<table  align="right" width="100%">')
-        for box in self.vreg.possible_vobjects('boxes', self.req, self.rset,
-                                               row=self.row, view=self,
-                                               context='incontext'):
-            self.w(u'<tr><td>')
-            try:
-                box.dispatch(w=self.w, row=self.row)
-            except NotImplementedError:
-                # much probably a context insensitive box, which only implements
-                # .call() and not cell_call()
-                box.dispatch(w=self.w)
-            self.w(u'</td></tr>')
-        self.w(u'</table>')
+        boxes = list(self.vreg.possible_vobjects('boxes', self.req, self.rset,
+                                                 row=self.row, view=self,
+                                                 context='incontext'))
+        if boxes:
+            self.w(u'<table width="100%">')
+            for box in boxes:
+                self.w(u'<tr><td>')
+                try:
+                    box.dispatch(w=self.w, row=self.row)
+                except NotImplementedError:
+                    # much probably a context insensitive box, which only implements
+                    # .call() and not cell_call()
+                    box.dispatch(w=self.w)
+                self.w(u'</td></tr>')
+            self.w(u'</table>')
                 
     def is_side_related(self, rschema, eschema):
         return rschema.meta and \
