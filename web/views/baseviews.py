@@ -11,7 +11,7 @@
 :copyright: 2001-2009 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 """
-from __future__ import with_statement
+#from __future__ import with_statement
 
 __docformat__ = "restructuredtext en"
 
