@@ -11,6 +11,8 @@
 :copyright: 2001-2009 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 """
+from __future__ import with_statement
+
 __docformat__ = "restructuredtext en"
 
 from warnings import warn
@@ -243,9 +245,11 @@ class PrimaryView(EntityView):
         non-meta in a first step, meta in a second step
         """
         if hasattr(self, 'get_side_boxes_defs'):
-            if rset:
+            sideboxes = [(label, rset) for label, rset in self.get_side_boxes_defs(entity)
+                         if rset]
+            if sideboxes:
                 self.w(u'<table width="100%">')
-                for label, rset in self.get_side_boxes_defs(entity):
+                for label, rset in sideboxes:
                     self.w(u'<tr><td>')
                     self.w(u'<div class="sideRelated">')
                     self.wview('sidebox', rset, title=label)
