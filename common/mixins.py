@@ -369,22 +369,18 @@ class ProgressMixIn(object):
     """provide default implementations for IProgress interface methods"""
 
     @property
-    @cached
     def cost(self):
         return self.progress_info()['estimated']
 
     @property
-    @cached
     def revised_cost(self):
         return self.progress_info().get('estimatedcorrected', self.cost)
 
     @property
-    @cached
     def done(self):
         return self.progress_info()['done']
 
     @property
-    @cached
     def todo(self):
         return self.progress_info()['todo']
 
