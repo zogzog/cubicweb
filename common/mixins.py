@@ -175,14 +175,14 @@ class WorkflowableMixIn(object):
         return self.req._(self.state)
 
     def wf_state(self, statename):
-        rset = self.req.execute('Any S, SN WHERE S name %(n)s, S state_of E, E name %(e)s',
+        rset = self.req.execute('Any S, SN WHERE S name SN, S name %(n)s, S state_of E, E name %(e)s',
                                 {'n': statename, 'e': str(self.e_schema)})
         if rset:
             return rset.get_entity(0, 0)
         return None
     
     def wf_transition(self, trname):
-        rset = self.req.execute('Any T, TN WHERE T name %(n)s, T transition_of E, E name %(e)s',
+        rset = self.req.execute('Any T, TN WHERE T name TN, T name %(n)s, T transition_of E, E name %(e)s',
                                 {'n': trname, 'e': str(self.e_schema)})
         if rset:
             return rset.get_entity(0, 0)
