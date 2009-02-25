@@ -381,9 +381,6 @@ msgstr "Recuerde que no es más que una copia superficial"
 msgid "Problem occured"
 msgstr "Ha ocurrido un error"
 
-msgid "Project linked data"
-msgstr ""
-
 msgid "RQLExpression"
 msgstr "Expresión RQL"
 
@@ -2292,13 +2289,10 @@ msgstr "ordre"
 msgid "ordernum"
 msgstr "ordre"
 
-msgid "owl (tbox+abox)"
+msgid "owl"
 msgstr ""
 
 msgid "owlabox"
-msgstr ""
-
-msgid "owlaboxlight"
 msgstr ""
 
 msgid "owned_by"
@@ -2684,9 +2678,6 @@ msgstr "filtre de tableau"
 
 msgid "task progression"
 msgstr "avancement de la t‚che"
-
-msgid "tbox"
-msgstr ""
 
 msgid "text"
 msgstr "text"

@@ -376,9 +376,6 @@ msgstr ""
 msgid "Problem occured"
 msgstr ""
 
-msgid "Project linked data"
-msgstr ""
-
 msgid "RQLExpression"
 msgstr "RQL expression"
 
@@ -2197,13 +2194,10 @@ msgstr ""
 msgid "ordernum"
 msgstr "order"
 
-msgid "owl (tbox+abox)"
+msgid "owl"
 msgstr ""
 
 msgid "owlabox"
-msgstr ""
-
-msgid "owlaboxlight"
 msgstr ""
 
 msgid "owned_by"
@@ -2575,9 +2569,6 @@ msgid "tablefilter"
 msgstr ""
 
 msgid "task progression"
-msgstr ""
-
-msgid "tbox"
 msgstr ""
 
 msgid "text"
