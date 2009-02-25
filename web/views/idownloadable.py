@@ -35,9 +35,19 @@ def download_box(w, entity, title=None, label=None):
     
 class DownloadBox(EntityBoxTemplate):
     id = 'download_box'
-    __selectors__ = (one_line_rset, implement_interface, match_context_prop)
+    # XXX primary_view selector ?
+    __selectors__ = (one_line_rset, implement_interface, match_context_prop, score_entity_selector)
     accepts_interfaces = (IDownloadable,)
     order = 10
+
+    @classmethod
+    def score_entity(cls, entity):
+        mt = entity.download_content_type()
+        # no download box for images
+        if mt and mt.startswith('image/'):
+            return 0
+        return 1
+    
     def cell_call(self, row, col, title=None, label=None, **kwargs):
         entity = self.entity(row, col)
         download_box(self.w, entity, title, label)
@@ -90,8 +100,9 @@ class DownloadLinkView(baseviews.EntityView):
                                                                                 
 class IDownloadablePrimaryView(baseviews.PrimaryView):
     __selectors__ = (implement_interface,)
-    #skip_attrs = ('eid', 'data',) # XXX
     accepts_interfaces = (IDownloadable,)
+    # XXX File/Image attributes but this is not specified in the IDownloadable interface
+    skip_attrs = baseviews.PrimaryView.skip_attrs + ('data', 'name')
 
     def render_entity_title(self, entity):
         self.w(u'<h1>%s %s</h1>'
@@ -100,12 +111,12 @@ class IDownloadablePrimaryView(baseviews.PrimaryView):
     
     def render_entity_attributes(self, entity, siderelations):
         super(IDownloadablePrimaryView, self).render_entity_attributes(entity, siderelations)
-        self.wview('downloadlink', entity.rset, title=self.req._('download'), row=entity.row)
         self.w(u'<div class="content">')
         contenttype = entity.download_content_type()
         if contenttype.startswith('image/'):
             self.wview('image', entity.rset, row=entity.row)
         else:
+            self.wview('downloadlink', entity.rset, title=self.req._('download'), row=entity.row)
             try:
                 if ENGINE.has_input(contenttype):
                     self.w(entity.printable_value('data'))
