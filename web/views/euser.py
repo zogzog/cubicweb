@@ -40,7 +40,7 @@ class FoafView(EntityView):
     content_type = 'text/xml'
 
     def call(self):
-        self.w('''<?xml version="1.0" encoding="%s"?>
+        self.w(u'''<?xml version="1.0" encoding="%s"?>
 <rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
          xmlns:rdfs="http://www.w3org/2000/01/rdf-schema#"
          xmlns:foaf="http://xmlns.com/foaf/0.1/"> '''% self.req.encoding)
