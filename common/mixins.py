@@ -399,6 +399,6 @@ class ProgressMixIn(object):
             return 100. * self.done / self.revised_cost
         except ZeroDivisionError:
             # total cost is 0 : if everything was estimated, task is completed
-            if self.progress_info().get('notestmiated'):
+            if self.progress_info().get('notestimated'):
                 return 0.
             return 100
