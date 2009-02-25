@@ -302,6 +302,7 @@ class EntityView(View):
     """
     __registerer__ = accepts_registerer
     __selectors__ = (accept,)
+    accepts = ('Any',)
     category = 'entityview'
 
     def field(self, label, value, row=True, show_label=True, w=None, tr=True):
