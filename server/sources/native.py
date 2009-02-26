@@ -451,6 +451,7 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
         try:
             res = session.system_sql(sql).fetchone()
         except:
+            assert self.pool, 'session has no pool set'
             raise UnknownEid(eid)
         if res is None:
             raise UnknownEid(eid)
