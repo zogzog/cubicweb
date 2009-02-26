@@ -453,7 +453,7 @@ class RepositoryBasedTC(TestCase):
         self.__commit = repo.commit
         self.__rollback = repo.rollback
         self.__close = repo.close
-        self.cnxid = self._cnx.sessionid
+        self.cnxid = self.cnx.sessionid
         self.session = repo._sessions[self.cnxid]
         # XXX copy schema since hooks may alter it and it may be not fully
         #     cleaned (missing some schema synchronization support)
