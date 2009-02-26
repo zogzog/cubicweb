@@ -632,7 +632,10 @@ class RQL2LDAPFilter(object):
             filter = '(%s%s)' % (self._ldap_attrs[relation.r_type],
                                  rhs.accept(self))
         except KeyError:
-            assert relation.r_type == 'password' # 2.38 migration
+            # unsupported attribute
+            self.source.warning('%s source can\'t handle relation %s, no '
+                                'results will be returned from this source',
+                                self.source.uri, relation)
             raise UnknownEid # trick to return no result
         return filter
 
