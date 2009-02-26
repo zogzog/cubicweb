@@ -905,6 +905,13 @@ class ServerMigrationHelper(MigrationHelper):
         if commit:
             self.commit()
 
+    def cmd_set_state(self, eid, statename, commit=False):
+        self.session.set_pool() # ensure pool is set
+        entity = self.session.eid_rset(eid).get_entity(0, 0)
+        entity.change_state(entity.wf_state(statename).eid)
+        if commit:
+            self.commit()
+        
     # EProperty handling ######################################################
 
     def cmd_property_value(self, pkey):
