@@ -52,8 +52,24 @@ msgid "%(subject)s %(etype)s #%(eid)s (%(login)s)"
 msgstr "%(subject)s %(etype)s #%(eid)s (%(login)s)"
 
 #, python-format
+msgid "%d days"
+msgstr "%d jours"
+
+#, python-format
+msgid "%d hours"
+msgstr "%d heures"
+
+#, python-format
+msgid "%d minutes"
+msgstr "%d minutes"
+
+#, python-format
 msgid "%d months"
 msgstr "%d mois"
+
+#, python-format
+msgid "%d seconds"
+msgstr "%d secondes"
 
 #, python-format
 msgid "%d weeks"
@@ -64,20 +80,36 @@ msgid "%d years"
 msgstr "%d années"
 
 #, python-format
-msgid "%s days"
-msgstr "%d jours"
+msgid "%d&nbsp;days"
+msgstr "%d&nbsp;jours"
+
+#, python-format
+msgid "%d&nbsp;hours"
+msgstr "%d&nbsp;heures"
+
+#, python-format
+msgid "%d&nbsp;minutes"
+msgstr "%d&nbsp;minutes"
+
+#, python-format
+msgid "%d&nbsp;months"
+msgstr "%d&nbsp;mois"
+
+#, python-format
+msgid "%d&nbsp;seconds"
+msgstr "%d&nbsp;secondes"
+
+#, python-format
+msgid "%d&nbsp;weeks"
+msgstr "%d&nbsp;semaines"
+
+#, python-format
+msgid "%d&nbsp;years"
+msgstr "%d&nbsp;années"
 
 #, python-format
 msgid "%s error report"
 msgstr "%s rapport d'erreur"
-
-#, python-format
-msgid "%s hours"
-msgstr "%s heures"
-
-#, python-format
-msgid "%s minutes"
-msgstr "%s minutes"
 
 #, python-format
 msgid "%s not estimated"
@@ -86,10 +118,6 @@ msgstr "%s non estimé(s)"
 #, python-format
 msgid "%s results matching query"
 msgstr "%s résultats pour la requête"
-
-#, python-format
-msgid "%s seconds"
-msgstr "%s secondes"
 
 #, python-format
 msgid "%s software version of the database"

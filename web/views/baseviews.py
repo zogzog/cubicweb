@@ -58,6 +58,21 @@ class FinalView(AnyRsetView):
     entities) 
     """
     id = 'final'
+    # record generated i18n catalog messages
+    _('%d&nbsp;years')
+    _('%d&nbsp;months')
+    _('%d&nbsp;weeks')
+    _('%d&nbsp;days')
+    _('%d&nbsp;hours')
+    _('%d&nbsp;minutes')
+    _('%d&nbsp;seconds')
+    _('%d years')
+    _('%d months')
+    _('%d weeks')
+    _('%d days')
+    _('%d hours')
+    _('%d minutes')
+    _('%d seconds')
             
     def cell_call(self, row, col, props=None, displaytime=False, format='text/html'):
         etype = self.rset.description[row][col]
@@ -69,23 +84,26 @@ class FinalView(AnyRsetView):
                 self.w(entity.printable_value(rtype, value, format=format))
                 return
         if etype in ('Time', 'Interval'):
-            _ = self.req._
             # value is DateTimeDelta but we have no idea about what is the 
             # reference date here, so we can only approximate years and months
-            if value.days > 730: # 2 years
-                self.w(_('%d years') % (value.days // 365))
-            elif value.days > 60: # 2 months
-                self.w(_('%d months') % (value.days // 30))
-            elif value.days > 14: # 2 weeks
-                self.w(_('%d weeks') % (value.days // 7))
-            elif value.days > 2:
-                self.w(_('%s days') % int(value.days))
-            elif value.hours > 2:
-                self.w(_('%s hours') % int(value.hours))
-            elif value.minutes >= 2:
-                self.w(_('%s minutes') % int(value.minutes))
+            if format == 'text/html':
+                space = '&nbsp;'
             else:
-                self.w(_('%s seconds') % int(value.seconds))
+                space = ' '
+            if value.days > 730: # 2 years
+                self.w(self.req.__('%%d%syears' % space) % (value.days // 365))
+            elif value.days > 60: # 2 months
+                self.w(self.req.__('%%d%smonths' % space) % (value.days // 30))
+            elif value.days > 14: # 2 weeks
+                self.w(self.req.__('%%d%sweeks' % space) % (value.days // 7))
+            elif value.days > 2:
+                self.w(self.req.__('%%d%sdays' % space) % int(value.days))
+            elif value.hours > 2:
+                self.w(self.req.__('%%d%shours' % space) % int(value.hours))
+            elif value.minutes >= 2:
+                self.w(self.req.__('%%d%sminutes' % space) % int(value.minutes))
+            else:
+                self.w(self.req.__('%%d%sseconds' % space) % int(value.seconds))
             return
         self.wdata(printable_value(self.req, etype, value, props, displaytime=displaytime))
 

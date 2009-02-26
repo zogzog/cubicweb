@@ -521,7 +521,6 @@ class EditionForm(EntityForm):
     def on_submit(self, entity):
         return u'return freezeFormButtons(\'%s\')' % (self.domid)
 
-
     def submited_message(self):
         return self.req._('element edited')
 
