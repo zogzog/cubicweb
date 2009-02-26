@@ -40,6 +40,7 @@ class DeleteConfForm(EntityForm):
     def call(self):
         """ask for confirmation before real deletion"""
         _ = self.req._
+        self.req.add_css('cubicweb.form.css')
         self.req.add_js('cubicweb.edition.js')
         self.w(u'<script type="text/javascript">updateMessage(\'%s\');</script>\n' % _('this action is not reversible!'))
         # XXX above message should have style of a warning
@@ -101,6 +102,7 @@ class ChangeStateForm(EntityForm):
         transition = self.req.eid_rset(self.req.form['treid']).get_entity(0, 0)
         dest = transition.destination()
         self.req.add_js('cubicweb.edition.js')
+        self.req.add_css('cubicweb.form.css')
         _ = self.req._
         self.w(self.error_message())
         self.w(u'<h4>%s %s</h4>\n' % (_(transition.name), entity.view('oneline')))
