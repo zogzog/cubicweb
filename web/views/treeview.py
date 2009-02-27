@@ -6,21 +6,20 @@
 """
 __docformat__ = "restructuredtext en"
 
+from logilab.common.decorators import monkeypatch
 from logilab.mtconverter import html_escape
-from cubicweb.interfaces import ITree
-from cubicweb.common.selectors import implement_interface, yes
-from cubicweb.common.view import EntityView
 
 from cubicweb.interfaces import ITree
-from cubicweb.common.selectors import implement_interface, yes
-from cubicweb.common.view import EntityView
+from cubicweb.selectors import implements
+from cubicweb.view import EntityView
+from cubicweb.web.views.basecontrollers import JSonController
 
 def treecookiename(treeid):
     return str('treestate-%s' % treeid)
 
+
 class TreeView(EntityView):
     id = 'treeview'
-    accepts = ('Any',)
     itemvid = 'treeitemview'
     css_classes = 'treeview widget'
     title = _('tree view')
@@ -37,8 +36,7 @@ class TreeView(EntityView):
             self.req.add_css('jquery.treeview.css')
             self.req.add_js(('cubicweb.ajax.js', 'jquery.treeview.js'))
             self.req.html_headers.add_onload(u"""
-                 jQuery("#tree-%s").treeview({toggle: toggleTree,
-                                              prerendered: true});""" % treeid)
+jQuery("#tree-%s").treeview({toggle: toggleTree, prerendered: true});""" % treeid)
         self.w(u'<ul id="tree-%s" class="%s">' % (treeid, self.css_classes))
         for rowidx in xrange(len(self.rset)):
             self.wview(self.itemvid, self.rset, row=rowidx, col=0,
@@ -74,10 +72,8 @@ class FileItemInnerView(EntityView):
 
 
 class DefaultTreeViewItemView(EntityView):
-    """default treeitem view for entities which don't implement ITree
-    """
+    """default treeitem view for entities which don't implement ITree"""
     id = 'treeitemview'
-    accepts = ('Any',)
 
     def cell_call(self, row, col, vid='oneline', parentvid='treeview', treeid=None):
         assert treeid is not None
@@ -92,13 +88,10 @@ class DefaultTreeViewItemView(EntityView):
 class TreeViewItemView(EntityView):
     """specific treeitem view for entities which implement ITree
 
-    (each item should be exandable if it's not a tree leaf)
+    (each item should be expandable if it's not a tree leaf)
     """
     id = 'treeitemview'
-    # XXX append yes to make sure we get an higher score than
-    #     the default treeitem view
-    __selectors__ = (implement_interface, yes)
-    accepts_interfaces = (ITree,)
+    __select_ = implements(ITree)
 
     def open_state(self, eeid, treeid):
         cookies = self.req.get_cookie()
@@ -159,8 +152,6 @@ class TreeViewItemView(EntityView):
             self.wview(parentvid, self.req.execute(rql), treeid=treeid, initial_load=False)
         w(u'</li>')
 
-from logilab.common.decorators import monkeypatch
-from cubicweb.web.views.basecontrollers import JSonController
 
 @monkeypatch(JSonController)
 def js_node_clicked(self, treeid, nodeeid):

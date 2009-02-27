@@ -12,7 +12,7 @@ from time import strftime, localtime
 from logilab.mtconverter import html_escape
 
 from cubicweb.selectors import none_rset, match_user_groups
-from cubicweb.common.view import StartupView
+from cubicweb.view import StartupView
 
 def dict_to_html(w, dict):
     # XHTML doesn't allow emtpy <ul> nodes
