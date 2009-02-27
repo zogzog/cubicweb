@@ -209,6 +209,10 @@ def simple_sgml_tag(tag, content=None, **attrs):
     """
     value = u'<%s' % tag
     if attrs:
+        try:
+            attrs['class'] = attrs.pop('klass')
+        except KeyError:
+            pass
         value += u' ' + u' '.join(u'%s="%s"' % (attr, html_escape(unicode(value)))
                                   for attr, value in attrs.items()
                                   if value is not None)
