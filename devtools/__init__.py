@@ -260,6 +260,8 @@ def install_sqlite_path(querier):
        - http://www.sqlite.org/cvstrac/tktview?tn=1327,33
        (some dates are returned as strings rather thant date objects)
     """
+    if hasattr(querier.__class__, '_devtools_sqlite_patched'):
+        return # already monkey patched
     def wrap_execute(base_execute):
         def new_execute(*args, **kwargs):
             rset = base_execute(*args, **kwargs)
@@ -288,7 +290,7 @@ def install_sqlite_path(querier):
             return rset
         return new_execute
     querier.__class__.execute = wrap_execute(querier.__class__.execute)
-
+    querier.__class__._devtools_sqlite_patched = True
 
 def init_test_database(driver='sqlite', configdir='data', config=None,
                        vreg=None):

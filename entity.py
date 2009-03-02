@@ -45,6 +45,8 @@ class RelationTags(object):
                                'inlineview'))
 
     def __init__(self, eclass, tagdefs):
+        # XXX if a rtag is redefined in a subclass,
+        # the rtag of the base class overwrite the rtag of the subclass
         self.eclass = eclass
         self._tagdefs = {}
         for relation, tags in tagdefs.iteritems():

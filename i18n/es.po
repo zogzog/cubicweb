@@ -52,32 +52,64 @@ msgid "%(subject)s %(etype)s #%(eid)s (%(login)s)"
 msgstr "%(subject)s %(etype)s #%(eid)s (%(login)s)"
 
 #, python-format
+msgid "%d days"
+msgstr "%d días"
+
+#, python-format
+msgid "%d hours"
+msgstr "%d horas"
+
+#, python-format
+msgid "%d minutes"
+msgstr "%d minutos"
+
+#, python-format
 msgid "%d months"
 msgstr "%d meses"
+
+#, python-format
+msgid "%d seconds"
+msgstr "%d segundos"
 
 #, python-format
 msgid "%d weeks"
 msgstr "%d semanas"
 
 #, python-format
-msgid "%d years"
-msgstr "%d años"
+msgid "%d&nbsp;years"
+msgstr "%d&nbsp;años"
 
 #, python-format
-msgid "%s days"
-msgstr "%d días"
+msgid "%d&nbsp;days"
+msgstr "%d&nbsp;días"
+
+#, python-format
+msgid "%d&nbsp;hours"
+msgstr "%d&nbsp;horas"
+
+#, python-format
+msgid "%d&nbsp;minutes"
+msgstr "%d&nbsp;minutos"
+
+#, python-format
+msgid "%d&nbsp;months"
+msgstr "%d&nbsp;meses"
+
+#, python-format
+msgid "%d&nbsp;seconds"
+msgstr "%d&nbsp;segundos"
+
+#, python-format
+msgid "%d&nbsp;weeks"
+msgstr "%d&nbsp;semanas"
+
+#, python-format
+msgid "%d&nbsp;years"
+msgstr "%d&nbsp;años"
 
 #, python-format
 msgid "%s error report"
 msgstr "%s reporte de errores"
-
-#, python-format
-msgid "%s hours"
-msgstr "%s horas"
-
-#, python-format
-msgid "%s minutes"
-msgstr "%s minutos"
 
 #, python-format
 msgid "%s not estimated"
@@ -86,10 +118,6 @@ msgstr "%s no estimado(s)"
 #, python-format
 msgid "%s results matching query"
 msgstr "%s resultados de la demanda"
-
-#, python-format
-msgid "%s seconds"
-msgstr "%s segundos"
 
 #, python-format
 msgid "%s software version of the database"
@@ -380,9 +408,6 @@ msgstr "Recuerde que no es más que una copia superficial"
 
 msgid "Problem occured"
 msgstr "Ha ocurrido un error"
-
-msgid "Project linked data"
-msgstr ""
 
 msgid "RQLExpression"
 msgstr "Expresión RQL"
@@ -2295,13 +2320,10 @@ msgstr "ordre"
 msgid "ordernum"
 msgstr "ordre"
 
-msgid "owl (tbox+abox)"
+msgid "owl"
 msgstr ""
 
 msgid "owlabox"
-msgstr ""
-
-msgid "owlaboxlight"
 msgstr ""
 
 msgid "owned_by"
@@ -2687,9 +2709,6 @@ msgstr "filtre de tableau"
 
 msgid "task progression"
 msgstr "avancement de la t‚che"
-
-msgid "tbox"
-msgstr ""
 
 msgid "text"
 msgstr "text"

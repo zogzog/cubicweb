@@ -35,6 +35,9 @@ function postAjaxLoad(node, req) {
     if (typeof buildWidgets != 'undefined') {
 	buildWidgets(node);
     }
+    if (typeof roundedCornersOnLoad != 'undefined') {
+	roundedCornersOnLoad();
+    }
 }
 
 // cubicweb loadxhtml plugin to make jquery handle xhtml response

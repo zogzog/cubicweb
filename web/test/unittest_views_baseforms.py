@@ -19,7 +19,7 @@ def setup_module(options):
         return DateTime(0000, 1, 1)
     widgets.today = widgets.now = _today
 
-def teardown_module(options, result):
+def teardown_module(options, results):
     widgets.today = orig_today
     widgets.now = orig_now
 

@@ -179,7 +179,7 @@ def text_cut(text, nbwords=30):
     if text is None:
         return u''
     words = text.split()
-    text = ' '.join(words) # normalize spaces
+    text = u' '.join(words) # normalize spaces
     minlength = len(' '.join(words[:nbwords]))
     textlength = text.find('.', minlength) + 1
     if textlength == 0: # no point found

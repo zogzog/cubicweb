@@ -109,6 +109,7 @@ class GaeSchemaLoader(CubicWebSchemaLoader):
         super(GaeSchemaLoader, self).__init__(*args, **kwargs)
         self.defined = {}
         self.created = []
+        self.loaded_files = []
         self._instantiate_handlers()
         
     def finalize(self, register_base_types=False):

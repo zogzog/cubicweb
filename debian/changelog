@@ -1,3 +1,9 @@
+cubicweb (3.1.0-1) unstable; urgency=low
+
+  * new upstream release
+
+ -- Sylvain Thénault <sylvain.thenault@logilab.fr>  Wed, 25 Feb 2009 18:41:47 +0100
+
 cubicweb (3.0.10-1) unstable; urgency=low
 
   * merge cubicweb-core package into cubicweb-common

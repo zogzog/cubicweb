@@ -47,7 +47,23 @@ msgid "%(subject)s %(etype)s #%(eid)s (%(login)s)"
 msgstr ""
 
 #, python-format
+msgid "%d days"
+msgstr ""
+
+#, python-format
+msgid "%d hours"
+msgstr ""
+
+#, python-format
+msgid "%d minutes"
+msgstr ""
+
+#, python-format
 msgid "%d months"
+msgstr ""
+
+#, python-format
+msgid "%d seconds"
 msgstr ""
 
 #, python-format
@@ -59,19 +75,35 @@ msgid "%d years"
 msgstr ""
 
 #, python-format
-msgid "%s days"
+msgid "%d&nbsp;days"
+msgstr ""
+
+#, python-format
+msgid "%d&nbsp;hours"
+msgstr ""
+
+#, python-format
+msgid "%d&nbsp;minutes"
+msgstr ""
+
+#, python-format
+msgid "%d&nbsp;months"
+msgstr ""
+
+#, python-format
+msgid "%d&nbsp;seconds"
+msgstr ""
+
+#, python-format
+msgid "%d&nbsp;weeks"
+msgstr ""
+
+#, python-format
+msgid "%d&nbsp;years"
 msgstr ""
 
 #, python-format
 msgid "%s error report"
-msgstr ""
-
-#, python-format
-msgid "%s hours"
-msgstr ""
-
-#, python-format
-msgid "%s minutes"
 msgstr ""
 
 #, python-format
@@ -80,10 +112,6 @@ msgstr ""
 
 #, python-format
 msgid "%s results matching query"
-msgstr ""
-
-#, python-format
-msgid "%s seconds"
 msgstr ""
 
 #, python-format
@@ -374,9 +402,6 @@ msgid "Please note that this is only a shallow copy"
 msgstr ""
 
 msgid "Problem occured"
-msgstr ""
-
-msgid "Project linked data"
 msgstr ""
 
 msgid "RQLExpression"
@@ -2203,13 +2228,10 @@ msgstr ""
 msgid "ordernum"
 msgstr "order"
 
-msgid "owl (tbox+abox)"
+msgid "owl"
 msgstr ""
 
 msgid "owlabox"
-msgstr ""
-
-msgid "owlaboxlight"
 msgstr ""
 
 msgid "owned_by"
@@ -2581,9 +2603,6 @@ msgid "tablefilter"
 msgstr ""
 
 msgid "task progression"
-msgstr ""
-
-msgid "tbox"
 msgstr ""
 
 msgid "text"

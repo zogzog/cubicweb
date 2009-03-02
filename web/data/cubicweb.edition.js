@@ -402,9 +402,8 @@ function unfreezeFormButtons(formid) {
 
 /* disable form buttons while the validation is being done */
 function freezeFormButtons(formid) {
-    var formbuttons = jQuery(formid + ' input.validateButton');
     jQuery('#progress').show();
-    jQuery(formid + ' input.validateButton').attr('disabled', 'disabled');
+    jQuery('#' + formid + ' input.validateButton').attr('disabled', 'disabled');
     return true;
 }
 

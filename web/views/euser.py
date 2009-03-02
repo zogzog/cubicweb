@@ -87,14 +87,6 @@ class FoafView(EntityView):
         self.w(u'</foaf:Person>\n')
 
 
-class FoafUsableView(FoafView):
-    id = 'foaf_usable'
-    # XXX killme
-    title = None
-    def call(self):
-        self.cell_call(0, 0)
-
-            
 class EditGroups(FormMixIn, EntityView):
     """displays a simple euser / egroups editable table"""
     

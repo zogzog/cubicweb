@@ -46,6 +46,7 @@ class DeleteConfForm(EntityView):
         """ask for confirmation before real deletion"""
         req, w = self.req, self.w
         _ = req._
+        req.add_css('cubicweb.form.css')
         req.add_js('cubicweb.edition.js')
         w(u'<script type="text/javascript">updateMessage(\'%s\');</script>\n'
           % _('this action is not reversible!'))
@@ -98,6 +99,7 @@ class ChangeStateFormView(EntityView):
         transition = self.req.eid_rset(self.req.form['treid']).get_entity(0, 0)
         dest = transition.destination()
         self.req.add_js('cubicweb.edition.js')
+        self.req.add_css('cubicweb.form.css')
         _ = self.req._
         form = ChangeStateForm(self.req, entity=entity,
                                redirect_path=self.redirectpath(entity))
@@ -478,7 +480,6 @@ class EditionForm(FormMixIn, EntityView):
     
     def on_submit(self, entity):
         return u'return freezeFormButtons(\'%s\')' % (self.domid)
-
 
     def submited_message(self):
         return self.req._('element edited')

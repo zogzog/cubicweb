@@ -260,7 +260,6 @@ class SQLGenAnnotator(object):
                 has_text_query = True
         return has_text_query
 
-
     def is_ambiguous(self, var):
         # ignore has_text relation
         if len([rel for rel in var.stinfo['relations']
@@ -337,7 +336,7 @@ class IsAmbData(object):
                 except KeyError:
                     # no relation to deambiguify
                     continue
-
+        
     def _debug_print(self):
         print 'varsols', dict((x, sorted(str(v) for v in values))
                                for x, values in self.varsols.iteritems())
@@ -375,8 +374,9 @@ class IsAmbData(object):
             otheretypes = (other.uidtype,)
             deambiguifier = None
         if otheretypes is not None:
-            # unless types for variable are already non-ambigous, check
-            # if this relation has some type ambiguity
+            # to restrict, we must check that for all type in othertypes,
+            # possible types on the other end of the relation are matching
+            # variable's possible types
             rschema = self.rschema(rel.r_type)
             if onlhs:
                 rtypefunc = rschema.subjects
@@ -386,7 +386,8 @@ class IsAmbData(object):
                 reltypes = frozenset(rtypefunc(otheretype))
                 if var.stinfo['possibletypes'] != reltypes:
                     break
-                self.restrict(var, reltypes)
+            else:
+                self.restrict(var, var.stinfo['possibletypes'])
                 self.deambification_map[var] = deambiguifier
                 return True
         return False

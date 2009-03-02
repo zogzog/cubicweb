@@ -57,7 +57,7 @@ class ServerMigrationHelper(MigrationHelper):
             self.repo_connect()
         if not schema:
             schema = config.load_schema(expand_cubes=True)
-        self.new_schema = schema
+        self.fs_schema = schema
         self._synchronized = set()
 
     @cached
@@ -217,7 +217,9 @@ class ServerMigrationHelper(MigrationHelper):
                         'rql': self.rqlexec,
                         'rqliter': self.rqliter,
                         'schema': self.repo.schema,
-                        'newschema': self.new_schema,
+                        # XXX deprecate
+                        'newschema': self.fs_schema,
+                        'fsschema': self.fs_schema,
                         'cnx': self.cnx,
                         'session' : self.session,
                         'repo' : self.repo,
@@ -281,22 +283,22 @@ class ServerMigrationHelper(MigrationHelper):
         if not update_database:
             self.commit()
             return
-        with_new_cubes = self.config.load_schema()
+        newcubes_schema = self.config.load_schema()
         new = set()
         # execute pre-create files
         for pack in reversed(newcubes):
             self.exec_event_script('precreate', self.config.cube_dir(pack))
         # add new entity and relation types
-        for rschema in with_new_cubes.relations():
+        for rschema in newcubes_schema.relations():
             if not rschema in self.repo.schema:
                 self.cmd_add_relation_type(rschema.type)
                 new.add(rschema.type)
-        for eschema in with_new_cubes.entities():
+        for eschema in newcubes_schema.entities():
             if not eschema in self.repo.schema:
                 self.cmd_add_entity_type(eschema.type)
                 new.add(eschema.type)
         # check if attributes has been added to existing entities
-        for rschema in with_new_cubes.relations():
+        for rschema in newcubes_schema.relations():
             existingschema = self.repo.schema.rschema(rschema.type)
             for (fromtype, totype) in rschema.iter_rdefs():
                 if existingschema.has_rdef(fromtype, totype):
@@ -315,25 +317,25 @@ class ServerMigrationHelper(MigrationHelper):
         removedcubes = super(ServerMigrationHelper, self).cmd_remove_cube(cube)
         if not removedcubes:
             return
-        oldschema = self.new_schema
-        self.new_schema = newschema = self.config.load_schema()
+        fsschema = self.fs_schema
+        removedcubes_schema = self.config.load_schema()
         reposchema = self.repo.schema
         # execute pre-remove files
         for pack in reversed(removedcubes):
             self.exec_event_script('preremove', self.config.cube_dir(pack))
         # remove cubes'entity and relation types
-        for rschema in oldschema.relations():
-            if not rschema in newschema and rschema in reposchema:
+        for rschema in fsschema.relations():
+            if not rschema in removedcubes_schema and rschema in reposchema:
                 self.cmd_drop_relation_type(rschema.type)
-        for eschema in oldschema.entities():
-            if not eschema in newschema and eschema in reposchema:
+        for eschema in fsschema.entities():
+            if not eschema in removedcubes_schema and eschema in reposchema:
                 self.cmd_drop_entity_type(eschema.type)
-        for rschema in oldschema.relations():
-            if rschema in newschema and rschema in reposchema: 
+        for rschema in fsschema.relations():
+            if rschema in removedcubes_schema and rschema in reposchema: 
                 # check if attributes/relations has been added to entities from 
                 # other cubes
                 for fromtype, totype in rschema.iter_rdefs():
-                    if not newschema[rschema.type].has_rdef(fromtype, totype) and \
+                    if not removedcubes_schema[rschema.type].has_rdef(fromtype, totype) and \
                            reposchema[rschema.type].has_rdef(fromtype, totype):
                         self.cmd_drop_relation_definition(
                             str(fromtype), rschema.type, str(totype))
@@ -349,7 +351,7 @@ class ServerMigrationHelper(MigrationHelper):
     def cmd_add_attribute(self, etype, attrname, attrtype=None, commit=True):
         """add a new attribute on the given entity type"""
         if attrtype is None:
-            rschema = self.new_schema.rschema(attrname)
+            rschema = self.fs_schema.rschema(attrname)
             attrtype = rschema.objects(etype)[0]
         self.cmd_add_relation_definition(etype, attrname, attrtype, commit=commit)
         
@@ -368,7 +370,7 @@ class ServerMigrationHelper(MigrationHelper):
         `oldname` is a string giving the name of the existing attribute
         `newname` is a string giving the name of the renamed attribute
         """
-        eschema = self.new_schema.eschema(etype)
+        eschema = self.fs_schema.eschema(etype)
         attrtype = eschema.destination(newname)
         # have to commit this first step anyway to get the definition
         # actually in the schema
@@ -393,7 +395,7 @@ class ServerMigrationHelper(MigrationHelper):
             if eschema.is_final():
                 applschema.del_entity_type(etype)
         else:
-            eschema = self.new_schema.eschema(etype)
+            eschema = self.fs_schema.eschema(etype)
         confirm = self.verbosity >= 2
         # register the entity into EEType
         self.rqlexecall(ss.eschema2rql(eschema), ask_confirm=confirm)
@@ -499,7 +501,7 @@ class ServerMigrationHelper(MigrationHelper):
         committing depends on the `commit` argument value).
         
         """
-        rschema = self.new_schema.rschema(rtype)
+        rschema = self.fs_schema.rschema(rtype)
         # register the relation into ERType and insert necessary relation
         # definitions
         self.rqlexecall(ss.rschema2rql(rschema, addrdef=False),
@@ -537,7 +539,7 @@ class ServerMigrationHelper(MigrationHelper):
         """register a new relation definition, from its definition found in the
         schema definition file
         """
-        rschema = self.new_schema.rschema(rtype)
+        rschema = self.fs_schema.rschema(rtype)
         if not rtype in self.repo.schema:
             self.cmd_add_relation_type(rtype, addrdef=False, commit=True)
         self.rqlexecall(ss.rdef2rql(rschema, subjtype, objtype),
@@ -564,7 +566,7 @@ class ServerMigrationHelper(MigrationHelper):
         """permission synchronization for an entity or relation type"""
         if ertype in ('eid', 'has_text', 'identity'):
             return
-        newrschema = self.new_schema[ertype]
+        newrschema = self.fs_schema[ertype]
         teid = self.repo.schema[ertype].eid
         if 'update' in newrschema.ACTIONS or newrschema.is_final():
             # entity type
@@ -644,7 +646,7 @@ class ServerMigrationHelper(MigrationHelper):
         if rtype in self._synchronized:
             return
         self._synchronized.add(rtype)
-        rschema = self.new_schema.rschema(rtype)
+        rschema = self.fs_schema.rschema(rtype)
         self.rqlexecall(ss.updaterschema2rql(rschema),
                         ask_confirm=self.verbosity>=2)
         reporschema = self.repo.schema.rschema(rtype)
@@ -674,7 +676,7 @@ class ServerMigrationHelper(MigrationHelper):
         self._synchronized.add(etype)
         repoeschema = self.repo.schema.eschema(etype)
         try:
-            eschema = self.new_schema.eschema(etype)
+            eschema = self.fs_schema.eschema(etype)
         except KeyError:
             return
         repospschema = repoeschema.specializes()
@@ -719,7 +721,7 @@ class ServerMigrationHelper(MigrationHelper):
         * constraints
         """
         subjtype, objtype = str(subjtype), str(objtype)
-        rschema = self.new_schema.rschema(rtype)
+        rschema = self.fs_schema.rschema(rtype)
         reporschema = self.repo.schema.rschema(rschema)
         if (subjtype, rschema, objtype) in self._synchronized:
             return
@@ -903,6 +905,13 @@ class ServerMigrationHelper(MigrationHelper):
         if commit:
             self.commit()
 
+    def cmd_set_state(self, eid, statename, commit=False):
+        self.session.set_pool() # ensure pool is set
+        entity = self.session.eid_rset(eid).get_entity(0, 0)
+        entity.change_state(entity.wf_state(statename).eid)
+        if commit:
+            self.commit()
+        
     # EProperty handling ######################################################
 
     def cmd_property_value(self, pkey):

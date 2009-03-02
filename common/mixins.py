@@ -175,14 +175,14 @@ class WorkflowableMixIn(object):
         return self.req._(self.state)
 
     def wf_state(self, statename):
-        rset = self.req.execute('Any S, SN WHERE S name %(n)s, S state_of E, E name %(e)s',
+        rset = self.req.execute('Any S, SN WHERE S name SN, S name %(n)s, S state_of E, E name %(e)s',
                                 {'n': statename, 'e': str(self.e_schema)})
         if rset:
             return rset.get_entity(0, 0)
         return None
     
     def wf_transition(self, trname):
-        rset = self.req.execute('Any T, TN WHERE T name %(n)s, T transition_of E, E name %(e)s',
+        rset = self.req.execute('Any T, TN WHERE T name TN, T name %(n)s, T transition_of E, E name %(e)s',
                                 {'n': trname, 'e': str(self.e_schema)})
         if rset:
             return rset.get_entity(0, 0)
@@ -368,22 +368,18 @@ class ProgressMixIn(object):
     """provide default implementations for IProgress interface methods"""
 
     @property
-    @cached
     def cost(self):
         return self.progress_info()['estimated']
 
     @property
-    @cached
     def revised_cost(self):
         return self.progress_info().get('estimatedcorrected', self.cost)
 
     @property
-    @cached
     def done(self):
         return self.progress_info()['done']
 
     @property
-    @cached
     def todo(self):
         return self.progress_info()['todo']
 
@@ -402,6 +398,6 @@ class ProgressMixIn(object):
             return 100. * self.done / self.revised_cost
         except ZeroDivisionError:
             # total cost is 0 : if everything was estimated, task is completed
-            if self.progress_info().get('notestmiated'):
+            if self.progress_info().get('notestimated'):
                 return 0.
             return 100

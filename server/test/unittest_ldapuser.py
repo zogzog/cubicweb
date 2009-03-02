@@ -33,8 +33,8 @@ config.sources_file = lambda : 'data/sourcesldap'
 repo, cnx = init_test_database('sqlite', config=config)
 
 class LDAPUserSourceTC(RepositoryBasedTC):
-    repo = repo
-        
+    repo, cnx = repo, cnx
+    
     def patch_authenticate(self):
         self._orig_authenticate = LDAPUserSource.authenticate
         LDAPUserSource.authenticate = nopwd_authenticate
@@ -242,7 +242,10 @@ class LDAPUserSourceTC(RepositoryBasedTC):
                                               ['users', 'cochon'],
                                               ['users', 'syt']])
         
-
+    def test_cd_restriction(self):
+        rset = self.execute('EUser X WHERE X creation_date > "2009-02-01"')
+        self.assertEquals(len(rset), 2) # admin/anon but no ldap user since it doesn't support creation_date
+        
     def test_union(self):
         afeids = self.execute('State X')
         ueids = self.execute('EUser X')

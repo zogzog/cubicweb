@@ -32,22 +32,15 @@ class LazyViewMixin(object):
   });""" % {'event': 'load_%s' % vid, 'vid': vid,
             'reloadable' : str(reloadable).lower()})
 
-    def lazyview(self, vid, rql=None, eid=None, rset=None, static=False,
-                 reloadable=False, show_spinbox=True, w=None):
+    def lazyview(self, vid, eid=None, reloadable=False, show_spinbox=True, w=None):
         """a lazy version of wview
         first version only support lazy viewing for an entity at a time
         """
-        assert rql or eid or rset or static, \
-            'lazyview wants at least : rql, or an eid, or an rset -- or call it with static=True'
         w = w or self.w
         self.req.add_js('cubicweb.lazy.js')
         urlparams = {'vid' : vid, 'mode' : 'html'}
-        if rql:
-            urlparams['rql'] = rql
-        elif eid:
+        if eid:
             urlparams['rql'] = uilib.rql_for_eid(eid)
-        elif rset:
-            urlparams['rql'] = rset.printable_rql()
         w(u'<div id="lazy-%s" cubicweb:loadurl="%s">' % (
             vid, html_escape(self.build_url('json', **urlparams))))
         if show_spinbox:
@@ -71,12 +64,12 @@ class TabsMixin(LazyViewMixin):
         return str('%s_active_tab' % self.config.appid)
 
     def active_tab(self, tabs, default):
-        cookies = self.req.get_cookie()
+        cookie = self.req.get_cookie()
         cookiename = self.cookie_name
-        activetab = cookies.get(cookiename)
+        activetab = cookie.get(cookiename)
         if activetab is None:
-            cookies[cookiename] = default
-            self.req.set_cookie(cookies, cookiename)
+            cookie[cookiename] = default
+            self.req.set_cookie(cookie, cookiename)
             tab = default
         else:
             tab = activetab.value
@@ -102,7 +95,7 @@ class TabsMixin(LazyViewMixin):
         active_tab = self.active_tab(tabs, default)
         # build the html structure
         w = self.w
-        w(u'<div id="entity-tabs-%s">' % entity.eid)
+        w(u'<div id="entity-tabs">')
         w(u'<ul>')
         for tab in tabs:
             w(u'<li>')
@@ -116,16 +109,15 @@ class TabsMixin(LazyViewMixin):
         w(u'</div>')
         for tab in tabs:
             w(u'<div id="as-%s">' % tab)
-            self.lazyview(tab, eid=entity.eid)
+            self.lazyview(tab, entity.eid)
             w(u'</div>')
         # call the set_tab() JS function *after* each tab is generated
         # because the callback binding needs to be done before
         self.req.html_headers.add_onload(u"""
-   jQuery('#entity-tabs-%(eeid)s > ul').tabs( { selected: %(tabindex)s });
+   jQuery('#entity-tabs > ul').tabs( { selected: %(tabindex)s });
    set_tab('%(vid)s', '%(cookiename)s');
  """ % {'tabindex'   : tabs.index(active_tab),
         'vid'        : active_tab,
-        'eeid'       : entity.eid,
         'cookiename' : self.cookie_name})
 
 

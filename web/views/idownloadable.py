@@ -17,6 +17,12 @@ from cubicweb.web.views import baseviews
 
 _ = unicode
 
+def is_image(entity):
+    mt = entity.download_content_type()
+    if not (mt and mt.startswith('image/')):
+        return 0
+    return 1
+
 def download_box(w, entity, title=None, label=None):
     req = entity.req
     w(u'<div class="sideRelated">')
@@ -32,11 +38,14 @@ def download_box(w, entity, title=None, label=None):
     w(u'</div>')
     w(u'</div>\n</div>\n')
 
-    
+
 class DownloadBox(EntityBoxTemplate):
     id = 'download_box'
-    __select__ = (one_line_rset() & implements(IDownloadable) & match_context_prop())
+    # no download box for images
+    # XXX primary_view selector ?
+    __select__ = (one_line_rset() & implements(IDownloadable) & match_context_prop() & ~ score_entity(is_image)
     order = 10
+    
     def cell_call(self, row, col, title=None, label=None, **kwargs):
         entity = self.entity(row, col)
         download_box(self.w, entity, title, label)
@@ -87,7 +96,8 @@ class DownloadLinkView(baseviews.EntityView):
                                                                                 
 class IDownloadablePrimaryView(baseviews.PrimaryView):
     __select__ = implements(IDownloadable)
-    #skip_attrs = ('eid', 'data',) # XXX
+    # XXX File/Image attributes but this is not specified in the IDownloadable interface
+    skip_attrs = baseviews.PrimaryView.skip_attrs + ('data', 'name')
 
     def render_entity_title(self, entity):
         self.w(u'<h1>%s %s</h1>'
@@ -96,12 +106,12 @@ class IDownloadablePrimaryView(baseviews.PrimaryView):
     
     def render_entity_attributes(self, entity, siderelations):
         super(IDownloadablePrimaryView, self).render_entity_attributes(entity, siderelations)
-        self.wview('downloadlink', entity.rset, title=self.req._('download'), row=entity.row)
         self.w(u'<div class="content">')
         contenttype = entity.download_content_type()
         if contenttype.startswith('image/'):
             self.wview('image', entity.rset, row=entity.row)
         else:
+            self.wview('downloadlink', entity.rset, title=self.req._('download'), row=entity.row)
             try:
                 if ENGINE.has_input(contenttype):
                     self.w(entity.printable_value('data'))
@@ -130,12 +140,6 @@ class IDownloadableLineView(baseviews.OneLineView):
                (url, name, durl, self.req._('download')))
 
 
-def is_image(entity):
-    mt = entity.download_content_type()
-    if not (mt and mt.startswith('image/')):
-        return 0
-    return 1
-    
 class ImageView(baseviews.EntityView):
     id = 'image'
     __select__ = implements(IDownloadable) & score_entity(is_image)

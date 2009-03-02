@@ -40,6 +40,8 @@ class MigrationCommandsTC(RepositoryBasedTC):
         self.mh = ServerMigrationHelper(self.repo.config, migrschema,
                                         repo=self.repo, cnx=self.cnx,
                                         interactive=False)
+        assert self.cnx is self.mh._cnx
+        assert self.session is self.mh.session, (self.session.id, self.mh.session.id)
         
     def test_add_attribute_int(self):
         self.failIf('whatever' in self.schema)
@@ -424,6 +426,16 @@ class MigrationCommandsTC(RepositoryBasedTC):
             # why this commit is necessary is unclear to me (though without it
             # next test may fail complaining of missing tables
             self.commit() 
+
+    def test_set_state(self):
+        user = self.session.user
+        self.set_debug(True)
+        self.mh.set_state(user.eid, 'deactivated')
+        user.clear_related_cache('in_state', 'subject')
+        try:
+            self.assertEquals(user.state, 'deactivated')
+        finally:
+            self.set_debug(False)
         
 if __name__ == '__main__':
     unittest_main()

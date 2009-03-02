@@ -105,14 +105,18 @@ function buildRQL(divid, vid, paginate, vidargs) {
 var SELECTED_IMG = baseuri()+"data/black-check.png";
 var UNSELECTED_IMG = baseuri()+"data/no-check-no-border.png";
 
-function initFacetBoxEvents(root){
+function initFacetBoxEvents(root) {
+    // facetargs : (divid, vid, paginate, extraargs)
     root = root || document;
     jQuery(root).find('form').each(function () {
 	var form = jQuery(this);
-	var facetargs = evalJSON(form.attr('cubicweb:facetargs'));
-	if (facetargs !== undefined && facetargs.length) {
+	// NOTE: don't evaluate facetargs here but in callbacks since its value
+	//       may changes and we must send its value when the callback is
+	//       called, not when the page is initialized
+	var facetargs = form.attr('cubicweb:facetargs');
+	if (facetargs !== undefined) {
 	    form.submit(function() {
-	        buildRQL.apply(null, facetargs); //(divid, vid, paginate, extraargs);
+	        buildRQL.apply(null, evalJSON(form.attr('cubicweb:facetargs'))); 
 	        return false;
 	    });
 	    form.find('div.facet').each(function() {
@@ -144,13 +148,13 @@ function initFacetBoxEvents(root){
 			jQuery(this).addClass('facetValueSelected');
 			jQuery(this).find('img').attr('src', SELECTED_IMG);
 		    }
-		    buildRQL.apply(null, facetargs); // (divid, vid, paginate, extraargs);
+		    buildRQL.apply(null, evalJSON(form.attr('cubicweb:facetargs'))); 
 		    facet.find('.facetBody').animate({scrollTop: 0}, '');
 		});
 		facet.find('select.facetOperator').change(function() {
 		    var nbselected = facet.find('div.facetValueSelected').length;
 		    if (nbselected >= 2) {
-			buildRQL.apply(null, facetargs); // (divid, vid, paginate, extraargs);
+			buildRQL.apply(null, evalJSON(form.attr('cubicweb:facetargs')));
 		    }
 		});
 		facet.find('div.facetTitle').click(function() {
@@ -169,8 +173,7 @@ function reorderFacetsItems(root){
     root = root || document;
     jQuery(root).find('form').each(function () {
 	var form = jQuery(this);
-	var facetargs = form.attr('cubicweb:facetargs');
-	if (facetargs) {
+	if (form.attr('cubicweb:facetargs')) {
 	    form.find('div.facet').each(function() {
 		var facet = jQuery(this);
 		var lastSelected = null;

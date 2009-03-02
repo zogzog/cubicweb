@@ -176,6 +176,10 @@ directory (default to once a day).',
         external repository
         """
         self.info('synchronizing ldap source %s', self.uri)
+        try:
+            ldap_emailattr = self.user_rev_attrs['email']
+        except KeyError:
+            return # no email in ldap, we're done
         session = self.repo.internal_session()
         try:
             cursor = session.system_sql("SELECT eid, extid FROM entities WHERE "
@@ -184,7 +188,7 @@ directory (default to once a day).',
                 # if no result found, _search automatically delete entity information
                 res = self._search(session, extid, BASE)
                 if res: 
-                    ldapemailaddr = res[0].get(self.user_rev_attrs['email'])
+                    ldapemailaddr = res[0].get(ldap_emailattr)
                     if ldapemailaddr:
                         rset = session.execute('EmailAddress X,A WHERE '
                                                'U use_email X, U eid %(u)s',
@@ -628,7 +632,10 @@ class RQL2LDAPFilter(object):
             filter = '(%s%s)' % (self._ldap_attrs[relation.r_type],
                                  rhs.accept(self))
         except KeyError:
-            assert relation.r_type == 'password' # 2.38 migration
+            # unsupported attribute
+            self.source.warning('%s source can\'t handle relation %s, no '
+                                'results will be returned from this source',
+                                self.source.uri, relation)
             raise UnknownEid # trick to return no result
         return filter
 

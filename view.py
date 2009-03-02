@@ -304,7 +304,22 @@ class View(AppRsetObject):
     def create_url(self, etype, **kwargs):
         """ return the url of the entity creation form for a given entity type"""
         return self.req.build_url('add/%s'%etype, **kwargs)
+<<<<<<< /home/syt/src/fcubicweb/cubicweb/view.py
     
+=======
+
+
+# concrete views base classes #################################################
+
+class EntityView(View):
+    """base class for views applying on an entity (i.e. uniform result set)
+    """
+    __registerer__ = accepts_registerer
+    __selectors__ = (accept,)
+    accepts = ('Any',)
+    category = 'entityview'
+
+>>>>>>> /tmp/view.py~other.mliJlS
     def field(self, label, value, row=True, show_label=True, w=None, tr=True):
         """ read-only field """
         if w is None:

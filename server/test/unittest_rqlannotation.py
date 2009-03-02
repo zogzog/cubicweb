@@ -286,6 +286,12 @@ class SQLGenAnnotatorTC(BaseQuerierTC):
                               '(EXISTS(S owned_by 1)) OR (EXISTS(S documented_by N, N title "published"))')
         self.assertEquals(rqlst.defined_vars['S']._q_invariant, True)
 
+    def test_nonregr_ambiguity(self):        
+        rqlst = self._prepare('Note N WHERE N attachment F')
+        # N may be an image as well, not invariant
+        self.assertEquals(rqlst.defined_vars['N']._q_invariant, False)
+        self.assertEquals(rqlst.defined_vars['F']._q_invariant, True)
+
 if __name__ == '__main__':
     from logilab.common.testlib import unittest_main
     unittest_main()
