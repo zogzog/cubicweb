@@ -9,7 +9,7 @@ __docformat__ = "restructuredtext en"
 from logilab.mtconverter import html_escape
 
 from cubicweb.selectors import implements
-from cubicweb.common.view import EntityView
+from cubicweb.view import EntityView
 
 class CellView(EntityView):
     id = 'cell'

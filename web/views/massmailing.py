@@ -11,7 +11,7 @@ from logilab.mtconverter import html_escape
 
 from cubicweb.interfaces import IEmailable
 from cubicweb.selectors import implements, match_user_groups
-from cubicweb.common.view import EntityView
+from cubicweb.view import EntityView
 from cubicweb.web.action import Action
 from cubicweb.web import stdmsgs
 

@@ -1,7 +1,7 @@
 """dynamically generated image views
 
 :organization: Logilab
-:copyright: 2001-2008 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+:copyright: 2001-2009 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 """
 __docformat__ = "restructuredtext en"
@@ -14,7 +14,7 @@ from logilab.common.graph import escape, GraphGenerator, DotBackend
 from yams import schema2dot as s2d
 
 from cubicweb.selectors import implements
-from cubicweb.common.view import EntityView, StartupView
+from cubicweb.view import EntityView, StartupView
 
 
 class RestrictedSchemaDotPropsHandler(s2d.SchemaDotPropsHandler):

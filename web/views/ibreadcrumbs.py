@@ -9,10 +9,10 @@ __docformat__ = "restructuredtext en"
 from logilab.mtconverter import html_escape
 
 # don't use AnyEntity since this may cause bug with isinstance() due to reloading
-from cubicweb.entity import Entity
 from cubicweb.interfaces import IBreadCrumbs
 from cubicweb.selectors import match_context_prop, one_line_rset, implements
-from cubicweb.common.view import EntityView
+from cubicweb.entity import Entity
+from cubicweb.view import EntityView
 from cubicweb.common.uilib import cut
 from cubicweb.web.component import EntityVComponent
 

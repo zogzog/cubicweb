@@ -14,10 +14,9 @@ from logilab.mtconverter import html_escape
 
 from cubicweb.interfaces import ICalendarable
 from cubicweb.selectors import implements
-from cubicweb.common.view import EntityView, StartupView
+from cubicweb.view import EntityView, StartupView
 
 
-# 
 class TimelineJsonView(EntityView):
     """generates a json file to feed Timeline.loadJSON()
     NOTE: work in progress (image_url, bubbleUrl and so on

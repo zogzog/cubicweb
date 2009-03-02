@@ -15,7 +15,7 @@ from rql import RQLSyntaxError, BadRQLQuery, parse
 from rql.nodes import Relation
 
 from cubicweb import Unauthorized
-from cubicweb.common.view import Component
+from cubicweb.view import Component
 
 LOGGER = getLogger('cubicweb.magicsearch')
 

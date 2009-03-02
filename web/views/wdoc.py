@@ -1,7 +1,7 @@
 """inline help system, using ReST file in products `wdoc` directory
 
 :organization: Logilab
-:copyright: 2008 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+:copyright: 2008-2009 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 """
 __docformat__ = "restructuredtext en"
@@ -16,7 +16,7 @@ from logilab.common.changelog import ChangeLog
 from logilab.mtconverter import CHARSET_DECL_RGX
 
 from cubicweb.selectors import match_form_params
-from cubicweb.common.view import StartupView
+from cubicweb.view import StartupView
 from cubicweb.common.uilib import rest_publish
 from cubicweb.web import NotFound
 

@@ -2,7 +2,7 @@
 
 
 :organization: Logilab
-:copyright: 2007-2008 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+:copyright: 2007-2009 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 """
 __docformat__ = "restructuredtext en"
@@ -14,7 +14,7 @@ from logilab.common.decorators import cached
 from cubicweb.selectors import (one_line_rset, none_rset, implements,
                                 match_user_groups, chainfirst, chainall)
 from cubicweb.utils import UStringIO
-from cubicweb.common.view import StartupView
+from cubicweb.view import StartupView
 from cubicweb.web import INTERNAL_FIELD_VALUE, eid_param, stdmsgs
 from cubicweb.web.views import baseviews
 from cubicweb.web.form import FormMixIn

@@ -12,7 +12,7 @@ from logilab.mtconverter import html_escape
 from cubicweb.selectors import implements, accept
 from cubicweb.interfaces import IProgress, IMileStone
 from cubicweb.schema import display_name
-from cubicweb.common.view import EntityView
+from cubicweb.view import EntityView
 from cubicweb.web.htmlwidgets import ProgressBarWidget
 
 

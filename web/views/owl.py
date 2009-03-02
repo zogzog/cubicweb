@@ -1,7 +1,14 @@
+"""produces some Ontology Web Language schema and views
+
+:organization: Logilab
+:copyright: 2008-2009 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+:contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
+"""
+__docformat__ = "restructuredtext en"
+
 from logilab.mtconverter import TransformError, xml_escape
 
-from cubicweb.common.view import StartupView
-from cubicweb.common.view import EntityView
+from cubicweb.view import StartupView, EntityView
 
 _ = unicode
 
