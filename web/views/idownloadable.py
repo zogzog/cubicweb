@@ -43,7 +43,7 @@ class DownloadBox(EntityBoxTemplate):
     id = 'download_box'
     # no download box for images
     # XXX primary_view selector ?
-    __select__ = (one_line_rset() & implements(IDownloadable) & match_context_prop() & ~ score_entity(is_image)
+    __select__ = (one_line_rset() & implements(IDownloadable) & match_context_prop() & ~score_entity(is_image))
     order = 10
     
     def cell_call(self, row, col, title=None, label=None, **kwargs):
