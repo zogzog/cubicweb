@@ -14,7 +14,7 @@ from cubicweb import NoSelectableObject, role
 from cubicweb.selectors import partial_has_related_entities
 from cubicweb.utils import HTMLHead
 from cubicweb.view import EntityView
-from cubicweb.common.uilib import rql_for_eid
+from cubicweb.common import uilib, tags
 from cubicweb.web.views.basecontrollers import JSonController
 
 
@@ -45,7 +45,7 @@ class LazyViewMixin(object):
         if rql:
             urlparams['rql'] = rql
         elif eid:
-            urlparams['rql'] = rql_for_eid(eid)
+            urlparams['rql'] = uilib.rql_for_eid(eid)
         elif rset:
             urlparams['rql'] = rset.printable_rql()
         w(u'<div id="lazy-%s" cubicweb:loadurl="%s">' % (
@@ -129,9 +129,8 @@ class TabsMixin(LazyViewMixin):
         'cookiename' : self.cookie_name})
 
 
-class EntityRelatedTab(EntityView):
-    """A view you should inherit from leftmost,
-    to wrap another actual view displaying entity related stuff.
+class EntityRelationView(EntityView):
+    """view displaying entity related stuff.
     Such a view _must_ provide the rtype, target and vid attributes :
 
     Example :
@@ -139,18 +138,14 @@ class EntityRelatedTab(EntityView):
     class ProjectScreenshotsView(EntityRelationView):
         '''display project's screenshots'''
         id = title = _('projectscreenshots')
-        accepts = ('Project',)
+        __select__ = EntityRelationView.__select__ & implements('Project')
         rtype = 'screenshot'
-        target = 'object'
+        role = 'subject'
         vid = 'gallery'
-        __selectors__ = EntityRelationView.__selectors__ + (one_line_rset,)
 
-
-    This is the view we want to have in a tab, only if there is something to show.
-    Then, just define as below, and declare this being the tab content :
-
-    class ProjectScreenshotTab(EntityRelatedTab, ProjectScreenshotsView):
-        id = 'screenshots_tab'
+    in this example, entities related to project entity by the'screenshot'
+    relation (where the project is subject of the relation) will be displayed
+    using the 'gallery' view.
     """
     __select__ = EntityView.__select__ & partial_has_related_entities()
     vid = 'list'
@@ -158,5 +153,7 @@ class EntityRelatedTab(EntityView):
     def cell_call(self, row, col):
         rset = self.entity(row, col).related(self.rtype, role(self))
         self.w(u'<div class="mainInfo">')
+        if self.title:
+            self.w(tags.h1(self.req._(title)))
         self.wview(self.vid, rset, 'noresult')
         self.w(u'</div>')
