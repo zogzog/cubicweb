@@ -246,11 +246,8 @@ class ISiocItem(Interface):
         """return content entity"""
 
     def isioc_container(self):
-        """return container entity"""
-           
-    def isioc_get_reply(self):
-         """return list of item reply"""
-        
+        """return container entity"""           
+            
 class ISiocContainer(Interface):
     """interface for entities (which are container
     in sioc specification) with sioc views"""
