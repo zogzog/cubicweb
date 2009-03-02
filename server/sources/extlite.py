@@ -203,7 +203,7 @@ repository.',
         """add a new entity to the source"""
         raise NotImplementedError()
 
-    def local_update_entity(self, session, entity):
+    def local_update_entity(self, session, entity, attrs=None):
         """update an entity in the source
 
         This is not provided as update_entity implementation since usually
@@ -211,7 +211,8 @@ repository.',
         and the source implementor may use this method if necessary
         """
         cu = session.pool[self.uri]
-        attrs = self.sqladapter.preprocess_entity(entity)
+        if attrs is None:
+            attrs = self.sqladapter.preprocess_entity(entity)
         sql = self.sqladapter.sqlgen.update(str(entity.e_schema), attrs, ['eid'])
         cu.execute(sql, attrs)
         
