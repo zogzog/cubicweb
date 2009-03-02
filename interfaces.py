@@ -241,34 +241,20 @@ class IFeed(Interface):
 class ISiocItem(Interface):
     """interface for entities (which are item
     in sioc specification) with sioc views"""
-
-    def isioc_item_creator(self):
-        """return creator entity"""
-
-    def isioc_item_content(self):
+    
+    def isioc_content(self):
         """return content entity"""
 
-    def isioc_item_container(self):
+    def isioc_container(self):
         """return container entity"""
            
-    def isioc_item_get_reply(self):
+    def isioc_get_reply(self):
          """return list of item reply"""
-
-    def isioc_item_creation_date(self):
-        """return creation date entity"""
-
-    def item_modification_date(self):
-        """return modification date"""
-    
+        
 class ISiocContainer(Interface):
     """interface for entities (which are container
     in sioc specification) with sioc views"""
 
-    def isioc_container_type(self):
+    def isioc_type(self):
         """return container type (forum, weblog, mailinglist)"""
-
-    def isioc_container_creation_date(self):
-        """return creation date entity"""
-        
-    def isico_container_modification_date(self):
-        """return modification date"""
+    
