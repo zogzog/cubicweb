@@ -158,9 +158,6 @@ class PrimaryView(EntityView):
         self.render_entity_metadata(entity)
         # entity's attributes and relations, excluding meta data
         # if the entity isn't meta itself
-        #self.w(u'<table border="0" width="100%">')
-        #self.w(u'<tr>')
-        #self.w(u'<td valign="top">')
         self.w(u'<div>')
         self.w(u'<div class="mainInfo">')
         self.render_entity_attributes(entity, siderelations)
@@ -169,16 +166,11 @@ class PrimaryView(EntityView):
         if self.main_related_section:
             self.render_entity_relations(entity, siderelations)
         self.w(u'</div>')
-        #self.w(u'</td>')
         # side boxes
-        #self.w(u'<td valign="top">')
         self.w(u'<div class="primaryRight">')
         self.render_side_related(entity, siderelations)
         self.w(u'</div>')
-        self.w(u'<div class="clear"></div>')#verifier
-        #self.w(u'</td>')
-        #self.w(u'</tr>')
-        #self.w(u'</table>')        
+        self.w(u'<div class="clear"></div>')          
         self.content_navigation_components('navcontentbottom')
 
     def content_navigation_components(self, context):
@@ -271,40 +263,28 @@ class PrimaryView(EntityView):
             sideboxes = [(label, rset) for label, rset in self.get_side_boxes_defs(entity)
                          if rset]
             if sideboxes:
-                #self.w(u'<table width="100%">')
                 for label, rset in sideboxes:
-                    #self.w(u'<tr><td>')
                     self.w(u'<div class="sideRelated">')
                     self.wview('sidebox', rset, title=label)
                     self.w(u'</div>')
-                    #self.w(u'</td></tr>')
-                #self.w(u'</table>')
         elif siderelations:
-            #self.w(u'<table width="100%">')
-            #self.w(u'<tr><td>')
             self.w(u'<div class="sideRelated">')
             for relatedinfos in siderelations:
                 # if not relatedinfos[0].meta:
                 #    continue
                 self._render_related_entities(entity, *relatedinfos)
             self.w(u'</div>')
-            #self.w(u'</td></tr>')
-            #self.w(u'</table>')
         boxes = list(self.vreg.possible_vobjects('boxes', self.req, self.rset,
                                                  row=self.row, view=self,
                                                  context='incontext'))
         if boxes:
-            #self.w(u'<table width="100%">')
             for box in boxes:
-                #self.w(u'<tr><td>')
                 try:
                     box.dispatch(w=self.w, row=self.row)
                 except NotImplementedError:
                     # much probably a context insensitive box, which only implements
                     # .call() and not cell_call()
-                    box.dispatch(w=self.w)
-                #self.w(u'</td></tr>')
-            #self.w(u'</table>')
+                    box.dispatch(w=self.w)               
                 
     def is_side_related(self, rschema, eschema):
         return rschema.meta and \
