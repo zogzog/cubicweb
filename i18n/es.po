@@ -104,10 +104,6 @@ msgid "%d&nbsp;weeks"
 msgstr "%d&nbsp;semanas"
 
 #, python-format
-msgid "%d&nbsp;years"
-msgstr "%d&nbsp;años"
-
-#, python-format
 msgid "%s error report"
 msgstr "%s reporte de errores"
 
