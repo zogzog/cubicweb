@@ -5,6 +5,7 @@
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 """
 __docformat__ = "restructuredtext en"
+import uuid
 
 from logilab.mtconverter import html_escape
 from cubicweb.interfaces import ITree
@@ -22,13 +23,17 @@ class TreeView(EntityView):
     title = _('tree view')
 
     def call(self, subvid=None, treeid=None, initial_load=True):
-        if subvid is None and 'subvid' in self.req.form:
-            subvid = self.req.form.pop('subvid') # consume it
         if subvid is None:
-            subvid = 'oneline'
-        if treeid is None and 'treeid' in self.req.form:
-            treeid = self.req.form.pop('treeid')
-        assert treeid is not None
+            if 'subvid' in self.req.form:
+                subvid = self.req.form.pop('subvid') # consume it
+            else:
+                subvid = 'oneline'
+        if treeid is None:
+            if 'treeid' in self.req.form:
+                treeid = self.req.form.pop('treeid')
+            else:
+                treeid = uuid.uuid1().hex
+                self.warning('Tree state won\'t be properly restored after next reload')
         if initial_load:
             self.req.add_css('jquery.treeview.css')
             self.req.add_js(('cubicweb.ajax.js', 'jquery.treeview.js'))
