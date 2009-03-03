@@ -5,11 +5,10 @@
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 """
 __docformat__ = "restructuredtext en"
-import uuid
-
 from logilab.mtconverter import html_escape
 from cubicweb.interfaces import ITree
 from cubicweb.common.selectors import implement_interface, yes
+from cubicweb.common.utils import make_uid
 from cubicweb.common.view import EntityView
 
 def treecookiename(treeid):
@@ -32,7 +31,7 @@ class TreeView(EntityView):
             if 'treeid' in self.req.form:
                 treeid = self.req.form.pop('treeid')
             else:
-                treeid = uuid.uuid1().hex
+                treeid = make_uid('throw away uid')
                 self.warning('Tree state won\'t be properly restored after next reload')
         if initial_load:
             self.req.add_css('jquery.treeview.css')
