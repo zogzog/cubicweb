@@ -1,7 +1,7 @@
 """base classes to handle tabbed views
 
 :organization: Logilab
-:copyright: 2008 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+:copyright: 2008-2009 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 """
 
@@ -90,6 +90,11 @@ class TabsMixin(LazyViewMixin):
         self.req.add_css('ui.tabs.css')
         self.req.add_js(('ui.core.js', 'ui.tabs.js',
                          'cubicweb.ajax.js', 'cubicweb.tabs.js', 'cubicweb.lazy.js'))
+        # tabbed views do no support concatenation
+        # hence we delegate to the default tab
+        if self.req.form.get('vid') == 'primary':
+            entity.view(default)
+            return
         # prune tabs : not all are to be shown
         tabs = self.prune_tabs(tabs)
         # select a tab
