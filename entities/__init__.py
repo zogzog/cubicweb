@@ -416,7 +416,7 @@ class AnyEntity(Entity):
         `attr`, according to user preferences
         """
         req = self.req
-        if req.property_value('ui.fckeditor') and self.has_format(attr):
+        if self.config.fckeditor_installed() and req.property_value('ui.fckeditor') and self.has_format(attr):
             if self.has_eid() or '%s_format' % attr in self:
                 return self.format(attr) == 'text/html'
             return req.property_value('ui.default-text-format') == 'text/html'
