@@ -745,7 +745,7 @@ class has_related_entities(EntitySelector):
             return 0
         rset = entity.related(self.rtype, self.role)
         if self.target_etype:
-            return any(x for x, in rset.description if x == self.target_etype)
+            return any(r for r in rset.description if r[0] == self.target_etype)
         return rset and 1 or 0
 
 
