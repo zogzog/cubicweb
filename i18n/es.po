@@ -76,8 +76,8 @@ msgid "%d weeks"
 msgstr "%d semanas"
 
 #, python-format
-msgid "%d&nbsp;years"
-msgstr "%d&nbsp;años"
+msgid "%d years"
+msgstr "%d años"
 
 #, python-format
 msgid "%d&nbsp;days"
@@ -102,10 +102,6 @@ msgstr "%d&nbsp;segundos"
 #, python-format
 msgid "%d&nbsp;weeks"
 msgstr "%d&nbsp;semanas"
-
-#, python-format
-msgid "%d&nbsp;years"
-msgstr "%d&nbsp;años"
 
 #, python-format
 msgid "%s error report"

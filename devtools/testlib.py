@@ -248,11 +248,11 @@ class WebTest(EnvBasedTC):
     def to_test_etypes(self):
         return unprotected_entities(self.schema, strict=True)
     
-    def iter_automatic_rsets(self):
+    def iter_automatic_rsets(self, limit=10):
         """generates basic resultsets for each entity type"""
         etypes = self.to_test_etypes()
         for etype in etypes:
-            yield self.execute('Any X WHERE X is %s' % etype)
+            yield self.execute('Any X LIMIT %s WHERE X is %s' % (limit, etype))
 
         etype1 = etypes.pop()
         etype2 = etypes.pop()
@@ -347,14 +347,14 @@ class AutomaticWebTest(WebTest):
     ## one each
     def test_one_each_config(self):
         self.auto_populate(1)
-        for rset in self.iter_automatic_rsets():
+        for rset in self.iter_automatic_rsets(limit=1):
             for testargs in self._test_everything_for(rset):
                 yield testargs
 
     ## ten each
     def test_ten_each_config(self):
         self.auto_populate(10)
-        for rset in self.iter_automatic_rsets():
+        for rset in self.iter_automatic_rsets(limit=10):
             for testargs in self._test_everything_for(rset):
                 yield testargs
                 

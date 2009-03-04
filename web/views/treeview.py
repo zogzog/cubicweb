@@ -26,21 +26,24 @@ class TreeView(EntityView):
     css_classes = 'treeview widget'
     title = _('tree view')
 
-    def call(self, subvid=None):
-        if subvid is None and 'subvid' in self.req.form:
-            subvid = self.req.form.pop('subvid') # consume it
+    def call(self, subvid=None, treeid=None, initial_load=True):
         if subvid is None:
-            subvid = 'oneline'
-        self.req.add_css('jquery.treeview.css')
-        self.req.add_js(('cubicweb.ajax.js', 'jquery.treeview.js', 'cubicweb.widgets.js'))
-        # XXX noautoload is a quick hack to avoid treeview to be rebuilt
-        #     after a json query and avoid double toggling bugs.
-        #     Need to find a way to do that cleanly.
-        if 'noautoload' in self.req.form:
-            self.w(u'<ul class="%s" cubicweb:wdgtype="TreeView">' % self.css_classes)
-        else:
-            self.w(u'<ul class="%s" cubicweb:loadtype="auto" cubicweb:wdgtype="TreeView">'
-                   % self.css_classes)
+            if 'subvid' in self.req.form:
+                subvid = self.req.form.pop('subvid') # consume it
+            else:
+                subvid = 'oneline'
+        if treeid is None:
+            if 'treeid' in self.req.form:
+                treeid = self.req.form.pop('treeid')
+            else:
+                treeid = make_uid('throw away uid')
+                self.warning('Tree state won\'t be properly restored after next reload')
+        if initial_load:
+            self.req.add_css('jquery.treeview.css')
+            self.req.add_js(('cubicweb.ajax.js', 'jquery.treeview.js'))
+            self.req.html_headers.add_onload(u"""
+jQuery("#tree-%s").treeview({toggle: toggleTree, prerendered: true});""" % treeid)
+        self.w(u'<ul id="tree-%s" class="%s">' % (treeid, self.css_classes))
         for rowidx in xrange(len(self.rset)):
             self.wview(self.itemvid, self.rset, row=rowidx, col=0,
                        vid=subvid, parentvid=self.id, treeid=treeid)
