@@ -500,6 +500,6 @@ class RepositoryBasedTC(TestCase):
         self.rollback()
         self.session.unsafe_execute('DELETE Any X WHERE X eid > %(x)s', {'x': self.maxeid})
         self.commit()
-        if close:
-            self.close()
+#         if close:
+#             self.close()
     
