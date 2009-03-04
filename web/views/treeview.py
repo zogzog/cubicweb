@@ -1,7 +1,7 @@
 """Set of tree-building widgets, based on jQuery treeview plugin
 
 :organization: Logilab
-:copyright: 2001-2009 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+:copyright: 2008-2009 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 """
 __docformat__ = "restructuredtext en"
@@ -12,6 +12,7 @@ from logilab.mtconverter import html_escape
 from cubicweb.interfaces import ITree
 from cubicweb.selectors import implements
 from cubicweb.view import EntityView
+from cubicweb.utils import make_uid
 from cubicweb.web.views.basecontrollers import JSonController
 
 def treecookiename(treeid):
@@ -46,7 +47,7 @@ jQuery("#tree-%s").treeview({toggle: toggleTree, prerendered: true});""" % treei
         self.w(u'<ul id="tree-%s" class="%s">' % (treeid, self.css_classes))
         for rowidx in xrange(len(self.rset)):
             self.wview(self.itemvid, self.rset, row=rowidx, col=0,
-                       vid=subvid, parentvid=self.id, treeid=treeid)
+                       vid=subvid, parentvid=self.id)
         self.w(u'</ul>')
         
 
@@ -98,7 +99,7 @@ class TreeViewItemView(EntityView):
     (each item should be expandable if it's not a tree leaf)
     """
     id = 'treeitemview'
-    __select_ = implements(ITree)
+    __select__ = implements(ITree)
     
     def cell_call(self, row, col, vid='oneline', parentvid='treeview'):
         entity = self.entity(row, col)
