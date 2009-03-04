@@ -1,9 +1,19 @@
 """rest publishing functions
 
-contains some functions and setup of docutils for cubicweb
+contains some functions and setup of docutils for cubicweb. Provides the
+following ReST directives:
+
+* `eid`, create link to entity in the repository by their eid
+
+* `card`, create link to card entity in the repository by their wikiid
+  (proposing to create it when the refered card doesn't exist yet)
+
+* `winclude`, reference to a web documentation file (in wdoc/ directories)
+
+* `sourcecode` (if pygments is installed), source code colorization
 
 :organization: Logilab
-:copyright: 2001-2008 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+:copyright: 2001-2009 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 """
 __docformat__ = "restructuredtext en"
@@ -155,6 +165,36 @@ winclude_directive.arguments = (1, 0, 1)
 winclude_directive.options = {'literal': directives.flag,
                               'encoding': directives.encoding}
 directives.register_directive('winclude', winclude_directive)
+
+try:
+    from pygments import highlight
+    from pygments.lexers import get_lexer_by_name, LEXERS
+    from pygments.formatters import HtmlFormatter
+except ImportError:
+    pass
+else:
+    _PYGMENTS_FORMATTER = HtmlFormatter()
+
+    def pygments_directive(name, arguments, options, content, lineno,
+                           content_offset, block_text, state, state_machine):
+        try:
+            lexer = get_lexer_by_name(arguments[0])
+        except ValueError:
+            import traceback
+            traceback.print_exc()
+            print sorted(aliases for module_name, name, aliases, _, _  in LEXERS.itervalues())
+            # no lexer found
+            lexer = get_lexer_by_name('text')
+        print 'LEXER', lexer
+        parsed = highlight(u'\n'.join(content), lexer, _PYGMENTS_FORMATTER)
+        context = state.document.settings.context
+        context.req.add_css('pygments.css')
+        return [nodes.raw('', parsed, format='html')]
+     
+    pygments_directive.arguments = (1, 0, 1)
+    pygments_directive.content = 1
+    directives.register_directive('sourcecode', pygments_directive)
+
 
 class CubicWebReSTParser(Parser):
     """The (customized) reStructuredText parser."""
