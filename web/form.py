@@ -932,6 +932,11 @@ class EntityFieldsForm(FieldsForm):
             # XXX bw compat, default_<field name> on the entity
             warn('found %s_%s_vocabulary on %s, should be set on a specific form'
                  % (role, rtype, self.entity.id), DeprecationWarning)
+        # NOTE: it is the responsibility of `vocabfunc` to sort the result
+        #       (direclty through RQL or via a python sort). This is also
+        #       important because `vocabfunc` might return a list with
+        #       couples (label, None) which act as separators. In these
+        #       cases, it doesn't make sense to sort results afterwards.
         return vocabfunc(rtype)
 ## XXX BACKPORT ME
 ##         if self.sort:
@@ -986,8 +991,7 @@ class EntityFieldsForm(FieldsForm):
                             limit=None, done=None):
         if done is None:
             done = set()
-        req = self.req
-        rset = entity.unrelated(rtype, targettype, role, limit)
+        rset = self.entity.unrelated(rtype, targettype, role, limit)
         res = []
         for entity in rset.entities():
             if entity.eid in done:
@@ -1051,7 +1055,7 @@ class FormRenderer(object):
             enctype = 'multipart/form-data'
         else:
             enctype = 'application/x-www-form-urlencoded'
-        tag = ('<form action="%s" methody="post" id="%s" enctype="%s"' % (
+        tag = ('<form action="%s" method="post" id="%s" enctype="%s"' % (
             html_escape(form.action or '#'), form.domid, enctype))
         if form.onsubmit:
             tag += ' onsubmit="%s"' % html_escape(form.onsubmit)
