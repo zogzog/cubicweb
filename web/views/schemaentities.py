@@ -45,7 +45,7 @@ class ERTypePrimaryView(_SchemaEntityPrimaryView):
                                                         'symetric', 'inlined')
 
 class ErdefPrimaryView(_SchemaEntityPrimaryView):
-    __select__ = implements('EEType', 'ENFRDef')
+    __select__ = implements('EFRDef', 'ENFRDef')
     show_attr_label = True
 
 class EETypeSchemaView(EETypePrimaryView):
