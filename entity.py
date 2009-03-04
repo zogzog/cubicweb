@@ -9,6 +9,7 @@ __docformat__ = "restructuredtext en"
 from logilab.common import interface
 from logilab.common.compat import all
 from logilab.common.decorators import cached
+from logilab.common.deprecation import obsolete
 from logilab.mtconverter import TransformData, TransformError, html_escape
 
 from rql.utils import rqlvar_maker
@@ -788,6 +789,7 @@ class Entity(AppRsetObject, dict):
     
     # generic vocabulary methods ##############################################
 
+    @obsolete('see new form api')
     def vocabulary(self, rtype, role='subject', limit=None):
         """vocabulary functions must return a list of couples
         (label, eid) that will typically be used to fill the
@@ -796,16 +798,11 @@ class Entity(AppRsetObject, dict):
         If `eid` is None in one of these couples, it should be
         interpreted as a separator in case vocabulary results are grouped
         """
-        try:
-            vocabfunc = getattr(self, '%s_%s_vocabulary' % (role, rtype))
-        except AttributeError:
-            vocabfunc = getattr(self, '%s_relation_vocabulary' % role)
-        # NOTE: it is the responsibility of `vocabfunc` to sort the result
-        #       (direclty through RQL or via a python sort). This is also
-        #       important because `vocabfunc` might return a list with
-        #       couples (label, None) which act as separators. In these
-        #       cases, it doesn't make sense to sort results afterwards.
-        return vocabfunc(rtype, limit)
+        from cubicweb.web.form import EntityFieldsForm
+        from logilab.common.testlib import mock_object
+        form = EntityFieldsForm(self.req, entity=self)
+        field = mock_object(name=rtype, role=role)
+        return form.form_field_vocabulary(field)
             
     def unrelated_rql(self, rtype, targettype, role, ordermethod=None,
                       vocabconstraints=True):
