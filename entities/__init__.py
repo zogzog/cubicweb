@@ -415,11 +415,10 @@ class AnyEntity(Entity):
         """return True if fckeditor should be used to edit entity's attribute named
         `attr`, according to user preferences
         """
-        req = self.req
-        if self.config.fckeditor_installed() and req.property_value('ui.fckeditor') and self.has_format(attr):
+        if self.req.use_fckeditor() and self.has_format(attr):
             if self.has_eid() or '%s_format' % attr in self:
                 return self.format(attr) == 'text/html'
-            return req.property_value('ui.default-text-format') == 'text/html'
+            return self.req.property_value('ui.default-text-format') == 'text/html'
         return False
 
 # XXX:  store a reference to the AnyEntity class since it is hijacked in goa

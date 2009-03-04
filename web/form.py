@@ -554,7 +554,7 @@ class RichTextField(TextField):
         """return True if fckeditor should be used to edit entity's attribute named
         `attr`, according to user preferences
         """
-        if form.config.fckeditor_installed() and form.req.property_value('ui.fckeditor'):
+        if form.req.use_fckeditor():
             return form.form_format_field_value(self) == 'text/html'
         return False
 

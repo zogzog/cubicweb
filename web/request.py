@@ -269,6 +269,8 @@ class CubicWebRequestBase(DBAPIRequest):
         self.html_headers.define_var('fcklang', self.lang)
         self.html_headers.define_var('fckconfigpath',
                                      self.build_url('data/cubicweb.fckcwconfig.js'))
+    def use_fckeditor(self):
+        return self.vreg.config.fckeditor_installed() and self.property_value('ui.fckeditor')
 
     def edited_eids(self, withtype=False):
         """return a list of edited eids"""
