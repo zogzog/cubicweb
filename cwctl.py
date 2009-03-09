@@ -173,19 +173,18 @@ class ListCommand(Command):
                     continue
                 print '   ', line
         print 
+        cubesdirs = ', '.join(CubicWebConfiguration.cubes_search_path())
         try:
-            cubesdir = CubicWebConfiguration.cubes_dir()
             namesize = max(len(x) for x in CubicWebConfiguration.available_cubes())
         except ConfigurationError, ex:
             print 'No cubes available:', ex
         except ValueError:
-            print 'No cubes available in %s' % cubesdir
+            print 'No cubes available in %s' % cubesdirs
         else:
-            print 'Available cubes (%s):' % cubesdir
+            print 'Available cubes (%s):' % cubesdirs
             for cube in CubicWebConfiguration.available_cubes():
                 if cube in ('CVS', '.svn', 'shared', '.hg'):
                     continue
-                templdir = join(cubesdir, cube)
                 try:
                     tinfo = CubicWebConfiguration.cube_pkginfo(cube)
                     tversion = tinfo.version
@@ -198,7 +197,7 @@ class ListCommand(Command):
                                            or tinfo.__doc__)
                     if shortdesc:
                         print '    '+ '    \n'.join(shortdesc.splitlines())
-                    modes = detect_available_modes(templdir)
+                    modes = detect_available_modes(CubicWebConfiguration.cube_dir(cube))
                     print '    available modes: %s' % ', '.join(modes)
         print
         try:

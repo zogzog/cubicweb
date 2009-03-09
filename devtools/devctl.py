@@ -286,10 +286,10 @@ class UpdateTemplateCatalogCommand(Command):
         """run the command with its specific arguments"""
         CUBEDIR = DevCubeConfiguration.cubes_dir()
         if args:
-            cubes = [join(CUBEDIR, app) for app in args]
+            cubes = [DevCubeConfiguration.cube_dir(cube) for cube in args]
         else:
-            cubes = [join(CUBEDIR, app) for app in listdir(CUBEDIR)
-                         if exists(join(CUBEDIR, app, 'i18n'))]
+            cubes = [DevCubeConfiguration.cube_dir(cube) for cube in DevCubeConfiguration.available_cubes()]
+            cubes = [cubepath for cubepath in cubes if exists(join(cubepath, 'i18n'))]
         update_cubes_catalogs(cubes)
 
 def update_cubes_catalogs(cubes):
