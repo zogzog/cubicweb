@@ -3,7 +3,8 @@ Section: web
 Priority: optional
 Maintainer: Logilab Packaging Team <contact@logilab.fr>
 Uploaders: Sylvain Thenault <sylvain.thenault@logilab.fr>,
-           Julien Jehannet <julien.jehannet@logilab.fr>
+           Julien Jehannet <julien.jehannet@logilab.fr>,
+           Aurélien Campéas <aurelien.campeas@logilab.fr>
 Build-Depends: debhelper (>= 7), python-dev (>=2.4), python-central (>= 0.5)
 Standards-Version: 3.8.0
 Homepage: http://www.cubicweb.org
@@ -54,7 +55,7 @@ Description: twisted-based web interface for the CubicWeb framework
  This package provides a twisted based HTTP server to serve
  the adaptative web interface (see cubicweb-web package).
  .
- This package provides only the twisted server part of the library. 
+ This package provides only the twisted server part of the library.
 
 
 Package: cubicweb-web
@@ -105,7 +106,7 @@ Depends: ${python:Depends}, cubicweb-ctl (= ${source:Version}), pyro
 Description: RQL command line client for the CubicWeb framework
  CubicWeb is a semantic web application framework.
  .
- This package provides a RQL (Relation Query Language) command line client using 
+ This package provides a RQL (Relation Query Language) command line client using
  pyro to connect to a repository server.
 
 
