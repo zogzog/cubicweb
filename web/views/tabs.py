@@ -159,6 +159,6 @@ class EntityRelationView(EntityView):
         rset = self.entity(row, col).related(self.rtype, role(self))
         self.w(u'<div class="mainInfo">')
         if self.title:
-            self.w(tags.h1(self.req._(title)))
+            self.w(tags.h1(self.req._(self.title)))
         self.wview(self.vid, rset, 'noresult')
         self.w(u'</div>')
