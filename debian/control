@@ -1,7 +1,7 @@
 Source: cubicweb
 Section: web
 Priority: optional
-Maintainer: Logilab Packaging Team <contact@logilab.fr>
+Maintainer: Logilab S.A. <contact@logilab.fr>
 Uploaders: Sylvain Thenault <sylvain.thenault@logilab.fr>,
            Julien Jehannet <julien.jehannet@logilab.fr>,
            Aurélien Campéas <aurelien.campeas@logilab.fr>
