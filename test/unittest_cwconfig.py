@@ -1,4 +1,6 @@
+import sys
 import os
+from os.path import dirname, join, abspath
 from tempfile import mktemp
 
 from logilab.common.testlib import TestCase, unittest_main
@@ -69,6 +71,33 @@ class CubicWebConfigurationTC(TestCase):
                           ['entities', 'web/views', 'sobjects',
                            'file/entities.py', 'file/views', 'file/hooks.py',
                            'email/entities.py', 'email/views', 'email/hooks.py'])
-            
+
+    def test_cubes_path(self):
+        os.environ['CW_CUBES_PATH'] = join(dirname(__file__), 'data', 'cubes')
+        self.assertEquals(self.config.cubes_search_path(),
+                          [abspath(join(dirname(__file__), 'data', 'cubes')),
+                           self.config.CUBES_DIR])
+        os.environ['CW_CUBES_PATH'] = '%s%s%s%s%s' % (join(dirname(__file__), 'data', 'cubes'),
+                                                      os.pathsep, self.config.CUBES_DIR,
+                                                      os.pathsep, 'unexistant')
+        # filter out unexistant and duplicates
+        self.assertEquals(self.config.cubes_search_path(),
+                          [abspath(join(dirname(__file__), 'data', 'cubes')),
+                           self.config.CUBES_DIR])
+        self.failUnless('mycube' in self.config.available_cubes())
+        # test cubes python path
+        self.config.adjust_sys_path()
+        import cubes
+        self.assertEquals(cubes.__path__, self.config.cubes_search_path())
+        # this import should succeed once path is adjusted
+        from cubes import mycube
+        self.assertEquals(mycube.__path__, [abspath(join(dirname(__file__), 'data', 'cubes', 'mycube'))])
+        # file cube should be overriden by the one found in data/cubes
+        sys.modules.pop('cubes.file', None)
+        del cubes.file
+        from cubes import file
+        self.assertEquals(file.__path__, [abspath(join(dirname(__file__), 'data', 'cubes', 'file'))])
+                                       
+                          
 if __name__ == '__main__':
     unittest_main()
