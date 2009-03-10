@@ -283,7 +283,7 @@ class ServerMigrationHelper(MigrationHelper):
         if not update_database:
             self.commit()
             return
-        newcubes_schema = self.config.load_schema()
+        newcubes_schema = self.config.load_schema(construction_mode='non-strict')
         new = set()
         # execute pre-create files
         for pack in reversed(newcubes):
@@ -317,9 +317,8 @@ class ServerMigrationHelper(MigrationHelper):
         removedcubes = super(ServerMigrationHelper, self).cmd_remove_cube(cube)
         if not removedcubes:
             return
-        print removedcubes
         fsschema = self.fs_schema
-        removedcubes_schema = self.config.load_schema()
+        removedcubes_schema = self.config.load_schema(construction_mode='non-strict')
         reposchema = self.repo.schema
         # execute pre-remove files
         for pack in reversed(removedcubes):
@@ -1075,7 +1074,6 @@ class ForRqlIterator:
             if not self._h.confirm('execute rql: %s ?' % msg):
                 raise StopIteration
         try:
-            #print rql, kwargs
             rset = self._h.rqlcursor.execute(rql, kwargs)
         except Exception, ex:
             if self._h.confirm('error: %s\nabort?' % ex):
