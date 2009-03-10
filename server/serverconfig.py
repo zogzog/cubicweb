@@ -223,7 +223,7 @@ notified of every changes.',
                 hooks.setdefault(event, {}).setdefault(ertype, []).append(cb)
         return hooks
     
-    def load_schema(self, expand_cubes=False):
+    def load_schema(self, expand_cubes=False, construction_mode='strict'):
         from cubicweb.schema import CubicWebSchemaLoader
         if expand_cubes:
             # in case some new dependencies have been introduced, we have to
@@ -231,7 +231,7 @@ notified of every changes.',
             origcubes = self.cubes()
             self._cubes = None
             self.init_cubes(self.expand_cubes(origcubes))
-        schema = CubicWebSchemaLoader().load(self)
+        schema = CubicWebSchemaLoader().load(self, construction_mode=construction_mode)
         if expand_cubes:
             # restaure original value
             self._cubes = origcubes
