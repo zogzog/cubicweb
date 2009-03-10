@@ -164,11 +164,11 @@ class SQLAdapterMixIn(object):
                     warn('found mx date time instance, please update to use datetime',
                          DeprecationWarning)
                     val = datetime(val.year, val.month, val.day,
-                                   val.hour, val.minute, val.second)
+                                   val.hour, val.minute, int(val.second))
                 elif type(val) is DateTimeDeltaType:
                     warn('found mx date time instance, please update to use datetime',
                          DeprecationWarning)
-                    val = timedelta(0, val.seconds, 0)
+                    val = timedelta(0, int(val.seconds), 0)
                 args[key] = val
             # should not collide
             args.update(query_args)
