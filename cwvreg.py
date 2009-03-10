@@ -410,7 +410,7 @@ class MulCnxCubicWebRegistry(CubicWebRegistry):
             vobject.config = self.config
         return super(MulCnxCubicWebRegistry, self).select(vobjects, *args, **kwargs)
     
-from mx.DateTime import DateTime, Time, DateTimeDelta
+from datetime import datetime, date, time, timedelta
 
 YAMS_TO_PY = {
     'Boolean':  bool,
@@ -419,9 +419,9 @@ YAMS_TO_PY = {
     'Bytes':    Binary,
     'Int':      int,
     'Float':    float,
-    'Date':     DateTime,
-    'Datetime': DateTime,
-    'Time':     Time,
-    'Interval': DateTimeDelta,
+    'Date':     date,
+    'Datetime': datetime,
+    'Time':     time,
+    'Interval': timedelta,
     }
 

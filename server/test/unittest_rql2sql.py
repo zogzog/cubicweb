@@ -1,7 +1,6 @@
 """unit tests for module cubicweb.server.sources.rql2sql"""
 
 import sys
-from mx.DateTime import today
 
 from logilab.common.testlib import TestCase, unittest_main
 

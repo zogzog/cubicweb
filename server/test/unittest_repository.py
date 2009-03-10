@@ -6,8 +6,8 @@ import sys
 import threading
 import time
 from copy import deepcopy
+from datetime import datetime
 
-from mx.DateTime import DateTimeType, now
 from logilab.common.testlib import TestCase, unittest_main
 from cubicweb.devtools.apptest import RepositoryBasedTC
 from cubicweb.devtools.repotest import tuplify
@@ -333,7 +333,7 @@ class DataHelpersTC(RepositoryBasedTC):
         cursor = self.session.pool['system']
         cursor.execute('SELECT * FROM entities WHERE eid = -1')
         data = cursor.fetchall()
-        self.assertIsInstance(data[0][3], DateTimeType)
+        self.assertIsInstance(data[0][3], datetime)
         data[0] = list(data[0])
         data[0][3] = None
         self.assertEquals(tuplify(data), [(-1, 'Personne', 'system', None, None)])
@@ -350,7 +350,7 @@ class FTITC(RepositoryBasedTC):
         cursor = self.session.pool['system']
         eidp = self.execute('INSERT Personne X: X nom "toto", X prenom "tutu"')[0][0]
         self.commit()
-        ts = now()
+        ts = datetime.now()
         self.assertEquals(len(self.execute('Personne X WHERE X has_text "tutu"')), 1)
         cursor.execute('SELECT mtime, eid FROM entities WHERE eid = %s' % eidp)
         omtime = cursor.fetchone()[0]

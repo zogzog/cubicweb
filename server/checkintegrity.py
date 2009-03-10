@@ -2,14 +2,14 @@
 is checked.
 
 :organization: Logilab
-:copyright: 2001-2008 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+:copyright: 2001-2009 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 """
 __docformat__ = "restructuredtext en"
 
 import sys
+from datetime import datetime
 
-from mx.DateTime import now
 from logilab.common.shellutils import ProgressBar
 
 def has_eid(sqlcursor, eid, eids):
@@ -228,8 +228,8 @@ def check_metadata(schema, session, eids, fix=1):
     print 'Checking metadata'
     cursor = session.system_sql("SELECT DISTINCT type FROM entities;")
     for etype, in cursor.fetchall():
-        for rel, default in ( ('creation_date', now()),
-                              ('modification_date', now()), ):
+        for rel, default in ( ('creation_date', datetime.now()),
+                              ('modification_date', datetime.now()), ):
             cursor = session.system_sql("SELECT eid FROM %s "
                                         "WHERE %s is NULL" % (etype, rel))
             for eid, in cursor.fetchall():

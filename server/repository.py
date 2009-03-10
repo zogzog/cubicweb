@@ -19,9 +19,8 @@ __docformat__ = "restructuredtext en"
 import sys
 import Queue
 from os.path import join, exists
+from datetime import datetime
 from time import time, localtime, strftime
-
-from mx.DateTime import now
 
 from logilab.common.decorators import cached
 
@@ -662,7 +661,7 @@ class Repository(object):
           deleted since the given timestamp
         """
         session = self.internal_session()
-        updatetime = now()
+        updatetime = datetime.now()
         try:
             modentities, delentities = self.system_source.modified_entities(
                 session, etypes, mtime)

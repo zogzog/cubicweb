@@ -1,15 +1,15 @@
 """twisted server for CubicWeb web applications
 
 :organization: Logilab
-:copyright: 2001-2008 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+:copyright: 2001-2009 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 """
 __docformat__ = "restructuredtext en"
 
 import sys
 import select
-
-from mx.DateTime import today, RelativeDate
+from time import mktime
+from datetime import date, timedelta
 
 from twisted.application import service, strports
 from twisted.internet import reactor, task, threads
@@ -62,8 +62,8 @@ class LongTimeExpiringFile(static.File):
             # Don't provide additional resource information to error responses
             if response.code < 400:
                 # the HTTP RFC recommands not going further than 1 year ahead
-                expires = today() + RelativeDate(months=6)
-                response.headers.setHeader('Expires', int(expires.ticks()))
+                expires = date.today() + timedelta(days=6*30)
+                response.headers.setHeader('Expires', mktime(expires.timetuple()))
             return response
         d = maybeDeferred(super(LongTimeExpiringFile, self).renderHTTP, request)
         return d.addCallback(setExpireHeader)

@@ -19,8 +19,8 @@ __docformat__ = "restructuredtext en"
 import sys
 import os
 from os.path import join, exists
+from datetime import datetime
 
-from mx.DateTime import now
 from logilab.common.decorators import cached
 from logilab.common.adbh import get_adv_func_helper
 
@@ -83,7 +83,7 @@ class ServerMigrationHelper(MigrationHelper):
         config = self.config
         source = config.sources()['system']
         helper = get_adv_func_helper(source['db-driver'])
-        date = now().strftime('%Y-%m-%d_%H:%M:%S')
+        date = datetime.now().strftime('%Y-%m-%d_%H:%M:%S')
         app = config.appid
         backupfile = backupfile or join(config.backup_dir(),
                                         '%s-%s.dump' % (app, date))
@@ -317,6 +317,7 @@ class ServerMigrationHelper(MigrationHelper):
         removedcubes = super(ServerMigrationHelper, self).cmd_remove_cube(cube)
         if not removedcubes:
             return
+        print removedcubes
         fsschema = self.fs_schema
         removedcubes_schema = self.config.load_schema()
         reposchema = self.repo.schema

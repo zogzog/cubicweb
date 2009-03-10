@@ -1,9 +1,7 @@
 """automatic tests"""
 
-from mx.DateTime import now
-
 from cubicweb.devtools.testlib import WebTest, AutomaticWebTest
-from cubicweb.common.view import AnyRsetView
+from cubicweb.view import AnyRsetView
 
 AutomaticWebTest.application_rql = [
     'Any L,F WHERE E is EUser, E login L, E firstname F',

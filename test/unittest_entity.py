@@ -1,11 +1,10 @@
 # -*- coding: utf-8 -*-
 """unit tests for cubicweb.web.views.entities module"""
 
-from cubicweb.devtools.apptest import EnvBasedTC
-
-from mx.DateTime import DateTimeType, now
+from datetime import datetime
 
 from cubicweb import Binary
+from cubicweb.devtools.apptest import EnvBasedTC
 from cubicweb.common.mttransforms import HAS_TAL
 
 class EntityTC(EnvBasedTC):
@@ -199,7 +198,7 @@ class EntityTC(EnvBasedTC):
         self.add_entity('Personne', nom=u'di mascio', prenom=u'adrien')
         self.add_entity('Personne', nom=u'di mascio', prenom=u'gwen')
         rschema = e.e_schema.subject_relation('tags')
-        self.assertEquals(len(e.vocabulary(rschema, 'subject', limit=1)),
+        self.assertEquals(len(e.unrelated(rschema, 'Personne', 'subject', limit=1)),
                           1)
         
     def test_new_entity_unrelated(self):
@@ -420,7 +419,7 @@ du :eid:`1:*ReST*`'''
                                'U login "admin", S2 name "activated"')[0][0]
             trinfo = self.entity('Any X WHERE X eid %(x)s', {'x': eid}, 'x')
             trinfo.complete()
-            self.failUnless(isinstance(trinfo.creation_date, DateTimeType))
+            self.failUnless(isinstance(trinfo.creation_date, datetime))
             self.failUnless(trinfo.relation_cached('from_state', 'subject'))
             self.failUnless(trinfo.relation_cached('to_state', 'subject'))
             self.failUnless(trinfo.relation_cached('wf_info_for', 'subject'))

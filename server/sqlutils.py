@@ -1,13 +1,16 @@
 """SQL utilities functions and classes.
 
 :organization: Logilab
-:copyright: 2001-2008 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+:copyright: 2001-2009 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 """
 __docformat__ = "restructuredtext en"
 
+from warnings import warn
+from datetime import datetime, timedelta
+
 from logilab.common.shellutils import ProgressBar
-from logilab.common.db import get_dbapi_compliant_module
+from logilab.common import db
 from logilab.common.adbh import get_adv_func_helper
 from logilab.common.sqlgen import SQLGenerator
 
@@ -18,6 +21,7 @@ from cubicweb.common.uilib import remove_html_tags
 from cubicweb.server import SQL_CONNECT_HOOKS
 from cubicweb.server.utils import crypt_password, cartesian_product
 
+db.USE_MX_DATETIME = False
 
 def sqlexec(sqlstmts, cursor_or_execute, withpb=True, delimiter=';'):
     """execute sql statements ignoring DROP/ CREATE GROUP or USER statements
@@ -105,7 +109,10 @@ def sqldropschema(schema, driver, text_index=True,
                      skip_entities=skip_entities, skip_relations=skip_relations))
     return '\n'.join(output)
 
-
+try:
+    from mx.DateTime import DateTimeType, DateTimeDeltaType
+except ImportError:
+    DateTimeType, DateTimeDeltaType = None
 
 class SQLAdapterMixIn(object):
     """Mixin for SQL data sources, getting a connection from a configuration
@@ -124,7 +131,7 @@ class SQLAdapterMixIn(object):
         self.dbuser = source_config.get('db-user')
         self.dbpasswd = source_config.get('db-password')
         self.encoding = source_config.get('db-encoding', 'UTF-8')
-        self.dbapi_module = get_dbapi_compliant_module(self.dbdriver)
+        self.dbapi_module = db.get_dbapi_compliant_module(self.dbdriver)
         self.binary = self.dbapi_module.Binary
         self.dbhelper = self.dbapi_module.adv_func_helper
         self.sqlgen = SQLGenerator()
@@ -152,6 +159,16 @@ class SQLAdapterMixIn(object):
                 # convert cubicweb binary into db binary
                 if isinstance(val, Binary):
                     val = self.binary(val.getvalue())
+                # XXX <3.2 bw compat
+                elif type(val) is DateTimeType:
+                    warn('found mx date time instance, please update to use datetime',
+                         DeprecationWarning)
+                    val = datetime(val.year, val.month, val.day,
+                                   val.hour, val.minute, val.second)
+                elif type(val) is DateTimeDeltaType:
+                    warn('found mx date time instance, please update to use datetime',
+                         DeprecationWarning)
+                    val = timedelta(0, val.seconds, 0)
                 args[key] = val
             # should not collide
             args.update(query_args)

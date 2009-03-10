@@ -2,8 +2,9 @@
 
 """
 
-from mx.DateTime import now
-NOW = now()
+from datetime import datetime
+NOW = datetime.now()
+
 from logilab.common.testlib import unittest_main
 from cubicweb.devtools.apptest import EnvBasedTC
 
@@ -186,10 +187,9 @@ class WidgetsTC(EnvBasedTC):
     def test_datetime_widget(self):
         w = self.get_widget('Personne', 'datenaiss', 'Datetime')
         self.assertEquals(w.name, 'datenaiss')
-        now_ = now()
         example = '%s, or without time: %s' % (        
-            now_.strftime(self.vreg.property_value('ui.datetime-format')),
-            now_.strftime(self.vreg.property_value('ui.date-format')))
+            NOW.strftime(self.vreg.property_value('ui.datetime-format')),
+            NOW.strftime(self.vreg.property_value('ui.date-format')))
         self.assertEquals(w.render_example(self.request()), example)
         self.assertDictEquals(w.attrs, {'accesskey': 'd', 'maxlength': 16, 'size': 16})
         entity = self.etype_instance('Personne')

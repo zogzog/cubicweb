@@ -7,10 +7,10 @@
 """
 __docformat__ = "restructuredtext en"
 
-from mx.DateTime import DateTimeFromTicks, now, gmtime
+from datetime import datetime
 
 # time delta usable to convert localized time to GMT time
-GMTOFFSET = - (now() - gmtime())
+GMTOFFSET = - (datetime.now() - datetime.utcnow())
 
 class NoHTTPCacheManager(object):
     """default cache manager: set no-cache cache control policy"""
@@ -105,11 +105,12 @@ def last_modified(self):
     /!\ must return GMT time /!\
     """
     # XXX check view module's file modification time in dev mod ?
-    ctime = gmtime()
+    ctime = datetime.utcnow()
     if self.cache_max_age:
         mtime = self.req.header_if_modified_since()
         if mtime:
-            if (ctime - mtime).seconds > self.cache_max_age:
+            tdelta = (ctime - mtime)
+            if tdelta.days * 24*60*60 + tdelta.seconds > self.cache_max_age:
                 mtime = ctime
         else:
             mtime = ctime

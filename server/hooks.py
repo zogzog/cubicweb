@@ -7,7 +7,7 @@ entities...
 """
 __docformat__ = "restructuredtext en"
 
-from mx.DateTime import now
+from datetime import datetime
 
 from cubicweb import UnknownProperty, ValidationError, BadConnectionId
 
@@ -30,14 +30,14 @@ def setctime_before_add_entity(session, entity):
     this is a conveniency hook, you shouldn't have to disable it
     """
     if not 'creation_date' in entity:
-        entity['creation_date'] = now()
+        entity['creation_date'] = datetime.now()
     if not 'modification_date' in entity:
-        entity['modification_date'] = now()
+        entity['modification_date'] = datetime.now()
 
 def setmtime_before_update_entity(session, entity):
     """update an entity -> set modification date"""
     if not 'modification_date' in entity:
-        entity['modification_date'] = now()
+        entity['modification_date'] = datetime.now()
         
 class SetCreatorOp(PreCommitOperation):
         

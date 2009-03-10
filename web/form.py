@@ -7,8 +7,9 @@
 __docformat__ = "restructuredtext en"
 
 from warnings import warn
+from datetime import date, datetime
+
 from simplejson import dumps
-from mx.DateTime import today, now
 
 from logilab.common.compat import any
 from logilab.mtconverter import html_escape
@@ -412,7 +413,7 @@ class DateTimePicker(TextInput):
         inputid = form.context[field]['id']
         helperid = '%shelper' % inputid
         if not value:
-            value = today()
+            value = date.today()
         year, month = value.year, value.month
         onclick = "toggleCalendar('%s', '%s', %s, %s);" % (
             helperid, inputid, year, month)
@@ -643,7 +644,7 @@ class DateField(StringField):
         return value and ustrftime(value, req.property_value(self.format_prop)) or u''
 
     def render_example(self, req):
-        return self.format_value(req, now())
+        return self.format_value(req, datetime.now())
 
 
 class DateTimeField(DateField):

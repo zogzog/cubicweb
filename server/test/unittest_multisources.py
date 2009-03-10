@@ -1,6 +1,7 @@
 from os.path import dirname, join, abspath
+from datetime import datetime, timedelta
+
 from logilab.common.decorators import cached
-from mx.DateTime import now
 
 from cubicweb.devtools import TestServerConfiguration, init_test_database
 from cubicweb.devtools.apptest import RepositoryBasedTC
@@ -23,7 +24,7 @@ cu.execute('INSERT Card X: X title "C4: Ze external card", X wikiid "zzz"')
 aff1 = cu.execute('INSERT Affaire X: X ref "AFFREF", X in_state S WHERE S name "pitetre"')[0][0]
 cnx2.commit()
 
-MTIME = now() - 0.1
+MTIME = datetime.now() - timedelta(0, 10)
 
 repo3, cnx3 = init_test_database('sqlite', config=ExternalSource2Configuration('data'))
 

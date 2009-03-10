@@ -1,9 +1,9 @@
 """cubicweb.web.views.baseforms unit tests"""
 
 from StringIO import StringIO
+from datetime import date
 import re
 
-from mx.DateTime import DateTime
 
 from logilab.common.testlib import unittest_main
 from logilab.common.decorators import clear_cache
@@ -11,17 +11,15 @@ from cubicweb.devtools.apptest import EnvBasedTC
 from cubicweb.entities import AnyEntity
 from cubicweb.web import widgets
 
-orig_today = widgets.today
-orig_now = widgets.now
+orig_now = widgets.datetime.now
 
 def setup_module(options):
     def _today():
-        return DateTime(0000, 1, 1)
-    widgets.today = widgets.now = _today
+        return date(0000, 1, 1)
+    widgets.datetime.now = _today
 
 def teardown_module(options, results):
-    widgets.today = orig_today
-    widgets.now = orig_now
+    widgets.datetime.now = orig_now
 
 
 def cleanup_text(text):

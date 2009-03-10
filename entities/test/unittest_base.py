@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """unit tests for cubicweb.entities.base module"""
 
-from mx.DateTime import now
-
 from logilab.common.testlib import unittest_main
 from logilab.common.decorators import clear_cache
 from logilab.common.interface import implements

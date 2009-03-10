@@ -7,8 +7,8 @@
 __docformat__ = "restructuredtext en"
 
 from warnings import warn
+from datetime import datetime, timedelta
 
-from mx.DateTime import now, oneSecond
 from simplejson import dumps
 
 from logilab.common.decorators import classproperty
@@ -22,12 +22,13 @@ from cubicweb.vregistry import VObject, AndSelector
 from cubicweb.selectors import yes
 from cubicweb.utils import UStringIO, ustrftime
 
+ONESECOND = timedelta(0, 1, 0)
 
 class Cache(dict):    
     def __init__(self):
         super(Cache, self).__init__()
         self.cache_creation_date = None
-        self.latest_cache_lookup = now()
+        self.latest_cache_lookup = datetime.now()
     
 CACHE_REGISTRY = {}
 
@@ -136,8 +137,8 @@ class AppRsetObject(VObject):
         else:
             cache = Cache()
             CACHE_REGISTRY[cachename] = cache
-        _now = now()
-        if _now > cache.latest_cache_lookup + oneSecond:
+        _now = datetime.now()
+        if _now > cache.latest_cache_lookup + ONESECOND:
             ecache = self.req.execute('Any C,T WHERE C is ECache, C name %(name)s, C timestamp T', 
                                       {'name':cachename}).get_entity(0,0)
             cache.latest_cache_lookup = _now
@@ -281,7 +282,7 @@ class AppRsetObject(VObject):
         return output.getvalue()
 
     def format_date(self, date, date_format=None, time=False):
-        """return a string for a mx date time according to application's
+        """return a string for a date time according to application's
         configuration
         """
         if date:
@@ -294,7 +295,7 @@ class AppRsetObject(VObject):
         return u''
 
     def format_time(self, time):
-        """return a string for a mx date time according to application's
+        """return a string for a time according to application's
         configuration
         """
         if time:

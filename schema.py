@@ -23,6 +23,11 @@ from rql import parse, nodes, RQLSyntaxError, TypeResolverException
 
 from cubicweb import ETYPE_NAME_MAP, ValidationError, Unauthorized
 
+# XXX <3.2 bw compat
+from yams import schema
+schema.use_py_datetime()
+nodes.use_py_datetime() 
+
 _ = unicode
 
 BASEGROUPS = ('managers', 'users', 'guests', 'owners')

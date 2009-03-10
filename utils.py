@@ -8,9 +8,17 @@ __docformat__ = "restructuredtext en"
 
 import locale
 from md5 import md5
+from datetime import datetime, timedelta
 from time import time
 from random import randint, seed
 
+try:
+    strptime = datetime.strptime
+except AttributeError: # py < 2.5
+    from time import strptime as time_strptime
+    def strptime(value, format):
+        return datetime(*time_strptime(value, format)[:6])
+    
 # initialize random seed from current time
 seed()
 
@@ -38,6 +46,7 @@ def date_range(begin, end, incr=1, include=None):
                     should be included.
     """
     date = begin
+    incr = timedelta(incr, 0, 0)
     while date <= end:
         if include is None or include(date): 
             yield date

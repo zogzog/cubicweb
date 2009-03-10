@@ -7,9 +7,10 @@
 """
 __docformat__ = "restructuredtext en"
 
-from mx.DateTime import strptime, Error as MxDTError, TimeDelta
+from datetime import timedelta
 
 from cubicweb import typed_eid
+from cubicweb.utils import strptime
 from cubicweb.common.registerers import priority_registerer
 from cubicweb.selectors import yes, require_group_compat
 from cubicweb.appobject import AppObject
@@ -107,20 +108,20 @@ class Controller(AppObject):
             format = self.req.property_value('ui.datetime-format')
             try:
                 return strptime(value, format)
-            except MxDTError:
+            except:
                 pass
         elif etype == 'Time':
             format = self.req.property_value('ui.time-format')
             try:
                 # (adim) I can't find a way to parse a Time with a custom format
                 date = strptime(value, format) # this returns a DateTime
-                return TimeDelta(date.hour, date.minute, date.second)
-            except MxDTError:
+                return timedelta(0, date.hour *60*60 + date.minute*60 + date.second, 0)
+            except:
                 raise ValueError('can\'t parse %r (expected %s)' % (value, format))
         try:
             format = self.req.property_value('ui.date-format')
             return strptime(value, format)
-        except MxDTError:
+        except:
             raise ValueError('can\'t parse %r (expected %s)' % (value, format))
 
 

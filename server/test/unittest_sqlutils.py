@@ -2,7 +2,6 @@
 """
 
 import sys
-from mx.DateTime import now
 
 from logilab.common.testlib import TestCase, unittest_main
 

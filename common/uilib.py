@@ -12,12 +12,10 @@ __docformat__ = "restructuredtext en"
 import csv
 import decimal
 import re
+from datetime import datetime, date, timedelta
 from urllib import quote as urlquote
 from cStringIO import StringIO
 from copy import deepcopy
-
-
-from mx.DateTime import DateTimeType, DateTimeDeltaType
 
 from logilab.common.textutils import unormalize
 from logilab.mtconverter import html_escape, html_unescape
@@ -509,10 +507,10 @@ def jsonize(function):
         ret = function(*args, **kwargs)
         if isinstance(ret, decimal.Decimal):
             ret = float(ret)
-        elif isinstance(ret, DateTimeType):
+        elif isinstance(ret, (date, datetime)):
             ret = ret.strftime('%Y-%m-%d %H:%M')
-        elif isinstance(ret, DateTimeDeltaType):
-            ret = ret.seconds
+        elif isinstance(ret, timedelta):
+            ret = (ret.days * 24*60*60) + ret.seconds
         try:
             return simplejson.dumps(ret)
         except TypeError:

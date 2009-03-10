@@ -4,8 +4,6 @@ import re
 from logilab.common.testlib import unittest_main
 from cubicweb.devtools.apptest import EnvBasedTC
 
-from mx.DateTime import now
-
 from cubicweb.sobjects.supervising import SendMailOp, SupervisionMailOp
 
 

@@ -1,7 +1,7 @@
 """Source to query another RQL repository using pyro
 
 :organization: Logilab
-:copyright: 2007-2008 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+:copyright: 2007-2009 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 """
 __docformat__ = "restructuredtext en"
@@ -9,7 +9,8 @@ __docformat__ = "restructuredtext en"
 import threading
 from os.path import join
 
-from mx.DateTime import DateTimeFromTicks
+from time import mktime
+from datetime import datetime
 
 from Pyro.errors import PyroError, ConnectionClosedError
 
@@ -145,7 +146,7 @@ repository (default to 5 minutes).',
             else:
                 assert len(rset) == 1
                 timestamp = int(rset[0][0])
-            return DateTimeFromTicks(timestamp)
+            return datetime.fromtimestamp(timestamp)
         finally:
             session.close()
 
@@ -194,7 +195,7 @@ repository (default to 5 minutes).',
                     continue
             session.execute('SET X value %(v)s WHERE X pkey %(k)s',
                             {'k': u'sources.%s.latest-update-time' % self.uri,
-                             'v': unicode(int(updatetime.ticks()))})
+                             'v': unicode(int(mktime(updatetime.timetuple())))})
             session.commit()
         finally:
             session.close()

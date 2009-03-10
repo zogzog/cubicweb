@@ -5,8 +5,7 @@
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 """
 
-from mx.DateTime import DateTime, RelativeDateTime, today, ISO
-from datetime import datetime
+from datetime import datetime, date, timedelta
 
 from vobject import iCalendar, icalendar
 
@@ -14,7 +13,7 @@ from logilab.mtconverter import html_escape
 
 from cubicweb.interfaces import ICalendarable
 from cubicweb.selectors import implements
-from cubicweb.utils import date_range
+from cubicweb.utils import strptime, date_range
 from cubicweb.view import EntityView
 from cubicweb.common.uilib import ajax_replace_url
 
@@ -30,26 +29,18 @@ except ImportError:
 
 _ = unicode
 
-# useful constants & functions
-def mkdt(mxdate):
-    """
-    Build a stdlib datetime date from a mx.datetime 
-    """
-    d = mxdate
-    return datetime(d.year, d.month, d.day, d.hour, d.minute,
-                    tzinfo=icalendar.utc)
-def iso(mxdate):
-    """
-    Format a ms datetime in ISO 8601 string 
-    """
-    # XXX What about timezone?
-    return ISO.str(mxdate)
-
-# mx.DateTime and ustrftime could be used to build WEEKDAYS
-WEEKDAYS = (_("monday"), _("tuesday"), _("wednesday"), _("thursday"),
-            _("friday"), _("saturday"), _("sunday"))
+# # useful constants & functions
+# def mkdt(mxdate):
+#     """
+#     Build a stdlib datetime date from a mx.datetime 
+#     """
+#     d = mxdate
+#     return datetime(d.year, d.month, d.day, d.hour, d.minute,
+#                     tzinfo=icalendar.utc)
 
 # used by i18n tools
+WEEKDAYS = (_("monday"), _("tuesday"), _("wednesday"), _("thursday"),
+            _("friday"), _("saturday"), _("sunday"))
 MONTHNAMES = ( _('january'), _('february'), _('march'), _('april'), _('may'),
                _('june'), _('july'), _('august'), _('september'), _('october'),
                _('november'), _('december')
@@ -97,9 +88,9 @@ class iCalView(EntityView):
             event.add('summary').value = task.dc_title()
             event.add('description').value = task.dc_description()
             if task.start:
-                event.add('dtstart').value = mkdt(task.start)
+                event.add('dtstart').value = task.start
             if task.stop:
-                event.add('dtend').value = mkdt(task.stop)
+                event.add('dtend').value = task.stop
 
         buff = ical.serialize()
         if not isinstance(buff, unicode):
@@ -125,9 +116,9 @@ class hCalView(EntityView):
             self.w(u'<h3 class="summary">%s</h3>' % html_escape(task.dc_title()))
             self.w(u'<div class="description">%s</div>' % html_escape(task.dc_description()))
             if task.start:
-                self.w(u'<abbr class="dtstart" title="%s">%s</abbr>' % (iso(task.start), self.format_date(task.start)))
+                self.w(u'<abbr class="dtstart" title="%s">%s</abbr>' % (task.start.isoformat(), self.format_date(task.start)))
             if task.stop:
-                self.w(u'<abbr class="dtstop" title="%s">%s</abbr>' % (iso(task.stop), self.format_date(task.stop)))
+                self.w(u'<abbr class="dtstop" title="%s">%s</abbr>' % (task.stop.isoformat(), self.format_date(task.stop)))
             self.w(u'</div>')
         self.w(u'</div>')
 
@@ -150,7 +141,7 @@ class OneMonthCal(EntityView):
         self.req.add_js('cubicweb.ajax.js')
         self.req.add_css('cubicweb.calendar.css')
         # XXX: restrict courses directy with RQL
-        _today =  today()
+        _today =  datetime.today()
 
         if 'year' in self.req.form:
             year = int(self.req.form['year'])
@@ -161,9 +152,13 @@ class OneMonthCal(EntityView):
         else:
             month = _today.month
 
-        first_day_of_month = DateTime(year, month, 1)
-        lastday = first_day_of_month + RelativeDateTime(months=1,weekday=(6,1))
-        firstday= first_day_of_month + RelativeDateTime(months=-1,weekday=(0,-1))
+        first_day_of_month = date(year, month, 1)
+        firstday = first_day_of_month - timedelta(first_day_of_month.weekday(), 0, 0)
+        if month >= 12:
+            last_day_of_month = date(year + 1, 1, 1) - timedelta(1, 0, 0)
+        else:
+            last_day_of_month = date(year, month + 1, 1) - timedelta(1, 0, 0)
+        lastday = last_day_of_month + timedelta(6 - last_day_of_month.weekday(), 0, 0)
         month_dates = list(date_range(firstday, lastday))
         dates = {}
         users = []
@@ -184,7 +179,7 @@ class OneMonthCal(EntityView):
                     continue
                 the_dates = [task.stop]
             if task.start and task.stop:
-                if task.start.absdate == task.stop.absdate:
+                if task.start.isocalendar() == task.stop.isocalendar():
                     date = task.start
                     if firstday<= date <= lastday:
                         the_dates = [date]
@@ -259,17 +254,17 @@ class OneMonthCal(EntityView):
         
         # build calendar
         for date, task_rows in zip(month_dates, days):
-            if date.day_of_week == 0:
+            if date.weekday() == 0:
                 self.w(u'<tr>')
             self._build_calendar_cell(date, task_rows, curdate)
-            if date.day_of_week == 6:
+            if date.weekday() == 6:
                 self.w(u'</tr>')
         self.w(u'</table></div>')
 
     def _prevnext_links(self, curdate):
-        prevdate = curdate - RelativeDateTime(months=1)
-        nextdate = curdate + RelativeDateTime(months=1)
-        rql = self.rset.rql
+        prevdate = curdate - timedelta(31, 0, 0)
+        nextdate = curdate + timedelta(31, 0, 0)
+        rql = self.rset.printable_rql()
         prevlink = ajax_replace_url('onemonthcalid', rql, 'onemonthcal',
                                     year=prevdate.year, month=prevdate.month)
         nextlink = ajax_replace_url('onemonthcalid', rql, 'onemonthcal',
@@ -281,7 +276,7 @@ class OneMonthCal(EntityView):
         classes = ""
         if date.month != curmonth:
             classes += " outOfRange"
-        if date == today():
+        if date == datetime.today():
             classes += " today"
         self.w(u'<td class="cell%s">' % classes)
         self.w(u'<div class="calCellTitle%s">' % classes)
@@ -292,7 +287,7 @@ class OneMonthCal(EntityView):
             url = self.build_url(vid='creation', etype=etype,
                                  schedule=True,
                                  start=self.format_date(date), stop=self.format_date(date),
-                                 __redirectrql=self.rset.rql,
+                                 __redirectrql=self.rset.printable_rql(),
                                  __redirectparams=self.req.build_url_params(year=curdate.year, month=curmonth),
                                  __redirectvid=self.id
                                  )
@@ -306,7 +301,7 @@ class OneMonthCal(EntityView):
                 self.w(u'<div class="task %s">' % task_descr.color)
                 task.view('calendaritem', w=self.w )
                 url = task.absolute_url(vid='edition',
-                                        __redirectrql=self.rset.rql,
+                                        __redirectrql=self.rset.printable_rql(),
                                         __redirectparams=self.req.build_url_params(year=curdate.year, month=curmonth),
                                         __redirectvid=self.id
                                         )
@@ -332,9 +327,8 @@ class OneWeekCal(EntityView):
     def call(self):
         self.req.add_js( ('cubicweb.ajax.js', 'cubicweb.calendar.js') )
         self.req.add_css('cubicweb.calendar.css')
-        # XXX: restrict courses directy with RQL
-        _today =  today()
-
+        # XXX: restrict directly with RQL
+        _today =  datetime.today()
         if 'year' in self.req.form:
             year = int(self.req.form['year'])
         else:
@@ -342,11 +336,11 @@ class OneWeekCal(EntityView):
         if 'week' in self.req.form:
             week = int(self.req.form['week'])
         else:
-            week = _today.iso_week[1]        
-
-        first_day_of_week = ISO.ParseWeek("%s-W%s-1"%(year, week))
-        lastday = first_day_of_week + RelativeDateTime(days=6)
-        firstday= first_day_of_week
+            week = _today.isocalendar()[1]        
+        # week - 1 since we get week number > 0 while we want it to start from 0
+        first_day_of_week = strptime('%s-%s-1' % (year, week - 1), '%Y-%U-%w')
+        lastday = first_day_of_week + timedelta(6, 0, 0)
+        firstday = first_day_of_week
         dates = [[] for i in range(7)]
         task_max = 0
         task_colors = {}   # remember a color assigned to a task
@@ -369,17 +363,17 @@ class OneWeekCal(EntityView):
                     continue
                 the_dates = [task.stop]
             if task.start and task.stop:
-                the_dates = date_range(max(task.start,firstday),
-                                       min(task.stop,lastday))
+                the_dates = date_range(max(task.start, firstday),
+                                       min(task.stop, lastday))
             if not the_dates:
                 continue
                 
             if task not in task_colors:
                 task_colors[task] = colors[next_color_index]
-                next_color_index = (next_color_index+1)%len(colors)
+                next_color_index = (next_color_index+1) % len(colors)
             
             for d in the_dates:
-                day = d.day_of_week
+                day = d.weekday()
                 task_descr = _TaskEntry(task, task_colors[task])  
                 dates[day].append(task_descr)
             
@@ -391,7 +385,7 @@ class OneWeekCal(EntityView):
         self.w(u'<th><a href="%s">&lt;&lt;</a></th><th colspan="5">%s %s %s</th>'
                u'<th><a href="%s">&gt;&gt;</a></th></tr>' %
                (html_escape(prevlink), first_day_of_week.year,
-                self.req._(u'week'), first_day_of_week.iso_week[1],
+                self.req._(u'week'), first_day_of_week.isocalendar()[1],
                 html_escape(nextlink)))
 
         # output header
@@ -400,12 +394,11 @@ class OneWeekCal(EntityView):
         _today = today()
         for i, day in enumerate(WEEKDAYS):
             date = first_day_of_week + i
-            if date.absdate == _today.absdate:
+            if date.isocalendar() == _today.isocalendar():
                 self.w(u'<th class="today">%s<br/>%s</th>' % (self.req._(day), self.format_date(date)))
             else:
                 self.w(u'<th>%s<br/>%s</th>' % (self.req._(day), self.format_date(date)))
         self.w(u'</tr>')
-
         
         # build week calendar
         self.w(u'<tr>')
@@ -420,14 +413,14 @@ class OneWeekCal(EntityView):
         for i, day in enumerate(WEEKDAYS):
             date = first_day_of_week + i
             classes = ""
-            if date.absdate == _today.absdate:
+            if date.isocalendar() == _today.isocalendar():
                 classes = " today"
             self.w(u'<td class="column %s" id="%s">'%(classes, day))
             if len(self.rset.column_types(0)) == 1:
                 etype = list(self.rset.column_types(0))[0]
                 url = self.build_url(vid='creation', etype=etype,
                                      schedule=True,
-                                     __redirectrql=self.rset.rql,
+                                     __redirectrql=self.rset.printable_rql(),
                                      __redirectparams=self.req.build_url_params(year=year, week=week),
                                      __redirectvid=self.id
                                      )
@@ -452,7 +445,7 @@ class OneWeekCal(EntityView):
         Return true if the task is a "one day" task; ie it have a start and a stop the same day
         """
         if task.start and task.stop:
-            if task.start.absdate ==  task.stop.absdate:
+            if task.start.isocalendar() ==  task.stop.isocalendar():
                 return True
         return False
         
@@ -508,8 +501,8 @@ class OneWeekCal(EntityView):
                        (task_desc.color, style))
             task.view('calendaritem', dates=False, w=self.w)
             url = task.absolute_url(vid='edition',
-                                    __redirectrql=self.rset.rql,
-                                    __redirectparams=self.req.build_url_params(year=date.year, week=date.iso_week[1]),
+                                    __redirectrql=self.rset.printable_rql(),
+                                    __redirectparams=self.req.build_url_params(year=date.year, week=date.isocalendar()[1]),
                                     __redirectvid=self.id
                                  )
 
@@ -530,12 +523,12 @@ class OneWeekCal(EntityView):
 
             
     def _prevnext_links(self, curdate):
-        prevdate = curdate - RelativeDateTime(days=7)
-        nextdate = curdate + RelativeDateTime(days=7)
-        rql = self.rset.rql
+        prevdate = curdate - timedelta(7, 0, 0)
+        nextdate = curdate + timedelta(7, 0, 0)
+        rql = self.rset.printable_rql()
         prevlink = ajax_replace_url('oneweekcalid', rql, 'oneweekcal',
-                                    year=prevdate.year, week=prevdate.iso_week[1])
+                                    year=prevdate.year, week=prevdate.isocalendar()[1])
         nextlink = ajax_replace_url('oneweekcalid', rql, 'oneweekcal',
-                                    year=nextdate.year, week=nextdate.iso_week[1])
+                                    year=nextdate.year, week=nextdate.isocalendar()[1])
         return prevlink, nextlink
 

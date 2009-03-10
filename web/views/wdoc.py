@@ -9,14 +9,14 @@ __docformat__ = "restructuredtext en"
 from itertools import chain
 from os.path import join
 from bisect import bisect_right
-
-from mx.DateTime import strptime, today
+from datetime import date
 
 from logilab.common.changelog import ChangeLog
 from logilab.mtconverter import CHARSET_DECL_RGX
 
 from cubicweb.selectors import match_form_params
 from cubicweb.view import StartupView
+from cubicweb.utils import strptime
 from cubicweb.common.uilib import rest_publish
 from cubicweb.web import NotFound
 
@@ -207,7 +207,7 @@ class ChangeLogView(StartupView):
                 if entry.date:
                     date = strptime(entry.date, '%Y-%m-%d')
                 else:
-                    date = today()
+                    date = date.today()
                 messages = []
                 for msglines, submsgs in entry.messages:
                     msgstr = unicode(' '.join(l.strip() for l in msglines), encoding)

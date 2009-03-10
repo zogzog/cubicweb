@@ -10,7 +10,7 @@ serialization time
 __docformat__ = "restructuredtext en"
 
 from simplejson import dumps
-from mx.DateTime import now, today
+from datetime import datetime
 
 from logilab.mtconverter import html_escape
 
@@ -735,7 +735,7 @@ class DateWidget(StringWidget):
 
     def render_example(self, req):
         formatstr = req.property_value(self.format_key)
-        return now().strftime(formatstr)
+        return datetime.now().strftime(formatstr)
 
 
     def _edit_render(self, entity):
@@ -764,7 +764,7 @@ class DateWidget(StringWidget):
         req.add_css(('cubicweb.calendar_popup.css',))
         inputid = self.attrs.get('id', self.rname)
         helperid = "%shelper" % inputid
-        _today = today()
+        _today = datetime.now()
         year = int(req.form.get('year', _today.year))
         month = int(req.form.get('month', _today.month))
 
@@ -785,8 +785,8 @@ class DateTimeWidget(DateWidget):
         formatstr1 = req.property_value('ui.datetime-format')
         formatstr2 = req.property_value('ui.date-format')
         return req._('%(fmt1)s, or without time: %(fmt2)s') % {
-            'fmt1': now().strftime(formatstr1),
-            'fmt2': now().strftime(formatstr2),
+            'fmt1': datetime.now().strftime(formatstr1),
+            'fmt2': datetime.now().strftime(formatstr2),
             }
 
 

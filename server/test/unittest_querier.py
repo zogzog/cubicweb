@@ -1,17 +1,18 @@
 # -*- coding: iso-8859-1 -*-
 """unit tests for modules cubicweb.server.querier and cubicweb.server.querier_steps
 """
+from datetime import date, datetime
 
 from logilab.common.testlib import TestCase, unittest_main
-from cubicweb.devtools import init_test_database
-from cubicweb.devtools.repotest import tuplify, BaseQuerierTC
-from unittest_session import Variable
-
-from mx.DateTime import today, now, DateTimeType
 from rql import BadRQLQuery, RQLSyntaxError
+
 from cubicweb import QueryError, Unauthorized
 from cubicweb.server.utils import crypt_password
 from cubicweb.server.sources.native import make_schema
+from cubicweb.devtools import init_test_database
+from cubicweb.devtools.repotest import tuplify, BaseQuerierTC
+
+from unittest_session import Variable
 
 
 # register priority/severity sorting registered procedure
@@ -187,7 +188,7 @@ class UtilsTC(BaseQuerierTC):
         self.assertEquals(rset.description[0][0], 'Boolean')
         rset = self.execute('Any %(x)s', {'x': 1.0})
         self.assertEquals(rset.description[0][0], 'Float')
-        rset = self.execute('Any %(x)s', {'x': now()})
+        rset = self.execute('Any %(x)s', {'x': datetime.now()})
         self.assertEquals(rset.description[0][0], 'Datetime')
         rset = self.execute('Any %(x)s', {'x': 'str'})
         self.assertEquals(rset.description[0][0], 'String')
@@ -655,14 +656,14 @@ class QuerierTC(BaseQuerierTC):
 #         self.assertEquals(rset.rows, [[eid]])
         
     def test_today_bug(self):
-        self.execute("INSERT Tag X: X name 'bidule', X creation_date TODAY")
+        self.execute("INSERT Tag X: X name 'bidule', X creation_date NOW")
         self.execute("INSERT Tag Y: Y name 'toto'")
         rset = self.execute("Any D WHERE X name in ('bidule', 'toto') , X creation_date D")
-        self.assert_(isinstance(rset.rows[0][0], DateTimeType), rset.rows)
+        self.assert_(isinstance(rset.rows[0][0], datetime), rset.rows)
         rset = self.execute('Tag X WHERE X creation_date TODAY')
         self.assertEqual(len(rset.rows), 2)
         rset = self.execute('Any MAX(D) WHERE X is Tag, X creation_date D')
-        self.failUnless(isinstance(rset[0][0], DateTimeType), type(rset[0][0]))
+        self.failUnless(isinstance(rset[0][0], datetime), type(rset[0][0]))
 
     def test_today(self):
         self.execute("INSERT Tag X: X name 'bidule', X creation_date TODAY")
@@ -767,10 +768,6 @@ class QuerierTC(BaseQuerierTC):
         eid, = self.execute("INSERT Personne X: X nom 'bidule'")[0]
         rset = self.execute('Any X, NOW - CD WHERE X is Personne, X creation_date CD')
         self.failUnlessEqual(rset.description[0][1], 'Interval')
-        # sqlite bug
-        #from mx.DateTime import DateTimeDeltaType
-        #self.assertIsInstance(rset[0][1], DateTimeDeltaType) 
-        #self.failUnless(rset[0][1].seconds > 0)
 
     def test_select_subquery_aggregat(self):
         # percent users by groups
@@ -1241,7 +1238,7 @@ class QuerierTC(BaseQuerierTC):
 
     def test_nonregr_set_datetime(self):
         # huum, psycopg specific
-        self.execute('SET X creation_date %(date)s WHERE X eid 1', {'date': today()})
+        self.execute('SET X creation_date %(date)s WHERE X eid 1', {'date': date.today()})
 
     def test_nonregr_set_query(self):
         ueid = self.execute("INSERT EUser X: X login 'bob', X upassword 'toto'")[0][0]

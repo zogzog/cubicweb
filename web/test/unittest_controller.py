@@ -2,7 +2,7 @@
 
 """
 
-from mx.DateTime import DateTimeType, DateTimeDeltaType
+from datetime import datetime, date, time
 
 from logilab.common.testlib import unittest_main
 
@@ -10,12 +10,12 @@ from cubicweb.devtools import apptest
 
 class BaseControllerTC(apptest.ControllerTC):
     def test_parse_datetime(self):
-        self.assertIsInstance(self.ctrl.parse_datetime('2006/06/24 12:18'), DateTimeType)
-        self.assertIsInstance(self.ctrl.parse_datetime('2006/06/24'), DateTimeType)
-        self.assertIsInstance(self.ctrl.parse_datetime('2006/06/24 12:18', 'Datetime'), DateTimeType)
-        self.assertIsInstance(self.ctrl.parse_datetime('2006/06/24', 'Datetime'), DateTimeType)
-        self.assertIsInstance(self.ctrl.parse_datetime('2006/06/24', 'Date'), DateTimeType)
-        self.assertIsInstance(self.ctrl.parse_datetime('12:18', 'Time'), DateTimeDeltaType)
+        self.assertIsInstance(self.ctrl.parse_datetime('2006/06/24 12:18'), datetime)
+        self.assertIsInstance(self.ctrl.parse_datetime('2006/06/24'), datetime)
+        self.assertIsInstance(self.ctrl.parse_datetime('2006/06/24 12:18', 'Datetime'), datetime)
+        self.assertIsInstance(self.ctrl.parse_datetime('2006/06/24', 'Datetime'), datetime)
+        self.assertIsInstance(self.ctrl.parse_datetime('2006/06/24', 'Date'), date)
+        self.assertIsInstance(self.ctrl.parse_datetime('12:18', 'Time'), time)
         self.assertRaises(ValueError,
                           self.ctrl.parse_datetime, '2006/06/24 12:188', 'Datetime')
         self.assertRaises(ValueError,

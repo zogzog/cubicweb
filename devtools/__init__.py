@@ -1,19 +1,19 @@
 """Test tools for cubicweb
 
 :organization: Logilab
-:copyright: 2001-2008 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+:copyright: 2001-2009 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 """
 __docformat__ = "restructuredtext en"
 
 import os
 import logging
+from datetime import timedelta
 from os.path import (abspath, join, exists, basename, dirname, normpath, split,
                      isfile, isabs)
 
-from mx.DateTime import strptime, DateTimeDelta
-
 from cubicweb import CW_SOFTWARE_ROOT, ConfigurationError
+from cubicweb.utils import strptime
 from cubicweb.toolsutils import read_config
 from cubicweb.cwconfig import CubicWebConfiguration, merge_options
 from cubicweb.server.serverconfig import ServerConfiguration
@@ -271,6 +271,7 @@ def install_sqlite_path(querier):
                     for cellindex, (value, vtype) in enumerate(zip(row, rowdesc)):
                         if vtype in ('Date', 'Datetime') and type(value) is unicode:
                             found_date = True
+                            value = value.rsplit('.', 1)[0]
                             try:
                                 row[cellindex] = strptime(value, '%Y-%m-%d %H:%M:%S')
                             except:
@@ -284,7 +285,7 @@ def install_sqlite_path(querier):
                                 row[cellindex] = strptime(value, '%Y-%m-%d %H:%M:%S')
                         if vtype == 'Interval' and type(value) is int:
                             found_date = True
-                            row[cellindex] = DateTimeDelta(0, 0, 0, value)
+                            row[cellindex] = timedelta(0, value, 0) # XXX value is in number of seconds?
                     if not found_date:
                         break
             return rset

@@ -2,12 +2,13 @@
 cubes development
 
 :organization: Logilab
-:copyright: 2001-2008 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+:copyright: 2001-2009 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 """
 __docformat__ = "restructuredtext en"
 
 import sys
+from datetime import datetime
 from os import walk, mkdir, chdir, listdir, getcwd
 from os.path import join, exists, abspath, basename, normpath, split, isdir
 
@@ -16,9 +17,8 @@ from logilab.common import STD_BLACKLIST
 from logilab.common.modutils import get_module_files
 from logilab.common.textutils import get_csv
 
-from cubicweb import CW_SOFTWARE_ROOT as BASEDIR
+from cubicweb import CW_SOFTWARE_ROOT as BASEDIR, BadCommandUsage
 from cubicweb.__pkginfo__ import version as cubicwebversion
-from cubicweb import BadCommandUsage
 from cubicweb.toolsutils import Command, register_commands, confirm, copy_skeleton
 from cubicweb.web.webconfig import WebConfiguration
 from cubicweb.server.serverconfig import ServerConfiguration
@@ -102,9 +102,8 @@ def generate_schema_pot(w, cubedir=None):
     _generate_schema_pot(w, vreg, schema, libschema=libschema, cube=cube)
                 
 def _generate_schema_pot(w, vreg, schema, libschema=None, cube=None):
-    from mx.DateTime import now
     from cubicweb.common.i18n import add_msg
-    w('# schema pot file, generated on %s\n' % now().strftime('%Y-%m-%d %H:%M:%S'))
+    w('# schema pot file, generated on %s\n' % datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
     w('# \n')
     w('# singular and plural forms for each entity type\n')
     w('\n')
@@ -451,14 +450,13 @@ class NewCubeCommand(Command):
                 dependancies = ', '.join(repr(cube) for cube in includes)
         else:
             dependancies = ''
-        from mx.DateTime import now
         context = {'cubename' : cubename,
                    'distname' : distname,
                    'shortdesc' : shortdesc,
                    'longdesc' : longdesc or shortdesc,
                    'dependancies' : dependancies,
                    'version'  : cubicwebversion,
-                   'year'  : str(now().year),
+                   'year'  : str(datetime.now().year),
                    'author': self['author'],
                    'author-email': self['author-email'],
                    'author-web-site': self['author-web-site'],

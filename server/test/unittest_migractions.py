@@ -1,7 +1,7 @@
 """unit tests for module cubicweb.server.migractions
 """
 
-from mx.DateTime import DateTime, today
+from datetime import date
 
 from logilab.common.testlib import TestCase, unittest_main
 from cubicweb.devtools.apptest import RepositoryBasedTC, get_versions
@@ -79,12 +79,12 @@ class MigrationCommandsTC(RepositoryBasedTC):
         self.failUnless('mydate' in self.schema)
         self.assertEquals(self.schema['mydate'].subjects(), ('Note', ))
         self.assertEquals(self.schema['mydate'].objects(), ('Date', ))
-        testdate = DateTime(2005, 12, 13)
+        testdate = date(2005, 12, 13)
         eid1 = self.mh.rqlexec('INSERT Note N')[0][0]
         eid2 = self.mh.rqlexec('INSERT Note N: N mydate %(mydate)s', {'mydate' : testdate})[0][0]
         d1 = self.mh.rqlexec('Any D WHERE X eid %(x)s, X mydate D', {'x': eid1}, 'x')[0][0]
         d2 = self.mh.rqlexec('Any D WHERE X eid %(x)s, X mydate D', {'x': eid2}, 'x')[0][0]
-        self.assertEquals(d1, today())
+        self.assertEquals(d1, date.today())
         self.assertEquals(d2, testdate)
         self.mh.rollback()
             

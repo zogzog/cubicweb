@@ -2,16 +2,16 @@
 """This modules defines func / methods for creating test repositories
 
 :organization: Logilab
-:copyright: 2001-2008 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+:copyright: 2001-2009 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 """
 __docformat__ = "restructuredtext en"
 
 from random import randint, choice
 from copy import deepcopy
-
-from mx.DateTime import DateTime, DateTimeDelta
+from datetime import datetime, date, timedelta
 from decimal import Decimal
+
 from yams.constraints import (SizeConstraint, StaticVocabularyConstraint,
                               IntervalBoundConstraint)
 from rql.utils import decompose_b26 as base_decompose_b26
@@ -158,15 +158,15 @@ title
     
     def generate_date(self, attrname, index):
         """generates a random date (format is 'yyyy-mm-dd')"""
-        return DateTime(randint(2000, 2004), randint(1, 12), randint(1, 28))
+        return date(randint(2000, 2004), randint(1, 12), randint(1, 28))
 
     def generate_time(self, attrname, index):
         """generates a random time (format is ' HH:MM')"""
-        return DateTimeDelta(0, 11, index%60) #'11:%02d' % (index % 60)
+        return timedelta(0, 11, index%60) #'11:%02d' % (index % 60)
     
     def generate_datetime(self, attrname, index):
         """generates a random date (format is 'yyyy-mm-dd HH:MM')"""
-        return DateTime(randint(2000, 2004), randint(1, 12), randint(1, 28), 11, index%60)
+        return datetime(randint(2000, 2004), randint(1, 12), randint(1, 28), 11, index%60)
         
 
     def generate_bytes(self, attrname, index, format=None):

@@ -13,11 +13,10 @@ from smtplib import SMTP
 
 import simplejson
 
-from mx.DateTime.Parser import DateFromString
-
 from logilab.common.decorators import cached
 
 from cubicweb import NoSelectableObject, ValidationError, ObjectNotFound, typed_eid
+from cubicweb.utils import strptime
 from cubicweb.selectors import yes, match_user_groups
 from cubicweb.view import STRICT_DOCTYPE, CW_XHTML_EXTENSIONS
 from cubicweb.common.mail import format_mail
@@ -390,7 +389,7 @@ class JSonController(Controller):
 
     def js_format_date(self, strdate):
         """returns the formatted date for `msgid`"""
-        date = DateFromString(strdate)
+        date = strptime(strdate)
         return self.format_date(date)
 
     def js_external_resource(self, resource):

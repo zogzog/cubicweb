@@ -4,8 +4,6 @@ from socket import gethostname
 from logilab.common.testlib import unittest_main, TestCase
 from cubicweb.devtools.apptest import EnvBasedTC
 
-from mx.DateTime import now
-
 from cubicweb.sobjects.notification import construct_message_id, parse_message_id
 
 class MessageIdTC(TestCase):

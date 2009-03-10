@@ -7,7 +7,7 @@
 __docformat__ = "restructuredtext en"
 
 from urlparse import urlsplit, urlunsplit
-from mx.DateTime import now
+from datetime import datetime
 
 from logilab.common.decorators import cached
 
@@ -153,6 +153,7 @@ class Card(AnyEntity):
     def dc_description(self, format='text/plain'):
         return self.synopsis or u''
 
+
 class ECache(AnyEntity):
     """Cache"""
     id = 'ECache'
@@ -160,7 +161,8 @@ class ECache(AnyEntity):
     fetch_attrs, fetch_order = fetch_config(['name'])
 
     def touch(self):
-        self.req.execute('SET X timestamp %(t)s WHERE X eid %(x)s', {'t': now(), 'x': self.eid}, 'x')
+        self.req.execute('SET X timestamp %(t)s WHERE X eid %(x)s',
+                         {'t': datetime.now(), 'x': self.eid}, 'x')
 
     def valid(self, date):
         return date < self.timestamp
