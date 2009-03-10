@@ -13,60 +13,25 @@ from logilab.mtconverter import html_escape
 
 from cubicweb.interfaces import ICalendarable
 from cubicweb.selectors import implements
-from cubicweb.utils import strptime, date_range
+from cubicweb.utils import strptime, date_range, todate
 from cubicweb.view import EntityView
 from cubicweb.common.uilib import ajax_replace_url
 
-
-# For backward compatibility
-from cubicweb.interfaces import ICalendarViews, ITimetableViews
-try:
-    from cubicweb.web.views.old_calendar import _CalendarView, AMPMWeekCalendarView
-except ImportError:
-    import logging
-    logger = logging.getLogger('cubicweb.registry')
-    logger.info("old calendar views could not be found and won't be registered")
-
 _ = unicode
 
-# # useful constants & functions
-# def mkdt(mxdate):
-#     """
-#     Build a stdlib datetime date from a mx.datetime 
-#     """
-#     d = mxdate
-#     return datetime(d.year, d.month, d.day, d.hour, d.minute,
-#                     tzinfo=icalendar.utc)
+# useful constants & functions ################################################
 
-# used by i18n tools
+ONEDAY = timedelta(1, 0)
+
 WEEKDAYS = (_("monday"), _("tuesday"), _("wednesday"), _("thursday"),
             _("friday"), _("saturday"), _("sunday"))
 MONTHNAMES = ( _('january'), _('february'), _('march'), _('april'), _('may'),
                _('june'), _('july'), _('august'), _('september'), _('october'),
                _('november'), _('december')
                )
-
-#################
-# In calendar views (views used as calendar cell item) 
-
-
-class CalendarItemView(EntityView):
-    id = 'calendaritem'
-
-    def cell_call(self, row, col, dates=False):
-        task = self.complete_entity(row)
-        task.view('oneline', w=self.w)
-        if dates:
-            if task.start and task.stop:
-                self.w('<br/>' % self.req._('from %(date)s' % {'date': self.format_date(task.start)}))
-                self.w('<br/>' % self.req._('to %(date)s' % {'date': self.format_date(task.stop)}))
-                self.w('<br/>to %s'%self.format_date(task.stop))
-                
-class CalendarLargeItemView(CalendarItemView):
-    id = 'calendarlargeitem'
         
-#################
-# Calendar views
+# Calendar views ##############################################################
+
 
 class iCalView(EntityView):
     """A calendar view that generates a iCalendar file (RFC 2445)
@@ -122,6 +87,22 @@ class hCalView(EntityView):
             self.w(u'</div>')
         self.w(u'</div>')
 
+
+class CalendarItemView(EntityView):
+    id = 'calendaritem'
+
+    def cell_call(self, row, col, dates=False):
+        task = self.complete_entity(row)
+        task.view('oneline', w=self.w)
+        if dates:
+            if task.start and task.stop:
+                self.w('<br/>' % self.req._('from %(date)s' % {'date': self.format_date(task.start)}))
+                self.w('<br/>' % self.req._('to %(date)s' % {'date': self.format_date(task.stop)}))
+                self.w('<br/>to %s'%self.format_date(task.stop))
+                
+class CalendarLargeItemView(CalendarItemView):
+    id = 'calendarlargeitem'
+
     
 class _TaskEntry(object):
     def __init__(self, task, color, index=0):
@@ -130,6 +111,16 @@ class _TaskEntry(object):
         self.index = index
         self.length = 1
 
+    def in_working_hours(self):
+        """predicate returning True is the task is in working hours"""
+        if self.task.start.hour > 7 and self.task.stop.hour < 20:
+            return True
+        return False
+    
+    def is_one_day_task(self):
+        task = self.task
+        return task.start and task.stop and task.start.isocalendar() ==  task.stop.isocalendar()
+        
 class OneMonthCal(EntityView):
     """At some point, this view will probably replace ampm calendars"""
     id = 'onemonthcal'
@@ -170,22 +161,23 @@ class OneMonthCal(EntityView):
             else:
                 user = None
             the_dates = []
-            if task.start:
-                if task.start > lastday:
+            tstart = todate(task.start)
+            if tstart:
+                if tstart > lastday:
                     continue
-                the_dates = [task.start]
-            if task.stop:
-                if task.stop < firstday:
+                the_dates = [tstart]
+            tstop = todate(task.start)
+            if tstop:
+                if tstop < firstday:
                     continue
-                the_dates = [task.stop]
-            if task.start and task.stop:
-                if task.start.isocalendar() == task.stop.isocalendar():
-                    date = task.start
-                    if firstday<= date <= lastday:
-                        the_dates = [date]
+                the_dates = [tstop]
+            if tstart and tstop:
+                if tstart.isocalendar() == tstop.isocalendar():
+                    if firstday <= tstart <= lastday:
+                        the_dates = [tstart]
                 else:
-                    the_dates = date_range(max(task.start,firstday),
-                                           min(task.stop,lastday))
+                    the_dates = date_range(max(tstart, firstday),
+                                           min(tstop, lastday))
             if not the_dates:
                 continue
             
@@ -204,8 +196,8 @@ class OneMonthCal(EntityView):
 
         visited_tasks = {} # holds a description of a task
         task_colors = {}   # remember a color assigned to a task
-        for date in month_dates:
-            d_tasks = dates.get((date.year, date.month, date.day), {})
+        for mdate in month_dates:
+            d_tasks = dates.get((mdate.year, mdate.month, mdate.day), {})
             rows = [None] * nrows
             # every task that is "visited" for the first time
             # require a special treatment, so we put them in
@@ -253,11 +245,11 @@ class OneMonthCal(EntityView):
                tuple(self.req._(day) for day in WEEKDAYS))
         
         # build calendar
-        for date, task_rows in zip(month_dates, days):
-            if date.weekday() == 0:
+        for mdate, task_rows in zip(month_dates, days):
+            if mdate.weekday() == 0:
                 self.w(u'<tr>')
-            self._build_calendar_cell(date, task_rows, curdate)
-            if date.weekday() == 6:
+            self._build_calendar_cell(mdate, task_rows, curdate)
+            if mdate.weekday() == 6:
                 self.w(u'</tr>')
         self.w(u'</table></div>')
 
@@ -354,17 +346,19 @@ class OneWeekCal(EntityView):
                 continue
             done_tasks.append(task)
             the_dates = []
-            if task.start:
-                if task.start > lastday:
+            tstart = todate(task.start)
+            tstop = todate(task.stop)
+            if tstart:
+                if tstart > lastday:
                     continue
-                the_dates = [task.start]
-            if task.stop:
-                if task.stop < firstday:
+                the_dates = [tstart]
+            if tstop:
+                if tstop < firstday:
                     continue
-                the_dates = [task.stop]
-            if task.start and task.stop:
-                the_dates = date_range(max(task.start, firstday),
-                                       min(task.stop, lastday))
+                the_dates = [tstop]
+            if tstart and tstop:
+                the_dates = date_range(max(tstart, firstday),
+                                       min(tstop, lastday))
             if not the_dates:
                 continue
                 
@@ -450,9 +444,8 @@ class OneWeekCal(EntityView):
         return False
         
     def _build_calendar_cell(self, date, task_descrs):
-        inday_tasks = [t for t in task_descrs if self._one_day_task(t.task) and  t.task.start.hour<20 and t.task.stop.hour>7]
-        wholeday_tasks = [t for t in task_descrs if not self._one_day_task(t.task)]
-
+        inday_tasks = [t for t in task_descrs if t.is_one_day_task() and  t.in_working_hours()]
+        wholeday_tasks = [t for t in task_descrs if not t.is_one_day_task()]
         inday_tasks.sort(key=lambda t:t.task.start)
         sorted_tasks = []
         for i, t in enumerate(wholeday_tasks):
@@ -483,11 +476,11 @@ class OneWeekCal(EntityView):
             stop_hour = 20
             stop_min = 0
             if task.start:
-                if date < task.start < date + 1:
+                if date < todate(task.start) < date + ONEDAY:
                     start_hour = max(8, task.start.hour)
                     start_min = task.start.minute
             if task.stop:
-                if date < task.stop < date + 1:
+                if date < todate(task.stop) < date + ONEDAY:
                     stop_hour = min(20, task.stop.hour)
                     if stop_hour < 20:
                         stop_min = task.stop.minute
