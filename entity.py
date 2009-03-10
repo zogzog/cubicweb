@@ -802,7 +802,7 @@ class Entity(AppRsetObject, dict):
         from logilab.common.testlib import mock_object
         form = EntityFieldsForm(self.req, entity=self)
         field = mock_object(name=rtype, role=role)
-        return form.form_field_vocabulary(field)
+        return form.form_field_vocabulary(field, limit)
             
     def unrelated_rql(self, rtype, targettype, role, ordermethod=None,
                       vocabconstraints=True):

@@ -923,7 +923,7 @@ class EntityFieldsForm(FieldsForm):
             return eid_param(field.id, self.entity.eid)
         return field.id
         
-    def form_field_vocabulary(self, field):
+    def form_field_vocabulary(self, field, limit=None):
         role, rtype = field.role, field.name
         try:
             vocabfunc = getattr(self.entity, '%s_%s_vocabulary' % (role, rtype))
@@ -938,7 +938,7 @@ class EntityFieldsForm(FieldsForm):
         #       important because `vocabfunc` might return a list with
         #       couples (label, None) which act as separators. In these
         #       cases, it doesn't make sense to sort results afterwards.
-        return vocabfunc(rtype)
+        return vocabfunc(rtype, limit)
 ## XXX BACKPORT ME
 ##         if self.sort:
 ##             choices = sorted(choices)
