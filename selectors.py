@@ -522,7 +522,10 @@ class implements(EClassSelector):
         for iface in self.expected_ifaces:
             if isinstance(iface, basestring):
                 # entity type
-                iface = eclass.vreg.etype_class(iface)
+                try:
+                    iface = eclass.vreg.etype_class(iface)
+                except KeyError:
+                    continue # entity type not in the schema
             if implements_iface(eclass, iface):
                 if getattr(iface, '__registry__', None) == 'etypes':
                     # adjust score if the interface is an entity class

@@ -102,6 +102,10 @@ class CubicWebRegistry(VRegistry):
 
     def register(self, obj, **kwargs):
         if kwargs.get('registryname', obj.__registry__) == 'etypes':
+            if obj.id != 'Any' and not obj.id in self.schema:
+                self.error('don\'t register %s, %s type not defined in the schema',
+                           obj, obj.id)
+                return
             kwargs['clear'] = True
         super(CubicWebRegistry, self).register(obj, **kwargs)
         # XXX bw compat
@@ -126,7 +130,7 @@ class CubicWebRegistry(VRegistry):
                         interfaces.update(expand_parent_classes(iface))
                     interfaces.update(expand_parent_classes(cls))
             for obj, ifaces in self._needs_iface.items():
-                ifaces = frozenset(isinstance(iface, basestring) and self.etype_class(iface) or iface
+                ifaces = frozenset(isinstance(iface, basestring) and iface in self.schema and self.etype_class(iface) or iface
                                    for iface in ifaces)
                 if not ifaces & interfaces:
                     self.debug('kicking vobject %s (unsupported interface)', obj)
