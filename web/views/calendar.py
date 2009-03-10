@@ -21,7 +21,7 @@ _ = unicode
 
 # useful constants & functions ################################################
 
-ONEDAY = timedelta(1, 0)
+ONEDAY = timedelta(1)
 
 WEEKDAYS = (_("monday"), _("tuesday"), _("wednesday"), _("thursday"),
             _("friday"), _("saturday"), _("sunday"))
@@ -144,12 +144,12 @@ class OneMonthCal(EntityView):
             month = _today.month
 
         first_day_of_month = date(year, month, 1)
-        firstday = first_day_of_month - timedelta(first_day_of_month.weekday(), 0, 0)
+        firstday = first_day_of_month - timedelta(first_day_of_month.weekday())
         if month >= 12:
-            last_day_of_month = date(year + 1, 1, 1) - timedelta(1, 0, 0)
+            last_day_of_month = date(year + 1, 1, 1) - timedelta(1)
         else:
-            last_day_of_month = date(year, month + 1, 1) - timedelta(1, 0, 0)
-        lastday = last_day_of_month + timedelta(6 - last_day_of_month.weekday(), 0, 0)
+            last_day_of_month = date(year, month + 1, 1) - timedelta(1)
+        lastday = last_day_of_month + timedelta(6 - last_day_of_month.weekday())
         month_dates = list(date_range(firstday, lastday))
         dates = {}
         users = []
@@ -254,8 +254,8 @@ class OneMonthCal(EntityView):
         self.w(u'</table></div>')
 
     def _prevnext_links(self, curdate):
-        prevdate = curdate - timedelta(31, 0, 0)
-        nextdate = curdate + timedelta(31, 0, 0)
+        prevdate = curdate - timedelta(31)
+        nextdate = curdate + timedelta(31)
         rql = self.rset.printable_rql()
         prevlink = ajax_replace_url('onemonthcalid', rql, 'onemonthcal',
                                     year=prevdate.year, month=prevdate.month)
@@ -330,8 +330,8 @@ class OneWeekCal(EntityView):
         else:
             week = _today.isocalendar()[1]        
         # week - 1 since we get week number > 0 while we want it to start from 0
-        first_day_of_week = strptime('%s-%s-1' % (year, week - 1), '%Y-%U-%w')
-        lastday = first_day_of_week + timedelta(6, 0, 0)
+        first_day_of_week = todate(strptime('%s-%s-1' % (year, week - 1), '%Y-%U-%w'))
+        lastday = first_day_of_week + timedelta(6)
         firstday = first_day_of_week
         dates = [[] for i in range(7)]
         task_max = 0
@@ -385,13 +385,13 @@ class OneWeekCal(EntityView):
         # output header
         self.w(u'<tr>')
         self.w(u'<th class="transparent"></th>') # column for hours
-        _today = today()
+        _today = date.today()
         for i, day in enumerate(WEEKDAYS):
-            date = first_day_of_week + i
-            if date.isocalendar() == _today.isocalendar():
-                self.w(u'<th class="today">%s<br/>%s</th>' % (self.req._(day), self.format_date(date)))
+            wdate = first_day_of_week + timedelta(i)
+            if wdate.isocalendar() == _today.isocalendar():
+                self.w(u'<th class="today">%s<br/>%s</th>' % (self.req._(day), self.format_date(wdate)))
             else:
-                self.w(u'<th>%s<br/>%s</th>' % (self.req._(day), self.format_date(date)))
+                self.w(u'<th>%s<br/>%s</th>' % (self.req._(day), self.format_date(wdate)))
         self.w(u'</tr>')
         
         # build week calendar
@@ -405,11 +405,11 @@ class OneWeekCal(EntityView):
         self.w(u'</td>')
         
         for i, day in enumerate(WEEKDAYS):
-            date = first_day_of_week + i
+            wdate = first_day_of_week + timedelta(i)
             classes = ""
-            if date.isocalendar() == _today.isocalendar():
+            if wdate.isocalendar() == _today.isocalendar():
                 classes = " today"
-            self.w(u'<td class="column %s" id="%s">'%(classes, day))
+            self.w(u'<td class="column %s" id="%s">' % (classes, day))
             if len(self.rset.column_types(0)) == 1:
                 etype = list(self.rset.column_types(0))[0]
                 url = self.build_url(vid='creation', etype=etype,
@@ -418,7 +418,8 @@ class OneWeekCal(EntityView):
                                      __redirectparams=self.req.build_url_params(year=year, week=week),
                                      __redirectvid=self.id
                                      )
-                extra = ' ondblclick="addCalendarItem(event, hmin=%s, hmax=%s, year=%s, month=%s, day=%s, duration=%s, baseurl=\'%s\')"' % (8,20,date.year, date.month, date.day, 2, html_escape(url))
+                extra = ' ondblclick="addCalendarItem(event, hmin=8, hmax=20, year=%s, month=%s, day=%s, duration=2, baseurl=\'%s\')"' % (
+                    wdate.year, wdate.month, wdate.day, html_escape(url))
             else:
                 extra = ""
             self.w(u'<div class="columndiv"%s>'% extra)
@@ -426,7 +427,7 @@ class OneWeekCal(EntityView):
                 self.w(u'<div class="hourline" style="top:%sex;">'%((h-7)*8))
                 self.w(u'</div>')            
             if dates[i]:
-                self._build_calendar_cell(date, dates[i])
+                self._build_calendar_cell(wdate, dates[i])
             self.w(u'</div>')
             self.w(u'</td>')
         self.w(u'</tr>')
@@ -516,8 +517,8 @@ class OneWeekCal(EntityView):
 
             
     def _prevnext_links(self, curdate):
-        prevdate = curdate - timedelta(7, 0, 0)
-        nextdate = curdate + timedelta(7, 0, 0)
+        prevdate = curdate - timedelta(7)
+        nextdate = curdate + timedelta(7)
         rql = self.rset.printable_rql()
         prevlink = ajax_replace_url('oneweekcalid', rql, 'oneweekcal',
                                     year=prevdate.year, week=prevdate.isocalendar()[1])
