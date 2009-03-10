@@ -225,7 +225,7 @@ this option is set to yes",
         """
         if cls.mode in ('dev', 'test') and not os.environ.get('APYCOT_ROOT'):
             return join(CW_SOFTWARE_ROOT, 'web')
-        return self.cube_dir('shared')
+        return cls.cube_dir('shared')
         
     @classmethod
     def i18n_lib_dir(cls):
