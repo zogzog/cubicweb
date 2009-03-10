@@ -353,8 +353,9 @@ this option is set to yes",
     @classmethod
     def cls_adjust_sys_path(cls):
         """update python path if necessary"""
-        if not cls.CUBES_DIR in sys.path:
-            sys.path.insert(0, cls.CUBES_DIR)
+        cubes_parent_dir = normpath(join(cls.CUBES_DIR, '..'))
+        if not cubes_parent_dir in sys.path:
+            sys.path.insert(0, cubes_parent_dir)
         try:
             import cubes
             cubes.__path__ = cls.cubes_search_path()

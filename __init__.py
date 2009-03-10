@@ -2,9 +2,9 @@
 relations between entitites.
 
 :organization: Logilab
-:copyright: 2001-2008 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+:copyright: 2001-2009 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
-:license: General Public License version 2 - http://www.gnu.org/licenses
+:license: Library General Public License version - http://www.gnu.org/licenses
 """
 __docformat__ = "restructuredtext en"
 from cubicweb.__pkginfo__ import version as __version__
