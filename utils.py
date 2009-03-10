@@ -8,9 +8,12 @@ __docformat__ = "restructuredtext en"
 
 import locale
 from md5 import md5
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date
 from time import time
 from random import randint, seed
+    
+# initialize random seed from current time
+seed()
 
 try:
     strptime = datetime.strptime
@@ -18,23 +21,14 @@ except AttributeError: # py < 2.5
     from time import strptime as time_strptime
     def strptime(value, format):
         return datetime(*time_strptime(value, format)[:6])
-    
-# initialize random seed from current time
-seed()
 
-def make_uid(key):
-    """forge a unique identifier"""
-    msg = str(key) + "%.10f"%time() + str(randint(0, 1000000))
-    return md5(msg).hexdigest()
+def todate(somedate):
+    """return a date from a date (leaving unchanged) or a datetime"""
+    if isinstance(somedate, datetime):
+        return date(somedate.year, somedate.month, somedate.day)
+    assert isinstance(somedate, date)
+    return date
 
-def working_hours(mxdate):
-    """
-    Predicate returning True is the date's hour is in working hours (8h->20h)
-    """
-    if mxdate.hour > 7 and mxdate.hour < 21:
-        return True
-    return False
-    
 def date_range(begin, end, incr=1, include=None):
     """yields each date between begin and end
     :param begin: the start date
@@ -61,6 +55,11 @@ def ustrftime(date, fmt='%Y-%m-%d'):
     # date format may depend on the locale
     encoding = locale.getpreferredencoding(do_setlocale=False) or 'UTF-8'
     return unicode(date.strftime(fmt), encoding)
+
+def make_uid(key):
+    """forge a unique identifier"""
+    msg = str(key) + "%.10f"%time() + str(randint(0, 1000000))
+    return md5(msg).hexdigest()
 
 
 def dump_class(cls, clsname):
