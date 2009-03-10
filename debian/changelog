@@ -1,3 +1,9 @@
+cubicweb (3.1.2-1) unstable; urgency=low
+
+  * new upstream release
+
+ -- Aurélien Campéas <aurelien.campeas@logilab.fr>  Wed, 10 Mar 2009 12:30:00 +0100
+
 cubicweb (3.1.1-1) unstable; urgency=low
 
   * new upstream release
