@@ -73,6 +73,9 @@ class CubicWebConfigurationTC(TestCase):
                            'email/entities.py', 'email/views', 'email/hooks.py'])
 
     def test_cubes_path(self):
+        # make sure we don't import the email cube, but the stdlib email package
+        import email
+        self.assertNotEquals(dirname(email.__file__), self.config.CUBES_DIR)
         os.environ['CW_CUBES_PATH'] = join(dirname(__file__), 'data', 'cubes')
         self.assertEquals(self.config.cubes_search_path(),
                           [abspath(join(dirname(__file__), 'data', 'cubes')),
