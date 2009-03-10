@@ -517,13 +517,13 @@ class CubicWebSchema(Schema):
         rdef.name = rdef.name.lower()
         rdef.subject = bw_normalize_etype(rdef.subject)
         rdef.object = bw_normalize_etype(rdef.object)
-        super(CubicWebSchema, self).add_relation_def(rdef)
-        try:
-            self._eid_index[rdef.eid] = (self.eschema(rdef.subject),
-                                         self.rschema(rdef.name),
-                                         self.eschema(rdef.object))
-        except AttributeError:
-            pass # not a serialized schema
+        if super(CubicWebSchema, self).add_relation_def(rdef):
+            try:
+                self._eid_index[rdef.eid] = (self.eschema(rdef.subject),
+                                             self.rschema(rdef.name),
+                                             self.eschema(rdef.object))
+            except AttributeError:
+                pass # not a serialized schema
     
     def del_relation_type(self, rtype):
         rschema = self.rschema(rtype)
@@ -906,13 +906,13 @@ class BootstrapSchemaLoader(SchemaLoader):
     SchemaLoader.file_handlers.update({'.rel' : CubicWebRelationFileReader,
                                        })
 
-    def load(self, config, path=()):
+    def load(self, config, path=(), **kwargs):
         """return a Schema instance from the schema definition read
         from <directory>
         """
         self.lib_directory = config.schemas_lib_dir()
         return super(BootstrapSchemaLoader, self).load(
-            path, config.appid, register_base_types=False)
+            path, config.appid, register_base_types=False, **kwargs)
     
     def _load_definition_files(self, cubes=None):
         # bootstraping, ignore cubes
@@ -930,7 +930,7 @@ class CubicWebSchemaLoader(BootstrapSchemaLoader):
     application's schema
     """
 
-    def load(self, config):
+    def load(self, config, **kwargs):
         """return a Schema instance from the schema definition read
         from <directory>
         """
@@ -939,7 +939,7 @@ class CubicWebSchemaLoader(BootstrapSchemaLoader):
             path = reversed([config.apphome] + config.cubes_path())
         else:
             path = reversed(config.cubes_path())
-        return super(CubicWebSchemaLoader, self).load(config, path=path)
+        return super(CubicWebSchemaLoader, self).load(config, path=path, **kwargs)
 
     def _load_definition_files(self, cubes):
         for filepath in (self.include_schema_files('bootstrap')
