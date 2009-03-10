@@ -255,9 +255,13 @@ from cubicweb.common import tags
 class FieldWidget(object):
     needs_js = ()
     needs_css = ()
+    setdomid = True
     
-    def __init__(self, attrs=None):
+    def __init__(self, attrs=None, setdomid=None):
         self.attrs = attrs or {}
+        if setdomid is not None:
+            # override class's default value
+            self.setdomid = setdomid
 
     def add_media(self, form):
         """adds media (CSS & JS) required by this widget"""
@@ -276,7 +280,8 @@ class FieldWidget(object):
         if not isinstance(values, (tuple, list)):
             values = (values,)
         attrs = dict(self.attrs)
-        attrs['id'] = form.context[field]['id']
+        if self.setdomid:
+            attrs['id'] = form.context[field]['id']
         return name, values, attrs
 
 class Input(FieldWidget):
@@ -316,6 +321,7 @@ class FileInput(Input):
         
 class HiddenInput(Input):
     type = 'hidden'
+    setdomid = False # by default, don't set id attribute on hidden input
     
 class ButtonInput(Input):
     type = 'button'
