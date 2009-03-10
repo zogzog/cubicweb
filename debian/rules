@@ -48,7 +48,6 @@ install: build $(basename $(wildcard debian/*.in))
 	rm -rf debian/cubicweb-common/usr/lib/${PY_VERSION}/site-packages/cubicweb/common/test
 
 	# cubes directory must be managed as a valid python module
-	ls -l debian/cubicweb-common/usr/share/cubicweb/cubes
 	touch debian/cubicweb-common/usr/share/cubicweb/cubes/__init__.py
 
 %: %.in
