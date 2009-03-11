@@ -359,10 +359,6 @@ class FCKEditor(TextArea):
         return super(FCKEditor, self).render(form, field)
 
 
-#class EditableFile(Widget):
-#    # XXX
-#    pass
-
 class Select(FieldWidget):
     def __init__(self, attrs=None, multiple=False):
         super(Select, self).__init__(attrs)
@@ -520,7 +516,6 @@ class Field(object):
     def render(self, form, renderer):
         return self.get_widget(form).render(form, self)
 
-
     def vocabulary(self, form):
         return self.choices
 
@@ -644,7 +639,37 @@ class FileField(StringField):
                 + renderer.render_help(form, field)
                 + u'<br/>')
         
+class EditableFileField(FileField):
+    editable_formats = ('text/plain', 'text/html', 'text/rest')
     
+    def render(self, form, renderer):
+        wdgs = [super(EditableFileField, self).render(form, renderer)]
+        if form.form_field_format(self) in self.editable_formats:
+            data = form.form_field_value(self, {}, load_bytes=True)
+            if data:
+                encoding = form.form_field_encoding(self)
+                try:
+                    form.context[self]['value'] = unicode(data.getvalue(), encoding)
+                    form.context[self]['rawvalue'] = form.context[self]['value']
+                except UnicodeError:
+                    pass
+                else:
+                    if not self.required:
+                        msg = form.req._(
+                            'You can either submit a new file using the browse button above'
+                            ', or choose to remove already uploaded file by checking the '
+                            '"detach attached file" check-box, or edit file content online '
+                            'with the widget below.')
+                    else:
+                        msg = form.req._(
+                            'You can either submit a new file using the browse button above'
+                            ', or edit file content online with the widget below.')
+                    wdgs.append(u'<p><b>%s</b></p>' % msg)
+                    wdgs.append(TextArea(setdomid=False).render(form, self))
+                    # XXX restore form context?
+        return '\n'.join(wdgs)
+
+        
 class IntField(Field):
     def __init__(self, min=None, max=None, **kwargs):
         super(IntField, self).__init__(**kwargs)
