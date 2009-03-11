@@ -211,12 +211,12 @@ class NewGoogleAppCommand(Command):
         # link every supported components
         packagesdir = join(appldir, 'cubes')
         create_init_file(join(appldir, 'cubes'), 'cubes')
-        cubesdir = CubicWebConfiguration.cubes_dir()
-        for include in ('addressbook','basket', 'blog','classfolders',
-                        'classtags', 'comment', 'file', 'link',
+        for include in ('addressbook','basket', 'blog','folder',
+                        'tag', 'comment', 'file', 'link',
                         'mailinglist', 'person', 'task', 'zone',
                         ):
-            create_symlink(join(cubesdir, include), join(packagesdir, include))
+            create_symlink(CubicWebConfiguration.cube_dir(include),
+                           join(packagesdir, include))
         # generate sample config
         from cubicweb.goa.goaconfig import GAEConfiguration
         from cubicweb.common.migration import MigrationHelper

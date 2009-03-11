@@ -6,10 +6,10 @@ software
 distname = "cubicweb"
 modname = "cubicweb"
 
-numversion = (3, 1, 0)
+numversion = (3, 1, 2)
 version = '.'.join(str(num) for num in numversion)
 
-license = 'GPL'
+license = 'LGPL v2'
 copyright = '''Copyright (c) 2003-2009 LOGILAB S.A. (Paris, FRANCE).
 http://www.logilab.fr/ -- mailto:contact@logilab.fr'''
 
