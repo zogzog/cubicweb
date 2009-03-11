@@ -912,7 +912,7 @@ class EntityFieldsForm(FieldsForm):
     def form_field_entity_value(self, field, default_initial=True):
         attr = field.name 
         if field.role == 'object':
-            attr += '_object'
+            attr = 'reverse_' + attr
         else:
             attrtype = self.entity.e_schema.destination(attr)
             if attrtype == 'Password':
