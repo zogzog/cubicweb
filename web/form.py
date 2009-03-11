@@ -488,7 +488,7 @@ class Field(object):
         self.label = label or name
         self.id = id or name
         self.initial = initial
-        self.choices = choices or ()
+        self.choices = choices
         self.help = help
         self.eidparam = eidparam
         self.role = 'subject'
@@ -537,7 +537,9 @@ class Field(object):
         return self.get_widget(form).render(form, self)
 
     def vocabulary(self, form):
-        return self.choices
+        if self.choices is not None:
+            return self.choices
+        return form.form_field_vocabulary(self)
 
     
 class StringField(Field):
