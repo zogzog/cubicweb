@@ -194,7 +194,10 @@ class ServerMigrationHelper(MigrationHelper):
     @cached
     def rqlcursor(self):
         """lazy rql cursor"""
-        return self.cnx.cursor(self.session)    
+        # should not give session as cnx.cursor(), else we may try to execute
+        # some query while no pool is set on the session (eg on entity attribute
+        # access for instance)
+        return self.cnx.cursor()
     
     def commit(self):
         if hasattr(self, '_cnx'):
