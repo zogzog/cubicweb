@@ -110,7 +110,7 @@ class ChangeStateFormView(EntityView):
             'st1': _(state.name),
             'st2': _(dest.name)}
         self.w(u'<p>%s</p>\n' % msg)
-        self.w(form.form_render(state=dest.eid))
+        self.w(form.form_render(state=dest.eid, trcomment=u''))
 
     def redirectpath(self, entity):
         return entity.rest_path()
