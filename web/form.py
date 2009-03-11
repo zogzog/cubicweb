@@ -1191,21 +1191,26 @@ class FormRenderer(object):
                 w(field.render(form, self))
                 fields.remove(field)
         if fields:
+            self._render_fields(fields, w, form, display_help)
+        for childform in getattr(form, 'forms', []):
+            self.render_fields(w, childform, values)
+            
+    def _render_fields(self, fields, w, form, display_help):
             w(u'<table>')
             for field in fields:
                 w(u'<tr>')
-                w('<th>%s</th>' % self.render_label(form, field))
+                w(u'<th>%s</th>' % self.render_label(form, field))
                 w(u'<td style="width:100%;">')
                 w(field.render(form, self))
                 if display_help == True:
                     w(self.render_help(form, field))
                 w(u'</td></tr>')
             w(u'</table>')
-        for childform in getattr(form, 'forms', []):
-            self.render_fields(w, childform, values)
-        
+
+    button_bar_class = u'formButtonBar'
+    
     def render_buttons(self, w, form):
-        w(u'<table class="formButtonBar">\n<tr>\n')
+        w(u'<table class="%s">\n<tr>\n' % self.button_bar_class)
         for button in form.form_buttons():
             w(u'<td>%s</td>\n' % button)
         w(u'</tr></table>')
