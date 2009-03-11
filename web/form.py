@@ -369,9 +369,8 @@ class Select(FieldWidget):
         
     def render(self, form, field):
         name, curvalues, attrs = self._render_attrs(form, field)
-        vocab = field.vocabulary(form)
         options = []
-        for label, value in vocab:
+        for label, value in field.vocabulary(form):
             if value in curvalues:
                 options.append(tags.option(label, value=value, selected='selected'))
             else:
@@ -392,8 +391,20 @@ class CheckBox(Input):
         return name, values, attrs
 
         
-class Radio(FieldWidget):
-    pass
+class Radio(Input):
+    type = 'radio'
+    setdomid = False
+    
+    def render(self, form, field):
+        name, curvalues, attrs = self._render_attrs(form, field)
+        options = []
+        for label, value in field.vocabulary(form):
+            if value in curvalues:
+                options.append(tags.input(name=name, type=self.type, value=value, checked='checked', **attrs))
+            else:
+                options.append(tags.option(name=name, type=self.type, value=value, **attrs))
+            options[-1] += label + '<br/>'
+        return '\n'.join(options)
 
 
 class DateTimePicker(TextInput):
