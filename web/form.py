@@ -372,8 +372,6 @@ class Select(FieldWidget):
                 options.append(tags.option(label, value=value, selected='selected'))
             else:
                 options.append(tags.option(label, value=value))
-        if attrs is None:
-            return tags.select(name=name, options=options)
         return tags.select(name=name, multiple=self.multiple,
                            options=options, **attrs)
 
