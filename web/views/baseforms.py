@@ -74,6 +74,7 @@ class DeleteConfForm(EntityView):
 
 
 class ChangeStateForm(EntityFieldsForm):
+    id = 'changestate'
     __method = StringField(name='__method', initial='set_state', widget=HiddenInput)
     state = StringField(widget=HiddenInput, eidparam=True)
     # XXX format field
@@ -101,8 +102,8 @@ class ChangeStateFormView(EntityView):
         self.req.add_js('cubicweb.edition.js')
         self.req.add_css('cubicweb.form.css')
         _ = self.req._
-        form = ChangeStateForm(self.req, entity=entity,
-                               redirect_path=self.redirectpath(entity))
+        form = self.select_object('forms', 'changestate', self.req, self.rset, row, col,
+                                  entity=entity, redirect_path=self.redirectpath(entity))
         self.w(form.error_message())
         self.w(u'<h4>%s %s</h4>\n' % (_(transition.name), entity.view('oneline')))
         msg = _('status will change from %(st1)s to %(st2)s') % {

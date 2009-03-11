@@ -17,8 +17,9 @@ from logilab.mtconverter import html_escape
 from yams.constraints import SizeConstraint, StaticVocabularyConstraint
 
 from cubicweb import typed_eid
+from cubicweb.appobject import AppObject
 from cubicweb.utils import ustrftime
-from cubicweb.selectors import match_form_params
+from cubicweb.selectors import yes, match_form_params, non_final_entity
 from cubicweb.view import NOINDEX, NOFOLLOW, View, EntityView, AnyRsetView
 from cubicweb.common.registerers import accepts_registerer
 from cubicweb.common.uilib import toggle_action
@@ -718,14 +719,17 @@ class metafieldsform(type):
         return super(metafieldsform, mcs).__new__(mcs, name, bases, classdict)
     
 
-class FieldsForm(FormMixIn):
+class FieldsForm(FormMixIn, AppObject):
     __metaclass__ = metafieldsform
+    __registry__ = 'forms'
+    __select__ = yes()
     
-    def __init__(self, req, domid=None, title=None, action='edit',
-                 onsubmit="return freezeFormButtons('%s');",
+    def __init__(self, req, rset=None, domid=None, title=None, action='edit',
+                 onsubmit="return freezeFormButtons('%(domid)s');",
                  cssclass=None, cssstyle=None, cwtarget=None, buttons=None,
                  redirect_path=None, set_error_url=True, copy_nav_params=False):
         self.req = req
+        self.rset = rset
         self.config = req.vreg.config
         self.domid = domid or 'form'
         self.title = title
@@ -805,6 +809,7 @@ class FieldsForm(FormMixIn):
 
    
 class EntityFieldsForm(FieldsForm):
+    __select__ = non_final_entity()
     
     def __init__(self, *args, **kwargs):
         kwargs.setdefault('domid', 'entityForm')
