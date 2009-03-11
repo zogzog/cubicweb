@@ -381,11 +381,18 @@ class Select(FieldWidget):
 class CheckBox(Input):
     type = 'checkbox'
     
-    def _render_attrs(self, form, field):
-        name, values, attrs = super(CheckBox, self)._render_attrs(form, field)
-        if values and values[0]:
-            attrs['checked'] = u'checked'
-        return name, values, attrs
+    def render(self, form, field):
+        name, curvalues, attrs = self._render_attrs(form, field)
+        options = []
+        for label, value in field.vocabulary(form):
+            if value in curvalues:
+                tag = tags.input(name=name, value=value, type=self.type,
+                                 checked='checked', **attrs)
+            else:
+                tag = tags.input(name=name, value=value, type=self.type,
+                                 **attrs)
+            options.append(tag + label)
+        return '<br/>\n'.join(options)
 
         
 class Radio(Input):
