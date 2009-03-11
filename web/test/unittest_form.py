@@ -31,41 +31,42 @@ class EntityFieldsFormTC(WebTest):
     def test_form_inheritance(self):
         form = CustomChangeStateForm(self.req, redirect_path='perdu.com',
                                      entity=self.entity)
-        self.assertEquals(form.form_render(state=123),
-                          ''' ''')
+        self.assertTextEquals(form.form_render(state=123),
+                              ''' ''')
 
     def test_change_state_form(self):
         form = ChangeStateForm(self.req, redirect_path='perdu.com',
                                entity=self.entity)
-        self.assertEquals(form.form_render(state=123),
-                          ''' ''')
-
-    def test_delete_conf_form_multi(self):
-        rset = self.execute('EGroup X')
-        self.assertEquals(self.view('deleteconf', rset).source,
-                          '')
+        self.assertTextEquals(form.form_render(state=123, trcomment=u''),
+                              ''' ''')
 
     def test_richtextfield(self):
         card = self.add_entity('Card', title=u"tls sprint fev 2009",
                                content=u'new widgets system')
         form = RTFForm(self.req, redirect_path='perdu.com',
                        entity=card)
-        self.assertEquals(form.form_render(),
-                          '''''')
+        self.assertTextEquals(form.form_render(),
+                              '''''')
 
     def test_filefield(self):
         file = self.add_entity('File', name=u"pouet.txt",
                                data=Binary('new widgets system'))
         form = FFForm(self.req, redirect_path='perdu.com',
                       entity=file)
-        self.assertEquals(form.form_render(),
-                          '''''')
+        self.assertTextEquals(form.form_render(),
+                              '''''')
 
     def test_passwordfield(self):
         form = PFForm(self.req, redirect_path='perdu.com',
                       entity=self.entity)
-        self.assertEquals(form.form_render(),
-                          '''''')
+        self.assertTextEquals(form.form_render(),
+                              '''''')
+        
+    def test_delete_conf_form_multi(self):
+        rset = self.execute('EGroup X')
+        self.assertTextEquals(self.view('deleteconf', rset, template=None).source,
+                              '')
+
         
 if __name__ == '__main__':
     unittest_main()
