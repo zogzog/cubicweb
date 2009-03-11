@@ -96,5 +96,5 @@ To update the translation catalogs you need to do:
 1. `cubicweb-ctl i18nupdate <component>`
 2. Edit the <component>/xxx.po  files and add missing translations (empty `msgstr`) 
 3. `hg ci -m "updated i18n catalogs"`
-4. `cubicweb-ctl i18n compile <myapplication>`
+4. `cubicweb-ctl i18ncompile <myapplication>`
 
