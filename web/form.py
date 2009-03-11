@@ -1075,7 +1075,7 @@ class FormRenderer(object):
         tag = ('<form action="%s" method="post" id="%s" enctype="%s"' % (
             html_escape(form.action or '#'), form.domid, enctype))
         if form.onsubmit:
-            tag += ' onsubmit="%s"' % html_escape(form.onsubmit)
+            tag += ' onsubmit="%s"' % html_escape(form.onsubmit % form.__dict__)
         if form.cssstyle:
             tag += ' style="%s"' % html_escape(form.cssstyle)
         if form.cssclass:
