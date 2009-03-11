@@ -21,6 +21,7 @@ from cubicweb.appobject import AppObject
 from cubicweb.utils import ustrftime
 from cubicweb.selectors import yes, match_form_params, non_final_entity
 from cubicweb.view import NOINDEX, NOFOLLOW, View, EntityView, AnyRsetView
+from cubicweb.schema import FormatConstraint
 from cubicweb.common.registerers import accepts_registerer
 from cubicweb.common.uilib import toggle_action
 from cubicweb.web import stdmsgs
@@ -544,11 +545,15 @@ class RichTextField(TextField):
                 # if fckeditor is used and format field isn't explicitly
                 # deactivated, we want an hidden field for the format
                 widget = HiddenInput()
+                choices = None
             else:
                 # else we want a format selector
                 # XXX compute vocabulary
                 widget = Select
-            field = StringField(name=self.name + '_format', widget=widget)
+                req = form.req
+                choices = [(req._(format), format) for format in FormatConstraint().vocabulary(req=req)]
+            field = StringField(name=self.name + '_format', widget=widget,
+                                choices=choices)
             form.req.data[self] = field
             return field
     
