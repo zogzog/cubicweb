@@ -968,6 +968,7 @@ class FormatConstraint(StaticVocabularyConstraint):
                        )
     def __init__(self):
         pass
+    
     def serialize(self):
         """called to make persistent valuable data of a constraint"""
         return None
@@ -979,8 +980,10 @@ class FormatConstraint(StaticVocabularyConstraint):
         """
         return cls()
     
-    def vocabulary(self, entity=None):
-        if entity and entity.req.user.has_permission(PERM_USE_TEMPLATE_FORMAT):
+    def vocabulary(self, entity=None, req=None):
+        if req is None and entity is not None:
+            req = entity.req
+        if req is not None and req.user.has_permission(PERM_USE_TEMPLATE_FORMAT):
             return self.regular_formats + tuple(self.need_perm_formats)
         return self.regular_formats
     
