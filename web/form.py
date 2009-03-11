@@ -812,7 +812,7 @@ class FieldsForm(FormMixIn, AppObject):
                                   'id': self.form_field_id(field),
                                   }
 
-    def form_field_value(self, field, values):
+    def form_field_value(self, field, values, load_bytes=False):
         """looks for field's value in
         1. kw args given to render_form (including previously submitted form
            values if any)
@@ -829,6 +829,9 @@ class FieldsForm(FormMixIn, AppObject):
 
     def form_field_format(self, field):
         return self.req.property_value('ui.default-text-format')
+    
+    def form_field_encoding(self, field):
+        return self.req.encoding
     
     def form_field_name(self, field):
         return field.name
@@ -879,7 +882,7 @@ class EntityFieldsForm(FieldsForm):
             name = 'edito-%s' % field.name
         return HiddenInitialValueField(field, name=name)
         
-    def form_field_value(self, field, values):
+    def form_field_value(self, field, values, load_bytes=False):
         """look for field's value with the following rules:
         1. handle special __type and eid fields
         2. looks in kw args given to render_form (including previously submitted
@@ -898,8 +901,8 @@ class EntityFieldsForm(FieldsForm):
         if fieldname.startswith('edits-') or fieldname.startswith('edito-'):
             # edit[s|o]- fieds must have the actual value stored on the entity
             if self.entity.has_eid():
-                value = self.form_field_entity_value(field.visible_field,
-                                                     default_initial=False)
+                value = self._form_field_entity_value(field.visible_field,
+                                                      default_initial=False)
             else:
                 value = INTERNAL_FIELD_VALUE
         elif fieldname == '__type':
@@ -915,7 +918,8 @@ class EntityFieldsForm(FieldsForm):
                 # use value found on the entity or field's initial value if it's
                 # not an attribute of the entity (XXX may conflicts and get
                 # undesired value)
-                value = self.form_field_entity_value(field, default_initial=True)
+                value = self._form_field_entity_value(field, default_initial=True,
+                                                      load_bytes=load_bytes)
             else:
                 defaultattr = 'default_%s' % fieldname
                 if hasattr(self.entity, defaultattr):
@@ -940,7 +944,14 @@ class EntityFieldsForm(FieldsForm):
             return self.entity.format(field.name)
         return self.req.property_value('ui.default-text-format')
 
-    def form_field_entity_value(self, field, default_initial=True):
+    def form_field_encoding(self, field):
+        entity = self.entity
+        if field.eidparam and entity.has_encoding(field.name) and (
+            entity.has_eid() or '%s_encoding' % field.name in entity):
+            return self.entity.text_encoding()
+        return super(EntityFieldsForm, self).form_field_encoding(field)
+
+    def _form_field_entity_value(self, field, default_initial=True, load_bytes=False):
         attr = field.name 
         if field.role == 'object':
             attr = 'reverse_' + attr
@@ -949,8 +960,12 @@ class EntityFieldsForm(FieldsForm):
             if attrtype == 'Password':
                 return self.entity.has_eid() and INTERNAL_FIELD_VALUE or ''
             if attrtype == 'Bytes':
-                # XXX value should reflect if some file is already attached
-                return self.entity.has_eid()
+                if self.entity.has_eid():
+                    if load_bytes:
+                        return getattr(self.entity, attr)
+                    # XXX value should reflect if some file is already attached
+                    return True
+                return False
         if default_initial:
             value = getattr(self.entity, attr, field.initial)
         else:
