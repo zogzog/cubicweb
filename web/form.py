@@ -350,13 +350,13 @@ class TextArea(FieldWidget):
 
 
 class FCKEditor(TextArea):
-    def __init__(self, attrs):
-        super(FCKEditor, self).__init__(attrs)
+    def __init__(self, *args, **kwargs):
+        super(FCKEditor, self).__init__(*args, **kwargs)
         self.attrs['cubicweb:type'] = 'wysiwyg'
     
     def render(self, form, field):
         form.req.fckeditor_config()
-        return super(self, FCKEditor, self).render(form, field)
+        return super(FCKEditor, self).render(form, field)
 
 
 #class EditableFile(Widget):
@@ -930,14 +930,14 @@ class EntityFieldsForm(FieldsForm):
                     # use field's initial value
                     value = field.initial
             if callable(value):
-                values = value()
+                value = value()
         return value
     
     def form_format_field_value(self, field, values):
         entity = self.entity
         if field.eidparam and entity.has_format(field.name) and (
             entity.has_eid() or '%s_format' % field.name in entity):
-            return self.entity.format(field.name) == 'text/html'
+            return self.entity.format(field.name)
         return self.req.property_value('ui.default-text-format')
 
     def form_field_entity_value(self, field, default_initial=True):
