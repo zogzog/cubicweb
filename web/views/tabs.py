@@ -66,6 +66,8 @@ class LazyViewMixin(object):
 
 
 class TabsMixin(LazyViewMixin):
+    """a tab mixin
+    """
 
     @property
     def cookie_name(self):
