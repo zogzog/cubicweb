@@ -34,6 +34,13 @@ class EntityFieldsFormTC(WebTest):
         rset = self.execute('EGroup X')
         self.assertTextEquals(self.view('deleteconf', rset, template=None).source,
                               '')
+        
+    def test_massmailing_form(self):
+        self.execute('INSERT EmailAddress X: X address L + "@cubicweb.org", '
+                     'U use_email X WHERE U is EUser, U login L')
+        rset = self.execute('EUser X')
+        self.assertTextEquals(self.view('massmailing', rset, template=None).source,
+                              '')
 
     # fields tests ############################################################
 
