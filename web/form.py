@@ -679,6 +679,11 @@ class IntField(Field):
 
 class BooleanField(Field):
     widget = Radio
+        
+    def vocabulary(self, form):
+        if self.choices:
+            return self.choices
+        return [(form.req._('yes'), '1'), (form.req._('no'), '')]
 
 
 class FloatField(IntField):    
