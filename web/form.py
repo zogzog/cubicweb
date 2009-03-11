@@ -271,6 +271,7 @@ class FieldsForm(FormMixIn, AppObject):
     __metaclass__ = metafieldsform
     __registry__ = 'forms'
     __select__ = yes()
+    internal_fields = ('__errorurl',) + NAV_FORM_PARAMETERS
     
     def __init__(self, req, rset=None, domid=None, title=None, action='edit',
                  onsubmit="return freezeFormButtons('%(domid)s');",
@@ -372,6 +373,8 @@ class FieldsForm(FormMixIn, AppObject):
    
 class EntityFieldsForm(FieldsForm):
     __select__ = non_final_entity()
+    
+    internal_fields = FieldsForm.internal_fields + ('__type', 'eid')
     
     def __init__(self, *args, **kwargs):
         kwargs.setdefault('domid', 'entityForm')
@@ -598,11 +601,21 @@ class MultipleFieldsForm(FieldsForm):
 
 
 # form renderers ############
-class FormRenderer(object):
 
+class FormRenderer(object):
+    button_bar_class = u'formButtonBar'
+    
+    def __init__(self, display_fields=None, display_label=True,
+                 display_help=True, button_bar_class=None):
+        self.display_fields = display_fields # None -> all fields
+        self.display_label = display_label
+        self.display_help = display_help
+        if button_bar_class is not None:
+            self.button_bar_class = button_bar_class
+            
     # renderer interface ######################################################
     
-    def render(self, form, values, display_help=True):
+    def render(self, form, values):
         data = []
         w = data.append
         w(self.open_form(form))
@@ -611,7 +624,7 @@ class FormRenderer(object):
         w(tags.input(type='hidden', name='__form_id', value=form.domid))
         if form.redirect_path:
             w(tags.input(type='hidden', name='__redirectpath', value=form.redirect_path))
-        self.render_fields(w, form, values, display_help)
+        self.render_fields(w, form, values)
         self.render_buttons(w, form)
         w(u'</fieldset>')
         w(u'</form>')
@@ -653,33 +666,40 @@ class FormRenderer(object):
         if form.cwtarget:
             tag += ' cubicweb:target="%s"' % html_escape(form.cwtarget)
         return tag + '>'
-        
-    def render_fields(self, w, form, values, display_help=True):
+
+    def display_field(self, form, field):
+        return (self.display_fields is None
+                or field.name in self.display_fields
+                or field.name in form.internal_fields)
+    
+    def render_fields(self, w, form, values):
         form.form_build_context(values)
         fields = form.fields[:]
         for field in form.fields:
+            if not self.display_field(field):
+                fields.remove(field)
+                
             if not field.is_visible():
                 w(field.render(form, self))
                 fields.remove(field)
         if fields:
-            self._render_fields(fields, w, form, display_help)
+            self._render_fields(fields, w, form)
         for childform in getattr(form, 'forms', []):
             self.render_fields(w, childform, values)
             
-    def _render_fields(self, fields, w, form, display_help):
+    def _render_fields(self, fields, w, form,):
             w(u'<table>')
             for field in fields:
                 w(u'<tr>')
-                w(u'<th>%s</th>' % self.render_label(form, field))
+                if self.display_label:
+                    w(u'<th>%s</th>' % self.render_label(form, field))
                 w(u'<td style="width:100%;">')
                 w(field.render(form, self))
-                if display_help == True:
+                if self.display_help:
                     w(self.render_help(form, field))
                 w(u'</td></tr>')
             w(u'</table>')
 
-    button_bar_class = u'formButtonBar'
-    
     def render_buttons(self, w, form):
         w(u'<table class="%s">\n<tr>\n' % self.button_bar_class)
         for button in form.form_buttons():
