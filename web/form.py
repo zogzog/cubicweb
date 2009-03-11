@@ -452,6 +452,21 @@ class DateTimePicker(TextInput):
                    req._('calendar'), helperid) )
 
 
+class AjaxWidget(FieldWidget):
+    def __init__(self, wdgtype, inputid=None, **kwargs):
+        super(AjaxWidget, self).__init__(**kwargs)
+        self.attrs.setdefault('class', 'widget')
+        self.attrs.setdefault('cubicweb:loadtype', 'auto')
+        self.attrs['cubicweb:wdgtype'] = wdgtype
+        if inputid is not None:
+            self.attrs['cubicweb:inputid'] = inputid
+            
+    def render(self, form, field):
+        self.add_media(form)
+        name, values, attrs = self._render_attrs(form, field)
+        return tags.div(**attrs)
+
+
 # fields ############
 
 class Field(object):
