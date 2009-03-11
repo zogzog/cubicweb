@@ -12,6 +12,7 @@ from datetime import date, datetime
 from simplejson import dumps
 
 from logilab.common.compat import any
+from logilab.common.decorators import iclassmethod
 from logilab.mtconverter import html_escape
 
 from yams.constraints import SizeConstraint, StaticVocabularyConstraint
@@ -772,7 +773,18 @@ class FieldsForm(FormMixIn, AppObject):
                     self.form_add_hidden(param, initial=value)
         self.buttons = buttons or []
         self.context = None
-        
+
+    @iclassmethod
+    def field_by_name(cls_or_self, name):
+        if isinstance(cls_or_self, type):
+            fields = cls_or_self._fields_
+        else:
+            fields = cls_or_self.fields
+        for field in fields:
+            if field.name == name:
+                return field
+        raise Exception('field %s not found' % name)
+    
     @property
     def form_needs_multipart(self):
         return any(field.needs_multipart for field in self.fields) 
