@@ -28,8 +28,7 @@ h3 = tag('h3')
 h4 = tag('h4')
 h5 = tag('h5')
 
-def select(name, id=None, multiple=False, options=[]):
-    attrs = {}
+def select(name, id=None, multiple=False, options=[], **attrs):
     if multiple:
         attrs['multiple'] = 'multiple'
     if id:
