@@ -25,12 +25,12 @@ from cubicweb.common.uilib import cut
 from cubicweb.web import INTERNAL_FIELD_VALUE, stdmsgs, eid_param
 from cubicweb.web.controller import NAV_FORM_PARAMETERS
 from cubicweb.web.widgets import checkbox, InputWidget, ComboBoxWidget
-from cubicweb.web.form import FormMixIn, relation_id
+from cubicweb.web.form import (MultipleFieldsForm, EntityFieldsForm, StringField, 
+                               RichTextField, HiddenInput,
+                               FormMixIn, relation_id)
 
 _ = unicode
 
-from cubicweb.web.form import MultipleFieldsForm, EntityFieldsForm, StringField, \
-     RichTextField, HiddenInput
 
 
 class DeleteConfForm(EntityView):
@@ -77,7 +77,6 @@ class ChangeStateForm(EntityFieldsForm):
     id = 'changestate'
     __method = StringField(name='__method', initial='set_state', widget=HiddenInput)
     state = StringField(widget=HiddenInput, eidparam=True)
-    # XXX format field
     trcomment = RichTextField(eidparam=True)
 
     def form_buttons(self):
@@ -90,10 +89,9 @@ class ChangeStateForm(EntityFieldsForm):
 class ChangeStateFormView(EntityView):
     id = 'statuschange'
     title = _('status change')
-
     __select__ = implements(IWorkflowable) & match_form_params('treid')
 
-    def cell_call(self, row, col, vid='secondary'):
+    def cell_call(self, row, col):
         entity = self.entity(row, col)
         eid = entity.eid
         state = entity.in_state[0]
@@ -114,6 +112,7 @@ class ChangeStateFormView(EntityView):
 
     def redirectpath(self, entity):
         return entity.rest_path()
+
 
 class ClickAndEditForm(FormMixIn, EntityView):
     id = 'reledit'

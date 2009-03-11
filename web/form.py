@@ -753,7 +753,7 @@ class FieldsForm(FormMixIn, AppObject):
                 if value:
                     self.form_add_hidden(param, initial=value)
         self.buttons = buttons or []
-        self.context = {}
+        self.context = None
         
     @property
     def form_needs_multipart(self):
@@ -868,7 +868,8 @@ class EntityFieldsForm(FieldsForm):
         if fieldname.startswith('edits-') or fieldname.startswith('edito-'):
             # edit[s|o]- fieds must have the actual value stored on the entity
             if self.entity.has_eid():
-                value = self.form_field_entity_value(field.visible_field, default_initial=False)
+                value = self.form_field_entity_value(field.visible_field,
+                                                     default_initial=False)
             else:
                 value = INTERNAL_FIELD_VALUE
         elif fieldname == '__type':
