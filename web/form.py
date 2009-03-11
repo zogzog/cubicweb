@@ -587,7 +587,7 @@ class RichTextField(TextField):
         `attr`, according to user preferences
         """
         if form.req.use_fckeditor():
-            return form.form_format_field_value(self) == 'text/html'
+            return form.form_field_format(self) == 'text/html'
         return False
 
     def render(self, form, renderer):
@@ -827,7 +827,7 @@ class FieldsForm(FormMixIn, AppObject):
             value = field.initial
         return value
 
-    def form_format_field_value(self, field, values):
+    def form_field_format(self, field):
         return self.req.property_value('ui.default-text-format')
     
     def form_field_name(self, field):
@@ -933,7 +933,7 @@ class EntityFieldsForm(FieldsForm):
                 value = value()
         return value
     
-    def form_format_field_value(self, field, values):
+    def form_field_format(self, field):
         entity = self.entity
         if field.eidparam and entity.has_format(field.name) and (
             entity.has_eid() or '%s_format' % field.name in entity):
