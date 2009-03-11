@@ -190,25 +190,6 @@ class AnyEntity(Entity):
         return self.absolute_url(vid='rss')
     
     # abstractions making the whole things (well, some at least) working ######
-    
-    @classmethod
-    def get_widget(cls, rschema, x='subject'):
-        """return a widget to view or edit a relation
-
-        notice that when the relation support multiple target types, the widget
-        is necessarily the same for all those types
-        """
-        # let ImportError propage if web par isn't available
-        from cubicweb.web.widgets import widget
-        if isinstance(rschema, basestring):
-            rschema = cls.schema.rschema(rschema)
-        if x == 'subject':
-            tschema = rschema.objects(cls.e_schema)[0]
-            wdg = widget(cls.vreg, cls, rschema, tschema, 'subject')
-        else:
-            tschema = rschema.subjects(cls.e_schema)[0]
-            wdg = widget(cls.vreg, tschema, rschema, cls, 'object')
-        return wdg
         
     def sortvalue(self, rtype=None):
         """return a value which can be used to sort this entity or given
@@ -255,8 +236,82 @@ class AnyEntity(Entity):
         """
         return self.rtags.get_mode(rtype, targettype, role)
 
-    # edition helper functions ################################################
+    # edition helper functions ################################################    
+
+    def linked_to(self, rtype, target, remove=True):
+        """if entity should be linked to another using __linkto form param for
+        the given relation/target, return eids of related entities
+
+        This method is consuming matching link-to information from form params
+        if `remove` is True (by default).
+        """
+        try:
+            return self.__linkto[(rtype, target)]
+        except AttributeError:
+            self.__linkto = {}
+        except KeyError:
+            pass
+        linktos = list(self.req.list_form_param('__linkto'))
+        linkedto = []
+        for linkto in linktos[:]:
+            ltrtype, eid, lttarget = linkto.split(':')
+            if rtype == ltrtype and target == lttarget:
+                # delete __linkto from form param to avoid it being added as
+                # hidden input
+                if remove:
+                    linktos.remove(linkto)
+                    self.req.form['__linkto'] = linktos
+                linkedto.append(typed_eid(eid))
+        self.__linkto[(rtype, target)] = linkedto
+        return linkedto
     
+    # edit controller callbacks ###############################################
+    
+    def after_deletion_path(self):
+        """return (path, parameters) which should be used as redirect
+        information when this entity is being deleted
+        """
+        return str(self.e_schema).lower(), {}
+
+    def pre_web_edit(self):
+        """callback called by the web editcontroller when an entity will be
+        created/modified, to let a chance to do some entity specific stuff.
+
+        Do nothing by default.
+        """
+        pass
+    
+    # server side helpers #####################################################
+    
+    def notification_references(self, view):
+        """used to control References field of email send on notification
+        for this entity. `view` is the notification view.
+        
+        Should return a list of eids which can be used to generate message ids
+        of previously sent email
+        """
+        return ()
+            
+    # XXX deprecates, may be killed once old widgets system is gone ###########
+    
+    @classmethod
+    def get_widget(cls, rschema, x='subject'):
+        """return a widget to view or edit a relation
+
+        notice that when the relation support multiple target types, the widget
+        is necessarily the same for all those types
+        """
+        # let ImportError propage if web par isn't available
+        from cubicweb.web.widgets import widget
+        if isinstance(rschema, basestring):
+            rschema = cls.schema.rschema(rschema)
+        if x == 'subject':
+            tschema = rschema.objects(cls.e_schema)[0]
+            wdg = widget(cls.vreg, cls, rschema, tschema, 'subject')
+        else:
+            tschema = rschema.subjects(cls.e_schema)[0]
+            wdg = widget(cls.vreg, tschema, rschema, cls, 'object')
+        return wdg
     def relations_by_category(self, categories=None, permission=None):
         if categories is not None:
             if not isinstance(categories, (list, tuple, set, frozenset)):
@@ -323,62 +378,6 @@ class AnyEntity(Entity):
                 continue
             result.append( (rschema.display_name(self.req, target), rschema, target) )
         return sorted(result)
-
-    def linked_to(self, rtype, target, remove=True):
-        """if entity should be linked to another using __linkto form param for
-        the given relation/target, return eids of related entities
-
-        This method is consuming matching link-to information from form params
-        if `remove` is True (by default).
-        """
-        try:
-            return self.__linkto[(rtype, target)]
-        except AttributeError:
-            self.__linkto = {}
-        except KeyError:
-            pass
-        linktos = list(self.req.list_form_param('__linkto'))
-        linkedto = []
-        for linkto in linktos[:]:
-            ltrtype, eid, lttarget = linkto.split(':')
-            if rtype == ltrtype and target == lttarget:
-                # delete __linkto from form param to avoid it being added as
-                # hidden input
-                if remove:
-                    linktos.remove(linkto)
-                    self.req.form['__linkto'] = linktos
-                linkedto.append(typed_eid(eid))
-        self.__linkto[(rtype, target)] = linkedto
-        return linkedto
-    
-    # edit controller callbacks ###############################################
-    
-    def after_deletion_path(self):
-        """return (path, parameters) which should be used as redirect
-        information when this entity is being deleted
-        """
-        return str(self.e_schema).lower(), {}
-
-    def pre_web_edit(self):
-        """callback called by the web editcontroller when an entity will be
-        created/modified, to let a chance to do some entity specific stuff.
-
-        Do nothing by default.
-        """
-        pass
-    
-    # server side helpers #####################################################
-    
-    def notification_references(self, view):
-        """used to control References field of email send on notification
-        for this entity. `view` is the notification view.
-        
-        Should return a list of eids which can be used to generate message ids
-        of previously sent email
-        """
-        return ()
-            
-    # XXX deprecates, may be killed once old widgets system is gone ###########
     
     def _default_format(self):
         return self.req.property_value('ui.default-text-format')
