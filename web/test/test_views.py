@@ -34,13 +34,7 @@ class ManualWebTests(WebTest):
 
     def test_manual_tests(self):
         rset = self.execute('Any P,F,S WHERE P is EUser, P firstname F, P surname S')
-        self.view('table', rset, template=None, displayfilter=True, displaycols=[0,2])
-#        rset = self.execute('Any P,F,S LIMIT 1 WHERE P is EUser, P firstname F, P surname S')
-#        rset.req.form['rtype'] = 'firstname'
-#        self.view('editrelation', rset, template=None)
-#        rset.req.form['rtype'] = 'use_email'
-#        self.view('editrelation', rset, template=None)
-        
+        self.view('table', rset, template=None, displayfilter=True, displaycols=[0,2])        
 
     def test_sortable_js_added(self):
         rset = self.execute('EUser X')
