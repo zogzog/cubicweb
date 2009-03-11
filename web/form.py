@@ -493,6 +493,7 @@ class Field(object):
         self.eidparam = eidparam
         self.role = 'subject'
         # global fields ordering in forms
+        self.creation_rank = Field.creation_rank
         Field.creation_rank += 1
 
     def set_name(self, name):
