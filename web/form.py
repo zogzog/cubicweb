@@ -552,8 +552,9 @@ class RichTextField(TextField):
             return self.format_field
         # we have to cache generated field since it's use as key in the
         # context dictionnary
+        req = form.req
         try:
-            return form.req.data[self]
+            return req.data[self]
         except KeyError:
             if self.use_fckeditor(form):
                 # if fckeditor is used and format field isn't explicitly
@@ -564,11 +565,10 @@ class RichTextField(TextField):
                 # else we want a format selector
                 # XXX compute vocabulary
                 widget = Select
-                req = form.req
                 choices = [(req._(format), format) for format in FormatConstraint().vocabulary(req=req)]
             field = StringField(name=self.name + '_format', widget=widget,
                                 choices=choices)
-            form.req.data[self] = field
+            req.data[self] = field
             return field
     
     def actual_fields(self, form):
@@ -638,6 +638,7 @@ class FileField(StringField):
                 + field.render(form, renderer)
                 + renderer.render_help(form, field)
                 + u'<br/>')
+
         
 class EditableFileField(FileField):
     editable_formats = ('text/plain', 'text/html', 'text/rest')
