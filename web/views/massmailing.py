@@ -4,6 +4,7 @@
 :copyright: 2007-2009 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 """
+__docformat__ = "restructuredtext en"
 
 import operator
 
@@ -12,8 +13,11 @@ from logilab.mtconverter import html_escape
 from cubicweb.interfaces import IEmailable
 from cubicweb.selectors import implements, match_user_groups
 from cubicweb.view import EntityView
-from cubicweb.web.action import Action
 from cubicweb.web import stdmsgs
+from cubicweb.web.action import Action
+from cubicweb.web.form import FieldsForm, FormRenderer
+from cubicweb.web.formfields import StringField
+from cubicweb.web.formwidgets import CheckBox, TextInput, AjaxWidget
 
 
 class SendEmailAction(Action):
@@ -31,8 +35,6 @@ class SendEmailAction(Action):
         return self.build_url(self.req.relative_path(includeparams=False),
                               **params)
 
-from cubicweb.web.form import FieldsForm, FormRenderer
-from cubicweb.web.form import StringField, CheckBox, TextInput, AjaxWidget
             
 class MassMailingForm(FieldsForm):
     id = 'massmailing'
@@ -59,10 +61,10 @@ class MassMailingForm(FieldsForm):
     def form_buttons(self):
         context = {'domid': self.domid,
                    'cancel' : self.req._(stdmsgs.BUTTON_CANCEL),
-                   'cancelimgpath' : self.req.external_resource('CANCEL_EMAIL_ICON'),
+                   'cancelimgpath' : self.req.external_resource('CANCEL_EMAIL_ICON'),j
                    'send' : self.req._('send email'),
                    'sendimgpath' : self.req.external_resource('SEND_EMAIL_ICON'),
-                }
+                   }
         return ['''<a id="sendbutton" href="javascript: $('%(domid)s').submit()">
 <img src="%(sendimgpath)s" alt="%(send)s"/>%(send)s</a>''' % context,
                 '''<a id="cancelbutton" href="javascript: history.back()">
@@ -88,7 +90,7 @@ class MassMailingForm(FieldsForm):
 class MassMailingFormRenderer(FormRenderer):
     button_bar_class = u'toolbar'
     
-    def _render_fields(self, fields, w, form, display_help):
+    def _render_fields(self, fields, w, form):
         w(u'<table class="headersform">')
         for field in fields:
             if field.name == 'mailbody':

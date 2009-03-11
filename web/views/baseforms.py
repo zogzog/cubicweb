@@ -25,9 +25,9 @@ from cubicweb.common.uilib import cut
 from cubicweb.web import INTERNAL_FIELD_VALUE, stdmsgs, eid_param
 from cubicweb.web.controller import NAV_FORM_PARAMETERS
 from cubicweb.web.widgets import checkbox, InputWidget, ComboBoxWidget
-from cubicweb.web.form import (MultipleFieldsForm, EntityFieldsForm, StringField, 
-                               RichTextField, HiddenInput,
-                               FormMixIn, relation_id)
+from cubicweb.web.form import MultipleFieldsForm, EntityFieldsForm, FormMixIn, relation_id
+from cubicweb.web.formfields import StringField,  RichTextField
+from cubicweb.web.formwidgets import HiddenInput
 
 _ = unicode
 
