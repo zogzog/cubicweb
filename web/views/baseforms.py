@@ -119,24 +119,8 @@ class ClickAndEditForm(FormMixIn, EntityView):
     id = 'reledit'
     __select__ = match_kwargs('rtype')
 
-    #FIXME editableField class could be toggleable from userprefs
-
-    EDITION_BODY = '''
-<div class="editableField" id="%(divid)s"
-      ondblclick="showInlineEditionForm(%(eid)s, '%(rtype)s', '%(divid)s')">%(value)s</div>
-<form style="display: none;" onsubmit="return inlineValidateForm('%(divid)s-form', '%(rtype)s', '%(eid)s', '%(divid)s', %(reload)s);" id="%(divid)s-form" action="#">
-<fieldset>
-<input type="hidden" name="eid" value="%(eid)s" />
-<input type="hidden" name="__maineid" value="%(eid)s" />
-<input type="hidden" name="__type:%(eid)s" value="%(etype)s" />
-%(attrform)s
-</fieldset>
-<div class="buttonbar">
-%(ok)s
-%(cancel)s
-</div>
-</form>
-'''
+    # FIXME editableField class could be toggleable from userprefs
+      
     def cell_call(self, row, col, rtype=None, role='subject', reload=False):
         entity = self.entity(row, col)
         if getattr(entity, rtype) is None:
@@ -150,27 +134,22 @@ class ClickAndEditForm(FormMixIn, EntityView):
         eid = entity.eid
         edit_key = make_uid('%s-%s' % (rtype, eid))
         divid = 'd%s' % edit_key
-        widget = entity.get_widget(rtype, 'subject')
-        eschema = entity.e_schema
-        attrform = widget.edit_render(entity, useid='i%s' % edit_key)
-        ok = (u'<input class="validateButton" type="submit" name="__action_apply" value="%s" tabindex="%s" />'
-              % (self.req._(stdmsgs.BUTTON_OK), self.req.next_tabindex()))
-        cancel = (u'<input class="validateButton" type="button" '
-                  'value="%s" onclick="cancelInlineEdit(%s, \'%s\', \'%s\')"  tabindex="%s" />'
-                  % (self.req._(stdmsgs.BUTTON_CANCEL), eid, rtype, divid,
-                     self.req.next_tabindex()))
-        self.w(self.EDITION_BODY % {
-                'eid': eid,
-                'rtype': rtype,
-                'etype': entity.e_schema,
-                'attrform': attrform,
-                'action' : self.build_url('edit'), # NOTE: actually never gets called
-                'ok': ok,
-                'cancel': cancel,
-                'value': value,
-                'reload': dumps(reload),
-                'divid': divid,
-                })
+        reload = dumps(reload)
+        buttons = [tags.input(klass="validateButton", type="submit", name="__action_apply",
+                              value=self.req._(stdmsgs.BUTTON_OK), tabindex=self.req.next_tabindex()),
+                   tags.input(klass="validateButton", type="button",
+                              value=self.req._(stdmsgs.BUTTON_CANCEL),
+                              onclick="cancelInlineEdit(%s,\'%s\',\'%s\')" % (eid, rtype, divid),
+                              tabindex=self.req.next_tabindex())]
+        form = self.vreg.select_object('forms', 'edition', self.req, self.rset, row=row, col=col,
+                                       entity=entity, domid='%s-form' % divid, action='#',
+                                       cssstyle='display: none', buttons=buttons,
+                                       onsubmit="return inlineValidateForm('%(divid)s-form', '%(rtype)s', '%(eid)s', '%(divid)s', %(reload)s);" % locals())
+        renderer = FormRenderer(display_label=False, display_help=False,
+                                display_fields=(rtype,), button_bar_class='buttonbar')
+        self.w(tags.div(value, klass='editableField', id=divid,
+                        ondblclick="showInlineEditionForm(%(eid)s, '%(rtype)s', '%(divid)s')" % locals()))
+        self.w(form.render(renderer=renderer)
 
 
 class EditionForm(FormMixIn, EntityView):
