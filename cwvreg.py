@@ -30,6 +30,9 @@ def use_interfaces(obj):
                 return sorted(impl.expected_ifaces)
         except AttributeError:
             pass # old-style vobject classes with no accepts_interfaces
+        except:
+            print 'bad selector %s on %s' % (obj.__select__, obj)
+            raise
         return ()
 
 def expand_parent_classes(iface):
