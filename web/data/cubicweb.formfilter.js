@@ -104,6 +104,7 @@ function buildRQL(divid, vid, paginate, vidargs) {
 
 var SELECTED_IMG = baseuri()+"data/black-check.png";
 var UNSELECTED_IMG = baseuri()+"data/no-check-no-border.png";
+var UNSELECTED_BORDER_IMG = baseuri()+"data/black-unchecked.png";
 
 function initFacetBoxEvents(root) {
     // facetargs : (divid, vid, paginate, extraargs)
@@ -116,7 +117,7 @@ function initFacetBoxEvents(root) {
 	var facetargs = form.attr('cubicweb:facetargs');
 	if (facetargs !== undefined) {
 	    form.submit(function() {
-	        buildRQL.apply(null, evalJSON(form.attr('cubicweb:facetargs'))); 
+	        buildRQL.apply(null, evalJSON(form.attr('cubicweb:facetargs')));
 	        return false;
 	    });
 	    form.find('div.facet').each(function() {
@@ -128,7 +129,14 @@ function initFacetBoxEvents(root) {
 		    var $this = jQuery(this);
 		    if ($this.hasClass('facetValueSelected')) {
 			$this.removeClass('facetValueSelected');
-			$this.find('img').attr('src', UNSELECTED_IMG);
+			$this.find('img').each(function (i){
+			if (this.getAttribute('cubicweb:unselimg')){
+			       this.setAttribute('src', UNSELECTED_BORDER_IMG);
+			    }
+			    else{
+                             this.setAttribute('src', UNSELECTED_IMG);
+			    }
+			});
 			var index = parseInt($this.attr('cubicweb:idx'));
 			var shift = jQuery.grep(facet.find('.facetValueSelected'), function (n) {
 			    var nindex = parseInt(n.getAttribute('cubicweb:idx'));
@@ -148,7 +156,7 @@ function initFacetBoxEvents(root) {
 			jQuery(this).addClass('facetValueSelected');
 			jQuery(this).find('img').attr('src', SELECTED_IMG);
 		    }
-		    buildRQL.apply(null, evalJSON(form.attr('cubicweb:facetargs'))); 
+		    buildRQL.apply(null, evalJSON(form.attr('cubicweb:facetargs')));
 		    facet.find('.facetBody').animate({scrollTop: 0}, '');
 		});
 		facet.find('select.facetOperator').change(function() {
