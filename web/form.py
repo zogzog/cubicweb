@@ -674,7 +674,6 @@ class EditableFileField(FileField):
                 encoding = form.form_field_encoding(self)
                 try:
                     form.context[self]['value'] = unicode(data.getvalue(), encoding)
-                    form.context[self]['rawvalue'] = form.context[self]['value']
                 except UnicodeError:
                     pass
                 else:
