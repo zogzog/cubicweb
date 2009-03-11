@@ -56,17 +56,6 @@ def guess_configuration(directory):
                                  % (directory, modes))
     return modes[0]
 
-# XXX generate this according to the configuration (repository/all-in-one/web)
-VREGOPTIONS = []
-for registry in ('etypes', 'hooks', 'controllers', 'actions', 'components',
-                 'views', 'boxes', 'contentnavigation', 'urlrewriting',
-                 'facets'):
-    VREGOPTIONS.append(('disable-%s'%registry,
-                        {'type' : 'csv', 'default': (),
-                         'help': 'list of identifier of application objects from the %s registry to disable'%registry,
-                         'group': 'appobjects', 'inputlevel': 2,
-                         }))
-VREGOPTIONS = tuple(VREGOPTIONS)
 
 # persistent options definition
 PERSISTENT_OPTIONS = (
@@ -157,7 +146,7 @@ class CubicWebNoAppConfiguration(ConfigurationMixIn):
         mode = 'installed'
         CUBES_DIR = '/usr/share/cubicweb/cubes/'
 
-    options = VREGOPTIONS + (
+    options = (
        ('log-threshold',
          {'type' : 'string', # XXX use a dedicated type?
           'default': 'ERROR',
@@ -201,6 +190,11 @@ registered.',
           'help': "don't display actual email addresses but mangle them if \
 this option is set to yes",
           'group': 'email', 'inputlevel': 2,
+          }),
+        ('disable-appobjects',
+         {'type' : 'csv', 'default': (),
+          'help': 'comma separated list of identifiers of application objects (<registry>.<oid>) to disable',
+          'group': 'appobjects', 'inputlevel': 2,
           }),
         )
     # static and class methods used to get application independant resources ##

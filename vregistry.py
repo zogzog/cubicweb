@@ -474,7 +474,7 @@ class VRegistry(object):
             or not cls.__registry__ or not cls.id):
             return
         regname = cls.__registry__
-        if cls.id in self.config['disable-%s' % regname]:
+        if '%s.%s' % (regname, cls.id) in self.config['disable-appobjects']:
             return
         registry = self._registries.setdefault(regname, {})
         vobjects = registry.setdefault(cls.id, [])
