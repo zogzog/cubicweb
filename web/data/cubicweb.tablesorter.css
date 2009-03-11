@@ -8,24 +8,6 @@
 	text-align: left;
 } */
 
-table.listing tr th {
-  border: 1px solid #FFF;
-  font-size: 8pt;
-  padding: 4px;
-}
-
-table.listing tr .header {
-  cursor: pointer;
-}
-
-table.listing td {
-  color: #3D3D3D;
-  padding: 4px;
-  background-color: #FFF;
-  vertical-align: top;
-}
-
-
 table.listing tr .headerSortUp {
   background-image: url(asc.gif);
 }

@@ -200,13 +200,10 @@ blockquote {
   visibility: hidden;
 }
 
-
-/* FIXME need to be moved to cubicweb.forms.css */
 li.invisible { list-style: none; background: none; padding: 0px 0px
 1px 1px; }
 
-/* FIXME Should use span in html insteed */
-li.invisible div {
+li.invisible div{
   display: inline;
 }
 
@@ -498,10 +495,7 @@ div.boxPrefTitle span{
  padding:0px 5px;
 }
 
-/* FIXME rqlboxsubmit2 still necessary ? */
-
-input.rqlsubmit, 
-input#rqlboxsubmit2 {
+input.rqlsubmit{
   background: #fffff8 url("go.png") 50% 50% no-repeat;
   width: 20px;
   height: 20px;
@@ -553,7 +547,6 @@ div.navigation a {
   text-decoration: none;
 }
 
-/* FIXME seems to be not used in cubicweb framework */
 div.prevnext {
   width: 100%;
   margin-bottom: 1em;
@@ -562,7 +555,6 @@ div.prevnext {
 div.prevnext a {
   color: #000;
 }
-
 
 /***************************************/
 /* entity views                        */
@@ -718,6 +710,25 @@ table.listing thead th.over {
   cursor: pointer;
 }
 
+table.listing tr th {
+  border: 1px solid #dfdfdf;
+  border-right:none;
+  font-size: 8pt;
+  padding: 4px;
+}
+
+table.listing tr .header {
+  border-right: 1px solid #dfdfdf;
+  cursor: pointer;
+}
+
+table.listing td {
+  color: #3D3D3D;
+  padding: 4px;
+  background-color: #FFF;
+  vertical-align: top;
+}
+
 table.listing th,
 table.listing td {
   padding: 3px 0px 3px 5px;
@@ -750,44 +761,6 @@ table.listing td.top {
   top: -1px;
 }
 
-/***************************************/
-/* drag and drop zone                  */
-/* (XXX only used in seo for now)      */
-/***************************************/
-
-div.droppable {
-  border: 1px dashed black;
-  margin: 2px;
-  padding: 2px;
-  height: 15px;
-}
-
-div.drophover {
-  background: #f4f5ed;
-}
-
-/****************************************/
-/* filter box  FIXME is not used anymore*/
-/****************************************/
-
-/*
-#filter_box input {
-  width: 180px;
-}
-#filter_box label {
-  float: left;
-}
-#filter_box select.radio {
-  width: 47px;
-  float: right;
-}
-#filter_box select {
-  width: 185px;
-}
-#filter_box option.disabled {
-  background: lightgray;
-}
-*/
 
 /***************************************/
 /* error view (views/management.py)    */
@@ -874,4 +847,11 @@ div.footer a {
   text-align: left;
   font-size:  large;
   font-weight: bold;
+}
+
+input.validateButton {  
+  margin: 1em 1em 0px 0px;
+  border: 1px solid #edecd2;
+  border-color:#edecd2 #cfceb7 #cfceb7  #edecd2;
+  background: #fffff8 url("button.png") bottom left repeat-x;
 }
