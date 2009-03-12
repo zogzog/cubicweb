@@ -6,6 +6,8 @@
 """
 __docformat__ = "restructuredtext en"
 
+from datetime import date
+
 from cubicweb.common import tags
 
 class FieldWidget(object):
@@ -25,11 +27,10 @@ class FieldWidget(object):
 
     def add_media(self, form):
         """adds media (CSS & JS) required by this widget"""
-        req = form.req
         if self.needs_js:
-            req.add_js(self.needs_js)
+            form.req.add_js(self.needs_js)
         if self.needs_css:
-            req.add_css(self.needs_css)
+            form.req.add_css(self.needs_css)
         
     def render(self, form, field):
         raise NotImplementedError
@@ -46,6 +47,7 @@ class FieldWidget(object):
             attrs['tabindex'] = form.req.next_tabindex()
         return name, values, attrs
 
+
 class Input(FieldWidget):
     type = None
     
@@ -56,8 +58,10 @@ class Input(FieldWidget):
                   for value in values]
         return u'\n'.join(inputs)
 
+
 class TextInput(Input):
     type = 'text'
+
 
 class PasswordInput(Input):
     type = 'password'
@@ -73,6 +77,7 @@ class PasswordInput(Input):
                                       **{'class': 'emphasis'})]
         return u'\n'.join(inputs)
 
+
 class FileInput(Input):
     type = 'file'
     
@@ -80,14 +85,17 @@ class FileInput(Input):
         # ignore value which makes no sense here (XXX even on form validation error?)
         name, values, attrs = super(FileInput, self)._render_attrs(form, field)
         return name, ('',), attrs
+
         
 class HiddenInput(Input):
     type = 'hidden'
     setdomid = False # by default, don't set id attribute on hidden input
     settabindex = False
+
     
 class ButtonInput(Input):
     type = 'button'
+
 
 class TextArea(FieldWidget):
     def render(self, form, field):
