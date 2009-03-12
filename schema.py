@@ -341,11 +341,8 @@ class CubicWebEntitySchema(EntitySchema):
         (the first tuple element containing the text and the second the text format)
         """
         for rschema, _ in self.attribute_definitions():
-            if rschema.type.endswith('_format'):
-                for constraint in self.constraints(rschema):
-                    if isinstance(constraint, FormatConstraint):
-                        yield self.subject_relation(rschema.type[:-7]), rschema
-                        break
+            if rschema.type.endswith('_format') and self.has_subject_relation(rschema.type[:-7]):
+                yield self.subject_relation(rschema.type[:-7]), rschema
                     
     def check_perm(self, session, action, eid=None):
         # NB: session may be a server session or a request object
