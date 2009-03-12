@@ -419,7 +419,7 @@ class TextWidget(Widget):
                     frname, format, frname)
             return u'%s<textarea cubicweb:type="wysiwyg" onkeypress="autogrow(this)" name="%s" %s>%s</textarea>' % (
                 hidden, self.rname, self.format_attrs(), dvalue)
-        if with_format and entity.has_metadata(self.name, 'format'):
+        if with_format and entity.e_schema.has_metadata(self.name, 'format'):
             fmtwdg = entity.get_widget(self.name + '_format')
             fmtwdgstr = fmtwdg.edit_render(entity, tabindex=self.attrs['tabindex'])
             self.attrs['tabindex'] = entity.req.next_tabindex()
@@ -467,7 +467,8 @@ class FileWidget(Widget):
     def _file_wdg(self, entity):
         wdgs = [u'<input type="file" name="%s" %s/>' % (self.rname, self.format_attrs())]
         req = entity.req
-        if entity.has_metadata(self.name, 'format') or entity.has_metadata(self.name, 'encoding'):
+        if (entity.e_schema.has_metadata(self.name, 'format')
+            or entity.e_schema.has_metadata(self.name, 'encoding')):
             divid = '%s-%s-advanced' % (self.name, entity.eid)
             wdgs.append(u'<a href="%s" title="%s"><img src="%s" alt="%s"/></a>' %
                         (html_escape(toggle_action(divid)),

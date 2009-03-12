@@ -413,7 +413,7 @@ class AnyEntity(Entity):
         """return True if fckeditor should be used to edit entity's attribute named
         `attr`, according to user preferences
         """
-        if self.req.use_fckeditor() and self.has_metadata(attr, 'format'):
+        if self.req.use_fckeditor() and self.e_schema.has_metadata(attr, 'format'):
             if self.has_eid() or '%s_format' % attr in self:
                 return self.attribute_metadata(attr, 'format') == 'text/html'
             return self.req.property_value('ui.default-text-format') == 'text/html'

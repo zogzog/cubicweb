@@ -213,7 +213,7 @@ class EditController(ViewController):
                     value = None
                 else:
                     val.filename = value[0]
-                    if entity.has_metadata(attr, 'format'):
+                    if entity.e_schema.has_metadata(attr, 'format'):
                         key = '%s_format' % attr
                         formparams[key] = value[1]
                         self.relations.append('X %s_format %%(%s)s'
