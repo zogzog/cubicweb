@@ -6,6 +6,19 @@
 """
 __docformat__ = "restructuredtext en"
 
+from datetime import datetime
+
+from logilab.mtconverter import html_escape
+from yams.constraints import SizeConstraint, StaticVocabularyConstraint
+
+from cubicweb.schema import FormatConstraint
+from cubicweb.utils import ustrftime
+from cubicweb.common import tags, uilib
+from cubicweb.web import INTERNAL_FIELD_VALUE
+from cubicweb.web.formwidgets import (HiddenInput, TextInput, FileInput, PasswordInput,
+                                      TextArea, FCKEditor, Radio, Select,
+                                      DateTimePicker) 
+
 class Field(object):
     """field class is introduced to control what's displayed in edition form
     """
@@ -15,7 +28,7 @@ class Field(object):
 
     def __init__(self, name=None, id=None, label=None,
                  widget=None, required=False, initial=None,
-                 choices=None, help=None, eidparam=False):
+                 choices=None, help=None, eidparam=False, role='subject'):
         self.required = required
         if widget is not None:
             self.widget = widget
@@ -28,7 +41,7 @@ class Field(object):
         self.choices = choices
         self.help = help
         self.eidparam = eidparam
-        self.role = 'subject'
+        self.role = role
         # global fields ordering in forms
         self.creation_rank = Field.creation_rank
         Field.creation_rank += 1
@@ -125,7 +138,8 @@ class RichTextField(TextField):
                 # else we want a format selector
                 # XXX compute vocabulary
                 widget = Select
-                choices = [(req._(format), format) for format in FormatConstraint().vocabulary(req=req)]
+                fcstr = FormatConstraint()
+                choices = [(req._(fmt), fmt) for fmt in fcstr.vocabulary(req=req)]
             field = StringField(name=self.name + '_format', widget=widget,
                                 choices=choices)
             req.data[self] = field
@@ -175,7 +189,7 @@ class FileField(StringField):
         if self.format_field or self.encoding_field:
             divid = '%s-advanced' % form.context[self]['name']
             wdgs.append(u'<a href="%s" title="%s"><img src="%s" alt="%s"/></a>' %
-                        (html_escape(toggle_action(divid)),
+                        (html_escape(uilib.toggle_action(divid)),
                          form.req._('show advanced fields'),
                          html_escape(form.req.build_url('data/puce_down.png')),
                          form.req._('show advanced fields')))
@@ -248,7 +262,7 @@ class BooleanField(Field):
 
 class FloatField(IntField):    
     def format_single_value(self, req, value):
-        formatstr = entity.req.property_value('ui.float-format')
+        formatstr = req.property_value('ui.float-format')
         if value is None:
             return u''
         return formatstr % float(value)
@@ -289,9 +303,8 @@ class RelationField(Field):
         super(RelationField, self).__init__(**kwargs)
 
     @staticmethod
-    def fromcardinality(card, role, **kwargs):
-        return RelationField(widget=Select(multiple=card in '*+'),
-                             **kwargs)
+    def fromcardinality(card, **kwargs):
+        return RelationField(widget=Select(multiple=card in '*+'), **kwargs)
         
     def vocabulary(self, form):
         entity = form.entity
@@ -325,47 +338,56 @@ def stringfield_from_constraints(constraints, **kwargs):
                                **kwargs)
         if isinstance(cstr, SizeConstraint) and cstr.max is not None:
             if cstr.max > 257:
-                field = textfield_from_constraint(cstr, **kwargs)
+                rows_cols_from_constraint(cstr, kwargs)
+                field = TextField(**kwargs)
             else:
                 field = StringField(max_length=cstr.max, **kwargs)
     return field or TextField(**kwargs)
-        
 
-def textfield_from_constraint(constraint, **kwargs):
-    if 256 < constraint.max < 513:
+
+def rows_cols_from_constraint(constraint, kwargs):
+    if constraint.max < 513:
         rows, cols = 5, 60
     else:
         rows, cols = 10, 80
-    return TextField(rows, cols, **kwargs)
+    kwargs.setdefault('rows', rows)
+    kwargs.setdefault('cols', cols)
 
 
-def find_field(eclass, subjschema, rschema, role='subject'):
+def guess_field(eclass, rschema, role='subject', **kwargs):
     """return the most adapated widget to edit the relation
     'subjschema rschema objschema' according to information found in the schema
     """
     fieldclass = None
+    eschema = eclass.e_schema
     if role == 'subject':
-        objschema = rschema.objects(subjschema)[0]
-        cardidx = 0
+        targetschema = rschema.objects(eschema)[0]
+        card = rschema.rproperty(eschema, targetschema, 'cardinality')[0]
     else:
-        objschema = rschema.subjects(subjschema)[0]
-        cardidx = 1
-    card = rschema.rproperty(subjschema, objschema, 'cardinality')[cardidx]
-    required = card in '1+'
-    if rschema in eclass.widgets:
-        fieldclass = eclass.widgets[rschema]
-        if isinstance(fieldclass, basestring):
-            return StringField(name=rschema.type)
-    elif not rschema.is_final():
-        return RelationField.fromcardinality(card, role,name=rschema.type,
-                                             required=required)
-    else:
-        fieldclass = FIELDS[objschema]
-    if fieldclass is StringField:
-        constraints = rschema.rproperty(subjschema, objschema, 'constraints')
-        return stringfield_from_constraints(constraints, name=rschema.type,
-                                            required=required)
-    return fieldclass(name=rschema.type, required=required)
+        targetschema = rschema.subjects(eschema)[0]
+        card = rschema.rproperty(targetschema, eschema, 'cardinality')[1]
+    kwargs['required'] = card in '1+'
+    kwargs['name'] = rschema.type
+    if rschema.is_final():
+        if rschema in eschema.format_fields:
+            return None
+        if targetschema == 'Password':
+            return StringField(widget=PasswordInput(), **kwargs)
+        if eschema.has_format(rschema):
+            constraints = rschema.rproperty(eschema, targetschema, 'constraints')
+            for cstr in constraints:
+                if isinstance(cstr, StaticVocabularyConstraint):
+                    raise Exception('rich text field with static vocabulary')
+                if isinstance(cstr, SizeConstraint) and cstr.max is not None:
+                    rows_cols_from_constraint(cstr, kwargs)
+            return RichTextField(**kwargs)
+        fieldclass = FIELDS[targetschema]
+        if fieldclass is StringField:
+            constraints = rschema.rproperty(eschema, targetschema, 'constraints')
+            return stringfield_from_constraints(constraints, **kwargs)
+        return fieldclass(**kwargs)
+    kwargs['role'] = role
+    return RelationField.fromcardinality(card, **kwargs)
 
 FIELDS = {
     'Boolean':  BooleanField,
@@ -379,4 +401,3 @@ FIELDS = {
     'String' :  StringField,
     'Time':     TimeField,
     }
-views/
