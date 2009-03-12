@@ -374,13 +374,6 @@ du :eid:`1:*ReST*`'''
         e['content'] = u'été'
         self.assertEquals(e.printable_value('content'), e['content'])
         
-
-    def test_entity_formatted_attrs(self):
-        e = self.etype_instance('EUser')
-        self.assertEquals(e.formatted_attrs(), [])
-        e = self.etype_instance('File')
-        self.assertEquals(e.formatted_attrs(), ['description'])
-        
         
     def test_fulltextindex(self):
         e = self.etype_instance('File')

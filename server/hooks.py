@@ -11,8 +11,6 @@ from datetime import datetime
 
 from cubicweb import UnknownProperty, ValidationError, BadConnectionId
 
-from cubicweb.common.uilib import soup2xhtml
-
 from cubicweb.server.pool import Operation, LateOperation, PreCommitOperation
 from cubicweb.server.hookhelper import (check_internal_entity, previous_state,
                                      get_user_sessions, rproperty)
@@ -208,30 +206,6 @@ def uniquecstrcheck_before_modification(session, entity):
 
 
 
-class tidy_html_fields(object):
-    """tidy HTML in rich text strings
-
-    FIXME: (adim) the whole idea of having a class is to store the
-    event type. There might be another way to get dynamically the
-    event inside the hook function.
-    """
-    # FIXME hooks manager use func_name to register
-    func_name = 'tidy_html_field'
-    
-    def __init__(self, event):
-        self.event = event
-
-    def __call__(self, session, entity):
-        for attr in entity.formatted_attrs():
-            value = entity.get(attr)
-            # text was not changed
-            if self.event == 'before_add_entity':
-                fmt = entity.get('%s_format' % attr)
-            else:
-                fmt = entity.get_value('%s_format' % attr)
-            if value and fmt == 'text/html':
-                entity[attr] = soup2xhtml(value, session.encoding)
-
 
 class CheckRequiredRelationOperation(LateOperation):
     """checking relation cardinality has to be done after commit in
@@ -315,8 +289,6 @@ def _register_core_hooks(hm):
     hm.register_hook(cstrcheck_after_add_relation, 'after_add_relation', '')
     hm.register_hook(uniquecstrcheck_before_modification, 'before_add_entity', '')
     hm.register_hook(uniquecstrcheck_before_modification, 'before_update_entity', '')
-    hm.register_hook(tidy_html_fields('before_add_entity'), 'before_add_entity', '')
-    hm.register_hook(tidy_html_fields('before_update_entity'), 'before_update_entity', '')
 
 
 # user/groups synchronisation #################################################

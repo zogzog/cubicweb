@@ -461,17 +461,6 @@ class Entity(AppRsetObject, dict):
             needcheck = False
         return mainattr, needcheck
 
-    @cached
-    def formatted_attrs(self):
-        """returns the list of attributes which have some format information
-        (i.e. rich text strings)
-        """
-        attrs = []
-        for rschema, attrschema in self.e_schema.attribute_definitions():
-            if attrschema.type == 'String' and self.has_format(rschema):
-                attrs.append(rschema.type)
-        return attrs
-
     @classmethod
     @obsolete('use method of the same name on the schema')
     def has_format(cls, attr):
