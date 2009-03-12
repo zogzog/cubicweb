@@ -4,7 +4,6 @@
 * primary, sidebox
 * secondary, oneline, incontext, outofcontext, text
 * list
-* xml, rss
 
 
 :organization: Logilab

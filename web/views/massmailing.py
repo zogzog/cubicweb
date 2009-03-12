@@ -61,7 +61,7 @@ class MassMailingForm(FieldsForm):
     def form_buttons(self):
         context = {'domid': self.domid,
                    'cancel' : self.req._(stdmsgs.BUTTON_CANCEL),
-                   'cancelimgpath' : self.req.external_resource('CANCEL_EMAIL_ICON'),j
+                   'cancelimgpath' : self.req.external_resource('CANCEL_EMAIL_ICON'),
                    'send' : self.req._('send email'),
                    'sendimgpath' : self.req.external_resource('SEND_EMAIL_ICON'),
                    }

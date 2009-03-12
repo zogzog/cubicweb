@@ -1,4 +1,4 @@
-"""dynamically generated image views
+"""Specific views for schema related entities
 
 :organization: Logilab
 :copyright: 2001-2009 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
@@ -6,15 +6,119 @@
 """
 __docformat__ = "restructuredtext en"
 
-import os
-from tempfile import mktemp
 from itertools import cycle
 
+from logilab.mtconverter import html_escape
 from logilab.common.graph import escape, GraphGenerator, DotBackend
 from yams import schema2dot as s2d
 
-from cubicweb.selectors import implements
+from cubicweb.selectors import implements, rql_condition, yes
+from cubicweb.schemaviewer import SchemaViewer
 from cubicweb.view import EntityView, StartupView
+from cubicweb.common.uilib import ureport_as_html
+from cubicweb.web.action import Action
+from cubicweb.web.views import baseviews
+from cubicweb.web.views import TmpFileViewMixin
+
+
+class ViewSchemaAction(Action):
+    id = 'schema'
+    __select__ = yes()
+    
+    title = _("site schema")
+    category = 'siteactions'
+    order = 30
+    
+    def url(self):
+        return self.build_url(self.id)
+
+        
+# schema entity types views ###################################################
+
+class _SchemaEntityPrimaryView(baseviews.PrimaryView):
+    show_attr_label = False
+    cache_max_age = 60*60*2 # stay in http cache for 2 hours by default 
+    
+    def content_title(self, entity):
+        return html_escape(entity.dc_long_title())
+    
+class EETypePrimaryView(_SchemaEntityPrimaryView):
+    __select__ = implements('EEType')
+    skip_attrs = _SchemaEntityPrimaryView.skip_attrs + ('name', 'meta', 'final')
+
+class ERTypePrimaryView(_SchemaEntityPrimaryView):
+    __select__ = implements('ERType')
+    skip_attrs = _SchemaEntityPrimaryView.skip_attrs + ('name', 'meta', 'final',
+                                                        'symetric', 'inlined')
+
+class ErdefPrimaryView(_SchemaEntityPrimaryView):
+    __select__ = implements('EFRDef', 'ENFRDef')
+    show_attr_label = True
+
+class EETypeOneLineView(baseviews.OneLineView):
+    __select__ = implements('EEType')
+    
+    def cell_call(self, row, col, **kwargs):
+        entity = self.entity(row, col)
+        final = entity.final
+        if final:
+            self.w(u'<em class="finalentity">')
+        super(EETypeOneLineView, self).cell_call(row, col, **kwargs)
+        if final:
+            self.w(u'</em>')
+
+
+# in memory schema views (yams class instances) ###############################
+
+class EETypeSchemaView(EETypePrimaryView):
+    id = 'eschema'
+    title = _('in memory entity schema')
+    main_related_section = False
+    skip_rels = ('is', 'is_instance_of', 'identity', 'created_by', 'owned_by',
+                 'has_text',)
+    
+    def render_entity_attributes(self, entity, siderelations):
+        super(EETypeSchemaView, self).render_entity_attributes(entity, siderelations)
+        eschema = self.vreg.schema.eschema(entity.name)
+        viewer = SchemaViewer(self.req)
+        layout = viewer.visit_entityschema(eschema, skiprels=self.skip_rels)
+        self.w(ureport_as_html(layout))
+        if not eschema.is_final():
+            self.w(u'<img src="%s" alt="%s"/>' % (
+                html_escape(entity.absolute_url(vid='eschemagraph')),
+                html_escape(self.req._('graphical schema for %s') % entity.name)))
+
+
+class ERTypeSchemaView(ERTypePrimaryView):
+    id = 'eschema'
+    title = _('in memory relation schema')
+    main_related_section = False
+
+    def render_entity_attributes(self, entity, siderelations):
+        super(ERTypeSchemaView, self).render_entity_attributes(entity, siderelations)
+        rschema = self.vreg.schema.rschema(entity.name)
+        viewer = SchemaViewer(self.req)
+        layout = viewer.visit_relationschema(rschema)
+        self.w(ureport_as_html(layout))
+        if not rschema.is_final():
+            self.w(u'<img src="%s" alt="%s"/>' % (
+                html_escape(entity.absolute_url(vid='eschemagraph')),
+                html_escape(self.req._('graphical schema for %s') % entity.name)))
+        
+
+# schema images ###############################################################
+
+class ImageView(EntityView):
+    __select__ = implements('EEType')
+    id = 'image'
+    title = _('image')
+
+    def cell_call(self, row, col):
+        entity = self.entity(row, col)
+        url = entity.absolute_url(vid='eschemagraph')
+        self.w(u'<img src="%s" alt="%s"/>' % (
+            html_escape(url),
+            html_escape(self.req._('graphical schema for %s') % entity.name)))
 
 
 class RestrictedSchemaDotPropsHandler(s2d.SchemaDotPropsHandler):
@@ -68,6 +172,7 @@ class RestrictedSchemaVisitorMiIn:
             if rschema.has_local_role('read') or rschema.has_perm(self.req, 'read'):
                 yield setype, oetype, rschema
 
+
 class FullSchemaVisitor(RestrictedSchemaVisitorMiIn, s2d.FullSchemaVisitor):
     pass
 
@@ -76,25 +181,8 @@ class OneHopESchemaVisitor(RestrictedSchemaVisitorMiIn, s2d.OneHopESchemaVisitor
 
 class OneHopRSchemaVisitor(RestrictedSchemaVisitorMiIn, s2d.OneHopRSchemaVisitor):
     pass
-                
-        
-class TmpFileViewMixin(object):
-    binary = True
-    content_type = 'application/octet-stream'
-    cache_max_age = 60*60*2 # stay in http cache for 2 hours by default 
-    
-    def call(self):
-        self.cell_call()
-        
-    def cell_call(self, row=0, col=0):
-        self.row, self.col = row, col # in case one need it
-        tmpfile = mktemp('.png')
-        try:
-            self._generate(tmpfile)
-            self.w(open(tmpfile).read())
-        finally:
-            os.unlink(tmpfile)
-    
+
+
 class SchemaImageView(TmpFileViewMixin, StartupView):
     id = 'schemagraph'
     content_type = 'image/png'
@@ -130,70 +218,3 @@ class ERTypeSchemaImageView(EETypeSchemaImageView):
         visitor = OneHopRSchemaVisitor(self.req, rschema)
         s2d.schema2dot(outputfile=tmpfile, visitor=visitor,
                        prophdlr=RestrictedSchemaDotPropsHandler(self.req))
-
-
-
-class WorkflowDotPropsHandler(object):
-    def __init__(self, req):
-        self._ = req._
-        
-    def node_properties(self, stateortransition):
-        """return default DOT drawing options for a state or transition"""
-        props = {'label': stateortransition.name, 
-                 'fontname': 'Courier'}
-        if hasattr(stateortransition, 'state_of'):
-            props['shape'] = 'box'
-            props['style'] = 'filled'
-            if stateortransition.reverse_initial_state:
-                props['color'] = '#88CC88'
-        else:
-            props['shape'] = 'ellipse'
-            descr = []
-            tr = stateortransition
-            if tr.require_group:
-                descr.append('%s %s'% (
-                    self._('groups:'),
-                    ','.join(g.name for g in tr.require_group)))
-            if tr.condition:
-                descr.append('%s %s'% (self._('condition:'), tr.condition))
-            if descr:
-                props['label'] += escape('\n'.join(descr))
-        return props
-    
-    def edge_properties(self, transition, fromstate, tostate):
-        return {'label': '', 'dir': 'forward',
-                'color': 'black', 'style': 'filled'}
-
-class WorkflowVisitor:
-    def __init__(self, entity):
-        self.entity = entity
-
-    def nodes(self):
-        for state in self.entity.reverse_state_of:
-            state.complete()
-            yield state.eid, state
-            
-        for transition in self.entity.reverse_transition_of:
-            transition.complete()
-            yield transition.eid, transition
-            
-    def edges(self):
-        for transition in self.entity.reverse_transition_of:
-            for incomingstate in transition.reverse_allowed_transition:
-                yield incomingstate.eid, transition.eid, transition
-            yield transition.eid, transition.destination().eid, transition
-
-
-class EETypeWorkflowImageView(TmpFileViewMixin, EntityView):
-    id = 'ewfgraph'
-    content_type = 'image/png'
-    __select__ = implements('EEType')
-    
-    def _generate(self, tmpfile):
-        """display schema information for an entity"""
-        entity = self.entity(self.row, self.col)
-        visitor = WorkflowVisitor(entity)
-        prophdlr = WorkflowDotPropsHandler(self.req)
-        generator = GraphGenerator(DotBackend('workflow', 'LR',
-                                              ratio='compress', size='30,12'))
-        return generator.generate(visitor, prophdlr, tmpfile)

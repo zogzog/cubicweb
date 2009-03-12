@@ -2,7 +2,6 @@
 
 * the rql input form
 * the logged user link
-* the workflow history section for workflowable objects
 
 :organization: Logilab
 :copyright: 2001-2009 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
@@ -132,41 +131,6 @@ class ApplicationMessage(Component):
             self.w(u'<div class="message" id="%s">%s</div>' % (
                 self.div_id(), msg))
         self.w(u'</div>')
-
-
-class WFHistoryVComponent(EntityVComponent):
-    """display the workflow history for entities supporting it"""
-    id = 'wfhistory'
-    __select__ = (EntityVComponent.__select__
-                  & relation_possible('wf_info_for', role='object'))
-    context = 'navcontentbottom'
-    title = _('Workflow history')
-
-    def cell_call(self, row, col, view=None):
-        _ = self.req._
-        eid = self.rset[row][col]
-        sel = 'Any FS,TS,WF,D'
-        rql = ' ORDERBY D DESC WHERE WF wf_info_for X,'\
-              'WF from_state FS, WF to_state TS, WF comment C,'\
-              'WF creation_date D'
-        if self.vreg.schema.eschema('EUser').has_perm(self.req, 'read'):
-            sel += ',U,C'
-            rql += ', WF owned_by U?'
-            displaycols = range(5)
-            headers = (_('from_state'), _('to_state'), _('comment'), _('date'),
-                       _('EUser'))            
-        else:
-            sel += ',C'
-            displaycols = range(4)
-            headers = (_('from_state'), _('to_state'), _('comment'), _('date'))
-        rql = '%s %s, X eid %%(x)s' % (sel, rql)
-        try:
-            rset = self.req.execute(rql, {'x': eid}, 'x')
-        except Unauthorized:
-            return
-        if rset:
-            self.wview('table', rset, title=_(self.title), displayactions=False,
-                       displaycols=displaycols, headers=headers)
 
 
 class ApplicationName(Component):

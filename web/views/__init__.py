@@ -1,12 +1,16 @@
-"""Views/forms and actions for the CubicWeb web client
+"""Views, forms, actions... for the CubicWeb web client
 
 :organization: Logilab
 :copyright: 2001-2009 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 """
 __docformat__ = "restructuredtext en"
-    
+
+import os
+from tempfile import mktemp
+
 from rql import nodes
+
 
 def need_table_view(rset, schema):
     """return True if we think that a table view is more appropriate than a
@@ -67,6 +71,7 @@ def vid_from_rset(req, rset, schema):
             return 'outofcontext-search'
         return 'list'
     return 'table'
+
     
 def linksearch_select_url(req, rset):
     """when searching an entity to create a relation, return an url to select
@@ -80,3 +85,21 @@ def linksearch_select_url(req, rset):
         id_fmt = '%%s:%s:%s' % (r_type, eid)
     triplets = '-'.join(id_fmt % row[0] for row in rset.rows)
     return "javascript: selectForAssociation('%s', '%s');" % (triplets, eid)
+                
+        
+class TmpFileViewMixin(object):
+    binary = True
+    content_type = 'application/octet-stream'
+    cache_max_age = 60*60*2 # stay in http cache for 2 hours by default 
+    
+    def call(self):
+        self.cell_call()
+        
+    def cell_call(self, row=0, col=0):
+        self.row, self.col = row, col # in case one need it
+        tmpfile = mktemp('.png')
+        try:
+            self._generate(tmpfile)
+            self.w(open(tmpfile).read())
+        finally:
+            os.unlink(tmpfile)

@@ -1,6 +1,5 @@
 """base xml and rss views
 
-
 :organization: Logilab
 :copyright: 2001-2009 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
@@ -11,10 +10,17 @@ from time import timezone
 
 from logilab.mtconverter import xml_escape
 
+from cubicweb.selectors import non_final_entity, one_line_rset, appobject_selectable
 from cubicweb.view import EntityView, AnyRsetView
 from cubicweb.web.httpcache import MaxAgeHTTPCacheManager
+from cubicweb.web.component import Component
+from cubicweb.web.box import BoxTemplate
 from cubicweb.common.uilib import simple_sgml_tag
 
+_ = unicode
+
+
+# base xml views ##############################################################
 
 class XmlView(EntityView):
     """xml view for entities"""
@@ -60,7 +66,6 @@ class XmlItemView(EntityView):
                 self.w(u'  <%s>%s</%s>\n' % (attr, value, attr))
         self.w(u'</%s>\n' % (entity.e_schema))
 
-
     
 class XmlRsetView(AnyRsetView):
     """dumps raw rset as xml"""
@@ -97,7 +102,45 @@ class XmlRsetView(AnyRsetView):
                 w(simple_sgml_tag(tag, val, **attrs))
             w(u' </row>\n')
         w(u'</%s>\n' % self.xml_root)
+
     
+# RSS stuff ###################################################################
+
+class RSSFeedURL(Component):
+    id = 'rss_feed_url'
+    __select__ = non_final_entity()
+    
+    def feed_url(self):
+        return self.build_url(rql=self.limited_rql(), vid='rss')
+
+
+class RSSEntityFeedURL(Component):
+    id = 'rss_feed_url'
+    __select__ = non_final_entity() & one_line_rset()
+    
+    def feed_url(self):
+        return self.entity(0, 0).rss_feed_url()
+
+        
+class RSSIconBox(BoxTemplate):
+    """just display the RSS icon on uniform result set"""
+    id = 'rss'
+    __select__ = (BoxTemplate.__select__
+                  & appobject_selectable('components', 'rss_feed_url'))
+    
+    visible = False
+    order = 999
+    
+    def call(self, **kwargs):
+        try:
+            rss = self.req.external_resource('RSS_LOGO')
+        except KeyError:
+            self.error('missing RSS_LOGO external resource')
+            return
+        urlgetter = self.vreg.select_component('rss_feed_url', self.req, self.rset)
+        url = urlgetter.feed_url()
+        self.w(u'<a href="%s"><img src="%s" alt="rss"/></a>\n' % (html_escape(url), rss))
+
 
 class RssView(XmlView):
     id = 'rss'

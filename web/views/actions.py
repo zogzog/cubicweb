@@ -266,18 +266,6 @@ class ManageAction(ManagersAction):
     order = 20
 
 
-class ViewSchemaAction(Action):
-    id = 'schema'
-    __select__ = yes()
-    
-    title = _("site schema")
-    category = 'siteactions'
-    order = 30
-    
-    def url(self):
-        return self.build_url(self.id)
-
-
 from logilab.common.deprecation import class_moved
 from cubicweb.web.views.bookmark import FollowAction
 FollowAction = class_moved(FollowAction)

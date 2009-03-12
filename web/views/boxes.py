@@ -3,7 +3,6 @@ generic boxes for CubicWeb web client:
 
 * actions box
 * possible views box
-* rss icon
 
 additional (disabled by default) boxes
 * schema box
@@ -185,26 +184,6 @@ class PossibleViewsBox(BoxTemplate):
             box.append(menu)
         if not box.is_empty():
             box.render(self.w)
-
-        
-class RSSIconBox(BoxTemplate):
-    """just display the RSS icon on uniform result set"""
-    id = 'rss'
-    __select__ = (BoxTemplate.__select__
-                  & appobject_selectable('components', 'rss_feed_url'))
-    
-    visible = False
-    order = 999
-    
-    def call(self, **kwargs):
-        try:
-            rss = self.req.external_resource('RSS_LOGO')
-        except KeyError:
-            self.error('missing RSS_LOGO external resource')
-            return
-        urlgetter = self.vreg.select_component('rss_feed_url', self.req, self.rset)
-        url = urlgetter.feed_url()
-        self.w(u'<a href="%s"><img src="%s" alt="rss"/></a>\n' % (html_escape(url), rss))
 
 
 class StartupViewsBox(BoxTemplate):
