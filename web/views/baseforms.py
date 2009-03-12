@@ -26,7 +26,7 @@ from cubicweb.web import INTERNAL_FIELD_VALUE, stdmsgs, eid_param
 from cubicweb.web.controller import NAV_FORM_PARAMETERS
 from cubicweb.web.widgets import checkbox, InputWidget, ComboBoxWidget
 from cubicweb.web.form import MultipleFieldsForm, EntityFieldsForm, FormMixIn, relation_id
-from cubicweb.web.formfields import StringField,  RichTextField
+from cubicweb.web.formfields import StringField,  RichTextField, find_field
 from cubicweb.web.formwidgets import HiddenInput
 
 _ = unicode
@@ -152,6 +152,52 @@ class ClickAndEditForm(FormMixIn, EntityView):
         self.w(form.render(renderer=renderer)
 
 
+## work in progress, this class will replace the standard EditionView soon
+class _EditionForm(EntityView):
+    """primary entity edition form
+
+    When generating a new attribute_input, the editor will look for a method
+    named 'default_ATTRNAME' on the entity instance, where ATTRNAME is the
+    name of the attribute being edited. You may use this feature to compute
+    dynamic default values such as the 'tomorrow' date or the user's login
+    being connected
+    """    
+    id = '_edition'
+    __select__ = one_line_rset() & non_final_entity()
+
+    title = _('edition')
+    controller = 'edit'
+    skip_relations = FormMixIn.skip_relations.copy()
+
+    def cell_call(self, row, col, **kwargs):
+        self.req.add_js( ('cubicweb.ajax.js', 'cubicweb.edition.js') )
+        self.req.add_css('cubicweb.form.css')
+        self.initialize_varmaker()
+        entity = self.complete_entity(row, col)
+
+    def initialize_varmaker(self):
+        varmaker = self.req.get_page_data('rql_varmaker')
+        if varmaker is None:
+            varmaker = self.req.varmaker
+            self.req.set_page_data('rql_varmaker', varmaker)
+        self.varmaker = varmaker
+        
+    def edit_form(self, entity, kwargs):
+        form = EntityFieldsForm(self.req, entity=entity)
+        for rschema, target in self.editable_attributes(entity):
+            field = find_field(entity.__class__, entity.e_schema, rschema, target)
+            form.fields.append(field)
+        form.buttons.append(form.button_ok())
+        form.buttons.append(form.button_apply())
+        form.buttons.append(form.button_cancel())
+        self.w(form.form_render())
+
+    def editable_attributes(self, entity):
+        # XXX both (add, delete)
+        return [(rschema, x) for rschema, _, x in entity.relations_by_category(('primary', 'secondary'), 'add')
+                if rschema != 'eid']
+    
+    
 class EditionForm(FormMixIn, EntityView):
     """primary entity edition form
 
@@ -466,7 +512,7 @@ class EditionForm(FormMixIn, EntityView):
 
 
     
-class CreationForm(EditionForm):
+class CreationForm(_EditionForm):
     __select__ = specified_etype_implements('Any')
     # XXX bw compat, use View.registered since we don't want accept_compat
     #    wrapper set in EntityView
@@ -478,12 +524,14 @@ class CreationForm(EditionForm):
         """creation view for an entity"""
         self.req.add_js( ('cubicweb.ajax.js', 'cubicweb.edition.js') )
         self.req.add_css('cubicweb.form.css')
+        self.initialize_varmaker()
         etype = kwargs.pop('etype', self.req.form.get('etype'))
         try:
             entity = self.vreg.etype_class(etype)(self.req, None, None)
         except:
             self.w(self.req._('no such entity type %s') % etype)
         else:
+            entity.eid = self.varmaker.next()
             self.edit_form(entity, kwargs)
 
     def action_title(self, entity):
