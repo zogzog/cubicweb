@@ -284,7 +284,6 @@ class UpdateTemplateCatalogCommand(Command):
     
     def run(self, args):
         """run the command with its specific arguments"""
-        CUBEDIR = DevCubeConfiguration.cubes_dir()
         if args:
             cubes = [DevCubeConfiguration.cube_dir(cube) for cube in args]
         else:
