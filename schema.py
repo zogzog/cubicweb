@@ -329,6 +329,12 @@ class CubicWebEntitySchema(EntitySchema):
         """
         return self.has_subject_relation('%s_format' % attr)
 
+    def has_format(self, attr):
+        """return true if this entity's schema has an encoding field for the given
+        attribute
+        """
+        return self.has_subject_relation('%s_format' % attr)
+
     def rich_text_fields(self):
         """return an iterator on (attribute, format attribute) of rich text field
 
