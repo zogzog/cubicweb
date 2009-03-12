@@ -203,22 +203,6 @@ class EtypeRestrictionComponent(Component):
         self.w(u'</div>')
         
 
-
-class RSSFeedURL(Component):
-    id = 'rss_feed_url'
-    __select__ = non_final_entity()
-    
-    def feed_url(self):
-        return self.build_url(rql=self.limited_rql(), vid='rss')
-
-class RSSEntityFeedURL(Component):
-    id = 'rss_feed_url'
-    __select__ = non_final_entity() & one_line_rset()
-    
-    def feed_url(self):
-        return self.entity(0, 0).rss_feed_url()
-
-
 def registration_callback(vreg):
     vreg.register_all(globals().values(), __name__, (SeeAlsoVComponent,))
     if 'see_also' in vreg.schema:
