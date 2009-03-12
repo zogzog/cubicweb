@@ -117,5 +117,5 @@ class StaticTimelineView(TimelineViewMixIn, StartupView):
     id = 'static-timeline'
     
     def call(self, loadurl, tlunit=None, wdgclass=None):
-        self.widget_class = wdgclass or self.widget_clas
+        self.widget_class = wdgclass or self.widget_class
         self.render(loadurl, tlunit)
