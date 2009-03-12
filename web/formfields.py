@@ -373,7 +373,7 @@ def guess_field(eclass, rschema, role='subject', **kwargs):
             return None
         if targetschema == 'Password':
             return StringField(widget=PasswordInput(), **kwargs)
-        if eschema.has_format(rschema):
+        if eschema.has_metadata(rschema, 'format'):
             constraints = rschema.rproperty(eschema, targetschema, 'constraints')
             for cstr in constraints:
                 if isinstance(cstr, StaticVocabularyConstraint):

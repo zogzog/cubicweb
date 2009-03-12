@@ -461,29 +461,12 @@ class Entity(AppRsetObject, dict):
             needcheck = False
         return mainattr, needcheck
 
-    @classmethod
-    @obsolete('use method of the same name on the schema')
-    def has_format(cls, attr):
-        """return true if this entity's schema has a format field for the given
-        attribute
-        """
-        return cls.e_schema.has_format(attr)
-        
-    def format(self, attr):
-        """return the mime type format for an attribute (if specified)"""
-        return getattr(self, '%s_format' % attr, None)
-    
-    def text_encoding(self, attr):
-        """return the text encoding for an attribute, default to site encoding
-        """
-        encoding = getattr(self, '%s_encoding' % attr, None)
-        return encoding or self.vreg.property_value('ui.encoding')
-    
-    def has_text_encoding(self, attr):
-        """return true if this entity's schema has ab encoding field for the
-        given attribute
-        """
-        return self.e_schema.has_subject_relation('%s_encoding' % attr)
+    def attribute_metadata(self, attr, metadata):
+        """return a metadata for an attribute (None if unspecified)"""
+        value = getattr(self, '%s_%s' % (attr, metadata), None)
+        if value is None and metadata == 'encoding':
+            value = self.vreg.property_value('ui.encoding')
+        return value
 
     def printable_value(self, attr, value=_marker, attrtype=None,
                         format='text/html', displaytime=True):
@@ -505,17 +488,14 @@ class Entity(AppRsetObject, dict):
             # description...
             if props.get('internationalizable'):
                 value = self.req._(value)
-            attrformat = self.format(attr)
+            attrformat = self.attribute_metadata(attr, 'format')
             if attrformat:
                 return self.mtc_transform(value, attrformat, format,
                                           self.req.encoding)
         elif attrtype == 'Bytes':
-            attrformat = self.format(attr)
+            attrformat = self.attribute_metadata(attr, 'format')
             if attrformat:
-                try:
-                    encoding = getattr(self, '%s_encoding' % attr)
-                except AttributeError:
-                    encoding = self.req.encoding
+                encoding = self.attribute_metadata(attr, 'encoding')
                 return self.mtc_transform(value.getvalue(), attrformat, format,
                                           encoding)
             return u''

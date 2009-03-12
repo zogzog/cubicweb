@@ -89,13 +89,12 @@ class AnyEntity(Entity):
     @classmethod
     def __initialize__(cls): 
         super(ANYENTITY, cls).__initialize__() # XXX
-        eschema = cls.e_schema
-        eschema.format_fields = {}
         # set a default_ATTR method for rich text format fields
-        for attr, formatattr in eschema.rich_text_fields():
-            if not hasattr(cls, 'default_%s' % formatattr):
-                setattr(cls, 'default_%s' % formatattr, cls._default_format)
-            eschema.format_fields[formatattr] = attr
+        # XXX move this away once the old widgets have been dropped!
+        eschema = cls.e_schema
+        for metaattr, (metadata, attr) in eschema.meta_attributes().iteritems():
+            if metadata == 'format' and not hasattr(cls, 'default_%s' % metaattr):
+                setattr(cls, 'default_%s' % metaattr, cls._default_format)
     
     # meta data api ###########################################################
 
@@ -414,9 +413,9 @@ class AnyEntity(Entity):
         """return True if fckeditor should be used to edit entity's attribute named
         `attr`, according to user preferences
         """
-        if self.req.use_fckeditor() and self.has_format(attr):
+        if self.req.use_fckeditor() and self.has_metadata(attr, 'format'):
             if self.has_eid() or '%s_format' % attr in self:
-                return self.format(attr) == 'text/html'
+                return self.attribute_metadata(attr, 'format') == 'text/html'
             return self.req.property_value('ui.default-text-format') == 'text/html'
         return False
 

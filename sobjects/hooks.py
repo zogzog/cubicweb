@@ -45,16 +45,18 @@ class TidyHtmlFields(Hook):
     accepts = ('Any',)
 
     def call(self, session, entity):
-        for formatattr, attr in entity.e_schema.format_fields.iteritems():
-            try:
-                value = entity[attr]
-            except KeyError:
-                continue # no text to tidy
-            if isinstance(value, unicode): # filter out None and Binary
-                if self.event == 'before_add_entity':
-                    fmt = entity.get(formatattr)
-                else:
-                    fmt = entity.get_value(formatattr)
-                if fmt == 'text/html':
-                    entity[attr] = soup2xhtml(value, session.encoding)
+        metaattrs = entity.e_schema.meta_attributes()
+        for metaattr, (metadata, attr) in metaattrs.iteritems():
+            if metadata == 'format':
+                try:
+                    value = entity[attr]
+                except KeyError:
+                    continue # no text to tidy
+                if isinstance(value, unicode): # filter out None and Binary
+                    if self.event == 'before_add_entity':
+                        fmt = entity.get(metaattr)
+                    else:
+                        fmt = entity.get_value(metaattr)
+                    if fmt == 'text/html':
+                        entity[attr] = soup2xhtml(value, session.encoding)
 

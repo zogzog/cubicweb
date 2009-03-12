@@ -201,24 +201,24 @@ class EditController(ViewController):
             if formparams.has_key('__%s_detach' % attr) or formparams.has_key('%s__detach' % attr):
                 # drop current file value
                 value = None
-            # no need to check value when nor explicit detach nor new file submitted,
-            # since it will think the attribut is not modified
+            # no need to check value when nor explicit detach nor new file
+            # submitted, since it will think the attribute is not modified
             elif isinstance(value, unicode):
                 # file modified using a text widget
-                value = Binary(value.encode(entity.text_encoding(attr)))
+                value = Binary(value.encode(entity.attribute_metadata(attr, 'encoding')))
             else:
                 # (filename, mimetype, stream)
                 val = Binary(value[2].read())
                 if not val.getvalue(): # usually an unexistant file
                     value = None
                 else:
-                    # XXX suppose a File compatible schema
                     val.filename = value[0]
-                    if entity.has_format(attr):
+                    if entity.has_metadata(attr, 'format'):
                         key = '%s_format' % attr
                         formparams[key] = value[1]
                         self.relations.append('X %s_format %%(%s)s'
                                               % (attr, key))
+                    # XXX suppose a File compatible schema
                     if entity.e_schema.has_subject_relation('name') \
                            and not formparams.get('name'):
                         formparams['name'] = value[0]

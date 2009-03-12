@@ -322,28 +322,7 @@ class CubicWebEntitySchema(EntitySchema):
     def schema_entity(self):
         """return True if this entity type is used to build the schema"""
         return self.type in self.schema.schema_entity_types()
-
-    def has_format(self, attr):
-        """return true if this entity's schema has a format field for the given
-        attribute
-        """
-        return self.has_subject_relation('%s_format' % attr)
-
-    def has_format(self, attr):
-        """return true if this entity's schema has an encoding field for the given
-        attribute
-        """
-        return self.has_subject_relation('%s_format' % attr)
-
-    def rich_text_fields(self):
-        """return an iterator on (attribute, format attribute) of rich text field
-
-        (the first tuple element containing the text and the second the text format)
-        """
-        for rschema, _ in self.attribute_definitions():
-            if rschema.type.endswith('_format') and self.has_subject_relation(rschema.type[:-7]):
-                yield self.subject_relation(rschema.type[:-7]), rschema
-                    
+    
     def check_perm(self, session, action, eid=None):
         # NB: session may be a server session or a request object
         user = session.user

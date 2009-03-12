@@ -410,7 +410,7 @@ class TextWidget(Widget):
             entity.req.fckeditor_config()
             if with_format:
                 if entity.has_eid():
-                    format = entity.format(self.name)
+                    format = entity.attribute_metadata(self.name, 'format')
                 else:
                     format = ''
                 frname = eid_param(self.name + '_format', entity.eid)
@@ -419,7 +419,7 @@ class TextWidget(Widget):
                     frname, format, frname)
             return u'%s<textarea cubicweb:type="wysiwyg" onkeypress="autogrow(this)" name="%s" %s>%s</textarea>' % (
                 hidden, self.rname, self.format_attrs(), dvalue)
-        if with_format and entity.has_format(self.name):
+        if with_format and entity.has_metadata(self.name, 'format'):
             fmtwdg = entity.get_widget(self.name + '_format')
             fmtwdgstr = fmtwdg.edit_render(entity, tabindex=self.attrs['tabindex'])
             self.attrs['tabindex'] = entity.req.next_tabindex()
@@ -467,7 +467,7 @@ class FileWidget(Widget):
     def _file_wdg(self, entity):
         wdgs = [u'<input type="file" name="%s" %s/>' % (self.rname, self.format_attrs())]
         req = entity.req
-        if entity.has_format(self.name) or entity.has_text_encoding(self.name):
+        if entity.has_metadata(self.name, 'format') or entity.has_metadata(self.name, 'encoding'):
             divid = '%s-%s-advanced' % (self.name, entity.eid)
             wdgs.append(u'<a href="%s" title="%s"><img src="%s" alt="%s"/></a>' %
                         (html_escape(toggle_action(divid)),
@@ -509,14 +509,14 @@ class TextFileWidget(FileWidget):
     
     def _edit_render(self, entity):
         wdgs = [self._file_wdg(entity)]
-        if entity.format(self.name) in ('text/plain', 'text/html', 'text/rest'):
+        if entity.attribute_metadata(self.name, 'format') in ('text/plain', 'text/html', 'text/rest'):
             msg = self._edit_msg(entity)
             wdgs.append(u'<p><b>%s</b></p>' % msg)
             twdg = TextWidget(self.vreg, self.subjtype, self.rschema, self.objtype)
             twdg.rname = self.rname
             data = getattr(entity, self.name)
             if data:
-                encoding = entity.text_encoding(self.name)
+                encoding = entity.attribute_metadata(self.name, 'encoding')
                 try:
                     entity[self.name] = unicode(data.getvalue(), encoding)
                 except UnicodeError:
