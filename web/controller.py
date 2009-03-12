@@ -22,7 +22,7 @@ NAVIGATION_PARAMETERS = (('vid', '__redirectvid'),
                          ('__redirectpath', '__redirectpath'),
                          ('__redirectparams', '__redirectparams'),
                          )
-NAV_FORM_PARAMETERS = [fp for ap, fp in NAVIGATION_PARAMETERS]
+NAV_FORM_PARAMETERS = tuple(fp for ap, fp in NAVIGATION_PARAMETERS)
 
 def redirect_params(form):
     """transform redirection parameters into navigation parameters
