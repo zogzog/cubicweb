@@ -686,7 +686,7 @@ class FormRenderer(object):
         form.form_build_context(values)
         fields = form.fields[:]
         for field in form.fields:
-            if not self.display_field(field):
+            if not self.display_field(form, field):
                 fields.remove(field)
                 
             if not field.is_visible():
