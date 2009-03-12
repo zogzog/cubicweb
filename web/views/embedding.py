@@ -33,7 +33,6 @@ class ExternalTemplate(basetemplates.TheMainTemplate):
     def call(self, body):
         # XXX fallback to HTML 4 mode when embeding ?
         self.set_request_content_type()
-        self.process_rql(self.req.form.get('rql'))
         self.req.search_state = ('normal',)
         self.template_header(self.content_type, None, self.req._('external page'),
                              [NOINDEX, NOFOLLOW])
@@ -72,7 +71,8 @@ class EmbedController(Controller):
             except HTTPError, err:
                 body = '<h2>%s</h2><h3>%s</h3>' % (
                     _('error while embedding page'), err)
-        return self.vreg.main_template(req, self.template, body=body)
+        self.process_rql(req.form.get('rql'))
+        return self.vreg.main_template(req, self.template, rset=self.rset, body=body)
 
 
 def entity_has_embedable_url(entity):

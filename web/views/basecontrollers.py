@@ -99,17 +99,6 @@ class ViewController(Controller):
             view = self.vreg.select_view(vid, req, rset)
         return view, rset
 
-    def process_rql(self, rql):
-        """execute rql if specified"""
-        if rql:
-            self.ensure_ro_rql(rql)
-            if not isinstance(rql, unicode):
-                rql = unicode(rql, self.req.encoding)
-            pp = self.vreg.select_component('magicsearch', self.req)
-            self.rset = pp.process_query(rql, self.req)
-            return self.rset
-        return None
-
     def add_to_breadcrumbs(self, view):
         # update breadcrumps **before** validating cache, unless the view
         # specifies explicitly it should not be added to breadcrumb or the

@@ -85,6 +85,17 @@ class Controller(AppObject):
         raise NotImplementedError
 
     # generic methods useful for concret implementations ######################
+
+    def process_rql(self, rql):
+        """execute rql if specified"""
+        if rql:
+            self.ensure_ro_rql(rql)
+            if not isinstance(rql, unicode):
+                rql = unicode(rql, self.req.encoding)
+            pp = self.vreg.select_component('magicsearch', self.req)
+            self.rset = pp.process_query(rql, self.req)
+            return self.rset
+        return None
     
     def check_expected_params(self, params):
         """check that the given list of parameters are specified in the form
