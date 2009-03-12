@@ -354,7 +354,7 @@ def rows_cols_from_constraint(constraint, kwargs):
     kwargs.setdefault('cols', cols)
 
 
-def guess_field(eclass, rschema, role='subject', **kwargs):
+def guess_field(eclass, rschema, role='subject', skip_meta_attr=True, **kwargs):
     """return the most adapated widget to edit the relation
     'subjschema rschema objschema' according to information found in the schema
     """
@@ -369,22 +369,33 @@ def guess_field(eclass, rschema, role='subject', **kwargs):
     kwargs['required'] = card in '1+'
     kwargs['name'] = rschema.type
     if rschema.is_final():
-        if rschema in eschema.format_fields:
+        if skip_meta_attr and rschema in eschema.meta_attributes():
             return None
-        if targetschema == 'Password':
-            return StringField(widget=PasswordInput(), **kwargs)
-        if eschema.has_metadata(rschema, 'format'):
-            constraints = rschema.rproperty(eschema, targetschema, 'constraints')
-            for cstr in constraints:
-                if isinstance(cstr, StaticVocabularyConstraint):
-                    raise Exception('rich text field with static vocabulary')
-                if isinstance(cstr, SizeConstraint) and cstr.max is not None:
-                    rows_cols_from_constraint(cstr, kwargs)
-            return RichTextField(**kwargs)
         fieldclass = FIELDS[targetschema]
         if fieldclass is StringField:
+            if targetschema == 'Password':
+                # special case for Password field: specific PasswordInput widget
+                return StringField(widget=PasswordInput(), **kwargs)
+            if eschema.has_metadata(rschema, 'format'):
+                # use RichTextField instead of StringField if the attribute has
+                # a "format" metadata. But getting information from constraints
+                # may be useful anyway...
+                constraints = rschema.rproperty(eschema, targetschema, 'constraints')
+                for cstr in constraints:
+                    if isinstance(cstr, StaticVocabularyConstraint):
+                        raise Exception('rich text field with static vocabulary')
+                    if isinstance(cstr, SizeConstraint) and cstr.max is not None:
+                        rows_cols_from_constraint(cstr, kwargs)
+                return RichTextField(**kwargs)
+            # return StringField or TextField according to constraints
             constraints = rschema.rproperty(eschema, targetschema, 'constraints')
             return stringfield_from_constraints(constraints, **kwargs)
+        if fieldclass is FileField:
+            for metadata in ('format', 'encoding'):
+                metaschema = eschema.has_metadata(rschema, metadata)
+                if metaschema is not None:
+                    kwargs['%s_field' % metadata] = guess_field(eclass, metaschema,
+                                                                skip_meta_attr=False)
         return fieldclass(**kwargs)
     kwargs['role'] = role
     return RelationField.fromcardinality(card, **kwargs)

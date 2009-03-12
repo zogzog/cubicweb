@@ -1,12 +1,12 @@
 """unittests for cw.web.formfields"""
 
 from logilab.common.testlib import TestCase, unittest_main
-
 from cubicweb.devtools import TestServerConfiguration
-from cubicweb.entities.lib import Card
-from cubicweb.entities.authobjs import EUser
 from cubicweb.web.formwidgets import PasswordInput
 from cubicweb.web.formfields import *
+from cubicweb.entities.lib import Card
+from cubicweb.entities.authobjs import EUser
+from cubes.file.entities import File
 
 config = TestServerConfiguration('data')
 config.bootstrap_cubes()
@@ -15,6 +15,8 @@ Card.schema = schema
 Card.__initialize__()
 EUser.schema = schema
 EUser.__initialize__()
+File.schema = schema
+File.__initialize__()
         
 class GuessFieldTC(TestCase):
     
@@ -59,6 +61,17 @@ class GuessFieldTC(TestCase):
         self.assertEquals(owned_by_field.required, False)
         self.assertEquals(owned_by_field.role, 'object')
 
-    
+    def test_file_fields(self):
+        data_format_field = guess_field(File, schema['data_format'])
+        self.assertEquals(data_format_field, None)
+        data_encoding_field = guess_field(File, schema['data_encoding'])
+        self.assertEquals(data_encoding_field, None)
+
+        data_field = guess_field(File, schema['data'])
+        self.assertIsInstance(data_field, FileField)
+        self.assertEquals(data_field.required, True)
+        self.assertIsInstance(data_field.format_field, StringField)
+        self.assertIsInstance(data_field.encoding_field, StringField)
+        
 if __name__ == '__main__':
     unittest_main()
