@@ -323,6 +323,12 @@ class CubicWebEntitySchema(EntitySchema):
         """return True if this entity type is used to build the schema"""
         return self.type in self.schema.schema_entity_types()
 
+    def has_format(self, attr):
+        """return true if this entity's schema has a format field for the given
+        attribute
+        """
+        return self.has_subject_relation('%s_format' % attr)
+
     def rich_text_fields(self):
         """return an iterator on (attribute, format attribute) of rich text field
 

@@ -471,6 +471,14 @@ class Entity(AppRsetObject, dict):
             if attrschema.type == 'String' and self.has_format(rschema):
                 attrs.append(rschema.type)
         return attrs
+
+    @classmethod
+    @obsolete('use method of the same name on the schema')
+    def has_format(cls, attr):
+        """return true if this entity's schema has a format field for the given
+        attribute
+        """
+        return cls.e_schema.has_format(attr)
         
     def format(self, attr):
         """return the mime type format for an attribute (if specified)"""
@@ -481,12 +489,6 @@ class Entity(AppRsetObject, dict):
         """
         encoding = getattr(self, '%s_encoding' % attr, None)
         return encoding or self.vreg.property_value('ui.encoding')
-
-    def has_format(self, attr):
-        """return true if this entity's schema has a format field for the given
-        attribute
-        """
-        return self.e_schema.has_subject_relation('%s_format' % attr)
     
     def has_text_encoding(self, attr):
         """return true if this entity's schema has ab encoding field for the
