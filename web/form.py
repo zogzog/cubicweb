@@ -15,20 +15,20 @@ from logilab.common.compat import any
 from logilab.common.decorators import iclassmethod
 from logilab.mtconverter import html_escape
 
-from yams.constraints import SizeConstraint, StaticVocabularyConstraint
-
 from cubicweb import typed_eid
 from cubicweb.appobject import AppObject
 from cubicweb.utils import ustrftime
 from cubicweb.selectors import yes, match_form_params, non_final_entity
 from cubicweb.view import NOINDEX, NOFOLLOW, View, EntityView, AnyRsetView
 from cubicweb.schema import FormatConstraint
-from cubicweb.common.registerers import accepts_registerer
-from cubicweb.common.uilib import toggle_action
-from cubicweb.web import stdmsgs
+from cubicweb.common import tags
+from cubicweb.web import INTERNAL_FIELD_VALUE, eid_param, stdmsgs
 from cubicweb.web.httpcache import NoHTTPCacheManager
 from cubicweb.web.controller import NAV_FORM_PARAMETERS, redirect_params
-from cubicweb.web import INTERNAL_FIELD_VALUE, eid_param
+from cubicweb.web.formfields import (Field, StringField, RelationField,
+                                     HiddenInitialValueField)
+from cubicweb.web.formwidgets import HiddenInput
+
 
 
 def relation_id(eid, rtype, target, reid):
@@ -272,6 +272,8 @@ class FieldsForm(FormMixIn, AppObject):
     __registry__ = 'forms'
     __select__ = yes()
     internal_fields = ('__errorurl',) + NAV_FORM_PARAMETERS
+    needs_js = ('cubicweb.edition.js',)
+    needs_css = ('cubicweb.form.css',)
     
     def __init__(self, req, rset=None, domid=None, title=None, action='edit',
                  onsubmit="return freezeFormButtons('%(domid)s');",
@@ -317,6 +319,13 @@ class FieldsForm(FormMixIn, AppObject):
     def form_add_hidden(self, name, value=None, **kwargs):
         self.fields.append(StringField(name=name, widget=HiddenInput,
                                        initial=value, **kwargs))
+
+    def add_media(self):
+        """adds media (CSS & JS) required by this widget"""
+        if self.needs_js:
+            self.req.add_js(self.needs_js)
+        if self.needs_css:
+            self.req.add_css(self.needs_css)
 
     def form_render(self, **values):
         renderer = values.pop('renderer', FormRenderer())
@@ -616,6 +625,7 @@ class FormRenderer(object):
     # renderer interface ######################################################
     
     def render(self, form, values):
+        form.add_media()
         data = []
         w = data.append
         w(self.open_form(form))
@@ -641,11 +651,11 @@ class FormRenderer(object):
         help = [ u'<br/>' ]
         descr = field.help
         if descr:
-            help.append('<span class="helper">%s</span>' % req._(descr))
+            help.append('<span class="helper">%s</span>' % form.req._(descr))
         example = field.example_format(form.req)
         if example:
             help.append('<span class="helper">(%s: %s)</span>'
-                        % (req._('sample format'), example))
+                        % (form.req._('sample format'), example))
         return u'&nbsp;'.join(help)
 
     # specific methods (mostly to ease overriding) #############################
