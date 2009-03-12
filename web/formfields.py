@@ -45,11 +45,11 @@ class Field(object):
         # global fields ordering in forms
         self.creation_rank = Field.creation_rank
         Field.creation_rank += 1
-
+    
     def __unicode__(self):
-        return u'<%s name=%r label=%r id=%r initial=%r>' % (
+        return u'<%s name=%r label=%r id=%r initial=%r @%x>' % (
             self.__class__.__name__, self.name, self.label,
-            self.id, self.initial)
+            self.id, self.initial, id(self))
 
     def __repr__(self):
         return self.__unicode__().encode('utf-8')
