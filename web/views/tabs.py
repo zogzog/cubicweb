@@ -101,8 +101,13 @@ class TabsMixin(LazyViewMixin):
                          'cubicweb.ajax.js', 'cubicweb.tabs.js', 'cubicweb.lazy.js'))
         # tabbed views do no support concatenation
         # hence we delegate to the default tab
-        if self.req.form.get('vid') == 'primary':
-            entity.view(default)
+        form = self.req.form
+        if form.get('vid') == 'primary':
+            entity.view(default, w=self.w)
+            return
+        rql = form.get('rql')
+        if rql:
+            self.req.execute(rql).get_entity(0,0).view(default, w=self.w)
             return
         # prune tabs : not all are to be shown
         tabs = self.prune_tabs(tabs)
