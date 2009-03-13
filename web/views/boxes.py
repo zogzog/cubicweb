@@ -111,7 +111,7 @@ class EditBox(BoxTemplate):
             if transitions:
                 menu_title = u'%s: %s' % (_('state'), state.view('text'))
                 menu_items = []
-                for tr in state.transitions(entity):
+                for tr in transitions:
                     url = entity.absolute_url(vid='statuschange', treid=tr.eid)
                     menu_items.append(self.mk_action(_(tr.name), url))
                 box.append(BoxMenu(menu_title, menu_items))
