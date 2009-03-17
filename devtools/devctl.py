@@ -424,8 +424,8 @@ class NewCubeCommand(Command):
         #    self.fail("you can only create new cubes in development mode")
         verbose = self.get('verbose')
         cubesdir = self.get('directory')
-        if not cubedir:
-            cubespath = ServerConfiguration.cubes_path()
+        if not cubesdir:
+            cubespath = ServerConfiguration.cubes_search_path()
             if len(cubespath) > 1:
                 raise BadCommandUsage("can't guess directory where to put the new cube."
                                       " Please specify it using the --directory option")
@@ -435,7 +435,7 @@ class NewCubeCommand(Command):
             try:
                 mkdir(cubesdir)
             except OSError, err:
-                self.fail("failed to create directory %r\n(%s)" % (cubedir, err))
+                self.fail("failed to create directory %r\n(%s)" % (cubesdir, err))
         cubedir = join(cubesdir, cubename)
         if exists(cubedir):
             self.fail("%s already exists !" % (cubedir))
