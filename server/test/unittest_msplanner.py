@@ -1819,7 +1819,8 @@ class MSPlannerTC(BaseMSPlannerTC):
                    {'x': 999999})
 
     def test_nonregr13_1(self):
-        # identity wrapped into exists
+        # identity wrapped into exists:
+        # should'nt propagate constraint that U is in the same source as ME
         self._test('Any B,U,UL GROUPBY B,U,UL WHERE B created_by U?, B is File '
                    'WITH U,UL BEING (Any U,UL WHERE ME eid %(x)s, (EXISTS(U identity ME) '
                    'OR (EXISTS(U in_group G, G name IN("managers", "staff")))) '
