@@ -61,7 +61,7 @@ def lltrace(selector):
     def traced(cls, *args, **kwargs):
         ret = selector(cls, *args, **kwargs)
         if TRACED_OIDS == 'all' or cls.id in TRACED_OIDS:
-            SELECTOR_LOGGER.warning('selector %s returned %s for %s', selector.__name__, ret, cls)
+            SELECTOR_LOGGER.critical('selector %s returned %s for %s', selector.__name__, ret, cls)
         return ret
     traced.__name__ = selector.__name__
     return traced
