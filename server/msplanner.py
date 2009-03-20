@@ -149,7 +149,15 @@ def select_group_sort(select): # XXX something similar done in rql2sql
                 select.append_selected(vref.copy(select))
                 if select.groupby and not vref in select.groupby:
                     select.add_group_var(vref.copy(select))
-            
+
+# XXX move to rql
+def is_ancestor(n1, n2):
+    p = n1.parent
+    while p is not None:
+        if p is n2:
+            return True
+        p = p.parent
+    return False
 
 class PartPlanInformation(object):
     """regroups necessary information to execute some part of a "global" rql
@@ -194,7 +202,7 @@ class PartPlanInformation(object):
         self._inputmaps = {}
         if rqlhelper is not None: # else test
             self._insert_identity_variable = rqlhelper._annotator.rewrite_shared_optional
-
+            
     def copy_solutions(self, solindices):
         return [self._solutions[solidx].copy() for solidx in solindices]
     
@@ -431,8 +439,14 @@ class PartPlanInformation(object):
                 # can't get information from relation inside a NOT exists
                 # where variables don't belong to the same scope
                 continue
-            if not (var.scope is rel.scope and ovar.scope is rel.scope) and rel.ored():
-                continue
+            need_ancestor_scope = False
+            if not (var.scope is rel.scope and ovar.scope is rel.scope):
+                if rel.ored():
+                    continue
+                if rel.ored(traverse_scope=True):
+                    # if relation has some OR as parent, constraints should only
+                    # propagate from parent scope to child scope, nothing else
+                    need_ancestor_scope = True
             relsources = self._session.repo.rel_type_sources(rel.r_type)
             if rel.neged(strict=True) and (
                 len(relsources) < 2
@@ -448,8 +462,10 @@ class PartPlanInformation(object):
                 continue
             norelsup = self._norel_support_set(rel)
             # compute invalid sources for variables and remove them
-            self._remove_var_sources(var, norelsup, ovar, vsources)
-            self._remove_var_sources(ovar, norelsup, var, vsources)
+            if not need_ancestor_scope or is_ancestor(var.scope, ovar.scope):
+                self._remove_var_sources(var, norelsup, ovar, vsources)
+            if not need_ancestor_scope or is_ancestor(ovar.scope, var.scope):
+                self._remove_var_sources(ovar, norelsup, var, vsources)
     
     def _remove_var_sources(self, var, norelsup, ovar, vsources):
         """remove invalid sources for var according to ovar's sources and the

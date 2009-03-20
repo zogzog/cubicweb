@@ -1818,6 +1818,28 @@ class MSPlannerTC(BaseMSPlannerTC):
                       )],
                    {'x': 999999})
 
+    def test_nonregr13(self):
+        self._test('Any B,U,UL GROUPBY B,U,UL WHERE B created_by U?, B is File '
+                   'WITH U,UL BEING (Any U,UL WHERE ME eid %(x)s, (EXISTS(U identity ME) '
+                   'OR (EXISTS(U in_group G, G name IN("managers", "staff")))) '
+                   'OR (EXISTS(U in_group H, ME in_group H, NOT H name "users")), U login UL, U is EUser)',
+                   [('FetchStep', [('Any U,UL WHERE U login UL, U is EUser',
+                                    [{'U': 'EUser', 'UL': 'String'}])],
+                     [self.ldap, self.system], None,
+                     {'U': 'table0.C0', 'U.login': 'table0.C1', 'UL': 'table0.C1'},
+                     []),
+                    ('FetchStep', [('Any U,UL WHERE ((EXISTS(U identity 5)) OR (EXISTS(U in_group G, G name IN("managers", "staff"), G is EGroup))) OR (EXISTS(U in_group H, 5 in_group H, NOT H name "users", H is EGroup)), U login UL, U is EUser',
+                                    [{'G': 'EGroup', 'H': 'EGroup', 'U': 'EUser', 'UL': 'String'}])],
+                     [self.system],
+                     {'U': 'table0.C0', 'U.login': 'table0.C1', 'UL': 'table0.C1'},
+                     {'U': 'table1.C0', 'U.login': 'table1.C1', 'UL': 'table1.C1'},
+                     []),
+                    ('OneFetchStep', [('Any B,U,UL GROUPBY B,U,UL WHERE B created_by U?, B is File',
+                                       [{'B': 'File', 'U': 'EUser', 'UL': 'String'}])],
+                     None, None, [self.system],
+                     {'U': 'table1.C0', 'UL': 'table1.C1'},
+                     [])],
+                   {'x': self.session.user.eid})
 
 class MSPlannerTwoSameExternalSourcesTC(BasePlannerTC):
     """test planner related feature on a 3-sources repository:
