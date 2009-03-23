@@ -12,7 +12,7 @@ from logilab.mtconverter import html_escape
 from cubicweb import NoSelectableObject, role
 from cubicweb.selectors import partial_has_related_entities
 from cubicweb.view import EntityView
-from cubicweb.common import tags
+from cubicweb.common import tags, uilib
 
 
 class LazyViewMixin(object):
@@ -42,7 +42,7 @@ class LazyViewMixin(object):
         if rql:
             urlparams['rql'] = rql
         elif eid:
-            urlparams['rql'] = rql_for_eid(eid)
+            urlparams['rql'] = uilib.rql_for_eid(eid)
         elif rset:
             urlparams['rql'] = rset.printable_rql()
         w(u'<div id="lazy-%s" cubicweb:loadurl="%s">' % (

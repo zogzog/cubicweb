@@ -139,7 +139,7 @@ class RSSIconBox(BoxTemplate):
             return
         urlgetter = self.vreg.select_component('rss_feed_url', self.req, self.rset)
         url = urlgetter.feed_url()
-        self.w(u'<a href="%s"><img src="%s" alt="rss"/></a>\n' % (html_escape(url), rss))
+        self.w(u'<a href="%s"><img src="%s" alt="rss"/></a>\n' % (xml_escape(url), rss))
 
 
 class RssView(XmlView):
