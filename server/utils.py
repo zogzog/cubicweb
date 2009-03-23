@@ -1,7 +1,7 @@
 """Some utilities for the CubicWeb server.
 
 :organization: Logilab
-:copyright: 2001-2008 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+:copyright: 2001-2009 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 """
 __docformat__ = "restructuredtext en"
@@ -128,11 +128,3 @@ class RepoThread(Thread):
     @property
     def name(self):
         return '%s(%s)' % (self._name, Thread.getName(self))
-
-
-from logilab.common.deprecation import class_moved
-from cubicweb.server import pool
-Operation = class_moved(pool.Operation)
-PreCommitOperation = class_moved(pool.PreCommitOperation)
-LateOperation = class_moved(pool.LateOperation)
-SingleLastOperation = class_moved(pool.SingleLastOperation)

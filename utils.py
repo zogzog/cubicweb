@@ -276,9 +276,3 @@ class AcceptMixIn(object):
     # XXX deprecated, no more necessary
 
 
-from logilab.common.deprecation import moved, class_moved
-rql_for_eid = moved('cubicweb.common.uilib', 'rql_for_eid')
-ajax_replace_url = moved('cubicweb.common.uilib', 'ajax_replace_url')
-
-import cubicweb
-Binary = class_moved(cubicweb.Binary)

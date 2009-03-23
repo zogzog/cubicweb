@@ -140,7 +140,6 @@ class AnyEntity(Entity):
     def dc_type(self, form=''):
         """return the display name for the type of this entity (translated)"""
         return self.e_schema.display_name(self.req, form)
-    display_name = deprecated_function(dc_type) # require agueol > 0.8.1, asteretud > 0.10.0 for removal
 
     def dc_language(self):
         """return language used by this entity (translated)"""
