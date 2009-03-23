@@ -1,22 +1,19 @@
 """Adapter for google appengine source.
 
 :organization: Logilab
-:copyright: 2008 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+:copyright: 2008-2009 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 """
 __docformat__ = "restructuredtext en"
 
-from logilab.common.decorators import cached, clear_cache
-
-from cubicweb import AuthenticationError, UnknownEid, server
+from cubicweb import AuthenticationError, UnknownEid
 from cubicweb.server.sources import AbstractSource, ConnectionWrapper
 from cubicweb.server.pool import SingleOperation
 from cubicweb.server.utils import crypt_password
 from cubicweb.goa.dbinit import set_user_groups
 from cubicweb.goa.rqlinterpreter import RQLInterpreter
 
-from google.appengine.api.datastore import Key, Entity, Get, Put, Delete
-from google.appengine.api.datastore import Query
+from google.appengine.api.datastore import Key, Entity, Put, Delete
 from google.appengine.api import datastore_errors, users
     
 def _init_groups(guser, euser):

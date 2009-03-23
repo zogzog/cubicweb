@@ -39,12 +39,11 @@ def date_range(begin, end, incr=1, include=None):
                     date as parameter, and returning True if the date
                     should be included.
     """
-    date = begin
     incr = timedelta(incr, 0, 0)
-    while date <= end:
-        if include is None or include(date): 
-            yield date
-        date += incr
+    while begin <= end:
+        if include is None or include(begin): 
+            yield begin
+        begin += incr
 
 def ustrftime(date, fmt='%Y-%m-%d'):
     """like strftime, but returns a unicode string instead of an encoded

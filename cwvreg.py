@@ -6,8 +6,6 @@
 """
 __docformat__ = "restructuredtext en"
 
-from warnings import warn
-
 from logilab.common.decorators import cached, clear_cache
 from logilab.common.interface import extend
 
@@ -19,6 +17,9 @@ from cubicweb.vregistry import VRegistry, ObjectNotFound, NoSelectableObject
 _ = unicode
 
 def use_interfaces(obj):
+    """return interfaces used by the given object by searchinf for implements
+    selectors, with a bw compat fallback to accepts_interfaces attribute
+    """
     from cubicweb.selectors import implements
     try:
         # XXX deprecated
@@ -34,12 +35,6 @@ def use_interfaces(obj):
             print 'bad selector %s on %s' % (obj.__select__, obj)
             raise
         return ()
-
-def expand_parent_classes(iface):
-    res = [iface]
-    for parent in iface.__bases__:
-        res += expand_parent_classes(parent)
-    return res
 
 
 class CubicWebRegistry(VRegistry):
@@ -59,7 +54,7 @@ class CubicWebRegistry(VRegistry):
                 if not item[0] in ('propertydefs', 'propertyvalues')]
 
     def values(self):
-        return [value for key,value in self._registries.items()
+        return [value for key, value in self._registries.items()
                 if not key in ('propertydefs', 'propertyvalues')]
     
     def reset(self):
@@ -106,8 +101,8 @@ class CubicWebRegistry(VRegistry):
     def register(self, obj, **kwargs):
         if kwargs.get('registryname', obj.__registry__) == 'etypes':
             if obj.id != 'Any' and not obj.id in self.schema:
-                self.error('don\'t register %s, %s type not defined in the schema',
-                           obj, obj.id)
+                self.error('don\'t register %s, %s type not defined in the '
+                           'schema', obj, obj.id)
                 return
             kwargs['clear'] = True
         super(CubicWebRegistry, self).register(obj, **kwargs)
@@ -130,29 +125,18 @@ class CubicWebRegistry(VRegistry):
             for classes in self.get('etypes', {}).values():
                 for cls in classes:
                     for iface in cls.__implements__:
-                        interfaces.update(expand_parent_classes(iface))
-                    interfaces.update(expand_parent_classes(cls))
+                        interfaces.update(iface.__mro__)
+                    interfaces.update(expand_parent_classes(cls.__mro__))
             for obj, ifaces in self._needs_iface.items():
-                ifaces = frozenset(isinstance(iface, basestring) and iface in self.schema and self.etype_class(iface) or iface
+                ifaces = frozenset(isinstance(iface, basestring)
+                                   and iface in self.schema
+                                   and self.etype_class(iface)
+                                   or iface
                                    for iface in ifaces)
                 if not ifaces & interfaces:
                     self.debug('kicking vobject %s (unsupported interface)', obj)
                     self.unregister(obj)
             
-        
-    
-    def eid_rset(self, cursor, eid, etype=None):
-        """return a result set for the given eid without doing actual query
-        (we have the eid, we can suppose it exists and user has access to the
-        entity)
-        """
-        msg = '.eid_rset is deprecated, use req.eid_rset'
-        warn(msg, DeprecationWarning, stacklevel=2)
-        try:
-            return cursor.req.eid_rset(eid, etype)
-        except AttributeError:
-            # cursor is a session
-            return cursor.eid_rset(eid, etype)
     
     @cached
     def etype_class(self, etype):

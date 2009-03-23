@@ -15,9 +15,7 @@ import re
 from datetime import datetime, date, timedelta
 from urllib import quote as urlquote
 from cStringIO import StringIO
-from copy import deepcopy
 
-from logilab.common.textutils import unormalize
 from logilab.mtconverter import html_escape, html_unescape
 
 from cubicweb.utils import ustrftime
@@ -340,7 +338,7 @@ def render_HTML_tree(tree, selected_node=None, render_node=None, caption=None):
             cell_12 = line[j+1] is not None
             cell_21 = line[j+1] is not None and line[j+1].next_sibling() is not None
             link_type = link_types.get((cell_11, cell_12, cell_21), 0)
-            if link_type == 0 and i > 0 and links[i-1][j] in (1,2,3):
+            if link_type == 0 and i > 0 and links[i-1][j] in (1, 2, 3):
                 link_type = 2
             links[-1].append(link_type)
     

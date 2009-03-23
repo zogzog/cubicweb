@@ -92,7 +92,6 @@ class SimpleReqRewriter(URLRewriter):
         """for each `input`, `output `in rules, if `uri` matches `input`,
         req's form is updated with `output`
         """
-        rset = None
         for data in self.rules:
             try:
                 inputurl, infos, required_groups = data
@@ -109,7 +108,7 @@ class SimpleReqRewriter(URLRewriter):
                 # XXX what about i18n ? (vtitle for instance)
                 for param, value in infos.items():
                     if isinstance(value, basestring):
-                        req.form[param]= inputurl.sub(value, uri)
+                        req.form[param] = inputurl.sub(value, uri)
                     else:
                         req.form[param] = value
                 break

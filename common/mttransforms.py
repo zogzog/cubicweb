@@ -1,7 +1,7 @@
 """mime type transformation engine for cubicweb, based on mtconverter
 
 :organization: Logilab
-:copyright: 2001-2008 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+:copyright: 2001-2009 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 """
 __docformat__ = "restructuredtext en"
@@ -14,7 +14,7 @@ from logilab.mtconverter import (register_base_transforms,
                                  register_pil_transforms, 
                                  register_pygments_transforms)
 
-from cubicweb.common.uilib import rest_publish, html_publish, remove_html_tags
+from cubicweb.common.uilib import rest_publish, html_publish
 
 HTML_MIMETYPES = ('text/html', 'text/xhtml', 'application/xhtml+xml')
 

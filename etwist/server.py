@@ -360,7 +360,7 @@ def _gc_debug():
             acount += 1
         else:
             try:
-                ocount[obj.__class__]+= 1
+                ocount[obj.__class__] += 1
             except KeyError:
                 ocount[obj.__class__] = 1
             except AttributeError:

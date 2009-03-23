@@ -13,8 +13,6 @@ from logilab.common.debugger import Debugger
 from logilab.common.testlib import InnerTest
 from logilab.common.pytest import nocoverage
 
-from rql import parse
-
 from cubicweb.devtools import VIEW_VALIDATORS
 from cubicweb.devtools.apptest import EnvBasedTC
 from cubicweb.devtools._apptest import unprotected_entities, SYSTEM_RELATIONS
@@ -24,8 +22,6 @@ from cubicweb.devtools.fill import insert_entity_queries, make_relations_queries
 from cubicweb.sobjects.notification import NotificationView
 
 from cubicweb.vregistry import NoSelectableObject
-from cubicweb.web.action import Action
-from cubicweb.web.views.basetemplates import TheMainTemplate
 
 
 ## TODO ###############
@@ -149,7 +145,7 @@ class WebTest(EnvBasedTC):
             if rschema.is_final() or rschema in ignored_relations:
                 continue
             rset = cu.execute('DISTINCT Any X,Y WHERE X %s Y' % rschema)
-            existingrels.setdefault(rschema.type, set()).update((x,y) for x, y in rset)
+            existingrels.setdefault(rschema.type, set()).update((x, y) for x, y in rset)
         q = make_relations_queries(self.schema, edict, cu, ignored_relations,
                                    existingrels=existingrels)
         for rql, args in q:
@@ -329,10 +325,6 @@ class WebTest(EnvBasedTC):
             # resultset's syntax tree
             rset = backup_rset
         for action in self.list_actions_for(rset):
-            # XXX this seems a bit dummy
-            #yield InnerTest(self._testname(rset, action.id, 'action'),
-            #                self.failUnless,
-            #                isinstance(action, Action))
             yield InnerTest(self._testname(rset, action.id, 'action'), action.url)
         for box in self.list_boxes_for(rset):
             yield InnerTest(self._testname(rset, box.id, 'box'), box.dispatch)

@@ -18,7 +18,7 @@ from logilab.common.configuration import (Configuration, Method,
                                           ConfigurationMixIn, merge_options)
 
 from cubicweb import CW_SOFTWARE_ROOT, CW_MIGRATION_MAP, ConfigurationError
-from cubicweb.toolsutils import env_path, read_config, create_dir
+from cubicweb.toolsutils import env_path, create_dir
 
 CONFIGURATIONS = []
 

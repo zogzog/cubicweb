@@ -38,9 +38,9 @@ class TimeTableView(AnyRsetView):
 
         # XXX: try refactoring with calendar.py:OneMonthCal
         for row in xrange(self.rset.rowcount):
-            task = self.rset.get_entity(row,0)
+            task = self.rset.get_entity(row, 0)
             if len(self.rset[row])>1:
-                user = self.rset.get_entity(row,1)
+                user = self.rset.get_entity(row, 1)
             else:
                 user = u"*"
             the_dates = []
@@ -55,9 +55,9 @@ class TimeTableView(AnyRsetView):
                 the_dates.append(task.stop)
             for d in the_dates:
                 d_users = dates.setdefault(d, {})
-                u_tasks = d_users.setdefault(user,set())
+                u_tasks = d_users.setdefault(user, set())
                 u_tasks.add( task )
-                task_max = users_max.setdefault(user,0)
+                task_max = users_max.setdefault(user, 0)
                 if len(u_tasks)>task_max:
                     users_max[user] = len(u_tasks)
             if user not in users:
@@ -71,7 +71,7 @@ class TimeTableView(AnyRsetView):
 
         rows = []
         # colors here are class names defined in cubicweb.css
-        colors = [ "col%x"%i for i in range(12) ]
+        colors = ["col%x" % i for i in xrange(12)]
         next_color_index = 0
 
         visited_tasks = {} # holds a description of a task for a user
@@ -100,7 +100,7 @@ class TimeTableView(AnyRsetView):
                     # (which must be the same for every user concerned
                     # by the task)
                     task, user = key
-                    for i,t in enumerate(user_columns):
+                    for i, t in enumerate(user_columns):
                         if t is None:
                             if task in task_colors:
                                 color = task_colors[task]
@@ -128,16 +128,16 @@ class TimeTableView(AnyRsetView):
         self.w(u'</table>')
         self.w(u'</div>\n')
 
-    def render_col_headers(self,users,widths):
+    def render_col_headers(self, users, widths):
         """ render column headers """
         self.w(u'<tr class="header">\n')
 
         self.w(u'<th class="ttdate">&nbsp;</th>\n')
         columns = []
-        for user,width in zip(users,widths):
-            self.w(u'<th colspan="%s">' % max(MIN_COLS,width))
-            if user!=u"*":
-                user.view('secondary',w=self.w)
+        for user, width in zip(users, widths):
+            self.w(u'<th colspan="%s">' % max(MIN_COLS, width))
+            if user != u"*":
+                user.view('secondary', w=self.w)
             else:
                 self.w(user)
             self.w(u'</th>')
@@ -164,7 +164,7 @@ class TimeTableView(AnyRsetView):
             previous_is_empty = False
 
             klass = "even"
-            if date.day_of_week in (5,6) and not empty_line:
+            if date.day_of_week in (5, 6) and not empty_line:
                 klass = "odd"
             self.w(u'<tr class="%s">' % klass)
             odd = not odd

@@ -12,10 +12,10 @@ from logilab.mtconverter import html_escape
 from logilab.common.decorators import cached
 
 from cubicweb.selectors import (one_line_rset, none_rset, implements,
-                                match_user_groups, chainfirst, chainall)
+                                match_user_groups)
 from cubicweb.utils import UStringIO
 from cubicweb.view import StartupView
-from cubicweb.web import INTERNAL_FIELD_VALUE, eid_param, stdmsgs
+from cubicweb.web import INTERNAL_FIELD_VALUE, eid_param
 from cubicweb.web.views import baseviews
 from cubicweb.web.form import FormMixIn
 

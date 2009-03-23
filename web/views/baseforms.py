@@ -14,13 +14,10 @@ from simplejson import dumps
 from logilab.mtconverter import html_escape
 from logilab.common.decorators import cached
 
-from cubicweb.selectors import (specified_etype_implements, implements,
-                                match_kwargs, match_form_params, one_line_rset,
-                                non_final_entity, accepts_etype_compat)
-from cubicweb.utils import make_uid
+from cubicweb.selectors import (specified_etype_implements, accepts_etype_compat,
+                                non_final_entity, match_kwargs, one_line_rset)
 from cubicweb.view import View, EntityView
-from cubicweb.common.uilib import cut
-from cubicweb.web import INTERNAL_FIELD_VALUE, stdmsgs, eid_param
+from cubicweb.web import INTERNAL_FIELD_VALUE, eid_param
 from cubicweb.web.controller import NAV_FORM_PARAMETERS
 from cubicweb.web.widgets import checkbox, InputWidget, ComboBoxWidget
 from cubicweb.web.form import FormMixIn

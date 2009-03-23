@@ -11,7 +11,6 @@ to the application's schema or to already registered object
 __docformat__ = "restructuredtext en"
 
 from cubicweb.vregistry import registerer, yes_registerer
-from cubicweb.selectors import implements
 from cubicweb.cwvreg import use_interfaces
 
 class priority_registerer(registerer):

@@ -1,7 +1,7 @@
 """some utilities for cubicweb tools
 
 :organization: Logilab
-:copyright: 2001-2008 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+:copyright: 2001-2009 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 """
 __docformat__ = "restructuredtext en"
@@ -11,7 +11,7 @@ from os import listdir, makedirs, symlink, environ, chmod, walk, remove
 from os.path import exists, join, abspath, normpath
 
 from logilab.common.clcommands import Command as BaseCommand, \
-     main_run as base_main_run, register_commands, pop_arg, cmd_run
+     main_run as base_main_run
 from logilab.common.compat import any
 
 from cubicweb import warning

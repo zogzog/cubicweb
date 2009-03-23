@@ -8,7 +8,7 @@ __docformat__ = "restructuredtext en"
 
 from cubicweb.vregistry import objectify_selector
 from cubicweb.selectors import (
-    yes, one_line_rset, two_lines_rset, one_etype_rset, relation_possible,
+    one_line_rset, two_lines_rset, one_etype_rset, relation_possible,
     non_final_entity,
     authenticated_user, match_user_groups, match_search_state,
     has_editable_relation, has_permission, has_add_permission,

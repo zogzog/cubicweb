@@ -157,7 +157,7 @@ def embed_external_page(url, prefix, headers=None, custom_css=None):
     req = Request(url, headers=(headers or {}))
     content = urlopen(req).read()
     page_source = unicode(content, guess_encoding(content), 'replace')
-    page_source =page_source
+    page_source = page_source
     match = BODY_RGX.search(page_source)
     if match is None:
         return page_source

@@ -7,7 +7,7 @@
 
 from datetime import datetime, date, timedelta
 
-from vobject import iCalendar, icalendar
+from vobject import iCalendar
 
 from logilab.mtconverter import html_escape
 
@@ -155,9 +155,9 @@ class OneMonthCal(EntityView):
         users = []
         task_max = 0
         for row in xrange(self.rset.rowcount):
-            task = self.rset.get_entity(row,0)
+            task = self.rset.get_entity(row, 0)
             if len(self.rset[row]) > 1 and self.rset.description[row][1] == 'EUser':
-                user = self.rset.get_entity(row,1)
+                user = self.rset.get_entity(row, 1)
             else:
                 user = None
             the_dates = []
@@ -183,15 +183,15 @@ class OneMonthCal(EntityView):
             
             for d in the_dates:
                 d_tasks = dates.setdefault((d.year, d.month, d.day), {})
-                t_users = d_tasks.setdefault(task,set())
+                t_users = d_tasks.setdefault(task, set())
                 t_users.add( user )
-                if len(d_tasks)>task_max:
+                if len(d_tasks) > task_max:
                     task_max = len(d_tasks)
 
         days = []
-        nrows = max(3,task_max)
+        nrows = max(3, task_max)
         # colors here are class names defined in cubicweb.css
-        colors = [ "col%x"%i for i in range(12) ]
+        colors = [ "col%x" % i for i in range(12) ]
         next_color_index = 0
 
         visited_tasks = {} # holds a description of a task
@@ -213,7 +213,7 @@ class OneMonthCal(EntityView):
                 # to every 'new' task we must affect a color
                 # (which must be the same for every user concerned
                 # by the task)
-                for i,t in enumerate(rows):
+                for i, t in enumerate(rows):
                     if t is None:
                         if task in task_colors:
                             color = task_colors[task]
@@ -334,14 +334,13 @@ class OneWeekCal(EntityView):
         lastday = first_day_of_week + timedelta(6)
         firstday = first_day_of_week
         dates = [[] for i in range(7)]
-        task_max = 0
         task_colors = {}   # remember a color assigned to a task
         # colors here are class names defined in cubicweb.css
-        colors = [ "col%x"%i for i in range(12) ]
+        colors = [ "col%x" % i for i in range(12) ]
         next_color_index = 0
         done_tasks = []
         for row in xrange(self.rset.rowcount):
-            task = self.rset.get_entity(row,0)
+            task = self.rset.get_entity(row, 0)
             if task in done_tasks:
                 continue
             done_tasks.append(task)

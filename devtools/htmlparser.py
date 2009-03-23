@@ -1,10 +1,8 @@
 """defines a validating HTML parser used in web application tests"""
 
 import re
-from StringIO import StringIO
 
 from lxml import etree
-from lxml.builder import E
 
 from cubicweb.view import STRICT_DOCTYPE, TRANSITIONAL_DOCTYPE, CW_XHTML_EXTENSIONS
 
@@ -55,20 +53,6 @@ class DTDValidator(Validator):
         for blockquote in blockquotes:
             parent = blockquote.getparent()
             parent.remove(blockquote)
-##         # for each blockquote, wrap unauthorized child in a div
-##         for blockquote in blockquotes:
-##             if len(blockquote):
-##                 needs_wrap = [(index, child) for index, child in enumerate(blockquote)
-##                               if child.tag not in expected]
-##                 for index, child in needs_wrap:
-##                     # the child is automatically popped from blockquote when
-##                     # its parent is changed
-##                     div = E.div(child)
-##                     blockquote.insert(index, div)
-##             elif blockquote.text:
-##                 div = E.div(blockquote.text)
-##                 blockquote.text = None
-##                 blockquote.append(div)
         data = etree.tostring(tree)
         return '<?xml version="1.0" encoding="UTF-8"?>%s\n%s' % (STRICT_DOCTYPE, data)
 

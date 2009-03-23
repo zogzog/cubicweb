@@ -5,12 +5,12 @@ Take a look at http://www.python.org/peps/pep-0249.html
 (most parts of this document are reported here in docstrings)
 
 :organization: Logilab
-:copyright: 2001-2008 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+:copyright: 2001-2009 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 """
 __docformat__ = "restructuredtext en"
 
-from logging import getLogger, StreamHandler
+from logging import getLogger
 from time import time, clock
 
 from cubicweb import ConnectionError, RequestSessionMixIn, set_log_methods
@@ -42,7 +42,7 @@ def get_repository(method, database=None, config=None, vreg=None):
         from cubicweb.server.repository import Repository
         return Repository(config, vreg=vreg)
     else: # method == 'pyro'
-        from Pyro import core, naming, config as pyroconfig
+        from Pyro import core, naming
         from Pyro.errors import NamingError, ProtocolError
         core.initClient(banner=0)
         nsid = ':%s.%s' % (config['pyro-ns-group'], database)
@@ -54,7 +54,7 @@ def get_repository(method, database=None, config=None, vreg=None):
         except ProtocolError:
             raise ConnectionError('Could not connect to the Pyro name server '
                                   '(host: %s:%i)' % (nshost, nsport))
-        except NamingError, ex:
+        except NamingError:
             raise ConnectionError('Could not get repository for %s '
                                   '(not registered in Pyro), '
                                   'you may have to restart your server-side '
@@ -358,11 +358,7 @@ class Connection(object):
 
     def check(self):
         """raise `BadSessionId` if the connection is no more valid"""
-        try:
-            self._repo.check_session(self.sessionid)
-        except AttributeError:
-            # XXX backward compat for repository running cubicweb < 2.48.3
-            self._repo.session_data(self.sessionid)
+        self._repo.check_session(self.sessionid)
 
     def get_shared_data(self, key, default=None, pop=False):
         """return value associated to `key` in shared data"""

@@ -9,7 +9,7 @@ __docformat__ = "restructuredtext en"
 
 import sys
 from datetime import datetime
-from os import walk, mkdir, chdir, listdir, getcwd
+from os import mkdir, chdir, listdir
 from os.path import join, exists, abspath, basename, normpath, split, isdir
 
 

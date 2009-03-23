@@ -1,7 +1,7 @@
 """helper functions for application hooks
 
 :organization: Logilab
-:copyright: 2001-2008 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+:copyright: 2001-2009 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 """
 __docformat__ = "restructuredtext en"
@@ -10,7 +10,7 @@ from smtplib import SMTP
 from threading import Lock
 
 from cubicweb import RepositoryError
-from cubicweb.server.pool import Operation, SingleLastOperation
+from cubicweb.server.pool import SingleLastOperation
 
 
 def entity_name(session, eid):

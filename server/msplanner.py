@@ -49,19 +49,18 @@ is supported, no group or such):
 
 
 :organization: Logilab
-:copyright: 2003-2008 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+:copyright: 2003-2009 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 """
 __docformat__ = "restructuredtext en"
 
-from copy import deepcopy
 from itertools import imap, ifilterfalse
 
 from logilab.common.compat import any
 from logilab.common.decorators import cached
 
 from rql.stmts import Union, Select
-from rql.nodes import VariableRef, Comparison, Relation, Constant, Exists, Variable
+from rql.nodes import VariableRef, Comparison, Relation, Constant, Variable
 
 from cubicweb import server
 from cubicweb.utils import make_uid
@@ -1231,7 +1230,7 @@ class VariablesFiltererVisitor(object):
             return False
         if not same_scope(var):
             return False
-        if any(v for v,_ in var.stinfo['attrvars'] if not v.name in variables):
+        if any(v for v, _ in var.stinfo['attrvars'] if not v.name in variables):
             return False
         return True
         

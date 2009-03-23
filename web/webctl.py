@@ -23,8 +23,8 @@ class WebCreateHandler(CommandHandler):
             print '-' * 72
             config.input_config('pyro-client', inputlevel)
         if confirm('allow anonymous access', False):
-           config.global_set_option('anonymous-user', 'anon') 
-           config.global_set_option('anonymous-password', 'anon') 
+            config.global_set_option('anonymous-user', 'anon') 
+            config.global_set_option('anonymous-password', 'anon') 
         
     def postcreate(self):
         """hooks called once application's initialization has been completed"""

@@ -14,8 +14,8 @@ from cubicweb.utils import merge_dicts
 from cubicweb.view import View, Component
 from cubicweb.selectors import (
     paginated_rset, one_line_rset, primary_view, match_context_prop,
-    partial_has_related_entities, partial_relation_possible,
-    condition_compat, accepts_compat, has_relation_compat)
+    partial_has_related_entities, condition_compat, accepts_compat,
+    has_relation_compat)
 from cubicweb.common.registerers import accepts_registerer
 
 _ = unicode

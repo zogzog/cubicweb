@@ -37,7 +37,7 @@ def pager_format_results(writer, layout):
         format_results(writer, layout, stream)
     finally:
         stream.close()
-        status = os.waitpid(pid, 0)
+        os.waitpid(pid, 0)
 
 def izip2(list1, list2):
     for i in xrange(len(list1)):

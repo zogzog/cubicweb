@@ -1,7 +1,7 @@
 """RQL rewriting utilities, used for read security checking
 
 :organization: Logilab
-:copyright: 2007-2008 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+:copyright: 2007-2009 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 """
 
@@ -25,7 +25,7 @@ def remove_solutions(origsolutions, solutions, defined):
                         except KeyError:
                             pass
                         break
-                except KeyError,ex:
+                except KeyError:
                     # variable has been rewritten
                     continue
             else:
@@ -357,7 +357,7 @@ class RQLRewriter(object):
         else: # target == 'subject':
             cardindex = 1
             ttypes_func = rschema.subjects
-            rprop = lambda x,y,z: rschema.rproperty(y, x, z)
+            rprop = lambda x, y, z: rschema.rproperty(y, x, z)
         for etype in self.varstinfo['possibletypes']:
             for ttype in ttypes_func(etype):
                 if rprop(etype, ttype, 'cardinality')[cardindex] in '+*':

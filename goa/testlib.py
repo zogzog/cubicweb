@@ -1,4 +1,4 @@
-from logilab.common.testlib import TestCase, mock_object
+from logilab.common.testlib import TestCase
 
 import os, os.path as osp
 import time
@@ -15,7 +15,6 @@ try:
     from google.appengine.api import datastore_file_stub
     from google.appengine.ext import db as gdb
     from cubicweb.goa import db, do_monkey_patch
-    from cubicweb.goa.dbmyams import load_schema
     import_appengine_failed = None
 except ImportError, exc:
     raise
@@ -34,8 +33,6 @@ except ImportError, exc:
     import_appengine_failed = 'cannot import appengine: %s' % exc
     
 
-from cubicweb import CW_SOFTWARE_ROOT
-from cubicweb.server.utils import crypt_password
 from cubicweb.devtools.fake import FakeRequest
 from cubicweb.goa.goavreg import GAERegistry
 from cubicweb.goa.goaconfig import GAEConfiguration

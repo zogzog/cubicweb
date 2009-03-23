@@ -1,7 +1,7 @@
 """provide a minimal RQL support for google appengine dbmodel
 
 :organization: Logilab
-:copyright: 2008 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+:copyright: 2008-2009 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 """
 __docformat__ = "restructuredtext en"
@@ -10,7 +10,6 @@ from mx.DateTime import DateTimeType, DateTimeDeltaType
 from datetime import datetime
 
 from rql import RQLHelper, nodes
-from logilab.common.compat import any
 
 from cubicweb import Binary
 from cubicweb.rset import ResultSet

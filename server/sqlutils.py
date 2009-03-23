@@ -19,7 +19,7 @@ from indexer import get_indexer
 from cubicweb import Binary, ConfigurationError
 from cubicweb.common.uilib import remove_html_tags
 from cubicweb.server import SQL_CONNECT_HOOKS
-from cubicweb.server.utils import crypt_password, cartesian_product
+from cubicweb.server.utils import crypt_password
 
 db.USE_MX_DATETIME = False
 

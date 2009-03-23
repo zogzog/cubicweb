@@ -11,12 +11,11 @@ from simplejson import dumps
 from logilab.mtconverter import html_escape
 
 from cubicweb.vregistry import objectify_selector
-from cubicweb.selectors import (chainfirst, chainall, non_final_entity,
-                                two_lines_rset, match_context_prop,
-                                yes, relation_possible)
+from cubicweb.selectors import (non_final_entity, two_lines_rset,
+                                match_context_prop, yes, relation_possible)
 from cubicweb.web.box import BoxTemplate
-from cubicweb.web.facet import (AbstractFacet, VocabularyFacet, FacetStringWidget,
-                             RelationFacet, prepare_facets_rqlst, filter_hiddens)
+from cubicweb.web.facet import (AbstractFacet, FacetStringWidget, RelationFacet,
+                                prepare_facets_rqlst, filter_hiddens)
 
 @objectify_selector
 def contextview_selector(cls, req, rset, row=None, col=None, view=None,
@@ -60,7 +59,7 @@ class FilterBox(BoxTemplate):
         req.add_css('cubicweb.facets.css')
         if self.roundcorners:
             req.html_headers.add_onload('jQuery(".facet").corner("tl br 10px");')
-        rset, vid, divid, paginate=self._get_context(view)
+        rset, vid, divid, paginate = self._get_context(view)
         if rset.rowcount < 2: # XXX done by selectors, though maybe necessary when rset has been hijacked
             return
         if vid is None:

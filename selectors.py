@@ -53,7 +53,7 @@ from yams import BASE_TYPES
 
 from cubicweb import Unauthorized, NoSelectableObject, NotAnEntity, role
 from cubicweb.vregistry import (NoSelectableObject, Selector,
-                                chainall, chainfirst, objectify_selector)
+                                chainall, objectify_selector)
 from cubicweb.cwconfig import CubicWebConfiguration
 from cubicweb.schema import split_expression
 
@@ -619,7 +619,7 @@ class relation_possible(EClassSelector):
                     return int(self.target_etype in rschema.objects(eschema))
                 else:
                     return int(self.target_etype in rschema.subjects(eschema))
-            except KeyError, ex:
+            except KeyError:
                 return 0
         return 1
 

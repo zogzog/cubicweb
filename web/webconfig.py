@@ -7,8 +7,7 @@
 __docformat__ = "restructuredtext en"
 
 import os
-from os.path import join, dirname, exists, split
-from urlparse import urljoin
+from os.path import join, exists, split
 
 from logilab.common.configuration import Method
 from logilab.common.decorators import cached

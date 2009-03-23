@@ -7,15 +7,12 @@
 
 __docformat__ = "restructuredtext en"
 
-from logilab.common.decorators import monkeypatch
 from logilab.mtconverter import html_escape
 
 from cubicweb import NoSelectableObject, role
 from cubicweb.selectors import partial_has_related_entities
-from cubicweb.utils import HTMLHead
 from cubicweb.view import EntityView
-from cubicweb.common import uilib, tags
-from cubicweb.web.views.basecontrollers import JSonController
+from cubicweb.common import tags
 
 
 class LazyViewMixin(object):

@@ -13,8 +13,7 @@ from logilab.common.deprecation import obsolete
 from logilab.mtconverter import html_escape
 
 from cubicweb import NotAnEntity, NoSelectableObject
-from cubicweb.selectors import (yes, match_user_groups, non_final_entity,
-                                nonempty_rset, none_rset)
+from cubicweb.selectors import yes, non_final_entity, nonempty_rset, none_rset
 from cubicweb.selectors import require_group_compat, accepts_compat
 from cubicweb.appobject import AppRsetObject
 from cubicweb.utils import UStringIO, HTMLStream
@@ -136,12 +135,12 @@ class View(AppRsetObject):
         according to optional row and col parameters, which are locating
         a particular row or cell in the result set:
 
-        * if row [and col] are specified, `cell_call` is called
+        * if row is specified, `cell_call` is called
         * if none of them is supplied, the view is considered to apply on
           the whole result set (which may be None in this case), `call` is
           called
         """
-        row, col = context.get('row'), context.get('col')
+        row = context.get('row')
         if row is not None:
             context.setdefault('col', 0)
             view_func = self.cell_call

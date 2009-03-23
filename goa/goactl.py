@@ -6,16 +6,17 @@
 """
 __docformat__ = "restructuredtext en"
 
-from os.path import exists, join, split, dirname, basename, normpath, abspath
+from os.path import exists, join, split, basename, normpath, abspath
+
+from logilab.common.clcommands import register_commands
 
 from cubicweb import BadCommandUsage
 from cubicweb import CW_SOFTWARE_ROOT
 from cubicweb.toolsutils import (Command, register_commands, copy_skeleton,
-                                 create_dir, create_symlink, create_copy)
+                                 create_dir, create_symlink)
 from cubicweb.cwconfig import CubicWebConfiguration
 
 from logilab import common as lgc
-from logilab.common.textutils import get_csv
 from logilab import constraint as lgcstr
 from logilab import mtconverter as lgmtc
 import rql, yams, yapps, simplejson, dateutil, vobject, docutils, roman
@@ -213,8 +214,8 @@ class NewGoogleAppCommand(Command):
         packagesdir = join(appldir, 'cubes')
         create_init_file(join(appldir, 'cubes'), 'cubes')
         cubesdir = CubicWebConfiguration.cubes_dir()
-        for include in ('addressbook','basket', 'blog','classfolders',
-                        'classtags', 'comment', 'file', 'link',
+        for include in ('addressbook', 'basket', 'blog','folder',
+                        'tag', 'comment', 'file', 'link',
                         'mailinglist', 'person', 'task', 'zone',
                         ):
             create_symlink(join(cubesdir, include), join(packagesdir, include))

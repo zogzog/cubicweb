@@ -46,13 +46,12 @@ class SchemaViewer(object):
         esection = Section(children=(Title(self.req._('Entities'),
                                            klass='titleUnderline'),))
         layout.append(esection)
-        entities = [eschema for eschema in schema.entities()
+        eschemas = [eschema for eschema in schema.entities()
                     if not eschema.is_final()]
         if skipmeta:
-            entities = [eschema for eschema in entities
+            eschemas = [eschema for eschema in eschemas
                         if not eschema.meta]
-        keys = [(eschema.type, eschema) for eschema in entities]
-        for key, eschema in sorted(keys):
+        for eschema in sorted(eschema):
             esection.append(self.visit_entityschema(eschema, skiprels))
         if display_relations:
             title = Title(self.req._('Relations'), klass='titleUnderline')

@@ -9,7 +9,6 @@ serialization time
 """
 __docformat__ = "restructuredtext en"
 
-from simplejson import dumps
 from datetime import datetime
 
 from logilab.mtconverter import html_escape

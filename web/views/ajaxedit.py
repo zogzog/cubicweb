@@ -6,7 +6,7 @@
 """
 __docformat__ = "restructuredtext en"
 
-from cubicweb.selectors import chainfirst, match_form_params, match_kwargs
+from cubicweb.selectors import match_form_params, match_kwargs
 from cubicweb.web.box import EditRelationBoxTemplate
 
 class AddRelationView(EditRelationBoxTemplate):

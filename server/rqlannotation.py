@@ -2,17 +2,15 @@
 code generation.
 
 :organization: Logilab
-:copyright: 2001-2008 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+:copyright: 2001-2009 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 """
 __docformat__ = "restructuredtext en"
 
 from logilab.common.compat import any
 
-from rql.nodes import Relation, Exists, VariableRef, Constant, Variable, Or
+from rql.nodes import Relation, VariableRef, Constant, Variable, Or
 from rql.utils import common_parent
-
-from cubicweb import server
 
 def _annotate_select(annotator, rqlst):
     for subquery in rqlst.with_:

@@ -1,14 +1,14 @@
 """Some i18n/gettext utilities.
 
 :organization: Logilab
-:copyright: 2001-2008 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+:copyright: 2001-2009 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 """
 __docformat__ = "restructuredtext en"
 
 import re
 import os
-from os.path import join, abspath, basename, splitext, exists
+from os.path import join, basename, splitext, exists
 from glob import glob
 
 from cubicweb.toolsutils import create_dir

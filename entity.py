@@ -951,7 +951,7 @@ class Entity(AppRsetObject, dict):
         for rschema in self.e_schema.indexable_attributes():
             try:
                 value = self.printable_value(rschema, format='text/plain')
-            except TransformError, ex:
+            except TransformError:
                 continue
             except:
                 self.exception("can't add value of %s to text index for entity %s",

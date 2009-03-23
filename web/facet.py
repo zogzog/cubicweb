@@ -520,7 +520,7 @@ class FacetVocabularyWidget(HTMLWidget):
         if not self.facet.start_unfolded:
             cssclass += ' hidden'
         if len(self.items) > 6:
-            cssclass +=' overflowed'
+            cssclass += ' overflowed'
         self.w(u'<div class="facetBody%s">\n' % cssclass)
         for item in self.items:
             item.render(self.w)

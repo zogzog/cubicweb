@@ -8,8 +8,6 @@ __docformat__ = "restructuredtext en"
 
 import operator
 
-from logilab.mtconverter import html_escape
-
 from cubicweb.interfaces import IEmailable
 from cubicweb.selectors import implements, match_user_groups
 from cubicweb.view import EntityView

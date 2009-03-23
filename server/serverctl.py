@@ -9,10 +9,11 @@ __docformat__ = "restructuredtext en"
 import os
 
 from logilab.common.configuration import REQUIRED, Configuration, ini_format_section
+from logilab.common.clcommands import register_commands, cmd_run, pop_arg
 
 from cubicweb import AuthenticationError, ExecutionError, ConfigurationError
-from cubicweb.toolsutils import Command, CommandHandler, pop_arg, cmd_run, \
-     register_commands, confirm, restrict_perms_to_user
+from cubicweb.toolsutils import (Command, CommandHandler, confirm,
+                                 restrict_perms_to_user)
 from cubicweb.server.serverconfig import ServerConfiguration
 
 

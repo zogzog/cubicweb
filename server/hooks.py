@@ -84,7 +84,6 @@ def fti_update_after_add_relation(session, eidfrom, rtype, eidto):
         FTIndexEntityOp(session, entity=session.entity(eidto))
     elif ftcontainer == 'object':
         FTIndexEntityOp(session, entity=session.entity(eidfrom))
-
 def fti_update_after_delete_relation(session, eidfrom, rtype, eidto):
     """sync fulltext index when relevant relation is deleted. Reindexing both
     entities is necessary.

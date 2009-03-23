@@ -9,7 +9,7 @@ __docformat__ = "restructuredtext en"
 
 from logilab.mtconverter import html_escape
 
-from cubicweb.selectors import implements, accept
+from cubicweb.selectors import implements
 from cubicweb.interfaces import IProgress, IMileStone
 from cubicweb.schema import display_name
 from cubicweb.view import EntityView

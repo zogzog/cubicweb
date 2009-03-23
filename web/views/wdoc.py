@@ -205,9 +205,9 @@ class ChangeLogView(StartupView):
                     w(unicode(line, encoding))
             for entry in cl.entries:
                 if entry.date:
-                    date = strptime(entry.date, '%Y-%m-%d')
+                    edate = strptime(entry.date, '%Y-%m-%d')
                 else:
-                    date = date.today()
+                    edate = date.today()
                 messages = []
                 for msglines, submsgs in entry.messages:
                     msgstr = unicode(' '.join(l.strip() for l in msglines), encoding)
@@ -216,15 +216,15 @@ class ChangeLogView(StartupView):
                         msgstr += '     - ' + unicode(' '.join(l.strip() for l in submsglines), encoding)
                         msgstr += u'\n'
                     messages.append(msgstr)
-                entry = (date, messages)
+                entry = (edate, messages)
                 allentries.insert(bisect_right(allentries, entry), entry)
         latestdate = None
         i = 0
-        for date, messages in reversed(allentries):
-            if latestdate != date:
-                fdate = self.format_date(date)
+        for edate, messages in reversed(allentries):
+            if latestdate != edate:
+                fdate = self.format_date(edate)
                 w(u'\n%s' % fdate)
-                w('~'*len(fdate))
+                w('~' * len(fdate))
                 latestdate = date
             for msg in messages:
                 w(u'* %s' % msg)

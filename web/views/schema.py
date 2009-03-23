@@ -9,10 +9,9 @@ __docformat__ = "restructuredtext en"
 from itertools import cycle
 
 from logilab.mtconverter import html_escape
-from logilab.common.graph import escape, GraphGenerator, DotBackend
 from yams import schema2dot as s2d
 
-from cubicweb.selectors import implements, rql_condition, yes
+from cubicweb.selectors import implements, yes
 from cubicweb.schemaviewer import SchemaViewer
 from cubicweb.view import EntityView, StartupView
 from cubicweb.common.uilib import ureport_as_html
@@ -135,7 +134,7 @@ class RestrictedSchemaDotPropsHandler(s2d.SchemaDotPropsHandler):
     # XXX remove this method once yams > 0.20 is out
     def node_properties(self, eschema):
         """return default DOT drawing options for an entity schema"""
-        label = ['{',eschema.type,'|']
+        label = ['{', eschema.type, '|']
         label.append(r'\l'.join(rel.type for rel in eschema.subject_relations()
                                 if rel.final and self.display_attr(rel)))
         label.append(r'\l}') # trailing \l ensure alignement of the last one

@@ -25,8 +25,7 @@ try:
     import sys
     if 'matplotlib.backends' not in sys.modules:
         matplotlib.use('Agg')
-    from matplotlib.ticker import FormatStrFormatter
-    from pylab import figure, show
+    from pylab import figure
 except ImportError:
     pass
 else:

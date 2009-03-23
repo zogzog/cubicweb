@@ -13,12 +13,8 @@ from datetime import datetime, date, time
 from google.appengine.ext import db
 from google.appengine.api import datastore_types
 
-from yams.schema2sql import eschema_attrs
-from yams.constraints import SizeConstraint
-from yams.reader import PyFileReader
 from yams.buildobjs import (String, Int, Float, Boolean, Date, Time, Datetime,
-                            Interval, Password, Bytes, ObjectRelation,
-                            SubjectRelation, RestrictedEntityType)
+                            Bytes, SubjectRelation)
 from yams.buildobjs import metadefinition, EntityType
 
 from cubicweb.schema import CubicWebSchemaLoader

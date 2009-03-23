@@ -14,7 +14,6 @@ from rql import BadRQLQuery
 from cubicweb import set_log_methods
 from cubicweb import (ValidationError, Unauthorized, AuthenticationError,
                    NoSelectableObject, RepositoryError)
-from cubicweb.cwconfig import CubicWebConfiguration
 from cubicweb.cwvreg import CubicWebRegistry
 from cubicweb.web import (LOGGER, StatusResponse, DirectResponse, Redirect, NotFound,
                        RemoteCallFailed, ExplicitLogin, InvalidSession)

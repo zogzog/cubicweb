@@ -11,7 +11,7 @@ from os.path import join
 
 from cubicweb import CW_SOFTWARE_ROOT
 from cubicweb.cwconfig import CubicWebConfiguration
-from cubicweb.web.webconfig import WebConfiguration, merge_options, Method
+from cubicweb.web.webconfig import WebConfiguration, merge_options
 from cubicweb.server.serverconfig import ServerConfiguration
 from cubicweb.goa.dbmyams import load_schema
 

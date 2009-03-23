@@ -88,8 +88,8 @@ class RequestSessionMixIn(object):
         from cubicweb.rset import ResultSet
         rset = ResultSet([('A',)]*size, '%s X' % etype,
                          description=[(etype,)]*size)
-        def get_entity(row, col=0, etype=etype, vreg=self.vreg, rset=rset):
-            return self.vreg.etype_class(etype)(self, rset, row, col)
+        def get_entity(row, col=0, etype=etype, req=self, rset=rset):
+            return req.vreg.etype_class(etype)(req, rset, row, col)
         rset.get_entity = get_entity
         return self.decorate_rset(rset)
 

@@ -9,7 +9,6 @@ __docformat__ = "restructuredtext en"
 import sys
 import threading
 from time import time
-from types import NoneType
 
 from rql.nodes import VariableRef, Function, ETYPE_PYOBJ_MAP, etype_from_pyobj
 from yams import BASE_TYPES
@@ -550,7 +549,7 @@ class InternalManager(object):
             return 'en'
         return None
 
-_IMANAGER= InternalManager()
+_IMANAGER = InternalManager()
 
 from logging import getLogger
 from cubicweb import set_log_methods

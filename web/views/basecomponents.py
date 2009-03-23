@@ -11,16 +11,12 @@ __docformat__ = "restructuredtext en"
 
 from rql import parse
 
-from cubicweb import Unauthorized
-from cubicweb.selectors import (yes, non_final_entity, one_line_rset,
-                                chainfirst, two_etypes_rset,
-                                match_form_params, relation_possible)
+from cubicweb.selectors import yes, two_etypes_rset, match_form_params
 from cubicweb.common.uilib import html_escape, toggle_action
 from cubicweb.schema import display_name
 
 from cubicweb.web.htmlwidgets import MenuWidget, PopupBoxMenu, BoxSeparator, BoxLink
-from cubicweb.web.component import (Component, EntityVComponent, 
-                                    RelatedObjectsVComponent)
+from cubicweb.web.component import Component, RelatedObjectsVComponent
 
 _ = unicode
 

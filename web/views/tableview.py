@@ -11,7 +11,7 @@ from simplejson import dumps
 
 from logilab.mtconverter import html_escape
 
-from cubicweb.selectors import nonempty_rset, match_form_params, accept_rset
+from cubicweb.selectors import nonempty_rset, match_form_params
 from cubicweb.utils import make_uid
 from cubicweb.view import EntityView, AnyRsetView
 from cubicweb.common.uilib import toggle_action, limitsize, jsonize, htmlescape

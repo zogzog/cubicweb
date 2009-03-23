@@ -101,7 +101,6 @@ yams_add_relation = ybo._add_relation
 @monkeypatch(ybo)
 def _add_relation(relations, rdef, name=None, insertidx=None):
     if isinstance(rdef, RichString):
-        default_format = rdef.default_format
         format_attrdef = ybo.String(meta=True, internationalizable=True,
                                     default=rdef.default_format, maxsize=50,
                                     constraints=rdef.format_constraints)

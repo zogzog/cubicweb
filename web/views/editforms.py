@@ -7,25 +7,15 @@ or a list of entities of the same type
 """
 __docformat__ = "restructuredtext en"
 
-from copy import copy
-
 from simplejson import dumps
 
-from logilab.mtconverter import html_escape
-from logilab.common.decorators import cached
-
-from cubicweb.selectors import (specified_etype_implements, implements,
-                                match_kwargs, match_form_params, one_line_rset,
-                                non_final_entity, accepts_etype_compat)
+from cubicweb.selectors import match_kwargs, one_line_rset, non_final_entity
 from cubicweb.utils import make_uid
-from cubicweb.view import View, EntityView
+from cubicweb.view import EntityView
 from cubicweb.common import tags
-from cubicweb.common.uilib import cut
-from cubicweb.web import INTERNAL_FIELD_VALUE, stdmsgs, eid_param
-from cubicweb.web.controller import NAV_FORM_PARAMETERS
+from cubicweb.web import stdmsgs
 from cubicweb.web.form import MultipleFieldsForm, EntityFieldsForm, FormMixIn, FormRenderer
-from cubicweb.web.formfields import StringField,  RichTextField, guess_field
-from cubicweb.web.formwidgets import HiddenInput
+from cubicweb.web.formfields import guess_field
 
 _ = unicode
 

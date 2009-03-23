@@ -45,7 +45,6 @@ class ChangeStateFormView(view.EntityView):
 
     def cell_call(self, row, col):
         entity = self.entity(row, col)
-        eid = entity.eid
         state = entity.in_state[0]
         transition = self.req.eid_rset(self.req.form['treid']).get_entity(0, 0)
         dest = transition.destination()
