@@ -136,7 +136,7 @@ class AppRsetObject(VObject):
                                       {'name':cachename}).get_entity(0,0)
             cache.latest_cache_lookup = _now
             if not ecache.valid(cache.cache_creation_date):
-                cache.empty()
+                cache.clear()
                 cache.cache_creation_date = _now
         return cache
 
