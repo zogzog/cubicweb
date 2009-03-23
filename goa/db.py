@@ -30,7 +30,6 @@ following differences:
 """
 __docformat__ = "restructuredtext en"
 
-from datetime import datetime
 from copy import deepcopy
 
 from logilab.common.decorators import cached, iclassmethod
@@ -39,7 +38,7 @@ from cubicweb import RequestSessionMixIn, Binary, entities
 from cubicweb.rset import ResultSet
 from cubicweb.entity import metaentity
 from cubicweb.server.utils import crypt_password
-from cubicweb.goa import use_mx_for_dates, mx2datetime, MODE
+from cubicweb.goa import MODE
 from cubicweb.goa.dbinit import init_relations
 
 from google.appengine.api.datastore import Get, Put, Key, Entity, Query
@@ -174,15 +173,11 @@ class Model(entities.AnyEntity):
         return '<ModelEntity %s %s %s at %s>' % (
             self.e_schema, self.eid, self.keys(), id(self))
 
-    __getattribute__ = use_mx_for_dates(entities.AnyEntity.__getattribute__)
-
     def _cubicweb_to_datastore(self, attr, value):
         attr = attr[2:] # remove 's_' / 'o_' prefix
         if attr in self._attributes:
             tschema = self.e_schema.destination(attr)
-            if tschema in ('Datetime', 'Date', 'Time'):
-                value = mx2datetime(value, tschema)
-            elif tschema == 'String':
+            if tschema == 'String':
                 if len(value) > 500:
                     value = Text(value)                
             elif tschema == 'Password':
@@ -288,7 +283,6 @@ class Model(entities.AnyEntity):
             return 'eid', False
         return mainattr, needcheck
     
-    @use_mx_for_dates
     def get_value(self, name):
         try:
             value = self[name]

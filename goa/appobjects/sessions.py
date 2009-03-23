@@ -15,7 +15,7 @@ from time import localtime, strftime
 
 from logilab.common.decorators import cached, clear_cache
 
-from cubicweb import UnknownEid, BadConnectionId
+from cubicweb import BadConnectionId
 from cubicweb.dbapi import Connection, ConnectionProperties, repo_connect
 from cubicweb.selectors import none_rset, match_user_groups
 from cubicweb.server.session import Session

@@ -1,7 +1,7 @@
 """provides all lax instances management commands into a single utility script
 
 :organization: Logilab
-:copyright: 2008 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+:copyright: 2008-2009 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 """
 __docformat__ = "restructuredtext en"
@@ -17,14 +17,9 @@ from Cookie import SimpleCookie
 
 from logilab.common.clcommands import Command, register_commands, main_run
 
-from cubicweb import CW_SOFTWARE_ROOT
 from cubicweb.common.uilib import remove_html_tags
-
 APPLROOT = osp.abspath(osp.join(osp.dirname(osp.abspath(__file__)), '..'))
 
-# XXX import custom?
-
-from tools import i18n
 
 def initialize_vregistry(applroot):
     # apply monkey patches first
@@ -51,33 +46,6 @@ class LaxCommand(Command):
     def run(self, args):
         self.vreg = initialize_vregistry(APPLROOT)
         self._run(args)
-                
-
-class I18nUpdateCommand(LaxCommand):
-    """updates i18n catalogs"""
-    name = 'i18nupdate'
-    
-    def _run(self, args):
-        assert not args, 'no argument expected'
-        i18ndir = i18n.get_i18n_directory(APPLROOT)
-        i18n.update_cubes_catalog(self.vreg, APPLROOT,
-                                      langs=i18n.getlangs(i18ndir))
-
-
-class I18nCompileCommand(LaxCommand):
-    """compiles i18n catalogs"""
-    name = 'i18ncompile'
-    min_args = max_args = 0
-    
-    def _run(self, args):
-        assert not args, 'no argument expected'
-        i18ndir = i18n.get_i18n_directory(APPLROOT)
-        langs = i18n.getlangs(i18ndir)
-        print 'generating .mo files for langs', ', '.join(langs)
-        cubicweb_i18ndir = osp.join(APPLROOT, 'cubes', 'shared')
-        paths = self.vreg.config.cubes_path() + [cubicweb_i18ndir]
-        sourcedirs = [i18ndir] + [osp.join(path, 'i18n') for path in paths]
-        i18n.compile_i18n_catalogs(sourcedirs, i18ndir, langs=langs)
         
 
 class GenerateSchemaCommand(LaxCommand):
@@ -274,9 +242,7 @@ class CleanSessionsCommand(URLCommand):
         self.extract_message(data)
             
     
-register_commands([I18nUpdateCommand,
-                   I18nCompileCommand,
-                   GenerateSchemaCommand,
+register_commands([GenerateSchemaCommand,
                    PopulateDataDirCommand,
                    DSInitCommand,
                    CleanSessionsCommand,

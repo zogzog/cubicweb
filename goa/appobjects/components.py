@@ -6,8 +6,6 @@
 """
 __docformat__ = "restructuredtext en"
 
-from os.path import join
-
 from logilab.mtconverter import html_escape
 from logilab.common.decorators import cached
 
@@ -17,11 +15,8 @@ from cubicweb.schema import display_name
 from cubicweb.common.view import StartupView, EntityView
 from cubicweb.web import Redirect
 from cubicweb.web.views import vid_from_rset
-from cubicweb.goa.db import rset_from_objs
 
-from google.appengine.api import datastore, mail
-
-from main import APPLROOT
+from google.appengine.api import mail
 
 
 class SearchForAssociationView(EntityView):

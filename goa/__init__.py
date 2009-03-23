@@ -1,67 +1,10 @@
 """cubicweb on google appengine
 
 :organization: Logilab
-:copyright: 2001-2008 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+:copyright: 2001-2009 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 """
 __docformat__ = "restructuredtext en"
-
-
-from datetime import datetime, time, date
-from mx.DateTime import DateTime, Date, Time
-
-def mx2datetime(mxobj, yamstype):
-    """converts a mx date object (DateTime, Date or Time) into a
-    regular python datetime object
-    """
-    #if yamstype == 'Datetime':
-    # don't use date, db model doesn't actually support it, only datetime
-    return datetime(mxobj.year, mxobj.month, mxobj.day,
-                    mxobj.hour, mxobj.minute, int(mxobj.second))
-#     elif yamstype == 'Date':
-#         return date(mxobj.year, mxobj.month, mxobj.day)
-#     # XXX don't support time either, what should we do here ?
-#     return time(mxobj.hour, mxobj.minute, int(mxobj.second))
-
-def datetime2mx(datetimeobj, yamstype=None):
-    """converts a mx date object (DateTime, Date or Time) into a
-    regular python datetime object
-    """
-    if yamstype is None:
-        yamstype = guess_yamstype_for_date(datetimeobj)
-    assert yamstype is not None
-    if yamstype == 'Datetime':
-        # don't use date, db model doesn't actually support it, only datetime
-        return DateTime(datetimeobj.year, datetimeobj.month, datetimeobj.day,
-                        datetimeobj.hour, datetimeobj.minute, int(datetimeobj.second))
-    elif yamstype == 'Date':
-        return Date(datetimeobj.year, datetimeobj.month, datetimeobj.day)
-    # XXX don't support time either, what should we do here ?
-    return Time(datetimeobj.hour, datetimeobj.minute, int(datetimeobj.second))
-
-
-def guess_yamstype_for_date(datetimeobj):
-    """guesses yams correct type according to `datetimeobj`'s type"""
-    if isinstance(datetimeobj, datetime):
-        return 'Datetime'
-    elif isinstance(datetimeobj, date):
-        return 'Date'
-    elif isinstance(datetimeobj, time):
-        return 'Time'
-    return None
-
-
-def use_mx_for_dates(func):
-    """decorator to convert func's return value into mx objects
-    instead of datetime objects
-    """
-    def wrapper(*args, **kwargs):
-        value = func(*args, **kwargs)
-        yamstype = guess_yamstype_for_date(value)
-        if yamstype is None:
-            return value
-        return datetime2mx(value, yamstype)
-    return wrapper
 
 
 try:

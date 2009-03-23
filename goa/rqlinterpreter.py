@@ -14,7 +14,6 @@ from logilab.common.compat import any
 
 from cubicweb import Binary
 from cubicweb.rset import ResultSet
-from cubicweb.goa import mx2datetime, datetime2mx
 from cubicweb.server import SQL_CONNECT_HOOKS
 
 from google.appengine.api.datastore import Key, Get, Query, Entity
@@ -250,9 +249,6 @@ class AttributeRestriction(RelationRestriction):
     def __init__(self, rel, kwargs):
         RelationRestriction.__init__(self, rel, None)
         value = self.rhs.eval(kwargs)
-        if isinstance(value, (DateTimeType, DateTimeDeltaType)):
-            #yamstype = self.schema.rschema(self.rtype).objects()[0]
-            value = mx2datetime(value, 'Datetime')
         self.value = value
         if self.operator == 'ILIKE':
             if value.startswith('%'):
@@ -294,11 +290,7 @@ class AttributeInRestriction(AttributeRestriction):
         RelationRestriction.__init__(self, rel, None)
         values = []
         for c in self.rel.children[1].iget_nodes(nodes.Constant):
-            value = c.eval(kwargs)
-            if isinstance(value, (DateTimeType, DateTimeDeltaType)):
-                #yamstype = self.schema.rschema(self.rtype).objects()[0]
-                value = mx2datetime(value, 'Datetime')
-            values.append(value)
+            values.append(c.eval(kwargs))
         self.value = values
 
     @property
@@ -322,9 +314,7 @@ class TypeRestriction(AttributeRestriction):
 
 def append_result(res, descr, i, j, value, etype):
     if value is not None:
-        if etype in ('Date', 'Datetime', 'Time'):
-            value = datetime2mx(value, etype)
-        elif isinstance(value, Text):
+        if isinstance(value, Text):
             value = unicode(value)
         elif isinstance(value, Blob):
             value = Binary(str(value))
