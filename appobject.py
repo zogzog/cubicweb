@@ -6,7 +6,6 @@
 """
 __docformat__ = "restructuredtext en"
 
-from warnings import warn
 from datetime import datetime, timedelta
 
 from simplejson import dumps
@@ -118,12 +117,6 @@ class AppRsetObject(VObject):
         super(AppRsetObject, self).__init__()
         self.req = req
         self.rset = rset
-
-    @property
-    def cursor(self): # XXX deprecate in favor of req.cursor?
-        msg = '.cursor is deprecated, use req.execute (or req.cursor if necessary)'
-        warn(msg, DeprecationWarning, stacklevel=2)
-        return self.req.cursor
         
     def get_cache(self, cachename):
         """
@@ -215,18 +208,6 @@ class AppRsetObject(VObject):
         return self.req.build_url(method, **kwargs)
 
     # various resources accessors #############################################
-
-    def etype_rset(self, etype, size=1):
-        """return a fake result set for a particular entity type"""
-        msg = '.etype_rset is deprecated, use req.etype_rset'
-        warn(msg, DeprecationWarning, stacklevel=2)
-        return self.req.etype_rset(etype, size=1)
-
-    def eid_rset(self, eid, etype=None):
-        """return a result set for the given eid"""
-        msg = '.eid_rset is deprecated, use req.eid_rset'
-        warn(msg, DeprecationWarning, stacklevel=2)
-        return self.req.eid_rset(eid, etype)
     
     def entity(self, row, col=0):
         """short cut to get an entity instance for a particular row/column
@@ -255,12 +236,6 @@ class AppRsetObject(VObject):
         inserted in html
         """
         self.req.add_js('cubicweb.ajax.js')
-        if nonify:
-            # XXX < 2.48.3 bw compat
-            warn('nonify argument is deprecated', DeprecationWarning, stacklevel=2)
-            _cb = cb
-            def cb(*args):
-                _cb(*args)
         cbname = self.req.register_onetime_callback(cb, *args)
         msg = dumps(msg or '') 
         return "javascript:userCallbackThenReloadPage('%s', %s)" % (
