@@ -6,7 +6,6 @@
 """
 __docformat__ = "restructuredtext en"
 
-from mx.DateTime import DateTimeType, DateTimeDeltaType
 from datetime import datetime
 
 from rql import RQLHelper, nodes

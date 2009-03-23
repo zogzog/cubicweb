@@ -1,13 +1,12 @@
 """overrides some base views for cubicweb on google appengine
 
 :organization: Logilab
-:copyright: 2008 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+:copyright: 2008-2009 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 """
 __docformat__ = "restructuredtext en"
 
 from logilab.mtconverter import html_escape
-from logilab.common.decorators import cached
 
 from cubicweb import typed_eid
 from cubicweb.selectors import one_line_rset, match_search_state, accept

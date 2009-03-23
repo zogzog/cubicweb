@@ -17,7 +17,7 @@ from logilab.mtconverter import html_escape
 from cubicweb import typed_eid
 from cubicweb.appobject import AppObject
 from cubicweb.selectors import yes, non_final_entity
-from cubicweb.view import NOINDEX, NOFOLLOW, View
+from cubicweb.view import NOINDEX, NOFOLLOW
 from cubicweb.common import tags
 from cubicweb.web import INTERNAL_FIELD_VALUE, eid_param, stdmsgs
 from cubicweb.web.httpcache import NoHTTPCacheManager

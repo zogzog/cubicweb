@@ -95,7 +95,7 @@ else:
         repository.Repository.get_cubes = get_cubes
         
         from rql import RQLHelper
-        RQLHelper.simplify = lambda x,r: None
+        RQLHelper.simplify = lambda x, r: None
 
         # activate entity caching on the server side
 

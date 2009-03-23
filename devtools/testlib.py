@@ -237,7 +237,7 @@ class WebTest(EnvBasedTC):
                     output = '\n'.join(line_template % (idx + 1, line)
                                 for idx, line in enumerate(output)
                                 if line_context_filter(idx+1, position))
-                    msg+= '\nfor output:\n%s' % output
+                    msg += '\nfor output:\n%s' % output
             raise AssertionError, msg, tcbk
 
 

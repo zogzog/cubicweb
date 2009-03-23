@@ -92,7 +92,7 @@ class TimeTableView(AnyRsetView):
                     if key in visited_tasks:
                         task_descr = visited_tasks[ key ]
                         user_columns[task_descr.column] = task_descr, False
-                        task_descr.lines+=1
+                        task_descr.lines += 1
                     else:
                         postpone.append(key)
                 for key in postpone:

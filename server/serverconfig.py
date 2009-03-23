@@ -257,7 +257,7 @@ notified of every changes.',
                     print 'not connecting to source', uri, 'during migration'
         elif 'all' in sources:
             assert len(sources) == 1
-            enabled_sources= None
+            enabled_sources = None
         else:
             known_sources = self.sources()
             for uri in sources:

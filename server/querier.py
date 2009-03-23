@@ -13,8 +13,7 @@ from logilab.common.cache import Cache
 from logilab.common.compat import any
 from rql import RQLHelper, RQLSyntaxError
 from rql.stmts import Union, Select
-from rql.nodes import (Relation, VariableRef, Constant, Exists, Variable,
-                       SubQuery)
+from rql.nodes import (Relation, VariableRef, Constant, SubQuery)
 
 from cubicweb import Unauthorized, QueryError, UnknownEid, typed_eid
 from cubicweb import server

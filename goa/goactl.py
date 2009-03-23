@@ -214,7 +214,7 @@ class NewGoogleAppCommand(Command):
         packagesdir = join(appldir, 'cubes')
         create_init_file(join(appldir, 'cubes'), 'cubes')
         cubesdir = CubicWebConfiguration.cubes_dir()
-        for include in ('addressbook', 'basket', 'blog','folder',
+        for include in ('addressbook', 'basket', 'blog', 'folder',
                         'tag', 'comment', 'file', 'link',
                         'mailinglist', 'person', 'task', 'zone',
                         ):

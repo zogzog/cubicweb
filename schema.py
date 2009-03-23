@@ -6,9 +6,9 @@
 """
 __docformat__ = "restructuredtext en"
 
-import warnings
 import re
 from logging import getLogger
+from warnings import warn
 
 from logilab.common.decorators import cached, clear_cache, monkeypatch
 from logilab.common.compat import any
@@ -41,7 +41,6 @@ ybo.RDEF_PROPERTIES += ('eid',)
 
 def bw_normalize_etype(etype):
     if etype in ETYPE_NAME_MAP:
-        from warnings import warn
         msg = '%s has been renamed to %s, please update your code' % (
             etype, ETYPE_NAME_MAP[etype])            
         warn(msg, DeprecationWarning, stacklevel=4)

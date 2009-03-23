@@ -56,7 +56,7 @@ else:
             abscisses = [row[0] for row in self.rset]
             courbes = []
             nbcols = len(self.rset.rows[0])
-            for col in range(1,nbcols):
+            for col in xrange(1, nbcols):
                 courbe = [row[col] for row in self.rset]
                 courbes.append(courbe)
             if not courbes:
@@ -71,7 +71,7 @@ else:
             except ValueError:
                 xlabels = abscisses
                 abscisses = range(len(xlabels))
-            for idx,courbe in enumerate(courbes):
+            for idx, courbe in enumerate(courbes):
                 ax.plot(abscisses, courbe, '%sv-' % colors[idx], label=self.rset.description[0][idx+1])
             ax.autoscale_view()
             alldata = flatten(courbes)

@@ -6,20 +6,16 @@
 """
 __docformat__ = "restructuredtext en"
 
-from logilab.common.decorators import monkeypatch
 from logilab.mtconverter import html_escape
 
 from cubicweb.interfaces import ITree
 from cubicweb.selectors import implements
 from cubicweb.view import EntityView
 from cubicweb.utils import make_uid
-from cubicweb.web.views.basecontrollers import JSonController
 
 def treecookiename(treeid):
     return str('treestate-%s' % treeid)
 
-
-from cubicweb.web.views.baseviews import OneLineView
 
 class TreeView(EntityView):
     id = 'treeview'

@@ -168,7 +168,7 @@ def load_schema(config, schemaclasses=None, extrahook=None):
     # the loader is instantiated because this is where the dbmodels
     # are registered in the yams schema
     for compname in config['included-cubes']:
-        comp = __import__('%s.schema' % compname)
+        __import__('%s.schema' % compname)
     loader = GaeSchemaLoader(use_gauthservice=config['use-google-auth'], db=db)
     loader.lib_directory = SCHEMAS_LIB_DIRECTORY
     if schemaclasses is not None:
@@ -176,7 +176,7 @@ def load_schema(config, schemaclasses=None, extrahook=None):
             loader.load_dbmodel(cls.__name__, goadb.extract_dbmodel(cls))
     elif config['schema-type'] == 'dbmodel':
         import schema as appschema
-        for objname, obj in vars(appschema).items():
+        for obj in vars(appschema).values():
             if isinstance(obj, type) and issubclass(obj, goadb.Model) and obj.__module__ == appschema.__name__:
                 loader.load_dbmodel(obj.__name__, goadb.extract_dbmodel(obj))
     for erschema in ('EGroup', 'EEType', 'ERType', 'RQLExpression',
