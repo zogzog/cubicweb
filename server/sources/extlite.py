@@ -141,7 +141,7 @@ repository.',
         
     def set_schema(self, schema):
         super(SQLiteAbstractSource, self).set_schema(schema)
-        if self._need_sql_create and self._is_schema_complete():
+        if self._need_sql_create and self._is_schema_complete() and self.dbpath:
             self._create_database()
         self.rqlsqlgen = self.sqlgen_class(schema, self.sqladapter.dbhelper)
                 
