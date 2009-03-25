@@ -8,7 +8,7 @@ class name correponds to the type name. Then the content of the class contains
 the description of attributes and relations for the defined entity type,
 for example ::
 
-  class Personne(EntityType):
+  class Person(EntityType):
     """A person with the properties and the relations necessary for my
     application"""
 
@@ -377,10 +377,10 @@ Updating your application with your new schema
 
 You have to get a shell on your application ::
 
-   cubicweb-ctl shell moninstance
+   cubicweb-ctl shell myinstance
 
 and type ::
 
-   add_entity_type('Personne')
+   add_entity_type('Person')
 
 And restart your application!

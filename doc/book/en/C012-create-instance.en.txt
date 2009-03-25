@@ -91,7 +91,7 @@ use during the development to administrate your web application. It will be
 possible, later on, to create others users for your final web application.
 
 When this command is completed, the definition of your instance is
-located in *~/etc/cubicweb.d/moninstance/*. To launch it, you just type ::
+located in *~/etc/cubicweb.d/myinstance/*. To launch it, you just type ::
 
   cubicweb-ctl start -D myinstance
 
