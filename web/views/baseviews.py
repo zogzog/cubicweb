@@ -704,7 +704,7 @@ class RssItemView(EntityView):
         entity = self.complete_entity(row, col)
         self.w(u'<item rdf:about="%s">\n' % html_escape(entity.absolute_url()))
         self.render_title_link(entity)
-        self._marker('description', entity.dc_date(self.description))
+        self._marker('description', html_escape(entity.dc_description()))
         self._marker('dc:date', entity.dc_date(self.date_format))
         self.render_entity_creator(entity)
         self.w(u'</item>\n')
