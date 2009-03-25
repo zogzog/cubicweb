@@ -61,6 +61,7 @@ def unprotected_entities(app_schema, strict=False):
     
 
 def ignore_relations(*relations):
+    global SYSTEM_RELATIONS
     SYSTEM_RELATIONS += relations
 
 class TestEnvironment(object):
@@ -83,7 +84,6 @@ class TestEnvironment(object):
         self.restore_database()
         if verbose:
             print "init done"
-        login = source['db-user']
         config.repository = lambda x=None: self.repo
         self.app = CubicWebPublisher(config, vreg=vreg)
         self.verbose = verbose

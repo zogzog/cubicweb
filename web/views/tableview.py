@@ -214,7 +214,7 @@ class TableView(AnyRsetView):
 
             if cellattrs and colindex in cellattrs:
                 for name, value in cellattrs[colindex].iteritems():
-                    column.add_attr(name,value)
+                    column.add_attr(name, value)
             # add column
             columns.append(column)
         return columns

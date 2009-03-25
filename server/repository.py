@@ -394,11 +394,13 @@ class Repository(object):
         return euser
 
     def _build_user(self, session, eid):
+        """return a EUser entity for user with the given eid"""
         cls = self.vreg.etype_class('EUser')
         rql = cls.fetch_rql(session.user, ['X eid %(x)s'])
         rset = session.execute(rql, {'x': eid}, 'x')
         assert len(rset) == 1, rset
         euser = rset.get_entity(0, 0)
+        # pylint: disable-msg=W0104
         # prefetch / cache euser's groups and properties. This is especially
         # useful for internal sessions to avoid security insertions
         euser.groups

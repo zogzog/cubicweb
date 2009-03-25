@@ -22,6 +22,7 @@ from yams.reader import (CONSTRAINTS, RelationFileReader, PyFileReader,
 from rql import parse, nodes, RQLSyntaxError, TypeResolverException
 
 from cubicweb import ETYPE_NAME_MAP, ValidationError, Unauthorized
+from cubicweb import set_log_methods
 
 # XXX <3.2 bw compat
 from yams import schema
@@ -981,8 +982,6 @@ format_constraint = FormatConstraint()
 CONSTRAINTS['FormatConstraint'] = FormatConstraint
 PyFileReader.context['format_constraint'] = format_constraint
 
-from logging import getLogger
-from cubicweb import set_log_methods
 set_log_methods(CubicWebSchemaLoader, getLogger('cubicweb.schemaloader'))
 set_log_methods(BootstrapSchemaLoader, getLogger('cubicweb.bootstrapschemaloader'))
 set_log_methods(RQLExpression, getLogger('cubicweb.schema'))

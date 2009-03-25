@@ -114,7 +114,7 @@ def copy_skeleton(skeldir, targetdir, context,
                 tfpath = tfpath[:-5]
                 if not askconfirm or not exists(tfpath) or \
                        confirm('%s exists, overwrite?' % tfpath):
-                    fname = fill_templated_file(fpath, tfpath, context)
+                    fill_templated_file(fpath, tfpath, context)
                     print '[generate] %s <-- %s' % (tfpath, fpath)
             elif exists(tfpath):
                 show_diffs(tfpath, fpath, askconfirm)

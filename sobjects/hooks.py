@@ -22,6 +22,7 @@ class AddUpdateEUserHook(Hook):
 
 
 class AutoDeleteBookmark(PreCommitOperation):
+    beid = None # make pylint happy
     def precommit_event(self):
         session = self.session
         if not self.beid in session.query_data('pendingeids', ()):

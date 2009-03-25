@@ -14,7 +14,8 @@ class SetUseEmailRelationOp(PreCommitOperation):
     already setting the relation
     """
     rtype = 'use_email'
-
+    fromeid = toeid = None # make pylint happy
+    
     def condition(self):
         """check entity has use_email set for the email address"""
         return not self.session.unsafe_execute(

@@ -17,8 +17,8 @@ try:
     from cubicweb.goa import db, do_monkey_patch
     import_appengine_failed = None
 except ImportError, exc:
-    raise
-    class db:
+    # XXX necessary ?
+    class db: 
         class Model:
             pass
         class DummyProperty:

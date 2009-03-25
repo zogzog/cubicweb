@@ -24,7 +24,7 @@ from cubicweb import BadConnectionId, UnknownEid, ConnectionError
 from cubicweb.cwconfig import register_persistent_options
 from cubicweb.server.sources import AbstractSource, ConnectionWrapper
 
-class ReplaceByInOperator:
+class ReplaceByInOperator(Exception):
     def __init__(self, eids):
         self.eids = eids
         

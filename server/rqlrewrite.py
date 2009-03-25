@@ -315,7 +315,7 @@ class RQLRewriter(object):
         return cmp_
 
     def visit_mathexpression(self, mexpr):
-        cmp_ = nodes.MathExpression(cmp.operator)
+        cmp_ = nodes.MathExpression(mexpr.operator)
         for c in cmp.children:
             cmp_.append(c.accept(self))
         return cmp_

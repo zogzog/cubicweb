@@ -126,7 +126,7 @@ class CubicWebRegistry(VRegistry):
                 for cls in classes:
                     for iface in cls.__implements__:
                         interfaces.update(iface.__mro__)
-                    interfaces.update(expand_parent_classes(cls.__mro__))
+                    interfaces.update(cls.__mro__)
             for obj, ifaces in self._needs_iface.items():
                 ifaces = frozenset(isinstance(iface, basestring)
                                    and iface in self.schema

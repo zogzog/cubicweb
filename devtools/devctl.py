@@ -16,10 +16,11 @@ from os.path import join, exists, abspath, basename, normpath, split, isdir
 from logilab.common import STD_BLACKLIST
 from logilab.common.modutils import get_module_files
 from logilab.common.textutils import get_csv
+from logilab.common.clcommands import register_commands
 
 from cubicweb import CW_SOFTWARE_ROOT as BASEDIR, BadCommandUsage
 from cubicweb.__pkginfo__ import version as cubicwebversion
-from cubicweb.toolsutils import Command, register_commands, confirm, copy_skeleton
+from cubicweb.toolsutils import Command, confirm, copy_skeleton
 from cubicweb.web.webconfig import WebConfiguration
 from cubicweb.server.serverconfig import ServerConfiguration
 

@@ -297,7 +297,7 @@ class HTMLHeader(View):
         req = self.req
         pid = make_uid(id(req))
         req.pageid = pid
-        req.html_headers.define_var('pageid', pid);
+        req.html_headers.define_var('pageid', pid)
 
 
 class HTMLPageHeader(View):

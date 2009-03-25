@@ -68,6 +68,13 @@ class EditionForm(FormMixIn, EntityView):
 </form>
 '''
 
+    def initialize_varmaker(self):
+        varmaker = self.req.get_page_data('rql_varmaker')
+        if varmaker is None:
+            varmaker = self.req.varmaker
+            self.req.set_page_data('rql_varmaker', varmaker)
+        self.varmaker = varmaker
+
     def cell_call(self, row, col, **kwargs):
         self.req.add_js( ('cubicweb.ajax.js', ) )
         entity = self.complete_entity(row, col)

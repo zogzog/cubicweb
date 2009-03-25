@@ -218,10 +218,13 @@ class EntitySelector(EClassSelector):
 
 
 # very basic selectors ########################################################
-@objectify_selector
-def yes(cls, *args, **kwargs):
-    """accept everything"""
-    return 1
+
+class yes(Selector):
+    """return arbitrary score"""
+    def __init__(self, score=1):
+        self.score = score
+    def __call__(self, *args, **kwargs):
+        return self.score
 
 @objectify_selector
 @lltrace
@@ -908,7 +911,7 @@ class score_entity(EntitySelector):
                       return a score >= 0 
     """
     def __init__(self, scorefunc, once_is_enough=False):
-        super(EntitySelector, self).__init__(once_is_enough)
+        super(score_entity, self).__init__(once_is_enough)
         self.score_entity = scorefunc
 
 

@@ -10,10 +10,9 @@ from os.path import exists, join, split, basename, normpath, abspath
 
 from logilab.common.clcommands import register_commands
 
-from cubicweb import BadCommandUsage
-from cubicweb import CW_SOFTWARE_ROOT
-from cubicweb.toolsutils import (Command, register_commands, copy_skeleton,
-                                 create_dir, create_symlink)
+from cubicweb import CW_SOFTWARE_ROOT, BadCommandUsage
+from cubicweb.toolsutils import (Command, copy_skeleton, create_symlink,
+                                 create_dir)
 from cubicweb.cwconfig import CubicWebConfiguration
 
 from logilab import common as lgc

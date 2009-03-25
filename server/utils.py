@@ -117,7 +117,7 @@ class RepoThread(Thread):
                 func()
             finally:
                 self.running_threads.remove(self)
-        Thread.__init__(self, target=target)
+        Thread.__init__(self, target=auto_remove_func)
         self.running_threads = running_threads
         self._name = target.__name__
         

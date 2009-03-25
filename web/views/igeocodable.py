@@ -67,7 +67,7 @@ class GoogleMapsView(EntityView):
 
     def call(self, gmap_key, width=400, height=400, uselabel=True, urlparams=None):
         self.req.add_js('http://maps.google.com/maps?file=api&amp;v=2&amp;key=%s' % gmap_key,
-                        localfile=False);
+                        localfile=False)
         self.req.add_js( ('cubicweb.widgets.js', 'cubicweb.gmap.js', 'gmap.utility.labeledmarker.js') )
         rql = self.rset.printable_rql()
         if urlparams is None:

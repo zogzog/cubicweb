@@ -256,7 +256,7 @@ try:
     from cubicweb.server.msplanner import PartPlanInformation
 except ImportError:
     class PartPlanInformation(object):
-        def merge_input_maps(*args):
+        def merge_input_maps(self, *args):
             pass
         def _choose_var(self, sourcevars):
             pass    

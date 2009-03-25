@@ -103,7 +103,8 @@ class AutomaticEntityForm(EntityFieldsForm):
         super(AutomaticEntityForm, self).__init__(*args, **kwargs)
         self.entity.complete()
         for rschema, target in self.editable_attributes(self.entity):
-            field = guess_field(entity.__class__, self.entity.e_schema, rschema, target)
+            field = guess_field(self.entity.__class__, self.entity.e_schema,
+                                rschema, target)
             self.fields.append(field)
             
     def form_buttons(self):

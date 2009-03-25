@@ -226,12 +226,13 @@ class Entity(AppRsetObject, dict):
     __registry__ = 'etypes'
     __select__ = yes()
     widgets = {}
+    rtags = None
     id = None
     e_schema = None
     eid = None
     rest_attr = None
+    fetch_attrs = None
     skip_copy_for = ()
-
     @classmethod
     def registered(cls, registry):
         """build class using descriptor at registration time"""

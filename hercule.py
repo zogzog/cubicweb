@@ -1,7 +1,7 @@
 """RQL client for cubicweb, connecting to application using pyro
 
 :organization: Logilab
-:copyright: 2001-2008 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+:copyright: 2001-2009 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 """
 __docformat__ = "restructuredtext en"
@@ -132,11 +132,11 @@ class RQLCli(CLIHelper):
     
     def do_description(self):
         """display the description of the latest result"""
-        if self.cursor.description is None:
+        if self.rset.description is None:
             print _('No query has been executed')
         else:
             print '\n'.join([', '.join(line_desc)
-                             for line_desc in self.cursor.description])
+                             for line_desc in self.rset.description])
 
     help_do_description = ('description', "description", _(do_description.__doc__))
     
@@ -200,7 +200,7 @@ class RQLCli(CLIHelper):
         self._previous_lines = []
         # search results
         try:
-            self.cursor.execute(query)
+            self.rset = rset = self.cursor.execute(query)
         except:
             if self.autocommit:
                 self.cnx.rollback()
@@ -208,18 +208,18 @@ class RQLCli(CLIHelper):
         else:
             if self.autocommit:
                 self.cnx.commit()
-        self.handle_result(self.cursor.fetchall(), self.cursor.description)
+        self.handle_result(rset)
 
-    def handle_result(self, result, description):
+    def handle_result(self, rset):
         """display query results if any"""
-        if not result:
+        if not rset:
             print _('No result matching query')
         else:
             from logilab.common.ureports import Table
-            children = flatten(izip2(description, result), to_string)
-            layout = Table(cols=2*len(result[0]), children=children, cheaders=1)
+            children = flatten(izip2(rset.description, rset.rows), to_string)
+            layout = Table(cols=2*len(rset.rows[0]), children=children, cheaders=1)
             self._format(self.writer, layout)
-            print _('%s results matching query') % len(result)
+            print _('%s results matching query') % rset.rowcount
 
     def display_schema(self, schema):
         """display a schema object"""
