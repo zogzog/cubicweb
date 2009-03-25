@@ -691,15 +691,9 @@ class RssView(XmlView):
         params = req.form.copy()
         params.pop('vid', None)
         self.w(u'    <link>%s</link>\n' % html_escape(self.build_url(**params)))
-        self.w(u'    <items>\n')
-        self.w(u'      <rdf:Seq>\n')
-        for entity in self.rset.entities():
-            self.w(u'      <rdf:li resource="%s" />\n' % html_escape(entity.absolute_url()))
-        self.w(u'      </rdf:Seq>\n')
-        self.w(u'    </items>\n')
-        self.w(u'  </channel>\n')
         for i in xrange(self.rset.rowcount):
             self.cell_call(i, 0)
+        self.w(u'  </channel>\n')
         self.w(u'</rss>')       
 
 class RssItemView(EntityView):
@@ -721,12 +715,12 @@ class RssItemView(EntityView):
            
     def render_entity_creator(self, entity):
         if entity.creator:
-            self.w(u'<author>')
-            self._marker('name', entity.creator.name())
+            self._marker('dc:creator', entity.creator.name())
             email = entity.creator.get_email()
             if email:
-                self._marker('email', email)
-            self.w(u'</author>')       
+                self.w(u'<author>')
+                self.w(email)
+                self.w(u'</author>')       
         
     def _marker(self, marker, value):
         if value:
