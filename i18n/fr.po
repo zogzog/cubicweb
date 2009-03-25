@@ -918,7 +918,7 @@ msgstr ""
 "s #%(toeid)s"
 
 msgid "address"
-msgstr "adresse"
+msgstr "adresse électronique"
 
 msgid "alias"
 msgstr "alias"

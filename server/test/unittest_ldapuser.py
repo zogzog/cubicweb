@@ -279,32 +279,39 @@ class LDAPUserSourceTC(RepositoryBasedTC):
         rset = cu.execute('Any F WHERE X has_text "iaminguestsgrouponly", X firstname F')
         self.assertEquals(rset.rows, [[None]])
 
-    def test_nonregr_1(self):
+    def test_nonregr1(self):
         self.execute('Any X,AA ORDERBY AA DESC WHERE E eid %(x)s, E owned_by X, '
                      'X modification_date AA',
                      {'x': cnx.user(self.session).eid})
 
-    def test_nonregr_2(self):
+    def test_nonregr2(self):
         self.execute('Any X,L,AA WHERE E eid %(x)s, E owned_by X, '
                      'X login L, X modification_date AA',
                      {'x': cnx.user(self.session).eid})
 
-    def test_nonregr_3(self):
+    def test_nonregr3(self):
         self.execute('Any X,AA ORDERBY AA DESC WHERE E eid %(x)s, '
                      'X modification_date AA',
                      {'x': cnx.user(self.session).eid})
 
-    def test_nonregr_4(self):
+    def test_nonregr4(self):
         emaileid = self.execute('INSERT EmailAddress X: X address "toto@logilab.org"')[0][0]
         self.execute('Any X,AA WHERE X use_email Y, Y eid %(x)s, X modification_date AA',
                      {'x': emaileid})
         
-    def test_nonregr_5(self):
+    def test_nonregr5(self):
         # original jpl query:
         # Any X, NOW - CD, P WHERE P is Project, U interested_in P, U is EUser, U login "sthenault", X concerns P, X creation_date CD ORDERBY CD DESC LIMIT 5
         rql = 'Any X, NOW - CD, P ORDERBY CD DESC LIMIT 5 WHERE P bookmarked_by U, U login "%s", P is X, X creation_date CD' % self.session.user.login
         self.execute(rql, )#{'x': })
         
+    def test_nonregr6(self):
+        self.execute('Any B,U,UL GROUPBY B,U,UL WHERE B created_by U?, B is File '
+                     'WITH U,UL BEING (Any U,UL WHERE ME eid %(x)s, (EXISTS(U identity ME) '
+                     'OR (EXISTS(U in_group G, G name IN("managers", "staff")))) '
+                     'OR (EXISTS(U in_group H, ME in_group H, NOT H name "users")), U login UL, U is EUser)',
+                     {'x': self.session.user.eid})
+
 
 class GlobTrFuncTC(TestCase):
 

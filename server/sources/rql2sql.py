@@ -25,7 +25,7 @@ is done according to this information
 
 
 :organization: Logilab
-:copyright: 2001-2008 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+:copyright: 2001-2009 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 """
 __docformat__ = "restructuredtext en"
@@ -802,7 +802,7 @@ class SQLGenerator(object):
             else:
                 join += ')'
         if not rhsconst:
-            rhstable = self._var_table(rhsvar)
+            rhstable = rhsvar._q_sqltable
             if rhstable:
                 assert rhstable is not None, rhsvar
                 join += ' %s OUTER JOIN %s ON (%s.%s=%s)' % (
@@ -967,7 +967,10 @@ class SQLGenerator(object):
         """get the sql name for a subquery column alias"""
         if colalias.name in self._varmap:
             sql = self._varmap[colalias.name]
-            self.add_table(sql.split('.', 1)[0])
+            table = sql.split('.', 1)[0]
+            colalias._q_sqltable = table
+            colalias._q_sql = sql
+            self.add_table(table)
             return sql
         return colalias._q_sql
     

@@ -681,10 +681,9 @@ class RssView(XmlView):
         """display a list of entities by calling their <item_vid> view"""
         req = self.req
         self.w(u'<?xml version="1.0" encoding="%s"?>\n' % req.encoding)
-        self.w(u'''<rdf:RDF
+        self.w(u'''<rss version="2.0"
  xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
  xmlns:dc="http://purl.org/dc/elements/1.1/"
- xmlns="http://purl.org/rss/1.0/"
 >''')
         self.w(u'  <channel rdf:about="%s">\n' % html_escape(req.url()))
         self.w(u'    <title>%s RSS Feed</title>\n' % html_escape(self.page_title()))
@@ -692,17 +691,10 @@ class RssView(XmlView):
         params = req.form.copy()
         params.pop('vid', None)
         self.w(u'    <link>%s</link>\n' % html_escape(self.build_url(**params)))
-        self.w(u'    <items>\n')
-        self.w(u'      <rdf:Seq>\n')
-        for entity in self.rset.entities():
-            self.w(u'      <rdf:li resource="%s" />\n' % html_escape(entity.absolute_url()))
-        self.w(u'      </rdf:Seq>\n')
-        self.w(u'    </items>\n')
-        self.w(u'  </channel>\n')
         for i in xrange(self.rset.rowcount):
             self.cell_call(i, 0)
-        self.w(u'</rdf:RDF>')
-
+        self.w(u'  </channel>\n')
+        self.w(u'</rss>')       
 
 class RssItemView(EntityView):
     id = 'rssitem'
@@ -711,23 +703,28 @@ class RssItemView(EntityView):
     def cell_call(self, row, col):
         entity = self.complete_entity(row, col)
         self.w(u'<item rdf:about="%s">\n' % html_escape(entity.absolute_url()))
+        self.render_title_link(entity)
+        self._marker('description', html_escape(entity.dc_description()))
+        self._marker('dc:date', entity.dc_date(self.date_format))
+        self.render_entity_creator(entity)
+        self.w(u'</item>\n')
+
+    def render_title_link(self, entity):
         self._marker('title', entity.dc_long_title())
         self._marker('link', entity.absolute_url())
-        self._marker('description', entity.dc_description())
-        self._marker('dc:date', entity.dc_date(self.date_format))
+           
+    def render_entity_creator(self, entity):
         if entity.creator:
-            self.w(u'<author>')
-            self._marker('name', entity.creator.name())
+            self._marker('dc:creator', entity.creator.name())
             email = entity.creator.get_email()
             if email:
-                self._marker('email', email)
-            self.w(u'</author>')
-        self.w(u'</item>\n')
+                self.w(u'<author>')
+                self.w(email)
+                self.w(u'</author>')       
         
     def _marker(self, marker, value):
         if value:
             self.w(u'  <%s>%s</%s>\n' % (marker, html_escape(value), marker))
-
 
 class CSVMixIn(object):
     """mixin class for CSV views"""
