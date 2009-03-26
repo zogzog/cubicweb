@@ -23,36 +23,7 @@ class AnyEntity(Entity):
     """an entity instance has e_schema automagically set on the class and
     instances have access to their issuing cursor
     """
-    id = 'Any'   
-    __rtags__ = {
-        'is' : ('generated', 'link'),
-        'is_instance_of' : ('generated', 'link'),
-        'identity' : ('generated', 'link'),
-        
-        # use primary and not generated for eid since it has to be an hidden
-        # field in edition
-        ('eid',                '*', 'subject'): 'primary',
-        ('creation_date',      '*', 'subject'): 'generated',
-        ('modification_date',  '*', 'subject'): 'generated',
-        ('has_text',           '*', 'subject'): 'generated',
-        
-        ('require_permission', '*', 'subject') : ('generated', 'link'),
-        ('owned_by',           '*', 'subject') : ('generated', 'link'),
-        ('created_by',         '*', 'subject') : ('generated', 'link'),
-        
-        ('wf_info_for',        '*', 'subject') : ('generated', 'link'),
-        ('wf_info_for',        '*', 'object')  : ('generated', 'link'),
-                 
-        ('description',        '*', 'subject'): 'secondary',
-
-        # XXX should be moved in their respective cubes
-        ('filed_under',        '*', 'subject') : ('generic', 'link'),
-        ('filed_under',        '*', 'object')  : ('generic', 'create'),
-        # generated since there is a componant to handle comments
-        ('comments',           '*', 'subject') : ('generated', 'link'),
-        ('comments',           '*', 'object')  : ('generated', 'link'),
-        }
-
+    id = 'Any'                    
     __implements__ = (IBreadCrumbs, IFeed)
     
     @classmethod
@@ -277,64 +248,11 @@ class AnyEntity(Entity):
             tschema = rschema.subjects(cls.e_schema)[0]
             wdg = widget(cls.vreg, tschema, rschema, cls, 'object')
         return wdg
-    
+
+    @obsolete('use AutomaticEntityForm.relations_by_category')
     def relations_by_category(self, categories=None, permission=None):
-        if categories is not None:
-            if not isinstance(categories, (list, tuple, set, frozenset)):
-                categories = (categories,)
-            if not isinstance(categories, (set, frozenset)):
-                categories = frozenset(categories)
-        eschema, rtags  = self.e_schema, self.rtags
-        if self.has_eid():
-            eid = self.eid
-        else:
-            eid = None
-        for rschema, targetschemas, role in eschema.relation_definitions(True):
-            if rschema in ('identity', 'has_text'):
-                continue
-            # check category first, potentially lower cost than checking
-            # permission which may imply rql queries
-            if categories is not None:
-                targetschemas = [tschema for tschema in targetschemas
-                                 if rtags.get_tags(rschema.type, tschema.type, role).intersection(categories)]
-                if not targetschemas:
-                    continue
-            tags = rtags.get_tags(rschema.type, role=role)
-            if permission is not None:
-                # tag allowing to hijack the permission machinery when
-                # permission is not verifiable until the entity is actually
-                # created...
-                if eid is None and ('%s_on_new' % permission) in tags:
-                    yield (rschema, targetschemas, role)
-                    continue
-                if rschema.is_final():
-                    if not rschema.has_perm(self.req, permission, eid):
-                        continue
-                elif role == 'subject':
-                    if not ((eid is None and rschema.has_local_role(permission)) or
-                            rschema.has_perm(self.req, permission, fromeid=eid)):
-                        continue
-                    # on relation with cardinality 1 or ?, we need delete perm as well
-                    # if the relation is already set
-                    if (permission == 'add'
-                        and rschema.cardinality(eschema, targetschemas[0], role) in '1?'
-                        and self.has_eid() and self.related(rschema.type, role)
-                        and not rschema.has_perm(self.req, 'delete', fromeid=eid,
-                                                 toeid=self.related(rschema.type, role)[0][0])):
-                        continue
-                elif role == 'object':
-                    if not ((eid is None and rschema.has_local_role(permission)) or
-                            rschema.has_perm(self.req, permission, toeid=eid)):
-                        continue
-                    # on relation with cardinality 1 or ?, we need delete perm as well
-                    # if the relation is already set
-                    if (permission == 'add'
-                        and rschema.cardinality(targetschemas[0], eschema, role) in '1?'
-                        and self.has_eid() and self.related(rschema.type, role)
-                        and not rschema.has_perm(self.req, 'delete', toeid=eid,
-                                                 fromeid=self.related(rschema.type, role)[0][0])):
-                        continue
-            yield (rschema, targetschemas, role)
+        from cubicweb.web.views.editform import AutomaticEntityForm
+        return AutomaticEntityForm.relations_by_category(entity, categories, permission)
 
     def srelations_by_category(self, categories=None, permission=None):
         result = []

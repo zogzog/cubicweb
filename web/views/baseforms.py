@@ -21,6 +21,7 @@ from cubicweb.web import INTERNAL_FIELD_VALUE, eid_param
 from cubicweb.web.controller import NAV_FORM_PARAMETERS
 from cubicweb.web.widgets import checkbox, InputWidget, ComboBoxWidget
 from cubicweb.web.form import FormMixIn
+from cubicweb.web.views.editforms import AutomaticEntityForm
 
 _ = unicode
     
@@ -326,7 +327,7 @@ class EditionForm(FormMixIn, EntityView):
     # should_* method extracted to allow overriding
     
     def should_inline_relation_form(self, entity, rschema, targettype, role):
-        return entity.rtags.is_inlined(rschema, targettype, role)
+        return AutomaticForm.rinlined.etype_rtag(entity.id, role, rschema, targettype)
 
     def should_display_inline_relation_form(self, rschema, existant, card):
         return not existant and card in '1+'
@@ -428,7 +429,7 @@ class InlineFormMixIn(object):
     def should_inline_relation_form(self, entity, rschema, targettype, role):
         if rschema == self.rschema:
             return False
-        return entity.rtags.is_inlined(rschema, targettype, role)
+        return AutomaticForm.rinlined.etype_rtag(entity.id, role, rschema, targettype)
 
     @cached
     def keep_entity(self, entity):

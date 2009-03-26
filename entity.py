@@ -6,6 +6,8 @@
 """
 __docformat__ = "restructuredtext en"
 
+from warnings import warn
+
 from logilab.common import interface
 from logilab.common.compat import all
 from logilab.common.decorators import cached
@@ -39,164 +41,70 @@ def greater_card(rschema, subjtypes, objtypes, index):
     return '1'
 
 
-class RelationTags(object):
-    
-    MODE_TAGS = frozenset(('link', 'create'))
-    CATEGORY_TAGS = frozenset(('primary', 'secondary', 'generic', 'generated',
-                               'inlineview'))
+MODE_TAGS = set(('link', 'create'))
+CATEGORY_TAGS = set(('primary', 'secondary', 'generic', 'generated')) # , 'metadata'))
 
-    def __init__(self, eclass, tagdefs):
-        # XXX if a rtag is redefined in a subclass,
-        # the rtag of the base class overwrite the rtag of the subclass
-        self.eclass = eclass
-        self._tagdefs = {}
-        for relation, tags in tagdefs.iteritems():
-            # tags must become a set
-            if isinstance(tags, basestring):
-                tags = set((tags,))
-            elif not isinstance(tags, set):
-                tags = set(tags)
-            # relation must become a 3-uple (rtype, targettype, role)
-            if isinstance(relation, basestring):
-                self._tagdefs[(relation, '*', 'subject')] = tags
-                self._tagdefs[(relation, '*', 'object')] = tags
-            elif len(relation) == 1: # useful ?
-                self._tagdefs[(relation[0], '*', 'subject')] = tags
-                self._tagdefs[(relation[0], '*', 'object')] = tags
-            elif len(relation) == 2:
-                rtype, ttype = relation
-                ttype = bw_normalize_etype(ttype) # XXX bw compat
-                self._tagdefs[rtype, ttype, 'subject'] = tags
-                self._tagdefs[rtype, ttype, 'object'] = tags
-            elif len(relation) == 3:
-                relation = list(relation)  # XXX bw compat
-                relation[1] = bw_normalize_etype(relation[1])
-                self._tagdefs[tuple(relation)] = tags
+try:
+    from cubicweb.web.views.editforms import AutomaticEntityForm
+    from cubicweb.web.views.boxes import EditBox
+
+    def dispatch_rtags(tags, rtype, role, stype, otype):
+        for tag in tags:
+            if tag in MODE_TAGS:
+                EditBox.rmode.set_rtag(tag, rtype, role, stype, otype)
+            elif tag in CATEGORY_TAGS:
+                AutomaticEntityForm.rcategories.set_rtag(tag, rtype, role, stype, otype)
+            elif tag == 'inlined':
+                AutomaticEntityForm.rinline.set_rtag(True, rtype, role, stype, otype)
             else:
-                raise ValueError('bad rtag definition (%r)' % (relation,))
-        
-
-    def __initialize__(self):
-        # eclass.[*]schema are only set when registering
-        self.schema = self.eclass.schema
-        eschema = self.eschema = self.eclass.e_schema
-        rtags = self._tagdefs
-        # expand wildcards in rtags and add automatic tags
-        for rschema, tschemas, role in sorted(eschema.relation_definitions(True)):
-            rtype = rschema.type
-            star_tags = rtags.pop((rtype, '*', role), set())
-            for tschema in tschemas:
-                tags = rtags.setdefault((rtype, tschema.type, role), set(star_tags))
-                if role == 'subject':
-                    X, Y = eschema, tschema
-                    card = rschema.rproperty(X, Y, 'cardinality')[0]
-                    composed = rschema.rproperty(X, Y, 'composite') == 'object'
-                else:
-                    X, Y = tschema, eschema
-                    card = rschema.rproperty(X, Y, 'cardinality')[1]
-                    composed = rschema.rproperty(X, Y, 'composite') == 'subject'
-                # set default category tags if needed
-                if not tags & self.CATEGORY_TAGS:
-                    if card in '1+':
-                        if not rschema.is_final() and composed:
-                            category = 'generated'
-                        elif rschema.is_final() and (
-                            rschema.type.endswith('_format')
-                            or rschema.type.endswith('_encoding')):
-                            category = 'generated'
-                        else:
-                            category = 'primary'
-                    elif rschema.is_final():
-                        if (rschema.type.endswith('_format')
-                            or rschema.type.endswith('_encoding')):
-                            category = 'generated'
-                        else:
-                            category = 'secondary'
-                    else: 
-                        category = 'generic'
-                    tags.add(category)
-                if not tags & self.MODE_TAGS:
-                    if card in '?1':
-                        # by default, suppose link mode if cardinality doesn't allow
-                        # more than one relation
-                        mode = 'link'
-                    elif rschema.rproperty(X, Y, 'composite') == role:
-                        # if self is composed of the target type, create mode
-                        mode = 'create'
-                    else:
-                        # link mode by default
-                        mode = 'link'
-                    tags.add(mode)
-
-    def _default_target(self, rschema, role='subject'):
-        eschema = self.eschema
-        if role == 'subject':
-            return eschema.subject_relation(rschema).objects(eschema)[0]
-        else:
-            return eschema.object_relation(rschema).subjects(eschema)[0]
-
-    # dict compat
-    def __getitem__(self, key):
-        if isinstance(key, basestring):
-            key = (key,)
-        return self.get_tags(*key)
-
-    __contains__ = __getitem__
+                raise ValueError(tag)
+            
+except ImportError:
+    AutomaticEntityForm = None
     
-    def get_tags(self, rtype, targettype=None, role='subject'):
-        rschema = self.schema.rschema(rtype)
-        if targettype is None:
-            tschema = self._default_target(rschema, role)
-        else:
-            tschema = self.schema.eschema(targettype)
-        return self._tagdefs[(rtype, tschema.type, role)]
-
-    __call__ = get_tags
+    def dispatch_rtags(*args):
+        pass
     
-    def get_mode(self, rtype, targettype=None, role='subject'):
-        # XXX: should we make an assertion on rtype not being final ?
-        # assert not rschema.is_final()
-        tags = self.get_tags(rtype, targettype, role)
-        # do not change the intersection order !
-        modes = tags & self.MODE_TAGS
-        assert len(modes) == 1
-        return modes.pop()
-
-    def get_category(self, rtype, targettype=None, role='subject'):
-        tags = self.get_tags(rtype, targettype, role)
-        categories = tags & self.CATEGORY_TAGS
-        assert len(categories) == 1
-        return categories.pop()
-
-    def is_inlined(self, rtype, targettype=None, role='subject'):
-        # return set(('primary', 'secondary')) & self.get_tags(rtype, targettype)
-        return 'inlineview' in self.get_tags(rtype, targettype, role)
-
-
 class metaentity(type):
     """this metaclass sets the relation tags on the entity class
     and deals with the `widgets` attribute
     """
     def __new__(mcs, name, bases, classdict):
         # collect baseclass' rtags
-        tagdefs = {}
-        widgets = {}
-        for base in bases:
-            tagdefs.update(getattr(base, '__rtags__', {}))
-            widgets.update(getattr(base, 'widgets', {}))
-        # update with the class' own rtgas
-        tagdefs.update(classdict.get('__rtags__', {}))
-        widgets.update(classdict.get('widgets', {}))
-        # XXX decide whether or not it's a good idea to replace __rtags__
-        #     good point: transparent support for inheritance levels >= 2
-        #     bad point: we loose the information of which tags are specific
-        #                to this entity class
-        classdict['__rtags__'] = tagdefs
-        classdict['widgets'] = widgets
-        eclass = super(metaentity, mcs).__new__(mcs, name, bases, classdict)
-        # adds the "rtags" attribute
-        eclass.rtags = RelationTags(eclass, tagdefs)
-        return eclass
+        if '__rtags__' in classdict:
+            etype = classdict['id']
+            warn('%s: __rtags__ is deprecated' % name, DeprecationWarning)
+            for relation, tags in classdict.pop('__rtags__').iteritems():
+                # tags must become an iterable
+                if isinstance(tags, basestring):
+                    tags = (tags,)
+                # relation must become a 3-uple (rtype, targettype, role)
+                if isinstance(relation, basestring):
+                    dispatch_rtags(tags, relation, 'subject', etype, '*')
+                    dispatch_rtags(tags, relation, 'object', '*', etype)
+                elif len(relation) == 1: # useful ?
+                    dispatch_rtags(tags, relation[0], 'subject', etype, '*')
+                    dispatch_rtags(tags, relation[0], 'object', '*', etype)
+                elif len(relation) == 2:
+                    rtype, ttype = relation
+                    ttype = bw_normalize_etype(ttype) # XXX bw compat
+                    dispatch_rtags(tags, rtype, 'subject', etype, ttype)
+                    dispatch_rtags(tags, rtype, 'object', ttype, etype)
+                elif len(relation) == 3:
+                    rtype, ttype, role = relation
+                    ttype = bw_normalize_etype(ttype)
+                    if role == 'subject':
+                        dispatch_rtags(tags, rtype, 'subject', etype, ttype)
+                    else:
+                        dispatch_rtags(tags, rtype, 'object', ttype, etype)
+                else:
+                    raise ValueError('bad rtag definition (%r)' % (relation,))
+        if 'widgets' in classdict and AutomaticEntityForm is not None:
+            etype = classdict['id']
+            warn('%s: widgets is deprecated' % name, DeprecationWarning)
+            for relation, wdgname in classdict.pop('widgets').iteritems():
+                AutomaticEntityForm.rwidgets.set_rtag(wdgname, rtype, 'subject', etype)
+        return super(metaentity, mcs).__new__(mcs, name, bases, classdict)
 
 
 class Entity(AppRsetObject, dict):
@@ -273,7 +181,6 @@ class Entity(AppRsetObject, dict):
         if mixins:
             cls.__bases__ = tuple(mixins + [p for p in cls.__bases__ if not p is object])
             cls.debug('plugged %s mixins on %s', mixins, etype)
-        cls.rtags.__initialize__()
     
     @classmethod
     def fetch_rql(cls, user, restriction=None, fetchattrs=None, mainvar='X',

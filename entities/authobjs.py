@@ -13,7 +13,6 @@ from cubicweb.entities import AnyEntity, fetch_config
 class EGroup(AnyEntity):
     id = 'EGroup'
     fetch_attrs, fetch_order = fetch_config(['name'])
-    __rtags__ = dict(in_group='create')
 
     def db_key_name(self):
         """XXX goa specific"""
@@ -23,18 +22,6 @@ class EGroup(AnyEntity):
 class EUser(AnyEntity):
     id = 'EUser'
     fetch_attrs, fetch_order = fetch_config(['login', 'firstname', 'surname'])
-    
-    __rtags__ = { 'firstname'  : 'secondary',
-                  'surname'    : 'secondary',
-                  'last_login_time' : 'generated',
-                  'todo_by'    : 'create',
-                  'use_email'  : 'inlineview', # 'primary',
-                  'in_state'   : 'primary', 
-                  'in_group'   : 'primary', 
-                  ('owned_by', '*', 'object') : ('generated', 'link'),
-                  ('created_by','*','object') : ('generated', 'link'),
-                  ('bookmarked_by', '*', 'object'): ('generated', 'create'),
-                  }
     
     # used by repository to check if  the user can log in or not
     AUTHENTICABLE_STATES = ('activated',)

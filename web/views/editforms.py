@@ -249,10 +249,11 @@ class AutomaticEntityForm(EntityFieldsForm):
     def editable_attributes(self):
         """return a list of (relation schema, role) to edit for the entity
         """
-        return [(rschema, x) for rschema, _, x in self.relations_by_category(self.attrcategories, 'add')
-                if rschema != 'eid']
-    
-    def relations_by_category(self, categories=None, permission=None):
+        return [(rschema, x) for rschema, _, x in self.relations_by_category(
+            self.entity, self.attrcategories, 'add') if rschema != 'eid']
+
+    @classmethod
+    def relations_by_category(cls, entity, categories=None, permission=None):
         """return a list of (relation schema, target schemas, role) matching
         categories and permission
         """
@@ -261,11 +262,11 @@ class AutomaticEntityForm(EntityFieldsForm):
                 categories = (categories,)
             if not isinstance(categories, (set, frozenset)):
                 categories = frozenset(categories)
-        eschema  = self.edited_entity.e_schema
-        rtags = self.rcategories
-        permsoverrides = self.rpermissions_overrides
-        if self.edited_entity.has_eid():
-            eid = self.edited_entity.eid
+        eschema  = entity.e_schema
+        rtags = cls.rcategories
+        permsoverrides = cls.rpermissions_overrides
+        if entity.has_eid():
+            eid = entity.eid
         else:
             eid = None
         for rschema, targetschemas, role in eschema.relation_definitions(True):
@@ -286,31 +287,31 @@ class AutomaticEntityForm(EntityFieldsForm):
                     yield (rschema, targetschemas, role)
                     continue
                 if rschema.is_final():
-                    if not rschema.has_perm(self.req, permission, eid):
+                    if not rschema.has_perm(entity.req, permission, eid):
                         continue
                 elif role == 'subject':
                     if not ((eid is None and rschema.has_local_role(permission)) or
-                            rschema.has_perm(self.req, permission, fromeid=eid)):
+                            rschema.has_perm(entity.req, permission, fromeid=eid)):
                         continue
                     # on relation with cardinality 1 or ?, we need delete perm as well
                     # if the relation is already set
                     if (permission == 'add'
                         and rschema.cardinality(eschema, targetschemas[0], role) in '1?'
-                        and eid and self.edited_entity.related(rschema.type, role)
-                        and not rschema.has_perm(self.req, 'delete', fromeid=eid,
-                                                 toeid=self.edited_entity.related(rschema.type, role)[0][0])):
+                        and eid and entity.related(rschema.type, role)
+                        and not rschema.has_perm(entity.req, 'delete', fromeid=eid,
+                                                 toeid=entity.related(rschema.type, role)[0][0])):
                         continue
                 elif role == 'object':
                     if not ((eid is None and rschema.has_local_role(permission)) or
-                            rschema.has_perm(self.req, permission, toeid=eid)):
+                            rschema.has_perm(entity.req, permission, toeid=eid)):
                         continue
                     # on relation with cardinality 1 or ?, we need delete perm as well
                     # if the relation is already set
                     if (permission == 'add'
                         and rschema.cardinality(targetschemas[0], eschema, role) in '1?'
-                        and eid and self.edited_entity.related(rschema.type, role)
-                        and not rschema.has_perm(self.req, 'delete', toeid=eid,
-                                                 fromeid=self.edited_entity.related(rschema.type, role)[0][0])):
+                        and eid and entity.related(rschema.type, role)
+                        and not rschema.has_perm(entity.req, 'delete', toeid=eid,
+                                                 fromeid=entity.related(rschema.type, role)[0][0])):
                         continue
             yield (rschema, targetschemas, role)
     
@@ -321,8 +322,8 @@ class AutomaticEntityForm(EntityFieldsForm):
         return a list of (relation's label, relation'schema, role)
         """
         result = []
-        for rschema, ttypes, role in self.relations_by_category(categories,
-                                                                permission):
+        for rschema, ttypes, role in self.relations_by_category(
+            self.entity, categories, permission):
             if rschema.is_final():
                 continue
             result.append( (rschema.display_name(self.req, role), rschema, role) )

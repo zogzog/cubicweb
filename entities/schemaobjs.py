@@ -1,7 +1,7 @@
 """schema definition related entities
 
 :organization: Logilab
-:copyright: 2001-2008 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+:copyright: 2001-2009 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 """
 __docformat__ = "restructuredtext en"
@@ -17,14 +17,7 @@ from cubicweb.entities import AnyEntity, fetch_config
 class EEType(AnyEntity):
     id = 'EEType'
     fetch_attrs, fetch_order = fetch_config(['name'])
-    __rtags__ = {
-        ('final',         '*', 'subject'): 'generated',
-        
-        ('state_of',      '*', 'object'): 'create',
-        ('transition_of', '*', 'object'): 'create',
-        ('from_entity',   '*', 'object'): 'link',
-        ('to_entity',     '*', 'object'): 'link',
-        }
+
     def dc_title(self):
         return self.req._(self.name)
     
@@ -47,11 +40,6 @@ class EEType(AnyEntity):
 class ERType(AnyEntity):
     id = 'ERType'
     fetch_attrs, fetch_order = fetch_config(['name'])
-    __rtags__ = {
-        ('final',         '*', 'subject'): 'generated',
-        
-        ('relation_type', '*', 'object') : 'create',
-        }
     
     def dc_title(self):
         return self.req._(self.name)
@@ -100,11 +88,6 @@ class ERType(AnyEntity):
 class ENFRDef(AnyEntity):
     id = 'ENFRDef'
     fetch_attrs = fetch_config(['cardinality'])[0]
-    __rtags__ = {
-        ('relation_type', 'ERType', 'subject') : 'inlineview',
-        ('from_entity', 'EEType', 'subject') : 'inlineview',
-        ('to_entity', 'EEType', 'subject') : 'inlineview',
-        }
     
     def dc_title(self):
         return u'%s %s %s' % (
@@ -171,10 +154,6 @@ class RQLExpression(AnyEntity):
     id = 'RQLExpression'
     fetch_attrs, fetch_order = fetch_config(['exprtype', 'mainvars', 'expression'])
 
-    widgets = {
-        'expression' : "StringWidget",
-        }
-
     def dc_title(self):
         return '%s(%s)' % (self.exprtype, self.expression or u'')
 
@@ -208,11 +187,6 @@ class RQLExpression(AnyEntity):
 class EPermission(AnyEntity):
     id = 'EPermission'
     fetch_attrs, fetch_order = fetch_config(['name', 'label'])
-
-
-    __rtags__ = {
-        'require_group' : 'primary',
-        }
 
     def dc_title(self):
         if self.label:

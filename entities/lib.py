@@ -25,10 +25,6 @@ class EmailAddress(AnyEntity):
     id = 'EmailAddress'
     fetch_attrs, fetch_order = fetch_config(['address', 'alias', 'canonical'])
 
-    widgets = {
-        'address' : "EmailWidget",
-        }
-
     def dc_title(self):
         if self.alias:
             return '%s <%s>' % (self.alias, self.display_address())
@@ -94,13 +90,7 @@ Emailaddress.id = 'Emailaddress'
 class EProperty(AnyEntity):
     id = 'EProperty'
 
-    fetch_attrs, fetch_order = fetch_config(['pkey', 'value'])
-
-    widgets = {
-        'pkey' : "PropertyKeyWidget",
-        'value' : "PropertyValueWidget",
-        }
-    
+    fetch_attrs, fetch_order = fetch_config(['pkey', 'value'])    
     rest_attr = 'pkey'
 
     def typed_value(self):
@@ -120,10 +110,6 @@ class Bookmark(AnyEntity):
     """customized class for Bookmark entities"""
     id = 'Bookmark'
     fetch_attrs, fetch_order = fetch_config(['title', 'path'])
-    widgets = {
-        'path' : "StringWidget",
-        }
-    __rtags__ = {'path': 'primary'}
 
     def actual_url(self):
         url = self.req.build_url(self.path)

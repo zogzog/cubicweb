@@ -1,14 +1,14 @@
 """workflow definition and history related entities
 
 :organization: Logilab
-:copyright: 2001-2008 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+:copyright: 2001-2009 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 """
 __docformat__ = "restructuredtext en"
 
 from cubicweb.entities import AnyEntity, fetch_config
 
-
+ 
 class Transition(AnyEntity):
     """customized class for Transition entities
 
@@ -17,9 +17,6 @@ class Transition(AnyEntity):
     """
     id = 'Transition'
     fetch_attrs, fetch_order = fetch_config(['name'])
-    __rtags__ = {('destination_state',  '*', 'subject'):  'create',
-                 ('allowed_transition', '*', 'object') :  'create',
-                  }
                  
     def may_be_passed(self, eid, stateeid):
         """return true if the logged user may pass this transition
@@ -66,11 +63,7 @@ class State(AnyEntity):
     id = 'State'
     fetch_attrs, fetch_order = fetch_config(['name'])
     rest_attr = 'eid'
-    
-    __rtags__ = {'destination_state' : 'create',
-                 'allowed_transition' : 'create'
-                 }
-    
+        
     def transitions(self, entity, desteid=None):
         rql = ('Any T,N,DS where S allowed_transition T, S eid %(x)s, '
                'T name N, T destination_state DS, '
