@@ -143,10 +143,10 @@ def _generate_schema_pot(w, vreg, schema, libschema=None, cube=None):
             add_msg(w, rschema.description)
     w('# add related box generated message\n')
     w('\n')
+    actionbox = self.vreg['actions']['edit_box'][0]
     for eschema in schema.entities():
         if eschema.is_final():
             continue
-        entity = vreg.etype_class(eschema)(None, None)
         for x, rschemas in (('subject', eschema.subject_relations()),
                             ('object', eschema.object_relations())):
             for rschema in rschemas:
@@ -155,7 +155,7 @@ def _generate_schema_pot(w, vreg, schema, libschema=None, cube=None):
                 for teschema in rschema.targets(eschema, x):
                     if defined_in_library(libschema, eschema, rschema, teschema, x):
                         continue
-                    if entity.relation_mode(rschema.type, teschema.type, x) == 'create':
+                    if actionbox.relation_mode(rschema.type, teschema.type, x) == 'create':
                         if x == 'subject':
                             label = 'add %s %s %s %s' % (eschema, rschema, teschema, x)
                             label2 = "creating %s (%s %%(linkto)s %s %s)" % (teschema, eschema, rschema, teschema)

@@ -201,39 +201,6 @@ class AnyEntity(Entity):
             return self.printable_value(rtype, format='text/plain').lower()
         return value
 
-    def add_related_schemas(self):
-        """this is actually used ui method to generate 'addrelated' actions from
-        the schema.
-
-        If you're using explicit 'addrelated' actions for an entity types, you
-        should probably overrides this method to return an empty list else you
-        may get some unexpected actions.
-        """
-        req = self.req
-        eschema = self.e_schema
-        for role, rschemas in (('subject', eschema.subject_relations()),
-                               ('object', eschema.object_relations())):
-            for rschema in rschemas:
-                if rschema.is_final():
-                    continue
-                # check the relation can be added as well
-                if role == 'subject'and not rschema.has_perm(req, 'add', fromeid=self.eid):
-                    continue
-                if role == 'object'and not rschema.has_perm(req, 'add', toeid=self.eid):
-                    continue
-                # check the target types can be added as well
-                for teschema in rschema.targets(eschema, role):
-                    if not self.relation_mode(rschema, teschema, role) == 'create':
-                        continue
-                    if teschema.has_local_role('add') or teschema.has_perm(req, 'add'):
-                        yield rschema, teschema, role
-
-    def relation_mode(self, rtype, targettype, role='subject'):
-        """return a string telling if the given relation is usually created
-        to a new entity ('create' mode) or to an existant entity ('link' mode)
-        """
-        return self.rtags.get_mode(rtype, targettype, role)
-
     # edition helper functions ################################################    
 
     def linked_to(self, rtype, target, remove=True):

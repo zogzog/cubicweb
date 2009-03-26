@@ -16,6 +16,7 @@ __docformat__ = "restructuredtext en"
 
 from logilab.mtconverter import html_escape
 
+from cubicweb.rtags import RelationTags
 from cubicweb.selectors import match_user_groups, non_final_entity
 from cubicweb.web.htmlwidgets import BoxWidget, BoxMenu, BoxHtml, RawBoxItem
 from cubicweb.view import EntityView
@@ -29,10 +30,55 @@ class EditBox(BoxTemplate):
     box with all actions impacting the entity displayed: edit, copy, delete
     change state, add related entities
     """
-    __select__ = BoxTemplate.__select__ & non_final_entity()
     id = 'edit_box'
+    __select__ = BoxTemplate.__select__ & non_final_entity()
+
     title = _('actions')
     order = 2
+    # 'link' / 'create' relation tags, used to control the "add entity" submenu
+    rmode = RelationTags() 
+
+    @classmethod
+    def registered(cls, registry):
+        """build class using descriptor at registration time"""
+        super(AutomaticEntityForm, cls).registered(registry)
+        cls.init_rtags_mode()
+        return cls
+        
+    @classmethod
+    def init_rtags_mode(cls):
+        """set default category tags for relations where it's not yet defined in
+        the category relation tags
+        """
+        for eschema in cls.schema.entities():
+            for rschema, tschemas, role in eschema.relation_definitions(True):
+                for tschema in tschemas:
+                    if role == 'subject':
+                        X, Y = eschema, tschema
+                        card = rschema.rproperty(X, Y, 'cardinality')[0]
+                    else:
+                        X, Y = tschema, eschema
+                        card = rschema.rproperty(X, Y, 'cardinality')[1]
+                    if not cls.rmode.rtag(role, rschema, X, Y):
+                        if card in '?1':
+                            # by default, suppose link mode if cardinality doesn't allow
+                            # more than one relation
+                            mode = 'link'
+                        elif rschema.rproperty(X, Y, 'composite') == role:
+                            # if self is composed of the target type, create mode
+                            mode = 'create'
+                        else:
+                            # link mode by default
+                            mode = 'link'
+                        cls.rmode.set_rtag(category, role, rschema, X, Y)
+
+    @classmethod
+    def relation_mode(cls, rtype, etype, targettype, role='subject'):
+        """return a string telling if the given relation is usually created
+        to a new entity ('create' mode) or to an existant entity ('link' mode)
+        """
+        return cls.rmode.rtag(role, rtype, etype, targettype)
+
 
     def call(self, **kwargs):
         _ = self.req._
@@ -92,7 +138,7 @@ class EditBox(BoxTemplate):
         actions = []
         _ = self.req._
         eschema = entity.e_schema
-        for rschema, teschema, x in entity.add_related_schemas():
+        for rschema, teschema, x in self.add_related_schemas(entity):
             if x == 'subject':
                 label = 'add %s %s %s %s' % (eschema, rschema, teschema, x)
                 url = self.linkto_url(entity, rschema, teschema, 'object')
@@ -101,6 +147,33 @@ class EditBox(BoxTemplate):
                 url = self.linkto_url(entity, rschema, teschema, 'subject')
             actions.append(self.mk_action(_(label), url))
         return actions
+
+    def add_related_schemas(self, entity):
+        """this is actually used ui method to generate 'addrelated' actions from
+        the schema.
+
+        If you're using explicit 'addrelated' actions for an entity types, you
+        should probably overrides this method to return an empty list else you
+        may get some unexpected actions.
+        """
+        req = self.req
+        eschema = entity.e_schema
+        for role, rschemas in (('subject', eschema.subject_relations()),
+                               ('object', eschema.object_relations())):
+            for rschema in rschemas:
+                if rschema.is_final():
+                    continue
+                # check the relation can be added as well
+                if role == 'subject'and not rschema.has_perm(req, 'add', fromeid=entity.eid):
+                    continue
+                if role == 'object'and not rschema.has_perm(req, 'add', toeid=entity.eid):
+                    continue
+                # check the target types can be added as well
+                for teschema in rschema.targets(eschema, role):
+                    if not self.relation_mode(rschema, eschema, teschema, role) == 'create':
+                        continue
+                    if teschema.has_local_role('add') or teschema.has_perm(req, 'add'):
+                        yield rschema, teschema, role
 
 
     def workflow_actions(self, entity, box):
