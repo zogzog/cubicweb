@@ -206,8 +206,6 @@ class DateTimePicker(TextInput):
         if not value:
             value = date.today()
         year, month = value.year, value.month
-        onclick = "toggleCalendar('%s', '%s', %s, %s);" % (
-            helperid, inputid, year, month)
         return (u"""<a onclick="toggleCalendar('%s', '%s', %s, %s);" class="calhelper">
 <img src="%s" title="%s" alt="" /></a><div class="calpopup hidden" id="%s"></div>"""
                 % (helperid, inputid, year, month,
@@ -226,5 +224,5 @@ class AjaxWidget(FieldWidget):
             
     def render(self, form, field):
         self.add_media(form)
-        name, values, attrs = self._render_attrs(form, field)
+        attrs = self._render_attrs(form, field)[-1]
         return tags.div(**attrs)

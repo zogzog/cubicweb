@@ -307,7 +307,7 @@ class RelationField(Field):
         return RelationField(widget=Select(multiple=card in '*+'), **kwargs)
         
     def vocabulary(self, form):
-        entity = form.entity
+        entity = form.edited_entity
         req = entity.req
         # first see if its specified by __linkto form parameters
         linkedto = entity.linked_to(self.name, self.role)
@@ -334,8 +334,8 @@ def stringfield_from_constraints(constraints, **kwargs):
     field = None
     for cstr in constraints:
         if isinstance(cstr, StaticVocabularyConstraint):
-            return StringField(widget=Select(vocabulary=cstr.vocabulary),
-                               **kwargs)
+            kwargs.setdefault('widget', Select(vocabulary=cstr.vocabulary))
+            return StringField(**kwargs)
         if isinstance(cstr, SizeConstraint) and cstr.max is not None:
             if cstr.max > 257:
                 rows_cols_from_constraint(cstr, kwargs)
@@ -375,7 +375,8 @@ def guess_field(eclass, rschema, role='subject', skip_meta_attr=True, **kwargs):
         if fieldclass is StringField:
             if targetschema == 'Password':
                 # special case for Password field: specific PasswordInput widget
-                return StringField(widget=PasswordInput(), **kwargs)
+                kwargs.setdefault('widget', PasswordInput())
+                return StringField(**kwargs)
             if eschema.has_metadata(rschema, 'format'):
                 # use RichTextField instead of StringField if the attribute has
                 # a "format" metadata. But getting information from constraints

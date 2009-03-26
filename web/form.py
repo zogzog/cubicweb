@@ -8,36 +8,24 @@ __docformat__ = "restructuredtext en"
 
 from warnings import warn
 
-from simplejson import dumps
-
 from logilab.common.compat import any
 from logilab.common.decorators import iclassmethod
-from logilab.mtconverter import html_escape
 
-from cubicweb import typed_eid
-from cubicweb.appobject import AppObject
-from cubicweb.selectors import yes, non_final_entity
+from cubicweb.appobject import AppRsetObject
+from cubicweb.selectors import yes, non_final_entity, match_kwargs, one_line_rset
 from cubicweb.view import NOINDEX, NOFOLLOW
 from cubicweb.common import tags
 from cubicweb.web import INTERNAL_FIELD_VALUE, eid_param, stdmsgs
 from cubicweb.web.httpcache import NoHTTPCacheManager
-from cubicweb.web.controller import NAV_FORM_PARAMETERS, redirect_params
+from cubicweb.web.controller import NAV_FORM_PARAMETERS
 from cubicweb.web.formfields import (Field, StringField, RelationField,
                                      HiddenInitialValueField)
-from cubicweb.web.formwidgets import HiddenInput
+from cubicweb.web.formrenderers import FormRenderer
+from cubicweb.web import formwidgets as fwdgs
 
 
 
-def relation_id(eid, rtype, target, reid):
-    if target == 'subject':
-        return u'%s:%s:%s' % (eid, rtype, reid)
-    return u'%s:%s:%s' % (reid, rtype, eid)
-        
-def toggable_relation_link(eid, nodeid, label='x'):
-    js = u"javascript: togglePendingDelete('%s', %s);" % (nodeid, html_escape(dumps(eid)))
-    return u'[<a class="handle" href="%s" id="handle%s">%s</a>]' % (js, nodeid, label)
-
-
+# XXX should disappear 
 class FormMixIn(object):
     """abstract form mix-in
     XXX: you should inherit from this FIRST (obscure pb with super call)"""
@@ -49,8 +37,8 @@ class FormMixIn(object):
     add_to_breadcrumbs = False
     skip_relations = set()
     
-    def __init__(self, req, rset):
-        super(FormMixIn, self).__init__(req, rset)
+    def __init__(self, req, rset, **kwargs):
+        super(FormMixIn, self).__init__(req, rset, **kwargs)
         self.maxrelitems = self.req.property_value('navigation.related-limit')
         self.maxcomboitems = self.req.property_value('navigation.combobox-limit')
         self.force_display = not not req.form.get('__force_display')
@@ -110,7 +98,42 @@ class FormMixIn(object):
                 if inlined_entity.get_widget(irschema, x).need_multipart:
                     return True
         return False
+    
 
+    def button(self, label, klass='validateButton', tabindex=None, **kwargs):
+        if tabindex is None:
+            tabindex = self.req.next_tabindex()
+        return tags.input(value=label, klass=klass, **kwargs)
+
+    def action_button(self, label, onclick=None, __action=None, **kwargs):
+        if onclick is None:
+            onclick = "postForm('__action_%s', \'%s\', \'%s\')" % (
+                __action, label, self.domid)
+        return self.button(label, onclick=onclick, **kwargs)
+
+    def button_ok(self, label=None, type='submit', name='defaultsubmit',
+                  **kwargs):
+        label = self.req._(label or stdmsgs.BUTTON_OK).capitalize()
+        return self.button(label, name=name, type=type, **kwargs)
+    
+    def button_apply(self, label=None, type='button', **kwargs):
+        label = self.req._(label or stdmsgs.BUTTON_APPLY).capitalize()
+        return self.action_button(label, __action='apply', type=type, **kwargs)
+
+    def button_delete(self, label=None, type='button', **kwargs):
+        label = self.req._(label or stdmsgs.BUTTON_DELETE).capitalize()
+        return self.action_button(label, __action='delete', type=type, **kwargs)
+    
+    def button_cancel(self, label=None, type='button', **kwargs):
+        label = self.req._(label or stdmsgs.BUTTON_CANCEL).capitalize()
+        return self.action_button(label, __action='cancel', type=type, **kwargs)
+    
+    def button_reset(self, label=None, type='reset', name='__action_cancel',
+                     **kwargs):
+        label = self.req._(label or stdmsgs.BUTTON_CANCEL).capitalize()
+        return self.button(label, type=type, **kwargs)
+
+    # XXX deprecated with new form system
     def error_message(self):
         """return formatted error message
 
@@ -137,113 +160,6 @@ class FormMixIn(object):
                     errormsg = '<ul>%s</ul>' % errormsg
             return u'<div class="errorMessage">%s</div>' % errormsg
         return u''
-    
-    def restore_pending_inserts(self, entity, cell=False):
-        """used to restore edition page as it was before clicking on
-        'search for <some entity type>'
-        
-        """
-        eid = entity.eid
-        cell = cell and "div_insert_" or "tr"
-        pending_inserts = set(self.req.get_pending_inserts(eid))
-        for pendingid in pending_inserts:
-            eidfrom, rtype, eidto = pendingid.split(':')
-            if typed_eid(eidfrom) == entity.eid: # subject
-                label = display_name(self.req, rtype, 'subject')
-                reid = eidto
-            else:
-                label = display_name(self.req, rtype, 'object')
-                reid = eidfrom
-            jscall = "javascript: cancelPendingInsert('%s', '%s', null, %s);" \
-                     % (pendingid, cell, eid)
-            rset = self.req.eid_rset(reid)
-            eview = self.view('text', rset, row=0)
-            # XXX find a clean way to handle baskets
-            if rset.description[0][0] == 'Basket':
-                eview = '%s (%s)' % (eview, display_name(self.req, 'Basket'))
-            yield rtype, pendingid, jscall, label, reid, eview
-        
-    
-    def force_display_link(self):
-        return (u'<span class="invisible">' 
-                u'[<a href="javascript: window.location.href+=\'&amp;__force_display=1\'">%s</a>]'
-                u'</span>' % self.req._('view all'))
-    
-    def relations_table(self, entity):
-        """yiels 3-tuples (rtype, target, related_list)
-        where <related_list> itself a list of :
-          - node_id (will be the entity element's DOM id)
-          - appropriate javascript's togglePendingDelete() function call
-          - status 'pendingdelete' or ''
-          - oneline view of related entity
-        """
-        eid = entity.eid
-        pending_deletes = self.req.get_pending_deletes(eid)
-        # XXX (adim) : quick fix to get Folder relations
-        for label, rschema, target in entity.srelations_by_category(('generic', 'metadata'), 'add'):
-            if rschema in self.skip_relations:
-                continue
-            relatedrset = entity.related(rschema, target, limit=self.limit)
-            toggable_rel_link = self.toggable_relation_link_func(rschema)
-            related = []
-            for row in xrange(relatedrset.rowcount):
-                nodeid = relation_id(eid, rschema, target, relatedrset[row][0])
-                if nodeid in pending_deletes:
-                    status = u'pendingDelete'
-                    label = '+'
-                else:
-                    status = u''
-                    label = 'x'
-                dellink = toggable_rel_link(eid, nodeid, label)
-                eview = self.view('oneline', relatedrset, row=row)
-                related.append((nodeid, dellink, status, eview))
-            yield (rschema, target, related)
-        
-    def toggable_relation_link_func(self, rschema):
-        if not rschema.has_perm(self.req, 'delete'):
-            return lambda x, y, z: u''
-        return toggable_relation_link
-
-
-    def redirect_url(self, entity=None):
-        """return a url to use as next direction if there are some information
-        specified in current form params, else return the result the reset_url
-        method which should be defined in concrete classes
-        """
-        rparams = redirect_params(self.req.form)
-        if rparams:
-            return self.build_url('view', **rparams)
-        return self.reset_url(entity)
-
-    def reset_url(self, entity):
-        raise NotImplementedError('implement me in concrete classes')
-
-    BUTTON_STR = u'<input class="validateButton" type="submit" name="%s" value="%s" tabindex="%s"/>'
-    ACTION_SUBMIT_STR = u'<input class="validateButton" type="button" onclick="postForm(\'%s\', \'%s\', \'%s\')" value="%s" tabindex="%s"/>'
-
-    def button_ok(self, label=None, tabindex=None):
-        label = self.req._(label or stdmsgs.BUTTON_OK).capitalize()
-        return self.BUTTON_STR % ('defaultsubmit', label, tabindex or 2)
-    
-    def button_apply(self, label=None, tabindex=None):
-        label = self.req._(label or stdmsgs.BUTTON_APPLY).capitalize()
-        return self.ACTION_SUBMIT_STR % ('__action_apply', label, self.domid,
-                                         label, tabindex or 3)
-
-    def button_delete(self, label=None, tabindex=None):
-        label = self.req._(label or stdmsgs.BUTTON_DELETE).capitalize()
-        return self.ACTION_SUBMIT_STR % ('__action_delete', label, self.domid,
-                                         label, tabindex or 3)
-    
-    def button_cancel(self, label=None, tabindex=None):
-        label = self.req._(label or stdmsgs.BUTTON_CANCEL).capitalize()
-        return self.ACTION_SUBMIT_STR % ('__action_cancel', label, self.domid,
-                                         label, tabindex or 4)
-    
-    def button_reset(self, label=None, tabindex=None):
-        label = self.req._(label or stdmsgs.BUTTON_CANCEL).capitalize()
-        return u'<input class="validateButton" type="reset" value="%s" tabindex="%s"/>' % (
-            label, tabindex or 4)
 
 
 ###############################################################################
@@ -264,38 +180,43 @@ class metafieldsform(type):
         return super(metafieldsform, mcs).__new__(mcs, name, bases, classdict)
     
 
-class FieldsForm(FormMixIn, AppObject):
+class FieldsForm(FormMixIn, AppRsetObject):
     __metaclass__ = metafieldsform
     __registry__ = 'forms'
     __select__ = yes()
+    
+    is_subform = False
+    
+    # attributes overrideable through __init__
     internal_fields = ('__errorurl',) + NAV_FORM_PARAMETERS
     needs_js = ('cubicweb.edition.js',)
     needs_css = ('cubicweb.form.css',)
-    
-    def __init__(self, req, rset=None, domid=None, title=None, action='edit',
-                 onsubmit="return freezeFormButtons('%(domid)s');",
-                 cssclass=None, cssstyle=None, cwtarget=None, buttons=None,
-                 redirect_path=None, set_error_url=True, copy_nav_params=False):
-        self.req = req
-        self.rset = rset
-        self.config = req.vreg.config
-        self.domid = domid or 'form'
-        self.title = title
-        self.action = action
-        self.onsubmit = onsubmit
-        self.cssclass = cssclass
-        self.cssstyle = cssstyle
-        self.cwtarget = cwtarget
-        self.redirect_path = redirect_path
+    domid = 'form'
+    title = None
+    action = None
+    onsubmit = "return freezeFormButtons('%(domid)s');"
+    cssclass = None
+    cssstyle = None
+    cwtarget = None
+    buttons = None
+    redirect_path = None
+    set_error_url = True
+    copy_nav_params = False
+                 
+    def __init__(self, req, rset=None, row=None, col=None, **kwargs):
+        super(FieldsForm, self).__init__(req, rset, row=row, col=col)
+        self.buttons = kwargs.pop('buttons', [])
+        for key, val in kwargs.items():
+            assert hasattr(self.__class__, key) and not key[0] == '_', key
+            setattr(self, key, val)
         self.fields = list(self.__class__._fields_)
-        if set_error_url:
+        if self.set_error_url:
             self.form_add_hidden('__errorurl', req.url())
-        if copy_nav_params:
+        if self.copy_nav_params:
             for param in NAV_FORM_PARAMETERS:
-                value = req.form.get(param)
+                value = kwargs.get(param, req.form.get(param))
                 if value:
                     self.form_add_hidden(param, initial=value)
-        self.buttons = buttons or []
         self.context = None
 
     @iclassmethod
@@ -309,14 +230,24 @@ class FieldsForm(FormMixIn, AppObject):
                 return field
         raise Exception('field %s not found' % name)
     
+    @iclassmethod
+    def remove_field(cls_or_self, field):
+        if isinstance(cls_or_self, type):
+            fields = cls_or_self._fields_
+        else:
+            fields = cls_or_self.fields
+        fields.remove(field)
+    
     @property
     def form_needs_multipart(self):
         return any(field.needs_multipart for field in self.fields) 
 
     def form_add_hidden(self, name, value=None, **kwargs):
-        self.fields.append(StringField(name=name, widget=HiddenInput,
-                                       initial=value, **kwargs))
-
+        field = StringField(name=name, widget=fwdgs.HiddenInput, initial=value,
+                            **kwargs)
+        self.fields.append(field)
+        return field
+    
     def add_media(self):
         """adds media (CSS & JS) required by this widget"""
         if self.needs_js:
@@ -357,6 +288,14 @@ class FieldsForm(FormMixIn, AppObject):
         else:
             value = field.initial
         return value
+    
+    def form_field_error(self, field):
+        """return validation error for widget's field, if any"""
+        errex = self.req.data.get('formerrors')
+        if errex and field.name in errex.errors:
+            self.req.data['displayederrors'].add(field.name)
+            return u'<span class="error">%s</span>' % errex.errors[field.name]
+        return u''
 
     def form_field_format(self, field):
         return self.req.property_value('ui.default-text-format')
@@ -378,19 +317,28 @@ class FieldsForm(FormMixIn, AppObject):
 
    
 class EntityFieldsForm(FieldsForm):
-    __select__ = non_final_entity()
+    __select__ = (match_kwargs('entity') | (one_line_rset & non_final_entity()))
     
     internal_fields = FieldsForm.internal_fields + ('__type', 'eid')
+    domid = 'entityForm'
     
     def __init__(self, *args, **kwargs):
-        kwargs.setdefault('domid', 'entityForm')
-        self.entity = kwargs.pop('entity', None)
+        self.edited_entity = kwargs.pop('entity', None)
+        msg = kwargs.pop('submitmsg', None)
         super(EntityFieldsForm, self).__init__(*args, **kwargs)
+        if self.edited_entity is None:
+            self.edited_entity = self.complete_entity(self.row)
         self.form_add_hidden('__type', eidparam=True)
         self.form_add_hidden('eid')
+        if msg is not None:
+            # If we need to directly attach the new object to another one
+            for linkto in self.req.list_form_param('__linkto'):
+                self.form_add_hidden('__linkto', linkto)
+                msg = '%s %s' % (msg, self.req._('and linked'))
+            self.form_add_hidden('__message', msg)
         
     def form_render(self, **values):
-        self.form_add_entity_hiddens(self.entity.e_schema)
+        self.form_add_entity_hiddens(self.edited_entity.e_schema)
         return super(EntityFieldsForm, self).form_render(**values)
 
     def form_add_entity_hiddens(self, eschema):
@@ -433,21 +381,24 @@ class EntityFieldsForm(FieldsForm):
         fieldname = field.name
         if fieldname.startswith('edits-') or fieldname.startswith('edito-'):
             # edit[s|o]- fieds must have the actual value stored on the entity
-            if self.entity.has_eid():
-                value = self._form_field_entity_value(field.visible_field,
-                                                      default_initial=False)
+            if hasattr(field, 'visible_field'):
+                if self.edited_entity.has_eid():
+                    value = self._form_field_entity_value(field.visible_field,
+                                                          default_initial=False)
+                else:
+                    value = INTERNAL_FIELD_VALUE
             else:
-                value = INTERNAL_FIELD_VALUE
+                value = field.initial
         elif fieldname == '__type':
-            value = self.entity.id
+            value = self.edited_entity.id
         elif fieldname == 'eid':
-            value = self.entity.eid
+            value = self.edited_entity.eid
         elif fieldname in values:
             value = values[fieldname]
         elif fieldname in self.req.form:
             value = self.req.form[fieldname]
         else:
-            if self.entity.has_eid() and field.eidparam:
+            if self.edited_entity.has_eid() and field.eidparam:
                 # use value found on the entity or field's initial value if it's
                 # not an attribute of the entity (XXX may conflicts and get
                 # undesired value)
@@ -455,11 +406,11 @@ class EntityFieldsForm(FieldsForm):
                                                       load_bytes=load_bytes)
             else:
                 defaultattr = 'default_%s' % fieldname
-                if hasattr(self.entity, defaultattr):
+                if hasattr(self.edited_entity, defaultattr):
                     # XXX bw compat, default_<field name> on the entity
                     warn('found %s on %s, should be set on a specific form'
-                         % (defaultattr, self.entity.id), DeprecationWarning)
-                    value = getattr(self.entity, defaultattr)
+                         % (defaultattr, self.edited_entity.id), DeprecationWarning)
+                    value = getattr(self.edited_entity, defaultattr)
                 elif hasattr(self, defaultattr):
                     # search for default_<field name> on the form instance
                     value = getattr(self, defaultattr)
@@ -471,38 +422,47 @@ class EntityFieldsForm(FieldsForm):
         return value
     
     def form_field_format(self, field):
-        entity = self.entity
+        entity = self.edited_entity
         if field.eidparam and entity.e_schema.has_metadata(field.name, 'format') and (
             entity.has_eid() or '%s_format' % field.name in entity):
-            return self.entity.attribute_metadata(field.name, 'format')
+            return self.edited_entity.attribute_metadata(field.name, 'format')
         return self.req.property_value('ui.default-text-format')
 
     def form_field_encoding(self, field):
-        entity = self.entity
+        entity = self.edited_entity
         if field.eidparam and entity.e_schema.has_metadata(field.name, 'encoding') and (
             entity.has_eid() or '%s_encoding' % field.name in entity):
-            return self.entity.attribute_metadata(field.name, 'encoding')
+            return self.edited_entity.attribute_metadata(field.name, 'encoding')
         return super(EntityFieldsForm, self).form_field_encoding(field)
+    
+    def form_field_error(self, field):
+        """return validation error for widget's field, if any"""
+        errex = self.req.data.get('formerrors')
+        if errex and errex.eid == self.edited_entity.eid and field.name in errex.errors:
+            self.req.data['displayederrors'].add(field.name)
+            return u'<span class="error">%s</span>' % errex.errors[field.name]
+        return u''
 
     def _form_field_entity_value(self, field, default_initial=True, load_bytes=False):
-        attr = field.name 
+        attr = field.name
+        entity = self.edited_entity
         if field.role == 'object':
             attr = 'reverse_' + attr
-        else:
-            attrtype = self.entity.e_schema.destination(attr)
+        elif entity.e_schema.subject_relation(attr).is_final():
+            attrtype = entity.e_schema.destination(attr)
             if attrtype == 'Password':
-                return self.entity.has_eid() and INTERNAL_FIELD_VALUE or ''
+                return entity.has_eid() and INTERNAL_FIELD_VALUE or ''
             if attrtype == 'Bytes':
-                if self.entity.has_eid():
+                if entity.has_eid():
                     if load_bytes:
-                        return getattr(self.entity, attr)
+                        return getattr(entity, attr)
                     # XXX value should reflect if some file is already attached
                     return True
                 return False
         if default_initial:
-            value = getattr(self.entity, attr, field.initial)
+            value = getattr(entity, attr, field.initial)
         else:
-            value = getattr(self.entity, attr)
+            value = getattr(entity, attr)
         if isinstance(field, RelationField):
             # in this case, value is the list of related entities
             value = [ent.eid for ent in value]
@@ -510,24 +470,24 @@ class EntityFieldsForm(FieldsForm):
     
     def form_field_name(self, field):
         if field.eidparam:
-            return eid_param(field.name, self.entity.eid)
+            return eid_param(field.name, self.edited_entity.eid)
         return field.name
 
     def form_field_id(self, field):
         if field.eidparam:
-            return eid_param(field.id, self.entity.eid)
+            return eid_param(field.id, self.edited_entity.eid)
         return field.id
         
     def form_field_vocabulary(self, field, limit=None):
         role, rtype = field.role, field.name
         try:
-            vocabfunc = getattr(self.entity, '%s_%s_vocabulary' % (role, rtype))
+            vocabfunc = getattr(self.edited_entity, '%s_%s_vocabulary' % (role, rtype))
         except AttributeError:
             vocabfunc = getattr(self, '%s_relation_vocabulary' % role)
         else:
             # XXX bw compat, default_<field name> on the entity
             warn('found %s_%s_vocabulary on %s, should be set on a specific form'
-                 % (role, rtype, self.entity.id), DeprecationWarning)
+                 % (role, rtype, self.edited_entity.id), DeprecationWarning)
         # NOTE: it is the responsibility of `vocabfunc` to sort the result
         #       (direclty through RQL or via a python sort). This is also
         #       important because `vocabfunc` might return a list with
@@ -544,7 +504,7 @@ class EntityFieldsForm(FieldsForm):
         """defaut vocabulary method for the given relation, looking for
         relation's object entities (i.e. self is the subject)
         """
-        entity = self.entity
+        entity = self.edited_entity
         if isinstance(rtype, basestring):
             rtype = entity.schema.rschema(rtype)
         done = None
@@ -566,7 +526,7 @@ class EntityFieldsForm(FieldsForm):
         """defaut vocabulary method for the given relation, looking for
         relation's subject entities (i.e. self is the object)
         """
-        entity = self.entity
+        entity = self.edited_entity
         if isinstance(rtype, basestring):
             rtype = entity.schema.rschema(rtype)
         done = None
@@ -587,7 +547,7 @@ class EntityFieldsForm(FieldsForm):
                             limit=None, done=None):
         if done is None:
             done = set()
-        rset = self.entity.unrelated(rtype, targettype, role, limit)
+        rset = self.edited_entity.unrelated(rtype, targettype, role, limit)
         res = []
         for entity in rset.entities():
             if entity.eid in done:
@@ -597,118 +557,13 @@ class EntityFieldsForm(FieldsForm):
         return res
 
 
-class MultipleFieldsForm(FieldsForm):
+class CompositeForm(FieldsForm):
+    """form composed for sub-forms"""
+    
     def __init__(self, *args, **kwargs):
-        super(MultipleFieldsForm, self).__init__(*args, **kwargs)
+        super(CompositeForm, self).__init__(*args, **kwargs)
         self.forms = []
 
     def form_add_subform(self, subform):
+        subform.is_subform = True
         self.forms.append(subform)
-
-
-# form renderers ############
-
-class FormRenderer(object):
-    button_bar_class = u'formButtonBar'
-    
-    def __init__(self, display_fields=None, display_label=True,
-                 display_help=True, button_bar_class=None):
-        self.display_fields = display_fields # None -> all fields
-        self.display_label = display_label
-        self.display_help = display_help
-        if button_bar_class is not None:
-            self.button_bar_class = button_bar_class
-            
-    # renderer interface ######################################################
-    
-    def render(self, form, values):
-        form.add_media()
-        data = []
-        w = data.append
-        w(self.open_form(form))
-        w(u'<div id="progress">%s</div>' % form.req._('validating...'))
-        w(u'<fieldset>')
-        w(tags.input(type='hidden', name='__form_id', value=form.domid))
-        if form.redirect_path:
-            w(tags.input(type='hidden', name='__redirectpath', value=form.redirect_path))
-        self.render_fields(w, form, values)
-        self.render_buttons(w, form)
-        w(u'</fieldset>')
-        w(u'</form>')
-        return '\n'.join(data)
-        
-    def render_label(self, form, field):
-        label = form.req._(field.label)
-        attrs = {'for': form.context[field]['id']}
-        if field.required:
-            attrs['class'] = 'required'
-        return tags.label(label, **attrs)
-
-    def render_help(self, form, field):
-        help = [ u'<br/>' ]
-        descr = field.help
-        if descr:
-            help.append('<span class="helper">%s</span>' % form.req._(descr))
-        example = field.example_format(form.req)
-        if example:
-            help.append('<span class="helper">(%s: %s)</span>'
-                        % (form.req._('sample format'), example))
-        return u'&nbsp;'.join(help)
-
-    # specific methods (mostly to ease overriding) #############################
-    
-    def open_form(self, form):
-        if form.form_needs_multipart:
-            enctype = 'multipart/form-data'
-        else:
-            enctype = 'application/x-www-form-urlencoded'
-        tag = ('<form action="%s" method="post" id="%s" enctype="%s"' % (
-            html_escape(form.action or '#'), form.domid, enctype))
-        if form.onsubmit:
-            tag += ' onsubmit="%s"' % html_escape(form.onsubmit % form.__dict__)
-        if form.cssstyle:
-            tag += ' style="%s"' % html_escape(form.cssstyle)
-        if form.cssclass:
-            tag += ' class="%s"' % html_escape(form.cssclass)
-        if form.cwtarget:
-            tag += ' cubicweb:target="%s"' % html_escape(form.cwtarget)
-        return tag + '>'
-
-    def display_field(self, form, field):
-        return (self.display_fields is None
-                or field.name in self.display_fields
-                or field.name in form.internal_fields)
-    
-    def render_fields(self, w, form, values):
-        form.form_build_context(values)
-        fields = form.fields[:]
-        for field in form.fields:
-            if not self.display_field(form, field):
-                fields.remove(field)
-                
-            if not field.is_visible():
-                w(field.render(form, self))
-                fields.remove(field)
-        if fields:
-            self._render_fields(fields, w, form)
-        for childform in getattr(form, 'forms', []):
-            self.render_fields(w, childform, values)
-            
-    def _render_fields(self, fields, w, form,):
-            w(u'<table>')
-            for field in fields:
-                w(u'<tr>')
-                if self.display_label:
-                    w(u'<th>%s</th>' % self.render_label(form, field))
-                w(u'<td style="width:100%;">')
-                w(field.render(form, self))
-                if self.display_help:
-                    w(self.render_help(form, field))
-                w(u'</td></tr>')
-            w(u'</table>')
-
-    def render_buttons(self, w, form):
-        w(u'<table class="%s">\n<tr>\n' % self.button_bar_class)
-        for button in form.form_buttons():
-            w(u'<td>%s</td>\n' % button)
-        w(u'</tr></table>')

@@ -25,31 +25,56 @@ class EntityFieldsFormTC(WebTest):
             creation_date = DateTimeField(widget=DateTimePicker)
         form = CustomChangeStateForm(self.req, redirect_path='perdu.com',
                                      entity=self.entity)
-        self.assertTextEquals(form.form_render(state=123, trcomment=u''),
-                              ''' ''')
+        form.form_render(state=123, trcomment=u'')
 
     def test_change_state_form(self):
         form = ChangeStateForm(self.req, redirect_path='perdu.com',
                                entity=self.entity)
-        self.assertTextEquals(form.form_render(state=123, trcomment=u''),
-                              ''' ''')
+        form.form_render(state=123, trcomment=u'')
         
     def test_delete_conf_form_multi(self):
         rset = self.execute('EGroup X')
-        self.assertTextEquals(self.view('deleteconf', rset, template=None).source,
-                              '')
+        self.view('deleteconf', rset, template=None).source
         
     def test_massmailing_form(self):
         self.execute('INSERT EmailAddress X: X address L + "@cubicweb.org", '
                      'U use_email X WHERE U is EUser, U login L')
         rset = self.execute('EUser X')
-        self.assertTextEquals(self.view('massmailing', rset, template=None).source,
-                              '')
+        self.view('massmailing', rset, template=None)
+        
+    def test_automatic_edition_form(self):
+        rset = self.execute('EUser X')
+        self.view('edition', rset, row=0, template=None).source
+        
+    def test_automatic_edition_form(self):
+        rset = self.execute('EUser X')
+        self.view('copy', rset, row=0, template=None).source
+        
+    def test_automatic_creation_form(self):
+        self.view('creation', None, etype='EUser', template=None).source
+        
+    def test_automatic_muledit_form(self):
+        rset = self.execute('EUser X')
+        self.view('muledit', rset, template=None).source
+        
+    def test_automatic_reledit_form(self):
+        rset = self.execute('EUser X')
+        self.view('reledit', rset, row=0, rtype='login', template=None).source
+        
+    def test_automatic_inline_edit_form(self):
+        geid = self.execute('EGroup X LIMIT 1')[0][0]
+        rset = self.execute('EUser X LIMIT 1')
+        self.view('inline-edition', rset, row=0, rtype='in_group', peid=geid, template=None).source
+                              
+    def test_automatic_inline_creation_form(self):
+        geid = self.execute('EGroup X LIMIT 1')[0][0]
+        self.view('inline-creation', None, etype='EUser', rtype='in_group', peid=geid, template=None).source
+
 
     # fields tests ############################################################
 
     def _render_entity_field(self, name, form):
-        form.form_add_entity_hiddens(form.entity.e_schema)
+        form.form_add_entity_hiddens(form.edited_entity.e_schema)
         form.form_build_context({})
         return form.field_by_name(name).render(form, self.renderer)
     
