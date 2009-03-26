@@ -70,14 +70,7 @@ class AppRsetObject(VObject):
         row and col
         """
         assert len(args) <= 2
-#         for key in ('req', 'rset'):
-#             if key in kwargs:
-#                 args += (kwargs.pop(key),)
-        instance = cls(*args)
-        instance.row = kwargs.pop('row', None)
-        instance.col = kwargs.pop('col', None)
-        instance.extra_kwargs = kwargs
-        return instance
+        return cls(*args, **kwargs)
 
     # Eproperties definition:
     # key: id of the property (the actual EProperty key is build using
@@ -113,10 +106,13 @@ class AppRsetObject(VObject):
             selector = (selector,)
         return selector
     
-    def __init__(self, req=None, rset=None):
+    def __init__(self, req=None, rset=None, row=None, col=None, **extra):
         super(AppRsetObject, self).__init__()
         self.req = req
         self.rset = rset
+        self.row = row
+        self.col = col
+        self.extra_kwargs = extra
         
     def get_cache(self, cachename):
         """
@@ -143,7 +139,6 @@ class AppRsetObject(VObject):
     def propval(self, propid):
         assert self.req
         return self.req.property_value(self.propkey(propid))
-
     
     def limited_rql(self):
         """return a printable rql for the result set associated to the object,

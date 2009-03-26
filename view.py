@@ -102,8 +102,8 @@ class View(AppRsetObject):
     add_to_breadcrumbs = True
     category = 'view'
 
-    def __init__(self, req=None, rset=None):
-        super(View, self).__init__(req, rset)
+    def __init__(self, req=None, rset=None, **kwargs):
+        super(View, self).__init__(req, rset, **kwargs)
         self.w = None
 
     @property
@@ -361,8 +361,8 @@ class EntityStartupView(EntityView):
 
     default_rql = None
 
-    def __init__(self, req, rset):
-        super(EntityStartupView, self).__init__(req, rset)
+    def __init__(self, req, rset, **kwargs):
+        super(EntityStartupView, self).__init__(req, rset, **kwargs)
         if rset is None:
             # this instance is not in the "entityview" category
             self.category = 'startupview'
