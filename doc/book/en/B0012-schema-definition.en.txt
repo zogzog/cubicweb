@@ -3,10 +3,12 @@
 Entity type definition
 ----------------------
 
-An entity type is defined by a Python class which inherits `EntityType`. The
-class name correponds to the type name. Then the content of the class contains
-the description of attributes and relations for the defined entity type,
-for example ::
+An entity type is defined by a Python class which inherits from `EntityType`.
+The class definition contains the description of attributes and relations
+for the defined entity type.
+The class name corresponds to the entity type name.
+
+For example ::
 
   class Person(EntityType):
     """A person with the properties and the relations necessary for my
@@ -14,15 +16,17 @@ for example ::
 
     last_name = String(required=True, fulltextindexed=True)
     first_name = String(required=True, fulltextindexed=True)
-    title = String(vocabulary=('M', 'Mme', 'Mlle'))
+    title = String(vocabulary=('Mr', 'Mrs', 'Miss'))
     date_of_birth = Date()
     works_for = SubjectRelation('Company', cardinality='?*')
+
 
 * the name of the Python attribute corresponds to the name of the attribute
   or the relation in `CubicWeb` application.
 
-* all built-in types are available : `String`, `Int`, `Float`,
-  `Boolean`, `Date`, `Datetime`, `Time`, `Byte`.
+* all `CubicWeb` built-in types are available : `String`, `Int`, `Float`,
+  `Boolean`, `Date`, `Datetime`, `Time`, `Byte`; they are and implicitely
+  imported (as well as the special the function "_").
 
 * each entity type has at least the following meta-relations :
 
@@ -34,21 +38,19 @@ for example ::
   
   - `created_by` (`EUser`) (which user created the entity)
   
-  - `owned_by` (`EUser`) (who does the entity belongs to, by default the 
-     creator but not necessary and it could have multiple owners)
+  - `owned_by` (`EUser`) (to whom the entity belongs; by default the 
+     creator but not necessary, and it could have multiple owners)
      
   - `is` (`EEType`)
 
-  
-* it is also possible to define relations of type object by using `ObjectRelation`
-  instead of `SubjectRelation`
 
-* the first argument of `SubjectRelation` and `ObjectRelation` gives respectively
+* relations can be defined by using `ObjectRelation` or `SubjectRelation`.
+  The first argument of `SubjectRelation` or `ObjectRelation` gives respectively
   the object/subject entity type of the relation. This could be :  
 
   * a string corresponding to an entity type
 
-  * a tuple of string correponding to multiple entities types
+  * a tuple of string corresponding to multiple entity types
 
   * special string such as follows :
 
@@ -62,20 +64,20 @@ for example ::
 
 * optional properties for attributes and relations : 
 
-  - `description` : string describing an attribute or a relation. By default
+  - `description` : a string describing an attribute or a relation. By default
     this string will be used in the editing form of the entity, which means
     that it is supposed to help the end-user and should be flagged by the
     function `_` to be properly internationalized.
 
-  - `constraints` : list of conditions/constraints that the relation needs to
+  - `constraints` : a list of conditions/constraints that the relation has to
     satisfy (c.f. `Contraints`_)
 
-  - `cardinality` : two characters string which specify the cardinality of the
+  - `cardinality` : a two character string which specify the cardinality of the
     relation. The first character defines the cardinality of the relation on
-    the subject, the second on the object of the relation. When a relation
-    has multiple possible subjects or objects, the cardinality applies to all
-    and not on a one to one basis (so it must be consistent...). The possible
-    values are inspired from regular expressions syntax :
+    the subject, and the second on the object. When a relation can have 
+    multiple subjects or objects, the cardinality applies to all,
+    not on a one-to-one basis (so it must be consistent...). The possible
+    values are inspired from regular expression syntax :
 
     * `1`: 1..1
     * `?`: 0..1
@@ -85,7 +87,7 @@ for example ::
   - `meta` : boolean indicating that the relation is a meta-relation (false by
     default)
 
-* optionnal properties for attributes : 
+* optional properties for attributes : 
 
   - `required` : boolean indicating if the attribute is required (false by default)
 
@@ -98,11 +100,11 @@ for example ::
     attribute.
 
   - `default` : default value of the attribute. In case of date types, the values
-    which could be used correpond to the RQL keywords `TODAY` and `NOW`.
+    which could be used correspond to the RQL keywords `TODAY` and `NOW`.
   
   - `vocabulary` : specify static possible values of an attribute
 
-* optionnal properties of type `String` : 
+* optional properties of type `String` : 
 
   - `fulltextindexed` : boolean indicating if the attribute is part of
     the full text index (false by default) (*applicable on the type `Byte`
@@ -113,17 +115,17 @@ for example ::
 
   - `maxsize` : integer providing the maximum size of the string (no limit by default)
 
-* optionnal properties for relations : 
+* optional properties for relations : 
 
   - `composite` : string indicating that the subject (composite == 'subject')
     is composed of the objects of the relations. For the opposite case (when
-    the object is composed of the subjects of the relation), we just need
-    to set 'object' as the value. The composition implies that when the relation
+    the object is composed of the subjects of the relation), we just set 
+    'object' as value. The composition implies that when the relation
     is deleted (so when the composite is deleted), the composed are also deleted.
 
 Contraints
 ``````````
-By default, the available constraints types are :
+By default, the available constraint types are :
 
 * `SizeConstraint` : allows to specify a minimum and/or maximum size on
   string (generic case of `maxsize`)
@@ -135,7 +137,7 @@ By default, the available constraints types are :
 
 * `StaticVocabularyConstraint` : identical to "vocabulary=(...)"
 
-* `RQLConstraint` : allows to specify a RQL query that needs to be satisfied
+* `RQLConstraint` : allows to specify a RQL query that has to be satisfied
   by the subject and/or the object of the relation. In this query the variables
   `S` and `O` are reserved for the entities subject and object of the 
   relation.
@@ -143,7 +145,7 @@ By default, the available constraints types are :
 * `RQLVocabularyConstraint` : similar to the previous type of constraint except
   that it does not express a "strong" constraint, which means it is only used to
   restrict the values listed in the drop-down menu of editing form, but it does
-  not prevent another entity to be selected
+  not prevent another entity to be selected.
 
 
 Relation definition
@@ -154,7 +156,7 @@ XXX add note about defining relation type / definition
 A relation is defined by a Python class heriting `RelationType`. The name
 of the class corresponds to the name of the type. The class then contains
 a description of the properties of this type of relation, and could as well 
-contains a string for the subject and a string for the object. This allows to create
+contain a string for the subject and a string for the object. This allows to create
 new definition of associated relations, (so that the class can have the 
 definition properties from the relation) for example ::
 
@@ -174,14 +176,14 @@ In addition to the permissions, the properties of the relation types
   table for the relation. This applies to the relation when the cardinality
   of subject->relation->object is 0..1 (`?`) or 1..1 (`1`)
 
-* `symetric` : boolean indication that the relation is symetrical, which
+* `symmetric` : boolean indicating that the relation is symmetrical, which
   means `X relation Y` implies `Y relation X`
 
 In the case of simultaneous relations definitions, `subject` and `object`
 can both be equal to the value of the first argument of `SubjectRelation`
 and `ObjectRelation`.
 
-When a relation is not inlined and not symetrical, and it does not require
+When a relation is not inlined and not symmetrical, and it does not require
 specific permissions, its definition (by using `SubjectRelation` and
 `ObjectRelation`) is all we need.
 
@@ -375,7 +377,11 @@ to check properly the permissions so that it would show up if necessary.
 Updating your application with your new schema
 ``````````````````````````````````````````````
 
-You have to get a shell on your application ::
+If you modified your schema, the update is not automatic; this is 
+indeed in general not a good idea.
+Instead, we call a shell on  your application, which is a 
+an interactive python shell, with an appropriate
+cubicweb environment ::
 
    cubicweb-ctl shell myinstance
 

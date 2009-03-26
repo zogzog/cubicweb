@@ -3,14 +3,14 @@
 Pre-defined schemas in the library
 ----------------------------------
 
-The library defines a set of entities schemas that are required by the system
+The library defines a set of entity schemas that are required by the system
 or commonly used in `CubicWeb` applications.
 Of course, you can extend those schemas if necessary.
 
 
 System schemas
 ``````````````
-The system entities available are :
+The system entities available are:
 
 * `EUser`, system users
 * `EGroup`, users groups
@@ -31,8 +31,11 @@ The system entities available are :
 * `Bookmark`, an entity type used to allow a user to customize his links within
   the application
 
-Cubes available
-```````````````
+(The first 'E' in some of the names is the first letter of 'Erudi', 
+`CubicWeb`'s old name; it might be changed/removed some day.)
+
+  Cubes available
+  ```````````````
 
 An application is based on several basic cubes. In the set of available
 basic cubes we can find for example :
