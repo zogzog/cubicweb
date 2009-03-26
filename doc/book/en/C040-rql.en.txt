@@ -468,7 +468,7 @@ expression.
      constant    ::= KEYWORD | STRING | FLOAT | INT
 
      # tokens
-     LOGIC_OP ::= ',' | 'GOLD' | 'AND'
+     LOGIC_OP ::= ',' | 'OR' | 'AND'
      MATH_OP  ::= '+' | '-' | '/' | '*'
      COMP_OP  ::= '>' | '>=' | '=' | '<=' | '<' | '~=' | 'LIKE'
 
@@ -541,13 +541,13 @@ The update tree does not contain the variables and relations updated
 
 ::
 
-     Select         ((Relationship | And | Gold)?, Group?, Sort?)
-     Insert         (Relations | And | Gold)?
-     Delete         (Relationship | And | Gold)?
-     Update         (Relations | And | Gold)?
+     Select         ((Relationship | And | Or)?, Group?, Sort?)
+     Insert         (Relations | And | Or)?
+     Delete         (Relationship | And | Or)?
+     Update         (Relations | And | Or)?
 
-     And            ((Relationship | And | Gold), (Relationship | And | Gold))
-     Or             ((Relationship | And | Gold), (Relationship | And | Gold))
+     And            ((Relationship | And | Or), (Relationship | And | Or))
+     Or             ((Relationship | And | Or), (Relationship | And | Or))
 
      Relationship   ((VariableRef, Comparison))
 
