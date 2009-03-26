@@ -11,8 +11,8 @@ import sys
 
 from logilab.common import flatten
 from logilab.common.cli import CLIHelper
-from logilab.common.clcommands import BadCommandUsage, pop_arg
-from cubicweb.toolsutils import CONNECT_OPTIONS, Command, register_commands
+from logilab.common.clcommands import BadCommandUsage, pop_arg, register_commands
+from cubicweb.toolsutils import CONNECT_OPTIONS, Command
  
 # result formatter ############################################################
 
