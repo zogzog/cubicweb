@@ -377,7 +377,11 @@ to check properly the permissions so that it would show up if necessary.
 Updating your application with your new schema
 ``````````````````````````````````````````````
 
-You have to get a shell on your application ::
+If you modified your schema, the update is not automatic; this is 
+indeed in general not a good idea.
+Instead, we call a shell on  your application, which is a 
+an interactive python shell, with an appropriate
+cubicweb environment ::
 
    cubicweb-ctl shell myinstance
 
