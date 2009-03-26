@@ -180,7 +180,7 @@ class WebTest(EnvBasedTC):
         :returns: an instance of `cubicweb.devtools.htmlparser.PageInfo`
                   encapsulation the generated HTML
         """
-        req = req or rset.req
+        req = req or rset and rset.req or self.request()
         # print "testing ", vid,
         # if rset:
         #     print rset, len(rset), id(rset)
