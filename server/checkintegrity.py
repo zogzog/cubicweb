@@ -71,6 +71,7 @@ def reindex_entities(schema, session):
                             'before_update_entity', '')
     repo.hm.unregister_hook(uniquecstrcheck_before_modification,
                             'before_update_entity', '')
+    repo.do_fti = True  # ensure full-text indexation is activated
     etypes = set()
     for eschema in schema.entities():
         if eschema.is_final():
