@@ -133,8 +133,9 @@ class CubicWebRegistry(VRegistry):
                                    and self.etype_class(iface)
                                    or iface
                                    for iface in ifaces)
-                if not ifaces & interfaces:
-                    self.debug('kicking vobject %s (unsupported interface)', obj)
+                if not ('Any' in ifaces or ifaces & implemented_interfaces):
+                    self.debug('kicking vobject %s (no implemented interface '
+                               'among %s)', obj, ifaces)
                     self.unregister(obj)
             
     
