@@ -1,6 +1,23 @@
+"""relation tags store
+
+:organization: Logilab
+:copyright: 2001-2009 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+:contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
+"""
+__docformat__ = "restructuredtext en"
 
 class RelationTags(object):
+    """RelationTags instances are a tag store for full relation definitions :
 
+         (subject type, relation type, object type, role)
+
+    allowing to set tags using wildcard (eg '*') as subject type / object type
+
+    if `use_set` is True, a set of tags is associated to each key, and you
+    should use rtags / etype_rtags / add_rtag api. Otherwise, a single tag is
+    associated to each key, and you should use rtag / etype_rtag / set_rtag api.
+    """
+    
     def __init__(self, use_set=False):
         self.use_set = use_set
         self._tagdefs = {}

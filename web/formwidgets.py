@@ -226,3 +226,5 @@ class AjaxWidget(FieldWidget):
         self.add_media(form)
         attrs = self._render_attrs(form, field)[-1]
         return tags.div(**attrs)
+
+# XXX backport PropertyKeyWidget and PropertyValueWidget
