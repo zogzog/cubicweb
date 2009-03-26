@@ -211,7 +211,8 @@ class Repository(object):
         self._get_pool().close(True) 
         for i in xrange(config['connections-pool-size']):
             self._available_pools.put_nowait(ConnectionsPool(self.sources))
-     
+        self.do_fti = config['delay-full-text-indexation']
+        
     # internals ###############################################################
 
     def get_source(self, uri, source_config):
@@ -829,7 +830,8 @@ class Repository(object):
             entity.complete(entity.e_schema.indexable_attributes())
         session.add_query_data('neweids', entity.eid)
         # now we can update the full text index
-        FTIndexEntityOp(session, entity=entity)
+        if self.do_fti:
+            FTIndexEntityOp(session, entity=entity)
         CleanupEidTypeCacheOp(session)
         
     def delete_info(self, session, eid):
@@ -995,7 +997,7 @@ class Repository(object):
                                     entity)
         source.update_entity(session, entity)
         if not only_inline_rels:
-            if need_fti_update:
+            if need_fti_update and self.do_fti:
                 # reindex the entity only if this query is updating at least
                 # one indexable attribute
                 FTIndexEntityOp(session, entity=entity)
