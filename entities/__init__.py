@@ -310,6 +310,7 @@ class AnyEntity(Entity):
             tschema = rschema.subjects(cls.e_schema)[0]
             wdg = widget(cls.vreg, tschema, rschema, cls, 'object')
         return wdg
+    
     def relations_by_category(self, categories=None, permission=None):
         if categories is not None:
             if not isinstance(categories, (list, tuple, set, frozenset)):

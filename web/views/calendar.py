@@ -152,7 +152,6 @@ class OneMonthCal(EntityView):
         lastday = last_day_of_month + timedelta(6 - last_day_of_month.weekday())
         month_dates = list(date_range(firstday, lastday))
         dates = {}
-        users = []
         task_max = 0
         for row in xrange(self.rset.rowcount):
             task = self.rset.get_entity(row, 0)
@@ -263,22 +262,22 @@ class OneMonthCal(EntityView):
                                     year=nextdate.year, month=nextdate.month)
         return prevlink, nextlink
 
-    def _build_calendar_cell(self, date, rows, curdate):
+    def _build_calendar_cell(self, celldate, rows, curdate):
         curmonth = curdate.month
         classes = ""
-        if date.month != curmonth:
+        if celldate.month != curmonth:
             classes += " outOfRange"
-        if date == datetime.today():
+        if celldate == date.today():
             classes += " today"
         self.w(u'<td class="cell%s">' % classes)
         self.w(u'<div class="calCellTitle%s">' % classes)
-        self.w(u'<div class="day">%s</div>' % date.day)
+        self.w(u'<div class="day">%s</div>' % celldate.day)
         
         if len(self.rset.column_types(0)) == 1:
             etype = list(self.rset.column_types(0))[0]
             url = self.build_url(vid='creation', etype=etype,
                                  schedule=True,
-                                 start=self.format_date(date), stop=self.format_date(date),
+                                 start=self.format_date(celldate), stop=self.format_date(celldate),
                                  __redirectrql=self.rset.printable_rql(),
                                  __redirectparams=self.req.build_url_params(year=curdate.year, month=curmonth),
                                  __redirectvid=self.id
@@ -434,15 +433,6 @@ class OneWeekCal(EntityView):
         self.w(u'<div id="coord"></div>')
         self.w(u'<div id="debug">&nbsp;</div>')
  
-    def _one_day_task(self, task):
-        """
-        Return true if the task is a "one day" task; ie it have a start and a stop the same day
-        """
-        if task.start and task.stop:
-            if task.start.isocalendar() ==  task.stop.isocalendar():
-                return True
-        return False
-        
     def _build_calendar_cell(self, date, task_descrs):
         inday_tasks = [t for t in task_descrs if t.is_one_day_task() and  t.in_working_hours()]
         wholeday_tasks = [t for t in task_descrs if not t.is_one_day_task()]

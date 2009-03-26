@@ -23,7 +23,6 @@ class LogInOutTemplate(MainTemplate):
         self.set_request_content_type()
         w = self.w
         self.write_doctype()
-        lang = self.req.lang
         self.template_header('text/html', self.req._('login_action'))
         w(u'<body>\n')
         self.content(w)

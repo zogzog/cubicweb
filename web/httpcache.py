@@ -92,11 +92,11 @@ __all__ = ('GMTOFFSET',
 # monkey patching, so view doesn't depends on this module and we have all
 # http cache related logic here
 
-from cubicweb import view
+from cubicweb import view as viewmod
 
 def set_http_cache_headers(self):
     self.http_cache_manager(self).set_headers()
-view.View.set_http_cache_headers = set_http_cache_headers
+viewmod.View.set_http_cache_headers = set_http_cache_headers
 
 def last_modified(self):
     """return the date/time where this view should be considered as
@@ -118,15 +118,15 @@ def last_modified(self):
         mtime = ctime
     # mtime = ctime will force page rerendering
     return mtime
-view.View.last_modified = last_modified
+viewmod.View.last_modified = last_modified
 
 # configure default caching
-view.View.http_cache_manager = NoHTTPCacheManager
+viewmod.View.http_cache_manager = NoHTTPCacheManager
 # max-age=0 to actually force revalidation when needed
-view.View.cache_max_age = 0
+viewmod.View.cache_max_age = 0
 
 
-view.EntityView.http_cache_manager = EntityHTTPCacheManager
+viewmod.EntityView.http_cache_manager = EntityHTTPCacheManager
 
-view.StartupView.http_cache_manager = MaxAgeHTTPCacheManager
-view.StartupView.cache_max_age = 60*60*2 # stay in http cache for 2 hours by default 
+viewmod.StartupView.http_cache_manager = MaxAgeHTTPCacheManager
+viewmod.StartupView.cache_max_age = 60*60*2 # stay in http cache for 2 hours by default 

@@ -6,10 +6,9 @@
 """
 __docformat__ = "restructuredtext en"
 
-from logilab.common.decorators import cached
 from logilab.mtconverter import html_escape
 
-from cubicweb import Unauthorized, role as get_role
+from cubicweb import Unauthorized, role as get_role, target as get_target
 from cubicweb.selectors import (one_line_rset,  primary_view,
                                 match_context_prop, partial_has_related_entities,
                                 accepts_compat, has_relation_compat,
@@ -179,18 +178,12 @@ class EditRelationBoxTemplate(ReloadableMixIn, EntityBoxTemplate):
 
     def div_id(self):
         return self.id
-
-    @cached
-    def xtarget(self):
-        if self.target == 'subject':
-            return 'object', 'subject'
-        return 'subject', 'object'
         
     def box_item(self, entity, etarget, rql, label):
         """builds HTML link to edit relation between `entity` and `etarget`
         """
-        x, target = self.xtarget()
-        args = {x[0] : entity.eid, target[0] : etarget.eid}
+        role, target = get_role(self), get_target(self)
+        args = {role[0] : entity.eid, target[0] : etarget.eid}
         url = self.user_rql_callback((rql, args))
         # for each target, provide a link to edit the relation
         label = u'[<a href="%s">%s</a>] %s' % (url, label,
@@ -217,10 +210,9 @@ class EditRelationBoxTemplate(ReloadableMixIn, EntityBoxTemplate):
         if etype is not defined on the Box's class, the default
         behaviour is to use the entity's appropraite vocabulary function
         """
-        x, target = self.xtarget()
         # use entity.unrelated if we've been asked for a particular etype
         if hasattr(self, 'etype'):
-            return entity.unrelated(self.rtype, self.etype, x).entities()
+            return entity.unrelated(self.rtype, self.etype, get_role(self)).entities()
         # in other cases, use vocabulary functions
         entities = []
         for _, eid in entity.vocabulary(self.rtype, x):
@@ -230,6 +222,5 @@ class EditRelationBoxTemplate(ReloadableMixIn, EntityBoxTemplate):
         return entities
         
     def related_entities(self, entity):
-        x, target = self.xtarget()
-        return entity.related(self.rtype, x, entities=True)
+        return entity.related(self.rtype, get_role(self), entities=True)
 

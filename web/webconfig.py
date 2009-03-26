@@ -192,7 +192,7 @@ if you want to allow everything',
         try:
             cube = self.cubes()[0]
             cubeeid = self.cube_pkginfo(cube).cube_eid
-        except Exception, ex:
+        except Exception:
             return None
         if cubeeid:
             return 'http://intranet.logilab.fr/jpl/view?__linkto=concerns:%s:subject&etype=Ticket&type=bug&vid=creation' % cubeeid

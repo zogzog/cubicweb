@@ -118,12 +118,17 @@ def _may_be_removed(rel, schema, mainvar):
     return None
 
 def _add_rtype_relation(rqlst, mainvar, rtype, role):
+    """add a relation relying `mainvar` to entities linked by the `rtype`
+    relation (where `mainvar` has `role`)
+
+    return the inserted variable for linked entities.
+    """
     newvar = rqlst.make_variable()
     if role == 'object':
-        rel = rqlst.add_relation(newvar, rtype, mainvar)
+        rqlst.add_relation(newvar, rtype, mainvar)
     else:
-        rel = rqlst.add_relation(mainvar, rtype, newvar)
-    return newvar, rel
+        rqlst.add_relation(mainvar, rtype, newvar)
+    return newvar
 
 def _prepare_vocabulary_rqlst(rqlst, mainvar, rtype, role):
     """prepare a syntax tree to generate a filter vocabulary rql using the given
@@ -133,11 +138,11 @@ def _prepare_vocabulary_rqlst(rqlst, mainvar, rtype, role):
     * add the new variable to GROUPBY clause if necessary
     * add the new variable to the selection
     """
-    newvar, rel = _add_rtype_relation(rqlst, mainvar, rtype, role)
+    newvar = _add_rtype_relation(rqlst, mainvar, rtype, role)
     if rqlst.groupby:
         rqlst.add_group_var(newvar)
     rqlst.add_selected(newvar)
-    return newvar, rel
+    return newvar
 
 def _remove_relation(rqlst, rel, var):
     """remove a constraint relation from the syntax tree"""
@@ -170,10 +175,10 @@ def insert_attr_select_relation(rqlst, mainvar, rtype, role, attrname,
                                 sortfuncname=None, sortasc=True):
     """modify a syntax tree to retrieve only relevant attribute `attr` of `var`"""
     _cleanup_rqlst(rqlst, mainvar)
-    var, mainrel = _prepare_vocabulary_rqlst(rqlst, mainvar, rtype, role)
+    var = _prepare_vocabulary_rqlst(rqlst, mainvar, rtype, role)
     # not found, create one
     attrvar = rqlst.make_variable()
-    attrrel = rqlst.add_relation(var, attrname, attrvar)
+    rqlst.add_relation(var, attrname, attrvar)
     # if query is grouped, we have to add the attribute variable
     if rqlst.groupby:
         if not attrvar in rqlst.groupby:
@@ -410,7 +415,7 @@ class RelationFacet(VocabularyFacet):
         if not value:
             return
         mainvar = self.filtered_variable
-        restrvar = _add_rtype_relation(self.rqlst, mainvar, self.rtype, self.role)[0]
+        restrvar = _add_rtype_relation(self.rqlst, mainvar, self.rtype, self.role)
         if isinstance(value, basestring):
             # only one value selected
             self.rqlst.add_eid_restriction(restrvar, value)
@@ -424,7 +429,7 @@ class RelationFacet(VocabularyFacet):
             # multiple values with AND operator
             self.rqlst.add_eid_restriction(restrvar, value.pop())
             while value:
-                restrvar = _add_rtype_relation(self.rqlst, mainvar, self.rtype, self.role)[0]
+                restrvar = _add_rtype_relation(self.rqlst, mainvar, self.rtype, self.role)
                 self.rqlst.add_eid_restriction(restrvar, value.pop())
 
 
@@ -442,7 +447,7 @@ class AttributeFacet(RelationFacet):
         try:
             mainvar = self.filtered_variable
             _cleanup_rqlst(rqlst, mainvar)
-            newvar, rel = _prepare_vocabulary_rqlst(rqlst, mainvar, self.rtype, self.role)
+            newvar = _prepare_vocabulary_rqlst(rqlst, mainvar, self.rtype, self.role)
             _set_orderby(rqlst, newvar, self.sortasc, self.sortfunc)
             try:
                 rset = self.rqlexec(rqlst.as_string(), self.rset.args, self.rset.cachekey)

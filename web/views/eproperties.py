@@ -1,6 +1,5 @@
 """Specific views for EProperty
 
-
 :organization: Logilab
 :copyright: 2007-2009 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
@@ -190,7 +189,6 @@ class SystemEPropertiesForm(FormMixIn, StartupView):
 
     def form_row(self, w, key, splitlabel):
         entity = self.entity_for_key(key)
-        eid = entity.eid
         if splitlabel:
             w(u'<td class="label">%s</td>' % self.req._(key.split('.')[-1]))
         else:

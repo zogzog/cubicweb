@@ -74,7 +74,7 @@ def build_toc(config):
             build_toc_index(section, index)
     return index
     
-def title(node, lang):
+def title_for_lang(node, lang):
     for title in node.findall('title'):
         if title.attrib['{http://www.w3.org/XML/1998/namespace}lang'] == lang:
             return unicode(title.text)
@@ -107,7 +107,7 @@ class InlineHelpView(StartupView):
         else:
             self.navigation_links(node)
             self.w(u'<div class="hr"></div>')
-            self.w(u'<h1>%s</h1>' % (title(node, self.req.lang)))            
+            self.w(u'<h1>%s</h1>' % (title_for_lang(node, self.req.lang)))            
         data = open(join(resourcedir, rid)).read()
         self.w(rest_publish(self, data))
         if node is not None:
@@ -141,7 +141,7 @@ class InlineHelpView(StartupView):
         self.w(u'%s : ' % self.req._(msgid))
         self.w(u'<a href="%s">%s</a>' % (
             self.req.build_url('doc/'+node.attrib['resource']),
-            title(node, self.req.lang)))
+            title_for_lang(node, self.req.lang)))
         self.w(u'</span>\n')
         
     def subsections_links(self, node, first=True):
@@ -154,7 +154,7 @@ class InlineHelpView(StartupView):
         for child in sub:
             self.w(u'<li><a href="%s">%s</a>' % (
                 self.req.build_url('doc/'+child.attrib['resource']),
-                title(child, self.req.lang)))
+                title_for_lang(child, self.req.lang)))
             self.subsections_links(child, False)
             self.w(u'</li>')
         self.w(u'</ul>\n')
