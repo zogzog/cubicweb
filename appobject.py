@@ -183,6 +183,16 @@ class AppRsetObject(VObject):
             rql = rqlst.as_string(kwargs=self.rset.args)
             rqlst.parent = None
         return rql
+        
+    def view(self, __vid, rset=None, __fallback_vid=None, **kwargs):
+        """shortcut to self.vreg.render method avoiding to pass self.req"""
+        try:
+            view = self.vreg.select_view(__vid, self.req, rset, **kwargs)
+        except NoSelectableObject:
+            if __fallback_vid is None:
+                raise
+            view = self.vreg.select_view(__fallback_vid, self.req, rset, **kwargs)
+        return view.dispatch(**kwargs)
     
     # url generation methods ##################################################
     

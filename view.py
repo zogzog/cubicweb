@@ -206,16 +206,6 @@ class View(AppRsetObject):
         self.req.set_content_type(self.content_type)
 
     # view utilities ##########################################################
-        
-    def view(self, __vid, rset=None, __fallback_vid=None, **kwargs):
-        """shortcut to self.vreg.render method avoiding to pass self.req"""
-        try:
-            view = self.vreg.select_view(__vid, self.req, rset, **kwargs)
-        except NoSelectableObject:
-            if __fallback_vid is None:
-                raise
-            view = self.vreg.select_view(__fallback_vid, self.req, rset, **kwargs)
-        return view.dispatch(**kwargs)
     
     def wview(self, __vid, rset, __fallback_vid=None, **kwargs):
         """shortcut to self.view method automatically passing self.w as argument
@@ -317,6 +307,14 @@ class View(AppRsetObject):
         w(u'<div class="field">%s</div>' % value)
         if row:
             w(u'</div>')
+            
+    def initialize_varmaker(self):
+        varmaker = self.req.get_page_data('rql_varmaker')
+        if varmaker is None:
+            varmaker = self.req.varmaker
+            self.req.set_page_data('rql_varmaker', varmaker)
+        self.varmaker = varmaker
+        
 
 
 # concrete views base classes #################################################
