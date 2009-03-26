@@ -11,7 +11,7 @@ from logilab.mtconverter import html_escape
 from cubicweb.selectors import implements
 from cubicweb.common import Unauthorized
 from cubicweb.web.views import baseviews
-from cubicweb.web.views.editform import AutomaticEntityForm
+from cubicweb.web.views.editforms import AutomaticEntityForm
 
 
 class EmailAddressPrimaryView(baseviews.PrimaryView):

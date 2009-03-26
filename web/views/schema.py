@@ -18,7 +18,7 @@ from cubicweb.common.uilib import ureport_as_html
 from cubicweb.web.action import Action
 from cubicweb.web.views import baseviews
 from cubicweb.web.views import TmpFileViewMixin
-from cubicweb.web.views.editform import AutomaticEntityForm
+from cubicweb.web.views.editforms import AutomaticEntityForm
 from cubicweb.web.views.boxes import EditBox
 
 

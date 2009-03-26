@@ -16,7 +16,7 @@ from cubicweb.web import INTERNAL_FIELD_VALUE
 from cubicweb.web.form import FormMixIn
 from cubicweb.web.action import Action
 from cubicweb.web.views.baseviews import PrimaryView, EntityView
-from cubicweb.web.views.editform import AutomaticEntityForm
+from cubicweb.web.views.editforms import AutomaticEntityForm
 from cubicweb.web.views.boxes import EditBox
 
 

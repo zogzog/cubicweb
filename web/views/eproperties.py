@@ -17,7 +17,7 @@ from cubicweb.view import StartupView
 from cubicweb.web import INTERNAL_FIELD_VALUE, eid_param
 from cubicweb.web.views import baseviews
 from cubicweb.web.form import FormMixIn
-from cubicweb.web.views.editform import AutomaticEntityForm
+from cubicweb.web.views.editforms import AutomaticEntityForm
 
 AutomaticEntityForm.rwidgets.set_rtag('PropertyKeyWidget', 'pkey', 'subject', 'EProperty')
 AutomaticEntityForm.rwidgets.set_rtag('PropertyValueWidget', 'value', 'subject', 'EProperty')

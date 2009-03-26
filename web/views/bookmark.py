@@ -14,7 +14,7 @@ from cubicweb.web.htmlwidgets import BoxWidget, BoxMenu, RawBoxItem
 from cubicweb.web.action import Action
 from cubicweb.web.box import UserRQLBoxTemplate
 from cubicweb.web.views.baseviews import PrimaryView
-from cubicweb.web.views.editform import AutomaticEntityForm
+from cubicweb.web.views.editforms import AutomaticEntityForm
 
 AutomaticEntityForm.rcategories.set_rtag('primary', 'path', 'subject', 'Bookmark')
 AutomaticEntityForm.rwidgets.set_rtag('StringWidget', 'path', 'subject', 'Bookmark')
