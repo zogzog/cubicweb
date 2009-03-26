@@ -1,7 +1,7 @@
 """Primary view for bookmarks + user's bookmarks box
 
 :organization: Logilab
-:copyright: 2001-2008 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+:copyright: 2001-2009 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 """
 __docformat__ = "restructuredtext en"
@@ -14,6 +14,10 @@ from cubicweb.web.htmlwidgets import BoxWidget, BoxMenu, RawBoxItem
 from cubicweb.web.action import Action
 from cubicweb.web.box import UserRQLBoxTemplate
 from cubicweb.web.views.baseviews import PrimaryView
+from cubicweb.web.views.editform import AutomaticEntityForm
+
+AutomaticEntityForm.rcategories.set_rtag('primary', 'path', 'subject', 'Bookmark')
+AutomaticEntityForm.rwidgets.set_rtag('StringWidget', 'path', 'subject', 'Bookmark')
 
 
 class FollowAction(Action):

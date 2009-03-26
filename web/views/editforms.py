@@ -154,12 +154,25 @@ class AutomaticEntityForm(EntityFieldsForm):
     rcategories.set_rtag('primary', 'subject', 'eid')
     rcategories.set_rtag('metadata', 'subject', 'creation_date')
     rcategories.set_rtag('metadata', 'subject', 'modification_date')
-    rcategories.set_rtag('generated', 'subject', 'has_text')        
+    rcategories.set_rtag('generated', 'subject', 'has_text')
+    rcategories.set_rtag('metadata', 'owned_by', 'subject')
+    rcategories.set_rtag('metadata', 'created_by', 'subject')
+    rcategories.set_rtag('generated', 'is', 'subject')
+    rcategories.set_rtag('generated', 'is', 'object')
+    rcategories.set_rtag('generated', 'is_instance_of', 'subject')
+    rcategories.set_rtag('generated', 'is_instance_of', 'object')
+    rcategories.set_rtag('generated', 'identity', 'subject')
+    rcategories.set_rtag('generated', 'identity', 'object')
+    rcategories.set_rtag('generated', 'require_permission', 'subject')
+    rcategories.set_rtag('primary', 'in_state', 'subject')
+    rcategories.set_rtag('generated', 'wf_info_for', 'subject')
+    rcategories.set_rtag('generated', 'wf_info_for', 'subject')
+    rcategories.set_rtag('secondary', 'description', 'subject')
 
     # relations'widget (eg one of available class name in cubicweb.web.formwidgets)
     rwidgets = RelationTags()
     # inlined view flag for non final relations
-    inlined = RelationTags()
+    rinlined = RelationTags()
     # set of tags of the form <action>_on_new on relations. <action> is a
     # schema action (add/update/delete/read), and when such a tag is found
     # permissions checking is by-passed and supposed to be ok
@@ -325,8 +338,7 @@ class AutomaticEntityForm(EntityFieldsForm):
         """
         entity = self.edited_entity
         pending_deletes = self.req.get_pending_deletes(entity.eid)
-        # XXX add metadata category quick fix to get Folder relations
-        for label, rschema, role in self.srelations_by_category(('generic', 'metadata'), 'add'):
+        for label, rschema, role in self.srelations_by_category('generic'), 'add'):
             relatedrset = entity.related(rschema, role, limit=self.limit)
             if rschema.has_perm(self.req, 'delete'):
                 toggable_rel_link_func = toggable_relation_link
@@ -377,7 +389,7 @@ class AutomaticEntityForm(EntityFieldsForm):
         """return true if the given relation with entity has role and a
         targettype target should be inlined
         """
-        return self.inlined.etype_rtag(self.edited_entity.id, role, rschema, targettype)
+        return self.rinlined.etype_rtag(self.edited_entity.id, role, rschema, targettype)
 
     def should_display_inline_creation_form(self, rschema, existant, card):
         """return true if a creation form should be inlined

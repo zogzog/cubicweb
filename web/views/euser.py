@@ -16,7 +16,24 @@ from cubicweb.web import INTERNAL_FIELD_VALUE
 from cubicweb.web.form import FormMixIn
 from cubicweb.web.action import Action
 from cubicweb.web.views.baseviews import PrimaryView, EntityView
+from cubicweb.web.views.editform import AutomaticEntityForm
+from cubicweb.web.views.boxes import EditBox
 
+
+AutomaticEntityForm.rcategories.set_rtag('secondary', 'firstname', 'subject', 'EUser')
+AutomaticEntityForm.rcategories.set_rtag('secondary', 'surname', 'subject', 'EUser')
+AutomaticEntityForm.rcategories.set_rtag('metadata', 'last_login_time', 'subject', 'EUser')
+AutomaticEntityForm.rcategories.set_rtag('primary', 'in_group', 'subject', 'EUser')
+AutomaticEntityForm.rcategories.set_rtag('generated', 'owned_by', 'object', 'EUser')
+AutomaticEntityForm.rcategories.set_rtag('metadata', 'created_by', 'object', 'EUser')
+AutomaticEntityForm.rcategories.set_rtag('metadata', 'bookmarked_by', 'object', 'EUser')
+AutomaticEntityForm.rinlined.set_rtag(True, 'use_email', 'subject', 'EUser')
+
+EditBox.rmode.set_rtag('create', 'in_group', 'subject', 'EGroup')
+EditBox.rmode.set_rtag('link', 'owned_by', 'object', 'EUser')
+EditBox.rmode.set_rtag('link', 'created_by', 'object', 'EUser')
+EditBox.rmode.set_rtag('create', 'bookmarked_by', 'object', 'EUser')
+    
 
 class UserPreferencesEntityAction(Action):
     id = 'prefs'

@@ -1,7 +1,7 @@
 """Specific views for email addresses entities
 
 :organization: Logilab
-:copyright: 2001-2008 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+:copyright: 2001-2009 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 """
 __docformat__ = "restructuredtext en"
@@ -11,6 +11,8 @@ from logilab.mtconverter import html_escape
 from cubicweb.selectors import implements
 from cubicweb.common import Unauthorized
 from cubicweb.web.views import baseviews
+from cubicweb.web.views.editform import AutomaticEntityForm
+
 
 class EmailAddressPrimaryView(baseviews.PrimaryView):
     __select__ = implements('EmailAddress')

@@ -18,6 +18,23 @@ from cubicweb.common.uilib import ureport_as_html
 from cubicweb.web.action import Action
 from cubicweb.web.views import baseviews
 from cubicweb.web.views import TmpFileViewMixin
+from cubicweb.web.views.editform import AutomaticEntityForm
+from cubicweb.web.views.boxes import EditBox
+
+
+AutomaticEntityForm.rcategories.set_rtag('primary', 'require_group', 'subject', 'EPermission')
+AutomaticEntityForm.rcategories.set_rtag('generated', 'final', 'subject', 'EEtype')
+AutomaticEntityForm.rcategories.set_rtag('generated', 'final', 'subject', 'ERtype')
+AutomaticEntityForm.rinlined.set_rtag(True, 'relation_type', 'subject', 'ENFRDef')
+AutomaticEntityForm.rinlined.set_rtag(True, 'from_entity', 'subject', 'ENFRDef')
+AutomaticEntityForm.rinlined.set_rtag(True, 'to_entity', 'subject', 'ENFRDef')
+AutomaticEntityForm.rwidgets.set_rtag('StringWidget', 'expression', 'subject', 'RQLExpression')
+
+EditBox.rmode.set_rtag('create', 'state_of', 'object', 'EEType')
+EditBox.rmode.set_rtag('create', 'transition_of', 'object', 'EEType')
+EditBox.rmode.set_rtag('create', 'relation_type', 'object', 'ERType')
+EditBox.rmode.set_rtag('link', 'from_entity', 'object', 'EEType')
+EditBox.rmode.set_rtag('link', 'to_entity', 'object', 'EEType')
 
 
 class ViewSchemaAction(Action):

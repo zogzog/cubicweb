@@ -20,6 +20,13 @@ from cubicweb.web import stdmsgs, action, component, form
 from cubicweb.web.formfields import StringField,  RichTextField
 from cubicweb.web.formwidgets import HiddenInput
 from cubicweb.web.views import TmpFileViewMixin
+from cubicweb.web.views.boxes import EditBox
+
+
+EditBox.rmode.set_rtag('create', 'destination_state', 'subject', 'Transition')
+EditBox.rmode.set_rtag('create', 'allowed_transition', 'object', 'Transition')
+EditBox.rmode.set_rtag('create', 'destination_state', 'object', 'State')
+EditBox.rmode.set_rtag('create', 'allowed_transition', 'subject', 'State')
 
 
 # IWorkflowable views #########################################################
