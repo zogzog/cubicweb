@@ -7,16 +7,37 @@
 __docformat__ = "restructuredtext en"
 
 from cubicweb.vregistry import objectify_selector
-from cubicweb.selectors import (
+from cubicweb.selectors import (EntitySelector, 
     one_line_rset, two_lines_rset, one_etype_rset, relation_possible,
     non_final_entity,
     authenticated_user, match_user_groups, match_search_state,
-    has_editable_relation, has_permission, has_add_permission,
+    has_permission, has_add_permission,
     )
 from cubicweb.web.action import Action
 from cubicweb.web.views import linksearch_select_url, vid_from_rset
+from cubicweb.web.views.editforms import AutomaticEntityForm
 
 _ = unicode
+
+
+class has_editable_relation(EntitySelector):
+    """accept if some relations for an entity found in the result set is
+    editable by the logged user.
+
+    See `EntitySelector` documentation for behaviour when row is not specified.
+    """
+        
+    def score_entity(self, entity):
+        # if user has no update right but it can modify some relation,
+        # display action anyway
+        for dummy in AutomaticEntityForm.esrelations_by_category(
+            entity, 'generic', 'add'):
+            return 1
+        for rschema, targetschemas, role in AutomaticEntityForm.erelations_by_category(
+            entity, ('primary', 'secondary'), 'add'):
+            if not rschema.is_final():
+                return 1
+        return 0
 
 @objectify_selector
 def match_searched_etype(cls, req, rset, **kwargs):

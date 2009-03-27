@@ -655,26 +655,6 @@ class partial_relation_possible(PartialSelectorMixIn, relation_possible):
         self.target_etype = getattr(cls, 'etype', None)
 
 
-class has_editable_relation(EntitySelector):
-    """accept if some relations for an entity found in the result set is
-    editable by the logged user.
-
-    See `EntitySelector` documentation for behaviour when row is not specified.
-    """
-        
-    def score_entity(self, entity):
-        # if user has no update right but it can modify some relation,
-        # display action anyway
-        for dummy in entity.srelations_by_category(('generic', 'metadata'),
-                                                   'add'):
-            return 1
-        for rschema, targetschemas, role in entity.relations_by_category(
-            ('primary', 'secondary'), 'add'):
-            if not rschema.is_final():
-                return 1
-        return 0
-
-
 class may_add_relation(EntitySelector):
     """accept if the relation can be added to an entity found in the result set
     by the logged user.
