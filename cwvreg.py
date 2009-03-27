@@ -137,7 +137,9 @@ class CubicWebRegistry(VRegistry):
                     self.debug('kicking vobject %s (no implemented interface '
                                'among %s)', obj, ifaces)
                     self.unregister(obj)
-            
+            # clear needs_iface so we don't try to remove some not-anymore-in
+            # objects on automatic reloading
+            self._needs_iface.clear()
     
     @cached
     def etype_class(self, etype):
