@@ -252,12 +252,12 @@ class AnyEntity(Entity):
     @obsolete('use EntityFieldsForm.subject_relation_vocabulary')
     def subject_relation_vocabulary(self, rtype, limit):
         from cubicweb.web.form import EntityFieldsForm
-        return EntityFieldsForm(entity=self).subject_relation_vocabulary(rtype, limit)
+        return EntityFieldsForm(self.req, None, entity=self).subject_relation_vocabulary(rtype, limit)
 
     @obsolete('use EntityFieldsForm.object_relation_vocabulary')
     def object_relation_vocabulary(self, rtype, limit):
         from cubicweb.web.form import EntityFieldsForm
-        return EntityFieldsForm(entity=self).object_relation_vocabulary(rtype, limit)
+        return EntityFieldsForm(self.req, None, entity=self).object_relation_vocabulary(rtype, limit)
     
     @obsolete('use AutomaticEntityForm.[e]relations_by_category')
     def relations_by_category(self, categories=None, permission=None):
