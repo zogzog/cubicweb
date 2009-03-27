@@ -561,15 +561,16 @@ class EntityFieldsForm(FieldsForm):
         relation's object entities (i.e. self is the subject) according
         to initial_state, state_of and next_state relation
         """
-        if not self.has_eid() or not self.in_state:
+        entity = self.edited_entity
+        if not entity.has_eid() or not entity.in_state:
             # get the initial state
             rql = 'Any S where S state_of ET, ET name %(etype)s, ET initial_state S'
-            rset = self.req.execute(rql, {'etype': str(self.e_schema)})
+            rset = self.req.execute(rql, {'etype': str(entity.e_schema)})
             if rset:
                 return [(rset.get_entity(0, 0).view('combobox'), rset[0][0])]
             return []
         results = []
-        for tr in self.in_state[0].transitions(self):
+        for tr in entity.in_state[0].transitions(entity):
             state = tr.destination_state[0]
             results.append((state.view('combobox'), state.eid))
         return sorted(results)
