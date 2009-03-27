@@ -16,7 +16,7 @@ from logilab.common.deprecation import obsolete
 from rql.nodes import VariableRef, SubQuery
 from rql.stmts import Union, Select
 
-from cubicweb import Unauthorized
+from cubicweb import Unauthorized, NoSelectableObject
 from cubicweb.vregistry import VObject, AndSelector
 from cubicweb.selectors import yes
 from cubicweb.utils import UStringIO, ustrftime
