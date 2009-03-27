@@ -556,6 +556,24 @@ class EntityFieldsForm(FieldsForm):
             res.append((entity.view('combobox'), entity.eid))
         return res
 
+    def subject_in_state_vocabulary(self, rschema, limit=None):
+        """vocabulary method for the in_state relation, looking for
+        relation's object entities (i.e. self is the subject) according
+        to initial_state, state_of and next_state relation
+        """
+        if not self.has_eid() or not self.in_state:
+            # get the initial state
+            rql = 'Any S where S state_of ET, ET name %(etype)s, ET initial_state S'
+            rset = self.req.execute(rql, {'etype': str(self.e_schema)})
+            if rset:
+                return [(rset.get_entity(0, 0).view('combobox'), rset[0][0])]
+            return []
+        results = []
+        for tr in self.in_state[0].transitions(self):
+            state = tr.destination_state[0]
+            results.append((state.view('combobox'), state.eid))
+        return sorted(results)
+
 
 class CompositeForm(FieldsForm):
     """form composed for sub-forms"""

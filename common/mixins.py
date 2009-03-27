@@ -7,6 +7,7 @@
 """
 __docformat__ = "restructuredtext en"
 
+from logilab.common.deprecation import obsolete
 from logilab.common.decorators import cached
 
 from cubicweb.selectors import implements
@@ -217,26 +218,6 @@ class WorkflowableMixIn(object):
         """return the latest transition information for this entity"""
         return self.reverse_wf_info_for[-1]
             
-    # specific vocabulary methods #############################################
-
-    def subject_in_state_vocabulary(self, rschema, limit=None):
-        """vocabulary method for the in_state relation, looking for
-        relation's object entities (i.e. self is the subject) according
-        to initial_state, state_of and next_state relation
-        """
-        if not self.has_eid() or not self.in_state:
-            # get the initial state
-            rql = 'Any S where S state_of ET, ET name %(etype)s, ET initial_state S'
-            rset = self.req.execute(rql, {'etype': str(self.e_schema)})
-            if rset:
-                return [(rset.get_entity(0, 0).view('combobox'), rset[0][0])]
-            return []
-        results = []
-        for tr in self.in_state[0].transitions(self):
-            state = tr.destination_state[0]
-            results.append((state.view('combobox'), state.eid))
-        return sorted(results)
-            
     # __method methods ########################################################
     
     def set_state(self, params=None):
@@ -247,6 +228,13 @@ class WorkflowableMixIn(object):
         self.change_state(int(params.pop('state')), params.get('trcomment'),
                           params.get('trcommentformat'))
         self.req.set_message(self.req._('__msg state changed'))
+            
+    # specific vocabulary methods #############################################
+    
+    @obsolete('use EntityFieldsForm.object_relation_vocabulary')
+    def subject_in_state_vocabulary(self, rschema, limit=None):
+        from cubicweb.web.form import EntityFieldsForm
+        return EntityFieldsForm(entity=self).subject_in_state_vocabulary(rtype, limit)
 
 
 
