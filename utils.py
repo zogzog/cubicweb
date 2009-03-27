@@ -53,7 +53,7 @@ def ustrftime(date, fmt='%Y-%m-%d'):
     """
     # date format may depend on the locale
     encoding = locale.getpreferredencoding(do_setlocale=False) or 'UTF-8'
-    return unicode(date.strftime(fmt), encoding)
+    return unicode(date.strftime(str(fmt)), encoding)
 
 def make_uid(key):
     """forge a unique identifier"""
