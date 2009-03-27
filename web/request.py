@@ -215,6 +215,19 @@ class CubicWebRequestBase(DBAPIRequest):
         if self.cnx is not None:
             self.set_session_data('search_state', searchstate)
 
+    def match_search_state(self, rset):
+        """when searching an entity to create a relation, return True if entities in
+        the given rset may be used as relation end
+        """
+        try:
+            searchedtype = self.search_state[1][-1]
+        except IndexError:
+            return False # no searching for association
+        for etype in rset.column_types(0):
+            if etype != searchedtype:
+                return False
+        return True
+
     def update_breadcrumbs(self):
         """stores the last visisted page in session data"""
         searchstate = self.get_session_data('search_state')
