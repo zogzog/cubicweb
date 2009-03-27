@@ -22,58 +22,58 @@ class RelationTags(object):
         self.use_set = use_set
         self._tagdefs = {}
         
-    def set_rtag(self, tag, role, rtype, stype='*', otype='*'):
+    def set_rtag(self, tag, rtype, role, stype='*', otype='*'):
         assert not self.use_set
         assert role in ('subject', 'object'), role
-        self._tagdefs[(stype, rtype, otype, role)] = tag
+        self._tagdefs[(rtype, role, stype, otype)] = tag
         
-    def rtag(self, role, rtype, stype='*', otype='*'):
+    def rtag(self, rtype, role, stype='*', otype='*'):
         assert not self.use_set
-        for key in reversed(self._get_keys(role, rtype, stype, otype)):
+        for key in reversed(self._get_keys(rtype, role, stype, otype)):
             try:
                 return self._tagdefs[key]
             except KeyError:
                 continue
         return None
         
-    def etype_rtag(self, etype, role, rtype, ttype='*'):
+    def etype_rtag(self, etype, rtype, role, ttype='*'):
         if role == 'subject':
-            return self.rtag(role, rtype, etype, ttype)
-        return self.rtag(role, rtype, ttype, etype)
+            return self.rtag(rtype, role, etype, ttype)
+        return self.rtag(rtype, role, ttype, etype)
         
-    def add_rtag(self, tag, role, rtype, stype='*', otype='*'):
+    def add_rtag(self, tag, rtype, role, stype='*', otype='*'):
         assert self.use_set
         assert role in ('subject', 'object'), role
-        rtags = self._tagdefs.setdefault((stype, rtype, otype, role), set())
+        rtags = self._tagdefs.setdefault((rtype, role, stype, otype), set())
         rtags.add(tag)
         
-    def rtags(self, role, rtype, stype='*', otype='*'):
+    def rtags(self, rtype, role, stype='*', otype='*'):
         assert self.use_set
         rtags = set()
-        for key in self._get_keys(role, rtype, stype, otype):
+        for key in self._get_keys(rtype, role, stype, otype):
             try:
                 rtags.update(self._tagdefs[key])
             except KeyError:
                 continue
         return rtags
         
-    def etype_rtags(self, etype, role, rtype, ttype='*'):
+    def etype_rtags(self, etype, rtype, role, ttype='*'):
         if role == 'subject':
-            return self.rtags(role, rtype, etype, ttype)
-        return self.rtags(role, rtype, ttype, etype)
+            return self.rtags(rtype, role, etype, ttype)
+        return self.rtags(rtype, role, ttype, etype)
 
-    def _get_keys(self, role, rtype, stype, otype): 
+    def _get_keys(self, rtype, role, stype, otype): 
         assert role in ('subject', 'object'), role
-        keys = [('*', rtype, '*', role),
-                ('*', rtype, otype, role),
-                (stype, rtype, '*', role),
-                (stype, rtype, otype, role)]
+        keys = [(rtype, role, '*', '*'),
+                (rtype, role, '*', otype),
+                (rtype, role, stype, '*'),
+                (rtype, role, stype, otype)]
         if stype == '*' or otype == '*':
-            keys.remove(('*', rtype, '*', role))
+            keys.remove((rtype, role, '*', '*'))
             if stype == '*':
-                keys.remove(('*', rtype, otype, role))
+                keys.remove((rtype, role, '*', otype))
             if otype == '*':
-                keys.remove((stype, rtype, '*', role))            
+                keys.remove((rtype, role, stype, '*'))            
         return keys
     
     # dict compat

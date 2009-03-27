@@ -151,10 +151,10 @@ class AutomaticEntityForm(EntityFieldsForm):
     # relations'category (eg primary/secondary/generic/metadata/generated)
     rcategories = RelationTags()
     # use primary and not generated for eid since it has to be an hidden
-    rcategories.set_rtag('primary', 'subject', 'eid')
-    rcategories.set_rtag('metadata', 'subject', 'creation_date')
-    rcategories.set_rtag('metadata', 'subject', 'modification_date')
-    rcategories.set_rtag('generated', 'subject', 'has_text')
+    rcategories.set_rtag('primary', 'eid', 'subject')
+    rcategories.set_rtag('metadata', 'creation_date', 'subject')
+    rcategories.set_rtag('metadata', 'modification_date', 'subject')
+    rcategories.set_rtag('generated', 'has_text', 'subject')
     rcategories.set_rtag('metadata', 'owned_by', 'subject')
     rcategories.set_rtag('metadata', 'created_by', 'subject')
     rcategories.set_rtag('generated', 'is', 'subject')
@@ -171,7 +171,9 @@ class AutomaticEntityForm(EntityFieldsForm):
 
     # relations'widget (eg one of available class name in cubicweb.web.formwidgets)
     rwidgets = RelationTags()
-    # inlined view flag for non final relations
+    # inlined view flag for non final relations: when True for an entry, the
+    # entity(ies) at the other end of the relation will be editable from the
+    # form of the edited entity
     rinlined = RelationTags()
     # set of tags of the form <action>_on_new on relations. <action> is a
     # schema action (add/update/delete/read), and when such a tag is found
@@ -201,7 +203,7 @@ class AutomaticEntityForm(EntityFieldsForm):
                         X, Y = tschema, eschema
                         card = rschema.rproperty(X, Y, 'cardinality')[1]
                         composed = rschema.rproperty(X, Y, 'composite') == 'subject'
-                    if not cls.rcategories.rtag(role, rschema, X, Y):
+                    if not cls.rcategories.rtag(rschema, role, X, Y):
                         if card in '1+':
                             if not rschema.is_final() and composed:
                                 category = 'generated'
@@ -211,49 +213,10 @@ class AutomaticEntityForm(EntityFieldsForm):
                             category = 'secondary'
                         else: 
                             category = 'generic'
-                        cls.rcategories.set_rtag(category, role, rschema, X, Y)
-                        
-    
-    def __init__(self, *args, **kwargs):
-        super(AutomaticEntityForm, self).__init__(*args, **kwargs)
-        if self.edited_entity.has_eid():
-            self.edited_entity.complete()
-        for rschema, role in self.editable_attributes():
-            wdgname = self.rwidgets.etype_rtag(self.edited_entity.id, role, rschema)
-            if wdgname:
-                field = guess_field(self.edited_entity.__class__, rschema, role,
-                                    eidparam=True, widget=getattr(formwidgets, wdgname))
-            else:
-                field = guess_field(self.edited_entity.__class__, rschema, role,
-                                    eidparam=True)
-            self.fields.append(field)
-        
-    def action(self):
-        """return the form's action attribute"""
-        try:
-            return self._action
-        except AttributeError:
-            return self.build_url('validateform')
-        
-    def set_action(self, value):
-        self._action = value
-        
-    action = property(action, set_action)
-    
-    def form_buttons(self):
-        """return the form's buttons (as string)"""
-        return [self.button_ok(tabindex=self.req.next_tabindex()),
-                self.button_apply(tabindex=self.req.next_tabindex()),
-                self.button_cancel(tabindex=self.req.next_tabindex())]
-
-    def editable_attributes(self):
-        """return a list of (relation schema, role) to edit for the entity
-        """
-        return [(rschema, x) for rschema, _, x in self.relations_by_category(
-            self.entity, self.attrcategories, 'add') if rschema != 'eid']
+                        cls.rcategories.set_rtag(category, rschema, role, X, Y)
 
     @classmethod
-    def relations_by_category(cls, entity, categories=None, permission=None):
+    def erelations_by_category(cls, entity, categories=None, permission=None):
         """return a list of (relation schema, target schemas, role) matching
         categories and permission
         """
@@ -276,14 +239,14 @@ class AutomaticEntityForm(EntityFieldsForm):
             # permission which may imply rql queries
             if categories is not None:
                 targetschemas = [tschema for tschema in targetschemas
-                                 if rtags.etype_rtag(eschema, role, rschema, tschema) in categories]
+                                 if rtags.etype_rtag(eschema, rschema, role, tschema) in categories]
                 if not targetschemas:
                     continue
             if permission is not None:
                 # tag allowing to hijack the permission machinery when
                 # permission is not verifiable until the entity is actually
                 # created...
-                if eid is None and '%s_on_new' % permission in permsoverrides.etype_rtags(eschema, role, rschema):
+                if eid is None and '%s_on_new' % permission in permsoverrides.etype_rtags(eschema, rschema, role):
                     yield (rschema, targetschemas, role)
                     continue
                 if rschema.is_final():
@@ -315,19 +278,80 @@ class AutomaticEntityForm(EntityFieldsForm):
                         continue
             yield (rschema, targetschemas, role)
     
+    @classmethod
+    def esrelations_by_category(cls, entity, categories=None, permission=None):
+        """filter out result of relations_by_category(categories, permission) by
+        removing final relations
+
+        return a sorted list of (relation's label, relation'schema, role) 
+        """
+        result = []
+        for rschema, ttypes, role in cls.erelations_by_category(
+            entity, categories, permission):
+            if rschema.is_final():
+                continue
+            result.append((rschema.display_name(entity.req, role), rschema, role))
+        return sorted(result)
+                        
+    
+    def __init__(self, *args, **kwargs):
+        super(AutomaticEntityForm, self).__init__(*args, **kwargs)
+        if self.edited_entity.has_eid():
+            self.edited_entity.complete()
+        for rschema, role in self.editable_attributes():
+            wdgname = self.rwidgets.etype_rtag(self.edited_entity.id, rschema,
+                                               role)
+            if wdgname:
+                widget = getattr(formwidgets, wdgname)
+                field = guess_field(self.edited_entity.__class__, rschema, role,
+                                    eidparam=True, widget=widget)
+            else:
+                field = guess_field(self.edited_entity.__class__, rschema, role,
+                                    eidparam=True)
+            if field is not None:
+                self.fields.append(field)
+    
+    def relations_by_category(self, categories=None, permission=None):
+        """return a list of (relation schema, target schemas, role) matching
+        given category(ies) and permission
+        """
+        return self.erelations_by_category(self.edited_entity, categories,
+                                           permission)
+    
     def srelations_by_category(self, categories=None, permission=None):
         """filter out result of relations_by_category(categories, permission) by
         removing final relations
 
-        return a list of (relation's label, relation'schema, role)
+        return a sorted list of (relation's label, relation'schema, role) 
         """
-        result = []
-        for rschema, ttypes, role in self.relations_by_category(
-            self.entity, categories, permission):
-            if rschema.is_final():
-                continue
-            result.append( (rschema.display_name(self.req, role), rschema, role) )
-        return sorted(result)
+        return self.esrelations_by_category(self.edited_entity, categories,
+                                           permission)
+        
+    def action(self):
+        """return the form's action attribute. Default to validateform if not
+        explicitly overriden.
+        """
+        try:
+            return self._action
+        except AttributeError:
+            return self.build_url('validateform')
+        
+    def set_action(self, value):
+        """override default action"""
+        self._action = value
+        
+    action = property(action, set_action)
+    
+    def form_buttons(self):
+        """return the form's buttons (as string)"""
+        return [self.button_ok(tabindex=self.req.next_tabindex()),
+                self.button_apply(tabindex=self.req.next_tabindex()),
+                self.button_cancel(tabindex=self.req.next_tabindex())]
+
+    def editable_attributes(self):
+        """return a list of (relation schema, role) to edit for the entity"""
+        return [(rschema, x) for rschema, _, x in self.relations_by_category(
+            self.attrcategories, 'add') if rschema != 'eid']
         
     def relations_table(self):
         """yiels 3-tuples (rtype, target, related_list)
@@ -339,7 +363,7 @@ class AutomaticEntityForm(EntityFieldsForm):
         """
         entity = self.edited_entity
         pending_deletes = self.req.get_pending_deletes(entity.eid)
-        for label, rschema, role in self.srelations_by_category('generic'), 'add'):
+        for label, rschema, role in self.srelations_by_category('generic', 'add'):
             relatedrset = entity.related(rschema, role, limit=self.limit)
             if rschema.has_perm(self.req, 'delete'):
                 toggable_rel_link_func = toggable_relation_link
@@ -390,7 +414,7 @@ class AutomaticEntityForm(EntityFieldsForm):
         """return true if the given relation with entity has role and a
         targettype target should be inlined
         """
-        return self.rinlined.etype_rtag(self.edited_entity.id, role, rschema, targettype)
+        return self.rinlined.etype_rtag(self.edited_entity.id, rschema, role, targettype)
 
     def should_display_inline_creation_form(self, rschema, existant, card):
         """return true if a creation form should be inlined

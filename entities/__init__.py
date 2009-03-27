@@ -8,7 +8,7 @@ __docformat__ = "restructuredtext en"
 
 from warnings import warn
 
-from logilab.common.deprecation import deprecated_function
+from logilab.common.deprecation import deprecated_function, obsolete
 from logilab.common.decorators import cached
 
 from cubicweb import Unauthorized, typed_eid
@@ -249,19 +249,25 @@ class AnyEntity(Entity):
             wdg = widget(cls.vreg, tschema, rschema, cls, 'object')
         return wdg
 
-    @obsolete('use AutomaticEntityForm.relations_by_category')
-    def relations_by_category(self, categories=None, permission=None):
-        from cubicweb.web.views.editform import AutomaticEntityForm
-        return AutomaticEntityForm.relations_by_category(entity, categories, permission)
+    @obsolete('use EntityFieldsForm.subject_relation_vocabulary')
+    def subject_relation_vocabulary(self, rtype, limit):
+        from cubicweb.web.form import EntityFieldsForm
+        return EntityFieldsForm(entity=self).subject_relation_vocabulary(rtype, limit)
 
+    @obsolete('use EntityFieldsForm.object_relation_vocabulary')
+    def object_relation_vocabulary(self, rtype, limit):
+        from cubicweb.web.form import EntityFieldsForm
+        return EntityFieldsForm(entity=self).object_relation_vocabulary(rtype, limit)
+    
+    @obsolete('use AutomaticEntityForm.[e]relations_by_category')
+    def relations_by_category(self, categories=None, permission=None):
+        from cubicweb.web.views.editforms import AutomaticEntityForm
+        return AutomaticEntityForm.erelations_by_category(self, categories, permission)
+
+    @obsolete('use AutomaticEntityForm.[e]srelations_by_category')
     def srelations_by_category(self, categories=None, permission=None):
-        result = []
-        for rschema, ttypes, target in self.relations_by_category(categories,
-                                                                  permission):
-            if rschema.is_final():
-                continue
-            result.append( (rschema.display_name(self.req, target), rschema, target) )
-        return sorted(result)
+        from cubicweb.web.views.editforms import AutomaticEntityForm
+        return AutomaticEntityForm.esrelations_by_category(self, categories, permission)
     
     def _default_format(self):
         return self.req.property_value('ui.default-text-format')
