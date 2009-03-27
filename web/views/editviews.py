@@ -34,8 +34,9 @@ class SearchForAssociationView(EntityView):
 
     def cell_call(self, row, col):
         rset, vid, divid, paginate = self.filter_box_context_info()
+        self.rset = rset
         self.w(u'<div id="%s">' % divid)
-        self.pagination(self.req, rset, w=self.w)
+        self.paginate(self.req, rset, w=self.w)
         self.wview(vid, rset, 'noresult')
         self.w(u'</div>')
 
@@ -114,8 +115,9 @@ class UnrelatedDivs(EntityView):
     %s
   </select>
 </div>
-""" % (hidden and 'hidden' or '', divid, selectid, html_escape(dumps(entity.eid)),
-       is_cell and 'true' or 'null', relname, '\n'.join(options))
+""" % (hidden and 'hidden' or '', divid, selectid,
+       html_escape(dumps(entity.eid)), is_cell and 'true' or 'null', relname,
+       '\n'.join(options))
 
     def _get_select_options(self, entity, rschema, target):
         """add options to search among all entities of each possible type"""
@@ -125,7 +127,8 @@ class UnrelatedDivs(EntityView):
         rtype = rschema.type
         for eview, reid in entity.vocabulary(rschema, target, self.limit):
             if reid is None:
-                options.append('<option class="separator">-- %s --</option>' % html_escape(eview))
+                options.append('<option class="separator">-- %s --</option>'
+                               % html_escape(eview))
             else:
                 optionid = relation_id(eid, rtype, target, reid)
                 if optionid not in pending_inserts:
