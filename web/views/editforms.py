@@ -11,6 +11,7 @@ from copy import copy
 
 from simplejson import dumps
 
+from logilab.common.decorators import iclassmethod
 from logilab.mtconverter import html_escape
 
 from cubicweb import typed_eid
@@ -292,7 +293,20 @@ class AutomaticEntityForm(EntityFieldsForm):
                 continue
             result.append((rschema.display_name(entity.req, role), rschema, role))
         return sorted(result)
-                        
+    
+    @iclassmethod
+    def field_by_name(cls_or_self, name, role='subject', eclass=None):
+        try:
+            return super(AutomaticEntityForm, cls_or_self, name, role)
+        except Exception: # XXX should raise more explicit exception
+            if eclass is None:
+                raise
+            field = guess_field(eclass, cls_or_self.schema.rschema(name), role,
+                                eidparam=True)
+            if field is None:
+                raise
+            raise
+            
     
     def __init__(self, *args, **kwargs):
         super(AutomaticEntityForm, self).__init__(*args, **kwargs)

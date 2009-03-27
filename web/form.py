@@ -220,13 +220,13 @@ class FieldsForm(FormMixIn, AppRsetObject):
         self.context = None
 
     @iclassmethod
-    def field_by_name(cls_or_self, name):
+    def field_by_name(cls_or_self, name, role='subject'):
         if isinstance(cls_or_self, type):
             fields = cls_or_self._fields_
         else:
             fields = cls_or_self.fields
         for field in fields:
-            if field.name == name:
+            if field.name == name and field.role == role:
                 return field
         raise Exception('field %s not found' % name)
     
@@ -309,7 +309,7 @@ class FieldsForm(FormMixIn, AppRsetObject):
     def form_field_id(self, field):
         return field.id
    
-    def form_field_vocabulary(self, field):
+    def form_field_vocabulary(self, field, limit=None):
         raise NotImplementedError
 
     def form_buttons(self):
