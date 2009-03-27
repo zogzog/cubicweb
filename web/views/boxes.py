@@ -52,7 +52,7 @@ class EditBox(BoxTemplate):
     @classmethod
     def registered(cls, registry):
         """build class using descriptor at registration time"""
-        super(AutomaticEntityForm, cls).registered(registry)
+        super(EditBox, cls).registered(registry)
         cls.init_rtags_mode()
         return cls
         
@@ -70,7 +70,7 @@ class EditBox(BoxTemplate):
                     else:
                         X, Y = tschema, eschema
                         card = rschema.rproperty(X, Y, 'cardinality')[1]
-                    if not cls.rmode.rtag(role, rschema, X, Y):
+                    if not cls.rmode.rtag(rschema, role, X, Y):
                         if card in '?1':
                             # by default, suppose link mode if cardinality doesn't allow
                             # more than one relation
@@ -81,14 +81,14 @@ class EditBox(BoxTemplate):
                         else:
                             # link mode by default
                             mode = 'link'
-                        cls.rmode.set_rtag(category, role, rschema, X, Y)
+                        cls.rmode.set_rtag(mode, rschema, role, X, Y)
 
     @classmethod
     def relation_mode(cls, rtype, etype, targettype, role='subject'):
         """return a string telling if the given relation is usually created
         to a new entity ('create' mode) or to an existant entity ('link' mode)
         """
-        return cls.rmode.rtag(role, rtype, etype, targettype)
+        return cls.rmode.rtag(rtype, role, etype, targettype)
 
 
     def call(self, **kwargs):

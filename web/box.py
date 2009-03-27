@@ -38,7 +38,7 @@ class BoxTemplate(View):
     """
     __registry__ = 'boxes'
     __select__ = match_context_prop()
-    registered = require_group_compat(View.registered)
+    registered = classmethod(require_group_compat(View.registered))
     
     categories_in_order = ()
     property_defs = {

@@ -3,7 +3,7 @@ publisher to get a full CubicWeb web application
 
 
 :organization: Logilab
-:copyright: 2001-2008 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+:copyright: 2001-2009 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 """
 __docformat__ = "restructuredtext en"
@@ -35,12 +35,5 @@ def eid_param(name, eid):
 from logging import getLogger
 LOGGER = getLogger('cubicweb.web')
 
+# XXX deprecated
 FACETTES = set()
-
-
-## FACETTES = set( (
-##     # (relation, role, target's attribute)
-##     ('created_by', 'subject', 'login'),
-##     ('in_group', 'subject', 'name'),
-##     ('in_state', 'subject', 'name'),
-##     ))

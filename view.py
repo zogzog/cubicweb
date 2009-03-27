@@ -12,7 +12,7 @@ from cStringIO import StringIO
 from logilab.common.deprecation import obsolete
 from logilab.mtconverter import html_escape
 
-from cubicweb import NotAnEntity, NoSelectableObject
+from cubicweb import NotAnEntity
 from cubicweb.selectors import yes, non_final_entity, nonempty_rset, none_rset
 from cubicweb.selectors import require_group_compat, accepts_compat
 from cubicweb.appobject import AppRsetObject

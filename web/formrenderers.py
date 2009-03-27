@@ -220,18 +220,21 @@ class EntityCompositeFormRenderer(FormRenderer):
 class EntityFormRenderer(FormRenderer):
     """specific renderer for entity edition form (edition)"""
         
+    def render(self, form, values):
+        rendered = super(EntityFormRenderer, self).render(form, values)
+        return rendered + u'</div>' # close extra div introducted by open_form
+        
     def open_form(self, form, values):
         attrs_fs_label = ('<div class="iformTitle"><span>%s</span></div>'
                           % form.req._('main informations'))
         attrs_fs_label += '<div class="formBody">'
-        return super(EntityFormRenderer, self).open_form(form, values) + attrs_fs_label
+        return attrs_fs_label + super(EntityFormRenderer, self).open_form(form, values)
 
     def render_fields(self, w, form, values):
         super(EntityFormRenderer, self).render_fields(w, form, values)
         self.inline_entities_form(w, form)
         if form.edited_entity.has_eid():
             self.relations_form(w, form)
-        w(u'</div>') # close extra div introducted by open_form
 
     def _render_fields(self, fields, w, form, values):
         if not form.edited_entity.has_eid() or form.edited_entity.has_perm('update'):

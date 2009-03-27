@@ -17,6 +17,46 @@ class EntityFieldsFormTC(WebTest):
         self.entity = self.user(self.req)
         self.renderer = FormRenderer()
         
+    # form view tests #########################################################
+        
+    def test_delete_conf_formview(self):
+        rset = self.execute('EGroup X')
+        self.view('deleteconf', rset, template=None).source
+        
+    def test_massmailing_formview(self):
+        self.execute('INSERT EmailAddress X: X address L + "@cubicweb.org", '
+                     'U use_email X WHERE U is EUser, U login L')
+        rset = self.execute('EUser X')
+        self.view('massmailing', rset, template=None)
+        
+    def test_automatic_edition_formview(self):
+        rset = self.execute('EUser X')
+        self.view('edition', rset, row=0, template=None).source
+        
+    def test_automatic_edition_formview(self):
+        rset = self.execute('EUser X')
+        self.view('copy', rset, row=0, template=None).source
+        
+    def test_automatic_creation_formview(self):
+        self.view('creation', None, etype='EUser', template=None).source
+        
+    def test_automatic_muledit_formview(self):
+        rset = self.execute('EUser X')
+        self.view('muledit', rset, template=None).source
+        
+    def test_automatic_reledit_formview(self):
+        rset = self.execute('EUser X')
+        self.view('reledit', rset, row=0, rtype='login', template=None).source
+        
+    def test_automatic_inline_edit_formview(self):
+        geid = self.execute('EGroup X LIMIT 1')[0][0]
+        rset = self.execute('EUser X LIMIT 1')
+        self.view('inline-edition', rset, row=0, rtype='in_group', peid=geid, template=None).source
+                              
+    def test_automatic_inline_creation_formview(self):
+        geid = self.execute('EGroup X LIMIT 1')[0][0]
+        self.view('inline-creation', None, etype='EUser', rtype='in_group', peid=geid, template=None).source
+
     # form tests ##############################################################
     
     def test_form_inheritance(self):
@@ -32,45 +72,13 @@ class EntityFieldsFormTC(WebTest):
                                entity=self.entity)
         form.form_render(state=123, trcomment=u'')
         
-    def test_delete_conf_form_multi(self):
-        rset = self.execute('EGroup X')
-        self.view('deleteconf', rset, template=None).source
-        
-    def test_massmailing_form(self):
-        self.execute('INSERT EmailAddress X: X address L + "@cubicweb.org", '
-                     'U use_email X WHERE U is EUser, U login L')
-        rset = self.execute('EUser X')
-        self.view('massmailing', rset, template=None)
-        
-    def test_automatic_edition_form(self):
-        rset = self.execute('EUser X')
-        self.view('edition', rset, row=0, template=None).source
-        
-    def test_automatic_edition_form(self):
-        rset = self.execute('EUser X')
-        self.view('copy', rset, row=0, template=None).source
-        
-    def test_automatic_creation_form(self):
-        self.view('creation', None, etype='EUser', template=None).source
-        
-    def test_automatic_muledit_form(self):
-        rset = self.execute('EUser X')
-        self.view('muledit', rset, template=None).source
-        
-    def test_automatic_reledit_form(self):
-        rset = self.execute('EUser X')
-        self.view('reledit', rset, row=0, rtype='login', template=None).source
-        
-    def test_automatic_inline_edit_form(self):
-        geid = self.execute('EGroup X LIMIT 1')[0][0]
+    def test_edition_form(self):
         rset = self.execute('EUser X LIMIT 1')
-        self.view('inline-edition', rset, row=0, rtype='in_group', peid=geid, template=None).source
-                              
-    def test_automatic_inline_creation_form(self):
-        geid = self.execute('EGroup X LIMIT 1')[0][0]
-        self.view('inline-creation', None, etype='EUser', rtype='in_group', peid=geid, template=None).source
-
-
+        form = self.vreg.select_object('forms', 'edition', rset.req, rset, row=0, col=0)
+        # should be also selectable by specifying entity
+        self.vreg.select_object('forms', 'edition', self.request(), entity=rset.get_entity(0, 0))
+        self.failIf(any(f for f in form.fields if f is None))
+        
     # fields tests ############################################################
 
     def _render_entity_field(self, name, form):

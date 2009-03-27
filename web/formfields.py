@@ -89,7 +89,13 @@ class Field(object):
 
     def vocabulary(self, form):
         if self.choices is not None:
-            return self.choices
+            if callable(self.choices):
+                vocab = self.choices(req=form.req)
+            else:
+                vocab = self.choices
+            if vocab and not isinstance(vocab[0], (list, tuple)):
+                vocab = [(x, x) for x in vocab]
+            return vocab
         return form.form_field_vocabulary(self)
 
     
@@ -334,8 +340,8 @@ def stringfield_from_constraints(constraints, **kwargs):
     field = None
     for cstr in constraints:
         if isinstance(cstr, StaticVocabularyConstraint):
-            kwargs.setdefault('widget', Select(vocabulary=cstr.vocabulary))
-            return StringField(**kwargs)
+            kwargs.setdefault('widget', Select())
+            return StringField(choices=cstr.vocabulary, **kwargs)
         if isinstance(cstr, SizeConstraint) and cstr.max is not None:
             if cstr.max > 257:
                 rows_cols_from_constraint(cstr, kwargs)
