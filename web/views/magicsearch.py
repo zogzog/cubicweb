@@ -392,33 +392,3 @@ class MagicSearchComponent(Component):
             # let exception propagate
             return proc.process_query(uquery, req)
         raise BadRQLQuery(req._('sorry, the server is unable to handle this query'))
-
-
-# Do not make a strong dependency on NlpTools
-try:
-    from NlpTools.rqltools.client import RQLClient
-except ImportError:
-    LOGGER.info('could not import RQLClient (NlpTools)')
-else:
-    try:
-        from Pyro.errors import NamingError
-    except ImportError:
-        LOGGER.warning("pyro is not installed, can't try to connect to nlp server")
-    else:
-        try:
-            class NLPProcessor(BaseQueryProcessor):
-                priority = 8
-                nlp_agent = RQLClient('ivan')
-                def preprocess_query(self, uquery, req):
-                    try:
-                        answer = self.nlp_agent.get_translation(uquery)
-                        if not answer:
-                            raise BadRQLQuery(uquery)
-                        return answer or uquery,
-                    except Exception, ex:
-                        LOGGER.exception(str(ex))
-                        return uquery,
-
-        except NamingError: # NlpTools available but no server registered
-            LOGGER.warning('could not find any RQLServer object named "ivan"')
-
