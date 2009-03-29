@@ -513,17 +513,20 @@ class ExamineLogCommand(Command):
             raise BadCommandUsage("no argument expected")
         import re
         requests = {}
-        for line in sys.stdin:
+        for lineno, line in enumerate(sys.stdin):
             if not ' WHERE ' in line:
                 continue
             #sys.stderr.write( line )
-            rql, time = line.split('--')
-            rql = re.sub("(\'\w+': \d*)", '', rql)
-            req = requests.setdefault(rql, [])
-            time.strip()
-            chunks = time.split()
-            cputime = float(chunks[-3])
-            req.append( cputime )
+            try:
+                rql, time = line.split('--')
+                rql = re.sub("(\'\w+': \d*)", '', rql)
+                req = requests.setdefault(rql, [])
+                time.strip()
+                chunks = time.split()
+                cputime = float(chunks[-3])
+                req.append( cputime )
+            except Exception, exc:
+                sys.stderr.write('Line %s: %s\n' % (lineno, exc))
 
         stat = []
         for rql, times in requests.items():
@@ -531,8 +534,9 @@ class ExamineLogCommand(Command):
 
         stat.sort()
         stat.reverse()
+        print 'Time ; Occurences ; Query'
         for time, occ, rql in stat:
-            print time, occ, rql
+            print time, ';', occ, ';', rql
         
 register_commands((UpdateCubicWebCatalogCommand,
                    UpdateTemplateCatalogCommand,
