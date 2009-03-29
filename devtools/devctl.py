@@ -520,13 +520,15 @@ class ExamineLogCommand(Command):
             try:
                 rql, time = line.split('--')
                 rql = re.sub("(\'\w+': \d*)", '', rql)
+                if '{' in rql:
+                    rql = rql[:rql.index('{')]
                 req = requests.setdefault(rql, [])
                 time.strip()
                 chunks = time.split()
                 cputime = float(chunks[-3])
                 req.append( cputime )
             except Exception, exc:
-                sys.stderr.write('Line %s: %s\n' % (lineno, exc))
+                sys.stderr.write('Line %s: %s (%s)\n' % (lineno, exc, line))
 
         stat = []
         for rql, times in requests.items():
@@ -534,9 +536,11 @@ class ExamineLogCommand(Command):
 
         stat.sort()
         stat.reverse()
-        print 'Time ; Occurences ; Query'
+
+        total_time = sum(time for time, occ, rql in stat)*0.01
+        print 'Percentage;Cumulative Time;Occurences;Query'
         for time, occ, rql in stat:
-            print time, ';', occ, ';', rql
+            print '%.2f;%.2f;%s;%s' % (time/total_time, time, occ, rql)
         
 register_commands((UpdateCubicWebCatalogCommand,
                    UpdateTemplateCatalogCommand,
