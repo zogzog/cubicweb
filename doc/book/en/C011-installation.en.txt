@@ -92,6 +92,18 @@ If you installed the debian packages, no configuration is required.
 Your new cubes will be placed in `/usr/share/cubicweb/cubes` and
 your applications will be placed in `/etc/cubicweb.d`.
 
+To use others directories then you will have to configure the
+following environment variables as follows: ::
+
+    export CW_CUBES_PATH=~/lib/cubes
+    export CW_REGISTRY=~/etc/cubicweb.d/
+    export CW_INSTANCE_DATA=$CW_REGISTRY
+    export CW_RUNTIME=/tmp
+
+.. note::
+    The values given above are our suggestions but of course
+    can be different.
+
 .. _ConfigurationPostgres:
 
 Postgres configuration
