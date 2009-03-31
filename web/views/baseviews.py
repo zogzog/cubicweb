@@ -673,12 +673,8 @@ class RssView(XmlView):
     content_type = 'text/xml'
     http_cache_manager = MaxAgeHTTPCacheManager
     cache_max_age = 60*60*2 # stay in http cache for 2 hours by default 
-    
-    def cell_call(self, row, col):
-        self.wview('rssitem', self.rset, row=row, col=col)
-        
-    def call(self):
-        """display a list of entities by calling their <item_vid> view"""
+
+    def _open(self):
         req = self.req
         self.w(u'<?xml version="1.0" encoding="%s"?>\n' % req.encoding)
         self.w(u'''<rss version="2.0"
@@ -691,14 +687,25 @@ class RssView(XmlView):
         params = req.form.copy()
         params.pop('vid', None)
         self.w(u'    <link>%s</link>\n' % html_escape(self.build_url(**params)))
-        for i in xrange(self.rset.rowcount):
-            self.cell_call(i, 0)
+
+    def _close(self):
         self.w(u'  </channel>\n')
         self.w(u'</rss>')       
+        
+    def call(self):
+        """display a list of entities by calling their <item_vid> view"""
+        self._open()
+        for i in xrange(self.rset.rowcount):
+            self.cell_call(i, 0)
+        self._close()
+
+    def cell_call(self, row, col):
+        self.wview('rssitem', self.rset, row=row, col=col)
 
 class RssItemView(EntityView):
     id = 'rssitem'
     date_format = '%%Y-%%m-%%dT%%H:%%M%+03i:00' % (timezone / 3600)
+    add_div_section = False
 
     def cell_call(self, row, col):
         entity = self.complete_entity(row, col)
