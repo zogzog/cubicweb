@@ -109,6 +109,11 @@ following environment variables as follows: ::
 Postgres configuration
 ----------------------
 
+.. note::
+    If you already have an existing cluster and postgres server
+    running you do not require to execute the initilization step
+    of your Postgres database.
+
 * First you have to initialize the database Postgres with the command ``initdb``.
   ::
 
@@ -125,15 +130,26 @@ Postgres configuration
  
     $ chown username /path/to/pgsql
 
-* Create a superuser for `CubicWeb` instance (**root**) ::
+* Create a superuser for `CubicWeb` instance: ::
+    
+    $ su
+    $ su - postgres
+    $ createuser -s username
 
-    createuser -s username
+  Initialize the password of the superuser you just created for your
+  database: ::
+    
+    $ su 
+    $ su - postgres
+    $ psql
 
-  Initialize the password of the superuser you just created with 
-  ``su - postgres`` and ``psql``.
+  And then execute de following query: ::
+    
+    ALTER USER username WITH PASSWORD `password`
 
-  This password will be asked to you later on where you will create an
-  instance with `cubicweb-ctl create`
+  This login/password will be requested when you will create an
+  instance with `cubicweb-ctl create` to initialize the database of
+  your application.
 
 .. [XXX] Est-ce que ces etapes sont vraiment necessaires?  sand : lors de l'installation de ma bdd cela n'a pas ete fait et il semble que tout aille bien. Doit etre verifie avec les experts.
 

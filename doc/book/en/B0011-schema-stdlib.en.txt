@@ -34,8 +34,8 @@ The system entities available are:
 (The first 'E' in some of the names is the first letter of 'Erudi', 
 `CubicWeb`'s old name; it might be changed/removed some day.)
 
-  Cubes available
-  ```````````````
+Cubes available
+```````````````
 
 An application is based on several basic cubes. In the set of available
 basic cubes we can find for example :
