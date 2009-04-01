@@ -29,7 +29,7 @@ For Ubuntu Hardy::
   deb http://ftp.logilab.org/dists/ hardy/
 
 
-You can now install the required packages with the following command::
+You can now install the required packages with the following command: ::
 
   apt-get update 
   apt-get install cubicweb
@@ -41,7 +41,7 @@ This is it!
 Install from source
 ```````````````````
 
-You can download the archive containing the sources from our `ftp site`_ at::
+You can download the archive containing the sources from our `ftp site`_ at: ::
 
   http://ftp.logilab.org/pub/cubicweb/
 
@@ -92,8 +92,8 @@ If you installed the debian packages, no configuration is required.
 Your new cubes will be placed in `/usr/share/cubicweb/cubes` and
 your applications will be placed in `/etc/cubicweb.d`.
 
-To use other directories you will have to configure the
-following environment variables as follows::
+To use others directories then you will have to configure the
+following environment variables as follows: ::
 
     export CW_CUBES_PATH=~/lib/cubes
     export CW_REGISTRY=~/etc/cubicweb.d/
@@ -111,7 +111,7 @@ Postgres configuration
 
 .. note::
     If you already have an existing cluster and postgres server
-    running you do not require to execute the initilization step
+    running, you do not require to execute the initilization step
     of your Postgres database.
 
 * First you have to initialize the database Postgres with the command ``initdb``.
@@ -120,7 +120,7 @@ Postgres configuration
     $ initdb -D /path/to/pgsql
 
   Once initialized, you can launch the database server Postgres 
-  with the command::
+  with the command: ::
   
     $ postgres -D /path/to/psql
 
@@ -130,26 +130,40 @@ Postgres configuration
  
     $ chown username /path/to/pgsql
 
-* Create a superuser for `CubicWeb` instance::
+* The database authentication can be either set to `ident sameuser`
+  or `md5`. 
+  If set to `md5`, make sure to use an existing user
+  of your database.
+  If set to `ident sameuser`, make sure that your
+  client's operating system user name has a matching user in
+  the database. If not, please do as follow to create a user: ::
     
     $ su
     $ su - postgres
     $ createuser -s username
 
-  Initialize the password of the superuser you just created for your
-  database::
+  If created with the options -P (for password prompt, 
+  ``createuser -s -P username``), the password will be encrypted with
+  the method set in the configuration file ``pg_hba.conf``. 
+  If you do not use this option, then the default value will be null
+  and this require to set the password in the database itself.
+  To do so: ::
     
     $ su 
     $ su - postgres
     $ psql
 
-  And then execute de following query::
+  And then execute de following query: ::
     
     ALTER USER username WITH PASSWORD `password`
 
   This login/password will be requested when you will create an
   instance with `cubicweb-ctl create` to initialize the database of
   your application.
+
+.. note::
+    The authentication method can be configured in ``pg_hba.conf``.
+
 
 .. FIXME Are these steps really necessary? It seemed to work without.
 
