@@ -44,8 +44,8 @@ in which :
     (schema and data migration for example).
 
 Again in the directory `migration`, the file `depends.map` allows to indicate
-that to migrate to a particular model version, you always have to first migrate
-to a particular `CubicWeb` version. This file can contain comments (lines
+that for the migration to a particular model version, you always have to first 
+migrate to a particular `CubicWeb` version. This file can contain comments (lines
 starting by `#`) and a dependancy is listed as follows: ::
   
   <model version n° X.Y.Z> : <cubicweb version n° X.Y.Z>
@@ -60,12 +60,12 @@ For example: ::
 Base context
 ------------
 
-The following identifiers are pre-defined in the migration scripts:
+The following identifiers are pre-defined in migration scripts:
 
 * `config`, instance configuration
 
 * `interactive_mode`, boolean indicating that the script is executed in
-  an intercative mode or not 
+  an interactive mode or not 
 
 * `appltemplversion`, application model version of the instance
 
@@ -73,7 +73,7 @@ The following identifiers are pre-defined in the migration scripts:
 
 * `cubicwebversion`, installed cubicweb version
 
-* `confirm(question)`, function interrogating the user and returning true
+* `confirm(question)`, function asking the user and returning true
   if the user answers yes, false otherwise (always returns true in
   non-interactive mode)
 
@@ -98,7 +98,7 @@ In the `repository` scripts, the following identifiers are also defined:
                         
 Schema migration
 ----------------
-The following functions for schema migration are available in the `repository`
+The following functions for schema migration are available in `repository`
 scripts:
 
 * `add_attribute(etype, attrname, attrtype=None, commit=True)`, adds a new
@@ -148,7 +148,7 @@ scripts:
   or even relations definitions).
         
 * `change_relation_props(subjtype, rtype, objtype, commit=True, **kwargs)`, changes
-  properties of a relation definition by using the nammed parameters of the properties
+  properties of a relation definition by using the named parameters of the properties
   to change.
 
 * `set_widget(etype, rtype, widget, commit=True)`, changes the widget used for the
@@ -159,19 +159,19 @@ scripts:
 
 Data migration
 --------------
-The following functions for data migration are available in the `repository` scripts:
+The following functions for data migration are available in `repository` scripts:
 
 * `rql(rql, kwargs=None, cachekey=None, ask_confirm=True)`, executes an arbitrary RQL
   query, either to interrogate or update. A result set object is returned.  
 
 * `add_entity(etype, *args, **kwargs)`, adds a nes entity type of the given
-  type. The attributes and relations values are specified using the nammed and
+  type. The attribute and relation values are specified using the named and
   positionned parameters.
 
 Workflow creation
 -----------------
 
-The following functions for workflow creation are available in the `repository`
+The following functions for workflow creation are available in `repository`
 scripts:
 
 * `add_state(name, stateof, initial=False, commit=False, **kwargs)`, adds a new state
@@ -185,10 +185,10 @@ You can find more details about workflows in the chapter :ref:`Workflow` .
 Configuration migration
 -----------------------
 
-The following functions for configuration migration are available in all the
+The following functions for configuration migration are available in all 
 scripts:
 
-* `option_renamed(oldname, newname)`, indicates that an option has been renammed
+* `option_renamed(oldname, newname)`, indicates that an option has been renamed
 
 * `option_group_change(option, oldgroup, newgroup)`, indicates that an option does not
   belong anymore to the same group.
@@ -202,7 +202,7 @@ Others migration functions
 --------------------------
 Those functions are only used for low level operations that could not be 
 accomplished otherwise or to repair damaged databases during interactive 
-session. They are available in the `repository` scripts:
+session. They are available in `repository` scripts:
 
 * `sqlexec(sql, args=None, ask_confirm=True)`, executes an arbitrary SQL query
 * `add_entity_type_table(etype, commit=True)`
