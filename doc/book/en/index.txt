@@ -42,7 +42,6 @@ Table of contents
 
 
 .. toctree::
-   :maxdepth: 2
 
    A000-introduction.en.txt
    B000-development.en.txt
