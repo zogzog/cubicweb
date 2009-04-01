@@ -164,7 +164,8 @@ Postgres configuration
 .. note::
     The authentication method can be configured in ``pg_hba.conf``.
 
-.. [XXX] Est-ce que ces etapes sont vraiment necessaires?  sand : lors de l'installation de ma bdd cela n'a pas ete fait et il semble que tout aille bien. Doit etre verifie avec les experts.
+
+.. FIXME Are these steps really necessary? It seemed to work without.
 
 * installation of plain-text index extension ::
 
