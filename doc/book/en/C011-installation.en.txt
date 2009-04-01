@@ -29,7 +29,7 @@ For Ubuntu Hardy::
   deb http://ftp.logilab.org/dists/ hardy/
 
 
-You can now install the required packages with the following command: ::
+You can now install the required packages with the following command::
 
   apt-get update 
   apt-get install cubicweb
@@ -41,7 +41,7 @@ This is it!
 Install from source
 ```````````````````
 
-You can download the archive containing the sources from our `ftp site`_ at: ::
+You can download the archive containing the sources from our `ftp site`_ at::
 
   http://ftp.logilab.org/pub/cubicweb/
 
@@ -92,8 +92,8 @@ If you installed the debian packages, no configuration is required.
 Your new cubes will be placed in `/usr/share/cubicweb/cubes` and
 your applications will be placed in `/etc/cubicweb.d`.
 
-To use others directories then you will have to configure the
-following environment variables as follows: ::
+To use other directories you will have to configure the
+following environment variables as follows::
 
     export CW_CUBES_PATH=~/lib/cubes
     export CW_REGISTRY=~/etc/cubicweb.d/
@@ -120,7 +120,7 @@ Postgres configuration
     $ initdb -D /path/to/pgsql
 
   Once initialized, you can launch the database server Postgres 
-  with the command: ::
+  with the command::
   
     $ postgres -D /path/to/psql
 
@@ -130,20 +130,20 @@ Postgres configuration
  
     $ chown username /path/to/pgsql
 
-* Create a superuser for `CubicWeb` instance: ::
+* Create a superuser for `CubicWeb` instance::
     
     $ su
     $ su - postgres
     $ createuser -s username
 
   Initialize the password of the superuser you just created for your
-  database: ::
+  database::
     
     $ su 
     $ su - postgres
     $ psql
 
-  And then execute de following query: ::
+  And then execute de following query::
     
     ALTER USER username WITH PASSWORD `password`
 
