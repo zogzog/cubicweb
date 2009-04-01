@@ -111,7 +111,7 @@ Postgres configuration
 
 .. note::
     If you already have an existing cluster and postgres server
-    running you do not require to execute the initilization step
+    running, you do not require to execute the initilization step
     of your Postgres database.
 
 * First you have to initialize the database Postgres with the command ``initdb``.
@@ -130,14 +130,24 @@ Postgres configuration
  
     $ chown username /path/to/pgsql
 
-* Create a superuser for `CubicWeb` instance: ::
+* The database authentication can be either set to `ident sameuser`
+  or `md5`. 
+  If set to `md5`, make sure to use an existing user
+  of your database.
+  If set to `ident sameuser`, make sure that your
+  client's operating system user name has a matching user in
+  the database. If not, please do as follow to create a user: ::
     
     $ su
     $ su - postgres
     $ createuser -s username
 
-  Initialize the password of the superuser you just created for your
-  database: ::
+  If created with the options -P (for password prompt, 
+  ``createuser -s -P username``), the password will be encrypted with
+  the method set in the configuration file ``pg_hba.conf``. 
+  If you do not use this option, then the default value will be null
+  and this require to set the password in the database itself.
+  To do so: ::
     
     $ su 
     $ su - postgres
@@ -150,6 +160,9 @@ Postgres configuration
   This login/password will be requested when you will create an
   instance with `cubicweb-ctl create` to initialize the database of
   your application.
+
+.. note::
+    The authentication method can be configured in ``pg_hba.conf``.
 
 .. [XXX] Est-ce que ces etapes sont vraiment necessaires?  sand : lors de l'installation de ma bdd cela n'a pas ete fait et il semble que tout aille bien. Doit etre verifie avec les experts.
 
