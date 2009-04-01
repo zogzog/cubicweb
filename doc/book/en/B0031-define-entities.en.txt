@@ -5,8 +5,8 @@ Parametrization and specific extensions
 
 Dynamic default values
 ``````````````````````
-It is possible to define in the schema *static* default values.
-It is also possible to define in the schema *dynamic* default values
+It is possible to define *static* default values in the schema.
+It is also possible to define *dynamic* default values
 by defining in the entity class a method `default_<attribut name>` for
 a given attribute.
 
@@ -118,20 +118,22 @@ form of its content. The algorithm is as follows:
 1. we consider that the first column contains the entities to constraint
 2. we collect the first entity of the table (row 0) to represent all the 
    others
-3. for all the others variables defined in the original request:
+3. for all the other variables defined in the original request:
    
-   1. if the varaible is related to the main variable by at least one relation
+   1. if the variable is related to the main variable by at least one relation
    2. we call the method ``filterform_vocabulary(rtype, x)`` on the entity,
       if nothing is returned (meaning a tuple `Non`, see below), we go to the
       next variable, otherwise a form filtering element is created based on
       the vocabulary values returned
 
-4. there is no others limitations to the `RQL`, it can include sorting, grouping
-   conditions... Javascripts functions are used to regenerate a request based on the
+4. there are no other limitations to the `RQL`, it can include sorting, grouping
+   conditions... JavaScript functions are used to regenerate a request based on the
    initial request and on the selected values from the filtering form.
 
 The method ``filterform_vocabulary(rtype, x, var, rqlst, args, cachekey)`` takes 
-the name of a relation and the target as parameters, which indicates of the
+the name of a relation and the target as parameters,
+[XXX what does it mean ?]
+ which indicates of the
 entity on which we apply the method is subject or object of the relation. It
 has to return:
 
@@ -157,18 +159,18 @@ For that we define the following method: ::
 
     class Ticket(AnyEntity):
 
-	...
+	    ...
 
-	def filterform_vocabulary(self, rtype, x, var, rqlst, args, cachekey):
-	    _ = self.req._
-	    if rtype == 'type':
-		return 'string', [(x, _(x)) for x in ('bug', 'story')]
-	    if rtype == 'priority':
-		return 'string', [(x, _(x)) for x in ('minor', 'normal', 'important')]
-	    if rtype == 'done_in':
-		rql = insert_attr_select_relation(rqlst, var, rtype, 'num')
-		return 'eid', self.req.execute(rql, args, cachekey)
-	    return super(Ticket, self).filterform_vocabulary(rtype, x, var, rqlst,
+    	def filterform_vocabulary(self, rtype, x, var, rqlst, args, cachekey):
+	        _ = self.req._
+	        if rtype == 'type':
+        		return 'string', [(x, _(x)) for x in ('bug', 'story')]
+	        if rtype == 'priority':
+    	    	return 'string', [(x, _(x)) for x in ('minor', 'normal', 'important')]
+    	    if rtype == 'done_in':
+	        	rql = insert_attr_select_relation(rqlst, var, rtype, 'num')
+		        return 'eid', self.req.execute(rql, args, cachekey)
+	        return super(Ticket, self).filterform_vocabulary(rtype, x, var, rqlst,
 							     args, cachekey)
 
 .. note::
