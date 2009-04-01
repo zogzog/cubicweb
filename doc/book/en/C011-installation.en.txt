@@ -29,7 +29,7 @@ For Ubuntu Hardy::
   deb http://ftp.logilab.org/dists/ hardy/
 
 
-You can now install the required packages with the following command: ::
+You can now install the required packages with the following command::
 
   apt-get update 
   apt-get install cubicweb
@@ -41,7 +41,7 @@ This is it!
 Install from source
 ```````````````````
 
-You can download the archive containing the sources from our `ftp site`_ at: ::
+You can download the archive containing the sources from our `ftp site`_ at::
 
   http://ftp.logilab.org/pub/cubicweb/
 
@@ -92,10 +92,27 @@ If you installed the debian packages, no configuration is required.
 Your new cubes will be placed in `/usr/share/cubicweb/cubes` and
 your applications will be placed in `/etc/cubicweb.d`.
 
+To use other directories you will have to configure the
+following environment variables as follows::
+
+    export CW_CUBES_PATH=~/lib/cubes
+    export CW_REGISTRY=~/etc/cubicweb.d/
+    export CW_INSTANCE_DATA=$CW_REGISTRY
+    export CW_RUNTIME=/tmp
+
+.. note::
+    The values given above are our suggestions but of course
+    can be different.
+
 .. _ConfigurationPostgres:
 
 Postgres configuration
 ----------------------
+
+.. note::
+    If you already have an existing cluster and postgres server
+    running you do not require to execute the initilization step
+    of your Postgres database.
 
 * First you have to initialize the database Postgres with the command ``initdb``.
   ::
@@ -103,7 +120,7 @@ Postgres configuration
     $ initdb -D /path/to/pgsql
 
   Once initialized, you can launch the database server Postgres 
-  with the command: ::
+  with the command::
   
     $ postgres -D /path/to/psql
 
@@ -113,17 +130,28 @@ Postgres configuration
  
     $ chown username /path/to/pgsql
 
-* Create a superuser for `CubicWeb` instance (**root**) ::
+* Create a superuser for `CubicWeb` instance::
+    
+    $ su
+    $ su - postgres
+    $ createuser -s username
 
-    createuser -s username
+  Initialize the password of the superuser you just created for your
+  database::
+    
+    $ su 
+    $ su - postgres
+    $ psql
 
-  Initialize the password of the superuser you just created with 
-  ``su - postgres`` and ``psql``.
+  And then execute de following query::
+    
+    ALTER USER username WITH PASSWORD `password`
 
-  This password will be asked to you later on where you will create an
-  instance with `cubicweb-ctl create`
+  This login/password will be requested when you will create an
+  instance with `cubicweb-ctl create` to initialize the database of
+  your application.
 
-.. [XXX] Est-ce que ces etapes sont vraiment necessaires?  sand : lors de l'installation de ma bdd cela n'a pas ete fait et il semble que tout aille bien. Doit etre verifie avec les experts.
+.. FIXME Are these steps really necessary? It seemed to work without.
 
 * installation of plain-text index extension ::
 

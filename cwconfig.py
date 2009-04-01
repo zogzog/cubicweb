@@ -2,7 +2,7 @@
 """common configuration utilities for cubicweb
 
 :organization: Logilab
-:copyright: 2001-2008 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+:copyright: 2001-2009 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 """
 __docformat__ = "restructuredtext en"
@@ -501,17 +501,16 @@ this option is set to yes",
 class CubicWebConfiguration(CubicWebNoAppConfiguration):
     """base class for cubicweb server and web configurations"""
     
+    INSTANCE_DATA_DIR = None
     if CubicWebNoAppConfiguration.mode == 'test':
         root = os.environ['APYCOT_ROOT']
         REGISTRY_DIR = '%s/etc/cubicweb.d/' % root
-        INSTANCE_DATA_DIR = REGISTRY_DIR
         RUNTIME_DIR = '/tmp/'
         MIGRATION_DIR = '%s/local/share/cubicweb/migration/' % root
         if not exists(REGISTRY_DIR):
             os.makedirs(REGISTRY_DIR)
     elif CubicWebNoAppConfiguration.mode == 'dev':
         REGISTRY_DIR = expanduser('~/etc/cubicweb.d/')
-        INSTANCE_DATA_DIR = REGISTRY_DIR
         RUNTIME_DIR = '/tmp/'
         MIGRATION_DIR = join(CW_SOFTWARE_ROOT, 'misc', 'migration')
     else: #mode = 'installed'
@@ -574,7 +573,8 @@ the repository',
     @classmethod
     def instance_data_dir(cls):
         """return the instance data directory"""
-        return env_path('CW_INSTANCE_DATA', cls.INSTANCE_DATA_DIR,
+        return env_path('CW_INSTANCE_DATA',
+                        cls.INSTANCE_DATA_DIR or cls.REGISTRY_DIR,
                         'additional data')
         
     @classmethod

@@ -673,12 +673,8 @@ class RssView(XmlView):
     content_type = 'text/xml'
     http_cache_manager = MaxAgeHTTPCacheManager
     cache_max_age = 60*60*2 # stay in http cache for 2 hours by default 
-    
-    def cell_call(self, row, col):
-        self.wview('rssitem', self.rset, row=row, col=col)
-        
-    def call(self):
-        """display a list of entities by calling their <item_vid> view"""
+
+    def _open(self):
         req = self.req
         self.w(u'<?xml version="1.0" encoding="%s"?>\n' % req.encoding)
         self.w(u'''<rss version="2.0"
@@ -691,26 +687,31 @@ class RssView(XmlView):
         params = req.form.copy()
         params.pop('vid', None)
         self.w(u'    <link>%s</link>\n' % html_escape(self.build_url(**params)))
-        self.w(u'    <items>\n')
-        self.w(u'      <rdf:Seq>\n')
-        for entity in self.rset.entities():
-            self.w(u'      <rdf:li resource="%s" />\n' % html_escape(entity.absolute_url()))
-        self.w(u'      </rdf:Seq>\n')
-        self.w(u'    </items>\n')
+
+    def _close(self):
         self.w(u'  </channel>\n')
+        self.w(u'</rss>')       
+        
+    def call(self):
+        """display a list of entities by calling their <item_vid> view"""
+        self._open()
         for i in xrange(self.rset.rowcount):
             self.cell_call(i, 0)
-        self.w(u'</rss>')       
+        self._close()
+
+    def cell_call(self, row, col):
+        self.wview('rssitem', self.rset, row=row, col=col)
 
 class RssItemView(EntityView):
     id = 'rssitem'
     date_format = '%%Y-%%m-%%dT%%H:%%M%+03i:00' % (timezone / 3600)
+    add_div_section = False
 
     def cell_call(self, row, col):
         entity = self.complete_entity(row, col)
         self.w(u'<item rdf:about="%s">\n' % html_escape(entity.absolute_url()))
         self.render_title_link(entity)
-        self._marker('description', entity.dc_date(self.description))
+        self._marker('description', html_escape(entity.dc_description()))
         self._marker('dc:date', entity.dc_date(self.date_format))
         self.render_entity_creator(entity)
         self.w(u'</item>\n')
@@ -721,12 +722,12 @@ class RssItemView(EntityView):
            
     def render_entity_creator(self, entity):
         if entity.creator:
-            self.w(u'<author>')
-            self._marker('name', entity.creator.name())
+            self._marker('dc:creator', entity.creator.name())
             email = entity.creator.get_email()
             if email:
-                self._marker('email', email)
-            self.w(u'</author>')       
+                self.w(u'<author>')
+                self.w(email)
+                self.w(u'</author>')       
         
     def _marker(self, marker, value):
         if value:

@@ -163,7 +163,7 @@ We'll show you now an example of a ``primary`` view and how to customize it.
 If you want to change the way a ``BlogEntry`` is displayed, just override 
 the method ``cell_call()`` of the view ``primary`` in ``BlogDemo/views.py`` ::
 
-  01. from ginco.web.views import baseviews
+  01. from cubicweb.web.views import baseviews
   02.
   03. class BlogEntryPrimaryView(baseviews.PrimaryView):
   04.

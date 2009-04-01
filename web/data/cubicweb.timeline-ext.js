@@ -9,7 +9,7 @@
 /* provide our own custom date parser since the default
  * one only understands iso8601 and gregorian dates
  */
-Timeline.NativeDateUnit.getParser = function(format) {
+SimileAjax.NativeDateUnit.getParser = Timeline.NativeDateUnit.getParser = function(format) {
     if (typeof format == "string") {
 	if (format.indexOf('%') != -1) {
 	    return function(datestring) {

@@ -449,7 +449,7 @@ class CheckBoxWidget(Widget):
 
 
 class YesNoRadioWidget(CheckBoxWidget):
-    
+    html_attributes = Widget.html_attributes | set(('disabled',))
     def _edit_render(self, entity):
         value = self.current_value(entity)
         dvalue = self.current_display_value(entity)
