@@ -148,8 +148,8 @@ By default, the available constraint types are :
   not prevent another entity to be selected.
 
 
-Relation definition
--------------------
+Definition of relations
+-----------------------
 
 XXX add note about defining relation type / definition
 
@@ -221,8 +221,8 @@ For `CubicWeb` in particular:
 Permissions definition
 ``````````````````````
 
-Define permissions is set through to the attribute `permissions` of entities and
-relations types. It defines a dictionnary where the keys are the access types
+Setting permissions is done with the attribute `permissions` of entities and
+relation types. It defines a dictionnary where the keys are the access types
 (action), and the values are the authorized groups or expressions.
 
 For an entity type, the possible actions are `read`, `add`, `update` and
@@ -377,9 +377,9 @@ to check properly the permissions so that it would show up if necessary.
 Updating your application with your new schema
 ``````````````````````````````````````````````
 
-If you modified your schema, the update is not automatic; this is 
-indeed in general not a good idea.
-Instead, we call a shell on  your application, which is a 
+If you modified your schema, the update is not automatic; indeed, this is 
+in general not a good idea.
+Instead, you call a shell on your application, which is a 
 an interactive python shell, with an appropriate
 cubicweb environment ::
 
