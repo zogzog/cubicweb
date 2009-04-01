@@ -15,4 +15,4 @@ applications based on that framework.
    C020-site-config.en.txt
    C030-instance-config.en.txt
    C040-rql.en.txt
-   C041-rql-tutorial.en.txt
+
