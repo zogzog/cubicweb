@@ -1434,6 +1434,10 @@ msgstr ""
 msgid "csv export"
 msgstr ""
 
+#, python-format
+msgid "currently attached file: %s"
+msgstr ""
+
 msgid "data directory url"
 msgstr ""
 
@@ -1546,7 +1550,8 @@ msgstr "destination state"
 msgid "destination_state_object"
 msgstr "destination of"
 
-msgid "detach attached file"
+#, python-format
+msgid "detach attached file %s"
 msgstr ""
 
 msgid "detailed schema view"

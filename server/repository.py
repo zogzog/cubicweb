@@ -145,7 +145,7 @@ class Repository(object):
         # querier helper, need to be created after sources initialization
         self.querier = QuerierHelper(self, self.schema)
         # should we reindex in changes?
-        self.do_fti = config['delay-full-text-indexation']
+        self.do_fti = not config['delay-full-text-indexation']
         # sources
         self.sources = []
         self.sources_by_uri = {}

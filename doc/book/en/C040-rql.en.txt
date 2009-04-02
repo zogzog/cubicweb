@@ -140,6 +140,14 @@ Search Query
         X is Person, X name N, X first_name P
 
 
+  Note: You can not specify several types with * ... where X is FirstType or X is SecondType*.
+  To specify several types explicitely, you have to do
+
+  ::
+
+        Any X where X is in (FirstType, SecondType)
+
+
 Insertion query
 ---------------
 

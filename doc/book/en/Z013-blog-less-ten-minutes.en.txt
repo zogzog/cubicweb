@@ -1,5 +1,7 @@
 .. -*- coding: utf-8 -*-
 
+.. BlogTenMinutes:
+
 Have a blog ready in less than ten minutes!
 -------------------------------------------
 
