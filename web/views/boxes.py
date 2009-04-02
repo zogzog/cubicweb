@@ -13,23 +13,22 @@ additional (disabled by default) boxes
 :copyright: 2001-2009 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 """
+from __future__ import with_statement
 __docformat__ = "restructuredtext en"
 
 from logilab.mtconverter import html_escape
-
 from cubicweb.common.selectors import any_rset, appobject_selectable
 from cubicweb.web.htmlwidgets import BoxWidget, BoxMenu, BoxHtml, RawBoxItem
 from cubicweb.web.box import BoxTemplate, ExtResourcesBoxTemplate
 
 _ = unicode
-
-
+    
 class EditBox(BoxTemplate):
     """
     box with all actions impacting the entity displayed: edit, copy, delete
     change state, add related entities
     """
-    __selectors__ = (any_rset,) + BoxTemplate.__selectors__
+    #__selectors__ = (any_rset,) + BoxTemplate.__selectors__ 
     id = 'edit_box'
     title = _('actions')
     order = 2
@@ -77,7 +76,7 @@ class EditBox(BoxTemplate):
         self.add_submenu(box, other_menu)
         if not box.is_empty():
             box.render(self.w)
-
+            
     def add_submenu(self, box, submenu, label_prefix=None):
         if len(submenu.items) == 1:
             boxlink = submenu.items[0]
@@ -205,7 +204,7 @@ class RSSIconBox(ExtResourcesBoxTemplate):
 class StartupViewsBox(BoxTemplate):
     """display a box containing links to all startup views"""
     id = 'startup_views_box'
-    visible = False # disabled by default
+    visible = False# disabled by default
     title = _('startup views')
     order = 70
 
