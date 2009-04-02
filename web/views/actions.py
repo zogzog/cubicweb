@@ -8,7 +8,7 @@ __docformat__ = "restructuredtext en"
 
 from cubicweb.common.selectors import (searchstate_accept, match_user_group, yes,
                                        one_line_rset, two_lines_rset, one_etype_rset,
-                                       authenticated_user,
+                                       authenticated_user, none_rset,
                                        match_search_state, chainfirst, chainall)
 
 from cubicweb.web.action import Action, EntityAction,  LinkToEntityAction
@@ -82,7 +82,6 @@ class ViewAction(Action):
 class ModifyAction(EntityAction):
     category = 'mainactions'
     __selectors__ = (one_line_rset, searchstate_accept)
-    #__selectors__ = searchstate_accept,
     schema_action = 'update'
     order = 10
     
@@ -313,4 +312,15 @@ class UserPreferencesEntityAction(EntityAction):
     def url(self):
         login = self.rset.get_entity(self.row or 0, self.col or 0).login
         return self.build_url('euser/%s'%login, vid='epropertiesform')
+
+# schema view action
+
+class DownloadOWLSchemaAction(Action):
+    category = 'mainactions'
+    id = 'download_as_owl'
+    title = _('download schema as owl')
+    __selectors__ = none_rset,
+   
+    def url(self):
+        return self.build_url('view', vid='owl')
 
