@@ -4,15 +4,15 @@
 Data as objects
 ===============
 
-We will in this chapter introduce the objects that are used to handle
+In this chapter, we will introduce the objects that are used to handle
 the data stored in the database.
 
 Classes `Entity` and `AnyEntity`
 --------------------------------
 
-To provide a specific behavior for each entity, we just need to define
-a class inheriting from `cubicweb.entities.AnyEntity`. In general, we have
-to defined those classes in a module of `entities` package of an application
+To provide a specific behavior for each entity, we have to define
+a class inheriting from `cubicweb.entities.AnyEntity`. In general, we
+define this class in a module of `entities` package of an application
 so that it will be available on both server and client side.
 
 The class `AnyEntity` is loaded dynamically from the class `Entity` 
@@ -22,7 +22,7 @@ specialize the handling of a given entity type
 Descriptors are added when classes are registered in order to initialize the class
 according to its schema:
 
-* we can access the defined attributes in the schema thanks the attributes of
+* we can access the defined attributes in the schema thanks to the attributes of
   the same name on instances (typed value)
 
 * we can access the defined relations in the schema thanks to the relations of
@@ -33,12 +33,12 @@ The methods defined for `AnyEntity` or `Entity` are the following ones:
 * `has_eid()`, returns true is the entity has an definitive eid (e.g. not in the
   creation process)
         
-* `check_perm(action)`, checks if the user has the permission to execcute the
+* `check_perm(action)`, checks if the user has the permission to execute the
   requested action on the entity
 
 :Formatting and output generation:
 
-  * `view(vid, **kwargs)`, apply the given view to the entity
+  * `view(vid, **kwargs)`, applies the given view to the entity
 
   * `absolute_url(**kwargs)`, returns an absolute URL to access the primary view
     of an entity
@@ -118,30 +118,31 @@ The methods defined for `AnyEntity` or `Entity` are the following ones:
 *rtags*
 -------
 
-*rtags* allows to specify certain behaviors of relations relative to a given
+*rtags* allow to specify certain behaviors of relations relative to a given
 entity type (see later). They are defined on the entity class by the attribute
-`rtags` which is a dictionnary with as its keys the triplet ::
+`rtags` which is a dictionnary with as keys the triplets ::
 
   <relation type>, <target entity type>, <context position ("subject" ou "object")>
 
-and as the values a `set` or a tuple of markers defining the properties that
+and as values a `set` or a tuple of markers defining the properties that
 apply to this relation.
 
 It is possible to simplify this dictionnary:
 
 * if we want to specifiy a single marker, it is not necessary to
-  use a tuple as the value, the marker by itself (characters string)
+  use a tuple as value, the marker by itself (character string)
   is enough
 * if we only care about a single type of relation and not about the target
   and the context position (or when this one is not ambigous), we can simply
-  use the name of the relation type as the key
+  use the name of the relation type as key
 * if we want a marker to apply independently from the target entity type,
-  we have to use the string `*` as the target entity type
+  we have to use the string `*` as target entity type
 
 
 Please note that this dictionnary is *treated at the time the class is created*.
 It is automatically merged with the parent class(es) (no need to copy the
-dictionnary from the parent class to modify it). Also, modify it after the 
+dictionnary from the parent class to modify it). Also, modifying it after the 
 class is created will not have any effect...
 
 .. include:: B0031-define-entities.en.txt
+

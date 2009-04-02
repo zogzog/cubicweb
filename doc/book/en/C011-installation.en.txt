@@ -35,8 +35,14 @@ You can now install the required packages with the following command::
   apt-get install cubicweb
   apt-get install cubicweb-dev
 
+`cubicweb` installs the framework itself, allowing you to create
+new applications.
 
-This is it!
+`cubicweb-dev` installs the development environment allowing you to
+develop new cubes.
+
+There is also a wide variety of cubes listed on http://www.cubicweb.org/Project available as debian packages and tarball.
+
 
 Install from source
 ```````````````````
@@ -92,7 +98,7 @@ If you installed the debian packages, no configuration is required.
 Your new cubes will be placed in `/usr/share/cubicweb/cubes` and
 your applications will be placed in `/etc/cubicweb.d`.
 
-To use other directories you will have to configure the
+To use others directories then you will have to configure the
 following environment variables as follows::
 
     export CW_CUBES_PATH=~/lib/cubes
@@ -111,7 +117,7 @@ Postgres configuration
 
 .. note::
     If you already have an existing cluster and postgres server
-    running you do not require to execute the initilization step
+    running, you do not require to execute the initilization step
     of your Postgres database.
 
 * First you have to initialize the database Postgres with the command ``initdb``.
@@ -130,14 +136,24 @@ Postgres configuration
  
     $ chown username /path/to/pgsql
 
-* Create a superuser for `CubicWeb` instance::
+* The database authentication can be either set to `ident sameuser`
+  or `md5`. 
+  If set to `md5`, make sure to use an existing user
+  of your database.
+  If set to `ident sameuser`, make sure that your
+  client's operating system user name has a matching user in
+  the database. If not, please do as follow to create a user::
     
     $ su
     $ su - postgres
     $ createuser -s username
 
-  Initialize the password of the superuser you just created for your
-  database::
+  If created with the options -P (for password prompt, 
+  ``createuser -s -P username``), the password will be encrypted with
+  the method set in the configuration file ``pg_hba.conf``. 
+  If you do not use this option, then the default value will be null
+  and this require to set the password in the database itself.
+  To do so: ::
     
     $ su 
     $ su - postgres
@@ -151,13 +167,17 @@ Postgres configuration
   instance with `cubicweb-ctl create` to initialize the database of
   your application.
 
+.. note::
+    The authentication method can be configured in ``pg_hba.conf``.
+
+
 .. FIXME Are these steps really necessary? It seemed to work without.
 
-* installation of plain-text index extension ::
+* Installation of plain-text index extension ::
 
     cat /usr/share/postgresql/8.3/contrib/tsearch2.sql | psql -U username template1
 
-* installation of plpythonu language by default ::
+* Installation of plpythonu language by default ::
 
     createlang -U pgadmin plpythonu template1
 

@@ -486,11 +486,15 @@ class FileWidget(Widget):
                     wdgs.append(ewdg.edit_render(entity, includehelp=True))
                     wdgs.append(u'<br/>')
             wdgs.append(u'</div>')
-        if entity.has_eid() and not self.required(entity):
-            # trick to be able to delete an uploaded file
-            wdgs.append(u'<br/>')
-            wdgs.append(checkbox(eid_param('__%s_detach' % self.rname, entity.eid), False))
-            wdgs.append(req._('detach attached file'))
+        if entity.has_eid():
+            if not self.required(entity):
+                # trick to be able to delete an uploaded file
+                wdgs.append(u'<br/>')
+                wdgs.append(checkbox(eid_param('__%s_detach' % self.rname, entity.eid), False))
+                wdgs.append(req._('detach attached file %s' % entity.dc_title()))
+            else:
+                wdgs.append(u'<br/>')
+                wdgs.append(req._('currently attached file: %s' % entity.dc_title()))
         return '\n'.join(wdgs)
     
     def _edit_render(self, entity):

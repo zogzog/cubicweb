@@ -1,10 +1,10 @@
 .. -*- coding: utf-8 -*-
 
-Data model definition (*schema*)
-================================
+Data model definition: the *schema*
+===================================
 
-The schema is the core piece of a `CubicWeb` application as it defines
-the data model handled. It is based on entity types that are either already
+The **schema** is the core piece of a `CubicWeb` application as it defines
+the handled data model. It is based on entity types that are either already
 defined in the `CubicWeb` standard library; or more specific types, that 
 `CubicWeb` expects to find in one or more Python files under the directory 
 `schema`.
