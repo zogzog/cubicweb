@@ -1492,6 +1492,10 @@ msgstr "export d'entités en CSV"
 msgid "csv export"
 msgstr "export CSV"
 
+#, python-format
+msgid "currently attached file: %s"
+msgstr "fichie actuellement attaché %s"
+
 msgid "data directory url"
 msgstr "url du répertoire de données"
 
@@ -1616,8 +1620,9 @@ msgstr "état de destination"
 msgid "destination_state_object"
 msgstr "destination de"
 
-msgid "detach attached file"
-msgstr "détacher le fichier existant"
+#, python-format
+msgid "detach attached file %s"
+msgstr "détacher le fichier existant %s"
 
 msgid "detailed schema view"
 msgstr "vue détaillée du schéma"
@@ -3001,6 +3006,9 @@ msgstr "vous avez été déconnecté"
 #~ msgstr ""
 #~ "langue par défaut (regarder le répertoire i18n de l'application pour voir "
 #~ "les langues disponibles)"
+
+#~ msgid "detach attached file"
+#~ msgstr "détacher le fichier existant"
 
 #~ msgid "filter"
 #~ msgstr "filtrer"
