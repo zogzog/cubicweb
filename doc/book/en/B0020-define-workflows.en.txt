@@ -2,26 +2,19 @@
 
 .. _Workflow:
 
-Workflow definition
-===================
-
-[TODO :  All this is too obscure and often not very understandable...]
+An Example: Workflow definition
+===============================
 
 General
 -------
 
-[XXX define what a "Workflow" is: states, transitions, transition graph ]
+A workflow describes how certain entities have to evolve between 
+different states. Hence we have a set of states, and a "transition graph", 
+i.e. a list of possible transitions from one state to another state.
 
-Example of a simple workflow
-----------------------------
-
-Please see the tutorial to view an example of a simple workflow.
-
-
-[Create a simple workflow for BlogDemo, to have a moderator approve new blog 
-entry to be published. This implies specifying a dedicated group of blog
-moderator as well as hiding the view of a blog entry to the user until
-it reaches the state published]
+We will define a simple workflow for a blog, with only the following 
+two states: `submitted` and `published`. So first, we create a simple 
+`CubicWeb` in ten minutes (see :ref:`BlogTenMinutes`).
 
 Set-up a workflow
 -----------------
