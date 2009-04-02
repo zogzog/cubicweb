@@ -29,19 +29,25 @@ For Ubuntu Hardy::
   deb http://ftp.logilab.org/dists/ hardy/
 
 
-You can now install the required packages with the following command: ::
+You can now install the required packages with the following command::
 
   apt-get update 
   apt-get install cubicweb
   apt-get install cubicweb-dev
 
+`cubicweb` installs the framework itself, allowing you to create
+new applications.
 
-This is it!
+`cubicweb-dev` installs the development environment allowing you to
+develop new cubes.
+
+There is also a wide variety of cubes listed on http://www.cubicweb.org/Project available as debian packages and tarball.
+
 
 Install from source
 ```````````````````
 
-You can download the archive containing the sources from our `ftp site`_ at: ::
+You can download the archive containing the sources from our `ftp site`_ at::
 
   http://ftp.logilab.org/pub/cubicweb/
 
@@ -93,7 +99,7 @@ Your new cubes will be placed in `/usr/share/cubicweb/cubes` and
 your applications will be placed in `/etc/cubicweb.d`.
 
 To use others directories then you will have to configure the
-following environment variables as follows: ::
+following environment variables as follows::
 
     export CW_CUBES_PATH=~/lib/cubes
     export CW_REGISTRY=~/etc/cubicweb.d/
@@ -120,7 +126,7 @@ Postgres configuration
     $ initdb -D /path/to/pgsql
 
   Once initialized, you can launch the database server Postgres 
-  with the command: ::
+  with the command::
   
     $ postgres -D /path/to/psql
 
@@ -136,7 +142,7 @@ Postgres configuration
   of your database.
   If set to `ident sameuser`, make sure that your
   client's operating system user name has a matching user in
-  the database. If not, please do as follow to create a user: ::
+  the database. If not, please do as follow to create a user::
     
     $ su
     $ su - postgres
@@ -153,7 +159,7 @@ Postgres configuration
     $ su - postgres
     $ psql
 
-  And then execute de following query: ::
+  And then execute de following query::
     
     ALTER USER username WITH PASSWORD `password`
 
@@ -167,11 +173,11 @@ Postgres configuration
 
 .. FIXME Are these steps really necessary? It seemed to work without.
 
-* installation of plain-text index extension ::
+* Installation of plain-text index extension ::
 
     cat /usr/share/postgresql/8.3/contrib/tsearch2.sql | psql -U username template1
 
-* installation of plpythonu language by default ::
+* Installation of plpythonu language by default ::
 
     createlang -U pgadmin plpythonu template1
 
