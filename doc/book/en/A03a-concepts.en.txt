@@ -12,18 +12,18 @@ Global architecture
 
 
 `CubicWeb` framework is a server/client application framework. Those two
-parties communicates through RQL (`CubicWeb` query language implementation)
+parts communicate through RQL (`CubicWeb` query language implementation)
 and ResultSet (which will be explained in :ref:`TermsVocabulary`).
 
 The server manages all interactions with sources.
 
 
 .. note::
-  For real, the client and server sides are integrated in the same
-  process and interact directly, without the needs for distants
-  calls using Pyro. It is important to note down that those two
+  Usually, the client and server sides are integrated in the same
+  process and interact directly, without the need for distant
+  calls using Pyro. But, it is important to note that those two
   sides, client/server, are disjointed and it is possible to execute
-  a couple of calls in distincts processes to balance the load of
+  a couple of calls in distinct processes to balance the load of
   your web site on one or more machines.
 
 .. _TermsVocabulary:
@@ -42,8 +42,8 @@ developing with `CubicWeb`.
   classes based on `yams`_ library. This is the core piece
   of an application. It is initially defined in the file system and is
   stored in the database at the time an instance is created. `CubicWeb`
-  provides a certain number of system entities included automatically as
-  it is necessary for the core of `CubicWeb` and a library of
+  provides a certain number of system entities included automatically    
+  (necessary for the core of `CubicWeb`) and a library of
   cubes (which defined application entities) that can be explicitely
   included if necessary.
 
@@ -57,7 +57,7 @@ developing with `CubicWeb`.
   a relation the `subject` and the second the `object`.
 
 *final entity type*
-  Final types corresponds to the basic types such as string of characters,
+  Final types correspond to the basic types such as string of characters,
   integers... Those types have a main property which is that they can
   only be used as `object` of a relation. The attributes of an entity
   (non final) are entities (finals).
@@ -78,11 +78,11 @@ developing with `CubicWeb`.
   A data source is a container of data (SGBD, LDAP directory, `Google
   App Engine`'s datastore ...) integrated in the
   `CubicWeb` repository. This repository has at least one source, `system` which
-  contains the schema of the application, plain-text index and others
+  contains the schema of the application, plain-text index and other
   vital informations for the system.
 
 *configuration*
-  It is possible to create differents configurations for an instance:
+  It is possible to create different configurations for an instance:
 
   - ``repository`` : repository only, accessible for clients using Pyro
   - ``twisted`` : web interface only, access the repository using Pyro
@@ -91,15 +91,15 @@ developing with `CubicWeb`.
 
 *cube*
   A cube is a model grouping one or multiple data types and/or views
-  to provide a specific functionnality or a complete `CubicWeb` application
+  to provide a specific functionality or a complete `CubicWeb` application
   potentially using other cubes. The available cubes are located in the file
-  system at `/path/to/forest/cubicweb/cubes` for a Mercurial forest installation,
-  for a debian packages installation they will be located in
+  system at `/path/to/forest/cubicweb/cubes` for a Mercurial forest installation.
+  For a debian packages installation they will be located in
   `/usr/share/cubicweb/cubes`.
-  Larger applications can be built faster by importing cubes,
-  adding entities and relationships and overriding the
-  views that need to display or edit informations not provided by
-  cubes.
+  Larger applications can be built quite fast by importing cubes,
+  adding entities and relationships, overriding the
+  *views* that display the cubes or by editing informations not provided by
+  the cubes.
 
 *instance*
   An instance is a specific installation of one or multiple cubes. All the required
@@ -107,11 +107,11 @@ developing with `CubicWeb`.
   are grouped in an instance. This will refer to the cube(s) your application
   is based on.
   For example logilab.org and our intranet are two instances of a single
-  cube jpl, developped internally.
+  cube "jpl", developped internally.
   The instances are defined in the directory `/etc/cubicweb.d`.
 
 *application*
-  The term application is sometime used to talk about an instance
+  The term application is sometimes used to talk about an instance
   and sometimes to talk of a cube depending on the context.
   So we would like to avoid using this term and try to use *cube* and
   *instance* instead.
@@ -143,9 +143,9 @@ developing with `CubicWeb`.
   the same identifier.
 
 *rql*
- Relation Query Language in order to empasize the way of browsing relations.
- This query language is inspired by SQL but is highest level, its implementation
- generates SQL.
+ Relation Query Language in order to emphasize the way of browsing relations.
+ This query language is inspired by SQL but is on a higher level;
+ its implementation generates SQL.
 
 
 .. _`Python Remote Object`: http://pyro.sourceforge.net/
@@ -156,9 +156,9 @@ developing with `CubicWeb`.
 ~~~~~~~~~~~~~~~~~
 
 The engine in `CubicWeb` is a set of classes managing a set of objects loaded
-dynamically at the startup of `CubicWeb` (*appobjects*). Those dynamics objects,
+dynamically at the startup of `CubicWeb` (*appobjects*). Those dynamic objects,
 based on the schema or the library, are building the final application.
-The differents dymanic components are for example:
+The different dynamic components are for example:
 
 * client and server side
 
@@ -200,11 +200,11 @@ The most important method is the `execute` method of a cursor :
 `execute(rqlstring, args=None, eid_key=None, build_descr=True)`
 
 :rqlstring: the RQL query to execute (unicode)
-:args: if the query contains substitutions, a dictionnary containing the values to use
+:args: if the query contains substitutions, a dictionary containing the values to use
 :eid_key:
-   an implementation detail of the RQL queries cache implies that if a substitution
+   an implementation detail of the RQL cache implies that if a substitution
    is used to introduce an eid *susceptible to raise the ambiguities in the query
-   type resolution*, then we have to specify the correponding key in the dictionnary
+   type resolution*, then we have to specify the corresponding key in the dictionary
    through this argument
 
 
@@ -214,7 +214,7 @@ the `CubicWeb` framework as it determines the end of the transaction depending
 on the query execution success.
 
 .. note::
-  While executing updates queries (SET, INSERT, DELETE), if a query generates
+  While executing update queries (SET, INSERT, DELETE), if a query generates
   an error related to security, a rollback is automatically done on the current
   transaction.
 
@@ -223,7 +223,7 @@ The `Request` class (`cubicweb.web`)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 A request instance is created when an HTTP request is sent to the web server.
-It contains informations such as forms parameters, user authenticated, etc.
+It contains informations such as form parameters, user authenticated, etc.
 
 **Globally, a request represents a user query, either through HTTP or not
 (we also talk about RQL queries on the server side for example).**
@@ -232,13 +232,13 @@ An instance of `Request` has the following attributes:
 
 * `user`, instance of `cubicweb.common.utils.User` corresponding to the authenticated
   user
-* `form`, dictionnary containing the values of a web form
-* `encoding`, characters encoding to use in the response
+* `form`, dictionary containing the values of a web form
+* `encoding`, character encoding to use in the response
 
 But also:
 
 :Session data handling:
-  * `session_data()`, returns a dictionnary containing all the session data
+  * `session_data()`, returns a dictionary containing all the session data
   * `get_session_data(key, default=None)`, returns a value associated to the given
     key or the value `default` if the key is not defined
   * `set_session_data(key, value)`, assign a value to a key
@@ -246,7 +246,7 @@ But also:
 
 
 :Cookies handling:
-  * `get_cookie()`, returns a dictionnary containing the value of the header
+  * `get_cookie()`, returns a dictionary containing the value of the header
     HTTP 'Cookie'
   * `set_cookie(cookie, key, maxage=300)`, adds a header HTTP `Set-Cookie`,
     with a minimal 5 minutes length of duration by default (`maxage` = None
@@ -268,7 +268,7 @@ But also:
   * `cursor()` returns a RQL cursor on the session
   * `execute(*args, **kwargs)`, shortcut to ``.cursor().execute()``
   * `property_value(key)`, properties management (`EProperty`)
-  * dictionnary `data` to store data to share informations between components
+  * dictionary `data` to store data to share informations between components
     *while a request is executed*
 
 Please note that this class is abstract and that a concrete implementation
@@ -372,7 +372,7 @@ What is a cube ?
 
 A cube is a model grouping one or more entity types and/or views associated
 in order to provide a specific feature or even a complete application using
-others cubes.
+other cubes.
 
 You can decide to write your own set of cubes if you wish to re-use the
 entity types you develop. Lots of cubes are available from the `CubicWeb
@@ -460,7 +460,7 @@ where :
 * ``sobjects`` contains hooks and/or views notifications (server side only)
 * ``views`` contains the web interface components (web interface only)
 * ``test`` contains tests related to the application (not installed)
-* ``i18n`` contains messages catalogs for supported languages (server side and
+* ``i18n`` contains message catalogs for supported languages (server side and
   web interface)
 * ``data`` contains data files for static content (images, css, javascripts)
   ...(web interface only)
@@ -479,7 +479,7 @@ At least you should have:
 * the file ``__pkginfo__.py``
 * the schema definition
   XXX false, we may want to have cubes which are only adding a service,
-  no persistent data (eg embeding for instance)
+  no persistent data (eg embedding for instance)
 
 
 Standard library
