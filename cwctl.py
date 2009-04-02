@@ -619,7 +619,11 @@ given, appropriate sources for migration will be automatically selected \
         config = CubicWebConfiguration.config_for(appid)
         config.creating = True # notice we're not starting the server
         config.verbosity = self.config.verbosity
-        config.set_sources_mode(self.config.ext_sources or ('migration',))
+        try:
+            config.set_sources_mode(self.config.ext_sources or ('migration',))
+        except AttributeError:
+            # not a server config
+            pass
         # get application and installed versions for the server and the componants
         print 'getting versions configuration from the repository...'
         mih = config.migration_handler()
