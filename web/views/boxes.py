@@ -28,7 +28,6 @@ class EditBox(BoxTemplate):
     box with all actions impacting the entity displayed: edit, copy, delete
     change state, add related entities
     """
-    #__selectors__ = (any_rset,) + BoxTemplate.__selectors__ 
     id = 'edit_box'
     title = _('actions')
     order = 2
