@@ -589,7 +589,7 @@ class StaticComboBoxWidget(ComboBoxWidget):
         self.vocabfunc = vocabfunc
 
     def vocabulary(self, entity):
-        choices = self.vocabfunc(entity)
+        choices = self.vocabfunc(entity=entity)
         if self.sort:
             choices = sorted(choices)
         if self.rschema.rproperty(self.subjtype, self.objtype, 'internationalizable'):
