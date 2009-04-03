@@ -258,15 +258,15 @@ except ImportError:
     class PartPlanInformation(object):
         def merge_input_maps(*args):
             pass
-        def _choose_var(self, sourcevars):
+        def _choose_term(self, sourceterms):
             pass    
 _orig_merge_input_maps = PartPlanInformation.merge_input_maps
-_orig_choose_var = PartPlanInformation._choose_var
+_orig_choose_term = PartPlanInformation._choose_term
 
 def _merge_input_maps(*args):
     return sorted(_orig_merge_input_maps(*args))
 
-def _choose_var(self, sourcevars):
+def _choose_term(self, sourceterms):
     # predictable order for test purpose
     def get_key(x):
         try:
@@ -279,17 +279,17 @@ def _choose_var(self, sourcevars):
             except AttributeError:
                 # const
                 return x.value
-    varsinorder = sorted(sourcevars, key=get_key)
-    if len(self._sourcesvars) > 1:
+    varsinorder = sorted(sourceterms, key=get_key)
+    if len(self._sourcesterms) > 1:
         for var in varsinorder:
             if not var.scope is self.rqlst:
-                return var, sourcevars.pop(var)
+                return var, sourceterms.pop(var)
     else:
         for var in varsinorder:
             if var.scope is self.rqlst:
-                return var, sourcevars.pop(var)
+                return var, sourceterms.pop(var)
     var = varsinorder[0]
-    return var, sourcevars.pop(var)
+    return var, sourceterms.pop(var)
 
 
 def do_monkey_patch():
@@ -299,7 +299,7 @@ def do_monkey_patch():
     ExecutionPlan.tablesinorder = None
     ExecutionPlan.init_temp_table = _init_temp_table
     PartPlanInformation.merge_input_maps = _merge_input_maps
-    PartPlanInformation._choose_var = _choose_var
+    PartPlanInformation._choose_term = _choose_term
 
 def undo_monkey_patch():
     RQLRewriter.insert_snippets = _orig_insert_snippets
@@ -307,5 +307,5 @@ def undo_monkey_patch():
     ExecutionPlan._check_permissions = _orig_check_permissions
     ExecutionPlan.init_temp_table = _orig_init_temp_table
     PartPlanInformation.merge_input_maps = _orig_merge_input_maps
-    PartPlanInformation._choose_var = _orig_choose_var
+    PartPlanInformation._choose_term = _orig_choose_term
 
