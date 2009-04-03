@@ -391,7 +391,6 @@ class PartPlanInformation(object):
         return termssources
             
     def _handle_cross_relation(self, rel, relsources, termssources):
-        cross_rel = False
         for source in relsources:
             if rel.r_type in source.cross_relations:
                 ssource = self._repo.system_source
@@ -415,29 +414,15 @@ class PartPlanInformation(object):
                     # not supported by the source, so we can stop here
                     continue
                 self._sourcesterms.setdefault(ssource, {})[rel] = set(self._solindices)
-                cross_rel = True
-                needsplit = True
-                flag = False
                 for term in crossvars:
-                    if len(termssources[term]) == 1:
-                        if iter(termssources[term]).next()[0].uri == 'system':
-                            flag = True
-                            for ov in crossvars:
-                                if ov is not term and (isinstance(ov, Constant) or ov._q_invariant):
-                                    ssset = frozenset((ssource,))
-                                    self._remove_sources(ov, termssources[ov] - ssset)
-                        else:
-                            for ov in crossvars:
-                                if ov is not term and (isinstance(ov, Constant) or ov._q_invariant):
-                                    needsplit = False
-                                    break
-                            else:
-                                continue
-                if not flag:
+                    if len(termssources[term]) == 1 and iter(termssources[term]).next()[0].uri == 'system':
+                        for ov in crossvars:
+                            if ov is not term and (isinstance(ov, Constant) or ov._q_invariant):
+                                ssset = frozenset((ssource,))
+                                self._remove_sources(ov, termssources[ov] - ssset)
+                        break
+                else:
                     self._sourcesterms.setdefault(source, {})[rel] = set(self._solindices)
-                if needsplit:
-                    self.needsplit = True
-        return cross_rel
     
     def _remove_invalid_sources(self, termssources):
         """removes invalid sources from `sourcesterms` member according to
