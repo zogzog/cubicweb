@@ -244,14 +244,12 @@ repository (default to 5 minutes).',
         
     def syntax_tree_search(self, session, union, args=None, cachekey=None,
                            varmap=None):
-        assert not varmap, (varmap, union)
+        #assert not varmap, (varmap, union)
         rqlkey = union.as_string(kwargs=args)
         try:
             results = self._query_cache[rqlkey]
-            print 'cache hit', rqlkey
         except KeyError:
             results = self._syntax_tree_search(session, union, args)
-            print 'cache miss', rqlkey
             self._query_cache[rqlkey] = results
         return results
     
