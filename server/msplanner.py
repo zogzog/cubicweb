@@ -785,10 +785,10 @@ class PartPlanInformation(object):
         if secondchoice is not None:
             return secondchoice, sourceterms.pop(secondchoice)
         # priority to variable with the less solutions supported and with the
-        # most valuable refs
+        # most valuable refs. Add variable name for test predictability
         variables = sorted([(var, sols) for (var, sols) in sourceterms.items()
                             if isinstance(var, Variable)],
-                           key=lambda (v, s): (len(s), -v.valuable_references()))
+                           key=lambda (v, s): (len(s), -v.valuable_references(), v.name))
         if variables:
             var = variables[0][0]
             return var, sourceterms.pop(var)
