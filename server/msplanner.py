@@ -344,7 +344,7 @@ class PartPlanInformation(object):
         for vconsts in self.rqlst.stinfo['rewritten'].itervalues():
             const = vconsts[0]
             source = self._session.source_from_eid(const.eval(self.plan.args))
-            if source is self._repo.system_source:
+            if source is repo.system_source:
                 for const in vconsts:
                     self._set_source_for_term(source, const)
             elif source in self._sourcesterms:
@@ -352,6 +352,13 @@ class PartPlanInformation(object):
                 for const in vconsts:
                     if const.scope in source_scopes:
                         self._set_source_for_term(source, const)
+                        # if system source is used, add every rewritten constant
+                        # to its supported terms even when associated entity
+                        # doesn't actually comes from it so we get a changes
+                        # that allequals will return True as expected when
+                        # computing needsplit
+                        if repo.system_source in sourcesterms:
+                            self._set_source_for_term(repo.system_source, const)
         # add source for relations
         rschema = self._schema.rschema
         termssources = {}
@@ -399,15 +406,6 @@ class PartPlanInformation(object):
                     if source.uri != 'system' and not const in self._sourcesterms.get(source, ()):
                         continue
                     crossvars.add(const)
-                    # XXX this is counter intuitive, though this is currently a
-                    # trick to add const to system source terms so we get a
-                    # chance that solutions will compare to equals when
-                    # computing need split
-                    allsols = set(self._solindices)
-                    try:
-                        self._sourcesterms[ssource][const] = allsols
-                    except KeyError:
-                        self._sourcesterms[ssource] = {const: allsols}
                 self._crossrelations.setdefault(source, {})[rel] = crossvars
                 if len(crossvars) < 2:
                     # this means there is a constant in the relation which is
@@ -517,7 +515,8 @@ class PartPlanInformation(object):
         invalid_sources = termsources - (termssources[oterm] | norelsup)
         if invalid_sources and self._repo.can_cross_relation(rel.r_type):
             invalid_sources -= self._sys_source_set
-            if invalid_sources and isinstance(term, Variable) and self._need_ext_source_access(term, rel):
+            if invalid_sources and isinstance(term, Variable) \
+                   and self._need_ext_source_access(term, rel):
                 # if the term is a not invariant variable, we should filter out
                 # source where the relation is a cross relation from invalid
                 # sources
@@ -563,7 +562,8 @@ class PartPlanInformation(object):
                             for reldict in self._crossrelations.itervalues():
                                 for rel, terms in reldict.iteritems():
                                     for term in terms:
-                                        if isinstance(term, Variable) and self._need_ext_source_access(term, rel):
+                                        if isinstance(term, Variable) \
+                                               and self._need_ext_source_access(term, rel):
                                             self.needsplit = True
                                             return
 

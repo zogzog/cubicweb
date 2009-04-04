@@ -48,6 +48,12 @@ X_ALL_SOLS = sorted([{'X': 'Affaire'}, {'X': 'Basket'}, {'X': 'Bookmark'},
                      {'X': 'Societe'}, {'X': 'State'}, {'X': 'SubDivision'},
                      {'X': 'Tag'}, {'X': 'TrInfo'}, {'X': 'Transition'}])
 
+def clear_ms_caches(repo):
+    clear_cache(repo, 'rel_type_sources')
+    clear_cache(repo, 'can_cross_relation')
+    clear_cache(repo, 'is_multi_sources_relation')
+    # XXX source_defs
+    
 # keep cnx so it's not garbage collected and the associated session is closed
 repo, cnx = init_test_database('sqlite')
 
@@ -90,6 +96,7 @@ class BaseMSPlannerTC(BasePlannerTC):
         repo.sources_by_uri['cards'] = self.sources[-1]
         self.rql = self.sources[-1]
         do_monkey_patch()
+        clear_ms_caches(repo)
         
     def tearDown(self):
         undo_monkey_patch()
@@ -256,17 +263,37 @@ class PartPlanInformationTC(BaseMSPlannerTC):
                    'EXISTS(X copain T, T login L, T login in ("comme", "cochon")) OR '
                    'EXISTS(X in_state S, S name "pascontent", NOT X copain T2, T2 login "billy")',
                    {self.system: {'X': s[0], 'S': s[0], 'T2': s[0], 'T': s[0], 'G': s[0], 'copain': s[0], 'in_group': s[0]}, 
-                    self.ldap: {'X': s[0], 'T2': s[0], 'T': s[0]}}, True)
+                    self.ldap: {'X': s[0], 'T2': s[0], 'T': s[0]}},
+                   True)
 
     def test_relation_need_split(self):
         self._test('Any X, S WHERE X in_state S',
                    {self.system: {'X': s[0, 1, 2], 'S': s[0, 1, 2]},
-                     self.rql: {'X': s[2], 'S': s[2]}}, True)
+                    self.rql: {'X': s[2], 'S': s[2]}},
+                   True)
+        
+    def test_not_relation_need_split(self):
+        self._test('Any SN WHERE NOT X in_state S, S name SN',
+                   {self.rql: {'X': s[2], 'S': s[0, 1, 2]},
+                    self.system: {'X': s[0, 1, 2], 'S': s[0, 1, 2]}},
+                   True)
+        
+    def test_not_relation_no_split_external(self):
+        repo._type_source_cache[999999] = ('Note', 'cards', 999999)
+        # similar to the above test but with an eid coming from the external source.
+        # the same plan may be used, since we won't find any record in the system source
+        # linking 9999999 to a state 
+        self._test('Any SN WHERE NOT X in_state S, X eid %(x)s, S name SN',
+                   {'x': 999999},
+                   {self.rql: {'x': s[0], 'S': s[0]},
+                    self.system: {'x': s[0], 'S': s[0]}},
+                   False)
 
     def test_relation_restriction_ambigous_need_split(self):
         self._test('Any X,T WHERE X in_state S, S name "pending", T tags X',
                    {self.system: {'X': s[0, 1, 2], 'S': s[0, 1, 2], 'T': s[0, 1, 2], 'tags': s[0, 1, 2]},
-                    self.rql: {'X': s[2], 'S': s[2]}}, True)
+                    self.rql: {'X': s[2], 'S': s[2]}},
+                   True)
 
     def test_simplified_var(self):
         repo._type_source_cache[999999] = ('Note', 'cards', 999999)
@@ -281,20 +308,23 @@ class PartPlanInformationTC(BaseMSPlannerTC):
         ueid = self.session.user.eid
         self._test('Any X, Y WHERE X created_by Y, X eid %(x)s, NOT Y eid %(y)s',
                    {'x': ueid, 'y': ueid},
-                   {self.system: {'Y': s[0], 'created_by': s[0], 'x': s[0]}}, False)
+                   {self.system: {'Y': s[0], 'created_by': s[0], 'x': s[0]}},
+                   False)
 
     def test_crossed_relation_eid_1_needattr(self):
         repo._type_source_cache[999999] = ('Note', 'system', 999999)
         ueid = self.session.user.eid
         self._test('Any Y,T WHERE X eid %(x)s, X multisource_crossed_rel Y, Y type T',
                    {'x': 999999,},
-                   {self.rql: {'Y': s[0]}, self.system: {'Y': s[0], 'x': s[0]}}, True)
+                   {self.rql: {'Y': s[0]}, self.system: {'Y': s[0], 'x': s[0]}},
+                   True)
         
     def test_crossed_relation_eid_1_invariant(self):
         repo._type_source_cache[999999] = ('Note', 'system', 999999)
         self._test('Any Y WHERE X eid %(x)s, X multisource_crossed_rel Y',
                    {'x': 999999},
-                   {self.system: {'Y': s[0], 'x': s[0]}}, False)
+                   {self.system: {'Y': s[0], 'x': s[0]}},
+                   False)
 
     def test_crossed_relation_eid_2_invariant(self):
         repo._type_source_cache[999999] = ('Note', 'cards', 999999)
@@ -311,6 +341,22 @@ class PartPlanInformationTC(BaseMSPlannerTC):
                    {self.rql: {'X': s[0], 'AD': s[0], 'multisource_crossed_rel': s[0], 'x': s[0]},
                     self.system: {'X': s[0], 'AD': s[0], 'multisource_crossed_rel': s[0], 'x': s[0]}},
                    True)
+        
+    def test_version_crossed_depends_on_2(self):
+        repo._type_source_cache[999999] = ('Note', 'system', 999999)
+        self._test('Any X,AD,AE WHERE E eid %(x)s, E multisource_crossed_rel X, X in_state AD, AD name AE',
+                   {'x': 999999},
+                   {self.rql: {'X': s[0], 'AD': s[0]},
+                    self.system: {'X': s[0], 'AD': s[0], 'x': s[0]}},
+                    True)
+
+    def test_simplified_var_3(self):
+        self.set_debug(True)
+        repo._type_source_cache[999999] = ('Note', 'cards', 999999)
+        repo._type_source_cache[999998] = ('State', 'cards', 999998)
+        self._test('Any S,T WHERE S eid %(s)s, N eid %(n)s, N type T, N is Note, S is State',
+                   {'n': 999999, 's': 999998},
+                   {self.rql: {'s': s[0], 'N': s[0]}}, False)
                    
 
         
@@ -1200,22 +1246,18 @@ class MSPlannerTC(BaseMSPlannerTC):
                                     [{'S': 'State', 'SN': 'String'}])],
                      [self.rql, self.system], None, {'S': 'table0.C1', 'S.name': 'table0.C0', 'SN': 'table0.C0'},
                      []),
-                    ('FetchStep', [('Any X WHERE X is Note', [{'X': 'Note'}])],
-                     [self.rql, self.system], None, {'X': 'table1.C0'},
-                     []),
                     ('IntersectStep', None, None,
                      [('OneFetchStep',
+                       [('Any SN WHERE NOT X in_state S, S name SN, S is State, X is Note',
+                         [{'S': 'State', 'SN': 'String', 'X': 'Note'}])],
+                       None, None, [self.rql, self.system], {},
+                       []),
+                      ('OneFetchStep',
                        [('Any SN WHERE NOT X in_state S, S name SN, S is State, X is IN(Affaire, EUser)',
                          [{'S': 'State', 'SN': 'String', 'X': 'Affaire'},
                           {'S': 'State', 'SN': 'String', 'X': 'EUser'}])],
                        None, None, [self.system], {'S': 'table0.C1', 'S.name': 'table0.C0', 'SN': 'table0.C0'},
-                       []),
-                      ('OneFetchStep',
-                       [('Any SN WHERE NOT X in_state S, S name SN, S is State, X is Note',
-                         [{'S': 'State', 'SN': 'String', 'X': 'Note'}])],
-                       None, None, [self.system], {'S': 'table0.C1', 'S.name': 'table0.C0', 'SN': 'table0.C0',
-                                                   'X': 'table1.C0'},
-                       [])]
+                       []),]
                      )])
             
     def test_external_attributes_and_relation(self):
@@ -1929,6 +1971,7 @@ class MSPlannerTwoSameExternalSourcesTC(BasePlannerTC):
         assert 'multisource_crossed_rel' in repo.sources_by_uri['cards2'].cross_relations
         assert repo.sources_by_uri['cards'].support_relation('multisource_crossed_rel')
         assert 'multisource_crossed_rel' in repo.sources_by_uri['cards'].cross_relations
+        clear_ms_caches(repo)
     _test = test_plan
         
     def tearDown(self):
@@ -1991,10 +2034,21 @@ class MSPlannerTwoSameExternalSourcesTC(BasePlannerTC):
                          [])],
                        {'x': 999999})
 
-    def test_version_crossed_depends_on_2_XXXFIXME(self):
+    def test_version_crossed_depends_on_2(self):
+        self.set_debug(True)
         self.repo._type_source_cache[999999] = ('Note', 'system', 999999)
         self._test('Any X,AD,AE WHERE E eid %(x)s, E multisource_crossed_rel X, X in_state AD, AD name AE',
-                   [],
+                   [('FetchStep', [('Any X,AD,AE WHERE X in_state AD, AD name AE, AD is State, X is Note',
+                                    [{'AD': 'State', 'AE': 'String', 'X': 'Note'}])],
+                     [self.rql, self.rql2, self.system],
+                     None, {'AD': 'table0.C1', 'AD.name': 'table0.C2',
+                            'AE': 'table0.C2', 'X': 'table0.C0'},
+                     []),
+                    ('OneFetchStep', [('Any X,AD,AE WHERE 999999 multisource_crossed_rel X, AD name AE, AD is State, X is Note',
+                                       [{'AD': 'State', 'AE': 'String', 'X': 'Note'}])],
+                     None, None, [self.system],
+                     {'AD': 'table0.C1', 'AD.name': 'table0.C2', 'AE': 'table0.C2', 'X': 'table0.C0'},
+                     [])],
                    {'x': 999999})
 
     def test_version_crossed_depends_on_3_XXXFIXME(self):
