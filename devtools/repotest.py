@@ -258,38 +258,28 @@ except ImportError:
     class PartPlanInformation(object):
         def merge_input_maps(*args):
             pass
-#         def _choose_term(self, sourceterms):
-#             pass    
+        def _choose_term(self, sourceterms):
+            pass    
 _orig_merge_input_maps = PartPlanInformation.merge_input_maps
-# _orig_choose_term = PartPlanInformation._choose_term
+_orig_choose_term = PartPlanInformation._choose_term
 
 def _merge_input_maps(*args):
     return sorted(_orig_merge_input_maps(*args))
 
-# def _choose_term(self, sourceterms):
-#     # predictable order for test purpose
-#     def get_key(x):
-#         try:
-#             # variable
-#             return x.name
-#         except AttributeError:
-#             try:
-#                 # relation
-#                 return x.r_type
-#             except AttributeError:
-#                 # const
-#                 return x.value
-#     varsinorder = sorted(sourceterms, key=get_key)
-#     if len(self._sourcesterms) > 1:
-#         for var in varsinorder:
-#             if not var.scope is self.rqlst:
-#                 return var, sourceterms.pop(var)
-#     else:
-#         for var in varsinorder:
-#             if var.scope is self.rqlst:
-#                 return var, sourceterms.pop(var)
-#     var = varsinorder[0]
-#     return var, sourceterms.pop(var)
+def _choose_term(self, sourceterms):
+    # predictable order for test purpose
+    def get_key(x):
+        try:
+            # variable
+            return x.name
+        except AttributeError:
+            try:
+                # relation
+                return x.r_type
+            except AttributeError:
+                # const
+                return x.value
+    return _orig_choose_term(self, sorted(sourceterms, key=get_key))
 
 
 def do_monkey_patch():
@@ -299,7 +289,7 @@ def do_monkey_patch():
     ExecutionPlan.tablesinorder = None
     ExecutionPlan.init_temp_table = _init_temp_table
     PartPlanInformation.merge_input_maps = _merge_input_maps
-    #PartPlanInformation._choose_term = _choose_term
+    PartPlanInformation._choose_term = _choose_term
 
 def undo_monkey_patch():
     RQLRewriter.insert_snippets = _orig_insert_snippets
@@ -307,5 +297,5 @@ def undo_monkey_patch():
     ExecutionPlan._check_permissions = _orig_check_permissions
     ExecutionPlan.init_temp_table = _orig_init_temp_table
     PartPlanInformation.merge_input_maps = _orig_merge_input_maps
-    #PartPlanInformation._choose_term = _orig_choose_term
+    PartPlanInformation._choose_term = _orig_choose_term
 
