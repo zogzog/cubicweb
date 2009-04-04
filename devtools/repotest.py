@@ -72,7 +72,7 @@ class DumbOrderedDict(list):
     def __contains__(self, key):
         return key in self.iterkeys()
     def __getitem__(self, key):
-        for key_, value in self.iteritems():
+        for key_, value in list.__iter__(self):
             if key == key_:
                 return value
         raise KeyError(key)
@@ -80,6 +80,17 @@ class DumbOrderedDict(list):
         return (x for x, y in list.__iter__(self))
     def iteritems(self):
         return (x for x in list.__iter__(self))
+    def items(self):
+        return [x for x in list.__iter__(self)]
+
+class DumbOrderedDict2(object):
+    def __init__(self, origdict, sortkey):
+        self.origdict = origdict
+        self.sortkey = sortkey
+    def __getattr__(self, attr):
+        return getattr(self.origdict, attr)
+    def __iter__(self):
+        return iter(sorted(self.origdict, key=self.sortkey))
 
 
 from logilab.common.testlib import TestCase
@@ -279,7 +290,7 @@ def _choose_term(self, sourceterms):
             except AttributeError:
                 # const
                 return x.value
-    return _orig_choose_term(self, sorted(sourceterms, key=get_key))
+    return _orig_choose_term(self, DumbOrderedDict2(sourceterms, get_key))
 
 
 def do_monkey_patch():
