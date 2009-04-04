@@ -351,7 +351,6 @@ class PartPlanInformationTC(BaseMSPlannerTC):
                     True)
 
     def test_simplified_var_3(self):
-        self.set_debug(True)
         repo._type_source_cache[999999] = ('Note', 'cards', 999999)
         repo._type_source_cache[999998] = ('State', 'cards', 999998)
         self._test('Any S,T WHERE S eid %(s)s, N eid %(n)s, N type T, N is Note, S is State',
@@ -1240,7 +1239,6 @@ class MSPlannerTC(BaseMSPlannerTC):
                    {'x': 999999})
 
     def test_not_relation_need_split(self):
-        ueid = self.session.user.eid
         self._test('Any SN WHERE NOT X in_state S, S name SN',
                    [('FetchStep', [('Any SN,S WHERE S name SN, S is State',
                                     [{'S': 'State', 'SN': 'String'}])],
@@ -1471,18 +1469,23 @@ class MSPlannerTC(BaseMSPlannerTC):
                     ],
                    {'x': 999999,})
 
-    def test_crossed_relation_eid_2_needattr_XXXFIXME(self):
+    def test_crossed_relation_eid_2_needattr(self):
         repo._type_source_cache[999999] = ('Note', 'cards', 999999)
-        self._test('Any Y,T WHERE X eid %(x)s, X multisource_crossed_rel Y, Y type T',
+        self._test('Any Y,T WHERE X eid %(x)s, X multisource_crossed_rel Y, Y type T',                   
                    [('FetchStep', [('Any Y,T WHERE Y type T, Y is Note', [{'T': 'String', 'Y': 'Note'}])],
                      [self.rql, self.system], None,
                      {'T': 'table0.C1', 'Y': 'table0.C0', 'Y.type': 'table0.C1'}, []),
-                    ('OneFetchStep', [('Any Y,T WHERE 999999 multisource_crossed_rel Y, Y type T, Y is Note',
-                                       [{'T': 'String', 'Y': 'Note'}])],
-                     None, None, [self.rql, self.system],
-                     {'T': 'table0.C1', 'Y': 'table0.C0', 'Y.type': 'table0.C1'},
-                     [])
-                    ],
+                    ('UnionStep', None, None,
+                     [('OneFetchStep', [('Any Y,T WHERE 999999 multisource_crossed_rel Y, Y type T, Y is Note',
+                                         [{'T': 'String', 'Y': 'Note'}])],
+                       None, None, [self.rql], None,
+                       []),
+                      ('OneFetchStep', [('Any Y,T WHERE 999999 multisource_crossed_rel Y, Y type T, Y is Note',
+                                         [{'T': 'String', 'Y': 'Note'}])],
+                       None, None, [self.system],
+                       {'T': 'table0.C1', 'Y': 'table0.C0', 'Y.type': 'table0.C1'},
+                       [])]
+                     )],
                    {'x': 999999,})
 
     def test_crossed_relation_eid_not_1(self):
@@ -1511,12 +1514,18 @@ class MSPlannerTC(BaseMSPlannerTC):
                     ('FetchStep',  [('Any Y,T WHERE Y type T, Y is Note', [{'T': 'String', 'Y': 'Note'}])],
                      [self.rql, self.system], None,
                      {'T': 'table1.C1', 'Y': 'table1.C0', 'Y.type': 'table1.C1'},  []),
-                    ('OneFetchStep', [('Any X,Y,T WHERE X multisource_crossed_rel Y, Y type T, X type T, X is Note, Y is Note',
-                                       [{'T': 'String', 'X': 'Note', 'Y': 'Note'}])],
-                     None, None, [self.rql, self.system],
-                     {'T': 'table1.C1', 'X': 'table0.C0', 'X.type': 'table0.C1',
-                      'Y': 'table1.C0', 'Y.type': 'table1.C1'},
-                    [])],
+                    ('UnionStep', None,  None,
+                     [('OneFetchStep', [('Any X,Y,T WHERE X multisource_crossed_rel Y, Y type T, X type T, X is Note, Y is Note',
+                                         [{'T': 'String', 'X': 'Note', 'Y': 'Note'}])],
+                       None, None, [self.rql], None,
+                       []),
+                      ('OneFetchStep', [('Any X,Y,T WHERE X multisource_crossed_rel Y, Y type T, X type T, X is Note, Y is Note',
+                                         [{'T': 'String', 'X': 'Note', 'Y': 'Note'}])],
+                       None, None, [self.system],
+                       {'T': 'table1.C1', 'X': 'table0.C0', 'X.type': 'table0.C1',
+                        'Y': 'table1.C0', 'Y.type': 'table1.C1'},
+                       [])]
+                     )],
                     {'x': 999999,})
         
     # edition queries tests ###################################################
@@ -1918,7 +1927,7 @@ class MSPlannerTC(BaseMSPlannerTC):
         # IMO this is normal, unless we introduce a special case for the
         # identity relation. BUT I think it's better to leave it as is and to
         # explain constraint propagation rules, and so why this should be
-        # wrapped in exists() is used in multi-source
+        # wrapped in exists() if used in multi-source
         self.skip('take a look at me if you wish')
         self._test('Any B,U,UL GROUPBY B,U,UL WHERE B created_by U?, B is File '
                    'WITH U,UL BEING (Any U,UL WHERE ME eid %(x)s, (U identity ME '
@@ -2016,26 +2025,27 @@ class MSPlannerTwoSameExternalSourcesTC(BasePlannerTC):
     def test_version_crossed_depends_on_1(self):
         self.repo._type_source_cache[999999] = ('Note', 'cards', 999999)
         self._test('Any X,AD,AE WHERE E eid %(x)s, E multisource_crossed_rel X, X in_state AD, AD name AE',
-                       [('FetchStep', [('Any X,AD,AE WHERE X in_state AD, AD name AE, AD is State, X is Note',
-                                        [{'AD': 'State', 'AE': 'String', 'X': 'Note'}])],
-                         [self.rql, self.rql2, self.system],
-                         None, {'AD': 'table0.C1', 'AD.name': 'table0.C2',
-                                'AE': 'table0.C2', 'X': 'table0.C0'},
-                         []),
-                        ('FetchStep', [('Any X WHERE 999999 multisource_crossed_rel X, X is Note',
-                                        [{'X': 'Note'}])],
-                         [self.rql, self.system], None, {'X': 'table1.C0'},
-                         []),
-                        ('OneFetchStep', [('Any X,AD,AE WHERE AD name AE, AD is State, X is Note, X identity A',
-                                           [{'A': 'Note', 'AD': 'State', 'AE': 'String', 'X': 'Note'}])],
-                         None, None, [self.system],
-                         {'A': 'table0.C0', 'AD': 'table0.C1', 'AD.name': 'table0.C2',
-                          'AE': 'table0.C2', 'X': 'table1.C0'},
-                         [])],
-                       {'x': 999999})
+                   [('FetchStep', [('Any X,AD,AE WHERE X in_state AD, AD name AE, AD is State, X is Note',
+                                    [{'AD': 'State', 'AE': 'String', 'X': 'Note'}])],
+                     [self.rql, self.rql2, self.system],
+                     None, {'AD': 'table0.C1', 'AD.name': 'table0.C2',
+                            'AE': 'table0.C2', 'X': 'table0.C0'},
+                     []),
+                    ('UnionStep', None, None,
+                     [('OneFetchStep', [('Any X,AD,AE WHERE 999999 multisource_crossed_rel X, AD name AE, AD is State, X is Note',
+                                         [{'AD': 'State', 'AE': 'String', 'X': 'Note'}])],
+                       None, None, [self.rql], None,
+                       []),
+                      ('OneFetchStep', [('Any X,AD,AE WHERE 999999 multisource_crossed_rel X, AD name AE, AD is State, X is Note',
+                                         [{'AD': 'State', 'AE': 'String', 'X': 'Note'}])],
+                       None, None, [self.system],
+                       {'AD': 'table0.C1', 'AD.name': 'table0.C2',
+                        'AE': 'table0.C2', 'X': 'table0.C0'},
+                       [])]
+                     )],
+                   {'x': 999999})
 
     def test_version_crossed_depends_on_2(self):
-        self.set_debug(True)
         self.repo._type_source_cache[999999] = ('Note', 'system', 999999)
         self._test('Any X,AD,AE WHERE E eid %(x)s, E multisource_crossed_rel X, X in_state AD, AD name AE',
                    [('FetchStep', [('Any X,AD,AE WHERE X in_state AD, AD name AE, AD is State, X is Note',
@@ -2051,9 +2061,34 @@ class MSPlannerTwoSameExternalSourcesTC(BasePlannerTC):
                      [])],
                    {'x': 999999})
 
-    def test_version_crossed_depends_on_3_XXXFIXME(self):
+    def test_version_crossed_depends_on_3(self):
         self._test('Any X,AD,AE WHERE E multisource_crossed_rel X, X in_state AD, AD name AE, E is Note',
-                   [])
+                   [('FetchStep', [('Any X,AD,AE WHERE X in_state AD, AD name AE, AD is State, X is Note',
+                                    [{'AD': 'State', 'AE': 'String', 'X': 'Note'}])],
+                     [self.rql, self.rql2, self.system],
+                     None, {'AD': 'table0.C1', 'AD.name': 'table0.C2',
+                            'AE': 'table0.C2', 'X': 'table0.C0'},
+                     []),
+                    ('FetchStep', [('Any E WHERE E is Note', [{'E': 'Note'}])],
+                     [self.rql, self.rql2, self.system],
+                     None, {'E': 'table1.C0'},
+                     []),
+                    ('UnionStep', None, None,
+                     [('OneFetchStep', [('Any X,AD,AE WHERE E multisource_crossed_rel X, AD name AE, AD is State, E is Note, X is Note',
+                                         [{'AD': 'State', 'AE': 'String', 'E': 'Note', 'X': 'Note'}])],
+                       None, None, [self.rql, self.rql2], None,
+                       []),
+                      ('OneFetchStep', [('Any X,AD,AE WHERE E multisource_crossed_rel X, AD name AE, AD is State, E is Note, X is Note',
+                                         [{'AD': 'State', 'AE': 'String', 'E': 'Note', 'X': 'Note'}])],
+                       None, None, [self.system],
+                       {'AD': 'table0.C1',
+                        'AD.name': 'table0.C2',
+                        'AE': 'table0.C2',
+                        'E': 'table1.C0',
+                        'X': 'table0.C0'},
+                       [])]
+                     )]
+                   )
 
 
 if __name__ == '__main__':
