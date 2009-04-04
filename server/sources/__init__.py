@@ -1,14 +1,34 @@
 """cubicweb server sources support
 
 :organization: Logilab
-:copyright: 2001-2008 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+:copyright: 2001-2009 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 """
 __docformat__ = "restructuredtext en"
 
 from logging import getLogger
 
+from mx.DateTime import now, DateTimeDelta
+
 from cubicweb import set_log_methods
+
+class TimedCache(dict):
+    def __init__(self, ttlm, ttls=0):
+        # time to live in minutes
+        self.ttl = DateTimeDelta(0, 0, ttlm, ttls)
+        
+    def __setitem__(self, key, value):
+        dict.__setitem__(self, key, (now(), value))
+        
+    def __getitem__(self, key):
+        return dict.__getitem__(self, key)[1]
+    
+    def clear_expired(self):
+        now_ = now()
+        ttl = self.ttl
+        for key, (timestamp, value) in self.items():
+            if now_ - timestamp > ttl:
+                del self[key]
 
 
 class AbstractSource(object):
