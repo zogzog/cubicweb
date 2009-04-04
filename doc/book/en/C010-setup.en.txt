@@ -1,6 +1,6 @@
 .. -*- coding: utf-8 -*-
 
-.. _MiseEnPlaceEnv:
+.. _SetUpEnv:
 
 ===================================================
 Installation and set-up of a `CubicWeb` environment

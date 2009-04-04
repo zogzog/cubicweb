@@ -222,7 +222,7 @@ Permissions definition
 ``````````````````````
 
 Setting permissions is done with the attribute `permissions` of entities and
-relation types. It defines a dictionnary where the keys are the access types
+relation types. It defines a dictionary where the keys are the access types
 (action), and the values are the authorized groups or expressions.
 
 For an entity type, the possible actions are `read`, `add`, `update` and
