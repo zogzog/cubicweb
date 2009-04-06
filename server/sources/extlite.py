@@ -1,7 +1,7 @@
 """provide an abstract class for external sources using a sqlite database helper
 
 :organization: Logilab
-:copyright: 2007-2008 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+:copyright: 2007-2009 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 """
 __docformat__ = "restructuredtext en"
@@ -12,7 +12,7 @@ import threading
 from os.path import join, exists
 
 from cubicweb import server
-from cubicweb.server.sqlutils import sqlexec, SQLAdapterMixIn
+from cubicweb.server.sqlutils import SQL_PREFIX, sqlexec, SQLAdapterMixIn
 from cubicweb.server.sources import AbstractSource, native
 from cubicweb.server.sources.rql2sql import SQLGenerator
 
@@ -122,7 +122,7 @@ repository.',
         for etype in self.support_entities:
             eschema = schema.eschema(etype)
             createsqls = eschema2sql(self.sqladapter.dbhelper, eschema,
-                                     skip_relations=('data',))
+                                     skip_relations=('data',), prefix=SQL_PREFIX)
             sqlexec(createsqls, cu, withpb=False)
         for rtype in self.support_relations:
             rschema = schema.rschema(rtype)
@@ -196,7 +196,7 @@ repository.',
         """
         cu = session.pool[self.uri]
         attrs = self.sqladapter.preprocess_entity(entity)
-        sql = self.sqladapter.sqlgen.insert(str(entity.e_schema), attrs)
+        sql = self.sqladapter.sqlgen.insert(SQL_PREFIX + str(entity.e_schema), attrs)
         cu.execute(sql, attrs)
         
     def add_entity(self, session, entity):
@@ -212,7 +212,7 @@ repository.',
         """
         cu = session.pool[self.uri]
         attrs = self.sqladapter.preprocess_entity(entity)
-        sql = self.sqladapter.sqlgen.update(str(entity.e_schema), attrs, ['eid'])
+        sql = self.sqladapter.sqlgen.update(SQL_PREFIX + str(entity.e_schema), attrs, ['eid'])
         cu.execute(sql, attrs)
         
     def update_entity(self, session, entity):
@@ -227,8 +227,8 @@ repository.',
         entity is deleted.
         """
         sqlcursor = session.pool[self.uri]        
-        attrs = {'eid': eid}
-        sql = self.sqladapter.sqlgen.delete(etype, attrs)
+        attrs = {SQL_PREFIX + 'eid': eid}
+        sql = self.sqladapter.sqlgen.delete(SQL_PREFIX + etype, attrs)
         sqlcursor.execute(sql, attrs)
     
     def delete_relation(self, session, subject, rtype, object):
@@ -237,8 +237,9 @@ repository.',
         if rschema.inlined:
             if subject in session.query_data('pendingeids', ()):
                 return
-            etype = session.describe(subject)[0]
-            sql = 'UPDATE %s SET %s=NULL WHERE eid=%%(eid)s' % (etype, rtype)
+            table = SQL_PREFIX + session.describe(subject)[0]
+            column = SQL_PREFIX + rtype
+            sql = 'UPDATE %s SET %s=NULL WHERE %seid=%%(eid)s' % (table, column, SQL_PREFIX)
             attrs = {'eid' : subject}
         else:
             attrs = {'eid_from': subject, 'eid_to': object}

@@ -1,7 +1,7 @@
 """SQL utilities functions and classes.
 
 :organization: Logilab
-:copyright: 2001-2008 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+:copyright: 2001-2009 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 """
 __docformat__ = "restructuredtext en"
@@ -18,6 +18,7 @@ from cubicweb.common.uilib import remove_html_tags
 from cubicweb.server import SQL_CONNECT_HOOKS
 from cubicweb.server.utils import crypt_password, cartesian_product
 
+SQL_PREFIX = 'cw_'
 
 def sqlexec(sqlstmts, cursor_or_execute, withpb=True, delimiter=';'):
     """execute sql statements ignoring DROP/ CREATE GROUP or USER statements
@@ -58,7 +59,7 @@ def sqlgrants(schema, driver, user,
         indexer = get_indexer(driver)
         w(indexer.sql_grant_user(user))
         w('')
-    w(grant_schema(schema, user, set_owner, skip_entities=skip_entities))
+    w(grant_schema(schema, user, set_owner, skip_entities=skip_entities, prefix=SQL_PREFIX))
     return '\n'.join(output)
 
                   
@@ -79,7 +80,7 @@ def sqlschema(schema, driver, text_index=True,
         w(indexer.sql_init_fti())
         w('')
     dbhelper = get_adv_func_helper(driver)
-    w(schema2sql(dbhelper, schema, 
+    w(schema2sql(dbhelper, schema, prefix=SQL_PREFIX, 
                  skip_entities=skip_entities, skip_relations=skip_relations))
     if dbhelper.users_support and user:
         w('')
@@ -101,7 +102,7 @@ def sqldropschema(schema, driver, text_index=True,
         indexer = get_indexer(driver)
         w(indexer.sql_drop_fti())
         w('')
-    w(dropschema2sql(schema,
+    w(dropschema2sql(schema, prefix=SQL_PREFIX,
                      skip_entities=skip_entities, skip_relations=skip_relations))
     return '\n'.join(output)
 
@@ -179,7 +180,7 @@ class SQLAdapterMixIn(object):
 
     def preprocess_entity(self, entity):
         """return a dictionary to use as extra argument to cursor.execute
-        to insert/update an entity
+        to insert/update an entity into a SQL database
         """
         attrs = {}
         eschema = entity.e_schema
@@ -198,7 +199,7 @@ class SQLAdapterMixIn(object):
                         value = crypt_password(value)
                 elif isinstance(value, Binary):
                     value = self.binary(value.getvalue())
-            attrs[str(attr)] = value
+            attrs[SQL_PREFIX+str(attr)] = value
         return attrs
 
 

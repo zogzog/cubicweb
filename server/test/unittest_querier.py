@@ -9,7 +9,9 @@ from unittest_session import Variable
 
 from mx.DateTime import today, now, DateTimeType
 from rql import BadRQLQuery, RQLSyntaxError
+
 from cubicweb import QueryError, Unauthorized
+from cubicweb.server.sqlutils import SQL_PREFIX
 from cubicweb.server.utils import crypt_password
 from cubicweb.server.sources.native import make_schema
 
@@ -468,6 +470,7 @@ class QuerierTC(BaseQuerierTC):
         self.assertEquals(rset.rows[0][0], self.ueid)
 
     def test_select_complex_sort(self):
+        self.skip('retry me once http://www.sqlite.org/cvstrac/tktview?tn=3773 is fixed')
         rset = self.execute('Any X ORDERBY X,D LIMIT 5 WHERE X creation_date D')
         result = rset.rows
         result.sort()
@@ -1072,7 +1075,8 @@ class QuerierTC(BaseQuerierTC):
         self.assertRaises(Unauthorized,
                           self.execute, "Any P WHERE X is EUser, X login 'bob', X upassword P")
         cursor = self.pool['system']
-        cursor.execute("SELECT upassword from EUser WHERE login='bob'")
+        cursor.execute("SELECT %supassword from %sEUser WHERE %slogin='bob'"
+                       % (SQL_PREFIX, SQL_PREFIX, SQL_PREFIX))
         passwd = cursor.fetchone()[0].getvalue()
         self.assertEquals(passwd, crypt_password('toto', passwd[:2])) 
         rset = self.execute("Any X WHERE X is EUser, X login 'bob', X upassword '%s'" % passwd)
@@ -1085,7 +1089,8 @@ class QuerierTC(BaseQuerierTC):
         self.assertEquals(rset.description[0][0], 'EUser')
         rset = self.execute("SET X upassword %(pwd)s WHERE X is EUser, X login 'bob'",
                             {'pwd': 'tutu'})
-        cursor.execute("SELECT upassword from EUser WHERE login='bob'")
+        cursor.execute("SELECT %supassword from %sEUser WHERE %slogin='bob'"
+                       % (SQL_PREFIX, SQL_PREFIX, SQL_PREFIX))
         passwd = cursor.fetchone()[0].getvalue()
         self.assertEquals(passwd, crypt_password('tutu', passwd[:2])) 
         rset = self.execute("Any X WHERE X is EUser, X login 'bob', X upassword '%s'" % passwd)
@@ -1212,6 +1217,7 @@ class QuerierTC(BaseQuerierTC):
         cause: old variable ref inserted into a fresh rqlst copy
         (in RQLSpliter._complex_select_plan)
         """
+        self.skip('retry me once http://www.sqlite.org/cvstrac/tktview?tn=3773 is fixed')
         self.execute('Any X ORDERBY D DESC WHERE X creation_date D')
     
     def test_nonregr_extra_joins(self):
