@@ -137,8 +137,8 @@ class AbstractSource(object):
     def eid2extid(self, eid, session=None):
         return self.repo.eid2extid(self, eid, session)
 
-    def extid2eid(self, value, etype, session=None, insert=True):
-        return self.repo.extid2eid(self, value, etype, session, insert)
+    def extid2eid(self, value, etype, session=None, **kwargs):
+        return self.repo.extid2eid(self, value, etype, session, **kwargs)
 
     PUBLIC_KEYS = ('adapter', 'uri')
     def remove_sensitive_information(self, sourcedef):
