@@ -61,13 +61,11 @@ tabular structure with rows and columns, hence cells):
 
 * `page_title()`, returns the title to use in the HTML header `title`
 
-* `creator(eid)`, returns the eid and the login of the entity creator of the entity
-  having the eid given in the parameter 
 
-Other basic views classes
-`````````````````````````
+Other basic view classes
+````````````````````````
 Here are some of the subclasses of `View` defined in `cubicweb.common.view`
-that are more concrete as they relates to data rendering within the application:
+that are more concrete as they relate to data rendering within the application:
 
 * `EntityView`, view applying to lines or cell containing an entity (e.g. an eid)
 * `StartupView`, start view that does not require a result set to apply to
@@ -83,14 +81,14 @@ A view is essentially defined by:
   and this identifier will be used as a key). This is defined in the class
   attribute ``id``.
   
-- a filter to select the resulsets it can be applied to. This is defined in
+- a filter to select the result sets it can be applied to. This is defined in
   the class attribute ``__selectors__``, which expects a tuple of selectors
   as its value.
 
 
 For a given identifier, multiple views can be defined. `CubicWeb` uses
-a selector which computes scores so that it can identify and select the
-best view to apply in context. The selectors library is in 
+a selector which computes scores to identify and select the
+best view to apply in the given context. The selectors library is in 
 ``cubicweb.common.selector`` and a library of the methods used to
 compute scores is in ``cubicweb.vregistry.vreq``.
 
@@ -107,8 +105,8 @@ A `registerer` can, for example, identify when we register an
 object that is equivalent to an already registered object, which
 could happen when we define two `primary` views for an entity type.
 
-The purpose of a `registerer` is to control objects registry
-at the application startup whereas `selectors` controls objects
+The purpose of a `registerer` is to control object registry
+at the application startup whereas `selectors` control objects
 when they are selected for display.
 
 
@@ -179,15 +177,15 @@ the method ``cell_call()`` of the view ``primary`` in ``BlogDemo/views.py`` ::
 The above source code defines a new primary view (`line 03`) for
 ``BlogEntry`` (`line 05`). 
 
-Since views are applied to resultsets and resulsets can be tables of
-data, it is needed to recover the entity from its (row,col)
-coordinates (`line 08`). We will get to this in more detail later.
+Since views are applied to result sets which can be tables of
+data, we have to recover the entity from its (row,col)-coordinates (`line 08`).
+We will get to this in more detail later.
 
-The view has a ``self.w()`` method that is used to output data. Here `lines
+The view method ``self.w()`` is used to output data. Here `lines
 09-12` output HTML tags and values of the entity's attributes.
 
-When displaying same blog entry as before, you will notice that the
-page is now looking much nicer.
+When displaying the same blog entry as before, you will notice that the
+page is now looking much nicer. [FIXME: it is not clear to what this refers.]
 
 .. image:: images/lax-book.09-new-view-blogentry.en.png
    :alt: blog entries now look much nicer
@@ -206,22 +204,22 @@ Let us now improve the primary view of a blog ::
   10.         self.wview('primary', rset)
 
 In the above source code, `lines 01-08` are similar to the previous
-view we defined.
+view we defined. [FIXME: defined where ?]
 
-At `line 09`, a simple request in made to build a resultset with all
+At `line 09`, a simple request is made to build a result set with all
 the entities linked to the current ``Blog`` entity by the relationship
 ``entry_of``. The part of the framework handling the request knows
 about the schema and infer that such entities have to be of the
 ``BlogEntry`` kind and retrieves them.
 
-The request returns a selection of data called a resultset. At 
-`line 10` the view 'primary' is applied to this resultset to output
+The request returns a selection of data called a result set. At 
+`line 10` the view 'primary' is applied to this result set to output
 HTML. 
 
 **This is to be compared to interfaces and protocols in object-oriented
-languages. Applying a given view to all the entities of a resultset only
-requires the availability, for each entity of this resultset, of a
-view with that name that can accepts the entity.**
+languages. Applying a given view called 'a_view' to all the entities
+of a result set only requires to have for each entity of this result set,
+an available view called 'a_view' which accepts the entity.**
 
 Assuming we added entries to the blog titled `MyLife`, displaying it
 now allows to read its description and all its entries.
@@ -232,7 +230,7 @@ now allows to read its description and all its entries.
 **Before we move forward, remember that the selection/view principle is
 at the core of `CubicWeb`. Everywhere in the engine, data is requested
 using the RQL language, then HTML/XML/text/PNG is output by applying a
-view to the resultset returned by the query. That is where most of the
+view to the result set returned by the query. That is where most of the
 flexibility comes from.**
 
 [WRITE ME]
@@ -242,7 +240,7 @@ flexibility comes from.**
 
 We will implement the `cubicweb.interfaces.ICalendarable` interfaces on
 entities.BlogEntry and apply the OneMonthCalendar and iCalendar views
-to resultsets like "Any E WHERE E is BlogEntry"
+to result sets like "Any E WHERE E is BlogEntry"
 
 * create view "blogentry table" with title, publish_date, category
 
@@ -262,7 +260,7 @@ and show that ajax comes for free.
 Templates
 ---------
 
-*Templates* are specific view that does not depend on a result set. The basic
+*Templates* are specific views that do not depend on a result set. The basic
 class `Template` (`cubicweb.common.view`) is derived from the class `View`.
 
 To build a HTML page, a *main template* is used. In general, the template of
@@ -280,16 +278,16 @@ You will find out more about templates in :ref:`templates`.
 
 XML views, binaries...
 ----------------------
-For the views generating other formats that HTML (an image generated dynamically
-for example), and which can not usually be included in the HTML page generated
+For views generating other formats than HTML (an image generated dynamically
+for example), and which can not simply be included in the HTML page generated
 by the main template (see above), you have to:
 
-* set the atribute `templatable` of the class to `False`
+* set the attribute `templatable` of the class to `False`
 * set, through the attribute `content_type` of the class, the MIME type generated
   by the view to `application/octet-stream`
 
-For the views dedicated to binary content creation (an image dynamically generated
-for example), we have to set the attribute `binary` of the class to `True` (which
+For views dedicated to binary content creation (like dynamically generated 
+images), we have to set the attribute `binary` of the class to `True` (which
 implies that `templatable == False`, so that the attribute `w` of the view could be
 replaced by a binary flow instead of unicode).
 

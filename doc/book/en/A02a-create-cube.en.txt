@@ -204,8 +204,7 @@ compute scores is available in ``cubicweb.vregistry.vreq``.
 
 It is possible to define multiple views for the same identifier
 and to associate selectors and filters to allow the application
-to find the best way to render the data. We will see more details
-on this in :ref:`ViewDefinition`.
+to find the best way to render the data. 
 
 For example, the view named ``primary`` is the one used to display
 a single entity. We will now show you how to customize this view.
@@ -266,8 +265,9 @@ The above source code defines a new primary view for ``BlogEntry``.
 
 Since views are applied to result sets and result sets can be tables of
 data, we have to recover the entity from its (row,col)-coordinates.
-We will get to this in more detail later.
+The view has a ``self.w()`` method that is used to output data, in our
+example HTML output.
 
-The view has a ``self.w()`` method that is used to output data. In our
-example we use it to output HTML tags and values of the entity's attributes.
+You can find more details about views and selectors in :ref:`ViewDefinition`.
+
 
