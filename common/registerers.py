@@ -101,6 +101,8 @@ class accepts_registerer(priority_registerer):
     def equivalent(self, other):
         if _accepts_interfaces(self.vobject) != _accepts_interfaces(other):
             return False
+        if getattr(self.vobject, 'require_groups', ()) != getattr(other, 'require_groups', ()):
+            return False
         try:
             newaccepts = list(other.accepts)
             for etype in self.vobject.accepts:
