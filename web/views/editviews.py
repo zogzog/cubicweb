@@ -127,7 +127,7 @@ class UnrelatedDivs(EntityView):
         rtype = rschema.type
         form = self.vreg.select_object('forms', 'edition', self.req,
                                        entity=entity)
-        field = form.field_by_name(rschema, target)
+        field = form.field_by_name(rschema, target, entity.__class__)
         for eview, reid in form.form_field_vocabulary(field, self.limit):
             if reid is None:
                 options.append('<option class="separator">-- %s --</option>'
