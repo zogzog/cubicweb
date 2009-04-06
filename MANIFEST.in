@@ -25,6 +25,6 @@ recursive-include server/test sources*
 recursive-include web/test/data *.js *.css *.png *.gif *.jpg *.ico external_resources
 recursive-include devtools/test/data *
 
-recursive-include skeleton *.py*.css *.js *.po compat *.in *.tmpl
+recursive-include skeleton *.py *.css *.js *.po compat *.in *.tmpl
 
 prune misc/cwfs
