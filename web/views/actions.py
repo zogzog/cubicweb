@@ -314,12 +314,17 @@ class UserPreferencesEntityAction(EntityAction):
         return self.build_url('euser/%s'%login, vid='epropertiesform')
 
 # schema view action
+def schema_view(cls, req, rset, row=None, col=None, view=None,
+                **kwargs):
+    if view is None or not view.id == 'schema':
+        return 0
+    return 1
 
 class DownloadOWLSchemaAction(Action):
     category = 'mainactions'
     id = 'download_as_owl'
     title = _('download schema as owl')
-    __selectors__ = none_rset,
+    __selectors__ = none_rset, schema_view
    
     def url(self):
         return self.build_url('view', vid='owl')

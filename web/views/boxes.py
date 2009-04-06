@@ -31,7 +31,7 @@ class EditBox(BoxTemplate):
     title = _('actions')
     order = 2
 
-    def call(self, **kwargs):
+    def call(self, view=None, **kwargs):
         _ = self.req._
         title = _(self.title)
         if self.rset:
@@ -42,7 +42,7 @@ class EditBox(BoxTemplate):
                 title = u'%s - %s' % (title, etypelabel.lower())
         box = BoxWidget(title, self.id, _class="greyBoxFrame")
         # build list of actions
-        actions = self.vreg.possible_actions(self.req, self.rset)
+        actions = self.vreg.possible_actions(self.req, self.rset, view=view)
         add_menu = BoxMenu(_('add')) # 'addrelated' category
         other_menu = BoxMenu(_('more actions')) # 'moreactions' category
         searchstate = self.req.search_state[0]
