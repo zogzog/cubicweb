@@ -297,7 +297,7 @@ class AutomaticEntityForm(EntityFieldsForm):
     @iclassmethod
     def field_by_name(cls_or_self, name, role='subject', eclass=None):
         try:
-            return super(AutomaticEntityForm, cls_or_self, name, role)
+            return super(AutomaticEntityForm, cls_or_self).field_by_name(name, role)
         except Exception: # XXX should raise more explicit exception
             if eclass is None:
                 raise
