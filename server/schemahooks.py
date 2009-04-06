@@ -6,7 +6,7 @@
 checking for schema consistency is done in hooks.py
 
 :organization: Logilab
-:copyright: 2001-2008 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+:copyright: 2001-2009 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 """
 __docformat__ = "restructuredtext en"
@@ -17,6 +17,7 @@ from yams.schema2sql import eschema2sql, rschema2sql, _type_from_constraints
 
 from cubicweb import ValidationError, RepositoryError
 from cubicweb.server import schemaserial as ss
+from cubicweb.server.sqlutils import SQL_PREFIX
 from cubicweb.server.pool import Operation, SingleLastOperation, PreCommitOperation
 from cubicweb.server.hookhelper import (entity_attr, entity_name,
                                      check_internal_entity)
@@ -44,19 +45,22 @@ def get_constraints(session, entity):
 
 def add_inline_relation_column(session, etype, rtype):
     """add necessary column and index for an inlined relation"""
+    table = SQL_PREFIX + etype
+    column = SQL_PREFIX + rtype
     try:
         session.system_sql(str('ALTER TABLE %s ADD COLUMN %s integer'
-                               % (etype, rtype)))
-        session.info('added column %s to table %s', rtype, etype)
+                               % (table, column)))
+        session.info('added column %s to table %s', column, table)
     except:
         # silent exception here, if this error has not been raised because the 
         # column already exists, index creation will fail anyway
-        session.exception('error while adding column %s to table %s', etype, rtype)
+        session.exception('error while adding column %s to table %s',
+                          table, column)
     # create index before alter table which may expectingly fail during test
     # (sqlite) while index creation should never fail (test for index existence
     # is done by the dbhelper)
-    session.pool.source('system').create_index(session, etype, rtype)
-    session.info('added index on %s(%s)', etype, rtype)
+    session.pool.source('system').create_index(session, table, column)
+    session.info('added index on %s(%s)', table, column)
     session.add_query_data('createdattrs', '%s.%s' % (etype, rtype))
 
 
@@ -148,7 +152,7 @@ def before_del_eetype(session, eid):
     name = check_internal_entity(session, eid, CORE_ETYPES)
     # delete every entities of this type
     session.unsafe_execute('DELETE %s X' % name)
-    DropTableOp(session, table=name)
+    DropTableOp(session, table=SQL_PREFIX + name)
     DeleteEETypeOp(session, name)
 
 def after_del_eetype(session, eid):
@@ -223,7 +227,8 @@ def after_del_relation_type(session, rdefeid, rtype, rteid):
                        'R eid %%(x)s, X from_entity E, E name %%(name)s'
                        % rdeftype, {'x': rteid, 'name': str(subjschema)})
         if rset[0][0] == 0 and not subjschema.eid in pendings:
-            DropColumnOp(session, table=subjschema.type, column=rschema.type)
+            DropColumnOp(session, table=SQL_PREFIX + subjschema.type,
+                         column=SQL_PREFIX + rschema.type)
     elif lastrel:
         DropTableOp(session, table='%s_relation' % rschema.type)
     # if this is the last instance, drop associated relation type
@@ -270,7 +275,8 @@ def after_add_eetype(session, entity):
     eschema = schema.add_entity_type(etype)
     eschema.set_default_groups()
     # generate table sql and rql to add metadata
-    tablesql = eschema2sql(session.pool.source('system').dbhelper, eschema)
+    tablesql = eschema2sql(session.pool.source('system').dbhelper, eschema,
+                           prefix=SQL_PREFIX)
     relrqls = []
     for rtype in ('is', 'is_instance_of', 'creation_date', 'modification_date',
                   'created_by', 'owned_by'):
@@ -393,22 +399,24 @@ class AddEFRDefPreCommitOp(PreCommitOperation):
             extra_unique_index = False
         # added some str() wrapping query since some backend (eg psycopg) don't
         # allow unicode queries
+        table = SQL_PREFIX + subj
+        column = SQL_PREFIX + rtype
         try:
             session.system_sql(str('ALTER TABLE %s ADD COLUMN %s %s'
-                                   % (subj, rtype, attrtype)))
-            self.info('added column %s to table %s', rtype, subj)
+                                   % (table, column, attrtype)))
+            self.info('added column %s to table %s', table, column)
         except Exception, ex:
             # the column probably already exists. this occurs when
             # the entity's type has just been added or if the column
             # has not been previously dropped
-            self.error('error while altering table %s: %s', subj, ex)
+            self.error('error while altering table %s: %s', table, ex)
         if extra_unique_index or entity.indexed:
             try:
-                sysource.create_index(session, subj, rtype,
+                sysource.create_index(session, table, column,
                                       unique=extra_unique_index)
             except Exception, ex:
                 self.error('error while creating index for %s.%s: %s',
-                           subj, rtype, ex)
+                           table, column, ex)
         # postgres doesn't implement, so do it in two times
         # ALTER TABLE %s ADD COLUMN %s %s SET DEFAULT %s
         if default is not None:
@@ -416,12 +424,12 @@ class AddEFRDefPreCommitOp(PreCommitOperation):
                 default = default.encode(sysource.encoding)
             try:
                 session.system_sql('ALTER TABLE %s ALTER COLUMN %s SET DEFAULT '
-                                   '%%(default)s' % (subj, rtype),
+                                   '%%(default)s' % (table, column),
                                    {'default': default})
             except Exception, ex:
                 # not supported by sqlite for instance
-                self.error('error while altering table %s: %s', subj, ex)
-            session.system_sql('UPDATE %s SET %s=%%(default)s' % (subj, rtype),
+                self.error('error while altering table %s: %s', table, ex)
+            session.system_sql('UPDATE %s SET %s=%%(default)s' % (table, column),
                                {'default': default})
         AddErdefOp(session, rdef)
 
@@ -534,7 +542,8 @@ class UpdateEntityTypeName(SchemaOperation):
     def precommit_event(self):
         # we need sql to operate physical changes on the system database
         sqlexec = self.session.system_sql
-        sqlexec('ALTER TABLE %s RENAME TO %s' % (self.oldname, self.newname))
+        sqlexec('ALTER TABLE %s%s RENAME TO %s%s' % (SQL_PREFIX, self.oldname,
+                                                     SQL_PREFIX, self.newname))
         self.info('renamed table %s to %s', self.oldname, self.newname)
         sqlexec('UPDATE entities SET type=%s WHERE type=%s',
                 (self.newname, self.oldname))
@@ -551,7 +560,9 @@ class UpdateRdefOp(SchemaOperation):
     def precommit_event(self):
         if 'indexed' in self.values:
             sysource = self.session.pool.source('system')
-            table, column = self.kobj[0], self.rschema.type
+            etype, rtype = self.kobj[0], self.rschema.type
+            table = SQL_PREFIX + etype
+            column = SQL_PREFIX + rtype
             if self.values['indexed']:
                 sysource.create_index(self.session, table, column)
             else:
@@ -561,6 +572,7 @@ class UpdateRdefOp(SchemaOperation):
         # structure should be clean, not need to remove entity's relations
         # at this point
         self.rschema._rproperties[self.kobj].update(self.values)
+
     
 def after_update_erdef(session, entity):
     desttype = entity.to_entity[0].name
@@ -593,6 +605,7 @@ class UpdateRtypeOp(SchemaOperation):
         # inlined changed, make necessary physical changes!
         sqlexec = self.session.system_sql
         rtype = rschema.type
+        eidcolumn = SQL_PREFIX + 'eid'
         if not inlined:
             # need to create the relation if it has not been already done by another
             # event of the same transaction
@@ -604,12 +617,15 @@ class UpdateRtypeOp(SchemaOperation):
                         sqlexec(sql)
                 session.add_query_data('createdtables', rschema.type)
             # copy existant data
+            column = SQL_PREFIX + rtype
             for etype in rschema.subjects():
-                sqlexec('INSERT INTO %s_relation SELECT eid, %s FROM %s WHERE NOT %s IS NULL'
-                        % (rtype, rtype, etype, rtype))
+                table = SQL_PREFIX + str(etype)
+                sqlexec('INSERT INTO %s_relation SELECT %s, %s FROM %s WHERE NOT %s IS NULL'
+                        % (rtype, eidcolumn, column, table, column))
             # drop existant columns
             for etype in rschema.subjects():
-                DropColumnOp(session, table=str(etype), column=rtype)
+                DropColumnOp(session, table=SQL_PREFIX + str(etype),
+                             column=SQL_PREFIX + rtype)
         else:
             for etype in rschema.subjects():
                 try:
@@ -625,13 +641,15 @@ class UpdateRtypeOp(SchemaOperation):
                 #        'FROM %(rtype)s_relation '
                 #        'WHERE %(etype)s.eid=%(rtype)s_relation.eid_from'
                 #        % locals())
-                cursor = sqlexec('SELECT eid_from, eid_to FROM %(etype)s, '
-                                 '%(rtype)s_relation WHERE %(etype)s.eid='
+                table = SQL_PREFIX + str(etype)
+                cursor = sqlexec('SELECT eid_from, eid_to FROM %(table)s, '
+                                 '%(rtype)s_relation WHERE %(table)s.%(eidcolumn)s='
                                  '%(rtype)s_relation.eid_from' % locals())
                 args = [{'val': eid_to, 'x': eid} for eid, eid_to in cursor.fetchall()]
                 if args:
-                    cursor.executemany('UPDATE %s SET %s=%%(val)s WHERE eid=%%(x)s'
-                                       % (etype, rtype), args)
+                    column = SQL_PREFIX + rtype
+                    cursor.executemany('UPDATE %s SET %s=%%(val)s WHERE %s=%%(x)s'
+                                       % (table, column, eidcolumn), args)
                 # drop existant table
                 DropTableOp(session, table='%s_relation' % rtype)
 
@@ -677,20 +695,22 @@ class ConstraintOp(SchemaOperation):
         self.cstr = rtype.constraint_by_type(subjtype, objtype, cstrtype)
         self._cstr = CONSTRAINTS[cstrtype].deserialize(self.entity.value)
         self._cstr.eid = self.entity.eid
+        table = SQL_PREFIX + str(subjtype)
+        column = SQL_PREFIX + str(rtype)
         # alter the physical schema on size constraint changes
         if self._cstr.type() == 'SizeConstraint' and (
             self.cstr is None or self.cstr.max != self._cstr.max):
             try:
                 session.system_sql('ALTER TABLE %s ALTER COLUMN %s TYPE VARCHAR(%s)'
-                                   % (subjtype, rtype, self._cstr.max))
+                                   % (table, column, self._cstr.max))
                 self.info('altered column %s of table %s: now VARCHAR(%s)',
-                          rtype, subjtype, self._cstr.max)
+                          column, table, self._cstr.max)
             except Exception, ex:
                 # not supported by sqlite for instance
-                self.error('error while altering table %s: %s', subjtype, ex)
+                self.error('error while altering table %s: %s', table, ex)
         elif cstrtype == 'UniqueConstraint':
             session.pool.source('system').create_index(
-                self.session, str(subjtype), str(rtype), unique=True)
+                self.session, table, column, unique=True)
         
     def commit_event(self):
         if self.cancelled:
@@ -700,11 +720,13 @@ class ConstraintOp(SchemaOperation):
             self.constraints.remove(self.cstr)
         self.constraints.append(self._cstr)
 
+
 def after_add_econstraint(session, entity):
     ConstraintOp(session, entity=entity)
 
 def after_update_econstraint(session, entity):
     ConstraintOp(session, entity=entity)
+
 
 class DelConstraintOp(ConstraintOp):
     """actually remove a constraint of a relation definition"""
@@ -712,20 +734,21 @@ class DelConstraintOp(ConstraintOp):
     def precommit_event(self):
         self.prepare_constraints(self.rtype, self.subjtype, self.objtype)
         cstrtype = self.cstr.type()
+        table = SQL_PREFIX + str(self.subjtype)
+        column = SQL_PREFIX + str(self.rtype)
         # alter the physical schema on size/unique constraint changes
         if cstrtype == 'SizeConstraint':
             try:
                 self.session.system_sql('ALTER TABLE %s ALTER COLUMN %s TYPE TEXT'
-                                        % (self.subjtype, self.rtype))
+                                        % (table, column))
                 self.info('altered column %s of table %s: now TEXT', 
-                          self.rtype,  self.subjtype)
+                          column, table)
             except Exception, ex:
                 # not supported by sqlite for instance
-                self.error('error while altering table %s: %s', 
-                           self.subjtype, ex)
+                self.error('error while altering table %s: %s', table, ex)
         elif cstrtype == 'UniqueConstraint':
             self.session.pool.source('system').drop_index(
-                self.session, str(self.subjtype), str(self.rtype), unique=True)
+                self.session, table, column, unique=True)
                 
     def commit_event(self):
         self.constraints.remove(self.cstr)

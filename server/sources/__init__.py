@@ -11,6 +11,8 @@ from logging import getLogger
 from mx.DateTime import now, DateTimeDelta
 
 from cubicweb import set_log_methods
+from cubicweb.server.sqlutils import SQL_PREFIX
+
 
 class TimedCache(dict):
     def __init__(self, ttlm, ttls=0):
@@ -78,7 +80,7 @@ class AbstractSource(object):
         pass
     
     def __repr__(self):
-        return '<%s source>' % self.uri
+        return '<%s source @%#x>' % (self.uri, id(self))
 
     def __cmp__(self, other):
         """simple comparison function to get predictable source order, with the
@@ -137,8 +139,8 @@ class AbstractSource(object):
     def eid2extid(self, eid, session=None):
         return self.repo.eid2extid(self, eid, session)
 
-    def extid2eid(self, value, etype, session=None, insert=True):
-        return self.repo.extid2eid(self, value, etype, session, insert)
+    def extid2eid(self, value, etype, session=None, **kwargs):
+        return self.repo.extid2eid(self, value, etype, session, **kwargs)
 
     PUBLIC_KEYS = ('adapter', 'uri')
     def remove_sensitive_information(self, sourcedef):
@@ -159,15 +161,18 @@ class AbstractSource(object):
         if not myeids:
             return
         # delete relations referencing one of those eids
+        eidcolum = SQL_PREFIX + 'eid'
         for rschema in self.schema.relations():
             if rschema.is_final() or rschema.type == 'identity':
                 continue
             if rschema.inlined:
+                column = SQL_PREFIX + rschema.type
                 for subjtype in rschema.subjects():
+                    table = SQL_PREFIX + str(subjtype)
                     for objtype in rschema.objects(subjtype):
                         if self.support_entity(objtype):
-                            sql = 'UPDATE %s SET %s = NULL WHERE eid IN (%s);' % (
-                                subjtype, rschema.type, myeids)
+                            sql = 'UPDATE %s SET %s=NULL WHERE %s IN (%s);' % (
+                                table, column, eidcolum, myeids)
                             session.system_sql(sql)
                             break
                 continue

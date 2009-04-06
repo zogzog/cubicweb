@@ -34,10 +34,55 @@ from cubicweb.common.migration import MigrationHelper, yes
 try:
     from cubicweb.server import schemaserial as ss
     from cubicweb.server.utils import manager_userpasswd
-    from cubicweb.server.sqlutils import sqlexec
+    from cubicweb.server.sqlutils import sqlexec, SQL_PREFIX
 except ImportError: # LAX
     pass
 
+def set_sql_prefix(prefix):
+    """3.1.5 migration function: allow to unset/reset SQL_PREFIX"""
+    for module in ('checkintegrity', 'migractions', 'schemahooks',
+                   'sources.rql2sql', 'sources.native'):
+        try:
+            sys.modules['cubicweb.server.%s' % module].SQL_PREFIX = prefix
+            print 'changed SQL_PREFIX for %s' % module
+        except KeyError:
+            pass
+        
+def update_database(repo):
+    """3.1.3 migration function: update database schema by adding SQL_PREFIX to
+    entity type tables and columns
+    """
+    pool = repo._get_pool()
+    source = repo.system_source
+    sqlcu = pool['system']
+    for etype in repo.schema.entities():
+        if etype.is_final():
+            continue
+        try:
+            sqlcu.execute('ALTER TABLE %s RENAME TO cw_%s' % (etype, etype))
+            print 'renamed %s table for source %s' % (etype, uri)
+        except:
+            pass
+        for rschema in etype.subject_relations():
+            if rschema == 'has_text':
+                continue
+            if rschema.is_final() or rschema.inlined:
+                if isinstance(source, SQLiteAbstractSource):
+                    sqlcu.execute('ALTER TABLE cw_%s ADD COLUMN cw_%s'
+                                  % (etype, rschema))
+                    sqlcu.execute('UPDATE cw_%s SET %s=cw_%s'
+                                  % (etype, rschema, rschema))
+                    print 'added %s.cw_%s column for source %s' % (
+                        etype, rschema, uri)
+                else:
+                    sqlcu.execute('ALTER TABLE cw_%s RENAME %s TO cw_%s'
+                                  % (etype, rschema, rschema))
+                    print 'renamed %s.%s column for source %s' % (
+                        etype, rschema, uri)
+    pool.commit()
+    repo._free_pool(pool)
+
+        
 class ServerMigrationHelper(MigrationHelper):
     """specific migration helper for server side  migration scripts,
     providind actions related to schema/data migration
@@ -62,7 +107,17 @@ class ServerMigrationHelper(MigrationHelper):
 
     @cached
     def repo_connect(self):
-        self.repo = get_repository(method='inmemory', config=self.config)
+        try:
+            self.repo = get_repository(method='inmemory', config=self.config)
+        except:
+            import traceback
+            traceback.print_exc()
+            print '3.1.5 migration'
+            # XXX 3.1.5 migration
+            set_sql_prefix('')
+            self.repo = get_repository(method='inmemory', config=self.config)
+            update_database(self.repo)
+            set_sql_prefix('cw_')
         return self.repo
     
     def shutdown(self):
@@ -1034,7 +1089,8 @@ class ServerMigrationHelper(MigrationHelper):
         and a sql database
         """
         dbhelper = self.repo.system_source.dbhelper
-        tablesql = eschema2sql(dbhelper, self.repo.schema.eschema(etype))
+        tablesql = eschema2sql(dbhelper, self.repo.schema.eschema(etype),
+                               prefix=SQL_PREFIX)
         for sql in tablesql.split(';'):
             if sql.strip():
                 self.sqlexec(sql)

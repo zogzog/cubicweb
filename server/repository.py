@@ -770,7 +770,8 @@ class Repository(object):
             raise UnknownEid(eid)
         return extid
 
-    def extid2eid(self, source, lid, etype, session=None, insert=True):
+    def extid2eid(self, source, lid, etype, session=None, insert=True,
+                  recreate=False):
         """get eid from a local id. An eid is attributed if no record is found"""
         cachekey = (str(lid), source.uri)
         try:
@@ -785,6 +786,15 @@ class Repository(object):
         if eid is not None:
             self._extid_cache[cachekey] = eid
             self._type_source_cache[eid] = (etype, source.uri, lid)
+            if recreate:
+                entity = source.before_entity_insertion(session, lid, etype, eid)
+                entity._cw_recreating = True
+                if source.should_call_hooks:
+                    self.hm.call_hooks('before_add_entity', etype, session, entity)
+                # XXX add fti op ?
+                source.after_entity_insertion(session, lid, entity)
+                if source.should_call_hooks:
+                    self.hm.call_hooks('after_add_entity', etype, session, entity)
             if reset_pool:
                 session.reset_pool()
             return eid

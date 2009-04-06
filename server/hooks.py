@@ -62,6 +62,8 @@ def setowner_after_add_entity(session, entity):
 
 def setis_after_add_entity(session, entity):
     """create a new entity -> set is relation"""
+    if hasattr(entity, '_cw_recreating'):
+        return
     session.unsafe_execute('SET X is E WHERE X eid %(x)s, E name %(name)s',
                            {'x': entity.eid, 'name': entity.id}, 'x')
     # XXX < 2.50 bw compat

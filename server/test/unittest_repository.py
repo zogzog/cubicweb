@@ -8,17 +8,18 @@ import time
 from copy import deepcopy
 
 from mx.DateTime import DateTimeType, now
+
 from logilab.common.testlib import TestCase, unittest_main
-from cubicweb.devtools.apptest import RepositoryBasedTC
-from cubicweb.devtools.repotest import tuplify
 
 from yams.constraints import UniqueConstraint
 
 from cubicweb import BadConnectionId, RepositoryError, ValidationError, UnknownEid, AuthenticationError
 from cubicweb.schema import CubicWebSchema, RQLConstraint
 from cubicweb.dbapi import connect, repo_connect
-
+from cubicweb.devtools.apptest import RepositoryBasedTC
+from cubicweb.devtools.repotest import tuplify
 from cubicweb.server import repository 
+from cubicweb.server.sqlutils import SQL_PREFIX
 
 
 # start name server anyway, process will fail if already running
@@ -46,11 +47,16 @@ class RepositoryTC(RepositoryBasedTC):
         self.repo.config._cubes = None # avoid assertion error
         self.repo.fill_schema()
         pool = self.repo._get_pool()
+        table = SQL_PREFIX + 'EEType'
+        namecol = SQL_PREFIX + 'name'
+        finalcol = SQL_PREFIX + 'final'
         try:
             sqlcursor = pool['system']
-            sqlcursor.execute('SELECT name FROM EEType WHERE final is NULL')
+            sqlcursor.execute('SELECT %s FROM %s WHERE %s is NULL' % (
+                namecol, table, finalcol))
             self.assertEquals(sqlcursor.fetchall(), [])
-            sqlcursor.execute('SELECT name FROM EEType WHERE final=%(final)s ORDER BY name', {'final': 'TRUE'})
+            sqlcursor.execute('SELECT %s FROM %s WHERE %s=%%(final)s ORDER BY %s'
+                              % (namecol, table, finalcol, namecol), {'final': 'TRUE'})
             self.assertEquals(sqlcursor.fetchall(), [(u'Boolean',), (u'Bytes',),
                                                      (u'Date',), (u'Datetime',),
                                                      (u'Decimal',),(u'Float',),
