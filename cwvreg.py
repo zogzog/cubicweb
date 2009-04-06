@@ -322,9 +322,9 @@ class CubicWebRegistry(VRegistry):
         if vocab is not None:
             if callable(vocab):
                 # list() just in case its a generator function
-                vocabfunc = lambda e: list(vocab(propkey, req))
+                vocabfunc = lambda **kwargs: list(vocab(propkey, req))
             else:
-                vocabfunc = lambda e: vocab
+                vocabfunc = lambda **kwargs: vocab
             w = StaticComboBoxWidget(self, 'EProperty', self.schema['value'], 'String',
                                      vocabfunc=vocabfunc, description=tr(pdef['help']),
                                      **attrs)
