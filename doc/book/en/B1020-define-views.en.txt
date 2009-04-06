@@ -1,6 +1,6 @@
 .. -*- coding: utf-8 -*-
 
-.. _DefinitionVues:
+.. _ViewDefinition:
 
 Views definition
 ================
