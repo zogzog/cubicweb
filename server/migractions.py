@@ -106,7 +106,9 @@ class ServerMigrationHelper(MigrationHelper):
                 if answer == 1: # 1: continue, 2: retry
                     break
             else:
+                from cubicweb.toolsutils import restrict_perms_to_user
                 print 'database backup:', backupfile
+                restrict_perms_to_user(backupfile, self.info)
                 break
         
     def restore_database(self, backupfile, drop=True):
