@@ -108,8 +108,10 @@ class FormRenderer(object):
             action = form.req.build_url('edit')
         else:
             action = form.action
-        tag = ('<form action="%s" method="post" id="%s" enctype="%s"' % (
-            html_escape(action or '#'), form.domid, enctype))
+        tag = ('<form action="%s" method="post" enctype="%s"' % (
+            html_escape(action or '#'), enctype))
+        if form.domid:
+            tag += ' id="%s"' % form.domid
         if form.onsubmit:
             tag += ' onsubmit="%s"' % html_escape(form.onsubmit % dictattr(form))
         if form.cssstyle:
