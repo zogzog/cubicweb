@@ -43,7 +43,7 @@ class FieldWidget(object):
         attrs = dict(self.attrs)
         if self.setdomid:
             attrs['id'] = form.context[field]['id']
-        if self.settabindex:
+        if self.settabindex and not 'tabindex' in attrs:
             attrs['tabindex'] = form.req.next_tabindex()
         return name, values, attrs
 
@@ -226,5 +226,3 @@ class AjaxWidget(FieldWidget):
         self.add_media(form)
         attrs = self._render_attrs(form, field)[-1]
         return tags.div(**attrs)
-
-# XXX backport PropertyKeyWidget and PropertyValueWidget
