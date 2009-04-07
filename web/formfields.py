@@ -439,6 +439,7 @@ def guess_field(eclass, rschema, role='subject', skip_meta_attr=True, **kwargs):
     if role == 'subject':
         targetschema = rschema.objects(eschema)[0]
         card = rschema.rproperty(eschema, targetschema, 'cardinality')[0]
+        help = rschema.rproperty(eschema, targetschema, 'description')
         if rschema.is_final():
             if rschema.rproperty(eschema, targetschema, 'internationalizable'):
                 kwargs['internationalizable'] = True
@@ -446,8 +447,10 @@ def guess_field(eclass, rschema, role='subject', skip_meta_attr=True, **kwargs):
     else:
         targetschema = rschema.subjects(eschema)[0]
         card = rschema.rproperty(targetschema, eschema, 'cardinality')[1]
+        help = rschema.rproperty(targetschema, eschema, 'description')
     kwargs['required'] = card in '1+'
     kwargs['name'] = rschema.type
+    kwargs['help'] = help
     if rschema.is_final():
         if skip_meta_attr and rschema in eschema.meta_attributes():
             return None

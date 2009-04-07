@@ -28,6 +28,7 @@ class GuessFieldTC(TestCase):
         synopsis_field = guess_field(Card, schema['synopsis'])
         self.assertIsInstance(synopsis_field, TextField)
         self.assertEquals(synopsis_field.required, False)
+        self.assertEquals(synopsis_field.help, 'an abstract for this card')
         
         content_field = guess_field(Card, schema['content'])
         self.assertIsInstance(content_field, RichTextField)
@@ -61,11 +62,13 @@ class GuessFieldTC(TestCase):
         self.assertIsInstance(in_group_field, RelationField)
         self.assertEquals(in_group_field.required, True)
         self.assertEquals(in_group_field.role, 'subject')
+        self.assertEquals(in_group_field.help, 'groups grant permissions to the user')
 
         owned_by_field = guess_field(EUser, schema['owned_by'], 'object')
         self.assertIsInstance(owned_by_field, RelationField)
         self.assertEquals(owned_by_field.required, False)
         self.assertEquals(owned_by_field.role, 'object')
+
 
     def test_file_fields(self):
         data_format_field = guess_field(File, schema['data_format'])
