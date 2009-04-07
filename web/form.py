@@ -208,7 +208,8 @@ class FieldsForm(FormMixIn, AppRsetObject):
     set_error_url = True
     copy_nav_params = False
                  
-    def __init__(self, req, rset=None, row=None, col=None, **kwargs):
+    def __init__(self, req, rset=None, row=None, col=None, submitmsg=None,
+                 **kwargs):
         super(FieldsForm, self).__init__(req, rset, row=row, col=col)
         self.buttons = kwargs.pop('buttons', [])
         for key, val in kwargs.items():
@@ -222,6 +223,8 @@ class FieldsForm(FormMixIn, AppRsetObject):
                 value = kwargs.get(param, req.form.get(param))
                 if value:
                     self.form_add_hidden(param, initial=value)
+        if submitmsg is not None:
+            self.form_add_hidden('__message', submitmsg)
         self.context = None
 
     @iclassmethod
