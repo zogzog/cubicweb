@@ -60,7 +60,7 @@ def update_database(repo):
             continue
         try:
             sqlcu.execute('ALTER TABLE %s RENAME TO cw_%s' % (etype, etype))
-            print 'renamed %s table for source %s' % (etype, uri)
+            print 'renamed %s table' % etype
         except:
             pass
         for rschema in etype.subject_relations():
@@ -69,8 +69,7 @@ def update_database(repo):
             if rschema.is_final() or rschema.inlined:
                 sqlcu.execute('ALTER TABLE cw_%s RENAME %s TO cw_%s'
                               % (etype, rschema, rschema))
-                print 'renamed %s.%s column for source %s' % (
-                    etype, rschema, uri)
+                print 'renamed %s.%s column' % (etype, rschema)
     pool.commit()
     repo._free_pool(pool)
 
