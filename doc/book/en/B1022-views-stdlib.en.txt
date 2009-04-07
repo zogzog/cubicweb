@@ -2,6 +2,10 @@
 
 Predefined views in the library
 ```````````````````````````````
+
+`CubicWeb` provides a lot of standard views for the default class
+`EntityType`. You can find them in ``cubicweb/web/views/``.
+
 A certain number of views are used to build the web interface, which apply
 to one or more entities. Their identifier is what distinguish them from
 each others and the main ones are:

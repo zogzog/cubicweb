@@ -72,6 +72,7 @@ that are more concrete as they relate to data rendering within the application:
 * `AnyRsetView`, view applied to any result set 
 * `EmptyRsetView`, view applied to an empty result set
 
+
 The selection view principle
 ----------------------------
 
@@ -96,6 +97,9 @@ compute scores is in ``cubicweb.vregistry.vreq``.
 
 Registerer
 ``````````
+[Registerers are deprecated: they will soon disappear for explicite 
+registration...] 
+
 A view is also customizable through its attribute ``__registerer__``.
 This is used at the time the application is launched to manage how
 objects (views, graphic components, actions, etc.) 
@@ -109,9 +113,6 @@ The purpose of a `registerer` is to control object registry
 at the application startup whereas `selectors` control objects
 when they are selected for display.
 
-
-`CubicWeb` provides a lot of standard views for the default class
-`EntityType`. You can find them in ``cubicweb/web/views/``.
 
 .. include:: B1022-views-stdlib.en.txt
 
