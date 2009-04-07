@@ -480,25 +480,24 @@ class EntityFieldsForm(FieldsForm):
         
     def form_field_vocabulary(self, field, limit=None):
         role, rtype = field.role, field.name
+        method = '%s_%s_vocabulary' % (role, rtype)
         try:
-            vocabfunc = getattr(self.edited_entity, '%s_%s_vocabulary' % (role, rtype))
+            vocabfunc = getattr(self, method)
         except AttributeError:
-            vocabfunc = getattr(self, '%s_relation_vocabulary' % role)
-        else:
-            # XXX bw compat, default_<field name> on the entity
-            warn('found %s_%s_vocabulary on %s, should be set on a specific form'
-                 % (role, rtype, self.edited_entity.id), DeprecationWarning)
+            try:
+                # XXX bw compat, <role>_<rtype>_vocabulary on the entity
+                vocabfunc = getattr(self.edited_entity, method)
+            except AttributeError:
+                vocabfunc = getattr(self, '%s_relation_vocabulary' % role)
+            else:
+                warn('found %s on %s, should be set on a specific form'
+                     % (method, self.edited_entity.id), DeprecationWarning)
         # NOTE: it is the responsibility of `vocabfunc` to sort the result
         #       (direclty through RQL or via a python sort). This is also
         #       important because `vocabfunc` might return a list with
         #       couples (label, None) which act as separators. In these
         #       cases, it doesn't make sense to sort results afterwards.
         return vocabfunc(rtype, limit)
-## XXX BACKPORT ME
-##         if self.sort:
-##             choices = sorted(choices)
-##         if self.rschema.rproperty(self.subjtype, self.objtype, 'internationalizable'):
-##             return zip((entity.req._(v) for v in choices), choices)
 
     def subject_relation_vocabulary(self, rtype, limit=None):
         """defaut vocabulary method for the given relation, looking for

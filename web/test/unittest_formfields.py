@@ -32,10 +32,16 @@ class GuessFieldTC(TestCase):
         content_field = guess_field(Card, schema['content'])
         self.assertIsInstance(content_field, RichTextField)
         self.assertEquals(content_field.required, False)
-        
+        self.assertEquals(content_field.format_field, None)
+                          
         content_format_field = guess_field(Card, schema['content_format'])
         self.assertEquals(content_format_field, None)
         
+        content_format_field = guess_field(Card, schema['content_format'], skip_meta_attr=False)
+        self.assertEquals(content_format_field.internationalizable, True)
+        self.assertEquals(content_format_field.sort, True)
+        self.assertEquals(content_format_field.initial, 'text/rest')
+
         wikiid_field = guess_field(Card, schema['wikiid'])
         self.assertIsInstance(wikiid_field, StringField)
         self.assertEquals(wikiid_field.required, False)

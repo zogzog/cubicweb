@@ -15,36 +15,83 @@ from cubicweb.schema import FormatConstraint
 from cubicweb.utils import ustrftime
 from cubicweb.common import tags, uilib
 from cubicweb.web import INTERNAL_FIELD_VALUE
-from cubicweb.web.formwidgets import (HiddenInput, TextInput, FileInput, PasswordInput,
-                                      TextArea, FCKEditor, Radio, Select,
-                                      DateTimePicker) 
+from cubicweb.web.formwidgets import (
+    HiddenInput, TextInput, FileInput, PasswordInput, TextArea, FCKEditor,
+    Radio, Select, DateTimePicker) 
 
 class Field(object):
-    """field class is introduced to control what's displayed in edition form
-    """
-    widget = TextInput
-    needs_multipart = False
-    creation_rank = 0
+    """field class is introduced to control what's displayed in forms. It makes
+    the link between something to edit and its display in the form. Actual
+    display is handled by a widget associated to the field.
 
-    def __init__(self, name=None, id=None, label=None,
+    Attributes
+    ----------
+    all the attributes described below have sensible default value which may be
+    overriden by value given to field's constructor.
+    
+    :name:
+       name of the field (basestring), should be unique in a form.
+    :id:
+       dom identifier (default to the same value as `name`), should be unique in
+       a form.
+    :label:
+       label of the field (default to the same value as `name`).
+    :help:
+       help message about this field.
+    :widget:
+       widget associated to the field. Each field class has a default widget
+       class which may be overriden per instance.
+    :required:
+       bool flag telling if the field is required or not.
+    :initial:
+       initial value, used when no value specified by other means.
+    :choices:
+       static vocabulary for this field. May be a list of values or a list of
+       (label, value) tuples if specified.
+    :sort:
+       bool flag telling if the vocabulary (either static vocabulary specified
+       in `choices` or dynamic vocabulary fetched from the form) should be
+       sorted on label.
+    :internationalizable:
+       bool flag telling if the vocabulary labels should be translated using the
+       current request language.
+    :eidparam:
+       bool flag telling if this field is linked to a specific entity
+    :role:
+       when the field is linked to an entity attribute or relation, tells the
+       role of the entity in the relation (eg 'subject' or 'object')
+    
+    """
+    # default widget associated to this class of fields. May be overriden per
+    # instance
+    widget = TextInput
+    # does this field requires a multipart form
+    needs_multipart = False
+    # class attribute used for ordering of fields in a form
+    __creation_rank = 0
+
+    def __init__(self, name=None, id=None, label=None, help=None, 
                  widget=None, required=False, initial=None,
-                 choices=None, help=None, eidparam=False, role='subject'):
+                 choices=None, sort=True, internationalizable=False,
+                 eidparam=False, role='subject'):
+        self.name = name
+        self.id = id or name
+        self.label = label or name
+        self.help = help
         self.required = required
         if widget is not None:
             self.widget = widget
         if isinstance(self.widget, type):
             self.widget = self.widget()
-        self.name = name
-        self.label = label or name
-        self.id = id or name
         self.initial = initial
         self.choices = choices
-        self.help = help
+        self.sort = sort
+        self.internationalizable = internationalizable
         self.eidparam = eidparam
         self.role = role
-        # global fields ordering in forms
-        self.creation_rank = Field.creation_rank
-        Field.creation_rank += 1
+        # ordering number for this field instance
+        self.creation_rank = Field.__creation_rank
+        Field.__creation_rank += 1
     
     def __unicode__(self):
         return u'<%s name=%r label=%r id=%r initial=%r @%x>' % (
@@ -55,6 +102,7 @@ class Field(object):
         return self.__unicode__().encode('utf-8')
 
     def set_name(self, name):
+        """automatically set .id and .label when name is set"""
         assert name
         self.name = name
         if not self.id:
@@ -63,31 +111,48 @@ class Field(object):
             self.label = name
             
     def is_visible(self):
+        """return true if the field is not an hidden field"""
         return not isinstance(self.widget, HiddenInput)
     
     def actual_fields(self, form):
+        """return actual fields composing this field in case of a compound
+        field, usually simply return self
+        """
         yield self
     
     def format_value(self, req, value):
+        """return value suitable for display where value may be a list or tuple
+        of values
+        """
         if isinstance(value, (list, tuple)):
             return [self.format_single_value(req, val) for val in value]
         return self.format_single_value(req, value)
     
     def format_single_value(self, req, value):
+        """return value suitable for display"""
         if value is None:
             return u''
         return unicode(value)
 
     def get_widget(self, form):
+        """return the widget instance associated to this field"""
         return self.widget
     
     def example_format(self, req):
+        """return a sample string describing what can be given as input for this
+        field
+        """        
         return u''
 
     def render(self, form, renderer):
+        """render this field, which is part of form, using the given form
+        renderer
+        """
         return self.get_widget(form).render(form, self)
 
     def vocabulary(self, form):
+        """return vocabulary for this field. This method will be called by
+        widgets which desire it."""        
         if self.choices is not None:
             if callable(self.choices):
                 vocab = self.choices(req=form.req)
@@ -95,8 +160,13 @@ class Field(object):
                 vocab = self.choices
             if vocab and not isinstance(vocab[0], (list, tuple)):
                 vocab = [(x, x) for x in vocab]
-            return vocab
-        return form.form_field_vocabulary(self)
+        else:
+            vocab = form.form_field_vocabulary(self)
+        if self.internationalizable:
+            vocab = [(form.req._(label), value) for label, value in vocab]
+        if self.sort:
+            vocab = sorted(vocab)
+        return vocab
 
     
 class StringField(Field):
@@ -369,6 +439,10 @@ def guess_field(eclass, rschema, role='subject', skip_meta_attr=True, **kwargs):
     if role == 'subject':
         targetschema = rschema.objects(eschema)[0]
         card = rschema.rproperty(eschema, targetschema, 'cardinality')[0]
+        if rschema.is_final():
+            if rschema.rproperty(eschema, targetschema, 'internationalizable'):
+                kwargs['internationalizable'] = True
+            kwargs['initial'] = rschema.rproperty(eschema, targetschema, 'default')
     else:
         targetschema = rschema.subjects(eschema)[0]
         card = rschema.rproperty(targetschema, eschema, 'cardinality')[1]
