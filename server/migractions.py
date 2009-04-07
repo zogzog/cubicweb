@@ -67,18 +67,10 @@ def update_database(repo):
             if rschema == 'has_text':
                 continue
             if rschema.is_final() or rschema.inlined:
-                if isinstance(source, SQLiteAbstractSource):
-                    sqlcu.execute('ALTER TABLE cw_%s ADD COLUMN cw_%s'
-                                  % (etype, rschema))
-                    sqlcu.execute('UPDATE cw_%s SET %s=cw_%s'
-                                  % (etype, rschema, rschema))
-                    print 'added %s.cw_%s column for source %s' % (
-                        etype, rschema, uri)
-                else:
-                    sqlcu.execute('ALTER TABLE cw_%s RENAME %s TO cw_%s'
-                                  % (etype, rschema, rschema))
-                    print 'renamed %s.%s column for source %s' % (
-                        etype, rschema, uri)
+                sqlcu.execute('ALTER TABLE cw_%s RENAME %s TO cw_%s'
+                              % (etype, rschema, rschema))
+                print 'renamed %s.%s column for source %s' % (
+                    etype, rschema, uri)
     pool.commit()
     repo._free_pool(pool)
 
