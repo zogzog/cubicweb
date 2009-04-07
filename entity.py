@@ -154,14 +154,15 @@ class Entity(AppRsetObject, dict):
     __metaclass__ = metaentity
     __registry__ = 'etypes'
     __select__ = yes()
-    widgets = {}
-    rtags = None
+
+    # class attributes that must be set in class definition 
     id = None
-    e_schema = None
-    eid = None
     rest_attr = None
     fetch_attrs = None
     skip_copy_for = ()
+    # class attributes set automatically at registration time
+    e_schema = None
+    
     @classmethod
     def registered(cls, registry):
         """build class using descriptor at registration time"""
