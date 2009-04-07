@@ -247,6 +247,14 @@ class FieldsForm(FormMixIn, AppRsetObject):
             fields = cls_or_self.fields
         fields.remove(field)
     
+    @iclassmethod
+    def append_field(cls_or_self, field):
+        if isinstance(cls_or_self, type):
+            fields = cls_or_self._fields_
+        else:
+            fields = cls_or_self.fields
+        fields.append(field)
+    
     @property
     def form_needs_multipart(self):
         return any(field.needs_multipart for field in self.fields) 
