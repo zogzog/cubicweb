@@ -186,11 +186,11 @@ class AutomaticEntityForm(EntityFieldsForm):
     def registered(cls, registry):
         """build class using descriptor at registration time"""
         super(AutomaticEntityForm, cls).registered(registry)
-        cls.init_rtags_category()
+        cls.init_rcategories()
         return cls
         
     @classmethod
-    def init_rtags_category(cls):
+    def init_rcategories(cls):
         """set default category tags for relations where it's not yet defined in
         the category relation tags
         """
@@ -317,6 +317,11 @@ class AutomaticEntityForm(EntityFieldsForm):
         if self.edited_entity.has_eid():
             self.edited_entity.complete()
         for rschema, role in self.editable_attributes():
+            try:
+                self.field_by_name(rschema.type, role)
+                continue # explicitly specified
+            except FieldNotFound:
+                pass # has to be guessed
             wdgname = self.rwidgets.etype_rtag(self.edited_entity.id, rschema,
                                                role)
             if wdgname:
