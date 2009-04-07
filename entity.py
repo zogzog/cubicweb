@@ -124,6 +124,9 @@ class metaentity(type):
             for name, widgets in _get_defs('widgets', name, bases, classdict):
                 warn('%s: widgets is deprecated' % name, DeprecationWarning)
                 for rtype, wdgname in widgets.iteritems():
+                    if wdgname in ('URLWidget', 'EmbededURLWidget'):
+                        warn('%s widget is deprecated' % wdgname, DeprecationWarning)
+                        continue
                     AutomaticEntityForm.rwidgets.set_rtag(wdgname, rtype, 'subject', etype)
         return super(metaentity, mcs).__new__(mcs, name, bases, classdict)
 
