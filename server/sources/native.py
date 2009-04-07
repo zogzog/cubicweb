@@ -17,7 +17,7 @@ from indexer import get_indexer
 
 from cubicweb import UnknownEid, AuthenticationError, Binary, server
 from cubicweb.server.utils import crypt_password
-from cubicweb.server.sqlutils import SQLAdapterMixIn
+from cubicweb.server.sqlutils import SQL_PREFIX, SQLAdapterMixIn
 from cubicweb.server.rqlannotation import set_qdata
 from cubicweb.server.sources import AbstractSource
 from cubicweb.server.sources.rql2sql import SQLGenerator
@@ -366,19 +366,19 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
     def add_entity(self, session, entity):
         """add a new entity to the source"""
         attrs = self.preprocess_entity(entity)
-        sql = self.sqlgen.insert(str(entity.e_schema), attrs)
+        sql = self.sqlgen.insert(SQL_PREFIX + str(entity.e_schema), attrs)
         self.doexec(session.pool[self.uri], sql, attrs)
         
     def update_entity(self, session, entity):
         """replace an entity in the source"""
         attrs = self.preprocess_entity(entity)
-        sql = self.sqlgen.update(str(entity.e_schema), attrs, ['eid'])
+        sql = self.sqlgen.update(SQL_PREFIX + str(entity.e_schema), attrs, [SQL_PREFIX + 'eid'])
         self.doexec(session.pool[self.uri], sql, attrs)
 
     def delete_entity(self, session, etype, eid):
         """delete an entity from the source"""
-        attrs = {'eid': eid}
-        sql = self.sqlgen.delete(etype, attrs)
+        attrs = {SQL_PREFIX + 'eid': eid}
+        sql = self.sqlgen.delete(SQL_PREFIX + etype, attrs)
         self.doexec(session.pool[self.uri], sql, attrs)
 
     def add_relation(self, session, subject, rtype, object):
@@ -391,8 +391,10 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
         """delete a relation from the source"""
         rschema = self.schema.rschema(rtype)
         if rschema.inlined:
-            etype = session.describe(subject)[0]
-            sql = 'UPDATE %s SET %s=NULL WHERE eid=%%(eid)s' % (etype, rtype)
+            table = SQL_PREFIX + session.describe(subject)[0]
+            column = SQL_PREFIX + rtype
+            sql = 'UPDATE %s SET %s=NULL WHERE %seid=%%(eid)s' % (table, column,
+                                                                  SQL_PREFIX)
             attrs = {'eid' : subject}
         else:
             attrs = {'eid_from': subject, 'eid_to': object}

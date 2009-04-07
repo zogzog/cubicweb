@@ -193,6 +193,7 @@ class WorkflowableMixIn(object):
         """change the entity's state according to a state defined in given
         parameters
         """
+        assert not isinstance(stateeid, basestring), 'change_state wants a state eid'
         if trcomment:
             self.req.set_shared_data('trcomment', trcomment)
         if trcommentformat:

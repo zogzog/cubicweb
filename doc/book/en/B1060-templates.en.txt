@@ -84,7 +84,7 @@ table.
 
 ::
 
- from ginco.web.views.basetemplates import HTMLPageHeader
+ from cubicweb.web.views.basetemplates import HTMLPageHeader
  class MyHTMLPageHeader(HTMLPageHeader):
     def main_header(self, view):
         """build the top menu with authentification info and the rql box"""
@@ -143,7 +143,7 @@ If you want to change the footer for example, look
 for HTMLPageFooter and override it in your views file as in : 
 ::
 
-  form ginco.web.views.basetemplates import HTMLPageFooter
+  form cubicweb.web.views.basetemplates import HTMLPageFooter
   class MyHTMLPageFooter(HTMLPageFooter):
       def call(self, **kwargs):
           self.w(u'<div class="footer">')
@@ -181,7 +181,7 @@ forms parameters:
   whatever the number of entities to display
 * `__method`, if the result set to render contains only one entity and this 
   parameter is set, it refers to a method to call on the entity by passing it
-  the dictionnary of the forms parameters, before going the classic way (through
+  the dictionary of the forms parameters, before going the classic way (through
   step 1 and 2 described juste above)
 
 The MainTemplate is a bit complex as it tries to accomodate many
@@ -211,5 +211,5 @@ Add login menu in left column
 
 [TODO]
 Rajouter une section pour definir la terminologie utilisee.
-Dans ginco-doc rajouter une section pour cubciweb-ctl shell ou
+Dans cubicweb-doc rajouter une section pour cubciweb-ctl shell ou
 on liste les commandes dispos.

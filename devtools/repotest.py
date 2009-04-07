@@ -72,7 +72,7 @@ class DumbOrderedDict(list):
     def __contains__(self, key):
         return key in self.iterkeys()
     def __getitem__(self, key):
-        for key_, value in self.iteritems():
+        for key_, value in list.__iter__(self):
             if key == key_:
                 return value
         raise KeyError(key)
@@ -80,6 +80,17 @@ class DumbOrderedDict(list):
         return (x for x, y in list.__iter__(self))
     def iteritems(self):
         return (x for x in list.__iter__(self))
+    def items(self):
+        return [x for x in list.__iter__(self)]
+
+class DumbOrderedDict2(object):
+    def __init__(self, origdict, sortkey):
+        self.origdict = origdict
+        self.sortkey = sortkey
+    def __getattr__(self, attr):
+        return getattr(self.origdict, attr)
+    def __iter__(self):
+        return iter(sorted(self.origdict, key=self.sortkey))
 
 
 from logilab.common.testlib import TestCase
@@ -258,15 +269,15 @@ except ImportError:
     class PartPlanInformation(object):
         def merge_input_maps(self, *args):
             pass
-        def _choose_var(self, sourcevars):
+        def _choose_term(self, sourceterms):
             pass    
 _orig_merge_input_maps = PartPlanInformation.merge_input_maps
-_orig_choose_var = PartPlanInformation._choose_var
+_orig_choose_term = PartPlanInformation._choose_term
 
 def _merge_input_maps(*args):
     return sorted(_orig_merge_input_maps(*args))
 
-def _choose_var(self, sourcevars):
+def _choose_term(self, sourceterms):
     # predictable order for test purpose
     def get_key(x):
         try:
@@ -279,17 +290,7 @@ def _choose_var(self, sourcevars):
             except AttributeError:
                 # const
                 return x.value
-    varsinorder = sorted(sourcevars, key=get_key)
-    if len(self._sourcesvars) > 1:
-        for var in varsinorder:
-            if not var.scope is self.rqlst:
-                return var, sourcevars.pop(var)
-    else:
-        for var in varsinorder:
-            if var.scope is self.rqlst:
-                return var, sourcevars.pop(var)
-    var = varsinorder[0]
-    return var, sourcevars.pop(var)
+    return _orig_choose_term(self, DumbOrderedDict2(sourceterms, get_key))
 
 
 def do_monkey_patch():
@@ -299,7 +300,7 @@ def do_monkey_patch():
     ExecutionPlan.tablesinorder = None
     ExecutionPlan.init_temp_table = _init_temp_table
     PartPlanInformation.merge_input_maps = _merge_input_maps
-    PartPlanInformation._choose_var = _choose_var
+    PartPlanInformation._choose_term = _choose_term
 
 def undo_monkey_patch():
     RQLRewriter.insert_snippets = _orig_insert_snippets
@@ -307,5 +308,5 @@ def undo_monkey_patch():
     ExecutionPlan._check_permissions = _orig_check_permissions
     ExecutionPlan.init_temp_table = _orig_init_temp_table
     PartPlanInformation.merge_input_maps = _orig_merge_input_maps
-    PartPlanInformation._choose_var = _orig_choose_var
+    PartPlanInformation._choose_term = _orig_choose_term
 

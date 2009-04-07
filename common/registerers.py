@@ -70,6 +70,8 @@ class accepts_registerer(priority_registerer):
     def equivalent(self, other):
         if use_interfaces(self.vobject) != use_interfaces(other):
             return False
+        if getattr(self.vobject, 'require_groups', ()) != getattr(other, 'require_groups', ()):
+            return False
         try:
             newaccepts = list(other.accepts)
             for etype in self.vobject.accepts:

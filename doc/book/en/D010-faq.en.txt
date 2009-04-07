@@ -99,9 +99,9 @@ http://groups.google.com/group/google-appengine/browse_frm/thread/f48cf6099973ae
   the application `Error while publishing ...` for Rest text and plain text.
   The server returns a traceback like as follows ::
 
-      2008-10-06 15:05:08 - (erudi.rest) ERROR: error while publishing ReST text
+      2008-10-06 15:05:08 - (cubicweb.rest) ERROR: error while publishing ReST text
       Traceback (most recent call last):
-      File "/home/sandrine/src/blogdemo/ginco/common/rest.py", line 217, in rest_publish
+      File "/home/user/src/blogdemo/cubicweb/common/rest.py", line 217, in rest_publish
       File "/usr/lib/python2.5/codecs.py", line 817, in open
       file = __builtin__.open(filename, mode, buffering)
       TypeError: __init__() takes at most 3 arguments (4 given)
@@ -156,11 +156,11 @@ HOW TO
   ``all-in-one.conf`` file of your instance, define the anonymous user
   as follows ::
 
-    # login of the Erudi user account to use for anonymous user (if you want to
+    # login of the CubicWeb user account to use for anonymous user (if you want to
     # allow anonymous)
     anonymous-user=anon
 
-    # password of the Erudi user account matching login
+    # password of the CubicWeb user account matching login
     anonymous-password=anon
 
   You also must ensure that this `anon` user is a registered user of
@@ -206,7 +206,7 @@ HOW TO
     user-login-attr=uid
     # name of a group in which ldap users will be by default
     user-default-group=users
-    # map from ldap user attributes to erudi attributes
+    # map from ldap user attributes to cubicweb attributes
     user-attrs-map=gecos:email,uid:login
 
   Any change applied to configuration file requires to restart your

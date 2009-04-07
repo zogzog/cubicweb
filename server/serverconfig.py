@@ -73,6 +73,15 @@ connections will have this number of opened connections.',
           'help': 'size of the parsed rql cache size.',
           'group': 'main', 'inputlevel': 1,
           }),
+        ('delay-full-text-indexation',
+         {'type' : 'yn', 'default': False,
+          'help': 'When full text indexation of entity has a too important cost'
+          ' to be done when entity are added/modified by users, activate this '
+          'option and setup a job using cubicweb-ctl db-rebuild-fti on your '
+          'system (using cron for instance).',
+          'group': 'main', 'inputlevel': 1,
+          }),
+        
         # email configuration
         ('default-recipients-mode',
          {'type' : 'choice',

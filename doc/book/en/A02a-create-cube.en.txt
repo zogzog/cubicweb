@@ -169,47 +169,45 @@ point your browser to the URL http://localhost:8080/schema
 
 .. _DefineViews:
 
-Define your entities views
---------------------------
+Define your entity views
+------------------------
 
-Each entity defined in a model inherits defaults views allowing
+Each entity defined in a model inherits default views allowing
 different rendering of the data. You can redefine each of them
-according to your needs and preferences. If you feel like it then
-you have to know how a view is defined.
+according to your needs and preferences. So let's see how the
+views are defined.
 
 
-The views selection principle
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The view selection principle
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 A view is defined by a Python class which includes: 
   
   - an identifier (all objects in `CubicWeb` are entered in a registry
     and this identifier will be used as a key)
   
-  - a filter to select the resulsets it can be applied to
+  - a filter to select the result sets it can be applied to
 
 A view has a set of methods complying
 with the `View` class interface (`cubicweb.common.view`).
 
-`CubicWeb` provides a lot of standard views for the type
-`EntityView`, for a complete list, you
-will have to read the code in directory ``cubicweb/web/views/``
+`CubicWeb` provides a lot of standard views for the type `EntityView`;
+for a complete list, read the code in directory ``cubicweb/web/views/``.
 
 A view is applied on a `result set` which contains a set of
 entities we are trying to display. `CubicWeb` uses a selector
-mechanism which computes a score used to identify which view
-is the best to apply for the `result set` we are trying to 
-display. The standard library of selectors is in 
+mechanism which computes for each available view a score: 
+the view with the highest score is then used to display the given `result set`.
+The standard library of selectors is in 
 ``cubicweb.common.selector`` and a library of methods used to
 compute scores is available in ``cubicweb.vregistry.vreq``.
 
 It is possible to define multiple views for the same identifier
 and to associate selectors and filters to allow the application
-to find the best way to render the data. We will see more details
-on this in :ref:`DefinitionVues`.
+to find the best way to render the data. 
 
 For example, the view named ``primary`` is the one used to display
-a single entity. We will now show you hos to customize this view.
+a single entity. We will now show you how to customize this view.
 
 
 View customization
@@ -219,8 +217,8 @@ If you wish to modify the way a `BlogEntry` is rendered, you will have to
 overwrite the `primary` view defined in the module ``views`` of the cube
 ``cubes/blog/views.py``.
 
-We can for example add in front of the pulication date a prefix specifying
-the date we see is the publication date.
+We can for example add in front of the publication date a prefix specifying
+that the date we see is the publication date.
 
 To do so, please apply the following changes:
 
@@ -263,12 +261,13 @@ You can now see that the publication date has a prefix.
    :alt: modified primary view
 
 
-The above source code defines a new primary view for
-``BlogEntry``. 
+The above source code defines a new primary view for ``BlogEntry``. 
 
-Since views are applied to resultsets and resulsets can be tables of
-data, it is needed to recover the entity from its (row,col)
-coordinates. We will get to this in more detail later.
+Since views are applied to result sets and result sets can be tables of
+data, we have to recover the entity from its (row,col)-coordinates.
+The view has a ``self.w()`` method that is used to output data, in our
+example HTML output.
 
-The view has a ``self.w()`` method that is used to output data. In our
-example we use it to output HTML tags and values of the entity's attributes.
+You can find more details about views and selectors in :ref:`ViewDefinition`.
+
+

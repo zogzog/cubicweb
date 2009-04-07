@@ -154,8 +154,8 @@ class NotificationView(EntityView):
     def context(self, **kwargs):
         entity = self.entity(0, 0)
         for key, val in kwargs.iteritems():
-            if val and val.strip():
-                kwargs[key] = self.req._(val)
+            if val and isinstance(val, unicode) and val.strip():
+               kwargs[key] = self.req._(val)
         kwargs.update({'user': self.user_login(),
                        'eid': entity.eid,
                        'etype': entity.dc_type(),

@@ -165,10 +165,15 @@ else:
             if add_ellipsis:
                 return text + u'...'
             return text
-        
-def text_cut(text, nbwords=30):
+
+def text_cut(text, nbwords=30, gotoperiod=True):
     """from the given plain text, return a text with at least <nbwords> words,
     trying to go to the end of the current sentence.
+
+    :param nbwords: the minimum number of words required
+    :param gotoperiod: specifies if the function should try to go to
+                       the first period after the cut (i.e. finish
+                       the sentence if possible)
 
     Note that spaces are normalized.
     """
@@ -176,10 +181,11 @@ def text_cut(text, nbwords=30):
         return u''
     words = text.split()
     text = u' '.join(words) # normalize spaces
-    minlength = len(' '.join(words[:nbwords]))
-    textlength = text.find('.', minlength) + 1
-    if textlength == 0: # no point found
-        textlength = minlength 
+    textlength = minlength = len(' '.join(words[:nbwords]))
+    if gotoperiod:
+        textlength = text.find('.', minlength) + 1
+        if textlength == 0: # no period found
+            textlength = minlength
     return text[:textlength]
 
 def cut(text, length):

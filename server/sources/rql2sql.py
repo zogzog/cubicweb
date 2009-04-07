@@ -25,7 +25,7 @@ is done according to this information
 
 
 :organization: Logilab
-:copyright: 2001-2008 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+:copyright: 2001-2009 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 """
 __docformat__ = "restructuredtext en"
@@ -38,6 +38,7 @@ from rql.nodes import (SortTerm, VariableRef, Constant, Function, Not,
                        Variable, ColumnAlias, Relation, SubQuery, Exists)
 
 from cubicweb import server
+from cubicweb.server.sqlutils import SQL_PREFIX
 from cubicweb.server.utils import cleanup_solutions
 
 def _new_var(select, varname): 
@@ -764,7 +765,7 @@ class SQLGenerator(object):
             if '%s.%s' % (lhs.name, attr) in self._varmap:
                 lhssql = self._varmap['%s.%s' % (lhs.name, attr)]
             else:
-                lhssql = '%s.%s' % (self._var_table(lhs.variable), attr)
+                lhssql = '%s.%s%s' % (self._var_table(lhs.variable), SQL_PREFIX, attr)
             if not rhsvar is None:
                 t2 = self._var_table(rhsvar)
                 if t2 is None:
@@ -801,11 +802,12 @@ class SQLGenerator(object):
             else:
                 join += ')'
         if not rhsconst:
-            rhstable = self._var_table(rhsvar)
+            rhstable = rhsvar._q_sqltable
             if rhstable:
                 assert rhstable is not None, rhsvar
                 join += ' %s OUTER JOIN %s ON (%s.%s=%s)' % (
-                    outertype, self._state.tables[rhstable][1], rid, restrattr, rhssql)
+                    outertype, self._state.tables[rhstable][1], rid, restrattr,
+                    rhssql)
                 toreplace.append(rhstable)
         self.replace_tables_by_outer_join(join, maintable, *toreplace)
         return ''
@@ -845,7 +847,10 @@ class SQLGenerator(object):
             try:
                 lhssql = self._varmap['%s.%s' % (lhs.name, relation.r_type)]
             except KeyError:
-                lhssql = '%s.%s' % (table, relation.r_type)
+                if relation.r_type == 'eid':
+                    lhssql = lhs.variable._q_sql
+                else:
+                    lhssql = '%s.%s%s' % (table, SQL_PREFIX, relation.r_type)
         try:
             if relation._q_needcast == 'TODAY':
                 sql = 'DATE(%s)%s' % (lhssql, rhssql)
@@ -966,7 +971,10 @@ class SQLGenerator(object):
         """get the sql name for a subquery column alias"""
         if colalias.name in self._varmap:
             sql = self._varmap[colalias.name]
-            self.add_table(sql.split('.', 1)[0])
+            table = sql.split('.', 1)[0]
+            colalias._q_sqltable = table
+            colalias._q_sql = sql
+            self.add_table(table)
             return sql
         return colalias._q_sql
     
@@ -989,7 +997,7 @@ class SQLGenerator(object):
             principal = variable.stinfo['principal']
             if principal is None:
                 vtablename = variable.name
-                self.add_table('entities AS %s' % variable.name, vtablename)
+                self.add_table('entities AS %s' % vtablename, vtablename)
                 sql = '%s.eid' % vtablename
                 if variable.stinfo['typerels']:
                     # add additional restriction on entities.type column
@@ -1054,8 +1062,8 @@ class SQLGenerator(object):
             if self.schema.eschema(etype).is_final():
                 raise BadRQLQuery(var.stmt.root)
             table = var.name
-            sql = '%s.eid' % table
-            self.add_table('%s AS %s' % (etype, table), table, scope=scope)
+            sql = '%s.%seid' % (table, SQL_PREFIX)
+            self.add_table('%s%s AS %s' % (SQL_PREFIX, etype, table), table, scope=scope)
         return sql, table
     
     def _inlined_var_sql(self, var, rtype):
@@ -1064,7 +1072,7 @@ class SQLGenerator(object):
             scope = var.sqlscope is var.stmt and 0 or -1
             self.add_table(sql.split('.', 1)[0], scope=scope)
         except KeyError:
-            sql = '%s.%s' % (self._var_table(var), rtype)
+            sql = '%s.%s%s' % (self._var_table(var), SQL_PREFIX, rtype)
             #self._state.done.add(var.name)
         return sql
         
@@ -1087,7 +1095,7 @@ class SQLGenerator(object):
             sql = self._varmap['%s.%s' % (linkedvar.name, rel.r_type)]
         except KeyError:
             linkedvar.accept(self)            
-            sql = '%s.%s' % (linkedvar._q_sqltable, rel.r_type)
+            sql = '%s.%s%s' % (linkedvar._q_sqltable, SQL_PREFIX, rel.r_type)
         return sql
 
     # tables handling #########################################################

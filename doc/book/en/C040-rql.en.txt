@@ -9,13 +9,13 @@ RQL language (Relation Query Language)
 Introduction
 ============
 
-Goals RQL
----------
+Goals of RQL
+------------
 
 The goal is to have a language emphasizing the way of browsing
 relations. As such, attributes will be regarded as cases of
-special relations (in terms of implementation, the user
-language not to see virtually no difference between an attribute and a
+special relations (in terms of implementation, the language
+user should see virtually no difference between an attribute and a
 relation).
 
 RQL is inspired by SQL but is the highest level. A knowledge of the 
@@ -34,7 +34,7 @@ schema defining the application.
 
 Versa
 `````
-Should I look in more detail, but here is already some ideas for
+We should look in more detail, but here are already some ideas for
 the moment ... Versa_ is the language most similar to what we wanted
 to do, but the model underlying data being RDF, there is some
 number of things such as namespaces or handling of the RDF types which 
@@ -54,19 +54,18 @@ The different types of queries
 ------------------------------
 
 Search (`Any`)
-   This type of query can extract entities and attributes of entities.
+   Extract entities and attributes of entities.
 
-Inserting entities (`INSERT`)
-   This type of query is used to insert new entities in the database. It
-   will also create direct relationships entities newly created.
+Insert entities (`INSERT`)
+   Insert new entities or relations in the database.
+   It can also directly create relationships for the newly created entities.
 
-Update entities, relations creation (`SET`)
-   This type of query updates existing entities in the database,
+Update entities, create relations (`SET`)
+   Update existing entities in the database,
    or create relations between existing entities.
 
-Deletion of entities or relationship (`DELETE`)
-   This type of query allows for the removal of entities and relations existing
-   in the database.
+Delete entities or relationship (`DELETE`)
+   Remove entities or relations existing in the database.
 
 Search Query
 ------------
@@ -80,7 +79,7 @@ Search Query
    Type of selected variables.
    The special type `Any` is equivalent to not specify a type.
 :restriction:
-   list of relations to go through whic follow the pattern
+   list of conditions to test successively 
      `V1 relation V2 | <static value>`
 :orderterms:
    Definition of the selection order: variable or column number followed by
@@ -92,13 +91,13 @@ Search Query
 
 
 - *Search for the object of identifier 53*
-   ::
+  ::
 
         Any WHERE X
         X eid 53
 
 - *Search material such as comics, owned by syt and available*
-   ::
+  ::
 
         WHERE X Document
         X occurence_of F, F class C, C name 'Comics'
@@ -106,39 +105,47 @@ Search Query
         X available true
 
 - *Looking for people working for eurocopter interested in training*
-   ::
+  ::
 
         Any P WHERE
-        P is Person, P work_for P, S name 'Eurocopter'
+        P is Person, P work_for S, S name 'Eurocopter'
         P interested_by T, T name 'training'
 
 - *Search note less than 10 days old written by jphc or ocy*
-   ::
+  ::
 
         Any N WHERE
         N is Note, N written_on D, D day> (today -10),
         N written_by P, P name 'jphc' or P name 'ocy'
 
 - *Looking for people interested in training or living in Paris*
-   ::
+  ::
 
         Any P WHERE
         P is Person, (P interested_by T, T name 'training') OR
         (P city 'Paris')
 
 - *The name and surname of all people*
-   ::
+  ::
 
         Any N, P WHERE
         X is Person, X name N, X first_name P
 
-   Note that the selection of several entities generally force
-   the use of "Any" because the type specification applies otherwise
-   to all the selected variables. We could write here
-   ::
+  Note that the selection of several entities generally force
+  the use of "Any" because the type specification applies otherwise
+  to all the selected variables. We could write here
+  ::
 
         String N, P WHERE
         X is Person, X name N, X first_name P
+
+
+  Note: You can not specify several types with * ... where X is FirstType or X is SecondType*.
+  To specify several types explicitely, you have to do
+
+  ::
+
+        Any X where X is in (FirstType, SecondType)
 
 
 Insertion query
@@ -147,16 +154,16 @@ Insertion query
     `INSERT` <entity type> V1 (, <entity type> V2) \ * `:` <assignments>
     [ `WHERE` <restriction>]
 
-: assignments:
+:assignments:
    list of relations to assign in the form `V1 relationship V2 | <static value>`
 
 The restriction can define variables used in assignments.
 
 Caution, if a restriction is specified, the insertion is done for 
-*each line results returned by the restriction*.
+*each line result returned by the restriction*.
 
 - *Insert a new person named 'foo'*
-   ::
+  ::
 
         INSERT Person X: X name 'foo'
 
@@ -178,12 +185,12 @@ Update and relation creation queries
     [ `WHERE` <restriction>]
 
 Caution, if a restriction is specified, the update is done *for
-each line results returned by the restriction*.
+each result line returned by the restriction*.
 
 - *Renaming of the person named 'foo' to 'bar' with the first name changed*
   ::
 
-        SET X name 'bar', X first_name 'original' where X is Person X name 'foo'
+        SET X name 'bar', X first_name 'original' WHERE X is Person, X name 'foo'
 
 - *Insert a relation of type 'know' between objects linked by 
   the relation of type 'friend'*
@@ -198,7 +205,7 @@ Deletion query
     [ `WHERE` <restriction>]
 
 Caution, if a restriction is specified, the deletion is made *for
-each line results returned by the restriction*.
+each line result returned by the restriction*.
 
 - *Deletion of the person named 'foo'*
   ::
@@ -211,8 +218,8 @@ each line results returned by the restriction*.
         DELETE X friend Y WHERE X is Person, X name 'foo'
 
 
-Undocumented (yet) type of queries
-----------------------------------
+(yet) Undocumented types of queries
+-----------------------------------
 
 **Limit / offset**
 ::
@@ -302,14 +309,14 @@ Built-in types
 ``````````````
 
 The base types supported are string (between double or single quotes),
-integers or floats (the separator is the'.'), dates and
+integers or floats (the separator is '.'), dates and
 boolean. We expect to receive a schema in which types String,
 Int, Float, Date and Boolean are defined.
 
 * `String` (literal: between double or single quotes).
 * `Int`, `Float` (separator being'.').
 * `Date`, `Datetime`, `Time` (literal: string YYYY/MM/DD [hh:mm] or keywords
-   `TODAY` and `NOW`).
+  `TODAY` and `NOW`).
 * `Boolean` (keywords `TRUE` and `FALSE`).
 * `Keyword` NULL.
 
@@ -318,10 +325,10 @@ Operators
 ---------
 
 Logical Operators
-```````````````````
+`````````````````
 ::
 
-     AND, OR, ','
+     AND, OR, NOT, ','
 
 ',' is equivalent to 'AND' but with the smallest among the priority
 of logical operators (see :ref:`PriorityOperators`).
@@ -336,7 +343,7 @@ Comparison operators
 ````````````````````
 ::
 
-     =, <, <=, >=, > = ~, IN, LIKE
+     =, <, <=, >=, >, ~=, IN, LIKE
 
 * The operator `=` is the default operator.
 
@@ -345,7 +352,7 @@ Comparison operators
   must start or finish by a prefix/suffix:
   ::
 
-     Any X WHERE X name =~ 'Th%'
+     Any X WHERE X name ~= 'Th%'
      Any X WHERE X name LIKE '%lt'
 
 * The operator `IN` provides a list of possible values:
@@ -354,30 +361,32 @@ Comparison operators
     Any X WHERE X name IN ( 'chauvat', 'fayolle', 'di mascio', 'thenault')
 
 
-XXX nico: A trick <> 'bar' would not it be more convenient than NOT A
-trick 'bar'?
+XXX nico: "A trick <> 'bar'" wouldn't it be more convenient than 
+"NOT A trick 'bar'" ?
 
 .. _PriorityOperators:
 
-Operators priority
-``````````````````
+Operator priority
+`````````````````
 
 1. '*', '/'
 
 2. '+', '-'
 
-3. 'and'
+3. 'not'
 
-4. 'or'
+4 'and'
 
-5. ','
+5 'or'
+
+6 ','
 
 
 Advanced Features
 -----------------
 
-Functions aggregates
-````````````````````
+Aggregate Functions
+```````````````````
 ::
 
      COUNT, MIN, MAX, AVG, SUM
@@ -468,11 +477,11 @@ expression.
      constant    ::= KEYWORD | STRING | FLOAT | INT
 
      # tokens
-     LOGIC_OP ::= ',' | 'GOLD' | 'AND'
+     LOGIC_OP ::= ',' | 'OR' | 'AND'
      MATH_OP  ::= '+' | '-' | '/' | '*'
      COMP_OP  ::= '>' | '>=' | '=' | '<=' | '<' | '~=' | 'LIKE'
 
-     FUNCTION ::= 'MIN' | 'MAX' | 'SUM' | 'AVG' | 'COUNT' | 'upper' | 'LOWER'
+     FUNCTION ::= 'MIN' | 'MAX' | 'SUM' | 'AVG' | 'COUNT' | 'UPPER' | 'LOWER'
 
      VARIABLE ::= '[A-Z][A-Z0-9]*'
      E_TYPE   ::= '[A-Z]\w*'
@@ -541,13 +550,13 @@ The update tree does not contain the variables and relations updated
 
 ::
 
-     Select         ((Relationship | And | Gold)?, Group?, Sort?)
-     Insert         (Relations | And | Gold)?
-     Delete         (Relationship | And | Gold)?
-     Update         (Relations | And | Gold)?
+     Select         ((Relationship | And | Or)?, Group?, Sort?)
+     Insert         (Relations | And | Or)?
+     Delete         (Relationship | And | Or)?
+     Update         (Relations | And | Or)?
 
-     And            ((Relationship | And | Gold), (Relationship | And | Gold))
-     Or             ((Relationship | And | Gold), (Relationship | And | Gold))
+     And            ((Relationship | And | Or), (Relationship | And | Or))
+     Or             ((Relationship | And | Or), (Relationship | And | Or))
 
      Relationship   ((VariableRef, Comparison))
 
@@ -578,20 +587,20 @@ Remarks
 
      Point P where P abs X, P ord Y, P value X+Y
 
-   is valid, but::
+  is valid, but::
 
      Point P where P abs X, P value X+Y, P ord Y
 
-   is not.
+  is not.
 
 RQL logs
 --------
 
-You can configure the `CubicWeb` application so that you keep a log
-of the queries executed against your database. To do so, you want to
+You can configure the `CubicWeb` application to keep a log
+of the queries executed against your database. To do so, 
 edit the configuration file of your application 
 ``.../etc/cubicweb.d/myapp/all-in-one.conf`` and uncomment the
-variable ``query-log-file``: ::
+variable ``query-log-file``::
 
   # web application query log file
   query-log-file=/tmp/rql-myapp.log

@@ -2,7 +2,7 @@
 """common configuration utilities for cubicweb
 
 :organization: Logilab
-:copyright: 2001-2008 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+:copyright: 2001-2009 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 """
 __docformat__ = "restructuredtext en"
@@ -10,7 +10,7 @@ __docformat__ = "restructuredtext en"
 import sys
 import os
 import logging
-from os.path import exists, join, expanduser, abspath, basename
+from os.path import exists, join, expanduser, abspath, normpath, basename, isdir
 
 from logilab.common.decorators import cached
 from logilab.common.logging_ext import set_log_methods, init_log
@@ -141,7 +141,7 @@ class CubicWebNoAppConfiguration(ConfigurationMixIn):
         file(join(CUBES_DIR, '__init__.py'), 'w').close()
     elif exists(join(CW_SOFTWARE_ROOT, '.hg')):
         mode = 'dev'
-        CUBES_DIR = join(CW_SOFTWARE_ROOT, '../cubes')
+        CUBES_DIR = abspath(normpath(join(CW_SOFTWARE_ROOT, '../cubes')))
     else:
         mode = 'installed'
         CUBES_DIR = '/usr/share/cubicweb/cubes/'
@@ -219,7 +219,7 @@ this option is set to yes",
         """
         if cls.mode in ('dev', 'test') and not os.environ.get('APYCOT_ROOT'):
             return join(CW_SOFTWARE_ROOT, 'web')
-        return join(cls.cubes_dir(), 'shared')
+        return cls.cube_dir('shared')
         
     @classmethod
     def i18n_lib_dir(cls):
@@ -230,26 +230,38 @@ this option is set to yes",
 
     @classmethod
     def available_cubes(cls):
-        cubes_dir = cls.cubes_dir()
-        return sorted(cube for cube in os.listdir(cubes_dir)
-                      if os.path.isdir(os.path.join(cubes_dir, cube))
-                      and not cube in ('CVS', '.svn', 'shared', '.hg'))
+        cubes = set()
+        for directory in cls.cubes_search_path():
+            for cube in os.listdir(directory):
+                if isdir(join(directory, cube)) and not cube in ('CVS', '.svn', 'shared', '.hg'):
+                    cubes.add(cube)
+        return sorted(cubes)
     
     @classmethod
-    def cubes_dir(cls):
-        """return the application cubes directory"""
-        return env_path('CW_CUBES', cls.CUBES_DIR, 'cubes')
+    def cubes_search_path(cls):
+        """return the path of directories where cubes should be searched"""
+        path = []
+        try:
+            for directory in os.environ['CW_CUBES_PATH'].split(os.pathsep):
+                directory = abspath(normpath(directory))
+                if exists(directory) and not directory in path:
+                    path.append(directory)
+        except KeyError:
+            pass
+        if not cls.CUBES_DIR in path:
+            path.append(cls.CUBES_DIR)
+        return path
     
     @classmethod
     def cube_dir(cls, cube):
         """return the cube directory for the given cube id,
         raise ConfigurationError if it doesn't exists
         """
-        cube_dir = join(cls.cubes_dir(), cube)
-        if not exists(cube_dir):
-            raise ConfigurationError('no cube %s in %s' % (
-                cube, cls.cubes_dir()))
-        return cube_dir
+        for directory in cls.cubes_search_path():
+            cubedir = join(directory, cube)
+            if exists(cubedir):
+                return cubedir
+        raise ConfigurationError('no cube %s in %s' % (cube, cls.cubes_search_path()))
 
     @classmethod
     def cube_migration_scripts_dir(cls, cube):
@@ -335,12 +347,14 @@ this option is set to yes",
     @classmethod
     def cls_adjust_sys_path(cls):
         """update python path if necessary"""
+        cubes_parent_dir = normpath(join(cls.CUBES_DIR, '..'))
+        if not cubes_parent_dir in sys.path:
+            sys.path.insert(0, cubes_parent_dir)
         try:
-            templdir = abspath(join(cls.cubes_dir(), '..'))
-            if not templdir in sys.path:
-                sys.path.insert(0, templdir)
-        except ConfigurationError:
-            return # cube dir doesn't exists
+            import cubes
+            cubes.__path__ = cls.cubes_search_path()
+        except ImportError:
+            return # cubes dir doesn't exists
 
     @classmethod
     def load_cwctl_plugins(cls):
@@ -352,10 +366,9 @@ this option is set to yes",
             if exists(join(CW_SOFTWARE_ROOT, ctlfile)):
                 load_module_from_file(join(CW_SOFTWARE_ROOT, ctlfile))
                 cls.info('loaded cubicweb-ctl plugin %s', ctlfile)
-        templdir = cls.cubes_dir()
         for cube in cls.available_cubes():
-            pluginfile = join(templdir, cube, 'ecplugin.py')
-            initfile = join(templdir, cube, '__init__.py')
+            pluginfile = join(cls.cube_dir(cube), 'ecplugin.py')
+            initfile = join(cls.cube_dir(cube), '__init__.py')
             if exists(pluginfile):
                 try:
                     __import__('cubes.%s.ecplugin' % cube)
@@ -482,17 +495,16 @@ this option is set to yes",
 class CubicWebConfiguration(CubicWebNoAppConfiguration):
     """base class for cubicweb server and web configurations"""
     
+    INSTANCE_DATA_DIR = None
     if CubicWebNoAppConfiguration.mode == 'test':
         root = os.environ['APYCOT_ROOT']
         REGISTRY_DIR = '%s/etc/cubicweb.d/' % root
-        INSTANCE_DATA_DIR = REGISTRY_DIR
         RUNTIME_DIR = '/tmp/'
         MIGRATION_DIR = '%s/local/share/cubicweb/migration/' % root
         if not exists(REGISTRY_DIR):
             os.makedirs(REGISTRY_DIR)
     elif CubicWebNoAppConfiguration.mode == 'dev':
         REGISTRY_DIR = expanduser('~/etc/cubicweb.d/')
-        INSTANCE_DATA_DIR = REGISTRY_DIR
         RUNTIME_DIR = '/tmp/'
         MIGRATION_DIR = join(CW_SOFTWARE_ROOT, 'misc', 'migration')
     else: #mode = 'installed'
@@ -555,7 +567,8 @@ the repository',
     @classmethod
     def instance_data_dir(cls):
         """return the instance data directory"""
-        return env_path('CW_INSTANCE_DATA', cls.INSTANCE_DATA_DIR,
+        return env_path('CW_INSTANCE_DATA',
+                        cls.INSTANCE_DATA_DIR or cls.REGISTRY_DIR,
                         'additional data')
         
     @classmethod

@@ -444,7 +444,7 @@ class CheckBoxWidget(Widget):
 
 
 class YesNoRadioWidget(CheckBoxWidget):
-    
+    html_attributes = Widget.html_attributes | set(('disabled',))
     def _edit_render(self, entity):
         value = self.current_value(entity)
         dvalue = self.current_display_value(entity)
@@ -482,11 +482,15 @@ class FileWidget(Widget):
                     wdgs.append(ewdg.edit_render(entity, includehelp=True))
                     wdgs.append(u'<br/>')
             wdgs.append(u'</div>')
-        if entity.has_eid() and not self.required(entity):
-            # trick to be able to delete an uploaded file
-            wdgs.append(u'<br/>')
-            wdgs.append(checkbox(eid_param('__%s_detach' % self.rname, entity.eid), False))
-            wdgs.append(req._('detach attached file'))
+        if entity.has_eid():
+            if not self.required(entity):
+                # trick to be able to delete an uploaded file
+                wdgs.append(u'<br/>')
+                wdgs.append(checkbox(eid_param('__%s_detach' % self.rname, entity.eid), False))
+                wdgs.append(req._('detach attached file %s' % entity.dc_title()))
+            else:
+                wdgs.append(u'<br/>')
+                wdgs.append(req._('currently attached file: %s' % entity.dc_title()))
         return '\n'.join(wdgs)
     
     def _edit_render(self, entity):
@@ -581,7 +585,7 @@ class StaticComboBoxWidget(ComboBoxWidget):
         self.vocabfunc = vocabfunc
 
     def vocabulary(self, entity):
-        choices = self.vocabfunc(entity)
+        choices = self.vocabfunc(entity=entity)
         if self.sort:
             choices = sorted(choices)
         if self.rschema.rproperty(self.subjtype, self.objtype, 'internationalizable'):

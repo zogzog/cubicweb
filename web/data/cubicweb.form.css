@@ -179,8 +179,11 @@ div.inlinedform {
 }
 
 /*FIXME inlineedit not used ?*/
+/*
 div.inlineedit {
-  display: none;}
+  display: none;
+}
+*/
 
 div.editableField {
   display: inline;

@@ -20,6 +20,7 @@ configuration files.
 This tutorial will show how to create a `cube` and how to use it as an
 application to run an `instance`.
 
+.. include:: Z013-blog-less-ten-minutes.en.txt
 .. include:: A02a-create-cube.en.txt
 .. include:: A02b-components.en.txt
 .. include:: A02c-maintemplate.en.txt

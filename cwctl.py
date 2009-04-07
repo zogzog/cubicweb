@@ -187,7 +187,6 @@ class ListCommand(Command):
             for cube in cwcfg.available_cubes():
                 if cube in ('CVS', '.svn', 'shared', '.hg'):
                     continue
-                templdir = join(cubesdir, cube)
                 try:
                     tinfo = cwcfg.cube_pkginfo(cube)
                     tversion = tinfo.version
@@ -200,7 +199,7 @@ class ListCommand(Command):
                                            or tinfo.__doc__)
                     if shortdesc:
                         print '    '+ '    \n'.join(shortdesc.splitlines())
-                    modes = detect_available_modes(templdir)
+                    modes = detect_available_modes(CubicWebConfiguration.cube_dir(cube))
                     print '    available modes: %s' % ', '.join(modes)
         print
         try:
@@ -622,7 +621,11 @@ given, appropriate sources for migration will be automatically selected \
         config = cwcfg.config_for(appid)
         config.creating = True # notice we're not starting the server
         config.verbosity = self.config.verbosity
-        config.set_sources_mode(self.config.ext_sources or ('migration',))
+        try:
+            config.set_sources_mode(self.config.ext_sources or ('migration',))
+        except AttributeError:
+            # not a server config
+            pass
         # get application and installed versions for the server and the componants
         print 'getting versions configuration from the repository...'
         mih = config.migration_handler()

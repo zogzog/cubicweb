@@ -9,6 +9,8 @@ __docformat__ = "restructuredtext en"
 from logilab.mtconverter import TransformError, xml_escape
 
 from cubicweb.view import StartupView, EntityView
+from cubicweb.web.action import Action
+from cubicweb.selectors import none_rset, match_view
 
 _ = unicode
 
@@ -212,4 +214,15 @@ class OWLABOXItemView(EntityView):
             for x in getattr(entity, attr):
                 self.w(u'<%s>%s %s</%s>' % (attr, x.id, x.eid, attr))
         self.w(u'</%s>'% eschema)
+
+
+class DownloadOWLSchemaAction(Action):
+    id = 'download_as_owl'
+    __select__ = none_rset() & match_view('schema')
+    
+    category = 'mainactions'
+    title = _('download schema as owl')
+   
+    def url(self):
+        return self.build_url('view', vid='owl')
 

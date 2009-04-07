@@ -104,6 +104,10 @@ msgid "%d&nbsp;weeks"
 msgstr "%d&nbsp;semanas"
 
 #, python-format
+msgid "%d&nbsp;years"
+msgstr ""
+
+#, python-format
 msgid "%s error report"
 msgstr "%s reporte de errores"
 
@@ -1487,6 +1491,10 @@ msgstr "exportar entidades en csv"
 msgid "csv export"
 msgstr "exportar CSV"
 
+#, python-format
+msgid "currently attached file: %s"
+msgstr ""
+
 msgid "data directory url"
 msgstr "url del repertorio de datos"
 
@@ -1612,8 +1620,9 @@ msgstr "Estado destino"
 msgid "destination_state_object"
 msgstr "destino de"
 
-msgid "detach attached file"
-msgstr "soltar el archivo existente"
+#, python-format
+msgid "detach attached file %s"
+msgstr ""
 
 msgid "detailed schema view"
 msgstr "vista detallada del esquema"
@@ -2999,6 +3008,9 @@ msgstr "vous avez ÈtÈ dÈconnectÈ"
 #~ msgstr ""
 #~ "langue par dÈfaut (regarder le rÈpertoire i18n de l'application pour voir "
 #~ "les langues disponibles)"
+
+#~ msgid "detach attached file"
+#~ msgstr "soltar el archivo existente"
 
 #~ msgid "filter"
 #~ msgstr "filtrer"

@@ -1,5 +1,6 @@
 .. -*- coding: utf-8 -*-
 
+.. _Part1:
 
 ===================================
 Part I - Introduction to `CubicWeb`

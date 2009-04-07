@@ -47,7 +47,7 @@ class ViewSchemaAction(Action):
     
     def url(self):
         return self.build_url(self.id)
-
+    
         
 # schema entity types views ###################################################
 

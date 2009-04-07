@@ -290,3 +290,4 @@ class ManageAction(ManagersAction):
 from logilab.common.deprecation import class_moved
 from cubicweb.web.views.bookmark import FollowAction
 FollowAction = class_moved(FollowAction)
+

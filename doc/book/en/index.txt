@@ -31,15 +31,14 @@ The hacker will join development at the forge_.
 
 The impatient will go strait away to :ref:`QuickInstall`.
 
-The impatient developper will move right away to :ref:`MiseEnPlaceEnv`.
+The impatient developper will move right away to :ref:`SetUpEnv`.
 
 .. _Logilab: http://www.logilab.fr/
 .. _forge: http://www.cubicweb.org/project/
 .. _Python: http://www.python.org/
 
-Table of contents
-=================
-
+The book
+========
 
 .. toctree::
    :maxdepth: 2
@@ -47,7 +46,13 @@ Table of contents
    A000-introduction.en.txt
    B000-development.en.txt
    C000-administration.en.txt
-   D000-annex.en.txt
+   D000-annex.en.txt    
+
+
+Table of Contents
+-----------------
+
+Complete :ref:`TOC`.
 
 Indices and tables
 ==================

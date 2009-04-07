@@ -476,6 +476,17 @@ class match_user_groups(match_search_state):
         return score
 
 
+class match_view(match_search_state):
+    """accept if the current view is in one of the expected vid given to the
+    initializer
+    """
+    @lltrace
+    def __call__(self, cls, req, rset, row=None, col=0, view=None, **kwargs):
+        if view is None or not view.id in self.expected:
+            return 0
+        return 1
+
+
 class appobject_selectable(Selector):
     """accept with another appobject is selectable using selector's input
     context.

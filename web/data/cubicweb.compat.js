@@ -242,7 +242,36 @@ TT = createDomFunction('tt');
 UL = createDomFunction('ul');
 
 // cubicweb specific
-IFRAME = createDomFunction('iframe');
+//IFRAME = createDomFunction('iframe');
+function IFRAME(params){
+  if ('name' in params){
+    try {
+      var node = document.createElement('<iframe name="'+params['name']+'">');
+      }catch (ex) {
+	 var node = document.createElement('iframe');
+      }
+  }
+  else{
+    var node = document.createElement('iframe');
+  }
+  for (key in params) {
+    if (key != 'name'){
+      var value = params[key];
+      if (key.substring(0, 2) == 'on') {
+	// this is an event handler definition
+	if (typeof value == 'string') {
+	  // litteral definition
+	  value = new Function(value);
+	}
+	node[key] = value;
+      } else { // normal node attribute
+	node.setAttribute(key, params[key]);
+      }
+    }
+  }
+  return node;
+}
+
 
 // dummy ultra minimalist implementation on deferred for jQuery
 function Deferred() {

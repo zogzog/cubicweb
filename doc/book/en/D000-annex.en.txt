@@ -1,9 +1,10 @@
 .. -*- coding: utf-8 -*-
 
+.. _Part4:
 
-=================
-Part IV - Annexes
-=================
+====================
+Part IV - Appendixes
+====================
 
 The following chapters are reference material.
  

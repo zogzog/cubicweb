@@ -86,7 +86,7 @@ class CubicWebRootResource(resource.PostableResource):
         if config.repo_method == 'inmemory':
             reactor.addSystemEventTrigger('before', 'shutdown',
                                           self.shutdown_event)
-            # monkey path start_looping_task to get proper reactor integration
+            # monkey patch start_looping_task to get proper reactor integration
             self.appli.repo.__class__.start_looping_tasks = start_looping_tasks
             if config.pyro_enabled():
                 # if pyro is enabled, we have to register to the pyro name
@@ -182,7 +182,7 @@ class CubicWebRootResource(resource.PostableResource):
             # don't allow anonymous on https connection
             return self.request_auth(req)            
         if self.url_rewriter is not None:
-            # XXX should occurs before authentication?
+            # XXX should occur before authentication?
             try:
                 path = self.url_rewriter.rewrite(host, origpath)
             except Redirect, ex:

@@ -42,6 +42,12 @@ function postAjaxLoad(node, req) {
 
 // cubicweb loadxhtml plugin to make jquery handle xhtml response
 jQuery.fn.loadxhtml = function(url, data, reqtype, mode) {
+    var ajax = null;
+    if (reqtype == 'post') {
+	ajax = jQuery.post;
+    } else {
+	ajax = jQuery.get;
+    }
     if (this.size() > 1) {
 	log('loadxhtml was called with more than one element');
     }
@@ -52,8 +58,9 @@ jQuery.fn.loadxhtml = function(url, data, reqtype, mode) {
 	callback = data.callback;
 	delete data.callback;
     }
-    var deferred = loadJSON(url, data, reqtype);
-    deferred.addCallback(function(response, req) {
+    var node = this.get(0); // only consider the first element
+    ajax = jQuery.post;
+    ajax(url, data, function(response) {
 	var domnode = getDomFromResponse(response);
 	if (mode == 'swap') {
 	    var origId = node.id;

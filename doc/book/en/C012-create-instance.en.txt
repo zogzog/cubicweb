@@ -62,6 +62,13 @@ handled by system utility tools such as APT) and the usable cubes
 at the time the base is created (import_erschema('MyCube') will
 not properly work otherwise).
 
+.. note::
+    Please note that if you do not wish to use default directory
+    for your cubes library, then you want to use the option
+    --directory to specify where you would like to place
+    the source code of your cube:
+    ``cubicweb-ctl newcube --directory=/path/to/cubes/library cube_name``
+
 Instance creation
 -----------------
 
@@ -91,7 +98,7 @@ use during the development to administrate your web application. It will be
 possible, later on, to create others users for your final web application.
 
 When this command is completed, the definition of your instance is
-located in *~/etc/cubicweb.d/moninstance/*. To launch it, you just type ::
+located in *~/etc/cubicweb.d/myinstance/*. To launch it, you just type ::
 
   cubicweb-ctl start -D myinstance
 

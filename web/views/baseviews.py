@@ -519,7 +519,6 @@ class TreeItemView(ListItemView):
     def cell_call(self, row, col):
         self.wview('incontext', self.rset, row=row, col=col)
 
-# context specific views ######################################################
 
 class TextSearchResultView(EntityView):
     """this view is used to display full-text search

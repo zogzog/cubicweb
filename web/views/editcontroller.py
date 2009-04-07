@@ -163,13 +163,13 @@ class EditController(ViewController):
         self.delete_entities(self.req.edited_eids(withtype=True))
         return self.reset()
 
-    def _needs_edition(self, rtype, formparams):
+    def _needs_edition(self, rtype, formparams, entity):
         """returns True and and the new value if `rtype` was edited"""
         editkey = 'edits-%s' % rtype
         if not editkey in formparams:
             return False, None # not edited
         value = formparams.get(rtype) or None
-        if (formparams.get(editkey) or None) == value:
+        if entity.has_eid() and (formparams.get(editkey) or None) == value:
             return False, None # not modified
         if value == INTERNAL_FIELD_VALUE:
             value = None        
@@ -180,7 +180,7 @@ class EditController(ViewController):
         attribute described by the given schema if necessary
         """
         attr = rschema.type
-        edition_needed, value = self._needs_edition(attr, formparams)
+        edition_needed, value = self._needs_edition(attr, formparams, entity)
         if not edition_needed:
             return
         # test if entity class defines a special handler for this attribute

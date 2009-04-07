@@ -73,10 +73,6 @@ table.omcalendar tr td:hover div.calCellTitle div.cmd a {
   text-align: right;
 }
 
-table.omcalendar tr td div.calCellTitle div.stopper {
- /* clear:pos; # FIXME : pos is not a clear value*/
-}
-
 table.omcalendar tr td {
   padding: 3px 0.5em 1em;                         
 }

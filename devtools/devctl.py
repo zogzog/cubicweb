@@ -284,12 +284,11 @@ class UpdateTemplateCatalogCommand(Command):
     
     def run(self, args):
         """run the command with its specific arguments"""
-        CUBEDIR = DevCubeConfiguration.cubes_dir()
         if args:
-            cubes = [join(CUBEDIR, app) for app in args]
+            cubes = [DevCubeConfiguration.cube_dir(cube) for cube in args]
         else:
-            cubes = [join(CUBEDIR, app) for app in listdir(CUBEDIR)
-                         if exists(join(CUBEDIR, app, 'i18n'))]
+            cubes = [DevCubeConfiguration.cube_dir(cube) for cube in DevCubeConfiguration.available_cubes()]
+            cubes = [cubepath for cubepath in cubes if exists(join(cubepath, 'i18n'))]
         update_cubes_catalogs(cubes)
 
 def update_cubes_catalogs(cubes):
@@ -385,6 +384,11 @@ class NewCubeCommand(Command):
     arguments = '<cubename>'
 
     options = (
+        ("directory",
+         {'short': 'd', 'type' : 'string', 'metavar': '<cubes directory>',
+          'help': 'directory where the new cube should be created',
+          }
+         ),
         ("verbose",
          {'short': 'v', 'type' : 'yn', 'metavar': '<verbose>',
           'default': 'n',
@@ -419,14 +423,20 @@ class NewCubeCommand(Command):
         #if ServerConfiguration.mode != "dev":
         #    self.fail("you can only create new cubes in development mode")
         verbose = self.get('verbose')
-        cubedir = ServerConfiguration.CUBES_DIR
-        if not isdir(cubedir):
-            print "creating apps directory", cubedir
+        cubesdir = self.get('directory')
+        if not cubesdir:
+            cubespath = ServerConfiguration.cubes_search_path()
+            if len(cubespath) > 1:
+                raise BadCommandUsage("can't guess directory where to put the new cube."
+                                      " Please specify it using the --directory option")
+            cubesdir = cubespath[0]
+        if not isdir(cubesdir):
+            print "creating cubes directory", cubesdir
             try:
-                mkdir(cubedir)
+                mkdir(cubesdir)
             except OSError, err:
-                self.fail("failed to create directory %r\n(%s)" % (cubedir, err))
-        cubedir = join(cubedir, cubename)
+                self.fail("failed to create directory %r\n(%s)" % (cubesdir, err))
+        cubedir = join(cubesdir, cubename)
         if exists(cubedir):
             self.fail("%s already exists !" % (cubedir))
         skeldir = join(BASEDIR, 'skeleton')
@@ -502,17 +512,22 @@ class ExamineLogCommand(Command):
             raise BadCommandUsage("no argument expected")
         import re
         requests = {}
-        for line in sys.stdin:
+        for lineno, line in enumerate(sys.stdin):
             if not ' WHERE ' in line:
                 continue
             #sys.stderr.write( line )
-            rql, time = line.split('--')
-            rql = re.sub("(\'\w+': \d*)", '', rql)
-            req = requests.setdefault(rql, [])
-            time.strip()
-            chunks = time.split()
-            cputime = float(chunks[-3])
-            req.append( cputime )
+            try:
+                rql, time = line.split('--')
+                rql = re.sub("(\'\w+': \d*)", '', rql)
+                if '{' in rql:
+                    rql = rql[:rql.index('{')]
+                req = requests.setdefault(rql, [])
+                time.strip()
+                chunks = time.split()
+                cputime = float(chunks[-3])
+                req.append( cputime )
+            except Exception, exc:
+                sys.stderr.write('Line %s: %s (%s)\n' % (lineno, exc, line))
 
         stat = []
         for rql, times in requests.items():
@@ -520,8 +535,11 @@ class ExamineLogCommand(Command):
 
         stat.sort()
         stat.reverse()
+
+        total_time = sum(time for time, occ, rql in stat)*0.01
+        print 'Percentage;Cumulative Time;Occurences;Query'
         for time, occ, rql in stat:
-            print time, occ, rql
+            print '%.2f;%.2f;%s;%s' % (time/total_time, time, occ, rql)
         
 register_commands((UpdateCubicWebCatalogCommand,
                    UpdateTemplateCatalogCommand,

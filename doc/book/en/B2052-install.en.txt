@@ -107,10 +107,10 @@ or the ``laxctl`` command ::
   $ python myapp/bin/laxctl i18ncompile 
 
 Ignore the errors that print "No translation file found for domain
-'erudi'". They disappear after the first run of i18ncompile.
+'cubicweb'". They disappear after the first run of i18ncompile.
 
 .. note:: The command  myapp/bin/laxctl i18nupdate needs to be executed
-   only if your application is using cubes from ginco-apps.
+   only if your application is using cubes from cubicweb-apps.
    Otherwise, please skip it.
 
 You will never need to add new entries in the translation catalog. Instead we would

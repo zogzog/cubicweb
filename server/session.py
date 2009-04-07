@@ -422,10 +422,14 @@ class Session(RequestSessionMixIn):
                     # None value inserted by an outer join, no type
                     row_descr[index] = None
                     continue
-                if isfinal:
-                    row_descr[index] = etype_from_pyobj(value)
-                else:
-                    row_descr[index] = etype_from_eid(value)[0]
+                try:
+                    if isfinal:
+                        row_descr[index] = etype_from_pyobj(value)
+                    else:
+                        row_descr[index] = etype_from_eid(value)[0]
+                except UnknownEid:
+                    self.critical('wrong eid in repository, should check database')
+                    row_descr[index] = row[index] = None
             description.append(tuple(row_descr))
         return description
 

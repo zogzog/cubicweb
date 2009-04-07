@@ -23,8 +23,7 @@ from cubicweb.view import EntityView
 from cubicweb.web.box import BoxTemplate
 
 _ = unicode
-
-
+    
 class EditBox(BoxTemplate):
     """
     box with all actions impacting the entity displayed: edit, copy, delete
@@ -91,7 +90,7 @@ class EditBox(BoxTemplate):
         return cls.rmode.rtag(rtype, role, etype, targettype)
 
 
-    def call(self, **kwargs):
+    def call(self, view=None, **kwargs):
         _ = self.req._
         title = _(self.title)
         if self.rset:
@@ -102,7 +101,7 @@ class EditBox(BoxTemplate):
                 title = u'%s - %s' % (title, etypelabel.lower())
         box = BoxWidget(title, self.id, _class="greyBoxFrame")
         # build list of actions
-        actions = self.vreg.possible_actions(self.req, self.rset)
+        actions = self.vreg.possible_actions(self.req, self.rset, view=view)
         add_menu = BoxMenu(_('add')) # 'addrelated' category
         other_menu = BoxMenu(_('more actions')) # 'moreactions' category
         searchstate = self.req.search_state[0]
@@ -134,7 +133,7 @@ class EditBox(BoxTemplate):
         self.add_submenu(box, other_menu)
         if not box.is_empty():
             box.render(self.w)
-
+            
     def add_submenu(self, box, submenu, label_prefix=None):
         if len(submenu.items) == 1:
             boxlink = submenu.items[0]
@@ -195,7 +194,7 @@ class EditBox(BoxTemplate):
             if transitions:
                 menu_title = u'%s: %s' % (_('state'), state.view('text'))
                 menu_items = []
-                for tr in state.transitions(entity):
+                for tr in transitions:
                     url = entity.absolute_url(vid='statuschange', treid=tr.eid)
                     menu_items.append(self.mk_action(_(tr.name), url))
                 box.append(BoxMenu(menu_title, menu_items))
@@ -272,7 +271,6 @@ class PossibleViewsBox(BoxTemplate):
 class StartupViewsBox(BoxTemplate):
     """display a box containing links to all startup views"""
     id = 'startup_views_box'
-
     visible = False # disabled by default
     title = _('startup views')
     order = 70
@@ -285,6 +283,7 @@ class StartupViewsBox(BoxTemplate):
         
         if not box.is_empty():
             box.render(self.w)
+
 
 # helper classes ##############################################################
 

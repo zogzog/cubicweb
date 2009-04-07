@@ -1,8 +1,8 @@
 .. -*- coding: utf-8 -*-
 
 
-Architecture du serveur
------------------------
+Server Architecture
+-------------------
 
 .. image:: images/server-class-diagram.png
 

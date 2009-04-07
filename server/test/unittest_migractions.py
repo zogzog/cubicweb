@@ -6,6 +6,8 @@ from datetime import date
 from logilab.common.testlib import TestCase, unittest_main
 from cubicweb.devtools.apptest import RepositoryBasedTC, get_versions
 
+from cubicweb.schema import CubicWebSchemaLoader
+from cubicweb.server.sqlutils import SQL_PREFIX
 from cubicweb.server.repository import Repository
 from cubicweb.server.migractions import *
 
@@ -29,7 +31,6 @@ class MigrationCommandsTC(RepositoryBasedTC):
             repo.config._cubes = None
             repo.fill_schema()
             # hack to read the schema from data/migrschema
-            from cubicweb.schema import CubicWebSchemaLoader
             CubicWebSchemaLoader.main_schema_directory = 'migrschema'
             global migrschema
             migrschema = self.repo.config.load_schema()
@@ -68,9 +69,9 @@ class MigrationCommandsTC(RepositoryBasedTC):
         self.assertEquals(self.schema['shortpara'].subjects(), ('Note', ))
         self.assertEquals(self.schema['shortpara'].objects(), ('String', ))
         # test created column is actually a varchar(64)
-        notesql = self.mh.sqlexec("SELECT sql FROM sqlite_master WHERE type='table' and name='Note'")[0][0]
+        notesql = self.mh.sqlexec("SELECT sql FROM sqlite_master WHERE type='table' and name='%sNote'" % SQL_PREFIX)[0][0]
         fields = dict(x.strip().split()[:2] for x in notesql.split('(', 1)[1].rsplit(')', 1)[0].split(','))
-        self.assertEquals(fields['shortpara'], 'varchar(64)')
+        self.assertEquals(fields['%sshortpara' % SQL_PREFIX], 'varchar(64)')
         self.mh.rollback()
         
     def test_add_datetime_with_default_value_attribute(self):

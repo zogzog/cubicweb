@@ -476,7 +476,8 @@ def _remote_dump(host, appid, output, sudo=False):
         raise ExecutionError('Error while retrieving the dump')
     rmcmd = 'ssh -t %s "rm -f /tmp/%s.dump"' % (host, appid)
     print rmcmd
-    if os.system(rmcmd) and not confirm('an error occured while deleting remote dump. Continue anyway?'):
+    if os.system(rmcmd) and not confirm(
+        'an error occured while deleting remote dump. Continue anyway?'):
         raise ExecutionError('Error while deleting remote dump')
 
 def _local_dump(appid, output):

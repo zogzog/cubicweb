@@ -5,10 +5,10 @@
 Migration
 =========
 
-One of the main concept in `CubicWeb` is to create incremental applications
-and for this purpose multiple actions are provided to facilitate the improvement
-of an application and in particular changes applied to the data model
-without loosing existing data.
+One of the main concept in `CubicWeb` is to create incremental applications.
+For this purpose, multiple actions are provided to facilitate the improvement
+of an application, and in particular to handle the changes to be applied
+to the data model, without loosing existing data.
 
 The current version of an application model is provided in the file
 `__pkginfo__.py` as a tuple of 3 integers.
@@ -16,8 +16,8 @@ The current version of an application model is provided in the file
 Migration scripts management
 ----------------------------
 
-Migration scripts needs to be located in the directory `migration` of your
-application and nammed accordingly:
+Migration scripts has to be located in the directory `migration` of your
+application and named accordingly:
 
 ::
 
@@ -25,26 +25,27 @@ application and nammed accordingly:
 
 in which : 
 
-* X.Y.Z is the model version number to which the script enable to migrate
+* X.Y.Z is the model version number to which the script enables to migrate.
 
-* *mode* (between the last "_" and the extension ".py") indicates which part
-  of the application (RQL server, web server) the script applies to in case
-  of distributed installation. Its value could be :
+* *mode* (between the last "_" and the extension ".py") is used for 
+  distributed installation. It indicates to which part
+  of the application (RQL server, web server) the script applies.
+  Its value could be :
 
   * `common`, applies to the RQL server as well as the web server and updates
     files on the hard drive (configuration files migration for example).
 
-  * `web`, applies only to the web server and updates files on the hard drive
+  * `web`, applies only to the web server and updates files on the hard drive.
 
   * `repository`, applies only to the RQL server and updates files on the
-    hard drive
+    hard drive.
 
   * `Any`, applies only to the RQL server and updates data in the database
-    (schema and data migration for example)
+    (schema and data migration for example).
 
 Again in the directory `migration`, the file `depends.map` allows to indicate
-that to migrate to a particular model version, you always have to first migrate
-to a particular `CubicWeb` version. This file can contains comments (lines
+that for the migration to a particular model version, you always have to first 
+migrate to a particular `CubicWeb` version. This file can contain comments (lines
 starting by `#`) and a dependancy is listed as follows: ::
   
   <model version n° X.Y.Z> : <cubicweb version n° X.Y.Z>
@@ -53,33 +54,31 @@ For example: ::
 
   0.12.0: 2.26.0
   0.13.0: 2.27.0
-  # 0.14 works with 2.27 <= erudi <= 2.28 at least
+  # 0.14 works with 2.27 <= cubicweb <= 2.28 at least
   0.15.0: 2.28.0
 
 Base context
 ------------
 
-The following identifiers are pre-defined in the migration scripts:
+The following identifiers are pre-defined in migration scripts:
 
 * `config`, instance configuration
 
 * `interactive_mode`, boolean indicating that the script is executed in
-  an intercative mode or not 
+  an interactive mode or not 
 
 * `appltemplversion`, application model version of the instance
 
-* `applerudiversion`, cubicweb instance version
-
 * `templversion`, installed application model version
 
-* `erudiversion`, installed cubicweb version
+* `cubicwebversion`, installed cubicweb version
 
-* `confirm(question)`, function interrogating the user and returning true
-  if the user answers yes, false otherwise (always returns true when in a
+* `confirm(question)`, function asking the user and returning true
+  if the user answers yes, false otherwise (always returns true in
   non-interactive mode)
 
-* `_`, function fonction equivalent to `unicode` allowing to flag the strings
-  to internationalize in the migration scripts
+* the function `_`, it is equivalent to `unicode` allowing to flag the strings
+  to internationalize in the migration scripts.
 
 In the `repository` scripts, the following identifiers are also defined:
 
@@ -89,7 +88,7 @@ In the `repository` scripts, the following identifiers are also defined:
   current migration)
 
 * `newschema`, installed schema on the file system (e.g. schema of 
-  the updated model and erudi)
+  the updated model and cubicweb)
 
 * `sqlcursor`, SQL cursor for very rare cases where it is really
    necessary or beneficial to go through the sql
@@ -99,7 +98,7 @@ In the `repository` scripts, the following identifiers are also defined:
                         
 Schema migration
 ----------------
-The following functions for schema migration are available in the `repository`
+The following functions for schema migration are available in `repository`
 scripts:
 
 * `add_attribute(etype, attrname, attrtype=None, commit=True)`, adds a new
@@ -109,7 +108,7 @@ scripts:
 * `drop_attribute(etype, attrname, commit=True)`, removes an attribute from an
   existing entity type.
 
-* `rename_attribute(etype, oldname, newname, commit=True)`, rename an attribute
+* `rename_attribute(etype, oldname, newname, commit=True)`, renames an attribute
             
 * `add_entity_type(etype, auto=True, commit=True)`, adds a new entity type.
   If `auto` is True, all the relations using this entity type and having a known
@@ -149,7 +148,7 @@ scripts:
   or even relations definitions).
         
 * `change_relation_props(subjtype, rtype, objtype, commit=True, **kwargs)`, changes
-  properties of a relation definition by using the nammed parameters of the properties
+  properties of a relation definition by using the named parameters of the properties
   to change.
 
 * `set_widget(etype, rtype, widget, commit=True)`, changes the widget used for the
@@ -160,19 +159,19 @@ scripts:
 
 Data migration
 --------------
-The following functions for data migration are available in the `repository` scripts:
+The following functions for data migration are available in `repository` scripts:
 
 * `rql(rql, kwargs=None, cachekey=None, ask_confirm=True)`, executes an arbitrary RQL
   query, either to interrogate or update. A result set object is returned.  
 
 * `add_entity(etype, *args, **kwargs)`, adds a nes entity type of the given
-  type. The attributes and relations values are specified using the nammed and
+  type. The attribute and relation values are specified using the named and
   positionned parameters.
 
 Workflow creation
 -----------------
 
-The following functions for workflow creation are available in the `repository`
+The following functions for workflow creation are available in `repository`
 scripts:
 
 * `add_state(name, stateof, initial=False, commit=False, **kwargs)`, adds a new state
@@ -186,10 +185,10 @@ You can find more details about workflows in the chapter :ref:`Workflow` .
 Configuration migration
 -----------------------
 
-The following functions for configuration migration are available in all the
+The following functions for configuration migration are available in all 
 scripts:
 
-* `option_renamed(oldname, newname)`, indicates that an option has been renammed
+* `option_renamed(oldname, newname)`, indicates that an option has been renamed
 
 * `option_group_change(option, oldgroup, newgroup)`, indicates that an option does not
   belong anymore to the same group.
@@ -203,7 +202,7 @@ Others migration functions
 --------------------------
 Those functions are only used for low level operations that could not be 
 accomplished otherwise or to repair damaged databases during interactive 
-session. They are available in the `repository` scripts:
+session. They are available in `repository` scripts:
 
 * `sqlexec(sql, args=None, ask_confirm=True)`, executes an arbitrary SQL query
 * `add_entity_type_table(etype, commit=True)`

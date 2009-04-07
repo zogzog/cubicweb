@@ -1,0 +1,86 @@
+.. -*- coding: utf-8 -*-
+
+.. BlogTenMinutes:
+
+Have a blog ready in less than ten minutes!
+-------------------------------------------
+
+Installation
+~~~~~~~~~~~~
+
+You need to install the following packages::
+
+    cubicweb, cubicweb-blog
+
+The package `cubicweb` is installing the command `cubicweb-ctl` that
+will allow you to create new application.
+
+The package `cubicweb-blog` is installing the blogging support for the
+`CubicWeb` framework.
+
+Application creation
+~~~~~~~~~~~~~~~~~~~~
+
+Creation and initialization of your application by running::
+    
+    cubicweb-ctl create blog myblog
+
+*myblog* is the name of the application you are creating.
+
+*blog* is the name of the component on which your application
+is based. 
+
+Application launch
+~~~~~~~~~~~~~~~~~~
+
+Your application is now ready to go::
+
+    cubicweb-ctl start -D myblog
+
+This is it. Your blog is ready to you. Go to http://localhost:8080 and enjoy!!
+
+
+A little code snapshot from behind the scene
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The component `blog`, referred as a `cube` in the book 
+(see :ref:`TermsVocabulary` for a complete definition), defines
+a data model in ``/usr/share/cubicweb/cubes/blog/schema.py``. 
+Here is the corresponding Python code::
+
+    from cubicweb.schema import format_constraint
+
+    class Blog(EntityType):
+        title = String(maxsize=50, required=True)
+        description_format = String(meta=True, internationalizable=True, maxsize=50,
+                                    default='text/rest', constraints=[format_constraint])
+        description = String()
+        rss_url = String(maxsize=128, description=_('blog\'s rss url (useful for when using external site such as feedburner)'))
+
+
+    class BlogEntry(EntityType):
+        title = String(required=True, fulltextindexed=True, maxsize=256)
+        content_format = String(meta=True, internationalizable=True, maxsize=50,
+                                default='text/rest', constraints=[format_constraint])
+        content = String(required=True, fulltextindexed=True)
+        entry_of = SubjectRelation('Blog', cardinality='?*')
+
+Two types of entities are defined here: Blog and BlogEntry.
+
+A Blog is defined by a title, a description and its format and a
+RSS URL to provide RSS feed.
+
+A BlogEntry is defined by a title, a content and its format and
+a relation to a Blog, meaning a BlogEntry belongs to a Blog.
+
+
+Next step
+~~~~~~~~~
+
+This was a brief demonstration of the re-usability of cubes and a way
+to show how you can use `CubicWeb` straigth out of the box.
+
+As a developper, you'll want to know more about how to develop new
+cubes and cutomize the views and this is what we talk about now. 
+
+
