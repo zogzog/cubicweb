@@ -22,7 +22,8 @@ from cubicweb.utils import make_uid
 from cubicweb.view import EntityView
 from cubicweb.common import tags
 from cubicweb.web import INTERNAL_FIELD_VALUE, stdmsgs, formwidgets
-from cubicweb.web.form import CompositeForm, EntityFieldsForm, FormMixIn
+from cubicweb.web.form import (FieldNotFound, CompositeForm, EntityFieldsForm,
+                               FormMixIn)
 from cubicweb.web.formfields import guess_field
 from cubicweb.web.formrenderers import (FormRenderer, EntityFormRenderer,
                                         EntityCompositeFormRenderer,
@@ -296,17 +297,20 @@ class AutomaticEntityForm(EntityFieldsForm):
     
     @iclassmethod
     def field_by_name(cls_or_self, name, role='subject', eclass=None):
+        """return field with the given name and role. If field is not explicitly
+        defined for the form but `eclass` is specified, guess_field will be
+        called.
+        """
         try:
             return super(AutomaticEntityForm, cls_or_self).field_by_name(name, role)
-        except Exception: # XXX should raise more explicit exception
+        except FieldNotFound: # XXX should raise more explicit exception
             if eclass is None:
                 raise
             field = guess_field(eclass, cls_or_self.schema.rschema(name), role,
                                 eidparam=True)
             if field is None:
                 raise
-            raise
-            
+            return field
     
     def __init__(self, *args, **kwargs):
         super(AutomaticEntityForm, self).__init__(*args, **kwargs)
