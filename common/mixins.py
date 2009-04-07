@@ -10,6 +10,7 @@ __docformat__ = "restructuredtext en"
 from logilab.common.deprecation import obsolete
 from logilab.common.decorators import cached
 
+from cubicweb import typed_eid
 from cubicweb.selectors import implements
 from cubicweb.interfaces import IWorkflowable, IEmailable, ITree
 
@@ -226,7 +227,8 @@ class WorkflowableMixIn(object):
         parameters, used to be called using __method controler facility
         """
         params = params or self.req.form
-        self.change_state(int(params.pop('state')), params.get('trcomment'),
+        self.change_state(typed_eid(params.pop('state')),
+                          params.get('trcomment'),
                           params.get('trcommentformat'))
         self.req.set_message(self.req._('__msg state changed'))
             
