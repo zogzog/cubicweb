@@ -178,8 +178,13 @@ class metafieldsform(type):
             allfields.append(field)
         classdict['_fields_'] = allfields
         return super(metafieldsform, mcs).__new__(mcs, name, bases, classdict)
-    
 
+    
+class FieldNotFound(Exception):
+    """raised by field_by_name when a field with the given name has not been
+    found
+    """
+    
 class FieldsForm(FormMixIn, AppRsetObject):
     __metaclass__ = metafieldsform
     __registry__ = 'forms'
@@ -221,6 +226,7 @@ class FieldsForm(FormMixIn, AppRsetObject):
 
     @iclassmethod
     def field_by_name(cls_or_self, name, role='subject'):
+        """return field with the given name and role"""
         if isinstance(cls_or_self, type):
             fields = cls_or_self._fields_
         else:
@@ -228,7 +234,7 @@ class FieldsForm(FormMixIn, AppRsetObject):
         for field in fields:
             if field.name == name and field.role == role:
                 return field
-        raise Exception('field %s not found' % name)
+        raise FieldNotFound(name)
     
     @iclassmethod
     def remove_field(cls_or_self, field):
