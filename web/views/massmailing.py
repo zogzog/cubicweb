@@ -15,7 +15,7 @@ from cubicweb.web import stdmsgs
 from cubicweb.web.action import Action
 from cubicweb.web.form import FieldsForm, FormRenderer
 from cubicweb.web.formfields import StringField
-from cubicweb.web.formwidgets import CheckBox, TextInput, AjaxWidget
+from cubicweb.web.formwidgets import CheckBox, TextInput, AjaxWidget, ImgButton
 
 
 class SendEmailAction(Action):
@@ -42,7 +42,11 @@ class MassMailingForm(FieldsForm):
     subject = StringField(label=_('Subject:'))
     mailbody = StringField(widget=AjaxWidget(wdgtype='TemplateTextField',
                                              inputid='mailarea'))
-
+    form_buttons = [ImgButton('sendbutton', "javascript: $('sendmail').submit()",
+                              _('send email'), 'SEND_EMAIL_ICON'),
+                    ImgButton('cancelbutton', "javascript: history.back()",
+                              stdmsgs.BUTTON_CANCEL, 'CANCEL_EMAIL_ICON')]                    
+                              
     def form_field_vocabulary(self, field):
         if field.name == 'recipient':
             vocab = [(entity.get_email(), entity.eid) for entity in self.rset.entities()]
@@ -55,19 +59,6 @@ class MassMailingForm(FieldsForm):
         elif field.name == 'mailbody':
             field.widget.attrs['cubicweb:variables'] = self.get_allowed_substitutions()
         return super(MassMailingForm, self).form_field_value(field, values)
-
-    def form_buttons(self):
-        context = {'domid': self.domid,
-                   'cancel' : self.req._(stdmsgs.BUTTON_CANCEL),
-                   'cancelimgpath' : self.req.external_resource('CANCEL_EMAIL_ICON'),
-                   'send' : self.req._('send email'),
-                   'sendimgpath' : self.req.external_resource('SEND_EMAIL_ICON'),
-                   }
-        return ['''<a id="sendbutton" href="javascript: $('%(domid)s').submit()">
-<img src="%(sendimgpath)s" alt="%(send)s"/>%(send)s</a>''' % context,
-                '''<a id="cancelbutton" href="javascript: history.back()">
-<img src="%(cancelimgpath)s" alt="%(cancel)s"/>%(cancel)s</a>''' % context,
-                ]
     
     def get_allowed_substitutions(self):
         attrs = []

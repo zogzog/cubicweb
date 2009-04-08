@@ -18,7 +18,7 @@ from cubicweb.selectors import (implements, has_related_entities,
 from cubicweb.interfaces import IWorkflowable
 from cubicweb.web import stdmsgs, action, component, form
 from cubicweb.web.formfields import StringField,  RichTextField
-from cubicweb.web.formwidgets import HiddenInput
+from cubicweb.web.formwidgets import HiddenInput, SubmitButton, Button
 from cubicweb.web.views import TmpFileViewMixin
 from cubicweb.web.views.boxes import EditBox
 
@@ -37,12 +37,8 @@ class ChangeStateForm(form.EntityFieldsForm):
     __method = StringField(name='__method', initial='set_state', widget=HiddenInput)
     state = StringField(widget=HiddenInput, eidparam=True)
     trcomment = RichTextField(eidparam=True)
-
-    def form_buttons(self):
-        return [self.button_ok(label=stdmsgs.YES,
-                               tabindex=self.req.next_tabindex()),
-                self.button_cancel(label=stdmsgs.NO,
-                                   tabindex=self.req.next_tabindex())]
+    form_buttons = [SubmitButton(stdmsgs.YES),
+                     Button(stdmsgs.NO, cwaction='cancel')]
 
         
 class ChangeStateFormView(view.EntityView):

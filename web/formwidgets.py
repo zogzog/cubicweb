@@ -9,6 +9,7 @@ __docformat__ = "restructuredtext en"
 from datetime import date
 
 from cubicweb.common import tags
+from cubicweb.web import stdmsgs
 
 class FieldWidget(object):
     needs_js = ()
@@ -228,3 +229,56 @@ class AjaxWidget(FieldWidget):
         self.add_media(form)
         attrs = self._render_attrs(form, field)[-1]
         return tags.div(**attrs)
+
+
+class Button(Input):
+    type = 'button'
+    def __init__(self, label=stdmsgs.BUTTON_OK, attrs=None,
+                 setdomid=None, settabindex=None,
+                 name='', value='', onclick=None, cwaction=None):
+        super(Button, self).__init__(attrs, setdomid, settabindex)
+        self.label = label
+        self.name = name
+        self.value = ''
+        self.onclick = onclick
+        self.cwaction = cwaction
+        self.attrs.setdefault('klass', 'validateButton')
+                
+    def render(self, form, field=None):
+        label = form.req._(self.label)
+        attrs = self.attrs.copy()
+        if self.cwaction:
+            assert self.onclick is None
+            attrs['onclick'] = "postForm('__action_%s', \'%s\', \'%s\')" % (
+                self.cwaction, self.label, form.domid)
+        elif self.onclick:
+            attrs['onclick'] = self.onclick
+        if self.name:
+            attrs['name'] = name
+            if self.setdomid:
+                attrs['id'] = self.name
+        if self.settabindex and not 'tabindex' in attrs:
+            attrs['tabindex'] = form.req.next_tabindex()
+        return tags.input(value=label, type=self.type, **attrs)
+
+    
+class SubmitButton(Button):
+    type = 'submit'
+    
+class ResetButton(Button):
+    type = 'reset'
+
+class ImgButton(object):
+    def __init__(self, domid, href, label, imgressource):
+        self.domid = domid
+        self.href = href
+        self.imgressource = imgressource
+        self.label = label
+        
+    def render(self, form, field=None):
+        self.imgsrc = form.req.external_resource(self.imgressource)
+        return '<a id="%(domid)s" href="%(href)s"><img src="%(imgsrc)s" alt="%(label)s"/>%(label)s</a>' % self.__dict__
+
+    
+# XXX EntityLinkComboBoxWidget, AddComboBoxWidget, AutoCompletionWidget,
+#     StaticFileAutoCompletionWidget, RestrictedAutoCompletionWidget...

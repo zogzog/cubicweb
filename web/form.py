@@ -209,15 +209,14 @@ class FieldsForm(FormMixIn, AppRsetObject):
     cssclass = None
     cssstyle = None
     cwtarget = None
-    buttons = None
     redirect_path = None
     set_error_url = True
     copy_nav_params = False
+    form_buttons = None # form buttons (button widgets instances)
                  
     def __init__(self, req, rset=None, row=None, col=None, submitmsg=None,
                  **kwargs):
         super(FieldsForm, self).__init__(req, rset, row=row, col=col)
-        self.buttons = kwargs.pop('buttons', [])
         for key, val in kwargs.items():
             assert hasattr(self.__class__, key) and not key[0] == '_', key
             setattr(self, key, val)
@@ -290,6 +289,7 @@ class FieldsForm(FormMixIn, AppRsetObject):
             values.update(previous_values)
         for field in self.fields:
             for field in field.actual_fields(self):
+                field.form_init(self)
                 value = self.form_field_value(field, values)
                 context[field] = {'value': field.format_value(self.req, value),
                                   'rawvalue': value,
@@ -334,9 +334,6 @@ class FieldsForm(FormMixIn, AppRsetObject):
    
     def form_field_vocabulary(self, field, limit=None):
         raise NotImplementedError
-
-    def form_buttons(self):
-        return self.buttons
 
    
 class EntityFieldsForm(FieldsForm):

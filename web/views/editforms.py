@@ -24,6 +24,7 @@ from cubicweb.web import INTERNAL_FIELD_VALUE, stdmsgs, formwidgets, uicfg
 from cubicweb.web.form import (FieldNotFound, CompositeForm, EntityFieldsForm,
                                FormMixIn)
 from cubicweb.web.formfields import guess_field
+from cubicweb.web.formwidgets import Button, SubmitButton, ResetButton
 from cubicweb.web.formrenderers import (FormRenderer, EntityFormRenderer,
                                         EntityCompositeFormRenderer,
                                         EntityInlinedFormRenderer)
@@ -61,11 +62,10 @@ class DeleteConfForm(EntityView):
           % _('this action is not reversible!'))
         # XXX above message should have style of a warning
         w(u'<h4>%s</h4>\n' % _('Do you want to delete the following element(s) ?'))
-        form = CompositeForm(req, domid='deleteconf', action=self.build_url('edit'),
-                                  onsubmit=self.onsubmit, copy_nav_params=True)
-        # XXX tabindex
-        form.buttons.append(form.button_delete(label=stdmsgs.YES))
-        form.buttons.append(form.button_cancel(label=stdmsgs.NO))
+        form = CompositeForm(req, domid='deleteconf', copy_nav_params=True,
+                             action=self.build_url('edit'), onsubmit=None,
+                             form_buttons=[Button(stdmsgs.YES, cwaction='delete'),
+                                           Button(stdmsgs.NO, cwaction='cancel')])
         done = set()
         w(u'<ul>\n')
         for entity in self.rset.entities():
@@ -110,17 +110,11 @@ class ClickAndEditForm(FormMixIn, EntityView):
         edit_key = make_uid('%s-%s' % (rtype, eid))
         divid = 'd%s' % edit_key
         reload = dumps(reload)
-        # XXX tab index
-        buttons = [tags.input(klass="validateButton", type="submit",
-                              name="__action_apply",
-                              value=self.req._(stdmsgs.BUTTON_OK),
-                              tabindex=self.req.next_tabindex()),
-                   tags.input(klass="validateButton", type="button",
-                              value=self.req._(stdmsgs.BUTTON_CANCEL),
-                              onclick="cancelInlineEdit(%s,\'%s\',\'%s\')" % (eid, rtype, divid),
-                              tabindex=self.req.next_tabindex())]
+        buttons = [SubmitButton(stdmsgs.BUTTON_OK, cwaction='apply'),
+                   Button(stdmsgs.BUTTON_CANCEL,
+                          onclick="cancelInlineEdit(%s,\'%s\',\'%s\')" % (eid, rtype, divid))]
         form = self.vreg.select_object('forms', 'edition', self.req, self.rset,
-                                       row=row, col=col, buttons=buttons,
+                                       row=row, col=col, form_buttons=buttons,
                                        domid='%s-form' % divid, action='#',
                                        cssstyle='display: none',
                                        onsubmit=self.onsubmit % locals())
@@ -147,6 +141,9 @@ class AutomaticEntityForm(EntityFieldsForm):
     cwtarget = 'eformframe'
     cssclass = 'entityForm'
     copy_nav_params = True
+    form_buttons = [SubmitButton(stdmsgs.BUTTON_OK),
+                    Button(stdmsgs.BUTTON_APPLY, cwaction='apply'),
+                    Button(stdmsgs.BUTTON_CANCEL, cwaction='cancel')]    
     attrcategories = ('primary', 'secondary')
     # class attributes below are actually stored in the uicfg module since we
     # don't want them to be reloaded
@@ -338,12 +335,6 @@ class AutomaticEntityForm(EntityFieldsForm):
         
     action = property(action, set_action)
     
-    def form_buttons(self):
-        """return the form's buttons (as string)"""
-        return [self.button_ok(tabindex=self.req.next_tabindex()),
-                self.button_apply(tabindex=self.req.next_tabindex()),
-                self.button_cancel(tabindex=self.req.next_tabindex())]
-
     def editable_attributes(self):
         """return a list of (relation schema, role) to edit for the entity"""
         return [(rschema, x) for rschema, _, x in self.relations_by_category(
@@ -548,6 +539,8 @@ class CopyFormView(EditionFormView):
 class TableEditForm(CompositeForm):
     id = 'muledit'
     onsubmit = "return validateForm('entityForm', null);"
+    form_buttons = [SubmitButton(_('validate modifications on selected items')),
+                    ResetButton(_('revert changes'))]
     
     def __init__(self, *args, **kwargs):
         super(TableEditForm, self).__init__(*args, **kwargs)
@@ -559,12 +552,6 @@ class TableEditForm(CompositeForm):
             # XXX rely on the MultipleEntityFormRenderer to put the eid input
             form.remove_field(form.field_by_name('eid'))
             self.form_add_subform(form)
-
-    def form_buttons(self):
-        """return the form's buttons (as string)"""
-        okt = self.req._('validate modifications on selected items').capitalize()
-        resett = self.req._('revert changes').capitalize()
-        return [self.button_ok(title=okt), self.button_reset(title=resett)]
 
         
 class TableEditFormView(EntityView):

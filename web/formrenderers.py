@@ -169,8 +169,8 @@ class FormRenderer(object):
 
     def render_buttons(self, w, form):
         w(u'<table class="%s">\n<tr>\n' % self.button_bar_class)
-        for button in form.form_buttons():
-            w(u'<td>%s</td>\n' % button)
+        for button in form.form_buttons:
+            w(u'<td>%s</td>\n' % button.render(form))
         w(u'</tr></table>')
 
 
@@ -243,8 +243,7 @@ class EntityFormRenderer(FormRenderer):
             super(EntityFormRenderer, self)._render_fields(fields, w, form, values)
             
     def render_buttons(self, w, form):
-        buttons = form.form_buttons()
-        if len(buttons) == 3:
+        if len(form.form_buttons) == 3:
             w("""<table width="100%%">
   <tbody>
    <tr><td align="center">
@@ -254,7 +253,7 @@ class EntityFormRenderer(FormRenderer):
      %s
    </td></tr>
   </tbody>
- </table>""" % tuple(buttons))
+ </table>""" % tuple(button.render(form) for button in form.form_buttons))
         else:
             super(EntityFormRenderer, self).render_buttons(w, form)
         
