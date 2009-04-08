@@ -48,7 +48,11 @@ class AutomaticEntityFormTC(EnvBasedTC):
                                ('wf_info_for', 'object'),
                                ('owned_by', 'object'),
                                ])
-                              
+
+    def test_inlined_view(self):
+        self.failUnless(AEF.rinlined.etype_rtag('EUser', 'use_email', 'subject'))
+        self.failIf(AEF.rinlined.etype_rtag('EUser', 'primary_email', 'subject'))
+                        
     def test_personne_relations_by_category(self):
         e = self.etype_instance('Personne')
         self.assertListEquals(rbc(e, 'primary'),
