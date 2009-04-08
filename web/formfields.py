@@ -326,7 +326,6 @@ class IntField(Field):
         self.min = min
         self.max = max
 
-
 class BooleanField(Field):
     widget = Radio
         
@@ -368,9 +367,8 @@ class TimeField(DateField):
 
 class HiddenInitialValueField(Field):
     def __init__(self, visible_field, name):
-        super(HiddenInitialValueField, self).__init__(name=name,
-                                                      widget=HiddenInput,
-                                                      eidparam=True)
+        super(HiddenInitialValueField, self).__init__(
+            name=name, widget=HiddenInput, eidparam=True)
         self.visible_field = visible_field
     
                  

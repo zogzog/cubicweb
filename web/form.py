@@ -81,23 +81,6 @@ class FormMixIn(object):
         if self.force_display:
             return None
         return self.maxrelitems + 1
-
-    def need_multipart(self, entity, categories=('primary', 'secondary')):
-        """return a boolean indicating if form's enctype should be multipart
-        """
-        for rschema, _, x in entity.relations_by_category(categories):
-            if entity.get_widget(rschema, x).need_multipart:
-                return True
-        # let's find if any of our inlined entities needs multipart
-        for rschema, targettypes, x in entity.relations_by_category('inlineview'):
-            assert len(targettypes) == 1, \
-                   "I'm not able to deal with several targets and inlineview"
-            ttype = targettypes[0]
-            inlined_entity = self.vreg.etype_class(ttype)(self.req, None, None)
-            for irschema, _, x in inlined_entity.relations_by_category(categories):
-                if inlined_entity.get_widget(irschema, x).need_multipart:
-                    return True
-        return False
     
     def initialize_varmaker(self):
         varmaker = self.req.get_page_data('rql_varmaker')
@@ -140,6 +123,24 @@ class FormMixIn(object):
         return self.button(label, type=type, **kwargs)
 
     # XXX deprecated with new form system
+
+    def need_multipart(self, entity, categories=('primary', 'secondary')):
+        """return a boolean indicating if form's enctype should be multipart
+        """
+        for rschema, _, x in entity.relations_by_category(categories):
+            if entity.get_widget(rschema, x).need_multipart:
+                return True
+        # let's find if any of our inlined entities needs multipart
+        for rschema, targettypes, x in entity.relations_by_category('inlineview'):
+            assert len(targettypes) == 1, \
+                   "I'm not able to deal with several targets and inlineview"
+            ttype = targettypes[0]
+            inlined_entity = self.vreg.etype_class(ttype)(self.req, None, None)
+            for irschema, _, x in inlined_entity.relations_by_category(categories):
+                if inlined_entity.get_widget(irschema, x).need_multipart:
+                    return True
+        return False
+    
     def error_message(self):
         """return formatted error message
 

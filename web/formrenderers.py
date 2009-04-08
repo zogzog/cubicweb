@@ -303,7 +303,8 @@ class EntityFormRenderer(FormRenderer):
         w(u'<tr id="relationSelectorRow_%s" class="separator">' % eid)
         w(u'<th class="labelCol">')
         w(u'<span>%s</span>' % _('add relation'))
-        w(u'<select id="relationSelector_%s" tabindex="%s" onchange="javascript:showMatchingSelect(this.options[this.selectedIndex].value,%s);">'
+        w(u'<select id="relationSelector_%s" tabindex="%s" '
+          'onchange="javascript:showMatchingSelect(this.options[this.selectedIndex].value,%s);">'
           % (eid, req.next_tabindex(), html_escape(dumps(eid))))
         w(u'<option value="">%s</option>' % _('select a relation'))
         for i18nrtype, rschema, target in srels_by_cat:

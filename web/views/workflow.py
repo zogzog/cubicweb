@@ -34,7 +34,8 @@ EditBox.rmode.set_rtag('create', 'allowed_transition', 'subject', 'State')
 class ChangeStateForm(form.EntityFieldsForm):
     id = 'changestate'
     
-    __method = StringField(name='__method', initial='set_state', widget=HiddenInput)
+    __method = StringField(name='__method', initial='set_state',
+                           widget=HiddenInput)
     state = StringField(widget=HiddenInput, eidparam=True)
     trcomment = RichTextField(eidparam=True)
     form_buttons = [SubmitButton(stdmsgs.YES),
@@ -52,10 +53,13 @@ class ChangeStateFormView(view.EntityView):
         transition = self.req.eid_rset(self.req.form['treid']).get_entity(0, 0)
         dest = transition.destination()
         _ = self.req._
-        form = self.vreg.select_object('forms', 'changestate', self.req, self.rset, row=row, col=col,
-                                       entity=entity, redirect_path=self.redirectpath(entity))
+        form = self.vreg.select_object('forms', 'changestate', self.req,
+                                       self.rset, row=row, col=col,
+                                       entity=entity,
+                                       redirect_path=self.redirectpath(entity))
         self.w(form.error_message())
-        self.w(u'<h4>%s %s</h4>\n' % (_(transition.name), entity.view('oneline')))
+        self.w(u'<h4>%s %s</h4>\n' % (_(transition.name),
+                                      entity.view('oneline')))
         msg = _('status will change from %(st1)s to %(st2)s') % {
             'st1': _(state.name),
             'st2': _(dest.name)}

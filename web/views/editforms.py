@@ -48,8 +48,6 @@ class DeleteConfForm(EntityView):
     """form used to confirm deletion of some entities"""
     id = 'deleteconf'
     title = _('delete')
-    domid = 'deleteconf'
-    onsubmit = None
     # don't use navigation, all entities asked to be deleted should be displayed
     # else we will only delete the displayed page
     need_navigation = False
@@ -439,7 +437,7 @@ class EditionFormView(EntityView):
         self.form_title(entity)
         form = self.vreg.select_object('forms', 'edition', self.req, entity.rset,
                                        row=entity.row, col=entity.col, entity=entity,
-                                       domid=self.id, submitmsg=self.submited_message())
+                                       submitmsg=self.submited_message())
         self.init_form(form, entity)
         self.w(form.form_render(renderer=EntityFormRenderer(), formvid=u'edition'))
 
@@ -546,8 +544,7 @@ class TableEditForm(CompositeForm):
         super(TableEditForm, self).__init__(*args, **kwargs)
         for row in xrange(len(self.rset)):
             form = self.vreg.select_object('forms', 'edition', self.req, self.rset,
-                                           row=row, domid=self.id,
-                                           attrcategories=('primary',),
+                                           row=row, attrcategories=('primary',),
                                            set_error_url=False)
             # XXX rely on the MultipleEntityFormRenderer to put the eid input
             form.remove_field(form.field_by_name('eid'))
@@ -564,8 +561,7 @@ class TableEditFormView(EntityView):
         should be the eid
         """
         #self.form_title(entity)
-        form = self.vreg.select_object('forms', self.id, self.req, self.rset,
-                                       domid=self.id)
+        form = self.vreg.select_object('forms', self.id, self.req, self.rset)
         self.w(form.form_render(renderer=EntityCompositeFormRenderer()))
 
 
