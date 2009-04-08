@@ -612,7 +612,7 @@ class InlineEntityEditionFormView(EntityView):
         rschema = self.schema.rschema(rtype)
         divid = '%s-%s-%s' % (peid, rtype, entity.eid)
         title = rschema.display_name(self.req, role)
-        form = self.vreg.select_object('forms', 'edition', self.req,
+        form = self.vreg.select_object('forms', 'edition', self.req, None,
                                        entity=entity)
         removejs = self.removejs % (peid, rtype,entity.eid)
         if self.keep_entity(entity, peid, rtype):
