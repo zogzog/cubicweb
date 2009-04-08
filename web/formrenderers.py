@@ -335,9 +335,8 @@ class EntityFormRenderer(FormRenderer):
                 existant = entity.has_eid() and entity.related(rschema)
                 if existant:
                     # display inline-edition view for all existing related entities
-                    w(self.view('inline-edition', existant, rtype=rschema, role=role, 
-                                ptype=entity.e_schema, peid=entity.eid,
-                                **kwargs))
+                    w(form.view('inline-edition', existant, rtype=rschema, role=role, 
+                                ptype=entity.e_schema, peid=entity.eid))
                 if role == 'subject':
                     card = rschema.rproperty(entity.e_schema, targettype, 'cardinality')[0]
                 else:
@@ -354,8 +353,8 @@ class EntityFormRenderer(FormRenderer):
                     divid = "addNew%s%s%s:%s" % (targettype, rschema, role, entity.eid)
                     w(u'<div class="inlinedform" id="%s" cubicweb:limit="true">'
                       % divid)
-                    js = "addInlineCreationForm('%s', '%s', '%s', '%s', '%s')" % (
-                        entity.eid, entity.e_schema, targettype, rschema, role)
+                    js = "addInlineCreationForm('%s', '%s', '%s', '%s')" % (
+                        entity.eid, targettype, rschema, role)
                     if card in '1?':
                         js = "toggleVisibility('%s'); %s" % (divid, js)
                     w(u'<a class="addEntity" id="add%s:%slink" href="javascript: %s" >+ %s.</a>'

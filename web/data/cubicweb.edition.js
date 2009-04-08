@@ -256,12 +256,11 @@ function updateInlinedEntitiesCounters(rtype) {
 /*
  * makes an AJAX request to get an inline-creation view's content
  * @param peid : the parent entity eid
- * @param ptype : the parent entity type
  * @param ttype : the target (inlined) entity type
  * @param rtype : the relation type between both entities
  */
-function addInlineCreationForm(peid, ptype, ttype, rtype, role) {
-    var d = async_rawremote_exec('inline_creation_form', peid, ptype, ttype, rtype, role);
+function addInlineCreationForm(peid, ttype, rtype, role) {
+    var d = async_rawremote_exec('inline_creation_form', peid, ttype, rtype, role);
     d.addCallback(function (response) {
 	var linknode = getNode('add' + rtype + ':' + peid + 'link');
         var dom = getDomFromResponse(response);
