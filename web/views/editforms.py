@@ -202,8 +202,6 @@ class AutomaticEntityForm(EntityFieldsForm):
         else:
             eid = None
         for rschema, targetschemas, role in eschema.relation_definitions(True):
-            if rschema in ('identity', 'has_text'):
-                continue
             # check category first, potentially lower cost than checking
             # permission which may imply rql queries
             if categories is not None:
