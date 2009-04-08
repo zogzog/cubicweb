@@ -363,10 +363,6 @@ class VRegistry(object):
                 directory, filename = split(fileordirectory)
                 if self.load_file(directory, filename, force_reload):
                     change = True
-        if change:
-            for registry, objects in self.items():
-                self.debug('available in registry %s: %s', registry,
-                           sorted(objects))
         return change
     
     def read_directory(self, directory, force_reload=False):

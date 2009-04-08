@@ -62,7 +62,11 @@ class AppRsetObject(VObject):
         cls.config = vreg.config
         cls.register_properties()
         return cls
-
+    
+    @classmethod
+    def vreg_initialization_completed(cls):
+        pass
+    
     @classmethod
     def selected(cls, *args, **kwargs):
         """by default web app objects are usually instantiated on

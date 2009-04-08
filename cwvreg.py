@@ -140,6 +140,13 @@ class CubicWebRegistry(VRegistry):
             # clear needs_iface so we don't try to remove some not-anymore-in
             # objects on automatic reloading
             self._needs_iface.clear()
+            # print registry content
+            for registry, objects in self.items():
+                self.debug('available in registry %s: %s', registry,
+                           sorted(objects))
+                for appobjects in objects.itervalues():
+                    for appobject in appobjects:
+                        appobject.vreg_initialization_completed()
     
     @cached
     def etype_class(self, etype):
