@@ -130,8 +130,10 @@ class Field(object):
     
     def format_single_value(self, req, value):
         """return value suitable for display"""
-        if value is None:
+        if value is None or value is False:
             return u''
+        if value is True:
+            return u'1'
         return unicode(value)
 
     def get_widget(self, form):
