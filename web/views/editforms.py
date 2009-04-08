@@ -17,11 +17,10 @@ from logilab.mtconverter import html_escape
 from cubicweb import typed_eid
 from cubicweb.selectors import (match_kwargs, one_line_rset, non_final_entity,
                                 specified_etype_implements, yes)
-from cubicweb.rtags import RelationTags
 from cubicweb.utils import make_uid
 from cubicweb.view import EntityView
 from cubicweb.common import tags
-from cubicweb.web import INTERNAL_FIELD_VALUE, stdmsgs, formwidgets
+from cubicweb.web import INTERNAL_FIELD_VALUE, stdmsgs, formwidgets, uicfg
 from cubicweb.web.form import (FieldNotFound, CompositeForm, EntityFieldsForm,
                                FormMixIn)
 from cubicweb.web.formfields import guess_field
@@ -149,48 +148,15 @@ class AutomaticEntityForm(EntityFieldsForm):
     cssclass = 'entityForm'
     copy_nav_params = True
     attrcategories = ('primary', 'secondary')
-    
-    # relations'category (eg primary/secondary/generic/metadata/generated)
-    rcategories = RelationTags()
-    # use primary and not generated for eid since it has to be an hidden
-    rcategories.set_rtag('primary', 'eid', 'subject')
-    rcategories.set_rtag('metadata', 'creation_date', 'subject')
-    rcategories.set_rtag('metadata', 'modification_date', 'subject')
-    rcategories.set_rtag('generated', 'has_text', 'subject')
-    rcategories.set_rtag('metadata', 'owned_by', 'subject')
-    rcategories.set_rtag('metadata', 'created_by', 'subject')
-    rcategories.set_rtag('generated', 'is', 'subject')
-    rcategories.set_rtag('generated', 'is', 'object')
-    rcategories.set_rtag('generated', 'is_instance_of', 'subject')
-    rcategories.set_rtag('generated', 'is_instance_of', 'object')
-    rcategories.set_rtag('generated', 'identity', 'subject')
-    rcategories.set_rtag('generated', 'identity', 'object')
-    rcategories.set_rtag('generated', 'require_permission', 'subject')
-    rcategories.set_rtag('primary', 'in_state', 'subject')
-    rcategories.set_rtag('generated', 'wf_info_for', 'subject')
-    rcategories.set_rtag('generated', 'wf_info_for', 'subject')
-    rcategories.set_rtag('secondary', 'description', 'subject')
-
-    # relations'widget (eg one of available class name in cubicweb.web.formwidgets)
-    rwidgets = RelationTags()
-    # inlined view flag for non final relations: when True for an entry, the
-    # entity(ies) at the other end of the relation will be editable from the
-    # form of the edited entity
-    rinlined = RelationTags()
-    # set of tags of the form <action>_on_new on relations. <action> is a
-    # schema action (add/update/delete/read), and when such a tag is found
-    # permissions checking is by-passed and supposed to be ok
-    rpermissions_overrides = RelationTags(use_set=True)
-
-    @classmethod
-    def registered(cls, registry):
-        """build class using descriptor at registration time"""
-        super(AutomaticEntityForm, cls).registered(registry)
-        cls.init_rcategories()
-        return cls
+    # class attributes below are actually stored in the uicfg module since we
+    # don't want them to be reloaded
+    rcategories = uicfg.rcategories
+    rwidgets = uicfg.rwidgets
+    rinlined = uicfg.rinlined
+    rpermissions_overrides = uicfg.rpermissions_overrides
         
     @classmethod
-    def init_rcategories(cls):
+    def vreg_initialization_completed(cls):
         """set default category tags for relations where it's not yet defined in
         the category relation tags
         """

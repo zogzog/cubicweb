@@ -20,6 +20,7 @@ from cubicweb.rtags import RelationTags
 from cubicweb.selectors import match_user_groups, non_final_entity
 from cubicweb.web.htmlwidgets import BoxWidget, BoxMenu, BoxHtml, RawBoxItem
 from cubicweb.view import EntityView
+from cubicweb.web import uicfg
 from cubicweb.web.box import BoxTemplate
 
 _ = unicode
@@ -34,29 +35,12 @@ class EditBox(BoxTemplate):
 
     title = _('actions')
     order = 2
-    # 'link' / 'create' relation tags, used to control the "add entity" submenu
-    rmode = RelationTags() 
-    rmode.set_rtag('link', 'is', 'subject')
-    rmode.set_rtag('link', 'is', 'object')
-    rmode.set_rtag('link', 'is_instance_of', 'subject')
-    rmode.set_rtag('link', 'is_instance_of', 'object')
-    rmode.set_rtag('link', 'identity', 'subject')
-    rmode.set_rtag('link', 'identity', 'object')
-    rmode.set_rtag('link', 'owned_by', 'subject')
-    rmode.set_rtag('link', 'created_by', 'subject')
-    rmode.set_rtag('link', 'require_permission', 'subject')
-    rmode.set_rtag('link', 'wf_info_for', 'subject')
-    rmode.set_rtag('link', 'wf_info_for', 'subject')
-
-    @classmethod
-    def registered(cls, registry):
-        """build class using descriptor at registration time"""
-        super(EditBox, cls).registered(registry)
-        cls.init_rtags_mode()
-        return cls
+    # class attributes below are actually stored in the uicfg module since we
+    # don't want them to be reloaded
+    rmode = uicfg.rmode
         
     @classmethod
-    def init_rtags_mode(cls):
+    def vreg_initialization_completed(cls):
         """set default category tags for relations where it's not yet defined in
         the category relation tags
         """
