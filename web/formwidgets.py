@@ -165,10 +165,12 @@ class Radio(Input):
         options = []
         for label, value in field.vocabulary(form):
             if value in curvalues:
-                options.append(tags.input(name=name, type=self.type, value=value, checked='checked', **attrs))
+                tag = tags.input(name=name, type=self.type, value=value,
+                                 checked='checked', **attrs)
             else:
-                options.append(tags.option(name=name, type=self.type, value=value, **attrs))
-            options[-1] += label + '<br/>'
+                tag = tags.input(name=name, type=self.type, value=value, **attrs)
+            tag += label + '<br/>'
+            options.append(tag)
         return '\n'.join(options)
 
 
