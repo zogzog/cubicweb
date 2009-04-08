@@ -321,7 +321,7 @@ class EntityFormRenderer(FormRenderer):
         """create a form to edit entity's inlined relations"""
         entity = form.edited_entity
         __ = form.req.__
-        for rschema, targettypes, role in form.relations_by_category('inlineview', 'add'):
+        for rschema, targettypes, role in form.inlined_relations():
             # show inline forms only if there's one possible target type
             # for rschema
             if len(targettypes) != 1:

@@ -184,7 +184,7 @@ class AutomaticEntityForm(EntityFieldsForm):
                         cls.rcategories.set_rtag(category, rschema, role, X, Y)
 
     @classmethod
-    def erelations_by_category(cls, entity, categories=None, permission=None):
+    def erelations_by_category(cls, entity, categories=None, permission=None, rtags=None):
         """return a list of (relation schema, target schemas, role) matching
         categories and permission
         """
@@ -194,7 +194,8 @@ class AutomaticEntityForm(EntityFieldsForm):
             if not isinstance(categories, (set, frozenset)):
                 categories = frozenset(categories)
         eschema  = entity.e_schema
-        rtags = cls.rcategories
+        if rtags is None:
+            rtags = cls.rcategories
         permsoverrides = cls.rpermissions_overrides
         if entity.has_eid():
             eid = entity.eid
@@ -306,6 +307,14 @@ class AutomaticEntityForm(EntityFieldsForm):
         """
         return self.erelations_by_category(self.edited_entity, categories,
                                            permission)
+    
+    def inlined_relations(self):
+        """return a list of (relation schema, target schemas, role) matching
+        given category(ies) and permission
+        """
+        # we'll need an initialized varmaker if there are some inlined relation
+        self.initialize_varmaker()
+        return self.erelations_by_category(self.edited_entity, True, 'add', self.rinlined)
     
     def srelations_by_category(self, categories=None, permission=None):
         """filter out result of relations_by_category(categories, permission) by
