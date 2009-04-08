@@ -212,6 +212,10 @@ class state_of(MetaRelationType):
     """link a state to one or more entity type"""
 class transition_of(MetaRelationType):
     """link a transition to one or more entity type"""
+class condition(MetaRelationType):
+    """link a transition to one or more rql expression allowing to go through
+    this transition
+    """
     
 class initial_state(MetaRelationType):
     """indicate which state should be used by default when an entity using
