@@ -21,6 +21,7 @@ from cubicweb.selectors import yes, match_user_groups
 from cubicweb.view import STRICT_DOCTYPE, CW_XHTML_EXTENSIONS
 from cubicweb.common.mail import format_mail
 from cubicweb.web import ExplicitLogin, Redirect, RemoteCallFailed
+from cubicweb.web.formrenderers import FormRenderer
 from cubicweb.web.controller import Controller
 from cubicweb.web.views import vid_from_rset
 try:
@@ -387,11 +388,15 @@ class JSonController(Controller):
 
     def js_prop_widget(self, propkey, varname, tabindex=None):
         """specific method for EProperty handling"""
-        w = self.vreg.property_value_widget(propkey, req=self.req)
         entity = self.vreg.etype_class('EProperty')(self.req, None, None)
         entity.eid = varname
-        self.req.form['value'] = self.vreg.property_info(propkey)['default']
-        return w.edit_render(entity, tabindex, includehelp=True)
+        entity['pkey'] = propkey
+        entity['value'] = self.vreg.property_info(propkey)['default']
+        form = self.vreg.select_object('forms', 'edition', entity=entity)
+        vfield = form.field_by_name('value')
+        renderer = FormRenderer()
+        return (vfield.render(form, renderer, tabindex=tabindex)
+                + renderer.render_help(form, vfield))
 
     def js_component(self, compid, rql, registry='components', extraargs=None):
         if rql:
@@ -432,12 +437,11 @@ class JSonController(Controller):
         self.req.cancel_edition(errorurl)
     
     @check_pageid
-    def js_inline_creation_form(self, peid, ptype, ttype, rtype, role):
+    def js_inline_creation_form(self, peid, ttype, rtype, role):
         view = self.vreg.select_view('inline-creation', self.req, None,
-                                     etype=ttype, ptype=ptype, peid=peid,
-                                     rtype=rtype, role=role)
-        source = view.dispatch(etype=ttype, ptype=ptype, peid=peid, rtype=rtype,
-                               role=role)
+                                     etype=ttype, peid=peid, rtype=rtype,
+                                     role=role)
+        source = view.dispatch(etype=ttype, peid=peid, rtype=rtype, role=role)
         return self._set_content_type(view, source)
 
     def js_remove_pending_insert(self, (eidfrom, rel, eidto)):

@@ -339,37 +339,6 @@ class CubicWebRegistry(VRegistry):
                 self.warning('%s (you should probably delete that property '
                              'from the database)', ex)
 
-
-    def property_value_widget(self, propkey, req=None, **attrs):
-        """return widget according to key's type / vocab"""
-        from cubicweb.web.widgets import StaticComboBoxWidget, widget_factory
-        if req is None:
-            tr = unicode
-        else:
-            tr = req._
-        try:
-            pdef = self.property_info(propkey)
-        except UnknownProperty, ex:
-            self.warning('%s (you should probably delete that property '
-                         'from the database)', ex)
-            return widget_factory(self, 'EProperty', self.schema['value'], 'String',
-                                  description=u'', **attrs)
-        req.form['value'] = pdef['default'] # XXX hack to pass the default value
-        vocab = pdef['vocabulary']
-        if vocab is not None:
-            if callable(vocab):
-                # list() just in case its a generator function
-                vocabfunc = lambda **kwargs: list(vocab(propkey, req))
-            else:
-                vocabfunc = lambda **kwargs: vocab
-            w = StaticComboBoxWidget(self, 'EProperty', self.schema['value'], 'String',
-                                     vocabfunc=vocabfunc, description=tr(pdef['help']),
-                                     **attrs)
-        else:
-            w = widget_factory(self, 'EProperty', self.schema['value'], pdef['type'],
-                               description=tr(pdef['help']), **attrs)
-        return w
-
     def parse(self, session, rql, args=None):
         rqlst = self.rqlhelper.parse(rql)
         def type_from_eid(eid, session=session):

@@ -828,59 +828,6 @@ class EmbededURLWidget(StringWidget):
         aurl = html_escape(entity.build_url('embed', url=url))
         return u'<a href="%s">%s</a>' % (aurl, url)
 
-
-
-class PropertyKeyWidget(ComboBoxWidget):
-    """specific widget for EProperty.pkey field to set the value widget according to
-    the selected key
-    """
-    
-    def _edit_render(self, entity):
-        entity.req.add_js( ('cubicweb.ajax.js', 'cubicweb.edition.js') )
-        vtabindex = self.attrs.get('tabindex', 0) + 1
-        self.attrs['onchange'] = "javascript:setPropValueWidget('%s', %s)" % (
-            entity.eid, vtabindex)
-        # limit size
-        if not entity.has_eid():
-            self.attrs['size'] = 10
-        else:
-            self.attrs['size'] = 1
-        return super(PropertyKeyWidget, self)._edit_render(entity)
-    
-    def vocabulary(self, entity):
-        _ = entity.req._
-        if entity.has_eid():
-            return [(_(entity.pkey), entity.pkey)]
-        # key beginning with 'system.' should usually not be edited by hand
-        choices = entity.vreg.user_property_keys()
-        return sorted(zip((_(v) for v in choices), choices))
-
-
-class PropertyValueWidget(Widget):
-    """specific widget for EProperty.value field which will be different according to
-    the selected key type and vocabulary information
-    """
-    
-    def render_help(self, entity):
-        return u''
-        
-    def render(self, entity):
-        assert entity.has_eid()
-        w = self.vreg.property_value_widget(entity.pkey, req=entity.req, **self.attrs)
-        return w.render(entity)
-        
-    def _edit_render(self, entity):
-        if not entity.has_eid():
-            # no key set yet, just include an empty div which will be filled
-            # on key selection
-            # empty span as well else html validation fail (label is refering to this id)
-            return u'<div id="div:%s"><span id="%s"/></div>' % (self.rname, self.attrs.get('id'))
-        w = self.vreg.property_value_widget(entity.pkey, req=entity.req, **self.attrs)
-        if entity.pkey.startswith('system.'):
-            value = '<span class="value" id="%s">%s</span>' % (self.attrs.get('id'), w.render(entity))
-            msg = entity.req._('value associated to this key is not editable manually')
-            return value + '<div>%s</div>' % msg
-        return w.edit_render(entity, self.attrs.get('tabindex'), includehelp=True)
     
 
 def widget_factory(vreg, subjschema, rschema, objschema, role='subject',
