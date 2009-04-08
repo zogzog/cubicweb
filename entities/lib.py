@@ -11,6 +11,7 @@ from datetime import datetime
 
 from logilab.common.decorators import cached
 
+from cubicweb import UnknownProperty
 from cubicweb.entity import _marker
 from cubicweb.entities import AnyEntity, fetch_config
 
@@ -97,7 +98,10 @@ class EProperty(AnyEntity):
         return self.vreg.typed_value(self.pkey, self.value)
         
     def dc_description(self):
-        return self.req._(self.vreg.property_info(self.pkey)['help'])
+        try:
+            return self.req._(self.vreg.property_info(self.pkey)['help'])
+        except UnknownProperty:
+            return u''
 
     def after_deletion_path(self):
         """return (path, parameters) which should be used as redirect
