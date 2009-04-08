@@ -386,7 +386,7 @@ class EntityInlinedFormRenderer(EntityFormRenderer):
           '[<a href="javascript: %(removejs)s;noop();">%(removemsg)s</a>]</div>'
           % values)
         self.render_fields(w, form, values)
-        w(u'</div>')
+        w(u'</div></div>')
         return '\n'.join(data)
     
     def render_fields(self, w, form, values):
