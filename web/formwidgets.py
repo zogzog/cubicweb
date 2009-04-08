@@ -74,7 +74,7 @@ class PasswordInput(Input):
         confirmname = '%s-confirm:%s' % tuple(name.rsplit(':', 1))
         inputs = [tags.input(name=name, value=values[0], type=self.type, id=id, **attrs),
                   '<br/>',
-                  tags.input(name=confirmname, type=self.type, **attrs),
+                  tags.input(name=confirmname, value=values[0], type=self.type, **attrs),
                   '&nbsp;', tags.span(form.req._('confirm password'),
                                       **{'class': 'emphasis'})]
         return u'\n'.join(inputs)
