@@ -169,7 +169,12 @@ class Field(object):
         if self.sort:
             vocab = sorted(vocab)
         return vocab
-
+    
+    def form_init(self, form):
+        """method called before by form_build_context to trigger potential field
+        initialization requiring the form instance
+        """
+        pass
     
 class StringField(Field):
     def __init__(self, max_length=None, **kwargs):
