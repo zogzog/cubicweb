@@ -19,43 +19,12 @@ class EntityFieldsFormTC(WebTest):
         
     # form view tests #########################################################
         
-    def test_delete_conf_formview(self):
-        rset = self.execute('EGroup X')
-        self.view('deleteconf', rset, template=None).source
-        
     def test_massmailing_formview(self):
         self.execute('INSERT EmailAddress X: X address L + "@cubicweb.org", '
                      'U use_email X WHERE U is EUser, U login L')
         rset = self.execute('EUser X')
         self.view('massmailing', rset, template=None)
         
-    def test_automatic_edition_formview(self):
-        rset = self.execute('EUser X')
-        self.view('edition', rset, row=0, template=None).source
-        
-    def test_automatic_edition_formview(self):
-        rset = self.execute('EUser X')
-        self.view('copy', rset, row=0, template=None).source
-        
-    def test_automatic_creation_formview(self):
-        self.view('creation', None, etype='EUser', template=None).source
-        
-    def test_automatic_muledit_formview(self):
-        rset = self.execute('EUser X')
-        self.view('muledit', rset, template=None).source
-        
-    def test_automatic_reledit_formview(self):
-        rset = self.execute('EUser X')
-        self.view('reledit', rset, row=0, rtype='login', template=None).source
-        
-    def test_automatic_inline_edit_formview(self):
-        geid = self.execute('EGroup X LIMIT 1')[0][0]
-        rset = self.execute('EUser X LIMIT 1')
-        self.view('inline-edition', rset, row=0, rtype='in_group', peid=geid, template=None).source
-                              
-    def test_automatic_inline_creation_formview(self):
-        geid = self.execute('EGroup X LIMIT 1')[0][0]
-        self.view('inline-creation', None, etype='EUser', rtype='in_group', peid=geid, template=None).source
 
     # form tests ##############################################################
     
@@ -71,13 +40,6 @@ class EntityFieldsFormTC(WebTest):
         form = ChangeStateForm(self.req, redirect_path='perdu.com',
                                entity=self.entity)
         form.form_render(state=123, trcomment=u'')
-        
-    def test_edition_form(self):
-        rset = self.execute('EUser X LIMIT 1')
-        form = self.vreg.select_object('forms', 'edition', rset.req, rset, row=0, col=0)
-        # should be also selectable by specifying entity
-        self.vreg.select_object('forms', 'edition', self.request(), entity=rset.get_entity(0, 0))
-        self.failIf(any(f for f in form.fields if f is None))
         
     # fields tests ############################################################
 
@@ -99,10 +61,10 @@ class EntityFieldsFormTC(WebTest):
     def test_richtextfield_1(self):
         self.req.use_fckeditor = lambda: False
         self._test_richtextfield('''<select name="content_format:%(eid)s" id="content_format:%(eid)s" tabindex="0">
-<option value="text/rest">text/rest</option>
+<option value="text/cubicweb-page-template">text/cubicweb-page-template</option>
 <option selected="selected" value="text/html">text/html</option>
 <option value="text/plain">text/plain</option>
-<option value="text/cubicweb-page-template">text/cubicweb-page-template</option>
+<option value="text/rest">text/rest</option>
 </select><textarea tabindex="1" id="content:%(eid)s" name="content:%(eid)s" onkeypress="autogrow(this)">&lt;h1&gt;new widgets system&lt;/h1&gt;</textarea>''')
 
     
@@ -163,7 +125,7 @@ detach attached file
         self.assertTextEquals(self._render_entity_field('upassword', form),
                               '''<input id="upassword:%(eid)s" type="password" name="upassword:%(eid)s" value="__cubicweb_internal_field__" tabindex="0"/>
 <br/>
-<input type="password" name="upassword-confirm:%(eid)s" tabindex="0"/>
+<input type="password" name="upassword-confirm:%(eid)s" value="__cubicweb_internal_field__" tabindex="0"/>
 &nbsp;
 <span class="emphasis">confirm password</span>''' % {'eid': self.entity.eid})
 
