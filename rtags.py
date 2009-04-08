@@ -25,7 +25,7 @@ class RelationTags(object):
     def set_rtag(self, tag, rtype, role, stype='*', otype='*'):
         assert not self.use_set
         assert role in ('subject', 'object'), role
-        self._tagdefs[(rtype, role, stype, otype)] = tag
+        self._tagdefs[(str(rtype), role, str(stype), str(otype))] = tag
         
     def rtag(self, rtype, role, stype='*', otype='*'):
         assert not self.use_set
