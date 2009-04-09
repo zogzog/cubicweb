@@ -282,9 +282,11 @@ class FieldsForm(FormMixIn, AppRsetObject):
         renderer = values.pop('renderer', FormRenderer())
         return renderer.render(self, values)
 
-    def form_build_context(self, values):
+    def form_build_context(self, values=None):
         self.context = context = {}
         # on validation error, we get a dictionnary of previously submitted values
+        if values is None:
+            values = {}
         previous_values = self.req.data.get('formvalues')
         if previous_values:
             values.update(previous_values)
