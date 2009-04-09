@@ -22,7 +22,7 @@ from cubicweb.view import EntityView
 from cubicweb.common import tags
 from cubicweb.web import INTERNAL_FIELD_VALUE, stdmsgs, uicfg
 from cubicweb.web.form import (FieldNotFound, CompositeForm, EntityFieldsForm,
-                               FormMixIn)
+                               FormViewMixIn)
 from cubicweb.web.formfields import guess_field
 from cubicweb.web.formwidgets import Button, SubmitButton, ResetButton
 from cubicweb.web.formrenderers import (FormRenderer, EntityFormRenderer,
@@ -44,7 +44,7 @@ def toggable_relation_link(eid, nodeid, label='x'):
     return u'[<a class="handle" href="%s" id="handle%s">%s</a>]' % (js, nodeid, label)
 
 
-class DeleteConfForm(EntityView):
+class DeleteConfForm(FormViewMixIn, EntityView):
     """form used to confirm deletion of some entities"""
     id = 'deleteconf'
     title = _('delete')
@@ -79,7 +79,7 @@ class DeleteConfForm(EntityView):
         w(form.form_render())
 
 
-class ClickAndEditForm(FormMixIn, EntityView):
+class ClickAndEditFormView(FormViewMixIn, EntityView):
     """form used to permit ajax edition of an attribute of an entity in a view
     
     (double-click on the field to see an appropriate edition widget)
@@ -297,6 +297,14 @@ class AutomaticEntityForm(EntityFieldsForm):
                                     eidparam=True)
             if field is not None:
                 self.fields.append(field)
+        self.maxrelitems = self.req.property_value('navigation.related-limit')
+        self.force_display = not not req.form.get('__force_display')
+        
+    @property
+    def related_limit(self):
+        if self.force_display:
+            return None
+        return self.maxrelitems + 1
     
     def relations_by_category(self, categories=None, permission=None):
         """return a list of (relation schema, target schemas, role) matching
@@ -353,7 +361,7 @@ class AutomaticEntityForm(EntityFieldsForm):
         entity = self.edited_entity
         pending_deletes = self.req.get_pending_deletes(entity.eid)
         for label, rschema, role in self.srelations_by_category('generic', 'add'):
-            relatedrset = entity.related(rschema, role, limit=self.limit)
+            relatedrset = entity.related(rschema, role, limit=self.related_limit)
             if rschema.has_perm(self.req, 'delete'):
                 toggable_rel_link_func = toggable_relation_link
             else:
@@ -422,7 +430,7 @@ class AutomaticEntityForm(EntityFieldsForm):
         return not existant or card in '+*'
 
     
-class EditionFormView(EntityView):
+class EditionFormView(FormViewMixIn, EntityView):
     """display primary entity edition form"""    
     id = 'edition'
     # add yes() so it takes precedence over deprecated views in baseforms,
@@ -430,7 +438,6 @@ class EditionFormView(EntityView):
     __select__ = one_line_rset() & non_final_entity() & yes()
 
     title = _('edition')
-    controller = 'edit'
     
     def cell_call(self, row, col, **kwargs):
         entity = self.complete_entity(row, col)
@@ -555,7 +562,7 @@ class TableEditForm(CompositeForm):
             self.form_add_subform(form)
 
         
-class TableEditFormView(EntityView):
+class TableEditFormView(FormViewMixIn, EntityView):
     id = 'muledit'
     __select__ = EntityView.__select__ & yes()
     title = _('multiple edit')
@@ -569,7 +576,7 @@ class TableEditFormView(EntityView):
         self.w(form.form_render(renderer=EntityCompositeFormRenderer()))
 
 
-class InlineEntityEditionFormView(EntityView):
+class InlineEntityEditionFormView(FormViewMixIn, EntityView):
     id = 'inline-edition'
     __select__ = non_final_entity() & match_kwargs('peid', 'rtype')
     removejs = "removeInlinedEntity('%s', '%s', '%s')"

@@ -15,10 +15,10 @@ from cubicweb.selectors import (one_line_rset, none_rset, implements,
                                 match_user_groups, entity_implements)
 from cubicweb.utils import UStringIO
 from cubicweb.view import StartupView
-from cubicweb.web import INTERNAL_FIELD_VALUE, eid_param
+from cubicweb.web import INTERNAL_FIELD_VALUE, eid_param, uicfg
 from cubicweb.web.views import baseviews
 from cubicweb.web import stdmsgs
-from cubicweb.web.form import FormMixIn, CompositeForm, EntityFieldsForm
+from cubicweb.web.form import CompositeForm, EntityFieldsForm, FormViewMixIn
 from cubicweb.web.formfields import FIELDS, StringField
 from cubicweb.web.formwidgets import Select, Button, SubmitButton
 from cubicweb.web.views.editforms import AutomaticEntityForm
@@ -50,12 +50,11 @@ class EPropertyPrimaryView(baseviews.PrimaryView):
     skip_none = False
 
 
-class SystemEPropertiesForm(FormMixIn, StartupView):
+class SystemEPropertiesForm(FormViewMixIn, StartupView):
     id = 'systemepropertiesform'
     __select__ = none_rset() & match_user_groups('managers')
 
     title = _('site configuration')
-    controller = 'edit'
     category = 'startupview'
 
     def linkable(self):
@@ -83,7 +82,7 @@ class SystemEPropertiesForm(FormMixIn, StartupView):
 
     def call(self, **kwargs):
         """The default view representing the application's index"""
-        self.req.add_js(('cubicweb.edition.js', 'cubicweb.preferences.js'))
+        self.req.add_js('cubicweb.preferences.js')
         self.req.add_css('cubicweb.preferences.css')
         vreg = self.vreg
         values = self.defined_keys
@@ -325,7 +324,6 @@ class PropertyValueField(StringField):
                 wdg.attrs.setdefault('size', 3)
         self.widget = wdg
 
-from cubicweb.web import uicfg
 uicfg.rfields.set_rtag(PropertyKeyField, 'pkey', 'subject', 'EProperty')
 uicfg.rfields.set_rtag(PropertyValueField, 'value', 'subject', 'EProperty')
     

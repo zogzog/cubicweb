@@ -23,25 +23,15 @@ from cubicweb.web.formfields import (Field, StringField, RelationField,
 from cubicweb.web.formrenderers import FormRenderer
 from cubicweb.web import formwidgets as fwdgs
 
-
-
-# XXX should disappear 
-class FormMixIn(object):
-    """abstract form mix-in
-    XXX: you should inherit from this FIRST (obscure pb with super call)"""
+class FormViewMixIn(object):
+    """abstract form view mix-in"""
     category = 'form'
     controller = 'edit'
-    domid = 'entityForm'
-    
     http_cache_manager = NoHTTPCacheManager
     add_to_breadcrumbs = False
-    skip_relations = set()
     
     def __init__(self, req, rset, **kwargs):
-        super(FormMixIn, self).__init__(req, rset, **kwargs)
-        self.maxrelitems = self.req.property_value('navigation.related-limit')
-        self.maxcomboitems = self.req.property_value('navigation.combobox-limit')
-        self.force_display = not not req.form.get('__force_display')
+        super(FormViewMixIn, self).__init__(req, rset, **kwargs)
         # get validation session data which may have been previously set.
         # deleting validation errors here breaks form reloading (errors are
         # no more available), they have to be deleted by application's publish
@@ -76,18 +66,64 @@ class FormMixIn(object):
         """
         return False
 
-    @property
-    def limit(self):
-        if self.force_display:
-            return None
-        return self.maxrelitems + 1
-    
+
+# XXX should disappear 
+class FormMixIn(object):
+    """abstract form mix-in
+    XXX: you should inherit from this FIRST (obscure pb with super call)
+    """
+
     def initialize_varmaker(self):
         varmaker = self.req.get_page_data('rql_varmaker')
         if varmaker is None:
             varmaker = self.req.varmaker
             self.req.set_page_data('rql_varmaker', varmaker)
         self.varmaker = varmaker
+
+    # XXX deprecated with new form system. Should disappear
+    
+    domid = 'entityForm'
+    category = 'form'
+    controller = 'edit'
+    http_cache_manager = NoHTTPCacheManager
+    add_to_breadcrumbs = False
+    
+    def __init__(self, req, rset, **kwargs):
+        super(FormMixIn, self).__init__(req, rset, **kwargs)
+        # get validation session data which may have been previously set.
+        # deleting validation errors here breaks form reloading (errors are
+        # no more available), they have to be deleted by application's publish
+        # method on successful commit
+        formurl = req.url()
+        forminfo = req.get_session_data(formurl)
+        if forminfo:
+            req.data['formvalues'] = forminfo['values']
+            req.data['formerrors'] = errex = forminfo['errors']
+            req.data['displayederrors'] = set()
+            # if some validation error occured on entity creation, we have to
+            # get the original variable name from its attributed eid
+            foreid = errex.entity
+            for var, eid in forminfo['eidmap'].items():
+                if foreid == eid:
+                    errex.eid = var
+                    break
+            else:
+                errex.eid = foreid    
+        
+    def html_headers(self):
+        """return a list of html headers (eg something to be inserted between
+        <head> and </head> of the returned page
+
+        by default forms are neither indexed nor followed
+        """
+        return [NOINDEX, NOFOLLOW]
+        
+    def linkable(self):
+        """override since forms are usually linked by an action,
+        so we don't want them to be listed by appli.possible_views
+        """
+        return False
+
 
     def button(self, label, klass='validateButton', tabindex=None, **kwargs):
         if tabindex is None:
@@ -121,8 +157,6 @@ class FormMixIn(object):
                      **kwargs):
         label = self.req._(label or stdmsgs.BUTTON_CANCEL).capitalize()
         return self.button(label, type=type, **kwargs)
-
-    # XXX deprecated with new form system
 
     def need_multipart(self, entity, categories=('primary', 'secondary')):
         """return a boolean indicating if form's enctype should be multipart

@@ -76,12 +76,6 @@ class UnrelatedDivs(EntityView):
     id = 'unrelateddivs'
     __select__ = match_form_params('relation')
 
-    @property
-    def limit(self):
-        if self.req.form.get('__force_display'):
-            return None
-        return self.req.property_value('navigation.related-limit') + 1
-
     def cell_call(self, row, col):
         entity = self.entity(row, col)
         relname, target = self.req.form.get('relation').rsplit('_', 1)
@@ -128,7 +122,8 @@ class UnrelatedDivs(EntityView):
         form = self.vreg.select_object('forms', 'edition', self.req,
                                        entity=entity)
         field = form.field_by_name(rschema, target, entity.__class__)
-        for eview, reid in form.form_field_vocabulary(field, self.limit):
+        limit = self.req.property_value('navigation.combobox-limit')
+        for eview, reid in form.form_field_vocabulary(field, limit):
             if reid is None:
                 options.append('<option class="separator">-- %s --</option>'
                                % html_escape(eview))

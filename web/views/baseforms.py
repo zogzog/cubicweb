@@ -40,7 +40,7 @@ class EditionForm(FormMixIn, EntityView):
 
     title = _('edition')
     controller = 'edit'
-    skip_relations = FormMixIn.skip_relations.copy()
+    skip_relations = set()
     
     EDITION_BODY = u'''\
  %(errormsg)s

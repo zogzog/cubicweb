@@ -17,6 +17,7 @@ from cubicweb.selectors import (implements, has_related_entities,
                                 relation_possible, match_form_params)
 from cubicweb.interfaces import IWorkflowable
 from cubicweb.web import stdmsgs, action, component, form
+from cubicweb.web.form import FormViewMixIn
 from cubicweb.web.formfields import StringField,  RichTextField
 from cubicweb.web.formwidgets import HiddenInput, SubmitButton, Button
 from cubicweb.web.views import TmpFileViewMixin
@@ -42,7 +43,7 @@ class ChangeStateForm(form.EntityFieldsForm):
                      Button(stdmsgs.NO, cwaction='cancel')]
 
         
-class ChangeStateFormView(view.EntityView):
+class ChangeStateFormView(FormViewMixIn, view.EntityView):
     id = 'statuschange'
     title = _('status change')
     __select__ = implements(IWorkflowable) & match_form_params('treid')
