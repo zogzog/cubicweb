@@ -351,6 +351,12 @@ class VRegistry(object):
     
     # intialization methods ###################################################
     
+    def init_registration(self, path):
+        # compute list of all modules that have to be loaded
+        self._toloadmods, filemods = _toload_info(path)
+        self._loadedmods = {}
+        return filemods
+    
     def register_objects(self, path, force_reload=None):
         if force_reload is None:
             force_reload = self.config.mode == 'dev'
@@ -370,16 +376,14 @@ class VRegistry(object):
                 sys.path.remove(webdir)
         if CW_SOFTWARE_ROOT in sys.path:
             sys.path.remove(CW_SOFTWARE_ROOT)
-        # compute list of all modules that have to be loaded
-        self._toloadmods, filemods = _toload_info(path)
-        self._loadedmods = {}
         # load views from each directory in the application's path
+        filemods = self.init_registration(path)
         change = False
         for filepath, modname in filemods:
             if self.load_file(filepath, modname, force_reload):
                 change = True
         return change
-
+    
     def load_file(self, filepath, modname, force_reload=False):
         """load visual objects from a python file"""
         from logilab.common.modutils import load_module_from_name
