@@ -74,7 +74,7 @@ class PasswordInput(Input):
         id = attrs.pop('id')
         try:
             confirmname = '%s-confirm:%s' % tuple(name.rsplit(':', 1))
-        except ValueError:
+        except TypeError:
             confirmname = '%s-confirm' % name
         inputs = [tags.input(name=name, value=values[0], type=self.type, id=id, **attrs),
                   '<br/>',
