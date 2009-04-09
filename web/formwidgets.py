@@ -72,7 +72,10 @@ class PasswordInput(Input):
         name, values, attrs = self._render_attrs(form, field)
         assert len(values) == 1
         id = attrs.pop('id')
-        confirmname = '%s-confirm:%s' % tuple(name.rsplit(':', 1))
+        try:
+            confirmname = '%s-confirm:%s' % tuple(name.rsplit(':', 1))
+        except ValueError:
+            confirmname = '%s-confirm' % name
         inputs = [tags.input(name=name, value=values[0], type=self.type, id=id, **attrs),
                   '<br/>',
                   tags.input(name=confirmname, value=values[0], type=self.type, **attrs),
