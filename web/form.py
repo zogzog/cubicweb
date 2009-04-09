@@ -360,7 +360,7 @@ class EntityFieldsForm(FieldsForm):
                 msg = '%s %s' % (msg, self.req._('and linked'))
             self.form_add_hidden('__message', msg)
         
-    def form_build_context(self, values):
+    def form_build_context(self, values=None):
         self.form_add_entity_hiddens(self.edited_entity.e_schema)
         return super(EntityFieldsForm, self).form_build_context(values)
 
