@@ -182,7 +182,7 @@ class DateTimePicker(TextInput):
     daynames = ('monday', 'tuesday', 'wednesday', 'thursday',
                 'friday', 'saturday', 'sunday')
 
-    needs_js = ('cubicweb.ajax.js', 'cubicweb.calendar.js')
+    needs_js = ('cubicweb.calendar.js',)
     needs_css = ('cubicweb.calendar_popup.css',)
     
     @classmethod

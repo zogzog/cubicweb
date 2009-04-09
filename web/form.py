@@ -201,7 +201,7 @@ class FieldsForm(FormMixIn, AppRsetObject):
     
     # attributes overrideable through __init__
     internal_fields = ('__errorurl',) + NAV_FORM_PARAMETERS
-    needs_js = ('cubicweb.edition.js',)
+    needs_js = ('cubicweb.ajax.js', 'cubicweb.edition.js',)
     needs_css = ('cubicweb.form.css',)
     domid = 'form'
     title = None
