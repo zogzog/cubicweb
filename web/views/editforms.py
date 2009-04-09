@@ -20,7 +20,7 @@ from cubicweb.selectors import (match_kwargs, one_line_rset, non_final_entity,
 from cubicweb.utils import make_uid
 from cubicweb.view import EntityView
 from cubicweb.common import tags
-from cubicweb.web import INTERNAL_FIELD_VALUE, stdmsgs, formwidgets, uicfg
+from cubicweb.web import INTERNAL_FIELD_VALUE, stdmsgs, uicfg
 from cubicweb.web.form import (FieldNotFound, CompositeForm, EntityFieldsForm,
                                FormMixIn)
 from cubicweb.web.formfields import guess_field
@@ -103,7 +103,6 @@ class ClickAndEditForm(FormMixIn, EntityView):
         if not entity.has_perm('update'):
             self.w(value)
             return
-        self.req.add_js( ('cubicweb.ajax.js',) )
         eid = entity.eid
         edit_key = make_uid('%s-%s' % (rtype, eid))
         divid = 'd%s' % edit_key
@@ -127,15 +126,14 @@ class AutomaticEntityForm(EntityFieldsForm):
     """base automatic form to edit any entity
 
     Designed to be flly generated from schema but highly configurable through:
-    * rtags (rcategories, rwidgets, inlined, rpermissions)
+    * rtags (rcategories, rfields, rwidgets, inlined, rpermissions)
     * various standard form parameters
 
     You can also easily customise it by adding/removing fields in
     AutomaticEntityForm instances.
     """
     id = 'edition'
-    
-    needs_js = EntityFieldsForm.needs_js + ('cubicweb.ajax.js',)
+
     cwtarget = 'eformframe'
     cssclass = 'entityForm'
     copy_nav_params = True
@@ -146,6 +144,7 @@ class AutomaticEntityForm(EntityFieldsForm):
     # class attributes below are actually stored in the uicfg module since we
     # don't want them to be reloaded
     rcategories = uicfg.rcategories
+    rfields = uicfg.rfields
     rwidgets = uicfg.rwidgets
     rinlined = uicfg.rinlined
     rpermissions_overrides = uicfg.rpermissions_overrides
@@ -282,10 +281,15 @@ class AutomaticEntityForm(EntityFieldsForm):
                 continue # explicitly specified
             except FieldNotFound:
                 pass # has to be guessed
-            wdgname = self.rwidgets.etype_rtag(self.edited_entity.id, rschema,
+            fieldcls = self.rfields.etype_rtag(self.edited_entity.id, rschema,
                                                role)
-            if wdgname:
-                widget = getattr(formwidgets, wdgname)
+            if fieldcls:
+                field = fieldcls(name=rschema.type, role=role, eidparam=True)
+                self.fields.append(field)
+                continue
+            widget = self.rwidgets.etype_rtag(self.edited_entity.id, rschema,
+                                              role)
+            if widget:
                 field = guess_field(self.edited_entity.__class__, rschema, role,
                                     eidparam=True, widget=widget)
             else:

@@ -45,6 +45,7 @@ MODE_TAGS = set(('link', 'create'))
 CATEGORY_TAGS = set(('primary', 'secondary', 'generic', 'generated')) # , 'metadata'))
 
 try:
+    from cubicweb.web import formwidgets
     from cubicweb.web.views.editforms import AutomaticEntityForm
     from cubicweb.web.views.boxes import EditBox
 
@@ -127,6 +128,9 @@ class metaentity(type):
                     if wdgname in ('URLWidget', 'EmbededURLWidget'):
                         warn('%s widget is deprecated' % wdgname, DeprecationWarning)
                         continue
+                    if wdgname == 'StringWidget':
+                        wdgname = 'TextInput'
+                    widget = getattr(formwidgets, wdgname)
                     AutomaticEntityForm.rwidgets.set_rtag(wdgname, rtype, 'subject', etype)
         return super(metaentity, mcs).__new__(mcs, name, bases, classdict)
 

@@ -36,7 +36,10 @@ rcategories.set_rtag('generated', 'wf_info_for', 'object')
 rcategories.set_rtag('generated', 'for_user', 'subject')
 rcategories.set_rtag('generated', 'for_user', 'object')
 
-# relations'widget (eg one of available class name in cubicweb.web.formwidgets)
+# relations'field class
+rfields = RelationTags()
+
+# relations'widget class
 rwidgets = RelationTags()
 
 # inlined view flag for non final relations: when True for an entry, the
