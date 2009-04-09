@@ -262,7 +262,7 @@ class FieldsForm(FormMixIn, AppRsetObject):
             for param in NAV_FORM_PARAMETERS:
                 value = kwargs.get(param, req.form.get(param))
                 if value:
-                    self.form_add_hidden(param, initial=value)
+                    self.form_add_hidden(param, value)
         if submitmsg is not None:
             self.form_add_hidden('__message', submitmsg)
         self.context = None
