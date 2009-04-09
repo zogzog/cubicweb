@@ -11,16 +11,16 @@ from logilab.mtconverter import html_escape
 from cubicweb import Unauthorized
 from cubicweb.selectors import implements
 from cubicweb.web.htmlwidgets import BoxWidget, BoxMenu, RawBoxItem
-from cubicweb.web.action import Action
+from cubicweb.web import action, formwidgets
 from cubicweb.web.box import UserRQLBoxTemplate
 from cubicweb.web.views.baseviews import PrimaryView
 from cubicweb.web.views.editforms import AutomaticEntityForm
 
 AutomaticEntityForm.rcategories.set_rtag('primary', 'path', 'subject', 'Bookmark')
-AutomaticEntityForm.rwidgets.set_rtag('StringWidget', 'path', 'subject', 'Bookmark')
+AutomaticEntityForm.rwidgets.set_rtag(formwidgets.TextInput, 'path', 'subject', 'Bookmark')
 
 
-class FollowAction(Action):
+class FollowAction(action.Action):
     id = 'follow'
     __select__ = implements('Bookmark')
 
