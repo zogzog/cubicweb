@@ -112,11 +112,13 @@ def del_existing_rel_if_needed(session, eidfrom, rtype, eidto):
     if card[0] in '1?':
         rschema = session.repo.schema.rschema(rtype)
         if not rschema.inlined:
-            session.unsafe_execute('DELETE X %s Y WHERE X eid %%(x)s, NOT Y eid %%(y)s' % rtype,
-                                   {'x': eidfrom, 'y': eidto}, 'x')
+            session.unsafe_execute(
+                'DELETE X %s Y WHERE X eid %%(x)s, NOT Y eid %%(y)s' % rtype,
+                {'x': eidfrom, 'y': eidto}, 'x')
     if card[1] in '1?':
-        session.unsafe_execute('DELETE X %s Y WHERE NOT X eid %%(x)s, Y eid %%(y)s' % rtype,
-                               {'x': eidfrom, 'y': eidto}, 'y')
+        session.unsafe_execute(
+            'DELETE X %s Y WHERE NOT X eid %%(x)s, Y eid %%(y)s' % rtype,
+            {'x': eidfrom, 'y': eidto}, 'y')
 
     
 class Repository(object):

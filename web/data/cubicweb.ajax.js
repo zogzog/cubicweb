@@ -58,8 +58,6 @@ jQuery.fn.loadxhtml = function(url, data, reqtype, mode) {
 	callback = data.callback;
 	delete data.callback;
     }
-    var node = this.get(0); // only consider the first element
-    ajax = jQuery.post;
     ajax(url, data, function(response) {
 	var domnode = getDomFromResponse(response);
 	if (mode == 'swap') {

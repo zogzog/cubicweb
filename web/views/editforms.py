@@ -40,8 +40,10 @@ def toggable_relation_link(eid, nodeid, label='x'):
     """return javascript snippet to delete/undelete a relation between two
     entities
     """
-    js = u"javascript: togglePendingDelete('%s', %s);" % (nodeid, html_escape(dumps(eid)))
-    return u'[<a class="handle" href="%s" id="handle%s">%s</a>]' % (js, nodeid, label)
+    js = u"javascript: togglePendingDelete('%s', %s);" % (
+        nodeid, html_escape(dumps(eid)))
+    return u'[<a class="handle" href="%s" id="handle%s">%s</a>]' % (
+        js, nodeid, label)
 
 
 class DeleteConfForm(FormViewMixIn, EntityView):
@@ -359,7 +361,7 @@ class AutomaticEntityForm(EntityFieldsForm):
           - oneline view of related entity
         """
         entity = self.edited_entity
-        pending_deletes = self.req.get_pending_deletes(entity.eid)
+        pending_deletes = self.req.get_pending_deletes(entity.eid)        
         for label, rschema, role in self.srelations_by_category('generic', 'add'):
             relatedrset = entity.related(rschema, role, limit=self.related_limit)
             if rschema.has_perm(self.req, 'delete'):

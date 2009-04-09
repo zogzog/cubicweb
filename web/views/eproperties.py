@@ -115,9 +115,8 @@ class SystemEPropertiesForm(FormViewMixIn, StartupView):
               (make_togglable_link('fieldset_' + group, label,
                                    self._cookie_name(group))))
             w(u'<div id="fieldset_%s" %s>' % (group, status))
-            w(u'<fieldset class="subentity">')
             w(form)
-            w(u'</fieldset></div>')
+            w(u'</div>')
         for label, group, objects in sorted((_(g), g, o)
                                             for g, o in groupedopts.iteritems()):
             status = css_class(self._group_status(group))

@@ -388,7 +388,6 @@ class JSonController(Controller):
 
     def js_prop_widget(self, propkey, varname, tabindex=None):
         """specific method for EProperty handling"""
-        print 'PROP WIDGET', propkey, varname, tabindex
         entity = self.vreg.etype_class('EProperty')(self.req, None, None)
         entity.eid = varname
         entity['pkey'] = propkey
