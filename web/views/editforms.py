@@ -300,7 +300,7 @@ class AutomaticEntityForm(EntityFieldsForm):
             if field is not None:
                 self.fields.append(field)
         self.maxrelitems = self.req.property_value('navigation.related-limit')
-        self.force_display = not not req.form.get('__force_display')
+        self.force_display = bool(self.req.form.get('__force_display'))
         
     @property
     def related_limit(self):
