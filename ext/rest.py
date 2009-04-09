@@ -185,7 +185,6 @@ else:
             print sorted(aliases for module_name, name, aliases, _, _  in LEXERS.itervalues())
             # no lexer found
             lexer = get_lexer_by_name('text')
-        print 'LEXER', lexer
         parsed = highlight(u'\n'.join(content), lexer, _PYGMENTS_FORMATTER)
         context = state.document.settings.context
         context.req.add_css('pygments.css')
