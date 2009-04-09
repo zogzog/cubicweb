@@ -440,6 +440,7 @@ class EditionFormView(FormViewMixIn, EntityView):
     __select__ = one_line_rset() & non_final_entity() & yes()
 
     title = _('edition')
+    renderer = EntityFormRenderer()
     
     def cell_call(self, row, col, **kwargs):
         entity = self.complete_entity(row, col)
@@ -452,7 +453,7 @@ class EditionFormView(FormViewMixIn, EntityView):
                                        row=entity.row, col=entity.col, entity=entity,
                                        submitmsg=self.submited_message())
         self.init_form(form, entity)
-        self.w(form.form_render(renderer=EntityFormRenderer(), formvid=u'edition'))
+        self.w(form.form_render(renderer=self.renderer, formvid=u'edition'))
 
     def init_form(self, form, entity):
         """customize your form before rendering here"""
@@ -559,7 +560,7 @@ class TableEditForm(CompositeForm):
             form = self.vreg.select_object('forms', 'edition', self.req, self.rset,
                                            row=row, attrcategories=('primary',),
                                            set_error_url=False)
-            # XXX rely on the MultipleEntityFormRenderer to put the eid input
+            # XXX rely on the EntityCompositeFormRenderer to put the eid input
             form.remove_field(form.field_by_name('eid'))
             self.form_add_subform(form)
 
