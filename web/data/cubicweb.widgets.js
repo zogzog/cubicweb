@@ -228,16 +228,11 @@ Widgets.TemplateTextField = defclass("TemplateTextField", null, {
 			'cols' : wdgnode.getAttribute('cubicweb:cols') || 80
 		       };
 	// this.variableRegexp = /%\((\w+)\)s/;
-	this.parentnode = wdgnode;
-    },
-
-    show : function(parentnode) {
-	parentnode = parentnode || this.parentnode;
 	this.errorField = DIV({'class' : "textfieldErrors"});
 	this.textField = TEXTAREA(this.options);
-	connect(this.textField, 'onkeyup', this, this.highlightInvalidVariables);
-	appendChildNodes(parentnode, this.textField, this.errorField);
-	appendChildNodes(parentnode, this.textField);
+	jQuery(this.textField).bind('keyup', {'self': this}, this.highlightInvalidVariables);
+	wdgnode.appendChild(this.textField);
+	wdgnode.appendChild(this.errorField);
     },
 
     /* signal callbacks */
