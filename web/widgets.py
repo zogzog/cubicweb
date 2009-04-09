@@ -839,7 +839,7 @@ def widget_factory(vreg, subjschema, rschema, objschema, role='subject',
         eclass, subjschema = _eclass_eschema(subjschema)
     else:
         eclass, objschema = _eclass_eschema(objschema)
-    if eclass is not None and rschema in eclass.widgets:
+    if eclass is not None and rschema in getattr(eclass, 'widgets', ()):
         wcls = WIDGETS[eclass.widgets[rschema]]
     elif not rschema.is_final():
         card = rschema.rproperty(subjschema, objschema, 'cardinality')
