@@ -16,6 +16,7 @@ from cubicweb.web import eid_param
 from cubicweb.web import formwidgets as fwdgs
 from cubicweb.web.widgets import checkbox
 
+
 class FormRenderer(object):
     """basic renderer displaying fields in a two columns table label | value
     """
@@ -344,9 +345,9 @@ class EntityFormRenderer(FormRenderer):
                 # there is no related entity and we need at least one: we need to
                 # display one explicit inline-creation view
                 if form.should_display_inline_creation_form(rschema, existant, card):
-                    w(self.view('inline-creation', None, etype=targettype,
+                    w(form.view('inline-creation', None, etype=targettype,
                                 peid=entity.eid, ptype=entity.e_schema,
-                                rtype=rschema, role=role, **kwargs))
+                                rtype=rschema, role=role))
                 # we can create more than one related entity, we thus display a link
                 # to add new related entities
                 if form.should_display_add_new_relation_link(rschema, existant, card):
