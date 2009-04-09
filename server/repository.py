@@ -181,7 +181,7 @@ class Repository(object):
             # need to load the Any and EUser entity types
             self.vreg.schema = self.schema
             etdirectory = join(CW_SOFTWARE_ROOT, 'entities')
-            self.init_registration(etdirectory)
+            self.vreg.init_registration([etdirectory])
             self.vreg.load_file(join(etdirectory, '__init__.py'),
                                 'cubicweb.entities.__init__')
             self.vreg.load_file(join(etdirectory, 'authobjs.py'),
