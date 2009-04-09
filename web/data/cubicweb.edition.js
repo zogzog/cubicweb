@@ -20,10 +20,10 @@ CubicWeb.require('ajax.js');
  * @param tabindex the tabindex that should be set on the widget
  */
 function setPropValueWidget(varname, tabindex) {
-    var key = firstSelected(jQuery('#pkey:'+varname));
+    var key = firstSelected(document.getElementById('pkey:'+varname));
     if (key) {
 	var args = _buildRemoteArgs('prop_widget', key, varname, tabindex);
-	jQuery('#div:value:'+varname).loadxhtml(JSON_BASE_URL, args, 'post');
+	jqNode('div:value:'+varname).loadxhtml(JSON_BASE_URL, args, 'post');
     }
 }
 

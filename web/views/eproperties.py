@@ -227,7 +227,30 @@ class EPropertiesForm(SystemEPropertiesForm):
             subform.form_add_hidden('for_user', self.user.eid, eidparam=True)
 
 
-# eproperty entity edition ####################################################
+# eproperty form objects ######################################################
+
+class PlaceHolderWidget(object):
+    
+    def render(self, form, field):
+        domid = form.context[field]['id']
+        # empty span as well else html validation fail (label is refering to
+        # this id)
+        return '<div id="div:%s"><span id="%s">%s</span></div>' % (
+            domid, domid, form.req._('select a key first'))
+
+
+class NotEditableWidget(object):
+    def __init__(self, value, msg=None):
+        self.value = value
+        self.msg = msg
+    
+    def render(self, form, field):
+        domid = form.context[field]['id']
+        value = '<span class="value" id="%s">%s</span>' % (domid, self.value)
+        if self.msg:
+            value + '<div class="helper">%s</div>' % self.msg
+        return value
+
 
 class PropertyKeyField(StringField):
     """specific field for EProperty.pkey to set the value widget according to
@@ -249,21 +272,16 @@ class PropertyKeyField(StringField):
             return [(_(entity.pkey), entity.pkey)]
         # key beginning with 'system.' should usually not be edited by hand
         choices = entity.vreg.user_property_keys()
-        return sorted(zip((_(v) for v in choices), choices))
+        return [(u'', u'')] + sorted(zip((_(v) for v in choices), choices))
 
 
 class PropertyValueField(StringField):
     """specific field for EProperty.value  which will be different according to
     the selected key type and vocabulary information
-    """        
+    """
+    widget = PlaceHolderWidget
+    
     def render(self, form, renderer=None, tabindex=None):
-        if not (form.edited_entity.has_eid() or 'pkey' in form.edited_entity):
-            # no key set yet, just include an empty div which will be filled
-            # on key selection
-            # empty span as well elsehtml validation fail (label is refering to
-            # this id)
-            domid = form.context[self]['id']
-            return u'<div id="div:%s"><span id="%s"/></div>' % (domid, domid)
         wdg = self.get_widget(form)
         if tabindex is not None:
             wdg.attrs['tabindex'] = tabindex
@@ -271,6 +289,10 @@ class PropertyValueField(StringField):
 
     def form_init(self, form):
         entity = form.edited_entity
+        if not (entity.has_eid() or 'pkey' in entity):
+            # no key set yet, just include an empty div which will be filled
+            # on key selection
+            return
         try:
             pdef = form.vreg.property_info(entity.pkey)
         except UnknownProperty, ex:
@@ -303,22 +325,7 @@ class PropertyValueField(StringField):
                 wdg.attrs.setdefault('size', 3)
         self.widget = wdg
 
-
-class NotEditableWidget(object):
-    def __init__(self, value, msg=None):
-        self.value = value
-        self.msg = msg
-    
-    def render(self, form, field):
-        domid = form.context[field]['id']
-        value = '<span class="value" id="%s">%s</span>' % (domid, self.value)
-        if self.msg:
-            value + '<div class="helper">%s</div>' % self.msg
-        return value
-        
-
-class EPropertyForm(AutomaticEntityForm):
-    __select__ = entity_implements('EProperty')
-    pkey = PropertyKeyField(eidparam=True)
-    value = PropertyValueField(eidparam=True)
+from cubicweb.web import uicfg
+uicfg.rfields.set_rtag(PropertyKeyField, 'pkey', 'subject', 'EProperty')
+uicfg.rfields.set_rtag(PropertyValueField, 'value', 'subject', 'EProperty')
     

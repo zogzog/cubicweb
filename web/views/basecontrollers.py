@@ -388,15 +388,17 @@ class JSonController(Controller):
 
     def js_prop_widget(self, propkey, varname, tabindex=None):
         """specific method for EProperty handling"""
+        print 'PROP WIDGET', propkey, varname, tabindex
         entity = self.vreg.etype_class('EProperty')(self.req, None, None)
         entity.eid = varname
         entity['pkey'] = propkey
-        entity['value'] = self.vreg.property_info(propkey)['default']
-        form = self.vreg.select_object('forms', 'edition', entity=entity)
+        form = self.vreg.select_object('forms', 'edition', self.req, None,
+                                       entity=entity)
+        form.form_build_context()
         vfield = form.field_by_name('value')
         renderer = FormRenderer()
-        return (vfield.render(form, renderer, tabindex=tabindex)
-                + renderer.render_help(form, vfield))
+        return vfield.render(form, renderer, tabindex=tabindex) \
+                   + renderer.render_help(form, vfield)
 
     def js_component(self, compid, rql, registry='components', extraargs=None):
         if rql:
