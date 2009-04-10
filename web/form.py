@@ -302,6 +302,10 @@ class FieldsForm(FormMixIn, AppRsetObject):
     def form_add_hidden(self, name, value=None, **kwargs):
         field = StringField(name=name, widget=fwdgs.HiddenInput, initial=value,
                             **kwargs)
+        if 'id' in kwargs:
+            # by default, hidden input don't set id attribute. If one is
+            # explicitly specified, ensure it will be set
+            field.widget.setdomid = True
         self.fields.append(field)
         return field
     
