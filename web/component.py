@@ -72,8 +72,8 @@ class NavigationComponent(Component):
     previous_page_link_templ = next_page_link_templ = page_link_templ
     no_previous_page_link = no_next_page_link = u''
     
-    def __init__(self, req, rset):
-        super(NavigationComponent, self).__init__(req, rset)
+    def __init__(self, req, rset, **kwargs):
+        super(NavigationComponent, self).__init__(req, rset, **kwargs)
         self.starting_from = 0
         self.total = rset.rowcount
 
