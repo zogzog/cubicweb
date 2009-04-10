@@ -267,22 +267,29 @@ class DateTimePicker(TextInput):
 
 # ajax widgets ################################################################
 
+def init_ajax_attributes(attrs, wdgtype, loadtype=u'auto'):
+    try:
+        attrs[u'klass'] += u' widget'
+    except KeyError:
+        attrs[u'klass'] = u'widget'
+    attrs.setdefault(u'cubicweb:wdgtype', wdgtype)
+    attrs.setdefault(u'cubicweb:loadtype', loadtype)
+
+
 class AjaxWidget(FieldWidget):
     """simple <div> based ajax widget"""
     def __init__(self, wdgtype, inputid=None, **kwargs):
         super(AjaxWidget, self).__init__(**kwargs)
-        self.attrs.setdefault('class', 'widget')
-        self.attrs.setdefault('cubicweb:loadtype', 'auto')
-        self.attrs['cubicweb:wdgtype'] = wdgtype
+        init_ajax_attributes(self.attrs, wdgtype)
         if inputid is not None:
-            self.attrs['cubicweb:inputid'] = inputid
+            self.attrs[u'cubicweb:inputid'] = inputid
             
     def render(self, form, field):
         self.add_media(form)
         attrs = self._render_attrs(form, field)[-1]
         return tags.div(**attrs)
 
-        
+    
 class AutoCompletionWidget(TextInput):
     """ajax widget for StringField, proposing matching existing values as you
     type.
@@ -296,12 +303,7 @@ class AutoCompletionWidget(TextInput):
         name, values, attrs = super(AutoCompletionWidget, self)._render_attrs(form, field)
         if not values[0]:
             values = (INTERNAL_FIELD_VALUE,)
-        try:
-            attrs['klass'] += ' widget'
-        except KeyError:
-            attrs['klass'] = 'widget'
-        attrs.setdefault('cubicweb:wdgtype', self.wdgtype)
-        attrs.setdefault('cubicweb:loadtype', self.loadtype)
+        init_ajax_attributes(attrs, self.wdgtype, self.loadtype)
         # XXX entity form specific
         attrs['cubicweb:dataurl'] = self._get_url(form.edited_entity)
         return name, values, attrs
@@ -324,6 +326,23 @@ class RestrictedAutoCompletionWidget(AutoCompletionWidget):
     wdgtype = 'RestrictedSuggestField'    
 
 
+class AddComboBoxWidget(Select):
+    def _render_attrs(self, form, field):
+        name, values, attrs = super(AddComboBoxWidget, self)._render_attrs(form, field)
+        init_ajax_attributes(self.attrs, 'AddComboBox')
+        # XXX entity form specific
+        entity = form.edited_entity
+        attrs['cubicweb:etype_to'] = entity.e_schema
+        etype_from = entity.e_schema.subject_relation(self.name).objects(entity.e_schema)[0]
+        attrs['cubicweb:etype_from'] = etype_from
+        
+    def render(self, form, field):
+        return super(AddComboBoxWidget, self).render(form, field) + u'''
+<div id="newvalue">
+  <input type="text" id="newopt" />
+  <a href="javascript:noop()" id="add_newopt">&nbsp;</a></div>
+'''
+        
 # buttons ######################################################################
 
 class Button(Input):
@@ -385,4 +404,4 @@ class ImgButton(object):
         return '<a id="%(domid)s" href="%(href)s"><img src="%(imgsrc)s" alt="%(label)s"/>%(label)s</a>' % self.__dict__
 
     
-# XXX EntityLinkComboBoxWidget, AddComboBoxWidget, RawDynamicComboBoxWidget
+# XXX EntityLinkComboBoxWidget, [Raw]DynamicComboBoxWidget
