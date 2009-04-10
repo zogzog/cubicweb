@@ -36,7 +36,7 @@ class SearchForAssociationView(EntityView):
         rset, vid, divid, paginate = self.filter_box_context_info()
         self.rset = rset
         self.w(u'<div id="%s">' % divid)
-        self.paginate(self.req, rset, w=self.w)
+        self.paginate()
         self.wview(vid, rset, 'noresult')
         self.w(u'</div>')
 
