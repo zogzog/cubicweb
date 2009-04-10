@@ -164,8 +164,15 @@ HOW TO
     anonymous-password=anon
 
   You also must ensure that this `anon` user is a registered user of
-  the DB backend. This could be the admin account (for development
+  the DB backend. If not, you can create through the administation
+  interface of your instance by adding a user with the role `guests`.
+  This could be the admin account (for development
   purposes, of course).
+
+.. note::
+    While creating a new instance, you can decide to allow access
+    to anonymous user, which will automatically executes what is
+    decribed above.
 
 
 * How to change the application logo?
