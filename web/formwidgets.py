@@ -167,7 +167,10 @@ class Select(FieldWidget):
         name, curvalues, attrs = self._render_attrs(form, field)
         options = []
         for label, value in field.vocabulary(form):
-            if value in curvalues:
+            if value is None:
+                # handle separator
+                options.append(u'<optgroup label="%s"/>' % (label or ''))
+            elif value in curvalues:
                 options.append(tags.option(label, value=value, selected='selected'))
             else:
                 options.append(tags.option(label, value=value))
