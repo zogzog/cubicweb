@@ -3,8 +3,8 @@
 Predefined views in the library
 ```````````````````````````````
 
-`CubicWeb` provides a lot of standard views for the default class
-`EntityType`. You can find them in ``cubicweb/web/views/``.
+`CubicWeb` provides a lot of standard views. You can find them in
+``cubicweb/web/views/``.
 
 A certain number of views are used to build the web interface, which apply
 to one or more entities. Their identifier is what distinguish them from
@@ -60,7 +60,8 @@ each others and the main ones are:
   This view displays usually a side box of some related entities 
   in a primary view.
 
-Start view:
+  
+Start view (e.g. views that don't apply to a result set):
 
 *index*
     This view defines the home page of your application. It does not require

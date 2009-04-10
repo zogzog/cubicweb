@@ -159,9 +159,11 @@ class SecurityManagementView(EntityView):
         w(u'<tr><th>%s</th><th>%s</th><th>%s</th><th>&nbsp;</th></tr>\n'
                % (_("name"), _("label"), _('granted to groups')))
         if getattr(entity, '__permissions__', None):
+            # vocabfunc must be compliant with StaticVocabularyConstraint.vocabulary
+            # which takes only keyword parameters
             wdg = StaticComboBoxWidget(self.vreg, self.schema['EPermission'],
                                        self.schema['name'], self.schema['String'],
-                                       vocabfunc=lambda x: entity.__permissions__)
+                                       vocabfunc=lambda entity, x=entity: x.__permissions__)
         else:
             wdg = newperm.get_widget('name')
         w(u'<tr><td>%s</td>\n' % wdg.edit_render(newperm))
