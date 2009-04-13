@@ -145,9 +145,15 @@ HOW TO
 
   It depends on what has been modified in the schema.
 
-  * Update of a non final relation.
+  * Update of an attribute permissions and properties: 
+    ``synchronize_eschema('MyEntity')``.
 
-  * Update of a final relation.
+  * Update of a relation permissions and properties: 
+    ``synchronize_rschema('MyRelation')``.
+
+  * Add an attribute: ``add_attribute('MyEntityType', 'myattr')``.
+
+  * Add a relation: ``add_relation_definition('SubjRelation', 'MyRelation', 'ObjRelation')``.
 
 
 * How to create an anonymous user?
