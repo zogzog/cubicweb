@@ -269,11 +269,11 @@ class DateTimePicker(TextInput):
 
 def init_ajax_attributes(attrs, wdgtype, loadtype=u'auto'):
     try:
-        attrs[u'klass'] += u' widget'
+        attrs['klass'] += u' widget'
     except KeyError:
-        attrs[u'klass'] = u'widget'
-    attrs.setdefault(u'cubicweb:wdgtype', wdgtype)
-    attrs.setdefault(u'cubicweb:loadtype', loadtype)
+        attrs['klass'] = u'widget'
+    attrs.setdefault('cubicweb:wdgtype', wdgtype)
+    attrs.setdefault('cubicweb:loadtype', loadtype)
 
 
 class AjaxWidget(FieldWidget):
@@ -282,7 +282,7 @@ class AjaxWidget(FieldWidget):
         super(AjaxWidget, self).__init__(**kwargs)
         init_ajax_attributes(self.attrs, wdgtype)
         if inputid is not None:
-            self.attrs[u'cubicweb:inputid'] = inputid
+            self.attrs['cubicweb:inputid'] = inputid
             
     def render(self, form, field):
         self.add_media(form)
