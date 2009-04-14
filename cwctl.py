@@ -4,7 +4,7 @@ CubicWeb main applications controller.
 %s"""
 
 import sys
-from os import remove, listdir, system, kill, getpgid
+from os import remove, listdir, system, kill, getpgid, pathsep
 from os.path import exists, join, isfile, isdir
 
 from logilab.common.clcommands import register_commands, pop_arg
@@ -176,7 +176,7 @@ class ListCommand(Command):
                 print '   ', line
         print 
         try:
-            cubesdir = cwcfg.cubes_dir()
+            cubesdir = pathsep.join(cwcfg.cubes_search_path())
             namesize = max(len(x) for x in cwcfg.available_cubes())
         except ConfigurationError, ex:
             print 'No cubes available:', ex
