@@ -151,7 +151,7 @@ class FormRenderer(object):
         return fields
     
     def _render_fields(self, fields, w, form, values):
-        w(u'<table id="%s" class="attributeForm" style="width:100%%;">')
+        w(u'<table class="attributeForm" style="width:100%;">')
         for field in fields:
             w(u'<tr>')
             if self.display_label:
