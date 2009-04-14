@@ -13,15 +13,16 @@ from cubicweb.entities import AnyEntity, fetch_config
 class EGroup(AnyEntity):
     id = 'EGroup'
     fetch_attrs, fetch_order = fetch_config(['name'])
+    fetch_unrelated_order = fetch_order
 
     def db_key_name(self):
         """XXX goa specific"""
         return self.get('name')
-
     
 class EUser(AnyEntity):
     id = 'EUser'
     fetch_attrs, fetch_order = fetch_config(['login', 'firstname', 'surname'])
+    fetch_unrelated_order = fetch_order
     
     # used by repository to check if  the user can log in or not
     AUTHENTICABLE_STATES = ('activated',)
