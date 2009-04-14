@@ -183,28 +183,25 @@ class EntityTC(EnvBasedTC):
     def test_entity_unrelated(self):
         p = self.add_entity('Personne', nom=u'di mascio', prenom=u'adrien')
         e = self.add_entity('Tag', name=u'x')
-        rschema = e.e_schema.subject_relation('tags')
         related = [r.eid for r in e.tags]
         self.failUnlessEqual(related, [])
-        unrelated = [reid for rview, reid in e.vocabulary(rschema, 'subject')]
+        unrelated = [r[0] for r in e.unrelated('tags', 'Personne', 'subject')]
         self.failUnless(p.eid in unrelated)
         self.execute('SET X tags Y WHERE X is Tag, Y is Personne')
         e = self.entity('Any X WHERE X is Tag')
-        unrelated = [reid for rview, reid in e.vocabulary(rschema, 'subject')]
+        unrelated = [r[0] for r in e.unrelated('tags', 'Personne', 'subject')]
         self.failIf(p.eid in unrelated)
 
     def test_entity_unrelated_limit(self):
         e = self.add_entity('Tag', name=u'x')
         self.add_entity('Personne', nom=u'di mascio', prenom=u'adrien')
         self.add_entity('Personne', nom=u'di mascio', prenom=u'gwen')
-        rschema = e.e_schema.subject_relation('tags')
-        self.assertEquals(len(e.unrelated(rschema, 'Personne', 'subject', limit=1)),
+        self.assertEquals(len(e.unrelated('tags', 'Personne', 'subject', limit=1)),
                           1)
         
     def test_new_entity_unrelated(self):
         e = self.etype_instance('EUser')
-        rschema = e.e_schema.subject_relation('in_group')
-        unrelated = [reid for rview, reid in e.vocabulary(rschema, 'subject')]
+        unrelated = [r[0] for r in e.unrelated('in_group', 'EGroup', 'subject')]
         # should be default groups but owners, i.e. managers, users, guests
         self.assertEquals(len(unrelated), 3)
 

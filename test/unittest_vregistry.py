@@ -12,6 +12,8 @@ from cubicweb.interfaces import IMileStone
 class YesSchema:
     def __contains__(self, something):
         return True
+
+WEBVIEWSDIR = join(BASE, 'web', 'views')
     
 class VRegistryTC(TestCase):
 
@@ -20,10 +22,11 @@ class VRegistryTC(TestCase):
         self.vreg = CubicWebRegistry(config)
         config.bootstrap_cubes()
         self.vreg.schema = config.load_schema()
-
+        
     def test_load(self):
-        self.vreg.load_file(join(BASE, 'web', 'views'), 'euser.py')
-        self.vreg.load_file(join(BASE, 'web', 'views'), 'baseviews.py')
+        self.vreg.init_registration([WEBVIEWSDIR])
+        self.vreg.load_file(join(WEBVIEWSDIR, 'euser.py'), 'cubicweb.web.views.euser')
+        self.vreg.load_file(join(WEBVIEWSDIR, 'baseviews.py'), 'cubicweb.web.views.baseviews')
         fpvc = [v for v in self.vreg.registry_objects('views', 'primary')
                if v.__module__ == 'cubicweb.web.views.euser'][0]
         fpv = fpvc(None, None)
@@ -31,8 +34,9 @@ class VRegistryTC(TestCase):
         self.assertRaises(AttributeError, fpv.render_entity_attributes, None, None)
 
     def test_load_interface_based_vojects(self):
-        self.vreg.load_file(join(BASE, 'web', 'views'), 'idownloadable.py')
-        self.vreg.load_file(join(BASE, 'web', 'views'), 'baseviews.py')
+        self.vreg.init_registration([WEBVIEWSDIR])
+        self.vreg.load_file(join(WEBVIEWSDIR, 'idownloadable.py'), 'cubicweb.web.views.idownloadable')
+        self.vreg.load_file(join(WEBVIEWSDIR, 'baseviews.py'), 'cubicweb.web.views.baseviews')
         # check loading baseviews after idownloadable isn't kicking interface based views
         self.assertEquals(len(self.vreg['views']['primary']), 2)
                               
@@ -57,6 +61,7 @@ class VRegistryTC(TestCase):
         class MyCard(Card):
             __implements__ = (IMileStone,)
         self.vreg.reset()
+        self.vreg._loadedmods[__name__] = {}
         self.vreg.register_vobject_class(MyCard)
         self.vreg.register_objects([join(BASE, 'web', 'views', 'iprogress.py')])
         # check progressbar isn't kicked

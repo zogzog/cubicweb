@@ -11,7 +11,7 @@ from cubicweb.devtools import ApptestConfiguration
 def unabsolutize(path):
     parts = path.split(os.sep)
     for i, part in reversed(tuple(enumerate(parts))):
-        if part in ('cubicweb', 'cubes', 'cubes'):
+        if part.startswith('cubicweb') or part == 'cubes':
             return '/'.join(parts[i+1:])
     raise Exception('duh? %s' % path)
     
@@ -19,6 +19,9 @@ class CubicWebConfigurationTC(TestCase):
     def setUp(self):
         self.config = ApptestConfiguration('data')
         self.config._cubes = ('email', 'file')
+
+    def tearDown(self):
+        os.environ.pop('CW_CUBES_PATH', None)
 
     def test_reorder_cubes(self):
         # jpl depends on email and file and comment
