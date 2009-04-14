@@ -17,6 +17,29 @@ class EntityFieldsFormTC(WebTest):
         self.entity = self.user(self.req)
         self.renderer = FormRenderer()
         
+    def test_form_field_vocabulary_unrelated(self):
+        b = self.add_entity('BlogEntry', title=u'di mascii code', content=u'a best-seller')
+        t = self.add_entity('Tag', name=u'x')
+        form1 = EntityFieldsForm(self.request(), None, entity=t)
+        unrelated = [reid for rview, reid in form1.subject_relation_vocabulary('tags')]
+        self.failUnless(b.eid in unrelated, unrelated)
+        form2 = EntityFieldsForm(self.request(), None, entity=b)
+        unrelated = [reid for rview, reid in form2.object_relation_vocabulary('tags')]
+        self.failUnless(t.eid in unrelated, unrelated)
+        self.execute('SET X tags Y WHERE X is Tag, Y is BlogEntry')
+        unrelated = [reid for rview, reid in form1.subject_relation_vocabulary('tags')]
+        self.failIf(b.eid in unrelated, unrelated)
+        unrelated = [reid for rview, reid in form2.object_relation_vocabulary('tags')]
+        self.failIf(t.eid in unrelated, unrelated)
+        
+    def test_form_field_vocabulary_new_entity(self):
+        e = self.etype_instance('EUser')
+        form = EntityFieldsForm(self.request(), None, entity=e)
+        unrelated = [rview for rview, reid in form.subject_relation_vocabulary('in_group')]
+        # should be default groups but owners, i.e. managers, users, guests
+        self.assertEquals(unrelated, [u'guests', u'managers', u'users'])
+
+        
     # form view tests #########################################################
         
     def test_massmailing_formview(self):
