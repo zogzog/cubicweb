@@ -667,6 +667,12 @@ msgstr "eliminar"
 msgid "actions_delete_description"
 msgstr ""
 
+msgid "actions_download_as_owl"
+msgstr ""
+
+msgid "actions_download_as_owl_description"
+msgstr ""
+
 msgid "actions_edit"
 msgstr "modificar"
 
@@ -1658,6 +1664,9 @@ msgstr "descargar"
 msgid "download icon"
 msgstr "ícono de descarga"
 
+msgid "download schema as owl"
+msgstr ""
+
 msgid "edit bookmarks"
 msgstr "editar los atajos"
 
@@ -2129,6 +2138,11 @@ msgstr "liÈ une enregistrement de transition vers l'objet associÈ"
 msgid "link a transition to one or more entity type"
 msgstr "lie une transition ‡ un ou plusieurs types d'entitÈs"
 
+msgid ""
+"link a transition to one or more rql expression allowing to go through this "
+"transition"
+msgstr ""
+
 msgid "link to each item in"
 msgstr "lier vers chaque ÈlÈment dans"
 
@@ -2371,6 +2385,9 @@ msgstr "rÈcupÈrer des signets existants"
 
 msgid "pkey"
 msgstr "clÈ"
+
+msgid "planned_delivery"
+msgstr ""
 
 msgid "please correct errors below"
 msgstr "veuillez corriger les erreurs ci-dessous"
