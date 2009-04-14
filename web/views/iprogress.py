@@ -40,7 +40,7 @@ class ProgressTableView(EntityView):
     accepts_interfaces = (IMileStone,)
 
     # default columns of the table
-    columns = (_('project'), _('milestone'), _('state'), _('eta_date'),
+    columns = (_('project'), _('milestone'), _('state'), _('eta_date'), _('planned_delivery'),
                _('cost'), _('progress'), _('todo_by'))
 
 
@@ -133,6 +133,12 @@ class ProgressTableView(EntityView):
             else:
                 formated_date = u'%s %s' % (_('expected:'), eta_date)
         return formated_date
+
+    def build_planned_delivery_cell(self, entity):
+        """``initial_prevision_date`` column cell renderer"""
+        if entity.finished():
+            return self.format_date(entity.completion_date())
+        return self.format_date(entity.initial_prevision_date())
     
     def build_todo_by_cell(self, entity):
         """``todo_by`` column cell renderer"""
