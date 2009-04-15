@@ -278,9 +278,8 @@ class Entity(AppRsetObject, dict):
         return selection, orderby, restrictions
 
     def __init__(self, req, rset, row=None, col=0):
-        AppRsetObject.__init__(self, req, rset)
+        AppRsetObject.__init__(self, req, rset, row, col)
         dict.__init__(self)
-        self.row, self.col = row, col
         self._related_cache = {}
         if rset is not None:
             self.eid = rset[row][col]
