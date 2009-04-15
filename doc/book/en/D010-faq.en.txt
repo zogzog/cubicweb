@@ -177,7 +177,7 @@ HOW TO
 
 .. note::
     While creating a new instance, you can decide to allow access
-    to anonymous user, which will automatically executes what is
+    to anonymous user, which will automatically execute what is
     decribed above.
 
 
