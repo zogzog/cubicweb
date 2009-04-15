@@ -205,7 +205,8 @@ class EditController(ViewController):
             # submitted, since it will think the attribute is not modified
             elif isinstance(value, unicode):
                 # file modified using a text widget
-                value = Binary(value.encode(entity.attribute_metadata(attr, 'encoding')))
+                encoding = entity.attr_metadata(attr, 'encoding')
+                value = Binary(value.encode(encoding))
             else:
                 # (filename, mimetype, stream)
                 val = Binary(value[2].read())

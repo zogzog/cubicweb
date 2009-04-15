@@ -409,7 +409,7 @@ class TextWidget(Widget):
             entity.req.fckeditor_config()
             if with_format:
                 if entity.has_eid():
-                    format = entity.attribute_metadata(self.name, 'format')
+                    format = entity.attr_metadata(self.name, 'format')
                 else:
                     format = ''
                 frname = eid_param(self.name + '_format', entity.eid)
@@ -513,14 +513,14 @@ class TextFileWidget(FileWidget):
     
     def _edit_render(self, entity):
         wdgs = [self._file_wdg(entity)]
-        if entity.attribute_metadata(self.name, 'format') in ('text/plain', 'text/html', 'text/rest'):
+        if entity.attr_metadata(self.name, 'format') in ('text/plain', 'text/html', 'text/rest'):
             msg = self._edit_msg(entity)
             wdgs.append(u'<p><b>%s</b></p>' % msg)
             twdg = TextWidget(self.vreg, self.subjtype, self.rschema, self.objtype)
             twdg.rname = self.rname
             data = getattr(entity, self.name)
             if data:
-                encoding = entity.attribute_metadata(self.name, 'encoding')
+                encoding = entity.attr_metadata(self.name, 'encoding')
                 try:
                     entity[self.name] = unicode(data.getvalue(), encoding)
                 except UnicodeError:

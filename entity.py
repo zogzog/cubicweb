@@ -398,7 +398,7 @@ class Entity(AppRsetObject, dict):
             needcheck = False
         return mainattr, needcheck
 
-    def attribute_metadata(self, attr, metadata):
+    def attr_metadata(self, attr, metadata):
         """return a metadata for an attribute (None if unspecified)"""
         value = getattr(self, '%s_%s' % (attr, metadata), None)
         if value is None and metadata == 'encoding':
@@ -425,14 +425,14 @@ class Entity(AppRsetObject, dict):
             # description...
             if props.get('internationalizable'):
                 value = self.req._(value)
-            attrformat = self.attribute_metadata(attr, 'format')
+            attrformat = self.attr_metadata(attr, 'format')
             if attrformat:
                 return self.mtc_transform(value, attrformat, format,
                                           self.req.encoding)
         elif attrtype == 'Bytes':
-            attrformat = self.attribute_metadata(attr, 'format')
+            attrformat = self.attr_metadata(attr, 'format')
             if attrformat:
-                encoding = self.attribute_metadata(attr, 'encoding')
+                encoding = self.attr_metadata(attr, 'encoding')
                 return self.mtc_transform(value.getvalue(), attrformat, format,
                                           encoding)
             return u''

@@ -486,14 +486,14 @@ class EntityFieldsForm(FieldsForm):
         entity = self.edited_entity
         if field.eidparam and entity.e_schema.has_metadata(field.name, 'format') and (
             entity.has_eid() or '%s_format' % field.name in entity):
-            return self.edited_entity.attribute_metadata(field.name, 'format')
+            return self.edited_entity.attr_metadata(field.name, 'format')
         return self.req.property_value('ui.default-text-format')
 
     def form_field_encoding(self, field):
         entity = self.edited_entity
         if field.eidparam and entity.e_schema.has_metadata(field.name, 'encoding') and (
             entity.has_eid() or '%s_encoding' % field.name in entity):
-            return self.edited_entity.attribute_metadata(field.name, 'encoding')
+            return self.edited_entity.attr_metadata(field.name, 'encoding')
         return super(EntityFieldsForm, self).form_field_encoding(field)
     
     def form_field_error(self, field):
