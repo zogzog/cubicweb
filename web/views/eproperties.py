@@ -108,6 +108,8 @@ class SystemEPropertiesForm(FormViewMixIn, StartupView):
         req = self.req
         _ = req._
         w(u'<h1>%s</h1>\n' % _(self.title))
+        # we don't want this in each sub-forms
+        w(u'<div id="progress">%s</div>' % self.req._('validating...'))
         for label, group, form in sorted((_(g), g, f)
                                          for g, f in mainopts.iteritems()):
             status = css_class(self._group_status(group)) 
@@ -173,7 +175,7 @@ class SystemEPropertiesForm(FormViewMixIn, StartupView):
         form.form_add_hidden('__redirectpath', path)
         for key in keys:            
             self.form_row(form, key, splitlabel)
-        return form.form_render()
+        return form.form_render(display_progress_div=False)
 
     def form_row(self, form, key, splitlabel):
         entity = self.entity_for_key(key)
