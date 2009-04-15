@@ -203,19 +203,19 @@ class Radio(Input):
     input will be generated for each possible value.
     """ 
     type = 'radio'
-    setdomid = False # by default, don't set id attribute on radio input
     
     def render(self, form, field):
         name, curvalues, attrs = self._render_attrs(form, field)
+        domid = attrs.pop('id', None)
         options = []
-        for label, value in field.vocabulary(form):
+        for i, (label, value) in enumerate(field.vocabulary(form)):
+            iattrs = attrs.copy()
+            if i == 0 and domid is not None:
+                iattrs['id'] = domid
             if value in curvalues:
-                tag = tags.input(name=name, type=self.type, value=value,
-                                 checked='checked', **attrs)
-            else:
-                tag = tags.input(name=name, type=self.type, value=value, **attrs)
-            tag += label + '<br/>'
-            options.append(tag)
+                iattrs['checked'] = u'checked'
+            tag = tags.input(name=name, type=self.type, value=value, **iattrs)
+            options.append(tag + label + '<br/>')
         return '\n'.join(options)
 
 
