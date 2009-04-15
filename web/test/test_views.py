@@ -45,6 +45,7 @@ class ManualWebTests(WebTest):
         self.failUnless('jquery.tablesorter.js' in self.view('table', rset))
 
     def test_js_added_only_once(self):
+        self.vreg._loadedmods[__name__] = {}
         self.vreg.register_vobject_class(SomeView)
         rset = self.execute('EUser X')
         source = self.view('someview', rset).source
