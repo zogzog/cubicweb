@@ -32,25 +32,6 @@ class MetadataTC(BaseEntityTC):
 
     def test_type(self):
         self.assertEquals(self.member.dc_type(), 'euser')
-
-    def test_custom_widget(self):
-        class EUser2(EUser):
-            widgets = {
-                'login' : 'AutoCompletionWidget',
-                }
-        clear_cache(self.vreg, 'etype_class')
-        self.vreg.register_vobject_class(EUser2)
-        p = self.entity('EUser U WHERE U login "member"')
-        self.failUnless(isinstance(p, EUser2))
-        w = p.get_widget('login')
-        self.failUnless(isinstance(w, AutoCompletionWidget))
-
-    def test_format_vocabulary(self):
-        card = self.add_entity('Card', title=u"hello")
-        self.assertEquals(card.default_content_format(), 'text/html')
-        self.execute('INSERT EProperty X: X pkey "ui.default-text-format", X value "text/rest", X for_user U WHERE U login "admin"')
-        self.commit()
-        self.assertEquals(card.default_content_format(), 'text/rest')
         
 
     def test_entity_meta_attributes(self):
@@ -258,20 +239,6 @@ class EUserTC(BaseEntityTC):
         self.failUnless(e.matching_groups(('xyz', 'managers')))
         self.failIf(e.matching_groups(('xyz', 'abcd')))
 
-    def test_subject_in_state_vocabulary(self):
-        # on a new entity
-        e = self.etype_instance('EUser')
-        rschema = e.e_schema.subject_relation('in_state')
-        states = list(e.subject_in_state_vocabulary(rschema))
-        self.assertEquals(len(states), 1)
-        self.assertEquals(states[0][0], u'activated') # list of (combobox view, state eid)
-        # on an existant entity
-        e = self.entity('Any X WHERE X is EUser')
-        self.assertEquals(e.in_state[0].name, 'activated')
-        states = list(e.subject_in_state_vocabulary(rschema))
-        self.assertEquals(len(states), 1)
-        self.assertEquals(states[0][0], u'deactivated') # list of (combobox view, state eid)
-
     def test_workflow_base(self):
         e = self.create_user('toto')
         self.assertEquals(e.state, 'activated')
@@ -295,6 +262,7 @@ class InterfaceTC(EnvBasedTC):
     def test_nonregr_subclasses_and_mixins_interfaces(self):
         class MyUser(EUser):
             __implements__ = (IMileStone,)
+        self.vreg._loadedmods[__name__] = {}
         self.vreg.register_vobject_class(MyUser)
         self.failUnless(implements(EUser, IWorkflowable))
         self.failUnless(implements(MyUser, IMileStone))
@@ -315,6 +283,7 @@ class SpecializedEntityClassesTC(EnvBasedTC):
         #self.assertEquals(eclass.__bases__, (AnyEntity,))
         # build class from most generic to most specific and make
         # sure the most specific is always selected
+        self.vreg._loadedmods[__name__] = {}
         for etype in ('Company', 'Division', 'SubDivision'):
             class Foo(AnyEntity):
                 id = etype
