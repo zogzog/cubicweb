@@ -208,17 +208,20 @@ class EditController(ViewController):
                 encoding = entity.attr_metadata(attr, 'encoding')
                 value = Binary(value.encode(encoding))
             else:
-                # (filename, mimetype, stream)
+                # value is a  3-uple (filename, mimetype, stream)
                 val = Binary(value[2].read())
                 if not val.getvalue(): # usually an unexistant file
                     value = None
                 else:
                     val.filename = value[0]
-                    if entity.e_schema.has_metadata(attr, 'format'):
-                        key = '%s_format' % attr
-                        formparams[key] = value[1]
-                        self.relations.append('X %s_format %%(%s)s'
-                                              % (attr, key))
+                    # ignore browser submitted MIME type since it may be buggy
+                    # XXX add a config option to tell if we should consider it
+                    # or not?
+                    #if entity.e_schema.has_metadata(attr, 'format'):
+                    #    key = '%s_format' % attr
+                    #    formparams[key] = value[1]
+                    #    self.relations.append('X %s_format %%(%s)s'
+                    #                          % (attr, key))
                     # XXX suppose a File compatible schema
                     if entity.e_schema.has_subject_relation('name') \
                            and not formparams.get('name'):
