@@ -238,3 +238,13 @@ HOW TO
   This will yield additional WARNINGs, like this: ::
 
     2009-01-09 16:43:52 - (cubicweb.selectors) WARNING: selector one_line_rset returned 0 for <class 'cubicweb.web.views.basecomponents.WFHistoryVComponent'>
+
+* How to format an entity date attribute?
+
+  If your schema has an attribute of type Date or Datetime, you might
+  want to format it. First, you should define your preferred format using
+  the site configuration panel ``http://appurl/view?vid=systemepropertiesform``
+  and then set ``ui.date`` and/or ``ui.datetime``.
+  Then in the view code, use::
+    
+    self.format_date(entity.date_attribute)
