@@ -37,7 +37,7 @@ Your application is now ready to go::
 
     cubicweb-ctl start -D myblog
 
-This is it. Your blog is ready to you. Go to http://localhost:8080 and enjoy!!
+This is it. Your blog is ready to you. Go to http://localhost:8080 and enjoy!
 
 
 A little code snapshot from behind the scene
