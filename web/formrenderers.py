@@ -20,24 +20,35 @@ from cubicweb.web.widgets import checkbox
 class FormRenderer(object):
     """basic renderer displaying fields in a two columns table label | value
     """
+    display_fields = None # None -> all fields
+    display_label = True
+    display_help = True
+    display_progress_div = True
     button_bar_class = u'formButtonBar'
     
-    def __init__(self, display_fields=None, display_label=True,
-                 display_help=True, button_bar_class=None):
-        self.display_fields = display_fields # None -> all fields
-        self.display_label = display_label
-        self.display_help = display_help
-        if button_bar_class is not None:
-            self.button_bar_class = button_bar_class
-            
+    def __init__(self, **kwargs):
+        if self._set_options(kwargs):
+            raise ValueError('unconsumed arguments %s' % kwargs)
+
+    def _set_options(self, kwargs):
+        for key in ('display_fields', 'display_label', 'display_help',
+                    'display_progress_div', 'button_bar_class'):
+            try:
+                setattr(self, key, kwargs.pop(key))
+            except KeyError:
+                continue
+        return kwargs
+    
     # renderer interface ######################################################
     
     def render(self, form, values):
+        self._set_options(values)
         form.add_media()
         data = []
         w = data.append
         w(self.open_form(form, values))
-        w(u'<div id="progress">%s</div>' % form.req._('validating...'))
+        if self.display_progress_div:
+            w(u'<div id="progress">%s</div>' % form.req._('validating...'))
         w(u'<fieldset>')
         w(tags.input(type=u'hidden', name=u'__form_id',
                      value=values.get('formvid', form.id)))
