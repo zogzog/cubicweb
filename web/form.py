@@ -388,7 +388,7 @@ class EntityFieldsForm(FieldsForm):
         msg = kwargs.pop('submitmsg', None)
         super(EntityFieldsForm, self).__init__(*args, **kwargs)
         if self.edited_entity is None:
-            self.edited_entity = self.complete_entity(self.row)
+            self.edited_entity = self.complete_entity(self.row, self.col)
         self.form_add_hidden('__type', eidparam=True)
         self.form_add_hidden('eid')
         if msg is not None:
