@@ -342,7 +342,7 @@ class AddComboBoxWidget(Select):
   <input type="text" id="newopt" />
   <a href="javascript:noop()" id="add_newopt">&nbsp;</a></div>
 '''
-        
+
 # buttons ######################################################################
 
 class Button(Input):

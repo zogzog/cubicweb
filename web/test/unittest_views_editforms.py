@@ -2,11 +2,20 @@ from logilab.common.testlib import unittest_main
 from cubicweb.devtools.apptest import EnvBasedTC
 from cubicweb.devtools.testlib import WebTest
 from cubicweb.web.views.editforms import AutomaticEntityForm as AEF
-
+from cubicweb.web.formwidgets import AutoCompletionWidget
 def rbc(entity, category):
     return [(rschema.type, x) for rschema, tschemas, x in AEF.erelations_by_category(entity, category)]
 
 class AutomaticEntityFormTC(EnvBasedTC):
+
+    def test_custom_widget(self):
+        AEF.rwidgets.set_rtag(AutoCompletionWidget, 'login', 'subject', 'EUser')
+        form = self.vreg.select_object('forms', 'edition', self.request(), None,
+                                       entity=self.user())
+        field = form.field_by_name('login')
+        self.assertIsInstance(field.widget, AutoCompletionWidget)
+        AEF.rwidgets.del_rtag('login', 'subject', 'EUser')
+        
 
     def test_euser_relations_by_category(self):
         #for (rtype, role, stype, otype), tag in AEF.rcategories._tagdefs.items():

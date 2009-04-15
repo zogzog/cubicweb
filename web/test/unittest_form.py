@@ -1,12 +1,22 @@
 from logilab.common.testlib import unittest_main, mock_object
 from cubicweb import Binary
 from cubicweb.devtools.testlib import WebTest
-from cubicweb.web.form import EntityFieldsForm, FormRenderer
+from cubicweb.web.form import EntityFieldsForm, FieldsForm, FormRenderer
 from cubicweb.web.formfields import (IntField, StringField, RichTextField,
                                      DateTimeField, DateTimePicker,
                                      FileField, EditableFileField)
 from cubicweb.web.formwidgets import PasswordInput
 from cubicweb.web.views.workflow import ChangeStateForm
+
+
+class FieldsFormTC(WebTest):
+
+    def test_form_field_format(self):
+        form = FieldsForm(self.request(), None)
+        self.assertEquals(form.form_field_format(None), 'text/html')
+        self.execute('INSERT EProperty X: X pkey "ui.default-text-format", X value "text/rest", X for_user U WHERE U login "admin"')
+        self.commit()
+        self.assertEquals(form.form_field_format(None), 'text/rest')
 
 
 class EntityFieldsFormTC(WebTest):
@@ -38,6 +48,21 @@ class EntityFieldsFormTC(WebTest):
         unrelated = [rview for rview, reid in form.subject_relation_vocabulary('in_group')]
         # should be default groups but owners, i.e. managers, users, guests
         self.assertEquals(unrelated, [u'guests', u'managers', u'users'])
+
+    def test_subject_in_state_vocabulary(self):
+        # on a new entity
+        e = self.etype_instance('EUser')
+        form = EntityFieldsForm(self.request(), None, entity=e)
+        states = list(form.subject_in_state_vocabulary('in_state'))
+        self.assertEquals(len(states), 1)
+        self.assertEquals(states[0][0], u'activated') # list of (combobox view, state eid)
+        # on an existant entity
+        e = self.user()
+        form = EntityFieldsForm(self.request(), None, entity=e)
+        states = list(form.subject_in_state_vocabulary('in_state'))
+        self.assertEquals(len(states), 1)
+        self.assertEquals(states[0][0], u'deactivated') # list of (combobox view, state eid)
+
 
         
     # form view tests #########################################################
