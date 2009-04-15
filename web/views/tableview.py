@@ -326,4 +326,3 @@ class InitialTableView(TableView):
 class EditableInitialTableTableView(InitialTableView):
     id = 'editable-initialtable'
     finalview = 'editable-final'
-    
