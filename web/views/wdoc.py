@@ -16,7 +16,7 @@ from logilab.mtconverter import CHARSET_DECL_RGX
 
 from cubicweb.selectors import match_form_params
 from cubicweb.view import StartupView
-from cubicweb.utils import strptime
+from cubicweb.utils import strptime, todate
 from cubicweb.common.uilib import rest_publish
 from cubicweb.web import NotFound
 
@@ -192,6 +192,7 @@ class ChangeLogView(StartupView):
         title = self.req._(self.title)
         restdata = ['.. -*- coding: utf-8 -*-', '', title, '='*len(title), '']
         w = restdata.append
+        today = date.today()
         for fpath in self.config.locate_all_files(rid):
             cl = ChangeLog(fpath)
             encoding = 'utf-8'
@@ -205,9 +206,9 @@ class ChangeLogView(StartupView):
                     w(unicode(line, encoding))
             for entry in cl.entries:
                 if entry.date:
-                    edate = strptime(entry.date, '%Y-%m-%d')
+                    edate = todate(strptime(entry.date, '%Y-%m-%d'))
                 else:
-                    edate = date.today()
+                    edate = today
                 messages = []
                 for msglines, submsgs in entry.messages:
                     msgstr = unicode(' '.join(l.strip() for l in msglines), encoding)
@@ -225,7 +226,7 @@ class ChangeLogView(StartupView):
                 fdate = self.format_date(edate)
                 w(u'\n%s' % fdate)
                 w('~' * len(fdate))
-                latestdate = date
+                latestdate = edate
             for msg in messages:
                 w(u'* %s' % msg)
                 i += 1
