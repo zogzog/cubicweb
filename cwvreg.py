@@ -122,11 +122,11 @@ class CubicWebRegistry(VRegistry):
                 return
             # remove vobjects that don't support any available interface
             implemented_interfaces = set()
-            for classes in self.get('etypes', {}).values():
-                for cls in classes:
-                    for iface in cls.__implements__:
-                        implemented_interfaces.update(iface.__mro__)
-                    implemented_interfaces.update(cls.__mro__)
+            for etype in self.schema.entities():
+                cls = self.etype_class(etype)
+                for iface in cls.__implements__:
+                    implemented_interfaces.update(iface.__mro__)
+                implemented_interfaces.update(cls.__mro__)
             for obj, ifaces in self._needs_iface.items():
                 ifaces = frozenset(isinstance(iface, basestring)
                                    and iface in self.schema
