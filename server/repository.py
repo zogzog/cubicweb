@@ -490,18 +490,19 @@ class Repository(object):
         finally:
             session.close()
 
-    def register_user(self, login, password, **kwargs):
+    def register_user(self, login, password, email=None, **kwargs):
         """check a user with the given login exists, if not create it with the
         given password. This method is designed to be used for anonymous
         registration on public web site.
         """
         session = self.internal_session()
+        # for consistency, keep same error as unique check hook (although not required)
+        errmsg = session._('the value "%s" is already used, use another one')
         try:
-            if session.execute('EUser X WHERE X login %(login)s', {'login': login}):
-                return False
-            if session.execute('EUser X WHERE X use_email C, C address %(login)s',
-                               {'login': login}):
-                return False
+            if (session.execute('EUser X WHERE X login %(login)s', {'login': login})
+                or session.execute('EUser X WHERE X use_email C, C address %(login)s',
+                                   {'login': login})):
+                raise ValidationError(None, {'login': errmsg % login})
             # we have to create the user
             user = self.vreg.etype_class('EUser')(session, None)
             if isinstance(password, unicode):
@@ -513,11 +514,12 @@ class Repository(object):
             self.glob_add_entity(session, user)
             session.execute('SET X in_group G WHERE X eid %(x)s, G name "users"',
                             {'x': user.eid})
-            # FIXME this does not work yet
-            if '@' in login:
-                session.execute('INSERT EmailAddress X: X address "%(login)s", '
-                                'U primary_email X, U use_email X WHERE U login "%(login)s"',
-                                {'login':login})
+            if email or '@' in login:
+                d = {'login': login, 'email': email or login}
+                if session.execute('EmailAddress X WHERE X address %(email)s', d):
+                    raise ValidationError(None, {'address': errmsg % d['email']})
+                session.execute('INSERT EmailAddress X: X address %(email)s, '
+                                'U primary_email X, U use_email X WHERE U login %(login)s', d)
             session.commit()
         finally:
             session.close()
