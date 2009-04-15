@@ -118,7 +118,8 @@ class ClickAndEditFormView(FormViewMixIn, EntityView):
                                        cssstyle='display: none',
                                        onsubmit=self.onsubmit % locals())
         renderer = FormRenderer(display_label=False, display_help=False,
-                                display_fields=(rtype,), button_bar_class='buttonbar')
+                                display_fields=(rtype,), button_bar_class='buttonbar',
+                                display_progress_div=False)
         self.w(tags.div(value, klass='editableField', id=divid,
                         ondblclick=self.ondblclick % locals()))
         self.w(form.form_render(renderer=renderer))
