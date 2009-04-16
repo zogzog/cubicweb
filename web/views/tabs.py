@@ -96,19 +96,25 @@ class TabsMixin(LazyViewMixin):
         return selected_tabs
 
     def render_tabs(self, tabs, default, entity):
+        # tabbed views do no support concatenation
+        # hence we delegate to the default tab if there is more than on entity
+        # in the result set
+        if len(self.rset) > 1:
+            entity.view(default, w=self.w)
+            return
+        # XXX (syt) fix below add been introduced at some point to fix something
+        # (http://intranet.logilab.fr/jpl/ticket/32174 ?) but this is not a clean
+        # way. We must not consider form['rql'] here since it introduces some
+        # other failures on non rql queries (plain text, shortcuts,... handled by
+        # magicsearch) which has a single result whose primary view is using tabs
+        # (https://www.logilab.net/cwo/ticket/342789)
+        #rql = self.req.form.get('rql')
+        #if rql:
+        #    self.req.execute(rql).get_entity(0,0).view(default, w=self.w)
+        #    return
         self.req.add_css('ui.tabs.css')
         self.req.add_js(('ui.core.js', 'ui.tabs.js',
                          'cubicweb.ajax.js', 'cubicweb.tabs.js', 'cubicweb.lazy.js'))
-        # tabbed views do no support concatenation
-        # hence we delegate to the default tab
-        form = self.req.form
-        if form.get('vid') == 'primary':
-            entity.view(default, w=self.w)
-            return
-        rql = form.get('rql')
-        if rql:
-            self.req.execute(rql).get_entity(0,0).view(default, w=self.w)
-            return
         # prune tabs : not all are to be shown
         tabs = self.prune_tabs(tabs)
         # select a tab
