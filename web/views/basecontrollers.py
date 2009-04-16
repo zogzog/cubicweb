@@ -379,7 +379,7 @@ class JSonController(Controller):
 
     def js_format_date(self, strdate):
         """returns the formatted date for `msgid`"""
-        date = strptime(strdate)
+        date = strptime(strdate, '%Y-%m-%d %H:%M:%S')
         return self.format_date(date)
 
     def js_external_resource(self, resource):
