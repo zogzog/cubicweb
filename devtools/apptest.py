@@ -228,6 +228,10 @@ class EnvBasedTC(TestCase):
     def paddrelactions(self, req, rset):
         return [(a.id, a.__class__) for a in self.vreg.possible_vobjects('actions', req, rset)
                 if a.category == 'addrelated']
+
+    def pmainactions(self, req, rset):
+        return [(a.id, a.__class__) for a in self.vreg.possible_vobjects('actions', req, rset)
+                if a.category == 'mainactions']
                
     def remote_call(self, fname, *args):
         """remote call simulation"""
