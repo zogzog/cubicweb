@@ -614,8 +614,6 @@ given, appropriate sources for migration will be automatically selected \
     
     def upgrade_application(self, appid):
         from logilab.common.changelog import Version
-        if not (CubicWebConfiguration.mode == 'dev' or self.config.nostartstop):
-            self.stop_application(appid)
         config = CubicWebConfiguration.config_for(appid)
         config.creating = True # notice we're not starting the server
         config.verbosity = self.config.verbosity
@@ -659,6 +657,9 @@ given, appropriate sources for migration will be automatically selected \
             return
         for cube, fromversion, toversion in toupgrade:
             print '**** %s migration %s -> %s' % (cube, fromversion, toversion)
+        # only stop once we're sure we have something to do
+        if not (CubicWebConfiguration.mode == 'dev' or self.config.nostartstop):
+            self.stop_application(appid)
         # run cubicweb/componants migration scripts
         mih.migrate(vcconf, reversed(toupgrade), self.config)
         # rewrite main configuration file
