@@ -346,7 +346,11 @@ class AddComboBoxWidget(Select):
 # buttons ######################################################################
 
 class Button(Input):
-    """<input type='button'>, base class for global form buttons"""
+    """<input type='button'>, base class for global form buttons
+
+    note label is a msgid which will be translated at form generation time, you
+    should not give an already translated string.
+    """
     type = 'button'
     def __init__(self, label=stdmsgs.BUTTON_OK, attrs=None,
                  setdomid=None, settabindex=None,
@@ -392,6 +396,9 @@ class ResetButton(Button):
 class ImgButton(object):
     """<img> wrapped into a <a> tag with href triggering something (usually a
     javascript call)
+
+    note label is a msgid which will be translated at form generation time, you
+    should not give an already translated string.
     """
     def __init__(self, domid, href, label, imgressource):
         self.domid = domid
@@ -400,8 +407,13 @@ class ImgButton(object):
         self.label = label
         
     def render(self, form, field=None):
-        self.imgsrc = form.req.external_resource(self.imgressource)
-        return '<a id="%(domid)s" href="%(href)s"><img src="%(imgsrc)s" alt="%(label)s"/>%(label)s</a>' % self.__dict__
+        label = form.req._(self.label)
+        imgsrc = form.req.external_resource(self.imgressource)
+        return '<a id="%(domid)s" href="%(href)s">'\
+               '<img src="%(imgsrc)s" alt="%(label)s"/>%(label)s</a>' % {
+            'label': label, 'imgsrc': imgsrc,
+            'domid': self.domid, 'href': self.href}
+            
 
     
 # XXX EntityLinkComboBoxWidget, [Raw]DynamicComboBoxWidget
