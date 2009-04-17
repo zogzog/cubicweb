@@ -343,14 +343,22 @@ class FieldsForm(FormMixIn, AppRsetObject):
         1. kw args given to render_form (including previously submitted form
            values if any)
         2. req.form
-        3. field's initial value
+        3. default_<fieldname> attribute / method on the form
+        4. field's initial value
         """
+        defaultattr = 'default_%s' % field.name
         if field.name in values:
             value = values[field.name]
         elif field.name in self.req.form:
             value = self.req.form[field.name]
+        elif hasattr(self, defaultattr):
+            value = getattr(self, defaultattr)
+            if callable(value):
+                value = value()
         else:
             value = field.initial
+            if callable(value):
+                value = value(self)
         return value
     
     def form_field_error(self, field):
@@ -479,7 +487,7 @@ class EntityFieldsForm(FieldsForm):
                     # use field's initial value
                     value = field.initial
             if callable(value):
-                value = value()
+                value = value(self)
         return value
     
     def form_field_format(self, field):
