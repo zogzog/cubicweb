@@ -281,6 +281,7 @@ class FieldsForm(FormMixIn, AppRsetObject):
     
     @iclassmethod
     def remove_field(cls_or_self, field):
+        """remove a field from form class or instance"""
         if isinstance(cls_or_self, type):
             fields = cls_or_self._fields_
         else:
@@ -289,6 +290,7 @@ class FieldsForm(FormMixIn, AppRsetObject):
     
     @iclassmethod
     def append_field(cls_or_self, field):
+        """append a field to form class or instance"""
         if isinstance(cls_or_self, type):
             fields = cls_or_self._fields_
         else:
@@ -297,9 +299,11 @@ class FieldsForm(FormMixIn, AppRsetObject):
     
     @property
     def form_needs_multipart(self):
+        """true if the form needs enctype=multipart/form-data"""
         return any(field.needs_multipart for field in self.fields) 
 
     def form_add_hidden(self, name, value=None, **kwargs):
+        """add an hidden field to the form"""
         field = StringField(name=name, widget=fwdgs.HiddenInput, initial=value,
                             **kwargs)
         if 'id' in kwargs:
@@ -317,10 +321,21 @@ class FieldsForm(FormMixIn, AppRsetObject):
             self.req.add_css(self.needs_css)
 
     def form_render(self, **values):
+        """render this form, using the renderer given in args or the default
+        FormRenderer()
+        """
         renderer = values.pop('renderer', FormRenderer())
         return renderer.render(self, values)
 
-    def form_build_context(self, values=None):
+    def form_build_context(self, rendervalues=None):
+        """build form context values (the .context attribute which is a
+        dictionary with field instance as key associated to a dictionary
+        containing field 'name' (qualified), 'id', 'value' (for display, always
+        a string).
+
+        rendervalues is an optional dictionary containing extra kwargs given to
+        form_render()
+        """
         self.context = context = {}
         # on validation error, we get a dictionnary of previously submitted values
         if values is None:
