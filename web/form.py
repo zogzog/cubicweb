@@ -337,49 +337,64 @@ class FieldsForm(FormMixIn, AppRsetObject):
         form_render()
         """
         self.context = context = {}
-        # on validation error, we get a dictionnary of previously submitted values
-        if values is None:
-            values = {}
-        previous_values = self.req.data.get('formvalues')
-        if previous_values:
-            values.update(previous_values)
+        # on validation error, we get a dictionary of previously submitted
+        # values
+        self._previous_values = self.req.data.get('formvalues', {})
+        # ensure rendervalues is a dict
+        if rendervalues is None:
+            rendervalues = {}
         for field in self.fields:
             for field in field.actual_fields(self):
                 field.form_init(self)
-                value = self.form_field_value(field, values)
-                context[field] = {'value': field.format_value(self.req, value),
-                                  'rawvalue': value,
+                value = self.form_field_display_value(field, rendervalues)
+                context[field] = {'value': value,
                                   'name': self.form_field_name(field),
                                   'id': self.form_field_id(field),
                                   }
 
-    def form_field_value(self, field, values, load_bytes=False):
-        """looks for field's value in
-        1. kw args given to render_form (including previously submitted form
-           values if any)
+    def form_field_display_value(self, field, rendervalues, load_bytes=False):
+        """return field's *string* value to use for display
+        
+        looks in
+        1. previously submitted form values if any (eg on validation error)
         2. req.form
-        3. default_<fieldname> attribute / method on the form
-        4. field's initial value
+        3. extra kw args given to render_form
+        4. field's typed value
+
+        values found in 1. and 2. are expected te be already some 'display'
+        value while those found in 3. and 4. are expected to be correctly typed.
         """
-        defaultattr = 'default_%s' % field.name
-        if field.name in values:
-            value = values[field.name]
+        if field.name in self._previous_values:
+            value = self._previous_values[field.name]
         elif field.name in self.req.form:
             value = self.req.form[field.name]
-        elif hasattr(self, defaultattr):
-            value = getattr(self, defaultattr)
-            if callable(value):
-                value = value()
         else:
-            value = field.initial
-            if callable(value):
-                value = value(self)
+            if field.name in rendervalues:
+                value = rendervalues[field.name]
+            else:
+                value = self.form_field_value(field, load_bytes)
+                if callable(value):
+                    value = value(self)
+            if value != INTERNAL_FIELD_VALUE: 
+                value = field.format_value(self.req, value)
         return value
+
+    def form_field_value(self, field, load_bytes=False):
+        """return field's *typed* value"""
+        value = field.initial
+        if callable(value):
+            value = value(self)
+        return value
+
+    def _errex_match_field(self, errex, field):
+        """return true if the field has some error in given validation exception
+        """
+        return field.name in errex.errors
     
     def form_field_error(self, field):
         """return validation error for widget's field, if any"""
         errex = self.req.data.get('formerrors')
-        if errex and field.name in errex.errors:
+        if errex and self._errex_match_field(errex, field):
             self.req.data['displayederrors'].add(field.name)
             return u'<span class="error">%s</span>' % errex.errors[field.name]
         return u''
@@ -447,64 +462,68 @@ class EntityFieldsForm(FieldsForm):
             name = 'edito-%s' % field.name
         return HiddenInitialValueField(field, name=name)
         
-    def form_field_value(self, field, values, load_bytes=False):
-        """look for field's value with the following rules:
-        1. handle special __type and eid fields
-        2. looks in kw args given to render_form (including previously submitted
-           form values if any)
-        3. looks in req.form
-        4. if entity has an eid:
-             1. looks for an associated attribute / method
-             2. use field's initial value
-           else:
-             1. looks for a default_<fieldname> attribute / method on the form
-             2. use field's initial value
-             
-        values found in step 4 may be a callable which'll then be called.
+    def form_field_value(self, field, load_bytes=False):
+        """return field's *typed* value
+
+        overriden to deal with
+        * special eid / __type / edits- / edito- fields
+        * lookup for values on edited entities
         """
-        fieldname = field.name
-        if fieldname.startswith('edits-') or fieldname.startswith('edito-'):
+        attr = field.name
+        entity = self.edited_entity
+        if attr == 'eid':
+            return entity.eid
+        if not field.eidparam:
+            return super(EntityFieldsForm, self).form_field_value(field, load_bytes)
+        if attr.startswith('edits-') or attr.startswith('edito-'):
             # edit[s|o]- fieds must have the actual value stored on the entity
-            if hasattr(field, 'visible_field'):
-                if self.edited_entity.has_eid():
-                    value = self._form_field_entity_value(field.visible_field,
-                                                          default_initial=False)
-                else:
-                    value = INTERNAL_FIELD_VALUE
+            assert hasattr(field, 'visible_field')
+            vfield = field.visible_field
+            assert vfield.eidparam
+            if entity.has_eid():
+                return self.form_field_value(vfield)
+            return INTERNAL_FIELD_VALUE
+        if attr == '__type':
+            return entity.id
+        if field.role == 'object':
+            attr = 'reverse_' + attr
+        elif entity.e_schema.subject_relation(attr).is_final():
+            attrtype = entity.e_schema.destination(attr)
+            if attrtype == 'Password':
+                return entity.has_eid() and INTERNAL_FIELD_VALUE or ''
+            if attrtype == 'Bytes':
+                if entity.has_eid():
+                    if load_bytes:
+                        return getattr(entity, attr)
+                    # XXX value should reflect if some file is already attached
+                    return True
+                return False
+            if entity.has_eid():
+                value = getattr(entity, attr)
             else:
-                value = field.initial
-        elif fieldname == '__type':
-            value = self.edited_entity.id
-        elif fieldname == 'eid':
-            value = self.edited_entity.eid
-        elif fieldname in values:
-            value = values[fieldname]
-        elif fieldname in self.req.form:
-            value = self.req.form[fieldname]
+                value = self._form_field_default_value(field, load_bytes)
+            return value
+        # non final relation field
+        if entity.has_eid():
+            value = [ent.eid for ent in getattr(entity, attr)]
         else:
-            if self.edited_entity.has_eid() and field.eidparam:
-                # use value found on the entity or field's initial value if it's
-                # not an attribute of the entity (XXX may conflicts and get
-                # undesired value)
-                value = self._form_field_entity_value(field, default_initial=True,
-                                                      load_bytes=load_bytes)
-            else:
-                defaultattr = 'default_%s' % fieldname
-                if hasattr(self.edited_entity, defaultattr):
-                    # XXX bw compat, default_<field name> on the entity
-                    warn('found %s on %s, should be set on a specific form'
-                         % (defaultattr, self.edited_entity.id), DeprecationWarning)
-                    value = getattr(self.edited_entity, defaultattr)
-                elif hasattr(self, defaultattr):
-                    # search for default_<field name> on the form instance
-                    value = getattr(self, defaultattr)
-                else:
-                    # use field's initial value
-                    value = field.initial
-            if callable(value):
-                value = value(self)
+            value = self._form_field_default_value(field, load_bytes)
         return value
-    
+
+    def _form_field_default_value(self, field, load_bytes):
+        defaultattr = 'default_%s' % field.name
+        if hasattr(self.edited_entity, defaultattr):
+            # XXX bw compat, default_<field name> on the entity
+            warn('found %s on %s, should be set on a specific form'
+                 % (defaultattr, self.edited_entity.id), DeprecationWarning)
+            value = getattr(self.edited_entity, defaultattr)
+            if callable(value):
+                value = value()
+        else:
+            value = super(EntityFieldsForm, self).form_field_value(field,
+                                                                   load_bytes)
+        return value
+        
     def form_field_format(self, field):
         entity = self.edited_entity
         if field.eidparam and entity.e_schema.has_metadata(field.name, 'format') and (
@@ -519,38 +538,11 @@ class EntityFieldsForm(FieldsForm):
             return self.edited_entity.attr_metadata(field.name, 'encoding')
         return super(EntityFieldsForm, self).form_field_encoding(field)
     
-    def form_field_error(self, field):
-        """return validation error for widget's field, if any"""
-        errex = self.req.data.get('formerrors')
-        if errex and errex.eid == self.edited_entity.eid and field.name in errex.errors:
-            self.req.data['displayederrors'].add(field.name)
-            return u'<span class="error">%s</span>' % errex.errors[field.name]
-        return u''
-
-    def _form_field_entity_value(self, field, default_initial=True, load_bytes=False):
-        attr = field.name
-        entity = self.edited_entity
-        if field.role == 'object':
-            attr = 'reverse_' + attr
-        elif entity.e_schema.subject_relation(attr).is_final():
-            attrtype = entity.e_schema.destination(attr)
-            if attrtype == 'Password':
-                return entity.has_eid() and INTERNAL_FIELD_VALUE or ''
-            if attrtype == 'Bytes':
-                if entity.has_eid():
-                    if load_bytes:
-                        return getattr(entity, attr)
-                    # XXX value should reflect if some file is already attached
-                    return True
-                return False
-        if default_initial:
-            value = getattr(entity, attr, field.initial)
-        else:
-            value = getattr(entity, attr)
-        if isinstance(field, RelationField):
-            # in this case, value is the list of related entities
-            value = [ent.eid for ent in value]
-        return value
+    
+    def _errex_match_field(self, errex, field):
+        """return true if the field has some error in given validation exception
+        """
+        return errex.eid == self.edited_entity.eid and field.name in errex.errors
     
     def form_field_name(self, field):
         if field.eidparam:

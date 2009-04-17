@@ -251,19 +251,19 @@ class DateTimePicker(TextInput):
         return txtwidget + cal_button
     
     def _render_calendar_popup(self, form, field):
-        req = form.req
-        value = form.context[field]['rawvalue']
-        inputid = form.context[field]['id']
-        helperid = '%shelper' % inputid
+        value = form.form_field_value(field)
         if not value:
             value = date.today()
+        inputid = form.context[field]['id']
+        helperid = '%shelper' % inputid
         year, month = value.year, value.month
         return (u"""<a onclick="toggleCalendar('%s', '%s', %s, %s);" class="calhelper">
 <img src="%s" title="%s" alt="" /></a><div class="calpopup hidden" id="%s"></div>"""
                 % (helperid, inputid, year, month,
-                   req.external_resource('CALENDAR_ICON'),
-                   req._('calendar'), helperid) )
+                   form.req.external_resource('CALENDAR_ICON'),
+                   form.req._('calendar'), helperid) )
 
+        
 
 # ajax widgets ################################################################
 

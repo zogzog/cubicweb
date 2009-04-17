@@ -303,7 +303,7 @@ class EditableFileField(FileField):
     def render(self, form, renderer):
         wdgs = [super(EditableFileField, self).render(form, renderer)]
         if form.form_field_format(self) in self.editable_formats:
-            data = form.form_field_value(self, {}, load_bytes=True)
+            data = form.form_field_value(self, load_bytes=True)
             if data:
                 encoding = form.form_field_encoding(self)
                 try:
