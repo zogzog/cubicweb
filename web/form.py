@@ -256,16 +256,20 @@ class FieldsForm(FormMixIn, AppRsetObject):
                  **kwargs):
         super(FieldsForm, self).__init__(req, rset, row=row, col=col)
         for key, val in kwargs.items():
-            assert hasattr(self.__class__, key) and not key[0] == '_', key
-            setattr(self, key, val)
+            if key in NAV_FORM_PARAMETERS:
+                self.form_add_hidden(key, val)
+            else:
+                assert hasattr(self.__class__, key) and not key[0] == '_', key
+                setattr(self, key, val)
         self.fields = list(self.__class__._fields_)
         if self.set_error_url:
             self.form_add_hidden('__errorurl', req.url())
         if self.copy_nav_params:
             for param in NAV_FORM_PARAMETERS:
-                value = kwargs.get(param, req.form.get(param))
-                if value:
-                    self.form_add_hidden(param, value)
+                if not param in kwargs:
+                    value = req.form.get(param)
+                    if value:
+                        self.form_add_hidden(param, value)
         if submitmsg is not None:
             self.form_add_hidden('__message', submitmsg)
         self.context = None
