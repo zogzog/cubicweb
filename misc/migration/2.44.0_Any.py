@@ -5,7 +5,7 @@ drop_relation_definition('CWPermission', 'require_state', 'State')
 
 if confirm('cleanup require_permission relation'):
     try:
-        newrschema = newschema.rschema('require_permission')
+        newrschema = fsschema.rschema('require_permission')
     except KeyError:
         newrschema = None
     for rsubj, robj in schema.rschema('require_permission').rdefs():

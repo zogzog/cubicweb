@@ -21,6 +21,7 @@ import os
 from os.path import join, exists
 from datetime import datetime
 
+from logilab.common.deprecation import deprecated_function, obsolete
 from logilab.common.decorators import cached
 from logilab.common.adbh import get_adv_func_helper
 
@@ -28,6 +29,7 @@ from yams.constraints import SizeConstraint
 from yams.schema2sql import eschema2sql, rschema2sql
 
 from cubicweb import AuthenticationError, ETYPE_NAME_MAP
+from cubicweb.schema import CubicWebRelationSchema
 from cubicweb.dbapi import get_repository, repo_connect
 from cubicweb.common.migration import MigrationHelper, yes
 
@@ -223,12 +225,12 @@ class ServerMigrationHelper(MigrationHelper):
                         'rql': self.rqlexec,
                         'rqliter': self.rqliter,
                         'schema': self.repo.schema,
-                        # XXX deprecate
-                        'newschema': self.fs_schema,
                         'fsschema': self.fs_schema,
-                        'cnx': self.cnx,
                         'session' : self.session,
                         'repo' : self.repo,
+                        'synchronize_schema': deprecated_function(self.sync_schema_props_perms),
+                        'synchronize_eschema': deprecated_function(self.sync_schema_props_perms),
+                        'synchronize_rschema': deprecated_function(self.sync_schema_props_perms),
                         })
         return context
 
@@ -264,6 +266,200 @@ class ServerMigrationHelper(MigrationHelper):
                                                'after_add_entity', '')
                     self.reactivate_verification_hooks()
     
+    # schema synchronization internals ########################################
+    
+    def _synchronize_permissions(self, ertype):
+        """permission synchronization for an entity or relation type"""
+        if ertype in ('eid', 'has_text', 'identity'):
+            return
+        newrschema = self.fs_schema[ertype]
+        teid = self.repo.schema[ertype].eid
+        if 'update' in newrschema.ACTIONS or newrschema.is_final():
+            # entity type
+            exprtype = u'ERQLExpression'
+        else:
+            # relation type
+            exprtype = u'RRQLExpression'
+        assert teid, ertype
+        gm = self.group_mapping()
+        confirm = self.verbosity >= 2
+        # * remove possibly deprecated permission (eg in the persistent schema
+        #   but not in the new schema)
+        # * synchronize existing expressions
+        # * add new groups/expressions
+        for action in newrschema.ACTIONS:
+            perm = '%s_permission' % action
+            # handle groups
+            newgroups = list(newrschema.get_groups(action))
+            for geid, gname in self.rqlexec('Any G, GN WHERE T %s G, G name GN, '
+                                            'T eid %%(x)s' % perm, {'x': teid}, 'x',
+                                            ask_confirm=False):
+                if not gname in newgroups:
+                    if not confirm or self.confirm('remove %s permission of %s to %s?'
+                                                   % (action, ertype, gname)):
+                        self.rqlexec('DELETE T %s G WHERE G eid %%(x)s, T eid %s'
+                                     % (perm, teid),
+                                     {'x': geid}, 'x', ask_confirm=False)
+                else:
+                    newgroups.remove(gname)
+            for gname in newgroups:
+                if not confirm or self.confirm('grant %s permission of %s to %s?'
+                                               % (action, ertype, gname)):
+                    self.rqlexec('SET T %s G WHERE G eid %%(x)s, T eid %s'
+                                 % (perm, teid),
+                                 {'x': gm[gname]}, 'x', ask_confirm=False)
+            # handle rql expressions
+            newexprs = dict((expr.expression, expr) for expr in newrschema.get_rqlexprs(action))
+            for expreid, expression in self.rqlexec('Any E, EX WHERE T %s E, E expression EX, '
+                                                    'T eid %s' % (perm, teid),
+                                                    ask_confirm=False):
+                if not expression in newexprs:
+                    if not confirm or self.confirm('remove %s expression for %s permission of %s?'
+                                                   % (expression, action, ertype)):
+                        # deleting the relation will delete the expression entity
+                        self.rqlexec('DELETE T %s E WHERE E eid %%(x)s, T eid %s'
+                                     % (perm, teid),
+                                     {'x': expreid}, 'x', ask_confirm=False)
+                else:
+                    newexprs.pop(expression)
+            for expression in newexprs.values():
+                expr = expression.expression
+                if not confirm or self.confirm('add %s expression for %s permission of %s?'
+                                               % (expr, action, ertype)):
+                    self.rqlexec('INSERT RQLExpression X: X exprtype %%(exprtype)s, '
+                                 'X expression %%(expr)s, X mainvars %%(vars)s, T %s X '
+                                 'WHERE T eid %%(x)s' % perm,
+                                 {'expr': expr, 'exprtype': exprtype,
+                                  'vars': expression.mainvars, 'x': teid}, 'x',
+                                 ask_confirm=False)
+        
+    def _synchronize_rschema(self, rtype, syncrdefs=True, syncperms=True):
+        """synchronize properties of the persistent relation schema against its
+        current definition:
+        
+        * description
+        * symetric, meta
+        * inlined
+        * relation definitions if `syncrdefs`
+        * permissions if `syncperms`
+        
+        physical schema changes should be handled by repository's schema hooks
+        """
+        rtype = str(rtype)
+        if rtype in self._synchronized:
+            return
+        self._synchronized.add(rtype)
+        rschema = self.fs_schema.rschema(rtype)
+        self.rqlexecall(ss.updaterschema2rql(rschema),
+                        ask_confirm=self.verbosity>=2)
+        reporschema = self.repo.schema.rschema(rtype)
+        if syncrdefs:
+            for subj, obj in rschema.iter_rdefs():
+                if not reporschema.has_rdef(subj, obj):
+                    continue
+                self._synchronize_rdef_schema(subj, rschema, obj)
+        if syncperms:
+            self._synchronize_permissions(rtype)
+                
+    def _synchronize_eschema(self, etype, syncperms=True):
+        """synchronize properties of the persistent entity schema against
+        its current definition:
+        
+        * description
+        * internationalizable, fulltextindexed, indexed, meta
+        * relations from/to this entity
+        * permissions if `syncperms`
+        """
+        etype = str(etype)
+        if etype in self._synchronized:
+            return
+        self._synchronized.add(etype)
+        repoeschema = self.repo.schema.eschema(etype)
+        try:
+            eschema = self.fs_schema.eschema(etype)
+        except KeyError:
+            return
+        repospschema = repoeschema.specializes()
+        espschema = eschema.specializes()
+        if repospschema and not espschema:
+            self.rqlexec('DELETE X specializes Y WHERE X is CWEType, X name %(x)s',
+                         {'x': str(repoeschema)})
+        elif not repospschema and espschema:
+            self.rqlexec('SET X specializes Y WHERE X is CWEType, X name %(x)s, '
+                         'Y is CWEType, Y name %(y)s',
+                         {'x': str(repoeschema), 'y': str(espschema)})
+        self.rqlexecall(ss.updateeschema2rql(eschema),
+                        ask_confirm=self.verbosity >= 2)
+        for rschema, targettypes, x in eschema.relation_definitions(True):
+            if x == 'subject':
+                if not rschema in repoeschema.subject_relations():
+                    continue
+                subjtypes, objtypes = [etype], targettypes
+            else: # x == 'object'
+                if not rschema in repoeschema.object_relations():
+                    continue
+                subjtypes, objtypes = targettypes, [etype]
+            self._synchronize_rschema(rschema, syncperms=syncperms,
+                                      syncrdefs=False)
+            reporschema = self.repo.schema.rschema(rschema)
+            for subj in subjtypes:
+                for obj in objtypes:
+                    if not reporschema.has_rdef(subj, obj):
+                        continue
+                    self._synchronize_rdef_schema(subj, rschema, obj,
+                                                     commit=False)
+        if syncperms:
+            self._synchronize_permissions(etype)
+
+    def _synchronize_rdef_schema(self, subjtype, rtype, objtype):
+        """synchronize properties of the persistent relation definition schema
+        against its current definition:
+        * order and other properties
+        * constraints
+        """
+        subjtype, objtype = str(subjtype), str(objtype)
+        rschema = self.fs_schema.rschema(rtype)
+        reporschema = self.repo.schema.rschema(rschema)
+        if (subjtype, rschema, objtype) in self._synchronized:
+            return
+        self._synchronized.add((subjtype, rschema, objtype))
+        if rschema.symetric:
+            self._synchronized.add((objtype, rschema, subjtype))
+        confirm = self.verbosity >= 2
+        # properties
+        self.rqlexecall(ss.updaterdef2rql(rschema, subjtype, objtype),
+                        ask_confirm=confirm)
+        # constraints
+        newconstraints = list(rschema.rproperty(subjtype, objtype, 'constraints'))
+        # 1. remove old constraints and update constraints of the same type
+        # NOTE: don't use rschema.constraint_by_type because it may be
+        #       out of sync with newconstraints when multiple
+        #       constraints of the same type are used
+        for cstr in reporschema.rproperty(subjtype, objtype, 'constraints'):
+            for newcstr in newconstraints:
+                if newcstr.type() == cstr.type():
+                    break
+            else:
+                newcstr = None
+            if newcstr is None:
+                self.rqlexec('DELETE X constrained_by C WHERE C eid %(x)s',
+                             {'x': cstr.eid}, 'x',
+                             ask_confirm=confirm)
+                self.rqlexec('DELETE CWConstraint C WHERE C eid %(x)s',
+                             {'x': cstr.eid}, 'x',
+                             ask_confirm=confirm)
+            else:
+                newconstraints.remove(newcstr)
+                values = {'x': cstr.eid,
+                          'v': unicode(newcstr.serialize())}
+                self.rqlexec('SET X value %(v)s WHERE X eid %(x)s',
+                             values, 'x', ask_confirm=confirm)
+        # 2. add new constraints
+        for newcstr in newconstraints:
+            self.rqlexecall(ss.constraint2rql(rschema, subjtype, objtype,
+                                              newcstr),
+                            ask_confirm=confirm)
+            
     # base actions ############################################################
 
     def checkpoint(self):
@@ -568,224 +764,44 @@ class ServerMigrationHelper(MigrationHelper):
         if commit:
             self.commit()
         
-    def cmd_synchronize_permissions(self, ertype, commit=True):
-        """permission synchronization for an entity or relation type"""
-        if ertype in ('eid', 'has_text', 'identity'):
-            return
-        newrschema = self.fs_schema[ertype]
-        teid = self.repo.schema[ertype].eid
-        if 'update' in newrschema.ACTIONS or newrschema.is_final():
-            # entity type
-            exprtype = u'ERQLExpression'
-        else:
-            # relation type
-            exprtype = u'RRQLExpression'
-        assert teid, ertype
-        gm = self.group_mapping()
-        confirm = self.verbosity >= 2
-        # * remove possibly deprecated permission (eg in the persistent schema
-        #   but not in the new schema)
-        # * synchronize existing expressions
-        # * add new groups/expressions
-        for action in newrschema.ACTIONS:
-            perm = '%s_permission' % action
-            # handle groups
-            newgroups = list(newrschema.get_groups(action))
-            for geid, gname in self.rqlexec('Any G, GN WHERE T %s G, G name GN, '
-                                            'T eid %%(x)s' % perm, {'x': teid}, 'x',
-                                            ask_confirm=False):
-                if not gname in newgroups:
-                    if not confirm or self.confirm('remove %s permission of %s to %s?'
-                                                   % (action, ertype, gname)):
-                        self.rqlexec('DELETE T %s G WHERE G eid %%(x)s, T eid %s'
-                                     % (perm, teid),
-                                     {'x': geid}, 'x', ask_confirm=False)
-                else:
-                    newgroups.remove(gname)
-            for gname in newgroups:
-                if not confirm or self.confirm('grant %s permission of %s to %s?'
-                                               % (action, ertype, gname)):
-                    self.rqlexec('SET T %s G WHERE G eid %%(x)s, T eid %s'
-                                 % (perm, teid),
-                                 {'x': gm[gname]}, 'x', ask_confirm=False)
-            # handle rql expressions
-            newexprs = dict((expr.expression, expr) for expr in newrschema.get_rqlexprs(action))
-            for expreid, expression in self.rqlexec('Any E, EX WHERE T %s E, E expression EX, '
-                                                    'T eid %s' % (perm, teid),
-                                                    ask_confirm=False):
-                if not expression in newexprs:
-                    if not confirm or self.confirm('remove %s expression for %s permission of %s?'
-                                                   % (expression, action, ertype)):
-                        # deleting the relation will delete the expression entity
-                        self.rqlexec('DELETE T %s E WHERE E eid %%(x)s, T eid %s'
-                                     % (perm, teid),
-                                     {'x': expreid}, 'x', ask_confirm=False)
-                else:
-                    newexprs.pop(expression)
-            for expression in newexprs.values():
-                expr = expression.expression
-                if not confirm or self.confirm('add %s expression for %s permission of %s?'
-                                               % (expr, action, ertype)):
-                    self.rqlexec('INSERT RQLExpression X: X exprtype %%(exprtype)s, '
-                                 'X expression %%(expr)s, X mainvars %%(vars)s, T %s X '
-                                 'WHERE T eid %%(x)s' % perm,
-                                 {'expr': expr, 'exprtype': exprtype,
-                                  'vars': expression.mainvars, 'x': teid}, 'x',
-                                 ask_confirm=False)
-        if commit:
-            self.commit()
-        
-    def cmd_synchronize_rschema(self, rtype, syncrdefs=True, syncperms=True,
-                                commit=True):
-        """synchronize properties of the persistent relation schema against its
-        current definition:
-        
-        * description
-        * symetric, meta
-        * inlined
-        * relation definitions if `syncrdefs`
-        * permissions if `syncperms`
-        
-        physical schema changes should be handled by repository's schema hooks
-        """
-        rtype = str(rtype)
-        if rtype in self._synchronized:
-            return
-        self._synchronized.add(rtype)
-        rschema = self.fs_schema.rschema(rtype)
-        self.rqlexecall(ss.updaterschema2rql(rschema),
-                        ask_confirm=self.verbosity>=2)
-        reporschema = self.repo.schema.rschema(rtype)
-        if syncrdefs:
-            for subj, obj in rschema.iter_rdefs():
-                if not reporschema.has_rdef(subj, obj):
-                    continue
-                self.cmd_synchronize_rdef_schema(subj, rschema, obj,
-                                                 commit=False)
-        if syncperms:
-            self.cmd_synchronize_permissions(rtype, commit=False)
-        if commit:
-            self.commit()
-                
-    def cmd_synchronize_eschema(self, etype, syncperms=True, commit=True):
-        """synchronize properties of the persistent entity schema against
-        its current definition:
-        
-        * description
-        * internationalizable, fulltextindexed, indexed, meta
-        * relations from/to this entity
-        * permissions if `syncperms`
-        """
-        etype = str(etype)
-        if etype in self._synchronized:
-            return
-        self._synchronized.add(etype)
-        repoeschema = self.repo.schema.eschema(etype)
-        try:
-            eschema = self.fs_schema.eschema(etype)
-        except KeyError:
-            return
-        repospschema = repoeschema.specializes()
-        espschema = eschema.specializes()
-        if repospschema and not espschema:
-            self.rqlexec('DELETE X specializes Y WHERE X is CWEType, X name %(x)s',
-                         {'x': str(repoeschema)})
-        elif not repospschema and espschema:
-            self.rqlexec('SET X specializes Y WHERE X is CWEType, X name %(x)s, '
-                         'Y is CWEType, Y name %(y)s',
-                         {'x': str(repoeschema), 'y': str(espschema)})
-        self.rqlexecall(ss.updateeschema2rql(eschema),
-                        ask_confirm=self.verbosity >= 2)
-        for rschema, targettypes, x in eschema.relation_definitions(True):
-            if x == 'subject':
-                if not rschema in repoeschema.subject_relations():
-                    continue
-                subjtypes, objtypes = [etype], targettypes
-            else: # x == 'object'
-                if not rschema in repoeschema.object_relations():
-                    continue
-                subjtypes, objtypes = targettypes, [etype]
-            self.cmd_synchronize_rschema(rschema, syncperms=syncperms,
-                                         syncrdefs=False, commit=False)
-            reporschema = self.repo.schema.rschema(rschema)
-            for subj in subjtypes:
-                for obj in objtypes:
-                    if not reporschema.has_rdef(subj, obj):
-                        continue
-                    self.cmd_synchronize_rdef_schema(subj, rschema, obj,
-                                                     commit=False)
-        if syncperms:
-            self.cmd_synchronize_permissions(etype, commit=False)
-        if commit:
-            self.commit()
-
-    def cmd_synchronize_rdef_schema(self, subjtype, rtype, objtype,
-                                    commit=True):
-        """synchronize properties of the persistent relation definition schema
-        against its current definition:
-        * order and other properties
-        * constraints
-        """
-        subjtype, objtype = str(subjtype), str(objtype)
-        rschema = self.fs_schema.rschema(rtype)
-        reporschema = self.repo.schema.rschema(rschema)
-        if (subjtype, rschema, objtype) in self._synchronized:
-            return
-        self._synchronized.add((subjtype, rschema, objtype))
-        if rschema.symetric:
-            self._synchronized.add((objtype, rschema, subjtype))
-        confirm = self.verbosity >= 2
-        # properties
-        self.rqlexecall(ss.updaterdef2rql(rschema, subjtype, objtype),
-                        ask_confirm=confirm)
-        # constraints
-        newconstraints = list(rschema.rproperty(subjtype, objtype, 'constraints'))
-        # 1. remove old constraints and update constraints of the same type
-        # NOTE: don't use rschema.constraint_by_type because it may be
-        #       out of sync with newconstraints when multiple
-        #       constraints of the same type are used
-        for cstr in reporschema.rproperty(subjtype, objtype, 'constraints'):
-            for newcstr in newconstraints:
-                if newcstr.type() == cstr.type():
-                    break
-            else:
-                newcstr = None
-            if newcstr is None:
-                self.rqlexec('DELETE X constrained_by C WHERE C eid %(x)s',
-                             {'x': cstr.eid}, 'x',
-                             ask_confirm=confirm)
-                self.rqlexec('DELETE CWConstraint C WHERE C eid %(x)s',
-                             {'x': cstr.eid}, 'x',
-                             ask_confirm=confirm)
-            else:
-                newconstraints.remove(newcstr)
-                values = {'x': cstr.eid,
-                          'v': unicode(newcstr.serialize())}
-                self.rqlexec('SET X value %(v)s WHERE X eid %(x)s',
-                             values, 'x', ask_confirm=confirm)
-        # 2. add new constraints
-        for newcstr in newconstraints:
-            self.rqlexecall(ss.constraint2rql(rschema, subjtype, objtype,
-                                              newcstr),
-                            ask_confirm=confirm)
-        if commit:
-            self.commit()
-        
-    def cmd_synchronize_schema(self, syncperms=True, commit=True):
+    def cmd_sync_schema_props_perms(self, ertype=None, syncperms=True,
+                                    syncprops=True, syncrdefs=True, commit=True)
         """synchronize the persistent schema against the current definition
         schema.
         
         It will synch common stuff between the definition schema and the
         actual persistent schema, it won't add/remove any entity or relation.
         """
-        for etype in self.repo.schema.entities():
-            self.cmd_synchronize_eschema(etype, syncperms=syncperms, commit=False)
+        assert syncperms or syncprops, 'nothing to do'
+        if ertype is not None:
+            if isinstance(ertype, (tuple, list)):
+                assert len(ertype) == 3, 'not a relation definition'
+                assert syncprops, 'can\'t update permission for a relation definition'
+                self._synchronize_rdef_schema(*ertype)
+            elif syncprops:
+                erschema = self.repo.schema[ertype]
+                if isinstance(erschema, CubicWebRelationSchema):
+                    self._synchronize_rschema(erschema, syncperms=syncperms,
+                                              syncrdefs=syncrdefs)
+                else:
+                    self._synchronize_eschema(erschema, syncperms=syncperms)
+            else:
+                self._synchronize_permissions(ertype)
+        else:
+            for etype in self.repo.schema.entities():
+                if syncprops:
+                    self._synchronize_eschema(etype, syncperms=syncperms)
+                else:
+                    self._synchronize_permissions(etype)
         if commit:
             self.commit()
                 
     def cmd_change_relation_props(self, subjtype, rtype, objtype,
                                   commit=True, **kwargs):
-        """change some properties of a relation definition"""
+        """change some properties of a relation definition
+
+        you usually want to use sync_schema_props_perms instead.
+        """
         assert kwargs
         restriction = []
         if subjtype and subjtype != 'Any':
@@ -808,7 +824,9 @@ class ServerMigrationHelper(MigrationHelper):
     def cmd_set_size_constraint(self, etype, rtype, size, commit=True):
         """set change size constraint of a string attribute
 
-        if size is None any size constraint will be removed
+        if size is None any size constraint will be removed.
+        
+        you usually want to use sync_schema_props_perms instead.        
         """
         oldvalue = None
         for constr in self.repo.schema.eschema(etype).constraints(rtype):
@@ -840,6 +858,10 @@ class ServerMigrationHelper(MigrationHelper):
                 self.rqlexec('DELETE CWConstraint C WHERE NOT X constrained_by C')
         if commit:
             self.commit()
+
+    @obsolete('use sync_schema_props_perms(ertype, syncprops=False)')
+    def cmd_synchronize_permissions(self, ertype, commit=True):
+        self.cmd_sync_schema_props_perms(ertype, syncprops=False, commit=commit)
     
     # Workflows handling ######################################################
     
