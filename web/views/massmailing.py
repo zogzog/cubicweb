@@ -17,6 +17,7 @@ from cubicweb.web.form import FieldsForm, FormRenderer, FormViewMixIn
 from cubicweb.web.formfields import StringField
 from cubicweb.web.formwidgets import CheckBox, TextInput, AjaxWidget, ImgButton
 
+_ = unicode
 
 class SendEmailAction(Action):
     id = 'sendemail'
