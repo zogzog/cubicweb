@@ -19,6 +19,15 @@ from cubicweb.web.widgets import checkbox
 
 class FormRenderer(object):
     """basic renderer displaying fields in a two columns table label | value
+
+    +--------------+--------------+
+    | field1 label | field1 input |
+    +--------------+--------------+
+    | field1 label | field2 input |
+    +--------------+--------------+
+    +---------+
+    | buttons |
+    +---------+
     """
     display_fields = None # None -> all fields
     display_label = True
@@ -186,6 +195,47 @@ class FormRenderer(object):
         w(u'</tr></table>')
 
 
+class HTableFormRenderer(FormRenderer):
+    """display fields horizontally in a table
+
+    +--------------+--------------+---------+
+    | field1 label | field2 label |         |
+    +--------------+--------------+---------+
+    | field1 input | field2 input | buttons
+    +--------------+--------------+---------+ 
+    """
+    display_help = False
+    def _render_fields(self, fields, w, form, values):
+        w(u'<table border="0">')
+        w(u'<tr>')
+        for field in fields:            
+            if self.display_label:
+                w(u'<th class="labelCol">%s</th>' % self.render_label(form, field))
+            if self.display_help:
+                w(self.render_help(form, field))
+        # empty slot for buttons
+        w(u'<th class="labelCol">&nbsp;</th>')
+        w(u'</tr>')
+        w(u'<tr>')
+        for field in fields:                        
+            error = form.form_field_error(field)
+            if error:
+                w(u'<td class="error" style="width:100%;">')
+                w(error)
+            else:
+                w(u'<td style="width:100%;">')
+            w(field.render(form, self))
+            w(u'</td>')
+        w(u'<td>')
+        for button in form.form_buttons:
+            w(button.render(form))
+        w(u'</td>')
+        w(u'</tr>')
+        w(u'</table>')
+
+    def render_buttons(self, w, form):
+        pass
+    
     
 class EntityCompositeFormRenderer(FormRenderer):
     """specific renderer for multiple entities edition form (muledit)"""
