@@ -17,6 +17,9 @@ from cubicweb.web.widgets import StaticComboBoxWidget
 
 _ = unicode
 
+SUBMIT_MSGID = _('Submit bug report')
+MAIL_SUBMIT_MSGID = _('Submit bug report by mail')
+
 def begin_form(w, entity, redirectvid, redirectpath=None, msg=None):
     w(u'<form method="post" action="%s">\n' % entity.req.build_url('edit'))
     w(u'<fieldset>\n')
@@ -185,10 +188,10 @@ class ErrorView(AnyRsetView):
 
     def call(self):
         req = self.req.reset_headers()
-        _ = req._; w = self.w
+        w = self.w
         ex = req.data.get('ex')#_("unable to find exception information"))
         excinfo = req.data.get('excinfo')
-        title = _('an error occured')
+        title = self.req._('an error occured')
         w(u'<h2>%s</h2>' % title)
         if 'errmsg' in req.data:
             ex = req.data['errmsg']
@@ -212,39 +215,32 @@ class ErrorView(AnyRsetView):
             return
         vcconf = self.config.vc_config()
         w(u"<div>")
-        eversion = vcconf.get('cubicweb', _('no version information'))
+        eversion = vcconf.get('cubicweb', self.req._('no version information'))
         # NOTE: tuple wrapping needed since eversion is itself a tuple
         w(u"<b>CubicWeb version:</b> %s<br/>\n" % (eversion,))
-        for pkg in self.config.cubes():
-            pkgversion = vcconf.get(pkg, _('no version information'))
-            w(u"<b>Package %s version:</b> %s<br/>\n" % (pkg, pkgversion))
+        cversions = []
+        for cube in self.config.cubes():
+            cubeversion = vcconf.get(cube, self.req._('no version information'))
+            w(u"<b>Package %s version:</b> %s<br/>\n" % (cube, cubeversion))
+            cversions.append((cube, cubeversion))
         w(u"</div>")
         # creates a bug submission link if SUBMIT_URL is set
         submiturl = self.config['submit-url']
-        if submiturl:
-            binfo = text_error_description(ex, excinfo, req, eversion,
-                                           [(pkg, vcconf.get(pkg, _('no version information')))
-                                            for pkg in self.config.cubes()])
-            w(u'<form action="%s" method="post">\n' % html_escape(submiturl))
-            w(u'<fieldset>\n')
-            w(u'<textarea class="hidden" name="description">%s</textarea>' % html_escape(binfo))
-            w(u'<input type="hidden" name="description_format" value="text/rest"/>')
-            w(u'<input type="hidden" name="__bugreporting" value="1"/>')
-            w(u'<input type="submit" value="%s"/>' % _('Submit bug report'))
-            w(u'</fieldset>\n')
-            w(u'</form>\n')
         submitmail = self.config['submit-mail']
-        if submitmail:
-            binfo = text_error_description(ex, excinfo, req, eversion,
-                                           [(pkg, vcconf.get(pkg, _('no version information')))
-                                            for pkg in self.config.cubes()])
-            w(u'<form action="%s" method="post">\n' % req.build_url('reportbug'))
-            w(u'<fieldset>\n')
-            w(u'<input type="hidden" name="description" value="%s"/>' % html_escape(binfo))
-            w(u'<input type="hidden" name="__bugreporting" value="1"/>')
-            w(u'<input type="submit" value="%s"/>' % _('Submit bug report by mail'))
-            w(u'</fieldset>\n')
-            w(u'</form>\n')
+        if submiturl or submitmail:
+            form = FieldsForm(self.req, set_error_url=False)
+            binfo = text_error_description(ex, excinfo, req, eversion, cversions)
+            form.form_add_hidden('description', binfo)
+            form.form_add_hidden('__bugreporting', '1')
+            if submitmail:
+                form.form_buttons = [SubmitButton(MAIL_SUBMIT_MSGID)]
+                form.action = req.build_url('reportbug')
+                w(form.form_render())
+            if submiturl:
+                form.form_add_hidden('description_format', 'text/rest')
+                form.form_buttons = [SubmitButton(SUBMIT_MSGID)]
+                form.action = submiturl
+                w(form.form_render())
 
 
 def exc_message(ex, encoding):
@@ -267,6 +263,7 @@ def text_error_description(ex, excinfo, req, eversion, cubes):
         binfo += u":Package %s version: %s\n" % (pkg, pkgversion)
     binfo += '\n'
     return binfo
+
 
 class ProcessInformationView(StartupView):
     id = 'info'
