@@ -152,7 +152,7 @@ class FormRenderer(object):
         form.form_build_context(values)
         fields = self._render_hidden_fields(w, form)
         if fields:
-            self._render_fields(fields, w, form, values)
+            self._render_fields(fields, w, form)
         self.render_child_forms(w, form, values)
         
     def render_child_forms(self, w, form, values):
@@ -170,7 +170,7 @@ class FormRenderer(object):
                 fields.remove(field)
         return fields
     
-    def _render_fields(self, fields, w, form, values):
+    def _render_fields(self, fields, w, form):
         w(u'<table class="attributeForm" style="width:100%;">')
         for field in fields:
             w(u'<tr>')
@@ -205,7 +205,7 @@ class HTableFormRenderer(FormRenderer):
     +--------------+--------------+---------+ 
     """
     display_help = False
-    def _render_fields(self, fields, w, form, values):
+    def _render_fields(self, fields, w, form):
         w(u'<table border="0">')
         w(u'<tr>')
         for field in fields:            
@@ -246,10 +246,10 @@ class EntityCompositeFormRenderer(FormRenderer):
         if not form.is_subform:
             w(u'</table>')
         
-    def _render_fields(self, fields, w, form, values):
+    def _render_fields(self, fields, w, form):
         if form.is_subform:
             entity = form.edited_entity
-            values = form.req.data.get('formvalues', ())
+            values = form._previous_values
             qeid = eid_param('eid', entity.eid)
             cbsetstate = "setCheckboxesState2('eid', %s, 'checked')" % html_escape(dumps(entity.eid))
             w(u'<tr class="%s">' % (entity.row % 2 and u'even' or u'odd'))
@@ -300,9 +300,9 @@ class EntityFormRenderer(FormRenderer):
         if form.edited_entity.has_eid():
             self.relations_form(w, form)
 
-    def _render_fields(self, fields, w, form, values):
+    def _render_fields(self, fields, w, form):
         if not form.edited_entity.has_eid() or form.edited_entity.has_perm('update'):
-            super(EntityFormRenderer, self)._render_fields(fields, w, form, values)
+            super(EntityFormRenderer, self)._render_fields(fields, w, form)
             
     def render_buttons(self, w, form):
         if len(form.form_buttons) == 3:
@@ -458,7 +458,7 @@ class EntityInlinedFormRenderer(EntityFormRenderer):
         w(u'</fieldset>')
         w(u'<fieldset class="subentity">')
         if fields:
-            self._render_fields(fields, w, form, values)
+            self._render_fields(fields, w, form)
         self.render_child_forms(w, form, values)
         self.inline_entities_form(w, form)
         w(u'</fieldset>')

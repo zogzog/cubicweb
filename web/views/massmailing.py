@@ -80,7 +80,7 @@ class MassMailingForm(FieldsForm):
 class MassMailingFormRenderer(FormRenderer):
     button_bar_class = u'toolbar'
     
-    def _render_fields(self, fields, w, form, values):
+    def _render_fields(self, fields, w, form):
         w(u'<table class="headersform">')
         for field in fields:
             if field.name == 'mailbody':
