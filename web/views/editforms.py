@@ -607,12 +607,17 @@ class InlineEntityEditionFormView(FormViewMixIn, EntityView):
         
     def render_form(self, entity, peid, rtype, role, **kwargs):
         """fetch and render the form"""
-        rschema = self.schema.rschema(rtype)
-        divid = '%s-%s-%s' % (peid, rtype, entity.eid)
-        title = rschema.display_name(self.req, role)
         form = self.vreg.select_object('forms', 'edition', self.req, None,
                                        entity=entity)
+        self.add_hiddens(form, entity, peid, rtype, role)
+        divid = '%s-%s-%s' % (peid, rtype, entity.eid)
+        title = self.schema.rschema(rtype).display_name(self.req, role)
         removejs = self.removejs % (peid, rtype,entity.eid)
+        self.w(form.form_render(renderer=EntityInlinedFormRenderer(), divid=divid,
+                                title=title, removejs=removejs,**kwargs))
+
+    def add_hiddens(self, form, entity, peid, rtype, role):
+        # to ease overriding (see cubes.vcsfile.views.forms for instance)
         if self.keep_entity(entity, peid, rtype):
             if entity.has_eid():
                 rval = entity.eid
@@ -621,9 +626,7 @@ class InlineEntityEditionFormView(FormViewMixIn, EntityView):
             form.form_add_hidden('edit%s-%s:%s' % (role[0], rtype, peid), rval)
         form.form_add_hidden(name='%s:%s' % (rtype, peid), value=entity.eid,
                              id='rel-%s-%s-%s'  % (peid, rtype, entity.eid))
-        self.w(form.form_render(renderer=EntityInlinedFormRenderer(), divid=divid,
-                                title=title, removejs=removejs,**kwargs))
-
+        
     def keep_entity(self, entity, peid, rtype):
         if not entity.has_eid():
             return True
