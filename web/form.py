@@ -206,6 +206,9 @@ class FormMixIn(object):
 ###############################################################################
 
 class metafieldsform(type):
+    """metaclass for FieldsForm to retreive fields defined as class attribute
+    and put them into a single ordered list, '_fields_'.
+    """
     def __new__(mcs, name, bases, classdict):
         allfields = []
         for base in bases:
@@ -385,11 +388,6 @@ class FieldsForm(FormMixIn, AppRsetObject):
         if callable(value):
             value = value(self)
         return value
-
-    def _errex_match_field(self, errex, field):
-        """return true if the field has some error in given validation exception
-        """
-        return field.name in errex.errors
     
     def form_field_error(self, field):
         """return validation error for widget's field, if any"""
@@ -400,19 +398,31 @@ class FieldsForm(FormMixIn, AppRsetObject):
         return u''
 
     def form_field_format(self, field):
+        """return MIME type used for the given (text or bytes) field"""
         return self.req.property_value('ui.default-text-format')
     
     def form_field_encoding(self, field):
+        """return encoding used for the given (text) field"""
         return self.req.encoding
     
     def form_field_name(self, field):
+        """return qualified name for the given field"""
         return field.name
 
     def form_field_id(self, field):
+        """return dom id for the given field"""
         return field.id
    
     def form_field_vocabulary(self, field, limit=None):
+        """return vocabulary for the given field. Should be overriden in
+        specific forms using fields which requires some vocabulary
+        """
         raise NotImplementedError
+
+    def _errex_match_field(self, errex, field):
+        """return true if the field has some error in given validation exception
+        """
+        return field.name in errex.errors
 
    
 class EntityFieldsForm(FieldsForm):
@@ -435,12 +445,51 @@ class EntityFieldsForm(FieldsForm):
                 self.form_add_hidden('__linkto', linkto)
                 msg = '%s %s' % (msg, self.req._('and linked'))
             self.form_add_hidden('__message', msg)
+    
+    def _errex_match_field(self, errex, field):
+        """return true if the field has some error in given validation exception
+        """
+        return errex.eid == self.edited_entity.eid and field.name in errex.errors
+
+    def _relation_vocabulary(self, rtype, targettype, role,
+                            limit=None, done=None):
+        """return unrelated entities for a given relation and target entity type
+        for use in vocabulary
+        """
+        if done is None:
+            done = set()
+        rset = self.edited_entity.unrelated(rtype, targettype, role, limit)
+        res = []
+        for entity in rset.entities():
+            if entity.eid in done:
+                continue
+            done.add(entity.eid)
+            res.append((entity.view('combobox'), entity.eid))
+        return res
+
+    def _form_field_default_value(self, field, load_bytes):
+        defaultattr = 'default_%s' % field.name
+        if hasattr(self.edited_entity, defaultattr):
+            # XXX bw compat, default_<field name> on the entity
+            warn('found %s on %s, should be set on a specific form'
+                 % (defaultattr, self.edited_entity.id), DeprecationWarning)
+            value = getattr(self.edited_entity, defaultattr)
+            if callable(value):
+                value = value()
+        else:
+            value = super(EntityFieldsForm, self).form_field_value(field,
+                                                                   load_bytes)
+        return value
         
     def form_build_context(self, values=None):
-        self.form_add_entity_hiddens(self.edited_entity.e_schema)
-        return super(EntityFieldsForm, self).form_build_context(values)
+        """overriden to add edit[s|o] hidden fields and to ensure schema fields
+        have eidparam set to True
 
-    def form_add_entity_hiddens(self, eschema):
+        edit[s|o] hidden fields are used t o indicate the value for the
+        associated field before the (potential) modification made when
+        submitting the form.
+        """
+        eschema = self.edited_entity.e_schema
         for field in self.fields[:]:
             for field in field.actual_fields(self):
                 fieldname = field.name
@@ -448,19 +497,8 @@ class EntityFieldsForm(FieldsForm):
                     (eschema.has_subject_relation(fieldname) or
                      eschema.has_object_relation(fieldname))):
                     field.eidparam = True
-                    self.fields.append(self.form_entity_hidden_field(field))
-
-    def form_entity_hidden_field(self, field):
-        """returns the hidden field which will indicate the value
-        before the modification
-        """
-        # Only RelationField has a `role` attribute, others are used
-        # to describe attribute fields => role is 'subject'
-        if getattr(field, 'role', 'subject') == 'subject':
-            name = 'edits-%s' % field.name
-        else:
-            name = 'edito-%s' % field.name
-        return HiddenInitialValueField(field, name=name)
+                    self.fields.append(HiddenInitialValueField(field))
+        return super(EntityFieldsForm, self).form_build_context(values)
         
     def form_field_value(self, field, load_bytes=False):
         """return field's *typed* value
@@ -509,22 +547,9 @@ class EntityFieldsForm(FieldsForm):
         else:
             value = self._form_field_default_value(field, load_bytes)
         return value
-
-    def _form_field_default_value(self, field, load_bytes):
-        defaultattr = 'default_%s' % field.name
-        if hasattr(self.edited_entity, defaultattr):
-            # XXX bw compat, default_<field name> on the entity
-            warn('found %s on %s, should be set on a specific form'
-                 % (defaultattr, self.edited_entity.id), DeprecationWarning)
-            value = getattr(self.edited_entity, defaultattr)
-            if callable(value):
-                value = value()
-        else:
-            value = super(EntityFieldsForm, self).form_field_value(field,
-                                                                   load_bytes)
-        return value
         
     def form_field_format(self, field):
+        """return MIME type used for the given (text or bytes) field"""
         entity = self.edited_entity
         if field.eidparam and entity.e_schema.has_metadata(field.name, 'format') and (
             entity.has_eid() or '%s_format' % field.name in entity):
@@ -532,29 +557,27 @@ class EntityFieldsForm(FieldsForm):
         return self.req.property_value('ui.default-text-format')
 
     def form_field_encoding(self, field):
+        """return encoding used for the given (text) field"""
         entity = self.edited_entity
         if field.eidparam and entity.e_schema.has_metadata(field.name, 'encoding') and (
             entity.has_eid() or '%s_encoding' % field.name in entity):
             return self.edited_entity.attr_metadata(field.name, 'encoding')
-        return super(EntityFieldsForm, self).form_field_encoding(field)
-    
-    
-    def _errex_match_field(self, errex, field):
-        """return true if the field has some error in given validation exception
-        """
-        return errex.eid == self.edited_entity.eid and field.name in errex.errors
+        return super(EntityFieldsForm, self).form_field_encoding(field)    
     
     def form_field_name(self, field):
+        """return qualified name for the given field"""
         if field.eidparam:
             return eid_param(field.name, self.edited_entity.eid)
         return field.name
 
     def form_field_id(self, field):
+        """return dom id for the given field"""
         if field.eidparam:
             return eid_param(field.id, self.edited_entity.eid)
         return field.id
         
     def form_field_vocabulary(self, field, limit=None):
+        """return vocabulary for the given field"""
         role, rtype = field.role, field.name
         method = '%s_%s_vocabulary' % (role, rtype)
         try:
@@ -591,8 +614,8 @@ class EntityFieldsForm(FieldsForm):
         for objtype in rtype.objects(entity.e_schema):
             if limit is not None:
                 rsetsize = limit - len(result)
-            result += self.relation_vocabulary(rtype, objtype, 'subject',
-                                               rsetsize, done)
+            result += self._relation_vocabulary(rtype, objtype, 'subject',
+                                                rsetsize, done)
             if limit is not None and len(result) >= limit:
                 break
         return result
@@ -612,29 +635,16 @@ class EntityFieldsForm(FieldsForm):
         for subjtype in rtype.subjects(entity.e_schema):
             if limit is not None:
                 rsetsize = limit - len(result)
-            result += self.relation_vocabulary(rtype, subjtype, 'object',
-                                               rsetsize, done)
+            result += self._relation_vocabulary(rtype, subjtype, 'object',
+                                                rsetsize, done)
             if limit is not None and len(result) >= limit:
                 break
         return result
 
-    def relation_vocabulary(self, rtype, targettype, role,
-                            limit=None, done=None):
-        if done is None:
-            done = set()
-        rset = self.edited_entity.unrelated(rtype, targettype, role, limit)
-        res = []
-        for entity in rset.entities():
-            if entity.eid in done:
-                continue
-            done.add(entity.eid)
-            res.append((entity.view('combobox'), entity.eid))
-        return res
-
     def subject_in_state_vocabulary(self, rschema, limit=None):
-        """vocabulary method for the in_state relation, looking for
-        relation's object entities (i.e. self is the subject) according
-        to initial_state, state_of and next_state relation
+        """vocabulary method for the in_state relation, looking for relation's
+        object entities (i.e. self is the subject) according to initial_state,
+        state_of and next_state relation
         """
         entity = self.edited_entity
         if not entity.has_eid() or not entity.in_state:
@@ -659,5 +669,6 @@ class CompositeForm(FieldsForm):
         self.forms = []
 
     def form_add_subform(self, subform):
+        """mark given form as a subform and append it"""
         subform.is_subform = True
         self.forms.append(subform)

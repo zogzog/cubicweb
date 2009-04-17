@@ -92,7 +92,6 @@ class EntityFieldsFormTC(WebTest):
     # fields tests ############################################################
 
     def _render_entity_field(self, name, form):
-        form.form_add_entity_hiddens(form.edited_entity.e_schema)
         form.form_build_context({})
         return form.field_by_name(name).render(form, self.renderer)
     
