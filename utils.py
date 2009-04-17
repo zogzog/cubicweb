@@ -9,7 +9,7 @@ __docformat__ = "restructuredtext en"
 import locale
 from md5 import md5
 from datetime import datetime, timedelta, date
-from time import time
+from time import time, strftime
 from random import randint, seed
     
 # initialize random seed from current time
@@ -53,7 +53,7 @@ def ustrftime(date, fmt='%Y-%m-%d'):
     """
     # date format may depend on the locale
     encoding = locale.getpreferredencoding(do_setlocale=False) or 'UTF-8'
-    return unicode(date.strftime(str(fmt)), encoding)
+    return unicode(strftime(str(fmt), date.timetuple()), encoding)
 
 def make_uid(key):
     """forge a unique identifier"""
