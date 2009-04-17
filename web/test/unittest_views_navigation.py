@@ -53,7 +53,7 @@ class NavigationTC(EnvBasedTC):
         rset = self.execute('Any RDEF ORDERBY RDEF WHERE RDEF relation_type RT')
         navcomp = self.vreg.select_component('navigation', req, rset)
         html = navcomp.dispatch()
-        rset = self.execute('EFRDef RDEF ORDERBY RDEF')
+        rset = self.execute('CWAttribute RDEF ORDERBY RDEF')
         navcomp = self.vreg.select_component('navigation', req, rset)
         html = navcomp.dispatch()
         rset = self.execute('Any RDEF ORDERBY N WHERE RDEF relation_type RT, RT name N')
@@ -69,7 +69,7 @@ class ContentNavigationTC(EnvBasedTC):
 
     def test_component_context(self):
         view = mock_object(is_primary=lambda x: True)
-        rset = self.execute('EUser X LIMIT 1')
+        rset = self.execute('CWUser X LIMIT 1')
         req = self.request()
         objs = self.vreg.possible_vobjects('contentnavigation', req, rset,
                                            view=view, context='navtop')
@@ -81,7 +81,7 @@ class ContentNavigationTC(EnvBasedTC):
         # breadcrumbs should _NOT_ be in footers by default
         clsids = set(obj.id for obj in objs)
         self.failIf('breadcrumbs' in clsids)
-        self.execute('INSERT EProperty P: P pkey "contentnavigation.breadcrumbs.context", '
+        self.execute('INSERT CWProperty P: P pkey "contentnavigation.breadcrumbs.context", '
                      'P value "navbottom"')
         # breadcrumbs should now be in footers
         req.cnx.commit()

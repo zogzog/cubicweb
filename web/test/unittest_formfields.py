@@ -5,7 +5,7 @@ from cubicweb.devtools import TestServerConfiguration
 from cubicweb.web.formwidgets import PasswordInput
 from cubicweb.web.formfields import *
 from cubicweb.entities.lib import Card
-from cubicweb.entities.authobjs import EUser
+from cubicweb.entities.authobjs import CWUser
 from cubes.file.entities import File
 
 config = TestServerConfiguration('data')
@@ -13,8 +13,8 @@ config.bootstrap_cubes()
 schema = config.load_schema()
 Card.schema = schema
 Card.__initialize__()
-EUser.schema = schema
-EUser.__initialize__()
+CWUser.schema = schema
+CWUser.__initialize__()
 File.schema = schema
 File.__initialize__()
         
@@ -49,22 +49,22 @@ class GuessFieldTC(TestCase):
 
         
     def test_euser_fields(self):
-        upassword_field = guess_field(EUser, schema['upassword'])
+        upassword_field = guess_field(CWUser, schema['upassword'])
         self.assertIsInstance(upassword_field, StringField)
         self.assertIsInstance(upassword_field.widget, PasswordInput)
         self.assertEquals(upassword_field.required, True)
 
-        last_login_time_field = guess_field(EUser, schema['last_login_time'])
+        last_login_time_field = guess_field(CWUser, schema['last_login_time'])
         self.assertIsInstance(last_login_time_field, DateTimeField)
         self.assertEquals(last_login_time_field.required, False)
 
-        in_group_field = guess_field(EUser, schema['in_group'])
+        in_group_field = guess_field(CWUser, schema['in_group'])
         self.assertIsInstance(in_group_field, RelationField)
         self.assertEquals(in_group_field.required, True)
         self.assertEquals(in_group_field.role, 'subject')
         self.assertEquals(in_group_field.help, 'groups grant permissions to the user')
 
-        owned_by_field = guess_field(EUser, schema['owned_by'], 'object')
+        owned_by_field = guess_field(CWUser, schema['owned_by'], 'object')
         self.assertIsInstance(owned_by_field, RelationField)
         self.assertEquals(owned_by_field.required, False)
         self.assertEquals(owned_by_field.role, 'object')

@@ -1,4 +1,4 @@
-"""Specific views for EProperty
+"""Specific views for CWProperty
 
 :organization: Logilab
 :copyright: 2007-2009 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
@@ -45,8 +45,8 @@ def css_class(someclass):
     return someclass and 'class="%s"' % someclass or ''
 
 
-class EPropertyPrimaryView(baseviews.PrimaryView):
-    __select__ = implements('EProperty')
+class CWPropertyPrimaryView(baseviews.PrimaryView):
+    __select__ = implements('CWProperty')
     skip_none = False
 
 
@@ -141,7 +141,7 @@ class SystemEPropertiesForm(FormViewMixIn, StartupView):
     @property
     @cached
     def eprops_rset(self):
-        return self.req.execute('Any P,K,V WHERE P is EProperty, P pkey K, '
+        return self.req.execute('Any P,K,V WHERE P is CWProperty, P pkey K, '
                                 'P value V, NOT P for_user U')
 
     @property
@@ -156,7 +156,7 @@ class SystemEPropertiesForm(FormViewMixIn, StartupView):
         if key in values:
             entity = self.eprops_rset.get_entity(values[key], 0)
         else:
-            entity = self.vreg.etype_class('EProperty')(self.req, None, None)
+            entity = self.vreg.etype_class('CWProperty')(self.req, None, None)
             entity.eid = self.req.varmaker.next()
             entity['pkey'] = key
             entity['value'] = self.vreg.property_value(key)
@@ -216,7 +216,7 @@ class EPropertiesForm(SystemEPropertiesForm):
     @property
     @cached
     def eprops_rset(self):
-        return self.req.execute('Any P,K,V WHERE P is EProperty, P pkey K, P value V,'
+        return self.req.execute('Any P,K,V WHERE P is CWProperty, P pkey K, P value V,'
                                 'P for_user U, U eid %(x)s', {'x': self.user.eid})
 
     def form_row(self, form, key, splitlabel):
@@ -253,7 +253,7 @@ class NotEditableWidget(object):
 
 
 class PropertyKeyField(StringField):
-    """specific field for EProperty.pkey to set the value widget according to
+    """specific field for CWProperty.pkey to set the value widget according to
     the selected key
     """
     widget = Select
@@ -276,7 +276,7 @@ class PropertyKeyField(StringField):
 
 
 class PropertyValueField(StringField):
-    """specific field for EProperty.value  which will be different according to
+    """specific field for CWProperty.value  which will be different according to
     the selected key type and vocabulary information
     """
     widget = PlaceHolderWidget
@@ -305,7 +305,7 @@ class PropertyValueField(StringField):
             msg = form.req._('value associated to this key is not editable '
                              'manually')
             self.widget = NotEditableWidget(entity.printable_value('value'), msg)
-        # XXX race condition when used from EPropertyForm, should not rely on
+        # XXX race condition when used from CWPropertyForm, should not rely on
         # instance attributes
         self.initial = pdef['default']
         self.help = pdef['help']
@@ -325,6 +325,6 @@ class PropertyValueField(StringField):
                 wdg.attrs.setdefault('size', 3)
         self.widget = wdg
 
-uicfg.rfields.set_rtag(PropertyKeyField, 'pkey', 'subject', 'EProperty')
-uicfg.rfields.set_rtag(PropertyValueField, 'value', 'subject', 'EProperty')
+uicfg.rfields.set_rtag(PropertyKeyField, 'pkey', 'subject', 'CWProperty')
+uicfg.rfields.set_rtag(PropertyValueField, 'value', 'subject', 'CWProperty')
     

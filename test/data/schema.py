@@ -23,5 +23,5 @@ class tags(RelationDefinition):
     object = ('Personne', 'Note')
 
 class evaluee(RelationDefinition):
-    subject = 'EUser'
+    subject = 'CWUser'
     object = 'Note'

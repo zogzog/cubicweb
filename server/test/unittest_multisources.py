@@ -195,8 +195,8 @@ class TwoSourcesTC(RepositoryBasedTC):
         
     def test_union(self):
         afeids = self.execute('Affaire X')
-        ueids = self.execute('EUser X')
-        rset = self.execute('(Any X WHERE X is Affaire) UNION (Any X WHERE X is EUser)')
+        ueids = self.execute('CWUser X')
+        rset = self.execute('(Any X WHERE X is Affaire) UNION (Any X WHERE X is CWUser)')
         self.assertEquals(sorted(r[0] for r in rset.rows),
                           sorted(r[0] for r in afeids + ueids))
         

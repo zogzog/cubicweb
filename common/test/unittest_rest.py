@@ -5,7 +5,7 @@ from cubicweb.common.rest import rest_publish
         
 class RestTC(EnvBasedTC):
     def context(self):
-        return self.execute('EUser X WHERE X login "admin"').get_entity(0, 0)
+        return self.execute('CWUser X WHERE X login "admin"').get_entity(0, 0)
     
     def test_eid_role(self):
         context = self.context()

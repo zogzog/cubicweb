@@ -28,7 +28,7 @@ class UrlRewriteTC(TestCase):
             ('/manage', dict(vid='manage')),
             ('/notfound', {'vid': '404'}),
             ('/error', {'vid': 'error'}),
-            ('/schema/([^/]+?)/?$', {'rql': r'Any X WHERE X is EEType, X name "\1"', 'vid': 'eschema'}),
+            ('/schema/([^/]+?)/?$', {'rql': r'Any X WHERE X is CWEType, X name "\1"', 'vid': 'eschema'}),
             ('/add/([^/]+?)/?$' , dict(vid='creation', etype=r'\1')),
             ('/doc/images/(.+?)/?$', dict(fid='\\1', vid='wdocimages')),
             ('/doc/?$', dict(fid='main', vid='wdoc')),

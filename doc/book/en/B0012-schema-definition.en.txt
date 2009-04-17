@@ -36,12 +36,12 @@ For example ::
   
   - `modification_date` (`Datetime`)
   
-  - `created_by` (`EUser`) (which user created the entity)
+  - `created_by` (`CWUser`) (which user created the entity)
   
-  - `owned_by` (`EUser`) (to whom the entity belongs; by default the 
+  - `owned_by` (`CWUser`) (to whom the entity belongs; by default the 
      creator but not necessary, and it could have multiple owners)
      
-  - `is` (`EEType`)
+  - `is` (`CWEType`)
 
 
 * relations can be defined by using `ObjectRelation` or `SubjectRelation`.
@@ -165,7 +165,7 @@ definition properties from the relation) for example ::
     inlined = True
     cardinality = '?*'
     subject = '*'
-    object = 'EUser'
+    object = 'CWUser'
 
 In addition to the permissions, the properties of the relation types
 (shared also by all definition of relation of this type) are :
@@ -290,15 +290,15 @@ for the following :
   - the permissions `add` and `delete` are equivalent. Only `add`/`read`
     are actually taken in consideration.
 
-In addition to that the entity type `EPermission` from the standard library
+In addition to that the entity type `CWPermission` from the standard library
 allow to build very complex and dynamic security architecture. The schema of
 this entity type is as follow : ::
 
-    class EPermission(MetaEntityType):
+    class CWPermission(MetaEntityType):
 	"""entity type that may be used to construct some advanced security configuration
 	"""
 	name = String(required=True, indexed=True, internationalizable=True, maxsize=100)
-	require_group = SubjectRelation('EGroup', cardinality='+*',
+	require_group = SubjectRelation('CWGroup', cardinality='+*',
 					description=_('groups to which the permission is granted'))
 	require_state = SubjectRelation('State',
 				    description=_("entity'state in which the permission is applyable"))
@@ -338,14 +338,14 @@ Example of configuration ::
 		       }
 	inlined = True
 
-This configuration indicates that an entity `EPermission` named
+This configuration indicates that an entity `CWPermission` named
 "add_version" can be associated to a project and provides rights to create
 new versions on this project to specific groups. It is important to notice that :
 
 * in such case, we have to protect both the entity type "Version" and the relation
   associating a version to a project ("version_of")
 
-* because of the genricity of the entity type `EPermission`, we have to execute
+* because of the genricity of the entity type `CWPermission`, we have to execute
   a unification with the groups and/or the states if necessary in the expression
   ("U in_group G, P require_group G" in the above example)
 

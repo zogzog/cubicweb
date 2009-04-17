@@ -37,7 +37,7 @@ class SQLGenAnnotatorTC(BaseQuerierTC):
         self.assert_(rqlst.defined_vars['B'].stinfo['attrvar'])
         self.assertEquals(rqlst.defined_vars['C']._q_invariant, False)
         self.assertEquals(rqlst.solutions, [{'A': 'TrInfo', 'B': 'String', 'C': 'Affaire'},
-                                      {'A': 'TrInfo', 'B': 'String', 'C': 'EUser'},
+                                      {'A': 'TrInfo', 'B': 'String', 'C': 'CWUser'},
                                       {'A': 'TrInfo', 'B': 'String', 'C': 'Note'}])
 
     def test_0_5(self):        
@@ -176,7 +176,7 @@ class SQLGenAnnotatorTC(BaseQuerierTC):
         self.assertEquals(rqlst.defined_vars['Y']._q_invariant, False)
         
     def test_not_relation_4_4(self):
-        rqlst = self._prepare('Any X WHERE NOT Y evaluee X, Y is EUser')
+        rqlst = self._prepare('Any X WHERE NOT Y evaluee X, Y is CWUser')
         self.assertEquals(rqlst.defined_vars['X']._q_invariant, False)
         self.assertEquals(rqlst.defined_vars['Y']._q_invariant, False)
 
@@ -186,12 +186,12 @@ class SQLGenAnnotatorTC(BaseQuerierTC):
         self.assertEquals(rqlst.solutions, [{'X': 'Note'}])
         
     def test_not_relation_5_1(self):
-        rqlst = self._prepare('Any X,Y WHERE X name "EGroup", Y eid IN(1, 2, 3), NOT X read_permission Y')
+        rqlst = self._prepare('Any X,Y WHERE X name "CWGroup", Y eid IN(1, 2, 3), NOT X read_permission Y')
         self.assertEquals(rqlst.defined_vars['X']._q_invariant, False)
         self.assertEquals(rqlst.defined_vars['Y']._q_invariant, False)
 
     def test_not_relation_5_2(self):
-        rqlst = self._prepare('DISTINCT Any X,Y WHERE X name "EGroup", Y eid IN(1, 2, 3), NOT X read_permission Y')
+        rqlst = self._prepare('DISTINCT Any X,Y WHERE X name "CWGroup", Y eid IN(1, 2, 3), NOT X read_permission Y')
         self.assertEquals(rqlst.defined_vars['X']._q_invariant, False)
         self.assertEquals(rqlst.defined_vars['Y']._q_invariant, False)
 
@@ -201,7 +201,7 @@ class SQLGenAnnotatorTC(BaseQuerierTC):
         self.assertEquals(rqlst.defined_vars['A']._q_invariant, True)
 
     def test_not_relation_7(self):
-        rqlst = self._prepare('Any K,V WHERE P is EProperty, P pkey K, P value V, NOT P for_user U') 
+        rqlst = self._prepare('Any K,V WHERE P is CWProperty, P pkey K, P value V, NOT P for_user U') 
         self.assertEquals(rqlst.defined_vars['P']._q_invariant, False)
         self.assertEquals(rqlst.defined_vars['U']._q_invariant, True)
        
@@ -221,12 +221,12 @@ class SQLGenAnnotatorTC(BaseQuerierTC):
         self.assertEquals(rqlst.defined_vars['X']._q_invariant, True)
         
     def test_exists_4(self):
-        rqlst = self._prepare('Any X,Y WHERE X name "EGroup", Y eid IN(1, 2, 3), EXISTS(X read_permission Y)')
+        rqlst = self._prepare('Any X,Y WHERE X name "CWGroup", Y eid IN(1, 2, 3), EXISTS(X read_permission Y)')
         self.assertEquals(rqlst.defined_vars['X']._q_invariant, False)
         self.assertEquals(rqlst.defined_vars['Y']._q_invariant, False)
         
     def test_exists_5(self):
-        rqlst = self._prepare('DISTINCT Any X,Y WHERE X name "EGroup", Y eid IN(1, 2, 3), EXISTS(X read_permission Y)')
+        rqlst = self._prepare('DISTINCT Any X,Y WHERE X name "CWGroup", Y eid IN(1, 2, 3), EXISTS(X read_permission Y)')
         self.assertEquals(rqlst.defined_vars['X']._q_invariant, False)
         self.assertEquals(rqlst.defined_vars['Y']._q_invariant, True)
 
@@ -236,11 +236,11 @@ class SQLGenAnnotatorTC(BaseQuerierTC):
         self.assertEquals(rqlst.defined_vars['X']._q_invariant, True)        
 
     def test_not_exists_2(self):        
-        rqlst = self._prepare('Any X,Y WHERE X name "EGroup", Y eid IN(1, 2, 3), NOT EXISTS(X read_permission Y)')
+        rqlst = self._prepare('Any X,Y WHERE X name "CWGroup", Y eid IN(1, 2, 3), NOT EXISTS(X read_permission Y)')
         self.assertEquals(rqlst.defined_vars['Y']._q_invariant, False)
 
     def test_not_exists_distinct_1(self):        
-        rqlst = self._prepare('DISTINCT Any X,Y WHERE X name "EGroup", Y eid IN(1, 2, 3), NOT EXISTS(X read_permission Y)')
+        rqlst = self._prepare('DISTINCT Any X,Y WHERE X name "CWGroup", Y eid IN(1, 2, 3), NOT EXISTS(X read_permission Y)')
         self.assertEquals(rqlst.defined_vars['Y']._q_invariant, False)
         
     def test_or_1(self):        

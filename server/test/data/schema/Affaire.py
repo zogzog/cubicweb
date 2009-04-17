@@ -22,7 +22,7 @@ class Affaire(WorkflowableEntityType):
     invoiced = Int()
 
     depends_on = SubjectRelation('Affaire')
-    require_permission = SubjectRelation('EPermission')
+    require_permission = SubjectRelation('CWPermission')
     
 class concerne(RelationType):
     permissions = {

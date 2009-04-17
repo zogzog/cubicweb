@@ -125,8 +125,8 @@ def _register_metadata_hooks(hm):
     hm.register_hook(fti_update_after_delete_relation, 'after_delete_relation', '')
     if 'is' in hm.schema:
         hm.register_hook(setis_after_add_entity, 'after_add_entity', '')
-    if 'EUser' in hm.schema:
-        hm.register_hook(setowner_after_add_user, 'after_add_entity', 'EUser')
+    if 'CWUser' in hm.schema:
+        hm.register_hook(setowner_after_add_user, 'after_add_entity', 'CWUser')
             
 # core hooks ##################################################################
     
@@ -282,7 +282,7 @@ def cardinalitycheck_before_del_relation(session, eidfrom, rtype, eidto):
 
 def _register_core_hooks(hm):
     hm.register_hook(handle_composite_before_del_relation, 'before_delete_relation', '')
-    hm.register_hook(before_del_group, 'before_delete_entity', 'EGroup')
+    hm.register_hook(before_del_group, 'before_delete_entity', 'CWGroup')
     
     #hm.register_hook(cstrcheck_before_update_entity, 'before_update_entity', '')
     hm.register_hook(cardinalitycheck_after_add_entity, 'after_add_entity', '')
@@ -362,7 +362,7 @@ def after_del_user(session, eid):
     
 def _register_usergroup_hooks(hm):
     """register user/group related hooks on the hooks manager"""
-    hm.register_hook(after_del_user, 'after_delete_entity', 'EUser')
+    hm.register_hook(after_del_user, 'after_delete_entity', 'CWUser')
     hm.register_hook(after_add_in_group, 'after_add_relation', 'in_group')
     hm.register_hook(after_del_in_group, 'after_delete_relation', 'in_group')
 
@@ -442,10 +442,10 @@ def _register_wf_hooks(hm):
                                  str(eschema))
 
 
-# EProperty hooks #############################################################
+# CWProperty hooks #############################################################
 
 
-class DelEPropertyOp(Operation):
+class DelCWPropertyOp(Operation):
     """a user's custom properties has been deleted"""
     
     def commit_event(self):
@@ -455,14 +455,14 @@ class DelEPropertyOp(Operation):
         except KeyError:
             self.error('%s has no associated value', self.key)
 
-class ChangeEPropertyOp(Operation):
+class ChangeCWPropertyOp(Operation):
     """a user's custom properties has been added/changed"""
         
     def commit_event(self):
         """the observed connections pool has been commited"""
         self.epropdict[self.key] = self.value
 
-class AddEPropertyOp(Operation):
+class AddCWPropertyOp(Operation):
     """a user's custom properties has been added/changed"""
         
     def commit_event(self):
@@ -470,7 +470,7 @@ class AddEPropertyOp(Operation):
         eprop = self.eprop
         if not eprop.for_user:
             self.repo.vreg.eprop_values[eprop.pkey] = eprop.value
-        # if for_user is set, update is handled by a ChangeEPropertyOp operation
+        # if for_user is set, update is handled by a ChangeCWPropertyOp operation
 
 def after_add_eproperty(session, entity):
     key, value = entity.pkey, entity.value
@@ -484,7 +484,7 @@ def after_add_eproperty(session, entity):
         session.unsafe_execute('SET P for_user U WHERE P eid %(x)s,U eid %(u)s',
                                {'x': entity.eid, 'u': session.user.eid}, 'x')
     else:
-        AddEPropertyOp(session, eprop=entity)
+        AddCWPropertyOp(session, eprop=entity)
         
 def after_update_eproperty(session, entity):
     key, value = entity.pkey, entity.value
@@ -496,11 +496,11 @@ def after_update_eproperty(session, entity):
         raise ValidationError(entity.eid, {'value': session._(str(ex))})
     if entity.for_user:
         for session_ in get_user_sessions(session.repo, entity.for_user[0].eid):
-            ChangeEPropertyOp(session, epropdict=session_.user.properties,
+            ChangeCWPropertyOp(session, epropdict=session_.user.properties,
                               key=key, value=value)
     else:
         # site wide properties
-        ChangeEPropertyOp(session, epropdict=session.vreg.eprop_values,
+        ChangeCWPropertyOp(session, epropdict=session.vreg.eprop_values,
                           key=key, value=value)
         
 def before_del_eproperty(session, eid):
@@ -511,10 +511,10 @@ def before_del_eproperty(session, eid):
     else:
         key = session.execute('Any K WHERE P eid %(x)s, P pkey K',
                               {'x': eid}, 'x')[0][0]
-        DelEPropertyOp(session, epropdict=session.vreg.eprop_values, key=key)
+        DelCWPropertyOp(session, epropdict=session.vreg.eprop_values, key=key)
 
 def after_add_for_user(session, fromeid, rtype, toeid):
-    if not session.describe(fromeid)[0] == 'EProperty':
+    if not session.describe(fromeid)[0] == 'CWProperty':
         return
     key, value = session.execute('Any K,V WHERE P eid %(x)s,P pkey K,P value V',
                                  {'x': fromeid}, 'x')[0]
@@ -522,7 +522,7 @@ def after_add_for_user(session, fromeid, rtype, toeid):
         raise ValidationError(fromeid,
                               {'for_user': session._("site-wide property can't be set for user")})
     for session_ in get_user_sessions(session.repo, toeid):
-        ChangeEPropertyOp(session, epropdict=session_.user.properties,
+        ChangeCWPropertyOp(session, epropdict=session_.user.properties,
                           key=key, value=value)
         
 def before_del_for_user(session, fromeid, rtype, toeid):
@@ -530,12 +530,12 @@ def before_del_for_user(session, fromeid, rtype, toeid):
                           {'x': fromeid}, 'x')[0][0]
     relation_deleted(session, fromeid, rtype, toeid)
     for session_ in get_user_sessions(session.repo, toeid):
-        DelEPropertyOp(session, epropdict=session_.user.properties, key=key)
+        DelCWPropertyOp(session, epropdict=session_.user.properties, key=key)
 
 def _register_eproperty_hooks(hm):
     """register workflow related hooks on the hooks manager"""
-    hm.register_hook(after_add_eproperty, 'after_add_entity', 'EProperty')
-    hm.register_hook(after_update_eproperty, 'after_update_entity', 'EProperty')
-    hm.register_hook(before_del_eproperty, 'before_delete_entity', 'EProperty')
+    hm.register_hook(after_add_eproperty, 'after_add_entity', 'CWProperty')
+    hm.register_hook(after_update_eproperty, 'after_update_entity', 'CWProperty')
+    hm.register_hook(before_del_eproperty, 'before_delete_entity', 'CWProperty')
     hm.register_hook(after_add_for_user, 'after_add_relation', 'for_user')
     hm.register_hook(before_del_for_user, 'before_delete_relation', 'for_user')

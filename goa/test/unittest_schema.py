@@ -21,8 +21,8 @@ class SomeViewsTC(GAEBasedTC):
                              set(('Boolean', 'Bytes', 'Date', 'Datetime', 'Float',
                               'Decimal',
                               'Int', 'Interval', 'Password', 'String', 'Time',
-                              'EEType', 'EGroup', 'EPermission', 'EProperty', 'ERType',
-                              'EUser', 'EmailAddress',
+                              'CWEType', 'CWGroup', 'CWPermission', 'CWProperty', 'CWRType',
+                              'CWUser', 'EmailAddress',
                               'RQLExpression', 'State', 'Transition', 'TrInfo',
                               'Article', 'Blog', 'YamsEntity')))
         self.assertSetEquals(set(str(e) for e in schema.relations()),
@@ -66,7 +66,7 @@ class SomeViewsTC(GAEBasedTC):
                              ('ambiguous_relation', 'talks_about', 'identity'))
 
     def test_yams_imported(self):
-        eschema = self.schema['EProperty']
+        eschema = self.schema['CWProperty']
         # only relations defined in the class are actually ordered
         orels = [str(e) for e in eschema.ordered_relations()]
         orels, others = orels[:3], orels[3:]
@@ -87,7 +87,7 @@ class SomeViewsTC(GAEBasedTC):
                              ('Blog', 'Article'))
 
     def test_euser(self):
-        eschema = self.schema['EUser']
+        eschema = self.schema['CWUser']
         # XXX pretend to have some relations it has not
         self.assertEquals([str(e) for e in eschema.ordered_relations()],
                           ['login', 'firstname', 'surname', 'last_login_time',

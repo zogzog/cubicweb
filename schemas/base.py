@@ -9,7 +9,7 @@ __docformat__ = "restructuredtext en"
 from cubicweb.schema import format_constraint
 
 
-class EUser(WorkflowableEntityType):
+class CWUser(WorkflowableEntityType):
     """define a CubicWeb user"""
     meta = True # XXX backported from old times, shouldn't be there anymore
     permissions = {
@@ -31,7 +31,7 @@ class EUser(WorkflowableEntityType):
                                     description=_('email address to use for notification'))
     use_email     = SubjectRelation('EmailAddress', cardinality='*?', composite='subject')
 
-    in_group = SubjectRelation('EGroup', cardinality='+*',
+    in_group = SubjectRelation('CWGroup', cardinality='+*',
                                constraints=[RQLConstraint('NOT O name "owners"')],
                                description=_('groups grant permissions to the user'))
 
@@ -99,7 +99,7 @@ class owned_by(MetaRelationType):
     # and to support later deletion of a user which has created some entities
     cardinality = '**'
     subject = '**'
-    object = 'EUser'
+    object = 'CWUser'
     
 class created_by(MetaRelationType):
     """core relation indicating the original creator of an entity"""
@@ -112,7 +112,7 @@ class created_by(MetaRelationType):
     # and to support later deletion of a user which has created some entities
     cardinality = '?*' 
     subject = '**'
-    object = 'EUser'
+    object = 'CWUser'
 
     
 class creation_date(MetaAttributeRelationType):
@@ -127,7 +127,7 @@ class modification_date(MetaAttributeRelationType):
     subject = '**'
     object = 'Datetime'
     
-class EProperty(EntityType):
+class CWProperty(EntityType):
     """used for cubicweb configuration. Once a property has been created you
     can't change the key.
     """
@@ -145,7 +145,7 @@ class EProperty(EntityType):
                                 'value'))
     value = String(internationalizable=True, maxsize=256)
     
-    for_user = SubjectRelation('EUser', cardinality='?*', composite='object',
+    for_user = SubjectRelation('CWUser', cardinality='?*', composite='object',
                                description=_('user for which this property is '
                                              'applying. If this relation is not '
                                              'set, the property is considered as'
@@ -164,17 +164,17 @@ class for_user(MetaRelationType):
     inlined = True
 
 
-class EPermission(MetaEntityType):
+class CWPermission(MetaEntityType):
     """entity type that may be used to construct some advanced security configuration
     """
     name = String(required=True, indexed=True, internationalizable=True, maxsize=100,
                   description=_('name or identifier of the permission'))
     label = String(required=True, internationalizable=True, maxsize=100,
                    description=_('distinct label to distinguate between other permission entity of the same name'))
-    require_group = SubjectRelation('EGroup', 
+    require_group = SubjectRelation('CWGroup', 
                                     description=_('groups to which the permission is granted'))
 
-# explicitly add X require_permission EPermission for each entity that should have
+# explicitly add X require_permission CWPermission for each entity that should have
 # configurable security
 class require_permission(RelationType):
     """link a permission to the entity. This permission should be used in the
@@ -199,7 +199,7 @@ class see_also(RelationType):
     """generic relation to link one entity to another"""
     symetric = True
 
-class ECache(MetaEntityType):
+class CWCache(MetaEntityType):
     """a simple cache entity characterized by a name and
     a validity date.
 

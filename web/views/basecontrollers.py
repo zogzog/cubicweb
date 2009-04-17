@@ -387,8 +387,8 @@ class JSonController(Controller):
         return self.req.external_resource(resource)
 
     def js_prop_widget(self, propkey, varname, tabindex=None):
-        """specific method for EProperty handling"""
-        entity = self.vreg.etype_class('EProperty')(self.req, None, None)
+        """specific method for CWProperty handling"""
+        entity = self.vreg.etype_class('CWProperty')(self.req, None, None)
         entity.eid = varname
         entity['pkey'] = propkey
         form = self.vreg.select_object('forms', 'edition', self.req, None,

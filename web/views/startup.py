@@ -92,7 +92,7 @@ class ManageView(StartupView):
             self.w(u'<tr><th colspan="4">%s</th></tr>\n' % self.req._('system entities'))
             self.entity_types_table(eschema for eschema in schema.entities()
                                     if eschema.meta and not eschema.schema_entity())
-            if 'EFRDef' in schema: # check schema support
+            if 'CWAttribute' in schema: # check schema support
                 self.w(u'<tr><th colspan="4">%s</th></tr>\n' % self.req._('schema entities'))
                 self.entity_types_table(schema.eschema(etype)
                                         for etype in schema.schema_entity_types())

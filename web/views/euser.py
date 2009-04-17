@@ -14,23 +14,23 @@ from cubicweb.web import uicfg, action
 from cubicweb.web.views.baseviews import PrimaryView
 
 
-uicfg.rcategories.set_rtag('secondary', 'firstname', 'subject', 'EUser')
-uicfg.rcategories.set_rtag('secondary', 'surname', 'subject', 'EUser')
-uicfg.rcategories.set_rtag('metadata', 'last_login_time', 'subject', 'EUser')
-uicfg.rcategories.set_rtag('primary', 'in_group', 'subject', 'EUser')
-uicfg.rcategories.set_rtag('generated', 'owned_by', 'object', otype='EUser')
-uicfg.rcategories.set_rtag('generated', 'created_by', 'object', otype='EUser')
-uicfg.rcategories.set_rtag('metadata', 'bookmarked_by', 'object', otype='EUser')
-uicfg.rinlined.set_rtag(True, 'use_email', 'subject', 'EUser')
-uicfg.rmode.set_rtag('create', 'in_group', 'subject', 'EGroup')
-uicfg.rmode.set_rtag('link', 'owned_by', 'object', 'EUser')
-uicfg.rmode.set_rtag('link', 'created_by', 'object', 'EUser')
-uicfg.rmode.set_rtag('create', 'bookmarked_by', 'object', 'EUser')
+uicfg.rcategories.set_rtag('secondary', 'firstname', 'subject', 'CWUser')
+uicfg.rcategories.set_rtag('secondary', 'surname', 'subject', 'CWUser')
+uicfg.rcategories.set_rtag('metadata', 'last_login_time', 'subject', 'CWUser')
+uicfg.rcategories.set_rtag('primary', 'in_group', 'subject', 'CWUser')
+uicfg.rcategories.set_rtag('generated', 'owned_by', 'object', otype='CWUser')
+uicfg.rcategories.set_rtag('generated', 'created_by', 'object', otype='CWUser')
+uicfg.rcategories.set_rtag('metadata', 'bookmarked_by', 'object', otype='CWUser')
+uicfg.rinlined.set_rtag(True, 'use_email', 'subject', 'CWUser')
+uicfg.rmode.set_rtag('create', 'in_group', 'subject', 'CWGroup')
+uicfg.rmode.set_rtag('link', 'owned_by', 'object', 'CWUser')
+uicfg.rmode.set_rtag('link', 'created_by', 'object', 'CWUser')
+uicfg.rmode.set_rtag('create', 'bookmarked_by', 'object', 'CWUser')
     
 
 class UserPreferencesEntityAction(action.Action):
     id = 'prefs'
-    __select__ = (one_line_rset() & implements('EUser') &
+    __select__ = (one_line_rset() & implements('CWUser') &
                   match_user_groups('owners', 'managers'))
     
     title = _('preferences')
@@ -41,14 +41,14 @@ class UserPreferencesEntityAction(action.Action):
         return self.build_url('euser/%s'%login, vid='epropertiesform')
 
 
-class EUserPrimaryView(PrimaryView):
-    __select__ = implements('EUser')
+class CWUserPrimaryView(PrimaryView):
+    __select__ = implements('CWUser')
     
     skip_attrs = ('firstname', 'surname')
     
     def iter_relations(self, entity):
         # don't want to display user's entities
-        for rschema, targetschemas, x in super(EUserPrimaryView, self).iter_relations(entity):
+        for rschema, targetschemas, x in super(CWUserPrimaryView, self).iter_relations(entity):
             if x == 'object' and rschema.type in ('owned_by', 'for_user'):
                 continue
             yield rschema, targetschemas, x
@@ -63,7 +63,7 @@ class EUserPrimaryView(PrimaryView):
                                  ]
 class FoafView(EntityView):
     id = 'foaf'
-    __select__ = implements('EUser')
+    __select__ = implements('CWUser')
     
     title = _('foaf')
     templatable = False
@@ -96,3 +96,6 @@ class FoafView(EntityView):
         if emailaddr:
             self.w(u'<foaf:mbox>%s</foaf:mbox>\n' % html_escape(emailaddr))
         self.w(u'</foaf:Person>\n')
+
+from logilab.common.deprecation import class_renamed
+EUserPrimaryView = class_renamed('EUserPrimaryView', CWUserPrimaryView)

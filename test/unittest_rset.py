@@ -26,8 +26,8 @@ class AttrDescIteratorTC(TestCase):
     def test_relations_description(self):
         """tests relations_description() function"""
         queries = {
-            'Any U,L,M where U is EUser, U login L, U mail M' : [(1, 'login', 'subject'), (2, 'mail', 'subject')],
-            'Any U,L,M where U is EUser, L is Foo, U mail M' : [(2, 'mail', 'subject')],
+            'Any U,L,M where U is CWUser, U login L, U mail M' : [(1, 'login', 'subject'), (2, 'mail', 'subject')],
+            'Any U,L,M where U is CWUser, L is Foo, U mail M' : [(2, 'mail', 'subject')],
             'Any C,P where C is Company, C employs P' : [(1, 'employs', 'subject')],
             'Any C,P where C is Company, P employed_by P' : [],
             'Any C where C is Company, C employs P' : [],
@@ -39,7 +39,7 @@ class AttrDescIteratorTC(TestCase):
     def test_relations_description_indexed(self):
         """tests relations_description() function"""
         queries = {
-            'Any C,U,P,L,M where C is Company, C employs P, U is EUser, U login L, U mail M' :
+            'Any C,U,P,L,M where C is Company, C employs P, U is CWUser, U login L, U mail M' :
             {0: [(2,'employs', 'subject')], 1: [(3,'login', 'subject'), (4,'mail', 'subject')]},
             }
         for rql, results in queries.items():
@@ -54,8 +54,8 @@ class ResultSetTC(EnvBasedTC):
     def setUp(self):
         super(ResultSetTC, self).setUp()
         self.rset = ResultSet([[12, 'adim'], [13, 'syt']],
-                              'Any U,L where U is EUser, U login L',
-                              description=[['EUser', 'String'], ['Bar', 'String']])
+                              'Any U,L where U is CWUser, U login L',
+                              description=[['CWUser', 'String'], ['Bar', 'String']])
         self.rset.vreg = self.vreg
 
     def compare_urls(self, url1, url2):
@@ -83,16 +83,16 @@ class ResultSetTC(EnvBasedTC):
         
     def test_resultset_build(self):
         """test basic build of a ResultSet"""
-        rs = ResultSet([1,2,3], 'EGroup X', description=['EGroup', 'EGroup', 'EGroup'])
+        rs = ResultSet([1,2,3], 'CWGroup X', description=['CWGroup', 'CWGroup', 'CWGroup'])
         self.assertEquals(rs.rowcount, 3)
         self.assertEquals(rs.rows, [1,2,3])
-        self.assertEquals(rs.description, ['EGroup', 'EGroup', 'EGroup'])
+        self.assertEquals(rs.description, ['CWGroup', 'CWGroup', 'CWGroup'])
 
 
     def test_resultset_limit(self):
         rs = ResultSet([[12000, 'adim'], [13000, 'syt'], [14000, 'nico']],
-                       'Any U,L where U is EUser, U login L',
-                       description=[['EUser', 'String']] * 3)
+                       'Any U,L where U is CWUser, U login L',
+                       description=[['CWUser', 'String']] * 3)
         rs.req = self.request()
         rs.vreg = self.env.vreg
 
@@ -106,8 +106,8 @@ class ResultSetTC(EnvBasedTC):
 
     def test_resultset_filter(self):
         rs = ResultSet([[12000, 'adim'], [13000, 'syt'], [14000, 'nico']],
-                       'Any U,L where U is EUser, U login L',
-                       description=[['EUser', 'String']] * 3)
+                       'Any U,L where U is CWUser, U login L',
+                       description=[['CWUser', 'String']] * 3)
         rs.req = self.request()
         rs.vreg = self.env.vreg
         def test_filter(entity):
@@ -119,8 +119,8 @@ class ResultSetTC(EnvBasedTC):
         
     def test_resultset_transform(self):
         rs = ResultSet([[12, 'adim'], [13, 'syt'], [14, 'nico']],
-                       'Any U,L where U is EUser, U login L',
-                       description=[['EUser', 'String']] * 3)
+                       'Any U,L where U is CWUser, U login L',
+                       description=[['CWUser', 'String']] * 3)
         rs.req = self.request()
         def test_transform(row, desc):
             return row[1:], desc[1:]
@@ -131,8 +131,8 @@ class ResultSetTC(EnvBasedTC):
         
     def test_resultset_sort(self):
         rs = ResultSet([[12000, 'adim'], [13000, 'syt'], [14000, 'nico']],
-                       'Any U,L where U is EUser, U login L',
-                       description=[['EUser', 'String']] * 3)
+                       'Any U,L where U is CWUser, U login L',
+                       description=[['CWUser', 'String']] * 3)
         rs.req = self.request()
         rs.vreg = self.env.vreg
         
@@ -160,9 +160,9 @@ class ResultSetTC(EnvBasedTC):
                         [13000, 'syt',  u'Le carrelage en 42 leçons'],
                         [14000, 'nico', u'La tarte tatin en 15 minutes'],
                         [14000, 'nico', u"L'épluchage du castor commun"]],
-                       'Any U, L, T WHERE U is EUser, U login L,'\
+                       'Any U, L, T WHERE U is CWUser, U login L,'\
                        'D created_by U, D title T',
-                       description=[['EUser', 'String', 'String']] * 5)
+                       description=[['CWUser', 'String', 'String']] * 5)
         rs.req = self.request()
         rs.vreg = self.env.vreg
         
@@ -206,7 +206,7 @@ class ResultSetTC(EnvBasedTC):
         self.assert_(rqlst1 is rqlst2)
 
     def test_get_entity_simple(self):
-        self.add_entity('EUser', login=u'adim', upassword='adim',
+        self.add_entity('CWUser', login=u'adim', upassword='adim',
                         surname=u'di mascio', firstname=u'adrien')
         e = self.entity('Any X,T WHERE X login "adim", X surname T')
         self.assertEquals(e['surname'], 'di mascio')
@@ -251,7 +251,7 @@ class ResultSetTC(EnvBasedTC):
         rset = self.execute('Any X,S WHERE X in_state S, X login "anon"')
         e = rset.get_entity(0, 0)
         seid = self.execute('State X WHERE X name "activated"')[0][0]
-        # for_user / in_group are prefetched in EUser __init__, in_state should
+        # for_user / in_group are prefetched in CWUser __init__, in_state should
         # be filed from our query rset
         self.assertEquals(pprelcachedict(e._related_cache),
                           [('in_state_subject', [seid])])
@@ -276,7 +276,7 @@ class ResultSetTC(EnvBasedTC):
 
         
     def test_get_entity_cache_with_left_outer_join(self):
-        eid = self.execute('INSERT EUser E: E login "joe", E upassword "joe", E in_group G '
+        eid = self.execute('INSERT CWUser E: E login "joe", E upassword "joe", E in_group G '
                            'WHERE G name "users"')[0][0]
         rset = self.execute('Any X,E WHERE X eid %(x)s, X primary_email E?', {'x': eid})
         e = rset.get_entity(0, 0)
@@ -294,10 +294,10 @@ class ResultSetTC(EnvBasedTC):
         rset = self.execute('Any X,N ORDERBY N WITH X,N BEING '
                             '((Any X,N WHERE X is Bookmark, X title N)'
                             ' UNION '
-                            ' (Any X,N WHERE X is EGroup, X name N))')
-        expected = (('EGroup', 'guests'), ('EGroup', 'managers'),
-                    ('Bookmark', 'manger'), ('EGroup', 'owners'),
-                    ('EGroup', 'users'))
+                            ' (Any X,N WHERE X is CWGroup, X name N))')
+        expected = (('CWGroup', 'guests'), ('CWGroup', 'managers'),
+                    ('Bookmark', 'manger'), ('CWGroup', 'owners'),
+                    ('CWGroup', 'users'))
         for entity in rset.entities(): # test get_entity for each row actually
             etype, n = expected[entity.row]
             self.assertEquals(entity.id, etype)
@@ -314,17 +314,17 @@ class ResultSetTC(EnvBasedTC):
     def test_related_entity_union_subquery(self):
         e = self.add_entity('Bookmark', title=u'aaaa', path=u'path')
         rset = self.execute('Any X,N ORDERBY N WITH X,N BEING '
-                            '((Any X,N WHERE X is EGroup, X name N)'
+                            '((Any X,N WHERE X is CWGroup, X name N)'
                             ' UNION '
                             ' (Any X,N WHERE X is Bookmark, X title N))')
         entity, rtype = rset.related_entity(0, 1)
         self.assertEquals(entity.eid, e.eid)
         self.assertEquals(rtype, 'title')
         entity, rtype = rset.related_entity(1, 1)
-        self.assertEquals(entity.id, 'EGroup')
+        self.assertEquals(entity.id, 'CWGroup')
         self.assertEquals(rtype, 'name')
         rset = self.execute('Any X,N ORDERBY N WHERE X is Bookmark WITH X,N BEING '
-                            '((Any X,N WHERE X is EGroup, X name N)'
+                            '((Any X,N WHERE X is CWGroup, X name N)'
                             ' UNION '
                             ' (Any X,N WHERE X is Bookmark, X title N))')
         entity, rtype = rset.related_entity(0, 1)
@@ -336,14 +336,14 @@ class ResultSetTC(EnvBasedTC):
         # make sure we have at least one element
         self.failUnless(rset)
         self.assertEquals(set(e.e_schema.type for e in rset.entities(0)),
-                          set(['EUser',]))
+                          set(['CWUser',]))
         self.assertEquals(set(e.e_schema.type for e in rset.entities(1)),
-                          set(['EGroup',]))
+                          set(['CWGroup',]))
 
     def test_printable_rql(self):        
-        rset = self.execute(u'EEType X WHERE X final FALSE, X meta FALSE')
+        rset = self.execute(u'CWEType X WHERE X final FALSE, X meta FALSE')
         self.assertEquals(rset.printable_rql(),
-                          'Any X WHERE X final FALSE, X meta FALSE, X is EEType')
+                          'Any X WHERE X final FALSE, X meta FALSE, X is CWEType')
 
 
     def test_searched_text(self):

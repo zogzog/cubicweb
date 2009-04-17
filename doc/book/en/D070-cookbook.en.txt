@@ -42,7 +42,7 @@ life easier.
         update = "UPDATE entities SET source='system' WHERE eid=%(eid)s;"
         cursor.execute("SELECT eid,type,source,extid,mtime FROM entities WHERE source!='system'")
         for eid, type, source, extid, mtime in cursor.fetchall():
-            if type != 'EUser':
+            if type != 'CWUser':
                 print "don't know what to do with entity type", type
                 continue
             if source != 'ldapuser':

@@ -458,11 +458,11 @@ class CubicWebSchema(Schema):
         
     def schema_entity_types(self):
         """return the list of entity types used to build the schema"""
-        return frozenset(('EEType', 'ERType', 'EFRDef', 'ENFRDef',
-                          'EConstraint', 'EConstraintType', 'RQLExpression',
+        return frozenset(('CWEType', 'CWRType', 'CWAttribute', 'CWRelation',
+                          'CWConstraint', 'CWConstraintType', 'RQLExpression',
                           # XXX those are not really "schema" entity types
                           #     but we usually don't want them as @* targets
-                          'EProperty', 'EPermission', 'State', 'Transition'))
+                          'CWProperty', 'CWPermission', 'State', 'Transition'))
         
     def add_entity_type(self, edef):
         edef.name = edef.name.encode()

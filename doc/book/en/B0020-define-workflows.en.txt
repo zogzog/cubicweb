@@ -69,7 +69,7 @@ to ``migration/postcreate.py``::
   
   _ = unicode
 
-  moderators = add_entity('EGroup', name=u"moderators")
+  moderators = add_entity('CWGroup', name=u"moderators")
 
 This adds the `moderators` user group.
 

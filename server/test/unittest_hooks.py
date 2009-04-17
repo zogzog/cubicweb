@@ -25,14 +25,14 @@ class CoreHooksTC(RepositoryBasedTC):
         
     def test_delete_internal_entities(self):
         self.assertRaises(RepositoryError, self.execute,
-                          'DELETE EEType X WHERE X name "EEType"')
+                          'DELETE CWEType X WHERE X name "CWEType"')
         self.assertRaises(RepositoryError, self.execute,
-                          'DELETE ERType X WHERE X name "relation_type"')
+                          'DELETE CWRType X WHERE X name "relation_type"')
         self.assertRaises(RepositoryError, self.execute,
-                          'DELETE EGroup X WHERE X name "owners"')
+                          'DELETE CWGroup X WHERE X name "owners"')
 
     def test_delete_required_relations_subject(self):
-        self.execute('INSERT EUser X: X login "toto", X upassword "hop", X in_group Y, X in_state S '
+        self.execute('INSERT CWUser X: X login "toto", X upassword "hop", X in_group Y, X in_state S '
                      'WHERE Y name "users", S name "activated"')
         self.commit()
         self.execute('DELETE X in_group Y WHERE X login "toto", Y name "users"')
@@ -47,17 +47,17 @@ class CoreHooksTC(RepositoryBasedTC):
     def test_static_vocabulary_check(self):
         self.assertRaises(ValidationError,
                           self.execute,
-                          'SET X composite "whatever" WHERE X from_entity FE, FE name "EUser", X relation_type RT, RT name "in_group"')
+                          'SET X composite "whatever" WHERE X from_entity FE, FE name "CWUser", X relation_type RT, RT name "in_group"')
     
     def test_missing_required_relations_subject_inline(self):
         # missing in_group relation 
-        self.execute('INSERT EUser X: X login "toto", X upassword "hop"')
+        self.execute('INSERT CWUser X: X login "toto", X upassword "hop"')
         self.assertRaises(ValidationError,
                           self.commit)
 
     def test_delete_if_singlecard1(self):
         self.assertEquals(self.repo.schema['in_state'].inlined, False)
-        ueid, = self.execute('INSERT EUser X: X login "toto", X upassword "hop", X in_group Y, X in_state S '
+        ueid, = self.execute('INSERT CWUser X: X login "toto", X upassword "hop", X in_group Y, X in_state S '
                              'WHERE Y name "users", S name "activated"')[0]
         self.commit()
         self.execute('SET X in_state S WHERE S name "deactivated", X eid %(x)s', {'x': ueid})
@@ -119,7 +119,7 @@ class CoreHooksTC(RepositoryBasedTC):
         self.assertEquals(rset.get_entity(0, 0).reverse_parts[0].messageid, '<2345>')
 
     def test_unsatisfied_constraints(self):
-        self.execute('INSERT ENFRDef X: X from_entity FE, X relation_type RT, X to_entity TE '
+        self.execute('INSERT CWRelation X: X from_entity FE, X relation_type RT, X to_entity TE '
                      'WHERE FE name "Affaire", RT name "concerne", TE name "String"')
         self.assertRaises(ValidationError,
                           self.commit)
@@ -160,7 +160,7 @@ class UserGroupHooksTC(RepositoryBasedTC):
         self.commit()
         cnxid = self.repo.connect(u'toto', 'hop')
         self.failIfEqual(cnxid, self.cnxid)
-        self.execute('DELETE EUser X WHERE X login "toto"')
+        self.execute('DELETE CWUser X WHERE X login "toto"')
         self.repo.execute(cnxid, 'State X')
         self.commit()
         self.assertRaises(BadConnectionId,
@@ -194,47 +194,47 @@ class UserGroupHooksTC(RepositoryBasedTC):
         self.commit()
         self.failIf(self.execute('Any X WHERE X created_by Y, X eid >= %(x)s', {'x': eid}))
         
-class EPropertyHooksTC(RepositoryBasedTC):
+class CWPropertyHooksTC(RepositoryBasedTC):
     
     def test_unexistant_eproperty(self):
         ex = self.assertRaises(ValidationError,
-                          self.execute, 'INSERT EProperty X: X pkey "bla.bla", X value "hop", X for_user U')
+                          self.execute, 'INSERT CWProperty X: X pkey "bla.bla", X value "hop", X for_user U')
         self.assertEquals(ex.errors, {'pkey': 'unknown property key'})
         ex = self.assertRaises(ValidationError,
-                          self.execute, 'INSERT EProperty X: X pkey "bla.bla", X value "hop"')
+                          self.execute, 'INSERT CWProperty X: X pkey "bla.bla", X value "hop"')
         self.assertEquals(ex.errors, {'pkey': 'unknown property key'})
         
     def test_site_wide_eproperty(self):
         ex = self.assertRaises(ValidationError,
-                               self.execute, 'INSERT EProperty X: X pkey "ui.site-title", X value "hop", X for_user U')
+                               self.execute, 'INSERT CWProperty X: X pkey "ui.site-title", X value "hop", X for_user U')
         self.assertEquals(ex.errors, {'for_user': "site-wide property can't be set for user"})
         
     def test_bad_type_eproperty(self):
         ex = self.assertRaises(ValidationError,
-                               self.execute, 'INSERT EProperty X: X pkey "ui.language", X value "hop", X for_user U')
+                               self.execute, 'INSERT CWProperty X: X pkey "ui.language", X value "hop", X for_user U')
         self.assertEquals(ex.errors, {'value': u'unauthorized value'})
         ex = self.assertRaises(ValidationError,
-                          self.execute, 'INSERT EProperty X: X pkey "ui.language", X value "hop"')
+                          self.execute, 'INSERT CWProperty X: X pkey "ui.language", X value "hop"')
         self.assertEquals(ex.errors, {'value': u'unauthorized value'})
         
         
 class SchemaHooksTC(RepositoryBasedTC):
         
     def test_duplicate_etype_error(self):
-        # check we can't add a EEType or ERType entity if it already exists one
+        # check we can't add a CWEType or CWRType entity if it already exists one
         # with the same name
         #
         # according to hook order, we'll get a repository or validation error
         self.assertRaises((ValidationError, RepositoryError),
-                          self.execute, 'INSERT EEType X: X name "Societe"')
+                          self.execute, 'INSERT CWEType X: X name "Societe"')
         self.assertRaises((ValidationError, RepositoryError),
-                          self.execute, 'INSERT ERType X: X name "in_group"')
+                          self.execute, 'INSERT CWRType X: X name "in_group"')
         
     def test_validation_unique_constraint(self):
         self.assertRaises(ValidationError,
-                          self.execute, 'INSERT EUser X: X login "admin"')
+                          self.execute, 'INSERT CWUser X: X login "admin"')
         try:
-            self.execute('INSERT EUser X: X login "admin"')
+            self.execute('INSERT CWUser X: X login "admin"')
         except ValidationError, ex:
             self.assertIsInstance(ex.entity, int)
             self.assertEquals(ex.errors, {'login': 'the value "admin" is already used, use another one'})
@@ -264,26 +264,26 @@ class SchemaModificationHooksTC(RepositoryBasedTC):
         self.failIf(schema.has_entity('Societe2'))
         self.failIf(schema.has_entity('concerne2'))
         # schema should be update on insertion (after commit)
-        self.execute('INSERT EEType X: X name "Societe2", X description "", X meta FALSE, X final FALSE')
-        self.execute('INSERT ERType X: X name "concerne2", X description "", X meta FALSE, X final FALSE, X symetric FALSE')
+        self.execute('INSERT CWEType X: X name "Societe2", X description "", X meta FALSE, X final FALSE')
+        self.execute('INSERT CWRType X: X name "concerne2", X description "", X meta FALSE, X final FALSE, X symetric FALSE')
         self.failIf(schema.has_entity('Societe2'))
         self.failIf(schema.has_entity('concerne2'))
-        self.execute('SET X read_permission G WHERE X is EEType, X name "Societe2", G is EGroup')
-        self.execute('SET X read_permission G WHERE X is ERType, X name "concerne2", G is EGroup')
-        self.execute('SET X add_permission G WHERE X is EEType, X name "Societe2", G is EGroup, G name "managers"')
-        self.execute('SET X add_permission G WHERE X is ERType, X name "concerne2", G is EGroup, G name "managers"')
-        self.execute('SET X delete_permission G WHERE X is EEType, X name "Societe2", G is EGroup, G name "owners"')
-        self.execute('SET X delete_permission G WHERE X is ERType, X name "concerne2", G is EGroup, G name "owners"')
+        self.execute('SET X read_permission G WHERE X is CWEType, X name "Societe2", G is CWGroup')
+        self.execute('SET X read_permission G WHERE X is CWRType, X name "concerne2", G is CWGroup')
+        self.execute('SET X add_permission G WHERE X is CWEType, X name "Societe2", G is CWGroup, G name "managers"')
+        self.execute('SET X add_permission G WHERE X is CWRType, X name "concerne2", G is CWGroup, G name "managers"')
+        self.execute('SET X delete_permission G WHERE X is CWEType, X name "Societe2", G is CWGroup, G name "owners"')
+        self.execute('SET X delete_permission G WHERE X is CWRType, X name "concerne2", G is CWGroup, G name "owners"')
         # have to commit before adding definition relations
         self.commit()
         self.failUnless(schema.has_entity('Societe2'))
         self.failUnless(schema.has_relation('concerne2'))
-        self.execute('INSERT EFRDef X: X cardinality "11", X defaultval "noname", X indexed TRUE, X relation_type RT, X from_entity E, X to_entity F '
+        self.execute('INSERT CWAttribute X: X cardinality "11", X defaultval "noname", X indexed TRUE, X relation_type RT, X from_entity E, X to_entity F '
                      'WHERE RT name "nom", E name "Societe2", F name "String"')
         concerne2_rdef_eid = self.execute(
-            'INSERT ENFRDef X: X cardinality "**", X relation_type RT, X from_entity E, X to_entity E '
+            'INSERT CWRelation X: X cardinality "**", X relation_type RT, X from_entity E, X to_entity E '
             'WHERE RT name "concerne2", E name "Societe2"')[0][0]
-        self.execute('INSERT ENFRDef X: X cardinality "?*", X relation_type RT, X from_entity E, X to_entity C '
+        self.execute('INSERT CWRelation X: X cardinality "?*", X relation_type RT, X from_entity E, X to_entity C '
                      'WHERE RT name "comments", E name "Societe2", C name "Comment"')
         self.failIf('nom' in schema['Societe2'].subject_relations())
         self.failIf('concerne2' in schema['Societe2'].subject_relations())
@@ -299,17 +299,17 @@ class SchemaModificationHooksTC(RepositoryBasedTC):
         rset = self.execute('Any X WHERE X concerne2 Y')
         self.assertEquals(rset.rows, [[s2eid]])
         # check that when a relation definition is deleted, existing relations are deleted
-        self.execute('INSERT ENFRDef X: X cardinality "**", X relation_type RT, X from_entity E, X to_entity E '
+        self.execute('INSERT CWRelation X: X cardinality "**", X relation_type RT, X from_entity E, X to_entity E '
                      'WHERE RT name "concerne2", E name "Societe"')
         self.commit()
-        self.execute('DELETE ENFRDef X WHERE X eid %(x)s', {'x': concerne2_rdef_eid}, 'x')
+        self.execute('DELETE CWRelation X WHERE X eid %(x)s', {'x': concerne2_rdef_eid}, 'x')
         self.commit()
         self.failUnless('concerne2' in schema['Societe'].subject_relations())
         self.failIf('concerne2' in schema['Societe2'].subject_relations())
         self.failIf(self.execute('Any X WHERE X concerne2 Y'))
         # schema should be cleaned on delete (after commit)
-        self.execute('DELETE EEType X WHERE X name "Societe2"')
-        self.execute('DELETE ERType X WHERE X name "concerne2"')
+        self.execute('DELETE CWEType X WHERE X name "Societe2"')
+        self.execute('DELETE CWRType X WHERE X name "concerne2"')
         self.failUnless(self.index_exists('Societe2', 'nom'))
         self.failUnless(schema.has_entity('Societe2'))
         self.failUnless(schema.has_relation('concerne2'))
@@ -336,42 +336,42 @@ class SchemaModificationHooksTC(RepositoryBasedTC):
         
     def test_perms_synchronization_1(self):
         schema = self.repo.schema
-        self.assertEquals(schema['EUser'].get_groups('read'), set(('managers', 'users')))
-        self.failUnless(self.execute('Any X, Y WHERE X is EEType, X name "EUser", Y is EGroup, Y name "users"')[0])
-        self.execute('DELETE X read_permission Y WHERE X is EEType, X name "EUser", Y name "users"')
-        self.assertEquals(schema['EUser'].get_groups('read'), set(('managers', 'users', )))
+        self.assertEquals(schema['CWUser'].get_groups('read'), set(('managers', 'users')))
+        self.failUnless(self.execute('Any X, Y WHERE X is CWEType, X name "CWUser", Y is CWGroup, Y name "users"')[0])
+        self.execute('DELETE X read_permission Y WHERE X is CWEType, X name "CWUser", Y name "users"')
+        self.assertEquals(schema['CWUser'].get_groups('read'), set(('managers', 'users', )))
         self.commit()
-        self.assertEquals(schema['EUser'].get_groups('read'), set(('managers', )))
-        self.execute('SET X read_permission Y WHERE X is EEType, X name "EUser", Y name "users"')
+        self.assertEquals(schema['CWUser'].get_groups('read'), set(('managers', )))
+        self.execute('SET X read_permission Y WHERE X is CWEType, X name "CWUser", Y name "users"')
         self.commit()
-        self.assertEquals(schema['EUser'].get_groups('read'), set(('managers', 'users',)))
+        self.assertEquals(schema['CWUser'].get_groups('read'), set(('managers', 'users',)))
 
     def test_perms_synchronization_2(self):
         schema = self.repo.schema['in_group']
         self.assertEquals(schema.get_groups('read'), set(('managers', 'users', 'guests')))
-        self.execute('DELETE X read_permission Y WHERE X is ERType, X name "in_group", Y name "guests"')
+        self.execute('DELETE X read_permission Y WHERE X is CWRType, X name "in_group", Y name "guests"')
         self.assertEquals(schema.get_groups('read'), set(('managers', 'users', 'guests')))
         self.commit()
         self.assertEquals(schema.get_groups('read'), set(('managers', 'users')))
-        self.execute('SET X read_permission Y WHERE X is ERType, X name "in_group", Y name "guests"')
+        self.execute('SET X read_permission Y WHERE X is CWRType, X name "in_group", Y name "guests"')
         self.assertEquals(schema.get_groups('read'), set(('managers', 'users')))
         self.commit()
         self.assertEquals(schema.get_groups('read'), set(('managers', 'users', 'guests')))
 
     def test_nonregr_user_edit_itself(self):
         ueid = self.session.user.eid
-        groupeids = [eid for eid, in self.execute('EGroup G WHERE G name in ("managers", "users")')]
+        groupeids = [eid for eid, in self.execute('CWGroup G WHERE G name in ("managers", "users")')]
         self.execute('DELETE X in_group Y WHERE X eid %s' % ueid)
         self.execute('SET X surname "toto" WHERE X eid %s' % ueid)
         self.execute('SET X in_group Y WHERE X eid %s, Y name "managers"' % ueid)
         self.commit()
-        eeid = self.execute('Any X WHERE X is EEType, X name "EEType"')[0][0]
+        eeid = self.execute('Any X WHERE X is CWEType, X name "CWEType"')[0][0]
         self.execute('DELETE X read_permission Y WHERE X eid %s' % eeid)
         self.execute('SET X final FALSE WHERE X eid %s' % eeid)
         self.execute('SET X read_permission Y WHERE X eid %s, Y eid in (%s, %s)'
                      % (eeid, groupeids[0], groupeids[1]))
         self.commit()
-        self.execute('Any X WHERE X is EEType, X name "EEType"')
+        self.execute('Any X WHERE X is CWEType, X name "CWEType"')
 
     # schema modification hooks tests #########################################
     
@@ -432,7 +432,7 @@ class SchemaModificationHooksTC(RepositoryBasedTC):
         sqlcursor = self.session.pool['system']
         try:
             try:
-                self.execute('INSERT EConstraint X: X cstrtype CT, DEF constrained_by X '
+                self.execute('INSERT CWConstraint X: X cstrtype CT, DEF constrained_by X '
                              'WHERE CT name "UniqueConstraint", DEF relation_type RT, DEF from_entity E,'
                              'RT name "sujet", E name "Affaire"')
                 self.failIf(self.schema['Affaire'].has_unique_values('sujet'))
@@ -461,21 +461,21 @@ class WorkflowHooksTC(RepositoryBasedTC):
         RepositoryBasedTC.setUp(self)
         self.s_activated = self.execute('State X WHERE X name "activated"')[0][0]
         self.s_deactivated = self.execute('State X WHERE X name "deactivated"')[0][0]
-        self.s_dummy = self.execute('INSERT State X: X name "dummy", X state_of E WHERE E name "EUser"')[0][0]
+        self.s_dummy = self.execute('INSERT State X: X name "dummy", X state_of E WHERE E name "CWUser"')[0][0]
         self.create_user('stduser')
         # give access to users group on the user's wf transitions
         # so we can test wf enforcing on euser (managers don't have anymore this
         # enforcement
-        self.execute('SET X require_group G WHERE G name "users", X transition_of ET, ET name "EUser"')
+        self.execute('SET X require_group G WHERE G name "users", X transition_of ET, ET name "CWUser"')
         self.commit()
         
     def tearDown(self):
-        self.execute('DELETE X require_group G WHERE G name "users", X transition_of ET, ET name "EUser"')
+        self.execute('DELETE X require_group G WHERE G name "users", X transition_of ET, ET name "CWUser"')
         self.commit()
         RepositoryBasedTC.tearDown(self)
 
     def test_set_initial_state(self):
-        ueid = self.execute('INSERT EUser E: E login "x", E upassword "x", E in_group G '
+        ueid = self.execute('INSERT CWUser E: E login "x", E upassword "x", E in_group G '
                             'WHERE G name "users"')[0][0]
         self.failIf(self.execute('Any N WHERE S name N, X in_state S, X eid %(x)s',
                                  {'x' : ueid}))
@@ -488,11 +488,11 @@ class WorkflowHooksTC(RepositoryBasedTC):
         cnx = self.login('stduser')
         cu = cnx.cursor()
         self.assertRaises(ValidationError, cu.execute,
-                          'INSERT EUser X: X login "badaboum", X upassword %(pwd)s, '
+                          'INSERT CWUser X: X login "badaboum", X upassword %(pwd)s, '
                           'X in_state S WHERE S name "deactivated"', {'pwd': 'oops'})
         cnx.close()
         # though managers can do whatever he want
-        self.execute('INSERT EUser X: X login "badaboum", X upassword %(pwd)s, '
+        self.execute('INSERT CWUser X: X login "badaboum", X upassword %(pwd)s, '
                      'X in_state S, X in_group G WHERE S name "deactivated", G name "users"', {'pwd': 'oops'})
         self.commit()
         

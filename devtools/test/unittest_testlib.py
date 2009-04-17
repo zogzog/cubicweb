@@ -24,7 +24,7 @@ class WebTestTC(TestCase):
                 self.view('raising', self.execute('Bug B'), template=None)
             
             def test_correct_view(self):
-                self.view('primary', self.execute('EUser U'), template=None)
+                self.view('primary', self.execute('CWUser U'), template=None)
             
         tests = [MyWebTest('test_error_view'), MyWebTest('test_correct_view')]
         result = self.runner.run(TestSuite(tests))

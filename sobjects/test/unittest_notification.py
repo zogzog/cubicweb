@@ -43,10 +43,10 @@ class MessageIdTC(TestCase):
 
 class RecipientsFinderTC(EnvBasedTC):
     def test(self):
-        urset = self.execute('EUser X WHERE X login "admin"')
+        urset = self.execute('CWUser X WHERE X login "admin"')
         self.execute('INSERT EmailAddress X: X address "admin@logilab.fr", U primary_email X '
                      'WHERE U eid %(x)s', {'x': urset[0][0]})
-        self.execute('INSERT EProperty X: X pkey "ui.language", X value "fr", X for_user U '
+        self.execute('INSERT CWProperty X: X pkey "ui.language", X value "fr", X for_user U '
                      'WHERE U eid %(x)s', {'x': urset[0][0]})
         self.commit() # commit so that admin get its properties updated
         finder = self.vreg.select_component('recipients_finder', self.request(), urset)

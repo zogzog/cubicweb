@@ -127,9 +127,9 @@ class MigrationCommandsTC(RepositoryBasedTC):
         self.failIf('filed_under2' in self.schema)
         self.mh.cmd_add_entity_type('Folder2')
         self.failUnless('Folder2' in self.schema)
-        self.failUnless(self.execute('EEType X WHERE X name "Folder2"'))
+        self.failUnless(self.execute('CWEType X WHERE X name "Folder2"'))
         self.failUnless('filed_under2' in self.schema)
-        self.failUnless(self.execute('ERType X WHERE X name "filed_under2"'))
+        self.failUnless(self.execute('CWRType X WHERE X name "filed_under2"'))
         self.assertEquals(sorted(str(rs) for rs in self.schema['Folder2'].subject_relations()),
                           ['created_by', 'creation_date', 'description', 'description_format', 'eid',
                            'filed_under2', 'has_text', 'identity', 'is', 'is_instance_of',
@@ -154,7 +154,7 @@ class MigrationCommandsTC(RepositoryBasedTC):
         eschema = self.schema.eschema('Folder2')
         self.mh.cmd_drop_entity_type('Folder2')
         self.failIf('Folder2' in self.schema)
-        self.failIf(self.execute('EEType X WHERE X name "Folder2"'))
+        self.failIf(self.execute('CWEType X WHERE X name "Folder2"'))
         # test automatic workflow deletion
         self.failIf(self.execute('State X WHERE NOT X state_of ET'))
         self.failIf(self.execute('Transition X WHERE NOT X transition_of ET'))
@@ -179,7 +179,7 @@ class MigrationCommandsTC(RepositoryBasedTC):
     def test_add_relation_definition(self):
         self.mh.cmd_add_relation_definition('Societe', 'in_state', 'State')
         self.assertEquals(sorted(self.schema['in_state'].subjects()),
-                          ['Affaire', 'Division', 'EUser', 'Note', 'Societe', 'SubDivision'])
+                          ['Affaire', 'Division', 'CWUser', 'Note', 'Societe', 'SubDivision'])
         self.assertEquals(self.schema['in_state'].objects(), ('State',))
 
     def test_add_relation_definition_nortype(self):
@@ -210,7 +210,7 @@ class MigrationCommandsTC(RepositoryBasedTC):
         self.mh.cmd_drop_relation_definition('Personne', 'evaluee', 'Note')
         self.failUnless('evaluee' in self.schema)
         self.assertEquals(sorted(self.schema['evaluee'].subjects()),
-                          ['Division', 'EUser', 'Societe', 'SubDivision'])
+                          ['Division', 'CWUser', 'Societe', 'SubDivision'])
         self.assertEquals(sorted(self.schema['evaluee'].objects()),
                           ['Note'])
 
@@ -257,7 +257,7 @@ class MigrationCommandsTC(RepositoryBasedTC):
         migrschema['Personne'].description = 'blabla bla'
         migrschema['titre'].description = 'usually a title' 
         migrschema['titre']._rproperties[('Personne', 'String')]['description'] = 'title for this person'
-#         rinorderbefore = cursor.execute('Any O,N WHERE X is EFRDef, X relation_type RT, RT name N,'
+#         rinorderbefore = cursor.execute('Any O,N WHERE X is CWAttribute, X relation_type RT, RT name N,'
 #                                         'X from_entity FE, FE name "Personne",'
 #                                         'X ordernum O ORDERBY O')
 #         expected = [u'creation_date', u'modification_date', u'nom', u'prenom',
@@ -279,7 +279,7 @@ class MigrationCommandsTC(RepositoryBasedTC):
         # schema and so behaviour is undefined
         # "civility" is also skipped since it may have been added by
         # test_rename_attribut :o/
-        rinorder = [n for n, in cursor.execute('Any N ORDERBY O WHERE X is EFRDef, X relation_type RT, RT name N,'
+        rinorder = [n for n, in cursor.execute('Any N ORDERBY O WHERE X is CWAttribute, X relation_type RT, RT name N,'
                                                'X from_entity FE, FE name "Personne",'
                                                'X ordernum O') if n not in ('sexe', 'description', 'civility')]
         expected = [u'nom', u'prenom', u'promo', u'ass', u'adel', u'titre',
@@ -338,14 +338,14 @@ class MigrationCommandsTC(RepositoryBasedTC):
         self.mh.rollback()
 
     def _erqlexpr_rset(self, action, ertype):
-        rql = 'RQLExpression X WHERE ET is EEType, ET %s_permission X, ET name %%(name)s' % action
+        rql = 'RQLExpression X WHERE ET is CWEType, ET %s_permission X, ET name %%(name)s' % action
         return self.mh.rqlcursor.execute(rql, {'name': ertype})
     def _erqlexpr_entity(self, action, ertype):
         rset = self._erqlexpr_rset(action, ertype)
         self.assertEquals(len(rset), 1)
         return rset.get_entity(0, 0)
     def _rrqlexpr_rset(self, action, ertype):
-        rql = 'RQLExpression X WHERE ET is ERType, ET %s_permission X, ET name %%(name)s' % action
+        rql = 'RQLExpression X WHERE ET is CWRType, ET %s_permission X, ET name %%(name)s' % action
         return self.mh.rqlcursor.execute(rql, {'name': ertype})
     def _rrqlexpr_entity(self, action, ertype):
         rset = self._rrqlexpr_rset(action, ertype)
@@ -355,14 +355,14 @@ class MigrationCommandsTC(RepositoryBasedTC):
     def test_set_size_constraint(self):
         # existing previous value
         try:
-            self.mh.cmd_set_size_constraint('EEType', 'name', 128)
+            self.mh.cmd_set_size_constraint('CWEType', 'name', 128)
         finally:
-            self.mh.cmd_set_size_constraint('EEType', 'name', 64)
+            self.mh.cmd_set_size_constraint('CWEType', 'name', 64)
         # non existing previous value
         try:
-            self.mh.cmd_set_size_constraint('EEType', 'description', 256)
+            self.mh.cmd_set_size_constraint('CWEType', 'description', 256)
         finally:
-            self.mh.cmd_set_size_constraint('EEType', 'description', None)
+            self.mh.cmd_set_size_constraint('CWEType', 'description', None)
 
     def test_add_remove_cube(self):
         cubes = set(self.config.cubes())

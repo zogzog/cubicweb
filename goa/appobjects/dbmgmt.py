@@ -168,7 +168,7 @@ class ContentInit(StartupView):
 class ContentClear(StartupView):
     id = 'contentclear'
     __select__ = none_rset() & match_user_groups('managers')
-    skip_etypes = ('EGroup', 'EUser')
+    skip_etypes = ('CWGroup', 'CWUser')
     
     def call(self):
         # XXX should use unsafe_execute with all hooks deactivated

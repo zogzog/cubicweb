@@ -144,7 +144,7 @@ class SecurityManagementView(EntityView):
     def require_permission_edit_form(self, entity):
         w = self.w
         _ = self.req._
-        newperm = self.vreg.etype_class('EPermission')(self.req, None)
+        newperm = self.vreg.etype_class('CWPermission')(self.req, None)
         newperm.eid = self.req.varmaker.next()
         w(u'<p>%s</p>' % _('add a new permission'))
         begin_form(w, newperm, 'security', entity.rest_path())
@@ -156,7 +156,7 @@ class SecurityManagementView(EntityView):
         w(u'<tr><th>%s</th><th>%s</th><th>%s</th><th>&nbsp;</th></tr>\n'
                % (_("name"), _("label"), _('granted to groups')))
         if getattr(entity, '__permissions__', None):
-            wdg = StaticComboBoxWidget(self.vreg, self.schema['EPermission'],
+            wdg = StaticComboBoxWidget(self.vreg, self.schema['CWPermission'],
                                        self.schema['name'], self.schema['String'],
                                        vocabfunc=lambda x: entity.__permissions__)
         else:

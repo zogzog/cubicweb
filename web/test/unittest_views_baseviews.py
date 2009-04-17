@@ -39,7 +39,7 @@ class VidFromRsetTC(EnvBasedTC):
         
     def test_more_than_one_entity(self):
         req = self.request()
-        rset = self.execute('Any X WHERE X is EUser')
+        rset = self.execute('Any X WHERE X is CWUser')
         self.assertEquals(vid_from_rset(req, rset, self.schema), 'list')
         rset = self.execute('Any X, L WHERE X login L')
         self.assertEquals(vid_from_rset(req, rset, self.schema), 'list')
@@ -58,16 +58,16 @@ class VidFromRsetTC(EnvBasedTC):
         req = self.request()
         rset = self.execute('Any X, COUNT(T) GROUPBY X WHERE X is T')
         self.assertEquals(vid_from_rset(req, rset, self.schema), 'table')
-        rset = self.execute('Any MAX(X) WHERE X is EUser')
+        rset = self.execute('Any MAX(X) WHERE X is CWUser')
         self.assertEquals(vid_from_rset(req, rset, self.schema), 'table')
 
     def test_subquery(self):
         rset = self.execute(
 'DISTINCT Any X,N ORDERBY N '
 'WITH X,N BEING ('
-'     (DISTINCT Any P,N WHERE P is EUser, P login N)'
+'     (DISTINCT Any P,N WHERE P is CWUser, P login N)'
 '       UNION'
-'     (DISTINCT Any W,N WHERE W is EGroup, W name N))')
+'     (DISTINCT Any W,N WHERE W is CWGroup, W name N))')
         req = self.request()
         self.assertEquals(vid_from_rset(req, rset, self.schema), 'table')
 

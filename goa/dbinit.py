@@ -15,7 +15,7 @@ def _get_group(groupname):
     try:
         return _GROUP_CACHE[groupname]
     except KeyError:
-        key = Key.from_path('EGroup', 'key_' + groupname, parent=None)
+        key = Key.from_path('CWGroup', 'key_' + groupname, parent=None)
         try:
             group = Get(key)
         except datastore_errors.EntityNotFoundError:
@@ -29,7 +29,7 @@ def _get_group(groupname):
 def create_user(login, password, groups):
     """create a cubicweb user"""
     from cubicweb.server.utils import crypt_password
-    user = Entity('EUser', name=login)
+    user = Entity('CWUser', name=login)
     user['s_login'] = unicode(login)
     user['s_upassword'] = crypt_password(password)
     set_user_groups(user, groups)
@@ -39,7 +39,7 @@ def create_user(login, password, groups):
 def create_groups():
     """create initial cubicweb groups"""
     for groupname in ('managers', 'users', 'guests'):
-        group = Entity('EGroup', name='key_' + groupname)
+        group = Entity('CWGroup', name='key_' + groupname)
         group['s_name'] = unicode(groupname)
         Put(group)
         _GROUP_CACHE[groupname] = group
@@ -74,23 +74,23 @@ def init_relations(gaeentity, eschema):
             gaeentity[dsrelation] = None
     
 def fix_entities(schema):
-    for etype in ('EUser', 'EGroup'):
+    for etype in ('CWUser', 'CWGroup'):
         eschema = schema.eschema(etype)
         for gaeentity in Query(etype).Run():
             init_relations(gaeentity, eschema)
-            # XXX o_is on EEType entity
-            gaeentity['s_is'] = Key.from_path('EEType', 'key_' + etype, parent=None)
+            # XXX o_is on CWEType entity
+            gaeentity['s_is'] = Key.from_path('CWEType', 'key_' + etype, parent=None)
             Put(gaeentity)
     
 def init_persistent_schema(ssession, schema):
     execute = ssession.unsafe_execute
-    rql = ('INSERT EEType X: X name %(name)s, X description %(descr)s,'
+    rql = ('INSERT CWEType X: X name %(name)s, X description %(descr)s,'
            'X final FALSE, X meta %(meta)s')
-    eschema = schema.eschema('EEType')
-    execute(rql, {'name': u'EEType', 'descr': unicode(eschema.description),
+    eschema = schema.eschema('CWEType')
+    execute(rql, {'name': u'CWEType', 'descr': unicode(eschema.description),
                   'meta': eschema.meta})
     for eschema in schema.entities():
-        if eschema.is_final() or eschema == 'EEType':
+        if eschema.is_final() or eschema == 'CWEType':
             continue
         execute(rql, {'name': unicode(eschema), 'meta': eschema.meta,
                       'descr': unicode(eschema.description)})
@@ -98,11 +98,11 @@ def init_persistent_schema(ssession, schema):
 def insert_versions(ssession, config):
     execute = ssession.unsafe_execute
     # insert versions
-    execute('INSERT EProperty X: X pkey %(pk)s, X value%(v)s',
+    execute('INSERT CWProperty X: X pkey %(pk)s, X value%(v)s',
             {'pk': u'system.version.cubicweb',
              'v': unicode(config.cubicweb_version())})
     for cube in config.cubes():
-        execute('INSERT EProperty X: X pkey %(pk)s, X value%(v)s',
+        execute('INSERT CWProperty X: X pkey %(pk)s, X value%(v)s',
                 {'pk': u'system.version.%s' % cube,
                  'v': unicode(config.cube_version(cube))})
     

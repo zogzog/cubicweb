@@ -22,7 +22,7 @@ def teardown_module(*args):
     repotest.undo_monkey_patch()
     
 def eid_func_map(eid):
-    return {1: 'EUser',
+    return {1: 'CWUser',
             2: 'Card'}[eid]
 
 def rewrite(rqlst, snippets_map, kwargs):
@@ -74,7 +74,7 @@ class RQLRewriteTC(TestCase):
         self.failUnlessEqual(rqlst.as_string(),
                              u"Any C WHERE C is Card, B eid %(D)s, "
                              "EXISTS(C in_state A, B in_group E, F require_state A, "
-                             "F name 'read', F require_group E, A is State, E is EGroup, F is EPermission)")
+                             "F name 'read', F require_group E, A is State, E is CWGroup, F is CWPermission)")
         
     def test_multiple_var(self):
         card_constraint = ('X in_state S, U in_group G, P require_state S,'
@@ -87,8 +87,8 @@ class RQLRewriteTC(TestCase):
         self.assertTextEquals(rqlst.as_string(),
                              "Any S WHERE S documented_by C, C eid %(u)s, B eid %(D)s, "
                              "EXISTS(C in_state A, B in_group E, F require_state A, "
-                             "F name 'read', F require_group E, A is State, E is EGroup, F is EPermission), "
-                             "(EXISTS(S ref LIKE 'PUBLIC%')) OR (EXISTS(B in_group G, G name 'public', G is EGroup)), "
+                             "F name 'read', F require_group E, A is State, E is CWGroup, F is CWPermission), "
+                             "(EXISTS(S ref LIKE 'PUBLIC%')) OR (EXISTS(B in_group G, G name 'public', G is CWGroup)), "
                              "S is Affaire")
         self.failUnless('D' in kwargs)
         
@@ -99,8 +99,8 @@ class RQLRewriteTC(TestCase):
         self.failUnlessEqual(rqlst.as_string(),
                              "Any S WHERE S owned_by C, C eid %(u)s, A eid %(B)s, "
                              "EXISTS((C identity A) OR (C in_state D, E identity A, "
-                             "E in_state D, D name 'subscribed'), D is State, E is EUser), "
-                             "S is IN(Affaire, Basket, Bookmark, Card, Comment, Division, ECache, EConstraint, EConstraintType, EEType, EFRDef, EGroup, ENFRDef, EPermission, EProperty, ERType, EUser, Email, EmailAddress, EmailPart, EmailThread, File, Folder, Image, Note, Personne, RQLExpression, Societe, State, SubDivision, Tag, TrInfo, Transition)")
+                             "E in_state D, D name 'subscribed'), D is State, E is CWUser), "
+                             "S is IN(Affaire, Basket, Bookmark, Card, Comment, Division, CWCache, CWConstraint, CWConstraintType, CWEType, CWAttribute, CWGroup, CWRelation, CWPermission, CWProperty, CWRType, CWUser, Email, EmailAddress, EmailPart, EmailThread, File, Folder, Image, Note, Personne, RQLExpression, Societe, State, SubDivision, Tag, TrInfo, Transition)")
 
     def test_simplified_rqlst(self):
         card_constraint = ('X in_state S, U in_group G, P require_state S,'
@@ -110,7 +110,7 @@ class RQLRewriteTC(TestCase):
         self.failUnlessEqual(rqlst.as_string(),
                              u"Any 2 WHERE B eid %(C)s, "
                              "EXISTS(2 in_state A, B in_group D, E require_state A, "
-                             "E name 'read', E require_group D, A is State, D is EGroup, E is EPermission)")
+                             "E name 'read', E require_group D, A is State, D is CWGroup, E is CWPermission)")
 
     def test_optional_var(self):
         card_constraint = ('X in_state S, U in_group G, P require_state S,'
@@ -141,22 +141,22 @@ class RQLRewriteTC(TestCase):
         self.failUnlessEqual(rqlst.as_string(),
                              u"Any C WHERE C in_state STATE, C is Card, A eid %(B)s, "
                              "EXISTS(A in_group D, E require_state STATE, "
-                             "E name 'read', E require_group D, D is EGroup, E is EPermission), "
+                             "E name 'read', E require_group D, D is CWGroup, E is CWPermission), "
                              "STATE is State")
 
     def test_unsupported_constraint_1(self):
-        # EUser doesn't have require_permission
+        # CWUser doesn't have require_permission
         trinfo_constraint = ('X wf_info_for Y, Y require_permission P, P name "read"')
-        rqlst = parse('Any U,T WHERE U is EUser, T wf_info_for U')
+        rqlst = parse('Any U,T WHERE U is CWUser, T wf_info_for U')
         self.assertRaises(Unauthorized, rewrite, rqlst, {'T': (trinfo_constraint,)}, {})
         
     def test_unsupported_constraint_2(self):
         trinfo_constraint = ('X wf_info_for Y, Y require_permission P, P name "read"')
-        rqlst = parse('Any U,T WHERE U is EUser, T wf_info_for U')
+        rqlst = parse('Any U,T WHERE U is CWUser, T wf_info_for U')
         rewrite(rqlst, {'T': (trinfo_constraint, 'X wf_info_for Y, Y in_group G, G name "managers"')}, {})
         self.failUnlessEqual(rqlst.as_string(),
-                             u"Any U,T WHERE U is EUser, T wf_info_for U, "
-                             "EXISTS(U in_group B, B name 'managers', B is EGroup), T is TrInfo")
+                             u"Any U,T WHERE U is CWUser, T wf_info_for U, "
+                             "EXISTS(U in_group B, B name 'managers', B is CWGroup), T is TrInfo")
 
     def test_unsupported_constraint_3(self):
         self.skip('raise unauthorized for now')

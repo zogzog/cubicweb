@@ -127,16 +127,16 @@ Every entities'type have the following meta-data:
 * `creation_date (Datetime)`, date on which the entity has been created
 * `modification_date (Datetime)`, lastest date on which the entity has been modified
 
-* `created_by (EUser)`, relation to the user which has created this entity
+* `created_by (CWUser)`, relation to the user which has created this entity
 
-* `owned_by (EUser)`, relation to the user()s considered as owner of this
+* `owned_by (CWUser)`, relation to the user()s considered as owner of this
   entity, the entity's creator by default
 
 * `is (Eetype)`, special relation to specify a variable type.
 
 A user's entity has the following schema:
 
-:EUser:
+:CWUser:
   ::
 
 	login  	  (String) not null

@@ -26,7 +26,7 @@ class MetaDataTC(GAEBasedTC):
         GAEBasedTC.setUp(self)
         self.req = self.request()
         self.a = self.add_entity('Article')
-        self.p = self.add_entity('EProperty', pkey=u'ui.language', value=u'en')
+        self.p = self.add_entity('CWProperty', pkey=u'ui.language', value=u'en')
         self.session.commit()
         
     def _test_timestamp(self, entity, attr, sleep=0.1):
@@ -96,9 +96,9 @@ class MetaDataTC(GAEBasedTC):
         en = self.execute('Any EN WHERE E name EN, X is E, X eid %(x)s', {'x': self.a.eid}, 'x')[0][0]
         self.assertEquals(en, 'Article')
         en = self.execute('Any EN WHERE E name EN, X is E, X eid %(x)s', {'x': self.p.eid}, 'x')[0][0]
-        self.assertEquals(en, 'EProperty') 
+        self.assertEquals(en, 'CWProperty') 
         en = self.execute('Any EN WHERE E name EN, X is E, X eid %(x)s', {'x': self.req.user.eid}, 'x')[0][0]
-        self.assertEquals(en, 'EUser')
+        self.assertEquals(en, 'CWUser')
 
         
 if __name__ == '__main__':

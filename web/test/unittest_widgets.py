@@ -32,7 +32,7 @@ class WidgetsTC(EnvBasedTC):
                            u'<input type="hidden" name="eid" value="X" />')
 
     def test_textarea_widget(self):
-        self.add_entity('EProperty', pkey=u'ui.fckeditor', value=u'')
+        self.add_entity('CWProperty', pkey=u'ui.fckeditor', value=u'')
         self.commit()
         w = self.get_widget('State', 'description', 'String')
         self.assertEquals(w.name, 'description')
@@ -58,7 +58,7 @@ class WidgetsTC(EnvBasedTC):
 </select><br/><textarea onkeypress="autogrow(this)" name="description:X" accesskey="d" cols="80" id="description:X" rows="20" tabindex="1"></textarea>''' % tal_format)
 
     def test_textarea_widget_previous_value(self):
-        self.add_entity('EProperty', pkey=u'ui.fckeditor', value=u'')
+        self.add_entity('CWProperty', pkey=u'ui.fckeditor', value=u'')
         self.commit()
         w = self.get_widget('State', 'description', 'String')
         req = self.request()
@@ -284,11 +284,11 @@ class WidgetsTC(EnvBasedTC):
 
 
     def test_password_widget(self):
-        w = self.get_widget('EUser', 'upassword', 'Password')
+        w = self.get_widget('CWUser', 'upassword', 'Password')
         self.assertEquals(w.name, 'upassword')
         self.assertEquals(w.render_example(self.request()), '')
         self.assertDictEquals(w.attrs, {'accesskey': 'u'})
-        entity = self.etype_instance('EUser')
+        entity = self.etype_instance('CWUser')
         entity.eid = 'X'
         self.assertEquals(w.required(entity), True)
         self.assertEquals(w.render(entity), '')

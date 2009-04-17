@@ -85,9 +85,9 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
     # need default value on class since migration doesn't call init method
     has_deleted_entitites_table = True
     
-    passwd_rql = "Any P WHERE X is EUser, X login %(login)s, X upassword P"
-    auth_rql = "Any X WHERE X is EUser, X login %(login)s, X upassword %(pwd)s"
-    _sols = ({'X': 'EUser', 'P': 'Password'},)
+    passwd_rql = "Any P WHERE X is CWUser, X login %(login)s, X upassword P"
+    auth_rql = "Any X WHERE X is CWUser, X login %(login)s, X upassword %(pwd)s"
+    _sols = ({'X': 'CWUser', 'P': 'Password'},)
     
     options = (
         ('db-driver',
@@ -199,7 +199,7 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
             self._rql_sqlgen.schema = schema
         except AttributeError:
             pass # __init__
-        if 'EUser' in schema: # probably an empty schema if not true...
+        if 'CWUser' in schema: # probably an empty schema if not true...
             # rql syntax trees used to authenticate users
             self._passwd_rqlst = self.compile_rql(self.passwd_rql)
             self._auth_rqlst = self.compile_rql(self.auth_rql)
@@ -221,7 +221,7 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
         return True #not rtype == 'content_for'
 
     def authenticate(self, session, login, password):
-        """return EUser eid for the given login/password if this account is
+        """return CWUser eid for the given login/password if this account is
         defined in this source, else raise `AuthenticationError`
 
         two queries are needed since passwords are stored crypted, so we have

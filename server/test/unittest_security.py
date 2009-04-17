@@ -41,12 +41,12 @@ class LowLevelSecurityFunctionTC(BaseSecurityTC):
             
     def test_upassword_not_selectable(self):
         self.assertRaises(Unauthorized,
-                          self.execute, 'Any X,P WHERE X is EUser, X upassword P')
+                          self.execute, 'Any X,P WHERE X is CWUser, X upassword P')
         self.rollback()
         cnx = self.login('iaminusersgrouponly')
         cu = cnx.cursor()
         self.assertRaises(Unauthorized,
-                          cu.execute, 'Any X,P WHERE X is EUser, X upassword P')
+                          cu.execute, 'Any X,P WHERE X is CWUser, X upassword P')
         
     
 class SecurityTC(BaseSecurityTC):
@@ -57,7 +57,7 @@ class SecurityTC(BaseSecurityTC):
         self.execute("INSERT Affaire X: X sujet 'cool'")
         self.execute("INSERT Societe X: X nom 'logilab'")
         self.execute("INSERT Personne X: X nom 'bidule'")
-        self.execute('INSERT EGroup X: X name "staff"')
+        self.execute('INSERT CWGroup X: X name "staff"')
         self.commit()
 
     def test_insert_security(self):
@@ -134,11 +134,11 @@ class SecurityTC(BaseSecurityTC):
         # exception is raised
         #user._groups = {'guests':1}
         #self.assertRaises(Unauthorized,
-        #                  self.o.execute, user, "DELETE EUser X WHERE X login 'bidule'")
+        #                  self.o.execute, user, "DELETE CWUser X WHERE X login 'bidule'")
         # check local security
         cnx = self.login('iaminusersgrouponly')
         cu = cnx.cursor()
-        self.assertRaises(Unauthorized, cu.execute, "DELETE EGroup Y WHERE Y name 'staff'")
+        self.assertRaises(Unauthorized, cu.execute, "DELETE CWGroup Y WHERE Y name 'staff'")
         
     def test_delete_rql_permission(self):
         self.execute("SET A concerne S WHERE A is Affaire, S is Societe")
@@ -369,11 +369,11 @@ class SecurityTC(BaseSecurityTC):
 
     def test_attribute_read_security(self):
         # anon not allowed to see users'login, but they can see users
-        self.repo.schema['EUser'].set_groups('read', ('guests', 'users', 'managers'))
+        self.repo.schema['CWUser'].set_groups('read', ('guests', 'users', 'managers'))
         self.repo.schema['login'].set_groups('read', ('users', 'managers'))
         cnx = self.login('anon')
         cu = cnx.cursor()
-        rset = cu.execute('EUser X')
+        rset = cu.execute('CWUser X')
         self.failUnless(rset)
         x = rset.get_entity(0, 0)
         self.assertEquals(x.login, None)
@@ -420,20 +420,20 @@ class BaseSchemaSecurityTC(BaseSecurityTC):
         # anonymous user can only read itself
         rset = cu.execute('Any L WHERE X owned_by U, U login L')
         self.assertEquals(rset.rows, [['anon']])
-        rset = cu.execute('EUser X')
+        rset = cu.execute('CWUser X')
         self.assertEquals(rset.rows, [[anon.eid]])
         # anonymous user can read groups (necessary to check allowed transitions for instance)
-        self.assert_(cu.execute('EGroup X'))
+        self.assert_(cu.execute('CWGroup X'))
         # should only be able to read the anonymous user, not another one
         origuser = self.session.user
         self.assertRaises(Unauthorized, 
-                          cu.execute, 'EUser X WHERE X eid %(x)s', {'x': origuser.eid}, 'x')
+                          cu.execute, 'CWUser X WHERE X eid %(x)s', {'x': origuser.eid}, 'x')
         # nothing selected, nothing updated, no exception raised
         #self.assertRaises(Unauthorized,
         #                  cu.execute, 'SET X login "toto" WHERE X eid %(x)s',
         #                  {'x': self.user.eid})
         
-        rset = cu.execute('EUser X WHERE X eid %(x)s', {'x': anon.eid}, 'x')
+        rset = cu.execute('CWUser X WHERE X eid %(x)s', {'x': anon.eid}, 'x')
         self.assertEquals(rset.rows, [[anon.eid]])
         # but can't modify it
         cu.execute('SET X login "toto" WHERE X eid %(x)s', {'x': anon.eid})

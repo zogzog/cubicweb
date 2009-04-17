@@ -27,7 +27,7 @@ from logilab.common.adbh import get_adv_func_helper
 from yams.constraints import SizeConstraint
 from yams.schema2sql import eschema2sql, rschema2sql
 
-from cubicweb import AuthenticationError
+from cubicweb import AuthenticationError, ETYPE_NAME_MAP
 from cubicweb.dbapi import get_repository, repo_connect
 from cubicweb.common.migration import MigrationHelper, yes
 
@@ -37,42 +37,6 @@ try:
     from cubicweb.server.sqlutils import sqlexec, SQL_PREFIX
 except ImportError: # LAX
     pass
-
-def set_sql_prefix(prefix):
-    """3.1.5 migration function: allow to unset/reset SQL_PREFIX"""
-    for module in ('checkintegrity', 'migractions', 'schemahooks',
-                   'sources.rql2sql', 'sources.native'):
-        try:
-            sys.modules['cubicweb.server.%s' % module].SQL_PREFIX = prefix
-            print 'changed SQL_PREFIX for %s' % module
-        except KeyError:
-            pass
-        
-def update_database(repo):
-    """3.1.3 migration function: update database schema by adding SQL_PREFIX to
-    entity type tables and columns
-    """
-    pool = repo._get_pool()
-    source = repo.system_source
-    sqlcu = pool['system']
-    for etype in repo.schema.entities():
-        if etype.is_final():
-            continue
-        try:
-            sqlcu.execute('ALTER TABLE %s RENAME TO cw_%s' % (etype, etype))
-            print 'renamed %s table for source %s' % (etype, uri)
-        except:
-            pass
-        for rschema in etype.subject_relations():
-            if rschema == 'has_text':
-                continue
-            if rschema.is_final() or rschema.inlined:
-                sqlcu.execute('ALTER TABLE cw_%s RENAME %s TO cw_%s'
-                              % (etype, rschema, rschema))
-                print 'renamed %s.%s column for source %s' % (
-                    etype, rschema, uri)
-    pool.commit()
-    repo._free_pool(pool)
 
         
 class ServerMigrationHelper(MigrationHelper):
@@ -99,17 +63,7 @@ class ServerMigrationHelper(MigrationHelper):
 
     @cached
     def repo_connect(self):
-        try:
-            self.repo = get_repository(method='inmemory', config=self.config)
-        except:
-            import traceback
-            traceback.print_exc()
-            print '3.1.5 migration'
-            # XXX 3.1.5 migration
-            set_sql_prefix('')
-            self.repo = get_repository(method='inmemory', config=self.config)
-            update_database(self.repo)
-            set_sql_prefix('cw_')
+        self.repo = get_repository(method='inmemory', config=self.config)
         return self.repo
     
     def shutdown(self):
@@ -394,7 +348,7 @@ class ServerMigrationHelper(MigrationHelper):
         # execute post-remove files
         for pack in reversed(removedcubes):
             self.exec_event_script('postremove', self.config.cube_dir(pack))
-            self.rqlexec('DELETE EProperty X WHERE X pkey %(pk)s',
+            self.rqlexec('DELETE CWProperty X WHERE X pkey %(pk)s',
                          {'pk': u'system.version.'+pack}, ask_confirm=False)
             self.commit()
             
@@ -449,7 +403,7 @@ class ServerMigrationHelper(MigrationHelper):
         else:
             eschema = self.fs_schema.eschema(etype)
         confirm = self.verbosity >= 2
-        # register the entity into EEType
+        # register the entity into CWEType
         self.rqlexecall(ss.eschema2rql(eschema), ask_confirm=confirm)
         # add specializes relation if needed
         self.rqlexecall(ss.eschemaspecialize2rql(eschema), ask_confirm=confirm)
@@ -525,8 +479,8 @@ class ServerMigrationHelper(MigrationHelper):
         This will trigger deletion of necessary relation types and definitions
         """
         # XXX what if we delete an entity type which is specialized by other types
-        # unregister the entity from EEType
-        self.rqlexec('DELETE EEType X WHERE X name %(etype)s', {'etype': etype},
+        # unregister the entity from CWEType
+        self.rqlexec('DELETE CWEType X WHERE X name %(etype)s', {'etype': etype},
                      ask_confirm=self.verbosity>=2)
         if commit:
             self.commit()
@@ -537,7 +491,7 @@ class ServerMigrationHelper(MigrationHelper):
         `oldname` is a string giving the name of the existing entity type
         `newname` is a string giving the name of the renamed entity type
         """
-        self.rqlexec('SET ET name %(newname)s WHERE ET is EEType, ET name %(oldname)s',
+        self.rqlexec('SET ET name %(newname)s WHERE ET is CWEType, ET name %(oldname)s',
                      {'newname' : unicode(newname), 'oldname' : oldname})
         if commit:
             self.commit()
@@ -554,7 +508,7 @@ class ServerMigrationHelper(MigrationHelper):
         
         """
         rschema = self.fs_schema.rschema(rtype)
-        # register the relation into ERType and insert necessary relation
+        # register the relation into CWRType and insert necessary relation
         # definitions
         self.rqlexecall(ss.rschema2rql(rschema, addrdef=False),
                         ask_confirm=self.verbosity>=2)
@@ -570,8 +524,8 @@ class ServerMigrationHelper(MigrationHelper):
         
     def cmd_drop_relation_type(self, rtype, commit=True):
         """unregister an existing relation type"""
-        # unregister the relation from ERType
-        self.rqlexec('DELETE ERType X WHERE X name %r' % rtype,
+        # unregister the relation from CWRType
+        self.rqlexec('DELETE CWRType X WHERE X name %r' % rtype,
                      ask_confirm=self.verbosity>=2)
         if commit:
             self.commit()
@@ -602,11 +556,11 @@ class ServerMigrationHelper(MigrationHelper):
     def cmd_drop_relation_definition(self, subjtype, rtype, objtype, commit=True):
         """unregister an existing relation definition"""
         rschema = self.repo.schema.rschema(rtype)
-        # unregister the definition from EFRDef or ENFRDef
+        # unregister the definition from CWAttribute or CWRelation
         if rschema.is_final():
-            etype = 'EFRDef'
+            etype = 'CWAttribute'
         else:
-            etype = 'ENFRDef'
+            etype = 'CWRelation'
         rql = ('DELETE %s X WHERE X from_entity FE, FE name "%s",'
                'X relation_type RT, RT name "%s", X to_entity TE, TE name "%s"')
         self.rqlexec(rql % (etype, subjtype, rtype, objtype),
@@ -734,11 +688,11 @@ class ServerMigrationHelper(MigrationHelper):
         repospschema = repoeschema.specializes()
         espschema = eschema.specializes()
         if repospschema and not espschema:
-            self.rqlexec('DELETE X specializes Y WHERE X is EEType, X name %(x)s',
+            self.rqlexec('DELETE X specializes Y WHERE X is CWEType, X name %(x)s',
                          {'x': str(repoeschema)})
         elif not repospschema and espschema:
-            self.rqlexec('SET X specializes Y WHERE X is EEType, X name %(x)s, '
-                         'Y is EEType, Y name %(y)s',
+            self.rqlexec('SET X specializes Y WHERE X is CWEType, X name %(x)s, '
+                         'Y is CWEType, Y name %(y)s',
                          {'x': str(repoeschema), 'y': str(espschema)})
         self.rqlexecall(ss.updateeschema2rql(eschema),
                         ask_confirm=self.verbosity >= 2)
@@ -800,7 +754,7 @@ class ServerMigrationHelper(MigrationHelper):
                 self.rqlexec('DELETE X constrained_by C WHERE C eid %(x)s',
                              {'x': cstr.eid}, 'x',
                              ask_confirm=confirm)
-                self.rqlexec('DELETE EConstraint C WHERE C eid %(x)s',
+                self.rqlexec('DELETE CWConstraint C WHERE C eid %(x)s',
                              {'x': cstr.eid}, 'x',
                              ask_confirm=confirm)
             else:
@@ -863,7 +817,7 @@ class ServerMigrationHelper(MigrationHelper):
         if oldvalue == size:
             return
         if oldvalue is None and not size is None:
-            ceid = self.rqlexec('INSERT EConstraint C: C value %(v)s, C cstrtype CT '
+            ceid = self.rqlexec('INSERT CWConstraint C: C value %(v)s, C cstrtype CT '
                                 'WHERE CT name "SizeConstraint"',
                                 {'v': SizeConstraint(size).serialize()},
                                 ask_confirm=self.verbosity>=2)[0][0]
@@ -883,7 +837,7 @@ class ServerMigrationHelper(MigrationHelper):
                              'S name "%s", R name "%s"' % (etype, rtype),
                              ask_confirm=self.verbosity>=2)
                 # cleanup unused constraints
-                self.rqlexec('DELETE EConstraint C WHERE NOT X constrained_by C')
+                self.rqlexec('DELETE CWConstraint C WHERE NOT X constrained_by C')
         if commit:
             self.commit()
     
@@ -964,20 +918,20 @@ class ServerMigrationHelper(MigrationHelper):
         if commit:
             self.commit()
         
-    # EProperty handling ######################################################
+    # CWProperty handling ######################################################
 
     def cmd_property_value(self, pkey):
-        rql = 'Any V WHERE X is EProperty, X pkey %(k)s, X value V'
+        rql = 'Any V WHERE X is CWProperty, X pkey %(k)s, X value V'
         rset = self.rqlexec(rql, {'k': pkey}, ask_confirm=False)
         return rset[0][0]
 
     def cmd_set_property(self, pkey, value):
         value = unicode(value)
         try:
-            prop = self.rqlexec('EProperty X WHERE X pkey %(k)s', {'k': pkey},
+            prop = self.rqlexec('CWProperty X WHERE X pkey %(k)s', {'k': pkey},
                                 ask_confirm=False).get_entity(0, 0)
         except:
-            self.cmd_add_entity('EProperty', pkey=unicode(pkey), value=value)
+            self.cmd_add_entity('CWProperty', pkey=unicode(pkey), value=value)
         else:
             self.rqlexec('SET X value %(v)s WHERE X pkey %(k)s',
                          {'k': pkey, 'v': value}, ask_confirm=False)
@@ -1064,8 +1018,8 @@ class ServerMigrationHelper(MigrationHelper):
         rschema = self.repo.schema.rschema(attr)
         oldtype = rschema.objects(etype)[0]
         rdefeid = rschema.rproperty(etype, oldtype, 'eid')
-        sql = ("UPDATE EFRDef "
-               "SET to_entity=(SELECT eid FROM EEType WHERE name='%s')"
+        sql = ("UPDATE CWAttribute "
+               "SET to_entity=(SELECT eid FROM CWEType WHERE name='%s')"
                "WHERE eid=%s") % (newtype, rdefeid)
         self.sqlexec(sql, ask_confirm=False)
         dbhelper = self.repo.system_source.dbhelper

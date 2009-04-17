@@ -267,7 +267,7 @@ But also:
   * `set_header(header, value)`, adds an arbitrary header in the response
   * `cursor()` returns a RQL cursor on the session
   * `execute(*args, **kwargs)`, shortcut to ``.cursor().execute()``
-  * `property_value(key)`, properties management (`EProperty`)
+  * `property_value(key)`, properties management (`CWProperty`)
   * dictionary `data` to store data to share informations between components
     *while a request is executed*
 

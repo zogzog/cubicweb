@@ -141,9 +141,9 @@ class SQLSchemaReaderClassTest(TestCase):
         entities.sort()
         expected_entities = ['Bookmark', 'Boolean', 'Bytes', 'Card', 
                              'Date', 'Datetime', 'Decimal',
-                             'ECache', 'EConstraint', 'EConstraintType', 'EEType',
-                             'EFRDef', 'EGroup', 'EmailAddress', 'ENFRDef',
-                             'EPermission', 'EProperty', 'ERType', 'EUser',
+                             'CWCache', 'CWConstraint', 'CWConstraintType', 'CWEType',
+                             'CWAttribute', 'CWGroup', 'EmailAddress', 'CWRelation',
+                             'CWPermission', 'CWProperty', 'CWRType', 'CWUser',
                              'File', 'Float', 'Image', 'Int', 'Interval', 'Note',
                              'Password', 'Personne',
                              'RQLExpression', 
@@ -195,7 +195,7 @@ class SQLSchemaReaderClassTest(TestCase):
     
         self.assertListEquals(relations, expected_relations)
 
-        eschema = schema.eschema('EUser')
+        eschema = schema.eschema('CWUser')
         rels = sorted(str(r) for r in eschema.subject_relations())
         self.assertListEquals(rels, ['created_by', 'creation_date', 'eid',
                                      'evaluee', 'firstname', 'has_text', 'identity',
@@ -208,7 +208,7 @@ class SQLSchemaReaderClassTest(TestCase):
         self.assertListEquals(rels, ['bookmarked_by', 'created_by', 'for_user',
                                      'identity', 'owned_by', 'wf_info_for'])
         rschema = schema.rschema('relation_type')
-        properties = rschema.rproperties('EFRDef', 'ERType')
+        properties = rschema.rproperties('CWAttribute', 'CWRType')
         self.assertEquals(properties['cardinality'], '1*')
         constraints = properties['constraints']
         self.failUnlessEqual(len(constraints), 1, constraints)
@@ -218,7 +218,7 @@ class SQLSchemaReaderClassTest(TestCase):
 
     def test_fulltext_container(self):
         schema = loader.load(config)
-        self.failUnless('has_text' in schema['EUser'].subject_relations())
+        self.failUnless('has_text' in schema['CWUser'].subject_relations())
         self.failIf('has_text' in schema['EmailAddress'].subject_relations())
 
 

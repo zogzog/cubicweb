@@ -566,13 +566,13 @@ class RQLTest(GAEBasedTC):
         self.assertEquals(rset.rows, [[article2.eid]])
         
     def test_8_not_relation_final_1(self):
-        rset = self.req.execute('Any G WHERE G is EGroup, NOT G name "guests"')
+        rset = self.req.execute('Any G WHERE G is CWGroup, NOT G name "guests"')
         self._check_rset_size(rset, 2, 1)
         self.assertUnorderedIterableEquals([g.name for g in rset.entities()],
                                            ['users', 'managers'])        
         
     def test_8_not_relation_final_2(self):
-        rset = self.req.execute('Any GN WHERE G is EGroup, NOT G name "guests", G name GN')
+        rset = self.req.execute('Any GN WHERE G is CWGroup, NOT G name "guests", G name GN')
         self._check_rset_size(rset, 2, 1)
         self.assertUnorderedIterableEquals([gn for gn, in rset.rows],
                                            ['users', 'managers'])

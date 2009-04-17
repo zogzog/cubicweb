@@ -134,9 +134,9 @@ Tous les types d'entités ont les métadonnées suivantes :
 * `creation_date (Datetime)`, date de création de l'entité
 * `modification_date (Datetime)`, date de dernière modification de l'entité
 
-* `created_by (EUser)`, relation vers l'utilisateur ayant créé l'entité
+* `created_by (CWUser)`, relation vers l'utilisateur ayant créé l'entité
 
-* `owned_by (EUser)`, relation vers le où les utilisateurs considérés comme 
+* `owned_by (CWUser)`, relation vers le où les utilisateurs considérés comme 
   propriétaire de l'entité, par défaut le créateur de l'entité
 
 * `is (Eetype)`, relation spéciale permettant de spécifier le
@@ -144,7 +144,7 @@ Tous les types d'entités ont les métadonnées suivantes :
 
 Enfin, le schéma standard d'un utilisateur est le suivant :
 
-:EUser:
+:CWUser:
   ::
 
 	login  	  (String, obligatoire)

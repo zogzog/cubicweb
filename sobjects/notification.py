@@ -37,7 +37,7 @@ class RecipientsFinder(Component):
     """
     id = 'recipients_finder'
     __select__ = yes()
-    user_rql = ('Any X,E,A WHERE X is EUser, X in_state S, S name "activated",'
+    user_rql = ('Any X,E,A WHERE X is CWUser, X in_state S, S name "activated",'
                 'X primary_email E, E address A')
     
     def recipients(self):

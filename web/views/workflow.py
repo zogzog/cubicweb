@@ -86,12 +86,12 @@ class WFHistoryVComponent(component.EntityVComponent):
         rql = ' ORDERBY D DESC WHERE WF wf_info_for X,'\
               'WF from_state FS, WF to_state TS, WF comment C,'\
               'WF creation_date D'
-        if self.vreg.schema.eschema('EUser').has_perm(self.req, 'read'):
+        if self.vreg.schema.eschema('CWUser').has_perm(self.req, 'read'):
             sel += ',U,C'
             rql += ', WF owned_by U?'
             displaycols = range(5)
             headers = (_('from_state'), _('to_state'), _('comment'), _('date'),
-                       _('EUser'))            
+                       _('CWUser'))            
         else:
             sel += ',C'
             displaycols = range(4)
@@ -130,7 +130,7 @@ class StateInContextView(view.EntityView):
         
 class ViewWorkflowAction(action.Action):
     id = 'workflow'
-    __select__ = implements('EEType') & has_related_entities('state_of', 'object')
+    __select__ = implements('CWEType') & has_related_entities('state_of', 'object')
     
     category = 'mainactions'
     title = _('view workflow')
@@ -139,9 +139,9 @@ class ViewWorkflowAction(action.Action):
         return entity.absolute_url(vid='workflow')
 
         
-class EETypeWorkflowView(view.EntityView):
+class CWETypeWorkflowView(view.EntityView):
     id = 'workflow'
-    __select__ = implements('EEType')
+    __select__ = implements('CWEType')
     cache_max_age = 60*60*2 # stay in http cache for 2 hours by default 
     
     def cell_call(self, row, col, **kwargs):
@@ -205,10 +205,10 @@ class WorkflowVisitor:
             yield transition.eid, transition.destination().eid, transition
 
 
-class EETypeWorkflowImageView(TmpFileViewMixin, view.EntityView):
+class CWETypeWorkflowImageView(TmpFileViewMixin, view.EntityView):
     id = 'ewfgraph'
     content_type = 'image/png'
-    __select__ = implements('EEType')
+    __select__ = implements('CWEType')
     
     def _generate(self, tmpfile):
         """display schema information for an entity"""

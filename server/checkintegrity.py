@@ -111,7 +111,7 @@ def check_schema(schema, session, eids, fix=1):
                           'VocabularyConstraint', 'RQLConstraint',
                           'RQLVocabularyConstraint')
     rql = ('Any COUNT(X),RN,EN,ECTN GROUPBY RN,EN,ECTN ORDERBY 1 '
-           'WHERE X is EConstraint, R constrained_by X, '
+           'WHERE X is CWConstraint, R constrained_by X, '
            'R relation_type RT, R from_entity ET, RT name RN, '
            'ET name EN, X cstrtype ECT, ECT name ECTN')
     for count, rn, en, cstrname in session.execute(rql):
@@ -252,7 +252,7 @@ def check_metadata(schema, session, eids, fix=1):
                     print >> sys.stderr, ' [FIXED]'
                 else:
                     print >> sys.stderr
-    cursor = session.system_sql('SELECT MIN(%s) FROM %sEUser;' % (eidcolumn,
+    cursor = session.system_sql('SELECT MIN(%s) FROM %sCWUser;' % (eidcolumn,
                                                                   SQL_PREFIX))
     default_user_eid = cursor.fetchone()[0]
     assert default_user_eid is not None, 'no user defined !'

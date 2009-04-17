@@ -13,17 +13,17 @@ from cubicweb.common.uilib import rql_for_eid
 from cubicweb.web import INTERNAL_FIELD_VALUE, Redirect, RequestError
 from cubicweb.web.views.basecontrollers import xmlize
 
-from cubicweb.entities.authobjs import EUser
+from cubicweb.entities.authobjs import CWUser
 
 
 class EditControllerTC(ControllerTC):
     def setUp(self):
         ControllerTC.setUp(self)
-        self.failUnless('users' in self.schema.eschema('EGroup').get_groups('read'))
+        self.failUnless('users' in self.schema.eschema('CWGroup').get_groups('read'))
         
     def tearDown(self):
         ControllerTC.tearDown(self)
-        self.failUnless('users' in self.schema.eschema('EGroup').get_groups('read'))
+        self.failUnless('users' in self.schema.eschema('CWGroup').get_groups('read'))
         
     def test_noparam_edit(self):
         """check behaviour of this controller without any form parameter
@@ -36,7 +36,7 @@ class EditControllerTC(ControllerTC):
         """test creation of two linked entities
         """        
         user = self.user()
-        self.req.form = {'eid': 'X', '__type:X': 'EUser',
+        self.req.form = {'eid': 'X', '__type:X': 'CWUser',
                          'login:X': u'admin', 'edits-login:X': u'', 
                          'upassword:X': u'toto', 'upassword-confirm:X': u'toto', 'edits-upassword:X': u'', 
                          }
@@ -47,13 +47,13 @@ class EditControllerTC(ControllerTC):
         """checking that a manager user can edit itself
         """
         user = self.user()
-        basegroups = [str(eid) for eid, in self.execute('EGroup G WHERE X in_group G, X eid %(x)s', {'x': user.eid})]
-        groupeids = [eid for eid, in self.execute('EGroup G WHERE G name in ("managers", "users")')]
+        basegroups = [str(eid) for eid, in self.execute('CWGroup G WHERE X in_group G, X eid %(x)s', {'x': user.eid})]
+        groupeids = [eid for eid, in self.execute('CWGroup G WHERE G name in ("managers", "users")')]
         groups = [str(eid) for eid in groupeids]
         stateeid = [eid for eid, in self.execute('State S WHERE S name "activated"')][0]
         self.req.form = {
             'eid':       `user.eid`,
-            '__type:'+`user.eid`:    'EUser',
+            '__type:'+`user.eid`:    'CWUser',
             'login:'+`user.eid`:     unicode(user.login),
             'firstname:'+`user.eid`: u'Th\xe9nault',
             'surname:'+`user.eid`:   u'Sylvain',
@@ -78,10 +78,10 @@ class EditControllerTC(ControllerTC):
         user = self.create_user('user')
         cnx = self.login('user')
         req = self.request()
-        #self.assertEquals(self.ctrl.schema['EUser']._groups['read'],
+        #self.assertEquals(self.ctrl.schema['CWUser']._groups['read'],
         #                  ('managers', 'users'))
         req.form = {
-            'eid': `user.eid`, '__type:'+`user.eid`: 'EUser',
+            'eid': `user.eid`, '__type:'+`user.eid`: 'CWUser',
             '__maineid' : str(user.eid),
             'upassword:'+`user.eid`: 'tournicoton',
             'upassword-confirm:'+`user.eid`: 'tournicoton',
@@ -97,10 +97,10 @@ class EditControllerTC(ControllerTC):
         relations (meaning no changes)
         """
         user = self.user()
-        groupeids = [eid for eid, in self.execute('EGroup G WHERE X in_group G, X eid %(x)s', {'x': user.eid})]
+        groupeids = [eid for eid, in self.execute('CWGroup G WHERE X in_group G, X eid %(x)s', {'x': user.eid})]
         self.req.form = {
             'eid':       `user.eid`,
-            '__type:'+`user.eid`:    'EUser',
+            '__type:'+`user.eid`:    'CWUser',
             'login:'+`user.eid`:     unicode(user.login),
             'firstname:'+`user.eid`: u'Th\xe9nault',
             'surname:'+`user.eid`:   u'Sylvain',
@@ -120,10 +120,10 @@ class EditControllerTC(ControllerTC):
         
         
     def test_create_multiple_linked(self):
-        gueid = self.execute('EGroup G WHERE G name "users"')[0][0]
+        gueid = self.execute('CWGroup G WHERE G name "users"')[0][0]
         self.req.form = {'eid': ['X', 'Y'],
                          
-                         '__type:X': 'EUser',
+                         '__type:X': 'CWUser',
                          '__maineid' : 'X',
                          'login:X': u'adim', 'edits-login:X': u'', 
                          'upassword:X': u'toto', 'upassword-confirm:X': u'toto', 'edits-upassword:X': u'', 
@@ -146,7 +146,7 @@ class EditControllerTC(ControllerTC):
     def test_edit_multiple_linked(self):
         peid = self.create_user('adim').eid
         self.req.form = {'eid': [`peid`, 'Y'],
-                         '__type:%s'%peid: 'EUser',
+                         '__type:%s'%peid: 'CWUser',
                          'surname:%s'%peid: u'Di Masci', 'edits-surname:%s'%peid: '',
                          
                          '__type:Y': 'EmailAddress',
@@ -165,7 +165,7 @@ class EditControllerTC(ControllerTC):
         
         emaileid = email.eid
         self.req.form = {'eid': [`peid`, `emaileid`],
-                         '__type:%s'%peid: 'EUser',
+                         '__type:%s'%peid: 'CWUser',
                          'surname:%s'%peid: u'Di Masci', 'edits-surname:%s'%peid: 'Di Masci',
                          '__type:%s'%emaileid: 'EmailAddress',
                          'address:%s'%emaileid: u'adim@logilab.fr', 'edits-address:%s'%emaileid: 'dima@logilab.fr',
@@ -186,13 +186,13 @@ class EditControllerTC(ControllerTC):
         """        
         user = self.user()
         self.req.form = {'__cloned_eid:X': user.eid,
-                         'eid': 'X', '__type:X': 'EUser',
+                         'eid': 'X', '__type:X': 'CWUser',
                          'login:X': u'toto', 'edits-login:X': u'', 
                          'upassword:X': u'toto', 'edits-upassword:X': u'', 
                          }
         self.assertRaises(ValidationError, self.publish, self.req)
         self.req.form = {'__cloned_eid:X': user.eid,
-                         'eid': 'X', '__type:X': 'EUser',
+                         'eid': 'X', '__type:X': 'CWUser',
                          'login:X': u'toto', 'edits-login:X': u'', 
                          'upassword:X': u'toto', 'upassword-confirm:X': u'tutu', 'edits-upassword:X': u'', 
                          }
@@ -227,7 +227,7 @@ class EditControllerTC(ControllerTC):
 
     def test_req_pending_insert(self):
         """make sure req's pending insertions are taken into account"""
-        tmpgroup = self.add_entity('EGroup', name=u"test")
+        tmpgroup = self.add_entity('CWGroup', name=u"test")
         user = self.user()
         self.req.set_session_data('pending_insert', set([(user.eid, 'in_group', tmpgroup.eid)]))
         path, params = self.expect_redirect_publish()
@@ -240,7 +240,7 @@ class EditControllerTC(ControllerTC):
     def test_req_pending_delete(self):
         """make sure req's pending deletions are taken into account"""
         user = self.user()
-        groupeid = self.execute('INSERT EGroup G: G name "test", U in_group G WHERE U eid %(x)s',
+        groupeid = self.execute('INSERT CWGroup G: G name "test", U in_group G WHERE U eid %(x)s',
                                 {'x': user.eid})[0][0]
         usergroups = [gname for gname, in
                       self.execute('Any N WHERE G name N, U in_group G, U eid %(u)s', {'u': user.eid})]
@@ -258,13 +258,13 @@ class EditControllerTC(ControllerTC):
         def custom_login_edit(self, formparams, value, relations):
             formparams['login'] = value.upper()
             relations.append('X login %(login)s')
-        EUser.custom_login_edit = custom_login_edit
+        CWUser.custom_login_edit = custom_login_edit
         try:
             user = self.user()
             eid = repr(user.eid)
             self.req.form = {
                 'eid': eid,
-                '__type:'+eid:  'EUser',
+                '__type:'+eid:  'CWUser',
                 'login:'+eid: u'foo',
                 'edits-login:'+eid:  unicode(user.login),
                 }
@@ -272,7 +272,7 @@ class EditControllerTC(ControllerTC):
             rset = self.execute('Any L WHERE X eid %(x)s, X login L', {'x': user.eid}, 'x')
             self.assertEquals(rset[0][0], 'FOO')
         finally:
-            del EUser.custom_login_edit
+            del CWUser.custom_login_edit
         
     def test_redirect_apply_button(self):
         redirectrql = rql_for_eid(4012) # whatever
@@ -342,22 +342,22 @@ class EditControllerTC(ControllerTC):
         self.assertEquals(params, {u'__message': u'entities deleted'})
 
     def test_nonregr_egroup_etype_editing(self):
-        """non-regression test checking that a manager user can edit a EEType entity (EGroup)
+        """non-regression test checking that a manager user can edit a CWEType entity (CWGroup)
         """
-        groupeids = [eid for eid, in self.execute('EGroup G WHERE G name "managers"')]
+        groupeids = [eid for eid, in self.execute('CWGroup G WHERE G name "managers"')]
         groups = [str(eid) for eid in groupeids]
-        eeetypeeid = self.execute('EEType X WHERE X name "EGroup"')[0][0]
-        basegroups = [str(eid) for eid, in self.execute('EGroup G WHERE X read_permission G, X eid %(x)s', {'x': eeetypeeid})]
+        eeetypeeid = self.execute('CWEType X WHERE X name "CWGroup"')[0][0]
+        basegroups = [str(eid) for eid, in self.execute('CWGroup G WHERE X read_permission G, X eid %(x)s', {'x': eeetypeeid})]
         self.req.form = {
                 'eid':      `eeetypeeid`,
-                '__type:'+`eeetypeeid`:   'EEType',
-                'name:'+`eeetypeeid`:     u'EGroup',
+                '__type:'+`eeetypeeid`:   'CWEType',
+                'name:'+`eeetypeeid`:     u'CWGroup',
                 'final:'+`eeetypeeid`:    False,
                 'meta:'+`eeetypeeid`:     True,
                 'description:'+`eeetypeeid`:     u'users group', 
                 'read_permission:'+`eeetypeeid`:  groups,
                 #
-                'edits-name:'+`eeetypeeid`:     u'EGroup',
+                'edits-name:'+`eeetypeeid`:     u'CWGroup',
                 'edits-final:'+`eeetypeeid`:    False,
                 'edits-meta:'+`eeetypeeid`:     True,
                 'edits-description:'+`eeetypeeid`:     u'users group', 
@@ -366,30 +366,30 @@ class EditControllerTC(ControllerTC):
         try:
             path, params = self.expect_redirect_publish()
             e = self.execute('Any X WHERE X eid %(x)s', {'x': eeetypeeid}, 'x').get_entity(0, 0)
-            self.assertEquals(e.name, 'EGroup')
+            self.assertEquals(e.name, 'CWGroup')
             self.assertEquals([g.eid for g in e.read_permission], groupeids)
         finally:
             # restore
-            self.execute('SET X read_permission Y WHERE X name "EGroup", Y eid IN (%s), NOT X read_permission Y' % (','.join(basegroups)))
+            self.execute('SET X read_permission Y WHERE X name "CWGroup", Y eid IN (%s), NOT X read_permission Y' % (','.join(basegroups)))
             self.commit()
             
     def test_nonregr_eetype_etype_editing(self):
-        """non-regression test checking that a manager user can edit a EEType entity (EEType)
+        """non-regression test checking that a manager user can edit a CWEType entity (CWEType)
         """
-        groupeids = sorted(eid for eid, in self.execute('EGroup G WHERE G name in ("managers", "users")'))
+        groupeids = sorted(eid for eid, in self.execute('CWGroup G WHERE G name in ("managers", "users")'))
         groups = [str(eid) for eid in groupeids]
-        eeetypeeid = self.execute('EEType X WHERE X name "EEType"')[0][0]
-        basegroups = [str(eid) for eid, in self.execute('EGroup G WHERE X read_permission G, X eid %(x)s', {'x': eeetypeeid})]
+        eeetypeeid = self.execute('CWEType X WHERE X name "CWEType"')[0][0]
+        basegroups = [str(eid) for eid, in self.execute('CWGroup G WHERE X read_permission G, X eid %(x)s', {'x': eeetypeeid})]
         self.req.form = {
                 'eid':      `eeetypeeid`,
-                '__type:'+`eeetypeeid`:  'EEType',
-                'name:'+`eeetypeeid`:     u'EEType',
+                '__type:'+`eeetypeeid`:  'CWEType',
+                'name:'+`eeetypeeid`:     u'CWEType',
                 'final:'+`eeetypeeid`:    False,
                 'meta:'+`eeetypeeid`:     True,
                 'description:'+`eeetypeeid`:     u'users group', 
                 'read_permission:'+`eeetypeeid`:  groups,
 
-                'edits-name:'+`eeetypeeid`:     u'EEType',
+                'edits-name:'+`eeetypeeid`:     u'CWEType',
                 'edits-final:'+`eeetypeeid`:    False,
                 'edits-meta:'+`eeetypeeid`:     True,
                 'edits-description:'+`eeetypeeid`:     u'users group', 
@@ -398,11 +398,11 @@ class EditControllerTC(ControllerTC):
         try:
             path, params = self.expect_redirect_publish()
             e = self.execute('Any X WHERE X eid %(x)s', {'x': eeetypeeid}, 'x').get_entity(0, 0)
-            self.assertEquals(e.name, 'EEType')
+            self.assertEquals(e.name, 'CWEType')
             self.assertEquals(sorted(g.eid for g in e.read_permission), groupeids)
         finally:
             # restore
-            self.execute('SET X read_permission Y WHERE X name "EEType", Y eid IN (%s), NOT X read_permission Y' % (','.join(basegroups)))
+            self.execute('SET X read_permission Y WHERE X name "CWEType", Y eid IN (%s), NOT X read_permission Y' % (','.join(basegroups)))
             self.commit()
         
     def test_nonregr_strange_text_input(self):
@@ -424,10 +424,10 @@ class EditControllerTC(ControllerTC):
 
 
     def test_nonregr_multiple_empty_email_addr(self):
-        gueid = self.execute('EGroup G WHERE G name "users"')[0][0]
+        gueid = self.execute('CWGroup G WHERE G name "users"')[0][0]
         self.req.form = {'eid': ['X', 'Y'],
                          
-                         '__type:X': 'EUser',
+                         '__type:X': 'CWUser',
                          'login:X': u'adim', 'edits-login:X': u'', 
                          'upassword:X': u'toto', 'upassword-confirm:X': u'toto', 'edits-upassword:X': u'', 
                          'in_group:X': `gueid`, 'edits-in_group:X': INTERNAL_FIELD_VALUE, 
@@ -442,14 +442,14 @@ class EditControllerTC(ControllerTC):
     def test_nonregr_copy(self):
         user = self.user()
         self.req.form = {'__cloned_eid:X': user.eid,
-                         'eid': 'X', '__type:X': 'EUser',
+                         'eid': 'X', '__type:X': 'CWUser',
                          '__maineid' : 'X',
                          'login:X': u'toto', 'edits-login:X': u'', 
                          'upassword:X': u'toto', 'upassword-confirm:X': u'toto', 'edits-upassword:X': u'', 
                          }
         path, params = self.expect_redirect_publish()
         self.assertEquals(path, 'euser/toto')
-        e = self.execute('Any X WHERE X is EUser, X login "toto"').get_entity(0, 0)
+        e = self.execute('Any X WHERE X is CWUser, X login "toto"').get_entity(0, 0)
         self.assertEquals(e.login, 'toto')
         self.assertEquals(e.in_group[0].name, 'managers')
 
@@ -464,7 +464,7 @@ class EditControllerTC(ControllerTC):
             self.execute('SET P use_email E, P primary_email E WHERE P eid %(p)s, E eid %(e)s',
                          {'p' : p.eid, 'e' : e.eid})
             self.req.form = {'__cloned_eid:X': p.eid,
-                             'eid': 'X', '__type:X': 'EUser',
+                             'eid': 'X', '__type:X': 'CWUser',
                              'login': u'dodo', 'edits-login': u'dodo', 
                              'surname:X': u'Boom', 'edits-surname:X': u'',
                              '__errorurl' : "whatever but required",
@@ -479,7 +479,7 @@ class EditControllerTC(ControllerTC):
                 self.req.form['rql'] = 'Any X WHERE X eid %s' % p.eid
                 self.req.form['vid'] = 'copy'
                 self.env.app.publish('view', self.req)
-            rset = self.execute('EUser P WHERE P surname "Boom"')
+            rset = self.execute('CWUser P WHERE P surname "Boom"')
             self.assertEquals(len(rset), 0)
         finally:
             p.__class__.skip_copy_for = old_skips
@@ -527,7 +527,7 @@ class JSONControllerTC(EnvBasedTC):
 
     ## tests ##################################################################
     def test_simple_exec(self):
-        ctrl = self.ctrl(self.request(rql='EUser P WHERE P login "John"',
+        ctrl = self.ctrl(self.request(rql='CWUser P WHERE P login "John"',
                                       pageid='123'))
         self.assertTextEquals(ctrl.publish(),
                               xmlize(self.john.view('primary')))
@@ -542,26 +542,26 @@ class JSONControllerTC(EnvBasedTC):
         self.remote_call('tag_entity', self.john.eid, ['python'])
         self.assertUnorderedIterableEquals([tname for tname, in self.execute('Any N WHERE T is Tag, T name N')],
                              ['python', 'cubicweb'])
-        self.assertEquals(self.execute('Any N WHERE T tags P, P is EUser, T name N').rows,
+        self.assertEquals(self.execute('Any N WHERE T tags P, P is CWUser, T name N').rows,
                           [['python']])
     
     def test_remote_add_new_tag(self):
         self.remote_call('tag_entity', self.john.eid, ['javascript'])
         self.assertUnorderedIterableEquals([tname for tname, in self.execute('Any N WHERE T is Tag, T name N')],
                              ['python', 'cubicweb', 'javascript'])
-        self.assertEquals(self.execute('Any N WHERE T tags P, P is EUser, T name N').rows,
+        self.assertEquals(self.execute('Any N WHERE T tags P, P is CWUser, T name N').rows,
                           [['javascript']])
 
     def test_edit_field(self):
-        nbusers = len(self.execute('EUser P'))
+        nbusers = len(self.execute('CWUser P'))
         eid = self.john.eid
         self.remote_call('edit_field', 'apply',
                          ('eid', 'firstname:%s' % eid, '__maineid', '__type:%s'% eid, 'edits-firstname:%s' % eid ),
-                         (str(eid), u'Remi', str(eid), 'EUser', self.john.firstname),
+                         (str(eid), u'Remi', str(eid), 'CWUser', self.john.firstname),
                          'firstname',
                          eid)
         self.commit()
-        rset = self.execute('EUser P')
+        rset = self.execute('CWUser P')
         # make sure we did not insert a new euser here
         self.assertEquals(len(rset), nbusers)
         john = self.execute('Any X WHERE X eid %(x)s', {'x': self.john.eid}, 'x').get_entity(0, 0)

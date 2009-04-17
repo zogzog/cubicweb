@@ -80,7 +80,7 @@ class SimpleReqRewriter(URLRewriter):
         ('/manage', dict(vid='manage')),
         ('/notfound', dict(vid='404')),
         ('/error', dict(vid='error')),
-        (rgx('/schema/([^/]+?)/?'),  dict(vid='eschema', rql=r'Any X WHERE X is EEType, X name "\1"')),
+        (rgx('/schema/([^/]+?)/?'),  dict(vid='eschema', rql=r'Any X WHERE X is CWEType, X name "\1"')),
         (rgx('/add/([^/]+?)/?'), dict(vid='creation', etype=r'\1')),
         (rgx('/doc/images/(.+?)/?'), dict(vid='wdocimages', fid=r'\1')),
         (rgx('/doc/?'), dict(vid='wdoc', fid=r'main')),

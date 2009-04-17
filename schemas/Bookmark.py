@@ -5,7 +5,7 @@ class Bookmark(MetaUserEntityType):
     path  = String(maxsize=512, required=True,
                    description=_("relative url of the bookmarked page"))
     
-    bookmarked_by = SubjectRelation('EUser',
+    bookmarked_by = SubjectRelation('CWUser',
                                     description=_("users using this bookmark"))
     
 

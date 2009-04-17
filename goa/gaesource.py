@@ -36,11 +36,11 @@ def _clear_related_cache(session, gaesubject, rtype, gaeobject):
             pass
         else:
             entity.clear_related_cache(rtype, role)
-    if gaesubject.kind() == 'EUser':
+    if gaesubject.kind() == 'CWUser':
         for asession in session.repo._sessions.itervalues():
             if asession.user.eid == subject:
                 asession.user.clear_related_cache(rtype, 'subject')
-    if gaeobject.kind() == 'EUser':
+    if gaeobject.kind() == 'CWUser':
         for asession in session.repo._sessions.itervalues():
             if asession.user.eid == object:
                 asession.user.clear_related_cache(rtype, 'object')
@@ -114,9 +114,9 @@ class DatastorePutOp(SingleOperation):
 class GAESource(AbstractSource):
     """adapter for a system source on top of google appengine datastore"""
 
-    passwd_rql = "Any P WHERE X is EUser, X login %(login)s, X upassword P"
-    auth_rql = "Any X WHERE X is EUser, X login %(login)s, X upassword %(pwd)s"
-    _sols = ({'X': 'EUser', 'P': 'Password'},)
+    passwd_rql = "Any P WHERE X is CWUser, X login %(login)s, X upassword P"
+    auth_rql = "Any X WHERE X is CWUser, X login %(login)s, X upassword %(pwd)s"
+    _sols = ({'X': 'CWUser', 'P': 'Password'},)
     
     options = ()
     
@@ -157,7 +157,7 @@ class GAESource(AbstractSource):
         """set the application'schema"""
         self.interpreter = RQLInterpreter(schema)
         self.schema = schema
-        if 'EUser' in schema and not self.repo.config['use-google-auth']:
+        if 'CWUser' in schema and not self.repo.config['use-google-auth']:
             # rql syntax trees used to authenticate users
             self._passwd_rqlst = self.compile_rql(self.passwd_rql)
             self._auth_rqlst = self.compile_rql(self.auth_rql)
@@ -185,7 +185,7 @@ class GAESource(AbstractSource):
         # XXX http://code.google.com/appengine/docs/users/userobjects.html
         # use a reference property to automatically work with email address
         # changes after the propagation feature is implemented
-        key = Key.from_path('EUser', 'key_' + login, parent=None)
+        key = Key.from_path('CWUser', 'key_' + login, parent=None)
         try:
             euser = session.datastore_get(key)
             # XXX fix user. Required until we find a better way to fix broken records
@@ -195,14 +195,14 @@ class GAESource(AbstractSource):
             return str(key)
         except datastore_errors.EntityNotFoundError:
             # create a record for this user
-            euser = Entity('EUser', name='key_' + login)
+            euser = Entity('CWUser', name='key_' + login)
             euser['s_login'] = login
             _init_groups(guser, euser)
             Put(euser)
             return str(euser.key())
         
     def authenticate_local(self, session, login, password):
-        """return EUser eid for the given login/password if this account is
+        """return CWUser eid for the given login/password if this account is
         defined in this source, else raise `AuthenticationError`
 
         two queries are needed since passwords are stored crypted, so we have
@@ -249,7 +249,7 @@ class GAESource(AbstractSource):
         """replace an entity in the source"""
         gaeentity = entity.to_gae_model()
         _mark_modified(session, entity.to_gae_model())
-        if gaeentity.kind() == 'EUser':
+        if gaeentity.kind() == 'CWUser':
             for asession in self.repo._sessions.itervalues():
                 if asession.user.eid == entity.eid:
                     asession.user.update(dict(gaeentity))

@@ -14,8 +14,8 @@ from cubicweb.schema import ERQLExpression, RRQLExpression
 from cubicweb.entities import AnyEntity, fetch_config
 
 
-class EEType(AnyEntity):
-    id = 'EEType'
+class CWEType(AnyEntity):
+    id = 'CWEType'
     fetch_attrs, fetch_order = fetch_config(['name'])
 
     def dc_title(self):
@@ -37,8 +37,8 @@ class EEType(AnyEntity):
         return self.get('name')
 
 
-class ERType(AnyEntity):
-    id = 'ERType'
+class CWRType(AnyEntity):
+    id = 'CWRType'
     fetch_attrs, fetch_order = fetch_config(['name'])
     
     def dc_title(self):
@@ -85,8 +85,8 @@ class ERType(AnyEntity):
         return self.get('name')
 
 
-class ENFRDef(AnyEntity):
-    id = 'ENFRDef'
+class CWRelation(AnyEntity):
+    id = 'CWRelation'
     fetch_attrs = fetch_config(['cardinality'])[0]
     
     def dc_title(self):
@@ -113,11 +113,11 @@ class ENFRDef(AnyEntity):
         """
         if self.relation_type:
             return self.relation_type[0].rest_path(), {}
-        return super(ENFRDef, self).after_deletion_path()
+        return super(CWRelation, self).after_deletion_path()
 
 
-class EFRDef(ENFRDef):
-    id = 'EFRDef'
+class CWAttribute(CWRelation):
+    id = 'CWAttribute'
     
     def dc_long_title(self):
         card = self.cardinality
@@ -130,8 +130,8 @@ class EFRDef(ENFRDef):
             self.to_entity[0].name)
 
 
-class EConstraint(AnyEntity):
-    id = 'EConstraint'
+class CWConstraint(AnyEntity):
+    id = 'CWConstraint'
     fetch_attrs, fetch_order = fetch_config(['value'])
 
     def dc_title(self):
@@ -143,7 +143,7 @@ class EConstraint(AnyEntity):
         """
         if self.reverse_constrained_by:
             return self.reverse_constrained_by[0].rest_path(), {}
-        return super(EConstraint, self).after_deletion_path()
+        return super(CWConstraint, self).after_deletion_path()
 
     @property
     def type(self):
@@ -184,8 +184,8 @@ class RQLExpression(AnyEntity):
         return super(RQLExpression, self).after_deletion_path()
 
 
-class EPermission(AnyEntity):
-    id = 'EPermission'
+class CWPermission(AnyEntity):
+    id = 'CWPermission'
     fetch_attrs, fetch_order = fetch_config(['name', 'label'])
 
     def dc_title(self):
@@ -200,4 +200,4 @@ class EPermission(AnyEntity):
         permissionof = getattr(self, 'reverse_require_permission', ())
         if len(permissionof) == 1:
             return permissionof[0].rest_path(), {}
-        return super(EPermission, self).after_deletion_path()
+        return super(CWPermission, self).after_deletion_path()

@@ -23,8 +23,8 @@ from cubicweb.server.hookhelper import (entity_attr, entity_name,
                                      check_internal_entity)
     
 # core entity and relation types which can't be removed
-CORE_ETYPES = list(BASE_TYPES) + ['EEType', 'ERType', 'EUser', 'EGroup',
-                                  'EConstraint', 'EFRDef', 'ENFRDef']
+CORE_ETYPES = list(BASE_TYPES) + ['CWEType', 'CWRType', 'CWUser', 'CWGroup',
+                                  'CWConstraint', 'CWAttribute', 'CWRelation']
 CORE_RTYPES = ['eid', 'creation_date', 'modification_date',
                'login', 'upassword', 'name',
                'is', 'instanceof', 'owned_by', 'created_by', 'in_group',
@@ -134,7 +134,7 @@ class DropColumnOp(PreCommitOperation):
 
 # deletion ####################################################################
 
-class DeleteEETypeOp(SchemaOperation):
+class DeleteCWETypeOp(SchemaOperation):
     """actually remove the entity type from the application's schema"""    
     def commit_event(self):
         try:
@@ -145,9 +145,9 @@ class DeleteEETypeOp(SchemaOperation):
             pass
 
 def before_del_eetype(session, eid):
-    """before deleting a EEType entity:
+    """before deleting a CWEType entity:
     * check that we don't remove a core entity type
-    * cascade to delete related EFRDef and ENFRDef entities
+    * cascade to delete related CWAttribute and CWRelation entities
     * instantiate an operation to delete the entity type on commit
     """
     # final entities can't be deleted, don't care about that
@@ -155,7 +155,7 @@ def before_del_eetype(session, eid):
     # delete every entities of this type
     session.unsafe_execute('DELETE %s X' % name)
     DropTableOp(session, table=SQL_PREFIX + name)
-    DeleteEETypeOp(session, name)
+    DeleteCWETypeOp(session, name)
 
 def after_del_eetype(session, eid):
     # workflow cleanup
@@ -163,7 +163,7 @@ def after_del_eetype(session, eid):
     session.execute('DELETE Transition X WHERE NOT X transition_of Y')
 
         
-class DeleteERTypeOp(SchemaOperation):
+class DeleteCWRTypeOp(SchemaOperation):
     """actually remove the relation type from the application's schema"""    
     def commit_event(self):
         try:
@@ -173,18 +173,18 @@ class DeleteERTypeOp(SchemaOperation):
             pass
 
 def before_del_ertype(session, eid):
-    """before deleting a ERType entity:
+    """before deleting a CWRType entity:
     * check that we don't remove a core relation type
-    * cascade to delete related EFRDef and ENFRDef entities
+    * cascade to delete related CWAttribute and CWRelation entities
     * instantiate an operation to delete the relation type on commit
     """
     name = check_internal_entity(session, eid, CORE_RTYPES)
     # delete relation definitions using this relation type
-    session.execute('DELETE EFRDef X WHERE X relation_type Y, Y eid %(x)s',
+    session.execute('DELETE CWAttribute X WHERE X relation_type Y, Y eid %(x)s',
                     {'x': eid})
-    session.execute('DELETE ENFRDef X WHERE X relation_type Y, Y eid %(x)s',
+    session.execute('DELETE CWRelation X WHERE X relation_type Y, Y eid %(x)s',
                     {'x': eid})
-    DeleteERTypeOp(session, name)
+    DeleteCWRTypeOp(session, name)
 
     
 class DelErdefOp(SchemaOperation):
@@ -198,7 +198,7 @@ class DelErdefOp(SchemaOperation):
             pass
         
 def after_del_relation_type(session, rdefeid, rtype, rteid):
-    """before deleting a EFRDef or ENFRDef entity:
+    """before deleting a CWAttribute or CWRelation entity:
     * if this is a final or inlined relation definition, instantiate an
       operation to drop necessary column, else if this is the last instance
       of a non final relation, instantiate an operation to drop necessary
@@ -210,9 +210,9 @@ def after_del_relation_type(session, rdefeid, rtype, rteid):
     pendings = session.query_data('pendingeids', ())
     # first delete existing relation if necessary
     if rschema.is_final():
-        rdeftype = 'EFRDef'
+        rdeftype = 'CWAttribute'
     else:
-        rdeftype = 'ENFRDef'
+        rdeftype = 'CWRelation'
         if not (subjschema.eid in pendings or objschema.eid in pendings):
             session.execute('DELETE X %s Y WHERE X is %s, Y is %s'
                             % (rschema, subjschema, objschema))
@@ -235,13 +235,13 @@ def after_del_relation_type(session, rdefeid, rtype, rteid):
         DropTableOp(session, table='%s_relation' % rschema.type)
     # if this is the last instance, drop associated relation type
     if lastrel and not rteid in pendings:
-        execute('DELETE ERType X WHERE X eid %(x)s', {'x': rteid}, 'x')
+        execute('DELETE CWRType X WHERE X eid %(x)s', {'x': rteid}, 'x')
     DelErdefOp(session, (subjschema, rschema, objschema))
 
         
 # addition ####################################################################
 
-class AddEETypeOp(EarlySchemaOperation):
+class AddCWETypeOp(EarlySchemaOperation):
     """actually add the entity type to the application's schema"""    
     eid = None # make pylint happy
     def commit_event(self):
@@ -249,7 +249,7 @@ class AddEETypeOp(EarlySchemaOperation):
         eschema.eid = self.eid
         
 def before_add_eetype(session, entity):
-    """before adding a EEType entity:
+    """before adding a CWEType entity:
     * check that we are not using an existing entity type,
     """
     name = entity['name']
@@ -258,11 +258,11 @@ def before_add_eetype(session, entity):
         raise RepositoryError('an entity type %s already exists' % name)
 
 def after_add_eetype(session, entity):
-    """after adding a EEType entity:
+    """after adding a CWEType entity:
     * create the necessary table
     * set creation_date and modification_date by creating the necessary
-      EFRDef entities
-    * add owned_by relation by creating the necessary ENFRDef entity
+      CWAttribute entities
+    * add owned_by relation by creating the necessary CWRelation entity
     * register an operation to add the entity type to the application's
       schema on commit
     """
@@ -297,13 +297,13 @@ def after_add_eetype(session, entity):
     # register operation to modify the schema on commit
     # this have to be done before adding other relations definitions
     # or permission settings
-    AddEETypeOp(session, etype, eid=entity.eid)
+    AddCWETypeOp(session, etype, eid=entity.eid)
     # add meta creation_date, modification_date and owned_by relations
     for rql, kwargs in relrqls:
         session.execute(rql, kwargs)
 
 
-class AddERTypeOp(EarlySchemaOperation):
+class AddCWRTypeOp(EarlySchemaOperation):
     """actually add the relation type to the application's schema"""    
     eid = None # make pylint happy
     def commit_event(self):
@@ -312,7 +312,7 @@ class AddERTypeOp(EarlySchemaOperation):
         rschema.eid = self.eid
         
 def before_add_ertype(session, entity):
-    """before adding a ERType entity:
+    """before adding a CWRType entity:
     * check that we are not using an existing relation type,
     * register an operation to add the relation type to the application's
       schema on commit
@@ -324,12 +324,12 @@ def before_add_ertype(session, entity):
         raise RepositoryError('a relation type %s already exists' % name)
     
 def after_add_ertype(session, entity):
-    """after a ERType entity has been added:
+    """after a CWRType entity has been added:
     * register an operation to add the relation type to the application's
       schema on commit
     We don't know yeat this point if a table is necessary
     """
-    AddERTypeOp(session, RelationType(name=entity['name'],
+    AddCWRTypeOp(session, RelationType(name=entity['name'],
                                       description=entity.get('description'),
                                       meta=entity.get('meta', False),
                                       inlined=entity.get('inlined', False),
@@ -356,8 +356,8 @@ TYPE_CONVERTER = {
     }
 
 
-class AddEFRDefPreCommitOp(PreCommitOperation):
-    """an attribute relation (EFRDef) has been added:
+class AddCWAttributePreCommitOp(PreCommitOperation):
+    """an attribute relation (CWAttribute) has been added:
     * add the necessary column
     * set default on this column if any and possible
     * register an operation to add the relation definition to the
@@ -439,10 +439,10 @@ class AddEFRDefPreCommitOp(PreCommitOperation):
         AddErdefOp(session, rdef)
 
 def after_add_efrdef(session, entity):
-    AddEFRDefPreCommitOp(session, entity=entity)
+    AddCWAttributePreCommitOp(session, entity=entity)
 
 
-class AddENFRDefPreCommitOp(PreCommitOperation):
+class AddCWRelationPreCommitOp(PreCommitOperation):
     """an actual relation has been added:
     * if this is an inlined relation, add the necessary column
       else if it's the first instance of this relation type, add the
@@ -510,7 +510,7 @@ class AddENFRDefPreCommitOp(PreCommitOperation):
                 session.add_query_data('createdtables', rtype)
                 
 def after_add_enfrdef(session, entity):
-    AddENFRDefPreCommitOp(session, entity=entity)
+    AddCWRelationPreCommitOp(session, entity=entity)
 
 
 # update ######################################################################
@@ -846,7 +846,7 @@ class AddRQLExpressionPermissionOp(PermissionOp):
 def after_add_permission(session, subject, rtype, object):
     """added entity/relation *_permission, need to update schema"""
     perm = rtype.split('_', 1)[0]
-    if session.describe(object)[0] == 'EGroup':
+    if session.describe(object)[0] == 'CWGroup':
         AddGroupPermissionOp(session, perm, subject, object)
     else: # RQLExpression
         expr = session.execute('Any EXPR WHERE X eid %(x)s, X expression EXPR',
@@ -906,7 +906,7 @@ def before_del_permission(session, subject, rtype, object):
     if subject in session.query_data('pendingeids', ()):
         return
     perm = rtype.split('_', 1)[0]
-    if session.describe(object)[0] == 'EGroup':
+    if session.describe(object)[0] == 'CWGroup':
         DelGroupPermissionOp(session, perm, subject, object)
     else: # RQLExpression
         expr = session.execute('Any EXPR WHERE X eid %(x)s, X expression EXPR',
@@ -925,28 +925,28 @@ def _register_schema_hooks(hm):
     """register schema related hooks on the hooks manager"""
     # schema synchronisation #####################
     # before/after add
-    hm.register_hook(before_add_eetype, 'before_add_entity', 'EEType')
-    hm.register_hook(before_add_ertype, 'before_add_entity', 'ERType')
-    hm.register_hook(after_add_eetype, 'after_add_entity', 'EEType')
-    hm.register_hook(after_add_ertype, 'after_add_entity', 'ERType')
-    hm.register_hook(after_add_efrdef, 'after_add_entity', 'EFRDef')
-    hm.register_hook(after_add_enfrdef, 'after_add_entity', 'ENFRDef')
+    hm.register_hook(before_add_eetype, 'before_add_entity', 'CWEType')
+    hm.register_hook(before_add_ertype, 'before_add_entity', 'CWRType')
+    hm.register_hook(after_add_eetype, 'after_add_entity', 'CWEType')
+    hm.register_hook(after_add_ertype, 'after_add_entity', 'CWRType')
+    hm.register_hook(after_add_efrdef, 'after_add_entity', 'CWAttribute')
+    hm.register_hook(after_add_enfrdef, 'after_add_entity', 'CWRelation')
     # before/after update
-    hm.register_hook(before_update_eetype, 'before_update_entity', 'EEType')
-    hm.register_hook(before_update_ertype, 'before_update_entity', 'ERType')
-    hm.register_hook(after_update_ertype, 'after_update_entity', 'ERType')
-    hm.register_hook(after_update_erdef, 'after_update_entity', 'EFRDef')
-    hm.register_hook(after_update_erdef, 'after_update_entity', 'ENFRDef')
+    hm.register_hook(before_update_eetype, 'before_update_entity', 'CWEType')
+    hm.register_hook(before_update_ertype, 'before_update_entity', 'CWRType')
+    hm.register_hook(after_update_ertype, 'after_update_entity', 'CWRType')
+    hm.register_hook(after_update_erdef, 'after_update_entity', 'CWAttribute')
+    hm.register_hook(after_update_erdef, 'after_update_entity', 'CWRelation')
     # before/after delete
-    hm.register_hook(before_del_eetype, 'before_delete_entity', 'EEType')
-    hm.register_hook(after_del_eetype, 'after_delete_entity', 'EEType')
-    hm.register_hook(before_del_ertype, 'before_delete_entity', 'ERType')
+    hm.register_hook(before_del_eetype, 'before_delete_entity', 'CWEType')
+    hm.register_hook(after_del_eetype, 'after_delete_entity', 'CWEType')
+    hm.register_hook(before_del_ertype, 'before_delete_entity', 'CWRType')
     hm.register_hook(after_del_relation_type, 'after_delete_relation', 'relation_type')
     hm.register_hook(rebuild_infered_relations, 'after_add_relation', 'specializes')
     hm.register_hook(rebuild_infered_relations, 'after_delete_relation', 'specializes')    
     # constraints synchronization hooks
-    hm.register_hook(after_add_econstraint, 'after_add_entity', 'EConstraint')
-    hm.register_hook(after_update_econstraint, 'after_update_entity', 'EConstraint')
+    hm.register_hook(after_add_econstraint, 'after_add_entity', 'CWConstraint')
+    hm.register_hook(after_update_econstraint, 'after_update_entity', 'CWConstraint')
     hm.register_hook(before_delete_constrained_by, 'before_delete_relation', 'constrained_by')
     hm.register_hook(after_add_constrained_by, 'after_add_relation', 'constrained_by')
     # permissions synchronisation ################

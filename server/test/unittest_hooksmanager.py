@@ -25,13 +25,13 @@ class HooksManagerTC(TestCase):
         self.assertRaises(AssertionError,
                           self.o.register_hook, self._hook, 'before_add_entiti')
         self.assertRaises(AssertionError,
-                          self.o.register_hook, self._hook, 'session_login', 'EEType')
+                          self.o.register_hook, self._hook, 'session_login', 'CWEType')
         self.assertRaises(AssertionError,
-                          self.o.register_hook, self._hook, 'session_logout', 'EEType')
+                          self.o.register_hook, self._hook, 'session_logout', 'CWEType')
         self.assertRaises(AssertionError,
-                          self.o.register_hook, self._hook, 'server_startup', 'EEType')
+                          self.o.register_hook, self._hook, 'server_startup', 'CWEType')
         self.assertRaises(AssertionError,
-                          self.o.register_hook, self._hook, 'server_shutdown', 'EEType')
+                          self.o.register_hook, self._hook, 'server_shutdown', 'CWEType')
         
     def test_register_hook1(self):
         self.o.register_hook(self._hook, 'before_add_entity')

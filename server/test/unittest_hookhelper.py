@@ -59,7 +59,7 @@ class HookHelpersTC(RepositoryBasedTC):
             SendMailOp(session, msg=content, recipients=['test@logilab.fr'])
         self.hm.register_hook(in_state_changed,
                              'before_add_relation', 'in_state')
-        self.execute('INSERT EUser X: X login "paf", X upassword "wouf", X in_state S, X in_group G WHERE S name "activated", G name "users"')
+        self.execute('INSERT CWUser X: X login "paf", X upassword "wouf", X in_state S, X in_group G WHERE S name "activated", G name "users"')
         self.assertEquals(result, [None])
         searchedops = [op for op in self.session.pending_operations
                        if isinstance(op, SendMailOp)]

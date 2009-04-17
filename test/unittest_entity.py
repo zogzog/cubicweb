@@ -17,7 +17,7 @@ class EntityTC(EnvBasedTC):
 ##                         embed=False)
     
     def test_boolean_value(self):
-        e = self.etype_instance('EUser')
+        e = self.etype_instance('CWUser')
         self.failUnless(e)
 
     def test_yams_inheritance(self):
@@ -28,7 +28,7 @@ class EntityTC(EnvBasedTC):
         self.assertIs(e.__class__, e2.__class__)
 
     def test_has_eid(self):
-        e = self.etype_instance('EUser')
+        e = self.etype_instance('CWUser')
         self.assertEquals(e.eid, None)
         self.assertEquals(e.has_eid(), False)
         e.eid = 'X'
@@ -68,7 +68,7 @@ class EntityTC(EnvBasedTC):
         e = self.entity('Any X WHERE X eid %(x)s', {'x':user.eid}, 'x')
         self.assertEquals(e.use_email[0].address, "toto@logilab.org")
         self.assertEquals(e.use_email[0].eid, adeleid)
-        usereid = self.execute('INSERT EUser X: X login "toto", X upassword "toto", X in_group G, X in_state S '
+        usereid = self.execute('INSERT CWUser X: X login "toto", X upassword "toto", X in_group G, X in_state S '
                                'WHERE G name "users", S name "activated"')[0][0]
         e = self.entity('Any X WHERE X eid %(x)s', {'x':usereid}, 'x')
         e.copy_relations(user.eid)
@@ -77,12 +77,12 @@ class EntityTC(EnvBasedTC):
         
     def test_copy_with_non_initial_state(self):
         user = self.user()
-        eid = self.execute('INSERT EUser X: X login "toto", X upassword %(pwd)s, X in_group G WHERE G name "users"',
+        eid = self.execute('INSERT CWUser X: X login "toto", X upassword %(pwd)s, X in_group G WHERE G name "users"',
                            {'pwd': 'toto'})[0][0]
         self.commit()
         self.execute('SET X in_state S WHERE X eid %(x)s, S name "deactivated"', {'x': eid}, 'x')
         self.commit()
-        eid2 = self.execute('INSERT EUser X: X login "tutu", X upassword %(pwd)s', {'pwd': 'toto'})[0][0]
+        eid2 = self.execute('INSERT CWUser X: X login "tutu", X upassword %(pwd)s', {'pwd': 'toto'})[0][0]
         e = self.entity('Any X WHERE X eid %(x)s', {'x': eid2}, 'x')
         e.copy_relations(eid)
         self.commit()
@@ -200,8 +200,8 @@ class EntityTC(EnvBasedTC):
                           1)
         
     def test_new_entity_unrelated(self):
-        e = self.etype_instance('EUser')
-        unrelated = [r[0] for r in e.unrelated('in_group', 'EGroup', 'subject')]
+        e = self.etype_instance('CWUser')
+        unrelated = [r[0] for r in e.unrelated('in_group', 'CWGroup', 'subject')]
         # should be default groups but owners, i.e. managers, users, guests
         self.assertEquals(len(unrelated), 3)
 
@@ -210,10 +210,10 @@ class EntityTC(EnvBasedTC):
                             content_format=u'text/rest')
         self.assertEquals(e.printable_value('content'),
                           '<p>du <a class="reference" href="http://testing.fr/cubicweb/egroup/managers">*ReST*</a></p>\n')
-        e['content'] = 'du <em>html</em> <ref rql="EUser X">users</ref>'
+        e['content'] = 'du <em>html</em> <ref rql="CWUser X">users</ref>'
         e['content_format'] = 'text/html'
         self.assertEquals(e.printable_value('content'),
-                          'du <em>html</em> <a href="http://testing.fr/cubicweb/view?rql=EUser%20X">users</a>')
+                          'du <em>html</em> <a href="http://testing.fr/cubicweb/view?rql=CWUser%20X">users</a>')
         e['content'] = 'du *texte*'
         e['content_format'] = 'text/plain'
         self.assertEquals(e.printable_value('content'),
@@ -341,7 +341,7 @@ du :eid:`1:*ReST*`'''
 
     def test_request_cache(self):
         req = self.request()
-        user = self.entity('EUser X WHERE X login "admin"', req=req)
+        user = self.entity('CWUser X WHERE X login "admin"', req=req)
         state = user.in_state[0]
         samestate = self.entity('State X WHERE X name "activated"', req=req)
         self.failUnless(state is samestate)

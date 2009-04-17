@@ -10,7 +10,7 @@ from cubicweb.devtools.apptest import EnvBasedTC
 from cubicweb import ValidationError
 from cubicweb.interfaces import IMileStone, IWorkflowable
 from cubicweb.entities import AnyEntity
-from cubicweb.entities.authobjs import EUser
+from cubicweb.entities.authobjs import CWUser
 from cubicweb.web.widgets import AutoCompletionWidget
 
 
@@ -36,20 +36,20 @@ class MetadataTC(BaseEntityTC):
 
     def test_entity_meta_attributes(self):
         # XXX move to yams
-        self.assertEquals(self.schema['EUser'].meta_attributes(), {})
+        self.assertEquals(self.schema['CWUser'].meta_attributes(), {})
         self.assertEquals(dict((str(k), v) for k, v in self.schema['Card'].meta_attributes().iteritems()),
                           {'content_format': ('format', 'content')})
         
 
-class EUserTC(BaseEntityTC):
+class CWUserTC(BaseEntityTC):
     def test_dc_title_and_name(self):
-        e = self.entity('EUser U WHERE U login "member"')
+        e = self.entity('CWUser U WHERE U login "member"')
         self.assertEquals(e.dc_title(), 'member')
         self.assertEquals(e.name(), 'member')
-        self.execute(u'SET X firstname "bouah" WHERE X is EUser, X login "member"')
+        self.execute(u'SET X firstname "bouah" WHERE X is CWUser, X login "member"')
         self.assertEquals(e.dc_title(), 'member')
         self.assertEquals(e.name(), u'bouah')
-        self.execute(u'SET X surname "lôt" WHERE X is EUser, X login "member"')
+        self.execute(u'SET X surname "lôt" WHERE X is CWUser, X login "member"')
         self.assertEquals(e.dc_title(), 'member')
         self.assertEquals(e.name(), u'bouah lôt')
 
@@ -57,7 +57,7 @@ class EUserTC(BaseEntityTC):
 class StateAndTransitionsTC(BaseEntityTC):
         
     def test_transitions(self):
-        user = self.entity('EUser X')
+        user = self.entity('CWUser X')
         e = self.entity('State S WHERE S name "activated"')
         trs = list(e.transitions(user))
         self.assertEquals(len(trs), 1)
@@ -71,12 +71,12 @@ class StateAndTransitionsTC(BaseEntityTC):
         e = self.entity('State S WHERE S name "activated"')
         trs = list(e.transitions(user))
         self.assertEquals(len(trs), 0)
-        user = self.entity('EUser X')
+        user = self.entity('CWUser X')
         self.assert_(not user.can_pass_transition('deactivate'))
         self.assert_(not user.can_pass_transition('activate'))
         
     def test_transitions_with_dest_specfied(self):
-        user = self.entity('EUser X')
+        user = self.entity('CWUser X')
         e = self.entity('State S WHERE S name "activated"')
         e2 = self.entity('State S WHERE S name "deactivated"')
         trs = list(e.transitions(user, e2.eid))
@@ -132,9 +132,9 @@ class StateAndTransitionsTC(BaseEntityTC):
         state3 = self.add_entity('State', name=u'state3')
         tr1 = self.add_entity('Transition', name=u'tr1')
         tr2 = self.add_entity('Transition', name=u'tr2')
-        self.execute('SET X state_of Y WHERE X eid in (%s, %s), Y is EEType, Y name "Card"' %
+        self.execute('SET X state_of Y WHERE X eid in (%s, %s), Y is CWEType, Y name "Card"' %
                       (state1.eid, state2.eid))
-        self.execute('SET X state_of Y WHERE X eid in (%s, %s), Y is EEType, Y name "Bookmark"' %
+        self.execute('SET X state_of Y WHERE X eid in (%s, %s), Y is CWEType, Y name "Bookmark"' %
                       (state1.eid, state3.eid))
         self.execute('SET X transition_of Y WHERE X eid %s, Y name "Card"' % tr1.eid)
         self.execute('SET X transition_of Y WHERE X eid %s, Y name "Bookmark"' % tr2.eid)
@@ -171,9 +171,9 @@ class StateAndTransitionsTC(BaseEntityTC):
         state2 = self.add_entity('State', name=u'state2')
         tr1 = self.add_entity('Transition', name=u'tr1')
         tr2 = self.add_entity('Transition', name=u'tr2')
-        self.execute('SET X state_of Y WHERE X eid in (%s, %s), Y is EEType, Y name "Card"' %
+        self.execute('SET X state_of Y WHERE X eid in (%s, %s), Y is CWEType, Y name "Card"' %
                       (state1.eid, state2.eid))
-        self.execute('SET X state_of Y WHERE X eid in (%s, %s), Y is EEType, Y name "Bookmark"' %
+        self.execute('SET X state_of Y WHERE X eid in (%s, %s), Y is CWEType, Y name "Bookmark"' %
                       (state1.eid, state2.eid))
         self.execute('SET X transition_of Y WHERE X eid %s, Y name "Card"' % tr1.eid)
         self.execute('SET X transition_of Y WHERE X eid %s, Y name "Bookmark"' % tr2.eid)
@@ -225,15 +225,15 @@ class EmailAddressTC(BaseEntityTC):
         self.assertEquals(email.printable_value('address'), 'syt')
 
 
-class EUserTC(BaseEntityTC):
+class CWUserTC(BaseEntityTC):
     
     def test_complete(self):
-        e = self.entity('EUser X WHERE X login "admin"')
+        e = self.entity('CWUser X WHERE X login "admin"')
         e.complete()
 
         
     def test_matching_groups(self):
-        e = self.entity('EUser X WHERE X login "admin"')
+        e = self.entity('CWUser X WHERE X login "admin"')
         self.failUnless(e.matching_groups('managers'))
         self.failIf(e.matching_groups('xyz'))
         self.failUnless(e.matching_groups(('xyz', 'managers')))
@@ -251,7 +251,7 @@ class EUserTC(BaseEntityTC):
         e.change_state(deactivatedeid, u'deactivate 2')
         self.commit()
         # get a fresh user to avoid potential cache issues
-        e = self.entity('EUser X WHERE X eid %s' % e.eid)
+        e = self.entity('CWUser X WHERE X eid %s' % e.eid)
         self.assertEquals([tr.comment for tr in e.reverse_wf_info_for],
                           [None, 'deactivate 1', 'activate 1', 'deactivate 2'])
         self.assertEquals(e.latest_trinfo().comment, 'deactivate 2')
@@ -260,11 +260,11 @@ class EUserTC(BaseEntityTC):
 class InterfaceTC(EnvBasedTC):
 
     def test_nonregr_subclasses_and_mixins_interfaces(self):
-        class MyUser(EUser):
+        class MyUser(CWUser):
             __implements__ = (IMileStone,)
         self.vreg._loadedmods[__name__] = {}
         self.vreg.register_vobject_class(MyUser)
-        self.failUnless(implements(EUser, IWorkflowable))
+        self.failUnless(implements(CWUser, IWorkflowable))
         self.failUnless(implements(MyUser, IMileStone))
         self.failUnless(implements(MyUser, IWorkflowable))
 

@@ -14,14 +14,14 @@ class State(MetaEntityType):
     description = RichString(fulltextindexed=True, default_format='text/rest',
                              description=_('semantic description of this state'))
     
-    state_of = SubjectRelation('EEType', cardinality='+*',
+    state_of = SubjectRelation('CWEType', cardinality='+*',
                     description=_('entity types which may use this state'),
                     constraints=[RQLConstraint('O final FALSE')])
     allowed_transition = SubjectRelation('Transition', cardinality='**',
                                          constraints=[RQLConstraint('S state_of ET, O transition_of ET')],
                                          description=_('allowed transitions from this state'))
     
-    initial_state = ObjectRelation('EEType', cardinality='?*',
+    initial_state = ObjectRelation('CWEType', cardinality='?*',
                                    # S initial_state O, O state_of S
                                    constraints=[RQLConstraint('O state_of S')],
                                    description=_('initial state for entities of this type'))
@@ -44,10 +44,10 @@ class Transition(MetaEntityType):
                                               'that will respectivly represents '
                                               'the current entity and the current user'))
     
-    require_group = SubjectRelation('EGroup', cardinality='**',
+    require_group = SubjectRelation('CWGroup', cardinality='**',
                                     description=_('group in which a user should be to be '
                                                   'allowed to pass this transition'))
-    transition_of = SubjectRelation('EEType', cardinality='+*',
+    transition_of = SubjectRelation('CWEType', cardinality='+*',
                                     description=_('entity types which may use this transition'),
                                     constraints=[RQLConstraint('O final FALSE')])
     destination_state = SubjectRelation('State', cardinality='?*',
@@ -101,7 +101,7 @@ class in_state(UserRelationType):
     """indicate the current state of an entity"""
     meta = True
     # not inlined intentionnaly since when using ldap sources, user'state
-    # has to be stored outside the EUser table
+    # has to be stored outside the CWUser table
     
     # add/delete perms given to managers/users, after what most of the job
     # is done by workflow enforcment

@@ -1,6 +1,6 @@
 """cubicweb ldap user source
 
-this source is for now limited to a read-only EUser source
+this source is for now limited to a read-only CWUser source
 
 :organization: Logilab
 :copyright: 2003-2009 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
@@ -51,8 +51,8 @@ MODES = {
 
 
 class LDAPUserSource(AbstractSource):
-    """LDAP read-only EUser source"""
-    support_entities = {'EUser': False} 
+    """LDAP read-only CWUser source"""
+    support_entities = {'CWUser': False} 
 
     port = None
     
@@ -200,7 +200,7 @@ directory (default to once a day).',
         return ConnectionWrapper(self._conn)
     
     def authenticate(self, session, login, password):
-        """return EUser eid for the given login/password if this account is
+        """return CWUser eid for the given login/password if this account is
         defined in this source, else raise `AuthenticationError`
 
         two queries are needed since passwords are stored crypted, so we have
@@ -224,7 +224,7 @@ directory (default to once a day).',
         except:
             # Something went wrong, most likely bad credentials
             raise AuthenticationError()
-        return self.extid2eid(user['dn'], 'EUser', session)
+        return self.extid2eid(user['dn'], 'CWUser', session)
 
     def ldap_name(self, var):
         if var.stinfo['relations']:
@@ -294,7 +294,7 @@ directory (default to once a day).',
         mainvars = []
         for varname in rqlst.defined_vars:
             for sol in rqlst.solutions:
-                if sol[varname] == 'EUser':
+                if sol[varname] == 'CWUser':
                     mainvars.append(varname)
                     break
         assert mainvars
@@ -326,7 +326,7 @@ directory (default to once a day).',
             filteredres = []
             for resdict in res:
                 # get sure the entity exists in the system table
-                eid = self.extid2eid(resdict['dn'], 'EUser', session)
+                eid = self.extid2eid(resdict['dn'], 'CWUser', session)
                 for eidfilter in eidfilters:
                     if not eidfilter(eid):
                         break
@@ -403,7 +403,7 @@ directory (default to once a day).',
         except ldap.PARTIAL_RESULTS:
             res = cnx.result(all=0)[1]
         except ldap.NO_SUCH_OBJECT:
-            eid = self.extid2eid(base, 'EUser', session, insert=False)
+            eid = self.extid2eid(base, 'CWUser', session, insert=False)
             if eid:
                 self.warning('deleting ldap user with eid %s and dn %s',
                              eid, base)

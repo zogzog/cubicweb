@@ -229,8 +229,8 @@ class AbstractSource(object):
         pass
     
     def authenticate(self, session, login, password):
-        """if the source support EUser entity type, it should implements
-        this method which should return EUser eid for the given login/password
+        """if the source support CWUser entity type, it should implements
+        this method which should return CWUser eid for the given login/password
         if this account is defined in this source and valid login / password is
         given. Else raise `AuthenticationError`
         """

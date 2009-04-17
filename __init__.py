@@ -212,16 +212,29 @@ class RequestSessionMixIn(object):
         
 
 # XXX 2.45 is allowing nicer entity type names, use this map for bw compat    
-ETYPE_NAME_MAP = {'Eetype': 'EEType',
-                  'Ertype': 'ERType',
-                  'Efrdef': 'EFRDef',
-                  'Enfrdef': 'ENFRDef',
-                  'Econstraint': 'EConstraint',
-                  'Econstrainttype': 'EConstraintType',
-                  'Epermission': 'EPermission',
-                  'Egroup': 'EGroup',
-                  'Euser': 'EUser',
-                  'Eproperty': 'EProperty',
+ETYPE_NAME_MAP = {# 3.2 migration
+                  'ECache': 'CWCache',
+                  'EUser': 'CWUser',
+                  'EGroup': 'CWGroup',
+                  'EProperty': 'CWProperty',
+                  'EFRDef': 'CWAttribute',
+                  'ENFRDef': 'CWRelation',
+                  'ERType': 'CWRType',
+                  'EEType': 'CWEType',
+                  'EConstraintType': 'CWConstraintType',
+                  'EConstraint': 'CWConstraint',
+                  'EPermission': 'CWPermission',
+                   # 2.45 migration
+                  'Eetype': 'CWEType',
+                  'Ertype': 'CWRType',
+                  'Efrdef': 'CWAttribute',
+                  'Enfrdef': 'CWRelation',
+                  'Econstraint': 'CWConstraint',
+                  'Econstrainttype': 'CWConstraintType',
+                  'Epermission': 'CWPermission',
+                  'Egroup': 'CWGroup',
+                  'Euser': 'CWUser',
+                  'Eproperty': 'CWProperty',
                   'Emailaddress': 'EmailAddress',
                   'Rqlexpression': 'RQLExpression',
                   'Trinfo': 'TrInfo',
@@ -269,11 +282,6 @@ CW_MIGRATION_MAP = {'erudi': 'cubicweb',
                     'agueol': 'agueol',
                     'docaster': 'docaster',
                     'asteretud': 'asteretud',
-                    
-                    # XXX temp
-                    'keywords': 'keyword',
-                    'folders': 'folder',
-                    'tags': 'tag',
                     }
 
 def neg_role(role):

@@ -77,7 +77,7 @@ class AppRsetObject(VObject):
         return cls(*args, **kwargs)
 
     # Eproperties definition:
-    # key: id of the property (the actual EProperty key is build using
+    # key: id of the property (the actual CWProperty key is build using
     #      <registry name>.<obj id>.<property id>
     # value: tuple (property type, vocabfunc, default value, property description)
     #        possible types are those used by `logilab.common.configuration`
@@ -132,7 +132,7 @@ class AppRsetObject(VObject):
             CACHE_REGISTRY[cachename] = cache
         _now = datetime.now()
         if _now > cache.latest_cache_lookup + ONESECOND:
-            ecache = self.req.execute('Any C,T WHERE C is ECache, C name %(name)s, C timestamp T', 
+            ecache = self.req.execute('Any C,T WHERE C is CWCache, C name %(name)s, C timestamp T', 
                                       {'name':cachename}).get_entity(0,0)
             cache.latest_cache_lookup = _now
             if not ecache.valid(cache.cache_creation_date):

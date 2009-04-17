@@ -11,10 +11,10 @@ from cubicweb.server.hooksmanager import Hook
 from cubicweb.server.pool import PreCommitOperation
 
 
-class AddUpdateEUserHook(Hook):
+class AddUpdateCWUserHook(Hook):
     """ensure user logins are stripped"""
     events = ('before_add_entity', 'before_update_entity',)
-    accepts = ('EUser',)
+    accepts = ('CWUser',)
     
     def call(self, session, entity):
         if 'login' in entity and entity['login']:

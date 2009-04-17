@@ -21,10 +21,10 @@ from cubicweb.web import Redirect
 from cubicweb.devtools import ApptestConfiguration, init_test_database
 from cubicweb.devtools.fake import FakeRequest
     
-SYSTEM_ENTITIES = ('EGroup', 'EUser',
-                   'EFRDef', 'ENFRDef',
-                   'EConstraint', 'EConstraintType', 'EProperty',
-                   'EEType', 'ERType',
+SYSTEM_ENTITIES = ('CWGroup', 'CWUser',
+                   'CWAttribute', 'CWRelation',
+                   'CWConstraint', 'CWConstraintType', 'CWProperty',
+                   'CWEType', 'CWRType',
                    'State', 'Transition', 'TrInfo',
                    'RQLExpression',
                    )
@@ -50,7 +50,7 @@ SYSTEM_RELATIONS = (
                     )
 
 def unprotected_entities(app_schema, strict=False):
-    """returned a Set of each non final entity type, excluding EGroup, and EUser...
+    """returned a Set of each non final entity type, excluding CWGroup, and CWUser...
     """
     if strict:
         protected_entities = yams.schema.BASE_TYPES
@@ -90,7 +90,7 @@ class TestEnvironment(object):
         schema = self.vreg.schema
         # else we may run into problems since email address are ususally share in app tests
         # XXX should not be necessary anymore
-        schema.rschema('primary_email').set_rproperty('EUser', 'EmailAddress', 'composite', False)
+        schema.rschema('primary_email').set_rproperty('CWUser', 'EmailAddress', 'composite', False)
         self.deletable_entities = unprotected_entities(schema)
 
     def restore_database(self):
@@ -119,7 +119,7 @@ class TestEnvironment(object):
     def create_user(self, login, groups=('users',), req=None):
         req = req or self.create_request()
         cursor = self._orig_cnx.cursor(req)
-        rset = cursor.execute('INSERT EUser X: X login %(login)s, X upassword %(passwd)s,'
+        rset = cursor.execute('INSERT CWUser X: X login %(login)s, X upassword %(passwd)s,'
                               'X in_state S WHERE S name "activated"',
                               {'login': unicode(login), 'passwd': login.encode('utf8')})
         user = rset.get_entity(0, 0)

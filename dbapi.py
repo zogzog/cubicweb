@@ -430,9 +430,9 @@ class Connection(object):
         eid, login, groups, properties = self._repo.user_info(self.sessionid, props)
         if req is None:
             req = self.request()
-        rset = req.eid_rset(eid, 'EUser')
-        user = self.vreg.etype_class('EUser')(req, rset, row=0, groups=groups,
-                                              properties=properties)
+        rset = req.eid_rset(eid, 'CWUser')
+        user = self.vreg.etype_class('CWUser')(req, rset, row=0, groups=groups,
+                                               properties=properties)
         user['login'] = login # cache login
         return user
 

@@ -29,7 +29,7 @@ class SomethingChangedHook(Hook):
             SupervisionMailOp(session)
         
     def _call(self, *args):
-        if self._event() == 'update_entity' and args[0].e_schema == 'EUser':
+        if self._event() == 'update_entity' and args[0].e_schema == 'CWUser':
             updated = set(args[0].iterkeys())
             if not (updated - frozenset(('eid', 'modification_date', 'last_login_time'))):
                 # don't record last_login_time update which are done 

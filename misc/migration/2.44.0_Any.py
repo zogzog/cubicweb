@@ -1,7 +1,7 @@
-change_relation_props('EFRDef', 'cardinality', 'String', internationalizable=True)
-change_relation_props('ENFRDef', 'cardinality', 'String', internationalizable=True)
+change_relation_props('CWAttribute', 'cardinality', 'String', internationalizable=True)
+change_relation_props('CWRelation', 'cardinality', 'String', internationalizable=True)
 
-drop_relation_definition('EPermission', 'require_state', 'State')
+drop_relation_definition('CWPermission', 'require_state', 'State')
 
 if confirm('cleanup require_permission relation'):
     try:

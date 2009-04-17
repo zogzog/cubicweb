@@ -12,10 +12,10 @@ System schemas
 ``````````````
 The available system entities are:
 
-* `EUser`, system users
-* `EGroup`, users groups
-* `EEType`, entity type
-* `ERType`, relation type
+* `CWUser`, system users
+* `CWGroup`, users groups
+* `CWEType`, entity type
+* `CWRType`, relation type
 
 * `State`, workflow state
 * `Transition`, workflow transition
@@ -24,8 +24,8 @@ The available system entities are:
 * `EmailAddress`, email address, used by the system to send notifications
   to the users and also used by others optionnals schemas
 
-* `EProperty`, used to configure the application
-* `EPermission`, used to configure the security of the application
+* `CWProperty`, used to configure the application
+* `CWPermission`, used to configure the security of the application
 
 * `Card`, generic documenting card
 * `Bookmark`, an entity type used to allow a user to customize his links within

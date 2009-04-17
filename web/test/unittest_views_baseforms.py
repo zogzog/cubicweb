@@ -49,7 +49,7 @@ class EditionFormTC(EnvBasedTC):
         self.assertTextEquals(expected, cleanup_text(self._build_creation_form(etype)))
         
     def test_base(self):
-        self._test_view_for('EGroup', '''\
+        self._test_view_for('CWGroup', '''\
 <form id="entityForm" class="entityForm" cubicweb:target="eformframe"
 method="post" onsubmit="return freezeFormButtons('entityForm')" enctype="application/x-www-form-urlencoded" action="http://testing.fr/cubicweb/validateform">
 <div class="formTitle"><span>egroup (creation)</span></div>
@@ -57,7 +57,7 @@ method="post" onsubmit="return freezeFormButtons('entityForm')" enctype="applica
 <div class="iformTitle"><span>main informations</span></div>
 <div class="formBody"><fieldset>
 <input type="hidden" name="eid" value="A" />
-<input type="hidden" name="__type:A" value="EGroup" />
+<input type="hidden" name="__type:A" value="CWGroup" />
 <input type="hidden" name="__maineid" value="A" />
 <input id="errorurl" type="hidden" name="__errorurl" value="http://testing.fr/cubicweb/view?rql=Blop&amp;vid=blop" />
 <input type="hidden" name="__form_id" value="edition" />
@@ -88,14 +88,14 @@ method="post" onsubmit="return freezeFormButtons('entityForm')" enctype="applica
 
     def test_with_inline_view(self):
         activated = self.execute('Any X WHERE X is State, X name "activated"')[0][0]
-        self._test_view_for('EUser', '''<form id="entityForm" class="entityForm" cubicweb:target="eformframe"
+        self._test_view_for('CWUser', '''<form id="entityForm" class="entityForm" cubicweb:target="eformframe"
 method="post" onsubmit="return freezeFormButtons('entityForm')" enctype="application/x-www-form-urlencoded" action="http://testing.fr/cubicweb/validateform">
 <div class="formTitle"><span>euser (creation)</span></div>
 <div id="progress">validating...</div>
 <div class="iformTitle"><span>main informations</span></div>
 <div class="formBody"><fieldset>
 <input type="hidden" name="eid" value="A" />
-<input type="hidden" name="__type:A" value="EUser" />
+<input type="hidden" name="__type:A" value="CWUser" />
 <input type="hidden" name="__maineid" value="A" />
 <input id="errorurl" type="hidden" name="__errorurl" value="http://testing.fr/cubicweb/view?rql=Blop&amp;vid=blop" />
 <input type="hidden" name="__form_id" value="edition" />
@@ -159,7 +159,7 @@ method="post" onsubmit="return freezeFormButtons('entityForm')" enctype="applica
 </table>
 <div id="inlineuse_emailslot">
 <div class="inlinedform" id="addNewEmailAddressuse_emailsubject:A" cubicweb:limit="true">
-<a class="addEntity" id="adduse_email:Alink" href="javascript: addInlineCreationForm('A', 'EUser', 'EmailAddress', 'use_email', 'subject')" >+ add a EmailAddress.</a>
+<a class="addEntity" id="adduse_email:Alink" href="javascript: addInlineCreationForm('A', 'CWUser', 'EmailAddress', 'use_email', 'subject')" >+ add a EmailAddress.</a>
 </div>
 <div class="trame_grise">&nbsp;</div>
 </div>
@@ -179,7 +179,7 @@ method="post" onsubmit="return freezeFormButtons('entityForm')" enctype="applica
 
     def test_redirection_after_creation(self):
         req = self.request()
-        req.form['etype'] = 'EUser'
+        req.form['etype'] = 'CWUser'
         view = self.vreg.select_view('creation', req, None)
         self.assertEquals(view.redirect_url(), 'http://testing.fr/cubicweb/euser')
         req.form['__redirectrql'] = 'Any X WHERE X eid 3012'
@@ -229,7 +229,7 @@ class CopyWebTest(WebTest):
 
 
     def test_cloned_elements_in_copy_form(self):
-        rset = self.execute('EUser P WHERE P login "Doe"')
+        rset = self.execute('CWUser P WHERE P login "Doe"')
         output = self.view('copy', rset)
         clones = [attrs for _, attrs in output.input_tags
                   if attrs.get('name', '').startswith('__cloned_eid')]

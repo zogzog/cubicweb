@@ -14,7 +14,7 @@ class FieldsFormTC(WebTest):
     def test_form_field_format(self):
         form = FieldsForm(self.request(), None)
         self.assertEquals(form.form_field_format(None), 'text/html')
-        self.execute('INSERT EProperty X: X pkey "ui.default-text-format", X value "text/rest", X for_user U WHERE U login "admin"')
+        self.execute('INSERT CWProperty X: X pkey "ui.default-text-format", X value "text/rest", X for_user U WHERE U login "admin"')
         self.commit()
         self.assertEquals(form.form_field_format(None), 'text/rest')
 
@@ -43,7 +43,7 @@ class EntityFieldsFormTC(WebTest):
         self.failIf(t.eid in unrelated, unrelated)
         
     def test_form_field_vocabulary_new_entity(self):
-        e = self.etype_instance('EUser')
+        e = self.etype_instance('CWUser')
         form = EntityFieldsForm(self.request(), None, entity=e)
         unrelated = [rview for rview, reid in form.subject_relation_vocabulary('in_group')]
         # should be default groups but owners, i.e. managers, users, guests
@@ -51,7 +51,7 @@ class EntityFieldsFormTC(WebTest):
 
     def test_subject_in_state_vocabulary(self):
         # on a new entity
-        e = self.etype_instance('EUser')
+        e = self.etype_instance('CWUser')
         form = EntityFieldsForm(self.request(), None, entity=e)
         states = list(form.subject_in_state_vocabulary('in_state'))
         self.assertEquals(len(states), 1)
@@ -69,8 +69,8 @@ class EntityFieldsFormTC(WebTest):
         
     def test_massmailing_formview(self):
         self.execute('INSERT EmailAddress X: X address L + "@cubicweb.org", '
-                     'U use_email X WHERE U is EUser, U login L')
-        rset = self.execute('EUser X')
+                     'U use_email X WHERE U is CWUser, U login L')
+        rset = self.execute('CWUser X')
         self.view('massmailing', rset, template=None)
         
 

@@ -134,13 +134,13 @@ repository (default to 5 minutes).',
 
     def last_update_time(self):
         pkey = u'sources.%s.latest-update-time' % self.uri
-        rql = 'Any V WHERE X is EProperty, X value V, X pkey %(k)s'
+        rql = 'Any V WHERE X is CWProperty, X value V, X pkey %(k)s'
         session = self.repo.internal_session()
         try:
             rset = session.execute(rql, {'k': pkey})
             if not rset:
                 # insert it
-                session.execute('INSERT EProperty X: X pkey %(k)s, X value %(v)s',
+                session.execute('INSERT CWProperty X: X pkey %(k)s, X value %(v)s',
                                 {'k': pkey, 'v': u'0'})
                 session.commit()
                 timestamp = 0

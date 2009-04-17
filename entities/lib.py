@@ -88,8 +88,8 @@ Emailaddress = class_renamed('Emailaddress', EmailAddress)
 Emailaddress.id = 'Emailaddress'
 
 
-class EProperty(AnyEntity):
-    id = 'EProperty'
+class CWProperty(AnyEntity):
+    id = 'CWProperty'
 
     fetch_attrs, fetch_order = fetch_config(['pkey', 'value'])    
     rest_attr = 'pkey'
@@ -144,9 +144,9 @@ class Card(AnyEntity):
         return self.synopsis or u''
 
 
-class ECache(AnyEntity):
+class CWCache(AnyEntity):
     """Cache"""
-    id = 'ECache'
+    id = 'CWCache'
     
     fetch_attrs, fetch_order = fetch_config(['name'])
 

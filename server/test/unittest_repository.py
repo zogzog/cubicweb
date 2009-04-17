@@ -46,7 +46,7 @@ class RepositoryTC(RepositoryBasedTC):
         self.repo.config._cubes = None # avoid assertion error
         self.repo.fill_schema()
         pool = self.repo._get_pool()
-        table = SQL_PREFIX + 'EEType'
+        table = SQL_PREFIX + 'CWEType'
         namecol = SQL_PREFIX + 'name'
         finalcol = SQL_PREFIX + 'final'
         try:
@@ -68,12 +68,12 @@ class RepositoryTC(RepositoryBasedTC):
     def test_schema_has_owner(self):
         repo = self.repo
         cnxid = repo.connect(*self.default_user_password())
-        self.failIf(repo.execute(cnxid, 'EEType X WHERE NOT X owned_by U'))
-        self.failIf(repo.execute(cnxid, 'ERType X WHERE NOT X owned_by U'))
-        self.failIf(repo.execute(cnxid, 'EFRDef X WHERE NOT X owned_by U'))
-        self.failIf(repo.execute(cnxid, 'ENFRDef X WHERE NOT X owned_by U'))
-        self.failIf(repo.execute(cnxid, 'EConstraint X WHERE NOT X owned_by U'))
-        self.failIf(repo.execute(cnxid, 'EConstraintType X WHERE NOT X owned_by U'))
+        self.failIf(repo.execute(cnxid, 'CWEType X WHERE NOT X owned_by U'))
+        self.failIf(repo.execute(cnxid, 'CWRType X WHERE NOT X owned_by U'))
+        self.failIf(repo.execute(cnxid, 'CWAttribute X WHERE NOT X owned_by U'))
+        self.failIf(repo.execute(cnxid, 'CWRelation X WHERE NOT X owned_by U'))
+        self.failIf(repo.execute(cnxid, 'CWConstraint X WHERE NOT X owned_by U'))
+        self.failIf(repo.execute(cnxid, 'CWConstraintType X WHERE NOT X owned_by U'))
         
     def test_connect(self):
         login, passwd = self.default_user_password()
@@ -97,7 +97,7 @@ class RepositoryTC(RepositoryBasedTC):
     def test_login_upassword_accent(self):
         repo = self.repo
         cnxid = repo.connect(*self.default_user_password())
-        repo.execute(cnxid, 'INSERT EUser X: X login %(login)s, X upassword %(passwd)s, X in_state S, X in_group G WHERE S name "activated", G name "users"',
+        repo.execute(cnxid, 'INSERT CWUser X: X login %(login)s, X upassword %(passwd)s, X in_state S, X in_group G WHERE S name "activated", G name "users"',
                      {'login': u"barnabé", 'passwd': u"héhéhé".encode('UTF8')})
         repo.commit(cnxid)
         repo.close(cnxid)
@@ -106,10 +106,10 @@ class RepositoryTC(RepositoryBasedTC):
     def test_invalid_entity_rollback(self):
         repo = self.repo
         cnxid = repo.connect(*self.default_user_password())
-        repo.execute(cnxid, 'INSERT EUser X: X login %(login)s, X upassword %(passwd)s, X in_state S WHERE S name "activated"',
+        repo.execute(cnxid, 'INSERT CWUser X: X login %(login)s, X upassword %(passwd)s, X in_state S WHERE S name "activated"',
                      {'login': u"tutetute", 'passwd': 'tutetute'})
         self.assertRaises(ValidationError, repo.commit, cnxid)
-        rset = repo.execute(cnxid, 'EUser X WHERE X login "tutetute"')
+        rset = repo.execute(cnxid, 'CWUser X WHERE X login "tutetute"')
         self.assertEquals(rset.rowcount, 0)
         
     def test_close(self):
@@ -201,7 +201,7 @@ class RepositoryTC(RepositoryBasedTC):
     def test_initial_schema(self):
         schema = self.repo.schema
         # check order of attributes is respected
-        self.assertListEquals([r.type for r in schema.eschema('EFRDef').ordered_relations()
+        self.assertListEquals([r.type for r in schema.eschema('CWAttribute').ordered_relations()
                                if not r.type in ('eid', 'is', 'is_instance_of', 'identity', 
                                                  'creation_date', 'modification_date',
                                                  'owned_by', 'created_by')],
@@ -210,10 +210,10 @@ class RepositoryTC(RepositoryBasedTC):
                                'indexed', 'fulltextindexed', 'internationalizable',
                                'defaultval', 'description_format', 'description'])
 
-        self.assertEquals(schema.eschema('EEType').main_attribute(), 'name')
+        self.assertEquals(schema.eschema('CWEType').main_attribute(), 'name')
         self.assertEquals(schema.eschema('State').main_attribute(), 'name')
 
-        constraints = schema.rschema('name').rproperty('EEType', 'String', 'constraints')
+        constraints = schema.rschema('name').rproperty('CWEType', 'String', 'constraints')
         self.assertEquals(len(constraints), 2)
         for cstr in constraints[:]:
             if isinstance(cstr, UniqueConstraint):
@@ -225,14 +225,14 @@ class RepositoryTC(RepositoryBasedTC):
         self.assertEquals(sizeconstraint.min, None)
         self.assertEquals(sizeconstraint.max, 64)
 
-        constraints = schema.rschema('relation_type').rproperty('EFRDef', 'ERType', 'constraints')
+        constraints = schema.rschema('relation_type').rproperty('CWAttribute', 'CWRType', 'constraints')
         self.assertEquals(len(constraints), 1)
         cstr = constraints[0]
         self.assert_(isinstance(cstr, RQLConstraint))
         self.assertEquals(cstr.restriction, 'O final TRUE')
 
         ownedby = schema.rschema('owned_by')
-        self.assertEquals(ownedby.objects('EEType'), ('EUser',))
+        self.assertEquals(ownedby.objects('CWEType'), ('CWUser',))
 
     def test_pyro(self):
         import Pyro
@@ -267,8 +267,8 @@ class RepositoryTC(RepositoryBasedTC):
         repo = self.repo
         cnxid = repo.connect(*self.default_user_password())
         session = repo._get_session(cnxid, setpool=True)
-        self.assertEquals(repo.type_and_source_from_eid(1, session), ('EGroup', 'system', None))
-        self.assertEquals(repo.type_from_eid(1, session), 'EGroup')
+        self.assertEquals(repo.type_and_source_from_eid(1, session), ('CWGroup', 'system', None))
+        self.assertEquals(repo.type_from_eid(1, session), 'CWGroup')
         self.assertEquals(repo.source_from_eid(1, session).uri, 'system')
         self.assertEquals(repo.eid2extid(repo.system_source, 1, session), None)
         class dummysource: uri = 'toto'
@@ -278,13 +278,13 @@ class RepositoryTC(RepositoryBasedTC):
         self.assertEquals(self.repo.get_schema(), self.repo.schema)
         self.assertEquals(self.repo.source_defs(), {'system': {'adapter': 'native', 'uri': 'system'}})
         # .properties() return a result set
-        self.assertEquals(self.repo.properties().rql, 'Any K,V WHERE P is EProperty,P pkey K, P value V, NOT P for_user U')
+        self.assertEquals(self.repo.properties().rql, 'Any K,V WHERE P is CWProperty,P pkey K, P value V, NOT P for_user U')
 
     def test_session_api(self):
         repo = self.repo
         cnxid = repo.connect(*self.default_user_password())
         self.assertEquals(repo.user_info(cnxid), (5, 'admin', set([u'managers']), {}))
-        self.assertEquals(repo.describe(cnxid, 1), (u'EGroup', u'system', None))
+        self.assertEquals(repo.describe(cnxid, 1), (u'CWGroup', u'system', None))
         repo.close(cnxid)
         self.assertRaises(BadConnectionId, repo.user_info, cnxid)
         self.assertRaises(BadConnectionId, repo.describe, cnxid, 1)
@@ -325,7 +325,7 @@ class DataHelpersTC(RepositoryBasedTC):
         self.assertRaises(UnknownEid, self.repo.source_from_eid, -2, self.session)
 
     def test_type_from_eid(self):
-        self.assertEquals(self.repo.type_from_eid(1, self.session), 'EGroup')
+        self.assertEquals(self.repo.type_from_eid(1, self.session), 'CWGroup')
         
     def test_type_from_eid_raise(self):
         self.assertRaises(UnknownEid, self.repo.type_from_eid, -2, self.session)
@@ -449,7 +449,7 @@ class InlineRelHooksTC(RepositoryBasedTC):
         """make sure after_<event>_relation hooks are deferred"""
         self.hm.register_hook(self._after_relation_hook,
                              'after_add_relation', 'in_state')
-        eidp = self.execute('INSERT EUser X: X login "toto", X upassword "tutu", X in_state S WHERE S name "activated"')[0][0]
+        eidp = self.execute('INSERT CWUser X: X login "toto", X upassword "tutu", X in_state S WHERE S name "activated"')[0][0]
         eids = self.execute('State X WHERE X name "activated"')[0][0]
         self.assertEquals(self.called, [(eidp, 'in_state', eids,)])
     

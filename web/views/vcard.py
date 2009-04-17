@@ -13,13 +13,13 @@ _ = unicode
 
 VCARD_PHONE_TYPES = {'home': 'HOME', 'office': 'WORK', 'mobile': 'CELL', 'fax': 'FAX'}
 
-class VCardEUserView(EntityView):
+class VCardCWUserView(EntityView):
     """export a person information as a vcard"""
     id = 'vcard'
     title = _('vcard')
     templatable = False
     content_type = 'text/x-vcard'
-    __select__ = implements('EUser')        
+    __select__ = implements('CWUser')        
 
     def set_request_content_type(self):
         """overriden to set a .vcf filename"""
@@ -49,4 +49,4 @@ class VCardEUserView(EntityView):
             w(u'EMAIL;TYPE=INTERNET:%s\n' % email.address)
 
 from logilab.common.deprecation import class_renamed
-VCardEuserView = class_renamed('VCardEuserView', VCardEUserView)
+VCardEuserView = class_renamed('VCardEuserView', VCardCWUserView)

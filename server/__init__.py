@@ -93,10 +93,10 @@ def init_repository(config, interactive=True, drop=False, vreg=None):
     print 'inserting default user and groups'
     needisfix = []
     for group in BASEGROUPS:
-        rset = session.execute('INSERT EGroup X: X name %(name)s',
+        rset = session.execute('INSERT CWGroup X: X name %(name)s',
                                {'name': unicode(group)})
         needisfix.append( (rset.rows[0][0], rset.description[0][0]) )
-    rset = session.execute('INSERT EUser X: X login %(login)s, X upassword %(pwd)s',
+    rset = session.execute('INSERT CWUser X: X login %(login)s, X upassword %(pwd)s',
                            {'login': login, 'pwd': pwd})
     needisfix.append( (rset.rows[0][0], rset.description[0][0]) )
     session.execute('SET U in_group G WHERE G name "managers"')
@@ -116,10 +116,10 @@ def init_repository(config, interactive=True, drop=False, vreg=None):
         handler.session.unsafe_execute('SET X is_instance_of E WHERE X eid %(x)s, E name %(name)s',
                                        {'x': eid, 'name': etype}, 'x')
     # insert versions
-    handler.cmd_add_entity('EProperty', pkey=u'system.version.cubicweb',
+    handler.cmd_add_entity('CWProperty', pkey=u'system.version.cubicweb',
                            value=unicode(config.cubicweb_version()))
     for cube in config.cubes():
-        handler.cmd_add_entity('EProperty', 
+        handler.cmd_add_entity('CWProperty', 
                                pkey=u'system.version.%s' % cube.lower(),
                                value=unicode(config.cube_version(cube)))
     # yoo !

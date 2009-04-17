@@ -10,7 +10,7 @@ from cubicweb.schema import format_constraint
 
 # not restricted since as "is" is handled as other relations, guests need
 # access to this
-class EEType(MetaEntityType):
+class CWEType(MetaEntityType):
     """define an entity type, used to build the application schema"""
     name = String(required=True, indexed=True, internationalizable=True,
                   unique=True, maxsize=64)
@@ -21,7 +21,7 @@ class EEType(MetaEntityType):
     final = Boolean(description=_('automatic'))
 
 
-class ERType(MetaEntityType):
+class CWRType(MetaEntityType):
     """define a relation type, used to build the application schema"""
     name = String(required=True, indexed=True, internationalizable=True,
                   unique=True, maxsize=64)
@@ -39,22 +39,22 @@ class ERType(MetaEntityType):
     final = Boolean(description=_('automatic'))
 
 
-class EFRDef(MetaEntityType):
+class CWAttribute(MetaEntityType):
     """define a final relation: link a final relation type from a non final
     entity to a final entity type. 
 
     used to build the application schema
     """
-    relation_type = SubjectRelation('ERType', cardinality='1*',
+    relation_type = SubjectRelation('CWRType', cardinality='1*',
                                     constraints=[RQLConstraint('O final TRUE')],
                                     composite='object')
-    from_entity = SubjectRelation('EEType', cardinality='1*',
+    from_entity = SubjectRelation('CWEType', cardinality='1*',
                                   constraints=[RQLConstraint('O final FALSE')],
                                   composite='object')
-    to_entity = SubjectRelation('EEType', cardinality='1*',
+    to_entity = SubjectRelation('CWEType', cardinality='1*',
                                 constraints=[RQLConstraint('O final TRUE')],
                                 composite='object')
-    constrained_by = SubjectRelation('EConstraint', cardinality='*1', composite='subject')
+    constrained_by = SubjectRelation('CWConstraint', cardinality='*1', composite='subject')
     
     cardinality = String(maxsize=2, internationalizable=True,
                          vocabulary=[_('?1'), _('11'), _('??'), _('1?')], 
@@ -77,22 +77,22 @@ CARDINALITY_VOCAB = [_('?*'), _('1*'), _('+*'), _('**'),
                      _('?1'), _('11'), _('+1'), _('*1'),
                      _('??'), _('1?'), _('+?'), _('*?')]
 
-class ENFRDef(MetaEntityType):
+class CWRelation(MetaEntityType):
     """define a non final relation: link a non final relation type from a non
     final entity to a non final entity type. 
 
     used to build the application schema
     """
-    relation_type = SubjectRelation('ERType', cardinality='1*',
+    relation_type = SubjectRelation('CWRType', cardinality='1*',
                                     constraints=[RQLConstraint('O final FALSE')],
                                     composite='object')
-    from_entity = SubjectRelation('EEType', cardinality='1*',
+    from_entity = SubjectRelation('CWEType', cardinality='1*',
                                   constraints=[RQLConstraint('O final FALSE')],
                                   composite='object')
-    to_entity = SubjectRelation('EEType', cardinality='1*',
+    to_entity = SubjectRelation('CWEType', cardinality='1*',
                                 constraints=[RQLConstraint('O final FALSE')],
                                 composite='object')
-    constrained_by = SubjectRelation('EConstraint', cardinality='*1', composite='subject')
+    constrained_by = SubjectRelation('CWConstraint', cardinality='*1', composite='subject')
     
     cardinality = String(maxsize=2, internationalizable=True,
                          vocabulary=CARDINALITY_VOCAB,
@@ -129,41 +129,41 @@ class RQLExpression(MetaEntityType):
                                       'relation\'subject, object and to '
                                       'the request user. '))
 
-    read_permission = ObjectRelation(('EEType', 'ERType'), cardinality='+?', composite='subject',
+    read_permission = ObjectRelation(('CWEType', 'CWRType'), cardinality='+?', composite='subject',
                                       description=_('rql expression allowing to read entities/relations of this type'))
-    add_permission = ObjectRelation(('EEType', 'ERType'), cardinality='*?', composite='subject',
+    add_permission = ObjectRelation(('CWEType', 'CWRType'), cardinality='*?', composite='subject',
                                      description=_('rql expression allowing to add entities/relations of this type'))
-    delete_permission = ObjectRelation(('EEType', 'ERType'), cardinality='*?', composite='subject',
+    delete_permission = ObjectRelation(('CWEType', 'CWRType'), cardinality='*?', composite='subject',
                                         description=_('rql expression allowing to delete entities/relations of this type'))
-    update_permission = ObjectRelation('EEType', cardinality='*?', composite='subject',
+    update_permission = ObjectRelation('CWEType', cardinality='*?', composite='subject',
                                         description=_('rql expression allowing to update entities of this type'))
     
 
-class EConstraint(MetaEntityType):
+class CWConstraint(MetaEntityType):
     """define a schema constraint"""
-    cstrtype = SubjectRelation('EConstraintType', cardinality='1*')
+    cstrtype = SubjectRelation('CWConstraintType', cardinality='1*')
     value = String(description=_('depends on the constraint type'))
 
 
-class EConstraintType(MetaEntityType):
+class CWConstraintType(MetaEntityType):
     """define a schema constraint type"""
     name = String(required=True, indexed=True, internationalizable=True,
                   unique=True, maxsize=64)
 
 
 # not restricted since it has to be read when checking allowed transitions
-class EGroup(MetaEntityType):
+class CWGroup(MetaEntityType):
     """define a CubicWeb users group"""
     name = String(required=True, indexed=True, internationalizable=True,
                   unique=True, maxsize=64)
 
-    read_permission = ObjectRelation(('EEType', 'ERType'), cardinality='+*',
+    read_permission = ObjectRelation(('CWEType', 'CWRType'), cardinality='+*',
                                       description=_('groups allowed to read entities/relations of this type'))
-    add_permission = ObjectRelation(('EEType', 'ERType'),
+    add_permission = ObjectRelation(('CWEType', 'CWRType'),
                                      description=_('groups allowed to add entities/relations of this type'))
-    delete_permission = ObjectRelation(('EEType', 'ERType'),
+    delete_permission = ObjectRelation(('CWEType', 'CWRType'),
                                         description=_('groups allowed to delete entities/relations of this type'))
-    update_permission = ObjectRelation('EEType',
+    update_permission = ObjectRelation('CWEType',
                                         description=_('groups allowed to update entities of this type'))
     
     
@@ -214,7 +214,7 @@ class is_(MetaRelationType):
         }
     cardinality = '1*'
     subject = '**'
-    object = 'EEType'
+    object = 'CWEType'
 
 class is_instance_of(MetaRelationType):
     """core relation indicating the types (including specialized types)
@@ -229,7 +229,7 @@ class is_instance_of(MetaRelationType):
         }
     cardinality = '+*'
     subject = '**'
-    object = 'EEType'
+    object = 'CWEType'
 
 class specializes(MetaRelationType):
     name = 'specializes'
@@ -239,5 +239,5 @@ class specializes(MetaRelationType):
         'delete': ('managers',),
         }
     cardinality = '?*'
-    subject = 'EEType'
-    object = 'EEType'
+    subject = 'CWEType'
+    object = 'CWEType'

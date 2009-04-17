@@ -121,14 +121,14 @@ WHERE rel_evaluee0.eid_from=X.cw_eid AND X.cw_nom IN(Logilab, Caesium)'''),
 FROM cw_Affaire AS X
 WHERE DATE(X.cw_creation_date)=CURRENT_DATE'''),
 
-    ("Any N WHERE G is EGroup, G name N, E eid 12, E read_permission G",
+    ("Any N WHERE G is CWGroup, G name N, E eid 12, E read_permission G",
      '''SELECT G.cw_name
-FROM cw_EGroup AS G, read_permission_relation AS rel_read_permission0
+FROM cw_CWGroup AS G, read_permission_relation AS rel_read_permission0
 WHERE rel_read_permission0.eid_from=12 AND rel_read_permission0.eid_to=G.cw_eid'''),
 
     ('Any Y WHERE U login "admin", U login Y', # stupid but valid...
      """SELECT U.cw_login
-FROM cw_EUser AS U
+FROM cw_CWUser AS U
 WHERE U.cw_login=admin"""),
 
     ('Any T WHERE T tags X, X is State',
@@ -145,13 +145,13 @@ WHERE rel_concerne0.eid_from=0 AND rel_concerne0.eid_to=1'''),
      "EXISTS(X owned_by U, U in_group G, G name 'lulufanclub' OR G name 'managers');",
      '''SELECT X.cw_eid
 FROM cw_Personne AS X
-WHERE X.cw_prenom=lulu AND EXISTS(SELECT 1 FROM owned_by_relation AS rel_owned_by0, in_group_relation AS rel_in_group1, cw_EGroup AS G WHERE rel_owned_by0.eid_from=X.cw_eid AND rel_in_group1.eid_from=rel_owned_by0.eid_to AND rel_in_group1.eid_to=G.cw_eid AND ((G.cw_name=lulufanclub) OR (G.cw_name=managers)))'''),
+WHERE X.cw_prenom=lulu AND EXISTS(SELECT 1 FROM owned_by_relation AS rel_owned_by0, in_group_relation AS rel_in_group1, cw_CWGroup AS G WHERE rel_owned_by0.eid_from=X.cw_eid AND rel_in_group1.eid_from=rel_owned_by0.eid_to AND rel_in_group1.eid_to=G.cw_eid AND ((G.cw_name=lulufanclub) OR (G.cw_name=managers)))'''),
 
     ("Any X WHERE X prenom 'lulu',"
      "NOT EXISTS(X owned_by U, U in_group G, G name 'lulufanclub' OR G name 'managers');",
      '''SELECT X.cw_eid
 FROM cw_Personne AS X
-WHERE X.cw_prenom=lulu AND NOT EXISTS(SELECT 1 FROM owned_by_relation AS rel_owned_by0, in_group_relation AS rel_in_group1, cw_EGroup AS G WHERE rel_owned_by0.eid_from=X.cw_eid AND rel_in_group1.eid_from=rel_owned_by0.eid_to AND rel_in_group1.eid_to=G.cw_eid AND ((G.cw_name=lulufanclub) OR (G.cw_name=managers)))'''),
+WHERE X.cw_prenom=lulu AND NOT EXISTS(SELECT 1 FROM owned_by_relation AS rel_owned_by0, in_group_relation AS rel_in_group1, cw_CWGroup AS G WHERE rel_owned_by0.eid_from=X.cw_eid AND rel_in_group1.eid_from=rel_owned_by0.eid_to AND rel_in_group1.eid_to=G.cw_eid AND ((G.cw_name=lulufanclub) OR (G.cw_name=managers)))'''),
 ]
 
 ADVANCED= [
@@ -234,11 +234,11 @@ WHERE rel_in_basket0.eid_to=12'''),
     
     ('Any SEN,RN,OEN WHERE X from_entity SE, SE eid 44, X relation_type R, R eid 139, X to_entity OE, OE eid 42, R name RN, SE name SEN, OE name OEN',
      '''SELECT SE.cw_name, R.cw_name, OE.cw_name
-FROM cw_EEType AS OE, cw_EEType AS SE, cw_EFRDef AS X, cw_ERType AS R
+FROM cw_CWEType AS OE, cw_CWEType AS SE, cw_CWAttribute AS X, cw_CWRType AS R
 WHERE X.cw_from_entity=44 AND SE.cw_eid=44 AND X.cw_relation_type=139 AND R.cw_eid=139 AND X.cw_to_entity=42 AND OE.cw_eid=42
 UNION ALL
 SELECT SE.cw_name, R.cw_name, OE.cw_name
-FROM cw_EEType AS OE, cw_EEType AS SE, cw_ENFRDef AS X, cw_ERType AS R
+FROM cw_CWEType AS OE, cw_CWEType AS SE, cw_CWRelation AS X, cw_CWRType AS R
 WHERE X.cw_from_entity=44 AND SE.cw_eid=44 AND X.cw_relation_type=139 AND R.cw_eid=139 AND X.cw_to_entity=42 AND OE.cw_eid=42'''),
 
     # Any O WHERE NOT S corrected_in O, S eid %(x)s, S concerns P, O version_of P, O in_state ST, NOT ST name "published", O modification_date MTIME ORDERBY MTIME DESC LIMIT 9
@@ -272,8 +272,8 @@ WHERE rel_owned_by0.eid_from=1 AND NOT EXISTS(SELECT 1 FROM owned_by_relation AS
 
     ('Any GN WHERE X in_group G, G name GN, (G name "managers" OR EXISTS(X copain T, T login in ("comme", "cochon")))',
      '''SELECT G.cw_name
-FROM cw_EGroup AS G, in_group_relation AS rel_in_group0
-WHERE rel_in_group0.eid_to=G.cw_eid AND ((G.cw_name=managers) OR (EXISTS(SELECT 1 FROM copain_relation AS rel_copain1, cw_EUser AS T WHERE rel_copain1.eid_from=rel_in_group0.eid_from AND rel_copain1.eid_to=T.cw_eid AND T.cw_login IN(comme, cochon))))'''),
+FROM cw_CWGroup AS G, in_group_relation AS rel_in_group0
+WHERE rel_in_group0.eid_to=G.cw_eid AND ((G.cw_name=managers) OR (EXISTS(SELECT 1 FROM copain_relation AS rel_copain1, cw_CWUser AS T WHERE rel_copain1.eid_from=rel_in_group0.eid_from AND rel_copain1.eid_to=T.cw_eid AND T.cw_login IN(comme, cochon))))'''),
 
     ('Any C WHERE C is Card, EXISTS(X documented_by C)',
       """SELECT C.cw_eid
@@ -292,12 +292,12 @@ WHERE EXISTS(SELECT 1 FROM documented_by_relation AS rel_documented_by0 WHERE re
 
     ('Any GN,L WHERE X in_group G, X login L, G name GN, EXISTS(X copain T, T login L, T login IN("comme", "cochon"))',
      '''SELECT G.cw_name, X.cw_login
-FROM cw_EGroup AS G, cw_EUser AS X, in_group_relation AS rel_in_group0
-WHERE rel_in_group0.eid_from=X.cw_eid AND rel_in_group0.eid_to=G.cw_eid AND EXISTS(SELECT 1 FROM copain_relation AS rel_copain1, cw_EUser AS T WHERE rel_copain1.eid_from=X.cw_eid AND rel_copain1.eid_to=T.cw_eid AND T.cw_login=X.cw_login AND T.cw_login IN(comme, cochon))'''),
+FROM cw_CWGroup AS G, cw_CWUser AS X, in_group_relation AS rel_in_group0
+WHERE rel_in_group0.eid_from=X.cw_eid AND rel_in_group0.eid_to=G.cw_eid AND EXISTS(SELECT 1 FROM copain_relation AS rel_copain1, cw_CWUser AS T WHERE rel_copain1.eid_from=X.cw_eid AND rel_copain1.eid_to=T.cw_eid AND T.cw_login=X.cw_login AND T.cw_login IN(comme, cochon))'''),
 
-    ('Any X,S, MAX(T) GROUPBY X,S ORDERBY S WHERE X is EUser, T tags X, S eid IN(32), X in_state S',
+    ('Any X,S, MAX(T) GROUPBY X,S ORDERBY S WHERE X is CWUser, T tags X, S eid IN(32), X in_state S',
      '''SELECT X.cw_eid, 32, MAX(rel_tags0.eid_from)
-FROM cw_EUser AS X, tags_relation AS rel_tags0
+FROM cw_CWUser AS X, tags_relation AS rel_tags0
 WHERE rel_tags0.eid_to=X.cw_eid AND X.cw_in_state=32
 GROUP BY X.cw_eid'''),
 
@@ -309,24 +309,24 @@ GROUP BY C.cw_nom
 ORDER BY 1 DESC
 LIMIT 10'''),
 
-    ('Any X WHERE Y evaluee X, Y is EUser',
+    ('Any X WHERE Y evaluee X, Y is CWUser',
      '''SELECT rel_evaluee0.eid_to
-FROM cw_EUser AS Y, evaluee_relation AS rel_evaluee0
+FROM cw_CWUser AS Y, evaluee_relation AS rel_evaluee0
 WHERE rel_evaluee0.eid_from=Y.cw_eid'''),
 
     ('Any L WHERE X login "admin", X identity Y, Y login L',
      '''SELECT Y.cw_login
-FROM cw_EUser AS X, cw_EUser AS Y
+FROM cw_CWUser AS X, cw_CWUser AS Y
 WHERE X.cw_login=admin AND X.cw_eid=Y.cw_eid'''),
 
     ('Any L WHERE X login "admin", NOT X identity Y, Y login L',
      '''SELECT Y.cw_login
-FROM cw_EUser AS X, cw_EUser AS Y
+FROM cw_CWUser AS X, cw_CWUser AS Y
 WHERE X.cw_login=admin AND NOT X.cw_eid=Y.cw_eid'''),
     
     ('Any L WHERE X login "admin", X identity Y?, Y login L',
      '''SELECT Y.cw_login
-FROM cw_EUser AS X LEFT OUTER JOIN cw_EUser AS Y ON (X.cw_eid=Y.cw_eid)
+FROM cw_CWUser AS X LEFT OUTER JOIN cw_CWUser AS Y ON (X.cw_eid=Y.cw_eid)
 WHERE X.cw_login=admin'''),
 
     ('Any XN ORDERBY XN WHERE X name XN',
@@ -334,22 +334,22 @@ WHERE X.cw_login=admin'''),
 FROM cw_Basket AS X
 UNION ALL
 SELECT X.cw_name
-FROM cw_ECache AS X
+FROM cw_CWCache AS X
 UNION ALL
 SELECT X.cw_name
-FROM cw_EConstraintType AS X
+FROM cw_CWConstraintType AS X
 UNION ALL
 SELECT X.cw_name
-FROM cw_EEType AS X
+FROM cw_CWEType AS X
 UNION ALL
 SELECT X.cw_name
-FROM cw_EGroup AS X
+FROM cw_CWGroup AS X
 UNION ALL
 SELECT X.cw_name
-FROM cw_EPermission AS X
+FROM cw_CWPermission AS X
 UNION ALL
 SELECT X.cw_name
-FROM cw_ERType AS X
+FROM cw_CWRType AS X
 UNION ALL
 SELECT X.cw_name
 FROM cw_File AS X
@@ -376,108 +376,108 @@ ORDER BY 1'''),
 #     ''''''),
 
     # DISTINCT, can use relatin under exists scope as principal
-    ('DISTINCT Any X,Y WHERE X name "EGroup", Y eid IN(1, 2, 3), EXISTS(X read_permission Y)',
+    ('DISTINCT Any X,Y WHERE X name "CWGroup", Y eid IN(1, 2, 3), EXISTS(X read_permission Y)',
      '''SELECT DISTINCT X.cw_eid, rel_read_permission0.eid_to
-FROM cw_EEType AS X, read_permission_relation AS rel_read_permission0
-WHERE X.cw_name=EGroup AND rel_read_permission0.eid_to IN(1, 2, 3) AND EXISTS(SELECT 1 WHERE rel_read_permission0.eid_from=X.cw_eid)
+FROM cw_CWEType AS X, read_permission_relation AS rel_read_permission0
+WHERE X.cw_name=CWGroup AND rel_read_permission0.eid_to IN(1, 2, 3) AND EXISTS(SELECT 1 WHERE rel_read_permission0.eid_from=X.cw_eid)
 UNION
 SELECT DISTINCT X.cw_eid, rel_read_permission0.eid_to
-FROM cw_ERType AS X, read_permission_relation AS rel_read_permission0
-WHERE X.cw_name=EGroup AND rel_read_permission0.eid_to IN(1, 2, 3) AND EXISTS(SELECT 1 WHERE rel_read_permission0.eid_from=X.cw_eid)'''),
+FROM cw_CWRType AS X, read_permission_relation AS rel_read_permission0
+WHERE X.cw_name=CWGroup AND rel_read_permission0.eid_to IN(1, 2, 3) AND EXISTS(SELECT 1 WHERE rel_read_permission0.eid_from=X.cw_eid)'''),
 
     # no distinct, Y can't be invariant
-    ('Any X,Y WHERE X name "EGroup", Y eid IN(1, 2, 3), EXISTS(X read_permission Y)',
+    ('Any X,Y WHERE X name "CWGroup", Y eid IN(1, 2, 3), EXISTS(X read_permission Y)',
      '''SELECT X.cw_eid, Y.cw_eid
-FROM cw_EEType AS X, cw_EGroup AS Y
-WHERE X.cw_name=EGroup AND Y.cw_eid IN(1, 2, 3) AND EXISTS(SELECT 1 FROM read_permission_relation AS rel_read_permission0 WHERE rel_read_permission0.eid_from=X.cw_eid AND rel_read_permission0.eid_to=Y.cw_eid)
+FROM cw_CWEType AS X, cw_CWGroup AS Y
+WHERE X.cw_name=CWGroup AND Y.cw_eid IN(1, 2, 3) AND EXISTS(SELECT 1 FROM read_permission_relation AS rel_read_permission0 WHERE rel_read_permission0.eid_from=X.cw_eid AND rel_read_permission0.eid_to=Y.cw_eid)
 UNION ALL
 SELECT X.cw_eid, Y.cw_eid
-FROM cw_EEType AS X, cw_RQLExpression AS Y
-WHERE X.cw_name=EGroup AND Y.cw_eid IN(1, 2, 3) AND EXISTS(SELECT 1 FROM read_permission_relation AS rel_read_permission0 WHERE rel_read_permission0.eid_from=X.cw_eid AND rel_read_permission0.eid_to=Y.cw_eid)
+FROM cw_CWEType AS X, cw_RQLExpression AS Y
+WHERE X.cw_name=CWGroup AND Y.cw_eid IN(1, 2, 3) AND EXISTS(SELECT 1 FROM read_permission_relation AS rel_read_permission0 WHERE rel_read_permission0.eid_from=X.cw_eid AND rel_read_permission0.eid_to=Y.cw_eid)
 UNION ALL
 SELECT X.cw_eid, Y.cw_eid
-FROM cw_EGroup AS Y, cw_ERType AS X
-WHERE X.cw_name=EGroup AND Y.cw_eid IN(1, 2, 3) AND EXISTS(SELECT 1 FROM read_permission_relation AS rel_read_permission0 WHERE rel_read_permission0.eid_from=X.cw_eid AND rel_read_permission0.eid_to=Y.cw_eid)
+FROM cw_CWGroup AS Y, cw_CWRType AS X
+WHERE X.cw_name=CWGroup AND Y.cw_eid IN(1, 2, 3) AND EXISTS(SELECT 1 FROM read_permission_relation AS rel_read_permission0 WHERE rel_read_permission0.eid_from=X.cw_eid AND rel_read_permission0.eid_to=Y.cw_eid)
 UNION ALL
 SELECT X.cw_eid, Y.cw_eid
-FROM cw_ERType AS X, cw_RQLExpression AS Y
-WHERE X.cw_name=EGroup AND Y.cw_eid IN(1, 2, 3) AND EXISTS(SELECT 1 FROM read_permission_relation AS rel_read_permission0 WHERE rel_read_permission0.eid_from=X.cw_eid AND rel_read_permission0.eid_to=Y.cw_eid)'''),
+FROM cw_CWRType AS X, cw_RQLExpression AS Y
+WHERE X.cw_name=CWGroup AND Y.cw_eid IN(1, 2, 3) AND EXISTS(SELECT 1 FROM read_permission_relation AS rel_read_permission0 WHERE rel_read_permission0.eid_from=X.cw_eid AND rel_read_permission0.eid_to=Y.cw_eid)'''),
 
     # DISTINCT but NEGED exists, can't be invariant
-    ('DISTINCT Any X,Y WHERE X name "EGroup", Y eid IN(1, 2, 3), NOT EXISTS(X read_permission Y)',
+    ('DISTINCT Any X,Y WHERE X name "CWGroup", Y eid IN(1, 2, 3), NOT EXISTS(X read_permission Y)',
      '''SELECT DISTINCT X.cw_eid, Y.cw_eid
-FROM cw_EEType AS X, cw_EGroup AS Y
-WHERE X.cw_name=EGroup AND Y.cw_eid IN(1, 2, 3) AND NOT EXISTS(SELECT 1 FROM read_permission_relation AS rel_read_permission0 WHERE rel_read_permission0.eid_from=X.cw_eid AND rel_read_permission0.eid_to=Y.cw_eid)
+FROM cw_CWEType AS X, cw_CWGroup AS Y
+WHERE X.cw_name=CWGroup AND Y.cw_eid IN(1, 2, 3) AND NOT EXISTS(SELECT 1 FROM read_permission_relation AS rel_read_permission0 WHERE rel_read_permission0.eid_from=X.cw_eid AND rel_read_permission0.eid_to=Y.cw_eid)
 UNION
 SELECT DISTINCT X.cw_eid, Y.cw_eid
-FROM cw_EEType AS X, cw_RQLExpression AS Y
-WHERE X.cw_name=EGroup AND Y.cw_eid IN(1, 2, 3) AND NOT EXISTS(SELECT 1 FROM read_permission_relation AS rel_read_permission0 WHERE rel_read_permission0.eid_from=X.cw_eid AND rel_read_permission0.eid_to=Y.cw_eid)
+FROM cw_CWEType AS X, cw_RQLExpression AS Y
+WHERE X.cw_name=CWGroup AND Y.cw_eid IN(1, 2, 3) AND NOT EXISTS(SELECT 1 FROM read_permission_relation AS rel_read_permission0 WHERE rel_read_permission0.eid_from=X.cw_eid AND rel_read_permission0.eid_to=Y.cw_eid)
 UNION
 SELECT DISTINCT X.cw_eid, Y.cw_eid
-FROM cw_EGroup AS Y, cw_ERType AS X
-WHERE X.cw_name=EGroup AND Y.cw_eid IN(1, 2, 3) AND NOT EXISTS(SELECT 1 FROM read_permission_relation AS rel_read_permission0 WHERE rel_read_permission0.eid_from=X.cw_eid AND rel_read_permission0.eid_to=Y.cw_eid)
+FROM cw_CWGroup AS Y, cw_CWRType AS X
+WHERE X.cw_name=CWGroup AND Y.cw_eid IN(1, 2, 3) AND NOT EXISTS(SELECT 1 FROM read_permission_relation AS rel_read_permission0 WHERE rel_read_permission0.eid_from=X.cw_eid AND rel_read_permission0.eid_to=Y.cw_eid)
 UNION
 SELECT DISTINCT X.cw_eid, Y.cw_eid
-FROM cw_ERType AS X, cw_RQLExpression AS Y
-WHERE X.cw_name=EGroup AND Y.cw_eid IN(1, 2, 3) AND NOT EXISTS(SELECT 1 FROM read_permission_relation AS rel_read_permission0 WHERE rel_read_permission0.eid_from=X.cw_eid AND rel_read_permission0.eid_to=Y.cw_eid)'''),
+FROM cw_CWRType AS X, cw_RQLExpression AS Y
+WHERE X.cw_name=CWGroup AND Y.cw_eid IN(1, 2, 3) AND NOT EXISTS(SELECT 1 FROM read_permission_relation AS rel_read_permission0 WHERE rel_read_permission0.eid_from=X.cw_eid AND rel_read_permission0.eid_to=Y.cw_eid)'''),
 
     # should generate the same query as above
-    ('DISTINCT Any X,Y WHERE X name "EGroup", Y eid IN(1, 2, 3), NOT X read_permission Y',
+    ('DISTINCT Any X,Y WHERE X name "CWGroup", Y eid IN(1, 2, 3), NOT X read_permission Y',
      '''SELECT DISTINCT X.cw_eid, Y.cw_eid
-FROM cw_EEType AS X, cw_EGroup AS Y
-WHERE X.cw_name=EGroup AND Y.cw_eid IN(1, 2, 3) AND NOT EXISTS(SELECT 1 FROM read_permission_relation AS rel_read_permission0 WHERE rel_read_permission0.eid_from=X.cw_eid AND rel_read_permission0.eid_to=Y.cw_eid)
+FROM cw_CWEType AS X, cw_CWGroup AS Y
+WHERE X.cw_name=CWGroup AND Y.cw_eid IN(1, 2, 3) AND NOT EXISTS(SELECT 1 FROM read_permission_relation AS rel_read_permission0 WHERE rel_read_permission0.eid_from=X.cw_eid AND rel_read_permission0.eid_to=Y.cw_eid)
 UNION
 SELECT DISTINCT X.cw_eid, Y.cw_eid
-FROM cw_EEType AS X, cw_RQLExpression AS Y
-WHERE X.cw_name=EGroup AND Y.cw_eid IN(1, 2, 3) AND NOT EXISTS(SELECT 1 FROM read_permission_relation AS rel_read_permission0 WHERE rel_read_permission0.eid_from=X.cw_eid AND rel_read_permission0.eid_to=Y.cw_eid)
+FROM cw_CWEType AS X, cw_RQLExpression AS Y
+WHERE X.cw_name=CWGroup AND Y.cw_eid IN(1, 2, 3) AND NOT EXISTS(SELECT 1 FROM read_permission_relation AS rel_read_permission0 WHERE rel_read_permission0.eid_from=X.cw_eid AND rel_read_permission0.eid_to=Y.cw_eid)
 UNION
 SELECT DISTINCT X.cw_eid, Y.cw_eid
-FROM cw_EGroup AS Y, cw_ERType AS X
-WHERE X.cw_name=EGroup AND Y.cw_eid IN(1, 2, 3) AND NOT EXISTS(SELECT 1 FROM read_permission_relation AS rel_read_permission0 WHERE rel_read_permission0.eid_from=X.cw_eid AND rel_read_permission0.eid_to=Y.cw_eid)
+FROM cw_CWGroup AS Y, cw_CWRType AS X
+WHERE X.cw_name=CWGroup AND Y.cw_eid IN(1, 2, 3) AND NOT EXISTS(SELECT 1 FROM read_permission_relation AS rel_read_permission0 WHERE rel_read_permission0.eid_from=X.cw_eid AND rel_read_permission0.eid_to=Y.cw_eid)
 UNION
 SELECT DISTINCT X.cw_eid, Y.cw_eid
-FROM cw_ERType AS X, cw_RQLExpression AS Y
-WHERE X.cw_name=EGroup AND Y.cw_eid IN(1, 2, 3) AND NOT EXISTS(SELECT 1 FROM read_permission_relation AS rel_read_permission0 WHERE rel_read_permission0.eid_from=X.cw_eid AND rel_read_permission0.eid_to=Y.cw_eid)'''),
+FROM cw_CWRType AS X, cw_RQLExpression AS Y
+WHERE X.cw_name=CWGroup AND Y.cw_eid IN(1, 2, 3) AND NOT EXISTS(SELECT 1 FROM read_permission_relation AS rel_read_permission0 WHERE rel_read_permission0.eid_from=X.cw_eid AND rel_read_permission0.eid_to=Y.cw_eid)'''),
     
     # neged relation, can't be inveriant
-    ('Any X,Y WHERE X name "EGroup", Y eid IN(1, 2, 3), NOT X read_permission Y',
+    ('Any X,Y WHERE X name "CWGroup", Y eid IN(1, 2, 3), NOT X read_permission Y',
      '''SELECT X.cw_eid, Y.cw_eid
-FROM cw_EEType AS X, cw_EGroup AS Y
-WHERE X.cw_name=EGroup AND Y.cw_eid IN(1, 2, 3) AND NOT EXISTS(SELECT 1 FROM read_permission_relation AS rel_read_permission0 WHERE rel_read_permission0.eid_from=X.cw_eid AND rel_read_permission0.eid_to=Y.cw_eid)
+FROM cw_CWEType AS X, cw_CWGroup AS Y
+WHERE X.cw_name=CWGroup AND Y.cw_eid IN(1, 2, 3) AND NOT EXISTS(SELECT 1 FROM read_permission_relation AS rel_read_permission0 WHERE rel_read_permission0.eid_from=X.cw_eid AND rel_read_permission0.eid_to=Y.cw_eid)
 UNION ALL
 SELECT X.cw_eid, Y.cw_eid
-FROM cw_EEType AS X, cw_RQLExpression AS Y
-WHERE X.cw_name=EGroup AND Y.cw_eid IN(1, 2, 3) AND NOT EXISTS(SELECT 1 FROM read_permission_relation AS rel_read_permission0 WHERE rel_read_permission0.eid_from=X.cw_eid AND rel_read_permission0.eid_to=Y.cw_eid)
+FROM cw_CWEType AS X, cw_RQLExpression AS Y
+WHERE X.cw_name=CWGroup AND Y.cw_eid IN(1, 2, 3) AND NOT EXISTS(SELECT 1 FROM read_permission_relation AS rel_read_permission0 WHERE rel_read_permission0.eid_from=X.cw_eid AND rel_read_permission0.eid_to=Y.cw_eid)
 UNION ALL
 SELECT X.cw_eid, Y.cw_eid
-FROM cw_EGroup AS Y, cw_ERType AS X
-WHERE X.cw_name=EGroup AND Y.cw_eid IN(1, 2, 3) AND NOT EXISTS(SELECT 1 FROM read_permission_relation AS rel_read_permission0 WHERE rel_read_permission0.eid_from=X.cw_eid AND rel_read_permission0.eid_to=Y.cw_eid)
+FROM cw_CWGroup AS Y, cw_CWRType AS X
+WHERE X.cw_name=CWGroup AND Y.cw_eid IN(1, 2, 3) AND NOT EXISTS(SELECT 1 FROM read_permission_relation AS rel_read_permission0 WHERE rel_read_permission0.eid_from=X.cw_eid AND rel_read_permission0.eid_to=Y.cw_eid)
 UNION ALL
 SELECT X.cw_eid, Y.cw_eid
-FROM cw_ERType AS X, cw_RQLExpression AS Y
-WHERE X.cw_name=EGroup AND Y.cw_eid IN(1, 2, 3) AND NOT EXISTS(SELECT 1 FROM read_permission_relation AS rel_read_permission0 WHERE rel_read_permission0.eid_from=X.cw_eid AND rel_read_permission0.eid_to=Y.cw_eid)'''),
+FROM cw_CWRType AS X, cw_RQLExpression AS Y
+WHERE X.cw_name=CWGroup AND Y.cw_eid IN(1, 2, 3) AND NOT EXISTS(SELECT 1 FROM read_permission_relation AS rel_read_permission0 WHERE rel_read_permission0.eid_from=X.cw_eid AND rel_read_permission0.eid_to=Y.cw_eid)'''),
 
     ('Any MAX(X)+MIN(X), N GROUPBY N WHERE X name N;',
      '''SELECT (MAX(T1.C0) + MIN(T1.C0)), T1.C1 FROM (SELECT X.cw_eid AS C0, X.cw_name AS C1
 FROM cw_Basket AS X
 UNION ALL
 SELECT X.cw_eid AS C0, X.cw_name AS C1
-FROM cw_ECache AS X
+FROM cw_CWCache AS X
 UNION ALL
 SELECT X.cw_eid AS C0, X.cw_name AS C1
-FROM cw_EConstraintType AS X
+FROM cw_CWConstraintType AS X
 UNION ALL
 SELECT X.cw_eid AS C0, X.cw_name AS C1
-FROM cw_EEType AS X
+FROM cw_CWEType AS X
 UNION ALL
 SELECT X.cw_eid AS C0, X.cw_name AS C1
-FROM cw_EGroup AS X
+FROM cw_CWGroup AS X
 UNION ALL
 SELECT X.cw_eid AS C0, X.cw_name AS C1
-FROM cw_EPermission AS X
+FROM cw_CWPermission AS X
 UNION ALL
 SELECT X.cw_eid AS C0, X.cw_name AS C1
-FROM cw_ERType AS X
+FROM cw_CWRType AS X
 UNION ALL
 SELECT X.cw_eid AS C0, X.cw_name AS C1
 FROM cw_File AS X
@@ -523,25 +523,25 @@ ORDER BY 2,3) AS T1
 '''),
 
     # ambiguity in EXISTS() -> should union the sub-query
-    ('Any T WHERE T is Tag, NOT T name in ("t1", "t2"), EXISTS(T tags X, X is IN (EUser, EGroup))',
+    ('Any T WHERE T is Tag, NOT T name in ("t1", "t2"), EXISTS(T tags X, X is IN (CWUser, CWGroup))',
      '''SELECT T.cw_eid
 FROM cw_Tag AS T
-WHERE NOT (T.cw_name IN(t1, t2)) AND EXISTS(SELECT 1 FROM tags_relation AS rel_tags0, cw_EGroup AS X WHERE rel_tags0.eid_from=T.cw_eid AND rel_tags0.eid_to=X.cw_eid UNION SELECT 1 FROM tags_relation AS rel_tags1, cw_EUser AS X WHERE rel_tags1.eid_from=T.cw_eid AND rel_tags1.eid_to=X.cw_eid)'''),
+WHERE NOT (T.cw_name IN(t1, t2)) AND EXISTS(SELECT 1 FROM tags_relation AS rel_tags0, cw_CWGroup AS X WHERE rel_tags0.eid_from=T.cw_eid AND rel_tags0.eid_to=X.cw_eid UNION SELECT 1 FROM tags_relation AS rel_tags1, cw_CWUser AS X WHERE rel_tags1.eid_from=T.cw_eid AND rel_tags1.eid_to=X.cw_eid)'''),
 
     # must not use a relation in EXISTS scope to inline a variable 
     ('Any U WHERE U eid IN (1,2), EXISTS(X owned_by U)',
      '''SELECT U.cw_eid
-FROM cw_EUser AS U
+FROM cw_CWUser AS U
 WHERE U.cw_eid IN(1, 2) AND EXISTS(SELECT 1 FROM owned_by_relation AS rel_owned_by0 WHERE rel_owned_by0.eid_to=U.cw_eid)'''),
 
     ('Any U WHERE EXISTS(U eid IN (1,2), X owned_by U)',
      '''SELECT U.cw_eid
-FROM cw_EUser AS U
+FROM cw_CWUser AS U
 WHERE EXISTS(SELECT 1 FROM owned_by_relation AS rel_owned_by0 WHERE U.cw_eid IN(1, 2) AND rel_owned_by0.eid_to=U.cw_eid)'''),
 
     ('Any COUNT(U) WHERE EXISTS (P owned_by U, P is IN (Note, Affaire))',
      '''SELECT COUNT(U.cw_eid)
-FROM cw_EUser AS U
+FROM cw_CWUser AS U
 WHERE EXISTS(SELECT 1 FROM owned_by_relation AS rel_owned_by0, cw_Affaire AS P WHERE rel_owned_by0.eid_from=P.cw_eid AND rel_owned_by0.eid_to=U.cw_eid UNION SELECT 1 FROM owned_by_relation AS rel_owned_by1, cw_Note AS P WHERE rel_owned_by1.eid_from=P.cw_eid AND rel_owned_by1.eid_to=U.cw_eid)'''),
 
     ('Any MAX(X)',
@@ -584,7 +584,7 @@ FROM entities AS X'''),
     
     ('Any X GROUPBY X ORDERBY Y WHERE X eid 12, X login Y',
      '''SELECT X.cw_eid
-FROM cw_EUser AS X
+FROM cw_CWUser AS X
 WHERE X.cw_eid=12
 GROUP BY X.cw_eid
 ORDER BY X.cw_login'''),
@@ -598,12 +598,12 @@ HAVING COUNT(rel_owned_by0.eid_from)>10'''),
 
     ('DISTINCT Any X ORDERBY stockproc(X) WHERE U login X',
      '''SELECT T1.C0 FROM (SELECT DISTINCT U.cw_login AS C0, STOCKPROC(U.cw_login) AS C1
-FROM cw_EUser AS U
+FROM cw_CWUser AS U
 ORDER BY 2) AS T1'''),
     
     ('DISTINCT Any X ORDERBY Y WHERE B bookmarked_by X, X login Y',
      '''SELECT T1.C0 FROM (SELECT DISTINCT X.cw_eid AS C0, X.cw_login AS C1
-FROM bookmarked_by_relation AS rel_bookmarked_by0, cw_EUser AS X
+FROM bookmarked_by_relation AS rel_bookmarked_by0, cw_CWUser AS X
 WHERE rel_bookmarked_by0.eid_to=X.cw_eid
 ORDER BY 2) AS T1'''),
 
@@ -613,7 +613,7 @@ FROM cw_Affaire AS X, cw_State AS S
 WHERE X.cw_in_state=S.cw_eid
 UNION
 SELECT DISTINCT X.cw_eid AS C0, S.cw_name AS C1
-FROM cw_EUser AS X, cw_State AS S
+FROM cw_CWUser AS X, cw_State AS S
 WHERE X.cw_in_state=S.cw_eid
 UNION
 SELECT DISTINCT X.cw_eid AS C0, S.cw_name AS C1
@@ -679,7 +679,7 @@ WHERE NOT (rel_tags0.eid_from=28258)'''),
     
     ('Any S WHERE T is Tag, T name TN, NOT T eid 28258, T tags S, S name SN',
      '''SELECT S.cw_eid
-FROM cw_EGroup AS S, cw_Tag AS T, tags_relation AS rel_tags0
+FROM cw_CWGroup AS S, cw_Tag AS T, tags_relation AS rel_tags0
 WHERE NOT (T.cw_eid=28258) AND rel_tags0.eid_from=T.cw_eid AND rel_tags0.eid_to=S.cw_eid
 UNION ALL
 SELECT S.cw_eid
@@ -707,7 +707,7 @@ FROM cw_Division AS Y
 WHERE NOT EXISTS(SELECT 1 FROM evaluee_relation AS rel_evaluee0 WHERE rel_evaluee0.eid_from=Y.cw_eid)
 UNION ALL
 SELECT Y.cw_eid
-FROM cw_EUser AS Y
+FROM cw_CWUser AS Y
 WHERE NOT EXISTS(SELECT 1 FROM evaluee_relation AS rel_evaluee0 WHERE rel_evaluee0.eid_from=Y.cw_eid)
 UNION ALL
 SELECT Y.cw_eid
@@ -722,10 +722,10 @@ SELECT Y.cw_eid
 FROM cw_SubDivision AS Y
 WHERE NOT EXISTS(SELECT 1 FROM evaluee_relation AS rel_evaluee0 WHERE rel_evaluee0.eid_from=Y.cw_eid)'''),
 
-    ('Any X WHERE NOT Y evaluee X, Y is EUser',
+    ('Any X WHERE NOT Y evaluee X, Y is CWUser',
      '''SELECT X.cw_eid
 FROM cw_Note AS X
-WHERE NOT EXISTS(SELECT 1 FROM evaluee_relation AS rel_evaluee0,cw_EUser AS Y WHERE rel_evaluee0.eid_from=Y.cw_eid AND rel_evaluee0.eid_to=X.cw_eid)'''),
+WHERE NOT EXISTS(SELECT 1 FROM evaluee_relation AS rel_evaluee0,cw_CWUser AS Y WHERE rel_evaluee0.eid_from=Y.cw_eid AND rel_evaluee0.eid_to=X.cw_eid)'''),
     
     ('Any X,T WHERE X title T, NOT X is Bookmark',
      '''SELECT DISTINCT X.cw_eid, X.cw_title
@@ -734,18 +734,18 @@ UNION
 SELECT DISTINCT X.cw_eid, X.cw_title
 FROM cw_EmailThread AS X'''),
 
-    ('Any K,V WHERE P is EProperty, P pkey K, P value V, NOT P for_user U',
+    ('Any K,V WHERE P is CWProperty, P pkey K, P value V, NOT P for_user U',
      '''SELECT DISTINCT P.cw_pkey, P.cw_value
-FROM cw_EProperty AS P
+FROM cw_CWProperty AS P
 WHERE P.cw_for_user IS NULL'''),
 
-    ('Any S WHERE NOT X in_state S, X is IN(Affaire, EUser)',
+    ('Any S WHERE NOT X in_state S, X is IN(Affaire, CWUser)',
      '''SELECT DISTINCT S.cw_eid
 FROM cw_Affaire AS X, cw_State AS S
 WHERE (X.cw_in_state IS NULL OR X.cw_in_state!=S.cw_eid)
 INTERSECT
 SELECT DISTINCT S.cw_eid
-FROM cw_EUser AS X, cw_State AS S
+FROM cw_CWUser AS X, cw_State AS S
 WHERE (X.cw_in_state IS NULL OR X.cw_in_state!=S.cw_eid)'''),
     ]
 
@@ -791,7 +791,7 @@ ORDER BY 4 DESC'''),
     ('Any X WHERE X is Affaire, S is Societe, EXISTS(X owned_by U OR (X concerne S?, S owned_by U))',
      '''SELECT X.cw_eid
 FROM cw_Affaire AS X
-WHERE EXISTS(SELECT 1 FROM owned_by_relation AS rel_owned_by0, cw_EUser AS U, cw_Affaire AS A LEFT OUTER JOIN concerne_relation AS rel_concerne1 ON (rel_concerne1.eid_from=A.cw_eid) LEFT OUTER JOIN cw_Societe AS S ON (rel_concerne1.eid_to=S.cw_eid), owned_by_relation AS rel_owned_by2 WHERE ((rel_owned_by0.eid_from=A.cw_eid AND rel_owned_by0.eid_to=U.cw_eid) OR (rel_owned_by2.eid_from=S.cw_eid AND rel_owned_by2.eid_to=U.cw_eid)) AND X.cw_eid=A.cw_eid)'''),
+WHERE EXISTS(SELECT 1 FROM owned_by_relation AS rel_owned_by0, cw_CWUser AS U, cw_Affaire AS A LEFT OUTER JOIN concerne_relation AS rel_concerne1 ON (rel_concerne1.eid_from=A.cw_eid) LEFT OUTER JOIN cw_Societe AS S ON (rel_concerne1.eid_to=S.cw_eid), owned_by_relation AS rel_owned_by2 WHERE ((rel_owned_by0.eid_from=A.cw_eid AND rel_owned_by0.eid_to=U.cw_eid) OR (rel_owned_by2.eid_from=S.cw_eid AND rel_owned_by2.eid_to=U.cw_eid)) AND X.cw_eid=A.cw_eid)'''),
 
     ('Any C,M WHERE C travaille G?, G evaluee M?, G is Societe',
      '''SELECT C.cw_eid, rel_evaluee1.eid_to
@@ -804,7 +804,7 @@ FROM cw_Personne AS C LEFT OUTER JOIN travaille_relation AS rel_travaille0 ON (r
      'F name "read", F require_group E, U in_group E)), U eid 1',
      '''SELECT A.cw_eid, rel_documented_by0.eid_to
 FROM cw_Affaire AS A LEFT OUTER JOIN documented_by_relation AS rel_documented_by0 ON (rel_documented_by0.eid_from=A.cw_eid)
-WHERE ((rel_documented_by0.eid_to IS NULL) OR (EXISTS(SELECT 1 FROM require_permission_relation AS rel_require_permission1, cw_EPermission AS F, require_group_relation AS rel_require_group2, in_group_relation AS rel_in_group3 WHERE rel_documented_by0.eid_to=rel_require_permission1.eid_from AND rel_require_permission1.eid_to=F.cw_eid AND F.cw_name=read AND rel_require_group2.eid_from=F.cw_eid AND rel_in_group3.eid_to=rel_require_group2.eid_to AND rel_in_group3.eid_from=1)))'''),
+WHERE ((rel_documented_by0.eid_to IS NULL) OR (EXISTS(SELECT 1 FROM require_permission_relation AS rel_require_permission1, cw_CWPermission AS F, require_group_relation AS rel_require_group2, in_group_relation AS rel_in_group3 WHERE rel_documented_by0.eid_to=rel_require_permission1.eid_from AND rel_require_permission1.eid_to=F.cw_eid AND F.cw_name=read AND rel_require_group2.eid_from=F.cw_eid AND rel_in_group3.eid_to=rel_require_group2.eid_to AND rel_in_group3.eid_from=1)))'''),
 
     ("Any X WHERE X eid 12, P? connait X",
      '''SELECT X.cw_eid
@@ -818,7 +818,7 @@ WHERE X.cw_eid=12'''
     ('Any GN, TN ORDERBY GN WHERE T tags G?, T name TN, G name GN',
     '''SELECT _T0.C1, T.cw_name
 FROM cw_Tag AS T LEFT OUTER JOIN tags_relation AS rel_tags0 ON (rel_tags0.eid_from=T.cw_eid) LEFT OUTER JOIN (SELECT G.cw_eid AS C0, G.cw_name AS C1
-FROM cw_EGroup AS G
+FROM cw_CWGroup AS G
 UNION ALL
 SELECT G.cw_eid AS C0, G.cw_name AS C1
 FROM cw_State AS G
@@ -829,9 +829,9 @@ ORDER BY 1'''),
 
 
     # optional variable with additional restriction
-    ('Any T,G WHERE T tags G?, G name "hop", G is EGroup',
+    ('Any T,G WHERE T tags G?, G name "hop", G is CWGroup',
      '''SELECT T.cw_eid, G.cw_eid
-FROM cw_Tag AS T LEFT OUTER JOIN tags_relation AS rel_tags0 ON (rel_tags0.eid_from=T.cw_eid) LEFT OUTER JOIN cw_EGroup AS G ON (rel_tags0.eid_to=G.cw_eid AND G.cw_name=hop)'''),
+FROM cw_Tag AS T LEFT OUTER JOIN tags_relation AS rel_tags0 ON (rel_tags0.eid_from=T.cw_eid) LEFT OUTER JOIN cw_CWGroup AS G ON (rel_tags0.eid_to=G.cw_eid AND G.cw_name=hop)'''),
 
     # optional variable with additional invariant restriction
     ('Any T,G WHERE T tags G?, G eid 12',
@@ -839,33 +839,33 @@ FROM cw_Tag AS T LEFT OUTER JOIN tags_relation AS rel_tags0 ON (rel_tags0.eid_fr
 FROM cw_Tag AS T LEFT OUTER JOIN tags_relation AS rel_tags0 ON (rel_tags0.eid_from=T.cw_eid AND rel_tags0.eid_to=12)'''),
 
     # optional variable with additional restriction appearing before the relation
-    ('Any T,G WHERE G name "hop", T tags G?, G is EGroup',
+    ('Any T,G WHERE G name "hop", T tags G?, G is CWGroup',
      '''SELECT T.cw_eid, G.cw_eid
-FROM cw_Tag AS T LEFT OUTER JOIN tags_relation AS rel_tags0 ON (rel_tags0.eid_from=T.cw_eid) LEFT OUTER JOIN cw_EGroup AS G ON (rel_tags0.eid_to=G.cw_eid AND G.cw_name=hop)'''),
+FROM cw_Tag AS T LEFT OUTER JOIN tags_relation AS rel_tags0 ON (rel_tags0.eid_from=T.cw_eid) LEFT OUTER JOIN cw_CWGroup AS G ON (rel_tags0.eid_to=G.cw_eid AND G.cw_name=hop)'''),
 
     # optional variable with additional restriction on inlined relation
     # XXX the expected result should be as the query below. So what, raise BadRQLQuery ?
-    ('Any T,G,S WHERE T tags G?, G in_state S, S name "hop", G is EUser',
+    ('Any T,G,S WHERE T tags G?, G in_state S, S name "hop", G is CWUser',
      '''SELECT T.cw_eid, G.cw_eid, S.cw_eid
-FROM cw_State AS S, cw_Tag AS T LEFT OUTER JOIN tags_relation AS rel_tags0 ON (rel_tags0.eid_from=T.cw_eid) LEFT OUTER JOIN cw_EUser AS G ON (rel_tags0.eid_to=G.cw_eid)
+FROM cw_State AS S, cw_Tag AS T LEFT OUTER JOIN tags_relation AS rel_tags0 ON (rel_tags0.eid_from=T.cw_eid) LEFT OUTER JOIN cw_CWUser AS G ON (rel_tags0.eid_to=G.cw_eid)
 WHERE G.cw_in_state=S.cw_eid AND S.cw_name=hop
 '''),
 
     # optional variable with additional invariant restriction on an inlined relation
-    ('Any T,G,S WHERE T tags G, G in_state S?, S eid 1, G is EUser',
+    ('Any T,G,S WHERE T tags G, G in_state S?, S eid 1, G is CWUser',
      '''SELECT rel_tags0.eid_from, G.cw_eid, G.cw_in_state
-FROM cw_EUser AS G, tags_relation AS rel_tags0
+FROM cw_CWUser AS G, tags_relation AS rel_tags0
 WHERE rel_tags0.eid_to=G.cw_eid AND (G.cw_in_state=1 OR G.cw_in_state IS NULL)'''),
 
     # two optional variables with additional invariant restriction on an inlined relation
-    ('Any T,G,S WHERE T tags G?, G in_state S?, S eid 1, G is EUser',
+    ('Any T,G,S WHERE T tags G?, G in_state S?, S eid 1, G is CWUser',
      '''SELECT T.cw_eid, G.cw_eid, G.cw_in_state
-FROM cw_Tag AS T LEFT OUTER JOIN tags_relation AS rel_tags0 ON (rel_tags0.eid_from=T.cw_eid) LEFT OUTER JOIN cw_EUser AS G ON (rel_tags0.eid_to=G.cw_eid AND (G.cw_in_state=1 OR G.cw_in_state IS NULL))'''),
+FROM cw_Tag AS T LEFT OUTER JOIN tags_relation AS rel_tags0 ON (rel_tags0.eid_from=T.cw_eid) LEFT OUTER JOIN cw_CWUser AS G ON (rel_tags0.eid_to=G.cw_eid AND (G.cw_in_state=1 OR G.cw_in_state IS NULL))'''),
 
     # two optional variables with additional restriction on an inlined relation
-    ('Any T,G,S WHERE T tags G?, G in_state S?, S name "hop", G is EUser',
+    ('Any T,G,S WHERE T tags G?, G in_state S?, S name "hop", G is CWUser',
      '''SELECT T.cw_eid, G.cw_eid, S.cw_eid
-FROM cw_Tag AS T LEFT OUTER JOIN tags_relation AS rel_tags0 ON (rel_tags0.eid_from=T.cw_eid) LEFT OUTER JOIN cw_EUser AS G ON (rel_tags0.eid_to=G.cw_eid) LEFT OUTER JOIN cw_State AS S ON (G.cw_in_state=S.cw_eid AND S.cw_name=hop)'''),
+FROM cw_Tag AS T LEFT OUTER JOIN tags_relation AS rel_tags0 ON (rel_tags0.eid_from=T.cw_eid) LEFT OUTER JOIN cw_CWUser AS G ON (rel_tags0.eid_to=G.cw_eid) LEFT OUTER JOIN cw_State AS S ON (G.cw_in_state=S.cw_eid AND S.cw_name=hop)'''),
     
     # two optional variables with additional restriction on an ambigous inlined relation
     ('Any T,G,S WHERE T tags G?, G in_state S?, S name "hop"',
@@ -874,7 +874,7 @@ FROM cw_Tag AS T LEFT OUTER JOIN tags_relation AS rel_tags0 ON (rel_tags0.eid_fr
 FROM cw_Affaire AS G LEFT OUTER JOIN cw_State AS S ON (G.cw_in_state=S.cw_eid AND S.cw_name=hop) 
 UNION ALL
 SELECT G.cw_eid AS C0, S.cw_eid AS C1
-FROM cw_EUser AS G LEFT OUTER JOIN cw_State AS S ON (G.cw_in_state=S.cw_eid AND S.cw_name=hop) 
+FROM cw_CWUser AS G LEFT OUTER JOIN cw_State AS S ON (G.cw_in_state=S.cw_eid AND S.cw_name=hop) 
 UNION ALL
 SELECT G.cw_eid AS C0, S.cw_eid AS C1
 FROM cw_Note AS G LEFT OUTER JOIN cw_State AS S ON (G.cw_in_state=S.cw_eid AND S.cw_name=hop) ) AS _T0 ON (rel_tags0.eid_to=_T0.C0)'''),
@@ -1039,17 +1039,17 @@ WHERE N.cw_ecrit_par=P.cw_eid AND N.cw_eid=0'''),
 FROM cw_Note AS N, cw_Personne AS P
 WHERE (N.cw_ecrit_par IS NULL OR N.cw_ecrit_par!=P.cw_eid) AND N.cw_eid=512'''),
 
-    ('Any S,ES,T WHERE S state_of ET, ET name "EUser", ES allowed_transition T, T destination_state S',
+    ('Any S,ES,T WHERE S state_of ET, ET name "CWUser", ES allowed_transition T, T destination_state S',
      '''SELECT T.cw_destination_state, rel_allowed_transition1.eid_from, T.cw_eid
-FROM allowed_transition_relation AS rel_allowed_transition1, cw_EEType AS ET, cw_Transition AS T, state_of_relation AS rel_state_of0
-WHERE T.cw_destination_state=rel_state_of0.eid_from AND rel_state_of0.eid_to=ET.cw_eid AND ET.cw_name=EUser AND rel_allowed_transition1.eid_to=T.cw_eid'''),
+FROM allowed_transition_relation AS rel_allowed_transition1, cw_CWEType AS ET, cw_Transition AS T, state_of_relation AS rel_state_of0
+WHERE T.cw_destination_state=rel_state_of0.eid_from AND rel_state_of0.eid_to=ET.cw_eid AND ET.cw_name=CWUser AND rel_allowed_transition1.eid_to=T.cw_eid'''),
     ('Any O WHERE S eid 0, S in_state O',
      '''SELECT S.cw_in_state
 FROM cw_Affaire AS S
 WHERE S.cw_eid=0 AND S.cw_in_state IS NOT NULL
 UNION ALL
 SELECT S.cw_in_state
-FROM cw_EUser AS S
+FROM cw_CWUser AS S
 WHERE S.cw_eid=0 AND S.cw_in_state IS NOT NULL
 UNION ALL
 SELECT S.cw_in_state
@@ -1065,7 +1065,7 @@ FROM cw_Affaire AS X, cw_State AS S
 WHERE (X.cw_in_state IS NULL OR X.cw_in_state!=S.cw_eid)
 INTERSECT
 SELECT DISTINCT S.cw_name
-FROM cw_EUser AS X, cw_State AS S
+FROM cw_CWUser AS X, cw_State AS S
 WHERE (X.cw_in_state IS NULL OR X.cw_in_state!=S.cw_eid)
 INTERSECT
 SELECT DISTINCT S.cw_name
@@ -1171,11 +1171,11 @@ class PostgresSQLGeneratorTC(RQLGeneratorTC):
     def test1(self):
         self._checkall('Any count(RDEF) WHERE RDEF relation_type X, X eid %(x)s',
                        ("""SELECT COUNT(T1.C0) FROM (SELECT RDEF.cw_eid AS C0
-FROM cw_EFRDef AS RDEF
+FROM cw_CWAttribute AS RDEF
 WHERE RDEF.cw_relation_type=%(x)s
 UNION ALL
 SELECT RDEF.cw_eid AS C0
-FROM cw_ENFRDef AS RDEF
+FROM cw_CWRelation AS RDEF
 WHERE RDEF.cw_relation_type=%(x)s) AS T1""", {}),
                        )
 
@@ -1198,14 +1198,14 @@ FROM in_basket_relation AS rel_in_basket0
 WHERE rel_in_basket0.eid_to=12''')
 
     def test_varmap(self):
-        self._check('Any X,L WHERE X is EUser, X in_group G, X login L, G name "users"',
+        self._check('Any X,L WHERE X is CWUser, X in_group G, X login L, G name "users"',
                     '''SELECT T00.x, T00.l
-FROM T00, cw_EGroup AS G, in_group_relation AS rel_in_group0
+FROM T00, cw_CWGroup AS G, in_group_relation AS rel_in_group0
 WHERE rel_in_group0.eid_from=T00.x AND rel_in_group0.eid_to=G.cw_eid AND G.cw_name=users''',
                     varmap={'X': 'T00.x', 'X.login': 'T00.l'})
-        self._check('Any X,L,GN WHERE X is EUser, X in_group G, X login L, G name GN',
+        self._check('Any X,L,GN WHERE X is CWUser, X in_group G, X login L, G name GN',
                     '''SELECT T00.x, T00.l, G.cw_name
-FROM T00, cw_EGroup AS G, in_group_relation AS rel_in_group0
+FROM T00, cw_CWGroup AS G, in_group_relation AS rel_in_group0
 WHERE rel_in_group0.eid_from=T00.x AND rel_in_group0.eid_to=G.cw_eid''',
                     varmap={'X': 'T00.x', 'X.login': 'T00.l'})
 
@@ -1311,7 +1311,7 @@ FROM cw_Societe AS X)
 UNION ALL
 (SELECT X.cw_eid AS C0
 FROM cw_Affaire AS X
-WHERE ((EXISTS(SELECT 1 FROM owned_by_relation AS rel_owned_by0 WHERE rel_owned_by0.eid_from=X.cw_eid AND rel_owned_by0.eid_to=1)) OR (((EXISTS(SELECT 1 FROM cw_Affaire AS D LEFT OUTER JOIN concerne_relation AS rel_concerne1 ON (rel_concerne1.eid_from=D.cw_eid) LEFT OUTER JOIN cw_Note AS B ON (rel_concerne1.eid_to=B.cw_eid), owned_by_relation AS rel_owned_by2 WHERE rel_owned_by2.eid_from=B.cw_eid AND rel_owned_by2.eid_to=1 AND X.cw_eid=D.cw_eid)) OR (EXISTS(SELECT 1 FROM cw_Affaire AS F LEFT OUTER JOIN concerne_relation AS rel_concerne3 ON (rel_concerne3.eid_from=F.cw_eid) LEFT OUTER JOIN cw_Societe AS E ON (rel_concerne3.eid_to=E.cw_eid), owned_by_relation AS rel_owned_by4 WHERE rel_owned_by4.eid_from=E.cw_eid AND rel_owned_by4.eid_to=1 AND X.cw_eid=F.cw_eid))))))) AS _T0, cw_EEType AS ET, is_relation AS rel_is0
+WHERE ((EXISTS(SELECT 1 FROM owned_by_relation AS rel_owned_by0 WHERE rel_owned_by0.eid_from=X.cw_eid AND rel_owned_by0.eid_to=1)) OR (((EXISTS(SELECT 1 FROM cw_Affaire AS D LEFT OUTER JOIN concerne_relation AS rel_concerne1 ON (rel_concerne1.eid_from=D.cw_eid) LEFT OUTER JOIN cw_Note AS B ON (rel_concerne1.eid_to=B.cw_eid), owned_by_relation AS rel_owned_by2 WHERE rel_owned_by2.eid_from=B.cw_eid AND rel_owned_by2.eid_to=1 AND X.cw_eid=D.cw_eid)) OR (EXISTS(SELECT 1 FROM cw_Affaire AS F LEFT OUTER JOIN concerne_relation AS rel_concerne3 ON (rel_concerne3.eid_from=F.cw_eid) LEFT OUTER JOIN cw_Societe AS E ON (rel_concerne3.eid_to=E.cw_eid), owned_by_relation AS rel_owned_by4 WHERE rel_owned_by4.eid_from=E.cw_eid AND rel_owned_by4.eid_to=1 AND X.cw_eid=F.cw_eid))))))) AS _T0, cw_CWEType AS ET, is_relation AS rel_is0
 WHERE rel_is0.eid_from=_T0.C0 AND rel_is0.eid_to=ET.cw_eid
 GROUP BY ET.cw_name'''),
             )):
@@ -1389,9 +1389,9 @@ WHERE appears0.words @@ to_tsquery('default', 'hip&hop&momo') AND appears0.uid=X
 
 
     def test_from_clause_needed(self):
-        queries = [("Any 1 WHERE EXISTS(T is EGroup, T name 'managers')",
+        queries = [("Any 1 WHERE EXISTS(T is CWGroup, T name 'managers')",
                     '''SELECT 1
-WHERE EXISTS(SELECT 1 FROM cw_EGroup AS T WHERE T.cw_name=managers)'''),
+WHERE EXISTS(SELECT 1 FROM cw_CWGroup AS T WHERE T.cw_name=managers)'''),
                    ('Any X,Y WHERE NOT X created_by Y, X eid 5, Y eid 6',
                     '''SELECT 5, 6
 WHERE NOT EXISTS(SELECT 1 FROM created_by_relation AS rel_created_by0 WHERE rel_created_by0.eid_from=5 AND rel_created_by0.eid_to=6)'''),
@@ -1548,10 +1548,10 @@ class MySQLGenerator(PostgresSQLGeneratorTC):
         return sql.strip().replace(' ILIKE ', ' LIKE ')
 
     def test_from_clause_needed(self):
-        queries = [("Any 1 WHERE EXISTS(T is EGroup, T name 'managers')",
+        queries = [("Any 1 WHERE EXISTS(T is CWGroup, T name 'managers')",
                     '''SELECT 1
 FROM (SELECT 1) AS _T
-WHERE EXISTS(SELECT 1 FROM cw_EGroup AS T WHERE T.cw_name=managers)'''),
+WHERE EXISTS(SELECT 1 FROM cw_CWGroup AS T WHERE T.cw_name=managers)'''),
                    ('Any X,Y WHERE NOT X created_by Y, X eid 5, Y eid 6',
                     '''SELECT 5, 6
 FROM (SELECT 1) AS _T

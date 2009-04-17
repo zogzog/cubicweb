@@ -258,7 +258,7 @@ Mais encore :
     réponse 
   * `cursor()` retourne un curseur RQL sur la session
   * `execute(*args, **kwargs)`, raccourci vers .cursor().execute()
-  * `property_value(key)`, gestion des propriétés (`EProperty`)
+  * `property_value(key)`, gestion des propriétés (`CWProperty`)
   * le dictionaire `data` pour stocker des données pour partager de
     l'information entre les composants *durant l'éxécution de la requête*.
 

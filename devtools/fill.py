@@ -236,7 +236,7 @@ def insert_entity_queries(etype, schema, vreg, entity_num,
                         returns acceptable values for this attribute
     """
     # XXX HACK, remove or fix asap
-    if etype in (('String', 'Int', 'Float', 'Boolean', 'Date', 'EGroup', 'EUser')):
+    if etype in (('String', 'Int', 'Float', 'Boolean', 'Date', 'CWGroup', 'CWUser')):
         return []
     queries = []
     for index in xrange(entity_num):

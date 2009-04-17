@@ -155,7 +155,7 @@ class OneMonthCal(EntityView):
         task_max = 0
         for row in xrange(self.rset.rowcount):
             task = self.rset.get_entity(row, 0)
-            if len(self.rset[row]) > 1 and self.rset.description[row][1] == 'EUser':
+            if len(self.rset[row]) > 1 and self.rset.description[row][1] == 'CWUser':
                 user = self.rset.get_entity(row, 1)
             else:
                 user = None

@@ -4,11 +4,11 @@ class Salesterm(EntityType):
     
 class tags(RelationDefinition):
     subject = 'Tag'
-    object = ('BlogEntry', 'EUser')
+    object = ('BlogEntry', 'CWUser')
 
 class checked_by(RelationType):
     subject = 'BlogEntry'
-    object = 'EUser'
+    object = 'CWUser'
     cardinality = '?*'
     permissions = {
         'add': ('managers',),

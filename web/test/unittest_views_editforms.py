@@ -9,19 +9,19 @@ def rbc(entity, category):
 class AutomaticEntityFormTC(EnvBasedTC):
 
     def test_custom_widget(self):
-        AEF.rwidgets.set_rtag(AutoCompletionWidget, 'login', 'subject', 'EUser')
+        AEF.rwidgets.set_rtag(AutoCompletionWidget, 'login', 'subject', 'CWUser')
         form = self.vreg.select_object('forms', 'edition', self.request(), None,
                                        entity=self.user())
         field = form.field_by_name('login')
         self.assertIsInstance(field.widget, AutoCompletionWidget)
-        AEF.rwidgets.del_rtag('login', 'subject', 'EUser')
+        AEF.rwidgets.del_rtag('login', 'subject', 'CWUser')
         
 
     def test_euser_relations_by_category(self):
         #for (rtype, role, stype, otype), tag in AEF.rcategories._tagdefs.items():
         #    if rtype == 'tags':
         #        print rtype, role, stype, otype, ':', tag
-        e = self.etype_instance('EUser')
+        e = self.etype_instance('CWUser')
         # see custom configuration in views.euser
         self.assertEquals(rbc(e, 'primary'),
                           [('login', 'subject'),
@@ -48,7 +48,7 @@ class AutomaticEntityFormTC(EnvBasedTC):
                                ('connait', 'subject'),
                                ('checked_by', 'object'),
                                ])
-        # owned_by is defined both as subject and object relations on EUser
+        # owned_by is defined both as subject and object relations on CWUser
         self.assertListEquals(rbc(e, 'generated'),
                               [('has_text', 'subject'),
                                ('identity', 'subject'),
@@ -63,8 +63,8 @@ class AutomaticEntityFormTC(EnvBasedTC):
                                ])
 
     def test_inlined_view(self):
-        self.failUnless(AEF.rinlined.etype_rtag('EUser', 'use_email', 'subject'))
-        self.failIf(AEF.rinlined.etype_rtag('EUser', 'primary_email', 'subject'))
+        self.failUnless(AEF.rinlined.etype_rtag('CWUser', 'use_email', 'subject'))
+        self.failIf(AEF.rinlined.etype_rtag('CWUser', 'primary_email', 'subject'))
         
     def test_personne_relations_by_category(self):
         e = self.etype_instance('Personne')
@@ -105,7 +105,7 @@ class AutomaticEntityFormTC(EnvBasedTC):
                                ])
         
     def test_edition_form(self):
-        rset = self.execute('EUser X LIMIT 1')
+        rset = self.execute('CWUser X LIMIT 1')
         form = self.vreg.select_object('forms', 'edition', rset.req, rset,
                                        row=0, col=0)
         # should be also selectable by specifying entity
@@ -116,36 +116,36 @@ class AutomaticEntityFormTC(EnvBasedTC):
         
 class FormViewsTC(WebTest):
     def test_delete_conf_formview(self):
-        rset = self.execute('EGroup X')
+        rset = self.execute('CWGroup X')
         self.view('deleteconf', rset, template=None).source
         
     def test_automatic_edition_formview(self):
-        rset = self.execute('EUser X')
+        rset = self.execute('CWUser X')
         self.view('edition', rset, row=0, template=None).source
         
     def test_automatic_edition_formview(self):
-        rset = self.execute('EUser X')
+        rset = self.execute('CWUser X')
         self.view('copy', rset, row=0, template=None).source
         
     def test_automatic_creation_formview(self):
-        self.view('creation', None, etype='EUser', template=None).source
+        self.view('creation', None, etype='CWUser', template=None).source
         
     def test_automatic_muledit_formview(self):
-        rset = self.execute('EUser X')
+        rset = self.execute('CWUser X')
         self.view('muledit', rset, template=None).source
         
     def test_automatic_reledit_formview(self):
-        rset = self.execute('EUser X')
+        rset = self.execute('CWUser X')
         self.view('reledit', rset, row=0, rtype='login', template=None).source
         
     def test_automatic_inline_edit_formview(self):
-        geid = self.execute('EGroup X LIMIT 1')[0][0]
-        rset = self.execute('EUser X LIMIT 1')
+        geid = self.execute('CWGroup X LIMIT 1')[0][0]
+        rset = self.execute('CWUser X LIMIT 1')
         self.view('inline-edition', rset, row=0, rtype='in_group', peid=geid, template=None).source
                               
     def test_automatic_inline_creation_formview(self):
-        geid = self.execute('EGroup X LIMIT 1')[0][0]
-        self.view('inline-creation', None, etype='EUser', rtype='in_group', peid=geid, template=None).source
+        geid = self.execute('CWGroup X LIMIT 1')[0][0]
+        self.view('inline-creation', None, etype='CWUser', rtype='in_group', peid=geid, template=None).source
 
         
 if __name__ == '__main__':

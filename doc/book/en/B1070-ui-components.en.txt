@@ -9,6 +9,6 @@ Component, VComponent
 ---------------------
 XXXFILLME
 
-EProperty
+CWProperty
 ---------
 XXXFILLME

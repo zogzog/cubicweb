@@ -180,7 +180,7 @@ class Repository(object):
             self.warning("set fs application'schema as bootstrap schema")
             config.bootstrap_cubes()
             self.set_bootstrap_schema(self.config.load_schema())
-            # need to load the Any and EUser entity types
+            # need to load the Any and CWUser entity types
             self.vreg.schema = self.schema
             etdirectory = join(CW_SOFTWARE_ROOT, 'entities')
             self.vreg.init_registration([etdirectory])
@@ -194,7 +194,7 @@ class Repository(object):
             config.bootstrap_cubes()
             self.set_schema(self.config.load_schema())
         if not config.creating:
-            if 'EProperty' in self.schema:
+            if 'CWProperty' in self.schema:
                 self.vreg.init_properties(self.properties())
             # call source's init method to complete their initialisation if
             # needed (for instance looking for persistent configuration using an
@@ -257,11 +257,13 @@ class Repository(object):
             except BadSchemaDefinition:
                 raise
             except Exception, ex:
+                import traceback
+                traceback.print_exc()
                 raise Exception('Is the database initialised ? (cause: %s)' % 
                                 (ex.args and ex.args[0].strip() or 'unknown')), \
                                 None, sys.exc_info()[-1]
             self.info('set the actual schema')
-            # XXX have to do this since EProperty isn't in the bootstrap schema
+            # XXX have to do this since CWProperty isn't in the bootstrap schema
             #     it'll be redone in set_schema
             self.set_bootstrap_schema(appschema)
             # 2.49 migration
@@ -269,7 +271,7 @@ class Repository(object):
                 session.set_pool()
                 if not 'template' in file(join(self.config.apphome, 'vc.conf')).read():
                     # remaning from cubicweb < 2.38...
-                    session.execute('DELETE EProperty X WHERE X pkey "system.version.template"')
+                    session.execute('DELETE CWProperty X WHERE X pkey "system.version.template"')
                     session.commit()
         finally:
             session.close()
@@ -383,10 +385,10 @@ class Repository(object):
         
     def authenticate_user(self, session, login, password):
         """validate login / password, raise AuthenticationError on failure
-        return associated EUser instance on success
+        return associated CWUser instance on success
         """
         for source in self.sources:
-            if source.support_entity('EUser'):
+            if source.support_entity('CWUser'):
                 try:
                     eid = source.authenticate(session, login, password)
                     break
@@ -401,8 +403,8 @@ class Repository(object):
         return euser
 
     def _build_user(self, session, eid):
-        """return a EUser entity for user with the given eid"""
-        cls = self.vreg.etype_class('EUser')
+        """return a CWUser entity for user with the given eid"""
+        cls = self.vreg.etype_class('CWUser')
         rql = cls.fetch_rql(session.user, ['X eid %(x)s'])
         rset = session.execute(rql, {'x': eid}, 'x')
         assert len(rset) == 1, rset
@@ -447,7 +449,7 @@ class Repository(object):
         session = self.internal_session()
         try:
             for pk, version in session.execute(
-                'Any K,V WHERE P is EProperty, P value V, P pkey K, '
+                'Any K,V WHERE P is CWProperty, P value V, P pkey K, '
                 'P pkey ~="system.version.%"', build_descr=False):
                 cube = pk.split('.')[-1]
                 # XXX cubicweb migration
@@ -484,7 +486,7 @@ class Repository(object):
         """return a result set containing system wide properties"""
         session = self.internal_session()
         try:
-            return session.execute('Any K,V WHERE P is EProperty,'
+            return session.execute('Any K,V WHERE P is CWProperty,'
                                    'P pkey K, P value V, NOT P for_user U',
                                    build_descr=False)
         finally:
@@ -499,12 +501,12 @@ class Repository(object):
         # for consistency, keep same error as unique check hook (although not required)
         errmsg = session._('the value "%s" is already used, use another one')
         try:
-            if (session.execute('EUser X WHERE X login %(login)s', {'login': login})
-                or session.execute('EUser X WHERE X use_email C, C address %(login)s',
+            if (session.execute('CWUser X WHERE X login %(login)s', {'login': login})
+                or session.execute('CWUser X WHERE X use_email C, C address %(login)s',
                                    {'login': login})):
                 raise ValidationError(None, {'login': errmsg % login})
             # we have to create the user
-            user = self.vreg.etype_class('EUser')(session, None)
+            user = self.vreg.etype_class('CWUser')(session, None)
             if isinstance(password, unicode):
                 # password should *always* be utf8 encoded
                 password = password.encode('UTF8')

@@ -1,2 +1,2 @@
-for etype in ('ERType', 'EFRDef', 'ENFRDef', 'EConstraint', 'EConstraintType'):
+for etype in ('CWRType', 'CWAttribute', 'CWRelation', 'CWConstraint', 'CWConstraintType'):
     synchronize_permissions(etype)

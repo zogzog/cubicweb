@@ -12,7 +12,7 @@ from cubicweb.web.views.actions import LogoutAction
 from google.appengine.api import users
 
 
-class GAEUserLink(UserLink):
+class GACWUserLink(UserLink):
 
     def anon_user_link(self):
         self.w(self.req._('anonymous'))
@@ -26,5 +26,5 @@ class GAELogoutAction(LogoutAction):
     
 def registration_callback(vreg):
     if hasattr(vreg.config, 'has_resource'):
-        vreg.register(GAEUserLink, clear=True)
+        vreg.register(GACWUserLink, clear=True)
         vreg.register(GAELogoutAction, clear=True)

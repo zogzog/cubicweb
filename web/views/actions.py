@@ -162,7 +162,7 @@ class ManagePermissionsAction(Action):
         if 'require_permission' in vreg.schema:
             cls.__select__ = (one_line_rset() & non_final_entity() &
                               (match_user_groups('managers')
-                               | relation_possible('require_permission', 'subject', 'EPermission',
+                               | relation_possible('require_permission', 'subject', 'CWPermission',
                                                    action='add')))
         return super(ManagePermissionsAction, cls).registered(vreg)
     

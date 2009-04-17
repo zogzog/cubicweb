@@ -177,7 +177,7 @@ class GAEBasedTC(TestCase):
         
     def create_user(self, login, groups=('users',), req=None):
         assert not self.config['use-google-auth']
-        user = self.add_entity('EUser', upassword=str(login), login=unicode(login))
+        user = self.add_entity('CWUser', upassword=str(login), login=unicode(login))
         cu = self.session.cursor()
         cu.execute('SET X in_group G WHERE X eid %%(x)s, G name IN(%s)'
                     % ','.join(repr(g) for g in groups),

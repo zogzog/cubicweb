@@ -22,19 +22,19 @@ from cubicweb.web.views.editforms import AutomaticEntityForm
 from cubicweb.web.views.boxes import EditBox
 
 
-AutomaticEntityForm.rcategories.set_rtag('primary', 'require_group', 'subject', 'EPermission')
+AutomaticEntityForm.rcategories.set_rtag('primary', 'require_group', 'subject', 'CWPermission')
 AutomaticEntityForm.rcategories.set_rtag('generated', 'final', 'subject', 'EEtype')
 AutomaticEntityForm.rcategories.set_rtag('generated', 'final', 'subject', 'ERtype')
-AutomaticEntityForm.rinlined.set_rtag(True, 'relation_type', 'subject', 'ENFRDef')
-AutomaticEntityForm.rinlined.set_rtag(True, 'from_entity', 'subject', 'ENFRDef')
-AutomaticEntityForm.rinlined.set_rtag(True, 'to_entity', 'subject', 'ENFRDef')
+AutomaticEntityForm.rinlined.set_rtag(True, 'relation_type', 'subject', 'CWRelation')
+AutomaticEntityForm.rinlined.set_rtag(True, 'from_entity', 'subject', 'CWRelation')
+AutomaticEntityForm.rinlined.set_rtag(True, 'to_entity', 'subject', 'CWRelation')
 AutomaticEntityForm.rwidgets.set_rtag('StringWidget', 'expression', 'subject', 'RQLExpression')
 
-EditBox.rmode.set_rtag('create', 'state_of', 'object', 'EEType')
-EditBox.rmode.set_rtag('create', 'transition_of', 'object', 'EEType')
-EditBox.rmode.set_rtag('create', 'relation_type', 'object', 'ERType')
-EditBox.rmode.set_rtag('link', 'from_entity', 'object', 'EEType')
-EditBox.rmode.set_rtag('link', 'to_entity', 'object', 'EEType')
+EditBox.rmode.set_rtag('create', 'state_of', 'object', 'CWEType')
+EditBox.rmode.set_rtag('create', 'transition_of', 'object', 'CWEType')
+EditBox.rmode.set_rtag('create', 'relation_type', 'object', 'CWRType')
+EditBox.rmode.set_rtag('link', 'from_entity', 'object', 'CWEType')
+EditBox.rmode.set_rtag('link', 'to_entity', 'object', 'CWEType')
 
 
 class ViewSchemaAction(Action):
@@ -58,35 +58,35 @@ class _SchemaEntityPrimaryView(baseviews.PrimaryView):
     def content_title(self, entity):
         return html_escape(entity.dc_long_title())
     
-class EETypePrimaryView(_SchemaEntityPrimaryView):
-    __select__ = implements('EEType')
+class CWETypePrimaryView(_SchemaEntityPrimaryView):
+    __select__ = implements('CWEType')
     skip_attrs = _SchemaEntityPrimaryView.skip_attrs + ('name', 'meta', 'final')
 
-class ERTypePrimaryView(_SchemaEntityPrimaryView):
-    __select__ = implements('ERType')
+class CWRTypePrimaryView(_SchemaEntityPrimaryView):
+    __select__ = implements('CWRType')
     skip_attrs = _SchemaEntityPrimaryView.skip_attrs + ('name', 'meta', 'final',
                                                         'symetric', 'inlined')
 
 class ErdefPrimaryView(_SchemaEntityPrimaryView):
-    __select__ = implements('EFRDef', 'ENFRDef')
+    __select__ = implements('CWAttribute', 'CWRelation')
     show_attr_label = True
 
-class EETypeOneLineView(baseviews.OneLineView):
-    __select__ = implements('EEType')
+class CWETypeOneLineView(baseviews.OneLineView):
+    __select__ = implements('CWEType')
     
     def cell_call(self, row, col, **kwargs):
         entity = self.entity(row, col)
         final = entity.final
         if final:
             self.w(u'<em class="finalentity">')
-        super(EETypeOneLineView, self).cell_call(row, col, **kwargs)
+        super(CWETypeOneLineView, self).cell_call(row, col, **kwargs)
         if final:
             self.w(u'</em>')
 
 
 # in memory schema views (yams class instances) ###############################
 
-class EETypeSchemaView(EETypePrimaryView):
+class CWETypeSchemaView(CWETypePrimaryView):
     id = 'eschema'
     title = _('in memory entity schema')
     main_related_section = False
@@ -94,7 +94,7 @@ class EETypeSchemaView(EETypePrimaryView):
                  'has_text',)
     
     def render_entity_attributes(self, entity, siderelations):
-        super(EETypeSchemaView, self).render_entity_attributes(entity, siderelations)
+        super(CWETypeSchemaView, self).render_entity_attributes(entity, siderelations)
         eschema = self.vreg.schema.eschema(entity.name)
         viewer = SchemaViewer(self.req)
         layout = viewer.visit_entityschema(eschema, skiprels=self.skip_rels)
@@ -105,13 +105,13 @@ class EETypeSchemaView(EETypePrimaryView):
                 html_escape(self.req._('graphical schema for %s') % entity.name)))
 
 
-class ERTypeSchemaView(ERTypePrimaryView):
+class CWRTypeSchemaView(CWRTypePrimaryView):
     id = 'eschema'
     title = _('in memory relation schema')
     main_related_section = False
 
     def render_entity_attributes(self, entity, siderelations):
-        super(ERTypeSchemaView, self).render_entity_attributes(entity, siderelations)
+        super(CWRTypeSchemaView, self).render_entity_attributes(entity, siderelations)
         rschema = self.vreg.schema.rschema(entity.name)
         viewer = SchemaViewer(self.req)
         layout = viewer.visit_relationschema(rschema)
@@ -125,7 +125,7 @@ class ERTypeSchemaView(ERTypePrimaryView):
 # schema images ###############################################################
 
 class ImageView(EntityView):
-    __select__ = implements('EEType')
+    __select__ = implements('CWEType')
     id = 'image'
     title = _('image')
 
@@ -210,10 +210,10 @@ class SchemaImageView(TmpFileViewMixin, StartupView):
         s2d.schema2dot(outputfile=tmpfile, visitor=visitor,
                        prophdlr=RestrictedSchemaDotPropsHandler(self.req))
 
-class EETypeSchemaImageView(TmpFileViewMixin, EntityView):
+class CWETypeSchemaImageView(TmpFileViewMixin, EntityView):
     id = 'eschemagraph'
     content_type = 'image/png'
-    __select__ = implements('EEType')
+    __select__ = implements('CWEType')
     skip_rels = ('owned_by', 'created_by', 'identity', 'is', 'is_instance_of')
     
     def _generate(self, tmpfile):
@@ -224,8 +224,8 @@ class EETypeSchemaImageView(TmpFileViewMixin, EntityView):
         s2d.schema2dot(outputfile=tmpfile, visitor=visitor,
                        prophdlr=RestrictedSchemaDotPropsHandler(self.req))
 
-class ERTypeSchemaImageView(EETypeSchemaImageView):
-    __select__ = implements('ERType')
+class CWRTypeSchemaImageView(CWETypeSchemaImageView):
+    __select__ = implements('CWRType')
     
     def _generate(self, tmpfile):
         """display schema information for an entity"""

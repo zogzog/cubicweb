@@ -80,7 +80,7 @@ class VRegistryTC(ViewSelectorTC):
                              [])
         
     def test_possible_views_one_egroup(self):
-        rset, req = self.env.get_rset_and_req('EGroup X WHERE X name "managers"')
+        rset, req = self.env.get_rset_and_req('CWGroup X WHERE X name "managers"')
         self.assertListEqual(self.pviews(req, rset),
                              [('csvexport', baseviews.CSVRsetView),
                               ('ecsvexport', baseviews.CSVEntityView),
@@ -102,7 +102,7 @@ class VRegistryTC(ViewSelectorTC):
                               ])
             
     def test_possible_views_multiple_egroups(self):
-        rset, req = self.env.get_rset_and_req('EGroup X')
+        rset, req = self.env.get_rset_and_req('CWGroup X')
         self.assertListEqual(self.pviews(req, rset),
                              [('csvexport', baseviews.CSVRsetView),
                               ('ecsvexport', baseviews.CSVEntityView),
@@ -155,7 +155,7 @@ class VRegistryTC(ViewSelectorTC):
                               ])
 
     def test_possible_views_multiple_eusers(self):
-        rset, req = self.env.get_rset_and_req('EUser X')
+        rset, req = self.env.get_rset_and_req('CWUser X')
         self.assertListEqual(self.pviews(req, rset),
                              [('csvexport', baseviews.CSVRsetView),
                               ('ecsvexport', baseviews.CSVEntityView),
@@ -165,7 +165,7 @@ class VRegistryTC(ViewSelectorTC):
                               ('list', baseviews.ListView),
                               ('oneline', baseviews.OneLineView),
                               ('owlabox', owl.OWLABOXView),
-                              ('primary', euser.EUserPrimaryView),
+                              ('primary', euser.CWUserPrimaryView),
                               ('rsetxml', baseviews.XMLRsetView),
                               ('rss', baseviews.RssView),
                               ('secondary', baseviews.SecondaryView),
@@ -173,7 +173,7 @@ class VRegistryTC(ViewSelectorTC):
                               ('table', tableview.TableView),
                               ('text', baseviews.TextView),
                               ('treeview', treeview.TreeView),
-                              ('vcard', vcard.VCardEUserView),
+                              ('vcard', vcard.VCardCWUserView),
                               ('xbel', xbel.XbelView),
                               ('xml', baseviews.XmlView),
                               ])
@@ -193,7 +193,7 @@ class VRegistryTC(ViewSelectorTC):
                               })
         
     def test_possible_actions_same_type_entities(self):
-        rset, req = self.env.get_rset_and_req('EGroup X')
+        rset, req = self.env.get_rset_and_req('CWGroup X')
         self.assertDictEqual(self.pactions(req, rset),
                              {'useractions': USERACTIONS,
                               'siteactions': SITEACTIONS,
@@ -217,7 +217,7 @@ class VRegistryTC(ViewSelectorTC):
                               'siteactions': SITEACTIONS})
         
     def test_possible_actions_eetype_euser_entity(self):
-        rset, req = self.env.get_rset_and_req('EEType X WHERE X name "EUser"')
+        rset, req = self.env.get_rset_and_req('CWEType X WHERE X name "CWUser"')
         self.assertDictEqual(self.pactions(req, rset),
                              {'useractions': USERACTIONS,
                               'siteactions': SITEACTIONS,
@@ -233,17 +233,17 @@ class VRegistryTC(ViewSelectorTC):
         rset = None
         req = self.request()
         # creation form
-        req.form['etype'] = 'EGroup'
+        req.form['etype'] = 'CWGroup'
         self.assertIsInstance(self.vreg.select_view('creation', req, rset),
                                   baseforms.CreationForm)
         del req.form['etype']
         # custom creation form
-        class EUserCreationForm(baseforms.CreationForm):
-            __select__ = specified_etype_implements('EUser')
-        self.vreg.register_vobject_class(EUserCreationForm)
-        req.form['etype'] = 'EUser'
+        class CWUserCreationForm(baseforms.CreationForm):
+            __select__ = specified_etype_implements('CWUser')
+        self.vreg.register_vobject_class(CWUserCreationForm)
+        req.form['etype'] = 'CWUser'
         self.assertIsInstance(self.vreg.select_view('creation', req, rset),
-                              EUserCreationForm)
+                              CWUserCreationForm)
             
     def test_select_view(self):
         # no entity
@@ -267,7 +267,7 @@ class VRegistryTC(ViewSelectorTC):
         self.failUnlessRaises(NoSelectableObject,
                              self.vreg.select_view, 'table', req, rset)
         # one entity
-        rset, req = self.env.get_rset_and_req('EGroup X WHERE X name "managers"')
+        rset, req = self.env.get_rset_and_req('CWGroup X WHERE X name "managers"')
         self.assertIsInstance(self.vreg.select_view('primary', req, rset),
                              baseviews.PrimaryView)
         self.assertIsInstance(self.vreg.select_view('list', req, rset),
@@ -281,7 +281,7 @@ class VRegistryTC(ViewSelectorTC):
         self.failUnlessRaises(NoSelectableObject,
                               self.vreg.select_view, 'index', req, rset)
         # list of entities of the same type
-        rset, req = self.env.get_rset_and_req('EGroup X')
+        rset, req = self.env.get_rset_and_req('CWGroup X')
         self.assertIsInstance(self.vreg.select_view('primary', req, rset),
                              baseviews.PrimaryView)
         self.assertIsInstance(self.vreg.select_view('list', req, rset),
@@ -317,7 +317,7 @@ class VRegistryTC(ViewSelectorTC):
         self.failUnlessRaises(NoSelectableObject,
                              self.vreg.select_view, 'edition', req, rset)
         # mixed query
-        rset, req = self.env.get_rset_and_req('Any U,G WHERE U is EUser, G is EGroup')
+        rset, req = self.env.get_rset_and_req('Any U,G WHERE U is CWUser, G is CWGroup')
         self.failUnlessRaises(NoSelectableObject,
                               self.vreg.select_view, 'edition', req, rset)
         self.failUnlessRaises(NoSelectableObject,
@@ -325,9 +325,9 @@ class VRegistryTC(ViewSelectorTC):
         self.assertIsInstance(self.vreg.select_view('table', req, rset),
                               tableview.TableView)
         # euser primary view priority
-        rset, req = self.env.get_rset_and_req('EUser X WHERE X login "admin"')
+        rset, req = self.env.get_rset_and_req('CWUser X WHERE X login "admin"')
         self.assertIsInstance(self.vreg.select_view('primary', req, rset),
-                             euser.EUserPrimaryView)
+                             euser.CWUserPrimaryView)
         self.assertIsInstance(self.vreg.select_view('text', req, rset),
                              baseviews.TextView)
 
@@ -367,9 +367,9 @@ class VRegistryTC(ViewSelectorTC):
     def test_form(self):
         for vid, rql, args in (
             #('creation', 'Any X WHERE X eid 999999', {}),
-            ('edition', 'EGroup X WHERE X name "managers"', {}),
-            ('copy', 'EGroup X WHERE X name "managers"', {}),
-            ('muledit', 'EGroup X', {}),
+            ('edition', 'CWGroup X WHERE X name "managers"', {}),
+            ('copy', 'CWGroup X WHERE X name "managers"', {}),
+            ('muledit', 'CWGroup X', {}),
             #('muledit', 'Any X', {}),
             ):
             self._test_view(vid, rql, args)
@@ -405,7 +405,7 @@ class VRegistryTC(ViewSelectorTC):
             self.create_user('john')
             self.login('john')
             # it should not be possible to use SomeAction not owned objects
-            rset, req = self.env.get_rset_and_req('Any G WHERE G is EGroup, G name "managers"')
+            rset, req = self.env.get_rset_and_req('Any G WHERE G is CWGroup, G name "managers"')
             self.failIf('foo' in self.pactions(req, rset))
             # insert a new card, and check that we can use SomeAction on our object
             self.execute('INSERT Card C: C title "zoubidou"')
@@ -420,33 +420,33 @@ class VRegistryTC(ViewSelectorTC):
             del self.vreg[SomeAction.__registry__][SomeAction.id]
 
 
-class EETypeRQLAction(Action):
+class CWETypeRQLAction(Action):
     id = 'testaction'
-    __select__ = implements('EEType') & rql_condition('X name "EEType"')
+    __select__ = implements('CWEType') & rql_condition('X name "CWEType"')
     title = 'bla'
 
 class RQLActionTC(ViewSelectorTC):
             
     def setUp(self):
         super(RQLActionTC, self).setUp()
-        self.vreg.register_vobject_class(EETypeRQLAction)
+        self.vreg.register_vobject_class(CWETypeRQLAction)
         
     def tearDown(self):
         super(RQLActionTC, self).tearDown()        
         del self.vreg._registries['actions']['testaction']
         
     def test(self):
-        rset, req = self.env.get_rset_and_req('EEType X WHERE X name "EEType"')
+        rset, req = self.env.get_rset_and_req('CWEType X WHERE X name "CWEType"')
         self.assertDictEqual(self.pactions(req, rset),
                              {'useractions': USERACTIONS,
                               'siteactions': SITEACTIONS,
                               'mainactions': [('edit', actions.ModifyAction)],
                               'moreactions': [('delete', actions.DeleteAction),
                                               ('copy', actions.CopyAction),
-                                              ('testaction', EETypeRQLAction),
+                                              ('testaction', CWETypeRQLAction),
                                               ('managepermission', actions.ManagePermissionsAction)],
                               })
-        rset, req = self.env.get_rset_and_req('EEType X WHERE X name "ERType"')
+        rset, req = self.env.get_rset_and_req('CWEType X WHERE X name "CWRType"')
         self.assertDictEqual(self.pactions(req, rset),
                              {'useractions': USERACTIONS,
                               'siteactions': SITEACTIONS,
