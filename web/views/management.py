@@ -1,4 +1,4 @@
-"""management and error screens
+"""security management and error screens
 
 
 :organization: Logilab
@@ -12,26 +12,15 @@ from logilab.mtconverter import html_escape
 from cubicweb.selectors import yes, none_rset, match_user_groups
 from cubicweb.view import AnyRsetView, StartupView, EntityView
 from cubicweb.common.uilib import html_traceback, rest_traceback
-from cubicweb.web import INTERNAL_FIELD_VALUE, eid_param, stdmsgs
-from cubicweb.web.widgets import StaticComboBoxWidget
+from cubicweb.web import formwidgets
+from cubicweb.web.form import FieldsForm, EntityFieldsForm
+from cubicweb.web.formfields import guess_field
+from cubicweb.web.formrenderers import HTableFormRenderer
 
 _ = unicode
 
 SUBMIT_MSGID = _('Submit bug report')
 MAIL_SUBMIT_MSGID = _('Submit bug report by mail')
-
-def begin_form(w, entity, redirectvid, redirectpath=None, msg=None):
-    w(u'<form method="post" action="%s">\n' % entity.req.build_url('edit'))
-    w(u'<fieldset>\n')
-    w(u'<input type="hidden" name="__redirectvid" value="%s"/>\n' % redirectvid)
-    w(u'<input type="hidden" name="__redirectpath" value="%s"/>\n' % (
-        html_escape(redirectpath or entity.rest_path())))
-    w(u'<input type="hidden" name="eid" value="%s"/>\n' % entity.eid)
-    w(u'<input type="hidden" name="%s" value="%s"/>\n' % (
-        eid_param('__type', entity.eid), entity.e_schema))
-    if msg:
-        w(u'<input type="hidden" name="__message" value="%s"/>\n'
-          % html_escape(msg))
 
 
 class SecurityManagementView(EntityView):
@@ -89,15 +78,14 @@ class SecurityManagementView(EntityView):
 
     def owned_by_edit_form(self, entity):
         self.w('<h3>%s</h3>' % self.req._('ownership'))
-        begin_form(self.w, entity, 'security', msg= _('ownerships have been changed'))
-        self.w(u'<table border="0">\n')
-        self.w(u'<tr><td>\n')
-        wdg = entity.get_widget('owned_by')
-        self.w(wdg.edit_render(entity))
-        self.w(u'</td><td>\n')
-        self.w(self.button_ok())
-        self.w(u'</td></tr>\n</table>\n')
-        self.w(u'</fieldset></form>\n')
+        msg = self.req._('ownerships have been changed')
+        form = EntityFieldsForm(self.req, None, entity=entity, submitmsg=msg,
+                                form_buttons=[formwidgets.SubmitButton()],
+                                __redirectvid='security',
+                                __redirectpath=entity.rest_path())
+        field = guess_field(entity.__class__, self.schema.rschema('owned_by'))
+        form.append_field(field)                          
+        self.w(form.form_render())
 
     def owned_by_information(self, entity):
         ownersrset = entity.related('owned_by')
@@ -147,32 +135,24 @@ class SecurityManagementView(EntityView):
         newperm = self.vreg.etype_class('CWPermission')(self.req, None)
         newperm.eid = self.req.varmaker.next()
         w(u'<p>%s</p>' % _('add a new permission'))
-        begin_form(w, newperm, 'security', entity.rest_path())
-        w(u'<input type="hidden" name="%s" value="%s"/>'
-          % (eid_param('edito-require_permission', newperm.eid), INTERNAL_FIELD_VALUE))
-        w(u'<input type="hidden" name="%s" value="%s"/>'
-          % (eid_param('require_permission', newperm.eid), entity.eid))
-        w(u'<table border="0">\n')
-        w(u'<tr><th>%s</th><th>%s</th><th>%s</th><th>&nbsp;</th></tr>\n'
-               % (_("name"), _("label"), _('granted to groups')))
-        if getattr(entity, '__permissions__', None):
-            wdg = StaticComboBoxWidget(self.vreg, self.schema['CWPermission'],
-                                       self.schema['name'], self.schema['String'],
-                                       vocabfunc=lambda x: entity.__permissions__)
+        form = EntityFieldsForm(self.req, None, entity=newperm, 
+                                form_buttons=[formwidgets.SubmitButton()],
+                                __redirectvid='security',
+                                __redirectpath=entity.rest_path())
+        form.form_add_hidden('require_permission', entity.eid, role='object', eidparam=True)
+        permnames = getattr(entity, '__permissions__', None)
+        if permnames is not None:
+            field = guess_field(newperm.__class__, self.schema.rschema('name'),
+                                widget=formwidgets.Select, choices=permnames)
         else:
-            wdg = newperm.get_widget('name')
-        w(u'<tr><td>%s</td>\n' % wdg.edit_render(newperm))
-        wdg = newperm.get_widget('label')
-        w(u'<td>%s</td>\n' % wdg.edit_render(newperm))
-        wdg = newperm.get_widget('require_group')
-        w(u'<td>%s</td>\n' % wdg.edit_render(newperm))
-        w(u'<td>%s</td></tr>\n' % self.button_ok())
-        w(u'</table>')
-        w(u'</fieldset></form>\n')
+            field = guess_field(newperm.__class__, self.schema.rschema('name'))
+        form.append_field(field)
+        field = guess_field(newperm.__class__, self.schema.rschema('label'))
+        form.append_field(field)
+        field = guess_field(newperm.__class__, self.schema.rschema('require_group'))
+        form.append_field(field)
+        self.w(form.form_render(renderer=HTableFormRenderer()))
 
-    def button_ok(self):
-        return (u'<input class="validateButton" type="submit" name="submit" value="%s"/>'
-                % self.req._(stdmsgs.BUTTON_OK))
 
 
 class ErrorView(AnyRsetView):
@@ -233,12 +213,12 @@ class ErrorView(AnyRsetView):
             form.form_add_hidden('description', binfo)
             form.form_add_hidden('__bugreporting', '1')
             if submitmail:
-                form.form_buttons = [SubmitButton(MAIL_SUBMIT_MSGID)]
+                form.form_buttons = [formwidgets.SubmitButton(MAIL_SUBMIT_MSGID)]
                 form.action = req.build_url('reportbug')
                 w(form.form_render())
             if submiturl:
                 form.form_add_hidden('description_format', 'text/rest')
-                form.form_buttons = [SubmitButton(SUBMIT_MSGID)]
+                form.form_buttons = [formwidgets.SubmitButton(SUBMIT_MSGID)]
                 form.action = submiturl
                 w(form.form_render())
 
