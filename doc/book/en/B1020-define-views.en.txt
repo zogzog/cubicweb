@@ -97,7 +97,7 @@ compute scores is in ``cubicweb.vregistry.vreq``.
 
 Registerer
 ``````````
-[Registerers are deprecated: they will soon disappear for explicite 
+[Registerers are deprecated: they will soon disappear for explicit 
 registration...] 
 
 A view is also customizable through its attribute ``__registerer__``.
