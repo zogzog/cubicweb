@@ -6,7 +6,9 @@ Entity type definition
 An entity type is defined by a Python class which inherits from `EntityType`.
 The class definition contains the description of attributes and relations
 for the defined entity type.
-The class name corresponds to the entity type name.
+The class name corresponds to the entity type name. It is exepected to be
+defined in the module ``mycube.schema``.
+
 
 For example ::
 

@@ -13,6 +13,8 @@ We'll start with a description of the interface providing you with a basic
 understanding of the classes and methods available, then detail the view
 selection principle which makes `CubicWeb` web interface very flexible.
 
+A `View` is an object applied to another object such as an entity.
+
 Basic class for views
 ---------------------
 

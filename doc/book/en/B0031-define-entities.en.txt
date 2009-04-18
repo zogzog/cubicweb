@@ -133,7 +133,7 @@ form of its content. The algorithm is as follows:
 The method ``filterform_vocabulary(rtype, x, var, rqlst, args, cachekey)`` takes 
 the name of a relation and the target as parameters,
 [XXX what does it mean ?]
- which indicates of the
+which indicates of the
 entity on which we apply the method is subject or object of the relation. It
 has to return:
 

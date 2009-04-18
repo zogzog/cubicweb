@@ -145,9 +145,15 @@ HOW TO
 
   It depends on what has been modified in the schema.
 
-  * Update of a non final relation.
+  * Update of an attribute permissions and properties: 
+    ``synchronize_eschema('MyEntity')``.
 
-  * Update of a final relation.
+  * Update of a relation permissions and properties: 
+    ``synchronize_rschema('MyRelation')``.
+
+  * Add an attribute: ``add_attribute('MyEntityType', 'myattr')``.
+
+  * Add a relation: ``add_relation_definition('SubjRelation', 'MyRelation', 'ObjRelation')``.
 
 
 * How to create an anonymous user?
@@ -164,8 +170,15 @@ HOW TO
     anonymous-password=anon
 
   You also must ensure that this `anon` user is a registered user of
-  the DB backend. This could be the admin account (for development
+  the DB backend. If not, you can create through the administation
+  interface of your instance by adding a user with the role `guests`.
+  This could be the admin account (for development
   purposes, of course).
+
+.. note::
+    While creating a new instance, you can decide to allow access
+    to anonymous user, which will automatically execute what is
+    decribed above.
 
 
 * How to change the application logo?
@@ -225,3 +238,13 @@ HOW TO
   This will yield additional WARNINGs, like this: ::
 
     2009-01-09 16:43:52 - (cubicweb.selectors) WARNING: selector one_line_rset returned 0 for <class 'cubicweb.web.views.basecomponents.WFHistoryVComponent'>
+
+* How to format an entity date attribute?
+
+  If your schema has an attribute of type Date or Datetime, you might
+  want to format it. First, you should define your preferred format using
+  the site configuration panel ``http://appurl/view?vid=systemepropertiesform``
+  and then set ``ui.date`` and/or ``ui.datetime``.
+  Then in the view code, use::
+    
+    self.format_date(entity.date_attribute)
