@@ -18,8 +18,7 @@ function loadAjaxHtmlHead(node) {
     jQuery(node).find('div.ajaxHtmlHead').appendTo(jQuery('head'));
 }
 
-function postAjaxLoad(node, req) {
-    // addStylesheets(evalJSON(req.getResponseHeader('X-Cubicweb-Stylesheets') || '[]'));
+function postAjaxLoad(node) {
     loadAjaxHtmlHead(node);
     // find sortable tables if there are some
     if (typeof(Sortable) != 'undefined') {
@@ -71,7 +70,7 @@ jQuery.fn.loadxhtml = function(url, data, reqtype, mode) {
 	} else if (mode == 'append') {
 	    jQuery(node).append(domnode);
 	}
-	postAjaxLoad(node, req);
+	postAjaxLoad(node);
 	while (jQuery.isFunction(callback)) {
 	    callback = callback.apply(this, [domnode]);
 	}
