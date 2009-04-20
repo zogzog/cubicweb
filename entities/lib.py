@@ -139,20 +139,6 @@ class Bookmark(AnyEntity):
     def action_url(self):
         return self.absolute_url() + '/follow'
 
-
-class Card(AnyEntity):
-    """customized class for Card entities"""
-    id = 'Card'
-    rest_attr = 'wikiid'
-    
-    fetch_attrs, fetch_order = fetch_config(['title'])
-
-    def dc_title(self):
-        return self.title
-
-    def dc_description(self, format='text/plain'):
-        return self.synopsis or u''
-
 class ECache(AnyEntity):
     """Cache"""
     id = 'ECache'
