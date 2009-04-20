@@ -206,8 +206,8 @@ class FormMixIn(object):
 ###############################################################################
 
 class metafieldsform(type):
-    """metaclass for FieldsForm to retreive fields defined as class attribute
-    and put them into a single ordered list, '_fields_'.
+    """metaclass for FieldsForm to retrieve fields defined as class attributes
+    and put them into a single ordered list: '_fields_'.
     """
     def __new__(mcs, name, bases, classdict):
         allfields = []
@@ -255,13 +255,13 @@ class FieldsForm(FormMixIn, AppRsetObject):
     def __init__(self, req, rset=None, row=None, col=None, submitmsg=None,
                  **kwargs):
         super(FieldsForm, self).__init__(req, rset, row=row, col=col)
+        self.fields = list(self.__class__._fields_)
         for key, val in kwargs.items():
             if key in NAV_FORM_PARAMETERS:
                 self.form_add_hidden(key, val)
             else:
                 assert hasattr(self.__class__, key) and not key[0] == '_', key
                 setattr(self, key, val)
-        self.fields = list(self.__class__._fields_)
         if self.set_error_url:
             self.form_add_hidden('__errorurl', req.url())
         if self.copy_nav_params:
@@ -317,7 +317,7 @@ class FieldsForm(FormMixIn, AppRsetObject):
             # by default, hidden input don't set id attribute. If one is
             # explicitly specified, ensure it will be set
             field.widget.setdomid = True
-        self.fields.append(field)
+        self.append_field(field)
         return field
     
     def add_media(self):
