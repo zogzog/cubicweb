@@ -1388,7 +1388,7 @@ class TermsFiltererVisitor(object):
             return False
         if not same_scope(var):
             return False
-        if any(v for v, _ in var.stinfo['attrvars'] if not v.name in variables):
+        if any(v for v, _ in var.stinfo['attrvars'] if not v in terms):
             return False
         return True
         

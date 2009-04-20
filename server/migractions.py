@@ -765,7 +765,7 @@ class ServerMigrationHelper(MigrationHelper):
             self.commit()
         
     def cmd_sync_schema_props_perms(self, ertype=None, syncperms=True,
-                                    syncprops=True, syncrdefs=True, commit=True)
+                                    syncprops=True, syncrdefs=True, commit=True):
         """synchronize the persistent schema against the current definition
         schema.
         

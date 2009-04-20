@@ -213,7 +213,8 @@ repository.',
         cu = session.pool[self.uri]
         if attrs is None:
             attrs = self.sqladapter.preprocess_entity(entity)
-        sql = self.sqladapter.sqlgen.update(SQL_PREFIX + str(entity.e_schema), attrs, ['eid'])
+        sql = self.sqladapter.sqlgen.update(SQL_PREFIX + str(entity.e_schema), attrs,
+                                            [SQL_PREFIX + 'eid'])
         cu.execute(sql, attrs)
         
     def update_entity(self, session, entity):
