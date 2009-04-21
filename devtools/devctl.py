@@ -9,7 +9,7 @@ __docformat__ = "restructuredtext en"
 
 import sys
 from datetime import datetime
-from os import mkdir, chdir, listdir
+from os import mkdir, chdir
 from os.path import join, exists, abspath, basename, normpath, split, isdir
 
 
@@ -143,7 +143,7 @@ def _generate_schema_pot(w, vreg, schema, libschema=None, cube=None):
             add_msg(w, rschema.description)
     w('# add related box generated message\n')
     w('\n')
-    actionbox = self.vreg['actions']['edit_box'][0]
+    actionbox = vreg['boxes']['edit_box'][0]
     for eschema in schema.entities():
         if eschema.is_final():
             continue
