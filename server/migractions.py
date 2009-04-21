@@ -406,8 +406,7 @@ class ServerMigrationHelper(MigrationHelper):
                 for obj in objtypes:
                     if not reporschema.has_rdef(subj, obj):
                         continue
-                    self._synchronize_rdef_schema(subj, rschema, obj,
-                                                     commit=False)
+                    self._synchronize_rdef_schema(subj, rschema, obj)
         if syncperms:
             self._synchronize_permissions(etype)
 
