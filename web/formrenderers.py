@@ -171,17 +171,17 @@ class FormRenderer(object):
         return fields
     
     def _render_fields(self, fields, w, form):
-        w(u'<table class="attributeForm" style="width:100%;">')
+        w(u'<table class="attributeForm">')
         for field in fields:
             w(u'<tr>')
             if self.display_label:
                 w(u'<th class="labelCol">%s</th>' % self.render_label(form, field))
             error = form.form_field_error(field)
             if error:
-                w(u'<td class="error" style="width:100%;">')
+                w(u'<td class="error">')
                 w(error)
             else:
-                w(u'<td style="width:100%;">')
+                w(u'<td>')
             w(field.render(form, self))
             if self.display_help:
                 w(self.render_help(form, field))
