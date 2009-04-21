@@ -25,7 +25,7 @@ class AnyEntity(Entity):
     """
     id = 'Any'                    
     __implements__ = (IBreadCrumbs, IFeed)
-    
+
     @classmethod
     def selected(cls, etype):
         """the special Any entity is used as the default factory, so

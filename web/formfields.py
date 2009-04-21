@@ -250,7 +250,7 @@ class RichTextField(TextField):
             result = u''
         return result + self.get_widget(form).render(form, self)
 
-    
+
 class FileField(StringField):
     widget = FileInput
     needs_multipart = True
