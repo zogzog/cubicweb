@@ -146,7 +146,7 @@ class PrimaryView(EntityView):
         """
         return []
     
-    def cell_call(self, row, col):        
+    def cell_call(self, row, col):
         self.row = row
         # XXX move render_entity implementation here
         self.render_entity(self.complete_entity(row, col))
@@ -170,7 +170,7 @@ class PrimaryView(EntityView):
         self.w(u'<div class="primaryRight">')
         self.render_side_related(entity, siderelations)
         self.w(u'</div>')
-        self.w(u'<div class="clear"></div>')          
+        self.w(u'<div class="clear"></div>')
         self.content_navigation_components('navcontentbottom')
 
     def content_navigation_components(self, context):
