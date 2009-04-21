@@ -296,10 +296,3 @@ class NormalizedTextView(ContentAddedMixIn, NotificationView):
         return  u'%s #%s (%s)' % (self.req.__('New %s' % entity.e_schema),
                                   entity.eid, self.user_login())
 
-
-class CardAddedView(NormalizedTextView):
-    """get notified from new cards"""
-    accepts = ('Card',)
-    content_attr = 'synopsis'
-    
-

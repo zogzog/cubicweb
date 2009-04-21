@@ -877,8 +877,8 @@ class CubicWebSchemaLoader(BootstrapSchemaLoader):
     def _load_definition_files(self, cubes):
         for filepath in (self.include_schema_files('bootstrap')
                          + self.include_schema_files('base')
-                         + self.include_schema_files('Bookmark')
-                         + self.include_schema_files('Card')):
+                         + self.include_schema_files('Bookmark')):
+#                         + self.include_schema_files('Card')):
             self.info('loading %s', filepath)
             self.handle_file(filepath)
         for cube in cubes:
