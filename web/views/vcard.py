@@ -49,4 +49,4 @@ class VCardCWUserView(EntityView):
             w(u'EMAIL;TYPE=INTERNET:%s\n' % email.address)
 
 from logilab.common.deprecation import class_renamed
-VCardEuserView = class_renamed('VCardEuserView', VCardCWUserView)
+VCardEuserView = VCardEUserView = class_renamed('VCardEuserView', VCardCWUserView)
