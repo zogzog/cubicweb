@@ -734,11 +734,7 @@ class RssItemView(EntityView):
            
     def render_entity_creator(self, entity):
         if entity.creator:
-            email = entity.creator.get_email()
-            if email:
-                self._marker('author', email + ' (%s)' %  entity.creator.name())
-            else:
-                self._marker('dc:creator', entity.creator.name())
+            self._marker('dc:creator', entity.creator.name())
        
                 
     def _marker(self, marker, value):
