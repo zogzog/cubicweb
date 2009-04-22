@@ -690,10 +690,9 @@ class RssView(XmlView):
         req = self.req
         self.w(u'<?xml version="1.0" encoding="%s"?>\n' % req.encoding)
         self.w(u'''<rss version="2.0"
- xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
  xmlns:dc="http://purl.org/dc/elements/1.1/"
->''')
-        self.w(u'  <channel rdf:about="%s">\n' % html_escape(req.url()))
+>\n''')
+        self.w(u'  <channel>\n')
         self.w(u'    <title>%s RSS Feed</title>\n' % html_escape(self.page_title()))
         self.w(u'    <description>%s</description>\n' % html_escape(req.form.get('vtitle', '')))
         params = req.form.copy()
@@ -721,7 +720,8 @@ class RssItemView(EntityView):
 
     def cell_call(self, row, col):
         entity = self.complete_entity(row, col)
-        self.w(u'<item rdf:about="%s">\n' % html_escape(entity.absolute_url()))
+        self.w(u'<item>\n')
+        self.w(u'<guid isPermaLink="true">%s</guid>\n' % html_escape(entity.absolute_url()))
         self.render_title_link(entity)
         self._marker('description', html_escape(entity.dc_description()))
         self._marker('dc:date', entity.dc_date(self.date_format))
