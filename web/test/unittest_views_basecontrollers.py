@@ -11,7 +11,7 @@ from cubicweb.common import ValidationError
 from cubicweb.common.uilib import rql_for_eid
 
 from cubicweb.web import INTERNAL_FIELD_VALUE, Redirect, RequestError
-from cubicweb.web.views.basecontrollers import xmlize
+from cubicweb.web.views.basecontrollers import xhtml_wrap
 
 from cubicweb.entities.authobjs import CWUser
 
@@ -20,25 +20,25 @@ class EditControllerTC(ControllerTC):
     def setUp(self):
         ControllerTC.setUp(self)
         self.failUnless('users' in self.schema.eschema('CWGroup').get_groups('read'))
-        
+
     def tearDown(self):
         ControllerTC.tearDown(self)
         self.failUnless('users' in self.schema.eschema('CWGroup').get_groups('read'))
-        
+
     def test_noparam_edit(self):
         """check behaviour of this controller without any form parameter
         """
-        
+
         self.req.form = {}
         self.assertRaises(ValidationError, self.publish, self.req)
-        
+
     def test_validation_unique(self):
         """test creation of two linked entities
-        """        
+        """
         user = self.user()
         self.req.form = {'eid': 'X', '__type:X': 'CWUser',
-                         'login:X': u'admin', 'edits-login:X': u'', 
-                         'upassword:X': u'toto', 'upassword-confirm:X': u'toto', 'edits-upassword:X': u'', 
+                         'login:X': u'admin', 'edits-login:X': u'',
+                         'upassword:X': u'toto', 'upassword-confirm:X': u'toto', 'edits-upassword:X': u'',
                          }
         self.assertRaises(ValidationError, self.publish, self.req)
 
@@ -117,23 +117,23 @@ class EditControllerTC(ControllerTC):
         self.assertEquals([g.eid for g in e.in_group], groupeids)
         stateeids = [eid for eid, in self.execute('State S WHERE S name "activated"')]
         self.assertEquals([s.eid for s in e.in_state], stateeids)
-        
-        
+
+
     def test_create_multiple_linked(self):
         gueid = self.execute('CWGroup G WHERE G name "users"')[0][0]
         self.req.form = {'eid': ['X', 'Y'],
-                         
+
                          '__type:X': 'CWUser',
                          '__maineid' : 'X',
-                         'login:X': u'adim', 'edits-login:X': u'', 
-                         'upassword:X': u'toto', 'upassword-confirm:X': u'toto', 'edits-upassword:X': u'', 
+                         'login:X': u'adim', 'edits-login:X': u'',
+                         'upassword:X': u'toto', 'upassword-confirm:X': u'toto', 'edits-upassword:X': u'',
                          'surname:X': u'Di Mascio', 'edits-surname:X': '',
 
-                         'in_group:X': `gueid`, 'edits-in_group:X': INTERNAL_FIELD_VALUE, 
-                         
+                         'in_group:X': `gueid`, 'edits-in_group:X': INTERNAL_FIELD_VALUE,
+
                          '__type:Y': 'EmailAddress',
                          'address:Y': u'dima@logilab.fr', 'edits-address:Y': '',
-                         'use_email:X': 'Y', 'edits-use_email:X': INTERNAL_FIELD_VALUE, 
+                         'use_email:X': 'Y', 'edits-use_email:X': INTERNAL_FIELD_VALUE,
                          }
         path, params = self.expect_redirect_publish()
         # should be redirected on the created person
@@ -142,17 +142,17 @@ class EditControllerTC(ControllerTC):
         self.assertEquals(e.surname, 'Di Mascio')
         email = e.use_email[0]
         self.assertEquals(email.address, 'dima@logilab.fr')
-        
+
     def test_edit_multiple_linked(self):
         peid = self.create_user('adim').eid
         self.req.form = {'eid': [`peid`, 'Y'],
                          '__type:%s'%peid: 'CWUser',
                          'surname:%s'%peid: u'Di Masci', 'edits-surname:%s'%peid: '',
-                         
+
                          '__type:Y': 'EmailAddress',
                          'address:Y': u'dima@logilab.fr', 'edits-address:Y': '',
                          'use_email:%s'%peid: 'Y', 'edits-use_email:%s'%peid: INTERNAL_FIELD_VALUE,
-                         
+
                          '__redirectrql': 'Any X WHERE X eid %s'%peid,
                          }
         path, params = self.expect_redirect_publish()
@@ -162,14 +162,14 @@ class EditControllerTC(ControllerTC):
         self.assertEquals(e.surname, 'Di Masci')
         email = e.use_email[0]
         self.assertEquals(email.address, 'dima@logilab.fr')
-        
+
         emaileid = email.eid
         self.req.form = {'eid': [`peid`, `emaileid`],
                          '__type:%s'%peid: 'CWUser',
                          'surname:%s'%peid: u'Di Masci', 'edits-surname:%s'%peid: 'Di Masci',
                          '__type:%s'%emaileid: 'EmailAddress',
                          'address:%s'%emaileid: u'adim@logilab.fr', 'edits-address:%s'%emaileid: 'dima@logilab.fr',
-                         'use_email:%s'%peid: `emaileid`, 'edits-use_email:%s'%peid: `emaileid`, 
+                         'use_email:%s'%peid: `emaileid`, 'edits-use_email:%s'%peid: `emaileid`,
                          '__redirectrql': 'Any X WHERE X eid %s'%peid,
                          }
         path, params = self.expect_redirect_publish()
@@ -180,21 +180,21 @@ class EditControllerTC(ControllerTC):
         email = e.use_email[0]
         self.assertEquals(email.address, 'adim@logilab.fr')
 
-        
+
     def test_password_confirm(self):
         """test creation of two linked entities
-        """        
+        """
         user = self.user()
         self.req.form = {'__cloned_eid:X': user.eid,
                          'eid': 'X', '__type:X': 'CWUser',
-                         'login:X': u'toto', 'edits-login:X': u'', 
-                         'upassword:X': u'toto', 'edits-upassword:X': u'', 
+                         'login:X': u'toto', 'edits-login:X': u'',
+                         'upassword:X': u'toto', 'edits-upassword:X': u'',
                          }
         self.assertRaises(ValidationError, self.publish, self.req)
         self.req.form = {'__cloned_eid:X': user.eid,
                          'eid': 'X', '__type:X': 'CWUser',
-                         'login:X': u'toto', 'edits-login:X': u'', 
-                         'upassword:X': u'toto', 'upassword-confirm:X': u'tutu', 'edits-upassword:X': u'', 
+                         'login:X': u'toto', 'edits-login:X': u'',
+                         'upassword:X': u'toto', 'upassword-confirm:X': u'tutu', 'edits-upassword:X': u'',
                          }
         self.assertRaises(ValidationError, self.publish, self.req)
 
@@ -220,7 +220,7 @@ class EditControllerTC(ControllerTC):
                          'described_by_test:X': str(feid), 'edits-described_by_test:X': INTERNAL_FIELD_VALUE,
                          }
         self.expect_redirect_publish()
-        # should be redirected on the created 
+        # should be redirected on the created
         #eid = params['rql'].split()[-1]
         e = self.execute('Salesterm X').get_entity(0, 0)
         self.assertEquals(e.amount, 10)
@@ -273,7 +273,7 @@ class EditControllerTC(ControllerTC):
             self.assertEquals(rset[0][0], 'FOO')
         finally:
             del CWUser.custom_login_edit
-        
+
     def test_redirect_apply_button(self):
         redirectrql = rql_for_eid(4012) # whatever
         self.req.form = {
@@ -354,13 +354,13 @@ class EditControllerTC(ControllerTC):
                 'name:'+`eeetypeeid`:     u'CWGroup',
                 'final:'+`eeetypeeid`:    False,
                 'meta:'+`eeetypeeid`:     True,
-                'description:'+`eeetypeeid`:     u'users group', 
+                'description:'+`eeetypeeid`:     u'users group',
                 'read_permission:'+`eeetypeeid`:  groups,
                 #
                 'edits-name:'+`eeetypeeid`:     u'CWGroup',
                 'edits-final:'+`eeetypeeid`:    False,
                 'edits-meta:'+`eeetypeeid`:     True,
-                'edits-description:'+`eeetypeeid`:     u'users group', 
+                'edits-description:'+`eeetypeeid`:     u'users group',
                 'edits-read_permission:'+`eeetypeeid`:  basegroups,
                 }
         try:
@@ -372,7 +372,7 @@ class EditControllerTC(ControllerTC):
             # restore
             self.execute('SET X read_permission Y WHERE X name "CWGroup", Y eid IN (%s), NOT X read_permission Y' % (','.join(basegroups)))
             self.commit()
-            
+
     def test_nonregr_eetype_etype_editing(self):
         """non-regression test checking that a manager user can edit a CWEType entity (CWEType)
         """
@@ -386,13 +386,13 @@ class EditControllerTC(ControllerTC):
                 'name:'+`eeetypeeid`:     u'CWEType',
                 'final:'+`eeetypeeid`:    False,
                 'meta:'+`eeetypeeid`:     True,
-                'description:'+`eeetypeeid`:     u'users group', 
+                'description:'+`eeetypeeid`:     u'users group',
                 'read_permission:'+`eeetypeeid`:  groups,
 
                 'edits-name:'+`eeetypeeid`:     u'CWEType',
                 'edits-final:'+`eeetypeeid`:    False,
                 'edits-meta:'+`eeetypeeid`:     True,
-                'edits-description:'+`eeetypeeid`:     u'users group', 
+                'edits-description:'+`eeetypeeid`:     u'users group',
                 'edits-read_permission:'+`eeetypeeid`:  basegroups,
                 }
         try:
@@ -404,12 +404,12 @@ class EditControllerTC(ControllerTC):
             # restore
             self.execute('SET X read_permission Y WHERE X name "CWEType", Y eid IN (%s), NOT X read_permission Y' % (','.join(basegroups)))
             self.commit()
-        
+
     def test_nonregr_strange_text_input(self):
         """non-regression test checking text input containing "13:03:43"
 
         this seems to be postgres (tsearch?) specific
-        """        
+        """
         self.req.form = {
                          'eid': 'A', '__type:A': 'BlogEntry',
                          '__maineid' : 'A',
@@ -426,16 +426,16 @@ class EditControllerTC(ControllerTC):
     def test_nonregr_multiple_empty_email_addr(self):
         gueid = self.execute('CWGroup G WHERE G name "users"')[0][0]
         self.req.form = {'eid': ['X', 'Y'],
-                         
+
                          '__type:X': 'CWUser',
-                         'login:X': u'adim', 'edits-login:X': u'', 
-                         'upassword:X': u'toto', 'upassword-confirm:X': u'toto', 'edits-upassword:X': u'', 
-                         'in_group:X': `gueid`, 'edits-in_group:X': INTERNAL_FIELD_VALUE, 
-                         
+                         'login:X': u'adim', 'edits-login:X': u'',
+                         'upassword:X': u'toto', 'upassword-confirm:X': u'toto', 'edits-upassword:X': u'',
+                         'in_group:X': `gueid`, 'edits-in_group:X': INTERNAL_FIELD_VALUE,
+
                          '__type:Y': 'EmailAddress',
                          'address:Y': u'', 'edits-address:Y': '',
                          'alias:Y': u'', 'edits-alias:Y': '',
-                         'use_email:X': 'Y', 'edits-use_email:X': INTERNAL_FIELD_VALUE, 
+                         'use_email:X': 'Y', 'edits-use_email:X': INTERNAL_FIELD_VALUE,
                          }
         self.assertRaises(ValidationError, self.publish, self.req)
 
@@ -444,8 +444,8 @@ class EditControllerTC(ControllerTC):
         self.req.form = {'__cloned_eid:X': user.eid,
                          'eid': 'X', '__type:X': 'CWUser',
                          '__maineid' : 'X',
-                         'login:X': u'toto', 'edits-login:X': u'', 
-                         'upassword:X': u'toto', 'upassword-confirm:X': u'toto', 'edits-upassword:X': u'', 
+                         'login:X': u'toto', 'edits-login:X': u'',
+                         'upassword:X': u'toto', 'upassword-confirm:X': u'toto', 'edits-upassword:X': u'',
                          }
         path, params = self.expect_redirect_publish()
         self.assertEquals(path, 'euser/toto')
@@ -465,7 +465,7 @@ class EditControllerTC(ControllerTC):
                          {'p' : p.eid, 'e' : e.eid})
             self.req.form = {'__cloned_eid:X': p.eid,
                              'eid': 'X', '__type:X': 'CWUser',
-                             'login': u'dodo', 'edits-login': u'dodo', 
+                             'login': u'dodo', 'edits-login': u'dodo',
                              'surname:X': u'Boom', 'edits-surname:X': u'',
                              '__errorurl' : "whatever but required",
                              }
@@ -510,7 +510,7 @@ class SendMailControllerTC(EnvBasedTC):
         self.login('anon')
         req = self.request()
         self.assertRaises(Unauthorized, self.env.app.select_controller, 'sendmail', req)
-   
+
 
 
 class JSONControllerTC(EnvBasedTC):
@@ -530,7 +530,7 @@ class JSONControllerTC(EnvBasedTC):
         ctrl = self.ctrl(self.request(rql='CWUser P WHERE P login "John"',
                                       pageid='123'))
         self.assertTextEquals(ctrl.publish(),
-                              xmlize(self.john.view('primary')))
+                              xhtml_wrap(self.john.view('primary')))
 
     def test_json_exec(self):
         rql = 'Any T,N WHERE T is Tag, T name N'
@@ -544,7 +544,7 @@ class JSONControllerTC(EnvBasedTC):
                              ['python', 'cubicweb'])
         self.assertEquals(self.execute('Any N WHERE T tags P, P is CWUser, T name N').rows,
                           [['python']])
-    
+
     def test_remote_add_new_tag(self):
         self.remote_call('tag_entity', self.john.eid, ['javascript'])
         self.assertUnorderedIterableEquals([tname for tname, in self.execute('Any N WHERE T is Tag, T name N')],
@@ -617,7 +617,7 @@ class JSONControllerTC(EnvBasedTC):
         req.remove_pending_operations()
         self.assertEquals(req.get_pending_deletes(), [])
         self.assertEquals(req.get_pending_inserts(), [])
-        
+
 
     def test_add_inserts(self):
         res, req = self.remote_call('add_pending_inserts',
@@ -625,7 +625,7 @@ class JSONControllerTC(EnvBasedTC):
         inserts = req.get_pending_inserts()
         self.assertEquals(inserts, ['12:tags:13', '12:tags:14'])
         req.remove_pending_operations()
-        
+
 
     # silly tests
     def test_external_resource(self):
@@ -639,8 +639,8 @@ class JSONControllerTC(EnvBasedTC):
         self.assertEquals(self.remote_call('format_date', '"2007-01-01 12:00:00"')[0],
                           simplejson.dumps('2007/01/01'))
 
-        
 
-        
+
+
 if __name__ == '__main__':
     unittest_main()

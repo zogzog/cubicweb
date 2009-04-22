@@ -26,7 +26,7 @@ SESSION_MANAGER = None
 class AbstractSessionManager(Component):
     """manage session data associated to a session identifier"""
     id = 'sessionmanager'
-    
+
     def __init__(self):
         self.session_time = self.vreg.config['http-session-time'] or None
         assert self.session_time is None or self.session_time > 0
@@ -39,7 +39,7 @@ class AbstractSessionManager(Component):
             assert self.cleanup_anon_session_time < self.session_time
         self.authmanager = self.vreg.select_component('authmanager')
         assert self.authmanager, 'no authentication manager found'
-        
+
     def clean_sessions(self):
         """cleanup sessions which has not been unused since a given amount of
         time. Return the number of sessions which have been closed.
@@ -57,28 +57,28 @@ class AbstractSessionManager(Component):
                 self.close_session(session)
                 closed += 1
         return closed, total - closed
-    
+
     def has_expired(self, session):
         """return True if the web session associated to the session is expired
         """
         return not (self.session_time is None or
                     time() < session.last_usage_time + self.session_time)
-                
+
     def current_sessions(self):
         """return currently open sessions"""
         raise NotImplementedError()
-            
+
     def get_session(self, req, sessionid):
         """return existing session for the given session identifier"""
         raise NotImplementedError()
 
     def open_session(self, req):
         """open and return a new session for the given request
-        
+
         :raise ExplicitLogin: if authentication is required
         """
         raise NotImplementedError()
-    
+
     def close_session(self, session):
         """close session on logout or on invalid session detected (expired out,
         corrupted...)
@@ -92,13 +92,13 @@ class AbstractAuthenticationManager(Component):
 
     def authenticate(self, req):
         """authenticate user and return corresponding user object
-        
+
         :raise ExplicitLogin: if authentication is required (no authentication
         info found or wrong user/password)
         """
         raise NotImplementedError()
 
-    
+
 class CookieSessionHandler(object):
     """a session handler using a cookie to store the session identifier
 
@@ -107,7 +107,7 @@ class CookieSessionHandler(object):
       identifier
     """
     SESSION_VAR = '__session'
-    
+
     def __init__(self, appli):
         self.session_manager = appli.vreg.select_component('sessionmanager')
         assert self.session_manager, 'no session manager found'
@@ -121,7 +121,7 @@ class CookieSessionHandler(object):
         time
         """
         self.session_manager.clean_sessions()
-        
+
     def set_session(self, req):
         """associate a session to the request
 
@@ -132,7 +132,7 @@ class CookieSessionHandler(object):
         if no session id is found, open a new session for the connected user
         or request authentification as needed
 
-        :raise Redirect: if authentication has occured and succeed        
+        :raise Redirect: if authentication has occured and succeed
         """
         assert req.cnx is None # at this point no cnx should be set on the request
         cookie = req.get_cookie()
@@ -154,7 +154,7 @@ class CookieSessionHandler(object):
 
     def get_session(self, req, sessionid):
         return self.session_manager.get_session(req, sessionid)
-    
+
     def open_session(self, req):
         session = self.session_manager.open_session(req)
         cookie = req.get_cookie()
@@ -177,7 +177,7 @@ class CookieSessionHandler(object):
         except:
             req.cnx.rollback()
             raise
-        
+
     def _postlogin(self, req):
         """postlogin: the user has been authenticated, redirect to the original
         page (index by default) with a welcome message
@@ -197,7 +197,7 @@ class CookieSessionHandler(object):
         if path == 'login':
             path = 'view'
         raise Redirect(req.build_url(path, **args))
-    
+
     def logout(self, req):
         """logout from the application by cleaning the session and raising
         `AuthenticationError`
@@ -211,7 +211,7 @@ class CubicWebPublisher(object):
     """Central registry for the web application. This is one of the central
     object in the web application, coupling dynamically loaded objects with
     the application's schema and the application's configuration objects.
-    
+
     It specializes the VRegistry by adding some convenience methods to
     access to stored objects. Currently we have the following registries
     of objects known by the web application (library may use some others
@@ -223,7 +223,7 @@ class CubicWebPublisher(object):
     * components
     * actions
     """
-    
+
     def __init__(self, config, debug=None,
                  session_handler_fact=CookieSessionHandler,
                  vreg=None):
@@ -243,14 +243,14 @@ class CubicWebPublisher(object):
             from threading import Lock
             self._query_log = open(config['query-log-file'], 'a')
             self.publish = self.log_publish
-            self._logfile_lock = Lock()            
+            self._logfile_lock = Lock()
         else:
             self._query_log = None
             self.publish = self.main_publish
         # instantiate session and url resolving helpers
         self.session_handler = session_handler_fact(self)
         self.url_resolver = vreg.select_component('urlpublisher')
-    
+
     def connect(self, req):
         """return a connection for a logged user object according to existing
         sessions (i.e. a new connection may be created or an already existing
@@ -266,9 +266,9 @@ class CubicWebPublisher(object):
                                req=req, appli=self)
         except NoSelectableObject:
             raise Unauthorized(req._('not authorized'))
-            
+
     # publish methods #########################################################
-        
+
     def log_publish(self, path, req):
         """wrapper around _publish to log all queries executed for a given
         accessed path
@@ -293,13 +293,13 @@ class CubicWebPublisher(object):
 
     def main_publish(self, path, req):
         """method called by the main publisher to process <path>
-        
+
         should return a string containing the resulting page or raise a
         `NotFound` exception
 
         :type path: str
         :param path: the path part of the url to publish
-        
+
         :type req: `web.Request`
         :param req: the request object
 
@@ -370,7 +370,7 @@ class CubicWebPublisher(object):
             req.set_session_data(req.form['__errorurl'], forminfo)
             raise Redirect(req.form['__errorurl'])
         self.error_handler(req, ex, tb=False)
-        
+
     def error_handler(self, req, ex, tb=False):
         excinfo = sys.exc_info()
         self.exception(repr(ex))
@@ -389,13 +389,13 @@ class CubicWebPublisher(object):
         except:
             content = self.vreg.main_template(req, 'error-template')
         raise StatusResponse(500, content)
-    
+
     def need_login_content(self, req):
         return self.vreg.main_template(req, 'login')
-    
+
     def loggedout_content(self, req):
         return self.vreg.main_template(req, 'loggedout')
-    
+
     def notfound_content(self, req):
         req.form['vid'] = '404'
         view = self.vreg.select_view('404', req, None)
@@ -407,7 +407,7 @@ class CubicWebPublisher(object):
         if template not in self.vreg.registry('views') :
             template = 'main-template'
         return template
-        
+
 
 set_log_methods(CubicWebPublisher, LOGGER)
 set_log_methods(CookieSessionHandler, LOGGER)
