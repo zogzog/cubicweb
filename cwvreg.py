@@ -91,7 +91,7 @@ class CubicWebRegistry(VRegistry):
                 for oid, objects in regcontent.items():
                     for obj in reversed(objects[:]):
                         if not obj in objects:
-                            continue # obj has been kicked by a previous one
+                            continue # obj was kicked by a previous one
                         accepted = set(getattr(obj, 'accepts_interfaces', ()))
                         if accepted:
                             for accepted_iface in accepted:
@@ -103,7 +103,7 @@ class CubicWebRegistry(VRegistry):
                                             registerer.remove_all_equivalents(objects)
                                         break
                                 else:
-                                    self.debug('kicking vobject %s (unsupported interface)', obj)
+                                    self.debug('kicking vobject %s because interface is not supported', obj)
                                     objects.remove(obj)
                     # if objects is empty, remove oid from registry
                     if not objects:
