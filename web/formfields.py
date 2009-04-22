@@ -17,7 +17,7 @@ from cubicweb.common import tags, uilib
 from cubicweb.web import INTERNAL_FIELD_VALUE
 from cubicweb.web.formwidgets import (
     HiddenInput, TextInput, FileInput, PasswordInput, TextArea, FCKEditor,
-    Radio, Select, DateTimePicker) 
+    Radio, Select, DateTimePicker)
 
 class Field(object):
     """field class is introduced to control what's displayed in forms. It makes
@@ -28,7 +28,7 @@ class Field(object):
     ----------
     all the attributes described below have sensible default value which may be
     overriden by value given to field's constructor.
-    
+
     :name:
        name of the field (basestring), should be unique in a form.
     :id:
@@ -60,7 +60,7 @@ class Field(object):
     :role:
        when the field is linked to an entity attribute or relation, tells the
        role of the entity in the relation (eg 'subject' or 'object')
-    
+
     """
     # default widget associated to this class of fields. May be overriden per
     # instance
@@ -70,7 +70,7 @@ class Field(object):
     # class attribute used for ordering of fields in a form
     __creation_rank = 0
 
-    def __init__(self, name=None, id=None, label=None, help=None, 
+    def __init__(self, name=None, id=None, label=None, help=None,
                  widget=None, required=False, initial=None,
                  choices=None, sort=True, internationalizable=False,
                  eidparam=False, role='subject'):
@@ -92,7 +92,7 @@ class Field(object):
         # ordering number for this field instance
         self.creation_rank = Field.__creation_rank
         Field.__creation_rank += 1
-    
+
     def __unicode__(self):
         return u'<%s name=%r label=%r id=%r initial=%r @%x>' % (
             self.__class__.__name__, self.name, self.label,
@@ -109,17 +109,17 @@ class Field(object):
             self.id = name
         if not self.label:
             self.label = name
-            
+
     def is_visible(self):
         """return true if the field is not an hidden field"""
         return not isinstance(self.widget, HiddenInput)
-    
+
     def actual_fields(self, form):
         """return actual fields composing this field in case of a compound
         field, usually simply return self
         """
         yield self
-    
+
     def format_value(self, req, value):
         """return value suitable for display where value may be a list or tuple
         of values
@@ -127,7 +127,7 @@ class Field(object):
         if isinstance(value, (list, tuple)):
             return [self.format_single_value(req, val) for val in value]
         return self.format_single_value(req, value)
-    
+
     def format_single_value(self, req, value):
         """return value suitable for display"""
         if value is None or value is False:
@@ -139,11 +139,11 @@ class Field(object):
     def get_widget(self, form):
         """return the widget instance associated to this field"""
         return self.widget
-    
+
     def example_format(self, req):
         """return a sample string describing what can be given as input for this
         field
-        """        
+        """
         return u''
 
     def render(self, form, renderer):
@@ -154,7 +154,7 @@ class Field(object):
 
     def vocabulary(self, form):
         """return vocabulary for this field. This method will be called by
-        widgets which desire it."""        
+        widgets which desire it."""
         if self.choices is not None:
             if callable(self.choices):
                 vocab = self.choices(req=form.req)
@@ -169,13 +169,13 @@ class Field(object):
         if self.sort:
             vocab = sorted(vocab)
         return vocab
-    
+
     def form_init(self, form):
         """method called before by form_build_context to trigger potential field
         initialization requiring the form instance
         """
         pass
-    
+
 class StringField(Field):
     def __init__(self, max_length=None, **kwargs):
         super(StringField, self).__init__(**kwargs)
@@ -227,13 +227,13 @@ class RichTextField(TextField):
                                 choices=choices)
             req.data[self] = field
             return field
-    
+
     def actual_fields(self, form):
         yield self
         format_field = self.get_format_field(form)
         if format_field:
             yield format_field
-            
+
     def use_fckeditor(self, form):
         """return True if fckeditor should be used to edit entity's attribute named
         `attr`, according to user preferences
@@ -254,12 +254,12 @@ class RichTextField(TextField):
 class FileField(StringField):
     widget = FileInput
     needs_multipart = True
-    
+
     def __init__(self, format_field=None, encoding_field=None, **kwargs):
         super(FileField, self).__init__(**kwargs)
         self.format_field = format_field
         self.encoding_field = encoding_field
-        
+
     def actual_fields(self, form):
         yield self
         if self.format_field:
@@ -281,7 +281,7 @@ class FileField(StringField):
                 wdgs.append(self.render_subfield(form, self.format_field, renderer))
             if self.encoding_field:
                 wdgs.append(self.render_subfield(form, self.encoding_field, renderer))
-            wdgs.append(u'</div>')            
+            wdgs.append(u'</div>')
         if not self.required and form.context[self]['value']:
             # trick to be able to delete an uploaded file
             wdgs.append(u'<br/>')
@@ -296,10 +296,10 @@ class FileField(StringField):
                 + renderer.render_help(form, field)
                 + u'<br/>')
 
-        
+
 class EditableFileField(FileField):
     editable_formats = ('text/plain', 'text/html', 'text/rest')
-    
+
     def render(self, form, renderer):
         wdgs = [super(EditableFileField, self).render(form, renderer)]
         if form.form_field_format(self) in self.editable_formats:
@@ -326,7 +326,7 @@ class EditableFileField(FileField):
                     # XXX restore form context?
         return '\n'.join(wdgs)
 
-        
+
 class IntField(Field):
     def __init__(self, min=None, max=None, **kwargs):
         super(IntField, self).__init__(**kwargs)
@@ -335,14 +335,14 @@ class IntField(Field):
 
 class BooleanField(Field):
     widget = Radio
-        
+
     def vocabulary(self, form):
         if self.choices:
             return self.choices
         return [(form.req._('yes'), '1'), (form.req._('no'), '')]
 
 
-class FloatField(IntField):    
+class FloatField(IntField):
     def format_single_value(self, req, value):
         formatstr = req.property_value('ui.float-format')
         if value is None:
@@ -356,7 +356,7 @@ class FloatField(IntField):
 class DateField(StringField):
     format_prop = 'ui.date-format'
     widget = DateTimePicker
-    
+
     def format_single_value(self, req, value):
         return value and ustrftime(value, req.property_value(self.format_prop)) or u''
 
@@ -378,8 +378,8 @@ class HiddenInitialValueField(Field):
         super(HiddenInitialValueField, self).__init__(
             name=name, widget=HiddenInput, eidparam=True)
         self.visible_field = visible_field
-    
-                 
+
+
 class RelationField(Field):
     def __init__(self, **kwargs):
         super(RelationField, self).__init__(**kwargs)
@@ -387,7 +387,7 @@ class RelationField(Field):
     @staticmethod
     def fromcardinality(card, **kwargs):
         return RelationField(widget=Select(multiple=card in '*+'), **kwargs)
-        
+
     def vocabulary(self, form):
         entity = form.edited_entity
         req = entity.req
@@ -407,7 +407,7 @@ class RelationField(Field):
         else:
             relatedvocab = []
         return res + form.form_field_vocabulary(self) + relatedvocab
-    
+
     def format_single_value(self, req, value):
         return value
 

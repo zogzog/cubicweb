@@ -29,7 +29,7 @@ class FormViewMixIn(object):
     controller = 'edit'
     http_cache_manager = NoHTTPCacheManager
     add_to_breadcrumbs = False
-    
+
     def __init__(self, req, rset, **kwargs):
         super(FormViewMixIn, self).__init__(req, rset, **kwargs)
         # get validation session data which may have been previously set.
@@ -51,7 +51,7 @@ class FormViewMixIn(object):
                     break
             else:
                 errex.eid = foreid
-        
+
     def html_headers(self):
         """return a list of html headers (eg something to be inserted between
         <head> and </head> of the returned page
@@ -59,7 +59,7 @@ class FormViewMixIn(object):
         by default forms are neither indexed nor followed
         """
         return [NOINDEX, NOFOLLOW]
-        
+
     def linkable(self):
         """override since forms are usually linked by an action,
         so we don't want them to be listed by appli.possible_views
@@ -67,7 +67,7 @@ class FormViewMixIn(object):
         return False
 
 
-# XXX should disappear 
+# XXX should disappear
 class FormMixIn(object):
     """abstract form mix-in
     XXX: you should inherit from this FIRST (obscure pb with super call)
@@ -81,13 +81,13 @@ class FormMixIn(object):
         self.varmaker = varmaker
 
     # XXX deprecated with new form system. Should disappear
-    
+
     domid = 'entityForm'
     category = 'form'
     controller = 'edit'
     http_cache_manager = NoHTTPCacheManager
     add_to_breadcrumbs = False
-    
+
     def __init__(self, req, rset, **kwargs):
         super(FormMixIn, self).__init__(req, rset, **kwargs)
         # get validation session data which may have been previously set.
@@ -108,8 +108,8 @@ class FormMixIn(object):
                     errex.eid = var
                     break
             else:
-                errex.eid = foreid    
-        
+                errex.eid = foreid
+
     def html_headers(self):
         """return a list of html headers (eg something to be inserted between
         <head> and </head> of the returned page
@@ -117,7 +117,7 @@ class FormMixIn(object):
         by default forms are neither indexed nor followed
         """
         return [NOINDEX, NOFOLLOW]
-        
+
     def linkable(self):
         """override since forms are usually linked by an action,
         so we don't want them to be listed by appli.possible_views
@@ -140,7 +140,7 @@ class FormMixIn(object):
                   **kwargs):
         label = self.req._(label or stdmsgs.BUTTON_OK).capitalize()
         return self.button(label, name=name, type=type, **kwargs)
-    
+
     def button_apply(self, label=None, type='button', **kwargs):
         label = self.req._(label or stdmsgs.BUTTON_APPLY).capitalize()
         return self.action_button(label, __action='apply', type=type, **kwargs)
@@ -148,11 +148,11 @@ class FormMixIn(object):
     def button_delete(self, label=None, type='button', **kwargs):
         label = self.req._(label or stdmsgs.BUTTON_DELETE).capitalize()
         return self.action_button(label, __action='delete', type=type, **kwargs)
-    
+
     def button_cancel(self, label=None, type='button', **kwargs):
         label = self.req._(label or stdmsgs.BUTTON_CANCEL).capitalize()
         return self.action_button(label, __action='cancel', type=type, **kwargs)
-    
+
     def button_reset(self, label=None, type='reset', name='__action_cancel',
                      **kwargs):
         label = self.req._(label or stdmsgs.BUTTON_CANCEL).capitalize()
@@ -174,7 +174,7 @@ class FormMixIn(object):
                 if inlined_entity.get_widget(irschema, x).need_multipart:
                     return True
         return False
-    
+
     def error_message(self):
         """return formatted error message
 
@@ -189,7 +189,7 @@ class FormMixIn(object):
                             if not field in displayed)
             if errors:
                 if len(errors) > 1:
-                    templstr = '<li>%s</li>\n' 
+                    templstr = '<li>%s</li>\n'
                 else:
                     templstr = '&nbsp;%s\n'
                 for field, err in errors:
@@ -223,19 +223,19 @@ class metafieldsform(type):
         classdict['_fields_'] = allfields
         return super(metafieldsform, mcs).__new__(mcs, name, bases, classdict)
 
-    
+
 class FieldNotFound(Exception):
     """raised by field_by_name when a field with the given name has not been
     found
     """
-    
+
 class FieldsForm(FormMixIn, AppRsetObject):
     __metaclass__ = metafieldsform
     __registry__ = 'forms'
     __select__ = yes()
-    
+
     is_subform = False
-    
+
     # attributes overrideable through __init__
     internal_fields = ('__errorurl',) + NAV_FORM_PARAMETERS
     needs_js = ('cubicweb.ajax.js', 'cubicweb.edition.js',)
@@ -251,7 +251,7 @@ class FieldsForm(FormMixIn, AppRsetObject):
     set_error_url = True
     copy_nav_params = False
     form_buttons = None # form buttons (button widgets instances)
-                 
+
     def __init__(self, req, rset=None, row=None, col=None, submitmsg=None,
                  **kwargs):
         super(FieldsForm, self).__init__(req, rset, row=row, col=col)
@@ -285,7 +285,7 @@ class FieldsForm(FormMixIn, AppRsetObject):
             if field.name == name and field.role == role:
                 return field
         raise FieldNotFound(name)
-    
+
     @iclassmethod
     def remove_field(cls_or_self, field):
         """remove a field from form class or instance"""
@@ -294,7 +294,7 @@ class FieldsForm(FormMixIn, AppRsetObject):
         else:
             fields = cls_or_self.fields
         fields.remove(field)
-    
+
     @iclassmethod
     def append_field(cls_or_self, field):
         """append a field to form class or instance"""
@@ -303,11 +303,11 @@ class FieldsForm(FormMixIn, AppRsetObject):
         else:
             fields = cls_or_self.fields
         fields.append(field)
-    
+
     @property
     def form_needs_multipart(self):
         """true if the form needs enctype=multipart/form-data"""
-        return any(field.needs_multipart for field in self.fields) 
+        return any(field.needs_multipart for field in self.fields)
 
     def form_add_hidden(self, name, value=None, **kwargs):
         """add an hidden field to the form"""
@@ -319,7 +319,7 @@ class FieldsForm(FormMixIn, AppRsetObject):
             field.widget.setdomid = True
         self.append_field(field)
         return field
-    
+
     def add_media(self):
         """adds media (CSS & JS) required by this widget"""
         if self.needs_js:
@@ -361,7 +361,7 @@ class FieldsForm(FormMixIn, AppRsetObject):
 
     def form_field_display_value(self, field, rendervalues, load_bytes=False):
         """return field's *string* value to use for display
-        
+
         looks in
         1. previously submitted form values if any (eg on validation error)
         2. req.form
@@ -382,7 +382,7 @@ class FieldsForm(FormMixIn, AppRsetObject):
                 value = self.form_field_value(field, load_bytes)
                 if callable(value):
                     value = value(self)
-            if value != INTERNAL_FIELD_VALUE: 
+            if value != INTERNAL_FIELD_VALUE:
                 value = field.format_value(self.req, value)
         return value
 
@@ -392,7 +392,7 @@ class FieldsForm(FormMixIn, AppRsetObject):
         if callable(value):
             value = value(self)
         return value
-    
+
     def form_field_error(self, field):
         """return validation error for widget's field, if any"""
         errex = self.req.data.get('formerrors')
@@ -404,11 +404,11 @@ class FieldsForm(FormMixIn, AppRsetObject):
     def form_field_format(self, field):
         """return MIME type used for the given (text or bytes) field"""
         return self.req.property_value('ui.default-text-format')
-    
+
     def form_field_encoding(self, field):
         """return encoding used for the given (text) field"""
         return self.req.encoding
-    
+
     def form_field_name(self, field):
         """return qualified name for the given field"""
         return field.name
@@ -416,7 +416,7 @@ class FieldsForm(FormMixIn, AppRsetObject):
     def form_field_id(self, field):
         """return dom id for the given field"""
         return field.id
-   
+
     def form_field_vocabulary(self, field, limit=None):
         """return vocabulary for the given field. Should be overriden in
         specific forms using fields which requires some vocabulary
@@ -428,13 +428,13 @@ class FieldsForm(FormMixIn, AppRsetObject):
         """
         return field.name in errex.errors
 
-   
+
 class EntityFieldsForm(FieldsForm):
     __select__ = (match_kwargs('entity') | (one_line_rset & non_final_entity()))
-    
+
     internal_fields = FieldsForm.internal_fields + ('__type', 'eid')
     domid = 'entityForm'
-    
+
     def __init__(self, *args, **kwargs):
         self.edited_entity = kwargs.pop('entity', None)
         msg = kwargs.pop('submitmsg', None)
@@ -449,7 +449,7 @@ class EntityFieldsForm(FieldsForm):
                 self.form_add_hidden('__linkto', linkto)
                 msg = '%s %s' % (msg, self.req._('and linked'))
             self.form_add_hidden('__message', msg)
-    
+
     def _errex_match_field(self, errex, field):
         """return true if the field has some error in given validation exception
         """
@@ -484,7 +484,7 @@ class EntityFieldsForm(FieldsForm):
             value = super(EntityFieldsForm, self).form_field_value(field,
                                                                    load_bytes)
         return value
-        
+
     def form_build_context(self, values=None):
         """overriden to add edit[s|o] hidden fields and to ensure schema fields
         have eidparam set to True
@@ -503,7 +503,7 @@ class EntityFieldsForm(FieldsForm):
                     field.eidparam = True
                     self.fields.append(HiddenInitialValueField(field))
         return super(EntityFieldsForm, self).form_build_context(values)
-        
+
     def form_field_value(self, field, load_bytes=False):
         """return field's *typed* value
 
@@ -551,7 +551,7 @@ class EntityFieldsForm(FieldsForm):
         else:
             value = self._form_field_default_value(field, load_bytes)
         return value
-        
+
     def form_field_format(self, field):
         """return MIME type used for the given (text or bytes) field"""
         entity = self.edited_entity
@@ -566,8 +566,8 @@ class EntityFieldsForm(FieldsForm):
         if field.eidparam and entity.e_schema.has_metadata(field.name, 'encoding') and (
             entity.has_eid() or '%s_encoding' % field.name in entity):
             return self.edited_entity.attr_metadata(field.name, 'encoding')
-        return super(EntityFieldsForm, self).form_field_encoding(field)    
-    
+        return super(EntityFieldsForm, self).form_field_encoding(field)
+
     def form_field_name(self, field):
         """return qualified name for the given field"""
         if field.eidparam:
@@ -579,7 +579,7 @@ class EntityFieldsForm(FieldsForm):
         if field.eidparam:
             return eid_param(field.id, self.edited_entity.eid)
         return field.id
-        
+
     def form_field_vocabulary(self, field, limit=None):
         """return vocabulary for the given field"""
         role, rtype = field.role, field.name
@@ -667,7 +667,7 @@ class EntityFieldsForm(FieldsForm):
 
 class CompositeForm(FieldsForm):
     """form composed for sub-forms"""
-    
+
     def __init__(self, *args, **kwargs):
         super(CompositeForm, self).__init__(*args, **kwargs)
         self.forms = []
