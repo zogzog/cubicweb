@@ -5,6 +5,6 @@
  */
 function toggle_and_remember_visibility(elemId, cookiename) {
     jqNode(elemId).toggleClass('hidden');
-    async_remote_exec('set_cookie', cookiename,
+    asyncRemoteExec('set_cookie', cookiename,
                       jQuery('#' + elemId).attr('class'));
 }

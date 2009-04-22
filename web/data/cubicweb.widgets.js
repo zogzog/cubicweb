@@ -277,7 +277,7 @@ Widgets.AddComboBox = defclass('AddComboBox', null, {
 	  this.eid_to = name[1];
           this.etype_to = wdgnode.getAttribute('cubicweb:etype_to');
           this.etype_from = wdgnode.getAttribute('cubicweb:etype_from');
-     	  var d = async_remote_exec('add_and_link_new_entity', this.etype_to, this.rel, this.eid_to, this.etype_from, 'new_val');
+     	  var d = asyncRemoteExec('add_and_link_new_entity', this.etype_to, this.rel, this.eid_to, this.etype_from, 'new_val');
           d.addCallback(function (eid) {
           jQuery(wdgnode).find("option[selected]").removeAttr("selected");
           var new_option = OPTION({'value':eid, 'selected':'selected'}, value=new_val);

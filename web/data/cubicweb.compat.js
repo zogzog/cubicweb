@@ -365,13 +365,12 @@ toISOTimestamp = function (date, realISO/* = false*/) {
 };
 
 
-function loadJSON(url, data, type, dataType) {
+function loadJSON(url, data, type) {
     var d = new Deferred();
     jQuery.ajax({
 	url: url,
 	type: type,
 	data: data,
-	dataType: dataType,
 
 	beforeSend: function(xhr) {
 	    d.req = xhr;

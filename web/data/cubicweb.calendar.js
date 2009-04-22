@@ -235,7 +235,7 @@ function dateSelected(cell, containerId) {
     //      the only way understood by both IE and Mozilla. Otherwise,
     //      IE accepts innerText and mozilla accepts textContent
     var selectedDate = new Date(cal.year, cal.month, cell.innerHTML, 12);
-    var xxx = remote_exec("format_date", toISOTimestamp(selectedDate));
+    var xxx = remoteExec("format_date", toISOTimestamp(selectedDate));
     input.value = xxx;
     cal.hide();
 }

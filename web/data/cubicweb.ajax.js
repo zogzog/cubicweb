@@ -1,6 +1,6 @@
 /*
  *  :organization: Logilab
- *  :copyright: 2003-2008 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+ *  :copyright: 2003-2009 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
  *  :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
  */
 
@@ -37,6 +37,7 @@ function postAjaxLoad(node) {
     if (typeof roundedCornersOnLoad != 'undefined') {
 	roundedCornersOnLoad();
     }
+    jQuery(CubicWeb).trigger('ajax-loaded');
 }
 
 // cubicweb loadxhtml plugin to make jquery handle xhtml response
@@ -109,22 +110,6 @@ jQuery(document).ready(loadDynamicFragments);
 
 //============= base AJAX functions to make remote calls =====================//
 
-
-/*
- * This function will call **synchronously** a remote method on the cubicweb server
- * @param fname: the function name to call (as exposed by the JSONController)
- * @param args: the list of arguments to pass the function
- */
-function remote_exec(fname) {
-    setProgressCursor();
-    var props = {'mode' : "remote", 'fname' : fname, 'pageid' : pageid,
-     		 'arg': map(jQuery.toJSON, sliceList(arguments, 1))};
-    var result  = jQuery.ajax({url: JSON_BASE_URL, data: props, async: false}).responseText;
-    result = evalJSON(result);
-    resetCursor();
-    return result;
-}
-
 function remoteCallFailed(err, req) {
     if (req.status == 500) {
 	updateMessage(err);
@@ -137,88 +122,66 @@ function remoteCallFailed(err, req) {
  * This function is the equivalent of MochiKit's loadJSONDoc but
  * uses POST instead of GET
  */
-function loadJSONDocUsingPOST(url, queryargs, mode) {
-    mode = mode || 'remote';
+function loadJSONDocUsingPOST(url, data) {
     setProgressCursor();
-    var dataType = (mode == 'remote') ? "json":null;
-    var deferred = loadJSON(url, queryargs, 'POST', dataType);
+    var deferred = loadJSON(url, data, 'POST');
     deferred = deferred.addErrback(remoteCallFailed);
-//     if (mode == 'remote') {
-// 	deferred = deferred.addCallbacks(evalJSONRequest);
-//     }
     deferred = deferred.addCallback(resetCursor);
     return deferred;
 }
 
 
-function _buildRemoteArgs(fname) {
-    return  {'mode' : "remote", 'fname' : fname, 'pageid' : pageid,
-     	     'arg': map(jQuery.toJSON, sliceList(arguments, 1))};
-}
-
 /*
- * This function will call **asynchronously** a remote method on the cubicweb server
- * This function is a low level one. You should use `async_remote_exec` or
- * `async_rawremote_exec` instead.
+ * This function will call **synchronously** a remote method on the cubicweb server
+ * @param fname: the function name to call (as exposed by the JSONController)
  *
- * @param fname: the function name to call (as exposed by the JSONController)
- * @param funcargs: the function's arguments
- * @param mode: rawremote or remote
- */
-function _async_exec(fname, funcargs, mode) {
-    var props = {'mode' : mode, 'fname' : fname, 'pageid' : pageid};
-    var args = map(urlEncode, map(jQuery.toJSON, funcargs));
-    args.unshift(''); // this is to be able to use join() directly
-    var queryargs = as_url(props) + args.join('&arg=');
-    return loadJSONDocUsingPOST(JSON_BASE_URL, queryargs, mode);
-}
-
-/*
- * This function will call **asynchronously** a remote method on the cubicweb server
- * @param fname: the function name to call (as exposed by the JSONController)
  * additional arguments will be directly passed to the specified function
- * Expected response type is Json.
- */
-function async_remote_exec(fname /* ... */) {
-    return _async_exec(fname, sliceList(arguments, 1), 'remote');
-}
-
-/*
- * This version of _async_exec doesn't expect a json response.
+ *
  * It looks at http headers to guess the response type.
  */
-function async_rawremote_exec(fname /* ... */) {
-    return _async_exec(fname, sliceList(arguments, 1), 'rawremote');
+function remoteExec(fname /* ... */) {
+    setProgressCursor();
+    var props = {'fname' : fname, 'pageid' : pageid,
+     		 'arg': map(jQuery.toJSON, sliceList(arguments, 1))};
+    var result  = jQuery.ajax({url: JSON_BASE_URL, data: props, async: false}).responseText;
+    if (result) {
+	result = evalJSON(result);
+    }
+    resetCursor();
+    return result;
 }
 
 /*
- * This function will call **asynchronously** a remote method on the cubicweb server
+ * This function will call **asynchronously** a remote method on the json
+ * controller of the cubicweb http server
+ *
  * @param fname: the function name to call (as exposed by the JSONController)
- * @param varargs: the list of arguments to pass to the function
- * This is an alternative form of `async_remote_exec` provided for convenience
+ *
+ * additional arguments will be directly passed to the specified function
+ *
+ * It looks at http headers to guess the response type.
  */
-function async_remote_exec_varargs(fname, varargs) {
-    return _async_exec(fname, varargs, 'remote');
+function asyncRemoteExec(fname /* ... */) {
+    var props = {'fname' : fname, 'pageid' : pageid,
+     		 'arg': map(jQuery.toJSON, sliceList(arguments, 1))};
+    return loadJSONDocUsingPOST(JSON_BASE_URL, props);
 }
+
 
 /* emulation of gettext's _ shortcut
  */
 function _(message) {
-    return remote_exec('i18n', [message])[0];
-}
-
-function rqlexec(rql) {
-    return async_remote_exec('rql', rql);
+    return remoteExec('i18n', [message])[0];
 }
 
 function userCallback(cbname) {
-    async_remote_exec('user_callback', cbname);
+    asyncRemoteExec('user_callback', cbname);
 }
 
 function unloadPageData() {
     // NOTE: do not make async calls on unload if you want to avoid
     //       strange bugs
-    remote_exec('unload_page_data');
+    remoteExec('unload_page_data');
 }
 
 function openHash() {
@@ -236,7 +199,7 @@ function reloadComponent(compid, rql, registry, nodeid, extraargs) {
     nodeid = nodeid || (compid + 'Component');
     extraargs = extraargs || {};
     var node = getNode(nodeid);
-    var d = async_rawremote_exec('component', compid, rql, registry, extraargs);
+    var d = asyncRemoteExec('component', compid, rql, registry, extraargs);
     d.addCallback(function(result, req) {
 	var domnode = getDomFromResponse(result);
 	if (node) {
@@ -259,7 +222,7 @@ function reloadBox(boxid, rql) {
 }
 
 function userCallbackThenUpdateUI(cbname, compid, rql, msg, registry, nodeid) {
-    var d = async_remote_exec('user_callback', cbname);
+    var d = asyncRemoteExec('user_callback', cbname);
     d.addCallback(function() {
 	reloadComponent(compid, rql, registry, nodeid);
 	if (msg) { updateMessage(msg); }
@@ -273,7 +236,7 @@ function userCallbackThenUpdateUI(cbname, compid, rql, msg, registry, nodeid) {
 }
 
 function userCallbackThenReloadPage(cbname, msg) {
-    var d = async_remote_exec('user_callback', cbname);
+    var d = asyncRemoteExec('user_callback', cbname);
     d.addCallback(function() {
 	window.location.reload();
 	if (msg) { updateMessage(msg); }
@@ -291,7 +254,7 @@ function userCallbackThenReloadPage(cbname, msg) {
  * while the page was generated.
  */
 function unregisterUserCallback(cbname) {
-    var d = async_remote_exec('unregister_user_callback', cbname);
+    var d = asyncRemoteExec('unregister_user_callback', cbname);
     d.addCallback(function() {resetCursor();});
     d.addErrback(function(xxx) {
 	updateMessage(_("an error occured"));
@@ -322,11 +285,11 @@ function replacePageChunk(nodeId, rql, vid, extraparams, /* ... */ swap, callbac
 	props['pageid'] = pageid;
 	if (vid) { props['vid'] = vid; }
 	if (extraparams) { jQuery.extend(props, extraparams); }
-	// FIXME we need to do as_url(props) manually instead of
+	// FIXME we need to do asURL(props) manually instead of
 	// passing `props` directly to loadxml because replacePageChunk
 	// is sometimes called (abusively) with some extra parameters in `vid`
 	var mode = swap?'swap':'replace';
-	var url = JSON_BASE_URL + as_url(props);
+	var url = JSON_BASE_URL + asURL(props);
 	jQuery(node).loadxhtml(url, params, 'get', mode);
     } else {
 	log('Node', nodeId, 'not found');
@@ -357,6 +320,22 @@ function buildWysiwygEditors(parent) {
 jQuery(document).ready(buildWysiwygEditors);
 
 
+/*
+ * takes a list of DOM nodes and removes all empty text nodes
+ */
+function stripEmptyTextNodes(nodelist) {
+    var stripped = [];
+    for (var i=0; i < nodelist.length; i++) {
+	var node = nodelist[i];
+	if (isTextNode(node) && !node.textContent.strip()) {
+	    continue;
+	} else {
+	    stripped.push(node);
+	}
+    }
+    return stripped;
+}
+
 /* convenience function that returns a DOM node based on req's result. */
 function getDomFromResponse(response) {
     if (typeof(response) == 'string') {
@@ -368,6 +347,7 @@ function getDomFromResponse(response) {
 	// no child (error cases) => return the whole document
 	return doc.cloneNode(true);
     }
+    children = stripEmptyTextNodes(children);
     if (children.length == 1) {
 	// only one child => return it
 	return children[0].cloneNode(true);

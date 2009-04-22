@@ -1,6 +1,6 @@
 /*
  *  :organization: Logilab
- *  :copyright: 2003-2008 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+ *  :copyright: 2003-2009 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
  *  :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
  */
 
@@ -22,7 +22,8 @@ CubicWeb.require('ajax.js');
 function setPropValueWidget(varname, tabindex) {
     var key = firstSelected(document.getElementById('pkey:'+varname));
     if (key) {
-	var args = _buildRemoteArgs('prop_widget', key, varname, tabindex);
+	var args = {fname: 'prop_widget', pageid: pageid,
+     		    arg: map(jQuery.toJSON, [key, varname, tabindex])};
 	jqNode('div:value:'+varname).loadxhtml(JSON_BASE_URL, args, 'post');
     }
 }
@@ -51,39 +52,24 @@ function reorderTabindex(start) {
     });
 }
 
+
 function showMatchingSelect(selectedValue, eid) {
     if (selectedValue) {
 	divId = 'div' + selectedValue + '_' + eid;
 	var divNode = jQuery('#' + divId);
 	if (!divNode.length) {
 	    var args = {vid: 'unrelateddivs', relation: selectedValue,
-			rql: rql_for_eid(eid), pageid: pageid,
-			'__notemplate': 1};
-	    jQuery.get(JSON_BASE_URL, args, function(response) {
-		// append generated HTML to the cell
-		jQuery('#unrelatedDivs_' + eid).append(getDomFromResponse(response));
-		_showMatchingSelect(eid, jQuery('#' + divId));
-	    });
-	    // deferred = doXHR(JSON_BASE_URL + queryString(args));
-	    // deferred.addCallback(_buildAndShowMatchingSelect, eid, divId);
+			rql: rql_for_eid(eid), '__notemplate': 1,
+			callback: function() {_showMatchingSelect(eid, jQuery('#' + divId))}};
+	    jQuery('#unrelatedDivs_' + eid).loadxhtml(baseuri() + 'view', args, 'post', 'append');
 	} else {
 	    _showMatchingSelect(eid, divNode);
 	}
-    }
-    else {
+    } else {
 	_showMatchingSelect(eid, null);
     }
 }
 
-
-
-// @param divStr a HTML string returned by the server
-// function _buildAndShowMatchingSelect(eid, divId, req) {
-//     var tdNode = jQuery('#unrelatedDivs_' + eid);
-//     // append generated HTML to the cell
-//     tdNode.appendChild(getDomFromRequest(req));
-//     _showMatchingSelect(eid, jQuery('#' + divId));
-// }
 
 // @param divNode is a jQuery selection
 function _showMatchingSelect(eid, divNode) {
@@ -154,7 +140,7 @@ function addPendingInsert(optionNode, eid, cell, relname) {
     // add hidden parameter
     var entityForm = jQuery('#entityForm');
     var oid = optionNode.id.substring(2); // option id is prefixed by "id"
-    remote_exec('add_pending_insert', oid.split(':'));
+    remoteExec('add_pending_inserts', [oid.split(':')]);
     var selectNode = optionNode.parentNode;
     // remove option node
     selectNode.removeChild(optionNode);
@@ -186,7 +172,7 @@ function cancelPendingInsert(elementId, element_name, comboId, eid) {
 	   options[options.length] = OPTION({'id' : elementId, 'value' : node_id}, entityView);
 	}
     }
-    remote_exec('remove_pending_insert', elementId.split(':'));
+    remoteExec('remove_pending_insert', elementId.split(':'));
 }
 
 // this function builds a Handle to cancel pending insertion
@@ -198,7 +184,7 @@ function buildPendingDeleteHandle(elementId, eid) {
 
 // @param nodeId eid_from:r_type:eid_to
 function addPendingDelete(nodeId, eid) {
-    var d = async_remote_exec('add_pending_delete', nodeId.split(':'));
+    var d = asyncRemoteExec('add_pending_delete', nodeId.split(':'));
     d.addCallback(function () {
 	// and strike entity view
 	jqNode('span' + nodeId).addClass('pendingDelete');
@@ -209,7 +195,7 @@ function addPendingDelete(nodeId, eid) {
 
 // @param nodeId eid_from:r_type:eid_to
 function cancelPendingDelete(nodeId, eid) {
-    var d = async_remote_exec('remove_pending_delete', nodeId.split(':'));
+    var d = asyncRemoteExec('remove_pending_delete', nodeId.split(':'));
     d.addCallback(function () {
 	// reset link's CSS class
 	jqNode('span' + nodeId).removeClass('pendingDelete');
@@ -232,11 +218,11 @@ function togglePendingDelete(nodeId, eid) {
 function selectForAssociation(tripletIdsString, originalEid) {
     var tripletlist = map(function (x) { return x.split(':'); },
 			  tripletIdsString.split('-'));
-    var d = async_remote_exec('add_pending_inserts', tripletlist);
+    var d = asyncRemoteExec('add_pending_inserts', tripletlist);
     d.addCallback(function () {
 	var args = {vid: 'edition', __mode: 'normal',
 		    rql: rql_for_eid(originalEid)};
-	document.location = 'view?' + as_url(args);
+	document.location = 'view?' + asURL(args);
     });
 
 }
@@ -246,12 +232,8 @@ function updateInlinedEntitiesCounters(rtype) {
     jQuery('#inline' + rtype + 'slot span.icounter').each(function (i) {
 	this.innerHTML = i+1;
     });
-    // var divnode = jQuery('#inline' + rtype + 'slot');
-    // var iforms = getElementsByTagAndClassName('span', 'icounter', divnode);
-    // for (var i=0; i<iforms.length; i++) {
-    //   iforms[i].innerHTML = i+1;
-    // }
 }
+
 
 /*
  * makes an AJAX request to get an inline-creation view's content
@@ -260,21 +242,17 @@ function updateInlinedEntitiesCounters(rtype) {
  * @param rtype : the relation type between both entities
  */
 function addInlineCreationForm(peid, ttype, rtype, role) {
-    var d = async_rawremote_exec('inline_creation_form', peid, ttype, rtype, role);
+    var d = asyncRemoteExec('inline_creation_form', peid, ttype, rtype, role);
     d.addCallback(function (response) {
 	var linknode = getNode('add' + rtype + ':' + peid + 'link');
         var dom = getDomFromResponse(response);
 	var form = jQuery(dom);
 	form.css('display', 'none');
 	form.insertBefore(linknode.parentNode).slideDown('fast');
-	// setStyle(form, {display: 'none'});
-	// insertSiblingNodesBefore(linknode.parentNode, form);
 	updateInlinedEntitiesCounters(rtype);
-	// slideDown(form, {'duration':0.6});
 	reorderTabindex();
 	form.trigger('inlinedform-added');
         postAjaxLoad(dom);
-	// MochiKit.Signal.signal(CubicWeb, 'inlinedform-added', form);
     });
     d.addErrback(function (xxx) {
 	log('xxx =', xxx);
@@ -300,15 +278,13 @@ function removeInlineForm(peid, rtype, eid) {
  */
 function removeInlinedEntity(peid, rtype, eid) {
     var nodeid = ['rel', peid, rtype, eid].join('-');
-    var divid = ['div', peid, rtype, eid].join('-');
-    var noticeid = ['notice', peid, rtype, eid].join('-');
     var node = jqNode(nodeid);
     if (node && node.length) {
 	node.remove();
+	var divid = ['div', peid, rtype, eid].join('-');
 	jqNode(divid).fadeTo('fast', 0.5);
-	// setOpacity(divid, 0.4);
+	var noticeid = ['notice', peid, rtype, eid].join('-');
 	jqNode(noticeid).fadeIn('fast');
-	// appear(jQuery('#' + noticeid), {'duration': 0.5});
     }
 }
 
@@ -321,11 +297,8 @@ function restoreInlinedEntity(peid, rtype, eid) {
 	node = INPUT({type: 'hidden', id: nodeid,
 		      name: rtype+':'+peid, value: eid});
 	jqNode(['fs', peid, rtype, eid].join('-')).append(node);
-	// appendChildNodes(fs, node);
 	jqNode(divid).fadeTo('fast', 1);
-	// setOpacity(divid, 1);
 	jqNode(noticeid).hide();
-	// jQuery('#' + noticeid).hide();
     }
 }
 
@@ -433,8 +406,8 @@ function setFormsTarget() {
 	var target = form.attr('cubicweb:target');
 	if (target) {
 	    form.attr('target', target);
-	    /* do not use display: none because some browser ignore iframe
-             *     with no display */
+	    /* do not use display: none because some browsers ignore iframe
+             * with no display */
 	    form.append(IFRAME({name: target, id: target,
 				src: 'javascript: void(0)',
 				width: '0px', height: '0px'}));
@@ -444,10 +417,6 @@ function setFormsTarget() {
 
 $(document).ready(setFormsTarget);
 
-function _sendForm(formid, action) {
-    var zipped = formContents(formid);
-    return async_remote_exec('validate_form', action, zipped[0], zipped[1]);
-}
 
 /*
  * called on traditionnal form submission : the idea is to try
@@ -457,7 +426,8 @@ function _sendForm(formid, action) {
  */
 function validateForm(formid, action, onsuccess) {
     try {
-	var d = _sendForm(formid, action);
+	var zipped = formContents(formid);
+	var d = asyncRemoteExec('validate_form', action, zipped[0], zipped[1]);
     } catch (ex) {
 	log('got exception', ex);
 	return false;
@@ -465,10 +435,10 @@ function validateForm(formid, action, onsuccess) {
     function _callback(result, req) {
 	handleFormValidationResponse(formid, onsuccess, result);
     }
-    // d.addCallback(handleFormValidationResponse, formid, onsuccess);
     d.addCallback(_callback);
     return false;
 }
+
 
 /*
  * called by live-edit forms to submit changes
@@ -489,7 +459,7 @@ function inlineValidateForm(formid, rtype, eid, divid, reload) {
 	    }
 	}
 	var zipped = formContents(form);
-	var d = async_remote_exec('edit_field', 'apply', zipped[0], zipped[1], rtype, eid);
+	var d = asyncRemoteExec('edit_field', 'apply', zipped[0], zipped[1], rtype, eid);
     } catch (ex) {
 	log('got exception', ex);
 	return false;

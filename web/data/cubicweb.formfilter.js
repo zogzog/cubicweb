@@ -43,7 +43,7 @@ function buildRQL(divid, vid, paginate, vidargs) {
     var zipped = facetFormContent(form);
     zipped[0].push('facetargs');
     zipped[1].push(vidargs);
-    var d = async_remote_exec('filter_build_rql', zipped[0], zipped[1]);
+    var d = asyncRemoteExec('filter_build_rql', zipped[0], zipped[1]);
     d.addCallback(function(result) {
 	var rql = result[0];
 	var $bkLink = jQuery('#facetBkLink');
@@ -80,7 +80,7 @@ function buildRQL(divid, vid, paginate, vidargs) {
 		reloadComponent('edit_box', rql, 'boxes', 'edit_box');
 	    }
 	}
-	var d = async_remote_exec('filter_select_content', toupdate, rql);
+	var d = asyncRemoteExec('filter_select_content', toupdate, rql);
 	d.addCallback(function(updateMap) {
 	    for (facetId in updateMap) {
 		var values = updateMap[facetId];

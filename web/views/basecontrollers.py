@@ -18,7 +18,7 @@ from logilab.common.decorators import cached
 from cubicweb import NoSelectableObject, ValidationError, ObjectNotFound, typed_eid
 from cubicweb.utils import strptime
 from cubicweb.selectors import yes, match_user_groups
-from cubicweb.view import STRICT_DOCTYPE, CW_XHTML_EXTENSIONS
+from cubicweb.view import STRICT_DOCTYPE
 from cubicweb.common.mail import format_mail
 from cubicweb.web import ExplicitLogin, Redirect, RemoteCallFailed
 from cubicweb.web.formrenderers import FormRenderer
@@ -30,8 +30,42 @@ try:
     HAS_SEARCH_RESTRICTION = True
 except ImportError: # gae
     HAS_SEARCH_RESTRICTION = False
-    
-    
+
+
+def xhtml_wrap(source):
+    head = u'<?xml version="1.0"?>\n' + STRICT_DOCTYPE
+    return head + u'<div xmlns="http://www.w3.org/1999/xhtml" xmlns:cubicweb="http://www.logilab.org/2008/cubicweb">%s</div>' % source.strip()
+
+def jsonize(func):
+    """decorator to sets correct content_type and calls `simplejson.dumps` on
+    results
+    """
+    def wrapper(self, *args, **kwargs):
+        self.req.set_content_type('application/json')
+        result = func(self, *args, **kwargs)
+        return simplejson.dumps(result)
+    return wrapper
+
+def xhtmlize(func):
+    """decorator to sets correct content_type and calls `xmlize` on results"""
+    def wrapper(self, *args, **kwargs):
+        self.req.set_content_type(self.req.html_content_type())
+        result = func(self, *args, **kwargs)
+        return xhtml_wrap(result)
+    return wrapper
+
+def check_pageid(func):
+    """decorator which checks the given pageid is found in the
+    user's session data
+    """
+    def wrapper(self, *args, **kwargs):
+        data = self.req.get_session_data(self.req.pageid)
+        if data is None:
+            raise RemoteCallFailed(self.req._('pageid-not-found'))
+        return func(self, *args, **kwargs)
+    return wrapper
+
+
 class LoginController(Controller):
     id = 'login'
 
@@ -44,10 +78,10 @@ class LoginController(Controller):
             # Cookie authentication
             return self.appli.need_login_content(self.req)
 
-    
+
 class LogoutController(Controller):
     id = 'logout'
-    
+
     def publish(self, rset=None):
         """logout from the application"""
         return self.appli.session_handler.logout(self.req)
@@ -60,7 +94,7 @@ class ViewController(Controller):
     """
     id = 'view'
     template = 'main-template'
-    
+
     def publish(self, rset=None):
         """publish a request, returning an encoded string"""
         view, rset = self._select_view_and_rset(rset)
@@ -131,7 +165,7 @@ class ViewController(Controller):
             else:
                 rql = 'SET Y %s X WHERE X eid %%(x)s, Y eid %%(y)s' % rtype
             for teid in eids:
-                req.execute(rql, {'x': eid, 'y': typed_eid(teid)}, ('x', 'y')) 
+                req.execute(rql, {'x': eid, 'y': typed_eid(teid)}, ('x', 'y'))
 
 
 class FormValidatorController(Controller):
@@ -178,56 +212,65 @@ class FormValidatorController(Controller):
         except AttributeError:
             eid = err.entity
         return (False, (eid, err.errors))
-        
-def xmlize(source):
-    head = u'<?xml version="1.0"?>\n' + STRICT_DOCTYPE % CW_XHTML_EXTENSIONS
-    return head + u'<div xmlns="http://www.w3.org/1999/xhtml" xmlns:cubicweb="http://www.logilab.org/2008/cubicweb">%s</div>' % source.strip()
 
-def jsonize(func):
-    """sets correct content_type and calls `simplejson.dumps` on results
-    """
-    def wrapper(self, *args, **kwargs):
-        self.req.set_content_type('application/json')
-        result = func(self, *args, **kwargs)
-        return simplejson.dumps(result)
-    return wrapper
-
-
-def check_pageid(func):
-    """decorator which checks the given pageid is found in the
-    user's session data
-    """
-    def wrapper(self, *args, **kwargs):
-        data = self.req.get_session_data(self.req.pageid)
-        if data is None:
-            raise RemoteCallFailed(self.req._('pageid-not-found'))
-        return func(self, *args, **kwargs)
-    return wrapper
-    
 
 class JSonController(Controller):
     id = 'json'
-    template = 'main'
 
     def publish(self, rset=None):
-        mode = self.req.form.get('mode', 'html')
+        """call js_* methods. Expected form keys:
+
+        :fname: the method name without the js_ prefix
+        :args: arguments list (json)
+
+        note: it's the responsability of js_* methods to set the correct
+        response content type
+        """
         self.req.pageid = self.req.form.get('pageid')
+        fname = self.req.form['fname']
         try:
-            func = getattr(self, '%s_exec' % mode)
-        except AttributeError, ex:
-            self.error('json controller got an unknown mode %r', mode)
-            self.error('\t%s', ex)
-            result = u''
-        else:
-            try:
-                result = func(rset)
-            except RemoteCallFailed:
-                raise
-            except Exception, ex:
-                self.exception('an exception occured on json request(rset=%s): %s',
-                               rset, ex)
-                raise RemoteCallFailed(repr(ex))
-        return result.encode(self.req.encoding)
+            func = getattr(self, 'js_%s' % fname)
+        except AttributeError:
+            raise RemoteCallFailed('no %s method' % fname)
+        # no <arg> attribute means the callback takes no argument
+        args = self.req.form.get('arg', ())
+        if not isinstance(args, (list, tuple)):
+            args = (args,)
+        args = [simplejson.loads(arg) for arg in args]
+        try:
+            result = func(*args)
+        except RemoteCallFailed:
+            raise
+        except Exception, ex:
+            self.exception('an exception occured while calling js_%s(%s): %s',
+                           fname, args, ex)
+            raise RemoteCallFailed(repr(ex))
+        if result is None:
+            return ''
+        # get unicode on @htmlize methods, encoded string on @jsonize methods
+        elif isinstance(result, unicode):
+            return result.encode(self.req.encoding)
+        return result
+
+    def _rebuild_posted_form(self, names, values, action=None):
+        form = {}
+        for name, value in zip(names, values):
+            # remove possible __action_xxx inputs
+            if name.startswith('__action'):
+                continue
+            # form.setdefault(name, []).append(value)
+            if name in form:
+                curvalue = form[name]
+                if isinstance(curvalue, list):
+                    curvalue.append(value)
+                else:
+                    form[name] = [curvalue, value]
+            else:
+                form[name] = value
+        # simulate click on __action_%s button to help the controller
+        if action:
+            form['__action_%s' % action] = u'whatever'
+        return form
 
     def _exec(self, rql, args=None, eidkey=None, rocheck=True):
         """json mode: execute RQL and return resultset as json"""
@@ -240,31 +283,15 @@ class JSonController(Controller):
             return None
         return None
 
-    @jsonize
-    def json_exec(self, rset=None):
-        """json mode: execute RQL and return resultset as json"""
-        rql = self.req.form.get('rql')
-        if rset is None and rql:
-            rset = self._exec(rql)
-        return rset and rset.rows or []
-
-    def _set_content_type(self, vobj, data):
-        """sets req's content type according to vobj's content type
-        (and xmlize data if needed)
-        """
-        content_type = vobj.content_type
-        if content_type == 'application/xhtml+xml':
-            self.req.set_content_type(content_type)
-            return xmlize(data)
-        return data
-    
-    def html_exec(self, rset=None):
+    @xhtmlize
+    def js_view(self):
         # XXX try to use the page-content template
         req = self.req
         rql = req.form.get('rql')
-        if rset is None and rql:
+        if rql:
             rset = self._exec(rql)
-        
+        else:
+            rset = None
         vid = req.form.get('vid') or vid_from_rset(req, rset, self.schema)
         try:
             view = self.vreg.select_view(vid, req, rset)
@@ -292,46 +319,46 @@ class JSonController(Controller):
             stream.write(u'</div>\n')
         if req.form.get('paginate') and divid == 'pageContent':
             stream.write(u'</div></div>')
-        source = stream.getvalue()
-        return self._set_content_type(view, source)
+        return stream.getvalue()
 
-    def rawremote_exec(self, rset=None):
-        """like remote_exec but doesn't change content type"""
-        # no <arg> attribute means the callback takes no argument
-        args = self.req.form.get('arg', ())
-        if not isinstance(args, (list, tuple)):
-            args = (args,)
-        fname = self.req.form['fname']
-        args = [simplejson.loads(arg) for arg in args]
-        try:
-            func = getattr(self, 'js_%s' % fname)
-        except AttributeError:
-            self.exception('rawremote_exec fname=%s', fname)
-            return u""
-        return func(*args)
+    @xhtmlize
+    def js_prop_widget(self, propkey, varname, tabindex=None):
+        """specific method for CWProperty handling"""
+        entity = self.vreg.etype_class('CWProperty')(self.req, None, None)
+        entity.eid = varname
+        entity['pkey'] = propkey
+        form = self.vreg.select_object('forms', 'edition', self.req, None,
+                                       entity=entity)
+        form.form_build_context()
+        vfield = form.field_by_name('value')
+        renderer = FormRenderer()
+        return vfield.render(form, renderer, tabindex=tabindex) \
+               + renderer.render_help(form, vfield)
 
-    remote_exec = jsonize(rawremote_exec)
-        
-    def _rebuild_posted_form(self, names, values, action=None):
-        form = {}
-        for name, value in zip(names, values):
-            # remove possible __action_xxx inputs
-            if name.startswith('__action'):
-                continue
-            # form.setdefault(name, []).append(value)
-            if name in form:
-                curvalue = form[name]
-                if isinstance(curvalue, list):
-                    curvalue.append(value)
-                else:
-                    form[name] = [curvalue, value]
-            else:
-                form[name] = value
-        # simulate click on __action_%s button to help the controller
-        if action:
-            form['__action_%s' % action] = u'whatever'
-        return form
-    
+    @xhtmlize
+    def js_component(self, compid, rql, registry='components', extraargs=None):
+        if rql:
+            rset = self._exec(rql)
+        else:
+            rset = None
+        comp = self.vreg.select_object(registry, compid, self.req, rset)
+        if extraargs is None:
+            extraargs = {}
+        else: # we receive unicode keys which is not supported by the **syntax
+            extraargs = dict((str(key), value)
+                             for key, value in extraargs.items())
+        extraargs = extraargs or {}
+        return comp.dispatch(**extraargs)
+
+    @check_pageid
+    @xhtmlize
+    def js_inline_creation_form(self, peid, ttype, rtype, role):
+        view = self.vreg.select_view('inline-creation', self.req, None,
+                                     etype=ttype, peid=peid, rtype=rtype,
+                                     role=role)
+        return view.dispatch(etype=ttype, peid=peid, rtype=rtype, role=role)
+
+    @jsonize
     def js_validate_form(self, action, names, values):
         # XXX this method (and correspoding js calls) should use the new
         #     `RemoteCallFailed` mechansim
@@ -359,6 +386,7 @@ class JSonController(Controller):
             return (False, self.req._(str(err)))
         return (False, '???')
 
+    @jsonize
     def js_edit_field(self, action, names, values, rtype, eid):
         success, args = self.js_validate_form(action, names, values)
         if success:
@@ -368,52 +396,29 @@ class JSonController(Controller):
             return (success, args, entity.printable_value(rtype))
         else:
             return (success, args, None)
-            
-    def js_rql(self, rql):
-        rset = self._exec(rql)
-        return rset and rset.rows or []
-    
+
+#     def js_rql(self, rql):
+#         rset = self._exec(rql)
+#         return rset and rset.rows or []
+
+    @jsonize
     def js_i18n(self, msgids):
         """returns the translation of `msgid`"""
         return [self.req._(msgid) for msgid in msgids]
 
+    @jsonize
     def js_format_date(self, strdate):
         """returns the formatted date for `msgid`"""
         date = strptime(strdate, '%Y-%m-%d %H:%M:%S')
         return self.format_date(date)
 
+    @jsonize
     def js_external_resource(self, resource):
         """returns the URL of the external resource named `resource`"""
         return self.req.external_resource(resource)
 
-    def js_prop_widget(self, propkey, varname, tabindex=None):
-        """specific method for CWProperty handling"""
-        entity = self.vreg.etype_class('CWProperty')(self.req, None, None)
-        entity.eid = varname
-        entity['pkey'] = propkey
-        form = self.vreg.select_object('forms', 'edition', self.req, None,
-                                       entity=entity)
-        form.form_build_context()
-        vfield = form.field_by_name('value')
-        renderer = FormRenderer()
-        return vfield.render(form, renderer, tabindex=tabindex) \
-                   + renderer.render_help(form, vfield)
-
-    def js_component(self, compid, rql, registry='components', extraargs=None):
-        if rql:
-            rset = self._exec(rql)
-        else:
-            rset = None
-        comp = self.vreg.select_object(registry, compid, self.req, rset)
-        if extraargs is None:
-            extraargs = {}
-        else: # we receive unicode keys which is not supported by the **syntax
-            extraargs = dict((str(key), value)
-                             for key, value in extraargs.items())
-        extraargs = extraargs or {}
-        return self._set_content_type(comp, comp.dispatch(**extraargs))
-
     @check_pageid
+    @jsonize
     def js_user_callback(self, cbname):
         page_data = self.req.get_session_data(self.req.pageid, {})
         try:
@@ -421,53 +426,16 @@ class JSonController(Controller):
         except KeyError:
             return None
         return cb(self.req)
-    
-    def js_unregister_user_callback(self, cbname):
-        self.req.unregister_callback(self.req.pageid, cbname)
-
-    def js_unload_page_data(self):
-        self.req.del_session_data(self.req.pageid)
-        
-    def js_cancel_edition(self, errorurl):
-        """cancelling edition from javascript
-
-        We need to clear associated req's data :
-          - errorurl
-          - pending insertions / deletions
-        """
-        self.req.cancel_edition(errorurl)
-    
-    @check_pageid
-    def js_inline_creation_form(self, peid, ttype, rtype, role):
-        view = self.vreg.select_view('inline-creation', self.req, None,
-                                     etype=ttype, peid=peid, rtype=rtype,
-                                     role=role)
-        source = view.dispatch(etype=ttype, peid=peid, rtype=rtype, role=role)
-        return self._set_content_type(view, source)
-
-    def js_remove_pending_insert(self, (eidfrom, rel, eidto)):
-        self._remove_pending(eidfrom, rel, eidto, 'insert')
-        
-    def js_add_pending_insert(self, (eidfrom, rel, eidto)):
-        self._add_pending(eidfrom, rel, eidto, 'insert')
-        
-    def js_add_pending_inserts(self, tripletlist):
-        for eidfrom, rel, eidto in tripletlist:
-            self._add_pending(eidfrom, rel, eidto, 'insert')
-        
-    def js_remove_pending_delete(self, (eidfrom, rel, eidto)):
-        self._remove_pending(eidfrom, rel, eidto, 'delete')
-    
-    def js_add_pending_delete(self, (eidfrom, rel, eidto)):
-        self._add_pending(eidfrom, rel, eidto, 'delete')
 
     if HAS_SEARCH_RESTRICTION:
+        @jsonize
         def js_filter_build_rql(self, names, values):
             form = self._rebuild_posted_form(names, values)
             self.req.form = form
             builder = FilterRQLBuilder(self.req)
             return builder.build_rql()
 
+        @jsonize
         def js_filter_select_content(self, facetids, rql):
             rqlst = self.vreg.parse(self.req, rql) # XXX Union unsupported yet
             mainvar = prepare_facets_rqlst(rqlst)[0]
@@ -477,13 +445,33 @@ class JSonController(Controller):
                 update_map[facetid] = facet.possible_values()
             return update_map
 
+    def js_unregister_user_callback(self, cbname):
+        self.req.unregister_callback(self.req.pageid, cbname)
+
+    def js_unload_page_data(self):
+        self.req.del_session_data(self.req.pageid)
+
+    def js_cancel_edition(self, errorurl):
+        """cancelling edition from javascript
+
+        We need to clear associated req's data :
+          - errorurl
+          - pending insertions / deletions
+        """
+        self.req.cancel_edition(errorurl)
+
     def js_delete_bookmark(self, beid):
-        try:
-            rql = 'DELETE B bookmarked_by U WHERE B eid %(b)s, U eid %(u)s'
-            self.req.execute(rql, {'b': typed_eid(beid), 'u' : self.req.user.eid})
-        except Exception, ex:
-            self.exception(unicode(ex))
-            return self.req._('Problem occured')
+        rql = 'DELETE B bookmarked_by U WHERE B eid %(b)s, U eid %(u)s'
+        self.req.execute(rql, {'b': typed_eid(beid), 'u' : self.req.user.eid})
+
+    def js_set_cookie(self, cookiename, cookievalue):
+        # XXX we should consider jQuery.Cookie
+        cookiename, cookievalue = str(cookiename), str(cookievalue)
+        cookies = self.req.get_cookie()
+        cookies[cookiename] = cookievalue
+        self.req.set_cookie(cookies, cookiename)
+
+    # relations edition stuff ##################################################
 
     def _add_pending(self, eidfrom, rel, eidto, kind):
         key = 'pending_%s' % kind
@@ -492,7 +480,7 @@ class JSonController(Controller):
         self.req.set_session_data(key, pendings)
 
     def _remove_pending(self, eidfrom, rel, eidto, kind):
-        key = 'pending_%s' % kind        
+        key = 'pending_%s' % kind
         try:
             pendings = self.req.get_session_data(key)
             pendings.remove( (typed_eid(eidfrom), rel, typed_eid(eidto)) )
@@ -501,6 +489,21 @@ class JSonController(Controller):
         else:
             self.req.set_session_data(key, pendings)
 
+    def js_remove_pending_insert(self, (eidfrom, rel, eidto)):
+        self._remove_pending(eidfrom, rel, eidto, 'insert')
+
+    def js_add_pending_inserts(self, tripletlist):
+        for eidfrom, rel, eidto in tripletlist:
+            self._add_pending(eidfrom, rel, eidto, 'insert')
+
+    def js_remove_pending_delete(self, (eidfrom, rel, eidto)):
+        self._remove_pending(eidfrom, rel, eidto, 'delete')
+
+    def js_add_pending_delete(self, (eidfrom, rel, eidto)):
+        self._add_pending(eidfrom, rel, eidto, 'delete')
+
+    # XXX specific code. Kill me and my AddComboBox friend
+    @jsonize
     def js_add_and_link_new_entity(self, etype_to, rel, eid_to, etype_from, value_from):
         # create a new entity
         eid_from = self.req.execute('INSERT %s T : T name "%s"' % ( etype_from, value_from ))[0][0]
@@ -508,12 +511,6 @@ class JSonController(Controller):
         rql = 'SET F %(rel)s T WHERE F eid %(eid_to)s, T eid %(eid_from)s' % {'rel' : rel, 'eid_to' : eid_to, 'eid_from' : eid_from}
         return eid_from
 
-    def js_set_cookie(self, cookiename, cookievalue):
-        # XXX we should consider jQuery.Cookie
-        cookiename, cookievalue = str(cookiename), str(cookievalue)
-        cookies = self.req.get_cookie()
-        cookies[cookiename] = cookievalue
-        self.req.set_cookie(cookies, cookiename)
 
 class SendMailController(Controller):
     id = 'sendmail'
@@ -549,7 +546,7 @@ class SendMailController(Controller):
         msg = format_mail({'email' : self.req.user.get_email(),
                            'name' : self.req.user.dc_title(),},
                           [recipient], body, subject)
-        self.smtp.sendmail(helo_addr, [recipient], msg.as_string())    
+        self.smtp.sendmail(helo_addr, [recipient], msg.as_string())
 
     def publish(self, rset=None):
         # XXX this allow anybody with access to an cubicweb application to use it as a mail relay
@@ -572,4 +569,4 @@ class MailBugReportController(SendMailController):
         self.sendmail(self.config['submit-mail'], _('%s error report') % self.config.appid, body)
         url = self.build_url(__message=self.req._('bug report sent'))
         raise Redirect(url)
-    
+

@@ -111,13 +111,13 @@ function updateMessage(msg) {
 }
 
 /* builds an url from an object (used as a dictionnary)
- * Notable difference with MochiKit's queryString: as_url does not
+ * Notable difference with MochiKit's queryString: asURL does not
  * *url_quote* each value found in the dictionnary
  *
- * >>> as_url({'rql' : "RQL", 'x': [1, 2], 'itemvid' : "oneline"})
+ * >>> asURL({'rql' : "RQL", 'x': [1, 2], 'itemvid' : "oneline"})
  * rql=RQL&vid=list&itemvid=oneline&x=1&x=2
  */
-function as_url(props) {
+function asURL(props) {
     var chunks = [];
     for(key in props) {
 	var value = props[key];
