@@ -220,12 +220,19 @@ The methods you want to modify while customizing a ``PrimaryView`` are:
     of type `Password` and `Bytes`.
 
 *content_navigation_components(self, context)*
+    This method is applicable only for entity type implementing the interface 
+    `IPrevNext`. This interface is for entities which can be linked to a previous
+    and/or next entity. This methods will render the navigation links between
+    entities of this type, either at the top or at the bottom of the page
+    given the context (navcontent{top|bottom}).
 
 *render_entity_relations(self, entity, siderelations)*
-    Renders all the relations of the entity.
+    Renders all the relations of the entity in the main section of the page.
         
 *render_side_related(self, entity, siderelations)*
-    Renders side related relations.
+    Renders all the relations of the entity in a side box. This is equivalent
+    to *render_entity_relations* in addition to render the relations
+    in a box.
 
 Also, please note that by setting the following attributes in you class,
 you can already customize some of the rendering:
