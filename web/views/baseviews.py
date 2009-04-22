@@ -734,7 +734,7 @@ class RssItemView(EntityView):
            
     def render_entity_creator(self, entity):
         if entity.creator:
-            self._marker('dc:creator', entity.creator.name())
+            self._marker('dc:creator', entity.dc_creator())
        
                 
     def _marker(self, marker, value):
