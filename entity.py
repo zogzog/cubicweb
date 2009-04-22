@@ -277,7 +277,7 @@ class Entity(AppRsetObject, dict):
                 orderby.append(orderterm)
         return selection, orderby, restrictions
 
-    def __init__(self, req, rset, row=None, col=0):
+    def __init__(self, req, rset=None, row=None, col=0):
         AppRsetObject.__init__(self, req, rset, row, col)
         dict.__init__(self)
         self._related_cache = {}

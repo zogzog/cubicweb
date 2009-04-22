@@ -482,7 +482,7 @@ class CreationFormView(EditionFormView):
         """creation view for an entity"""
         etype = kwargs.pop('etype', self.req.form.get('etype'))
         try:
-            entity = self.vreg.etype_class(etype)(self.req, None, None)
+            entity = self.vreg.etype_class(etype)(self.req)
         except:
             self.w(self.req._('no such entity type %s') % etype)
         else:
