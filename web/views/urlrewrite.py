@@ -7,7 +7,6 @@
 import re
 
 from cubicweb.appobject import AppObject
-from cubicweb.common.registerers import accepts_registerer
 
 
 def rgx(pattern, flags=0):
@@ -53,7 +52,6 @@ class URLRewriter(AppObject):
     """
     __metaclass__ = metarewriter
     __registry__ = 'urlrewriting'
-    __registerer__ = accepts_registerer
     __abstract__ = True
 
     id = 'urlrewriting'

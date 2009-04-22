@@ -11,7 +11,6 @@ from datetime import timedelta
 
 from cubicweb import typed_eid
 from cubicweb.utils import strptime
-from cubicweb.common.registerers import priority_registerer
 from cubicweb.selectors import yes, require_group_compat
 from cubicweb.appobject import AppObject
 from cubicweb.web import LOGGER, Redirect, RequestError
@@ -68,7 +67,6 @@ class Controller(AppObject):
     and another linked by forms to edit objects ("edit").
     """
     __registry__ = 'controllers'
-    __registerer__ = priority_registerer
     __select__ = yes()
     registered = require_group_compat(AppObject.registered)
 

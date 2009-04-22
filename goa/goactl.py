@@ -65,7 +65,6 @@ COPY_CW_FILES = (
     'common/migration.py',
     'common/mixins.py',
     'common/mttransforms.py',
-    'common/registerers.py',
     'common/uilib.py',
 
     'ext/html4zope.py',

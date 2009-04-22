@@ -16,7 +16,6 @@ from cubicweb.selectors import (
     paginated_rset, one_line_rset, primary_view, match_context_prop,
     partial_has_related_entities, condition_compat, accepts_compat,
     has_relation_compat)
-from cubicweb.common.registerers import accepts_registerer
 
 _ = unicode
 
@@ -32,7 +31,6 @@ class EntityVComponent(Component):
     """
     
     __registry__ = 'contentnavigation'
-    __registerer__ = accepts_registerer    
     __select__ = one_line_rset() & primary_view() & match_context_prop()
     registered = accepts_compat(has_relation_compat(condition_compat(View.registered)))
     

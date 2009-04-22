@@ -7,11 +7,6 @@
 * to interact with the vregistry, object should inherit from the
   VObject abstract class
   
-* the registration procedure is delegated to a registerer. Each
-  registerable vobject must defines its registerer class using the
-  __registerer__ attribute.  A registerer is instantianted at
-  registration time after what the instance is lost
-  
 * the selection procedure has been generalized by delegating to a
   selector, which is responsible to score the vobject according to the
   current state (req, rset, row, col). At the end of the selection, if
@@ -53,42 +48,6 @@ def _toload_info(path, _toload=None):
     return _toload
 
 
-class registerer(object):
-    """do whatever is needed at registration time for the wrapped
-    class, according to current application schema and already
-    registered objects of the same kind (i.e. same registry name and
-    same id).
-
-    The wrapped class may be skipped, some previously selected object
-    may be kicked out... After whatever works needed, if the object or
-    a transformed object is returned, it will be added to previously
-    registered objects.
-    """
-
-    def __init__(self, registry, vobject):
-        self.registry = registry
-        self.vobject = vobject
-        self.config = registry.config
-        self.schema = registry.schema
-        self.kicked = set()
-    
-    def do_it_yourself(self, registered):
-        raise NotImplementedError(str(self.vobject))
-        
-    def kick(self, registered, kicked):
-        self.debug('kicking vobject %s', kicked)
-        registered.remove(kicked)
-        self.kicked.add(kicked.classid())
-        
-    def skip(self):
-        self.debug('no schema compat, skipping %s', self.vobject)
-
-class yes_registerer(registerer):
-    """register without any other action"""
-    def do_it_yourself(self, registered):
-        return self.vobject
-
-
 class VObject(object):
     """visual object, use to be handled somehow by the visual components
     registry.
@@ -110,7 +69,6 @@ class VObject(object):
     # necessary attributes to interact with the registry
     id = None
     __registry__ = None
-    __registerer__ = yes_registerer
     __select__ = None
 
     @classmethod
@@ -469,8 +427,6 @@ class VRegistry(object):
         with a name starting starting by an underscore are not registered.
         Also a vobject class needs to have __registry__ and id attributes set
         to a non empty string to be registered.
-
-        Registration is actually handled by vobject's registerer.
         """
         if (cls.__dict__.get('__abstract__') or cls.__name__[0] == '_'
             or not cls.__registry__ or not cls.id):
@@ -478,12 +434,7 @@ class VRegistry(object):
         regname = cls.__registry__
         if '%s.%s' % (regname, cls.id) in self.config['disable-appobjects']:
             return
-        registry = self._registries.setdefault(regname, {})
-        vobjects = registry.setdefault(cls.id, [])
-        registerer = cls.__registerer__(self, cls)
-        cls = registerer.do_it_yourself(vobjects)
-        if cls:
-            self.register(cls)
+        self.register(cls)
             
     def unregister_module_vobjects(self, modname):
         """removes registered objects coming from a given module
@@ -550,7 +501,6 @@ class VRegistry(object):
 # init logging 
 set_log_methods(VObject, getLogger('cubicweb'))
 set_log_methods(VRegistry, getLogger('cubicweb.registry'))
-set_log_methods(registerer, getLogger('cubicweb.registration'))
 
 
 # selector base classes and operations ########################################

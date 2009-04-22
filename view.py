@@ -17,8 +17,6 @@ from cubicweb.selectors import yes, non_final_entity, nonempty_rset, none_rset
 from cubicweb.selectors import require_group_compat, accepts_compat
 from cubicweb.appobject import AppRsetObject
 from cubicweb.utils import UStringIO, HTMLStream
-from cubicweb.vregistry import yes_registerer
-from cubicweb.common.registerers import accepts_registerer, priority_registerer, yes_registerer
 
 _ = unicode
 
@@ -93,7 +91,6 @@ class View(AppRsetObject):
     time to a write function to use.
     """
     __registry__ = 'views'
-    __registerer__ = priority_registerer
     registered = require_group_compat(AppRsetObject.registered)
 
     templatable = True
@@ -320,7 +317,6 @@ class View(AppRsetObject):
 
 class EntityView(View):
     """base class for views applying on an entity (i.e. uniform result set)"""
-    __registerer__ = accepts_registerer
     __select__ = non_final_entity()
     registered = accepts_compat(View.registered)
 
@@ -331,7 +327,6 @@ class StartupView(View):
     """base class for views which doesn't need a particular result set to be
     displayed (so they can always be displayed !)
     """
-    __registerer__ = priority_registerer
     __select__ = none_rset()
     registered = require_group_compat(View.registered)
     
@@ -483,7 +478,6 @@ class ReloadableMixIn(object):
 class Component(ReloadableMixIn, View):
     """base class for components"""
     __registry__ = 'components'
-    __registerer__ = yes_registerer
     __select__ = yes()
     property_defs = {
         _('visible'):  dict(type='Boolean', default=True,
