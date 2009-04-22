@@ -165,6 +165,8 @@ class Select(FieldWidget):
         
     def render(self, form, field):
         name, curvalues, attrs = self._render_attrs(form, field)
+        if not 'size' in attrs:
+            attrs['size'] = '5'
         options = []
         for label, value in field.vocabulary(form):
             if value is None:
