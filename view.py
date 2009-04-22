@@ -66,9 +66,10 @@ CW_XHTML_EXTENSIONS = '''[
  cubicweb:facetName         CDATA   #IMPLIED
   "> ] '''
 
-TRANSITIONAL_DOCTYPE = u'<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd" %s>\n'
-
-STRICT_DOCTYPE = u'<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd" %s>\n'
+TRANSITIONAL_DOCTYPE = u'<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd" %s>\n' % CW_XHTML_EXTENSIONS
+TRANSITIONAL_DOCTYPE_NOEXT = u'<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">\n'
+STRICT_DOCTYPE = u'<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd" %s>\n' % CW_XHTML_EXTENSIONS
+STRICT_DOCTYPE_NOEXT = u'<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">\n'
 
 # base view object ############################################################
 
@@ -108,9 +109,7 @@ class View(AppRsetObject):
 
     @property
     def content_type(self):
-        if self.req.xhtml_browser():
-            return 'application/xhtml+xml'
-        return 'text/html'
+        return self.req.html_content_type()
 
     def set_stream(self, w=None):
         if self.w is not None:
@@ -419,14 +418,13 @@ class MainTemplate(View):
     There is usually at least a regular main template and a simple fallback
     one to display error if the first one failed
     """
-    base_doctype = STRICT_DOCTYPE
     registered = require_group_compat(View.registered)
 
     @property
     def doctype(self):
         if self.req.xhtml_browser():
-            return self.base_doctype % CW_XHTML_EXTENSIONS
-        return self.base_doctype % ''
+            return STRICT_DOCTYPE
+        return STRICT_DOCTYPE_NOEXT
 
     def set_stream(self, w=None, templatable=True):
         if templatable and self.w is not None:

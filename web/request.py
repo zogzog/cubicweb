@@ -56,8 +56,8 @@ def list_form_param(form, param, pop=False):
 
 
 class CubicWebRequestBase(DBAPIRequest):
-    """abstract HTTP request, should be extended according to the HTTP backend"""    
-    
+    """abstract HTTP request, should be extended according to the HTTP backend"""
+
     def __init__(self, vreg, https, form=None):
         super(CubicWebRequestBase, self).__init__(vreg)
         self.message = None
@@ -657,13 +657,18 @@ class CubicWebRequestBase(DBAPIRequest):
     
     def xhtml_browser(self):
         useragent = self.useragent()
-        # MSIE does not support xml content-type
-        # quick fix: Opera supports xhtml and handles namespaces
-        # properly but it breaks jQuery.attr()
+        # * MSIE/Konqueror does not support xml content-type
+        # * Opera supports xhtml and handles namespaces properly but it breaks
+        #   jQuery.attr()
         if useragent and ('MSIE' in useragent or 'KHTML' in useragent
                           or 'Opera' in useragent):
             return False
         return True
+
+    def html_content_type(self):
+        if self.xhtml_browser():
+            return 'application/xhtml+xml'
+        return 'text/html'
 
 from cubicweb import set_log_methods
 set_log_methods(CubicWebRequestBase, LOGGER)

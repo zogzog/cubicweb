@@ -12,7 +12,7 @@ from logilab.mtconverter import html_escape
 
 from cubicweb.vregistry import objectify_selector
 from cubicweb.selectors import match_kwargs
-from cubicweb.view import View, MainTemplate,  NOINDEX, NOFOLLOW
+from cubicweb.view import View, MainTemplate,  NOINDEX, NOFOLLOW, STRICT_DOCTYPE
 from cubicweb.utils import make_uid, UStringIO
 
 # main templates ##############################################################
@@ -78,14 +78,20 @@ def templatable_view(cls, req, rset, *args, **kwargs):
 class NonTemplatableViewTemplate(MainTemplate):
     """main template for any non templatable views (xml, binaries, etc.)"""
     id = 'main-template'
-    __select__ = ~ templatable_view()
-    
+    __select__ = ~templatable_view()
+
     def call(self, view):
         view.set_request_content_type()
-        self.set_stream(templatable=False)
+        view.set_stream()
+        xhtml_wrap = (self.req.form.has_key('__notemplate') and view.templatable
+                      and view.content_type == self.req.html_content_type())
+        if xhtml_wrap:
+            view.w(u'<?xml version="1.0"?>\n' + STRICT_DOCTYPE)
+            view.w(u'<div xmlns="http://www.w3.org/1999/xhtml" xmlns:cubicweb="http://www.logilab.org/2008/cubicweb">')
         # have to replace our unicode stream using view's binary stream
         view.dispatch()
-        assert self._stream, 'duh, template used as a sub-view ?? (%s)' % self._stream
+        if xhtml_wrap:
+            view.w(u'</div>')
         self._stream = view._stream
 
 
@@ -96,7 +102,7 @@ class TheMainTemplate(MainTemplate):
     """
     id = 'main-template'
     __select__ = templatable_view()
-    
+
     def call(self, view):
         self.set_request_content_type()
         self.template_header(self.content_type, view)
@@ -417,9 +423,9 @@ class HTMLContentFooter(View):
 class LogFormTemplate(View):
     id = 'logform'
     __select__ = match_kwargs('id', 'klass')
-    
+
     title = 'log in'
-    
+
     def call(self, id, klass, title=True, message=True):
         self.req.add_css('cubicweb.login.css')
         self.w(u'<div id="%s" class="%s">' % (id, klass))
