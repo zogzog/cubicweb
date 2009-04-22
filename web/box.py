@@ -215,7 +215,7 @@ class EditRelationBoxTemplate(ReloadableMixIn, EntityBoxTemplate):
             return entity.unrelated(self.rtype, self.etype, get_role(self)).entities()
         # in other cases, use vocabulary functions
         entities = []
-        for _, eid in entity.vocabulary(self.rtype, x):
+        for _, eid in entity.vocabulary(self.rtype, get_role(self)):
             if eid is not None:
                 rset = self.req.eid_rset(eid)
                 entities.append(rset.get_entity(0, 0))
