@@ -36,13 +36,13 @@ class priority_registerer(registerer):
                 self.warning('priority_registerer found more than one registered objects '
                              '(registerer monkey patch ?)')
             for regobj in registered[:]:
-                self.kick(registered, regobj)
+                self.kick(registered, regobj, 'more than one object')
         return self.vobject
     
     def remove_equivalents(self, registered):
         for _obj in registered[:]:
             if self.equivalent(_obj):
-                self.kick(registered, _obj)
+                self.kick(registered, _obj, 'equivalent to %s'%_obj)
                 break
             
     def remove_all_equivalents(self, registered):
@@ -50,7 +50,7 @@ class priority_registerer(registerer):
             if _obj is self.vobject:
                 continue
             if self.equivalent(_obj):
-                self.kick(registered, _obj)
+                self.kick(registered, _obj, 'all are equivalent')
 
     def equivalent(self, other):
         raise NotImplementedError(self, self.vobject)
@@ -63,7 +63,7 @@ class kick_registerer(registerer):
     """
     def do_it_yourself(self, registered):
         if registered:
-            self.kick(registered, registered[-1])
+            self.kick(registered, registered[-1], 'diy')
         return 
     
 
