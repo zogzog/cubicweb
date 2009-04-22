@@ -5,6 +5,11 @@
 Have a blog ready in less than ten minutes!
 -------------------------------------------
 
+We picked the example of a Blog as this is familiar to any developper
+as well as none-developper. We could have choose any of the cubes available
+on http://www.cubicweb.org.
+
+
 Installation
 ~~~~~~~~~~~~
 
@@ -38,6 +43,7 @@ Your application is now ready to go::
     cubicweb-ctl start -D myblog
 
 This is it. Your blog is ready to you. Go to http://localhost:8080 and enjoy!!
+You can add content and creates user for your application if you'd like to.  
 
 
 A little code snapshot from behind the scene
