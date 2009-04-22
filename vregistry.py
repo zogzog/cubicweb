@@ -6,7 +6,7 @@
 
 * to interact with the vregistry, object should inherit from the
   VObject abstract class
-  
+
 * the selection procedure has been generalized by delegating to a
   selector, which is responsible to score the vobject according to the
   current state (req, rset, row, col). At the end of the selection, if
@@ -53,7 +53,7 @@ class VObject(object):
     registry.
 
     The following attributes should be set on concret vobject subclasses:
-    
+
     :__registry__:
       name of the registry for this object (string like 'views',
       'templates'...)
@@ -62,7 +62,7 @@ class VObject(object):
       'primary', 'folder_box')
     :__select__:
       class'selector
-      
+
     Moreover, the `__abstract__` attribute may be set to True to indicate
     that a vobject is abstract and should not be registered
     """
@@ -85,7 +85,7 @@ class VObject(object):
     @classmethod
     def selected(cls, *args, **kwargs):
         """called by the registry when the vobject has been selected.
-        
+
         It must return the  object that will be actually returned by the
         .select method (this may be the right hook to create an
         instance for example). By default the selected object is
@@ -127,7 +127,7 @@ class VRegistry(object):
     elements used to build the web interface. Currently, we have templates,
     views, actions and components.
     """
-    
+
     def __init__(self, config):#, cache_size=1000):
         self.config = config
         # dictionnary of registry (themself dictionnary) by name
@@ -199,7 +199,7 @@ class VRegistry(object):
                 continue
             if oid:
                 self.register(obj)
-                
+
     def register(self, obj, registryname=None, oid=None, clear=False):
         """base method to add an object in the registry"""
         assert not '__abstract__' in obj.__dict__
@@ -246,9 +246,9 @@ class VRegistry(object):
 #                 else:
 #                     # if objects is empty, remove oid from registry
 #                     if not registry[obj.id]:
-#                         del regcontent[oid]                    
+#                         del regcontent[oid]
                 break
-    
+
     def register_and_replace(self, obj, replaced, registryname=None):
         if hasattr(replaced, 'classid'):
             replaced = replaced.classid()
@@ -262,7 +262,7 @@ class VRegistry(object):
         self.register(obj, registryname=registryname)
 
     # dynamic selection methods ###############################################
-    
+
     def select(self, vobjects, *args, **kwargs):
         """return an instance of the most specific object according
         to parameters
@@ -291,7 +291,7 @@ class VRegistry(object):
         winner = winners[0]
         # return the result of the .selected method of the vobject
         return winner.selected(*args, **kwargs)
-    
+
     def possible_objects(self, registry, *args, **kwargs):
         """return an iterator on possible objects in a registry for this result set
 
@@ -306,15 +306,15 @@ class VRegistry(object):
     def select_object(self, registry, cid, *args, **kwargs):
         """return the most specific component according to the resultset"""
         return self.select(self.registry_objects(registry, cid), *args, **kwargs)
-    
+
     # intialization methods ###################################################
-    
+
     def init_registration(self, path):
         # compute list of all modules that have to be loaded
         self._toloadmods, filemods = _toload_info(path)
         self._loadedmods = {}
         return filemods
-    
+
     def register_objects(self, path, force_reload=None):
         if force_reload is None:
             force_reload = self.config.mode == 'dev'
@@ -341,7 +341,7 @@ class VRegistry(object):
             if self.load_file(filepath, modname, force_reload):
                 change = True
         return change
-    
+
     def load_file(self, filepath, modname, force_reload=False):
         """load visual objects from a python file"""
         from logilab.common.modutils import load_module_from_name
@@ -368,7 +368,7 @@ class VRegistry(object):
         module = load_module_from_name(modname, use_sys=not force_reload)
         self.load_module(module)
         # if something was unregistered, we need to update places where it was
-        # referenced 
+        # referenced
         if unregistered:
             # oldnew_mapping = {}
             registered = self._loadedmods[modname]
@@ -388,7 +388,7 @@ class VRegistry(object):
                     continue
                 self._load_ancestors_then_object(module.__name__, obj)
         self.debug('loaded %s', module)
-    
+
     def _load_ancestors_then_object(self, modname, obj):
         # imported classes
         objmodname = getattr(obj, '__module__', None)
@@ -409,7 +409,7 @@ class VRegistry(object):
         for parent in obj.__bases__:
             self._load_ancestors_then_object(modname, parent)
         self.load_object(obj)
-            
+
     def load_object(self, obj):
         try:
             self.register_vobject_class(obj)
@@ -417,12 +417,12 @@ class VRegistry(object):
             if self.config.mode in ('test', 'dev'):
                 raise
             self.exception('vobject %s registration failed: %s', obj, ex)
-        
+
     # old automatic registration XXX deprecated ###############################
-    
+
     def register_vobject_class(self, cls):
         """handle vobject class registration
-        
+
         vobject class with __abstract__ == True in their local dictionnary or
         with a name starting starting by an underscore are not registered.
         Also a vobject class needs to have __registry__ and id attributes set
@@ -435,7 +435,7 @@ class VRegistry(object):
         if '%s.%s' % (regname, cls.id) in self.config['disable-appobjects']:
             return
         self.register(cls)
-            
+
     def unregister_module_vobjects(self, modname):
         """removes registered objects coming from a given module
 
@@ -497,8 +497,8 @@ class VRegistry(object):
                         self.debug('updating %s.%s base classes',
                                   obj.__module__, obj.__name__)
                         obj.__bases__ = newbases
-        
-# init logging 
+
+# init logging
 set_log_methods(VObject, getLogger('cubicweb'))
 set_log_methods(VRegistry, getLogger('cubicweb.registry'))
 
@@ -537,7 +537,7 @@ class Selector(object):
 
     def __str__(self):
         return self.__class__.__name__
-    
+
     def __and__(self, other):
         return AndSelector(self, other)
     def __rand__(self, other):
@@ -550,7 +550,7 @@ class Selector(object):
 
     def __invert__(self):
         return NotSelector(self)
-    
+
     # XXX (function | function) or (function & function) not managed yet
 
     def __call__(self, cls, *args, **kwargs):
@@ -559,7 +559,7 @@ class Selector(object):
 
 class MultiSelector(Selector):
     """base class for compound selector classes"""
-    
+
     def __init__(self, *selectors):
         self.selectors = self.merge_selectors(selectors)
 
@@ -600,7 +600,7 @@ class MultiSelector(Selector):
                 return found
         return None
 
-    
+
 def objectify_selector(selector_func):
     """convenience decorator for simple selectors where a class definition
     would be overkill::
@@ -608,14 +608,14 @@ def objectify_selector(selector_func):
         @objectify_selector
         def yes(cls, *args, **kwargs):
             return 1
-        
+
     """
     return type(selector_func.__name__, (Selector,),
                 {'__call__': lambda self, *args, **kwargs: selector_func(*args, **kwargs)})
 
 def _instantiate_selector(selector):
     """ensures `selector` is a `Selector` instance
-    
+
     NOTE: This should only be used locally in build___select__()
     XXX: then, why not do it ??
     """

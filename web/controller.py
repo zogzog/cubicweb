@@ -47,7 +47,7 @@ def parse_relations_descr(rdescr):
         for subj in subjs.split('_'):
             for obj in objs.split('_'):
                 yield typed_eid(subj), rtype, typed_eid(obj)
-        
+
 def append_url_params(url, params):
     """append raw parameters to the url. Given parameters, if any, are expected
     to be already url-quoted.
@@ -75,7 +75,7 @@ class Controller(AppObject):
         # attributes use to control after edition redirection
         self._after_deletion_path = None
         self._edited_entity = None
-        
+
     def publish(self, rset=None):
         """publish the current request, with an option input rql string
         (already processed if necessary)
@@ -94,7 +94,7 @@ class Controller(AppObject):
             self.rset = pp.process_query(rql, self.req)
             return self.rset
         return None
-    
+
     def check_expected_params(self, params):
         """check that the given list of parameters are specified in the form
         dictionary
@@ -106,7 +106,7 @@ class Controller(AppObject):
         if missing:
             raise RequestError('missing required parameter(s): %s'
                                % ','.join(missing))
-    
+
     def parse_datetime(self, value, etype='Datetime'):
         """get a datetime or time from a string (according to etype)
         Datetime formatted as Date are accepted
@@ -141,7 +141,7 @@ class Controller(AppObject):
         #       relation) that might not be satisfied yet (in case of creations)
         if not self._edited_entity:
             self._edited_entity = entity
-        
+
     def delete_entities(self, eidtypes):
         """delete entities from the repository"""
         redirect_info = set()
@@ -160,7 +160,7 @@ class Controller(AppObject):
             self.req.set_message(self.req._('entities deleted'))
         else:
             self.req.set_message(self.req._('entity deleted'))
-        
+
     def delete_relations(self, rdefs):
         """delete relations from the repository"""
         # FIXME convert to using the syntax subject:relation:eids
@@ -169,7 +169,7 @@ class Controller(AppObject):
             rql = 'DELETE X %s Y where X eid %%(x)s, Y eid %%(y)s' % rtype
             execute(rql, {'x': subj, 'y': obj}, ('x', 'y'))
         self.req.set_message(self.req._('relations deleted'))
-    
+
     def insert_relations(self, rdefs):
         """insert relations into the repository"""
         execute = self.req.execute
@@ -177,7 +177,7 @@ class Controller(AppObject):
             rql = 'SET X %s Y where X eid %%(x)s, Y eid %%(y)s' % rtype
             execute(rql, {'x': subj, 'y': obj}, ('x', 'y'))
 
-    
+
     def reset(self):
         """reset form parameters and redirect to a view determinated by given
         parameters
@@ -221,7 +221,7 @@ class Controller(AppObject):
         url = self.build_url(path, **newparams)
         url = append_url_params(url, self.req.form.get('__redirectparams'))
         raise Redirect(url)
-    
+
 
     def _return_to_edition_view(self, newparams):
         """apply-button case"""

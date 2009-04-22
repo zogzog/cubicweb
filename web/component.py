@@ -22,46 +22,46 @@ _ = unicode
 class EntityVComponent(Component):
     """abstract base class for additinal components displayed in content
     headers and footer according to:
-    
+
     * the displayed entity's type
     * a context (currently 'header' or 'footer')
 
     it should be configured using .accepts, .etype, .rtype, .target and
     .context class attributes
     """
-    
+
     __registry__ = 'contentnavigation'
     __select__ = one_line_rset() & primary_view() & match_context_prop()
     registered = accepts_compat(has_relation_compat(condition_compat(View.registered)))
-    
+
     property_defs = {
         _('visible'):  dict(type='Boolean', default=True,
                             help=_('display the box or not')),
         _('order'):    dict(type='Int', default=99,
                             help=_('display order of the component')),
         _('context'):  dict(type='String', default='header',
-                            vocabulary=(_('navtop'), _('navbottom'), 
+                            vocabulary=(_('navtop'), _('navbottom'),
                                         _('navcontenttop'), _('navcontentbottom')),
                             #vocabulary=(_('header'), _('incontext'), _('footer')),
                             help=_('context where this component should be displayed')),
         _('htmlclass'):dict(type='String', default='mainRelated',
                             help=_('html class of the component')),
     }
-    
+
     context = 'navcontentbottom' # 'footer' | 'header' | 'incontext'
-    
+
     def call(self, view=None):
         return self.cell_call(0, 0, view)
 
     def cell_call(self, row, col, view=None):
         raise NotImplementedError()
 
-    
+
 class NavigationComponent(Component):
     """abstract base class for navigation components"""
     id = 'navigation'
     __select__ = paginated_rset()
-    
+
     page_size_property = 'navigation.page-size'
     start_param = '__start'
     stop_param = '__stop'
@@ -69,7 +69,7 @@ class NavigationComponent(Component):
     selected_page_link_templ = u'<span class="selectedSlice"><a href="%s" title="%s">%s</a></span>'
     previous_page_link_templ = next_page_link_templ = page_link_templ
     no_previous_page_link = no_next_page_link = u''
-    
+
     def __init__(self, req, rset, **kwargs):
         super(NavigationComponent, self).__init__(req, rset, **kwargs)
         self.starting_from = 0
@@ -90,9 +90,9 @@ class NavigationComponent(Component):
 
     def set_page_size(self, page_size):
         self._page_size = page_size
-        
+
     page_size = property(get_page_size, set_page_size)
-    
+
     def page_boundaries(self):
         try:
             stop = int(self.req.form[self.stop_param]) + 1
@@ -101,7 +101,7 @@ class NavigationComponent(Component):
             start, stop = 0, self.page_size
         self.starting_from = start
         return start, stop
-        
+
     def clean_params(self, params):
         if self.start_param in params:
             del params[self.start_param]
@@ -141,13 +141,13 @@ class NavigationComponent(Component):
 class RelatedObjectsVComponent(EntityVComponent):
     """a section to display some related entities"""
     __select__ = EntityVComponent.__select__ & partial_has_related_entities()
-    
+
     vid = 'list'
-    
+
     def rql(self):
         """override this method if you want to use a custom rql query"""
         return None
-    
+
     def cell_call(self, row, col, view=None):
         rql = self.rql()
         if rql is None:

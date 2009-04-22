@@ -202,12 +202,12 @@ class View(AppRsetObject):
         self.req.set_content_type(self.content_type)
 
     # view utilities ##########################################################
-    
+
     def wview(self, __vid, rset, __fallback_vid=None, **kwargs):
         """shortcut to self.view method automatically passing self.w as argument
         """
         self.view(__vid, rset, __fallback_vid, w=self.w, **kwargs)
-        
+
     # XXX Template bw compat
     template = obsolete('.template is deprecated, use .view')(wview)
 
@@ -303,14 +303,14 @@ class View(AppRsetObject):
         w(u'<div class="field">%s</div>' % value)
         if row:
             w(u'</div>')
-            
+
     def initialize_varmaker(self):
         varmaker = self.req.get_page_data('rql_varmaker')
         if varmaker is None:
             varmaker = self.req.varmaker
             self.req.set_page_data('rql_varmaker', varmaker)
         self.varmaker = varmaker
-        
+
 
 
 # concrete views base classes #################################################
@@ -329,9 +329,9 @@ class StartupView(View):
     """
     __select__ = none_rset()
     registered = require_group_compat(View.registered)
-    
+
     category = 'startupview'
-    
+
     def url(self):
         """return the url associated with this view. We can omit rql here"""
         return self.build_url('view', vid=self.id)
@@ -405,7 +405,7 @@ class AnyRsetView(View):
             labels.append(label)
         return labels
 
-    
+
 # concrete template base classes ##############################################
 
 class MainTemplate(View):
@@ -443,12 +443,12 @@ class MainTemplate(View):
 
     def linkable(self):
         return False
-    
+
 # concrete component base classes #############################################
 
 class ReloadableMixIn(object):
     """simple mixin for reloadable parts of UI"""
-    
+
     def user_callback(self, cb, args, msg=None, nonify=False):
         """register the given user callback and return an url to call it ready to be
         inserted in html
@@ -460,17 +460,17 @@ class ReloadableMixIn(object):
                 _cb(*args)
         cbname = self.req.register_onetime_callback(cb, *args)
         return self.build_js(cbname, html_escape(msg or ''))
-        
+
     def build_update_js_call(self, cbname, msg):
         rql = html_escape(self.rset.printable_rql())
         return "javascript:userCallbackThenUpdateUI('%s', '%s', '%s', '%s', '%s', '%s')" % (
             cbname, self.id, rql, msg, self.__registry__, self.div_id())
-    
+
     def build_reload_js_call(self, cbname, msg):
         return "javascript:userCallbackThenReloadPage('%s', '%s')" % (cbname, msg)
 
     build_js = build_update_js_call # expect updatable component by default
-    
+
     def div_id(self):
         return ''
 
@@ -482,7 +482,7 @@ class Component(ReloadableMixIn, View):
     property_defs = {
         _('visible'):  dict(type='Boolean', default=True,
                             help=_('display the component or not')),
-        }    
+        }
 
     def div_class(self):
         return '%s %s' % (self.propval('htmlclass'), self.id)

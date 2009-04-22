@@ -17,11 +17,11 @@ _ = unicode
 
 class Action(AppRsetObject):
     """abstract action. Handle the .search_states attribute to match
-    request search state. 
+    request search state.
     """
     __registry__ = 'actions'
     __select__ = yes()
-    
+
     property_defs = {
         'visible':  dict(type='Boolean', default=True,
                          help=_('display the action or not')),
@@ -34,11 +34,11 @@ class Action(AppRsetObject):
     }
     site_wide = True # don't want user to configuration actions eproperties
     category = 'moreactions'
-    
+
     def url(self):
         """return the url associated with this action"""
         raise NotImplementedError
-    
+
     def html_class(self):
         if self.req.selected(self.url()):
             return 'selected'
@@ -52,13 +52,13 @@ class UnregisteredAction(Action):
     """
     category = None
     id = None
-    
+
     def __init__(self, req, rset, title, path, **kwargs):
         Action.__init__(self, req, rset)
         self.title = req._(title)
         self._path = path
         self.__dict__.update(kwargs)
-        
+
     def url(self):
         return self._path
 
@@ -74,9 +74,9 @@ class LinkToEntityAction(Action):
                   & partial_relation_possible(action='add')
                   & partial_may_add_relation())
     registered = accepts_compat(Action.registered)
-    
+
     category = 'addrelated'
-                
+
     def url(self):
         current_entity = self.rset.get_entity(self.row or 0, self.col or 0)
         linkto = '%s:%s:%s' % (self.rtype, current_entity.eid, target(self))
@@ -91,4 +91,4 @@ class EntityAction(Action):
     registered = deprecate(condition_compat(accepts_compat(Action.registered)),
                            msg='EntityAction is deprecated, use Action with '
                            'appropriate selectors')
-    
+

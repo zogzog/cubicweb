@@ -339,7 +339,7 @@ class RelationFacet(VocabularyFacet):
     __select__ = partial_relation_possible() & match_context_prop()
     # class attributes to configure the rel ation facet
     rtype = None
-    role = 'subject' 
+    role = 'subject'
     target_attr = 'eid'
     # set this to a stored procedure name if you want to sort on the result of
     # this function's result instead of direct value

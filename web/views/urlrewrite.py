@@ -85,7 +85,7 @@ class SimpleReqRewriter(URLRewriter):
         (rgx('/doc/(.+?)/?'), dict(vid='wdoc', fid=r'\1')),
         (rgx('/changelog/?'), dict(vid='changelog')),
         ]
-    
+
     def rewrite(self, req, uri):
         """for each `input`, `output `in rules, if `uri` matches `input`,
         req's form is updated with `output`
@@ -179,7 +179,7 @@ class SchemaBasedRewriter(URLRewriter):
     rules = [
         # rgxp : callback
         (rgx('/search/(.+)'), build_rset(rql=r'Any X WHERE X has_text %(text)s',
-                                         rgxgroups=[('text', 1)])), 
+                                         rgxgroups=[('text', 1)])),
         ]
 
     def rewrite(self, req, uri):
