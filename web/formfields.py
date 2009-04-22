@@ -373,7 +373,8 @@ class TimeField(DateField):
 
 
 class HiddenInitialValueField(Field):
-    def __init__(self, visible_field, name):
+    def __init__(self, visible_field):
+        name = 'edit%s-%s' % (visible_field.role[0], visible_field.name)
         super(HiddenInitialValueField, self).__init__(
             name=name, widget=HiddenInput, eidparam=True)
         self.visible_field = visible_field
