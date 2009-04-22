@@ -734,13 +734,13 @@ class RssItemView(EntityView):
            
     def render_entity_creator(self, entity):
         if entity.creator:
-            self._marker('dc:creator', entity.creator.name())
             email = entity.creator.get_email()
             if email:
-                self.w(u'<author>')
-                self.w(email)
-                self.w(u'</author>')       
-        
+                self._marker('author', email + ' (%s)' %  entity.creator.name())
+            else:
+                self._marker('dc:creator', entity.creator.name())
+       
+                
     def _marker(self, marker, value):
         if value:
             self.w(u'  <%s>%s</%s>\n' % (marker, html_escape(value), marker))
