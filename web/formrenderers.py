@@ -29,6 +29,8 @@ class FormRenderer(object):
     | buttons |
     +---------+
     """
+    _options = ('display_fields', 'display_label', 'display_help',
+                'display_progress_div', 'button_bar_class')
     display_fields = None # None -> all fields
     display_label = True
     display_help = True
@@ -40,8 +42,7 @@ class FormRenderer(object):
             raise ValueError('unconsumed arguments %s' % kwargs)
 
     def _set_options(self, kwargs):
-        for key in ('display_fields', 'display_label', 'display_help',
-                    'display_progress_div', 'button_bar_class'):
+        for key in self._options:
             try:
                 setattr(self, key, kwargs.pop(key))
             except KeyError:
@@ -239,6 +240,7 @@ class HTableFormRenderer(FormRenderer):
     
 class EntityCompositeFormRenderer(FormRenderer):
     """specific renderer for multiple entities edition form (muledit)"""
+    
     def render_fields(self, w, form, values):
         if not form.is_subform:
             w(u'<table class="listing">')
@@ -283,6 +285,8 @@ class EntityCompositeFormRenderer(FormRenderer):
             
 class EntityFormRenderer(FormRenderer):
     """specific renderer for entity edition form (edition)"""
+    _options = FormRenderer._options + ('display_relations_form',)
+    display_relations_form = True
         
     def render(self, form, values):
         rendered = super(EntityFormRenderer, self).render(form, values)
@@ -297,7 +301,7 @@ class EntityFormRenderer(FormRenderer):
     def render_fields(self, w, form, values):
         super(EntityFormRenderer, self).render_fields(w, form, values)
         self.inline_entities_form(w, form)
-        if form.edited_entity.has_eid():
+        if form.edited_entity.has_eid() and self.display_relations_table:
             self.relations_form(w, form)
 
     def _render_fields(self, fields, w, form):
