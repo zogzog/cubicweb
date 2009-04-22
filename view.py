@@ -426,17 +426,12 @@ class MainTemplate(View):
             return STRICT_DOCTYPE
         return STRICT_DOCTYPE_NOEXT
 
-    def set_stream(self, w=None, templatable=True):
-        if templatable and self.w is not None:
+    def set_stream(self, w=None):
+        if self.w is not None:
             return
-
         if w is None:
             if self.binary:
                 self._stream = stream = StringIO()
-            elif not templatable:
-                # not templatable means we're using a non-html view, we don't
-                # want the HTMLStream stuff to interfere during data generation
-                self._stream = stream = UStringIO()
             else:
                 self._stream = stream = HTMLStream(self.req)
             w = stream.write
