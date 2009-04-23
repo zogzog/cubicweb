@@ -135,12 +135,6 @@ http://groups.google.com/group/google-appengine/browse_frm/thread/f48cf6099973ae
   `AppRsetObject` instances are selected on a request and a result
   set. `AppObject` instances are directly selected by id.
 
-HOW TO
-======
-
-[TO COMPLETE]
-
-
 * How to update a database after a schema modification?
 
   It depends on what has been modified in the schema.

@@ -208,3 +208,6 @@ session. They are available in `repository` scripts:
 * `add_entity_type_table(etype, commit=True)`
 * `add_relation_type_table(rtype, commit=True)`
 * `uninline_relation(rtype, commit=True)`
+
+
+[FIXME] Add explanation on how to use cubicweb-ctl shell

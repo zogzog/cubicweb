@@ -11,8 +11,11 @@ Installation of `Cubicweb` and its dependencies
 `CubicWeb` is packaged for Debian and Ubuntu, but can be installed from source
 using a tarball or the Mercurial version control system.
 
+.. _DebianInstallation:
+
 Debian and Ubuntu packages
 ```````````````````````````
+
 Depending on the distribution you are using, add the appropriate line to your list
 of sources (for example by editing ``/etc/apt/sources.list``).
 
@@ -32,8 +35,7 @@ For Ubuntu Hardy::
 You can now install the required packages with the following command::
 
   apt-get update 
-  apt-get install cubicweb
-  apt-get install cubicweb-dev
+  apt-get install cubicweb cubicweb-dev
 
 `cubicweb` installs the framework itself, allowing you to create
 new applications.
@@ -117,15 +119,15 @@ Postgres configuration
 
 .. note::
     If you already have an existing cluster and postgres server
-    running, you do not require to execute the initilization step
+    running, you do not need to execute the initilization step
     of your Postgres database.
 
-* First you have to initialize the database Postgres with the command ``initdb``.
+* First, initialize the database Postgres with the command ``initdb``.
   ::
 
     $ initdb -D /path/to/pgsql
 
-  Once initialized, you can launch the database server Postgres 
+  Once initialized, start the database server Postgres 
   with the command::
   
     $ postgres -D /path/to/psql
@@ -146,22 +148,14 @@ Postgres configuration
     
     $ su
     $ su - postgres
-    $ createuser -s username
+    $ createuser -s -P username
 
-  If created with the options -P (for password prompt, 
-  ``createuser -s -P username``), the password will be encrypted with
+  The option `-P` (for password prompt), will encrypt the password with
   the method set in the configuration file ``pg_hba.conf``. 
-  If you do not use this option, then the default value will be null
-  and this require to set the password in the database itself.
-  To do so: ::
+  If you do not use this option `-P`, then the default value will be null
+  and you will need to set it with::
     
-    $ su 
-    $ su - postgres
-    $ psql
-
-  And then execute de following query::
-    
-    ALTER USER username WITH PASSWORD `password`
+    $ su postgres -c "echo ALTER USER username WITH PASSWORD 'userpasswd' | psql"
 
   This login/password will be requested when you will create an
   instance with `cubicweb-ctl create` to initialize the database of
@@ -194,11 +188,9 @@ Pyro configuration
 ------------------
 
 If you use Pyro, it is required to have a name server Pyro running on your
-network (by default it is identified by a broadcast request).
+network (by default it is detected by a broadcast request).
 
 To do so, you need to :
-
-* launch the server manually before starting cubicweb with `pyro-ns`
 
 * launch the server manually before starting cubicweb as a server with
   `pyro-nsd start`
