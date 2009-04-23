@@ -115,13 +115,14 @@ following environment variables as follows::
 
 
 Databases configuration
-=======================
+-----------------------
+
 
 
 .. _ConfigurationPostgres:
 
 Postgres configuration
-----------------------
+``````````````````````
 
 .. note::
     If you already have an existing cluster and postgres server
@@ -182,7 +183,7 @@ Postgres configuration
     createlang -U pgadmin plpythonu template1
 
 MySql configuration
--------------------
+```````````````````
 Yout must add the following lines in /etc/mysql/my.cnf file::
 
     transaction-isolation = READ-COMMITTED
