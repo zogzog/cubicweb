@@ -124,7 +124,7 @@ Optionnal properties
     or not within all entities of the same type (false by default)
 
   - `indexed` : boolean indicating if an index needs to be created for this 
-    attribute in the database (false by default). This is usefull only if
+    attribute in the database (false by default). This is useful only if
     you know that you will have to run numerous searches on the value of this
     attribute.
 
