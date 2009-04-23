@@ -266,7 +266,7 @@ class AutomaticEntityForm(EntityFieldsForm):
         try:
             return super(AutomaticEntityForm, cls_or_self).field_by_name(name, role)
         except FieldNotFound: # XXX should raise more explicit exception
-            if eclass is None or not name in self.schema:
+            if eschema is None or not name in self.schema:
                 raise
             rschema = cls_or_self.schema.rschema(name)
             fieldcls = cls_or_self.rfields.etype_rtag(eschema, rschema, role)
