@@ -23,14 +23,36 @@ For example ::
     works_for = SubjectRelation('Company', cardinality='?*')
 
 
-* the name of the Python attribute corresponds to the name of the attribute
-  or the relation in `CubicWeb` application.
+The entity described above defines three attributes of type String,
+last_name, first_name and title, an attribute of type Date for the date of
+birth and a relation that connects a `Person` to another entity of type
+`Company` through the semantic `works_for`.
 
-* all `CubicWeb` built-in types are available : `String`, `Int`, `Float`,
-  `Boolean`, `Date`, `Datetime`, `Time`, `Byte`; they are and implicitely
-  imported (as well as the special the function "_").
+The name of the Python attribute corresponds to the name of the attribute
+or the relation in `CubicWeb` application.
 
-* each entity type has at least the following meta-relations :
+Built-in types for attributes
+`````````````````````````````
+
+All `CubicWeb` built-in types are available : `String`, `Int`, `Float`,
+`Decimal`, `Boolean`, `Date`, `Datetime`, `Time`, `Interval`, `Byte` 
+and `Password`.
+They are implicitely imported (as well as the special the function "_"
+for translation :ref:`internationalization`).
+
+An attribute is defined in the schema as follows::
+    
+    attr_name = attr_type(properties*)
+
+where `attr_type` is one of the type listed above and `properties` is
+a list of  the attribute needs to statisfy (see :ref:`properties`
+for more details). 
+
+
+Meta-data
+`````````
+
+Each entity type has at least the following meta-relations :
 
   - `eid` (`Int`)
   
@@ -43,7 +65,7 @@ For example ::
   - `owned_by` (`EUser`) (to whom the entity belongs; by default the 
      creator but not necessary, and it could have multiple owners)
      
-  - `is` (`EEType`)
+  - `is` (`EEType`) (of which type the entity is)
 
 
 * relations can be defined by using `ObjectRelation` or `SubjectRelation`.
@@ -63,6 +85,11 @@ For example ::
 
 * it is possible to use the attribute `meta` to flag an entity type as a `meta`
   (e.g. used to describe/categorize other entities)
+
+Optionnal properties
+````````````````````
+.. _properties:
+
 
 * optional properties for attributes and relations : 
 
