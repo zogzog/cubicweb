@@ -83,8 +83,8 @@ class SecurityManagementView(EntityView):
                                 form_buttons=[formwidgets.SubmitButton()],
                                 __redirectvid='security',
                                 __redirectpath=entity.rest_path())
-        field = guess_field(entity.__class__, self.schema.rschema('owned_by'))
-        form.append_field(field)                          
+        field = guess_field(entity.e_schema, self.schema.rschema('owned_by'))
+        form.append_field(field)
         self.w(form.form_render())
 
     def owned_by_information(self, entity):
@@ -135,21 +135,22 @@ class SecurityManagementView(EntityView):
         newperm = self.vreg.etype_class('CWPermission')(self.req, None)
         newperm.eid = self.req.varmaker.next()
         w(u'<p>%s</p>' % _('add a new permission'))
-        form = EntityFieldsForm(self.req, None, entity=newperm, 
+        form = EntityFieldsForm(self.req, None, entity=newperm,
                                 form_buttons=[formwidgets.SubmitButton()],
                                 __redirectvid='security',
                                 __redirectpath=entity.rest_path())
         form.form_add_hidden('require_permission', entity.eid, role='object', eidparam=True)
         permnames = getattr(entity, '__permissions__', None)
+        cwpermschema = newperm.e_schema
         if permnames is not None:
-            field = guess_field(newperm.__class__, self.schema.rschema('name'),
+            field = guess_field(cwpermschema, self.schema.rschema('name'),
                                 widget=formwidgets.Select, choices=permnames)
         else:
-            field = guess_field(newperm.__class__, self.schema.rschema('name'))
+            field = guess_field(cwpermschema, self.schema.rschema('name'))
         form.append_field(field)
-        field = guess_field(newperm.__class__, self.schema.rschema('label'))
+        field = guess_field(cwpermschema, self.schema.rschema('label'))
         form.append_field(field)
-        field = guess_field(newperm.__class__, self.schema.rschema('require_group'))
+        field = guess_field(cwpermschema, self.schema.rschema('require_group'))
         form.append_field(field)
         self.w(form.form_render(renderer=HTableFormRenderer()))
 
@@ -248,7 +249,7 @@ def text_error_description(ex, excinfo, req, eversion, cubes):
 class ProcessInformationView(StartupView):
     id = 'info'
     __select__ = none_rset() & match_user_groups('managers')
-    
+
     title = _('server information')
 
     def call(self, **kwargs):

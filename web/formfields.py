@@ -436,12 +436,11 @@ def rows_cols_from_constraint(constraint, kwargs):
     kwargs.setdefault('cols', cols)
 
 
-def guess_field(eclass, rschema, role='subject', skip_meta_attr=True, **kwargs):
+def guess_field(eschema, rschema, role='subject', skip_meta_attr=True, **kwargs):
     """return the most adapated widget to edit the relation
     'subjschema rschema objschema' according to information found in the schema
     """
     fieldclass = None
-    eschema = eclass.e_schema
     if role == 'subject':
         targetschema = rschema.objects(eschema)[0]
         card = rschema.rproperty(eschema, targetschema, 'cardinality')[0]
@@ -484,7 +483,7 @@ def guess_field(eclass, rschema, role='subject', skip_meta_attr=True, **kwargs):
             for metadata in ('format', 'encoding'):
                 metaschema = eschema.has_metadata(rschema, metadata)
                 if metaschema is not None:
-                    kwargs['%s_field' % metadata] = guess_field(eclass, metaschema,
+                    kwargs['%s_field' % metadata] = guess_field(eschema, metaschema,
                                                                 skip_meta_attr=False)
         return fieldclass(**kwargs)
     kwargs['role'] = role

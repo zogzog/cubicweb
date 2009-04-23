@@ -258,7 +258,7 @@ class AutomaticEntityForm(EntityFieldsForm):
         return sorted(result)
 
     @iclassmethod
-    def field_by_name(cls_or_self, name, role='subject', eclass=None):
+    def field_by_name(cls_or_self, name, role='subject', eschema=None):
         """return field with the given name and role. If field is not explicitly
         defined for the form but `eclass` is specified, guess_field will be
         called.
@@ -268,7 +268,7 @@ class AutomaticEntityForm(EntityFieldsForm):
         except FieldNotFound: # XXX should raise more explicit exception
             if eclass is None:
                 raise
-            field = guess_field(eclass, cls_or_self.schema.rschema(name), role,
+            field = guess_field(eschema, cls_or_self.schema.rschema(name), role,
                                 eidparam=True)
             if field is None:
                 raise
@@ -293,10 +293,10 @@ class AutomaticEntityForm(EntityFieldsForm):
             widget = self.rwidgets.etype_rtag(self.edited_entity.id, rschema,
                                               role)
             if widget:
-                field = guess_field(self.edited_entity.__class__, rschema, role,
+                field = guess_field(self.edited_entity.e_schema, rschema, role,
                                     eidparam=True, widget=widget)
             else:
-                field = guess_field(self.edited_entity.__class__, rschema, role,
+                field = guess_field(self.edited_entity.e_schema, rschema, role,
                                     eidparam=True)
             if field is not None:
                 self.fields.append(field)

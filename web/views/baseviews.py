@@ -296,7 +296,7 @@ class PrimaryView(EntityView):
                                                     self.req._('see them all'))
                 value +=  '</div>'
         label = display_name(self.req, rschema.type, role)
-        self.field(label, value, show_label=show_label, w=self.w, tr=False)
+        self.field(label, value, show_label=show_label, tr=False)
 
 
 class SecondaryView(EntityView):
