@@ -1,9 +1,9 @@
 .. -*- coding: utf-8 -*-
 
-.. _Overview:
+.. _Tutorial:
 
-Quick overview of `CubicWeb`
-============================
+Tutorial
+========
 
 `CubicWeb` is a semantic web application framework that favors reuse and
 object-oriented design.
