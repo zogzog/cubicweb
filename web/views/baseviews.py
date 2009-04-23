@@ -158,7 +158,7 @@ class PrimaryView(EntityView):
         self.render_entity_metadata(entity)
         # entity's attributes and relations, excluding meta data
         # if the entity isn't meta itself
-        boxes = self._preinit_side_related(entity) or siderelations
+        boxes = self._preinit_side_related(entity, siderelations)
         if boxes:
             self.w(u'<table width="100%"><tr><td width="75%">')
         self.w(u'<div>')
@@ -168,7 +168,7 @@ class PrimaryView(EntityView):
         self.content_navigation_components('navcontenttop')
         if self.main_related_section:
             self.render_entity_relations(entity, siderelations)
-        self.w(u'</div>')
+            self.w(u'</div>')
         if boxes:
             self.w(u'</td><td>')
             # side boxes
@@ -244,34 +244,37 @@ class PrimaryView(EntityView):
                 continue
             self._render_related_entities(entity, rschema, value)
 
-    def render_entity_relations(self, entity, siderelations):
-        if hasattr(self, 'get_side_boxes_defs'):
-            return
-        eschema = entity.e_schema
-        maxrelated = self.req.property_value('navigation.related-limit')
-        for rschema, targetschemas, x in self.iter_relations(entity):
-            try:
-                related = entity.related(rschema.type, x, limit=maxrelated+1)
-            except Unauthorized:
-                continue
-            if not related:
-                continue
-            if self.is_side_related(rschema, eschema):
-                siderelations.append((rschema, related, x))
-                continue
-            self._render_related_entities(entity, rschema, related, x)
-
-    def _preinit_side_related(self, entity):
+    def _preinit_side_related(self, entity, siderelations):
         self._sideboxes = None
+        self._related_entities = []
         if hasattr(self, 'get_side_boxes_defs'):
             self._sideboxes = [(label, rset) for label, rset in self.get_side_boxes_defs(entity)
                                if rset]
+        else:
+            eschema = entity.e_schema
+            maxrelated = self.req.property_value('navigation.related-limit')
+            for rschema, targetschemas, x in self.iter_relations(entity):
+                try:
+                    related = entity.related(rschema.type, x, limit=maxrelated+1)
+                except Unauthorized:
+                    continue
+                if not related:
+                    continue
+                if self.is_side_related(rschema, eschema):
+                    siderelations.append((rschema, related, x))
+                    continue
+                self._related_entities.append((rschema, related, x)) 
         self._boxes_in_context = list(self.vreg.possible_vobjects('boxes', self.req, self.rset,
                                                  row=self.row, view=self,
                                                  context='incontext'))
-        return self._sideboxes or self._boxes_in_context
+        return self._sideboxes or self._boxes_in_context or self._related_entities or siderelations
         
-            
+    def render_entity_relations(self, entity, siderelations):
+        if self._related_entities:
+            for rschema, related, x in self._related_entities:
+                self._render_related_entities(entity, rschema, related, x)
+
+              
     def render_side_related(self, entity, siderelations):
         """display side related relations:
         non-meta in a first step, meta in a second step
@@ -330,8 +333,8 @@ class PrimaryView(EntityView):
                 value +=  '</div>'
         label = display_name(self.req, rschema.type, role)
         self.field(label, value, show_label=show_label, w=self.w, tr=False)
-
-
+        print '_render', entity
+        
 class SideBoxView(EntityView):
     """side box usually displaying some related entities in a primary view"""
     id = 'sidebox'
@@ -427,7 +430,7 @@ class MetaDataView(EntityView):
             self.w(u'#%s - ' % entity.eid)
         if entity.modification_date != entity.creation_date:
             self.w(u'<span>%s</span> ' % _('latest update on'))
-            self.w(u'<span class="value">%s</span>,&nbsp;'
+            self.w(u'<span class="value">%s</span>, ;'
                    % self.format_date(entity.modification_date))
         # entities from external source may not have a creation date (eg ldap)
         if entity.creation_date: 
@@ -435,7 +438,7 @@ class MetaDataView(EntityView):
             self.w(u'<span class="value">%s</span>'
                    % self.format_date(entity.creation_date))
         if entity.creator:
-            self.w(u'&nbsp;<span>%s</span> ' % _('by'))
+            self.w(u' <span>%s</span> ' % _('by'))
             self.w(u'<span class="value">%s</span>' % entity.creator.name())
         self.w(u'</div>')
 
