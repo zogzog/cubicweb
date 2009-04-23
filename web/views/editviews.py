@@ -29,7 +29,7 @@ class SearchForAssociationView(EntityView):
     id = 'search-associate'
     __select__ = (one_line_rset() & match_search_state('linksearch')
                   & non_final_entity())
-    
+
     title = _('search for association')
 
     def cell_call(self, row, col):
@@ -71,7 +71,7 @@ class OutOfContextSearch(EntityView):
         else:
             entity.view('outofcontext', w=self.w)
 
-        
+
 class UnrelatedDivs(EntityView):
     id = 'unrelateddivs'
     __select__ = match_form_params('relation')
@@ -121,7 +121,7 @@ class UnrelatedDivs(EntityView):
         rtype = rschema.type
         form = self.vreg.select_object('forms', 'edition', self.req,
                                        entity=entity)
-        field = form.field_by_name(rschema, target, entity.__class__)
+        field = form.field_by_name(rschema, target, entity.e_schema)
         limit = self.req.property_value('navigation.combobox-limit')
         for eview, reid in form.form_field_vocabulary(field, limit):
             if reid is None:
@@ -167,7 +167,7 @@ class UnrelatedDivs(EntityView):
             # edited entity
             if baskettypes & targettypes:
                 yield basketeid, basketname
-            
+
     def _get_basket_info(self, ueid):
         basketref = []
         basketrql = 'Any B,N WHERE B is Basket, B owned_by U, U eid %(x)s, B name N'
@@ -186,18 +186,18 @@ class ComboboxView(EntityView):
     """
     id = 'combobox'
     title = None
-    
+
     def cell_call(self, row, col):
         """the combo-box view for an entity: same as text out of context view
         by default
         """
         self.wview('textoutofcontext', self.rset, row=row, col=col)
-        
+
 
 class EditableFinalView(FinalView):
     """same as FinalView but enables inplace-edition when possible"""
     id = 'editable-final'
-                
+
     def cell_call(self, row, col, props=None, displaytime=False):
         entity, rtype = self.rset.related_entity(row, col)
         if entity is not None:
