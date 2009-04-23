@@ -13,25 +13,29 @@ esac
 if [ "$1" = configure ]; then
     # XXX bw compat: erudi -> cubicweb migration
     if [ -e "/etc/erudi.d/" ]; then
-      mv /etc/erudi.d/* /etc/cubicweb.d/
-      echo 'moved /etc/erudi.d/* to /etc/cubicweb.d/'
-      sed -i s/ginco/cubicweb/g /etc/*/*.py
-      sed -i s/erudi/cubicweb/ */*.conf
+      mv /etc/erudi.d/* /etc/cubicweb.d/ && (
+	  echo 'moved /etc/erudi.d/* to /etc/cubicweb.d/'
+	  sed -i s/ginco/cubicweb/g /etc/*/*.py
+	  sed -i s/erudi/cubicweb/ */*.conf
+	  ) || true # empty dir
     fi
     if [ -e "/var/log/erudi/" ]; then
-      mv /var/log/erudi/* /var/log/cubicweb/
-      echo 'moved /var/log/erudi/* to /var/log/cubicweb/'
+      mv /var/log/erudi/* /var/log/cubicweb/ && (
+	  echo 'moved /var/log/erudi/* to /var/log/cubicweb/'
+	  ) || true # empty dir
     fi
     if [ -e "/var/lib/erudi/backup" ]; then
-      mv /var/lib/erudi/backup/* /var/lib/cubicweb/backup/
-      echo 'moved /var/lib/erudi/backup/* to /var/lib/cubicweb/backup/'
+      mv /var/lib/erudi/backup/* /var/lib/cubicweb/backup/ && (
+	  echo 'moved /var/lib/erudi/backup/* to /var/lib/cubicweb/backup/'
+	  ) || true # empty dir
     fi
     if [ -e "/var/lib/erudi/instances" ]; then
-      mv /var/lib/erudi/instances/* /var/lib/cubicweb/instances/
-      echo 'moved /var/lib/erudi/instances/* to /var/lib/cubicweb/instances/'
+      mv /var/lib/erudi/instances/* /var/lib/cubicweb/instances/ && (
+	  echo 'moved /var/lib/erudi/instances/* to /var/lib/cubicweb/instances/'
+	  ) || true # empty dir
     fi
 fi
-  
+
 #DEBHELPER#
- 
+
 exit 0
