@@ -26,10 +26,10 @@ class TreeMixIn(object):
     # XXX misnamed
     parent_target = 'subject'
     children_target = 'object'
-    
+
     def different_type_children(self, entities=True):
         """return children entities of different type as this entity.
-        
+
         according to the `entities` parameter, return entity objects or the
         equivalent result set
         """
@@ -41,7 +41,7 @@ class TreeMixIn(object):
 
     def same_type_children(self, entities=True):
         """return children entities of the same type as this entity.
-        
+
         according to the `entities` parameter, return entity objects or the
         equivalent result set
         """
@@ -50,7 +50,7 @@ class TreeMixIn(object):
         if entities:
             return [e for e in res if e.e_schema == self.e_schema]
         return res.filtered_rset(lambda x: x.e_schema == self.e_schema, self.col)
-    
+
     def iterchildren(self, _done=None):
         if _done is None:
             _done = set()
@@ -74,7 +74,7 @@ class TreeMixIn(object):
                     yield entity
             except AttributeError:
                 pass
-    
+
     @cached
     def path(self):
         """returns the list of eids from the root object to this object"""
@@ -96,7 +96,7 @@ class TreeMixIn(object):
 
         path.reverse()
         return path
-    
+
     def iterparents(self):
         def _uptoroot(self):
             curr = self
@@ -110,7 +110,7 @@ class TreeMixIn(object):
     def notification_references(self, view):
         """used to control References field of email send on notification
         for this entity. `view` is the notification view.
-        
+
         Should return a list of eids which can be used to generate message ids
         of previously sent email
         """
@@ -142,7 +142,7 @@ class TreeMixIn(object):
 
     def children_rql(self):
         return self.related_rql(self.tree_attribute, self.children_target)
-    
+
     def __iter__(self):
         return self.iterchildren()
 
@@ -163,7 +163,7 @@ class WorkflowableMixIn(object):
     relation (which implies supporting 'wf_info_for' as well)
     """
     __implements__ = (IWorkflowable,)
-    
+
     @property
     def state(self):
         try:
@@ -171,7 +171,7 @@ class WorkflowableMixIn(object):
         except IndexError:
             self.warning('entity %s has no state', self)
             return None
-    
+
     @property
     def displayable_state(self):
         return self.req._(self.state)
@@ -182,7 +182,7 @@ class WorkflowableMixIn(object):
         if rset:
             return rset.get_entity(0, 0)
         return None
-    
+
     def wf_transition(self, trname):
         rset = self.req.execute('Any T, TN WHERE T name TN, T name %(n)s, T transition_of E, E name %(e)s',
                                 {'n': trname, 'e': str(self.e_schema)})
@@ -201,7 +201,7 @@ class WorkflowableMixIn(object):
             self.req.set_shared_data('trcommentformat', trcommentformat)
         self.req.execute('SET X in_state S WHERE X eid %(x)s, S eid %(s)s',
                          {'x': self.eid, 's': stateeid}, 'x')
-    
+
     def can_pass_transition(self, trname):
         """return the Transition instance if the current user can pass the
         transition with the given name, else None
@@ -215,13 +215,13 @@ class WorkflowableMixIn(object):
         for tr in rset.entities():
             if tr.may_be_passed(self.eid, stateeid):
                 return tr
-    
+
     def latest_trinfo(self):
         """return the latest transition information for this entity"""
         return self.reverse_wf_info_for[-1]
-            
+
     # __method methods ########################################################
-    
+
     def set_state(self, params=None):
         """change the entity's state according to a state defined in given
         parameters, used to be called using __method controler facility
@@ -231,9 +231,9 @@ class WorkflowableMixIn(object):
                           params.get('trcomment'),
                           params.get('trcommentformat'))
         self.req.set_message(self.req._('__msg state changed'))
-            
+
     # specific vocabulary methods #############################################
-    
+
     @obsolete('use EntityFieldsForm.subject_in_state_vocabulary')
     def subject_in_state_vocabulary(self, rschema, limit=None):
         from cubicweb.web.form import EntityFieldsForm
@@ -249,7 +249,7 @@ class EmailableMixIn(object):
     primary_email / use_email scheme
     """
     __implements__ = (IEmailable,)
-    
+
     def get_email(self):
         if getattr(self, 'primary_email', None):
             return self.primary_email[0].address
@@ -271,14 +271,14 @@ class EmailableMixIn(object):
     def as_email_context(self):
         """returns the dictionary as used by the sendmail controller to
         build email bodies.
-        
+
         NOTE: the dictionary keys should match the list returned by the
         `allowed_massmail_keys` method.
         """
         return dict( (attr, getattr(self, attr)) for attr in self.allowed_massmail_keys() )
 
 
-    
+
 MI_REL_TRIGGERS = {
     ('in_state',    'subject'): WorkflowableMixIn,
     ('primary_email',   'subject'): EmailableMixIn,
@@ -312,7 +312,7 @@ class TreeViewMixIn(object):
         if done is None:
             done = set()
         super(TreeViewMixIn, self).call(done=done, **kwargs)
-            
+
     def cell_call(self, row, col=0, vid=None, done=None, **kwargs):
         done, entity = _done_init(done, self, row, col)
         if done is None:
@@ -341,7 +341,7 @@ class TreePathMixIn(object):
         self.w(u'<div class="pathbar">')
         super(TreePathMixIn, self).call(**kwargs)
         self.w(u'</div>')
-        
+
     def cell_call(self, row, col=0, vid=None, done=None, **kwargs):
         done, entity = _done_init(done, self, row, col)
         if done is None:
@@ -383,7 +383,7 @@ class ProgressMixIn(object):
 
     def in_progress(self):
         raise NotImplementedError()
-    
+
     def progress(self):
         try:
             return 100. * self.done / self.revised_cost

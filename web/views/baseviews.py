@@ -40,7 +40,7 @@ class NoResultView(View):
     """default view when no result has been found"""
     __select__ = empty_rset()
     id = 'noresult'
-    
+
     def call(self, **kwargs):
         self.w(u'<div class="searchMessage"><strong>%s</strong></div>\n'
                % self.req._('No result matching query'))
@@ -48,7 +48,7 @@ class NoResultView(View):
 
 class FinalView(AnyRsetView):
     """display values without any transformation (i.e. get a number for
-    entities) 
+    entities)
     """
     id = 'final'
     # record generated i18n catalog messages
@@ -66,7 +66,7 @@ class FinalView(AnyRsetView):
     _('%d hours')
     _('%d minutes')
     _('%d seconds')
-            
+
     def cell_call(self, row, col, props=None, displaytime=False, format='text/html'):
         etype = self.rset.description[row][col]
         value = self.rset.rows[row][col]
@@ -77,7 +77,7 @@ class FinalView(AnyRsetView):
                 self.w(entity.printable_value(rtype, value, format=format))
                 return
         if etype in ('Time', 'Interval'):
-            # value is DateTimeDelta but we have no idea about what is the 
+            # value is DateTimeDelta but we have no idea about what is the
             # reference date here, so we can only approximate years and months
             if format == 'text/html':
                 space = '&nbsp;'
@@ -100,9 +100,9 @@ class FinalView(AnyRsetView):
             return
         self.wdata(printable_value(self.req, etype, value, props, displaytime=displaytime))
 
-        
+
 PRIMARY_SKIP_RELS = set(['is', 'is_instance_of', 'identity',
-                         'owned_by', 'created_by', 
+                         'owned_by', 'created_by',
                          'in_state', 'wf_info_for', 'require_permission',
                          'from_entity', 'to_entity',
                          'see_also'])
@@ -125,12 +125,12 @@ class PrimaryView(EntityView):
         by default primary views are indexed
         """
         return []
-    
-    def cell_call(self, row, col):        
+
+    def cell_call(self, row, col):
         self.row = row
         # XXX move render_entity implementation here
         self.render_entity(self.complete_entity(row, col))
-    
+
     def render_entity(self, entity):
         """return html to display the given entity"""
         siderelations = []
@@ -150,7 +150,7 @@ class PrimaryView(EntityView):
         self.w(u'<div class="primaryRight">')
         self.render_side_related(entity, siderelations)
         self.w(u'</div>')
-        self.w(u'<div class="clear"></div>')          
+        self.w(u'<div class="clear"></div>')
         self.content_navigation_components('navcontentbottom')
 
     def content_navigation_components(self, context):
@@ -165,13 +165,13 @@ class PrimaryView(EntityView):
                      % comp.__class__, DeprecationWarning)
                 comp.dispatch(w=self.w, view=self)
         self.w(u'</div>')
-        
+
     def iter_attributes(self, entity):
         for rschema, targetschema in entity.e_schema.attribute_definitions():
             if rschema.type in self.skip_attrs:
                 continue
             yield rschema, targetschema
-            
+
     def iter_relations(self, entity):
         skip = set(self.skip_rels)
         skip.update(PRIMARY_SKIP_RELS)
@@ -185,21 +185,21 @@ class PrimaryView(EntityView):
         if title:
             self.w(u'<h1><span class="etype">%s</span> %s</h1>'
                    % (entity.dc_type().capitalize(), title))
-    
+
     def content_title(self, entity):
         """default implementation return an empty string"""
         return u''
-            
+
     def render_entity_metadata(self, entity):
         entity.view('metadata', w=self.w)
         summary = self.summary(entity) # deprecate summary?
         if summary:
             self.w(u'<div class="summary">%s</div>' % summary)
-    
+
     def summary(self, entity):
         """default implementation return an empty string"""
-        return u''    
-               
+        return u''
+
     def render_entity_attributes(self, entity, siderelations):
         for rschema, targetschema in self.iter_attributes(entity):
             attr = rschema.type
@@ -263,8 +263,8 @@ class PrimaryView(EntityView):
                 except NotImplementedError:
                     # much probably a context insensitive box, which only implements
                     # .call() and not cell_call()
-                    box.dispatch(w=self.w)               
-                
+                    box.dispatch(w=self.w)
+
     def is_side_related(self, rschema, eschema):
         return rschema.meta and \
                not rschema.schema_relation() == eschema.schema_entity()
@@ -298,11 +298,11 @@ class PrimaryView(EntityView):
         label = display_name(self.req, rschema.type, role)
         self.field(label, value, show_label=show_label, w=self.w, tr=False)
 
- 
+
 class SecondaryView(EntityView):
     id = 'secondary'
     title = _('secondary')
-    
+
     def cell_call(self, row, col):
         """the secondary view for an entity
         secondary = icon + view(oneline)
@@ -314,7 +314,7 @@ class SecondaryView(EntityView):
 
 class OneLineView(EntityView):
     id = 'oneline'
-    title = _('oneline') 
+    title = _('oneline')
 
     def cell_call(self, row, col):
         """the one line view for an entity: linked text view
@@ -345,7 +345,7 @@ class TextView(EntityView):
             self.wview(self.id, rset, row=i, **kwargs)
             if len(rset) > 1:
                 self.w(u"\n")
-    
+
     def cell_call(self, row, col=0, **kwargs):
         entity = self.entity(row, col)
         self.w(cut(entity.dc_title(),
@@ -356,7 +356,7 @@ class MetaDataView(EntityView):
     """paragraph view of some metadata"""
     id = 'metadata'
     show_eid = True
-    
+
     def cell_call(self, row, col):
         _ = self.req._
         entity = self.entity(row, col)
@@ -368,7 +368,7 @@ class MetaDataView(EntityView):
             self.w(u'<span class="value">%s</span>,&nbsp;'
                    % self.format_date(entity.modification_date))
         # entities from external source may not have a creation date (eg ldap)
-        if entity.creation_date: 
+        if entity.creation_date:
             self.w(u'<span>%s</span> ' % _('created on'))
             self.w(u'<span class="value">%s</span>'
                    % self.format_date(entity.creation_date))
@@ -408,7 +408,7 @@ class InContextView(EntityView):
         self.w(html_escape(self.view('textincontext', self.rset, row=row, col=col)))
         self.w(u'</a>')
 
-        
+
 class OutOfContextView(EntityView):
     id = 'outofcontext'
 
@@ -417,17 +417,17 @@ class OutOfContextView(EntityView):
         self.w(html_escape(self.view('textoutofcontext', self.rset, row=row, col=col)))
         self.w(u'</a>')
 
-            
+
 # list views ##################################################################
-    
+
 class ListView(EntityView):
     id = 'list'
     title = _('list')
     item_vid = 'listitem'
-        
+
     def call(self, klass=None, title=None, subvid=None, listid=None, **kwargs):
         """display a list of entities by calling their <item_vid> view
-        
+
         :param listid: the DOM id to use for the root element
         """
         if subvid is None and 'subvid' in self.req.form:
@@ -474,16 +474,16 @@ class ListView(EntityView):
             return self.build_url(entity.rest_path(), vid=self.id)
         return self.build_url(rql=self.rset.printable_rql(), vid=self.id)
 
- 
+
 class ListItemView(EntityView):
     id = 'listitem'
-    
+
     @property
     def redirect_vid(self):
         if self.req.search_state[0] == 'normal':
             return 'outofcontext'
         return 'outofcontext-search'
-        
+
     def cell_call(self, row, col, vid=None, **kwargs):
         if not vid:
             vid = self.redirect_vid
@@ -504,7 +504,7 @@ class SimpleListView(ListItemView):
 class CSVView(SimpleListView):
     id = 'csv'
     redirect_vid = 'incontext'
-        
+
     def call(self, **kwargs):
         rset = self.rset
         for i in xrange(len(rset)):
@@ -515,7 +515,7 @@ class CSVView(SimpleListView):
 
 class TreeItemView(ListItemView):
     id = 'treeitem'
-    
+
     def cell_call(self, row, col):
         self.wview('incontext', self.rset, row=row, col=col)
 
@@ -552,7 +552,7 @@ class TextSearchResultView(EntityView):
                     else:
                         contexts.append(ctx)
                 value = u'\n' + highlighted.join(contexts)
-                self.w(value.replace('\n', '<br/>'))            
+                self.w(value.replace('\n', '<br/>'))
 
 
 class TooltipView(EntityView):
@@ -579,4 +579,4 @@ XmlItemView = class_moved(xmlrss.XmlItemView)
 XmlRsetView = class_moved(xmlrss.XmlRsetView)
 RssView = class_moved(xmlrss.RssView)
 RssItemView = class_moved(xmlrss.RssItemView)
-            
+

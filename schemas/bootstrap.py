@@ -14,7 +14,7 @@ class CWEType(MetaEntityType):
     """define an entity type, used to build the application schema"""
     name = String(required=True, indexed=True, internationalizable=True,
                   unique=True, maxsize=64)
-    description = RichString(internationalizable=True, 
+    description = RichString(internationalizable=True,
                              description=_('semantic description of this entity type'))
     meta = Boolean(description=_('is it an application entity type or not ?'))
     # necessary to filter using RQL
@@ -41,7 +41,7 @@ class CWRType(MetaEntityType):
 
 class CWAttribute(MetaEntityType):
     """define a final relation: link a final relation type from a non final
-    entity to a final entity type. 
+    entity to a final entity type.
 
     used to build the application schema
     """
@@ -55,31 +55,31 @@ class CWAttribute(MetaEntityType):
                                 constraints=[RQLConstraint('O final TRUE')],
                                 composite='object')
     constrained_by = SubjectRelation('CWConstraint', cardinality='*1', composite='subject')
-    
+
     cardinality = String(maxsize=2, internationalizable=True,
-                         vocabulary=[_('?1'), _('11'), _('??'), _('1?')], 
+                         vocabulary=[_('?1'), _('11'), _('??'), _('1?')],
                          description=_('subject/object cardinality'))
     ordernum = Int(description=('control subject entity\'s relations order'), default=0)
-    
+
     indexed = Boolean(description=_('create an index for quick search on this attribute'))
     fulltextindexed = Boolean(description=_('index this attribute\'s value in the plain text index'))
     internationalizable = Boolean(description=_('is this attribute\'s value translatable'))
     defaultval = String(maxsize=256)
-    
+
     description_format = String(meta=True, internationalizable=True, maxsize=50,
                                 default='text/plain', constraints=[format_constraint])
     description = String(internationalizable=True,
                          description=_('semantic description of this attribute'))
-    
 
-CARDINALITY_VOCAB = [_('?*'), _('1*'), _('+*'), _('**'), 
-                     _('?+'), _('1+'), _('++'), _('*+'), 
+
+CARDINALITY_VOCAB = [_('?*'), _('1*'), _('+*'), _('**'),
+                     _('?+'), _('1+'), _('++'), _('*+'),
                      _('?1'), _('11'), _('+1'), _('*1'),
                      _('??'), _('1?'), _('+?'), _('*?')]
 
 class CWRelation(MetaEntityType):
     """define a non final relation: link a non final relation type from a non
-    final entity to a non final entity type. 
+    final entity to a non final entity type.
 
     used to build the application schema
     """
@@ -93,7 +93,7 @@ class CWRelation(MetaEntityType):
                                 constraints=[RQLConstraint('O final FALSE')],
                                 composite='object')
     constrained_by = SubjectRelation('CWConstraint', cardinality='*1', composite='subject')
-    
+
     cardinality = String(maxsize=2, internationalizable=True,
                          vocabulary=CARDINALITY_VOCAB,
                          description=_('subject/object cardinality'))
@@ -105,12 +105,12 @@ class CWRelation(MetaEntityType):
                                      'deleted.'),
                        vocabulary=('', _('subject'), _('object')),
                        maxsize=8, default=None)
-    
+
     description_format = String(meta=True, internationalizable=True, maxsize=50,
                                 default='text/plain', constraints=[format_constraint])
     description = String(internationalizable=True,
                          description=_('semantic description of this relation'))
-    
+
 
 # not restricted since it has to be read when checking allowed transitions
 class RQLExpression(MetaEntityType):
@@ -120,7 +120,7 @@ class RQLExpression(MetaEntityType):
                       description=_('name of the main variables which should be '
                                     'used in the selection if necessary (comma '
                                     'separated)'))
-    expression = String(required=True, 
+    expression = String(required=True,
                         description=_('restriction part of a rql query. '
                                       'For entity rql expression, X and U are '
                                       'predefined respectivly to the current object and to '
@@ -137,7 +137,7 @@ class RQLExpression(MetaEntityType):
                                         description=_('rql expression allowing to delete entities/relations of this type'))
     update_permission = ObjectRelation('CWEType', cardinality='*?', composite='subject',
                                         description=_('rql expression allowing to update entities of this type'))
-    
+
 
 class CWConstraint(MetaEntityType):
     """define a schema constraint"""
@@ -165,9 +165,9 @@ class CWGroup(MetaEntityType):
                                         description=_('groups allowed to delete entities/relations of this type'))
     update_permission = ObjectRelation('CWEType',
                                         description=_('groups allowed to update entities of this type'))
-    
-    
-    
+
+
+
 class relation_type(MetaRelationType):
     """link a relation definition to its relation type"""
     inlined = True
@@ -179,7 +179,7 @@ class to_entity(MetaRelationType):
     inlined = True
 class constrained_by(MetaRelationType):
     """constraints applying on this relation"""
-    
+
 class cstrtype(MetaRelationType):
     """constraint factory"""
     inlined = True

@@ -6,8 +6,6 @@
 """
 __docformat__ = "restructuredtext en"
 
-from cubicweb.schema import format_constraint
-
 
 class CWUser(WorkflowableEntityType):
     """define a CubicWeb user"""
@@ -26,7 +24,7 @@ class CWUser(WorkflowableEntityType):
     surname   = String(maxsize=64)
     last_login_time  = Datetime(description=_('last connection date'))
     # allowing an email to be the primary email of multiple entities is necessary for
-    # test at least :-/    
+    # test at least :-/
     primary_email = SubjectRelation('EmailAddress', cardinality='??',
                                     description=_('email address to use for notification'))
     use_email     = SubjectRelation('EmailAddress', cardinality='*?', composite='subject')
@@ -44,9 +42,9 @@ class EmailAddress(MetaEntityType):
         'delete': ('managers', 'owners', ERQLExpression('P use_email X, U has_update_permission P')),
         'update': ('managers', 'owners', ERQLExpression('P use_email X, U has_update_permission P')),
         }
-    
+
     alias   = String(fulltextindexed=True, maxsize=56)
-    address = String(required=True, fulltextindexed=True, 
+    address = String(required=True, fulltextindexed=True,
                      indexed=True, unique=True, maxsize=128)
     canonical = Boolean(default=False,
                         description=_('when multiple addresses are equivalent \
@@ -66,7 +64,7 @@ class use_email(RelationType):
 class primary_email(RelationType):
     """the prefered email"""
     permissions = use_email.permissions
-    
+
 class identical_to(RelationType):
     """identical_to"""
     symetric = True
@@ -85,14 +83,14 @@ class identical_to(RelationType):
 class in_group(MetaRelationType):
     """core relation indicating a user's groups"""
     meta = False
-    
+
 class owned_by(MetaRelationType):
     """core relation indicating owners of an entity. This relation
     implicitly put the owner into the owners group for the entity
     """
     permissions = {
         'read':   ('managers', 'users', 'guests'),
-        'add':    ('managers', RRQLExpression('S owned_by U'),), 
+        'add':    ('managers', RRQLExpression('S owned_by U'),),
         'delete': ('managers', RRQLExpression('S owned_by U'),),
         }
     # 0..n cardinality for entities created by internal session (no attached user)
@@ -100,7 +98,7 @@ class owned_by(MetaRelationType):
     cardinality = '**'
     subject = '**'
     object = 'CWUser'
-    
+
 class created_by(MetaRelationType):
     """core relation indicating the original creator of an entity"""
     permissions = {
@@ -110,11 +108,11 @@ class created_by(MetaRelationType):
         }
     # 0..1 cardinality for entities created by internal session (no attached user)
     # and to support later deletion of a user which has created some entities
-    cardinality = '?*' 
+    cardinality = '?*'
     subject = '**'
     object = 'CWUser'
 
-    
+
 class creation_date(MetaAttributeRelationType):
     """creation time of an entity"""
     cardinality = '11'
@@ -126,7 +124,7 @@ class modification_date(MetaAttributeRelationType):
     cardinality = '11'
     subject = '**'
     object = 'Datetime'
-    
+
 class CWProperty(EntityType):
     """used for cubicweb configuration. Once a property has been created you
     can't change the key.
@@ -144,7 +142,7 @@ class CWProperty(EntityType):
                                 'You must select this first to be able to set '
                                 'value'))
     value = String(internationalizable=True, maxsize=256)
-    
+
     for_user = SubjectRelation('CWUser', cardinality='?*', composite='object',
                                description=_('user for which this property is '
                                              'applying. If this relation is not '
@@ -171,7 +169,7 @@ class CWPermission(MetaEntityType):
                   description=_('name or identifier of the permission'))
     label = String(required=True, internationalizable=True, maxsize=100,
                    description=_('distinct label to distinguate between other permission entity of the same name'))
-    require_group = SubjectRelation('CWGroup', 
+    require_group = SubjectRelation('CWGroup',
                                     description=_('groups to which the permission is granted'))
 
 # explicitly add X require_permission CWPermission for each entity that should have
@@ -185,7 +183,7 @@ class require_permission(RelationType):
         'add':    ('managers',),
         'delete': ('managers',),
         }
-    
+
 class require_group(MetaRelationType):
     """used to grant a permission to a group"""
     permissions = {
@@ -194,7 +192,7 @@ class require_group(MetaRelationType):
         'delete': ('managers',),
         }
 
-    
+
 class see_also(RelationType):
     """generic relation to link one entity to another"""
     symetric = True
@@ -215,6 +213,6 @@ class CWCache(MetaEntityType):
         'delete': ('managers',),
         }
 
-    name = String(required=True, unique=True, indexed=True, 
+    name = String(required=True, unique=True, indexed=True,
                   description=_('name of the cache'))
     timestamp = Datetime(default='NOW')

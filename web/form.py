@@ -608,7 +608,7 @@ class EntityFieldsForm(FieldsForm):
         """
         entity = self.edited_entity
         if isinstance(rtype, basestring):
-            rtype = entity.schema.rschema(rtype)
+            rtype = self.schema.rschema(rtype)
         done = None
         assert not rtype.is_final(), rtype
         if entity.has_eid():
@@ -630,7 +630,7 @@ class EntityFieldsForm(FieldsForm):
         """
         entity = self.edited_entity
         if isinstance(rtype, basestring):
-            rtype = entity.schema.rschema(rtype)
+            rtype = self.schema.rschema(rtype)
         done = None
         if entity.has_eid():
             done = set(e.eid for e in getattr(entity, 'reverse_%s' % rtype))
@@ -645,7 +645,7 @@ class EntityFieldsForm(FieldsForm):
                 break
         return result
 
-    def subject_in_state_vocabulary(self, rschema, limit=None):
+    def subject_in_state_vocabulary(self, rtype, limit=None):
         """vocabulary method for the in_state relation, looking for relation's
         object entities (i.e. self is the subject) according to initial_state,
         state_of and next_state relation
