@@ -189,7 +189,7 @@ else:
         context = state.document.settings.context
         context.req.add_css('pygments.css')
         return [nodes.raw('', parsed, format='html')]
-     
+
     pygments_directive.arguments = (1, 0, 1)
     pygments_directive.content = 1
     directives.register_directive('sourcecode', pygments_directive)
@@ -216,11 +216,9 @@ class CubicWebReSTParser(Parser):
         self.finish_parse()
 
 
-_REST_PARSER = CubicWebReSTParser()
-
 def rest_publish(context, data):
     """publish a string formatted as ReStructured Text to HTML
-    
+
     :type context: a cubicweb application object
 
     :type data: str
@@ -239,7 +237,7 @@ def rest_publish(context, data):
                 'warning_stream': StringIO(), 'context': context,
                 # dunno what's the max, severe is 4, and we never want a crash
                 # (though try/except may be a better option...)
-                'halt_level': 10, 
+                'halt_level': 10,
                 }
     if context:
         if hasattr(req, 'url'):
@@ -252,7 +250,7 @@ def rest_publish(context, data):
         base_url = None
     try:
         return publish_string(writer=Writer(base_url=base_url),
-                              parser=_REST_PARSER, source=data,
+                              parser=CubicWebReSTParser(), source=data,
                               settings_overrides=settings)
     except Exception:
         LOGGER.exception('error while publishing ReST text')
