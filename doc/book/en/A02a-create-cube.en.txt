@@ -3,6 +3,10 @@
 Create your cube
 ----------------
 
+The packages ``cubicweb`` and ``cubicweb-dev`` installs a command line tool
+for `CubicWeb` called ``cubicweb-ctl``. This tool provides a wide range of
+commands described in details in :ref:`cubicweb-ctl`. 
+
 Once your `CubicWeb` development environment is set up, you can create a new
 cube::
 
