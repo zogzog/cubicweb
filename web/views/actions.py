@@ -7,7 +7,7 @@
 __docformat__ = "restructuredtext en"
 
 from cubicweb.vregistry import objectify_selector
-from cubicweb.selectors import (EntitySelector, 
+from cubicweb.selectors import (EntitySelector,
     one_line_rset, two_lines_rset, one_etype_rset, relation_possible,
     non_final_entity,
     authenticated_user, match_user_groups, match_search_state,
@@ -26,7 +26,7 @@ class has_editable_relation(EntitySelector):
 
     See `EntitySelector` documentation for behaviour when row is not specified.
     """
-        
+
     def score_entity(self, entity):
         # if user has no update right but it can modify some relation,
         # display action anyway
@@ -75,11 +75,11 @@ class SelectAction(Action):
     """
     id = 'select'
     __select__ = match_search_state('linksearch') & match_searched_etype()
-    
+
     title = _('select')
-    category = 'mainactions'    
+    category = 'mainactions'
     order = 0
-    
+
     def url(self):
         return linksearch_select_url(self.req, self.rset)
 
@@ -87,11 +87,11 @@ class SelectAction(Action):
 class CancelSelectAction(Action):
     id = 'cancel'
     __select__ = match_search_state('linksearch')
-    
+
     title = _('cancel select')
     category = 'mainactions'
     order = 10
-    
+
     def url(self):
         target, eid, r_type, searched_type = self.req.search_state[1]
         return self.build_url(str(eid),
@@ -102,13 +102,13 @@ class ViewAction(Action):
     id = 'view'
     __select__ = (match_search_state('normal') &
                   match_user_groups('users', 'managers') &
-                  view_is_not_default_view() & 
+                  view_is_not_default_view() &
                   non_final_entity())
-    
+
     title = _('view')
-    category = 'mainactions'    
+    category = 'mainactions'
     order = 0
-    
+
     def url(self):
         params = self.req.form.copy()
         params.pop('vid', None)
@@ -120,9 +120,9 @@ class ViewAction(Action):
 class ModifyAction(Action):
     id = 'edit'
     __select__ = (match_search_state('normal') &
-                  one_line_rset() & 
+                  one_line_rset() &
                   (has_permission('update') | has_editable_relation('add')))
-    
+
     title = _('modify')
     category = 'mainactions'
     order = 10
@@ -130,7 +130,7 @@ class ModifyAction(Action):
     def url(self):
         entity = self.rset.get_entity(self.row or 0, self.col or 0)
         return entity.absolute_url(vid='edition')
-        
+
 
 class MultipleEditAction(Action):
     id = 'muledit' # XXX get strange conflicts if id='edit'
@@ -141,7 +141,7 @@ class MultipleEditAction(Action):
     title = _('modify')
     category = 'mainactions'
     order = 10
-    
+
     def url(self):
         return self.build_url('view', rql=self.rset.rql, vid='muledit')
 
@@ -165,34 +165,34 @@ class ManagePermissionsAction(Action):
                                | relation_possible('require_permission', 'subject', 'CWPermission',
                                                    action='add')))
         return super(ManagePermissionsAction, cls).registered(vreg)
-    
-    def url(self):
-        return self.rset.get_entity(0, 0).absolute_url(vid='security')
 
-    
+    def url(self):
+        return self.rset.get_entity(self.row, self.col).absolute_url(vid='security')
+
+
 class DeleteAction(Action):
     id = 'delete'
     __select__ = has_permission('delete')
-    
+
     title = _('delete')
-    category = 'moreactions' 
+    category = 'moreactions'
     order = 20
-    
+
     def url(self):
         if len(self.rset) == 1:
-            entity = self.rset.get_entity(0, 0)
+            entity = self.rset.get_entity(self.row, self.col)
             return self.build_url(entity.rest_path(), vid='deleteconf')
         return self.build_url(rql=self.rset.printable_rql(), vid='deleteconf')
-    
-        
+
+
 class CopyAction(Action):
     id = 'copy'
     __select__ = one_line_rset() & has_permission('add')
-    
+
     title = _('copy')
     category = 'moreactions'
     order = 30
-    
+
     def url(self):
         entity = self.rset.get_entity(self.row or 0, self.col or 0)
         return entity.absolute_url(vid='copy')
@@ -210,7 +210,7 @@ class AddNewAction(MultipleEditAction):
 
     category = 'moreactions'
     order = 40
-    
+
     @property
     def rsettype(self):
         if self.rset:
@@ -230,7 +230,7 @@ class AddNewAction(MultipleEditAction):
 class UserPreferencesAction(Action):
     id = 'myprefs'
     __select__ = authenticated_user()
-    
+
     title = _('user preferences')
     category = 'useractions'
     order = 10
@@ -242,7 +242,7 @@ class UserPreferencesAction(Action):
 class UserInfoAction(Action):
     id = 'myinfos'
     __select__ = authenticated_user()
-    
+
     title = _('personnal informations')
     category = 'useractions'
     order = 20
@@ -254,7 +254,7 @@ class UserInfoAction(Action):
 class LogoutAction(Action):
     id = 'logout'
     __select__ = authenticated_user()
-    
+
     title = _('logout')
     category = 'useractions'
     order = 30
@@ -262,7 +262,7 @@ class LogoutAction(Action):
     def url(self):
         return self.build_url(self.id)
 
-    
+
 # site actions ################################################################
 
 class ManagersAction(Action):
@@ -274,13 +274,13 @@ class ManagersAction(Action):
     def url(self):
         return self.build_url(self.id)
 
-    
+
 class SiteConfigurationAction(ManagersAction):
     id = 'siteconfig'
     title = _('site configuration')
     order = 10
 
-    
+
 class ManageAction(ManagersAction):
     id = 'manage'
     title = _('manage')
