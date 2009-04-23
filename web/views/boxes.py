@@ -24,7 +24,7 @@ from cubicweb.web import uicfg
 from cubicweb.web.box import BoxTemplate
 
 _ = unicode
-    
+
 class EditBox(BoxTemplate):
     """
     box with all actions impacting the entity displayed: edit, copy, delete
@@ -38,7 +38,7 @@ class EditBox(BoxTemplate):
     # class attributes below are actually stored in the uicfg module since we
     # don't want them to be reloaded
     rmode = uicfg.rmode
-        
+
     @classmethod
     def vreg_initialization_completed(cls):
         """set default category tags for relations where it's not yet defined in
@@ -71,7 +71,9 @@ class EditBox(BoxTemplate):
         """return a string telling if the given relation is usually created
         to a new entity ('create' mode) or to an existant entity ('link' mode)
         """
-        return cls.rmode.rtag(rtype, role, etype, targettype)
+        if role == 'subject':
+            return cls.rmode.rtag(rtype, role, etype, targettype)
+        return cls.rmode.rtag(rtype, role, targettype, etype)
 
 
     def call(self, view=None, **kwargs):
@@ -117,7 +119,7 @@ class EditBox(BoxTemplate):
         self.add_submenu(box, other_menu)
         if not box.is_empty():
             box.render(self.w)
-            
+
     def add_submenu(self, box, submenu, label_prefix=None):
         if len(submenu.items) == 1:
             boxlink = submenu.items[0]
@@ -126,7 +128,7 @@ class EditBox(BoxTemplate):
             box.append(boxlink)
         elif submenu.items:
             box.append(submenu)
-        
+
     def schema_actions(self, entity):
         user = self.req.user
         actions = []
@@ -225,7 +227,7 @@ class SearchBox(BoxTemplate):
         title = u"""<span onclick="javascript: toggleVisibility('rqlinput')">%s</span>""" % req._(self.title)
         box = BoxWidget(title, self.id, _class="searchBoxFrame", islist=False, escape=False)
         box.append(BoxHtml(form))
-        box.render(self.w)            
+        box.render(self.w)
 
 
 # boxes disabled by default ###################################################
@@ -234,7 +236,7 @@ class PossibleViewsBox(BoxTemplate):
     """display a box containing links to all possible views"""
     id = 'possible_views_box'
     __select__ = BoxTemplate.__select__ & match_user_groups('users', 'managers')
-    
+
     visible = False
     title = _('possible views')
     order = 10
@@ -264,7 +266,7 @@ class StartupViewsBox(BoxTemplate):
         for view in self.vreg.possible_views(self.req, None):
             if view.category == 'startupview':
                 box.append(self.box_action(view))
-        
+
         if not box.is_empty():
             box.render(self.w)
 
@@ -274,7 +276,7 @@ class StartupViewsBox(BoxTemplate):
 class SideBoxView(EntityView):
     """helper view class to display some entities in a sidebox"""
     id = 'sidebox'
-    
+
     def call(self, boxclass='sideBox', title=u''):
         """display a list of entities by calling their <item_vid> view"""
         if title:
