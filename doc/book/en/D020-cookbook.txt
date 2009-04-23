@@ -62,3 +62,19 @@ life easier.
         cnx.commit()
         cnx.close()
 
+
+* How to load data from a script?
+
+  The following script aims at loading data within a script assuming pyro-nsd is
+  running and your application is configured with ``pyro-server=yes``, otherwise
+  you would not be able to use dbapi. ::
+
+    from cubicweb import dbapi
+        
+    cnx = dbapi.connection(database='instance-id', user='admin', password='admin')
+    cur = cnx.cursor()
+    for name in ('Personal', 'Professional', 'Computers'):
+        cur.execute('INSERT Blog B: B name %s', name)
+    cnx.commit()
+
+    
