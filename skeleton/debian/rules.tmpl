@@ -5,12 +5,12 @@
 # Uncomment this to turn on verbose mode.
 #export DH_VERBOSE=1
 build: build-stamp
-build-stamp: 
+build-stamp:
 	dh_testdir
 	python setup.py -q build
 	touch build-stamp
 
-clean: 
+clean:
 	dh_testdir
 	dh_testroot
 	rm -f build-stamp configure-stamp
@@ -24,6 +24,8 @@ install: build
 	dh_clean -k
 	dh_installdirs -i
 	python setup.py -q install --no-compile --prefix=debian/%(distname)s/usr/
+	# remove generated .egg-info file
+	rm -rf debian/cubicweb-comment/usr/lib/python*
 
 
 # Build architecture-independent files here.
@@ -39,13 +41,13 @@ binary-indep: build install
 	dh_compress -i -X.py -X.ini -X.xml -Xtest
 	dh_fixperms -i
 	dh_installdeb -i
-	dh_gencontrol -i 
+	dh_gencontrol -i
 	dh_md5sums -i
 	dh_builddeb -i
 
 
 # Build architecture-dependent files here.
-binary-arch: 
+binary-arch:
 
-binary: binary-indep 
+binary: binary-indep
 .PHONY: build clean binary-arch binary-indep binary
