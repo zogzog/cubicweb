@@ -168,7 +168,7 @@ class PrimaryView(EntityView):
         self.content_navigation_components('navcontenttop')
         if self.main_related_section:
             self.render_entity_relations(entity, siderelations)
-            self.w(u'</div>')
+        self.w(u'</div>')
         if boxes:
             self.w(u'</td><td>')
             # side boxes
@@ -333,7 +333,6 @@ class PrimaryView(EntityView):
                 value +=  '</div>'
         label = display_name(self.req, rschema.type, role)
         self.field(label, value, show_label=show_label, w=self.w, tr=False)
-        print '_render', entity
         
 class SideBoxView(EntityView):
     """side box usually displaying some related entities in a primary view"""
