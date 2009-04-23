@@ -5,8 +5,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: cubicweb 2.46.0\n"
 "PO-Revision-Date: 2008-11-27 07:59+0100\n"
-"Last-Translator: Celso Flores<contact@logilab.fr>\n"
-"Language-Team: fr <contact@logilab.fr>\n"
+"Last-Translator: Celso Flores<jcelsoflores@gmail.com>\n"
+"Language-Team: es <contact@logilab.fr>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -2281,65 +2281,65 @@ msgid "no"
 msgstr "no"
 
 msgid "no associated epermissions"
-msgstr "aucune permission spÈcifique n'est dÈfinie"
+msgstr "permisos no asociados"
 
 msgid "no possible transition"
-msgstr "aucune transition possible"
+msgstr "transición no posible"
 
 msgid "no related project"
-msgstr "pas de projet rattachÈ"
+msgstr "no hay proyecto relacionado"
 
 msgid "no selected entities"
-msgstr "pas d'entitÈ sÈlectionnÈe"
+msgstr "no hay entidades seleccionadas"
 
 #, python-format
 msgid "no such entity type %s"
-msgstr "le type d'entitÈ '%s' n'existe pas"
+msgstr "el tipo de entidad '%s' no existe"
 
 msgid "no version information"
-msgstr "pas d'information de version"
+msgstr "no información de version"
 
 msgid "not authorized"
-msgstr "non autorisÈ"
+msgstr "no autorizado"
 
 msgid "not selected"
-msgstr ""
+msgstr "no seleccionado"
 
 msgid "not specified"
-msgstr "non spÈcifiÈ"
+msgstr "no especificado"
 
 msgid "not the initial state for this entity"
-msgstr "n'est pas l'Ètat initial pour cette entitÈ"
+msgstr "no el estado inicial para esta entidad"
 
 msgid "nothing to edit"
-msgstr "rien ‡ Èditer"
+msgstr "nada que editar"
 
 msgid "november"
-msgstr "novembre"
+msgstr "noviembre"
 
 msgid "object"
-msgstr "objet"
+msgstr "objeto"
 
 msgid "october"
-msgstr "octobre"
+msgstr "octubre"
 
 msgid "one month"
-msgstr "un mois"
+msgstr "un mes"
 
 msgid "one week"
-msgstr "une semaine"
+msgstr "una semana"
 
 msgid "oneline"
-msgstr "une ligne"
+msgstr "una linea"
 
 msgid "only select queries are authorized"
-msgstr "seules les requÍtes de sÈlections sont autorisÈes"
+msgstr "solo estan permitidas consultas de lectura"
 
 msgid "order"
-msgstr "ordre"
+msgstr "orden"
 
 msgid "ordernum"
-msgstr "ordre"
+msgstr "orden"
 
 msgid "owl"
 msgstr ""
@@ -2348,178 +2348,177 @@ msgid "owlabox"
 msgstr ""
 
 msgid "owned_by"
-msgstr "appartient ‡"
+msgstr "pertenece a"
 
 msgid "owned_by_object"
-msgstr "possËde"
+msgstr "pertenece al objeto"
 
 msgid "owners"
-msgstr "propriÈtaires"
+msgstr "proprietarios"
 
 msgid "ownership"
-msgstr "propriÈtÈ"
+msgstr "pertenencia"
 
 msgid "ownerships have been changed"
-msgstr "les droits de propriÈtÈ ont ÈtÈ modifiÈs"
+msgstr "la pertenencia ha sido modificada"
 
 msgid "pageid-not-found"
 msgstr ""
-"des donnÈes nÈcessaires semblent expirÈes, veuillez recharger la page et "
-"recommencer."
+"pagina no encontrada."
 
 msgid "password"
-msgstr "mot de passe"
+msgstr "Clave de acceso"
 
 msgid "password and confirmation don't match"
-msgstr "le mot de passe et la confirmation sont diffÈrents"
+msgstr "La clave de acceso y la confirmación no concuerdan"
 
 msgid "path"
-msgstr "chemin"
+msgstr "Ruta"
 
 msgid "permission"
-msgstr "permission"
+msgstr "Permiso"
 
 msgid "permissions for this entity"
-msgstr "permissions pour cette entitÈ"
+msgstr "Permisos para esta entidad"
 
 msgid "personnal informations"
-msgstr "informations personnelles"
+msgstr "Información personal"
 
 msgid "pick existing bookmarks"
-msgstr "rÈcupÈrer des signets existants"
+msgstr "Seleccione los favoritos existentes"
 
 msgid "pkey"
-msgstr "clÈ"
-
-msgid "planned_delivery"
 msgstr ""
 
+msgid "planned_delivery"
+msgstr "entrega planeada"
+
 msgid "please correct errors below"
-msgstr "veuillez corriger les erreurs ci-dessous"
+msgstr "Favor de corregir errores"
 
 msgid "please correct the following errors:"
-msgstr "veuillez corriger les erreurs suivantes :"
+msgstr "Favor de corregir los siguientes errores :"
 
 msgid "possible views"
-msgstr "vues possibles"
+msgstr "Vistas posibles"
 
 msgid "preferences"
-msgstr "prÈfÈrences"
+msgstr "Preferencias"
 
 msgid "previous_results"
-msgstr "rÈsultats prÈcÈdents"
+msgstr "Resultados anteriores"
 
 msgid "primary"
-msgstr "primaire"
+msgstr "Primaria"
 
 msgid "primary_email"
-msgstr "adresse email principale"
+msgstr "Dirección de email principal"
 
 msgid "primary_email_object"
-msgstr "adresse email principale (object)"
+msgstr "Dirección de email principal (objeto)"
 
 msgid "progress"
-msgstr "avancement"
+msgstr "Avance"
 
 msgid "progress bar"
-msgstr "barre d'avancement"
+msgstr "Barra de progreso de avance"
 
 msgid "project"
-msgstr "projet"
+msgstr "Proyecto"
 
 msgid "read"
-msgstr "lecture"
+msgstr "Lectura"
 
 msgid "read_perm"
-msgstr "lecture"
+msgstr "Lectura"
 
 msgid "read_permission"
-msgstr "permission de lire"
+msgstr "Permiso de lectura"
 
 msgid "read_permission_object"
-msgstr "a la permission de lire"
+msgstr "Objeto_permiso_lectura"
 
 #, python-format
 msgid "relation %(relname)s of %(ent)s"
-msgstr "relation %(relname)s de %(ent)s"
+msgstr "relación %(relname)s de %(ent)s"
 
 msgid "relation_type"
-msgstr "type de relation"
+msgstr "tipo de relación"
 
 msgid "relation_type_object"
-msgstr "dÈfinition"
+msgstr "Definición"
 
 msgid "relations deleted"
-msgstr "relations supprimÈes"
+msgstr "Relaciones eliminadas"
 
 msgid "relative url of the bookmarked page"
-msgstr "url relative de la page"
+msgstr "Url relativa de la pagina"
 
 msgid "remove this Bookmark"
-msgstr "supprimer ce signet"
+msgstr "Eliminar este Favorito"
 
 msgid "remove this Card"
-msgstr "supprimer cette fiche"
+msgstr "Eliminar esta Ficha"
 
 msgid "remove this ECache"
-msgstr "supprimer ce cache applicatif"
+msgstr "Eliminar esta cache de aplicación"
 
 msgid "remove this EConstraint"
-msgstr "supprimer cette contrainte"
+msgstr "Eliminar esta restricción"
 
 msgid "remove this EConstraintType"
-msgstr "supprimer ce type de contrainte"
+msgstr "Eliminar este tipo de restricción"
 
 msgid "remove this EEType"
-msgstr "supprimer ce type d'entitÈ"
+msgstr "Eliminar este tipo de entidad"
 
 msgid "remove this EFRDef"
-msgstr "supprimer cet attribut"
+msgstr "Eliminar este atributo"
 
 msgid "remove this EGroup"
-msgstr "supprimer ce groupe"
+msgstr "Eliminar este grupo"
 
 msgid "remove this ENFRDef"
-msgstr "supprimer cette relation"
+msgstr "Eliminar esta relación"
 
 msgid "remove this EPermission"
-msgstr "supprimer cette permission"
+msgstr "Eliminar este permiso"
 
 msgid "remove this EProperty"
-msgstr "supprimer cette propriÈtÈ"
+msgstr "Eliminar esta propiedad"
 
 msgid "remove this ERType"
-msgstr "supprimer cette dÈfinition de relation"
+msgstr "Eliminar esta definición de relación"
 
 msgid "remove this EUser"
-msgstr "supprimer cet utilisateur"
+msgstr "Eliminar este usuario"
 
 msgid "remove this EmailAddress"
-msgstr "supprimer cette adresse email"
+msgstr "Eliminar este correo electronico"
 
 msgid "remove this RQLExpression"
-msgstr "supprimer cette expression rql"
+msgstr "Eliminar esta expresión RQL"
 
 msgid "remove this State"
-msgstr "supprimer cet Ètat"
+msgstr "Eliminar este estado"
 
 msgid "remove this TrInfo"
-msgstr "retirer cette information de transition"
+msgstr "Eliminar información de esta transición"
 
 msgid "remove this Transition"
-msgstr "supprimer cette transition"
+msgstr "Eliminar esta transición"
 
 msgid "require_group"
-msgstr "nÈcessite le groupe"
+msgstr "Requiere_grupo"
 
 msgid "require_group_object"
-msgstr "‡ les droits"
+msgstr "Objeto_grupo_requerido"
 
 msgid "required attribute"
-msgstr "attribut requis"
+msgstr "Atributo requerido"
 
 msgid "required field"
-msgstr "champ requis"
+msgstr "Campo requerido"
 
 msgid ""
 "restriction part of a rql query. For entity rql expression, X and U are "
@@ -2527,460 +2526,458 @@ msgid ""
 "relation rql expression, S, O and U are predefined respectivly to the "
 "current relation'subject, object and to the request user. "
 msgstr ""
-"partie restriction de la requÍte rql. Pour une expression s'appliquant ‡ une "
-"entitÈ, X et U sont respectivement prÈfÈfinis ‡ l'entitÈ et ‡ l'utilisateur "
-"courant. Pour une expression s'appliquant ‡ une relation, S, O et U sont "
-"respectivement prÈfÈfinis au sujet/objet de la relation et ‡ l'utilisateur "
-"courant."
+"restriction part of a rql query. For entity rql expression, X and U are "
+"predefined respectivly to the current object and to the request user. For "
+"relation rql expression, S, O and U are predefined respectivly to the "
+"current relation'subject, object and to the request user. "
 
 msgid "revert changes"
-msgstr "annuler les changements"
+msgstr "Revertir cambios"
 
 msgid "right"
-msgstr "droite"
+msgstr "Derecha"
 
 msgid "rql expression allowing to add entities/relations of this type"
 msgstr ""
-"expression RQL donnant le droit d'ajouter des entitÈs/relations de ce type"
+"expresion RQL permitiendo agregar entidades/relaciones de este tipo"
 
 msgid "rql expression allowing to delete entities/relations of this type"
 msgstr ""
-"expression RQL donnant le droit de supprimer des entitÈs/relations de ce type"
+"expresion RQL permitiendo eliminar entidades/relaciones de este tipo"
 
 msgid "rql expression allowing to read entities/relations of this type"
 msgstr ""
-"expression RQL donnant le droit de lire des entitÈs/relations de ce type"
+"expresion RQL permitiendo leer entidades/relaciones de este tipo"
 
 msgid "rql expression allowing to update entities of this type"
 msgstr ""
-"expression RQL donnant le droit de modifier des entitÈs/relations de ce type"
+"expresion RQL permitiendo actualizar entidades de este tipo"
 
 msgid "rql expressions"
-msgstr "conditions rql"
+msgstr "expresiones rql"
 
 msgid "rss"
 msgstr "RSS"
 
 msgid "sample format"
-msgstr "exemple"
+msgstr "ejemplo"
 
 msgid "saturday"
-msgstr "samedi"
+msgstr "sabado"
 
 msgid "schema entities"
-msgstr "entitÈs dÈfinissant le schÈma"
+msgstr "entidades del esquema"
 
 msgid "schema's permissions definitions"
-msgstr "permissions dÈfinies dans le schÈma"
+msgstr "definiciones de permisos del esquema"
 
 msgid "search"
-msgstr "rechercher"
+msgstr "buscar"
 
 msgid "search for association"
-msgstr "rechercher pour associer"
+msgstr "buscar por asociación"
 
 msgid "searching for"
-msgstr "Recherche de"
+msgstr "buscando "
 
 msgid "secondary"
-msgstr "secondaire"
+msgstr "secundario"
 
 msgid "security"
-msgstr "sÈcuritÈ"
+msgstr "seguridad"
 
 msgid "see them all"
-msgstr "les voir toutes"
+msgstr "Ver todos"
 
 msgid "select"
-msgstr "sÈlectionner"
+msgstr "Seleccionar"
 
 msgid "select a"
-msgstr "sÈlectionner un"
+msgstr "seleccione un"
 
 msgid "select a relation"
-msgstr "sÈlectionner une relation"
+msgstr "seleccione una relación"
 
 msgid "select this entity"
-msgstr "sÈlectionner cette entitÈ"
+msgstr "seleccionar esta entidad"
 
 msgid "selected"
-msgstr ""
+msgstr "seleccionado"
 
 msgid "semantic description of this attribute"
-msgstr "description sÈmantique de cet attribut"
+msgstr "descripción semantica de este atributo"
 
 msgid "semantic description of this entity type"
-msgstr "description sÈmantique de ce type d'entitÈ"
+msgstr "descripción semantica de este tipo de entidad"
 
 msgid "semantic description of this relation"
-msgstr "description sÈmantique de cette relation"
+msgstr "descripción semantica de esta relación"
 
 msgid "semantic description of this relation type"
-msgstr "description sÈmantique de ce type de relation"
+msgstr "descripción semantica de este tipo de relación"
 
 msgid "semantic description of this state"
-msgstr "description sÈmantique de cet Ètat"
+msgstr "descripción semantica de este estado"
 
 msgid "semantic description of this transition"
-msgstr "description sÈmantique de cette transition"
+msgstr "descripcion semantica de esta transición"
 
 msgid "send email"
-msgstr "envoyer un courriel"
+msgstr "enviar email"
 
 msgid "september"
-msgstr "septembre"
+msgstr "septiembre"
 
 msgid "server debug information"
-msgstr "informations de dÈboguage serveur"
+msgstr "server debug information"
 
 msgid "server information"
-msgstr "informations serveur"
+msgstr "server information"
 
 msgid ""
 "should html fields being edited using fckeditor (a HTML WYSIWYG editor).  "
 "You should also select text/html as default text format to actually get "
 "fckeditor."
 msgstr ""
-"indique si les champs HTML doivent Ítre Èditer avec fckeditor (un\n"
-"Èditer HTML WYSIWYG). Il est Ègalement conseill'de choisir text/html\n"
-"comme format de texte par dÈfaut pour pouvoir utiliser fckeditor."
+"indique si los campos deberan ser editados usando fckeditor (un\n"
+"editor HTML WYSIWYG). Debera tambien elegir text/html\n"
+"como formato de texto por default para poder utilizar fckeditor."
 
 #, python-format
 msgid "show %s results"
-msgstr "montrer %s rÈsultats"
+msgstr "mostrar %s resultados"
 
 msgid "show advanced fields"
-msgstr "montrer les champs avancÈs"
+msgstr "mostrar campos avanzados"
 
 msgid "show filter form"
 msgstr "afficher le filtre"
 
 msgid "show meta-data"
-msgstr "afficher les mÈta-donnÈes"
+msgstr "mostrar meta-data"
 
 msgid "site configuration"
-msgstr "configuration du site"
+msgstr "configuracion del sitio"
 
 msgid "site documentation"
-msgstr "documentation du site"
+msgstr "documentacion del sitio"
 
 msgid "site schema"
-msgstr "schÈma du site"
+msgstr "esquema del sitio"
 
 msgid "site title"
-msgstr "titre du site"
+msgstr "titulo del sitio"
 
 msgid "site-wide property can't be set for user"
-msgstr "une propriÈtÈ spÈcifique au site ne peut Ítre propre ‡ un utilisateur"
+msgstr "una propiedad especifica para el sitio no puede establecerse para el usuario"
 
 msgid "sorry, the server is unable to handle this query"
-msgstr "dÈsolÈ, le serveur ne peut traiter cette requÍte"
+msgstr "lo sentimos, el servidor no puede manejar esta consulta"
 
 msgid "specializes"
-msgstr "dÈrive de"
+msgstr "derivado de"
 
 msgid "specializes_object"
-msgstr "parent de"
+msgstr "objeto_derivado"
 
 msgid "startup views"
-msgstr "vues de dÈpart"
+msgstr "vistas de inicio"
 
 msgid "state"
-msgstr "Ètat"
+msgstr "estado"
 
 msgid "state_of"
-msgstr "Ètat de"
+msgstr "estado_de"
 
 msgid "state_of_object"
-msgstr "a pour Ètat"
+msgstr "objeto_estado_de"
 
 msgid "status change"
-msgstr "changer l'Ètat"
+msgstr "cambio de estatus"
 
 msgid "status changed"
-msgstr "changement d'Ètat"
+msgstr "estatus cambiado"
 
 #, python-format
 msgid "status will change from %(st1)s to %(st2)s"
-msgstr "l'entitÈ passera de l'Ètat %(st1)s ‡ l'Ètat %(st2)s"
+msgstr "estatus cambiara de %(st1)s a %(st2)s"
 
 msgid "subject"
-msgstr "sujet"
+msgstr "sujeto"
 
 msgid "subject/object cardinality"
-msgstr "cardinalitÈ sujet/objet"
+msgstr "cardinalidad sujeto/objeto"
 
 msgid "sunday"
-msgstr "dimanche"
+msgstr "domingo"
 
 msgid "surname"
-msgstr "nom"
+msgstr "apellido"
 
 msgid "symetric"
-msgstr "symÈtrique"
+msgstr "simetrico"
 
 msgid "synopsis"
-msgstr "synopsis"
+msgstr "sinopsis"
 
 msgid "system entities"
-msgstr "entitÈs systËmes"
+msgstr "entidades de sistema"
 
 msgid "table"
-msgstr "table"
+msgstr "tabla"
 
 msgid "tablefilter"
-msgstr "filtre de tableau"
+msgstr "filtro de tabla"
 
 msgid "task progression"
-msgstr "avancement de la t‚che"
+msgstr "progreso de la tarea"
 
 msgid "text"
 msgstr "text"
 
 msgid "text/cubicweb-page-template"
-msgstr "contenu dynamique"
+msgstr "text/cubicweb-page-template"
 
 msgid "text/html"
 msgstr "html"
 
 msgid "text/plain"
-msgstr "texte pur"
+msgstr "text/plain"
 
 msgid "text/rest"
-msgstr "ReST"
+msgstr "text/rest"
 
 msgid "the prefered email"
-msgstr "l'adresse Èlectronique principale"
+msgstr "dirección principal de email"
 
 #, python-format
 msgid "the value \"%s\" is already used, use another one"
-msgstr "la valeur \"%s\" est dÈj‡ utilisÈe, veuillez utiliser une autre valeur"
+msgstr "el valor \"%s\" ya esta en uso, favor de utilizar otro"
 
 msgid "this action is not reversible!"
 msgstr ""
-"Attention ! Cette opÈration va dÈtruire les donnÈes de faÁon irrÈversible."
+"esta acción es irreversible!."
 
 msgid "this entity is currently owned by"
-msgstr "cette entitÈ appartient ‡"
+msgstr "esta entidad es propiedad de"
 
 msgid "this resource does not exist"
-msgstr "cette ressource est introuvable"
+msgstr "este recurso no existe"
 
 msgid "thursday"
-msgstr "jeudi"
+msgstr "jueves"
 
 msgid "timestamp"
-msgstr "date"
+msgstr "fecha"
 
 msgid "timestamp of the latest source synchronization."
-msgstr "date de la derniËre synchronisation avec la source."
+msgstr "fecha de la ultima sincronización de la fuente."
 
 msgid "timetable"
-msgstr "emploi du temps"
+msgstr "tabla de tiempos"
 
 msgid "title"
-msgstr "titre"
+msgstr "titulo"
 
 msgid "to"
-msgstr "‡"
+msgstr "a"
 
 msgid "to associate with"
-msgstr "pour associer ‡"
+msgstr "a asociar con"
 
 msgid "to_entity"
-msgstr "vers l'entitÈ"
+msgstr "hacia entidad"
 
 msgid "to_entity_object"
-msgstr "relation objet"
+msgstr "hacia entidad objeto"
 
 msgid "to_state"
-msgstr "vers l'Ètat"
+msgstr "hacia el estado"
 
 msgid "to_state_object"
-msgstr "transitions vers cette Ètat"
+msgstr "hacia objeto estado"
 
 msgid "todo_by"
-msgstr "‡ faire par"
+msgstr "a hacer por"
 
 msgid "transition is not allowed"
-msgstr "transition non permise"
+msgstr "transition no permitida"
 
 msgid "transition_of"
-msgstr "transition de"
+msgstr "transicion de"
 
 msgid "transition_of_object"
-msgstr "a pour transition"
+msgstr "objeto de transición"
 
 msgid "tree view"
 msgstr ""
 
 msgid "tuesday"
-msgstr "mardi"
+msgstr "martes"
 
 msgid "type"
 msgstr "type"
 
 msgid "ui"
-msgstr "propriÈtÈs gÈnÈriques de l'interface"
+msgstr "interfaz de usuario"
 
 msgid "unaccessible"
-msgstr "inaccessible"
+msgstr "inaccesible"
 
 msgid "unauthorized value"
-msgstr "valeur non autorisÈe"
+msgstr "valor no permitido"
 
 msgid "unique identifier used to connect to the application"
-msgstr "identifiant unique utilisÈ pour se connecter ‡ l'application"
+msgstr "identificador unico utilizado para conectar a la aplicación"
 
 msgid "unknown external entity"
-msgstr "entitÈ (externe) introuvable"
+msgstr "entidad externa desconocida"
 
 msgid "unknown property key"
-msgstr "clÈ de propriÈtÈ inconnue"
+msgstr "propiedad desconocida"
 
 msgid "upassword"
-msgstr "mot de passe"
+msgstr "clave de acceso"
 
 msgid "update"
-msgstr "modification"
+msgstr "modificación"
 
 msgid "update_perm"
-msgstr "modification"
+msgstr "modificación"
 
 msgid "update_permission"
-msgstr "permission de modification"
+msgstr "Permiso de modificación"
 
 msgid "update_permission_object"
-msgstr "‡ la permission de modifier"
+msgstr "objeto de autorización de modificaciones"
 
 #, python-format
 msgid "updated %(etype)s #%(eid)s (%(title)s)"
-msgstr "modification de l'entitÈ %(etype)s #%(eid)s (%(title)s)"
+msgstr "actualización de la entidad %(etype)s #%(eid)s (%(title)s)"
 
 msgid "use template languages"
-msgstr "utiliser les langages de template"
+msgstr "utilizar plantillas de lenguaje"
 
 msgid ""
 "use to define a transition from one or multiple states to a destination "
 "states in workflow's definitions."
 msgstr ""
-"utiliser dans une dÈfinition de processus pour ajouter une transition depuis "
-"un ou plusieurs Ètats vers un Ètat de destination."
+"utilizado para definir una transición desde uno o multiples estados hacia uno o varios estados destino "
+"en las definiciones del workflow"
 
 msgid "use_email"
-msgstr "adresse Èlectronique"
+msgstr "correo electrónico"
 
 msgid "use_email_object"
-msgstr "adresse utilisÈe par"
+msgstr "objeto email utilizado"
 
 msgid "use_template_format"
-msgstr "utilisation du format 'cubicweb template'"
+msgstr "utilización del formato 'cubicweb template'"
 
 msgid ""
 "used for cubicweb configuration. Once a property has been created you can't "
 "change the key."
 msgstr ""
-"utilisÈ pour la configuration de l'application. Une fois qu'une propriÈtÈ a "
-"ÈtÈ crÈÈe, vous ne pouvez plus changez la clÈ associÈe"
+"utilizado para la configuración de cubicweb. Una vez que la propiedad ha sido creada no "
+"puede cambiar la llave"
 
 msgid ""
 "used to associate simple states to an entity type and/or to define workflows"
-msgstr "associe les Ètats ‡ un type d'entitÈ pour dÈfinir un workflow"
+msgstr "utilizado para asociar estados simples a un tipo de entidad y/o para definir workflows"
 
 msgid "used to grant a permission to a group"
-msgstr "utiliser pour donner une permission ‡ un groupe"
+msgstr "utilizado para otorgar permisos a un grupo"
 
 #, python-format
 msgid ""
 "user %s has made the following change(s):\n"
 "\n"
 msgstr ""
-"l'utilisateur %s a effectuÈ le(s) changement(s) suivant(s):\n"
+"el usuario %s ha efectuado los siguentes cambios:\n"
 "\n"
 
 msgid ""
 "user for which this property is applying. If this relation is not set, the "
 "property is considered as a global property"
 msgstr ""
-"utilisateur a qui s'applique cette propriÈtÈ. Si cette relation n'est pas "
-"spÈcifiÈe la propriÈtÈ est considÈrÈe comme globale."
+"usuario para el cual aplica esta propiedad. Si no se establece esta relación, la propiedad es considerada como una propiedad global."
 
 msgid "user interface encoding"
-msgstr "encodage utilisÈ dans l'interface utilisateur"
+msgstr "codificación de la interfaz de usuario"
 
 msgid "user preferences"
-msgstr "prÈfÈrences utilisateur"
+msgstr "preferencias del usuario"
 
 msgid "users"
-msgstr "utilisateurs"
+msgstr "usuarios"
 
 msgid "users using this bookmark"
-msgstr "utilisateurs utilisant ce signet"
+msgstr "usuarios en este favorito"
 
 msgid "validate modifications on selected items"
-msgstr "valider les modifications apportÈes aux ÈlÈments sÈlectionnÈs"
+msgstr "valida modificaciones sobre elementos seleccionados"
 
 msgid "validating..."
-msgstr "chargement en cours ..."
+msgstr "validando ..."
 
 msgid "value"
-msgstr "valeur"
+msgstr "valor"
 
 msgid "value associated to this key is not editable manually"
-msgstr "la valeur associÈe ‡ cette clÈ n'est pas Èditable manuellement"
+msgstr "el valor asociado a este elemento no es editable manualmente"
 
 msgid "vcard"
 msgstr "vcard"
 
 msgid "view"
-msgstr "voir"
+msgstr "ver"
 
 msgid "view all"
-msgstr "voir tous"
+msgstr "ver todos"
 
 msgid "view detail for this entity"
-msgstr "voir les dÈtails de cette entitÈ"
+msgstr "ver detalle de esta entidad"
 
 msgid "view workflow"
-msgstr "voir les Ètats possibles"
+msgstr "ver workflow"
 
 msgid "views"
-msgstr "vues"
+msgstr "vistas"
 
 msgid "visible"
 msgstr "visible"
 
 msgid "wednesday"
-msgstr "mercredi"
+msgstr "miercoles"
 
 msgid "week"
 msgstr "sem."
 
 #, python-format
 msgid "welcome %s !"
-msgstr "bienvenue %s !"
+msgstr "bienvenido %s !"
 
 msgid "wf_info_for"
-msgstr "historique de"
+msgstr "historial de"
 
 msgid "wf_info_for_object"
-msgstr "historique des transitions"
+msgstr "historial de transiciones"
 
 msgid ""
 "when multiple addresses are equivalent (such as python-projects@logilab.org "
 "and python-projects@lists.logilab.org), set this to true on one of them "
 "which is the preferred form."
 msgstr ""
-"quand plusieurs adresses sont Èquivalentes (comme python-projects@logilab."
-"org et python-projects@lists.logilab.org), mettez cette propriÈtÈ ‡ vrai sur "
-"l'une d'entre-elle qui sera la forme canonique"
+"cuando multiples direcciones de correo son equivalentes (como python-projects@logilab.org "
+"y python-projects@lists.logilab.org), establecer esto como verdadero en una de ellas "
+"es la forma preferida "
 
 msgid "wikiid"
-msgstr "identifiant wiki"
+msgstr "identificador wiki"
 
 #, python-format
 msgid "workflow for %s"
-msgstr "workflow pour %s"
+msgstr "workflow para %s"
 
 msgid "xbel"
 msgstr "xbel"
@@ -2992,10 +2989,10 @@ msgid "xml export"
 msgstr ""
 
 msgid "yes"
-msgstr "oui"
+msgstr "si"
 
 msgid "you have been logged out"
-msgstr "vous avez ÈtÈ dÈconnectÈ"
+msgstr "ha terminado la sesion"
 
 #~ msgid "%s constraint failed"
 #~ msgstr "La contrainte %s n'est pas satisfaite"
