@@ -266,40 +266,40 @@ class AutomaticEntityForm(EntityFieldsForm):
         try:
             return super(AutomaticEntityForm, cls_or_self).field_by_name(name, role)
         except FieldNotFound: # XXX should raise more explicit exception
-            if eclass is None:
+            if eclass is None or not name in self.schema:
                 raise
-            field = guess_field(eschema, cls_or_self.schema.rschema(name), role,
-                                eidparam=True)
+            rschema = cls_or_self.schema.rschema(name)
+            fieldcls = cls_or_self.rfields.etype_rtag(eschema, rschema, role)
+            if fieldcls:
+                return fieldcls(name=name, role=role, eidparam=True)
+            widget = cls_or_self.rwidgets.etype_rtag(eschema, rschema, role)
+            if widget:
+                field = guess_field(eschema, rschema, role,
+                                    eidparam=True, widget=widget)
+            else:
+                field = guess_field(eschema, rschema, role, eidparam=True)
             if field is None:
                 raise
             return field
 
     def __init__(self, *args, **kwargs):
         super(AutomaticEntityForm, self).__init__(*args, **kwargs)
-        if self.edited_entity.has_eid():
-            self.edited_entity.complete()
+        entity = self.edited_entity
+        if entity.has_eid():
+            entity.complete()
         for rschema, role in self.editable_attributes():
             try:
                 self.field_by_name(rschema.type, role)
                 continue # explicitly specified
             except FieldNotFound:
-                pass # has to be guessed
-            fieldcls = self.rfields.etype_rtag(self.edited_entity.id, rschema,
-                                               role)
-            if fieldcls:
-                field = fieldcls(name=rschema.type, role=role, eidparam=True)
-                self.fields.append(field)
-                continue
-            widget = self.rwidgets.etype_rtag(self.edited_entity.id, rschema,
-                                              role)
-            if widget:
-                field = guess_field(self.edited_entity.e_schema, rschema, role,
-                                    eidparam=True, widget=widget)
-            else:
-                field = guess_field(self.edited_entity.e_schema, rschema, role,
-                                    eidparam=True)
-            if field is not None:
-                self.fields.append(field)
+                # has to be guessed
+                try:
+                    field = self.field_by_name(rschema.type, role,
+                                               eschema=entity.e_schema)
+                    self.fields.append(field)
+                except FieldNotFound:
+                    # meta attribute such as <attr>_format
+                    continue
         self.maxrelitems = self.req.property_value('navigation.related-limit')
         self.force_display = bool(self.req.form.get('__force_display'))
 
@@ -432,6 +432,9 @@ class AutomaticEntityForm(EntityFieldsForm):
         """
         return not existant or card in '+*'
 
+def etype_relation_field(etype, rtype, role='subject'):
+    eschema = AutomaticEntityForm.schema.eschema(etype)
+    return AutomaticEntityForm.field_by_name(rtype, role, eschema)
 
 class EditionFormView(FormViewMixIn, EntityView):
     """display primary entity edition form"""
