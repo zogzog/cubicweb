@@ -29,8 +29,6 @@ The unbeliever will read the :ref:`Tutorial`.
 
 The hacker will join development at the forge_.
 
-The impatient will go strait away to :ref:`QuickInstall`.
-
 The impatient developper will move right away to :ref:`SetUpEnv`.
 
 .. _Logilab: http://www.logilab.fr/
