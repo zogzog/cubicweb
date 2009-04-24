@@ -34,33 +34,33 @@ class SendEmailAction(Action):
         return self.build_url(self.req.relative_path(includeparams=False),
                               **params)
 
-            
+
 class MassMailingForm(FieldsForm):
     id = 'massmailing'
-    
+
     sender = StringField(widget=TextInput({'disabled': 'disabled'}), label=_('From:'))
     recipient = StringField(widget=CheckBox(), label=_('Recipients:'))
     subject = StringField(label=_('Subject:'))
     mailbody = StringField(widget=AjaxWidget(wdgtype='TemplateTextField',
                                              inputid='mailarea'))
-    form_buttons = [ImgButton('sendbutton', "javascript: $('sendmail').submit()",
+    form_buttons = [ImgButton('sendbutton', "javascript: $('#sendmail').submit()",
                               _('send email'), 'SEND_EMAIL_ICON'),
                     ImgButton('cancelbutton', "javascript: history.back()",
-                              stdmsgs.BUTTON_CANCEL, 'CANCEL_EMAIL_ICON')]                    
-                              
+                              stdmsgs.BUTTON_CANCEL, 'CANCEL_EMAIL_ICON')]
+
     def form_field_vocabulary(self, field):
         if field.name == 'recipient':
             vocab = [(entity.get_email(), entity.eid) for entity in self.rset.entities()]
             return [(label, value) for label, value in vocab if label]
         return super(MassMailingForm, self).form_field_vocabulary(field)
-    
+
     def form_field_value(self, field, values):
         if field.name == 'recipient':
             return [entity.eid for entity in self.rset.entities() if entity.get_email()]
         elif field.name == 'mailbody':
-            field.widget.attrs['cubicweb:variables'] = self.get_allowed_substitutions()
+            field.widget.attrs['cubicweb:variables'] = ','.join(self.get_allowed_substitutions())
         return super(MassMailingForm, self).form_field_value(field, values)
-    
+
     def get_allowed_substitutions(self):
         attrs = []
         for coltype in self.rset.column_types(0):
@@ -79,12 +79,13 @@ class MassMailingForm(FieldsForm):
 
 class MassMailingFormRenderer(FormRenderer):
     button_bar_class = u'toolbar'
-    
+
     def _render_fields(self, fields, w, form):
         w(u'<table class="headersform">')
         for field in fields:
             if field.name == 'mailbody':
                 w(u'</table>')
+                self._render_toolbar(w, form)
                 w(u'<table>')
                 w(u'<tr><td><div>')
             else:
@@ -100,7 +101,17 @@ class MassMailingFormRenderer(FormRenderer):
                 w(u'</td></tr>')
         w(u'</table>')
 
-    
+    def _render_toolbar(self, w, form):
+        w(u'<div id="toolbar">')
+        w(u'<ul>')
+        for button in form.form_buttons:
+            w(u'<li>%s</li>' % button.render(form))
+        w(u'</ul>')
+        w(u'</div>')
+
+    def render_buttons(self, w, form):
+        pass
+
 class MassMailingFormView(FormViewMixIn, EntityView):
     id = 'massmailing'
     __select__ = implements(IEmailable) & match_user_groups('managers', 'users')
@@ -113,6 +124,3 @@ class MassMailingFormView(FormViewMixIn, EntityView):
         form = self.vreg.select_object('forms', 'massmailing', self.req, self.rset,
                                        action='sendmail', domid='sendmail')
         self.w(form.form_render(sender=from_addr, renderer=MassMailingFormRenderer()))
-
-
-    

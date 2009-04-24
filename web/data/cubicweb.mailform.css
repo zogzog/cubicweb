@@ -5,7 +5,7 @@
  *  :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
  */
 
-div#compose {
+form#sendmail {
   border: 1px solid #DBDCE3;
   background-color: #E9F5F7;
   font-family:Verdana,Tahoma,Arial,sans-serif;
@@ -16,7 +16,7 @@ table.headersform {
   width: 100%;
 }
 
-div#compose td#buttonbar {
+form#sendmail td#buttonbar {
   padding: 0.5ex 0ex;
 }
 
@@ -36,12 +36,12 @@ table.headersform td.hvalue input#mailsubj {
   width: 47em; 
 }
 
-div#compose div#toolbar {
+form#sendmail div#toolbar {
   margin: 0.5em 0em;
   height: 29px;
 }
 
-div#compose div#toolbar ul {
+form#sendmail div#toolbar ul {
   list-style-image: none;
   list-style-position: outside;
   list-style-type:none;
@@ -50,13 +50,13 @@ div#compose div#toolbar ul {
   /* border: 1px solid #DBDCE3; */
 }
 
-div#compose div#toolbar li {
+form#sendmail div#toolbar li {
   background: none;
   padding-left: 1em;
   float: left;
 }
 
-div#compose div#toolbar li a {
+form#sendmail div#toolbar li a {
   font-family: Verdana,Tahoma,Arial,sans-serif;
   color: #444444;
 }
