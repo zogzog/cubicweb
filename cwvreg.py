@@ -7,7 +7,6 @@
 __docformat__ = "restructuredtext en"
 
 from logilab.common.decorators import cached, clear_cache
-from logilab.common.interface import extend
 
 from rql import RQLHelper
 
@@ -23,7 +22,7 @@ def use_interfaces(obj):
     from cubicweb.selectors import implements
     try:
         # XXX deprecated
-        return sorted(obj.accepts_interfaces) 
+        return sorted(obj.accepts_interfaces)
     except AttributeError:
         try:
             impl = obj.__select__.search_selector(implements)
@@ -39,7 +38,7 @@ def use_interfaces(obj):
 
 class CubicWebRegistry(VRegistry):
     """extend the generic VRegistry with some cubicweb specific stuff"""
-    
+
     def __init__(self, config, debug=None, initlog=True):
         if initlog:
             # first init log service
@@ -48,7 +47,7 @@ class CubicWebRegistry(VRegistry):
         self.schema = None
         self.reset()
         self.initialized = False
-        
+
     def items(self):
         return [item for item in self._registries.items()
                 if not item[0] in ('propertydefs', 'propertyvalues')]
@@ -56,7 +55,7 @@ class CubicWebRegistry(VRegistry):
     def values(self):
         return [value for key, value in self._registries.items()
                 if not key in ('propertydefs', 'propertyvalues')]
-    
+
     def reset(self):
         self._registries = {}
         self._lastmodifs = {}
@@ -68,14 +67,14 @@ class CubicWebRegistry(VRegistry):
         self._registries['propertyvalues'] = self.eprop_values = {}
         for key, propdef in self.config.eproperty_definitions():
             self.register_property(key, **propdef)
-            
+
     def set_schema(self, schema):
         """set application'schema and load application objects"""
         self.schema = schema
         clear_cache(self, 'rqlhelper')
         # now we can load application's web objects
         self.register_objects(self.config.vregistry_path())
-        
+
     def update_schema(self, schema):
         """update .schema attribute on registered objects, necessary for some
         tests
@@ -110,7 +109,7 @@ class CubicWebRegistry(VRegistry):
         ifaces = use_interfaces(obj)
         if ifaces:
             self._needs_iface[obj] = ifaces
-        
+
     def register_objects(self, path, force_reload=None):
         """overriden to remove objects requiring a missing interface"""
         if super(CubicWebRegistry, self).register_objects(path, force_reload):
@@ -147,7 +146,7 @@ class CubicWebRegistry(VRegistry):
                 for appobjects in objects.itervalues():
                     for appobject in appobjects:
                         appobject.vreg_initialization_completed()
-    
+
     @cached
     def etype_class(self, etype):
         """return an entity class for the given entity type.
@@ -172,19 +171,14 @@ class CubicWebRegistry(VRegistry):
             # no entity class for any of the ancestors, fallback to the default
             # one
             cls = self.select(self.registry_objects('etypes', 'Any'), etype)
-        # add class itself to the list of implemented interfaces, as well as the
-        # Any entity class so we can select according to class using the
-        # `implements` selector
-        extend(cls, cls)
-        extend(cls, self.etype_class('Any'))
         return cls
-    
+
     def render(self, registry, oid, req, **context):
         """select an object in a given registry and render it
 
         - registry: the registry's name
         - oid : the view to call
-        - req : the HTTP request         
+        - req : the HTTP request
         """
         objclss = self.registry_objects(registry, oid)
         try:
@@ -193,7 +187,7 @@ class CubicWebRegistry(VRegistry):
             rset = None
         selected = self.select(objclss, req, rset, **context)
         return selected.dispatch(**context)
-        
+
     def main_template(self, req, oid='main-template', **context):
         """display query by calling the given template (default to main),
         and returning the output as a string instead of requiring the [w]rite
@@ -213,7 +207,7 @@ class CubicWebRegistry(VRegistry):
         return [x for x in sorted(self.possible_objects(registry, *args, **kwargs),
                                   key=lambda x: x.propval('order'))
                 if x.propval('visible')]
-        
+
     def possible_actions(self, req, rset, **kwargs):
         if rset is None:
             actions = self.possible_vobjects('actions', req, rset)
@@ -223,7 +217,7 @@ class CubicWebRegistry(VRegistry):
         for action in actions:
             result.setdefault(action.category, []).append(action)
         return result
-        
+
     def possible_views(self, req, rset, **kwargs):
         """return an iterator on possible views for this result set
 
@@ -241,7 +235,7 @@ class CubicWebRegistry(VRegistry):
             except Exception:
                 self.exception('error while trying to list possible %s views for %s',
                                vid, rset)
-                
+
     def select_box(self, oid, *args, **kwargs):
         """return the most specific view according to the result set"""
         try:
@@ -255,7 +249,7 @@ class CubicWebRegistry(VRegistry):
             return self.select_object('actions', oid, *args, **kwargs)
         except NoSelectableObject:
             return
-    
+
     def select_component(self, cid, *args, **kwargs):
         """return the most specific component according to the result set"""
         try:
@@ -268,7 +262,7 @@ class CubicWebRegistry(VRegistry):
         views = self.registry_objects('views', __vid)
         return self.select(views, req, rset, **kwargs)
 
-    
+
     # properties handling #####################################################
 
     def user_property_keys(self, withsitewide=False):
@@ -282,7 +276,7 @@ class CubicWebRegistry(VRegistry):
         """register a given property"""
         properties = self._registries['propertydefs']
         assert type in YAMS_TO_PY
-        properties[key] = {'type': type, 'vocabulary': vocabulary, 
+        properties[key] = {'type': type, 'vocabulary': vocabulary,
                            'default': default, 'help': help,
                            'sitewide': sitewide}
 
@@ -300,7 +294,7 @@ class CubicWebRegistry(VRegistry):
                         'default': None, 'vocabulary': None,
                         'help': _('%s software version of the database') % soft}
             raise UnknownProperty('unregistered property %r' % key)
-            
+
     def property_value(self, key):
         try:
             return self._registries['propertyvalues'][key]
@@ -323,7 +317,7 @@ class CubicWebRegistry(VRegistry):
             if not value in vocab:
                 raise ValueError(_('unauthorized value'))
         return value
-    
+
     def init_properties(self, propvalues):
         """init the property values registry using the given set of couple (key, value)
         """
@@ -383,7 +377,7 @@ class MulCnxCubicWebRegistry(CubicWebRegistry):
             vobject.schema = self.schema
             vobject.config = self.config
         return super(MulCnxCubicWebRegistry, self).select(vobjects, *args, **kwargs)
-    
+
 from datetime import datetime, date, time, timedelta
 
 YAMS_TO_PY = {
