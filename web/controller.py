@@ -7,7 +7,7 @@
 """
 __docformat__ = "restructuredtext en"
 
-from datetime import timedelta
+import datetime
 
 from cubicweb import typed_eid
 from cubicweb.utils import strptime
@@ -124,12 +124,13 @@ class Controller(AppObject):
             try:
                 # (adim) I can't find a way to parse a Time with a custom format
                 date = strptime(value, format) # this returns a DateTime
-                return timedelta(0, date.hour *60*60 + date.minute*60 + date.second, 0)
+                return datetime.timedelta(0, date.hour *60*60 + date.minute*60 + date.second, 0)
             except:
                 raise ValueError('can\'t parse %r (expected %s)' % (value, format))
         try:
             format = self.req.property_value('ui.date-format')
-            return strptime(value, format)
+            dt = strptime(value, format)
+            return datetime.date(dt.year, dt.month, dt.day)
         except:
             raise ValueError('can\'t parse %r (expected %s)' % (value, format))
 
