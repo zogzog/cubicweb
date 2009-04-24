@@ -42,7 +42,7 @@ class MassMailingForm(FieldsForm):
     recipient = StringField(widget=CheckBox(), label=_('Recipients:'))
     subject = StringField(label=_('Subject:'))
     mailbody = StringField(widget=AjaxWidget(wdgtype='TemplateTextField',
-                                             inputid='mailarea'))
+                                             inputid='mailbody'))
     form_buttons = [ImgButton('sendbutton', "javascript: $('#sendmail').submit()",
                               _('send email'), 'SEND_EMAIL_ICON'),
                     ImgButton('cancelbutton', "javascript: history.back()",

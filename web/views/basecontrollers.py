@@ -551,7 +551,7 @@ class SendMailController(Controller):
     def publish(self, rset=None):
         # XXX this allow anybody with access to an cubicweb application to use it as a mail relay
         body = self.req.form['mailbody']
-        subject = self.req.form['mailsubject']
+        subject = self.req.form['subject']
         for recipient in self.recipients():
             text = body % recipient.as_email_context()
             self.sendmail(recipient.get_email(), subject, text)

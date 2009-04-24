@@ -222,8 +222,7 @@ Widgets.TemplateTextField = defclass("TemplateTextField", null, {
 
     __init__ : function(wdgnode) {
 	this.variables = getNodeAttribute(wdgnode, 'cubicweb:variables').split(',');
-	this.options = {'name' : wdgnode.getAttribute('cubicweb:inputname'),
-			'id'   : wdgnode.getAttribute('cubicweb:inputid'),
+	this.options = {'name'   : wdgnode.getAttribute('cubicweb:inputid'),
 			'rows' : wdgnode.getAttribute('cubicweb:rows') || 40,
 			'cols' : wdgnode.getAttribute('cubicweb:cols') || 80
 		       };
