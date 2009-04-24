@@ -59,7 +59,7 @@ try:
                 AutomaticEntityForm.rinlined.set_rtag(True, rtype, role, stype, otype)
             else:
                 raise ValueError(tag)
-            
+
 except ImportError:
     AutomaticEntityForm = None
     
@@ -276,6 +276,13 @@ class Entity(AppRsetObject, dict):
             if orderterm:
                 orderby.append(orderterm)
         return selection, orderby, restrictions
+
+    @classmethod
+    @cached
+    def parent_classes(cls):
+        parents = [cls.vreg.etype_class(e.type) for e in cls.e_schema.ancestors()]
+        parents.append(cls.vreg.etype_class('Any'))
+        return parents
 
     def __init__(self, req, rset=None, row=None, col=0):
         AppRsetObject.__init__(self, req, rset, row, col)
