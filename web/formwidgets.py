@@ -20,7 +20,7 @@ class FieldWidget(object):
     # automatically set id and tabindex attributes ?
     setdomid = True
     settabindex = True
-    
+
     def __init__(self, attrs=None, setdomid=None, settabindex=None):
         if attrs is None:
             attrs = {}
@@ -38,7 +38,7 @@ class FieldWidget(object):
             form.req.add_js(self.needs_js)
         if self.needs_css:
             form.req.add_css(self.needs_css)
-        
+
     def render(self, form, field):
         """render the widget for the given `field` of `form`.
         To override in concrete class
@@ -63,10 +63,10 @@ class FieldWidget(object):
 class Input(FieldWidget):
     """abstract widget class for <input> tag based widgets"""
     type = None
-    
+
     def render(self, form, field):
         """render the widget for the given `field` of `form`.
-        
+
         Generate one <input> tag for each field's value
         """
         self.add_media(form)
@@ -88,7 +88,7 @@ class PasswordInput(Input):
     <field's name>-confirm as name)
     """
     type = 'password'
-    
+
     def render(self, form, field):
         self.add_media(form)
         name, values, attrs = self._render_attrs(form, field)
@@ -109,20 +109,20 @@ class PasswordInput(Input):
 class FileInput(Input):
     """<input type='file'>"""
     type = 'file'
-    
+
     def _render_attrs(self, form, field):
         # ignore value which makes no sense here (XXX even on form validation error?)
         name, values, attrs = super(FileInput, self)._render_attrs(form, field)
         return name, ('',), attrs
 
-        
+
 class HiddenInput(Input):
     """<input type='hidden'>"""
     type = 'hidden'
     setdomid = False # by default, don't set id attribute on hidden input
     settabindex = False
 
-    
+
 class ButtonInput(Input):
     """<input type='button'>
 
@@ -151,18 +151,18 @@ class FCKEditor(TextArea):
     def __init__(self, *args, **kwargs):
         super(FCKEditor, self).__init__(*args, **kwargs)
         self.attrs['cubicweb:type'] = 'wysiwyg'
-    
+
     def render(self, form, field):
         form.req.fckeditor_config()
         return super(FCKEditor, self).render(form, field)
 
 
 class Select(FieldWidget):
-    """<select>, for field having a specific vocabulary""" 
+    """<select>, for field having a specific vocabulary"""
     def __init__(self, attrs=None, multiple=False):
         super(Select, self).__init__(attrs)
         self.multiple = multiple
-        
+
     def render(self, form, field):
         name, curvalues, attrs = self._render_attrs(form, field)
         if not 'size' in attrs:
@@ -183,9 +183,9 @@ class Select(FieldWidget):
 class CheckBox(Input):
     """<input type='checkbox'>, for field having a specific vocabulary. One
     input will be generated for each possible value.
-    """ 
+    """
     type = 'checkbox'
-    
+
     def render(self, form, field):
         name, curvalues, attrs = self._render_attrs(form, field)
         options = []
@@ -199,13 +199,13 @@ class CheckBox(Input):
             options.append(tag + label)
         return '<br/>\n'.join(options)
 
-        
+
 class Radio(Input):
     """<input type='radio'>, for field having a specific vocabulary. One
     input will be generated for each possible value.
-    """ 
+    """
     type = 'radio'
-    
+
     def render(self, form, field):
         name, curvalues, attrs = self._render_attrs(form, field)
         domid = attrs.pop('id', None)
@@ -235,7 +235,7 @@ class DateTimePicker(TextInput):
 
     needs_js = ('cubicweb.calendar.js',)
     needs_css = ('cubicweb.calendar_popup.css',)
-    
+
     @classmethod
     def add_localized_infos(cls, req):
         """inserts JS variables defining localized months and days"""
@@ -245,13 +245,13 @@ class DateTimePicker(TextInput):
         daynames = [_(dname) for dname in cls.daynames]
         req.html_headers.define_var('MONTHNAMES', monthnames)
         req.html_headers.define_var('DAYNAMES', daynames)
-    
+
     def render(self, form, field):
         txtwidget = super(DateTimePicker, self).render(form, field)
         self.add_localized_infos(form.req)
         cal_button = self._render_calendar_popup(form, field)
         return txtwidget + cal_button
-    
+
     def _render_calendar_popup(self, form, field):
         value = form.form_field_value(field)
         if not value:
@@ -265,7 +265,7 @@ class DateTimePicker(TextInput):
                    form.req.external_resource('CALENDAR_ICON'),
                    form.req._('calendar'), helperid) )
 
-        
+
 
 # ajax widgets ################################################################
 
@@ -285,13 +285,13 @@ class AjaxWidget(FieldWidget):
         init_ajax_attributes(self.attrs, wdgtype)
         if inputid is not None:
             self.attrs['cubicweb:inputid'] = inputid
-            
+
     def render(self, form, field):
         self.add_media(form)
         attrs = self._render_attrs(form, field)[-1]
         return tags.div(**attrs)
 
-    
+
 class AutoCompletionWidget(TextInput):
     """ajax widget for StringField, proposing matching existing values as you
     type.
@@ -300,7 +300,7 @@ class AutoCompletionWidget(TextInput):
     needs_css = ('jquery.autocomplete.css',)
     wdgtype = 'SuggestField'
     loadtype = 'auto'
-    
+
     def _render_attrs(self, form, field):
         name, values, attrs = super(AutoCompletionWidget, self)._render_attrs(form, field)
         if not values[0]:
@@ -309,7 +309,7 @@ class AutoCompletionWidget(TextInput):
         # XXX entity form specific
         attrs['cubicweb:dataurl'] = self._get_url(form.edited_entity)
         return name, values, attrs
-    
+
     def _get_url(self, entity):
         return entity.req.build_url('json', fname=entity.autocomplete_initfuncs[self.rschema],
                                 pageid=entity.req.pageid, mode='remote')
@@ -318,14 +318,14 @@ class AutoCompletionWidget(TextInput):
 class StaticFileAutoCompletionWidget(AutoCompletionWidget):
     """XXX describe me"""
     wdgtype = 'StaticFileSuggestField'
-    
+
     def _get_url(self, entity):
         return entity.req.datadir_url + entity.autocomplete_initfuncs[self.rschema]
 
 
 class RestrictedAutoCompletionWidget(AutoCompletionWidget):
     """XXX describe me"""
-    wdgtype = 'RestrictedSuggestField'    
+    wdgtype = 'RestrictedSuggestField'
 
 
 class AddComboBoxWidget(Select):
@@ -337,7 +337,7 @@ class AddComboBoxWidget(Select):
         attrs['cubicweb:etype_to'] = entity.e_schema
         etype_from = entity.e_schema.subject_relation(self.name).objects(entity.e_schema)[0]
         attrs['cubicweb:etype_from'] = etype_from
-        
+
     def render(self, form, field):
         return super(AddComboBoxWidget, self).render(form, field) + u'''
 <div id="newvalue">
@@ -364,7 +364,7 @@ class Button(Input):
         self.onclick = onclick
         self.cwaction = cwaction
         self.attrs.setdefault('klass', 'validateButton')
-                
+
     def render(self, form, field=None):
         label = form.req._(self.label)
         attrs = self.attrs.copy()
@@ -382,12 +382,12 @@ class Button(Input):
             attrs['tabindex'] = form.req.next_tabindex()
         return tags.input(value=label, type=self.type, **attrs)
 
-    
+
 class SubmitButton(Button):
     """<input type='submit'>, main button to submit a form"""
     type = 'submit'
 
-    
+
 class ResetButton(Button):
     """<input type='reset'>, main button to reset a form.
     You usually don't want this.
@@ -407,7 +407,7 @@ class ImgButton(object):
         self.href = href
         self.imgressource = imgressource
         self.label = label
-        
+
     def render(self, form, field=None):
         label = form.req._(self.label)
         imgsrc = form.req.external_resource(self.imgressource)
@@ -415,7 +415,7 @@ class ImgButton(object):
                '<img src="%(imgsrc)s" alt="%(label)s"/>%(label)s</a>' % {
             'label': label, 'imgsrc': imgsrc,
             'domid': self.domid, 'href': self.href}
-            
 
-    
+
+
 # XXX EntityLinkComboBoxWidget, [Raw]DynamicComboBoxWidget

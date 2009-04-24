@@ -62,7 +62,7 @@ try:
 
 except ImportError:
     AutomaticEntityForm = None
-    
+
     def dispatch_rtags(*args):
         pass
 
@@ -74,7 +74,7 @@ def _get_etype(bases, classdict):
             etype = getattr(base, 'id', None)
             if etype and etype != 'Any':
                 return etype
-            
+
 def _get_defs(attr, name, bases, classdict):
     try:
         yield name, classdict.pop(attr)
@@ -86,7 +86,7 @@ def _get_defs(attr, name, bases, classdict):
                 yield base.__name__, value
             except AttributeError:
                 continue
-            
+
 class metaentity(type):
     """this metaclass sets the relation tags on the entity class
     and deals with the `widgets` attribute
@@ -138,7 +138,7 @@ class metaentity(type):
 class Entity(AppRsetObject, dict):
     """an entity instance has e_schema automagically set on
     the class and instances has access to their issuing cursor.
-    
+
     A property is set for each attribute and relation on each entity's type
     class. Becare that among attributes, 'eid' is *NEITHER* stored in the
     dict containment (which acts as a cache for other attributes dynamically
@@ -151,7 +151,7 @@ class Entity(AppRsetObject, dict):
     :cvar rest_var: indicates which attribute should be used to build REST urls
                     If None is specified, the first non-meta attribute will
                     be used
-                    
+
     :type skip_copy_for: list
     :cvar skip_copy_for: a list of relations that should be skipped when copying
                          this kind of entity. Note that some relations such
@@ -162,14 +162,14 @@ class Entity(AppRsetObject, dict):
     __registry__ = 'etypes'
     __select__ = yes()
 
-    # class attributes that must be set in class definition 
+    # class attributes that must be set in class definition
     id = None
     rest_attr = None
     fetch_attrs = None
     skip_copy_for = ()
     # class attributes set automatically at registration time
     e_schema = None
-    
+
     @classmethod
     def registered(cls, registry):
         """build class using descriptor at registration time"""
@@ -178,7 +178,7 @@ class Entity(AppRsetObject, dict):
         if cls.id != 'Any':
             cls.__initialize__()
         return cls
-                
+
     MODE_TAGS = set(('link', 'create'))
     CATEGORY_TAGS = set(('primary', 'secondary', 'generic', 'generated')) # , 'metadata'))
     @classmethod
@@ -210,7 +210,7 @@ class Entity(AppRsetObject, dict):
         if mixins:
             cls.__bases__ = tuple(mixins + [p for p in cls.__bases__ if not p is object])
             cls.debug('plugged %s mixins on %s', mixins, etype)
-    
+
     @classmethod
     def fetch_rql(cls, user, restriction=None, fetchattrs=None, mainvar='X',
                   settype=True, ordermethod='fetch_order'):
@@ -231,7 +231,7 @@ class Entity(AppRsetObject, dict):
             rql +=  ' ORDERBY %s' % ','.join(orderby)
         rql += ' WHERE %s' % ', '.join(restrictions)
         return rql
-    
+
     @classmethod
     def _fetch_restrictions(cls, mainvar, varmaker, fetchattrs,
                             selection, orderby, restrictions, user,
@@ -293,7 +293,7 @@ class Entity(AppRsetObject, dict):
         else:
             self.eid = None
         self._is_saved = True
-        
+
     def __repr__(self):
         return '<Entity %s %s %s at %s>' % (
             self.e_schema, self.eid, self.keys(), id(self))
@@ -308,11 +308,11 @@ class Entity(AppRsetObject, dict):
         """hook called by the repository before doing anything to add the entity
         (before_add entity hooks have not been called yet). This give the
         occasion to do weird stuff such as autocast (File -> Image for instance).
-        
+
         This method must return the actual entity to be added.
         """
         return self
-    
+
     def set_eid(self, eid):
         self.eid = self['eid'] = eid
 
@@ -333,7 +333,7 @@ class Entity(AppRsetObject, dict):
         saved in its source.
         """
         return self.has_eid() and self._is_saved
-    
+
     @cached
     def metainformation(self):
         res = dict(zip(('type', 'source', 'extid'), self.req.describe(self.eid)))
@@ -349,7 +349,7 @@ class Entity(AppRsetObject, dict):
 
     def has_perm(self, action):
         return self.e_schema.has_perm(self.req, action, self.eid)
-        
+
     def view(self, vid, __registry='views', **kwargs):
         """shortcut to apply a view on this entity"""
         return self.vreg.render(__registry, vid, self.req, rset=self.rset,
@@ -452,9 +452,9 @@ class Entity(AppRsetObject, dict):
         trdata = TransformData(data, format, encoding, appobject=self)
         data = _engine.convert(trdata, target_format).decode()
         if format == 'text/html':
-            data = soup2xhtml(data, self.req.encoding)                
+            data = soup2xhtml(data, self.req.encoding)
         return data
-    
+
     # entity cloning ##########################################################
 
     def copy_relations(self, ceid):
@@ -517,7 +517,7 @@ class Entity(AppRsetObject, dict):
         rset = ResultSet([(self.eid,)], 'Any X WHERE X eid %(x)s',
                          {'x': self.eid}, [(self.id,)])
         return self.req.decorate_rset(rset)
-                       
+
     def to_complete_relations(self):
         """by default complete final relations to when calling .complete()"""
         for rschema in self.e_schema.subject_relations():
@@ -533,7 +533,7 @@ class Entity(AppRsetObject, dict):
                    all(matching_groups(es.get_groups('read'))
                        for es in rschema.objects(self.e_schema)):
                     yield rschema, 'subject'
-                    
+
     def to_complete_attributes(self, skip_bytes=True):
         for rschema, attrschema in self.e_schema.attribute_definitions():
             # skip binary data by default
@@ -548,7 +548,7 @@ class Entity(AppRsetObject, dict):
                 self[attr] = None
                 continue
             yield attr
-            
+
     def complete(self, attributes=None, skip_bytes=True):
         """complete this entity by adding missing attributes (i.e. query the
         repository to fill the entity)
@@ -618,7 +618,7 @@ class Entity(AppRsetObject, dict):
                 else:
                     rrset = self.req.eid_rset(value)
                 self.set_related_cache(rtype, x, rrset)
-                
+
     def get_value(self, name):
         """get value for the attribute relation <name>, query the repository
         to get the value if necessary.
@@ -654,7 +654,7 @@ class Entity(AppRsetObject, dict):
 
     def related(self, rtype, role='subject', limit=None, entities=False):
         """returns a resultset of related entities
-        
+
         :param role: is the role played by 'self' in the relation ('subject' or 'object')
         :param limit: resultset's maximum size
         :param entities: if True, the entites are returned; if False, a result set is returned
@@ -700,7 +700,7 @@ class Entity(AppRsetObject, dict):
             args = tuple(rql.split(' WHERE ', 1))
             rql = '%s ORDERBY Z DESC WHERE X modification_date Z, %s' % args
         return rql
-    
+
     # generic vocabulary methods ##############################################
 
     @obsolete('see new form api')
@@ -708,7 +708,7 @@ class Entity(AppRsetObject, dict):
         """vocabulary functions must return a list of couples
         (label, eid) that will typically be used to fill the
         edition view's combobox.
-        
+
         If `eid` is None in one of these couples, it should be
         interpreted as a separator in case vocabulary results are grouped
         """
@@ -717,7 +717,7 @@ class Entity(AppRsetObject, dict):
         form = EntityFieldsForm(self.req, entity=self)
         field = mock_object(name=rtype, role=role)
         return form.form_field_vocabulary(field, limit)
-            
+
     def unrelated_rql(self, rtype, targettype, role, ordermethod=None,
                       vocabconstraints=True):
         """build a rql to fetch `targettype` entities unrelated to this entity
@@ -753,7 +753,7 @@ class Entity(AppRsetObject, dict):
             before, after = rql.split(' WHERE ', 1)
             rql = '%s ORDERBY %s WHERE %s' % (before, searchedvar, after)
         return rql
-    
+
     def unrelated(self, rtype, targettype, role='subject', limit=None,
                   ordermethod=None):
         """return a result set of target type objects that may be related
@@ -766,14 +766,14 @@ class Entity(AppRsetObject, dict):
         if self.has_eid():
             return self.req.execute(rql, {'x': self.eid})
         return self.req.execute(rql)
-        
+
     # relations cache handling ################################################
-    
+
     def relation_cached(self, rtype, role):
         """return true if the given relation is already cached on the instance
         """
         return '%s_%s' % (rtype, role) in self._related_cache
-    
+
     def related_cache(self, rtype, role, entities=True, limit=None):
         """return values for the given relation if it's cached on the instance,
         else raise `KeyError`
@@ -785,7 +785,7 @@ class Entity(AppRsetObject, dict):
             else:
                 res = res.limit(limit)
         return res
-    
+
     def set_related_cache(self, rtype, role, rset, col=0):
         """set cached values for the given relation"""
         if rset:
@@ -805,7 +805,7 @@ class Entity(AppRsetObject, dict):
         else:
             related = []
         self._related_cache['%s_%s' % (rtype, role)] = (rset, related)
-        
+
     def clear_related_cache(self, rtype=None, role=None):
         """clear cached values for the given relation or the entire cache if
         no relation is given
@@ -815,9 +815,9 @@ class Entity(AppRsetObject, dict):
         else:
             assert role
             self._related_cache.pop('%s_%s' % (rtype, role), None)
-        
+
     # raw edition utilities ###################################################
-    
+
     def set_attributes(self, **kwargs):
         assert kwargs
         relations = []
@@ -829,14 +829,14 @@ class Entity(AppRsetObject, dict):
         kwargs['x'] = self.eid
         self.req.execute('SET %s WHERE X eid %%(x)s' % ','.join(relations),
                          kwargs, 'x')
-            
+
     def delete(self):
         assert self.has_eid(), self.eid
         self.req.execute('DELETE %s X WHERE X eid %%(x)s' % self.e_schema,
                          {'x': self.eid})
-    
+
     # server side utilities ###################################################
-        
+
     def set_defaults(self):
         """set default values according to the schema"""
         self._default_set = set()
@@ -879,13 +879,13 @@ class Entity(AppRsetObject, dict):
                 yield self
         else:
             yield self
-                    
+
     def get_words(self):
         """used by the full text indexer to get words to index
 
         this method should only be used on the repository side since it depends
         on the indexer package
-        
+
         :rtype: list
         :return: the list of indexable word of this entity
         """
@@ -902,7 +902,7 @@ class Entity(AppRsetObject, dict):
                 continue
             if value:
                 words += tokenize(value)
-        
+
         for rschema, role in self.e_schema.fulltext_relations():
             if role == 'subject':
                 for entity in getattr(self, rschema.type):
@@ -947,7 +947,7 @@ class Relation(object):
             raise AttributeError('%s cannot be only be accessed from instances'
                                  % self._rtype)
         return eobj.related(self._rtype, self._role, entities=True)
-    
+
     def __set__(self, eobj, value):
         raise NotImplementedError
 
@@ -955,7 +955,7 @@ class Relation(object):
 class SubjectRelation(Relation):
     """descriptor that controls schema relation access"""
     _role = 'subject'
-    
+
 class ObjectRelation(Relation):
     """descriptor that controls schema relation access"""
     _role = 'object'
