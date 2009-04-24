@@ -112,6 +112,28 @@ class traced_selection(object):
         return traceback is None
 
 
+def score_interface(cls_or_inst, cls, iface):
+    """Return true if the give object (maybe an instance or class) implements
+    the interface.
+    """
+    if getattr(iface, '__registry__', None) == 'etypes':
+        # adjust score if the interface is an entity class
+        parents = cls_or_inst.parent_classes()
+        if iface is cls:
+            return len(parents) + 4
+        if iface is parents[-1]: # Any
+            return 1
+        for index, etype in enumerate(reversed(parents[:-1])):
+            basecls = vreg.etype_class(etype)
+            if iface is basecls:
+                return index + 3
+        return 0
+    if implements_iface(cls_or_inst, iface):
+        # implenting an interface takes precedence other special Any interface
+        return 2
+    return 0
+
+
 # abstract selectors ##########################################################
 
 class PartialSelectorMixIn(object):
@@ -146,24 +168,7 @@ class ImplementsMixIn(object):
                     iface = vreg.etype_class(iface)
                 except KeyError:
                     continue # entity type not in the schema
-            if implements_iface(cls_or_inst, iface):
-                if getattr(iface, '__registry__', None) == 'etypes':
-                    # adjust score if the interface is an entity class
-                    if iface is cls:
-                        score += len(eschema.ancestors()) + 4
-                    else: 
-                        parents = [e.type for e in eschema.ancestors()]
-                        for index, etype in enumerate(reversed(parents)):
-                            basecls = vreg.etype_class(etype)
-                            if iface is basecls:
-                                score += index + 3
-                                break
-                        else: # Any
-                            score += 1
-                else:
-                    # implenting an interface takes precedence other special Any
-                    # interface
-                    score += 2
+            score += score_interface(cls_or_inst, cls, iface)
         return score
 
 
