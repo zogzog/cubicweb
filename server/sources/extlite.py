@@ -22,7 +22,7 @@ def timeout_acquire(lock, timeout):
         timeout -= 0.2
         if timeout <= 0:
             raise RuntimeError("svn source is busy, can't acquire connection lock")
-        
+
 class ConnectionWrapper(object):
     def __init__(self, source=None):
         self.source = source
@@ -34,19 +34,19 @@ class ConnectionWrapper(object):
             timeout_acquire(self.source._cnxlock, 5)
             self._cnx = self.source._sqlcnx
         return self._cnx
-    
+
     def commit(self):
         if self._cnx is not None:
             self._cnx.commit()
-        
+
     def rollback(self):
         if self._cnx is not None:
             self._cnx.rollback()
-        
+
     def cursor(self):
         return self.cnx.cursor()
 
-    
+
 class SQLiteAbstractSource(AbstractSource):
     """an abstract class for external sources using a sqlite database helper
     """
@@ -59,7 +59,7 @@ class SQLiteAbstractSource(AbstractSource):
             native.NONSYSTEM_ETYPES.add(etype)
         for rtype in cls.support_relations:
             native.NONSYSTEM_RELATIONS.add(rtype)
-        
+
     options = (
         ('helper-db-path',
          {'type' : 'string',
@@ -69,10 +69,10 @@ repository.',
           'inputlevel': 2,
           }),
     )
-            
+
     def __init__(self, repo, appschema, source_config, *args, **kwargs):
         # the helper db is used to easy querying and will store everything but
-        # actual file content 
+        # actual file content
         dbpath = source_config.get('helper-db-path')
         if dbpath is None:
             dbpath = join(repo.config.appdatahome,
@@ -91,7 +91,7 @@ repository.',
         # * create the connection when needed
         # * use a lock to be sure only one connection is used
         self._cnxlock = threading.Lock()
-        
+
     @property
     def _sqlcnx(self):
         # XXX: sqlite connections can only be used in the same thread, so
@@ -138,13 +138,13 @@ repository.',
                          self.repo.config['uid'])
             chown(self.dbpath, self.repo.config['uid'])
         restrict_perms_to_user(self.dbpath, self.info)
-        
+
     def set_schema(self, schema):
         super(SQLiteAbstractSource, self).set_schema(schema)
         if self._need_sql_create and self._is_schema_complete() and self.dbpath:
             self._create_database()
         self.rqlsqlgen = self.sqlgen_class(schema, self.sqladapter.dbhelper)
-                
+
     def get_connection(self):
         return ConnectionWrapper(self)
 
@@ -168,11 +168,11 @@ repository.',
                 cnx._cnx = None
             finally:
                 self._cnxlock.release()
-        
+
     def syntax_tree_search(self, session, union,
                            args=None, cachekey=None, varmap=None, debug=0):
-        """return result from this source for a rql query (actually from a rql 
-        syntax tree and a solution dictionary mapping each used variable to a 
+        """return result from this source for a rql query (actually from a rql
+        syntax tree and a solution dictionary mapping each used variable to a
         possible type). If cachekey is given, the query necessary to fetch the
         results (but not the results themselves) may be cached using this key.
         """
@@ -185,7 +185,7 @@ repository.',
         args = self.sqladapter.merge_args(args, query_args)
         cursor = session.pool[self.uri]
         cursor.execute(sql, args)
-        return self.sqladapter.process_result(cursor) 
+        return self.sqladapter.process_result(cursor)
 
     def local_add_entity(self, session, entity):
         """insert the entity in the local database.
@@ -198,7 +198,7 @@ repository.',
         attrs = self.sqladapter.preprocess_entity(entity)
         sql = self.sqladapter.sqlgen.insert(SQL_PREFIX + str(entity.e_schema), attrs)
         cu.execute(sql, attrs)
-        
+
     def add_entity(self, session, entity):
         """add a new entity to the source"""
         raise NotImplementedError()
@@ -213,14 +213,14 @@ repository.',
         cu = session.pool[self.uri]
         if attrs is None:
             attrs = self.sqladapter.preprocess_entity(entity)
-        sql = self.sqladapter.sqlgen.update(SQL_PREFIX + str(entity.e_schema), attrs,
-                                            [SQL_PREFIX + 'eid'])
+        sql = self.sqladapter.sqlgen.update(SQL_PREFIX + str(entity.e_schema),
+                                            attrs, [SQL_PREFIX + 'eid'])
         cu.execute(sql, attrs)
-        
+
     def update_entity(self, session, entity):
         """update an entity in the source"""
         raise NotImplementedError()
-        
+
     def delete_entity(self, session, etype, eid):
         """delete an entity from the source
 
@@ -228,11 +228,11 @@ repository.',
         source. Main usage is to delete repository content when a Repository
         entity is deleted.
         """
-        sqlcursor = session.pool[self.uri]        
+        sqlcursor = session.pool[self.uri]
         attrs = {SQL_PREFIX + 'eid': eid}
         sql = self.sqladapter.sqlgen.delete(SQL_PREFIX + etype, attrs)
         sqlcursor.execute(sql, attrs)
-    
+
     def delete_relation(self, session, subject, rtype, object):
         """delete a relation from the source"""
         rschema = self.schema.rschema(rtype)
@@ -246,5 +246,5 @@ repository.',
         else:
             attrs = {'eid_from': subject, 'eid_to': object}
             sql = self.sqladapter.sqlgen.delete('%s_relation' % rtype, attrs)
-        sqlcursor = session.pool[self.uri]        
+        sqlcursor = session.pool[self.uri]
         sqlcursor.execute(sql, attrs)
