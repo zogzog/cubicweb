@@ -7,9 +7,9 @@
 
 from logilab.common.testlib import TestCase, unittest_main
 
+from cubicweb.devtools.testlib import EnvBasedTC
 from cubicweb.vregistry import Selector, AndSelector, OrSelector
 from cubicweb.selectors import implements
-
 from cubicweb.interfaces import IDownloadable
 
 class _1_(Selector):
@@ -48,7 +48,7 @@ class SelectorsTC(TestCase):
         self.assertEquals(selector(None), 3)
         selector = _2_ & _1_()
         self.assertEquals(selector(None), 3)
-        
+
     def test_three_and(self):
         selector = _1_() & _1_() & _1_()
         self.assertEquals(selector(None), 3)
@@ -84,8 +84,7 @@ class SelectorsTC(TestCase):
         self.assertIs(csel.search_selector(implements), sel)
         csel = AndSelector(Selector(), sel)
         self.assertIs(csel.search_selector(implements), sel)
-        
-from cubicweb.devtools.testlib import EnvBasedTC
+
 
 class ImplementsSelectorTC(EnvBasedTC):
     def test_etype_priority(self):
@@ -96,7 +95,11 @@ class ImplementsSelectorTC(EnvBasedTC):
         self.failUnless(idownscore > anyscore, (idownscore, anyscore))
         filescore = implements('File').score_class(cls, req)
         self.failUnless(filescore > idownscore, (filescore, idownscore))
-    
+
+    def test_etype_inheritance_no_yams_inheritance(self):
+        cls = self.vreg.etype_class('Personne')
+        self.failIf(implements('Societe').score_class(cls, self.request()))
+
 if __name__ == '__main__':
     unittest_main()
 
