@@ -118,6 +118,10 @@ msgstr ""
 msgid "%s software version of the database"
 msgstr ""
 
+#, python-format
+msgid "%s_perm"
+msgstr ""
+
 msgid "**"
 msgstr "0..n 0..n"
 
@@ -195,12 +199,6 @@ msgstr "Bytes"
 
 msgid "Bytes_plural"
 msgstr "Bytes"
-
-msgid "Card"
-msgstr "Card"
-
-msgid "Card_plural"
-msgstr "Cards"
 
 msgid "Date"
 msgstr "Date"
@@ -331,9 +329,6 @@ msgstr "Intervals"
 
 msgid "New Bookmark"
 msgstr "New bookmark"
-
-msgid "New Card"
-msgstr "New card"
 
 msgid "New ECache"
 msgstr ""
@@ -471,9 +466,6 @@ msgstr ""
 msgid "This Bookmark"
 msgstr "This bookmark"
 
-msgid "This Card"
-msgstr "This card"
-
 msgid "This ECache"
 msgstr ""
 
@@ -593,11 +585,6 @@ msgid ""
 "a RQL expression which should return some results, else the transition won't "
 "be available. This query may use X and U variables that will respectivly "
 "represents the current entity and the current user"
-msgstr ""
-
-msgid ""
-"a card is a textual content used as documentation, reference, procedure "
-"reminder"
 msgstr ""
 
 msgid ""
@@ -820,9 +807,6 @@ msgstr "transition"
 msgid "add a Bookmark"
 msgstr "add a bookmark"
 
-msgid "add a Card"
-msgstr "add a card"
-
 msgid "add a ECache"
 msgstr ""
 
@@ -928,9 +912,6 @@ msgstr ""
 msgid "am/pm calendar (year)"
 msgstr ""
 
-msgid "an abstract for this card"
-msgstr ""
-
 msgid "an electronic mail address associated to a short alias"
 msgstr ""
 
@@ -966,6 +947,9 @@ msgid "at least one relation %(rtype)s is required on %(etype)s (%(eid)s)"
 msgstr ""
 
 msgid "attribute"
+msgstr ""
+
+msgid "attributes with modified permissions:"
 msgstr ""
 
 msgid "august"
@@ -1235,12 +1219,6 @@ msgstr ""
 
 msgid "constraints applying on this relation"
 msgstr ""
-
-msgid "content"
-msgstr ""
-
-msgid "content_format"
-msgstr "content format"
 
 msgid "contentnavigation"
 msgstr "contextual components"
@@ -1827,7 +1805,7 @@ msgid "hide filter form"
 msgstr ""
 
 msgid "hide meta-data"
-msgstr ""
+msgstr "hide meta entities and relations"
 
 msgid "home"
 msgstr ""
@@ -1943,9 +1921,6 @@ msgid "initial_state_object"
 msgstr "initial state of"
 
 msgid "inlined"
-msgstr ""
-
-msgid "inlined view"
 msgstr ""
 
 msgid "internationalizable"
@@ -2220,6 +2195,9 @@ msgstr ""
 msgid "object"
 msgstr ""
 
+msgid "object_plural:"
+msgstr "objects:"
+
 msgid "october"
 msgstr ""
 
@@ -2278,6 +2256,12 @@ msgstr ""
 msgid "permission"
 msgstr ""
 
+msgid "permissions for entities"
+msgstr ""
+
+msgid "permissions for relations"
+msgstr ""
+
 msgid "permissions for this entity"
 msgstr ""
 
@@ -2289,9 +2273,6 @@ msgstr ""
 
 msgid "pkey"
 msgstr "key"
-
-msgid "planned_delivery"
-msgstr "planned delivery"
 
 msgid "please correct errors below"
 msgstr ""
@@ -2348,6 +2329,9 @@ msgstr "relation type"
 msgid "relation_type_object"
 msgstr "relation definitions"
 
+msgid "relations"
+msgstr ""
+
 msgid "relations deleted"
 msgstr ""
 
@@ -2356,9 +2340,6 @@ msgstr ""
 
 msgid "remove this Bookmark"
 msgstr "remove this bookmark"
-
-msgid "remove this Card"
-msgstr "remove this card"
 
 msgid "remove this ECache"
 msgstr ""
@@ -2543,7 +2524,7 @@ msgid "show filter form"
 msgstr ""
 
 msgid "show meta-data"
-msgstr ""
+msgstr "show the complete schema"
 
 msgid "site configuration"
 msgstr ""
@@ -2597,6 +2578,9 @@ msgstr ""
 msgid "subject/object cardinality"
 msgstr ""
 
+msgid "subject_plural:"
+msgstr "subjects:"
+
 msgid "sunday"
 msgstr ""
 
@@ -2604,9 +2588,6 @@ msgid "surname"
 msgstr ""
 
 msgid "symetric"
-msgstr ""
-
-msgid "synopsis"
 msgstr ""
 
 msgid "system entities"
@@ -2722,6 +2703,9 @@ msgid "unknown external entity"
 msgstr ""
 
 msgid "unknown property key"
+msgstr ""
+
+msgid "up"
 msgstr ""
 
 msgid "upassword"
@@ -2850,9 +2834,6 @@ msgid ""
 "which is the preferred form."
 msgstr ""
 
-msgid "wikiid"
-msgstr "wiki identifier"
-
 #, python-format
 msgid "workflow for %s"
 msgstr ""
@@ -2871,3 +2852,30 @@ msgstr ""
 
 msgid "you have been logged out"
 msgstr ""
+
+#~ msgid "Card"
+#~ msgstr "Card"
+
+#~ msgid "Card_plural"
+#~ msgstr "Cards"
+
+#~ msgid "New Card"
+#~ msgstr "New card"
+
+#~ msgid "This Card"
+#~ msgstr "This card"
+
+#~ msgid "add a Card"
+#~ msgstr "add a card"
+
+#~ msgid "content_format"
+#~ msgstr "content format"
+
+#~ msgid "planned_delivery"
+#~ msgstr "planned delivery"
+
+#~ msgid "remove this Card"
+#~ msgstr "remove this card"
+
+#~ msgid "wikiid"
+#~ msgstr "wiki identifier"

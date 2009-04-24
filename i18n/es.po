@@ -123,6 +123,10 @@ msgstr "%s resultados de la demanda"
 msgid "%s software version of the database"
 msgstr "version sistema de la base para %s"
 
+#, python-format
+msgid "%s_perm"
+msgstr ""
+
 msgid "**"
 msgstr "0..n 0..n"
 
@@ -200,12 +204,6 @@ msgstr "Datos binarios"
 
 msgid "Bytes_plural"
 msgstr "Datos binarios"
-
-msgid "Card"
-msgstr "Ficha"
-
-msgid "Card_plural"
-msgstr "Fichas"
 
 msgid "Date"
 msgstr "Fecha"
@@ -336,9 +334,6 @@ msgstr "Duraciones"
 
 msgid "New Bookmark"
 msgstr "Nuevo Atajo"
-
-msgid "New Card"
-msgstr "Nueva ficha"
 
 msgid "New ECache"
 msgstr "Nueva memoria cache"
@@ -476,9 +471,6 @@ msgstr "Este %s"
 msgid "This Bookmark"
 msgstr "Este atajo"
 
-msgid "This Card"
-msgstr "Esta Ficha"
-
 msgid "This ECache"
 msgstr "Esta Memoria Cache"
 
@@ -613,13 +605,6 @@ msgstr ""
 "una expresión RQL deviendo regresado resultado para que la transición pueda "
 "ser realizada. Esta expresión puede utilizar las variables X y U que "
 "representan respectivamente la entidad en transición y el usuarioactual. "
-
-msgid ""
-"a card is a textual content used as documentation, reference, procedure "
-"reminder"
-msgstr ""
-"una ficha es un texto utilizado como documentación, referencia, memoria de "
-"procedimiento..."
 
 msgid ""
 "a simple cache entity characterized by a name and a validity date. The "
@@ -841,9 +826,6 @@ msgstr "agregar una transición"
 msgid "add a Bookmark"
 msgstr "agregar un atajo"
 
-msgid "add a Card"
-msgstr "agregar una ficha"
-
 msgid "add a ECache"
 msgstr "agregar una memoria cache"
 
@@ -951,9 +933,6 @@ msgstr "calendario am/pm (semana)"
 msgid "am/pm calendar (year)"
 msgstr "calendario am/pm (año)"
 
-msgid "an abstract for this card"
-msgstr "un resumen para esta ficha"
-
 msgid "an electronic mail address associated to a short alias"
 msgstr "una dirección electrónica asociada a este alias"
 
@@ -992,6 +971,9 @@ msgstr ""
 
 msgid "attribute"
 msgstr "atributo"
+
+msgid "attributes with modified permissions:"
+msgstr ""
 
 msgid "august"
 msgstr "agosto"
@@ -1267,12 +1249,6 @@ msgstr "condiciones"
 
 msgid "constraints applying on this relation"
 msgstr "condiciones que se aplican a esta relación"
-
-msgid "content"
-msgstr "contenido"
-
-msgid "content_format"
-msgstr "formato"
 
 msgid "contentnavigation"
 msgstr "composantes contextuales"
@@ -2031,9 +2007,6 @@ msgstr "estado inicial de"
 msgid "inlined"
 msgstr "puesto en línea"
 
-msgid "inlined view"
-msgstr "vista incluída (en línea)"
-
 msgid "internationalizable"
 msgstr "internacionalizable"
 
@@ -2315,6 +2288,9 @@ msgstr "novembre"
 msgid "object"
 msgstr "objet"
 
+msgid "object_plural:"
+msgstr ""
+
 msgid "october"
 msgstr "octobre"
 
@@ -2374,6 +2350,12 @@ msgstr "chemin"
 msgid "permission"
 msgstr "permission"
 
+msgid "permissions for entities"
+msgstr ""
+
+msgid "permissions for relations"
+msgstr ""
+
 msgid "permissions for this entity"
 msgstr "permissions pour cette entitÈ"
 
@@ -2385,9 +2367,6 @@ msgstr "rÈcupÈrer des signets existants"
 
 msgid "pkey"
 msgstr "clÈ"
-
-msgid "planned_delivery"
-msgstr ""
 
 msgid "please correct errors below"
 msgstr "veuillez corriger les erreurs ci-dessous"
@@ -2444,6 +2423,9 @@ msgstr "type de relation"
 msgid "relation_type_object"
 msgstr "dÈfinition"
 
+msgid "relations"
+msgstr ""
+
 msgid "relations deleted"
 msgstr "relations supprimÈes"
 
@@ -2452,9 +2434,6 @@ msgstr "url relative de la page"
 
 msgid "remove this Bookmark"
 msgstr "supprimer ce signet"
-
-msgid "remove this Card"
-msgstr "supprimer cette fiche"
 
 msgid "remove this ECache"
 msgstr "supprimer ce cache applicatif"
@@ -2705,6 +2684,9 @@ msgstr "sujet"
 msgid "subject/object cardinality"
 msgstr "cardinalitÈ sujet/objet"
 
+msgid "subject_plural:"
+msgstr ""
+
 msgid "sunday"
 msgstr "dimanche"
 
@@ -2713,9 +2695,6 @@ msgstr "nom"
 
 msgid "symetric"
 msgstr "symÈtrique"
-
-msgid "synopsis"
-msgstr "synopsis"
 
 msgid "system entities"
 msgstr "entitÈs systËmes"
@@ -2832,6 +2811,9 @@ msgstr "entitÈ (externe) introuvable"
 
 msgid "unknown property key"
 msgstr "clÈ de propriÈtÈ inconnue"
+
+msgid "up"
+msgstr ""
 
 msgid "upassword"
 msgstr "mot de passe"
@@ -2970,9 +2952,6 @@ msgstr ""
 "org et python-projects@lists.logilab.org), mettez cette propriÈtÈ ‡ vrai sur "
 "l'une d'entre-elle qui sera la forme canonique"
 
-msgid "wikiid"
-msgstr "identifiant wiki"
-
 #, python-format
 msgid "workflow for %s"
 msgstr "workflow pour %s"
@@ -3001,11 +2980,36 @@ msgstr "vous avez ÈtÈ dÈconnectÈ"
 #~ msgid "%s, or without time: %s"
 #~ msgstr "%s, ou bien sans prÈciser d'heure: %s"
 
+#~ msgid "Card"
+#~ msgstr "Ficha"
+
+#~ msgid "Card_plural"
+#~ msgstr "Fichas"
+
 #~ msgid "Loading"
 #~ msgstr "chargement"
 
+#~ msgid "New Card"
+#~ msgstr "Nueva ficha"
+
 #~ msgid "Problem occured while setting new value"
 #~ msgstr "Un problËme est survenu lors de la mise ‡ jour"
+
+#~ msgid "This Card"
+#~ msgstr "Esta Ficha"
+
+#~ msgid ""
+#~ "a card is a textual content used as documentation, reference, procedure "
+#~ "reminder"
+#~ msgstr ""
+#~ "una ficha es un texto utilizado como documentación, referencia, memoria "
+#~ "de procedimiento..."
+
+#~ msgid "add a Card"
+#~ msgstr "agregar una ficha"
+
+#~ msgid "an abstract for this card"
+#~ msgstr "un resumen para esta ficha"
 
 #~ msgid "and"
 #~ msgstr "et"
@@ -3015,6 +3019,12 @@ msgstr "vous avez ÈtÈ dÈconnectÈ"
 
 #~ msgid "cancel edition"
 #~ msgstr "annuler l'Èdition"
+
+#~ msgid "content"
+#~ msgstr "contenido"
+
+#~ msgid "content_format"
+#~ msgstr "formato"
 
 #~ msgid ""
 #~ "default language (look at the i18n directory of the application to see "
@@ -3041,6 +3051,9 @@ msgstr "vous avez ÈtÈ dÈconnectÈ"
 #~ msgid "incorrect value for type \"%s\""
 #~ msgstr "valeur incorrecte pour le type \"%s\""
 
+#~ msgid "inlined view"
+#~ msgstr "vista incluída (en línea)"
+
 #~ msgid "linked"
 #~ msgstr "liÈ"
 
@@ -3055,11 +3068,20 @@ msgstr "vous avez ÈtÈ dÈconnectÈ"
 #~ msgid "owned by"
 #~ msgstr "appartient ‡"
 
+#~ msgid "remove this Card"
+#~ msgstr "supprimer cette fiche"
+
 #~ msgid "see also"
 #~ msgstr "voir aussi"
 
 #~ msgid "status will change from %s to %s"
 #~ msgstr "l'Ètat va passer de %s ‡ %s"
+
+#~ msgid "synopsis"
+#~ msgstr "synopsis"
+
+#~ msgid "wikiid"
+#~ msgstr "identifiant wiki"
 
 #~ msgid "workflow history"
 #~ msgstr "historique du workflow"

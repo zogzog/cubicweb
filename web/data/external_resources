@@ -52,3 +52,4 @@ SEND_EMAIL_ICON = DATADIR/sendok.png
 DOWNLOAD_ICON = DATADIR/download.gif
 UPLOAD_ICON = DATADIR/upload.gif
 GMARKER_ICON = DATADIR/gmap_blue_marker.png
+UP_ICON = DATADIR/up.gif

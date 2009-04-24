@@ -123,6 +123,10 @@ msgstr "%s résultats pour la requête"
 msgid "%s software version of the database"
 msgstr "version logicielle de la base pour %s"
 
+#, python-format
+msgid "%s_perm"
+msgstr ""
+
 msgid "**"
 msgstr "0..n 0..n"
 
@@ -200,12 +204,6 @@ msgstr "Donnée binaires"
 
 msgid "Bytes_plural"
 msgstr "Données binaires"
-
-msgid "Card"
-msgstr "Fiche"
-
-msgid "Card_plural"
-msgstr "Fiches"
 
 msgid "Date"
 msgstr "Date"
@@ -336,9 +334,6 @@ msgstr "Durées"
 
 msgid "New Bookmark"
 msgstr "Nouveau signet"
-
-msgid "New Card"
-msgstr "Nouvelle fiche"
 
 msgid "New ECache"
 msgstr "Nouveau cache applicatif"
@@ -476,9 +471,6 @@ msgstr "Ce %s"
 msgid "This Bookmark"
 msgstr "Ce signet"
 
-msgid "This Card"
-msgstr "Cette fiche"
-
 msgid "This ECache"
 msgstr "Ce cache applicatif"
 
@@ -615,13 +607,6 @@ msgstr ""
 "puisse être passée. Cette expression peut utiliser les variables X et U qui "
 "représente respectivement l'entité à laquelle on veut appliquer la "
 "transition et l'utilisateur courant."
-
-msgid ""
-"a card is a textual content used as documentation, reference, procedure "
-"reminder"
-msgstr ""
-"une fiche est un texte utilisé comme documentation, référence, rappel de "
-"procédure..."
 
 msgid ""
 "a simple cache entity characterized by a name and a validity date. The "
@@ -843,9 +828,6 @@ msgstr "ajouter une transition"
 msgid "add a Bookmark"
 msgstr "ajouter un signet"
 
-msgid "add a Card"
-msgstr "ajouter une fiche"
-
 msgid "add a ECache"
 msgstr "ajouter un cache applicatif"
 
@@ -953,9 +935,6 @@ msgstr "calendrier am/pm (semaine)"
 msgid "am/pm calendar (year)"
 msgstr "calendrier am/pm (année)"
 
-msgid "an abstract for this card"
-msgstr "un résumé pour cette fiche"
-
 msgid "an electronic mail address associated to a short alias"
 msgstr "une addresse électronique associée à un alias"
 
@@ -994,6 +973,9 @@ msgstr ""
 
 msgid "attribute"
 msgstr "attribut"
+
+msgid "attributes with modified permissions:"
+msgstr "attributs ayant des permissions modifiées :"
 
 msgid "august"
 msgstr "août"
@@ -1268,12 +1250,6 @@ msgstr "contraintes"
 
 msgid "constraints applying on this relation"
 msgstr "contraintes s'appliquant à cette relation"
-
-msgid "content"
-msgstr "contenu"
-
-msgid "content_format"
-msgstr "format"
 
 msgid "contentnavigation"
 msgstr "composants contextuels"
@@ -1904,7 +1880,7 @@ msgid "hide filter form"
 msgstr "cacher le filtre"
 
 msgid "hide meta-data"
-msgstr "cacher les méta-données"
+msgstr "cacher les entités et relations \"méta\""
 
 msgid "home"
 msgstr "maison"
@@ -2030,9 +2006,6 @@ msgstr "état initial de"
 
 msgid "inlined"
 msgstr "mise en ligne"
-
-msgid "inlined view"
-msgstr "vue embarquée (en ligne)"
 
 msgid "internationalizable"
 msgstr "internationalisable"
@@ -2316,6 +2289,9 @@ msgstr "novembre"
 msgid "object"
 msgstr "objet"
 
+msgid "object_plural:"
+msgstr "objets :"
+
 msgid "october"
 msgstr "octobre"
 
@@ -2375,6 +2351,12 @@ msgstr "chemin"
 msgid "permission"
 msgstr "permission"
 
+msgid "permissions for entities"
+msgstr "permissions pour les entités"
+
+msgid "permissions for relations"
+msgstr "permissions pour les relations"
+
 msgid "permissions for this entity"
 msgstr "permissions pour cette entité"
 
@@ -2386,9 +2368,6 @@ msgstr "récupérer des signets existants"
 
 msgid "pkey"
 msgstr "clé"
-
-msgid "planned_delivery"
-msgstr "livraison prévue"
 
 msgid "please correct errors below"
 msgstr "veuillez corriger les erreurs ci-dessous"
@@ -2445,6 +2424,9 @@ msgstr "type de relation"
 msgid "relation_type_object"
 msgstr "définition"
 
+msgid "relations"
+msgstr ""
+
 msgid "relations deleted"
 msgstr "relations supprimées"
 
@@ -2453,9 +2435,6 @@ msgstr "url relative de la page"
 
 msgid "remove this Bookmark"
 msgstr "supprimer ce signet"
-
-msgid "remove this Card"
-msgstr "supprimer cette fiche"
 
 msgid "remove this ECache"
 msgstr "supprimer ce cache applicatif"
@@ -2652,7 +2631,7 @@ msgid "show filter form"
 msgstr "afficher le filtre"
 
 msgid "show meta-data"
-msgstr "afficher les méta-données"
+msgstr "afficher le schéma complet"
 
 msgid "site configuration"
 msgstr "configuration du site"
@@ -2706,6 +2685,9 @@ msgstr "sujet"
 msgid "subject/object cardinality"
 msgstr "cardinalité sujet/objet"
 
+msgid "subject_plural:"
+msgstr "sujets :"
+
 msgid "sunday"
 msgstr "dimanche"
 
@@ -2714,9 +2696,6 @@ msgstr "nom"
 
 msgid "symetric"
 msgstr "symétrique"
-
-msgid "synopsis"
-msgstr "synopsis"
 
 msgid "system entities"
 msgstr "entités systèmes"
@@ -2833,6 +2812,9 @@ msgstr "entité (externe) introuvable"
 
 msgid "unknown property key"
 msgstr "clé de propriété inconnue"
+
+msgid "up"
+msgstr ""
 
 msgid "upassword"
 msgstr "mot de passe"
@@ -2971,9 +2953,6 @@ msgstr ""
 "org et python-projects@lists.logilab.org), mettez cette propriété à vrai sur "
 "l'une d'entre-elle qui sera la forme canonique"
 
-msgid "wikiid"
-msgstr "identifiant wiki"
-
 #, python-format
 msgid "workflow for %s"
 msgstr "workflow pour %s"
@@ -3002,11 +2981,36 @@ msgstr "vous avez été déconnecté"
 #~ msgid "%s, or without time: %s"
 #~ msgstr "%s, ou bien sans préciser d'heure: %s"
 
+#~ msgid "Card"
+#~ msgstr "Fiche"
+
+#~ msgid "Card_plural"
+#~ msgstr "Fiches"
+
 #~ msgid "Loading"
 #~ msgstr "chargement"
 
+#~ msgid "New Card"
+#~ msgstr "Nouvelle fiche"
+
 #~ msgid "Problem occured while setting new value"
 #~ msgstr "Un problème est survenu lors de la mise à jour"
+
+#~ msgid "This Card"
+#~ msgstr "Cette fiche"
+
+#~ msgid ""
+#~ "a card is a textual content used as documentation, reference, procedure "
+#~ "reminder"
+#~ msgstr ""
+#~ "une fiche est un texte utilisé comme documentation, référence, rappel de "
+#~ "procédure..."
+
+#~ msgid "add a Card"
+#~ msgstr "ajouter une fiche"
+
+#~ msgid "an abstract for this card"
+#~ msgstr "un résumé pour cette fiche"
 
 #~ msgid "and"
 #~ msgstr "et"
@@ -3016,6 +3020,12 @@ msgstr "vous avez été déconnecté"
 
 #~ msgid "cancel edition"
 #~ msgstr "annuler l'édition"
+
+#~ msgid "content"
+#~ msgstr "contenu"
+
+#~ msgid "content_format"
+#~ msgstr "format"
 
 #~ msgid ""
 #~ "default language (look at the i18n directory of the application to see "
@@ -3042,6 +3052,9 @@ msgstr "vous avez été déconnecté"
 #~ msgid "incorrect value for type \"%s\""
 #~ msgstr "valeur incorrecte pour le type \"%s\""
 
+#~ msgid "inlined view"
+#~ msgstr "vue embarquée (en ligne)"
+
 #~ msgid "linked"
 #~ msgstr "lié"
 
@@ -3056,11 +3069,23 @@ msgstr "vous avez été déconnecté"
 #~ msgid "owned by"
 #~ msgstr "appartient à"
 
+#~ msgid "planned_delivery"
+#~ msgstr "livraison prévue"
+
+#~ msgid "remove this Card"
+#~ msgstr "supprimer cette fiche"
+
 #~ msgid "see also"
 #~ msgstr "voir aussi"
 
 #~ msgid "status will change from %s to %s"
 #~ msgstr "l'état va passer de %s à %s"
+
+#~ msgid "synopsis"
+#~ msgstr "synopsis"
+
+#~ msgid "wikiid"
+#~ msgstr "identifiant wiki"
 
 #~ msgid "workflow history"
 #~ msgstr "historique du workflow"
