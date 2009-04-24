@@ -56,7 +56,7 @@ rpermissions_overrides = RelationTags(use_set=True)
 # boxes.EditBox configuration #################################################
 
 # 'link' / 'create' relation tags, used to control the "add entity" submenu
-rmode = RelationTags() 
+rmode = RelationTags()
 rmode.set_rtag('link', 'is', 'subject')
 rmode.set_rtag('link', 'is', 'object')
 rmode.set_rtag('link', 'is_instance_of', 'subject')
@@ -67,4 +67,4 @@ rmode.set_rtag('link', 'owned_by', 'subject')
 rmode.set_rtag('link', 'created_by', 'subject')
 rmode.set_rtag('link', 'require_permission', 'subject')
 rmode.set_rtag('link', 'wf_info_for', 'subject')
-rmode.set_rtag('link', 'wf_info_for', 'subject')
+rmode.set_rtag('link', 'wf_info_for', 'object')
