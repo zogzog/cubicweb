@@ -167,7 +167,7 @@ class ManagePermissionsAction(Action):
         return super(ManagePermissionsAction, cls).registered(vreg)
 
     def url(self):
-        return self.rset.get_entity(self.row, self.col).absolute_url(vid='security')
+        return self.rset.get_entity(self.row or 0, self.col or 0).absolute_url(vid='security')
 
 
 class DeleteAction(Action):
@@ -180,7 +180,7 @@ class DeleteAction(Action):
 
     def url(self):
         if len(self.rset) == 1:
-            entity = self.rset.get_entity(self.row, self.col)
+            entity = self.rset.get_entity(self.row or 0, self.col or 0)
             return self.build_url(entity.rest_path(), vid='deleteconf')
         return self.build_url(rql=self.rset.printable_rql(), vid='deleteconf')
 
