@@ -86,30 +86,31 @@ def generate_schema_pot(w, cubedir=None):
     """
     from cubicweb.cwvreg import CubicWebRegistry
     cube = cubedir and split(cubedir)[-1]
-    config = DevDepConfiguration(cube)
-    cleanup_sys_modules(config)
+    libconfig = DevDepConfiguration(cube)
+    libconfig.cleanup_interface_sobjects = False
+    cleanup_sys_modules(libconfig)
     if cubedir:
-        libschema = config.load_schema()
         config = DevCubeConfiguration(cube)
         schema = config.load_schema()
     else:
         schema = config.load_schema()
-        libschema = None
-        config.cleanup_interface_sobjects = False
+        config = libconfig
+        libconfig = None
     vreg = CubicWebRegistry(config)
     # set_schema triggers objects registrations
     vreg.set_schema(schema)
     w(DEFAULT_POT_HEAD)
-    _generate_schema_pot(w, vreg, schema, libschema=libschema, cube=cube)
+    _generate_schema_pot(w, vreg, schema, libconfig=libconfig, cube=cube)
 
 
-def _generate_schema_pot(w, vreg, schema, libschema=None, cube=None):
+def _generate_schema_pot(w, vreg, schema, libconfig=None, cube=None):
     from cubicweb.common.i18n import add_msg
     w('# schema pot file, generated on %s\n' % datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
     w('# \n')
     w('# singular and plural forms for each entity type\n')
     w('\n')
-    if libschema is not None:
+    if libconfig is not None:
+        libschema = libconfig.load_schema()
         entities = [e for e in schema.entities() if not e in libschema]
     else:
         entities = schema.entities()
@@ -170,18 +171,30 @@ def _generate_schema_pot(w, vreg, schema, libschema=None, cube=None):
                                 teschema, teschema, rschema, eschema)
                         add_msg(w, label)
                         add_msg(w, label2)
-    cube = (cube and 'cubes.%s.' % cube or 'cubicweb.')
+    #cube = (cube and 'cubes.%s.' % cube or 'cubicweb.')
     done = set()
+    if libconfig is not None:
+        from cubicweb.cwvreg import CubicWebRegistry
+        libvreg = CubicWebRegistry(libconfig)
+        libvreg.set_schema(libschema) # trigger objects registration
+        # prefill done set
+        list(_iter_vreg_objids(libvreg, done))
+    print 'done', done
+    for objid in _iter_vreg_objids(vreg, done):
+        add_msg(w, '%s_description' % objid)
+        add_msg(w, objid)
+
+def _iter_vreg_objids(vreg, done, prefix=None):
     for reg, objdict in vreg.items():
         for objects in objdict.values():
             for obj in objects:
                 objid = '%s_%s' % (reg, obj.id)
                 if objid in done:
-                    continue
-                if obj.__module__.startswith(cube) and obj.property_defs:
-                    add_msg(w, '%s_description' % objid)
-                    add_msg(w, objid)
+                    break
+                if obj.property_defs:
+                    yield objid
                     done.add(objid)
+                    break
 
 
 def defined_in_library(libschema, etype, rtype, tetype, role):
