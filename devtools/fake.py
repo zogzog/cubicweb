@@ -199,8 +199,9 @@ class FakeRepo(object):
 
     def internal_session(self):
         return FakeSession(self)
-    
-    def extid2eid(self, source, extid, etype, session, insert=True):
+
+    def extid2eid(self, source, extid, etype, session, insert=True,
+                  recreate=False):
         try:
             return self.extids[extid]
         except KeyError:
