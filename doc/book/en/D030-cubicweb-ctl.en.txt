@@ -52,8 +52,8 @@ in cubicweb-ctl, but they are available in the instance created.
 
 For more details, please see :ref:`gaecontents` .
 
-Commands to launch instance
----------------------------
+Commands to control instances
+-----------------------------
 * ``start``, starts one or more or all instances
 * ``stop``, stops one or more or all instances
 * ``restart``, restarts one or more or all instances
@@ -64,7 +64,6 @@ Commands to maintain instances
 * ``upgrade``, launches the existing instances migration when a new version
   of `CubicWeb` or the cubes installed is available
 * ``shell``, opens a migration shell for manual maintenance of the instance
-  (see :ref:`cubicweb-ctl-shell` for more details)
 * ``db-dump``, creates a dump of the system database
 * ``db-restore``, restores a dump of the system database
 * ``db-check``, checks data integrity of an instance. If the automatic correction
@@ -79,7 +78,7 @@ Commands to maintain i18n catalogs
 * ``i18ncompile``, recompiles the messages catalogs of an instance. 
   This is automatically done while upgrading.
 
-Cf :ref:`Internationalisation`.
+See also chapter :ref:`internationalisation`.
 
 Other commands
 --------------
@@ -87,23 +86,6 @@ Other commands
   and instances.
 * ``delete``, deletes an instance (configuration files and database)
 
-
-.. _cubicweb-ctl-shell:
-
-``cubicweb-ctl shell`` addon
-----------------------------
-
-This migration shell provides an interactive interface to all
-the migrations functions described in the chapter :ref:`migration`.
-
-Usage
-`````
-::
-  
-  ``cubicweb-ctl shell myapp``
-
-Examples
---------
 
 Create an instance from an existing cube
 ````````````````````````````````````````

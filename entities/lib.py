@@ -30,11 +30,11 @@ class EmailAddress(AnyEntity):
         if self.alias:
             return '%s <%s>' % (self.alias, self.display_address())
         return self.display_address()
-    
+
     @property
     def email_of(self):
         return self.reverse_use_email and self.reverse_use_email[0]
-    
+
     @cached
     def canonical_form(self):
         if self.canonical:
@@ -91,12 +91,12 @@ Emailaddress.id = 'Emailaddress'
 class CWProperty(AnyEntity):
     id = 'CWProperty'
 
-    fetch_attrs, fetch_order = fetch_config(['pkey', 'value'])    
+    fetch_attrs, fetch_order = fetch_config(['pkey', 'value'])
     rest_attr = 'pkey'
 
     def typed_value(self):
         return self.vreg.typed_value(self.pkey, self.value)
-        
+
     def dc_description(self):
         try:
             return self.req._(self.vreg.property_info(self.pkey)['help'])
@@ -108,7 +108,7 @@ class CWProperty(AnyEntity):
         information when this entity is being deleted
         """
         return 'view', {}
-        
+
 
 class Bookmark(AnyEntity):
     """customized class for Bookmark entities"""
@@ -130,24 +130,9 @@ class Bookmark(AnyEntity):
         return self.absolute_url() + '/follow'
 
 
-class Card(AnyEntity):
-    """customized class for Card entities"""
-    id = 'Card'
-    rest_attr = 'wikiid'
-    
-    fetch_attrs, fetch_order = fetch_config(['title'])
-
-    def dc_title(self):
-        return self.title
-
-    def dc_description(self, format='text/plain'):
-        return self.synopsis or u''
-
-
 class CWCache(AnyEntity):
     """Cache"""
     id = 'CWCache'
-    
     fetch_attrs, fetch_order = fetch_config(['name'])
 
     def touch(self):

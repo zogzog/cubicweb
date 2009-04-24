@@ -30,10 +30,10 @@ class XmlView(EntityView):
     content_type = 'text/xml'
     xml_root = 'rset'
     item_vid = 'xmlitem'
-    
+
     def cell_call(self, row, col):
         self.wview(self.item_vid, self.rset, row=row, col=col)
-        
+
     def call(self):
         """display a list of entities by calling their <item_vid> view"""
         self.w(u'<?xml version="1.0" encoding="%s"?>\n' % self.req.encoding)
@@ -66,7 +66,7 @@ class XmlItemView(EntityView):
                 self.w(u'  <%s>%s</%s>\n' % (attr, value, attr))
         self.w(u'</%s>\n' % (entity.e_schema))
 
-    
+
 class XmlRsetView(AnyRsetView):
     """dumps raw rset as xml"""
     id = 'rsetxml'
@@ -74,7 +74,7 @@ class XmlRsetView(AnyRsetView):
     templatable = False
     content_type = 'text/xml'
     xml_root = 'rset'
-        
+
     def call(self):
         w = self.w
         rset, descr = self.rset, self.rset.description
@@ -103,13 +103,13 @@ class XmlRsetView(AnyRsetView):
             w(u' </row>\n')
         w(u'</%s>\n' % self.xml_root)
 
-    
+
 # RSS stuff ###################################################################
 
 class RSSFeedURL(Component):
     id = 'rss_feed_url'
     __select__ = non_final_entity()
-    
+
     def feed_url(self):
         return self.build_url(rql=self.limited_rql(), vid='rss')
 
@@ -117,20 +117,20 @@ class RSSFeedURL(Component):
 class RSSEntityFeedURL(Component):
     id = 'rss_feed_url'
     __select__ = non_final_entity() & one_line_rset()
-    
+
     def feed_url(self):
         return self.entity(0, 0).rss_feed_url()
 
-        
+
 class RSSIconBox(BoxTemplate):
     """just display the RSS icon on uniform result set"""
     id = 'rss'
     __select__ = (BoxTemplate.__select__
                   & appobject_selectable('components', 'rss_feed_url'))
-    
+
     visible = False
     order = 999
-    
+
     def call(self, **kwargs):
         try:
             rss = self.req.external_resource('RSS_LOGO')
@@ -148,58 +148,57 @@ class RssView(XmlView):
     templatable = False
     content_type = 'text/xml'
     http_cache_manager = MaxAgeHTTPCacheManager
-    cache_max_age = 60*60*2 # stay in http cache for 2 hours by default 
-    
-    def cell_call(self, row, col):
-        self.wview('rssitem', self.rset, row=row, col=col)
-        
-    def call(self):
-        """display a list of entities by calling their <item_vid> view"""
+    cache_max_age = 60*60*2 # stay in http cache for 2 hours by default
+
+    def _open(self):
         req = self.req
         self.w(u'<?xml version="1.0" encoding="%s"?>\n' % req.encoding)
-        self.w(u'''<rdf:RDF
- xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
- xmlns:dc="http://purl.org/dc/elements/1.1/"
- xmlns="http://purl.org/rss/1.0/"
->''')
-        self.w(u'  <channel rdf:about="%s">\n' % xml_escape(req.url()))
-        self.w(u'    <title>%s RSS Feed</title>\n' % xml_escape(self.page_title()))
-        self.w(u'    <description>%s</description>\n' % xml_escape(req.form.get('vtitle', '')))
+        self.w(u'<rss version="2.0" xmlns:dc="http://purl.org/dc/elements/1.1/">\n')
+        self.w(u'  <channel>\n')
+        self.w(u'    <title>%s RSS Feed</title>\n' % html_escape(self.page_title()))
+        self.w(u'    <description>%s</description>\n' % html_escape(req.form.get('vtitle', '')))
         params = req.form.copy()
         params.pop('vid', None)
-        self.w(u'    <link>%s</link>\n' % xml_escape(self.build_url(**params)))
-        self.w(u'    <items>\n')
-        self.w(u'      <rdf:Seq>\n')
-        for entity in self.rset.entities():
-            self.w(u'      <rdf:li resource="%s" />\n' % xml_escape(entity.absolute_url()))
-        self.w(u'      </rdf:Seq>\n')
-        self.w(u'    </items>\n')
+        self.w(u'    <link>%s</link>\n' % html_escape(self.build_url(**params)))
+
+    def _close(self):
         self.w(u'  </channel>\n')
+        self.w(u'</rss>')
+
+    def call(self):
+        """display a list of entities by calling their <item_vid> view"""
+        self._open()
         for i in xrange(self.rset.rowcount):
             self.cell_call(i, 0)
-        self.w(u'</rdf:RDF>')
+        self._close()
 
+    def cell_call(self, row, col):
+        self.wview('rssitem', self.rset, row=row, col=col)
 
 class RssItemView(EntityView):
     id = 'rssitem'
     date_format = '%%Y-%%m-%%dT%%H:%%M%+03i:00' % (timezone / 3600)
+    add_div_section = False
 
     def cell_call(self, row, col):
         entity = self.complete_entity(row, col)
-        self.w(u'<item rdf:about="%s">\n' % xml_escape(entity.absolute_url()))
+        self.w(u'<item>\n')
+        self.w(u'<guid isPermaLink="true">%s</guid>\n' % html_escape(entity.absolute_url()))
+        self.render_title_link(entity)
+        self._marker('description', html_escape(entity.dc_description()))
+        self._marker('dc:date', entity.dc_date(self.date_format))
+        self.render_entity_creator(entity)
+        self.w(u'</item>\n')
+
+    def render_title_link(self, entity):
         self._marker('title', entity.dc_long_title())
         self._marker('link', entity.absolute_url())
-        self._marker('description', entity.dc_description())
-        self._marker('dc:date', entity.dc_date(self.date_format))
+
+    def render_entity_creator(self, entity):
         if entity.creator:
-            self.w(u'<author>')
-            self._marker('name', entity.creator.name())
-            email = entity.creator.get_email()
-            if email:
-                self._marker('email', email)
-            self.w(u'</author>')
-        self.w(u'</item>\n')
-        
+            self._marker('dc:creator', entity.dc_creator())
+
+
     def _marker(self, marker, value):
         if value:
-            self.w(u'  <%s>%s</%s>\n' % (marker, xml_escape(value), marker))
+            self.w(u'  <%s>%s</%s>\n' % (marker, html_escape(value), marker))

@@ -9,7 +9,7 @@ life easier.
 
 * How to import LDAP users in `CubicWeb`?
 
-  Here is a very usefull script which enables you to import LDAP users
+  Here is a very useful script which enables you to import LDAP users
   into your `CubicWeb` application by running the following: ::
 
 

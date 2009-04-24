@@ -40,7 +40,7 @@ try:
 except ImportError: # LAX
     pass
 
-        
+
 class ServerMigrationHelper(MigrationHelper):
     """specific migration helper for server side  migration scripts,
     providind actions related to schema/data migration
@@ -67,11 +67,11 @@ class ServerMigrationHelper(MigrationHelper):
     def repo_connect(self):
         self.repo = get_repository(method='inmemory', config=self.config)
         return self.repo
-    
+
     def shutdown(self):
         if self.repo is not None:
             self.repo.shutdown()
-        
+
     def rewrite_vcconfiguration(self):
         """write current installed versions (of cubicweb software
         and of each used cube) into the database
@@ -81,7 +81,7 @@ class ServerMigrationHelper(MigrationHelper):
             pkgversion = self.config.cube_version(pkg)
             self.cmd_set_property('system.version.%s' % pkg.lower(), pkgversion)
         self.commit()
-        
+
     def backup_database(self, backupfile=None, askconfirm=True):
         config = self.config
         source = config.sources()['system']
@@ -113,7 +113,7 @@ class ServerMigrationHelper(MigrationHelper):
                 print 'database backup:', backupfile
                 restrict_perms_to_user(backupfile, self.info)
                 break
-        
+
     def restore_database(self, backupfile, drop=True):
         config = self.config
         source = config.sources()['system']
@@ -139,7 +139,7 @@ class ServerMigrationHelper(MigrationHelper):
                     else:
                         break
             print 'database restored'
-        
+
     def migrate(self, vcconf, toupgrade, options):
         if not options.fs_only:
             if options.backup_db is None:
@@ -147,7 +147,7 @@ class ServerMigrationHelper(MigrationHelper):
             elif options.backup_db:
                 self.backup_database(askconfirm=False)
         super(ServerMigrationHelper, self).migrate(vcconf, toupgrade, options)
-    
+
     def process_script(self, migrscript, funcname=None, *args, **kwargs):
         """execute a migration script
         in interactive mode,  display the migration script path, ask for
@@ -159,7 +159,7 @@ class ServerMigrationHelper(MigrationHelper):
         else:
             return super(ServerMigrationHelper, self).process_script(
                 migrscript, funcname, *args, **kwargs)
-        
+
     @property
     def cnx(self):
         """lazy connection"""
@@ -194,7 +194,7 @@ class ServerMigrationHelper(MigrationHelper):
     @property
     def session(self):
         return self.repo._get_session(self.cnx.sessionid)
-    
+
     @property
     @cached
     def rqlcursor(self):
@@ -203,15 +203,15 @@ class ServerMigrationHelper(MigrationHelper):
         # some query while no pool is set on the session (eg on entity attribute
         # access for instance)
         return self.cnx.cursor()
-    
+
     def commit(self):
         if hasattr(self, '_cnx'):
             self._cnx.commit()
-            
+
     def rollback(self):
         if hasattr(self, '_cnx'):
             self._cnx.rollback()
-                   
+
     def rqlexecall(self, rqliter, cachekey=None, ask_confirm=True):
         for rql, kwargs in rqliter:
             self.rqlexec(rql, kwargs, cachekey, ask_confirm)
@@ -238,9 +238,9 @@ class ServerMigrationHelper(MigrationHelper):
     def group_mapping(self):
         """cached group mapping"""
         return ss.group_mapping(self.rqlcursor)
-        
+
     def exec_event_script(self, event, cubepath=None, funcname=None,
-                          *args, **kwargs):            
+                          *args, **kwargs):
         if cubepath:
             apc = join(cubepath, 'migration', '%s.py' % event)
         else:
@@ -265,9 +265,9 @@ class ServerMigrationHelper(MigrationHelper):
                     self.repo.hm.register_hook(setowner_after_add_entity,
                                                'after_add_entity', '')
                     self.reactivate_verification_hooks()
-    
+
     # schema synchronization internals ########################################
-    
+
     def _synchronize_permissions(self, ertype):
         """permission synchronization for an entity or relation type"""
         if ertype in ('eid', 'has_text', 'identity'):
@@ -332,17 +332,17 @@ class ServerMigrationHelper(MigrationHelper):
                                  {'expr': expr, 'exprtype': exprtype,
                                   'vars': expression.mainvars, 'x': teid}, 'x',
                                  ask_confirm=False)
-        
+
     def _synchronize_rschema(self, rtype, syncrdefs=True, syncperms=True):
         """synchronize properties of the persistent relation schema against its
         current definition:
-        
+
         * description
         * symetric, meta
         * inlined
         * relation definitions if `syncrdefs`
         * permissions if `syncperms`
-        
+
         physical schema changes should be handled by repository's schema hooks
         """
         rtype = str(rtype)
@@ -360,11 +360,11 @@ class ServerMigrationHelper(MigrationHelper):
                 self._synchronize_rdef_schema(subj, rschema, obj)
         if syncperms:
             self._synchronize_permissions(rtype)
-                
+
     def _synchronize_eschema(self, etype, syncperms=True):
         """synchronize properties of the persistent entity schema against
         its current definition:
-        
+
         * description
         * internationalizable, fulltextindexed, indexed, meta
         * relations from/to this entity
@@ -458,7 +458,7 @@ class ServerMigrationHelper(MigrationHelper):
             self.rqlexecall(ss.constraint2rql(rschema, subjtype, objtype,
                                               newcstr),
                             ask_confirm=confirm)
-            
+
     # base actions ############################################################
 
     def checkpoint(self):
@@ -468,7 +468,7 @@ class ServerMigrationHelper(MigrationHelper):
 
     def cmd_add_cube(self, cube, update_database=True):
         self.cmd_add_cubes( (cube,), update_database)
-    
+
     def cmd_add_cubes(self, cubes, update_database=True):
         """update_database is telling if the database schema should be updated
         or if only the relevant eproperty should be inserted (for the case where
@@ -507,13 +507,13 @@ class ServerMigrationHelper(MigrationHelper):
                 # check we should actually add the relation definition
                 if not (fromtype in new or totype in new or rschema in new):
                     continue
-                self.cmd_add_relation_definition(str(fromtype), rschema.type, 
+                self.cmd_add_relation_definition(str(fromtype), rschema.type,
                                                  str(totype))
         # execute post-create files
         for pack in reversed(newcubes):
             self.exec_event_script('postcreate', self.config.cube_dir(pack))
-            self.commit()        
-                
+            self.commit()
+
     def cmd_remove_cube(self, cube):
         removedcubes = super(ServerMigrationHelper, self).cmd_remove_cube(cube)
         if not removedcubes:
@@ -532,8 +532,8 @@ class ServerMigrationHelper(MigrationHelper):
             if not eschema in removedcubes_schema and eschema in reposchema:
                 self.cmd_drop_entity_type(eschema.type)
         for rschema in fsschema.relations():
-            if rschema in removedcubes_schema and rschema in reposchema: 
-                # check if attributes/relations has been added to entities from 
+            if rschema in removedcubes_schema and rschema in reposchema:
+                # check if attributes/relations has been added to entities from
                 # other cubes
                 for fromtype, totype in rschema.iter_rdefs():
                     if not removedcubes_schema[rschema.type].has_rdef(fromtype, totype) and \
@@ -546,19 +546,19 @@ class ServerMigrationHelper(MigrationHelper):
             self.rqlexec('DELETE CWProperty X WHERE X pkey %(pk)s',
                          {'pk': u'system.version.'+pack}, ask_confirm=False)
             self.commit()
-            
+
     # schema migration actions ################################################
-    
+
     def cmd_add_attribute(self, etype, attrname, attrtype=None, commit=True):
         """add a new attribute on the given entity type"""
         if attrtype is None:
             rschema = self.fs_schema.rschema(attrname)
             attrtype = rschema.objects(etype)[0]
         self.cmd_add_relation_definition(etype, attrname, attrtype, commit=commit)
-        
+
     def cmd_drop_attribute(self, etype, attrname, commit=True):
         """drop an existing attribute from the given entity type
-        
+
         `attrname` is a string giving the name of the attribute to drop
         """
         rschema = self.repo.schema.rschema(attrname)
@@ -567,7 +567,7 @@ class ServerMigrationHelper(MigrationHelper):
 
     def cmd_rename_attribute(self, etype, oldname, newname, commit=True):
         """rename an existing attribute of the given entity type
-        
+
         `oldname` is a string giving the name of the existing attribute
         `newname` is a string giving the name of the renamed attribute
         """
@@ -583,10 +583,10 @@ class ServerMigrationHelper(MigrationHelper):
             rql += ', NOT X %s NULL' % oldname
         self.rqlexec(rql, ask_confirm=self.verbosity>=2)
         self.cmd_drop_attribute(etype, oldname, commit=commit)
-            
+
     def cmd_add_entity_type(self, etype, auto=True, commit=True):
         """register a new entity type
-        
+
         in auto mode, automatically register entity's relation where the
         targeted type is known
         """
@@ -624,7 +624,7 @@ class ServerMigrationHelper(MigrationHelper):
             for rschema in eschema.subject_relations():
                 # attribute relation have already been processed and
                 # 'owned_by'/'created_by' will be automatically added
-                if rschema.final or rschema.type in ('owned_by', 'created_by', 'is', 'is_instance_of'): 
+                if rschema.final or rschema.type in ('owned_by', 'created_by', 'is', 'is_instance_of'):
                     continue
                 rtypeadded = rschema.type in applschema
                 for targetschema in rschema.objects(etype):
@@ -667,10 +667,10 @@ class ServerMigrationHelper(MigrationHelper):
                                     ask_confirm=confirm)
         if commit:
             self.commit()
-                
+
     def cmd_drop_entity_type(self, etype, commit=True):
         """unregister an existing entity type
-        
+
         This will trigger deletion of necessary relation types and definitions
         """
         # XXX what if we delete an entity type which is specialized by other types
@@ -682,7 +682,7 @@ class ServerMigrationHelper(MigrationHelper):
 
     def cmd_rename_entity_type(self, oldname, newname, commit=True):
         """rename an existing entity type in the persistent schema
-        
+
         `oldname` is a string giving the name of the existing entity type
         `newname` is a string giving the name of the renamed entity type
         """
@@ -690,7 +690,7 @@ class ServerMigrationHelper(MigrationHelper):
                      {'newname' : unicode(newname), 'oldname' : oldname})
         if commit:
             self.commit()
-        
+
     def cmd_add_relation_type(self, rtype, addrdef=True, commit=True):
         """register a new relation type named `rtype`, as described in the
         schema description file.
@@ -700,7 +700,7 @@ class ServerMigrationHelper(MigrationHelper):
         implies an intermediate "commit" which commits the relation type
         creation (but not the relation definitions themselves, for which
         committing depends on the `commit` argument value).
-        
+
         """
         rschema = self.fs_schema.rschema(rtype)
         # register the relation into CWRType and insert necessary relation
@@ -716,7 +716,7 @@ class ServerMigrationHelper(MigrationHelper):
                             ask_confirm=self.verbosity>=2)
         if commit:
             self.commit()
-        
+
     def cmd_drop_relation_type(self, rtype, commit=True):
         """unregister an existing relation type"""
         # unregister the relation from CWRType
@@ -724,10 +724,10 @@ class ServerMigrationHelper(MigrationHelper):
                      ask_confirm=self.verbosity>=2)
         if commit:
             self.commit()
-        
+
     def cmd_rename_relation(self, oldname, newname, commit=True):
         """rename an existing relation
-        
+
         `oldname` is a string giving the name of the existing relation
         `newname` is a string giving the name of the renamed relation
         """
@@ -747,7 +747,7 @@ class ServerMigrationHelper(MigrationHelper):
                         ask_confirm=self.verbosity>=2)
         if commit:
             self.commit()
-        
+
     def cmd_drop_relation_definition(self, subjtype, rtype, objtype, commit=True):
         """unregister an existing relation definition"""
         rschema = self.repo.schema.rschema(rtype)
@@ -762,12 +762,12 @@ class ServerMigrationHelper(MigrationHelper):
                      ask_confirm=self.verbosity>=2)
         if commit:
             self.commit()
-        
+
     def cmd_sync_schema_props_perms(self, ertype=None, syncperms=True,
                                     syncprops=True, syncrdefs=True, commit=True):
         """synchronize the persistent schema against the current definition
         schema.
-        
+
         It will synch common stuff between the definition schema and the
         actual persistent schema, it won't add/remove any entity or relation.
         """
@@ -794,7 +794,7 @@ class ServerMigrationHelper(MigrationHelper):
                     self._synchronize_permissions(etype)
         if commit:
             self.commit()
-                
+
     def cmd_change_relation_props(self, subjtype, rtype, objtype,
                                   commit=True, **kwargs):
         """change some properties of a relation definition
@@ -824,8 +824,8 @@ class ServerMigrationHelper(MigrationHelper):
         """set change size constraint of a string attribute
 
         if size is None any size constraint will be removed.
-        
-        you usually want to use sync_schema_props_perms instead.        
+
+        you usually want to use sync_schema_props_perms instead.
         """
         oldvalue = None
         for constr in self.repo.schema.eschema(etype).constraints(rtype):
@@ -861,9 +861,9 @@ class ServerMigrationHelper(MigrationHelper):
     @obsolete('use sync_schema_props_perms(ertype, syncprops=False)')
     def cmd_synchronize_permissions(self, ertype, commit=True):
         self.cmd_sync_schema_props_perms(ertype, syncprops=False, commit=commit)
-    
+
     # Workflows handling ######################################################
-    
+
     def cmd_add_state(self, name, stateof, initial=False, commit=False, **kwargs):
         """method to ease workflow definition: add a state for one or more
         entity type(s)
@@ -881,7 +881,7 @@ class ServerMigrationHelper(MigrationHelper):
         if commit:
             self.commit()
         return stateeid
-    
+
     def cmd_add_transition(self, name, transitionof, fromstates, tostate,
                            requiredgroups=(), conditions=(), commit=False, **kwargs):
         """method to ease workflow definition: add a transition for one or more
@@ -938,7 +938,7 @@ class ServerMigrationHelper(MigrationHelper):
         entity.change_state(entity.wf_state(statename).eid)
         if commit:
             self.commit()
-        
+
     # CWProperty handling ######################################################
 
     def cmd_property_value(self, pkey):
@@ -958,7 +958,7 @@ class ServerMigrationHelper(MigrationHelper):
                          {'k': pkey, 'v': value}, ask_confirm=False)
 
     # other data migration commands ###########################################
-        
+
     def cmd_add_entity(self, etype, *args, **kwargs):
         """add a new entity of the given type"""
         rql = 'INSERT %s X' % etype
@@ -978,10 +978,10 @@ class ServerMigrationHelper(MigrationHelper):
         if commit:
             self.commit()
         return eid
-    
+
     def sqlexec(self, sql, args=None, ask_confirm=True):
         """execute the given sql if confirmed
-        
+
         should only be used for low level stuff undoable with existing higher
         level actions
         """
@@ -999,7 +999,7 @@ class ServerMigrationHelper(MigrationHelper):
             except:
                 # no result to fetch
                 return
-    
+
     def rqlexec(self, rql, kwargs=None, cachekey=None, ask_confirm=True):
         """rql action"""
         if not isinstance(rql, (tuple, list)):
@@ -1026,7 +1026,7 @@ class ServerMigrationHelper(MigrationHelper):
 
     def cmd_reactivate_verification_hooks(self):
         self.repo.hm.reactivate_verification_hooks()
-        
+
     # broken db commands ######################################################
 
     def cmd_change_attribute_type(self, etype, attr, newtype, commit=True):
@@ -1049,7 +1049,7 @@ class ServerMigrationHelper(MigrationHelper):
         self.sqlexec(sql, ask_confirm=False)
         if commit:
             self.commit()
-        
+
     def cmd_add_entity_type_table(self, etype, commit=True):
         """low level method to create the sql table for an existing entity.
         This may be useful on accidental desync between the repository schema
@@ -1063,7 +1063,7 @@ class ServerMigrationHelper(MigrationHelper):
                 self.sqlexec(sql)
         if commit:
             self.commit()
-            
+
     def cmd_add_relation_type_table(self, rtype, commit=True):
         """low level method to create the sql table for an existing relation.
         This may be useful on accidental desync between the repository schema
@@ -1076,7 +1076,7 @@ class ServerMigrationHelper(MigrationHelper):
                 self.sqlexec(sql)
         if commit:
             self.commit()
-            
+
 
 class ForRqlIterator:
     """specific rql iterator to make the loop skipable"""
@@ -1086,10 +1086,10 @@ class ForRqlIterator:
         self.kwargs = kwargs
         self.ask_confirm = ask_confirm
         self._rsetit = None
-        
+
     def __iter__(self):
         return self
-    
+
     def next(self):
         if self._rsetit is not None:
             return self._rsetit.next()

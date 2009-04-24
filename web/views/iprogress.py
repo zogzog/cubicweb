@@ -131,7 +131,7 @@ class ProgressTableView(EntityView):
             else:
                 formated_date = u'%s %s' % (_('expected:'), eta_date)
         return formated_date
-    
+
     def build_todo_by_cell(self, entity):
         """``todo_by`` column cell renderer"""
         return u', '.join(p.view('outofcontext') for p in entity.contractors())

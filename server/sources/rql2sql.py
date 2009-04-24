@@ -935,9 +935,9 @@ class SQLGenerator(object):
     def visit_function(self, func, contextrels=None):
         """generate SQL name for a function"""
         # function_description will check function is supported by the backend
-        self.dbms_helper.function_description(func.name) 
-        return '%s(%s)' % (func.name, ', '.join(c.accept(self, contextrels)
-                                                for c in func.children))
+        sqlname = self.dbms_helper.func_sqlname(func.name) 
+        return '%s(%s)' % (sqlname, ', '.join(c.accept(self, contextrels)
+                                              for c in func.children))
 
     def visit_constant(self, constant, contextrels=None):
         """generate SQL name for a constant"""

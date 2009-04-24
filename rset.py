@@ -51,7 +51,9 @@ class ResultSet(object):
         # set by the cursor which returned this resultset
         self.vreg = None
         self.req = None
-   
+        # actions cache
+        self._rsetactions = None
+        
     def __str__(self):
         if not self.rows:
             return '<empty resultset %s>' % self.rql
@@ -70,9 +72,19 @@ class ResultSet(object):
                                                  '\n'.join('%s (%s)' % (r, d)
                                                            for r, d in zip(rows, self.description)))
 
-    @cached
-    def possible_actions(self):
-        return self.vreg.possible_vobjects('actions', self.req, self)
+    def possible_actions(self, **kwargs):
+        if self._rsetactions is None:
+            self._rsetactions = {}
+        if kwargs:
+            key = tuple(sorted(kwargs.iteritems()))
+        else:
+            key = None
+        try:
+            return self._rsetactions[key]
+        except KeyError:
+            actions = self.vreg.possible_vobjects('actions', self.req, self, **kwargs)
+            self._rsetactions[key] = actions
+            return actions
     
     def __len__(self):
         """returns the result set's size"""

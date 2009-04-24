@@ -13,7 +13,8 @@ applications based on that framework.
    :maxdepth: 1
 
    C010-setup.en.txt
-   C020-site-config.en.txt
-   C030-instance-config.en.txt
-   C040-rql.en.txt
+   C020-create-instance.en.txt
+   C030-site-config.en.txt
+   C040-instance-config.en.txt
+   C050-rql.en.txt
 

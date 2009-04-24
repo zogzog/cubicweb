@@ -25,7 +25,7 @@ daily visits at some production sites, `CubicWeb` is a proven end to end solutio
 for semantic web application development that promotes quality, reusability and
 efficiency.
 
-The unbeliever will read the :ref:`Overview`.
+The unbeliever will read the :ref:`Tutorial`.
 
 The hacker will join development at the forge_.
 

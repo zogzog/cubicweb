@@ -1,9 +1,9 @@
 .. -*- coding: utf-8 -*-
 
-.. _Overview:
+.. _Tutorial:
 
-Quick overview of `CubicWeb`
-============================
+Tutorial
+========
 
 `CubicWeb` is a semantic web application framework that favors reuse and
 object-oriented design.
@@ -16,6 +16,7 @@ a few smaller cubes.
 
 An `instance` is a specific installation of an application and includes
 configuration files.
+
 
 This tutorial will show how to create a `cube` and how to use it as an
 application to run an `instance`.

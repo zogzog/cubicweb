@@ -210,9 +210,9 @@ class CubicWebRegistry(VRegistry):
 
     def possible_actions(self, req, rset, **kwargs):
         if rset is None:
-            actions = self.possible_vobjects('actions', req, rset)
+            actions = self.possible_vobjects('actions', req, rset, **kwargs)
         else:
-            actions = rset.possible_actions() # cached implementation
+            actions = rset.possible_actions(**kwargs) # cached implementation
         result = {}
         for action in actions:
             result.setdefault(action.category, []).append(action)

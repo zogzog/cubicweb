@@ -39,7 +39,7 @@ class RecipientsFinder(Component):
     __select__ = yes()
     user_rql = ('Any X,E,A WHERE X is CWUser, X in_state S, S name "activated",'
                 'X primary_email E, E address A')
-    
+
     def recipients(self):
         mode = self.config['default-recipients-mode']
         if mode == 'users':
@@ -55,7 +55,7 @@ class RecipientsFinder(Component):
             dests = []
         return dests
 
-    
+
 # hooks #######################################################################
 
 class RenderAndSendNotificationView(PreCommitOperation):
@@ -64,12 +64,12 @@ class RenderAndSendNotificationView(PreCommitOperation):
         if self.view.rset[0][0] in self.session.query_data('pendingeids', ()):
             return # entity added and deleted in the same transaction
         self.view.render_and_send(**getattr(self, 'viewargs', {}))
-        
+
 class StatusChangeHook(Hook):
     """notify when a workflowable entity has its state modified"""
     events = ('after_add_entity',)
     accepts = ('TrInfo',)
-    
+
     def call(self, session, entity):
         if not entity.from_state: # not a transition
             return
@@ -133,11 +133,11 @@ class NotificationView(EntityView):
       override call)
     """
     msgid_timestamp = True
-    
+
     def recipients(self):
         finder = self.vreg.select_component('recipients_finder', self.req, self.rset)
         return finder.recipients()
-        
+
     def subject(self):
         entity = self.entity(0, 0)
         subject = self.req._(self.message)
@@ -150,7 +150,7 @@ class NotificationView(EntityView):
         # req is actually a session (we are on the server side), and we have to
         # prevent nested internal session
         return self.req.actual_session().user.login
-    
+
     def context(self, **kwargs):
         entity = self.entity(0, 0)
         for key, val in kwargs.iteritems():
@@ -162,7 +162,7 @@ class NotificationView(EntityView):
                        'url': entity.absolute_url(),
                        'title': entity.dc_long_title(),})
         return kwargs
-    
+
     def cell_call(self, row, col=0, **kwargs):
         self.w(self.req._(self.content) % self.context(**kwargs))
 
@@ -237,7 +237,7 @@ def parse_message_id(msgid, appid):
     if appid != fromappid or host != gethostname():
         return None
     return values
-    
+
 
 class StatusChangeMixIn(object):
     id = 'notif_status_change'
@@ -263,7 +263,7 @@ url: %(url)s
 
 class ContentAddedView(NotificationView):
     __abstract__ = True
-    id = 'notif_after_add_entity' 
+    id = 'notif_after_add_entity'
     msgid_timestamp = False
     message = _('new')
     content = """
@@ -273,7 +273,7 @@ class ContentAddedView(NotificationView):
 
 url: %(url)s
 """
-    
+
     def context(self, **kwargs):
         entity = self.entity(0, 0)
         content = entity.printable_value(self.content_attr, format='text/plain')
@@ -281,17 +281,10 @@ url: %(url)s
             contentformat = getattr(entity, self.content_attr + '_format', 'text/rest')
             content = normalize_text(content, 80, rest=contentformat=='text/rest')
         return super(ContentAddedView, self).context(content=content, **kwargs)
-    
+
     def subject(self):
         entity = self.entity(0, 0)
         return  u'%s #%s (%s)' % (self.req.__('New %s' % entity.e_schema),
                                   entity.eid, self.user_login())
 
 NormalizedTextView = class_renamed('NormalizedTextView', ContentAddedView)
-
-class CardAddedView(ContentAddedView):
-    """get notified from new cards"""
-    __select__ = implements('Card')
-    content_attr = 'synopsis'
-    
-

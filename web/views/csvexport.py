@@ -12,28 +12,28 @@ from cubicweb.view import EntityView, AnyRsetView
 class CSVMixIn(object):
     """mixin class for CSV views"""
     templatable = False
-    content_type = "text/comma-separated-values"    
+    content_type = "text/comma-separated-values"
     binary = True # avoid unicode assertion
     csv_params = {'dialect': 'excel',
                   'quotechar': '"',
                   'delimiter': ';',
                   'lineterminator': '\n'}
-    
+
     def set_request_content_type(self):
         """overriden to set a .csv filename"""
         self.req.set_content_type(self.content_type, filename='cubicwebexport.csv')
-            
+
     def csvwriter(self, **kwargs):
         params = self.csv_params.copy()
         params.update(kwargs)
         return UnicodeCSVWriter(self.w, self.req.encoding, **params)
 
-    
+
 class CSVRsetView(CSVMixIn, AnyRsetView):
     """dumps raw result set in CSV"""
     id = 'csvexport'
     title = _('csv export')
-        
+
     def call(self):
         writer = self.csvwriter()
         writer.writerow(self.columns_labels())
@@ -45,16 +45,16 @@ class CSVRsetView(CSVMixIn, AnyRsetView):
                 etype = descr[rowindex][colindex]
                 if val is not None and not eschema(etype).is_final():
                     # csvrow.append(val) # val is eid in that case
-                    content = self.view('textincontext', rset, 
+                    content = self.view('textincontext', rset,
                                         row=rowindex, col=colindex)
                 else:
                     content = self.view('final', rset,
                                         displaytime=True, format='text/plain',
                                         row=rowindex, col=colindex)
-                csvrow.append(content)                    
+                csvrow.append(content)
             writer.writerow(csvrow)
-    
-    
+
+
 class CSVEntityView(CSVMixIn, EntityView):
     """dumps rset's entities (with full set of attributes) in CSV
 
@@ -83,5 +83,5 @@ class CSVEntityView(CSVMixIn, EntityView):
         for rows in rows_by_type.itervalues():
             writer.writerows(rows)
             # use two empty lines as separator
-            writer.writerows([[], []])        
-    
+            writer.writerows([[], []])
+

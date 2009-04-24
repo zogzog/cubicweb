@@ -125,6 +125,7 @@ class modification_date(MetaAttributeRelationType):
     subject = '**'
     object = 'Datetime'
 
+
 class CWProperty(EntityType):
     """used for cubicweb configuration. Once a property has been created you
     can't change the key.
@@ -197,6 +198,7 @@ class see_also(RelationType):
     """generic relation to link one entity to another"""
     symetric = True
 
+
 class CWCache(MetaEntityType):
     """a simple cache entity characterized by a name and
     a validity date.
@@ -213,6 +215,6 @@ class CWCache(MetaEntityType):
         'delete': ('managers',),
         }
 
-    name = String(required=True, unique=True, indexed=True,
+    name = String(required=True, unique=True, indexed=True,  maxsize=128,
                   description=_('name of the cache'))
     timestamp = Datetime(default='NOW')

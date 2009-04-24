@@ -13,6 +13,8 @@ We'll start with a description of the interface providing you with a basic
 understanding of the classes and methods available, then detail the view
 selection principle which makes `CubicWeb` web interface very flexible.
 
+A `View` is an object applied to another object such as an entity.
+
 Basic class for views
 ---------------------
 
@@ -72,6 +74,7 @@ that are more concrete as they relate to data rendering within the application:
 * `AnyRsetView`, view applied to any result set 
 * `EmptyRsetView`, view applied to an empty result set
 
+
 The selection view principle
 ----------------------------
 
@@ -96,6 +99,9 @@ compute scores is in ``cubicweb.vregistry.vreq``.
 
 Registerer
 ``````````
+[Registerers are deprecated: they will soon disappear for explicite 
+registration...] 
+
 A view is also customizable through its attribute ``__registerer__``.
 This is used at the time the application is launched to manage how
 objects (views, graphic components, actions, etc.) 
@@ -109,9 +115,6 @@ The purpose of a `registerer` is to control object registry
 at the application startup whereas `selectors` control objects
 when they are selected for display.
 
-
-`CubicWeb` provides a lot of standard views for the default class
-`EntityType`. You can find them in ``cubicweb/web/views/``.
 
 .. include:: B1022-views-stdlib.en.txt
 
@@ -150,11 +153,121 @@ Examples of views class
         search_states = ('linksearch',)
 
     
+Rendering methods and attributes for ``PrimaryView``
+----------------------------------------------------
 
+By default, `CubicWeb` provides a primary view for each new entity type
+you create. The first view you might be interested in modifying.
 
+Let's have a quick look at the EntityView ``PrimaryView`` as well as
+its rendering method::
+    
+    class PrimaryView(EntityView):
+    """the full view of an non final entity"""
+        id = 'primary'
+        title = _('primary')
+        show_attr_label = True
+        show_rel_label = True
+        skip_none = True
+        skip_attrs = ('eid', 'creation_date', 'modification_date')
+        skip_rels = ()
+        main_related_section = True
+
+        ...
+
+    def cell_call(self, row, col):
+        self.row = row
+        self.render_entity(self.complete_entity(row, col))
+
+    def render_entity(self, entity):
+        """return html to display the given entity"""
+        siderelations = []
+        self.render_entity_title(entity)
+        self.render_entity_metadata(entity)
+        # entity's attributes and relations, excluding meta data
+        # if the entity isn't meta itself
+        self.w(u'<div>')
+        self.w(u'<div class="mainInfo">')
+        self.render_entity_attributes(entity, siderelations)
+        self.w(u'</div>')
+        self.content_navigation_components('navcontenttop')
+        if self.main_related_section:
+            self.render_entity_relations(entity, siderelations)
+        self.w(u'</div>')
+        # side boxes
+        self.w(u'<div class="primaryRight">')
+        self.render_side_related(entity, siderelations)
+        self.w(u'</div>')
+        self.w(u'<div class="clear"></div>')
+        self.content_navigation_components('navcontentbottom')
+
+    ...
+
+``cell_call`` is executed for each entity of a result set and apply ``render_entity``.
+
+The methods you want to modify while customizing a ``PrimaryView`` are:
+
+*render_entity_title(self, entity)* 
+    Renders the entity title based on the assumption that the method 
+    ``def content_title(self)`` is implemented for the given entity type.
+
+*render_entity_metadata(self, entity)*
+    Renders the entity metadata based on the assumption that the method
+    ``def summary(self)`` is implemented for the given entity type.
+
+*render_entity_attributes(self, entity, siderelations)*
+    Renders all the attribute of an entity with the exception of attribute
+    of type `Password` and `Bytes`.
+
+*content_navigation_components(self, context)*
+    This method is applicable only for entity type implementing the interface 
+    `IPrevNext`. This interface is for entities which can be linked to a previous
+    and/or next entity. This methods will render the navigation links between
+    entities of this type, either at the top or at the bottom of the page
+    given the context (navcontent{top|bottom}).
+
+*render_entity_relations(self, entity, siderelations)*
+    Renders all the relations of the entity in the main section of the page.
+        
+*render_side_related(self, entity, siderelations)*
+    Renders all the relations of the entity in a side box. This is equivalent
+    to *render_entity_relations* in addition to render the relations
+    in a box.
+
+Also, please note that by setting the following attributes in you class,
+you can already customize some of the rendering:
+
+*show_attr_label*
+    Renders the attribute label next to the attribute value if set to True.
+    Otherwise, does only display the attribute value.
+
+*show_rel_label* 
+    Renders the relation label next to the relation value if set to True.
+    Otherwise, does only display the relation value.
+
+*skip_none*
+    Does not render an attribute value that is None if set to True.
+
+*skip_attrs*
+    Given a list of attributes name, does not render the value of the attributes listed.
+
+*skip_rels*
+    Given a list of relations name, does not render the relations listed.
+
+*main_related_section*
+    Renders the relations of the entity if set to True.
+
+A good practice is for you to identify the content of your entity type for which
+the default rendering does not answer your need so that you can focus on the specific
+method (from the list above) that needs to be modified. We do not recommand you to
+overwrite ``render_entity`` as you might potentially loose the benefits of the side
+boxes handling.
 
 Example of a view customization
 -------------------------------
+
+[FIXME] XXX Example needs to be rewritten as it shows how to modify cell_call which
+contredicts our advise of not modifying it.
 
 We'll show you now an example of a ``primary`` view and how to customize it.
 

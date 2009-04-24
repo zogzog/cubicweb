@@ -646,6 +646,12 @@ msgstr "delete"
 msgid "actions_delete_description"
 msgstr ""
 
+msgid "actions_download_as_owl"
+msgstr ""
+
+msgid "actions_download_as_owl_description"
+msgstr ""
+
 msgid "actions_edit"
 msgstr "modify"
 
@@ -1586,6 +1592,9 @@ msgstr ""
 msgid "download icon"
 msgstr ""
 
+msgid "download schema as owl"
+msgstr ""
+
 msgid "edit bookmarks"
 msgstr ""
 
@@ -2039,6 +2048,11 @@ msgstr ""
 msgid "link a transition to one or more entity type"
 msgstr ""
 
+msgid ""
+"link a transition to one or more rql expression allowing to go through this "
+"transition"
+msgstr ""
+
 msgid "link to each item in"
 msgstr ""
 
@@ -2281,6 +2295,9 @@ msgstr ""
 
 msgid "pkey"
 msgstr "key"
+
+msgid "planned_delivery"
+msgstr "planned delivery"
 
 msgid "please correct errors below"
 msgstr ""

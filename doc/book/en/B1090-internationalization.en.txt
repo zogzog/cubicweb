@@ -1,9 +1,9 @@
 .. -*- coding: utf-8 -*-
 
-.. _internationalization:
+.. _internationalisation:
 
 
-Internationalization
+Internationalisation
 ====================
 
 Cubicweb fully supports the internalization of it's content and interface.

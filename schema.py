@@ -932,8 +932,7 @@ class CubicWebSchemaLoader(BootstrapSchemaLoader):
         for filepath in (self.include_schema_files('bootstrap')
                          + self.include_schema_files('base')
                          + self.include_schema_files('workflow')
-                         + self.include_schema_files('Bookmark')
-                         + self.include_schema_files('Card')):
+                         + self.include_schema_files('Bookmark')):
             self.info('loading %s', filepath)
             self.handle_file(filepath)
         for cube in cubes:
