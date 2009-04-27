@@ -187,8 +187,9 @@ class SchemaView(StartupView):
         if section:
             self.wview(section, None)
         self.w(u'</div>')
+
     
-class SchemaPermissionsView(SchemaPermissionsView, SecurityViewMixIn):
+class ManagerSchemaPermissionsView(StartupView, SecurityViewMixIn):
     id = 'schema_security'
     require_groups = ('managers',)
     __selectors__ = StartupView.__selectors__ + (match_user_group,)
