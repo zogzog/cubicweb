@@ -145,14 +145,15 @@ class Widget(object):
     def render_help(self, entity):
         """render a help message about the (edited) field"""
         req = entity.req
-        help = [u'<br/>']
+        help = [u'<div class="helper">']
         descr = self.description or self.rschema.rproperty(self.subjtype, self.objtype, 'description')
         if descr:
-            help.append(u'<span class="helper">%s</span>' % req._(descr))
+            help.append(u'<span>%s</span>' % req._(descr))
         example = self.render_example(req)
         if example:
-            help.append(u'<span class="helper">(%s: %s)</span>'
+            help.append(u'<span>(%s: %s)</span>'
                         % (req._('sample format'), example))
+	help.append(u'</div>')
         return u'&nbsp;'.join(help)
     
     def render_example(self, req):
@@ -755,14 +756,15 @@ class DateWidget(StringWidget):
     def render_help(self, entity):
         """calendar popup widget"""
         req = entity.req
-        help = [ u'<br/>' ]
+        help = [ u'<div class="helper">' ]
         descr = self.rschema.rproperty(self.subjtype, self.objtype, 'description')
         if descr:
-            help.append('<span class="helper">%s</span>' % req._(descr))
+            help.append('<span>%s</span>' % req._(descr))
         example = self.render_example(req)
         if example:
-            help.append('<span class="helper">(%s: %s)</span>'
+            help.append('<span>(%s: %s)</span>'
                         % (req._('sample format'), example))
+	help.append(u'</div>')
         return u'&nbsp;'.join(help)
 
     def render_calendar_popup(self, entity):
