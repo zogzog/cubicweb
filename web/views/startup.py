@@ -183,11 +183,12 @@ class SchemaView(StartupView):
                    (html_escape(ajax_replace_url('detailed_schema', '', 'schema_security',
                                                  skipmeta=int(not withmeta))),
                 self.req._('security')))
-        self.w(u'<div id="detailed_schema"></div>')
+        self.w(u'<div id="detailed_schema">')
         if section:
             self.wview(section, None)
-           
-class SchemaPermissionsView(StartupView, SecurityViewMixIn):
+        self.w(u'</div>')
+    
+class SchemaPermissionsView(SchemaPermissionsView, SecurityViewMixIn):
     id = 'schema_security'
     require_groups = ('managers',)
     __selectors__ = StartupView.__selectors__ + (match_user_group,)
