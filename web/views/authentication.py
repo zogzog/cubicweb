@@ -74,7 +74,7 @@ class RepositoryAuthenticationManager(AbstractAuthenticationManager):
             login, password = _login, _password
         else:
             login, password = req.get_authorization()
-        if '@' in (login or u''):
+        if self.vreg.config['allow-email-login'] and '@' in (login or u''):
             login = self.login_from_email(login)
         if not login:
             # No session and no login -> try anonymous

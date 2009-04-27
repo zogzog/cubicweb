@@ -333,12 +333,19 @@ class ApplicationTC(EnvBasedTC):
         self.assertRaises(AuthenticationError, self.publish, req, 'logout')
         self.assertEquals(len(self.open_sessions), 0) 
 
-    def test_cookie_auth_no_anon_login_by_email(self):
+    def test_login_by_email(self):
         login = self.request().user.login
         address = login + u'@localhost'
         self.execute('INSERT EmailAddress X: X address %(address)s, U primary_email X '
                      'WHERE U login %(login)s', {'address': address, 'login': login})
         self.commit()
+        # option allow-email-login not set
+        req, origcnx = self._init_auth('cookie')
+        req.form['__login'] = address
+        req.form['__password'] = origcnx.password
+        self._test_auth_fail(req)
+        # option allow-email-login set
+        self.set_option('allow-email-login', True)
         req, origcnx = self._init_auth('cookie')
         req.form['__login'] = address
         req.form['__password'] = origcnx.password
