@@ -333,6 +333,19 @@ class ApplicationTC(EnvBasedTC):
         self.assertRaises(AuthenticationError, self.publish, req, 'logout')
         self.assertEquals(len(self.open_sessions), 0) 
 
+    def test_cookie_auth_no_anon_login_by_email(self):
+        login = self.request().user.login
+        address = login + u'@localhost'
+        self.execute('INSERT EmailAddress X: X address %(address)s, U primary_email X '
+                     'WHERE U login %(login)s', {'address': address, 'login': login})
+        self.commit()
+        req, origcnx = self._init_auth('cookie')
+        req.form['__login'] = address
+        req.form['__password'] = origcnx.password
+        self._test_auth_succeed(req, origcnx)
+        self.assertRaises(AuthenticationError, self.publish, req, 'logout')
+        self.assertEquals(len(self.open_sessions), 0) 
+
     def _test_auth_anon(self, req):
         self.app.connect(req)
         acnx = req.cnx
@@ -384,8 +397,6 @@ class ApplicationTC(EnvBasedTC):
         self.assertRaises(AuthenticationError, self.publish, req, 'logout')
         self.assertEquals(len(self.open_sessions), 0) 
 
-    
 
-        
 if __name__ == '__main__':
     unittest_main()
