@@ -192,7 +192,6 @@ class SchemaView(StartupView):
 class ManagerSchemaPermissionsView(StartupView, SecurityViewMixIn):
     id = 'schema_security'
     require_groups = ('managers',)
-    __selectors__ = StartupView.__selectors__ + (match_user_group,)
 
     def call(self, display_relations=True,
              skiprels=('is', 'is_instance_of', 'identity', 'owned_by', 'created_by')):
