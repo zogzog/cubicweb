@@ -111,7 +111,7 @@ class SystemEPropertiesForm(FormViewMixIn, StartupView):
         w(u'<div id="progress">%s</div>' % self.req._('validating...'))
         for label, group, form in sorted((_(g), g, f)
                                          for g, f in mainopts.iteritems()):
-            status = css_class(self._group_status(group)) 
+            status = css_class(self._group_status(group))
             w(u'<h2 class="propertiesform">%s</h2>\n' %
               (make_togglable_link('fieldset_' + group, label,
                                    self._cookie_name(group))))
@@ -165,14 +165,14 @@ class SystemEPropertiesForm(FormViewMixIn, StartupView):
         buttons = [SubmitButton(),
                    Button(stdmsgs.BUTTON_CANCEL, cwaction='cancel')]
         form = CompositeForm(self.req, domid=None, action=self.build_url(),
-                             form_buttons=buttons, 
+                             form_buttons=buttons,
                              submitmsg=self.req._('changes applied'))
         path = self.req.relative_path()
         if '?' in path:
             path, params = path.split('?', 1)
             form.form_add_hidden('__redirectparams', params)
         form.form_add_hidden('__redirectpath', path)
-        for key in keys:            
+        for key in keys:
             self.form_row(form, key, splitlabel)
         return form.form_render(display_progress_div=False)
 
@@ -203,7 +203,7 @@ class EPropertiesForm(SystemEPropertiesForm):
         (none_rset() | ((one_line_rset() & is_user_prefs) &
                         (one_line_rset() & match_user_groups('managers'))))
         )
-    
+
     title = _('preferences')
 
     @property
@@ -229,7 +229,7 @@ class EPropertiesForm(SystemEPropertiesForm):
 # eproperty form objects ######################################################
 
 class PlaceHolderWidget(object):
-    
+
     def render(self, form, field):
         domid = form.context[field]['id']
         # empty span as well else html validation fail (label is refering to
@@ -242,7 +242,7 @@ class NotEditableWidget(object):
     def __init__(self, value, msg=None):
         self.value = value
         self.msg = msg
-    
+
     def render(self, form, field):
         domid = form.context[field]['id']
         value = '<span class="value" id="%s">%s</span>' % (domid, self.value)
@@ -256,14 +256,14 @@ class PropertyKeyField(StringField):
     the selected key
     """
     widget = Select
-    
+
     def render(self, form, renderer):
         wdg = self.get_widget(form)
         wdg.attrs['tabindex'] = form.req.next_tabindex()
         wdg.attrs['onchange'] = "javascript:setPropValueWidget('%s', %s)" % (
             form.edited_entity.eid, form.req.next_tabindex())
         return wdg.render(form, self)
-    
+
     def vocabulary(self, form):
         entity = form.edited_entity
         _ = form.req._
@@ -279,7 +279,7 @@ class PropertyValueField(StringField):
     the selected key type and vocabulary information
     """
     widget = PlaceHolderWidget
-    
+
     def render(self, form, renderer=None, tabindex=None):
         wdg = self.get_widget(form)
         if tabindex is not None:
@@ -326,4 +326,4 @@ class PropertyValueField(StringField):
 
 uicfg.rfields.set_rtag(PropertyKeyField, 'pkey', 'subject', 'CWProperty')
 uicfg.rfields.set_rtag(PropertyValueField, 'value', 'subject', 'CWProperty')
-    
+
