@@ -157,7 +157,7 @@ class SchemaViewer(object):
             return layout
         _ = self.req._
         if self.req.user.matching_groups('managers'):
-            layout.append(self.format_acls(eschema, ('read', 'add', 'delete', 'update')))
+            # layout.append(self.format_acls(eschema, ('read', 'add', 'delete', 'update')))
             # possible views for this entity type
             views = [_(view.title) for view in self.possible_views(etype)]
             layout.append(Section(children=(Table(cols=1, rheaders=1,
