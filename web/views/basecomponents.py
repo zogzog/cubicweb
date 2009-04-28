@@ -154,7 +154,6 @@ class ApplicationName(Component):
 class SeeAlsoVComponent(RelatedObjectsVComponent):
     """display any entity's see also"""
     id = 'seealso'
-    property_defs = VISIBLE_PROP_DEF
     context = 'navcontentbottom'
     rtype = 'see_also'
     target = 'object'
