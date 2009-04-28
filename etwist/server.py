@@ -10,6 +10,7 @@ import sys
 import select
 from time import mktime
 from datetime import date, timedelta
+from urlparse import urlsplit, urlunsplit
 
 from twisted.application import service, strports
 from twisted.internet import reactor, task, threads
@@ -167,6 +168,12 @@ class CubicWebRootResource(resource.PostableResource):
         else:
             https = False
             baseurl = self.base_url
+        if self.config['use-request-subdomain']:
+            scheme, netloc, url, query, fragment = urlsplit(baseurl)
+            if '.' in netloc:
+                netloc = '.'.join(host.split('.')[:1] + netloc.split('.')[1:])
+            baseurl = urlunsplit((scheme, netloc, url, query, fragment))
+            self.warning('base_url is %s for this request', baseurl)
         req = CubicWebTwistedRequestAdapter(request, self.appli.vreg, https, baseurl)
         if req.authmode == 'http':
             # activate realm-based auth

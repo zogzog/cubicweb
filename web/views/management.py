@@ -22,8 +22,47 @@ _ = unicode
 SUBMIT_MSGID = _('Submit bug report')
 MAIL_SUBMIT_MSGID = _('Submit bug report by mail')
 
+class SecurityViewMixIn(object):
+    """display security information for a given schema """
+    def schema_definition(self, eschema, link=True,  access_types=None):
+        w = self.w
+        _ = self.req._
+        if not access_types:
+            access_types = eschema.ACTIONS
+        w(u'<table class="schemaInfo">')
+        w(u'<tr><th>%s</th><th>%s</th><th>%s</th></tr>' % ( 
+            _("permission"), _('granted to groups'), _('rql expressions')))
+        for access_type in access_types:
+            w(u'<tr>')
+            w(u'<td>%s</td>' % _('%s_perm' % access_type))
+            groups = eschema.get_groups(access_type)
+            l = []
+            groups = [(_(group), group) for group in groups]
+            for trad, group in sorted(groups):
+                if link:
+                    l.append(u'<a href="%s" class="%s">%s</a><br/>' % (
+                    self.build_url('egroup/%s' % group), group, trad))
+                else:
+                    l.append(u'<div class="%s">%s</div>' % (group, trad))
+            w(u'<td>%s</td>' % u''.join(l))
+            rqlexprs = eschema.get_rqlexprs(access_type)
+            w(u'<td>%s</td>' % u'<br/><br/>'.join(expr.expression for expr in rqlexprs))
+            w(u'</tr>\n')
+        w(u'</table>')
 
-class SecurityManagementView(EntityView):
+    def has_schema_modified_permissions(self, eschema, access_types):
+        """ return True if eschema's actual permissions are diffrents
+        from the default ones
+        """
+        for access_type in access_types:
+            if eschema.get_rqlexprs(access_type):
+                return True
+            if eschema.get_groups(access_type) != \
+                    frozenset(eschema.get_default_groups()[access_type]):
+                return True
+        return False
+
+class SecurityManagementView(EntityView, SecurityViewMixIn):
     """display security information for a given entity"""
     id = 'security'
     title = _('security')
@@ -40,7 +79,7 @@ class SecurityManagementView(EntityView):
              html_escape(entity.dc_title())))
         # first show permissions defined by the schema
         self.w('<h2>%s</h2>' % _('schema\'s permissions definitions'))
-        self.schema_definition(entity)
+        self.schema_definition(entity.e_schema)
         self.w('<h2>%s</h2>' % _('manage security'))
         # ownership information
         if self.schema.rschema('owned_by').has_perm(self.req, 'add',
@@ -48,33 +87,13 @@ class SecurityManagementView(EntityView):
             self.owned_by_edit_form(entity)
         else:
             self.owned_by_information(entity)
-        # epermissions
+        # cwpermissions
         if 'require_permission' in entity.e_schema.subject_relations():
             w('<h3>%s</h3>' % _('permissions for this entity'))
             reqpermschema = self.schema.rschema('require_permission')
             self.require_permission_information(entity, reqpermschema)
             if reqpermschema.has_perm(self.req, 'add', fromeid=entity.eid):
                 self.require_permission_edit_form(entity)
-
-    def schema_definition(self, entity):
-        w = self.w
-        _ = self.req._
-        w(u'<table class="schemaInfo">')
-        w(u'<tr><th>%s</th><th>%s</th><th>%s</th></tr>' % (
-            _("access type"), _('granted to groups'), _('rql expressions')))
-        for access_type in ('read', 'add', 'update', 'delete'):
-            w(u'<tr>')
-            w(u'<th>%s</th>' % self.req.__('%s_permission' % access_type))
-            groups = entity.e_schema.get_groups(access_type)
-            l = []
-            for group in groups:
-                l.append(u'<a href="%s">%s</a>' % (
-                    self.build_url('egroup/%s' % group), _(group)))
-            w(u'<td>%s</td>' % u', '.join(l))
-            rqlexprs = entity.e_schema.get_rqlexprs(access_type)
-            w(u'<td>%s</td>' % u'<br/>'.join(expr.expression for expr in rqlexprs))
-            w(u'</tr>\n')
-        w(u'</table>')
 
     def owned_by_edit_form(self, entity):
         self.w('<h3>%s</h3>' % self.req._('ownership'))
@@ -116,18 +135,18 @@ class SecurityManagementView(EntityView):
             w(u'<table class="schemaInfo">')
             w(u'<tr><th>%s</th><th>%s</th></tr>' % (_("permission"),
                                                     _('granted to groups')))
-            for eperm in entity.require_permission:
+            for cwperm in entity.require_permission:
                 w(u'<tr>')
                 if dellinktempl:
-                    w(u'<td>%s%s</td>' % (dellinktempl % eperm.eid,
-                                          eperm.view('oneline')))
+                    w(u'<td>%s%s</td>' % (dellinktempl % cwperm.eid,
+                                          cwperm.view('oneline')))
                 else:
-                    w(u'<td>%s</td>' % eperm.view('oneline'))
-                w(u'<td>%s</td>' % self.view('csv', eperm.related('require_group'), 'null'))
+                    w(u'<td>%s</td>' % cwperm.view('oneline'))
+                w(u'<td>%s</td>' % self.view('csv', cwperm.related('require_group'), 'null'))
                 w(u'</tr>\n')
             w(u'</table>')
         else:
-            self.w(self.req._('no associated epermissions'))
+            self.w(self.req._('no associated permissions'))
 
     def require_permission_edit_form(self, entity):
         w = self.w

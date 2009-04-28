@@ -9,19 +9,90 @@
 /* security edition form (views/management.py)                                */
 /******************************************************************************/
 
+h2.schema{
+ background : #ff7700;
+ color: #fff;
+ font-weight: bold;
+ padding : 0.1em 0.3em;
+}
+
+
+h3.schema{ 
+ font-weight: bold;
+}
+
+h4 a,
+h4 a:link,
+h4 a:visited{ 
+ color:#000;
+ }
+
 table.schemaInfo {
-  margin: 1ex 1em;
+  margin: 1em 0em;
   text-align: left;
   border: 1px solid black;
   border-collapse: collapse;
+  width:100%;
 }
 
 table.schemaInfo th,
 table.schemaInfo td {
-  padding: 0em 1em;
-  border: 1px solid black;
+  padding: .3em .5em;
+  border: 1px solid grey;
+  width:33%; 
 }
 
+
+table.schemaInfo tr th {   
+ padding: 0.2em 0px 0.2em 5px;
+ background-image:none;
+ background-color:#dfdfdf;
+}
+
+table.schemaInfo thead tr {
+  border: 1px solid #dfdfdf;
+} 
+
+table.schemaInfo td {
+  padding: 3px 10px 3px 5px; 
+
+}
+
+.users{ 
+ color : #00CC33;
+ font-weight: bold }
+
+.guests{ 
+ color :  #ff7700;
+ font-weight: bold;
+}
+
+.staff{  
+ color : #0083ab;
+ font-weight: bold;
+}
+
+.owners{ 
+ color : #8b0000;
+ font-weight: bold;
+}
+
+.discret,
+a.grey{ 
+ color:#666;
+}
+
+a.grey:hover{ 
+ color:#000;
+}
+
+.red{ 
+ color :  #ff7700;
+ }
+
+div#schema_security{ 
+ width:780px;
+ }
 /******************************************************************************/
 /* user groups edition form (views/euser.py)                                  */
 /******************************************************************************/

@@ -57,10 +57,11 @@ class CWUserPrimaryView(PrimaryView):
         return entity.name()
 
     def is_side_related(self, rschema, eschema):
+        # XXX only bookmarked_by defined in cw...
         return  rschema.type in ['interested_in', 'tags',
-                                 'todo_by', 'bookmarked_by',
+                                 'todo_by', 'bookmarked_by']
 
-                                 ]
+
 class FoafView(EntityView):
     id = 'foaf'
     __select__ = implements('CWUser')
