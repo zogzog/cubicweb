@@ -9,17 +9,37 @@ CubicWeb.require('htmlhelpers.js');
 
 var JSON_BASE_URL = baseuri() + 'json?';
 
+function _loadAjaxHtmlHead(node, head, tag, srcattr) {
+    var loaded = [];
+    jQuery('head ' + tag).each(function(i) {
+	loaded.push(this.getAttribute(srcattr));
+    });
+    node.find(tag).each(function(i) {
+	if (!loaded.contains(this.getAttribute(srcattr))) {
+	    jQuery(this).appendTo(head);
+	}
+    });
+    node.find(tag).remove();
+}
+
 /*
  * inspect dom response, search for a <div class="ajaxHtmlHead"> node and
  * put its content into the real document's head.
  * This enables dynamic css and js loading and is used by replacePageChunk
  */
 function loadAjaxHtmlHead(node) {
-    jQuery(node).find('div.ajaxHtmlHead').appendTo(jQuery('head'));
+    var head = jQuery('head');
+    var node = jQuery(node).find('div.ajaxHtmlHead');
+    _loadAjaxHtmlHead(node, head, 'script', 'src');
+    _loadAjaxHtmlHead(node, head, 'link', 'href');
+    node.find('*').appendTo(head);
+}
+
+function preprocessAjaxLoad(node, newdomnode) {
+    loadAjaxHtmlHead(newdomnode);
 }
 
 function postAjaxLoad(node) {
-    loadAjaxHtmlHead(node);
     // find sortable tables if there are some
     if (typeof(Sortable) != 'undefined') {
 	Sortable.sortTables(node);
@@ -37,6 +57,7 @@ function postAjaxLoad(node) {
     if (typeof roundedCornersOnLoad != 'undefined') {
 	roundedCornersOnLoad();
     }
+    loadDynamicFragments(node);
     jQuery(CubicWeb).trigger('ajax-loaded');
 }
 
@@ -60,6 +81,7 @@ jQuery.fn.loadxhtml = function(url, data, reqtype, mode) {
     }
     ajax(url, data, function(response) {
 	var domnode = getDomFromResponse(response);
+	preprocessAjaxLoad(node, domnode);
 	if (mode == 'swap') {
 	    var origId = node.id;
 	    node = swapDOM(node, domnode);
@@ -83,8 +105,12 @@ jQuery.fn.loadxhtml = function(url, data, reqtype, mode) {
 /* finds each dynamic fragment in the page and executes the
  * the associated RQL to build them (Async call)
  */
-function loadDynamicFragments() {
-    var fragments = jQuery('div.dynamicFragment');
+function loadDynamicFragments(node) {
+    if (node) {
+	var fragments = jQuery(node).find('div.dynamicFragment');
+    } else {
+	var fragments = jQuery('div.dynamicFragment');
+    }
     if (fragments.length == 0) {
 	return;
     }
@@ -106,7 +132,7 @@ function loadDynamicFragments() {
     }
 }
 
-jQuery(document).ready(loadDynamicFragments);
+jQuery(document).ready(function() {loadDynamicFragments();});
 
 //============= base AJAX functions to make remote calls =====================//
 
