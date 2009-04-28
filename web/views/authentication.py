@@ -51,10 +51,18 @@ class RepositoryAuthenticationManager(AbstractAuthenticationManager):
         # associate the connection to the current request
         req.set_connection(cnx, user)
         return cnx
-        
+
+    def login_from_email(self, login):
+        session = self.repo.internal_session()
+        rset = session.execute('Any L WHERE U login L, U primary_email M, '
+                               'M address %(login)s', {'login': login})
+        if rset.rowcount == 1:
+            login = rset[0][0]
+        return login
+
     def authenticate(self, req, _login=None, _password=None):
         """authenticate user and return corresponding user object
-        
+
         :raise ExplicitLogin: if authentication is required (no authentication
         info found or wrong user/password)
 
@@ -66,6 +74,8 @@ class RepositoryAuthenticationManager(AbstractAuthenticationManager):
             login, password = _login, _password
         else:
             login, password = req.get_authorization()
+        if self.vreg.config['allow-email-login'] and '@' in (login or u''):
+            login = self.login_from_email(login)
         if not login:
             # No session and no login -> try anonymous
             login, password = self.vreg.config.anonymous_user()
