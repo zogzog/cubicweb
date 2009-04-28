@@ -4,6 +4,11 @@
 :organization: Logilab
 :copyright: 2001-2009 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
+
+.. envvar:: CW_CUBES_PATH
+
+   Augments the default search path for cubes
+   
 """
 __docformat__ = "restructuredtext en"
 

@@ -24,13 +24,13 @@ _ = unicode
 
 class BoxTemplate(View):
     """base template for boxes, usually a (contextual) list of possible
-    
+
     actions. Various classes attributes may be used to control the box
     rendering.
-    
+
     You may override on of the formatting callbacks is this is not necessary
     for your custom box.
-    
+
     Classes inheriting from this class usually only have to override call
     to fetch desired actions, and then to do something like  ::
 
@@ -39,7 +39,7 @@ class BoxTemplate(View):
     __registry__ = 'boxes'
     __select__ = match_context_prop()
     registered = classmethod(require_group_compat(View.registered))
-    
+
     categories_in_order = ()
     property_defs = {
         _('visible'): dict(type='Boolean', default=True,
@@ -76,9 +76,9 @@ class BoxTemplate(View):
         if escape:
             title = html_escape(title)
         return self.box_action(self._action(title, path, **kwargs))
-    
+
     def _action(self, title, path, **kwargs):
-        return UnregisteredAction(self.req, self.rset, title, path, **kwargs)        
+        return UnregisteredAction(self.req, self.rset, title, path, **kwargs)
 
     # formating callbacks
 
@@ -91,12 +91,12 @@ class BoxTemplate(View):
         cls = getattr(action, 'html_class', lambda: None)() or self.htmlitemclass
         return BoxLink(action.url(), self.req._(action.title),
                        cls, self.boxitem_link_tooltip(action))
-        
+
 
 class RQLBoxTemplate(BoxTemplate):
     """abstract box for boxes displaying the content of a rql query not
     related to the current result set.
-    
+
     It rely on etype, rtype (both optional, usable to control registration
     according to application schema and display according to connected
     user's rights) and rql attributes
@@ -104,11 +104,11 @@ class RQLBoxTemplate(BoxTemplate):
 #XXX    __selectors__ = BoxTemplate.__selectors__ + (etype_rtype_selector,)
 
     rql  = None
-    
+
     def to_display_rql(self):
         assert self.rql is not None, self.id
         return (self.rql,)
-    
+
     def call(self, **kwargs):
         try:
             rset = self.req.execute(*self.to_display_rql())
@@ -123,7 +123,7 @@ class RQLBoxTemplate(BoxTemplate):
             box.append(self.mk_action(tname, entity.absolute_url()))
         box.render(w=self.w)
 
-        
+
 class UserRQLBoxTemplate(RQLBoxTemplate):
     """same as rql box template but the rql is build using the eid of the
     request's user
@@ -132,14 +132,14 @@ class UserRQLBoxTemplate(RQLBoxTemplate):
     def to_display_rql(self):
         assert self.rql is not None, self.id
         return (self.rql, {'x': self.req.user.eid}, 'x')
-    
+
 
 class EntityBoxTemplate(BoxTemplate):
     """base class for boxes related to a single entity"""
     __select__ = BoxTemplate.__select__ & one_line_rset() & primary_view()
     registered = accepts_compat(has_relation_compat(condition_compat(BoxTemplate.registered)))
     context = 'incontext'
-    
+
     def call(self, row=0, col=0, **kwargs):
         """classes inheriting from EntityBoxTemplate should define cell_call"""
         self.cell_call(row, col, **kwargs)
@@ -165,7 +165,7 @@ class EditRelationBoxTemplate(ReloadableMixIn, EntityBoxTemplate):
     subclasses should define at least id, rtype and target
     class attributes.
     """
-    
+
     def cell_call(self, row, col, view=None):
         self.req.add_js('cubicweb.ajax.js')
         entity = self.entity(row, col)
@@ -178,7 +178,7 @@ class EditRelationBoxTemplate(ReloadableMixIn, EntityBoxTemplate):
 
     def div_id(self):
         return self.id
-        
+
     def box_item(self, entity, etarget, rql, label):
         """builds HTML link to edit relation between `entity` and `etarget`
         """
@@ -189,7 +189,7 @@ class EditRelationBoxTemplate(ReloadableMixIn, EntityBoxTemplate):
         label = u'[<a href="%s">%s</a>] %s' % (url, label,
                                                etarget.view('incontext'))
         return RawBoxItem(label, liclass=u'invisible')
-    
+
     def w_related(self, box, entity):
         """appends existing relations to the `box`"""
         rql = 'DELETE S %s O WHERE S eid %%(s)s, O eid %%(o)s' % self.rtype
@@ -197,7 +197,7 @@ class EditRelationBoxTemplate(ReloadableMixIn, EntityBoxTemplate):
         for etarget in related:
             box.append(self.box_item(entity, etarget, rql, u'-'))
         return len(related)
-    
+
     def w_unrelated(self, box, entity):
         """appends unrelated entities to the `box`"""
         rql = 'SET S %s O WHERE S eid %%(s)s, O eid %%(o)s' % self.rtype
@@ -220,7 +220,7 @@ class EditRelationBoxTemplate(ReloadableMixIn, EntityBoxTemplate):
                 rset = self.req.eid_rset(eid)
                 entities.append(rset.get_entity(0, 0))
         return entities
-        
+
     def related_entities(self, entity):
         return entity.related(self.rtype, get_role(self), entities=True)
 

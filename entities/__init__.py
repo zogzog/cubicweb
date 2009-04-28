@@ -23,7 +23,7 @@ class AnyEntity(Entity):
     """an entity instance has e_schema automagically set on the class and
     instances have access to their issuing cursor
     """
-    id = 'Any'                    
+    id = 'Any'
     __implements__ = (IBreadCrumbs, IFeed)
 
     @classmethod
@@ -38,7 +38,7 @@ class AnyEntity(Entity):
         usercls.id = etype
         usercls.__initialize__()
         return usercls
-    
+
     fetch_attrs = ('modification_date',)
     @classmethod
     def fetch_order(cls, attr, var):
@@ -46,7 +46,7 @@ class AnyEntity(Entity):
         this type are fetched
         """
         return cls.fetch_unrelated_order(attr, var)
-    
+
     @classmethod
     def fetch_unrelated_order(cls, attr, var):
         """class method used to control sort order when multiple entities of
@@ -58,7 +58,7 @@ class AnyEntity(Entity):
         return None
 
     @classmethod
-    def __initialize__(cls): 
+    def __initialize__(cls):
         super(ANYENTITY, cls).__initialize__() # XXX
         # set a default_ATTR method for rich text format fields
         # XXX move this away once the old widgets have been dropped!
@@ -66,7 +66,7 @@ class AnyEntity(Entity):
         for metaattr, (metadata, attr) in eschema.meta_attributes().iteritems():
             if metadata == 'format' and not hasattr(cls, 'default_%s' % metaattr):
                 setattr(cls, 'default_%s' % metaattr, cls._default_format)
-    
+
     # meta data api ###########################################################
 
     def dc_title(self):
@@ -84,7 +84,7 @@ class AnyEntity(Entity):
     def dc_long_title(self):
         """return a more detailled title for this entity"""
         return self.dc_title()
-    
+
     def dc_description(self, format='text/plain'):
         """return a suitable description for this entity"""
         if self.e_schema.has_subject_relation('description'):
@@ -121,7 +121,7 @@ class AnyEntity(Entity):
                                  'internationalizable'):
                 return self.req._(self.req.user.property_value('ui.language'))
         return self.req._(self.vreg.property_value('ui.language'))
-        
+
     @property
     def creator(self):
         """return the CWUser entity which has created this entity, or None if
@@ -157,9 +157,9 @@ class AnyEntity(Entity):
 
     def rss_feed_url(self):
         return self.absolute_url(vid='rss')
-    
+
     # abstractions making the whole things (well, some at least) working ######
-        
+
     def sortvalue(self, rtype=None):
         """return a value which can be used to sort this entity or given
         entity's attribute
@@ -172,7 +172,7 @@ class AnyEntity(Entity):
             return self.printable_value(rtype, format='text/plain').lower()
         return value
 
-    # edition helper functions ################################################    
+    # edition helper functions ################################################
 
     def linked_to(self, rtype, target, remove=True):
         """if entity should be linked to another using __linkto form param for
@@ -200,9 +200,9 @@ class AnyEntity(Entity):
                 linkedto.append(typed_eid(eid))
         self.__linkto[(rtype, target)] = linkedto
         return linkedto
-    
+
     # edit controller callbacks ###############################################
-    
+
     def after_deletion_path(self):
         """return (path, parameters) which should be used as redirect
         information when this entity is being deleted
@@ -216,20 +216,20 @@ class AnyEntity(Entity):
         Do nothing by default.
         """
         pass
-    
+
     # server side helpers #####################################################
-    
+
     def notification_references(self, view):
         """used to control References field of email send on notification
         for this entity. `view` is the notification view.
-        
+
         Should return a list of eids which can be used to generate message ids
         of previously sent email
         """
         return ()
-            
+
     # XXX deprecates, may be killed once old widgets system is gone ###########
-    
+
     @classmethod
     def get_widget(cls, rschema, x='subject'):
         """return a widget to view or edit a relation
@@ -258,7 +258,7 @@ class AnyEntity(Entity):
     def object_relation_vocabulary(self, rtype, limit):
         from cubicweb.web.form import EntityFieldsForm
         return EntityFieldsForm(self.req, None, entity=self).object_relation_vocabulary(rtype, limit)
-    
+
     @obsolete('use AutomaticEntityForm.[e]relations_by_category')
     def relations_by_category(self, categories=None, permission=None):
         from cubicweb.web.views.editforms import AutomaticEntityForm
@@ -268,10 +268,10 @@ class AnyEntity(Entity):
     def srelations_by_category(self, categories=None, permission=None):
         from cubicweb.web.views.editforms import AutomaticEntityForm
         return AutomaticEntityForm.esrelations_by_category(self, categories, permission)
-    
+
     def _default_format(self):
         return self.req.property_value('ui.default-text-format')
-                
+
     def attribute_values(self, attrname):
         if self.has_eid() or attrname in self:
             try:
