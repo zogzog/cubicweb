@@ -27,11 +27,11 @@ uicfg.rinlined.set_rtag(True, 'from_entity', 'subject', 'CWRelation')
 uicfg.rinlined.set_rtag(True, 'to_entity', 'subject', 'CWRelation')
 uicfg.rwidgets.set_rtag('StringWidget', 'expression', 'subject', 'RQLExpression')
 
-uicfg.rmode.set_rtag('create', 'state_of', 'object', 'CWEType')
-uicfg.rmode.set_rtag('create', 'transition_of', 'object', 'CWEType')
-uicfg.rmode.set_rtag('create', 'relation_type', 'object', 'CWRType')
-uicfg.rmode.set_rtag('link', 'from_entity', 'object', 'CWEType')
-uicfg.rmode.set_rtag('link', 'to_entity', 'object', 'CWEType')
+uicfg.rmode.set_rtag('create', 'state_of', 'object', otype='CWEType')
+uicfg.rmode.set_rtag('create', 'transition_of', 'object', otype='CWEType')
+uicfg.rmode.set_rtag('create', 'relation_type', 'object', otype='CWRType')
+uicfg.rmode.set_rtag('link', 'from_entity', 'object', otype='CWEType')
+uicfg.rmode.set_rtag('link', 'to_entity', 'object', otype='CWEType')
 
 
 class ViewSchemaAction(action.Action):

@@ -26,8 +26,8 @@ from cubicweb.web.views.boxes import EditBox
 _ = unicode
 
 EditBox.rmode.set_rtag('create', 'destination_state', 'subject', 'Transition')
-EditBox.rmode.set_rtag('create', 'allowed_transition', 'object', 'Transition')
-EditBox.rmode.set_rtag('create', 'destination_state', 'object', 'State')
+EditBox.rmode.set_rtag('create', 'allowed_transition', 'object', otype='Transition')
+EditBox.rmode.set_rtag('create', 'destination_state', 'object', otype='State')
 EditBox.rmode.set_rtag('create', 'allowed_transition', 'subject', 'State')
 
 
@@ -38,8 +38,8 @@ class ChangeStateForm(form.EntityFieldsForm):
 
     __method = StringField(name='__method', initial='set_state',
                            widget=HiddenInput)
-    state = StringField(label=_('state'), eidparam=True, widget=HiddenInput)
-    trcomment = RichTextField(label=_('trcomment'), eidparam=True)
+    state = StringField(eidparam=True, widget=HiddenInput)
+    trcomment = RichTextField(label=_('comment:'), eidparam=True)
     form_buttons = [SubmitButton(stdmsgs.YES),
                      Button(stdmsgs.NO, cwaction='cancel')]
 

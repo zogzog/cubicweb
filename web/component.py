@@ -62,6 +62,11 @@ class NavigationComponent(Component):
     id = 'navigation'
     __select__ = paginated_rset()
 
+    property_defs = {
+        _('visible'):  dict(type='Boolean', default=True,
+                            help=_('display the component or not')),
+        }
+
     page_size_property = 'navigation.page-size'
     start_param = '__start'
     stop_param = '__stop'

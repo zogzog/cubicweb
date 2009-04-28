@@ -480,10 +480,7 @@ class Component(ReloadableMixIn, View):
     """base class for components"""
     __registry__ = 'components'
     __select__ = yes()
-    property_defs = {
-        _('visible'):  dict(type='Boolean', default=True,
-                            help=_('display the component or not')),
-        }
+    property_defs = {}
 
     def div_class(self):
         return '%s %s' % (self.propval('htmlclass'), self.id)

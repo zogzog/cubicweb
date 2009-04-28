@@ -20,12 +20,16 @@ from cubicweb.web.component import Component, RelatedObjectsVComponent
 
 _ = unicode
 
+VISIBLE_PROP_DEF = {
+    _('visible'):  dict(type='Boolean', default=False,
+                        help=_('display the component or not')),
+    }
 
 class RQLInputForm(Component):
     """build the rql input form, usually displayed in the header"""
     id = 'rqlinput'
-    visible = False
-       
+    property_defs = VISIBLE_PROP_DEF
+
     def call(self, view=None):
         if hasattr(view, 'filter_box_context_info'):
             rset = view.filter_box_context_info()[0]
@@ -53,7 +57,10 @@ class RQLInputForm(Component):
 class ApplLogo(Component):
     """build the application logo, usually displayed in the header"""
     id = 'logo'
-    site_wide = True # don't want user to hide this component using an eproperty
+    property_defs = VISIBLE_PROP_DEF
+    # don't want user to hide this component using an cwproperty
+    site_wide = True
+
     def call(self):
         self.w(u'<a href="%s"><img class="logo" src="%s" alt="logo"/></a>'
                % (self.req.base_url(), self.req.external_resource('LOGO')))
@@ -62,6 +69,7 @@ class ApplLogo(Component):
 class ApplHelp(Component):
     """build the help button, usually displayed in the header"""
     id = 'help'
+    property_defs = VISIBLE_PROP_DEF
     def call(self):
         self.w(u'<a href="%s" class="help" title="%s">&nbsp;</a>'
                % (self.build_url(_restpath='doc/main'),
@@ -72,8 +80,10 @@ class UserLink(Component):
     """if the user is the anonymous user, build a link to login
     else a link to the connected user object with a loggout link
     """
+    property_defs = VISIBLE_PROP_DEF
+    # don't want user to hide this component using an cwproperty
+    site_wide = True
     id = 'loggeduserlink'
-    site_wide = True # don't want user to hide this component using an eproperty
 
     def call(self):
         if not self.req.cnx.anonymous_connection:
@@ -93,7 +103,7 @@ class UserLink(Component):
             box.render(w=self.w)
         else:
             self.anon_user_link()
-            
+
     def anon_user_link(self):
         if self.config['auth-mode'] == 'cookie':
             self.w(self.req._('anonymous'))
@@ -116,7 +126,9 @@ class ApplicationMessage(Component):
     """
     __select__ = yes()
     id = 'applmessages'
-    site_wide = True # don't want user to hide this component using an eproperty
+    property_defs = VISIBLE_PROP_DEF
+    # don't want user to hide this component using an cwproperty
+    site_wide = True
 
     def call(self):
         msgs = [msg for msg in (self.req.get_shared_data('sources_error', pop=True),
@@ -132,15 +144,17 @@ class ApplicationMessage(Component):
 class ApplicationName(Component):
     """display the application name"""
     id = 'appliname'
+    property_defs = VISIBLE_PROP_DEF
 
     def call(self):
         self.w(u'<span id="appliName"><a href="%s">%s</a></span>' % (self.req.base_url(),
                                                          self.req.property_value('ui.site-title')))
-        
+
 
 class SeeAlsoVComponent(RelatedObjectsVComponent):
     """display any entity's see also"""
     id = 'seealso'
+    property_defs = VISIBLE_PROP_DEF
     context = 'navcontentbottom'
     rtype = 'see_also'
     target = 'object'
@@ -149,7 +163,7 @@ class SeeAlsoVComponent(RelatedObjectsVComponent):
     title = _('contentnavigation_seealso')
     help = _('contentnavigation_seealso_description')
 
-    
+
 class EtypeRestrictionComponent(Component):
     """displays the list of entity types contained in the resultset
     to be able to filter accordingly.
@@ -157,8 +171,11 @@ class EtypeRestrictionComponent(Component):
     id = 'etypenavigation'
     __select__ = two_etypes_rset() | match_form_params('__restrtype', '__restrtypes',
                                                        '__restrrql')
+    property_defs = VISIBLE_PROP_DEF
+    # don't want user to hide this component using an cwproperty
+    site_wide = True
     visible = False # disabled by default
-    
+
     def call(self):
         _ = self.req._
         self.w(u'<div id="etyperestriction">')
@@ -197,7 +214,7 @@ class EtypeRestrictionComponent(Component):
             html.insert(0, u'<span class="selected">%s</span>' % _('Any'))
         self.w(u'&nbsp;|&nbsp;'.join(html))
         self.w(u'</div>')
-        
+
 
 def registration_callback(vreg):
     vreg.register_all(globals().values(), __name__, (SeeAlsoVComponent,))
