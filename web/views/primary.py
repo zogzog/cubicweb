@@ -44,27 +44,41 @@ class PrimaryView(EntityView):
 
     def render_entity(self, entity):
         """return html to display the given entity"""
-        siderelations = []
         self.render_entity_title(entity)
         self.render_entity_metadata(entity)
         # entity's attributes and relations, excluding meta data
         # if the entity isn't meta itself
-        boxes = self._preinit_side_related(entity, siderelations)
+        boxes = self._preinit_side_related(entity)
         if boxes:
             self.w(u'<table width="100%"><tr><td width="75%">')
         self.w(u'<div>')
         self.w(u'<div class="mainInfo">')
-        self.render_entity_attributes(entity, siderelations)
+        try:
+            self.render_entity_attributes(entity)
+        except TypeError: # XXX bw compat
+            warn('siderelations argument of render_entity_attributes is '
+                 'deprecated')
+            self.render_entity_attributes(entity, [])
         self.w(u'</div>')
         self.content_navigation_components('navcontenttop')
         if self.main_related_section:
-            self.render_entity_relations(entity, siderelations)
+            try:
+                self.render_entity_relations(entity)
+            except TypeError: # XXX bw compat
+                warn('siderelations argument of render_entity_relations is '
+                     'deprecated')
+                self.render_entity_relations(entity, [])
         self.w(u'</div>')
         if boxes:
             self.w(u'</td><td>')
             # side boxes
             self.w(u'<div class="primaryRight">')
-            self.render_side_related(entity, siderelations)
+            try:
+                self.render_side_related(entity)
+            except TypeError: # XXX bw compat
+                warn('siderelations argument of render_entity_relations is '
+                     'deprecated')
+                self.render_entity_relations(entity, [])
             self.w(u'</div>')
             self.w(u'</td></tr></table>')
         self.content_navigation_components('navcontentbottom')
@@ -117,7 +131,7 @@ class PrimaryView(EntityView):
         """default implementation return an empty string"""
         return u''
 
-    def render_entity_attributes(self, entity, siderelations):
+    def render_entity_attributes(self, entity, siderelations=None):
         for rschema, targetschema in self.iter_attributes(entity):
             attr = rschema.type
             if targetschema.type in ('Password', 'Bytes'):
@@ -134,56 +148,51 @@ class PrimaryView(EntityView):
                 continue
             self._render_related_entities(entity, rschema, value)
 
-    def _preinit_side_related(self, entity, siderelations):
-        self._sideboxes = None
-        self._related_entities = []
+    def _preinit_side_related(self, entity):
+        self._sideboxes = []
         if hasattr(self, 'get_side_boxes_defs'):
-            self._sideboxes = [(label, rset) for label, rset in self.get_side_boxes_defs(entity)
+            self._sideboxes = [(label, rset, 'sidebox') for label, rset in self.get_side_boxes_defs(entity)
                                if rset]
         else:
             eschema = entity.e_schema
             maxrelated = self.req.property_value('navigation.related-limit')
-            for rschema, targetschemas, x in self.iter_relations(entity):
+            for rschema, targetschemas, role in self.iter_relations(entity):
+                if self.is_side_related(rschema, eschema):
+                    try:
+                        related = entity.related(rschema.type, role, limit=maxrelated+1)
+                    except Unauthorized:
+                        continue
+                    if not related:
+                        continue
+                    label = display_name(self.req, rschema.type, role)
+                    self._sideboxes.append((label, related, 'autolimited'))
+        self._contextboxes = list(self.vreg.possible_vobjects('boxes', self.req, self.rset,
+                                                                  row=self.row, view=self,
+                                                                  context='incontext'))
+        return self._sideboxes or self._contextboxes
+
+    def render_entity_relations(self, entity, siderelations=None):
+        eschema = entity.e_schema
+        for rschema, targetschemas, x in self.iter_relations(entity):
+            if not self.is_side_related(rschema, eschema):
                 try:
                     related = entity.related(rschema.type, x, limit=maxrelated+1)
                 except Unauthorized:
                     continue
-                if not related:
-                    continue
-                if self.is_side_related(rschema, eschema):
-                    siderelations.append((rschema, related, x))
-                    continue
-                self._related_entities.append((rschema, related, x))
-        self._boxes_in_context = list(self.vreg.possible_vobjects('boxes', self.req, self.rset,
-                                                 row=self.row, view=self,
-                                                 context='incontext'))
-        return self._sideboxes or self._boxes_in_context or self._related_entities or siderelations
-
-    def render_entity_relations(self, entity, siderelations):
-        if self._related_entities:
-            for rschema, related, x in self._related_entities:
                 self._render_related_entities(entity, rschema, related, x)
 
 
-    def render_side_related(self, entity, siderelations):
+    def render_side_related(self, entity, siderelations=None):
         """display side related relations:
         non-meta in a first step, meta in a second step
         """
         if self._sideboxes:
-            for label, rset in self._sideboxes:
+            for label, rset, vid in self._sideboxes:
                 self.w(u'<div class="sideRelated">')
-                self.wview('sidebox', rset, title=label)
+                self.wview(vid, rset, title=label)
                 self.w(u'</div>')
-        elif siderelations:
-            self.w(u'<div class="sideRelated">')
-            for relatedinfos in siderelations:
-                # if not relatedinfos[0].meta:
-                #    continue
-                self._render_related_entities(entity, *relatedinfos)
-            self.w(u'</div>')
-
-        if self._boxes_in_context:
-            for box in self._boxes_in_context:
+        if self._contextboxes:
+            for box in self._contextboxes:
                 try:
                     box.dispatch(w=self.w, row=self.row)
                 except NotImplementedError:
@@ -203,24 +212,31 @@ class PrimaryView(EntityView):
         else:
             if not related:
                 return
-            show_label = self.show_rel_label
-            # if not too many entities, show them all in a list
-            maxrelated = self.req.property_value('navigation.related-limit')
-            if related.rowcount <= maxrelated:
-                if related.rowcount == 1:
-                    value = self.view('incontext', related, row=0)
-                elif 1 < related.rowcount <= 5:
-                    value = self.view('csv', related)
-                else:
-                    value = '<div>' + self.view('simplelist', related) + '</div>'
-            # else show links to display related entities
-            else:
-                rql = related.printable_rql()
-                related.limit(maxrelated)
-                value = '<div>' + self.view('simplelist', related)
-                value += '[<a href="%s">%s</a>]' % (self.build_url(rql=rql),
-                                                    self.req._('see them all'))
-                value +=  '</div>'
+            value = self.view('autolimited', related)
         label = display_name(self.req, rschema.type, role)
         self.field(label, value, show_label=show_label, tr=False)
 
+
+class RelatedView(EntityView):
+    id = 'autolimited'
+    def call(self):
+        # if not too many entities, show them all in a list
+        maxrelated = self.req.property_value('navigation.related-limit')
+        if self.rset.rowcount <= maxrelated:
+            if self.rset.rowcount == 1:
+                self.wview('incontext', self.rset, row=0)
+            elif 1 < self.rset.rowcount <= 5:
+                self.wview('csv', self.rset)
+            else:
+                self.w(u'<div>')
+                self.wview('simplelist', self.rset)
+                self.w(u'</div>')
+        # else show links to display related entities
+        else:
+            rql = self.rset.printable_rql()
+            self.rset.limit(maxself.rset)
+            self.w(u'<div>')
+            self.wview('simplelist', self.rset)
+            self.w(u'[<a href="%s">%s</a>]' % (self.build_url(rql=rql),
+                                               self.req._('see them all')))
+            self.w(u'</div>')
