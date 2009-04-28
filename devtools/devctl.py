@@ -183,7 +183,6 @@ def _generate_schema_pot(w, vreg, schema, libconfig=None, cube=None):
         libvreg.set_schema(libschema) # trigger objects registration
         # prefill done set
         list(_iter_vreg_objids(libvreg, done))
-    print 'done', done
     for objid in _iter_vreg_objids(vreg, done):
         add_msg(w, '%s_description' % objid)
         add_msg(w, objid)
