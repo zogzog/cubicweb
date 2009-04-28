@@ -23,6 +23,7 @@ from cubicweb.web.formwidgets import HiddenInput, SubmitButton, Button
 from cubicweb.web.views import TmpFileViewMixin
 from cubicweb.web.views.boxes import EditBox
 
+_ = unicode
 
 EditBox.rmode.set_rtag('create', 'destination_state', 'subject', 'Transition')
 EditBox.rmode.set_rtag('create', 'allowed_transition', 'object', 'Transition')
@@ -34,15 +35,15 @@ EditBox.rmode.set_rtag('create', 'allowed_transition', 'subject', 'State')
 
 class ChangeStateForm(form.EntityFieldsForm):
     id = 'changestate'
-    
+
     __method = StringField(name='__method', initial='set_state',
                            widget=HiddenInput)
-    state = StringField(widget=HiddenInput, eidparam=True)
-    trcomment = RichTextField(eidparam=True)
+    state = StringField(label=_('state'), eidparam=True, widget=HiddenInput)
+    trcomment = RichTextField(label=_('trcomment'), eidparam=True)
     form_buttons = [SubmitButton(stdmsgs.YES),
                      Button(stdmsgs.NO, cwaction='cancel')]
 
-        
+
 class ChangeStateFormView(FormViewMixIn, view.EntityView):
     id = 'statuschange'
     title = _('status change')
@@ -91,7 +92,7 @@ class WFHistoryVComponent(component.EntityVComponent):
             rql += ', WF owned_by U?'
             displaycols = range(5)
             headers = (_('from_state'), _('to_state'), _('comment'), _('date'),
-                       _('CWUser'))            
+                       _('CWUser'))
         else:
             sel += ',C'
             displaycols = range(4)
@@ -111,7 +112,7 @@ class WFHistoryVComponent(component.EntityVComponent):
 class CellView(view.EntityView):
     id = 'cell'
     __select__ = implements('TrInfo')
-    
+
     def cell_call(self, row, col, cellvid=None):
         self.w(self.entity(row, col).printable_value('comment'))
 
@@ -120,30 +121,30 @@ class StateInContextView(view.EntityView):
     """convenience trick, State's incontext view should not be clickable"""
     id = 'incontext'
     __select__ = implements('State')
-    
+
     def cell_call(self, row, col):
         self.w(html_escape(self.view('textincontext', self.rset,
                                      row=row, col=col)))
 
 
 # workflow images #############################################################
-        
+
 class ViewWorkflowAction(action.Action):
     id = 'workflow'
     __select__ = implements('CWEType') & has_related_entities('state_of', 'object')
-    
+
     category = 'mainactions'
     title = _('view workflow')
     def url(self):
         entity = self.rset.get_entity(self.row or 0, self.col or 0)
         return entity.absolute_url(vid='workflow')
 
-        
+
 class CWETypeWorkflowView(view.EntityView):
     id = 'workflow'
     __select__ = implements('CWEType')
-    cache_max_age = 60*60*2 # stay in http cache for 2 hours by default 
-    
+    cache_max_age = 60*60*2 # stay in http cache for 2 hours by default
+
     def cell_call(self, row, col, **kwargs):
         entity = self.entity(row, col)
         self.w(u'<h1>%s</h1>' % (self.req._('workflow for %s')
@@ -156,10 +157,10 @@ class CWETypeWorkflowView(view.EntityView):
 class WorkflowDotPropsHandler(object):
     def __init__(self, req):
         self._ = req._
-        
+
     def node_properties(self, stateortransition):
         """return default DOT drawing options for a state or transition"""
-        props = {'label': stateortransition.name, 
+        props = {'label': stateortransition.name,
                  'fontname': 'Courier'}
         if hasattr(stateortransition, 'state_of'):
             props['shape'] = 'box'
@@ -179,7 +180,7 @@ class WorkflowDotPropsHandler(object):
             if descr:
                 props['label'] += escape('\n'.join(descr))
         return props
-    
+
     def edge_properties(self, transition, fromstate, tostate):
         return {'label': '', 'dir': 'forward',
                 'color': 'black', 'style': 'filled'}
@@ -193,11 +194,11 @@ class WorkflowVisitor:
         for state in self.entity.reverse_state_of:
             state.complete()
             yield state.eid, state
-            
+
         for transition in self.entity.reverse_transition_of:
             transition.complete()
             yield transition.eid, transition
-            
+
     def edges(self):
         for transition in self.entity.reverse_transition_of:
             for incomingstate in transition.reverse_allowed_transition:
@@ -209,7 +210,7 @@ class CWETypeWorkflowImageView(TmpFileViewMixin, view.EntityView):
     id = 'ewfgraph'
     content_type = 'image/png'
     __select__ = implements('CWEType')
-    
+
     def _generate(self, tmpfile):
         """display schema information for an entity"""
         entity = self.entity(self.row, self.col)
