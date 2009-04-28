@@ -93,8 +93,8 @@ def generate_schema_pot(w, cubedir=None):
         config = DevCubeConfiguration(cube)
         schema = config.load_schema()
     else:
-        schema = config.load_schema()
         config = libconfig
+        schema = config.load_schema()
         libconfig = None
     vreg = CubicWebRegistry(config)
     # set_schema triggers objects registrations
@@ -130,7 +130,7 @@ def _generate_schema_pot(w, vreg, schema, libconfig=None, cube=None):
     w('# subject and object forms for each relation type\n')
     w('# (no object form for final relation types)\n')
     w('\n')
-    if libschema is not None:
+    if libconfig is not None:
         relations = [r for r in schema.relations() if not r in libschema]
     else:
         relations = schema.relations()
@@ -155,9 +155,13 @@ def _generate_schema_pot(w, vreg, schema, libconfig=None, cube=None):
                 if rschema.is_final():
                     continue
                 for teschema in rschema.targets(eschema, role):
-                    if defined_in_library(libschema, eschema, rschema,
-                                          teschema, role):
-                        continue
+                    if libconfig is not None:
+                        if role == 'subject':
+                            subjtype, objtype = etype, tetype
+                        else:
+                            subjtype, objtype = tetype, etype
+                        if libschema.rschema(rtype).has_rdef(subjtype, objtype):
+                            continue
                     if actionbox.relation_mode(rschema, eschema, teschema, role) == 'create':
                         if role == 'subject':
                             label = 'add %s %s %s %s' % (eschema, rschema,
@@ -197,7 +201,7 @@ def _iter_vreg_objids(vreg, done, prefix=None):
                     break
 
 
-def defined_in_library(libschema, etype, rtype, tetype, role):
+def defined_in_library(etype, rtype, tetype, role):
     """return true if the given relation definition exists in cubicweb's library
     """
     if libschema is None:
@@ -271,8 +275,12 @@ class UpdateCubicWebCatalogCommand(Command):
             cmd = 'xgettext --no-location --omit-header -k_ -o %s %s'
             if lang is not None:
                 cmd += ' -L %s' % lang
-            potfiles.append(join(tempdir, '%s.pot' % id))
-            execute(cmd % (potfiles[-1], ' '.join(files)))
+            potfile = join(tempdir, '%s.pot' % id)
+            execute(cmd % (potfile, ' '.join(files)))
+            if exists(potfile):
+                potfiles.append(potfile)
+            else:
+                print 'WARNING: %s file not generated' % potfile
         print '******** merging .pot files'
         cubicwebpot = join(tempdir, 'cubicweb.pot')
         execute('msgcat %s > %s' % (' '.join(potfiles), cubicwebpot))
