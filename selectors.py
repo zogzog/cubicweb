@@ -404,7 +404,7 @@ class non_final_entity(EClassSelector):
 @objectify_selector
 @lltrace
 def authenticated_user(cls, req, *args, **kwargs):
-    """accept if user is anonymous"""
+    """accept if user is authenticated"""
     if req.cnx.anonymous_connection:
         return 0
     return 1
