@@ -22,20 +22,20 @@ uicfg.rcategories.set_rtag('generated', 'owned_by', 'object', otype='CWUser')
 uicfg.rcategories.set_rtag('generated', 'created_by', 'object', otype='CWUser')
 uicfg.rcategories.set_rtag('metadata', 'bookmarked_by', 'object', otype='CWUser')
 uicfg.rinlined.set_rtag(True, 'use_email', 'subject', 'CWUser')
-uicfg.rmode.set_rtag('create', 'in_group', 'subject', 'CWGroup')
-uicfg.rmode.set_rtag('link', 'owned_by', 'object', 'CWUser')
-uicfg.rmode.set_rtag('link', 'created_by', 'object', 'CWUser')
-uicfg.rmode.set_rtag('create', 'bookmarked_by', 'object', 'CWUser')
-    
+uicfg.rmode.set_rtag('create', 'in_group', 'object', otype='CWGroup')
+uicfg.rmode.set_rtag('link', 'owned_by', 'object', otype='CWUser')
+uicfg.rmode.set_rtag('link', 'created_by', 'object', otype='CWUser')
+uicfg.rmode.set_rtag('create', 'bookmarked_by', 'object', otype='CWUser')
+
 
 class UserPreferencesEntityAction(action.Action):
     id = 'prefs'
     __select__ = (one_line_rset() & implements('CWUser') &
                   match_user_groups('owners', 'managers'))
-    
+
     title = _('preferences')
     category = 'mainactions'
-    
+
     def url(self):
         login = self.rset.get_entity(self.row or 0, self.col or 0).login
         return self.build_url('euser/%s'%login, vid='epropertiesform')
@@ -43,9 +43,9 @@ class UserPreferencesEntityAction(action.Action):
 
 class CWUserPrimaryView(PrimaryView):
     __select__ = implements('CWUser')
-    
+
     skip_attrs = ('firstname', 'surname')
-    
+
     def iter_relations(self, entity):
         # don't want to display user's entities
         for rschema, targetschemas, x in super(CWUserPrimaryView, self).iter_relations(entity):
@@ -57,14 +57,14 @@ class CWUserPrimaryView(PrimaryView):
         return entity.name()
 
     def is_side_related(self, rschema, eschema):
-        return  rschema.type in ['interested_in', 'tags', 
+        return  rschema.type in ['interested_in', 'tags',
                                  'todo_by', 'bookmarked_by',
 
                                  ]
 class FoafView(EntityView):
     id = 'foaf'
     __select__ = implements('CWUser')
-    
+
     title = _('foaf')
     templatable = False
     content_type = 'text/xml'
