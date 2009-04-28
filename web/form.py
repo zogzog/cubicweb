@@ -489,7 +489,7 @@ class EntityFieldsForm(FieldsForm):
         """overriden to add edit[s|o] hidden fields and to ensure schema fields
         have eidparam set to True
 
-        edit[s|o] hidden fields are used t o indicate the value for the
+        edit[s|o] hidden fields are used to indicate the value for the
         associated field before the (potential) modification made when
         submitting the form.
         """
@@ -608,7 +608,7 @@ class EntityFieldsForm(FieldsForm):
         """
         entity = self.edited_entity
         if isinstance(rtype, basestring):
-            rtype = self.schema.rschema(rtype)
+            rtype = entity.schema.rschema(rtype)
         done = None
         assert not rtype.is_final(), rtype
         if entity.has_eid():
@@ -630,7 +630,7 @@ class EntityFieldsForm(FieldsForm):
         """
         entity = self.edited_entity
         if isinstance(rtype, basestring):
-            rtype = self.schema.rschema(rtype)
+            rtype = entity.schema.rschema(rtype)
         done = None
         if entity.has_eid():
             done = set(e.eid for e in getattr(entity, 'reverse_%s' % rtype))
