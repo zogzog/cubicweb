@@ -220,9 +220,10 @@ class RichTextField(TextField):
             else:
                 # else we want a format selector
                 # XXX compute vocabulary
-                widget = Select
+                widget = Select()
                 fcstr = FormatConstraint()
                 choices = [(req._(fmt), fmt) for fmt in fcstr.vocabulary(req=req)]
+                widget.attrs['size'] = 1
             field = StringField(name=self.name + '_format', widget=widget,
                                 choices=choices)
             req.data[self] = field
@@ -412,11 +413,13 @@ class RelationField(Field):
         return value
 
 
-def stringfield_from_constraints(constraints, **kwargs):
+def stringfield_from_constraints(constraints, card, **kwargs):
     field = None
     for cstr in constraints:
         if isinstance(cstr, StaticVocabularyConstraint):
             kwargs.setdefault('widget', Select())
+            if card in '?1':
+                kwargs['widget'].attrs.setdefault('size', 1)
             return StringField(choices=cstr.vocabulary, **kwargs)
         if isinstance(cstr, SizeConstraint) and cstr.max is not None:
             if cstr.max > 257:
@@ -478,7 +481,7 @@ def guess_field(eschema, rschema, role='subject', skip_meta_attr=True, **kwargs)
                 return RichTextField(**kwargs)
             # return StringField or TextField according to constraints
             constraints = rschema.rproperty(eschema, targetschema, 'constraints')
-            return stringfield_from_constraints(constraints, **kwargs)
+            return stringfield_from_constraints(constraints, card, **kwargs)
         if fieldclass is FileField:
             for metadata in ('format', 'encoding'):
                 metaschema = eschema.has_metadata(rschema, metadata)
