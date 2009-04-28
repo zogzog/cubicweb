@@ -38,7 +38,7 @@ class LazyViewMixin(object):
             'lazyview wants at least : rql, or an eid, or an rset -- or call it with static=True'
         w = w or self.w
         self.req.add_js('cubicweb.lazy.js')
-        urlparams = {'vid' : vid, 'mode' : 'html'}
+        urlparams = {'vid' : vid, 'fname' : 'view'}
         if rql:
             urlparams['rql'] = rql
         elif eid:

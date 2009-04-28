@@ -51,6 +51,7 @@ CW_XHTML_EXTENSIONS = '''[
  cubicweb:variables         CDATA   #IMPLIED
  cubicweb:displayactions    CDATA   #IMPLIED
  cubicweb:fallbackvid       CDATA   #IMPLIED
+ cubicweb:fname             CDATA   #IMPLIED
  cubicweb:vid               CDATA   #IMPLIED
  cubicweb:rql               CDATA   #IMPLIED
  cubicweb:actualrql         CDATA   #IMPLIED

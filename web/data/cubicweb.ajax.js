@@ -282,6 +282,7 @@ function replacePageChunk(nodeId, rql, vid, extraparams, /* ... */ swap, callbac
     var props = {};
     if (node) {
 	props['rql'] = rql;
+	props['fname'] = 'view';
 	props['pageid'] = pageid;
 	if (vid) { props['vid'] = vid; }
 	if (extraparams) { jQuery.extend(props, extraparams); }

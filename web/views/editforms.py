@@ -20,7 +20,6 @@ from cubicweb.view import EntityView
 from cubicweb.common import tags
 from cubicweb.web import stdmsgs
 from cubicweb.web.form import CompositeForm, EntityFieldsForm, FormViewMixIn
-from cubicweb.web.formfields import guess_field
 from cubicweb.web.formwidgets import Button, SubmitButton, ResetButton
 from cubicweb.web.formrenderers import (FormRenderer, EntityFormRenderer,
                                         EntityCompositeFormRenderer,

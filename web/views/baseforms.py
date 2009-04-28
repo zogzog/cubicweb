@@ -21,7 +21,7 @@ from cubicweb.web import INTERNAL_FIELD_VALUE, eid_param
 from cubicweb.web.controller import NAV_FORM_PARAMETERS
 from cubicweb.web.widgets import checkbox, InputWidget, ComboBoxWidget
 from cubicweb.web.form import FormMixIn
-from cubicweb.web.views.editforms import AutomaticEntityForm
+from cubicweb.web.views.autoform import AutomaticEntityForm
 
 _ = unicode
     

@@ -15,7 +15,7 @@ from cubicweb.selectors import (EntitySelector,
     )
 from cubicweb.web.action import Action
 from cubicweb.web.views import linksearch_select_url, vid_from_rset
-from cubicweb.web.views.editforms import AutomaticEntityForm
+from cubicweb.web.views.autoform import AutomaticEntityForm
 
 _ = unicode
 

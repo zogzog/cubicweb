@@ -261,12 +261,12 @@ class AnyEntity(Entity):
 
     @obsolete('use AutomaticEntityForm.[e]relations_by_category')
     def relations_by_category(self, categories=None, permission=None):
-        from cubicweb.web.views.editforms import AutomaticEntityForm
+        from cubicweb.web.views.autoform import AutomaticEntityForm
         return AutomaticEntityForm.erelations_by_category(self, categories, permission)
 
     @obsolete('use AutomaticEntityForm.[e]srelations_by_category')
     def srelations_by_category(self, categories=None, permission=None):
-        from cubicweb.web.views.editforms import AutomaticEntityForm
+        from cubicweb.web.views.autoform import AutomaticEntityForm
         return AutomaticEntityForm.esrelations_by_category(self, categories, permission)
 
     def _default_format(self):

@@ -11,7 +11,7 @@ reloading problems.
 __docformat__ = "restructuredtext en"
 from cubicweb.rtags import RelationTags
 
-# editforms.AutomaticEntityForm configuration #################################
+# autoform.AutomaticEntityForm configuration ##################################
 
 # relations'category (eg primary/secondary/generic/metadata/generated)
 rcategories = RelationTags()

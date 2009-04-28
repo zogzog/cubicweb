@@ -19,12 +19,12 @@ _ = unicode
 
 class ManageView(StartupView):
     id = 'manage'
-    title = _('manage')    
+    title = _('manage')
     http_cache_manager = EtagHTTPCacheManager
 
     def display_folders(self):
         return False
-    
+
     def call(self, **kwargs):
         """The default view representing the application's management"""
         self.req.add_css('cubicweb.manageview.css')
@@ -35,7 +35,7 @@ class ManageView(StartupView):
             self.w(u'<table><tr>\n')
             self.w(u'<td style="width:40%">')
             self._main_index()
-            self.w(u'</td><td style="width:60%">')            
+            self.w(u'</td><td style="width:60%">')
             self.folders()
             self.w(u'</td>')
             self.w(u'</tr></table>\n')
@@ -63,22 +63,22 @@ class ManageView(StartupView):
                 href = req.build_url('view', vid='creation', etype='Card', wikiid='index')
                 label = self.req._('create an index page')
             self.w(u'<br/><a href="%s">%s</a>\n' % (html_escape(href), label))
-        
+
     def folders(self):
         self.w(u'<h4>%s</h4>\n' % self.req._('Browse by category'))
         self.vreg.select_view('tree', self.req, None).dispatch(w=self.w)
-        
+
     def startup_views(self):
         self.w(u'<h4>%s</h4>\n' % self.req._('Startup views'))
         self.startupviews_table()
-        
+
     def startupviews_table(self):
         for v in self.vreg.possible_views(self.req, None):
             if v.category != 'startupview' or v.id in ('index', 'tree', 'manage'):
                 continue
             self.w('<p><a href="%s">%s</a></p>' % (
                 html_escape(v.url()), html_escape(self.req._(v.title).capitalize())))
-        
+
     def entities(self):
         schema = self.schema
         self.w(u'<h4>%s</h4>\n' % self.req._('The repository holds the following entities'))
@@ -88,7 +88,7 @@ class ManageView(StartupView):
             self.w(u'<tr><th colspan="4">%s</th></tr>\n' % self.req._('application entities'))
         self.entity_types_table(eschema for eschema in schema.entities()
                                 if not eschema.meta and not eschema.is_subobject(strict=True))
-        if manager: 
+        if manager:
             self.w(u'<tr><th colspan="4">%s</th></tr>\n' % self.req._('system entities'))
             self.entity_types_table(eschema for eschema in schema.entities()
                                     if eschema.meta and not eschema.schema_entity())
@@ -97,7 +97,7 @@ class ManageView(StartupView):
                 self.entity_types_table(schema.eschema(etype)
                                         for etype in schema.schema_entity_types())
         self.w(u'</table>')
-        
+
     def entity_types_table(self, eschemas):
         newline = 0
         infos = sorted(self.entity_types(eschemas),
@@ -111,8 +111,8 @@ class ManageView(StartupView):
             self.w(u'<td class="addcol">%s</td><td>%s</td>\n' % (addlink,  etypelink))
             self.w(u'<td class="addcol">%s</td><td>%s</td>\n' % (addlink2, etypelink2))
             self.w(u'</tr>\n')
-        
-        
+
+
     def entity_types(self, eschemas):
         """return a list of formatted links to get a list of entities of
         a each entity's types
@@ -133,7 +133,7 @@ class ManageView(StartupView):
             etypelink = u'&nbsp;<a href="%s">%s</a> (%d)' % (
                 html_escape(url), label, nb)
             yield (label, etypelink, self.add_entity_link(eschema, req))
-    
+
     def add_entity_link(self, eschema, req):
         """creates a [+] link for adding an entity if user has permission to do so"""
         if not eschema.has_perm(req, 'add'):
@@ -142,14 +142,14 @@ class ManageView(StartupView):
             html_escape(self.create_url(eschema.type)),
             self.req.__('add a %s' % eschema))
 
-    
+
 class IndexView(ManageView):
     id = 'index'
     title = _('index')
-    
+
     def display_folders(self):
         return 'Folder' in self.schema and self.req.execute('Any COUNT(X) WHERE X is Folder')[0][0]
-    
+
 
 
 class SchemaView(StartupView):

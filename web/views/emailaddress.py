@@ -11,16 +11,15 @@ from logilab.mtconverter import html_escape
 from cubicweb.selectors import implements
 from cubicweb.common import Unauthorized
 from cubicweb.web.views import baseviews
-from cubicweb.web.views.editforms import AutomaticEntityForm
 
 
 class EmailAddressPrimaryView(baseviews.PrimaryView):
     __select__ = implements('EmailAddress')
-    
+
     def cell_call(self, row, col, skipeids=None):
         self.skipeids = skipeids
         super(EmailAddressPrimaryView, self).cell_call(row, col)
-        
+
     def render_entity_attributes(self, entity, siderelations):
         self.w(u'<h3>')
         entity.view('oneline', w=self.w)
@@ -70,10 +69,10 @@ class EmailAddressShortPrimaryView(EmailAddressPrimaryView):
         entity.view('oneline', w=self.w)
         self.w(u'</h5>')
 
-    
+
 class EmailAddressOneLineView(baseviews.OneLineView):
     __select__ = implements('EmailAddress')
-    
+
     def cell_call(self, row, col, **kwargs):
         entity = self.entity(row, col)
         if entity.reverse_primary_email:
@@ -93,7 +92,7 @@ class EmailAddressMailToView(baseviews.OneLineView):
 
     id = 'mailto'
     __select__ = implements('EmailAddress')
-    
+
     def cell_call(self, row, col, **kwargs):
         entity = self.entity(row, col)
         if entity.reverse_primary_email:
@@ -108,15 +107,15 @@ class EmailAddressMailToView(baseviews.OneLineView):
             mailto = "mailto:%s" % entity.display_address()
         self.w(u'<a href="%s">%s</a>' % (html_escape(mailto),
                                          html_escape(entity.display_address())))
-            
+
         if entity.alias:
             self.w(u'&gt;\n')
         if entity.reverse_primary_email:
             self.w(u'</b>')
 
-    
+
 class EmailAddressTextView(baseviews.TextView):
     __select__ = implements('EmailAddress')
-    
+
     def cell_call(self, row, col, **kwargs):
         self.w(self.entity(row, col).display_address())

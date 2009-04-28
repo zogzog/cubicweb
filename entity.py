@@ -41,30 +41,26 @@ def greater_card(rschema, subjtypes, objtypes, index):
     return '1'
 
 
-MODE_TAGS = set(('link', 'create'))
-CATEGORY_TAGS = set(('primary', 'secondary', 'generic', 'generated')) # , 'metadata'))
+_MODE_TAGS = set(('link', 'create'))
+_CATEGORY_TAGS = set(('primary', 'secondary', 'generic', 'generated')) # , 'metadata'))
 
 try:
-    from cubicweb.web import formwidgets
+    from cubicweb.web import formwidgets, uicfg
     from cubicweb.web.views.editforms import AutomaticEntityForm
-    from cubicweb.web.views.boxes import EditBox
 
-    def dispatch_rtags(tags, rtype, role, stype, otype):
+    def _dispatch_rtags(tags, rtype, role, stype, otype):
         for tag in tags:
-            if tag in MODE_TAGS:
-                EditBox.rmode.set_rtag(tag, rtype, role, stype, otype)
-            elif tag in CATEGORY_TAGS:
-                AutomaticEntityForm.rcategories.set_rtag(tag, rtype, role, stype, otype)
+            if tag in _MODE_TAGS:
+                uicfg.rmode.set_rtag(tag, rtype, role, stype, otype)
+            elif tag in _CATEGORY_TAGS:
+                uicfg.rcategories.set_rtag(tag, rtype, role, stype, otype)
             elif tag == 'inlineview':
-                AutomaticEntityForm.rinlined.set_rtag(True, rtype, role, stype, otype)
+                uicfg.rinlined.set_rtag(True, rtype, role, stype, otype)
             else:
                 raise ValueError(tag)
 
 except ImportError:
-    AutomaticEntityForm = None
-
-    def dispatch_rtags(*args):
-        pass
+    _dispatch_rtags = None
 
 def _get_etype(bases, classdict):
     try:
@@ -87,14 +83,14 @@ def _get_defs(attr, name, bases, classdict):
             except AttributeError:
                 continue
 
-class metaentity(type):
+class _metaentity(type):
     """this metaclass sets the relation tags on the entity class
     and deals with the `widgets` attribute
     """
     def __new__(mcs, name, bases, classdict):
         # collect baseclass' rtags
         etype = _get_etype(bases, classdict)
-        if etype and AutomaticEntityForm is not None:
+        if etype and _dispatch_rtags is not None:
             for name, rtags in _get_defs('__rtags__', name, bases, classdict):
                 warn('%s: __rtags__ is deprecated' % name, DeprecationWarning)
                 for relation, tags in rtags.iteritems():
@@ -103,23 +99,23 @@ class metaentity(type):
                         tags = (tags,)
                     # relation must become a 3-uple (rtype, targettype, role)
                     if isinstance(relation, basestring):
-                        dispatch_rtags(tags, relation, 'subject', etype, '*')
-                        dispatch_rtags(tags, relation, 'object', '*', etype)
+                        _dispatch_rtags(tags, relation, 'subject', etype, '*')
+                        _dispatch_rtags(tags, relation, 'object', '*', etype)
                     elif len(relation) == 1: # useful ?
-                        dispatch_rtags(tags, relation[0], 'subject', etype, '*')
-                        dispatch_rtags(tags, relation[0], 'object', '*', etype)
+                        _dispatch_rtags(tags, relation[0], 'subject', etype, '*')
+                        _dispatch_rtags(tags, relation[0], 'object', '*', etype)
                     elif len(relation) == 2:
                         rtype, ttype = relation
                         ttype = bw_normalize_etype(ttype) # XXX bw compat
-                        dispatch_rtags(tags, rtype, 'subject', etype, ttype)
-                        dispatch_rtags(tags, rtype, 'object', ttype, etype)
+                        _dispatch_rtags(tags, rtype, 'subject', etype, ttype)
+                        _dispatch_rtags(tags, rtype, 'object', ttype, etype)
                     elif len(relation) == 3:
                         rtype, ttype, role = relation
                         ttype = bw_normalize_etype(ttype)
                         if role == 'subject':
-                            dispatch_rtags(tags, rtype, 'subject', etype, ttype)
+                            _dispatch_rtags(tags, rtype, 'subject', etype, ttype)
                         else:
-                            dispatch_rtags(tags, rtype, 'object', ttype, etype)
+                            _dispatch_rtags(tags, rtype, 'object', ttype, etype)
                     else:
                         raise ValueError('bad rtag definition (%r)' % (relation,))
             for name, widgets in _get_defs('widgets', name, bases, classdict):
@@ -132,7 +128,7 @@ class metaentity(type):
                         wdgname = 'TextInput'
                     widget = getattr(formwidgets, wdgname)
                     AutomaticEntityForm.rwidgets.set_rtag(wdgname, rtype, 'subject', etype)
-        return super(metaentity, mcs).__new__(mcs, name, bases, classdict)
+        return super(_metaentity, mcs).__new__(mcs, name, bases, classdict)
 
 
 class Entity(AppRsetObject, dict):
@@ -158,7 +154,7 @@ class Entity(AppRsetObject, dict):
                          as composite relations or relations that have '?1' as object
                          cardinality
     """
-    __metaclass__ = metaentity
+    __metaclass__ = _metaentity
     __registry__ = 'etypes'
     __select__ = yes()
 

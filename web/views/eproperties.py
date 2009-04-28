@@ -21,7 +21,6 @@ from cubicweb.web import stdmsgs
 from cubicweb.web.form import CompositeForm, EntityFieldsForm, FormViewMixIn
 from cubicweb.web.formfields import FIELDS, StringField
 from cubicweb.web.formwidgets import Select, Button, SubmitButton
-from cubicweb.web.views.editforms import AutomaticEntityForm
 
 _ = unicode
 

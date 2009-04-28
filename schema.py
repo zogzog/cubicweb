@@ -77,7 +77,7 @@ ybo.RelationDefinition._actual_types = _actual_types
 ## cubicweb provides a RichString class for convenience
 class RichString(ybo.String):
     """Convenience RichString attribute type
-    The follwing declaration::
+    The following declaration::
 
       class Card(EntityType):
           content = RichString(fulltextindexed=True, default_format='text/rest')

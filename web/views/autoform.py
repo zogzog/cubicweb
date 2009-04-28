@@ -11,6 +11,7 @@ from logilab.common.decorators import iclassmethod
 from cubicweb import typed_eid
 from cubicweb.web import stdmsgs, uicfg
 from cubicweb.web.form import FieldNotFound, EntityFieldsForm
+from cubicweb.web.formfields import guess_field
 from cubicweb.web.formwidgets import Button, SubmitButton
 _ = unicode
 
