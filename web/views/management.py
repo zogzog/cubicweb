@@ -48,7 +48,7 @@ class SecurityManagementView(EntityView):
             self.owned_by_edit_form(entity)
         else:
             self.owned_by_information(entity)
-        # epermissions
+        # cwpermissions
         if 'require_permission' in entity.e_schema.subject_relations():
             w('<h3>%s</h3>' % _('permissions for this entity'))
             reqpermschema = self.schema.rschema('require_permission')
@@ -116,18 +116,18 @@ class SecurityManagementView(EntityView):
             w(u'<table class="schemaInfo">')
             w(u'<tr><th>%s</th><th>%s</th></tr>' % (_("permission"),
                                                     _('granted to groups')))
-            for eperm in entity.require_permission:
+            for cwperm in entity.require_permission:
                 w(u'<tr>')
                 if dellinktempl:
-                    w(u'<td>%s%s</td>' % (dellinktempl % eperm.eid,
-                                          eperm.view('oneline')))
+                    w(u'<td>%s%s</td>' % (dellinktempl % cwperm.eid,
+                                          cwperm.view('oneline')))
                 else:
-                    w(u'<td>%s</td>' % eperm.view('oneline'))
-                w(u'<td>%s</td>' % self.view('csv', eperm.related('require_group'), 'null'))
+                    w(u'<td>%s</td>' % cwperm.view('oneline'))
+                w(u'<td>%s</td>' % self.view('csv', cwperm.related('require_group'), 'null'))
                 w(u'</tr>\n')
             w(u'</table>')
         else:
-            self.w(self.req._('no associated epermissions'))
+            self.w(self.req._('no associated permissions'))
 
     def require_permission_edit_form(self, entity):
         w = self.w
