@@ -117,25 +117,25 @@ class CubicWebRegistry(VRegistry):
             clear_cache(self, 'etype_class')
             # we may want to keep interface dependent objects (e.g.for i18n
             # catalog generation)
-            if not self.config.cleanup_interface_sobjects:
-                return
-            # remove vobjects that don't support any available interface
-            implemented_interfaces = set()
-            for etype in self.schema.entities():
-                cls = self.etype_class(etype)
-                for iface in cls.__implements__:
-                    implemented_interfaces.update(iface.__mro__)
-                implemented_interfaces.update(cls.__mro__)
-            for obj, ifaces in self._needs_iface.items():
-                ifaces = frozenset(isinstance(iface, basestring)
-                                   and iface in self.schema
-                                   and self.etype_class(iface)
-                                   or iface
-                                   for iface in ifaces)
-                if not ('Any' in ifaces or ifaces & implemented_interfaces):
-                    self.debug('kicking vobject %s (no implemented interface '
-                               'among %s)', obj, ifaces)
-                    self.unregister(obj)
+            if self.config.cleanup_interface_sobjects:
+                # remove vobjects that don't support any available interface
+                implemented_interfaces = set()
+                for etype in self.schema.entities():
+                    cls = self.etype_class(etype)
+                    for iface in cls.__implements__:
+                        implemented_interfaces.update(iface.__mro__)
+                    implemented_interfaces.update(cls.__mro__)
+                for obj, ifaces in self._needs_iface.items():
+                    ifaces = frozenset(isinstance(iface, basestring)
+                                       and iface in self.schema
+                                       and self.etype_class(iface)
+                                       or iface
+                                       for iface in ifaces)
+                    if not ('Any' in ifaces or ifaces & implemented_interfaces):
+                        self.debug('kicking vobject %s (no implemented '
+                                   'interface among %s)', obj, ifaces)
+                        self.unregister(obj)
+            print 'HOP', self.items()
             # clear needs_iface so we don't try to remove some not-anymore-in
             # objects on automatic reloading
             self._needs_iface.clear()
