@@ -38,7 +38,7 @@ class UserPreferencesEntityAction(action.Action):
 
     def url(self):
         login = self.rset.get_entity(self.row or 0, self.col or 0).login
-        return self.build_url('euser/%s'%login, vid='epropertiesform')
+        return self.build_url('cwuser/%s'%login, vid='epropertiesform')
 
 
 class CWUserPrimaryView(PrimaryView):

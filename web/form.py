@@ -75,9 +75,9 @@ class FormMixIn(object):
         # method on successful commit
         forminfo = self.req.get_session_data(sessionkey, pop=True)
         if forminfo:
-            req.data['formvalues'] = forminfo['values']
-            req.data['formerrors'] = errex = forminfo['errors']
-            req.data['displayederrors'] = set()
+            self.req.data['formvalues'] = forminfo['values']
+            self.req.data['formerrors'] = errex = forminfo['errors']
+            self.req.data['displayederrors'] = set()
             # if some validation error occured on entity creation, we have to
             # get the original variable name from its attributed eid
             foreid = errex.entity
