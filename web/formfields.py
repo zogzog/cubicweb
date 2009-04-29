@@ -180,14 +180,13 @@ class StringField(Field):
     def __init__(self, max_length=None, **kwargs):
         super(StringField, self).__init__(**kwargs)
         self.max_length = max_length
+        if max_length < 513 and isinstance(self.widget, TextArea):
+            self.widget.attrs['cols'], self.widget.attrs['rows'] = 60, 5
 
 
-class TextField(Field):
+class TextField(StringField):
+    """XXX string field not enough?"""
     widget = TextArea
-    def __init__(self, rows=10, cols=80, **kwargs):
-        super(TextField, self).__init__(**kwargs)
-        self.rows = rows
-        self.cols = cols
 
 
 class RichTextField(TextField):
@@ -424,7 +423,7 @@ def stringfield_from_constraints(constraints, card, **kwargs):
         if isinstance(cstr, SizeConstraint) and cstr.max is not None:
             if cstr.max > 257:
                 rows_cols_from_constraint(cstr, kwargs)
-                field = TextField(**kwargs)
+                field = TextField(max_length=cstr.max, **kwargs)
             else:
                 field = StringField(max_length=cstr.max, **kwargs)
     return field or TextField(**kwargs)
