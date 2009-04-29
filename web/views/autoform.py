@@ -20,7 +20,7 @@ _ = unicode
 class AutomaticEntityForm(EntityFieldsForm):
     """base automatic form to edit any entity.
 
-    Designed to be flly generated from schema but highly configurable through:
+    Designed to be fully generated from schema but highly configurable through:
     * rtags (rcategories, rfields, rwidgets, inlined, rpermissions)
     * various standard form parameters
 
