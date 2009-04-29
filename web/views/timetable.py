@@ -45,7 +45,7 @@ class TimeTableView(AnyRsetView):
                 user = u"*"
             the_dates = []
             if task.start and task.stop:
-                if task.start.absdate == task.stop.absdate:
+                if task.start.toordinal() == task.stop.toordinal():
                     the_dates.append(task.start)
                 else:
                     the_dates += date_range( task.start, task.stop )
