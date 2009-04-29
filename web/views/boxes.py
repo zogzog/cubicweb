@@ -72,8 +72,8 @@ class EditBox(BoxTemplate):
         to a new entity ('create' mode) or to an existant entity ('link' mode)
         """
         if role == 'subject':
-            return cls.rmode.rtag(rtype, role, etype, targettype)
-        return cls.rmode.rtag(rtype, role, targettype, etype)
+            return cls.rmode.get(rtype, role, etype, targettype)
+        return cls.rmode.get(rtype, role, targettype, etype)
 
 
     def call(self, view=None, **kwargs):

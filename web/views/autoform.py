@@ -95,14 +95,14 @@ class AutomaticEntityForm(EntityFieldsForm):
             # permission which may imply rql queries
             if categories is not None:
                 targetschemas = [tschema for tschema in targetschemas
-                                 if rtags.etype_rtag(eschema, rschema, role, tschema) in categories]
+                                 if rtags.etype_get(eschema, rschema, role, tschema) in categories]
                 if not targetschemas:
                     continue
             if permission is not None:
                 # tag allowing to hijack the permission machinery when
                 # permission is not verifiable until the entity is actually
                 # created...
-                if eid is None and '%s_on_new' % permission in permsoverrides.etype_rtags(eschema, rschema, role):
+                if eid is None and '%s_on_new' % permission in permsoverrides.etype_get(eschema, rschema, role):
                     yield (rschema, targetschemas, role)
                     continue
                 if rschema.is_final():
@@ -161,10 +161,10 @@ class AutomaticEntityForm(EntityFieldsForm):
             if eschema is None or not name in cls_or_self.schema:
                 raise
             rschema = cls_or_self.schema.rschema(name)
-            fieldcls = cls_or_self.rfields.etype_rtag(eschema, rschema, role)
+            fieldcls = cls_or_self.rfields.etype_get(eschema, rschema, role)
             if fieldcls:
                 return fieldcls(name=name, role=role, eidparam=True)
-            widget = cls_or_self.rwidgets.etype_rtag(eschema, rschema, role)
+            widget = cls_or_self.rwidgets.etype_get(eschema, rschema, role)
             if widget:
                 field = guess_field(eschema, rschema, role,
                                     eidparam=True, widget=widget)
@@ -306,7 +306,7 @@ class AutomaticEntityForm(EntityFieldsForm):
         """return true if the given relation with entity has role and a
         targettype target should be inlined
         """
-        return self.rinlined.etype_rtag(self.edited_entity.id, rschema, role, targettype)
+        return self.rinlined.etype_get(self.edited_entity.id, rschema, role, targettype)
 
     def should_display_inline_creation_form(self, rschema, existant, card):
         """return true if a creation form should be inlined

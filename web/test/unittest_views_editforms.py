@@ -64,8 +64,8 @@ class AutomaticEntityFormTC(EnvBasedTC):
                                ])
 
     def test_inlined_view(self):
-        self.failUnless(AEF.rinlined.etype_rtag('CWUser', 'use_email', 'subject'))
-        self.failIf(AEF.rinlined.etype_rtag('CWUser', 'primary_email', 'subject'))
+        self.failUnless(AEF.rinlined.etype_get('CWUser', 'use_email', 'subject'))
+        self.failIf(AEF.rinlined.etype_get('CWUser', 'primary_email', 'subject'))
 
     def test_personne_relations_by_category(self):
         e = self.etype_instance('Personne')
