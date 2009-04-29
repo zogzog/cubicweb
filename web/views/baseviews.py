@@ -165,7 +165,7 @@ class MetaDataView(EntityView):
             self.w(u'#%s - ' % entity.eid)
         if entity.modification_date != entity.creation_date:
             self.w(u'<span>%s</span> ' % _('latest update on'))
-            self.w(u'<span class="value">%s</span>, ;'
+            self.w(u'<span class="value">%s</span>, '
                    % self.format_date(entity.modification_date))
         # entities from external source may not have a creation date (eg ldap)
         if entity.creation_date:
