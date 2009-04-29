@@ -84,14 +84,14 @@ class PrimaryView(EntityView):
         # if the entity isn't meta itself
         boxes = self._prepare_side_boxes(entity)
         if boxes or hasattr(self, 'render_side_related'):
-            self.w(u'<table width="100%"><tr><td width="75%">')
+            self.w(u'<table width="100%"><tr><td style="width: 75%">')
         self.w(u'<div>')
         self.w(u'<div class="mainInfo">')
         try:
             self.render_entity_attributes(entity)
         except TypeError: # XXX bw compat
             warn('siderelations argument of render_entity_attributes is '
-                 'deprecated')
+                 'deprecated (%s)' % self.__class__)
             self.render_entity_attributes(entity, [])
         self.w(u'</div>')
         self.content_navigation_components('navcontenttop')
@@ -153,13 +153,12 @@ class PrimaryView(EntityView):
     def render_entity_attributes(self, entity, siderelations=None):
         for rschema, tschemas, role, displayinfo in self._iter_display(entity, 'attributes'):
             vid =  displayinfo.get('vid', 'reledit')
-            if rschema.is_final():
-                value = entity.view('reledit', rtype=rschema.type)
+            if rschema.is_final() or vid == 'reledit':
+                value = entity.view(vid, rtype=rschema.type, role=role)
             else:
-                vid =  displayinfo.get('vid', 'reledit')
                 rset = self._relation_rset(entity, rschema, role, displayinfo)
                 if rset:
-                    value = self.view(rset, vid)
+                    value = self.view(vid, rset)
                 else:
                     value = None
             if self.skip_none and (value is None or value == ''):
