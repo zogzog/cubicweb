@@ -23,21 +23,21 @@ from cubicweb.utils import UStringIO, ustrftime
 
 ONESECOND = timedelta(0, 1, 0)
 
-class Cache(dict):    
+class Cache(dict):
     def __init__(self):
         super(Cache, self).__init__()
         self.cache_creation_date = None
         self.latest_cache_lookup = datetime.now()
-    
+
 CACHE_REGISTRY = {}
 
 class AppRsetObject(VObject):
     """This is the base class for CubicWeb application objects
     which are selected according to a request and result set.
-    
+
     Classes are kept in the vregistry and instantiation is done at selection
     time.
-    
+
     At registration time, the following attributes are set on the class:
     :vreg:
       the application's registry
@@ -62,11 +62,11 @@ class AppRsetObject(VObject):
         cls.config = vreg.config
         cls.register_properties()
         return cls
-    
+
     @classmethod
     def vreg_initialization_completed(cls):
         pass
-    
+
     @classmethod
     def selected(cls, *args, **kwargs):
         """by default web app objects are usually instantiated on
@@ -85,9 +85,9 @@ class AppRsetObject(VObject):
     # notice that when it exists multiple objects with the same id (adaptation,
     # overriding) only the first encountered definition is considered, so those
     # objects can't try to have different default values for instance.
-    
+
     property_defs = {}
-    
+
     @classmethod
     def register_properties(cls):
         for propid, pdef in cls.property_defs.items():
@@ -95,7 +95,7 @@ class AppRsetObject(VObject):
             pdef['default'] = getattr(cls, propid, pdef['default'])
             pdef['sitewide'] = getattr(cls, 'site_wide', pdef.get('sitewide'))
             cls.vreg.register_property(cls.propkey(propid), **pdef)
-        
+
     @classmethod
     def propkey(cls, propid):
         return '%s.%s.%s' % (cls.__registry__, cls.id, propid)
@@ -109,7 +109,7 @@ class AppRsetObject(VObject):
         if not isinstance(selector, tuple):
             selector = (selector,)
         return selector
-    
+
     def __init__(self, req=None, rset=None, row=None, col=None, **extra):
         super(AppRsetObject, self).__init__()
         self.req = req
@@ -117,12 +117,12 @@ class AppRsetObject(VObject):
         self.row = row
         self.col = col
         self.extra_kwargs = extra
-        
+
     def get_cache(self, cachename):
         """
         NOTE: cachename should be dotted names as in :
         - cubicweb.mycache
-        - cubes.blog.mycache 
+        - cubes.blog.mycache
         - etc.
         """
         if cachename in CACHE_REGISTRY:
@@ -132,7 +132,7 @@ class AppRsetObject(VObject):
             CACHE_REGISTRY[cachename] = cache
         _now = datetime.now()
         if _now > cache.latest_cache_lookup + ONESECOND:
-            ecache = self.req.execute('Any C,T WHERE C is CWCache, C name %(name)s, C timestamp T', 
+            ecache = self.req.execute('Any C,T WHERE C is CWCache, C name %(name)s, C timestamp T',
                                       {'name':cachename}).get_entity(0,0)
             cache.latest_cache_lookup = _now
             if not ecache.valid(cache.cache_creation_date):
@@ -143,7 +143,7 @@ class AppRsetObject(VObject):
     def propval(self, propid):
         assert self.req
         return self.req.property_value(self.propkey(propid))
-    
+
     def limited_rql(self):
         """return a printable rql for the result set associated to the object,
         with limit/offset correctly set according to maximum page size and
@@ -165,7 +165,7 @@ class AppRsetObject(VObject):
         else:
             rql = self.rset.printable_rql()
         return rql
-    
+
     def _limit_offset_rql(self, limit, offset):
         rqlst = self.rset.syntax_tree()
         if len(rqlst.children) == 1:
@@ -187,7 +187,7 @@ class AppRsetObject(VObject):
             rql = rqlst.as_string(kwargs=self.rset.args)
             rqlst.parent = None
         return rql
-        
+
     def view(self, __vid, rset=None, __fallback_vid=None, **kwargs):
         """shortcut to self.vreg.render method avoiding to pass self.req"""
         try:
@@ -197,11 +197,11 @@ class AppRsetObject(VObject):
                 raise
             view = self.vreg.select_view(__fallback_vid, self.req, rset, **kwargs)
         return view.dispatch(**kwargs)
-    
+
     # url generation methods ##################################################
-    
+
     controller = 'view'
-    
+
     def build_url(self, method=None, **kwargs):
         """return an absolute URL using params dictionary key/values as URL
         parameters. Values are automatically URL quoted, and the
@@ -217,13 +217,13 @@ class AppRsetObject(VObject):
         return self.req.build_url(method, **kwargs)
 
     # various resources accessors #############################################
-    
+
     def entity(self, row, col=0):
         """short cut to get an entity instance for a particular row/column
         (col default to 0)
         """
         return self.rset.get_entity(row, col)
-    
+
     def complete_entity(self, row, col=0, skip_bytes=True):
         """short cut to get an completed entity instance for a particular
         row (all instance's attributes have been fetched)
@@ -239,14 +239,14 @@ class AppRsetObject(VObject):
         def rqlexec(req, rql, args=None, key=None):
             req.execute(rql, args, key)
         return self.user_callback(rqlexec, args, msg)
-        
+
     def user_callback(self, cb, args, msg=None, nonify=False):
         """register the given user callback and return an url to call it ready to be
         inserted in html
         """
         self.req.add_js('cubicweb.ajax.js')
         cbname = self.req.register_onetime_callback(cb, *args)
-        msg = dumps(msg or '') 
+        msg = dumps(msg or '')
         return "javascript:userCallbackThenReloadPage('%s', %s)" % (
             cbname, msg)
 
@@ -293,23 +293,23 @@ class AppRsetObject(VObject):
         if num:
             return self.req.property_value('ui.float-format') % num
         return u''
-    
+
     # security related methods ################################################
-    
+
     def ensure_ro_rql(self, rql):
         """raise an exception if the given rql is not a select query"""
         first = rql.split(' ', 1)[0].lower()
         if first in ('insert', 'set', 'delete'):
             raise Unauthorized(self.req._('only select queries are authorized'))
 
-        
+
 class AppObject(AppRsetObject):
     """base class for application objects which are not selected
     according to a result set, only by their identifier.
-    
+
     Those objects may not have req, rset and cursor set.
     """
-    
+
     @classmethod
     def selected(cls, *args, **kwargs):
         """by default web app objects are usually instantiated on
