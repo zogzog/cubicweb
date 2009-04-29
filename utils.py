@@ -8,10 +8,11 @@ __docformat__ = "restructuredtext en"
 
 import locale
 from md5 import md5
+from calendar import monthrange
 from datetime import datetime, timedelta, date
 from time import time
 from random import randint, seed
-    
+
 # initialize random seed from current time
 seed()
 
@@ -29,26 +30,43 @@ def todate(somedate):
     assert isinstance(somedate, date)
     return date
 
+ONEDAY = timedelta(days=1)
+
+def days_in_month(date_):
+    return monthrange(date_.year, date_.month)[1]
+
+def previous_month(date_):
+    return first_day(date_) - ONEDAY
+
+def next_month(date_):
+    return last_day(date_) + ONEDAY
+
+def first_day(date_):
+    return date(date_.year, date_.month, 1)
+
+def last_day(date_):
+    return date(date_.year, date_.month, days_in_month(date_))
+
 def date_range(begin, end, incr=1, include=None):
     """yields each date between begin and end
     :param begin: the start date
     :param end: the end date
     :param incr: the step to use to iterate over dates. Default is
-                 one day.                 
+                 one day.
     :param include: None (means no exclusion) or a function taking a
                     date as parameter, and returning True if the date
                     should be included.
     """
     incr = timedelta(incr, 0, 0)
     while begin <= end:
-        if include is None or include(begin): 
+        if include is None or include(begin):
             yield begin
         begin += incr
 
 def ustrftime(date, fmt='%Y-%m-%d'):
     """like strftime, but returns a unicode string instead of an encoded
     string which may be problematic with localized date.
-    
+
     encoding is guessed by locale.getpreferredencoding()
     """
     # date format may depend on the locale
@@ -79,7 +97,7 @@ def merge_dicts(dict1, dict2):
     dict1 = dict(dict1)
     dict1.update(dict2)
     return dict1
-                
+
 
 class SizeConstrainedList(list):
     """simple list that makes sure the list does not get bigger
@@ -120,12 +138,12 @@ class UStringIO(list):
 
     def __nonzero__(self):
         return True
-    
+
     def write(self, value):
         assert isinstance(value, unicode), u"unicode required not %s : %s"\
                                      % (type(value).__name__, repr(value))
         self.append(value)
-        
+
     def getvalue(self):
         return u''.join(self)
 
@@ -164,8 +182,8 @@ class HTMLHead(UStringIO):
         self.add_post_inline_script(u"""jQuery(document).ready(function () {
  %s
  });""" % jscode)
-        
-    
+
+
     def add_js(self, jsfile):
         """adds `jsfile` to the list of javascripts used in the webpage
 
@@ -231,18 +249,18 @@ class HTMLHead(UStringIO):
         if skiphead:
             return header
         return u'<head>\n%s</head>\n' % header
-        
+
 
 class HTMLStream(object):
     """represents a HTML page.
 
     This is used my main templates so that HTML headers can be added
     at any time during the page generation.
-    
+
     HTMLStream uses the (U)StringIO interface to be compliant with
     existing code.
     """
-    
+
     def __init__(self, req):
         # stream for <head>
         self.head = req.html_headers
