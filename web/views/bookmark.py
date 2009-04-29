@@ -14,8 +14,8 @@ from cubicweb.web.htmlwidgets import BoxWidget, BoxMenu, RawBoxItem
 from cubicweb.web import uicfg, action, box, formwidgets
 from cubicweb.web.views.baseviews import PrimaryView
 
-uicfg.rcategories.set_rtag('primary', 'path', 'subject', 'Bookmark')
-uicfg.rwidgets.set_rtag(formwidgets.TextInput, 'path', 'subject', 'Bookmark')
+uicfg.rcategories.tag_relation('primary', ('Bookmark', 'path', '*'), 'subject')
+uicfg.rwidgets.tag_relation(formwidgets.TextInput, ('Bookmark', 'path', '*'), 'subject')
 
 
 class FollowAction(action.Action):

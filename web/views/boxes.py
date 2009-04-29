@@ -64,7 +64,7 @@ class EditBox(BoxTemplate):
                         else:
                             # link mode by default
                             mode = 'link'
-                        cls.rmode.set_rtag(mode, rschema, role, X, Y)
+                        cls.rmode.tag_relation(mode, (X, rschema, Y), role)
 
     @classmethod
     def relation_mode(cls, rtype, etype, targettype, role='subject'):

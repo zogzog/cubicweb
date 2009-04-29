@@ -70,7 +70,7 @@ class AutomaticEntityForm(EntityFieldsForm):
                             category = 'secondary'
                         else:
                             category = 'generic'
-                        cls.rcategories.set_rtag(category, rschema, role, X, Y)
+                        cls.rcategories.add_relation(category, (X, rschema, Y), role)
 
     @classmethod
     def erelations_by_category(cls, entity, categories=None, permission=None, rtags=None):

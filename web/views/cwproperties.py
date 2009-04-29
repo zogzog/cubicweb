@@ -24,6 +24,9 @@ from cubicweb.web.formwidgets import Select, Button, SubmitButton
 
 _ = unicode
 
+uicfg.rfields.tag_relation(PropertyKeyField, ('CWProperty', 'pkey', '*'), 'subject')
+uicfg.rfields.tag_relation(PropertyValueField, ('CWProperty', 'value', '*'), 'subject')
+
 # some string we want to be internationalizable for nicer display of eproperty
 # groups
 _('navigation')
@@ -323,7 +326,4 @@ class PropertyValueField(StringField):
             elif pdef['type'] in ('Float', 'Int'):
                 wdg.attrs.setdefault('size', 3)
         self.widget = wdg
-
-uicfg.rfields.set_rtag(PropertyKeyField, 'pkey', 'subject', 'CWProperty')
-uicfg.rfields.set_rtag(PropertyValueField, 'value', 'subject', 'CWProperty')
 

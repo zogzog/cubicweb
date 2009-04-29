@@ -19,19 +19,19 @@ from cubicweb.web import uicfg, action
 from cubicweb.web.views import TmpFileViewMixin, baseviews
 
 
-uicfg.rcategories.set_rtag('primary', 'require_group', 'subject', 'CWPermission')
-uicfg.rcategories.set_rtag('generated', 'final', 'subject', 'EEtype')
-uicfg.rcategories.set_rtag('generated', 'final', 'subject', 'ERtype')
-uicfg.rinlined.set_rtag(True, 'relation_type', 'subject', 'CWRelation')
-uicfg.rinlined.set_rtag(True, 'from_entity', 'subject', 'CWRelation')
-uicfg.rinlined.set_rtag(True, 'to_entity', 'subject', 'CWRelation')
-uicfg.rwidgets.set_rtag('StringWidget', 'expression', 'subject', 'RQLExpression')
+uicfg.rcategories.tag_relation('primary', ('CWPermission', 'require_group', '*'), 'subject')
+uicfg.rcategories.tag_relation('generated', ('EEtype', 'final', '*'), 'subject')
+uicfg.rcategories.tag_relation('generated', ('ERtype', 'final', '*'), 'subject')
+uicfg.rinlined.tag_relation(True, ('CWRelation', 'relation_type', '*'), 'subject')
+uicfg.rinlined.tag_relation(True, ('CWRelation', 'from_entity', '*'), 'subject')
+uicfg.rinlined.tag_relation(True, ('CWRelation', 'to_entity', '*'), 'subject')
+uicfg.rwidgets.tag_relation('StringWidget', ('RQLExpression', 'expression', '*'), 'subject')
 
-uicfg.rmode.set_rtag('create', 'state_of', 'object', otype='CWEType')
-uicfg.rmode.set_rtag('create', 'transition_of', 'object', otype='CWEType')
-uicfg.rmode.set_rtag('create', 'relation_type', 'object', otype='CWRType')
-uicfg.rmode.set_rtag('link', 'from_entity', 'object', otype='CWEType')
-uicfg.rmode.set_rtag('link', 'to_entity', 'object', otype='CWEType')
+uicfg.rmode.tag_relation('create', ('*', 'state_of', 'CWEType'), 'object')
+uicfg.rmode.tag_relation('create', ('*', 'transition_of', 'CWEType'), 'object')
+uicfg.rmode.tag_relation('create', ('*', 'relation_type', 'CWRType'), 'object')
+uicfg.rmode.tag_relation('link', ('*', 'from_entity', 'CWEType'), 'object')
+uicfg.rmode.tag_relation('link', ('*', 'to_entity', 'CWEType'), 'object')
 
 
 class ViewSchemaAction(action.Action):
