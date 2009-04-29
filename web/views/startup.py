@@ -10,7 +10,7 @@ __docformat__ = "restructuredtext en"
 from logilab.common.textutils import unormalize
 from logilab.mtconverter import html_escape
 
-from cubicweb.common.uilib import ureport_as_html, unormalize, ajax_replace_url
+from cubicweb.common.uilib import ureport_as_html, ajax_replace_url
 from cubicweb.common.view import StartupView
 from cubicweb.common.selectors import match_user_group
 from cubicweb.web.httpcache import EtagHTTPCacheManager
