@@ -14,7 +14,7 @@ from yams import schema2dot as s2d
 from cubicweb.selectors import implements, yes
 from cubicweb.schemaviewer import SchemaViewer
 from cubicweb.view import EntityView, StartupView
-from cubicweb.common.uilib import ureport_as_html
+from cubicweb.common import tags, uilib
 from cubicweb.web import uicfg, action
 from cubicweb.web.views import TmpFileViewMixin, primary, baseviews
 
@@ -85,16 +85,16 @@ class CWETypeSchemaView(primary.PrimaryView):
     main_related_section = False
     skip_rels = SKIPPED_RELS
 
-    def render_entity_attributes(self, entity, siderelations):
-        super(CWETypeSchemaView, self).render_entity_attributes(entity, siderelations)
+    def render_entity_attributes(self, entity):
+        super(CWETypeSchemaView, self).render_entity_attributes(entity)
         eschema = self.vreg.schema.eschema(entity.name)
         viewer = SchemaViewer(self.req)
         layout = viewer.visit_entityschema(eschema, skiprels=self.skip_rels)
-        self.w(ureport_as_html(layout))
+        self.w(uilib.ureport_as_html(layout))
         if not eschema.is_final():
-            self.w(u'<img src="%s" alt="%s"/>' % (
-                html_escape(entity.absolute_url(vid='eschemagraph')),
-                html_escape(self.req._('graphical schema for %s') % entity.name)))
+            msg = self.req._('graphical schema for %s') % entity.name
+            self.w(tags.img(src=entity.absolute_url(vid='eschemagraph'),
+                            alt=msg))
 
 
 class CWRTypeSchemaView(primary.PrimaryView):
@@ -103,16 +103,16 @@ class CWRTypeSchemaView(primary.PrimaryView):
     title = _('in memory relation schema')
     main_related_section = False
 
-    def render_entity_attributes(self, entity, siderelations):
-        super(CWRTypeSchemaView, self).render_entity_attributes(entity, siderelations)
+    def render_entity_attributes(self, entity):
+        super(CWRTypeSchemaView, self).render_entity_attributes(entity)
         rschema = self.vreg.schema.rschema(entity.name)
         viewer = SchemaViewer(self.req)
         layout = viewer.visit_relationschema(rschema)
-        self.w(ureport_as_html(layout))
+        self.w(uilib.ureport_as_html(layout))
         if not rschema.is_final():
-            self.w(u'<img src="%s" alt="%s"/>' % (
-                html_escape(entity.absolute_url(vid='eschemagraph')),
-                html_escape(self.req._('graphical schema for %s') % entity.name)))
+            msg = self.req._('graphical schema for %s') % entity.name
+            self.w(tags.img(src=entity.absolute_url(vid='eschemagraph'),
+                            alt=msg))
 
 
 # schema images ###############################################################
