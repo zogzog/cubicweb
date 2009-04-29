@@ -161,12 +161,14 @@ class SecurityManagementView(EntityView, SecurityViewMixIn):
                                 domid='reqperm%s' % entity.eid,
                                 __redirectvid='security',
                                 __redirectpath=entity.rest_path())
-        form.form_add_hidden('require_permission', entity.eid, role='object', eidparam=True)
+        form.form_add_hidden('require_permission', entity.eid, role='object',
+                             eidparam=True)
         permnames = getattr(entity, '__permissions__', None)
         cwpermschema = newperm.e_schema
         if permnames is not None:
             field = guess_field(cwpermschema, self.schema.rschema('name'),
-                                widget=formwidgets.Select, choices=permnames)
+                                widget=formwidgets.Select({'size': 1}),
+                                choices=permnames)
         else:
             field = guess_field(cwpermschema, self.schema.rschema('name'))
         form.append_field(field)
