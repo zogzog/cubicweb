@@ -29,7 +29,7 @@ function _loadAjaxHtmlHead(node, head, tag, srcattr) {
  */
 function loadAjaxHtmlHead(node) {
     var head = jQuery('head');
-    var node = jQuery(node).find('div.ajaxHtmlHead');
+    node = jQuery(node).find('div.ajaxHtmlHead');
     _loadAjaxHtmlHead(node, head, 'script', 'src');
     _loadAjaxHtmlHead(node, head, 'link', 'href');
     node.find('*').appendTo(head);
@@ -144,18 +144,6 @@ function remoteCallFailed(err, req) {
     }
 }
 
-/*
- * This function is the equivalent of MochiKit's loadJSONDoc but
- * uses POST instead of GET
- */
-function loadJSONDocUsingPOST(url, data) {
-    setProgressCursor();
-    var deferred = loadJSON(url, data, 'POST');
-    deferred = deferred.addErrback(remoteCallFailed);
-    deferred = deferred.addCallback(resetCursor);
-    return deferred;
-}
-
 
 /*
  * This function will call **synchronously** a remote method on the cubicweb server
@@ -187,10 +175,16 @@ function remoteExec(fname /* ... */) {
  *
  * It looks at http headers to guess the response type.
  */
+
 function asyncRemoteExec(fname /* ... */) {
+    setProgressCursor();
     var props = {'fname' : fname, 'pageid' : pageid,
      		 'arg': map(jQuery.toJSON, sliceList(arguments, 1))};
-    return loadJSONDocUsingPOST(JSON_BASE_URL, props);
+    var deferred = loadRemote(JSON_BASE_URL, props, 'POST');
+    deferred = deferred.addErrback(remoteCallFailed);
+    deferred = deferred.addErrback(resetCursor);
+    deferred = deferred.addCallback(resetCursor);
+    return deferred;
 }
 
 
