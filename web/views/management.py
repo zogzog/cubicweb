@@ -62,6 +62,7 @@ class SecurityViewMixIn(object):
                 return True
         return False
 
+
 class SecurityManagementView(EntityView, SecurityViewMixIn):
     """display security information for a given entity"""
     id = 'security'
@@ -100,6 +101,7 @@ class SecurityManagementView(EntityView, SecurityViewMixIn):
         msg = self.req._('ownerships have been changed')
         form = EntityFieldsForm(self.req, None, entity=entity, submitmsg=msg,
                                 form_buttons=[formwidgets.SubmitButton()],
+                                domid='ownership%s' % entity.eid,
                                 __redirectvid='security',
                                 __redirectpath=entity.rest_path())
         field = guess_field(entity.e_schema, self.schema.rschema('owned_by'))
@@ -156,14 +158,17 @@ class SecurityManagementView(EntityView, SecurityViewMixIn):
         w(u'<p>%s</p>' % _('add a new permission'))
         form = EntityFieldsForm(self.req, None, entity=newperm,
                                 form_buttons=[formwidgets.SubmitButton()],
+                                domid='reqperm%s' % entity.eid,
                                 __redirectvid='security',
                                 __redirectpath=entity.rest_path())
-        form.form_add_hidden('require_permission', entity.eid, role='object', eidparam=True)
+        form.form_add_hidden('require_permission', entity.eid, role='object',
+                             eidparam=True)
         permnames = getattr(entity, '__permissions__', None)
         cwpermschema = newperm.e_schema
         if permnames is not None:
             field = guess_field(cwpermschema, self.schema.rschema('name'),
-                                widget=formwidgets.Select, choices=permnames)
+                                widget=formwidgets.Select({'size': 1}),
+                                choices=permnames)
         else:
             field = guess_field(cwpermschema, self.schema.rschema('name'))
         form.append_field(field)

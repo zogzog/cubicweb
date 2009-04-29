@@ -33,7 +33,7 @@ def relation_id(eid, rtype, role, reid):
         return u'%s:%s:%s' % (eid, rtype, reid)
     return u'%s:%s:%s' % (reid, rtype, eid)
 
-def toggable_relation_link(eid, nodeid, label='x'):
+def toggleable_relation_link(eid, nodeid, label='x'):
     """return javascript snippet to delete/undelete a relation between two
     entities
     """

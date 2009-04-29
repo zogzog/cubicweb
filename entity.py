@@ -51,11 +51,11 @@ try:
     def _dispatch_rtags(tags, rtype, role, stype, otype):
         for tag in tags:
             if tag in _MODE_TAGS:
-                uicfg.rmode.set_rtag(tag, rtype, role, stype, otype)
+                uicfg.rmode.tag_relation(tag, (stype, rtype, otype), role)
             elif tag in _CATEGORY_TAGS:
-                uicfg.rcategories.set_rtag(tag, rtype, role, stype, otype)
+                uicfg.rcategories.tag_relation(tag, (stype, rtype, otype), role)
             elif tag == 'inlineview':
-                uicfg.rinlined.set_rtag(True, rtype, role, stype, otype)
+                uicfg.rinlined.tag_relation(True, (stype, rtype, otype), role)
             else:
                 raise ValueError(tag)
 
@@ -127,7 +127,8 @@ class _metaentity(type):
                     if wdgname == 'StringWidget':
                         wdgname = 'TextInput'
                     widget = getattr(formwidgets, wdgname)
-                    AutomaticEntityForm.rwidgets.set_rtag(wdgname, rtype, 'subject', etype)
+                    AutomaticEntityForm.rwidgets.tag_relation(
+                        wdgname, (etype, rtype, '*'), 'subject')
         return super(_metaentity, mcs).__new__(mcs, name, bases, classdict)
 
 

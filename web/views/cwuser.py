@@ -14,18 +14,18 @@ from cubicweb.web import uicfg, action
 from cubicweb.web.views.baseviews import PrimaryView
 
 
-uicfg.rcategories.set_rtag('secondary', 'firstname', 'subject', 'CWUser')
-uicfg.rcategories.set_rtag('secondary', 'surname', 'subject', 'CWUser')
-uicfg.rcategories.set_rtag('metadata', 'last_login_time', 'subject', 'CWUser')
-uicfg.rcategories.set_rtag('primary', 'in_group', 'subject', 'CWUser')
-uicfg.rcategories.set_rtag('generated', 'owned_by', 'object', otype='CWUser')
-uicfg.rcategories.set_rtag('generated', 'created_by', 'object', otype='CWUser')
-uicfg.rcategories.set_rtag('metadata', 'bookmarked_by', 'object', otype='CWUser')
-uicfg.rinlined.set_rtag(True, 'use_email', 'subject', 'CWUser')
-uicfg.rmode.set_rtag('create', 'in_group', 'object', otype='CWGroup')
-uicfg.rmode.set_rtag('link', 'owned_by', 'object', otype='CWUser')
-uicfg.rmode.set_rtag('link', 'created_by', 'object', otype='CWUser')
-uicfg.rmode.set_rtag('create', 'bookmarked_by', 'object', otype='CWUser')
+uicfg.rcategories.tag_relation('secondary', ('CWUser', 'firstname', '*'), 'subject')
+uicfg.rcategories.tag_relation('secondary', ('CWUser', 'surname', '*'), 'subject')
+uicfg.rcategories.tag_relation('metadata', ('CWUser', 'last_login_time', '*'), 'subject')
+uicfg.rcategories.tag_relation('primary', ('CWUser', 'in_group', '*'), 'subject')
+uicfg.rcategories.tag_relation('generated', ('*', 'owned_by', 'CWUser'), 'object')
+uicfg.rcategories.tag_relation('generated', ('*', 'created_by', 'CWUser'), 'object')
+uicfg.rcategories.tag_relation('metadata', ('*', 'bookmarked_by', 'CWUser'), 'object')
+uicfg.rinlined.tag_relation(True, ('CWUser', 'use_email', '*'), 'subject')
+uicfg.rmode.tag_relation('create', ('*', 'in_group', 'CWGroup'), 'object')
+uicfg.rmode.tag_relation('link', ('*', 'owned_by', 'CWUser'), 'object')
+uicfg.rmode.tag_relation('link', ('*', 'created_by', 'CWUser'), 'object')
+uicfg.rmode.tag_relation('create', ('*', 'bookmarked_by', 'CWUser'), 'object')
 
 
 class UserPreferencesEntityAction(action.Action):

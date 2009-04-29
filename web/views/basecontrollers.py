@@ -44,6 +44,7 @@ def jsonize(func):
         self.req.set_content_type('application/json')
         result = func(self, *args, **kwargs)
         return simplejson.dumps(result)
+    wrapper.__name__ = func.__name__
     return wrapper
 
 def xhtmlize(func):
@@ -52,6 +53,7 @@ def xhtmlize(func):
         self.req.set_content_type(self.req.html_content_type())
         result = func(self, *args, **kwargs)
         return xhtml_wrap(result)
+    wrapper.__name__ = func.__name__
     return wrapper
 
 def check_pageid(func):
@@ -360,6 +362,9 @@ class JSonController(Controller):
 
     @jsonize
     def js_validate_form(self, action, names, values):
+        return self.validate_form(action, names, values)
+
+    def validate_form(self, action, names, values):
         # XXX this method (and correspoding js calls) should use the new
         #     `RemoteCallFailed` mechansim
         self.req.form = self._rebuild_posted_form(names, values, action)
@@ -388,7 +393,7 @@ class JSonController(Controller):
 
     @jsonize
     def js_edit_field(self, action, names, values, rtype, eid):
-        success, args = self.js_validate_form(action, names, values)
+        success, args = self.validate_form(action, names, values)
         if success:
             rset = self.req.execute('Any X,N WHERE X eid %%(x)s, X %s N' % rtype,
                                     {'x': eid}, 'x')

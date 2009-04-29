@@ -189,10 +189,10 @@ class SchemaView(StartupView):
             self.wview(section, None)
         self.w(u'</div>')
 
-    
+
 class ManagerSchemaPermissionsView(StartupView, SecurityViewMixIn):
     id = 'schema_security'
-    __selectors__ = StartupView.__selectors__ + (match_user_groups('managers'),)
+    __select__ = StartupView.__select__ & match_user_groups('managers')
 
     def call(self, display_relations=True,
              skiprels=('is', 'is_instance_of', 'identity', 'owned_by', 'created_by')):
@@ -208,7 +208,7 @@ class ManagerSchemaPermissionsView(StartupView, SecurityViewMixIn):
             entities = [eschema for eschema in entities
                         if not eschema.meta]
         # compute relations
-        relations = []    
+        relations = []
         if display_relations:
             relations = [rschema for rschema in schema.relations()
                          if not (rschema.is_final() or rschema.type in skiprels)]
@@ -288,7 +288,7 @@ class ManagerSchemaPermissionsView(StartupView, SecurityViewMixIn):
             self.schema_definition(rschema, link=False)
             self.w(u'</div>')
 
-                
+
 class SchemaUreportsView(StartupView):
     id = 'schematext'
 

@@ -9,32 +9,33 @@ reloading problems.
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 """
 __docformat__ = "restructuredtext en"
-from cubicweb.rtags import RelationTags
+
+from cubicweb.rtags import RelationTags, RelationTagsSet
 
 # autoform.AutomaticEntityForm configuration ##################################
 
 # relations'category (eg primary/secondary/generic/metadata/generated)
 rcategories = RelationTags()
 # use primary and not generated for eid since it has to be an hidden
-rcategories.set_rtag('primary', 'eid', 'subject')
-rcategories.set_rtag('primary', 'in_state', 'subject')
-rcategories.set_rtag('secondary', 'description', 'subject')
-rcategories.set_rtag('metadata', 'creation_date', 'subject')
-rcategories.set_rtag('metadata', 'modification_date', 'subject')
-rcategories.set_rtag('metadata', 'owned_by', 'subject')
-rcategories.set_rtag('metadata', 'created_by', 'subject')
-rcategories.set_rtag('generated', 'has_text', 'subject')
-rcategories.set_rtag('generated', 'is', 'subject')
-rcategories.set_rtag('generated', 'is', 'object')
-rcategories.set_rtag('generated', 'is_instance_of', 'subject')
-rcategories.set_rtag('generated', 'is_instance_of', 'object')
-rcategories.set_rtag('generated', 'identity', 'subject')
-rcategories.set_rtag('generated', 'identity', 'object')
-rcategories.set_rtag('generated', 'require_permission', 'subject')
-rcategories.set_rtag('generated', 'wf_info_for', 'subject')
-rcategories.set_rtag('generated', 'wf_info_for', 'object')
-rcategories.set_rtag('generated', 'for_user', 'subject')
-rcategories.set_rtag('generated', 'for_user', 'object')
+rcategories.tag_relation('primary', ('*', 'eid', '*'), 'subject')
+rcategories.tag_relation('primary', ('*', 'in_state', '*'), 'subject')
+rcategories.tag_relation('secondary', ('*', 'description', '*'), 'subject')
+rcategories.tag_relation('metadata', ('*', 'creation_date', '*'), 'subject')
+rcategories.tag_relation('metadata', ('*', 'modification_date', '*'), 'subject')
+rcategories.tag_relation('metadata', ('*', 'owned_by', '*'), 'subject')
+rcategories.tag_relation('metadata', ('*', 'created_by', '*'), 'subject')
+rcategories.tag_relation('generated', ('*', 'has_text', '*'), 'subject')
+rcategories.tag_relation('generated', ('*', 'is', '*'), 'subject')
+rcategories.tag_relation('generated', ('*', 'is', '*'), 'object')
+rcategories.tag_relation('generated', ('*', 'is_instance_of', '*'), 'subject')
+rcategories.tag_relation('generated', ('*', 'is_instance_of', '*'), 'object')
+rcategories.tag_relation('generated', ('*', 'identity', '*'), 'subject')
+rcategories.tag_relation('generated', ('*', 'identity', '*'), 'object')
+rcategories.tag_relation('generated', ('*', 'require_permission', '*'), 'subject')
+rcategories.tag_relation('generated', ('*', 'wf_info_for', '*'), 'subject')
+rcategories.tag_relation('generated', ('*', 'wf_info_for', '*'), 'object')
+rcategories.tag_relation('generated', ('*', 'for_user', '*'), 'subject')
+rcategories.tag_relation('generated', ('*', 'for_user', '*'), 'object')
 
 # relations'field class
 rfields = RelationTags()
@@ -50,21 +51,21 @@ rinlined = RelationTags()
 # set of tags of the form <action>_on_new on relations. <action> is a
 # schema action (add/update/delete/read), and when such a tag is found
 # permissions checking is by-passed and supposed to be ok
-rpermissions_overrides = RelationTags(use_set=True)
+rpermissions_overrides = RelationTagsSet()
 
 
 # boxes.EditBox configuration #################################################
 
 # 'link' / 'create' relation tags, used to control the "add entity" submenu
 rmode = RelationTags()
-rmode.set_rtag('link', 'is', 'subject')
-rmode.set_rtag('link', 'is', 'object')
-rmode.set_rtag('link', 'is_instance_of', 'subject')
-rmode.set_rtag('link', 'is_instance_of', 'object')
-rmode.set_rtag('link', 'identity', 'subject')
-rmode.set_rtag('link', 'identity', 'object')
-rmode.set_rtag('link', 'owned_by', 'subject')
-rmode.set_rtag('link', 'created_by', 'subject')
-rmode.set_rtag('link', 'require_permission', 'subject')
-rmode.set_rtag('link', 'wf_info_for', 'subject')
-rmode.set_rtag('link', 'wf_info_for', 'object')
+rmode.tag_relation('link', ('*', 'is', '*'), 'subject')
+rmode.tag_relation('link', ('*', 'is', '*'), 'object')
+rmode.tag_relation('link', ('*', 'is_instance_of', '*'), 'subject')
+rmode.tag_relation('link', ('*', 'is_instance_of', '*'), 'object')
+rmode.tag_relation('link', ('*', 'identity', '*'), 'subject')
+rmode.tag_relation('link', ('*', 'identity', '*'), 'object')
+rmode.tag_relation('link', ('*', 'owned_by', '*'), 'subject')
+rmode.tag_relation('link', ('*', 'created_by', '*'), 'subject')
+rmode.tag_relation('link', ('*', 'require_permission', '*'), 'subject')
+rmode.tag_relation('link', ('*', 'wf_info_for', '*'), 'subject')
+rmode.tag_relation('link', ('*', 'wf_info_for', '*'), 'object')

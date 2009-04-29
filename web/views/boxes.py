@@ -53,7 +53,7 @@ class EditBox(BoxTemplate):
                     else:
                         X, Y = tschema, eschema
                         card = rschema.rproperty(X, Y, 'cardinality')[1]
-                    if not cls.rmode.rtag(rschema, role, X, Y):
+                    if not cls.rmode.get(rschema, role, X, Y):
                         if card in '?1':
                             # by default, suppose link mode if cardinality doesn't allow
                             # more than one relation
@@ -64,7 +64,7 @@ class EditBox(BoxTemplate):
                         else:
                             # link mode by default
                             mode = 'link'
-                        cls.rmode.set_rtag(mode, rschema, role, X, Y)
+                        cls.rmode.tag_relation(mode, (X, rschema, Y), role)
 
     @classmethod
     def relation_mode(cls, rtype, etype, targettype, role='subject'):
@@ -72,8 +72,8 @@ class EditBox(BoxTemplate):
         to a new entity ('create' mode) or to an existant entity ('link' mode)
         """
         if role == 'subject':
-            return cls.rmode.rtag(rtype, role, etype, targettype)
-        return cls.rmode.rtag(rtype, role, targettype, etype)
+            return cls.rmode.get(rtype, role, etype, targettype)
+        return cls.rmode.get(rtype, role, targettype, etype)
 
 
     def call(self, view=None, **kwargs):
