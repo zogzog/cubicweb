@@ -421,7 +421,7 @@ class FieldsForm(FormMixIn, AppRsetObject):
 class EntityFieldsForm(FieldsForm):
     __select__ = (match_kwargs('entity') | (one_line_rset & non_final_entity()))
 
-    internal_fields = FieldsForm.internal_fields + ('__type', 'eid')
+    internal_fields = FieldsForm.internal_fields + ('__type', 'eid', '__maineid')
     domid = 'entityForm'
 
     def __init__(self, *args, **kwargs):
