@@ -12,6 +12,48 @@ __docformat__ = "restructuredtext en"
 
 from cubicweb.rtags import RelationTags, RelationTagsSet
 
+# primary view configuration ##################################################
+
+# how to display a relation in primary view.
+# values a dict with the following keys:
+#
+# 'where', whose value may be one of:
+#  * 'attributes', display in the attributes section
+#  * 'relations', display in the relations section (below attributes)
+#  * 'sideboxes', display in the side boxes (beside attributes)
+# if this key is missing, the relation won't be displayed at all.
+#
+# 'vid' is an optional view identifier
+#
+# 'label' is an optional label
+#
+# 'limit' is a boolean telling if the results should be limited according to
+#  the configuration
+class RDisplayRelationTags(RelationTags):
+    def __init__(self):
+        super(RDisplayRelationTags, self).__init__()
+        self._counter = 0
+
+    def tag_relation(self, values, *args, **kwargs):
+        super(RDisplayRelationTags, self).tag_relation(values, *args, **kwargs)
+        if values:
+            values['order'] = self.get_timestamp()
+
+    def get_timestamp(self):
+        self._counter += 1
+        return self._counter
+
+rdisplay = RDisplayRelationTags()
+for rtype in ('eid', 'creation_date', 'modification_date',
+              'is', 'is_instance_of', 'identity',
+              'owned_by', 'created_by',
+              'in_state', 'wf_info_for', 'require_permission',
+              'from_entity', 'to_entity',
+              'see_also'):
+    rdisplay.tag_relation({}, ('*', rtype, '*'), 'subject')
+    rdisplay.tag_relation({}, ('*', rtype, '*'), 'object')
+
+
 # autoform.AutomaticEntityForm configuration ##################################
 
 # relations'category (eg primary/secondary/generic/metadata/generated)

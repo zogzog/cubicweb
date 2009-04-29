@@ -26,6 +26,8 @@ uicfg.rmode.tag_relation('create', ('*', 'in_group', 'CWGroup'), 'object')
 uicfg.rmode.tag_relation('link', ('*', 'owned_by', 'CWUser'), 'object')
 uicfg.rmode.tag_relation('link', ('*', 'created_by', 'CWUser'), 'object')
 uicfg.rmode.tag_relation('create', ('*', 'bookmarked_by', 'CWUser'), 'object')
+uicfg.rdisplay.tag_attribute({}, 'CWUser', 'firstname')
+uicfg.rdisplay.tag_attribute({}, 'CWUser', 'surname')
 
 
 class UserPreferencesEntityAction(action.Action):
@@ -44,22 +46,8 @@ class UserPreferencesEntityAction(action.Action):
 class CWUserPrimaryView(PrimaryView):
     __select__ = implements('CWUser')
 
-    skip_attrs = ('firstname', 'surname')
-
-    def iter_relations(self, entity):
-        # don't want to display user's entities
-        for rschema, targetschemas, x in super(CWUserPrimaryView, self).iter_relations(entity):
-            if x == 'object' and rschema.type in ('owned_by', 'for_user'):
-                continue
-            yield rschema, targetschemas, x
-
     def content_title(self, entity):
         return entity.name()
-
-    def is_side_related(self, rschema, eschema):
-        # XXX only bookmarked_by defined in cw...
-        return  rschema.type in ['interested_in', 'tags',
-                                 'todo_by', 'bookmarked_by']
 
 
 class FoafView(EntityView):

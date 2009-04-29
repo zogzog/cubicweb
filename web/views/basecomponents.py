@@ -16,7 +16,7 @@ from cubicweb.common.uilib import html_escape, toggle_action
 from cubicweb.schema import display_name
 
 from cubicweb.web.htmlwidgets import MenuWidget, PopupBoxMenu, BoxSeparator, BoxLink
-from cubicweb.web.component import Component, RelatedObjectsVComponent
+from cubicweb.web import uicfg, component
 
 _ = unicode
 
@@ -25,7 +25,7 @@ VISIBLE_PROP_DEF = {
                         help=_('display the component or not')),
     }
 
-class RQLInputForm(Component):
+class RQLInputForm(component.Component):
     """build the rql input form, usually displayed in the header"""
     id = 'rqlinput'
     property_defs = VISIBLE_PROP_DEF
@@ -54,7 +54,7 @@ class RQLInputForm(Component):
         self.w(u'</form></div>')
 
 
-class ApplLogo(Component):
+class ApplLogo(component.Component):
     """build the application logo, usually displayed in the header"""
     id = 'logo'
     property_defs = VISIBLE_PROP_DEF
@@ -66,7 +66,7 @@ class ApplLogo(Component):
                % (self.req.base_url(), self.req.external_resource('LOGO')))
 
 
-class ApplHelp(Component):
+class ApplHelp(component.Component):
     """build the help button, usually displayed in the header"""
     id = 'help'
     property_defs = VISIBLE_PROP_DEF
@@ -76,7 +76,7 @@ class ApplHelp(Component):
                   self.req._(u'help'),))
 
 
-class UserLink(Component):
+class UserLink(component.Component):
     """if the user is the anonymous user, build a link to login
     else a link to the connected user object with a loggout link
     """
@@ -120,7 +120,7 @@ class UserLink(Component):
                    % (self.build_url('login'), self.req._('login')))
 
 
-class ApplicationMessage(Component):
+class ApplicationMessage(component.Component):
     """display application's messages given using the __message parameter
     into a special div section
     """
@@ -141,7 +141,7 @@ class ApplicationMessage(Component):
         self.w(u'</div>')
 
 
-class ApplicationName(Component):
+class ApplicationName(component.Component):
     """display the application name"""
     id = 'appliname'
     property_defs = VISIBLE_PROP_DEF
@@ -151,19 +151,22 @@ class ApplicationName(Component):
                                                          self.req.property_value('ui.site-title')))
 
 
-class SeeAlsoVComponent(RelatedObjectsVComponent):
+uicfg.rdisplay.tag_relation({}, ('*', 'see_also', '*'), 'subject')
+uicfg.rdisplay.tag_relation({}, ('*', 'see_also', '*'), 'object')
+
+class SeeAlsoVComponent(component.RelatedObjectsVComponent):
     """display any entity's see also"""
     id = 'seealso'
     context = 'navcontentbottom'
     rtype = 'see_also'
-    target = 'object'
+    role = 'subject'
     order = 40
     # register msg not generated since no entity use see_also in cubicweb itself
     title = _('contentnavigation_seealso')
     help = _('contentnavigation_seealso_description')
 
 
-class EtypeRestrictionComponent(Component):
+class EtypeRestrictionComponent(component.Component):
     """displays the list of entity types contained in the resultset
     to be able to filter accordingly.
     """

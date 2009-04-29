@@ -94,19 +94,11 @@ class DownloadLinkView(baseviews.EntityView):
         self.w(u'<a href="%s">%s</a>' % (url, html_escape(title or entity.dc_title())))
 
 
-
 class IDownloadablePrimaryView(baseviews.PrimaryView):
     __select__ = implements(IDownloadable)
-    # XXX File/Image attributes but this is not specified in the IDownloadable interface
-    skip_attrs = baseviews.PrimaryView.skip_attrs + ('data', 'name')
 
-    def render_entity_title(self, entity):
-        self.w(u'<h1>%s %s</h1>'
-               % (entity.dc_type().capitalize(),
-                  html_escape(entity.dc_title())))
-
-    def render_entity_attributes(self, entity, siderelations):
-        super(IDownloadablePrimaryView, self).render_entity_attributes(entity, siderelations)
+    def render_entity_attributes(self, entity):
+        super(IDownloadablePrimaryView, self).render_entity_attributes(entity)
         self.w(u'<div class="content">')
         contenttype = entity.download_content_type()
         if contenttype.startswith('image/'):
@@ -122,10 +114,6 @@ class IDownloadablePrimaryView(baseviews.PrimaryView):
                 msg = self.req._("can't display data, unexpected error: %s") % ex
                 self.w('<div class="error">%s</div>' % msg)
         self.w(u'</div>')
-
-    def is_side_related(self, rschema, eschema):
-        """display all relations as side related"""
-        return True
 
 
 class IDownloadableLineView(baseviews.OneLineView):
