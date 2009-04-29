@@ -42,6 +42,9 @@ class RelationTags(object):
                 keys.remove((rtype, tagged, stype, '*'))
         return keys
 
+    def tag_attribute(self, tag, stype, attr):
+        self._tagdefs[(str(attr), 'subject', str(stype), '*')] = tag
+
     def tag_relation(self, tag, relation, tagged):
         assert tagged in ('subject', 'object'), tagged
         stype, rtype, otype = relation
