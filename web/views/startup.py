@@ -10,9 +10,9 @@ __docformat__ = "restructuredtext en"
 from logilab.common.textutils import unormalize
 from logilab.mtconverter import html_escape
 
-from cubicweb.common.uilib import ureport_as_html, unormalize, ajax_replace_url
-from cubicweb.common.view import StartupView
-from cubicweb.common.selectors import match_user_group
+from cubicweb.common.uilib import ureport_as_html, ajax_replace_url
+from cubicweb.view import StartupView
+from cubicweb.selectors import match_user_groups
 from cubicweb.web.httpcache import EtagHTTPCacheManager
 from cubicweb.web.views.management import SecurityViewMixIn
 from copy import deepcopy
@@ -192,8 +192,7 @@ class SchemaView(StartupView):
     
 class ManagerSchemaPermissionsView(StartupView, SecurityViewMixIn):
     id = 'schema_security'
-    require_groups = ('managers',)
-    __selectors__ = StartupView.__selectors__ + (match_user_group,)
+    __selectors__ = StartupView.__selectors__ + (match_user_groups('managers'),)
 
     def call(self, display_relations=True,
              skiprels=('is', 'is_instance_of', 'identity', 'owned_by', 'created_by')):

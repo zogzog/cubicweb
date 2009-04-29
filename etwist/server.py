@@ -155,6 +155,14 @@ class CubicWebRootResource(resource.PostableResource):
         else:
             return threads.deferToThread(self.render_request, request)
 
+    def _host_prefixed_base_url(self, base_url):
+        scheme, netloc, url, query, fragment = urlsplit(baseurl)
+        if '.' in netloc:
+            netloc = '.'.join(host.split('.')[:1] + netloc.split('.')[1:])
+        baseurl = urlunsplit((scheme, netloc, url, query, fragment))
+        self.warning('base_url is %s for this request', baseurl)
+        return base_url
+
     def render_request(self, request):
         origpath = request.path
         host = request.host
@@ -169,11 +177,7 @@ class CubicWebRootResource(resource.PostableResource):
             https = False
             baseurl = self.base_url
         if self.config['use-request-subdomain']:
-            scheme, netloc, url, query, fragment = urlsplit(baseurl)
-            if '.' in netloc:
-                netloc = '.'.join(host.split('.')[:1] + netloc.split('.')[1:])
-            baseurl = urlunsplit((scheme, netloc, url, query, fragment))
-            self.warning('base_url is %s for this request', baseurl)
+            base_url = self._host_prefixed_base_url(base_url)
         req = CubicWebTwistedRequestAdapter(request, self.appli.vreg, https, baseurl)
         if req.authmode == 'http':
             # activate realm-based auth
