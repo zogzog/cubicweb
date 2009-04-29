@@ -44,6 +44,14 @@ def start_looping_tasks(repo):
     # ensure no tasks will be further added
     repo._looping_tasks = ()
 
+def host_prefixed_baseurl(baseurl, host):
+    scheme, netloc, url, query, fragment = urlsplit(baseurl)
+    netloc_domain = '.' + '.'.join(netloc.split('.')[-2:])
+    if host.endswith(netloc_domain):
+        netloc = host
+    baseurl = urlunsplit((scheme, netloc, url, query, fragment))
+    return baseurl
+
 
 class LongTimeExpiringFile(static.File):
     """overrides static.File and sets a far futre ``Expires`` date
@@ -155,14 +163,6 @@ class CubicWebRootResource(resource.PostableResource):
         else:
             return threads.deferToThread(self.render_request, request)
 
-    def _host_prefixed_base_url(self, base_url):
-        scheme, netloc, url, query, fragment = urlsplit(baseurl)
-        if '.' in netloc:
-            netloc = '.'.join(host.split('.')[:1] + netloc.split('.')[1:])
-        baseurl = urlunsplit((scheme, netloc, url, query, fragment))
-        self.warning('base_url is %s for this request', baseurl)
-        return base_url
-
     def render_request(self, request):
         origpath = request.path
         host = request.host
@@ -177,7 +177,8 @@ class CubicWebRootResource(resource.PostableResource):
             https = False
             baseurl = self.base_url
         if self.config['use-request-subdomain']:
-            base_url = self._host_prefixed_base_url(base_url)
+            baseurl = host_prefixed_baseurl(baseurl, host)
+            self.warning('used baseurl is %s for this request', baseurl)
         req = CubicWebTwistedRequestAdapter(request, self.appli.vreg, https, baseurl)
         if req.authmode == 'http':
             # activate realm-based auth
