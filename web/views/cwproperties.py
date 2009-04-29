@@ -12,10 +12,9 @@ from logilab.common.decorators import cached
 
 from cubicweb import UnknownProperty
 from cubicweb.selectors import (one_line_rset, none_rset, implements,
-                                match_user_groups, entity_implements)
-from cubicweb.utils import UStringIO
+                                match_user_groups)
 from cubicweb.view import StartupView
-from cubicweb.web import INTERNAL_FIELD_VALUE, eid_param, uicfg
+from cubicweb.web import uicfg
 from cubicweb.web.views import baseviews
 from cubicweb.web import stdmsgs
 from cubicweb.web.form import CompositeForm, EntityFieldsForm, FormViewMixIn
@@ -23,9 +22,6 @@ from cubicweb.web.formfields import FIELDS, StringField
 from cubicweb.web.formwidgets import Select, Button, SubmitButton
 
 _ = unicode
-
-uicfg.rfields.tag_relation(PropertyKeyField, ('CWProperty', 'pkey', '*'), 'subject')
-uicfg.rfields.tag_relation(PropertyValueField, ('CWProperty', 'value', '*'), 'subject')
 
 # some string we want to be internationalizable for nicer display of eproperty
 # groups
@@ -327,3 +323,6 @@ class PropertyValueField(StringField):
                 wdg.attrs.setdefault('size', 3)
         self.widget = wdg
 
+
+uicfg.rfields.tag_relation(PropertyKeyField, ('CWProperty', 'pkey', '*'), 'subject')
+uicfg.rfields.tag_relation(PropertyValueField, ('CWProperty', 'value', '*'), 'subject')
