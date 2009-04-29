@@ -24,7 +24,7 @@ class CWUser(AnyEntity):
     id = 'CWUser'
     fetch_attrs, fetch_order = fetch_config(['login', 'firstname', 'surname'])
     fetch_unrelated_order = fetch_order
-    
+
     # used by repository to check if  the user can log in or not
     AUTHENTICABLE_STATES = ('activated',)
 
@@ -37,7 +37,7 @@ class CWUser(AnyEntity):
             self._groups = groups
         if properties is not None:
             self._properties = properties
-            
+
     @property
     def groups(self):
         try:
@@ -45,7 +45,7 @@ class CWUser(AnyEntity):
         except AttributeError:
             self._groups = set(g.name for g in self.in_group)
             return self._groups
-        
+
     @property
     def properties(self):
         try:
@@ -64,7 +64,7 @@ class CWUser(AnyEntity):
         except ValueError:
             self.warning('incorrect value for eproperty %s of user %s', key, self.login)
         return self.vreg.property_value(key)
-    
+
     def matching_groups(self, groups):
         """return the number of the given group(s) in which the user is
 
@@ -86,7 +86,7 @@ class CWUser(AnyEntity):
         """ checks if user is an anonymous user"""
         #FIXME on the web-side anonymous user is detected according
         # to config['anonymous-user'], we don't have this info on
-        # the server side. 
+        # the server side.
         return self.groups == frozenset(('guests', ))
 
     def owns(self, eid):
@@ -116,12 +116,12 @@ class CWUser(AnyEntity):
             return self.req.execute(rql, kwargs, cachekey)
         except Unauthorized:
             return False
-    
+
     # presentation utilities ##################################################
-    
+
     def name(self):
         """construct a name using firstname / surname or login if not defined"""
-        
+
         if self.firstname and self.surname:
             return self.req._('%(firstname)s %(surname)s') % {
                 'firstname': self.firstname, 'surname' : self.surname}

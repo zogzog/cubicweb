@@ -11,7 +11,7 @@ from logilab.common.interface import Interface
 
 class IEmailable(Interface):
     """interface for emailable entities"""
-    
+
     def get_email(self):
         """return email address"""
 
@@ -28,7 +28,7 @@ class IEmailable(Interface):
     def as_email_context(self):
         """returns the dictionary as used by the sendmail controller to
         build email bodies.
-        
+
         NOTE: the dictionary keys should match the list returned by the
         `allowed_massmail_keys` method.
         """
@@ -45,12 +45,12 @@ class IWorkflowable(Interface):
         """change the entity's state according to a state defined in given
         parameters
         """
-    
+
     def can_pass_transition(self, trname):
         """return true if the current user can pass the transition with the
         given name
         """
-    
+
     def latest_trinfo(self):
         """return the latest transition information for this entity
         """
@@ -73,7 +73,7 @@ class IProgress(Interface):
     @property
     def todo(self):
         """what remains to be done"""
-    
+
     def progress_info(self):
         """returns a dictionary describing progress/estimated cost of the
         version.
@@ -93,19 +93,19 @@ class IProgress(Interface):
 
     def progress(self):
         """returns the % progress of the task item"""
-        
-    
+
+
 class IMileStone(IProgress):
     """represents an ITask's item"""
-    
+
     parent_type = None # specify main task's type
-    
+
     def get_main_task(self):
         """returns the main ITask entity"""
 
     def initial_prevision_date(self):
         """returns the initial expected end of the milestone"""
-        
+
     def eta_date(self):
         """returns expected date of completion based on what remains
         to be done
@@ -128,7 +128,7 @@ class ITree(Interface):
 
     def __iter__(self):
         """iterates over the item's children"""
-        
+
     def is_leaf(self):
         """returns true if this node as no child"""
 
@@ -146,7 +146,7 @@ class IPrevNext(Interface):
     """interface for entities which can be linked to a previous and/or next
     entity
     """
-    
+
     def next_entity(self):
         """return the 'next' entity"""
     def previous_entity(self):
@@ -155,10 +155,10 @@ class IPrevNext(Interface):
 
 class IBreadCrumbs(Interface):
     """interface for entities which can be "located" on some path"""
-    
+
     def breadcrumbs(self, view, recurs=False):
         """return a list containing some:
-        
+
         * tuple (url, label)
         * entity
         * simple label string
@@ -173,7 +173,7 @@ class IBreadCrumbs(Interface):
 
 class IDownloadable(Interface):
     """interface for downloadable entities"""
-    
+
     def download_url(self): # XXX not really part of this interface
         """return an url to download entity's content"""
     def download_content_type(self):
@@ -188,31 +188,31 @@ class IDownloadable(Interface):
 
 class IEmbedable(Interface):
     """interface for embedable entities"""
-    
+
     def embeded_url(self):
         """embed action interface"""
-    
+
 class ICalendarable(Interface):
     """interface for items that do have a begin date 'start' and an end date 'stop'
-    """    
-    
+    """
+
 class ICalendarViews(Interface):
     """calendar views interface"""
     def matching_dates(self, begin, end):
         """
         :param begin: day considered as begin of the range (`DateTime`)
         :param end: day considered as end of the range (`DateTime`)
-        
+
         :return:
           a list of dates (`DateTime`) in the range [`begin`, `end`] on which
           this entity apply
         """
-        
+
 class ITimetableViews(Interface):
     """timetable views interface"""
     def timetable_date(self):
         """XXX explain
-        
+
         :return: date (`DateTime`)
         """
 
@@ -231,17 +231,18 @@ class IGeocodable(Interface):
         """returns the icon that should be used as the marker
         (returns None for default)
         """
-        
+
 class IFeed(Interface):
     """interface for entities with rss flux"""
-    
+
     def rss_feed_url(self):
         """return an url which layout sub-entities item
         """
+
 class ISiocItem(Interface):
     """interface for entities (which are item
     in sioc specification) with sioc views"""
-    
+
     def isioc_content(self):
         """return content entity"""
 
@@ -252,11 +253,11 @@ class ISiocItem(Interface):
         """return container type (post, BlogPost, MailMessage)"""
 
     def isioc_replies(self):
-        """return replies items"""       
+        """return replies items"""
 
     def isioc_topics(self):
         """return topics items"""
-            
+
 class ISiocContainer(Interface):
     """interface for entities (which are container
     in sioc specification) with sioc views"""
@@ -267,5 +268,5 @@ class ISiocContainer(Interface):
     def isioc_items(self):
         """return contained items"""
 
-   
-    
+
+
