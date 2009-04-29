@@ -58,13 +58,22 @@ class FormMixIn(object):
             self.req.set_page_data('rql_varmaker', varmaker)
         self.varmaker = varmaker
 
+    def session_key(self):
+        """return the key that may be used to store / retreive data about a
+        previous post which failed because of a validation error
+        """
+        return '%s#%s' % (self.req.url(), self.domid)
+
     def __init__(self, req, rset, **kwargs):
         super(FormMixIn, self).__init__(req, rset, **kwargs)
+        self.restore_previous_post(self.session_key())
+
+    def restore_previous_post(self, sessionkey):
         # get validation session data which may have been previously set.
         # deleting validation errors here breaks form reloading (errors are
         # no more available), they have to be deleted by application's publish
         # method on successful commit
-        forminfo = req.get_session_data(req.url())
+        forminfo = self.req.get_session_data(sessionkey, pop=True)
         if forminfo:
             req.data['formvalues'] = forminfo['values']
             req.data['formerrors'] = errex = forminfo['errors']
@@ -240,7 +249,7 @@ class FieldsForm(FormMixIn, AppRsetObject):
                 assert hasattr(self.__class__, key) and not key[0] == '_', key
                 setattr(self, key, val)
         if self.set_error_url:
-            self.form_add_hidden('__errorurl', req.url())
+            self.form_add_hidden('__errorurl', self.session_key())
         if self.copy_nav_params:
             for param in NAV_FORM_PARAMETERS:
                 if not param in kwargs:
@@ -250,6 +259,8 @@ class FieldsForm(FormMixIn, AppRsetObject):
         if submitmsg is not None:
             self.form_add_hidden('__message', submitmsg)
         self.context = None
+        if 'domid' in kwargs:# session key changed
+            self.restore_previous_post(self.session_key())
 
     @iclassmethod
     def field_by_name(cls_or_self, name, role='subject'):
