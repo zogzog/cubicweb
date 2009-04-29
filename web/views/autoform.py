@@ -60,7 +60,7 @@ class AutomaticEntityForm(EntityFieldsForm):
                         X, Y = tschema, eschema
                         card = rschema.rproperty(X, Y, 'cardinality')[1]
                         composed = rschema.rproperty(X, Y, 'composite') == 'subject'
-                    if not cls.rcategories.rtag(rschema, role, X, Y):
+                    if not cls.rcategories.get(rschema, role, X, Y):
                         if card in '1+':
                             if not rschema.is_final() and composed:
                                 category = 'generated'
@@ -70,7 +70,7 @@ class AutomaticEntityForm(EntityFieldsForm):
                             category = 'secondary'
                         else:
                             category = 'generic'
-                        cls.rcategories.add_relation(category, (X, rschema, Y), role)
+                        cls.rcategories.tag_relation(category, (X, rschema, Y), role)
 
     @classmethod
     def erelations_by_category(cls, entity, categories=None, permission=None, rtags=None):
