@@ -155,11 +155,11 @@ class RssView(XmlView):
         self.w(u'<?xml version="1.0" encoding="%s"?>\n' % req.encoding)
         self.w(u'<rss version="2.0" xmlns:dc="http://purl.org/dc/elements/1.1/">\n')
         self.w(u'  <channel>\n')
-        self.w(u'    <title>%s RSS Feed</title>\n' % html_escape(self.page_title()))
-        self.w(u'    <description>%s</description>\n' % html_escape(req.form.get('vtitle', '')))
+        self.w(u'    <title>%s RSS Feed</title>\n' % xml_escape(self.page_title()))
+        self.w(u'    <description>%s</description>\n' % xml_escape(req.form.get('vtitle', '')))
         params = req.form.copy()
         params.pop('vid', None)
-        self.w(u'    <link>%s</link>\n' % html_escape(self.build_url(**params)))
+        self.w(u'    <link>%s</link>\n' % xml_escape(self.build_url(**params)))
 
     def _close(self):
         self.w(u'  </channel>\n')
@@ -175,6 +175,7 @@ class RssView(XmlView):
     def cell_call(self, row, col):
         self.wview('rssitem', self.rset, row=row, col=col)
 
+
 class RssItemView(EntityView):
     id = 'rssitem'
     date_format = '%%Y-%%m-%%dT%%H:%%M%+03i:00' % (timezone / 3600)
@@ -183,9 +184,9 @@ class RssItemView(EntityView):
     def cell_call(self, row, col):
         entity = self.complete_entity(row, col)
         self.w(u'<item>\n')
-        self.w(u'<guid isPermaLink="true">%s</guid>\n' % html_escape(entity.absolute_url()))
+        self.w(u'<guid isPermaLink="true">%s</guid>\n' % xml_escape(entity.absolute_url()))
         self.render_title_link(entity)
-        self._marker('description', html_escape(entity.dc_description()))
+        self._marker('description', xml_escape(entity.dc_description()))
         self._marker('dc:date', entity.dc_date(self.date_format))
         self.render_entity_creator(entity)
         self.w(u'</item>\n')
@@ -201,4 +202,4 @@ class RssItemView(EntityView):
 
     def _marker(self, marker, value):
         if value:
-            self.w(u'  <%s>%s</%s>\n' % (marker, html_escape(value), marker))
+            self.w(u'  <%s>%s</%s>\n' % (marker, xml_escape(value), marker))
