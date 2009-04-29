@@ -154,7 +154,7 @@ class ManagePermissionsAction(Action):
 
     title = _('manage permissions')
     category = 'moreactions'
-    order = 100
+    order = 15
 
     @classmethod
     def registered(cls, vreg):
