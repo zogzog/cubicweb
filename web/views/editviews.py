@@ -120,7 +120,7 @@ class UnrelatedDivs(EntityView):
         pending_inserts = self.req.get_pending_inserts(eid)
         rtype = rschema.type
         form = self.vreg.select_object('forms', 'edition', self.req,
-                                       entity=entity)
+                                       self.rset, entity=entity)
         field = form.field_by_name(rschema, target, entity.e_schema)
         limit = self.req.property_value('navigation.combobox-limit')
         for eview, reid in form.form_field_vocabulary(field, limit):

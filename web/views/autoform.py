@@ -13,6 +13,8 @@ from cubicweb.web import stdmsgs, uicfg
 from cubicweb.web.form import FieldNotFound, EntityFieldsForm
 from cubicweb.web.formfields import guess_field
 from cubicweb.web.formwidgets import Button, SubmitButton
+from cubicweb.web.views.editforms import toggleable_relation_link, relation_id
+
 _ = unicode
 
 class AutomaticEntityForm(EntityFieldsForm):
@@ -241,7 +243,7 @@ class AutomaticEntityForm(EntityFieldsForm):
     def editable_attributes(self):
         """return a list of (relation schema, role) to edit for the entity"""
         return [(rschema, x) for rschema, _, x in self.relations_by_category(
-            self.attrcategories, 'add') if rschema != 'eid']
+                self.attrcategories, 'add') if rschema != 'eid']
 
     def relations_table(self):
         """yiels 3-tuples (rtype, target, related_list)
@@ -256,9 +258,9 @@ class AutomaticEntityForm(EntityFieldsForm):
         for label, rschema, role in self.srelations_by_category('generic', 'add'):
             relatedrset = entity.related(rschema, role, limit=self.related_limit)
             if rschema.has_perm(self.req, 'delete'):
-                toggable_rel_link_func = toggable_relation_link
+                toggleable_rel_link_func = toggleable_relation_link
             else:
-                toggable_rel_link_func = lambda x, y, z: u''
+                toggleable_rel_link_func = lambda x, y, z: u''
             related = []
             for row in xrange(relatedrset.rowcount):
                 nodeid = relation_id(entity.eid, rschema, role,
@@ -269,7 +271,7 @@ class AutomaticEntityForm(EntityFieldsForm):
                 else:
                     status = u''
                     label = 'x'
-                dellink = toggable_rel_link_func(entity.eid, nodeid, label)
+                dellink = toggleable_rel_link_func(entity.eid, nodeid, label)
                 eview = self.view('oneline', relatedrset, row=row)
                 related.append((nodeid, dellink, status, eview))
             yield (rschema, role, related)
