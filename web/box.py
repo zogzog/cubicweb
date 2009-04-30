@@ -166,7 +166,7 @@ class EditRelationBoxTemplate(ReloadableMixIn, EntityBoxTemplate):
     class attributes.
     """
 
-    def cell_call(self, row, col, view=None):
+    def cell_call(self, row, col, view=None, **kwargs):
         self.req.add_js('cubicweb.ajax.js')
         entity = self.entity(row, col)
         box = SideBoxWidget(display_name(self.req, self.rtype), self.id)
