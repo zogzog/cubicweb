@@ -1,7 +1,7 @@
 # custom application views
-from calendar import monthrange
 from datetime import date
 
+from cubicweb.utils import last_day
 from cubicweb.web.views import baseviews, boxes, calendar
 from cubicweb.web.htmlwidgets import BoxLink, BoxWidget
 
@@ -36,7 +36,7 @@ class BlogArchiveBox(boxes.BoxTemplate):
         box = BoxWidget(_('Blog archives'), id=self.id)
         for year, month in blogmonths:
             firstday = date(year, month, 1)
-            lastday = date(year, month, monthrange(year, month)[1])
+            lastday = last_day(firstday)
             rql = ('Any B WHERE B is BlogEntry, B creation_date >= "%s", B creation_date <= "%s"'
                    % (firstday.strftime('%Y-%m-%d'), lastday.strftime('%Y-%m-%d')))
             url = self.build_url(rql=rql)
