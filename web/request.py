@@ -23,7 +23,7 @@ from cubicweb.common.mail import header
 from cubicweb.common.uilib import remove_html_tags
 from cubicweb.utils import SizeConstrainedList, HTMLHead
 from cubicweb.web import (INTERNAL_FIELD_VALUE, LOGGER, NothingToEdit, RequestError,
-                       StatusResponse)
+                          StatusResponse)
 
 _MARKER = object()
 

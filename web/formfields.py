@@ -94,9 +94,9 @@ class Field(object):
         Field.__creation_rank += 1
 
     def __unicode__(self):
-        return u'<%s name=%r label=%r id=%r initial=%r @%x>' % (
+        return u'<%s name=%r label=%r id=%r initial=%r visible=%r @%x>' % (
             self.__class__.__name__, self.name, self.label,
-            self.id, self.initial, id(self))
+            self.id, self.initial, self.is_visible(), id(self))
 
     def __repr__(self):
         return self.__unicode__().encode('utf-8')
@@ -406,7 +406,10 @@ class RelationField(Field):
             relatedvocab = [(e.view('combobox'), e.eid) for e in rset.entities()]
         else:
             relatedvocab = []
-        return res + form.form_field_vocabulary(self) + relatedvocab
+        vocab = res + form.form_field_vocabulary(self) + relatedvocab
+        if self.sort:
+            vocab = sorted(vocab)
+        return vocab
 
     def format_single_value(self, req, value):
         return value

@@ -161,20 +161,16 @@ class FCKEditor(TextArea):
 
 class Select(FieldWidget):
     """<select>, for field having a specific vocabulary"""
-    def __init__(self, attrs=None, multiple=False, sort=False):
+    def __init__(self, attrs=None, multiple=False):
         super(Select, self).__init__(attrs)
         self._multiple = multiple
-        self._sort = sort
 
     def render(self, form, field):
         name, curvalues, attrs = self._render_attrs(form, field)
         if not 'size' in attrs and self._multiple:
             attrs['size'] = '5'
         options = []
-        vocab = field.vocabulary(form)
-        if self._sort:
-            vocab = sorted(vocab)
-        for label, value in vocab:
+        for label, value in field.vocabulary(form):
             if value is None:
                 # handle separator
                 options.append(u'<optgroup label="%s"/>' % (label or ''))

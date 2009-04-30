@@ -395,6 +395,8 @@ class JSonController(Controller):
     def js_edit_field(self, action, names, values, rtype, eid):
         success, args = self.validate_form(action, names, values)
         if success:
+            # Any X,N where we don't seem to use N is an optimisation
+            # printable_value won't need to query N again
             rset = self.req.execute('Any X,N WHERE X eid %%(x)s, X %s N' % rtype,
                                     {'x': eid}, 'x')
             entity = rset.get_entity(0, 0)
@@ -402,9 +404,17 @@ class JSonController(Controller):
         else:
             return (success, args, None)
 
-#     def js_rql(self, rql):
-#         rset = self._exec(rql)
-#         return rset and rset.rows or []
+    @jsonize
+    def js_edit_relation(self, action, names, values,
+                         rtype, eid, role='subject', vid='list'):
+        # XXX validate_form
+        success, args = self.validate_form(action, names, values)
+        if success:
+            entity = self.req.eid_rset(eid).get_entity(0, 0)
+            rset = entity.related('person_in_charge', role)
+            return (success, args, self.view(vid, rset))
+        else:
+            return (success, args, None)
 
     @jsonize
     def js_i18n(self, msgids):
