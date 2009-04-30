@@ -27,7 +27,7 @@ def todate(somedate):
     """return a date from a date (leaving unchanged) or a datetime"""
     if isinstance(somedate, datetime):
         return date(somedate.year, somedate.month, somedate.day)
-    assert isinstance(somedate, date)
+    assert isinstance(somedate, date), repr(somedate)
     return date
 
 ONEDAY = timedelta(days=1)
