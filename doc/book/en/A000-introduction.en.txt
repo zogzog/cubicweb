@@ -6,8 +6,8 @@
 Part I - Introduction to `CubicWeb`
 ===================================
 
-This first part of the book will offer different reading path to
-present you with the `CubicWeb` framework, provide a tutorial to get a quick
+This first part of the book will present different reading path to
+discover the `CubicWeb` framework, provide a tutorial to get a quick
 overview of its features and list its key concepts.
 
  

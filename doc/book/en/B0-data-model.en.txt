@@ -7,6 +7,7 @@ The data model
    :maxdepth: 1
 
    B0010-define-schema.en.txt
+   B0015-define-permissions.en.txt
    B0020-define-workflows.en.txt
    B0030-data-as-objects.en.txt
    B0040-migration.en.txt

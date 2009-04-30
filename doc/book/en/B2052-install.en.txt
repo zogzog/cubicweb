@@ -97,7 +97,7 @@ You can have the details of available commands by running ::
 
 
 Generating translation files
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+----------------------------
 
 `CubicWeb` is fully internationalized. Translation catalogs are found in
 ``myapp/i18n``. To compile the translation files, use the `gettext` tools
@@ -120,7 +120,7 @@ xgettext that is used to collect new strings to translate.
 While running ``laxctl i18nupdate``, new string will be added to the catalogs.
 
 Generating the data directory
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+-----------------------------
 
 In order to generate the ``myapp/data`` directory that holds the static
 files like stylesheets and icons, you need to run the command::
@@ -128,7 +128,7 @@ files like stylesheets and icons, you need to run the command::
   $ python myapp/bin/laxctl populatedata
 
 Generating the schema diagram
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+-----------------------------
 
 There is a view named ``schema`` that displays a diagram of the
 entity-relationship graph defined by the schema. This diagram has to
@@ -136,11 +136,8 @@ be generated from the command line::
 
   $ python myapp/bin/laxctl genschema
 
-Application configuration
--------------------------
-
-Authentication
-~~~~~~~~~~~~~~
+Application configuration: authentication
+-----------------------------------------
 
 You have the option of using or not google authentication for your application.
 This has to be define in ``app.conf`` and ``app.yaml``.
@@ -178,9 +175,9 @@ the application and continue the installation.
 You should be redirected to a page displaying a message `content initialized`.
 
 Initialize the datastore
-~~~~~~~~~~~~~~~~~~~~~~~~
+------------------------
 
-You, then, want to visit  `http://MYAPP_URL/?vid=authinfo <http://localhost:8080/?vid=authinfo>`_ .
+Visit  `http://MYAPP_URL/?vid=authinfo <http://localhost:8080/?vid=authinfo>`_ .
 If you selected not  to use google authentication, you will be prompted to a 
 login form where you should initialize the administrator login (recommended
 to use admin/admin at first). You will then be redirected to a page providing

@@ -242,3 +242,11 @@ http://groups.google.com/group/google-appengine/browse_frm/thread/f48cf6099973ae
   Then in the view code, use::
     
     self.format_date(entity.date_attribute)
+
+* Can PostgreSQL and CubicWeb authentication work with kerberos ?
+
+  If you have postgresql set up to accept kerberos authentication, you can set
+  the db-host, db-name and db-user parameters in the `sources` configuration
+  file while leaving the password blank. It should be enough for your instance
+  to connect to postgresql with a kerberos ticket.
+  

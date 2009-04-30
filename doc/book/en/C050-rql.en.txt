@@ -177,7 +177,7 @@ Caution, if a restriction is specified, the insertion is done for
   person called 'nice'*
   ::
 
-        INSERT Person X: X name 'foo', X friend  Y WHERE name 'nice'
+        INSERT Person X: X name 'foo', X friend Y WHERE Y name 'nice'
 
 Update and relation creation queries
 ------------------------------------

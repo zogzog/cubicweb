@@ -146,7 +146,7 @@ class PrimaryView(EntityView):
         """
         return []
     
-    def cell_call(self, row, col):        
+    def cell_call(self, row, col):
         self.row = row
         # XXX move render_entity implementation here
         self.render_entity(self.complete_entity(row, col))
