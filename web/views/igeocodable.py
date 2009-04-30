@@ -71,7 +71,6 @@ class GoogleMapsView(EntityView):
             loadurl = self.build_url(rql=rql, vid='geocoding-json')
         else:
             loadurl = self.build_url(rql=rql, vid='geocoding-json', **urlparams)
-        loadurl = loadurl.replace('&','&amp;')
         self.w(u'<div style="width: %spx; height: %spx;" class="widget gmap" '
                u'cubicweb:wdgtype="GMapWidget" cubicweb:loadtype="auto" '
                u'cubicweb:loadurl="%s" cubicweb:uselabel="%s"> </div>' % (width, height, loadurl, uselabel))
