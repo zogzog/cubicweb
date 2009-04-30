@@ -146,8 +146,8 @@ class FormRenderer(object):
 
     def display_field(self, form, field):
         return (self.display_fields is None
-                or field.name in self.display_fields
-                or field.name in form.internal_fields)
+                or (field.name, field.role) in self.display_fields
+                or (field.name, field.role) in form.internal_fields)
 
     def render_fields(self, w, form, values):
         form.form_build_context(values)

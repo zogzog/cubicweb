@@ -104,10 +104,12 @@ class ClickAndEditFormView(FormViewMixIn, EntityView):
             return
         eid = entity.eid
         divid = 'd%s' % make_uid('%s-%s' % (rtype, eid))
-        event_data = {'divid' : divid, 'eid' : eid, 'rtype' : rtype, 'reload' : dumps(reload)}
+        event_data = {'divid' : divid, 'eid' : eid, 'rtype' : rtype,
+                      'reload' : dumps(reload)}
         buttons = [SubmitButton(stdmsgs.BUTTON_OK),
                    Button(stdmsgs.BUTTON_CANCEL,
-                          onclick="cancelInlineEdit(%s,\'%s\',\'%s\')" % (eid, rtype, divid))]
+                          onclick="cancelInlineEdit(%s,\'%s\',\'%s\')" % (
+                              eid, rtype, divid))]
         form = self.vreg.select_object('forms', 'edition', self.req, self.rset,
                                        row=row, col=col, form_buttons=buttons,
                                        domid='%s-form' % divid, action='#',
@@ -115,7 +117,8 @@ class ClickAndEditFormView(FormViewMixIn, EntityView):
                                        onsubmit=self.onsubmit % event_data)
         form.form_add_hidden(u'__maineid', entity.eid)
         renderer = FormRenderer(display_label=False, display_help=False,
-                                display_fields=(rtype,), button_bar_class='buttonbar',
+                                display_fields=[(rtype, role)],
+                                button_bar_class='buttonbar',
                                 display_progress_div=False)
         self.w(tags.div(value, klass='editableField', id=divid,
                         ondblclick=self.ondblclick % event_data))
