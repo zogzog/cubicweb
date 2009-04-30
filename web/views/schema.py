@@ -15,17 +15,17 @@ from cubicweb.selectors import implements, yes
 from cubicweb.schemaviewer import SchemaViewer
 from cubicweb.view import EntityView, StartupView
 from cubicweb.common import tags, uilib
-from cubicweb.web import uicfg, action
+from cubicweb.web import uicfg, formwidgets, action
 from cubicweb.web.views import TmpFileViewMixin, primary, baseviews
 
 
 uicfg.rcategories.tag_relation('primary', ('CWPermission', 'require_group', '*'), 'subject')
-uicfg.rcategories.tag_relation('generated', ('EEtype', 'final', '*'), 'subject')
-uicfg.rcategories.tag_relation('generated', ('ERtype', 'final', '*'), 'subject')
+uicfg.rcategories.tag_attribute('generated', 'EEtype', 'final')
+uicfg.rcategories.tag_attribute('generated', 'ERtype', 'final')
 uicfg.rinlined.tag_relation(True, ('CWRelation', 'relation_type', '*'), 'subject')
 uicfg.rinlined.tag_relation(True, ('CWRelation', 'from_entity', '*'), 'subject')
 uicfg.rinlined.tag_relation(True, ('CWRelation', 'to_entity', '*'), 'subject')
-uicfg.rwidgets.tag_relation('StringWidget', ('RQLExpression', 'expression', '*'), 'subject')
+uicfg.rwidgets.tag_attribute(formwidgets.TextInput, 'RQLExpression', 'expression')
 
 uicfg.rmode.tag_relation('create', ('*', 'state_of', 'CWEType'), 'object')
 uicfg.rmode.tag_relation('create', ('*', 'transition_of', 'CWEType'), 'object')
