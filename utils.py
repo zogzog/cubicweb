@@ -8,7 +8,6 @@ __docformat__ = "restructuredtext en"
 
 import locale
 from md5 import md5
-from calendar import monthrange
 from datetime import datetime, timedelta, date
 from time import time
 from random import randint, seed
