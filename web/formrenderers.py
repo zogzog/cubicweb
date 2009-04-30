@@ -15,6 +15,7 @@ from cubicweb.common import tags
 from cubicweb.web import eid_param
 from cubicweb.web import formwidgets as fwdgs
 from cubicweb.web.widgets import checkbox
+from cubicweb.web.formfields import HiddenInitialValueField
 
 
 class FormRenderer(object):
@@ -145,6 +146,8 @@ class FormRenderer(object):
         return tag + '>'
 
     def display_field(self, form, field):
+        if isinstance(field, HiddenInitialValueField):
+            field = field.visible_field
         return (self.display_fields is None
                 or (field.name, field.role) in self.display_fields
                 or (field.name, field.role) in form.internal_fields)
