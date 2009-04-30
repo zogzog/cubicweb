@@ -11,10 +11,10 @@ from md5 import md5
 from datetime import datetime, timedelta, date
 from time import time
 from random import randint, seed
+from calendar import monthrange
 
 # initialize random seed from current time
 seed()
-
 try:
     strptime = datetime.strptime
 except AttributeError: # py < 2.5
