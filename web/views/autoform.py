@@ -64,6 +64,8 @@ class AutomaticEntityForm(EntityFieldsForm):
                         if card in '1+':
                             if not rschema.is_final() and composed:
                                 category = 'generated'
+                            elif eschema.is_metadata(rschema):
+                                category = 'generated'
                             else:
                                 category = 'primary'
                         elif rschema.is_final():
