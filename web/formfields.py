@@ -417,21 +417,6 @@ class RelationField(Field):
         return value
 
 
-def stringfield_from_constraints(constraints, card, **kwargs):
-    field = None
-    for cstr in constraints:
-        if isinstance(cstr, StaticVocabularyConstraint):
-            kwargs.setdefault('widget', Select())
-            if card in '?1':
-                kwargs['widget'].attrs.setdefault('size', 1)
-            return StringField(choices=cstr.vocabulary, **kwargs)
-        if isinstance(cstr, SizeConstraint) and cstr.max is not None:
-            if cstr.max > 257:
-                kwargs.setdefault('widget', TextArea)
-            field = StringField(max_length=cstr.max, **kwargs)
-    return field or TextField(**kwargs)
-
-
 def guess_field(eschema, rschema, role='subject', skip_meta_attr=True, **kwargs):
     """return the most adapated widget to edit the relation
     'subjschema rschema objschema' according to information found in the schema
@@ -470,9 +455,18 @@ def guess_field(eschema, rschema, role='subject', skip_meta_attr=True, **kwargs)
                     if isinstance(cstr, StaticVocabularyConstraint):
                         raise Exception('rich text field with static vocabulary')
                 return RichTextField(**kwargs)
-            # return StringField or TextField according to constraints
             constraints = rschema.rproperty(eschema, targetschema, 'constraints')
-            return stringfield_from_constraints(constraints, card, **kwargs)
+            # init StringField parameters according to constraints
+            for cstr in constraints:
+                if isinstance(cstr, StaticVocabularyConstraint):
+                    kwargs.setdefault('widget', Select())
+                    if card in '?1':
+                        kwargs['widget'].attrs.setdefault('size', 1)
+                if isinstance(cstr, SizeConstraint) and cstr.max is not None:
+                    if cstr.max > 257:
+                        kwargs.setdefault('widget', TextArea)
+                    kwargs['max_length'] = cstr.max
+            return StringField(**kwargs)
         if fieldclass is FileField:
             for metadata in ('format', 'encoding'):
                 metaschema = eschema.has_metadata(rschema, metadata)
