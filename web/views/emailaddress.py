@@ -12,7 +12,6 @@ from cubicweb.selectors import implements
 from cubicweb.common import Unauthorized
 from cubicweb.web.views import baseviews
 
-
 class EmailAddressPrimaryView(baseviews.PrimaryView):
     __select__ = implements('EmailAddress')
 

@@ -21,7 +21,6 @@ uicfg.rcategories.tag_relation('primary', ('CWUser', 'in_group', '*'), 'subject'
 uicfg.rcategories.tag_relation('generated', ('*', 'owned_by', 'CWUser'), 'object')
 uicfg.rcategories.tag_relation('generated', ('*', 'created_by', 'CWUser'), 'object')
 uicfg.rcategories.tag_relation('metadata', ('*', 'bookmarked_by', 'CWUser'), 'object')
-uicfg.rinlined.tag_relation(True, ('CWUser', 'use_email', '*'), 'subject')
 uicfg.rmode.tag_relation('create', ('*', 'in_group', 'CWGroup'), 'object')
 uicfg.rmode.tag_relation('link', ('*', 'owned_by', 'CWUser'), 'object')
 uicfg.rmode.tag_relation('link', ('*', 'created_by', 'CWUser'), 'object')

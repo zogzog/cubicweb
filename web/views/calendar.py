@@ -29,7 +29,7 @@ MONTHNAMES = ( _('january'), _('february'), _('march'), _('april'), _('may'),
                _('june'), _('july'), _('august'), _('september'), _('october'),
                _('november'), _('december')
                )
-        
+
 # Calendar views ##############################################################
 
 
@@ -99,11 +99,11 @@ class CalendarItemView(EntityView):
                 self.w('<br/>' % self.req._('from %(date)s' % {'date': self.format_date(task.start)}))
                 self.w('<br/>' % self.req._('to %(date)s' % {'date': self.format_date(task.stop)}))
                 self.w('<br/>to %s'%self.format_date(task.stop))
-                
+
 class CalendarLargeItemView(CalendarItemView):
     id = 'calendarlargeitem'
 
-    
+
 class _TaskEntry(object):
     def __init__(self, task, color, index=0):
         self.task = task
@@ -116,11 +116,12 @@ class _TaskEntry(object):
         if self.task.start.hour > 7 and self.task.stop.hour < 20:
             return True
         return False
-    
+
     def is_one_day_task(self):
         task = self.task
         return task.start and task.stop and task.start.isocalendar() ==  task.stop.isocalendar()
-        
+
+
 class OneMonthCal(EntityView):
     """At some point, this view will probably replace ampm calendars"""
     id = 'onemonthcal'
@@ -179,7 +180,7 @@ class OneMonthCal(EntityView):
                                            min(tstop, lastday))
             if not the_dates:
                 continue
-            
+
             for d in the_dates:
                 d_tasks = dates.setdefault((d.year, d.month, d.day), {})
                 t_users = d_tasks.setdefault(task, set())
@@ -242,7 +243,7 @@ class OneMonthCal(EntityView):
         # output header
         self.w(u'<tr><th>%s</th><th>%s</th><th>%s</th><th>%s</th><th>%s</th><th>%s</th><th>%s</th></tr>' %
                tuple(self.req._(day) for day in WEEKDAYS))
-        
+
         # build calendar
         for mdate, task_rows in zip(month_dates, days):
             if mdate.weekday() == 0:
@@ -272,7 +273,7 @@ class OneMonthCal(EntityView):
         self.w(u'<td class="cell%s">' % classes)
         self.w(u'<div class="calCellTitle%s">' % classes)
         self.w(u'<div class="day">%s</div>' % celldate.day)
-        
+
         if len(self.rset.column_types(0)) == 1:
             etype = list(self.rset.column_types(0))[0]
             url = self.build_url(vid='creation', etype=etype,
@@ -314,7 +315,7 @@ class OneWeekCal(EntityView):
     __select__ = implements(ICalendarable)
     need_navigation = False
     title = _('one week')
-    
+
     def call(self):
         self.req.add_js( ('cubicweb.ajax.js', 'cubicweb.calendar.js') )
         self.req.add_css('cubicweb.calendar.css')
@@ -327,7 +328,7 @@ class OneWeekCal(EntityView):
         if 'week' in self.req.form:
             week = int(self.req.form['week'])
         else:
-            week = _today.isocalendar()[1]        
+            week = _today.isocalendar()[1]
         # week - 1 since we get week number > 0 while we want it to start from 0
         first_day_of_week = todate(strptime('%s-%s-1' % (year, week - 1), '%Y-%U-%w'))
         lastday = first_day_of_week + timedelta(6)
@@ -359,16 +360,16 @@ class OneWeekCal(EntityView):
                                        min(tstop, lastday))
             if not the_dates:
                 continue
-                
+
             if task not in task_colors:
                 task_colors[task] = colors[next_color_index]
                 next_color_index = (next_color_index+1) % len(colors)
-            
+
             for d in the_dates:
                 day = d.weekday()
-                task_descr = _TaskEntry(task, task_colors[task])  
+                task_descr = _TaskEntry(task, task_colors[task])
                 dates[day].append(task_descr)
-            
+
         self.w(u'<div id="oneweekcalid">')
         # build schedule
         self.w(u'<table class="omcalendar" id="week">')
@@ -391,7 +392,7 @@ class OneWeekCal(EntityView):
             else:
                 self.w(u'<th>%s<br/>%s</th>' % (self.req._(day), self.format_date(wdate)))
         self.w(u'</tr>')
-        
+
         # build week calendar
         self.w(u'<tr>')
         self.w(u'<td style="width:5em;">') # column for hours
@@ -399,9 +400,9 @@ class OneWeekCal(EntityView):
         for h in range(8, 20):
             self.w(u'<div class="hour" %s>'%extra)
             self.w(u'%02d:00'%h)
-            self.w(u'</div>')            
+            self.w(u'</div>')
         self.w(u'</td>')
-        
+
         for i, day in enumerate(WEEKDAYS):
             wdate = first_day_of_week + timedelta(i)
             classes = ""
@@ -423,7 +424,7 @@ class OneWeekCal(EntityView):
             self.w(u'<div class="columndiv"%s>'% extra)
             for h in range(8, 20):
                 self.w(u'<div class="hourline" style="top:%sex;">'%((h-7)*8))
-                self.w(u'</div>')            
+                self.w(u'</div>')
             if dates[i]:
                 self._build_calendar_cell(wdate, dates[i])
             self.w(u'</div>')
@@ -432,7 +433,7 @@ class OneWeekCal(EntityView):
         self.w(u'</table></div>')
         self.w(u'<div id="coord"></div>')
         self.w(u'<div id="debug">&nbsp;</div>')
- 
+
     def _build_calendar_cell(self, date, task_descrs):
         inday_tasks = [t for t in task_descrs if t.is_one_day_task() and  t.in_working_hours()]
         wholeday_tasks = [t for t in task_descrs if not t.is_one_day_task()]
@@ -474,7 +475,7 @@ class OneWeekCal(EntityView):
                     stop_hour = min(20, task.stop.hour)
                     if stop_hour < 20:
                         stop_min = task.stop.minute
-                    
+
             height = 100.0*(stop_hour+stop_min/60.0-start_hour-start_min/60.0)/(20-8)
             top = 100.0*(start_hour+start_min/60.0-8)/(20-8)
             left = width*task_desc.index
@@ -504,7 +505,7 @@ class OneWeekCal(EntityView):
                 self.w(u'</div>')
             self.w(u'</div>')
 
-            
+
     def _prevnext_links(self, curdate):
         prevdate = curdate - timedelta(7)
         nextdate = curdate + timedelta(7)

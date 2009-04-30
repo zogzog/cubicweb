@@ -89,6 +89,8 @@ rwidgets = RelationTags()
 # entity(ies) at the other end of the relation will be editable from the
 # form of the edited entity
 rinlined = RelationTags()
+rinlined.tag_relation(True, ('*', 'use_email', '*'), 'subject')
+
 
 # set of tags of the form <action>_on_new on relations. <action> is a
 # schema action (add/update/delete/read), and when such a tag is found
