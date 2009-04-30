@@ -143,11 +143,9 @@ function setCurrentValues(form){
 	    jQuery(form).find("[name=" + name + "]").each(function (){
 		    var input = jQuery(this);
 		    if(input.attr('type')=='radio'){
-			log(input.attr('name'));
 			if(input.attr('checked')){
 			    log(input.attr('value'));
 			    currentValueInput.attr('value', input.attr('value'));
-			    log(currentValueInput.attr('value').toString());
 			}
 		    }else{
 			currentValueInput.attr('value', input.attr('value'));
