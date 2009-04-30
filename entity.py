@@ -127,6 +127,7 @@ class _metaentity(type):
                     if wdgname == 'StringWidget':
                         wdgname = 'TextInput'
                     widget = getattr(formwidgets, wdgname)
+                    assert hasattr(widget, 'render')
                     AutomaticEntityForm.rwidgets.tag_relation(
                         widget, (etype, rtype, '*'), 'subject')
         return super(_metaentity, mcs).__new__(mcs, name, bases, classdict)
