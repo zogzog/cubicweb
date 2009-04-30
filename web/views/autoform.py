@@ -61,10 +61,10 @@ class AutomaticEntityForm(EntityFieldsForm):
                         card = rschema.rproperty(X, Y, 'cardinality')[1]
                         composed = rschema.rproperty(X, Y, 'composite') == 'subject'
                     if not cls.rcategories.get(rschema, role, X, Y):
-                        if card in '1+':
+                        if eschema.is_metadata(rschema):
+                            category = 'generated'
+                        elif card in '1+':
                             if not rschema.is_final() and composed:
-                                category = 'generated'
-                            elif eschema.is_metadata(rschema):
                                 category = 'generated'
                             else:
                                 category = 'primary'
