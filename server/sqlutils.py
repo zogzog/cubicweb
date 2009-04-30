@@ -7,7 +7,7 @@
 __docformat__ = "restructuredtext en"
 
 from warnings import warn
-from datetime import datetime, timedelta
+from datetime import datetime, date, timedelta
 
 from logilab.common.shellutils import ProgressBar
 from logilab.common import db
@@ -17,6 +17,7 @@ from logilab.common.sqlgen import SQLGenerator
 from indexer import get_indexer
 
 from cubicweb import Binary, ConfigurationError
+from cubicweb.utils import todate, todatetime
 from cubicweb.common.uilib import remove_html_tags
 from cubicweb.server import SQL_CONNECT_HOOKS
 from cubicweb.server.utils import crypt_password
@@ -68,8 +69,8 @@ def sqlgrants(schema, driver, user,
     w(grant_schema(schema, user, set_owner, skip_entities=skip_entities, prefix=SQL_PREFIX))
     return '\n'.join(output)
 
-                  
-def sqlschema(schema, driver, text_index=True, 
+
+def sqlschema(schema, driver, text_index=True,
               user=None, set_owner=False,
               skip_relations=('has_text', 'identity'), skip_entities=()):
     """return the system sql schema, according to the given parameters"""
@@ -86,7 +87,7 @@ def sqlschema(schema, driver, text_index=True,
         w(indexer.sql_init_fti())
         w('')
     dbhelper = get_adv_func_helper(driver)
-    w(schema2sql(dbhelper, schema, prefix=SQL_PREFIX, 
+    w(schema2sql(dbhelper, schema, prefix=SQL_PREFIX,
                  skip_entities=skip_entities, skip_relations=skip_relations))
     if dbhelper.users_support and user:
         w('')
@@ -94,8 +95,8 @@ def sqlschema(schema, driver, text_index=True,
                     skip_relations, skip_entities))
     return '\n'.join(output)
 
-                  
-def sqldropschema(schema, driver, text_index=True, 
+
+def sqldropschema(schema, driver, text_index=True,
                   skip_relations=('has_text', 'identity'), skip_entities=()):
     """return the sql to drop the schema, according to the given parameters"""
     from yams.schema2sql import dropschema2sql
@@ -121,7 +122,7 @@ class SQLAdapterMixIn(object):
     """Mixin for SQL data sources, getting a connection from a configuration
     dictionary and handling connection locking
     """
-    
+
     def __init__(self, source_config):
         try:
             self.dbdriver = source_config['db-driver'].lower()
@@ -138,7 +139,7 @@ class SQLAdapterMixIn(object):
         self.binary = self.dbapi_module.Binary
         self.dbhelper = self.dbapi_module.adv_func_helper
         self.sqlgen = SQLGenerator()
-        
+
     def get_connection(self, user=None, password=None):
         """open and return a connection to the database"""
         if user or self.dbuser:
@@ -216,6 +217,11 @@ class SQLAdapterMixIn(object):
                         value = value.getvalue()
                     else:
                         value = crypt_password(value)
+                # XXX needed for sqlite but I don't think it is for other backends
+                elif atype == 'Datetime' and isinstance(value, date):
+                    value = todatetime(value)
+                elif atype == 'Date' and isinstance(value, datetime):
+                    value = todate(value)
                 elif isinstance(value, Binary):
                     value = self.binary(value.getvalue())
                 # XXX <3.2 bw compat
@@ -254,7 +260,7 @@ def init_sqlite_connexion(cnx):
     # some time
     cnx.create_aggregate("CONCAT_STRINGS", 1, concat_strings)
     cnx.create_aggregate("GROUP_CONCAT", 1, concat_strings)
-    
+
     def _limit_size(text, maxsize, format='text/plain'):
         if len(text) < maxsize:
             return text
