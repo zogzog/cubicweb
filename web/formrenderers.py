@@ -149,6 +149,7 @@ class FormRenderer(object):
         if isinstance(field, HiddenInitialValueField):
             field = field.visible_field
         return (self.display_fields is None
+                or field.name in form.internal_fields
                 or (field.name, field.role) in self.display_fields
                 or (field.name, field.role) in form.internal_fields)
 
