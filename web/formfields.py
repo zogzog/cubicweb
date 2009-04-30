@@ -460,6 +460,7 @@ def guess_field(eschema, rschema, role='subject', skip_meta_attr=True, **kwargs)
             for cstr in constraints:
                 if isinstance(cstr, StaticVocabularyConstraint):
                     kwargs.setdefault('widget', Select())
+                    kwargs.setdefault('choices', cstr.vocabulary)
                     if card in '?1':
                         kwargs['widget'].attrs.setdefault('size', 1)
                 if isinstance(cstr, SizeConstraint) and cstr.max is not None:
