@@ -1115,6 +1115,9 @@ msgstr ""
 msgid "click on the box to cancel the deletion"
 msgstr ""
 
+msgid "close all"
+msgstr ""
+
 msgid "comment"
 msgstr ""
 
@@ -2143,6 +2146,18 @@ msgstr "page top, within main content"
 msgid "navigation"
 msgstr ""
 
+msgid "navigation.combobox-limit"
+msgstr "\"related\" combo-box"
+
+msgid "navigation.page-size"
+msgstr "number of results"
+
+msgid "navigation.related-limit"
+msgstr "number of entities in the primary view "
+
+msgid "navigation.short-line-size"
+msgstr "short description"
+
 msgid "navtop"
 msgstr "page top"
 
@@ -2211,6 +2226,9 @@ msgid "oneline"
 msgstr "one-line"
 
 msgid "only select queries are authorized"
+msgstr ""
+
+msgid "open all"
 msgstr ""
 
 msgid "order"
@@ -2689,6 +2707,27 @@ msgstr ""
 
 msgid "ui"
 msgstr ""
+
+msgid "ui.date-format"
+msgstr "date format"
+
+msgid "ui.datetime-format"
+msgstr "date and time format"
+
+msgid "ui.default-text-format"
+msgstr "text format"
+
+msgid "ui.fckeditor"
+msgstr "content editor"
+
+msgid "ui.float-format"
+msgstr "float format"
+
+msgid "ui.language"
+msgstr "language"
+
+msgid "ui.time-format"
+msgstr "time format"
 
 msgid "unaccessible"
 msgstr ""

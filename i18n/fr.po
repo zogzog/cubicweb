@@ -1143,6 +1143,9 @@ msgstr "changements appliqués"
 msgid "click on the box to cancel the deletion"
 msgstr "cliquer dans la zone d'édition pour annuler la suppression"
 
+msgid "close all"
+msgstr "tout fermer"
+
 msgid "comment"
 msgstr "commentaire"
 
@@ -2237,6 +2240,18 @@ msgstr "haut de page"
 msgid "navigation"
 msgstr "navigation"
 
+msgid "navigation.combobox-limit"
+msgstr "nombre d'entités dans les listes déroulantes"
+
+msgid "navigation.page-size"
+msgstr "nombre de résultats"
+
+msgid "navigation.related-limit"
+msgstr "nombre d'entités dans la vue primaire"
+
+msgid "navigation.short-line-size"
+msgstr "description courtes"
+
 msgid "navtop"
 msgstr "haut de page du contenu principal"
 
@@ -2306,6 +2321,9 @@ msgstr "une ligne"
 
 msgid "only select queries are authorized"
 msgstr "seules les requêtes de sélections sont autorisées"
+
+msgid "open all"
+msgstr "tout ouvrir"
 
 msgid "order"
 msgstr "ordre"
@@ -2797,6 +2815,27 @@ msgstr "type"
 
 msgid "ui"
 msgstr "propriétés génériques de l'interface"
+
+msgid "ui.date-format"
+msgstr "format de date"
+
+msgid "ui.datetime-format"
+msgstr "format de date et de l'heure"
+
+msgid "ui.default-text-format"
+msgstr "format de texte"
+
+msgid "ui.fckeditor"
+msgstr "éditeur"
+
+msgid "ui.float-format"
+msgstr "format des flottants"
+
+msgid "ui.language"
+msgstr "langue"
+
+msgid "ui.time-format"
+msgstr "format de l'heure"
 
 msgid "unaccessible"
 msgstr "inaccessible"
