@@ -12,8 +12,8 @@ from cubicweb.selectors import (match_user_groups, implements,
                                 traced_selection)
 from cubicweb.web import NoSelectableObject
 from cubicweb.web.action import Action
-from cubicweb.web.views import (baseviews, tableview, baseforms, calendar, 
-                                management, embedding, actions, startup, 
+from cubicweb.web.views import (baseviews, tableview, baseforms, calendar,
+                                management, embedding, actions, startup,
                                 euser, schemaentities, xbel, vcard, owl,
                                 treeview, idownloadable, wdoc, debug, eproperties)
 
@@ -22,7 +22,7 @@ USERACTIONS = [('myprefs', actions.UserPreferencesAction),
                ('logout', actions.LogoutAction)]
 SITEACTIONS = [('siteconfig', actions.SiteConfigurationAction),
                ('manage', actions.ManageAction),
-               ('schema', actions.ViewSchemaAction)]        
+               ('schema', actions.ViewSchemaAction)]
 
 
 class ViewSelectorTC(EnvBasedTC):
@@ -30,7 +30,6 @@ class ViewSelectorTC(EnvBasedTC):
     def setup_database(self):
         self.add_entity('BlogEntry', title=u"une news !", content=u"cubicweb c'est beau")
         self.add_entity('Bookmark', title=u"un signet !", path=u"view?vid=index")
-        self.add_entity('Card', title=u'mandatory', content=u"DoC !")
         self.add_entity('EmailAddress', address=u"devel@logilab.fr", alias=u'devel')
         self.add_entity('Tag', name=u'x')
 
@@ -59,8 +58,8 @@ class VRegistryTC(ViewSelectorTC):
             print 'no more', [v for v in expected if not v in content.keys()]
             print 'missing', [v for v in content.keys() if not v in expected]
             raise
-        
-    
+
+
     def test_possible_views_none_rset(self):
         req = self.request()
         self.assertListEqual(self.pviews(req, None),
@@ -73,12 +72,12 @@ class VRegistryTC(ViewSelectorTC):
                               ('owl', owl.OWLView),
                               ('schema', startup.SchemaView),
                               ('systemepropertiesform', eproperties.SystemEPropertiesForm)])
-        
+
     def test_possible_views_noresult(self):
         rset, req = self.env.get_rset_and_req('Any X WHERE X eid 999999')
         self.assertListEqual(self.pviews(req, rset),
                              [])
-        
+
     def test_possible_views_one_egroup(self):
         rset, req = self.env.get_rset_and_req('CWGroup X WHERE X name "managers"')
         self.assertListEqual(self.pviews(req, rset),
@@ -100,7 +99,7 @@ class VRegistryTC(ViewSelectorTC):
                               ('xbel', xbel.XbelView),
                               ('xml', baseviews.XmlView),
                               ])
-            
+
     def test_possible_views_multiple_egroups(self):
         rset, req = self.env.get_rset_and_req('CWGroup X')
         self.assertListEqual(self.pviews(req, rset),
@@ -122,7 +121,7 @@ class VRegistryTC(ViewSelectorTC):
                               ('xbel', xbel.XbelView),
                               ('xml', baseviews.XmlView),
                               ])
-        
+
     def test_possible_views_multiple_different_types(self):
         rset, req = self.env.get_rset_and_req('Any X')
         self.assertListEqual(self.pviews(req, rset),
@@ -144,7 +143,7 @@ class VRegistryTC(ViewSelectorTC):
                               ('xbel', xbel.XbelView),
                               ('xml', baseviews.XmlView),
                               ])
-        
+
     def test_possible_views_any_rset(self):
         rset, req = self.env.get_rset_and_req('Any N, X WHERE X in_group Y, Y name N')
         self.assertListEqual(self.pviews(req, rset),
@@ -177,13 +176,13 @@ class VRegistryTC(ViewSelectorTC):
                               ('xbel', xbel.XbelView),
                               ('xml', baseviews.XmlView),
                               ])
-        
+
     def test_possible_actions_none_rset(self):
         req = self.request()
         self.assertDictEqual(self.pactions(req, None),
                              {'useractions': USERACTIONS,
                               'siteactions': SITEACTIONS,
-                              
+
                               })
     def test_possible_actions_no_entity(self):
         rset, req = self.env.get_rset_and_req('Any X WHERE X eid 999999')
@@ -191,7 +190,7 @@ class VRegistryTC(ViewSelectorTC):
                              {'useractions': USERACTIONS,
                               'siteactions': SITEACTIONS,
                               })
-        
+
     def test_possible_actions_same_type_entities(self):
         rset, req = self.env.get_rset_and_req('CWGroup X')
         self.assertDictEqual(self.pactions(req, rset),
@@ -201,7 +200,7 @@ class VRegistryTC(ViewSelectorTC):
                               'moreactions': [('delete', actions.DeleteAction),
                                               ('addentity', actions.AddNewAction)],
                               })
-        
+
     def test_possible_actions_different_types_entities(self):
         rset, req = self.env.get_rset_and_req('Any X')
         self.assertDictEqual(self.pactions(req, rset),
@@ -209,13 +208,13 @@ class VRegistryTC(ViewSelectorTC):
                               'siteactions': SITEACTIONS,
                               'moreactions': [('delete', actions.DeleteAction)],
                               })
-            
+
     def test_possible_actions_final_entities(self):
         rset, req = self.env.get_rset_and_req('Any N, X WHERE X in_group Y, Y name N')
         self.assertDictEqual(self.pactions(req, rset),
                              {'useractions': USERACTIONS,
                               'siteactions': SITEACTIONS})
-        
+
     def test_possible_actions_eetype_euser_entity(self):
         rset, req = self.env.get_rset_and_req('CWEType X WHERE X name "CWUser"')
         self.assertDictEqual(self.pactions(req, rset),
@@ -227,7 +226,7 @@ class VRegistryTC(ViewSelectorTC):
                                               ('copy', actions.CopyAction),
                                               ('managepermission', actions.ManagePermissionsAction)],
                               })
-        
+
 
     def test_select_creation_form(self):
         rset = None
@@ -244,7 +243,7 @@ class VRegistryTC(ViewSelectorTC):
         req.form['etype'] = 'CWUser'
         self.assertIsInstance(self.vreg.select_view('creation', req, rset),
                               CWUserCreationForm)
-            
+
     def test_select_view(self):
         # no entity
         rset = None
@@ -255,7 +254,7 @@ class VRegistryTC(ViewSelectorTC):
                              self.vreg.select_view, 'primary', req, rset)
         self.failUnlessRaises(NoSelectableObject,
                              self.vreg.select_view, 'table', req, rset)
-        
+
         # no entity
         rset, req = self.env.get_rset_and_req('Any X WHERE X eid 999999')
         self.failUnlessRaises(NoSelectableObject,
@@ -337,8 +336,8 @@ class VRegistryTC(ViewSelectorTC):
         rset, req = self.env.get_rset_and_req('Image X WHERE X name "bim.png"')
         self.assertIsInstance(self.vreg.select_view('primary', req, rset),
                               idownloadable.IDownloadablePrimaryView)
-        
-        
+
+
     def test_score_entity_selector(self):
         image = self.add_entity('Image', name=u'bim.png', data=Binary('bim'))
         # image primary view priority
@@ -349,9 +348,9 @@ class VRegistryTC(ViewSelectorTC):
         # image primary view priority
         rset, req = self.env.get_rset_and_req('File X WHERE X name "bim.txt"')
         self.assertRaises(NoSelectableObject, self.vreg.select_view, 'image', req, rset)
-        
-        
-        
+
+
+
     def _test_view(self, vid, rql, args):
         if rql is None:
             rset = None
@@ -389,35 +388,8 @@ class VRegistryTC(ViewSelectorTC):
         self.assertEquals(self.vreg.property_value('boxes.possible_views_box.visible'), False)
         self.assertEquals(self.vreg.property_value('boxes.possible_views_box.order'), 10)
         self.assertRaises(KeyError, self.vreg.property_value, 'boxes.actions_box')
-        
 
 
-    def test_owners_match_user_group(self):
-        """tests usage of 'owners' group with match_user_group"""
-        class SomeAction(Action):
-            id = 'yo'
-            category = 'foo'
-            __select__ = match_user_groups('owners')
-        self.vreg.register_vobject_class(SomeAction)
-        self.failUnless(SomeAction in self.vreg['actions']['yo'], self.vreg['actions'])
-        try:
-            # login as a simple user
-            self.create_user('john')
-            self.login('john')
-            # it should not be possible to use SomeAction not owned objects
-            rset, req = self.env.get_rset_and_req('Any G WHERE G is CWGroup, G name "managers"')
-            self.failIf('foo' in self.pactions(req, rset))
-            # insert a new card, and check that we can use SomeAction on our object
-            self.execute('INSERT Card C: C title "zoubidou"')
-            self.commit()
-            rset, req = self.env.get_rset_and_req('Card C WHERE C title "zoubidou"')
-            self.failUnless('foo' in self.pactions(req, rset))
-            # make sure even managers can't use the action
-            self.restore_connection()
-            rset, req = self.env.get_rset_and_req('Card C WHERE C title "zoubidou"')
-            self.failIf('foo' in self.pactions(req, rset))
-        finally:
-            del self.vreg[SomeAction.__registry__][SomeAction.id]
 
 
 class CWETypeRQLAction(Action):
@@ -426,15 +398,15 @@ class CWETypeRQLAction(Action):
     title = 'bla'
 
 class RQLActionTC(ViewSelectorTC):
-            
+
     def setUp(self):
         super(RQLActionTC, self).setUp()
         self.vreg.register_vobject_class(CWETypeRQLAction)
-        
+
     def tearDown(self):
-        super(RQLActionTC, self).tearDown()        
+        super(RQLActionTC, self).tearDown()
         del self.vreg._registries['actions']['testaction']
-        
+
     def test(self):
         rset, req = self.env.get_rset_and_req('CWEType X WHERE X name "CWEType"')
         self.assertDictEqual(self.pactions(req, rset),
@@ -455,7 +427,7 @@ class RQLActionTC(ViewSelectorTC):
                                               ('copy', actions.CopyAction),
                                               ('managepermission', actions.ManagePermissionsAction)],
                               })
-        
+
 
 
 if __name__ == '__main__':

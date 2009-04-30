@@ -26,7 +26,7 @@ class EntityFieldsFormTC(WebTest):
         self.req = self.request()
         self.entity = self.user(self.req)
         self.renderer = FormRenderer()
-        
+
     def test_form_field_vocabulary_unrelated(self):
         b = self.add_entity('BlogEntry', title=u'di mascii code', content=u'a best-seller')
         t = self.add_entity('Tag', name=u'x')
@@ -41,7 +41,7 @@ class EntityFieldsFormTC(WebTest):
         self.failIf(b.eid in unrelated, unrelated)
         unrelated = [reid for rview, reid in form2.object_relation_vocabulary('tags')]
         self.failIf(t.eid in unrelated, unrelated)
-        
+
     def test_form_field_vocabulary_new_entity(self):
         e = self.etype_instance('CWUser')
         form = EntityFieldsForm(self.request(), None, entity=e)
@@ -64,18 +64,18 @@ class EntityFieldsFormTC(WebTest):
         self.assertEquals(states[0][0], u'deactivated') # list of (combobox view, state eid)
 
 
-        
+
     # form view tests #########################################################
-        
+
     def test_massmailing_formview(self):
         self.execute('INSERT EmailAddress X: X address L + "@cubicweb.org", '
                      'U use_email X WHERE U is CWUser, U login L')
         rset = self.execute('CWUser X')
         self.view('massmailing', rset, template=None)
-        
+
 
     # form tests ##############################################################
-    
+
     def test_form_inheritance(self):
         class CustomChangeStateForm(ChangeStateForm):
             hello = IntField(name='youlou')
@@ -88,36 +88,37 @@ class EntityFieldsFormTC(WebTest):
         form = ChangeStateForm(self.req, redirect_path='perdu.com',
                                entity=self.entity)
         form.form_render(state=123, trcomment=u'')
-        
+
     # fields tests ############################################################
 
     def _render_entity_field(self, name, form):
         form.form_build_context({})
         return form.field_by_name(name).render(form, self.renderer)
-    
+
     def _test_richtextfield(self, expected):
         class RTFForm(EntityFieldsForm):
-            content = RichTextField()
-        card = self.add_entity('Card', title=u"tls sprint fev 2009",
-                               content=u'<h1>new widgets system</h1>',
-                               content_format=u'text/html')
-        form = RTFForm(self.req, redirect_path='perdu.com', entity=card)
-        self.assertTextEquals(self._render_entity_field('content', form), expected % {'eid': card.eid})
+            description = RichTextField()
+        state = self.execute('State X WHERE X name "activated", X state_of ET, ET name "CWUser"').get_entity(0, 0)
+        form = RTFForm(self.req, redirect_path='perdu.com', entity=state)
+        # make it think it can use fck editor anyway
+        form.form_field_format = lambda x: 'text/html'
+        self.assertTextEquals(self._render_entity_field('description', form),
+                              expected % {'eid': state.eid})
 
-        
+
     def test_richtextfield_1(self):
         self.req.use_fckeditor = lambda: False
-        self._test_richtextfield('''<select name="content_format:%(eid)s" id="content_format:%(eid)s" tabindex="0">
+        self._test_richtextfield('''<select name="description_format:%(eid)s" size="1" id="description_format:%(eid)s" tabindex="0">
 <option value="text/cubicweb-page-template">text/cubicweb-page-template</option>
-<option selected="selected" value="text/html">text/html</option>
+<option value="text/html">text/html</option>
 <option value="text/plain">text/plain</option>
-<option value="text/rest">text/rest</option>
-</select><textarea tabindex="1" id="content:%(eid)s" name="content:%(eid)s" onkeypress="autogrow(this)">&lt;h1&gt;new widgets system&lt;/h1&gt;</textarea>''')
+<option selected="selected" value="text/rest">text/rest</option>
+</select><textarea rows="5" name="description:564" onkeypress="autogrow(this)" cols="60" id="description:564" tabindex="1"/>''')
 
-    
+
     def test_richtextfield_2(self):
         self.req.use_fckeditor = lambda: True
-        self._test_richtextfield('''<input type="hidden" name="content_format:%(eid)s" value="text/html"/><textarea tabindex="0" cubicweb:type="wysiwyg" id="content:%(eid)s" name="content:%(eid)s" onkeypress="autogrow(this)">&lt;h1&gt;new widgets system&lt;/h1&gt;</textarea>''')
+        self._test_richtextfield('<input type="hidden" name="description_format:%(eid)s" value="text/rest"/><textarea rows="20" name="description:564" onkeypress="autogrow(this)" cols="80" cubicweb:type="wysiwyg" id="description:564" tabindex="0"/>')
 
 
     def test_filefield(self):
@@ -135,11 +136,11 @@ class EntityFieldsFormTC(WebTest):
 <label for="data_encoding:%(eid)s">data_encoding</label><input id="data_encoding:%(eid)s" type="text" name="data_encoding:%(eid)s" value="UTF-8" tabindex="2"/><br/><br/>
 </div>
 <br/>
-<input type="checkbox" name="data:594__detach"/>
+<input type="checkbox" name="data:%(eid)s__detach"/>
 detach attached file
 ''' % {'eid': file.eid})
 
-        
+
     def test_editablefilefield(self):
         class EFFForm(EntityFieldsForm):
             data = EditableFileField(format_field=StringField(name='data_format'),
@@ -159,10 +160,10 @@ detach attached file
 <label for="data_encoding:%(eid)s">data_encoding</label><input id="data_encoding:%(eid)s" type="text" name="data_encoding:%(eid)s" value="UTF-8" tabindex="2"/><br/><br/>
 </div>
 <br/>
-<input type="checkbox" name="data:594__detach"/>
+<input type="checkbox" name="data:%(eid)s__detach"/>
 detach attached file
 <p><b>You can either submit a new file using the browse button above, or choose to remove already uploaded file by checking the "detach attached file" check-box, or edit file content online with the widget below.</b></p>
-<textarea tabindex="3" name="data:%(eid)s" onkeypress="autogrow(this)">new widgets system</textarea>''' % {'eid': file.eid})
+<textarea tabindex="3" rows="20" cols="80" name="data:%(eid)s" onkeypress="autogrow(this)">new widgets system</textarea>''' % {'eid': file.eid})
 
 
     def test_passwordfield(self):
@@ -176,6 +177,6 @@ detach attached file
 &nbsp;
 <span class="emphasis">confirm password</span>''' % {'eid': self.entity.eid})
 
-        
+
 if __name__ == '__main__':
     unittest_main()
