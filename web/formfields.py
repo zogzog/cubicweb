@@ -180,16 +180,16 @@ class StringField(Field):
     def __init__(self, max_length=None, **kwargs):
         super(StringField, self).__init__(**kwargs)
         self.max_length = max_length
-        if max_length < 513 and isinstance(self.widget, TextArea):
-            self.widget.attrs['cols'], self.widget.attrs['rows'] = 60, 5
+        if isinstance(self.widget, TextArea):
+            self.init_text_area(self.widget)
+
+    def init_text_area(self, widget):
+        if self.max_length < 513:
+            widget.attrs.setdefault('cols', 60)
+            widget.attrs.setdefault('rows', 5)
 
 
-class TextField(StringField):
-    """XXX string field not enough?"""
-    widget = TextArea
-
-
-class RichTextField(TextField):
+class RichTextField(StringField):
     widget = None
     def __init__(self, format_field=None, **kwargs):
         super(RichTextField, self).__init__(**kwargs)
@@ -199,7 +199,9 @@ class RichTextField(TextField):
         if self.widget is None:
             if self.use_fckeditor(form):
                 return FCKEditor()
-            return TextArea()
+            widget = TextArea()
+            self.init_text_area(widget)
+            return widget
         return self.widget
 
     def get_format_field(self, form):
@@ -425,20 +427,9 @@ def stringfield_from_constraints(constraints, card, **kwargs):
             return StringField(choices=cstr.vocabulary, **kwargs)
         if isinstance(cstr, SizeConstraint) and cstr.max is not None:
             if cstr.max > 257:
-                rows_cols_from_constraint(cstr, kwargs)
-                field = TextField(max_length=cstr.max, **kwargs)
-            else:
-                field = StringField(max_length=cstr.max, **kwargs)
+                kwargs.setdefault('widget', TextArea)
+            field = StringField(max_length=cstr.max, **kwargs)
     return field or TextField(**kwargs)
-
-
-def rows_cols_from_constraint(constraint, kwargs):
-    if constraint.max < 513:
-        rows, cols = 5, 60
-    else:
-        rows, cols = 10, 80
-    kwargs.setdefault('rows', rows)
-    kwargs.setdefault('cols', cols)
 
 
 def guess_field(eschema, rschema, role='subject', skip_meta_attr=True, **kwargs):
@@ -478,8 +469,6 @@ def guess_field(eschema, rschema, role='subject', skip_meta_attr=True, **kwargs)
                 for cstr in constraints:
                     if isinstance(cstr, StaticVocabularyConstraint):
                         raise Exception('rich text field with static vocabulary')
-                    if isinstance(cstr, SizeConstraint) and cstr.max is not None:
-                        rows_cols_from_constraint(cstr, kwargs)
                 return RichTextField(**kwargs)
             # return StringField or TextField according to constraints
             constraints = rschema.rproperty(eschema, targetschema, 'constraints')
