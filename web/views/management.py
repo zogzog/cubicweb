@@ -13,14 +13,14 @@ from logilab.common.decorators import cached
 
 from cubicweb.common.utils import UStringIO
 from cubicweb.common.view import AnyRsetView, StartupView, EntityView
-from cubicweb.common.uilib import html_traceback, rest_traceback
+from cubicweb.common.uilib import html_traceback, rest_traceback, ajax_replace_url
 from cubicweb.common.selectors import (yes, one_line_rset,
                                        accept_rset, none_rset,
-                                       chainfirst, chainall)
+				       match_user_group,
+                                       chainfirst, chainall, )
 from cubicweb.web import INTERNAL_FIELD_VALUE, eid_param, stdmsgs
 from cubicweb.web.widgets import StaticComboBoxWidget
 from cubicweb.web.form import FormMixIn
-
 _ = unicode
 
 def begin_form(w, entity, redirectvid, redirectpath=None, msg=None):
@@ -305,14 +305,27 @@ _('components')
 _('contentnavigation')
 
 
-def make_togglable_link(nodeid, label, cookiename):
+def make_togglable_link(nodeid, label):
     """builds a HTML link that switches the visibility & remembers it"""
-    action = u"javascript: toggle_and_remember_visibility('%s', '%s')" % \
-        (nodeid, cookiename)
+    action = u"javascript: toggleVisibility('%s')" % nodeid
     return u'<a href="%s">%s</a>' % (action, label)
 
 def css_class(someclass):
     return someclass and 'class="%s"' % someclass or ''
+
+### translations for SystemEpropertiesForm
+_('navigation.combobox-limit')
+_('navigation.page-size')
+_('navigation.related-limit')
+_('navigation.short-line-size')
+_('ui.date-format')
+_('ui.datetime-format')
+_('ui.default-text-format')
+_('ui.fckeditor')
+_('ui.float-format')
+_('ui.language')
+_('ui.time-format')
+_('open all')
 
 class SystemEpropertiesForm(FormMixIn, StartupView):
     controller = 'edit'
@@ -345,7 +358,7 @@ class SystemEpropertiesForm(FormMixIn, StartupView):
 
     def call(self, **kwargs):
         """The default view representing the application's index"""
-        self.req.add_js(('cubicweb.edition.js', 'cubicweb.preferences.js'))
+        self.req.add_js(('cubicweb.edition.js', 'cubicweb.preferences.js', 'cubicweb.ajax.js'))
         self.req.add_css('cubicweb.preferences.css')
         vreg = self.vreg
         values = self.defined_keys
@@ -363,10 +376,11 @@ class SystemEpropertiesForm(FormMixIn, StartupView):
                 mainopts.setdefault(parts[0], []).append(key)
         # precompute form to consume error message
         for group, keys in mainopts.items():
-            mainopts[group] = self.form(keys, False)
+            mainopts[group] = self.form(group, keys, False)
+
         for group, objects in groupedopts.items():
             for oid, keys in objects.items():
-                groupedopts[group][oid] = self.form(keys, True)
+                groupedopts[group][oid] = self.form(group + '-' + oid, keys, True)
 
         w = self.w
         req = self.req
@@ -377,28 +391,35 @@ class SystemEpropertiesForm(FormMixIn, StartupView):
                                          for g, f in mainopts.iteritems()):
             status = css_class(self._group_status(group)) #'hidden' (collapsed), or '' (open) ?
             w(u'<h2 class="propertiesform">%s</h2>\n' %
-              (make_togglable_link('fieldset_' + group, label,
-                                   self._cookie_name(group))))
+            (make_togglable_link('fieldset_' + group, label.capitalize())))
             w(u'<div id="fieldset_%s" %s>' % (group, status))
-            w(u'<fieldset class="subentity">')
+            w(u'<fieldset class="preferences">')
             w(form)
             w(u'</fieldset></div>')
+
         for label, group, objects in sorted((_(g), g, o)
                                             for g, o in groupedopts.iteritems()):
             status = css_class(self._group_status(group))
             w(u'<h2 class="propertiesform">%s</h2>\n' %
-              (make_togglable_link('fieldset_' + group, label,
-                                   self._cookie_name(group))))
+              (make_togglable_link('fieldset_' + group, label.capitalize())))
             w(u'<div id="fieldset_%s" %s>' % (group, status))
-            for label, oid, form in sorted((self.req.__('%s_%s' % (group, o)), o, f)
-                                           for o, f in objects.iteritems()):
-                w(u'<fieldset class="subentity">')
-                w(u'<legend class="componentTitle">%s</legend>\n' % label)
+	    
+	    # create selection
+	    sorted_objects =  sorted((self.req.__('%s_%s' % (group, o)), o, f)
+                                           for o, f in objects.iteritems())
+	    for label, oid, form in sorted_objects:
+                w(u'''<div class="componentLink"><a href="javascript:noop();" onclick="javascript:toggleVisibility('field_%(oid)s_%(group)s')" class="componentTitle">%(label)s</a>''' % {'label':label, 'oid':oid, 'group':group})
+                w(u''' (<div class="openlink"><a href="javascript:noop();" onclick="javascript:closeFieldset('fieldset_%(group)s')">%(label)s</a></div>)'''
+                  % {'label':_('close all'), 'group':group})
+                w(u'</div>')
                 docmsgid = '%s_%s_description' % (group, oid)
                 doc = _(docmsgid)
                 if doc != docmsgid:
-                    w(u'<p class="description">%s</p>' % html_escape(doc))
-                w(form)
+                    w(u'<p class="helper">%s</p>' % html_escape(doc).capitalize())
+		    
+		w(u'<fieldset id="field_%(oid)s_%(group)s" class="%(group)s preferences">'
+                  % {'oid':oid, 'group':group})
+		w(form)
                 w(u'</fieldset>')
             w(u'</div>')
 
@@ -424,11 +445,12 @@ class SystemEpropertiesForm(FormMixIn, StartupView):
             entity['value'] = self.vreg.property_value(key)
         return entity
 
-    def form(self, keys, splitlabel=False):
+    def form(self, formid, keys, splitlabel=False):
         stream = UStringIO()
         w = stream.write
-        w(u'<form action="%s" method="post">\n' % self.build_url())
+	w(u'''<form action="%(url)s" id="%(formid)s" method="post" onsubmit="return validatePrefsForm('%(formid)s')" >\n''' % {'url' : self.build_url(), 'formid':formid})
         w(u'<fieldset>\n')
+	w(u'<div class="formsg"></div>')
         w(u'<input type="hidden" name="__errorurl" value="%s"/>\n'
           % html_escape(self.req.url()))
         w(u'<input type="hidden" name="__form_id" value="%s"/>\n' % self.id)
@@ -438,41 +460,37 @@ class SystemEpropertiesForm(FormMixIn, StartupView):
             w(u'<input type="hidden" name="__redirectparams" value="%s"/>\n'
               % html_escape(params))
         w(u'<input type="hidden" name="__redirectpath" value="%s"/>\n' % path)
-        #w(u'<input type="hidden" name="__redirectrql" value=""/>\n')
+        w(u'<input type="hidden" name="__redirectrql" value=""/>\n')
         w(u'<input type="hidden" name="__message" value="%s"/>\n'
           % self.req._('changes applied'))
-        w(u'<table><tr><td>\n')
-
-        w(u'<table>\n')
-        for key in keys:
-            w(u'<tr>\n')
+	for key in keys:
             self.form_row(w, key, splitlabel)
-            w(u'</tr>\n')
-        w(u'</table>\n')
-        w(u'</td></tr><tr><td>\n')
         w(self.button_ok())
-        w(self.button_cancel())
-        w(u'</td></tr></table>\n')
         w(u'</fieldset>\n')
         w(u'</form>\n')
         return stream.getvalue()
-
+     
     def form_row(self, w, key, splitlabel):
-        entity = self.entity_for_key(key)
+	entity = self.entity_for_key(key)
         eid = entity.eid
-        if splitlabel:
-            w(u'<td class="label">%s</td>' % self.req._(key.split('.')[-1]))
+	if splitlabel:
+            w(u'<label>%s</label>' % self.req._(key.split('.')[-1]).capitalize())
         else:
-            w(u'<td class="label">%s</td>' % self.req._(key))
+            w(u'<label>%s</label>' % self.req._(key).capitalize())
+ 
         wdg = self.vreg.property_value_widget(key, req=self.req)
         error = wdg.render_error(entity)
-        w(u'<td class="%s">' % (error and 'error' or ''))
-        w(error)
+	w(u'<div class="preffield">\n')
+        w(u'%s' % wdg.render_help(entity))
+        w(u'<div class="prefinput">')
+        w(u'<span class="%s">%s</span>' % (error and 'error' or '', error))
         self.form_row_hiddens(w, entity, key)
-        w(wdg.edit_render(entity))
-        w(u'</td>\n')
-        w(u'<td>%s</td>' % wdg.render_help(entity))
-        return entity
+	w(wdg.edit_render(entity))
+        w(u'<input type="hidden" id="current-value:%(eid)s" value="%(value)s"/>'
+          % {'eid':entity.eid, 'value':wdg.current_display_value(entity)})
+	w(u'</div>')
+	w(u'</div>')
+	return entity
 
     def form_row_hiddens(self, w, entity, key):
         eid = entity.eid
@@ -481,13 +499,13 @@ class SystemEpropertiesForm(FormMixIn, StartupView):
         w(u'<input type="hidden" name="%s" value="%s"/>' % (eid_param('pkey', eid), key))
         w(u'<input type="hidden" name="%s" value="%s"/>' % (eid_param('edits-pkey', eid), ''))
 
-
+        
 class EpropertiesForm(SystemEpropertiesForm):
     id = 'epropertiesform'
     title = _('preferences')
-    require_groups = ('users', 'managers') # we don't want guests to be able to come here
-    __selectors__ = chainfirst(none_rset,
-                               chainall(one_line_rset, accept_rset)),
+    require_groups = ('users',) # we don't want guests to be able to come here
+    __selectors__ = chainfirst(none_rset, 
+                               chainall( match_user_group, one_line_rset, accept_rset)),
     accepts = ('EUser',)
 
     @classmethod
@@ -512,19 +530,27 @@ class EpropertiesForm(SystemEpropertiesForm):
     def eprops_rset(self):
         return self.req.execute('Any P,K,V WHERE P is EProperty, P pkey K, P value V,'
                                 'P for_user U, U eid %(x)s', {'x': self.user.eid})
+#     def form_row(self, w, key, splitlabel):
+# 	print 'user'
+
+class ManagerEpropertiesForm(EpropertiesForm):
+    title = _('preferences')
+    require_groups = ('managers',) 
+
 
     def form_row_hiddens(self, w, entity, key):
-        super(EpropertiesForm, self).form_row_hiddens(w, entity, key)
+        super(ManagerEpropertiesForm, self).form_row_hiddens(w, entity, key)
         # if user is in the managers group and the property is being created,
         # we have to set for_user explicitly
-        if not entity.has_eid() and self.user.matching_groups('managers'):
+        if not entity.has_eid():
             eid = entity.eid
             w(u'<input type="hidden" name="%s" value="%s"/>'
               % (eid_param('edits-for_user', eid), INTERNAL_FIELD_VALUE))
             w(u'<input type="hidden" name="%s" value="%s"/>'
               % (eid_param('for_user', eid), self.user.eid))
 
-
+#     def form_row(self, w, key, splitlabel):
+# 	print 'manager'
 
 
 class ProcessInformationView(StartupView):
