@@ -234,12 +234,11 @@ class PrimaryView(EntityView):
         return rset
 
     def _render_relation(self, rset, displayinfo, defaultvid, showlabel):
-        self.w('<div class="section">')
+        self.w(u'<div class="section">')
         if showlabel:
-            label = self.req._(displayinfo['label'])
-            self.w('<h4>%s</h4>' % label)
+            self.w(u'<h4>%s</h4>' % self.req._(displayinfo['label']))
         self.wview(displayinfo.get('vid', defaultvid), rset)
-        self.w('</div>')
+        self.w(u'</div>')
 
     def _render_attribute(self, rschema, value, role='subject'):
         if rschema.is_final():
