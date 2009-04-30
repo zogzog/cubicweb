@@ -23,8 +23,8 @@ msgid ""
 "url: %(url)s\n"
 msgstr ""
 "\n"
-"%(user)s ha cambiado su estado de <%(previous_state)s> hacia <%(current_state)"
-"s> por la entidad\n"
+"%(user)s ha cambiado su estado de <%(previous_state)s> hacia <%"
+"(current_state)s> por la entidad\n"
 "'%(title)s'\n"
 "\n"
 "%(comment)s\n"
@@ -123,6 +123,10 @@ msgstr "%s resultados de la demanda"
 msgid "%s software version of the database"
 msgstr "versión sistema de la base para %s"
 
+#, python-format
+msgid "%s_perm"
+msgstr ""
+
 msgid "**"
 msgstr "0..n 0..n"
 
@@ -200,12 +204,6 @@ msgstr "Bytes"
 
 msgid "Bytes_plural"
 msgstr "Bytes"
-
-msgid "Card"
-msgstr "Ficha"
-
-msgid "Card_plural"
-msgstr "Fichas"
 
 msgid "Date"
 msgstr "Fecha"
@@ -336,9 +334,6 @@ msgstr "Duraciones"
 
 msgid "New Bookmark"
 msgstr "Agregar a Favoritos"
-
-msgid "New Card"
-msgstr "Agregar Ficha"
 
 msgid "New ECache"
 msgstr "Agregar Cache"
@@ -476,9 +471,6 @@ msgstr "Este %s"
 msgid "This Bookmark"
 msgstr "Este favorito"
 
-msgid "This Card"
-msgstr "Esta Ficha"
-
 msgid "This ECache"
 msgstr "Este Cache"
 
@@ -610,16 +602,9 @@ msgid ""
 "be available. This query may use X and U variables that will respectivly "
 "represents the current entity and the current user"
 msgstr ""
-"una expresión RQL que debe haber enviado resultados, para que la transición pueda "
-"ser realizada. Esta expresión puede utilizar las variables X y U que "
+"una expresión RQL que debe haber enviado resultados, para que la transición "
+"pueda ser realizada. Esta expresión puede utilizar las variables X y U que "
 "representan respectivamente la entidad en transición y el usuario actual. "
-
-msgid ""
-"a card is a textual content used as documentation, reference, procedure "
-"reminder"
-msgstr ""
-"una ficha es un texto utilizado como documentación, referencia, memoria de "
-"algún procedimiento..."
 
 msgid ""
 "a simple cache entity characterized by a name and a validity date. The "
@@ -628,9 +613,9 @@ msgid ""
 "get_cache() method."
 msgstr ""
 "una entidad cache simple caracterizada por un nombre y una fecha correcta. "
-"El sistema objetivo es responsable de actualizar timestamp cuand se necesario "
-"para invalidar el cache (usualmente en hooks).Recomendamos revisar el METODO "
-" AppRsetObject.get_cache()."
+"El sistema objetivo es responsable de actualizar timestamp cuand se "
+"necesario para invalidar el cache (usualmente en hooks).Recomendamos revisar "
+"el METODO  AppRsetObject.get_cache()."
 
 msgid "about this site"
 msgstr "Sobre este Espacio"
@@ -845,9 +830,6 @@ msgstr "Agregar una transición"
 msgid "add a Bookmark"
 msgstr "Agregar un Favorito"
 
-msgid "add a Card"
-msgstr "Agregar una ficha"
-
 msgid "add a ECache"
 msgstr "Agregar un cache"
 
@@ -922,8 +904,8 @@ msgid ""
 "added relation %(rtype)s from %(frometype)s #%(fromeid)s to %(toetype)s #%"
 "(toeid)s"
 msgstr ""
-"Relación agregada %(rtype)s de %(frometype)s #%(fromeid)s hacia %"
-"(toetype)s #%(toeid)s"
+"Relación agregada %(rtype)s de %(frometype)s #%(fromeid)s hacia %(toetype)s #"
+"%(toeid)s"
 
 msgid "address"
 msgstr "dirección"
@@ -954,9 +936,6 @@ msgstr "calendario am/pm (semana)"
 
 msgid "am/pm calendar (year)"
 msgstr "calendario am/pm (año)"
-
-msgid "an abstract for this card"
-msgstr "un resumen para esta ficha"
 
 msgid "an electronic mail address associated to a short alias"
 msgstr "una dirección electrónica asociada a este alias"
@@ -996,6 +975,9 @@ msgstr ""
 
 msgid "attribute"
 msgstr "Atributo"
+
+msgid "attributes with modified permissions:"
+msgstr ""
 
 msgid "august"
 msgstr "Agosto"
@@ -1056,8 +1038,7 @@ msgid "boxes_filter_box"
 msgstr "Filtros"
 
 msgid "boxes_filter_box_description"
-msgstr ""
-"Caja que permite realizar filtros sobre los resultados de una búsqueda"
+msgstr "Caja que permite realizar filtros sobre los resultados de una búsqueda"
 
 msgid "boxes_possible_views_box"
 msgstr "Caja de Vistas Posibles"
@@ -1154,6 +1135,9 @@ msgstr "canónico"
 msgid "cardinality"
 msgstr "cardinalidad"
 
+msgid "category"
+msgstr ""
+
 #, python-format
 msgid "changed state of %(etype)s #%(eid)s (%(title)s)"
 msgstr "Cambiar del estado de %(etype)s #%(eid)s (%(title)s)"
@@ -1163,6 +1147,9 @@ msgstr "Cambios realizados"
 
 msgid "click on the box to cancel the deletion"
 msgstr "Seleccione la zona de edición para cancelar la eliminación"
+
+msgid "close all"
+msgstr ""
 
 msgid "comment"
 msgstr "Comentario"
@@ -1272,12 +1259,6 @@ msgstr "Restricciones"
 msgid "constraints applying on this relation"
 msgstr "Restricciones que se aplican a esta relación"
 
-msgid "content"
-msgstr "Contenido"
-
-msgid "content_format"
-msgstr "Formato"
-
 msgid "contentnavigation"
 msgstr "Componentes contextuales"
 
@@ -1333,8 +1314,8 @@ msgid ""
 "core relation giving to a group the permission to add an entity or relation "
 "type"
 msgstr ""
-"Relación sistema que otorga a un grupo la autorización de agregar una entidad "
-"o una relación"
+"Relación sistema que otorga a un grupo la autorización de agregar una "
+"entidad o una relación"
 
 msgid ""
 "core relation giving to a group the permission to delete an entity or "
@@ -1435,13 +1416,11 @@ msgstr ""
 
 msgid ""
 "creating RQLExpression (EEType %(linkto)s read_permission RQLExpression)"
-msgstr "" 
-"Creación de una expresión RQL para la autorización de leer %(linkto)s"
+msgstr "Creación de una expresión RQL para la autorización de leer %(linkto)s"
 
 msgid ""
 "creating RQLExpression (EEType %(linkto)s update_permission RQLExpression)"
-msgstr ""
-"Creación de una expresión RQL para autorizar actualizar %(linkto)s"
+msgstr "Creación de una expresión RQL para autorizar actualizar %(linkto)s"
 
 msgid "creating RQLExpression (ERType %(linkto)s add_permission RQLExpression)"
 msgstr ""
@@ -2036,9 +2015,6 @@ msgstr "es el estado inicial de"
 msgid "inlined"
 msgstr "Puesto en línea"
 
-msgid "inlined view"
-msgstr "Vista incluída (en línea)"
-
 msgid "internationalizable"
 msgstr "Internacionalizable"
 
@@ -2251,8 +2227,8 @@ msgid ""
 "name of the main variables which should be used in the selection if "
 "necessary (comma separated)"
 msgstr ""
-"Nombre de las variables principales que deberian se utilizadas en la selección"
-"de ser necesario (separarlas con comas)"
+"Nombre de las variables principales que deberian se utilizadas en la "
+"selecciónde ser necesario (separarlas con comas)"
 
 msgid "name or identifier of the permission"
 msgstr "Nombre o indentificador de la autorización"
@@ -2268,6 +2244,18 @@ msgstr "Encabezado"
 
 msgid "navigation"
 msgstr "Navegación"
+
+msgid "navigation.combobox-limit"
+msgstr ""
+
+msgid "navigation.page-size"
+msgstr ""
+
+msgid "navigation.related-limit"
+msgstr ""
+
+msgid "navigation.short-line-size"
+msgstr ""
 
 msgid "navtop"
 msgstr "Encabezado del contenido principal"
@@ -2321,6 +2309,9 @@ msgstr "noviembre"
 msgid "object"
 msgstr "objeto"
 
+msgid "object_plural:"
+msgstr ""
+
 msgid "october"
 msgstr "octubre"
 
@@ -2335,6 +2326,9 @@ msgstr "una linea"
 
 msgid "only select queries are authorized"
 msgstr "solo estan permitidas consultas de lectura"
+
+msgid "open all"
+msgstr ""
 
 msgid "order"
 msgstr "orden"
@@ -2364,8 +2358,7 @@ msgid "ownerships have been changed"
 msgstr "la pertenencia ha sido modificada"
 
 msgid "pageid-not-found"
-msgstr ""
-"pagina no encontrada."
+msgstr "pagina no encontrada."
 
 msgid "password"
 msgstr "Clave de acceso"
@@ -2379,6 +2372,12 @@ msgstr "Ruta"
 msgid "permission"
 msgstr "Permiso"
 
+msgid "permissions for entities"
+msgstr ""
+
+msgid "permissions for relations"
+msgstr ""
+
 msgid "permissions for this entity"
 msgstr "Permisos para esta entidad"
 
@@ -2390,9 +2389,6 @@ msgstr "Seleccione los favoritos existentes"
 
 msgid "pkey"
 msgstr ""
-
-msgid "planned_delivery"
-msgstr "entrega planeada"
 
 msgid "please correct errors below"
 msgstr "Favor de corregir errores"
@@ -2449,6 +2445,9 @@ msgstr "tipo de relación"
 msgid "relation_type_object"
 msgstr "Definición"
 
+msgid "relations"
+msgstr ""
+
 msgid "relations deleted"
 msgstr "Relaciones eliminadas"
 
@@ -2457,9 +2456,6 @@ msgstr "Url relativa de la pagina"
 
 msgid "remove this Bookmark"
 msgstr "Eliminar este Favorito"
-
-msgid "remove this Card"
-msgstr "Eliminar esta Ficha"
 
 msgid "remove this ECache"
 msgstr "Eliminar esta cache de aplicación"
@@ -2539,20 +2535,16 @@ msgid "right"
 msgstr "Derecha"
 
 msgid "rql expression allowing to add entities/relations of this type"
-msgstr ""
-"expresion RQL permitiendo agregar entidades/relaciones de este tipo"
+msgstr "expresion RQL permitiendo agregar entidades/relaciones de este tipo"
 
 msgid "rql expression allowing to delete entities/relations of this type"
-msgstr ""
-"expresion RQL permitiendo eliminar entidades/relaciones de este tipo"
+msgstr "expresion RQL permitiendo eliminar entidades/relaciones de este tipo"
 
 msgid "rql expression allowing to read entities/relations of this type"
-msgstr ""
-"expresion RQL permitiendo leer entidades/relaciones de este tipo"
+msgstr "expresion RQL permitiendo leer entidades/relaciones de este tipo"
 
 msgid "rql expression allowing to update entities of this type"
-msgstr ""
-"expresion RQL permitiendo actualizar entidades de este tipo"
+msgstr "expresion RQL permitiendo actualizar entidades de este tipo"
 
 msgid "rql expressions"
 msgstr "expresiones rql"
@@ -2670,7 +2662,8 @@ msgid "site title"
 msgstr "titulo del sitio"
 
 msgid "site-wide property can't be set for user"
-msgstr "una propiedad especifica para el sitio no puede establecerse para el usuario"
+msgstr ""
+"una propiedad especifica para el sitio no puede establecerse para el usuario"
 
 msgid "sorry, the server is unable to handle this query"
 msgstr "lo sentimos, el servidor no puede manejar esta consulta"
@@ -2709,6 +2702,9 @@ msgstr "sujeto"
 msgid "subject/object cardinality"
 msgstr "cardinalidad sujeto/objeto"
 
+msgid "subject_plural:"
+msgstr ""
+
 msgid "sunday"
 msgstr "domingo"
 
@@ -2717,9 +2713,6 @@ msgstr "apellido"
 
 msgid "symetric"
 msgstr "simetrico"
-
-msgid "synopsis"
-msgstr "sinopsis"
 
 msgid "system entities"
 msgstr "entidades de sistema"
@@ -2756,8 +2749,7 @@ msgid "the value \"%s\" is already used, use another one"
 msgstr "el valor \"%s\" ya esta en uso, favor de utilizar otro"
 
 msgid "this action is not reversible!"
-msgstr ""
-"esta acción es irreversible!."
+msgstr "esta acción es irreversible!."
 
 msgid "this entity is currently owned by"
 msgstr "esta entidad es propiedad de"
@@ -2822,6 +2814,36 @@ msgstr "type"
 msgid "ui"
 msgstr "interfaz de usuario"
 
+msgid "ui.date-format"
+msgstr ""
+
+msgid "ui.datetime-format"
+msgstr ""
+
+msgid "ui.default-text-format"
+msgstr ""
+
+msgid "ui.encoding"
+msgstr ""
+
+msgid "ui.fckeditor"
+msgstr ""
+
+msgid "ui.float-format"
+msgstr ""
+
+msgid "ui.language"
+msgstr ""
+
+msgid "ui.main-template"
+msgstr ""
+
+msgid "ui.site-title"
+msgstr ""
+
+msgid "ui.time-format"
+msgstr ""
+
 msgid "unaccessible"
 msgstr "inaccesible"
 
@@ -2836,6 +2858,9 @@ msgstr "entidad externa desconocida"
 
 msgid "unknown property key"
 msgstr "propiedad desconocida"
+
+msgid "up"
+msgstr ""
 
 msgid "upassword"
 msgstr "clave de acceso"
@@ -2863,8 +2888,8 @@ msgid ""
 "use to define a transition from one or multiple states to a destination "
 "states in workflow's definitions."
 msgstr ""
-"utilizado para definir una transición desde uno o multiples estados hacia uno o varios estados destino "
-"en las definiciones del workflow"
+"utilizado para definir una transición desde uno o multiples estados hacia "
+"uno o varios estados destino en las definiciones del workflow"
 
 msgid "use_email"
 msgstr "correo electrónico"
@@ -2879,12 +2904,14 @@ msgid ""
 "used for cubicweb configuration. Once a property has been created you can't "
 "change the key."
 msgstr ""
-"utilizado para la configuración de cubicweb. Una vez que la propiedad ha sido creada no "
-"puede cambiar la llave"
+"utilizado para la configuración de cubicweb. Una vez que la propiedad ha "
+"sido creada no puede cambiar la llave"
 
 msgid ""
 "used to associate simple states to an entity type and/or to define workflows"
-msgstr "utilizado para asociar estados simples a un tipo de entidad y/o para definir workflows"
+msgstr ""
+"utilizado para asociar estados simples a un tipo de entidad y/o para definir "
+"workflows"
 
 msgid "used to grant a permission to a group"
 msgstr "utilizado para otorgar permisos a un grupo"
@@ -2901,7 +2928,8 @@ msgid ""
 "user for which this property is applying. If this relation is not set, the "
 "property is considered as a global property"
 msgstr ""
-"usuario para el cual aplica esta propiedad. Si no se establece esta relación, la propiedad es considerada como una propiedad global."
+"usuario para el cual aplica esta propiedad. Si no se establece esta "
+"relación, la propiedad es considerada como una propiedad global."
 
 msgid "user interface encoding"
 msgstr "codificación de la interfaz de usuario"
@@ -2969,12 +2997,9 @@ msgid ""
 "and python-projects@lists.logilab.org), set this to true on one of them "
 "which is the preferred form."
 msgstr ""
-"cuando multiples direcciones de correo son equivalentes (como python-projects@logilab.org "
-"y python-projects@lists.logilab.org), establecer esto como verdadero en una de ellas "
-"es la forma preferida "
-
-msgid "wikiid"
-msgstr "identificador wiki"
+"cuando multiples direcciones de correo son equivalentes (como python-"
+"projects@logilab.org y python-projects@lists.logilab.org), establecer esto "
+"como verdadero en una de ellas es la forma preferida "
 
 #, python-format
 msgid "workflow for %s"
@@ -3004,11 +3029,36 @@ msgstr "ha terminado la sesion"
 #~ msgid "%s, or without time: %s"
 #~ msgstr "%s, ou bien sans prÈciser d'heure: %s"
 
+#~ msgid "Card"
+#~ msgstr "Ficha"
+
+#~ msgid "Card_plural"
+#~ msgstr "Fichas"
+
 #~ msgid "Loading"
 #~ msgstr "chargement"
 
+#~ msgid "New Card"
+#~ msgstr "Agregar Ficha"
+
 #~ msgid "Problem occured while setting new value"
 #~ msgstr "Un problËme est survenu lors de la mise ‡ jour"
+
+#~ msgid "This Card"
+#~ msgstr "Esta Ficha"
+
+#~ msgid ""
+#~ "a card is a textual content used as documentation, reference, procedure "
+#~ "reminder"
+#~ msgstr ""
+#~ "una ficha es un texto utilizado como documentación, referencia, memoria "
+#~ "de algún procedimiento..."
+
+#~ msgid "add a Card"
+#~ msgstr "Agregar una ficha"
+
+#~ msgid "an abstract for this card"
+#~ msgstr "un resumen para esta ficha"
 
 #~ msgid "and"
 #~ msgstr "et"
@@ -3018,6 +3068,12 @@ msgstr "ha terminado la sesion"
 
 #~ msgid "cancel edition"
 #~ msgstr "annuler l'Èdition"
+
+#~ msgid "content"
+#~ msgstr "Contenido"
+
+#~ msgid "content_format"
+#~ msgstr "Formato"
 
 #~ msgid ""
 #~ "default language (look at the i18n directory of the application to see "
@@ -3044,6 +3100,9 @@ msgstr "ha terminado la sesion"
 #~ msgid "incorrect value for type \"%s\""
 #~ msgstr "valeur incorrecte pour le type \"%s\""
 
+#~ msgid "inlined view"
+#~ msgstr "Vista incluída (en línea)"
+
 #~ msgid "linked"
 #~ msgstr "liÈ"
 
@@ -3058,11 +3117,23 @@ msgstr "ha terminado la sesion"
 #~ msgid "owned by"
 #~ msgstr "appartient ‡"
 
+#~ msgid "planned_delivery"
+#~ msgstr "entrega planeada"
+
+#~ msgid "remove this Card"
+#~ msgstr "Eliminar esta Ficha"
+
 #~ msgid "see also"
 #~ msgstr "voir aussi"
 
 #~ msgid "status will change from %s to %s"
 #~ msgstr "l'Ètat va passer de %s ‡ %s"
+
+#~ msgid "synopsis"
+#~ msgstr "sinopsis"
+
+#~ msgid "wikiid"
+#~ msgstr "identificador wiki"
 
 #~ msgid "workflow history"
 #~ msgstr "historique du workflow"

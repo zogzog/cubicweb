@@ -326,6 +326,10 @@ _('ui.float-format')
 _('ui.language')
 _('ui.time-format')
 _('open all')
+_('ui.main-template')
+_('ui.site-title')
+_('ui.encoding')
+_('category')
 
 class SystemEpropertiesForm(FormMixIn, StartupView):
     controller = 'edit'
@@ -503,7 +507,7 @@ class SystemEpropertiesForm(FormMixIn, StartupView):
 class EpropertiesForm(SystemEpropertiesForm):
     id = 'epropertiesform'
     title = _('preferences')
-    require_groups = ('users',) # we don't want guests to be able to come here
+    require_groups = ('managers',) # we don't want guests to be able to come here
     __selectors__ = chainfirst(none_rset, 
                                chainall( match_user_group, one_line_rset, accept_rset)),
     accepts = ('EUser',)
@@ -530,13 +534,12 @@ class EpropertiesForm(SystemEpropertiesForm):
     def eprops_rset(self):
         return self.req.execute('Any P,K,V WHERE P is EProperty, P pkey K, P value V,'
                                 'P for_user U, U eid %(x)s', {'x': self.user.eid})
-#     def form_row(self, w, key, splitlabel):
-# 	print 'user'
-
 class ManagerEpropertiesForm(EpropertiesForm):
     title = _('preferences')
-    require_groups = ('managers',) 
-
+    require_groups = ('users',) 
+    __selectors__ = chainfirst(none_rset, 
+                               chainall( match_user_group, one_line_rset, accept_rset)),
+ 
 
     def form_row_hiddens(self, w, entity, key):
         super(ManagerEpropertiesForm, self).form_row_hiddens(w, entity, key)

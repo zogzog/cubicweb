@@ -1105,6 +1105,9 @@ msgstr ""
 msgid "cardinality"
 msgstr ""
 
+msgid "category"
+msgstr ""
+
 #, python-format
 msgid "changed state of %(etype)s #%(eid)s (%(title)s)"
 msgstr ""
@@ -2717,6 +2720,9 @@ msgstr "date and time format"
 msgid "ui.default-text-format"
 msgstr "text format"
 
+msgid "ui.encoding"
+msgstr "encoding"
+
 msgid "ui.fckeditor"
 msgstr "content editor"
 
@@ -2725,6 +2731,12 @@ msgstr "float format"
 
 msgid "ui.language"
 msgstr "language"
+
+msgid "ui.main-template"
+msgstr "main template"
+
+msgid "ui.site-title"
+msgstr "site title"
 
 msgid "ui.time-format"
 msgstr "time format"

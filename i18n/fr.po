@@ -1133,6 +1133,9 @@ msgstr "canonique"
 msgid "cardinality"
 msgstr "cardinalité"
 
+msgid "category"
+msgstr "categorie"
+
 #, python-format
 msgid "changed state of %(etype)s #%(eid)s (%(title)s)"
 msgstr "changement de l'état de %(etype)s #%(eid)s (%(title)s)"
@@ -2825,14 +2828,23 @@ msgstr "format de date et de l'heure"
 msgid "ui.default-text-format"
 msgstr "format de texte"
 
+msgid "ui.encoding"
+msgstr "encodage"
+
 msgid "ui.fckeditor"
-msgstr "éditeur"
+msgstr "éditeur du contenu"
 
 msgid "ui.float-format"
 msgstr "format des flottants"
 
 msgid "ui.language"
 msgstr "langue"
+
+msgid "ui.main-template"
+msgstr "gabarit principal"
+
+msgid "ui.site-title"
+msgstr "titre du site"
 
 msgid "ui.time-format"
 msgstr "format de l'heure"
@@ -3044,6 +3056,9 @@ msgstr "vous avez été déconnecté"
 #~ msgstr ""
 #~ "une fiche est un texte utilisé comme documentation, référence, rappel de "
 #~ "procédure..."
+
+#~ msgid "actions_addpermission"
+#~ msgstr "ajouter une permission"
 
 #~ msgid "add a Card"
 #~ msgstr "ajouter une fiche"
