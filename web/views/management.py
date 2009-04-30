@@ -82,6 +82,7 @@ class SecurityManagementView(EntityView, SecurityViewMixIn):
         self.w('<h2>%s</h2>' % _('schema\'s permissions definitions'))
         self.schema_definition(entity.e_schema)
         self.w('<h2>%s</h2>' % _('manage security'))
+        self.w(u'<div id="progress">%s</div>' % form.req._('validating...'))
         # ownership information
         if self.schema.rschema('owned_by').has_perm(self.req, 'add',
                                                     fromeid=entity.eid):
@@ -106,7 +107,7 @@ class SecurityManagementView(EntityView, SecurityViewMixIn):
                                 __redirectpath=entity.rest_path())
         field = guess_field(entity.e_schema, self.schema.rschema('owned_by'))
         form.append_field(field)
-        self.w(form.form_render())
+        self.w(form.form_render(display_progress_div=False)))
 
     def owned_by_information(self, entity):
         ownersrset = entity.related('owned_by')
@@ -176,7 +177,7 @@ class SecurityManagementView(EntityView, SecurityViewMixIn):
         form.append_field(field)
         field = guess_field(cwpermschema, self.schema.rschema('require_group'))
         form.append_field(field)
-        self.w(form.form_render(renderer=HTableFormRenderer()))
+        self.w(form.form_render(renderer=HTableFormRenderer(display_progress_div=False)))
 
 
 
