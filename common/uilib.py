@@ -204,7 +204,7 @@ def cut(text, length):
 
 # HTML generation helper functions ############################################
 
-def simple_sgml_tag(tag, content=None, **attrs):
+def simple_sgml_tag(tag, content=None, escapecontent=True, **attrs):
     """generation of a simple sgml tag (eg without children tags) easier
 
     content and attributes will be escaped
@@ -219,7 +219,9 @@ def simple_sgml_tag(tag, content=None, **attrs):
                                   for attr, value in attrs.items()
                                   if value is not None)
     if content:
-        value += u'>%s</%s>' % (html_escape(unicode(content)), tag)
+        if escapecontent:
+            content = html_escape(unicode(content))
+        value += u'>%s</%s>' % (content, tag)
     else:
         value += u'/>'
     return value
