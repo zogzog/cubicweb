@@ -8,7 +8,7 @@ __docformat__ = "restructuredtext en"
 
 from cubicweb.entities import AnyEntity, fetch_config
 
- 
+
 class Transition(AnyEntity):
     """customized class for Transition entities
 
@@ -17,7 +17,7 @@ class Transition(AnyEntity):
     """
     id = 'Transition'
     fetch_attrs, fetch_order = fetch_config(['name'])
-                 
+
     def may_be_passed(self, eid, stateeid):
         """return true if the logged user may pass this transition
 
@@ -44,7 +44,7 @@ class Transition(AnyEntity):
 
     def destination(self):
         return self.destination_state[0]
-    
+
     def after_deletion_path(self):
         """return (path, parameters) which should be used as redirect
         information when this entity is being deleted
@@ -53,7 +53,7 @@ class Transition(AnyEntity):
             return self.transition_of[0].rest_path(), {'vid': 'workflow'}
         return super(Transition, self).after_deletion_path()
 
-    
+
 class State(AnyEntity):
     """customized class for State entities
 
@@ -63,7 +63,7 @@ class State(AnyEntity):
     id = 'State'
     fetch_attrs, fetch_order = fetch_config(['name'])
     rest_attr = 'eid'
-        
+
     def transitions(self, entity, desteid=None):
         rql = ('Any T,N,DS where S allowed_transition T, S eid %(x)s, '
                'T name N, T destination_state DS, '
@@ -75,7 +75,7 @@ class State(AnyEntity):
         for tr in rset.entities():
             if tr.may_be_passed(entity.eid, self.eid):
                 yield tr
-                
+
     def after_deletion_path(self):
         """return (path, parameters) which should be used as redirect
         information when this entity is being deleted
@@ -84,7 +84,7 @@ class State(AnyEntity):
             return self.state_of[0].rest_path(), {'vid': 'workflow'}
         return super(State, self).after_deletion_path()
 
-    
+
 class TrInfo(AnyEntity):
     """customized class for Transition information entities
     """
@@ -97,7 +97,7 @@ class TrInfo(AnyEntity):
     @property
     def previous_state(self):
         return self.from_state and self.from_state[0]
-    
+
     @property
     def new_state(self):
         return self.to_state[0]
