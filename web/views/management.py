@@ -67,6 +67,9 @@ class SecurityManagementView(EntityView, SecurityViewMixIn):
     """display security information for a given entity"""
     id = 'security'
     title = _('security')
+    def call(self):
+        self.w(u'<div id="progress">%s</div>' % self.req._('validating...'))
+        super(SecurityManagementView, self).call()
 
     def cell_call(self, row, col):
         self.req.add_js('cubicweb.edition.js')
@@ -82,7 +85,6 @@ class SecurityManagementView(EntityView, SecurityViewMixIn):
         self.w('<h2>%s</h2>' % _('schema\'s permissions definitions'))
         self.schema_definition(entity.e_schema)
         self.w('<h2>%s</h2>' % _('manage security'))
-        self.w(u'<div id="progress">%s</div>' % self.req._('validating...'))
         # ownership information
         if self.schema.rschema('owned_by').has_perm(self.req, 'add',
                                                     fromeid=entity.eid):
