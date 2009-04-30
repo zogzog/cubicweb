@@ -82,7 +82,7 @@ class SecurityManagementView(EntityView, SecurityViewMixIn):
         self.w('<h2>%s</h2>' % _('schema\'s permissions definitions'))
         self.schema_definition(entity.e_schema)
         self.w('<h2>%s</h2>' % _('manage security'))
-        self.w(u'<div id="progress">%s</div>' % form.req._('validating...'))
+        self.w(u'<div id="progress">%s</div>' % self.req._('validating...'))
         # ownership information
         if self.schema.rschema('owned_by').has_perm(self.req, 'add',
                                                     fromeid=entity.eid):
