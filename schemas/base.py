@@ -328,6 +328,6 @@ class ECache(MetaEntityType):
         'delete': ('managers',),
         }
 
-    name = String(required=True, unique=True, indexed=True, 
+    name = String(required=True, unique=True, indexed=True,  maxsize=128,
                   description=_('name of the cache'))
     timestamp = Datetime(default='NOW')

@@ -158,7 +158,7 @@ class PrimaryView(EntityView):
         self.render_entity_metadata(entity)
         # entity's attributes and relations, excluding meta data
         # if the entity isn't meta itself
-        boxes = self._preinit_side_related(entity) or siderelations
+        boxes = self._preinit_side_related(entity, siderelations)
         if boxes:
             self.w(u'<table width="100%"><tr><td width="75%">')
         self.w(u'<div>')
@@ -244,34 +244,37 @@ class PrimaryView(EntityView):
                 continue
             self._render_related_entities(entity, rschema, value)
 
-    def render_entity_relations(self, entity, siderelations):
-        if hasattr(self, 'get_side_boxes_defs'):
-            return
-        eschema = entity.e_schema
-        maxrelated = self.req.property_value('navigation.related-limit')
-        for rschema, targetschemas, x in self.iter_relations(entity):
-            try:
-                related = entity.related(rschema.type, x, limit=maxrelated+1)
-            except Unauthorized:
-                continue
-            if not related:
-                continue
-            if self.is_side_related(rschema, eschema):
-                siderelations.append((rschema, related, x))
-                continue
-            self._render_related_entities(entity, rschema, related, x)
-
-    def _preinit_side_related(self, entity):
+    def _preinit_side_related(self, entity, siderelations):
         self._sideboxes = None
+        self._related_entities = []
         if hasattr(self, 'get_side_boxes_defs'):
             self._sideboxes = [(label, rset) for label, rset in self.get_side_boxes_defs(entity)
                                if rset]
+        else:
+            eschema = entity.e_schema
+            maxrelated = self.req.property_value('navigation.related-limit')
+            for rschema, targetschemas, x in self.iter_relations(entity):
+                try:
+                    related = entity.related(rschema.type, x, limit=maxrelated+1)
+                except Unauthorized:
+                    continue
+                if not related:
+                    continue
+                if self.is_side_related(rschema, eschema):
+                    siderelations.append((rschema, related, x))
+                    continue
+                self._related_entities.append((rschema, related, x)) 
         self._boxes_in_context = list(self.vreg.possible_vobjects('boxes', self.req, self.rset,
                                                  row=self.row, view=self,
                                                  context='incontext'))
-        return self._sideboxes or self._boxes_in_context
+        return self._sideboxes or self._boxes_in_context or self._related_entities or siderelations
         
-            
+    def render_entity_relations(self, entity, siderelations):
+        if self._related_entities:
+            for rschema, related, x in self._related_entities:
+                self._render_related_entities(entity, rschema, related, x)
+
+              
     def render_side_related(self, entity, siderelations):
         """display side related relations:
         non-meta in a first step, meta in a second step
@@ -330,8 +333,7 @@ class PrimaryView(EntityView):
                 value +=  '</div>'
         label = display_name(self.req, rschema.type, role)
         self.field(label, value, show_label=show_label, w=self.w, tr=False)
-
-
+        
 class SideBoxView(EntityView):
     """side box usually displaying some related entities in a primary view"""
     id = 'sidebox'
@@ -427,7 +429,7 @@ class MetaDataView(EntityView):
             self.w(u'#%s - ' % entity.eid)
         if entity.modification_date != entity.creation_date:
             self.w(u'<span>%s</span> ' % _('latest update on'))
-            self.w(u'<span class="value">%s</span>,&nbsp;'
+            self.w(u'<span class="value">%s</span>, ;'
                    % self.format_date(entity.modification_date))
         # entities from external source may not have a creation date (eg ldap)
         if entity.creation_date: 
@@ -435,7 +437,7 @@ class MetaDataView(EntityView):
             self.w(u'<span class="value">%s</span>'
                    % self.format_date(entity.creation_date))
         if entity.creator:
-            self.w(u'&nbsp;<span>%s</span> ' % _('by'))
+            self.w(u' <span>%s</span> ' % _('by'))
             self.w(u'<span class="value">%s</span>' % entity.creator.name())
         self.w(u'</div>')
 
@@ -690,10 +692,9 @@ class RssView(XmlView):
         req = self.req
         self.w(u'<?xml version="1.0" encoding="%s"?>\n' % req.encoding)
         self.w(u'''<rss version="2.0"
- xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
  xmlns:dc="http://purl.org/dc/elements/1.1/"
->''')
-        self.w(u'  <channel rdf:about="%s">\n' % html_escape(req.url()))
+>\n''')
+        self.w(u'  <channel>\n')
         self.w(u'    <title>%s RSS Feed</title>\n' % html_escape(self.page_title()))
         self.w(u'    <description>%s</description>\n' % html_escape(req.form.get('vtitle', '')))
         params = req.form.copy()
@@ -721,7 +722,8 @@ class RssItemView(EntityView):
 
     def cell_call(self, row, col):
         entity = self.complete_entity(row, col)
-        self.w(u'<item rdf:about="%s">\n' % html_escape(entity.absolute_url()))
+        self.w(u'<item>\n')
+        self.w(u'<guid isPermaLink="true">%s</guid>\n' % html_escape(entity.absolute_url()))
         self.render_title_link(entity)
         self._marker('description', html_escape(entity.dc_description()))
         self._marker('dc:date', entity.dc_date(self.date_format))
@@ -734,13 +736,9 @@ class RssItemView(EntityView):
            
     def render_entity_creator(self, entity):
         if entity.creator:
-            self._marker('dc:creator', entity.creator.name())
-            email = entity.creator.get_email()
-            if email:
-                self.w(u'<author>')
-                self.w(email)
-                self.w(u'</author>')       
-        
+            self._marker('dc:creator', entity.dc_creator())
+       
+                
     def _marker(self, marker, value):
         if value:
             self.w(u'  <%s>%s</%s>\n' % (marker, html_escape(value), marker))

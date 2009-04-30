@@ -31,7 +31,8 @@ THIS_CUBE_DIR = join(CUBES_DIR, '%(cubename)s')
 def listdir(dirpath):
     return [join(dirpath, fname) for fname in _listdir(dirpath)
             if fname[0] != '.' and not fname.endswith('.pyc')
-            and not fname.endswith('~')]
+            and not fname.endswith('~')
+            and not isdir(join(dirpath, fname))]¶
 
 from glob import glob
 try:

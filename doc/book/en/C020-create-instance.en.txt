@@ -8,7 +8,7 @@ What is an instance?
 
 A `CubicWeb` instance is a directory in ``~/etc/cubicweb.d``
 which enables us to run a web application. An instance is based on
-one or more cubes.
+a cube.
 
 An instance is a container that refers to cubes and configuration 
 parameters for your web application.

@@ -24,8 +24,6 @@ The data model of your cube ``blog`` is defined in the file ``schema.py``:
 
 ::
 
-  from cubicweb.schema import format_constraint
-  
   class Blog(EntityType):
     title = String(maxsize=50, required=True)
     description = String()
@@ -63,9 +61,7 @@ To use this cube as an application and create a new instance named ``blogdemo``,
   cubicweb-ctl create blog blogdemo
 
 
-This command will create a directory ``~/etc/cubicweb.d/blogdemo``
-which will contain all the configuration files required to start
-you web application.
+This command will create the corresponding database and initialize it.
 
 Welcome to your web application
 -------------------------------

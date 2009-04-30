@@ -12,9 +12,10 @@ The following chapters are reference material.
    :maxdepth: 1
 
    D010-faq.en.txt
-   D020-api-reference.en.txt
-   D030-architecture.en.txt
-   D040-modules-stdlib.en.txt
-   D050-modules-cbw-api.en.txt
-   D060-mercurial.en.txt
-   D070-cookbook.en.txt
+   D020-cookbook.en.txt
+   D030-cubicweb-ctl.en.txt
+   D040-api-reference.en.txt
+   D050-architecture.en.txt
+   D060-modules-stdlib.en.txt
+   D070-modules-cbw-api.en.txt
+   D080-mercurial.en.txt
