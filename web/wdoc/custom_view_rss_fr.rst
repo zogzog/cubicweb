@@ -14,5 +14,5 @@ derniers changements sous forme de flux RSS:
 
 :raw-html:`<p><a class="reference"
 href="view?vid=rss&amp;rql=Any+X%2CM+WHERE+X+modification_date+M+ORDERBY+M+DESC+LIMIT+30"><img
-alt="rss" src="data/rss.png"> latest changes</a></p>`
+alt="rss" src="data/rss.png"> latest changes</img></a></p>`
 
