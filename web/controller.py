@@ -10,7 +10,7 @@ __docformat__ = "restructuredtext en"
 import datetime
 
 from cubicweb import typed_eid
-from cubicweb.utils import strptime
+from cubicweb.utils import strptime, todate, todatetime
 from cubicweb.selectors import yes, require_group_compat
 from cubicweb.appobject import AppObject
 from cubicweb.web import LOGGER, Redirect, RequestError
@@ -116,7 +116,7 @@ class Controller(AppObject):
         if etype == 'Datetime':
             format = self.req.property_value('ui.datetime-format')
             try:
-                return strptime(value, format)
+                return todatetime(strptime(value, format))
             except:
                 pass
         elif etype == 'Time':
@@ -124,13 +124,15 @@ class Controller(AppObject):
             try:
                 # (adim) I can't find a way to parse a Time with a custom format
                 date = strptime(value, format) # this returns a DateTime
-                return datetime.timedelta(0, date.hour *60*60 + date.minute*60 + date.second, 0)
+                return datetime.time(date.hour, date.minute, date.second)
             except:
                 raise ValueError('can\'t parse %r (expected %s)' % (value, format))
         try:
             format = self.req.property_value('ui.date-format')
             dt = strptime(value, format)
-            return datetime.date(dt.year, dt.month, dt.day)
+            if etype == 'Datetime':
+                return todatetime(dt)
+            return todate(dt)
         except:
             raise ValueError('can\'t parse %r (expected %s)' % (value, format))
 
