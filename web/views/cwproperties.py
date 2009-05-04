@@ -19,7 +19,7 @@ from cubicweb.web import uicfg, stdmsgs
 from cubicweb.web.form import CompositeForm, EntityFieldsForm, FormViewMixIn
 from cubicweb.web.formfields import FIELDS, StringField
 from cubicweb.web.formwidgets import Select, Button, SubmitButton
-from cubicweb.web.views import primaryviews
+from cubicweb.web.views import primary
 
 
 # some string we want to be internationalizable for nicer display of eproperty
