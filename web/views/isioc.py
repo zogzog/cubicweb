@@ -44,13 +44,17 @@ class SIOCContainerView(EntityView):
 
     def cell_call(self, row, col):
         entity = self.complete_entity(row, col)
-        self.w(u'<sioc:%s rdf:about="%s">\n' % (html_escape(entity.isioc_type()),
-                                                html_escape(entity.absolute_url())))
-        self.w(u'<dcterms:title>%s</dcterms:title>' % html_escape(entity.dc_title()))
-        self.w(u'<dcterms:created>%s</dcterms:created>' % entity.creation_date)
-        self.w(u'<dcterms:modified>%s</dcterms:modified>' % entity.modification_date)
+        sioct = html_escape(entity.isioc_type())
+        self.w(u'<sioc:%s rdf:about="%s">\n'
+               % (sioct, html_escape(entity.absolute_url())))
+        self.w(u'<dcterms:title>%s</dcterms:title>'
+               % html_escape(entity.dc_title()))
+        self.w(u'<dcterms:created>%s</dcterms:created>'
+               % entity.creation_date)
+        self.w(u'<dcterms:modified>%s</dcterms:modified>'
+               % entity.modification_date)
         self.w(u'<!-- FIXME : here be items -->')#entity.isioc_items()
-        self.w(u'</sioc:%s>\n' % entity.isioc_type())
+        self.w(u'</sioc:%s>\n' % sioct)
 
 
 class SIOCItemView(EntityView):
@@ -61,22 +65,29 @@ class SIOCItemView(EntityView):
 
     def cell_call(self, row, col):
         entity = self.complete_entity(row, col)
-        self.w(u'<sioc:%s rdf:about="%s">\n' %  (html_escape(entity.isioc_type()),
-                                                 html_escape(entity.absolute_url())))
-        self.w(u'<dcterms:title>%s</dcterms:title>' % html_escape(entity.dc_title()))
-        self.w(u'<dcterms:created>%s</dcterms:created>' % entity.creation_date)
-        self.w(u'<dcterms:modified>%s</dcterms:modified>' % entity.modification_date)
+        sioct = html_escape(entity.isioc_type())
+        self.w(u'<sioc:%s rdf:about="%s">\n'
+               %  (sioct, html_escape(entity.absolute_url())))
+        self.w(u'<dcterms:title>%s</dcterms:title>'
+               % html_escape(entity.dc_title()))
+        self.w(u'<dcterms:created>%s</dcterms:created>'
+               % entity.creation_date)
+        self.w(u'<dcterms:modified>%s</dcterms:modified>'
+               % entity.modification_date)
         if entity.content:
-            self.w(u'<sioc:content>%s</sioc:content>''' % html_escape(entity.isioc_content()))
+            self.w(u'<sioc:content>%s</sioc:content>'''
+                   % html_escape(entity.isioc_content()))
         if entity.related('entry_of'):
-            self.w(u'<sioc:has_container rdf:resource="%s"/>\n' % html_escape(entity.isioc_container().absolute_url()))
+            self.w(u'<sioc:has_container rdf:resource="%s"/>\n'
+                   % html_escape(entity.isioc_container().absolute_url()))
         if entity.creator:
             self.w(u'<sioc:has_creator>\n')
-            self.w(u'<sioc:User rdf:about="%s">\n' % html_escape(entity.creator.absolute_url()))
+            self.w(u'<sioc:User rdf:about="%s">\n'
+                   % html_escape(entity.creator.absolute_url()))
             self.w(entity.creator.view('foaf'))
             self.w(u'</sioc:User>\n')
             self.w(u'</sioc:has_creator>\n')
         self.w(u'<!-- FIXME : here be topics -->')#entity.isioc_topics()
         self.w(u'<!-- FIXME : here be replies -->')#entity.isioc_replies()
-        self.w(u' </sioc:%s>\n' % 'Post')
+        self.w(u' </sioc:%s>\n' % sioct)
 
