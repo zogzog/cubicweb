@@ -60,7 +60,10 @@ class PrimaryView(EntityView):
                                        'order': cls.rdisplay.get_timestamp()}
                         cls.rdisplay.tag_relation(displayinfo, (X, rschema, Y),
                                                   role)
-                    displayinfo.setdefault('label', '%s_%s' % (rschema, role))
+                    if role == 'subject':
+                        displayinfo.setdefault('label', rschema.type)
+                    else:
+                        displayinfo.setdefault('label', '%s_%s' % (rschema, role))
 
     def html_headers(self):
         """return a list of html headers (eg something to be inserted between
