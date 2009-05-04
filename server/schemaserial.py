@@ -32,7 +32,7 @@ def group_mapping(cursor, interactive=True):
     if missing:
         print 'some native groups are missing but the following groups have been found:'
         print '\n'.join('* %s (%s)' % (n, eid) for n, eid in res.items())
-        print 
+        print
         print 'enter the eid of a to group to map to each missing native group'
         print 'or just type enter to skip permissions granted to a group'
         for group in missing:
@@ -56,7 +56,7 @@ def _set_sql_prefix(prefix):
             print 'changed SQL_PREFIX for %s' % module
         except KeyError:
             pass
-        
+
 def _update_database(schema, sqlcu):
     """3.2.0 migration function: update database schema by adding SQL_PREFIX to
     entity type tables and columns
@@ -90,7 +90,8 @@ def deserialize_schema(schema, session):
     repo = session.repo
     sqlcu = session.pool['system']
     _3_2_migration = False
-    if 'eetype' in [t.lower() for t in repo.system_source.dbhelper.list_tables(sqlcu)]:
+    tables = set(t.lower() for t in repo.system_source.dbhelper.list_tables(sqlcu))
+    if 'eetype' in tables:
         _3_2_migration = True
         # 3.2 migration
         _set_sql_prefix('')
@@ -99,9 +100,11 @@ def deserialize_schema(schema, session):
         for etype in ('EFRDef', 'ENFRDef', 'ERType', 'EEType',
                       'EConstraintType', 'EConstraint', 'EGroup', 'EUser',
                       'ECache', 'EPermission', 'EProperty'):
-            sql = 'ALTER TABLE %s RENAME TO %s' % (etype, ETYPE_NAME_MAP[etype])
-            print sql
-            sqlcu.execute(sql)
+            if etype.lower() in tables:
+                sql = 'ALTER TABLE %s RENAME TO %s' % (etype,
+                                                       ETYPE_NAME_MAP[etype])
+                print sql
+                sqlcu.execute(sql)
         # other table renaming done once schema has been readen
     # print 'reading schema from the database...'
     index = {}
@@ -132,9 +135,9 @@ def deserialize_schema(schema, session):
             except:
                 pass
             tocleanup = [eid]
-            tocleanup += (eid for eid, (eidetype, uri, extid) in session.repo._type_source_cache.items()
+            tocleanup += (eid for eid, (eidetype, uri, extid) in repo._type_source_cache.items()
                           if etype == eidetype)
-            session.repo.clear_caches(tocleanup)
+            repo.clear_caches(tocleanup)
             session.commit(False)
             etype = ETYPE_NAME_MAP[etype]
         etype = ybo.EntityType(name=etype, description=desc, meta=meta, eid=eid)
@@ -167,7 +170,7 @@ def deserialize_schema(schema, session):
                                  fulltext_container=ft_container, eid=eid)
         rschema = schema.add_relation_type(rtype)
         index[eid] = rschema
-        set_perms(rschema, permsdict.get(eid, {}))        
+        set_perms(rschema, permsdict.get(eid, {}))
     cstrsdict = deserialize_rdef_constraints(session)
     for values in session.execute(
         'Any X,SE,RT,OE,CARD,ORD,DESC,IDX,FTIDX,I18N,DFLT WHERE X is CWAttribute,'
@@ -181,7 +184,7 @@ def deserialize_schema(schema, session):
         rtype = index[reid].type
         toetype = index[teid].type
         rdef = ybo.RelationDefinition(frometype, rtype, toetype, cardinality=card,
-                                  order=ord, description=desc, 
+                                  order=ord, description=desc,
                                   constraints=constraints,
                                   indexed=idx, fulltextindexed=ftidx,
                                   internationalizable=i18n,
@@ -197,7 +200,7 @@ def deserialize_schema(schema, session):
         toetype = index[teid].type
         constraints = cstrsdict.get(rdefeid, ())
         rdef = ybo.RelationDefinition(frometype, rtype, toetype, cardinality=card,
-                                  order=ord, description=desc, 
+                                  order=ord, description=desc,
                                   composite=c, constraints=constraints,
                                   eid=rdefeid)
         schema.add_relation_def(rdef)
@@ -241,7 +244,7 @@ def set_perms(erschema, permsdict):
                 actperms.append(erschema.rql_expression(*something))
             else: # group name
                 actperms.append(something)
-        erschema.set_permissions(action, actperms)            
+        erschema.set_permissions(action, actperms)
 
 
 def deserialize_rdef_constraints(session):
@@ -254,8 +257,8 @@ def deserialize_rdef_constraints(session):
         cstr.eid = ceid
         res.setdefault(rdefeid, []).append(cstr)
     return res
-        
-        
+
+
 # schema / perms serialization ################################################
 
 def serialize_schema(cursor, schema, verbose=False):
@@ -352,12 +355,12 @@ def _rdef_values(rschema, objtype, props):
             value = unicode(value)
         values[amap.get(prop, prop)] = value
     return values
-    
+
 def nfrdef_relations_values(rschema, objtype, props):
     values = _rdef_values(rschema, objtype, props)
     relations = ['X %s %%(%s)s' % (attr, attr) for attr in sorted(values)]
     return relations, values
-    
+
 def frdef_relations_values(rschema, objtype, props):
     values = _rdef_values(rschema, objtype, props)
     default = values['default']
@@ -371,7 +374,7 @@ def frdef_relations_values(rschema, objtype, props):
     relations = ['X %s %%(%s)s' % (attr, attr) for attr in sorted(values)]
     return relations, values
 
-    
+
 def __rdef2rql(genmap, rschema, subjtype=None, objtype=None, props=None):
     if subjtype is None:
         assert objtype is None
@@ -405,7 +408,7 @@ def schema2rql(schema, skip=None, allow=None):
     elif allow is not None:
         return chain(*[erschema2rql(schema[t]) for t in all if t in allow])
     return chain(*[erschema2rql(schema[t]) for t in all])
-        
+
 def erschema2rql(erschema):
     if isinstance(erschema, schemamod.EntitySchema):
         return eschema2rql(erschema)
@@ -442,7 +445,7 @@ def rschema2rql(rschema, addrdef=True):
     if addrdef:
         for rql, values in rdef2rql(rschema):
             yield rql, values
-            
+
 def rdef2rql(rschema, subjtype=None, objtype=None, props=None):
     genmap = {True: frdef2rql, False: nfrdef2rql}
     return __rdef2rql(genmap, rschema, subjtype, objtype, props)
@@ -458,7 +461,7 @@ def frdef2rql(rschema, subjtype, objtype, props):
     yield 'INSERT CWAttribute X: %s WHERE %s' % (','.join(relations), _LOCATE_RDEF_RQL1), values
     for rql, values in rdefrelations2rql(rschema, subjtype, objtype, props):
         yield rql + ', EDEF is CWAttribute', values
-            
+
 def nfrdef2rql(rschema, subjtype, objtype, props):
     relations, values = nfrdef_relations_values(rschema, objtype, props)
     relations.append(_LOCATE_RDEF_RQL0)
@@ -466,7 +469,7 @@ def nfrdef2rql(rschema, subjtype, objtype, props):
     yield 'INSERT CWRelation X: %s WHERE %s' % (','.join(relations), _LOCATE_RDEF_RQL1), values
     for rql, values in rdefrelations2rql(rschema, subjtype, objtype, props):
         yield rql + ', EDEF is CWRelation', values
-                
+
 def rdefrelations2rql(rschema, subjtype, objtype, props):
     iterators = []
     for constraint in props['constraints']:
@@ -525,7 +528,7 @@ def updaterschema2rql(rschema):
     relations, values = rschema_relations_values(rschema)
     values['rt'] = rschema.type
     yield 'SET %s WHERE X is CWRType, X name %%(rt)s' % ','.join(relations), values
-            
+
 def updaterdef2rql(rschema, subjtype=None, objtype=None, props=None):
     genmap = {True: updatefrdef2rql, False: updatenfrdef2rql}
     return __rdef2rql(genmap, rschema, subjtype, objtype, props)
@@ -536,7 +539,7 @@ def updatefrdef2rql(rschema, subjtype, objtype, props):
     yield 'SET %s WHERE %s, %s, X is CWAttribute' % (','.join(relations),
                                                  _LOCATE_RDEF_RQL0,
                                                  _LOCATE_RDEF_RQL1), values
-            
+
 def updatenfrdef2rql(rschema, subjtype, objtype, props):
     relations, values = nfrdef_relations_values(rschema, objtype, props)
     values.update({'se': subjtype, 'rt': str(rschema), 'oe': objtype})
