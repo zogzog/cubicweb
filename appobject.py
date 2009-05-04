@@ -255,7 +255,7 @@ class AppRsetObject(VObject):
         """render a precompiled page template with variables in the given
         dictionary as context
         """
-        from cubicweb.common.tal import CubicWebContext
+        from cubicweb.ext.tal import CubicWebContext
         context = CubicWebContext()
         context.update({'self': self, 'rset': self.rset, '_' : self.req._,
                         'req': self.req, 'user': self.req.user})
