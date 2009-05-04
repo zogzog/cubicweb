@@ -15,12 +15,11 @@ from cubicweb import UnknownProperty
 from cubicweb.selectors import (one_line_rset, none_rset, implements,
                                 match_user_groups)
 from cubicweb.view import StartupView
-from cubicweb.web import uicfg
-from cubicweb.web.views import baseviews
-from cubicweb.web import stdmsgs
+from cubicweb.web import uicfg, stdmsgs
 from cubicweb.web.form import CompositeForm, EntityFieldsForm, FormViewMixIn
 from cubicweb.web.formfields import FIELDS, StringField
 from cubicweb.web.formwidgets import Select, Button, SubmitButton
+from cubicweb.web.views import primaryviews
 
 
 # some string we want to be internationalizable for nicer display of eproperty
@@ -59,7 +58,7 @@ def css_class(someclass):
     return someclass and 'class="%s"' % someclass or ''
 
 
-class CWPropertyPrimaryView(baseviews.PrimaryView):
+class CWPropertyPrimaryView(primary.PrimaryView):
     __select__ = implements('CWProperty')
     skip_none = False
 
