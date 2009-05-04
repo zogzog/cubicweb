@@ -7,8 +7,6 @@
 
 from datetime import datetime, date, timedelta
 
-from vobject import iCalendar
-
 from logilab.mtconverter import html_escape
 
 from cubicweb.interfaces import ICalendarable
@@ -32,35 +30,40 @@ MONTHNAMES = ( _('january'), _('february'), _('march'), _('april'), _('may'),
 
 # Calendar views ##############################################################
 
+try:
+    from vobject import iCalendar
 
-class iCalView(EntityView):
-    """A calendar view that generates a iCalendar file (RFC 2445)
+    class iCalView(EntityView):
+        """A calendar view that generates a iCalendar file (RFC 2445)
 
-    Does apply to ICalendarable compatible entities
-    """
-    __select__ = implements(ICalendarable)
-    need_navigation = False
-    content_type = 'text/calendar'
-    title = _('iCalendar')
-    templatable = False
-    id = 'ical'
+        Does apply to ICalendarable compatible entities
+        """
+        __select__ = implements(ICalendarable)
+        need_navigation = False
+        content_type = 'text/calendar'
+        title = _('iCalendar')
+        templatable = False
+        id = 'ical'
 
-    def call(self):
-        ical = iCalendar()
-        for i in range(len(self.rset.rows)):
-            task = self.complete_entity(i)
-            event = ical.add('vevent')
-            event.add('summary').value = task.dc_title()
-            event.add('description').value = task.dc_description()
-            if task.start:
-                event.add('dtstart').value = task.start
-            if task.stop:
-                event.add('dtend').value = task.stop
+        def call(self):
+            ical = iCalendar()
+            for i in range(len(self.rset.rows)):
+                task = self.complete_entity(i)
+                event = ical.add('vevent')
+                event.add('summary').value = task.dc_title()
+                event.add('description').value = task.dc_description()
+                if task.start:
+                    event.add('dtstart').value = task.start
+                if task.stop:
+                    event.add('dtend').value = task.stop
 
-        buff = ical.serialize()
-        if not isinstance(buff, unicode):
-            buff = unicode(buff, self.req.encoding)
-        self.w(buff)
+            buff = ical.serialize()
+            if not isinstance(buff, unicode):
+                buff = unicode(buff, self.req.encoding)
+            self.w(buff)
+
+except ImportError:
+    pass
 
 class hCalView(EntityView):
     """A calendar view that generates a hCalendar file
