@@ -157,10 +157,10 @@ def _generate_schema_pot(w, vreg, schema, libconfig=None, cube=None):
                 for teschema in rschema.targets(eschema, role):
                     if libconfig is not None:
                         if role == 'subject':
-                            subjtype, objtype = etype, tetype
+                            subjtype, objtype = eschema, teschema
                         else:
-                            subjtype, objtype = tetype, etype
-                        if libschema.rschema(rtype).has_rdef(subjtype, objtype):
+                            subjtype, objtype = teschema, eschema
+                        if rschema.has_rdef(subjtype, objtype):
                             continue
                     if actionbox.relation_mode(rschema, eschema, teschema, role) == 'create':
                         if role == 'subject':
