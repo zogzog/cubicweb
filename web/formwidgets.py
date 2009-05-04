@@ -9,7 +9,7 @@ __docformat__ = "restructuredtext en"
 from datetime import date
 
 from cubicweb.common import tags
-from cubicweb.web import stdmsgs
+from cubicweb.web import INTERNAL_FIELD_VALUE, stdmsgs
 
 
 class FieldWidget(object):
