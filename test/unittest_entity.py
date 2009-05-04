@@ -15,7 +15,7 @@ class EntityTC(EnvBasedTC):
 ##         self.add_entity('Tag', name=u'x')
 ##         self.add_entity('Link', title=u'perdu', url=u'http://www.perdu.com',
 ##                         embed=False)
-    
+
     def test_boolean_value(self):
         e = self.etype_instance('CWUser')
         self.failUnless(e)
@@ -37,7 +37,7 @@ class EntityTC(EnvBasedTC):
         self.assertEquals(e.has_eid(), True)
         e.eid = 2
         self.assertEquals(e.has_eid(), True)
-        
+
     def test_copy(self):
         self.add_entity('Tag', name=u'x')
         p = self.add_entity('Personne', nom=u'toto')
@@ -50,7 +50,7 @@ class EntityTC(EnvBasedTC):
         self.assertEquals(len(e.ecrit_par), 1)
         self.assertEquals(e.ecrit_par[0].eid, p.eid)
         self.assertEquals(len(e.reverse_tags), 0)
-        
+
     def test_copy_with_nonmeta_composite_inlined(self):
         p = self.add_entity('Personne', nom=u'toto')
         oe = self.add_entity('Note', type=u'x')
@@ -61,7 +61,7 @@ class EntityTC(EnvBasedTC):
         e.copy_relations(oe.eid)
         self.failIf(e.ecrit_par)
         self.failUnless(oe.ecrit_par)
-            
+
     def test_copy_with_composite(self):
         user = self.user()
         adeleid = self.execute('INSERT EmailAddress X: X address "toto@logilab.org", U use_email X WHERE U login "admin"')[0][0]
@@ -74,7 +74,7 @@ class EntityTC(EnvBasedTC):
         e.copy_relations(user.eid)
         self.failIf(e.use_email)
         self.failIf(e.primary_email)
-        
+
     def test_copy_with_non_initial_state(self):
         user = self.user()
         eid = self.execute('INSERT CWUser X: X login "toto", X upassword %(pwd)s, X in_group G WHERE G name "users"',
@@ -110,7 +110,7 @@ class EntityTC(EnvBasedTC):
         self.assertEquals(len(p.related('tags', 'object', limit=2)), 2)
         self.assertEquals(len(p.related('tags', 'object')), 4)
 
-        
+
     def test_fetch_rql(self):
         user = self.user()
         Personne = self.vreg.etype_class('Personne')
@@ -130,7 +130,7 @@ class EntityTC(EnvBasedTC):
         try:
             # testing unknown attributes
             Personne.fetch_attrs = ('bloug', 'beep')
-            self.assertEquals(Personne.fetch_rql(user), 'Any X WHERE X is Personne')            
+            self.assertEquals(Personne.fetch_rql(user), 'Any X WHERE X is Personne')
             # testing one non final relation
             Personne.fetch_attrs = ('nom', 'prenom', 'travaille')
             self.assertEquals(Personne.fetch_rql(user),
@@ -179,7 +179,7 @@ class EntityTC(EnvBasedTC):
         # XXX
         self.assertEquals(aff.related_rql('evaluee'),
                           'Any X,AA ORDERBY Z DESC WHERE X modification_date Z, E eid %(x)s, E evaluee X, X modification_date AA')
-    
+
     def test_entity_unrelated(self):
         p = self.add_entity('Personne', nom=u'di mascio', prenom=u'adrien')
         e = self.add_entity('Tag', name=u'x')
@@ -198,7 +198,7 @@ class EntityTC(EnvBasedTC):
         self.add_entity('Personne', nom=u'di mascio', prenom=u'gwen')
         self.assertEquals(len(e.unrelated('tags', 'Personne', 'subject', limit=1)),
                           1)
-        
+
     def test_new_entity_unrelated(self):
         e = self.etype_instance('CWUser')
         unrelated = [r[0] for r in e.unrelated('in_group', 'CWGroup', 'subject')]
@@ -209,7 +209,7 @@ class EntityTC(EnvBasedTC):
         e = self.add_entity('Card', title=u'rest test', content=u'du :eid:`1:*ReST*`',
                             content_format=u'text/rest')
         self.assertEquals(e.printable_value('content'),
-                          '<p>du <a class="reference" href="http://testing.fr/cubicweb/egroup/managers">*ReST*</a></p>\n')
+                          '<p>du <a class="reference" href="http://testing.fr/cubicweb/cwgroup/managers">*ReST*</a></p>\n')
         e['content'] = 'du <em>html</em> <ref rql="CWUser X">users</ref>'
         e['content_format'] = 'text/html'
         self.assertEquals(e.printable_value('content'),
@@ -237,7 +237,7 @@ du :eid:`1:*ReST*`'''
             e['content_format'] = 'text/cubicweb-page-template'
             self.assertEquals(e.printable_value('content'),
                               '<h1>zou</h1>')
-        
+
 
     def test_printable_value_bytes(self):
         e = self.add_entity('File', data=Binary('lambda x: 1'), data_format=u'text/x-python',
@@ -254,7 +254,7 @@ du :eid:`1:*ReST*`'''
 <span style="color: #C00000;">lambda</span> <span style="color: #000000;">x</span><span style="color: #0000C0;">:</span> <span style="color: #0080C0;">1</span>
 </pre>
 ''')
-        
+
         e = self.add_entity('File', data=Binary('*héhéhé*'), data_format=u'text/rest',
                             data_encoding=u'utf-8', name=u'toto.txt')
         self.assertEquals(e.printable_value('data'),
@@ -290,8 +290,8 @@ du :eid:`1:*ReST*`'''
         self.assertEquals(e.printable_value('content'), e['content'])
         e['content'] = u'été'
         self.assertEquals(e.printable_value('content'), e['content'])
-        
-        
+
+
     def test_fulltextindex(self):
         e = self.etype_instance('File')
         e['name'] = 'an html file'
@@ -300,17 +300,17 @@ du :eid:`1:*ReST*`'''
         e['data'] = Binary('some <em>data</em>')
         e['data_format'] = 'text/html'
         e['data_encoding'] = 'ascii'
-        self.assertEquals(set(e.get_words()), 
+        self.assertEquals(set(e.get_words()),
                           set(['an', 'html', 'file', 'du', 'html', 'some', 'data']))
 
-        
+
     def test_nonregr_relation_cache(self):
         p1 = self.add_entity('Personne', nom=u'di mascio', prenom=u'adrien')
         p2 = self.add_entity('Personne', nom=u'toto')
         self.execute('SET X evaluee Y WHERE X nom "di mascio", Y nom "toto"')
         self.assertEquals(p1.evaluee[0].nom, "toto")
         self.failUnless(not p1.reverse_evaluee)
-        
+
     def test_complete_relation(self):
         self.execute('SET RT add_permission G WHERE RT name "wf_info_for", G name "managers"')
         self.commit()
@@ -382,7 +382,7 @@ du :eid:`1:*ReST*`'''
         metainf['source'] = metainf['source'].copy()
         metainf['source']['base-url']  = 'http://cubicweb2.com/'
         self.assertEquals(note.absolute_url(), 'http://cubicweb2.com/note/%s' % note.eid)
-        
+
 if __name__ == '__main__':
     from logilab.common.testlib import unittest_main
     unittest_main()

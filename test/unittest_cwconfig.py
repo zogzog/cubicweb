@@ -14,7 +14,7 @@ def unabsolutize(path):
         if part.startswith('cubicweb') or part == 'cubes':
             return '/'.join(parts[i+1:])
     raise Exception('duh? %s' % path)
-    
+
 class CubicWebConfigurationTC(TestCase):
     def setUp(self):
         self.config = ApptestConfiguration('data')
@@ -38,7 +38,7 @@ class CubicWebConfigurationTC(TestCase):
                           ('jpl', 'email', 'file'))
         self.assertEquals(self.config.reorder_cubes(('jpl', 'email', 'file')),
                           ('jpl', 'email', 'file'))
-        
+
     def test_reorder_cubes_recommends(self):
         from cubes.comment import __pkginfo__ as comment_pkginfo
         comment_pkginfo.__recommend__ = ('file',)
@@ -55,8 +55,8 @@ class CubicWebConfigurationTC(TestCase):
                               ('jpl', 'email', 'comment', 'file'))
         finally:
             comment_pkginfo.__use__ = ()
-            
-        
+
+
 #     def test_vc_config(self):
 #         vcconf = self.config.vc_config()
 #         self.assertIsInstance(vcconf['EEMAIL'], Version)
@@ -64,7 +64,7 @@ class CubicWebConfigurationTC(TestCase):
 #         self.assertEquals(vcconf['CW'], (2, 31, 2))
 #         self.assertRaises(KeyError, vcconf.__getitem__, 'CW_VERSION')
 #         self.assertRaises(KeyError, vcconf.__getitem__, 'CRM')
-        
+
     def test_expand_cubes(self):
         self.assertEquals(self.config.expand_cubes(('email', 'eblog')),
                           ['email', 'eblog', 'file'])
@@ -104,7 +104,7 @@ class CubicWebConfigurationTC(TestCase):
         del cubes.file
         from cubes import file
         self.assertEquals(file.__path__, [abspath(join(dirname(__file__), 'data', 'cubes', 'file'))])
-                                       
-                          
+
+
 if __name__ == '__main__':
     unittest_main()
