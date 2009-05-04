@@ -374,9 +374,9 @@ except ImportError:
 from cubicweb.web.views import boxes, xmlrss, primary
 PrimaryView = class_moved(primary.PrimaryView)
 SideBoxView = class_moved(boxes.SideBoxView)
-XmlView = class_moved(xmlrss.XmlView)
-XmlItemView = class_moved(xmlrss.XmlItemView)
-XmlRsetView = class_moved(xmlrss.XmlRsetView)
-RssView = class_moved(xmlrss.RssView)
-RssItemView = class_moved(xmlrss.RssItemView)
+XmlView = class_moved(xmlrss.XMLView)
+XmlItemView = class_moved(xmlrss.XMLItemView)
+XmlRsetView = class_moved(xmlrss.XMLRsetView)
+RssView = class_moved(xmlrss.RSSView)
+RssItemView = class_moved(xmlrss.RSSItemView)
 
