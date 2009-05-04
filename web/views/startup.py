@@ -13,8 +13,8 @@ from logilab.mtconverter import html_escape
 
 from cubicweb.view import StartupView
 from cubicweb.selectors import match_user_groups
-from cubicweb.common.uilib import ureport_as_html, ajax_replace_url
-from cubicweb.web import uicfg, httpcache
+from cubicweb.common.uilib import ureport_as_html
+from cubicweb.web import ajax_replace_url, uicfg, httpcache
 from cubicweb.web.views.management import SecurityViewMixIn
 
 

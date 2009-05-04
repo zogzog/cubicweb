@@ -14,7 +14,7 @@ import decimal
 import re
 from datetime import datetime, date, timedelta
 from urllib import quote as urlquote
-from cStringIO import StringIO
+from StringIO import StringIO
 
 from logilab.mtconverter import html_escape, html_unescape
 
@@ -239,31 +239,6 @@ def toggle_link(nodeid, label):
     """builds a HTML link that uses the js toggleVisibility function"""
     return u'<a href="%s">%s</a>' % (toggle_action(nodeid), label)
 
-def ajax_replace_url(nodeid, rql, vid=None, swap=False, **extraparams):
-    """builds a replacePageChunk-like url
-    >>> ajax_replace_url('foo', 'Person P')
-    "javascript: replacePageChunk('foo', 'Person%20P');"
-    >>> ajax_replace_url('foo', 'Person P', 'oneline')
-    "javascript: replacePageChunk('foo', 'Person%20P', 'oneline');"
-    >>> ajax_replace_url('foo', 'Person P', 'oneline', name='bar', age=12)
-    "javascript: replacePageChunk('foo', 'Person%20P', 'oneline', {'age':12, 'name':'bar'});"
-    >>> ajax_replace_url('foo', 'Person P', name='bar', age=12)
-    "javascript: replacePageChunk('foo', 'Person%20P', 'null', {'age':12, 'name':'bar'});"
-    """
-    params = [repr(nodeid), repr(urlquote(rql))]
-    if extraparams and not vid:
-        params.append("'null'")
-    elif vid:
-        params.append(repr(vid))
-    if extraparams:
-        import simplejson
-        params.append(simplejson.dumps(extraparams))
-    if swap:
-        params.append('true')
-    return "javascript: replacePageChunk(%s);" % ', '.join(params)
-
-
-from StringIO import StringIO
 
 def ureport_as_html(layout):
     from logilab.common.ureports import HTMLWriter
@@ -505,23 +480,6 @@ class limitsize(object):
                 return ret[:self.maxsize]
             return ret
         return newfunc
-
-
-def jsonize(function):
-    import simplejson
-    def newfunc(*args, **kwargs):
-        ret = function(*args, **kwargs)
-        if isinstance(ret, decimal.Decimal):
-            ret = float(ret)
-        elif isinstance(ret, (date, datetime)):
-            ret = ret.strftime('%Y-%m-%d %H:%M')
-        elif isinstance(ret, timedelta):
-            ret = (ret.days * 24*60*60) + ret.seconds
-        try:
-            return simplejson.dumps(ret)
-        except TypeError:
-            return simplejson.dumps(repr(ret))
-    return newfunc
 
 
 def htmlescape(function):

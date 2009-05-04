@@ -20,7 +20,7 @@ from cubicweb.utils import strptime
 from cubicweb.selectors import yes, match_user_groups
 from cubicweb.view import STRICT_DOCTYPE
 from cubicweb.common.mail import format_mail
-from cubicweb.web import ExplicitLogin, Redirect, RemoteCallFailed
+from cubicweb.web import ExplicitLogin, Redirect, RemoteCallFailed, json_dumps
 from cubicweb.web.formrenderers import FormRenderer
 from cubicweb.web.controller import Controller
 from cubicweb.web.views import vid_from_rset
@@ -42,8 +42,7 @@ def jsonize(func):
     """
     def wrapper(self, *args, **kwargs):
         self.req.set_content_type('application/json')
-        result = func(self, *args, **kwargs)
-        return simplejson.dumps(result)
+        return json_dumps(func(self, *args, **kwargs))
     wrapper.__name__ = func.__name__
     return wrapper
 

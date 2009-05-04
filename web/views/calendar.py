@@ -15,7 +15,7 @@ from cubicweb.interfaces import ICalendarable
 from cubicweb.selectors import implements
 from cubicweb.utils import strptime, date_range, todate
 from cubicweb.view import EntityView
-from cubicweb.common.uilib import ajax_replace_url
+from cubicweb.web import ajax_replace_url
 
 _ = unicode
 

@@ -8,8 +8,6 @@ __docformat__ = "restructuredtext en"
 
 from datetime import datetime, timedelta
 
-from simplejson import dumps
-
 from logilab.common.decorators import classproperty
 from logilab.common.deprecation import obsolete
 
@@ -244,6 +242,7 @@ class AppRsetObject(VObject):
         """register the given user callback and return an url to call it ready to be
         inserted in html
         """
+        from simplejson import dumps
         self.req.add_js('cubicweb.ajax.js')
         cbname = self.req.register_onetime_callback(cb, *args)
         msg = dumps(msg or '')
