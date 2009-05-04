@@ -22,7 +22,7 @@ _ = unicode
 
 # base xml views ##############################################################
 
-class XmlView(EntityView):
+class XMLView(EntityView):
     """xml view for entities"""
     id = 'xml'
     title = _('xml')
@@ -43,7 +43,7 @@ class XmlView(EntityView):
         self.w(u'</%s>\n' % self.xml_root)
 
 
-class XmlItemView(EntityView):
+class XMLItemView(EntityView):
     id = 'xmlitem'
 
     def cell_call(self, row, col):
@@ -67,7 +67,7 @@ class XmlItemView(EntityView):
         self.w(u'</%s>\n' % (entity.e_schema))
 
 
-class XmlRsetView(AnyRsetView):
+class XMLRsetView(AnyRsetView):
     """dumps raw rset as xml"""
     id = 'rsetxml'
     title = _('xml export')
@@ -142,7 +142,7 @@ class RSSIconBox(BoxTemplate):
         self.w(u'<a href="%s"><img src="%s" alt="rss"/></a>\n' % (xml_escape(url), rss))
 
 
-class RssView(XmlView):
+class RSSView(XMLView):
     id = 'rss'
     title = _('rss')
     templatable = False
@@ -176,7 +176,7 @@ class RssView(XmlView):
         self.wview('rssitem', self.rset, row=row, col=col)
 
 
-class RssItemView(EntityView):
+class RSSItemView(EntityView):
     id = 'rssitem'
     date_format = '%%Y-%%m-%%dT%%H:%%M%+03i:00' % (timezone / 3600)
     add_div_section = False
