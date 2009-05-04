@@ -9,8 +9,11 @@ publisher to get a full CubicWeb web application
 __docformat__ = "restructuredtext en"
 _ = unicode
 
+from decimal import Decimal
+from datetime import datetime, date, timedelta
 from simplejson import dumps
 
+from cubicweb.common.uilib import urlquote
 from cubicweb.web._exceptions import *
 
 
@@ -43,16 +46,16 @@ FACETTES = set()
 
 
 def json_dumps(value):
-    if isinstance(value, decimal.Decimal):
+    if isinstance(value, Decimal):
         value = float(value)
     elif isinstance(value, (date, datetime)):
         value = value.strftime('%Y-%m-%d %H:%M')
     elif isinstance(value, timedelta):
         value = (value.days * 24*60*60) + value.seconds
     try:
-        return simplejson.dumps(value)
+        return dumps(value)
     except TypeError:
-        return simplejson.dumps(repr(value))
+        return dumps(repr(value))
 
 def jsonize(function):
     def newfunc(*args, **kwargs):
