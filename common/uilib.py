@@ -10,9 +10,7 @@ contains some functions designed to help implementation of cubicweb user interfa
 __docformat__ = "restructuredtext en"
 
 import csv
-import decimal
 import re
-from datetime import datetime, date, timedelta
 from urllib import quote as urlquote
 from StringIO import StringIO
 
