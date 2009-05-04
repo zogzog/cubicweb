@@ -51,7 +51,7 @@ class EntityVComponent(Component):
     context = 'navcontentbottom' # 'footer' | 'header' | 'incontext'
 
     def call(self, view=None):
-        return self.cell_call(0, 0, view)
+        return self.cell_call(0, 0, view=view)
 
     def cell_call(self, row, col, view=None):
         raise NotImplementedError()
