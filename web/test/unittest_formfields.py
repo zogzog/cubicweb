@@ -13,7 +13,7 @@ config.bootstrap_cubes()
 schema = config.load_schema()
 state_schema = schema['State']
 cwuser_schema = schema['CWUser']
-file_schema.schema = schema['File']
+file_schema = schema['File']
 
 class GuessFieldTC(TestCase):
 

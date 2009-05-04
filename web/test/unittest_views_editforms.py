@@ -1,7 +1,7 @@
 from logilab.common.testlib import unittest_main
 from cubicweb.devtools.apptest import EnvBasedTC
 from cubicweb.devtools.testlib import WebTest
-from cubicweb.web.views.editforms import AutomaticEntityForm as AEF
+from cubicweb.web.views.autoform import AutomaticEntityForm as AEF
 from cubicweb.web.formwidgets import AutoCompletionWidget
 def rbc(entity, category):
     return [(rschema.type, x) for rschema, tschemas, x in AEF.erelations_by_category(entity, category)]
@@ -15,7 +15,7 @@ class AutomaticEntityFormTC(EnvBasedTC):
                                        entity=self.user())
         field = form.field_by_name('login')
         self.assertIsInstance(field.widget, AutoCompletionWidget)
-        AEF.rwidgets.del_rtag('login', 'subject', 'CWUser')
+        AEF.rwidgets.del_rtag(('CWUser', 'login', '*'),'subject')
 
 
     def test_euser_relations_by_category(self):
@@ -44,14 +44,14 @@ class AutomaticEntityFormTC(EnvBasedTC):
                                ('bookmarked_by', 'object'),
                                ])
         self.assertListEquals(rbc(e, 'generic'),
-                              [('primary_email', 'subject'),
-                               ('use_email', 'subject'),
-                               ('connait', 'subject'),
+                              [('connait', 'subject'),
                                ('checked_by', 'object'),
                                ])
         # owned_by is defined both as subject and object relations on CWUser
         self.assertListEquals(rbc(e, 'generated'),
-                              [('has_text', 'subject'),
+                              [('primary_email', 'subject'),
+                               ('use_email', 'subject'),
+                               ('has_text', 'subject'),
                                ('identity', 'subject'),
                                ('is', 'subject'),
                                ('is_instance_of', 'subject'),

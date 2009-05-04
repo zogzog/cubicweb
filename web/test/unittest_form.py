@@ -108,35 +108,35 @@ class EntityFieldsFormTC(WebTest):
 
     def test_richtextfield_1(self):
         self.req.use_fckeditor = lambda: False
-        self._test_richtextfield('''<select name="description_format:%(eid)s" size="1" id="description_format:%(eid)s" tabindex="0">
+        self._test_richtextfield('''<select id="description_format:%(eid)s" name="description_format:%(eid)s" size="1" tabindex="0">
 <option value="text/cubicweb-page-template">text/cubicweb-page-template</option>
 <option value="text/html">text/html</option>
 <option value="text/plain">text/plain</option>
 <option selected="selected" value="text/rest">text/rest</option>
-</select><textarea rows="5" name="description:564" onkeypress="autogrow(this)" cols="60" id="description:564" tabindex="1"/>''')
+</select><textarea cols="60" id="description:%(eid)s" name="description:%(eid)s" onkeypress="autogrow(this)" rows="5" tabindex="1"/>''')
 
 
     def test_richtextfield_2(self):
         self.req.use_fckeditor = lambda: True
-        self._test_richtextfield('<input type="hidden" name="description_format:%(eid)s" value="text/rest"/><textarea rows="20" name="description:564" onkeypress="autogrow(this)" cols="80" cubicweb:type="wysiwyg" id="description:564" tabindex="0"/>')
+        self._test_richtextfield('<input name="description_format:%(eid)s" type="hidden" value="text/rest"/><textarea cols="80" cubicweb:type="wysiwyg" id="description:%(eid)s" name="description:%(eid)s" onkeypress="autogrow(this)" rows="20" tabindex="0"/>')
 
 
     def test_filefield(self):
         class FFForm(EntityFieldsForm):
             data = FileField(format_field=StringField(name='data_format'),
                              encoding_field=StringField(name='data_encoding'))
-        file = self.add_entity('File', name=u"pouet.txt",
+        file = self.add_entity('File', name=u"pouet.txt", data_encoding=u'UTF-8',
                                data=Binary('new widgets system'))
         form = FFForm(self.req, redirect_path='perdu.com', entity=file)
         self.assertTextEquals(self._render_entity_field('data', form),
-                              '''<input id="data:%(eid)s" type="file" name="data:%(eid)s" value="" tabindex="0"/>
+                              '''<input id="data:%(eid)s" name="data:%(eid)s" tabindex="0" type="file" value=""/>
 <a href="javascript: toggleVisibility(&#39;data:%(eid)s-advanced&#39;)" title="show advanced fields"><img src="http://testing.fr/cubicweb/data/puce_down.png" alt="show advanced fields"/></a>
 <div id="data:%(eid)s-advanced" class="hidden">
-<label for="data_format:%(eid)s">data_format</label><input id="data_format:%(eid)s" type="text" name="data_format:%(eid)s" value="text/plain" tabindex="1"/><br/><br/>
-<label for="data_encoding:%(eid)s">data_encoding</label><input id="data_encoding:%(eid)s" type="text" name="data_encoding:%(eid)s" value="UTF-8" tabindex="2"/><br/><br/>
+<label for="data_format:%(eid)s">data_format</label><input id="data_format:%(eid)s" name="data_format:%(eid)s" tabindex="1" type="text" value="text/plain"/><br/><br/>
+<label for="data_encoding:%(eid)s">data_encoding</label><input id="data_encoding:%(eid)s" name="data_encoding:%(eid)s" tabindex="2" type="text" value="UTF-8"/><br/><br/>
 </div>
 <br/>
-<input type="checkbox" name="data:%(eid)s__detach"/>
+<input name="data:%(eid)s__detach" type="checkbox"/>
 detach attached file
 ''' % {'eid': file.eid})
 
@@ -149,21 +149,21 @@ detach attached file
                 return 'ascii'
             def form_field_format(self, field):
                 return 'text/plain'
-        file = self.add_entity('File', name=u"pouet.txt",
+        file = self.add_entity('File', name=u"pouet.txt", data_encoding=u'UTF-8', 
                                data=Binary('new widgets system'))
         form = EFFForm(self.req, redirect_path='perdu.com', entity=file)
         self.assertTextEquals(self._render_entity_field('data', form),
-                              '''<input id="data:%(eid)s" type="file" name="data:%(eid)s" value="" tabindex="0"/>
+                              '''<input id="data:%(eid)s" name="data:%(eid)s" tabindex="0" type="file" value=""/>
 <a href="javascript: toggleVisibility(&#39;data:%(eid)s-advanced&#39;)" title="show advanced fields"><img src="http://testing.fr/cubicweb/data/puce_down.png" alt="show advanced fields"/></a>
 <div id="data:%(eid)s-advanced" class="hidden">
-<label for="data_format:%(eid)s">data_format</label><input id="data_format:%(eid)s" type="text" name="data_format:%(eid)s" value="text/plain" tabindex="1"/><br/><br/>
-<label for="data_encoding:%(eid)s">data_encoding</label><input id="data_encoding:%(eid)s" type="text" name="data_encoding:%(eid)s" value="UTF-8" tabindex="2"/><br/><br/>
+<label for="data_format:%(eid)s">data_format</label><input id="data_format:%(eid)s" name="data_format:%(eid)s" tabindex="1" type="text" value="text/plain"/><br/><br/>
+<label for="data_encoding:%(eid)s">data_encoding</label><input id="data_encoding:%(eid)s" name="data_encoding:%(eid)s" tabindex="2" type="text" value="UTF-8"/><br/><br/>
 </div>
 <br/>
-<input type="checkbox" name="data:%(eid)s__detach"/>
+<input name="data:%(eid)s__detach" type="checkbox"/>
 detach attached file
 <p><b>You can either submit a new file using the browse button above, or choose to remove already uploaded file by checking the "detach attached file" check-box, or edit file content online with the widget below.</b></p>
-<textarea tabindex="3" rows="20" cols="80" name="data:%(eid)s" onkeypress="autogrow(this)">new widgets system</textarea>''' % {'eid': file.eid})
+<textarea cols="80" name="data:%(eid)s" onkeypress="autogrow(this)" rows="20" tabindex="3">new widgets system</textarea>''' % {'eid': file.eid})
 
 
     def test_passwordfield(self):
@@ -171,9 +171,9 @@ detach attached file
             upassword = StringField(widget=PasswordInput)
         form = PFForm(self.req, redirect_path='perdu.com', entity=self.entity)
         self.assertTextEquals(self._render_entity_field('upassword', form),
-                              '''<input id="upassword:%(eid)s" type="password" name="upassword:%(eid)s" value="__cubicweb_internal_field__" tabindex="0"/>
+                              '''<input id="upassword:%(eid)s" name="upassword:%(eid)s" tabindex="0" type="password" value="__cubicweb_internal_field__"/>
 <br/>
-<input type="password" name="upassword-confirm:%(eid)s" value="__cubicweb_internal_field__" tabindex="0"/>
+<input name="upassword-confirm:%(eid)s" tabindex="0" type="password" value="__cubicweb_internal_field__"/>
 &nbsp;
 <span class="emphasis">confirm password</span>''' % {'eid': self.entity.eid})
 
