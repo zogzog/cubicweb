@@ -113,31 +113,7 @@ class CubicWebRegistry(VRegistry):
     def register_objects(self, path, force_reload=None):
         """overriden to remove objects requiring a missing interface"""
         if super(CubicWebRegistry, self).register_objects(path, force_reload):
-            # clear etype cache if you don't want to run into deep weirdness
-            clear_cache(self, 'etype_class')
-            # we may want to keep interface dependent objects (e.g.for i18n
-            # catalog generation)
-            if self.config.cleanup_interface_sobjects:
-                # remove vobjects that don't support any available interface
-                implemented_interfaces = set()
-                for etype in self.schema.entities():
-                    cls = self.etype_class(etype)
-                    for iface in cls.__implements__:
-                        implemented_interfaces.update(iface.__mro__)
-                    implemented_interfaces.update(cls.__mro__)
-                for obj, ifaces in self._needs_iface.items():
-                    ifaces = frozenset(isinstance(iface, basestring)
-                                       and iface in self.schema
-                                       and self.etype_class(iface)
-                                       or iface
-                                       for iface in ifaces)
-                    if not ('Any' in ifaces or ifaces & implemented_interfaces):
-                        self.debug('kicking vobject %s (no implemented '
-                                   'interface among %s)', obj, ifaces)
-                        self.unregister(obj)
-            # clear needs_iface so we don't try to remove some not-anymore-in
-            # objects on automatic reloading
-            self._needs_iface.clear()
+            self.initialization_completed()
             # print registry content
             for registry, objects in self.items():
                 self.debug('available in registry %s: %s', registry,
@@ -145,6 +121,34 @@ class CubicWebRegistry(VRegistry):
                 for appobjects in objects.itervalues():
                     for appobject in appobjects:
                         appobject.vreg_initialization_completed()
+
+    def initialization_completed(self):
+        # clear etype cache if you don't want to run into deep weirdness
+        clear_cache(self, 'etype_class')
+        # we may want to keep interface dependent objects (e.g.for i18n
+        # catalog generation)
+        if self.config.cleanup_interface_sobjects:
+            # remove vobjects that don't support any available interface
+            implemented_interfaces = set()
+            if 'Any' in self.get('etypes', ()):
+                for etype in self.schema.entities():
+                    cls = self.etype_class(etype)
+                    for iface in cls.__implements__:
+                        implemented_interfaces.update(iface.__mro__)
+                    implemented_interfaces.update(cls.__mro__)
+            for obj, ifaces in self._needs_iface.items():
+                ifaces = frozenset(isinstance(iface, basestring)
+                                   and iface in self.schema
+                                   and self.etype_class(iface)
+                                   or iface
+                                   for iface in ifaces)
+                if not ('Any' in ifaces or ifaces & implemented_interfaces):
+                    self.debug('kicking vobject %s (no implemented '
+                               'interface among %s)', obj, ifaces)
+                    self.unregister(obj)
+        # clear needs_iface so we don't try to remove some not-anymore-in
+        # objects on automatic reloading
+        self._needs_iface.clear()
 
     @cached
     def etype_class(self, etype):
