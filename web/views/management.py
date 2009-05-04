@@ -6,6 +6,7 @@
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 """
 __docformat__ = "restructuredtext en"
+_ = unicode
 
 from logilab.mtconverter import html_escape
 
@@ -16,8 +17,6 @@ from cubicweb.web import formwidgets
 from cubicweb.web.form import FieldsForm, EntityFieldsForm
 from cubicweb.web.formfields import guess_field
 from cubicweb.web.formrenderers import HTableFormRenderer
-
-_ = unicode
 
 SUBMIT_MSGID = _('Submit bug report')
 MAIL_SUBMIT_MSGID = _('Submit bug report by mail')
@@ -30,7 +29,7 @@ class SecurityViewMixIn(object):
         if not access_types:
             access_types = eschema.ACTIONS
         w(u'<table class="schemaInfo">')
-        w(u'<tr><th>%s</th><th>%s</th><th>%s</th></tr>' % ( 
+        w(u'<tr><th>%s</th><th>%s</th><th>%s</th></tr>' % (
             _("permission"), _('granted to groups'), _('rql expressions')))
         for access_type in access_types:
             w(u'<tr>')
@@ -271,7 +270,6 @@ def text_error_description(ex, excinfo, req, eversion, cubes):
         binfo += u":Package %s version: %s\n" % (pkg, pkgversion)
     binfo += '\n'
     return binfo
-
 
 class ProcessInformationView(StartupView):
     id = 'info'

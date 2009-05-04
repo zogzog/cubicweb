@@ -5,6 +5,7 @@
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 """
 __docformat__ = "restructuredtext en"
+_ = unicode
 
 from logilab.mtconverter import html_escape
 
@@ -21,7 +22,6 @@ from cubicweb.web.form import CompositeForm, EntityFieldsForm, FormViewMixIn
 from cubicweb.web.formfields import FIELDS, StringField
 from cubicweb.web.formwidgets import Select, Button, SubmitButton
 
-_ = unicode
 
 # some string we want to be internationalizable for nicer display of eproperty
 # groups
@@ -31,6 +31,22 @@ _('actions')
 _('boxes')
 _('components')
 _('contentnavigation')
+_('navigation.combobox-limit')
+_('navigation.page-size')
+_('navigation.related-limit')
+_('navigation.short-line-size')
+_('ui.date-format')
+_('ui.datetime-format')
+_('ui.default-text-format')
+_('ui.fckeditor')
+_('ui.float-format')
+_('ui.language')
+_('ui.time-format')
+_('open all')
+_('ui.main-template')
+_('ui.site-title')
+_('ui.encoding')
+_('category')
 
 
 def make_togglable_link(nodeid, label, cookiename):
