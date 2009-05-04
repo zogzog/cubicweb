@@ -54,6 +54,16 @@ for rtype in ('eid', 'creation_date', 'modification_date',
     rdisplay.tag_relation({}, ('*', rtype, '*'), 'object')
 
 
+# index view configuration ####################################################
+# entity type category in the index/manage page. May be one of
+# * 'application'
+# * 'system'
+# * 'schema'
+# * 'subobject' (not displayed by default)
+
+etypecat = {'EmailAddress': 'subobject'}
+
+
 # autoform.AutomaticEntityForm configuration ##################################
 
 # relations'category (eg primary/secondary/generic/metadata/generated)

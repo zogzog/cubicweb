@@ -6,23 +6,34 @@ apply to a result set.
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 """
 __docformat__ = "restructuredtext en"
+_ = unicode
 
 from logilab.common.textutils import unormalize
 from logilab.mtconverter import html_escape
 
-from cubicweb.common.uilib import ureport_as_html, ajax_replace_url
 from cubicweb.view import StartupView
 from cubicweb.selectors import match_user_groups
-from cubicweb.web.httpcache import EtagHTTPCacheManager
+from cubicweb.common.uilib import ureport_as_html, ajax_replace_url
+from cubicweb.web import uicfg, httpcache
 from cubicweb.web.views.management import SecurityViewMixIn
-from copy import deepcopy
-_ = unicode
 
 
 class ManageView(StartupView):
     id = 'manage'
     title = _('manage')
-    http_cache_manager = EtagHTTPCacheManager
+    http_cache_manager = httpcache.EtagHTTPCacheManager
+
+    @classmethod
+    def vreg_initialization_completed(cls):
+        for eschema in cls.schema.entities():
+            if eschema.schema_entity():
+                uicfg.etypecat.setdefault(eschema, 'schema')
+            elif eschema.is_subobject(strict=True):
+                uicfg.etypecat.setdefault(eschema, 'subobject')
+            elif eschema.meta:
+                uicfg.etypecat.setdefault(eschema, 'system')
+            else:
+                uicfg.etypecat.setdefault(eschema, 'application')
 
     def display_folders(self):
         return False
@@ -89,15 +100,15 @@ class ManageView(StartupView):
         if manager:
             self.w(u'<tr><th colspan="4">%s</th></tr>\n' % self.req._('application entities'))
         self.entity_types_table(eschema for eschema in schema.entities()
-                                if not eschema.meta and not eschema.is_subobject(strict=True))
+                                if uicfg.etypecat.get(eschema) == 'application')
         if manager:
             self.w(u'<tr><th colspan="4">%s</th></tr>\n' % self.req._('system entities'))
             self.entity_types_table(eschema for eschema in schema.entities()
-                                    if eschema.meta and not eschema.schema_entity())
+                                if uicfg.etypecat.get(eschema) == 'system')
             if 'CWAttribute' in schema: # check schema support
                 self.w(u'<tr><th colspan="4">%s</th></tr>\n' % self.req._('schema entities'))
-                self.entity_types_table(schema.eschema(etype)
-                                        for etype in schema.schema_entity_types())
+                self.entity_types_table(eschema for eschema in schema.entities()
+                                        if uicfg.etypecat.get(eschema) == 'schema')
         self.w(u'</table>')
 
     def entity_types_table(self, eschemas):
