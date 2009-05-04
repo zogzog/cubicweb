@@ -5,17 +5,18 @@
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 """
 __docformat__ = "restructuredtext en"
+_ = unicode
 
 from logilab.mtconverter import BINARY_ENCODINGS, TransformError, html_escape
 
+from cubicweb.view import EntityView
 from cubicweb.selectors import (one_line_rset, score_entity,
                                 implements, match_context_prop)
 from cubicweb.interfaces import IDownloadable
 from cubicweb.common.mttransforms import ENGINE
 from cubicweb.web.box import EntityBoxTemplate
-from cubicweb.web.views import baseviews
+from cubicweb.web.views import primary, baseviews
 
-_ = unicode
 
 def is_image(entity):
     mt = entity.download_content_type()
@@ -52,7 +53,7 @@ class DownloadBox(EntityBoxTemplate):
         download_box(self.w, entity, title, label)
 
 
-class DownloadView(baseviews.EntityView):
+class DownloadView(EntityView):
     """this view is replacing the deprecated 'download' controller and allow
     downloading of entities providing the necessary interface
     """
@@ -81,7 +82,7 @@ class DownloadView(baseviews.EntityView):
         self.w(self.complete_entity(0).download_data())
 
 
-class DownloadLinkView(baseviews.EntityView):
+class DownloadLinkView(EntityView):
     """view displaying a link to download the file"""
     id = 'downloadlink'
     __select__ = implements(IDownloadable)
@@ -94,7 +95,7 @@ class DownloadLinkView(baseviews.EntityView):
         self.w(u'<a href="%s">%s</a>' % (url, html_escape(title or entity.dc_title())))
 
 
-class IDownloadablePrimaryView(baseviews.PrimaryView):
+class IDownloadablePrimaryView(primary.PrimaryView):
     __select__ = implements(IDownloadable)
 
     def render_entity_attributes(self, entity):
@@ -129,7 +130,7 @@ class IDownloadableLineView(baseviews.OneLineView):
                (url, name, durl, self.req._('download')))
 
 
-class ImageView(baseviews.EntityView):
+class ImageView(EntityView):
     id = 'image'
     __select__ = implements(IDownloadable) & score_entity(is_image)
 

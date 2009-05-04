@@ -12,7 +12,7 @@ from cubicweb import Unauthorized
 from cubicweb.selectors import implements
 from cubicweb.web.htmlwidgets import BoxWidget, BoxMenu, RawBoxItem
 from cubicweb.web import uicfg, action, box, formwidgets
-from cubicweb.web.views.baseviews import PrimaryView
+from cubicweb.web.views import primary
 
 uicfg.rcategories.tag_relation('primary', ('Bookmark', 'path', '*'), 'subject')
 uicfg.rwidgets.tag_relation(formwidgets.TextInput, ('Bookmark', 'path', '*'), 'subject')
@@ -29,7 +29,7 @@ class FollowAction(action.Action):
         return self.rset.get_entity(self.row or 0, self.col or 0).actual_url()
 
 
-class BookmarkPrimaryView(PrimaryView):
+class BookmarkPrimaryView(primary.PrimaryView):
     __select__ = implements('Bookmark')
 
     def cell_call(self, row, col):

@@ -10,9 +10,9 @@ from logilab.mtconverter import html_escape
 
 from cubicweb.selectors import implements
 from cubicweb.common import Unauthorized
-from cubicweb.web.views import baseviews
+from cubicweb.web.views import baseviews, primary
 
-class EmailAddressPrimaryView(baseviews.PrimaryView):
+class EmailAddressPrimaryView(primary.PrimaryView):
     __select__ = implements('EmailAddress')
 
     def cell_call(self, row, col, skipeids=None):
@@ -63,7 +63,7 @@ class EmailAddressShortPrimaryView(EmailAddressPrimaryView):
     __select__ = implements('EmailAddress')
     id = 'shortprimary'
     title = None # hidden view
-    
+
     def render_entity_attributes(self, entity):
         self.w(u'<h5>')
         entity.view('oneline', w=self.w)

@@ -11,7 +11,7 @@ from logilab.mtconverter import html_escape
 from cubicweb.selectors import one_line_rset, implements, match_user_groups
 from cubicweb.view import EntityView
 from cubicweb.web import uicfg, action
-from cubicweb.web.views.baseviews import PrimaryView
+from cubicweb.web.views import primary
 
 
 uicfg.rcategories.tag_relation('secondary', ('CWUser', 'firstname', '*'), 'subject')
@@ -42,7 +42,7 @@ class UserPreferencesEntityAction(action.Action):
         return self.build_url('cwuser/%s'%login, vid='epropertiesform')
 
 
-class CWUserPrimaryView(PrimaryView):
+class CWUserPrimaryView(primary.PrimaryView):
     __select__ = implements('CWUser')
 
     def content_title(self, entity):
