@@ -36,8 +36,9 @@ def select(name, id=None, multiple=False, options=[], **attrs):
         attrs['multiple'] = 'multiple'
     if id:
         attrs['id'] = id
-    html = [u'<select name="%s" %s>' % (
-        name, ' '.join('%s="%s"' % kv for kv in attrs.items()))]
+    attrs['name'] = name
+    html = [u'<select %s>' % ' '.join('%s="%s"' % kv
+                                      for kv in sorted(attrs.items()))]
     html += options
     html.append(u'</select>')
     return u'\n'.join(html)

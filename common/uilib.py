@@ -214,7 +214,7 @@ def simple_sgml_tag(tag, content=None, escapecontent=True, **attrs):
         except KeyError:
             pass
         value += u' ' + u' '.join(u'%s="%s"' % (attr, html_escape(unicode(value)))
-                                  for attr, value in attrs.items()
+                                  for attr, value in sorted(attrs.items())
                                   if value is not None)
     if content:
         if escapecontent:
