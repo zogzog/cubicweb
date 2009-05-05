@@ -136,10 +136,10 @@ class EditBox(BoxTemplate):
         eschema = entity.e_schema
         for rschema, teschema, x in self.add_related_schemas(entity):
             if x == 'subject':
-                label = 'add %s %s %s %s' % (eschema, rschema, teschema, x)
+                label = '%s %s %s %s' % (eschema, rschema, teschema, x)
                 url = self.linkto_url(entity, rschema, teschema, 'object')
             else:
-                label = 'add %s %s %s %s' % (teschema, rschema, eschema, x)
+                label = '%s %s %s %s' % (teschema, rschema, eschema, x)
                 url = self.linkto_url(entity, rschema, teschema, 'subject')
             actions.append(self.mk_action(_(label), url))
         return actions
