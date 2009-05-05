@@ -139,6 +139,8 @@ def repo_cnx(config):
             return in_memory_cnx(config, login, pwd)
         except AuthenticationError:
             print 'wrong user/password'
+            # reset cubes else we'll have an assertion error on next retry
+            config._cubes = None
         login, pwd = manager_userpasswd()
 
 # repository specific command handlers ########################################
