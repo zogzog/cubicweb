@@ -230,70 +230,70 @@ msgstr "Decimales"
 msgid "Do you want to delete the following element(s) ?"
 msgstr "Desea suprimir el(los) elemento(s) siguiente(s)"
 
-msgid "ECache"
+msgid "CWCache"
 msgstr "Cache"
 
-msgid "ECache_plural"
+msgid "CWCache_plural"
 msgstr "Caches"
 
-msgid "EConstraint"
+msgid "CWConstraint"
 msgstr "Restricción"
 
-msgid "EConstraintType"
+msgid "CWConstraintType"
 msgstr "Tipo de Restricción"
 
-msgid "EConstraintType_plural"
+msgid "CWConstraintType_plural"
 msgstr "Tipos de Restricción"
 
-msgid "EConstraint_plural"
+msgid "CWConstraint_plural"
 msgstr "Restricciones"
 
-msgid "EEType"
+msgid "CWEType"
 msgstr "Tipo de entidad"
 
-msgid "EEType_plural"
+msgid "CWEType_plural"
 msgstr "Tipos de entidades"
 
-msgid "EFRDef"
+msgid "CWAttribute"
 msgstr "Atributo"
 
-msgid "EFRDef_plural"
+msgid "CWAttribute_plural"
 msgstr "Atributos"
 
-msgid "EGroup"
+msgid "CWGroup"
 msgstr "Groupo"
 
-msgid "EGroup_plural"
+msgid "CWGroup_plural"
 msgstr "Groupos"
 
-msgid "ENFRDef"
+msgid "CWRelation"
 msgstr "Relación"
 
-msgid "ENFRDef_plural"
+msgid "CWRelation_plural"
 msgstr "Relaciones"
 
-msgid "EPermission"
+msgid "CWPermission"
 msgstr "Autorización"
 
-msgid "EPermission_plural"
+msgid "CWPermission_plural"
 msgstr "Autorizaciones"
 
-msgid "EProperty"
+msgid "CWProperty"
 msgstr "Propiedad"
 
-msgid "EProperty_plural"
+msgid "CWProperty_plural"
 msgstr "Propiedades"
 
-msgid "ERType"
+msgid "CWRType"
 msgstr "Tipo de relación"
 
-msgid "ERType_plural"
+msgid "CWRType_plural"
 msgstr "Tipos de relación"
 
-msgid "EUser"
+msgid "CWUser"
 msgstr "Usuario"
 
-msgid "EUser_plural"
+msgid "CWUser_plural"
 msgstr "Usuarios"
 
 msgid "Email body: "
@@ -335,37 +335,37 @@ msgstr "Duraciones"
 msgid "New Bookmark"
 msgstr "Agregar a Favoritos"
 
-msgid "New ECache"
+msgid "New CWCache"
 msgstr "Agregar Cache"
 
-msgid "New EConstraint"
+msgid "New CWConstraint"
 msgstr "Agregar Restricción"
 
-msgid "New EConstraintType"
+msgid "New CWConstraintType"
 msgstr "Agregar tipo de Restricción"
 
-msgid "New EEType"
+msgid "New CWEType"
 msgstr "Agregar tipo de entidad"
 
-msgid "New EFRDef"
+msgid "New CWAttribute"
 msgstr "Nueva definición de relación final"
 
-msgid "New EGroup"
+msgid "New CWGroup"
 msgstr "Nuevo grupo"
 
-msgid "New ENFRDef"
+msgid "New CWRelation"
 msgstr "Nueva definición de relación final"
 
-msgid "New EPermission"
+msgid "New CWPermission"
 msgstr "Agregar autorización"
 
-msgid "New EProperty"
+msgid "New CWProperty"
 msgstr "Agregar Propiedad"
 
-msgid "New ERType"
+msgid "New CWRType"
 msgstr "Agregar tipo de relación"
 
-msgid "New EUser"
+msgid "New CWUser"
 msgstr "Agregar usuario"
 
 msgid "New EmailAddress"
@@ -471,37 +471,37 @@ msgstr "Este %s"
 msgid "This Bookmark"
 msgstr "Este favorito"
 
-msgid "This ECache"
+msgid "This CWCache"
 msgstr "Este Cache"
 
-msgid "This EConstraint"
+msgid "This CWConstraint"
 msgstr "Esta Restricción"
 
-msgid "This EConstraintType"
+msgid "This CWConstraintType"
 msgstr "Este tipo de Restricción"
 
-msgid "This EEType"
+msgid "This CWEType"
 msgstr "Este tipo de Entidad"
 
-msgid "This EFRDef"
+msgid "This CWAttribute"
 msgstr "Esta definición de relación final"
 
-msgid "This EGroup"
+msgid "This CWGroup"
 msgstr "Este grupo"
 
-msgid "This ENFRDef"
+msgid "This CWRelation"
 msgstr "Esta definición de relación no final"
 
-msgid "This EPermission"
+msgid "This CWPermission"
 msgstr "Esta autorización"
 
-msgid "This EProperty"
+msgid "This CWProperty"
 msgstr "Esta propiedad"
 
-msgid "This ERType"
+msgid "This CWRType"
 msgstr "Este tipo de relación"
 
-msgid "This EUser"
+msgid "This CWUser"
 msgstr "Este usuario"
 
 msgid "This EmailAddress"
@@ -761,49 +761,49 @@ msgstr "Activado"
 msgid "add"
 msgstr "Agregar"
 
-msgid "add Bookmark bookmarked_by EUser object"
+msgid "add Bookmark bookmarked_by CWUser object"
 msgstr "Agregar a los favoritos "
 
-msgid "add EEType add_permission RQLExpression subject"
+msgid "add CWEType add_permission RQLExpression subject"
 msgstr "Agregar una autorización"
 
-msgid "add EEType delete_permission RQLExpression subject"
+msgid "add CWEType delete_permission RQLExpression subject"
 msgstr "Eliminar una autorización"
 
-msgid "add EEType read_permission RQLExpression subject"
+msgid "add CWEType read_permission RQLExpression subject"
 msgstr "Definir una expresión RQL de lectura"
 
-msgid "add EEType update_permission RQLExpression subject"
+msgid "add CWEType update_permission RQLExpression subject"
 msgstr "Definir una expresión RQL de actualización"
 
-msgid "add EFRDef constrained_by EConstraint subject"
+msgid "add CWAttribute constrained_by CWConstraint subject"
 msgstr "Restricción"
 
-msgid "add EFRDef relation_type ERType object"
+msgid "add CWAttribute relation_type CWRType object"
 msgstr "Definición de atributo"
 
-msgid "add ENFRDef constrained_by EConstraint subject"
+msgid "add CWRelation constrained_by CWConstraint subject"
 msgstr "Restricción"
 
-msgid "add ENFRDef relation_type ERType object"
+msgid "add CWRelation relation_type CWRType object"
 msgstr "Definición de relación"
 
-msgid "add EProperty for_user EUser object"
+msgid "add CWProperty for_user CWUser object"
 msgstr "Agregar Propiedad"
 
-msgid "add ERType add_permission RQLExpression subject"
+msgid "add CWRType add_permission RQLExpression subject"
 msgstr "Agregar expresión RQL de agregación"
 
-msgid "add ERType delete_permission RQLExpression subject"
+msgid "add CWRType delete_permission RQLExpression subject"
 msgstr "Agregar expresión RQL de eliminación"
 
-msgid "add ERType read_permission RQLExpression subject"
+msgid "add CWRType read_permission RQLExpression subject"
 msgstr "Agregar expresión RQL de lectura"
 
-msgid "add EUser in_group EGroup object"
+msgid "add CWUser in_group CWGroup object"
 msgstr "Agregar usuario"
 
-msgid "add EUser use_email EmailAddress subject"
+msgid "add CWUser use_email EmailAddress subject"
 msgstr "Agregar email"
 
 msgid "add State allowed_transition Transition object"
@@ -812,7 +812,7 @@ msgstr "Agregar un estado en entrada"
 msgid "add State allowed_transition Transition subject"
 msgstr "Agregar una transición en salida"
 
-msgid "add State state_of EEType object"
+msgid "add State state_of CWEType object"
 msgstr "Agregar un estado"
 
 msgid "add Transition condition RQLExpression subject"
@@ -824,43 +824,43 @@ msgstr "Agregar una transición de entrada"
 msgid "add Transition destination_state State subject"
 msgstr "Agregar el estado de salida"
 
-msgid "add Transition transition_of EEType object"
+msgid "add Transition transition_of CWEType object"
 msgstr "Agregar una transición"
 
 msgid "add a Bookmark"
 msgstr "Agregar un Favorito"
 
-msgid "add a ECache"
+msgid "add a CWCache"
 msgstr "Agregar un cache"
 
-msgid "add a EConstraint"
+msgid "add a CWConstraint"
 msgstr "Agregar una Restricción"
 
-msgid "add a EConstraintType"
+msgid "add a CWConstraintType"
 msgstr "Agregar un tipo de Restricción"
 
-msgid "add a EEType"
+msgid "add a CWEType"
 msgstr "Agregar un tipo de entidad"
 
-msgid "add a EFRDef"
+msgid "add a CWAttribute"
 msgstr "Agregar un tipo de relación"
 
-msgid "add a EGroup"
+msgid "add a CWGroup"
 msgstr "Agregar un grupo de usuarios"
 
-msgid "add a ENFRDef"
+msgid "add a CWRelation"
 msgstr "Agregar una relación"
 
-msgid "add a EPermission"
+msgid "add a CWPermission"
 msgstr "Agregar una autorización"
 
-msgid "add a EProperty"
+msgid "add a CWProperty"
 msgstr "Agregar una propiedad"
 
-msgid "add a ERType"
+msgid "add a CWRType"
 msgstr "Agregar un tipo de relación"
 
-msgid "add a EUser"
+msgid "add a CWUser"
 msgstr "Agregar un usuario"
 
 msgid "add a EmailAddress"
@@ -1381,60 +1381,60 @@ msgstr "creado por"
 msgid "created_by_object"
 msgstr "ha creado"
 
-msgid "creating Bookmark (Bookmark bookmarked_by EUser %(linkto)s)"
+msgid "creating Bookmark (Bookmark bookmarked_by CWUser %(linkto)s)"
 msgstr "Creando Favorito"
 
-msgid "creating EConstraint (EFRDef %(linkto)s constrained_by EConstraint)"
+msgid "creating CWConstraint (CWAttribute %(linkto)s constrained_by CWConstraint)"
 msgstr "Creación condicionada por el atributo %(linkto)s"
 
-msgid "creating EConstraint (ENFRDef %(linkto)s constrained_by EConstraint)"
+msgid "creating CWConstraint (CWRelation %(linkto)s constrained_by CWConstraint)"
 msgstr "Creación condicionada por la relación %(linkto)s"
 
-msgid "creating EFRDef (EFRDef relation_type ERType %(linkto)s)"
+msgid "creating CWAttribute (CWAttribute relation_type CWRType %(linkto)s)"
 msgstr "Creación del atributo %(linkto)s"
 
-msgid "creating ENFRDef (ENFRDef relation_type ERType %(linkto)s)"
+msgid "creating CWRelation (CWRelation relation_type CWRType %(linkto)s)"
 msgstr "Creación de la relación %(linkto)s"
 
-msgid "creating EProperty (EProperty for_user EUser %(linkto)s)"
+msgid "creating CWProperty (CWProperty for_user CWUser %(linkto)s)"
 msgstr "Creación de una propiedad por el usuario %(linkto)s"
 
-msgid "creating EUser (EUser in_group EGroup %(linkto)s)"
+msgid "creating CWUser (CWUser in_group CWGroup %(linkto)s)"
 msgstr "Creación de un usuario para agregar al grupo %(linkto)s"
 
-msgid "creating EmailAddress (EUser %(linkto)s use_email EmailAddress)"
+msgid "creating EmailAddress (CWUser %(linkto)s use_email EmailAddress)"
 msgstr "Creación de una dirección electrónica para el usuario %(linkto)s"
 
-msgid "creating RQLExpression (EEType %(linkto)s add_permission RQLExpression)"
+msgid "creating RQLExpression (CWEType %(linkto)s add_permission RQLExpression)"
 msgstr ""
 "Creación de una expresión RQL para la autorización de agregar %(linkto)s"
 
 msgid ""
-"creating RQLExpression (EEType %(linkto)s delete_permission RQLExpression)"
+"creating RQLExpression (CWEType %(linkto)s delete_permission RQLExpression)"
 msgstr ""
 "Creación de una expresión RQL para la autorización de eliminar %(linkto)s"
 
 msgid ""
-"creating RQLExpression (EEType %(linkto)s read_permission RQLExpression)"
+"creating RQLExpression (CWEType %(linkto)s read_permission RQLExpression)"
 msgstr "Creación de una expresión RQL para la autorización de leer %(linkto)s"
 
 msgid ""
-"creating RQLExpression (EEType %(linkto)s update_permission RQLExpression)"
+"creating RQLExpression (CWEType %(linkto)s update_permission RQLExpression)"
 msgstr "Creación de una expresión RQL para autorizar actualizar %(linkto)s"
 
-msgid "creating RQLExpression (ERType %(linkto)s add_permission RQLExpression)"
+msgid "creating RQLExpression (CWRType %(linkto)s add_permission RQLExpression)"
 msgstr ""
 "Creación de una expresión RQL para la autorización de agregar relaciones %"
 "(linkto)s"
 
 msgid ""
-"creating RQLExpression (ERType %(linkto)s delete_permission RQLExpression)"
+"creating RQLExpression (CWRType %(linkto)s delete_permission RQLExpression)"
 msgstr ""
 "creación de una expresión RQL para autorizar la eliminación de relaciones %"
 "(linkto)s"
 
 msgid ""
-"creating RQLExpression (ERType %(linkto)s read_permission RQLExpression)"
+"creating RQLExpression (CWRType %(linkto)s read_permission RQLExpression)"
 msgstr ""
 "Creación de una expresión RQL para autorizar la lectura de relaciones %"
 "(linkto)s"
@@ -1445,7 +1445,7 @@ msgstr "Creación de una expresión RQL para la transición %(linkto)s"
 msgid "creating State (State allowed_transition Transition %(linkto)s)"
 msgstr "Creación de un estado que pueda ir hacia la transición %(linkto)s"
 
-msgid "creating State (State state_of EEType %(linkto)s)"
+msgid "creating State (State state_of CWEType %(linkto)s)"
 msgstr "Creación de un estado por el tipo %(linkto)s"
 
 msgid "creating State (Transition %(linkto)s destination_state State)"
@@ -1457,7 +1457,7 @@ msgstr "Creación de una transición autorizada desde el estado %(linkto)s"
 msgid "creating Transition (Transition destination_state State %(linkto)s)"
 msgstr "Creación de un transición hacia el estado %(linkto)s"
 
-msgid "creating Transition (Transition transition_of EEType %(linkto)s)"
+msgid "creating Transition (Transition transition_of CWEType %(linkto)s)"
 msgstr "Creación de una transición para el tipo %(linkto)s"
 
 msgid "creation"
@@ -2457,37 +2457,37 @@ msgstr "Url relativa de la pagina"
 msgid "remove this Bookmark"
 msgstr "Eliminar este Favorito"
 
-msgid "remove this ECache"
+msgid "remove this CWCache"
 msgstr "Eliminar esta cache de aplicación"
 
-msgid "remove this EConstraint"
+msgid "remove this CWConstraint"
 msgstr "Eliminar esta restricción"
 
-msgid "remove this EConstraintType"
+msgid "remove this CWConstraintType"
 msgstr "Eliminar este tipo de restricción"
 
-msgid "remove this EEType"
+msgid "remove this CWEType"
 msgstr "Eliminar este tipo de entidad"
 
-msgid "remove this EFRDef"
+msgid "remove this CWAttribute"
 msgstr "Eliminar este atributo"
 
-msgid "remove this EGroup"
+msgid "remove this CWGroup"
 msgstr "Eliminar este grupo"
 
-msgid "remove this ENFRDef"
+msgid "remove this CWRelation"
 msgstr "Eliminar esta relación"
 
-msgid "remove this EPermission"
+msgid "remove this CWPermission"
 msgstr "Eliminar este permiso"
 
-msgid "remove this EProperty"
+msgid "remove this CWProperty"
 msgstr "Eliminar esta propiedad"
 
-msgid "remove this ERType"
+msgid "remove this CWRType"
 msgstr "Eliminar esta definición de relación"
 
-msgid "remove this EUser"
+msgid "remove this CWUser"
 msgstr "Eliminar este usuario"
 
 msgid "remove this EmailAddress"
