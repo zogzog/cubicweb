@@ -70,7 +70,7 @@ Once you modified your data model, you need to synchronize the
 database with your model. For this purpose, `CubicWeb` provides
 a very useful command ``cubicweb-ctl shell blogdemo`` which
 launches an interactive migration Python shell. (see 
-:ref:`cubicweb-ctl-shell` for more details))
+:ref:`cubicweb-ctl` for more details))
 As you modified a relation from the `BlogEntry` schema,
 run the following command:
 ::
