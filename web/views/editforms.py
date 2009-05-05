@@ -18,7 +18,7 @@ from cubicweb.selectors import (match_kwargs, one_line_rset, non_final_entity,
 from cubicweb.utils import make_uid
 from cubicweb.view import EntityView
 from cubicweb.common import tags
-from cubicweb.web import INTERNAL_FIELD_VALUE, stdmsgs
+from cubicweb.web import INTERNAL_FIELD_VALUE, stdmsgs, eid_param
 from cubicweb.web.form import CompositeForm, EntityFieldsForm, FormViewMixIn
 from cubicweb.web.formwidgets import Button, SubmitButton, ResetButton
 from cubicweb.web.formrenderers import (FormRenderer, EntityFormRenderer,
@@ -228,19 +228,21 @@ class CopyFormView(EditionFormView):
         """fetch and render the form"""
         # make a copy of entity to avoid altering the entity in the
         # request's cache.
+        entity.complete()
         self.newentity = copy(entity)
         self.copying = self.newentity.eid
-        self.newentity.eid = None
+        self.initialize_varmaker()
+        self.newentity.eid = self.varmaker.next()
         self.w(u'<script type="text/javascript">updateMessage("%s");</script>\n'
                % self.req._('Please note that this is only a shallow copy'))
-        super(CopyFormView, self).render_form(entity)
+        super(CopyFormView, self).render_form(self.newentity)
         del self.newentity
 
     def init_form(self, form, entity):
         """customize your form before rendering here"""
         super(CopyFormView, self).init_form(form, entity)
         if entity.eid == self.newentity.eid:
-            form.form_add_hidden('__cloned_eid', self.copying, eidparam=True)
+            form.form_add_hidden(eid_param('__cloned_eid', entity.eid), self.copying)
 
     def submited_message(self):
         """return the message that will be displayed on successful edition"""
