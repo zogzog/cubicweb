@@ -38,7 +38,7 @@ All `CubicWeb` built-in types are available : `String`, `Int`, `Float`,
 `Decimal`, `Boolean`, `Date`, `Datetime`, `Time`, `Interval`, `Byte` 
 and `Password`.
 They are implicitely imported (as well as the special the function "_"
-for translation :ref:`internationalization`).
+for translation :ref:`internationalisation`).
 
 An attribute is defined in the schema as follows::
     
@@ -86,9 +86,10 @@ Each entity type has at least the following meta-relations :
 * it is possible to use the attribute `meta` to flag an entity type as a `meta`
   (e.g. used to describe/categorize other entities)
 
+.. _properties:
+
 Optionnal properties
 ````````````````````
-.. _properties:
 
 
 * optional properties for attributes and relations : 
@@ -216,6 +217,7 @@ When a relation is not inlined and not symmetrical, and it does not require
 specific permissions, its definition (by using `SubjectRelation` and
 `ObjectRelation`) is all we need.
 
+.. _security:
 
 The security model
 ------------------
