@@ -37,15 +37,22 @@ def todatetime(somedate):
     return somedate
 
 ONEDAY = timedelta(days=1)
+ONEWEEK = timedelta(days=7)
 
 def days_in_month(date_):
     return monthrange(date_.year, date_.month)[1]
 
-def previous_month(date_):
-    return first_day(date_) - ONEDAY
+def previous_month(date_, nbmonth=1):
+    while nbmonth:
+        date_ = first_day(date_) - ONEDAY
+        nbmonth -= 1
+    return date_
 
-def next_month(date_):
-    return last_day(date_) + ONEDAY
+def next_month(date_, nbmonth=1):
+    while nbmonth:
+        date_ = last_day(date_) + ONEDAY
+        nbmonth -= 1
+    return date_
 
 def first_day(date_):
     return date(date_.year, date_.month, 1)
