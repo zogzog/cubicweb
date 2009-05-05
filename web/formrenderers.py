@@ -273,7 +273,7 @@ class EntityCompositeFormRenderer(FormRenderer):
                 elif isinstance(field.widget, fwdgs.Input):
                     field.widget.attrs['onkeypress'] = cbsetstate
                 w(u'<div>%s</div>' % field.render(form, self))
-                w(u'/<td>')
+                w(u'</td>')
         else:
             # main form, display table headers
             w(u'<tr class="header">')
