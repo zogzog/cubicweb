@@ -1,31 +1,24 @@
 """html calendar views
 
 :organization: Logilab
-:copyright: 2001-2008 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+:copyright: 2001-2009 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 """
 
-from datetime import datetime, date, time, timedelta
-#from datetime import datetime, RelativeDateTime, date, time, Sunday
+from datetime import date, time, timedelta
 
 from logilab.mtconverter import html_escape
 
 from cubicweb.interfaces import ICalendarViews
-from cubicweb.utils import date_range
+from cubicweb.utils import ONEDAY, ONEWEEK, date_range, previous_month, next_month
 from cubicweb.selectors import implements
 from cubicweb.view import EntityView
 
 # Define some useful constants
-#ONE_MONTH = RelativeDateTime(months=1)
-ONE_MONTH = timedelta(days=31)
-TODAY = date.today()
-THIS_MONTH = TODAY.month
-THIS_YEAR = TODAY.year
-# mx.DateTime and ustrftime could be used to build WEEKDAYS
+ONE_MONTH = timedelta(days=31) # XXX
+# used by i18n tools
 WEEKDAYS = [_("monday"), _("tuesday"), _("wednesday"), _("thursday"),
             _("friday"), _("saturday"), _("sunday")]
-
-# used by i18n tools
 MONTHNAMES = [ _('january'), _('february'), _('march'), _('april'), _('may'),
                _('june'), _('july'), _('august'), _('september'), _('october'),
                _('november'), _('december')
@@ -44,30 +37,35 @@ class _CalendarView(EntityView):
 <tr><td class="prev">%s</td><td class="next">%s</td></tr>
 </table>
 """ % (PREV, NEXT)
-    
+
     def nav_header(self, date, smallshift=3, bigshift=9):
         """prints shortcut links to go to previous/next steps (month|week)"""
-        prev1 = date - RelativeDateTime(months=smallshift)
-        prev2 = date - RelativeDateTime(months=bigshift)
-        next1 = date + RelativeDateTime(months=smallshift)
-        next2 = date + RelativeDateTime(months=bigshift)
-        rql, vid = self.rset.printable_rql(), self.id
+        prev1 = next1 = prev2 = nex2 = date
+        prev1 = previous_month(date, smallshift)
+        next1 = next_month(date, smallshift)
+        prev2 = previous_month(date, bigshift)
+        next2 = next_month(date, bigshift)
+        rql = self.rset.printable_rql()
         return self.NAV_HEADER % (
-            html_escape(self.build_url(rql=rql, vid=vid, year=prev2.year, month=prev2.month)),
-            html_escape(self.build_url(rql=rql, vid=vid, year=prev1.year, month=prev1.month)),
-            html_escape(self.build_url(rql=rql, vid=vid, year=next1.year, month=next1.month)),
-            html_escape(self.build_url(rql=rql, vid=vid, year=next2.year, month=next2.month)))
-        
-    
+            html_escape(self.build_url(rql=rql, vid=self.id, year=prev2.year,
+                                       month=prev2.month)),
+            html_escape(self.build_url(rql=rql, vid=self.id, year=prev1.year,
+                                       month=prev1.month)),
+            html_escape(self.build_url(rql=rql, vid=self.id, year=next1.year,
+                                       month=next1.month)),
+            html_escape(self.build_url(rql=rql, vid=self.id, year=next2.year,
+                                       month=next2.month)))
+
+
     # Calendar building methods ##############################################
-    
+
     def build_calendars(self, schedule, begin, end):
         """build several HTML calendars at once, one for each month
         between begin and end
         """
         return [self.build_calendar(schedule, date)
                 for date in date_range(begin, end, incr=ONE_MONTH)]
-    
+
     def build_calendar(self, schedule, first_day):
         """method responsible for building *one* HTML calendar"""
         # FIXME  iterates between [first_day-first_day.day_of_week ;
@@ -108,34 +106,36 @@ class _CalendarView(EntityView):
         returns { day1 : { hour : [views] },
                   day2 : { hour : [views] } ... }
         """
-        # put this here since all sub views are calling this method        
-        self.req.add_css('cubicweb.calendar.css') 
+        # put this here since all sub views are calling this method
+        self.req.add_css('cubicweb.calendar.css')
         schedule = {}
         for row in xrange(len(self.rset.rows)):
             entity = self.entity(row)
             infos = u'<div class="event">'
             infos += self.view(itemvid, self.rset, row=row)
             infos += u'</div>'
-            for date in entity.matching_dates(begin, end):
-                day = Date(date.year, date.month, date.day)
-                time = Time(date.hour, date.minute, date.second) 
+            for date_ in entity.matching_dates(begin, end):
+                day = date(date_.year, date_.month, date_.day)
+                try:
+                    dt = time(date_.hour, date_.minute, date_.second)
+                except AttributeError:
+                    # date instance
+                    dt = time(0, 0, 0)
                 schedule.setdefault(day, {})
-                schedule[day].setdefault(time, []).append(infos)
+                schedule[day].setdefault(dt, []).append(infos)
         return schedule
-        
+
 
     @staticmethod
-    def get_date_range(day=TODAY, shift=4):
+    def get_date_range(day, shift=4):
         """returns a couple (begin, end)
 
         <begin> is the first day of current_month - shift
         <end> is the last day of current_month + (shift+1)
         """
-        first_day_in_month = DateTime(day.year, day.month, 1)
-        begin = first_day_in_month - RelativeDateTime(months=shift)
-        end = (first_day_in_month + RelativeDateTime(months=shift+1)) - 1
+        begin = first_day(previous_month(day, shift))
+        end = last_day(next_month(day, shift))
         return begin, end
-
 
     def _build_ampm_cells(self, daynum, events):
         """create a view without any hourly details.
@@ -166,11 +166,11 @@ class YearCalendarView(_CalendarView):
     id = 'calendaryear'
     title = _('calendar (year)')
 
-    def call(self, year=THIS_YEAR, month=THIS_MONTH):
+    def call(self, year=None, month=None):
         """this view renders a 3x3 calendars' table"""
-        year = int(self.req.form.get('year', year))
-        month = int(self.req.form.get('month', month))
-        center_date = DateTime(year, month)
+        year = year or int(self.req.form.get('year', date.today().year))
+        month = month or int(self.req.form.get('month', date.today().month))
+        center_date = date(year, month, 1)
         begin, end = self.get_date_range(day=center_date)
         schedule = self._mk_schedule(begin, end)
         self.w(self.nav_header(center_date))
@@ -185,17 +185,17 @@ class SemesterCalendarView(_CalendarView):
     id = 'calendarsemester'
     title = _('calendar (semester)')
 
-    def call(self, year=THIS_YEAR, month=THIS_MONTH):
-        year = int(self.req.form.get('year', year))
-        month = int(self.req.form.get('month', month))
-        begin = DateTime(year, month) - RelativeDateTime(months=2)
-        end = DateTime(year, month) + RelativeDateTime(months=3)
+    def call(self, year=None, month=None):
+        year = year or int(self.req.form.get('year', date.today().year))
+        month = month or int(self.req.form.get('month', date.today().month))
+        begin = previous_month(date(year, month, 1), 2)
+        end = next_month(date(year, month, 1), 3)
         schedule = self._mk_schedule(begin, end)
-        self.w(self.nav_header(DateTime(year, month), 1, 6))
+        self.w(self.nav_header(date(year, month, 1), 1, 6))
         self.w(u'<table class="semesterCalendar">')
         self.build_calendars(schedule, begin, end)
         self.w(u'</table>')
-        self.w(self.nav_header(DateTime(year, month), 1, 6))
+        self.w(self.nav_header(date(year, month, 1), 1, 6))
 
     def build_calendars(self, schedule, begin, end):
         self.w(u'<tr>')
@@ -214,29 +214,29 @@ class SemesterCalendarView(_CalendarView):
                 if day_num >= cur_month.days_in_month:
                     self.w(u'%s%s' % (NO_CELL, NO_CELL))
                 else:
-                    day = DateTime(cur_month.year, cur_month.month, day_num+1)
+                    day = date(cur_month.year, cur_month.month, day_num+1)
                     events = schedule.get(day)
                     self.w(u'<td>%s&nbsp;%s</td>\n' % (_(WEEKDAYS[day.day_of_week])[0].upper(), day_num+1))
                     self.format_day_events(day, events)
             self.w(u'</tr>')
-            
+
     def format_day_events(self, day, events):
         if events:
             events = ['\n'.join(event) for event in events.values()]
             self.w(WEEK_CELL % '\n'.join(events))
         else:
             self.w(WEEK_EMPTY_CELL)
-        
+
 
 class MonthCalendarView(_CalendarView):
     """this view renders a 3x1 calendars' table"""
     id = 'calendarmonth'
     title = _('calendar (month)')
-    
-    def call(self, year=THIS_YEAR, month=THIS_MONTH):
-        year = int(self.req.form.get('year', year))
-        month = int(self.req.form.get('month', month))
-        center_date = DateTime(year, month)
+
+    def call(self, year=None, month=None):
+        year = year or int(self.req.form.get('year', date.today().year))
+        month = month or int(self.req.form.get('month', date.today().month))
+        center_date = date(year, month, 1)
         begin, end = self.get_date_range(day=center_date, shift=1)
         schedule = self._mk_schedule(begin, end)
         calendars = self.build_calendars(schedule, begin, end)
@@ -244,32 +244,33 @@ class MonthCalendarView(_CalendarView):
         self.w(BIG_CALENDARS_PAGE % tuple(calendars))
         self.w(self.nav_header(center_date, 1, 3))
 
-        
+
 class WeekCalendarView(_CalendarView):
     """this view renders a calendar for week events"""
     id = 'calendarweek'
     title = _('calendar (week)')
-    
-    def call(self, year=THIS_YEAR, week=TODAY.isocalendar()[1]):
-        year = int(self.req.form.get('year', year))
-        week = int(self.req.form.get('week', week))
-        day0 = DateTime(year)
-        first_day_of_week = (day0-day0.day_of_week) + 7*week
-        begin, end = first_day_of_week-7, first_day_of_week+14
+
+    def call(self, year=None, week=None):
+        year = year or int(self.req.form.get('year', date.today().year))
+        week = week or int(self.req.form.get('week', week,
+                                             date.today().isocalendar()[1]))
+        day0 = date(year, 1, 1)
+        first_day_of_week = day0 - day0.day_of_week*ONEDAY + ONEWEEK
+        begin, end = first_day_of_week- ONEWEEK, first_day_of_week + 2*ONEWEEK
         schedule = self._mk_schedule(begin, end, itemvid='calendarlargeitem')
         self.w(self.nav_header(first_day_of_week))
         self.w(u'<table class="weekCalendar">')
-        _weeks = [(first_day_of_week-7, first_day_of_week-1),
-                  (first_day_of_week, first_day_of_week+6),
-                  (first_day_of_week+7, first_day_of_week+13)]
+        _weeks = [(first_day_of_week-ONEWEEK, first_day_of_week-ONEDAY),
+                  (first_day_of_week, first_day_of_week+6*ONEDAY),
+                  (first_day_of_week+ONEWEEK, first_day_of_week+13*ONEDAY)]
         self.build_calendar(schedule, _weeks)
         self.w(u'</table>')
         self.w(self.nav_header(first_day_of_week))
- 
+
     def build_calendar(self, schedule, weeks):
         rql = self.rset.printable_rql()
         _ = self.req._
-        for monday, sunday in weeks:            
+        for monday, sunday in weeks:
             umonth = self.format_date(monday, '%B %Y')
             url = self.build_url(rql=rql, vid='calendarmonth',
                                  year=monday.year, month=monday.month)
@@ -287,26 +288,26 @@ class WeekCalendarView(_CalendarView):
                 else:
                     self.w(WEEK_EMPTY_CELL)
                 self.w(u'</tr>')
-        
+
     def nav_header(self, date, smallshift=1, bigshift=3):
         """prints shortcut links to go to previous/next steps (month|week)"""
-        prev1 = date - RelativeDateTime(weeks=smallshift)
-        prev2 = date - RelativeDateTime(weeks=bigshift)
-        next1 = date + RelativeDateTime(weeks=smallshift)
-        next2 = date + RelativeDateTime(weeks=bigshift)
-        rql, vid = self.rset.printable_rql(), self.id
+        prev1 = date - ONEWEEK * smallshift
+        prev2 = date - ONEWEEK * bigshift
+        next1 = date + ONEWEEK * smallshift
+        next2 = date + ONEWEEK * bigshift
+        rql = self.rset.printable_rql()
         return self.NAV_HEADER % (
-            html_escape(self.build_url(rql=rql, vid=vid, year=prev2.year, week=prev2.isocalendar()[1])),
-            html_escape(self.build_url(rql=rql, vid=vid, year=prev1.year, week=prev1.isocalendar()[1])),
-            html_escape(self.build_url(rql=rql, vid=vid, year=next1.year, week=next1.isocalendar()[1])),
-            html_escape(self.build_url(rql=rql, vid=vid, year=next2.year, week=next2.isocalendar()[1])))
+            html_escape(self.build_url(rql=rql, vid=self.id, year=prev2.year, week=prev2.isocalendar()[1])),
+            html_escape(self.build_url(rql=rql, vid=self.id, year=prev1.year, week=prev1.isocalendar()[1])),
+            html_escape(self.build_url(rql=rql, vid=self.id, year=next1.year, week=next1.isocalendar()[1])),
+            html_escape(self.build_url(rql=rql, vid=self.id, year=next2.year, week=next2.isocalendar()[1])))
 
 
-        
+
 class AMPMYearCalendarView(YearCalendarView):
     id = 'ampmcalendaryear'
     title = _('am/pm calendar (year)')
-    
+
     def build_calendar(self, schedule, first_day):
         """method responsible for building *one* HTML calendar"""
         umonth = self.format_date(first_day, '%B %Y') # localized month name
@@ -353,7 +354,7 @@ class AMPMYearCalendarView(YearCalendarView):
                              year=first_day.year, month=first_day.month)
         monthlink = '<a href="%s">%s</a>' % (html_escape(url), umonth)
         return CALENDAR(self.req) % (monthlink, '\n'.join(formatted_rows))
-        
+
 
 
 class AMPMSemesterCalendarView(SemesterCalendarView):
@@ -378,18 +379,18 @@ class AMPMSemesterCalendarView(SemesterCalendarView):
                 if day_num >= cur_month.days_in_month:
                     self.w(u'%s%s%s' % (NO_CELL, NO_CELL, NO_CELL))
                 else:
-                    day = DateTime(cur_month.year, cur_month.month, day_num+1)
+                    day = date(cur_month.year, cur_month.month, day_num+1)
                     events = schedule.get(day)
                     self.w(u'<td>%s&nbsp;%s</td>\n' % (_(WEEKDAYS[day.day_of_week])[0].upper(),
                                                        day_num+1))
                     self.format_day_events(day, events)
             self.w(u'</tr>')
-    
+
     def format_day_events(self, day, events):
         if events:
             self.w(u'\n'.join(self._build_ampm_cells(day, events)))
         else:
-            self.w(u'%s %s'% (AMPM_EMPTY % ("amCell", "am"), 
+            self.w(u'%s %s'% (AMPM_EMPTY % ("amCell", "am"),
                               AMPM_EMPTY % ("pmCell", "pm")))
 
 
@@ -445,10 +446,10 @@ class AMPMMonthCalendarView(MonthCalendarView):
                              year=first_day.year, month=first_day.month)
         monthlink = '<a href="%s">%s</a>' % (html_escape(url),
                                              umonth)
-        return CALENDAR(self.req) % (monthlink, '\n'.join(formatted_rows))      
-    
+        return CALENDAR(self.req) % (monthlink, '\n'.join(formatted_rows))
 
-    
+
+
 class AMPMWeekCalendarView(WeekCalendarView):
     """this view renders a 3x1 calendars' table"""
     id = 'ampmcalendarweek'
