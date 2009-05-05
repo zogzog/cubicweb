@@ -173,7 +173,8 @@ class EditRelationBoxTemplate(ReloadableMixIn, EntityBoxTemplate):
         count = self.w_related(box, entity)
         if count:
             box.append(BoxSeparator())
-        self.w_unrelated(box, entity)
+        if not self.w_unrelated(box, entity):
+            del box.items[-1] # remove useless separator
         box.render(self.w)
 
     def div_id(self):
@@ -201,8 +202,11 @@ class EditRelationBoxTemplate(ReloadableMixIn, EntityBoxTemplate):
     def w_unrelated(self, box, entity):
         """appends unrelated entities to the `box`"""
         rql = 'SET S %s O WHERE S eid %%(s)s, O eid %%(o)s' % self.rtype
+        i = 0
         for etarget in self.unrelated_entities(entity):
             box.append(self.box_item(entity, etarget, rql, u'+'))
+            i += 1
+        return i
 
     def unrelated_entities(self, entity):
         """returns the list of unrelated entities
