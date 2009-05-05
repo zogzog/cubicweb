@@ -26,7 +26,7 @@ For example ::
 The entity described above defines three attributes of type String,
 last_name, first_name and title, an attribute of type Date for the date of
 birth and a relation that connects a `Person` to another entity of type
-`Company` through the semantic `works_for`.
+`Company` through the semantic `works_for` (:ref:`relations`).
 
 The name of the Python attribute corresponds to the name of the attribute
 or the relation in `CubicWeb` application.
@@ -45,7 +45,7 @@ An attribute is defined in the schema as follows::
     attr_name = attr_type(properties*)
 
 where `attr_type` is one of the type listed above and `properties` is
-a list of  the attribute needs to statisfy (see :ref:`properties`
+a list of properties the attribute will comply to (see :ref:`properties`
 for more details). 
 
 
@@ -54,23 +54,28 @@ Meta-data
 
 Each entity type has at least the following meta-relations :
 
-  - `eid` (`Int`)
+  - `eid` (`Int`): provides the unique numeric identifier of an entity
   
-  - `creation_date` (`Datetime`)
+  - `creation_date` (`Datetime`): date on which the entity has been created
   
-  - `modification_date` (`Datetime`)
+  - `modification_date` (`Datetime`: date on which the entity has been last modified
   
-  - `created_by` (`EUser`) (which user created the entity)
+  - `created_by` (`EUser`): which user created the entity
   
-  - `owned_by` (`EUser`) (to whom the entity belongs; by default the 
-     creator but not necessary, and it could have multiple owners)
+  - `owned_by` (`EUser`): to whom the entity belongs; by default the 
+     creator but not necessary, and it could have multiple owners
      
-  - `is` (`EEType`) (of which type the entity is)
+  - `is` (`EEType`): of which type the entity is
 
+.. _relations:
 
-* relations can be defined by using `ObjectRelation` or `SubjectRelation`.
-  The first argument of `SubjectRelation` or `ObjectRelation` gives respectively
-  the object/subject entity type of the relation. This could be :  
+Relation definition
+```````````````````
+
+There are two types of relation you can use to define an entity type: 
+`ObjectRelation` or `SubjectRelation`.
+The first argument of `SubjectRelation` or `ObjectRelation` gives respectively
+the object/subject entity type of the relation. This could be :  
 
   * a string corresponding to an entity type
 
@@ -83,7 +88,7 @@ Each entity type has at least the following meta-relations :
     - "@" : all types of meta entities but not system entities (e.g. used for
       the basic schema description)
 
-* it is possible to use the attribute `meta` to flag an entity type as a `meta`
+.. it is possible to use the attribute `meta` to flag an entity type as a `meta`
   (e.g. used to describe/categorize other entities)
 
 .. _properties:
@@ -91,8 +96,10 @@ Each entity type has at least the following meta-relations :
 Optionnal properties
 ````````````````````
 
+Follows the list of properties that are available for defining
+attribute and relation of a new entity type.
 
-* optional properties for attributes and relations : 
+* Optional properties for attributes and relations : 
 
   - `description` : a string describing an attribute or a relation. By default
     this string will be used in the editing form of the entity, which means
@@ -117,7 +124,7 @@ Optionnal properties
   - `meta` : boolean indicating that the relation is a meta-relation (false by
     default)
 
-* optional properties for attributes : 
+* Optional properties for attributes : 
 
   - `required` : boolean indicating if the attribute is required (false by default)
 
@@ -134,7 +141,7 @@ Optionnal properties
   
   - `vocabulary` : specify static possible values of an attribute
 
-* optional properties of type `String` : 
+* Optional properties of type `String` : 
 
   - `fulltextindexed` : boolean indicating if the attribute is part of
     the full text index (false by default) (*applicable on the type `Byte`
@@ -145,7 +152,7 @@ Optionnal properties
 
   - `maxsize` : integer providing the maximum size of the string (no limit by default)
 
-* optional properties for relations : 
+* Optional properties for relations : 
 
   - `composite` : string indicating that the subject (composite == 'subject')
     is composed of the objects of the relations. For the opposite case (when
@@ -153,8 +160,8 @@ Optionnal properties
     'object' as value. The composition implies that when the relation
     is deleted (so when the composite is deleted), the composed are also deleted.
 
-Contraints
-``````````
+Constraints
+```````````
 By default, the available constraint types are :
 
 * `SizeConstraint` : allows to specify a minimum and/or maximum size on
