@@ -497,6 +497,7 @@ class Repository(object):
         given password. This method is designed to be used for anonymous
         registration on public web site.
         """
+        # XXX should not be called from web interface
         session = self.internal_session()
         # for consistency, keep same error as unique check hook (although not required)
         errmsg = session._('the value "%s" is already used, use another one')
