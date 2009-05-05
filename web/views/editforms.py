@@ -251,12 +251,14 @@ class CopyFormView(EditionFormView):
 
 class TableEditForm(CompositeForm):
     id = 'muledit'
-    onsubmit = "return validateForm('entityForm', null);"
+    domid = 'entityForm'
+    onsubmit = "return validateForm('%s', null);" % domid
     form_buttons = [SubmitButton(_('validate modifications on selected items')),
                     ResetButton(_('revert changes'))]
 
-    def __init__(self, *args, **kwargs):
-        super(TableEditForm, self).__init__(*args, **kwargs)
+    def __init__(self, req, rset, **kwargs):
+        kwargs.setdefault('__redirectrql', rset.printable_rql())
+        super(TableEditForm, self).__init__(req, rset, **kwargs)
         for row in xrange(len(self.rset)):
             form = self.vreg.select_object('forms', 'edition', self.req, self.rset,
                                            row=row, attrcategories=('primary',),
