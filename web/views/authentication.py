@@ -53,6 +53,7 @@ class RepositoryAuthenticationManager(AbstractAuthenticationManager):
         return cnx
 
     def login_from_email(self, login):
+        # XXX should not be called from web interface
         session = self.repo.internal_session()
         try:
             rset = session.execute('Any L WHERE U login L, U primary_email M, '
