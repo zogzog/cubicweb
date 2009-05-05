@@ -54,10 +54,13 @@ class RepositoryAuthenticationManager(AbstractAuthenticationManager):
 
     def login_from_email(self, login):
         session = self.repo.internal_session()
-        rset = session.execute('Any L WHERE U login L, U primary_email M, '
-                               'M address %(login)s', {'login': login})
-        if rset.rowcount == 1:
-            login = rset[0][0]
+        try:
+            rset = session.execute('Any L WHERE U login L, U primary_email M, '
+                                   'M address %(login)s', {'login': login})
+            if rset.rowcount == 1:
+                login = rset[0][0]
+        finally:
+            session.close()
         return login
 
     def authenticate(self, req, _login=None, _password=None):
