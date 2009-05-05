@@ -81,7 +81,7 @@ connections will have this number of opened connections.',
           'system (using cron for instance).',
           'group': 'main', 'inputlevel': 1,
           }),
-        
+
         # email configuration
         ('default-recipients-mode',
          {'type' : 'choice',
@@ -123,14 +123,14 @@ notified of every changes.',
           'group': 'pyro-server', 'inputlevel': 2,
           }),
         ) + CubicWebConfiguration.options)
-        
+
     # read the schema from the database
     read_application_schema = True
     bootstrap_schema = True
-    
+
     # check user's state at login time
     consider_user_state = True
-    
+
     # hooks registration configuration
     # all hooks should be activated during normal execution
     core_hooks = True
@@ -142,7 +142,7 @@ notified of every changes.',
 
     # should some hooks be deactivated during [pre|post]create script execution
     free_wheel = False
-    
+
     # list of enables sources when sources restriction is necessary
     # (eg repository initialization at least)
     _enabled_sources = None
@@ -150,7 +150,7 @@ notified of every changes.',
     def enabled_sources(self, sourceuris=None):
         self._enabled_sources = sourceuris
         clear_cache(self, 'sources')
-        
+
     @classmethod
     def schemas_lib_dir(cls):
         """application schema directory"""
@@ -172,17 +172,17 @@ notified of every changes.',
         else:
             # no cubes
             self.init_cubes(())
-        
+
     def write_bootstrap_cubes_file(self, cubes):
         stream = file(join(self.apphome, 'bootstrap_cubes'), 'w')
         stream.write('# this is a generated file only used for bootstraping\n')
         stream.write('# you should not have to edit this\n')
         stream.write('%s\n' % ','.join(cubes))
         stream.close()
-        
+
     def sources_file(self):
         return join(self.apphome, 'sources')
-    
+
     # this method has to be cached since when the server is running using a
     # restricted user, this user usually don't have access to the sources
     # configuration file (#16102)
@@ -196,11 +196,11 @@ notified of every changes.',
             return allsources
         return dict((uri, config) for uri, config in allsources.items()
                     if uri in self._enabled_sources or uri == 'admin')
-    
+
     def pyro_enabled(self):
         """pyro is always enabled in standalone repository configuration"""
         return True
-        
+
     def load_hooks(self, vreg):
         hooks = {}
         for path in reversed([self.apphome] + self.cubes_path()):
@@ -209,8 +209,8 @@ notified of every changes.',
                 self.warning('application_hooks.py is deprecated, use dynamic '
                              'objects to register hooks (%s)', hooksfile)
                 context = {}
-                # Use execfile rather than `load_module_from_name` because 
-                # the latter gets fooled by the `sys.modules` cache when 
+                # Use execfile rather than `load_module_from_name` because
+                # the latter gets fooled by the `sys.modules` cache when
                 # loading different configurations one after the other
                 # (another fix would have been to do :
                 #    sys.modules.pop('applications_hooks')
@@ -231,8 +231,8 @@ notified of every changes.',
                 cb = hookdef.make_callback(event)
                 hooks.setdefault(event, {}).setdefault(ertype, []).append(cb)
         return hooks
-    
-    def load_schema(self, expand_cubes=False, construction_mode='strict'):
+
+    def load_schema(self, expand_cubes=False, **kwargs):
         from cubicweb.schema import CubicWebSchemaLoader
         if expand_cubes:
             # in case some new dependencies have been introduced, we have to
@@ -240,18 +240,18 @@ notified of every changes.',
             origcubes = self.cubes()
             self._cubes = None
             self.init_cubes(self.expand_cubes(origcubes))
-        schema = CubicWebSchemaLoader().load(self, construction_mode=construction_mode)
+        schema = CubicWebSchemaLoader().load(self, **kwargs)
         if expand_cubes:
             # restaure original value
             self._cubes = origcubes
         return schema
-    
+
     def load_bootstrap_schema(self):
         from cubicweb.schema import BootstrapSchemaLoader
         schema = BootstrapSchemaLoader().load(self)
         schema.name = 'bootstrap'
         return schema
-    
+
     def set_sources_mode(self, sources):
         if 'migration' in sources:
             from cubicweb.server.sources import source_adapter
@@ -274,7 +274,7 @@ notified of every changes.',
             enabled_sources = sources
         self._enabled_sources = enabled_sources
         clear_cache(self, 'sources')
-        
+
     def migration_handler(self, schema=None, interactive=True,
                           cnx=None, repo=None, connect=True):
         """return a migration handler instance"""
