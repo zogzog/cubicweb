@@ -20,7 +20,7 @@ from cubicweb.web.httpcache import NoHTTPCacheManager
 from cubicweb.web.controller import NAV_FORM_PARAMETERS
 from cubicweb.web.formfields import (Field, StringField, RelationField,
                                      HiddenInitialValueField)
-from cubicweb.web.formrenderers import FormRenderer
+from cubicweb.web import formrenderers
 from cubicweb.web import formwidgets as fwdgs
 
 class FormViewMixIn(object):
@@ -220,6 +220,7 @@ class FieldsForm(FormMixIn, AppRsetObject):
     __registry__ = 'forms'
     __select__ = yes()
 
+    renderer_cls = formrenderers.FormRenderer
     is_subform = False
 
     # attributes overrideable through __init__
@@ -319,7 +320,7 @@ class FieldsForm(FormMixIn, AppRsetObject):
         """render this form, using the renderer given in args or the default
         FormRenderer()
         """
-        renderer = values.pop('renderer', FormRenderer())
+        renderer = values.pop('renderer', self.renderer_cls())
         return renderer.render(self, values)
 
     def form_build_context(self, rendervalues=None):
