@@ -59,7 +59,7 @@ class BoxWidget(HTMLWidget):
 
     main_div_class = 'boxContent'
     listing_class = 'boxListing'
-    
+
     def box_begin_content(self):
         self.w(u'<div class="%s">\n' % self.main_div_class)
         if self.islist:
@@ -71,12 +71,12 @@ class BoxWidget(HTMLWidget):
         self.w(u'</div>\n')
         if self.shadow:
             self.w(u'<div class="shadow">&nbsp;</div>')
-        
+
     def _render(self):
         if self.id:
             self.w(u'<div class="%s" id="%s">' % (self._class, self.id))
         else:
-            self.w(u'<div class="%s">' % self._class)            
+            self.w(u'<div class="%s">' % self._class)
         if self.title:
             if self.escape:
                 title = '<span>%s</span>' % html_escape(self.title)
@@ -100,7 +100,7 @@ class SideBoxWidget(BoxWidget):
         super(SideBoxWidget, self).__init__(title, id=id, _class='sideBox',
                                             shadow=False)
 
-                                            
+
 class MenuWidget(BoxWidget):
     main_div_class = 'menuContent'
     listing_class = 'menuListing'
@@ -109,7 +109,7 @@ class MenuWidget(BoxWidget):
         if self.islist:
             self.w(u'</ul>\n')
         self.w(u'</div>\n')
-    
+
 
 class RawBoxItem(HTMLWidget):
     """a simpe box item displaying raw data"""
@@ -122,9 +122,9 @@ class RawBoxItem(HTMLWidget):
             return u'<li>'
         else:
             return u'<li class="%s">' % self.liclass
-        
+
         return self.label
-    
+
     def _render(self):
         self.w(u'%s%s</li>' % (self._start_li(), self.label))
 
@@ -132,7 +132,7 @@ class RawBoxItem(HTMLWidget):
 class BoxMenu(RawBoxItem):
     """a menu in a box"""
     link_class = 'boxMenu'
-    
+
     def __init__(self, label, items=None, isitem=True, liclass=None, ident=None,
                  link_class=None):
         super(BoxMenu, self).__init__(label, liclass)
@@ -141,7 +141,7 @@ class BoxMenu(RawBoxItem):
         self.ident = ident or u'boxmenu_%s' % label.replace(' ', '_').replace("'", '')
         if link_class:
             self.link_class = link_class
-            
+
     def append(self, item):
         self.items.append(item)
 
@@ -150,7 +150,7 @@ class BoxMenu(RawBoxItem):
 
     def _end_menu(self):
         self.w(u'</ul>')
-        
+
     def _render(self):
         if self.isitem:
             self.w(self._start_li())
@@ -183,15 +183,15 @@ class BoxField(HTMLWidget):
     def __init__(self, label, value):
         self.label = label
         self.value = value
-    
+
     def _render(self):
         self.w(u'<li><div><span class="label">%s</span>&nbsp;'
-               u'<span class="value">%s</span></div></li>' 
+               u'<span class="value">%s</span></div></li>'
                % (self.label, self.value))
 
 class BoxSeparator(HTMLWidget):
     """a menu separator"""
-    
+
     def _render(self):
         self.w(u'</ul><hr class="boxSeparator"/><ul>')
 
@@ -249,7 +249,7 @@ class TableWidget(HTMLWidget):
 
     highlight = "onmouseover=\"addElementClass(this, 'highlighted');\" " \
                 "onmouseout=\"removeElementClass(this, 'highlighted');\""
-    
+
     def __init__(self, model):
         self.model = model
         self.columns = []
