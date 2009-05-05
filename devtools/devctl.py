@@ -91,11 +91,10 @@ def generate_schema_pot(w, cubedir=None):
     cleanup_sys_modules(libconfig)
     if cubedir:
         config = DevCubeConfiguration(cube)
-        schema = config.load_schema()
     else:
         config = libconfig
-        schema = config.load_schema()
         libconfig = None
+    schema = config.load_schema(remove_unused_rtypes=False)
     vreg = CubicWebRegistry(config)
     # set_schema triggers objects registrations
     vreg.set_schema(schema)
@@ -110,7 +109,7 @@ def _generate_schema_pot(w, vreg, schema, libconfig=None, cube=None):
     w('# singular and plural forms for each entity type\n')
     w('\n')
     if libconfig is not None:
-        libschema = libconfig.load_schema()
+        libschema = libconfig.load_schema(remove_unused_rtypes=False)
         entities = [e for e in schema.entities() if not e in libschema]
     else:
         entities = schema.entities()
@@ -154,13 +153,15 @@ def _generate_schema_pot(w, vreg, schema, libconfig=None, cube=None):
             for rschema in rschemas:
                 if rschema.is_final():
                     continue
+                if libconfig is not None:
+                    librschema = libschema.get(rschema)
                 for teschema in rschema.targets(eschema, role):
-                    if libconfig is not None:
+                    if libconfig is not None and librschema is not None:
                         if role == 'subject':
                             subjtype, objtype = eschema, teschema
                         else:
                             subjtype, objtype = teschema, eschema
-                        if rschema.has_rdef(subjtype, objtype):
+                        if librschema.has_rdef(subjtype, objtype):
                             continue
                     if actionbox.relation_mode(rschema, eschema, teschema, role) == 'create':
                         if role == 'subject':
