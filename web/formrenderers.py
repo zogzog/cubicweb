@@ -328,7 +328,7 @@ class EntityFormRenderer(FormRenderer):
             super(EntityFormRenderer, self).render_buttons(w, form)
 
     def relations_form(self, w, form):
-        srels_by_cat = form.srelations_by_category(('generic', 'metadata'), 'add')
+        srels_by_cat = form.srelations_by_category('generic', 'add')
         if not srels_by_cat:
             return u''
         req = form.req

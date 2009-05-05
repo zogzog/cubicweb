@@ -16,7 +16,7 @@ __docformat__ = "restructuredtext en"
 
 from rql import nodes
 
-from logilab.mtconverter import TransformError, html_escape
+from logilab.mtconverter import TransformError, html_escape, xml_escape
 
 from cubicweb import NoSelectableObject
 from cubicweb.selectors import yes, empty_rset
@@ -338,7 +338,7 @@ class TextSearchResultView(EntityView):
         highlighted = '<b>%s</b>' % searched
         for attr in entity.e_schema.indexable_attributes():
             try:
-                value = html_escape(entity.printable_value(attr, format='text/plain').lower())
+                value = xml_escape(entity.printable_value(attr, format='text/plain').lower())
             except TransformError, ex:
                 continue
             except:

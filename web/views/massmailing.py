@@ -13,7 +13,8 @@ from cubicweb.selectors import implements, match_user_groups
 from cubicweb.view import EntityView
 from cubicweb.web import stdmsgs
 from cubicweb.web.action import Action
-from cubicweb.web.form import FieldsForm, FormRenderer, FormViewMixIn
+from cubicweb.web.form import FieldsForm, FormViewMixIn
+from cubicweb.web.formrenderers import FormRenderer
 from cubicweb.web.formfields import StringField
 from cubicweb.web.formwidgets import CheckBox, TextInput, AjaxWidget, ImgButton
 

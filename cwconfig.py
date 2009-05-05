@@ -677,7 +677,7 @@ the repository',
         return join(self.instance_data_dir(), self.appid)
 
     def init_cubes(self, cubes):
-        assert self._cubes is None
+        assert self._cubes is None, self._cubes
         self._cubes = self.reorder_cubes(cubes)
         # load cubes'__init__.py file first
         for cube in cubes:

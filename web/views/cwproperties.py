@@ -50,7 +50,7 @@ _('category')
 
 def make_togglable_link(nodeid, label, cookiename):
     """builds a HTML link that switches the visibility & remembers it"""
-    action = u"javascript: toggle_and_remember_visibility('%s', '%s')" % \
+    action = u"javascript: toggleVisibility('%s', '%s')" % \
         (nodeid, cookiename)
     return u'<a href="%s">%s</a>' % (action, label)
 

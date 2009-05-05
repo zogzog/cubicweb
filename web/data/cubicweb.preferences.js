@@ -4,7 +4,7 @@
  *     move me in a more appropriate place
  */
 
-function toggleVisibility(elemId) {
+function toggleVisibility(elemId, cookiename) {
     _clearPreviousMessages();
     jqNode(elemId).toggleClass('hidden');
     asyncRemoteExec('set_cookie', cookiename,
