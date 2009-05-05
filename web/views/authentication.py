@@ -1,7 +1,7 @@
 """user authentication component
 
 :organization: Logilab
-:copyright: 2001-2008 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+:copyright: 2001-2009 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 """
 __docformat__ = "restructuredtext en"
@@ -12,11 +12,11 @@ from cubicweb import AuthenticationError, BadConnectionId
 from cubicweb.dbapi import repo_connect, ConnectionProperties
 from cubicweb.web import ExplicitLogin, InvalidSession
 from cubicweb.web.application import AbstractAuthenticationManager
-    
+
 
 class RepositoryAuthenticationManager(AbstractAuthenticationManager):
     """authenticate user associated to a request and check session validity"""
-    
+
     def __init__(self):
         self.repo = self.config.repository(self.vreg)
         self.log_queries = self.config['query-log-file']
