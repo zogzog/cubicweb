@@ -1111,7 +1111,8 @@ def accepts_compat(registered):
     def plug_selector(cls, vreg):
         cls = registered(cls, vreg)
         if getattr(cls, 'accepts', None):
-            warn('use "implements("EntityType", IFace)" instead of using accepts',
+            warn('use "implements("EntityType", IFace)" instead of using accepts on %s'
+                 % cls,
                  DeprecationWarning)
             cls.__select__ &= implements(*cls.accepts)
         return cls
