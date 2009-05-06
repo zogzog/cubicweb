@@ -735,12 +735,12 @@ class DateWidget(StringWidget):
         values = entity.attribute_values(self.name)
         if values and hasattr(values[0], 'strftime'):
             formatstr = entity.req.property_value(self.format_key)
-            return [values[0].strftime(formatstr)]
+            return [values[0].strftime(str(formatstr))]
         return values
 
     def render_example(self, req):
         formatstr = req.property_value(self.format_key)
-        return datetime.now().strftime(formatstr)
+        return datetime.now().strftime(str(formatstr))
 
 
     def _edit_render(self, entity):
@@ -759,7 +759,7 @@ class DateWidget(StringWidget):
         if example:
             help.append('<span>(%s: %s)</span>'
                         % (req._('sample format'), example))
-	help.append(u'</div>')
+        help.append(u'</div>')
         return u'&nbsp;'.join(help)
 
     def render_calendar_popup(self, entity):
@@ -791,8 +791,8 @@ class DateTimeWidget(DateWidget):
         formatstr1 = req.property_value('ui.datetime-format')
         formatstr2 = req.property_value('ui.date-format')
         return req._('%(fmt1)s, or without time: %(fmt2)s') % {
-            'fmt1': datetime.now().strftime(formatstr1),
-            'fmt2': datetime.now().strftime(formatstr2),
+            'fmt1': datetime.now().strftime(str(formatstr1)),
+            'fmt2': datetime.now().strftime(str(formatstr2)),
             }
 
 
