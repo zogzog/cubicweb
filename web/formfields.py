@@ -429,7 +429,9 @@ def guess_field(eschema, rschema, role='subject', skip_meta_attr=True, **kwargs)
         if rschema.is_final():
             if rschema.rproperty(eschema, targetschema, 'internationalizable'):
                 kwargs['internationalizable'] = True
-            kwargs['initial'] = rschema.rproperty(eschema, targetschema, 'default')
+            def get_default(form, es=eschema, rs=rschema):
+                return es.default(rs)
+            kwargs['initial'] = get_default
     else:
         targetschema = rschema.subjects(eschema)[0]
         card = rschema.rproperty(targetschema, eschema, 'cardinality')[1]
