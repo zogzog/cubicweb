@@ -75,18 +75,22 @@ class FormMixIn(object):
         # method on successful commit
         forminfo = self.req.get_session_data(sessionkey, pop=True)
         if forminfo:
-            self.req.data['formvalues'] = forminfo['values']
-            self.req.data['formerrors'] = errex = forminfo['errors']
-            self.req.data['displayederrors'] = set()
+            # XXX remove req.data assigment once cw.web.widget is killed
+            self.req.data['formvalues'] = self.form_previous_values = forminfo['values']
+            self.req.data['formerrors'] = self.form_valerror = forminfo['errors']
+            self.req.data['displayederrors'] = self.form_displayed_errors = set()
             # if some validation error occured on entity creation, we have to
             # get the original variable name from its attributed eid
-            foreid = errex.entity
+            foreid = self.form_valerror.entity
             for var, eid in forminfo['eidmap'].items():
                 if foreid == eid:
-                    errex.eid = var
+                    self.form_valerror.eid = var
                     break
             else:
-                errex.eid = foreid
+                self.form_valerror.eid = foreid
+        else:
+            self.form_previous_values = {}
+            self.form_valerror = None
 
     # XXX deprecated with new form system. Should disappear
 
@@ -166,11 +170,11 @@ class FormMixIn(object):
 
         This method should be called once inlined field errors has been consumed
         """
-        errex = self.req.data.get('formerrors')
+        errex = self.req.data.get('formerrors') or self.form_valerror
         # get extra errors
         if errex is not None:
             errormsg = self.req._('please correct the following errors:')
-            displayed = self.req.data['displayederrors']
+            displayed = self.req.data.get('displayederrors') or self.form_displayed_errors
             errors = sorted((field, err) for field, err in errex.errors.items()
                             if not field in displayed)
             if errors:
@@ -333,9 +337,6 @@ class FieldsForm(FormMixIn, AppRsetObject):
         form_render()
         """
         self.context = context = {}
-        # on validation error, we get a dictionary of previously submitted
-        # values
-        self._previous_values = self.req.data.get('formvalues', {})
         # ensure rendervalues is a dict
         if rendervalues is None:
             rendervalues = {}
@@ -361,8 +362,8 @@ class FieldsForm(FormMixIn, AppRsetObject):
         value while those found in 3. and 4. are expected to be correctly typed.
         """
         qname = self.form_field_name(field)
-        if qname in self._previous_values:
-            value = self._previous_values[qname]
+        if qname in self.form_previous_values:
+            value = self.form_previous_values[qname]
         elif qname in self.req.form:
             value = self.req.form[qname]
         else:
@@ -385,10 +386,9 @@ class FieldsForm(FormMixIn, AppRsetObject):
 
     def form_field_error(self, field):
         """return validation error for widget's field, if any"""
-        errex = self.req.data.get('formerrors')
-        if errex and self._errex_match_field(errex, field):
-            self.req.data['displayederrors'].add(field.name)
-            return u'<span class="error">%s</span>' % errex.errors[field.name]
+        if self._field_has_error(field):
+            self.form_displayed_errors.add(field.name)
+            return u'<span class="error">%s</span>' % self.form_valerror.errors[field.name]
         return u''
 
     def form_field_format(self, field):
@@ -413,10 +413,10 @@ class FieldsForm(FormMixIn, AppRsetObject):
         """
         raise NotImplementedError
 
-    def _errex_match_field(self, errex, field):
+    def _field_has_error(self, field):
         """return true if the field has some error in given validation exception
         """
-        return field.name in errex.errors
+        return self.form_valerror and field.name in self.form_valerror.errors
 
 
 class EntityFieldsForm(FieldsForm):
@@ -443,10 +443,11 @@ class EntityFieldsForm(FieldsForm):
         self.schema = self.edited_entity.schema
         self.vreg = self.edited_entity.vreg
 
-    def _errex_match_field(self, errex, field):
+    def _field_has_error(self, field):
         """return true if the field has some error in given validation exception
         """
-        return errex.eid == self.edited_entity.eid and field.name in errex.errors
+        return super(EntityFieldsForm, self)._field_has_error(field) \
+               and self.form_valerror.eid == self.edited_entity.eid
 
     def _relation_vocabulary(self, rtype, targettype, role,
                             limit=None, done=None):

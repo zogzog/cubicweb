@@ -124,7 +124,7 @@ class ClickAndEditFormView(FormViewMixIn, EntityView):
         form.form_add_hidden(u'__maineid', entity.eid)
         renderer = FormRenderer(display_label=False, display_help=False,
                                 display_fields=[(rtype, role)],
-                                button_bar_class='buttonbar',
+                                table_class='', button_bar_class='buttonbar',
                                 display_progress_div=False)
         self.w(tags.div(value, klass='editableField', id=divid,
                         ondblclick=self.ondblclick % event_data))
@@ -327,7 +327,7 @@ class InlineEntityEditionFormView(FormViewMixIn, EntityView):
 
     def add_hiddens(self, form, entity, peid, rtype, role):
         # to ease overriding (see cubes.vcsfile.views.forms for instance)
-        if self.keep_entity(entity, peid, rtype):
+        if self.keep_entity(form, entity, peid, rtype):
             if entity.has_eid():
                 rval = entity.eid
             else:
@@ -336,14 +336,13 @@ class InlineEntityEditionFormView(FormViewMixIn, EntityView):
         form.form_add_hidden(name='%s:%s' % (rtype, peid), value=entity.eid,
                              id='rel-%s-%s-%s'  % (peid, rtype, entity.eid))
 
-    def keep_entity(self, entity, peid, rtype):
+    def keep_entity(self, form, entity, peid, rtype):
         if not entity.has_eid():
             return True
         # are we regenerating form because of a validation error ?
-        erroneous_post = self.req.data.get('formvalues')
         if erroneous_post:
-            cdvalues = self.req.list_form_param('%s:%s' % (rtype, peid),
-                                                erroneous_post)
+            cdvalues = self.req.list_form_param(eid_param(rtype, peid),
+                                                form.form_previous_values)
             if unicode(entity.eid) not in cdvalues:
                 return False
         return True

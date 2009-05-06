@@ -31,11 +31,12 @@ class FormRenderer(object):
     +---------+
     """
     _options = ('display_fields', 'display_label', 'display_help',
-                'display_progress_div', 'button_bar_class')
+                'display_progress_div', 'table_class', 'button_bar_class')
     display_fields = None # None -> all fields
     display_label = True
     display_help = True
     display_progress_div = True
+    table_class = u'attributeForm'
     button_bar_class = u'formButtonBar'
 
     def __init__(self, **kwargs):
@@ -100,11 +101,11 @@ class FormRenderer(object):
         This method should be called once inlined field errors has been consumed
         """
         req = form.req
-        errex = req.data.get('formerrors')
+        errex = form.form_valerror
         # get extra errors
         if errex is not None:
             errormsg = req._('please correct the following errors:')
-            displayed = req.data['displayederrors']
+            displayed = form.form_displayed_errors
             errors = sorted((field, err) for field, err in errex.errors.items()
                             if not field in displayed)
             if errors:
@@ -176,7 +177,7 @@ class FormRenderer(object):
         return fields
 
     def _render_fields(self, fields, w, form):
-        w(u'<table class="attributeForm">')
+        w(u'<table class="%s">' % self.table_class)
         for field in fields:
             w(u'<tr>')
             if self.display_label:
@@ -255,7 +256,7 @@ class EntityCompositeFormRenderer(FormRenderer):
     def _render_fields(self, fields, w, form):
         if form.is_subform:
             entity = form.edited_entity
-            values = form._previous_values
+            values = form.form_previous_values
             qeid = eid_param('eid', entity.eid)
             cbsetstate = "setCheckboxesState2('eid', %s, 'checked')" % html_escape(dumps(entity.eid))
             w(u'<tr class="%s">' % (entity.row % 2 and u'even' or u'odd'))
