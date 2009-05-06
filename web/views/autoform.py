@@ -5,6 +5,7 @@
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 """
 __docformat__ = "restructuredtext en"
+_ = unicode
 
 from logilab.common.decorators import iclassmethod
 
@@ -15,7 +16,6 @@ from cubicweb.web.formfields import guess_field
 from cubicweb.web.formwidgets import Button, SubmitButton
 from cubicweb.web.views.editforms import toggleable_relation_link, relation_id
 
-_ = unicode
 
 class AutomaticEntityForm(EntityFieldsForm):
     """base automatic form to edit any entity.
@@ -244,7 +244,7 @@ class AutomaticEntityForm(EntityFieldsForm):
 
     def editable_attributes(self):
         """return a list of (relation schema, role) to edit for the entity"""
-        return [(rschema, x) for rschema, _, x in self.relations_by_category(
+        return [(rschema, role) for rschema, _, role in self.relations_by_category(
                 self.attrcategories, 'add') if rschema != 'eid']
 
     def relations_table(self):

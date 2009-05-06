@@ -520,9 +520,7 @@ class EntityFieldsForm(FieldsForm):
             return INTERNAL_FIELD_VALUE
         if attr == '__type':
             return entity.id
-        if field.role == 'object':
-            attr = 'reverse_' + attr
-        elif entity.e_schema.subject_relation(attr).is_final():
+        if self.schema.rschema(attr).is_final():
             attrtype = entity.e_schema.destination(attr)
             if attrtype == 'Password':
                 return entity.has_eid() and INTERNAL_FIELD_VALUE or ''
@@ -533,14 +531,14 @@ class EntityFieldsForm(FieldsForm):
                     # XXX value should reflect if some file is already attached
                     return True
                 return False
-            if entity.has_eid():
+            if entity.has_eid() or attr in entity:
                 value = getattr(entity, attr)
             else:
                 value = self._form_field_default_value(field, load_bytes)
             return value
         # non final relation field
-        if entity.has_eid():
-            value = [ent.eid for ent in getattr(entity, attr)]
+        if entity.has_eid() or entity.relation_cached(attr, field.role):
+            value = [r[0] for r in entity.related(attr, field.role)]
         else:
             value = self._form_field_default_value(field, load_bytes)
         return value
