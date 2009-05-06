@@ -372,7 +372,7 @@ class DateTimeField(DateField):
 
 class TimeField(DateField):
     format_prop = 'ui.datetime-format'
-
+    widget = TextInput 
 
 class HiddenInitialValueField(Field):
     def __init__(self, visible_field):
