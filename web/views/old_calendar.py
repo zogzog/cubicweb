@@ -10,12 +10,10 @@ from datetime import date, time, timedelta
 from logilab.mtconverter import html_escape
 
 from cubicweb.interfaces import ICalendarViews
-from cubicweb.utils import ONEDAY, ONEWEEK, date_range, previous_month, next_month
+from cubicweb.utils import ONEDAY, ONEWEEK, date_range, first_day, last_day, previous_month, next_month, days_in_month
 from cubicweb.selectors import implements
 from cubicweb.view import EntityView
 
-# Define some useful constants
-ONE_MONTH = timedelta(days=31) # XXX
 # used by i18n tools
 WEEKDAYS = [_("monday"), _("tuesday"), _("wednesday"), _("thursday"),
             _("friday"), _("saturday"), _("sunday")]
@@ -64,7 +62,7 @@ class _CalendarView(EntityView):
         between begin and end
         """
         return [self.build_calendar(schedule, date)
-                for date in date_range(begin, end, incr=ONE_MONTH)]
+                for date in date_range(begin, end, incmonth=1)]
 
     def build_calendar(self, schedule, first_day):
         """method responsible for building *one* HTML calendar"""
@@ -72,10 +70,10 @@ class _CalendarView(EntityView):
         #                          last_day+6-last_day.day_of_week]
         umonth = self.format_date(first_day, '%B %Y') # localized month name
         rows = []
-        current_row = [NO_CELL] * first_day.day_of_week
-        for daynum in xrange(0, first_day.days_in_month):
+        current_row = [NO_CELL] * first_day.weekday()
+        for daynum in xrange(0, days_in_month(first_day)):
             # build cell day
-            day = first_day + daynum
+            day = first_day + timedelta(daynum)
             events = schedule.get(day)
             if events:
                 events = [u'\n'.join(event) for event in events.values()]
@@ -83,12 +81,12 @@ class _CalendarView(EntityView):
             else:
                 current_row.append(EMPTY_CELL % (daynum+1))
             # store & reset current row on Sundays
-            if day.day_of_week == Sunday:
+            if day.weekday() == 6:
                 rows.append(u'<tr>%s%s</tr>' % (WEEKNUM_CELL % day.isocalendar()[1], ''.join(current_row)))
                 current_row = []
-        current_row.extend([NO_CELL] * (Sunday-day.day_of_week))
+        current_row.extend([NO_CELL] * (6-day.weekday()))
         rql = self.rset.printable_rql()
-        if day.day_of_week != Sunday:
+        if day.weekday() != 6:
             rows.append(u'<tr>%s%s</tr>' % (WEEKNUM_CELL % day.isocalendar()[1], ''.join(current_row)))
         url = self.build_url(rql=rql, vid='calendarmonth',
                              year=first_day.year, month=first_day.month)
@@ -200,7 +198,7 @@ class SemesterCalendarView(_CalendarView):
     def build_calendars(self, schedule, begin, end):
         self.w(u'<tr>')
         rql = self.rset.printable_rql()
-        for cur_month in date_range(begin, end, incr=ONE_MONTH):
+        for cur_month in date_range(begin, end, incmonth=1):
             umonth = u'%s&nbsp;%s' % (self.format_date(cur_month, '%B'), cur_month.year)
             url = self.build_url(rql=rql, vid=self.id,
                                  year=cur_month.year, month=cur_month.month)
@@ -210,13 +208,13 @@ class SemesterCalendarView(_CalendarView):
         _ = self.req._
         for day_num in xrange(31):
             self.w(u'<tr>')
-            for cur_month in date_range(begin, end, incr=ONE_MONTH):
-                if day_num >= cur_month.days_in_month:
+            for cur_month in date_range(begin, end, incmonth=1):
+                if day_num >= days_in_month(cur_month):
                     self.w(u'%s%s' % (NO_CELL, NO_CELL))
                 else:
                     day = date(cur_month.year, cur_month.month, day_num+1)
                     events = schedule.get(day)
-                    self.w(u'<td>%s&nbsp;%s</td>\n' % (_(WEEKDAYS[day.day_of_week])[0].upper(), day_num+1))
+                    self.w(u'<td>%s&nbsp;%s</td>\n' % (_(WEEKDAYS[day.weekday()])[0].upper(), day_num+1))
                     self.format_day_events(day, events)
             self.w(u'</tr>')
 
@@ -252,10 +250,9 @@ class WeekCalendarView(_CalendarView):
 
     def call(self, year=None, week=None):
         year = year or int(self.req.form.get('year', date.today().year))
-        week = week or int(self.req.form.get('week', week,
-                                             date.today().isocalendar()[1]))
+        week = week or int(self.req.form.get('week', date.today().isocalendar()[1]))
         day0 = date(year, 1, 1)
-        first_day_of_week = day0 - day0.day_of_week*ONEDAY + ONEWEEK
+        first_day_of_week = day0 - day0.weekday()*ONEDAY + ONEWEEK
         begin, end = first_day_of_week- ONEWEEK, first_day_of_week + 2*ONEWEEK
         schedule = self._mk_schedule(begin, end, itemvid='calendarlargeitem')
         self.w(self.nav_header(first_day_of_week))
@@ -279,7 +276,7 @@ class WeekCalendarView(_CalendarView):
                   % (_('week'), monday.isocalendar()[1], monthlink))
             for day in date_range(monday, sunday):
                 self.w(u'<tr>')
-                self.w(u'<td>%s</td>' % _(WEEKDAYS[day.day_of_week]))
+                self.w(u'<td>%s</td>' % _(WEEKDAYS[day.weekday()]))
                 self.w(u'<td>%s</td>' % (day.strftime('%Y-%m-%d')))
                 events = schedule.get(day)
                 if events:
@@ -312,11 +309,11 @@ class AMPMYearCalendarView(YearCalendarView):
         """method responsible for building *one* HTML calendar"""
         umonth = self.format_date(first_day, '%B %Y') # localized month name
         rows = [] # each row is: (am,pm), (am,pm) ... week_title
-        current_row = [(NO_CELL, NO_CELL, NO_CELL)] * first_day.day_of_week
+        current_row = [(NO_CELL, NO_CELL, NO_CELL)] * first_day.weekday()
         rql = self.rset.printable_rql()
-        for daynum in xrange(0, first_day.days_in_month):
+        for daynum in xrange(0, days_in_month(first_day)):
             # build cells day
-            day = first_day + daynum
+            day = first_day + timedelta(daynum)
             events = schedule.get(day)
             if events:
                 current_row.append((AMPM_DAY % (daynum+1),) + self._build_ampm_cells(daynum, events))
@@ -325,7 +322,7 @@ class AMPMYearCalendarView(YearCalendarView):
                                     AMPM_EMPTY % ("amCell", "am"),
                                     AMPM_EMPTY % ("pmCell", "pm")))
             # store & reset current row on Sundays
-            if day.day_of_week == Sunday:
+            if day.weekday() == 6:
                 url = self.build_url(rql=rql, vid='ampmcalendarweek',
                                      year=day.year, week=day.isocalendar()[1])
                 weeklink = '<a href="%s">%s</a>' % (html_escape(url),
@@ -333,7 +330,7 @@ class AMPMYearCalendarView(YearCalendarView):
                 current_row.append(WEEKNUM_CELL % weeklink)
                 rows.append(current_row)
                 current_row = []
-        current_row.extend([(NO_CELL, NO_CELL, NO_CELL)] * (Sunday-day.day_of_week))
+        current_row.extend([(NO_CELL, NO_CELL, NO_CELL)] * (6-day.weekday()))
         url = self.build_url(rql=rql, vid='ampmcalendarweek',
                              year=day.year, week=day.isocalendar()[1])
         weeklink = '<a href="%s">%s</a>' % (html_escape(url), day.isocalendar()[1])
@@ -365,7 +362,7 @@ class AMPMSemesterCalendarView(SemesterCalendarView):
     def build_calendars(self, schedule, begin, end):
         self.w(u'<tr>')
         rql = self.rset.printable_rql()
-        for cur_month in date_range(begin, end, incr=ONE_MONTH):
+        for cur_month in date_range(begin, end, incmonth=1):
             umonth = u'%s&nbsp;%s' % (self.format_date(cur_month, '%B'), cur_month.year)
             url = self.build_url(rql=rql, vid=self.id,
                                  year=cur_month.year, month=cur_month.month)
@@ -375,13 +372,13 @@ class AMPMSemesterCalendarView(SemesterCalendarView):
         _ = self.req._
         for day_num in xrange(31):
             self.w(u'<tr>')
-            for cur_month in date_range(begin, end, incr=ONE_MONTH):
-                if day_num >= cur_month.days_in_month:
+            for cur_month in date_range(begin, end, incmonth=1):
+                if day_num >= days_in_month(cur_month):
                     self.w(u'%s%s%s' % (NO_CELL, NO_CELL, NO_CELL))
                 else:
                     day = date(cur_month.year, cur_month.month, day_num+1)
                     events = schedule.get(day)
-                    self.w(u'<td>%s&nbsp;%s</td>\n' % (_(WEEKDAYS[day.day_of_week])[0].upper(),
+                    self.w(u'<td>%s&nbsp;%s</td>\n' % (_(WEEKDAYS[day.weekday()])[0].upper(),
                                                        day_num+1))
                     self.format_day_events(day, events)
             self.w(u'</tr>')
@@ -403,11 +400,11 @@ class AMPMMonthCalendarView(MonthCalendarView):
         """method responsible for building *one* HTML calendar"""
         umonth = self.format_date(first_day, '%B %Y') # localized month name
         rows = [] # each row is: (am,pm), (am,pm) ... week_title
-        current_row = [(NO_CELL, NO_CELL, NO_CELL)] * first_day.day_of_week
+        current_row = [(NO_CELL, NO_CELL, NO_CELL)] * first_day.weekday()
         rql = self.rset.printable_rql()
-        for daynum in xrange(0, first_day.days_in_month):
+        for daynum in xrange(0, days_in_month(first_day)):
             # build cells day
-            day = first_day + daynum
+            day = first_day + timedelta(daynum)
             events = schedule.get(day)
             if events:
                 current_row.append((AMPM_DAY % (daynum+1),) + self._build_ampm_cells(daynum, events))
@@ -416,7 +413,7 @@ class AMPMMonthCalendarView(MonthCalendarView):
                                     AMPM_EMPTY % ("amCell", "am"),
                                     AMPM_EMPTY % ("pmCell", "pm")))
             # store & reset current row on Sundays
-            if day.day_of_week == Sunday:
+            if day.weekday() == 6:
                 url = self.build_url(rql=rql, vid='ampmcalendarweek',
                                      year=day.year, week=day.isocalendar()[1])
                 weeklink = '<a href="%s">%s</a>' % (html_escape(url),
@@ -424,7 +421,7 @@ class AMPMMonthCalendarView(MonthCalendarView):
                 current_row.append(WEEKNUM_CELL % weeklink)
                 rows.append(current_row)
                 current_row = []
-        current_row.extend([(NO_CELL, NO_CELL, NO_CELL)] * (Sunday-day.day_of_week))
+        current_row.extend([(NO_CELL, NO_CELL, NO_CELL)] * (6-day.weekday()))
         url = self.build_url(rql=rql, vid='ampmcalendarweek',
                              year=day.year, week=day.isocalendar()[1])
         weeklink = '<a href="%s">%s</a>' % (html_escape(url),
@@ -469,13 +466,13 @@ class AMPMWeekCalendarView(WeekCalendarView):
             w(u'<tr><th>%s</th><th>&nbsp;</th></tr>'% _(u'Date'))
             for day in date_range(monday, sunday):
                 events = schedule.get(day)
-                style = day.day_of_week % 2 and "even" or "odd"
+                style = day.weekday() % 2 and "even" or "odd"
                 w(u'<tr class="%s">' % style)
                 if events:
                     hours = events.keys()
                     hours.sort()
                     w(AMPM_DAYWEEK % (
-                        len(hours), _(WEEKDAYS[day.day_of_week]),
+                        len(hours), _(WEEKDAYS[day.weekday()]),
                         self.format_date(day)))
                     w(AMPM_WEEK_CELL % (
                         hours[0].hour, hours[0].minute,
@@ -487,7 +484,7 @@ class AMPMWeekCalendarView(WeekCalendarView):
                                                      '\n'.join(events[hour]))))
                 else:
                     w(AMPM_DAYWEEK_EMPTY % (
-                        _(WEEKDAYS[day.day_of_week]),
+                        _(WEEKDAYS[day.weekday()]),
                         self.format_date(day)))
                     w(WEEK_EMPTY_CELL)
                     w(u'</tr>')
