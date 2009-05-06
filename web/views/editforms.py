@@ -230,7 +230,7 @@ class CopyFormView(EditionFormView):
         # request's cache.
         entity.complete()
         self.newentity = copy(entity)
-        self.copying = self.newentity.eid
+        self.copying = entity
         self.initialize_varmaker()
         self.newentity.eid = self.varmaker.next()
         self.w(u'<script type="text/javascript">updateMessage("%s");</script>\n'
@@ -242,7 +242,14 @@ class CopyFormView(EditionFormView):
         """customize your form before rendering here"""
         super(CopyFormView, self).init_form(form, entity)
         if entity.eid == self.newentity.eid:
-            form.form_add_hidden(eid_param('__cloned_eid', entity.eid), self.copying)
+            form.form_add_hidden(eid_param('__cloned_eid', entity.eid),
+                                 self.copying.eid)
+        for rschema, _, role in form.relations_by_category(form.attrcategories,
+                                                           'add'):
+            if not rschema.is_final():
+                # ensure relation cache is filed
+                rset = self.copying.related(rschema, role)
+                self.newentity.set_related_cache(rschema, role, rset)
 
     def submited_message(self):
         """return the message that will be displayed on successful edition"""
