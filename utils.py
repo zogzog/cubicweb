@@ -60,7 +60,7 @@ def first_day(date_):
 def last_day(date_):
     return date(date_.year, date_.month, days_in_month(date_))
 
-def date_range(begin, end, incr=1, include=None):
+def date_range(begin, end, incday=None, incmonth=None):
     """yields each date between begin and end
     :param begin: the start date
     :param end: the end date
@@ -70,15 +70,24 @@ def date_range(begin, end, incr=1, include=None):
                     date as parameter, and returning True if the date
                     should be included.
     """
-    incr = timedelta(incr, 0, 0)
-    while begin <= end:
-        if include is None or include(begin):
+    assert not (incday and incmonth)
+    begin = todate(begin)
+    if incmonth:
+        while begin < end:
+            begin = next_month(begin, incmonth)
             yield begin
-        begin += incr
+    else:
+        if not incday:
+            incr = ONEDAY
+        else:
+            incr = timedelta(incday)
+        while begin <= end:
+           yield begin
+           begin += incr
 
 def ustrftime(date, fmt='%Y-%m-%d'):
     """like strftime, but returns a unicode string instead of an encoded
-    string which may be problematic with localized date.
+    string which' may be problematic with localized date.
 
     encoding is guessed by locale.getpreferredencoding()
     """
