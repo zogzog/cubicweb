@@ -29,14 +29,14 @@ autoclass_content = 'both'
 templates_path = ['.templates']
 
 # The suffix of source filenames.
-source_suffix = '.txt'
+source_suffix = '.rst'
 
 # The master toctree document.
 master_doc = 'index'
 
 # General substitutions.
 project = 'Cubicweb'
-copyright = '2008, Logilab'
+copyright = '2008-2009, Logilab'
 
 # The default replacements for |version| and |release|, also used in various
 # other places throughout the built documents.
@@ -44,7 +44,7 @@ copyright = '2008, Logilab'
 # The short X.Y version.
 version = '0.54'
 # The full version, including alpha/beta/rc tags.
-release = '3.0'
+release = '3.2'
 
 # There are two options for replacing |today|: either, you set today to some
 # non-false value, then it is used:

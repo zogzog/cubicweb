@@ -1,0 +1,43 @@
+====
+Book
+====
+
+----
+Part
+----
+
+Chapter
+=======
+
+Level 1 section
+---------------
+
+Level 2 section
+~~~~~~~~~~~~~~~
+
+Level 3 section
+```````````````
+
+
+
+*CubicWeb*
+
+
+inline directives:
+  :file:
+  :envvar:
+  :command:
+
+  :ref:, :mod:
+
+
+XXX
+* lien vers cw.cwconfig.CW_CUBES_PATH par ex.
+
+
+.. sourcecode:: python
+
+   class SomePythonCode:
+     ...
+
+.. XXX a comment

@@ -1,9 +1,0 @@
-.. -*- coding: utf-8 -*-
-
-Embedding external pages
-========================
-
-[WRITE ME]
-
-* including external content
-

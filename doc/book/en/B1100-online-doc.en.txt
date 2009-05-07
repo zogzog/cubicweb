@@ -1,9 +1,0 @@
-.. -*- coding: utf-8 -*-
-
-Online documentation system
-===========================
-
-[WRITE ME]
-
-* describe the on-line documentation system
-
