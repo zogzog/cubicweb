@@ -495,13 +495,9 @@ class JSonController(Controller):
 
     def _remove_pending(self, eidfrom, rel, eidto, kind):
         key = 'pending_%s' % kind
-        try:
-            pendings = self.req.get_session_data(key)
-            pendings.remove( (typed_eid(eidfrom), rel, typed_eid(eidto)) )
-        except:
-            self.exception('while removing pending eids')
-        else:
-            self.req.set_session_data(key, pendings)
+        pendings = self.req.get_session_data(key)
+        pendings.remove( (typed_eid(eidfrom), rel, typed_eid(eidto)) )
+        self.req.set_session_data(key, pendings)
 
     def js_remove_pending_insert(self, (eidfrom, rel, eidto)):
         self._remove_pending(eidfrom, rel, eidto, 'insert')
