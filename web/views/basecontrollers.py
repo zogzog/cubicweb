@@ -20,7 +20,7 @@ from cubicweb.utils import strptime
 from cubicweb.selectors import yes, match_user_groups
 from cubicweb.view import STRICT_DOCTYPE
 from cubicweb.common.mail import format_mail
-from cubicweb.web import ExplicitLogin, Redirect, RemoteCallFailed
+from cubicweb.web import ExplicitLogin, Redirect, RemoteCallFailed, json_dumps
 from cubicweb.web.formrenderers import FormRenderer
 from cubicweb.web.controller import Controller
 from cubicweb.web.views import vid_from_rset
@@ -42,8 +42,8 @@ def jsonize(func):
     """
     def wrapper(self, *args, **kwargs):
         self.req.set_content_type('application/json')
-        result = func(self, *args, **kwargs)
-        return simplejson.dumps(result)
+        return json_dumps(func(self, *args, **kwargs))
+    wrapper.__name__ = func.__name__
     return wrapper
 
 def xhtmlize(func):
@@ -52,6 +52,7 @@ def xhtmlize(func):
         self.req.set_content_type(self.req.html_content_type())
         result = func(self, *args, **kwargs)
         return xhtml_wrap(result)
+    wrapper.__name__ = func.__name__
     return wrapper
 
 def check_pageid(func):
@@ -360,6 +361,9 @@ class JSonController(Controller):
 
     @jsonize
     def js_validate_form(self, action, names, values):
+        return self.validate_form(action, names, values)
+
+    def validate_form(self, action, names, values):
         # XXX this method (and correspoding js calls) should use the new
         #     `RemoteCallFailed` mechansim
         self.req.form = self._rebuild_posted_form(names, values, action)
@@ -388,8 +392,10 @@ class JSonController(Controller):
 
     @jsonize
     def js_edit_field(self, action, names, values, rtype, eid):
-        success, args = self.js_validate_form(action, names, values)
+        success, args = self.validate_form(action, names, values)
         if success:
+            # Any X,N where we don't seem to use N is an optimisation
+            # printable_value won't need to query N again
             rset = self.req.execute('Any X,N WHERE X eid %%(x)s, X %s N' % rtype,
                                     {'x': eid}, 'x')
             entity = rset.get_entity(0, 0)
@@ -397,9 +403,17 @@ class JSonController(Controller):
         else:
             return (success, args, None)
 
-#     def js_rql(self, rql):
-#         rset = self._exec(rql)
-#         return rset and rset.rows or []
+    @jsonize
+    def js_edit_relation(self, action, names, values,
+                         rtype, eid, role='subject', vid='list'):
+        # XXX validate_form
+        success, args = self.validate_form(action, names, values)
+        if success:
+            entity = self.req.eid_rset(eid).get_entity(0, 0)
+            rset = entity.related('person_in_charge', role)
+            return (success, args, self.view(vid, rset))
+        else:
+            return (success, args, None)
 
     @jsonize
     def js_i18n(self, msgids):
@@ -481,13 +495,9 @@ class JSonController(Controller):
 
     def _remove_pending(self, eidfrom, rel, eidto, kind):
         key = 'pending_%s' % kind
-        try:
-            pendings = self.req.get_session_data(key)
-            pendings.remove( (typed_eid(eidfrom), rel, typed_eid(eidto)) )
-        except:
-            self.exception('while removing pending eids')
-        else:
-            self.req.set_session_data(key, pendings)
+        pendings = self.req.get_session_data(key)
+        pendings.remove( (typed_eid(eidfrom), rel, typed_eid(eidto)) )
+        self.req.set_session_data(key, pendings)
 
     def js_remove_pending_insert(self, (eidfrom, rel, eidto)):
         self._remove_pending(eidfrom, rel, eidto, 'insert')

@@ -5,6 +5,7 @@
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 """
 __docformat__ = "restructuredtext en"
+_ = unicode
 
 from logilab.mtconverter import html_escape
 
@@ -12,17 +13,14 @@ from logilab.common.decorators import cached
 
 from cubicweb import UnknownProperty
 from cubicweb.selectors import (one_line_rset, none_rset, implements,
-                                match_user_groups, entity_implements)
-from cubicweb.utils import UStringIO
+                                match_user_groups)
 from cubicweb.view import StartupView
-from cubicweb.web import INTERNAL_FIELD_VALUE, eid_param, uicfg
-from cubicweb.web.views import baseviews
-from cubicweb.web import stdmsgs
+from cubicweb.web import uicfg, stdmsgs
 from cubicweb.web.form import CompositeForm, EntityFieldsForm, FormViewMixIn
 from cubicweb.web.formfields import FIELDS, StringField
 from cubicweb.web.formwidgets import Select, Button, SubmitButton
+from cubicweb.web.views import primary
 
-_ = unicode
 
 # some string we want to be internationalizable for nicer display of eproperty
 # groups
@@ -32,11 +30,27 @@ _('actions')
 _('boxes')
 _('components')
 _('contentnavigation')
+_('navigation.combobox-limit')
+_('navigation.page-size')
+_('navigation.related-limit')
+_('navigation.short-line-size')
+_('ui.date-format')
+_('ui.datetime-format')
+_('ui.default-text-format')
+_('ui.fckeditor')
+_('ui.float-format')
+_('ui.language')
+_('ui.time-format')
+_('open all')
+_('ui.main-template')
+_('ui.site-title')
+_('ui.encoding')
+_('category')
 
 
 def make_togglable_link(nodeid, label, cookiename):
     """builds a HTML link that switches the visibility & remembers it"""
-    action = u"javascript: toggle_and_remember_visibility('%s', '%s')" % \
+    action = u"javascript: toggleVisibility('%s', '%s')" % \
         (nodeid, cookiename)
     return u'<a href="%s">%s</a>' % (action, label)
 
@@ -44,7 +58,7 @@ def css_class(someclass):
     return someclass and 'class="%s"' % someclass or ''
 
 
-class CWPropertyPrimaryView(baseviews.PrimaryView):
+class CWPropertyPrimaryView(primary.PrimaryView):
     __select__ = implements('CWProperty')
     skip_none = False
 
@@ -111,7 +125,7 @@ class SystemEPropertiesForm(FormViewMixIn, StartupView):
         w(u'<div id="progress">%s</div>' % self.req._('validating...'))
         for label, group, form in sorted((_(g), g, f)
                                          for g, f in mainopts.iteritems()):
-            status = css_class(self._group_status(group)) 
+            status = css_class(self._group_status(group))
             w(u'<h2 class="propertiesform">%s</h2>\n' %
               (make_togglable_link('fieldset_' + group, label,
                                    self._cookie_name(group))))
@@ -165,14 +179,14 @@ class SystemEPropertiesForm(FormViewMixIn, StartupView):
         buttons = [SubmitButton(),
                    Button(stdmsgs.BUTTON_CANCEL, cwaction='cancel')]
         form = CompositeForm(self.req, domid=None, action=self.build_url(),
-                             form_buttons=buttons, 
+                             form_buttons=buttons,
                              submitmsg=self.req._('changes applied'))
         path = self.req.relative_path()
         if '?' in path:
             path, params = path.split('?', 1)
             form.form_add_hidden('__redirectparams', params)
         form.form_add_hidden('__redirectpath', path)
-        for key in keys:            
+        for key in keys:
             self.form_row(form, key, splitlabel)
         return form.form_render(display_progress_div=False)
 
@@ -203,7 +217,7 @@ class EPropertiesForm(SystemEPropertiesForm):
         (none_rset() | ((one_line_rset() & is_user_prefs) &
                         (one_line_rset() & match_user_groups('managers'))))
         )
-    
+
     title = _('preferences')
 
     @property
@@ -229,7 +243,7 @@ class EPropertiesForm(SystemEPropertiesForm):
 # eproperty form objects ######################################################
 
 class PlaceHolderWidget(object):
-    
+
     def render(self, form, field):
         domid = form.context[field]['id']
         # empty span as well else html validation fail (label is refering to
@@ -242,7 +256,7 @@ class NotEditableWidget(object):
     def __init__(self, value, msg=None):
         self.value = value
         self.msg = msg
-    
+
     def render(self, form, field):
         domid = form.context[field]['id']
         value = '<span class="value" id="%s">%s</span>' % (domid, self.value)
@@ -256,14 +270,14 @@ class PropertyKeyField(StringField):
     the selected key
     """
     widget = Select
-    
+
     def render(self, form, renderer):
         wdg = self.get_widget(form)
         wdg.attrs['tabindex'] = form.req.next_tabindex()
         wdg.attrs['onchange'] = "javascript:setPropValueWidget('%s', %s)" % (
             form.edited_entity.eid, form.req.next_tabindex())
         return wdg.render(form, self)
-    
+
     def vocabulary(self, form):
         entity = form.edited_entity
         _ = form.req._
@@ -279,7 +293,7 @@ class PropertyValueField(StringField):
     the selected key type and vocabulary information
     """
     widget = PlaceHolderWidget
-    
+
     def render(self, form, renderer=None, tabindex=None):
         wdg = self.get_widget(form)
         if tabindex is not None:
@@ -324,6 +338,6 @@ class PropertyValueField(StringField):
                 wdg.attrs.setdefault('size', 3)
         self.widget = wdg
 
-uicfg.rfields.set_rtag(PropertyKeyField, 'pkey', 'subject', 'CWProperty')
-uicfg.rfields.set_rtag(PropertyValueField, 'value', 'subject', 'CWProperty')
-    
+
+uicfg.rfields.tag_relation(PropertyKeyField, ('CWProperty', 'pkey', '*'), 'subject')
+uicfg.rfields.tag_relation(PropertyValueField, ('CWProperty', 'value', '*'), 'subject')

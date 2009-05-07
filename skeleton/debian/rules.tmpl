@@ -25,7 +25,7 @@ install: build
 	dh_installdirs -i
 	python setup.py -q install --no-compile --prefix=debian/%(distname)s/usr/
 	# remove generated .egg-info file
-	rm -rf debian/cubicweb-comment/usr/lib/python*
+	rm -rf debian/%(distname)s/usr/lib/python*
 
 
 # Build architecture-independent files here.

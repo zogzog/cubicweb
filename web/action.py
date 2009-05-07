@@ -20,7 +20,7 @@ class Action(AppRsetObject):
     request search state.
     """
     __registry__ = 'actions'
-    __select__ = yes()
+    __select__ = match_search_state('normal')
 
     property_defs = {
         'visible':  dict(type='Boolean', default=True,

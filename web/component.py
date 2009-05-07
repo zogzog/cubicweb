@@ -51,7 +51,7 @@ class EntityVComponent(Component):
     context = 'navcontentbottom' # 'footer' | 'header' | 'incontext'
 
     def call(self, view=None):
-        return self.cell_call(0, 0, view)
+        return self.cell_call(0, 0, view=view)
 
     def cell_call(self, row, col, view=None):
         raise NotImplementedError()
@@ -61,6 +61,11 @@ class NavigationComponent(Component):
     """abstract base class for navigation components"""
     id = 'navigation'
     __select__ = paginated_rset()
+
+    property_defs = {
+        _('visible'):  dict(type='Boolean', default=True,
+                            help=_('display the component or not')),
+        }
 
     page_size_property = 'navigation.page-size'
     start_param = '__start'

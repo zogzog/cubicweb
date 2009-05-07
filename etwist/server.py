@@ -10,6 +10,7 @@ import sys
 import select
 from time import mktime
 from datetime import date, timedelta
+from urlparse import urlsplit, urlunsplit
 
 from twisted.application import service, strports
 from twisted.internet import reactor, task, threads
@@ -42,6 +43,14 @@ def start_looping_tasks(repo):
         start_task(interval, catch_error_func)
     # ensure no tasks will be further added
     repo._looping_tasks = ()
+
+def host_prefixed_baseurl(baseurl, host):
+    scheme, netloc, url, query, fragment = urlsplit(baseurl)
+    netloc_domain = '.' + '.'.join(netloc.split('.')[-2:])
+    if host.endswith(netloc_domain):
+        netloc = host
+    baseurl = urlunsplit((scheme, netloc, url, query, fragment))
+    return baseurl
 
 
 class LongTimeExpiringFile(static.File):
@@ -167,6 +176,9 @@ class CubicWebRootResource(resource.PostableResource):
         else:
             https = False
             baseurl = self.base_url
+        if self.config['use-request-subdomain']:
+            baseurl = host_prefixed_baseurl(baseurl, host)
+            self.warning('used baseurl is %s for this request', baseurl)
         req = CubicWebTwistedRequestAdapter(request, self.appli.vreg, https, baseurl)
         if req.authmode == 'http':
             # activate realm-based auth

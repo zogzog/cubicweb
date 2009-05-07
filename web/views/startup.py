@@ -6,21 +6,34 @@ apply to a result set.
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 """
 __docformat__ = "restructuredtext en"
+_ = unicode
 
 from logilab.common.textutils import unormalize
 from logilab.mtconverter import html_escape
 
 from cubicweb.view import StartupView
-from cubicweb.common.uilib import ureport_as_html, ajax_replace_url
-from cubicweb.web.httpcache import EtagHTTPCacheManager
-
-_ = unicode
+from cubicweb.selectors import match_user_groups
+from cubicweb.common.uilib import ureport_as_html
+from cubicweb.web import ajax_replace_url, uicfg, httpcache
+from cubicweb.web.views.management import SecurityViewMixIn
 
 
 class ManageView(StartupView):
     id = 'manage'
     title = _('manage')
-    http_cache_manager = EtagHTTPCacheManager
+    http_cache_manager = httpcache.EtagHTTPCacheManager
+
+    @classmethod
+    def vreg_initialization_completed(cls):
+        for eschema in cls.schema.entities():
+            if eschema.schema_entity():
+                uicfg.etypecat.setdefault(eschema, 'schema')
+            elif eschema.is_subobject(strict=True):
+                uicfg.etypecat.setdefault(eschema, 'subobject')
+            elif eschema.meta:
+                uicfg.etypecat.setdefault(eschema, 'system')
+            else:
+                uicfg.etypecat.setdefault(eschema, 'application')
 
     def display_folders(self):
         return False
@@ -87,15 +100,15 @@ class ManageView(StartupView):
         if manager:
             self.w(u'<tr><th colspan="4">%s</th></tr>\n' % self.req._('application entities'))
         self.entity_types_table(eschema for eschema in schema.entities()
-                                if not eschema.meta and not eschema.is_subobject(strict=True))
+                                if uicfg.etypecat.get(eschema) == 'application')
         if manager:
             self.w(u'<tr><th colspan="4">%s</th></tr>\n' % self.req._('system entities'))
             self.entity_types_table(eschema for eschema in schema.entities()
-                                    if eschema.meta and not eschema.schema_entity())
+                                if uicfg.etypecat.get(eschema) == 'system')
             if 'CWAttribute' in schema: # check schema support
                 self.w(u'<tr><th colspan="4">%s</th></tr>\n' % self.req._('schema entities'))
-                self.entity_types_table(schema.eschema(etype)
-                                        for etype in schema.schema_entity_types())
+                self.entity_types_table(eschema for eschema in schema.entities()
+                                        if uicfg.etypecat.get(eschema) == 'schema')
         self.w(u'</table>')
 
     def entity_types_table(self, eschemas):
@@ -159,23 +172,132 @@ class SchemaView(StartupView):
     def call(self):
         """display schema information"""
         self.req.add_js('cubicweb.ajax.js')
-        self.req.add_css('cubicweb.schema.css')
+        self.req.add_css(('cubicweb.schema.css','cubicweb.acl.css'))
         withmeta = int(self.req.form.get('withmeta', 0))
+        section = self.req.form.get('sec', '')
         self.w(u'<img src="%s" alt="%s"/>\n' % (
             html_escape(self.req.build_url('view', vid='schemagraph', withmeta=withmeta)),
             self.req._("graphical representation of the application'schema")))
         if withmeta:
             self.w(u'<div><a href="%s">%s</a></div>' % (
-                self.build_url('schema', withmeta=0),
+                html_escape(self.build_url('schema', withmeta=0, sec=section)),
                 self.req._('hide meta-data')))
         else:
             self.w(u'<div><a href="%s">%s</a></div>' % (
-                self.build_url('schema', withmeta=1),
+                html_escape(self.build_url('schema', withmeta=1, sec=section)),
                 self.req._('show meta-data')))
-        self.w(u'<div id="detailed_schema"><a href="%s">%s</a></div>' %
+        self.w(u'<a href="%s">%s</a><br/>' %
                (html_escape(ajax_replace_url('detailed_schema', '', 'schematext',
                                              skipmeta=int(not withmeta))),
                 self.req._('detailed schema view')))
+        if self.req.user.matching_groups('managers'):
+            self.w(u'<a href="%s">%s</a>' %
+                   (html_escape(ajax_replace_url('detailed_schema', '', 'schema_security',
+                                                 skipmeta=int(not withmeta))),
+                self.req._('security')))
+        self.w(u'<div id="detailed_schema">')
+        if section:
+            self.wview(section, None)
+        self.w(u'</div>')
+
+
+class ManagerSchemaPermissionsView(StartupView, SecurityViewMixIn):
+    id = 'schema_security'
+    __select__ = StartupView.__select__ & match_user_groups('managers')
+
+    def call(self, display_relations=True,
+             skiprels=('is', 'is_instance_of', 'identity', 'owned_by', 'created_by')):
+        _ = self.req._
+        formparams = {}
+        formparams['sec'] = self.id
+        formparams['withmeta'] = int(self.req.form.get('withmeta', True))
+        schema = self.schema
+        # compute entities
+        entities = [eschema for eschema in schema.entities()
+                   if not eschema.is_final()]
+        if not formparams['withmeta']:
+            entities = [eschema for eschema in entities
+                        if not eschema.meta]
+        # compute relations
+        relations = []
+        if display_relations:
+            relations = [rschema for rschema in schema.relations()
+                         if not (rschema.is_final() or rschema.type in skiprels)]
+            if not formparams['withmeta']:
+                relations = [rschema for rschema in relations
+                             if not rschema.meta]
+        # index
+        self.w(u'<div id="schema_security"><a id="index" href="index"/>')
+        self.w(u'<h2 class="schema">%s</h2>' % _('index').capitalize())
+        self.w(u'<h4>%s</h4>' %   _('Entities').capitalize())
+        ents = []
+        for eschema in sorted(entities):
+            url = html_escape(self.build_url('schema', **formparams) + '#' + eschema.type)
+            ents.append(u'<a class="grey" href="%s">%s</a> (%s)' % (url,  eschema.type, _(eschema.type)))
+        self.w('%s' %  ', '.join(ents))
+        self.w(u'<h4>%s</h4>' % (_('relations').capitalize()))
+        rels = []
+        for eschema in sorted(relations):
+            url = html_escape(self.build_url('schema', **formparams) + '#' + eschema.type)
+            rels.append(u'<a class="grey" href="%s">%s</a> (%s), ' %  (url , eschema.type, _(eschema.type)))
+        self.w('%s' %  ', '.join(ents))
+        # entities
+        self.display_entities(entities, formparams)
+        # relations
+        if relations:
+            self.display_relations(relations, formparams)
+        self.w(u'</div>')
+
+    def display_entities(self, entities, formparams):
+        _ = self.req._
+        self.w(u'<a id="entities" href="entities"/>')
+        self.w(u'<h2 class="schema">%s</h2>' % _('permissions for entities').capitalize())
+        for eschema in sorted(entities):
+            self.w(u'<a id="%s" href="%s"/>' %  (eschema.type, eschema.type))
+            self.w(u'<h3 class="schema">%s (%s) ' % (eschema.type, _(eschema.type)))
+            url = html_escape(self.build_url('schema', **formparams) + '#index')
+            self.w(u'<a href="%s"><img src="%s" alt="%s"/></a>' % (url,  self.req.external_resource('UP_ICON'), _('up')))
+            self.w(u'</h3>')
+            self.w(u'<div style="margin: 0px 1.5em">')
+            self.schema_definition(eschema, link=False)
+
+            # display entity attributes only if they have some permissions modified
+            modified_attrs = []
+            for attr, etype in  eschema.attribute_definitions():
+                if self.has_schema_modified_permissions(attr, attr.ACTIONS):
+                    modified_attrs.append(attr)
+            if  modified_attrs:
+                self.w(u'<h4>%s</h4>' % _('attributes with modified permissions:').capitalize())
+                self.w(u'</div>')
+                self.w(u'<div style="margin: 0px 6em">')
+                for attr in  modified_attrs:
+                    self.w(u'<h4 class="schema">%s (%s)</h4> ' % (attr.type, _(attr.type)))
+                    self.schema_definition(attr, link=False)
+                self.w(u'</div>')
+            else:
+                self.w(u'</div>')
+
+
+    def display_relations(self, relations, formparams):
+        _ = self.req._
+        self.w(u'<a id="relations" href="relations"/>')
+        self.w(u'<h2 class="schema">%s </h2>' % _('permissions for relations').capitalize())
+        for rschema in sorted(relations):
+            self.w(u'<a id="%s" href="%s"/>' %  (rschema.type, rschema.type))
+            self.w(u'<h3 class="schema">%s (%s) ' % (rschema.type, _(rschema.type)))
+            url = html_escape(self.build_url('schema', **formparams) + '#index')
+            self.w(u'<a href="%s"><img src="%s" alt="%s"/></a>' % (url,  self.req.external_resource('UP_ICON'), _('up')))
+            self.w(u'</h3>')
+            self.w(u'<div style="margin: 0px 1.5em">')
+            subjects = [str(subj) for subj in rschema.subjects()]
+            self.w(u'<div><strong>%s</strong> %s (%s)</div>' % (_('subject_plural:'),
+                                                ', '.join( [str(subj) for subj in rschema.subjects()]),
+                                                ', '.join( [_(str(subj)) for subj in rschema.subjects()])))
+            self.w(u'<div><strong>%s</strong> %s (%s)</div>' % (_('object_plural:'),
+                                                ', '.join( [str(obj) for obj in rschema.objects()]),
+                                                ', '.join( [_(str(obj)) for obj in rschema.objects()])))
+            self.schema_definition(rschema, link=False)
+            self.w(u'</div>')
 
 
 class SchemaUreportsView(StartupView):

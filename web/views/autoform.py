@@ -5,6 +5,7 @@
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 """
 __docformat__ = "restructuredtext en"
+_ = unicode
 
 from logilab.common.decorators import iclassmethod
 
@@ -13,12 +14,13 @@ from cubicweb.web import stdmsgs, uicfg
 from cubicweb.web.form import FieldNotFound, EntityFieldsForm
 from cubicweb.web.formfields import guess_field
 from cubicweb.web.formwidgets import Button, SubmitButton
-_ = unicode
+from cubicweb.web.views.editforms import toggleable_relation_link, relation_id
+
 
 class AutomaticEntityForm(EntityFieldsForm):
     """base automatic form to edit any entity.
 
-    Designed to be flly generated from schema but highly configurable through:
+    Designed to be fully generated from schema but highly configurable through:
     * rtags (rcategories, rfields, rwidgets, inlined, rpermissions)
     * various standard form parameters
 
@@ -58,8 +60,10 @@ class AutomaticEntityForm(EntityFieldsForm):
                         X, Y = tschema, eschema
                         card = rschema.rproperty(X, Y, 'cardinality')[1]
                         composed = rschema.rproperty(X, Y, 'composite') == 'subject'
-                    if not cls.rcategories.rtag(rschema, role, X, Y):
-                        if card in '1+':
+                    if not cls.rcategories.get(rschema, role, X, Y):
+                        if eschema.is_metadata(rschema):
+                            category = 'generated'
+                        elif card in '1+':
                             if not rschema.is_final() and composed:
                                 category = 'generated'
                             else:
@@ -68,7 +72,7 @@ class AutomaticEntityForm(EntityFieldsForm):
                             category = 'secondary'
                         else:
                             category = 'generic'
-                        cls.rcategories.set_rtag(category, rschema, role, X, Y)
+                        cls.rcategories.tag_relation(category, (X, rschema, Y), role)
 
     @classmethod
     def erelations_by_category(cls, entity, categories=None, permission=None, rtags=None):
@@ -93,14 +97,14 @@ class AutomaticEntityForm(EntityFieldsForm):
             # permission which may imply rql queries
             if categories is not None:
                 targetschemas = [tschema for tschema in targetschemas
-                                 if rtags.etype_rtag(eschema, rschema, role, tschema) in categories]
+                                 if rtags.etype_get(eschema, rschema, role, tschema) in categories]
                 if not targetschemas:
                     continue
             if permission is not None:
                 # tag allowing to hijack the permission machinery when
                 # permission is not verifiable until the entity is actually
                 # created...
-                if eid is None and '%s_on_new' % permission in permsoverrides.etype_rtags(eschema, rschema, role):
+                if eid is None and '%s_on_new' % permission in permsoverrides.etype_get(eschema, rschema, role):
                     yield (rschema, targetschemas, role)
                     continue
                 if rschema.is_final():
@@ -159,10 +163,10 @@ class AutomaticEntityForm(EntityFieldsForm):
             if eschema is None or not name in cls_or_self.schema:
                 raise
             rschema = cls_or_self.schema.rschema(name)
-            fieldcls = cls_or_self.rfields.etype_rtag(eschema, rschema, role)
+            fieldcls = cls_or_self.rfields.etype_get(eschema, rschema, role)
             if fieldcls:
                 return fieldcls(name=name, role=role, eidparam=True)
-            widget = cls_or_self.rwidgets.etype_rtag(eschema, rschema, role)
+            widget = cls_or_self.rwidgets.etype_get(eschema, rschema, role)
             if widget:
                 field = guess_field(eschema, rschema, role,
                                     eidparam=True, widget=widget)
@@ -240,8 +244,8 @@ class AutomaticEntityForm(EntityFieldsForm):
 
     def editable_attributes(self):
         """return a list of (relation schema, role) to edit for the entity"""
-        return [(rschema, x) for rschema, _, x in self.relations_by_category(
-            self.attrcategories, 'add') if rschema != 'eid']
+        return [(rschema, role) for rschema, _, role in self.relations_by_category(
+                self.attrcategories, 'add') if rschema != 'eid']
 
     def relations_table(self):
         """yiels 3-tuples (rtype, target, related_list)
@@ -256,9 +260,9 @@ class AutomaticEntityForm(EntityFieldsForm):
         for label, rschema, role in self.srelations_by_category('generic', 'add'):
             relatedrset = entity.related(rschema, role, limit=self.related_limit)
             if rschema.has_perm(self.req, 'delete'):
-                toggable_rel_link_func = toggable_relation_link
+                toggleable_rel_link_func = toggleable_relation_link
             else:
-                toggable_rel_link_func = lambda x, y, z: u''
+                toggleable_rel_link_func = lambda x, y, z: u''
             related = []
             for row in xrange(relatedrset.rowcount):
                 nodeid = relation_id(entity.eid, rschema, role,
@@ -269,7 +273,7 @@ class AutomaticEntityForm(EntityFieldsForm):
                 else:
                     status = u''
                     label = 'x'
-                dellink = toggable_rel_link_func(entity.eid, nodeid, label)
+                dellink = toggleable_rel_link_func(entity.eid, nodeid, label)
                 eview = self.view('oneline', relatedrset, row=row)
                 related.append((nodeid, dellink, status, eview))
             yield (rschema, role, related)
@@ -304,7 +308,7 @@ class AutomaticEntityForm(EntityFieldsForm):
         """return true if the given relation with entity has role and a
         targettype target should be inlined
         """
-        return self.rinlined.etype_rtag(self.edited_entity.id, rschema, role, targettype)
+        return self.rinlined.etype_get(self.edited_entity.id, rschema, role, targettype)
 
     def should_display_inline_creation_form(self, rschema, existant, card):
         """return true if a creation form should be inlined

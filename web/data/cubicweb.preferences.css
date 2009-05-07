@@ -5,11 +5,45 @@
  *  :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
  */
 
-.componentTitle{
- font-weight:bold;
- color: #ff7700;
- padding:0px 4px;
+
+table.preferences td{ 
+ padding: 0 0.5em 1em;
+ }
+
+fieldset.preferences{  
+ border : 1px solid #CFCEB7;
+ margin:1em 0;
+ padding:0 1em 1em;
 }
+
+div.preffield {
+ margin-bottom: 0.8em ;
+}
+
+/*
+div.preffield label{ 
+ font-size:110%
+ }
+*/
+
+div.prefinput{ 
+ margin:.3em 0;
+}
+
+div.componentLink{ 
+ margin-top:0.3em;
+ }
+
+a.componentTitle{
+ font-weight:bold;
+ color: #000;
+ }
+
+a.componentTitle:visited{
+ color: #000;
+}
+
+
 
 h2.propertiesform a{
  display:block;
@@ -26,3 +60,56 @@ h2.propertiesform a:hover{
  background-color:#cfceb7;
  text-decoration:none;
 }
+
+div.prefinput select.changed,
+div.prefinput input.changed{ 
+ background:#eeedd9;
+ border: 1px solid #eeedd9;
+}
+
+div.prefinput select,
+div.prefinput input{ 
+ background:#fff;
+ border: 1px solid #CFCEB7;
+}
+
+.prefinput input.error {
+ background:transparent url(error.png) no-repeat scroll 100% 50% !important;
+}
+
+
+div.formsg{ 
+ font-weight:bold;
+ margin:0.5em 0px;
+ }
+
+
+div.formsg .critical{ 
+ color:red;
+ padding-left:20px;
+ background:#fff url(critical.png) no-repeat;
+ }
+
+div.formsg .message{ 
+ color : green;
+}
+
+.helper{
+  font-size: 96%;
+  color: #555544;
+  padding:0; 
+}
+
+div.prefinput .helper:hover {
+  color: #000;
+  cursor: default;
+}
+
+.error{ 
+ color:red;
+ padding-right:1em;
+ }
+
+div.openlink{ 
+ display:inline;
+ }

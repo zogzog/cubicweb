@@ -13,14 +13,14 @@ class State(MetaEntityType):
                   maxsize=256)
     description = RichString(fulltextindexed=True, default_format='text/rest',
                              description=_('semantic description of this state'))
-    
+
     state_of = SubjectRelation('CWEType', cardinality='+*',
                     description=_('entity types which may use this state'),
                     constraints=[RQLConstraint('O final FALSE')])
     allowed_transition = SubjectRelation('Transition', cardinality='**',
                                          constraints=[RQLConstraint('S state_of ET, O transition_of ET')],
                                          description=_('allowed transitions from this state'))
-    
+
     initial_state = ObjectRelation('CWEType', cardinality='?*',
                                    # S initial_state O, O state_of S
                                    constraints=[RQLConstraint('O state_of S')],
@@ -43,7 +43,7 @@ class Transition(MetaEntityType):
                                               'This query may use X and U variables '
                                               'that will respectivly represents '
                                               'the current entity and the current user'))
-    
+
     require_group = SubjectRelation('CWGroup', cardinality='**',
                                     description=_('group in which a user should be to be '
                                                   'allowed to pass this transition'))
@@ -78,12 +78,12 @@ class wf_info_for(MetaRelationType):
     inlined = True
     composite = 'object'
     fulltext_container = composite
-    
+
 class state_of(MetaRelationType):
     """link a state to one or more entity type"""
 class transition_of(MetaRelationType):
     """link a transition to one or more entity type"""
-    
+
 class initial_state(MetaRelationType):
     """indicate which state should be used by default when an entity using
     states is created
@@ -93,7 +93,7 @@ class initial_state(MetaRelationType):
 class destination_state(MetaRelationType):
     """destination state of a transition"""
     inlined = True
-    
+
 class allowed_transition(MetaRelationType):
     """allowed transition from this state"""
 
@@ -102,7 +102,7 @@ class in_state(UserRelationType):
     meta = True
     # not inlined intentionnaly since when using ldap sources, user'state
     # has to be stored outside the CWUser table
-    
+
     # add/delete perms given to managers/users, after what most of the job
     # is done by workflow enforcment
-    
+

@@ -110,16 +110,16 @@ class WebTest(EnvBasedTC):
     # maps vid : validator name (override content_type_validators)
     vid_validators = dict((vid, VALMAP[valkey])
                           for vid, valkey in VIEW_VALIDATORS.iteritems())
-    
+
     no_auto_populate = ()
-    ignored_relations = ()    
-        
+    ignored_relations = ()
+
     def custom_populate(self, how_many, cursor):
         pass
-        
+
     def post_populate(self, cursor):
         pass
-    
+
     @nocoverage
     def auto_populate(self, how_many):
         """this method populates the database with `how_many` entities
@@ -185,7 +185,7 @@ class WebTest(EnvBasedTC):
         # if rset:
         #     print rset, len(rset), id(rset)
         # else:
-        #     print 
+        #     print
         req.form['vid'] = vid
         view = self.vreg.select_view(vid, req, rset, **kwargs)
         # set explicit test description
@@ -243,7 +243,7 @@ class WebTest(EnvBasedTC):
 
     def to_test_etypes(self):
         return unprotected_entities(self.schema, strict=True)
-    
+
     def iter_automatic_rsets(self, limit=10):
         """generates basic resultsets for each entity type"""
         etypes = self.to_test_etypes()
@@ -260,7 +260,7 @@ class WebTest(EnvBasedTC):
         for rql in self.application_rql:
             yield self.execute(rql)
 
-                
+
     def list_views_for(self, rset):
         """returns the list of views that can be applied on `rset`"""
         req = rset.req
@@ -297,7 +297,7 @@ class WebTest(EnvBasedTC):
         req = rset.req
         for box in self.vreg.possible_objects('boxes', req, rset):
             yield box
-            
+
     def list_startup_views(self):
         """returns the list of startup views"""
         req = self.request()
@@ -306,7 +306,7 @@ class WebTest(EnvBasedTC):
                 yield view.id
             else:
                 not_selected(self.vreg, view)
-                
+
     def _test_everything_for(self, rset):
         """this method tries to find everything that can be tested
         for `rset` and yields a callable test (as needed in generative tests)
@@ -332,7 +332,7 @@ class WebTest(EnvBasedTC):
     @staticmethod
     def _testname(rset, objid, objtype):
         return '%s_%s_%s' % ('_'.join(rset.column_types(0)), objid, objtype)
-            
+
 
 class AutomaticWebTest(WebTest):
     """import this if you wan automatic tests to be ran"""
@@ -349,7 +349,7 @@ class AutomaticWebTest(WebTest):
         for rset in self.iter_automatic_rsets(limit=10):
             for testargs in self._test_everything_for(rset):
                 yield testargs
-                
+
     ## startup views
     def test_startup_views(self):
         for vid in self.list_startup_views():
@@ -374,7 +374,7 @@ def not_selected(vreg, vobject):
         vreg._selected[vobject.__class__] -= 1
     except (KeyError, AttributeError):
         pass
-        
+
 def vreg_instrumentize(testclass):
     from cubicweb.devtools.apptest import TestEnvironment
     env = testclass._env = TestEnvironment('data', configcls=testclass.configcls,

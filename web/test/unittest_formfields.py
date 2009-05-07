@@ -2,47 +2,48 @@
 
 from logilab.common.testlib import TestCase, unittest_main
 from cubicweb.devtools import TestServerConfiguration
-from cubicweb.web.formwidgets import PasswordInput
+from cubicweb.web.formwidgets import PasswordInput, TextArea
 from cubicweb.web.formfields import *
-from cubicweb.entities.lib import Card
+from cubicweb.entities.wfobjs import State
 from cubicweb.entities.authobjs import CWUser
 from cubes.file.entities import File
 
 config = TestServerConfiguration('data')
 config.bootstrap_cubes()
 schema = config.load_schema()
-card_schema = schema['Card']
+state_schema = schema['State']
 cwuser_schema = schema['CWUser']
-file_schema.schema = schema['File']
+file_schema = schema['File']
 
 class GuessFieldTC(TestCase):
 
-    def test_card_fields(self):
-        title_field = guess_field(card_schema, schema['title'])
+    def test_state_fields(self):
+        title_field = guess_field(state_schema, schema['name'])
         self.assertIsInstance(title_field, StringField)
         self.assertEquals(title_field.required, True)
 
-        synopsis_field = guess_field(card_schema, schema['synopsis'])
-        self.assertIsInstance(synopsis_field, TextField)
-        self.assertEquals(synopsis_field.required, False)
-        self.assertEquals(synopsis_field.help, 'an abstract for this card')
+#         synopsis_field = guess_field(state_schema, schema['synopsis'])
+#         self.assertIsInstance(synopsis_field, StringField)
+#         self.assertIsInstance(synopsis_field.widget, TextArea)
+#         self.assertEquals(synopsis_field.required, False)
+#         self.assertEquals(synopsis_field.help, 'an abstract for this state')
 
-        content_field = guess_field(card_schema, schema['content'])
-        self.assertIsInstance(content_field, RichTextField)
-        self.assertEquals(content_field.required, False)
-        self.assertEquals(content_field.format_field, None)
+        description_field = guess_field(state_schema, schema['description'])
+        self.assertIsInstance(description_field, RichTextField)
+        self.assertEquals(description_field.required, False)
+        self.assertEquals(description_field.format_field, None)
 
-        content_format_field = guess_field(card_schema, schema['content_format'])
-        self.assertEquals(content_format_field, None)
+        description_format_field = guess_field(state_schema, schema['description_format'])
+        self.assertEquals(description_format_field, None)
 
-        content_format_field = guess_field(card_schema, schema['content_format'], skip_meta_attr=False)
-        self.assertEquals(content_format_field.internationalizable, True)
-        self.assertEquals(content_format_field.sort, True)
-        self.assertEquals(content_format_field.initial, 'text/rest')
+        description_format_field = guess_field(state_schema, schema['description_format'], skip_meta_attr=False)
+        self.assertEquals(description_format_field.internationalizable, True)
+        self.assertEquals(description_format_field.sort, True)
+        self.assertEquals(description_format_field.initial, 'text/rest')
 
-        wikiid_field = guess_field(card_schema, schema['wikiid'])
-        self.assertIsInstance(wikiid_field, StringField)
-        self.assertEquals(wikiid_field.required, False)
+#         wikiid_field = guess_field(state_schema, schema['wikiid'])
+#         self.assertIsInstance(wikiid_field, StringField)
+#         self.assertEquals(wikiid_field.required, False)
 
 
     def test_euser_fields(self):

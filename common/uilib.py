@@ -10,11 +10,9 @@ contains some functions designed to help implementation of cubicweb user interfa
 __docformat__ = "restructuredtext en"
 
 import csv
-import decimal
 import re
-from datetime import datetime, date, timedelta
 from urllib import quote as urlquote
-from cStringIO import StringIO
+from StringIO import StringIO
 
 from logilab.mtconverter import html_escape, html_unescape
 
@@ -41,7 +39,7 @@ def printable_value(req, attrtype, value, props=None, displaytime=True):
         # don't translate empty value if you don't want strange results
         if props is not None and value and props.get('internationalizable'):
             return req._(value)
-        
+
         return value
     if attrtype == 'Date':
         return ustrftime(value, req.property_value('ui.date-format'))
@@ -63,12 +61,12 @@ def printable_value(req, attrtype, value, props=None, displaytime=True):
 # text publishing #############################################################
 
 try:
-    from cubicweb.common.rest import rest_publish # pylint: disable-msg=W0611
+    from cubicweb.ext.rest import rest_publish # pylint: disable-msg=W0611
 except ImportError:
     def rest_publish(entity, data):
         """default behaviour if docutils was not found"""
-        return data
-    
+        return html_escape(data)
+
 TAG_PROG = re.compile(r'</?.*?>', re.U)
 def remove_html_tags(text):
     """Removes HTML tags from text
@@ -201,10 +199,10 @@ def cut(text, length):
     return text[:length] + u'...'
 
 
-    
+
 # HTML generation helper functions ############################################
 
-def simple_sgml_tag(tag, content=None, **attrs):
+def simple_sgml_tag(tag, content=None, escapecontent=True, **attrs):
     """generation of a simple sgml tag (eg without children tags) easier
 
     content and attributes will be escaped
@@ -216,10 +214,12 @@ def simple_sgml_tag(tag, content=None, **attrs):
         except KeyError:
             pass
         value += u' ' + u' '.join(u'%s="%s"' % (attr, html_escape(unicode(value)))
-                                  for attr, value in attrs.items()
+                                  for attr, value in sorted(attrs.items())
                                   if value is not None)
     if content:
-        value += u'>%s</%s>' % (html_escape(unicode(content)), tag)
+        if escapecontent:
+            content = html_escape(unicode(content))
+        value += u'>%s</%s>' % (content, tag)
     else:
         value += u'/>'
     return value
@@ -237,31 +237,6 @@ def toggle_link(nodeid, label):
     """builds a HTML link that uses the js toggleVisibility function"""
     return u'<a href="%s">%s</a>' % (toggle_action(nodeid), label)
 
-def ajax_replace_url(nodeid, rql, vid=None, swap=False, **extraparams):
-    """builds a replacePageChunk-like url
-    >>> ajax_replace_url('foo', 'Person P')
-    "javascript: replacePageChunk('foo', 'Person%20P');"
-    >>> ajax_replace_url('foo', 'Person P', 'oneline')
-    "javascript: replacePageChunk('foo', 'Person%20P', 'oneline');"
-    >>> ajax_replace_url('foo', 'Person P', 'oneline', name='bar', age=12)
-    "javascript: replacePageChunk('foo', 'Person%20P', 'oneline', {'age':12, 'name':'bar'});"
-    >>> ajax_replace_url('foo', 'Person P', name='bar', age=12)
-    "javascript: replacePageChunk('foo', 'Person%20P', 'null', {'age':12, 'name':'bar'});"    
-    """
-    params = [repr(nodeid), repr(urlquote(rql))]
-    if extraparams and not vid:
-        params.append("'null'")
-    elif vid:
-        params.append(repr(vid))
-    if extraparams:
-        import simplejson
-        params.append(simplejson.dumps(extraparams))
-    if swap:
-        params.append('true')
-    return "javascript: replacePageChunk(%s);" % ', '.join(params)
-
-
-from StringIO import StringIO
 
 def ureport_as_html(layout):
     from logilab.common.ureports import HTMLWriter
@@ -315,7 +290,7 @@ def render_HTML_tree(tree, selected_node=None, render_node=None, caption=None):
         else:
             for child in path[-1].children:
                 build_matrix(path[:] + [child], matrix)
-        
+
     matrix = []
     build_matrix([tree], matrix)
 
@@ -347,9 +322,9 @@ def render_HTML_tree(tree, selected_node=None, render_node=None, caption=None):
             if link_type == 0 and i > 0 and links[i-1][j] in (1, 2, 3):
                 link_type = 2
             links[-1].append(link_type)
-    
 
-    # We can now generate the HTML code for the <table> 
+
+    # We can now generate the HTML code for the <table>
     s = u'<table class="tree">\n'
     if caption:
         s += '<caption>%s</caption>\n' % caption
@@ -369,7 +344,7 @@ def render_HTML_tree(tree, selected_node=None, render_node=None, caption=None):
                 s += '<td rowspan="2">&nbsp;</td>'
             s += '<td class="tree_cell_%d_1">&nbsp;</td>' % link_cell
             s += '<td class="tree_cell_%d_2">&nbsp;</td>' % link_cell
-                
+
         cell = line[-1]
         if cell:
             if cell.id == selected_node:
@@ -459,7 +434,7 @@ def html_traceback(info, exception, title='',
                            (boxid, ''.join(html_info)))
             tcbk = tcbk.tb_next
         except Exception:
-            pass # doesn't really matter if we have no context info    
+            pass # doesn't really matter if we have no context info
     strings.append(u'</div>')
     return '\n'.join(strings)
 
@@ -467,7 +442,7 @@ def html_traceback(info, exception, title='',
 
 class UnicodeCSVWriter:
     """proxies calls to csv.writer.writerow to be able to deal with unicode"""
-    
+
     def __init__(self, wfunc, encoding, **kwargs):
         self.writer = csv.writer(self, **kwargs)
         self.wfunc = wfunc
@@ -503,23 +478,6 @@ class limitsize(object):
                 return ret[:self.maxsize]
             return ret
         return newfunc
-
-
-def jsonize(function):
-    import simplejson
-    def newfunc(*args, **kwargs):
-        ret = function(*args, **kwargs)
-        if isinstance(ret, decimal.Decimal):
-            ret = float(ret)
-        elif isinstance(ret, (date, datetime)):
-            ret = ret.strftime('%Y-%m-%d %H:%M')
-        elif isinstance(ret, timedelta):
-            ret = (ret.days * 24*60*60) + ret.seconds
-        try:
-            return simplejson.dumps(ret)
-        except TypeError:
-            return simplejson.dumps(repr(ret))
-    return newfunc
 
 
 def htmlescape(function):

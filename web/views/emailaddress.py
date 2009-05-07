@@ -10,17 +10,16 @@ from logilab.mtconverter import html_escape
 
 from cubicweb.selectors import implements
 from cubicweb.common import Unauthorized
-from cubicweb.web.views import baseviews
+from cubicweb.web.views import baseviews, primary
 
-
-class EmailAddressPrimaryView(baseviews.PrimaryView):
+class EmailAddressPrimaryView(primary.PrimaryView):
     __select__ = implements('EmailAddress')
 
     def cell_call(self, row, col, skipeids=None):
         self.skipeids = skipeids
         super(EmailAddressPrimaryView, self).cell_call(row, col)
 
-    def render_entity_attributes(self, entity, siderelations):
+    def render_entity_attributes(self, entity):
         self.w(u'<h3>')
         entity.view('oneline', w=self.w)
         if not entity.canonical:
@@ -53,7 +52,7 @@ class EmailAddressPrimaryView(baseviews.PrimaryView):
             emailofstr = ', '.join(e.view('oneline') for e in emailof)
             self.field(display_name(self.req, 'use_email', 'object'), emailofstr)
 
-    def render_entity_relations(self, entity, siderelations):
+    def render_entity_relations(self, entity):
         for i, email in enumerate(entity.related_emails(self.skipeids)):
             self.w(u'<div class="%s">' % (i%2 and 'even' or 'odd'))
             email.view('oneline', w=self.w, contexteid=entity.eid)
@@ -64,7 +63,8 @@ class EmailAddressShortPrimaryView(EmailAddressPrimaryView):
     __select__ = implements('EmailAddress')
     id = 'shortprimary'
     title = None # hidden view
-    def render_entity_attributes(self, entity, siderelations):
+
+    def render_entity_attributes(self, entity):
         self.w(u'<h5>')
         entity.view('oneline', w=self.w)
         self.w(u'</h5>')

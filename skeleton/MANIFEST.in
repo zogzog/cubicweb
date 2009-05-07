@@ -2,4 +2,4 @@ include *.py
 
 recursive-include data external_resources *.gif *.png *.css *.ico *.js
 recursive-include i18n *.pot *.po
-recursive-include migration *.sql *.py depends.map
+recursive-include migration *.py

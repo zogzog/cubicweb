@@ -9,7 +9,7 @@ __docformat__ = "restructuredtext en"
 from datetime import date
 
 from cubicweb.common import tags
-from cubicweb.web import stdmsgs
+from cubicweb.web import INTERNAL_FIELD_VALUE, stdmsgs
 
 
 class FieldWidget(object):
@@ -137,6 +137,8 @@ class TextArea(FieldWidget):
     def render(self, form, field):
         name, values, attrs = self._render_attrs(form, field)
         attrs.setdefault('onkeypress', 'autogrow(this)')
+        attrs.setdefault('cols', 80)
+        attrs.setdefault('rows', 20)
         if not values:
             value = u''
         elif len(values) == 1:
@@ -161,11 +163,11 @@ class Select(FieldWidget):
     """<select>, for field having a specific vocabulary"""
     def __init__(self, attrs=None, multiple=False):
         super(Select, self).__init__(attrs)
-        self.multiple = multiple
+        self._multiple = multiple
 
     def render(self, form, field):
         name, curvalues, attrs = self._render_attrs(form, field)
-        if not 'size' in attrs:
+        if not 'size' in attrs and self._multiple:
             attrs['size'] = '5'
         options = []
         for label, value in field.vocabulary(form):
@@ -176,7 +178,7 @@ class Select(FieldWidget):
                 options.append(tags.option(label, value=value, selected='selected'))
             else:
                 options.append(tags.option(label, value=value))
-        return tags.select(name=name, multiple=self.multiple,
+        return tags.select(name=name, multiple=self._multiple,
                            options=options, **attrs)
 
 

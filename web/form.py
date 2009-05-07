@@ -20,7 +20,7 @@ from cubicweb.web.httpcache import NoHTTPCacheManager
 from cubicweb.web.controller import NAV_FORM_PARAMETERS
 from cubicweb.web.formfields import (Field, StringField, RelationField,
                                      HiddenInitialValueField)
-from cubicweb.web.formrenderers import FormRenderer
+from cubicweb.web import formrenderers
 from cubicweb.web import formwidgets as fwdgs
 
 class FormViewMixIn(object):
@@ -29,28 +29,6 @@ class FormViewMixIn(object):
     controller = 'edit'
     http_cache_manager = NoHTTPCacheManager
     add_to_breadcrumbs = False
-
-    def __init__(self, req, rset, **kwargs):
-        super(FormViewMixIn, self).__init__(req, rset, **kwargs)
-        # get validation session data which may have been previously set.
-        # deleting validation errors here breaks form reloading (errors are
-        # no more available), they have to be deleted by application's publish
-        # method on successful commit
-        formurl = req.url()
-        forminfo = req.get_session_data(formurl)
-        if forminfo:
-            req.data['formvalues'] = forminfo['values']
-            req.data['formerrors'] = errex = forminfo['errors']
-            req.data['displayederrors'] = set()
-            # if some validation error occured on entity creation, we have to
-            # get the original variable name from its attributed eid
-            foreid = errex.entity
-            for var, eid in forminfo['eidmap'].items():
-                if foreid == eid:
-                    errex.eid = var
-                    break
-            else:
-                errex.eid = foreid
 
     def html_headers(self):
         """return a list of html headers (eg something to be inserted between
@@ -80,6 +58,40 @@ class FormMixIn(object):
             self.req.set_page_data('rql_varmaker', varmaker)
         self.varmaker = varmaker
 
+    def session_key(self):
+        """return the key that may be used to store / retreive data about a
+        previous post which failed because of a validation error
+        """
+        return '%s#%s' % (self.req.url(), self.domid)
+
+    def __init__(self, req, rset, **kwargs):
+        super(FormMixIn, self).__init__(req, rset, **kwargs)
+        self.restore_previous_post(self.session_key())
+
+    def restore_previous_post(self, sessionkey):
+        # get validation session data which may have been previously set.
+        # deleting validation errors here breaks form reloading (errors are
+        # no more available), they have to be deleted by application's publish
+        # method on successful commit
+        forminfo = self.req.get_session_data(sessionkey, pop=True)
+        if forminfo:
+            # XXX remove req.data assigment once cw.web.widget is killed
+            self.req.data['formvalues'] = self.form_previous_values = forminfo['values']
+            self.req.data['formerrors'] = self.form_valerror = forminfo['errors']
+            self.req.data['displayederrors'] = self.form_displayed_errors = set()
+            # if some validation error occured on entity creation, we have to
+            # get the original variable name from its attributed eid
+            foreid = self.form_valerror.entity
+            for var, eid in forminfo['eidmap'].items():
+                if foreid == eid:
+                    self.form_valerror.eid = var
+                    break
+            else:
+                self.form_valerror.eid = foreid
+        else:
+            self.form_previous_values = {}
+            self.form_valerror = None
+
     # XXX deprecated with new form system. Should disappear
 
     domid = 'entityForm'
@@ -87,28 +99,6 @@ class FormMixIn(object):
     controller = 'edit'
     http_cache_manager = NoHTTPCacheManager
     add_to_breadcrumbs = False
-
-    def __init__(self, req, rset, **kwargs):
-        super(FormMixIn, self).__init__(req, rset, **kwargs)
-        # get validation session data which may have been previously set.
-        # deleting validation errors here breaks form reloading (errors are
-        # no more available), they have to be deleted by application's publish
-        # method on successful commit
-        formurl = req.url()
-        forminfo = req.get_session_data(formurl)
-        if forminfo:
-            req.data['formvalues'] = forminfo['values']
-            req.data['formerrors'] = errex = forminfo['errors']
-            req.data['displayederrors'] = set()
-            # if some validation error occured on entity creation, we have to
-            # get the original variable name from its attributed eid
-            foreid = errex.entity
-            for var, eid in forminfo['eidmap'].items():
-                if foreid == eid:
-                    errex.eid = var
-                    break
-            else:
-                errex.eid = foreid
 
     def html_headers(self):
         """return a list of html headers (eg something to be inserted between
@@ -180,11 +170,11 @@ class FormMixIn(object):
 
         This method should be called once inlined field errors has been consumed
         """
-        errex = self.req.data.get('formerrors')
+        errex = self.req.data.get('formerrors') or self.form_valerror
         # get extra errors
         if errex is not None:
             errormsg = self.req._('please correct the following errors:')
-            displayed = self.req.data['displayederrors']
+            displayed = self.req.data.get('displayederrors') or self.form_displayed_errors
             errors = sorted((field, err) for field, err in errex.errors.items()
                             if not field in displayed)
             if errors:
@@ -234,6 +224,7 @@ class FieldsForm(FormMixIn, AppRsetObject):
     __registry__ = 'forms'
     __select__ = yes()
 
+    renderer_cls = formrenderers.FormRenderer
     is_subform = False
 
     # attributes overrideable through __init__
@@ -263,7 +254,7 @@ class FieldsForm(FormMixIn, AppRsetObject):
                 assert hasattr(self.__class__, key) and not key[0] == '_', key
                 setattr(self, key, val)
         if self.set_error_url:
-            self.form_add_hidden('__errorurl', req.url())
+            self.form_add_hidden('__errorurl', self.session_key())
         if self.copy_nav_params:
             for param in NAV_FORM_PARAMETERS:
                 if not param in kwargs:
@@ -273,6 +264,8 @@ class FieldsForm(FormMixIn, AppRsetObject):
         if submitmsg is not None:
             self.form_add_hidden('__message', submitmsg)
         self.context = None
+        if 'domid' in kwargs:# session key changed
+            self.restore_previous_post(self.session_key())
 
     @iclassmethod
     def field_by_name(cls_or_self, name, role='subject'):
@@ -331,7 +324,7 @@ class FieldsForm(FormMixIn, AppRsetObject):
         """render this form, using the renderer given in args or the default
         FormRenderer()
         """
-        renderer = values.pop('renderer', FormRenderer())
+        renderer = values.pop('renderer', self.renderer_cls())
         return renderer.render(self, values)
 
     def form_build_context(self, rendervalues=None):
@@ -344,9 +337,6 @@ class FieldsForm(FormMixIn, AppRsetObject):
         form_render()
         """
         self.context = context = {}
-        # on validation error, we get a dictionary of previously submitted
-        # values
-        self._previous_values = self.req.data.get('formvalues', {})
         # ensure rendervalues is a dict
         if rendervalues is None:
             rendervalues = {}
@@ -371,10 +361,11 @@ class FieldsForm(FormMixIn, AppRsetObject):
         values found in 1. and 2. are expected te be already some 'display'
         value while those found in 3. and 4. are expected to be correctly typed.
         """
-        if field.name in self._previous_values:
-            value = self._previous_values[field.name]
-        elif field.name in self.req.form:
-            value = self.req.form[field.name]
+        qname = self.form_field_name(field)
+        if qname in self.form_previous_values:
+            value = self.form_previous_values[qname]
+        elif qname in self.req.form:
+            value = self.req.form[qname]
         else:
             if field.name in rendervalues:
                 value = rendervalues[field.name]
@@ -395,10 +386,9 @@ class FieldsForm(FormMixIn, AppRsetObject):
 
     def form_field_error(self, field):
         """return validation error for widget's field, if any"""
-        errex = self.req.data.get('formerrors')
-        if errex and self._errex_match_field(errex, field):
-            self.req.data['displayederrors'].add(field.name)
-            return u'<span class="error">%s</span>' % errex.errors[field.name]
+        if self._field_has_error(field):
+            self.form_displayed_errors.add(field.name)
+            return u'<span class="error">%s</span>' % self.form_valerror.errors[field.name]
         return u''
 
     def form_field_format(self, field):
@@ -423,16 +413,16 @@ class FieldsForm(FormMixIn, AppRsetObject):
         """
         raise NotImplementedError
 
-    def _errex_match_field(self, errex, field):
+    def _field_has_error(self, field):
         """return true if the field has some error in given validation exception
         """
-        return field.name in errex.errors
+        return self.form_valerror and field.name in self.form_valerror.errors
 
 
 class EntityFieldsForm(FieldsForm):
     __select__ = (match_kwargs('entity') | (one_line_rset & non_final_entity()))
 
-    internal_fields = FieldsForm.internal_fields + ('__type', 'eid')
+    internal_fields = FieldsForm.internal_fields + ('__type', 'eid', '__maineid')
     domid = 'entityForm'
 
     def __init__(self, *args, **kwargs):
@@ -440,7 +430,7 @@ class EntityFieldsForm(FieldsForm):
         msg = kwargs.pop('submitmsg', None)
         super(EntityFieldsForm, self).__init__(*args, **kwargs)
         if self.edited_entity is None:
-            self.edited_entity = self.complete_entity(self.row, self.col)
+            self.edited_entity = self.complete_entity(self.row or 0, self.col or 0)
         self.form_add_hidden('__type', eidparam=True)
         self.form_add_hidden('eid')
         if msg is not None:
@@ -449,11 +439,15 @@ class EntityFieldsForm(FieldsForm):
                 self.form_add_hidden('__linkto', linkto)
                 msg = '%s %s' % (msg, self.req._('and linked'))
             self.form_add_hidden('__message', msg)
+        # in case of direct instanciation
+        self.schema = self.edited_entity.schema
+        self.vreg = self.edited_entity.vreg
 
-    def _errex_match_field(self, errex, field):
+    def _field_has_error(self, field):
         """return true if the field has some error in given validation exception
         """
-        return errex.eid == self.edited_entity.eid and field.name in errex.errors
+        return super(EntityFieldsForm, self)._field_has_error(field) \
+               and self.form_valerror.eid == self.edited_entity.eid
 
     def _relation_vocabulary(self, rtype, targettype, role,
                             limit=None, done=None):
@@ -489,7 +483,7 @@ class EntityFieldsForm(FieldsForm):
         """overriden to add edit[s|o] hidden fields and to ensure schema fields
         have eidparam set to True
 
-        edit[s|o] hidden fields are used t o indicate the value for the
+        edit[s|o] hidden fields are used to indicate the value for the
         associated field before the (potential) modification made when
         submitting the form.
         """
@@ -527,9 +521,7 @@ class EntityFieldsForm(FieldsForm):
             return INTERNAL_FIELD_VALUE
         if attr == '__type':
             return entity.id
-        if field.role == 'object':
-            attr = 'reverse_' + attr
-        elif entity.e_schema.subject_relation(attr).is_final():
+        if self.schema.rschema(attr).is_final():
             attrtype = entity.e_schema.destination(attr)
             if attrtype == 'Password':
                 return entity.has_eid() and INTERNAL_FIELD_VALUE or ''
@@ -540,14 +532,14 @@ class EntityFieldsForm(FieldsForm):
                     # XXX value should reflect if some file is already attached
                     return True
                 return False
-            if entity.has_eid():
+            if entity.has_eid() or attr in entity:
                 value = getattr(entity, attr)
             else:
                 value = self._form_field_default_value(field, load_bytes)
             return value
         # non final relation field
-        if entity.has_eid():
-            value = [ent.eid for ent in getattr(entity, attr)]
+        if entity.has_eid() or entity.relation_cached(attr, field.role):
+            value = [r[0] for r in entity.related(attr, field.role)]
         else:
             value = self._form_field_default_value(field, load_bytes)
         return value
@@ -608,7 +600,7 @@ class EntityFieldsForm(FieldsForm):
         """
         entity = self.edited_entity
         if isinstance(rtype, basestring):
-            rtype = self.schema.rschema(rtype)
+            rtype = entity.schema.rschema(rtype)
         done = None
         assert not rtype.is_final(), rtype
         if entity.has_eid():
@@ -630,7 +622,7 @@ class EntityFieldsForm(FieldsForm):
         """
         entity = self.edited_entity
         if isinstance(rtype, basestring):
-            rtype = self.schema.rschema(rtype)
+            rtype = entity.schema.rschema(rtype)
         done = None
         if entity.has_eid():
             done = set(e.eid for e in getattr(entity, 'reverse_%s' % rtype))

@@ -44,7 +44,7 @@ class PageNavigation(NavigationComponent):
         w(u'[&nbsp;%s&nbsp;]' % u'&nbsp;| '.join(blocklist))
         w(u'&nbsp;%s' % self.next_link(params))
         w(u'</div>')
-        
+
     def index_display(self, start, stop):
         return u'%s - %s' % (start+1, stop+1)
 
@@ -53,10 +53,10 @@ class SortedNavigation(NavigationComponent):
     and if the result set is sorted
     """
     __select__ = paginated_rset() & sorted_rset()
-    
+
     # number of considered chars to build page links
     nb_chars = 5
-    
+
     def display_func(self, rset, col, attrname):
         req = self.req
         if attrname is not None:
@@ -70,7 +70,7 @@ class SortedNavigation(NavigationComponent):
             def index_display(row):
                 return rset.get_entity(row, col).view('text')
         return index_display
-    
+
     def call(self):
         """displays links to navigate accross pages of a result set
 
@@ -167,12 +167,12 @@ def limit_rset_using_paged_nav(self, req, rset, w, forcedisplay=False,
 # monkey patch base View class to add a .pagination(req, rset, w, forcedisplay)
 # method to be called on view's result set and printing pages index in the view
 from cubicweb.view import View
-# XXX deprecated, use paginate
 View.pagination = obsolete('.pagination is deprecated, use paginate')(limit_rset_using_paged_nav)
 
-def paginate(view, show_all_option=True, w=None):
+def paginate(view, show_all_option=True, w=None, page_size=None):
     limit_rset_using_paged_nav(view, view.req, view.rset, w or view.w,
-                               not view.need_navigation, show_all_option)
+                               not view.need_navigation, show_all_option,
+                               page_size=page_size)
 View.paginate = paginate
 
 class NextPrevNavigationComponent(EntityVComponent):
@@ -212,7 +212,7 @@ class NextPrevNavigationComponent(EntityVComponent):
             html_escape(previous.absolute_url()),
             self.req._('i18nprevnext_previous'),
             html_escape(cut(previous.dc_title(), textsize)))
-    
+
     def next_link(self, next, textsize):
         return u'<a href="%s" title="%s">%s &gt;&gt;</a>' % (
             html_escape(next.absolute_url()),

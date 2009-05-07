@@ -1,0 +1,1 @@
+distname = 'cubicweb-mycube'

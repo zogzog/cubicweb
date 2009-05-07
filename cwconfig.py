@@ -189,6 +189,14 @@ registered.',
           'help': 'web server root url',
           'group': 'main', 'inputlevel': 1,
           }),
+        ('use-request-subdomain',
+         {'type' : 'yn',
+          'default': None,
+          'help': ('if set, base-url subdomain is replaced by the request\'s '
+                   'host, to help managing sites with several subdomains in a '
+                   'single cubicweb instance'),
+          'group': 'main', 'inputlevel': 1,
+          }),
         ('mangle-emails',
          {'type' : 'yn',
           'default': False,
@@ -669,7 +677,7 @@ the repository',
         return join(self.instance_data_dir(), self.appid)
 
     def init_cubes(self, cubes):
-        assert self._cubes is None
+        assert self._cubes is None, self._cubes
         self._cubes = self.reorder_cubes(cubes)
         # load cubes'__init__.py file first
         for cube in cubes:

@@ -6,6 +6,7 @@
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 """
 __docformat__ = "restructuredtext en"
+_ = unicode
 
 from logilab.mtconverter import html_escape
 
@@ -17,16 +18,57 @@ from cubicweb.web.form import FieldsForm, EntityFieldsForm
 from cubicweb.web.formfields import guess_field
 from cubicweb.web.formrenderers import HTableFormRenderer
 
-_ = unicode
-
 SUBMIT_MSGID = _('Submit bug report')
 MAIL_SUBMIT_MSGID = _('Submit bug report by mail')
 
+class SecurityViewMixIn(object):
+    """display security information for a given schema """
+    def schema_definition(self, eschema, link=True,  access_types=None):
+        w = self.w
+        _ = self.req._
+        if not access_types:
+            access_types = eschema.ACTIONS
+        w(u'<table class="schemaInfo">')
+        w(u'<tr><th>%s</th><th>%s</th><th>%s</th></tr>' % (
+            _("permission"), _('granted to groups'), _('rql expressions')))
+        for access_type in access_types:
+            w(u'<tr>')
+            w(u'<td>%s</td>' % _('%s_perm' % access_type))
+            groups = eschema.get_groups(access_type)
+            l = []
+            groups = [(_(group), group) for group in groups]
+            for trad, group in sorted(groups):
+                if link:
+                    l.append(u'<a href="%s" class="%s">%s</a><br/>' % (
+                    self.build_url('egroup/%s' % group), group, trad))
+                else:
+                    l.append(u'<div class="%s">%s</div>' % (group, trad))
+            w(u'<td>%s</td>' % u''.join(l))
+            rqlexprs = eschema.get_rqlexprs(access_type)
+            w(u'<td>%s</td>' % u'<br/><br/>'.join(expr.expression for expr in rqlexprs))
+            w(u'</tr>\n')
+        w(u'</table>')
 
-class SecurityManagementView(EntityView):
+    def has_schema_modified_permissions(self, eschema, access_types):
+        """ return True if eschema's actual permissions are diffrents
+        from the default ones
+        """
+        for access_type in access_types:
+            if eschema.get_rqlexprs(access_type):
+                return True
+            if eschema.get_groups(access_type) != \
+                    frozenset(eschema.get_default_groups()[access_type]):
+                return True
+        return False
+
+
+class SecurityManagementView(EntityView, SecurityViewMixIn):
     """display security information for a given entity"""
     id = 'security'
     title = _('security')
+    def call(self):
+        self.w(u'<div id="progress">%s</div>' % self.req._('validating...'))
+        super(SecurityManagementView, self).call()
 
     def cell_call(self, row, col):
         self.req.add_js('cubicweb.edition.js')
@@ -40,7 +82,7 @@ class SecurityManagementView(EntityView):
              html_escape(entity.dc_title())))
         # first show permissions defined by the schema
         self.w('<h2>%s</h2>' % _('schema\'s permissions definitions'))
-        self.schema_definition(entity)
+        self.schema_definition(entity.e_schema)
         self.w('<h2>%s</h2>' % _('manage security'))
         # ownership information
         if self.schema.rschema('owned_by').has_perm(self.req, 'add',
@@ -48,7 +90,7 @@ class SecurityManagementView(EntityView):
             self.owned_by_edit_form(entity)
         else:
             self.owned_by_information(entity)
-        # epermissions
+        # cwpermissions
         if 'require_permission' in entity.e_schema.subject_relations():
             w('<h3>%s</h3>' % _('permissions for this entity'))
             reqpermschema = self.schema.rschema('require_permission')
@@ -56,36 +98,17 @@ class SecurityManagementView(EntityView):
             if reqpermschema.has_perm(self.req, 'add', fromeid=entity.eid):
                 self.require_permission_edit_form(entity)
 
-    def schema_definition(self, entity):
-        w = self.w
-        _ = self.req._
-        w(u'<table class="schemaInfo">')
-        w(u'<tr><th>%s</th><th>%s</th><th>%s</th></tr>' % (
-            _("access type"), _('granted to groups'), _('rql expressions')))
-        for access_type in ('read', 'add', 'update', 'delete'):
-            w(u'<tr>')
-            w(u'<th>%s</th>' % self.req.__('%s_permission' % access_type))
-            groups = entity.e_schema.get_groups(access_type)
-            l = []
-            for group in groups:
-                l.append(u'<a href="%s">%s</a>' % (
-                    self.build_url('egroup/%s' % group), _(group)))
-            w(u'<td>%s</td>' % u', '.join(l))
-            rqlexprs = entity.e_schema.get_rqlexprs(access_type)
-            w(u'<td>%s</td>' % u'<br/>'.join(expr.expression for expr in rqlexprs))
-            w(u'</tr>\n')
-        w(u'</table>')
-
     def owned_by_edit_form(self, entity):
         self.w('<h3>%s</h3>' % self.req._('ownership'))
         msg = self.req._('ownerships have been changed')
         form = EntityFieldsForm(self.req, None, entity=entity, submitmsg=msg,
                                 form_buttons=[formwidgets.SubmitButton()],
+                                domid='ownership%s' % entity.eid,
                                 __redirectvid='security',
                                 __redirectpath=entity.rest_path())
         field = guess_field(entity.e_schema, self.schema.rschema('owned_by'))
         form.append_field(field)
-        self.w(form.form_render())
+        self.w(form.form_render(display_progress_div=False))
 
     def owned_by_information(self, entity):
         ownersrset = entity.related('owned_by')
@@ -116,18 +139,18 @@ class SecurityManagementView(EntityView):
             w(u'<table class="schemaInfo">')
             w(u'<tr><th>%s</th><th>%s</th></tr>' % (_("permission"),
                                                     _('granted to groups')))
-            for eperm in entity.require_permission:
+            for cwperm in entity.require_permission:
                 w(u'<tr>')
                 if dellinktempl:
-                    w(u'<td>%s%s</td>' % (dellinktempl % eperm.eid,
-                                          eperm.view('oneline')))
+                    w(u'<td>%s%s</td>' % (dellinktempl % cwperm.eid,
+                                          cwperm.view('oneline')))
                 else:
-                    w(u'<td>%s</td>' % eperm.view('oneline'))
-                w(u'<td>%s</td>' % self.view('csv', eperm.related('require_group'), 'null'))
+                    w(u'<td>%s</td>' % cwperm.view('oneline'))
+                w(u'<td>%s</td>' % self.view('csv', cwperm.related('require_group'), 'null'))
                 w(u'</tr>\n')
             w(u'</table>')
         else:
-            self.w(self.req._('no associated epermissions'))
+            self.w(self.req._('no associated permissions'))
 
     def require_permission_edit_form(self, entity):
         w = self.w
@@ -137,14 +160,17 @@ class SecurityManagementView(EntityView):
         w(u'<p>%s</p>' % _('add a new permission'))
         form = EntityFieldsForm(self.req, None, entity=newperm,
                                 form_buttons=[formwidgets.SubmitButton()],
+                                domid='reqperm%s' % entity.eid,
                                 __redirectvid='security',
                                 __redirectpath=entity.rest_path())
-        form.form_add_hidden('require_permission', entity.eid, role='object', eidparam=True)
+        form.form_add_hidden('require_permission', entity.eid, role='object',
+                             eidparam=True)
         permnames = getattr(entity, '__permissions__', None)
         cwpermschema = newperm.e_schema
         if permnames is not None:
             field = guess_field(cwpermschema, self.schema.rschema('name'),
-                                widget=formwidgets.Select, choices=permnames)
+                                widget=formwidgets.Select({'size': 1}),
+                                choices=permnames)
         else:
             field = guess_field(cwpermschema, self.schema.rschema('name'))
         form.append_field(field)
@@ -152,7 +178,7 @@ class SecurityManagementView(EntityView):
         form.append_field(field)
         field = guess_field(cwpermschema, self.schema.rschema('require_group'))
         form.append_field(field)
-        self.w(form.form_render(renderer=HTableFormRenderer()))
+        self.w(form.form_render(renderer=HTableFormRenderer(display_progress_div=False)))
 
 
 
@@ -244,7 +270,6 @@ def text_error_description(ex, excinfo, req, eversion, cubes):
         binfo += u":Package %s version: %s\n" % (pkg, pkgversion)
     binfo += '\n'
     return binfo
-
 
 class ProcessInformationView(StartupView):
     id = 'info'

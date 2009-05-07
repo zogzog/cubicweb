@@ -94,9 +94,9 @@ class Field(object):
         Field.__creation_rank += 1
 
     def __unicode__(self):
-        return u'<%s name=%r label=%r id=%r initial=%r @%x>' % (
+        return u'<%s name=%r label=%r id=%r initial=%r visible=%r @%x>' % (
             self.__class__.__name__, self.name, self.label,
-            self.id, self.initial, id(self))
+            self.id, self.initial, self.is_visible(), id(self))
 
     def __repr__(self):
         return self.__unicode__().encode('utf-8')
@@ -180,17 +180,16 @@ class StringField(Field):
     def __init__(self, max_length=None, **kwargs):
         super(StringField, self).__init__(**kwargs)
         self.max_length = max_length
+        if isinstance(self.widget, TextArea):
+            self.init_text_area(self.widget)
+
+    def init_text_area(self, widget):
+        if self.max_length < 513:
+            widget.attrs.setdefault('cols', 60)
+            widget.attrs.setdefault('rows', 5)
 
 
-class TextField(Field):
-    widget = TextArea
-    def __init__(self, rows=10, cols=80, **kwargs):
-        super(TextField, self).__init__(**kwargs)
-        self.rows = rows
-        self.cols = cols
-
-
-class RichTextField(TextField):
+class RichTextField(StringField):
     widget = None
     def __init__(self, format_field=None, **kwargs):
         super(RichTextField, self).__init__(**kwargs)
@@ -200,7 +199,9 @@ class RichTextField(TextField):
         if self.widget is None:
             if self.use_fckeditor(form):
                 return FCKEditor()
-            return TextArea()
+            widget = TextArea()
+            self.init_text_area(widget)
+            return widget
         return self.widget
 
     def get_format_field(self, form):
@@ -220,9 +221,10 @@ class RichTextField(TextField):
             else:
                 # else we want a format selector
                 # XXX compute vocabulary
-                widget = Select
+                widget = Select()
                 fcstr = FormatConstraint()
                 choices = [(req._(fmt), fmt) for fmt in fcstr.vocabulary(req=req)]
+                widget.attrs['size'] = 1
             field = StringField(name=self.name + '_format', widget=widget,
                                 choices=choices)
             req.data[self] = field
@@ -370,7 +372,7 @@ class DateTimeField(DateField):
 
 class TimeField(DateField):
     format_prop = 'ui.datetime-format'
-
+    widget = TextInput 
 
 class HiddenInitialValueField(Field):
     def __init__(self, visible_field):
@@ -406,34 +408,13 @@ class RelationField(Field):
             relatedvocab = [(e.view('combobox'), e.eid) for e in rset.entities()]
         else:
             relatedvocab = []
-        return res + form.form_field_vocabulary(self) + relatedvocab
+        vocab = res + form.form_field_vocabulary(self) + relatedvocab
+        if self.sort:
+            vocab = sorted(vocab)
+        return vocab
 
     def format_single_value(self, req, value):
         return value
-
-
-def stringfield_from_constraints(constraints, **kwargs):
-    field = None
-    for cstr in constraints:
-        if isinstance(cstr, StaticVocabularyConstraint):
-            kwargs.setdefault('widget', Select())
-            return StringField(choices=cstr.vocabulary, **kwargs)
-        if isinstance(cstr, SizeConstraint) and cstr.max is not None:
-            if cstr.max > 257:
-                rows_cols_from_constraint(cstr, kwargs)
-                field = TextField(**kwargs)
-            else:
-                field = StringField(max_length=cstr.max, **kwargs)
-    return field or TextField(**kwargs)
-
-
-def rows_cols_from_constraint(constraint, kwargs):
-    if constraint.max < 513:
-        rows, cols = 5, 60
-    else:
-        rows, cols = 10, 80
-    kwargs.setdefault('rows', rows)
-    kwargs.setdefault('cols', cols)
 
 
 def guess_field(eschema, rschema, role='subject', skip_meta_attr=True, **kwargs):
@@ -448,7 +429,9 @@ def guess_field(eschema, rschema, role='subject', skip_meta_attr=True, **kwargs)
         if rschema.is_final():
             if rschema.rproperty(eschema, targetschema, 'internationalizable'):
                 kwargs['internationalizable'] = True
-            kwargs['initial'] = rschema.rproperty(eschema, targetschema, 'default')
+            def get_default(form, es=eschema, rs=rschema):
+                return es.default(rs)
+            kwargs['initial'] = get_default
     else:
         targetschema = rschema.subjects(eschema)[0]
         card = rschema.rproperty(targetschema, eschema, 'cardinality')[1]
@@ -473,12 +456,20 @@ def guess_field(eschema, rschema, role='subject', skip_meta_attr=True, **kwargs)
                 for cstr in constraints:
                     if isinstance(cstr, StaticVocabularyConstraint):
                         raise Exception('rich text field with static vocabulary')
-                    if isinstance(cstr, SizeConstraint) and cstr.max is not None:
-                        rows_cols_from_constraint(cstr, kwargs)
                 return RichTextField(**kwargs)
-            # return StringField or TextField according to constraints
             constraints = rschema.rproperty(eschema, targetschema, 'constraints')
-            return stringfield_from_constraints(constraints, **kwargs)
+            # init StringField parameters according to constraints
+            for cstr in constraints:
+                if isinstance(cstr, StaticVocabularyConstraint):
+                    kwargs.setdefault('widget', Select())
+                    kwargs.setdefault('choices', cstr.vocabulary)
+                    if card in '?1':
+                        kwargs['widget'].attrs.setdefault('size', 1)
+                if isinstance(cstr, SizeConstraint) and cstr.max is not None:
+                    if cstr.max > 257:
+                        kwargs.setdefault('widget', TextArea)
+                    kwargs['max_length'] = cstr.max
+            return StringField(**kwargs)
         if fieldclass is FileField:
             for metadata in ('format', 'encoding'):
                 metaschema = eschema.has_metadata(rschema, metadata)

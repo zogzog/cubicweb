@@ -89,7 +89,7 @@ class EditControllerTC(ControllerTC):
             }
         path, params = self.expect_redirect_publish(req)
         cnx.commit() # commit to check we don't get late validation error for instance
-        self.assertEquals(path, 'euser/user')
+        self.assertEquals(path, 'cwuser/user')
         self.failIf('vid' in params)
 
     def testr_user_editing_itself_no_relation(self):
@@ -137,7 +137,7 @@ class EditControllerTC(ControllerTC):
                          }
         path, params = self.expect_redirect_publish()
         # should be redirected on the created person
-        self.assertEquals(path, 'euser/adim')
+        self.assertEquals(path, 'cwuser/adim')
         e = self.execute('Any P WHERE P surname "Di Mascio"').get_entity(0, 0)
         self.assertEquals(e.surname, 'Di Mascio')
         email = e.use_email[0]
@@ -329,7 +329,7 @@ class EditControllerTC(ControllerTC):
         self.req.form = {'eid': str(eid), '__type:%s'%eid: 'EmailAddress',
                          '__action_delete': ''}
         path, params = self.expect_redirect_publish()
-        self.assertEquals(path, 'euser/admin')
+        self.assertEquals(path, 'cwuser/admin')
         self.assertEquals(params, {u'__message': u'entity deleted'})
         eid1 = self.add_entity('BlogEntry', title=u'hop', content=u'hop').eid
         eid2 = self.add_entity('EmailAddress', address=u'hop@logilab.fr').eid
@@ -448,7 +448,7 @@ class EditControllerTC(ControllerTC):
                          'upassword:X': u'toto', 'upassword-confirm:X': u'toto', 'edits-upassword:X': u'',
                          }
         path, params = self.expect_redirect_publish()
-        self.assertEquals(path, 'euser/toto')
+        self.assertEquals(path, 'cwuser/toto')
         e = self.execute('Any X WHERE X is CWUser, X login "toto"').get_entity(0, 0)
         self.assertEquals(e.login, 'toto')
         self.assertEquals(e.in_group[0].name, 'managers')
@@ -527,16 +527,18 @@ class JSONControllerTC(EnvBasedTC):
 
     ## tests ##################################################################
     def test_simple_exec(self):
-        ctrl = self.ctrl(self.request(rql='CWUser P WHERE P login "John"',
-                                      pageid='123'))
+        req = self.request(rql='CWUser P WHERE P login "John"',
+                           pageid='123', fname='view')
+        ctrl = self.ctrl(req)
+        rset = self.john.as_rset()
         self.assertTextEquals(ctrl.publish(),
-                              xhtml_wrap(self.john.view('primary')))
+                              xhtml_wrap(ctrl.view('primary', rset)))
 
-    def test_json_exec(self):
-        rql = 'Any T,N WHERE T is Tag, T name N'
-        ctrl = self.ctrl(self.request(mode='json', rql=rql, pageid='123'))
-        self.assertEquals(ctrl.publish(),
-                          simplejson.dumps(self.execute(rql).rows))
+#     def test_json_exec(self):
+#         rql = 'Any T,N WHERE T is Tag, T name N'
+#         ctrl = self.ctrl(self.request(mode='json', rql=rql, pageid='123'))
+#         self.assertEquals(ctrl.publish(),
+#                           simplejson.dumps(self.execute(rql).rows))
 
     def test_remote_add_existing_tag(self):
         self.remote_call('tag_entity', self.john.eid, ['python'])
@@ -562,7 +564,7 @@ class JSONControllerTC(EnvBasedTC):
                          eid)
         self.commit()
         rset = self.execute('CWUser P')
-        # make sure we did not insert a new euser here
+        # make sure we did not insert a new cwuser here
         self.assertEquals(len(rset), nbusers)
         john = self.execute('Any X WHERE X eid %(x)s', {'x': self.john.eid}, 'x').get_entity(0, 0)
         self.assertEquals(john.eid, self.john.eid)
@@ -570,12 +572,12 @@ class JSONControllerTC(EnvBasedTC):
 
 
     def test_pending_insertion(self):
-        res, req = self.remote_call('add_pending_insert', ['12', 'tags', '13'])
+        res, req = self.remote_call('add_pending_inserts', [['12', 'tags', '13']])
         deletes = req.get_pending_deletes()
         self.assertEquals(deletes, [])
         inserts = req.get_pending_inserts()
         self.assertEquals(inserts, ['12:tags:13'])
-        res, req = self.remote_call('add_pending_insert', ['12', 'tags', '14'])
+        res, req = self.remote_call('add_pending_inserts', [['12', 'tags', '14']])
         deletes = req.get_pending_deletes()
         self.assertEquals(deletes, [])
         inserts = req.get_pending_inserts()
@@ -609,7 +611,7 @@ class JSONControllerTC(EnvBasedTC):
 
     def test_remove_pending_operations(self):
         self.remote_call('add_pending_delete', ['12', 'tags', '13'])
-        _, req = self.remote_call('add_pending_insert', ['12', 'tags', '14'])
+        _, req = self.remote_call('add_pending_inserts', [['12', 'tags', '14']])
         inserts = req.get_pending_inserts()
         self.assertEquals(inserts, ['12:tags:14'])
         deletes = req.get_pending_deletes()
@@ -636,7 +638,7 @@ class JSONControllerTC(EnvBasedTC):
                           simplejson.dumps(['bimboom']))
 
     def test_format_date(self):
-        self.assertEquals(self.remote_call('format_date', '"2007-01-01 12:00:00"')[0],
+        self.assertEquals(self.remote_call('format_date', '2007-01-01 12:00:00')[0],
                           simplejson.dumps('2007/01/01'))
 
 

@@ -6,15 +6,16 @@ from cubicweb import CW_SOFTWARE_ROOT as BASE
 from cubicweb.vregistry import VObject
 from cubicweb.cwvreg import CubicWebRegistry, UnknownProperty
 from cubicweb.devtools import TestServerConfiguration
-from cubicweb.entities.lib import Card
 from cubicweb.interfaces import IMileStone
+
+from cubes.card.entities import Card
 
 class YesSchema:
     def __contains__(self, something):
         return True
 
 WEBVIEWSDIR = join(BASE, 'web', 'views')
-    
+
 class VRegistryTC(TestCase):
 
     def setUp(self):
@@ -22,24 +23,26 @@ class VRegistryTC(TestCase):
         self.vreg = CubicWebRegistry(config)
         config.bootstrap_cubes()
         self.vreg.schema = config.load_schema()
-        
+
     def test_load(self):
         self.vreg.init_registration([WEBVIEWSDIR])
-        self.vreg.load_file(join(WEBVIEWSDIR, 'euser.py'), 'cubicweb.web.views.euser')
+        self.vreg.load_file(join(WEBVIEWSDIR, 'cwuser.py'), 'cubicweb.web.views.cwuser')
         self.vreg.load_file(join(WEBVIEWSDIR, 'baseviews.py'), 'cubicweb.web.views.baseviews')
         fpvc = [v for v in self.vreg.registry_objects('views', 'primary')
-               if v.__module__ == 'cubicweb.web.views.euser'][0]
+               if v.__module__ == 'cubicweb.web.views.cwuser'][0]
         fpv = fpvc(None, None)
         # don't want a TypeError due to super call
         self.assertRaises(AttributeError, fpv.render_entity_attributes, None, None)
 
     def test_load_interface_based_vojects(self):
         self.vreg.init_registration([WEBVIEWSDIR])
+        self.vreg.load_file(join(BASE, 'entities', '__init__.py'), 'cubicweb.entities.__init__')
         self.vreg.load_file(join(WEBVIEWSDIR, 'idownloadable.py'), 'cubicweb.web.views.idownloadable')
-        self.vreg.load_file(join(WEBVIEWSDIR, 'baseviews.py'), 'cubicweb.web.views.baseviews')
-        # check loading baseviews after idownloadable isn't kicking interface based views
+        self.vreg.load_file(join(WEBVIEWSDIR, 'primary.py'), 'cubicweb.web.views.primary')
         self.assertEquals(len(self.vreg['views']['primary']), 2)
-                              
+        self.vreg.initialization_completed()
+        self.assertEquals(len(self.vreg['views']['primary']), 1)
+
     def test___selectors__compat(self):
         myselector1 = lambda *args: 1
         myselector2 = lambda *args: 1
@@ -63,10 +66,11 @@ class VRegistryTC(TestCase):
         self.vreg.reset()
         self.vreg._loadedmods[__name__] = {}
         self.vreg.register_vobject_class(MyCard)
-        self.vreg.register_objects([join(BASE, 'web', 'views', 'iprogress.py')])
+        self.vreg.register_objects([join(BASE, 'entities', '__init__.py'),
+                                    join(BASE, 'web', 'views', 'iprogress.py')])
         # check progressbar isn't kicked
         self.assertEquals(len(self.vreg['views']['progressbar']), 1)
-        
+
 
 if __name__ == '__main__':
     unittest_main()

@@ -11,7 +11,7 @@ from logilab import mtconverter
 from logilab.mtconverter.engine import TransformEngine
 from logilab.mtconverter.transform import Transform
 from logilab.mtconverter import (register_base_transforms,
-                                 register_pil_transforms, 
+                                 register_pil_transforms,
                                  register_pygments_transforms)
 
 from cubicweb.common.uilib import rest_publish, html_publish
@@ -31,7 +31,7 @@ class html_to_html(Transform):
     output = 'text/html'
     def _convert(self, trdata):
         return html_publish(trdata.appobject, trdata.data)
-    
+
 
 # Instantiate and configure the transformation engine
 
@@ -47,10 +47,10 @@ except ImportError:
     HAS_TAL = False
     from cubicweb.schema import FormatConstraint
     FormatConstraint.need_perm_formats.remove('text/cubicweb-page-template')
-    
+
 else:
     HAS_TAL = True
-    
+
     class ept_to_html(Transform):
         inputs = ('text/cubicweb-page-template',)
         output = 'text/html'
@@ -65,7 +65,7 @@ if register_pil_transforms(ENGINE, verb=False):
     HAS_PIL_TRANSFORMS = True
 else:
     HAS_PIL_TRANSFORMS = False
-    
+
 try:
     from logilab.mtconverter.transforms import pygmentstransforms
     for mt in ('text/plain',) + HTML_MIMETYPES:
@@ -84,9 +84,9 @@ try:
             return origconvert(self, trdata)
         cls._convert = _convert
     patch_convert(pygmentstransforms.PygmentsHTMLTransform)
-    
+
     HAS_PYGMENTS_TRANSFORMS = True
 except ImportError:
     HAS_PYGMENTS_TRANSFORMS = False
-    
+
 register_base_transforms(ENGINE, verb=False)

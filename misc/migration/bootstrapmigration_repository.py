@@ -7,6 +7,9 @@ it should only include low level schema changes
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 """
 
+if applcubicwebversion < (3, 2, 0) and cubicwebversion >= (3, 2, 0):
+   add_cube('card', update_database=False)
+
 if applcubicwebversion < (2, 47, 0) and cubicwebversion >= (2, 47, 0):
     from cubicweb.server import schemaserial
     schemaserial.HAS_FULLTEXT_CONTAINER = False
@@ -15,7 +18,7 @@ if applcubicwebversion < (2, 47, 0) and cubicwebversion >= (2, 47, 0):
     schemaserial.HAS_FULLTEXT_CONTAINER = True
 
 
- 
+
 if applcubicwebversion < (2, 50, 0) and cubicwebversion >= (2, 50, 0):
     session.set_shared_data('do-not-insert-is_instance_of', True)
     add_relation_type('is_instance_of')
@@ -40,4 +43,4 @@ if applcubicwebversion < (2, 42, 0) and cubicwebversion >= (2, 42, 0):
     sql('CREATE INDEX deleted_entities_dtime_idx ON deleted_entities(dtime)')
     sql('CREATE INDEX deleted_entities_extid_idx ON deleted_entities(extid)')
     checkpoint()
-   
+

@@ -45,7 +45,7 @@ class TimeTableView(AnyRsetView):
                 user = u"*"
             the_dates = []
             if task.start and task.stop:
-                if task.start.absdate == task.stop.absdate:
+                if task.start.toordinal() == task.stop.toordinal():
                     the_dates.append(task.start)
                 else:
                     the_dates += date_range( task.start, task.stop )
@@ -164,7 +164,7 @@ class TimeTableView(AnyRsetView):
             previous_is_empty = False
 
             klass = "even"
-            if date.day_of_week in (5, 6) and not empty_line:
+            if date.weekday() in (5, 6) and not empty_line:
                 klass = "odd"
             self.w(u'<tr class="%s">' % klass)
             odd = not odd

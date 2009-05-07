@@ -1,10 +1,8 @@
 # custom application views
+from datetime import date
 
-from mx.DateTime import DateTime
-
-from cubicweb.web.views import baseviews
-from cubicweb.web.views.boxes import BoxTemplate
-from cubicweb.web.views.calendar import MONTHNAMES
+from cubicweb.utils import last_day
+from cubicweb.web.views import baseviews, boxes, calendar
 from cubicweb.web.htmlwidgets import BoxLink, BoxWidget
 
 _ = unicode
@@ -12,15 +10,15 @@ _ = unicode
 
 class BlogEntryPrimaryView(baseviews.PrimaryView):
     accepts = ('BlogEntry',)
-    
+
     def cell_call(self, row, col):
         entity = self.entity(row, col)
         self.w(u'<h1>%s</h1>' % entity.dc_title())
         entity.view('metadata', w=self.w)
         self.w(entity.printable_value('text'))
-        
 
-class BlogArchiveBox(BoxTemplate):
+
+class BlogArchiveBox(boxes.BoxTemplate):
     """side box usually displaying some related entities in a primary view"""
     id = 'blog_archives_box'
     title = _('blog archives')
@@ -37,12 +35,12 @@ class BlogArchiveBox(BoxTemplate):
                 blogmonths.append( (year, month) )
         box = BoxWidget(_('Blog archives'), id=self.id)
         for year, month in blogmonths:
-            firstday = DateTime(year, month, 1)
-            lastday = DateTime(year, month, firstday.days_in_month)
+            firstday = date(year, month, 1)
+            lastday = last_day(firstday)
             rql = ('Any B WHERE B is BlogEntry, B creation_date >= "%s", B creation_date <= "%s"'
                    % (firstday.strftime('%Y-%m-%d'), lastday.strftime('%Y-%m-%d')))
             url = self.build_url(rql=rql)
-            label = u'%s %s' % (_(MONTHNAMES[month-1]), year)
+            label = u'%s %s' % (_(calendar.MONTHNAMES[month-1]), year)
             box.append( BoxLink(url, label) )
         box.render(self.w)
 

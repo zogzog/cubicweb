@@ -166,12 +166,14 @@ function cancelPendingInsert(elementId, element_name, comboId, eid) {
     if (comboId) {
 	// re-insert option in combobox if it was taken from there
 	var selectNode = getNode(comboId);
+        // XXX what on object relation
 	if (selectNode){
 	   var options = selectNode.options;
 	   var node_id = elementId.substring(0, elementId.indexOf(':'));
 	   options[options.length] = OPTION({'id' : elementId, 'value' : node_id}, entityView);
 	}
     }
+    elementId = elementId.substring(2, elementId.length);
     remoteExec('remove_pending_insert', elementId.split(':'));
 }
 

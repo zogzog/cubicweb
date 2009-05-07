@@ -12,20 +12,24 @@ __docformat__ = "restructuredtext en"
 from rql import parse
 
 from cubicweb.selectors import yes, two_etypes_rset, match_form_params
-from cubicweb.common.uilib import html_escape, toggle_action
 from cubicweb.schema import display_name
-
-from cubicweb.web.htmlwidgets import MenuWidget, PopupBoxMenu, BoxSeparator, BoxLink
-from cubicweb.web.component import Component, RelatedObjectsVComponent
+from cubicweb.common.uilib import html_escape, toggle_action
+from cubicweb.web import uicfg, component
+from cubicweb.web.htmlwidgets import (MenuWidget, PopupBoxMenu, BoxSeparator,
+                                      BoxLink)
 
 _ = unicode
 
+VISIBLE_PROP_DEF = {
+    _('visible'):  dict(type='Boolean', default=False,
+                        help=_('display the component or not')),
+    }
 
-class RQLInputForm(Component):
+class RQLInputForm(component.Component):
     """build the rql input form, usually displayed in the header"""
     id = 'rqlinput'
-    visible = False
-       
+    property_defs = VISIBLE_PROP_DEF
+
     def call(self, view=None):
         if hasattr(view, 'filter_box_context_info'):
             rset = view.filter_box_context_info()[0]
@@ -50,30 +54,36 @@ class RQLInputForm(Component):
         self.w(u'</form></div>')
 
 
-class ApplLogo(Component):
+class ApplLogo(component.Component):
     """build the application logo, usually displayed in the header"""
     id = 'logo'
-    site_wide = True # don't want user to hide this component using an eproperty
+    property_defs = VISIBLE_PROP_DEF
+    # don't want user to hide this component using an cwproperty
+    site_wide = True
+
     def call(self):
         self.w(u'<a href="%s"><img class="logo" src="%s" alt="logo"/></a>'
                % (self.req.base_url(), self.req.external_resource('LOGO')))
 
 
-class ApplHelp(Component):
+class ApplHelp(component.Component):
     """build the help button, usually displayed in the header"""
     id = 'help'
+    property_defs = VISIBLE_PROP_DEF
     def call(self):
         self.w(u'<a href="%s" class="help" title="%s">&nbsp;</a>'
                % (self.build_url(_restpath='doc/main'),
                   self.req._(u'help'),))
 
 
-class UserLink(Component):
+class UserLink(component.Component):
     """if the user is the anonymous user, build a link to login
     else a link to the connected user object with a loggout link
     """
+    property_defs = VISIBLE_PROP_DEF
+    # don't want user to hide this component using an cwproperty
+    site_wide = True
     id = 'loggeduserlink'
-    site_wide = True # don't want user to hide this component using an eproperty
 
     def call(self):
         if not self.req.cnx.anonymous_connection:
@@ -93,7 +103,7 @@ class UserLink(Component):
             box.render(w=self.w)
         else:
             self.anon_user_link()
-            
+
     def anon_user_link(self):
         if self.config['auth-mode'] == 'cookie':
             self.w(self.req._('anonymous'))
@@ -110,13 +120,15 @@ class UserLink(Component):
                    % (self.build_url('login'), self.req._('login')))
 
 
-class ApplicationMessage(Component):
+class ApplicationMessage(component.Component):
     """display application's messages given using the __message parameter
     into a special div section
     """
     __select__ = yes()
     id = 'applmessages'
-    site_wide = True # don't want user to hide this component using an eproperty
+    property_defs = VISIBLE_PROP_DEF
+    # don't want user to hide this component using an cwproperty
+    site_wide = True
 
     def call(self):
         msgs = [msg for msg in (self.req.get_shared_data('sources_error', pop=True),
@@ -129,36 +141,43 @@ class ApplicationMessage(Component):
         self.w(u'</div>')
 
 
-class ApplicationName(Component):
+class ApplicationName(component.Component):
     """display the application name"""
     id = 'appliname'
+    property_defs = VISIBLE_PROP_DEF
 
     def call(self):
         self.w(u'<span id="appliName"><a href="%s">%s</a></span>' % (self.req.base_url(),
                                                          self.req.property_value('ui.site-title')))
-        
 
-class SeeAlsoVComponent(RelatedObjectsVComponent):
+
+uicfg.rdisplay.tag_relation({}, ('*', 'see_also', '*'), 'subject')
+uicfg.rdisplay.tag_relation({}, ('*', 'see_also', '*'), 'object')
+
+class SeeAlsoVComponent(component.RelatedObjectsVComponent):
     """display any entity's see also"""
     id = 'seealso'
     context = 'navcontentbottom'
     rtype = 'see_also'
-    target = 'object'
+    role = 'subject'
     order = 40
     # register msg not generated since no entity use see_also in cubicweb itself
     title = _('contentnavigation_seealso')
     help = _('contentnavigation_seealso_description')
 
-    
-class EtypeRestrictionComponent(Component):
+
+class EtypeRestrictionComponent(component.Component):
     """displays the list of entity types contained in the resultset
     to be able to filter accordingly.
     """
     id = 'etypenavigation'
     __select__ = two_etypes_rset() | match_form_params('__restrtype', '__restrtypes',
                                                        '__restrrql')
+    property_defs = VISIBLE_PROP_DEF
+    # don't want user to hide this component using an cwproperty
+    site_wide = True
     visible = False # disabled by default
-    
+
     def call(self):
         _ = self.req._
         self.w(u'<div id="etyperestriction">')
@@ -197,7 +216,7 @@ class EtypeRestrictionComponent(Component):
             html.insert(0, u'<span class="selected">%s</span>' % _('Any'))
         self.w(u'&nbsp;|&nbsp;'.join(html))
         self.w(u'</div>')
-        
+
 
 def registration_callback(vreg):
     vreg.register_all(globals().values(), __name__, (SeeAlsoVComponent,))

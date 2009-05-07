@@ -16,7 +16,7 @@ __docformat__ = "restructuredtext en"
 
 from rql import nodes
 
-from logilab.mtconverter import TransformError, html_escape
+from logilab.mtconverter import TransformError, html_escape, xml_escape
 
 from cubicweb import NoSelectableObject
 from cubicweb.selectors import yes, empty_rset
@@ -68,6 +68,7 @@ class FinalView(AnyRsetView):
     def cell_call(self, row, col, props=None, displaytime=False, format='text/html'):
         etype = self.rset.description[row][col]
         value = self.rset.rows[row][col]
+       
         if etype == 'String':
             entity, rtype = self.rset.related_entity(row, col)
             if entity is not None:
@@ -89,10 +90,10 @@ class FinalView(AnyRsetView):
                 self.w(self.req.__('%%d%sweeks' % space) % (value.days // 7))
             elif value.days > 2:
                 self.w(self.req.__('%%d%sdays' % space) % int(value.days))
-            elif value.hours > 2:
-                self.w(self.req.__('%%d%shours' % space) % int(value.hours))
-            elif value.minutes >= 2:
-                self.w(self.req.__('%%d%sminutes' % space) % int(value.minutes))
+            elif value.seconds > 3600:
+                self.w(self.req.__('%%d%shours' % space) % int(value.seconds // 3600))
+            elif value.seconds >= 120:
+                self.w(self.req.__('%%d%sminutes' % space) % int(value.seconds // 60))
             else:
                 self.w(self.req.__('%%d%sseconds' % space) % int(value.seconds))
             return
@@ -165,7 +166,7 @@ class MetaDataView(EntityView):
             self.w(u'#%s - ' % entity.eid)
         if entity.modification_date != entity.creation_date:
             self.w(u'<span>%s</span> ' % _('latest update on'))
-            self.w(u'<span class="value">%s</span>, ;'
+            self.w(u'<span class="value">%s</span>, '
                    % self.format_date(entity.modification_date))
         # entities from external source may not have a creation date (eg ldap)
         if entity.creation_date:
@@ -338,7 +339,7 @@ class TextSearchResultView(EntityView):
         highlighted = '<b>%s</b>' % searched
         for attr in entity.e_schema.indexable_attributes():
             try:
-                value = html_escape(entity.printable_value(attr, format='text/plain').lower())
+                value = xml_escape(entity.printable_value(attr, format='text/plain').lower())
             except TransformError, ex:
                 continue
             except:
@@ -373,11 +374,10 @@ except ImportError:
 
 from cubicweb.web.views import boxes, xmlrss, primary
 PrimaryView = class_moved(primary.PrimaryView)
-PRIMARY_SKIP_RELS = primary.PRIMARY_SKIP_RELS
 SideBoxView = class_moved(boxes.SideBoxView)
-XmlView = class_moved(xmlrss.XmlView)
-XmlItemView = class_moved(xmlrss.XmlItemView)
-XmlRsetView = class_moved(xmlrss.XmlRsetView)
-RssView = class_moved(xmlrss.RssView)
-RssItemView = class_moved(xmlrss.RssItemView)
+XmlView = class_moved(xmlrss.XMLView)
+XmlItemView = class_moved(xmlrss.XMLItemView)
+XmlRsetView = class_moved(xmlrss.XMLRsetView)
+RssView = class_moved(xmlrss.RSSView)
+RssItemView = class_moved(xmlrss.RSSItemView)
 

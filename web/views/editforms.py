@@ -18,7 +18,7 @@ from cubicweb.selectors import (match_kwargs, one_line_rset, non_final_entity,
 from cubicweb.utils import make_uid
 from cubicweb.view import EntityView
 from cubicweb.common import tags
-from cubicweb.web import stdmsgs
+from cubicweb.web import INTERNAL_FIELD_VALUE, stdmsgs, eid_param
 from cubicweb.web.form import CompositeForm, EntityFieldsForm, FormViewMixIn
 from cubicweb.web.formwidgets import Button, SubmitButton, ResetButton
 from cubicweb.web.formrenderers import (FormRenderer, EntityFormRenderer,
@@ -33,7 +33,7 @@ def relation_id(eid, rtype, role, reid):
         return u'%s:%s:%s' % (eid, rtype, reid)
     return u'%s:%s:%s' % (reid, rtype, eid)
 
-def toggable_relation_link(eid, nodeid, label='x'):
+def toggleable_relation_link(eid, nodeid, label='x'):
     """return javascript snippet to delete/undelete a relation between two
     entities
     """
@@ -92,33 +92,42 @@ class ClickAndEditFormView(FormViewMixIn, EntityView):
                 "'%(eid)s', '%(divid)s', %(reload)s);")
     ondblclick = "showInlineEditionForm(%(eid)s, '%(rtype)s', '%(divid)s')"
 
-    def cell_call(self, row, col, rtype=None, role='subject', reload=False):
+    def cell_call(self, row, col, rtype=None, role='subject', reload=False,
+                  vid='autolimited'):
         """display field to edit entity's `rtype` relation on double-click"""
+        rschema = self.schema.rschema(rtype)
         entity = self.entity(row, col)
-        if getattr(entity, rtype) is None:
-            value = self.req._('not specified')
+        if rschema.is_final():
+            if getattr(entity, rtype) is None:
+                value = self.req._('not specified')
+            else:
+                value = entity.printable_value(rtype)
         else:
-            value = entity.printable_value(rtype)
+            rset = entity.related(rtype, role)
+            value = self.view(vid, rset, 'null')
         if not entity.has_perm('update'):
             self.w(value)
             return
         eid = entity.eid
-        edit_key = make_uid('%s-%s' % (rtype, eid))
-        divid = 'd%s' % edit_key
-        reload = dumps(reload)
-        buttons = [SubmitButton(stdmsgs.BUTTON_OK, cwaction='apply'),
+        divid = 'd%s' % make_uid('%s-%s' % (rtype, eid))
+        event_data = {'divid' : divid, 'eid' : eid, 'rtype' : rtype,
+                      'reload' : dumps(reload)}
+        buttons = [SubmitButton(stdmsgs.BUTTON_OK),
                    Button(stdmsgs.BUTTON_CANCEL,
-                          onclick="cancelInlineEdit(%s,\'%s\',\'%s\')" % (eid, rtype, divid))]
+                          onclick="cancelInlineEdit(%s,\'%s\',\'%s\')" % (
+                              eid, rtype, divid))]
         form = self.vreg.select_object('forms', 'edition', self.req, self.rset,
                                        row=row, col=col, form_buttons=buttons,
                                        domid='%s-form' % divid, action='#',
                                        cssstyle='display: none',
-                                       onsubmit=self.onsubmit % locals())
+                                       onsubmit=self.onsubmit % event_data)
+        form.form_add_hidden(u'__maineid', entity.eid)
         renderer = FormRenderer(display_label=False, display_help=False,
-                                display_fields=(rtype,), button_bar_class='buttonbar',
+                                display_fields=[(rtype, role)],
+                                table_class='', button_bar_class='buttonbar',
                                 display_progress_div=False)
         self.w(tags.div(value, klass='editableField', id=divid,
-                        ondblclick=self.ondblclick % locals()))
+                        ondblclick=self.ondblclick % event_data))
         self.w(form.form_render(renderer=renderer))
 
 
@@ -219,19 +228,28 @@ class CopyFormView(EditionFormView):
         """fetch and render the form"""
         # make a copy of entity to avoid altering the entity in the
         # request's cache.
+        entity.complete()
         self.newentity = copy(entity)
-        self.copying = self.newentity.eid
-        self.newentity.eid = None
+        self.copying = entity
+        self.initialize_varmaker()
+        self.newentity.eid = self.varmaker.next()
         self.w(u'<script type="text/javascript">updateMessage("%s");</script>\n'
                % self.req._('Please note that this is only a shallow copy'))
-        super(CopyFormView, self).render_form(entity)
+        super(CopyFormView, self).render_form(self.newentity)
         del self.newentity
 
     def init_form(self, form, entity):
         """customize your form before rendering here"""
         super(CopyFormView, self).init_form(form, entity)
         if entity.eid == self.newentity.eid:
-            form.form_add_hidden('__cloned_eid', self.copying, eidparam=True)
+            form.form_add_hidden(eid_param('__cloned_eid', entity.eid),
+                                 self.copying.eid)
+        for rschema, _, role in form.relations_by_category(form.attrcategories,
+                                                           'add'):
+            if not rschema.is_final():
+                # ensure relation cache is filed
+                rset = self.copying.related(rschema, role)
+                self.newentity.set_related_cache(rschema, role, rset)
 
     def submited_message(self):
         """return the message that will be displayed on successful edition"""
@@ -240,12 +258,14 @@ class CopyFormView(EditionFormView):
 
 class TableEditForm(CompositeForm):
     id = 'muledit'
-    onsubmit = "return validateForm('entityForm', null);"
+    domid = 'entityForm'
+    onsubmit = "return validateForm('%s', null);" % domid
     form_buttons = [SubmitButton(_('validate modifications on selected items')),
                     ResetButton(_('revert changes'))]
 
-    def __init__(self, *args, **kwargs):
-        super(TableEditForm, self).__init__(*args, **kwargs)
+    def __init__(self, req, rset, **kwargs):
+        kwargs.setdefault('__redirectrql', rset.printable_rql())
+        super(TableEditForm, self).__init__(req, rset, **kwargs)
         for row in xrange(len(self.rset)):
             form = self.vreg.select_object('forms', 'edition', self.req, self.rset,
                                            row=row, attrcategories=('primary',),
@@ -307,7 +327,7 @@ class InlineEntityEditionFormView(FormViewMixIn, EntityView):
 
     def add_hiddens(self, form, entity, peid, rtype, role):
         # to ease overriding (see cubes.vcsfile.views.forms for instance)
-        if self.keep_entity(entity, peid, rtype):
+        if self.keep_entity(form, entity, peid, rtype):
             if entity.has_eid():
                 rval = entity.eid
             else:
@@ -316,14 +336,13 @@ class InlineEntityEditionFormView(FormViewMixIn, EntityView):
         form.form_add_hidden(name='%s:%s' % (rtype, peid), value=entity.eid,
                              id='rel-%s-%s-%s'  % (peid, rtype, entity.eid))
 
-    def keep_entity(self, entity, peid, rtype):
+    def keep_entity(self, form, entity, peid, rtype):
         if not entity.has_eid():
             return True
         # are we regenerating form because of a validation error ?
-        erroneous_post = self.req.data.get('formvalues')
         if erroneous_post:
-            cdvalues = self.req.list_form_param('%s:%s' % (rtype, peid),
-                                                erroneous_post)
+            cdvalues = self.req.list_form_param(eid_param(rtype, peid),
+                                                form.form_previous_values)
             if unicode(entity.eid) not in cdvalues:
                 return False
         return True

@@ -239,7 +239,7 @@ class EnvBasedTC(TestCase):
         """remote call simulation"""
         dump = simplejson.dumps
         args = [dump(arg) for arg in args]
-        req = self.request(mode='remote', fname=fname, pageid='123', arg=args)
+        req = self.request(fname=fname, pageid='123', arg=args)
         ctrl = self.env.app.select_controller('json', req)
         return ctrl.publish(), req
 

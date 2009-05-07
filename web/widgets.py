@@ -63,7 +63,7 @@ class Widget(object):
     autoid = True
     html_attributes = set(('id', 'class', 'tabindex', 'accesskey', 'onchange', 'onkeypress'))
     cubicwebns_attributes = set()
-    
+
     def __init__(self, vreg, subjschema, rschema, objschema,
                  role='subject', description=None,
                  **kwattrs):
@@ -83,12 +83,12 @@ class Widget(object):
         because widget instances are cached)
         """
         # brute force copy (subclasses don't have the
-        # same __init__ prototype) 
+        # same __init__ prototype)
         widget = self.__new__(self.__class__)
         widget.__dict__ = dict(self.__dict__)
         widget.attrs = dict(widget.attrs)
         return widget
-    
+
     @staticmethod
     def size_constraint_attrs(attrs, maxsize):
         """set html attributes in the attrs dict to consider maxsize"""
@@ -105,7 +105,7 @@ class Widget(object):
             elif name in self.html_attributes:
                 attrs.append(u'%s="%s"' % (name, value))
         return u' '.join(sorted(attrs))
-        
+
     def required(self, entity):
         """indicates if the widget needs a value to be filled in"""
         card = self.rschema.cardinality(self.subjtype, self.objtype, self.role)
@@ -116,7 +116,7 @@ class Widget(object):
             return self.rname
         except AttributeError:
             return eid_param(self.name, entity.eid)
-    
+
     def render_label(self, entity, label=None):
         """render widget's label"""
         label = label or self.rschema.display_name(entity.req, self.role)
@@ -130,7 +130,7 @@ class Widget(object):
         else:
             label = u'<label%s>%s</label>' % (forattr, label)
         return label
-    
+
     def render_error(self, entity):
         """return validation error for widget's field of the given entity, if
         any
@@ -144,25 +144,26 @@ class Widget(object):
     def render_help(self, entity):
         """render a help message about the (edited) field"""
         req = entity.req
-        help = [u'<br/>']
+        help = [u'<div class="helper">']
         descr = self.description or self.rschema.rproperty(self.subjtype, self.objtype, 'description')
         if descr:
-            help.append(u'<span class="helper">%s</span>' % req._(descr))
+            help.append(u'<span>%s</span>' % req._(descr))
         example = self.render_example(req)
         if example:
-            help.append(u'<span class="helper">(%s: %s)</span>'
+            help.append(u'<span>(%s: %s)</span>'
                         % (req._('sample format'), example))
+	help.append(u'</div>')
         return u'&nbsp;'.join(help)
-    
+
     def render_example(self, req):
         return u''
-        
+
     def render(self, entity):
         """render the widget for a simple view"""
         if not entity.has_eid():
             return u''
         return entity.printable_value(self.name)
-    
+
     def edit_render(self, entity, tabindex=None,
                     includehelp=False, useid=None, **kwargs):
         """render the widget for edition"""
@@ -180,7 +181,7 @@ class Widget(object):
         if includehelp:
             output += self.render_help(entity)
         return output
-    
+
     def _edit_render(self, entity):
         """do the actual job to render the widget for edition"""
         raise NotImplementedError
@@ -196,7 +197,7 @@ class Widget(object):
         elif entity.has_eid():
             return [row[0] for row in entity.related(self.name, self.role)]
         return ()
-            
+
     def current_value(self, entity):
         return _value_from_values(self.current_values(entity))
 
@@ -213,13 +214,13 @@ class Widget(object):
         if not isinstance(cdvalues, (list, tuple)):
             cdvalues = (cdvalues,)
         return cdvalues
-    
+
     def current_display_value(self, entity):
         """same as .current_value but consider values stored in session in case
         of validation error
         """
         return _value_from_values(self.current_display_values(entity))
-    
+
     def hidden_input(self, entity, qvalue):
         """return an hidden field which
         1. indicates that a field is edited
@@ -258,7 +259,7 @@ class HiddenWidget(InputWidget):
     def __init__(self, vreg, subjschema, rschema, objschema,
                  role='subject', **kwattrs):
         InputWidget.__init__(self, vreg, subjschema, rschema, objschema,
-                             role='subject', 
+                             role='subject',
                              **kwattrs)
         # disable access key
         del self.attrs['accesskey']
@@ -270,18 +271,18 @@ class HiddenWidget(InputWidget):
     def current_display_value(self, entity):
         value = InputWidget.current_display_value(self, entity)
         return value or INTERNAL_FIELD_VALUE
-    
+
     def render_label(self, entity, label=None):
         """render widget's label"""
         return u''
-    
+
     def render_help(self, entity):
         return u''
-    
+
     def hidden_input(self, entity, value):
         """no hidden input for hidden input"""
         return ''
-    
+
 
 class EidWidget(HiddenWidget):
 
@@ -297,15 +298,15 @@ class StringWidget(InputWidget):
         """set html attributes in the attrs dict to consider maxsize"""
         attrs['size'] = min(maxsize, 40)
         attrs['maxlength'] = maxsize
-        
-        
+
+
 class AutoCompletionWidget(StringWidget):
     cubicwebns_attributes = (StringWidget.cubicwebns_attributes |
                           set(('accesskey', 'size', 'maxlength')))
     attrs = ()
-    
+
     wdgtype = 'SuggestField'
-    
+
     def current_value(self, entity):
         value = StringWidget.current_value(self, entity)
         return value or INTERNAL_FIELD_VALUE
@@ -344,22 +345,22 @@ class AutoCompletionWidget(StringWidget):
 
 class StaticFileAutoCompletionWidget(AutoCompletionWidget):
     wdgtype = 'StaticFileSuggestField'
-    
+
     def _get_url(self, entity):
         return entity.req.datadir_url + entity.autocomplete_initfuncs[self.rschema]
 
 class RestrictedAutoCompletionWidget(AutoCompletionWidget):
-    wdgtype = 'RestrictedSuggestField'    
+    wdgtype = 'RestrictedSuggestField'
 
-    
+
 class PasswordWidget(InputWidget):
     input_type = 'password'
-    
+
     def required(self, entity):
         if InputWidget.required(self, entity) and not entity.has_eid():
             return True
         return False
-    
+
     def current_values(self, entity):
         # on existant entity, show password field has non empty (we don't have
         # the actual value
@@ -374,10 +375,10 @@ class PasswordWidget(InputWidget):
             html, self.input_type, name, name, entity.req.next_tabindex(),
             entity.req._('confirm password'))
 
-    
+
 class TextWidget(Widget):
     html_attributes = Widget.html_attributes | set(('rows', 'cols'))
-    
+
     @staticmethod
     def size_constraint_attrs(attrs, maxsize):
         """set html attributes in the attrs dict to consider maxsize"""
@@ -385,12 +386,12 @@ class TextWidget(Widget):
             attrs['cols'], attrs['rows'] = 60, 5
         else:
             attrs['cols'], attrs['rows'] = 80, 10
-    
+
     def render(self, entity):
         if not entity.has_eid():
             return u''
         return entity.printable_value(self.name)
-        
+
     def _edit_render(self, entity, with_format=True):
         req = entity.req
         editor = self._edit_render_textarea(entity, with_format)
@@ -398,7 +399,7 @@ class TextWidget(Widget):
         if isinstance(value, basestring):
             value = html_escape(value)
         return u'%s%s' % (self.hidden_input(entity, value), editor)
-    
+
     def _edit_render_textarea(self, entity, with_format):
         self.attrs.setdefault('cols', 80)
         self.attrs.setdefault('rows', 20)
@@ -426,8 +427,8 @@ class TextWidget(Widget):
             fmtwdgstr = ''
         return u'%s<br/><textarea onkeypress="autogrow(this)" name="%s" %s>%s</textarea>' % (
             fmtwdgstr, self.rname, self.format_attrs(), dvalue)
-            
-    
+
+
 class CheckBoxWidget(Widget):
     html_attributes = Widget.html_attributes | set(('checked', ))
     def _edit_render(self, entity):
@@ -460,7 +461,7 @@ class YesNoRadioWidget(CheckBoxWidget):
                 u'<input type="radio" name="%s" value="" %s/>%s<br/>' % (self.rname, attrs2, entity.req._('no'))]
         return '\n'.join(wdgs)
 
-    
+
 class FileWidget(Widget):
     need_multipart = True
     def _file_wdg(self, entity):
@@ -492,7 +493,7 @@ class FileWidget(Widget):
                 wdgs.append(u'<br/>')
                 wdgs.append(req._('currently attached file: %s' % entity.dc_title()))
         return '\n'.join(wdgs)
-    
+
     def _edit_render(self, entity):
         return self.hidden_input(entity, None) + self._file_wdg(entity)
 
@@ -510,7 +511,7 @@ class TextFileWidget(FileWidget):
                 'You can either submit a new file using the browse button above'
                 ', or edit file content online with the widget below.')
         return msg
-    
+
     def _edit_render(self, entity):
         wdgs = [self._file_wdg(entity)]
         if entity.attr_metadata(self.name, 'format') in ('text/plain', 'text/html', 'text/rest'):
@@ -534,7 +535,7 @@ class TextFileWidget(FileWidget):
 
 class ComboBoxWidget(Widget):
     html_attributes = Widget.html_attributes | set(('multiple', 'size'))
-    
+
     def __init__(self, vreg, subjschema, rschema, objschema,
                  multiple=False, **kwattrs):
         super(ComboBoxWidget, self).__init__(vreg, subjschema, rschema, objschema,
@@ -545,10 +546,10 @@ class ComboBoxWidget(Widget):
                 self.attrs['size'] = '5'
         # disable access key (dunno why but this is not allowed by xhtml 1.0)
         del self.attrs['accesskey']
-        
+
     def vocabulary(self, entity):
         raise NotImplementedError()
-    
+
     def form_value(self, entity, value, values):
         if value in values:
             flag = 'selected="selected"'
@@ -574,9 +575,9 @@ class ComboBoxWidget(Widget):
         res.append(u'</select>')
         return '\n'.join(res)
 
- 
+
 class StaticComboBoxWidget(ComboBoxWidget):
-    
+
     def __init__(self, vreg, subjschema, rschema, objschema,
                  vocabfunc, multiple=False, sort=False, **kwattrs):
         super(StaticComboBoxWidget, self).__init__(vreg, subjschema, rschema, objschema,
@@ -591,11 +592,11 @@ class StaticComboBoxWidget(ComboBoxWidget):
         if self.rschema.rproperty(self.subjtype, self.objtype, 'internationalizable'):
             return zip((entity.req._(v) for v in choices), choices)
         return zip(choices, choices)
-    
+
 
 class EntityLinkComboBoxWidget(ComboBoxWidget):
     """to be used be specific forms"""
-    
+
     def current_values(self, entity):
         if entity.has_eid():
             return [r[0] for r in entity.related(self.name, self.role)]
@@ -603,13 +604,13 @@ class EntityLinkComboBoxWidget(ComboBoxWidget):
         if hasattr(entity, defaultmeth):
             return getattr(entity, defaultmeth)()
         return ()
-    
+
     def vocabulary(self, entity):
         return [('', INTERNAL_FIELD_VALUE)] + entity.vocabulary(self.rschema, self.role)
 
 
 class RawDynamicComboBoxWidget(EntityLinkComboBoxWidget):
-    
+
     def vocabulary(self, entity, limit=None):
         req = entity.req
         # first see if its specified by __linkto form parameters
@@ -632,7 +633,7 @@ class RawDynamicComboBoxWidget(EntityLinkComboBoxWidget):
 
 
 class DynamicComboBoxWidget(RawDynamicComboBoxWidget):
-    
+
     def vocabulary(self, entity, limit=None):
         return sorted(super(DynamicComboBoxWidget, self).vocabulary(entity, limit))
 
@@ -669,11 +670,11 @@ class IntegerWidget(StringWidget):
         kwattrs['size'] = 5
         kwattrs['maxlength'] = 15
         StringWidget.__init__(self, vreg, subjschema, rschema, objschema, **kwattrs)
-        
+
     def render_example(self, req):
         return '23'
-    
-        
+
+
 class FloatWidget(StringWidget):
     def __init__(self, vreg, subjschema, rschema, objschema, **kwattrs):
         kwattrs['size'] = 5
@@ -683,7 +684,7 @@ class FloatWidget(StringWidget):
     def render_example(self, req):
         formatstr = req.property_value('ui.float-format')
         return formatstr % 1.23
-    
+
     def current_values(self, entity):
         values = entity.attribute_values(self.name)
         if values:
@@ -702,7 +703,7 @@ class DecimalWidget(StringWidget):
         kwattrs['size'] = 5
         kwattrs['maxlength'] = 15
         StringWidget.__init__(self, vreg, subjschema, rschema, objschema, **kwattrs)
-        
+
     def render_example(self, req):
         return '345.0300'
 
@@ -724,7 +725,7 @@ class DateWidget(StringWidget):
         daynames = [_(dname) for dname in cls.daynames]
         req.html_headers.define_var('MONTHNAMES', monthnames)
         req.html_headers.define_var('DAYNAMES', daynames)
-    
+
     def __init__(self, vreg, subjschema, rschema, objschema, **kwattrs):
         kwattrs.setdefault('size', 10)
         kwattrs.setdefault('maxlength', 10)
@@ -734,12 +735,12 @@ class DateWidget(StringWidget):
         values = entity.attribute_values(self.name)
         if values and hasattr(values[0], 'strftime'):
             formatstr = entity.req.property_value(self.format_key)
-            return [values[0].strftime(formatstr)]
+            return [values[0].strftime(str(formatstr))]
         return values
 
     def render_example(self, req):
         formatstr = req.property_value(self.format_key)
-        return datetime.now().strftime(formatstr)
+        return datetime.now().strftime(str(formatstr))
 
 
     def _edit_render(self, entity):
@@ -750,14 +751,15 @@ class DateWidget(StringWidget):
     def render_help(self, entity):
         """calendar popup widget"""
         req = entity.req
-        help = [ u'<br/>' ]
+        help = [ u'<div class="helper">' ]
         descr = self.rschema.rproperty(self.subjtype, self.objtype, 'description')
         if descr:
-            help.append('<span class="helper">%s</span>' % req._(descr))
+            help.append('<span>%s</span>' % req._(descr))
         example = self.render_example(req)
         if example:
-            help.append('<span class="helper">(%s: %s)</span>'
+            help.append('<span>(%s: %s)</span>'
                         % (req._('sample format'), example))
+        help.append(u'</div>')
         return u'&nbsp;'.join(help)
 
     def render_calendar_popup(self, entity):
@@ -784,13 +786,13 @@ class DateTimeWidget(DateWidget):
         kwattrs['size'] = 16
         kwattrs['maxlength'] = 16
         DateWidget.__init__(self, vreg, subjschema, rschema, objschema, **kwattrs)
-    
+
     def render_example(self, req):
         formatstr1 = req.property_value('ui.datetime-format')
         formatstr2 = req.property_value('ui.date-format')
         return req._('%(fmt1)s, or without time: %(fmt2)s') % {
-            'fmt1': datetime.now().strftime(formatstr1),
-            'fmt2': datetime.now().strftime(formatstr2),
+            'fmt1': datetime.now().strftime(str(formatstr1)),
+            'fmt2': datetime.now().strftime(str(formatstr2)),
             }
 
 
@@ -801,26 +803,26 @@ class TimeWidget(StringWidget):
         kwattrs['maxlength'] = 5
         StringWidget.__init__(self, vreg, subjschema, rschema, objschema, **kwattrs)
 
-        
+
 class EmailWidget(StringWidget):
-    
+
     def render(self, entity):
         email = getattr(entity, self.name)
         if not email:
             return u''
         return u'<a href="mailto:%s">%s</a>' % (email, email)
-        
+
 class URLWidget(StringWidget):
-    
+
     def render(self, entity):
         url = getattr(entity, self.name)
         if not url:
             return u''
         url = html_escape(url)
         return u'<a href="%s">%s</a>' % (url, url)
-    
+
 class EmbededURLWidget(StringWidget):
-    
+
     def render(self, entity):
         url = getattr(entity, self.name)
         if not url:
@@ -828,7 +830,7 @@ class EmbededURLWidget(StringWidget):
         aurl = html_escape(entity.build_url('embed', url=url))
         return u'<a href="%s">%s</a>' % (aurl, url)
 
-    
+
 
 def widget_factory(vreg, subjschema, rschema, objschema, role='subject',
                    **kwargs):
@@ -857,14 +859,14 @@ def widget_factory(vreg, subjschema, rschema, objschema, role='subject',
 
 
 # factories to find the most adapated widget according to a type and other constraints
-                
+
 def _string_widget_factory(vreg, subjschema, rschema, objschema, wcls=None, **kwargs):
     w = None
     for c in rschema.rproperty(subjschema, objschema, 'constraints'):
         if isinstance(c, StaticVocabularyConstraint):
             # may have been set by a previous SizeConstraint but doesn't make sense
             # here (even doesn't have the same meaning on a combobox actually)
-            kwargs.pop('size', None) 
+            kwargs.pop('size', None)
             return (wcls or StaticComboBoxWidget)(vreg, subjschema, rschema, objschema,
                                                   vocabfunc=c.vocabulary, **kwargs)
         if isinstance(c, SizeConstraint) and c.max is not None:
@@ -914,7 +916,7 @@ _WFACTORIES = {
     'String' :  StringWidget,
     'Time':     TimeWidget,
     }
-    
+
 # widgets registry
 WIDGETS = {}
 def register(widget_list):

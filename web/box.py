@@ -166,14 +166,15 @@ class EditRelationBoxTemplate(ReloadableMixIn, EntityBoxTemplate):
     class attributes.
     """
 
-    def cell_call(self, row, col, view=None):
+    def cell_call(self, row, col, view=None, **kwargs):
         self.req.add_js('cubicweb.ajax.js')
         entity = self.entity(row, col)
         box = SideBoxWidget(display_name(self.req, self.rtype), self.id)
         count = self.w_related(box, entity)
         if count:
             box.append(BoxSeparator())
-        self.w_unrelated(box, entity)
+        if not self.w_unrelated(box, entity):
+            del box.items[-1] # remove useless separator
         box.render(self.w)
 
     def div_id(self):
@@ -201,8 +202,11 @@ class EditRelationBoxTemplate(ReloadableMixIn, EntityBoxTemplate):
     def w_unrelated(self, box, entity):
         """appends unrelated entities to the `box`"""
         rql = 'SET S %s O WHERE S eid %%(s)s, O eid %%(o)s' % self.rtype
+        i = 0
         for etarget in self.unrelated_entities(entity):
             box.append(self.box_item(entity, etarget, rql, u'+'))
+            i += 1
+        return i
 
     def unrelated_entities(self, entity):
         """returns the list of unrelated entities
@@ -215,7 +219,10 @@ class EditRelationBoxTemplate(ReloadableMixIn, EntityBoxTemplate):
             return entity.unrelated(self.rtype, self.etype, get_role(self)).entities()
         # in other cases, use vocabulary functions
         entities = []
-        for _, eid in entity.vocabulary(self.rtype, get_role(self)):
+        form = self.vreg.select_object('forms', 'edition', self.req, self.rset,
+                                       row=self.row or 0)
+        field = form.field_by_name(self.rtype, get_role(self), entity.e_schema)
+        for _, eid in form.form_field_vocabulary(field):
             if eid is not None:
                 rset = self.req.eid_rset(eid)
                 entities.append(rset.get_entity(0, 0))

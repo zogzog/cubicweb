@@ -320,8 +320,8 @@ class EditionForm(FormMixIn, EntityView):
     # should_* method extracted to allow overriding
     
     def should_inline_relation_form(self, entity, rschema, targettype, role):
-        return AutomaticEntityForm.rinlined.etype_rtag(entity.id, rschema, role,
-                                                       targettype)
+        return AutomaticEntityForm.rinlined.etype_get(entity.id, rschema, role,
+                                                      targettype)
 
     def should_display_inline_relation_form(self, rschema, existant, card):
         return not existant and card in '1+'
@@ -423,8 +423,8 @@ class InlineFormMixIn(object):
     def should_inline_relation_form(self, entity, rschema, targettype, role):
         if rschema == self.rschema:
             return False
-        return AutomaticEntityForm.rinlined.etype_rtag(entity.id, rschema, role,
-                                                       targettype)
+        return AutomaticEntityForm.rinlined.etype_get(entity.id, rschema, role,
+                                                      targettype)
 
     @cached
     def keep_entity(self, entity):

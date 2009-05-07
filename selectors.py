@@ -51,7 +51,8 @@ from logilab.common.interface import implements as implements_iface
 
 from yams import BASE_TYPES
 
-from cubicweb import Unauthorized, NoSelectableObject, NotAnEntity, role
+from cubicweb import (Unauthorized, NoSelectableObject, NotAnEntity,
+                      role, typed_eid)
 from cubicweb.vregistry import (NoSelectableObject, Selector,
                                 chainall, objectify_selector)
 from cubicweb.cwconfig import CubicWebConfiguration
@@ -527,6 +528,20 @@ class match_user_groups(match_search_state):
             else:
                 score = all(user.owns(r[col]) for r in rset)
         return score
+
+
+class match_transition(match_search_state):
+    @lltrace
+    def __call__(self, cls, req, rset=None, row=None, col=0, **kwargs):
+        try:
+            trname = req.execute('Any XN WHERE X is Transition, X eid %(x)s, X name XN',
+                                 {'x': typed_eid(req.form['treid'])})[0][0]
+        except (KeyError, IndexError):
+            return 0
+        # XXX check this is a transition that apply to the object?
+        if not trname in self.expected:
+            return 0
+        return 1
 
 
 class match_view(match_search_state):
@@ -1096,7 +1111,8 @@ def accepts_compat(registered):
     def plug_selector(cls, vreg):
         cls = registered(cls, vreg)
         if getattr(cls, 'accepts', None):
-            warn('use "implements("EntityType", IFace)" instead of using accepts',
+            warn('use "implements("EntityType", IFace)" instead of using accepts on %s'
+                 % cls,
                  DeprecationWarning)
             cls.__select__ &= implements(*cls.accepts)
         return cls

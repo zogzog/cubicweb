@@ -14,24 +14,29 @@ from yams import schema2dot as s2d
 from cubicweb.selectors import implements, yes
 from cubicweb.schemaviewer import SchemaViewer
 from cubicweb.view import EntityView, StartupView
-from cubicweb.common.uilib import ureport_as_html
-from cubicweb.web import uicfg, action
-from cubicweb.web.views import TmpFileViewMixin, baseviews
+from cubicweb.common import tags, uilib
+from cubicweb.web import uicfg, formwidgets, action
+from cubicweb.web.views import TmpFileViewMixin, primary, baseviews
 
 
-uicfg.rcategories.set_rtag('primary', 'require_group', 'subject', 'CWPermission')
-uicfg.rcategories.set_rtag('generated', 'final', 'subject', 'EEtype')
-uicfg.rcategories.set_rtag('generated', 'final', 'subject', 'ERtype')
-uicfg.rinlined.set_rtag(True, 'relation_type', 'subject', 'CWRelation')
-uicfg.rinlined.set_rtag(True, 'from_entity', 'subject', 'CWRelation')
-uicfg.rinlined.set_rtag(True, 'to_entity', 'subject', 'CWRelation')
-uicfg.rwidgets.set_rtag('StringWidget', 'expression', 'subject', 'RQLExpression')
+uicfg.rcategories.tag_relation('primary', ('CWPermission', 'require_group', '*'), 'subject')
+uicfg.rcategories.tag_attribute('generated', 'EEtype', 'final')
+uicfg.rcategories.tag_attribute('generated', 'ERtype', 'final')
+uicfg.rinlined.tag_relation(True, ('CWRelation', 'relation_type', '*'), 'subject')
+uicfg.rinlined.tag_relation(True, ('CWRelation', 'from_entity', '*'), 'subject')
+uicfg.rinlined.tag_relation(True, ('CWRelation', 'to_entity', '*'), 'subject')
+uicfg.rwidgets.tag_attribute(formwidgets.TextInput, 'RQLExpression', 'expression')
 
-uicfg.rmode.set_rtag('create', 'state_of', 'object', 'CWEType')
-uicfg.rmode.set_rtag('create', 'transition_of', 'object', 'CWEType')
-uicfg.rmode.set_rtag('create', 'relation_type', 'object', 'CWRType')
-uicfg.rmode.set_rtag('link', 'from_entity', 'object', 'CWEType')
-uicfg.rmode.set_rtag('link', 'to_entity', 'object', 'CWEType')
+uicfg.rmode.tag_relation('create', ('*', 'state_of', 'CWEType'), 'object')
+uicfg.rmode.tag_relation('create', ('*', 'transition_of', 'CWEType'), 'object')
+uicfg.rmode.tag_relation('create', ('*', 'relation_type', 'CWRType'), 'object')
+uicfg.rmode.tag_relation('link', ('*', 'from_entity', 'CWEType'), 'object')
+uicfg.rmode.tag_relation('link', ('*', 'to_entity', 'CWEType'), 'object')
+
+for attr in ('name', 'meta', 'final'):
+    uicfg.rdisplay.tag_attribute({}, 'CWRType', attr)
+for attr in ('name', 'meta', 'final', 'symetric', 'inlined'):
+    uicfg.rdisplay.tag_attribute({}, 'CWRType', attr)
 
 
 class ViewSchemaAction(action.Action):
@@ -48,25 +53,13 @@ class ViewSchemaAction(action.Action):
 
 # schema entity types views ###################################################
 
-class _SchemaEntityPrimaryView(baseviews.PrimaryView):
-    show_attr_label = False
+class CWRDEFPrimaryView(primary.PrimaryView):
+    __select__ = implements('CWAttribute', 'CWRelation')
     cache_max_age = 60*60*2 # stay in http cache for 2 hours by default
 
     def content_title(self, entity):
         return html_escape(entity.dc_long_title())
 
-class CWETypePrimaryView(_SchemaEntityPrimaryView):
-    __select__ = implements('CWEType')
-    skip_attrs = _SchemaEntityPrimaryView.skip_attrs + ('name', 'meta', 'final')
-
-class CWRTypePrimaryView(_SchemaEntityPrimaryView):
-    __select__ = implements('CWRType')
-    skip_attrs = _SchemaEntityPrimaryView.skip_attrs + ('name', 'meta', 'final',
-                                                        'symetric', 'inlined')
-
-class ErdefPrimaryView(_SchemaEntityPrimaryView):
-    __select__ = implements('CWAttribute', 'CWRelation')
-    show_attr_label = True
 
 class CWETypeOneLineView(baseviews.OneLineView):
     __select__ = implements('CWEType')
@@ -82,41 +75,44 @@ class CWETypeOneLineView(baseviews.OneLineView):
 
 
 # in memory schema views (yams class instances) ###############################
+SKIPPED_RELS = ('is', 'is_instance_of', 'identity', 'created_by', 'owned_by',
+                'has_text',)
 
-class CWETypeSchemaView(CWETypePrimaryView):
+class CWETypeSchemaView(primary.PrimaryView):
     id = 'eschema'
+    __select__ = implements('CWEType')
     title = _('in memory entity schema')
     main_related_section = False
-    skip_rels = ('is', 'is_instance_of', 'identity', 'created_by', 'owned_by',
-                 'has_text',)
+    skip_rels = SKIPPED_RELS
 
-    def render_entity_attributes(self, entity, siderelations):
-        super(CWETypeSchemaView, self).render_entity_attributes(entity, siderelations)
+    def render_entity_attributes(self, entity):
+        super(CWETypeSchemaView, self).render_entity_attributes(entity)
         eschema = self.vreg.schema.eschema(entity.name)
         viewer = SchemaViewer(self.req)
         layout = viewer.visit_entityschema(eschema, skiprels=self.skip_rels)
-        self.w(ureport_as_html(layout))
+        self.w(uilib.ureport_as_html(layout))
         if not eschema.is_final():
-            self.w(u'<img src="%s" alt="%s"/>' % (
-                html_escape(entity.absolute_url(vid='eschemagraph')),
-                html_escape(self.req._('graphical schema for %s') % entity.name)))
+            msg = self.req._('graphical schema for %s') % entity.name
+            self.w(tags.img(src=entity.absolute_url(vid='eschemagraph'),
+                            alt=msg))
 
 
-class CWRTypeSchemaView(CWRTypePrimaryView):
+class CWRTypeSchemaView(primary.PrimaryView):
     id = 'eschema'
+    __select__ = implements('CWRType')
     title = _('in memory relation schema')
     main_related_section = False
 
-    def render_entity_attributes(self, entity, siderelations):
-        super(CWRTypeSchemaView, self).render_entity_attributes(entity, siderelations)
+    def render_entity_attributes(self, entity):
+        super(CWRTypeSchemaView, self).render_entity_attributes(entity)
         rschema = self.vreg.schema.rschema(entity.name)
         viewer = SchemaViewer(self.req)
         layout = viewer.visit_relationschema(rschema)
-        self.w(ureport_as_html(layout))
+        self.w(uilib.ureport_as_html(layout))
         if not rschema.is_final():
-            self.w(u'<img src="%s" alt="%s"/>' % (
-                html_escape(entity.absolute_url(vid='eschemagraph')),
-                html_escape(self.req._('graphical schema for %s') % entity.name)))
+            msg = self.req._('graphical schema for %s') % entity.name
+            self.w(tags.img(src=entity.absolute_url(vid='eschemagraph'),
+                            alt=msg))
 
 
 # schema images ###############################################################
@@ -198,8 +194,9 @@ class OneHopRSchemaVisitor(RestrictedSchemaVisitorMiIn, s2d.OneHopRSchemaVisitor
 
 class SchemaImageView(TmpFileViewMixin, StartupView):
     id = 'schemagraph'
+
     content_type = 'image/png'
-    skip_rels = ('owned_by', 'created_by', 'identity', 'is', 'is_instance_of')
+    skip_rels = SKIPPED_RELS
     def _generate(self, tmpfile):
         """display global schema information"""
         skipmeta = not int(self.req.form.get('withmeta', 0))
@@ -209,9 +206,10 @@ class SchemaImageView(TmpFileViewMixin, StartupView):
 
 class CWETypeSchemaImageView(TmpFileViewMixin, EntityView):
     id = 'eschemagraph'
-    content_type = 'image/png'
     __select__ = implements('CWEType')
-    skip_rels = ('owned_by', 'created_by', 'identity', 'is', 'is_instance_of')
+
+    content_type = 'image/png'
+    skip_rels = SKIPPED_RELS
 
     def _generate(self, tmpfile):
         """display schema information for an entity"""

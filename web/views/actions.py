@@ -154,7 +154,7 @@ class ManagePermissionsAction(Action):
 
     title = _('manage permissions')
     category = 'moreactions'
-    order = 100
+    order = 15
 
     @classmethod
     def registered(cls, vreg):
@@ -248,7 +248,7 @@ class UserInfoAction(Action):
     order = 20
 
     def url(self):
-        return self.build_url('euser/%s'%self.req.user.login, vid='edition')
+        return self.build_url('cwuser/%s'%self.req.user.login, vid='edition')
 
 
 class LogoutAction(Action):
