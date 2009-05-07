@@ -52,11 +52,16 @@ def need_table_view(rset, schema):
             return True
     return False
 
-
+VID_BY_MIMETYPE = {'text/xml': 'xml',
+                   # XXX rss, owl...
+                  }
 def vid_from_rset(req, rset, schema):
     """given a result set, return a view id"""
     if rset is None:
         return 'index'
+    for mimetype in req.parse_accept_header('Accept'):
+        if mimetype in VID_FROM_RSET:
+            return VID_FROM_RSET[mimetype]
     nb_rows = len(rset)
     # empty resultset
     if nb_rows == 0 :
@@ -72,7 +77,7 @@ def vid_from_rset(req, rset, schema):
         return 'list'
     return 'table'
 
-    
+
 def linksearch_select_url(req, rset):
     """when searching an entity to create a relation, return an url to select
     entities in the given rset
@@ -85,16 +90,16 @@ def linksearch_select_url(req, rset):
         id_fmt = '%%s:%s:%s' % (r_type, eid)
     triplets = '-'.join(id_fmt % row[0] for row in rset.rows)
     return "javascript: selectForAssociation('%s', '%s');" % (triplets, eid)
-                
-        
+
+
 class TmpFileViewMixin(object):
     binary = True
     content_type = 'application/octet-stream'
-    cache_max_age = 60*60*2 # stay in http cache for 2 hours by default 
-    
+    cache_max_age = 60*60*2 # stay in http cache for 2 hours by default
+
     def call(self):
         self.cell_call()
-        
+
     def cell_call(self, row=0, col=0):
         self.row, self.col = row, col # in case one need it
         tmpfile = mktemp('.png')

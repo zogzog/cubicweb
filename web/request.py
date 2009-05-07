@@ -598,21 +598,33 @@ class CubicWebRequestBase(DBAPIRequest):
                            auth, ex.__class__.__name__, ex)
         return None, None
 
+    @obsolete("use parse_accept_header('Accept-Language')")
     def header_accept_language(self):
         """returns an ordered list of preferred languages"""
-        acceptedlangs = self.get_header('Accept-Language', '')
-        langs = []
-        for langinfo in acceptedlangs.split(','):
+        return [value.split('-')[0] for value in
+                self.parse_accept_header('Accept-Language')]
+
+    def parse_accept_header(self, header):
+        """returns an ordered list of preferred languages"""
+        accepteds = self.get_header(header, '')
+        values = []
+        for info in accepteds.split(','):
             try:
-                lang, score = langinfo.split(';')
-                score = float(score[2:]) # remove 'q='
+                value, scores = info.split(';', 1)
             except ValueError:
-                lang = langinfo
+                value = info
                 score = 1.0
-            lang = lang.split('-')[0]
-            langs.append( (score, lang) )
-        langs.sort(reverse=True)
-        return (lang for (score, lang) in langs)
+            else:
+                for score in scores.split(';'):
+                    try:
+                        scorekey, scoreval = score.split('=')
+                        if scorekey = 'q': # XXX 'level'
+                            score = float(score[2:]) # remove 'q='
+                    except ValueError:
+                        continue
+            values.append(value, score)
+        values.sort(reverse=True)
+        return (value for (score, value) in values)
 
     def header_if_modified_since(self):
         """If the HTTP header If-modified-since is set, return the equivalent
