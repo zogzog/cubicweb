@@ -72,6 +72,7 @@ def date_range(begin, end, incday=None, incmonth=None):
     """
     assert not (incday and incmonth)
     begin = todate(begin)
+    end = todate(end)
     if incmonth:
         while begin < end:
             begin = next_month(begin, incmonth)
