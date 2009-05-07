@@ -68,6 +68,7 @@ class FinalView(AnyRsetView):
     def cell_call(self, row, col, props=None, displaytime=False, format='text/html'):
         etype = self.rset.description[row][col]
         value = self.rset.rows[row][col]
+       
         if etype == 'String':
             entity, rtype = self.rset.related_entity(row, col)
             if entity is not None:
@@ -89,10 +90,10 @@ class FinalView(AnyRsetView):
                 self.w(self.req.__('%%d%sweeks' % space) % (value.days // 7))
             elif value.days > 2:
                 self.w(self.req.__('%%d%sdays' % space) % int(value.days))
-            elif value.hours > 2:
-                self.w(self.req.__('%%d%shours' % space) % int(value.hours))
-            elif value.minutes >= 2:
-                self.w(self.req.__('%%d%sminutes' % space) % int(value.minutes))
+            elif value.seconds > 3600:
+                self.w(self.req.__('%%d%shours' % space) % int(value.seconds // 3600))
+            elif value.seconds >= 120:
+                self.w(self.req.__('%%d%sminutes' % space) % int(value.seconds // 60))
             else:
                 self.w(self.req.__('%%d%sseconds' % space) % int(value.seconds))
             return
