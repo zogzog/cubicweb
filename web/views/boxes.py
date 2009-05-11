@@ -71,10 +71,7 @@ class EditBox(BoxTemplate):
         """return a string telling if the given relation is usually created
         to a new entity ('create' mode) or to an existant entity ('link' mode)
         """
-        if role == 'subject':
-            return cls.rmode.get(rtype, role, etype, targettype)
-        return cls.rmode.get(rtype, role, targettype, etype)
-
+        return cls.rmode.etype_get(etype, rtype, role, targettype)
 
     def call(self, view=None, **kwargs):
         _ = self.req._
