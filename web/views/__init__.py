@@ -60,8 +60,8 @@ def vid_from_rset(req, rset, schema):
     if rset is None:
         return 'index'
     for mimetype in req.parse_accept_header('Accept'):
-        if mimetype in VID_FROM_RSET:
-            return VID_FROM_RSET[mimetype]
+        if mimetype in VID_BY_MIMETYPE:
+            return VID_BY_MIMETYPE[mimetype]
     nb_rows = len(rset)
     # empty resultset
     if nb_rows == 0 :
