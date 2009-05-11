@@ -623,7 +623,7 @@ class CubicWebRequestBase(DBAPIRequest):
                             score = float(score[2:]) # remove 'q='
                     except ValueError:
                         continue
-            values.append(value, score)
+            values.append((score, value))
         values.sort(reverse=True)
         return (value for (score, value) in values)
 
