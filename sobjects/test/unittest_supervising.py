@@ -17,12 +17,12 @@ class SupervisingTC(EnvBasedTC):
         self.execute('SET C comments B WHERE B title "une autre news !", C content "Yo !"')
         self.vreg.config.global_set_option('supervising-addrs', 'test@logilab.fr')
 
-        
+
     def test_supervision(self):
         session = self.session()
         # do some modification
         ueid = self.execute('INSERT CWUser X: X login "toto", X upassword "sosafe", X in_group G, X in_state S '
-                            'WHERE G name "users", S name "activated"')[0][0]        
+                            'WHERE G name "users", S name "activated"')[0][0]
         self.execute('SET X last_login_time NOW WHERE X eid %(x)s', {'x': ueid}, 'x')
         self.execute('SET X in_state S WHERE X login "anon", S name "deactivated"')
         self.execute('DELETE Card B WHERE B title "une news !"')
@@ -38,7 +38,7 @@ class SupervisingTC(EnvBasedTC):
         view = sentops[0]._get_view()
         self.assertEquals(view.recipients(), ['test@logilab.fr'])
         self.assertEquals(view.subject(), '[data supervision] changes summary')
-        data = view.dispatch(changes=session.query_data('pendingchanges')).strip()
+        data = view.render(changes=session.query_data('pendingchanges')).strip()
         data = re.sub('#\d+', '#EID', data)
         data = re.sub('/\d+', '/EID', data)
         self.assertTextEquals('''user admin has made the following change(s):
@@ -63,9 +63,9 @@ class SupervisingTC(EnvBasedTC):
                               data)
         # check prepared email
         op._prepare_email()
-        self.assertEquals(len(op.to_send), 1) 
+        self.assertEquals(len(op.to_send), 1)
         self.assert_(op.to_send[0][0])
-        self.assertEquals(op.to_send[0][1], ['test@logilab.fr']) 
+        self.assertEquals(op.to_send[0][1], ['test@logilab.fr'])
 
     def test_nonregr1(self):
         session = self.session()
@@ -73,6 +73,6 @@ class SupervisingTC(EnvBasedTC):
         self.execute('SET X last_login_time NOW WHERE X eid %(x)s', {'x': session.user.eid}, 'x')
         self.commit() # no crash
 
-        
+
 if __name__ == '__main__':
     unittest_main()

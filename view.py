@@ -125,7 +125,7 @@ class View(AppRsetObject):
 
     # main view interface #####################################################
 
-    def dispatch(self, w=None, **context):
+    def render(self, w=None, **context):
         """called to render a view object for a result set.
 
         This method is a dispatched to an actual method selected
@@ -149,6 +149,8 @@ class View(AppRsetObject):
         # return stream content if we have created it
         if stream is not None:
             return self._stream.getvalue()
+
+    dispatch = obsolete('.dispatch is deprecated, use .render')(render)
 
     # should default .call() method add a <div classs="section"> around each
     # rset item

@@ -25,10 +25,10 @@ from cubicweb.web.views.boxes import EditBox
 
 _ = unicode
 
-EditBox.rmode.tag_relation('create', ('Transition', 'destination_state', '*'), 'subject')
-EditBox.rmode.tag_relation('create', ('*', 'allowed_transition', 'Transition'), 'object')
-EditBox.rmode.tag_relation('create', ('*', 'destination_state', 'State'), 'object')
-EditBox.rmode.tag_relation('create', ('State', 'allowed_transition', '*'), 'subject')
+EditBox.rmode.tag_relation('!Transition', 'destination_state', '*', 'create')
+EditBox.rmode.tag_relation('*', 'allowed_transition', '!Transition', 'create')
+EditBox.rmode.tag_relation('*', 'destination_state', '!State', 'create')
+EditBox.rmode.tag_relation('!State', 'allowed_transition', '*', 'create')
 
 
 # IWorkflowable views #########################################################

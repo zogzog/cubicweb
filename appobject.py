@@ -194,7 +194,7 @@ class AppRsetObject(VObject):
             if __fallback_vid is None:
                 raise
             view = self.vreg.select_view(__fallback_vid, self.req, rset, **kwargs)
-        return view.dispatch(**kwargs)
+        return view.render(**kwargs)
 
     # url generation methods ##################################################
 

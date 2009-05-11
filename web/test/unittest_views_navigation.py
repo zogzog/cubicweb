@@ -9,7 +9,7 @@ from cubicweb.web.views.ibreadcrumbs import BreadCrumbEntityVComponent
 BreadCrumbEntityVComponent.visible = True
 
 class NavigationTC(EnvBasedTC):
-    
+
     def test_navigation_selection(self):
         rset = self.execute('Any X,N WHERE X name N')
         req = self.request()
@@ -39,29 +39,29 @@ class NavigationTC(EnvBasedTC):
         req.set_search_state('W:X:Y:Z')
         navcomp = self.vreg.select_component('navigation', req, rset)
         self.assertIsInstance(navcomp, SortedNavigation)
-        
-        
+
+
     def test_sorted_navigation(self):
         rset = self.execute('Any X,N ORDERBY N WHERE X name N')
         req = self.request()
         req.set_search_state('W:X:Y:Z')
         navcomp = self.vreg.select_component('navigation', rset.req, rset)
-        html = navcomp.dispatch()
+        html = navcomp.render()
         rset = self.execute('Any RDEF ORDERBY RT WHERE RDEF relation_type RT')
         navcomp = self.vreg.select_component('navigation', req, rset)
-        html = navcomp.dispatch()
+        html = navcomp.render()
         rset = self.execute('Any RDEF ORDERBY RDEF WHERE RDEF relation_type RT')
         navcomp = self.vreg.select_component('navigation', req, rset)
-        html = navcomp.dispatch()
+        html = navcomp.render()
         rset = self.execute('CWAttribute RDEF ORDERBY RDEF')
         navcomp = self.vreg.select_component('navigation', req, rset)
-        html = navcomp.dispatch()
+        html = navcomp.render()
         rset = self.execute('Any RDEF ORDERBY N WHERE RDEF relation_type RT, RT name N')
         navcomp = self.vreg.select_component('navigation', req, rset)
-        html = navcomp.dispatch()
+        html = navcomp.render()
         rset = self.execute('Any N, COUNT(RDEF) GROUPBY N ORDERBY N WHERE RDEF relation_type RT, RT name N')
         navcomp = self.vreg.select_component('navigation', rset.req, rset)
-        html = navcomp.dispatch()
+        html = navcomp.render()
 
 
 
@@ -87,15 +87,15 @@ class ContentNavigationTC(EnvBasedTC):
         req.cnx.commit()
         objs = self.vreg.possible_vobjects('contentnavigation', req, rset,
                                           view=view, context='navbottom')
-        
+
         clsids = [obj.id for obj in objs]
         self.failUnless('breadcrumbs' in clsids)
         objs = self.vreg.possible_vobjects('contentnavigation', req, rset,
                                           view=view, context='navtop')
-        
+
         clsids = [obj.id for obj in objs]
         self.failIf('breadcrumbs' in clsids)
-        
+
 
 if __name__ == '__main__':
     unittest_main()

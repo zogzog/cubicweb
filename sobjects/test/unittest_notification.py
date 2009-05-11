@@ -22,7 +22,7 @@ class MessageIdTC(TestCase):
         self.failUnlessEqual(values['eid'], '21')
         self.failUnless('timestamp' in values)
         self.failUnlessEqual(parse_message_id(msgid1[1:-1], 'anotherapp'), None)
-        
+
     def test_notimestamp(self):
         msgid1 = construct_message_id('testapp', 21, False)
         msgid2 = construct_message_id('testapp', 21, False)
@@ -39,7 +39,7 @@ class MessageIdTC(TestCase):
         for eid in (1, 12, 123, 1234):
             msgid1 = construct_message_id('testapp', eid, 12)
             self.assertNotEquals(msgid1, '<@testapp.%s>' % gethostname())
-        
+
 
 class RecipientsFinderTC(EnvBasedTC):
     def test(self):
@@ -57,19 +57,19 @@ class RecipientsFinderTC(EnvBasedTC):
         self.set_option('default-recipients-mode', 'default-dest-addrs')
         self.set_option('default-dest-addrs', 'abcd@logilab.fr, efgh@logilab.fr')
         self.assertEquals(finder.recipients(), [('abcd@logilab.fr', 'en'), ('efgh@logilab.fr', 'en')])
-        
+
 
 class StatusChangeViewsTC(EnvBasedTC):
-        
+
     def test_status_change_view(self):
         req = self.session()
         u = self.create_user('toto', req=req)
         assert u.req
         self.execute('SET X in_state S WHERE X eid %s, S name "deactivated"' % u.eid)
         v = self.vreg.select_view('notif_status_change', req, u.rset, row=0)
-        content = v.dispatch(row=0, comment='yeah',
-                             previous_state='activated',
-                             current_state='deactivated')
+        content = v.render(row=0, comment='yeah',
+                           previous_state='activated',
+                           current_state='deactivated')
         # remove date
         self.assertEquals(content,
                           '''

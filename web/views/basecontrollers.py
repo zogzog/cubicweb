@@ -312,7 +312,7 @@ class JSonController(Controller):
             view.pagination(req, rset, view.w, not view.need_navigation)
             if divid == 'pageContent':
                 stream.write(u'<div id="contentmain">')
-        view.dispatch()
+        view.render()
         extresources = req.html_headers.getvalue(skiphead=True)
         if extresources:
             stream.write(u'<div class="ajaxHtmlHead">\n') # XXX use a widget ?
@@ -349,7 +349,7 @@ class JSonController(Controller):
             extraargs = dict((str(key), value)
                              for key, value in extraargs.items())
         extraargs = extraargs or {}
-        return comp.dispatch(**extraargs)
+        return comp.render(**extraargs)
 
     @check_pageid
     @xhtmlize
@@ -357,7 +357,7 @@ class JSonController(Controller):
         view = self.vreg.select_view('inline-creation', self.req, None,
                                      etype=ttype, peid=peid, rtype=rtype,
                                      role=role)
-        return view.dispatch(etype=ttype, peid=peid, rtype=rtype, role=role)
+        return view.render(etype=ttype, peid=peid, rtype=rtype, role=role)
 
     @jsonize
     def js_validate_form(self, action, names, values):

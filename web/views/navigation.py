@@ -153,7 +153,7 @@ def limit_rset_using_paged_nav(self, req, rset, w, forcedisplay=False,
     if nav:
         # get boundaries before component rendering
         start, stop = nav.page_boundaries()
-        nav.dispatch(w=w)
+        nav.render(w=w)
         params = dict(req.form)
         nav.clean_params(params)
         # make a link to see them all
