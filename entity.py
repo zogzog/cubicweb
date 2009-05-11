@@ -46,7 +46,6 @@ _CATEGORY_TAGS = set(('primary', 'secondary', 'generic', 'generated')) # , 'meta
 
 try:
     from cubicweb.web import formwidgets, uicfg
-    from cubicweb.web.views.editforms import AutomaticEntityForm
 
     def _dispatch_rtags(tags, rtype, role, stype, otype):
         for tag in tags:
@@ -60,6 +59,7 @@ try:
                 raise ValueError(tag)
 
 except ImportError:
+
     _dispatch_rtags = None
 
 def _get_etype(bases, classdict):
@@ -128,7 +128,7 @@ class _metaentity(type):
                         wdgname = 'TextInput'
                     widget = getattr(formwidgets, wdgname)
                     assert hasattr(widget, 'render')
-                    AutomaticEntityForm.rwidgets.tag_relation(
+                    uicfg.rwidgets.tag_relation(
                         etype, rtype, '*', widget, tagged='subject')
         return super(_metaentity, mcs).__new__(mcs, name, bases, classdict)
 
