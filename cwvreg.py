@@ -189,7 +189,7 @@ class CubicWebRegistry(VRegistry):
         except KeyError:
             rset = None
         selected = self.select(objclss, req, rset, **context)
-        return selected.dispatch(**context)
+        return selected.render(**context)
 
     def main_template(self, req, oid='main-template', **context):
         """display query by calling the given template (default to main),

@@ -5,14 +5,23 @@ class RelationTagsTC(TestCase):
 
     def test_rtags_expansion(self):
         rtags = RelationTags()
-        rtags.tag_relation('primary', ('Societe', 'travaille', '*'), 'subject', )
-        rtags.tag_relation('secondary', ('*', 'evaluee', '*'), 'subject')
-        rtags.tag_relation('generated', ('*', 'tags', '*'), 'object')        
-        self.assertEquals(rtags.get('evaluee', 'subject', 'Note'), 'secondary')
-        self.assertEquals(rtags.get('travaille', 'subject', 'Societe'), 'primary')
-        self.assertEquals(rtags.get('travaille', 'subject', 'Note'), None)
-        self.assertEquals(rtags.get('tags', 'subject', 'Note'), None)
-        self.assertEquals(rtags.get('tags', 'object', 'Note'), 'generated')
+        rtags.tag_relation('!Societe', 'travaille', '*', 'primary')
+        rtags.tag_relation('!*', 'evaluee', '*', 'secondary')
+        rtags.tag_relation('*', 'tags', '!*', 'generated')
+        self.assertEquals(rtags.get('!Note', 'evaluee', '*'),
+                          'secondary')
+        self.assertEquals(rtags.get('Note', 'evaluee', '*', 'subject'),
+                          'secondary')
+        self.assertEquals(rtags.get('!Societe', 'travaille', '*'),
+                          'primary')
+        self.assertEquals(rtags.get('!Note', 'travaille', '*'),
+                          None)
+        self.assertEquals(rtags.get('!Note', 'tags', '*'),
+                          None)
+        self.assertEquals(rtags.get('*', 'tags', '!Note'),
+                          'generated')
+        self.assertEquals(rtags.get('Tag', 'tags', '!*'),
+                          'generated')
 
 #         self.assertEquals(rtags.rtag('evaluee', 'Note', 'subject'), set(('secondary', 'link')))
 #         self.assertEquals(rtags.is_inlined('evaluee', 'Note', 'subject'), False)
@@ -35,11 +44,16 @@ class RelationTagsTC(TestCase):
 
     def test_rtagset_expansion(self):
         rtags = RelationTagsSet()
-        rtags.tag_relation('primary', ('Societe', 'travaille', '*'), 'subject', )
-        rtags.tag_relation('secondary', ('*', 'travaille', '*'), 'subject')
-        self.assertEquals(rtags.get('travaille', 'subject', 'Societe'), set(('primary', 'secondary')))
-        self.assertEquals(rtags.get('travaille', 'subject', 'Note'), set(('secondary',)))
-        self.assertEquals(rtags.get('tags', 'subject', 'Note'), set())
+        rtags.tag_relation('!Societe', 'travaille', '*', 'primary')
+        rtags.tag_relation('!*', 'travaille', '*', 'secondary')
+        self.assertEquals(rtags.get('!Societe', 'travaille', '*'),
+                          set(('primary', 'secondary')))
+        self.assertEquals(rtags.get('Societe', 'travaille', '*', 'subject'),
+                          set(('primary', 'secondary')))
+        self.assertEquals(rtags.get('!Note', 'travaille', '*'),
+                          set(('secondary',)))
+        self.assertEquals(rtags.get('!Note', 'tags', "*"),
+                          set())
 
 if __name__ == '__main__':
     unittest_main()

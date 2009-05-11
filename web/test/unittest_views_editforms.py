@@ -9,13 +9,12 @@ def rbc(entity, category):
 class AutomaticEntityFormTC(EnvBasedTC):
 
     def test_custom_widget(self):
-        AEF.rwidgets.tag_relation(AutoCompletionWidget,
-                                  ('CWUser', 'login', '*'), 'subject')
+        AEF.rwidgets.tag_relation('!CWUser', 'login', '*', AutoCompletionWidget)
         form = self.vreg.select_object('forms', 'edition', self.request(), None,
                                        entity=self.user())
         field = form.field_by_name('login')
         self.assertIsInstance(field.widget, AutoCompletionWidget)
-        AEF.rwidgets.del_rtag(('CWUser', 'login', '*'),'subject')
+        AEF.rwidgets.del_rtag('!CWUser', 'login', '*')
 
 
     def test_euser_relations_by_category(self):

@@ -339,5 +339,5 @@ class PropertyValueField(StringField):
         self.widget = wdg
 
 
-uicfg.rfields.tag_relation(PropertyKeyField, ('CWProperty', 'pkey', '*'), 'subject')
-uicfg.rfields.tag_relation(PropertyValueField, ('CWProperty', 'value', '*'), 'subject')
+uicfg.rfields.tag_attribute('CWProperty', 'pkey', PropertyKeyField)
+uicfg.rfields.tag_attribute('CWProperty', 'value', PropertyValueField)

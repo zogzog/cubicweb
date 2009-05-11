@@ -151,8 +151,8 @@ class ApplicationName(component.Component):
                                                          self.req.property_value('ui.site-title')))
 
 
-uicfg.rdisplay.tag_relation({}, ('*', 'see_also', '*'), 'subject')
-uicfg.rdisplay.tag_relation({}, ('*', 'see_also', '*'), 'object')
+uicfg.rdisplay.tag_relation('!*', 'see_also', '*', {})
+uicfg.rdisplay.tag_relation('*', 'see_also', '!*', {})
 
 class SeeAlsoVComponent(component.RelatedObjectsVComponent):
     """display any entity's see also"""
