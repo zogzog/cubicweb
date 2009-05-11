@@ -41,7 +41,7 @@ class RelationTags(object):
                 raise AssertionError('either stype or rtype should have the '
                                      'role mark ("!")')
         else:
-            assert tagged in ('subject', 'object'), tagged
+            assert tagged in ('subject', 'object'), repr(tagged)
         return stype, otype, tagged
 
     def _get_keys(self, stype, rtype, otype, tagged=None):
