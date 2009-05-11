@@ -60,7 +60,7 @@ class CWRDEFPrimaryView(primary.PrimaryView):
     def render_entity_title(self, entity):
         self.w(u'<h1><span class="etype">%s</span> %s</h1>'
                % (entity.dc_type().capitalize(),
-                  html_escape(entity.dc_long_title()))
+                  html_escape(entity.dc_long_title())))
 
 
 class CWETypeOneLineView(baseviews.OneLineView):
