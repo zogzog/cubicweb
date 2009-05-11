@@ -9,7 +9,7 @@ __docformat__ = "restructuredtext en"
 from datetime import date
 
 from cubicweb.common import tags
-from cubicweb.web import INTERNAL_FIELD_VALUE, stdmsgs
+from cubicweb.web import stdmsgs, INTERNAL_FIELD_VALUE
 
 
 class FieldWidget(object):
@@ -50,6 +50,8 @@ class FieldWidget(object):
         """
         name = form.context[field]['name']
         values = form.context[field]['value']
+        if not values:
+            values = (INTERNAL_FIELD_VALUE,)
         if not isinstance(values, (tuple, list)):
             values = (values,)
         attrs = dict(self.attrs)
