@@ -58,8 +58,8 @@ class PrimaryView(EntityView):
                             where = 'sideboxes'
                         displayinfo = {'where': where,
                                        'order': cls.rdisplay.get_timestamp()}
-                        cls.rdisplay.tag_relation(displayinfo, (X, rschema, Y),
-                                                  role)
+                        cls.rdisplay.tag_relation(X, rschema, Y, displayinfo,
+                                                  tagged=role)
                     if role == 'subject':
                         displayinfo.setdefault('label', rschema.type)
                     else:

@@ -14,19 +14,18 @@ from cubicweb.web import uicfg, action
 from cubicweb.web.views import primary
 
 
-uicfg.rcategories.tag_relation('secondary', ('CWUser', 'firstname', '*'), 'subject')
-uicfg.rcategories.tag_relation('secondary', ('CWUser', 'surname', '*'), 'subject')
-uicfg.rcategories.tag_relation('metadata', ('CWUser', 'last_login_time', '*'), 'subject')
-uicfg.rcategories.tag_relation('primary', ('CWUser', 'in_group', '*'), 'subject')
-uicfg.rcategories.tag_relation('generated', ('*', 'owned_by', 'CWUser'), 'object')
-uicfg.rcategories.tag_relation('generated', ('*', 'created_by', 'CWUser'), 'object')
-uicfg.rcategories.tag_relation('metadata', ('*', 'bookmarked_by', 'CWUser'), 'object')
-uicfg.rmode.tag_relation('create', ('*', 'in_group', 'CWGroup'), 'object')
-uicfg.rmode.tag_relation('link', ('*', 'owned_by', 'CWUser'), 'object')
-uicfg.rmode.tag_relation('link', ('*', 'created_by', 'CWUser'), 'object')
-uicfg.rmode.tag_relation('create', ('*', 'bookmarked_by', 'CWUser'), 'object')
-uicfg.rdisplay.tag_attribute({}, 'CWUser', 'firstname')
-uicfg.rdisplay.tag_attribute({}, 'CWUser', 'surname')
+uicfg.rcategories.tag_attribute('CWUser', 'firstname', 'secondary')
+uicfg.rcategories.tag_attribute('CWUser', 'surname', 'secondary')
+uicfg.rcategories.tag_attribute('CWUser', 'last_login_time', 'metadata')
+uicfg.rcategories.tag_relation('!CWUser', 'in_group', '*', 'primary')
+uicfg.rcategories.tag_relation('*', 'owned_by', '!CWUser', 'generated')
+uicfg.rcategories.tag_relation('*', 'created_by', '!CWUser', 'generated')
+uicfg.rcategories.tag_relation('*', 'bookmarked_by', '!CWUser', 'metadata')
+
+uicfg.rmode.tag_relation('*', 'in_group', '!CWGroup', 'create')
+uicfg.rmode.tag_relation('*', 'owned_by', '!CWUser', 'link')
+uicfg.rmode.tag_relation('*', 'created_by', '!CWUser', 'link')
+uicfg.rmode.tag_relation('*', 'bookmarked_by', '!CWUser', 'create')
 
 
 class UserPreferencesEntityAction(action.Action):

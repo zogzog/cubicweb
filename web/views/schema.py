@@ -19,24 +19,26 @@ from cubicweb.web import uicfg, formwidgets, action
 from cubicweb.web.views import TmpFileViewMixin, primary, baseviews
 
 
-uicfg.rcategories.tag_relation('primary', ('CWPermission', 'require_group', '*'), 'subject')
-uicfg.rcategories.tag_attribute('generated', 'EEtype', 'final')
-uicfg.rcategories.tag_attribute('generated', 'ERtype', 'final')
-uicfg.rinlined.tag_relation(True, ('CWRelation', 'relation_type', '*'), 'subject')
-uicfg.rinlined.tag_relation(True, ('CWRelation', 'from_entity', '*'), 'subject')
-uicfg.rinlined.tag_relation(True, ('CWRelation', 'to_entity', '*'), 'subject')
-uicfg.rwidgets.tag_attribute(formwidgets.TextInput, 'RQLExpression', 'expression')
+uicfg.rcategories.tag_relation('!CWPermission', 'require_group', '*', 'primary')
+uicfg.rcategories.tag_attribute('EEtype', 'final', 'generated')
+uicfg.rcategories.tag_attribute('ERtype', 'final', 'generated')
 
-uicfg.rmode.tag_relation('create', ('*', 'state_of', 'CWEType'), 'object')
-uicfg.rmode.tag_relation('create', ('*', 'transition_of', 'CWEType'), 'object')
-uicfg.rmode.tag_relation('create', ('*', 'relation_type', 'CWRType'), 'object')
-uicfg.rmode.tag_relation('link', ('*', 'from_entity', 'CWEType'), 'object')
-uicfg.rmode.tag_relation('link', ('*', 'to_entity', 'CWEType'), 'object')
+uicfg.rinlined.tag_relation('!CWRelation', 'relation_type', '*', True)
+uicfg.rinlined.tag_relation('!CWRelation', 'from_entity', '*', True)
+uicfg.rinlined.tag_relation('!CWRelation', 'to_entity', '*', True)
+
+uicfg.rwidgets.tag_attribute('RQLExpression', 'expression', formwidgets.TextInput)
+
+uicfg.rmode.tag_relation('*', 'state_of', '!CWEType', 'create')
+uicfg.rmode.tag_relation('*', 'transition_of', '!CWEType', 'create')
+uicfg.rmode.tag_relation('*', 'relation_type', '!CWRType', 'create')
+uicfg.rmode.tag_relation('*', 'from_entity', '!CWEType', 'link')
+uicfg.rmode.tag_relation('*', 'to_entity', '!CWEType', 'link')
 
 for attr in ('name', 'meta', 'final'):
-    uicfg.rdisplay.tag_attribute({}, 'CWRType', attr)
+    uicfg.rdisplay.tag_attribute('CWRType', attr, {})
 for attr in ('name', 'meta', 'final', 'symetric', 'inlined'):
-    uicfg.rdisplay.tag_attribute({}, 'CWRType', attr)
+    uicfg.rdisplay.tag_attribute('CWRType', attr, {})
 
 
 class ViewSchemaAction(action.Action):
