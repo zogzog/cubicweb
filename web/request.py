@@ -17,6 +17,7 @@ from itertools import count
 from rql.utils import rqlvar_maker
 
 from logilab.common.decorators import cached
+from logilab.common.deprecation import obsolete
 
 from cubicweb.dbapi import DBAPIRequest
 from cubicweb.common.mail import header
@@ -618,7 +619,7 @@ class CubicWebRequestBase(DBAPIRequest):
                 for score in scores.split(';'):
                     try:
                         scorekey, scoreval = score.split('=')
-                        if scorekey = 'q': # XXX 'level'
+                        if scorekey == 'q': # XXX 'level'
                             score = float(score[2:]) # remove 'q='
                     except ValueError:
                         continue
