@@ -57,8 +57,10 @@ class CWRDEFPrimaryView(primary.PrimaryView):
     __select__ = implements('CWAttribute', 'CWRelation')
     cache_max_age = 60*60*2 # stay in http cache for 2 hours by default
 
-    def content_title(self, entity):
-        return html_escape(entity.dc_long_title())
+    def render_entity_title(self, entity):
+        self.w(u'<h1><span class="etype">%s</span> %s</h1>'
+               % (entity.dc_type().capitalize(),
+                  html_escape(entity.dc_long_title()))
 
 
 class CWETypeOneLineView(baseviews.OneLineView):

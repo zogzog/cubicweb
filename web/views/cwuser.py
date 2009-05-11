@@ -42,13 +42,6 @@ class UserPreferencesEntityAction(action.Action):
         return self.build_url('cwuser/%s'%login, vid='epropertiesform')
 
 
-class CWUserPrimaryView(primary.PrimaryView):
-    __select__ = implements('CWUser')
-
-    def content_title(self, entity):
-        return entity.name()
-
-
 class FoafView(EntityView):
     id = 'foaf'
     __select__ = implements('CWUser')

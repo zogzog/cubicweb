@@ -133,15 +133,11 @@ class PrimaryView(EntityView):
         self.w(u'</div>')
 
     def render_entity_title(self, entity):
-        title = self.content_title(entity) # deprecate content_title?
+        """default implementation return dc_title"""
+        title = html_escape(entity.dc_title())
         if title:
             self.w(u'<h1><span class="etype">%s</span> %s</h1>'
                    % (entity.dc_type().capitalize(), title))
-
-
-    def content_title(self, entity):
-        """default implementation return dc_title"""
-        return html_escape(entity.dc_title())
 
     def render_entity_metadata(self, entity):
         entity.view('metadata', w=self.w)
