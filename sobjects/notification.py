@@ -198,8 +198,9 @@ class NotificationView(EntityView):
             # since the same view (eg self) may be called multiple time and we
             # need a fresh stream at each iteration, reset it explicitly
             self.w = None
-            # call dispatch before subject to set .row/.col attributes on the view :/
-            content = self.dispatch(row=0, col=0, **kwargs)
+            # XXX call render before subject to set .row/.col attributes on the
+            #     view
+            content = self.render(row=0, col=0, **kwargs)
             subject = self.subject()
             msg = format_mail(userdata, [emailaddr], content, subject,
                               config=self.config, msgid=msgid, references=refs)

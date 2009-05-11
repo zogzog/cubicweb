@@ -79,7 +79,7 @@ class ManageView(StartupView):
 
     def folders(self):
         self.w(u'<h4>%s</h4>\n' % self.req._('Browse by category'))
-        self.vreg.select_view('tree', self.req, None).dispatch(w=self.w)
+        self.vreg.select_view('tree', self.req, None).render(w=self.w)
 
     def startup_views(self):
         self.w(u'<h4>%s</h4>\n' % self.req._('Startup views'))

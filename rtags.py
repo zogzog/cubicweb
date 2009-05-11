@@ -63,7 +63,7 @@ class RelationTags(object):
         self._tagdefs[(str(rtype), tagged, stype, otype)] = tag
 
     def tag_attribute(self, stype, attr, tag):
-        self.tag_relation(stype, attr, '*', tag, tagged)
+        self.tag_relation(stype, attr, '*', tag, 'subject')
 
     def del_rtag(self, stype, rtype, otype):
         stype, otype, tagged = self._get_tagged(stype, otype)

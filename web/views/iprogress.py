@@ -32,7 +32,7 @@ class ProgressTableView(EntityView):
 
     header_for_COLNAME methods allow to customize header's label
     """
-    
+
     id = 'progress_table_view'
     title = _('task progression')
     __select__ = implements(IMileStone)
@@ -87,7 +87,7 @@ class ProgressTableView(EntityView):
     def header_for_milestone(self, ecls):
         """use entity's type as label"""
         return display_name(self.req, ecls.id)
-    
+
     def table_header(self, ecls):
         """builds the table's header"""
         self.w(u'<thead><tr>')
@@ -101,7 +101,7 @@ class ProgressTableView(EntityView):
             self.w(u'<th>%s</th>' % html_escape(colname))
         self.w(u'</tr></thead>\n')
 
-    
+
     ## cell management ########################################################
     def build_project_cell(self, entity):
         """``project`` column cell renderer"""
@@ -117,7 +117,7 @@ class ProgressTableView(EntityView):
     def build_state_cell(self, entity):
         """``state`` column cell renderer"""
         return html_escape(self.req._(entity.state))
-    
+
     def build_eta_date_cell(self, entity):
         """``eta_date`` column cell renderer"""
         if entity.finished():
@@ -152,7 +152,7 @@ class ProgressTableView(EntityView):
         if costdescr:
             return u'%s (%s)' % (totalcost, ', '.join(costdescr))
         return unicode(totalcost)
-    
+
     def build_progress_cell(self, entity):
         """``progress`` column cell renderer"""
         progress =  u'<div class="progress_data">%s (%.2f%%)</div>' % (
@@ -165,7 +165,7 @@ class InContextProgressTableView(ProgressTableView):
     the ``project`` column
     """
     id = 'ic_progress_table_view'
-    
+
     def call(self):
         view = self.vreg.select_view('progress_table_view', self.req, self.rset)
         columns = list(view.columns)
@@ -173,7 +173,7 @@ class InContextProgressTableView(ProgressTableView):
             columns.remove('project')
         except ValueError:
             self.info('[ic_progress_table_view] could not remove project from columns')
-        view.dispatch(w=self.w, columns=columns)
+        view.render(w=self.w, columns=columns)
 
 
 class ProgressBarView(EntityView):

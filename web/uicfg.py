@@ -34,10 +34,11 @@ class RDisplayRelationTags(RelationTags):
         super(RDisplayRelationTags, self).__init__()
         self._counter = 0
 
-    def tag_relation(self, values, *args, **kwargs):
-        super(RDisplayRelationTags, self).tag_relation(values, *args, **kwargs)
-        if values:
-            values['order'] = self.get_timestamp()
+    def tag_relation(self, stype, rtype, otype, tag, tagged=None):
+        super(RDisplayRelationTags, self).tag_relation(stype, rtype, otype, tag,
+                                                       tagged)
+        if tag:
+            tag['order'] = self.get_timestamp()
 
     def get_timestamp(self):
         self._counter += 1

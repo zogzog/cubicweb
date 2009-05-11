@@ -89,7 +89,7 @@ class NonTemplatableViewTemplate(MainTemplate):
             view.w(u'<?xml version="1.0"?>\n' + STRICT_DOCTYPE)
             view.w(u'<div xmlns="http://www.w3.org/1999/xhtml" xmlns:cubicweb="http://www.logilab.org/2008/cubicweb">')
         # have to replace our unicode stream using view's binary stream
-        view.dispatch()
+        view.render()
         if xhtml_wrap:
             view.w(u'</div>')
         self._stream = view._stream
@@ -115,13 +115,13 @@ class TheMainTemplate(MainTemplate):
         etypefilter = self.vreg.select_component('etypenavigation',
                                                  self.req, self.rset)
         if etypefilter and etypefilter.propval('visible'):
-            etypefilter.dispatch(w=w)
+            etypefilter.render(w=w)
         self.nav_html = UStringIO()
         if view and view.need_navigation:
             view.paginate(w=self.nav_html.write)
         w(_(self.nav_html.getvalue()))
         w(u'<div id="contentmain">\n')
-        view.dispatch(w=w)
+        view.render(w=w)
         w(u'</div>\n') # close id=contentmain
         w(_(self.nav_html.getvalue()))
         w(u'</div>\n') # closes id=pageContent
@@ -154,10 +154,10 @@ class TheMainTemplate(MainTemplate):
         w(u'<td id="contentcol">\n')
         rqlcomp = self.vreg.select_component('rqlinput', self.req, self.rset)
         if rqlcomp:
-            rqlcomp.dispatch(w=self.w, view=view)
+            rqlcomp.render(w=self.w, view=view)
         msgcomp = self.vreg.select_component('applmessages', self.req, self.rset)
         if msgcomp:
-            msgcomp.dispatch(w=self.w)
+            msgcomp.render(w=self.w)
         self.content_header(view)
 
     def template_footer(self, view=None):
@@ -174,7 +174,7 @@ class TheMainTemplate(MainTemplate):
         if boxes:
             self.w(u'<td class="navcol"><div class="navboxes">\n')
             for box in boxes:
-                box.dispatch(w=self.w, view=view)
+                box.render(w=self.w, view=view)
             self.w(u'</div></td>\n')
 
     def content_header(self, view=None):
@@ -199,7 +199,7 @@ class ErrorTemplate(TheMainTemplate):
         view = self.vreg.select_view('error', self.req, self.rset)
         self.template_header(self.content_type, view, self.req._('an error occured'),
                              [NOINDEX, NOFOLLOW])
-        view.dispatch(w=self.w)
+        view.render(w=self.w)
         self.template_footer(view)
 
     def template_header(self, content_type, view=None, page_title='', additional_headers=()):
@@ -243,7 +243,7 @@ class SimpleMainTemplate(TheMainTemplate):
         if boxes:
             w(u'<div class="navboxes">\n')
             for box in boxes:
-                box.dispatch(w=w)
+                box.render(w=w)
             self.w(u'</div>\n')
         w(u'</td>')
         w(u'<td id="contentcol" rowspan="2">')
@@ -255,7 +255,7 @@ class SimpleMainTemplate(TheMainTemplate):
     def topleft_header(self):
         self.w(u'<table id="header"><tr>\n')
         self.w(u'<td>')
-        self.vreg.select_component('logo', self.req, self.rset).dispatch(w=self.w)
+        self.vreg.select_component('logo', self.req, self.rset).render(w=self.w)
         self.w(u'</td>\n')
         self.w(u'</tr></table>\n')
 
@@ -322,25 +322,25 @@ class HTMLPageHeader(View):
         """build the top menu with authentification info and the rql box"""
         self.w(u'<table id="header"><tr>\n')
         self.w(u'<td id="firstcolumn">')
-        self.vreg.select_component('logo', self.req, self.rset).dispatch(w=self.w)
+        self.vreg.select_component('logo', self.req, self.rset).render(w=self.w)
         self.w(u'</td>\n')
         # appliname and breadcrumbs
         self.w(u'<td id="headtext">')
         comp = self.vreg.select_component('appliname', self.req, self.rset)
         if comp and comp.propval('visible'):
-            comp.dispatch(w=self.w)
+            comp.render(w=self.w)
         comp = self.vreg.select_component('breadcrumbs', self.req, self.rset, view=view)
         if comp and comp.propval('visible'):
-            comp.dispatch(w=self.w, view=view)
+            comp.render(w=self.w, view=view)
         self.w(u'</td>')
         # logged user and help
         self.w(u'<td>\n')
         comp = self.vreg.select_component('loggeduserlink', self.req, self.rset)
-        comp.dispatch(w=self.w)
+        comp.render(w=self.w)
         self.w(u'</td><td>')
         helpcomp = self.vreg.select_component('help', self.req, self.rset)
         if helpcomp: # may not be available if Card is not defined in the schema
-            helpcomp.dispatch(w=self.w)
+            helpcomp.render(w=self.w)
         self.w(u'</td>')
         # lastcolumn
         self.w(u'<td id="lastcolumn">')
@@ -399,7 +399,7 @@ class HTMLContentHeader(View):
         if components:
             self.w(u'<div id="contentheader">')
             for comp in components:
-                comp.dispatch(w=self.w, view=view)
+                comp.render(w=self.w, view=view)
             self.w(u'</div><div class="clear"></div>')
 
 
@@ -416,7 +416,7 @@ class HTMLContentFooter(View):
         if components:
             self.w(u'<div id="contentfooter">')
             for comp in components:
-                comp.dispatch(w=self.w, view=view)
+                comp.render(w=self.w, view=view)
             self.w(u'</div>')
 
 
