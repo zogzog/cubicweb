@@ -76,6 +76,3 @@ class FoafView(EntityView):
         if emailaddr:
             self.w(u'<foaf:mbox>%s</foaf:mbox>\n' % html_escape(emailaddr))
         self.w(u'</foaf:Person>\n')
-
-from logilab.common.deprecation import class_renamed
-EUserPrimaryView = class_renamed('EUserPrimaryView', CWUserPrimaryView)
