@@ -155,8 +155,10 @@ class RSSView(XMLView):
         self.w(u'<?xml version="1.0" encoding="%s"?>\n' % req.encoding)
         self.w(u'<rss version="2.0" xmlns:dc="http://purl.org/dc/elements/1.1/">\n')
         self.w(u'  <channel>\n')
-        self.w(u'    <title>%s RSS Feed</title>\n' % xml_escape(self.page_title()))
-        self.w(u'    <description>%s</description>\n' % xml_escape(req.form.get('vtitle', '')))
+        self.w(u'    <title>%s RSS Feed</title>\n'
+               % xml_escape(self.page_title()))
+        self.w(u'    <description>%s</description>\n'
+               % xml_escape(req.form.get('vtitle', '')))
         params = req.form.copy()
         params.pop('vid', None)
         self.w(u'    <link>%s</link>\n' % xml_escape(self.build_url(**params)))
@@ -184,9 +186,10 @@ class RSSItemView(EntityView):
     def cell_call(self, row, col):
         entity = self.complete_entity(row, col)
         self.w(u'<item>\n')
-        self.w(u'<guid isPermaLink="true">%s</guid>\n' % xml_escape(entity.absolute_url()))
+        self.w(u'<guid isPermaLink="true">%s</guid>\n'
+               % xml_escape(entity.absolute_url()))
         self.render_title_link(entity)
-        self._marker('description', xml_escape(entity.dc_description()))
+        self._marker('description', entity.dc_description(format='text/html'))
         self._marker('dc:date', entity.dc_date(self.date_format))
         self.render_entity_creator(entity)
         self.w(u'</item>\n')
