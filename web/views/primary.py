@@ -43,7 +43,7 @@ class PrimaryView(EntityView):
                         X, Y = tschema, eschema
                         card = rschema.rproperty(X, Y, 'cardinality')[1]
                         composed = rschema.rproperty(X, Y, 'composite') == 'subject'
-                    displayinfo = cls.rdisplay.get(rschema, role, X, Y)
+                    displayinfo = cls.rdisplay.get(X, rschema, Y, role)
                     if displayinfo is None:
                         if rschema.is_final():
                             if rschema.meta or tschema.type in ('Password', 'Bytes'):

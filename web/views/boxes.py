@@ -53,7 +53,7 @@ class EditBox(BoxTemplate):
                     else:
                         X, Y = tschema, eschema
                         card = rschema.rproperty(X, Y, 'cardinality')[1]
-                    if not cls.rmode.get(rschema, role, X, Y):
+                    if not cls.rmode.get(X, rschema, Y, role):
                         if card in '?1':
                             # by default, suppose link mode if cardinality doesn't allow
                             # more than one relation
