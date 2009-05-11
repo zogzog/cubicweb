@@ -221,7 +221,7 @@ class TableView(AnyRsetView):
         return columns
 
 
-    def render(self, cellvid, row, col, w):
+    def render_cell(self, cellvid, row, col, w):
         self.view('cell', self.rset, row=row, col=col, cellvid=cellvid, w=w)
 
     def get_rows(self):

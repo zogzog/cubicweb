@@ -29,7 +29,7 @@ class TimelineJsonView(EntityView):
 
     __select__ = implements(ICalendarable)
     date_fmt = '%Y/%m/%d'
-    
+
     def call(self):
         events = []
         for entity in self.rset.entities():
@@ -43,13 +43,13 @@ class TimelineJsonView(EntityView):
     # FIXME: those properties should be defined by the entity class
     def onclick_url(self, entity):
         return entity.absolute_url()
-    
+
     def onclick(self, entity):
         url = self.onclick_url(entity)
         if url:
             return u"javascript: document.location.href='%s'" % url
         return None
-    
+
     def build_event(self, entity):
         """converts `entity` into a JSON object
         {'start': '1891',
@@ -77,13 +77,13 @@ class TimelineJsonView(EntityView):
             event_data['end'] = stop.strftime(self.date_fmt)
         return event_data
 
-    
+
 class TimelineViewMixIn(object):
     widget_class = 'TimelineWidget'
     jsfiles = ('cubicweb.timeline-bundle.js', 'cubicweb.widgets.js',
                'cubicweb.timeline-ext.js', 'cubicweb.ajax.js')
-    
-    def render(self, loadurl, tlunit=None):
+
+    def render_url(self, loadurl, tlunit=None):
         tlunit = tlunit or self.req.form.get('tlunit')
         self.req.add_js(self.jsfiles)
         self.req.add_css('timeline-bundle.css')
@@ -107,15 +107,15 @@ class TimelineView(TimelineViewMixIn, EntityView):
         self.req.html_headers.define_var('Timeline_urlPrefix', self.req.datadir_url)
         rql = self.rset.printable_rql()
         loadurl = self.build_url(rql=rql, vid='timeline-json')
-        self.render(loadurl, tlunit)
-        
-    
+        self.render_url(loadurl, tlunit)
+
+
 class StaticTimelineView(TimelineViewMixIn, StartupView):
     """similar to `TimelineView` but loads data from a static
     JSON file instead of one after a RQL query.
     """
     id = 'static-timeline'
-    
+
     def call(self, loadurl, tlunit=None, wdgclass=None):
         self.widget_class = wdgclass or self.widget_class
-        self.render(loadurl, tlunit)
+        self.render_url(loadurl, tlunit)

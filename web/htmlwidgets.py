@@ -278,7 +278,7 @@ class TableWidget(HTMLWidget):
                 attrs = ('%s="%s"' % (name, value) for name, value in attrs.iteritems())
                 self.w(u'<td %s>' % (' '.join(attrs)))
                 for cellvid, colindex in column.cellrenderers:
-                    self.model.render(cellvid, rowindex, colindex, w=self.w)
+                    self.model.render_cell(cellvid, rowindex, colindex, w=self.w)
                 self.w(u'</td>')
             self.w(u'</tr>')
         self.w(u'</tbody>')
