@@ -7,7 +7,7 @@
 __docformat__ = "restructuredtext en"
 
 from logilab.common.ureports import Section, Title, Table, Link, Span, Text
-from yams.schema2dot import CARD_MAP    
+from yams.schema2dot import CARD_MAP
 
 _ = unicode
 I18NSTRINGS = [_('read'), _('add'), _('delete'), _('update'), _('order')]
@@ -24,7 +24,7 @@ class SchemaViewer(object):
         else:
             self._possible_views = lambda x: ()
         self.encoding = encoding
-        
+
     def format_acls(self, schema, access_types):
         """return a layout displaying access control lists"""
         data = [self.req._('access type'), self.req._('groups')]
@@ -36,7 +36,7 @@ class SchemaViewer(object):
         return Section(children=(Table(cols=2, cheaders=1, rheaders=1, children=data),),
                        klass='acl')
 
-        
+
     def visit_schema(self, schema, display_relations=0,
                      skiprels=(), skipmeta=True):
         """get a layout for a whole schema"""
@@ -51,11 +51,11 @@ class SchemaViewer(object):
         if skipmeta:
             eschemas = [eschema for eschema in eschemas
                         if not eschema.meta]
-        for eschema in sorted(eschema):
+        for eschema in sorted(eschemas):
             esection.append(self.visit_entityschema(eschema, skiprels))
         if display_relations:
             title = Title(self.req._('Relations'), klass='titleUnderline')
-            rsection = Section(children=(title,)) 
+            rsection = Section(children=(title,))
             layout.append(rsection)
             relations = [rschema for rschema in schema.relations()
                          if not (rschema.is_final() or rschema.type in skiprels)]
@@ -76,7 +76,7 @@ class SchemaViewer(object):
                 continue
             aname = rschema.type
             if aname == 'eid':
-                continue            
+                continue
             data.append('%s (%s)' % (aname, _(aname)))
             data.append(_(aschema.type))
             defaultval = eschema.default(aname)
@@ -94,7 +94,7 @@ class SchemaViewer(object):
 
     def eschema_link_url(self, eschema):
         return self.req.build_url('eetype/%s?vid=eschema' % eschema)
-    
+
     def rschema_link_url(self, rschema):
         return self.req.build_url('ertype/%s?vid=eschema' % rschema)
 
@@ -105,7 +105,7 @@ class SchemaViewer(object):
 
     def stereotype(self, name):
         return Span((' <<%s>>' % name,), klass='stereotype')
-    
+
     def visit_entityschema(self, eschema, skiprels=()):
         """get a layout for an entity schema"""
         etype = eschema.type
@@ -117,7 +117,7 @@ class SchemaViewer(object):
             boxchild = [Section(children=(title, ' (%s)'%eschema.display_name(self.req), stereotype), klass='title')]
         else:
             boxchild = [Section(children=(title, ' (%s)'%eschema.display_name(self.req)), klass='title')]
-        table = Table(cols=4, rheaders=1, 
+        table = Table(cols=4, rheaders=1,
                       children=self._entity_attributes_data(eschema))
         boxchild.append(Section(children=(table,), klass='body'))
         data = []
@@ -164,7 +164,7 @@ class SchemaViewer(object):
                                                   children=[_('views')]+views),),
                                   klass='views'))
         return layout
-    
+
     def visit_relationschema(self, rschema, title=True):
         """get a layout for a relation schema"""
         _ = self.req._
