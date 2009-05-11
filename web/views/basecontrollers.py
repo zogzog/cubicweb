@@ -404,18 +404,6 @@ class JSonController(Controller):
             return (success, args, None)
 
     @jsonize
-    def js_edit_relation(self, action, names, values,
-                         rtype, eid, role='subject', vid='list'):
-        # XXX validate_form
-        success, args = self.validate_form(action, names, values)
-        if success:
-            entity = self.req.eid_rset(eid).get_entity(0, 0)
-            rset = entity.related('person_in_charge', role)
-            return (success, args, self.view(vid, rset))
-        else:
-            return (success, args, None)
-
-    @jsonize
     def js_i18n(self, msgids):
         """returns the translation of `msgid`"""
         return [self.req._(msgid) for msgid in msgids]
