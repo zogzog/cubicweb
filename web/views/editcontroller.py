@@ -207,7 +207,7 @@ class EditController(ViewController):
                 # file modified using a text widget
                 encoding = entity.attr_metadata(attr, 'encoding')
                 value = Binary(value.encode(encoding))
-            else:
+            elif value:
                 # value is a  3-uple (filename, mimetype, stream)
                 val = Binary(value[2].read())
                 if not val.getvalue(): # usually an unexistant file
