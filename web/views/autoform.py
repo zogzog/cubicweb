@@ -145,10 +145,12 @@ class AutomaticEntityForm(EntityFieldsForm):
             if eschema is None or not name in cls_or_self.schema:
                 raise
             rschema = cls_or_self.schema.rschema(name)
-            fieldcls = cls_or_self.rfields.etype_get(eschema, rschema, role)
+            # XXX use a sample target type. Document this.
+            tschemas = rschema.targets(eschema, role)
+            fieldcls = cls_or_self.rfields.etype_get(eschema, rschema, role, tschemas[0])
             if fieldcls:
                 return fieldcls(name=name, role=role, eidparam=True)
-            widget = cls_or_self.rwidgets.etype_get(eschema, rschema, role)
+            widget = cls_or_self.rwidgets.etype_get(eschema, rschema, role, tschemas[0])
             if widget:
                 field = guess_field(eschema, rschema, role,
                                     eidparam=True, widget=widget)
