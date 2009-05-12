@@ -226,10 +226,10 @@ class HTableFormRenderer(FormRenderer):
         for field in fields:
             error = form.form_field_error(field)
             if error:
-                w(u'<td class="error" style="width:100%;">')
+                w(u'<td class="error">')
                 w(error)
             else:
-                w(u'<td style="width:100%;">')
+                w(u'<td>')
             w(field.render(form, self))
             w(u'</td>')
         w(u'<td>')
