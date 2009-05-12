@@ -443,13 +443,13 @@ function validateForm(formid, action, onsuccess) {
 
 
 /*
- * called by live-edit forms to submit changes
+ * called by reledit forms to submit changes
  * @param formid : the dom id of the form used
  * @param rtype : the attribute being edited
  * @param eid : the eid of the entity being edited
  * @param reload: boolean to reload page if true (when changing URL dependant data)
  */
-function inlineValidateForm(formid, rtype, eid, divid, reload) {
+function inlineValidateAttributeForm(formid, rtype, eid, divid, reload) {
     try {
 	var form = getNode(formid);
 	if (typeof FCKeditorAPI != "undefined") {
@@ -487,6 +487,41 @@ function inlineValidateForm(formid, rtype, eid, divid, reload) {
     });
     return false;
 }
+
+
+function inlineValidateRelationForm(formid, rtype, eid, divid, reload) {
+    try {
+	var form = getNode(formid);
+	var zipped = formContents(form);
+	var d = asyncRemoteExec('edit_relation', 'apply', zipped[0], zipped[1], rtype, eid);
+    } catch (ex) {
+	log('got exception', ex);
+	return false;
+    }
+    d.addCallback(function (result, req) {
+        handleFormValidationResponse(formid, noop, result);
+	if (reload) {
+             log(result[1]);
+	    //document.location.href = result[1];
+	} else {
+            log(result[2]);
+	    var fieldview = getNode(divid);
+	    // XXX using innerHTML is very fragile and won't work if
+	    // we mix XHTML and HTML
+	    fieldview.innerHTML = result[2];
+	    // switch inline form off only if no error
+	    if (result[0]) {
+		// hide global error messages
+		jQuery('div.errorMessage').remove();
+		jQuery('#appMsg').hide();
+		cancelInlineEdit(eid, rtype, divid);
+	    }
+	}
+	return false;
+    });
+    return false;
+}
+
 
 /**** inline edition ****/
 function showInlineEditionForm(eid, rtype, divid) {

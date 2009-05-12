@@ -387,7 +387,7 @@ class JSonController(Controller):
         except Exception, err:
             self.req.cnx.rollback()
             self.exception('unexpected error in js_validateform')
-            return (False, self.req._(str(err)))
+            return (False, self.req._(str(err).decode('utf-8')))
         return (False, '???')
 
     @jsonize
@@ -400,6 +400,17 @@ class JSonController(Controller):
                                     {'x': eid}, 'x')
             entity = rset.get_entity(0, 0)
             return (success, args, entity.printable_value(rtype))
+        else:
+            return (success, args, None)
+
+    @jsonize
+    def js_edit_relation(self, action, names, values,
+                         rtype, eid, role='subject', vid='list'):
+        success, args = self.validate_form(action, names, values)
+        if success:
+            entity = self.req.eid_rset(eid).get_entity(0, 0)
+            rset = entity.related(rtype, role)
+            return (success, args, self.view(vid, rset))
         else:
             return (success, args, None)
 
