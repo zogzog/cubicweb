@@ -71,10 +71,16 @@ from cubicweb.web import formwidgets
 
 # primary view configuration ##################################################
 
+def dual_role(role):
+    return 'object' if role == 'subject' else 'subject'
+
 def init_primaryview_section(rtag, sschema, rschema, oschema, role):
     if rtag.get(sschema, rschema, oschema, role) is None:
+        card = rschema.rproperty(sschema, oschema, 'cardinality')
+        card = card[0] if role == 'subject' else card[1]
+        composed = rschema.rproperty(sschema, oschema, 'composite') == dual_role(role)
         if rschema.is_final():
-            if rschema.meta or tschema.type in ('Password', 'Bytes'):
+            if rschema.meta or oschema.type in ('Password', 'Bytes'):
                 section = 'hidden'
             else:
                 section = 'attributes'
@@ -111,7 +117,7 @@ class DisplayCtrlRelationTags(RelationTags):
 
     def tag_relation(self, key, tag):
         assert isinstance(tag, dict)
-        super(RDisplayRelationTags, self).tag_relation(key, tag)
+        super(DisplayCtrlRelationTags, self).tag_relation(key, tag)
         self._counter += 1
         tag.setdefault('order', self._counter)
 
