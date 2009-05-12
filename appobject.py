@@ -196,6 +196,13 @@ class AppRsetObject(VObject):
             view = self.vreg.select_view(__fallback_vid, self.req, rset, **kwargs)
         return view.render(**kwargs)
 
+    def initialize_varmaker(self):
+        varmaker = self.req.get_page_data('rql_varmaker')
+        if varmaker is None:
+            varmaker = self.req.varmaker
+            self.req.set_page_data('rql_varmaker', varmaker)
+        self.varmaker = varmaker
+
     # url generation methods ##################################################
 
     controller = 'view'

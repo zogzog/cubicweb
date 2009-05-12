@@ -51,13 +51,6 @@ class FormMixIn(object):
     XXX: you should inherit from this FIRST (obscure pb with super call)
     """
 
-    def initialize_varmaker(self):
-        varmaker = self.req.get_page_data('rql_varmaker')
-        if varmaker is None:
-            varmaker = self.req.varmaker
-            self.req.set_page_data('rql_varmaker', varmaker)
-        self.varmaker = varmaker
-
     def session_key(self):
         """return the key that may be used to store / retreive data about a
         previous post which failed because of a validation error
