@@ -50,8 +50,6 @@ class FieldWidget(object):
         """
         name = form.context[field]['name']
         values = form.context[field]['value']
-        if not values:
-            values = (INTERNAL_FIELD_VALUE,)
         if not isinstance(values, (tuple, list)):
             values = (values,)
         attrs = dict(self.attrs)
