@@ -68,7 +68,7 @@ class FinalView(AnyRsetView):
     def cell_call(self, row, col, props=None, displaytime=False, format='text/html'):
         etype = self.rset.description[row][col]
         value = self.rset.rows[row][col]
-       
+
         if etype == 'String':
             entity, rtype = self.rset.related_entity(row, col)
             if entity is not None:
