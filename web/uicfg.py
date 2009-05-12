@@ -74,10 +74,15 @@ from cubicweb.web import formwidgets
 def dual_role(role):
     return 'object' if role == 'subject' else 'subject'
 
+def card_from_role(card, role):
+    if role == 'subject':
+        return card[0]
+    assert role in ('object', 'sobject'), repr(role)
+    return card[1]
+
 def init_primaryview_section(rtag, sschema, rschema, oschema, role):
     if rtag.get(sschema, rschema, oschema, role) is None:
-        card = rschema.rproperty(sschema, oschema, 'cardinality')
-        card = card[0] if role == 'subject' else card[1]
+        card = card_from_role(rschema.rproperty(sschema, oschema, 'cardinality'), role)
         composed = rschema.rproperty(sschema, oschema, 'composite') == dual_role(role)
         if rschema.is_final():
             if rschema.meta or oschema.type in ('Password', 'Bytes'):
