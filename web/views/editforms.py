@@ -94,7 +94,7 @@ class ClickAndEditFormView(FormViewMixIn, EntityView):
     ondblclick = "showInlineEditionForm(%(eid)s, '%(rtype)s', '%(divid)s')"
 
     def cell_call(self, row, col, rtype=None, role='subject', reload=False,
-                  vid='list'):
+                  vid='textoutofcontext'):
         """display field to edit entity's `rtype` relation on double-click"""
         rschema = self.schema.rschema(rtype)
         entity = self.entity(row, col)
@@ -105,43 +105,43 @@ class ClickAndEditFormView(FormViewMixIn, EntityView):
                 value = entity.printable_value(rtype)
         else:
             rset = entity.related(rtype, role)
-            value = '&nbsp;%s&nbsp;' % self.view(vid, rset, 'null')
+            value = self.view(vid, rset, 'null')
         if not entity.has_perm('update'):
             self.w(value)
             return
         if rschema.is_final():
-            self._edit_attribute(entity, value, rtype, role, reload, row, col)
+            form = self._build_attribute_form(entity, value, rtype, role, reload, row, col)
         else:
-            self._edit_relation(entity, value, rtype, role, reload, row, col)
-
-    def _edit_relation(self, entity, value, rtype, role, reload, row, col):
-        rtype = 'person_in_charge'
-        entity = self.entity(row, col)
-        divid = 'd%s' % make_uid('%s-%s' % (rtype, entity.eid))
-        event_data = {'divid' : divid, 'eid' : entity.eid, 'rtype' : rtype,
-                      'reload' : dumps(reload)}
-        form = EntityFieldsForm(self.req, None, entity=entity, action='#',
-                                domid='%s-form' % divid,
-                                cssstyle='display: none',
-                                onsubmit=("return inlineValidateRelationForm('%(divid)s-form', '%(rtype)s', "
-                                          "'%(eid)s', '%(divid)s', %(reload)s);" % event_data),
-                                form_buttons=[SubmitButton(),
-                                              Button(stdmsgs.BUTTON_CANCEL,
-                                                     onclick="cancelInlineEdit(%s,\'%s\',\'%s\')" %\
-                                                         (entity.eid, rtype, divid))])
+            form = self._build_relation_form(entity, value, rtype, role, row, col, vid)
         form.form_add_hidden(u'__maineid', entity.eid)
-        form.append_field(RelationField(name=rtype, sort=True,
-                                        widget=Select(dict(size=1)),
-                                        label=u' '))
         renderer = FormRenderer(display_label=False, display_help=False,
                                 display_fields=[(rtype, role)],
                                 table_class='', button_bar_class='buttonbar',
                                 display_progress_div=False)
-        self.w(tags.div(value, klass='editableField', id=divid,
-                        ondblclick=self.ondblclick % event_data))
         self.w(form.form_render(renderer=renderer))
 
-    def _edit_attribute(self, entity, value, rtype, role, reload, row, col):
+    def _build_relation_form(self, entity, value, rtype, role, row, col, vid):
+        rtype = 'person_in_charge'
+        entity = self.entity(row, col)
+        divid = 'd%s' % make_uid('%s-%s' % (rtype, entity.eid))
+        event_data = {'divid' : divid, 'eid' : entity.eid, 'rtype' : rtype, 'vid' : vid}
+        form = EntityFieldsForm(self.req, None, entity=entity, action='#',
+                                domid='%s-form' % divid,
+                                cssstyle='display: none',
+                                onsubmit=("return inlineValidateRelationForm('%(divid)s-form', '%(rtype)s', "
+                                          "'%(eid)s', '%(divid)s', '%(vid)s');" % event_data),
+                                form_buttons=[SubmitButton(),
+                                              Button(stdmsgs.BUTTON_CANCEL,
+                                                     onclick="cancelInlineEdit(%s,\'%s\',\'%s\')" %\
+                                                         (entity.eid, rtype, divid))])
+        form.append_field(RelationField(name=rtype, sort=True,
+                                        widget=Select(dict(size=1)),
+                                        label=u' '))
+        self.w(tags.div(value, klass='editableField', id=divid,
+                        ondblclick=self.ondblclick % event_data))
+        return form
+
+    def _build_attribute_form(self, entity, value, rtype, role, reload, row, col):
         eid = entity.eid
         divid = 'd%s' % make_uid('%s-%s' % (rtype, eid))
         event_data = {'divid' : divid, 'eid' : eid, 'rtype' : rtype,
@@ -155,14 +155,9 @@ class ClickAndEditFormView(FormViewMixIn, EntityView):
                                        domid='%s-form' % divid, action='#',
                                        cssstyle='display: none',
                                        onsubmit=self.onsubmit % event_data)
-        form.form_add_hidden(u'__maineid', eid)
-        renderer = FormRenderer(display_label=False, display_help=False,
-                                display_fields=[(rtype, role)],
-                                table_class='', button_bar_class='buttonbar',
-                                display_progress_div=False)
         self.w(tags.div(value, klass='editableField', id=divid,
                         ondblclick=self.ondblclick % event_data))
-        self.w(form.form_render(renderer=renderer))
+        return form
 
 
 class EditionFormView(FormViewMixIn, EntityView):

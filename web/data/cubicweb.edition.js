@@ -488,38 +488,29 @@ function inlineValidateAttributeForm(formid, rtype, eid, divid, reload) {
     return false;
 }
 
-
-function inlineValidateRelationForm(formid, rtype, eid, divid, reload) {
+function inlineValidateRelationForm(formid, rtype, eid, divid, vid) {
     try {
 	var form = getNode(formid);
 	var zipped = formContents(form);
-	var d = asyncRemoteExec('edit_relation', 'apply', zipped[0], zipped[1], rtype, eid);
+	var d = asyncRemoteExec('edit_relation', 'apply', zipped[0], zipped[1], rtype, eid, vid);
     } catch (ex) {
 	log('got exception', ex);
 	return false;
     }
     d.addCallback(function (result, req) {
         handleFormValidationResponse(formid, noop, result);
-	if (reload) {
-             log(result[1]);
-	    //document.location.href = result[1];
-	} else {
-            log(result[2]);
-	    var fieldview = getNode(divid);
-	    // XXX using innerHTML is very fragile and won't work if
-	    // we mix XHTML and HTML
-	    fieldview.innerHTML = result[2];
-	    // switch inline form off only if no error
-	    if (result[0]) {
-		// hide global error messages
-		jQuery('div.errorMessage').remove();
-		jQuery('#appMsg').hide();
-		cancelInlineEdit(eid, rtype, divid);
-	    }
+	var fieldview = getNode(divid);
+        fieldview.innerHTML = result[2];
+	// switch inline form off only if no error
+	if (result[0]) {
+          // hide global error messages
+	  jQuery('div.errorMessage').remove();
+	  jQuery('#appMsg').hide();
+	  cancelInlineEdit(eid, rtype, divid);
 	}
-	return false;
+        return false;
     });
-    return false;
+  return false;
 }
 
 

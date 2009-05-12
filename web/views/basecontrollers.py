@@ -405,7 +405,7 @@ class JSonController(Controller):
 
     @jsonize
     def js_edit_relation(self, action, names, values,
-                         rtype, eid, role='subject', vid='list'):
+                         rtype, eid, vid, role='subject'):
         success, args = self.validate_form(action, names, values)
         if success:
             entity = self.req.eid_rset(eid).get_entity(0, 0)
