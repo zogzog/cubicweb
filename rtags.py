@@ -50,11 +50,11 @@ class RelationTags(object):
 
     def init(self, schema):
         # XXX check existing keys against schema
-        for rtype, tagged, stype, otype in self._tagdefs.keys():
+        for (rtype, tagged, stype, otype), value in self._tagdefs.items():
             for ertype in (stype, rtype, otype):
                 if ertype != '*' and not ertype in schema:
-                    self.warning('removing rtag for %s, undefined in schema',
-                                 ertype)
+                    self.warning('removing rtag %s: %s, %s undefined in schema',
+                                 (stype, rtype, otype, tagged), value, ertype)
                     self.del_rtag(stype, rtype, otype, tagged)
         if self._initfunc is not None:
             for eschema in schema.entities():
