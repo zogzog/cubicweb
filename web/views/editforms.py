@@ -135,7 +135,7 @@ class ClickAndEditFormView(FormViewMixIn, EntityView):
                                                      onclick="cancelInlineEdit(%s,\'%s\',\'%s\')" %\
                                                          (entity.eid, rtype, divid))])
         form.append_field(RelationField(name=rtype, sort=True,
-                                        widget=Select(dict(size=1)),
+                                        widget=Select(),
                                         label=u' '))
         self.w(tags.div(value, klass='editableField', id=divid,
                         ondblclick=self.ondblclick % event_data))
