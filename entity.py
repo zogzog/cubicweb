@@ -130,8 +130,8 @@ class _metaentity(type):
                         wdgname = 'TextInput'
                     widget = getattr(formwidgets, wdgname)
                     assert hasattr(widget, 'render')
-                    uicfg.autoform_widget.tag_subject_of((etype, rtype, '*'),
-                                                         widget)
+                    uicfg.autoform_field_kwargs.tag_subject_of(
+                        (etype, rtype, '*'), {'widget': widget})
         return super(_metaentity, mcs).__new__(mcs, name, bases, classdict)
 
 
