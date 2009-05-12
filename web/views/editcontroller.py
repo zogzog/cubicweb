@@ -65,7 +65,7 @@ class EditController(ViewController):
         if self._pending_relations:
             for rschema, formparams, x, entity in self._pending_relations:
                 self.handle_relation(rschema, formparams, x, entity, True)
-            
+
         # XXX this processes *all* pending operations of *all* entities
         if form.has_key('__delete'):
             todelete += req.list_form_param('__delete', form, pop=True)
@@ -76,7 +76,7 @@ class EditController(ViewController):
         if toinsert:
             self.insert_relations(parse_relations_descr(toinsert))
         self.req.remove_pending_operations()
-        
+
     def edit_entity(self, formparams, multiple=False):
         """edit / create / copy an entity and return its eid"""
         etype = formparams['__type']
@@ -84,7 +84,7 @@ class EditController(ViewController):
         entity.eid = eid = self._get_eid(formparams['eid'])
         edited = self.req.form.get('__maineid') == formparams['eid']
         # let a chance to do some entity specific stuff.
-        entity.pre_web_edit() 
+        entity.pre_web_edit()
         # create a rql query from parameters
         self.relations = []
         self.restrictions = []
@@ -99,14 +99,14 @@ class EditController(ViewController):
                 self.handle_inlined_relation(rschema, formparams, entity)
         execute = self.req.execute
         if eid is None: # creation or copy
-            if self.relations: 
+            if self.relations:
                 rql = 'INSERT %s X: %s' % (etype, ','.join(self.relations))
             else:
                 rql = 'INSERT %s X' % etype
             if self.restrictions:
                 rql += ' WHERE %s' % ','.join(self.restrictions)
             try:
-                # get the new entity (in some cases, the type might have 
+                # get the new entity (in some cases, the type might have
                 # changed as for the File --> Image mutation)
                 entity = execute(rql, formparams).get_entity(0, 0)
                 eid = entity.eid
@@ -152,7 +152,7 @@ class EditController(ViewController):
     def _action_apply(self):
         self._default_publish()
         self.reset()
-            
+
     def _action_cancel(self):
         errorurl = self.req.form.get('__errorurl')
         if errorurl:
@@ -172,7 +172,7 @@ class EditController(ViewController):
         if entity.has_eid() and (formparams.get(editkey) or None) == value:
             return False, None # not modified
         if value == INTERNAL_FIELD_VALUE:
-            value = None        
+            value = None
         return True, value
 
     def handle_attribute(self, entity, rschema, formparams):
@@ -284,7 +284,7 @@ class EditController(ViewController):
             self.restrictions.append('%s eid %%(%s)s' % (attr.upper(), attr))
         elif entity.has_eid():
             self.handle_relation(rschema, formparams, 'subject', entity, late)
-        
+
     def handle_relation(self, rschema, formparams, x, entity, late=False):
         """handle edition for the (rschema, x) relation of the given entity
         """
@@ -316,7 +316,7 @@ class EditController(ViewController):
             subjvar, rschema, objvar)
         for reid in values.difference(origvalues):
             self.req.execute(rql, {'x': eid, 'y': reid}, ('x', 'y'))
-    
+
     def _get_eid(self, eid):
         # should be either an int (existant entity) or a variable (to be
         # created entity)
@@ -346,5 +346,5 @@ class EditController(ViewController):
                 raise Exception('duh')
             result.add(eid)
         return result
-        
+
 
