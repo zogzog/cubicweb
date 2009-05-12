@@ -121,7 +121,6 @@ class ClickAndEditFormView(FormViewMixIn, EntityView):
         self.w(form.form_render(renderer=renderer))
 
     def _build_relation_form(self, entity, value, rtype, role, row, col, vid):
-        rtype = 'person_in_charge'
         entity = self.entity(row, col)
         divid = 'd%s' % make_uid('%s-%s' % (rtype, entity.eid))
         event_data = {'divid' : divid, 'eid' : entity.eid, 'rtype' : rtype, 'vid' : vid}
