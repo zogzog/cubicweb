@@ -388,7 +388,8 @@ class RelationField(Field):
 
     @staticmethod
     def fromcardinality(card, **kwargs):
-        return RelationField(widget=Select(multiple=card in '*+'), **kwargs)
+        kwargs.setdefault('widget', Select(multiple=card in '*+'))
+        return RelationField(**kwargs)
 
     def vocabulary(self, form):
         entity = form.edited_entity
