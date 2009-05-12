@@ -61,10 +61,10 @@ class RelationTags(object):
                 for rschema, tschemas, role in eschema.relation_definitions(True):
                     for tschema in tschemas:
                         if role == 'subject':
-                            stype, otype = eschema, tschema
+                            sschema, oschema = eschema, tschema
                         else:
-                            stype, otype = tschema, eschema
-                        self._initfunc(self, stype, rtype, otype, role)
+                            sschema, oschema = tschema, eschema
+                        self._initfunc(self, sschema, rschema, oschema, role)
 
     # rtag declaration api ####################################################
 
