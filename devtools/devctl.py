@@ -163,7 +163,8 @@ def _generate_schema_pot(w, vreg, schema, libconfig=None, cube=None):
                             subjtype, objtype = teschema, eschema
                         if librschema.has_rdef(subjtype, objtype):
                             continue
-                    if actionbox.relation_mode(rschema, eschema, teschema, role) == 'create':
+                    if actionbox.appearsin_addmenu.etype_get(eschema, rschema,
+                                                             role, teschema):
                         if role == 'subject':
                             label = 'add %s %s %s %s' % (eschema, rschema,
                                                          teschema, role)

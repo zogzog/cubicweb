@@ -38,45 +38,26 @@ class AutomaticEntityForm(EntityFieldsForm):
     attrcategories = ('primary', 'secondary')
     # class attributes below are actually stored in the uicfg module since we
     # don't want them to be reloaded
-    rcategories = uicfg.rcategories
-    rfields = uicfg.rfields
-    rwidgets = uicfg.rwidgets
-    rinlined = uicfg.rinlined
-    rpermissions_overrides = uicfg.rpermissions_overrides
+    rcategories = uicfg.autoform_section
+    rfields = uicfg.autoform_field
+    rwidgets = uicfg.autoform_widget
+    rinlined = uicfg.autoform_is_inlined
+    rpermissions_overrides = uicfg.autoform_permissions_overrides
 
     @classmethod
     def vreg_initialization_completed(cls):
         """set default category tags for relations where it's not yet defined in
         the category relation tags
         """
-        for eschema in cls.schema.entities():
-            for rschema, tschemas, role in eschema.relation_definitions(True):
-                for tschema in tschemas:
-                    if role == 'subject':
-                        X, Y = eschema, tschema
-                        card = rschema.rproperty(X, Y, 'cardinality')[0]
-                        composed = rschema.rproperty(X, Y, 'composite') == 'object'
-                    else:
-                        X, Y = tschema, eschema
-                        card = rschema.rproperty(X, Y, 'cardinality')[1]
-                        composed = rschema.rproperty(X, Y, 'composite') == 'subject'
-                    if not cls.rcategories.get(X, rschema, Y, role):
-                        if eschema.is_metadata(rschema):
-                            category = 'generated'
-                        elif card in '1+':
-                            if not rschema.is_final() and composed:
-                                category = 'generated'
-                            else:
-                                category = 'primary'
-                        elif rschema.is_final():
-                            category = 'secondary'
-                        else:
-                            category = 'generic'
-                        cls.rcategories.tag_relation(X, rschema, Y, category,
-                                                     tagged=role)
+        cls.rcategories.init(cls.schema)
+        cls.rfields.init(cls.schema)
+        cls.rwidgets.init(cls.schema)
+        cls.rinlined.init(cls.schema)
+        cls.rpermissions_overrides.init(cls.schema)
 
     @classmethod
-    def erelations_by_category(cls, entity, categories=None, permission=None, rtags=None):
+    def erelations_by_category(cls, entity, categories=None, permission=None,
+                               rtags=None):
         """return a list of (relation schema, target schemas, role) matching
         categories and permission
         """

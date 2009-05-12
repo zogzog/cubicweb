@@ -339,5 +339,5 @@ class PropertyValueField(StringField):
         self.widget = wdg
 
 
-uicfg.rfields.tag_attribute('CWProperty', 'pkey', PropertyKeyField)
-uicfg.rfields.tag_attribute('CWProperty', 'value', PropertyValueField)
+uicfg.autoform_field.tag_attribute(('CWProperty', 'pkey'), PropertyKeyField)
+uicfg.autoform_field.tag_attribute(('CWProperty', 'value'), PropertyValueField)

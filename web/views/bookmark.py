@@ -11,11 +11,8 @@ from logilab.mtconverter import html_escape
 from cubicweb import Unauthorized
 from cubicweb.selectors import implements
 from cubicweb.web.htmlwidgets import BoxWidget, BoxMenu, RawBoxItem
-from cubicweb.web import uicfg, action, box, formwidgets
+from cubicweb.web import action, box
 from cubicweb.web.views import primary
-
-uicfg.rcategories.tag_attribute('!Bookmark', 'path', 'primary')
-uicfg.rwidgets.tag_attribute('Bookmark', 'path', formwidgets.TextInput)
 
 
 class FollowAction(action.Action):

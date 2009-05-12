@@ -10,22 +10,8 @@ from logilab.mtconverter import html_escape
 
 from cubicweb.selectors import one_line_rset, implements, match_user_groups
 from cubicweb.view import EntityView
-from cubicweb.web import uicfg, action
+from cubicweb.web import action
 from cubicweb.web.views import primary
-
-
-uicfg.rcategories.tag_attribute('CWUser', 'firstname', 'secondary')
-uicfg.rcategories.tag_attribute('CWUser', 'surname', 'secondary')
-uicfg.rcategories.tag_attribute('CWUser', 'last_login_time', 'metadata')
-uicfg.rcategories.tag_relation('!CWUser', 'in_group', '*', 'primary')
-uicfg.rcategories.tag_relation('*', 'owned_by', '!CWUser', 'generated')
-uicfg.rcategories.tag_relation('*', 'created_by', '!CWUser', 'generated')
-uicfg.rcategories.tag_relation('*', 'bookmarked_by', '!CWUser', 'metadata')
-
-uicfg.rmode.tag_relation('*', 'in_group', '!CWGroup', 'create')
-uicfg.rmode.tag_relation('*', 'owned_by', '!CWUser', 'link')
-uicfg.rmode.tag_relation('*', 'created_by', '!CWUser', 'link')
-uicfg.rmode.tag_relation('*', 'bookmarked_by', '!CWUser', 'create')
 
 
 class UserPreferencesEntityAction(action.Action):

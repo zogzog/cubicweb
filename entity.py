@@ -50,11 +50,13 @@ try:
     def _dispatch_rtags(tags, rtype, role, stype, otype):
         for tag in tags:
             if tag in _MODE_TAGS:
-                uicfg.rmode.tag_relation(stype, rtype, otype, tag, role)
+                uicfg.actionbox_appearsin_addmenu.tag_relation(
+                    (stype, rtype, otype, role), tag == 'create')
             elif tag in _CATEGORY_TAGS:
-                uicfg.rcategories.tag_relation(stype, rtype, otype, tag, role)
+                uicfg.autoform_section.tag_relation((stype, rtype, otype, role),
+                                                    tag)
             elif tag == 'inlineview':
-                uicfg.rinlined.tag_relation(stype, rtype, otype, True, role)
+                uicfg.autoform_is_inlined.tag_relation((stype, rtype, otype, role), True)
             else:
                 raise ValueError(tag)
 
@@ -128,8 +130,8 @@ class _metaentity(type):
                         wdgname = 'TextInput'
                     widget = getattr(formwidgets, wdgname)
                     assert hasattr(widget, 'render')
-                    uicfg.rwidgets.tag_relation(
-                        etype, rtype, '*', widget, tagged='subject')
+                    uicfg.autoform_widget.tag_subject_of((etype, rtype, '*'),
+                                                         widget)
         return super(_metaentity, mcs).__new__(mcs, name, bases, classdict)
 
 

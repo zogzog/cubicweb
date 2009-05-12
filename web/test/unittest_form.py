@@ -1,7 +1,8 @@
 from logilab.common.testlib import unittest_main, mock_object
 from cubicweb import Binary
 from cubicweb.devtools.testlib import WebTest
-from cubicweb.web.form import EntityFieldsForm, FieldsForm, FormRenderer
+from cubicweb.web.form import EntityFieldsForm, FieldsForm
+from cubicweb.web.formrenderers import FormRenderer
 from cubicweb.web.formfields import (IntField, StringField, RichTextField,
                                      DateTimeField, DateTimePicker,
                                      FileField, EditableFileField)

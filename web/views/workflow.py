@@ -8,6 +8,7 @@
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 """
 __docformat__ = "restructuredtext en"
+_ = unicode
 
 from logilab.mtconverter import html_escape
 from logilab.common.graph import escape, GraphGenerator, DotBackend
@@ -22,13 +23,6 @@ from cubicweb.web.formfields import StringField,  RichTextField
 from cubicweb.web.formwidgets import HiddenInput, SubmitButton, Button
 from cubicweb.web.views import TmpFileViewMixin
 from cubicweb.web.views.boxes import EditBox
-
-_ = unicode
-
-EditBox.rmode.tag_relation('!Transition', 'destination_state', '*', 'create')
-EditBox.rmode.tag_relation('*', 'allowed_transition', '!Transition', 'create')
-EditBox.rmode.tag_relation('*', 'destination_state', '!State', 'create')
-EditBox.rmode.tag_relation('!State', 'allowed_transition', '*', 'create')
 
 
 # IWorkflowable views #########################################################

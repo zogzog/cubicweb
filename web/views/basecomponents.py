@@ -14,7 +14,7 @@ from rql import parse
 from cubicweb.selectors import yes, two_etypes_rset, match_form_params
 from cubicweb.schema import display_name
 from cubicweb.common.uilib import html_escape, toggle_action
-from cubicweb.web import uicfg, component
+from cubicweb.web import component
 from cubicweb.web.htmlwidgets import (MenuWidget, PopupBoxMenu, BoxSeparator,
                                       BoxLink)
 
@@ -145,14 +145,13 @@ class ApplicationName(component.Component):
     """display the application name"""
     id = 'appliname'
     property_defs = VISIBLE_PROP_DEF
+    # don't want user to hide this component using an cwproperty
+    site_wide = True
 
     def call(self):
-        self.w(u'<span id="appliName"><a href="%s">%s</a></span>' % (self.req.base_url(),
-                                                         self.req.property_value('ui.site-title')))
+        self.w(u'<span id="appliName"><a href="%s">%s</a></span>' % (
+            self.req.base_url(), self.req.property_value('ui.site-title')))
 
-
-uicfg.rdisplay.tag_relation('!*', 'see_also', '*', {})
-uicfg.rdisplay.tag_relation('*', 'see_also', '!*', {})
 
 class SeeAlsoVComponent(component.RelatedObjectsVComponent):
     """display any entity's see also"""

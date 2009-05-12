@@ -37,41 +37,14 @@ class EditBox(BoxTemplate):
     order = 2
     # class attributes below are actually stored in the uicfg module since we
     # don't want them to be reloaded
-    rmode = uicfg.rmode
+    appearsin_addmenu = uicfg.actionbox_appearsin_addmenu
 
     @classmethod
     def vreg_initialization_completed(cls):
         """set default category tags for relations where it's not yet defined in
         the category relation tags
         """
-        for eschema in cls.schema.entities():
-            for rschema, tschemas, role in eschema.relation_definitions(True):
-                for tschema in tschemas:
-                    if role == 'subject':
-                        X, Y = eschema, tschema
-                        card = rschema.rproperty(X, Y, 'cardinality')[0]
-                    else:
-                        X, Y = tschema, eschema
-                        card = rschema.rproperty(X, Y, 'cardinality')[1]
-                    if not cls.rmode.get(X, rschema, Y, role):
-                        if card in '?1':
-                            # by default, suppose link mode if cardinality doesn't allow
-                            # more than one relation
-                            mode = 'link'
-                        elif rschema.rproperty(X, Y, 'composite') == role:
-                            # if self is composed of the target type, create mode
-                            mode = 'create'
-                        else:
-                            # link mode by default
-                            mode = 'link'
-                        cls.rmode.tag_relation(X, rschema, Y, mode, tagged=role)
-
-    @classmethod
-    def relation_mode(cls, rtype, etype, targettype, role='subject'):
-        """return a string telling if the given relation is usually created
-        to a new entity ('create' mode) or to an existant entity ('link' mode)
-        """
-        return cls.rmode.etype_get(etype, rtype, role, targettype)
+        cls.appearsin_addmenu.init(cls.schema)
 
     def call(self, view=None, **kwargs):
         _ = self.req._
@@ -157,13 +130,17 @@ class EditBox(BoxTemplate):
                 if rschema.is_final():
                     continue
                 # check the relation can be added as well
-                if role == 'subject'and not rschema.has_perm(req, 'add', fromeid=entity.eid):
+                # XXX consider autoform_permissions_overrides?
+                if role == 'subject'and not rschema.has_perm(req, 'add',
+                                                             fromeid=entity.eid):
                     continue
-                if role == 'object'and not rschema.has_perm(req, 'add', toeid=entity.eid):
+                if role == 'object'and not rschema.has_perm(req, 'add',
+                                                            toeid=entity.eid):
                     continue
                 # check the target types can be added as well
                 for teschema in rschema.targets(eschema, role):
-                    if not self.relation_mode(rschema, eschema, teschema, role) == 'create':
+                    if not self.appearsin_addmenu.etype_get(eschema, rschema,
+                                                            role, teschema):
                         continue
                     if teschema.has_local_role('add') or teschema.has_perm(req, 'add'):
                         yield rschema, teschema, role

@@ -15,30 +15,8 @@ from cubicweb.selectors import implements, yes
 from cubicweb.schemaviewer import SchemaViewer
 from cubicweb.view import EntityView, StartupView
 from cubicweb.common import tags, uilib
-from cubicweb.web import uicfg, formwidgets, action
+from cubicweb.web import action
 from cubicweb.web.views import TmpFileViewMixin, primary, baseviews
-
-
-uicfg.rcategories.tag_relation('!CWPermission', 'require_group', '*', 'primary')
-uicfg.rcategories.tag_attribute('EEtype', 'final', 'generated')
-uicfg.rcategories.tag_attribute('ERtype', 'final', 'generated')
-
-uicfg.rinlined.tag_relation('!CWRelation', 'relation_type', '*', True)
-uicfg.rinlined.tag_relation('!CWRelation', 'from_entity', '*', True)
-uicfg.rinlined.tag_relation('!CWRelation', 'to_entity', '*', True)
-
-uicfg.rwidgets.tag_attribute('RQLExpression', 'expression', formwidgets.TextInput)
-
-uicfg.rmode.tag_relation('*', 'state_of', '!CWEType', 'create')
-uicfg.rmode.tag_relation('*', 'transition_of', '!CWEType', 'create')
-uicfg.rmode.tag_relation('*', 'relation_type', '!CWRType', 'create')
-uicfg.rmode.tag_relation('*', 'from_entity', '!CWEType', 'link')
-uicfg.rmode.tag_relation('*', 'to_entity', '!CWEType', 'link')
-
-for attr in ('name', 'meta', 'final'):
-    uicfg.rdisplay.tag_attribute('CWRType', attr, {})
-for attr in ('name', 'meta', 'final', 'symetric', 'inlined'):
-    uicfg.rdisplay.tag_attribute('CWRType', attr, {})
 
 
 class ViewSchemaAction(action.Action):

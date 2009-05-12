@@ -27,13 +27,13 @@ class ManageView(StartupView):
     def vreg_initialization_completed(cls):
         for eschema in cls.schema.entities():
             if eschema.schema_entity():
-                uicfg.etypecat.setdefault(eschema, 'schema')
+                uicfg.indexview_etype_section.setdefault(eschema, 'schema')
             elif eschema.is_subobject(strict=True):
-                uicfg.etypecat.setdefault(eschema, 'subobject')
+                uicfg.indexview_etype_section.setdefault(eschema, 'subobject')
             elif eschema.meta:
-                uicfg.etypecat.setdefault(eschema, 'system')
+                uicfg.indexview_etype_section.setdefault(eschema, 'system')
             else:
-                uicfg.etypecat.setdefault(eschema, 'application')
+                uicfg.indexview_etype_section.setdefault(eschema, 'application')
 
     def display_folders(self):
         return False
@@ -100,15 +100,15 @@ class ManageView(StartupView):
         if manager:
             self.w(u'<tr><th colspan="4">%s</th></tr>\n' % self.req._('application entities'))
         self.entity_types_table(eschema for eschema in schema.entities()
-                                if uicfg.etypecat.get(eschema) == 'application')
+                                if uicfg.indexview_etype_section.get(eschema) == 'application')
         if manager:
             self.w(u'<tr><th colspan="4">%s</th></tr>\n' % self.req._('system entities'))
             self.entity_types_table(eschema for eschema in schema.entities()
-                                if uicfg.etypecat.get(eschema) == 'system')
+                                if uicfg.indexview_etype_section.get(eschema) == 'system')
             if 'CWAttribute' in schema: # check schema support
                 self.w(u'<tr><th colspan="4">%s</th></tr>\n' % self.req._('schema entities'))
                 self.entity_types_table(eschema for eschema in schema.entities()
-                                        if uicfg.etypecat.get(eschema) == 'schema')
+                                        if uicfg.indexview_etype_section.get(eschema) == 'schema')
         self.w(u'</table>')
 
     def entity_types_table(self, eschemas):

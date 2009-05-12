@@ -5,6 +5,7 @@
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 """
 __docformat__ = "restructuredtext en"
+_ = unicode
 
 from warnings import warn
 
@@ -12,9 +13,8 @@ from logilab.mtconverter import html_escape
 
 from cubicweb import Unauthorized
 from cubicweb.view import EntityView
-from cubicweb.web.uicfg import rdisplay
+from cubicweb.web import uicfg
 
-_ = unicode
 
 
 class PrimaryView(EntityView):
@@ -24,7 +24,8 @@ class PrimaryView(EntityView):
     show_attr_label = True
     show_rel_label = True
     skip_none = True
-    rdisplay = rdisplay
+    rsection = uicfg.primaryview_section
+    display_ctrl = uicfg.primaryview_display_ctrl
     main_related_section = True
 
     @classmethod
@@ -32,38 +33,8 @@ class PrimaryView(EntityView):
         """set default category tags for relations where it's not yet defined in
         the category relation tags
         """
-        for eschema in cls.schema.entities():
-            for rschema, tschemas, role in eschema.relation_definitions(True):
-                for tschema in tschemas:
-                    if role == 'subject':
-                        X, Y = eschema, tschema
-                        card = rschema.rproperty(X, Y, 'cardinality')[0]
-                        composed = rschema.rproperty(X, Y, 'composite') == 'object'
-                    else:
-                        X, Y = tschema, eschema
-                        card = rschema.rproperty(X, Y, 'cardinality')[1]
-                        composed = rschema.rproperty(X, Y, 'composite') == 'subject'
-                    displayinfo = cls.rdisplay.get(X, rschema, Y, role)
-                    if displayinfo is None:
-                        if rschema.is_final():
-                            if rschema.meta or tschema.type in ('Password', 'Bytes'):
-                                where = None
-                            else:
-                                where = 'attributes'
-                        elif card in '1+':
-                            where = 'attributes'
-                        elif composed:
-                            where = 'relations'
-                        else:
-                            where = 'sideboxes'
-                        displayinfo = {'where': where,
-                                       'order': cls.rdisplay.get_timestamp()}
-                        cls.rdisplay.tag_relation(X, rschema, Y, displayinfo,
-                                                  tagged=role)
-                    if role == 'subject':
-                        displayinfo.setdefault('label', rschema.type)
-                    else:
-                        displayinfo.setdefault('label', '%s_%s' % (rschema, role))
+        cls.rsection.init(cls.schema)
+        cls.display_ctrl.init(cls.schema)
 
     def html_headers(self):
         """return a list of html headers (eg something to be inserted between
@@ -150,12 +121,12 @@ class PrimaryView(EntityView):
         return u''
 
     def render_entity_attributes(self, entity, siderelations=None):
-        for rschema, tschemas, role, displayinfo in self._iter_display(entity, 'attributes'):
-            vid =  displayinfo.get('vid', 'reledit')
+        for rschema, tschemas, role, dispctrl in self._section_def(entity, 'attributes'):
+            vid =  dispctrl.get('vid', 'reledit')
             if rschema.is_final() or vid == 'reledit':
                 value = entity.view(vid, rtype=rschema.type, role=role)
             else:
-                rset = self._relation_rset(entity, rschema, role, displayinfo)
+                rset = self._relation_rset(entity, rschema, role, dispctrl)
                 if rset:
                     value = self.view(vid, rset)
                 else:
@@ -165,10 +136,10 @@ class PrimaryView(EntityView):
             self._render_attribute(rschema, value)
 
     def render_entity_relations(self, entity, siderelations=None):
-        for rschema, tschemas, role, displayinfo in self._iter_display(entity, 'relations'):
-            rset = self._relation_rset(entity, rschema, role, displayinfo)
+        for rschema, tschemas, role, dispctrl in self._section_def(entity, 'relations'):
+            rset = self._relation_rset(entity, rschema, role, dispctrl)
             if rset:
-                self._render_relation(rset, displayinfo, 'autolimited',
+                self._render_relation(rset, dispctrl, 'autolimited',
                                       self.show_rel_label)
 
     def render_side_boxes(self, boxes):
@@ -177,7 +148,7 @@ class PrimaryView(EntityView):
         """
         for box in boxes:
             if isinstance(box, tuple):
-                label, rset, vid, _  = box
+                label, rset, vid  = box
                 self.w(u'<div class="sideRelated">')
                 self.wview(vid, rset, title=label)
                 self.w(u'</div>')
@@ -191,52 +162,54 @@ class PrimaryView(EntityView):
 
     def _prepare_side_boxes(self, entity):
         sideboxes = []
-        for rschema, tschemas, role, displayinfo in self._iter_display(entity, 'sideboxes'):
-            rset = self._relation_rset(entity, rschema, role, displayinfo)
+        for rschema, tschemas, role, dispctrl in self._section_def(entity, 'sideboxes'):
+            rset = self._relation_rset(entity, rschema, role, dispctrl)
             if not rset:
                 continue
             label = display_name(self.req, rschema.type, role)
-            vid = displayinfo.get('vid', 'autolimited')
-            sideboxes.append((label, rset, vid, displayinfo.get('order')))
-        sideboxes = sorted(sideboxes, key=lambda x: x[-1])
-        sideboxes += list(self.vreg.possible_vobjects('boxes', self.req, self.rset,
-                                                      row=self.row, view=self,
-                                                      context='incontext'))
+            vid = dispctrl.get('vid', 'sidebox')
+            sideboxes.append( (label, rset, vid) )
+        sideboxes += self.vreg.possible_vobjects('boxes', self.req, self.rset,
+                                                 row=self.row, view=self,
+                                                 context='incontext')
         return sideboxes
 
-    def _iter_display(self, entity, where):
+    def _section_def(self, entity, where):
+        rdefs = []
         eschema = entity.e_schema
         for rschema, tschemas, role in eschema.relation_definitions(True):
             matchtschemas = []
             for tschema in tschemas:
-                displayinfo = self.rdisplay.etype_get(eschema, rschema, role,
-                                                      tschema)
-                assert displayinfo is not None, (str(rschema), role,
-                                                 str(eschema), str(tschema))
-                if displayinfo.get('where') == where:
+                section = self.rsection.etype_get(eschema, rschema, role,
+                                                  tschema)
+                if section == where:
                     matchtschemas.append(tschema)
             if matchtschemas:
-                # XXX pick the latest displayinfo
-                yield rschema, matchtschemas, role, displayinfo
+                # XXX pick the latest dispctrl
+                dispctrl = self.display_ctrl.etype_get(eschema, rschema, role,
+                                                       matchtschemas[-1])
 
-    def _relation_rset(self, entity, rschema, role, displayinfo):
+                rdefs.append( (rschema, matchtschemas, role, dispctrl) )
+        return sorted(rdefs, key=lambda x: x[-1]['order'])
+
+    def _relation_rset(self, entity, rschema, role, dispctrl):
         try:
-            if displayinfo.get('limit'):
+            if dispctrl.get('limit'):
                 rset = entity.related(rschema.type, role,
                                       limit=self.maxrelated+1)
             else:
                 rset = entity.related(rschema.type, role)
         except Unauthorized:
             return
-        if 'filter' in displayinfo:
-            rset = displayinfo['filter'](rset)
+        if 'filter' in dispctrl:
+            rset = dispctrl['filter'](rset)
         return rset
 
-    def _render_relation(self, rset, displayinfo, defaultvid, showlabel):
+    def _render_relation(self, rset, dispctrl, defaultvid, showlabel):
         self.w(u'<div class="section">')
         if showlabel:
-            self.w(u'<h4>%s</h4>' % self.req._(displayinfo['label']))
-        self.wview(displayinfo.get('vid', defaultvid), rset)
+            self.w(u'<h4>%s</h4>' % self.req._(dispctrl['label']))
+        self.wview(dispctrl.get('vid', defaultvid), rset)
         self.w(u'</div>')
 
     def _render_attribute(self, rschema, value, role='subject'):
