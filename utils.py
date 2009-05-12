@@ -31,10 +31,11 @@ def todate(somedate):
 
 def todatetime(somedate):
     """return a date from a date (leaving unchanged) or a datetime"""
-    if isinstance(somedate, date):
-        return datetime(somedate.year, somedate.month, somedate.day)
-    assert isinstance(somedate, datetime), repr(somedate)
-    return somedate
+    # take care, datetime is a subclass of date
+    if isinstance(somedate, datetime):
+        return somedate
+    assert isinstance(somedate, date), repr(somedate)
+    return datetime(somedate.year, somedate.month, somedate.day)
 
 ONEDAY = timedelta(days=1)
 ONEWEEK = timedelta(days=7)
