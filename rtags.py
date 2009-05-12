@@ -10,6 +10,9 @@ import logging
 
 from logilab.common.logging_ext import set_log_methods
 
+RTAGS = []
+def register_rtag(rtag):
+    RTAGS.append(rtag)
 
 class RelationTags(object):
     """a tag store for full relation definitions :
@@ -26,7 +29,8 @@ class RelationTags(object):
         if allowed_values is not None:
             self._allowed_values = allowed_values
         self._initfunc = initfunc
-
+        register_rtag(self)
+        
     def __repr__(self):
         return repr(self._tagdefs)
 

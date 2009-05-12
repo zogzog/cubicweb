@@ -45,17 +45,6 @@ class AutomaticEntityForm(EntityFieldsForm):
     rpermissions_overrides = uicfg.autoform_permissions_overrides
 
     @classmethod
-    def vreg_initialization_completed(cls):
-        """set default category tags for relations where it's not yet defined in
-        the category relation tags
-        """
-        cls.rcategories.init(cls.schema)
-        cls.rfields.init(cls.schema)
-        cls.rwidgets.init(cls.schema)
-        cls.rinlined.init(cls.schema)
-        cls.rpermissions_overrides.init(cls.schema)
-
-    @classmethod
     def erelations_by_category(cls, entity, categories=None, permission=None,
                                rtags=None):
         """return a list of (relation schema, target schemas, role) matching

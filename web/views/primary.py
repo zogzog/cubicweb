@@ -28,14 +28,6 @@ class PrimaryView(EntityView):
     display_ctrl = uicfg.primaryview_display_ctrl
     main_related_section = True
 
-    @classmethod
-    def vreg_initialization_completed(cls):
-        """set default category tags for relations where it's not yet defined in
-        the category relation tags
-        """
-        cls.rsection.init(cls.schema)
-        cls.display_ctrl.init(cls.schema)
-
     def html_headers(self):
         """return a list of html headers (eg something to be inserted between
         <head> and </head> of the returned page

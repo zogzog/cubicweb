@@ -39,13 +39,6 @@ class EditBox(BoxTemplate):
     # don't want them to be reloaded
     appearsin_addmenu = uicfg.actionbox_appearsin_addmenu
 
-    @classmethod
-    def vreg_initialization_completed(cls):
-        """set default category tags for relations where it's not yet defined in
-        the category relation tags
-        """
-        cls.appearsin_addmenu.init(cls.schema)
-
     def call(self, view=None, **kwargs):
         _ = self.req._
         title = _(self.title)

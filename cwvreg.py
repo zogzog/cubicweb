@@ -114,13 +114,17 @@ class CubicWebRegistry(VRegistry):
         """overriden to remove objects requiring a missing interface"""
         if super(CubicWebRegistry, self).register_objects(path, force_reload):
             self.initialization_completed()
-            # print registry content
+            # call vreg_initialization_completed on appobjects and print
+            # registry content
             for registry, objects in self.items():
                 self.debug('available in registry %s: %s', registry,
                            sorted(objects))
                 for appobjects in objects.itervalues():
                     for appobject in appobjects:
                         appobject.vreg_initialization_completed()
+            from cubicweb.rtags import RTAGS
+            for rtag in RTAGS:
+                rtag.init(self.schema)
 
     def initialization_completed(self):
         # clear etype cache if you don't want to run into deep weirdness
