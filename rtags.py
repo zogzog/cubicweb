@@ -64,7 +64,7 @@ class RelationTags(object):
                             stype, otype = eschema, tschema
                         else:
                             stype, otype = tschema, eschema
-                        self._initfunc(stype, rtype, otype, role)
+                        self._initfunc(self, stype, rtype, otype, role)
 
     # rtag declaration api ####################################################
 
@@ -89,7 +89,7 @@ class RelationTags(object):
         #else:
         stype, rtype, otype, tagged = [str(k) for k in key]
         if self._allowed_values is not None:
-            assert tag in self._allowed_values
+            assert tag in self._allowed_values, '%r is not an allowed tag' % tag
         self._tagdefs[(rtype, tagged, stype, otype)] = tag
 
     # rtag runtime api ########################################################

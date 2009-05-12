@@ -53,7 +53,7 @@ to true on one of them which is the preferred form.'))
     identical_to = SubjectRelation('EmailAddress')
 
 class use_email(RelationType):
-    """"""
+    """ """
     permissions = {
         'read':   ('managers', 'users', 'guests',),
         'add':    ('managers', RRQLExpression('U has_update_permission S'),),

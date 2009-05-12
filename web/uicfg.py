@@ -71,8 +71,8 @@ from cubicweb.web import formwidgets
 
 # primary view configuration ##################################################
 
-def init_primaryview_section(self, sschema, rschema, oschema, role):
-    if self.get(sschema, rschema, oschema, role) is None:
+def init_primaryview_section(rtag, sschema, rschema, oschema, role):
+    if rtag.get(sschema, rschema, oschema, role) is None:
         if rschema.is_final():
             if rschema.meta or tschema.type in ('Password', 'Bytes'):
                 section = 'hidden'
@@ -84,7 +84,7 @@ def init_primaryview_section(self, sschema, rschema, oschema, role):
             section = 'relations'
         else:
             section = 'sideboxes'
-        self.tag_relation((sschema, rschema, oschema, role), section)
+        rtag.tag_relation((sschema, rschema, oschema, role), section)
 
 primaryview_section = RelationTags(init_primaryview_section,
                                     frozenset(('attributes', 'relations',
@@ -116,17 +116,17 @@ class DisplayCtrlRelationTags(RelationTags):
         tag.setdefault('order', self._counter)
 
 
-def init_primaryview_display_ctrl(self, sschema, rschema, oschema, role):
+def init_primaryview_display_ctrl(rtag, sschema, rschema, oschema, role):
     if role == 'subject':
         oschema = '*'
         label = rschema.type
     else:
         sschema = '*'
         label = '%s_%s' % (rschema, role)
-    displayinfo = self.get(sschema, rschema, oschema, role)
+    displayinfo = rtag.get(sschema, rschema, oschema, role)
     if displayinfo is None:
         displayinfo = {}
-        self.tag_relation((sschema, rschema, oschema, role), displayinfo)
+        rtag.tag_relation((sschema, rschema, oschema, role), displayinfo)
     displayinfo.setdefault('label', label)
 
 primaryview_display_ctrl = DisplayCtrlRelationTags(init_primaryview_display_ctrl)
@@ -146,8 +146,8 @@ indexview_etype_section = {'EmailAddress': 'subobject'}
 
 # relations'section (eg primary/secondary/generic/metadata/generated)
 
-def init_autoform_section(self, sschema, rschema, oschema, role):
-    if self.get(sschema, rschema, oschema, role) is None:
+def init_autoform_section(rtag, sschema, rschema, oschema, role):
+    if rtag.get(sschema, rschema, oschema, role) is None:
         if role == 'subject':
             card = rschema.rproperty(sschema, oschema, 'cardinality')[0]
             composed = rschema.rproperty(sschema, oschema, 'composite') == 'object'
@@ -165,7 +165,7 @@ def init_autoform_section(self, sschema, rschema, oschema, role):
             section = 'secondary'
         else:
             section = 'generic'
-        self.tag_relation((sschema, rschema, oschema, role), section)
+        rtag.tag_relation((sschema, rschema, oschema, role), section)
 
 autoform_section = RelationTags(init_autoform_section,
                                 set(('primary', 'secondary', 'generic',
@@ -233,12 +233,12 @@ autoform_permissions_overrides = RelationTagsSet()
 # boxes.EditBox configuration #################################################
 
 # 'link' / 'create' relation tags, used to control the "add entity" submenu
-def init_actionbox_appearsin_addmenu(self, sschema, rschema, oschema, role):
-    if self.get(sschema, rschema, oschema, role) is None:
+def init_actionbox_appearsin_addmenu(rtag, sschema, rschema, oschema, role):
+    if rtag.get(sschema, rschema, oschema, role) is None:
         card = rschema.rproperty(sschema, oschema, 'cardinality')[role == 'object']
         if not card in '?1' and \
                rschema.rproperty(sschema, oschema, 'composite') == role:
-            self.tag_relation((sschema, rschema, oschema, role), True)
+            rtag.tag_relation((sschema, rschema, oschema, role), True)
 
 actionbox_appearsin_addmenu = RelationTagsBool(init_actionbox_appearsin_addmenu)
 actionbox_appearsin_addmenu.tag_subject_of(('*', 'is', '*'), False)
