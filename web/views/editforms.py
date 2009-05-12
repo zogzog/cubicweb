@@ -94,18 +94,18 @@ class ClickAndEditFormView(FormViewMixIn, EntityView):
     ondblclick = "showInlineEditionForm(%(eid)s, '%(rtype)s', '%(divid)s')"
 
     def cell_call(self, row, col, rtype=None, role='subject', reload=False,
-                  vid='textoutofcontext'):
+                  vid='textoutofcontext', default=u''):
         """display field to edit entity's `rtype` relation on double-click"""
         rschema = self.schema.rschema(rtype)
         entity = self.entity(row, col)
         if rschema.is_final():
             if getattr(entity, rtype) is None:
-                value = self.req._('not specified')
+                value = default or self.req._('not specified')
             else:
                 value = entity.printable_value(rtype)
         else:
             rset = entity.related(rtype, role)
-            value = self.view(vid, rset, 'null')
+            value = self.view(vid, rset, 'null') or default
         if not entity.has_perm('update'):
             self.w(value)
             return
