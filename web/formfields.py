@@ -334,6 +334,9 @@ class IntField(Field):
         super(IntField, self).__init__(**kwargs)
         self.min = min
         self.max = max
+        if isinstance(self.widget, TextInput):
+            self.widget.attrs.setdefault('size', 5)
+            self.widget.attrs.setdefault('maxlength', 15)
 
 class BooleanField(Field):
     widget = Radio
@@ -372,7 +375,7 @@ class DateTimeField(DateField):
 
 class TimeField(DateField):
     format_prop = 'ui.datetime-format'
-    widget = TextInput 
+    widget = TextInput
 
 class HiddenInitialValueField(Field):
     def __init__(self, visible_field):
@@ -384,6 +387,7 @@ class HiddenInitialValueField(Field):
 
 class RelationField(Field):
     def __init__(self, **kwargs):
+        kwargs.setdefault('sort', False)
         super(RelationField, self).__init__(**kwargs)
 
     @staticmethod
