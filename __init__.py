@@ -22,13 +22,7 @@ from StringIO import StringIO
 from urllib import quote as urlquote, unquote as urlunquote
 
 from logilab.common.decorators import cached
-
-def set_log_methods(cls, logger):
-    """bind standart logger's methods as static methods on the class
-    """
-    cls._logger = logger
-    for attr in ('debug', 'info', 'warning', 'error', 'critical', 'exception'):
-        setattr(cls, attr, getattr(logger, attr))
+from logilab.common.logging_ext import set_log_methods
 
 if os.environ.get('APYCOT_ROOT'):
     logging.basicConfig(level=logging.CRITICAL)
