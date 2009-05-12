@@ -217,11 +217,12 @@ autoform_section.tag_attribute(('Bookmark', 'path'), 'primary')
 # relations'field class
 autoform_field = RelationTags()
 
-# relations'widget class
-autoform_widget = RelationTags()
-autoform_widget.tag_attribute(('RQLExpression', 'expression'),
-                              formwidgets.TextInput)
-autoform_widget.tag_attribute(('Bookmark', 'path'), formwidgets.TextInput)
+# relations'field explicit kwargs (given to field's __init__)
+autoform_field_kwargs = RelationTags()
+autoform_field_kwargs.tag_attribute(('RQLExpression', 'expression'),
+                                    {'widget': formwidgets.TextInput})
+autoform_field_kwargs.tag_attribute(('Bookmark', 'path'),
+                                    {'widget': formwidgets.TextInput})
 
 
 

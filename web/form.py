@@ -361,12 +361,8 @@ class FieldsForm(FormMixIn, AppRsetObject):
         values found in 1. and 2. are expected te be already some 'display'
         value while those found in 3. and 4. are expected to be correctly typed.
         """
-        qname = self.form_field_name(field)
-        if qname in self.form_previous_values:
-            value = self.form_previous_values[qname]
-        elif qname in self.req.form:
-            value = self.req.form[qname]
-        else:
+        value = self._req_display_value(field)
+        if value is None:
             if field.name in rendervalues:
                 value = rendervalues[field.name]
             else:
@@ -376,6 +372,14 @@ class FieldsForm(FormMixIn, AppRsetObject):
             if value != INTERNAL_FIELD_VALUE:
                 value = field.format_value(self.req, value)
         return value
+
+    def _req_display_value(self, field):
+        qname = self.form_field_name(field)
+        if qname in self.form_previous_values:
+            return self.form_previous_values[qname]
+        if qname in self.req.form:
+            return self.req.form[qname]
+        return None
 
     def form_field_value(self, field, load_bytes=False):
         """return field's *typed* value"""
@@ -464,6 +468,12 @@ class EntityFieldsForm(FieldsForm):
             done.add(entity.eid)
             res.append((entity.view('combobox'), entity.eid))
         return res
+
+    def _req_display_value(self, field):
+        value = super(EntityFieldsForm, self)._req_display_value(field)
+        if value is None:
+            value = self.edited_entity.linked_to(field.name, field.role) or None
+        return value
 
     def _form_field_default_value(self, field, load_bytes):
         defaultattr = 'default_%s' % field.name

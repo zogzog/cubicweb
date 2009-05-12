@@ -40,7 +40,7 @@ class AutomaticEntityForm(EntityFieldsForm):
     # don't want them to be reloaded
     rcategories = uicfg.autoform_section
     rfields = uicfg.autoform_field
-    rwidgets = uicfg.autoform_widget
+    rfields_kwargs = uicfg.autoform_field_kwargs
     rinlined = uicfg.autoform_is_inlined
     rpermissions_overrides = uicfg.autoform_permissions_overrides
 
@@ -139,10 +139,10 @@ class AutomaticEntityForm(EntityFieldsForm):
             fieldcls = cls_or_self.rfields.etype_get(eschema, rschema, role, tschemas[0])
             if fieldcls:
                 return fieldcls(name=name, role=role, eidparam=True)
-            widget = cls_or_self.rwidgets.etype_get(eschema, rschema, role, tschemas[0])
-            if widget:
+            kwargs = cls_or_self.rfields_kwargs.etype_get(eschema, rschema, role, tschemas[0])
+            if kwargs:
                 field = guess_field(eschema, rschema, role,
-                                    eidparam=True, widget=widget)
+                                    eidparam=True, **kwargs)
             else:
                 field = guess_field(eschema, rschema, role, eidparam=True)
             if field is None:
