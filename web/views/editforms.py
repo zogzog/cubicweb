@@ -340,7 +340,7 @@ class InlineEntityEditionFormView(FormViewMixIn, EntityView):
         if not entity.has_eid():
             return True
         # are we regenerating form because of a validation error ?
-        if erroneous_post:
+        if form.form_previous_values:
             cdvalues = self.req.list_form_param(eid_param(rtype, peid),
                                                 form.form_previous_values)
             if unicode(entity.eid) not in cdvalues:
