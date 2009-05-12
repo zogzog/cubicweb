@@ -6,6 +6,10 @@
 """
 __docformat__ = "restructuredtext en"
 
+import logging
+
+from logilab.common.logging_ext import set_log_methods
+
 
 class RelationTags(object):
     """a tag store for full relation definitions :
@@ -46,12 +50,12 @@ class RelationTags(object):
 
     def init(self, schema):
         # XXX check existing keys against schema
-        for rtype, tagged, stype, otype in self._tagdefs:
-            assert rtype in schema
-            if stype != '*':
-                assert stype in schema
-            if otype != '*':
-                assert otype in schema
+        for rtype, tagged, stype, otype in self._tagdefs.keys():
+            for ertype in (stype, rtype, otype):
+                if ertype != '*' and not ertype in schema:
+                    self.warning('removing rtag for %s, undefined in schema',
+                                 ertype)
+                    self.del_rtag(stype, rtype, otype, tagged)
         if self._initfunc is not None:
             for eschema in schema.entities():
                 for rschema, tschemas, role in eschema.relation_definitions(True):
@@ -129,11 +133,5 @@ class RelationTagsSet(RelationTags):
 class RelationTagsBool(RelationTags):
     _allowed_values = frozenset((True, False))
 
-    def tag_subject_of(self, key, tag=True):
-        super(RelationTagsBool, self).tag_subject_of(key, tag)
 
-    def tag_object_of(self, key, tag=True):
-        super(RelationTagsBool, self).tag_object_of(key, tag)
-
-    def tag_attribute(self, key, tag=True):
-        super(RelationTagsBool, self).tag_attribute(key, tag)
+set_log_methods(RelationTags, logging.getLogger('cubicweb.rtags'))
