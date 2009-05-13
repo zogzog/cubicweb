@@ -124,8 +124,7 @@ def score_interface(cls_or_inst, cls, iface):
             return len(parents) + 4
         if iface is parents[-1]: # Any
             return 1
-        for index, etype in enumerate(reversed(parents[:-1])):
-            basecls = vreg.etype_class(etype)
+        for index, basecls in enumerate(reversed(parents[:-1])):
             if iface is basecls:
                 return index + 3
         return 0
