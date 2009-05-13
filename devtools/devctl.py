@@ -36,7 +36,7 @@ class DevCubeConfiguration(ServerConfiguration, WebConfiguration):
         if cube is None:
             self._cubes = ()
         else:
-            self._cubes = self.expand_cubes(self.my_cubes(cube))
+            self._cubes = self.reorder_cubes(self.expand_cubes(self.my_cubes(cube)))
 
     def my_cubes(self, cube):
         return (cube,) + self.cube_dependencies(cube) + self.cube_recommends(cube)
@@ -96,6 +96,7 @@ def generate_schema_pot(w, cubedir=None):
     cleanup_sys_modules(libconfig)
     if cubedir:
         config = DevCubeConfiguration(cube)
+        config.cleanup_interface_sobjects = False
     else:
         config = libconfig
         libconfig = None
