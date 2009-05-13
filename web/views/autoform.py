@@ -137,14 +137,12 @@ class AutomaticEntityForm(EntityFieldsForm):
             # XXX use a sample target type. Document this.
             tschemas = rschema.targets(eschema, role)
             fieldcls = cls_or_self.rfields.etype_get(eschema, rschema, role, tschemas[0])
-            if fieldcls:
-                return fieldcls(name=name, role=role, eidparam=True)
             kwargs = cls_or_self.rfields_kwargs.etype_get(eschema, rschema, role, tschemas[0])
-            if kwargs:
-                field = guess_field(eschema, rschema, role,
-                                    eidparam=True, **kwargs)
-            else:
-                field = guess_field(eschema, rschema, role, eidparam=True)
+            if kwargs is None:
+                kwargs = {}
+            if fieldcls:
+                return fieldcls(name=name, role=role, eidparam=True, **kwargs)
+            field = guess_field(eschema, rschema, role, eidparam=True, **kwargs)
             if field is None:
                 raise
             return field
