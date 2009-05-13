@@ -24,15 +24,15 @@ class FakeUserROSource(AbstractSource):
     def syntax_tree_search(self, *args, **kwargs):
         return []
 
-        
+
 class FakeCardSource(AbstractSource):
     uri = 'ccc'
     support_entities = {'Card': True, 'Note': True, 'State': True}
     support_relations = {'in_state': True, 'multisource_rel': True, 'multisource_inlined_rel': True,
                          'multisource_crossed_rel': True}
-    dont_cross_relations = set(('fiche',))
+    dont_cross_relations = set(('fiche', 'in_state'))
     cross_relations = set(('multisource_crossed_rel',))
-    
+
     def syntax_tree_search(self, *args, **kwargs):
         return []
 
@@ -53,19 +53,19 @@ def clear_ms_caches(repo):
     clear_cache(repo, 'can_cross_relation')
     clear_cache(repo, 'is_multi_sources_relation')
     # XXX source_defs
-    
+
 # keep cnx so it's not garbage collected and the associated session is closed
 repo, cnx = init_test_database('sqlite')
 
 class BaseMSPlannerTC(BasePlannerTC):
     """test planner related feature on a 3-sources repository:
-    
+
     * system source supporting everything
     * ldap source supporting CWUser
     * rql source supporting Card
     """
     repo = repo
-    
+
     def setUp(self):
         #_QuerierTC.setUp(self)
         clear_cache(repo, 'rel_type_sources')
@@ -84,7 +84,7 @@ class BaseMSPlannerTC(BasePlannerTC):
         self.prevrqlexpr_user = userreadperms[-1]
         userreadperms[-1] = ERQLExpression('X owned_by U')
         self.schema['CWUser']._groups['read'] = tuple(userreadperms)
-        
+
         self.sources = self.o._repo.sources
         self.system = self.sources[-1]
         self.sources.append(FakeUserROSource(self.o._repo, self.o.schema,
@@ -97,7 +97,7 @@ class BaseMSPlannerTC(BasePlannerTC):
         self.rql = self.sources[-1]
         do_monkey_patch()
         clear_ms_caches(repo)
-        
+
     def tearDown(self):
         undo_monkey_patch()
         del self.sources[-1]
@@ -107,20 +107,20 @@ class BaseMSPlannerTC(BasePlannerTC):
         # restore hijacked security
         self.restore_orig_affaire_security()
         self.restore_orig_euser_security()
-        
+
     def restore_orig_affaire_security(self):
         affreadperms = list(self.schema['Affaire']._groups['read'])
         affreadperms[-1] = self.prevrqlexpr_affaire
         self.schema['Affaire']._groups['read'] = tuple(affreadperms)
         clear_cache(self.schema['Affaire'], 'ERSchema_get_rqlexprs')
-        
+
     def restore_orig_euser_security(self):
         userreadperms = list(self.schema['CWUser']._groups['read'])
         userreadperms[-1] = self.prevrqlexpr_user
         self.schema['CWUser']._groups['read'] = tuple(userreadperms)
         clear_cache(self.schema['CWUser'], 'ERSchema_get_rqlexprs')
 
-                  
+
 class PartPlanInformationTC(BaseMSPlannerTC):
 
     def _test(self, rql, *args):
@@ -140,44 +140,44 @@ class PartPlanInformationTC(BaseMSPlannerTC):
         self.assertEquals(ppi._sourcesterms, sourcesterms)
         self.assertEquals(ppi.needsplit, needsplit)
 
-        
+
     def test_simple_system_only(self):
         """retrieve entities only supported by the system source"""
         self._test('CWGroup X',
                    {self.system: {'X': s[0]}}, False)
-        
+
     def test_simple_system_ldap(self):
         """retrieve CWUser X from both sources and return concatenation of results
         """
         self._test('CWUser X',
                    {self.system: {'X': s[0]}, self.ldap: {'X': s[0]}}, False)
-        
+
     def test_simple_system_rql(self):
         """retrieve Card X from both sources and return concatenation of results
         """
         self._test('Any X, XT WHERE X is Card, X title XT',
                    {self.system: {'X': s[0]}, self.rql: {'X': s[0]}}, False)
-        
+
     def test_simple_eid_specified(self):
         """retrieve CWUser X from system source (eid is specified, can locate the entity)
         """
         ueid = self.session.user.eid
         self._test('Any X,L WHERE X eid %(x)s, X login L', {'x': ueid},
                    {self.system: {'X': s[0]}}, False)
-        
+
     def test_simple_eid_invariant(self):
         """retrieve CWUser X from system source (eid is specified, can locate the entity)
         """
         ueid = self.session.user.eid
         self._test('Any X WHERE X eid %(x)s', {'x': ueid},
                    {self.system: {'x': s[0]}}, False)
-        
+
     def test_simple_invariant(self):
         """retrieve CWUser X from system source only (X is invariant and in_group not supported by ldap source)
         """
         self._test('Any X WHERE X is CWUser, X in_group G, G name "users"',
                    {self.system: {'X': s[0], 'G': s[0], 'in_group': s[0]}}, False)
-        
+
     def test_security_has_text(self):
         """retrieve CWUser X from system source only (has_text not supported by ldap source)
         """
@@ -185,7 +185,7 @@ class PartPlanInformationTC(BaseMSPlannerTC):
         # with ambigous query (eg only considering the first solution)
         self._test('CWUser X WHERE X has_text "bla"',
                    {self.system: {'X': s[0]}}, False)
-        
+
     def test_complex_base(self):
         """
         1. retrieve Any X, L WHERE X is CWUser, X login L from system and ldap sources, store
@@ -202,7 +202,7 @@ class PartPlanInformationTC(BaseMSPlannerTC):
         1. retrieve Any X,AA WHERE X modification_date AA from system and ldap sources, store
            concatenation of results into a temporary table
         2. return the result of Any X,AA ORDERBY AA WHERE %s owned_by X, X modification_date AA
-           on the system source   
+           on the system source
         """
         ueid = self.session.user.eid
         self._test('Any X,AA ORDERBY AA WHERE E eid %(x)s, E owned_by X, X modification_date AA', {'x': ueid},
@@ -214,7 +214,7 @@ class PartPlanInformationTC(BaseMSPlannerTC):
         1. retrieve Any X,L,AA WHERE X login L, X modification_date AA from system and ldap sources, store
            concatenation of results into a temporary table
         2. return the result of Any X,L,AA WHERE %s owned_by X, X login L, X modification_date AA
-           on the system source   
+           on the system source
         """
         ueid = self.session.user.eid
         self._test('Any X,L,AA WHERE E eid %(x)s, E owned_by X, X login L, X modification_date AA', {'x': ueid},
@@ -233,18 +233,18 @@ class PartPlanInformationTC(BaseMSPlannerTC):
         1. retrieve Any X,A,Y,B WHERE X login A, Y login B from system and ldap sources, store
            cartesian product of results into a temporary table
         2. return the result of Any X,Y WHERE X login 'syt', Y login 'adim'
-           on the system source   
+           on the system source
         """
         ueid = self.session.user.eid
         self._test('Any X,Y WHERE X login "syt", Y login "adim"', {'x': ueid},
                    {self.system: {'Y': s[0], 'X': s[0]},
                     self.ldap: {'Y': s[0], 'X': s[0]}}, True)
-        
+
     def test_complex_aggregat(self):
         solindexes = set(range(len([e for e in self.schema.entities() if not e.is_final()])))
         self._test('Any MAX(X)',
                    {self.system: {'X': solindexes}}, False)
-                   
+
     def test_complex_optional(self):
         ueid = self.session.user.eid
         self._test('Any U WHERE WF wf_info_for X, X eid %(x)s, WF owned_by U?, WF from_state FS', {'x': ueid},
@@ -252,7 +252,7 @@ class PartPlanInformationTC(BaseMSPlannerTC):
                                   'from_state': s[0], 'owned_by': s[0], 'wf_info_for': s[0],
                                   'x': s[0]}},
                    False)
-        
+
     def test_exists4(self):
         """
         State S could come from both rql source and system source,
@@ -262,7 +262,7 @@ class PartPlanInformationTC(BaseMSPlannerTC):
         self._test('Any G,L WHERE X in_group G, X login L, G name "managers", '
                    'EXISTS(X copain T, T login L, T login in ("comme", "cochon")) OR '
                    'EXISTS(X in_state S, S name "pascontent", NOT X copain T2, T2 login "billy")',
-                   {self.system: {'X': s[0], 'S': s[0], 'T2': s[0], 'T': s[0], 'G': s[0], 'copain': s[0], 'in_group': s[0]}, 
+                   {self.system: {'X': s[0], 'S': s[0], 'T2': s[0], 'T': s[0], 'G': s[0], 'copain': s[0], 'in_group': s[0]},
                     self.ldap: {'X': s[0], 'T2': s[0], 'T': s[0]}},
                    True)
 
@@ -271,18 +271,18 @@ class PartPlanInformationTC(BaseMSPlannerTC):
                    {self.system: {'X': s[0, 1, 2], 'S': s[0, 1, 2]},
                     self.rql: {'X': s[2], 'S': s[2]}},
                    True)
-        
+
     def test_not_relation_need_split(self):
         self._test('Any SN WHERE NOT X in_state S, S name SN',
                    {self.rql: {'X': s[2], 'S': s[0, 1, 2]},
                     self.system: {'X': s[0, 1, 2], 'S': s[0, 1, 2]}},
                    True)
-        
+
     def test_not_relation_no_split_external(self):
         repo._type_source_cache[999999] = ('Note', 'cards', 999999)
         # similar to the above test but with an eid coming from the external source.
         # the same plan may be used, since we won't find any record in the system source
-        # linking 9999999 to a state 
+        # linking 9999999 to a state
         self._test('Any SN WHERE NOT X in_state S, X eid %(x)s, S name SN',
                    {'x': 999999},
                    {self.rql: {'x': s[0], 'S': s[0]},
@@ -303,7 +303,7 @@ class PartPlanInformationTC(BaseMSPlannerTC):
                                   'require_permission': s[0], 'in_group': s[0], 'P': s[0], 'require_group': s[0],
                                   'u': s[0]}},
                    False)
-        
+
     def test_delete_relation1(self):
         ueid = self.session.user.eid
         self._test('Any X, Y WHERE X created_by Y, X eid %(x)s, NOT Y eid %(y)s',
@@ -318,7 +318,7 @@ class PartPlanInformationTC(BaseMSPlannerTC):
                    {'x': 999999,},
                    {self.rql: {'Y': s[0]}, self.system: {'Y': s[0], 'x': s[0]}},
                    True)
-        
+
     def test_crossed_relation_eid_1_invariant(self):
         repo._type_source_cache[999999] = ('Note', 'system', 999999)
         self._test('Any Y WHERE X eid %(x)s, X multisource_crossed_rel Y',
@@ -341,7 +341,7 @@ class PartPlanInformationTC(BaseMSPlannerTC):
                    {self.rql: {'X': s[0], 'AD': s[0], 'multisource_crossed_rel': s[0], 'x': s[0]},
                     self.system: {'X': s[0], 'AD': s[0], 'multisource_crossed_rel': s[0], 'x': s[0]}},
                    True)
-        
+
     def test_version_crossed_depends_on_2(self):
         repo._type_source_cache[999999] = ('Note', 'system', 999999)
         self._test('Any X,AD,AE WHERE E eid %(x)s, E multisource_crossed_rel X, X in_state AD, AD name AE',
@@ -356,11 +356,11 @@ class PartPlanInformationTC(BaseMSPlannerTC):
         self._test('Any S,T WHERE S eid %(s)s, N eid %(n)s, N type T, N is Note, S is State',
                    {'n': 999999, 's': 999998},
                    {self.rql: {'s': s[0], 'N': s[0]}}, False)
-                   
 
-        
+
+
 class MSPlannerTC(BaseMSPlannerTC):
-    
+
     def setUp(self):
         BaseMSPlannerTC.setUp(self)
         self.planner = MSPlanner(self.o.schema, self.o._rqlhelper)
@@ -387,14 +387,14 @@ class MSPlannerTC(BaseMSPlannerTC):
         self._test('CWGroup X LIMIT 10 OFFSET 10',
                    [('OneFetchStep', [('Any X LIMIT 10 OFFSET 10 WHERE X is CWGroup', [{'X': 'CWGroup'}])],
                      10, 10, [self.system], {}, [])])
-        
+
     def test_simple_system_ldap(self):
         """retrieve CWUser X from both sources and return concatenation of results
         """
         self._test('CWUser X',
                    [('OneFetchStep', [('Any X WHERE X is CWUser', [{'X': 'CWUser'}])],
                      None, None, [self.ldap, self.system], {}, [])])
-        
+
     def test_simple_system_ldap_limit(self):
         """retrieve CWUser X from both sources and return concatenation of results
         """
@@ -428,14 +428,14 @@ class MSPlannerTC(BaseMSPlannerTC):
                         [self.ldap, self.system], {}, {'COUNT(X)': 'table0.C0'}, []),
                        ]),
                    ])
-        
+
     def test_simple_system_rql(self):
         """retrieve Card X from both sources and return concatenation of results
         """
         self._test('Any X, XT WHERE X is Card, X title XT',
                    [('OneFetchStep', [('Any X,XT WHERE X is Card, X title XT', [{'X': 'Card', 'XT': 'String'}])],
                      None, None, [self.rql, self.system], {}, [])])
-        
+
     def test_simple_eid_specified(self):
         """retrieve CWUser X from system source (eid is specified, can locate the entity)
         """
@@ -444,7 +444,7 @@ class MSPlannerTC(BaseMSPlannerTC):
                    [('OneFetchStep', [('Any X,L WHERE X eid %s, X login L'%ueid, [{'X': 'CWUser', 'L': 'String'}])],
                      None, None, [self.system], {}, [])],
                    {'x': ueid})
-        
+
     def test_simple_eid_invariant(self):
         """retrieve CWUser X from system source (eid is specified, can locate the entity)
         """
@@ -453,7 +453,7 @@ class MSPlannerTC(BaseMSPlannerTC):
                    [('OneFetchStep', [('Any %s'%ueid, [{}])],
                      None, None, [self.system], {}, [])],
                    {'x': ueid})
-        
+
     def test_simple_invariant(self):
         """retrieve CWUser X from system source only (X is invariant and in_group not supported by ldap source)
         """
@@ -461,7 +461,7 @@ class MSPlannerTC(BaseMSPlannerTC):
                    [('OneFetchStep', [('Any X WHERE X is CWUser, X in_group G, G name "users"',
                                        [{'X': 'CWUser', 'G': 'CWGroup'}])],
                      None, None, [self.system], {}, [])])
-        
+
     def test_complex_base(self):
         """
         1. retrieve Any X, L WHERE X is CWUser, X login L from system and ldap sources, store
@@ -498,7 +498,7 @@ class MSPlannerTC(BaseMSPlannerTC):
 
     def test_complex_ordered(self):
         self._test('Any L ORDERBY L WHERE X login L',
-                   [('AggrStep', 'Any L ORDERBY L', None, None, 'table0', None, 
+                   [('AggrStep', 'Any L ORDERBY L', None, None, 'table0', None,
                      [('FetchStep', [('Any L WHERE X login L, X is CWUser',
                                       [{'X': 'CWUser', 'L': 'String'}])],
                        [self.ldap, self.system], {}, {'X.login': 'table0.C0', 'L': 'table0.C0'}, []),
@@ -507,13 +507,13 @@ class MSPlannerTC(BaseMSPlannerTC):
 
     def test_complex_ordered_limit_offset(self):
         self._test('Any L ORDERBY L LIMIT 10 OFFSET 10 WHERE X login L',
-                   [('AggrStep', 'Any L ORDERBY L', 10, 10, 'table0', None, 
+                   [('AggrStep', 'Any L ORDERBY L', 10, 10, 'table0', None,
                      [('FetchStep', [('Any L WHERE X login L, X is CWUser',
                                       [{'X': 'CWUser', 'L': 'String'}])],
                        [self.ldap, self.system], {}, {'X.login': 'table0.C0', 'L': 'table0.C0'}, []),
                       ])
                     ])
-        
+
     def test_complex_invariant_ordered(self):
         """
         1. retrieve Any X,AA WHERE X modification_date AA from system and ldap sources, store
@@ -543,7 +543,7 @@ class MSPlannerTC(BaseMSPlannerTC):
         1. retrieve Any X,L,AA WHERE X login L, X modification_date AA from system and ldap sources, store
            concatenation of results into a temporary table
         2. return the result of Any X,L,AA WHERE %s owned_by X, X login L, X modification_date AA
-           on the system source   
+           on the system source
         """
         ueid = self.session.user.eid
         self._test('Any X,L,AA WHERE E eid %(x)s, E owned_by X, X login L, X modification_date AA',
@@ -593,7 +593,7 @@ class MSPlannerTC(BaseMSPlannerTC):
         2. return content of the table sorted
         """
         self._test('Any X,F ORDERBY F WHERE X firstname F',
-                   [('AggrStep', 'Any X,F ORDERBY F', None, None, 'table0', None, 
+                   [('AggrStep', 'Any X,F ORDERBY F', None, None, 'table0', None,
                      [('FetchStep', [('Any X,F WHERE X firstname F, X is CWUser',
                                       [{'X': 'CWUser', 'F': 'String'}])],
                        [self.ldap, self.system], {},
@@ -604,13 +604,13 @@ class MSPlannerTC(BaseMSPlannerTC):
                        {'X': 'table0.C0', 'X.firstname': 'table0.C1', 'F': 'table0.C1'}, []),
                       ]),
                     ])
-        
+
     def test_complex_multiple(self):
         """
         1. retrieve Any X,A,Y,B WHERE X login A, Y login B from system and ldap sources, store
            cartesian product of results into a temporary table
         2. return the result of Any X,Y WHERE X login 'syt', Y login 'adim'
-           on the system source   
+           on the system source
         """
         ueid = self.session.user.eid
         self._test('Any X,Y WHERE X login "syt", Y login "adim"',
@@ -627,13 +627,13 @@ class MSPlannerTC(BaseMSPlannerTC):
                      None, None, [self.system],
                      {'X': 'table0.C0', 'Y': 'table1.C0'}, [])
                     ], {'x': ueid})
-        
+
     def test_complex_multiple_limit_offset(self):
         """
         1. retrieve Any X,A,Y,B WHERE X login A, Y login B from system and ldap sources, store
            cartesian product of results into a temporary table
         2. return the result of Any X,Y WHERE X login 'syt', Y login 'adim'
-           on the system source   
+           on the system source
         """
         ueid = self.session.user.eid
         self._test('Any X,Y LIMIT 10 OFFSET 10 WHERE X login "syt", Y login "adim"',
@@ -648,14 +648,14 @@ class MSPlannerTC(BaseMSPlannerTC):
                      10, 10, [self.system],
                      {'X': 'table0.C0', 'Y': 'table1.C0'}, [])
                     ], {'x': ueid})
-        
+
     def test_complex_aggregat(self):
         self._test('Any MAX(X)',
                    [('OneFetchStep',
                      [('Any MAX(X)', X_ALL_SOLS)],
                      None, None, [self.system], {}, [])
                     ])
-        
+
     def test_complex_typed_aggregat(self):
         self._test('Any MAX(X) WHERE X is Card',
                    [('AggrStep', 'Any MAX(X)', None, None, 'table0',  None,
@@ -664,28 +664,20 @@ class MSPlannerTC(BaseMSPlannerTC):
                        [self.rql, self.system], {}, {'MAX(X)': 'table0.C0'}, [])
                       ])
                     ])
-        
+
     def test_complex_greater_eid(self):
         self._test('Any X WHERE X eid > 12',
                    [('OneFetchStep',
                      [('Any X WHERE X eid > 12', X_ALL_SOLS)],
                      None, None, [self.system], {}, [])
                     ])
-        
+
     def test_complex_greater_typed_eid(self):
         self._test('Any X WHERE X eid > 12, X is Card',
                    [('OneFetchStep',
                      [('Any X WHERE X eid > 12, X is Card', [{'X': 'Card'}])],
                      None, None, [self.system], {}, [])
                     ])
-        
-    def test_complex_optional(self):
-        ueid = self.session.user.eid
-        self._test('Any U WHERE WF wf_info_for X, X eid %(x)s, WF owned_by U?, WF from_state FS',
-                   [('OneFetchStep', [('Any U WHERE WF wf_info_for 5, WF owned_by U?, WF from_state FS',
-                                       [{'WF': 'TrInfo', 'FS': 'State', 'U': 'CWUser'}])],
-                     None, None, [self.system], {}, [])],
-                   {'x': ueid})
 
     def test_complex_optional(self):
         ueid = self.session.user.eid
@@ -695,7 +687,15 @@ class MSPlannerTC(BaseMSPlannerTC):
                      None, None, [self.system], {}, [])],
                    {'x': ueid})
 
-    
+    def test_complex_optional(self):
+        ueid = self.session.user.eid
+        self._test('Any U WHERE WF wf_info_for X, X eid %(x)s, WF owned_by U?, WF from_state FS',
+                   [('OneFetchStep', [('Any U WHERE WF wf_info_for 5, WF owned_by U?, WF from_state FS',
+                                       [{'WF': 'TrInfo', 'FS': 'State', 'U': 'CWUser'}])],
+                     None, None, [self.system], {}, [])],
+                   {'x': ueid})
+
+
     def test_3sources_ambigous(self):
         self._test('Any X,T WHERE X owned_by U, U login "syt", X title T',
                    [('FetchStep', [('Any X,T WHERE X title T, X is Card', [{'X': 'Card', 'T': 'String'}])],
@@ -736,7 +736,7 @@ class MSPlannerTC(BaseMSPlannerTC):
                     ])
 
     def test_outer_supported_rel1(self):
-        # both system and rql support all variables, can be 
+        # both system and rql support all variables, can be
         self._test('Any X, R WHERE X is Note, X in_state S, X type R, '
                    'NOT EXISTS(Y is Note, Y in_state S, Y type R, X identity Y)',
                    [('OneFetchStep', [('Any X,R WHERE X is Note, X in_state S, X type R, NOT EXISTS(Y is Note, Y in_state S, Y type R, X identity Y), S is State',
@@ -746,7 +746,7 @@ class MSPlannerTC(BaseMSPlannerTC):
                     ])
 
     def test_not_identity(self):
-        # both system and rql support all variables, can be 
+        # both system and rql support all variables, can be
         self._test('Any X WHERE NOT X identity U, U eid %s' % self.session.user.eid,
                    [('OneFetchStep',
                      [('Any X WHERE NOT X identity 5, X is CWUser', [{'X': 'CWUser'}])],
@@ -769,7 +769,7 @@ class MSPlannerTC(BaseMSPlannerTC):
                      None, None, [self.system],
                      {'A': 'table0.C0', 'X': 'table1.C0', 'X.login': 'table1.C1', 'R': 'table1.C1', 'Y.type': 'table0.C1'}, [])
                     ])
-            
+
     def test_security_has_text(self):
         # use a guest user
         self.session = self._user_session()[1]
@@ -795,7 +795,7 @@ class MSPlannerTC(BaseMSPlannerTC):
                        None, None, [self.system], {}, []),
                       ])
                      ])
-        
+
     def test_security_has_text_limit_offset(self):
         # use a guest user
         self.session = self._user_session()[1]
@@ -828,9 +828,9 @@ class MSPlannerTC(BaseMSPlannerTC):
                         {'X': 'Folder'}, {'X': 'Image'}, {'X': 'Note'},
                         {'X': 'Personne'}, {'X': 'Societe'}, {'X': 'State'},
                         {'X': 'SubDivision'}, {'X': 'Tag'}, {'X': 'Transition'}])],
-                     10, 10, [self.system], {'X': 'table0.C0'}, [])                    
+                     10, 10, [self.system], {'X': 'table0.C0'}, [])
                      ])
-        
+
     def test_security_user(self):
         """a guest user trying to see another user: EXISTS(X owned_by U) is automatically inserted"""
         # use a guest user
@@ -842,7 +842,7 @@ class MSPlannerTC(BaseMSPlannerTC):
                     ('OneFetchStep',
                      [('Any X WHERE EXISTS(X owned_by 5), X is CWUser', [{'X': 'CWUser'}])],
                      None, None, [self.system], {'X': 'table0.C0'}, [])])
-                
+
     def test_security_complex_has_text(self):
         # use a guest user
         self.session = self._user_session()[1]
@@ -879,18 +879,18 @@ class MSPlannerTC(BaseMSPlannerTC):
         self.session = self._user_session()[1]
         self._test('Any MAX(X)',
                    [('FetchStep', [('Any E WHERE E type "X", E is Note', [{'E': 'Note'}])],
-                     [self.rql, self.system],  None, {'E': 'table1.C0'}, []), 
+                     [self.rql, self.system],  None, {'E': 'table1.C0'}, []),
                     ('FetchStep', [('Any X WHERE X is CWUser', [{'X': 'CWUser'}])],
                      [self.ldap, self.system], None, {'X': 'table2.C0'}, []),
                     ('UnionFetchStep', [
                         ('FetchStep', [('Any X WHERE EXISTS(X owned_by 5), X is Basket', [{'X': 'Basket'}])],
-                          [self.system], {}, {'X': 'table0.C0'}, []),                        
+                          [self.system], {}, {'X': 'table0.C0'}, []),
                         ('UnionFetchStep',
                          [('FetchStep', [('Any X WHERE X is IN(Card, Note, State)',
                                           [{'X': 'Card'}, {'X': 'Note'}, {'X': 'State'}])],
                            [self.rql, self.system], {}, {'X': 'table0.C0'}, []),
                           ('FetchStep',
-                           [('Any X WHERE X is IN(Bookmark, Comment, Division, CWCache, CWConstraint, CWConstraintType, CWEType, CWAttribute, CWGroup, CWRelation, CWPermission, CWProperty, CWRType, Email, EmailAddress, EmailPart, EmailThread, File, Folder, Image, Personne, RQLExpression, Societe, SubDivision, Tag, TrInfo, Transition)',
+                           [('Any X WHERE X is IN(Bookmark, CWAttribute, CWCache, CWConstraint, CWConstraintType, CWEType, CWGroup, CWPermission, CWProperty, CWRType, CWRelation, Comment, Division, Email, EmailAddress, EmailPart, EmailThread, File, Folder, Image, Personne, RQLExpression, Societe, SubDivision, Tag, TrInfo, Transition)',
                              sorted([{'X': 'Bookmark'}, {'X': 'Comment'}, {'X': 'Division'},
                                       {'X': 'CWCache'}, {'X': 'CWConstraint'}, {'X': 'CWConstraintType'},
                                       {'X': 'CWEType'}, {'X': 'CWAttribute'}, {'X': 'CWGroup'},
@@ -906,16 +906,16 @@ class MSPlannerTC(BaseMSPlannerTC):
                          [self.system], {'X': 'table2.C0'}, {'X': 'table0.C0'}, []),
                         ('FetchStep', [('Any X WHERE (EXISTS(X owned_by 5)) OR ((((EXISTS(D concerne C?, C owned_by 5, C type "X", X identity D, C is Division, D is Affaire)) OR (EXISTS(H concerne G?, G owned_by 5, G type "X", X identity H, G is SubDivision, H is Affaire))) OR (EXISTS(I concerne F?, F owned_by 5, F type "X", X identity I, F is Societe, I is Affaire))) OR (EXISTS(J concerne E?, E owned_by 5, X identity J, E is Note, J is Affaire))), X is Affaire',
                                         [{'C': 'Division', 'E': 'Note', 'D': 'Affaire', 'G': 'SubDivision', 'F': 'Societe', 'I': 'Affaire', 'H': 'Affaire', 'J': 'Affaire', 'X': 'Affaire'}])],
-                         [self.system], {'E': 'table1.C0'}, {'X': 'table0.C0'}, []),                        
+                         [self.system], {'E': 'table1.C0'}, {'X': 'table0.C0'}, []),
                         ]),
                     ('OneFetchStep', [('Any MAX(X)', X_ALL_SOLS)],
                      None, None, [self.system], {'X': 'table0.C0'}, [])
                     ])
-            
+
     def test_security_complex_aggregat2(self):
         # use a guest user
         self.session = self._user_session()[1]
-        self._test('Any ET, COUNT(X) GROUPBY ET ORDERBY ET WHERE X is ET',                   
+        self._test('Any ET, COUNT(X) GROUPBY ET ORDERBY ET WHERE X is ET',
                    [('FetchStep', [('Any X WHERE X is IN(Card, Note, State)',
                                     [{'X': 'Card'}, {'X': 'Note'}, {'X': 'State'}])],
                      [self.rql, self.system], None, {'X': 'table1.C0'}, []),
@@ -939,7 +939,7 @@ class MSPlannerTC(BaseMSPlannerTC):
                        [self.system], {'X': 'table3.C0'}, {'ET': 'table0.C0', 'X': 'table0.C1'}, []),
                       # extra UnionFetchStep could be avoided but has no cost, so don't care
                       ('UnionFetchStep',
-                       [('FetchStep', [('Any ET,X WHERE X is ET, ET is CWEType, X is IN(Bookmark, Comment, Division, CWCache, CWConstraint, CWConstraintType, CWEType, CWAttribute, CWGroup, CWRelation, CWPermission, CWProperty, CWRType, Email, EmailAddress, EmailPart, EmailThread, File, Folder, Image, Personne, RQLExpression, Societe, SubDivision, Tag, TrInfo, Transition)',
+                       [('FetchStep', [('Any ET,X WHERE X is ET, ET is CWEType, X is IN(Bookmark, CWAttribute, CWCache, CWConstraint, CWConstraintType, CWEType, CWGroup, CWPermission, CWProperty, CWRType, CWRelation, Comment, Division, Email, EmailAddress, EmailPart, EmailThread, File, Folder, Image, Personne, RQLExpression, Societe, SubDivision, Tag, TrInfo, Transition)',
                                         [{'X': 'Bookmark', 'ET': 'CWEType'}, {'X': 'Comment', 'ET': 'CWEType'},
                                          {'X': 'Division', 'ET': 'CWEType'}, {'X': 'CWCache', 'ET': 'CWEType'},
                                          {'X': 'CWConstraint', 'ET': 'CWEType'}, {'X': 'CWConstraintType', 'ET': 'CWEType'},
@@ -1054,7 +1054,7 @@ class MSPlannerTC(BaseMSPlannerTC):
                      10, 10, [self.system],
                      {'X': 'table0.C0', 'X.title': 'table0.C1', 'XT': 'table0.C1', 'U': 'table1.C0'}, [])
                     ])
-    
+
     def test_exists_base(self):
         self._test('Any X,L,S WHERE X in_state S, X login L, EXISTS(X in_group G, G name "bougloup")',
                    [('FetchStep', [('Any X,L WHERE X login L, X is CWUser', [{'X': 'CWUser', 'L': 'String'}])],
@@ -1128,7 +1128,7 @@ class MSPlannerTC(BaseMSPlannerTC):
                      None, None, [self.system],
                      {'T': 'table0.C0', 'T2': 'table1.C0',
                       'X': 'table2.C1', 'X.login': 'table2.C0', 'L': 'table2.C0'}, [])])
-            
+
     def test_exists_security_no_invariant(self):
         ueid = self.session.user.eid
         self._test('Any X,AA,AB,AC,AD ORDERBY AA WHERE X is CWUser, X login AA, X firstname AB, X surname AC, X modification_date AD, A eid %(B)s, \
@@ -1159,10 +1159,10 @@ class MSPlannerTC(BaseMSPlannerTC):
         self._test('Any X, S WHERE X in_state S',
                    [('UnionStep', None, None, [
                        ('OneFetchStep', [('Any X,S WHERE X in_state S, S is State, X is IN(Affaire, CWUser)',
-                                          [{'X': 'Affaire', 'S': 'State'}, {'X': 'CWUser', 'S': 'State'}])], 
+                                          [{'X': 'Affaire', 'S': 'State'}, {'X': 'CWUser', 'S': 'State'}])],
                         None, None, [self.system], {}, []),
                        ('OneFetchStep', [('Any X,S WHERE X in_state S, S is State, X is Note',
-                                          [{'X': 'Note', 'S': 'State'}])], 
+                                          [{'X': 'Note', 'S': 'State'}])],
                         None, None, [self.rql, self.system], {}, []),
                     ])])
 
@@ -1223,7 +1223,7 @@ class MSPlannerTC(BaseMSPlannerTC):
         # generation for the external source
         self._test('Any SN WHERE NOT X in_state S, X eid %(x)s, S name SN',
                    [('OneFetchStep', [('Any SN WHERE NOT 5 in_state S, S name SN, S is State',
-                                       [{'S': 'State', 'SN': 'String'}])], 
+                                       [{'S': 'State', 'SN': 'String'}])],
                      None, None, [self.rql, self.system], {}, [])],
                    {'x': ueid})
 
@@ -1231,10 +1231,10 @@ class MSPlannerTC(BaseMSPlannerTC):
         repo._type_source_cache[999999] = ('Note', 'cards', 999999)
         # similar to the above test but with an eid coming from the external source.
         # the same plan may be used, since we won't find any record in the system source
-        # linking 9999999 to a state 
+        # linking 9999999 to a state
         self._test('Any SN WHERE NOT X in_state S, X eid %(x)s, S name SN',
                    [('OneFetchStep', [('Any SN WHERE NOT 999999 in_state S, S name SN, S is State',
-                                       [{'S': 'State', 'SN': 'String'}])], 
+                                       [{'S': 'State', 'SN': 'String'}])],
                      None, None, [self.rql, self.system], {}, [])],
                    {'x': 999999})
 
@@ -1257,7 +1257,7 @@ class MSPlannerTC(BaseMSPlannerTC):
                        None, None, [self.system], {'S': 'table0.C1', 'S.name': 'table0.C0', 'SN': 'table0.C0'},
                        []),]
                      )])
-            
+
     def test_external_attributes_and_relation(self):
         repo._type_source_cache[999999] = ('Note', 'cards', 999999)
         self._test('Any A,B,C,D WHERE A eid %(x)s,A creation_date B,A modification_date C, A todo_by D?',
@@ -1287,7 +1287,7 @@ class MSPlannerTC(BaseMSPlannerTC):
                    [('OneFetchStep', [('Any X WHERE X has_text "toto", X is Card',
                                        [{'X': 'Card'}])],
                      None, None, [self.system], {}, [])])
-        
+
     def test_has_text_3(self):
         self._test('Any X WHERE X has_text "toto", X title "zoubidou"',
                    [('FetchStep', [(u'Any X WHERE X title "zoubidou", X is Card',
@@ -1302,7 +1302,7 @@ class MSPlannerTC(BaseMSPlannerTC):
                          None, None, [self.system], {}, []),
                         ]),
                     ])
-        
+
     def test_sort_func(self):
         self._test('Note X ORDERBY DUMB_SORT(RF) WHERE X type RF',
                    [('AggrStep', 'Any X ORDERBY DUMB_SORT(RF)', None, None, 'table0', None, [
@@ -1362,7 +1362,7 @@ class MSPlannerTC(BaseMSPlannerTC):
 
     def test_attr_unification_neq_1(self):
         self._test('Any X,Y WHERE X is Bookmark, Y is Card, X creation_date D, Y creation_date > D',
-                   [('FetchStep', 
+                   [('FetchStep',
                      [('Any Y,D WHERE Y creation_date > D, Y is Card',
                        [{'D': 'Datetime', 'Y': 'Card'}])],
                      [self.rql,self.system], None,
@@ -1439,7 +1439,7 @@ class MSPlannerTC(BaseMSPlannerTC):
 
 
     # external source w/ .cross_relations == ['multisource_crossed_rel'] ######
-    
+
     def test_crossed_relation_eid_1_invariant(self):
         repo._type_source_cache[999999] = ('Note', 'system', 999999)
         self._test('Any Y WHERE X eid %(x)s, X multisource_crossed_rel Y',
@@ -1471,7 +1471,7 @@ class MSPlannerTC(BaseMSPlannerTC):
 
     def test_crossed_relation_eid_2_needattr(self):
         repo._type_source_cache[999999] = ('Note', 'cards', 999999)
-        self._test('Any Y,T WHERE X eid %(x)s, X multisource_crossed_rel Y, Y type T',                   
+        self._test('Any Y,T WHERE X eid %(x)s, X multisource_crossed_rel Y, Y type T',
                    [('FetchStep', [('Any Y,T WHERE Y type T, Y is Note', [{'T': 'String', 'Y': 'Note'}])],
                      [self.rql, self.system], None,
                      {'T': 'table0.C1', 'Y': 'table0.C0', 'Y.type': 'table0.C1'}, []),
@@ -1527,7 +1527,7 @@ class MSPlannerTC(BaseMSPlannerTC):
                        [])]
                      )],
                     {'x': 999999,})
-        
+
     # edition queries tests ###################################################
 
     def test_insert_simplified_var_1(self):
@@ -1602,7 +1602,7 @@ class MSPlannerTC(BaseMSPlannerTC):
                        )]
                      )],
                    {'n': 999999, 's': 999998})
-    
+
     def test_delete_relation1(self):
         ueid = self.session.user.eid
         self._test('DELETE X created_by Y WHERE X eid %(x)s, NOT Y eid %(y)s',
@@ -1613,7 +1613,7 @@ class MSPlannerTC(BaseMSPlannerTC):
                        ]),
                     ],
                    {'x': ueid, 'y': ueid})
-        
+
     def test_delete_relation2(self):
         ueid = self.session.user.eid
         self._test('DELETE X created_by Y WHERE X eid %(x)s, NOT Y login "syt"',
@@ -1636,7 +1636,7 @@ class MSPlannerTC(BaseMSPlannerTC):
                       ])
                     ],
                    {'x': 999999})
-        
+
     def test_delete_entity2(self):
         repo._type_source_cache[999999] = ('Note', 'system', 999999)
         self._test('DELETE Note X WHERE X eid %(x)s, NOT X multisource_inlined_rel Y',
@@ -1647,7 +1647,7 @@ class MSPlannerTC(BaseMSPlannerTC):
                       ])
                     ],
                    {'x': 999999})
-                   
+
     def test_update(self):
         self._test('SET X copain Y WHERE X login "comme", Y login "cochon"',
                    [('FetchStep',
@@ -1701,9 +1701,9 @@ class MSPlannerTC(BaseMSPlannerTC):
 #                         None, None, [self.system], {}, []),
 #                        ]),
 #                     ])
-        
+
     # non regression tests ####################################################
-    
+
     def test_nonregr1(self):
         self._test('Any X, Y WHERE X copain Y, X login "syt", Y login "cochon"',
                    [('FetchStep',
@@ -1717,7 +1717,7 @@ class MSPlannerTC(BaseMSPlannerTC):
                        [{'X': 'CWUser', 'Y': 'CWUser'}])],
                      None, None, [self.system], {'X': 'table0.C0', 'Y': 'table1.C0'}, [])
                     ])
-    
+
     def test_nonregr2(self):
         treid = self.session.user.latest_trinfo().eid
         self._test('Any X ORDERBY D DESC WHERE E eid %(x)s, E wf_info_for X, X modification_date D',
@@ -1746,7 +1746,7 @@ class MSPlannerTC(BaseMSPlannerTC):
                         ]),
                     ],
                    {'x': treid})
-        
+
     def test_nonregr3(self):
         # original jpl query:
         # Any X, NOW - CD, P WHERE P is Project, U interested_in P, U is CWUser, U login "sthenault", X concerns P, X creation_date CD ORDERBY CD DESC LIMIT 5
@@ -1757,7 +1757,7 @@ class MSPlannerTC(BaseMSPlannerTC):
                                        [{'P': 'Bookmark', 'U': 'CWUser', 'X': 'CWEType', 'CD': 'Datetime'}])],
                      5, None,  [self.system], {'U': 'table0.C0'}, [])]
                    )
-        
+
     def test_nonregr4(self):
         self._test('Any U ORDERBY D DESC WHERE WF wf_info_for X, WF creation_date D, WF from_state FS, '
                    'WF owned_by U?, X eid %(x)s',
@@ -1771,7 +1771,7 @@ class MSPlannerTC(BaseMSPlannerTC):
 
     def test_nonregr5(self):
         # original jpl query:
-        # DISTINCT Version V WHERE MB done_in MV, MV eid %(x)s, 
+        # DISTINCT Version V WHERE MB done_in MV, MV eid %(x)s,
         # MB depends_on B, B done_in V, V version_of P, NOT P eid %(p)s'
         cardeid = self.execute('INSERT Card X: X title "hop"')[0][0]
         noteeid = self.execute('INSERT Note X')[0][0]
@@ -1822,7 +1822,7 @@ class MSPlannerTC(BaseMSPlannerTC):
                                        [{'Z': 'Affaire'}])],
                      None, None, [self.system], {}, [])],
                    {'x': 999999})
-        
+
     def test_nonregr9(self):
         repo._type_source_cache[999999] = ('Note', 'cards', 999999)
         repo._type_source_cache[999998] = ('Note', 'cards', 999998)
@@ -1853,7 +1853,7 @@ class MSPlannerTC(BaseMSPlannerTC):
                      [])
                     ],
                    {'x': 999999})
-        
+
     def test_nonregr11(self):
         repo._type_source_cache[999999] = ('Bookmark', 'system', 999999)
         self._test('SET X bookmarked_by Y WHERE X eid %(x)s, Y login "hop"',
@@ -1867,7 +1867,7 @@ class MSPlannerTC(BaseMSPlannerTC):
                        [])]
                      )],
                    {'x': 999999})
-        
+
     def test_nonregr12(self):
         repo._type_source_cache[999999] = ('Note', 'cards', 999999)
         self._test('Any X ORDERBY Z DESC WHERE X modification_date Z, E eid %(x)s, E see_also X',
@@ -1916,7 +1916,7 @@ class MSPlannerTC(BaseMSPlannerTC):
                      {'U': 'table1.C0', 'UL': 'table1.C1'},
                      [])],
                    {'x': self.session.user.eid})
-        
+
     def test_nonregr13_2(self):
         # identity *not* wrapped into exists.
         #
@@ -1954,11 +1954,11 @@ class MSPlannerTC(BaseMSPlannerTC):
 
 class MSPlannerTwoSameExternalSourcesTC(BasePlannerTC):
     """test planner related feature on a 3-sources repository:
-    
+
     * 2 rql sources supporting Card
     """
     repo = repo
-    
+
     def setUp(self):
         self.o = repo.querier
         self.session = repo._sessions.values()[0]
@@ -1982,7 +1982,7 @@ class MSPlannerTwoSameExternalSourcesTC(BasePlannerTC):
         assert 'multisource_crossed_rel' in repo.sources_by_uri['cards'].cross_relations
         clear_ms_caches(repo)
     _test = test_plan
-        
+
     def tearDown(self):
         undo_monkey_patch()
         del self.sources[-1]
@@ -2089,6 +2089,16 @@ class MSPlannerTwoSameExternalSourcesTC(BasePlannerTC):
                        [])]
                      )]
                    )
+
+    def test_nonregr_dont_cross_rel_source_filtering(self):
+        self.repo._type_source_cache[999999] = ('Note', 'cards', 999999)
+        self._test('Any X,AA,AB WHERE E eid %(x)s, E in_state X, X name AA, X modification_date AB',
+                   [('OneFetchStep', [('Any X,AA,AB WHERE 999999 in_state X, X name AA, X modification_date AB, X is State',
+                                       [{'AA': 'String', 'AB': 'Datetime', 'X': 'State'}])],
+                     None, None,
+                     [self.rql], {}, []
+                     )],
+                   {'x': 999999})
 
 
 if __name__ == '__main__':
