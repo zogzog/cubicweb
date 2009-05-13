@@ -9,6 +9,7 @@ __docformat__ = "restructuredtext en"
 from warnings import warn
 from datetime import datetime, date, timedelta
 
+import logilab.common as lgc
 from logilab.common.shellutils import ProgressBar
 from logilab.common import db
 from logilab.common.adbh import get_adv_func_helper
@@ -23,7 +24,7 @@ from cubicweb.server import SQL_CONNECT_HOOKS
 from cubicweb.server.utils import crypt_password
 
 
-db.USE_MX_DATETIME = False
+lgc.USE_MX_DATETIME = False
 SQL_PREFIX = 'cw_'
 
 
