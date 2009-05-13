@@ -102,7 +102,7 @@ class ClickAndEditFormView(FormViewMixIn, EntityView):
             if getattr(entity, rtype) is None:
                 value = default or self.req._('not specified')
             else:
-                value = html_escape(entity.printable_value(rtype))
+                value = entity.printable_value(rtype)
         else:
             rset = entity.related(rtype, role)
             # XXX html_escape but that depends of the actual vid
