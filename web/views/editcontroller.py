@@ -308,14 +308,16 @@ class EditController(ViewController):
         if x == 'object' or not rschema.inlined or not values:
             # this is not an inlined relation or no values specified,
             # explicty remove relations
+            rql = 'DELETE %s %s %s WHERE X eid %%(x)s, Y eid %%(y)s' % (
+                subjvar, rschema, objvar)
             for reid in origvalues.difference(values):
-                rql = 'DELETE %s %s %s WHERE X eid %%(x)s, Y eid %%(y)s' % (
-                    subjvar, rschema, objvar)
                 self.req.execute(rql, {'x': eid, 'y': reid}, ('x', 'y'))
-        rql = 'SET %s %s %s WHERE X eid %%(x)s, Y eid %%(y)s' % (
-            subjvar, rschema, objvar)
-        for reid in values.difference(origvalues):
-            self.req.execute(rql, {'x': eid, 'y': reid}, ('x', 'y'))
+        seteids = values.difference(origvalues)
+        if seteids:
+            rql = 'SET %s %s %s WHERE X eid %%(x)s, Y eid %%(y)s' % (
+                subjvar, rschema, objvar)
+            for reid in seteids:
+                self.req.execute(rql, {'x': eid, 'y': reid}, ('x', 'y'))
 
     def _get_eid(self, eid):
         # should be either an int (existant entity) or a variable (to be

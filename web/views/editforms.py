@@ -90,17 +90,19 @@ class ClickAndEditFormView(FormViewMixIn, EntityView):
     # FIXME editableField class could be toggleable from userprefs
 
     onsubmit = ("return inlineValidateAttributeForm('%(divid)s-form', '%(rtype)s', "
-                "'%(eid)s', '%(divid)s', %(reload)s);")
+                "'%(eid)s', '%(divid)s', %(reload)s, '%(default)s');")
     ondblclick = "showInlineEditionForm(%(eid)s, '%(rtype)s', '%(divid)s')"
 
     def cell_call(self, row, col, rtype=None, role='subject', reload=False,
-                  vid='textoutofcontext', default=u''):
+                  vid='textoutofcontext', default=None):
         """display field to edit entity's `rtype` relation on double-click"""
         rschema = self.schema.rschema(rtype)
         entity = self.entity(row, col)
+        if not default:
+            default = self.req._('not specified')
         if rschema.is_final():
             if getattr(entity, rtype) is None:
-                value = default or self.req._('not specified')
+                value = default
             else:
                 value = entity.printable_value(rtype)
         else:
@@ -111,9 +113,9 @@ class ClickAndEditFormView(FormViewMixIn, EntityView):
             self.w(value)
             return
         if rschema.is_final():
-            form = self._build_attribute_form(entity, value, rtype, role, reload, row, col)
+            form = self._build_attribute_form(entity, value, rtype, role, reload, row, col, default)
         else:
-            form = self._build_relation_form(entity, value, rtype, role, row, col, vid)
+            form = self._build_relation_form(entity, value, rtype, role, row, col, vid, default)
         form.form_add_hidden(u'__maineid', entity.eid)
         renderer = FormRenderer(display_label=False, display_help=False,
                                 display_fields=[(rtype, role)],
@@ -121,15 +123,17 @@ class ClickAndEditFormView(FormViewMixIn, EntityView):
                                 display_progress_div=False)
         self.w(form.form_render(renderer=renderer))
 
-    def _build_relation_form(self, entity, value, rtype, role, row, col, vid):
+    def _build_relation_form(self, entity, value, rtype, role, row, col, vid, default):
         entity = self.entity(row, col)
         divid = 'd%s' % make_uid('%s-%s' % (rtype, entity.eid))
-        event_data = {'divid' : divid, 'eid' : entity.eid, 'rtype' : rtype, 'vid' : vid}
+        event_data = {'divid' : divid, 'eid' : entity.eid, 'rtype' : rtype, 'vid' : vid,
+                      'default' : default, 'role' : role}
         form = EntityFieldsForm(self.req, None, entity=entity, action='#',
                                 domid='%s-form' % divid,
                                 cssstyle='display: none',
                                 onsubmit=("return inlineValidateRelationForm('%(divid)s-form', '%(rtype)s', "
-                                          "'%(eid)s', '%(divid)s', '%(vid)s');" % event_data),
+                                          "'%(role)s', '%(eid)s', '%(divid)s', '%(vid)s', '%(default)s');" %
+                                          event_data),
                                 form_buttons=[SubmitButton(),
                                               Button(stdmsgs.BUTTON_CANCEL,
                                                      onclick="cancelInlineEdit(%s,\'%s\',\'%s\')" %\
@@ -141,11 +145,11 @@ class ClickAndEditFormView(FormViewMixIn, EntityView):
                         ondblclick=self.ondblclick % event_data))
         return form
 
-    def _build_attribute_form(self, entity, value, rtype, role, reload, row, col):
+    def _build_attribute_form(self, entity, value, rtype, role, reload, row, col, default):
         eid = entity.eid
         divid = 'd%s' % make_uid('%s-%s' % (rtype, eid))
         event_data = {'divid' : divid, 'eid' : eid, 'rtype' : rtype,
-                      'reload' : dumps(reload)}
+                      'reload' : dumps(reload), 'default' : default}
         buttons = [SubmitButton(stdmsgs.BUTTON_OK),
                    Button(stdmsgs.BUTTON_CANCEL,
                           onclick="cancelInlineEdit(%s,\'%s\',\'%s\')" % (

@@ -382,8 +382,8 @@ class JSonController(Controller):
             else:
                 eid = err.entity.eid
             return (False, (eid, err.errors))
-        except Redirect, err:
-            return (True, err.location)
+        except Redirect, redir:
+            return (True, redir.location)
         except Exception, err:
             self.req.cnx.rollback()
             self.exception('unexpected error in js_validateform')
@@ -391,7 +391,7 @@ class JSonController(Controller):
         return (False, '???')
 
     @jsonize
-    def js_edit_field(self, action, names, values, rtype, eid):
+    def js_edit_field(self, action, names, values, rtype, eid, default):
         success, args = self.validate_form(action, names, values)
         if success:
             # Any X,N where we don't seem to use N is an optimisation
@@ -400,18 +400,22 @@ class JSonController(Controller):
                                     {'x': eid}, 'x')
             entity = rset.get_entity(0, 0)
             value = entity.printable_value(rtype)
-            return (success, args, value or self.req._('not specified'))
+            return (success, args, value or default)
         else:
             return (success, args, None)
 
     @jsonize
     def js_edit_relation(self, action, names, values,
-                         rtype, eid, vid, role='subject'):
+                         rtype, role, eid, vid, default):
         success, args = self.validate_form(action, names, values)
         if success:
             entity = self.req.eid_rset(eid).get_entity(0, 0)
             rset = entity.related(rtype, role)
-            return (success, args, self.view(vid, rset))
+            if rset:
+                output = self.view(vid, rset)
+            else:
+                output = default
+            return (success, args, output)
         else:
             return (success, args, None)
 
