@@ -43,7 +43,7 @@ def compare_steps(self, step, expected):
                               'expected %s queries, got %s' % (len(equeries), len(queries)))
             for i, (rql, sol) in enumerate(queries):
                 self.assertEquals(rql, equeries[i][0])
-                self.assertEquals(sol, equeries[i][1])
+                self.assertEquals(sorted(sol), sorted(equeries[i][1]))
             idx = 2
         else:
             idx = 1
