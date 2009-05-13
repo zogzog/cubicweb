@@ -141,6 +141,8 @@ class AutomaticEntityForm(EntityFieldsForm):
             if kwargs is None:
                 kwargs = {}
             if fieldcls:
+                if not isinstance(fieldcls, type):
+                    return fieldcls # already and instance
                 return fieldcls(name=name, role=role, eidparam=True, **kwargs)
             field = guess_field(eschema, rschema, role, eidparam=True, **kwargs)
             if field is None:
