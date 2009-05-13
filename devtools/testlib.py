@@ -194,7 +194,7 @@ class WebTest(EnvBasedTC):
         else:
             self.set_description("testing %s, mod=%s (no rset)" % (vid, view.__module__))
         if template is None: # raw view testing, no template
-            viewfunc = view.dispatch
+            viewfunc = view.render
         else:
             templateview = self.vreg.select_view(template, req, rset, view=view, **kwargs)
             kwargs['view'] = view
@@ -327,7 +327,7 @@ class WebTest(EnvBasedTC):
         for action in self.list_actions_for(rset):
             yield InnerTest(self._testname(rset, action.id, 'action'), action.url)
         for box in self.list_boxes_for(rset):
-            yield InnerTest(self._testname(rset, box.id, 'box'), box.dispatch)
+            yield InnerTest(self._testname(rset, box.id, 'box'), box.render)
 
     @staticmethod
     def _testname(rset, objid, objtype):
