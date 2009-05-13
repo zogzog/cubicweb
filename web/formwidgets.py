@@ -173,14 +173,20 @@ class Select(FieldWidget):
         if not 'size' in attrs and self._multiple:
             attrs['size'] = '5'
         options = []
+        optgroup_opened = False
         for label, value in field.vocabulary(form):
             if value is None:
                 # handle separator
-                options.append(u'<optgroup label="%s"/>' % (label or ''))
+                if optgroup_opened:
+                    options.append(u'</optgroup>')
+                options.append(u'<optgroup label="%s">' % (label or ''))
+                optgroup_opened = True
             elif value in curvalues:
                 options.append(tags.option(label, value=value, selected='selected'))
             else:
                 options.append(tags.option(label, value=value))
+        if optgroup_opened:
+            options.append(u'</optgroup>')
         return tags.select(name=name, multiple=self._multiple,
                            options=options, **attrs)
 
