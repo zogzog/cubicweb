@@ -325,74 +325,86 @@ class UpdateTemplateCatalogCommand(Command):
             cubes = [cubepath for cubepath in cubes if exists(join(cubepath, 'i18n'))]
         update_cubes_catalogs(cubes)
 
+
 def update_cubes_catalogs(cubes):
+    toedit = []
+    for cubedir in cubes:
+        if not isdir(cubedir):
+            print 'not a directory', cubedir
+            continue
+        try:
+            toedit += update_cube_catalogs(cubedir)
+        except Exception:
+            import traceback
+            traceback.print_exc()
+            print 'error while updating catalogs for', cubedir
+    # instructions pour la suite
+    print '*' * 72
+    print 'you can now edit the following files:'
+    print '* ' + '\n* '.join(toedit)
+
+
+def update_cube_catalogs(cubedir):
     import shutil
     from tempfile import mktemp
     from logilab.common.fileutils import ensure_fs_mode
     from logilab.common.shellutils import find, rm
     from cubicweb.common.i18n import extract_from_tal, execute
     toedit = []
-    for cubedir in cubes:
-        cube = basename(normpath(cubedir))
-        if not isdir(cubedir):
-            print 'unknown cube', cube
-            continue
-        tempdir = mktemp()
-        mkdir(tempdir)
-        print '*' * 72
-        print 'updating %s cube...' % cube
-        chdir(cubedir)
-        potfiles = [join('i18n', scfile) for scfile in ('entities.pot',)
-                    if exists(join('i18n', scfile))]
-        print '******** extract schema messages'
-        schemapot = join(tempdir, 'schema.pot')
-        potfiles.append(schemapot)
-        # explicit close necessary else the file may not be yet flushed when
-        # we'll using it below
-        schemapotstream = file(schemapot, 'w')
-        generate_schema_pot(schemapotstream.write, cubedir)
-        schemapotstream.close()
-        print '******** extract TAL messages'
-        tali18nfile = join(tempdir, 'tali18n.py')
-        extract_from_tal(find('.', ('.py', '.pt'), blacklist=STD_BLACKLIST+('test',)), tali18nfile)
-        print '******** extract Javascript messages'
-        jsfiles =  [jsfile for jsfile in find('.', '.js') if basename(jsfile).startswith('cub')]
-        if jsfiles:
-            tmppotfile = join(tempdir, 'js.pot')
-            execute('xgettext --no-location --omit-header -k_ -L java --from-code=utf-8 -o %s %s'
-                    % (tmppotfile, ' '.join(jsfiles)))
-            # no pot file created if there are no string to translate
-            if exists(tmppotfile):
-                potfiles.append(tmppotfile)
-        print '******** create cube specific catalog'
-        tmppotfile = join(tempdir, 'generated.pot')
-        cubefiles = find('.', '.py', blacklist=STD_BLACKLIST+('test',))
-        cubefiles.append(tali18nfile)
-        execute('xgettext --no-location --omit-header -k_ -o %s %s'
-                % (tmppotfile, ' '.join(cubefiles)))
-        if exists(tmppotfile): # doesn't exists of no translation string found
-            potfiles.append(tmppotfile)
-        potfile = join(tempdir, 'cube.pot')
-        print '******** merging .pot files'
-        execute('msgcat %s > %s' % (' '.join(potfiles), potfile))
-        print '******** merging main pot file with existing translations'
-        chdir('i18n')
-        for lang in LANGS:
-            print '****', lang
-            cubepo = '%s.po' % lang
-            if not exists(cubepo):
-                shutil.copy(potfile, cubepo)
-            else:
-                execute('msgmerge -N -s %s %s > %snew' % (cubepo, potfile, cubepo))
-                ensure_fs_mode(cubepo)
-                shutil.move('%snew' % cubepo, cubepo)
-            toedit.append(abspath(cubepo))
-        # cleanup
-        rm(tempdir)
-    # instructions pour la suite
+    cube = basename(normpath(cubedir))
+    tempdir = mktemp()
+    mkdir(tempdir)
     print '*' * 72
-    print 'you can now edit the following files:'
-    print '* ' + '\n* '.join(toedit)
+    print 'updating %s cube...' % cube
+    chdir(cubedir)
+    potfiles = [join('i18n', scfile) for scfile in ('entities.pot',)
+                if exists(join('i18n', scfile))]
+    print '******** extract schema messages'
+    schemapot = join(tempdir, 'schema.pot')
+    potfiles.append(schemapot)
+    # explicit close necessary else the file may not be yet flushed when
+    # we'll using it below
+    schemapotstream = file(schemapot, 'w')
+    generate_schema_pot(schemapotstream.write, cubedir)
+    schemapotstream.close()
+    print '******** extract TAL messages'
+    tali18nfile = join(tempdir, 'tali18n.py')
+    extract_from_tal(find('.', ('.py', '.pt'), blacklist=STD_BLACKLIST+('test',)), tali18nfile)
+    print '******** extract Javascript messages'
+    jsfiles =  [jsfile for jsfile in find('.', '.js') if basename(jsfile).startswith('cub')]
+    if jsfiles:
+        tmppotfile = join(tempdir, 'js.pot')
+        execute('xgettext --no-location --omit-header -k_ -L java --from-code=utf-8 -o %s %s'
+                % (tmppotfile, ' '.join(jsfiles)))
+        # no pot file created if there are no string to translate
+        if exists(tmppotfile):
+            potfiles.append(tmppotfile)
+    print '******** create cube specific catalog'
+    tmppotfile = join(tempdir, 'generated.pot')
+    cubefiles = find('.', '.py', blacklist=STD_BLACKLIST+('test',))
+    cubefiles.append(tali18nfile)
+    execute('xgettext --no-location --omit-header -k_ -o %s %s'
+            % (tmppotfile, ' '.join(cubefiles)))
+    if exists(tmppotfile): # doesn't exists of no translation string found
+        potfiles.append(tmppotfile)
+    potfile = join(tempdir, 'cube.pot')
+    print '******** merging .pot files'
+    execute('msgcat %s > %s' % (' '.join(potfiles), potfile))
+    print '******** merging main pot file with existing translations'
+    chdir('i18n')
+    for lang in LANGS:
+        print '****', lang
+        cubepo = '%s.po' % lang
+        if not exists(cubepo):
+            shutil.copy(potfile, cubepo)
+        else:
+            execute('msgmerge -N -s %s %s > %snew' % (cubepo, potfile, cubepo))
+            ensure_fs_mode(cubepo)
+            shutil.move('%snew' % cubepo, cubepo)
+        toedit.append(abspath(cubepo))
+    # cleanup
+    rm(tempdir)
+    return toedit
 
 
 class LiveServerCommand(Command):
