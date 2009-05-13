@@ -249,9 +249,11 @@ class WebTest(EnvBasedTC):
         etypes = self.to_test_etypes()
         for etype in etypes:
             yield self.execute('Any X LIMIT %s WHERE X is %s' % (limit, etype))
-
         etype1 = etypes.pop()
-        etype2 = etypes.pop()
+        try:
+            etype2 = etypes.pop()
+        except KeyError:
+            etype2 = etype1
         # test a mixed query (DISTINCT/GROUP to avoid getting duplicate
         # X which make muledit view failing for instance (html validation fails
         # because of some duplicate "id" attributes)
