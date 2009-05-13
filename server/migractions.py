@@ -228,9 +228,9 @@ class ServerMigrationHelper(MigrationHelper):
                         'fsschema': self.fs_schema,
                         'session' : self.session,
                         'repo' : self.repo,
-                        'synchronize_schema': deprecated_function(self.sync_schema_props_perms),
-                        'synchronize_eschema': deprecated_function(self.sync_schema_props_perms),
-                        'synchronize_rschema': deprecated_function(self.sync_schema_props_perms),
+                        'synchronize_schema': deprecated_function(self.cmd_sync_schema_props_perms),
+                        'synchronize_eschema': deprecated_function(self.cmd_sync_schema_props_perms),
+                        'synchronize_rschema': deprecated_function(self.cmd_sync_schema_props_perms),
                         })
         return context
 
