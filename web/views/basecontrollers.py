@@ -399,7 +399,8 @@ class JSonController(Controller):
             rset = self.req.execute('Any X,N WHERE X eid %%(x)s, X %s N' % rtype,
                                     {'x': eid}, 'x')
             entity = rset.get_entity(0, 0)
-            return (success, args, entity.printable_value(rtype))
+            value = entity.printable_value(rtype)
+            return (success, args, value or self.req._('not specified'))
         else:
             return (success, args, None)
 
