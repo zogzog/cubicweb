@@ -109,7 +109,7 @@ class EntityFieldsFormTC(WebTest):
 
     def test_richtextfield_1(self):
         self.req.use_fckeditor = lambda: False
-        self._test_richtextfield('''<select id="description_format:%(eid)s" name="description_format:%(eid)s" size="1" tabindex="0">
+        self._test_richtextfield('''<select id="description_format:%(eid)s" name="description_format:%(eid)s" size="1" style="display: block" tabindex="0">
 <option value="text/cubicweb-page-template">text/cubicweb-page-template</option>
 <option value="text/html">text/html</option>
 <option value="text/plain">text/plain</option>
@@ -119,7 +119,7 @@ class EntityFieldsFormTC(WebTest):
 
     def test_richtextfield_2(self):
         self.req.use_fckeditor = lambda: True
-        self._test_richtextfield('<input name="description_format:%(eid)s" type="hidden" value="text/rest"/><textarea cols="80" cubicweb:type="wysiwyg" id="description:%(eid)s" name="description:%(eid)s" onkeypress="autogrow(this)" rows="20" tabindex="0"/>')
+        self._test_richtextfield('<input name="description_format:%(eid)s" style="display: block" type="hidden" value="text/rest"/><textarea cols="80" cubicweb:type="wysiwyg" id="description:%(eid)s" name="description:%(eid)s" onkeypress="autogrow(this)" rows="20" tabindex="0"/>')
 
 
     def test_filefield(self):
