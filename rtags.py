@@ -30,7 +30,7 @@ class RelationTags(object):
             self._allowed_values = allowed_values
         self._initfunc = initfunc
         register_rtag(self)
-        
+
     def __repr__(self):
         return repr(self._tagdefs)
 
@@ -52,14 +52,16 @@ class RelationTags(object):
                 keys.remove((rtype, tagged, stype, '*'))
         return keys
 
-    def init(self, schema):
+    def init(self, schema, check=True):
         # XXX check existing keys against schema
-        for (rtype, tagged, stype, otype), value in self._tagdefs.items():
-            for ertype in (stype, rtype, otype):
-                if ertype != '*' and not ertype in schema:
-                    self.warning('removing rtag %s: %s, %s undefined in schema',
-                                 (stype, rtype, otype, tagged), value, ertype)
-                    self.del_rtag(stype, rtype, otype, tagged)
+        if check:
+            for (rtype, tagged, stype, otype), value in self._tagdefs.items():
+                for ertype in (stype, rtype, otype):
+                    if ertype != '*' and not ertype in schema:
+                        self.warning('removing rtag %s: %s, %s undefined in schema',
+                                     (stype, rtype, otype, tagged), value, ertype)
+                        self.del_rtag(stype, rtype, otype, tagged)
+                        break
         if self._initfunc is not None:
             for eschema in schema.entities():
                 for rschema, tschemas, role in eschema.relation_definitions(True):

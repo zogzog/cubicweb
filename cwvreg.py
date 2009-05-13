@@ -5,6 +5,7 @@
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 """
 __docformat__ = "restructuredtext en"
+_ = unicode
 
 from logilab.common.decorators import cached, clear_cache
 
@@ -12,8 +13,8 @@ from rql import RQLHelper
 
 from cubicweb import Binary, UnknownProperty, UnknownEid
 from cubicweb.vregistry import VRegistry, ObjectNotFound, NoSelectableObject
+from cubicweb.rtags import RTAGS
 
-_ = unicode
 
 def use_interfaces(obj):
     """return interfaces used by the given object by searchinf for implements
@@ -122,9 +123,10 @@ class CubicWebRegistry(VRegistry):
                 for appobjects in objects.itervalues():
                     for appobject in appobjects:
                         appobject.vreg_initialization_completed()
-            from cubicweb.rtags import RTAGS
+            # don't check rtags if we don't want to cleanup_interface_sobjects
             for rtag in RTAGS:
-                rtag.init(self.schema)
+                rtag.init(self.schema,
+                          check=self.config.cleanup_interface_sobjects)
 
     def initialization_completed(self):
         # clear etype cache if you don't want to run into deep weirdness
