@@ -260,8 +260,13 @@ class PartPlanInformation(object):
             self._insert_identity_variable = rqlhelper._annotator.rewrite_shared_optional
         if server.DEBUG:
             print 'sourcesterms:'
-            for source, terms in self.sourcesterms.items():
-                print source, terms
+            self._debug_sourcesterms()
+
+    def _debug_sourcesterms(self):
+        for source in self._sourcesterms:
+            print '-', source
+            for term, sols in self._sourcesterms[source].items():
+                print '  -', term, id(term), ':' ,sols
 
     def copy_solutions(self, solindices):
         return [self._solutions[solidx].copy() for solidx in solindices]
@@ -358,7 +363,8 @@ class PartPlanInformation(object):
                         # doesn't actually comes from it so we get a changes
                         # that allequals will return True as expected when
                         # computing needsplit
-                        if self.system_source in sourcesterms:
+                        # check const is used in a relation restriction
+                        if const.relation() and self.system_source in sourcesterms:
                             self._set_source_for_term(self.system_source, const)
         # add source for relations
         rschema = self._schema.rschema
@@ -605,6 +611,8 @@ class PartPlanInformation(object):
             try:
                 sourcesterms[source][term].remove(solindex)
             except KeyError:
+                import rql.base as rqlb
+                assert isinstance(term, rqlb.BaseNode), repr(term)
                 continue # may occur with subquery column alias
             if not sourcesterms[source][term]:
                 del sourcesterms[source][term]

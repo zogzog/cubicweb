@@ -2090,13 +2090,21 @@ class MSPlannerTwoSameExternalSourcesTC(BasePlannerTC):
                      )]
                    )
 
-    def test_nonregr_dont_cross_rel_source_filtering(self):
+    def test_nonregr_dont_cross_rel_source_filtering_1(self):
+        self.repo._type_source_cache[999999] = ('Note', 'cards', 999999)
+        self._test('Any S WHERE E eid %(x)s, E in_state S, NOT S name "moved"',
+                   [('OneFetchStep', [('Any S WHERE 999999 in_state S, NOT S name "moved", S is State',
+                                       [{'S': 'State'}])],
+                     None, None, [self.rql], {}, []
+                     )],
+                   {'x': 999999})
+
+    def test_nonregr_dont_cross_rel_source_filtering_2(self):
         self.repo._type_source_cache[999999] = ('Note', 'cards', 999999)
         self._test('Any X,AA,AB WHERE E eid %(x)s, E in_state X, X name AA, X modification_date AB',
                    [('OneFetchStep', [('Any X,AA,AB WHERE 999999 in_state X, X name AA, X modification_date AB, X is State',
                                        [{'AA': 'String', 'AB': 'Datetime', 'X': 'State'}])],
-                     None, None,
-                     [self.rql], {}, []
+                     None, None, [self.rql], {}, []
                      )],
                    {'x': 999999})
 
