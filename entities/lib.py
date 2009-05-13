@@ -97,7 +97,7 @@ class CWProperty(AnyEntity):
     def typed_value(self):
         return self.vreg.typed_value(self.pkey, self.value)
 
-    def dc_description(self):
+    def dc_description(self, format='text/plain'):
         try:
             return self.req._(self.vreg.property_info(self.pkey)['help'])
         except UnknownProperty:
