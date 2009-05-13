@@ -17,13 +17,13 @@ class TimedCache(dict):
     def __init__(self, ttlm, ttls=0):
         # time to live in minutes
         self.ttl = timedelta(0, ttlm*60 + ttls, 0)
-        
+
     def __setitem__(self, key, value):
         dict.__setitem__(self, key, (datetime.now(), value))
-        
+
     def __getitem__(self, key):
         return dict.__getitem__(self, key)[1]
-    
+
     def clear_expired(self):
         now_ = datetime.now()
         ttl = self.ttl
@@ -41,7 +41,7 @@ class AbstractSource(object):
     # boolean telling if the repository should connect to this source during
     # migration
     connect_for_migration = True
-    
+
     # mappings telling which entities and relations are available in the source
     # keys are supported entity/relation types and values are boolean indicating
     # wether the support is read-only (False) or read-write (True)
@@ -54,30 +54,30 @@ class AbstractSource(object):
     repo = None
     # a reference to the application'schema (may differs from the source'schema)
     schema = None
-    
+
     def __init__(self, repo, appschema, source_config, *args, **kwargs):
         self.repo = repo
         self.uri = source_config['uri']
         set_log_methods(self, getLogger('cubicweb.sources.'+self.uri))
         self.set_schema(appschema)
         self.support_relations['identity'] = False
-        
+
     def init_creating(self):
         """method called by the repository once ready to create a new instance"""
         pass
- 
+
     def init(self):
         """method called by the repository once ready to handle request"""
         pass
-    
+
     def reset_caches(self):
         """method called during test to reset potential source caches"""
         pass
-    
+
     def clear_eid_cache(self, eid, etype):
         """clear potential caches for the given eid"""
         pass
-    
+
     def __repr__(self):
         return '<%s source @%#x>' % (self.uri, id(self))
 
@@ -92,11 +92,11 @@ class AbstractSource(object):
         if other.uri == 'system':
             return -1
         return cmp(self.uri, other.uri)
-        
+
     def set_schema(self, schema):
         """set the application'schema"""
         self.schema = schema
-        
+
     def support_entity(self, etype, write=False):
         """return true if the given entity's type is handled by this adapter
         if write is true, return true only if it's a RW support
@@ -108,13 +108,13 @@ class AbstractSource(object):
         if write:
             return wsupport
         return True
-    
+
     def support_relation(self, rtype, write=False):
         """return true if the given relation's type is handled by this adapter
         if write is true, return true only if it's a RW support
 
-        current implementation return true if the relation is defined into 
-        `support_relations` or if it is a final relation of a supported entity 
+        current implementation return true if the relation is defined into
+        `support_relations` or if it is a final relation of a supported entity
         type
         """
         try:
@@ -133,8 +133,8 @@ class AbstractSource(object):
                 return False
         if write:
             return wsupport
-        return True    
-    
+        return True
+
     def eid2extid(self, eid, session=None):
         return self.repo.eid2extid(self, eid, session)
 
@@ -187,7 +187,7 @@ class AbstractSource(object):
                         rschema.type, myeids)
                     session.system_sql(sql)
                     break
-        
+
     def cleanup_entities_info(self, session):
         """cleanup system tables from information for entities coming from
         this source. This should be called when a source is removed to
@@ -204,13 +204,13 @@ class AbstractSource(object):
                            {'uri': self.uri})
         session.system_sql('DELETE FROM entities WHERE source=%(uri)s',
                            {'uri': self.uri})
-        
+
     # abstract methods to override (at least) in concrete source classes #######
-    
+
     def get_connection(self):
         """open and return a connection to the source"""
         raise NotImplementedError()
-    
+
     def check_connection(self, cnx):
         """check connection validity, return None if the connection is still valid
         else a new connection (called when the pool using the given connection is
@@ -219,7 +219,7 @@ class AbstractSource(object):
         do nothing by default
         """
         pass
-    
+
     def pool_reset(self, cnx):
         """the pool using the given connection is being reseted from its current
         attached session
@@ -227,7 +227,7 @@ class AbstractSource(object):
         do nothing by default
         """
         pass
-    
+
     def authenticate(self, session, login, password):
         """if the source support CWUser entity type, it should implements
         this method which should return CWUser eid for the given login/password
@@ -235,16 +235,16 @@ class AbstractSource(object):
         given. Else raise `AuthenticationError`
         """
         raise NotImplementedError()
-    
+
     def syntax_tree_search(self, session, union,
                            args=None, cachekey=None, varmap=None, debug=0):
-        """return result from this source for a rql query (actually from a rql 
-        syntax tree and a solution dictionary mapping each used variable to a 
+        """return result from this source for a rql query (actually from a rql
+        syntax tree and a solution dictionary mapping each used variable to a
         possible type). If cachekey is given, the query necessary to fetch the
         results (but not the results themselves) may be cached using this key.
         """
         raise NotImplementedError()
-                
+
     def flying_insert(self, table, session, union, args=None, varmap=None):
         """similar as .syntax_tree_search, but inserts data in the temporary
         table (on-the-fly if possible, eg for the system source whose the given
@@ -254,21 +254,21 @@ class AbstractSource(object):
         res = self.syntax_tree_search(session, union, args, varmap=varmap)
         session.pool.source('system')._manual_insert(res, table, session)
 
-        
+
     # system source don't have to implement the two methods below
-    
+
     def before_entity_insertion(self, session, lid, etype, eid):
         """called by the repository when an eid has been attributed for an
         entity stored here but the entity has not been inserted in the system
         table yet.
-        
+
         This method must return the an Entity instance representation of this
         entity.
         """
         entity = self.repo.vreg.etype_class(etype)(session, None)
         entity.set_eid(eid)
         return entity
-    
+
     def after_entity_insertion(self, session, lid, entity):
         """called by the repository after an entity stored here has been
         inserted in the system table.
@@ -280,11 +280,11 @@ class AbstractSource(object):
     def get_extid(self, entity):
         """return the external id for the given newly inserted entity"""
         raise NotImplementedError()
-        
+
     def add_entity(self, session, entity):
         """add a new entity to the source"""
         raise NotImplementedError()
-        
+
     def update_entity(self, session, entity):
         """update an entity in the source"""
         raise NotImplementedError()
@@ -296,7 +296,7 @@ class AbstractSource(object):
     def add_relation(self, session, subject, rtype, object):
         """add a relation to the source"""
         raise NotImplementedError()
-    
+
     def delete_relation(self, session, subject, rtype, object):
         """delete a relation from the source"""
         raise NotImplementedError()
@@ -306,7 +306,7 @@ class AbstractSource(object):
     def eid_type_source(self, session, eid):
         """return a tuple (type, source, extid) for the entity with id <eid>"""
         raise NotImplementedError()
-    
+
     def create_eid(self, session):
         raise NotImplementedError()
 
@@ -319,18 +319,18 @@ class AbstractSource(object):
         record from the entities table to the deleted_entities table
         """
         raise NotImplementedError()
-        
+
     def fti_unindex_entity(self, session, eid):
         """remove text content for entity with the given eid from the full text
         index
         """
         raise NotImplementedError()
-        
+
     def fti_index_entity(self, session, entity):
         """add text content of a created/modified entity to the full text index
         """
         raise NotImplementedError()
-        
+
     def modified_entities(self, session, etypes, mtime):
         """return a 2-uple:
         * list of (etype, eid) of entities of the given types which have been
@@ -346,13 +346,13 @@ class AbstractSource(object):
     def sqlexec(self, session, sql, args=None):
         """execute the query and return its result"""
         raise NotImplementedError()
-    
+
     def temp_table_def(self, selection, solution, table, basemap):
         raise NotImplementedError()
-    
+
     def create_index(self, session, table, column, unique=False):
         raise NotImplementedError()
-            
+
     def drop_index(self, session, table, column, unique=False):
         raise NotImplementedError()
 
@@ -363,14 +363,14 @@ class AbstractSource(object):
         """remove temporary data, usually associated to temporary tables"""
         pass
 
-        
+
 class TrFunc(object):
     """lower, upper"""
     def __init__(self, trname, index, attrname=None):
         self._tr = trname.lower()
         self.index = index
         self.attrname = attrname
-        
+
     def apply(self, resdict):
         value = resdict.get(self.attrname)
         if value is not None:
@@ -428,7 +428,7 @@ def source_adapter(source_config):
         return SOURCE_TYPES[adapter_type]
     except KeyError:
         raise RuntimeError('Unknown adapter %r' % adapter_type)
-    
+
 def get_source(source_config, global_schema, repo):
     """return a source adapter according to the adapter field in the
     source's configuration

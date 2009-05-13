@@ -29,7 +29,7 @@ NONSYSTEM_RELATIONS = set()
 class LogCursor(object):
     def __init__(self, cursor):
         self.cu = cursor
-        
+
     def execute(self, query, args=None):
         """Execute a query.
         it's a function just so that it shows up in profiling
@@ -42,13 +42,13 @@ class LogCursor(object):
             print "sql: %r\n args: %s\ndbms message: %r" % (
                 query, args, ex.args[0])
             raise
-        
+
     def fetchall(self):
         return self.cu.fetchall()
-        
+
     def fetchone(self):
         return self.cu.fetchone()
-    
+
 def make_schema(selected, solution, table, typemap):
     """return a sql schema to store RQL query result"""
     sql = []
@@ -84,11 +84,11 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
     """
     # need default value on class since migration doesn't call init method
     has_deleted_entitites_table = True
-    
+
     passwd_rql = "Any P WHERE X is CWUser, X login %(login)s, X upassword P"
     auth_rql = "Any X WHERE X is CWUser, X login %(login)s, X upassword %(pwd)s"
     _sols = ({'X': 'CWUser', 'P': 'Password'},)
-    
+
     options = (
         ('db-driver',
          {'type' : 'string',
@@ -127,7 +127,7 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
           'group': 'native-source', 'inputlevel': 1,
           }),
     )
-    
+
     def __init__(self, repo, appschema, source_config, *args, **kwargs):
         SQLAdapterMixIn.__init__(self, source_config)
         AbstractSource.__init__(self, repo, appschema, source_config,
@@ -150,18 +150,18 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
     def reset_caches(self):
         """method called during test to reset potential source caches"""
         self._cache = Cache(self.repo.config['rql-cache-size'])
-    
+
     def clear_eid_cache(self, eid, etype):
         """clear potential caches for the given eid"""
         self._cache.pop('%s X WHERE X eid %s' % (etype, eid), None)
         self._cache.pop('Any X WHERE X eid %s' % eid, None)
-        
+
     def sqlexec(self, session, sql, args=None):
         """execute the query and return its result"""
         cursor = session.pool[self.uri]
         self.doexec(cursor, sql, args)
         return self.process_result(cursor)
-    
+
     def init_creating(self):
         # check full text index availibility
         pool = self.repo._get_pool()
@@ -171,7 +171,7 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
         self.repo._free_pool(pool)
 
     def init(self):
-        self.init_creating() 
+        self.init_creating()
         pool = self.repo._get_pool()
         # XXX cubicweb < 2.42 compat
         if 'deleted_entities' in self.dbhelper.list_tables(pool['system']):
@@ -179,7 +179,7 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
         else:
             self.has_deleted_entitites_table = False
         self.repo._free_pool(pool)
-        
+
     # ISource interface #######################################################
 
     def compile_rql(self, rql):
@@ -189,7 +189,7 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
         self.repo.querier.sqlgen_annotate(rqlst)
         set_qdata(self.schema.rschema, rqlst, ())
         return rqlst
-    
+
     def set_schema(self, schema):
         """set the application'schema"""
         self._cache = Cache(self.repo.config['rql-cache-size'])
@@ -203,13 +203,13 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
             # rql syntax trees used to authenticate users
             self._passwd_rqlst = self.compile_rql(self.passwd_rql)
             self._auth_rqlst = self.compile_rql(self.auth_rql)
-                
+
     def support_entity(self, etype, write=False):
         """return true if the given entity's type is handled by this adapter
         if write is true, return true only if it's a RW support
         """
         return not etype in NONSYSTEM_ETYPES
-    
+
     def support_relation(self, rtype, write=False):
         """return true if the given relation's type is handled by this adapter
         if write is true, return true only if it's a RW support
@@ -217,7 +217,7 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
         if write:
             return not rtype in NONSYSTEM_RELATIONS
         # due to current multi-sources implementation, the system source
-        # can't claim not supporting a relation            
+        # can't claim not supporting a relation
         return True #not rtype == 'content_for'
 
     def authenticate(self, session, login, password):
@@ -243,8 +243,8 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
             return rset[0][0]
         except IndexError:
             raise AuthenticationError('bad password')
-    
-    def syntax_tree_search(self, session, union, args=None, cachekey=None, 
+
+    def syntax_tree_search(self, session, union, args=None, cachekey=None,
                            varmap=None):
         """return result from this source for a rql query (actually from
         a rql syntax tree and a solution dictionary mapping each used
@@ -289,7 +289,7 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
         if server.DEBUG:
             print '------>', res
         return res
-                
+
     def flying_insert(self, table, session, union, args=None, varmap=None):
         """similar as .syntax_tree_search, but inserts data in the
         temporary table (on-the-fly if possible, eg for the system
@@ -319,7 +319,7 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
         else:
             super(NativeSQLSource, self).flying_insert(table, session, union,
                                                        args, varmap)
-        
+
     def _manual_insert(self, results, table, session):
         """insert given result into a temporary table on the system source"""
         #print 'manual insert', table, results
@@ -362,13 +362,13 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
                     del self._temp_table_data[table]
                 except KeyError:
                     continue
-    
+
     def add_entity(self, session, entity):
         """add a new entity to the source"""
         attrs = self.preprocess_entity(entity)
         sql = self.sqlgen.insert(SQL_PREFIX + str(entity.e_schema), attrs)
         self.doexec(session.pool[self.uri], sql, attrs)
-        
+
     def update_entity(self, session, entity):
         """replace an entity in the source"""
         attrs = self.preprocess_entity(entity)
@@ -386,7 +386,7 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
         attrs = {'eid_from': subject, 'eid_to': object}
         sql = self.sqlgen.insert('%s_relation' % rtype, attrs)
         self.doexec(session.pool[self.uri], sql, attrs)
-    
+
     def delete_relation(self, session, subject, rtype, object):
         """delete a relation from the source"""
         rschema = self.schema.rschema(rtype)
@@ -399,7 +399,7 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
         else:
             attrs = {'eid_from': subject, 'eid_to': object}
             sql = self.sqlgen.delete('%s_relation' % rtype, attrs)
-        self.doexec(session.pool[self.uri], sql, attrs)    
+        self.doexec(session.pool[self.uri], sql, attrs)
 
     def doexec(self, cursor, query, args=None):
         """Execute a query.
@@ -417,7 +417,7 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
             self.critical("sql: %r\n args: %s\ndbms message: %r",
                           query, args, ex.args[0])
             raise
-        
+
     def doexecmany(self, cursor, query, args):
         """Execute a query.
         it's a function just so that it shows up in profiling
@@ -433,13 +433,13 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
         except:
             self.critical("sql many: %r\n args: %s", query, args)
             raise
-        
+
     # short cut to method requiring advanced db helper usage ##################
-            
+
     def create_index(self, session, table, column, unique=False):
         cursor = LogCursor(session.pool[self.uri])
         self.dbhelper.create_index(cursor, table, column, unique)
-            
+
     def drop_index(self, session, table, column, unique=False):
         cursor = LogCursor(session.pool[self.uri])
         self.dbhelper.drop_index(cursor, table, column, unique)
@@ -466,16 +466,16 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
                                     {'x': str(lid), 's': source.uri})
         # XXX testing rowcount cause strange bug with sqlite, results are there
         #     but rowcount is 0
-        #if cursor.rowcount > 0: 
+        #if cursor.rowcount > 0:
         try:
             result = cursor.fetchone()
             if result:
                 eid = result[0]
-                return eid            
+                return eid
         except:
             pass
         return None
-    
+
     def temp_table_def(self, selected, sol, table):
         return make_schema(selected, sol, table, self.dbhelper.TYPE_MAPPING)
 
@@ -485,7 +485,7 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
         # on commit
         sql = self.dbhelper.sql_temporary_table(table, schema, False)
         self.doexec(session.pool[self.uri], sql)
-    
+
     def create_eid(self, session):
         self._eid_creation_lock.acquire()
         try:
@@ -513,7 +513,7 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
             attrs = {'type': etype, 'eid': eid, 'extid': extid,
                      'source': uri, 'dtime': datetime.now()}
             session.system_sql(self.sqlgen.insert('deleted_entities', attrs), attrs)
-        
+
     def fti_unindex_entity(self, session, eid):
         """remove text content for entity with the given eid from the full text
         index
@@ -523,7 +523,7 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
         except:
             if self.indexer is not None:
                 self.exception('error while unindexing %s', eid)
-        
+
     def fti_index_entity(self, session, entity):
         """add text content of a created/modified entity to the full text index
         """
@@ -537,7 +537,7 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
         # update entities.mtime
         attrs = {'eid': entity.eid, 'mtime': datetime.now()}
         session.system_sql(self.sqlgen.update('entities', attrs, ['eid']), attrs)
-        
+
     def modified_entities(self, session, etypes, mtime):
         """return a 2-uple:
         * list of (etype, eid) of entities of the given types which have been
