@@ -71,6 +71,9 @@ class Input(FieldWidget):
         """
         self.add_media(form)
         name, values, attrs = self._render_attrs(form, field)
+        # ensure something is rendered
+        if not values:
+            values = (INTERNAL_FIELD_VALUE,)
         inputs = [tags.input(name=name, value=value, type=self.type, **attrs)
                   for value in values]
         return u'\n'.join(inputs)
