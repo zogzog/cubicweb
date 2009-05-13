@@ -27,19 +27,19 @@ from cubicweb.server.sources import AbstractSource, ConnectionWrapper, TimedCach
 class ReplaceByInOperator(Exception):
     def __init__(self, eids):
         self.eids = eids
-        
+
 class PyroRQLSource(AbstractSource):
     """External repository source, using Pyro connection"""
-    
+
     # boolean telling if modification hooks should be called when something is
     # modified in this source
     should_call_hooks = False
     # boolean telling if the repository should connect to this source during
     # migration
     connect_for_migration = False
-    
+
     support_entities = None
-    
+
     options = (
         # XXX pyro-ns host/port
         ('pyro-ns-id',
@@ -101,7 +101,7 @@ registered. If not set, default to the value from all_in_one.conf.',
 repository (default to 5 minutes).',
           'group': 'pyro-source', 'inputlevel': 2,
           }),
-        
+
     )
 
     PUBLIC_KEYS = AbstractSource.PUBLIC_KEYS + ('base-url',)
@@ -127,7 +127,7 @@ repository (default to 5 minutes).',
                       {'type' : 'int', 'sitewide': True,
                        'default': 0,
                        'help': _('timestamp of the latest source synchronization.'),
-                       'group': 'sources', 
+                       'group': 'sources',
                        }),)
         register_persistent_options(myoptions)
         self._query_cache = TimedCache(30)
@@ -154,8 +154,8 @@ repository (default to 5 minutes).',
     def init(self):
         """method called by the repository once ready to handle request"""
         interval = int(self.config.get('synchronization-interval', 5*60))
-        self.repo.looping_task(interval, self.synchronize) 
-        self.repo.looping_task(self._query_cache.ttl.seconds/10, self._query_cache.clear_expired) 
+        self.repo.looping_task(interval, self.synchronize)
+        self.repo.looping_task(self._query_cache.ttl.seconds/10, self._query_cache.clear_expired)
 
     def synchronize(self, mtime=None):
         """synchronize content known by this repository with content in the
@@ -169,6 +169,7 @@ repository (default to 5 minutes).',
             mtime = self.last_update_time()
         updatetime, modified, deleted = extrepo.entities_modified_since(etypes,
                                                                         mtime)
+        self._query_cache.clear()
         repo = self.repo
         session = repo.internal_session()
         try:
@@ -201,7 +202,7 @@ repository (default to 5 minutes).',
             session.commit()
         finally:
             session.close()
-                
+
     def _get_connection(self):
         """open and return a connection to the source"""
         nshost = self.config.get('pyro-ns-host') or self.repo.config['pyro-ns-host']
@@ -221,7 +222,7 @@ repository (default to 5 minutes).',
             self.critical("can't get connection to source %s", self.uri,
                           exc_info=1)
             return ConnectionWrapper()
-        
+
     def check_connection(self, cnx):
         """check connection validity, return None if the connection is still valid
         else a new connection
@@ -242,7 +243,7 @@ repository (default to 5 minutes).',
                 pass
         # try to reconnect
         return self.get_connection()
-        
+
     def syntax_tree_search(self, session, union, args=None, cachekey=None,
                            varmap=None):
         #assert not varmap, (varmap, union)
@@ -253,10 +254,10 @@ repository (default to 5 minutes).',
             results = self._syntax_tree_search(session, union, args)
             self._query_cache[rqlkey] = results
         return results
-    
+
     def _syntax_tree_search(self, session, union, args):
-        """return result from this source for a rql query (actually from a rql 
-        syntax tree and a solution dictionary mapping each used variable to a 
+        """return result from this source for a rql query (actually from a rql
+        syntax tree and a solution dictionary mapping each used variable to a
         possible type). If cachekey is given, the query necessary to fetch the
         results (but not the results themselves) may be cached using this key.
         """
@@ -330,11 +331,11 @@ repository (default to 5 minutes).',
             relations.append('X %s %%(%s)s' % (key, key))
             kwargs[key] = val
         return relations, kwargs
-    
+
     def add_entity(self, session, entity):
         """add a new entity to the source"""
         raise NotImplementedError()
-        
+
     def update_entity(self, session, entity):
         """update an entity in the source"""
         relations, kwargs = self._entity_relations_and_kwargs(session, entity)
@@ -354,7 +355,7 @@ repository (default to 5 minutes).',
         cu.execute('SET X %s Y WHERE X eid %%(x)s, Y eid %%(y)s' % rtype,
                    {'x': self.eid2extid(subject, session),
                     'y': self.eid2extid(object, session)}, ('x', 'y'))
-    
+
     def delete_relation(self, session, subject, rtype, object):
         """delete a relation from the source"""
         cu = session.pool[self.uri]
@@ -368,7 +369,7 @@ class RQL2RQL(object):
     def __init__(self, source):
         self.source = source
         self.current_operator = None
-        
+
     def _accept_children(self, node):
         res = []
         for child in node.children:
@@ -376,20 +377,20 @@ class RQL2RQL(object):
             if rql is not None:
                 res.append(rql)
         return res
-        
+
     def generate(self, session, rqlst, args):
-        self._session = session 
+        self._session = session
         self.kwargs = args
         self.cachekey = []
         self.need_translation = False
         return self.visit_union(rqlst), self.cachekey
-    
+
     def visit_union(self, node):
         s = self._accept_children(node)
         if len(s) > 1:
             return ' UNION '.join('(%s)' % q for q in s)
         return s[0]
-    
+
     def visit_select(self, node):
         """return the tree as an encoded rql string"""
         self._varmaker = rqlvar_maker(defined=node.defined_vars.copy())
@@ -416,7 +417,7 @@ class RQL2RQL(object):
                 restrictions.append(nr)
         if restrictions:
             s.append('WHERE %s' % ','.join(restrictions))
-        
+
         if node.having:
             s.append('HAVING %s' % ', '.join(term.accept(self)
                                              for term in node.having))
@@ -427,13 +428,13 @@ class RQL2RQL(object):
         if subqueries:
             s.append('WITH %s' % (','.join(subqueries)))
         return ' '.join(s)
-    
+
     def visit_and(self, node):
         res = self._accept_children(node)
         if res:
             return ', '.join(res)
         return
-    
+
     def visit_or(self, node):
         res = self._accept_children(node)
         if len(res) > 1:
@@ -441,16 +442,16 @@ class RQL2RQL(object):
         elif res:
             return res[0]
         return
-    
+
     def visit_not(self, node):
         rql = node.children[0].accept(self)
         if rql:
             return 'NOT (%s)' % rql
         return
-    
+
     def visit_exists(self, node):
         return 'EXISTS(%s)' % node.children[0].accept(self)
-        
+
     def visit_relation(self, node):
         try:
             if isinstance(node.children[0], Constant):
@@ -497,18 +498,18 @@ class RQL2RQL(object):
         if restr is not None:
             return '%s %s %s, %s' % (lhs, node.r_type, rhs, restr)
         return '%s %s %s' % (lhs, node.r_type, rhs)
-        
+
     def visit_comparison(self, node):
         if node.operator in ('=', 'IS'):
             return node.children[0].accept(self)
         return '%s %s' % (node.operator.encode(),
                           node.children[0].accept(self))
-            
+
     def visit_mathexpression(self, node):
         return '(%s %s %s)' % (node.children[0].accept(self),
                                node.operator.encode(),
                                node.children[1].accept(self))
-        
+
     def visit_function(self, node):
         #if node.name == 'IN':
         res = []
@@ -521,7 +522,7 @@ class RQL2RQL(object):
         if not res:
             raise ex
         return '%s(%s)' % (node.name, ', '.join(res))
-        
+
     def visit_constant(self, node):
         if self.need_translation or node.uidtype:
             if node.type == 'Int':
@@ -558,7 +559,7 @@ class RQL2RQL(object):
 
     def eid2extid(self, eid):
         try:
-            return self.source.eid2extid(eid, self._session)        
+            return self.source.eid2extid(eid, self._session)
         except UnknownEid:
             operator = self.current_operator
             if operator is not None and operator != '=':
@@ -583,4 +584,4 @@ class RQL2RQL(object):
                 if rows:
                     raise ReplaceByInOperator((r[0] for r in rows))
             raise
-                
+
