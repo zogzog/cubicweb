@@ -9,13 +9,13 @@ def rbc(entity, category):
 class AutomaticEntityFormTC(EnvBasedTC):
 
     def test_custom_widget(self):
-        AEF.rwidgets.tag_subject_of(('CWUser', 'login', '*'),
-                                    AutoCompletionWidget)
+        AEF.rfields_kwargs.tag_subject_of(('CWUser', 'login', '*'),
+                                          {'widget':AutoCompletionWidget})
         form = self.vreg.select_object('forms', 'edition', self.request(), None,
                                        entity=self.user())
         field = form.field_by_name('login')
         self.assertIsInstance(field.widget, AutoCompletionWidget)
-        AEF.rwidgets.del_rtag('!CWUser', 'login', '*')
+        AEF.rfields_kwargs.del_rtag('CWUser', 'login', '*', 'subject')
 
 
     def test_euser_relations_by_category(self):
@@ -44,13 +44,13 @@ class AutomaticEntityFormTC(EnvBasedTC):
                                ('bookmarked_by', 'object'),
                                ])
         self.assertListEquals(rbc(e, 'generic'),
-                              [('connait', 'subject'),
+                              [('primary_email', 'subject'),
+                               ('connait', 'subject'),
                                ('checked_by', 'object'),
                                ])
         # owned_by is defined both as subject and object relations on CWUser
         self.assertListEquals(rbc(e, 'generated'),
-                              [('primary_email', 'subject'),
-                               ('use_email', 'subject'),
+                              [('use_email', 'subject'),
                                ('has_text', 'subject'),
                                ('identity', 'subject'),
                                ('is', 'subject'),

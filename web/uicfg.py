@@ -212,6 +212,8 @@ autoform_section.tag_object_of(('*', 'owned_by', 'CWUser'), 'generated')
 autoform_section.tag_object_of(('*', 'created_by', 'CWUser'), 'generated')
 autoform_section.tag_object_of(('*', 'bookmarked_by', 'CWUser'), 'metadata')
 autoform_section.tag_attribute(('Bookmark', 'path'), 'primary')
+autoform_section.tag_subject_of(('*', 'use_email', '*'), 'generated') # inlined actually
+autoform_section.tag_subject_of(('*', 'primary_email', '*'), 'generic')
 
 
 # relations'field class

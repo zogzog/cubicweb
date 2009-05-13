@@ -531,6 +531,7 @@ class JSONControllerTC(EnvBasedTC):
                            pageid='123', fname='view')
         ctrl = self.ctrl(req)
         rset = self.john.as_rset()
+        rset.req = req
         self.assertTextEquals(ctrl.publish(),
                               xhtml_wrap(ctrl.view('primary', rset)))
 

@@ -39,7 +39,7 @@ class GuessFieldTC(TestCase):
         description_format_field = guess_field(state_schema, schema['description_format'], skip_meta_attr=False)
         self.assertEquals(description_format_field.internationalizable, True)
         self.assertEquals(description_format_field.sort, True)
-        self.assertEquals(description_format_field.initial, 'text/rest')
+        self.assertEquals(description_format_field.initial(None), 'text/rest')
 
 #         wikiid_field = guess_field(state_schema, schema['wikiid'])
 #         self.assertIsInstance(wikiid_field, StringField)

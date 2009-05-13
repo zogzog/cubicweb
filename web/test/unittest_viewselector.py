@@ -165,7 +165,7 @@ class VRegistryTC(ViewSelectorTC):
                               ('list', baseviews.ListView),
                               ('oneline', baseviews.OneLineView),
                               ('owlabox', owl.OWLABOXView),
-                              ('primary', cwuser.CWUserPrimaryView),
+                              ('primary', primary.PrimaryView),
                               ('rsetxml', xmlrss.XMLRsetView),
                               ('rss', xmlrss.RSSView),
                               ('secondary', baseviews.SecondaryView),
@@ -326,12 +326,6 @@ class VRegistryTC(ViewSelectorTC):
                               self.vreg.select_view, 'creation', req, rset)
         self.assertIsInstance(self.vreg.select_view('table', req, rset),
                               tableview.TableView)
-        # cwuser primary view priority
-        rset, req = self.env.get_rset_and_req('CWUser X WHERE X login "admin"')
-        self.assertIsInstance(self.vreg.select_view('primary', req, rset),
-                             cwuser.CWUserPrimaryView)
-        self.assertIsInstance(self.vreg.select_view('text', req, rset),
-                             baseviews.TextView)
 
     def test_interface_selector(self):
         image = self.add_entity('Image', name=u'bim.png', data=Binary('bim'))
