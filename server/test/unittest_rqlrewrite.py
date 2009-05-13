@@ -11,7 +11,7 @@ config = TestServerConfiguration('data')
 config.bootstrap_cubes()
 schema = config.load_schema()
 schema.add_relation_def(mock_object(subject='Card', name='in_state', object='State', cardinality='1*'))
-                        
+
 rqlhelper = RQLHelper(schema, special_relations={'eid': 'uid',
                                                  'has_text': 'fti'})
 
@@ -20,7 +20,7 @@ def setup_module(*args):
 
 def teardown_module(*args):
     repotest.undo_monkey_patch()
-    
+
 def eid_func_map(eid):
     return {1: 'CWUser',
             2: 'Card'}[eid]
@@ -41,7 +41,7 @@ def rewrite(rqlst, snippets_map, kwargs):
     rewriter = RQLRewriter(FakeQuerier, mock_object(user=(mock_object(eid=1))))
     for v, snippets in snippets_map.items():
         snippets_map[v] = [mock_object(snippet_rqlst=parse('Any X WHERE '+snippet).children[0],
-                                       expression='Any X WHERE '+snippet) 
+                                       expression='Any X WHERE '+snippet)
                            for snippet in snippets]
     rqlhelper.compute_solutions(rqlst.children[0], {'eid': eid_func_map}, kwargs=kwargs)
     solutions = rqlst.children[0].solutions
@@ -62,10 +62,10 @@ class RQLRewriteTC(TestCase):
 
     * optimisation: detecter les relations utilisees dans les rqlexpressions qui
       sont presentes dans la requete de depart pour les reutiliser si possible
-      
+
     * "has_<ACTION>_permission" ?
     """
-    
+
     def test_base_var(self):
         card_constraint = ('X in_state S, U in_group G, P require_state S,'
                            'P name "read", P require_group G')
@@ -75,7 +75,7 @@ class RQLRewriteTC(TestCase):
                              u"Any C WHERE C is Card, B eid %(D)s, "
                              "EXISTS(C in_state A, B in_group E, F require_state A, "
                              "F name 'read', F require_group E, A is State, E is CWGroup, F is CWPermission)")
-        
+
     def test_multiple_var(self):
         card_constraint = ('X in_state S, U in_group G, P require_state S,'
                            'P name "read", P require_group G')
@@ -91,7 +91,7 @@ class RQLRewriteTC(TestCase):
                              "(EXISTS(S ref LIKE 'PUBLIC%')) OR (EXISTS(B in_group G, G name 'public', G is CWGroup)), "
                              "S is Affaire")
         self.failUnless('D' in kwargs)
-        
+
     def test_or(self):
         constraint = '(X identity U) OR (X in_state ST, CL identity U, CL in_state ST, ST name "subscribed")'
         rqlst = parse('Any S WHERE S owned_by C, C eid %(u)s')
@@ -100,7 +100,7 @@ class RQLRewriteTC(TestCase):
                              "Any S WHERE S owned_by C, C eid %(u)s, A eid %(B)s, "
                              "EXISTS((C identity A) OR (C in_state D, E identity A, "
                              "E in_state D, D name 'subscribed'), D is State, E is CWUser), "
-                             "S is IN(Affaire, Basket, Bookmark, Card, Comment, Division, CWCache, CWConstraint, CWConstraintType, CWEType, CWAttribute, CWGroup, CWRelation, CWPermission, CWProperty, CWRType, CWUser, Email, EmailAddress, EmailPart, EmailThread, File, Folder, Image, Note, Personne, RQLExpression, Societe, State, SubDivision, Tag, TrInfo, Transition)")
+                             "S is IN(Affaire, Basket, Bookmark, CWAttribute, CWCache, CWConstraint, CWConstraintType, CWEType, CWGroup, CWPermission, CWProperty, CWRType, CWRelation, CWUser, Card, Comment, Division, Email, EmailAddress, EmailPart, EmailThread, File, Folder, Image, Note, Personne, RQLExpression, Societe, State, SubDivision, Tag, TrInfo, Transition)")
 
     def test_simplified_rqlst(self):
         card_constraint = ('X in_state S, U in_group G, P require_state S,'
@@ -129,7 +129,7 @@ class RQLRewriteTC(TestCase):
                              "WITH C,T BEING "
                              "(Any C,T WHERE C in_state B, D in_group F, G require_state B, G name 'read', "
                              "G require_group F, C title T, D eid %(A)s, C is Card)")
-        
+
     def test_relation_optimization(self):
         # since Card in_state State as monovalued cardinality, the in_state
         # relation used in the rql expression can be ignored and S replaced by
@@ -149,7 +149,7 @@ class RQLRewriteTC(TestCase):
         trinfo_constraint = ('X wf_info_for Y, Y require_permission P, P name "read"')
         rqlst = parse('Any U,T WHERE U is CWUser, T wf_info_for U')
         self.assertRaises(Unauthorized, rewrite, rqlst, {'T': (trinfo_constraint,)}, {})
-        
+
     def test_unsupported_constraint_2(self):
         trinfo_constraint = ('X wf_info_for Y, Y require_permission P, P name "read"')
         rqlst = parse('Any U,T WHERE U is CWUser, T wf_info_for U')
@@ -165,23 +165,23 @@ class RQLRewriteTC(TestCase):
         rewrite(rqlst, {'T': (trinfo_constraint, 'X in_group G, G name "managers"')}, {})
         self.failUnlessEqual(rqlst.as_string(),
                              u'XXX dunno what should be generated')
-        
+
     def test_add_ambiguity_exists(self):
         constraint = ('X concerne Y')
         rqlst = parse('Affaire X')
         rewrite(rqlst, {'X': (constraint,)}, {})
         self.failUnlessEqual(rqlst.as_string(),
                              u"Any X WHERE X is Affaire, (((EXISTS(X concerne A, A is Division)) OR (EXISTS(X concerne D, D is SubDivision))) OR (EXISTS(X concerne C, C is Societe))) OR (EXISTS(X concerne B, B is Note))")
-        
+
     def test_add_ambiguity_outerjoin(self):
         constraint = ('X concerne Y')
         rqlst = parse('Any X,C WHERE X? documented_by C')
         rewrite(rqlst, {'X': (constraint,)}, {})
         # ambiguity are kept in the sub-query, no need to be resolved using OR
         self.failUnlessEqual(rqlst.as_string(),
-                             u"Any X,C WHERE X? documented_by C, C is Card WITH X BEING (Any X WHERE X concerne A, X is Affaire)") 
-       
-        
-        
+                             u"Any X,C WHERE X? documented_by C, C is Card WITH X BEING (Any X WHERE X concerne A, X is Affaire)")
+
+
+
 if __name__ == '__main__':
     unittest_main()

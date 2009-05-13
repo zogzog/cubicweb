@@ -24,16 +24,6 @@ class VRegistryTC(TestCase):
         config.bootstrap_cubes()
         self.vreg.schema = config.load_schema()
 
-    def test_load(self):
-        self.vreg.init_registration([WEBVIEWSDIR])
-        self.vreg.load_file(join(WEBVIEWSDIR, 'cwuser.py'), 'cubicweb.web.views.cwuser')
-        self.vreg.load_file(join(WEBVIEWSDIR, 'baseviews.py'), 'cubicweb.web.views.baseviews')
-        fpvc = [v for v in self.vreg.registry_objects('views', 'primary')
-               if v.__module__ == 'cubicweb.web.views.cwuser'][0]
-        fpv = fpvc(None, None)
-        # don't want a TypeError due to super call
-        self.assertRaises(AttributeError, fpv.render_entity_attributes, None, None)
-
     def test_load_interface_based_vojects(self):
         self.vreg.init_registration([WEBVIEWSDIR])
         self.vreg.load_file(join(BASE, 'entities', '__init__.py'), 'cubicweb.entities.__init__')

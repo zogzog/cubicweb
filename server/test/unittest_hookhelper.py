@@ -4,23 +4,23 @@
 from logilab.common.testlib import unittest_main
 from cubicweb.devtools.apptest import RepositoryBasedTC
 
-from cubicweb.server.pool import LateOperation
+from cubicweb.server.pool import LateOperation, Operation, SingleLastOperation
 from cubicweb.server.hookhelper import *
 
 
 class HookHelpersTC(RepositoryBasedTC):
-    
+
     def setUp(self):
         RepositoryBasedTC.setUp(self)
         self.hm = self.repo.hm
-    
+
     def test_late_operation(self):
         session = self.session
         l1 = LateOperation(session)
         l2 = LateOperation(session)
         l3 = Operation(session)
         self.assertEquals(session.pending_operations, [l3, l1, l2])
-        
+
     def test_single_last_operation(self):
         session = self.session
         l0 = SingleLastOperation(session)
@@ -30,7 +30,7 @@ class HookHelpersTC(RepositoryBasedTC):
         self.assertEquals(session.pending_operations, [l3, l1, l2, l0])
         l4 = SingleLastOperation(session)
         self.assertEquals(session.pending_operations, [l3, l1, l2, l4])
-        
+
     def test_global_operation_order(self):
         from cubicweb.server import hooks, schemahooks
         session = self.session
@@ -42,8 +42,8 @@ class HookHelpersTC(RepositoryBasedTC):
         op4 = hooks.DelayedDeleteOp(session)
         op5 = hooks.CheckORelationOp(session)
         self.assertEquals(session.pending_operations, [op1, op2, op4, op5, op3])
-                          
-       
+
+
     def test_in_state_notification(self):
         result = []
         # test both email notification and transition_information
@@ -78,6 +78,6 @@ class HookHelpersTC(RepositoryBasedTC):
                        if isinstance(op, SendMailOp)]
         self.assertEquals(len(searchedops), 0,
                           self.session.pending_operations)
-        
+
 if __name__ == '__main__':
     unittest_main()

@@ -17,7 +17,7 @@ from cubicweb.schema import CubicWebSchema, RQLConstraint
 from cubicweb.dbapi import connect, repo_connect
 from cubicweb.devtools.apptest import RepositoryBasedTC
 from cubicweb.devtools.repotest import tuplify
-from cubicweb.server import repository 
+from cubicweb.server import repository
 from cubicweb.server.sqlutils import SQL_PREFIX
 
 
@@ -29,10 +29,10 @@ class RepositoryTC(RepositoryBasedTC):
     """ singleton providing access to a persistent storage for entities
     and relation
     """
-    
+
 #     def setUp(self):
 #         pass
-    
+
 #     def tearDown(self):
 #         self.repo.config.db_perms = True
 #         cnxid = self.repo.connect(*self.default_user_password())
@@ -64,7 +64,7 @@ class RepositoryTC(RepositoryBasedTC):
                                                      (u'String',), (u'Time',)])
         finally:
             self.repo._free_pool(pool)
-            
+
     def test_schema_has_owner(self):
         repo = self.repo
         cnxid = repo.connect(*self.default_user_password())
@@ -74,7 +74,7 @@ class RepositoryTC(RepositoryBasedTC):
         self.failIf(repo.execute(cnxid, 'CWRelation X WHERE NOT X owned_by U'))
         self.failIf(repo.execute(cnxid, 'CWConstraint X WHERE NOT X owned_by U'))
         self.failIf(repo.execute(cnxid, 'CWConstraintType X WHERE NOT X owned_by U'))
-        
+
     def test_connect(self):
         login, passwd = self.default_user_password()
         self.assert_(self.repo.connect(login, passwd))
@@ -84,7 +84,7 @@ class RepositoryTC(RepositoryBasedTC):
                           self.repo.connect, login, None)
         self.assertRaises(AuthenticationError,
                           self.repo.connect, None, None)
-    
+
     def test_execute(self):
         repo = self.repo
         cnxid = repo.connect(*self.default_user_password())
@@ -93,7 +93,7 @@ class RepositoryTC(RepositoryBasedTC):
         repo.execute(cnxid, 'Any X where X is Personne, X nom ~= "to"')
         repo.execute(cnxid, 'Any X WHERE X has_text %(text)s', {'text': u'\xe7a'})
         repo.close(cnxid)
-        
+
     def test_login_upassword_accent(self):
         repo = self.repo
         cnxid = repo.connect(*self.default_user_password())
@@ -102,27 +102,28 @@ class RepositoryTC(RepositoryBasedTC):
         repo.commit(cnxid)
         repo.close(cnxid)
         self.assert_(repo.connect(u"barnabé", u"héhéhé".encode('UTF8')))
-    
+
     def test_invalid_entity_rollback(self):
         repo = self.repo
         cnxid = repo.connect(*self.default_user_password())
+        # no group
         repo.execute(cnxid, 'INSERT CWUser X: X login %(login)s, X upassword %(passwd)s, X in_state S WHERE S name "activated"',
                      {'login': u"tutetute", 'passwd': 'tutetute'})
         self.assertRaises(ValidationError, repo.commit, cnxid)
         rset = repo.execute(cnxid, 'CWUser X WHERE X login "tutetute"')
         self.assertEquals(rset.rowcount, 0)
-        
+
     def test_close(self):
         repo = self.repo
         cnxid = repo.connect(*self.default_user_password())
         self.assert_(cnxid)
         repo.close(cnxid)
         self.assertRaises(BadConnectionId, repo.execute, cnxid, 'Any X')
-    
+
     def test_invalid_cnxid(self):
         self.assertRaises(BadConnectionId, self.repo.execute, 0, 'Any X')
         self.assertRaises(BadConnectionId, self.repo.close, None)
-    
+
     def test_shared_data(self):
         repo = self.repo
         cnxid = repo.connect(*self.default_user_password())
@@ -179,7 +180,7 @@ class RepositoryTC(RepositoryBasedTC):
         repo.rollback(cnxid)
         result = repo.execute(cnxid, "Any U WHERE U in_group G, U login 'admin', G name 'guests'")
         self.assertEquals(result.rowcount, 0, result.rows)
-        
+
     def test_transaction_base3(self):
         repo = self.repo
         cnxid = repo.connect(*self.default_user_password())
@@ -194,7 +195,7 @@ class RepositoryTC(RepositoryBasedTC):
         repo.rollback(cnxid)
         rset = repo.execute(cnxid, 'TrInfo T WHERE T wf_info_for X, X eid %(x)s', {'x': ueid})
         self.assertEquals(len(rset), 1)
-        
+
     def test_transaction_interleaved(self):
         self.skip('implement me')
 
@@ -202,11 +203,11 @@ class RepositoryTC(RepositoryBasedTC):
         schema = self.repo.schema
         # check order of attributes is respected
         self.assertListEquals([r.type for r in schema.eschema('CWAttribute').ordered_relations()
-                               if not r.type in ('eid', 'is', 'is_instance_of', 'identity', 
+                               if not r.type in ('eid', 'is', 'is_instance_of', 'identity',
                                                  'creation_date', 'modification_date',
                                                  'owned_by', 'created_by')],
                               ['relation_type', 'from_entity', 'to_entity', 'constrained_by',
-                               'cardinality', 'ordernum', 
+                               'cardinality', 'ordernum',
                                'indexed', 'fulltextindexed', 'internationalizable',
                                'defaultval', 'description_format', 'description'])
 
@@ -254,14 +255,14 @@ class RepositoryTC(RepositoryBasedTC):
             t.join()
         finally:
             repository.pyro_unregister(self.repo.config)
-            
+
     def _pyro_client(self, lock):
         cnx = connect(self.repo.config.appid, u'admin', 'gingkow')
         # check we can get the schema
         schema = cnx.get_schema()
         self.assertEquals(schema.__hashmode__, None)
         rset = cnx.cursor().execute('Any U,G WHERE U in_group G')
-        
+
 
     def test_internal_api(self):
         repo = self.repo
@@ -301,10 +302,10 @@ class RepositoryTC(RepositoryBasedTC):
         repo.close(cnxid)
         self.assertRaises(BadConnectionId, repo.set_shared_data, cnxid, 'data', 0)
         self.assertRaises(BadConnectionId, repo.get_shared_data, cnxid, 'data')
-        
+
 
 class DataHelpersTC(RepositoryBasedTC):
-    
+
     def setUp(self):
         """ called before each test from this class """
         cnxid = self.repo.connect(*self.default_user_password())
@@ -313,7 +314,7 @@ class DataHelpersTC(RepositoryBasedTC):
 
     def tearDown(self):
         self.session.rollback()
-        
+
     def test_create_eid(self):
         self.assert_(self.repo.system_source.create_eid(self.session))
 
@@ -326,10 +327,10 @@ class DataHelpersTC(RepositoryBasedTC):
 
     def test_type_from_eid(self):
         self.assertEquals(self.repo.type_from_eid(1, self.session), 'CWGroup')
-        
+
     def test_type_from_eid_raise(self):
         self.assertRaises(UnknownEid, self.repo.type_from_eid, -2, self.session)
-        
+
     def test_add_delete_info(self):
         entity = self.repo.vreg.etype_class('Personne')(self.session, None, None)
         entity.eid = -1
@@ -350,7 +351,7 @@ class DataHelpersTC(RepositoryBasedTC):
 
 
 class FTITC(RepositoryBasedTC):
-    
+
     def test_reindex_and_modified_since(self):
         cursor = self.session.pool['system']
         eidp = self.execute('INSERT Personne X: X nom "toto", X prenom "tutu"')[0][0]
@@ -400,18 +401,18 @@ class FTITC(RepositoryBasedTC):
         self.commit()
         rset = self.execute('Any X WHERE X has_text %(t)s', {'t': 'tutu'})
         self.assertEquals(rset.rows, [[self.session.user.eid]])
-        
-        
+
+
 class DBInitTC(RepositoryBasedTC):
-    
+
     def test_versions_inserted(self):
         inserted = [r[0] for r in self.execute('Any K ORDERBY K WHERE P pkey K, P pkey ~= "system.version.%"')]
         self.assertEquals(inserted,
-                          [u'system.version.basket', u'system.version.comment', 
-                           u'system.version.cubicweb', u'system.version.email', 
-                           u'system.version.file', u'system.version.folder', 
+                          [u'system.version.basket', u'system.version.card', u'system.version.comment',
+                           u'system.version.cubicweb', u'system.version.email',
+                           u'system.version.file', u'system.version.folder',
                            u'system.version.tag'])
-        
+
 class InlineRelHooksTC(RepositoryBasedTC):
     """test relation hooks are called for inlined relations
     """
@@ -419,13 +420,13 @@ class InlineRelHooksTC(RepositoryBasedTC):
         RepositoryBasedTC.setUp(self)
         self.hm = self.repo.hm
         self.called = []
-    
+
     def _before_relation_hook(self, pool, fromeid, rtype, toeid):
         self.called.append((fromeid, rtype, toeid))
 
     def _after_relation_hook(self, pool, fromeid, rtype, toeid):
         self.called.append((fromeid, rtype, toeid))
-        
+
     def test_before_add_inline_relation(self):
         """make sure before_<event>_relation hooks are called directly"""
         self.hm.register_hook(self._before_relation_hook,
@@ -434,7 +435,7 @@ class InlineRelHooksTC(RepositoryBasedTC):
         eidn = self.execute('INSERT Note X: X type "T"')[0][0]
         self.execute('SET N ecrit_par Y WHERE N type "T", Y nom "toto"')
         self.assertEquals(self.called, [(eidn, 'ecrit_par', eidp)])
-        
+
     def test_after_add_inline_relation(self):
         """make sure after_<event>_relation hooks are deferred"""
         self.hm.register_hook(self._after_relation_hook,
@@ -444,7 +445,7 @@ class InlineRelHooksTC(RepositoryBasedTC):
         self.assertEquals(self.called, [])
         self.execute('SET N ecrit_par Y WHERE N type "T", Y nom "toto"')
         self.assertEquals(self.called, [(eidn, 'ecrit_par', eidp,)])
-        
+
     def test_after_add_inline(self):
         """make sure after_<event>_relation hooks are deferred"""
         self.hm.register_hook(self._after_relation_hook,
@@ -452,7 +453,7 @@ class InlineRelHooksTC(RepositoryBasedTC):
         eidp = self.execute('INSERT CWUser X: X login "toto", X upassword "tutu", X in_state S WHERE S name "activated"')[0][0]
         eids = self.execute('State X WHERE X name "activated"')[0][0]
         self.assertEquals(self.called, [(eidp, 'in_state', eids,)])
-    
+
     def test_before_delete_inline_relation(self):
         """make sure before_<event>_relation hooks are called directly"""
         self.hm.register_hook(self._before_relation_hook,
@@ -477,6 +478,6 @@ class InlineRelHooksTC(RepositoryBasedTC):
         self.execute('DELETE N ecrit_par Y WHERE N type "T", Y nom "toto"')
         self.assertEquals(self.called, [(eidn, 'ecrit_par', eidp,)])
 
-    
+
 if __name__ == '__main__':
     unittest_main()

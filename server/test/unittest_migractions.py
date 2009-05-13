@@ -19,10 +19,10 @@ def setup_module(*args):
 def teardown_module(*args):
     Repository.get_versions = orig_get_versions
 
-    
+
 class MigrationCommandsTC(RepositoryBasedTC):
     copy_schema = True
-    
+
     def setUp(self):
         if not hasattr(self, '_repo'):
             # first initialization
@@ -43,7 +43,7 @@ class MigrationCommandsTC(RepositoryBasedTC):
                                         interactive=False)
         assert self.cnx is self.mh._cnx
         assert self.session is self.mh.session, (self.session.id, self.mh.session.id)
-        
+
     def test_add_attribute_int(self):
         self.failIf('whatever' in self.schema)
         paraordernum = self.mh.rqlexec('Any O WHERE X name "Note", RT name "para", RDEF from_entity X, RDEF relation_type RT, RDEF ordernum O')[0][0]
@@ -73,7 +73,7 @@ class MigrationCommandsTC(RepositoryBasedTC):
         fields = dict(x.strip().split()[:2] for x in notesql.split('(', 1)[1].rsplit(')', 1)[0].split(','))
         self.assertEquals(fields['%sshortpara' % SQL_PREFIX], 'varchar(64)')
         self.mh.rollback()
-        
+
     def test_add_datetime_with_default_value_attribute(self):
         self.failIf('mydate' in self.schema)
         self.mh.cmd_add_attribute('Note', 'mydate')
@@ -88,7 +88,7 @@ class MigrationCommandsTC(RepositoryBasedTC):
         self.assertEquals(d1, date.today())
         self.assertEquals(d2, testdate)
         self.mh.rollback()
-            
+
     def test_rename_attribute(self):
         self.failIf('civility' in self.schema)
         eid1 = self.mh.rqlexec('INSERT Personne X: X nom "lui", X sexe "M"')[0][0]
@@ -121,7 +121,7 @@ class MigrationCommandsTC(RepositoryBasedTC):
             self.assertEquals(t1, "baz")
         gn = self.mh.rqlexec('Any GN WHERE T require_group G, G name GN, T eid %s' % baz)[0][0]
         self.assertEquals(gn, 'managers')
-        
+
     def test_add_entity_type(self):
         self.failIf('Folder2' in self.schema)
         self.failIf('filed_under2' in self.schema)
@@ -137,7 +137,7 @@ class MigrationCommandsTC(RepositoryBasedTC):
         self.assertEquals([str(rs) for rs in self.schema['Folder2'].object_relations()],
                           ['filed_under2', 'identity'])
         self.assertEquals(sorted(str(e) for e in self.schema['filed_under2'].subjects()),
-                          ['Affaire', 'Card', 'Division', 'Email', 'EmailThread', 'File', 
+                          ['Affaire', 'Card', 'Division', 'Email', 'EmailThread', 'File',
                            'Folder2', 'Image', 'Note', 'Personne', 'Societe', 'SubDivision'])
         self.assertEquals(self.schema['filed_under2'].objects(), ('Folder2',))
         eschema = self.schema.eschema('Folder2')
@@ -164,7 +164,7 @@ class MigrationCommandsTC(RepositoryBasedTC):
         self.mh.cmd_add_relation_type('filed_under2')
         self.failUnless('filed_under2' in self.schema)
         self.assertEquals(sorted(str(e) for e in self.schema['filed_under2'].subjects()),
-                          ['Affaire', 'Card', 'Division', 'Email', 'EmailThread', 'File', 
+                          ['Affaire', 'Card', 'Division', 'Email', 'EmailThread', 'File',
                            'Folder2', 'Image', 'Note', 'Personne', 'Societe', 'SubDivision'])
         self.assertEquals(self.schema['filed_under2'].objects(), ('Folder2',))
 
@@ -178,8 +178,8 @@ class MigrationCommandsTC(RepositoryBasedTC):
 
     def test_add_relation_definition(self):
         self.mh.cmd_add_relation_definition('Societe', 'in_state', 'State')
-        self.assertEquals(sorted(self.schema['in_state'].subjects()),
-                          ['Affaire', 'Division', 'CWUser', 'Note', 'Societe', 'SubDivision'])
+        self.assertEquals(sorted(str(x) for x in self.schema['in_state'].subjects()),
+                          ['Affaire', 'CWUser', 'Division', 'Note', 'Societe', 'SubDivision'])
         self.assertEquals(self.schema['in_state'].objects(), ('State',))
 
     def test_add_relation_definition_nortype(self):
@@ -195,7 +195,7 @@ class MigrationCommandsTC(RepositoryBasedTC):
         self.mh.cmd_drop_relation_definition('Personne', 'concerne', 'Affaire')
         self.assertEquals(sorted(str(e) for e in self.schema['concerne'].subjects()), ['Affaire'])
         self.assertEquals(sorted(str(e) for e in self.schema['concerne'].objects()), ['Division', 'Note', 'Societe', 'SubDivision'])
-        
+
     def test_drop_relation_definition_with_specialization(self):
         self.failUnless('concerne' in self.schema)
         self.assertEquals(sorted(str(e) for e in self.schema['concerne'].subjects()), ['Affaire', 'Personne'])
@@ -204,13 +204,13 @@ class MigrationCommandsTC(RepositoryBasedTC):
         self.mh.cmd_drop_relation_definition('None', 'concerne', 'Societe')
         self.assertEquals(sorted(str(e) for e in self.schema['concerne'].subjects()), ['Affaire', 'Personne'])
         self.assertEquals(sorted(str(e) for e in self.schema['concerne'].objects()), ['Affaire', 'Note'])
-        
+
     def test_drop_relation_definition2(self):
         self.failUnless('evaluee' in self.schema)
         self.mh.cmd_drop_relation_definition('Personne', 'evaluee', 'Note')
         self.failUnless('evaluee' in self.schema)
         self.assertEquals(sorted(self.schema['evaluee'].subjects()),
-                          ['Division', 'CWUser', 'Societe', 'SubDivision'])
+                          ['CWUser', 'Division', 'Societe', 'SubDivision'])
         self.assertEquals(sorted(self.schema['evaluee'].objects()),
                           ['Note'])
 
@@ -229,7 +229,7 @@ class MigrationCommandsTC(RepositoryBasedTC):
         finally:
             self.mh.cmd_change_relation_props('Affaire', 'concerne', 'Societe',
                                               cardinality='**')
-            
+
     def test_change_relation_props_final(self):
         rschema = self.schema['adel']
         card = rschema.rproperty('Personne', 'String', 'fulltextindexed')
@@ -255,7 +255,7 @@ class MigrationCommandsTC(RepositoryBasedTC):
 #         self.assertEquals([rs.type for rs in migrschema['Personne'].ordered_relations() if rs.is_final()],
 #                           expected)
         migrschema['Personne'].description = 'blabla bla'
-        migrschema['titre'].description = 'usually a title' 
+        migrschema['titre'].description = 'usually a title'
         migrschema['titre']._rproperties[('Personne', 'String')]['description'] = 'title for this person'
 #         rinorderbefore = cursor.execute('Any O,N WHERE X is CWAttribute, X relation_type RT, RT name N,'
 #                                         'X from_entity FE, FE name "Personne",'
@@ -264,9 +264,9 @@ class MigrationCommandsTC(RepositoryBasedTC):
 #                     u'sexe', u'promo', u'titre', u'adel', u'ass', u'web', u'tel',
 #                     u'fax', u'datenaiss', u'test', u'description']
 #        self.assertListEquals(rinorderbefore, map(list, zip([0, 0]+range(1, len(expected)), expected)))
-        
-        self.mh.cmd_synchronize_schema(commit=False)
-        
+
+        self.mh.cmd_sync_schema_props_perms(commit=False)
+
         self.assertEquals(cursor.execute('Any D WHERE X name "Personne", X description D')[0][0],
                           'blabla bla')
         self.assertEquals(cursor.execute('Any D WHERE X name "titre", X description D')[0][0],
@@ -300,7 +300,7 @@ class MigrationCommandsTC(RepositoryBasedTC):
         # no more rqlexpr to delete and add para attribute
         self.failIf(self._rrqlexpr_rset('add', 'para'))
         self.failIf(self._rrqlexpr_rset('delete', 'para'))
-        # new rql expr to add ecrit_par relation        
+        # new rql expr to add ecrit_par relation
         rexpr = self._rrqlexpr_entity('add', 'ecrit_par')
         self.assertEquals(rexpr.expression,
                           'O require_permission P, P name "add_note", '
@@ -333,8 +333,8 @@ class MigrationCommandsTC(RepositoryBasedTC):
         self.assertEquals(len(cursor.execute('RQLExpression X WHERE NOT ET1 read_permission X, NOT ET2 add_permission X, '
                                              'NOT ET3 delete_permission X, NOT ET4 update_permission X')), 8+1)
         # finally
-        self.assertEquals(len(cursor.execute('RQLExpression X')), nbrqlexpr_start + 1 + 2) 
-                          
+        self.assertEquals(len(cursor.execute('RQLExpression X')), nbrqlexpr_start + 1 + 2)
+
         self.mh.rollback()
 
     def _erqlexpr_rset(self, action, ertype):
@@ -351,7 +351,7 @@ class MigrationCommandsTC(RepositoryBasedTC):
         rset = self._rrqlexpr_rset(action, ertype)
         self.assertEquals(len(rset), 1)
         return rset.get_entity(0, 0)
-    
+
     def test_set_size_constraint(self):
         # existing previous value
         try:
@@ -378,7 +378,7 @@ class MigrationCommandsTC(RepositoryBasedTC):
                 cubes.remove('email')
                 cubes.remove('file')
                 self.assertEquals(set(self.config.cubes()), cubes)
-                for ertype in ('Email', 'EmailThread', 'EmailPart', 'File', 'Image', 
+                for ertype in ('Email', 'EmailThread', 'EmailPart', 'File', 'Image',
                                'sender', 'in_thread', 'reply_to', 'data_format'):
                     self.failIf(ertype in schema, ertype)
                 self.assertEquals(sorted(schema['see_also']._rproperties.keys()),
@@ -402,7 +402,7 @@ class MigrationCommandsTC(RepositoryBasedTC):
             cubes.add('email')
             cubes.add('file')
             self.assertEquals(set(self.config.cubes()), cubes)
-            for ertype in ('Email', 'EmailThread', 'EmailPart', 'File', 'Image', 
+            for ertype in ('Email', 'EmailThread', 'EmailPart', 'File', 'Image',
                            'sender', 'in_thread', 'reply_to', 'data_format'):
                 self.failUnless(ertype in schema, ertype)
             self.assertEquals(sorted(schema['see_also']._rproperties.keys()),
@@ -426,17 +426,13 @@ class MigrationCommandsTC(RepositoryBasedTC):
             self.maxeid = self.execute('Any MAX(X)')[0][0]
             # why this commit is necessary is unclear to me (though without it
             # next test may fail complaining of missing tables
-            self.commit() 
+            self.commit()
 
     def test_set_state(self):
         user = self.session.user
-        self.set_debug(True)
         self.mh.set_state(user.eid, 'deactivated')
         user.clear_related_cache('in_state', 'subject')
-        try:
-            self.assertEquals(user.state, 'deactivated')
-        finally:
-            self.set_debug(False)
-        
+        self.assertEquals(user.state, 'deactivated')
+
 if __name__ == '__main__':
     unittest_main()

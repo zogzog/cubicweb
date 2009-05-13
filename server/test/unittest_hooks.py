@@ -20,9 +20,9 @@ def teardown_module(*args):
     Repository.get_versions = orig_get_versions
 
 
-    
+
 class CoreHooksTC(RepositoryBasedTC):
-        
+
     def test_delete_internal_entities(self):
         self.assertRaises(RepositoryError, self.execute,
                           'DELETE CWEType X WHERE X name "CWEType"')
@@ -40,17 +40,17 @@ class CoreHooksTC(RepositoryBasedTC):
         self.execute('DELETE X in_group Y WHERE X login "toto"')
         self.execute('SET X in_group Y WHERE X login "toto", Y name "guests"')
         self.commit()
-        
+
     def test_delete_required_relations_object(self):
         self.skip('no sample in the schema ! YAGNI ? Kermaat ?')
-    
+
     def test_static_vocabulary_check(self):
         self.assertRaises(ValidationError,
                           self.execute,
                           'SET X composite "whatever" WHERE X from_entity FE, FE name "CWUser", X relation_type RT, RT name "in_group"')
-    
+
     def test_missing_required_relations_subject_inline(self):
-        # missing in_group relation 
+        # missing in_group relation
         self.execute('INSERT CWUser X: X login "toto", X upassword "hop"')
         self.assertRaises(ValidationError,
                           self.commit)
@@ -76,7 +76,7 @@ class CoreHooksTC(RepositoryBasedTC):
         self.execute('SET X sender Y WHERE X is Email, Y is EmailAddress')
         rset = self.execute('Any S WHERE X sender S, X eid %s' % eeid)
         self.assertEquals(len(rset), 1)
-        
+
     def test_composite_1(self):
         self.execute('INSERT EmailAddress X: X address "toto@logilab.fr", X alias "hop"')
         self.execute('INSERT EmailPart X: X content_format "text/plain", X ordernum 1, X content "this is a test"')
@@ -90,7 +90,7 @@ class CoreHooksTC(RepositoryBasedTC):
         self.commit()
         rset = self.execute('Any X WHERE X is EmailPart')
         self.assertEquals(len(rset), 0)
-            
+
     def test_composite_2(self):
         self.execute('INSERT EmailAddress X: X address "toto@logilab.fr", X alias "hop"')
         self.execute('INSERT EmailPart X: X content_format "text/plain", X ordernum 1, X content "this is a test"')
@@ -102,7 +102,7 @@ class CoreHooksTC(RepositoryBasedTC):
         self.commit()
         rset = self.execute('Any X WHERE X is EmailPart')
         self.assertEquals(len(rset), 0)
-            
+
     def test_composite_redirection(self):
         self.execute('INSERT EmailAddress X: X address "toto@logilab.fr", X alias "hop"')
         self.execute('INSERT EmailPart X: X content_format "text/plain", X ordernum 1, X content "this is a test"')
@@ -148,11 +148,11 @@ class CoreHooksTC(RepositoryBasedTC):
         self.execute('SET A descr "R&D<p>yo" WHERE A eid %s' % entity.eid)
         entity = self.execute('Any A WHERE A eid %s' % entity.eid).get_entity(0, 0)
         self.assertEquals(entity.descr, u'R&amp;D<p>yo</p>')
-        
 
-        
+
+
 class UserGroupHooksTC(RepositoryBasedTC):
-    
+
     def test_user_synchronization(self):
         self.create_user('toto', password='hop', commit=False)
         self.assertRaises(AuthenticationError,
@@ -193,9 +193,9 @@ class UserGroupHooksTC(RepositoryBasedTC):
         self.execute('DELETE EmailAddress X WHERE X eid %s' % eid)
         self.commit()
         self.failIf(self.execute('Any X WHERE X created_by Y, X eid >= %(x)s', {'x': eid}))
-        
+
 class CWPropertyHooksTC(RepositoryBasedTC):
-    
+
     def test_unexistant_eproperty(self):
         ex = self.assertRaises(ValidationError,
                           self.execute, 'INSERT CWProperty X: X pkey "bla.bla", X value "hop", X for_user U')
@@ -203,12 +203,12 @@ class CWPropertyHooksTC(RepositoryBasedTC):
         ex = self.assertRaises(ValidationError,
                           self.execute, 'INSERT CWProperty X: X pkey "bla.bla", X value "hop"')
         self.assertEquals(ex.errors, {'pkey': 'unknown property key'})
-        
+
     def test_site_wide_eproperty(self):
         ex = self.assertRaises(ValidationError,
                                self.execute, 'INSERT CWProperty X: X pkey "ui.site-title", X value "hop", X for_user U')
         self.assertEquals(ex.errors, {'for_user': "site-wide property can't be set for user"})
-        
+
     def test_bad_type_eproperty(self):
         ex = self.assertRaises(ValidationError,
                                self.execute, 'INSERT CWProperty X: X pkey "ui.language", X value "hop", X for_user U')
@@ -216,10 +216,10 @@ class CWPropertyHooksTC(RepositoryBasedTC):
         ex = self.assertRaises(ValidationError,
                           self.execute, 'INSERT CWProperty X: X pkey "ui.language", X value "hop"')
         self.assertEquals(ex.errors, {'value': u'unauthorized value'})
-        
-        
+
+
 class SchemaHooksTC(RepositoryBasedTC):
-        
+
     def test_duplicate_etype_error(self):
         # check we can't add a CWEType or CWRType entity if it already exists one
         # with the same name
@@ -229,7 +229,7 @@ class SchemaHooksTC(RepositoryBasedTC):
                           self.execute, 'INSERT CWEType X: X name "Societe"')
         self.assertRaises((ValidationError, RepositoryError),
                           self.execute, 'INSERT CWRType X: X name "in_group"')
-        
+
     def test_validation_unique_constraint(self):
         self.assertRaises(ValidationError,
                           self.execute, 'INSERT CWUser X: X login "admin"')
@@ -253,13 +253,13 @@ class SchemaModificationHooksTC(RepositoryBasedTC):
         RepositoryBasedTC.setUp(self)
 
     def index_exists(self, etype, attr, unique=False):
-        dbhelper = self.session.pool.source('system').dbhelper    
+        dbhelper = self.session.pool.source('system').dbhelper
         sqlcursor = self.session.pool['system']
         return dbhelper.index_exists(sqlcursor, SQL_PREFIX + etype, SQL_PREFIX + attr, unique=unique)
-        
+
     def test_base(self):
         schema = self.repo.schema
-        dbhelper = self.session.pool.source('system').dbhelper    
+        dbhelper = self.session.pool.source('system').dbhelper
         sqlcursor = self.session.pool['system']
         self.failIf(schema.has_entity('Societe2'))
         self.failIf(schema.has_entity('concerne2'))
@@ -332,8 +332,8 @@ class SchemaModificationHooksTC(RepositoryBasedTC):
         self.failUnless('subdiv' in snames)
         snames = [name for name, in self.execute('Any N WHERE S is_instance_of Division, S nom N')]
         self.failUnless('subdiv' in snames)
-        
-        
+
+
     def test_perms_synchronization_1(self):
         schema = self.repo.schema
         self.assertEquals(schema['CWUser'].get_groups('read'), set(('managers', 'users')))
@@ -374,9 +374,9 @@ class SchemaModificationHooksTC(RepositoryBasedTC):
         self.execute('Any X WHERE X is CWEType, X name "CWEType"')
 
     # schema modification hooks tests #########################################
-    
+
     def test_uninline_relation(self):
-        dbhelper = self.session.pool.source('system').dbhelper    
+        dbhelper = self.session.pool.source('system').dbhelper
         sqlcursor = self.session.pool['system']
         # Personne inline2 Affaire inline
         # insert a person without inline2 relation (not mandatory)
@@ -410,7 +410,7 @@ class SchemaModificationHooksTC(RepositoryBasedTC):
             self.assertEquals(rset.rows[0], [peid, aeid])
 
     def test_indexed_change(self):
-        dbhelper = self.session.pool.source('system').dbhelper    
+        dbhelper = self.session.pool.source('system').dbhelper
         sqlcursor = self.session.pool['system']
         try:
             self.execute('SET X indexed TRUE WHERE X relation_type R, R name "sujet"')
@@ -428,7 +428,7 @@ class SchemaModificationHooksTC(RepositoryBasedTC):
             self.failIf(self.index_exists('Affaire', 'sujet'))
 
     def test_unique_change(self):
-        dbhelper = self.session.pool.source('system').dbhelper    
+        dbhelper = self.session.pool.source('system').dbhelper
         sqlcursor = self.session.pool['system']
         try:
             try:
@@ -453,7 +453,7 @@ class SchemaModificationHooksTC(RepositoryBasedTC):
             self.commit()
             self.failIf(self.schema['Affaire'].has_unique_values('sujet'))
             self.failIf(self.index_exists('Affaire', 'sujet', unique=True))
-        
+
 
 class WorkflowHooksTC(RepositoryBasedTC):
 
@@ -468,7 +468,7 @@ class WorkflowHooksTC(RepositoryBasedTC):
         # enforcement
         self.execute('SET X require_group G WHERE G name "users", X transition_of ET, ET name "CWUser"')
         self.commit()
-        
+
     def tearDown(self):
         self.execute('DELETE X require_group G WHERE G name "users", X transition_of ET, ET name "CWUser"')
         self.commit()
@@ -483,7 +483,7 @@ class WorkflowHooksTC(RepositoryBasedTC):
         initialstate = self.execute('Any N WHERE S name N, X in_state S, X eid %(x)s',
                                     {'x' : ueid})[0][0]
         self.assertEquals(initialstate, u'activated')
-        
+
     def test_initial_state(self):
         cnx = self.login('stduser')
         cu = cnx.cursor()
@@ -495,7 +495,7 @@ class WorkflowHooksTC(RepositoryBasedTC):
         self.execute('INSERT CWUser X: X login "badaboum", X upassword %(pwd)s, '
                      'X in_state S, X in_group G WHERE S name "deactivated", G name "users"', {'pwd': 'oops'})
         self.commit()
-        
+
     # test that the workflow is correctly enforced
     def test_transition_checking1(self):
         cnx = self.login('stduser')
@@ -505,7 +505,7 @@ class WorkflowHooksTC(RepositoryBasedTC):
                           cu.execute, 'SET X in_state S WHERE X eid %(x)s, S eid %(s)s',
                           {'x': ueid, 's': self.s_activated}, 'x')
         cnx.close()
-        
+
     def test_transition_checking2(self):
         cnx = self.login('stduser')
         cu = cnx.cursor()
@@ -514,7 +514,7 @@ class WorkflowHooksTC(RepositoryBasedTC):
                           cu.execute, 'SET X in_state S WHERE X eid %(x)s, S eid %(s)s',
                           {'x': ueid, 's': self.s_dummy}, 'x')
         cnx.close()
-        
+
     def test_transition_checking3(self):
         cnx = self.login('stduser')
         cu = cnx.cursor()
@@ -530,7 +530,7 @@ class WorkflowHooksTC(RepositoryBasedTC):
                       {'x': ueid, 's': self.s_activated}, 'x')
         cnx.commit()
         cnx.close()
-        
+
     def test_transition_checking4(self):
         cnx = self.login('stduser')
         cu = cnx.cursor()
@@ -559,7 +559,7 @@ class WorkflowHooksTC(RepositoryBasedTC):
         self.assertEquals(tr.comment, None)
         self.assertEquals(tr.from_state[0].eid, self.s_activated)
         self.assertEquals(tr.to_state[0].eid, self.s_deactivated)
-        
+
         self.session.set_shared_data('trcomment', u'il est pas sage celui-la')
         self.session.set_shared_data('trcommentformat', u'text/plain')
         self.execute('SET X in_state S WHERE X eid %(x)s, S eid %(s)s',
@@ -591,6 +591,6 @@ class WorkflowHooksTC(RepositoryBasedTC):
         cu = cnx.cursor()
         self.failUnless(cu.execute("INSERT Note X: X type 'a', X in_state S WHERE S name 'todo'"))
         cnx.commit()
-    
+
 if __name__ == '__main__':
     unittest_main()
