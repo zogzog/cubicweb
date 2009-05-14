@@ -59,10 +59,10 @@ class TestServerConfiguration(ServerConfiguration):
           'group': 'main', 'inputlevel': 1,
           }),
         ))
-                            
+
     if not os.environ.get('APYCOT_ROOT'):
         REGISTRY_DIR = normpath(join(CW_SOFTWARE_ROOT, '../cubes'))
-    
+
     def __init__(self, appid, log_threshold=logging.CRITICAL+10):
         ServerConfiguration.__init__(self, appid)
         self.global_set_option('log-file', None)
@@ -71,7 +71,7 @@ class TestServerConfiguration(ServerConfiguration):
         self.load_cwctl_plugins()
 
     anonymous_user = TwistedConfiguration.anonymous_user.im_func
-        
+
     @property
     def apphome(self):
         if exists(self.appid):
@@ -79,7 +79,7 @@ class TestServerConfiguration(ServerConfiguration):
         # application cube test
         return abspath('..')
     appdatahome = apphome
-    
+
     def main_config_file(self):
         """return application's control configuration file"""
         return join(self.apphome, '%s.conf' % self.name)
@@ -116,7 +116,7 @@ class TestServerConfiguration(ServerConfiguration):
         if not sources:
             sources = DEFAULT_SOURCES
         return sources
-    
+
     def load_defaults(self):
         super(TestServerConfiguration, self).load_defaults()
         # note: don't call global set option here, OptionManager may not yet be initialized
@@ -146,25 +146,25 @@ class BaseApptestConfiguration(TestServerConfiguration, TwistedConfiguration):
 
     def available_languages(self, *args):
         return ('en', 'fr', 'de')
-    
+
     def ext_resources_file(self):
         """return application's external resources file"""
         return join(self.apphome, 'data', 'external_resources')
-    
+
     def pyro_enabled(self):
         # but export PYRO_MULTITHREAD=0 or you get problems with sqlite and threads
         return True
 
 
 class ApptestConfiguration(BaseApptestConfiguration):
-    
+
     def __init__(self, appid, log_threshold=logging.CRITICAL, sourcefile=None):
         BaseApptestConfiguration.__init__(self, appid, log_threshold=log_threshold)
         self.init_repository = sourcefile is None
         self.sourcefile = sourcefile
         import re
         self.global_set_option('embed-allowed', re.compile('.*'))
-        
+
 
 class RealDatabaseConfiguration(ApptestConfiguration):
     init_repository = False
@@ -180,7 +180,7 @@ class RealDatabaseConfiguration(ApptestConfiguration):
                               'password': u'gingkow',
                               },
                    }
-    
+
     def __init__(self, appid, log_threshold=logging.CRITICAL, sourcefile=None):
         ApptestConfiguration.__init__(self, appid)
         self.init_repository = False
@@ -191,7 +191,7 @@ class RealDatabaseConfiguration(ApptestConfiguration):
         By default, we run tests with the sqlite DB backend.
         One may use its own configuration by just creating a
         'sources' file in the test directory from wich tests are
-        launched. 
+        launched.
         """
         self._sources = self.sourcesdef
         return self._sources
@@ -220,11 +220,11 @@ def loadconfig(filename):
     """
     return type('MyRealDBConfig', (RealDatabaseConfiguration,),
                 {'sourcesdef': read_config(filename)})
-    
+
 
 class LivetestConfiguration(BaseApptestConfiguration):
     init_repository = False
-    
+
     def __init__(self, cube=None, sourcefile=None, pyro_name=None,
                  log_threshold=logging.CRITICAL):
         TestServerConfiguration.__init__(self, cube, log_threshold=log_threshold)
@@ -254,7 +254,7 @@ class LivetestConfiguration(BaseApptestConfiguration):
             return False
 
 CubicWebConfiguration.cls_adjust_sys_path()
-                                                    
+
 def install_sqlite_path(querier):
     """This patch hotfixes the following sqlite bug :
        - http://www.sqlite.org/cvstrac/tktview?tn=1327,33
@@ -331,7 +331,7 @@ def cleanup_sqlite(dbfile, removecube=False):
             os.remove('%s-cube' % dbfile)
         except OSError:
             pass
-    
+
 def init_test_database_sqlite(config, source, vreg=None):
     """initialize a fresh sqlite databse used for testing purpose"""
     import shutil

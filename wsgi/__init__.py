@@ -7,7 +7,7 @@ NOTE: this package borrows a lot of code to Django
 WSGI corresponding PEP: http://www.python.org/dev/peps/pep-0333/
 
 :organization: Logilab
-:copyright: 2008 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+:copyright: 2008-2009 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 """
 __docformat__ = "restructuredtext en"
@@ -25,7 +25,7 @@ def pformat(obj):
         return _pformat(obj)
     except:
         return u'<could not parse>'
-    
+
 def qs2dict(qs):
     """transforms a query string into a regular python dict"""
     result = {}
@@ -35,7 +35,7 @@ def qs2dict(qs):
 
 def normalize_header(header):
     """returns a normalized header name
-    
+
     >>> normalize_header('User_Agent')
     'User-agent'
     """
@@ -84,4 +84,3 @@ def parse_file_upload(header_dict, post_data):
         else:
             post.setdefault(key, []).append(submessage.get_payload())
     return post, files
-

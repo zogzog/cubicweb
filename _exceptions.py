@@ -26,9 +26,9 @@ class ConfigurationError(CubicWebException):
     """a misconfiguration error"""
 
 class InternalError(CubicWebException):
-    """base class for exceptions which should not occurs"""    
+    """base class for exceptions which should not occurs"""
 
-class SecurityError(CubicWebException): 
+class SecurityError(CubicWebException):
     """base class for cubicweb server security exception"""
 
 class RepositoryError(CubicWebException):
@@ -39,7 +39,7 @@ class SourceException(CubicWebException):
 
 class CubicWebRuntimeError(CubicWebException):
     """base class for runtime exceptions"""
-    
+
 # repository exceptions #######################################################
 
 class ConnectionError(RepositoryError):
@@ -53,7 +53,7 @@ class AuthenticationError(ConnectionError):
 class BadConnectionId(ConnectionError):
     """raised when a bad connection id is given or when an attempt to establish
     a connection failed"""
-    
+
 BadSessionId = BadConnectionId # XXX bw compat for pyro connections
 
 class UnknownEid(RepositoryError):
@@ -68,7 +68,7 @@ class RTypeNotSupportedBySources(RepositoryError, InternalError):
     """no source support a relation type"""
     msg = 'No source supports %r relation\'s type'
 
-    
+
 # security exceptions #########################################################
 
 class Unauthorized(SecurityError):
@@ -80,7 +80,7 @@ class Unauthorized(SecurityError):
     var = None
     #def __init__(self, *args):
     #    self.args = args
-        
+
     def __str__(self):
         try:
             if self.args and len(self.args) == 2:
@@ -90,7 +90,7 @@ class Unauthorized(SecurityError):
             return self.msg
         except Exception, ex:
             return str(ex)
-    
+
 # source exceptions ###########################################################
 
 class EidNotInSource(SourceException):
@@ -98,8 +98,8 @@ class EidNotInSource(SourceException):
     source has failed
     """
     msg = 'No entity with eid %s in %s'
-    
-    
+
+
 # registry exceptions #########################################################
 
 class RegistryException(CubicWebException):
@@ -110,16 +110,16 @@ class RegistryNotFound(RegistryException):
 
     this is usually a programming/typo error...
     """
-    
+
 class ObjectNotFound(RegistryException):
     """raised when an unregistered object is requested
 
     this may be a programming/typo or a misconfiguration error
     """
-    
+
 # class ViewNotFound(ObjectNotFound):
 #     """raised when an unregistered view is called"""
-    
+
 class NoSelectableObject(RegistryException):
     """some views with the given vid have been found but no
     one is applyable to the result set
@@ -144,5 +144,5 @@ class ExecutionError(Exception):
     """server execution control error (already started, not running...)"""
 
 # pylint: disable-msg=W0611
-from logilab.common.clcommands import BadCommandUsage 
+from logilab.common.clcommands import BadCommandUsage
 

@@ -4,7 +4,7 @@ if __name__ == '__main__':
     from cubicweb import goa
     from cubicweb.goa.goaconfig import GAEConfiguration
     from cubicweb.goa.dbinit import create_user, create_groups
-    
+
     # compute application's root directory
     APPLROOT = dirname(abspath(__file__))
     # apply monkey patches first

@@ -12,7 +12,7 @@ class ModuleGenerator:
 CubicWeb API
 ============
 """
-    EXCLUDE_DIRS = ('test', 'tests', 'examples', 'data', 'doc', '.hg', 'migration')  
+    EXCLUDE_DIRS = ('test', 'tests', 'examples', 'data', 'doc', '.hg', 'migration')
 
     def __init__(self, output_fn, mod_names):
         self.mod_names =  mod_names
@@ -21,7 +21,7 @@ CubicWeb API
 
     def done(self):
         self.fn.close()
-        
+
     def gen_module(self, mod_name):
         mod_entry = """
 :mod:`%s`

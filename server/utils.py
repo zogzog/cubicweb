@@ -46,7 +46,7 @@ def cartesian_product(seqin):
             for item in seqin[0]:
                 newcomb = comb + [item]     # add next item to current combination
                 # call rloop w/ remaining seqs, newcomb
-                for item in rloop(seqin[1:], newcomb):   
+                for item in rloop(seqin[1:], newcomb):
                     yield item          # seqs and newcomb
         else:                           # processing last sequence
             yield comb                  # comb finished, add to list
@@ -95,7 +95,7 @@ class LoopTask(object):
                 self.start()
         self.func = auto_restart_func
         self.name = func.__name__
-        
+
     def start(self):
         self._t = Timer(self.interval, self.func)
         self._t.start()
@@ -120,7 +120,7 @@ class RepoThread(Thread):
         Thread.__init__(self, target=auto_remove_func)
         self.running_threads = running_threads
         self._name = target.__name__
-        
+
     def start(self):
         self.running_threads.append(self)
         Thread.start(self)

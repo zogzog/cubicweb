@@ -23,7 +23,7 @@ class GAELogoutAction(LogoutAction):
 
     def url(self):
         return users.create_logout_url(self.req.build_url('logout') )
-    
+
 def registration_callback(vreg):
     if hasattr(vreg.config, 'has_resource'):
         vreg.register(GACWUserLink, clear=True)

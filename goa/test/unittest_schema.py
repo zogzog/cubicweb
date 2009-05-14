@@ -1,6 +1,6 @@
 from cubicweb.goa.testlib import *
 
-class Article(db.Model):        
+class Article(db.Model):
     content = db.TextProperty()
     synopsis = db.StringProperty(default='hello')
 
@@ -8,10 +8,10 @@ class Blog(db.Model):
     diem = db.DateProperty(required=True, auto_now_add=True)
     title = db.StringProperty(required=True)
     content = db.TextProperty()
-    talks_about = db.ReferenceProperty(Article) 
-    cites = db.SelfReferenceProperty() 
+    talks_about = db.ReferenceProperty(Article)
+    cites = db.SelfReferenceProperty()
 
-  
+
 class SomeViewsTC(GAEBasedTC):
     MODEL_CLASSES = (Article, Blog)
 
@@ -77,7 +77,7 @@ class SomeViewsTC(GAEBasedTC):
                            'is', 'is_instance_of', 'modification_date', 'owned_by'])
         self.assertUnorderedIterableEquals((str(e) for e in eschema.object_relations()),
                              ('identity',))
-    
+
     def test_yams_ambiguous_relation(self):
         rschema = self.schema['ambiguous_relation']
         # only relations defined in the class are actually ordered
@@ -103,7 +103,7 @@ class SomeViewsTC(GAEBasedTC):
         self.assertEquals(rschema.objects(), ('Bytes',))
         self.assertEquals(rschema.rproperty('Blog', 'Bytes', 'cardinality'), '?1')
 
-        
+
 if __name__ == '__main__':
     from logilab.common.testlib import unittest_main
     unittest_main()

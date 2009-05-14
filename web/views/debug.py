@@ -23,7 +23,7 @@ def dict_to_html(w, dict):
                 html_escape(str(key)), html_escape(repr(dict[key]))))
         w(u'</ul>')
 
-    
+
 class DebugView(StartupView):
     id = 'debug'
     __select__ = none_rset() & match_user_groups('managers')

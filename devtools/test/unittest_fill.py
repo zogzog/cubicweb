@@ -20,7 +20,7 @@ class AutoExtendableTC(TestCase):
         for attrname in attrvalues - set(self.attrvalues):
             delattr(_ValueGenerator, attrname)
 
-        
+
     def test_autoextend(self):
         self.failIf('generate_server' in dir(ValueGenerator))
         class MyValueGenerator(ValueGenerator):

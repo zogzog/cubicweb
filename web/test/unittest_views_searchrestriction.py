@@ -15,7 +15,7 @@ class InsertAttrRelationTC(EnvBasedTC):
         mainvar = prepare_facets_rqlst(rqlst)[0]
         insert_attr_select_relation(rqlst.children[0], mainvar, rel, role, attr)
         return rqlst.as_string()
-        
+
     @property
     def select(self):
         return self.parse('Any B,(NOW - CD),S,V,U,GROUP_CONCAT(TN),VN,P,CD,BMD '
@@ -24,30 +24,30 @@ class InsertAttrRelationTC(EnvBasedTC):
                           'B modification_date BMD, T? tags B, T name TN, '
                           'V? bookmarked_by B, V title VN, B created_by U?, '
                           'B in_group P, P name "managers"')
-    
+
     def test_1(self):
         self.assertEquals(self._generate(self.select, 'in_state', 'subject', 'name'),
                           "DISTINCT Any A,C ORDERBY C WHERE B in_group P, P name 'managers', "
                           "B in_state A, A name C, B is CWUser")
-        
+
     def test_2(self):
         self.assertEquals(self._generate(self.select, 'tags', 'object', 'name'),
                           "DISTINCT Any A,C ORDERBY C WHERE B in_group P, P name 'managers', "
                           "A tags B, A name C, B is CWUser")
-        
+
     def test_3(self):
         self.assertEquals(self._generate(self.select, 'created_by', 'subject', 'login'),
                           "DISTINCT Any A,C ORDERBY C WHERE B in_group P, P name 'managers', "
                           "B created_by A, A login C, B is CWUser")
-        
+
     def test_4(self):
         self.assertEquals(self._generate(self.parse('Any X WHERE X is CWUser'), 'created_by', 'subject', 'login'),
                           "DISTINCT Any A,B ORDERBY B WHERE X is CWUser, X created_by A, A login B")
-        
+
     def test_5(self):
         self.assertEquals(self._generate(self.parse('Any X,L WHERE X is CWUser, X login L'), 'created_by', 'subject', 'login'),
                           "DISTINCT Any A,B ORDERBY B WHERE X is CWUser, X created_by A, A login B")
-        
+
     def test_nonregr1(self):
         select = self.parse('Any T,V WHERE T bookmarked_by V?, '
                             'V in_state VS, VS name "published", T created_by U')
@@ -77,7 +77,7 @@ class InsertAttrRelationTC(EnvBasedTC):
         self.assertEquals(self._generate(select, 'in_group', 'subject', 'name'),
                           "DISTINCT Any B,C ORDERBY C WHERE X is CWUser, X in_group B, B name C")
 
-        
+
 if __name__ == '__main__':
     from logilab.common.testlib import unittest_main
     unittest_main()

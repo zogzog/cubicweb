@@ -8,7 +8,7 @@ repo, cnx = init_test_database('sqlite')
 class SSPlannerTC(BasePlannerTC):
     repo = repo
     _test = test_plan
-    
+
     def setUp(self):
         BasePlannerTC.setUp(self)
         self.planner = SSPlanner(self.o.schema, self.o._rqlhelper)
@@ -33,9 +33,9 @@ class SSPlannerTC(BasePlannerTC):
                                         {'X': 'State', 'XN': 'String'},
                                         {'X': 'Tag', u'XN': 'String'},
                                         {'X': 'Transition', 'XN': 'String'}])],
-                     None, None, 
+                     None, None,
                      [self.system], None, [])])
-    
+
     def test_groupeded_ambigous_sol(self):
         self._test('Any XN,COUNT(X) GROUPBY XN WHERE X name XN',
                    [('OneFetchStep', [('Any XN,COUNT(X) GROUPBY XN WHERE X name XN',
@@ -52,9 +52,9 @@ class SSPlannerTC(BasePlannerTC):
                                         {'X': 'State', 'XN': 'String'},
                                         {'X': 'Tag', u'XN': 'String'},
                                         {'X': 'Transition', 'XN': 'String'}])],
-                     None, None, 
+                     None, None,
                      [self.system], None, [])])
-        
+
 if __name__ == '__main__':
     from logilab.common.testlib import unittest_main
     unittest_main()

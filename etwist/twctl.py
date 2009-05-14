@@ -1,4 +1,8 @@
 """cubicweb-clt handlers for twisted
+
+:organization: Logilab
+:copyright: 2001-2009 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+:contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 """
 
 import sys
@@ -52,8 +56,8 @@ class TWStartHandler(CommandHandler):
 class TWStopHandler(CommandHandler):
     cmdname = 'stop'
     cfgname = 'twisted'
-    
-    
+
+
 try:
     from cubicweb.server import serverctl
 
@@ -67,7 +71,7 @@ try:
             """bootstrap this configuration"""
             serverctl.RepositoryCreateHandler.bootstrap(self, cubes, inputlevel)
             TWCreateHandler.bootstrap(self, cubes, inputlevel)
-            
+
     class AllInOneStartHandler(TWStartHandler):
         cmdname = 'start'
         cfgname = 'all-in-one'
@@ -80,4 +84,3 @@ try:
 
 except ImportError:
     pass
-    

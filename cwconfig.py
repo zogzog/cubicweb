@@ -8,7 +8,7 @@
 .. envvar:: CW_CUBES_PATH
 
    Augments the default search path for cubes
-   
+
 """
 __docformat__ = "restructuredtext en"
 

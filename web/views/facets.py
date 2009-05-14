@@ -22,7 +22,7 @@ def contextview_selector(cls, req, rset, row=None, col=None, view=None,
                          **kwargs):
     if view and getattr(view, 'filter_box_context_info', lambda: None)():
         return 1
-    return 0    
+    return 0
 
 
 class FilterBox(BoxTemplate):
@@ -42,7 +42,7 @@ class FilterBox(BoxTemplate):
         be used by the facet
         """
         return {}
-        
+
     def _get_context(self, view):
         context = getattr(view, 'filter_box_context_info', lambda: None)()
         if context:
@@ -52,7 +52,7 @@ class FilterBox(BoxTemplate):
             vid, divid = None, 'pageContent'
             paginate = view and view.need_navigation
         return rset, vid, divid, paginate
-        
+
     def call(self, view=None):
         req = self.req
         req.add_js( ('cubicweb.ajax.js', 'cubicweb.formfilter.js') )
@@ -109,7 +109,7 @@ class FilterBox(BoxTemplate):
         return self.vreg.possible_vobjects('facets', self.req, rset,
                                            context='facetbox',
                                            filtered_variable=mainvar)
-        
+
 # facets ######################################################################
 
 class CreatedByFacet(RelationFacet):
@@ -144,7 +144,7 @@ class ETypeFacet(RelationFacet):
         """
         etypes = self.rset.column_types(0)
         return sorted((self.req._(etype), etype) for etype in etypes)
-    
+
     def add_rql_restrictions(self):
         """add restriction for this facet into the rql syntax tree"""
         value = self.req.form.get(self.id)
@@ -162,7 +162,7 @@ class HasTextFacet(AbstractFacet):
     @property
     def title(self):
         return self.req._('has_text')
-    
+
     def get_widget(self):
         """return the widget instance to use to display this facet
 

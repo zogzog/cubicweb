@@ -16,7 +16,7 @@ from rql.nodes import VariableRef, Variable, Function
 from cubicweb.server.ssplanner import (LimitOffsetMixIn, Step, OneFetchStep,
                                     varmap_test_repr, offset_result)
 
-AGGR_TRANSFORMS = {'COUNT':'SUM', 'MIN':'MIN', 'MAX':'MAX', 'SUM': 'SUM'} 
+AGGR_TRANSFORMS = {'COUNT':'SUM', 'MIN':'MIN', 'MAX':'MAX', 'SUM': 'SUM'}
 
 def remove_clauses(union, keepgroup):
     clauses = []
@@ -73,7 +73,7 @@ class FetchStep(OneFetchStep):
                         if lhsvar.name in srqlst.defined_vars:
                             key = '%s.%s' % (lhsvar.name, rel.r_type)
                             self.outputmap[key] = self.outputmap[var.name]
-                
+
     def execute(self):
         """execute this step"""
         self.execute_children()
@@ -86,7 +86,7 @@ class FetchStep(OneFetchStep):
             source.flying_insert(self.table, plan.session, union, plan.args,
                                  self.inputmap)
         restore_clauses(union, self.keepgroup, clauses)
-            
+
     def mytest_repr(self):
         """return a representation of this step suitable for test"""
         clauses = remove_clauses(self.union, self.keepgroup)
@@ -104,7 +104,7 @@ class FetchStep(OneFetchStep):
         finally:
             restore_clauses(self.union, self.keepgroup, clauses)
 
-    
+
 class AggrStep(LimitOffsetMixIn, Step):
     """step consisting in making aggregat from temporary data in the system
     source
@@ -123,7 +123,7 @@ class AggrStep(LimitOffsetMixIn, Step):
             plan.init_temp_table(outputtable, selection, select.solutions[0])
 
         #self.inputmap = inputmap
-        
+
     def mytest_repr(self):
         """return a representation of this step suitable for test"""
         sel = self.select.selection
@@ -167,7 +167,7 @@ class AggrStep(LimitOffsetMixIn, Step):
                     clause.append(term.accept(self))
                     # restaure the tree XXX necessary?
                     term.name = orig_name
-                    term.children = orig_children                
+                    term.children = orig_children
                 except KeyError:
                     clause.append(var_name)
             else:
@@ -215,28 +215,28 @@ class AggrStep(LimitOffsetMixIn, Step):
             self.plan.create_temp_table(self.outputtable)
             sql = 'INSERT INTO %s %s' % (self.outputtable, sql)
         return self.plan.sqlexec(sql, self.plan.args)
-    
+
     def visit_function(self, function):
         """generate SQL name for a function"""
         return '%s(%s)' % (function.name,
                            ','.join(c.accept(self) for c in function.children))
-        
+
     def visit_variableref(self, variableref):
         """get the sql name for a variable reference"""
         try:
             return self.inputmap[variableref.name]
         except KeyError: # XXX duh? explain
             return variableref.variable.name
-        
+
     def visit_constant(self, constant):
         """generate SQL name for a constant"""
         assert constant.type == 'Int'
         return str(constant.value)
-    
+
 
 class UnionStep(LimitOffsetMixIn, Step):
     """union results of child in-memory steps (e.g. OneFetchStep / AggrStep)"""
-        
+
     def execute(self):
         """execute this step"""
         result = []
@@ -258,7 +258,7 @@ class UnionStep(LimitOffsetMixIn, Step):
                 if len(result) >= olimit:
                     return result[:olimit]
         return result
-        
+
     def mytest_repr(self):
         """return a representation of this step suitable for test"""
         return (self.__class__.__name__, self.limit, self.offset)
@@ -266,7 +266,7 @@ class UnionStep(LimitOffsetMixIn, Step):
 
 class IntersectStep(UnionStep):
     """return intersection of results of child in-memory steps (e.g. OneFetchStep / AggrStep)"""
-        
+
     def execute(self):
         """execute this step"""
         result = set()

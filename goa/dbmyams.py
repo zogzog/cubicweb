@@ -5,6 +5,9 @@ MISSING FEATURES:
  - ReferenceProperty.verbose_name, collection_name, etc. (XXX)
 
 XXX proprify this knowing we'll use goa.db
+:organization: Logilab
+:copyright: 2008-2009 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+:contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 """
 
 from os.path import join
@@ -68,7 +71,7 @@ def dbm2y_date_factory(prop):
     # XXX no equivalent to Django's `auto_now`
     return dbm2y_default_factory(prop, **kwargs)
 
-    
+
 def dbm2y_relation_factory(etype, prop, multiple=False):
     """called if `prop` is a `db.ReferenceProperty`"""
     if multiple:
@@ -83,8 +86,8 @@ def dbm2y_relation_factory(etype, prop, multiple=False):
     except AttributeError, ex:
         # hack, data_type is still _SELF_REFERENCE_MARKER
         return SubjectRelation(etype, cardinality=cardinality)
-    
-    
+
+
 DBM2Y_FACTORY = {
     basestring: dbm2y_string_factory,
     datastore_types.Text: dbm2y_string_factory,
@@ -107,7 +110,7 @@ class GaeSchemaLoader(CubicWebSchemaLoader):
         self.created = []
         self.loaded_files = []
         self._instantiate_handlers()
-        
+
     def finalize(self, register_base_types=False):
         return self._build_schema('google-appengine', register_base_types)
 
@@ -148,11 +151,11 @@ class GaeSchemaLoader(CubicWebSchemaLoader):
     def import_yams_cube_schema(self, templpath):
         for filepath in self.get_schema_files(templpath):
             self.handle_file(filepath)
-        
+
     @property
     def pyreader(self):
         return self._live_handlers['.py']
-        
+
 import os
 from cubicweb import CW_SOFTWARE_ROOT
 
@@ -183,7 +186,7 @@ def load_schema(config, schemaclasses=None, extrahook=None):
                      'is_', 'is_instance_of',
                      'read_permission', 'add_permission',
                      'delete_permission', 'update_permission'):
-        loader.import_yams_schema(erschema, 'bootstrap')  
+        loader.import_yams_schema(erschema, 'bootstrap')
     loader.handle_file(join(SCHEMAS_LIB_DIRECTORY, 'base.py'))
     cubes = config['included-yams-cubes']
     for cube in reversed(config.expand_cubes(cubes)):
@@ -211,4 +214,3 @@ def load_schema(config, schemaclasses=None, extrahook=None):
         if getattr(ertype, 'inlined', False):
             ertype.inlined = False
     return loader.finalize()
-

@@ -34,14 +34,14 @@ repo, cnx = init_test_database('sqlite', config=config)
 
 class LDAPUserSourceTC(RepositoryBasedTC):
     repo, cnx = repo, cnx
-    
+
     def patch_authenticate(self):
         self._orig_authenticate = LDAPUserSource.authenticate
         LDAPUserSource.authenticate = nopwd_authenticate
 
     def setUp(self):
         self._prepare()
-        # XXX: need this first query else we get 'database is locked' from 
+        # XXX: need this first query else we get 'database is locked' from
         # sqlite since it doesn't support multiple connections on the same
         # database
         # so doing, ldap inserted users don't get removed between each test
@@ -50,21 +50,21 @@ class LDAPUserSourceTC(RepositoryBasedTC):
         # check we get some users from ldap
         self.assert_(len(rset) > 1)
         self.maxeid = self.execute('Any MAX(X)')[0][0]
-        
+
     def tearDown(self):
         if hasattr(self, '_orig_authenticate'):
             LDAPUserSource.authenticate = self._orig_authenticate
         RepositoryBasedTC.tearDown(self)
-            
+
     def test_authenticate(self):
         source = self.repo.sources_by_uri['ldapuser']
         self.assertRaises(AuthenticationError,
                           source.authenticate, self.session, 'toto', 'toto')
-        
+
     def test_synchronize(self):
         source = self.repo.sources_by_uri['ldapuser']
         source.synchronize()
-        
+
     def test_base(self):
         # check a known one
         e = self.execute('CWUser X WHERE X login "syt"').get_entity(0, 0)
@@ -139,7 +139,7 @@ class LDAPUserSourceTC(RepositoryBasedTC):
     def test_or(self):
         rset = self.execute('DISTINCT Any X WHERE X login "syt" OR (X in_group G, G name "managers")')
         self.assertEquals(len(rset), 2, rset.rows) # syt + admin
-        
+
     def test_nonregr_set_owned_by(self):
         # test that when a user coming from ldap is triggering a transition
         # the related TrInfo has correct owner information
@@ -175,7 +175,7 @@ class LDAPUserSourceTC(RepositoryBasedTC):
     def test_multiple_entities_from_different_sources(self):
         self.create_user('cochon')
         self.failUnless(self.execute('Any X,Y WHERE X login "syt", Y login "cochon"'))
-        
+
     def test_exists1(self):
         self.add_entity('CWGroup', name=u'bougloup1')
         self.add_entity('CWGroup', name=u'bougloup2')
@@ -241,11 +241,11 @@ class LDAPUserSourceTC(RepositoryBasedTC):
         self.assertEquals(sorted(rset.rows), [['guests', 'cochon'],
                                               ['users', 'cochon'],
                                               ['users', 'syt']])
-        
+
     def test_cd_restriction(self):
         rset = self.execute('CWUser X WHERE X creation_date > "2009-02-01"')
         self.assertEquals(len(rset), 2) # admin/anon but no ldap user since it doesn't support creation_date
-        
+
     def test_union(self):
         afeids = self.execute('State X')
         ueids = self.execute('CWUser X')
@@ -257,21 +257,21 @@ class LDAPUserSourceTC(RepositoryBasedTC):
         self.create_user('iaminguestsgrouponly', groups=('guests',))
         cnx = self.login('iaminguestsgrouponly')
         return cnx.cursor()
-    
+
     def test_security1(self):
         cu = self._init_security_test()
         rset = cu.execute('Any X WHERE X login "syt"')
         self.assertEquals(rset.rows, [])
         rset = cu.execute('Any X WHERE X login "iaminguestsgrouponly"')
         self.assertEquals(len(rset.rows), 1)
-    
+
     def test_security2(self):
         cu = self._init_security_test()
         rset = cu.execute('Any X WHERE X has_text "syt"')
         self.assertEquals(rset.rows, [])
         rset = cu.execute('Any X WHERE X has_text "iaminguestsgrouponly"')
         self.assertEquals(len(rset.rows), 1)
-    
+
     def test_security3(self):
         cu = self._init_security_test()
         rset = cu.execute('Any F WHERE X has_text "syt", X firstname F')
@@ -298,13 +298,13 @@ class LDAPUserSourceTC(RepositoryBasedTC):
         emaileid = self.execute('INSERT EmailAddress X: X address "toto@logilab.org"')[0][0]
         self.execute('Any X,AA WHERE X use_email Y, Y eid %(x)s, X modification_date AA',
                      {'x': emaileid})
-        
+
     def test_nonregr5(self):
         # original jpl query:
         # Any X, NOW - CD, P WHERE P is Project, U interested_in P, U is CWUser, U login "sthenault", X concerns P, X creation_date CD ORDERBY CD DESC LIMIT 5
         rql = 'Any X, NOW - CD, P ORDERBY CD DESC LIMIT 5 WHERE P bookmarked_by U, U login "%s", P is X, X creation_date CD' % self.session.user.login
         self.execute(rql, )#{'x': })
-        
+
     def test_nonregr6(self):
         self.execute('Any B,U,UL GROUPBY B,U,UL WHERE B created_by U?, B is File '
                      'WITH U,UL BEING (Any U,UL WHERE ME eid %(x)s, (EXISTS(U identity ME) '
@@ -350,33 +350,33 @@ class GlobTrFuncTC(TestCase):
 
 class RQL2LDAPFilterTC(RQLGeneratorTC):
     schema = repo.schema
-    
+
     def setUp(self):
         RQLGeneratorTC.setUp(self)
         ldapsource = repo.sources[-1]
         self.pool = repo._get_pool()
         session = mock_object(pool=self.pool)
         self.o = RQL2LDAPFilter(ldapsource, session)
-        
+
     def tearDown(self):
         repo._free_pool(self.pool)
         RQLGeneratorTC.tearDown(self)
-        
+
     def test_base(self):
         rqlst = self._prepare('CWUser X WHERE X login "toto"').children[0]
         self.assertEquals(self.o.generate(rqlst, 'X')[1],
                           '(&(objectClass=top)(objectClass=posixAccount)(uid=toto))')
-        
+
     def test_kwargs(self):
         rqlst = self._prepare('CWUser X WHERE X login %(x)s').children[0]
         self.o._args = {'x': "toto"}
         self.assertEquals(self.o.generate(rqlst, 'X')[1],
                           '(&(objectClass=top)(objectClass=posixAccount)(uid=toto))')
-        
+
     def test_get_attr(self):
         rqlst = self._prepare('Any X WHERE E firstname X, E eid 12').children[0]
         self.assertRaises(UnknownEid, self.o.generate, rqlst, 'E')
-        
-        
+
+
 if __name__ == '__main__':
     unittest_main()

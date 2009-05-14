@@ -61,7 +61,7 @@ def etype_fti_containers(eschema, _done=None):
                     yield container
     else:
         yield eschema
-    
+
 def reindex_entities(schema, session):
     """reindex all entities in the repository"""
     # deactivate modification_date hook since we don't want them
@@ -103,7 +103,7 @@ def reindex_entities(schema, session):
     # restore Entity.check
     Entity.check = _check
 
-    
+
 def check_schema(schema, session, eids, fix=1):
     """check serialized schema"""
     print 'Checking serialized schema'
@@ -122,7 +122,7 @@ def check_schema(schema, session, eids, fix=1):
                 count, cstrname, en, rn)
 
 
-    
+
 def check_text_index(schema, session, eids, fix=1):
     """check all entities registered in the text index"""
     print 'Checking text index'
@@ -172,8 +172,8 @@ def check_entities(schema, session, eids, fix=1):
                     print >> sys.stderr, ' [FIXED]'
                 else:
                     print >> sys.stderr
-                
-            
+
+
 def bad_related_msg(rtype, target, eid, fix):
     msg = '  A relation %s with %s eid %s exists but no such entity in sources'
     print >> sys.stderr, msg % (rtype, target, eid),
@@ -181,8 +181,8 @@ def bad_related_msg(rtype, target, eid, fix):
         print >> sys.stderr, ' [FIXED]'
     else:
         print >> sys.stderr
-    
-    
+
+
 def check_relations(schema, session, eids, fix=1):
     """check all relations registered in the repo system table"""
     print 'Checking relations'

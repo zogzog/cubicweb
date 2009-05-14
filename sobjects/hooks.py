@@ -15,7 +15,7 @@ class AddUpdateCWUserHook(Hook):
     """ensure user logins are stripped"""
     events = ('before_add_entity', 'before_update_entity',)
     accepts = ('CWUser',)
-    
+
     def call(self, session, entity):
         if 'login' in entity and entity['login']:
             entity['login'] = entity['login'].strip()
@@ -30,12 +30,12 @@ class AutoDeleteBookmark(PreCommitOperation):
                                           {'x': self.beid}, 'x'):
                 session.unsafe_execute('DELETE Bookmark X WHERE X eid %(x)s',
                                        {'x': self.beid}, 'x')
-        
+
 class DelBookmarkedByHook(Hook):
     """ensure user logins are stripped"""
     events = ('after_delete_relation',)
     accepts = ('bookmarked_by',)
-    
+
     def call(self, session, subj, rtype, obj):
         AutoDeleteBookmark(session, beid=subj)
 
@@ -60,4 +60,3 @@ class TidyHtmlFields(Hook):
                         fmt = entity.get_value(metaattr)
                     if fmt == 'text/html':
                         entity[attr] = soup2xhtml(value, session.encoding)
-

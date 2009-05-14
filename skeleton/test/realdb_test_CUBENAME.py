@@ -18,7 +18,7 @@ class RealDatabaseTC(RealDBTest):
     def test_all_primaries(self):
         for rset in self.iter_individual_rsets(limit=50):
             yield self.view, 'primary', rset, rset.req.reset_headers()
-    
+
     ## startup views
     def test_startup_views(self):
         for vid in self.list_startup_views():

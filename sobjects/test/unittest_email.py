@@ -22,7 +22,7 @@ class EmailAddressHooksTC(EnvBasedTC):
         self.commit()
         self.assertEquals(self.execute('Any A WHERE U use_email X, U login "admin", X address A')[0][0],
                           'admin@logilab.fr')
-        
+
 
 if __name__ == '__main__':
     from logilab.common.testlib import unittest_main

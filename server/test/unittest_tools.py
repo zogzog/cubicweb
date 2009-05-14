@@ -6,6 +6,6 @@ class ImportTC(TestCase):
         import cubicweb.server.server
         import cubicweb.server.checkintegrity
         import cubicweb.server.serverctl
-        
+
 if __name__ == '__main__':
     unittest_main()

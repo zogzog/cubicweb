@@ -45,7 +45,7 @@ jQuery("#tree-%s").treeview({toggle: toggleTree, prerendered: true});""" % treei
             self.wview(self.itemvid, self.rset, row=rowidx, col=0,
                        vid=subvid, parentvid=self.id)
         self.w(u'</ul>')
-        
+
 
 class FileTreeView(TreeView):
     """specific version of the treeview to display file trees
@@ -79,7 +79,7 @@ class FileItemInnerView(EntityView):
 class DefaultTreeViewItemView(EntityView):
     """default treeitem view for entities which don't implement ITree"""
     id = 'treeitemview'
-    
+
     def cell_call(self, row, col, vid='oneline', parentvid='treeview'):
         entity = self.entity(row, col)
         itemview = self.view(vid, self.rset, row=row, col=col)
@@ -96,7 +96,7 @@ class TreeViewItemView(EntityView):
     """
     id = 'treeitemview'
     __select__ = implements(ITree)
-    
+
     def cell_call(self, row, col, vid='oneline', parentvid='treeview'):
         entity = self.entity(row, col)
         cssclasses = []
@@ -124,4 +124,3 @@ class TreeViewItemView(EntityView):
             self.w(u'<ul class="placeholder"><li>place holder</li></ul>')
         self.wview(vid, self.rset, row=row, col=col)
         self.w(u'</li>')
-

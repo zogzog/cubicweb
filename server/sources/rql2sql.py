@@ -17,7 +17,7 @@ SQL queries optimization
 
    -> direct join between nonfinal1 and nonfinal2, whatever X,Y, Z (unless
       inlined...)
-      
+
       NOT IMPLEMENTED (and quite hard to implement)
 
 Potential optimization information is collected by the querier, sql generation
@@ -41,7 +41,7 @@ from cubicweb import server
 from cubicweb.server.sqlutils import SQL_PREFIX
 from cubicweb.server.utils import cleanup_solutions
 
-def _new_var(select, varname): 
+def _new_var(select, varname):
     newvar = select.get_variable(varname)
     if not 'relations' in newvar.stinfo:
         # not yet initialized
@@ -61,7 +61,7 @@ def _fill_to_wrap_rel(var, newselect, towrap, schema):
                 _fill_to_wrap_rel(vref.variable, newselect, towrap, schema)
         elif rschema.is_final():
             towrap.add( (var, rel) )
-   
+
 def rewrite_unstable_outer_join(select, solutions, unstable, schema):
     """if some optional variables are unstable, they should be selected in a
     subquery. This function check this and rewrite the rql syntax tree if
@@ -104,7 +104,7 @@ def rewrite_unstable_outer_join(select, solutions, unstable, schema):
                 var.stinfo['relations'].add(newrel)
                 var.stinfo['rhsrelations'].add(newrel)
                 if rel.optional in ('right', 'both'):
-                    var.stinfo['optrelations'].add(newrel)                
+                    var.stinfo['optrelations'].add(newrel)
         # extract subquery solutions
         solutions = [sol.copy() for sol in solutions]
         cleanup_solutions(newselect, solutions)
@@ -205,7 +205,7 @@ def sort_term_selection(sorts, selectedidx, rqlst, groups):
                 for vref in term.iget_nodes(VariableRef):
                     if not vref in groups:
                         groups.append(vref)
-        
+
 def fix_selection(rqlst, selectedidx, needwrap, sorts, groups, having):
     if sorts:
         sort_term_selection(sorts, selectedidx, rqlst, not needwrap and groups)
@@ -230,7 +230,7 @@ class StateInfo(object):
         self.existssols = existssols
         self.unstablevars = unstablevars
         self.subtables = {}
-        
+
     def reset(self, solution):
         """reset some visit variables"""
         self.solution = solution
@@ -246,11 +246,11 @@ class StateInfo(object):
         self.aliases = {}
         self.restrictions = []
         self._restr_stack = []
-        
+
     def add_restriction(self, restr):
         if restr:
             self.restrictions.append(restr)
-            
+
     def iter_exists_sols(self, exists):
         if not exists in self.existssols:
             yield 1
@@ -286,8 +286,8 @@ class StateInfo(object):
         restrictions = self.restrictions
         self.restrictions = self._restr_stack.pop()
         return restrictions, self.actual_tables.pop()
-    
-    
+
+
 class SQLGenerator(object):
     """
     generation of SQL from the fully expanded RQL syntax tree
@@ -295,13 +295,13 @@ class SQLGenerator(object):
 
     Groups and sort are not handled here since they should not be handled at
     this level (see cubicweb.server.querier)
-    
+
     we should not have errors here !
 
     WARNING: a CubicWebSQLGenerator instance is not thread safe, but generate is
     protected by a lock
     """
-    
+
     def __init__(self, schema, dbms_helper, dbencoding='UTF-8'):
         self.schema = schema
         self.dbms_helper = dbms_helper
@@ -312,7 +312,7 @@ class SQLGenerator(object):
         if not self.dbms_helper.union_parentheses_support:
             self.union_sql = self.noparen_union_sql
         self._lock = threading.Lock()
-        
+
     def generate(self, union, args=None, varmap=None):
         """return SQL queries and a variable dictionnary from a RQL syntax tree
 
@@ -355,7 +355,7 @@ class SQLGenerator(object):
         sqls = (self.select_sql(select, needalias)
                 for i, select in enumerate(union.children))
         return '\nUNION ALL\n'.join(sqls)
-    
+
     def select_sql(self, select, needalias=False):
         """return SQL queries and a variable dictionnary from a RQL syntax tree
 
@@ -388,7 +388,7 @@ class SQLGenerator(object):
                 # query will be necessary
                 if groups or select.has_aggregat:
                     select.select_only_variables()
-                    needwrap = True                        
+                    needwrap = True
         else:
             existssols, unstable = {}, ()
         state = StateInfo(existssols, unstable)
@@ -441,7 +441,7 @@ class SQLGenerator(object):
                 sql += '\nHAVING %s' % having
             # sort
             if sorts:
-                sql += '\nORDER BY %s' % ','.join(self._sortterm_sql(sortterm, 
+                sql += '\nORDER BY %s' % ','.join(self._sortterm_sql(sortterm,
                                                                      fselectidx)
                                                   for sortterm in sorts)
                 if fneedwrap:
@@ -497,7 +497,7 @@ class SQLGenerator(object):
             return '\nUNION\n'.join(sqls)
         else:
             return '\nUNION ALL\n'.join(sqls)
-        
+
     def _selection_sql(self, selected, distinct, needaliasing=False):
         clause = []
         for term in selected:
@@ -546,7 +546,7 @@ class SQLGenerator(object):
                 return '(%s)' % ' OR '.join(res)
             return res[0]
         return ''
-    
+
     def visit_not(self, node):
         self._state.push_scope()
         csql = node.children[0].accept(self)
@@ -581,7 +581,7 @@ class SQLGenerator(object):
         if not sqls:
             return ''
         return 'EXISTS(%s)' % ' UNION '.join(sqls)
-            
+
     def _visit_exists(self, exists):
         self._state.push_scope()
         restriction = exists.children[0].accept(self)
@@ -593,12 +593,12 @@ class SQLGenerator(object):
             return ''
         if not tables:
             # XXX could leave surrounding EXISTS() in this case no?
-            sql = 'SELECT 1 WHERE %s' % restriction 
+            sql = 'SELECT 1 WHERE %s' % restriction
         else:
             sql = 'SELECT 1 FROM %s WHERE %s' % (', '.join(tables), restriction)
         return sql
 
-    
+
     def visit_relation(self, relation):
         """generate SQL for a relation"""
         rtype = relation.r_type
@@ -691,7 +691,7 @@ class SQLGenerator(object):
             extrajoin = self._extra_join_sql(relation, '%s.%s' % (rid, relfield), termvar)
             if extrajoin:
                 yield extrajoin
-        
+
     def _visit_relation(self, relation, rschema):
         """generate SQL for a relation
 
@@ -718,10 +718,10 @@ class SQLGenerator(object):
         """
         left outer join syntax (optional=='right'):
           X relation Y?
-          
+
         right outer join syntax (optional=='left'):
           X? relation Y
-          
+
         full outer join syntaxes (optional=='both'):
           X? relation Y?
 
@@ -834,7 +834,7 @@ class SQLGenerator(object):
         lhssql = self._inlined_var_sql(relation.children[0].variable,
                                        relation.r_type)
         return '%s%s' % (lhssql, relation.children[1].accept(self, contextrels))
-    
+
     def _visit_attribute_relation(self, relation):
         """generate SQL for an attribute relation"""
         lhs, rhs = relation.get_parts()
@@ -897,7 +897,7 @@ class SQLGenerator(object):
             not_ = False
         return self.dbms_helper.fti_restriction_sql(alias, const.eval(self._args),
                                                     jointo, not_) + restriction
-        
+
     def visit_comparison(self, cmp, contextrels=None):
         """generate SQL for a comparaison"""
         if len(cmp.children) == 2:
@@ -918,7 +918,7 @@ class SQLGenerator(object):
             return '%s%s'% (operator, rhs.accept(self, contextrels))
         return '%s%s%s'% (lhs.accept(self, contextrels), operator,
                           rhs.accept(self, contextrels))
-            
+
     def visit_mathexpression(self, mexpr, contextrels=None):
         """generate SQL for a mathematic expression"""
         lhs, rhs = mexpr.get_parts()
@@ -931,11 +931,11 @@ class SQLGenerator(object):
             pass
         return '(%s %s %s)'% (lhs.accept(self, contextrels), operator,
                               rhs.accept(self, contextrels))
-        
+
     def visit_function(self, func, contextrels=None):
         """generate SQL name for a function"""
         # function_description will check function is supported by the backend
-        sqlname = self.dbms_helper.func_sqlname(func.name) 
+        sqlname = self.dbms_helper.func_sqlname(func.name)
         return '%s(%s)' % (sqlname, ', '.join(c.accept(self, contextrels)
                                               for c in func.children))
 
@@ -963,7 +963,7 @@ class SQLGenerator(object):
                 value = value.encode(self.dbencoding)
             self._query_attrs[_id] = value
         return '%%(%s)s' % _id
-        
+
     def visit_variableref(self, variableref, contextrels=None):
         """get the sql name for a variable reference"""
         # use accept, .variable may be a variable or a columnalias
@@ -979,7 +979,7 @@ class SQLGenerator(object):
             self.add_table(table)
             return sql
         return colalias._q_sql
-    
+
     def visit_variable(self, variable, contextrels=None):
         """get the table name and sql string for a variable"""
         if contextrels is None and variable.name in self._state.done:
@@ -989,7 +989,7 @@ class SQLGenerator(object):
         self._state.done.add(variable.name)
         vtablename = None
         if contextrels is None and variable.name in self._varmap:
-            sql, vtablename = self._var_info(variable)            
+            sql, vtablename = self._var_info(variable)
         elif variable.stinfo['attrvar']:
             # attribute variable (systematically used in rhs of final
             # relation(s)), get table name and sql from any rhs relation
@@ -1043,7 +1043,7 @@ class SQLGenerator(object):
             # so nothing to return here
             pass
         return ''
-    
+
     def _var_info(self, var):
         # if current var or one of its attribute is selected , it *must*
         # appear in the toplevel's FROM even if we're currently visiting
@@ -1067,7 +1067,7 @@ class SQLGenerator(object):
             sql = '%s.%seid' % (table, SQL_PREFIX)
             self.add_table('%s%s AS %s' % (SQL_PREFIX, etype, table), table, scope=scope)
         return sql, table
-    
+
     def _inlined_var_sql(self, var, rtype):
         try:
             sql = self._varmap['%s.%s' % (var.name, rtype)]
@@ -1077,14 +1077,14 @@ class SQLGenerator(object):
             sql = '%s.%s%s' % (self._var_table(var), SQL_PREFIX, rtype)
             #self._state.done.add(var.name)
         return sql
-        
+
     def _linked_var_sql(self, variable, contextrels=None):
         if contextrels is None:
             try:
-                return self._varmap[variable.name]            
+                return self._varmap[variable.name]
             except KeyError:
                 pass
-        rel = (contextrels and contextrels.get(variable.name) or 
+        rel = (contextrels and contextrels.get(variable.name) or
                variable.stinfo.get('principal') or
                iter(variable.stinfo['rhsrelations']).next())
         linkedvar = rel.children[0].variable
@@ -1096,7 +1096,7 @@ class SQLGenerator(object):
         try:
             sql = self._varmap['%s.%s' % (linkedvar.name, rel.r_type)]
         except KeyError:
-            linkedvar.accept(self)            
+            linkedvar.accept(self)
             sql = '%s.%s%s' % (linkedvar._q_sqltable, SQL_PREFIX, rel.r_type)
         return sql
 
@@ -1107,7 +1107,7 @@ class SQLGenerator(object):
         self._state.count += 1
         self.add_table('%s AS %s' % (tablename, alias), alias)
         return alias
-        
+
     def add_table(self, table, key=None, scope=-1):
         if key is None:
             key = table
@@ -1115,7 +1115,7 @@ class SQLGenerator(object):
             return
         self._state.tables[key] = (len(self._state.actual_tables) - 1, table)
         self._state.actual_tables[scope].append(table)
-    
+
     def replace_tables_by_outer_join(self, substitute, lefttable, *tables):
         for table in tables:
             try:
@@ -1160,8 +1160,8 @@ class SQLGenerator(object):
         for table, outerexpr in self._state.outer_tables.iteritems():
             if outerexpr == oldalias:
                 self._state.outer_tables[table] = newalias
-        self._state.outer_tables[table] = newalias        
-        
+        self._state.outer_tables[table] = newalias
+
     def _var_table(self, var):
         var.accept(self)#.visit_variable(var)
         return var._q_sqltable
@@ -1173,7 +1173,7 @@ class SQLGenerator(object):
         assert not self.schema.rschema(relation.r_type).is_final(), relation.r_type
         rid = 'rel_%s%s' % (relation.r_type, self._state.count)
         # relation's table is belonging to the root scope if it is the principal
-        # table of one of it's variable and if that variable belong's to parent 
+        # table of one of it's variable and if that variable belong's to parent
         # scope
         for varref in relation.iget_nodes(VariableRef):
             var = varref.variable
@@ -1192,7 +1192,7 @@ class SQLGenerator(object):
         relation._q_sqltable = rid
         self._state.done.add(relation)
         return rid
-    
+
     def _fti_table(self, relation):
         if relation in self._state.done:
             try:
@@ -1203,7 +1203,7 @@ class SQLGenerator(object):
         alias = self.alias_and_add_table(self.dbms_helper.fti_table)
         relation._q_sqltable = alias
         return alias
-        
+
     def _varmap_table_scope(self, select, table):
         """since a varmap table may be used for multiple variable, its scope is
         the most outer scope of each variables

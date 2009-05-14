@@ -40,19 +40,19 @@ class URLBinder:
     def __init__(self, url, klass):
         self.base_url = url
         self.translator_class = HTMLTranslator
-        
+
     def __call__(self, document):
         translator = self.translator_class(document)
         translator.base_url = self.base_url
         return translator
-    
+
 class HTMLTranslator(CSS1HTMLTranslator):
     """ReST tree to html translator"""
 
     def astext(self):
         """return the extracted html"""
         return ''.join(self.body)
-    
+
     def visit_title(self, node):
         """Only 6 section levels are supported by HTML."""
         if isinstance(node.parent, nodes.topic):
@@ -124,7 +124,7 @@ class HTMLTranslator(CSS1HTMLTranslator):
 
     def depart_problematic(self, node):
         pass
-    
+
     def visit_system_message(self, node):
         backref_text = ''
         if len(node['backrefs']):

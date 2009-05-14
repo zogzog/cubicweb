@@ -21,6 +21,6 @@ def auto_login_publish(self, path, req):
             pass
         assert req.user.login == login
     return orig_publish(self, path, req)
-    
+
 orig_publish = CubicWebPublisher.main_publish
 CubicWebPublisher.main_publish = auto_login_publish

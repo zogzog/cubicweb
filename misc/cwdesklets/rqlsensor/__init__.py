@@ -52,7 +52,7 @@ class RQLSensor(Sensor):
             output.set('resultbg[%s]' % index, 'black')
             webbrowser.open(self._urls[index])
         self._send_output(output)
-        
+
     def __get_connection(self):
         try:
             return self._v_cnx
@@ -73,8 +73,8 @@ class RQLSensor(Sensor):
             del self._v_cnx
             raise
         self._urls = []
-        output.set('layout', 'vertical, 14')        
-        output.set('length', rset.rowcount)        
+        output.set('layout', 'vertical, 14')
+        output.set('length', rset.rowcount)
         i = 0
         for line in rset:
             output.set('result[%s]' % i, ', '.join([str(v) for v in line[1:]]))
@@ -84,7 +84,7 @@ class RQLSensor(Sensor):
             except:
                 self._urls.append('')
             i += 1
-    
+
     def __update(self):
         output = self._new_output()
         try:
@@ -92,12 +92,12 @@ class RQLSensor(Sensor):
         except Exception, ex:
             import traceback
             traceback.print_exc()
-            output.set('layout', 'vertical, 10')        
-            output.set('length', 1)        
+            output.set('layout', 'vertical, 10')
+            output.set('length', 1)
             output.set('result[0]', str(ex))
         self._send_output(output)
         self._add_timer(int(self._get_config('delay'))*1000, self.__update)
 
-        
+
 def new_sensor(args):
     return RQLSensor(*args)

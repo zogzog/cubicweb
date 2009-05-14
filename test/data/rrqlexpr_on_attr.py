@@ -6,7 +6,7 @@ class ToTo(EntityType):
         'delete': ('managers',),
         }
     attr = String()
-    
+
 class attr(RelationType):
     permissions = {
         'read': ('managers', ),

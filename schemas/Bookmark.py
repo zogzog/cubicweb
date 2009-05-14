@@ -4,10 +4,10 @@ class Bookmark(MetaUserEntityType):
     title = String(required=True, maxsize=128)
     path  = String(maxsize=512, required=True,
                    description=_("relative url of the bookmarked page"))
-    
+
     bookmarked_by = SubjectRelation('CWUser',
                                     description=_("users using this bookmark"))
-    
+
 
 class bookmarked_by(MetaUserRelationType):
     permissions = {'read':   ('managers', 'users', 'guests',),

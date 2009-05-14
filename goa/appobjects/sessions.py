@@ -41,10 +41,10 @@ class GAEAuthenticationManager(AbstractAuthenticationManager):
     def __init__(self, *args, **kwargs):
         super(GAEAuthenticationManager, self).__init__(*args, **kwargs)
         self._repo = self.config.repository(vreg=self.vreg)
-        
+
     def authenticate(self, req, _login=None, _password=None):
         """authenticate user and return an established connection for this user
-        
+
         :raise ExplicitLogin: if authentication is required (no authentication
         info found or wrong user/password)
         """
@@ -75,7 +75,7 @@ class GAEPersistentSessionManager(AbstractSessionManager):
     def __init__(self, *args, **kwargs):
         super(GAEPersistentSessionManager, self).__init__(*args, **kwargs)
         self._repo = self.config.repository(vreg=self.vreg)
-        
+
     def get_session(self, req, sessionid):
         """return existing session for the given session identifier"""
         # search a record for the given session
@@ -126,7 +126,7 @@ class GAEPersistentSessionManager(AbstractSessionManager):
         record['anonymous_connection'] = cnx.anonymous_connection
         Put(record)
         return self._get_proxy(req, record, cnx, user)
-    
+
     def close_session(self, proxy):
         """close session on logout or on invalid session detected (expired out,
         corrupted...)
@@ -136,7 +136,7 @@ class GAEPersistentSessionManager(AbstractSessionManager):
     def current_sessions(self):
         for record in Query('CubicWebSession').Run():
             yield ConnectionProxy(record)
-            
+
     def _get_proxy(self, req, record, cnx, user):
         proxy = ConnectionProxy(record, cnx, user)
         user.req = req
@@ -145,7 +145,7 @@ class GAEPersistentSessionManager(AbstractSessionManager):
 
 
 class ConnectionProxy(object):
-    
+
     def __init__(self, record, cnx=None, user=None):
         self.__record = record
         self.__cnx = cnx
@@ -153,7 +153,7 @@ class ConnectionProxy(object):
         self.__data = None
         self.__is_dirty = False
         self.sessionid = record.key().name()[4:] # remove 'key_' prefix
-        
+
     def __repr__(self):
         sstr = '<ConnectionProxy %s' % self.sessionid
         if self.anonymous_connection:
@@ -162,7 +162,7 @@ class ConnectionProxy(object):
             sstr += ' for %s' % self.__user.login
         sstr += ', last used %s>' % strftime('%T', localtime(self.last_usage_time))
         return sstr
-        
+
     def __getattribute__(self, name):
         try:
             return super(ConnectionProxy, self).__getattribute__(name)
@@ -174,7 +174,7 @@ class ConnectionProxy(object):
         self.__record['last_usage_time'] = value
     def _get_last_usage_time(self):
         return self.__record['last_usage_time']
-    
+
     last_usage_time = property(_get_last_usage_time, _set_last_usage_time)
 
     @property
@@ -182,7 +182,7 @@ class ConnectionProxy(object):
         # use get() for bw compat if sessions without anonymous information are
         # found. Set default to True to limit lifetime of those sessions.
         return self.__record.get('anonymous_connection', True)
-        
+
     @property
     @cached
     def data(self):
@@ -194,7 +194,7 @@ class ConnectionProxy(object):
                 self.exception('corrupted session data for session %s',
                                self.__cnx)
         return {}
-        
+
     def get_session_data(self, key, default=None, pop=False):
         """return value associated to `key` in session data"""
         if pop:
@@ -206,20 +206,20 @@ class ConnectionProxy(object):
                 return default
         else:
             return self.data.get(key, default)
-        
+
     def set_session_data(self, key, value):
         """set value associated to `key` in session data"""
         self.data[key] = value
         self.__is_dirty = True
-        
+
     def del_session_data(self, key):
         """remove value associated to `key` in session data"""
         try:
             del self.data[key]
             self.__is_dirty = True
         except KeyError:
-            pass    
-            
+            pass
+
     def commit(self):
         if self.__is_dirty:
             self.__save()
@@ -233,7 +233,7 @@ class ConnectionProxy(object):
         if self.__cnx is not None:
             self.__cnx.close()
         Delete(self.__record)
-        
+
     def __save(self):
         if self.__is_dirty:
             self.__record['data'] = Blob(dumps(self.data))
@@ -243,7 +243,7 @@ class ConnectionProxy(object):
     def user(self, req=None, props=None):
         """return the User object associated to this connection"""
         return self.__user
-        
+
 
 import logging
 from cubicweb import set_log_methods
@@ -256,7 +256,7 @@ from cubicweb.web import application
 class SessionsCleaner(StartupView):
     id = 'cleansessions'
     __select__ = none_rset() & match_user_groups('managers')
-    
+
     def call(self):
         # clean web session
         session_manager = application.SESSION_MANAGER
@@ -270,7 +270,7 @@ class SessionsCleaner(StartupView):
         self.w(u'%s remaining sessions<br/>\n' % remaining)
         self.w(u'</div>')
 
-        
+
 def registration_callback(vreg):
     vreg.register(SessionsCleaner)
     vreg.register(GAEAuthenticationManager, clear=True)

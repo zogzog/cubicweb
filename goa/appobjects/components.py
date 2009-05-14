@@ -23,7 +23,7 @@ class SearchForAssociationView(EntityView):
     to search for something to link to the edited eid
     """
     id = 'search-associate'
-    
+
     __select__ = one_line_rset() & match_search_state('linksearch') & accept
 
     def cell_call(self, row, col):
@@ -43,7 +43,7 @@ class SchemaImageView(StartupView):
     binary = True
     content_type = 'image/png'
     def call(self):
-        """display global schema information"""        
+        """display global schema information"""
         skipmeta = not int(self.req.form.get('withmeta', 0))
         if skipmeta:
             url = self.build_url('data/schema.png')

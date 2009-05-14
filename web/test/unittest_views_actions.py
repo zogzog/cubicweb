@@ -20,6 +20,6 @@ class ActionsTC(EnvBasedTC):
         rset = self.execute('Any X WHERE X login "anon"', req=req)
         self.failIf([action for action in self.vreg.possible_vobjects('actions', req, rset)
                      if action.id == 'sendemail'])
-        
+
 if __name__ == '__main__':
     unittest_main()

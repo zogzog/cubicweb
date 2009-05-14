@@ -34,7 +34,7 @@ def remove_solutions(origsolutions, solutions, defined):
     return newsolutions
 
 class Unsupported(Exception): pass
-        
+
 class RQLRewriter(object):
     """insert some rql snippets into another rql syntax tree"""
     def __init__(self, querier, session):
@@ -51,7 +51,7 @@ class RQLRewriter(object):
             raise Unsupported()
         if len(self.select.solutions) < len(self.solutions):
             raise Unsupported()
-        
+
     def rewrite(self, select, snippets, solutions, kwargs):
         if server.DEBUG:
             print '---- rewrite', select, snippets, solutions
@@ -112,7 +112,7 @@ class RQLRewriter(object):
         add_types_restriction(self.schema, select)
         if server.DEBUG:
             print '---- rewriten', select
-            
+
     def build_variantes(self, newsolutions):
         variantes = set()
         for sol in newsolutions:
@@ -133,7 +133,7 @@ class RQLRewriter(object):
                 for variante in variantes:
                     del variante[(erqlexpr, mainvar, oldvar)]
         return variantes
-    
+
     def insert_snippets(self, snippets, varexistsmap=None):
         self.rewritten = {}
         for varname, erqlexprs in snippets:
@@ -175,7 +175,7 @@ class RQLRewriter(object):
             if varexistsmap is None and not inserted:
                 # no rql expression found matching rql solutions. User has no access right
                 raise Unauthorized()
-            
+
     def insert_snippet(self, varname, snippetrqlst, parent=None):
         new = snippetrqlst.where.accept(self)
         if new is not None:
@@ -240,7 +240,7 @@ class RQLRewriter(object):
                     else:
                         parent.parent.replace(or_, or_.children[0])
                         self._cleanup_inserted(new)
-                    raise 
+                    raise
             return new
 
     def _cleanup_inserted(self, node):
@@ -250,7 +250,7 @@ class RQLRewriter(object):
             if not vref.variable.stinfo['references']:
                 # no more references, undefine the variable
                 del self.select.defined_vars[vref.name]
-        
+
     def _visit_binary(self, node, cls):
         newnode = cls()
         for c in node.children:
@@ -270,20 +270,20 @@ class RQLRewriter(object):
             return None
         newnode = cls()
         newnode.append(newc)
-        return newnode 
-        
+        return newnode
+
     def visit_and(self, et):
         return self._visit_binary(et, nodes.And)
 
     def visit_or(self, ou):
         return self._visit_binary(ou, nodes.Or)
-        
+
     def visit_not(self, node):
         return self._visit_unary(node, nodes.Not)
 
     def visit_exists(self, node):
         return self._visit_unary(node, nodes.Exists)
-   
+
     def visit_relation(self, relation):
         lhs, rhs = relation.get_variable_parts()
         if lhs.name == 'X':
@@ -301,7 +301,7 @@ class RQLRewriter(object):
             if relation.r_type in self.rhs_rels and self._may_be_shared(relation, 'subject'):
                 # ok, can share variable
                 term = self.rhs_rels[relation.r_type].children[0]
-                self._use_outer_term(lhs.name, term)            
+                self._use_outer_term(lhs.name, term)
                 return
         rel = nodes.Relation(relation.r_type, relation.optional)
         for c in relation.children:
@@ -319,7 +319,7 @@ class RQLRewriter(object):
         for c in cmp.children:
             cmp_.append(c.accept(self))
         return cmp_
-        
+
     def visit_function(self, function):
         """generate filter name for a function"""
         function_ = nodes.Function(function.name)
@@ -371,7 +371,7 @@ class RQLRewriter(object):
             for inserted_vref in insertedvar.references():
                 inserted_vref.parent.replace(inserted_vref, term.copy(self.select))
         self.rewritten[key] = term
-        
+
     def _get_varname_or_term(self, vname):
         if vname == 'U':
             if self.u_varname is None:

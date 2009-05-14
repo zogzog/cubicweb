@@ -11,7 +11,7 @@ class in_state(RelationDefinition):
     object = 'State'
     cardinality = '1*'
     constraints=[RQLConstraint('S is ET, O state_of ET')]
-    
+
 class wf_info_for(RelationDefinition):
     subject = 'TrInfo'
     object = 'Note'

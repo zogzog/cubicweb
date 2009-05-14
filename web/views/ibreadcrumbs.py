@@ -21,7 +21,7 @@ _ = unicode
 def bc_title(entity):
     textsize = entity.req.property_value('navigation.short-line-size')
     return html_escape(cut(entity.dc_title(), textsize))
-    
+
 
 class BreadCrumbEntityVComponent(EntityVComponent):
     id = 'breadcrumbs'
@@ -52,7 +52,7 @@ class BreadCrumbEntityVComponent(EntityVComponent):
                 self.w(u"\n")
                 self.wpath_part(parent, entity, i == len(path) - 1)
             self.w(u'</span>')
-            
+
     def wpath_part(self, part, contextentity, last=False):
         if isinstance(part, Entity):
             if last and part.eid == contextentity.eid:
@@ -67,7 +67,7 @@ class BreadCrumbEntityVComponent(EntityVComponent):
         else:
             textsize = self.req.property_value('navigation.short-line-size')
             self.w(cut(unicode(part), textsize))
-        
+
 
 class BreadCrumbComponent(BreadCrumbEntityVComponent):
     __registry__ = 'components'

@@ -267,6 +267,3 @@ class ISiocContainer(Interface):
 
     def isioc_items(self):
         """return contained items"""
-
-
-

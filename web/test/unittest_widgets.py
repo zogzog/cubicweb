@@ -1,6 +1,4 @@
-"""cubicweb.common.widget unit tests
-
-"""
+"""cubicweb.common.widget unit tests"""
 
 from datetime import datetime
 NOW = datetime.now()
@@ -13,11 +11,11 @@ from cubicweb.web.widgets import widget, AutoCompletionWidget
 
 
 class WidgetsTC(EnvBasedTC):
-        
+
     def get_widget(self, etype, rname, rtype):
         rschema = self.schema[rname]
         return widget(self.vreg, etype, rschema, rtype, role='subject')
-    
+
 
     def test_hidden_widget(self):
         w = self.get_widget('State', 'eid', 'Int')
@@ -187,7 +185,7 @@ class WidgetsTC(EnvBasedTC):
     def test_datetime_widget(self):
         w = self.get_widget('Personne', 'datenaiss', 'Datetime')
         self.assertEquals(w.name, 'datenaiss')
-        example = '%s, or without time: %s' % (        
+        example = '%s, or without time: %s' % (
             NOW.strftime(self.vreg.property_value('ui.datetime-format')),
             NOW.strftime(self.vreg.property_value('ui.date-format')))
         self.assertEquals(w.render_example(self.request()), example)
@@ -231,8 +229,8 @@ class WidgetsTC(EnvBasedTC):
         self.assertEquals(w.edit_render(entity),
                           u'<input type="hidden" name="edits-salary:X" value="__cubicweb_internal_field__"/>\n'
                           '<input type="text" name="salary:X" value="" accesskey="s" id="salary:X" maxlength="15" size="5" tabindex="0"/>')
-                          
-                          
+
+
     def test_float_widget_previous_value(self):
         w = self.get_widget('Personne', 'salary', 'Float')
         self.assertEquals(w.name, 'salary')
@@ -314,7 +312,7 @@ class WidgetsTC(EnvBasedTC):
             self.assertTextEquals(w.edit_render(entity),
                                   u'<input type="hidden" name="edits-nom:X" value="__cubicweb_internal_field__"/>\n'
                                   u'<input type="text" name="nom:X" value="" cubicweb:dataurl="http://testing.fr/cubicweb/json?pageid=None&amp;mode=remote&amp;fname=getnames" class="widget required" id="nom:X" tabindex="0" cubicweb:loadtype="auto" cubicweb:wdgtype="SuggestField"  cubicweb:accesskey="n" cubicweb:maxlength="64" cubicweb:size="40" />')
-                                  
+
         finally:
             del entity.widgets['nom']
 
@@ -337,7 +335,7 @@ class WidgetsTC(EnvBasedTC):
             self.assertTextEquals(w.edit_render(entity),
                                   u'<input type="hidden" name="edits-nom:X" value="__cubicweb_internal_field__"/>\n'
                                   u'<input type="text" name="nom:X" value="a name" cubicweb:dataurl="http://testing.fr/cubicweb/json?pageid=None&amp;mode=remote&amp;fname=getnames" class="widget required" id="nom:X" tabindex="0" cubicweb:loadtype="auto" cubicweb:wdgtype="SuggestField"  cubicweb:accesskey="n" cubicweb:maxlength="64" cubicweb:size="40" />')
-            
+
         finally:
             del entity.widgets['nom']
 
@@ -365,7 +363,7 @@ class WidgetsTC(EnvBasedTC):
         entity.autocomplete_initfuncs = {'nom' : 'getnames'}
         w = self.get_widget(entity, 'travaille', 'Societe')
         self.failUnless(isinstance(w, AutoCompletionWidget))
-        
-        
+
+
 if __name__ == '__main__':
     unittest_main()

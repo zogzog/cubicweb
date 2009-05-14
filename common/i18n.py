@@ -90,4 +90,3 @@ def compile_i18n_catalogs(sourcedirs, destdir, langs):
         except Exception:
             continue
     return errors
-                         

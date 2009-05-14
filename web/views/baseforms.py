@@ -24,8 +24,8 @@ from cubicweb.web.form import FormMixIn
 from cubicweb.web.views.autoform import AutomaticEntityForm
 
 _ = unicode
-    
-    
+
+
 class EditionForm(FormMixIn, EntityView):
     """primary entity edition form
 
@@ -34,14 +34,14 @@ class EditionForm(FormMixIn, EntityView):
     name of the attribute being edited. You may use this feature to compute
     dynamic default values such as the 'tomorrow' date or the user's login
     being connected
-    """    
+    """
     id = 'edition'
     __select__ = one_line_rset() & non_final_entity()
 
     title = _('edition')
     controller = 'edit'
     skip_relations = set()
-    
+
     EDITION_BODY = u'''\
  %(errormsg)s
 <form id="%(formid)s" class="entityForm" cubicweb:target="eformframe"
@@ -135,7 +135,7 @@ class EditionForm(FormMixIn, EntityView):
     @property
     def formid(self):
         return self.id
-    
+
     def action_title(self, entity):
         """form's title"""
         ptitle = self.req._(self.title)
@@ -155,7 +155,7 @@ class EditionForm(FormMixIn, EntityView):
                 output.append(u'<input type="hidden" name="%s" value="%s" />'
                               % (name, value))
         return u'\n'.join(output)
-                
+
     def add_hidden_web_behaviour_params(self, entity):
         """inserts hidden params controlling how errors and redirection
         should be handled
@@ -174,8 +174,8 @@ class EditionForm(FormMixIn, EntityView):
             self._hiddens.append( ('__linkto', linkto, '') )
             msg = '%s %s' % (msg, self.req._('and linked'))
         self._hiddens.append( ('__message', msg, '') )
-        
-    
+
+
     def attributes_form(self, entity, kwargs, include_eid=True):
         """create a form to edit entity's attributes"""
         html = []
@@ -208,7 +208,7 @@ class EditionForm(FormMixIn, EntityView):
         # XXX both (add, delete)
         return [(rschema, x) for rschema, _, x in entity.relations_by_category(('primary', 'secondary'), 'add')
                 if rschema != 'eid']
-    
+
     def relations_form(self, entity, kwargs):
         srels_by_cat = entity.srelations_by_category(('generic', 'metadata'), 'add')
         if not srels_by_cat:
@@ -267,7 +267,7 @@ class EditionForm(FormMixIn, EntityView):
         w(u'</table>')
         w(u'</fieldset>')
         return '\n'.join(html)
-        
+
     def inline_entities_form(self, entity, kwargs):
         """create a form to edit entity's inlined relations"""
         result = []
@@ -286,7 +286,7 @@ class EditionForm(FormMixIn, EntityView):
                 existant = entity.has_eid() and entity.related(rschema)
                 if existant:
                     # display inline-edition view for all existing related entities
-                    result.append(self.view('inline-edition', existant, 
+                    result.append(self.view('inline-edition', existant,
                                             ptype=entity.e_schema, peid=entity.eid,
                                             rtype=rschema, role=x, **kwargs))
                 if x == 'subject':
@@ -318,7 +318,7 @@ class EditionForm(FormMixIn, EntityView):
         return '\n'.join(result)
 
     # should_* method extracted to allow overriding
-    
+
     def should_inline_relation_form(self, entity, rschema, targettype, role):
         return AutomaticEntityForm.rinlined.etype_get(entity.id, rschema, role,
                                                       targettype)
@@ -328,10 +328,10 @@ class EditionForm(FormMixIn, EntityView):
 
     def should_display_add_inline_relation_link(self, rschema, existant, card):
         return not existant or card in '+*'
-    
+
     def reset_url(self, entity):
         return entity.absolute_url()
-    
+
     def on_submit(self, entity):
         return u'return freezeFormButtons(\'%s\')' % (self.domid)
 
@@ -339,7 +339,7 @@ class EditionForm(FormMixIn, EntityView):
         return self.req._('element edited')
 
 
-    
+
 class CreationForm(EditionForm):
     __select__ = specified_etype_implements('Any')
     # XXX bw compat, use View.registered since we don't want accept_compat
@@ -347,7 +347,7 @@ class CreationForm(EditionForm):
     registered = accepts_etype_compat(View.registered)
     id = 'creation'
     title = _('creation')
-    
+
     def call(self, **kwargs):
         """creation view for an entity"""
         self.req.add_js( ('cubicweb.ajax.js',) )
@@ -385,16 +385,16 @@ class CreationForm(EditionForm):
     @property
     def formid(self):
         return 'edition'
-    
+
     def relations_form(self, entity, kwargs):
         return u''
 
     def reset_url(self, entity=None):
         return self.build_url(self.req.form.get('etype', '').lower())
-    
+
     def submited_message(self):
         return self.req._('element created')
-    
+
     def url(self):
         """return the url associated with this view"""
         return self.create_url(self.req.form.get('etype'))
@@ -405,21 +405,21 @@ class InlineFormMixIn(object):
     @cached
     def card(self, etype):
         return self.rschema.rproperty(self.parent_schema, etype, 'cardinality')[0]
-    
+
     def action_title(self, entity):
         return self.rschema.display_name(self.req, self.role)
-        
+
     def add_hidden_web_behaviour_params(self, entity):
         pass
-    
+
     def edit_form(self, entity, ptype, peid, rtype,
                   role='subject', **kwargs):
         self.rschema = self.schema.rschema(rtype)
-        self.role = role        
+        self.role = role
         self.parent_schema = self.schema.eschema(ptype)
         self.parent_eid = peid
         super(InlineFormMixIn, self).edit_form(entity, kwargs)
-    
+
     def should_inline_relation_form(self, entity, rschema, targettype, role):
         if rschema == self.rschema:
             return False
@@ -455,7 +455,7 @@ class InlineFormMixIn(object):
                      }
         ctx.update(local_ctx)
         return ctx
-    
+
 
 class CopyEditionForm(EditionForm):
     id = 'copy'
@@ -465,7 +465,7 @@ class CopyEditionForm(EditionForm):
         self.req.add_js(('cubicweb.ajax.js',))
         entity = self.complete_entity(row, col, skip_bytes=True)
         # make a copy of entity to avoid altering the entity in the
-        # request's cache. 
+        # request's cache.
         self.newentity = copy(entity)
         self.copying = self.newentity.eid
         self.newentity.eid = None
@@ -482,23 +482,23 @@ class CopyEditionForm(EditionForm):
     @property
     def formid(self):
         return 'edition'
-        
+
     def relations_form(self, entity, kwargs):
         return u''
 
     def reset_url(self, entity):
         return self.build_url('view', rql='Any X WHERE X eid %s' % self.copying)
-    
+
     def attributes_form(self, entity, kwargs, include_eid=True):
         # we don't want __clone_eid on inlined edited entities
         if entity.eid == self.newentity.eid:
             self._hiddens.append((eid_param('__cloned_eid', entity.eid), self.copying, ''))
         return EditionForm.attributes_form(self, entity, kwargs, include_eid)
-    
+
     def submited_message(self):
         return self.req._('element copied')
-       
-    
+
+
 class TableEditForm(FormMixIn, EntityView):
     id = 'muledit'
     title = _('multiple edit')
@@ -526,7 +526,7 @@ class TableEditForm(FormMixIn, EntityView):
       </td>
     </tr>
   </table>
-  </fieldset>    
+  </fieldset>
 </form>
 '''
 
@@ -535,7 +535,7 @@ class TableEditForm(FormMixIn, EntityView):
   %(error)s
   <div>%(widget)s</div>
 </td>'''
-    
+
     def call(self, **kwargs):
         """a view to edit multiple entities of the same type
         the first column should be the eid
@@ -560,13 +560,13 @@ class TableEditForm(FormMixIn, EntityView):
                'oktitle': _('validate modifications on selected items').capitalize(),
                'cancelvalue': _('button_reset').capitalize(),
                'canceltitle': _('revert changes').capitalize(),
-               }        
+               }
         self.w(self.EDITION_BODY % ctx)
-        
-        
+
+
     def reset_url(self, entity=None):
         self.build_url('view', rql=self.rset.printable_rql())
-        
+
     def edit_form(self, entity):
         html = []
         w = html.append

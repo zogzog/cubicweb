@@ -42,14 +42,14 @@ class EtagHTTPCacheManager(NoHTTPCacheManager):
 
     def etag(self):
         return self.view.id + '/' + ','.join(sorted(self.req.user.groups))
-    
+
     def max_age(self):
         # 0 to actually force revalidation
         return 0
-    
+
     def last_modified(self):
         return self.view.last_modified()
-    
+
     def set_headers(self):
         req = self.req
         try:
@@ -129,4 +129,4 @@ viewmod.View.cache_max_age = 0
 viewmod.EntityView.http_cache_manager = EntityHTTPCacheManager
 
 viewmod.StartupView.http_cache_manager = MaxAgeHTTPCacheManager
-viewmod.StartupView.cache_max_age = 60*60*2 # stay in http cache for 2 hours by default 
+viewmod.StartupView.cache_max_age = 60*60*2 # stay in http cache for 2 hours by default

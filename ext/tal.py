@@ -1,7 +1,7 @@
 """provides simpleTAL extensions for CubicWeb
 
 :organization: Logilab
-:copyright: 2001-2008 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+:copyright: 2001-2009 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 """
 
@@ -12,7 +12,7 @@ import re
 from os.path import exists, isdir, join
 from logging import getLogger
 from StringIO import StringIO
-        
+
 from simpletal import simpleTAL, simpleTALES
 
 from logilab.common.decorators import cached
@@ -23,7 +23,7 @@ LOGGER = getLogger('cubicweb.tal')
 class LoggerAdapter(object):
     def __init__(self, tal_logger):
         self.tal_logger = tal_logger
-        
+
     def debug(self, msg):
         LOGGER.debug(msg)
 
@@ -49,7 +49,7 @@ class CubicWebContext(simpleTALES.Context):
         simpleTALES.Context.addRepeat(self, name, var, initialValue)
 
 # XXX FIXME need to find a clean to define OPCODE values for extensions
-I18N_CONTENT = 18  
+I18N_CONTENT = 18
 I18N_REPLACE = 19
 RQL_EXECUTE  = 20
 # simpleTAL uses the OPCODE values to define priority over commands.
@@ -113,7 +113,7 @@ class CubicWebTemplateCompiler(simpleTAL.HTMLTemplateCompiler):
         """
         # Compile tal:attributes into attribute command
         # Argument: [(attributeName, expression)]
-        
+
         # Break up the list of attribute settings first
         commandArgs = []
         # We only want to match semi-colons that are not escaped
@@ -187,7 +187,7 @@ def compile_template(template):
 def compile_template_file(filepath):
     """compiles a TAL template file
     :type filepath: str
-    :param template: path of the file to compile 
+    :param template: path of the file to compile
     """
     fp = file(filepath)
     file_content = unicode(fp.read()) # template file should be pure ASCII
@@ -253,4 +253,3 @@ class talbased(object):
                 return compile_template_file(filepath)
         raise Exception('no such template %s' % self.filename)
     _compiled_template = cached(_compiled_template, 0)
-    

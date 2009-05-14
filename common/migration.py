@@ -2,7 +2,7 @@
 version
 
 :organization: Logilab
-:copyright: 2001-2008 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+:copyright: 2001-2009 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 """
 __docformat__ = "restructuredtext en"
@@ -125,10 +125,10 @@ class MigrationHelper(object):
 
     def repo_connect(self):
         return self.config.repository()
-        
+
     def migrate(self, vcconf, toupgrade, options):
         """upgrade the given set of cubes
-        
+
         `cubes` is an ordered list of 3-uple:
         (cube, fromversion, toversion)
         """
@@ -149,23 +149,23 @@ class MigrationHelper(object):
                                    'versions_map': vmap})
             self.scripts_session(scripts)
         else:
-            print 'no migration script to execute'            
+            print 'no migration script to execute'
 
     def shutdown(self):
         pass
-    
+
     def __getattribute__(self, name):
         try:
             return object.__getattribute__(self, name)
         except AttributeError:
             cmd = 'cmd_%s' % name
             if hasattr(self, cmd):
-                meth = getattr(self, cmd) 
+                meth = getattr(self, cmd)
                 return lambda *args, **kwargs: self.interact(args, kwargs,
                                                              meth=meth)
             raise
         raise AttributeError(name)
-            
+
     def interact(self, args, kwargs, meth):
         """execute the given method according to user's confirmation"""
         msg = 'execute command: %s(%s) ?' % (
@@ -224,7 +224,7 @@ class MigrationHelper(object):
         except ImportError:
             # readline not available
             pass
-        else:        
+        else:
             readline.set_completer(Completer(local_ctx).complete)
             readline.parse_and_bind('tab: complete')
             histfile = os.path.join(os.environ["HOME"], ".eshellhist")
@@ -256,7 +256,7 @@ type "exit" or Ctrl-D to quit the shell and resume operation"""
                 else:
                     context[attr[4:]] = getattr(self, attr)
         return context
-    
+
     def process_script(self, migrscript, funcname=None, *args, **kwargs):
         """execute a migration script
         in interactive mode,  display the migration script path, ask for
@@ -280,7 +280,7 @@ type "exit" or Ctrl-D to quit the shell and resume operation"""
                     self.critical('no %s in script %s', funcname, migrscript)
                     return None
                 return func(*args, **kwargs)
-                    
+
     def scripts_session(self, migrscripts):
         """execute some scripts in a transaction"""
         try:
@@ -311,7 +311,7 @@ type "exit" or Ctrl-D to quit the shell and resume operation"""
     def cmd_option_type_changed(self, optname, oldtype, newvalue):
         """a configuration option's type has changed"""
         self._option_changes.append(('typechanged', optname, oldtype, newvalue))
-        
+
     def cmd_add_cubes(self, cubes):
         """modify the list of used cubes in the in-memory config
         returns newly inserted cubes, including dependencies
@@ -319,7 +319,7 @@ type "exit" or Ctrl-D to quit the shell and resume operation"""
         if isinstance(cubes, basestring):
             cubes = (cubes,)
         origcubes = self.config.cubes()
-        newcubes = [p for p in self.config.expand_cubes(cubes) 
+        newcubes = [p for p in self.config.expand_cubes(cubes)
                        if not p in origcubes]
         if newcubes:
             for cube in cubes:
@@ -340,7 +340,7 @@ type "exit" or Ctrl-D to quit the shell and resume operation"""
         assert cube in removed, \
                "can't remove cube %s, used as a dependancy" % cube
         return removed
-    
+
     def rewrite_configuration(self):
         # import locally, show_diffs unavailable in gae environment
         from cubicweb.toolsutils import show_diffs

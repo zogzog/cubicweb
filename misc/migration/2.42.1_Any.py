@@ -15,4 +15,4 @@ if confirm('remove deprecated database constraints?'):
 if 'inline_view' in schema:
     # inline_view attribute should have been deleted for a while now....
     drop_attribute('CWRelation', 'inline_view')
-    
+

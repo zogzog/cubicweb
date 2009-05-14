@@ -22,7 +22,7 @@ class ComposityCopy(WebTest):
 
 class SomeView(AnyRsetView):
     id = 'someview'
-    
+
     def call(self):
         self.req.add_js('spam.js')
         self.req.add_js('spam.js')
@@ -34,7 +34,7 @@ class ManualWebTests(WebTest):
 
     def test_manual_tests(self):
         rset = self.execute('Any P,F,S WHERE P is CWUser, P firstname F, P surname S')
-        self.view('table', rset, template=None, displayfilter=True, displaycols=[0,2])        
+        self.view('table', rset, template=None, displayfilter=True, displaycols=[0,2])
 
     def test_sortable_js_added(self):
         rset = self.execute('CWUser X')
@@ -54,14 +54,13 @@ class ManualWebTests(WebTest):
 
 
 class ExplicitViewsTest(WebTest):
-    
+
     def test_unrelateddivs(self):
         rset = self.execute('Any X WHERE X is CWUser, X login "admin"')
         group = self.add_entity('CWGroup', name=u'R&D')
         req = self.request(relation='in_group_subject')
         self.view('unrelateddivs', rset, req)
-        
-        
+
 
 if __name__ == '__main__':
     from logilab.common.testlib import unittest_main

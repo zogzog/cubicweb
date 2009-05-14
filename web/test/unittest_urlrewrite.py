@@ -35,7 +35,7 @@ class UrlRewriteTC(TestCase):
             ('/doc/(.+?)/?$', dict(fid='\\1', vid='wdoc')),
             ('/changelog/?$', dict(vid='changelog')),
             # now in SchemaBasedRewriter
-            #('/search/(.+)$', dict(rql=r'Any X WHERE X has_text "\1"')), 
+            #('/search/(.+)$', dict(rql=r'Any X WHERE X has_text "\1"')),
             ])
 
 
@@ -94,8 +94,8 @@ class RgxActionRewriteTC(EnvBasedTC):
         pmid, rset = rewriter.rewrite(req, u'/DaLToN/JoE')
         self.assertEquals(len(rset), 1)
         self.assertEquals(rset[0][0], self.p1.eid)
-        
-    
+
+
 
 if __name__ == '__main__':
     unittest_main()

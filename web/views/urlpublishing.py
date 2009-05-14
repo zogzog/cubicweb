@@ -35,7 +35,7 @@ class PathDontMatch(Exception):
     """exception used by url evaluators to notify they can't evaluate
     a path
     """
-    
+
 class URLPublisherComponent(Component):
     """associate url's path to view identifier / rql queries,
     by applying a chain of urlpathevaluator components.
@@ -50,33 +50,33 @@ class URLPublisherComponent(Component):
     something else than `PathDontMatch` will stop the handlers chain.
     """
     id = 'urlpublisher'
-    
+
     def __init__(self, default_method='view'):
         super(URLPublisherComponent, self).__init__()
         self.default_method = default_method
-        evaluators = []        
+        evaluators = []
         for evaluatorcls in self.vreg.registry_objects('components',
                                                        'urlpathevaluator'):
             # instantiation needed
             evaluator = evaluatorcls(self)
             evaluators.append(evaluator)
         self.evaluators = sorted(evaluators, key=lambda x: x.priority)
-        
+
     def process(self, req, path):
         """given an url (essentialy caracterized by a path on the server,
         but additional information may be found in the request object), return
         a publishing method identifier (eg controller) and an optional result
         set
-        
+
         :type req: `cubicweb.web.Request`
         :param req: the request object
-        
+
         :type path: str
         :param path: the path of the resource to publish
 
         :rtype: tuple(str, `cubicweb.common.utils.ResultSet` or None)
         :return: the publishing method identifier and an optional result set
-        
+
         :raise NotFound: if no handler is able to decode the given path
         """
         parts = [part for part in path.split('/')
@@ -97,7 +97,7 @@ class URLPublisherComponent(Component):
             pmid = self.default_method
         return pmid, rset
 
-        
+
 class URLPathEvaluator(Component):
     __abstract__ = True
     id = 'urlpathevaluator'
@@ -136,7 +136,7 @@ class EidPathEvaluator(URLPathEvaluator):
             raise NotFound()
         return None, rset
 
-        
+
 class RestPathEvaluator(URLPathEvaluator):
     """handle path with the form::
 
@@ -149,7 +149,7 @@ class RestPathEvaluator(URLPathEvaluator):
         for etype in self.schema.entities():
             etype = str(etype)
             self.etype_map[etype.lower()] = etype
-            
+
     def evaluate_path(self, req, parts):
         if not (0 < len(parts) < 4):
             raise PathDontMatch()
@@ -177,7 +177,7 @@ class RestPathEvaluator(URLPathEvaluator):
 
     def cls_rset(self, req, cls):
         return req.execute(cls.fetch_rql(req.user))
-        
+
     def attr_rset(self, req, etype, attrname, value):
         rql = u'Any X WHERE X is %s, X %s %%(x)s' % (etype, attrname)
         if attrname == 'eid':
@@ -211,7 +211,7 @@ class URLRewriteEvaluator(URLPathEvaluator):
             except KeyError:
                 continue
         raise PathDontMatch()
-        
+
 
 class ActionPathEvaluator(URLPathEvaluator):
     """handle path with the form::

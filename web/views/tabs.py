@@ -164,7 +164,7 @@ class EntityRelationView(EntityView):
     """
     __select__ = EntityView.__select__ & partial_has_related_entities()
     vid = 'list'
-    
+
     def cell_call(self, row, col):
         rset = self.entity(row, col).related(self.rtype, role(self))
         self.w(u'<div class="mainInfo">')

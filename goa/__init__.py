@@ -17,7 +17,7 @@ except ImportError:
     pass
 else:
 
-    import os    
+    import os
     _SS = os.environ.get('SERVER_SOFTWARE')
     if _SS is None:
         MODE = 'test'
@@ -30,7 +30,7 @@ else:
     from cubicweb.goa.gaesource import GAESource
     SOURCE_TYPES['gae'] = GAESource
 
-    
+
     def do_monkey_patch():
 
         # monkey patch yams Bytes validator since it should take a bytes string with gae
@@ -56,16 +56,16 @@ else:
 
         # XXX monkey patch cubicweb.schema.CubicWebSchema to have string eid with
         #     optional cardinality (since eid is set after the validation)
-        
+
         import re
         from yams import buildobjs as ybo
-        
+
         def add_entity_type(self, edef):
             edef.name = edef.name.encode()
             assert re.match(r'[A-Z][A-Za-z0-9]*[a-z]+[0-9]*$', edef.name), repr(edef.name)
             eschema = super(CubicWebSchema, self).add_entity_type(edef)
             if not eschema.is_final():
-                # automatically add the eid relation to non final entity types 
+                # automatically add the eid relation to non final entity types
                 rdef = ybo.RelationDefinition(eschema.type, 'eid', 'Bytes',
                                               cardinality='?1', uid=True)
                 self.add_relation_def(rdef)
@@ -73,7 +73,7 @@ else:
                 self.add_relation_def(rdef)
             self._eid_index[eschema.eid] = eschema
             return eschema
-        
+
         from cubicweb.schema import CubicWebSchema
         CubicWebSchema.add_entity_type = add_entity_type
 
@@ -93,7 +93,7 @@ else:
             cubes = config['included-cubes'] + config['included-yams-cubes']
             return config.expand_cubes(cubes)
         repository.Repository.get_cubes = get_cubes
-        
+
         from rql import RQLHelper
         RQLHelper.simplify = lambda x, r: None
 

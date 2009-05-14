@@ -24,5 +24,3 @@ class ErrorOccured(StartupView):
         _ = self.req._
         self.w(u"<h1>%s</h1>" %
                _('an error occured, the request cannot be fulfilled'))
-    
-

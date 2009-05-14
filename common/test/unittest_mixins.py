@@ -8,7 +8,7 @@ class WorkfloableMixInTC(EnvBasedTC):
                      {'x': s.eid})
         es = self.user().wf_state('activated')
         self.assertEquals(es.state_of[0].name, 'CWUser')
-        
+
     def test_wf_transition(self):
         t = self.add_entity('Transition', name=u'deactivate')
         self.execute('SET X transition_of ET WHERE ET name "Bookmark", X eid %(x)s',
@@ -20,6 +20,6 @@ class WorkfloableMixInTC(EnvBasedTC):
         user = self.user()
         user.change_state(user.wf_state('deactivated').eid)
         self.assertEquals(user.state, 'deactivated')
-    
+
 if __name__ == '__main__':
     unittest_main()

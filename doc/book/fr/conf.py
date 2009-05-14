@@ -36,7 +36,7 @@ master_doc = 'index'
 
 # General substitutions.
 project = 'Cubicweb'
-copyright = '2008, Logilab'
+copyright = '2008-2009, Logilab'
 
 # The default replacements for |version| and |release|, also used in various
 # other places throughout the built documents.

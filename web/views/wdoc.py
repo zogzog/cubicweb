@@ -53,7 +53,7 @@ def get_insertion_point(section, index):
         node = index[section.attrib['appendto']]
         idx = None
     return node, idx
-                     
+
 def build_toc(config):
     alltocfiles = reversed(tuple(config.locate_all_files('toc.xml')))
     maintoc = parse(alltocfiles.next()).getroot()
@@ -61,7 +61,7 @@ def build_toc(config):
     index = {}
     build_toc_index(maintoc, index)
     # insert component documentation into the tree according to their toc.xml
-    # file 
+    # file
     for fpath in alltocfiles:
         toc = parse(fpath).getroot()
         for section in toc:
@@ -73,7 +73,7 @@ def build_toc(config):
             section.parent = node
             build_toc_index(section, index)
     return index
-    
+
 def title_for_lang(node, lang):
     for title in node.findall('title'):
         if title.attrib['{http://www.w3.org/XML/1998/namespace}lang'] == lang:
@@ -88,7 +88,7 @@ class InlineHelpView(StartupView):
     __select__ = match_form_params('fid')
     id = 'wdoc'
     title = _('site documentation')
-    
+
     def call(self):
         fid = self.req.form['fid']
         for lang in chain((self.req.lang, self.vreg.property_value('ui.language')),
@@ -107,7 +107,7 @@ class InlineHelpView(StartupView):
         else:
             self.navigation_links(node)
             self.w(u'<div class="hr"></div>')
-            self.w(u'<h1>%s</h1>' % (title_for_lang(node, self.req.lang)))            
+            self.w(u'<h1>%s</h1>' % (title_for_lang(node, self.req.lang)))
         data = open(join(resourcedir, rid)).read()
         self.w(rest_publish(self, data))
         if node is not None:
@@ -124,17 +124,17 @@ class InlineHelpView(StartupView):
         self.w(u'<div class="docnav">\n')
         previousidx = brothers.index(node) - 1
         if previousidx >= 0:
-            self.navsection(brothers[previousidx], 'prev')            
-        self.navsection(parent, 'up')            
+            self.navsection(brothers[previousidx], 'prev')
+        self.navsection(parent, 'up')
         nextidx = brothers.index(node) + 1
         if nextidx < len(brothers):
-            self.navsection(brothers[nextidx], 'next')            
+            self.navsection(brothers[nextidx], 'next')
         self.w(u'</div>\n')
 
     navinfo = {'prev': ('', 'data/previous.png', _('i18nprevnext_previous')),
                'next': ('', 'data/next.png', _('i18nprevnext_next')),
                'up': ('', 'data/up.png', _('i18nprevnext_up'))}
-               
+
     def navsection(self, node, navtype):
         htmlclass, imgpath, msgid = self.navinfo[navtype]
         self.w(u'<span class="%s">' % htmlclass)
@@ -143,7 +143,7 @@ class InlineHelpView(StartupView):
             self.req.build_url('doc/'+node.attrib['resource']),
             title_for_lang(node, self.req.lang)))
         self.w(u'</span>\n')
-        
+
     def subsections_links(self, node, first=True):
         sub = subsections(node)
         if not sub:
@@ -158,7 +158,7 @@ class InlineHelpView(StartupView):
             self.subsections_links(child, False)
             self.w(u'</li>')
         self.w(u'</ul>\n')
-        
+
 
 
 class InlineHelpImageView(StartupView):
@@ -167,7 +167,7 @@ class InlineHelpImageView(StartupView):
     binary = True
     templatable = False
     content_type = 'image/png'
-    
+
     def call(self):
         fid = self.req.form['fid']
         for lang in chain((self.req.lang, self.vreg.property_value('ui.language')),
@@ -185,7 +185,7 @@ class ChangeLogView(StartupView):
     id = 'changelog'
     title = _('What\'s new?')
     maxentries = 25
-    
+
     def call(self):
         rid = 'ChangeLog_%s' % (self.req.lang)
         allentries = []
@@ -234,4 +234,3 @@ class ChangeLogView(StartupView):
                     break
         w('') # blank line
         self.w(rest_publish(self, '\n'.join(restdata)))
-        

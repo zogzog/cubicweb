@@ -29,7 +29,7 @@ class ExternalTemplate(basetemplates.TheMainTemplate):
     """template embeding an external web pages into CubicWeb web interface
     """
     id = 'external'
-    
+
     def call(self, body):
         # XXX fallback to HTML 4 mode when embeding ?
         self.set_request_content_type()
@@ -92,12 +92,12 @@ class EmbedAction(Action):
     """
     id = 'embed'
     __select__ = (one_line_rset() & match_search_state('normal')
-                  & implements(IEmbedable) 
+                  & implements(IEmbedable)
                   & score_entity(entity_has_embedable_url))
-    
+
     title = _('embed')
     controller = 'embed'
-    
+
     def url(self, row=0):
         entity = self.rset.get_entity(row, 0)
         url = urljoin(self.req.base_url(), entity.embeded_url())
@@ -119,7 +119,7 @@ class replace_href:
     def __init__(self, prefix, custom_css=None):
         self.prefix = prefix
         self.custom_css = custom_css
-        
+
     def __call__(self, match):
         original_url = match.group(1)
         url = self.prefix + urlquote(original_url, safe='')
@@ -136,7 +136,7 @@ class absolutize_links:
         self.embedded_url = embedded_url
         self.tag = tag
         self.custom_css = custom_css
-    
+
     def __call__(self, match):
         original_url = match.group(1)
         if '://' in original_url:

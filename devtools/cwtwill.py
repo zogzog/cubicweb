@@ -1,4 +1,9 @@
-"""cubicweb extensions for twill"""
+"""cubicweb extensions for twill
+
+:organization: Logilab
+:copyright: 2001-2009 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+:contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
+"""
 
 import re
 from urllib import quote
@@ -24,9 +29,9 @@ def has_link(text, url=''):
                 # if url is specified linkurl must match
                 if url and linkurl != url:
                     continue
-                return        
+                return
     raise AssertionError('link %s (%s) not found' % (text, url))
-        
+
 
 def view(rql, vid=''):
     """
@@ -56,7 +61,7 @@ def edit(rql):
     twc.go('view?rql=%s&vid=edition' % quote(rql))
 
 
-        
+
 
 def setvalue(formname, fieldname, value):
     """
@@ -104,5 +109,5 @@ def submitform(formname, submit_button=None):
     browser._browser.form = form
     browser.submit(submit_button)
 
-    
+
 # missing actions: delete, copy, changeview
