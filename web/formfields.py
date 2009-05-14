@@ -473,9 +473,10 @@ def guess_field(eschema, rschema, role='subject', skip_meta_attr=True, **kwargs)
                     if card in '?1':
                         kwargs['widget'].attrs.setdefault('size', 1)
                 if isinstance(cstr, SizeConstraint) and cstr.max is not None:
-                    if cstr.max > 257:
-                        kwargs.setdefault('widget', TextArea)
+                    if cstr.max < 257:
+                        kwargs.setdefault('widget', TextInput())
                     kwargs['max_length'] = cstr.max
+            kwargs.setdefault('widget', TextArea())
             return StringField(**kwargs)
         if fieldclass is FileField:
             for metadata in ('format', 'encoding'):
