@@ -72,7 +72,7 @@ from cubicweb.web import formwidgets
 # primary view configuration ##################################################
 
 def dual_role(role):
-    return 'object' if role == 'subject' else 'subject'
+    return role == 'subject' and 'object' or 'subject'
 
 def card_from_role(card, role):
     if role == 'subject':
