@@ -33,7 +33,7 @@ class SecurityViewMixIn(object):
             _("permission"), _('granted to groups'), _('rql expressions')))
         for access_type in access_types:
             w(u'<tr>')
-            w(u'<td>%s</td>' % _('%s_perm' % access_type))
+            w(u'<td>%s</td>' % self.req.__('%s_perm' % access_type))
             groups = eschema.get_groups(access_type)
             l = []
             groups = [(_(group), group) for group in groups]
