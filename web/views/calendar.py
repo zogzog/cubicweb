@@ -164,13 +164,15 @@ class OneMonthCal(EntityView):
             else:
                 user = None
             the_dates = []
-            tstart = todate(task.start)
+            tstart = task.start
             if tstart:
+                tstart = todate(task.start)
                 if tstart > lastday:
                     continue
                 the_dates = [tstart]
-            tstop = todate(task.start)
+            tstop = task.stop
             if tstop:
+                tstop = todate(tstop)
                 if tstop < firstday:
                     continue
                 the_dates = [tstop]
@@ -348,13 +350,15 @@ class OneWeekCal(EntityView):
                 continue
             done_tasks.append(task)
             the_dates = []
-            tstart = todate(task.start)
-            tstop = todate(task.stop)
+            tstart = task.start
+            tstop = task.stop
             if tstart:
+                tstart = todate(tstart)
                 if tstart > lastday:
                     continue
                 the_dates = [tstart]
             if tstop:
+                tstop = todate(tstop)
                 if tstop < firstday:
                     continue
                 the_dates = [tstop]
