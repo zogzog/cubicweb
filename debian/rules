@@ -41,6 +41,7 @@ install: build $(basename $(wildcard debian/*.in))
 	dh_install -vi
 	# cwctl in the cubicweb-ctl package
 	rm -f debian/cubicweb-common/usr/share/pyshared/cubicweb/cwctl.py
+	rm -f debian/cubicweb-common/usr/share/pyshared/cubicweb/hercule.py
 
 	dh_lintian
 
