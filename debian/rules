@@ -39,6 +39,9 @@ install: build $(basename $(wildcard debian/*.in))
 	# Put all the python library and data in cubicweb-common
 	# and scripts in cubicweb-server
 	dh_install -vi
+	# cwctl in the cubicweb-ctl package
+	rm -f debian/cubicweb-common/usr/lib/${PY_VERSION}/site-packages/cubicweb/cwctl.py
+
 	dh_lintian
 
 	# Remove unittests directory (should be available in cubicweb-dev only)
