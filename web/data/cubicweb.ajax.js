@@ -317,6 +317,18 @@ function replacePageChunk(nodeId, rql, vid, extraparams, /* ... */ swap, callbac
     }
 }
 
+/*
+ * fetches `url` and replaces `nodeid`'s content with the result
+ * @param replacemode how the replacement should be done (default is 'replace')
+ *  Possible values are :
+ *    - 'replace' to replace the node's content with the generated HTML
+ *    - 'swap' to replace the node itself with the generated HTML
+ *    - 'append' to append the generated HTML to the node's content
+ */
+function loadxhtml(nodeid, url, /* ... */ replacemode) {
+    jQuery('#' + nodeid).loadxhtml(url, null, 'post', replacemode);
+}
+
 /* XXX: this function should go in edition.js but as for now, htmlReplace
  * references it.
  *

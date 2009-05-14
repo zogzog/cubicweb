@@ -262,10 +262,12 @@ class OneMonthCal(EntityView):
         prevdate = curdate - timedelta(31)
         nextdate = curdate + timedelta(31)
         rql = self.rset.printable_rql()
-        prevlink = ajax_replace_url('onemonthcalid', rql, 'onemonthcal',
-                                    year=prevdate.year, month=prevdate.month)
-        nextlink = ajax_replace_url('onemonthcalid', rql, 'onemonthcal',
-                                    year=nextdate.year, month=nextdate.month)
+        prevlink = self.req.build_ajax_replace_url('onemonthcalid', rql, 'onemonthcal',
+                                                   year=prevdate.year,
+                                                   month=prevdate.month)
+        nextlink = self.req.build_ajax_replace_url('onemonthcalid', rql, 'onemonthcal',
+                                                   year=nextdate.year,
+                                                   month=nextdate.month)
         return prevlink, nextlink
 
     def _build_calendar_cell(self, celldate, rows, curdate):
@@ -517,9 +519,11 @@ class OneWeekCal(EntityView):
         prevdate = curdate - timedelta(7)
         nextdate = curdate + timedelta(7)
         rql = self.rset.printable_rql()
-        prevlink = ajax_replace_url('oneweekcalid', rql, 'oneweekcal',
-                                    year=prevdate.year, week=prevdate.isocalendar()[1])
-        nextlink = ajax_replace_url('oneweekcalid', rql, 'oneweekcal',
-                                    year=nextdate.year, week=nextdate.isocalendar()[1])
+        prevlink = self.req.build_ajax_replace_url('oneweekcalid', rql, 'oneweekcal',
+                                                   year=prevdate.year,
+                                                   week=prevdate.isocalendar()[1])
+        nextlink = self.req.build_ajax_replace_url('oneweekcalid', rql, 'oneweekcal',
+                                                   year=nextdate.year,
+                                                   week=nextdate.isocalendar()[1])
         return prevlink, nextlink
 
