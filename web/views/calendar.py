@@ -11,7 +11,7 @@ from logilab.mtconverter import html_escape
 
 from cubicweb.interfaces import ICalendarable
 from cubicweb.selectors import implements
-from cubicweb.utils import strptime, date_range, todate
+from cubicweb.utils import strptime, date_range, todate, todatetime
 from cubicweb.view import EntityView
 from cubicweb.web import ajax_replace_url
 
@@ -116,7 +116,7 @@ class _TaskEntry(object):
 
     def in_working_hours(self):
         """predicate returning True is the task is in working hours"""
-        if self.task.start.hour > 7 and self.task.stop.hour < 20:
+        if todatetime(self.task.start).hour > 7 and todatetime(self.task.stop).hour < 20:
             return True
         return False
 
