@@ -43,7 +43,7 @@ def compare_steps(self, step, expected):
                               'expected %s queries, got %s' % (len(equeries), len(queries)))
             for i, (rql, sol) in enumerate(queries):
                 self.assertEquals(rql, equeries[i][0])
-                self.assertEquals(sol, equeries[i][1])
+                self.assertEquals(sorted(sol), sorted(equeries[i][1]))
             idx = 2
         else:
             idx = 1
@@ -103,7 +103,7 @@ from cubicweb.server.sources.rql2sql import remove_unused_solutions
 
 class RQLGeneratorTC(TestCase):
     schema = None # set this in concret test
-    
+
     def setUp(self):
         self.rqlhelper = RQLHelper(self.schema, special_relations={'eid': 'uid',
                                                                    'has_text': 'fti'})
@@ -114,7 +114,7 @@ class RQLGeneratorTC(TestCase):
     def tearDown(self):
         ExecutionPlan._check_permissions = _orig_check_permissions
         rqlannotation._select_principal = _orig_select_principal
-        
+
     def _prepare(self, rql):
         #print '******************** prepare', rql
         union = self.rqlhelper.parse(rql)
@@ -133,7 +133,7 @@ class RQLGeneratorTC(TestCase):
 
 class BaseQuerierTC(TestCase):
     repo = None # set this in concret test
-    
+
     def setUp(self):
         self.o = self.repo.querier
         self.session = self.repo._sessions.values()[0]
@@ -148,7 +148,7 @@ class BaseQuerierTC(TestCase):
         return self.session.unsafe_execute('Any MAX(X)')[0][0]
     def cleanup(self):
         self.session.unsafe_execute('DELETE Any X WHERE X eid > %s' % self.maxeid)
-        
+
     def tearDown(self):
         undo_monkey_patch()
         self.session.rollback()
@@ -159,7 +159,7 @@ class BaseQuerierTC(TestCase):
 
     def set_debug(self, debug):
         set_debug(debug)
-        
+
     def _rqlhelper(self):
         rqlhelper = self.o._rqlhelper
         # reset uid_func so it don't try to get type from eids
@@ -175,8 +175,8 @@ class BaseQuerierTC(TestCase):
         for select in rqlst.children:
             select.solutions.sort()
         return self.o.plan_factory(rqlst, kwargs, self.session)
-        
-    def _prepare(self, rql, kwargs=None):    
+
+    def _prepare(self, rql, kwargs=None):
         plan = self._prepare_plan(rql, kwargs)
         plan.preprocess(plan.rqlst)
         rqlst = plan.rqlst.children[0]
@@ -195,10 +195,10 @@ class BaseQuerierTC(TestCase):
 
     def execute(self, rql, args=None, eid_key=None, build_descr=True):
         return self.o.execute(self.session, rql, args, eid_key, build_descr)
-    
+
     def commit(self):
         self.session.commit()
-        self.session.set_pool()        
+        self.session.set_pool()
 
 
 class BasePlannerTC(BaseQuerierTC):
@@ -228,10 +228,10 @@ def _build_variantes(self, newsolutions):
     variantes = _orig_build_variantes(self, newsolutions)
     sortedvariantes = []
     for variante in variantes:
-        orderedkeys = sorted((k[1], k[2], v) for k,v in variante.iteritems())
+        orderedkeys = sorted((k[1], k[2], v) for k, v in variante.iteritems())
         variante = DumbOrderedDict(sorted(variante.iteritems(),
-                                          lambda a,b: cmp((a[0][1],a[0][2],a[1]),
-                                                          (b[0][1],b[0][2],b[1]))))
+                                          lambda a, b: cmp((a[0][1],a[0][2],a[1]),
+                                                           (b[0][1],b[0][2],b[1]))))
         sortedvariantes.append( (orderedkeys, variante) )
     return [v for ok, v in sorted(sortedvariantes)]
 
@@ -241,7 +241,7 @@ _orig_init_temp_table = ExecutionPlan.init_temp_table
 
 def _check_permissions(*args, **kwargs):
     res, restricted = _orig_check_permissions(*args, **kwargs)
-    res = DumbOrderedDict(sorted(res.iteritems(), lambda a,b: cmp(a[1], b[1])))
+    res = DumbOrderedDict(sorted(res.iteritems(), lambda a, b: cmp(a[1], b[1])))
     return res, restricted
 
 def _dummy_check_permissions(self, rqlst):
@@ -267,10 +267,10 @@ try:
     from cubicweb.server.msplanner import PartPlanInformation
 except ImportError:
     class PartPlanInformation(object):
-        def merge_input_maps(*args):
+        def merge_input_maps(self, *args):
             pass
         def _choose_term(self, sourceterms):
-            pass    
+            pass
 _orig_merge_input_maps = PartPlanInformation.merge_input_maps
 _orig_choose_term = PartPlanInformation._choose_term
 
@@ -309,4 +309,3 @@ def undo_monkey_patch():
     ExecutionPlan.init_temp_table = _orig_init_temp_table
     PartPlanInformation.merge_input_maps = _orig_merge_input_maps
     PartPlanInformation._choose_term = _orig_choose_term
-

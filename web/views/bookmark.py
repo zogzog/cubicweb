@@ -1,7 +1,7 @@
 """Primary view for bookmarks + user's bookmarks box
 
 :organization: Logilab
-:copyright: 2001-2008 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+:copyright: 2001-2009 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 """
 __docformat__ = "restructuredtext en"
@@ -9,14 +9,26 @@ __docformat__ = "restructuredtext en"
 from logilab.mtconverter import html_escape
 
 from cubicweb import Unauthorized
+from cubicweb.selectors import implements
 from cubicweb.web.htmlwidgets import BoxWidget, BoxMenu, RawBoxItem
-from cubicweb.web.box import UserRQLBoxTemplate
-from cubicweb.web.views.baseviews import PrimaryView
+from cubicweb.web import action, box
+from cubicweb.web.views import primary
 
 
-class BookmarkPrimaryView(PrimaryView):
-    accepts = ('Bookmark',)
-        
+class FollowAction(action.Action):
+    id = 'follow'
+    __select__ = implements('Bookmark')
+
+    title = _('follow')
+    category = 'mainactions'
+
+    def url(self):
+        return self.rset.get_entity(self.row or 0, self.col or 0).actual_url()
+
+
+class BookmarkPrimaryView(primary.PrimaryView):
+    __select__ = implements('Bookmark')
+
     def cell_call(self, row, col):
         """the primary view for bookmark entity"""
         entity = self.complete_entity(row, col)
@@ -32,7 +44,7 @@ class BookmarkPrimaryView(PrimaryView):
         self.w(u'</div>')
 
 
-class BookmarksBox(UserRQLBoxTemplate):
+class BookmarksBox(box.UserRQLBoxTemplate):
     """display a box containing all user's bookmarks"""
     id = 'bookmarks_box'
     order = 40
@@ -42,8 +54,8 @@ class BookmarksBox(UserRQLBoxTemplate):
            'U eid %(x)s')
     etype = 'Bookmark'
     rtype = 'bookmarked_by'
-    
-    
+
+
     def call(self, **kwargs):
         req = self.req
         ueid = req.user.eid

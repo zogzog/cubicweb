@@ -2,7 +2,7 @@
 
 * the rql repository has a limited number of connections pools, each of them
   dealing with a set of connections on each source used by the repository
-  
+
 * operation may be registered by hooks during a transaction, which will  be
   fired when the pool is commited or rollbacked
 
@@ -11,13 +11,13 @@ for operation.
 
 
 :organization: Logilab
-:copyright: 2001-2008 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+:copyright: 2001-2009 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 """
 __docformat__ = "restructuredtext en"
 
 import sys
-    
+
 class ConnectionsPool(object):
     """handle connections on a set of sources, at some point associated to a
     user session
@@ -40,7 +40,7 @@ class ConnectionsPool(object):
         for source, cnx in self.source_cnxs.values():
             # let exception propagates
             cnx.commit()
-        
+
     def rollback(self):
         """rollback the current transaction for this user"""
         for source, cnx in self.source_cnxs.values():
@@ -64,7 +64,7 @@ class ConnectionsPool(object):
                 cnx.close()
             except:
                 continue
-            
+
     # internals ###############################################################
 
     def pool_set(self, session):
@@ -75,7 +75,7 @@ class ConnectionsPool(object):
         """pool is being reseted"""
         for source, cnx in self.source_cnxs.values():
             source.pool_reset(cnx)
-        
+
     def __getitem__(self, uri):
         """subscription notation provide access to sources'cursors"""
         try:
@@ -86,7 +86,7 @@ class ConnectionsPool(object):
                 # None possible on sources without cursor support such as ldap
                 self._cursors[uri] = cursor
         return cursor
-    
+
     def sources(self):
         """return the source objects handled by this pool"""
         # implementation details of flying insert requires the system source
@@ -97,11 +97,11 @@ class ConnectionsPool(object):
                 continue
             yield source
         #return [source_cnx[0] for source_cnx in self.source_cnxs.values()]
-    
+
     def source(self, uid):
         """return the source object with the given uri"""
         return self.source_cnxs[uid][0]
-    
+
     def connection(self, uid):
         """return the connection on the source object with the given uri"""
         return self.source_cnxs[uid][1]
@@ -109,7 +109,7 @@ class ConnectionsPool(object):
     def reconnect(self, source):
         """reopen a connection for this source"""
         source.info('trying to reconnect')
-        self.source_cnxs[source.uri] = (source, source.get_connection())        
+        self.source_cnxs[source.uri] = (source, source.get_connection())
         del self._cursors[source.uri]
 
     def check_connections(self):
@@ -133,11 +133,11 @@ class Operation(object):
       do any heavy computation or raise an exception if the commit can't go.
       You can add some new operation during this phase but their precommit
       event won't be triggered
-      
+
     commit:
       the pool is preparing to commit. You should avoid to do to expensive
       stuff or something that may cause an exception in this event
-      
+
     revertcommit:
       if an operation failed while commited, this event is triggered for
       all operations which had their commit event already to let them
@@ -153,7 +153,7 @@ class Operation(object):
     order of operations may be important, and is controlled according to:
     * operation's class
     """
-    
+
     def __init__(self, session, **kwargs):
         self.session = session
         self.user = session.user
@@ -165,10 +165,10 @@ class Operation(object):
         # execution information
         self.processed = None # 'precommit', 'commit'
         self.failed = False
-        
+
     def register(self, session):
         session.add_operation(self, self.insert_index())
-        
+
     def insert_index(self):
         """return the index of  the lastest instance which is not a
         LateOperation instance
@@ -177,17 +177,17 @@ class Operation(object):
             if isinstance(op, (LateOperation, SingleLastOperation)):
                 return i
         return None
-    
+
     def handle_event(self, event):
         """delegate event handling to the opertaion"""
         getattr(self, event)()
 
     def precommit_event(self):
         """the observed connections pool is preparing a commit"""
-    
+
     def revertprecommit_event(self):
         """an error went when pre-commiting this operation or a later one
-        
+
         should revert pre-commit's changes but take care, they may have not
         been all considered if it's this operation which failed
         """
@@ -195,17 +195,17 @@ class Operation(object):
     def commit_event(self):
         """the observed connections pool is commiting"""
         raise NotImplementedError()
-    
+
     def revertcommit_event(self):
         """an error went when commiting this operation or a later one
-        
+
         should revert commit's changes but take care, they may have not
         been all considered if it's this operation which failed
         """
-    
+
     def rollback_event(self):
         """the observed connections pool has been rollbacked
-        
+
         do nothing by default, the operation will just be removed from the pool
         operation list
         """
@@ -226,7 +226,7 @@ class PreCommitOperation(Operation):
 class LateOperation(Operation):
     """special operation which should be called after all possible (ie non late)
     operations
-    """    
+    """
     def insert_index(self):
         """return the index of  the lastest instance which is not a
         SingleLastOperation instance
@@ -238,7 +238,7 @@ class LateOperation(Operation):
 
 
 class SingleOperation(Operation):
-    """special operation which should be called once"""    
+    """special operation which should be called once"""
     def register(self, session):
         """override register to handle cases where this operation has already
         been added
@@ -251,7 +251,7 @@ class SingleOperation(Operation):
             equivalent = None
         session.add_operation(self, self.insert_index())
         return equivalent
-    
+
     def equivalent_index(self, operations):
         """return the index of the equivalent operation if any"""
         equivalents = [i for i, op in enumerate(operations)
@@ -264,7 +264,7 @@ class SingleOperation(Operation):
 class SingleLastOperation(SingleOperation):
     """special operation which should be called once and after all other
     operations
-    """    
+    """
     def insert_index(self):
         return None
 

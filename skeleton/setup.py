@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # pylint: disable-msg=W0404,W0622,W0704,W0613,W0152
-# Copyright (c) 2003-2004 LOGILAB S.A. (Paris, FRANCE).
+# Copyright (c) 2003-2009 LOGILAB S.A. (Paris, FRANCE).
 # http://www.logilab.fr/ -- mailto:contact@logilab.fr
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -45,6 +45,6 @@ def install(**kwargs):
                  url=web,
                  data_files=data_files,
                  **kwargs)
-            
+
 if __name__ == '__main__' :
     install()

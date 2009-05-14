@@ -2,15 +2,15 @@
 
 
 :organization: Logilab
-:copyright: 2001-2008 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+:copyright: 2001-2009 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 """
 __docformat__ = "restructuredtext en"
 
-from mx.DateTime import DateTimeFromTicks, now, gmtime
+from datetime import datetime
 
 # time delta usable to convert localized time to GMT time
-GMTOFFSET = - (now() - gmtime())
+GMTOFFSET = - (datetime.now() - datetime.utcnow())
 
 class NoHTTPCacheManager(object):
     """default cache manager: set no-cache cache control policy"""
@@ -42,14 +42,14 @@ class EtagHTTPCacheManager(NoHTTPCacheManager):
 
     def etag(self):
         return self.view.id + '/' + ','.join(sorted(self.req.user.groups))
-    
+
     def max_age(self):
         # 0 to actually force revalidation
         return 0
-    
+
     def last_modified(self):
         return self.view.last_modified()
-    
+
     def set_headers(self):
         req = self.req
         try:
@@ -92,11 +92,11 @@ __all__ = ('GMTOFFSET',
 # monkey patching, so view doesn't depends on this module and we have all
 # http cache related logic here
 
-from cubicweb.common import view
+from cubicweb import view as viewmod
 
 def set_http_cache_headers(self):
     self.http_cache_manager(self).set_headers()
-view.View.set_http_cache_headers = set_http_cache_headers
+viewmod.View.set_http_cache_headers = set_http_cache_headers
 
 def last_modified(self):
     """return the date/time where this view should be considered as
@@ -105,11 +105,12 @@ def last_modified(self):
     /!\ must return GMT time /!\
     """
     # XXX check view module's file modification time in dev mod ?
-    ctime = gmtime()
+    ctime = datetime.utcnow()
     if self.cache_max_age:
         mtime = self.req.header_if_modified_since()
         if mtime:
-            if (ctime - mtime).seconds > self.cache_max_age:
+            tdelta = (ctime - mtime)
+            if tdelta.days * 24*60*60 + tdelta.seconds > self.cache_max_age:
                 mtime = ctime
         else:
             mtime = ctime
@@ -117,15 +118,15 @@ def last_modified(self):
         mtime = ctime
     # mtime = ctime will force page rerendering
     return mtime
-view.View.last_modified = last_modified
+viewmod.View.last_modified = last_modified
 
 # configure default caching
-view.View.http_cache_manager = NoHTTPCacheManager
+viewmod.View.http_cache_manager = NoHTTPCacheManager
 # max-age=0 to actually force revalidation when needed
-view.View.cache_max_age = 0
+viewmod.View.cache_max_age = 0
 
 
-view.EntityView.http_cache_manager = EntityHTTPCacheManager
+viewmod.EntityView.http_cache_manager = EntityHTTPCacheManager
 
-view.StartupView.http_cache_manager = MaxAgeHTTPCacheManager
-view.StartupView.cache_max_age = 60*60*2 # stay in http cache for 2 hours by default 
+viewmod.StartupView.http_cache_manager = MaxAgeHTTPCacheManager
+viewmod.StartupView.cache_max_age = 60*60*2 # stay in http cache for 2 hours by default

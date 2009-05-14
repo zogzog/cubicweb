@@ -2,7 +2,7 @@
 restoration).
 
 :organization: Logilab
-:copyright: 2008 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+:copyright: 2008-2009 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 """
 __docformat__ = "restructuredtext en"
@@ -13,6 +13,7 @@ from pickle import loads, dumps
 from logilab.common.decorators import cached
 from logilab.mtconverter import html_escape
 
+from cubicweb.selectors import none_rset, match_user_groups
 from cubicweb.common.view import StartupView
 from cubicweb.web import Redirect
 from cubicweb.goa.dbinit import fix_entities, init_persistent_schema, insert_versions
@@ -39,7 +40,7 @@ class AuthInfo(StartupView):
     which are doing datastore administration requests
     """
     id = 'authinfo'
-    require_groups = ('managers',)
+    __select__ = none_rset() & match_user_groups('managers')
 
     def call(self):
         cookie = self.req.get_cookie()
@@ -53,15 +54,15 @@ class AuthInfo(StartupView):
         values.append('__session=%s' % cookie['__session'].value)
         self.w(u"<p>pass this flag to the client: --cookie='%s'</p>"
                % html_escape('; '.join(values)))
-        
-        
+
+
 
 class ContentInit(StartupView):
     """special management view to initialize content of a repository,
     step by step to avoid depassing quotas
     """
     id = 'contentinit'
-    require_groups = ('managers',)
+    __select__ = none_rset() & match_user_groups('managers')
 
     def server_session(self):
         ssession = self.config.repo_session(self.req.cnx.sessionid)
@@ -73,7 +74,7 @@ class ContentInit(StartupView):
         status['stepid'] = stepid
         Put(status)
         self.msg(msg)
-        
+
     def call(self):
         status = _get_status('creation')
         if status.get('finished'):
@@ -148,7 +149,7 @@ class ContentInit(StartupView):
                        '<b>delete all datastore content</b> so process can be '
                        'reinitialized</div>' % html_escape(self.req.base_url()))
         Put(status)
-        
+
     @property
     @cached
     def _migrhandler(self):
@@ -163,12 +164,12 @@ class ContentInit(StartupView):
     def continue_link(self):
         self.w(u'<a href="%s">continue</a><br/>' % html_escape(self.req.url()))
 
-        
+
 class ContentClear(StartupView):
     id = 'contentclear'
-    require_groups = ('managers',)
-    skip_etypes = ('EGroup', 'EUser')
-    
+    __select__ = none_rset() & match_user_groups('managers')
+    skip_etypes = ('CWGroup', 'CWUser')
+
     def call(self):
         # XXX should use unsafe_execute with all hooks deactivated
         # XXX step by catching datastore errors?

@@ -1,7 +1,7 @@
 """Pyro RQL server
 
 :organization: Logilab
-:copyright: 2001-2008 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+:copyright: 2001-2009 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 """
 __docformat__ = "restructuredtext en"
@@ -22,7 +22,7 @@ class TimeEvent:
     """base event"""
     # timefunc = staticmethod(localtime)
     timefunc = localtime
-    
+
     def __init__(self, absolute=None, period=None):
         # local time tuple
         if absolute is None:
@@ -57,10 +57,10 @@ class QuitEvent(TimeEvent):
     def fire(self, server):
         server.repo.shutdown()
         server.quiting = True
-        
+
 
 class RepositoryServer(object):
-    
+
     def __init__(self, config, debug=False):
         """make the repository available as a PyRO object"""
         self.config = config
@@ -86,7 +86,7 @@ class RepositoryServer(object):
                     event.update()
                 except Finished:
                     self.events.remove(event)
-            
+
     def run(self, req_timeout=5.0):
         """enter the service loop"""
         while self.quiting is None:
@@ -95,7 +95,7 @@ class RepositoryServer(object):
             except select.error:
                 continue
             self.trigger_events()
-    
+
     def quit(self):
         """stop the server"""
         self.add_event(QuitEvent())
@@ -105,16 +105,16 @@ class RepositoryServer(object):
         necessary
         """
         self.daemon = self.repo.pyro_register(host)
-            
+
     # server utilitities ######################################################
-    
+
     def install_sig_handlers(self):
         """install signal handlers"""
         import signal
         self.info('installing signal handlers')
         signal.signal(signal.SIGINT, lambda x, y, s=self: s.quit())
         signal.signal(signal.SIGTERM, lambda x, y, s=self: s.quit())
-        
+
     def daemonize(self, pid_file=None):
         """daemonize the process"""
         # fork so the parent can exist

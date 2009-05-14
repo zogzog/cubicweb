@@ -9,10 +9,10 @@ Vous pouvez bien entendu étendre ces schémas au besoin.
 Schémas "systèmes"
 ``````````````````
 
-* `EUser`, utilisateurs du système
-* `EGroup`, groupes d'utilisateurs
-* `EEType`, types d'entité
-* `ERType`, types de relation
+* `CWUser`, utilisateurs du système
+* `CWGroup`, groupes d'utilisateurs
+* `CWEType`, types d'entité
+* `CWRType`, types de relation
 
 * `State`, état d'un workflow
 * `Transition`, transition d'un workflow
@@ -21,8 +21,8 @@ Schémas "systèmes"
 * `EmailAddress`, adresse électronique, utilisé par le système de notification
   pour les utilisateurs et par d'autres schéma optionnels
 
-* `EProperty`, utilisé pour configurer l'application
-* `EPermission`, utilisé pour configurer la sécurité de l'application
+* `CWProperty`, utilisé pour configurer l'application
+* `CWPermission`, utilisé pour configurer la sécurité de l'application
 
 * `Card`, fiche documentaire générique
 * `Bookmark`, un type d'entité utilisé pour permetter à un utilisateur de

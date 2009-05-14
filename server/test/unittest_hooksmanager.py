@@ -16,7 +16,7 @@ schema = config.load_schema()
 class HooksManagerTC(TestCase):
     args = (None,)
     kwargs = {'a': 1}
-    
+
     def setUp(self):
         """ called before each test from this class """
         self.o = HooksManager(schema)
@@ -25,29 +25,29 @@ class HooksManagerTC(TestCase):
         self.assertRaises(AssertionError,
                           self.o.register_hook, self._hook, 'before_add_entiti')
         self.assertRaises(AssertionError,
-                          self.o.register_hook, self._hook, 'session_login', 'EEType')
+                          self.o.register_hook, self._hook, 'session_login', 'CWEType')
         self.assertRaises(AssertionError,
-                          self.o.register_hook, self._hook, 'session_logout', 'EEType')
+                          self.o.register_hook, self._hook, 'session_logout', 'CWEType')
         self.assertRaises(AssertionError,
-                          self.o.register_hook, self._hook, 'server_startup', 'EEType')
+                          self.o.register_hook, self._hook, 'server_startup', 'CWEType')
         self.assertRaises(AssertionError,
-                          self.o.register_hook, self._hook, 'server_shutdown', 'EEType')
-        
+                          self.o.register_hook, self._hook, 'server_shutdown', 'CWEType')
+
     def test_register_hook1(self):
         self.o.register_hook(self._hook, 'before_add_entity')
         self.o.register_hook(self._hook, 'before_delete_entity', 'Personne')
         self._test_called_hooks()
-        
+
     def test_register_hook2(self):
         self.o.register_hook(self._hook, 'before_add_entity', '')
         self.o.register_hook(self._hook, 'before_delete_entity', 'Personne')
         self._test_called_hooks()
-        
+
     def test_register_hook3(self):
         self.o.register_hook(self._hook, 'before_add_entity', None)
         self.o.register_hook(self._hook, 'before_delete_entity', 'Personne')
         self._test_called_hooks()
-        
+
     def test_register_hooks(self):
         self.o.register_hooks({'before_add_entity' : {'': [self._hook]},
                                'before_delete_entity' : {'Personne': [self._hook]},
@@ -62,7 +62,7 @@ class HooksManagerTC(TestCase):
         self.o.unregister_hook(self._hook, 'after_delete_entity', 'Personne')
         # no hook should be called there
         self.o.call_hooks('after_delete_entity', 'Personne')
-        
+
 
     def _test_called_hooks(self):
         self.assertRaises(HookCalled,
@@ -102,9 +102,9 @@ class RelationHookTC(TestCase):
                              'before_add_relation', 'concerne')
         self.assertEquals(self.called, [])
         self.o.call_hooks('before_add_relation', 'concerne', 'USER',
-                          1, 'concerne', 2)        
+                          1, 'concerne', 2)
         self.assertEquals(self.called, [(1, 'concerne', 2)])
-        
+
     def test_after_add_relation(self):
         """make sure after_xxx_relation hooks are deferred"""
         self.o.register_hook(self._after_relation_hook,
@@ -115,14 +115,14 @@ class RelationHookTC(TestCase):
         self.o.call_hooks('after_add_relation', 'concerne', 'USER',
                           3, 'concerne', 4)
         self.assertEquals(self.called, [(1, 'concerne', 2), (3, 'concerne', 4)])
-    
+
     def test_before_delete_relation(self):
         """make sure before_xxx_relation hooks are called directly"""
         self.o.register_hook(self._before_relation_hook,
                              'before_delete_relation', 'concerne')
         self.assertEquals(self.called, [])
         self.o.call_hooks('before_delete_relation', 'concerne', 'USER',
-                          1, 'concerne', 2)        
+                          1, 'concerne', 2)
         self.assertEquals(self.called, [(1, 'concerne', 2)])
 
     def test_after_delete_relation(self):
@@ -166,7 +166,7 @@ class MyHook(Hook):
     schema = schema # set for actual hooks at registration time
     events = ('whatever', 'another')
     accepts = ('Societe', 'Division')
-    
+
 class HookTC(RepositoryBasedTC):
     def test_inheritance(self):
         self.assertEquals(list(MyHook.register_to()),

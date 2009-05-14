@@ -1,4 +1,11 @@
-from logilab.common.testlib import TestCase, mock_object
+"""
+:organization: Logilab
+:copyright: 2008-2009 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+:contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
+"""
+__docformat__ = "restructuredtext en"
+
+from logilab.common.testlib import TestCase
 
 import os, os.path as osp
 import time
@@ -15,10 +22,9 @@ try:
     from google.appengine.api import datastore_file_stub
     from google.appengine.ext import db as gdb
     from cubicweb.goa import db, do_monkey_patch
-    from cubicweb.goa.dbmyams import load_schema
     import_appengine_failed = None
 except ImportError, exc:
-    raise
+    # XXX necessary ?
     class db:
         class Model:
             pass
@@ -32,10 +38,8 @@ except ImportError, exc:
         ReferenceProperty = DummyProperty
         SelfReferenceProperty = DummyProperty
     import_appengine_failed = 'cannot import appengine: %s' % exc
-    
 
-from cubicweb import CW_SOFTWARE_ROOT
-from cubicweb.server.utils import crypt_password
+
 from cubicweb.devtools.fake import FakeRequest
 from cubicweb.goa.goavreg import GAERegistry
 from cubicweb.goa.goaconfig import GAEConfiguration
@@ -59,11 +63,11 @@ class GAEBasedTC(TestCase):
 
     def load_schema_hook(self, loader):
         loader.import_yams_cube_schema('data')
-    
+
     @property
     def DS_FILE(self):
         return self.DS_TEMPL_FILE.replace('-template', '')
-    
+
     @property
     def DS_TEMPL_FILE(self):
         return self._DS_TEMPL_FILE + '_'.join(sorted(cls.__name__ for cls in self.MODEL_CLASSES))
@@ -75,7 +79,7 @@ class GAEBasedTC(TestCase):
         stub = datastore_file_stub.DatastoreFileStub(self.APP_ID, dsfile,
                                                      dsfile+'.history')
         apiproxy_stub_map.apiproxy.RegisterStub('datastore_v3', stub)
-        
+
     def setUp(self):
         if import_appengine_failed:
             self.skip(import_appengine_failed)
@@ -91,7 +95,7 @@ class GAEBasedTC(TestCase):
             self._set_ds_file(self.DS_TEMPL_FILE)
 #         from google.appengine.api import mail_stub
 #         from google3.apphosting.api import urlfetch_stub
-#         from google3.apphosting.api import user_service_stub        
+#         from google3.apphosting.api import user_service_stub
 #         # Use a fresh stub UserService.
 #         apiproxy_stub_map.apiproxy.RegisterStub(
 #             'user', user_service_stub.UserServiceStub())
@@ -152,15 +156,15 @@ class GAEBasedTC(TestCase):
                 req = FakeRequest(vreg=self.vreg)
                 self.session = self.session_manager.open_session(req)
             self.user = self.session.user()
-            
+
     def tearDown(self):
         self.session.close()
-        
+
     def request(self):
         req = FakeRequest(vreg=self.vreg)
         req.set_connection(self.session, self.user)
         return req
-    
+
     def add_entity(self, etype, **kwargs):
         cu = self.session.cursor()
         rql = 'INSERT %s X' % etype
@@ -177,10 +181,10 @@ class GAEBasedTC(TestCase):
 
     def rollback(self):
         self.session.rollback()
-        
+
     def create_user(self, login, groups=('users',), req=None):
         assert not self.config['use-google-auth']
-        user = self.add_entity('EUser', upassword=str(login), login=unicode(login))
+        user = self.add_entity('CWUser', upassword=str(login), login=unicode(login))
         cu = self.session.cursor()
         cu.execute('SET X in_group G WHERE X eid %%(x)s, G name IN(%s)'
                     % ','.join(repr(g) for g in groups),
@@ -193,4 +197,3 @@ class GAEBasedTC(TestCase):
         req.form['__login'] = login
         req.form['__password'] = password or login
         return self.session_manager.open_session(req)
-        

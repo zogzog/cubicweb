@@ -1,26 +1,25 @@
 """cubicweb.web.views.baseforms unit tests"""
 
 from StringIO import StringIO
+from datetime import date
 import re
 
+
 from logilab.common.testlib import unittest_main
+from logilab.common.decorators import clear_cache
 from cubicweb.devtools.apptest import EnvBasedTC
-
 from cubicweb.entities import AnyEntity
-
-from mx.DateTime import DateTime
 from cubicweb.web import widgets
-orig_today = widgets.today
-orig_now = widgets.now
+
+orig_now = widgets.datetime.now
 
 def setup_module(options):
     def _today():
-        return DateTime(0000, 1, 1)
-    widgets.today = widgets.now = _today
+        return date(0000, 1, 1)
+    widgets.datetime.now = _today
 
 def teardown_module(options, results):
-    widgets.today = orig_today
-    widgets.now = orig_now
+    widgets.datetime.now = orig_now
 
 
 def cleanup_text(text):
@@ -32,7 +31,7 @@ class EditionFormTC(EnvBasedTC):
 
     def setup_database(self):
         self.create_user('joe')
-        
+
     def _build_creation_form(self, etype):
         req = self.request()
         req.next_tabindex()
@@ -45,12 +44,12 @@ class EditionFormTC(EnvBasedTC):
         view.w = buffer.write
         view.edit_form(entity, {})
         return buffer.getvalue()
-    
+
     def _test_view_for(self, etype, expected):
         self.assertTextEquals(expected, cleanup_text(self._build_creation_form(etype)))
-        
+
     def test_base(self):
-        self._test_view_for('EGroup', '''\
+        self._test_view_for('CWGroup', '''\
 <form id="entityForm" class="entityForm" cubicweb:target="eformframe"
 method="post" onsubmit="return freezeFormButtons('entityForm')" enctype="application/x-www-form-urlencoded" action="http://testing.fr/cubicweb/validateform">
 <div class="formTitle"><span>egroup (creation)</span></div>
@@ -58,7 +57,7 @@ method="post" onsubmit="return freezeFormButtons('entityForm')" enctype="applica
 <div class="iformTitle"><span>main informations</span></div>
 <div class="formBody"><fieldset>
 <input type="hidden" name="eid" value="A" />
-<input type="hidden" name="__type:A" value="EGroup" />
+<input type="hidden" name="__type:A" value="CWGroup" />
 <input type="hidden" name="__maineid" value="A" />
 <input id="errorurl" type="hidden" name="__errorurl" value="http://testing.fr/cubicweb/view?rql=Blop&amp;vid=blop" />
 <input type="hidden" name="__form_id" value="edition" />
@@ -89,14 +88,14 @@ method="post" onsubmit="return freezeFormButtons('entityForm')" enctype="applica
 
     def test_with_inline_view(self):
         activated = self.execute('Any X WHERE X is State, X name "activated"')[0][0]
-        self._test_view_for('EUser', '''<form id="entityForm" class="entityForm" cubicweb:target="eformframe"
+        self._test_view_for('CWUser', '''<form id="entityForm" class="entityForm" cubicweb:target="eformframe"
 method="post" onsubmit="return freezeFormButtons('entityForm')" enctype="application/x-www-form-urlencoded" action="http://testing.fr/cubicweb/validateform">
 <div class="formTitle"><span>euser (creation)</span></div>
 <div id="progress">validating...</div>
 <div class="iformTitle"><span>main informations</span></div>
 <div class="formBody"><fieldset>
 <input type="hidden" name="eid" value="A" />
-<input type="hidden" name="__type:A" value="EUser" />
+<input type="hidden" name="__type:A" value="CWUser" />
 <input type="hidden" name="__maineid" value="A" />
 <input id="errorurl" type="hidden" name="__errorurl" value="http://testing.fr/cubicweb/view?rql=Blop&amp;vid=blop" />
 <input type="hidden" name="__form_id" value="edition" />
@@ -160,7 +159,7 @@ method="post" onsubmit="return freezeFormButtons('entityForm')" enctype="applica
 </table>
 <div id="inlineuse_emailslot">
 <div class="inlinedform" id="addNewEmailAddressuse_emailsubject:A" cubicweb:limit="true">
-<a class="addEntity" id="adduse_email:Alink" href="javascript: addInlineCreationForm('A', 'EUser', 'EmailAddress', 'use_email', 'subject')" >+ add a EmailAddress.</a>
+<a class="addEntity" id="adduse_email:Alink" href="javascript: addInlineCreationForm('A', 'CWUser', 'EmailAddress', 'use_email', 'subject')" >+ add a EmailAddress.</a>
 </div>
 <div class="trame_grise">&nbsp;</div>
 </div>
@@ -180,7 +179,7 @@ method="post" onsubmit="return freezeFormButtons('entityForm')" enctype="applica
 
     def test_redirection_after_creation(self):
         req = self.request()
-        req.form['etype'] = 'EUser'
+        req.form['etype'] = 'CWUser'
         view = self.vreg.select_view('creation', req, None)
         self.assertEquals(view.redirect_url(), 'http://testing.fr/cubicweb/euser')
         req.form['__redirectrql'] = 'Any X WHERE X eid 3012'
@@ -199,7 +198,7 @@ method="post" onsubmit="return freezeFormButtons('entityForm')" enctype="applica
         entity = vreg.etype_class('Salesterm')(req, None, None)
         view = vreg.select_view('creation', req, None)
         self.failUnless(view.need_multipart(entity))
-        
+
 
 
     def test_nonregr_check_add_permission_on_relation(self):
@@ -207,6 +206,7 @@ method="post" onsubmit="return freezeFormButtons('entityForm')" enctype="applica
         class BlogEntryPlus(BlogEntry):
             __rtags__ = {'checked_by': 'primary'}
         self.vreg.register_vobject_class(BlogEntryPlus)
+        clear_cache(self.vreg, 'etype_class')
         # an admin should be able to edit the checked_by relation
         html = self._build_creation_form('BlogEntry')
         self.failUnless('name="edits-checked_by:A"' in html)
@@ -214,7 +214,7 @@ method="post" onsubmit="return freezeFormButtons('entityForm')" enctype="applica
         self.login('joe')
         html = self._build_creation_form('BlogEntry')
         self.failIf('name="edits-checked_by:A"' in html)
-        
+
 from cubicweb.devtools.testlib import WebTest
 from cubicweb.devtools.htmlparser import DTDValidator
 
@@ -229,7 +229,7 @@ class CopyWebTest(WebTest):
 
 
     def test_cloned_elements_in_copy_form(self):
-        rset = self.execute('EUser P WHERE P login "Doe"')
+        rset = self.execute('CWUser P WHERE P login "Doe"')
         output = self.view('copy', rset)
         clones = [attrs for _, attrs in output.input_tags
                   if attrs.get('name', '').startswith('__cloned_eid')]

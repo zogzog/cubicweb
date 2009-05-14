@@ -1,7 +1,7 @@
 """navigation components definition for CubicWeb web client
 
 :organization: Logilab
-:copyright: 2001-2008 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+:copyright: 2001-2009 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 """
 __docformat__ = "restructuredtext en"
@@ -9,11 +9,12 @@ __docformat__ = "restructuredtext en"
 from rql.nodes import VariableRef, Constant
 
 from logilab.mtconverter import html_escape
+from logilab.common.deprecation import obsolete
 
 from cubicweb.interfaces import IPrevNext
-from cubicweb.common.selectors import (paginated_rset, sorted_rset,
-                                       primary_view, match_context_prop,
-                                       one_line_rset, implement_interface)
+from cubicweb.selectors import (paginated_rset, sorted_rset,
+                                primary_view, match_context_prop,
+                                one_line_rset, implements)
 from cubicweb.common.uilib import cut
 from cubicweb.web.component import EntityVComponent, NavigationComponent
 
@@ -43,7 +44,7 @@ class PageNavigation(NavigationComponent):
         w(u'[&nbsp;%s&nbsp;]' % u'&nbsp;| '.join(blocklist))
         w(u'&nbsp;%s' % self.next_link(params))
         w(u'</div>')
-        
+
     def index_display(self, start, stop):
         return u'%s - %s' % (start+1, stop+1)
 
@@ -51,11 +52,11 @@ class SortedNavigation(NavigationComponent):
     """sorted navigation apply if navigation is needed (according to page size)
     and if the result set is sorted
     """
-    __selectors__ = (paginated_rset, sorted_rset)
-    
+    __select__ = paginated_rset() & sorted_rset()
+
     # number of considered chars to build page links
     nb_chars = 5
-    
+
     def display_func(self, rset, col, attrname):
         req = self.req
         if attrname is not None:
@@ -69,7 +70,7 @@ class SortedNavigation(NavigationComponent):
             def index_display(row):
                 return rset.get_entity(row, col).view('text')
         return index_display
-    
+
     def call(self):
         """displays links to navigate accross pages of a result set
 
@@ -145,14 +146,14 @@ class SortedNavigation(NavigationComponent):
 
 
 def limit_rset_using_paged_nav(self, req, rset, w, forcedisplay=False,
-                               show_all_option=True, page_size = None):
+                               show_all_option=True, page_size=None):
     showall = forcedisplay or req.form.get('__force_display') is not None
     nav = not showall and self.vreg.select_component('navigation', req, rset,
                                                      page_size=page_size)
     if nav:
         # get boundaries before component rendering
         start, stop = nav.page_boundaries()
-        nav.dispatch(w=w)
+        nav.render(w=w)
         params = dict(req.form)
         nav.clean_params(params)
         # make a link to see them all
@@ -165,13 +166,13 @@ def limit_rset_using_paged_nav(self, req, rset, w, forcedisplay=False,
 
 # monkey patch base View class to add a .pagination(req, rset, w, forcedisplay)
 # method to be called on view's result set and printing pages index in the view
-from cubicweb.common.view import View
-# XXX deprecated, use paginate
-View.pagination = limit_rset_using_paged_nav
+from cubicweb.view import View
+View.pagination = obsolete('.pagination is deprecated, use paginate')(limit_rset_using_paged_nav)
 
-def paginate(view, show_all_option=True, w=None):
+def paginate(view, show_all_option=True, w=None, page_size=None):
     limit_rset_using_paged_nav(view, view.req, view.rset, w or view.w,
-                               not view.need_navigation, show_all_option)
+                               not view.need_navigation, show_all_option,
+                               page_size=page_size)
 View.paginate = paginate
 
 class NextPrevNavigationComponent(EntityVComponent):
@@ -180,9 +181,8 @@ class NextPrevNavigationComponent(EntityVComponent):
     # itself
     title = _('contentnavigation_prevnext')
     help = _('contentnavigation_prevnext_description')
-    __selectors__ = (one_line_rset, primary_view,
-                     match_context_prop, implement_interface)
-    accepts_interfaces = (IPrevNext,)
+    __select__ = (one_line_rset() & primary_view()
+                  & match_context_prop() & implements(IPrevNext))
     context = 'navbottom'
     order = 10
     def call(self, view=None):
@@ -212,7 +212,7 @@ class NextPrevNavigationComponent(EntityVComponent):
             html_escape(previous.absolute_url()),
             self.req._('i18nprevnext_previous'),
             html_escape(cut(previous.dc_title(), textsize)))
-    
+
     def next_link(self, next, textsize):
         return u'<a href="%s" title="%s">%s &gt;&gt;</a>' % (
             html_escape(next.absolute_url()),

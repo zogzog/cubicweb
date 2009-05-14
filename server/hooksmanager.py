@@ -23,12 +23,12 @@ Here is the prototype of the different hooks:
 
 
 :organization: Logilab
-:copyright: 2001-2008 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+:copyright: 2001-2009 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 """
 __docformat__ = "restructuredtext en"
 
-ENTITIES_HOOKS = ('before_add_entity',    'after_add_entity', 
+ENTITIES_HOOKS = ('before_add_entity',    'after_add_entity',
                   'before_update_entity', 'after_update_entity',
                   'before_delete_entity', 'after_delete_entity')
 RELATIONS_HOOKS = ('before_add_relation',   'after_add_relation' ,
@@ -42,7 +42,7 @@ class HooksManager(object):
     """handle hooks registration and calls
     """
     verification_hooks_activated = True
-    
+
     def __init__(self, schema):
         self.set_schema(schema)
 
@@ -50,20 +50,20 @@ class HooksManager(object):
         self._hooks = {}
         self.schema = schema
         self._init_hooks(schema)
-        
+
     def register_hooks(self, hooks):
         """register a dictionary of hooks :
-        
+
              {'event': {'entity or relation type': [callbacks list]}}
         """
         for event, subevents in hooks.items():
             for subevent, callbacks in subevents.items():
                 for callback in callbacks:
                     self.register_hook(callback, event, subevent)
-                    
+
     def register_hook(self, function, event, etype=''):
         """register a function to call when <event> occurs
-        
+
          <etype> is an entity/relation type or an empty string.
          If etype is the empty string, the function will be called at each
          event, else the function will be called only when event occurs on an
@@ -76,14 +76,14 @@ class HooksManager(object):
             self._hooks[event][etype].append(function)
             self.debug('registered hook %s on %s (%s)', event, etype or 'any',
                        function.func_name)
-            
+
         except KeyError:
             self.error('can\'t register hook %s on %s (%s)',
                        event, etype or 'any', function.func_name)
-            
+
     def unregister_hook(self, function, event, etype=''):
         """register a function to call when <event> occurs
-        
+
         <etype> is an entity/relation type or an empty string.
         If etype is the empty string, the function will be called at each
         event, else the function will be called only when event occurs on an
@@ -109,7 +109,7 @@ class HooksManager(object):
             for hook in self._hooks[__event][__type]:
                 #print '[%s]'%__type, hook.__name__
                 hook(*args, **kwargs)
-    
+
     def _init_hooks(self, schema):
         """initialize the hooks map"""
         for hook_event in ENTITIES_HOOKS:
@@ -164,7 +164,7 @@ class HooksManager(object):
         self.unregister_hook(uniquecstrcheck_before_modification, 'before_update_entity', '')
 #         self.unregister_hook(tidy_html_fields('before_add_entity'), 'before_add_entity', '')
 #         self.unregister_hook(tidy_html_fields('before_update_entity'), 'before_update_entity', '')
-        
+
     def reactivate_verification_hooks(self):
         from cubicweb.server.hooks import (cardinalitycheck_after_add_entity,
                                         cardinalitycheck_before_del_relation,
@@ -179,14 +179,13 @@ class HooksManager(object):
         self.register_hook(uniquecstrcheck_before_modification, 'before_update_entity', '')
 #         self.register_hook(tidy_html_fields('before_add_entity'), 'before_add_entity', '')
 #         self.register_hook(tidy_html_fields('before_update_entity'), 'before_update_entity', '')
-            
-from cubicweb.vregistry import autoselectors
-from cubicweb.common.appobject import AppObject
-from cubicweb.common.registerers import accepts_registerer, yes_registerer
-from cubicweb.common.selectors import yes
 
-class autoid(autoselectors):
+from cubicweb.selectors import yes
+from cubicweb.appobject import AppObject
+
+class autoid(type):
     """metaclass to create an unique 'id' attribute on the class using it"""
+    # XXX is this metaclass really necessary ?
     def __new__(mcs, name, bases, classdict):
         cls = super(autoid, mcs).__new__(mcs, name, bases, classdict)
         cls.id = str(id(cls))
@@ -195,22 +194,21 @@ class autoid(autoselectors):
 class Hook(AppObject):
     __metaclass__ = autoid
     __registry__ = 'hooks'
-    __registerer__ = accepts_registerer
-    __selectors__ = (yes,)
+    __select__ = yes()
     # set this in derivated classes
     events = None
     accepts = None
     enabled = True
-    
+
     def __init__(self, event=None):
         super(Hook, self).__init__()
         self.event = event
-        
+
     @classmethod
     def registered(cls, vreg):
         super(Hook, cls).registered(vreg)
         return cls()
-    
+
     @classmethod
     def register_to(cls):
         if not cls.enabled:
@@ -234,7 +232,7 @@ class Hook(AppObject):
                             continue
                         yield event, str(eetype)
                         done.add((event, eetype))
-                        
+
 
     def make_callback(self, event):
         if len(self.events) == 1:
@@ -243,9 +241,8 @@ class Hook(AppObject):
 
     def call(self):
         raise NotImplementedError
-    
+
 class SystemHook(Hook):
-    __registerer__ = yes_registerer
     accepts = ('',)
 
 from logging import getLogger

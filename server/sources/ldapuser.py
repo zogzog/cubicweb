@@ -1,6 +1,6 @@
 """cubicweb ldap user source
 
-this source is for now limited to a read-only EUser source
+this source is for now limited to a read-only CWUser source
 
 :organization: Logilab
 :copyright: 2003-2009 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
@@ -48,17 +48,18 @@ MODES = {
     1: (636, 'ldaps'),
     2: (0,   'ldapi'),
     }
-                
+
+
 class LDAPUserSource(AbstractSource):
-    """LDAP read-only EUser source"""
-    support_entities = {'EUser': False} 
+    """LDAP read-only CWUser source"""
+    support_entities = {'CWUser': False}
 
     port = None
-    
+
     cnx_mode = 0
     cnx_dn = ''
     cnx_pwd = ''
-    
+
     options = (
         ('host',
          {'type' : 'string',
@@ -118,9 +119,9 @@ directory (default to once a day).',
           'help': 'life time of query cache in minutes (default to two hours).',
           'group': 'ldap-source', 'inputlevel': 2,
           }),
-        
+
     )
-            
+
     def __init__(self, repo, appschema, source_config, *args, **kwargs):
         AbstractSource.__init__(self, repo, appschema, source_config,
                                 *args, **kwargs)
@@ -149,8 +150,8 @@ directory (default to once a day).',
 
     def init(self):
         """method called by the repository once ready to handle request"""
-        self.repo.looping_task(self._interval, self.synchronize) 
-        self.repo.looping_task(self._query_cache.ttl.seconds/10, self._query_cache.clear_expired) 
+        self.repo.looping_task(self._interval, self.synchronize)
+        self.repo.looping_task(self._query_cache.ttl.seconds/10, self._query_cache.clear_expired)
 
     def synchronize(self):
         """synchronize content known by this repository with content in the
@@ -168,7 +169,7 @@ directory (default to once a day).',
             for eid, extid in cursor.fetchall():
                 # if no result found, _search automatically delete entity information
                 res = self._search(session, extid, BASE)
-                if res: 
+                if res:
                     ldapemailaddr = res[0].get(ldap_emailattr)
                     if ldapemailaddr:
                         rset = session.execute('EmailAddress X,A WHERE '
@@ -191,15 +192,15 @@ directory (default to once a day).',
         finally:
             session.commit()
             session.close()
-            
+
     def get_connection(self):
         """open and return a connection to the source"""
         if self._conn is None:
             self._connect()
         return ConnectionWrapper(self._conn)
-    
+
     def authenticate(self, session, login, password):
-        """return EUser eid for the given login/password if this account is
+        """return CWUser eid for the given login/password if this account is
         defined in this source, else raise `AuthenticationError`
 
         two queries are needed since passwords are stored crypted, so we have
@@ -223,14 +224,14 @@ directory (default to once a day).',
         except:
             # Something went wrong, most likely bad credentials
             raise AuthenticationError()
-        return self.extid2eid(user['dn'], 'EUser', session)
+        return self.extid2eid(user['dn'], 'CWUser', session)
 
     def ldap_name(self, var):
         if var.stinfo['relations']:
             relname = iter(var.stinfo['relations']).next().r_type
             return self.user_rev_attrs.get(relname)
         return None
-        
+
     def prepare_columns(self, mainvars, rqlst):
         """return two list describin how to build the final results
         from the result of an ldap search (ie a list of dictionnary)
@@ -269,11 +270,11 @@ directory (default to once a day).',
             #    # probably a bug in rql splitting if we arrive here
             #    raise NotImplementedError
         return columns, global_transforms
-    
+
     def syntax_tree_search(self, session, union,
                            args=None, cachekey=None, varmap=None, debug=0):
-        """return result from this source for a rql query (actually from a rql 
-        syntax tree and a solution dictionary mapping each used variable to a 
+        """return result from this source for a rql query (actually from a rql
+        syntax tree and a solution dictionary mapping each used variable to a
         possible type). If cachekey is given, the query necessary to fetch the
         results (but not the results themselves) may be cached using this key.
         """
@@ -293,7 +294,7 @@ directory (default to once a day).',
         mainvars = []
         for varname in rqlst.defined_vars:
             for sol in rqlst.solutions:
-                if sol[varname] == 'EUser':
+                if sol[varname] == 'CWUser':
                     mainvars.append(varname)
                     break
         assert mainvars
@@ -325,7 +326,7 @@ directory (default to once a day).',
             filteredres = []
             for resdict in res:
                 # get sure the entity exists in the system table
-                eid = self.extid2eid(resdict['dn'], 'EUser', session)
+                eid = self.extid2eid(resdict['dn'], 'CWUser', session)
                 for eidfilter in eidfilters:
                     if not eidfilter(eid):
                         break
@@ -360,8 +361,8 @@ directory (default to once a day).',
             result = trfunc.apply(result)
         #print '--> ldap result', result
         return result
-                
-    
+
+
     def _connect(self, userdn=None, userpwd=None):
         port, protocol = MODES[self.cnx_mode]
         if protocol == 'ldapi':
@@ -402,7 +403,7 @@ directory (default to once a day).',
         except ldap.PARTIAL_RESULTS:
             res = cnx.result(all=0)[1]
         except ldap.NO_SUCH_OBJECT:
-            eid = self.extid2eid(base, 'EUser', session, insert=False)
+            eid = self.extid2eid(base, 'CWUser', session, insert=False)
             if eid:
                 self.warning('deleting ldap user with eid %s and dn %s',
                              eid, base)
@@ -443,12 +444,12 @@ directory (default to once a day).',
             result.append(rec_dict)
         #print '--->', result
         return result
-    
+
     def before_entity_insertion(self, session, lid, etype, eid):
         """called by the repository when an eid has been attributed for an
         entity stored here but the entity has not been inserted in the system
         table yet.
-        
+
         This method must return the an Entity instance representation of this
         entity.
         """
@@ -457,7 +458,7 @@ directory (default to once a day).',
         for attr in entity.e_schema.indexable_attributes():
             entity[attr] = res[self.user_rev_attrs[attr]]
         return entity
-    
+
     def after_entity_insertion(self, session, dn, entity):
         """called by the repository after an entity stored here has been
         inserted in the system table.
@@ -491,13 +492,13 @@ directory (default to once a day).',
 def _insert_email(session, emailaddr, ueid):
     session.execute('INSERT EmailAddress X: X address %(addr)s, U primary_email X '
                     'WHERE U eid %(x)s', {'addr': emailaddr, 'x': ueid}, 'x')
-    
+
 class GotDN(Exception):
     """exception used when a dn localizing the searched user has been found"""
     def __init__(self, dn):
         self.dn = dn
 
-        
+
 class RQL2LDAPFilter(object):
     """generate an LDAP filter for a rql query"""
     def __init__(self, source, session, args=None, mainvars=()):
@@ -509,7 +510,7 @@ class RQL2LDAPFilter(object):
             args = {}
         self._args = args
         self.mainvars = mainvars
-        
+
     def generate(self, selection, mainvarname):
         self._filters = res = self._base_filters[:]
         self._mainvarname = mainvarname
@@ -526,7 +527,7 @@ class RQL2LDAPFilter(object):
         if len(res) > 1:
             return self._eidfilters, '(&%s)' % ''.join(res)
         return self._eidfilters, res[0]
-    
+
     def visit_and(self, et):
         """generate filter for a AND subtree"""
         for c in et.children:
@@ -586,7 +587,7 @@ class RQL2LDAPFilter(object):
         else:
             raise NotImplementedError(relation)
         return res
-        
+
     def _visit_attribute_relation(self, relation):
         """generate filter for an attribute relation"""
         lhs, rhs = relation.get_parts()
@@ -622,18 +623,18 @@ class RQL2LDAPFilter(object):
 
     def visit_comparison(self, cmp):
         """generate filter for a comparaison"""
-        return '%s%s'% (cmp.operator, cmp.children[0].accept(self))            
+        return '%s%s'% (cmp.operator, cmp.children[0].accept(self))
 
     def visit_mathexpression(self, mexpr):
         """generate filter for a mathematic expression"""
         raise NotImplementedError
-        
+
     def visit_function(self, function):
         """generate filter name for a function"""
         if function.name == 'IN':
             return self.visit_in(function)
         raise NotImplementedError
-        
+
     def visit_in(self, function):
         grandpapa = function.parent.parent
         ldapattr = self._ldap_attrs[grandpapa.r_type]
@@ -648,7 +649,7 @@ class RQL2LDAPFilter(object):
             else:
                 part = '(%s=%s)' % (ldapattr, res[0])
         return part
-        
+
     def visit_constant(self, constant):
         """generate filter name for a constant"""
         value = constant.value
@@ -666,7 +667,7 @@ class RQL2LDAPFilter(object):
         else:
             value = str(value)
         return escape_filter_chars(value)
-        
+
     def visit_variableref(self, variableref):
         """get the sql name for a variable reference"""
         pass

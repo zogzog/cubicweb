@@ -2,24 +2,25 @@
 cubes development
 
 :organization: Logilab
-:copyright: 2001-2008 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+:copyright: 2001-2009 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 """
 __docformat__ = "restructuredtext en"
 
 import sys
-from os import walk, mkdir, chdir, listdir, getcwd
+from datetime import datetime
+from os import mkdir, chdir
 from os.path import join, exists, abspath, basename, normpath, split, isdir
 
 
 from logilab.common import STD_BLACKLIST
 from logilab.common.modutils import get_module_files
 from logilab.common.textutils import get_csv
+from logilab.common.clcommands import register_commands
 
-from cubicweb import CW_SOFTWARE_ROOT as BASEDIR
+from cubicweb import CW_SOFTWARE_ROOT as BASEDIR, BadCommandUsage
 from cubicweb.__pkginfo__ import version as cubicwebversion
-from cubicweb import BadCommandUsage
-from cubicweb.toolsutils import Command, register_commands, confirm, copy_skeleton
+from cubicweb.toolsutils import Command, confirm, copy_skeleton
 from cubicweb.web.webconfig import WebConfiguration
 from cubicweb.server.serverconfig import ServerConfiguration
 
@@ -35,11 +36,11 @@ class DevCubeConfiguration(ServerConfiguration, WebConfiguration):
         if cube is None:
             self._cubes = ()
         else:
-            self._cubes = self.expand_cubes(self.my_cubes(cube))
+            self._cubes = self.reorder_cubes(self.expand_cubes(self.my_cubes(cube)))
 
     def my_cubes(self, cube):
         return (cube,) + self.cube_dependencies(cube) + self.cube_recommends(cube)
-    
+
     @property
     def apphome(self):
         return None
@@ -76,7 +77,12 @@ def cleanup_sys_modules(config):
             if mod.__file__.startswith(path):
                 del sys.modules[name]
                 break
-    
+        # fresh rtags
+        from cubicweb import rtags
+        from cubicweb.web import uicfg
+        rtags.RTAGS[:] = []
+        reload(uicfg)
+
 def generate_schema_pot(w, cubedir=None):
     """generate a pot file with schema specific i18n messages
 
@@ -85,30 +91,31 @@ def generate_schema_pot(w, cubedir=None):
     """
     from cubicweb.cwvreg import CubicWebRegistry
     cube = cubedir and split(cubedir)[-1]
-    config = DevDepConfiguration(cube)
-    cleanup_sys_modules(config)
+    libconfig = DevDepConfiguration(cube)
+    libconfig.cleanup_interface_sobjects = False
+    cleanup_sys_modules(libconfig)
     if cubedir:
-        libschema = config.load_schema()
         config = DevCubeConfiguration(cube)
-        schema = config.load_schema()
-    else:
-        schema = config.load_schema()
-        libschema = None
         config.cleanup_interface_sobjects = False
+    else:
+        config = libconfig
+        libconfig = None
+    schema = config.load_schema(remove_unused_rtypes=False)
     vreg = CubicWebRegistry(config)
     # set_schema triggers objects registrations
     vreg.set_schema(schema)
     w(DEFAULT_POT_HEAD)
-    _generate_schema_pot(w, vreg, schema, libschema=libschema, cube=cube)
-                
-def _generate_schema_pot(w, vreg, schema, libschema=None, cube=None):
-    from mx.DateTime import now
+    _generate_schema_pot(w, vreg, schema, libconfig=libconfig, cube=cube)
+
+
+def _generate_schema_pot(w, vreg, schema, libconfig=None, cube=None):
     from cubicweb.common.i18n import add_msg
-    w('# schema pot file, generated on %s\n' % now().strftime('%Y-%m-%d %H:%M:%S'))
+    w('# schema pot file, generated on %s\n' % datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
     w('# \n')
     w('# singular and plural forms for each entity type\n')
     w('\n')
-    if libschema is not None:
+    if libconfig is not None:
+        libschema = libconfig.load_schema(remove_unused_rtypes=False)
         entities = [e for e in schema.entities() if not e in libschema]
     else:
         entities = schema.entities()
@@ -128,7 +135,7 @@ def _generate_schema_pot(w, vreg, schema, libschema=None, cube=None):
     w('# subject and object forms for each relation type\n')
     w('# (no object form for final relation types)\n')
     w('\n')
-    if libschema is not None:
+    if libconfig is not None:
         relations = [r for r in schema.relations() if not r in libschema]
     else:
         relations = schema.relations()
@@ -143,46 +150,70 @@ def _generate_schema_pot(w, vreg, schema, libschema=None, cube=None):
             add_msg(w, rschema.description)
     w('# add related box generated message\n')
     w('\n')
+    actionbox = vreg['boxes']['edit_box'][0]
     for eschema in schema.entities():
         if eschema.is_final():
             continue
-        entity = vreg.etype_class(eschema)(None, None)
-        for x, rschemas in (('subject', eschema.subject_relations()),
+        for role, rschemas in (('subject', eschema.subject_relations()),
                             ('object', eschema.object_relations())):
             for rschema in rschemas:
                 if rschema.is_final():
                     continue
-                for teschema in rschema.targets(eschema, x):
-                    if defined_in_library(libschema, eschema, rschema, teschema, x):
-                        continue
-                    if entity.relation_mode(rschema.type, teschema.type, x) == 'create':
-                        if x == 'subject':
-                            label = 'add %s %s %s %s' % (eschema, rschema, teschema, x)
-                            label2 = "creating %s (%s %%(linkto)s %s %s)" % (teschema, eschema, rschema, teschema)
+                if libconfig is not None:
+                    librschema = libschema.get(rschema)
+                for teschema in rschema.targets(eschema, role):
+                    if libconfig is not None and librschema is not None:
+                        if role == 'subject':
+                            subjtype, objtype = eschema, teschema
                         else:
-                            label = 'add %s %s %s %s' % (teschema, rschema, eschema, x)
-                            label2 = "creating %s (%s %s %s %%(linkto)s)" % (teschema, teschema, rschema, eschema)
+                            subjtype, objtype = teschema, eschema
+                        if librschema.has_rdef(subjtype, objtype):
+                            continue
+                    if actionbox.appearsin_addmenu.etype_get(eschema, rschema,
+                                                             role, teschema):
+                        if role == 'subject':
+                            label = 'add %s %s %s %s' % (eschema, rschema,
+                                                         teschema, role)
+                            label2 = "creating %s (%s %%(linkto)s %s %s)" % (
+                                teschema, eschema, rschema, teschema)
+                        else:
+                            label = 'add %s %s %s %s' % (teschema, rschema,
+                                                         eschema, role)
+                            label2 = "creating %s (%s %s %s %%(linkto)s)" % (
+                                teschema, teschema, rschema, eschema)
                         add_msg(w, label)
                         add_msg(w, label2)
-    cube = (cube and 'cubes.%s.' % cube or 'cubicweb.')
+    #cube = (cube and 'cubes.%s.' % cube or 'cubicweb.')
     done = set()
+    if libconfig is not None:
+        from cubicweb.cwvreg import CubicWebRegistry
+        libvreg = CubicWebRegistry(libconfig)
+        libvreg.set_schema(libschema) # trigger objects registration
+        # prefill done set
+        list(_iter_vreg_objids(libvreg, done))
+    for objid in _iter_vreg_objids(vreg, done):
+        add_msg(w, '%s_description' % objid)
+        add_msg(w, objid)
+
+def _iter_vreg_objids(vreg, done, prefix=None):
     for reg, objdict in vreg.items():
         for objects in objdict.values():
             for obj in objects:
                 objid = '%s_%s' % (reg, obj.id)
                 if objid in done:
-                    continue
-                if obj.__module__.startswith(cube) and obj.property_defs:
-                    add_msg(w, '%s_description' % objid)
-                    add_msg(w, objid)
+                    break
+                if obj.property_defs:
+                    yield objid
                     done.add(objid)
+                    break
 
-                    
-def defined_in_library(libschema, etype, rtype, tetype, x):
-    """return true if the given relation definition exists in cubicweb's library"""
+
+def defined_in_library(etype, rtype, tetype, role):
+    """return true if the given relation definition exists in cubicweb's library
+    """
     if libschema is None:
         return False
-    if x == 'subject':
+    if role == 'subject':
         subjtype, objtype = etype, tetype
     else:
         subjtype, objtype = tetype, etype
@@ -211,7 +242,7 @@ msgstr ""
 
 class UpdateCubicWebCatalogCommand(Command):
     """Update i18n catalogs for cubicweb library.
-    
+
     It will regenerate cubicweb/i18n/xx.po files. You'll have then to edit those
     files to add translations of newly added messages.
     """
@@ -251,8 +282,12 @@ class UpdateCubicWebCatalogCommand(Command):
             cmd = 'xgettext --no-location --omit-header -k_ -o %s %s'
             if lang is not None:
                 cmd += ' -L %s' % lang
-            potfiles.append(join(tempdir, '%s.pot' % id))
-            execute(cmd % (potfiles[-1], ' '.join(files)))
+            potfile = join(tempdir, '%s.pot' % id)
+            execute(cmd % (potfile, ' '.join(files)))
+            if exists(potfile):
+                potfiles.append(potfile)
+            else:
+                print 'WARNING: %s file not generated' % potfile
         print '******** merging .pot files'
         cubicwebpot = join(tempdir, 'cubicweb.pot')
         execute('msgcat %s > %s' % (' '.join(potfiles), cubicwebpot))
@@ -281,7 +316,7 @@ class UpdateTemplateCatalogCommand(Command):
     """
     name = 'i18nupdate'
     arguments = '[<cube>...]'
-    
+
     def run(self, args):
         """run the command with its specific arguments"""
         if args:
@@ -291,74 +326,86 @@ class UpdateTemplateCatalogCommand(Command):
             cubes = [cubepath for cubepath in cubes if exists(join(cubepath, 'i18n'))]
         update_cubes_catalogs(cubes)
 
+
 def update_cubes_catalogs(cubes):
+    toedit = []
+    for cubedir in cubes:
+        if not isdir(cubedir):
+            print 'not a directory', cubedir
+            continue
+        try:
+            toedit += update_cube_catalogs(cubedir)
+        except Exception:
+            import traceback
+            traceback.print_exc()
+            print 'error while updating catalogs for', cubedir
+    # instructions pour la suite
+    print '*' * 72
+    print 'you can now edit the following files:'
+    print '* ' + '\n* '.join(toedit)
+
+
+def update_cube_catalogs(cubedir):
     import shutil
     from tempfile import mktemp
     from logilab.common.fileutils import ensure_fs_mode
     from logilab.common.shellutils import find, rm
     from cubicweb.common.i18n import extract_from_tal, execute
     toedit = []
-    for cubedir in cubes:
-        cube = basename(normpath(cubedir))
-        if not isdir(cubedir):
-            print 'unknown cube', cube
-            continue
-        tempdir = mktemp()
-        mkdir(tempdir)
-        print '*' * 72
-        print 'updating %s cube...' % cube
-        chdir(cubedir)
-        potfiles = [join('i18n', scfile) for scfile in ('entities.pot',)
-                    if exists(join('i18n', scfile))]
-        print '******** extract schema messages'
-        schemapot = join(tempdir, 'schema.pot')
-        potfiles.append(schemapot)
-        # explicit close necessary else the file may not be yet flushed when
-        # we'll using it below
-        schemapotstream = file(schemapot, 'w')
-        generate_schema_pot(schemapotstream.write, cubedir)
-        schemapotstream.close()
-        print '******** extract TAL messages'
-        tali18nfile = join(tempdir, 'tali18n.py')
-        extract_from_tal(find('.', ('.py', '.pt'), blacklist=STD_BLACKLIST+('test',)), tali18nfile)
-        print '******** extract Javascript messages'
-        jsfiles =  [jsfile for jsfile in find('.', '.js') if basename(jsfile).startswith('cub')]
-        if jsfiles:
-            tmppotfile = join(tempdir, 'js.pot')
-            execute('xgettext --no-location --omit-header -k_ -L java --from-code=utf-8 -o %s %s'
-                    % (tmppotfile, ' '.join(jsfiles)))
-            # no pot file created if there are no string to translate
-            if exists(tmppotfile): 
-                potfiles.append(tmppotfile)
-        print '******** create cube specific catalog'
-        tmppotfile = join(tempdir, 'generated.pot')
-        cubefiles = find('.', '.py', blacklist=STD_BLACKLIST+('test',))
-        cubefiles.append(tali18nfile)
-        execute('xgettext --no-location --omit-header -k_ -o %s %s'
-                % (tmppotfile, ' '.join(cubefiles)))
-        if exists(tmppotfile): # doesn't exists of no translation string found
-            potfiles.append(tmppotfile)
-        potfile = join(tempdir, 'cube.pot')
-        print '******** merging .pot files'
-        execute('msgcat %s > %s' % (' '.join(potfiles), potfile))
-        print '******** merging main pot file with existing translations'
-        chdir('i18n')
-        for lang in LANGS:
-            print '****', lang
-            cubepo = '%s.po' % lang
-            if not exists(cubepo):
-                shutil.copy(potfile, cubepo)
-            else:
-                execute('msgmerge -N -s %s %s > %snew' % (cubepo, potfile, cubepo))
-                ensure_fs_mode(cubepo)
-                shutil.move('%snew' % cubepo, cubepo)
-            toedit.append(abspath(cubepo))
-        # cleanup
-        rm(tempdir)
-    # instructions pour la suite
+    cube = basename(normpath(cubedir))
+    tempdir = mktemp()
+    mkdir(tempdir)
     print '*' * 72
-    print 'you can now edit the following files:'
-    print '* ' + '\n* '.join(toedit)
+    print 'updating %s cube...' % cube
+    chdir(cubedir)
+    potfiles = [join('i18n', scfile) for scfile in ('entities.pot',)
+                if exists(join('i18n', scfile))]
+    print '******** extract schema messages'
+    schemapot = join(tempdir, 'schema.pot')
+    potfiles.append(schemapot)
+    # explicit close necessary else the file may not be yet flushed when
+    # we'll using it below
+    schemapotstream = file(schemapot, 'w')
+    generate_schema_pot(schemapotstream.write, cubedir)
+    schemapotstream.close()
+    print '******** extract TAL messages'
+    tali18nfile = join(tempdir, 'tali18n.py')
+    extract_from_tal(find('.', ('.py', '.pt'), blacklist=STD_BLACKLIST+('test',)), tali18nfile)
+    print '******** extract Javascript messages'
+    jsfiles =  [jsfile for jsfile in find('.', '.js') if basename(jsfile).startswith('cub')]
+    if jsfiles:
+        tmppotfile = join(tempdir, 'js.pot')
+        execute('xgettext --no-location --omit-header -k_ -L java --from-code=utf-8 -o %s %s'
+                % (tmppotfile, ' '.join(jsfiles)))
+        # no pot file created if there are no string to translate
+        if exists(tmppotfile):
+            potfiles.append(tmppotfile)
+    print '******** create cube specific catalog'
+    tmppotfile = join(tempdir, 'generated.pot')
+    cubefiles = find('.', '.py', blacklist=STD_BLACKLIST+('test',))
+    cubefiles.append(tali18nfile)
+    execute('xgettext --no-location --omit-header -k_ -o %s %s'
+            % (tmppotfile, ' '.join(cubefiles)))
+    if exists(tmppotfile): # doesn't exists of no translation string found
+        potfiles.append(tmppotfile)
+    potfile = join(tempdir, 'cube.pot')
+    print '******** merging .pot files'
+    execute('msgcat %s > %s' % (' '.join(potfiles), potfile))
+    print '******** merging main pot file with existing translations'
+    chdir('i18n')
+    for lang in LANGS:
+        print '****', lang
+        cubepo = '%s.po' % lang
+        if not exists(cubepo):
+            shutil.copy(potfile, cubepo)
+        else:
+            execute('msgmerge -N -s %s %s > %snew' % (cubepo, potfile, cubepo))
+            ensure_fs_mode(cubepo)
+            shutil.move('%snew' % cubepo, cubepo)
+        toedit.append(abspath(cubepo))
+    # cleanup
+    rm(tempdir)
+    return toedit
 
 
 class LiveServerCommand(Command):
@@ -367,7 +414,7 @@ class LiveServerCommand(Command):
     name = 'live-server'
     arguments = ''
     options = ()
-    
+
     def run(self, args):
         """run the command with its specific arguments"""
         from cubicweb.devtools.livetest import runserver
@@ -415,7 +462,7 @@ class NewCubeCommand(Command):
          ),
         )
 
-    
+
     def run(self, args):
         if len(args) != 1:
             raise BadCommandUsage("exactly one argument (cube name) is expected")
@@ -449,7 +496,7 @@ class NewCubeCommand(Command):
                     distname = 'cubicweb-' + distname
         else:
             distname = 'cubicweb-%s' % cubename.lower()
-        
+
         longdesc = shortdesc = raw_input('Enter a short description for your cube: ')
         if verbose:
             longdesc = raw_input('Enter a long description (or nothing if you want to reuse the short one): ')
@@ -461,14 +508,13 @@ class NewCubeCommand(Command):
                 dependancies = ', '.join(repr(cube) for cube in includes)
         else:
             dependancies = ''
-        from mx.DateTime import now
         context = {'cubename' : cubename,
                    'distname' : distname,
                    'shortdesc' : shortdesc,
                    'longdesc' : longdesc or shortdesc,
                    'dependancies' : dependancies,
                    'version'  : cubicwebversion,
-                   'year'  : str(now().year),
+                   'year'  : str(datetime.now().year),
                    'author': self['author'],
                    'author-email': self['author-email'],
                    'author-web-site': self['author-web-site'],
@@ -488,7 +534,7 @@ class NewCubeCommand(Command):
             elif ans == 's':
                 break
         return includes
-    
+
 
 class ExamineLogCommand(Command):
     """Examine a rql log file.
@@ -507,7 +553,7 @@ class ExamineLogCommand(Command):
     name = 'exlog'
     options = (
         )
-    
+
     def run(self, args):
         if args:
             raise BadCommandUsage("no argument expected")
@@ -541,7 +587,7 @@ class ExamineLogCommand(Command):
         print 'Percentage;Cumulative Time;Occurences;Query'
         for time, occ, rql in stat:
             print '%.2f;%.2f;%s;%s' % (time/total_time, time, occ, rql)
-        
+
 register_commands((UpdateCubicWebCatalogCommand,
                    UpdateTemplateCatalogCommand,
                    LiveServerCommand,

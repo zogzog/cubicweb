@@ -9,38 +9,16 @@ __docformat__ = "restructuredtext en"
 import sys
 import threading
 from time import time
-from types import NoneType
-from decimal import Decimal
 
-from mx.DateTime import DateTimeType, DateTimeDeltaType
-from rql.nodes import VariableRef, Function
+from rql.nodes import VariableRef, Function, ETYPE_PYOBJ_MAP, etype_from_pyobj
 from yams import BASE_TYPES
 
-from cubicweb import RequestSessionMixIn, Binary
+from cubicweb import RequestSessionMixIn, Binary, UnknownEid
 from cubicweb.dbapi import ConnectionProperties
-from cubicweb.common.utils import make_uid
+from cubicweb.utils import make_uid
 from cubicweb.server.rqlrewrite import RQLRewriter
 
-_ETYPE_PYOBJ_MAP = { bool: 'Boolean',
-                     int: 'Int',
-                     long: 'Int',
-                     float: 'Float',
-                     Decimal: 'Decimal',
-                     unicode: 'String',
-                     NoneType: None,
-                     Binary: 'Bytes',
-                     DateTimeType: 'Datetime',
-                     DateTimeDeltaType: 'Interval',
-                     }
-
-def etype_from_pyobj(value):
-    """guess yams type from python value"""
-    # note:
-    # * Password is not selectable so no problem)
-    # * use type(value) and not value.__class__ since mx instances have no
-    #   __class__ attribute
-    # * XXX Date, Time
-    return _ETYPE_PYOBJ_MAP[type(value)]
+ETYPE_PYOBJ_MAP[Binary] = 'Bytes'
 
 def is_final(rqlst, variable, args):
     # try to find if this is a final var or not
@@ -51,7 +29,7 @@ def is_final(rqlst, variable, args):
                 continue
             if etype in BASE_TYPES:
                 return True
-            return False   
+            return False
 
 def _make_description(selected, args, solution):
     """return a description for a result set"""
@@ -67,7 +45,7 @@ class Session(RequestSessionMixIn):
     """tie session id, user, connections pool and other session data all
     together
     """
-    
+
     def __init__(self, user, repo, cnxprops=None, _id=None):
         super(Session, self).__init__(repo.vreg)
         self.id = _id or make_uid(user.login.encode('UTF8'))
@@ -87,7 +65,7 @@ class Session(RequestSessionMixIn):
         # i18n initialization
         self.set_language(cnxprops.lang)
         self._threaddata = threading.local()
-        
+
     def get_mode(self):
         return getattr(self._threaddata, 'mode', 'read')
     def set_mode(self, value):
@@ -100,12 +78,12 @@ class Session(RequestSessionMixIn):
     def set_commit_state(self, value):
         self._threaddata.commit_state = value
     commit_state = property(get_commit_state, set_commit_state)
-    
+
     # set according to transaction mode for each query
     @property
     def pool(self):
         return getattr(self._threaddata, 'pool', None)
-    
+
     # pending transaction operations
     @property
     def pending_operations(self):
@@ -114,7 +92,7 @@ class Session(RequestSessionMixIn):
         except AttributeError:
             self._threaddata.pending_operations = []
             return self._threaddata.pending_operations
-    
+
     # rql rewriter
     @property
     def rql_rewriter(self):
@@ -123,7 +101,7 @@ class Session(RequestSessionMixIn):
         except AttributeError:
             self._threaddata._rewriter = RQLRewriter(self.repo.querier, self)
             return self._threaddata._rewriter
-    
+
     # transaction queries data
     @property
     def _query_data(self):
@@ -132,7 +110,7 @@ class Session(RequestSessionMixIn):
         except AttributeError:
             self._threaddata._query_data = {}
             return self._threaddata._query_data
-    
+
     def set_language(self, language):
         """i18n configuration for translation"""
         vreg = self.vreg
@@ -146,42 +124,42 @@ class Session(RequestSessionMixIn):
             except KeyError:
                 self._ = self.__ = unicode
         self.lang = language
-        
+
     def change_property(self, prop, value):
         assert prop == 'lang' # this is the only one changeable property for now
         self.set_language(value)
 
     def __str__(self):
-        return '<%ssession %s (%s 0x%x)>' % (self.cnxtype, self.user.login, 
+        return '<%ssession %s (%s 0x%x)>' % (self.cnxtype, self.user.login,
                                              self.id, id(self))
 
     def etype_class(self, etype):
         """return an entity class for the given entity type"""
         return self.vreg.etype_class(etype)
-    
+
     def entity(self, eid):
         """return a result set for the given eid"""
         return self.eid_rset(eid).get_entity(0, 0)
-        
+
     def _touch(self):
         """update latest session usage timestamp and reset mode to read
         """
         self.timestamp = time()
         self.local_perm_cache.clear()
         self._threaddata.mode = 'read'
-        
+
     def set_pool(self):
         """the session need a pool to execute some queries"""
         if self.pool is None:
             self._threaddata.pool = self.repo._get_pool()
-            try:                
+            try:
                 self._threaddata.pool.pool_set(self)
             except:
                 self.repo._free_pool(self.pool)
                 self._threaddata.pool = None
                 raise
         return self._threaddata.pool
-            
+
     def reset_pool(self):
         """the session has no longer using its pool, at least for some time
         """
@@ -192,7 +170,7 @@ class Session(RequestSessionMixIn):
             self.repo._free_pool(self.pool)
             self.pool.pool_reset(self)
             self._threaddata.pool = None
-            
+
     def system_sql(self, sql, args=None):
         """return a sql cursor on the system database"""
         if not sql.split(None, 1)[0].upper() == 'SELECT':
@@ -203,26 +181,26 @@ class Session(RequestSessionMixIn):
 
     def actual_session(self):
         """return the original parent session if any, else self"""
-        return self        
+        return self
 
     # shared data handling ###################################################
-    
+
     def get_shared_data(self, key, default=None, pop=False):
         """return value associated to `key` in session data"""
         if pop:
             return self.data.pop(key, default)
         else:
             return self.data.get(key, default)
-        
+
     def set_shared_data(self, key, value, querydata=False):
         """set value associated to `key` in session data"""
         if querydata:
             self.set_query_data(key, value)
         else:
             self.data[key] = value
-        
+
     # request interface #######################################################
-    
+
     def set_entity_cache(self, entity):
         # no entity cache in the server, too high risk of inconsistency
         # between pre/post hooks
@@ -233,20 +211,20 @@ class Session(RequestSessionMixIn):
 
     def base_url(self):
         return self.repo.config['base-url'] or u''
-        
+
     def from_controller(self):
         """return the id (string) of the controller issuing the request (no
         sense here, always return 'view')
         """
         return 'view'
-    
+
     def source_defs(self):
         return self.repo.source_defs()
 
     def describe(self, eid):
         """return a tuple (type, sourceuri, extid) for the entity with id <eid>"""
         return self.repo.type_and_source_from_eid(eid, self)
-    
+
     # db-api like interface ###################################################
 
     def source_from_eid(self, eid):
@@ -271,7 +249,7 @@ class Session(RequestSessionMixIn):
         # need shared pool set
         self.set_pool()
         return csession
-        
+
     def unsafe_execute(self, rql, kwargs=None, eid_key=None, build_descr=False,
                        propagate=False):
         """like .execute but with security checking disabled (this method is
@@ -288,7 +266,7 @@ class Session(RequestSessionMixIn):
     def cursor(self):
         """return a rql cursor"""
         return self
-    
+
     def execute(self, rql, kwargs=None, eid_key=None, build_descr=True,
                 propagate=False):
         """db-api like method directly linked to the querier execute method
@@ -298,7 +276,7 @@ class Session(RequestSessionMixIn):
         """
         rset = self._execute(self, rql, kwargs, eid_key, build_descr)
         return self.decorate_rset(rset, propagate)
-    
+
     def commit(self, reset_pool=True):
         """commit the current session's transaction"""
         if self.pool is None:
@@ -339,7 +317,7 @@ class Session(RequestSessionMixIn):
             self._query_data.clear()
             if reset_pool:
                 self.reset_pool()
-                        
+
     def rollback(self, reset_pool=True):
         """rollback the current session's transaction"""
         if self.pool is None:
@@ -362,19 +340,19 @@ class Session(RequestSessionMixIn):
             self._query_data.clear()
             if reset_pool:
                 self.reset_pool()
-        
+
     def close(self):
         """do not close pool on session close, since they are shared now"""
         self.rollback()
-        
+
     # transaction data/operations management ##################################
-    
+
     def add_query_data(self, key, value):
         self._query_data.setdefault(key, []).append(value)
-    
+
     def set_query_data(self, key, value):
         self._query_data[key] = value
-        
+
     def query_data(self, key, default=None, setdefault=False, pop=False):
         if setdefault:
             assert not pop
@@ -383,7 +361,7 @@ class Session(RequestSessionMixIn):
             return self._query_data.pop(key, default)
         else:
             return self._query_data.get(key, default)
-        
+
     def add_operation(self, operation, index=None):
         """add an observer"""
         assert self.commit_state != 'commit'
@@ -391,9 +369,9 @@ class Session(RequestSessionMixIn):
             self.pending_operations.insert(index, operation)
         else:
             self.pending_operations.append(operation)
-            
+
     # querier helpers #########################################################
-    
+
     def build_description(self, rqlst, args, result):
         """build a description for a given result"""
         if len(rqlst.children) == 1 and len(rqlst.children[0].solutions) == 1:
@@ -407,7 +385,7 @@ class Session(RequestSessionMixIn):
 
     def manual_build_descr(self, rqlst, args, result):
         """build a description for a given result by analysing each row
-        
+
         XXX could probably be done more efficiently during execution of query
         """
         # not so easy, looks for variable which changes from one solution
@@ -432,7 +410,7 @@ class Session(RequestSessionMixIn):
         if not todetermine:
             return [tuple(basedescription)] * len(result)
         return self._build_descr(result, basedescription, todetermine)
-    
+
     def _build_descr(self, result, basedescription, todetermine):
         description = []
         etype_from_eid = self.describe
@@ -444,23 +422,23 @@ class Session(RequestSessionMixIn):
                     # None value inserted by an outer join, no type
                     row_descr[index] = None
                     continue
-                try:
-                    if isfinal:
-                        row_descr[index] = etype_from_pyobj(value)
-                    else:
+                if isfinal:
+                    row_descr[index] = etype_from_pyobj(value)
+                else:
+                    try:
                         row_descr[index] = etype_from_eid(value)[0]
-                except UnknownEid:
-                    self.critical('wrong eid in repository, should check database')
-                    row_descr[index] = row[index] = None
+                    except UnknownEid:
+                        self.critical('wrong eid %s in repository, should check database' % value)
+                        row_descr[index] = row[index] = None
             description.append(tuple(row_descr))
         return description
 
-    
+
 class ChildSession(Session):
     """child (or internal) session are used to hijack the security system
     """
     cnxtype = 'inmemory'
-    
+
     def __init__(self, parent_session):
         self.id = None
         self.is_internal_session = False
@@ -476,7 +454,7 @@ class ChildSession(Session):
         self._ = self.__ = parent_session._
         # short cut to querier .execute method
         self._execute = self.repo.querier.execute
-    
+
     @property
     def super_session(self):
         return self
@@ -492,7 +470,7 @@ class ChildSession(Session):
     def set_commit_state(self, value):
         self.parent_session.set_commit_state(value)
     commit_state = property(get_commit_state, set_commit_state)
-    
+
     @property
     def pool(self):
         return self.parent_session.pool
@@ -502,11 +480,11 @@ class ChildSession(Session):
     @property
     def _query_data(self):
         return self.parent_session._query_data
-        
+
     def set_pool(self):
         """the session need a pool to execute some queries"""
         self.parent_session.set_pool()
-            
+
     def reset_pool(self):
         """the session has no longer using its pool, at least for some time
         """
@@ -515,19 +493,19 @@ class ChildSession(Session):
     def actual_session(self):
         """return the original parent session if any, else self"""
         return self.parent_session
-        
+
     def commit(self, reset_pool=True):
         """commit the current session's transaction"""
         self.parent_session.commit(reset_pool)
-        
+
     def rollback(self, reset_pool=True):
         """rollback the current session's transaction"""
         self.parent_session.rollback(reset_pool)
-        
+
     def close(self):
         """do not close pool on session close, since they are shared now"""
         self.rollback()
-        
+
     def user_data(self):
         """returns a dictionnary with this user's information"""
         return self.parent_session.user_data()
@@ -535,14 +513,14 @@ class ChildSession(Session):
 
 class InternalSession(Session):
     """special session created internaly by the repository"""
-    
+
     def __init__(self, repo, cnxprops=None):
         super(InternalSession, self).__init__(_IMANAGER, repo, cnxprops,
                                               _id='internal')
         self.cnxtype = 'inmemory'
         self.is_internal_session = True
         self.is_super_session = True
-    
+
     @property
     def super_session(self):
         return self
@@ -566,7 +544,7 @@ class InternalManager(object):
 
     def owns(self, eid):
         return True
-    
+
     def has_permission(self, pname, contexteid=None):
         return True
 
@@ -575,7 +553,7 @@ class InternalManager(object):
             return 'en'
         return None
 
-_IMANAGER= InternalManager()
+_IMANAGER = InternalManager()
 
 from logging import getLogger
 from cubicweb import set_log_methods

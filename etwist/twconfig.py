@@ -2,13 +2,13 @@
 
 * the "twisted" configuration to get a web application running in a standalone
   twisted web server which talk to a repository server using Pyro
-  
+
 * the "all-in-one" configuration to get a web application running in a twisted
   web server integrating a repository server in the same process (only available
   if the repository part of the software is installed
 
 :organization: Logilab
-:copyright: 2001-2008 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+:copyright: 2001-2009 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 """
 __docformat__ = "restructuredtext en"
@@ -63,12 +63,12 @@ the repository rather than the user running the command',
         ('pyro-server',
          {'type' : 'yn',
           # pyro is only a recommends by default, so don't activate it here
-          'default': False, 
+          'default': False,
           'help': 'run a pyro server',
           'group': 'main', 'inputlevel': 1,
           }),
         ) + WebConfiguration.options)
-    
+
     def server_file(self):
         return join(self.apphome, '%s-%s.py' % (self.appid, self.name))
 
@@ -91,6 +91,6 @@ try:
         def pyro_enabled(self):
             """tell if pyro is activated for the in memory repository"""
             return self['pyro-server']
-        
+
 except ImportError:
     pass

@@ -27,7 +27,7 @@ Configuration du serveur web
 
 :`main.anonymous-user`, `main.anonymous-password`:
    login et mot de passe à utiliser pour se connecter au serveur RQL lors des
-   connexions HTTP anonymes. Il faut que le compte EUser associé existe.
+   connexions HTTP anonymes. Il faut que le compte CWUser associé existe.
 
 :`main.base-url`:
    url de base du site, à utiliser pour générer les urls des pages web
@@ -143,7 +143,7 @@ Configuration journalisation
 
 Configuration Eproperties
 -------------------------
-D'autres paramètres de configuration sont sous la forme d'entités `EProperty`
+D'autres paramètres de configuration sont sous la forme d'entités `CWProperty`
 dans la base de données. Il faut donc les éditer via l'interface web ou par des
 requêtes rql.
 

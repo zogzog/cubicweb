@@ -28,14 +28,14 @@ class UrlRewriteTC(TestCase):
             ('/manage', dict(vid='manage')),
             ('/notfound', {'vid': '404'}),
             ('/error', {'vid': 'error'}),
-            ('/schema/([^/]+?)/?$', {'rql': r'Any X WHERE X is EEType, X name "\1"', 'vid': 'eschema'}),
+            ('/schema/([^/]+?)/?$', {'rql': r'Any X WHERE X is CWEType, X name "\1"', 'vid': 'eschema'}),
             ('/add/([^/]+?)/?$' , dict(vid='creation', etype=r'\1')),
             ('/doc/images/(.+?)/?$', dict(fid='\\1', vid='wdocimages')),
             ('/doc/?$', dict(fid='main', vid='wdoc')),
             ('/doc/(.+?)/?$', dict(fid='\\1', vid='wdoc')),
             ('/changelog/?$', dict(vid='changelog')),
             # now in SchemaBasedRewriter
-            #('/search/(.+)$', dict(rql=r'Any X WHERE X has_text "\1"')), 
+            #('/search/(.+)$', dict(rql=r'Any X WHERE X has_text "\1"')),
             ])
 
 
@@ -94,8 +94,8 @@ class RgxActionRewriteTC(EnvBasedTC):
         pmid, rset = rewriter.rewrite(req, u'/DaLToN/JoE')
         self.assertEquals(len(rset), 1)
         self.assertEquals(rset[0][0], self.p1.eid)
-        
-    
+
+
 
 if __name__ == '__main__':
     unittest_main()

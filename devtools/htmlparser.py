@@ -1,20 +1,17 @@
 """defines a validating HTML parser used in web application tests"""
 
 import re
-from StringIO import StringIO
 
 from lxml import etree
-from lxml.builder import E
 
-from cubicweb.common.view import STRICT_DOCTYPE, TRANSITIONAL_DOCTYPE, CW_XHTML_EXTENSIONS
-
-STRICT_DOCTYPE = str(STRICT_DOCTYPE % CW_XHTML_EXTENSIONS).strip()
-TRANSITIONAL_DOCTYPE = str(TRANSITIONAL_DOCTYPE % CW_XHTML_EXTENSIONS).strip()
+from cubicweb.view import STRICT_DOCTYPE, TRANSITIONAL_DOCTYPE
+STRICT_DOCTYPE = str(STRICT_DOCTYPE)
+TRANSITIONAL_DOCTYPE = str(TRANSITIONAL_DOCTYPE)
 
 ERR_COUNT = 0
 
 class Validator(object):
-    
+
     def parse_string(self, data, sysid=None):
         try:
             data = self.preprocess_data(data)
@@ -55,24 +52,11 @@ class DTDValidator(Validator):
         for blockquote in blockquotes:
             parent = blockquote.getparent()
             parent.remove(blockquote)
-##         # for each blockquote, wrap unauthorized child in a div
-##         for blockquote in blockquotes:
-##             if len(blockquote):
-##                 needs_wrap = [(index, child) for index, child in enumerate(blockquote)
-##                               if child.tag not in expected]
-##                 for index, child in needs_wrap:
-##                     # the child is automatically popped from blockquote when
-##                     # its parent is changed
-##                     div = E.div(child)
-##                     blockquote.insert(index, div)
-##             elif blockquote.text:
-##                 div = E.div(blockquote.text)
-##                 blockquote.text = None
-##                 blockquote.append(div)
         data = etree.tostring(tree)
-        return '<?xml version="1.0" encoding="UTF-8"?>%s\n%s' % (STRICT_DOCTYPE, data)
+        return '<?xml version="1.0" encoding="UTF-8"?>%s\n%s' % (
+            STRICT_DOCTYPE, data)
 
-   
+
 class SaxOnlyValidator(Validator):
 
     def __init__(self):
@@ -85,7 +69,7 @@ class HTMLValidator(Validator):
         Validator.__init__(self)
         self.parser = etree.HTMLParser()
 
-    
+
 
 class PageInfo(object):
     """holds various informations on the view's output"""
@@ -103,7 +87,7 @@ class PageInfo(object):
         self.h4_tags = self.find_tag('h4')
         self.input_tags = self.find_tag('input')
         self.title_tags = [self.h1_tags, self.h2_tags, self.h3_tags, self.h4_tags]
-        
+
     def find_tag(self, tag):
         """return a list which contains text of all "tag" elements """
         if self.default_ns is None:
@@ -113,14 +97,14 @@ class PageInfo(object):
         if tag in ('a', 'input'):
             return [(elt.text, elt.attrib) for elt in self.etree.iterfind(iterstr)]
         return [u''.join(elt.xpath('.//text()')) for elt in self.etree.iterfind(iterstr)]
-         
+
     def appears(self, text):
         """returns True if <text> appears in the page"""
         return text in self.raw_text
 
     def __contains__(self, text):
         return text in self.source
-    
+
     def has_title(self, text, level=None):
         """returns True if <h?>text</h?>
 
@@ -150,7 +134,7 @@ class PageInfo(object):
                 if sre.match(title):
                     return True
             return False
-    
+
     def has_link(self, text, url=None):
         """returns True if <a href=url>text</a> was found in the page"""
         for link_text, attrs in self.a_tags:
@@ -164,7 +148,7 @@ class PageInfo(object):
                 except KeyError:
                     continue
         return False
-    
+
     def has_link_regexp(self, pattern, url=None):
         """returns True if <a href=url>pattern</a> was found in the page"""
         sre = re.compile(pattern)

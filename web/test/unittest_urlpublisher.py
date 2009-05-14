@@ -21,11 +21,11 @@ class URLPublisherTC(EnvBasedTC):
         b = self.add_entity('BlogEntry', title=u'hell\'o', content=u'blabla')
         c = self.add_entity('Tag', name=u'yo') # take care: Tag's name normalized to lower case
         self.execute('SET C tags B WHERE C eid %(c)s, B eid %(b)s', {'c':c.eid, 'b':b.eid}, 'b')
-                          
+
     def process(self, url):
         req = self.req = self.request()
         return self.env.app.url_resolver.process(req, url)
-        
+
     def test_raw_path(self):
         """tests raw path resolution'"""
         self.assertEquals(self.process('view'), ('view', None))
@@ -41,32 +41,32 @@ class URLPublisherTC(EnvBasedTC):
 
     def test_rest_path(self):
         """tests the rest path resolution"""
-        ctrl, rset = self.process('EUser')
+        ctrl, rset = self.process('CWUser')
         self.assertEquals(ctrl, 'view')
-        self.assertEquals(rset.description[0][0], 'EUser')
+        self.assertEquals(rset.description[0][0], 'CWUser')
         self.assertEquals(rset.printable_rql(),
-                          "Any X,AA,AB,AC,AD ORDERBY AA WHERE X is EUser, X login AA, X firstname AB, X surname AC, X modification_date AD")
-        ctrl, rset = self.process('EUser/login/admin')
+                          "Any X,AA,AB,AC,AD ORDERBY AA WHERE X is CWUser, X login AA, X firstname AB, X surname AC, X modification_date AD")
+        ctrl, rset = self.process('CWUser/login/admin')
         self.assertEquals(ctrl, 'view')
         self.assertEquals(len(rset), 1)
-        self.assertEquals(rset.description[0][0], 'EUser')
-        self.assertEquals(rset.printable_rql(), 'Any X WHERE X is EUser, X login "admin"')
-        ctrl, rset = self.process('euser/admin')
+        self.assertEquals(rset.description[0][0], 'CWUser')
+        self.assertEquals(rset.printable_rql(), 'Any X WHERE X is CWUser, X login "admin"')
+        ctrl, rset = self.process('cwuser/admin')
         self.assertEquals(ctrl, 'view')
         self.assertEquals(len(rset), 1)
-        self.assertEquals(rset.description[0][0], 'EUser')
-        self.assertEquals(rset.printable_rql(), 'Any X WHERE X is EUser, X login "admin"')
-        ctrl, rset = self.process('euser/eid/%s'%rset[0][0])
+        self.assertEquals(rset.description[0][0], 'CWUser')
+        self.assertEquals(rset.printable_rql(), 'Any X WHERE X is CWUser, X login "admin"')
+        ctrl, rset = self.process('cwuser/eid/%s'%rset[0][0])
         self.assertEquals(ctrl, 'view')
         self.assertEquals(len(rset), 1)
-        self.assertEquals(rset.description[0][0], 'EUser')
-        self.assertEquals(rset.printable_rql(), 'Any X WHERE X is EUser, X eid 5')
+        self.assertEquals(rset.description[0][0], 'CWUser')
+        self.assertEquals(rset.printable_rql(), 'Any X WHERE X is CWUser, X eid 5')
         # test non-ascii paths
-        ctrl, rset = self.process('EUser/login/%C3%BFsa%C3%BFe')
+        ctrl, rset = self.process('CWUser/login/%C3%BFsa%C3%BFe')
         self.assertEquals(ctrl, 'view')
         self.assertEquals(len(rset), 1)
-        self.assertEquals(rset.description[0][0], 'EUser')
-        self.assertEquals(rset.printable_rql(), u'Any X WHERE X is EUser, X login "ÿsaÿe"')
+        self.assertEquals(rset.description[0][0], 'CWUser')
+        self.assertEquals(rset.printable_rql(), u'Any X WHERE X is CWUser, X login "ÿsaÿe"')
         # test quoted paths
         ctrl, rset = self.process('BlogEntry/title/hell%27o')
         self.assertEquals(ctrl, 'view')
@@ -74,10 +74,10 @@ class URLPublisherTC(EnvBasedTC):
         self.assertEquals(rset.description[0][0], 'BlogEntry')
         self.assertEquals(rset.printable_rql(), u'Any X WHERE X is BlogEntry, X title "hell\'o"')
         # errors
-        self.assertRaises(NotFound, self.process, 'EUser/eid/30000')
+        self.assertRaises(NotFound, self.process, 'CWUser/eid/30000')
         self.assertRaises(NotFound, self.process, 'Workcases')
-        self.assertRaises(NotFound, self.process, 'EUser/inexistant_attribute/joe')
-    
+        self.assertRaises(NotFound, self.process, 'CWUser/inexistant_attribute/joe')
+
     def test_action_path(self):
         """tests the action path resolution"""
         self.assertRaises(Redirect, self.process, '1/edit')
@@ -85,14 +85,14 @@ class URLPublisherTC(EnvBasedTC):
         self.assertRaises(Redirect, self.process, 'Tag/yo/edit')
         self.assertRaises(NotFound, self.process, 'view/edit')
         self.assertRaises(NotFound, self.process, '1/non_action')
-        self.assertRaises(NotFound, self.process, 'EUser/login/admin/non_action')
+        self.assertRaises(NotFound, self.process, 'CWUser/login/admin/non_action')
 
 
     def test_regexp_path(self):
         """tests the regexp path resolution"""
         ctrl, rset = self.process('add/Task')
         self.assertEquals(ctrl, 'view')
-        self.assertEquals(rset, None) 
+        self.assertEquals(rset, None)
         self.assertEquals(self.req.form, {'etype' : "Task", 'vid' : "creation"})
         self.assertRaises(NotFound, self.process, 'add/foo/bar')
 
@@ -103,11 +103,11 @@ class URLPublisherTC(EnvBasedTC):
         try:
             path = str(FakeRequest().url_quote(u'été'))
             ctrl, rset = self.process(path)
-            self.assertEquals(rset, None) 
+            self.assertEquals(rset, None)
             self.assertEquals(self.req.form, {'vid' : "foo"})
         finally:
             SimpleReqRewriter.rules = oldrules
-            
+
 
 if __name__ == '__main__':
     unittest_main()

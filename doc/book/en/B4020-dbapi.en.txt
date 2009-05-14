@@ -1,9 +1,0 @@
-.. -*- coding: utf-8 -*-
-
-DB-API
-=========
-
-[WRITE ME]
-
-* direct connection to the repository
-

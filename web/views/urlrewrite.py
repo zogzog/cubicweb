@@ -1,22 +1,19 @@
 """Rules based url rewriter component, to get configurable RESTful urls
 
 :organization: Logilab
-:copyright: 2007-2008 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+:copyright: 2007-2009 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 """
 import re
 
-from cubicweb.vregistry import autoselectors
-
-from cubicweb.common.registerers import accepts_registerer
-from cubicweb.common.appobject import AppObject
+from cubicweb.appobject import AppObject
 
 
 def rgx(pattern, flags=0):
     """this is just a convenient shortcout to add the $ sign"""
     return re.compile(pattern+'$', flags)
 
-class metarewriter(autoselectors):
+class metarewriter(type):
     """auto-extend rules dictionnary"""
     def __new__(mcs, name, bases, classdict):
         # collect baseclass' rules
@@ -55,11 +52,9 @@ class URLRewriter(AppObject):
     """
     __metaclass__ = metarewriter
     __registry__ = 'urlrewriting'
-    __registerer__ = accepts_registerer
     __abstract__ = True
 
     id = 'urlrewriting'
-    accepts = ('Any',)
     priority = 1
 
     def rewrite(self, req, uri):
@@ -83,19 +78,18 @@ class SimpleReqRewriter(URLRewriter):
         ('/manage', dict(vid='manage')),
         ('/notfound', dict(vid='404')),
         ('/error', dict(vid='error')),
-        (rgx('/schema/([^/]+?)/?'),  dict(vid='eschema', rql=r'Any X WHERE X is EEType, X name "\1"')),
+        (rgx('/schema/([^/]+?)/?'),  dict(vid='eschema', rql=r'Any X WHERE X is CWEType, X name "\1"')),
         (rgx('/add/([^/]+?)/?'), dict(vid='creation', etype=r'\1')),
         (rgx('/doc/images/(.+?)/?'), dict(vid='wdocimages', fid=r'\1')),
         (rgx('/doc/?'), dict(vid='wdoc', fid=r'main')),
         (rgx('/doc/(.+?)/?'), dict(vid='wdoc', fid=r'\1')),
         (rgx('/changelog/?'), dict(vid='changelog')),
         ]
-    
+
     def rewrite(self, req, uri):
         """for each `input`, `output `in rules, if `uri` matches `input`,
         req's form is updated with `output`
         """
-        rset = None
         for data in self.rules:
             try:
                 inputurl, infos, required_groups = data
@@ -112,7 +106,7 @@ class SimpleReqRewriter(URLRewriter):
                 # XXX what about i18n ? (vtitle for instance)
                 for param, value in infos.items():
                     if isinstance(value, basestring):
-                        req.form[param]= inputurl.sub(value, uri)
+                        req.form[param] = inputurl.sub(value, uri)
                     else:
                         req.form[param] = value
                 break
@@ -185,7 +179,7 @@ class SchemaBasedRewriter(URLRewriter):
     rules = [
         # rgxp : callback
         (rgx('/search/(.+)'), build_rset(rql=r'Any X WHERE X has_text %(text)s',
-                                         rgxgroups=[('text', 1)])), 
+                                         rgxgroups=[('text', 1)])),
         ]
 
     def rewrite(self, req, uri):

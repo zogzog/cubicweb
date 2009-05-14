@@ -24,13 +24,15 @@ class MigrTestConfig(TestServerConfiguration):
 
     def cube_migration_scripts_dir(cls, cube):
         return TMIGRDIR
-    
+
 class MigrationToolsTC(TestCase):
     def setUp(self):
         self.config = MigrTestConfig('data')
         from yams.schema import Schema
         self.config.load_schema = lambda expand_cubes=False: Schema('test')
-        
+        self.config.__class__.cubicweb_vobject_path = frozenset()
+        self.config.__class__.cube_vobject_path = frozenset()
+
     def test_migration_files_base(self):
         self.assertListEquals(migration_files(self.config, [('cubicweb', (2,3,0), (2,4,0)),
                                                             ('TEMPLATE', (0,0,2), (0,0,3))]),
@@ -46,7 +48,7 @@ class MigrationToolsTC(TestCase):
                               [SMIGRDIR+'bootstrapmigration_repository.py',
                                SMIGRDIR+'2.6.0_Any.sql',
                                TMIGRDIR+'0.0.4_Any.py'])
-        
+
 ##     def test_migration_files_overlap(self):
 ##         self.assertListEquals(migration_files(self.config, (2,4,0), (2,10,2),
 ##                                               (0,0,2), (0,1,2)),
@@ -60,7 +62,7 @@ class MigrationToolsTC(TestCase):
 ##                                TMIGRDIR+'0.1.0_repository.py',
 ##                                TMIGRDIR+'0.1.2_Any.py',
 ##                                SMIGRDIR+'2.10.1_2.10.2_Any.sql'])
-        
+
     def test_migration_files_for_mode(self):
         from cubicweb.server.migractions import ServerMigrationHelper
         self.assertIsInstance(self.config.migration_handler(), ServerMigrationHelper)

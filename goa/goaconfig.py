@@ -1,7 +1,7 @@
 """google appengine configuration
 
 :organization: Logilab
-:copyright: 2008 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+:copyright: 2008-2009 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 """
 __docformat__ = "restructuredtext en"
@@ -11,7 +11,7 @@ from os.path import join
 
 from cubicweb import CW_SOFTWARE_ROOT
 from cubicweb.cwconfig import CubicWebConfiguration
-from cubicweb.web.webconfig import WebConfiguration, merge_options, Method
+from cubicweb.web.webconfig import WebConfiguration, merge_options
 from cubicweb.server.serverconfig import ServerConfiguration
 from cubicweb.goa.dbmyams import load_schema
 
@@ -32,7 +32,7 @@ class GAEConfiguration(ServerConfiguration, WebConfiguration):
     """repository and web application in the same twisted process"""
     name = 'app'
     repo_method = 'inmemory'
-    options = merge_options(( 
+    options = merge_options((
         ('included-cubes',
          {'type' : 'csv',
           'default': [],
@@ -75,7 +75,7 @@ class GAEConfiguration(ServerConfiguration, WebConfiguration):
           'anonymous access using the app.yaml file)',
           'group': 'main', 'inputlevel': 1,
           }),
-        
+
         ) + WebConfiguration.options + ServerConfiguration.options)
     options = [(optname, optdict) for optname, optdict in options
                if not optname in UNSUPPORTED_OPTIONS]
@@ -94,10 +94,10 @@ class GAEConfiguration(ServerConfiguration, WebConfiguration):
     # deactivate some hooks during [pre|post]create scripts execution
     # (unique values check, owned_by/created_by relations setup)
     free_wheel = True
-    
+
     if not os.environ.get('APYCOT_ROOT'):
         CUBES_DIR = join(CW_SOFTWARE_ROOT, '../cubes')
-    
+
     def __init__(self, appid, apphome=None):
         if apphome is None:
             apphome = 'data'
@@ -111,7 +111,7 @@ class GAEConfiguration(ServerConfiguration, WebConfiguration):
         if key == 'base-url':
             return self._base_url
         return super(GAEConfiguration, self).__getitem__(key)
-    
+
     # overriden from cubicweb base configuration
 
     @property
@@ -136,15 +136,15 @@ class GAEConfiguration(ServerConfiguration, WebConfiguration):
 
     def instance_md5_version(self):
         return ''
-    
+
     def _init_base_url(self):
         pass
-    
+
     # overriden from cubicweb server configuration
-    
+
     def sources(self):
         return {'system': {'adapter': 'gae'}}
-    
+
     def load_schema(self, schemaclasses=None, extrahook=None):
         try:
             return self._schema
@@ -155,10 +155,11 @@ class GAEConfiguration(ServerConfiguration, WebConfiguration):
     # goa specific
     def repo_session(self, sessionid):
         return self.repository()._sessions[sessionid]
-    
+
     def is_anonymous_user(self, login):
         if self['use-google-auth']:
             from google.appengine.api import users
             return users.get_current_user() is None
         else:
             return login == self.anonymous_user()[0]
+

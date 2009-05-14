@@ -2,7 +2,6 @@
 """
 
 import sys
-from mx.DateTime import now
 
 from logilab.common.testlib import TestCase, unittest_main
 
@@ -21,12 +20,12 @@ class SQLAdapterMixInTC(TestCase):
     def test_init(self):
         o = SQLAdapterMixIn(BASE_CONFIG)
         self.assertEquals(o.encoding, 'UTF-8')
-        
+
     def test_init_encoding(self):
         config = BASE_CONFIG.copy()
         config['db-encoding'] = 'ISO-8859-1'
         o = SQLAdapterMixIn(config)
         self.assertEquals(o.encoding, 'ISO-8859-1')
-        
+
 if __name__ == '__main__':
     unittest_main()

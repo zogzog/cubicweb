@@ -1,0 +1,131 @@
+.. -*- coding: utf-8 -*-
+
+Templates
+---------
+
+Look at ``cubicweb/web/views/basetemplates.py`` and you will
+find the base templates used to generate HTML for your application.
+
+A page is composed as indicated on the schema below:
+
+.. image:: ../../images/lax-book.06-main-template-layout.en.png
+
+In this section we will demonstrate a change in one of the main
+interesting template from the three you will look for, 
+that is to say, the HTMLPageHeader, the HTMLPageFooter 
+and the TheMainTemplate.
+
+
+Customize a template
+~~~~~~~~~~~~~~~~~~~~
+
+Based on the diagram below, each template can be overriden
+by your customized template. To do so, we recommand you create
+a Python module ``blog.views.templates`` to keep it organized.
+In this module you will have to import the parent class you are
+interested as follows: ::
+  
+  from cubicweb.web.views.basetemplates import HTMLPageHeader, \
+                                    HTMLPageFooter, TheMainTemplate
+
+and then create your sub-class::
+
+  class MyBlogHTMLPageHeader(HTMLPageHeader):
+      ...  
+
+Customize header
+`````````````````
+
+Let's now move the search box in the header and remove the login form
+from the header. We'll show how to move it to the left column of the application.
+
+Let's say we do not want anymore the login menu to be in the header
+
+First, to remove the login menu, we just need to comment out the display of the
+login graphic component such as follows:
+
+.. code-block :: python
+
+  class MyBlogHTMLPageHeader(HTMLPageHeader):
+    
+      def main_header(self, view):
+          """build the top menu with authentification info and the rql box"""
+          self.w(u'<table id="header"><tr>\n')
+          self.w(u'<td id="firstcolumn">')
+          self.vreg.select_component('logo', self.req, self.rset).dispatch(w=self.w)
+          self.w(u'</td>\n')
+          # appliname and breadcrumbs
+          self.w(u'<td id="headtext">')
+          comp = self.vreg.select_component('appliname', self.req, self.rset)
+          if comp and comp.propval('visible'):
+              comp.dispatch(w=self.w)
+          comp = self.vreg.select_component('breadcrumbs', self.req, self.rset, view=view)
+          if comp and comp.propval('visible'):
+              comp.dispatch(w=self.w, view=view)
+          self.w(u'</td>')
+          # logged user and help
+          #self.w(u'<td>\n')
+          #comp = self.vreg.select_component('loggeduserlink', self.req, self.rset)
+          #comp.dispatch(w=self.w)
+          #self.w(u'</td><td>')
+
+          self.w(u'<td>')
+          helpcomp = self.vreg.select_component('help', self.req, self.rset)
+          if helpcomp: # may not be available if Card is not defined in the schema
+              helpcomp.dispatch(w=self.w)
+          self.w(u'</td>')
+          # lastcolumn
+          self.w(u'<td id="lastcolumn">')
+          self.w(u'</td>\n')
+          self.w(u'</tr></table>\n')
+          self.template('logform', rset=self.rset, id='popupLoginBox', klass='hidden',
+                        title=False, message=False)
+
+
+
+.. image:: ../../images/lax-book.06-header-no-login.en.png
+
+Customize footer
+````````````````
+
+If you want to change the footer for example, look
+for HTMLPageFooter and override it in your views file as in: ::
+
+..code-block :: python
+
+  from cubicweb.web.views.basetemplates import HTMLPageFooter
+
+  class MyHTMLPageFooter(HTMLPageFooter):
+
+      def call(self, **kwargs):
+          self.w(u'<div class="footer">')
+          self.w(u'This website has been created with <a href="http://cubicweb.org">CubicWeb</a>.')
+          self.w(u'</div>')
+
+Updating a view does not require any restart of the server. By reloading
+the page you can see your new page footer.
+
+
+TheMainTemplate
+```````````````
+
+.. _TheMainTemplate:
+
+The MainTemplate is a bit complex as it tries to accomodate many
+different cases. We are now about to go through it and cutomize entirely
+our application.
+
+TheMainTemplate is responsible for the general layout of the entire application. 
+It defines the template of ``id = main`` that is used by the application. Is 
+also defined in ``cubicweb/web/views/basetemplates.py`` another template that can
+be used based on TheMainTemplate called SimpleMainTemplate which does not have 
+a top section.
+
+.. image:: ../../images/lax-book.06-simple-main-template.en.png
+
+XXX
+[WRITE ME]
+
+* customize MainTemplate and show that everything in the user
+  interface can be changed
+

@@ -1,7 +1,7 @@
 """goa specific registry
 
 :organization: Logilab
-:copyright: 2008 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+:copyright: 2008-2009 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 """
 __docformat__ = "restructuredtext en"
@@ -19,7 +19,7 @@ def _pkg_name(cube, module):
     return 'cubes.%s.%s' % (cube, module)
 
 class GAERegistry(CubicWebRegistry):
-    
+
     def set_schema(self, schema):
         """disable reload hooks of cubicweb registry set_schema method"""
         self.schema = schema
@@ -37,7 +37,7 @@ class GAERegistry(CubicWebRegistry):
         for cube in reversed(self.config.cubes()):
             self.load_cube(cube)
         self.load_application(applroot)
-        
+
     def load_directory(self, directory, cube, skip=()):
         for filename in listdir(directory):
             if filename[-3:] == '.py' and not filename in skip:
@@ -70,6 +70,3 @@ class GAERegistry(CubicWebRegistry):
             # when using db.Model defined schema, the defined class is used as
             # entity class as well and so have to be registered
             self._import(_pkg_name(cube, 'schema'))
-
-
-    

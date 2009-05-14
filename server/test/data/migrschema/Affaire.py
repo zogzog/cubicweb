@@ -6,7 +6,7 @@ class Affaire(EntityType):
         'update': ('managers', 'owners', ERQLExpression('X concerne S, S owned_by U')),
         'delete': ('managers', 'owners', ERQLExpression('X concerne S, S owned_by U')),
         }
-    
+
     ref = String(fulltextindexed=True, indexed=True,
                  constraints=[SizeConstraint(16)])
     sujet = String(fulltextindexed=True,
@@ -18,4 +18,4 @@ class concerne(RelationType):
         'add':    ('managers', RRQLExpression('U has_update_permission S')),
         'delete': ('managers', RRQLExpression('O owned_by U')),
         }
-    
+

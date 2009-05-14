@@ -4,11 +4,11 @@ from cubicweb.devtools.apptest import EnvBasedTC
 
 class ActionsTC(EnvBasedTC):
     def test_view_action(self):
-        req = self.request(__message='bla bla bla', vid='rss', rql='EUser X')
-        rset = self.execute('EUser X')
+        req = self.request(__message='bla bla bla', vid='rss', rql='CWUser X')
+        rset = self.execute('CWUser X')
         vaction = [action for action in self.vreg.possible_vobjects('actions', req, rset)
                    if action.id == 'view'][0]
-        self.assertEquals(vaction.url(), 'http://testing.fr/cubicweb/view?rql=EUser%20X')
+        self.assertEquals(vaction.url(), 'http://testing.fr/cubicweb/view?rql=CWUser%20X')
 
     def test_sendmail_action(self):
         req = self.request()
@@ -20,6 +20,6 @@ class ActionsTC(EnvBasedTC):
         rset = self.execute('Any X WHERE X login "anon"', req=req)
         self.failIf([action for action in self.vreg.possible_vobjects('actions', req, rset)
                      if action.id == 'sendemail'])
-        
+
 if __name__ == '__main__':
     unittest_main()

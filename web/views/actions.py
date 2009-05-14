@@ -6,71 +6,109 @@
 """
 __docformat__ = "restructuredtext en"
 
-from cubicweb.common.selectors import (searchstate_accept, match_user_group, yes,
-                                       one_line_rset, two_lines_rset, one_etype_rset,
-                                       authenticated_user, none_rset,
-                                       match_search_state, chainfirst, chainall)
-
-from cubicweb.web.action import Action, EntityAction,  LinkToEntityAction
-from cubicweb.web.views import linksearch_select_url, linksearch_match
-from cubicweb.web.views.baseviews import vid_from_rset
+from cubicweb.vregistry import objectify_selector
+from cubicweb.selectors import (EntitySelector,
+    one_line_rset, two_lines_rset, one_etype_rset, relation_possible,
+    non_final_entity,
+    authenticated_user, match_user_groups, match_search_state,
+    has_permission, has_add_permission,
+    )
+from cubicweb.web.action import Action
+from cubicweb.web.views import linksearch_select_url, vid_from_rset
+from cubicweb.web.views.autoform import AutomaticEntityForm
 
 _ = unicode
 
+
+class has_editable_relation(EntitySelector):
+    """accept if some relations for an entity found in the result set is
+    editable by the logged user.
+
+    See `EntitySelector` documentation for behaviour when row is not specified.
+    """
+
+    def score_entity(self, entity):
+        # if user has no update right but it can modify some relation,
+        # display action anyway
+        for dummy in AutomaticEntityForm.esrelations_by_category(
+            entity, 'generic', 'add'):
+            return 1
+        for rschema, targetschemas, role in AutomaticEntityForm.erelations_by_category(
+            entity, ('primary', 'secondary'), 'add'):
+            if not rschema.is_final():
+                return 1
+        return 0
+
+@objectify_selector
+def match_searched_etype(cls, req, rset, **kwargs):
+    return req.match_search_state(rset)
+
+@objectify_selector
+def view_is_not_default_view(cls, req, rset, **kwargs):
+    # interesting if it propose another view than the current one
+    vid = req.form.get('vid')
+    if vid and vid != vid_from_rset(req, rset, cls.schema):
+        return 1
+    return 0
+
+@objectify_selector
+def addable_etype_empty_rset(cls, req, rset, **kwargs):
+    if rset is not None and not rset.rowcount:
+        rqlst = rset.syntax_tree()
+        if len(rqlst.children) > 1:
+            return 0
+        select = rqlst.children[0]
+        if len(select.defined_vars) == 1 and len(select.solutions) == 1:
+            rset._searched_etype = select.solutions[0].itervalues().next()
+            eschema = cls.schema.eschema(rset._searched_etype)
+            if not (eschema.is_final() or eschema.is_subobject(strict=True)) \
+                   and eschema.has_perm(req, 'add'):
+                return 1
+    return 0
+
 # generic primary actions #####################################################
 
-class SelectAction(EntityAction):
+class SelectAction(Action):
     """base class for link search actions. By default apply on
     any size entity result search it the current state is 'linksearch'
     if accept match.
     """
-    category = 'mainactions'    
-    __selectors__ = (searchstate_accept,)
-    search_states = ('linksearch',)
-    order = 0
-    
     id = 'select'
+    __select__ = match_search_state('linksearch') & match_searched_etype()
+
     title = _('select')
-    
-    @classmethod
-    def accept_rset(cls, req, rset, row, col):
-        return linksearch_match(req, rset)
-    
+    category = 'mainactions'
+    order = 0
+
     def url(self):
         return linksearch_select_url(self.req, self.rset)
 
 
 class CancelSelectAction(Action):
-    category = 'mainactions'
-    search_states = ('linksearch',)
-    order = 10
-    
     id = 'cancel'
+    __select__ = match_search_state('linksearch')
+
     title = _('cancel select')
-    
+    category = 'mainactions'
+    order = 10
+
     def url(self):
-        target, link_eid, r_type, searched_type = self.req.search_state[1]
-        return self.build_url(rql="Any X WHERE X eid %s" % link_eid,
+        target, eid, r_type, searched_type = self.req.search_state[1]
+        return self.build_url(str(eid),
                               vid='edition', __mode='normal')
 
 
 class ViewAction(Action):
-    category = 'mainactions'    
-    __selectors__ = (match_user_group, searchstate_accept)
-    require_groups = ('users', 'managers')
-    order = 0
-    
     id = 'view'
+    __select__ = (match_search_state('normal') &
+                  match_user_groups('users', 'managers') &
+                  view_is_not_default_view() &
+                  non_final_entity())
+
     title = _('view')
-    
-    @classmethod
-    def accept_rset(cls, req, rset, row, col):
-        # interesting if it propose another view than the current one
-        vid = req.form.get('vid')
-        if vid and vid != vid_from_rset(req, rset, cls.schema):
-            return 1
-        return 0
-    
+    category = 'mainactions'
+    order = 0
+
     def url(self):
         params = self.req.form.copy()
         params.pop('vid', None)
@@ -79,90 +117,82 @@ class ViewAction(Action):
                               **params)
 
 
-class ModifyAction(EntityAction):
-    category = 'mainactions'
-    __selectors__ = (one_line_rset, searchstate_accept)
-    schema_action = 'update'
-    order = 10
-    
+class ModifyAction(Action):
     id = 'edit'
+    __select__ = (match_search_state('normal') &
+                  one_line_rset() &
+                  (has_permission('update') | has_editable_relation('add')))
+
     title = _('modify')
-    
-    @classmethod
-    def has_permission(cls, entity, action):
-        if entity.has_perm(action):
-            return True
-        # if user has no update right but it can modify some relation,
-        # display action anyway
-        for dummy in entity.srelations_by_category(('generic', 'metadata'),
-                                                   'add'):
-            return True
-        for rschema, targetschemas, role in entity.relations_by_category(
-            ('primary', 'secondary'), 'add'):
-            if not rschema.is_final():
-                return True
-        return False
+    category = 'mainactions'
+    order = 10
 
     def url(self):
         entity = self.rset.get_entity(self.row or 0, self.col or 0)
         return entity.absolute_url(vid='edition')
-        
 
-class MultipleEditAction(EntityAction):
-    category = 'mainactions'
-    __selectors__ = (two_lines_rset, one_etype_rset,
-                     searchstate_accept)
-    schema_action = 'update'
-    order = 10
-    
+
+class MultipleEditAction(Action):
     id = 'muledit' # XXX get strange conflicts if id='edit'
+    __select__ = (match_search_state('normal') &
+                  two_lines_rset() & one_etype_rset() &
+                  has_permission('update'))
+
     title = _('modify')
-    
+    category = 'mainactions'
+    order = 10
+
     def url(self):
         return self.build_url('view', rql=self.rset.rql, vid='muledit')
 
 
 # generic secondary actions ###################################################
 
-class ManagePermissions(LinkToEntityAction):
-    accepts = ('Any',)
-    category = 'moreactions'
-    id = 'addpermission'
+class ManagePermissionsAction(Action):
+    id = 'managepermission'
+    __select__ = one_line_rset() & non_final_entity() & match_user_groups('managers')
+
     title = _('manage permissions')
-    order = 100
+    category = 'moreactions'
+    order = 15
 
-    etype = 'EPermission'
-    rtype = 'require_permission'
-    target = 'object'
-    
+    @classmethod
+    def registered(cls, vreg):
+        super(ManagePermissionsAction, cls).registered(vreg)
+        if 'require_permission' in vreg.schema:
+            cls.__select__ = (one_line_rset() & non_final_entity() &
+                              (match_user_groups('managers')
+                               | relation_possible('require_permission', 'subject', 'CWPermission',
+                                                   action='add')))
+        return super(ManagePermissionsAction, cls).registered(vreg)
+
     def url(self):
-        return self.rset.get_entity(0, 0).absolute_url(vid='security')
+        return self.rset.get_entity(self.row or 0, self.col or 0).absolute_url(vid='security')
 
-    
-class DeleteAction(EntityAction):
-    category = 'moreactions' 
-    __selectors__ = (searchstate_accept,)
-    schema_action = 'delete'
-    order = 20
-    
+
+class DeleteAction(Action):
     id = 'delete'
+    __select__ = has_permission('delete')
+
     title = _('delete')
-    
+    category = 'moreactions'
+    order = 20
+
     def url(self):
         if len(self.rset) == 1:
-            entity = self.rset.get_entity(0, 0)
+            entity = self.rset.get_entity(self.row or 0, self.col or 0)
             return self.build_url(entity.rest_path(), vid='deleteconf')
         return self.build_url(rql=self.rset.printable_rql(), vid='deleteconf')
-    
-        
-class CopyAction(EntityAction):
-    category = 'moreactions'
-    schema_action = 'add'
-    order = 30
-    
+
+
+class CopyAction(Action):
     id = 'copy'
+    __select__ = one_line_rset() & has_permission('add')
+
     title = _('copy')
-    
+    category = 'moreactions'
+    order = 30
+
     def url(self):
         entity = self.rset.get_entity(self.row or 0, self.col or 0)
         return entity.absolute_url(vid='copy')
@@ -172,34 +202,14 @@ class AddNewAction(MultipleEditAction):
     """when we're seeing more than one entity with the same type, propose to
     add a new one
     """
-    category = 'moreactions'
     id = 'addentity'
-    order = 40
-    
-    def etype_rset_selector(cls, req, rset, **kwargs):
-        if rset is not None and not rset.rowcount:
-            rqlst = rset.syntax_tree()
-            if len(rqlst.children) > 1:
-                return 0
-            select = rqlst.children[0]
-            if len(select.defined_vars) == 1 and len(select.solutions) == 1:
-                rset._searched_etype = select.solutions[0].itervalues().next()
-                eschema = cls.schema.eschema(rset._searched_etype)
-                if not (eschema.is_final() or eschema.is_subobject(strict=True)) \
-                       and eschema.has_perm(req, 'add'):
-                    return 1
-        return 0
+    __select__ = (match_search_state('normal') &
+                  (addable_etype_empty_rset()
+                   | (two_lines_rset() & one_etype_rset & has_add_permission()))
+                  )
 
-    def has_add_perm_selector(cls, req, rset, **kwargs):
-        eschema = cls.schema.eschema(rset.description[0][0])
-        if not (eschema.is_final() or eschema.is_subobject(strict=True)) \
-               and eschema.has_perm(req, 'add'):
-            return 1
-        return 0
-    __selectors__ = (match_search_state,
-                     chainfirst(etype_rset_selector,
-                                chainall(two_lines_rset, one_etype_rset,
-                                         has_add_perm_selector)))
+    category = 'moreactions'
+    order = 40
 
     @property
     def rsettype(self):
@@ -218,114 +228,66 @@ class AddNewAction(MultipleEditAction):
 # logged user actions #########################################################
 
 class UserPreferencesAction(Action):
-    category = 'useractions'
-    __selectors__ = authenticated_user,
-    order = 10
-    
     id = 'myprefs'
+    __select__ = authenticated_user()
+
     title = _('user preferences')
+    category = 'useractions'
+    order = 10
 
     def url(self):
         return self.build_url(self.id)
 
 
 class UserInfoAction(Action):
-    category = 'useractions'
-    __selectors__ = authenticated_user,
-    order = 20
-    
     id = 'myinfos'
+    __select__ = authenticated_user()
+
     title = _('personnal informations')
+    category = 'useractions'
+    order = 20
 
     def url(self):
-        return self.build_url('euser/%s'%self.req.user.login, vid='edition')
+        return self.build_url('cwuser/%s'%self.req.user.login, vid='edition')
 
 
 class LogoutAction(Action):
-    category = 'useractions'
-    __selectors__ = authenticated_user,
-    order = 30
-    
     id = 'logout'
+    __select__ = authenticated_user()
+
     title = _('logout')
+    category = 'useractions'
+    order = 30
 
     def url(self):
         return self.build_url(self.id)
 
-    
+
 # site actions ################################################################
 
 class ManagersAction(Action):
-    category = 'siteactions'
     __abstract__ = True
-    __selectors__ = match_user_group,
-    require_groups = ('managers',)
+    __select__ = match_user_groups('managers')
+
+    category = 'siteactions'
 
     def url(self):
         return self.build_url(self.id)
 
-    
+
 class SiteConfigurationAction(ManagersAction):
-    order = 10
     id = 'siteconfig'
     title = _('site configuration')
+    order = 10
 
-    
+
 class ManageAction(ManagersAction):
-    order = 20
     id = 'manage'
     title = _('manage')
+    order = 20
 
 
-class ViewSchemaAction(Action):
-    category = 'siteactions'
-    id = 'schema'
-    title = _("site schema")
-    __selectors__ = yes,
-    order = 30
-    
-    def url(self):
-        return self.build_url(self.id)
-
-
-# content type specific actions ###############################################
-
-class FollowAction(EntityAction):
-    category = 'mainactions'
-    accepts = ('Bookmark',)
-    
-    id = 'follow'
-    title = _('follow')
-    
-    def url(self):
-        return self.rset.get_entity(self.row or 0, self.col or 0).actual_url()
-
-class UserPreferencesEntityAction(EntityAction):
-    __selectors__ = EntityAction.__selectors__ + (one_line_rset, match_user_group,)
-    require_groups = ('owners', 'managers')
-    category = 'mainactions'
-    accepts = ('EUser',)
-    
-    id = 'prefs'
-    title = _('preferences')
-    
-    def url(self):
-        login = self.rset.get_entity(self.row or 0, self.col or 0).login
-        return self.build_url('euser/%s'%login, vid='epropertiesform')
-
-# schema view action
-def schema_view(cls, req, rset, row=None, col=None, view=None,
-                **kwargs):
-    if view is None or not view.id == 'schema':
-        return 0
-    return 1
-
-class DownloadOWLSchemaAction(Action):
-    category = 'mainactions'
-    id = 'download_as_owl'
-    title = _('download schema as owl')
-    __selectors__ = none_rset, schema_view
-   
-    def url(self):
-        return self.build_url('view', vid='owl')
+from logilab.common.deprecation import class_moved
+from cubicweb.web.views.bookmark import FollowAction
+FollowAction = class_moved(FollowAction)
 

@@ -1,6 +1,6 @@
 /*
  *  :organization: Logilab
- *  :copyright: 2003-2008 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+ *  :copyright: 2003-2009 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
  *  :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
  */
 
@@ -8,6 +8,36 @@ CubicWeb.require('python.js');
 CubicWeb.require('htmlhelpers.js');
 
 var JSON_BASE_URL = baseuri() + 'json?';
+
+function _loadAjaxHtmlHead(node, head, tag, srcattr) {
+    var loaded = [];
+    jQuery('head ' + tag).each(function(i) {
+	loaded.push(this.getAttribute(srcattr));
+    });
+    node.find(tag).each(function(i) {
+	if (!loaded.contains(this.getAttribute(srcattr))) {
+	    jQuery(this).appendTo(head);
+	}
+    });
+    node.find(tag).remove();
+}
+
+/*
+ * inspect dom response, search for a <div class="ajaxHtmlHead"> node and
+ * put its content into the real document's head.
+ * This enables dynamic css and js loading and is used by replacePageChunk
+ */
+function loadAjaxHtmlHead(node) {
+    var head = jQuery('head');
+    node = jQuery(node).find('div.ajaxHtmlHead');
+    _loadAjaxHtmlHead(node, head, 'script', 'src');
+    _loadAjaxHtmlHead(node, head, 'link', 'href');
+    node.find('*').appendTo(head);
+}
+
+function preprocessAjaxLoad(node, newdomnode) {
+    loadAjaxHtmlHead(newdomnode);
+}
 
 function postAjaxLoad(node) {
     // find sortable tables if there are some
@@ -27,11 +57,12 @@ function postAjaxLoad(node) {
     if (typeof roundedCornersOnLoad != 'undefined') {
 	roundedCornersOnLoad();
     }
+    loadDynamicFragments(node);
+    jQuery(CubicWeb).trigger('ajax-loaded');
 }
 
 // cubicweb loadxhtml plugin to make jquery handle xhtml response
 jQuery.fn.loadxhtml = function(url, data, reqtype, mode) {
-
     var ajax = null;
     if (reqtype == 'post') {
 	ajax = jQuery.post;
@@ -41,16 +72,16 @@ jQuery.fn.loadxhtml = function(url, data, reqtype, mode) {
     if (this.size() > 1) {
 	log('loadxhtml was called with more than one element');
     }
+    var node = this.get(0); // only consider the first element
     mode = mode || 'replace';
     var callback = null;
     if (data && data.callback) {
 	callback = data.callback;
 	delete data.callback;
     }
-    var node = this.get(0); // only consider the first element
-    ajax = jQuery.post;
     ajax(url, data, function(response) {
 	var domnode = getDomFromResponse(response);
+	preprocessAjaxLoad(node, domnode);
 	if (mode == 'swap') {
 	    var origId = node.id;
 	    node = swapDOM(node, domnode);
@@ -74,8 +105,12 @@ jQuery.fn.loadxhtml = function(url, data, reqtype, mode) {
 /* finds each dynamic fragment in the page and executes the
  * the associated RQL to build them (Async call)
  */
-function loadDynamicFragments() {
-    var fragments = jQuery('div.dynamicFragment');
+function loadDynamicFragments(node) {
+    if (node) {
+	var fragments = jQuery(node).find('div.dynamicFragment');
+    } else {
+	var fragments = jQuery('div.dynamicFragment');
+    }
     if (fragments.length == 0) {
 	return;
     }
@@ -97,25 +132,9 @@ function loadDynamicFragments() {
     }
 }
 
-jQuery(document).ready(loadDynamicFragments);
+jQuery(document).ready(function() {loadDynamicFragments();});
 
 //============= base AJAX functions to make remote calls =====================//
-
-
-/*
- * This function will call **synchronously** a remote method on the cubicweb server
- * @param fname: the function name to call (as exposed by the JSONController)
- * @param args: the list of arguments to pass the function
- */
-function remote_exec(fname) {
-    setProgressCursor();
-    var props = {'mode' : "remote", 'fname' : fname, 'pageid' : pageid,
-     		 'arg': map(jQuery.toJSON, sliceList(arguments, 1))};
-    var result  = jQuery.ajax({url: JSON_BASE_URL, data: props, async: false}).responseText;
-    result = evalJSON(result);
-    resetCursor();
-    return result;
-}
 
 function remoteCallFailed(err, req) {
     if (req.status == 500) {
@@ -125,92 +144,64 @@ function remoteCallFailed(err, req) {
     }
 }
 
+
 /*
- * This function is the equivalent of MochiKit's loadJSONDoc but
- * uses POST instead of GET
+ * This function will call **synchronously** a remote method on the cubicweb server
+ * @param fname: the function name to call (as exposed by the JSONController)
+ *
+ * additional arguments will be directly passed to the specified function
+ *
+ * It looks at http headers to guess the response type.
  */
-function loadJSONDocUsingPOST(url, queryargs, mode) {
-    mode = mode || 'remote';
+function remoteExec(fname /* ... */) {
     setProgressCursor();
-    var dataType = (mode == 'remote') ? "json":null;
-    var deferred = loadJSON(url, queryargs, 'POST', dataType);
+    var props = {'fname' : fname, 'pageid' : pageid,
+     		 'arg': map(jQuery.toJSON, sliceList(arguments, 1))};
+    var result  = jQuery.ajax({url: JSON_BASE_URL, data: props, async: false}).responseText;
+    if (result) {
+	result = evalJSON(result);
+    }
+    resetCursor();
+    return result;
+}
+
+/*
+ * This function will call **asynchronously** a remote method on the json
+ * controller of the cubicweb http server
+ *
+ * @param fname: the function name to call (as exposed by the JSONController)
+ *
+ * additional arguments will be directly passed to the specified function
+ *
+ * It looks at http headers to guess the response type.
+ */
+
+function asyncRemoteExec(fname /* ... */) {
+    setProgressCursor();
+    var props = {'fname' : fname, 'pageid' : pageid,
+     		 'arg': map(jQuery.toJSON, sliceList(arguments, 1))};
+    var deferred = loadRemote(JSON_BASE_URL, props, 'POST');
     deferred = deferred.addErrback(remoteCallFailed);
-//     if (mode == 'remote') {
-// 	deferred = deferred.addCallbacks(evalJSONRequest);
-//     }
+    deferred = deferred.addErrback(resetCursor);
     deferred = deferred.addCallback(resetCursor);
     return deferred;
 }
 
 
-function _buildRemoteArgs(fname) {
-    return  {'mode' : "remote", 'fname' : fname, 'pageid' : pageid,
-     	     'arg': map(jQuery.toJSON, sliceList(arguments, 1))};
-}
-
-/*
- * This function will call **asynchronously** a remote method on the cubicweb server
- * This function is a low level one. You should use `async_remote_exec` or
- * `async_rawremote_exec` instead.
- *
- * @param fname: the function name to call (as exposed by the JSONController)
- * @param funcargs: the function's arguments
- * @param mode: rawremote or remote
- */
-function _async_exec(fname, funcargs, mode) {
-    var props = {'mode' : mode, 'fname' : fname, 'pageid' : pageid};
-    var args = map(urlEncode, map(jQuery.toJSON, funcargs));
-    args.unshift(''); // this is to be able to use join() directly
-    var queryargs = as_url(props) + args.join('&arg=');
-    return loadJSONDocUsingPOST(JSON_BASE_URL, queryargs, mode);
-}
-
-/*
- * This function will call **asynchronously** a remote method on the cubicweb server
- * @param fname: the function name to call (as exposed by the JSONController)
- * additional arguments will be directly passed to the specified function
- * Expected response type is Json.
- */
-function async_remote_exec(fname /* ... */) {
-    return _async_exec(fname, sliceList(arguments, 1), 'remote');
-}
-
-/*
- * This version of _async_exec doesn't expect a json response.
- * It looks at http headers to guess the response type.
- */
-function async_rawremote_exec(fname /* ... */) {
-    return _async_exec(fname, sliceList(arguments, 1), 'rawremote');
-}
-
-/*
- * This function will call **asynchronously** a remote method on the cubicweb server
- * @param fname: the function name to call (as exposed by the JSONController)
- * @param varargs: the list of arguments to pass to the function
- * This is an alternative form of `async_remote_exec` provided for convenience
- */
-function async_remote_exec_varargs(fname, varargs) {
-    return _async_exec(fname, varargs, 'remote');
-}
-
 /* emulation of gettext's _ shortcut
  */
 function _(message) {
-    return remote_exec('i18n', [message])[0];
-}
-
-function rqlexec(rql) {
-    return async_remote_exec('rql', rql);
+    return remoteExec('i18n', [message])[0];
 }
 
 function userCallback(cbname) {
-    async_remote_exec('user_callback', cbname);
+    asyncRemoteExec('user_callback', cbname);
 }
 
 function unloadPageData() {
     // NOTE: do not make async calls on unload if you want to avoid
     //       strange bugs
-    remote_exec('unload_page_data');
+    remoteExec('unload_page_data');
 }
 
 function openHash() {
@@ -228,7 +219,7 @@ function reloadComponent(compid, rql, registry, nodeid, extraargs) {
     nodeid = nodeid || (compid + 'Component');
     extraargs = extraargs || {};
     var node = getNode(nodeid);
-    var d = async_rawremote_exec('component', compid, rql, registry, extraargs);
+    var d = asyncRemoteExec('component', compid, rql, registry, extraargs);
     d.addCallback(function(result, req) {
 	var domnode = getDomFromResponse(result);
 	if (node) {
@@ -251,7 +242,7 @@ function reloadBox(boxid, rql) {
 }
 
 function userCallbackThenUpdateUI(cbname, compid, rql, msg, registry, nodeid) {
-    var d = async_remote_exec('user_callback', cbname);
+    var d = asyncRemoteExec('user_callback', cbname);
     d.addCallback(function() {
 	reloadComponent(compid, rql, registry, nodeid);
 	if (msg) { updateMessage(msg); }
@@ -265,7 +256,7 @@ function userCallbackThenUpdateUI(cbname, compid, rql, msg, registry, nodeid) {
 }
 
 function userCallbackThenReloadPage(cbname, msg) {
-    var d = async_remote_exec('user_callback', cbname);
+    var d = asyncRemoteExec('user_callback', cbname);
     d.addCallback(function() {
 	window.location.reload();
 	if (msg) { updateMessage(msg); }
@@ -283,7 +274,7 @@ function userCallbackThenReloadPage(cbname, msg) {
  * while the page was generated.
  */
 function unregisterUserCallback(cbname) {
-    var d = async_remote_exec('unregister_user_callback', cbname);
+    var d = asyncRemoteExec('unregister_user_callback', cbname);
     d.addCallback(function() {resetCursor();});
     d.addErrback(function(xxx) {
 	updateMessage(_("an error occured"));
@@ -311,18 +302,31 @@ function replacePageChunk(nodeId, rql, vid, extraparams, /* ... */ swap, callbac
     var props = {};
     if (node) {
 	props['rql'] = rql;
+	props['fname'] = 'view';
 	props['pageid'] = pageid;
 	if (vid) { props['vid'] = vid; }
 	if (extraparams) { jQuery.extend(props, extraparams); }
-	// FIXME we need to do as_url(props) manually instead of
+	// FIXME we need to do asURL(props) manually instead of
 	// passing `props` directly to loadxml because replacePageChunk
 	// is sometimes called (abusively) with some extra parameters in `vid`
 	var mode = swap?'swap':'replace';
-	var url = JSON_BASE_URL + as_url(props);
+	var url = JSON_BASE_URL + asURL(props);
 	jQuery(node).loadxhtml(url, params, 'get', mode);
     } else {
 	log('Node', nodeId, 'not found');
     }
+}
+
+/*
+ * fetches `url` and replaces `nodeid`'s content with the result
+ * @param replacemode how the replacement should be done (default is 'replace')
+ *  Possible values are :
+ *    - 'replace' to replace the node's content with the generated HTML
+ *    - 'swap' to replace the node itself with the generated HTML
+ *    - 'append' to append the generated HTML to the node's content
+ */
+function loadxhtml(nodeid, url, /* ... */ replacemode) {
+    jQuery('#' + nodeid).loadxhtml(url, null, 'post', replacemode);
 }
 
 /* XXX: this function should go in edition.js but as for now, htmlReplace
@@ -349,6 +353,22 @@ function buildWysiwygEditors(parent) {
 jQuery(document).ready(buildWysiwygEditors);
 
 
+/*
+ * takes a list of DOM nodes and removes all empty text nodes
+ */
+function stripEmptyTextNodes(nodelist) {
+    var stripped = [];
+    for (var i=0; i < nodelist.length; i++) {
+	var node = nodelist[i];
+	if (isTextNode(node) && !node.textContent.strip()) {
+	    continue;
+	} else {
+	    stripped.push(node);
+	}
+    }
+    return stripped;
+}
+
 /* convenience function that returns a DOM node based on req's result. */
 function getDomFromResponse(response) {
     if (typeof(response) == 'string') {
@@ -360,6 +380,7 @@ function getDomFromResponse(response) {
 	// no child (error cases) => return the whole document
 	return doc.cloneNode(true);
     }
+    children = stripEmptyTextNodes(children);
     if (children.length == 1) {
 	// only one child => return it
 	return children[0].cloneNode(true);

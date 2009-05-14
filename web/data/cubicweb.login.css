@@ -9,7 +9,7 @@ div#popupLoginBox {
   position: absolute;
   z-index: 400;
   right: 0px;
-  width: 23em;
+  width: 26em;
   padding: 0px 1px 1px;
   font-weight: bold;
   background: #E4EAD8; 
@@ -24,8 +24,8 @@ div#loginBox {
   position : absolute;
   top: 15%;
   left : 50%;
-  margin-left: -11em;
-  width: 24em;
+  margin-left: -14em;
+  width: 28em;
   background: #fff;
   border: 2px solid #cfceb7;
   padding-bottom: 0.5em;

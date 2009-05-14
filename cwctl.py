@@ -1,17 +1,18 @@
 """%%prog %s [options] %s
 
-CubicWeb main applications controller. 
+CubicWeb main applications controller.
 %s"""
 
 import sys
-from os import remove, listdir, system, kill, getpgid
+from os import remove, listdir, system, kill, getpgid, pathsep
 from os.path import exists, join, isfile, isdir
 
+from logilab.common.clcommands import register_commands, pop_arg
+
 from cubicweb import ConfigurationError, ExecutionError, BadCommandUsage
-from cubicweb.cwconfig import CubicWebConfiguration, CONFIGURATIONS
-from cubicweb.toolsutils import (Command, register_commands, main_run, 
-                                 rm, create_dir, pop_arg, confirm)
-    
+from cubicweb.cwconfig import CubicWebConfiguration as cwcfg, CONFIGURATIONS
+from cubicweb.toolsutils import Command, main_run,  rm, create_dir, confirm
+
 def wait_process_end(pid, maxtry=10, waittime=1):
     """wait for a process to actually die"""
     import signal
@@ -41,13 +42,13 @@ def detect_available_modes(templdir):
             modes.append('web ui')
             break
     return modes
-    
-    
+
+
 class ApplicationCommand(Command):
     """base class for command taking 0 to n application id as arguments
     (0 meaning all registered applications)
     """
-    arguments = '[<application>...]'    
+    arguments = '[<application>...]'
     options = (
         ("force",
          {'short': 'f', 'action' : 'store_true',
@@ -57,13 +58,13 @@ class ApplicationCommand(Command):
          ),
         )
     actionverb = None
-    
+
     def ordered_instances(self):
         """return instances in the order in which they should be started,
         considering $REGISTRY_DIR/startorder file if it exists (useful when
         some instances depends on another as external source
         """
-        regdir = CubicWebConfiguration.registry_dir()
+        regdir = cwcfg.registry_dir()
         _allinstances = list_instances(regdir)
         if isfile(join(regdir, 'startorder')):
             allinstances = []
@@ -74,12 +75,13 @@ class ApplicationCommand(Command):
                         _allinstances.remove(line)
                         allinstances.append(line)
                     except ValueError:
-                        print 'ERROR: startorder file contains unexistant instance %s' % line
+                        print ('ERROR: startorder file contains unexistant '
+                               'instance %s' % line)
             allinstances += _allinstances
         else:
             allinstances = _allinstances
         return allinstances
-    
+
     def run(self, args):
         """run the <command>_method on each argument (a list of application
         identifiers)
@@ -94,7 +96,7 @@ class ApplicationCommand(Command):
         else:
             askconfirm = False
         self.run_args(args, askconfirm)
-        
+
     def run_args(self, args, askconfirm):
         for appid in args:
             if askconfirm:
@@ -102,7 +104,7 @@ class ApplicationCommand(Command):
                 if not confirm('%s application %r ?' % (self.name, appid)):
                     continue
             self.run_arg(appid)
-            
+
     def run_arg(self, appid):
         cmdmeth = getattr(self, '%s_application' % self.name)
         try:
@@ -141,7 +143,7 @@ class ApplicationCommandFork(ApplicationCommand):
                     sys.exit(status)
             else:
                 self.run_arg(appid)
-    
+
 # base commands ###############################################################
 
 class ListCommand(Command):
@@ -153,16 +155,16 @@ class ListCommand(Command):
     name = 'list'
     options = (
         ('verbose',
-         {'short': 'v', 'action' : 'store_true', 
-          'help': "display more information."}),        
+         {'short': 'v', 'action' : 'store_true',
+          'help': "display more information."}),
         )
-    
+
     def run(self, args):
         """run the command with its specific arguments"""
         if args:
             raise BadCommandUsage('Too much arguments')
-        print 'CubicWeb version:', CubicWebConfiguration.cubicweb_version()
-        print 'Detected mode:', CubicWebConfiguration.mode
+        print 'CubicWeb version:', cwcfg.cubicweb_version()
+        print 'Detected mode:', cwcfg.mode
         print
         print 'Available configurations:'
         for config in CONFIGURATIONS:
@@ -172,21 +174,21 @@ class ListCommand(Command):
                 if not line:
                     continue
                 print '   ', line
-        print 
-        cubesdirs = ', '.join(CubicWebConfiguration.cubes_search_path())
+        print
         try:
-            namesize = max(len(x) for x in CubicWebConfiguration.available_cubes())
+            cubesdir = pathsep.join(cwcfg.cubes_search_path())
+            namesize = max(len(x) for x in cwcfg.available_cubes())
         except ConfigurationError, ex:
             print 'No cubes available:', ex
         except ValueError:
-            print 'No cubes available in %s' % cubesdirs
+            print 'No cubes available in %s' % cubesdir
         else:
-            print 'Available cubes (%s):' % cubesdirs
-            for cube in CubicWebConfiguration.available_cubes():
+            print 'Available cubes (%s):' % cubesdir
+            for cube in cwcfg.available_cubes():
                 if cube in ('CVS', '.svn', 'shared', '.hg'):
                     continue
                 try:
-                    tinfo = CubicWebConfiguration.cube_pkginfo(cube)
+                    tinfo = cwcfg.cube_pkginfo(cube)
                     tversion = tinfo.version
                 except ConfigurationError:
                     tinfo = None
@@ -201,7 +203,7 @@ class ListCommand(Command):
                     print '    available modes: %s' % ', '.join(modes)
         print
         try:
-            regdir = CubicWebConfiguration.registry_dir()
+            regdir = cwcfg.registry_dir()
         except ConfigurationError, ex:
             print 'No application available:', ex
             print
@@ -210,14 +212,14 @@ class ListCommand(Command):
         if instances:
             print 'Available applications (%s):' % regdir
             for appid in instances:
-                modes = CubicWebConfiguration.possible_configurations(appid)
+                modes = cwcfg.possible_configurations(appid)
                 if not modes:
                     print '* %s (BROKEN application, no configuration found)' % appid
                     continue
                 print '* %s (%s)' % (appid, ', '.join(modes))
                 try:
-                    config = CubicWebConfiguration.config_for(appid, modes[0])
-                except Exception, exc: 
+                    config = cwcfg.config_for(appid, modes[0])
+                except Exception, exc:
                     print '    (BROKEN application, %s)' % exc
                     continue
         else:
@@ -259,7 +261,7 @@ repository and the web server.',
           }
          ),
         )
-    
+
     def run(self, args):
         """run the command with its specific arguments"""
         from logilab.common.textutils import get_csv
@@ -267,19 +269,19 @@ repository and the web server.',
         cubes = get_csv(pop_arg(args, 1))
         appid = pop_arg(args)
         # get the configuration and helper
-        CubicWebConfiguration.creating = True
-        config = CubicWebConfiguration.config_for(appid, configname)
+        cwcfg.creating = True
+        config = cwcfg.config_for(appid, configname)
         config.set_language = False
         config.init_cubes(config.expand_cubes(cubes))
         helper = self.config_helper(config)
         # check the cube exists
         try:
-            templdirs = [CubicWebConfiguration.cube_dir(cube)
+            templdirs = [cwcfg.cube_dir(cube)
                          for cube in cubes]
         except ConfigurationError, ex:
             print ex
             print '\navailable cubes:',
-            print ', '.join(CubicWebConfiguration.available_cubes())
+            print ', '.join(cwcfg.available_cubes())
             return
         # create the registry directory for this application
         create_dir(config.apphome)
@@ -295,7 +297,6 @@ repository and the web server.',
         # write down configuration
         config.save()
         # handle i18n files structure
-        # XXX currently available languages are guessed from translations found
         # in the first cube given
         from cubicweb.common import i18n
         langs = [lang for lang, _ in i18n.available_catalogs(join(templdirs[0], 'i18n'))]
@@ -322,21 +323,21 @@ repository and the web server.',
         print
         helper.postcreate()
 
-    
+
 class DeleteApplicationCommand(Command):
     """Delete an application. Will remove application's files and
     unregister it.
     """
     name = 'delete'
     arguments = '<application>'
-    
+
     options = ()
 
     def run(self, args):
         """run the command with its specific arguments"""
         appid = pop_arg(args, msg="No application specified !")
-        configs = [CubicWebConfiguration.config_for(appid, configname)
-                   for configname in CubicWebConfiguration.possible_configurations(appid)]
+        configs = [cwcfg.config_for(appid, configname)
+                   for configname in cwcfg.possible_configurations(appid)]
         if not configs:
             raise ExecutionError('unable to guess configuration for %s' % appid)
         for config in configs:
@@ -360,7 +361,7 @@ class DeleteApplicationCommand(Command):
 
 class StartApplicationCommand(ApplicationCommand):
     """Start the given applications. If no application is given, start them all.
-    
+
     <application>...
       identifiers of the applications to start. If no application is
       given, start them all.
@@ -389,7 +390,7 @@ running.'}),
         # without all options defined
         debug = self.get('debug')
         force = self.get('force')
-        config = CubicWebConfiguration.config_for(appid)
+        config = cwcfg.config_for(appid)
         if self.get('profile'):
             config.global_set_option('profile', self.config.profile)
         helper = self.config_helper(config, cmdname='start')
@@ -413,22 +414,22 @@ the --force option."
 
 class StopApplicationCommand(ApplicationCommand):
     """Stop the given applications.
-    
+
     <application>...
       identifiers of the applications to stop. If no application is
       given, stop them all.
     """
     name = 'stop'
     actionverb = 'stopped'
-    
+
     def ordered_instances(self):
         instances = super(StopApplicationCommand, self).ordered_instances()
         instances.reverse()
         return instances
-    
+
     def stop_application(self, appid):
         """stop the application's server"""
-        config = CubicWebConfiguration.config_for(appid)
+        config = cwcfg.config_for(appid)
         helper = self.config_helper(config, cmdname='stop')
         helper.poststop() # do this anyway
         pidf = config['pid-file']
@@ -459,12 +460,12 @@ class StopApplicationCommand(ApplicationCommand):
             # already removed by twistd
             pass
         print 'application %s stopped' % appid
-    
+
 
 class RestartApplicationCommand(StartApplicationCommand,
                                 StopApplicationCommand):
     """Restart the given applications.
-    
+
     <application>...
       identifiers of the applications to restart. If no application is
       given, restart them all.
@@ -473,7 +474,7 @@ class RestartApplicationCommand(StartApplicationCommand,
     actionverb = 'restarted'
 
     def run_args(self, args, askconfirm):
-        regdir = CubicWebConfiguration.registry_dir()
+        regdir = cwcfg.registry_dir()
         if not isfile(join(regdir, 'startorder')) or len(args) <= 1:
             # no specific startorder
             super(RestartApplicationCommand, self).run_args(args, askconfirm)
@@ -496,30 +497,30 @@ class RestartApplicationCommand(StartApplicationCommand,
             status = system('%s %s' % (forkcmd, appid))
             if status:
                 sys.exit(status)
-    
+
     def restart_application(self, appid):
         self.stop_application(appid)
         if self.start_application(appid):
             print 'application %s %s' % (appid, self.actionverb)
 
-        
+
 class ReloadConfigurationCommand(RestartApplicationCommand):
     """Reload the given applications. This command is equivalent to a
     restart for now.
-    
+
     <application>...
       identifiers of the applications to reload. If no application is
       given, reload them all.
     """
     name = 'reload'
-    
+
     def reload_application(self, appid):
         self.restart_application(appid)
-    
+
 
 class StatusCommand(ApplicationCommand):
     """Display status information about the given applications.
-    
+
     <application>...
       identifiers of the applications to status. If no application is
       given, get status information about all registered applications.
@@ -527,10 +528,11 @@ class StatusCommand(ApplicationCommand):
     name = 'status'
     options = ()
 
-    def status_application(self, appid):
+    @staticmethod
+    def status_application(appid):
         """print running status information for an application"""
-        for mode in CubicWebConfiguration.possible_configurations(appid):
-            config = CubicWebConfiguration.config_for(appid, mode)
+        for mode in cwcfg.possible_configurations(appid):
+            config = cwcfg.config_for(appid, mode)
             print '[%s-%s]' % (appid, mode),
             try:
                 pidf = config['pid-file']
@@ -574,7 +576,7 @@ class UpgradeApplicationCommand(ApplicationCommandFork,
          {'short': 'e', 'type' : 'string', 'metavar': 'X.Y.Z',
           'default': None,
           'help': 'force migration from the indicated cubicweb version.'}),
-        
+
         ('fs-only',
          {'short': 's', 'action' : 'store_true',
           'default': False,
@@ -584,13 +586,13 @@ class UpgradeApplicationCommand(ApplicationCommandFork,
          {'short': 'n', 'action' : 'store_true',
           'default': False,
           'help': 'don\'t try to stop application before migration and to restart it after.'}),
-        
+
         ('verbosity',
          {'short': 'v', 'type' : 'int', 'metavar': '<0..2>',
           'default': 1,
           'help': "0: no confirmation, 1: only main commands confirmed, 2 ask \
 for everything."}),
-        
+
         ('backup-db',
          {'short': 'b', 'type' : 'yn', 'metavar': '<y or n>',
           'default': None,
@@ -611,10 +613,10 @@ given, appropriate sources for migration will be automatically selected \
     def ordered_instances(self):
         # need this since mro return StopApplicationCommand implementation
         return ApplicationCommand.ordered_instances(self)
-    
+
     def upgrade_application(self, appid):
         from logilab.common.changelog import Version
-        config = CubicWebConfiguration.config_for(appid)
+        config = cwcfg.config_for(appid)
         config.creating = True # notice we're not starting the server
         config.verbosity = self.config.verbosity
         try:
@@ -644,7 +646,7 @@ given, appropriate sources for migration will be automatically selected \
                 continue
             if installedversion > applversion:
                 toupgrade.append( (cube, applversion, installedversion) )
-        cubicwebversion = config.cubicweb_version()           
+        cubicwebversion = config.cubicweb_version()
         if self.config.force_cubicweb_version:
             applcubicwebversion = Version(self.config.force_cubicweb_version)
             vcconf['cubicweb'] = applcubicwebversion
@@ -658,7 +660,7 @@ given, appropriate sources for migration will be automatically selected \
         for cube, fromversion, toversion in toupgrade:
             print '**** %s migration %s -> %s' % (cube, fromversion, toversion)
         # only stop once we're sure we have something to do
-        if not (CubicWebConfiguration.mode == 'dev' or self.config.nostartstop):
+        if not (cwcfg.mode == 'dev' or self.config.nostartstop):
             self.stop_application(appid)
         # run cubicweb/componants migration scripts
         mih.migrate(vcconf, reversed(toupgrade), self.config)
@@ -667,10 +669,9 @@ given, appropriate sources for migration will be automatically selected \
         # handle i18n upgrade:
         # * install new languages
         # * recompile catalogs
-        # XXX currently available languages are guessed from translations found
         # in the first componant given
         from cubicweb.common import i18n
-        templdir = CubicWebConfiguration.cube_dir(config.cubes()[0])
+        templdir = cwcfg.cube_dir(config.cubes()[0])
         langs = [lang for lang, _ in i18n.available_catalogs(join(templdir, 'i18n'))]
         errors = config.i18ncompile(langs)
         if errors:
@@ -683,7 +684,7 @@ given, appropriate sources for migration will be automatically selected \
         mih.shutdown()
         print
         print 'application migrated'
-        if not (CubicWebConfiguration.mode == 'dev' or self.config.nostartstop):
+        if not (cwcfg.mode == 'dev' or self.config.nostartstop):
             self.start_application(appid)
         print
 
@@ -706,7 +707,7 @@ class ShellCommand(Command):
           'help': 'only connect to the system source when the instance is '
           'using multiple sources. You can\'t use this option and the '
           '--ext-sources option at the same time.'}),
-        
+
         ('ext-sources',
          {'short': 'E', 'type' : 'csv', 'metavar': '<sources>',
           'default': None,
@@ -715,11 +716,11 @@ repository should connect to for upgrading. When unspecified or 'all' given, \
 will connect to all defined sources. If 'migration' is given, appropriate \
 sources for migration will be automatically selected.",
           }),
-        
+
         )
     def run(self, args):
         appid = pop_arg(args, 99, msg="No application specified !")
-        config = CubicWebConfiguration.config_for(appid)
+        config = cwcfg.config_for(appid)
         if self.config.ext_sources:
             assert not self.config.system_only
             sources = self.config.ext_sources
@@ -733,21 +734,22 @@ sources for migration will be automatically selected.",
             mih.scripts_session(args)
         else:
             mih.interactive_shell()
-        mih.shutdown() 
+        mih.shutdown()
 
 
 class RecompileApplicationCatalogsCommand(ApplicationCommand):
     """Recompile i18n catalogs for applications.
-    
+
     <application>...
       identifiers of the applications to consider. If no application is
       given, recompile for all registered applications.
     """
     name = 'i18ncompile'
-    
-    def i18ncompile_application(self, appid):
+
+    @staticmethod
+    def i18ncompile_application(appid):
         """recompile application's messages catalogs"""
-        config = CubicWebConfiguration.config_for(appid)
+        config = cwcfg.config_for(appid)
         try:
             config.bootstrap_cubes()
         except IOError, ex:
@@ -771,10 +773,10 @@ class ListInstancesCommand(Command):
     """list available instances, useful for bash completion."""
     name = 'listinstances'
     hidden = True
-    
+
     def run(self, args):
         """run the command with its specific arguments"""
-        regdir = CubicWebConfiguration.registry_dir()
+        regdir = cwcfg.registry_dir()
         for appid in sorted(listdir(regdir)):
             print appid
 
@@ -783,10 +785,10 @@ class ListCubesCommand(Command):
     """list available componants, useful for bash completion."""
     name = 'listcubes'
     hidden = True
-    
+
     def run(self, args):
         """run the command with its specific arguments"""
-        for cube in CubicWebConfiguration.available_cubes():
+        for cube in cwcfg.available_cubes():
             print cube
 
 register_commands((ListCommand,
@@ -803,10 +805,10 @@ register_commands((ListCommand,
                    ListInstancesCommand, ListCubesCommand,
                    ))
 
-                
+
 def run(args):
     """command line tool"""
-    CubicWebConfiguration.load_cwctl_plugins()
+    cwcfg.load_cwctl_plugins()
     main_run(args, __doc__)
 
 if __name__ == '__main__':

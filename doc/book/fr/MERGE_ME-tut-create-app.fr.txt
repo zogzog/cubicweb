@@ -331,7 +331,7 @@ to ``migration/postcreate.py``::
   
   _ = unicode
 
-  moderators      = add_entity('EGroup', name=u"moderators")
+  moderators      = add_entity('CWGroup', name=u"moderators")
 
   submitted = add_state(_('submitted'), 'BlogEntry', initial=True)
   published = add_state(_('published'), 'BlogEntry')

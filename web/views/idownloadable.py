@@ -1,21 +1,28 @@
 """Specific views for entities implementing IDownloadable
 
 :organization: Logilab
-:copyright: 2001-2008 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+:copyright: 2001-2009 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 """
 __docformat__ = "restructuredtext en"
+_ = unicode
 
 from logilab.mtconverter import BINARY_ENCODINGS, TransformError, html_escape
 
+from cubicweb.view import EntityView
+from cubicweb.selectors import (one_line_rset, score_entity,
+                                implements, match_context_prop)
 from cubicweb.interfaces import IDownloadable
 from cubicweb.common.mttransforms import ENGINE
-from cubicweb.common.selectors import (one_line_rset, score_entity_selector,
-                                       implement_interface, match_context_prop)
 from cubicweb.web.box import EntityBoxTemplate
-from cubicweb.web.views import baseviews
+from cubicweb.web.views import primary, baseviews
 
-_ = unicode
+
+def is_image(entity):
+    mt = entity.download_content_type()
+    if not (mt and mt.startswith('image/')):
+        return 0
+    return 1
 
 def download_box(w, entity, title=None, label=None):
     req = entity.req
@@ -32,34 +39,26 @@ def download_box(w, entity, title=None, label=None):
     w(u'</div>')
     w(u'</div>\n</div>\n')
 
-    
+
 class DownloadBox(EntityBoxTemplate):
     id = 'download_box'
+    # no download box for images
     # XXX primary_view selector ?
-    __selectors__ = (one_line_rset, implement_interface, match_context_prop, score_entity_selector)
-    accepts_interfaces = (IDownloadable,)
+    __select__ = (one_line_rset() & implements(IDownloadable) &
+                  match_context_prop() & ~score_entity(is_image))
     order = 10
 
-    @classmethod
-    def score_entity(cls, entity):
-        mt = entity.download_content_type()
-        # no download box for images
-        if mt and mt.startswith('image/'):
-            return 0
-        return 1
-    
     def cell_call(self, row, col, title=None, label=None, **kwargs):
         entity = self.entity(row, col)
         download_box(self.w, entity, title, label)
 
 
-class DownloadView(baseviews.EntityView):
-    """this view is replacing the deprecated 'download' controller and allow downloading
-    of entities providing the necessary interface
+class DownloadView(EntityView):
+    """this view is replacing the deprecated 'download' controller and allow
+    downloading of entities providing the necessary interface
     """
     id = 'download'
-    __selectors__ = (one_line_rset, implement_interface)
-    accepts_interfaces = (IDownloadable,)
+    __select__ = one_line_rset() & implements(IDownloadable)
 
     templatable = False
     content_type = 'application/octet-stream'
@@ -83,34 +82,24 @@ class DownloadView(baseviews.EntityView):
         self.w(self.complete_entity(0).download_data())
 
 
-class DownloadLinkView(baseviews.EntityView):
+class DownloadLinkView(EntityView):
     """view displaying a link to download the file"""
     id = 'downloadlink'
+    __select__ = implements(IDownloadable)
     title = None # should not be listed in possible views
-    __selectors__ = (implement_interface,)
 
-    accepts_interfaces = (IDownloadable,)
-    
+
     def cell_call(self, row, col, title=None, **kwargs):
         entity = self.entity(row, col)
         url = html_escape(entity.download_url())
         self.w(u'<a href="%s">%s</a>' % (url, html_escape(title or entity.dc_title())))
 
 
-                                                                                
-class IDownloadablePrimaryView(baseviews.PrimaryView):
-    __selectors__ = (implement_interface,)
-    accepts_interfaces = (IDownloadable,)
-    # XXX File/Image attributes but this is not specified in the IDownloadable interface
-    skip_attrs = baseviews.PrimaryView.skip_attrs + ('data', 'name')
+class IDownloadablePrimaryView(primary.PrimaryView):
+    __select__ = implements(IDownloadable)
 
-    def render_entity_title(self, entity):
-        self.w(u'<h1>%s %s</h1>'
-               % (entity.dc_type().capitalize(),
-                  html_escape(entity.dc_title())))
-    
-    def render_entity_attributes(self, entity, siderelations):
-        super(IDownloadablePrimaryView, self).render_entity_attributes(entity, siderelations)
+    def render_entity_attributes(self, entity):
+        super(IDownloadablePrimaryView, self).render_entity_attributes(entity)
         self.w(u'<div class="content">')
         contenttype = entity.download_content_type()
         if contenttype.startswith('image/'):
@@ -126,17 +115,10 @@ class IDownloadablePrimaryView(baseviews.PrimaryView):
                 msg = self.req._("can't display data, unexpected error: %s") % ex
                 self.w('<div class="error">%s</div>' % msg)
         self.w(u'</div>')
-            
-    def is_side_related(self, rschema, eschema):
-        """display all relations as side related"""
-        return True
 
 
 class IDownloadableLineView(baseviews.OneLineView):
-    __selectors__ = (implement_interface,)
-    # don't kick default oneline view
-    accepts_interfaces = (IDownloadable,)
-    
+    __select__ = implements(IDownloadable)
 
     def cell_call(self, row, col, title=None, **kwargs):
         """the secondary view is a link to download the file"""
@@ -148,12 +130,12 @@ class IDownloadableLineView(baseviews.OneLineView):
                (url, name, durl, self.req._('download')))
 
 
-class ImageView(baseviews.EntityView):
-    __selectors__ = (implement_interface, score_entity_selector)
+class ImageView(EntityView):
     id = 'image'
+    __select__ = implements(IDownloadable) & score_entity(is_image)
+
     title = _('image')
-    accepts_interfaces = (IDownloadable,)
-    
+
     def call(self):
         rset = self.rset
         for i in xrange(len(rset)):
@@ -161,13 +143,6 @@ class ImageView(baseviews.EntityView):
             self.wview(self.id, rset, row=i, col=0)
             self.w(u'</div>')
 
-    @classmethod
-    def score_entity(cls, entity):
-        mt = entity.download_content_type()
-        if not (mt and mt.startswith('image/')):
-            return 0
-        return 1
-    
     def cell_call(self, row, col):
         entity = self.entity(row, col)
         #if entity.data_format.startswith('image/'):

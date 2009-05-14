@@ -1,7 +1,7 @@
 """Fake objects to ease testing of cubicweb without a fully working environment
 
 :organization: Logilab
-:copyright: 2001-2008 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+:copyright: 2001-2009 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 """
 __docformat__ = "restructuredtext en"
@@ -24,13 +24,13 @@ class FakeConfig(dict, BaseApptestConfiguration):
         self.apphome = apphome
         self._cubes = cubes
         self['auth-mode'] = 'cookie'
-        self['uid'] = None 
+        self['uid'] = None
         self['base-url'] = BASE_URL
         self['rql-cache-size'] = 100
-       
+
     def cubes(self, expand=False):
         return self._cubes
-    
+
     def sources(self):
         return {}
 
@@ -41,7 +41,7 @@ class FakeVReg(object):
         self.properties = {'ui.encoding': 'UTF8',
                            'ui.language': 'en',
                            }
-        
+
     def property_value(self, key):
         return self.properties[key]
 
@@ -51,10 +51,10 @@ class FakeVReg(object):
         'views' : [Mock(id='primary'), Mock(id='secondary'),
                          Mock(id='oneline'), Mock(id='list')],
         }
-    
+
     def registry_objects(self, name, oid=None):
         return self._registries[name]
-    
+
     def etype_class(self, etype):
         class Entity(dict):
             e_schema = self.schema[etype]
@@ -112,15 +112,15 @@ class FakeRequest(CubicWebRequestBase):
     def set_header(self, header, value):
         """set an output HTTP header"""
         pass
-    
+
     def add_header(self, header, value):
         """set an output HTTP header"""
         pass
-    
+
     def remove_header(self, header):
         """remove an output HTTP header"""
         pass
-    
+
     def get_header(self, header, default=None):
         """return the value associated with the given input header,
         raise KeyError if the header is not set
@@ -169,7 +169,7 @@ class FakeSession(RequestSessionMixIn):
         self.is_internal_session = False
         self.is_super_session = self.user.eid == -1
         self._query_data = {}
-        
+
     def execute(self, *args):
         pass
     def commit(self, *args):
@@ -186,7 +186,7 @@ class FakeSession(RequestSessionMixIn):
 
     def set_entity_cache(self, entity):
         pass
-    
+
 class FakeRepo(object):
     querier = None
     def __init__(self, schema, vreg=None, config=None):
@@ -199,8 +199,9 @@ class FakeRepo(object):
 
     def internal_session(self):
         return FakeSession(self)
-    
-    def extid2eid(self, source, extid, etype, session, insert=True):
+
+    def extid2eid(self, source, extid, etype, session, insert=True,
+                  recreate=False):
         try:
             return self.extids[extid]
         except KeyError:
@@ -213,7 +214,7 @@ class FakeRepo(object):
             self.eids[eid] = extid
             source.after_entity_insertion(session, extid, entity)
             return eid
-        
+
     def eid2extid(self, source, eid, session=None):
         return self.eids[eid]
 
@@ -228,7 +229,7 @@ class FakeSource(object):
     def __init__(self, uri):
         self.uri = uri
 
-        
+
 class FakePool(object):
     def source(self, uri):
         return FakeSource(uri)

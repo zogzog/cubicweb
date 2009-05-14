@@ -29,7 +29,7 @@ class DBAPITC(EnvBasedTC):
     def test_api(self):
         cnx = self.cnx
         self.assertEquals(cnx.user(None).login, 'anon')
-        self.assertEquals(cnx.describe(1), (u'EGroup', u'system', None))
+        self.assertEquals(cnx.describe(1), (u'CWGroup', u'system', None))
         self.restore_connection() # proper way to close cnx
         self.assertRaises(ConnectionError, cnx.user, None)
         self.assertRaises(ConnectionError, cnx.describe, 1)
@@ -73,7 +73,7 @@ class DBAPITC(EnvBasedTC):
 
 #     def test_api(self):
 #         cu = self.cursor
-#         self.assertEquals(cu.describe(1), (u'EGroup', u'system', None))
+#         self.assertEquals(cu.describe(1), (u'CWGroup', u'system', None))
 #         #cu.close()
 #         #self.assertRaises(ConnectionError, cu.describe, 1)
 

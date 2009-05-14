@@ -1,7 +1,7 @@
 """The edit controller, handling form submitting.
 
 :organization: Logilab
-:copyright: 2001-2008 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+:copyright: 2001-2009 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 """
 __docformat__ = "restructuredtext en"
@@ -26,17 +26,14 @@ class EditController(ViewController):
     def publish(self, rset=None, fromjson=False):
         """edit / create / copy / delete entity / relations"""
         self.fromjson = fromjson
-        req = self.req
-        form = req.form
-        for key in form:
+        for key in self.req.form:
             # There should be 0 or 1 action
             if key.startswith('__action_'):
                 cbname = key[1:]
                 try:
                     callback = getattr(self, cbname)
                 except AttributeError:
-                    raise ValidationError(None,
-                                          {None: req._('invalid action %r' % key)})
+                    raise RequestError(self.req._('invalid action %r' % key))
                 else:
                     return callback()
         self._default_publish()
@@ -68,7 +65,7 @@ class EditController(ViewController):
         if self._pending_relations:
             for rschema, formparams, x, entity in self._pending_relations:
                 self.handle_relation(rschema, formparams, x, entity, True)
-            
+
         # XXX this processes *all* pending operations of *all* entities
         if form.has_key('__delete'):
             todelete += req.list_form_param('__delete', form, pop=True)
@@ -79,7 +76,7 @@ class EditController(ViewController):
         if toinsert:
             self.insert_relations(parse_relations_descr(toinsert))
         self.req.remove_pending_operations()
-        
+
     def edit_entity(self, formparams, multiple=False):
         """edit / create / copy an entity and return its eid"""
         etype = formparams['__type']
@@ -87,7 +84,7 @@ class EditController(ViewController):
         entity.eid = eid = self._get_eid(formparams['eid'])
         edited = self.req.form.get('__maineid') == formparams['eid']
         # let a chance to do some entity specific stuff.
-        entity.pre_web_edit() 
+        entity.pre_web_edit()
         # create a rql query from parameters
         self.relations = []
         self.restrictions = []
@@ -102,14 +99,14 @@ class EditController(ViewController):
                 self.handle_inlined_relation(rschema, formparams, entity)
         execute = self.req.execute
         if eid is None: # creation or copy
-            if self.relations: 
+            if self.relations:
                 rql = 'INSERT %s X: %s' % (etype, ','.join(self.relations))
             else:
                 rql = 'INSERT %s X' % etype
             if self.restrictions:
                 rql += ' WHERE %s' % ','.join(self.restrictions)
             try:
-                # get the new entity (in some cases, the type might have 
+                # get the new entity (in some cases, the type might have
                 # changed as for the File --> Image mutation)
                 entity = execute(rql, formparams).get_entity(0, 0)
                 eid = entity.eid
@@ -155,7 +152,7 @@ class EditController(ViewController):
     def _action_apply(self):
         self._default_publish()
         self.reset()
-            
+
     def _action_cancel(self):
         errorurl = self.req.form.get('__errorurl')
         if errorurl:
@@ -175,7 +172,7 @@ class EditController(ViewController):
         if entity.has_eid() and (formparams.get(editkey) or None) == value:
             return False, None # not modified
         if value == INTERNAL_FIELD_VALUE:
-            value = None        
+            value = None
         return True, value
 
     def handle_attribute(self, entity, rschema, formparams):
@@ -199,27 +196,33 @@ class EditController(ViewController):
             value = Decimal(value)
         elif attrtype == 'Bytes':
             # if it is a file, transport it using a Binary (StringIO)
-            if formparams.has_key('__%s_detach' % attr):
+            # XXX later __detach is for the new widget system, the former is to
+            # be removed once web/widgets.py has been dropped
+            if formparams.has_key('__%s_detach' % attr) or formparams.has_key('%s__detach' % attr):
                 # drop current file value
                 value = None
-            # no need to check value when nor explicit detach nor new file submitted,
-            # since it will think the attribut is not modified
+            # no need to check value when nor explicit detach nor new file
+            # submitted, since it will think the attribute is not modified
             elif isinstance(value, unicode):
                 # file modified using a text widget
-                value = Binary(value.encode(entity.text_encoding(attr)))
-            else:
-                # (filename, mimetype, stream)
+                encoding = entity.attr_metadata(attr, 'encoding')
+                value = Binary(value.encode(encoding))
+            elif value:
+                # value is a  3-uple (filename, mimetype, stream)
                 val = Binary(value[2].read())
                 if not val.getvalue(): # usually an unexistant file
                     value = None
                 else:
-                    # XXX suppose a File compatible schema
                     val.filename = value[0]
-                    if entity.has_format(attr):
-                        key = '%s_format' % attr
-                        formparams[key] = value[1]
-                        self.relations.append('X %s_format %%(%s)s'
-                                              % (attr, key))
+                    # ignore browser submitted MIME type since it may be buggy
+                    # XXX add a config option to tell if we should consider it
+                    # or not?
+                    #if entity.e_schema.has_metadata(attr, 'format'):
+                    #    key = '%s_format' % attr
+                    #    formparams[key] = value[1]
+                    #    self.relations.append('X %s_format %%(%s)s'
+                    #                          % (attr, key))
+                    # XXX suppose a File compatible schema
                     if entity.e_schema.has_subject_relation('name') \
                            and not formparams.get('name'):
                         formparams['name'] = value[0]
@@ -281,7 +284,7 @@ class EditController(ViewController):
             self.restrictions.append('%s eid %%(%s)s' % (attr.upper(), attr))
         elif entity.has_eid():
             self.handle_relation(rschema, formparams, 'subject', entity, late)
-        
+
     def handle_relation(self, rschema, formparams, x, entity, late=False):
         """handle edition for the (rschema, x) relation of the given entity
         """
@@ -305,15 +308,17 @@ class EditController(ViewController):
         if x == 'object' or not rschema.inlined or not values:
             # this is not an inlined relation or no values specified,
             # explicty remove relations
+            rql = 'DELETE %s %s %s WHERE X eid %%(x)s, Y eid %%(y)s' % (
+                subjvar, rschema, objvar)
             for reid in origvalues.difference(values):
-                rql = 'DELETE %s %s %s WHERE X eid %%(x)s, Y eid %%(y)s' % (
-                    subjvar, rschema, objvar)
                 self.req.execute(rql, {'x': eid, 'y': reid}, ('x', 'y'))
-        rql = 'SET %s %s %s WHERE X eid %%(x)s, Y eid %%(y)s' % (
-            subjvar, rschema, objvar)
-        for reid in values.difference(origvalues):
-            self.req.execute(rql, {'x': eid, 'y': reid}, ('x', 'y'))
-    
+        seteids = values.difference(origvalues)
+        if seteids:
+            rql = 'SET %s %s %s WHERE X eid %%(x)s, Y eid %%(y)s' % (
+                subjvar, rschema, objvar)
+            for reid in seteids:
+                self.req.execute(rql, {'x': eid, 'y': reid}, ('x', 'y'))
+
     def _get_eid(self, eid):
         # should be either an int (existant entity) or a variable (to be
         # created entity)
@@ -343,5 +348,5 @@ class EditController(ViewController):
                 raise Exception('duh')
             result.add(eid)
         return result
-        
+
 

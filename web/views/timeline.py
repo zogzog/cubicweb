@@ -3,7 +3,7 @@
 cf. http://code.google.com/p/simile-widgets/
 
 :organization: Logilab
-:copyright: 2008 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+:copyright: 2008-2009 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 """
 __docformat__ = "restructuredtext en"
@@ -13,11 +13,10 @@ import simplejson
 from logilab.mtconverter import html_escape
 
 from cubicweb.interfaces import ICalendarable
-from cubicweb.common.view import EntityView, StartupView
-from cubicweb.common.selectors import implement_interface
+from cubicweb.selectors import implements
+from cubicweb.view import EntityView, StartupView
 
 
-# 
 class TimelineJsonView(EntityView):
     """generates a json file to feed Timeline.loadJSON()
     NOTE: work in progress (image_url, bubbleUrl and so on
@@ -28,10 +27,9 @@ class TimelineJsonView(EntityView):
     templatable = False
     content_type = 'application/json'
 
-    __selectors__ = (implement_interface,)
-    accepts_interfaces = (ICalendarable,)
+    __select__ = implements(ICalendarable)
     date_fmt = '%Y/%m/%d'
-    
+
     def call(self):
         events = []
         for entity in self.rset.entities():
@@ -45,13 +43,13 @@ class TimelineJsonView(EntityView):
     # FIXME: those properties should be defined by the entity class
     def onclick_url(self, entity):
         return entity.absolute_url()
-    
+
     def onclick(self, entity):
         url = self.onclick_url(entity)
         if url:
             return u"javascript: document.location.href='%s'" % url
         return None
-    
+
     def build_event(self, entity):
         """converts `entity` into a JSON object
         {'start': '1891',
@@ -79,13 +77,13 @@ class TimelineJsonView(EntityView):
             event_data['end'] = stop.strftime(self.date_fmt)
         return event_data
 
-    
+
 class TimelineViewMixIn(object):
     widget_class = 'TimelineWidget'
     jsfiles = ('cubicweb.timeline-bundle.js', 'cubicweb.widgets.js',
                'cubicweb.timeline-ext.js', 'cubicweb.ajax.js')
-    
-    def render(self, loadurl, tlunit=None):
+
+    def render_url(self, loadurl, tlunit=None):
         tlunit = tlunit or self.req.form.get('tlunit')
         self.req.add_js(self.jsfiles)
         self.req.add_css('timeline-bundle.css')
@@ -103,22 +101,21 @@ class TimelineViewMixIn(object):
 class TimelineView(TimelineViewMixIn, EntityView):
     """builds a cubicweb timeline widget node"""
     id = 'timeline'
-    __selectors__ = (implement_interface,)
-    accepts_interfaces = (ICalendarable,)
+    __select__ = implements(ICalendarable)
     need_navigation = False
     def call(self, tlunit=None):
         self.req.html_headers.define_var('Timeline_urlPrefix', self.req.datadir_url)
         rql = self.rset.printable_rql()
         loadurl = self.build_url(rql=rql, vid='timeline-json')
-        self.render(loadurl, tlunit)
-        
-    
+        self.render_url(loadurl, tlunit)
+
+
 class StaticTimelineView(TimelineViewMixIn, StartupView):
     """similar to `TimelineView` but loads data from a static
     JSON file instead of one after a RQL query.
     """
     id = 'static-timeline'
-    
+
     def call(self, loadurl, tlunit=None, wdgclass=None):
-        self.widget_class = wdgclass or self.widget_clas
-        self.render(loadurl, tlunit)
+        self.widget_class = wdgclass or self.widget_class
+        self.render_url(loadurl, tlunit)

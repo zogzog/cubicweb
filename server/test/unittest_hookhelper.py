@@ -4,23 +4,23 @@
 from logilab.common.testlib import unittest_main
 from cubicweb.devtools.apptest import RepositoryBasedTC
 
-from cubicweb.server.pool import LateOperation
+from cubicweb.server.pool import LateOperation, Operation, SingleLastOperation
 from cubicweb.server.hookhelper import *
 
 
 class HookHelpersTC(RepositoryBasedTC):
-    
+
     def setUp(self):
         RepositoryBasedTC.setUp(self)
         self.hm = self.repo.hm
-    
+
     def test_late_operation(self):
         session = self.session
         l1 = LateOperation(session)
         l2 = LateOperation(session)
         l3 = Operation(session)
         self.assertEquals(session.pending_operations, [l3, l1, l2])
-        
+
     def test_single_last_operation(self):
         session = self.session
         l0 = SingleLastOperation(session)
@@ -30,7 +30,7 @@ class HookHelpersTC(RepositoryBasedTC):
         self.assertEquals(session.pending_operations, [l3, l1, l2, l0])
         l4 = SingleLastOperation(session)
         self.assertEquals(session.pending_operations, [l3, l1, l2, l4])
-        
+
     def test_global_operation_order(self):
         from cubicweb.server import hooks, schemahooks
         session = self.session
@@ -42,8 +42,8 @@ class HookHelpersTC(RepositoryBasedTC):
         op4 = hooks.DelayedDeleteOp(session)
         op5 = hooks.CheckORelationOp(session)
         self.assertEquals(session.pending_operations, [op1, op2, op4, op5, op3])
-                          
-       
+
+
     def test_in_state_notification(self):
         result = []
         # test both email notification and transition_information
@@ -59,7 +59,7 @@ class HookHelpersTC(RepositoryBasedTC):
             SendMailOp(session, msg=content, recipients=['test@logilab.fr'])
         self.hm.register_hook(in_state_changed,
                              'before_add_relation', 'in_state')
-        self.execute('INSERT EUser X: X login "paf", X upassword "wouf", X in_state S, X in_group G WHERE S name "activated", G name "users"')
+        self.execute('INSERT CWUser X: X login "paf", X upassword "wouf", X in_state S, X in_group G WHERE S name "activated", G name "users"')
         self.assertEquals(result, [None])
         searchedops = [op for op in self.session.pending_operations
                        if isinstance(op, SendMailOp)]
@@ -78,6 +78,6 @@ class HookHelpersTC(RepositoryBasedTC):
                        if isinstance(op, SendMailOp)]
         self.assertEquals(len(searchedops), 0,
                           self.session.pending_operations)
-        
+
 if __name__ == '__main__':
     unittest_main()

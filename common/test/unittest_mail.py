@@ -17,14 +17,14 @@ def getlogin():
     Another solution would be to use $LOGNAME, $USER or $USERNAME
     """
     return pwd.getpwuid(os.getuid())[0]
-    
+
 
 class EmailTC(EnvBasedTC):
 
     def test_format_mail(self):
         self.set_option('sender-addr', 'bim@boum.fr')
         self.set_option('sender-name', 'BimBam')
-        
+
         mail = format_mail({'name': 'oim', 'email': 'oim@logilab.fr'},
                            ['test@logilab.fr'], u'un petit cöucou', u'bïjour',
                            config=self.config)
@@ -47,7 +47,7 @@ dW4gcGV0aXQgY8O2dWNvdQ==
         self.assertEquals(msg.get('reply-to'), u'oim <oim@logilab.fr>, BimBam <bim@boum.fr>')
         self.assertEquals(msg.get_payload(decode=True), u'un petit cöucou')
 
-        
+
     def test_format_mail_euro(self):
         mail = format_mail({'name': u'oîm', 'email': u'oim@logilab.fr'},
                            ['test@logilab.fr'], u'un petit cöucou €', u'bïjour €')
@@ -92,7 +92,7 @@ dW4gcGV0aXQgY8O2dWNvdSDigqw=
         self.assertEquals(msg.get('reply-to'), u'tutu <tutu@logilab.fr>')
         # set sender name and address as expected
         self.set_option('sender-name', 'cubicweb-test')
-        self.set_option('sender-addr', 'cubicweb-test@logilab.fr') 
+        self.set_option('sender-addr', 'cubicweb-test@logilab.fr')
         # anonymous notification: no name and no email specified
         msg = format_mail({'name': u'', 'email': u''},
                            ['test@logilab.fr'], u'un petit cöucou €', u'bïjour €',
@@ -119,4 +119,4 @@ dW4gcGV0aXQgY8O2dWNvdSDigqw=
 
 if __name__ == '__main__':
     unittest_main()
-    
+

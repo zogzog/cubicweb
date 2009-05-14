@@ -1,13 +1,13 @@
 """Set of views allowing edition of entities/relations using ajax
 
 :organization: Logilab
-:copyright: 2008 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+:copyright: 2009 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 """
 __docformat__ = "restructuredtext en"
 
-from cubicweb.common.selectors import (chainfirst, match_form_params,
-                                    match_kwargs)
+from cubicweb import role
+from cubicweb.selectors import match_form_params, match_kwargs
 from cubicweb.web.box import EditRelationBoxTemplate
 
 class AddRelationView(EditRelationBoxTemplate):
@@ -18,13 +18,14 @@ class AddRelationView(EditRelationBoxTemplate):
     class attributes.
     """
     __registry__ = 'views'
-    __selectors__ = (chainfirst(match_form_params, match_kwargs),)
+    __select__ = (match_form_params('rtype', 'target')
+                  | match_kwargs('rtype', 'target'))
     property_defs = {} # don't want to inherit this from Box
     id = 'xaddrelation'
     expected_kwargs = form_params = ('rtype', 'target')
 
     build_js = EditRelationBoxTemplate.build_reload_js_call
-    
+
     def cell_call(self, row, col, rtype=None, target=None, etype=None):
         self.rtype = rtype or self.req.form['rtype']
         self.target = target or self.req.form['target']
@@ -41,7 +42,7 @@ class AddRelationView(EditRelationBoxTemplate):
         fakebox = []
         self.w(u'<div id="%s">' % self.id)
         self.w(u'<h1>%s</h1>' % self.req._('relation %(relname)s of %(ent)s')
-               % {'relname': rschema.display_name(self.req, self.xtarget()[0]),
+               % {'relname': rschema.display_name(self.req, role(self)),
                   'ent': entity.view('incontext')})
         self.w(u'<ul>')
         self.w_unrelated(fakebox, entity)
@@ -55,15 +56,16 @@ class AddRelationView(EditRelationBoxTemplate):
         if etype is not defined on the Box's class, the default
         behaviour is to use the entity's appropraite vocabulary function
         """
-        x, target = self.xtarget()
         # use entity.unrelated if we've been asked for a particular etype
         if getattr(self, 'etype', None):
-            rset = entity.unrelated(self.rtype, self.etype, x, ordermethod='fetch_order')
+            rset = entity.unrelated(self.rtype, self.etype, role(self),
+                                    ordermethod='fetch_order')
             self.pagination(self.req, rset, w=self.w)
             return rset.entities()
         # in other cases, use vocabulary functions
         entities = []
-        for _, eid in entity.vocabulary(self.rtype, x):
+        # XXX to update for 3.2
+        for _, eid in entity.vocabulary(self.rtype, role(self)):
             if eid is not None:
                 rset = self.req.eid_rset(eid)
                 entities.append(rset.get_entity(0, 0))

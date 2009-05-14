@@ -2,17 +2,17 @@
 
 
 :organization: Logilab
-:copyright: 2001-2008 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+:copyright: 2001-2009 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 """
 __docformat__ = "restructuredtext en"
 
-from mx.DateTime import strptime, Error as MxDTError, TimeDelta
+import datetime
 
 from cubicweb import typed_eid
-from cubicweb.common.registerers import priority_registerer
-from cubicweb.common.selectors import match_user_group
-from cubicweb.common.appobject import AppObject
+from cubicweb.utils import strptime, todate, todatetime
+from cubicweb.selectors import yes, require_group_compat
+from cubicweb.appobject import AppObject
 from cubicweb.web import LOGGER, Redirect, RequestError
 
 
@@ -21,7 +21,7 @@ NAVIGATION_PARAMETERS = (('vid', '__redirectvid'),
                          ('__redirectpath', '__redirectpath'),
                          ('__redirectparams', '__redirectparams'),
                          )
-NAV_FORM_PARAMETERS = [fp for ap, fp in NAVIGATION_PARAMETERS]
+NAV_FORM_PARAMETERS = tuple(fp for ap, fp in NAVIGATION_PARAMETERS)
 
 def redirect_params(form):
     """transform redirection parameters into navigation parameters
@@ -47,7 +47,7 @@ def parse_relations_descr(rdescr):
         for subj in subjs.split('_'):
             for obj in objs.split('_'):
                 yield typed_eid(subj), rtype, typed_eid(obj)
-        
+
 def append_url_params(url, params):
     """append raw parameters to the url. Given parameters, if any, are expected
     to be already url-quoted.
@@ -67,16 +67,15 @@ class Controller(AppObject):
     and another linked by forms to edit objects ("edit").
     """
     __registry__ = 'controllers'
-    __registerer__ = priority_registerer
-    __selectors__ = (match_user_group,)
-    require_groups = ()
+    __select__ = yes()
+    registered = require_group_compat(AppObject.registered)
 
     def __init__(self, *args, **kwargs):
         super(Controller, self).__init__(*args, **kwargs)
         # attributes use to control after edition redirection
         self._after_deletion_path = None
         self._edited_entity = None
-        
+
     def publish(self, rset=None):
         """publish the current request, with an option input rql string
         (already processed if necessary)
@@ -84,7 +83,18 @@ class Controller(AppObject):
         raise NotImplementedError
 
     # generic methods useful for concret implementations ######################
-    
+
+    def process_rql(self, rql):
+        """execute rql if specified"""
+        if rql:
+            self.ensure_ro_rql(rql)
+            if not isinstance(rql, unicode):
+                rql = unicode(rql, self.req.encoding)
+            pp = self.vreg.select_component('magicsearch', self.req)
+            self.rset = pp.process_query(rql, self.req)
+            return self.rset
+        return None
+
     def check_expected_params(self, params):
         """check that the given list of parameters are specified in the form
         dictionary
@@ -96,7 +106,7 @@ class Controller(AppObject):
         if missing:
             raise RequestError('missing required parameter(s): %s'
                                % ','.join(missing))
-    
+
     def parse_datetime(self, value, etype='Datetime'):
         """get a datetime or time from a string (according to etype)
         Datetime formatted as Date are accepted
@@ -106,21 +116,24 @@ class Controller(AppObject):
         if etype == 'Datetime':
             format = self.req.property_value('ui.datetime-format')
             try:
-                return strptime(value, format)
-            except MxDTError:
+                return todatetime(strptime(value, format))
+            except:
                 pass
         elif etype == 'Time':
             format = self.req.property_value('ui.time-format')
             try:
                 # (adim) I can't find a way to parse a Time with a custom format
                 date = strptime(value, format) # this returns a DateTime
-                return TimeDelta(date.hour, date.minute, date.second)
-            except MxDTError:
+                return datetime.time(date.hour, date.minute, date.second)
+            except:
                 raise ValueError('can\'t parse %r (expected %s)' % (value, format))
         try:
             format = self.req.property_value('ui.date-format')
-            return strptime(value, format)
-        except MxDTError:
+            dt = strptime(value, format)
+            if etype == 'Datetime':
+                return todatetime(dt)
+            return todate(dt)
+        except:
             raise ValueError('can\'t parse %r (expected %s)' % (value, format))
 
 
@@ -131,7 +144,7 @@ class Controller(AppObject):
         #       relation) that might not be satisfied yet (in case of creations)
         if not self._edited_entity:
             self._edited_entity = entity
-        
+
     def delete_entities(self, eidtypes):
         """delete entities from the repository"""
         redirect_info = set()
@@ -150,7 +163,7 @@ class Controller(AppObject):
             self.req.set_message(self.req._('entities deleted'))
         else:
             self.req.set_message(self.req._('entity deleted'))
-        
+
     def delete_relations(self, rdefs):
         """delete relations from the repository"""
         # FIXME convert to using the syntax subject:relation:eids
@@ -159,7 +172,7 @@ class Controller(AppObject):
             rql = 'DELETE X %s Y where X eid %%(x)s, Y eid %%(y)s' % rtype
             execute(rql, {'x': subj, 'y': obj}, ('x', 'y'))
         self.req.set_message(self.req._('relations deleted'))
-    
+
     def insert_relations(self, rdefs):
         """insert relations into the repository"""
         execute = self.req.execute
@@ -167,7 +180,7 @@ class Controller(AppObject):
             rql = 'SET X %s Y where X eid %%(x)s, Y eid %%(y)s' % rtype
             execute(rql, {'x': subj, 'y': obj}, ('x', 'y'))
 
-    
+
     def reset(self):
         """reset form parameters and redirect to a view determinated by given
         parameters
@@ -211,7 +224,7 @@ class Controller(AppObject):
         url = self.build_url(path, **newparams)
         url = append_url_params(url, self.req.form.get('__redirectparams'))
         raise Redirect(url)
-    
+
 
     def _return_to_edition_view(self, newparams):
         """apply-button case"""

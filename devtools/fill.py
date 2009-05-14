@@ -2,16 +2,16 @@
 """This modules defines func / methods for creating test repositories
 
 :organization: Logilab
-:copyright: 2001-2008 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+:copyright: 2001-2009 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 """
 __docformat__ = "restructuredtext en"
 
 from random import randint, choice
 from copy import deepcopy
-
-from mx.DateTime import DateTime, DateTimeDelta
+from datetime import datetime, date, timedelta
 from decimal import Decimal
+
 from yams.constraints import (SizeConstraint, StaticVocabularyConstraint,
                               IntervalBoundConstraint)
 from rql.utils import decompose_b26 as base_decompose_b26
@@ -33,7 +33,7 @@ def get_choices(eschema, attrname):
         if isinstance(cst, StaticVocabularyConstraint):
             return cst.vocabulary()
     return None
-    
+
 
 def get_max_length(eschema, attrname):
     """returns the maximum length allowed for 'attrname'"""
@@ -75,7 +75,7 @@ class _ValueGenerator(object):
             value = self.__generate_value(attrname, index, **kwargs)
         _GENERATED_VALUES.setdefault((self.e_schema.type, attrname), set()).add(value)
         return value
-        
+
     def __generate_value(self, attrname, index, **kwargs):
         """generates a consistent value for 'attrname'"""
         attrtype = str(self.e_schema.destination(attrname)).lower()
@@ -100,7 +100,7 @@ class _ValueGenerator(object):
         if choices is None:
             return None
         return unicode(choice(choices)) # FIXME
-        
+
     def generate_string(self, attrname, index, format=None):
         """generates a consistent value for 'attrname' if it's a string"""
         # First try to get choices
@@ -133,7 +133,7 @@ title
     def generate_password(self, attrname, index):
         """generates a consistent value for 'attrname' if it's a password"""
         return u'toto'
-        
+
     def generate_integer(self, attrname, index):
         """generates a consistent value for 'attrname' if it's an integer"""
         choosed = self.generate_choice(attrname, index)
@@ -145,29 +145,29 @@ title
         else:
             maxvalue = maxvalue or index
         return randint(minvalue or 0, maxvalue)
-    
+
     generate_int = generate_integer
-    
+
     def generate_float(self, attrname, index):
         """generates a consistent value for 'attrname' if it's a float"""
         return float(randint(-index, index))
-    
+
     def generate_decimal(self, attrname, index):
         """generates a consistent value for 'attrname' if it's a float"""
         return Decimal(str(self.generate_float(attrname, index)))
-    
+
     def generate_date(self, attrname, index):
         """generates a random date (format is 'yyyy-mm-dd')"""
-        return DateTime(randint(2000, 2004), randint(1, 12), randint(1, 28))
+        return date(randint(2000, 2004), randint(1, 12), randint(1, 28))
 
     def generate_time(self, attrname, index):
         """generates a random time (format is ' HH:MM')"""
-        return DateTimeDelta(0, 11, index%60) #'11:%02d' % (index % 60)
-    
+        return timedelta(0, 11, index%60) #'11:%02d' % (index % 60)
+
     def generate_datetime(self, attrname, index):
         """generates a random date (format is 'yyyy-mm-dd HH:MM')"""
-        return DateTime(randint(2000, 2004), randint(1, 12), randint(1, 28), 11, index%60)
-        
+        return datetime(randint(2000, 2004), randint(1, 12), randint(1, 28), 11, index%60)
+
 
     def generate_bytes(self, attrname, index, format=None):
         # modpython way
@@ -175,7 +175,7 @@ title
         fakefile.filename = "file_%s" % attrname
         fakefile.value = fakefile.getvalue()
         return fakefile
-    
+
     def generate_boolean(self, attrname, index):
         """generates a consistent value for 'attrname' if it's a boolean"""
         return index % 2 == 0
@@ -185,7 +185,7 @@ title
         # need this method else stupid values will be set which make mtconverter
         # raise exception
         return u'application/octet-stream'
-    
+
     def generate_Any_content_format(self, index, **kwargs):
         # content_format attribute of EmailPart has no vocabulary constraint, we
         # need this method else stupid values will be set which make mtconverter
@@ -236,7 +236,7 @@ def insert_entity_queries(etype, schema, vreg, entity_num,
                         returns acceptable values for this attribute
     """
     # XXX HACK, remove or fix asap
-    if etype in (('String', 'Int', 'Float', 'Boolean', 'Date', 'EGroup', 'EUser')):
+    if etype in (('String', 'Int', 'Float', 'Boolean', 'Date', 'CWGroup', 'CWUser')):
         return []
     queries = []
     for index in xrange(entity_num):
@@ -250,7 +250,7 @@ def insert_entity_queries(etype, schema, vreg, entity_num,
                             args))
             assert not 'eid' in args, args
         else:
-            queries.append(('INSERT %s X' % etype, {}))        
+            queries.append(('INSERT %s X' % etype, {}))
     return queries
 
 
@@ -365,7 +365,7 @@ class RelationsQueriesGenerator(object):
                     continue
                 subjcard, objcard = rschema.rproperty(subj, obj, 'cardinality')
                 # process mandatory relations first
-                if subjcard in '1+' or objcard in '1+': 
+                if subjcard in '1+' or objcard in '1+':
                     queries += self.make_relation_queries(sedict, oedict,
                                                           rschema, subj, obj)
                 else:
@@ -374,7 +374,7 @@ class RelationsQueriesGenerator(object):
                 queries += self.make_relation_queries(sedict, oedict, rschema,
                                                       subj, obj)
         return queries
-        
+
     def qargs(self, subjeids, objeids, subjcard, objcard, subjeid, objeid):
         if subjcard in '?1':
             subjeids.remove(subjeid)
@@ -411,7 +411,7 @@ class RelationsQueriesGenerator(object):
                         subjeids.remove(subjeid)
         if not subjeids:
             check_card_satisfied(objcard, objeids, subj, rschema, obj)
-            return 
+            return
         if not objeids:
             check_card_satisfied(subjcard, subjeids, subj, rschema, obj)
             return
@@ -452,7 +452,7 @@ class RelationsQueriesGenerator(object):
                     used.add( (subjeid, objeid) )
                     yield q, self.qargs(subjeids, objeids, subjcard, objcard,
                                         subjeid, objeid)
-                    
+
 def check_card_satisfied(card, remaining, subj, rschema, obj):
     if card in '1+' and remaining:
         raise Exception("can't satisfy cardinality %s for relation %s %s %s"
@@ -466,8 +466,8 @@ def choose_eid(values, avoid):
     while objeid == avoid: # avoid infinite recursion like in X comment X
         objeid = choice(values)
     return objeid
-                    
-                
+
+
 
 # UTILITIES FUNCS ##############################################################
 def make_tel(num_tel):

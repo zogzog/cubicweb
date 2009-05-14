@@ -5,18 +5,18 @@ Take a look at http://www.python.org/peps/pep-0249.html
 (most parts of this document are reported here in docstrings)
 
 :organization: Logilab
-:copyright: 2001-2008 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+:copyright: 2001-2009 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 """
 __docformat__ = "restructuredtext en"
 
-from logging import getLogger, StreamHandler
+from logging import getLogger
 from time import time, clock
 
 from cubicweb import ConnectionError, RequestSessionMixIn, set_log_methods
 from cubicweb.cwvreg import CubicWebRegistry, MulCnxCubicWebRegistry
 from cubicweb.cwconfig import CubicWebNoAppConfiguration
-        
+
 _MARKER = object()
 
 class ConnectionProperties(object):
@@ -29,7 +29,7 @@ class ConnectionProperties(object):
 
 def get_repository(method, database=None, config=None, vreg=None):
     """get a proxy object to the CubicWeb repository, using a specific RPC method.
-     
+
     Only 'in-memory' and 'pyro' are supported for now. Either vreg or config
     argument should be given
     """
@@ -42,7 +42,7 @@ def get_repository(method, database=None, config=None, vreg=None):
         from cubicweb.server.repository import Repository
         return Repository(config, vreg=vreg)
     else: # method == 'pyro'
-        from Pyro import core, naming, config as pyroconfig
+        from Pyro import core, naming
         from Pyro.errors import NamingError, ProtocolError
         core.initClient(banner=0)
         nsid = ':%s.%s' % (config['pyro-ns-group'], database)
@@ -54,16 +54,16 @@ def get_repository(method, database=None, config=None, vreg=None):
         except ProtocolError:
             raise ConnectionError('Could not connect to the Pyro name server '
                                   '(host: %s:%i)' % (nshost, nsport))
-        except NamingError, ex:
+        except NamingError:
             raise ConnectionError('Could not get repository for %s '
                                   '(not registered in Pyro), '
                                   'you may have to restart your server-side '
                                   'application' % nsid)
         return core.getProxyForURI(uri)
-        
+
 def repo_connect(repo, user, password, cnxprops=None):
     """Constructor to create a new connection to the CubicWeb repository.
-    
+
     Returns a Connection instance.
     """
     cnxprops = cnxprops or ConnectionProperties('inmemory')
@@ -72,7 +72,7 @@ def repo_connect(repo, user, password, cnxprops=None):
     if cnxprops.cnxtype == 'inmemory':
         cnx.vreg = repo.vreg
     return cnx
-    
+
 def connect(database=None, user=None, password=None, host=None,
             group=None, cnxprops=None, port=None, setvreg=True, mulcnx=True,
             initlog=True):
@@ -110,7 +110,7 @@ def connect(database=None, user=None, password=None, host=None,
 
 def in_memory_cnx(config, user, password):
     """usefull method for testing and scripting to get a dbapi.Connection
-    object connected to an in-memory repository instance 
+    object connected to an in-memory repository instance
     """
     if isinstance(config, CubicWebRegistry):
         vreg = config
@@ -126,7 +126,7 @@ def in_memory_cnx(config, user, password):
 
 
 class DBAPIRequest(RequestSessionMixIn):
-    
+
     def __init__(self, vreg, cnx=None):
         super(DBAPIRequest, self).__init__(vreg)
         try:
@@ -146,10 +146,10 @@ class DBAPIRequest(RequestSessionMixIn):
 
     def base_url(self):
         return self.vreg.config['base-url']
-    
+
     def from_controller(self):
         return 'view'
-    
+
     def set_connection(self, cnx, user=None):
         """method called by the session handler when the user is authenticated
         or an anonymous connection is open
@@ -157,7 +157,7 @@ class DBAPIRequest(RequestSessionMixIn):
         self.cnx = cnx
         self.cursor = cnx.cursor(self)
         self.set_user(user)
-    
+
     def set_default_language(self, vreg):
         try:
             self.lang = vreg.property_value('ui.language')
@@ -175,26 +175,26 @@ class DBAPIRequest(RequestSessionMixIn):
         rset.vreg = self.vreg
         rset.req = self
         return rset
-    
+
     def describe(self, eid):
         """return a tuple (type, sourceuri, extid) for the entity with id <eid>"""
         return self.cnx.describe(eid)
-    
+
     def source_defs(self):
         """return the definition of sources used by the repository."""
         return self.cnx.source_defs()
-            
+
     # entities cache management ###############################################
-    
+
     def entity_cache(self, eid):
         return self._eid_cache[eid]
-    
+
     def set_entity_cache(self, entity):
         self._eid_cache[entity.eid] = entity
 
     def cached_entities(self):
         return self._eid_cache.values()
-    
+
     def drop_entity_cache(self, eid=None):
         if eid is None:
             self._eid_cache = {}
@@ -210,11 +210,11 @@ class DBAPIRequest(RequestSessionMixIn):
     def get_session_data(self, key, default=None, pop=False):
         """return value associated to `key` in session data"""
         return self.cnx.get_session_data(key, default, pop)
-        
+
     def set_session_data(self, key, value):
         """set value associated to `key` in session data"""
         return self.cnx.set_session_data(key, value)
-        
+
     def del_session_data(self, key):
         """remove value associated to `key` in session data"""
         return self.cnx.del_session_data(key)
@@ -222,7 +222,7 @@ class DBAPIRequest(RequestSessionMixIn):
     def get_shared_data(self, key, default=None, pop=False):
         """return value associated to `key` in shared data"""
         return self.cnx.get_shared_data(key, default, pop)
-        
+
     def set_shared_data(self, key, value, querydata=False):
         """set value associated to `key` in shared data
 
@@ -245,14 +245,14 @@ class DBAPIRequest(RequestSessionMixIn):
         self._user = user
         if user:
             self.set_entity_cache(user)
-        
+
     def execute(self, *args, **kwargs):
         """Session interface compatibility"""
         return self.cursor.execute(*args, **kwargs)
 
 set_log_methods(DBAPIRequest, getLogger('cubicweb.dbapi'))
-        
-        
+
+
 # exceptions ##################################################################
 
 class ProgrammingError(Exception): #DatabaseError):
@@ -288,15 +288,15 @@ threadsafety = 1
 """String constant stating the type of parameter marker formatting expected by
 the interface. Possible values are :
 
-                'qmark'         Question mark style, 
+                'qmark'         Question mark style,
                                 e.g. '...WHERE name=?'
-                'numeric'       Numeric, positional style, 
+                'numeric'       Numeric, positional style,
                                 e.g. '...WHERE name=:1'
-                'named'         Named style, 
+                'named'         Named style,
                                 e.g. '...WHERE name=:name'
-                'format'        ANSI C printf format codes, 
+                'format'        ANSI C printf format codes,
                                 e.g. '...WHERE name=%s'
-                'pyformat'      Python extended format codes, 
+                'pyformat'      Python extended format codes,
                                 e.g. '...WHERE name=%(name)s'
 """
 paramstyle = 'pyformat'
@@ -333,41 +333,37 @@ class Connection(object):
 
     def request(self):
         return DBAPIRequest(self.vreg, self)
-    
+
     def session_data(self):
         """return a dictionnary containing session data"""
         return self.data
-        
+
     def get_session_data(self, key, default=None, pop=False):
         """return value associated to `key` in session data"""
         if pop:
             return self.data.pop(key, default)
         else:
             return self.data.get(key, default)
-        
+
     def set_session_data(self, key, value):
         """set value associated to `key` in session data"""
         self.data[key] = value
-        
+
     def del_session_data(self, key):
         """remove value associated to `key` in session data"""
         try:
             del self.data[key]
         except KeyError:
-            pass    
+            pass
 
     def check(self):
         """raise `BadSessionId` if the connection is no more valid"""
-        try:
-            self._repo.check_session(self.sessionid)
-        except AttributeError:
-            # XXX backward compat for repository running cubicweb < 2.48.3
-            self._repo.session_data(self.sessionid)
+        self._repo.check_session(self.sessionid)
 
     def get_shared_data(self, key, default=None, pop=False):
         """return value associated to `key` in shared data"""
         return self._repo.get_shared_data(self.sessionid, key, default, pop)
-        
+
     def set_shared_data(self, key, value, querydata=False):
         """set value associated to `key` in shared data
 
@@ -377,10 +373,10 @@ class Connection(object):
         repository side.
         """
         return self._repo.set_shared_data(self.sessionid, key, value, querydata)
-        
+
     def get_schema(self):
         """Return the schema currently used by the repository.
-        
+
         This is NOT part of the DB-API.
         """
         if self._closed is not None:
@@ -418,10 +414,10 @@ class Connection(object):
             # application specific hooks
             if self._repo.config.application_hooks:
                 hm.register_hooks(config.load_hooks(self.vreg))
-            
+
     def source_defs(self):
         """Return the definition of sources used by the repository.
-        
+
         This is NOT part of the DB-API.
         """
         if self._closed is not None:
@@ -434,9 +430,9 @@ class Connection(object):
         eid, login, groups, properties = self._repo.user_info(self.sessionid, props)
         if req is None:
             req = self.request()
-        rset = req.eid_rset(eid, 'EUser')
-        user = self.vreg.etype_class('EUser')(req, rset, row=0, groups=groups,
-                                              properties=properties)
+        rset = req.eid_rset(eid, 'CWUser')
+        user = self.vreg.etype_class('CWUser')(req, rset, row=0, groups=groups,
+                                               properties=properties)
         user['login'] = login # cache login
         return user
 
@@ -447,13 +443,13 @@ class Connection(object):
                 self.close()
             except:
                 pass
-    
+
     def describe(self, eid):
         return self._repo.describe(self.sessionid, eid)
-            
+
     def close(self):
         """Close the connection now (rather than whenever __del__ is called).
-        
+
         The connection will be unusable from this point forward; an Error (or
         subclass) exception will be raised if any operation is attempted with
         the connection. The same applies to all cursor objects trying to use the
@@ -469,7 +465,7 @@ class Connection(object):
         """Commit any pending transaction to the database. Note that if the
         database supports an auto-commit feature, this must be initially off. An
         interface method may be provided to turn it back on.
-            
+
         Database modules that do not support transactions should implement this
         method with void functionality.
         """
@@ -480,7 +476,7 @@ class Connection(object):
     def rollback(self):
         """This method is optional since not all databases provide transaction
         support.
-            
+
         In case a database does provide transactions this method causes the the
         database to roll back to the start of any pending transaction.  Closing
         a connection without committing the changes first will cause an implicit
@@ -514,7 +510,7 @@ class Cursor(object):
     support is implemented (see also the connection's rollback() and commit()
     methods.)
     """
-    
+
     def __init__(self, connection, repo, req=None):
         """This read-only attribute return a reference to the Connection
         object on which the cursor was created.
@@ -526,7 +522,7 @@ class Cursor(object):
         """This read/write attribute specifies the number of rows to fetch at a
         time with fetchmany(). It defaults to 1 meaning to fetch a single row
         at a time.
-        
+
         Implementations must observe this value with respect to the fetchmany()
         method, but are free to interact with the database a single row at a
         time. It may also be used in the implementation of executemany().
@@ -539,7 +535,7 @@ class Cursor(object):
         self._closed = None
         self._index = 0
 
-        
+
     def close(self):
         """Close the cursor now (rather than whenever __del__ is called).  The
         cursor will be unusable from this point forward; an Error (or subclass)
@@ -547,30 +543,30 @@ class Cursor(object):
         """
         self._closed = True
 
-            
+
     def execute(self, operation, parameters=None, eid_key=None, build_descr=True):
         """Prepare and execute a database operation (query or command).
         Parameters may be provided as sequence or mapping and will be bound to
         variables in the operation.  Variables are specified in a
         database-specific notation (see the module's paramstyle attribute for
         details).
-        
+
         A reference to the operation will be retained by the cursor.  If the
         same operation object is passed in again, then the cursor can optimize
         its behavior.  This is most effective for algorithms where the same
         operation is used, but different parameters are bound to it (many
         times).
-        
+
         For maximum efficiency when reusing an operation, it is best to use the
         setinputsizes() method to specify the parameter types and sizes ahead
         of time.  It is legal for a parameter to not match the predefined
         information; the implementation should compensate, possibly with a loss
         of efficiency.
-        
+
         The parameters may also be specified as list of tuples to e.g. insert
         multiple rows in a single operation, but this kind of usage is
         depreciated: executemany() should be used instead.
-        
+
         Return values are not defined by the DB-API, but this here it returns a
         ResultSet object.
         """
@@ -579,25 +575,25 @@ class Cursor(object):
         self.req.decorate_rset(res)
         self._index = 0
         return res
-        
+
 
     def executemany(self, operation, seq_of_parameters):
         """Prepare a database operation (query or command) and then execute it
         against all parameter sequences or mappings found in the sequence
         seq_of_parameters.
-        
+
         Modules are free to implement this method using multiple calls to the
         execute() method or by using array operations to have the database
         process the sequence as a whole in one call.
-        
+
         Use of this method for an operation which produces one or more result
         sets constitutes undefined behavior, and the implementation is
         permitted (but not required) to raise an exception when it detects that
         a result set has been created by an invocation of the operation.
-        
+
         The same comments as for execute() also apply accordingly to this
         method.
-        
+
         Return values are not defined.
         """
         for parameters in seq_of_parameters:
@@ -610,7 +606,7 @@ class Cursor(object):
     def fetchone(self):
         """Fetch the next row of a query result set, returning a single
         sequence, or None when no more data is available.
-        
+
         An Error (or subclass) exception is raised if the previous call to
         execute*() did not produce any result set or no call was issued yet.
         """
@@ -620,21 +616,21 @@ class Cursor(object):
         self._index += 1
         return row
 
-        
+
     def fetchmany(self, size=None):
         """Fetch the next set of rows of a query result, returning a sequence
         of sequences (e.g. a list of tuples). An empty sequence is returned
         when no more rows are available.
-        
+
         The number of rows to fetch per call is specified by the parameter.  If
         it is not given, the cursor's arraysize determines the number of rows
         to be fetched. The method should try to fetch as many rows as indicated
         by the size parameter. If this is not possible due to the specified
         number of rows not being available, fewer rows may be returned.
-        
+
         An Error (or subclass) exception is raised if the previous call to
         execute*() did not produce any result set or no call was issued yet.
-        
+
         Note there are performance considerations involved with the size
         parameter.  For optimal performance, it is usually best to use the
         arraysize attribute.  If the size parameter is used, then it is best
@@ -648,12 +644,12 @@ class Cursor(object):
         self._index += size
         return rows
 
-        
+
     def fetchall(self):
         """Fetch all (remaining) rows of a query result, returning them as a
         sequence of sequences (e.g. a list of tuples).  Note that the cursor's
         arraysize attribute can affect the performance of this operation.
-        
+
         An Error (or subclass) exception is raised if the previous call to
         execute*() did not produce any result set or no call was issued yet.
         """
@@ -669,39 +665,39 @@ class Cursor(object):
     def setinputsizes(self, sizes):
         """This can be used before a call to execute*() to predefine memory
         areas for the operation's parameters.
-        
+
         sizes is specified as a sequence -- one item for each input parameter.
         The item should be a Type Object that corresponds to the input that
         will be used, or it should be an integer specifying the maximum length
         of a string parameter.  If the item is None, then no predefined memory
         area will be reserved for that column (this is useful to avoid
         predefined areas for large inputs).
-        
+
         This method would be used before the execute*() method is invoked.
-        
+
         Implementations are free to have this method do nothing and users are
         free to not use it.
         """
         pass
 
-        
+
     def setoutputsize(self, size, column=None):
         """Set a column buffer size for fetches of large columns (e.g. LONGs,
         BLOBs, etc.).  The column is specified as an index into the result
         sequence.  Not specifying the column will set the default size for all
         large columns in the cursor.
-        
+
         This method would be used before the execute*() method is invoked.
-        
+
         Implementations are free to have this method do nothing and users are
         free to not use it.
-        """    
+        """
         pass
 
-    
+
 class LogCursor(Cursor):
     """override the standard cursor to log executed queries"""
-    
+
     def execute(self, operation, parameters=None, eid_key=None, build_descr=True):
         """override the standard cursor to log executed queries"""
         tstart, cstart = time(), clock()

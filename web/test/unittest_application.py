@@ -44,7 +44,7 @@ class FakeController(ViewController):
 class RequestBaseTC(TestCase):
     def setUp(self):
         self.req = FakeRequest()
-        
+
 
     def test_list_arg(self):
         """tests the list_arg() function"""
@@ -73,13 +73,13 @@ class RequestBaseTC(TestCase):
         self.assertEquals(req.relative_path(False), 'login')
         self.assertEquals(req.from_controller(), 'login')
 
-        
+
 class UtilsTC(TestCase):
     """test suite for misc application utilities"""
 
     def setUp(self):
         self.ctrl = FakeController()
-    
+
     #def test_which_mapping(self):
     #    """tests which mapping is used (application or core)"""
     #    init_mapping()
@@ -95,7 +95,7 @@ class UtilsTC(TestCase):
         self.assertEquals(self.ctrl.execute_linkto(), None)
         self.assertEquals(self.ctrl._cursor.executed,
                           [])
-        
+
         self.ctrl.set_form({'__linkto' : 'works_for:12_13_14:object',
                               'eid': 8})
         self.ctrl.execute_linkto()
@@ -110,7 +110,7 @@ class UtilsTC(TestCase):
         self.assertEquals(self.ctrl._cursor.executed,
                           ['SET X works_for Y WHERE X eid 8, Y eid %s' % i
                            for i in (12, 13, 14)])
-        
+
 
         self.ctrl.new_cursor()
         self.ctrl.req.form = {'__linkto' : 'works_for:12_13_14:object'}
@@ -152,10 +152,10 @@ class ApplicationTC(EnvBasedTC):
             return path, params
         else:
             self.fail('expected a Redirect exception')
-        
+
     def expect_redirect_publish(self, req, path='view'):
         return self.expect_redirect(lambda x: self.publish(x, path), req)
-    
+
     def test_cnx_user_groups_sync(self):
         user = self.user()
         self.assertEquals(user.groups, set(('managers',)))
@@ -168,22 +168,22 @@ class ApplicationTC(EnvBasedTC):
         # cleanup
         self.execute('DELETE X in_group G WHERE X eid %s, G name "guests"' % user.eid)
         self.commit()
-    
+
     def test_nonregr_publish1(self):
-        req = self.request(u'EEType X WHERE X final FALSE, X meta FALSE')
+        req = self.request(u'CWEType X WHERE X final FALSE, X meta FALSE')
         self.app.publish('view', req)
-        
+
     def test_nonregr_publish2(self):
         req = self.request(u'Any count(N) WHERE N todo_by U, N is Note, U eid %s'
                            % self.user().eid)
         self.app.publish('view', req)
-        
+
     def test_publish_validation_error(self):
         req = self.request()
         user = self.user()
         req.form = {
             'eid':       `user.eid`,
-            '__type:'+`user.eid`:    'EUser',
+            '__type:'+`user.eid`:    'CWUser',
             'login:'+`user.eid`:     '', # ERROR: no login specified
             'edits-login:'+`user.eid`: unicode(user.login),
              # just a sample, missing some necessary information for real life
@@ -204,12 +204,12 @@ class ApplicationTC(EnvBasedTC):
 
     def test_validation_error_dont_loose_subentity_data(self):
         """test creation of two linked entities
-        """        
+        """
         req = self.request()
         form = {'eid': ['X', 'Y'],
-                '__type:X': 'EUser',
+                '__type:X': 'CWUser',
                 # missing required field
-                'login:X': u'', 'edits-login:X': '', 
+                'login:X': u'', 'edits-login:X': '',
                 'surname:X': u'Mr Ouaoua', 'edits-surname:X': '',
                 '__type:Y': 'EmailAddress',
                 # but email address is set
@@ -229,13 +229,13 @@ class ApplicationTC(EnvBasedTC):
         self.assertEquals(forminfo['errors'].errors, {'login': 'required attribute',
                                                       'upassword': 'required attribute'})
         self.assertEquals(forminfo['values'], form)
-        
+
     def _test_cleaned(self, kwargs, injected, cleaned):
         req = self.request(**kwargs)
         page = self.app.publish('view', req)
         self.failIf(injected in page, (kwargs, injected))
         self.failUnless(cleaned in page, (kwargs, cleaned))
-        
+
     def test_nonregr_script_kiddies(self):
         """test against current script injection"""
         injected = '<i>toto</i>'
@@ -245,7 +245,7 @@ class ApplicationTC(EnvBasedTC):
                        {'vtitle': injected},
                        ):
             yield self._test_cleaned, kwargs, injected, cleaned
-        
+
     def test_site_wide_eproperties_sync(self):
         # XXX work in all-in-one configuration but not in twisted for instance
         # in which case we need a kindof repo -> http server notification
@@ -253,7 +253,7 @@ class ApplicationTC(EnvBasedTC):
         vreg = self.app.vreg
         # default value
         self.assertEquals(vreg.property_value('ui.language'), 'en')
-        self.execute('INSERT EProperty X: X value "fr", X pkey "ui.language"')
+        self.execute('INSERT CWProperty X: X value "fr", X pkey "ui.language"')
         self.assertEquals(vreg.property_value('ui.language'), 'en')
         self.commit()
         self.assertEquals(vreg.property_value('ui.language'), 'fr')
@@ -261,7 +261,7 @@ class ApplicationTC(EnvBasedTC):
         self.assertEquals(vreg.property_value('ui.language'), 'fr')
         self.commit()
         self.assertEquals(vreg.property_value('ui.language'), 'de')
-        self.execute('DELETE EProperty X WHERE X pkey "ui.language"')
+        self.execute('DELETE CWProperty X WHERE X pkey "ui.language"')
         self.assertEquals(vreg.property_value('ui.language'), 'de')
         self.commit()
         self.assertEquals(vreg.property_value('ui.language'), 'en')
@@ -278,7 +278,7 @@ class ApplicationTC(EnvBasedTC):
         self.failIf(req.cnx is origcnx)
         self.assertEquals(req.user.login, 'turlututu')
         self.failUnless('turlututu' in page, page)
-        
+
     # authentication tests ####################################################
 
     def _init_auth(self, authmode, anonuser=None):
@@ -289,7 +289,7 @@ class ApplicationTC(EnvBasedTC):
         req.cnx = None
         sh = self.app.session_handler
         # not properly cleaned between tests
-        self.open_sessions = sh.session_manager._sessions = {} 
+        self.open_sessions = sh.session_manager._sessions = {}
         return req, origcnx
 
     def _test_auth_succeed(self, req, origcnx):
@@ -299,16 +299,16 @@ class ApplicationTC(EnvBasedTC):
         self.assertEquals(len(self.open_sessions), 1, self.open_sessions)
         self.assertEquals(cnx.login, origcnx.login)
         self.assertEquals(cnx.password, origcnx.password)
-        self.assertEquals(cnx.anonymous_connection, False) 
+        self.assertEquals(cnx.anonymous_connection, False)
         self.assertEquals(path, 'view')
         self.assertEquals(params, {'__message': 'welcome %s !' % origcnx.login})
-    
+
     def _test_auth_fail(self, req):
         self.assertRaises(AuthenticationError, self.app.connect, req)
         self.assertEquals(req.cnx, None)
-        self.assertEquals(len(self.open_sessions), 0) 
+        self.assertEquals(len(self.open_sessions), 0)
         clear_cache(req, 'get_authorization')
-        
+
     def test_http_auth_no_anon(self):
         req, origcnx = self._init_auth('http')
         self._test_auth_fail(req)
@@ -318,7 +318,7 @@ class ApplicationTC(EnvBasedTC):
         req._headers['Authorization'] = 'basic %s' % authstr
         self._test_auth_succeed(req, origcnx)
         self.assertRaises(AuthenticationError, self.publish, req, 'logout')
-        self.assertEquals(len(self.open_sessions), 0) 
+        self.assertEquals(len(self.open_sessions), 0)
 
     def test_cookie_auth_no_anon(self):
         req, origcnx = self._init_auth('cookie')
@@ -331,17 +331,37 @@ class ApplicationTC(EnvBasedTC):
         req.form['__password'] = origcnx.password
         self._test_auth_succeed(req, origcnx)
         self.assertRaises(AuthenticationError, self.publish, req, 'logout')
-        self.assertEquals(len(self.open_sessions), 0) 
+        self.assertEquals(len(self.open_sessions), 0)
+
+    def test_login_by_email(self):
+        login = self.request().user.login
+        address = login + u'@localhost'
+        self.execute('INSERT EmailAddress X: X address %(address)s, U primary_email X '
+                     'WHERE U login %(login)s', {'address': address, 'login': login})
+        self.commit()
+        # option allow-email-login not set
+        req, origcnx = self._init_auth('cookie')
+        req.form['__login'] = address
+        req.form['__password'] = origcnx.password
+        self._test_auth_fail(req)
+        # option allow-email-login set
+        self.set_option('allow-email-login', True)
+        req, origcnx = self._init_auth('cookie')
+        req.form['__login'] = address
+        req.form['__password'] = origcnx.password
+        self._test_auth_succeed(req, origcnx)
+        self.assertRaises(AuthenticationError, self.publish, req, 'logout')
+        self.assertEquals(len(self.open_sessions), 0)
 
     def _test_auth_anon(self, req):
         self.app.connect(req)
         acnx = req.cnx
         self.assertEquals(len(self.open_sessions), 1)
-        self.assertEquals(acnx.login, 'anon') 
-        self.assertEquals(acnx.password, 'anon') 
+        self.assertEquals(acnx.login, 'anon')
+        self.assertEquals(acnx.password, 'anon')
         self.failUnless(acnx.anonymous_connection)
         self._reset_cookie(req)
-        
+
     def _reset_cookie(self, req):
         # preparing the suite of the test
         # set session id in cookie
@@ -351,15 +371,15 @@ class ApplicationTC(EnvBasedTC):
         clear_cache(req, 'get_authorization')
         # reset cnx as if it was a new incoming request
         req.cnx = None
-        
+
     def _test_anon_auth_fail(self, req):
-        self.assertEquals(len(self.open_sessions), 1) 
+        self.assertEquals(len(self.open_sessions), 1)
         self.app.connect(req)
         self.assertEquals(req.message, 'authentication failure')
         self.assertEquals(req.cnx.anonymous_connection, True)
-        self.assertEquals(len(self.open_sessions), 1) 
+        self.assertEquals(len(self.open_sessions), 1)
         self._reset_cookie(req)
-        
+
     def test_http_auth_anon_allowed(self):
         req, origcnx = self._init_auth('http', 'anon')
         self._test_auth_anon(req)
@@ -370,8 +390,8 @@ class ApplicationTC(EnvBasedTC):
         req._headers['Authorization'] = 'basic %s' % authstr
         self._test_auth_succeed(req, origcnx)
         self.assertRaises(AuthenticationError, self.publish, req, 'logout')
-        self.assertEquals(len(self.open_sessions), 0) 
-        
+        self.assertEquals(len(self.open_sessions), 0)
+
     def test_cookie_auth_anon_allowed(self):
         req, origcnx = self._init_auth('cookie', 'anon')
         self._test_auth_anon(req)
@@ -382,10 +402,8 @@ class ApplicationTC(EnvBasedTC):
         req.form['__password'] = origcnx.password
         self._test_auth_succeed(req, origcnx)
         self.assertRaises(AuthenticationError, self.publish, req, 'logout')
-        self.assertEquals(len(self.open_sessions), 0) 
+        self.assertEquals(len(self.open_sessions), 0)
 
-    
 
-        
 if __name__ == '__main__':
     unittest_main()

@@ -1,10 +1,16 @@
-# -*- coding: utf-8 -*-
+"""Specific views for entities implementing IGeocodable
+
+:organization: Logilab
+:copyright: 2001-2009 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+:contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
+"""
+__docformat__ = "restructuredtext en"
 
 import simplejson
 
 from cubicweb.interfaces import IGeocodable
-from cubicweb.common.view import EntityView
-from cubicweb.common.selectors import implement_interface
+from cubicweb.view import EntityView
+from cubicweb.selectors import implements
 
 class GeocodingJsonView(EntityView):
     id = 'geocoding-json'
@@ -12,8 +18,7 @@ class GeocodingJsonView(EntityView):
     templatable = False
     content_type = 'application/json'
 
-    __selectors__ = (implement_interface,)
-    accepts_interfaces = (IGeocodable,)
+    __select__ = implements(IGeocodable)
 
     def call(self):
         zoomlevel = self.req.form.pop('zoomlevel', 8)
@@ -46,8 +51,7 @@ class GeocodingJsonView(EntityView):
 class GoogleMapBubbleView(EntityView):
     id = 'gmap-bubble'
 
-    __selectors__ = (implement_interface,)
-    accepts_interfaces = (IGeocodable,)
+    __select__ = implements(IGeocodable)
 
     def cell_call(self, row, col):
         entity = self.entity(row, col)
@@ -58,13 +62,12 @@ class GoogleMapBubbleView(EntityView):
 class GoogleMapsView(EntityView):
     id = 'gmap-view'
 
-    __selectors__ = (implement_interface,)
-    accepts_interfaces = (IGeocodable,)
+    __select__ = implements(IGeocodable)
     need_navigation = False
 
     def call(self, gmap_key, width=400, height=400, uselabel=True, urlparams=None):
         self.req.add_js('http://maps.google.com/maps?file=api&amp;v=2&amp;key=%s' % gmap_key,
-                        localfile=False);
+                        localfile=False)
         self.req.add_js( ('cubicweb.widgets.js', 'cubicweb.gmap.js', 'gmap.utility.labeledmarker.js') )
         rql = self.rset.printable_rql()
         if urlparams is None:

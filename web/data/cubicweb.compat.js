@@ -365,19 +365,26 @@ toISOTimestamp = function (date, realISO/* = false*/) {
 };
 
 
-function loadJSON(url, data, type, dataType) {
+/*
+ * Asynchronously load an url and return a deferred
+ * whose callbacks args are decoded according to
+ * the Content-Type response header
+ */
+function loadRemote(url, data, reqtype) {
     var d = new Deferred();
     jQuery.ajax({
 	url: url,
-	type: type,
+	type: reqtype,
 	data: data,
-	dataType: dataType,
 
 	beforeSend: function(xhr) {
 	    d.req = xhr;
 	},
 
 	success: function(data, status) {
+            if (d.req.getResponseHeader("content-type") == 'application/json') {
+              data = evalJSON(data);
+            }
 	    d.success(data);
 	},
 
@@ -507,23 +514,7 @@ function merge(array1, array2) {
 var KEYS = {
     KEY_ESC: 27,
     KEY_ENTER: 13
-}
+};
 
-// XHR = null;
-// function test() {
-//     var d = loadJSON('http://crater:9876/json?mode=remote&fname=i18n&pageid=xxx&arg=' + jQuery.toJSON(['modify']));
-//     d = d.addCallback(function (result, xhr) {
-// 	XHR = xhr;
-// 	log('got ajax result 1' + result + xhr);
-// 	log('got ajax result 1' + xhr);
-// 	log('got ajax result 1' + xhr + 'arguments =', arguments.length);
-//     });
-//     d.addCallback(function (x, req, y, z) {
-// 	log('callback 2 x =' + x, ' req=', req, 'y =', y, 'z=',z);
-//     }, 12, 13)
-//     d.addErrback(function (error, xhr) {
-// 	XHR = xhr;
-// 	log('got err', error, ' code =', xhr.status, 'arguments length=', arguments.length);
-//     })
-// }
+
 

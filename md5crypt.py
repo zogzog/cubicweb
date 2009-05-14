@@ -53,7 +53,7 @@ def to64 (v, n):
 
 
 def crypt(pw, salt, magic=None):
-    if magic==None:
+    if magic is None:
         magic = MAGIC
     # Take care of the magic string if present
     if salt[:len(magic)] == magic:
@@ -63,7 +63,7 @@ def crypt(pw, salt, magic=None):
     salt = salt[:8]
     ctx = pw + magic + salt
     final = md5.md5(pw + salt + pw).digest()
-    for pl in range(len(pw),0,-16):
+    for pl in xrange(len(pw), 0, -16):
         if pl > 16:
             ctx = ctx + final[:16]
         else:
@@ -80,7 +80,7 @@ def crypt(pw, salt, magic=None):
     # The following is supposed to make
     # things run slower. 
     # my question: WTF???
-    for i in range(1000):
+    for i in xrange(1000):
         ctx1 = ''
         if i & 1:
             ctx1 = ctx1 + pw

@@ -1,14 +1,14 @@
 """Twisted request handler for CubicWeb
 
 :organization: Logilab
-:copyright: 2001-2008 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+:copyright: 2001-2009 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 """
 __docformat__ = "restructuredtext en"
 
-from twisted.web2 import http, http_headers
+from datetime import datetime
 
-from mx.DateTime import DateTimeFromTicks
+from twisted.web2 import http, http_headers
 
 from cubicweb.web import DirectResponse
 from cubicweb.web.request import CubicWebRequestBase
@@ -39,11 +39,11 @@ class CubicWebTwistedRequestAdapter(CubicWebRequestBase):
     def base_url(self):
         """return the root url of the application"""
         return self._base_url
-    
+
     def http_method(self):
         """returns 'POST', 'GET', 'HEAD', etc."""
         return self._twreq.method
-    
+
     def relative_path(self, includeparams=True):
         """return the normalized path of the request (ie at least relative
         to the application's root, but some other normalization may be needed
@@ -117,7 +117,7 @@ class CubicWebTwistedRequestAdapter(CubicWebRequestBase):
         mtime = self.get_header('If-modified-since', raw=False)
         if mtime:
             # :/ twisted is returned a localized time stamp
-            return DateTimeFromTicks(mtime) + GMTOFFSET
+            return datetime.fromtimestamp(mtime) + GMTOFFSET
         return None
 
 

@@ -1,6 +1,7 @@
 """only for unit tests !"""
 
-from cubicweb.common.view import EntityView
+from cubicweb.view import EntityView
+from cubicweb.selectors import implements
 
 HTML_PAGE = u"""<html>
   <body>
@@ -11,7 +12,7 @@ HTML_PAGE = u"""<html>
 
 class SimpleView(EntityView):
     id = 'simple'
-    accepts = ('Bug',)
+    __select__ = implements('Bug',)
 
     def call(self, **kwargs):
         self.cell_call(0, 0)
@@ -21,7 +22,7 @@ class SimpleView(EntityView):
 
 class RaisingView(EntityView):
     id = 'raising'
-    accepts = ('Bug',)
+    __select__ = implements('Bug',)
 
     def cell_call(self, row, col):
         raise ValueError()

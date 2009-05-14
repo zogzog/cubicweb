@@ -442,7 +442,6 @@ def textdomain(domain=None):
 
 
 def bindtextdomain(domain, localedir=None):
-    global _localedirs
     if localedir is not None:
         _localedirs[domain] = localedir
     return _localedirs.get(domain, _default_localedir)

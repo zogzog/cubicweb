@@ -10,7 +10,7 @@ class WebconfigTC(TestCase):
         self.config = ApptestConfiguration('data')
         self.config._cubes = ['file']
         self.config.load_configuration()
-        
+
     def test_nonregr_print_css_as_list(self):
         """make sure PRINT_CSS *must* is a list"""
         config = self.config
@@ -26,8 +26,8 @@ class WebconfigTC(TestCase):
         self.failUnless('file' in self.config.locate_resource(rname).split(os.sep))
         cubicwebcsspath = self.config.locate_resource('cubicweb.css').split(os.sep)
         self.failUnless('web' in cubicwebcsspath or 'shared' in cubicwebcsspath) # 'shared' if tests under apycot
-        
+
 if __name__ == '__main__':
     unittest_main()
 
-    
+

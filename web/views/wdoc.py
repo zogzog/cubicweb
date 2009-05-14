@@ -1,7 +1,7 @@
 """inline help system, using ReST file in products `wdoc` directory
 
 :organization: Logilab
-:copyright: 2008 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+:copyright: 2008-2009 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 """
 __docformat__ = "restructuredtext en"
@@ -9,14 +9,14 @@ __docformat__ = "restructuredtext en"
 from itertools import chain
 from os.path import join
 from bisect import bisect_right
-
-from mx.DateTime import strptime, today
+from datetime import date
 
 from logilab.common.changelog import ChangeLog
 from logilab.mtconverter import CHARSET_DECL_RGX
 
-from cubicweb.common.selectors import match_form_params
-from cubicweb.common.view import StartupView
+from cubicweb.selectors import match_form_params
+from cubicweb.view import StartupView
+from cubicweb.utils import strptime, todate
 from cubicweb.common.uilib import rest_publish
 from cubicweb.web import NotFound
 
@@ -53,7 +53,7 @@ def get_insertion_point(section, index):
         node = index[section.attrib['appendto']]
         idx = None
     return node, idx
-                     
+
 def build_toc(config):
     alltocfiles = reversed(tuple(config.locate_all_files('toc.xml')))
     maintoc = parse(alltocfiles.next()).getroot()
@@ -61,7 +61,7 @@ def build_toc(config):
     index = {}
     build_toc_index(maintoc, index)
     # insert component documentation into the tree according to their toc.xml
-    # file 
+    # file
     for fpath in alltocfiles:
         toc = parse(fpath).getroot()
         for section in toc:
@@ -73,8 +73,8 @@ def build_toc(config):
             section.parent = node
             build_toc_index(section, index)
     return index
-    
-def title(node, lang):
+
+def title_for_lang(node, lang):
     for title in node.findall('title'):
         if title.attrib['{http://www.w3.org/XML/1998/namespace}lang'] == lang:
             return unicode(title.text)
@@ -85,11 +85,10 @@ def subsections(node):
 # help views ##################################################################
 
 class InlineHelpView(StartupView):
-    __selectors__ = (match_form_params,)
-    form_params = ('fid',)
+    __select__ = match_form_params('fid')
     id = 'wdoc'
     title = _('site documentation')
-    
+
     def call(self):
         fid = self.req.form['fid']
         for lang in chain((self.req.lang, self.vreg.property_value('ui.language')),
@@ -108,7 +107,7 @@ class InlineHelpView(StartupView):
         else:
             self.navigation_links(node)
             self.w(u'<div class="hr"></div>')
-            self.w(u'<h1>%s</h1>' % (title(node, self.req.lang)))            
+            self.w(u'<h1>%s</h1>' % (title_for_lang(node, self.req.lang)))
         data = open(join(resourcedir, rid)).read()
         self.w(rest_publish(self, data))
         if node is not None:
@@ -125,26 +124,26 @@ class InlineHelpView(StartupView):
         self.w(u'<div class="docnav">\n')
         previousidx = brothers.index(node) - 1
         if previousidx >= 0:
-            self.navsection(brothers[previousidx], 'prev')            
-        self.navsection(parent, 'up')            
+            self.navsection(brothers[previousidx], 'prev')
+        self.navsection(parent, 'up')
         nextidx = brothers.index(node) + 1
         if nextidx < len(brothers):
-            self.navsection(brothers[nextidx], 'next')            
+            self.navsection(brothers[nextidx], 'next')
         self.w(u'</div>\n')
 
     navinfo = {'prev': ('', 'data/previous.png', _('i18nprevnext_previous')),
                'next': ('', 'data/next.png', _('i18nprevnext_next')),
                'up': ('', 'data/up.png', _('i18nprevnext_up'))}
-               
+
     def navsection(self, node, navtype):
         htmlclass, imgpath, msgid = self.navinfo[navtype]
         self.w(u'<span class="%s">' % htmlclass)
         self.w(u'%s : ' % self.req._(msgid))
         self.w(u'<a href="%s">%s</a>' % (
             self.req.build_url('doc/'+node.attrib['resource']),
-            title(node, self.req.lang)))
+            title_for_lang(node, self.req.lang)))
         self.w(u'</span>\n')
-        
+
     def subsections_links(self, node, first=True):
         sub = subsections(node)
         if not sub:
@@ -155,21 +154,20 @@ class InlineHelpView(StartupView):
         for child in sub:
             self.w(u'<li><a href="%s">%s</a>' % (
                 self.req.build_url('doc/'+child.attrib['resource']),
-                title(child, self.req.lang)))
+                title_for_lang(child, self.req.lang)))
             self.subsections_links(child, False)
             self.w(u'</li>')
         self.w(u'</ul>\n')
-        
+
 
 
 class InlineHelpImageView(StartupView):
-    __selectors__ = (match_form_params,)
-    form_params = ('fid',)
     id = 'wdocimages'
+    __select__ = match_form_params('fid')
     binary = True
     templatable = False
     content_type = 'image/png'
-    
+
     def call(self):
         fid = self.req.form['fid']
         for lang in chain((self.req.lang, self.vreg.property_value('ui.language')),
@@ -187,13 +185,14 @@ class ChangeLogView(StartupView):
     id = 'changelog'
     title = _('What\'s new?')
     maxentries = 25
-    
+
     def call(self):
         rid = 'ChangeLog_%s' % (self.req.lang)
         allentries = []
         title = self.req._(self.title)
         restdata = ['.. -*- coding: utf-8 -*-', '', title, '='*len(title), '']
         w = restdata.append
+        today = date.today()
         for fpath in self.config.locate_all_files(rid):
             cl = ChangeLog(fpath)
             encoding = 'utf-8'
@@ -207,9 +206,9 @@ class ChangeLogView(StartupView):
                     w(unicode(line, encoding))
             for entry in cl.entries:
                 if entry.date:
-                    date = strptime(entry.date, '%Y-%m-%d')
+                    edate = todate(strptime(entry.date, '%Y-%m-%d'))
                 else:
-                    date = today()
+                    edate = today
                 messages = []
                 for msglines, submsgs in entry.messages:
                     msgstr = unicode(' '.join(l.strip() for l in msglines), encoding)
@@ -218,16 +217,16 @@ class ChangeLogView(StartupView):
                         msgstr += '     - ' + unicode(' '.join(l.strip() for l in submsglines), encoding)
                         msgstr += u'\n'
                     messages.append(msgstr)
-                entry = (date, messages)
+                entry = (edate, messages)
                 allentries.insert(bisect_right(allentries, entry), entry)
         latestdate = None
         i = 0
-        for date, messages in reversed(allentries):
-            if latestdate != date:
-                fdate = self.format_date(date)
+        for edate, messages in reversed(allentries):
+            if latestdate != edate:
+                fdate = self.format_date(edate)
                 w(u'\n%s' % fdate)
-                w('~'*len(fdate))
-                latestdate = date
+                w('~' * len(fdate))
+                latestdate = edate
             for msg in messages:
                 w(u'* %s' % msg)
                 i += 1
@@ -235,4 +234,3 @@ class ChangeLogView(StartupView):
                     break
         w('') # blank line
         self.w(rest_publish(self, '\n'.join(restdata)))
-        

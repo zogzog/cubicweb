@@ -1,7 +1,7 @@
 """plan execution of rql queries on a single source
 
 :organization: Logilab
-:copyright: 2001-2008 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+:copyright: 2001-2009 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 """
 __docformat__ = "restructuredtext en"
@@ -78,35 +78,35 @@ def add_types_restriction(schema, rqlst, newroot=None, solutions=None):
                 rel = newroot.add_type_restriction(var, possibletypes)
             stinfo['typerels'] = frozenset((rel,))
             stinfo['possibletypes'] = possibletypes
-        
+
 class SSPlanner(object):
     """SingleSourcePlanner: build execution plan for rql queries
 
     optimized for single source repositories
     """
-    
+
     def __init__(self, schema, rqlhelper):
         self.schema = schema
         self.rqlhelper = rqlhelper
 
     def build_plan(self, plan):
         """build an execution plan from a RQL query
-        
+
         do nothing here, dispatch according to the statement type
         """
         build_plan = getattr(self, 'build_%s_plan' % plan.rqlst.TYPE)
         for step in build_plan(plan, plan.rqlst):
             plan.add_step(step)
-    
+
     def build_select_plan(self, plan, rqlst):
         """build execution plan for a SELECT RQL query. Suppose only one source
         is available and so avoid work need for query decomposition among sources
-               
+
         the rqlst should not be tagged at this point.
         """
         plan.preprocess(rqlst)
         return (OneFetchStep(plan, rqlst, plan.session.repo.sources),)
-            
+
     def build_insert_plan(self, plan, rqlst):
         """get an execution plan from an INSERT RQL query"""
         # each variable in main variables is a new entity to insert
@@ -123,7 +123,7 @@ class SSPlanner(object):
         step.children += self._compute_relation_steps(plan, rqlst.solutions,
                                                       rqlst.where, to_select)
         return (step,)
-        
+
     def _compute_relation_steps(self, plan, solutions, restriction, to_select):
         """handle the selection of relations for an insert query"""
         for edef, rdefs in to_select.items():
@@ -146,7 +146,7 @@ class SSPlanner(object):
             step = RelationsStep(plan, edef, rdefs)
             step.children += self._select_plan(plan, select, solutions)
             yield step
-    
+
     def build_delete_plan(self, plan, rqlst):
         """get an execution plan from a DELETE RQL query"""
         # build a select query to fetch entities to delete
@@ -174,7 +174,7 @@ class SSPlanner(object):
         if etype != 'Any':
             select.add_type_restriction(varref.variable, etype)
         return self._select_plan(plan, select, solutions)
-        
+
     def _sel_relation_steps(self, plan, solutions, restriction, relation):
         """handle the selection of relations for a delete query"""
         select = Select()
@@ -185,7 +185,7 @@ class SSPlanner(object):
         if restriction is not None:
             select.add_restriction(restriction.copy(select))
         return self._select_plan(plan, select, solutions)
-    
+
     def build_set_plan(self, plan, rqlst):
         """get an execution plan from an SET RQL query"""
         select = Select()
@@ -222,12 +222,12 @@ class SSPlanner(object):
         return (step,)
 
     # internal methods ########################################################
-    
+
     def _select_plan(self, plan, select, solutions):
         union = Union()
         union.append(select)
         select.clean_solutions(solutions)
-        add_types_restriction(self.schema, select)        
+        add_types_restriction(self.schema, select)
         self.rqlhelper.annotate(union)
         return self.build_select_plan(plan, union)
 
@@ -260,35 +260,35 @@ class LimitOffsetMixIn(object):
         self.limit = limit
         self.offset = offset or None
 
-        
+
 class Step(object):
     """base abstract class for execution step"""
     def __init__(self, plan):
         self.plan = plan
         self.children = []
-        
+
     def execute_child(self):
         assert len(self.children) == 1
         return self.children[0].execute()
-    
+
     def execute_children(self):
         for step in self.children:
             step.execute()
-        
+
     def execute(self):
         """execute this step and store partial (eg this step) results"""
         raise NotImplementedError()
-    
+
     def mytest_repr(self):
         """return a representation of this step suitable for test"""
         return (self.__class__.__name__,)
-    
+
     def test_repr(self):
         """return a representation of this step suitable for test"""
         return self.mytest_repr() + (
             [step.test_repr() for step in self.children],)
 
-        
+
 class OneFetchStep(LimitOffsetMixIn, Step):
     """step consisting in fetching data from sources and directly returning
     results
@@ -305,7 +305,7 @@ class OneFetchStep(LimitOffsetMixIn, Step):
         for select in self.union.children:
             select.limit = limit
             select.offset = offset
-        
+
     def execute(self):
         """call .syntax_tree_search with the given syntax tree on each
         source for each solution
@@ -375,22 +375,22 @@ class RelationsStep(Step):
 
     relations values comes from the latest result, with one columns for
     each relation defined in self.r_defs
-    
+
     for one entity definition, we'll construct N entity, where N is the
     number of the latest result
     """
-    
+
     FINAL = 0
     RELATION = 1
     REVERSE_RELATION = 2
-    
+
     def __init__(self, plan, e_def, r_defs):
         Step.__init__(self, plan)
         # partial entity definition to expand
         self.e_def = e_def
         # definition of relations to complete
         self.r_defs = r_defs
-        
+
     def execute(self):
         """execute this step"""
         base_e_def = self.e_def
@@ -415,7 +415,7 @@ class RelationsStep(Step):
 
 class InsertStep(Step):
     """step consisting in inserting new entities / relations"""
-    
+
     def execute(self):
         """execute this step"""
         for step in self.children:
@@ -444,34 +444,34 @@ class DeleteEntitiesStep(Step):
         pending |= actual
         for eid in actual:
             delete(session, eid)
-            
-    
+
+
 class DeleteRelationsStep(Step):
     """step consisting in deleting relations"""
 
     def __init__(self, plan, rtype):
         Step.__init__(self, plan)
         self.rtype = rtype
-        
+
     def execute(self):
         """execute this step"""
         session = self.plan.session
         delete = session.repo.glob_delete_relation
         for subj, obj in self.execute_child():
             delete(session, subj, self.rtype, obj)
-    
+
 
 class UpdateStep(Step):
     """step consisting in updating entities / adding relations from relations
     definitions and from results fetched in previous step
     """
-    
+
     def __init__(self, plan, attribute_relations, relations, selected_index):
         Step.__init__(self, plan)
         self.attribute_relations = attribute_relations
         self.relations = relations
         self.selected_index = selected_index
-        
+
     def execute(self):
         """execute this step"""
         plan = self.plan

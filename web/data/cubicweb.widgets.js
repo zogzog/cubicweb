@@ -222,46 +222,46 @@ Widgets.TemplateTextField = defclass("TemplateTextField", null, {
 
     __init__ : function(wdgnode) {
 	this.variables = getNodeAttribute(wdgnode, 'cubicweb:variables').split(',');
-	this.options = {'name' : wdgnode.getAttribute('cubicweb:inputname'),
-			'id'   : wdgnode.getAttribute('cubicweb:inputid'),
+	this.options = {'name'   : wdgnode.getAttribute('cubicweb:inputid'),
 			'rows' : wdgnode.getAttribute('cubicweb:rows') || 40,
 			'cols' : wdgnode.getAttribute('cubicweb:cols') || 80
 		       };
 	// this.variableRegexp = /%\((\w+)\)s/;
-	this.parentnode = wdgnode;
-    },
-
-    show : function(parentnode) {
-	parentnode = parentnode || this.parentnode;
-	this.errorField = DIV({'class' : "textfieldErrors"});
+	this.errorField = DIV({'class' : "errorMessage"});
 	this.textField = TEXTAREA(this.options);
-	connect(this.textField, 'onkeyup', this, this.highlightInvalidVariables);
-	appendChildNodes(parentnode, this.textField, this.errorField);
-	appendChildNodes(parentnode, this.textField);
+	jQuery(this.textField).bind('keyup', {'self': this}, this.highlightInvalidVariables);
+	jQuery('#substitutions').prepend(this.errorField);
+	jQuery('#substitutions .errorMessage').hide();
+	wdgnode.appendChild(this.textField);
     },
 
     /* signal callbacks */
 
-    highlightInvalidVariables : function() {
-	var text = this.textField.value;
+    highlightInvalidVariables : function(event) {
+	var self = event.data.self;
+	var text = self.textField.value;
 	var unknownVariables = [];
-	var it=0;
+	var it = 0;
 	var group = null;
 	var variableRegexp = /%\((\w+)\)s/g;
 	// emulates rgx.findAll()
 	while ( group=variableRegexp.exec(text) ) {
-	    if ( !this.variables.contains(group[1]) ) {
+	    if ( !self.variables.contains(group[1]) ) {
 		unknownVariables.push(group[1]);
 	    }
 	    it++;
-	    if (it > 5)
+	    if (it > 5) {
 		break;
+	    }
 	}
 	var errText = '';
 	if (unknownVariables.length) {
 	    errText = "Detected invalid variables : " + ", ".join(unknownVariables);
+	    jQuery('#substitutions .errorMessage').show();
+	} else {
+	    jQuery('#substitutions .errorMessage').hide();
 	}
-	this.errorField.innerHTML = errText;
+	self.errorField.innerHTML = errText;
     }
 
 });
@@ -282,14 +282,14 @@ Widgets.AddComboBox = defclass('AddComboBox', null, {
 	  this.eid_to = name[1];
           this.etype_to = wdgnode.getAttribute('cubicweb:etype_to');
           this.etype_from = wdgnode.getAttribute('cubicweb:etype_from');
-     	  var d = async_remote_exec('add_and_link_new_entity', this.etype_to, this.rel, this.eid_to, this.etype_from, 'new_val');
+     	  var d = asyncRemoteExec('add_and_link_new_entity', this.etype_to, this.rel, this.eid_to, this.etype_from, 'new_val');
           d.addCallback(function (eid) {
-          jQuery(wdgnode).find("option[selected]").removeAttr("selected");
-          var new_option = OPTION({'value':eid, 'selected':'selected'}, value=new_val);
-          wdgnode.appendChild(new_option);
+	      jQuery(wdgnode).find("option[selected]").removeAttr("selected");
+              var new_option = OPTION({'value':eid, 'selected':'selected'}, value=new_val);
+              wdgnode.appendChild(new_option);
           });
           d.addErrback(function (xxx) {
-             log('xxx =', xxx);
+              log('xxx =', xxx);
           });
      });
    }

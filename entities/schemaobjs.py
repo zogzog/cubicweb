@@ -1,7 +1,7 @@
 """schema definition related entities
 
 :organization: Logilab
-:copyright: 2001-2008 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+:copyright: 2001-2009 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 """
 __docformat__ = "restructuredtext en"
@@ -14,20 +14,13 @@ from cubicweb.schema import ERQLExpression, RRQLExpression
 from cubicweb.entities import AnyEntity, fetch_config
 
 
-class EEType(AnyEntity):
-    id = 'EEType'
+class CWEType(AnyEntity):
+    id = 'CWEType'
     fetch_attrs, fetch_order = fetch_config(['name'])
-    __rtags__ = {
-        ('final',         '*', 'subject'): 'generated',
-        
-        ('state_of',      '*', 'object'): 'create',
-        ('transition_of', '*', 'object'): 'create',
-        ('from_entity',   '*', 'object'): 'link',
-        ('to_entity',     '*', 'object'): 'link',
-        }
+
     def dc_title(self):
         return self.req._(self.name)
-    
+
     def dc_long_title(self):
         stereotypes = []
         _ = self.req._
@@ -44,18 +37,13 @@ class EEType(AnyEntity):
         return self.get('name')
 
 
-class ERType(AnyEntity):
-    id = 'ERType'
+class CWRType(AnyEntity):
+    id = 'CWRType'
     fetch_attrs, fetch_order = fetch_config(['name'])
-    __rtags__ = {
-        ('final',         '*', 'subject'): 'generated',
-        
-        ('relation_type', '*', 'object') : 'create',
-        }
-    
+
     def dc_title(self):
         return self.req._(self.name)
-    
+
     def dc_long_title(self):
         stereotypes = []
         _ = self.req._
@@ -73,7 +61,7 @@ class ERType(AnyEntity):
 
     def inlined_changed(self, inlined):
         """check inlining is necessary and possible:
-        
+
         * return False if nothing has changed
         * raise ValidationError if inlining is'nt possible
         * eventually return True
@@ -97,21 +85,16 @@ class ERType(AnyEntity):
         return self.get('name')
 
 
-class ENFRDef(AnyEntity):
-    id = 'ENFRDef'
+class CWRelation(AnyEntity):
+    id = 'CWRelation'
     fetch_attrs = fetch_config(['cardinality'])[0]
-    __rtags__ = {
-        ('relation_type', 'ERType', 'subject') : 'inlineview',
-        ('from_entity', 'EEType', 'subject') : 'inlineview',
-        ('to_entity', 'EEType', 'subject') : 'inlineview',
-        }
-    
+
     def dc_title(self):
         return u'%s %s %s' % (
             self.from_entity[0].name,
-            self.relation_type[0].name, 
+            self.relation_type[0].name,
             self.to_entity[0].name)
-    
+
     def dc_long_title(self):
         card = self.cardinality
         scard, ocard = u'', u''
@@ -130,12 +113,12 @@ class ENFRDef(AnyEntity):
         """
         if self.relation_type:
             return self.relation_type[0].rest_path(), {}
-        return super(ENFRDef, self).after_deletion_path()
+        return super(CWRelation, self).after_deletion_path()
 
 
-class EFRDef(ENFRDef):
-    id = 'EFRDef'
-    
+class CWAttribute(CWRelation):
+    id = 'CWAttribute'
+
     def dc_long_title(self):
         card = self.cardinality
         scard = u''
@@ -143,37 +126,33 @@ class EFRDef(ENFRDef):
             scard = '+'
         return u'%s %s%s %s' % (
             self.from_entity[0].name,
-            scard, self.relation_type[0].name, 
+            scard, self.relation_type[0].name,
             self.to_entity[0].name)
 
 
-class EConstraint(AnyEntity):
-    id = 'EConstraint'
+class CWConstraint(AnyEntity):
+    id = 'CWConstraint'
     fetch_attrs, fetch_order = fetch_config(['value'])
 
     def dc_title(self):
         return '%s(%s)' % (self.cstrtype[0].name, self.value or u'')
-        
+
     def after_deletion_path(self):
         """return (path, parameters) which should be used as redirect
         information when this entity is being deleted
         """
         if self.reverse_constrained_by:
             return self.reverse_constrained_by[0].rest_path(), {}
-        return super(EConstraint, self).after_deletion_path()
+        return super(CWConstraint, self).after_deletion_path()
 
     @property
     def type(self):
         return self.cstrtype[0].name
 
-        
+
 class RQLExpression(AnyEntity):
     id = 'RQLExpression'
     fetch_attrs, fetch_order = fetch_config(['exprtype', 'mainvars', 'expression'])
-
-    widgets = {
-        'expression' : "StringWidget",
-        }
 
     def dc_title(self):
         return '%s(%s)' % (self.exprtype, self.expression or u'')
@@ -185,17 +164,17 @@ class RQLExpression(AnyEntity):
             values = getattr(self, 'reverse_%s' % rel)
             if values:
                 return values[0]
-            
+
     @cached
     def _rqlexpr(self):
         if self.exprtype == 'ERQLExpression':
             return ERQLExpression(self.expression, self.mainvars, self.eid)
         #if self.exprtype == 'RRQLExpression':
         return RRQLExpression(self.expression, self.mainvars, self.eid)
-    
+
     def check_expression(self, *args, **kwargs):
         return self._rqlexpr().check(*args, **kwargs)
-    
+
     def after_deletion_path(self):
         """return (path, parameters) which should be used as redirect
         information when this entity is being deleted
@@ -205,20 +184,15 @@ class RQLExpression(AnyEntity):
         return super(RQLExpression, self).after_deletion_path()
 
 
-class EPermission(AnyEntity):
-    id = 'EPermission'
+class CWPermission(AnyEntity):
+    id = 'CWPermission'
     fetch_attrs, fetch_order = fetch_config(['name', 'label'])
-
-
-    __rtags__ = {
-        'require_group' : 'primary',
-        }
 
     def dc_title(self):
         if self.label:
             return '%s (%s)' % (self.req._(self.name), self.label)
         return self.req._(self.name)
-    
+
     def after_deletion_path(self):
         """return (path, parameters) which should be used as redirect
         information when this entity is being deleted
@@ -226,4 +200,4 @@ class EPermission(AnyEntity):
         permissionof = getattr(self, 'reverse_require_permission', ())
         if len(permissionof) == 1:
             return permissionof[0].rest_path(), {}
-        return super(EPermission, self).after_deletion_path()
+        return super(CWPermission, self).after_deletion_path()

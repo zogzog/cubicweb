@@ -201,11 +201,71 @@ msgstr "Donnée binaires"
 msgid "Bytes_plural"
 msgstr "Données binaires"
 
-msgid "Card"
-msgstr "Fiche"
+msgid "CWAttribute"
+msgstr "Attribut"
 
-msgid "Card_plural"
-msgstr "Fiches"
+msgid "CWAttribute_plural"
+msgstr "Attributs"
+
+msgid "CWCache"
+msgstr "Cache applicatif"
+
+msgid "CWCache_plural"
+msgstr "Caches applicatifs"
+
+msgid "CWConstraint"
+msgstr "Contrainte"
+
+msgid "CWConstraintType"
+msgstr "Type de contrainte"
+
+msgid "CWConstraintType_plural"
+msgstr "Types de contrainte"
+
+msgid "CWConstraint_plural"
+msgstr "Contraintes"
+
+msgid "CWEType"
+msgstr "Type d'entité"
+
+msgid "CWEType_plural"
+msgstr "Types d'entité"
+
+msgid "CWGroup"
+msgstr "Groupe"
+
+msgid "CWGroup_plural"
+msgstr "Groupes"
+
+msgid "CWPermission"
+msgstr "Permission"
+
+msgid "CWPermission_plural"
+msgstr "Permissions"
+
+msgid "CWProperty"
+msgstr "Propriété"
+
+msgid "CWProperty_plural"
+msgstr "Propriétés"
+
+msgid "CWRType"
+msgstr "Type de relation"
+
+msgid "CWRType_plural"
+msgstr "Types de relation"
+
+msgid "CWRelation"
+msgstr "Relation"
+
+msgid "CWRelation_plural"
+msgstr "Relations"
+
+msgid "CWUser"
+msgstr "Utilisateur"
+
+msgid "CWUser_plural"
+msgstr "Utilisateurs"
 
 msgid "Date"
 msgstr "Date"
@@ -232,75 +292,6 @@ msgstr "Nombres décimaux"
 msgid "Do you want to delete the following element(s) ?"
 msgstr "Voulez vous supprimer le(s) élément(s) suivant(s)"
 
-msgid "ECache"
-msgstr "Cache applicatif"
-
-msgid "ECache_plural"
-msgstr "Caches applicatifs"
-
-msgid "EConstraint"
-msgstr "Contrainte"
-
-msgid "EConstraintType"
-msgstr "Type de contrainte"
-
-msgid "EConstraintType_plural"
-msgstr "Types de contrainte"
-
-msgid "EConstraint_plural"
-msgstr "Contraintes"
-
-msgid "EEType"
-msgstr "Type d'entité"
-
-msgid "EEType_plural"
-msgstr "Types d'entité"
-
-msgid "EFRDef"
-msgstr "Attribut"
-
-msgid "EFRDef_plural"
-msgstr "Attributs"
-
-msgid "EGroup"
-msgstr "Groupe"
-
-msgid "EGroup_plural"
-msgstr "Groupes"
-
-msgid "ENFRDef"
-msgstr "Relation"
-
-msgid "ENFRDef_plural"
-msgstr "Relations"
-
-msgid "EPermission"
-msgstr "Permission"
-
-msgid "EPermission_plural"
-msgstr "Permissions"
-
-msgid "EProperty"
-msgstr "Propriété"
-
-msgid "EProperty_plural"
-msgstr "Propriétés"
-
-msgid "ERType"
-msgstr "Type de relation"
-
-msgid "ERType_plural"
-msgstr "Types de relation"
-
-msgid "EUser"
-msgstr "Utilisateur"
-
-msgid "EUser_plural"
-msgstr "Utilisateurs"
-
-msgid "Email body: "
-msgstr "Contenu du courriel : "
-
 msgid "EmailAddress"
 msgstr "Adresse électronique"
 
@@ -319,8 +310,8 @@ msgstr "Nombre flottant"
 msgid "Float_plural"
 msgstr "Nombres flottants"
 
-msgid "From: "
-msgstr "De : "
+msgid "From:"
+msgstr "De :"
 
 msgid "Int"
 msgstr "Nombre entier"
@@ -337,40 +328,37 @@ msgstr "Durées"
 msgid "New Bookmark"
 msgstr "Nouveau signet"
 
-msgid "New Card"
-msgstr "Nouvelle fiche"
-
-msgid "New ECache"
-msgstr "Nouveau cache applicatif"
-
-msgid "New EConstraint"
-msgstr "Nouvelle contrainte"
-
-msgid "New EConstraintType"
-msgstr "Nouveau type de contrainte"
-
-msgid "New EEType"
-msgstr "Nouveau type d'entité"
-
-msgid "New EFRDef"
+msgid "New CWAttribute"
 msgstr "Nouvelle définition de relation finale"
 
-msgid "New EGroup"
+msgid "New CWCache"
+msgstr "Nouveau cache applicatif"
+
+msgid "New CWConstraint"
+msgstr "Nouvelle contrainte"
+
+msgid "New CWConstraintType"
+msgstr "Nouveau type de contrainte"
+
+msgid "New CWEType"
+msgstr "Nouveau type d'entité"
+
+msgid "New CWGroup"
 msgstr "Nouveau groupe"
 
-msgid "New ENFRDef"
-msgstr "Nouvelle définition de relation non finale"
-
-msgid "New EPermission"
+msgid "New CWPermission"
 msgstr "Nouvelle permission"
 
-msgid "New EProperty"
+msgid "New CWProperty"
 msgstr "Nouvelle propriété"
 
-msgid "New ERType"
+msgid "New CWRType"
 msgstr "Nouveau type de relation"
 
-msgid "New EUser"
+msgid "New CWRelation"
+msgstr "Nouvelle définition de relation non finale"
+
+msgid "New CWUser"
 msgstr "Nouvel utilisateur"
 
 msgid "New EmailAddress"
@@ -406,17 +394,14 @@ msgstr "Mots de passe"
 msgid "Please note that this is only a shallow copy"
 msgstr "Attention, cela n'effectue qu'une copie de surface"
 
-msgid "Problem occured"
-msgstr "Une erreur est survenue"
-
 msgid "RQLExpression"
 msgstr "Expression RQL"
 
 msgid "RQLExpression_plural"
 msgstr "Expressions RQL"
 
-msgid "Recipients: "
-msgstr "Destinataires : "
+msgid "Recipients:"
+msgstr "Destinataires :"
 
 msgid "Relations"
 msgstr "Relations"
@@ -449,8 +434,8 @@ msgstr "Chaîne de caractères"
 msgid "String_plural"
 msgstr "Chaînes de caractères"
 
-msgid "Subject: "
-msgstr "Sujet : "
+msgid "Subject:"
+msgstr "Sujet :"
 
 msgid "Submit bug report"
 msgstr "Soumettre un rapport de bug"
@@ -476,40 +461,37 @@ msgstr "Ce %s"
 msgid "This Bookmark"
 msgstr "Ce signet"
 
-msgid "This Card"
-msgstr "Cette fiche"
-
-msgid "This ECache"
-msgstr "Ce cache applicatif"
-
-msgid "This EConstraint"
-msgstr "Cette contrainte"
-
-msgid "This EConstraintType"
-msgstr "Ce type de contrainte"
-
-msgid "This EEType"
-msgstr "Ce type d'entité"
-
-msgid "This EFRDef"
+msgid "This CWAttribute"
 msgstr "Cette définition de relation finale"
 
-msgid "This EGroup"
+msgid "This CWCache"
+msgstr "Ce cache applicatif"
+
+msgid "This CWConstraint"
+msgstr "Cette contrainte"
+
+msgid "This CWConstraintType"
+msgstr "Ce type de contrainte"
+
+msgid "This CWEType"
+msgstr "Ce type d'entité"
+
+msgid "This CWGroup"
 msgstr "Ce groupe"
 
-msgid "This ENFRDef"
-msgstr "Cette définition de relation non finale"
-
-msgid "This EPermission"
+msgid "This CWPermission"
 msgstr "Cette permission"
 
-msgid "This EProperty"
+msgid "This CWProperty"
 msgstr "Cette propriété"
 
-msgid "This ERType"
+msgid "This CWRType"
 msgstr "Ce type de relation"
 
-msgid "This EUser"
+msgid "This CWRelation"
+msgstr "Cette définition de relation non finale"
+
+msgid "This CWUser"
 msgstr "Cet utilisateur"
 
 msgid "This EmailAddress"
@@ -617,13 +599,6 @@ msgstr ""
 "transition et l'utilisateur courant."
 
 msgid ""
-"a card is a textual content used as documentation, reference, procedure "
-"reminder"
-msgstr ""
-"une fiche est un texte utilisé comme documentation, référence, rappel de "
-"procédure..."
-
-msgid ""
 "a simple cache entity characterized by a name and a validity date. The "
 "target application is responsible for updating timestamp when necessary to "
 "invalidate the cache (typically in hooks). Also, checkout the AppRsetObject."
@@ -705,6 +680,12 @@ msgstr "gestion du site"
 msgid "actions_manage_description"
 msgstr ""
 
+msgid "actions_managepermission"
+msgstr ""
+
+msgid "actions_managepermission_description"
+msgstr ""
+
 msgid "actions_muledit"
 msgstr "édition multiple"
 
@@ -774,49 +755,49 @@ msgstr "activé"
 msgid "add"
 msgstr "ajouter"
 
-msgid "add Bookmark bookmarked_by EUser object"
+msgid "add Bookmark bookmarked_by CWUser object"
 msgstr "signet"
 
-msgid "add EEType add_permission RQLExpression subject"
-msgstr "définir une expression RQL d'ajout"
-
-msgid "add EEType delete_permission RQLExpression subject"
-msgstr "définir une expression RQL de suppression"
-
-msgid "add EEType read_permission RQLExpression subject"
-msgstr "définir une expression RQL de lecture"
-
-msgid "add EEType update_permission RQLExpression subject"
-msgstr "définir une expression RQL de mise à jour"
-
-msgid "add EFRDef constrained_by EConstraint subject"
+msgid "add CWAttribute constrained_by CWConstraint subject"
 msgstr "contrainte"
 
-msgid "add EFRDef relation_type ERType object"
+msgid "add CWAttribute relation_type CWRType object"
 msgstr "définition d'attribut"
 
-msgid "add ENFRDef constrained_by EConstraint subject"
-msgstr "contrainte"
+msgid "add CWEType add_permission RQLExpression subject"
+msgstr "définir une expression RQL d'ajout"
 
-msgid "add ENFRDef relation_type ERType object"
-msgstr "définition de relation"
+msgid "add CWEType delete_permission RQLExpression subject"
+msgstr "définir une expression RQL de suppression"
 
-msgid "add EProperty for_user EUser object"
+msgid "add CWEType read_permission RQLExpression subject"
+msgstr "définir une expression RQL de lecture"
+
+msgid "add CWEType update_permission RQLExpression subject"
+msgstr "définir une expression RQL de mise à jour"
+
+msgid "add CWProperty for_user CWUser object"
 msgstr "propriété"
 
-msgid "add ERType add_permission RQLExpression subject"
+msgid "add CWRType add_permission RQLExpression subject"
 msgstr "expression RQL d'ajout"
 
-msgid "add ERType delete_permission RQLExpression subject"
+msgid "add CWRType delete_permission RQLExpression subject"
 msgstr "expression RQL de suppression"
 
-msgid "add ERType read_permission RQLExpression subject"
+msgid "add CWRType read_permission RQLExpression subject"
 msgstr "expression RQL de lecture"
 
-msgid "add EUser in_group EGroup object"
+msgid "add CWRelation constrained_by CWConstraint subject"
+msgstr "contrainte"
+
+msgid "add CWRelation relation_type CWRType object"
+msgstr "définition de relation"
+
+msgid "add CWUser in_group CWGroup object"
 msgstr "utilisateur"
 
-msgid "add EUser use_email EmailAddress subject"
+msgid "add CWUser use_email EmailAddress subject"
 msgstr "ajouter une addresse email"
 
 msgid "add State allowed_transition Transition object"
@@ -825,7 +806,7 @@ msgstr "ajouter un état en entrée"
 msgid "add State allowed_transition Transition subject"
 msgstr "ajouter une transition en sortie"
 
-msgid "add State state_of EEType object"
+msgid "add State state_of CWEType object"
 msgstr "ajouter un état"
 
 msgid "add Transition condition RQLExpression subject"
@@ -837,46 +818,43 @@ msgstr "ajouter une transition en entrée"
 msgid "add Transition destination_state State subject"
 msgstr "ajouter l'état de sortie"
 
-msgid "add Transition transition_of EEType object"
+msgid "add Transition transition_of CWEType object"
 msgstr "ajouter une transition"
 
 msgid "add a Bookmark"
 msgstr "ajouter un signet"
 
-msgid "add a Card"
-msgstr "ajouter une fiche"
+msgid "add a CWAttribute"
+msgstr "ajouter un type de relation"
 
-msgid "add a ECache"
+msgid "add a CWCache"
 msgstr "ajouter un cache applicatif"
 
-msgid "add a EConstraint"
+msgid "add a CWConstraint"
 msgstr "ajouter une contrainte"
 
-msgid "add a EConstraintType"
+msgid "add a CWConstraintType"
 msgstr "ajouter un type de contrainte"
 
-msgid "add a EEType"
+msgid "add a CWEType"
 msgstr "ajouter un type d'entité"
 
-msgid "add a EFRDef"
-msgstr "ajouter un type de relation"
-
-msgid "add a EGroup"
+msgid "add a CWGroup"
 msgstr "ajouter un groupe d'utilisateurs"
 
-msgid "add a ENFRDef"
-msgstr "ajouter une relation"
-
-msgid "add a EPermission"
+msgid "add a CWPermission"
 msgstr "ajouter une permission"
 
-msgid "add a EProperty"
+msgid "add a CWProperty"
 msgstr "ajouter une propriété"
 
-msgid "add a ERType"
+msgid "add a CWRType"
 msgstr "ajouter un type de relation"
 
-msgid "add a EUser"
+msgid "add a CWRelation"
+msgstr "ajouter une relation"
+
+msgid "add a CWUser"
 msgstr "ajouter un utilisateur"
 
 msgid "add a EmailAddress"
@@ -953,9 +931,6 @@ msgstr "calendrier am/pm (semaine)"
 msgid "am/pm calendar (year)"
 msgstr "calendrier am/pm (année)"
 
-msgid "an abstract for this card"
-msgstr "un résumé pour cette fiche"
-
 msgid "an electronic mail address associated to a short alias"
 msgstr "une addresse électronique associée à un alias"
 
@@ -994,6 +969,9 @@ msgstr ""
 
 msgid "attribute"
 msgstr "attribut"
+
+msgid "attributes with modified permissions:"
+msgstr "attributs ayant des permissions modifiées :"
 
 msgid "august"
 msgstr "août"
@@ -1151,6 +1129,9 @@ msgstr "canonique"
 msgid "cardinality"
 msgstr "cardinalité"
 
+msgid "category"
+msgstr "categorie"
+
 #, python-format
 msgid "changed state of %(etype)s #%(eid)s (%(title)s)"
 msgstr "changement de l'état de %(etype)s #%(eid)s (%(title)s)"
@@ -1233,12 +1214,6 @@ msgstr "barre rql"
 msgid "components_rqlinput_description"
 msgstr "la barre de requête rql, dans l'en-tête de page"
 
-msgid "components_rss_feed_url"
-msgstr "syndication rss"
-
-msgid "components_rss_feed_url_description"
-msgstr ""
-
 msgid "composite"
 msgstr "composite"
 
@@ -1268,12 +1243,6 @@ msgstr "contraintes"
 
 msgid "constraints applying on this relation"
 msgstr "contraintes s'appliquant à cette relation"
-
-msgid "content"
-msgstr "contenu"
-
-msgid "content_format"
-msgstr "format"
 
 msgid "contentnavigation"
 msgstr "composants contextuels"
@@ -1398,60 +1367,64 @@ msgstr "créé par"
 msgid "created_by_object"
 msgstr "a créé"
 
-msgid "creating Bookmark (Bookmark bookmarked_by EUser %(linkto)s)"
+msgid "creating Bookmark (Bookmark bookmarked_by CWUser %(linkto)s)"
 msgstr "création d'un signet pour %(linkto)s"
 
-msgid "creating EConstraint (EFRDef %(linkto)s constrained_by EConstraint)"
-msgstr "création d'une contrainte pour l'attribut %(linkto)s"
-
-msgid "creating EConstraint (ENFRDef %(linkto)s constrained_by EConstraint)"
-msgstr "création d'une contrainte pour la relation %(linkto)s"
-
-msgid "creating EFRDef (EFRDef relation_type ERType %(linkto)s)"
+msgid "creating CWAttribute (CWAttribute relation_type CWRType %(linkto)s)"
 msgstr "création d'un attribut %(linkto)s"
 
-msgid "creating ENFRDef (ENFRDef relation_type ERType %(linkto)s)"
-msgstr "création relation %(linkto)s"
+msgid ""
+"creating CWConstraint (CWAttribute %(linkto)s constrained_by CWConstraint)"
+msgstr "création d'une contrainte pour l'attribut %(linkto)s"
 
-msgid "creating EProperty (EProperty for_user EUser %(linkto)s)"
+msgid ""
+"creating CWConstraint (CWRelation %(linkto)s constrained_by CWConstraint)"
+msgstr "création d'une contrainte pour la relation %(linkto)s"
+
+msgid "creating CWProperty (CWProperty for_user CWUser %(linkto)s)"
 msgstr "création d'une propriété pour l'utilisateur %(linkto)s"
 
-msgid "creating EUser (EUser in_group EGroup %(linkto)s)"
+msgid "creating CWRelation (CWRelation relation_type CWRType %(linkto)s)"
+msgstr "création relation %(linkto)s"
+
+msgid "creating CWUser (CWUser in_group CWGroup %(linkto)s)"
 msgstr "création d'un utilisateur à rajouter au groupe %(linkto)s"
 
-msgid "creating EmailAddress (EUser %(linkto)s use_email EmailAddress)"
+msgid "creating EmailAddress (CWUser %(linkto)s use_email EmailAddress)"
 msgstr "création d'une adresse électronique pour l'utilisateur %(linkto)s"
 
-msgid "creating RQLExpression (EEType %(linkto)s add_permission RQLExpression)"
+msgid ""
+"creating RQLExpression (CWEType %(linkto)s add_permission RQLExpression)"
 msgstr "création d'une expression RQL pour la permission d'ajout de %(linkto)s"
 
 msgid ""
-"creating RQLExpression (EEType %(linkto)s delete_permission RQLExpression)"
+"creating RQLExpression (CWEType %(linkto)s delete_permission RQLExpression)"
 msgstr ""
 "création d'une expression RQL pour la permission de suppression de %(linkto)s"
 
 msgid ""
-"creating RQLExpression (EEType %(linkto)s read_permission RQLExpression)"
+"creating RQLExpression (CWEType %(linkto)s read_permission RQLExpression)"
 msgstr "création d'une expression RQL pour la permission de lire %(linkto)s"
 
 msgid ""
-"creating RQLExpression (EEType %(linkto)s update_permission RQLExpression)"
+"creating RQLExpression (CWEType %(linkto)s update_permission RQLExpression)"
 msgstr ""
 "création d'une expression RQL pour la permission de mise à jour de %(linkto)s"
 
-msgid "creating RQLExpression (ERType %(linkto)s add_permission RQLExpression)"
+msgid ""
+"creating RQLExpression (CWRType %(linkto)s add_permission RQLExpression)"
 msgstr ""
 "création d'une expression RQL pour la permission d'ajout des relations %"
 "(linkto)s"
 
 msgid ""
-"creating RQLExpression (ERType %(linkto)s delete_permission RQLExpression)"
+"creating RQLExpression (CWRType %(linkto)s delete_permission RQLExpression)"
 msgstr ""
 "création d'une expression RQL pour la permission de suppression des "
 "relations %(linkto)s"
 
 msgid ""
-"creating RQLExpression (ERType %(linkto)s read_permission RQLExpression)"
+"creating RQLExpression (CWRType %(linkto)s read_permission RQLExpression)"
 msgstr ""
 "création d'une expression RQL pour la permission de lire les relations %"
 "(linkto)s"
@@ -1462,7 +1435,7 @@ msgstr "création d'une expression RQL pour la transition %(linkto)s"
 msgid "creating State (State allowed_transition Transition %(linkto)s)"
 msgstr "création d'un état pouvant aller vers la transition %(linkto)s"
 
-msgid "creating State (State state_of EEType %(linkto)s)"
+msgid "creating State (State state_of CWEType %(linkto)s)"
 msgstr "création d'un état pour le type %(linkto)s"
 
 msgid "creating State (Transition %(linkto)s destination_state State)"
@@ -1474,7 +1447,7 @@ msgstr "création d'une transition autorisée depuis l'état %(linkto)s"
 msgid "creating Transition (Transition destination_state State %(linkto)s)"
 msgstr "création d'une transition vers l'état %(linkto)s"
 
-msgid "creating Transition (Transition transition_of EEType %(linkto)s)"
+msgid "creating Transition (Transition transition_of CWEType %(linkto)s)"
 msgstr "création d'une transition pour le type %(linkto)s"
 
 msgid "creation"
@@ -1626,6 +1599,9 @@ msgstr "état de destination"
 msgid "destination_state_object"
 msgstr "destination de"
 
+msgid "detach attached file"
+msgstr "détacher le fichier existant"
+
 #, python-format
 msgid "detach attached file %s"
 msgstr "détacher le fichier existant %s"
@@ -1665,7 +1641,7 @@ msgid "download icon"
 msgstr "icône de téléchargement"
 
 msgid "download schema as owl"
-msgstr ""
+msgstr "télécharger le schéma OWL"
 
 msgid "edit bookmarks"
 msgstr "éditer les signets"
@@ -1706,8 +1682,17 @@ msgstr "l'inclusion de cette url est interdite"
 msgid "entities deleted"
 msgstr "entités supprimées"
 
+msgid "entity copied"
+msgstr "entité copiée"
+
+msgid "entity created"
+msgstr "entité créée"
+
 msgid "entity deleted"
 msgstr "entité supprimée"
+
+msgid "entity edited"
+msgstr "entité éditée"
 
 msgid "entity type"
 msgstr "type d'entité"
@@ -1819,6 +1804,10 @@ msgstr "vendredi"
 msgid "from"
 msgstr "de"
 
+#, python-format
+msgid "from %(date)s"
+msgstr "du %(date)s"
+
 msgid "from_entity"
 msgstr "de l'entité"
 
@@ -1842,6 +1831,9 @@ msgstr "indexation du texte"
 
 msgid "generic plot"
 msgstr "tracé de courbes standard"
+
+msgid "generic relation to link one entity to another"
+msgstr "relation générique pour lier une entité à une autre"
 
 msgid "go back to the index page"
 msgstr "retourner sur la page d'accueil"
@@ -1904,7 +1896,7 @@ msgid "hide filter form"
 msgstr "cacher le filtre"
 
 msgid "hide meta-data"
-msgstr "cacher les méta-données"
+msgstr "cacher les entités et relations \"méta\""
 
 msgid "home"
 msgstr "maison"
@@ -2031,9 +2023,6 @@ msgstr "état initial de"
 msgid "inlined"
 msgstr "mise en ligne"
 
-msgid "inlined view"
-msgstr "vue embarquée (en ligne)"
-
 msgid "internationalizable"
 msgstr "internationalisable"
 
@@ -2114,6 +2103,13 @@ msgid "left"
 msgstr "gauche"
 
 msgid ""
+"link a permission to the entity. This permission should be used in the "
+"security definition of the entity's type to be useful."
+msgstr ""
+"lie une permission à une entité. Cette permission doit généralement être utilisée "
+"dans la définition de sécurité du type d'entité pour être utile."
+
+msgid ""
 "link a property to the user which want this property customization. Unless "
 "you're a site manager, this relation will be handled automatically."
 msgstr ""
@@ -2139,11 +2135,6 @@ msgstr "lié une enregistrement de transition vers l'objet associé"
 msgid "link a transition to one or more entity type"
 msgstr "lie une transition à un ou plusieurs types d'entités"
 
-msgid ""
-"link a transition to one or more rql expression allowing to go through this "
-"transition"
-msgstr ""
-
 msgid "link to each item in"
 msgstr "lier vers chaque élément dans"
 
@@ -2158,6 +2149,9 @@ msgstr "s'identifier"
 
 msgid "login"
 msgstr "identifiant"
+
+msgid "login or email"
+msgstr "identifiant ou email"
 
 msgid "login_action"
 msgstr "identifiez vous"
@@ -2264,6 +2258,18 @@ msgstr "haut de page"
 msgid "navigation"
 msgstr "navigation"
 
+msgid "navigation.combobox-limit"
+msgstr "nombre d'entités dans les listes déroulantes"
+
+msgid "navigation.page-size"
+msgstr "nombre de résultats"
+
+msgid "navigation.related-limit"
+msgstr "nombre d'entités dans la vue primaire"
+
+msgid "navigation.short-line-size"
+msgstr "description courtes"
+
 msgid "navtop"
 msgstr "haut de page du contenu principal"
 
@@ -2276,8 +2282,8 @@ msgstr "résultats suivants"
 msgid "no"
 msgstr "non"
 
-msgid "no associated epermissions"
-msgstr "aucune permission spécifique n'est définie"
+msgid "no associated permissions"
+msgstr "aucune permission associée"
 
 msgid "no possible transition"
 msgstr "aucune transition possible"
@@ -2316,6 +2322,9 @@ msgstr "novembre"
 msgid "object"
 msgstr "objet"
 
+msgid "object_plural:"
+msgstr "objets :"
+
 msgid "october"
 msgstr "octobre"
 
@@ -2331,6 +2340,9 @@ msgstr "une ligne"
 msgid "only select queries are authorized"
 msgstr "seules les requêtes de sélections sont autorisées"
 
+msgid "open all"
+msgstr "tout ouvrir"
+
 msgid "order"
 msgstr "ordre"
 
@@ -2338,10 +2350,10 @@ msgid "ordernum"
 msgstr "ordre"
 
 msgid "owl"
-msgstr ""
+msgstr "owl"
 
 msgid "owlabox"
-msgstr ""
+msgstr "owl ABox"
 
 msgid "owned_by"
 msgstr "appartient à"
@@ -2375,6 +2387,12 @@ msgstr "chemin"
 msgid "permission"
 msgstr "permission"
 
+msgid "permissions for entities"
+msgstr "permissions pour les entités"
+
+msgid "permissions for relations"
+msgstr "permissions pour les relations"
+
 msgid "permissions for this entity"
 msgstr "permissions pour cette entité"
 
@@ -2386,9 +2404,6 @@ msgstr "récupérer des signets existants"
 
 msgid "pkey"
 msgstr "clé"
-
-msgid "planned_delivery"
-msgstr "livraison prévue"
 
 msgid "please correct errors below"
 msgstr "veuillez corriger les erreurs ci-dessous"
@@ -2445,6 +2460,9 @@ msgstr "type de relation"
 msgid "relation_type_object"
 msgstr "définition"
 
+msgid "relations"
+msgstr "relations"
+
 msgid "relations deleted"
 msgstr "relations supprimées"
 
@@ -2454,40 +2472,37 @@ msgstr "url relative de la page"
 msgid "remove this Bookmark"
 msgstr "supprimer ce signet"
 
-msgid "remove this Card"
-msgstr "supprimer cette fiche"
-
-msgid "remove this ECache"
-msgstr "supprimer ce cache applicatif"
-
-msgid "remove this EConstraint"
-msgstr "supprimer cette contrainte"
-
-msgid "remove this EConstraintType"
-msgstr "supprimer ce type de contrainte"
-
-msgid "remove this EEType"
-msgstr "supprimer ce type d'entité"
-
-msgid "remove this EFRDef"
+msgid "remove this CWAttribute"
 msgstr "supprimer cet attribut"
 
-msgid "remove this EGroup"
+msgid "remove this CWCache"
+msgstr "supprimer ce cache applicatif"
+
+msgid "remove this CWConstraint"
+msgstr "supprimer cette contrainte"
+
+msgid "remove this CWConstraintType"
+msgstr "supprimer ce type de contrainte"
+
+msgid "remove this CWEType"
+msgstr "supprimer ce type d'entité"
+
+msgid "remove this CWGroup"
 msgstr "supprimer ce groupe"
 
-msgid "remove this ENFRDef"
-msgstr "supprimer cette relation"
-
-msgid "remove this EPermission"
+msgid "remove this CWPermission"
 msgstr "supprimer cette permission"
 
-msgid "remove this EProperty"
+msgid "remove this CWProperty"
 msgstr "supprimer cette propriété"
 
-msgid "remove this ERType"
+msgid "remove this CWRType"
 msgstr "supprimer cette définition de relation"
 
-msgid "remove this EUser"
+msgid "remove this CWRelation"
+msgstr "supprimer cette relation"
+
+msgid "remove this CWUser"
 msgstr "supprimer cet utilisateur"
 
 msgid "remove this EmailAddress"
@@ -2510,6 +2525,12 @@ msgstr "nécessite le groupe"
 
 msgid "require_group_object"
 msgstr "à les droits"
+
+msgid "require_permission"
+msgstr "require permission"
+
+msgid "require_permission_object"
+msgstr "permission of"
 
 msgid "required attribute"
 msgstr "attribut requis"
@@ -2587,11 +2608,17 @@ msgstr "sécurité"
 msgid "see them all"
 msgstr "les voir toutes"
 
+msgid "see_also"
+msgstr "see also"
+
 msgid "select"
 msgstr "sélectionner"
 
 msgid "select a"
 msgstr "sélectionner un"
+
+msgid "select a key first"
+msgstr "sélectionnez d'abord une clé"
 
 msgid "select a relation"
 msgstr "sélectionner une relation"
@@ -2652,7 +2679,10 @@ msgid "show filter form"
 msgstr "afficher le filtre"
 
 msgid "show meta-data"
-msgstr "afficher les méta-données"
+msgstr "afficher le schéma complet"
+
+msgid "sioc"
+msgstr "sioc"
 
 msgid "site configuration"
 msgstr "configuration du site"
@@ -2706,6 +2736,9 @@ msgstr "sujet"
 msgid "subject/object cardinality"
 msgstr "cardinalité sujet/objet"
 
+msgid "subject_plural:"
+msgstr "sujets :"
+
 msgid "sunday"
 msgstr "dimanche"
 
@@ -2714,9 +2747,6 @@ msgstr "nom"
 
 msgid "symetric"
 msgstr "symétrique"
-
-msgid "synopsis"
-msgstr "synopsis"
 
 msgid "system entities"
 msgstr "entités systèmes"
@@ -2780,6 +2810,10 @@ msgstr "titre"
 msgid "to"
 msgstr "à"
 
+#, python-format
+msgid "to %(date)s"
+msgstr "au %(date)s"
+
 msgid "to associate with"
 msgstr "pour associer à"
 
@@ -2797,6 +2831,9 @@ msgstr "transitions vers cette état"
 
 msgid "todo_by"
 msgstr "à faire par"
+
+msgid "toggle check boxes"
+msgstr "inverser les cases à cocher"
 
 msgid "transition is not allowed"
 msgstr "transition non permise"
@@ -2819,6 +2856,36 @@ msgstr "type"
 msgid "ui"
 msgstr "propriétés génériques de l'interface"
 
+msgid "ui.date-format"
+msgstr "format de date"
+
+msgid "ui.datetime-format"
+msgstr "format de date et de l'heure"
+
+msgid "ui.default-text-format"
+msgstr "format de texte"
+
+msgid "ui.encoding"
+msgstr "encodage"
+
+msgid "ui.fckeditor"
+msgstr "éditeur du contenu"
+
+msgid "ui.float-format"
+msgstr "format des flottants"
+
+msgid "ui.language"
+msgstr "langue"
+
+msgid "ui.main-template"
+msgstr "gabarit principal"
+
+msgid "ui.site-title"
+msgstr "titre du site"
+
+msgid "ui.time-format"
+msgstr "format de l'heure"
+
 msgid "unaccessible"
 msgstr "inaccessible"
 
@@ -2833,6 +2900,9 @@ msgstr "entité (externe) introuvable"
 
 msgid "unknown property key"
 msgstr "clé de propriété inconnue"
+
+msgid "up"
+msgstr "haut"
 
 msgid "upassword"
 msgstr "mot de passe"
@@ -2971,9 +3041,6 @@ msgstr ""
 "org et python-projects@lists.logilab.org), mettez cette propriété à vrai sur "
 "l'une d'entre-elle qui sera la forme canonique"
 
-msgid "wikiid"
-msgstr "identifiant wiki"
-
 #, python-format
 msgid "workflow for %s"
 msgstr "workflow pour %s"
@@ -2993,6 +3060,9 @@ msgstr "oui"
 msgid "you have been logged out"
 msgstr "vous avez été déconnecté"
 
+msgid "you should probably delete that property"
+msgstr "vous devriez probablement supprimer cette propriété"
+
 #~ msgid "%s constraint failed"
 #~ msgstr "La contrainte %s n'est pas satisfaite"
 
@@ -3002,11 +3072,54 @@ msgstr "vous avez été déconnecté"
 #~ msgid "%s, or without time: %s"
 #~ msgstr "%s, ou bien sans préciser d'heure: %s"
 
+#~ msgid "Card"
+#~ msgstr "Fiche"
+
+#~ msgid "Card_plural"
+#~ msgstr "Fiches"
+
+#~ msgid "Email body: "
+#~ msgstr "Contenu du courriel : "
+
+#~ msgid "From: "
+#~ msgstr "De : "
+
 #~ msgid "Loading"
 #~ msgstr "chargement"
 
+#~ msgid "New Card"
+#~ msgstr "Nouvelle fiche"
+
+#~ msgid "Problem occured"
+#~ msgstr "Une erreur est survenue"
+
 #~ msgid "Problem occured while setting new value"
 #~ msgstr "Un problème est survenu lors de la mise à jour"
+
+#~ msgid "Recipients: "
+#~ msgstr "Destinataires : "
+
+#~ msgid "Subject: "
+#~ msgstr "Sujet : "
+
+#~ msgid "This Card"
+#~ msgstr "Cette fiche"
+
+#~ msgid ""
+#~ "a card is a textual content used as documentation, reference, procedure "
+#~ "reminder"
+#~ msgstr ""
+#~ "une fiche est un texte utilisé comme documentation, référence, rappel de "
+#~ "procédure..."
+
+#~ msgid "actions_addpermission"
+#~ msgstr "ajouter une permission"
+
+#~ msgid "add a Card"
+#~ msgstr "ajouter une fiche"
+
+#~ msgid "an abstract for this card"
+#~ msgstr "un résumé pour cette fiche"
 
 #~ msgid "and"
 #~ msgstr "et"
@@ -3017,15 +3130,24 @@ msgstr "vous avez été déconnecté"
 #~ msgid "cancel edition"
 #~ msgstr "annuler l'édition"
 
+#~ msgid "close all"
+#~ msgstr "tout fermer"
+
+#~ msgid "components_rss_feed_url"
+#~ msgstr "syndication rss"
+
+#~ msgid "content"
+#~ msgstr "contenu"
+
+#~ msgid "content_format"
+#~ msgstr "format"
+
 #~ msgid ""
 #~ "default language (look at the i18n directory of the application to see "
 #~ "available languages)"
 #~ msgstr ""
 #~ "langue par défaut (regarder le répertoire i18n de l'application pour voir "
 #~ "les langues disponibles)"
-
-#~ msgid "detach attached file"
-#~ msgstr "détacher le fichier existant"
 
 #~ msgid "filter"
 #~ msgstr "filtrer"
@@ -3042,6 +3164,9 @@ msgstr "vous avez été déconnecté"
 #~ msgid "incorrect value for type \"%s\""
 #~ msgstr "valeur incorrecte pour le type \"%s\""
 
+#~ msgid "inlined view"
+#~ msgstr "vue embarquée (en ligne)"
+
 #~ msgid "linked"
 #~ msgstr "lié"
 
@@ -3053,14 +3178,29 @@ msgstr "vous avez été déconnecté"
 #~ msgstr ""
 #~ "nombre maximum d'entités liées à afficher dans la vue de restriction"
 
+#~ msgid "no associated epermissions"
+#~ msgstr "aucune permission spécifique n'est définie"
+
 #~ msgid "owned by"
 #~ msgstr "appartient à"
+
+#~ msgid "planned_delivery"
+#~ msgstr "livraison prévue"
+
+#~ msgid "remove this Card"
+#~ msgstr "supprimer cette fiche"
 
 #~ msgid "see also"
 #~ msgstr "voir aussi"
 
 #~ msgid "status will change from %s to %s"
 #~ msgstr "l'état va passer de %s à %s"
+
+#~ msgid "synopsis"
+#~ msgstr "synopsis"
+
+#~ msgid "wikiid"
+#~ msgstr "identifiant wiki"
 
 #~ msgid "workflow history"
 #~ msgstr "historique du workflow"

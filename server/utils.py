@@ -1,7 +1,7 @@
 """Some utilities for the CubicWeb server.
 
 :organization: Logilab
-:copyright: 2001-2008 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+:copyright: 2001-2009 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 """
 __docformat__ = "restructuredtext en"
@@ -46,7 +46,7 @@ def cartesian_product(seqin):
             for item in seqin[0]:
                 newcomb = comb + [item]     # add next item to current combination
                 # call rloop w/ remaining seqs, newcomb
-                for item in rloop(seqin[1:], newcomb):   
+                for item in rloop(seqin[1:], newcomb):
                     yield item          # seqs and newcomb
         else:                           # processing last sequence
             yield comb                  # comb finished, add to list
@@ -95,7 +95,7 @@ class LoopTask(object):
                 self.start()
         self.func = auto_restart_func
         self.name = func.__name__
-        
+
     def start(self):
         self._t = Timer(self.interval, self.func)
         self._t.start()
@@ -117,10 +117,10 @@ class RepoThread(Thread):
                 func()
             finally:
                 self.running_threads.remove(self)
-        Thread.__init__(self, target=target)
+        Thread.__init__(self, target=auto_remove_func)
         self.running_threads = running_threads
         self._name = target.__name__
-        
+
     def start(self):
         self.running_threads.append(self)
         Thread.start(self)
@@ -128,11 +128,3 @@ class RepoThread(Thread):
     @property
     def name(self):
         return '%s(%s)' % (self._name, Thread.getName(self))
-
-
-from logilab.common.deprecation import class_moved
-from cubicweb.server import pool
-Operation = class_moved(pool.Operation)
-PreCommitOperation = class_moved(pool.PreCommitOperation)
-LateOperation = class_moved(pool.LateOperation)
-SingleLastOperation = class_moved(pool.SingleLastOperation)

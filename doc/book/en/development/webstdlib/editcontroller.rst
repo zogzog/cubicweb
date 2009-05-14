@@ -1,0 +1,118 @@
+.. -*- coding: utf-8 -*-
+The 'edit' controller (:mod:`cubicweb.web.views.editcontroller`)
+----------------------------------------------------------------
+
+Editing control
+~~~~~~~~~~~~~~~~
+
+Re-requisites: the parameters related to entities to edit are
+specified as follows ::
+
+  <field name>:<entity eid>
+
+where entity eid could be a letter in case of an entity to create. We
+name those parameters as *qualified*.
+
+1. Retrieval of entities to edit by looking for the forms parameters
+   starting by `eid:` and also having a parameter `__type` associated
+   (also *qualified* by eid)
+
+2. For all the attributes and the relations of an entity to edit:
+
+   1. search for a parameter `edits-<relation name>` or `edito-<relation name>`
+      qualified in the case of a relation where the entity is object
+   2. if found, the value returned is considered as the initial value
+      for this relaiton and we then look for the new value(s)  in the parameter
+      <relation name> (qualified)
+   3. if the value returned is different from the initial value, an database update
+      request is done
+
+3. For each entity to edit:
+
+   1. if a qualified parameter `__linkto` is specified, its value has to be
+      a string (or a list of string) such as: ::
+
+        <relation type>:<eids>:<target>
+
+      where <target> is either `subject` or `object` and each eid could be
+      separated from the others by a `_`. Target specifies if the *edited entity*
+      is subject or object of the relation and each relation specified will
+      be inserted.
+
+    2. if a qualified parameter `__clone_eid` is specified for an entity, the
+       relations of the specified entity passed as value of this parameter are
+       copied on the edited entity.
+
+    3. if a qualified parameter `__delete` is specified, its value must be
+       a string or a list of string such as follows: ::
+
+          <ssubjects eids>:<relation type>:<objects eids>
+
+       where each eid subject or object can be seperated from the other
+       by `_`. Each relation specified will be deleted.
+
+    4. if a qualified parameter `__insert` is specified, its value should
+       follow the same pattern as `__delete`, but each relation specified is
+       inserted.
+
+4. If the parameters `__insert` and/or `__delete` are found not qualified,
+   they are interpreted as explained above (independantly from the number
+   of entities edited).
+
+5. If no entity is edited but the form contains the parameters `__linkto`
+   and `eid`, this one is interpreted by using the value specified for `eid`
+   to designate the entity on which to add the relations.
+
+
+.. note::
+
+   * If the parameter `__action_delete` is found, all the entities specified
+     as to be edited will be deleted.
+
+   * If the parameter`__action_cancel` is found, no action is completed.
+
+   * If the parameter `__action_apply` is found, the editing is applied
+     normally but the redirection is done on the form
+     (see :ref:`RedirectionControl`).
+
+   * The parameter `__method` is also supported as for the main template
+     (XXX not very consistent, maybe __method should be dealed in the view
+     controller).
+
+   * If no entity is found to be edited and if there is no parameter
+     `__action_delete`, `__action_cancel`, `__linkto`, `__delete` or
+     `__insert`, an error is raised.
+
+   * Using the parameter `__message` in the form will allow to use its value
+     as a message to provide the user once the editing is completed.
+
+
+.. _RedirectionControl:
+
+Redirection control
+~~~~~~~~~~~~~~~~~~~
+Once editing is completed, there is still an issue left: where should we go
+now? If nothing is specified, the controller will do his job but it does not
+mean we will be happy with the result. We can control that by using the
+following parameters:
+
+* `__redirectpath`: path of the URL (relative to the root URL of the site,
+  no form parameters
+
+* `__redirectparams`: forms parameters to add to the path
+
+* `__redirectrql`: redirection RQL request
+
+* `__redirectvid`: redirection view identifier
+
+* `__errorurl`: initial form URL, used for redirecting in case a validation
+  error is raised during editing. If this one is not specified, an error page
+  is displayed instead of going back to the form (which is, if necessary,
+  responsible for displaying the errors)
+
+* `__form_id`: initial view form identifier, used if `__action_apply` is
+  found
+
+In general we use either `__redirectpath` and `__redirectparams` or
+`__redirectrql` and `__redirectvid`.
+

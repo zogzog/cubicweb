@@ -5,13 +5,13 @@ Stress test a CubicWeb repository
 OPTIONS:
   -h / --help
      Display this help message and exit.
-     
+
   -u / --user <user>
      Connect as <user> instead of being prompted to give it.
   -p / --password <password>
      Automatically give <password> for authentication instead of being prompted
      to give it.
-     
+
   -n / --nb-times <num>
      Repeat queries <num> times.
   -t / --nb-threads <num>
@@ -21,7 +21,7 @@ OPTIONS:
   -o / --report-output <filename>
      Write profiler report into <filename> rather than on stdout
 
-Copyright (c) 2003-2006 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+Copyright (c) 2003-2009 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 http://www.logilab.fr/ -- mailto:contact@logilab.fr
 """
 
@@ -49,7 +49,7 @@ class QueryExecutor:
         self._times = times
         self._queries = queries
         self._reporter = reporter
-        
+
     def run(self):
         cursor = self._cursor
         times = self._times
@@ -80,7 +80,7 @@ class ProfileReporter:
     threads and can write a report that summarizes all profile informations
     """
     profiler_lock = threading.Lock()
-    
+
     def __init__(self, queries):
         self._queries = tuple(queries)
         self._profile_results = [(0., 0)] * len(self._queries)
@@ -111,8 +111,8 @@ class ProfileReporter:
         table_layout = Table(3, rheaders = True, children = table_elems)
         TextWriter().format(table_layout, output)
         # output.write('\n'.join(tmp_output))
-        
-        
+
+
 def run(args):
     """run the command line tool"""
     try:
@@ -150,7 +150,7 @@ def run(args):
         user = raw_input('login: ')
     if password is None:
         password = getpass('password: ')
-    from cubicweb.cwconfig import application_configuration 
+    from cubicweb.cwconfig import application_configuration
     config = application_configuration(args[0])
     # get local access to the repository
     print "Creating repo", prof_file
@@ -176,7 +176,7 @@ def run(args):
     else:
         QueryExecutor(repo_cursor, repeat, queries, reporter = reporter).run()
     reporter.dump_report(report_output)
-    
-    
+
+
 if __name__ == '__main__':
     run(sys.argv[1:])

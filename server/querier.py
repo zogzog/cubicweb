@@ -2,7 +2,7 @@
 security checking and data aggregation.
 
 :organization: Logilab
-:copyright: 2001-2008 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+:copyright: 2001-2009 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 """
 __docformat__ = "restructuredtext en"
@@ -13,8 +13,7 @@ from logilab.common.cache import Cache
 from logilab.common.compat import any
 from rql import RQLHelper, RQLSyntaxError
 from rql.stmts import Union, Select
-from rql.nodes import (Relation, VariableRef, Constant, Exists, Variable,
-                       SubQuery)
+from rql.nodes import (Relation, VariableRef, Constant, SubQuery)
 
 from cubicweb import Unauthorized, QueryError, UnknownEid, typed_eid
 from cubicweb import server
@@ -85,7 +84,7 @@ def check_read_access(schema, user, rqlst, solution):
             #assert len(erqlexprs) == 1
             localchecks[varname] = tuple(erqlexprs)
     return localchecks
-                    
+
 def noinvariant_vars(restricted, select, nbtrees):
     # a variable can actually be invariant if it has not been restricted for
     # security reason or if security assertion hasn't modified the possible
@@ -115,12 +114,12 @@ def _expand_selection(terms, selected, aliases, select, newselect):
                 colalias = newselect.get_variable(vref.name, len(aliases))
                 aliases.append(VariableRef(colalias))
                 selected.add(vref.name)
-                
+
 # Plans #######################################################################
 
 class ExecutionPlan(object):
     """the execution model of a rql query, composed of querier steps"""
-    
+
     def __init__(self, querier, rqlst, args, session):
         # original rql syntax tree
         self.rqlst = rqlst
@@ -138,11 +137,11 @@ class ExecutionPlan(object):
         self.schema = querier.schema
         self.rqlhelper = querier._rqlhelper
         self.sqlannotate = querier.sqlgen_annotate
-        
+
     def annotate_rqlst(self):
         if not self.rqlst.annotated:
             self.rqlhelper.annotate(self.rqlst)
-            
+
     def add_step(self, step):
         """add a step to the plan"""
         self.steps.append(step)
@@ -150,10 +149,10 @@ class ExecutionPlan(object):
     def clean(self):
         """remove temporary tables"""
         self.syssource.clean_temp_data(self.session, self.temp_tables)
-        
+
     def sqlexec(self, sql, args=None):
         return self.syssource.sqlexec(self.session, sql, args)
-            
+
     def execute(self):
         """execute a plan and return resulting rows"""
         try:
@@ -163,7 +162,7 @@ class ExecutionPlan(object):
             return result
         finally:
             self.clean()
-            
+
     def init_temp_table(self, table, selected, sol):
         """initialize sql schema and variable map for a temporary table which
         will be used to store result for the given rqlst
@@ -176,17 +175,17 @@ class ExecutionPlan(object):
                                                                  table)
             self.temp_tables[table] = [outputmap, sqlschema, False]
         return outputmap
-        
+
     def create_temp_table(self, table):
         """create a temporary table to store result for the given rqlst"""
         if not self.temp_tables[table][-1]:
             sqlschema = self.temp_tables[table][1]
             self.syssource.create_temp_table(self.session, table, sqlschema)
             self.temp_tables[table][-1] = True
-        
+
     def preprocess(self, union, security=True):
         """insert security when necessary then annotate rql st for sql generation
-        
+
         return rqlst to actually execute
         """
         #if server.DEBUG:
@@ -280,7 +279,7 @@ class ExecutionPlan(object):
         are removed, else if the user may read it (eg if an rql expression is
         defined for the "read" permission of the related type), the local checks
         dict for the solution is updated
-        
+
         return a dict with entries for each different local check necessary,
         with associated solutions as value. A local check is defined by a list
         of 2-uple, with variable name as first item and the necessary rql
@@ -347,11 +346,11 @@ class ExecutionPlan(object):
         self.rqlhelper.annotate(rqlst)
         self.preprocess(rqlst, security=False)
         return rqlst
-       
+
 class InsertPlan(ExecutionPlan):
     """an execution model specific to the INSERT rql query
     """
-    
+
     def __init__(self, querier, rqlst, args, session):
         ExecutionPlan.__init__(self, querier, rqlst, args, session)
         # save originaly selected variable, we may modify this
@@ -388,7 +387,7 @@ class InsertPlan(ExecutionPlan):
                     value = rhs.eval(self.args)
                     eschema = edef.e_schema
                     attrtype = eschema.subject_relation(rtype).objects(eschema)[0]
-                    if attrtype == 'Password' and isinstance(value, unicode): 
+                    if attrtype == 'Password' and isinstance(value, unicode):
                         value = value.encode('UTF8')
                     edef[rtype] = value
                 elif to_build.has_key(str(rhs)):
@@ -398,12 +397,12 @@ class InsertPlan(ExecutionPlan):
                     to_select.setdefault(edef, []).append( (rtype, rhs, 0) )
         return to_select
 
-        
+
     def add_entity_def(self, edef):
         """add an entity definition to build"""
         edef.querier_pending_relations = {}
         self.e_defs[-1].append(edef)
-        
+
     def add_relation_def(self, rdef):
         """add an relation definition to build"""
         self.r_defs.append(rdef)
@@ -411,11 +410,11 @@ class InsertPlan(ExecutionPlan):
             self._r_subj_index.setdefault(rdef[0], []).append(rdef)
         if not isinstance(rdef[2], int):
             self._r_obj_index.setdefault(rdef[2], []).append(rdef)
-        
+
     def substitute_entity_def(self, edef, edefs):
         """substitute an incomplete entity definition by a list of complete
         equivalents
-        
+
         e.g. on queries such as ::
           INSERT Personne X, Societe Y: X nom N, Y nom 'toto', X travaille Y
           WHERE U login 'admin', U login N
@@ -456,7 +455,7 @@ class InsertPlan(ExecutionPlan):
                     for edef in edefs:
                         result.append( (exp_rdef[0], exp_rdef[1], edef) )
                 self._expanded_r_defs[rdef] = result
-        
+
     def _expanded(self, rdef):
         """return expanded value for the given relation definition"""
         try:
@@ -464,7 +463,7 @@ class InsertPlan(ExecutionPlan):
         except KeyError:
             self.r_defs.remove(rdef)
             return [rdef]
-        
+
     def relation_defs(self):
         """return the list for relation definitions to insert"""
         for rdefs in self._expanded_r_defs.values():
@@ -472,11 +471,11 @@ class InsertPlan(ExecutionPlan):
                 yield rdef
         for rdef in self.r_defs:
             yield rdef
-            
+
     def insert_entity_defs(self):
         """return eids of inserted entities in a suitable form for the resulting
         result set, e.g.:
-        
+
         e.g. on queries such as ::
           INSERT Personne X, Societe Y: X nom N, Y nom 'toto', X travaille Y
           WHERE U login 'admin', U login N
@@ -491,7 +490,7 @@ class InsertPlan(ExecutionPlan):
             results.append([repo.glob_add_entity(session, edef)
                             for edef in row])
         return results
-        
+
     def insert_relation_defs(self):
         session = self.session
         repo = session.repo
@@ -515,18 +514,18 @@ class InsertPlan(ExecutionPlan):
 
 class QuerierHelper(object):
     """helper class to execute rql queries, putting all things together"""
-    
+
     def __init__(self, repo, schema):
         # system info helper
         self._repo = repo
         # application schema
         self.set_schema(schema)
-        
+
     def set_schema(self, schema):
         self.schema = schema
         # rql parsing / analysing helper
         self._rqlhelper = RQLHelper(schema, special_relations={'eid': 'uid',
-                                                               'has_text': 'fti'})        
+                                                               'has_text': 'fti'})
         self._rql_cache = Cache(self._repo.config['rql-cache-size'])
         self.cache_hit, self.cache_miss = 0, 0
         # rql planner
@@ -536,11 +535,11 @@ class QuerierHelper(object):
             from cubicweb.server.ssplanner import SSPlanner
             self._planner = SSPlanner(schema, self._rqlhelper)
         else:
-            from cubicweb.server.msplanner import MSPlanner            
+            from cubicweb.server.msplanner import MSPlanner
             self._planner = MSPlanner(schema, self._rqlhelper)
         # sql generation annotator
         self.sqlgen_annotate = SQLGenAnnotator(schema).annotate
-        
+
     def parse(self, rql, annotate=False):
         """return a rql syntax tree for the given rql"""
         try:
@@ -560,7 +559,7 @@ class QuerierHelper(object):
         if rqlst.TYPE == 'insert':
             return InsertPlan(self, rqlst, args, session)
         return ExecutionPlan(self, rqlst, args, session)
-        
+
     def execute(self, session, rql, args=None, eid_key=None, build_descr=True):
         """execute a rql query, return resulting rows and their description in
         a `ResultSet` object
@@ -579,7 +578,7 @@ class QuerierHelper(object):
 
         on INSERT queries, there will be on row with the eid of each inserted
         entity
-        
+
         result for DELETE and SET queries is undefined yet
 
         to maximize the rql parsing/analyzing cache performance, you should

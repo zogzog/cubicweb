@@ -1,21 +1,21 @@
-"""cubicweb.common.widget unit tests
+"""cubicweb.common.widget unit tests"""
 
-"""
+from datetime import datetime
+NOW = datetime.now()
 
-from mx.DateTime import now
-NOW = now()
 from logilab.common.testlib import unittest_main
 from cubicweb.devtools.apptest import EnvBasedTC
 
+from cubicweb.common.mttransforms import HAS_TAL
 from cubicweb.web.widgets import widget, AutoCompletionWidget
 
 
 class WidgetsTC(EnvBasedTC):
-        
+
     def get_widget(self, etype, rname, rtype):
         rschema = self.schema[rname]
         return widget(self.vreg, etype, rschema, rtype, role='subject')
-    
+
 
     def test_hidden_widget(self):
         w = self.get_widget('State', 'eid', 'Int')
@@ -30,7 +30,7 @@ class WidgetsTC(EnvBasedTC):
                            u'<input type="hidden" name="eid" value="X" />')
 
     def test_textarea_widget(self):
-        self.add_entity('EProperty', pkey=u'ui.fckeditor', value=u'')
+        self.add_entity('CWProperty', pkey=u'ui.fckeditor', value=u'')
         self.commit()
         w = self.get_widget('State', 'description', 'String')
         self.assertEquals(w.name, 'description')
@@ -41,6 +41,10 @@ class WidgetsTC(EnvBasedTC):
         entity
         self.assertEquals(w.required(entity), False)
         self.assertEquals(w.render(entity), '')
+        if HAS_TAL:
+            tal_format = u'\n<option value="text/cubicweb-page-template" >text/cubicweb-page-template</option>'
+        else:
+            tal_format = u''
         self.assertTextEquals(w.edit_render(entity),
                            u'''<input type="hidden" name="edits-description:X" value="__cubicweb_internal_field__"/>
 <input type="hidden" name="edits-description_format:X" value="__cubicweb_internal_field__"/>
@@ -48,12 +52,11 @@ class WidgetsTC(EnvBasedTC):
 <select name="description_format:X" id="description_format:X" tabindex="0">
 <option value="text/rest" >text/rest</option>
 <option value="text/html" selected="selected">text/html</option>
-<option value="text/plain" >text/plain</option>
-<option value="text/cubicweb-page-template" >text/cubicweb-page-template</option>
-</select><br/><textarea onkeypress="autogrow(this)" name="description:X" accesskey="d" cols="80" id="description:X" rows="20" tabindex="1"></textarea>''')
+<option value="text/plain" >text/plain</option>%s
+</select><br/><textarea onkeypress="autogrow(this)" name="description:X" accesskey="d" cols="80" id="description:X" rows="20" tabindex="1"></textarea>''' % tal_format)
 
     def test_textarea_widget_previous_value(self):
-        self.add_entity('EProperty', pkey=u'ui.fckeditor', value=u'')
+        self.add_entity('CWProperty', pkey=u'ui.fckeditor', value=u'')
         self.commit()
         w = self.get_widget('State', 'description', 'String')
         req = self.request()
@@ -62,6 +65,10 @@ class WidgetsTC(EnvBasedTC):
         entity.eid = 'X'
         self.assertEquals(w.required(entity), False)
         self.assertEquals(w.render(entity), '')
+        if HAS_TAL:
+            tal_format = u'\n<option value="text/cubicweb-page-template" >text/cubicweb-page-template</option>'
+        else:
+            tal_format = u''
         self.assertTextEquals(w.edit_render(entity),
                            u'''<input type="hidden" name="edits-description:X" value="__cubicweb_internal_field__"/>
 <input type="hidden" name="edits-description_format:X" value="__cubicweb_internal_field__"/>
@@ -69,9 +76,8 @@ class WidgetsTC(EnvBasedTC):
 <select name="description_format:X" id="description_format:X" tabindex="0">
 <option value="text/rest" >text/rest</option>
 <option value="text/html" selected="selected">text/html</option>
-<option value="text/plain" >text/plain</option>
-<option value="text/cubicweb-page-template" >text/cubicweb-page-template</option>
-</select><br/><textarea onkeypress="autogrow(this)" name="description:X" accesskey="d" cols="80" id="description:X" rows="20" tabindex="1">a description</textarea>''')
+<option value="text/plain" >text/plain</option>%s
+</select><br/><textarea onkeypress="autogrow(this)" name="description:X" accesskey="d" cols="80" id="description:X" rows="20" tabindex="1">a description</textarea>''' % tal_format)
 
     def test_fckeditor_widget(self):
         w = self.get_widget('State', 'description', 'String')
@@ -179,10 +185,9 @@ class WidgetsTC(EnvBasedTC):
     def test_datetime_widget(self):
         w = self.get_widget('Personne', 'datenaiss', 'Datetime')
         self.assertEquals(w.name, 'datenaiss')
-        now_ = now()
-        example = '%s, or without time: %s' % (        
-            now_.strftime(self.vreg.property_value('ui.datetime-format')),
-            now_.strftime(self.vreg.property_value('ui.date-format')))
+        example = '%s, or without time: %s' % (
+            NOW.strftime(self.vreg.property_value('ui.datetime-format')),
+            NOW.strftime(self.vreg.property_value('ui.date-format')))
         self.assertEquals(w.render_example(self.request()), example)
         self.assertDictEquals(w.attrs, {'accesskey': 'd', 'maxlength': 16, 'size': 16})
         entity = self.etype_instance('Personne')
@@ -214,7 +219,7 @@ class WidgetsTC(EnvBasedTC):
     def test_float_widget(self):
         w = self.get_widget('Personne', 'salary', 'Float')
         self.assertEquals(w.name, 'salary')
-        format = now().strftime(self.vreg.property_value('ui.float-format'))
+        format = self.vreg.property_value('ui.float-format')
         self.assertEquals(w.render_example(self.request()), format % 1.23)
         self.assertDictEquals(w.attrs, {'accesskey': 's', 'maxlength': 15, 'size': 5})
         entity = self.etype_instance('Personne')
@@ -224,12 +229,12 @@ class WidgetsTC(EnvBasedTC):
         self.assertEquals(w.edit_render(entity),
                           u'<input type="hidden" name="edits-salary:X" value="__cubicweb_internal_field__"/>\n'
                           '<input type="text" name="salary:X" value="" accesskey="s" id="salary:X" maxlength="15" size="5" tabindex="0"/>')
-                          
-                          
+
+
     def test_float_widget_previous_value(self):
         w = self.get_widget('Personne', 'salary', 'Float')
         self.assertEquals(w.name, 'salary')
-        format = now().strftime(self.vreg.property_value('ui.float-format'))
+        format = self.vreg.property_value('ui.float-format')
         self.assertEquals(w.render_example(self.request()), format % 1.23)
         self.assertDictEquals(w.attrs, {'accesskey': 's', 'maxlength': 15, 'size': 5})
         req = self.request()
@@ -277,11 +282,11 @@ class WidgetsTC(EnvBasedTC):
 
 
     def test_password_widget(self):
-        w = self.get_widget('EUser', 'upassword', 'Password')
+        w = self.get_widget('CWUser', 'upassword', 'Password')
         self.assertEquals(w.name, 'upassword')
         self.assertEquals(w.render_example(self.request()), '')
         self.assertDictEquals(w.attrs, {'accesskey': 'u'})
-        entity = self.etype_instance('EUser')
+        entity = self.etype_instance('CWUser')
         entity.eid = 'X'
         self.assertEquals(w.required(entity), True)
         self.assertEquals(w.render(entity), '')
@@ -307,7 +312,7 @@ class WidgetsTC(EnvBasedTC):
             self.assertTextEquals(w.edit_render(entity),
                                   u'<input type="hidden" name="edits-nom:X" value="__cubicweb_internal_field__"/>\n'
                                   u'<input type="text" name="nom:X" value="" cubicweb:dataurl="http://testing.fr/cubicweb/json?pageid=None&amp;mode=remote&amp;fname=getnames" class="widget required" id="nom:X" tabindex="0" cubicweb:loadtype="auto" cubicweb:wdgtype="SuggestField"  cubicweb:accesskey="n" cubicweb:maxlength="64" cubicweb:size="40" />')
-                                  
+
         finally:
             del entity.widgets['nom']
 
@@ -330,7 +335,7 @@ class WidgetsTC(EnvBasedTC):
             self.assertTextEquals(w.edit_render(entity),
                                   u'<input type="hidden" name="edits-nom:X" value="__cubicweb_internal_field__"/>\n'
                                   u'<input type="text" name="nom:X" value="a name" cubicweb:dataurl="http://testing.fr/cubicweb/json?pageid=None&amp;mode=remote&amp;fname=getnames" class="widget required" id="nom:X" tabindex="0" cubicweb:loadtype="auto" cubicweb:wdgtype="SuggestField"  cubicweb:accesskey="n" cubicweb:maxlength="64" cubicweb:size="40" />')
-            
+
         finally:
             del entity.widgets['nom']
 
@@ -338,7 +343,7 @@ class WidgetsTC(EnvBasedTC):
     def test_nonregr_float_widget_with_none(self):
         w = self.get_widget('Personne', 'salary', 'Float')
         self.assertEquals(w.name, 'salary')
-        format = now().strftime(self.vreg.property_value('ui.float-format'))
+        format = self.vreg.property_value('ui.float-format')
         self.assertEquals(w.render_example(self.request()), format % 1.23)
         self.assertDictEquals(w.attrs, {'accesskey': 's', 'maxlength': 15, 'size': 5})
         req = self.request()
@@ -358,7 +363,7 @@ class WidgetsTC(EnvBasedTC):
         entity.autocomplete_initfuncs = {'nom' : 'getnames'}
         w = self.get_widget(entity, 'travaille', 'Societe')
         self.failUnless(isinstance(w, AutoCompletionWidget))
-        
-        
+
+
 if __name__ == '__main__':
     unittest_main()

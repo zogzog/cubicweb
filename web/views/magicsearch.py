@@ -2,7 +2,7 @@
 
 
 :organization: Logilab
-:copyright: 2001-2008 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+:copyright: 2001-2009 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 """
 
@@ -15,7 +15,7 @@ from rql import RQLSyntaxError, BadRQLQuery, parse
 from rql.nodes import Relation
 
 from cubicweb import Unauthorized
-from cubicweb.common.appobject import Component, SingletonComponent
+from cubicweb.view import Component
 
 LOGGER = getLogger('cubicweb.magicsearch')
 
@@ -41,7 +41,7 @@ def translate_rql_tree(rqlst, translations, schema):
     :param translations: the reverted l10n dict
 
     :type schema: `cubicweb.schema.Schema`
-    :param schema: the application's schema    
+    :param schema: the application's schema
     """
     # var_types is used as a map : var_name / var_type
     vartypes = {}
@@ -107,7 +107,7 @@ def resolve_ambiguities(var_types, ambiguous_nodes, schema):
         if rtype is None:
             continue
         relation.r_type = rtype
-    
+
 
 
 QUOTED_SRE = re.compile(r'(.*?)(["\'])(.+?)\2')
@@ -145,7 +145,7 @@ class BaseQueryProcessor(Component):
             return req.execute(*args)
         finally:
             # rollback necessary to avoid leaving the connection in a bad state
-            req.cnx.rollback() 
+            req.cnx.rollback()
 
     def preprocess_query(self, uquery, req):
         raise NotImplementedError()
@@ -161,10 +161,10 @@ class DoNotPreprocess(BaseQueryProcessor):
     priority = 0
     def preprocess_query(self, uquery, req):
         return uquery,
-    
+
 
 class QueryTranslator(BaseQueryProcessor):
-    """ parses through rql and translates into schema language entity names 
+    """ parses through rql and translates into schema language entity names
     and attributes
     """
     priority = 2
@@ -185,15 +185,15 @@ class QSPreProcessor(BaseQueryProcessor):
     preprocessing query in shortcut form to their RQL form
     """
     priority = 4
-    
+
     def preprocess_query(self, uquery, req):
-        """"""
+        """try to get rql from an unicode query string"""
         args = None
         self.req = req
         try:
             # Process as if there was a quoted part
             args = self._quoted_words_query(uquery)
-        ## No quoted part  
+        ## No quoted part
         except BadRQLQuery:
             words = uquery.split()
             if len(words) == 1:
@@ -205,7 +205,7 @@ class QSPreProcessor(BaseQueryProcessor):
             else:
                 args = self._multiple_words_query(words)
         return args
-    
+
     def _get_entity_type(self, word):
         """check if the given word is matching an entity type, return it if
         it's the case or raise BadRQLQuery if not
@@ -214,7 +214,7 @@ class QSPreProcessor(BaseQueryProcessor):
         try:
             return trmap(self.config, self.vreg.schema, self.req.lang)[etype]
         except KeyError:
-            raise BadRQLQuery('%s is not a valid entity name' % etype)        
+            raise BadRQLQuery('%s is not a valid entity name' % etype)
 
     def _get_attribute_name(self, word, eschema):
         """check if the given word is matching an attribute of the given entity type,
@@ -261,7 +261,7 @@ class QSPreProcessor(BaseQueryProcessor):
         if var is None:
             var = etype[0]
         return '%s %s %s%%(text)s' % (var, searchattr, searchop)
-        
+
     def _two_words_query(self, word1, word2):
         """Specific process for two words query (case (2) of preprocess_rql)
         """
@@ -272,7 +272,7 @@ class QSPreProcessor(BaseQueryProcessor):
         # else, suppose it's a shortcut like : Person Smith
         rql = '%s %s WHERE %s' % (etype, etype[0], self._complete_rql(word2, etype))
         return rql, {'text': word2}
-           
+
     def _three_words_query(self, word1, word2, word3):
         """Specific process for three words query (case (3) of preprocess_rql)
         """
@@ -336,20 +336,20 @@ class QSPreProcessor(BaseQueryProcessor):
             return self._three_words_query(word1, word2, quoted_part)
             # return ori_rql
         raise BadRQLQuery("unable to handle request %r" % ori_rql)
-    
 
- 
+
+
 class FullTextTranslator(BaseQueryProcessor):
     priority = 10
     name = 'text'
-    
+
     def preprocess_query(self, uquery, req):
         """suppose it's a plain text query"""
         return 'Any X WHERE X has_text %(text)s', {'text': uquery}
 
 
 
-class MagicSearchComponent(SingletonComponent):
+class MagicSearchComponent(Component):
     id  = 'magicsearch'
     def __init__(self, req, rset=None):
         super(MagicSearchComponent, self).__init__(req, rset)
@@ -392,33 +392,3 @@ class MagicSearchComponent(SingletonComponent):
             # let exception propagate
             return proc.process_query(uquery, req)
         raise BadRQLQuery(req._('sorry, the server is unable to handle this query'))
-
-
-# Do not make a strong dependency on NlpTools
-try:
-    from NlpTools.rqltools.client import RQLClient
-except ImportError:
-    LOGGER.info('could not import RQLClient (NlpTools)')
-else:
-    try:
-        from Pyro.errors import NamingError
-    except ImportError:
-        LOGGER.warning("pyro is not installed, can't try to connect to nlp server")
-    else:
-        try:
-            class NLPProcessor(BaseQueryProcessor):
-                priority = 8
-                nlp_agent = RQLClient('ivan')
-                def preprocess_query(self, uquery, req):
-                    try:
-                        answer = self.nlp_agent.get_translation(uquery)
-                        if not answer:
-                            raise BadRQLQuery(uquery)
-                        return answer or uquery,
-                    except Exception, ex:
-                        LOGGER.exception(str(ex))
-                        return uquery,
-
-        except NamingError: # NlpTools available but no server registered
-            LOGGER.warning('could not find any RQLServer object named "ivan"')
-

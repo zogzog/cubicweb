@@ -1,12 +1,16 @@
-"""Views/forms and actions for the CubicWeb web client
+"""Views, forms, actions... for the CubicWeb web client
 
 :organization: Logilab
-:copyright: 2001-2008 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+:copyright: 2001-2009 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 """
 __docformat__ = "restructuredtext en"
-    
+
+import os
+from tempfile import mktemp
+
 from rql import nodes
+
 
 def need_table_view(rset, schema):
     """return True if we think that a table view is more appropriate than a
@@ -48,11 +52,16 @@ def need_table_view(rset, schema):
             return True
     return False
 
-
+VID_BY_MIMETYPE = {'text/xml': 'xml',
+                   # XXX rss, owl...
+                  }
 def vid_from_rset(req, rset, schema):
     """given a result set, return a view id"""
     if rset is None:
         return 'index'
+    for mimetype in req.parse_accept_header('Accept'):
+        if mimetype in VID_BY_MIMETYPE:
+            return VID_BY_MIMETYPE[mimetype]
     nb_rows = len(rset)
     # empty resultset
     if nb_rows == 0 :
@@ -68,29 +77,34 @@ def vid_from_rset(req, rset, schema):
         return 'list'
     return 'table'
 
-def linksearch_match(req, rset):
-    """when searching an entity to create a relation, return True if entities in
-    the given rset may be used as relation end
-    """
-    try:
-        searchedtype = req.search_state[1][-1]
-    except IndexError:
-        return 0 # no searching for association
-    for etype in rset.column_types(0):
-        if etype != searchedtype:
-            return 0
-    return 1
-    
+
 def linksearch_select_url(req, rset):
     """when searching an entity to create a relation, return an url to select
     entities in the given rset
     """
     req.add_js( ('cubicweb.ajax.js', 'cubicweb.edition.js') )
-    target, link_eid, r_type, searchedtype = req.search_state[1]
+    target, eid, r_type, searchedtype = req.search_state[1]
     if target == 'subject':
-        id_fmt = '%s:%s:%%s' % (link_eid, r_type)
+        id_fmt = '%s:%s:%%s' % (eid, r_type)
     else:
-        id_fmt = '%%s:%s:%s' % (r_type, link_eid)
+        id_fmt = '%%s:%s:%s' % (r_type, eid)
     triplets = '-'.join(id_fmt % row[0] for row in rset.rows)
-    return "javascript: selectForAssociation('%s', '%s');" % (triplets,
-                                                              link_eid)
+    return "javascript: selectForAssociation('%s', '%s');" % (triplets, eid)
+
+
+class TmpFileViewMixin(object):
+    binary = True
+    content_type = 'application/octet-stream'
+    cache_max_age = 60*60*2 # stay in http cache for 2 hours by default
+
+    def call(self):
+        self.cell_call()
+
+    def cell_call(self, row=0, col=0):
+        self.row, self.col = row, col # in case one need it
+        tmpfile = mktemp('.png')
+        try:
+            self._generate(tmpfile)
+            self.w(open(tmpfile).read())
+        finally:
+            os.unlink(tmpfile)

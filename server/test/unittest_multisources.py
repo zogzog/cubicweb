@@ -1,6 +1,7 @@
 from os.path import dirname, join, abspath
+from datetime import datetime, timedelta
+
 from logilab.common.decorators import cached
-from mx.DateTime import now
 
 from cubicweb.devtools import TestServerConfiguration, init_test_database
 from cubicweb.devtools.apptest import RepositoryBasedTC
@@ -9,10 +10,10 @@ from cubicweb.devtools.repotest import do_monkey_patch, undo_monkey_patch
 class TwoSourcesConfiguration(TestServerConfiguration):
     sourcefile = 'sources_multi'
 
-        
+
 class ExternalSource1Configuration(TestServerConfiguration):
     sourcefile = 'sources_extern'
-        
+
 class ExternalSource2Configuration(TestServerConfiguration):
     sourcefile = 'sources_multi2'
 
@@ -23,7 +24,7 @@ cu.execute('INSERT Card X: X title "C4: Ze external card", X wikiid "zzz"')
 aff1 = cu.execute('INSERT Affaire X: X ref "AFFREF", X in_state S WHERE S name "pitetre"')[0][0]
 cnx2.commit()
 
-MTIME = now() - 0.1
+MTIME = datetime.now() - timedelta(0, 10)
 
 repo3, cnx3 = init_test_database('sqlite', config=ExternalSource2Configuration('data'))
 
@@ -40,6 +41,8 @@ class TwoSourcesTC(RepositoryBasedTC):
 
     def setUp(self):
         RepositoryBasedTC.setUp(self)
+        self.repo.sources[-1]._query_cache.clear()
+        self.repo.sources[-2]._query_cache.clear()
         # trigger discovery
         self.execute('Card X')
         self.execute('Affaire X')
@@ -52,7 +55,7 @@ class TwoSourcesTC(RepositoryBasedTC):
         self.ic2 = self.execute('INSERT Card X: X title "C2: Ze internal card", X wikiid "zzzi"')[0][0]
         self.commit()
         do_monkey_patch()
-        
+
     def tearDown(self):
         RepositoryBasedTC.tearDown(self)
         undo_monkey_patch()
@@ -62,15 +65,15 @@ class TwoSourcesTC(RepositoryBasedTC):
         self.assertEquals(len(rset), 4)
         rset = self.execute('Any X,T WHERE X title T, X eid > 1')
         self.assertEquals(len(rset), 4)
-        
+
     def test_metainformation(self):
         rset = self.execute('Card X ORDERBY T WHERE X title T')
         # 2 added to the system source, 2 added to the external source
         self.assertEquals(len(rset), 4)
         # since they are orderd by eid, we know the 3 first one is coming from the system source
         # and the others from external source
-        self.assertEquals(rset.get_entity(0, 0).metainformation(), 
-                          {'source': {'adapter': 'native', 'uri': 'system'}, 
+        self.assertEquals(rset.get_entity(0, 0).metainformation(),
+                          {'source': {'adapter': 'native', 'uri': 'system'},
                            'type': u'Card', 'extid': None})
         externent = rset.get_entity(3, 0)
         metainf = externent.metainformation()
@@ -80,7 +83,7 @@ class TwoSourcesTC(RepositoryBasedTC):
         etype = self.execute('Any ETN WHERE X is ET, ET name ETN, X eid %(x)s',
                              {'x': externent.eid}, 'x')[0][0]
         self.assertEquals(etype, 'Card')
-        
+
     def test_order_limit_offset(self):
         rsetbase = self.execute('Any W,X ORDERBY W,X WHERE X wikiid W')
         self.assertEquals(len(rsetbase), 4)
@@ -107,6 +110,7 @@ class TwoSourcesTC(RepositoryBasedTC):
 
     def test_synchronization(self):
         cu = cnx2.cursor()
+        assert cu.execute('Any X WHERE X eid %(x)s', {'x': aff1}, 'x')
         cu.execute('SET X ref "BLAH" WHERE X eid %(x)s', {'x': aff1}, 'x')
         aff2 = cu.execute('INSERT Affaire X: X ref "AFFREUX", X in_state S WHERE S name "pitetre"')[0][0]
         cnx2.commit()
@@ -140,7 +144,7 @@ class TwoSourcesTC(RepositoryBasedTC):
 
     def test_sort_func(self):
         self.execute('Affaire X ORDERBY DUMB_SORT(RF) WHERE X ref RF')
-        
+
     def test_sort_func_ambigous(self):
         self.execute('Any X ORDERBY DUMB_SORT(RF) WHERE X title RF')
 
@@ -149,7 +153,7 @@ class TwoSourcesTC(RepositoryBasedTC):
                                    'Card', self.session)
         rset = self.execute('Any X WHERE X eid IN (%s, %s)' % (iec1, self.ic1))
         self.assertEquals(sorted(r[0] for r in rset.rows), sorted([iec1, self.ic1]))
-        
+
     def test_greater_eid(self):
         rset = self.execute('Any X WHERE X eid > %s' % self.maxeid)
         self.assertEquals(len(rset.rows), 2) # self.ic1 and self.ic2
@@ -160,13 +164,13 @@ class TwoSourcesTC(RepositoryBasedTC):
         self.assertEquals(len(rset.rows), 2)
         # trigger discovery using another query
         crset = self.execute('Card X WHERE X title "glup"')
-        self.assertEquals(len(crset.rows), 1) 
+        self.assertEquals(len(crset.rows), 1)
         rset = self.execute('Any X WHERE X eid > %s' % self.maxeid)
         self.assertEquals(len(rset.rows), 3)
         rset = self.execute('Any MAX(X)')
         self.assertEquals(len(rset.rows), 1)
         self.assertEquals(rset.rows[0][0], crset[0][0])
-        
+
     def test_attr_unification_1(self):
         n1 = self.execute('INSERT Note X: X type "AFFREF"')[0][0]
         n2 = self.execute('INSERT Note X: X type "AFFREU"')[0][0]
@@ -191,14 +195,14 @@ class TwoSourcesTC(RepositoryBasedTC):
     def test_attr_unification_neq_2(self):
         # XXX complete
         self.execute('Any X,Y WHERE X is Card, Y is Affaire, X creation_date D, Y creation_date > D')
-        
+
     def test_union(self):
         afeids = self.execute('Affaire X')
-        ueids = self.execute('EUser X')
-        rset = self.execute('(Any X WHERE X is Affaire) UNION (Any X WHERE X is EUser)')
+        ueids = self.execute('CWUser X')
+        rset = self.execute('(Any X WHERE X is Affaire) UNION (Any X WHERE X is CWUser)')
         self.assertEquals(sorted(r[0] for r in rset.rows),
                           sorted(r[0] for r in afeids + ueids))
-        
+
     def test_subquery1(self):
         rsetbase = self.execute('Any W,X WITH W,X BEING (Any W,X ORDERBY W,X WHERE X wikiid W)')
         self.assertEquals(len(rsetbase), 4)
@@ -209,11 +213,11 @@ class TwoSourcesTC(RepositoryBasedTC):
         self.assertEquals(rset.rows, rsetbase.rows[2:4])
         rset = self.execute('Any W,X WITH W,X BEING (Any W,X ORDERBY W,X LIMIT 2 OFFSET 2 WHERE X wikiid W)')
         self.assertEquals(rset.rows, rsetbase.rows[2:4])
-        
+
     def test_subquery2(self):
         affeid = self.execute('Affaire X WHERE X ref "AFFREF"')[0][0]
-        rset =self.execute('Any X,AA,AB WITH X,AA,AB BEING (Any X,AA,AB WHERE E eid %(x)s, E in_state X, X name AA, X modification_date AB)',
-                           {'x': affeid})
+        rset = self.execute('Any X,AA,AB WITH X,AA,AB BEING (Any X,AA,AB WHERE E eid %(x)s, E in_state X, X name AA, X modification_date AB)',
+                            {'x': affeid})
         self.assertEquals(len(rset), 1)
         self.assertEquals(rset[0][1], "pitetre")
 
@@ -233,13 +237,13 @@ class TwoSourcesTC(RepositoryBasedTC):
                                                        {'x': aff1}, 'x'))
         self.set_debug(False)
         self.assertSetEquals(notstates, states)
-        
+
     def test_nonregr1(self):
         ueid = self.session.user.eid
         affaire = self.execute('Affaire X WHERE X ref "AFFREF"').get_entity(0, 0)
         self.execute('Any U WHERE U in_group G, (G name IN ("managers", "logilab") OR (X require_permission P?, P name "bla", P require_group G)), X eid %(x)s, U eid %(u)s',
                      {'x': affaire.eid, 'u': ueid})
-        
+
     def test_nonregr2(self):
         treid = self.session.user.latest_trinfo().eid
         rset = self.execute('Any X ORDERBY D DESC WHERE E eid %(x)s, E wf_info_for X, X modification_date D',
@@ -250,7 +254,7 @@ class TwoSourcesTC(RepositoryBasedTC):
 
     def test_nonregr3(self):
         self.execute('DELETE Card X WHERE X eid %(x)s, NOT X multisource_inlined_rel Y', {'x': self.ic1})
-        
+
 if __name__ == '__main__':
     from logilab.common.testlib import unittest_main
     unittest_main()

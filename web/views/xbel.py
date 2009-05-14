@@ -1,7 +1,7 @@
 """xbel views
 
 :organization: Logilab
-:copyright: 2001-2008 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+:copyright: 2001-2009 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 """
 __docformat__ = "restructuredtext en"
@@ -9,18 +9,20 @@ _ = unicode
 
 from logilab.mtconverter import html_escape
 
-from cubicweb.web.views.baseviews import XmlView, EntityView
+from cubicweb.selectors import implements
+from cubicweb.view import EntityView
+from cubicweb.web.views.xmlrss import XMLView
 
 
-class XbelView(XmlView):
+class XbelView(XMLView):
     id = 'xbel'
     title = _('xbel')
     templatable = False
-    content_type = 'text/xml' #application/xbel+xml 
-    
+    content_type = 'text/xml' #application/xbel+xml
+
     def cell_call(self, row, col):
         self.wview('xbelitem', self.rset, row=row, col=col)
-        
+
     def call(self):
         """display a list of entities by calling their <item_vid> view"""
         title = self.page_title()
@@ -32,7 +34,7 @@ class XbelView(XmlView):
         for i in xrange(self.rset.rowcount):
             self.cell_call(i, 0)
         self.w(u"</xbel>")
-    
+
 
 class XbelItemView(EntityView):
     id = 'xbelitem'
@@ -45,10 +47,11 @@ class XbelItemView(EntityView):
 
     def url(self, entity):
         return entity.absolute_url()
-        
+
+
 class XbelItemBookmarkView(XbelItemView):
-    accepts = ('Bookmark',)
+    __select__ = implements('Bookmark')
 
     def url(self, entity):
         return entity.actual_url()
-        
+

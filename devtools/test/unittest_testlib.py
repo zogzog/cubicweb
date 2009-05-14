@@ -22,14 +22,14 @@ class WebTestTC(TestCase):
             def test_error_view(self):
                 self.add_entity('Bug', title=u"bt")
                 self.view('raising', self.execute('Bug B'), template=None)
-            
+
             def test_correct_view(self):
-                self.view('primary', self.execute('EUser U'), template=None)
-            
+                self.view('primary', self.execute('CWUser U'), template=None)
+
         tests = [MyWebTest('test_error_view'), MyWebTest('test_correct_view')]
         result = self.runner.run(TestSuite(tests))
         self.assertEquals(result.testsRun, 2)
-        self.assertEquals(len(result.errors), 0)        
+        self.assertEquals(len(result.errors), 0)
         self.assertEquals(len(result.failures), 1)
 
 
@@ -97,13 +97,13 @@ class HTMLPageInfoTC(TestCase):
     def test_source1(self):
         """make sure source is stored correctly"""
         self.assertEquals(self.page_info.source, HTML_PAGE2)
-        
+
     def test_source2(self):
         """make sure source is stored correctly - raise exception"""
         parser = htmlparser.DTDValidator()
         self.assertRaises(AssertionError, parser.parse_string, HTML_PAGE_ERROR)
 
-        
+
     def test_has_title_no_level(self):
         """tests h? tags information"""
         self.assertEquals(self.page_info.has_title('Test'), True)
@@ -128,7 +128,7 @@ class HTMLPageInfoTC(TestCase):
         self.assertEquals(self.page_info.has_title_regexp('h[23] title', 2), True)
         self.assertEquals(self.page_info.has_title_regexp('h[23] title', 3), True)
         self.assertEquals(self.page_info.has_title_regexp('h[23] title', 4), False)
-    
+
     def test_appears(self):
         """tests PageInfo.appears()"""
         self.assertEquals(self.page_info.appears('CW'), True)
@@ -151,4 +151,3 @@ class HTMLPageInfoTC(TestCase):
 
 if __name__ == '__main__':
     unittest_main()
-

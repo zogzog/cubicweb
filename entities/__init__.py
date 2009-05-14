@@ -8,12 +8,12 @@ __docformat__ = "restructuredtext en"
 
 from warnings import warn
 
-from logilab.common.deprecation import deprecated_function
+from logilab.common.deprecation import deprecated_function, obsolete
 from logilab.common.decorators import cached
 
 from cubicweb import Unauthorized, typed_eid
-from cubicweb.common.utils import dump_class
-from cubicweb.common.entity import Entity
+from cubicweb.entity import Entity
+from cubicweb.utils import dump_class
 from cubicweb.schema import FormatConstraint
 
 from cubicweb.interfaces import IBreadCrumbs, IFeed
@@ -23,38 +23,9 @@ class AnyEntity(Entity):
     """an entity instance has e_schema automagically set on the class and
     instances have access to their issuing cursor
     """
-    id = 'Any'   
-    __rtags__ = {
-        'is' : ('generated', 'link'),
-        'is_instance_of' : ('generated', 'link'),
-        'identity' : ('generated', 'link'),
-        
-        # use primary and not generated for eid since it has to be an hidden
-        # field in edition
-        ('eid',                '*', 'subject'): 'primary',
-        ('creation_date',      '*', 'subject'): 'generated',
-        ('modification_date',  '*', 'subject'): 'generated',
-        ('has_text',           '*', 'subject'): 'generated',
-        
-        ('require_permission', '*', 'subject') : ('generated', 'link'),
-        ('owned_by',           '*', 'subject') : ('generated', 'link'),
-        ('created_by',         '*', 'subject') : ('generated', 'link'),
-        
-        ('wf_info_for',        '*', 'subject') : ('generated', 'link'),
-        ('wf_info_for',        '*', 'object')  : ('generated', 'link'),
-                 
-        ('description',        '*', 'subject'): 'secondary',
-
-        # XXX should be moved in their respective cubes
-        ('filed_under',        '*', 'subject') : ('generic', 'link'),
-        ('filed_under',        '*', 'object')  : ('generic', 'create'),
-        # generated since there is a componant to handle comments
-        ('comments',           '*', 'subject') : ('generated', 'link'),
-        ('comments',           '*', 'object')  : ('generated', 'link'),
-        }
-
+    id = 'Any'
     __implements__ = (IBreadCrumbs, IFeed)
-    
+
     @classmethod
     def selected(cls, etype):
         """the special Any entity is used as the default factory, so
@@ -67,7 +38,7 @@ class AnyEntity(Entity):
         usercls.id = etype
         usercls.__initialize__()
         return usercls
-    
+
     fetch_attrs = ('modification_date',)
     @classmethod
     def fetch_order(cls, attr, var):
@@ -75,7 +46,7 @@ class AnyEntity(Entity):
         this type are fetched
         """
         return cls.fetch_unrelated_order(attr, var)
-    
+
     @classmethod
     def fetch_unrelated_order(cls, attr, var):
         """class method used to control sort order when multiple entities of
@@ -87,30 +58,15 @@ class AnyEntity(Entity):
         return None
 
     @classmethod
-    def __initialize__(cls): 
+    def __initialize__(cls):
         super(ANYENTITY, cls).__initialize__() # XXX
-        eschema = cls.e_schema
-        eschema.format_fields = {}
         # set a default_ATTR method for rich text format fields
-        for attr, formatattr in eschema.rich_text_fields():
-            if not hasattr(cls, 'default_%s' % formatattr):
-                setattr(cls, 'default_%s' % formatattr, cls._default_format)
-            eschema.format_fields[formatattr] = attr
-            
-    def _default_format(self):
-        return self.req.property_value('ui.default-text-format')
+        # XXX move this away once the old widgets have been dropped!
+        eschema = cls.e_schema
+        for metaattr, (metadata, attr) in eschema.meta_attributes().iteritems():
+            if metadata == 'format' and not hasattr(cls, 'default_%s' % metaattr):
+                setattr(cls, 'default_%s' % metaattr, cls._default_format)
 
-    def use_fckeditor(self, attr):
-        """return True if fckeditor should be used to edit entity's attribute named
-        `attr`, according to user preferences
-        """
-        req = self.req
-        if req.property_value('ui.fckeditor') and self.has_format(attr):
-            if self.has_eid() or '%s_format' % attr in self:
-                return self.format(attr) == 'text/html'
-            return req.property_value('ui.default-text-format') == 'text/html'
-        return False
-    
     # meta data api ###########################################################
 
     def dc_title(self):
@@ -128,7 +84,7 @@ class AnyEntity(Entity):
     def dc_long_title(self):
         """return a more detailled title for this entity"""
         return self.dc_title()
-    
+
     def dc_description(self, format='text/plain'):
         """return a suitable description for this entity"""
         if self.e_schema.has_subject_relation('description'):
@@ -155,7 +111,6 @@ class AnyEntity(Entity):
     def dc_type(self, form=''):
         """return the display name for the type of this entity (translated)"""
         return self.e_schema.display_name(self.req, form)
-    display_name = deprecated_function(dc_type) # require agueol > 0.8.1, asteretud > 0.10.0 for removal
 
     def dc_language(self):
         """return language used by this entity (translated)"""
@@ -166,10 +121,10 @@ class AnyEntity(Entity):
                                  'internationalizable'):
                 return self.req._(self.req.user.property_value('ui.language'))
         return self.req._(self.vreg.property_value('ui.language'))
-        
+
     @property
     def creator(self):
-        """return the EUser entity which has created this entity, or None if
+        """return the CWUser entity which has created this entity, or None if
         unknown or if the curent user doesn't has access to this euser
         """
         try:
@@ -202,28 +157,9 @@ class AnyEntity(Entity):
 
     def rss_feed_url(self):
         return self.absolute_url(vid='rss')
-    
-    # abstractions making the whole things (well, some at least) working ######
-    
-    @classmethod
-    def get_widget(cls, rschema, x='subject'):
-        """return a widget to view or edit a relation
 
-        notice that when the relation support multiple target types, the widget
-        is necessarily the same for all those types
-        """
-        # let ImportError propage if web par isn't available
-        from cubicweb.web.widgets import widget
-        if isinstance(rschema, basestring):
-            rschema = cls.schema.rschema(rschema)
-        if x == 'subject':
-            tschema = rschema.objects(cls.e_schema)[0]
-            wdg = widget(cls.vreg, cls, rschema, tschema, 'subject')
-        else:
-            tschema = rschema.subjects(cls.e_schema)[0]
-            wdg = widget(cls.vreg, tschema, rschema, cls, 'object')
-        return wdg
-        
+    # abstractions making the whole things (well, some at least) working ######
+
     def sortvalue(self, rtype=None):
         """return a value which can be used to sort this entity or given
         entity's attribute
@@ -236,141 +172,7 @@ class AnyEntity(Entity):
             return self.printable_value(rtype, format='text/plain').lower()
         return value
 
-    def after_deletion_path(self):
-        """return (path, parameters) which should be used as redirect
-        information when this entity is being deleted
-        """
-        return str(self.e_schema).lower(), {}
-
-    def add_related_schemas(self):
-        """this is actually used ui method to generate 'addrelated' actions from
-        the schema.
-
-        If you're using explicit 'addrelated' actions for an entity types, you
-        should probably overrides this method to return an empty list else you
-        may get some unexpected actions.
-        """
-        req = self.req
-        eschema = self.e_schema
-        for role, rschemas in (('subject', eschema.subject_relations()),
-                               ('object', eschema.object_relations())):
-            for rschema in rschemas:
-                if rschema.is_final():
-                    continue
-                # check the relation can be added as well
-                if role == 'subject'and not rschema.has_perm(req, 'add', fromeid=self.eid):
-                    continue
-                if role == 'object'and not rschema.has_perm(req, 'add', toeid=self.eid):
-                    continue
-                # check the target types can be added as well
-                for teschema in rschema.targets(eschema, role):
-                    if not self.relation_mode(rschema, teschema, role) == 'create':
-                        continue
-                    if teschema.has_local_role('add') or teschema.has_perm(req, 'add'):
-                        yield rschema, teschema, role
-
-    def relation_mode(self, rtype, targettype, role='subject'):
-        """return a string telling if the given relation is usually created
-        to a new entity ('create' mode) or to an existant entity ('link' mode)
-        """
-        return self.rtags.get_mode(rtype, targettype, role)
-
     # edition helper functions ################################################
-    
-    def relations_by_category(self, categories=None, permission=None):
-        if categories is not None:
-            if not isinstance(categories, (list, tuple, set, frozenset)):
-                categories = (categories,)
-            if not isinstance(categories, (set, frozenset)):
-                categories = frozenset(categories)
-        eschema, rtags  = self.e_schema, self.rtags
-        if self.has_eid():
-            eid = self.eid
-        else:
-            eid = None
-        for rschema, targetschemas, role in eschema.relation_definitions(True):
-            if rschema in ('identity', 'has_text'):
-                continue
-            # check category first, potentially lower cost than checking
-            # permission which may imply rql queries
-            if categories is not None:
-                targetschemas = [tschema for tschema in targetschemas
-                                 if rtags.get_tags(rschema.type, tschema.type, role).intersection(categories)]
-                if not targetschemas:
-                    continue
-            tags = rtags.get_tags(rschema.type, role=role)
-            if permission is not None:
-                # tag allowing to hijack the permission machinery when
-                # permission is not verifiable until the entity is actually
-                # created...
-                if eid is None and ('%s_on_new' % permission) in tags:
-                    yield (rschema, targetschemas, role)
-                    continue
-                if rschema.is_final():
-                    if not rschema.has_perm(self.req, permission, eid):
-                        continue
-                elif role == 'subject':
-                    if not ((eid is None and rschema.has_local_role(permission)) or
-                            rschema.has_perm(self.req, permission, fromeid=eid)):
-                        continue
-                    # on relation with cardinality 1 or ?, we need delete perm as well
-                    # if the relation is already set
-                    if (permission == 'add'
-                        and rschema.cardinality(eschema, targetschemas[0], role) in '1?'
-                        and self.has_eid() and self.related(rschema.type, role)
-                        and not rschema.has_perm(self.req, 'delete', fromeid=eid,
-                                                 toeid=self.related(rschema.type, role)[0][0])):
-                        continue
-                elif role == 'object':
-                    if not ((eid is None and rschema.has_local_role(permission)) or
-                            rschema.has_perm(self.req, permission, toeid=eid)):
-                        continue
-                    # on relation with cardinality 1 or ?, we need delete perm as well
-                    # if the relation is already set
-                    if (permission == 'add'
-                        and rschema.cardinality(targetschemas[0], eschema, role) in '1?'
-                        and self.has_eid() and self.related(rschema.type, role)
-                        and not rschema.has_perm(self.req, 'delete', toeid=eid,
-                                                 fromeid=self.related(rschema.type, role)[0][0])):
-                        continue
-            yield (rschema, targetschemas, role)
-
-    def srelations_by_category(self, categories=None, permission=None):
-        result = []
-        for rschema, ttypes, target in self.relations_by_category(categories,
-                                                                  permission):
-            if rschema.is_final():
-                continue
-            result.append( (rschema.display_name(self.req, target), rschema, target) )
-        return sorted(result)
-                
-    def attribute_values(self, attrname):
-        if self.has_eid() or attrname in self:
-            try:
-                values = self[attrname]
-            except KeyError:
-                values = getattr(self, attrname)
-            # actual relation return a list of entities
-            if isinstance(values, list):
-                return [v.eid for v in values]
-            return (values,)
-        # the entity is being created, try to find default value for
-        # this attribute
-        try:
-            values = self.req.form[attrname]
-        except KeyError:
-            try:
-                values = self[attrname] # copying
-            except KeyError:
-                values = getattr(self, 'default_%s' % attrname,
-                                 self.e_schema.default(attrname))
-                if callable(values):
-                    values = values()
-        if values is None:
-            values = ()
-        elif not isinstance(values, (list, tuple)):
-            values = (values,)
-        return values
 
     def linked_to(self, rtype, target, remove=True):
         """if entity should be linked to another using __linkto form param for
@@ -399,6 +201,14 @@ class AnyEntity(Entity):
         self.__linkto[(rtype, target)] = linkedto
         return linkedto
 
+    # edit controller callbacks ###############################################
+
+    def after_deletion_path(self):
+        """return (path, parameters) which should be used as redirect
+        information when this entity is being deleted
+        """
+        return str(self.e_schema).lower(), {}
+
     def pre_web_edit(self):
         """callback called by the web editcontroller when an entity will be
         created/modified, to let a chance to do some entity specific stuff.
@@ -406,17 +216,99 @@ class AnyEntity(Entity):
         Do nothing by default.
         """
         pass
-    
+
     # server side helpers #####################################################
-    
+
     def notification_references(self, view):
         """used to control References field of email send on notification
         for this entity. `view` is the notification view.
-        
+
         Should return a list of eids which can be used to generate message ids
         of previously sent email
         """
         return ()
+
+    # XXX deprecates, may be killed once old widgets system is gone ###########
+
+    @classmethod
+    def get_widget(cls, rschema, x='subject'):
+        """return a widget to view or edit a relation
+
+        notice that when the relation support multiple target types, the widget
+        is necessarily the same for all those types
+        """
+        # let ImportError propage if web par isn't available
+        from cubicweb.web.widgets import widget
+        if isinstance(rschema, basestring):
+            rschema = cls.schema.rschema(rschema)
+        if x == 'subject':
+            tschema = rschema.objects(cls.e_schema)[0]
+            wdg = widget(cls.vreg, cls, rschema, tschema, 'subject')
+        else:
+            tschema = rschema.subjects(cls.e_schema)[0]
+            wdg = widget(cls.vreg, tschema, rschema, cls, 'object')
+        return wdg
+
+    @obsolete('use EntityFieldsForm.subject_relation_vocabulary')
+    def subject_relation_vocabulary(self, rtype, limit):
+        from cubicweb.web.form import EntityFieldsForm
+        return EntityFieldsForm(self.req, None, entity=self).subject_relation_vocabulary(rtype, limit)
+
+    @obsolete('use EntityFieldsForm.object_relation_vocabulary')
+    def object_relation_vocabulary(self, rtype, limit):
+        from cubicweb.web.form import EntityFieldsForm
+        return EntityFieldsForm(self.req, None, entity=self).object_relation_vocabulary(rtype, limit)
+
+    @obsolete('use AutomaticEntityForm.[e]relations_by_category')
+    def relations_by_category(self, categories=None, permission=None):
+        from cubicweb.web.views.autoform import AutomaticEntityForm
+        return AutomaticEntityForm.erelations_by_category(self, categories, permission)
+
+    @obsolete('use AutomaticEntityForm.[e]srelations_by_category')
+    def srelations_by_category(self, categories=None, permission=None):
+        from cubicweb.web.views.autoform import AutomaticEntityForm
+        return AutomaticEntityForm.esrelations_by_category(self, categories, permission)
+
+    def _default_format(self):
+        return self.req.property_value('ui.default-text-format')
+
+    def attribute_values(self, attrname):
+        if self.has_eid() or attrname in self:
+            try:
+                values = self[attrname]
+            except KeyError:
+                values = getattr(self, attrname)
+            # actual relation return a list of entities
+            if isinstance(values, list):
+                return [v.eid for v in values]
+            return (values,)
+        # the entity is being created, try to find default value for
+        # this attribute
+        try:
+            values = self.req.form[attrname]
+        except KeyError:
+            try:
+                values = self[attrname] # copying
+            except KeyError:
+                values = getattr(self, 'default_%s' % attrname,
+                                 self.e_schema.default(attrname))
+                if callable(values):
+                    values = values()
+        if values is None:
+            values = ()
+        elif not isinstance(values, (list, tuple)):
+            values = (values,)
+        return values
+
+    def use_fckeditor(self, attr):
+        """return True if fckeditor should be used to edit entity's attribute named
+        `attr`, according to user preferences
+        """
+        if self.req.use_fckeditor() and self.e_schema.has_metadata(attr, 'format'):
+            if self.has_eid() or '%s_format' % attr in self:
+                return self.attr_metadata(attr, 'format') == 'text/html'
+            return self.req.property_value('ui.default-text-format') == 'text/html'
+        return False
 
 # XXX:  store a reference to the AnyEntity class since it is hijacked in goa
 #       configuration and we need the actual reference to avoid infinite loops

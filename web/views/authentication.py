@@ -1,7 +1,7 @@
 """user authentication component
 
 :organization: Logilab
-:copyright: 2001-2008 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+:copyright: 2001-2009 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 """
 __docformat__ = "restructuredtext en"
@@ -12,11 +12,11 @@ from cubicweb import AuthenticationError, BadConnectionId
 from cubicweb.dbapi import repo_connect, ConnectionProperties
 from cubicweb.web import ExplicitLogin, InvalidSession
 from cubicweb.web.application import AbstractAuthenticationManager
-    
+
 
 class RepositoryAuthenticationManager(AbstractAuthenticationManager):
     """authenticate user associated to a request and check session validity"""
-    
+
     def __init__(self):
         self.repo = self.config.repository(self.vreg)
         self.log_queries = self.config['query-log-file']
@@ -51,10 +51,22 @@ class RepositoryAuthenticationManager(AbstractAuthenticationManager):
         # associate the connection to the current request
         req.set_connection(cnx, user)
         return cnx
-        
+
+    def login_from_email(self, login):
+        # XXX should not be called from web interface
+        session = self.repo.internal_session()
+        try:
+            rset = session.execute('Any L WHERE U login L, U primary_email M, '
+                                   'M address %(login)s', {'login': login})
+            if rset.rowcount == 1:
+                login = rset[0][0]
+        finally:
+            session.close()
+        return login
+
     def authenticate(self, req, _login=None, _password=None):
         """authenticate user and return corresponding user object
-        
+
         :raise ExplicitLogin: if authentication is required (no authentication
         info found or wrong user/password)
 
@@ -66,6 +78,8 @@ class RepositoryAuthenticationManager(AbstractAuthenticationManager):
             login, password = _login, _password
         else:
             login, password = req.get_authorization()
+        if self.vreg.config['allow-email-login'] and '@' in (login or u''):
+            login = self.login_from_email(login)
         if not login:
             # No session and no login -> try anonymous
             login, password = self.vreg.config.anonymous_user()

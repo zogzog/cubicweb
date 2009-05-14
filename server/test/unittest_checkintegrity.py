@@ -17,6 +17,6 @@ class CheckIntegrityTC(TestCase):
         finally:
             sys.stderr = sys.__stderr__
             sys.stdout = sys.__stdout__
-        
+
 if __name__ == '__main__':
     unittest_main()

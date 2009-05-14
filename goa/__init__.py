@@ -1,67 +1,10 @@
 """cubicweb on google appengine
 
 :organization: Logilab
-:copyright: 2001-2008 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+:copyright: 2001-2009 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 """
 __docformat__ = "restructuredtext en"
-
-
-from datetime import datetime, time, date
-from mx.DateTime import DateTime, Date, Time
-
-def mx2datetime(mxobj, yamstype):
-    """converts a mx date object (DateTime, Date or Time) into a
-    regular python datetime object
-    """
-    #if yamstype == 'Datetime':
-    # don't use date, db model doesn't actually support it, only datetime
-    return datetime(mxobj.year, mxobj.month, mxobj.day,
-                    mxobj.hour, mxobj.minute, int(mxobj.second))
-#     elif yamstype == 'Date':
-#         return date(mxobj.year, mxobj.month, mxobj.day)
-#     # XXX don't support time either, what should we do here ?
-#     return time(mxobj.hour, mxobj.minute, int(mxobj.second))
-
-def datetime2mx(datetimeobj, yamstype=None):
-    """converts a mx date object (DateTime, Date or Time) into a
-    regular python datetime object
-    """
-    if yamstype is None:
-        yamstype = guess_yamstype_for_date(datetimeobj)
-    assert yamstype is not None
-    if yamstype == 'Datetime':
-        # don't use date, db model doesn't actually support it, only datetime
-        return DateTime(datetimeobj.year, datetimeobj.month, datetimeobj.day,
-                        datetimeobj.hour, datetimeobj.minute, int(datetimeobj.second))
-    elif yamstype == 'Date':
-        return Date(datetimeobj.year, datetimeobj.month, datetimeobj.day)
-    # XXX don't support time either, what should we do here ?
-    return Time(datetimeobj.hour, datetimeobj.minute, int(datetimeobj.second))
-
-
-def guess_yamstype_for_date(datetimeobj):
-    """guesses yams correct type according to `datetimeobj`'s type"""
-    if isinstance(datetimeobj, datetime):
-        return 'Datetime'
-    elif isinstance(datetimeobj, date):
-        return 'Date'
-    elif isinstance(datetimeobj, time):
-        return 'Time'
-    return None
-
-
-def use_mx_for_dates(func):
-    """decorator to convert func's return value into mx objects
-    instead of datetime objects
-    """
-    def wrapper(*args, **kwargs):
-        value = func(*args, **kwargs)
-        yamstype = guess_yamstype_for_date(value)
-        if yamstype is None:
-            return value
-        return datetime2mx(value, yamstype)
-    return wrapper
 
 
 try:
@@ -74,7 +17,7 @@ except ImportError:
     pass
 else:
 
-    import os    
+    import os
     _SS = os.environ.get('SERVER_SOFTWARE')
     if _SS is None:
         MODE = 'test'
@@ -87,7 +30,7 @@ else:
     from cubicweb.goa.gaesource import GAESource
     SOURCE_TYPES['gae'] = GAESource
 
-    
+
     def do_monkey_patch():
 
         # monkey patch yams Bytes validator since it should take a bytes string with gae
@@ -113,16 +56,16 @@ else:
 
         # XXX monkey patch cubicweb.schema.CubicWebSchema to have string eid with
         #     optional cardinality (since eid is set after the validation)
-        
+
         import re
         from yams import buildobjs as ybo
-        
+
         def add_entity_type(self, edef):
             edef.name = edef.name.encode()
             assert re.match(r'[A-Z][A-Za-z0-9]*[a-z]+[0-9]*$', edef.name), repr(edef.name)
             eschema = super(CubicWebSchema, self).add_entity_type(edef)
             if not eschema.is_final():
-                # automatically add the eid relation to non final entity types 
+                # automatically add the eid relation to non final entity types
                 rdef = ybo.RelationDefinition(eschema.type, 'eid', 'Bytes',
                                               cardinality='?1', uid=True)
                 self.add_relation_def(rdef)
@@ -130,7 +73,7 @@ else:
                 self.add_relation_def(rdef)
             self._eid_index[eschema.eid] = eschema
             return eschema
-        
+
         from cubicweb.schema import CubicWebSchema
         CubicWebSchema.add_entity_type = add_entity_type
 
@@ -150,9 +93,9 @@ else:
             cubes = config['included-cubes'] + config['included-yams-cubes']
             return config.expand_cubes(cubes)
         repository.Repository.get_cubes = get_cubes
-        
+
         from rql import RQLHelper
-        RQLHelper.simplify = lambda x,r: None
+        RQLHelper.simplify = lambda x, r: None
 
         # activate entity caching on the server side
 

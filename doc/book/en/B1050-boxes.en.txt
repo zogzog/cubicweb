@@ -1,9 +1,0 @@
-.. -*- coding: utf-8 -*-
-
-Boxes
-=========
-
-[WRITE ME]
-
-* boxes in the web interface
-

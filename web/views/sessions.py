@@ -2,18 +2,18 @@
 object :/
 
 :organization: Logilab
-:copyright: 2001-2008 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+:copyright: 2001-2009 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 """
 __docformat__ = "restructuredtext en"
 
-from cubicweb.web import ExplicitLogin, InvalidSession
+from cubicweb.web import InvalidSession
 from cubicweb.web.application import AbstractSessionManager
 
 
 class InMemoryRepositorySessionManager(AbstractSessionManager):
     """manage session data associated to a session identifier"""
-    
+
     def __init__(self):
         AbstractSessionManager.__init__(self)
         # XXX require a RepositoryAuthenticationManager which violates
@@ -23,7 +23,7 @@ class InMemoryRepositorySessionManager(AbstractSessionManager):
 
     def current_sessions(self):
         return self._sessions.values()
-    
+
     def get_session(self, req, sessionid):
         """return existing session for the given session identifier"""
         if not sessionid in self._sessions:
@@ -47,13 +47,13 @@ class InMemoryRepositorySessionManager(AbstractSessionManager):
 
     def open_session(self, req):
         """open and return a new session for the given request
-        
+
         :raise ExplicitLogin: if authentication is required
         """
         session = self.authmanager.authenticate(req)
         self._sessions[session.sessionid] = session
         return session
-    
+
     def close_session(self, session):
         """close session on logout or on invalid session detected (expired out,
         corrupted...)
@@ -66,4 +66,3 @@ class InMemoryRepositorySessionManager(AbstractSessionManager):
             # already closed, may occurs if the repository session expired but
             # not the web session
             pass
-    

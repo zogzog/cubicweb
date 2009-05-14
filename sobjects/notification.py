@@ -1,7 +1,7 @@
 """some hooks and views to handle notification on entity's changes
 
 :organization: Logilab
-:copyright: 2001-2008 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+:copyright: 2001-2009 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 """
 __docformat__ = "restructuredtext en"
@@ -16,12 +16,11 @@ except ImportError:
         return 'XXX'
 
 from logilab.common.textutils import normalize_text
+from logilab.common.deprecation import class_renamed
 
 from cubicweb import RegistryException
-from cubicweb.common.view import EntityView
-from cubicweb.common.appobject import Component
-from cubicweb.common.registerers import accepts_registerer
-from cubicweb.common.selectors import accept
+from cubicweb.selectors import implements, yes
+from cubicweb.view import EntityView, Component
 from cubicweb.common.mail import format_mail
 
 from cubicweb.server.pool import PreCommitOperation
@@ -37,12 +36,10 @@ class RecipientsFinder(Component):
     email addresses specified in the configuration are used
     """
     id = 'recipients_finder'
-    __registerer__ = accepts_registerer
-    __selectors__ = (accept,)
-    accepts = ('Any',)
-    user_rql = ('Any X,E,A WHERE X is EUser, X in_state S, S name "activated",'
+    __select__ = yes()
+    user_rql = ('Any X,E,A WHERE X is CWUser, X in_state S, S name "activated",'
                 'X primary_email E, E address A')
-    
+
     def recipients(self):
         mode = self.config['default-recipients-mode']
         if mode == 'users':
@@ -58,7 +55,7 @@ class RecipientsFinder(Component):
             dests = []
         return dests
 
-    
+
 # hooks #######################################################################
 
 class RenderAndSendNotificationView(PreCommitOperation):
@@ -67,12 +64,12 @@ class RenderAndSendNotificationView(PreCommitOperation):
         if self.view.rset[0][0] in self.session.query_data('pendingeids', ()):
             return # entity added and deleted in the same transaction
         self.view.render_and_send(**getattr(self, 'viewargs', {}))
-        
+
 class StatusChangeHook(Hook):
     """notify when a workflowable entity has its state modified"""
     events = ('after_add_entity',)
     accepts = ('TrInfo',)
-    
+
     def call(self, session, entity):
         if not entity.from_state: # not a transition
             return
@@ -135,15 +132,12 @@ class NotificationView(EntityView):
     * set a content attribute to define the content of the email (unless you
       override call)
     """
-    accepts = ()
-    id = None
     msgid_timestamp = True
-    
+
     def recipients(self):
-        finder = self.vreg.select_component('recipients_finder',
-                                            req=self.req, rset=self.rset)
+        finder = self.vreg.select_component('recipients_finder', self.req, self.rset)
         return finder.recipients()
-        
+
     def subject(self):
         entity = self.entity(0, 0)
         subject = self.req._(self.message)
@@ -156,7 +150,7 @@ class NotificationView(EntityView):
         # req is actually a session (we are on the server side), and we have to
         # prevent nested internal session
         return self.req.actual_session().user.login
-    
+
     def context(self, **kwargs):
         entity = self.entity(0, 0)
         for key, val in kwargs.iteritems():
@@ -168,7 +162,7 @@ class NotificationView(EntityView):
                        'url': entity.absolute_url(),
                        'title': entity.dc_long_title(),})
         return kwargs
-    
+
     def cell_call(self, row, col=0, **kwargs):
         self.w(self.req._(self.content) % self.context(**kwargs))
 
@@ -180,8 +174,7 @@ class NotificationView(EntityView):
         self._kwargs = kwargs
         recipients = self.recipients()
         if not recipients:
-            self.info('skipping %s%s notification which has no recipients',
-                      self.id, self.accepts)
+            self.info('skipping %s notification, no recipients', self.id)
             return
         if not isinstance(recipients[0], tuple):
             from warnings import warn
@@ -205,8 +198,9 @@ class NotificationView(EntityView):
             # since the same view (eg self) may be called multiple time and we
             # need a fresh stream at each iteration, reset it explicitly
             self.w = None
-            # call dispatch before subject to set .row/.col attributes on the view :/
-            content = self.dispatch(row=0, col=0, **kwargs)
+            # XXX call render before subject to set .row/.col attributes on the
+            #     view
+            content = self.render(row=0, col=0, **kwargs)
             subject = self.subject()
             msg = format_mail(userdata, [emailaddr], content, subject,
                               config=self.config, msgid=msgid, references=refs)
@@ -244,7 +238,7 @@ def parse_message_id(msgid, appid):
     if appid != fromappid or host != gethostname():
         return None
     return values
-    
+
 
 class StatusChangeMixIn(object):
     id = 'notif_status_change'
@@ -260,10 +254,17 @@ url: %(url)s
 """)
 
 
-class ContentAddedMixIn(object):
-    """define emailcontent view for entity types for which you want to be notified
-    """
-    id = 'notif_after_add_entity' 
+###############################################################################
+# Actual notification views.                                                  #
+#                                                                             #
+# disable them at the recipients_finder level if you don't want them          #
+###############################################################################
+
+# XXX should be based on dc_title/dc_description, no?
+
+class ContentAddedView(NotificationView):
+    __abstract__ = True
+    id = 'notif_after_add_entity'
     msgid_timestamp = False
     message = _('new')
     content = """
@@ -274,25 +275,17 @@ class ContentAddedMixIn(object):
 url: %(url)s
 """
 
-###############################################################################
-# Actual notification views.                                                  #
-#                                                                             #
-# disable them at the recipients_finder level if you don't want them          #
-###############################################################################
-
-# XXX should be based on dc_title/dc_description, no?
-
-class NormalizedTextView(ContentAddedMixIn, NotificationView):
     def context(self, **kwargs):
         entity = self.entity(0, 0)
         content = entity.printable_value(self.content_attr, format='text/plain')
         if content:
             contentformat = getattr(entity, self.content_attr + '_format', 'text/rest')
             content = normalize_text(content, 80, rest=contentformat=='text/rest')
-        return super(NormalizedTextView, self).context(content=content, **kwargs)
-    
+        return super(ContentAddedView, self).context(content=content, **kwargs)
+
     def subject(self):
         entity = self.entity(0, 0)
         return  u'%s #%s (%s)' % (self.req.__('New %s' % entity.e_schema),
                                   entity.eid, self.user_login())
 
+NormalizedTextView = class_renamed('NormalizedTextView', ContentAddedView)

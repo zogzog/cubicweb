@@ -5,37 +5,26 @@
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 """
 __docformat__ = "restructuredtext en"
+
 from logilab.common.decorators import cached
 
 from cubicweb import Unauthorized
 from cubicweb.entities import AnyEntity, fetch_config
 
-class EGroup(AnyEntity):
-    id = 'EGroup'
+class CWGroup(AnyEntity):
+    id = 'CWGroup'
     fetch_attrs, fetch_order = fetch_config(['name'])
-    __rtags__ = dict(in_group='create')
+    fetch_unrelated_order = fetch_order
 
     def db_key_name(self):
         """XXX goa specific"""
         return self.get('name')
 
-    
-class EUser(AnyEntity):
-    id = 'EUser'
+class CWUser(AnyEntity):
+    id = 'CWUser'
     fetch_attrs, fetch_order = fetch_config(['login', 'firstname', 'surname'])
-    
-    __rtags__ = { 'firstname'  : 'secondary',
-                  'surname'    : 'secondary',
-                  'last_login_time' : 'generated',
-                  'todo_by'    : 'create',
-                  'use_email'  : 'inlineview', # 'primary',
-                  'in_state'   : 'primary', 
-                  'in_group'   : 'primary', 
-                  ('owned_by', '*', 'object') : ('generated', 'link'),
-                  ('created_by','*','object') : ('generated', 'link'),
-                  ('bookmarked_by', '*', 'object'): ('generated', 'create'),
-                  }
-    
+    fetch_unrelated_order = fetch_order
+
     # used by repository to check if  the user can log in or not
     AUTHENTICABLE_STATES = ('activated',)
 
@@ -43,12 +32,12 @@ class EUser(AnyEntity):
     def __init__(self, *args, **kwargs):
         groups = kwargs.pop('groups', None)
         properties = kwargs.pop('properties', None)
-        super(EUser, self).__init__(*args, **kwargs)
+        super(CWUser, self).__init__(*args, **kwargs)
         if groups is not None:
             self._groups = groups
         if properties is not None:
             self._properties = properties
-            
+
     @property
     def groups(self):
         try:
@@ -56,7 +45,7 @@ class EUser(AnyEntity):
         except AttributeError:
             self._groups = set(g.name for g in self.in_group)
             return self._groups
-        
+
     @property
     def properties(self):
         try:
@@ -75,7 +64,7 @@ class EUser(AnyEntity):
         except ValueError:
             self.warning('incorrect value for eproperty %s of user %s', key, self.login)
         return self.vreg.property_value(key)
-    
+
     def matching_groups(self, groups):
         """return the number of the given group(s) in which the user is
 
@@ -97,13 +86,13 @@ class EUser(AnyEntity):
         """ checks if user is an anonymous user"""
         #FIXME on the web-side anonymous user is detected according
         # to config['anonymous-user'], we don't have this info on
-        # the server side. 
+        # the server side.
         return self.groups == frozenset(('guests', ))
 
     def owns(self, eid):
         if hasattr(self.req, 'unsafe_execute'):
             # use unsafe_execute on the repository side, in case
-            # session's user doesn't have access to EUser
+            # session's user doesn't have access to CWUser
             execute = self.req.unsafe_execute
         else:
             execute = self.req.execute
@@ -115,7 +104,7 @@ class EUser(AnyEntity):
     owns = cached(owns, keyarg=1)
 
     def has_permission(self, pname, contexteid=None):
-        rql = 'Any P WHERE P is EPermission, U eid %(u)s, U in_group G, '\
+        rql = 'Any P WHERE P is CWPermission, U eid %(u)s, U in_group G, '\
               'P name %(pname)s, P require_group G'
         kwargs = {'pname': pname, 'u': self.eid}
         cachekey = None
@@ -127,12 +116,12 @@ class EUser(AnyEntity):
             return self.req.execute(rql, kwargs, cachekey)
         except Unauthorized:
             return False
-    
+
     # presentation utilities ##################################################
-    
+
     def name(self):
         """construct a name using firstname / surname or login if not defined"""
-        
+
         if self.firstname and self.surname:
             return self.req._('%(firstname)s %(surname)s') % {
                 'firstname': self.firstname, 'surname' : self.surname}
@@ -150,5 +139,5 @@ class EUser(AnyEntity):
         return self.get('login')
 
 from logilab.common.deprecation import class_renamed
-Euser = class_renamed('Euser', EUser)
-Euser.id = 'Euser'
+EUser = class_renamed('EUser', CWUser)
+EGroup = class_renamed('EGroup', CWGroup)

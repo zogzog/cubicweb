@@ -1,11 +1,20 @@
+"""produces some Ontology Web Language schema and views
+
+:organization: Logilab
+:copyright: 2008-2009 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+:contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
+"""
+__docformat__ = "restructuredtext en"
+
 from logilab.mtconverter import TransformError, xml_escape
 
-from cubicweb.common.view import StartupView
-from cubicweb.common.view import EntityView
+from cubicweb.view import StartupView, EntityView
+from cubicweb.web.action import Action
+from cubicweb.selectors import none_rset, match_view
 
 _ = unicode
 
-OWL_CARD_MAP = {'1': '<rdf:type rdf:resource="&owl;FunctionalProperty"/>',                      
+OWL_CARD_MAP = {'1': '<rdf:type rdf:resource="&owl;FunctionalProperty"/>',
                 '?': '<owl:maxCardinality rdf:datatype="&xsd;int">1</owl:maxCardinality>',
                 '+': '<owl:minCardinality rdf:datatype="&xsd;int">1</owl:minCardinality>',
                 '*': ''
@@ -28,7 +37,7 @@ OWL_OPENING_ROOT = u'''<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE rdf:RDF [
         <!ENTITY owl "http://www.w3.org/2002/07/owl#" >
         <!ENTITY xsd "http://www.w3.org/2001/XMLSchema#" >
-]>        
+]>
 <rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
     xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#"
     xmlns:xsd="http://www.w3.org/2001/XMLSchema#"
@@ -39,7 +48,7 @@ OWL_OPENING_ROOT = u'''<?xml version="1.0" encoding="UTF-8"?>
 
   <owl:Ontology rdf:about="">
     <rdfs:comment>
-    %(appid)s Cubicweb OWL Ontology                           
+    %(appid)s Cubicweb OWL Ontology
     </rdfs:comment>
   </owl:Ontology>'''
 
@@ -62,7 +71,7 @@ class OWLView(StartupView):
         self.visit_schema(skipmeta=skipmeta)
         if writeprefix:
             self.w(OWL_CLOSING_ROOT)
-        
+
     def visit_schema(self, skiprels=DEFAULT_SKIP_RELS, skipmeta=True):
         """get a layout for a whole schema"""
         entities = sorted([eschema for eschema in self.schema.entities()
@@ -80,8 +89,8 @@ class OWLView(StartupView):
 
     def visit_entityschema(self, eschema, skiprels=()):
         """get a layout for an entity OWL schema"""
-        self.w(u'<owl:Class rdf:ID="%s">'% eschema)         
-        self.w(u'<!-- relations -->')    
+        self.w(u'<owl:Class rdf:ID="%s">'% eschema)
+        self.w(u'<!-- relations -->')
         for rschema, targetschemas, role in eschema.relation_definitions():
             if rschema.type in skiprels:
                 continue
@@ -104,7 +113,7 @@ class OWLView(StartupView):
 ''' % (label, cardtag))
 
         self.w(u'<!-- attributes -->')
-              
+
         for rschema, aschema in eschema.attribute_definitions():
             if not (rschema.has_local_role('read') or rschema.has_perm(self.req, 'read')):
                 continue
@@ -116,10 +125,10 @@ class OWLView(StartupView):
    <owl:onProperty rdf:resource="#%s"/>
    <rdf:type rdf:resource="&owl;FunctionalProperty"/>
   </owl:Restriction>
-</rdfs:subClassOf>'''                         
+</rdfs:subClassOf>'''
                    % aname)
         self.w(u'</owl:Class>')
-    
+
     def visit_property_schema(self, eschema, skiprels=()):
         """get a layout for property entity OWL schema"""
         for rschema, targetschemas, role in eschema.relation_definitions():
@@ -132,7 +141,7 @@ class OWLView(StartupView):
                 self.w(u'''<owl:ObjectProperty rdf:ID="%s">
  <rdfs:domain rdf:resource="#%s"/>
  <rdfs:range rdf:resource="#%s"/>
-</owl:ObjectProperty>                                                
+</owl:ObjectProperty>
 ''' % (label, eschema, oeschema.type))
 
     def visit_property_object_schema(self, eschema):
@@ -148,16 +157,15 @@ class OWLView(StartupView):
 </owl:DatatypeProperty>'''
                    % (aname, eschema, OWL_TYPE_MAP[aschema.type]))
 
-            
+
 class OWLABOXView(EntityView):
     '''This view represents a part of the ABOX for a given entity.'''
-    
+
     id = 'owlabox'
     title = _('owlabox')
     templatable = False
-    accepts = ('Any',)
     content_type = 'application/xml' # 'text/xml'
-    
+
     def call(self):
         self.w(OWL_OPENING_ROOT % {'appid': self.schema.name})
         for i in xrange(self.rset.rowcount):
@@ -167,13 +175,11 @@ class OWLABOXView(EntityView):
     def cell_call(self, row, col, skiprels=DEFAULT_SKIP_RELS):
         self.wview('owlaboxitem', self.rset, row=row, col=col, skiprels=skiprels)
 
-        
+
 class OWLABOXItemView(EntityView):
     '''This view represents a part of the ABOX for a given entity.'''
-    
     id = 'owlaboxitem'
     templatable = False
-    accepts = ('Any',)
     content_type = 'application/xml' # 'text/xml'
 
     def cell_call(self, row, col, skiprels=DEFAULT_SKIP_RELS):
@@ -202,10 +208,20 @@ class OWLABOXItemView(EntityView):
             if not (rschema.has_local_role('read') or rschema.has_perm(self.req, 'read')):
                 continue
             if role == 'object':
-                attr = 'reverse_%s' % rschema.type 
+                attr = 'reverse_%s' % rschema.type
             else:
-                attr = rschema.type        
+                attr = rschema.type
             for x in getattr(entity, attr):
                 self.w(u'<%s>%s %s</%s>' % (attr, x.id, x.eid, attr))
         self.w(u'</%s>'% eschema)
 
+
+class DownloadOWLSchemaAction(Action):
+    id = 'download_as_owl'
+    __select__ = none_rset() & match_view('schema')
+
+    category = 'mainactions'
+    title = _('download schema as owl')
+
+    def url(self):
+        return self.build_url('view', vid='owl')

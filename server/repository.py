@@ -19,9 +19,8 @@ __docformat__ = "restructuredtext en"
 import sys
 import Queue
 from os.path import join, exists
+from datetime import datetime
 from time import time, localtime, strftime
-
-from mx.DateTime import now
 
 from logilab.common.decorators import cached
 
@@ -61,7 +60,7 @@ class CleanupEidTypeCacheOp(SingleLastOperation):
         remove inserted eid from repository type/source cache
         """
         self.repo.clear_caches(self.session.query_data('pendingeids', ()))
-        
+
     def rollback_event(self):
         """the observed connections pool has been rollbacked,
         remove inserted eid from repository type/source cache
@@ -85,7 +84,7 @@ class FTIndexEntityOp(LateOperation):
         session.repo.system_source.fti_unindex_entity(session, entity.eid)
         for container in entity.fti_containers():
             session.repo.index_entity(session, container)
-            
+
     def commit_event(self):
         pass
 
@@ -113,20 +112,22 @@ def del_existing_rel_if_needed(session, eidfrom, rtype, eidto):
     if card[0] in '1?':
         rschema = session.repo.schema.rschema(rtype)
         if not rschema.inlined:
-            session.unsafe_execute('DELETE X %s Y WHERE X eid %%(x)s, NOT Y eid %%(y)s' % rtype,
-                                   {'x': eidfrom, 'y': eidto}, 'x')
+            session.unsafe_execute(
+                'DELETE X %s Y WHERE X eid %%(x)s, NOT Y eid %%(y)s' % rtype,
+                {'x': eidfrom, 'y': eidto}, 'x')
     if card[1] in '1?':
-        session.unsafe_execute('DELETE X %s Y WHERE NOT X eid %%(x)s, Y eid %%(y)s' % rtype,
-                               {'x': eidfrom, 'y': eidto}, 'y')
+        session.unsafe_execute(
+            'DELETE X %s Y WHERE NOT X eid %%(x)s, Y eid %%(y)s' % rtype,
+            {'x': eidfrom, 'y': eidto}, 'y')
 
-    
+
 class Repository(object):
     """a repository provides access to a set of persistent storages for
     entities and relations
 
     XXX protect pyro access
     """
-    
+
     def __init__(self, config, vreg=None, debug=False):
         self.config = config
         if vreg is None:
@@ -154,7 +155,7 @@ class Repository(object):
         for uri, source_config in config.sources().items():
             if uri == 'admin':
                 # not an actual source
-                continue 
+                continue
             source = self.get_source(uri, source_config)
             self.sources_by_uri[uri] = source
             self.sources.append(source)
@@ -179,18 +180,21 @@ class Repository(object):
             self.warning("set fs application'schema as bootstrap schema")
             config.bootstrap_cubes()
             self.set_bootstrap_schema(self.config.load_schema())
-            # need to load the Any and EUser entity types
+            # need to load the Any and CWUser entity types
             self.vreg.schema = self.schema
             etdirectory = join(CW_SOFTWARE_ROOT, 'entities')
-            self.vreg.load_file(etdirectory, '__init__.py')
-            self.vreg.load_file(etdirectory, 'authobjs.py')
+            self.vreg.init_registration([etdirectory])
+            self.vreg.load_file(join(etdirectory, '__init__.py'),
+                                'cubicweb.entities.__init__')
+            self.vreg.load_file(join(etdirectory, 'authobjs.py'),
+                                'cubicweb.entities.authobjs')
         else:
             # test start: use the file system schema (quicker)
             self.warning("set fs application'schema")
             config.bootstrap_cubes()
             self.set_schema(self.config.load_schema())
         if not config.creating:
-            if 'EProperty' in self.schema:
+            if 'CWProperty' in self.schema:
                 self.vreg.init_properties(self.properties())
             # call source's init method to complete their initialisation if
             # needed (for instance looking for persistent configuration using an
@@ -210,16 +214,16 @@ class Repository(object):
                 source.init_creating()
         # close initialization pool and reopen fresh ones for proper
         # initialization now that we know cubes
-        self._get_pool().close(True) 
+        self._get_pool().close(True)
         for i in xrange(config['connections-pool-size']):
             self._available_pools.put_nowait(ConnectionsPool(self.sources))
-        
+
     # internals ###############################################################
 
     def get_source(self, uri, source_config):
         source_config['uri'] = uri
         return get_source(source_config, self.schema, self)
-        
+
     def set_schema(self, schema, resetvreg=True):
         schema.rebuild_infered_relations()
         self.info('set schema %s %#x', schema.name, id(schema))
@@ -253,11 +257,13 @@ class Repository(object):
             except BadSchemaDefinition:
                 raise
             except Exception, ex:
-                raise Exception('Is the database initialised ? (cause: %s)' % 
+                import traceback
+                traceback.print_exc()
+                raise Exception('Is the database initialised ? (cause: %s)' %
                                 (ex.args and ex.args[0].strip() or 'unknown')), \
                                 None, sys.exc_info()[-1]
             self.info('set the actual schema')
-            # XXX have to do this since EProperty isn't in the bootstrap schema
+            # XXX have to do this since CWProperty isn't in the bootstrap schema
             #     it'll be redone in set_schema
             self.set_bootstrap_schema(appschema)
             # 2.49 migration
@@ -265,13 +271,13 @@ class Repository(object):
                 session.set_pool()
                 if not 'template' in file(join(self.config.apphome, 'vc.conf')).read():
                     # remaning from cubicweb < 2.38...
-                    session.execute('DELETE EProperty X WHERE X pkey "system.version.template"')
+                    session.execute('DELETE CWProperty X WHERE X pkey "system.version.template"')
                     session.commit()
         finally:
             session.close()
         self.config.init_cubes(self.get_cubes())
         self.set_schema(appschema)
-        
+
     def set_bootstrap_schema(self, schema):
         """disable hooks when setting a bootstrap schema, but restore
         the configuration for the next time
@@ -289,7 +295,7 @@ class Repository(object):
         config.schema_hooks = True
         config.notification_hooks = True
         config.application_hooks = True
-            
+
     def start_looping_tasks(self):
         assert isinstance(self._looping_tasks, list), 'already started'
         for i, (interval, func) in enumerate(self._looping_tasks):
@@ -302,7 +308,7 @@ class Repository(object):
 
     def looping_task(self, interval, func):
         """register a function to be called every `interval` seconds.
-        
+
         looping tasks can only be registered during repository initialization,
         once done this method will fail.
         """
@@ -315,7 +321,7 @@ class Repository(object):
         """start function in a separated thread"""
         t = RepoThread(func, self._running_threads)
         t.start()
-        
+
     #@locked
     def _get_pool(self):
         try:
@@ -326,7 +332,7 @@ class Repository(object):
                             'connections) or to much load on the server (in '
                             'which case you can try to set a bigger '
                             'connections pools size)')
-        
+
     def _free_pool(self, pool):
         pool.rollback()
         self._available_pools.put_nowait(pool)
@@ -376,13 +382,13 @@ class Repository(object):
                       ((hits + misses) * 100) / (hits + misses + nocache))
         except ZeroDivisionError:
             pass
-        
+
     def authenticate_user(self, session, login, password):
         """validate login / password, raise AuthenticationError on failure
-        return associated EUser instance on success
+        return associated CWUser instance on success
         """
         for source in self.sources:
-            if source.support_entity('EUser'):
+            if source.support_entity('CWUser'):
                 try:
                     eid = source.authenticate(session, login, password)
                     break
@@ -397,19 +403,21 @@ class Repository(object):
         return euser
 
     def _build_user(self, session, eid):
-        cls = self.vreg.etype_class('EUser')
+        """return a CWUser entity for user with the given eid"""
+        cls = self.vreg.etype_class('CWUser')
         rql = cls.fetch_rql(session.user, ['X eid %(x)s'])
         rset = session.execute(rql, {'x': eid}, 'x')
         assert len(rset) == 1, rset
         euser = rset.get_entity(0, 0)
+        # pylint: disable-msg=W0104
         # prefetch / cache euser's groups and properties. This is especially
         # useful for internal sessions to avoid security insertions
         euser.groups
         euser.properties
         return euser
-        
+
     # public (dbapi) interface ################################################
-            
+
     def get_schema(self):
         """return the application schema. This is a public method, not
         requiring a session id
@@ -441,7 +449,7 @@ class Repository(object):
         session = self.internal_session()
         try:
             for pk, version in session.execute(
-                'Any K,V WHERE P is EProperty, P value V, P pkey K, '
+                'Any K,V WHERE P is CWProperty, P value V, P pkey K, '
                 'P pkey ~="system.version.%"', build_descr=False):
                 cube = pk.split('.')[-1]
                 # XXX cubicweb migration
@@ -461,7 +469,7 @@ class Repository(object):
         finally:
             session.close()
         return vcconf
-    
+
     @cached
     def source_defs(self):
         sources = self.config.sources().copy()
@@ -478,23 +486,28 @@ class Repository(object):
         """return a result set containing system wide properties"""
         session = self.internal_session()
         try:
-            return session.execute('Any K,V WHERE P is EProperty,'
+            return session.execute('Any K,V WHERE P is CWProperty,'
                                    'P pkey K, P value V, NOT P for_user U',
                                    build_descr=False)
         finally:
             session.close()
 
-    def register_user(self, login, password, **kwargs):
+    def register_user(self, login, password, email=None, **kwargs):
         """check a user with the given login exists, if not create it with the
         given password. This method is designed to be used for anonymous
         registration on public web site.
         """
+        # XXX should not be called from web interface
         session = self.internal_session()
+        # for consistency, keep same error as unique check hook (although not required)
+        errmsg = session._('the value "%s" is already used, use another one')
         try:
-            if session.execute('EUser X WHERE X login %(login)s', {'login': login}):
-                return False
+            if (session.execute('CWUser X WHERE X login %(login)s', {'login': login})
+                or session.execute('CWUser X WHERE X use_email C, C address %(login)s',
+                                   {'login': login})):
+                raise ValidationError(None, {'login': errmsg % login})
             # we have to create the user
-            user = self.vreg.etype_class('EUser')(session, None)
+            user = self.vreg.etype_class('CWUser')(session, None)
             if isinstance(password, unicode):
                 # password should *always* be utf8 encoded
                 password = password.encode('UTF8')
@@ -504,17 +517,23 @@ class Repository(object):
             self.glob_add_entity(session, user)
             session.execute('SET X in_group G WHERE X eid %(x)s, G name "users"',
                             {'x': user.eid})
+            if email or '@' in login:
+                d = {'login': login, 'email': email or login}
+                if session.execute('EmailAddress X WHERE X address %(email)s', d):
+                    raise ValidationError(None, {'address': errmsg % d['email']})
+                session.execute('INSERT EmailAddress X: X address %(email)s, '
+                                'U primary_email X, U use_email X WHERE U login %(login)s', d)
             session.commit()
         finally:
             session.close()
         return True
-        
+
     def connect(self, login, password, cnxprops=None):
         """open a connection for a given user
 
         base_url may be needed to send mails
         cnxtype indicate if this is a pyro connection or a in-memory connection
-        
+
         raise `AuthenticationError` if the authentication failed
         raise `ConnectionError` if we can't open a connection
         """
@@ -566,7 +585,7 @@ class Repository(object):
                 raise
         finally:
             session.reset_pool()
-    
+
     def describe(self, sessionid, eid):
         """return a tuple (type, source, extid) for the entity with id <eid>"""
         session = self._get_session(sessionid, setpool=True)
@@ -600,12 +619,12 @@ class Repository(object):
         self.debug('begin commit for session %s', sessionid)
         try:
             self._get_session(sessionid, setpool=True).commit()
-        except (ValidationError, Unauthorized): 
+        except (ValidationError, Unauthorized):
             raise
         except:
             self.exception('unexpected error')
             raise
-        
+
     def rollback(self, sessionid):
         """commit transaction for the session with the given id"""
         self.debug('begin rollback for session %s', sessionid)
@@ -627,7 +646,7 @@ class Repository(object):
         session.close()
         del self._sessions[sessionid]
         self.info('closed session %s for user %s', sessionid, session.user.login)
-    
+
     def user_info(self, sessionid, props=None):
         """this method should be used by client to:
         * check session id validity
@@ -641,9 +660,9 @@ class Repository(object):
                 session.change_property(prop, value)
         user = session.user
         return user.eid, user.login, user.groups, user.properties
-            
+
     # public (inter-repository) interface #####################################
-    
+
     def entities_modified_since(self, etypes, mtime):
         """function designed to be called from an external repository which
         is using this one as a rql source for synchronization, and return a
@@ -656,7 +675,7 @@ class Repository(object):
           deleted since the given timestamp
         """
         session = self.internal_session()
-        updatetime = now()
+        updatetime = datetime.now()
         try:
             modentities, delentities = self.system_source.modified_entities(
                 session, etypes, mtime)
@@ -665,7 +684,7 @@ class Repository(object):
             session.close()
 
     # session handling ########################################################
-        
+
     def close_sessions(self):
         """close every opened sessions"""
         for sessionid in self._sessions.keys():
@@ -687,7 +706,7 @@ class Repository(object):
                 self.close(session.id)
                 nbclosed += 1
         return nbclosed
-    
+
     def internal_session(self, cnxprops=None):
         """return a dbapi like connection/cursor using internal user which
         have every rights on the repository. You'll *have to* commit/rollback
@@ -698,7 +717,7 @@ class Repository(object):
         session = InternalSession(self, cnxprops)
         session.set_pool()
         return session
-            
+
     def _get_session(self, sessionid, setpool=False):
         """return the user associated to the given session identifier"""
         try:
@@ -713,7 +732,7 @@ class Repository(object):
     # * correspondance between eid and (type, source)
     # * correspondance between eid and local id (i.e. specific to a given source)
     # * searchable text indexes
-    
+
     def type_and_source_from_eid(self, eid, session=None):
         """return a tuple (type, source, extid) for the entity with id <eid>"""
         try:
@@ -753,15 +772,15 @@ class Repository(object):
             rqlcache.pop('Any X WHERE X eid %s' % eid, None)
             for source in self.sources:
                 source.clear_eid_cache(eid, etype)
-                
+
     def type_from_eid(self, eid, session=None):
         """return the type of the entity with id <eid>"""
         return self.type_and_source_from_eid(eid, session)[0]
-    
+
     def source_from_eid(self, eid, session=None):
         """return the source for the given entity's eid"""
         return self.sources_by_uri[self.type_and_source_from_eid(eid, session)[1]]
-        
+
     def eid2extid(self, source, eid, session=None):
         """get local id from an eid"""
         etype, uri, extid = self.type_and_source_from_eid(eid, session)
@@ -830,7 +849,7 @@ class Repository(object):
         except:
             session.rollback(reset_pool)
             raise
-        
+
     def add_info(self, session, entity, source, extid=None, complete=True):
         """add type and source info for an eid into the system table,
         and index the entity with the full text index
@@ -844,11 +863,11 @@ class Repository(object):
         if self.do_fti:
             FTIndexEntityOp(session, entity=entity)
         CleanupEidTypeCacheOp(session)
-        
+
     def delete_info(self, session, eid):
         self._prepare_delete_info(session, eid)
         self._delete_info(session, eid)
-        
+
     def _prepare_delete_info(self, session, eid):
         """prepare the repository for deletion of an entity:
         * update the fti
@@ -859,7 +878,7 @@ class Repository(object):
         pending = session.query_data('pendingeids', set(), setdefault=True)
         pending.add(eid)
         CleanupEidTypeCacheOp(session)
-        
+
     def _delete_info(self, session, eid):
         """delete system information on deletion of an entity:
         * delete all relations on this entity
@@ -868,7 +887,7 @@ class Repository(object):
         etype, uri, extid = self.type_and_source_from_eid(eid, session)
         self._clear_eid_relations(session, etype, eid)
         self.system_source.delete_info(session, eid, etype, uri, extid)
-        
+
     def _clear_eid_relations(self, session, etype, eid):
         """when a entity is deleted, build and execute rql query to delete all
         its relations
@@ -899,7 +918,7 @@ class Repository(object):
             return
         alreadydone.add(entity.eid)
         self.system_source.fti_index_entity(session, entity)
-        
+
     def locate_relation_source(self, session, subject, rtype, object):
         subjsource = self.source_from_eid(subject, session)
         objsource = self.source_from_eid(object, session)
@@ -910,17 +929,17 @@ class Repository(object):
         else:
             source = subjsource
         return source
-    
+
     def locate_etype_source(self, etype):
         for source in self.sources:
             if source.support_entity(etype, 1):
                 return source
         else:
             raise ETypeNotSupportedBySources(etype)
-        
+
     def glob_add_entity(self, session, entity):
         """add an entity to the repository
-        
+
         the entity eid should originaly be None and a unique eid is assigned to
         the entity instance
         """
@@ -963,7 +982,7 @@ class Repository(object):
                 self.hm.call_hooks('after_add_relation', attr, session,
                                     entity.eid, attr, value)
         return entity.eid
-        
+
     def glob_update_entity(self, session, entity):
         """replace an entity in the repository
         the type and the eid of an entity must not be changed
@@ -1033,7 +1052,7 @@ class Repository(object):
         if source.should_call_hooks:
             self.hm.call_hooks('after_delete_entity', etype, session, eid)
         # don't clear cache here this is done in a hook on commit
-        
+
     def glob_add_relation(self, session, subject, rtype, object):
         """add a relation to the repository"""
         assert subject is not None
@@ -1071,7 +1090,7 @@ class Repository(object):
 
 
     # pyro handling ###########################################################
-    
+
     def pyro_register(self, host=''):
         """register the repository as a pyro object"""
         from Pyro import core
@@ -1090,7 +1109,7 @@ class Repository(object):
         self.info(msg, nsgroup, nsid)
         self.pyro_registered = True
         return daemon
-    
+
     def pyro_nameserver(self, host=None, group=None):
         """locate and bind the the name server to the daemon"""
         from Pyro import naming, errors
@@ -1105,25 +1124,25 @@ class Repository(object):
         return nameserver
 
     # multi-sources planner helpers ###########################################
-    
+
     @cached
     def rel_type_sources(self, rtype):
         return [source for source in self.sources
                 if source.support_relation(rtype)
                 or rtype in source.dont_cross_relations]
-    
+
     @cached
     def can_cross_relation(self, rtype):
         return [source for source in self.sources
                 if source.support_relation(rtype)
                 and rtype in source.cross_relations]
-    
+
     @cached
     def is_multi_sources_relation(self, rtype):
         return any(source for source in self.sources
                    if not source is self.system_source
                    and source.support_relation(rtype))
-    
+
 
 def pyro_unregister(config):
     """unregister the repository from the pyro name server"""

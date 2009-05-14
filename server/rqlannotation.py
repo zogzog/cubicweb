@@ -2,17 +2,15 @@
 code generation.
 
 :organization: Logilab
-:copyright: 2001-2008 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+:copyright: 2001-2009 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 """
 __docformat__ = "restructuredtext en"
 
 from logilab.common.compat import any
 
-from rql.nodes import Relation, Exists, VariableRef, Constant, Variable, Or
+from rql.nodes import Relation, VariableRef, Constant, Variable, Or
 from rql.utils import common_parent
-
-from cubicweb import server
 
 def _annotate_select(annotator, rqlst):
     for subquery in rqlst.with_:
@@ -71,7 +69,7 @@ def _annotate_select(annotator, rqlst):
             # "Any X", "Any X, Y WHERE X attr Y"
             stinfo['invariant'] = False
             continue
-        joins = set()            
+        joins = set()
         invariant = False
         for ref in var.references():
             rel = ref.relation()
@@ -80,7 +78,7 @@ def _annotate_select(annotator, rqlst):
             lhs, rhs = rel.get_parts()
             onlhs = ref is lhs
             if rel.r_type == 'eid':
-                if not (onlhs and len(stinfo['relations']) > 1): 
+                if not (onlhs and len(stinfo['relations']) > 1):
                     break
                 if not stinfo['constnode']:
                     joins.add(rel)
@@ -112,9 +110,9 @@ def _annotate_select(annotator, rqlst):
                 continue
             if not stinfo['constnode']:
                 if rschema.inlined and rel.neged(strict=True):
-                    # if relation is inlined, can't be invariant if that 
+                    # if relation is inlined, can't be invariant if that
                     # variable is used anywhere else.
-                    # see 'Any P WHERE NOT N ecrit_par P, N eid 512':                    
+                    # see 'Any P WHERE NOT N ecrit_par P, N eid 512':
                     # sql for 'NOT N ecrit_par P' is 'N.ecrit_par is NULL' so P
                     # can use N.ecrit_par as principal
                     if (stinfo['selected'] or len(stinfo['relations']) > 1):
@@ -186,7 +184,7 @@ def _select_principal(sqlscope, relations, _sort=lambda x:x):
         return iter(_sort(diffscope_rels)).next()
     # XXX  could use a relation for a different scope if it can't generate
     # duplicates, so we would have to check cardinality
-    raise CantSelectPrincipal()    
+    raise CantSelectPrincipal()
 
 def _select_main_var(relations):
     """given a list of rqlst relations, select one which will be used as main
@@ -267,12 +265,12 @@ class SQLGenAnnotator(object):
             return False
         try:
             data = var.stmt._deamb_data
-        except AttributeError: 
+        except AttributeError:
             data = var.stmt._deamb_data = IsAmbData(self.schema, self.nfdomain)
             data.compute(var.stmt)
         return data.is_ambiguous(var)
 
-        
+
 class IsAmbData(object):
     def __init__(self, schema, nfdomain):
         self.schema = schema
@@ -290,7 +288,7 @@ class IsAmbData(object):
         self.deambification_map = {}
         # not invariant variables (access to final.inlined relation)
         self.not_invariants = set()
-        
+
     def is_ambiguous(self, var):
         return var in self.ambiguousvars
 
@@ -298,7 +296,7 @@ class IsAmbData(object):
         self.varsols[var] &= restricted_domain
         if var in self.ambiguousvars and self.varsols[var] == var.stinfo['possibletypes']:
             self.ambiguousvars.remove(var)
-    
+
     def compute(self, rqlst):
         # set domains for each variable
         for varname, var in rqlst.defined_vars.iteritems():
@@ -336,7 +334,7 @@ class IsAmbData(object):
                 except KeyError:
                     # no relation to deambiguify
                     continue
-        
+
     def _debug_print(self):
         print 'varsols', dict((x, sorted(str(v) for v in values))
                                for x, values in self.varsols.iteritems())
@@ -352,7 +350,7 @@ class IsAmbData(object):
                     self.maydeambrels[var].add(rel)
                 except KeyError:
                     self.maydeambrels[var] = set((rel,))
-        
+
     def deambiguifying_relation(self, var, rel):
         lhs, rhs = rel.get_variable_parts()
         onlhs = var is getattr(lhs, 'variable', None)

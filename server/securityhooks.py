@@ -24,25 +24,25 @@ def check_entity_attributes(session, entity):
         if rschema.is_final(): # non final relation are checked by other hooks
             # add/delete should be equivalent (XXX: unify them into 'update' ?)
             rschema.check_perm(session, 'add', eid)
-            
-    
+
+
 class CheckEntityPermissionOp(LateOperation):
     def precommit_event(self):
         #print 'CheckEntityPermissionOp', self.session.user, self.entity, self.action
         self.entity.check_perm(self.action)
         check_entity_attributes(self.session, self.entity)
-        
+
     def commit_event(self):
         pass
-            
-    
+
+
 class CheckRelationPermissionOp(LateOperation):
     def precommit_event(self):
         self.rschema.check_perm(self.session, self.action, self.fromeid, self.toeid)
-        
+
     def commit_event(self):
         pass
-    
+
 def after_add_entity(session, entity):
     if not session.is_super_session:
         CheckEntityPermissionOp(session, entity=entity, action='add')
@@ -56,7 +56,7 @@ def after_update_entity(session, entity):
         except Unauthorized:
             entity.clear_local_perm_cache('update')
             CheckEntityPermissionOp(session, entity=entity, action='update')
-        
+
 def before_del_entity(session, eid):
     if not session.is_super_session:
         eschema = session.repo.schema[session.describe(eid)[0]]
@@ -67,7 +67,7 @@ def before_add_relation(session, fromeid, rtype, toeid):
     if rtype in BEFORE_ADD_RELATIONS and not session.is_super_session:
         rschema = session.repo.schema[rtype]
         rschema.check_perm(session, 'add', fromeid, toeid)
-        
+
 def after_add_relation(session, fromeid, rtype, toeid):
     if not rtype in BEFORE_ADD_RELATIONS and not session.is_super_session:
         rschema = session.repo.schema[rtype]
@@ -89,4 +89,4 @@ def register_security_hooks(hm):
     hm.register_hook(before_add_relation, 'before_add_relation', '')
     hm.register_hook(after_add_relation, 'after_add_relation', '')
     hm.register_hook(before_del_relation, 'before_delete_relation', '')
-    
+

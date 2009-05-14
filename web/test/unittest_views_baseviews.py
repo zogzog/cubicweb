@@ -6,17 +6,17 @@ from logilab.mtconverter import html_unescape
 from cubicweb.devtools.apptest import EnvBasedTC
 
 from cubicweb.web.htmlwidgets import TableWidget
-from cubicweb.web.views.baseviews import vid_from_rset
+from cubicweb.web.views import vid_from_rset
 
 def loadjson(value):
     return loads(html_unescape(value))
 
 class VidFromRsetTC(EnvBasedTC):
-    
+
     def test_no_rset(self):
         req = self.request()
         self.assertEquals(vid_from_rset(req, None, self.schema), 'index')
-    
+
     def test_no_entity(self):
         req = self.request()
         rset = self.execute('Any X WHERE X login "blabla"')
@@ -36,38 +36,38 @@ class VidFromRsetTC(EnvBasedTC):
         req = self.request()
         rset = self.execute('Any X WHERE X eid 1')
         self.assertEquals(vid_from_rset(req, rset, self.schema), 'primary')
-        
+
     def test_more_than_one_entity(self):
         req = self.request()
-        rset = self.execute('Any X WHERE X is EUser')
+        rset = self.execute('Any X WHERE X is CWUser')
         self.assertEquals(vid_from_rset(req, rset, self.schema), 'list')
         rset = self.execute('Any X, L WHERE X login L')
         self.assertEquals(vid_from_rset(req, rset, self.schema), 'list')
-    
+
     def test_more_than_one_entity_by_row(self):
         req = self.request()
         rset = self.execute('Any X, G WHERE X in_group G')
         self.assertEquals(vid_from_rset(req, rset, self.schema), 'table')
-    
+
     def test_more_than_one_entity_by_row_2(self):
         req = self.request()
         rset = self.execute('Any X, GN WHERE X in_group G, G name GN')
         self.assertEquals(vid_from_rset(req, rset, self.schema), 'table')
-    
+
     def test_aggregat(self):
         req = self.request()
         rset = self.execute('Any X, COUNT(T) GROUPBY X WHERE X is T')
         self.assertEquals(vid_from_rset(req, rset, self.schema), 'table')
-        rset = self.execute('Any MAX(X) WHERE X is EUser')
+        rset = self.execute('Any MAX(X) WHERE X is CWUser')
         self.assertEquals(vid_from_rset(req, rset, self.schema), 'table')
 
     def test_subquery(self):
         rset = self.execute(
 'DISTINCT Any X,N ORDERBY N '
 'WITH X,N BEING ('
-'     (DISTINCT Any P,N WHERE P is EUser, P login N)'
+'     (DISTINCT Any P,N WHERE P is CWUser, P login N)'
 '       UNION'
-'     (DISTINCT Any W,N WHERE W is EGroup, W name N))')
+'     (DISTINCT Any W,N WHERE W is CWGroup, W name N))')
         req = self.request()
         self.assertEquals(vid_from_rset(req, rset, self.schema), 'table')
 
@@ -81,7 +81,7 @@ class TableViewTC(EnvBasedTC):
         req = self.request()
         view = self.vreg.select_view('table', req, rset)
         return e, rset, view
-      
+
     def test_headers(self):
         self.skip('implement me')
 

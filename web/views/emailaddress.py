@@ -1,24 +1,25 @@
 """Specific views for email addresses entities
 
 :organization: Logilab
-:copyright: 2001-2008 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+:copyright: 2001-2009 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 """
 __docformat__ = "restructuredtext en"
 
 from logilab.mtconverter import html_escape
 
+from cubicweb.selectors import implements
 from cubicweb.common import Unauthorized
-from cubicweb.web.views import baseviews
+from cubicweb.web.views import baseviews, primary
 
-class EmailAddressPrimaryView(baseviews.PrimaryView):
-    accepts = ('EmailAddress',)
-    
+class EmailAddressPrimaryView(primary.PrimaryView):
+    __select__ = implements('EmailAddress')
+
     def cell_call(self, row, col, skipeids=None):
         self.skipeids = skipeids
         super(EmailAddressPrimaryView, self).cell_call(row, col)
-        
-    def render_entity_attributes(self, entity, siderelations):
+
+    def render_entity_attributes(self, entity):
         self.w(u'<h3>')
         entity.view('oneline', w=self.w)
         if not entity.canonical:
@@ -51,7 +52,7 @@ class EmailAddressPrimaryView(baseviews.PrimaryView):
             emailofstr = ', '.join(e.view('oneline') for e in emailof)
             self.field(display_name(self.req, 'use_email', 'object'), emailofstr)
 
-    def render_entity_relations(self, entity, siderelations):
+    def render_entity_relations(self, entity):
         for i, email in enumerate(entity.related_emails(self.skipeids)):
             self.w(u'<div class="%s">' % (i%2 and 'even' or 'odd'))
             email.view('oneline', w=self.w, contexteid=entity.eid)
@@ -59,18 +60,19 @@ class EmailAddressPrimaryView(baseviews.PrimaryView):
 
 
 class EmailAddressShortPrimaryView(EmailAddressPrimaryView):
-    accepts = ('EmailAddress',)
+    __select__ = implements('EmailAddress')
     id = 'shortprimary'
     title = None # hidden view
-    def render_entity_attributes(self, entity, siderelations):
+
+    def render_entity_attributes(self, entity):
         self.w(u'<h5>')
         entity.view('oneline', w=self.w)
         self.w(u'</h5>')
 
-    
+
 class EmailAddressOneLineView(baseviews.OneLineView):
-    accepts = ('EmailAddress',)
-    
+    __select__ = implements('EmailAddress')
+
     def cell_call(self, row, col, **kwargs):
         entity = self.entity(row, col)
         if entity.reverse_primary_email:
@@ -89,8 +91,8 @@ class EmailAddressMailToView(baseviews.OneLineView):
     'mailto:'"""
 
     id = 'mailto'
-    accepts = ('EmailAddress',)
-    
+    __select__ = implements('EmailAddress')
+
     def cell_call(self, row, col, **kwargs):
         entity = self.entity(row, col)
         if entity.reverse_primary_email:
@@ -105,15 +107,15 @@ class EmailAddressMailToView(baseviews.OneLineView):
             mailto = "mailto:%s" % entity.display_address()
         self.w(u'<a href="%s">%s</a>' % (html_escape(mailto),
                                          html_escape(entity.display_address())))
-            
+
         if entity.alias:
             self.w(u'&gt;\n')
         if entity.reverse_primary_email:
             self.w(u'</b>')
 
-    
+
 class EmailAddressTextView(baseviews.TextView):
-    accepts = ('EmailAddress',)
-    
+    __select__ = implements('EmailAddress')
+
     def cell_call(self, row, col, **kwargs):
         self.w(self.entity(row, col).display_address())

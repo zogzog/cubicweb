@@ -1,7 +1,7 @@
 """abstract class for http request
 
 :organization: Logilab
-:copyright: 2001-2008 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+:copyright: 2001-2009 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 """
 __docformat__ = "restructuredtext en"
@@ -17,15 +17,18 @@ from itertools import count
 from rql.utils import rqlvar_maker
 
 from logilab.common.decorators import cached
+from logilab.common.deprecation import obsolete
 
-# XXX move _MARKER here once AppObject.external_resource has been removed
+from logilab.mtconverter import html_escape
+
 from cubicweb.dbapi import DBAPIRequest
-from cubicweb.common.appobject import _MARKER 
 from cubicweb.common.mail import header
 from cubicweb.common.uilib import remove_html_tags
-from cubicweb.common.utils import SizeConstrainedList, HTMLHead
-from cubicweb.web import (INTERNAL_FIELD_VALUE, LOGGER, NothingToEdit, RequestError,
-                       StatusResponse)
+from cubicweb.utils import SizeConstrainedList, HTMLHead
+from cubicweb.web import (INTERNAL_FIELD_VALUE, LOGGER, NothingToEdit,
+                          RequestError, StatusResponse)
+
+_MARKER = object()
 
 
 def list_form_param(form, param, pop=False):
@@ -56,8 +59,8 @@ def list_form_param(form, param, pop=False):
 
 
 class CubicWebRequestBase(DBAPIRequest):
-    """abstract HTTP request, should be extended according to the HTTP backend"""    
-    
+    """abstract HTTP request, should be extended according to the HTTP backend"""
+
     def __init__(self, vreg, https, form=None):
         super(CubicWebRequestBase, self).__init__(vreg)
         self.message = None
@@ -73,7 +76,7 @@ class CubicWebRequestBase(DBAPIRequest):
         self.data = {}
         # search state: 'normal' or 'linksearch' (eg searching for an object
         # to create a relation with another)
-        self.search_state = ('normal',) 
+        self.search_state = ('normal',)
         # tabindex generator
         self.tabindexgen = count()
         self.next_tabindex = self.tabindexgen.next
@@ -106,27 +109,27 @@ class CubicWebRequestBase(DBAPIRequest):
                     return
         # 3. default language
         self.set_default_language(vreg)
-            
+
     def set_language(self, lang):
         self._ = self.__ = self.translations[lang]
         self.lang = lang
         self.debug('request language: %s', lang)
-        
+
     # input form parameters management ########################################
-    
+
     # common form parameters which should be protected against html values
     # XXX can't add 'eid' for instance since it may be multivalued
     # dont put rql as well, if query contains < and > it will be corrupted!
-    no_script_form_params = set(('vid', 
-                                 'etype', 
+    no_script_form_params = set(('vid',
+                                 'etype',
                                  'vtitle', 'title',
                                  '__message',
                                  '__redirectvid', '__redirectrql'))
-        
+
     def setup_params(self, params):
         """WARNING: we're intentionaly leaving INTERNAL_FIELD_VALUE here
 
-        subclasses should overrides to 
+        subclasses should overrides to
         """
         if params is None:
             params = {}
@@ -146,7 +149,7 @@ class CubicWebRequestBase(DBAPIRequest):
                 del self.form[k]
             else:
                 self.form[k] = v
-    
+
     def no_script_form_param(self, param, default=None, value=None):
         """ensure there is no script in a user form param
 
@@ -167,11 +170,11 @@ class CubicWebRequestBase(DBAPIRequest):
                 value = value[0]
             return remove_html_tags(value)
         return value
-        
+
     def list_form_param(self, param, form=None, pop=False):
         """get param from form parameters and return its value as a list,
         skipping internal markers if any
-        
+
         * if the parameter isn't defined, return an empty list
         * if the parameter is a single (unicode) value, return a list
           containing that value
@@ -182,8 +185,8 @@ class CubicWebRequestBase(DBAPIRequest):
         """
         if form is None:
             form = self.form
-        return list_form_param(form, param, pop)            
-    
+        return list_form_param(form, param, pop)
+
 
     def reset_headers(self):
         """used by AutomaticWebTest to clear html headers between tests on
@@ -193,11 +196,11 @@ class CubicWebRequestBase(DBAPIRequest):
         return self
 
     # web state helpers #######################################################
-    
+
     def set_message(self, msg):
         assert isinstance(msg, unicode)
         self.message = msg
-    
+
     def update_search_state(self):
         """update the current search state"""
         searchstate = self.form.get('__mode')
@@ -214,6 +217,19 @@ class CubicWebRequestBase(DBAPIRequest):
             assert len(self.search_state[-1]) == 4
         if self.cnx is not None:
             self.set_session_data('search_state', searchstate)
+
+    def match_search_state(self, rset):
+        """when searching an entity to create a relation, return True if entities in
+        the given rset may be used as relation end
+        """
+        try:
+            searchedtype = self.search_state[1][-1]
+        except IndexError:
+            return False # no searching for association
+        for etype in rset.column_types(0):
+            if etype != searchedtype:
+                return False
+        return True
 
     def update_breadcrumbs(self):
         """stores the last visisted page in session data"""
@@ -234,7 +250,7 @@ class CubicWebRequestBase(DBAPIRequest):
     def register_onetime_callback(self, func, *args):
         cbname = 'cb_%s' % (
             sha.sha('%s%s%s%s' % (time.time(), func.__name__,
-                                  random.random(), 
+                                  random.random(),
                                   self.user.login)).hexdigest())
         def _cb(req):
             try:
@@ -242,12 +258,12 @@ class CubicWebRequestBase(DBAPIRequest):
             except TypeError:
                 from warnings import warn
                 warn('user callback should now take request as argument')
-                ret = func(*args)            
+                ret = func(*args)
             self.unregister_callback(self.pageid, cbname)
             return ret
         self.set_page_data(cbname, _cb)
         return cbname
-    
+
     def unregister_callback(self, pageid, cbname):
         assert pageid is not None
         assert cbname.startswith('cb_')
@@ -260,14 +276,17 @@ class CubicWebRequestBase(DBAPIRequest):
             callbacks = [key for key in sessdata if key.startswith('cb_')]
             for callback in callbacks:
                 self.del_session_data(callback)
-    
+
     # web edition helpers #####################################################
-    
+
     @cached # so it's writed only once
     def fckeditor_config(self):
+        self.add_js('fckeditor/fckeditor.js')
         self.html_headers.define_var('fcklang', self.lang)
         self.html_headers.define_var('fckconfigpath',
-                                     self.build_url('data/fckcwconfig.js'))
+                                     self.build_url('data/cubicweb.fckcwconfig.js'))
+    def use_fckeditor(self):
+        return self.vreg.config.fckeditor_installed() and self.property_value('ui.fckeditor')
 
     def edited_eids(self, withtype=False):
         """return a list of edited eids"""
@@ -314,7 +333,7 @@ class CubicWebRequestBase(DBAPIRequest):
             print eid, params
             raise RequestError(self._('missing parameters for entity %s') % eid)
         return params
-    
+
     def get_pending_operations(self, entity, relname, role):
         operations = {'insert' : [], 'delete' : []}
         for optype in ('insert', 'delete'):
@@ -326,7 +345,7 @@ class CubicWebRequestBase(DBAPIRequest):
                     if role == 'object' and entity.eid == eidto:
                         operations[optype].append(eidfrom)
         return operations
-    
+
     def get_pending_inserts(self, eid=None):
         """shortcut to access req's pending_insert entry
 
@@ -361,7 +380,7 @@ class CubicWebRequestBase(DBAPIRequest):
         """
         self.del_session_data(errorurl)
         self.remove_pending_operations()
-    
+
     # high level methods for HTTP headers management ##########################
 
     # must be cached since login/password are popped from the form dictionary
@@ -379,7 +398,7 @@ class CubicWebRequestBase(DBAPIRequest):
                 return None, None
         else:
             return self.header_authorization()
-    
+
     def get_cookie(self):
         """retrieve request cookies, returns an empty cookie if not found"""
         try:
@@ -407,7 +426,7 @@ class CubicWebRequestBase(DBAPIRequest):
         morsel['Max-Age'] = 0
         # The only way to set up cookie age for IE is to use an old "expired"
         # syntax. IE doesn't support Max-Age there is no library support for
-        # managing 
+        # managing
         # ===> Do _NOT_ comment this line :
         morsel['expires'] = 'Thu, 01-Jan-1970 00:00:00 GMT'
         self.add_header('Set-Cookie', morsel.OutputString())
@@ -460,9 +479,26 @@ class CubicWebRequestBase(DBAPIRequest):
             if localfile:
                 cssfile = self.datadir_url + cssfile
             add_css(cssfile, media)
-    
+
+    def build_ajax_replace_url(self, nodeid, rql, vid, replacemode='replace',
+                               **extraparams):
+        """builds an ajax url that will replace `nodeid`s content
+        :param nodeid: the dom id of the node to replace
+        :param rql: rql to execute
+        :param vid: the view to apply on the resultset
+        :param replacemode: defines how the replacement should be done.
+        Possible values are :
+         - 'replace' to replace the node's content with the generated HTML
+         - 'swap' to replace the node itself with the generated HTML
+         - 'append' to append the generated HTML to the node's content
+        """
+        url = self.build_url('view', rql=rql, vid=vid, __notemplate=1,
+                             **extraparams)
+        return "javascript: loadxhtml('%s', '%s', '%s')" % (
+            nodeid, html_escape(url), replacemode)
+
     # urls/path management ####################################################
-    
+
     def url(self, includeparams=True):
         """return currently accessed url"""
         return self.base_url() + self.relative_path(includeparams)
@@ -470,7 +506,7 @@ class CubicWebRequestBase(DBAPIRequest):
     def _datadir_url(self):
         """return url of the application's data directory"""
         return self.base_url() + 'data%s/' % self.vreg.config.instance_md5_version()
-    
+
     def selected(self, url):
         """return True if the url is equivalent to currently accessed url"""
         reqpath = self.relative_path().lower()
@@ -486,7 +522,7 @@ class CubicWebRequestBase(DBAPIRequest):
     def base_url_path(self):
         """returns the absolute path of the base url"""
         return urlsplit(self.base_url())[2]
-        
+
     @cached
     def from_controller(self):
         """return the id (string) of the controller issuing the request"""
@@ -496,7 +532,7 @@ class CubicWebRequestBase(DBAPIRequest):
         if controller in registered_controllers:
             return controller
         return 'view'
-    
+
     def external_resource(self, rid, default=_MARKER):
         """return a path to an external resource, using its identifier
 
@@ -525,9 +561,9 @@ class CubicWebRequestBase(DBAPIRequest):
         self._validate_cache()
         if self.http_method() == 'HEAD':
             raise StatusResponse(200, '')
-        
+
     # abstract methods to override according to the web front-end #############
-        
+
     def http_method(self):
         """returns 'POST', 'GET', 'HEAD', etc."""
         raise NotImplementedError()
@@ -537,7 +573,7 @@ class CubicWebRequestBase(DBAPIRequest):
         exists and is still usable
         """
         raise NotImplementedError()
-        
+
     def relative_path(self, includeparams=True):
         """return the normalized path of the request (ie at least relative
         to the application's root, but some other normalization may be needed
@@ -561,11 +597,11 @@ class CubicWebRequestBase(DBAPIRequest):
     def add_header(self, header, value):
         """add an output HTTP header"""
         raise NotImplementedError()
-    
+
     def remove_header(self, header):
         """remove an output HTTP header"""
         raise NotImplementedError()
-        
+
     def header_authorization(self):
         """returns a couple (auth-type, auth-value)"""
         auth = self.get_header("Authorization", None)
@@ -582,42 +618,54 @@ class CubicWebRequestBase(DBAPIRequest):
                            auth, ex.__class__.__name__, ex)
         return None, None
 
+    @obsolete("use parse_accept_header('Accept-Language')")
     def header_accept_language(self):
         """returns an ordered list of preferred languages"""
-        acceptedlangs = self.get_header('Accept-Language', '')
-        langs = []
-        for langinfo in acceptedlangs.split(','):
+        return [value.split('-')[0] for value in
+                self.parse_accept_header('Accept-Language')]
+
+    def parse_accept_header(self, header):
+        """returns an ordered list of preferred languages"""
+        accepteds = self.get_header(header, '')
+        values = []
+        for info in accepteds.split(','):
             try:
-                lang, score = langinfo.split(';')
-                score = float(score[2:]) # remove 'q='
+                value, scores = info.split(';', 1)
             except ValueError:
-                lang = langinfo
+                value = info
                 score = 1.0
-            lang = lang.split('-')[0]
-            langs.append( (score, lang) )
-        langs.sort(reverse=True)
-        return (lang for (score, lang) in langs)
+            else:
+                for score in scores.split(';'):
+                    try:
+                        scorekey, scoreval = score.split('=')
+                        if scorekey == 'q': # XXX 'level'
+                            score = float(score[2:]) # remove 'q='
+                    except ValueError:
+                        continue
+            values.append((score, value))
+        values.sort(reverse=True)
+        return (value for (score, value) in values)
 
     def header_if_modified_since(self):
         """If the HTTP header If-modified-since is set, return the equivalent
         mx date time value (GMT), else return None
         """
         raise NotImplementedError()
-    
+
     # page data management ####################################################
 
     def get_page_data(self, key, default=None):
         """return value associated to `key` in curernt page data"""
         page_data = self.cnx.get_session_data(self.pageid, {})
         return page_data.get(key, default)
-        
+
     def set_page_data(self, key, value):
         """set value associated to `key` in current page data"""
         self.html_headers.add_unload_pagedata()
         page_data = self.cnx.get_session_data(self.pageid, {})
         page_data[key] = value
         return self.cnx.set_session_data(self.pageid, page_data)
-        
+
     def del_page_data(self, key=None):
         """remove value associated to `key` in current page data
         if `key` is None, all page data will be cleared
@@ -638,16 +686,21 @@ class CubicWebRequestBase(DBAPIRequest):
     def ie_browser(self):
         useragent = self.useragent()
         return useragent and 'MSIE' in useragent
-    
+
     def xhtml_browser(self):
         useragent = self.useragent()
-        # MSIE does not support xml content-type
-        # quick fix: Opera supports xhtml and handles namespaces
-        # properly but it breaks jQuery.attr()
+        # * MSIE/Konqueror does not support xml content-type
+        # * Opera supports xhtml and handles namespaces properly but it breaks
+        #   jQuery.attr()
         if useragent and ('MSIE' in useragent or 'KHTML' in useragent
                           or 'Opera' in useragent):
             return False
         return True
+
+    def html_content_type(self):
+        if self.xhtml_browser():
+            return 'application/xhtml+xml'
+        return 'text/html'
 
 from cubicweb import set_log_methods
 set_log_methods(CubicWebRequestBase, LOGGER)

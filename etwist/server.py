@@ -1,15 +1,16 @@
 """twisted server for CubicWeb web applications
 
 :organization: Logilab
-:copyright: 2001-2008 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+:copyright: 2001-2009 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 """
 __docformat__ = "restructuredtext en"
 
 import sys
 import select
-
-from mx.DateTime import today, RelativeDate
+from time import mktime
+from datetime import date, timedelta
+from urlparse import urlsplit, urlunsplit
 
 from twisted.application import service, strports
 from twisted.internet import reactor, task, threads
@@ -18,7 +19,7 @@ from twisted.web2 import channel, http, server, iweb
 from twisted.web2 import static, resource, responsecode
 
 from cubicweb import ObjectNotFound
-from cubicweb.web import (AuthenticationError, NotFound, Redirect, 
+from cubicweb.web import (AuthenticationError, NotFound, Redirect,
                        RemoteCallFailed, DirectResponse, StatusResponse,
                        ExplicitLogin)
 from cubicweb.web.application import CubicWebPublisher
@@ -42,7 +43,15 @@ def start_looping_tasks(repo):
         start_task(interval, catch_error_func)
     # ensure no tasks will be further added
     repo._looping_tasks = ()
-    
+
+def host_prefixed_baseurl(baseurl, host):
+    scheme, netloc, url, query, fragment = urlsplit(baseurl)
+    netloc_domain = '.' + '.'.join(netloc.split('.')[-2:])
+    if host.endswith(netloc_domain):
+        netloc = host
+    baseurl = urlunsplit((scheme, netloc, url, query, fragment))
+    return baseurl
+
 
 class LongTimeExpiringFile(static.File):
     """overrides static.File and sets a far futre ``Expires`` date
@@ -62,8 +71,8 @@ class LongTimeExpiringFile(static.File):
             # Don't provide additional resource information to error responses
             if response.code < 400:
                 # the HTTP RFC recommands not going further than 1 year ahead
-                expires = today() + RelativeDate(months=6)
-                response.headers.setHeader('Expires', int(expires.ticks()))
+                expires = date.today() + timedelta(days=6*30)
+                response.headers.setHeader('Expires', mktime(expires.timetuple()))
             return response
         d = maybeDeferred(super(LongTimeExpiringFile, self).renderHTTP, request)
         return d.addCallback(setExpireHeader)
@@ -71,7 +80,7 @@ class LongTimeExpiringFile(static.File):
 
 class CubicWebRootResource(resource.PostableResource):
     addSlash = False
-    
+
     def __init__(self, config, debug=None):
         self.appli = CubicWebPublisher(config, debug=debug)
         self.debugmode = debug
@@ -103,7 +112,7 @@ class CubicWebRootResource(resource.PostableResource):
         interval = min(config['cleanup-session-time'] or 120,
                        config['cleanup-anonymous-session-time'] or 720) / 2.
         start_task(interval, self.appli.session_handler.clean_sessions)
-        
+
     def shutdown_event(self):
         """callback fired when the server is shutting down to properly
         clean opened sessions
@@ -116,7 +125,7 @@ class CubicWebRootResource(resource.PostableResource):
             self.pyro_daemon.handleRequests(self.pyro_listen_timeout)
         except select.error:
             return
-        
+
     def locateChild(self, request, segments):
         """Indicate which resource to use to process down the URL's path"""
         if segments:
@@ -143,7 +152,7 @@ class CubicWebRootResource(resource.PostableResource):
                     return static.File(fckeditordir), segments[1:]
         # Otherwise we use this single resource
         return self, ()
-    
+
     def render(self, request):
         """Render a page from the root resource"""
         # reload modified files (only in development or debug mode)
@@ -153,7 +162,7 @@ class CubicWebRootResource(resource.PostableResource):
             return self.render_request(request)
         else:
             return threads.deferToThread(self.render_request, request)
-            
+
     def render_request(self, request):
         origpath = request.path
         host = request.host
@@ -163,10 +172,13 @@ class CubicWebRootResource(resource.PostableResource):
             origpath = origpath[6:]
             request.uri = request.uri[6:]
             https = True
-            baseurl = self.https_url or self.base_url 
+            baseurl = self.https_url or self.base_url
         else:
             https = False
             baseurl = self.base_url
+        if self.config['use-request-subdomain']:
+            baseurl = host_prefixed_baseurl(baseurl, host)
+            self.warning('used baseurl is %s for this request', baseurl)
         req = CubicWebTwistedRequestAdapter(request, self.appli.vreg, https, baseurl)
         if req.authmode == 'http':
             # activate realm-based auth
@@ -180,7 +192,7 @@ class CubicWebRootResource(resource.PostableResource):
             return self.redirect(req, ex.location)
         if https and req.cnx.anonymous_connection:
             # don't allow anonymous on https connection
-            return self.request_auth(req)            
+            return self.request_auth(req)
         if self.url_rewriter is not None:
             # XXX should occur before authentication?
             try:
@@ -226,11 +238,6 @@ class CubicWebRootResource(resource.PostableResource):
                 return self.request_auth(req, loggedout=True)
         except Redirect, ex:
             return self.redirect(req, ex.location)
-        if not result:
-            # no result, something went wrong...
-            self.error('no data (%s)', req)
-            # 500 Internal server error
-            return self.redirect(req, req.build_url('error'))
         # request may be referenced by "onetime callback", so clear its entity
         # cache to avoid memory usage
         req.drop_entity_cache()
@@ -242,11 +249,11 @@ class CubicWebRootResource(resource.PostableResource):
         self.debug('redirecting to %s', location)
         # 303 See other
         return http.Response(code=303, headers=req.headers_out)
-        
+
     def request_auth(self, req, loggedout=False):
         if self.https_url and req.base_url() != self.https_url:
             req.headers_out.setHeader('location', self.https_url + 'login')
-            return http.Response(code=303, headers=req.headers_out)            
+            return http.Response(code=303, headers=req.headers_out)
         if self.config['auth-mode'] == 'http':
             code = responsecode.UNAUTHORIZED
         else:
@@ -260,7 +267,7 @@ class CubicWebRootResource(resource.PostableResource):
             content = self.appli.need_login_content(req)
         return http.Response(code, req.headers_out, content)
 
-    
+
 # This part gets run when you run this file via: "twistd -noy demo.py"
 def main(appid, cfgname):
     """Starts an cubicweb  twisted server for an application
@@ -295,12 +302,12 @@ from twisted.web2 import fileupload
 
 # XXX set max file size to 100Mo: put max upload size in the configuration
 # line below for twisted >= 8.0, default param value for earlier version
-resource.PostableResource.maxSize = 100*1024*1024 
+resource.PostableResource.maxSize = 100*1024*1024
 def parsePOSTData(request, maxMem=100*1024, maxFields=1024,
                   maxSize=100*1024*1024):
     if request.stream.length == 0:
         return defer.succeed(None)
-    
+
     ctype = request.headers.getHeader('content-type')
 
     if ctype is None:
@@ -318,7 +325,7 @@ def parsePOSTData(request, maxMem=100*1024, maxFields=1024,
     def error(f):
         f.trap(fileupload.MimeFormatError)
         raise http.HTTPError(responsecode.BAD_REQUEST)
-    
+
     if ctype.mediaType == 'application' and ctype.mediaSubtype == 'x-www-form-urlencoded':
         d = fileupload.parse_urlencoded(request.stream, keep_blank_values=True)
         d.addCallbacks(updateArgs, error)
@@ -360,7 +367,7 @@ def _gc_debug():
             acount += 1
         else:
             try:
-                ocount[obj.__class__]+= 1
+                ocount[obj.__class__] += 1
             except KeyError:
                 ocount[obj.__class__] = 1
             except AttributeError:

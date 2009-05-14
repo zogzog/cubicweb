@@ -6,7 +6,7 @@ class RepoThread(object):
         pass
     def join(self):
         pass
-    
+
 class LoopTask(RepoThread):
     def cancel(self):
         pass

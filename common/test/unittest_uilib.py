@@ -21,7 +21,7 @@ class UILIBTC(TestCase):
         for text, expected in data:
             got = uilib.remove_html_tags(text)
             self.assertEquals(got, expected)
-       
+
     def test_fallback_safe_cut(self):
         self.assertEquals(uilib.fallback_safe_cut(u'ab <a href="hello">cd</a>', 4), u'ab c...')
         self.assertEquals(uilib.fallback_safe_cut(u'ab <a href="hello">cd</a>', 5), u'ab <a href="hello">cd</a>')
@@ -29,7 +29,7 @@ class UILIBTC(TestCase):
         self.assertEquals(uilib.fallback_safe_cut(u'ab <a href="hello">&amp;d</a> ef', 5), u'ab &amp;d...')
         self.assertEquals(uilib.fallback_safe_cut(u'ab <a href="hello">&igrave;d</a>', 4), u'ab ì...')
         self.assertEquals(uilib.fallback_safe_cut(u'&amp; <a href="hello">&amp;d</a> ef', 4), u'&amp; &amp;d...')
-        
+
     def test_lxml_safe_cut(self):
         self.assertEquals(uilib.safe_cut(u'aaa<div>aaad</div> ef', 4), u'<p>aaa</p><div>a...</div>')
         self.assertEquals(uilib.safe_cut(u'aaa<div>aaad</div> ef', 7), u'<p>aaa</p><div>aaad</div>...')
@@ -75,18 +75,6 @@ quis nostrud exercitation ullamco laboris nisi"),
             got = uilib.text_cut(text, 30)
             self.assertEquals(got, expected)
 
-    def test_ajax_replace_url(self):
-        # NOTE: for the simplest use cases, we could use doctest
-        arurl = uilib.ajax_replace_url
-        self.assertEquals(arurl('foo', 'Person P'),
-                          "javascript: replacePageChunk('foo', 'Person%20P');")
-        self.assertEquals(arurl('foo', 'Person P', 'oneline'),
-                          "javascript: replacePageChunk('foo', 'Person%20P', 'oneline');")
-        self.assertEquals(arurl('foo', 'Person P', 'oneline', name='bar', age=12),
-                          'javascript: replacePageChunk(\'foo\', \'Person%20P\', \'oneline\', {"age": 12, "name": "bar"});')
-        self.assertEquals(arurl('foo', 'Person P', name='bar', age=12),
-                          'javascript: replacePageChunk(\'foo\', \'Person%20P\', \'null\', {"age": 12, "name": "bar"});')
-
 tree = ('root', (
     ('child_1_1', (
     ('child_2_1', ()), ('child_2_2', (
@@ -116,18 +104,18 @@ def make_tree(tuple):
     for child in tuple[1]:
         n.append(make_tree(child))
     return n
-    
+
 class UIlibHTMLGenerationTC(TestCase):
     """ a basic tree node, caracterised by an id"""
     def setUp(self):
-        """ called before each test from this class """        
+        """ called before each test from this class """
         self.o = make_tree(tree)
 
     def test_generated_html(self):
         s = uilib.render_HTML_tree(self.o, selected_node="child_2_2")
         self.assertTextEqual(s, generated_html)
-    
-    
+
+
 if __name__ == '__main__':
     unittest_main()
 

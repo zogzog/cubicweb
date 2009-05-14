@@ -23,11 +23,11 @@ Project see_also Project symetric
 Project uses Project
 
 Version version_of Project inline
-Version todo_by EUser
+Version todo_by CWUser
 
 Comment about Bug inline
 Comment about Story inline
 Comment about Comment inline
 
-EUser interested_in Project
+CWUser interested_in Project
 

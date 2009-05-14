@@ -5,6 +5,9 @@ MISSING FEATURES:
  - ReferenceProperty.verbose_name, collection_name, etc. (XXX)
 
 XXX proprify this knowing we'll use goa.db
+:organization: Logilab
+:copyright: 2008-2009 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+:contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 """
 
 from os.path import join
@@ -13,12 +16,8 @@ from datetime import datetime, date, time
 from google.appengine.ext import db
 from google.appengine.api import datastore_types
 
-from yams.schema2sql import eschema_attrs
-from yams.constraints import SizeConstraint
-from yams.reader import PyFileReader
 from yams.buildobjs import (String, Int, Float, Boolean, Date, Time, Datetime,
-                            Interval, Password, Bytes, ObjectRelation,
-                            SubjectRelation, RestrictedEntityType)
+                            Bytes, SubjectRelation)
 from yams.buildobjs import metadefinition, EntityType
 
 from cubicweb.schema import CubicWebSchemaLoader
@@ -72,7 +71,7 @@ def dbm2y_date_factory(prop):
     # XXX no equivalent to Django's `auto_now`
     return dbm2y_default_factory(prop, **kwargs)
 
-    
+
 def dbm2y_relation_factory(etype, prop, multiple=False):
     """called if `prop` is a `db.ReferenceProperty`"""
     if multiple:
@@ -87,8 +86,8 @@ def dbm2y_relation_factory(etype, prop, multiple=False):
     except AttributeError, ex:
         # hack, data_type is still _SELF_REFERENCE_MARKER
         return SubjectRelation(etype, cardinality=cardinality)
-    
-    
+
+
 DBM2Y_FACTORY = {
     basestring: dbm2y_string_factory,
     datastore_types.Text: dbm2y_string_factory,
@@ -111,7 +110,7 @@ class GaeSchemaLoader(CubicWebSchemaLoader):
         self.created = []
         self.loaded_files = []
         self._instantiate_handlers()
-        
+
     def finalize(self, register_base_types=False):
         return self._build_schema('google-appengine', register_base_types)
 
@@ -152,11 +151,11 @@ class GaeSchemaLoader(CubicWebSchemaLoader):
     def import_yams_cube_schema(self, templpath):
         for filepath in self.get_schema_files(templpath):
             self.handle_file(filepath)
-        
+
     @property
     def pyreader(self):
         return self._live_handlers['.py']
-        
+
 import os
 from cubicweb import CW_SOFTWARE_ROOT
 
@@ -172,7 +171,7 @@ def load_schema(config, schemaclasses=None, extrahook=None):
     # the loader is instantiated because this is where the dbmodels
     # are registered in the yams schema
     for compname in config['included-cubes']:
-        comp = __import__('%s.schema' % compname)
+        __import__('%s.schema' % compname)
     loader = GaeSchemaLoader(use_gauthservice=config['use-google-auth'], db=db)
     loader.lib_directory = SCHEMAS_LIB_DIRECTORY
     if schemaclasses is not None:
@@ -180,14 +179,14 @@ def load_schema(config, schemaclasses=None, extrahook=None):
             loader.load_dbmodel(cls.__name__, goadb.extract_dbmodel(cls))
     elif config['schema-type'] == 'dbmodel':
         import schema as appschema
-        for objname, obj in vars(appschema).items():
+        for obj in vars(appschema).values():
             if isinstance(obj, type) and issubclass(obj, goadb.Model) and obj.__module__ == appschema.__name__:
                 loader.load_dbmodel(obj.__name__, goadb.extract_dbmodel(obj))
-    for erschema in ('EGroup', 'EEType', 'ERType', 'RQLExpression',
+    for erschema in ('CWGroup', 'CWEType', 'CWRType', 'RQLExpression',
                      'is_', 'is_instance_of',
                      'read_permission', 'add_permission',
                      'delete_permission', 'update_permission'):
-        loader.import_yams_schema(erschema, 'bootstrap')  
+        loader.import_yams_schema(erschema, 'bootstrap')
     loader.handle_file(join(SCHEMAS_LIB_DIRECTORY, 'base.py'))
     cubes = config['included-yams-cubes']
     for cube in reversed(config.expand_cubes(cubes)):
@@ -198,21 +197,20 @@ def load_schema(config, schemaclasses=None, extrahook=None):
     if extrahook is not None:
         extrahook(loader)
     if config['use-google-auth']:
-        loader.defined['EUser'].remove_relation('upassword')
-        loader.defined['EUser'].permissions['add'] = ()
-        loader.defined['EUser'].permissions['delete'] = ()
-    for etype in ('EGroup', 'RQLExpression'):
+        loader.defined['CWUser'].remove_relation('upassword')
+        loader.defined['CWUser'].permissions['add'] = ()
+        loader.defined['CWUser'].permissions['delete'] = ()
+    for etype in ('CWGroup', 'RQLExpression'):
         read_perm_rel = loader.defined[etype].get_relations('read_permission').next()
         read_perm_rel.cardinality = '**'
-    # XXX not yet ready for EUser workflow
-    loader.defined['EUser'].remove_relation('in_state')
-    loader.defined['EUser'].remove_relation('wf_info_for')
-    # remove RQLConstraint('NOT O name "owners"') on EUser in_group EGroup
+    # XXX not yet ready for CWUser workflow
+    loader.defined['CWUser'].remove_relation('in_state')
+    loader.defined['CWUser'].remove_relation('wf_info_for')
+    # remove RQLConstraint('NOT O name "owners"') on CWUser in_group CWGroup
     # since "owners" group is not persistent with gae
-    loader.defined['EUser'].get_relations('in_group').next().constraints = []
+    loader.defined['CWUser'].get_relations('in_group').next().constraints = []
     # return the full schema including the cubes' schema
     for ertype in loader.defined.values():
         if getattr(ertype, 'inlined', False):
             ertype.inlined = False
     return loader.finalize()
-

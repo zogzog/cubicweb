@@ -1,21 +1,21 @@
 """cubicweb on appengine plugins for cubicweb-ctl
 
 :organization: Logilab
-:copyright: 2008 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+:copyright: 2008-2009 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 """
 __docformat__ = "restructuredtext en"
 
-from os.path import exists, join, split, dirname, basename, normpath, abspath
+from os.path import exists, join, split, basename, normpath, abspath
 
-from cubicweb import BadCommandUsage
-from cubicweb import CW_SOFTWARE_ROOT
-from cubicweb.toolsutils import (Command, register_commands, copy_skeleton,
-                              create_dir, create_symlink, create_copy)
+from logilab.common.clcommands import register_commands
+
+from cubicweb import CW_SOFTWARE_ROOT, BadCommandUsage
+from cubicweb.toolsutils import (Command, copy_skeleton, create_symlink,
+                                 create_dir)
 from cubicweb.cwconfig import CubicWebConfiguration
 
 from logilab import common as lgc
-from logilab.common.textutils import get_csv
 from logilab import constraint as lgcstr
 from logilab import mtconverter as lgmtc
 import rql, yams, yapps, simplejson, dateutil, vobject, docutils, roman
@@ -36,7 +36,7 @@ SLINK_DIRECTORIES = (
     (join(CW_SOFTWARE_ROOT, 'embedded', 'mx'), 'mx'),
     ('/usr/share/fckeditor/', 'fckeditor'),
 
-    (join(CW_SOFTWARE_ROOT, 'web', 'data'), join('cubes', 'shared', 'data')), 
+    (join(CW_SOFTWARE_ROOT, 'web', 'data'), join('cubes', 'shared', 'data')),
     (join(CW_SOFTWARE_ROOT, 'web', 'wdoc'), join('cubes', 'shared', 'wdoc')),
     (join(CW_SOFTWARE_ROOT, 'i18n'), join('cubes', 'shared', 'i18n')),
     (join(CW_SOFTWARE_ROOT, 'goa', 'tools'), 'tools'),
@@ -47,28 +47,28 @@ COPY_CW_FILES = (
     '__init__.py',
     '__pkginfo__.py',
     '_exceptions.py',
+    'appobject.py',
     'dbapi.py',
     'cwvreg.py',
     'cwconfig.py',
+    'entity.py',
     'interfaces.py',
     'rset.py',
     'schema.py',
     'schemaviewer.py',
+    'selectors.py',
+    'utils.py',
     'vregistry.py',
-    
-    'common/appobject.py',
-    'common/entity.py',
-    'common/html4zope.py',
+    'view.py',
+
     'common/mail.py',
     'common/migration.py',
     'common/mixins.py',
     'common/mttransforms.py',
-    'common/registerers.py',
-    'common/rest.py',
-    'common/selectors.py',
-    'common/view.py',
     'common/uilib.py',
-    'common/utils.py',
+
+    'ext/html4zope.py',
+    'ext/rest.py',
 
     'server/hookhelper.py',
     'server/hooksmanager.py',
@@ -93,12 +93,12 @@ COPY_CW_FILES = (
 
     'sobjects/__init__.py',
     'sobjects/notification.py',
-    
+
 # XXX would be necessary for goa.testlib but require more stuff to be added
 #     such as server.serverconfig and so on (check devtools.__init__)
 #    'devtools/__init__.py',
 #    'devtools/fake.py',
-    
+
     'web/__init__.py',
     'web/_exceptions.py',
     'web/action.py',
@@ -139,7 +139,7 @@ COPY_CW_FILES = (
     'wsgi/__init__.py',
     'wsgi/handler.py',
     'wsgi/request.py',
-    
+
     'goa/__init__.py',
     'goa/db.py',
     'goa/dbinit.py',
@@ -149,9 +149,9 @@ COPY_CW_FILES = (
     'goa/gaesource.py',
     'goa/rqlinterpreter.py',
     'goa/appobjects/__init__.py',
-    'goa/appobjects/components.py', 
-    'goa/appobjects/dbmgmt.py', 
-    'goa/appobjects/gauthservice.py', 
+    'goa/appobjects/components.py',
+    'goa/appobjects/dbmgmt.py',
+    'goa/appobjects/gauthservice.py',
     'goa/appobjects/sessions.py',
 
     'schemas/bootstrap.py',
@@ -178,7 +178,7 @@ class NewGoogleAppCommand(Command):
     """
     name = 'newgapp'
     arguments = '<application directory>'
-    
+
     def run(self, args):
         if len(args) != 1:
             raise BadCommandUsage("exactly one argument is expected")
@@ -196,7 +196,7 @@ class NewGoogleAppCommand(Command):
                 create_dir(split(subdirectory)[0])
             create_symlink(directory, join(appldir, subdirectory))
         create_init_file(join(appldir, 'logilab'), 'logilab')
-        # copy supported part of cubicweb 
+        # copy supported part of cubicweb
         create_dir(join(appldir, 'cubicweb'))
         for fpath in COPY_CW_FILES:
             target = join(appldir, 'cubicweb', fpath)

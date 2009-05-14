@@ -7,11 +7,9 @@ entities...
 """
 __docformat__ = "restructuredtext en"
 
-from mx.DateTime import now
+from datetime import datetime
 
 from cubicweb import UnknownProperty, ValidationError, BadConnectionId
-
-from cubicweb.common.uilib import soup2xhtml
 
 from cubicweb.server.pool import Operation, LateOperation, PreCommitOperation
 from cubicweb.server.hookhelper import (check_internal_entity, previous_state,
@@ -20,27 +18,27 @@ from cubicweb.server.repository import FTIndexEntityOp
 
 def relation_deleted(session, eidfrom, rtype, eidto):
     session.add_query_data('pendingrelations', (eidfrom, rtype, eidto))
-    
+
 
 # base meta-data handling #####################################################
 
 def setctime_before_add_entity(session, entity):
     """before create a new entity -> set creation and modification date
- 
+
     this is a conveniency hook, you shouldn't have to disable it
     """
     if not 'creation_date' in entity:
-        entity['creation_date'] = now()
+        entity['creation_date'] = datetime.now()
     if not 'modification_date' in entity:
-        entity['modification_date'] = now()
+        entity['modification_date'] = datetime.now()
 
 def setmtime_before_update_entity(session, entity):
     """update an entity -> set modification date"""
     if not 'modification_date' in entity:
-        entity['modification_date'] = now()
-        
+        entity['modification_date'] = datetime.now()
+
 class SetCreatorOp(PreCommitOperation):
-        
+
     def precommit_event(self):
         if self.eid in self.session.query_data('pendingeids', ()):
             # entity have been created and deleted in the same transaction
@@ -48,7 +46,7 @@ class SetCreatorOp(PreCommitOperation):
         ueid = self.session.user.eid
         execute = self.session.unsafe_execute
         if not execute('Any X WHERE X created_by U, X eid %(x)s',
-                       {'x': self.eid}, 'x'): 
+                       {'x': self.eid}, 'x'):
             execute('SET X created_by U WHERE X eid %(x)s, U eid %(u)s',
                     {'x': self.eid, 'u': ueid}, 'x')
 
@@ -88,7 +86,6 @@ def fti_update_after_add_relation(session, eidfrom, rtype, eidto):
         FTIndexEntityOp(session, entity=session.entity(eidto))
     elif ftcontainer == 'object':
         FTIndexEntityOp(session, entity=session.entity(eidfrom))
-
 def fti_update_after_delete_relation(session, eidfrom, rtype, eidto):
     """sync fulltext index when relevant relation is deleted. Reindexing both
     entities is necessary.
@@ -96,15 +93,15 @@ def fti_update_after_delete_relation(session, eidfrom, rtype, eidto):
     if session.repo.schema.rschema(rtype).fulltext_container:
         FTIndexEntityOp(session, entity=session.entity(eidto))
         FTIndexEntityOp(session, entity=session.entity(eidfrom))
-    
+
 class SyncOwnersOp(PreCommitOperation):
-        
+
     def precommit_event(self):
         self.session.unsafe_execute('SET X owned_by U WHERE C owned_by U, C eid %(c)s,'
                                     'NOT EXISTS(X owned_by U, X eid %(x)s)',
                                     {'c': self.compositeeid, 'x': self.composedeid},
                                     ('c', 'x'))
-        
+
 def sync_owner_after_add_composite_relation(session, eidfrom, rtype, eidto):
     """when adding composite relation, the composed should have the same owners
     has the composite
@@ -117,7 +114,7 @@ def sync_owner_after_add_composite_relation(session, eidfrom, rtype, eidto):
         SyncOwnersOp(session, compositeeid=eidfrom, composedeid=eidto)
     elif composite == 'object':
         SyncOwnersOp(session, compositeeid=eidto, composedeid=eidfrom)
-    
+
 def _register_metadata_hooks(hm):
     """register meta-data related hooks on the hooks manager"""
     hm.register_hook(setctime_before_add_entity, 'before_add_entity', '')
@@ -128,16 +125,16 @@ def _register_metadata_hooks(hm):
     hm.register_hook(fti_update_after_delete_relation, 'after_delete_relation', '')
     if 'is' in hm.schema:
         hm.register_hook(setis_after_add_entity, 'after_add_entity', '')
-    if 'EUser' in hm.schema:
-        hm.register_hook(setowner_after_add_user, 'after_add_entity', 'EUser')
-            
+    if 'CWUser' in hm.schema:
+        hm.register_hook(setowner_after_add_user, 'after_add_entity', 'CWUser')
+
 # core hooks ##################################################################
-    
+
 class DelayedDeleteOp(PreCommitOperation):
     """delete the object of composite relation except if the relation
     has actually been redirected to another composite
     """
-        
+
     def precommit_event(self):
         session = self.session
         if not self.eid in session.query_data('pendingeids', ()):
@@ -145,7 +142,7 @@ class DelayedDeleteOp(PreCommitOperation):
             session.unsafe_execute('DELETE %s X WHERE X eid %%(x)s, NOT %s'
                                    % (etype, self.relation),
                                    {'x': self.eid}, 'x')
-    
+
 def handle_composite_before_del_relation(session, eidfrom, rtype, eidto):
     """delete the object of composite relation"""
     composite = rproperty(session, rtype, eidfrom, eidto, 'composite')
@@ -160,7 +157,7 @@ def before_del_group(session, eid):
 
 
 # schema validation hooks #####################################################
-        
+
 class CheckConstraintsOperation(LateOperation):
     """check a new relation satisfy its constraints
     """
@@ -179,10 +176,10 @@ class CheckConstraintsOperation(LateOperation):
             except NotImplementedError:
                 self.critical('can\'t check constraint %s, not supported',
                               constraint)
-    
+
     def commit_event(self):
         pass
-    
+
 def cstrcheck_after_add_relation(session, eidfrom, rtype, eidto):
     """check the relation satisfy its constraints
 
@@ -210,37 +207,13 @@ def uniquecstrcheck_before_modification(session, entity):
 
 
 
-class tidy_html_fields(object):
-    """tidy HTML in rich text strings
-
-    FIXME: (adim) the whole idea of having a class is to store the
-    event type. There might be another way to get dynamically the
-    event inside the hook function.
-    """
-    # FIXME hooks manager use func_name to register
-    func_name = 'tidy_html_field'
-    
-    def __init__(self, event):
-        self.event = event
-
-    def __call__(self, session, entity):
-        for attr in entity.formatted_attrs():
-            value = entity.get(attr)
-            # text was not changed
-            if self.event == 'before_add_entity':
-                fmt = entity.get('%s_format' % attr)
-            else:
-                fmt = entity.get_value('%s_format' % attr)
-            if value and fmt == 'text/html':
-                entity[attr] = soup2xhtml(value, session.encoding)
-
 
 class CheckRequiredRelationOperation(LateOperation):
     """checking relation cardinality has to be done after commit in
     case the relation is being replaced
     """
     eid, rtype = None, None
-    
+
     def precommit_event(self):
         # recheck pending eids
         if self.eid in self.session.query_data('pendingeids', ()):
@@ -251,18 +224,18 @@ class CheckRequiredRelationOperation(LateOperation):
             raise ValidationError(self.eid, {self.rtype: msg % {'rtype': self.rtype,
                                                                 'etype': etype,
                                                                 'eid': self.eid}})
-    
+
     def commit_event(self):
         pass
-        
+
     def _rql(self):
         raise NotImplementedError()
-    
+
 class CheckSRelationOp(CheckRequiredRelationOperation):
     """check required subject relation"""
     def _rql(self):
         return 'Any O WHERE S eid %%(x)s, S %s O' % self.rtype, {'x': self.eid}, 'x'
-    
+
 class CheckORelationOp(CheckRequiredRelationOperation):
     """check required object relation"""
     def _rql(self):
@@ -275,7 +248,7 @@ def checkrel_if_necessary(session, opcls, rtype, eid):
             break
     else:
         opcls(session, rtype=rtype, eid=eid)
-    
+
 def cardinalitycheck_after_add_entity(session, entity):
     """check cardinalities are satisfied"""
     eid = entity.eid
@@ -309,26 +282,24 @@ def cardinalitycheck_before_del_relation(session, eidfrom, rtype, eidto):
 
 def _register_core_hooks(hm):
     hm.register_hook(handle_composite_before_del_relation, 'before_delete_relation', '')
-    hm.register_hook(before_del_group, 'before_delete_entity', 'EGroup')
-    
+    hm.register_hook(before_del_group, 'before_delete_entity', 'CWGroup')
+
     #hm.register_hook(cstrcheck_before_update_entity, 'before_update_entity', '')
     hm.register_hook(cardinalitycheck_after_add_entity, 'after_add_entity', '')
     hm.register_hook(cardinalitycheck_before_del_relation, 'before_delete_relation', '')
     hm.register_hook(cstrcheck_after_add_relation, 'after_add_relation', '')
     hm.register_hook(uniquecstrcheck_before_modification, 'before_add_entity', '')
     hm.register_hook(uniquecstrcheck_before_modification, 'before_update_entity', '')
-    hm.register_hook(tidy_html_fields('before_add_entity'), 'before_add_entity', '')
-    hm.register_hook(tidy_html_fields('before_update_entity'), 'before_update_entity', '')
 
 
 # user/groups synchronisation #################################################
-            
+
 class GroupOperation(Operation):
     """base class for group operation"""
     geid = None
     def __init__(self, session, *args, **kwargs):
         """override to get the group name before actual groups manipulation:
-        
+
         we may temporarily loose right access during a commit event, so
         no query should be emitted while comitting
         """
@@ -347,13 +318,13 @@ class DeleteGroupOp(GroupOperation):
         except KeyError:
             self.error('user %s not in group %s',  self.cnxuser, self.group)
             return
-    
+
 def after_del_in_group(session, fromeid, rtype, toeid):
     """modify user permission, need to update users"""
     for session_ in get_user_sessions(session.repo, fromeid):
         DeleteGroupOp(session, cnxuser=session_.user, geid=toeid)
 
-        
+
 class AddGroupOp(GroupOperation):
     """synchronize user when a in_group relation has been added"""
     def commit_event(self):
@@ -376,7 +347,7 @@ class DelUserOp(Operation):
     def __init__(self, session, cnxid):
         self.cnxid = cnxid
         Operation.__init__(self, session)
-        
+
     def commit_event(self):
         """the observed connections pool has been commited"""
         try:
@@ -388,10 +359,10 @@ def after_del_user(session, eid):
     """modify user permission, need to update users"""
     for session_ in get_user_sessions(session.repo, eid):
         DelUserOp(session, session_.id)
-    
+
 def _register_usergroup_hooks(hm):
     """register user/group related hooks on the hooks manager"""
-    hm.register_hook(after_del_user, 'after_delete_entity', 'EUser')
+    hm.register_hook(after_del_user, 'after_delete_entity', 'CWUser')
     hm.register_hook(after_add_in_group, 'after_add_relation', 'in_group')
     hm.register_hook(after_del_in_group, 'after_delete_relation', 'in_group')
 
@@ -459,7 +430,7 @@ class SetInitialStateOp(PreCommitOperation):
 
 def set_initial_state_after_add(session, entity):
     SetInitialStateOp(session, entity=entity)
-    
+
 def _register_wf_hooks(hm):
     """register workflow related hooks on the hooks manager"""
     if 'in_state' in hm.schema:
@@ -471,12 +442,12 @@ def _register_wf_hooks(hm):
                                  str(eschema))
 
 
-# EProperty hooks #############################################################
+# CWProperty hooks #############################################################
 
 
-class DelEPropertyOp(Operation):
+class DelCWPropertyOp(Operation):
     """a user's custom properties has been deleted"""
-    
+
     def commit_event(self):
         """the observed connections pool has been commited"""
         try:
@@ -484,22 +455,22 @@ class DelEPropertyOp(Operation):
         except KeyError:
             self.error('%s has no associated value', self.key)
 
-class ChangeEPropertyOp(Operation):
+class ChangeCWPropertyOp(Operation):
     """a user's custom properties has been added/changed"""
-        
+
     def commit_event(self):
         """the observed connections pool has been commited"""
         self.epropdict[self.key] = self.value
 
-class AddEPropertyOp(Operation):
+class AddCWPropertyOp(Operation):
     """a user's custom properties has been added/changed"""
-        
+
     def commit_event(self):
         """the observed connections pool has been commited"""
         eprop = self.eprop
         if not eprop.for_user:
             self.repo.vreg.eprop_values[eprop.pkey] = eprop.value
-        # if for_user is set, update is handled by a ChangeEPropertyOp operation
+        # if for_user is set, update is handled by a ChangeCWPropertyOp operation
 
 def after_add_eproperty(session, entity):
     key, value = entity.pkey, entity.value
@@ -513,8 +484,8 @@ def after_add_eproperty(session, entity):
         session.unsafe_execute('SET P for_user U WHERE P eid %(x)s,U eid %(u)s',
                                {'x': entity.eid, 'u': session.user.eid}, 'x')
     else:
-        AddEPropertyOp(session, eprop=entity)
-        
+        AddCWPropertyOp(session, eprop=entity)
+
 def after_update_eproperty(session, entity):
     key, value = entity.pkey, entity.value
     try:
@@ -525,13 +496,13 @@ def after_update_eproperty(session, entity):
         raise ValidationError(entity.eid, {'value': session._(str(ex))})
     if entity.for_user:
         for session_ in get_user_sessions(session.repo, entity.for_user[0].eid):
-            ChangeEPropertyOp(session, epropdict=session_.user.properties,
+            ChangeCWPropertyOp(session, epropdict=session_.user.properties,
                               key=key, value=value)
     else:
         # site wide properties
-        ChangeEPropertyOp(session, epropdict=session.vreg.eprop_values,
+        ChangeCWPropertyOp(session, epropdict=session.vreg.eprop_values,
                           key=key, value=value)
-        
+
 def before_del_eproperty(session, eid):
     for eidfrom, rtype, eidto in session.query_data('pendingrelations', ()):
         if rtype == 'for_user' and eidfrom == eid:
@@ -540,10 +511,10 @@ def before_del_eproperty(session, eid):
     else:
         key = session.execute('Any K WHERE P eid %(x)s, P pkey K',
                               {'x': eid}, 'x')[0][0]
-        DelEPropertyOp(session, epropdict=session.vreg.eprop_values, key=key)
+        DelCWPropertyOp(session, epropdict=session.vreg.eprop_values, key=key)
 
 def after_add_for_user(session, fromeid, rtype, toeid):
-    if not session.describe(fromeid)[0] == 'EProperty':
+    if not session.describe(fromeid)[0] == 'CWProperty':
         return
     key, value = session.execute('Any K,V WHERE P eid %(x)s,P pkey K,P value V',
                                  {'x': fromeid}, 'x')[0]
@@ -551,20 +522,20 @@ def after_add_for_user(session, fromeid, rtype, toeid):
         raise ValidationError(fromeid,
                               {'for_user': session._("site-wide property can't be set for user")})
     for session_ in get_user_sessions(session.repo, toeid):
-        ChangeEPropertyOp(session, epropdict=session_.user.properties,
+        ChangeCWPropertyOp(session, epropdict=session_.user.properties,
                           key=key, value=value)
-        
+
 def before_del_for_user(session, fromeid, rtype, toeid):
     key = session.execute('Any K WHERE P eid %(x)s, P pkey K',
                           {'x': fromeid}, 'x')[0][0]
     relation_deleted(session, fromeid, rtype, toeid)
     for session_ in get_user_sessions(session.repo, toeid):
-        DelEPropertyOp(session, epropdict=session_.user.properties, key=key)
+        DelCWPropertyOp(session, epropdict=session_.user.properties, key=key)
 
 def _register_eproperty_hooks(hm):
     """register workflow related hooks on the hooks manager"""
-    hm.register_hook(after_add_eproperty, 'after_add_entity', 'EProperty')
-    hm.register_hook(after_update_eproperty, 'after_update_entity', 'EProperty')
-    hm.register_hook(before_del_eproperty, 'before_delete_entity', 'EProperty')
+    hm.register_hook(after_add_eproperty, 'after_add_entity', 'CWProperty')
+    hm.register_hook(after_update_eproperty, 'after_update_entity', 'CWProperty')
+    hm.register_hook(before_del_eproperty, 'before_delete_entity', 'CWProperty')
     hm.register_hook(after_add_for_user, 'after_add_relation', 'for_user')
     hm.register_hook(before_del_for_user, 'before_delete_relation', 'for_user')

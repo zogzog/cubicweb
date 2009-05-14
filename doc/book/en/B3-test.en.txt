@@ -1,9 +1,0 @@
-.. -*- coding: utf-8 -*-
-
-Tests
-+++++
-.. toctree::
-   :maxdepth: 1
-
-   B3010-tests.en.txt
-

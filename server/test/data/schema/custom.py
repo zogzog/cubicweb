@@ -30,5 +30,5 @@ class see_also(RelationDefinition):
     subject = ('Bookmark', 'Note')
     object = ('Bookmark', 'Note')
 
-_euser = import_schema('base').EUser
+_euser = import_schema('base').CWUser
 _euser.__relations__[0].fulltextindexed = True

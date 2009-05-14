@@ -6,7 +6,7 @@ class ToTo(EntityType):
         'delete': ('managers',),
         }
     toto = SubjectRelation('TuTu')
-    
+
 class TuTu(EntityType):
     permissions = {
         'read': ('managers',),

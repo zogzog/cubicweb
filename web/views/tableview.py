@@ -11,13 +11,13 @@ from simplejson import dumps
 
 from logilab.mtconverter import html_escape
 
-from cubicweb.common.utils import make_uid
-from cubicweb.common.uilib import toggle_action, limitsize, jsonize, htmlescape
-from cubicweb.common.view import EntityView, AnyRsetView
-from cubicweb.common.selectors import (nonempty_rset,  match_form_params,
-                                    accept_rset)
+from cubicweb.selectors import nonempty_rset, match_form_params
+from cubicweb.utils import make_uid
+from cubicweb.view import EntityView, AnyRsetView
+from cubicweb.common.uilib import toggle_action, limitsize, htmlescape
+from cubicweb.web import jsonize
 from cubicweb.web.htmlwidgets import (TableWidget, TableColumn, MenuWidget,
-                                   PopupBoxMenu, BoxLink)
+                                      PopupBoxMenu, BoxLink)
 from cubicweb.web.facet import prepare_facets_rqlst, filter_hiddens
 
 class TableView(AnyRsetView):
@@ -45,7 +45,7 @@ class TableView(AnyRsetView):
                                         'displayfilter': displayfilter})
             return self.show_hide_actions(divid, not hidden)
         return ()
-    
+
     def _generate_form(self, divid, baserql, fwidgets, hidden=True, vidargs={}):
         """display a form to filter table's content. This should only
         occurs when a context eid is given
@@ -89,7 +89,7 @@ class TableView(AnyRsetView):
             else:
                 displaycols = range(len(self.rset.syntax_tree().children[0].selection))
         return displaycols
-    
+
     def call(self, title=None, subvid=None, displayfilter=None, headers=None,
              displaycols=None, displayactions=None, actions=(), divid=None,
              cellvids=None, cellattrs=None):
@@ -170,7 +170,7 @@ class TableView(AnyRsetView):
         if currentlydisplayed:
             return [(showhide, showlabel, 'hidden', '%sShow' % divid),
                     (showhide, hidelabel, None, '%sHide' % divid)]
-        return [(showhide, showlabel, None, '%sShow' % divid), 
+        return [(showhide, showlabel, None, '%sShow' % divid),
                 (showhide, hidelabel, 'hidden', '%sHide' % divid)]
 
     def render_actions(self, divid, actions):
@@ -185,7 +185,7 @@ class TableView(AnyRsetView):
             menu.append(BoxLink(url, label, klass, ident=ident, escape=True))
         box.render(w=self.w)
         self.w(u'<div class="clear"/>')
-        
+
     def get_columns(self, rqlstdescr, displaycols, headers, subvid, cellvids,
                     cellattrs, mainindex):
         columns = []
@@ -215,15 +215,15 @@ class TableView(AnyRsetView):
 
             if cellattrs and colindex in cellattrs:
                 for name, value in cellattrs[colindex].iteritems():
-                    column.add_attr(name,value)
+                    column.add_attr(name, value)
             # add column
             columns.append(column)
         return columns
-        
 
-    def render(self, cellvid, row, col, w):
+
+    def render_cell(self, cellvid, row, col, w):
         self.view('cell', self.rset, row=row, col=col, cellvid=cellvid, w=w)
-        
+
     def get_rows(self):
         return self.rset
 
@@ -246,18 +246,18 @@ class TableView(AnyRsetView):
         entity = self.rset.get_entity(row, col)
         return entity.sortvalue()
 
+
 class EditableTableView(TableView):
     id = 'editable-table'
     finalview = 'editable-final'
     title = _('editable-table')
 
-    
+
 class CellView(EntityView):
-    __selectors__ = (nonempty_rset, accept_rset)
-    
+    __select__ = nonempty_rset()
+
     id = 'cell'
-    accepts = ('Any',)
-    
+
     def cell_call(self, row, col, cellvid=None):
         """
         :param row, col: indexes locating the cell value in view's result set
@@ -278,23 +278,22 @@ class CellView(EntityView):
 
 class InitialTableView(TableView):
     """same display as  table view but consider two rql queries :
-    
+
     * the default query (ie `rql` form parameter), which is only used to select
       this view and to build the filter form. This query should have the same
       structure as the actual without actual restriction (but link to
       restriction variables) and usually with a limit for efficiency (limit set
       to 2 is advised)
-      
+
     * the actual query (`actualrql` form parameter) whose results will be
       displayed with default restrictions set
     """
     id = 'initialtable'
-    __selectors__ = nonempty_rset, match_form_params
-    form_params = ('actualrql',)
+    __select__ = nonempty_rset() & match_form_params('actualrql')
     # should not be displayed in possible view since it expects some specific
     # parameters
     title = None
-    
+
     def call(self, title=None, subvid=None, headers=None, divid=None,
              displaycols=None, displayactions=None):
         """Dumps a table displaying a composite query"""
@@ -328,4 +327,3 @@ class InitialTableView(TableView):
 class EditableInitialTableTableView(InitialTableView):
     id = 'editable-initialtable'
     finalview = 'editable-final'
-    

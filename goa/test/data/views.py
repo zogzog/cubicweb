@@ -21,7 +21,7 @@ INDEX_TEMPLATE = template.Template(u'''
 
 class MyIndex(StartupView):
     id = 'index'
-    
+
     def call(self):
         ctx = template.Context({'user': self.req.user})
         return INDEX_TEMPLATE.render(ctx)

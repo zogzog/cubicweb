@@ -1,7 +1,7 @@
 """cubicweb-ctl commands and command handlers specific to the server.serverconfig
 
 :organization: Logilab
-:copyright: 2001-2008 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+:copyright: 2001-2009 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 """
 __docformat__ = "restructuredtext en"
@@ -9,10 +9,11 @@ __docformat__ = "restructuredtext en"
 import os
 
 from logilab.common.configuration import REQUIRED, Configuration, ini_format_section
+from logilab.common.clcommands import register_commands, cmd_run, pop_arg
 
 from cubicweb import AuthenticationError, ExecutionError, ConfigurationError
-from cubicweb.toolsutils import Command, CommandHandler, pop_arg, cmd_run, \
-     register_commands, confirm, restrict_perms_to_user
+from cubicweb.toolsutils import (Command, CommandHandler, confirm,
+                                 restrict_perms_to_user)
 from cubicweb.server.serverconfig import ServerConfiguration
 
 
@@ -88,7 +89,7 @@ def _db_sys_cnx(source, what, db=None, user=None, verbose=True):
         # set_isolation_level() is psycopg specific
         pass
     return cnx
-    
+
 def generate_sources_file(sourcesfile, sourcescfg, keys=None):
     """serialize repository'sources configuration into a INI like file
 
@@ -108,7 +109,7 @@ def generate_sources_file(sourcesfile, sourcescfg, keys=None):
             # get a Configuration object
             _sconfig = Configuration(options=SOURCE_TYPES[sconfig['adapter']].options)
             for attr, val in sconfig.items():
-                if attr == 'uri': 
+                if attr == 'uri':
                     continue
                 if attr == 'adapter':
                     _sconfig.adapter = val
@@ -138,8 +139,10 @@ def repo_cnx(config):
             return in_memory_cnx(config, login, pwd)
         except AuthenticationError:
             print 'wrong user/password'
+            # reset cubes else we'll have an assertion error on next retry
+            config._cubes = None
         login, pwd = manager_userpasswd()
-    
+
 # repository specific command handlers ########################################
 
 class RepositoryCreateHandler(CommandHandler):
@@ -186,14 +189,14 @@ class RepositoryCreateHandler(CommandHandler):
         restrict_perms_to_user(sourcesfile)
         # remember selected cubes for later initialization of the database
         config.write_bootstrap_cubes_file(cubes)
-        
+
     def postcreate(self):
         if confirm('do you want to create repository\'s system database?'):
             verbosity = (self.config.mode == 'installed') and 'y' or 'n'
             cmd_run('db-create', self.config.appid, '--verbose=%s' % verbosity)
         else:
             print 'nevermind, you can do it later using the db-create command'
-            
+
 USER_OPTIONS =  (
     ('login', {'type' : 'string',
                'default': REQUIRED,
@@ -235,7 +238,7 @@ class RepositoryDeleteHandler(CommandHandler):
                 cnx.rollback()
                 raise
 
-    
+
 class RepositoryStartHandler(CommandHandler):
     cmdname = 'start'
     cfgname = 'repository'
@@ -246,7 +249,7 @@ class RepositoryStartHandler(CommandHandler):
             command.append('--debug')
         command.append(self.config.appid)
         return ' '.join(command)
-        
+
 
 class RepositoryStopHandler(CommandHandler):
     cmdname = 'stop'
@@ -259,12 +262,12 @@ class RepositoryStopHandler(CommandHandler):
         if self.config.pyro_enabled():
             from cubicweb.server.repository import pyro_unregister
             pyro_unregister(self.config)
-    
+
 
 # repository specific commands ################################################
 class CreateApplicationDBCommand(Command):
     """Create the system database of an application (run after 'create').
-    
+
     You will be prompted for a login / password to use to connect to
     the system database.  The given user should have almost all rights
     on the database (ie a super user on the dbms allowed to create
@@ -275,7 +278,7 @@ class CreateApplicationDBCommand(Command):
     """
     name = 'db-create'
     arguments = '<application>'
-    
+
     options = (
         ("create-db",
          {'short': 'c', 'type': "yn", 'metavar': '<y or n>',
@@ -327,11 +330,11 @@ class CreateApplicationDBCommand(Command):
             except:
                 dbcnx.rollback()
                 raise
-        cnx = system_source_cnx(source, special_privs='LANGUAGE C', verbose=verbose) 
+        cnx = system_source_cnx(source, special_privs='LANGUAGE C', verbose=verbose)
         cursor = cnx.cursor()
         indexer = get_indexer(driver)
         indexer.init_extensions(cursor)
-        # postgres specific stuff        
+        # postgres specific stuff
         if driver == 'postgres':
             # install plpythonu/plpgsql language if not installed by the cube
             for extlang in ('plpythonu', 'plpgsql'):
@@ -345,10 +348,10 @@ class CreateApplicationDBCommand(Command):
         else:
             print 'nevermind, you can do it later using the db-init command'
 
-    
+
 class InitApplicationCommand(Command):
     """Initialize the system database of an application (run after 'db-create').
-    
+
     You will be prompted for a login / password to use to connect to
     the system database.  The given user should have the create tables,
     and grant permissions.
@@ -358,7 +361,7 @@ class InitApplicationCommand(Command):
     """
     name = 'db-init'
     arguments = '<application>'
-    
+
     options = (
         ("drop",
          {'short': 'd', 'action': 'store_true',
@@ -376,7 +379,7 @@ tables, indexes... (no by default)'}),
 
 class GrantUserOnApplicationCommand(Command):
     """Grant a database user on a repository system database.
-    
+
     <application>
       the identifier of the application
     <user>
@@ -387,7 +390,7 @@ class GrantUserOnApplicationCommand(Command):
 
     options = (
         ("set-owner",
-         {'short': 'o', 'type' : "yn", 'metavar' : '<yes or no>', 
+         {'short': 'o', 'type' : "yn", 'metavar' : '<yes or no>',
           'default' : False,
           'help': 'Set the user as tables owner if yes (no by default).'}
          ),
@@ -416,10 +419,10 @@ class GrantUserOnApplicationCommand(Command):
             print 'grants given to %s on application %s' % (appid, user)
 
 
-    
+
 class StartRepositoryCommand(Command):
     """Start an CubicWeb RQL server for a given application.
-    
+
     The server will be accessible through pyro
 
     <application>
@@ -427,7 +430,7 @@ class StartRepositoryCommand(Command):
     """
     name = 'start-repository'
     arguments = '<application>'
-    
+
     options = (
         ("debug",
          {'short': 'D', 'action' : 'store_true',
@@ -466,8 +469,8 @@ def _remote_dump(host, appid, output, sudo=False):
     if os.system(dmpcmd):
         raise ExecutionError('Error while dumping the database')
     if output is None:
-        from mx.DateTime import today
-        date = today().strftime('%Y-%m-%d')
+        from datetime import date
+        date = date.today().strftime('%Y-%m-%d')
         output = '%s-%s.dump' % (appid, date)
     cmd = 'scp %s:/tmp/%s.dump %s' % (host, appid, output)
     print cmd
@@ -533,7 +536,7 @@ def application_status(config, cubicwebapplversion, vcconf):
             applversion = vcconf[cube]
         except KeyError:
             print "no cube version information for %s in version configuration" % cube
-            continue            
+            continue
         if softversion == applversion:
             continue
         if softversion > applversion:
@@ -541,11 +544,11 @@ def application_status(config, cubicwebapplversion, vcconf):
         elif softversion < applversion:
             return 'needapplupgrade'
     return None
-    
+
 
 class DBDumpCommand(Command):
     """Backup the system database of an application.
-    
+
     <application>
       the identifier of the application to backup
       format [[user@]host:]appname
@@ -555,7 +558,7 @@ class DBDumpCommand(Command):
 
     options = (
         ("output",
-         {'short': 'o', 'type' : "string", 'metavar' : '<file>', 
+         {'short': 'o', 'type' : "string", 'metavar' : '<file>',
           'default' : None,
           'help': 'Specify the backup file where the backup will be stored.'}
          ),
@@ -577,7 +580,7 @@ class DBDumpCommand(Command):
 
 class DBRestoreCommand(Command):
     """Restore the system database of an application.
-    
+
     <application>
       the identifier of the application to restore
     """
@@ -586,7 +589,7 @@ class DBRestoreCommand(Command):
 
     options = (
         ("no-drop",
-         {'short': 'n', 'action' : 'store_true', 
+         {'short': 'n', 'action' : 'store_true',
           'default' : False,
           'help': 'for some reason the database doesn\'t exist and so '
           'should not be dropped.'}
@@ -601,7 +604,7 @@ class DBRestoreCommand(Command):
 
 class DBCopyCommand(Command):
     """Copy the system database of an application (backup and restore).
-    
+
     <src-application>
       the identifier of the application to backup
       format [[user@]host:]appname
@@ -614,7 +617,7 @@ class DBCopyCommand(Command):
 
     options = (
         ("no-drop",
-         {'short': 'n', 'action' : 'store_true', 
+         {'short': 'n', 'action' : 'store_true',
           'default' : False,
           'help': 'For some reason the database doesn\'t exist and so '
           'should not be dropped.'}
@@ -647,10 +650,10 @@ class DBCopyCommand(Command):
         else:
             os.remove(output)
 
-        
+
 class CheckRepositoryCommand(Command):
     """Check integrity of the system database of an application.
-    
+
     <application>
       the identifier of the application to check
     """
@@ -659,25 +662,25 @@ class CheckRepositoryCommand(Command):
 
     options = (
         ("checks",
-         {'short': 'c', 'type' : "csv", 'metavar' : '<check list>', 
+         {'short': 'c', 'type' : "csv", 'metavar' : '<check list>',
           'default' : ('entities', 'relations', 'metadata', 'schema', 'text_index'),
           'help': 'Comma separated list of check to run. By default run all \
 checks, i.e. entities, relations, text_index and metadata.'}
          ),
-        
+
         ("autofix",
-         {'short': 'a', 'type' : "yn", 'metavar' : '<yes or no>', 
+         {'short': 'a', 'type' : "yn", 'metavar' : '<yes or no>',
           'default' : False,
           'help': 'Automatically correct integrity problems if this option \
 is set to "y" or "yes", else only display them'}
          ),
         ("reindex",
-         {'short': 'r', 'type' : "yn", 'metavar' : '<yes or no>', 
+         {'short': 'r', 'type' : "yn", 'metavar' : '<yes or no>',
           'default' : False,
           'help': 're-indexes the database for full text search if this \
 option is set to "y" or "yes" (may be long for large database).'}
          ),
-        
+
         )
 
     def run(self, args):
@@ -691,7 +694,7 @@ option is set to "y" or "yes" (may be long for large database).'}
 
 class RebuildFTICommand(Command):
     """Rebuild the full-text index of the system database of an application.
-    
+
     <application>
       the identifier of the application to rebuild
     """
@@ -709,10 +712,10 @@ class RebuildFTICommand(Command):
         reindex_entities(repo.schema, session)
         cnx.commit()
 
-    
+
 class SynchronizeApplicationSchemaCommand(Command):
     """Synchronize persistent schema with cube schema.
-        
+
     Will synchronize common stuff between the cube schema and the
     actual persistent schema, but will not add/remove any entity or relation.
 
@@ -729,7 +732,7 @@ class SynchronizeApplicationSchemaCommand(Command):
         mih.cmd_synchronize_schema()
 
 
-register_commands( (CreateApplicationDBCommand,                   
+register_commands( (CreateApplicationDBCommand,
                     InitApplicationCommand,
                     GrantUserOnApplicationCommand,
                     StartRepositoryCommand,

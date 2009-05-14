@@ -7,11 +7,12 @@
 __docformat__ = "restructuredtext en"
 
 from urlparse import urlsplit, urlunsplit
-from mx.DateTime import now
+from datetime import datetime
 
 from logilab.common.decorators import cached
 
-from cubicweb.common.entity import _marker
+from cubicweb import UnknownProperty
+from cubicweb.entity import _marker
 from cubicweb.entities import AnyEntity, fetch_config
 
 def mangle_email(address):
@@ -25,19 +26,15 @@ class EmailAddress(AnyEntity):
     id = 'EmailAddress'
     fetch_attrs, fetch_order = fetch_config(['address', 'alias', 'canonical'])
 
-    widgets = {
-        'address' : "EmailWidget",
-        }
-
     def dc_title(self):
         if self.alias:
             return '%s <%s>' % (self.alias, self.display_address())
         return self.display_address()
-    
+
     @property
     def email_of(self):
         return self.reverse_use_email and self.reverse_use_email[0]
-    
+
     @cached
     def canonical_form(self):
         if self.canonical:
@@ -91,39 +88,32 @@ Emailaddress = class_renamed('Emailaddress', EmailAddress)
 Emailaddress.id = 'Emailaddress'
 
 
-class EProperty(AnyEntity):
-    id = 'EProperty'
+class CWProperty(AnyEntity):
+    id = 'CWProperty'
 
     fetch_attrs, fetch_order = fetch_config(['pkey', 'value'])
-
-    widgets = {
-        'pkey' : "PropertyKeyWidget",
-        'value' : "PropertyValueWidget",
-        }
-    
     rest_attr = 'pkey'
 
     def typed_value(self):
         return self.vreg.typed_value(self.pkey, self.value)
-        
-    def dc_description(self):
-        return self.req._(self.vreg.property_info(self.pkey)['help'])
+
+    def dc_description(self, format='text/plain'):
+        try:
+            return self.req._(self.vreg.property_info(self.pkey)['help'])
+        except UnknownProperty:
+            return u''
 
     def after_deletion_path(self):
         """return (path, parameters) which should be used as redirect
         information when this entity is being deleted
         """
         return 'view', {}
-        
+
 
 class Bookmark(AnyEntity):
     """customized class for Bookmark entities"""
     id = 'Bookmark'
     fetch_attrs, fetch_order = fetch_config(['title', 'path'])
-    widgets = {
-        'path' : "StringWidget",
-        }
-    __rtags__ = {'path': 'primary'}
 
     def actual_url(self):
         url = self.req.build_url(self.path)
@@ -139,14 +129,15 @@ class Bookmark(AnyEntity):
     def action_url(self):
         return self.absolute_url() + '/follow'
 
-class ECache(AnyEntity):
+
+class CWCache(AnyEntity):
     """Cache"""
-    id = 'ECache'
-    
+    id = 'CWCache'
     fetch_attrs, fetch_order = fetch_config(['name'])
 
     def touch(self):
-        self.req.execute('SET X timestamp %(t)s WHERE X eid %(x)s', {'t': now(), 'x': self.eid}, 'x')
+        self.req.execute('SET X timestamp %(t)s WHERE X eid %(x)s',
+                         {'t': datetime.now(), 'x': self.eid}, 'x')
 
     def valid(self, date):
         return date < self.timestamp

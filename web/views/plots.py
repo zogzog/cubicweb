@@ -2,8 +2,10 @@ import os
 
 from logilab.common import flatten
 
+from cubicweb.vregistry import objectify_selector
 from cubicweb.web.views import baseviews
 
+@objectify_selector
 def plot_selector(cls, req, rset, *args, **kwargs):
     """accept result set with at least one line and two columns of result
     all columns after second must be of numerical types"""
@@ -23,8 +25,7 @@ try:
     import sys
     if 'matplotlib.backends' not in sys.modules:
         matplotlib.use('Agg')
-    from matplotlib.ticker import FormatStrFormatter
-    from pylab import figure, show
+    from pylab import figure
 except ImportError:
     pass
 else:
@@ -34,7 +35,7 @@ else:
         binary = True
         content_type = 'image/png'
         _plot_count = 0
-        __selectors__ = (plot_selector,)
+        __select__ = plot_selector()
 
         def call(self, width=None, height=None):
             # compute dimensions
@@ -55,7 +56,7 @@ else:
             abscisses = [row[0] for row in self.rset]
             courbes = []
             nbcols = len(self.rset.rows[0])
-            for col in range(1,nbcols):
+            for col in xrange(1, nbcols):
                 courbe = [row[col] for row in self.rset]
                 courbes.append(courbe)
             if not courbes:
@@ -70,7 +71,7 @@ else:
             except ValueError:
                 xlabels = abscisses
                 abscisses = range(len(xlabels))
-            for idx,courbe in enumerate(courbes):
+            for idx, courbe in enumerate(courbes):
                 ax.plot(abscisses, courbe, '%sv-' % colors[idx], label=self.rset.description[0][idx+1])
             ax.autoscale_view()
             alldata = flatten(courbes)

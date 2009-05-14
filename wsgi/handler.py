@@ -1,7 +1,7 @@
 """WSGI request handler for cubicweb
 
 :organization: Logilab
-:copyright: 2008 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+:copyright: 2008-2009 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 """
 
@@ -74,7 +74,7 @@ class WSGIResponse(object):
 
     def __iter__(self):
         return iter(self.body)
-    
+
 
 
 class CubicWebWSGIApplication(object):
@@ -100,7 +100,7 @@ class CubicWebWSGIApplication(object):
             self.url_rewriter = self.appli.vreg.select_component('urlrewriter')
         except ObjectNotFound:
             self.url_rewriter = None
-        
+
     def _render(self, req):
         """this function performs the actual rendering
         XXX missing: https handling, url rewriting, cache management,
@@ -156,8 +156,8 @@ class CubicWebWSGIApplication(object):
             # 500 Internal server error
             return self.redirect(req, req.build_url('error'))
         return WSGIResponse(200, req, result)
-        
-    
+
+
     def __call__(self, environ, start_response):
         """WSGI protocol entry point"""
         req = CubicWebWsgiRequest(environ, self.appli.vreg, self.base_url)
@@ -170,7 +170,7 @@ class CubicWebWSGIApplication(object):
         self.debug('redirecting to %s', location)
         req.set_header('location', str(location))
         return WSGIResponse(303, req)
-        
+
     def request_auth(self, req, loggedout=False):
         """returns the appropriate WSGIResponse to require the user to log in
         """

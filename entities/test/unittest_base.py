@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """unit tests for cubicweb.entities.base module"""
 
-from mx.DateTime import now
-
 from logilab.common.testlib import unittest_main
 from logilab.common.decorators import clear_cache
 from logilab.common.interface import implements
@@ -12,7 +10,7 @@ from cubicweb.devtools.apptest import EnvBasedTC
 from cubicweb import ValidationError
 from cubicweb.interfaces import IMileStone, IWorkflowable
 from cubicweb.entities import AnyEntity
-from cubicweb.entities.authobjs import EUser
+from cubicweb.entities.authobjs import CWUser
 from cubicweb.web.widgets import AutoCompletionWidget
 
 
@@ -20,59 +18,45 @@ class BaseEntityTC(EnvBasedTC):
 
     def setup_database(self):
         self.member = self.create_user('member')
-    
-                     
-    
+
+
+
 class MetadataTC(BaseEntityTC):
 
     def test_creator(self):
         self.login(u'member')
-        card = self.add_entity('Card', title=u"hello")
+        entity = self.add_entity('Bookmark', title=u"hello", path=u'project/cubicweb')
         self.commit()
-        self.assertEquals(card.creator.eid, self.member.eid)
-        self.assertEquals(card.dc_creator(), u'member')
+        self.assertEquals(entity.creator.eid, self.member.eid)
+        self.assertEquals(entity.dc_creator(), u'member')
 
     def test_type(self):
-        self.assertEquals(self.member.dc_type(), 'euser')
+        self.assertEquals(self.member.dc_type(), 'cwuser')
 
-    def test_custom_widget(self):
-        class EUser2(EUser):
-            widgets = {
-                'login' : 'AutoCompletionWidget',
-                }
-        clear_cache(self.vreg, 'etype_class')
-        self.vreg.register_vobject_class(EUser2)
-        p = self.entity('EUser U WHERE U login "member"')
-        self.failUnless(isinstance(p, EUser2))
-        w = p.get_widget('login')
-        self.failUnless(isinstance(w, AutoCompletionWidget))
-
-    def test_format_vocabulary(self):
-        card = self.add_entity('Card', title=u"hello")
-        self.assertEquals(card.default_content_format(), 'text/html')
-        self.execute('INSERT EProperty X: X pkey "ui.default-text-format", X value "text/rest", X for_user U WHERE U login "admin"')
-        self.commit()
-        self.assertEquals(card.default_content_format(), 'text/rest')
-        
+    def test_entity_meta_attributes(self):
+        # XXX move to yams
+        self.assertEquals(self.schema['CWUser'].meta_attributes(), {})
+        self.assertEquals(dict((str(k), v) for k, v in self.schema['State'].meta_attributes().iteritems()),
+                          {'description_format': ('format', 'description')})
 
 
-class EUserTC(BaseEntityTC):
+class CWUserTC(BaseEntityTC):
     def test_dc_title_and_name(self):
-        e = self.entity('EUser U WHERE U login "member"')
+        e = self.entity('CWUser U WHERE U login "member"')
         self.assertEquals(e.dc_title(), 'member')
         self.assertEquals(e.name(), 'member')
-        self.execute(u'SET X firstname "bouah" WHERE X is EUser, X login "member"')
+        self.execute(u'SET X firstname "bouah" WHERE X is CWUser, X login "member"')
         self.assertEquals(e.dc_title(), 'member')
         self.assertEquals(e.name(), u'bouah')
-        self.execute(u'SET X surname "lôt" WHERE X is EUser, X login "member"')
+        self.execute(u'SET X surname "lôt" WHERE X is CWUser, X login "member"')
         self.assertEquals(e.dc_title(), 'member')
         self.assertEquals(e.name(), u'bouah lôt')
 
-    
+
 class StateAndTransitionsTC(BaseEntityTC):
-        
+
     def test_transitions(self):
-        user = self.entity('EUser X')
+        user = self.entity('CWUser X')
         e = self.entity('State S WHERE S name "activated"')
         trs = list(e.transitions(user))
         self.assertEquals(len(trs), 1)
@@ -86,12 +70,12 @@ class StateAndTransitionsTC(BaseEntityTC):
         e = self.entity('State S WHERE S name "activated"')
         trs = list(e.transitions(user))
         self.assertEquals(len(trs), 0)
-        user = self.entity('EUser X')
+        user = self.entity('CWUser X')
         self.assert_(not user.can_pass_transition('deactivate'))
         self.assert_(not user.can_pass_transition('activate'))
-        
+
     def test_transitions_with_dest_specfied(self):
-        user = self.entity('EUser X')
+        user = self.entity('CWUser X')
         e = self.entity('State S WHERE S name "activated"')
         e2 = self.entity('State S WHERE S name "deactivated"')
         trs = list(e.transitions(user, e2.eid))
@@ -100,20 +84,20 @@ class StateAndTransitionsTC(BaseEntityTC):
         self.assertEquals(trs[0].destination().name, u'deactivated')
         trs = list(e.transitions(user, e.eid))
         self.assertEquals(len(trs), 0)
-    
+
     def test_transitions_maybe_passed(self):
         self.execute('INSERT RQLExpression X: X exprtype "ERQLExpression", '
                      'X expression "X owned_by U", T condition X '
                      'WHERE T name "deactivate"')
         self._test_deactivated()
-        
+
     def test_transitions_maybe_passed_using_has_update_perm(self):
         self.execute('INSERT RQLExpression X: X exprtype "ERQLExpression", '
                      'X expression "U has_update_permission X", T condition X '
                      'WHERE T name "deactivate"')
         self._test_deactivated()
-        
-        
+
+
     def _test_deactivated(self):
         ueid = self.create_user('toto').eid
         self.create_user('tutu')
@@ -131,12 +115,12 @@ class StateAndTransitionsTC(BaseEntityTC):
         self.assertRaises(ValidationError,
                           cu.execute, 'SET X in_state S WHERE X eid %(x)s, S name "activated"',
                           {'x': ueid}, 'x')
-    
+
 
     def test_transitions_selection(self):
         """
         ------------------------  tr1    -----------------
-        | state1 (Card, Bookmark) | ------> | state2 (Card) |
+        | state1 (CWGroup, Bookmark) | ------> | state2 (CWGroup) |
         ------------------------         -----------------
                   |  tr2    ------------------
                   `------>  | state3 (Bookmark) |
@@ -147,11 +131,11 @@ class StateAndTransitionsTC(BaseEntityTC):
         state3 = self.add_entity('State', name=u'state3')
         tr1 = self.add_entity('Transition', name=u'tr1')
         tr2 = self.add_entity('Transition', name=u'tr2')
-        self.execute('SET X state_of Y WHERE X eid in (%s, %s), Y is EEType, Y name "Card"' %
+        self.execute('SET X state_of Y WHERE X eid in (%s, %s), Y is CWEType, Y name "CWGroup"' %
                       (state1.eid, state2.eid))
-        self.execute('SET X state_of Y WHERE X eid in (%s, %s), Y is EEType, Y name "Bookmark"' %
+        self.execute('SET X state_of Y WHERE X eid in (%s, %s), Y is CWEType, Y name "Bookmark"' %
                       (state1.eid, state3.eid))
-        self.execute('SET X transition_of Y WHERE X eid %s, Y name "Card"' % tr1.eid)
+        self.execute('SET X transition_of Y WHERE X eid %s, Y name "CWGroup"' % tr1.eid)
         self.execute('SET X transition_of Y WHERE X eid %s, Y name "Bookmark"' % tr2.eid)
         self.execute('SET X allowed_transition Y WHERE X eid %s, Y eid %s' %
                       (state1.eid, tr1.eid))
@@ -161,36 +145,35 @@ class StateAndTransitionsTC(BaseEntityTC):
                       (tr1.eid, state2.eid))
         self.execute('SET X destination_state Y WHERE X eid %s, Y eid %s' %
                       (tr2.eid, state3.eid))
-        self.execute('SET X initial_state Y WHERE Y eid %s, X name "Card"' % state1.eid)
+        self.execute('SET X initial_state Y WHERE Y eid %s, X name "CWGroup"' % state1.eid)
         self.execute('SET X initial_state Y WHERE Y eid %s, X name "Bookmark"' % state1.eid)
-        card = self.add_entity('Card', title=u't1')
-        bookmark = self.add_entity('Bookmark', title=u'111', path=u'/view')
-        
-        transitions = list(state1.transitions(card))
+        group = self.add_entity('CWGroup', name=u't1')
+        transitions = list(state1.transitions(group))
         self.assertEquals(len(transitions), 1)
         self.assertEquals(transitions[0].name, 'tr1')
+        bookmark = self.add_entity('Bookmark', title=u'111', path=u'/view')
         transitions = list(state1.transitions(bookmark))
         self.assertEquals(len(transitions), 1)
         self.assertEquals(transitions[0].name, 'tr2')
-        
+
 
     def test_transitions_selection2(self):
         """
         ------------------------  tr1 (Bookmark)   -----------------------
-        | state1 (Card, Bookmark) | -------------> | state2 (Card,Bookmark) |
+        | state1 (CWGroup, Bookmark) | -------------> | state2 (CWGroup,Bookmark) |
         ------------------------                -----------------------
-                  |  tr2 (Card)                     |
+                  |  tr2 (CWGroup)                     |
                   `---------------------------------/
         """
         state1 = self.add_entity('State', name=u'state1')
         state2 = self.add_entity('State', name=u'state2')
         tr1 = self.add_entity('Transition', name=u'tr1')
         tr2 = self.add_entity('Transition', name=u'tr2')
-        self.execute('SET X state_of Y WHERE X eid in (%s, %s), Y is EEType, Y name "Card"' %
+        self.execute('SET X state_of Y WHERE X eid in (%s, %s), Y is CWEType, Y name "CWGroup"' %
                       (state1.eid, state2.eid))
-        self.execute('SET X state_of Y WHERE X eid in (%s, %s), Y is EEType, Y name "Bookmark"' %
+        self.execute('SET X state_of Y WHERE X eid in (%s, %s), Y is CWEType, Y name "Bookmark"' %
                       (state1.eid, state2.eid))
-        self.execute('SET X transition_of Y WHERE X eid %s, Y name "Card"' % tr1.eid)
+        self.execute('SET X transition_of Y WHERE X eid %s, Y name "CWGroup"' % tr1.eid)
         self.execute('SET X transition_of Y WHERE X eid %s, Y name "Bookmark"' % tr2.eid)
         self.execute('SET X allowed_transition Y WHERE X eid %s, Y eid %s' %
                       (state1.eid, tr1.eid))
@@ -200,18 +183,17 @@ class StateAndTransitionsTC(BaseEntityTC):
                       (tr1.eid, state2.eid))
         self.execute('SET X destination_state Y WHERE X eid %s, Y eid %s' %
                       (tr2.eid, state2.eid))
-        self.execute('SET X initial_state Y WHERE Y eid %s, X name "Card"' % state1.eid)
+        self.execute('SET X initial_state Y WHERE Y eid %s, X name "CWGroup"' % state1.eid)
         self.execute('SET X initial_state Y WHERE Y eid %s, X name "Bookmark"' % state1.eid)
-        card = self.add_entity('Card', title=u't1')
-        bookmark = self.add_entity('Bookmark', title=u'111', path=u'/view')
-        
-        transitions = list(state1.transitions(card))
+        group = self.add_entity('CWGroup', name=u't1')
+        transitions = list(state1.transitions(group))
         self.assertEquals(len(transitions), 1)
         self.assertEquals(transitions[0].name, 'tr1')
+        bookmark = self.add_entity('Bookmark', title=u'111', path=u'/view')
         transitions = list(state1.transitions(bookmark))
         self.assertEquals(len(transitions), 1)
         self.assertEquals(transitions[0].name, 'tr2')
-        
+
 
 class EmailAddressTC(BaseEntityTC):
     def test_canonical_form(self):
@@ -240,33 +222,19 @@ class EmailAddressTC(BaseEntityTC):
         self.assertEquals(email.printable_value('address'), 'syt')
 
 
-class EUserTC(BaseEntityTC):
-    
+class CWUserTC(BaseEntityTC):
+
     def test_complete(self):
-        e = self.entity('EUser X WHERE X login "admin"')
+        e = self.entity('CWUser X WHERE X login "admin"')
         e.complete()
 
-        
+
     def test_matching_groups(self):
-        e = self.entity('EUser X WHERE X login "admin"')
+        e = self.entity('CWUser X WHERE X login "admin"')
         self.failUnless(e.matching_groups('managers'))
         self.failIf(e.matching_groups('xyz'))
         self.failUnless(e.matching_groups(('xyz', 'managers')))
         self.failIf(e.matching_groups(('xyz', 'abcd')))
-
-    def test_subject_in_state_vocabulary(self):
-        # on a new entity
-        e = self.etype_instance('EUser')
-        rschema = e.e_schema.subject_relation('in_state')
-        states = list(e.subject_in_state_vocabulary(rschema))
-        self.assertEquals(len(states), 1)
-        self.assertEquals(states[0][0], u'activated') # list of (combobox view, state eid)
-        # on an existant entity
-        e = self.entity('Any X WHERE X is EUser')
-        self.assertEquals(e.in_state[0].name, 'activated')
-        states = list(e.subject_in_state_vocabulary(rschema))
-        self.assertEquals(len(states), 1)
-        self.assertEquals(states[0][0], u'deactivated') # list of (combobox view, state eid)
 
     def test_workflow_base(self):
         e = self.create_user('toto')
@@ -280,7 +248,7 @@ class EUserTC(BaseEntityTC):
         e.change_state(deactivatedeid, u'deactivate 2')
         self.commit()
         # get a fresh user to avoid potential cache issues
-        e = self.entity('EUser X WHERE X eid %s' % e.eid)
+        e = self.entity('CWUser X WHERE X eid %s' % e.eid)
         self.assertEquals([tr.comment for tr in e.reverse_wf_info_for],
                           [None, 'deactivate 1', 'activate 1', 'deactivate 2'])
         self.assertEquals(e.latest_trinfo().comment, 'deactivate 2')
@@ -289,10 +257,11 @@ class EUserTC(BaseEntityTC):
 class InterfaceTC(EnvBasedTC):
 
     def test_nonregr_subclasses_and_mixins_interfaces(self):
-        class MyUser(EUser):
+        class MyUser(CWUser):
             __implements__ = (IMileStone,)
+        self.vreg._loadedmods[__name__] = {}
         self.vreg.register_vobject_class(MyUser)
-        self.failUnless(implements(EUser, IWorkflowable))
+        self.failUnless(implements(CWUser, IWorkflowable))
         self.failUnless(implements(MyUser, IMileStone))
         self.failUnless(implements(MyUser, IWorkflowable))
 
@@ -303,7 +272,7 @@ class SpecializedEntityClassesTC(EnvBasedTC):
         # clear selector cache
         clear_cache(self.vreg, 'etype_class')
         return self.vreg.etype_class(etype)
-        
+
     def test_etype_class_selection_and_specialization(self):
         # no specific class for Subdivisions, the default one should be selected
         eclass = self.select_eclass('SubDivision')
@@ -311,6 +280,7 @@ class SpecializedEntityClassesTC(EnvBasedTC):
         #self.assertEquals(eclass.__bases__, (AnyEntity,))
         # build class from most generic to most specific and make
         # sure the most specific is always selected
+        self.vreg._loadedmods[__name__] = {}
         for etype in ('Company', 'Division', 'SubDivision'):
             class Foo(AnyEntity):
                 id = etype
@@ -324,6 +294,6 @@ class SpecializedEntityClassesTC(EnvBasedTC):
         # check Division eclass is still selected for plain Division entities
         eclass = self.select_eclass('Division')
         self.assertEquals(eclass.id, 'Division')
-        
+
 if __name__ == '__main__':
     unittest_main()

@@ -2,7 +2,7 @@
 are much more limited for the moment)
 
 :organization: Logilab
-:copyright: 2007-2008 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+:copyright: 2007-2009 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 """
 
@@ -11,7 +11,7 @@ __docformat__ = "restructuredtext en"
 from re import compile
 
 from cubicweb.web import Redirect
-from cubicweb.web.component import SingletonComponent
+from cubicweb.web.component import Component
 
 class RewriteCond(object):
     def __init__(self, condition, match='host', rules=(), action='rewrite'):
@@ -28,7 +28,7 @@ class RewriteCond(object):
     def match(self, **kwargs):
         self._match = self.condition.match(kwargs[self.match_part])
         return not self._match is None
-    
+
     def action_rewrite(self, path):
         for rgx, replace in self.rules:
             if not rgx.match(path) is None:
@@ -45,8 +45,8 @@ class RewriteCond(object):
     def action_stop(self, path):
         return path
 
-    
-class ApacheURLRewrite(SingletonComponent):
+
+class ApacheURLRewrite(Component):
     """inherit from this class with actual rules to activate apache style rewriting
 
     rules should have the form :
@@ -69,24 +69,24 @@ class ApacheURLRewrite(SingletonComponent):
         RewriteRule ^/(data/.*) http://localhost:8080/$1 [L,P]
         RewriteRule ^/(json.*) http://localhost:8080/$1 [L,P]
         RewriteRule ^/(.*) http://localhost:8080/m_%1/$1 [L,P]
-    
+
     could be written (considering that no "host rewritting" is necessary):
 
-      class MyAppRules(ApacheURLRewrite): 
+      class MyAppRules(ApacheURLRewrite):
         rules = [
           RewriteCond('logilab\.fr', match='host',
                       rules=[('/(.*)', r'http://www.logilab.fr/\1')],
                       action='redirect'),
           RewriteCond('(www)\.logilab\.fr', match='host', action='stop'),
           RewriteCond('/(data|json)/', match='path', action='stop'),
-          RewriteCond('(?P<cat>.*)\.logilab\.fr', match='host', 
+          RewriteCond('(?P<cat>.*)\.logilab\.fr', match='host',
                       rules=[('/(.*)', r'/m_%(cat)s/\1')]),
         ]
     """
     __abstract__ = True
     id = 'urlrewriter'
     rules = []
-        
+
     def rewrite(self, host, path):
         for cond in self.rules:
             if cond.match(host=host, path=path):

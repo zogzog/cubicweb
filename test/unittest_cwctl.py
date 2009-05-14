@@ -19,10 +19,10 @@ class CubicWebCtlTC(TestCase):
         sys.stdout = self.stream
     def tearDown(self):
         sys.stdout = sys.__stdout__
-        
+
     def test_list(self):
         from cubicweb.cwctl import ListCommand
         ListCommand().run([])
-        
+
 if __name__ == '__main__':
     unittest_main()

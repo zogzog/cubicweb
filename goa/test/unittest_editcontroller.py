@@ -8,27 +8,27 @@ from cubicweb.common.uilib import rql_for_eid
 from cubicweb.web import INTERNAL_FIELD_VALUE, Redirect
 
 from cubicweb.goa.goaconfig import GAEConfiguration
-from cubicweb.entities.authobjs import EUser
+from cubicweb.entities.authobjs import CWUser
 
 
 class EditControllerTC(GAEBasedTC):
-    
+
     config = GAEConfiguration('toto')
     config.global_set_option('use-google-auth', False)
     config.global_set_option('schema-type', 'yams')
     config.global_set_option('included-cubes', ())
     config.global_set_option('included-yams-cubes', ('blog',))
-    
+
     MODEL_CLASSES = ()
     from cubicweb.web.views import editcontroller
     from cubicweb.entities import lib
     LOAD_APP_MODULES = (editcontroller, lib)
-    
+
     def setUp(self):
         GAEBasedTC.setUp(self)
         self.req = self.request()
         self.ctrl = self.get_ctrl(self.req)
-        
+
     def get_ctrl(self, req):
         return self.vreg.select(self.vreg.registry_objects('controllers', 'edit'),
                                 req=req, appli=self)
@@ -69,13 +69,13 @@ class EditControllerTC(GAEBasedTC):
         """check behaviour of this controller without any form parameter"""
         self.req.form = {}
         self.assertRaises(ValidationError, self.publish, self.req)
-        
+
     def test_validation_unique(self):
-        """test creation of two linked entities"""        
+        """test creation of two linked entities"""
         user = self.user
-        self.req.form = {'eid': 'X', '__type:X': 'EUser',
-                         'login:X': self.user.login, 'edits-login:X': u'', 
-                         'upassword:X': u'toto', 'upassword-confirm:X': u'toto', 'edits-upassword:X': u'', 
+        self.req.form = {'eid': 'X', '__type:X': 'CWUser',
+                         'login:X': self.user.login, 'edits-login:X': u'',
+                         'upassword:X': u'toto', 'upassword-confirm:X': u'toto', 'edits-upassword:X': u'',
                          }
         self.assertRaises(ValidationError, self.publish, self.req)
 
@@ -84,13 +84,13 @@ class EditControllerTC(GAEBasedTC):
         """checking that a manager user can edit itself"""
         self.skip('missing actual gae support, retry latter')
         user = self.user
-        basegroups = [str(eid) for eid, in self.req.execute('EGroup G WHERE X in_group G, X eid %(x)s', {'x': user.eid})]
-        groupeids = [eid for eid, in self.req.execute('EGroup G WHERE G name in ("managers", "users")')]
+        basegroups = [str(eid) for eid, in self.req.execute('CWGroup G WHERE X in_group G, X eid %(x)s', {'x': user.eid})]
+        groupeids = [eid for eid, in self.req.execute('CWGroup G WHERE G name in ("managers", "users")')]
         groups = [str(eid) for eid in groupeids]
         stateeid = [eid for eid, in self.req.execute('State S WHERE S name "activated"')][0]
         self.req.form = {
             'eid':       user.eid,
-            '__type:'+user.eid:    'EUser',
+            '__type:'+user.eid:    'CWUser',
             'login:'+user.eid:     unicode(user.login),
             'firstname:'+user.eid: u'Th\xe9nault',
             'surname:'+user.eid:   u'Sylvain',
@@ -115,10 +115,10 @@ class EditControllerTC(GAEBasedTC):
         user = self.create_user('user')
         cnx = self.login('user')
         req = self.request()
-        #self.assertEquals(self.ctrl.schema['EUser']._groups['read'],
+        #self.assertEquals(self.ctrl.schema['CWUser']._groups['read'],
         #                  ('managers', 'users'))
         req.form = {
-            'eid': user.eid, '__type:'+user.eid: 'EUser',
+            'eid': user.eid, '__type:'+user.eid: 'CWUser',
             '__maineid' : str(user.eid),
             'upassword:'+user.eid: 'tournicoton',
             'upassword-confirm:'+user.eid: 'tournicoton',
@@ -134,10 +134,10 @@ class EditControllerTC(GAEBasedTC):
         relations (meaning no changes)
         """
         user = self.user
-        groupeids = [eid for eid, in self.req.execute('EGroup G WHERE X in_group G, X eid %(x)s', {'x': user.eid})]
+        groupeids = [eid for eid, in self.req.execute('CWGroup G WHERE X in_group G, X eid %(x)s', {'x': user.eid})]
         self.req.form = {
             'eid':       user.eid,
-            '__type:'+user.eid:    'EUser',
+            '__type:'+user.eid:    'CWUser',
             'login:'+user.eid:     unicode(user.login),
             'firstname:'+user.eid: u'Th\xe9nault',
             'surname:'+user.eid:   u'Sylvain',
@@ -155,23 +155,23 @@ class EditControllerTC(GAEBasedTC):
         self.assertUnorderedIterableEquals([g.eid for g in e.in_group], groupeids)
         #stateeids = [eid for eid, in self.req.execute('State S WHERE S name "activated"')]
         #self.assertEquals([s.eid for s in e.in_state], stateeids)
-        
-        
+
+
     def test_create_multiple_linked(self):
-        gueid = self.req.execute('EGroup G WHERE G name "users"')[0][0]
+        gueid = self.req.execute('CWGroup G WHERE G name "users"')[0][0]
         self.req.form = {'eid': ['X', 'Y'],
-                         
-                         '__type:X': 'EUser',
+
+                         '__type:X': 'CWUser',
                          '__maineid' : 'X',
-                         'login:X': u'adim', 'edits-login:X': u'', 
-                         'upassword:X': u'toto', 'upassword-confirm:X': u'toto', 'edits-upassword:X': u'', 
+                         'login:X': u'adim', 'edits-login:X': u'',
+                         'upassword:X': u'toto', 'upassword-confirm:X': u'toto', 'edits-upassword:X': u'',
                          'surname:X': u'Di Mascio', 'edits-surname:X': '',
 
-                         'in_group:X': gueid, 'edits-in_group:X': INTERNAL_FIELD_VALUE, 
-                         
+                         'in_group:X': gueid, 'edits-in_group:X': INTERNAL_FIELD_VALUE,
+
                          '__type:Y': 'EmailAddress',
                          'address:Y': u'dima@logilab.fr', 'edits-address:Y': '',
-                         'use_email:X': 'Y', 'edits-use_email:X': INTERNAL_FIELD_VALUE, 
+                         'use_email:X': 'Y', 'edits-use_email:X': INTERNAL_FIELD_VALUE,
                          }
         path, params = self.expect_redirect_publish()
         # should be redirected on the created person
@@ -180,17 +180,17 @@ class EditControllerTC(GAEBasedTC):
         self.assertEquals(e.surname, 'Di Mascio')
         email = e.use_email[0]
         self.assertEquals(email.address, 'dima@logilab.fr')
-        
+
     def test_edit_multiple_linked(self):
         peid = self.create_user('adim').eid
         self.req.form = {'eid': [peid, 'Y'],
-                         '__type:%s'%peid: 'EUser',
+                         '__type:%s'%peid: 'CWUser',
                          'surname:%s'%peid: u'Di Masci', 'edits-surname:%s'%peid: '',
-                         
+
                          '__type:Y': 'EmailAddress',
                          'address:Y': u'dima@logilab.fr', 'edits-address:Y': '',
                          'use_email:%s'%peid: 'Y', 'edits-use_email:%s'%peid: INTERNAL_FIELD_VALUE,
-                         
+
                          '__redirectrql': 'Any X WHERE X eid %s'%peid,
                          }
         path, params = self.expect_redirect_publish()
@@ -200,14 +200,14 @@ class EditControllerTC(GAEBasedTC):
         self.assertEquals(e.surname, 'Di Masci')
         email = e.use_email[0]
         self.assertEquals(email.address, 'dima@logilab.fr')
-        
+
         emaileid = email.eid
         self.req.form = {'eid': [peid, emaileid],
-                         '__type:%s'%peid: 'EUser',
+                         '__type:%s'%peid: 'CWUser',
                          'surname:%s'%peid: u'Di Masci', 'edits-surname:%s'%peid: 'Di Masci',
                          '__type:%s'%emaileid: 'EmailAddress',
                          'address:%s'%emaileid: u'adim@logilab.fr', 'edits-address:%s'%emaileid: 'dima@logilab.fr',
-                         'use_email:%s'%peid: emaileid, 'edits-use_email:%s'%peid: emaileid, 
+                         'use_email:%s'%peid: emaileid, 'edits-use_email:%s'%peid: emaileid,
                          '__redirectrql': 'Any X WHERE X eid %s'%peid,
                          }
         path, params = self.expect_redirect_publish()
@@ -220,28 +220,28 @@ class EditControllerTC(GAEBasedTC):
         email = e.use_email[0]
         self.assertEquals(email.address, 'adim@logilab.fr')
 
-        
+
     def test_password_confirm(self):
         """test creation of two linked entities
-        """        
+        """
         user = self.user
         self.req.form = {'__cloned_eid:X': user.eid,
-                         'eid': 'X', '__type:X': 'EUser',
-                         'login:X': u'toto', 'edits-login:X': u'', 
-                         'upassword:X': u'toto', 'edits-upassword:X': u'', 
+                         'eid': 'X', '__type:X': 'CWUser',
+                         'login:X': u'toto', 'edits-login:X': u'',
+                         'upassword:X': u'toto', 'edits-upassword:X': u'',
                          }
         self.assertRaises(ValidationError, self.publish, self.req)
         self.req.form = {'__cloned_eid:X': user.eid,
-                         'eid': 'X', '__type:X': 'EUser',
-                         'login:X': u'toto', 'edits-login:X': u'', 
-                         'upassword:X': u'toto', 'upassword-confirm:X': u'tutu', 'edits-upassword:X': u'', 
+                         'eid': 'X', '__type:X': 'CWUser',
+                         'login:X': u'toto', 'edits-login:X': u'',
+                         'upassword:X': u'toto', 'upassword-confirm:X': u'tutu', 'edits-upassword:X': u'',
                          }
         self.assertRaises(ValidationError, self.publish, self.req)
 
 
     def test_req_pending_insert(self):
         """make sure req's pending insertions are taken into account"""
-        tmpgroup = self.add_entity('EGroup', name=u"test")
+        tmpgroup = self.add_entity('CWGroup', name=u"test")
         user = self.user
         self.req.set_session_data('pending_insert', set([(user.eid, 'in_group', tmpgroup.eid)]))
         path, params = self.expect_redirect_publish()
@@ -254,7 +254,7 @@ class EditControllerTC(GAEBasedTC):
     def test_req_pending_delete(self):
         """make sure req's pending deletions are taken into account"""
         user = self.user
-        groupeid = self.req.execute('INSERT EGroup G: G name "test", U in_group G WHERE U eid %(x)s',
+        groupeid = self.req.execute('INSERT CWGroup G: G name "test", U in_group G WHERE U eid %(x)s',
                                     {'x': user.eid})[0][0]
         usergroups = [gname for gname, in
                       self.req.execute('Any N WHERE G name N, U in_group G, U eid %(u)s', {'u': user.eid})]
@@ -273,13 +273,13 @@ class EditControllerTC(GAEBasedTC):
         def custom_login_edit(self, formparams, value, relations):
             formparams['login'] = value.upper()
             relations.append('X login %(login)s')
-        EUser.custom_login_edit = custom_login_edit
+        CWUser.custom_login_edit = custom_login_edit
         try:
             user = self.user
             eid = repr(user.eid)
             self.req.form = {
                 'eid': eid,
-                '__type:'+eid:  'EUser',
+                '__type:'+eid:  'CWUser',
                 'login:'+eid: u'foo',
                 'edits-login:'+eid:  unicode(user.login),
                 }
@@ -287,8 +287,8 @@ class EditControllerTC(GAEBasedTC):
             rset = self.req.execute('Any L WHERE X eid %(x)s, X login L', {'x': user.eid}, 'x')
             self.assertEquals(rset[0][0], 'FOO')
         finally:
-            del EUser.custom_login_edit
-        
+            del CWUser.custom_login_edit
+
     def test_redirect_apply_button(self):
         redirectrql = rql_for_eid(4012) # whatever
         self.req.form = {
@@ -355,21 +355,21 @@ class EditControllerTC(GAEBasedTC):
         path, params = self.expect_redirect_publish()
         self.assertEquals(path, 'view')
         self.assertEquals(params, {u'__message': u'entities deleted'})
-        
+
 
     def test_nonregr_multiple_empty_email_addr(self):
-        gueid = self.req.execute('EGroup G WHERE G name "users"')[0][0]
+        gueid = self.req.execute('CWGroup G WHERE G name "users"')[0][0]
         self.req.form = {'eid': ['X', 'Y'],
-                         
-                         '__type:X': 'EUser',
-                         'login:X': u'adim', 'edits-login:X': u'', 
-                         'upassword:X': u'toto', 'upassword-confirm:X': u'toto', 'edits-upassword:X': u'', 
-                         'in_group:X': gueid, 'edits-in_group:X': INTERNAL_FIELD_VALUE, 
-                         
+
+                         '__type:X': 'CWUser',
+                         'login:X': u'adim', 'edits-login:X': u'',
+                         'upassword:X': u'toto', 'upassword-confirm:X': u'toto', 'edits-upassword:X': u'',
+                         'in_group:X': gueid, 'edits-in_group:X': INTERNAL_FIELD_VALUE,
+
                          '__type:Y': 'EmailAddress',
                          'address:Y': u'', 'edits-address:Y': '',
                          'alias:Y': u'', 'edits-alias:Y': '',
-                         'use_email:X': 'Y', 'edits-use_email:X': INTERNAL_FIELD_VALUE, 
+                         'use_email:X': 'Y', 'edits-use_email:X': INTERNAL_FIELD_VALUE,
                          }
         self.assertRaises(ValidationError, self.publish, self.req)
 
@@ -385,8 +385,8 @@ class EditControllerTC(GAEBasedTC):
             self.req.execute('SET P use_email E, P primary_email E WHERE P eid %(p)s, E eid %(e)s',
                          {'p' : p.eid, 'e' : e.eid})
             self.req.form = {'__cloned_eid:X': p.eid,
-                             'eid': 'X', '__type:X': 'EUser',
-                             'login': u'dodo', 'edits-login': u'dodo', 
+                             'eid': 'X', '__type:X': 'CWUser',
+                             'login': u'dodo', 'edits-login': u'dodo',
                              'surname:X': u'Boom', 'edits-surname:X': u'',
                              '__errorurl' : "whatever but required",
                              }
@@ -400,12 +400,12 @@ class EditControllerTC(GAEBasedTC):
                 self.req.form['rql'] = 'Any X WHERE X eid %s' % p.eid
                 self.req.form['vid'] = 'copy'
                 self.env.app.publish('view', self.req)
-            rset = self.req.execute('EUser P WHERE P surname "Boom"')
+            rset = self.req.execute('CWUser P WHERE P surname "Boom"')
             self.assertEquals(len(rset), 0)
         finally:
             p.__class__.skip_copy_for = old_skips
 
-        
+
 if __name__ == '__main__':
     from logilab.common.testlib import unittest_main
     unittest_main()

@@ -9,10 +9,10 @@ __docformat__ = "restructuredtext en"
 
 from logilab.mtconverter import html_escape
 
+from cubicweb.selectors import implements
 from cubicweb.interfaces import IProgress, IMileStone
 from cubicweb.schema import display_name
-from cubicweb.common.view import EntityView
-from cubicweb.common.selectors import implement_interface, accept
+from cubicweb.view import EntityView
 from cubicweb.web.htmlwidgets import ProgressBarWidget
 
 
@@ -32,12 +32,10 @@ class ProgressTableView(EntityView):
 
     header_for_COLNAME methods allow to customize header's label
     """
-    
+
     id = 'progress_table_view'
     title = _('task progression')
-    __selectors__ = (accept, implement_interface)
-
-    accepts_interfaces = (IMileStone,)
+    __select__ = implements(IMileStone)
 
     # default columns of the table
     columns = (_('project'), _('milestone'), _('state'), _('eta_date'),
@@ -89,7 +87,7 @@ class ProgressTableView(EntityView):
     def header_for_milestone(self, ecls):
         """use entity's type as label"""
         return display_name(self.req, ecls.id)
-    
+
     def table_header(self, ecls):
         """builds the table's header"""
         self.w(u'<thead><tr>')
@@ -103,7 +101,7 @@ class ProgressTableView(EntityView):
             self.w(u'<th>%s</th>' % html_escape(colname))
         self.w(u'</tr></thead>\n')
 
-    
+
     ## cell management ########################################################
     def build_project_cell(self, entity):
         """``project`` column cell renderer"""
@@ -119,7 +117,7 @@ class ProgressTableView(EntityView):
     def build_state_cell(self, entity):
         """``state`` column cell renderer"""
         return html_escape(self.req._(entity.state))
-    
+
     def build_eta_date_cell(self, entity):
         """``eta_date`` column cell renderer"""
         if entity.finished():
@@ -154,7 +152,7 @@ class ProgressTableView(EntityView):
         if costdescr:
             return u'%s (%s)' % (totalcost, ', '.join(costdescr))
         return unicode(totalcost)
-    
+
     def build_progress_cell(self, entity):
         """``progress`` column cell renderer"""
         progress =  u'<div class="progress_data">%s (%.2f%%)</div>' % (
@@ -167,7 +165,7 @@ class InContextProgressTableView(ProgressTableView):
     the ``project`` column
     """
     id = 'ic_progress_table_view'
-    
+
     def call(self):
         view = self.vreg.select_view('progress_table_view', self.req, self.rset)
         columns = list(view.columns)
@@ -175,16 +173,14 @@ class InContextProgressTableView(ProgressTableView):
             columns.remove('project')
         except ValueError:
             self.info('[ic_progress_table_view] could not remove project from columns')
-        view.dispatch(w=self.w, columns=columns)
+        view.render(w=self.w, columns=columns)
 
 
 class ProgressBarView(EntityView):
     """displays a progress bar"""
     id = 'progressbar'
     title = _('progress bar')
-    __selectors__ = (accept, implement_interface)
-
-    accepts_interfaces = (IProgress,)
+    __select__ = implements(IProgress)
 
     def cell_call(self, row, col):
         self.req.add_css('cubicweb.iprogress.css')

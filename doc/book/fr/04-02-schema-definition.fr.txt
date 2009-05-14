@@ -32,12 +32,12 @@ par exemple ::
   
   - `modification_date` (`Datetime`)
   
-  - `created_by` (`EUser`) (quel utilisateur a créé l'entité)
+  - `created_by` (`CWUser`) (quel utilisateur a créé l'entité)
   
-  - `owned_by` (`EUser`) (à qui appartient l'entité, par défaut le
+  - `owned_by` (`CWUser`) (à qui appartient l'entité, par défaut le
      créateur mais pas forcément et il peut exister plusieurs propriétaires)
      
-  - `is` (`EEType`)
+  - `is` (`CWEType`)
 
   
 * il est également possible de définir des relations dont le type d'entité est
@@ -167,7 +167,7 @@ ci-dessus), par exemple ::
     inlined = True
     cardinality = '?*'
     subject = '*'
-    object = 'EUser'
+    object = 'CWUser'
 
 En plus des permissions, les propriétés propres aux types de relation (et donc
 partagés par toutes les définitions de relation de ce type) sont :
@@ -263,16 +263,16 @@ avec les différences suivantes :
     'add'/'read' son pris en considération
 
 
-En plus de cela, le type d'entité `EPermission` de la librairie standard permet
+En plus de cela, le type d'entité `CWPermission` de la librairie standard permet
 de construire des modèles de sécurités très complexes et dynamiques. Le schéma
 de ce type d'entité est le suivant : ::
 
 
-    class EPermission(MetaEntityType):
+    class CWPermission(MetaEntityType):
 	"""entity type that may be used to construct some advanced security configuration
 	"""
 	name = String(required=True, indexed=True, internationalizable=True, maxsize=100)
-	require_group = SubjectRelation('EGroup', cardinality='+*',
+	require_group = SubjectRelation('CWGroup', cardinality='+*',
 					description=_('groups to which the permission is granted'))
 	require_state = SubjectRelation('State',
 				    description=_("entity'state in which the permission is applyable"))
@@ -311,7 +311,7 @@ Exemple de configuration extrait de *jpl* ::
 		       }
 	inlined = True
 
-Cette configuration suppose indique qu'une entité `EPermission` de nom
+Cette configuration suppose indique qu'une entité `CWPermission` de nom
 "add_version" peut-être associée à un projet et donner le droit de créer des
 versions sur ce projet à des groupes spécifiques. Il est important de noter les
 points suivants :
@@ -319,7 +319,7 @@ points suivants :
 * dans ce cas il faut protéger à la fois le type d'entité "Version" et la
   relation liant une version à un projet ("version_of")
 
-* du fait de la généricité du type d'entité `EPermission`, il faut effectuer
+* du fait de la généricité du type d'entité `CWPermission`, il faut effectuer
   l'unification avec les groupes et / ou les états le cas échéant dans
   l'expression ("U in_group G, P require_group G" dans l'exemple ci-dessus)
 
