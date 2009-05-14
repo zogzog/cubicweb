@@ -199,26 +199,6 @@ class CheckBox(Input):
 
     def render(self, form, field):
         name, curvalues, attrs = self._render_attrs(form, field)
-        options = []
-        for label, value in field.vocabulary(form):
-            if value in curvalues:
-                tag = tags.input(name=name, value=value, type=self.type,
-                                 checked='checked', **attrs)
-            else:
-                tag = tags.input(name=name, value=value, type=self.type,
-                                 **attrs)
-            options.append(tag + label)
-        return '<br/>\n'.join(options)
-
-
-class Radio(Input):
-    """<input type='radio'>, for field having a specific vocabulary. One
-    input will be generated for each possible value.
-    """
-    type = 'radio'
-
-    def render(self, form, field):
-        name, curvalues, attrs = self._render_attrs(form, field)
         domid = attrs.pop('id', None)
         options = []
         for i, (label, value) in enumerate(field.vocabulary(form)):
@@ -231,6 +211,12 @@ class Radio(Input):
             options.append(tag + label + '<br/>')
         return '\n'.join(options)
 
+
+class Radio(CheckBox):
+    """<input type='radio'>, for field having a specific vocabulary. One
+    input will be generated for each possible value.
+    """
+    type = 'radio'
 
 # javascript widgets ###########################################################
 
