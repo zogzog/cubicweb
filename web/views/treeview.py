@@ -9,6 +9,7 @@ __docformat__ = "restructuredtext en"
 from logilab.common.decorators import monkeypatch
 from logilab.mtconverter import html_escape
 
+from cubicweb.utils import make_uid
 from cubicweb.interfaces import ITree
 from cubicweb.selectors import implements
 from cubicweb.view import EntityView
@@ -24,23 +25,23 @@ class TreeView(EntityView):
     title = _('tree view')
 
     def call(self, subvid=None, treeid=None, initial_load=True):
-        if subvid is None and 'subvid' in self.req.form:
-            subvid = self.req.form.pop('subvid') # consume it
         if subvid is None:
-            subvid = 'oneline'
-        if treeid is None and 'treeid' in self.req.form:
-            treeid = self.req.form.pop('treeid')
-        assert treeid is not None
-        if initial_load:
-            self.req.add_css('jquery.treeview.css')
-            self.req.add_js(('cubicweb.ajax.js', 'jquery.treeview.js'))
-            self.req.html_headers.add_onload(u"""
-jQuery("#tree-%s").treeview({toggle: toggleTree, prerendered: true});""" % treeid)
+            subvid = self.req.form.pop('subvid', 'oneline') # consume it
+        if treeid is None:
+            treeid = self.req.form.pop('treeid', None)
+            if treeid is None:
+                self.warning('Tree state won\'t be properly restored after next reload')
+                treeid = make_uid('throw away uid')
         self.w(u'<ul id="tree-%s" class="%s">' % (treeid, self.css_classes))
         for rowidx in xrange(len(self.rset)):
             self.wview(self.itemvid, self.rset, row=rowidx, col=0,
                        vid=subvid, parentvid=self.id, treeid=treeid)
         self.w(u'</ul>')
+        if initial_load and not self.req.form.get('fname'):
+            self.req.add_css('jquery.treeview.css')
+            self.req.add_js(('cubicweb.ajax.js', 'jquery.treeview.js'))
+            self.req.html_headers.add_onload(u"""
+jQuery("#tree-%s").treeview({toggle: toggleTree, prerendered: true});""" % treeid)
 
 
 class FileTreeView(TreeView):
@@ -103,7 +104,6 @@ class TreeViewItemView(EntityView):
         w = self.w
         entity = self.entity(row, col)
         liclasses = []
-        is_leaf = False
         is_last = row == len(self.rset) - 1
         is_open = self.open_state(entity.eid, treeid)
         if not hasattr(entity, 'is_leaf') or entity.is_leaf():
@@ -123,7 +123,7 @@ class TreeViewItemView(EntityView):
                 divclasses.append('collapsable-hitarea')
             else:
                 liclasses.append('expandable')
-                divclasses.append('closed-hitarea expandable-hitarea')
+                divclasses.append('expandable-hitarea')
             if is_last:
                 if is_open:
                     liclasses.append('lastCollapsable')
@@ -135,11 +135,8 @@ class TreeViewItemView(EntityView):
                 w(u'<li class="%s">' % u' '.join(liclasses))
             else:
                 w(u'<li cubicweb:loadurl="%s" class="%s">' % (url, u' '.join(liclasses)))
-            if is_leaf:
-                divtail = ''
-            else:
-                divtail = ''' onclick="asyncRemoteExec('node_clicked', '%s', '%s')"''' % \
-                    (treeid, entity.eid)
+            divtail = """ onclick="asyncRemoteExec('node_clicked', '%s', '%s')" """ %\
+                (treeid, entity.eid)
             w(u'<div class="%s"%s></div>' % (u' '.join(divclasses), divtail))
 
             # add empty <ul> because jquery's treeview plugin checks for
@@ -148,7 +145,7 @@ class TreeViewItemView(EntityView):
                 w(u'<ul class="placeholder"><li>place holder</li></ul>')
         # the local node info
         self.wview(vid, self.rset, row=row, col=col)
-        if is_open: # recurse if needed
+        if is_open: # => not leaf => rql is defined
             self.wview(parentvid, self.req.execute(rql), treeid=treeid, initial_load=False)
         w(u'</li>')
 
