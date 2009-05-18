@@ -325,6 +325,11 @@ class Connection(object):
         self.vreg = None
         # session's data
         self.data = {}
+        # XXX < 3.2 bw compat
+        if 'EUser' in self._repo.get_schema():
+            self._user_etype = 'EUser'
+        else:
+            self._user_etype = 'CWUser'
 
     def __repr__(self):
         if self.anonymous_connection:
@@ -430,8 +435,8 @@ class Connection(object):
         eid, login, groups, properties = self._repo.user_info(self.sessionid, props)
         if req is None:
             req = self.request()
-        rset = req.eid_rset(eid, 'CWUser')
-        user = self.vreg.etype_class('CWUser')(req, rset, row=0, groups=groups,
+        rset = req.eid_rset(eid, self._user_etype)
+        user = self.vreg.etype_class(self._user_etype)(req, rset, row=0, groups=groups,
                                                properties=properties)
         user['login'] = login # cache login
         return user
