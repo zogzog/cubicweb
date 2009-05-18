@@ -350,7 +350,8 @@ class InlineEntityEditionFormView(FormViewMixIn, EntityView):
     def render_form(self, entity, peid, rtype, role, **kwargs):
         """fetch and render the form"""
         form = self.vreg.select_object('forms', 'edition', self.req, None,
-                                       entity=entity, set_error_url=False)
+                                       entity=entity, set_error_url=False,
+                                       copy_nav_params=False)
         self.add_hiddens(form, entity, peid, rtype, role)
         divid = '%s-%s-%s' % (peid, rtype, entity.eid)
         title = self.schema.rschema(rtype).display_name(self.req, role)
