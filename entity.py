@@ -380,7 +380,12 @@ class Entity(AppRsetObject, dict):
         if getattr(self.req, 'search_state', ('normal',))[0] == 'normal':
             kwargs['base_url'] = self.metainformation()['source'].get('base-url')
         if method is None or method == 'view':
-            kwargs['_restpath'] = self.rest_path(kwargs.get('base_url'))
+            try:
+                kwargs['_restpath'] = self.rest_path(kwargs.get('base_url'))
+            except TypeError:
+                warn('%s: rest_path() now take use_ext_eid argument, '
+                     'please update' % self.id, DeprecationWarning)
+                kwargs['_restpath'] = self.rest_path()
         else:
             kwargs['rql'] = 'Any X WHERE X eid %s' % self.eid
         return self.build_url(method, **kwargs)
