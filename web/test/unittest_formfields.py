@@ -1,8 +1,9 @@
 """unittests for cw.web.formfields"""
 
+from yams.constraints import StaticVocabularyConstraint, SizeConstraint
 from logilab.common.testlib import TestCase, unittest_main
 from cubicweb.devtools import TestServerConfiguration
-from cubicweb.web.formwidgets import PasswordInput, TextArea
+from cubicweb.web.formwidgets import PasswordInput, TextArea, Select
 from cubicweb.web.formfields import *
 from cubicweb.entities.wfobjs import State
 from cubicweb.entities.authobjs import CWUser
@@ -14,6 +15,7 @@ schema = config.load_schema()
 state_schema = schema['State']
 cwuser_schema = schema['CWUser']
 file_schema = schema['File']
+salesterm_schema = schema['Salesterm']
 
 class GuessFieldTC(TestCase):
 
@@ -79,6 +81,13 @@ class GuessFieldTC(TestCase):
         self.assertEquals(data_field.required, True)
         self.assertIsInstance(data_field.format_field, StringField)
         self.assertIsInstance(data_field.encoding_field, StringField)
+
+    def test_constraints_priority(self):
+        salesterm_field = guess_field(salesterm_schema, schema['reason'])
+        constraints = schema['reason'].rproperty('Salesterm', 'String', 'constraints')
+        self.assertEquals([c.__class__ for c in constraints],
+                          [SizeConstraint, StaticVocabularyConstraint])
+        self.assertIsInstance(salesterm_field.widget, Select)
 
 if __name__ == '__main__':
     unittest_main()
