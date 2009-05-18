@@ -14,6 +14,7 @@ pyro-ns-id = extern
 cubicweb-user = admin
 cubicweb-password = gingkow
 mapping-file = extern_mapping.py
+base-url=http://extern.org/
 
 [extern-multi]
 adapter = pyrorql

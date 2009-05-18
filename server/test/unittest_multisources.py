@@ -235,8 +235,20 @@ class TwoSourcesTC(RepositoryBasedTC):
         states.remove((aff1stateeid, aff1statename))
         notstates = set(tuple(x) for x in self.execute('Any S,SN WHERE S is State, S name SN, NOT X in_state S, X eid %(x)s',
                                                        {'x': aff1}, 'x'))
-        self.set_debug(False)
         self.assertSetEquals(notstates, states)
+
+    def test_absolute_url_base_url(self):
+        ceid = cu.execute('INSERT Card X: X title "without wikiid to get eid based url"')[0][0]
+        cnx2.commit()
+        lc = self.execute('Card X WHERE X title "without wikiid to get eid based url"').get_entity(0, 0)
+        self.assertEquals(lc.absolute_url(), 'http://extern.org/card/eid/%s' % ceid)
+
+    def test_absolute_url_no_base_url(self):
+        cu = cnx3.cursor()
+        ceid = cu.execute('INSERT Card X: X title "without wikiid to get eid based url"')[0][0]
+        cnx3.commit()
+        lc = self.execute('Card X WHERE X title "without wikiid to get eid based url"').get_entity(0, 0)
+        self.assertEquals(lc.absolute_url(), 'http://testing.fr/cubicweb/card/eid/%s' % lc.eid)
 
     def test_nonregr1(self):
         ueid = self.session.user.eid
@@ -250,7 +262,6 @@ class TwoSourcesTC(RepositoryBasedTC):
                             {'x': treid})
         self.assertEquals(len(rset), 1)
         self.assertEquals(rset.rows[0], [self.session.user.eid])
-
 
     def test_nonregr3(self):
         self.execute('DELETE Card X WHERE X eid %(x)s, NOT X multisource_inlined_rel Y', {'x': self.ic1})
