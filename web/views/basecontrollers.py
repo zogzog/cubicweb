@@ -487,6 +487,24 @@ class JSonController(Controller):
         rql = 'DELETE B bookmarked_by U WHERE B eid %(b)s, U eid %(u)s'
         self.req.execute(rql, {'b': typed_eid(beid), 'u' : self.req.user.eid})
 
+    def js_node_clicked(self, treeid, nodeeid):
+        """add/remove eid in treestate cookie"""
+        from cubicweb.web.views.treeview import treecookiename
+        cookies = self.req.get_cookie()
+        statename = treecookiename(treeid)
+        treestate = cookies.get(statename)
+        if treestate is None:
+            cookies[statename] = nodeeid
+            self.req.set_cookie(cookies, statename)
+        else:
+            marked = set(filter(None, treestate.value.split(';')))
+            if nodeeid in marked:
+                marked.remove(nodeeid)
+            else:
+                marked.add(nodeeid)
+            cookies[statename] = ';'.join(marked)
+            self.req.set_cookie(cookies, statename)
+
     def js_set_cookie(self, cookiename, cookievalue):
         # XXX we should consider jQuery.Cookie
         cookiename, cookievalue = str(cookiename), str(cookievalue)
