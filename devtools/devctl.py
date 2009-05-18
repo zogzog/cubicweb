@@ -77,11 +77,11 @@ def cleanup_sys_modules(config):
             if mod.__file__.startswith(path):
                 del sys.modules[name]
                 break
-        # fresh rtags
-        from cubicweb import rtags
-        from cubicweb.web import uicfg
-        rtags.RTAGS[:] = []
-        reload(uicfg)
+    # fresh rtags
+    from cubicweb import rtags
+    from cubicweb.web import uicfg
+    rtags.RTAGS[:] = []
+    reload(uicfg)
 
 def generate_schema_pot(w, cubedir=None):
     """generate a pot file with schema specific i18n messages
