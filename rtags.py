@@ -24,7 +24,8 @@ class RelationTags(object):
     This class associates a single tag to each key.
     """
     _allowed_values = None
-    def __init__(self, initfunc=None, allowed_values=None):
+    def __init__(self, name=None, initfunc=None, allowed_values=None):
+        self._name = name or '<unknown>'
         self._tagdefs = {}
         if allowed_values is not None:
             self._allowed_values = allowed_values
@@ -32,7 +33,7 @@ class RelationTags(object):
         register_rtag(self)
 
     def __repr__(self):
-        return repr(self._tagdefs)
+        return '%s: %s' % (self._name, repr(self._tagdefs))
 
     # dict compat
     def __getitem__(self, key):
