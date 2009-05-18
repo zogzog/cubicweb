@@ -18,7 +18,7 @@ from logilab.common.decorators import cached
 from cubicweb import NoSelectableObject, ValidationError, ObjectNotFound, typed_eid
 from cubicweb.utils import strptime
 from cubicweb.selectors import yes, match_user_groups
-from cubicweb.view import STRICT_DOCTYPE
+from cubicweb.view import STRICT_DOCTYPE, STRICT_DOCTYPE_NOEXT
 from cubicweb.common.mail import format_mail
 from cubicweb.web import ExplicitLogin, Redirect, RemoteCallFailed, json_dumps
 from cubicweb.web.formrenderers import FormRenderer
@@ -32,8 +32,12 @@ except ImportError: # gae
     HAS_SEARCH_RESTRICTION = False
 
 
-def xhtml_wrap(source):
-    head = u'<?xml version="1.0"?>\n' + STRICT_DOCTYPE
+def xhtml_wrap(self, source):
+    # XXX factor out, watch view.py ~ Maintemplate.doctype
+    if self.req.xhtml_browser():
+        dt = STRICT_DOCTYPE
+    dt = STRICT_DOCTYPE_NOEXT
+    head = u'<?xml version="1.0"?>\n' + dt
     return head + u'<div xmlns="http://www.w3.org/1999/xhtml" xmlns:cubicweb="http://www.logilab.org/2008/cubicweb">%s</div>' % source.strip()
 
 def jsonize(func):
@@ -51,7 +55,7 @@ def xhtmlize(func):
     def wrapper(self, *args, **kwargs):
         self.req.set_content_type(self.req.html_content_type())
         result = func(self, *args, **kwargs)
-        return xhtml_wrap(result)
+        return xhtml_wrap(self, result)
     wrapper.__name__ = func.__name__
     return wrapper
 
