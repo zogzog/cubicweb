@@ -13,7 +13,6 @@ from cubicweb.utils import make_uid
 from cubicweb.interfaces import ITree
 from cubicweb.selectors import implements
 from cubicweb.view import EntityView
-from cubicweb.web.views.basecontrollers import jsonize, JSonController
 
 def treecookiename(treeid):
     return str('treestate-%s' % treeid)
@@ -149,21 +148,3 @@ class TreeViewItemView(EntityView):
             self.wview(parentvid, self.req.execute(rql), treeid=treeid, initial_load=False)
         w(u'</li>')
 
-@monkeypatch(JSonController)
-@jsonize
-def js_node_clicked(self, treeid, nodeeid):
-    """add/remove eid in treestate cookie"""
-    cookies = self.req.get_cookie()
-    statename = treecookiename(treeid)
-    treestate = cookies.get(statename)
-    if treestate is None:
-        cookies[statename] = nodeeid
-        self.req.set_cookie(cookies, statename)
-    else:
-        marked = set(filter(None, treestate.value.split(';')))
-        if nodeeid in marked:
-            marked.remove(nodeeid)
-        else:
-            marked.add(nodeeid)
-        cookies[statename] = ';'.join(marked)
-        self.req.set_cookie(cookies, statename)
