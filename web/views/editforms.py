@@ -52,7 +52,7 @@ class DeleteConfForm(FormViewMixIn, EntityView):
     # else we will only delete the displayed page
     need_navigation = False
 
-    def call(self):
+    def call(self, onsubmit=None):
         """ask for confirmation before real deletion"""
         req, w = self.req, self.w
         _ = req._
@@ -61,7 +61,7 @@ class DeleteConfForm(FormViewMixIn, EntityView):
         # XXX above message should have style of a warning
         w(u'<h4>%s</h4>\n' % _('Do you want to delete the following element(s) ?'))
         form = CompositeForm(req, domid='deleteconf', copy_nav_params=True,
-                             action=self.build_url('edit'), onsubmit=None,
+                             action=self.build_url('edit'), onsubmit=onsubmit,
                              form_buttons=[Button(stdmsgs.YES, cwaction='delete'),
                                            Button(stdmsgs.NO, cwaction='cancel')])
         done = set()
