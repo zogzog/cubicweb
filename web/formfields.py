@@ -213,20 +213,21 @@ class RichTextField(StringField):
         try:
             return req.data[self]
         except KeyError:
+            fkwargs = {}
             if self.use_fckeditor(form):
                 # if fckeditor is used and format field isn't explicitly
                 # deactivated, we want an hidden field for the format
-                widget = HiddenInput()
-                choices = None
+                fkwargs['widget'] = HiddenInput()
+                fkwargs['initial'] = 'text/html'
             else:
                 # else we want a format selector
-                # XXX compute vocabulary
-                widget = Select()
+                fkwargs['widget'] = Select()
+                fkwargs['widget'].attrs['size'] = 1
                 fcstr = FormatConstraint()
-                choices = [(req._(fmt), fmt) for fmt in fcstr.vocabulary(req=req)]
-                widget.attrs['size'] = 1
-            field = StringField(name=self.name + '_format', widget=widget,
-                                choices=choices)
+                fkwargs['choices'] = fcstr.vocabulary(req=req)
+                fkwargs['internationalizable'] = True
+                fkwargs['initial'] = lambda f: f.form_field_format(self)
+            field = StringField(name=self.name + '_format', **fkwargs)
             req.data[self] = field
             return field
 

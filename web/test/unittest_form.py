@@ -64,7 +64,14 @@ class EntityFieldsFormTC(WebTest):
         self.assertEquals(len(states), 1)
         self.assertEquals(states[0][0], u'deactivated') # list of (combobox view, state eid)
 
-
+    def test_consider_req_form_params(self):
+        e = self.etype_instance('CWUser')
+        e.eid = 'A'
+        form = EntityFieldsForm(self.request(login=u'toto'), None, entity=e)
+        field = StringField(name='login', eidparam=True)
+        form.append_field(field)
+        form.form_build_context({})
+        self.assertEquals(form.form_field_display_value(field, {}), 'toto')
 
     # form view tests #########################################################
 

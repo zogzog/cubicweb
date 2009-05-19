@@ -24,7 +24,8 @@ class RelationTags(object):
     This class associates a single tag to each key.
     """
     _allowed_values = None
-    def __init__(self, initfunc=None, allowed_values=None):
+    def __init__(self, name=None, initfunc=None, allowed_values=None):
+        self._name = name or '<unknown>'
         self._tagdefs = {}
         if allowed_values is not None:
             self._allowed_values = allowed_values
@@ -32,7 +33,7 @@ class RelationTags(object):
         register_rtag(self)
 
     def __repr__(self):
-        return repr(self._tagdefs)
+        return '%s: %s' % (self._name, repr(self._tagdefs))
 
     # dict compat
     def __getitem__(self, key):
@@ -95,7 +96,9 @@ class RelationTags(object):
         #else:
         stype, rtype, otype, tagged = [str(k) for k in key]
         if self._allowed_values is not None:
-            assert tag in self._allowed_values, '%r is not an allowed tag' % tag
+            assert tag in self._allowed_values, \
+                   '%r is not an allowed tag (should be in %s)' % (
+                tag, self._allowed_values)
         self._tagdefs[(rtype, tagged, stype, otype)] = tag
 
     # rtag runtime api ########################################################

@@ -382,11 +382,7 @@ class JSonController(Controller):
             ctrl.publish(None, fromjson=True)
         except ValidationError, err:
             self.req.cnx.rollback()
-            if not err.entity or isinstance(err.entity, (long, int)):
-                eid = err.entity
-            else:
-                eid = err.entity.eid
-            return (False, (eid, err.errors))
+            return (False, (err.entity, err.errors))
         except Redirect, redir:
             return (True, redir.location)
         except Exception, err:
@@ -486,6 +482,24 @@ class JSonController(Controller):
     def js_delete_bookmark(self, beid):
         rql = 'DELETE B bookmarked_by U WHERE B eid %(b)s, U eid %(u)s'
         self.req.execute(rql, {'b': typed_eid(beid), 'u' : self.req.user.eid})
+
+    def js_node_clicked(self, treeid, nodeeid):
+        """add/remove eid in treestate cookie"""
+        from cubicweb.web.views.treeview import treecookiename
+        cookies = self.req.get_cookie()
+        statename = treecookiename(treeid)
+        treestate = cookies.get(statename)
+        if treestate is None:
+            cookies[statename] = nodeeid
+            self.req.set_cookie(cookies, statename)
+        else:
+            marked = set(filter(None, treestate.value.split(';')))
+            if nodeeid in marked:
+                marked.remove(nodeeid)
+            else:
+                marked.add(nodeeid)
+            cookies[statename] = ';'.join(marked)
+            self.req.set_cookie(cookies, statename)
 
     def js_set_cookie(self, cookiename, cookievalue):
         # XXX we should consider jQuery.Cookie
