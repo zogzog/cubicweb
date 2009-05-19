@@ -471,7 +471,7 @@ function inlineValidateAttributeForm(formid, rtype, eid, divid, reload, default_
 	return false;
     }
     d.addCallback(function (result, req) {
-        handleFormValidationResponse(formid, noop, result);
+    handleFormValidationResponse(formid, noop, noop, result);
 	if (reload) {
 	    document.location.href = result[1];
 	} else {
@@ -505,7 +505,7 @@ function inlineValidateRelationForm(formid, rtype, role, eid, divid, vid, defaul
 	return false;
     }
     d.addCallback(function (result, req) {
-        handleFormValidationResponse(formid, noop, result);
+	    handleFormValidationResponse(formid, noop, noop, result);
 	var fieldview = getNode(divid);
         fieldview.innerHTML = result[2];
 	// switch inline form off only if no error

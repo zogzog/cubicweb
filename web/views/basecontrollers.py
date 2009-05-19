@@ -208,7 +208,7 @@ class FormValidatorController(Controller):
         self.req.set_content_type('text/html')
         jsarg = simplejson.dumps( (status, args) )
         return """<script type="text/javascript">
- window.parent.handleFormValidationResponse('entityForm', null, %s);
+ window.parent.handleFormValidationResponse('entityForm', null, null, %s);
 </script>""" %  simplejson.dumps( (status, args) )
 
     def validation_error(self, err):
