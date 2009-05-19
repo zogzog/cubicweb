@@ -4,11 +4,9 @@
  *     move me in a more appropriate place
  */
 
-function toggleVisibility(elemId, cookiename) {
-    _clearPreviousMessages();
-    jqNode(elemId).toggleClass('hidden');
-    asyncRemoteExec('set_cookie', cookiename,
-                      jQuery('#' + elemId).attr('class'));
+function togglePrefVisibility(elemId) {
+    clearPreviousMessages();
+    jQuery('#' + elemId).toggleClass('hidden');
 }
 
 function closeFieldset(fieldsetid){
@@ -43,44 +41,25 @@ function _toggleFieldset(fieldsetid, closeaction, linklabel, linkhref){
 }
 
 function validatePrefsForm(formid){
-    var form = getNode(formid);
     freezeFormButtons(formid);
-    try {
-	var d = _sendForm(formid, null);
-    } catch (ex) {
-	log('got exception', ex);
-	return false;
-    }
-    function _callback(result, req) {
-	_clearPreviousMessages();
-	_clearPreviousErrors(formid);
-	// success
-	if(result[0]){
-	    return submitSucces(formid)
-	}
- 	// Failures
-	unfreezeFormButtons(formid);
-	var descr = result[1];
-        if (!isArrayLike(descr) || descr.length != 2) {
-	   log('got strange error :', descr);
-	   updateMessage(descr);
-	   return ;
-	}
-        _displayValidationerrors(formid, descr[0], descr[1]);
-	var dom = DIV({'class':'critical'},
-		      _("please correct errors below"));
-	jQuery(form).find('div.formsg').empty().append(dom);
-	updateMessage(_(""));
-	return false;
-    }
-    d.addCallback(_callback);
-    return false;
+    clearPreviousMessages();
+    clearPreviousErrors(formid);
+    return validateForm(formid, null,  submitSucces, submitFailure);
 }
 
-function submitSucces(formid){
+function submitFailure(formid){
+    var form = jQuery('#'+formid);
+    var dom = DIV({'class':'critical'},
+		  _("please correct errors below"));
+    jQuery(form).find('div.formsg').empty().append(dom);
+    // clearPreviousMessages()
+    jQuery(form).find('span.error').next().focus();
+}
+
+function submitSucces(url, formid){
     var form = jQuery('#'+formid);
     setCurrentValues(form);
-    var dom = DIV({'class':'message'},
+    var dom = DIV({'class':'msg'},
 		  _("changes applied"));
     jQuery(form).find('div.formsg').empty().append(dom);
     jQuery(form).find('input').removeClass('changed');
@@ -88,13 +67,13 @@ function submitSucces(formid){
     return;
 }
 
-function _clearPreviousMessages() {
+function clearPreviousMessages() {
     jQuery('div#appMsg').addClass('hidden');
     jQuery('div.formsg').empty();
 }
 
-function _clearPreviousErrors(formid) {
-    jQuery('#' + formid + ' span.error').remove();
+function clearPreviousErrors(formid) {
+    jQuery('#err-value:' + formid).remove();
 }
 
 
@@ -111,20 +90,20 @@ function checkValues(form, success){
 		unfreezeButtons = _checkValue(jQuery(this), unfreezeButtons);
 	    }
      }); 
-   
+    
     if (unfreezeButtons){
 	unfreezeFormButtons(form.attr('id'));
     }else{
 	if (!success){
-	    _clearPreviousMessages();
+	    clearPreviousMessages();
 	}
-	_clearPreviousErrors(form.attr('id'));
+	clearPreviousErrors(form.attr('id'));
 	freezeFormButtons(form.attr('id'));
     }
 }
 
 function _checkValue(input, unfreezeButtons){
-     var currentValueInput = jQuery("input[id=current-" + input.attr('name') + "]");
+     var currentValueInput = jQuery("input[name=current-" + input.attr('name') + "]");
      if (currentValueInput.attr('value') != input.attr('value')){
 	 input.addClass('changed');
 	 unfreezeButtons = true;
@@ -138,14 +117,13 @@ function _checkValue(input, unfreezeButtons){
 
 
 function setCurrentValues(form){
-    jQuery(form).find('input[id^=current-value]').each(function () { 
+    jQuery(form).find('input[name^=current-value]').each(function () { 
 	    var currentValueInput = jQuery(this);
-	    var name = currentValueInput.attr('id').split('-')[1];
+	    var name = currentValueInput.attr('name').split('-')[1];
 	    jQuery(form).find("[name=" + name + "]").each(function (){
 		    var input = jQuery(this);
 		    if(input.attr('type')=='radio'){
 			if(input.attr('checked')){
-			    log(input.attr('value'));
 			    currentValueInput.attr('value', input.attr('value'));
 			}
 		    }else{
@@ -154,7 +132,6 @@ function setCurrentValues(form){
 		});
     });
 }
-
 
 function initEvents(){
   jQuery('form').each(function() { 
@@ -169,6 +146,7 @@ function initEvents(){
 	  form.find('select').change(function(){  
 		  checkValues(form);	 
           });
+	  setCurrentValues(form);
     });
 }
 
