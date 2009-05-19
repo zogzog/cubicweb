@@ -381,6 +381,8 @@ class FieldsForm(FormMixIn, AppRsetObject):
         myattr = '%s_%s_default' % (field.role, field.name)
         if hasattr(self, myattr):
             return getattr(self, myattr)()
+        if callable(value):
+            value = value(self)
         return field.initial
 
     def form_field_error(self, field):
