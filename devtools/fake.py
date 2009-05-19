@@ -79,6 +79,11 @@ class FakeRequest(CubicWebRequestBase):
         self._session_data = {}
         self._headers = {}
 
+    def get_session_data(self, key, default=None, pop=False):
+        if pop:
+            return self._session_data.pop(key, default)
+        return self._session_data.get(key, default)
+
     def header_accept_language(self):
         """returns an ordered list of preferred languages"""
         return ('en',)
