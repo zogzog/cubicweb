@@ -200,6 +200,7 @@ class CheckBox(Input):
     def render(self, form, field):
         name, curvalues, attrs = self._render_attrs(form, field)
         domid = attrs.pop('id', None)
+        sep = attrs.get('separator', u'<br/>')
         options = []
         for i, (label, value) in enumerate(field.vocabulary(form)):
             iattrs = attrs.copy()
@@ -208,7 +209,7 @@ class CheckBox(Input):
             if value in curvalues:
                 iattrs['checked'] = u'checked'
             tag = tags.input(name=name, type=self.type, value=value, **iattrs)
-            options.append(tag + label + '<br/>')
+            options.append(tag + label + sep)
         return '\n'.join(options)
 
 
