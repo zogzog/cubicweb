@@ -17,6 +17,7 @@ from cubicweb.selectors import (one_line_rset, none_rset, implements,
 from cubicweb.view import StartupView
 from cubicweb.web import uicfg, stdmsgs
 from cubicweb.web.form import CompositeForm, EntityFieldsForm, FormViewMixIn
+from cubicweb.web.formrenderers import FormRenderer
 from cubicweb.web.formfields import FIELDS, StringField
 from cubicweb.web.formwidgets import Select, Button, SubmitButton
 from cubicweb.web.views import primary
@@ -48,10 +49,9 @@ _('ui.encoding')
 _('category')
 
 
-def make_togglable_link(nodeid, label, cookiename):
+def make_togglable_link(nodeid, label):
     """builds a HTML link that switches the visibility & remembers it"""
-    action = u"javascript: toggleVisibility('%s', '%s')" % \
-        (nodeid, cookiename)
+    action = u"javascript: togglePrefVisibility('%s')" % nodeid
     return u'<a href="%s">%s</a>' % (action, label)
 
 def css_class(someclass):
@@ -95,7 +95,7 @@ class SystemEPropertiesForm(FormViewMixIn, StartupView):
 
     def call(self, **kwargs):
         """The default view representing the application's index"""
-        self.req.add_js('cubicweb.preferences.js')
+        self.req.add_js(('cubicweb.edition.js', 'cubicweb.preferences.js', 'cubicweb.ajax.js'))
         self.req.add_css('cubicweb.preferences.css')
         vreg = self.vreg
         values = self.defined_keys
@@ -113,41 +113,51 @@ class SystemEPropertiesForm(FormViewMixIn, StartupView):
                 mainopts.setdefault(parts[0], []).append(key)
         # precompute form to consume error message
         for group, keys in mainopts.items():
-            mainopts[group] = self.form(keys, True)
+            mainopts[group] = self.form(group, keys, False)
+
         for group, objects in groupedopts.items():
             for oid, keys in objects.items():
-                groupedopts[group][oid] = self.form(keys, True)
+                groupedopts[group][oid] = self.form(group + '-' + oid, keys, True)
+
         w = self.w
         req = self.req
         _ = req._
         w(u'<h1>%s</h1>\n' % _(self.title))
-        # we don't want this in each sub-forms
+        # we don't want this in each sub-forms XXX
         w(u'<div id="progress">%s</div>' % self.req._('validating...'))
         for label, group, form in sorted((_(g), g, f)
                                          for g, f in mainopts.iteritems()):
             status = css_class(self._group_status(group))
             w(u'<h2 class="propertiesform">%s</h2>\n' %
-              (make_togglable_link('fieldset_' + group, label,
-                                   self._cookie_name(group))))
+            (make_togglable_link('fieldset_' + group, label.capitalize())))
             w(u'<div id="fieldset_%s" %s>' % (group, status))
+            w(u'<fieldset class="preferences">')
             w(form)
-            w(u'</div>')
+            w(u'</fieldset></div>')
+
         for label, group, objects in sorted((_(g), g, o)
                                             for g, o in groupedopts.iteritems()):
             status = css_class(self._group_status(group))
             w(u'<h2 class="propertiesform">%s</h2>\n' %
-              (make_togglable_link('fieldset_' + group, label,
-                                   self._cookie_name(group))))
+              (make_togglable_link('fieldset_' + group, label.capitalize())))
             w(u'<div id="fieldset_%s" %s>' % (group, status))
-            for label, oid, form in sorted((self.req.__('%s_%s' % (group, o)), o, f)
-                                           for o, f in objects.iteritems()):
-                w(u'<fieldset class="subentity">')
-                w(u'<legend class="componentTitle">%s</legend>\n' % label)
+	    
+	    # create selection
+	    sorted_objects =  sorted((self.req.__('%s_%s' % (group, o)), o, f)
+                                           for o, f in objects.iteritems())
+	    for label, oid, form in sorted_objects:
+                w(u'''<div class="componentLink"><a href="javascript:noop();" onclick="javascript:toggleVisibility('field_%(oid)s_%(group)s')" class="componentTitle">%(label)s</a>''' % {'label':label, 'oid':oid, 'group':group})
+                w(u''' (<div class="openlink"><a href="javascript:noop();" onclick="javascript:closeFieldset('fieldset_%(group)s')">%(label)s</a></div>)'''
+                  % {'label':_('close all'), 'group':group})
+                w(u'</div>')
                 docmsgid = '%s_%s_description' % (group, oid)
                 doc = _(docmsgid)
                 if doc != docmsgid:
-                    w(u'<p class="description">%s</p>' % html_escape(doc))
-                w(form)
+                    w(u'<div class="helper">%s</div>' % html_escape(doc).capitalize())
+		    
+		w(u'<fieldset id="field_%(oid)s_%(group)s" class="%(group)s preferences">'
+                  % {'oid':oid, 'group':group})
+		w(form)
                 w(u'</fieldset>')
             w(u'</div>')
 
@@ -175,20 +185,22 @@ class SystemEPropertiesForm(FormViewMixIn, StartupView):
             entity['value'] = self.vreg.property_value(key)
         return entity
 
-    def form(self, keys, splitlabel=False):
-        buttons = [SubmitButton(),
-                   Button(stdmsgs.BUTTON_CANCEL, cwaction='cancel')]
-        form = CompositeForm(self.req, domid=None, action=self.build_url(),
-                             form_buttons=buttons,
+    def form(self, formid, keys, splitlabel=False):
+        buttons = [SubmitButton()]
+        form = CompositeForm(self.req, domid=formid, action=self.build_url(),
+                             form_buttons=buttons, 
+			     onsubmit="return validatePrefsForm('%s')" % formid,
                              submitmsg=self.req._('changes applied'))
-        path = self.req.relative_path()
+	path = self.req.relative_path()
         if '?' in path:
             path, params = path.split('?', 1)
             form.form_add_hidden('__redirectparams', params)
         form.form_add_hidden('__redirectpath', path)
         for key in keys:
             self.form_row(form, key, splitlabel)
-        return form.form_render(display_progress_div=False)
+	renderer = EPropertiesFormRenderer()
+        return form.form_render(display_progress_div=False,
+				renderer=renderer)
 
     def form_row(self, form, key, splitlabel):
         entity = self.entity_for_key(key)
@@ -196,15 +208,16 @@ class SystemEPropertiesForm(FormViewMixIn, StartupView):
             label = key.split('.')[-1]
         else:
             label = key
-        subform = EntityFieldsForm(self.req, entity=entity, set_error_url=False)
+	subform = EntityFieldsForm(self.req, entity=entity, set_error_url=False)
+	
         subform.append_field(PropertyValueField(name='value', label=label,
                                                 eidparam=True))
         subform.vreg = self.vreg
         subform.form_add_hidden('pkey', key, eidparam=True)
+ 	subform.form_add_hidden("current-value:%s" % entity.eid,)
         form.form_add_subform(subform)
         return subform
-
-
+    
 def is_user_prefs(cls, req, rset, row=None, col=0, **kwargs):
     return req.user.eid == rset[row or 0][col]
 
@@ -326,7 +339,7 @@ class PropertyValueField(StringField):
         if vocab is not None:
             if callable(vocab):
                 # list() just in case its a generator function
-                self.choices = list(vocab(form.req))
+                self.choices = list(vocab(form.req)) 
             else:
                 self.choices = vocab
             wdg = Select()
@@ -338,6 +351,30 @@ class PropertyValueField(StringField):
                 wdg.attrs.setdefault('size', 3)
         self.widget = wdg
 
+class EPropertiesFormRenderer(FormRenderer):
+    """specific renderer for cwproperties"""
+
+    def open_form(self, form, values):
+	err = '<div class="formsg"></div>'
+	return super(EPropertiesFormRenderer, self).open_form(form, values) + err
+    
+    def _render_fields(self, fields, w, form):
+	for field in fields:
+	    w(u'<div class="preffield">\n')
+	    if self.display_label:
+		w(u'%s' % self.render_label(form, field))
+            error = form.form_field_error(field)
+	    w(u'%s' % self.render_help(form, field))
+	    w(u'<div class="prefinput">')
+      	    w(field.render(form, self))
+	    w(u'</div>')
+	    w(u'</div>')
+
+    def render_buttons(self, w, form):
+        w(u'<div>\n')
+        for button in form.form_buttons:
+            w(u'%s\n' % button.render(form))
+        w(u'</div>')
 
 uicfg.autoform_field.tag_attribute(('CWProperty', 'pkey'), PropertyKeyField)
 uicfg.autoform_field.tag_attribute(('CWProperty', 'value'), PropertyValueField)
