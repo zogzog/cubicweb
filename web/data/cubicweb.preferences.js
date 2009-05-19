@@ -11,14 +11,14 @@ function togglePrefVisibility(elemId) {
 
 function closeFieldset(fieldsetid){
     var linklabel = _('open all');
-    var linkhref = 'javascript:openFieldset("' +fieldsetid + '")'
-    _toggleFieldset(fieldsetid, 1, linklabel, linkhref)
+    var linkhref = 'javascript:openFieldset("' +fieldsetid + '")';
+    _toggleFieldset(fieldsetid, 1, linklabel, linkhref);
 }
 
 function openFieldset(fieldsetid){
     var linklabel = _('close all');
-    var linkhref = 'javascript:closeFieldset("'+ fieldsetid + '")'
-    _toggleFieldset(fieldsetid, 0, linklabel, linkhref)
+    var linkhref = 'javascript:closeFieldset("'+ fieldsetid + '")';
+    _toggleFieldset(fieldsetid, 0, linklabel, linkhref);
 }
 
 
@@ -26,13 +26,13 @@ function _toggleFieldset(fieldsetid, closeaction, linklabel, linkhref){
     jQuery('#'+fieldsetid).find('div.openlink').each(function(){
 	    var link = A({'href' : "javascript:noop();",
 			  'onclick' : linkhref},
-			  linklabel)
+			  linklabel);
 	    jQuery(this).empty().append(link);
 	});
     jQuery('#'+fieldsetid).find('fieldset[id]').each(function(){
 	    var fieldset = jQuery(this);
 	    if(closeaction){
-		fieldset.addClass('hidden')
+		fieldset.addClass('hidden');
 	    }else{
 		fieldset.removeClass('hidden');
 		linkLabel = (_('open all'));
@@ -41,7 +41,6 @@ function _toggleFieldset(fieldsetid, closeaction, linklabel, linkhref){
 }
 
 function validatePrefsForm(formid){
-    freezeFormButtons(formid);
     clearPreviousMessages();
     clearPreviousErrors(formid);
     return validateForm(formid, null,  submitSucces, submitFailure);
@@ -79,18 +78,18 @@ function clearPreviousErrors(formid) {
 
 function checkValues(form, success){
     var unfreezeButtons = false;
-    jQuery(form).find('select').each(function () { 
+    jQuery(form).find('select').each(function () {
 	    unfreezeButtons = _checkValue(jQuery(this), unfreezeButtons);
 	});
     jQuery(form).find('[type=text]').each(function () {
 	    unfreezeButtons = _checkValue(jQuery(this), unfreezeButtons);
 	});
-    jQuery(form).find('input[type=radio]').each(function () { 
+    jQuery(form).find('input[type=radio]').each(function () {
 	    if (jQuery(this).attr('checked')){
 		unfreezeButtons = _checkValue(jQuery(this), unfreezeButtons);
 	    }
-     }); 
-    
+     });
+
     if (unfreezeButtons){
 	unfreezeFormButtons(form.attr('id'));
     }else{
@@ -110,14 +109,14 @@ function _checkValue(input, unfreezeButtons){
      }else{
 	 input.removeClass('changed');
 	 jQuery("span[id=err-" + input.attr('id') + "]").remove();
-     }	
+     }
      input.removeClass('error');
-     return unfreezeButtons
+     return unfreezeButtons;
 }
 
 
 function setCurrentValues(form){
-    jQuery(form).find('input[name^=current-value]').each(function () { 
+    jQuery(form).find('input[name^=current-value]').each(function () {
 	    var currentValueInput = jQuery(this);
 	    var name = currentValueInput.attr('name').split('-')[1];
 	    jQuery(form).find("[name=" + name + "]").each(function (){
@@ -134,17 +133,17 @@ function setCurrentValues(form){
 }
 
 function initEvents(){
-  jQuery('form').each(function() { 
+  jQuery('form').each(function() {
 	  var form = jQuery(this);
 	  freezeFormButtons(form.attr('id'));
-	  form.find('input[type=text]').keyup(function(){  
-		  checkValues(form);	   
+	  form.find('input[type=text]').keyup(function(){
+		  checkValues(form);
           });
-	  form.find('input[type=radio]').change(function(){  
-		  checkValues(form);	   
+	  form.find('input[type=radio]').change(function(){
+		  checkValues(form);
           });
-	  form.find('select').change(function(){  
-		  checkValues(form);	 
+	  form.find('select').change(function(){
+		  checkValues(form);
           });
 	  setCurrentValues(form);
     });

@@ -6,17 +6,21 @@
  */
 
 
-.preferences .validateButton{ 
+.preferences .validateButton{
  margin-top:0px;
  }
 
-fieldset.preferences{  
+fieldset.preferences{
  border : 1px solid #CFCEB7;
  margin:7px 1em 0;
  padding:2px 6px 6px;
 }
 
-div.componentLink{ 
+div.component {
+ margin-left: 1em;
+}
+
+div.componentLink{
  margin-top:0.3em;
  }
 
@@ -39,7 +43,7 @@ h2.propertiesform a{
  font-size:89%;
 }
 
-h2.propertiesform a:hover{ 
+h2.propertiesform a:hover{
  background-color:#cfceb7;
 }
 
@@ -50,57 +54,57 @@ h2.propertiesform a:visited{
 }
 
 div.preffield {
- margin-bottom: 5px; 
+ margin-bottom: 5px;
  padding:2px 5px;
  background:#eeedd9;
 }
 
-div.prefinput{ 
- margin:.3em;  
+div.prefinput{
+ margin:.3em;
 }
 
 
 div.prefinput select.changed,
-div.prefinput input.changed{ 
+div.prefinput input.changed{
  border: 1px solid #000;
  font-weight:bold;
 
 }
 
 div.prefinput select,
-div.prefinput input{ 
+div.prefinput input{
  background:#fff;
  border: 1px solid #CFCEB7;
 }
 
 .prefinput input.error {
  /* background:#fff url(error.png) no-repeat scroll 100% 50% !important; */
- border:1px solid red !important; 
+ border:1px solid red !important;
  color:red;
  padding-right:1em;
 }
 
 
-div.formsg{ 
+div.formsg{
  font-weight:bold;
  margin:0.5em 0px;
 }
 
 
-div.critical{ 
+div.critical{
  color:red;
  padding-left:20px;
  background:#fff url(critical.png) no-repeat;
  }
 
-div.formsg .msg{ 
+div.formsg .msg{
  color : green;
 }
 
 .helper{
   font-size: 96%;
   color: #555544;
-  padding:0; 
+  padding:0;
 }
 
 div.prefinput .helper:hover {
@@ -108,6 +112,6 @@ div.prefinput .helper:hover {
   cursor: default;
 }
 
-div.openlink{ 
+div.openlink{
  display:inline;
  }

@@ -123,8 +123,6 @@ class SystemEPropertiesForm(FormViewMixIn, StartupView):
         req = self.req
         _ = req._
         w(u'<h1>%s</h1>\n' % _(self.title))
-        # we don't want this in each sub-forms XXX
-        w(u'<div id="progress">%s</div>' % self.req._('validating...'))
         for label, group, form in sorted((_(g), g, f)
                                          for g, f in mainopts.iteritems()):
             status = css_class(self._group_status(group))
@@ -141,21 +139,25 @@ class SystemEPropertiesForm(FormViewMixIn, StartupView):
             w(u'<h2 class="propertiesform">%s</h2>\n' %
               (make_togglable_link('fieldset_' + group, label.capitalize())))
             w(u'<div id="fieldset_%s" %s>' % (group, status))
-	    
+
 	    # create selection
 	    sorted_objects =  sorted((self.req.__('%s_%s' % (group, o)), o, f)
                                            for o, f in objects.iteritems())
 	    for label, oid, form in sorted_objects:
-                w(u'''<div class="componentLink"><a href="javascript:noop();" onclick="javascript:toggleVisibility('field_%(oid)s_%(group)s')" class="componentTitle">%(label)s</a>''' % {'label':label, 'oid':oid, 'group':group})
-                w(u''' (<div class="openlink"><a href="javascript:noop();" onclick="javascript:closeFieldset('fieldset_%(group)s')">%(label)s</a></div>)'''
-                  % {'label':_('close all'), 'group':group})
+                w(u'<div class="component">')
+                w(u'''<div class="componentLink"><a href="javascript:noop();"
+                           onclick="javascript:toggleVisibility('field_%(oid)s_%(group)s')"
+                           class="componentTitle">%(label)s</a>''' % {'label':label, 'oid':oid, 'group':group})
+                w(u''' (<div class="openlink"><a href="javascript:noop();"
+                             onclick="javascript:openFieldset('fieldset_%(group)s')">%(label)s</a></div>)'''
+                  % {'label':_('open all'), 'group':group})
                 w(u'</div>')
                 docmsgid = '%s_%s_description' % (group, oid)
                 doc = _(docmsgid)
                 if doc != docmsgid:
                     w(u'<div class="helper">%s</div>' % html_escape(doc).capitalize())
-		    
-		w(u'<fieldset id="field_%(oid)s_%(group)s" class="%(group)s preferences">'
+                w(u'</div>')
+		w(u'<fieldset id="field_%(oid)s_%(group)s" class="%(group)s preferences hidden">'
                   % {'oid':oid, 'group':group})
 		w(form)
                 w(u'</fieldset>')
@@ -188,7 +190,7 @@ class SystemEPropertiesForm(FormViewMixIn, StartupView):
     def form(self, formid, keys, splitlabel=False):
         buttons = [SubmitButton()]
         form = CompositeForm(self.req, domid=formid, action=self.build_url(),
-                             form_buttons=buttons, 
+                             form_buttons=buttons,
 			     onsubmit="return validatePrefsForm('%s')" % formid,
                              submitmsg=self.req._('changes applied'))
 	path = self.req.relative_path()
@@ -209,7 +211,7 @@ class SystemEPropertiesForm(FormViewMixIn, StartupView):
         else:
             label = key
 	subform = EntityFieldsForm(self.req, entity=entity, set_error_url=False)
-	
+
         subform.append_field(PropertyValueField(name='value', label=label,
                                                 eidparam=True))
         subform.vreg = self.vreg
@@ -217,7 +219,7 @@ class SystemEPropertiesForm(FormViewMixIn, StartupView):
  	subform.form_add_hidden("current-value:%s" % entity.eid,)
         form.form_add_subform(subform)
         return subform
-    
+
 def is_user_prefs(cls, req, rset, row=None, col=0, **kwargs):
     return req.user.eid == rset[row or 0][col]
 
@@ -339,7 +341,7 @@ class PropertyValueField(StringField):
         if vocab is not None:
             if callable(vocab):
                 # list() just in case its a generator function
-                self.choices = list(vocab(form.req)) 
+                self.choices = list(vocab(form.req))
             else:
                 self.choices = vocab
             wdg = Select()
@@ -357,7 +359,7 @@ class EPropertiesFormRenderer(FormRenderer):
     def open_form(self, form, values):
 	err = '<div class="formsg"></div>'
 	return super(EPropertiesFormRenderer, self).open_form(form, values) + err
-    
+
     def _render_fields(self, fields, w, form):
 	for field in fields:
 	    w(u'<div class="preffield">\n')
