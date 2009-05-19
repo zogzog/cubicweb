@@ -901,6 +901,7 @@ class SQLGenerator(object):
     def visit_comparison(self, cmp, contextrels=None):
         """generate SQL for a comparaison"""
         if len(cmp.children) == 2:
+            # XXX occurs ?
             lhs, rhs = cmp.children
         else:
             lhs = None
@@ -911,6 +912,11 @@ class SQLGenerator(object):
                 operator = ' LIKE '
             else:
                 operator = ' %s ' % operator
+        elif (operator == '=' and isinstance(rhs, Constant)
+              and rhs.eval(self._args) is None):
+            if lhs is None:
+                return ' IS NULL'
+            return '%s IS NULL' % lhs.accept(self, contextrels)
         elif isinstance(rhs, Function) and rhs.name == 'IN':
             assert operator == '='
             operator = ' '
