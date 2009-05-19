@@ -378,10 +378,10 @@ class FieldsForm(FormMixIn, AppRsetObject):
 
     def form_field_value(self, field, load_bytes=False):
         """return field's *typed* value"""
-        value = field.initial
-        if callable(value):
-            value = value(self)
-        return value
+        myattr = '%s_%s_default' % (field.role, field.name)
+        if hasattr(self, myattr):
+            return getattr(self, myattr)()
+        return field.initial
 
     def form_field_error(self, field):
         """return validation error for widget's field, if any"""
