@@ -342,11 +342,11 @@ function _displayValidationerrors(formid, eid, errors) {
 }
 
 
-function handleFormValidationResponse(formid, onsuccess, result) {
+function handleFormValidationResponse(formid, onsuccess, onfailure, result) {
     // Success
     if (result[0]) {
 	if (onsuccess) {
-	    return onsuccess(result[1]);
+	    return onsuccess(result[1], formid);
 	} else {
 	    document.location.href = result[1];
 	    return ;
@@ -365,6 +365,9 @@ function handleFormValidationResponse(formid, onsuccess, result) {
     _displayValidationerrors(formid, descr[0], descr[1]);
     updateMessage(_("please correct errors below"));
     document.location.hash = '#header';
+    if (onfailure){
+	onfailure(formid);
+    }
     return false;
 }
 
@@ -426,7 +429,7 @@ $(document).ready(setFormsTarget);
  * to the appropriate URL. Otherwise, the validation errors are displayed
  * around the corresponding input fields.
  */
-function validateForm(formid, action, onsuccess) {
+function validateForm(formid, action, onsuccess, onfailure) {
     try {
 	var zipped = formContents(formid);
 	var d = asyncRemoteExec('validate_form', action, zipped[0], zipped[1]);
@@ -435,7 +438,7 @@ function validateForm(formid, action, onsuccess) {
 	return false;
     }
     function _callback(result, req) {
-	handleFormValidationResponse(formid, onsuccess, result);
+	handleFormValidationResponse(formid, onsuccess, onfailure, result);
     }
     d.addCallback(_callback);
     return false;
