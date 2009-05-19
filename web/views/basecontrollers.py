@@ -382,11 +382,7 @@ class JSonController(Controller):
             ctrl.publish(None, fromjson=True)
         except ValidationError, err:
             self.req.cnx.rollback()
-            if not err.entity or isinstance(err.entity, (long, int)):
-                eid = err.entity
-            else:
-                eid = err.entity.eid
-            return (False, (eid, err.errors))
+            return (False, (err.entity, err.errors))
         except Redirect, redir:
             return (True, redir.location)
         except Exception, err:
