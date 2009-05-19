@@ -83,13 +83,13 @@ class FormRenderer(object):
         return tags.label(label, **attrs)
 
     def render_help(self, form, field):
-        help = [ u'<br/>' ]
+	help = []
         descr = field.help
         if descr:
-            help.append('<span class="helper">%s</span>' % form.req._(descr))
+            help.append('<div class="helper">%s</div>' % form.req._(descr))
         example = field.example_format(form.req)
         if example:
-            help.append('<span class="helper">(%s: %s)</span>'
+            help.append('<div class="helper">(%s: %s)</div>'
                         % (form.req._('sample format'), example))
         return u'&nbsp;'.join(help)
 
