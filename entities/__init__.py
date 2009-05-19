@@ -57,16 +57,6 @@ class AnyEntity(Entity):
             return '%s DESC' % var
         return None
 
-    @classmethod
-    def __initialize__(cls):
-        super(ANYENTITY, cls).__initialize__() # XXX
-        # set a default_ATTR method for rich text format fields
-        # XXX move this away once the old widgets have been dropped!
-        eschema = cls.e_schema
-        for metaattr, (metadata, attr) in eschema.meta_attributes().iteritems():
-            if metadata == 'format' and not hasattr(cls, 'default_%s' % metaattr):
-                setattr(cls, 'default_%s' % metaattr, cls._default_format)
-
     # meta data api ###########################################################
 
     def dc_title(self):
@@ -268,9 +258,6 @@ class AnyEntity(Entity):
     def srelations_by_category(self, categories=None, permission=None):
         from cubicweb.web.views.autoform import AutomaticEntityForm
         return AutomaticEntityForm.esrelations_by_category(self, categories, permission)
-
-    def _default_format(self):
-        return self.req.property_value('ui.default-text-format')
 
     def attribute_values(self, attrname):
         if self.has_eid() or attrname in self:
