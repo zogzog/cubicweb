@@ -200,7 +200,7 @@ class CheckBox(Input):
     def render(self, form, field):
         name, curvalues, attrs = self._render_attrs(form, field)
         domid = attrs.pop('id', None)
-        sep = attrs.get('separator', u'<br/>')
+        sep = attrs.pop('separator', u'<br/>')
         options = []
         for i, (label, value) in enumerate(field.vocabulary(form)):
             iattrs = attrs.copy()
