@@ -96,7 +96,9 @@ class RelationTags(object):
         #else:
         stype, rtype, otype, tagged = [str(k) for k in key]
         if self._allowed_values is not None:
-            assert tag in self._allowed_values, '%r is not an allowed tag' % tag
+            assert tag in self._allowed_values, \
+                   '%r is not an allowed tag (should be in %s)' % (
+                tag, self._allowed_values)
         self._tagdefs[(rtype, tagged, stype, otype)] = tag
 
     # rtag runtime api ########################################################
