@@ -381,9 +381,10 @@ class FieldsForm(FormMixIn, AppRsetObject):
         myattr = '%s_%s_default' % (field.role, field.name)
         if hasattr(self, myattr):
             return getattr(self, myattr)()
+        value = field.initial
         if callable(value):
             value = value(self)
-        return field.initial
+        return value
 
     def form_field_error(self, field):
         """return validation error for widget's field, if any"""
