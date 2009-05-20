@@ -11,8 +11,8 @@
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 """
 #from __future__ import with_statement
-
 __docformat__ = "restructuredtext en"
+_ = unicode
 
 from rql import nodes
 
@@ -23,7 +23,6 @@ from cubicweb.selectors import yes, empty_rset
 from cubicweb.view import EntityView, AnyRsetView, View
 from cubicweb.common.uilib import cut, printable_value
 
-_ = unicode
 
 class NullView(AnyRsetView):
     """default view when no result has been found"""
@@ -204,9 +203,10 @@ class InContextView(EntityView):
     def cell_call(self, row, col):
         entity = self.entity(row, col)
         desc = cut(entity.dc_description(), 50)
-        self.w(u'<a href="%s" title="%s">' % (html_escape(entity.absolute_url()),
-                                              html_escape(desc)))
-        self.w(html_escape(self.view('textincontext', self.rset, row=row, col=col)))
+        self.w(u'<a href="%s" title="%s">' % (
+            html_escape(entity.absolute_url()), html_escape(desc)))
+        self.w(html_escape(self.view('textincontext', self.rset,
+                                     row=row, col=col)))
         self.w(u'</a>')
 
 
@@ -214,8 +214,12 @@ class OutOfContextView(EntityView):
     id = 'outofcontext'
 
     def cell_call(self, row, col):
-        self.w(u'<a href="%s">' % self.entity(row, col).absolute_url())
-        self.w(html_escape(self.view('textoutofcontext', self.rset, row=row, col=col)))
+        entity = self.entity(row, col)
+        desc = cut(entity.dc_description(), 50)
+        self.w(u'<a href="%s" title="%s">' % (
+            html_escape(entity.absolute_url()), html_escape(desc)))
+        self.w(html_escape(self.view('textoutofcontext', self.rset,
+                                     row=row, col=col)))
         self.w(u'</a>')
 
 

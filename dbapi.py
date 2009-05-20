@@ -50,7 +50,7 @@ def get_repository(method, database=None, config=None, vreg=None):
         # resolve the Pyro object
         try:
             nshost, nsport = config['pyro-ns-host'], config['pyro-ns-port']
-            uri = locator.getNS(nshost, nsport) .resolve(nsid)
+            uri = locator.getNS(nshost, nsport).resolve(nsid)
         except ProtocolError:
             raise ConnectionError('Could not connect to the Pyro name server '
                                   '(host: %s:%i)' % (nshost, nsport))

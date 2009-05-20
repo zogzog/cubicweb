@@ -5,6 +5,7 @@
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 """
 __docformat__ = "restructuredtext en"
+_ = unicode
 
 from time import timezone
 
@@ -16,8 +17,6 @@ from cubicweb.web.httpcache import MaxAgeHTTPCacheManager
 from cubicweb.web.component import Component
 from cubicweb.web.box import BoxTemplate
 from cubicweb.common.uilib import simple_sgml_tag
-
-_ = unicode
 
 
 # base xml views ##############################################################

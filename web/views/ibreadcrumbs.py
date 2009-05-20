@@ -5,6 +5,7 @@
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 """
 __docformat__ = "restructuredtext en"
+_ = unicode
 
 from logilab.mtconverter import html_escape
 
@@ -16,7 +17,6 @@ from cubicweb.view import EntityView
 from cubicweb.common.uilib import cut
 from cubicweb.web.component import EntityVComponent
 
-_ = unicode
 
 def bc_title(entity):
     textsize = entity.req.property_value('navigation.short-line-size')
@@ -80,7 +80,6 @@ class BreadCrumbView(EntityView):
 
     def cell_call(self, row, col):
         entity = self.entity(row, col)
-        desc = cut(entity.dc_description(), 50)
-        self.w(u'<a href="%s" title="%s">%s</a>' % (html_escape(entity.absolute_url()),
-                                                    html_escape(desc),
-                                                    bc_title(entity)))
+        desc = html_escape(cut(entity.dc_description(), 50))
+        self.w(u'<a href="%s" title="%s">%s</a>' % (
+            html_escape(entity.absolute_url()), desc, bc_title(entity)))
