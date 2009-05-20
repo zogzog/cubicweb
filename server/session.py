@@ -65,6 +65,8 @@ class Session(RequestSessionMixIn):
         # i18n initialization
         self.set_language(cnxprops.lang)
         self._threaddata = threading.local()
+        self._threads_in_transaction = set()
+        self._closed = False
 
     def get_mode(self):
         return getattr(self._threaddata, 'mode', 'read')
@@ -150,6 +152,8 @@ class Session(RequestSessionMixIn):
 
     def set_pool(self):
         """the session need a pool to execute some queries"""
+        if self._closed:
+            raise Exception('try to set pool on a closed session')
         if self.pool is None:
             self._threaddata.pool = self.repo._get_pool()
             try:
@@ -158,6 +162,7 @@ class Session(RequestSessionMixIn):
                 self.repo._free_pool(self.pool)
                 self._threaddata.pool = None
                 raise
+            self._threads_in_transaction.add(threading.currentThread())
         return self._threaddata.pool
 
     def reset_pool(self):
@@ -167,6 +172,7 @@ class Session(RequestSessionMixIn):
         # or rollback
         if self.pool is not None and self.mode == 'read':
             # even in read mode, we must release the current transaction
+            self._threads_in_transaction.remove(threading.currentThread())
             self.repo._free_pool(self.pool)
             self.pool.pool_reset(self)
             self._threaddata.pool = None
@@ -343,6 +349,23 @@ class Session(RequestSessionMixIn):
 
     def close(self):
         """do not close pool on session close, since they are shared now"""
+        self._closed = True
+        # copy since _threads_in_transaction maybe modified while waiting
+        for thread in self._threads_in_transaction.copy():
+            if thread is threading.currentThread():
+                continue
+            self.info('waiting for thread %s', thread)
+            # do this loop/break instead of a simple join(10) in case thread is
+            # the main thread (in which case it will be removed from
+            # self._threads_in_transaction but still be alive...)
+            for i in xrange(10):
+                thread.join(1)
+                if not (thread.isAlive() and
+                        thread in self._threads_in_transaction):
+                    break
+            else:
+                self.error('thread %s still alive after 10 seconds, will close '
+                           'session anyway', thread)
         self.rollback()
 
     # transaction data/operations management ##################################

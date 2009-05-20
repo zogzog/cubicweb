@@ -4,6 +4,8 @@
 :copyright: 2001-2009 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 """
+__docformat__ = "restructuredtext en"
+_ = unicode
 
 from datetime import datetime, date, timedelta
 
@@ -14,7 +16,6 @@ from cubicweb.selectors import implements
 from cubicweb.utils import strptime, date_range, todate, todatetime
 from cubicweb.view import EntityView
 
-_ = unicode
 
 # useful constants & functions ################################################
 
@@ -81,7 +82,8 @@ class hCalView(EntityView):
             task = self.complete_entity(i)
             self.w(u'<div class="vevent">')
             self.w(u'<h3 class="summary">%s</h3>' % html_escape(task.dc_title()))
-            self.w(u'<div class="description">%s</div>' % html_escape(task.dc_description()))
+            self.w(u'<div class="description">%s</div>'
+                   % task.dc_description(format='text/html'))
             if task.start:
                 self.w(u'<abbr class="dtstart" title="%s">%s</abbr>' % (task.start.isoformat(), self.format_date(task.start)))
             if task.stop:

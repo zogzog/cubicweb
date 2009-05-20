@@ -199,27 +199,8 @@ class CheckBox(Input):
 
     def render(self, form, field):
         name, curvalues, attrs = self._render_attrs(form, field)
-        options = []
-        for label, value in field.vocabulary(form):
-            if value in curvalues:
-                tag = tags.input(name=name, value=value, type=self.type,
-                                 checked='checked', **attrs)
-            else:
-                tag = tags.input(name=name, value=value, type=self.type,
-                                 **attrs)
-            options.append(tag + label)
-        return '<br/>\n'.join(options)
-
-
-class Radio(Input):
-    """<input type='radio'>, for field having a specific vocabulary. One
-    input will be generated for each possible value.
-    """
-    type = 'radio'
-
-    def render(self, form, field):
-        name, curvalues, attrs = self._render_attrs(form, field)
         domid = attrs.pop('id', None)
+        sep = attrs.pop('separator', u'<br/>')
         options = []
         for i, (label, value) in enumerate(field.vocabulary(form)):
             iattrs = attrs.copy()
@@ -228,9 +209,15 @@ class Radio(Input):
             if value in curvalues:
                 iattrs['checked'] = u'checked'
             tag = tags.input(name=name, type=self.type, value=value, **iattrs)
-            options.append(tag + label + '<br/>')
+            options.append(tag + label + sep)
         return '\n'.join(options)
 
+
+class Radio(CheckBox):
+    """<input type='radio'>, for field having a specific vocabulary. One
+    input will be generated for each possible value.
+    """
+    type = 'radio'
 
 # javascript widgets ###########################################################
 
@@ -318,20 +305,21 @@ class AutoCompletionWidget(TextInput):
             values = (INTERNAL_FIELD_VALUE,)
         init_ajax_attributes(attrs, self.wdgtype, self.loadtype)
         # XXX entity form specific
-        attrs['cubicweb:dataurl'] = self._get_url(form.edited_entity)
+        attrs['cubicweb:dataurl'] = self._get_url(form.edited_entity, field)
         return name, values, attrs
 
-    def _get_url(self, entity):
-        return entity.req.build_url('json', fname=entity.autocomplete_initfuncs[self.rschema],
-                                pageid=entity.req.pageid, mode='remote')
+    def _get_url(self, entity, field):
+        fname = entity.autocomplete_initfuncs[field.name]
+        return entity.req.build_url('json', fname=fname, mode='remote',
+                                    pageid=entity.req.pageid)
 
 
 class StaticFileAutoCompletionWidget(AutoCompletionWidget):
     """XXX describe me"""
     wdgtype = 'StaticFileSuggestField'
 
-    def _get_url(self, entity):
-        return entity.req.datadir_url + entity.autocomplete_initfuncs[self.rschema]
+    def _get_url(self, entity, field):
+        return entity.req.datadir_url + entity.autocomplete_initfuncs[field.name]
 
 
 class RestrictedAutoCompletionWidget(AutoCompletionWidget):

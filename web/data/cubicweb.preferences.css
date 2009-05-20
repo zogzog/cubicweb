@@ -6,98 +6,105 @@
  */
 
 
-table.preferences td{ 
- padding: 0 0.5em 1em;
+.preferences .validateButton{
+ margin-top:0px;
  }
 
-fieldset.preferences{  
+fieldset.preferences{
  border : 1px solid #CFCEB7;
- margin:1em 0;
- padding:0 1em 1em;
+ margin:7px 1em 0;
+ padding:2px 6px 6px;
 }
 
-div.preffield {
- margin-bottom: 0.8em ;
+div.component {
+ margin-left: 1em;
 }
 
-/*
-div.preffield label{ 
- font-size:110%
- }
-*/
-
-div.prefinput{ 
- margin:.3em 0;
-}
-
-div.componentLink{ 
+div.componentLink{
  margin-top:0.3em;
  }
 
 a.componentTitle{
  font-weight:bold;
- color: #000;
+ color: #000/*#0083AB;*/
  }
 
 a.componentTitle:visited{
  color: #000;
 }
 
-
-
 h2.propertiesform a{
  display:block;
  margin: 10px 0px 6px 0px;
  font-weight: bold;
- color: #222211;
+ color: #000;
  padding: 0.2em 0.2em 0.2em 16px;
  background:#eeedd9 url("puce_down.png") 3px center no-repeat;
- font-size:76%;
+ font-size:89%;
 }
 
 h2.propertiesform a:hover{
- color:#000;
  background-color:#cfceb7;
- text-decoration:none;
 }
 
-div.prefinput select.changed,
-div.prefinput input.changed{ 
+h2.propertiesform a:hover,
+h2.propertiesform a:visited{
+ text-decoration:none;
+ color: #000;
+}
+
+div.preffield {
+ margin-bottom: 5px;
+ padding:2px 5px;
  background:#eeedd9;
- border: 1px solid #eeedd9;
+}
+
+div.prefinput{
+ margin:.3em;
+}
+
+
+div.prefinput select.changed,
+div.prefinput input.changed{
+ border: 1px solid #000;
+ font-weight:bold;
+
 }
 
 div.prefinput select,
-div.prefinput input{ 
+div.prefinput input{
  background:#fff;
  border: 1px solid #CFCEB7;
 }
 
 .prefinput input.error {
- background:transparent url(error.png) no-repeat scroll 100% 50% !important;
+ /* background:#fff url(error.png) no-repeat scroll 100% 50% !important; */
+ border:1px solid red !important;
+ color:red;
+ padding-right:1em;
 }
 
 
-div.formsg{ 
+div.formsg{
  font-weight:bold;
  margin:0.5em 0px;
- }
+}
 
 
-div.formsg .critical{ 
+div.critical{
  color:red;
  padding-left:20px;
  background:#fff url(critical.png) no-repeat;
  }
 
-div.formsg .message{ 
+div.formsg .msg{
  color : green;
 }
 
 .helper{
   font-size: 96%;
   color: #555544;
-  padding:0; 
+  padding:0;
 }
 
 div.prefinput .helper:hover {
@@ -105,11 +112,6 @@ div.prefinput .helper:hover {
   cursor: default;
 }
 
-.error{ 
- color:red;
- padding-right:1em;
- }
-
-div.openlink{ 
+div.openlink{
  display:inline;
  }

@@ -284,6 +284,23 @@ class Entity(AppRsetObject, dict):
         parents.append(cls.vreg.etype_class('Any'))
         return parents
 
+    @classmethod
+    @cached
+    def _rest_attr_info(cls):
+        mainattr, needcheck = 'eid', True
+        if cls.rest_attr:
+            mainattr = cls.rest_attr
+            needcheck = not cls.e_schema.has_unique_values(mainattr)
+        else:
+            for rschema in cls.e_schema.subject_relations():
+                if rschema.is_final() and rschema != 'eid' and cls.e_schema.has_unique_values(rschema):
+                    mainattr = str(rschema)
+                    needcheck = False
+                    break
+        if mainattr == 'eid':
+            needcheck = False
+        return mainattr, needcheck
+
     def __init__(self, req, rset=None, row=None, col=0):
         AppRsetObject.__init__(self, req, rset, row, col)
         dict.__init__(self)
@@ -363,46 +380,41 @@ class Entity(AppRsetObject, dict):
         if getattr(self.req, 'search_state', ('normal',))[0] == 'normal':
             kwargs['base_url'] = self.metainformation()['source'].get('base-url')
         if method is None or method == 'view':
-            kwargs['_restpath'] = self.rest_path()
+            try:
+                kwargs['_restpath'] = self.rest_path(kwargs.get('base_url'))
+            except TypeError:
+                warn('%s: rest_path() now take use_ext_eid argument, '
+                     'please update' % self.id, DeprecationWarning)
+                kwargs['_restpath'] = self.rest_path()
         else:
             kwargs['rql'] = 'Any X WHERE X eid %s' % self.eid
         return self.build_url(method, **kwargs)
 
-    def rest_path(self):
+    def rest_path(self, use_ext_eid=False):
         """returns a REST-like (relative) path for this entity"""
         mainattr, needcheck = self._rest_attr_info()
         etype = str(self.e_schema)
-        if mainattr == 'eid':
-            value = self.eid
-        else:
+        path = etype.lower()
+        if mainattr != 'eid':
             value = getattr(self, mainattr)
             if value is None:
-                return '%s/eid/%s' % (etype.lower(), self.eid)
-        if needcheck:
-            # make sure url is not ambiguous
-            rql = 'Any COUNT(X) WHERE X is %s, X %s %%(value)s' % (etype, mainattr)
-            if value is not None:
-                nbresults = self.req.execute(rql, {'value' : value})[0][0]
-                # may an assertion that nbresults is not 0 would be a good idea
-                if nbresults != 1: # no ambiguity
-                    return '%s/eid/%s' % (etype.lower(), self.eid)
-        return '%s/%s' % (etype.lower(), self.req.url_quote(value))
-
-    @classmethod
-    def _rest_attr_info(cls):
-        mainattr, needcheck = 'eid', True
-        if cls.rest_attr:
-            mainattr = cls.rest_attr
-            needcheck = not cls.e_schema.has_unique_values(mainattr)
-        else:
-            for rschema in cls.e_schema.subject_relations():
-                if rschema.is_final() and rschema != 'eid' and cls.e_schema.has_unique_values(rschema):
-                    mainattr = str(rschema)
-                    needcheck = False
-                    break
+                mainattr = 'eid'
+                path += '/eid'
+            elif needcheck:
+                # make sure url is not ambiguous
+                rql = 'Any COUNT(X) WHERE X is %s, X %s %%(value)s' % (
+                    etype, mainattr)
+                if value is not None:
+                    nbresults = self.req.execute(rql, {'value' : value})[0][0]
+                    if nbresults != 1: # ambiguity?
+                        mainattr = 'eid'
+                        path += '/eid'
         if mainattr == 'eid':
-            needcheck = False
-        return mainattr, needcheck
+            if use_ext_eid:
+                value = self.metainformation()['extid']
+            else:
+                value = self.eid
+        return '%s/%s' % (path, self.req.url_quote(value))
 
     def attr_metadata(self, attr, metadata):
         """return a metadata for an attribute (None if unspecified)"""

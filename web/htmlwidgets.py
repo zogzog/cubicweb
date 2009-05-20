@@ -57,6 +57,7 @@ class BoxWidget(HTMLWidget):
     def append(self, item):
         self.items.append(item)
 
+    title_class = 'boxTitle'
     main_div_class = 'boxContent'
     listing_class = 'boxListing'
 
@@ -82,7 +83,7 @@ class BoxWidget(HTMLWidget):
                 title = '<span>%s</span>' % html_escape(self.title)
             else:
                 title = '<span>%s</span>' % self.title
-            self.w(u'<div class="boxTitle">%s</div>' % title)
+            self.w(u'<div class="%s">%s</div>' % (self.title_class, title))
         if self.items:
             self.box_begin_content()
             for item in self.items:
@@ -93,6 +94,7 @@ class BoxWidget(HTMLWidget):
 
 class SideBoxWidget(BoxWidget):
     """default CubicWeb's sidebox widget"""
+    title_class = u'sideBoxTitle'
     main_div_class = u'sideBoxBody'
     listing_class = ''
 

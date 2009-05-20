@@ -1,11 +1,15 @@
 """unittests for cw.web.formfields"""
 
 from logilab.common.testlib import TestCase, unittest_main
+
+from yams.constraints import StaticVocabularyConstraint, SizeConstraint
+
 from cubicweb.devtools import TestServerConfiguration
-from cubicweb.web.formwidgets import PasswordInput, TextArea
+from cubicweb.devtools.testlib import EnvBasedTC
+from cubicweb.web.form import EntityFieldsForm
+from cubicweb.web.formwidgets import PasswordInput, TextArea, Select
 from cubicweb.web.formfields import *
-from cubicweb.entities.wfobjs import State
-from cubicweb.entities.authobjs import CWUser
+
 from cubes.file.entities import File
 
 config = TestServerConfiguration('data')
@@ -14,6 +18,7 @@ schema = config.load_schema()
 state_schema = schema['State']
 cwuser_schema = schema['CWUser']
 file_schema = schema['File']
+salesterm_schema = schema['Salesterm']
 
 class GuessFieldTC(TestCase):
 
@@ -41,12 +46,13 @@ class GuessFieldTC(TestCase):
         self.assertEquals(description_format_field.sort, True)
         self.assertEquals(description_format_field.initial(None), 'text/rest')
 
+
 #         wikiid_field = guess_field(state_schema, schema['wikiid'])
 #         self.assertIsInstance(wikiid_field, StringField)
 #         self.assertEquals(wikiid_field.required, False)
 
 
-    def test_euser_fields(self):
+    def test_cwuser_fields(self):
         upassword_field = guess_field(cwuser_schema, schema['upassword'])
         self.assertIsInstance(upassword_field, StringField)
         self.assertIsInstance(upassword_field.widget, PasswordInput)
@@ -79,6 +85,29 @@ class GuessFieldTC(TestCase):
         self.assertEquals(data_field.required, True)
         self.assertIsInstance(data_field.format_field, StringField)
         self.assertIsInstance(data_field.encoding_field, StringField)
+
+    def test_constraints_priority(self):
+        salesterm_field = guess_field(salesterm_schema, schema['reason'])
+        constraints = schema['reason'].rproperty('Salesterm', 'String', 'constraints')
+        self.assertEquals([c.__class__ for c in constraints],
+                          [SizeConstraint, StaticVocabularyConstraint])
+        self.assertIsInstance(salesterm_field.widget, Select)
+
+class MoreFieldsTC(EnvBasedTC):
+    def test_rtf_format_field(self):
+        req = self.request()
+        req.use_fckeditor = lambda: False
+        e = self.etype_instance('State')
+        form = EntityFieldsForm(req, entity=e)
+        description_field = guess_field(state_schema, schema['description'])
+        description_format_field = description_field.get_format_field(form)
+        self.assertEquals(description_format_field.internationalizable, True)
+        self.assertEquals(description_format_field.sort, True)
+        # unlike below, initial is bound to form.form_field_format
+        self.assertEquals(description_format_field.initial(form), 'text/html')
+        self.execute('INSERT CWProperty X: X pkey "ui.default-text-format", X value "text/rest", X for_user U WHERE U login "admin"')
+        self.commit()
+        self.assertEquals(description_format_field.initial(form), 'text/rest')
 
 if __name__ == '__main__':
     unittest_main()

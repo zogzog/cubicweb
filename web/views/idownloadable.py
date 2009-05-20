@@ -26,7 +26,7 @@ def is_image(entity):
 
 def download_box(w, entity, title=None, label=None):
     req = entity.req
-    w(u'<div class="sideRelated">')
+    w(u'<div class="sideBox">')
     if title is None:
         title = req._('download')
     w(u'<div class="sideBoxTitle downloadBoxTitle"><span>%s</span></div>'

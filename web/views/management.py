@@ -10,7 +10,7 @@ _ = unicode
 
 from logilab.mtconverter import html_escape
 
-from cubicweb.selectors import yes, none_rset, match_user_groups
+from cubicweb.selectors import yes, none_rset, match_user_groups, authenticated_user
 from cubicweb.view import AnyRsetView, StartupView, EntityView
 from cubicweb.common.uilib import html_traceback, rest_traceback
 from cubicweb.web import formwidgets
@@ -65,6 +65,8 @@ class SecurityViewMixIn(object):
 class SecurityManagementView(EntityView, SecurityViewMixIn):
     """display security information for a given entity"""
     id = 'security'
+    __select__ = EntityView.__select__ & authenticated_user()
+
     title = _('security')
     def call(self):
         self.w(u'<div id="progress">%s</div>' % self.req._('validating...'))
@@ -181,7 +183,6 @@ class SecurityManagementView(EntityView, SecurityViewMixIn):
         self.w(form.form_render(renderer=HTableFormRenderer(display_progress_div=False)))
 
 
-
 class ErrorView(AnyRsetView):
     """default view when no result has been found"""
     __select__ = yes()
@@ -270,6 +271,7 @@ def text_error_description(ex, excinfo, req, eversion, cubes):
         binfo += u":Package %s version: %s\n" % (pkg, pkgversion)
     binfo += '\n'
     return binfo
+
 
 class ProcessInformationView(StartupView):
     id = 'info'

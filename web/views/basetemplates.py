@@ -7,7 +7,6 @@
 """
 __docformat__ = "restructuredtext en"
 
-
 from logilab.mtconverter import html_escape
 
 from cubicweb.vregistry import objectify_selector

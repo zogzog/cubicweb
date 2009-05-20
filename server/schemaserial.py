@@ -14,6 +14,7 @@ from logilab.common.shellutils import ProgressBar
 from yams import schema as schemamod, buildobjs as ybo
 
 from cubicweb.schema import CONSTRAINTS, ETYPE_NAME_MAP
+from cubicweb.server import sqlutils
 
 def group_mapping(cursor, interactive=True):
     """create a group mapping from an rql cursor
@@ -124,7 +125,8 @@ def deserialize_schema(schema, session):
         if etype in ETYPE_NAME_MAP: # XXX <2.45 bw compat
             print 'fixing etype name from %s to %s' % (etype, ETYPE_NAME_MAP[etype])
             # can't use write rql queries at this point, use raw sql
-            session.system_sql('UPDATE CWEType SET name=%(n)s WHERE eid=%(x)s',
+            session.system_sql('UPDATE %(p)sCWEType SET %(p)sname=%%(n)s WHERE %(p)seid=%%(x)s'
+                               % {'p': sqlutils.SQL_PREFIX},
                                {'x': eid, 'n': ETYPE_NAME_MAP[etype]})
             session.system_sql('UPDATE entities SET type=%(n)s WHERE type=%(x)s',
                                {'x': etype, 'n': ETYPE_NAME_MAP[etype]})

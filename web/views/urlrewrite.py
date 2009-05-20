@@ -73,8 +73,8 @@ class SimpleReqRewriter(URLRewriter):
     rules = [
         ('/schema',  dict(vid='schema')),
         ('/index', dict(vid='index')),
-        ('/myprefs', dict(vid='epropertiesform')),
-        ('/siteconfig', dict(vid='systemepropertiesform')),
+        ('/myprefs', dict(vid='propertiesform')),
+        ('/siteconfig', dict(vid='systempropertiesform')),
         ('/manage', dict(vid='manage')),
         ('/notfound', dict(vid='404')),
         ('/error', dict(vid='error')),

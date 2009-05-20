@@ -152,7 +152,7 @@ class RelatedEntityBoxTemplate(EntityBoxTemplate):
         entity = self.entity(row, col)
         limit = self.req.property_value('navigation.related-limit') + 1
         role = get_role(self)
-        self.w(u'<div class="sideRelated">')
+        self.w(u'<div class="sideBox">')
         self.wview('sidebox', entity.related(self.rtype, role, limit=limit),
                    title=display_name(self.req, self.rtype, role))
         self.w(u'</div>')

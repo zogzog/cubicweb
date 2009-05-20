@@ -1,6 +1,7 @@
 class Salesterm(EntityType):
     described_by_test = SubjectRelation('File', cardinality='1*', composite='subject')
     amount = Int(constraints=[IntervalBoundConstraint(0, 100)])
+    reason = String(maxsize=20, vocabulary=[u'canceled', u'sold'])
 
 class tags(RelationDefinition):
     subject = 'Tag'

@@ -372,10 +372,15 @@ class FieldsForm(FormMixIn, AppRsetObject):
             return self.form_previous_values[qname]
         if qname in self.req.form:
             return self.req.form[qname]
+        if field.name in self.req.form:
+            return self.req.form[field.name]
         return None
 
     def form_field_value(self, field, load_bytes=False):
         """return field's *typed* value"""
+        myattr = '%s_%s_default' % (field.role, field.name)
+        if hasattr(self, myattr):
+            return getattr(self, myattr)()
         value = field.initial
         if callable(value):
             value = value(self)
