@@ -1,6 +1,15 @@
+"""basic plot views
+
+:organization: Logilab
+:copyright: 2007-2009 LOGILAB S.A. (Paris, FRANCE), license is LGPL.
+:contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
+"""
+__docformat__ = "restructuredtext en"
+
 import os
 
 from logilab.common import flatten
+from logilab.mtconverter import html_escape
 
 from cubicweb.vregistry import objectify_selector
 from cubicweb.web.views import baseviews
@@ -9,15 +18,24 @@ from cubicweb.web.views import baseviews
 def plot_selector(cls, req, rset, *args, **kwargs):
     """accept result set with at least one line and two columns of result
     all columns after second must be of numerical types"""
-    if rset is None:
-        return 0
-    if not len(rset):
+    if not rset:
         return 0
     if len(rset.rows[0]) < 2:
         return 0
     for etype in rset.description[0]:
         if etype not in ('Int', 'Float'):
             return 0
+    return 1
+
+@objectify_selector
+def piechart_selector(cls, req, rset, *args, **kwargs):
+    if not rset:
+        return 0
+    if len(rset.rows[0]) < 2:
+        return 0
+    etype = rset.description[0][1]
+    if etype not  in ('Int', 'Float'):
+        return 0
     return 1
 
 try:
@@ -101,4 +119,32 @@ else:
 
         def build_figname(self):
             self.__class__._plot_count += 1
-            return '/tmp/burndown_chart_%s_%d.png' % (self.config.appid, self.__class__._plot_count)
+            return '/tmp/burndown_chart_%s_%d.png' % (self.config.appid,
+                                                      self.__class__._plot_count)
+
+try:
+    from GChartWrapper import Pie, Pie3D
+except ImportError:
+    pass
+else:
+    class PieChartView(baseviews.AnyRsetView):
+        id = 'piechart'
+        pieclass = Pie
+        __select__ = piechart_selector()
+
+        def call(self, title=None, width=None, height=None):
+            piechart = self.pieclass([(row[1] or 0) for row in self.rset])
+            labels = ['%s: %s' % (row[0].encode(self.req.encoding), row[1])
+                      for row in self.rset]
+            piechart.label(*labels)
+            if width is not None:
+                height = height or width
+                piechart.size(width, height)
+            if title:
+                piechart.title(title)
+            self.w(u'<img src="%s" />' % html_escape(piechart.url))
+
+
+    class PieChart3DView(PieChartView):
+        id = 'piechart3D'
+        pieclass = Pie3D
