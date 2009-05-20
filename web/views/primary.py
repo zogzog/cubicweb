@@ -141,7 +141,7 @@ class PrimaryView(EntityView):
         for box in boxes:
             if isinstance(box, tuple):
                 label, rset, vid  = box
-                self.w(u'<div class="sideRelated">')
+                self.w(u'<div class="sideBox">')
                 self.wview(vid, rset, title=label)
                 self.w(u'</div>')
             else:

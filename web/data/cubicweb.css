@@ -455,6 +455,8 @@ div.sideBox {
   padding: 0.2em 0px;
   margin-bottom: 0.5em;
   background: #eeedd9;
+  min-width: 21em;
+  max-width: 50em;
 }
 
 ul.sideBox li{ 
@@ -572,23 +574,10 @@ div.mainRelated {
   padding: 0.5em 0.2em 0.2em;
 }
 
-div.sideRelated h4,
-div.sideRelated h5 {
-  margin-top: 0px;
-  margin-bottom: 0px;
-}
-
 div.primaryRight{
   float:right;
   
  }
-
-div.sideRelated {
-  margin-right: 1em;
-  padding: 12px 0px 12px 12px;
-  min-width: 21em;
-  max-width: 50em;
-}
 
 div.metadata {
   font-size: 90%;
