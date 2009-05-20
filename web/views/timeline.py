@@ -16,6 +16,7 @@ from cubicweb.interfaces import ICalendarable
 from cubicweb.selectors import implements
 from cubicweb.view import EntityView, StartupView
 
+_ = unicode
 
 class TimelineJsonView(EntityView):
     """generates a json file to feed Timeline.loadJSON()
@@ -101,6 +102,7 @@ class TimelineViewMixIn(object):
 class TimelineView(TimelineViewMixIn, EntityView):
     """builds a cubicweb timeline widget node"""
     id = 'timeline'
+    title = _('timeline')
     __select__ = implements(ICalendarable)
     need_navigation = False
     def call(self, tlunit=None):
