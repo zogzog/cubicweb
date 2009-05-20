@@ -67,7 +67,7 @@ class TimelineJsonView(EntityView):
             return None
         event_data = {'start': start.strftime(self.date_fmt),
                       'title': html_escape(entity.dc_title()),
-                      'description': entity.dc_description(),
+                      'description': entity.dc_description(format='text/html'),
                       'link': entity.absolute_url(),
                       }
         onclick = self.onclick(entity)
