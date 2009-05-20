@@ -109,6 +109,8 @@ for rtype in ('eid', 'creation_date', 'modification_date',
               'see_also'):
     primaryview_section.tag_subject_of(('*', rtype, '*'), 'hidden')
     primaryview_section.tag_object_of(('*', rtype, '*'), 'hidden')
+primaryview_section.tag_subject_of(('*', 'use_email', '*'), 'attributes')
+primaryview_section.tag_subject_of(('*', 'primary_email', '*'), 'hidden')
 
 for attr in ('name', 'meta', 'final'):
     primaryview_section.tag_attribute(('CWEType', attr), 'hidden')
@@ -282,3 +284,4 @@ actionbox_appearsin_addmenu.tag_subject_of(('Transition', 'destination_state', '
 actionbox_appearsin_addmenu.tag_object_of(('*', 'allowed_transition', 'Transition'), True)
 actionbox_appearsin_addmenu.tag_object_of(('*', 'destination_state', 'State'), True)
 actionbox_appearsin_addmenu.tag_subject_of(('State', 'allowed_transition', '*'), True)
+
