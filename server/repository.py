@@ -217,7 +217,7 @@ class Repository(object):
         self._get_pool().close(True)
         for i in xrange(config['connections-pool-size']):
             self._available_pools.put_nowait(ConnectionsPool(self.sources))
-        self._shuting_down = False
+        self._shutting_down = False
 
     # internals ###############################################################
 
@@ -350,7 +350,7 @@ class Repository(object):
         """called on server stop event to properly close opened sessions and
         connections
         """
-        self._shuting_down = True
+        self._shutting_down = True
         if isinstance(self._looping_tasks, tuple): # if tasks have been started
             for looptask in self._looping_tasks:
                 self.info('canceling task %s...', looptask.name)
@@ -722,8 +722,8 @@ class Repository(object):
 
     def _get_session(self, sessionid, setpool=False):
         """return the user associated to the given session identifier"""
-        if self._shuting_down:
-            raise Exception('Repository is shuting down')
+        if self._shutting_down:
+            raise Exception('Repository is shutting down')
         try:
             session = self._sessions[sessionid]
         except KeyError:
