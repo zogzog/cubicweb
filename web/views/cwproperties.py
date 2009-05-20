@@ -23,7 +23,7 @@ from cubicweb.web.formwidgets import Select, Button, SubmitButton
 from cubicweb.web.views import primary
 
 
-# some string we want to be internationalizable for nicer display of eproperty
+# some string we want to be internationalizable for nicer display of property
 # groups
 _('navigation')
 _('ui')
@@ -63,8 +63,8 @@ class CWPropertyPrimaryView(primary.PrimaryView):
     skip_none = False
 
 
-class SystemEPropertiesForm(FormViewMixIn, StartupView):
-    id = 'systemepropertiesform'
+class SystemCWPropertiesForm(FormViewMixIn, StartupView):
+    id = 'systempropertiesform'
     __select__ = none_rset() & match_user_groups('managers')
 
     title = _('site configuration')
@@ -101,9 +101,9 @@ class SystemEPropertiesForm(FormViewMixIn, StartupView):
         values = self.defined_keys
         groupedopts = {}
         mainopts = {}
-        # "self.id=='systemepropertiesform'" to skip site wide properties on
+        # "self.id=='systempropertiesform'" to skip site wide properties on
         # user's preference but not site's configuration
-        for key in vreg.user_property_keys(self.id=='systemepropertiesform'):
+        for key in vreg.user_property_keys(self.id=='systempropertiesform'):
             parts = key.split('.')
             if parts[0] in vreg:
                 # appobject configuration
@@ -140,10 +140,10 @@ class SystemEPropertiesForm(FormViewMixIn, StartupView):
               (make_togglable_link('fieldset_' + group, label.capitalize())))
             w(u'<div id="fieldset_%s" %s>' % (group, status))
 
-	    # create selection
-	    sorted_objects =  sorted((self.req.__('%s_%s' % (group, o)), o, f)
+            # create selection
+            sorted_objects =  sorted((self.req.__('%s_%s' % (group, o)), o, f)
                                            for o, f in objects.iteritems())
-	    for label, oid, form in sorted_objects:
+            for label, oid, form in sorted_objects:
                 w(u'<div class="component">')
                 w(u'''<div class="componentLink"><a href="javascript:noop();"
                            onclick="javascript:toggleVisibility('field_%(oid)s_%(group)s')"
@@ -157,29 +157,29 @@ class SystemEPropertiesForm(FormViewMixIn, StartupView):
                 if doc != docmsgid:
                     w(u'<div class="helper">%s</div>' % html_escape(doc).capitalize())
                 w(u'</div>')
-		w(u'<fieldset id="field_%(oid)s_%(group)s" class="%(group)s preferences hidden">'
+                w(u'<fieldset id="field_%(oid)s_%(group)s" class="%(group)s preferences hidden">'
                   % {'oid':oid, 'group':group})
-		w(form)
+                w(form)
                 w(u'</fieldset>')
             w(u'</div>')
 
     @property
     @cached
-    def eprops_rset(self):
+    def cwprops_rset(self):
         return self.req.execute('Any P,K,V WHERE P is CWProperty, P pkey K, '
                                 'P value V, NOT P for_user U')
 
     @property
     def defined_keys(self):
         values = {}
-        for i, entity in enumerate(self.eprops_rset.entities()):
+        for i, entity in enumerate(self.cwprops_rset.entities()):
             values[entity.pkey] = i
         return values
 
     def entity_for_key(self, key):
         values = self.defined_keys
         if key in values:
-            entity = self.eprops_rset.get_entity(values[key], 0)
+            entity = self.cwprops_rset.get_entity(values[key], 0)
         else:
             entity = self.vreg.etype_class('CWProperty')(self.req, None, None)
             entity.eid = self.req.varmaker.next()
@@ -191,18 +191,18 @@ class SystemEPropertiesForm(FormViewMixIn, StartupView):
         buttons = [SubmitButton()]
         form = CompositeForm(self.req, domid=formid, action=self.build_url(),
                              form_buttons=buttons,
-			     onsubmit="return validatePrefsForm('%s')" % formid,
+                             onsubmit="return validatePrefsForm('%s')" % formid,
                              submitmsg=self.req._('changes applied'))
-	path = self.req.relative_path()
+        path = self.req.relative_path()
         if '?' in path:
             path, params = path.split('?', 1)
             form.form_add_hidden('__redirectparams', params)
         form.form_add_hidden('__redirectpath', path)
         for key in keys:
             self.form_row(form, key, splitlabel)
-	renderer = EPropertiesFormRenderer()
+        renderer = CWPropertiesFormRenderer()
         return form.form_render(display_progress_div=False,
-				renderer=renderer)
+                                renderer=renderer)
 
     def form_row(self, form, key, splitlabel):
         entity = self.entity_for_key(key)
@@ -210,7 +210,7 @@ class SystemEPropertiesForm(FormViewMixIn, StartupView):
             label = key.split('.')[-1]
         else:
             label = key
-	subform = EntityFieldsForm(self.req, entity=entity, set_error_url=False)
+        subform = EntityFieldsForm(self.req, entity=entity, set_error_url=False)
 
         subform.append_field(PropertyValueField(name='value', label=label,
                                                 eidparam=True))
@@ -224,8 +224,8 @@ def is_user_prefs(cls, req, rset, row=None, col=0, **kwargs):
     return req.user.eid == rset[row or 0][col]
 
 
-class EPropertiesForm(SystemEPropertiesForm):
-    id = 'epropertiesform'
+class CWPropertiesForm(SystemCWPropertiesForm):
+    id = 'propertiesform'
     __select__ = (
         # we don't want guests to be able to come here
         match_user_groups('users', 'managers') &
@@ -243,19 +243,19 @@ class EPropertiesForm(SystemEPropertiesForm):
 
     @property
     @cached
-    def eprops_rset(self):
+    def cwprops_rset(self):
         return self.req.execute('Any P,K,V WHERE P is CWProperty, P pkey K, P value V,'
                                 'P for_user U, U eid %(x)s', {'x': self.user.eid})
 
     def form_row(self, form, key, splitlabel):
-        subform = super(EPropertiesForm, self).form_row(form, key, splitlabel)
+        subform = super(CWPropertiesForm, self).form_row(form, key, splitlabel)
         # if user is in the managers group and the property is being created,
         # we have to set for_user explicitly
         if not subform.edited_entity.has_eid() and self.user.matching_groups('managers'):
             subform.form_add_hidden('for_user', self.user.eid, eidparam=True)
 
 
-# eproperty form objects ######################################################
+# cwproperty form objects ######################################################
 
 class PlaceHolderWidget(object):
 
@@ -353,30 +353,32 @@ class PropertyValueField(StringField):
                 wdg.attrs.setdefault('size', 3)
         self.widget = wdg
 
-class EPropertiesFormRenderer(FormRenderer):
-    """specific renderer for cwproperties"""
+
+uicfg.autoform_field.tag_attribute(('CWProperty', 'pkey'), PropertyKeyField)
+uicfg.autoform_field.tag_attribute(('CWProperty', 'value'), PropertyValueField)
+
+
+class CWPropertiesFormRenderer(FormRenderer):
+    """specific renderer for properties"""
 
     def open_form(self, form, values):
-	err = '<div class="formsg"></div>'
-	return super(EPropertiesFormRenderer, self).open_form(form, values) + err
+        err = '<div class="formsg"></div>'
+        return super(CWPropertiesFormRenderer, self).open_form(form, values) + err
 
     def _render_fields(self, fields, w, form):
-	for field in fields:
-	    w(u'<div class="preffield">\n')
-	    if self.display_label:
-		w(u'%s' % self.render_label(form, field))
+        for field in fields:
+            w(u'<div class="preffield">\n')
+            if self.display_label:
+                w(u'%s' % self.render_label(form, field))
             error = form.form_field_error(field)
-	    w(u'%s' % self.render_help(form, field))
-	    w(u'<div class="prefinput">')
-      	    w(field.render(form, self))
-	    w(u'</div>')
-	    w(u'</div>')
+            w(u'%s' % self.render_help(form, field))
+            w(u'<div class="prefinput">')
+            w(field.render(form, self))
+            w(u'</div>')
+            w(u'</div>')
 
     def render_buttons(self, w, form):
         w(u'<div>\n')
         for button in form.form_buttons:
             w(u'%s\n' % button.render(form))
         w(u'</div>')
-
-uicfg.autoform_field.tag_attribute(('CWProperty', 'pkey'), PropertyKeyField)
-uicfg.autoform_field.tag_attribute(('CWProperty', 'value'), PropertyValueField)
