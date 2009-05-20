@@ -305,20 +305,21 @@ class AutoCompletionWidget(TextInput):
             values = (INTERNAL_FIELD_VALUE,)
         init_ajax_attributes(attrs, self.wdgtype, self.loadtype)
         # XXX entity form specific
-        attrs['cubicweb:dataurl'] = self._get_url(form.edited_entity)
+        attrs['cubicweb:dataurl'] = self._get_url(form.edited_entity, field)
         return name, values, attrs
 
-    def _get_url(self, entity):
-        return entity.req.build_url('json', fname=entity.autocomplete_initfuncs[self.rschema],
-                                pageid=entity.req.pageid, mode='remote')
+    def _get_url(self, entity, field):
+        fname = entity.autocomplete_initfuncs[field.name]
+        return entity.req.build_url('json', fname=fname, mode='remote',
+                                    pageid=entity.req.pageid)
 
 
 class StaticFileAutoCompletionWidget(AutoCompletionWidget):
     """XXX describe me"""
     wdgtype = 'StaticFileSuggestField'
 
-    def _get_url(self, entity):
-        return entity.req.datadir_url + entity.autocomplete_initfuncs[self.rschema]
+    def _get_url(self, entity, field):
+        return entity.req.datadir_url + entity.autocomplete_initfuncs[field.name]
 
 
 class RestrictedAutoCompletionWidget(AutoCompletionWidget):
