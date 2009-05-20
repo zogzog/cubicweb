@@ -13,6 +13,7 @@ additional (disabled by default) boxes
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 """
 __docformat__ = "restructuredtext en"
+_ = unicode
 
 from logilab.mtconverter import html_escape
 
@@ -23,7 +24,6 @@ from cubicweb.view import EntityView
 from cubicweb.web import uicfg
 from cubicweb.web.box import BoxTemplate
 
-_ = unicode
 
 class EditBox(BoxTemplate):
     """

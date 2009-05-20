@@ -437,7 +437,7 @@ class Connection(object):
             req = self.request()
         rset = req.eid_rset(eid, self._user_etype)
         user = self.vreg.etype_class(self._user_etype)(req, rset, row=0, groups=groups,
-                                               properties=properties)
+                                                       properties=properties)
         user['login'] = login # cache login
         return user
 
