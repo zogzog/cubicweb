@@ -199,6 +199,26 @@ class RepositoryTC(RepositoryBasedTC):
     def test_transaction_interleaved(self):
         self.skip('implement me')
 
+    def test_close_wait_processing_request(self):
+        repo = self.repo
+        cnxid = repo.connect(*self.default_user_password())
+        repo.execute(cnxid, 'INSERT CWUser X: X login "toto", X upassword "tutu", X in_group G WHERE G name "users"')
+        repo.commit(cnxid)
+        # close has to be in the thread due to sqlite limitations
+        def close_in_a_few_moment():
+            time.sleep(0.1)
+            repo.close(cnxid)
+        t = threading.Thread(target=close_in_a_few_moment)
+        t.start()
+        try:
+            print 'execute'
+            repo.execute(cnxid, 'DELETE CWUser X WHERE X login "toto"')
+            print 'commit'
+            repo.commit(cnxid)
+            print 'commited'
+        finally:
+            t.join()
+
     def test_initial_schema(self):
         schema = self.repo.schema
         # check order of attributes is respected
@@ -238,31 +258,29 @@ class RepositoryTC(RepositoryBasedTC):
     def test_pyro(self):
         import Pyro
         Pyro.config.PYRO_MULTITHREADED = 0
-        lock = threading.Lock()
+        done = []
         # the client part has to be in the thread due to sqlite limitations
-        t = threading.Thread(target=self._pyro_client, args=(lock,))
+        t = threading.Thread(target=self._pyro_client, args=(done,))
         try:
             daemon = self.repo.pyro_register()
             t.start()
-            # connection
-            daemon.handleRequests(1.0)
-            daemon.handleRequests(1.0)
-            daemon.handleRequests(1.0)
-            # get schema
-            daemon.handleRequests(1.0)
-            # execute
-            daemon.handleRequests(1.0)
-            t.join()
+            while not done:
+                daemon.handleRequests(1.0)
+            t.join(1)
+            if t.isAlive():
+                self.fail('something went wrong, thread still alive')
         finally:
             repository.pyro_unregister(self.repo.config)
 
-    def _pyro_client(self, lock):
+    def _pyro_client(self, done):
         cnx = connect(self.repo.config.appid, u'admin', 'gingkow')
         # check we can get the schema
         schema = cnx.get_schema()
         self.assertEquals(schema.__hashmode__, None)
-        rset = cnx.cursor().execute('Any U,G WHERE U in_group G')
-
+        cu = cnx.cursor()
+        rset = cu.execute('Any U,G WHERE U in_group G')
+        cnx.close()
+        done.append(True)
 
     def test_internal_api(self):
         repo = self.repo
