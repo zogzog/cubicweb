@@ -59,72 +59,77 @@ def filterout_nulls(abscissa, plot):
         filtered.append( (x, y) )
     return sorted(filtered)
 
-class PlotView(baseviews.AnyRsetView):
-    id = 'plot'
-    title = _('generic plot')
-    __select__ = at_least_two_columns() & all_columns_are_numbers()
-    mode = 'null' # null or time, meant for jquery.flot.js
+def datetime2ticks(date):
+    return time.mktime(date.timetuple()) * 1000
 
-    def _build_abscissa(self):
-        return [row[0] for row in self.rset]
-
-    def _build_data(self, abscissa, plot):
-        return filterout_nulls(abscissa, plot)
-
-    def call(self, width=500, height=400):
-        # XXX add excanvas.js if IE
-        self.req.add_js( ('jquery.flot.js', 'cubicweb.flot.js') )
-        # prepare data
-        abscissa = self._build_abscissa()
-        plots = []
-        nbcols = len(self.rset.rows[0])
-        for col in xrange(1, nbcols):
-            plots.append([row[col] for row in self.rset])
-        # plot data
-        plotuid = 'plot%s' % make_uid('foo')
-        self.w(u'<div id="%s" style="width: %spx; height: %spx;"></div>' %
-               (plotuid, width, height))
-        rqlst = self.rset.syntax_tree()
-        # XXX try to make it work with unions
-        varnames = [var.name for var in rqlst.children[0].get_selected_variables()][1:]
-        plotdefs = []
-        plotdata = []
-        for idx, (varname, plot) in enumerate(zip(varnames, plots)):
-            plotid = '%s_%s' % (plotuid, idx)
-            data = self._build_data(abscissa, plot)
-            plotdefs.append('var %s = %s;' % (plotid, dumps(data)))
-            plotdata.append("{label: '%s', data: %s}" % (varname, plotid))
-        self.req.html_headers.add_onload('''
+class FlotPlotWidget(object):
+    """PlotRenderer widget using Flot"""
+    onload = u'''
 %(plotdefs)s
-jQuery.plot(jQuery("#%(plotuid)s"), [%(plotdata)s],
+jQuery.plot(jQuery("#%(figid)s"), [%(plotdata)s],
     {points: {show: true},
      lines: {show: true},
      grid: {hoverable: true},
      xaxis: {mode: %(mode)s}});
-jQuery('#%(plotuid)s').bind('plothover', onPlotHover);
-''' % {'plotdefs': '\n'.join(plotdefs),
-       'plotuid': plotuid,
-       'plotdata': ','.join(plotdata),
-       'mode': self.mode})
+jQuery('#%(figid)s').bind('plothover', onPlotHover);
+'''
+    
+    def __init__(self, labels, plots, timemode=False):
+        self.labels = labels
+        self.plots = plots # list of list of couples
+        self.timemode = timemode
+
+    def dump_plot(self, plot):
+        # XXX for now, the only way that we have to customize properly
+        #     datetime labels on tooltips is to insert an additional column
+        #     cf. function onPlotHover in cubicweb.flot.js
+        if self.timemode:
+            plot = [(datetime2ticks(x), y, datetime2ticks(x)) for x,y in plot]
+        return dumps(plot)
+    
+    def render(self, req, width=500, height=400, w=None):
+        # XXX IE requires excanvas.js
+        req.add_js( ('jquery.flot.js', 'cubicweb.flot.js') )
+        figid = u'figure%s' % make_uid('foo')
+        plotdefs = []
+        plotdata = []
+        w(u'<div id="%s" style="width: %spx; height: %spx;"></div>' %
+          (figid, width, height))
+        for idx, (label, plot) in enumerate(zip(self.labels, self.plots)):
+            plotid = '%s_%s' % (figid, idx)
+            plotdefs.append('var %s = %s;' % (plotid, self.dump_plot(plot)))
+            plotdata.append("{label: '%s', data: %s}" % (label, plotid))
+        req.html_headers.add_onload(self.onload %
+                                    {'plotdefs': '\n'.join(plotdefs),
+                                     'figid': figid,
+                                     'plotdata': ','.join(plotdata),
+                                     'mode': self.timemode and "'time'" or 'null'})
+    
+
+class PlotView(baseviews.AnyRsetView):
+    id = 'plot'
+    title = _('generic plot')
+    __select__ = at_least_two_columns() & all_columns_are_numbers()
+    timemode = False
+
+    def call(self, width=500, height=400):
+        # prepare data
+        rqlst = self.rset.syntax_tree()
+        # XXX try to make it work with unions
+        varnames = [var.name for var in rqlst.children[0].get_selected_variables()][1:]
+        abscissa = [row[0] for row in self.rset]
+        plots = []
+        nbcols = len(self.rset.rows[0])
+        for col in xrange(1, nbcols):
+            data = [row[col] for row in self.rset]
+            plots.append(filterout_nulls(abscissa, plot))
+        plotwidget = FlotPlotWidget(varnames, plots, timemode=self.timemode)
+        plotwidget.render(self.req, width, height, w=self.w)
 
 
 class TimeSeriePlotView(PlotView):
-    id = 'plot'
-    title = _('generic plot')
     __select__ = at_least_two_columns() & columns_are_date_then_numbers()
-    mode = '"time"'
-
-    def _build_abscissa(self):
-        abscissa = [time.mktime(row[0].timetuple()) * 1000
-                    for row in self.rset]
-        return abscissa
-
-    def _build_data(self, abscissa, plot):
-        data = []
-        # XXX find a way to get rid of the 3rd column and find 'mode' in JS
-        for x, y in filterout_nulls(abscissa, plot):
-            data.append( (x, y, x) )
-        return data
+    timemode = True
 
 try:
     from GChartWrapper import Pie, Pie3D
