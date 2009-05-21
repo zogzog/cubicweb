@@ -45,17 +45,16 @@ Why do you think using pure python is better than using a template language ?
   we use standard OOP techniques and this is a key factor in a
   robust application.
 
-Why do you use the GPL license to prevent me from doing X ?
+Why do you use the LGPL license to prevent me from doing X ?
 -----------------------------------------------------------
 
-  GPL means that *if* you redistribute your application, you need to
-  redistribute it *and* the changes you made *and* the code _linked_
-  to it under the GPL licence.
+  LGPL means that *if* you redistribute your application, you need to
+  redistribute the changes you made to CubicWeb under the LGPL licence.
 
   Publishing a web site has nothing to do with redistributing
-  source code. A fair amount of companies use modified GPL code
+  source code. A fair amount of companies use modified LGPL code
   for internal use. And someone could publish a `CubicWeb` component
-  under a BSD licence for others to plug into a GPL framework without
+  under a BSD licence for others to plug into a LGPL framework without
   any problem. The only thing we are trying to prevent here is someone
   taking the framework and packaging it as closed source to his own
   clients.
@@ -64,18 +63,12 @@ Why do you use the GPL license to prevent me from doing X ?
 CubicWeb looks pretty recent. Is it stable ?
 --------------------------------------------
 
-  It is constantly evolving, piece by piece.  The framework has
-  evolved over the past seven years and data has been migrated from
-  one schema to the other ever since. There is a well-defined way to
-  handle data and schema migration.
+  It is constantly evolving, piece by piece.  The framework has evolved since
+  2001 and data has been migrated from one schema to the other ever since. There
+  is a well-defined way to handle data and schema migration.
 
-<<<<<<< /home/syt/src/fcubicweb/cubicweb_3.2/doc/book/en/annexes/faq.rst
-Why is the RQL query language looking similar to X ?
-----------------------------------------------------
-=======
 Why is the RQL query language looking similar to X ?
 -----------------------------------------------------
->>>>>>> /tmp/faq.rst~other.MxOUAP
 
   It may remind you of SQL but it is higher level than SQL, more like
   SPARQL. Except that SPARQL did not exist when we started the project.
@@ -342,3 +335,20 @@ What is the CubicWeb datatype corresponding to GAE datastore's UserProperty?
   [XXX check that cw handle users better by
   mapping Google Accounts to local Euser entities automatically]
 
+
+How to reset the password for user joe?
+---------------------------------------
+
+  You need to generate a new encrypted password::
+
+    $ python
+    >>> from cubicweb.server.utils import crypt_password
+    >>> crypt_password('joepass')
+    'qHO8282QN5Utg'
+    >>> 
+
+  and paste it in the database::
+
+    $ psql mydb
+    mydb=> update cw_cwuser set cw_upassword='qHO8282QN5Utg' where cw_login='joe';
+    UPDATE 1
