@@ -1,7 +1,7 @@
 """cubicweb.web.views.basecontrollers unit tests"""
 import simplejson
 
-from logilab.common.testlib import unittest_main
+from logilab.common.testlib import unittest_main, mock_object
 
 from cubicweb import Binary, Unauthorized
 from cubicweb.devtools._apptest import TestEnvironment
@@ -533,7 +533,7 @@ class JSONControllerTC(EnvBasedTC):
         rset = self.john.as_rset()
         rset.req = req
         self.assertTextEquals(ctrl.publish(),
-                              xhtml_wrap(ctrl.view('primary', rset)))
+                              xhtml_wrap(mock_object(req=req), ctrl.view('primary', rset)))
 
 #     def test_json_exec(self):
 #         rql = 'Any T,N WHERE T is Tag, T name N'
@@ -562,7 +562,7 @@ class JSONControllerTC(EnvBasedTC):
                          ('eid', 'firstname:%s' % eid, '__maineid', '__type:%s'% eid, 'edits-firstname:%s' % eid ),
                          (str(eid), u'Remi', str(eid), 'CWUser', self.john.firstname),
                          'firstname',
-                         eid)
+                         eid, 'default_value')
         self.commit()
         rset = self.execute('CWUser P')
         # make sure we did not insert a new cwuser here
