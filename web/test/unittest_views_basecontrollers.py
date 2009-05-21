@@ -562,7 +562,7 @@ class JSONControllerTC(EnvBasedTC):
                          ('eid', 'firstname:%s' % eid, '__maineid', '__type:%s'% eid, 'edits-firstname:%s' % eid ),
                          (str(eid), u'Remi', str(eid), 'CWUser', self.john.firstname),
                          'firstname',
-                         eid)
+                         eid, 'default_value')
         self.commit()
         rset = self.execute('CWUser P')
         # make sure we did not insert a new cwuser here
