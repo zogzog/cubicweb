@@ -379,7 +379,7 @@ class Entity(AppRsetObject, dict):
         # XXX search_state is web specific
         if getattr(self.req, 'search_state', ('normal',))[0] == 'normal':
             kwargs['base_url'] = self.metainformation()['source'].get('base-url')
-        if method is None or method == 'view':
+        if method in (None, 'view'):
             try:
                 kwargs['_restpath'] = self.rest_path(kwargs.get('base_url'))
             except TypeError:
@@ -404,11 +404,10 @@ class Entity(AppRsetObject, dict):
                 # make sure url is not ambiguous
                 rql = 'Any COUNT(X) WHERE X is %s, X %s %%(value)s' % (
                     etype, mainattr)
-                if value is not None:
-                    nbresults = self.req.execute(rql, {'value' : value})[0][0]
-                    if nbresults != 1: # ambiguity?
-                        mainattr = 'eid'
-                        path += '/eid'
+                nbresults = self.req.execute(rql, {'value' : value})[0][0]
+                if nbresults != 1: # ambiguity?
+                    mainattr = 'eid'
+                    path += '/eid'
         if mainattr == 'eid':
             if use_ext_eid:
                 value = self.metainformation()['extid']
