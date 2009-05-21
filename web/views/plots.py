@@ -14,7 +14,7 @@ from simplejson import dumps
 from logilab.common import flatten
 from logilab.mtconverter import html_escape
 
-from cubicweb.utils import make_uid
+from cubicweb.utils import make_uid, UStringIO
 from cubicweb.vregistry import objectify_selector
 from cubicweb.web.views import baseviews
 
@@ -62,7 +62,23 @@ def filterout_nulls(abscissa, plot):
 def datetime2ticks(date):
     return time.mktime(date.timetuple()) * 1000
 
-class FlotPlotWidget(object):
+class PlotWidget(object):
+    # XXX refactor with cubicweb.web.views.htmlwidgets.HtmlWidget
+    def _initialize_stream(self, w=None):
+        if w:
+            self.w = w
+        else:
+            self._stream = UStringIO()
+            self.w = self._stream.write
+
+    def render(self, *args, **kwargs):
+        w = kwargs.pop('w', None)
+        self._initialize_stream(w)
+        self._render(*args, **kwargs)
+        if w is None:
+            return self._stream.getvalue()
+
+class FlotPlotWidget(PlotWidget):
     """PlotRenderer widget using Flot"""
     onload = u'''
 %(plotdefs)s
@@ -73,7 +89,7 @@ jQuery.plot(jQuery("#%(figid)s"), [%(plotdata)s],
      xaxis: {mode: %(mode)s}});
 jQuery('#%(figid)s').bind('plothover', onPlotHover);
 '''
-    
+
     def __init__(self, labels, plots, timemode=False):
         self.labels = labels
         self.plots = plots # list of list of couples
@@ -86,15 +102,15 @@ jQuery('#%(figid)s').bind('plothover', onPlotHover);
         if self.timemode:
             plot = [(datetime2ticks(x), y, datetime2ticks(x)) for x,y in plot]
         return dumps(plot)
-    
-    def render(self, req, width=500, height=400, w=None):
+
+    def _render(self, req, width=500, height=400):
         # XXX IE requires excanvas.js
         req.add_js( ('jquery.flot.js', 'cubicweb.flot.js') )
         figid = u'figure%s' % make_uid('foo')
         plotdefs = []
         plotdata = []
-        w(u'<div id="%s" style="width: %spx; height: %spx;"></div>' %
-          (figid, width, height))
+        self.w(u'<div id="%s" style="width: %spx; height: %spx;"></div>' %
+               (figid, width, height))
         for idx, (label, plot) in enumerate(zip(self.labels, self.plots)):
             plotid = '%s_%s' % (figid, idx)
             plotdefs.append('var %s = %s;' % (plotid, self.dump_plot(plot)))
@@ -104,7 +120,7 @@ jQuery('#%(figid)s').bind('plothover', onPlotHover);
                                      'figid': figid,
                                      'plotdata': ','.join(plotdata),
                                      'mode': self.timemode and "'time'" or 'null'})
-    
+
 
 class PlotView(baseviews.AnyRsetView):
     id = 'plot'
@@ -131,27 +147,45 @@ class TimeSeriePlotView(PlotView):
     __select__ = at_least_two_columns() & columns_are_date_then_numbers()
     timemode = True
 
+
 try:
     from GChartWrapper import Pie, Pie3D
 except ImportError:
     pass
 else:
-    class PieChartView(baseviews.AnyRsetView):
-        id = 'piechart'
-        pieclass = Pie
-        __select__ = at_least_two_columns() & second_column_is_number()
 
-        def call(self, title=None, width=None, height=None):
-            piechart = self.pieclass([(row[1] or 0) for row in self.rset])
-            labels = ['%s: %s' % (row[0].encode(self.req.encoding), row[1])
-                      for row in self.rset]
-            piechart.label(*labels)
+    class PieChartWidget(PlotWidget):
+        def __init__(self, labels, values, pieclass=Pie, title=None):
+            self.labels = labels
+            self.values = values
+            self.pieclass = pieclass
+            self.title = title
+
+        def _render(self, width=None, height=None):
+            piechart = self.pieclass(self.values)
+            piechart.label(*self.labels)
             if width is not None:
                 height = height or width
                 piechart.size(width, height)
-            if title:
-                piechart.title(title)
+            if self.title:
+                piechart.title(self.title)
             self.w(u'<img src="%s" />' % html_escape(piechart.url))
+
+    class PieChartView(baseviews.AnyRsetView):
+        id = 'piechart'
+        pieclass = Pie
+
+        __select__ = at_least_two_columns() & second_column_is_number()
+
+        def call(self, title=None, width=None, height=None):
+            labels = ['%s: %s' % (row[0].encode(self.req.encoding), row[1])
+                      for row in self.rset]
+            values = [(row[1] or 0) for row in self.rset]
+            pie = PieChartWidget(labels, values, pieclass=self.pieclass,
+                                 title=title)
+            if width is not None:
+                height = height or width
+            pie.render(width, height, w=self.w)
 
 
     class PieChart3DView(PieChartView):
