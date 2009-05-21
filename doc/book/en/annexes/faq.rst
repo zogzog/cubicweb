@@ -289,7 +289,7 @@ How to format an entity date attribute?
 
   If your schema has an attribute of type Date or Datetime, you might
   want to format it. First, you should define your preferred format using
-  the site configuration panel ``http://appurl/view?vid=systemepropertiesform``
+  the site configuration panel ``http://appurl/view?vid=systempropertiesform``
   and then set ``ui.date`` and/or ``ui.datetime``.
   Then in the view code, use::
     
