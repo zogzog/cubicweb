@@ -246,7 +246,7 @@ class UpdateCubicWebCatalogCommand(Command):
     It will regenerate cubicweb/i18n/xx.po files. You'll have then to edit those
     files to add translations of newly added messages.
     """
-    name = 'i18nlibupdate'
+    name = 'i18ncubicweb'
 
     def run(self, args):
         """run the command with its specific arguments"""
@@ -307,14 +307,14 @@ class UpdateCubicWebCatalogCommand(Command):
         print 'you can now edit the following files:'
         print '* ' + '\n* '.join(toedit)
         print
-        print "then you'll have to update cubes catalogs using the i18nupdate command"
+        print "then you'll have to update cubes catalogs using the i18ncube command"
 
 
 class UpdateTemplateCatalogCommand(Command):
     """Update i18n catalogs for cubes. If no cube is specified, update
     catalogs of all registered cubes.
     """
-    name = 'i18nupdate'
+    name = 'i18ncube'
     arguments = '[<cube>...]'
 
     def run(self, args):

@@ -73,9 +73,9 @@ Commands to maintain instances
 
 Commands to maintain i18n catalogs
 ----------------------------------
-* ``i18nlibupdate``, regenerates messages catalogs of the `CubicWeb` library
-* ``i18nupdate``, regenerates the messages catalogs of a cube
-* ``i18ncompile``, recompiles the messages catalogs of an instance. 
+* ``i18ncubicweb``, regenerates messages catalogs of the `CubicWeb` library
+* ``i18ncube``, regenerates the messages catalogs of a cube
+* ``i18ninstance``, recompiles the messages catalogs of an instance. 
   This is automatically done while upgrading.
 
 See also chapter :ref:`internationalisation`.

@@ -119,13 +119,13 @@ Generating translation files
 ``myapp/i18n``. To compile the translation files, use the `gettext` tools
 or the ``laxctl`` command ::
 
-  $ python myapp/bin/laxctl i18nupdate 
-  $ python myapp/bin/laxctl i18ncompile 
+  $ python myapp/bin/laxctl i18ncube 
+  $ python myapp/bin/laxctl i18ninstance
 
 Ignore the errors that print "No translation file found for domain
-'cubicweb'". They disappear after the first run of i18ncompile.
+'cubicweb'". They disappear after the first run of i18ninstance.
 
-.. note:: The command  myapp/bin/laxctl i18nupdate needs to be executed
+.. note:: The command  myapp/bin/laxctl i18ncube needs to be executed
    only if your application is using cubes from cubicweb-apps.
    Otherwise, please skip it.
 
@@ -133,7 +133,7 @@ You will never need to add new entries in the translation catalog. Instead we wo
 recommand you to use ``self.req._("msgId")`` in your application code
 to flag new message id to add to the catalog, where ``_`` refers to
 xgettext that is used to collect new strings to translate. 
-While running ``laxctl i18nupdate``, new string will be added to the catalogs.
+While running ``laxctl i18ncube``, new string will be added to the catalogs.
 
 Generating the data directory
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

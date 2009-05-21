@@ -75,7 +75,7 @@ _ec_command_specific()
 	    COMPREPLY=(${COMPREPLY[@]:-} $(compgen -W '$options $instances' -- "$cur"))
 	;;
 	# commands with template as argument
- 	i18nupdate)
+ 	i18ncube)
 	    cubes="$("$ec" listcubes 2>/dev/null)" || cubes=""
 	    COMPREPLY=(${COMPREPLY[@]:-} $(compgen -W '$options $cubes' -- "$cur"))
  	;;
@@ -86,12 +86,12 @@ _ec_command_specific()
 	    COMPREPLY=(${COMPREPLY[@]:-} $(compgen -W '$options $instances' -- "$cur"))
  	;;
 	# generic commands without argument
- 	list|newtemplate|i18nlibupdate|live-server)
+ 	list|newtemplate|i18ncubicweb|live-server)
 	    options="$("$ec" listcommands "$cmd" 2>/dev/null)" || options=""
 	    COMPREPLY=(${COMPREPLY[@]:-} $(compgen -W '$options $instances' -- "$cur"))
  	;;
 	# generic commands without option
- 	shell|i18ncompile|delete|status|schema-sync)
+ 	shell|i18ninstance|delete|status|schema-sync)
 	    instances="$("$ec" listinstances 2>/dev/null)" || instances=""
 	    COMPREPLY=(${COMPREPLY[@]:-} $(compgen -W '$options $instances' -- "$cur"))
  	;;
