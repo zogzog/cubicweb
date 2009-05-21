@@ -1,7 +1,7 @@
 """cubicweb.web.views.basecontrollers unit tests"""
 import simplejson
 
-from logilab.common.testlib import unittest_main
+from logilab.common.testlib import unittest_main, mock_object
 
 from cubicweb import Binary, Unauthorized
 from cubicweb.devtools._apptest import TestEnvironment
@@ -533,7 +533,7 @@ class JSONControllerTC(EnvBasedTC):
         rset = self.john.as_rset()
         rset.req = req
         self.assertTextEquals(ctrl.publish(),
-                              xhtml_wrap(ctrl.view('primary', rset)))
+                              xhtml_wrap(mock_object(req=req), ctrl.view('primary', rset)))
 
 #     def test_json_exec(self):
 #         rql = 'Any T,N WHERE T is Tag, T name N'
