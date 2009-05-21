@@ -374,14 +374,15 @@ du :eid:`1:*ReST*`'''
         self.assertEquals(person.prenom, u'sylvain')
         self.assertEquals(person.nom, u'thénault')
 
-    def test_metainformation(self):
+    def test_metainformation_and_external_absolute_url(self):
         note = self.add_entity('Note', type=u'z')
         metainf = note.metainformation()
         self.assertEquals(metainf, {'source': {'adapter': 'native', 'uri': 'system'}, 'type': u'Note', 'extid': None})
         self.assertEquals(note.absolute_url(), 'http://testing.fr/cubicweb/note/%s' % note.eid)
         metainf['source'] = metainf['source'].copy()
         metainf['source']['base-url']  = 'http://cubicweb2.com/'
-        self.assertEquals(note.absolute_url(), 'http://cubicweb2.com/note/%s' % note.eid)
+        metainf['extid']  = 1234
+        self.assertEquals(note.absolute_url(), 'http://cubicweb2.com/note/1234')
 
 if __name__ == '__main__':
     from logilab.common.testlib import unittest_main
