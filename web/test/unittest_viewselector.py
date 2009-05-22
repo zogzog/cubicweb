@@ -1,8 +1,6 @@
 # -*- coding: iso-8859-1 -*-
 """XXX rename, split, reorganize this
 """
-from __future__ import with_statement
-
 from logilab.common.testlib import unittest_main
 
 from cubicweb.devtools.apptest import EnvBasedTC
