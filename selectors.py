@@ -114,7 +114,7 @@ class traced_selection(object):
 
 
 def score_interface(cls_or_inst, cls, iface):
-    """Return true if the give object (maybe an instance or class) implements
+    """Return XXX if the give object (maybe an instance or class) implements
     the interface.
     """
     if getattr(iface, '__registry__', None) == 'etypes':
