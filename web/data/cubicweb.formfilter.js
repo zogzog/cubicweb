@@ -8,7 +8,6 @@ CubicWeb.require('htmlhelpers.js');
 CubicWeb.require('ajax.js');
 
 //============= filter form functions ========================================//
-
 function copyParam(origparams, newparams, param) {
     var index = findValue(origparams[0], param);
     if (index > -1) {
@@ -30,7 +29,7 @@ function facetFormContent(form) {
         names.push(this.name);
         values.push(this.value);
     });
-    jQuery(form).find('select option[@selected]').each(function () {
+    jQuery(form).find('select option[selected]').each(function () {
 	names.push(this.parentNode.name);
 	values.push(this.value);
     });

@@ -926,6 +926,8 @@ class rql_condition(EntitySelector):
         except Unauthorized:
             return 0
 
+    def __repr__(self):
+        return u'<rql_condition "%s" at %x>' % (self.rql, id(self))
 
 class but_etype(EntitySelector):
     """accept if the given entity types are not found in the result set.

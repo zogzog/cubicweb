@@ -744,10 +744,10 @@ class RecompileApplicationCatalogsCommand(ApplicationCommand):
       identifiers of the applications to consider. If no application is
       given, recompile for all registered applications.
     """
-    name = 'i18ncompile'
+    name = 'i18ninstance'
 
     @staticmethod
-    def i18ncompile_application(appid):
+    def i18ninstance_application(appid):
         """recompile application's messages catalogs"""
         config = cwcfg.config_for(appid)
         try:

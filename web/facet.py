@@ -19,6 +19,7 @@ from logilab.common.compat import all
 from rql import parse, nodes
 
 from cubicweb import Unauthorized, typed_eid
+from cubicweb.utils import make_uid
 from cubicweb.selectors import match_context_prop, partial_relation_possible
 from cubicweb.appobject import AppRsetObject
 from cubicweb.web.htmlwidgets import HTMLWidget
@@ -474,6 +475,28 @@ class AttributeFacet(RelationFacet):
                                             self.attrtype, self.comparator)
 
 
+class RangeFacet(AttributeFacet):
+
+    def get_widget(self):
+        """return the widget instance to use to display this facet
+        """
+        values = set(value for _, value in self.vocabulary() if value is not None)
+        return FacetRangeWidget(self, min(values), max(values))
+
+    def add_rql_restrictions(self):
+        infvalue = self.req.form.get('%s_inf' % self.id)
+        if not infvalue:
+            return
+        supvalue = self.req.form.get('%s_sup' % self.id)
+        self.rqlst.add_constant_restriction(self.filtered_variable,
+                                            self.rtype,
+                                            u'%s' % infvalue,
+                                            'Float', '>=')
+        self.rqlst.add_constant_restriction(self.filtered_variable,
+                                            self.rtype,
+                                            u'%s' % supvalue,
+                                            'Float', '<=')
+
 
 class FilterRQLBuilder(object):
     """called by javascript to get a rql string from filter form"""
@@ -543,6 +566,52 @@ class FacetStringWidget(HTMLWidget):
         self.w(u'<div class="facetTitle" cubicweb:facetName="%s">%s</div>\n' %
                (facetid, title))
         self.w(u'<input name="%s" type="text" value="%s" />\n' % (facetid, self.value or u''))
+        self.w(u'</div>\n')
+
+
+class FacetRangeWidget(HTMLWidget):
+    onload = u'''
+    jQuery("#%(sliderid)s").slider({
+    	range: true,
+	min: %(minvalue)s,
+	max: %(maxvalue)s,
+        values: [%(minvalue)s, %(maxvalue)s],
+    	slide: function(event, ui) {
+	    $('#%(sliderid)s_inf').html(ui.values[0]);
+	    $('#%(sliderid)s_sup').html(ui.values[1]);
+	    $('input[name=%(facetid)s_inf]').val(ui.values[0]);
+	    $('input[name=%(facetid)s_sup]').val(ui.values[1]);
+    	}
+   });
+'''
+    def __init__(self, facet, minvalue, maxvalue):
+        self.facet = facet
+        self.minvalue = minvalue
+        self.maxvalue = maxvalue
+
+    def _render(self):
+        facet = self.facet
+        facet.req.add_js('ui.slider.js')
+        facet.req.add_css('ui.all.css')
+        sliderid = make_uid('the slider')
+        facetid = html_escape(self.facet.id)
+        facet.req.html_headers.add_onload(self.onload % {
+                'sliderid': sliderid,
+                'facetid': facetid,
+                'minvalue': self.minvalue,
+                'maxvalue': self.maxvalue,
+                })
+        title = html_escape(self.facet.title)
+        self.w(u'<div id="%s" class="facet">\n' % facetid)
+        self.w(u'<div class="facetTitle" cubicweb:facetName="%s">%s</div>\n' %
+               (facetid, title))
+        self.w(u'<span id="%s_inf">%s</span> - <span id="%s_sup">%s</span>'
+               % (sliderid, self.minvalue, sliderid, self.maxvalue))
+        self.w(u'<input type="hidden" name="%s_inf" value="%s" />'
+               % (facetid, self.minvalue))
+        self.w(u'<input type="hidden" name="%s_sup" value="%s" />'
+               % (facetid, self.maxvalue))
+        self.w(u'<div id="%s"></div>' % sliderid)
         self.w(u'</div>\n')
 
 

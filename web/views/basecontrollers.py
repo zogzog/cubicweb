@@ -119,6 +119,8 @@ class ViewController(Controller):
             try:
                 method = getattr(entity, req.form.pop('__method'))
                 method()
+            except Redirect: # propagate redirect that might occur in method()
+                raise
             except Exception, ex:
                 self.exception('while handling __method')
                 req.set_message(req._("error while handling __method: %s") % req._(ex))

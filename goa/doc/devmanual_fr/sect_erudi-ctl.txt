@@ -56,9 +56,9 @@ Commandes pour la maintenance des instances
 
 Commandes pour la maintenance des catalogues i18n
 `````````````````````````````````````````````````
-* ``i18nlibupdate``, regénère les catalogues de messages de la librairie CubicWeb
-* ``i18nupdate``, regénère les catalogues de messages d'un composant
-* ``i18ncompile``, recompile les catalogues de messages d'une instance. Cela est
+* ``i18ncubicweb``, regénère les catalogues de messages de la librairie CubicWeb
+* ``i18ncube``, regénère les catalogues de messages d'un composant
+* ``i18ninstance``, recompile les catalogues de messages d'une instance. Cela est
   effectué automatiquement lors d'une upgrade
 
 Cf Internationalisation_.
