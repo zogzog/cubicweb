@@ -78,17 +78,17 @@ to populate and update the translation catalog. Cubicweb provides the
 following commands for this purpose:
 
 
-* `i18nlibupdate` updates Cubicweb framework's translation
+* `i18ncubicweb` updates Cubicweb framework's translation
   catalogs. Unless you work on the framework development, you don't
   need to use this command.
 
-* `i18nupdate` updates the translation catalogs of *one particular
+* `i18ncube` updates the translation catalogs of *one particular
   component* (or of all components). After this command is
   executed you must update the translation files *.po* in the "i18n"
   directory of your template. This command will of course not remove
   existing translations still in use.
 
-* `i18ncompile` recompile the translation catalogs of *one particular
+* `i18ninstance` recompile the translation catalogs of *one particular
   instance* (or of all instances) after the translation catalogs of
   its components have been updated. This command is automatically
   called every time you create or update your instance. The compiled
@@ -103,8 +103,8 @@ You have added and/or modified some translation strings in your application
 (after creating a new view or modifying the application's schema for exemple).
 To update the translation catalogs you need to do:
 
-1. `cubicweb-ctl i18nupdate <component>`
+1. `cubicweb-ctl i18ncube <component>`
 2. Edit the <component>/xxx.po  files and add missing translations (empty `msgstr`)
 3. `hg ci -m "updated i18n catalogs"`
-4. `cubicweb-ctl i18ncompile <myapplication>`
+4. `cubicweb-ctl i18ninstance <myapplication>`
 

@@ -1,104 +1,193 @@
+"""basic plot views
+
+:organization: Logilab
+:copyright: 2007-2009 LOGILAB S.A. (Paris, FRANCE), license is LGPL.
+:contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
+"""
+__docformat__ = "restructuredtext en"
+
 import os
+import time
+
+from simplejson import dumps
 
 from logilab.common import flatten
+from logilab.mtconverter import html_escape
 
+from cubicweb.utils import make_uid, UStringIO
 from cubicweb.vregistry import objectify_selector
 from cubicweb.web.views import baseviews
 
 @objectify_selector
-def plot_selector(cls, req, rset, *args, **kwargs):
+def at_least_two_columns(cls, req, rset, *args, **kwargs):
+    if not rset:
+        return 0
+    return len(rset.rows[0]) >= 2
+
+@objectify_selector
+def all_columns_are_numbers(cls, req, rset, *args, **kwargs):
     """accept result set with at least one line and two columns of result
     all columns after second must be of numerical types"""
-    if rset is None:
-        return 0
-    if not len(rset):
-        return 0
-    if len(rset.rows[0]) < 2:
-        return 0
     for etype in rset.description[0]:
         if etype not in ('Int', 'Float'):
             return 0
     return 1
 
+@objectify_selector
+def second_column_is_number(cls, req, rset, *args, **kwargs):
+    etype = rset.description[0][1]
+    if etype not  in ('Int', 'Float'):
+        return 0
+    return 1
+
+@objectify_selector
+def columns_are_date_then_numbers(cls, req, rset, *args, **kwargs):
+    etypes = rset.description[0]
+    if etypes[0] not in ('Date', 'Datetime'):
+        return 0
+    for etype in etypes[1:]:
+        if etype not in ('Int', 'Float'):
+            return 0
+    return 1
+
+
+def filterout_nulls(abscissa, plot):
+    filtered = []
+    for x, y in zip(abscissa, plot):
+        if x is None or y is None:
+            continue
+        filtered.append( (x, y) )
+    return sorted(filtered)
+
+def datetime2ticks(date):
+    return time.mktime(date.timetuple()) * 1000
+
+class PlotWidget(object):
+    # XXX refactor with cubicweb.web.views.htmlwidgets.HtmlWidget
+    def _initialize_stream(self, w=None):
+        if w:
+            self.w = w
+        else:
+            self._stream = UStringIO()
+            self.w = self._stream.write
+
+    def render(self, *args, **kwargs):
+        w = kwargs.pop('w', None)
+        self._initialize_stream(w)
+        self._render(*args, **kwargs)
+        if w is None:
+            return self._stream.getvalue()
+
+class FlotPlotWidget(PlotWidget):
+    """PlotRenderer widget using Flot"""
+    onload = u'''
+%(plotdefs)s
+jQuery.plot(jQuery("#%(figid)s"), [%(plotdata)s],
+    {points: {show: true},
+     lines: {show: true},
+     grid: {hoverable: true},
+     xaxis: {mode: %(mode)s}});
+jQuery('#%(figid)s').bind('plothover', onPlotHover);
+'''
+
+    def __init__(self, labels, plots, timemode=False):
+        self.labels = labels
+        self.plots = plots # list of list of couples
+        self.timemode = timemode
+
+    def dump_plot(self, plot):
+        # XXX for now, the only way that we have to customize properly
+        #     datetime labels on tooltips is to insert an additional column
+        #     cf. function onPlotHover in cubicweb.flot.js
+        if self.timemode:
+            plot = [(datetime2ticks(x), y, datetime2ticks(x)) for x,y in plot]
+        return dumps(plot)
+
+    def _render(self, req, width=500, height=400):
+        # XXX IE requires excanvas.js
+        req.add_js( ('jquery.flot.js', 'cubicweb.flot.js') )
+        figid = u'figure%s' % make_uid('foo')
+        plotdefs = []
+        plotdata = []
+        self.w(u'<div id="%s" style="width: %spx; height: %spx;"></div>' %
+               (figid, width, height))
+        for idx, (label, plot) in enumerate(zip(self.labels, self.plots)):
+            plotid = '%s_%s' % (figid, idx)
+            plotdefs.append('var %s = %s;' % (plotid, self.dump_plot(plot)))
+            plotdata.append("{label: '%s', data: %s}" % (label, plotid))
+        req.html_headers.add_onload(self.onload %
+                                    {'plotdefs': '\n'.join(plotdefs),
+                                     'figid': figid,
+                                     'plotdata': ','.join(plotdata),
+                                     'mode': self.timemode and "'time'" or 'null'})
+
+
+class PlotView(baseviews.AnyRsetView):
+    id = 'plot'
+    title = _('generic plot')
+    __select__ = at_least_two_columns() & all_columns_are_numbers()
+    timemode = False
+
+    def call(self, width=500, height=400):
+        # prepare data
+        rqlst = self.rset.syntax_tree()
+        # XXX try to make it work with unions
+        varnames = [var.name for var in rqlst.children[0].get_selected_variables()][1:]
+        abscissa = [row[0] for row in self.rset]
+        plots = []
+        nbcols = len(self.rset.rows[0])
+        for col in xrange(1, nbcols):
+            data = [row[col] for row in self.rset]
+            plots.append(filterout_nulls(abscissa, plot))
+        plotwidget = FlotPlotWidget(varnames, plots, timemode=self.timemode)
+        plotwidget.render(self.req, width, height, w=self.w)
+
+
+class TimeSeriePlotView(PlotView):
+    __select__ = at_least_two_columns() & columns_are_date_then_numbers()
+    timemode = True
+
+
 try:
-    import matplotlib
-    import sys
-    if 'matplotlib.backends' not in sys.modules:
-        matplotlib.use('Agg')
-    from pylab import figure
+    from GChartWrapper import Pie, Pie3D
 except ImportError:
     pass
 else:
-    class PlotView(baseviews.AnyRsetView):
-        id = 'plot'
-        title = _('generic plot')
-        binary = True
-        content_type = 'image/png'
-        _plot_count = 0
-        __select__ = plot_selector()
 
-        def call(self, width=None, height=None):
-            # compute dimensions
-            if width is None:
-                if 'width' in self.req.form:
-                    width = int(self.req.form['width'])
-                else:
-                    width = 500
+    class PieChartWidget(PlotWidget):
+        def __init__(self, labels, values, pieclass=Pie, title=None):
+            self.labels = labels
+            self.values = values
+            self.pieclass = pieclass
+            self.title = title
 
-            if height is None:
-                if 'height' in self.req.form:
-                    height = int(self.req.form['height'])
-                else:
-                    height = 400
-            dpi = 100.
+        def _render(self, width=None, height=None):
+            piechart = self.pieclass(self.values)
+            piechart.label(*self.labels)
+            if width is not None:
+                height = height or width
+                piechart.size(width, height)
+            if self.title:
+                piechart.title(self.title)
+            self.w(u'<img src="%s" />' % html_escape(piechart.url))
 
-            # compute data
-            abscisses = [row[0] for row in self.rset]
-            courbes = []
-            nbcols = len(self.rset.rows[0])
-            for col in xrange(1, nbcols):
-                courbe = [row[col] for row in self.rset]
-                courbes.append(courbe)
-            if not courbes:
-                raise Exception('no data')
-            # plot data
-            fig = figure(figsize=(width/dpi, height/dpi), dpi=dpi)
-            ax = fig.add_subplot(111)
-            colors = 'brgybrgy'
-            try:
-                float(abscisses[0])
-                xlabels = None
-            except ValueError:
-                xlabels = abscisses
-                abscisses = range(len(xlabels))
-            for idx, courbe in enumerate(courbes):
-                ax.plot(abscisses, courbe, '%sv-' % colors[idx], label=self.rset.description[0][idx+1])
-            ax.autoscale_view()
-            alldata = flatten(courbes)
-            m, M = min(alldata or [0]), max(alldata or [1])
-            if m is None: m = 0
-            if M is None: M = 0
-            margin = float(M-m)/10
-            ax.set_ylim(m-margin, M+margin)
-            ax.grid(True)
-            ax.legend(loc='best')
-            if xlabels is not None:
-                ax.set_xticks(abscisses)
-                ax.set_xticklabels(xlabels)
-            try:
-                fig.autofmt_xdate()
-            except AttributeError:
-                # XXX too old version of matplotlib. Ignore safely.
-                pass
+    class PieChartView(baseviews.AnyRsetView):
+        id = 'piechart'
+        pieclass = Pie
 
-            # save plot
-            filename = self.build_figname()
-            fig.savefig(filename, dpi=100)
-            img = open(filename, 'rb')
-            self.w(img.read())
-            img.close()
-            os.remove(filename)
+        __select__ = at_least_two_columns() & second_column_is_number()
 
-        def build_figname(self):
-            self.__class__._plot_count += 1
-            return '/tmp/burndown_chart_%s_%d.png' % (self.config.appid, self.__class__._plot_count)
+        def call(self, title=None, width=None, height=None):
+            labels = ['%s: %s' % (row[0].encode(self.req.encoding), row[1])
+                      for row in self.rset]
+            values = [(row[1] or 0) for row in self.rset]
+            pie = PieChartWidget(labels, values, pieclass=self.pieclass,
+                                 title=title)
+            if width is not None:
+                height = height or width
+            pie.render(width, height, w=self.w)
+
+
+    class PieChart3DView(PieChartView):
+        id = 'piechart3D'
+        pieclass = Pie3D
