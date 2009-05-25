@@ -6,6 +6,7 @@
 """
 __docformat__ = "restructuredtext en"
 
+import sys
 import os
 
 from logilab.common.configuration import REQUIRED, Configuration, ini_format_section
@@ -418,6 +419,51 @@ class GrantUserOnApplicationCommand(Command):
             cnx.commit()
             print 'grants given to %s on application %s' % (appid, user)
 
+class ResetAdminPasswordCommand(Command):
+    """Reset the administrator password.
+
+    <application>
+      the identifier of the application
+    """
+    name = 'reset-admin-pwd'
+    arguments = '<application>'
+
+    def run(self, args):
+        """run the command with its specific arguments"""
+        from cubicweb.server.sqlutils import sqlexec, SQL_PREFIX
+        from cubicweb.server.utils import crypt_password, manager_userpasswd
+        appid = pop_arg(args, 1, msg="No application specified !")
+        config = ServerConfiguration.config_for(appid)
+        sourcescfg = config.sources()
+        try:
+            adminlogin = sourcescfg['admin']['login']
+        except KeyError:
+            print 'could not get cubicweb administrator login'
+            sys.exit(1)
+        cnx = source_cnx(sourcescfg['system'])
+        cursor = cnx.cursor()
+        _, passwd = manager_userpasswd(adminlogin, confirm=True,
+                                       passwdmsg='new password for %s' % adminlogin)
+        try:
+            sqlexec("UPDATE %(sp)sCWUser SET %(sp)supassword='%(p)s' WHERE %(sp)slogin='%(l)s'"
+                    % {'sp': SQL_PREFIX,
+                       'p': crypt_password(passwd), 'l': adminlogin},
+                    cursor, withpb=False)
+            sconfig = Configuration(options=USER_OPTIONS)
+            sconfig['login'] = adminlogin
+            sconfig['password'] = passwd
+            sourcescfg['admin'] = sconfig
+            sourcesfile = config.sources_file()
+            generate_sources_file(sourcesfile, sourcescfg)
+            restrict_perms_to_user(sourcesfile)
+        except Exception, ex:
+            cnx.rollback()
+            import traceback
+            traceback.print_exc()
+            print 'An error occured:', ex
+        else:
+            cnx.commit()
+            print 'password reset, sources file regenerated'
 
 
 class StartRepositoryCommand(Command):
@@ -735,6 +781,7 @@ class SynchronizeApplicationSchemaCommand(Command):
 register_commands( (CreateApplicationDBCommand,
                     InitApplicationCommand,
                     GrantUserOnApplicationCommand,
+                    ResetAdminPasswordCommand,
                     StartRepositoryCommand,
                     DBDumpCommand,
                     DBRestoreCommand,
