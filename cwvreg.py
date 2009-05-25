@@ -11,7 +11,7 @@ from logilab.common.decorators import cached, clear_cache
 
 from rql import RQLHelper
 
-from cubicweb import Binary, UnknownProperty, UnknownEid
+from cubicweb import ETYPE_NAME_MAP, Binary, UnknownProperty, UnknownEid
 from cubicweb.vregistry import VRegistry, ObjectNotFound, NoSelectableObject
 from cubicweb.rtags import RTAGS
 
@@ -170,7 +170,10 @@ class CubicWebRegistry(VRegistry):
         # browse ancestors from most specific to most generic and
         # try to find an associated custom entity class
         for baseschema in baseschemas:
-            btype = str(baseschema)
+            try:
+                btype = ETYPE_NAME_MAP[baseschema]
+            except KeyError:
+                btype = str(baseschema)
             try:
                 cls = self.select(self.registry_objects('etypes', btype), etype)
                 break
@@ -387,7 +390,14 @@ class MulCnxCubicWebRegistry(CubicWebRegistry):
             vobject.vreg = self
             vobject.schema = self.schema
             vobject.config = self.config
-        return super(MulCnxCubicWebRegistry, self).select(vobjects, *args, **kwargs)
+        selected = super(MulCnxCubicWebRegistry, self).select(vobjects, *args,
+                                                              **kwargs)
+        # redo the same thing on the instance so it won't use equivalent class
+        # attributes (which may change)
+        selected.vreg = self
+        selected.schema = self.schema
+        selected.config = self.config
+        return selected
 
 from datetime import datetime, date, time, timedelta
 
