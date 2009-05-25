@@ -372,6 +372,8 @@ class MulCnxCubicWebRegistry(CubicWebRegistry):
         default to a dump of the class registered for 'Any'
         """
         usercls = super(MulCnxCubicWebRegistry, self).etype_class(etype)
+        if etype == 'Any':
+            return usercls
         usercls.e_schema = self.schema.eschema(etype)
         return usercls
 
