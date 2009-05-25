@@ -2,12 +2,10 @@ Source: cubicweb
 Section: web
 Priority: optional
 Maintainer: Logilab S.A. <contact@logilab.fr>
-Uploaders: Sylvain Thénault <sylvain.thenault@logilab.fr>,
+Uploaders: Sylvain Thenault <sylvain.thenault@logilab.fr>,
            Julien Jehannet <julien.jehannet@logilab.fr>,
-           Aurélien Campéas <aurelien.campeas@logilab.fr>,
-           Nicolas Chauvat <nicolas.chauvat@logilab.fr>
-Build-Depends: debhelper (>= 7), python-dev (>=2.4)
-Build-Depends-Indep: python-support
+           Aurélien Campéas <aurelien.campeas@logilab.fr>
+Build-Depends: debhelper (>= 7), python-dev (>=2.4), python-central (>= 0.5)
 Standards-Version: 3.8.0
 Homepage: http://www.cubicweb.org
 XS-Python-Version: >= 2.4, << 2.6

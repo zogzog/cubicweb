@@ -3,7 +3,7 @@ include pylintrc
 include bin/cubicweb-*
 include man/cubicweb-ctl.1
 
-recursive-include doc *.txt *.rst *.zargo *.png *.html makefile
+recursive-include doc *.txt *.zargo *.png *.html makefile
 
 recursive-include misc *
 
