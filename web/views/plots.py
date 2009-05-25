@@ -87,7 +87,7 @@ jQuery.plot(jQuery("#%(figid)s"), [%(plotdata)s],
      lines: {show: true},
      grid: {hoverable: true},
      xaxis: {mode: %(mode)s}});
-jQuery('#%(figid)s').bind('plothover', onPlotHover);
+jQuery("#%(figid)s").bind("plothover", onPlotHover);
 '''
 
     def __init__(self, labels, plots, timemode=False):
