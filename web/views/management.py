@@ -23,6 +23,7 @@ MAIL_SUBMIT_MSGID = _('Submit bug report by mail')
 
 class SecurityViewMixIn(object):
     """display security information for a given schema """
+
     def schema_definition(self, eschema, link=True,  access_types=None):
         w = self.w
         _ = self.req._
@@ -40,7 +41,7 @@ class SecurityViewMixIn(object):
             for trad, group in sorted(groups):
                 if link:
                     l.append(u'<a href="%s" class="%s">%s</a><br/>' % (
-                    self.build_url('egroup/%s' % group), group, trad))
+                    self.build_url('cwgroup/%s' % group), group, trad))
                 else:
                     l.append(u'<div class="%s">%s</div>' % (group, trad))
             w(u'<td>%s</td>' % u''.join(l))
@@ -68,6 +69,7 @@ class SecurityManagementView(EntityView, SecurityViewMixIn):
     __select__ = EntityView.__select__ & authenticated_user()
 
     title = _('security')
+
     def call(self):
         self.w(u'<div id="progress">%s</div>' % self.req._('validating...'))
         super(SecurityManagementView, self).call()
