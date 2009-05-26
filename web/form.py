@@ -261,13 +261,17 @@ class FieldsForm(FormMixIn, AppRsetObject):
             self.restore_previous_post(self.session_key())
 
     @iclassmethod
-    def field_by_name(cls_or_self, name, role='subject'):
-        """return field with the given name and role"""
+    def _fieldsattr(cls_or_self):
         if isinstance(cls_or_self, type):
             fields = cls_or_self._fields_
         else:
             fields = cls_or_self.fields
-        for field in fields:
+        return fields
+
+    @iclassmethod
+    def field_by_name(cls_or_self, name, role='subject'):
+        """return field with the given name and role"""
+        for field in cls_or_self._fieldsattr():
             if field.name == name and field.role == role:
                 return field
         raise FieldNotFound(name)
@@ -275,20 +279,24 @@ class FieldsForm(FormMixIn, AppRsetObject):
     @iclassmethod
     def remove_field(cls_or_self, field):
         """remove a field from form class or instance"""
-        if isinstance(cls_or_self, type):
-            fields = cls_or_self._fields_
-        else:
-            fields = cls_or_self.fields
-        fields.remove(field)
+        cls_or_self._fieldsattr().remove(field)
 
     @iclassmethod
     def append_field(cls_or_self, field):
         """append a field to form class or instance"""
-        if isinstance(cls_or_self, type):
-            fields = cls_or_self._fields_
-        else:
-            fields = cls_or_self.fields
-        fields.append(field)
+        cls_or_self._fieldsattr().append(field)
+
+    @iclassmethod
+    def insert_field_before(cls_or_self, new_field, name, role='subject'):
+        field = cls_or_self.field_by_name(name, role)
+        fields = cls_or_self._fieldsattr()
+        fields.insert(fields.index(field), new_field)
+
+    @iclassmethod
+    def insert_field_after(cls_or_self, new_field, name, role='subject'):
+        field = cls_or_self.field_by_name(name, role)
+        fields = cls_or_self._fieldsattr()
+        fields.insert(fields.index(field)+1, new_field)
 
     @property
     def form_needs_multipart(self):

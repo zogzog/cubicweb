@@ -109,6 +109,11 @@ class PasswordInput(Input):
         return u'\n'.join(inputs)
 
 
+class PasswordSingleInput(Input):
+    """<input type='password'> without a confirmation field"""
+    type = 'password'
+
+
 class FileInput(Input):
     """<input type='file'>"""
     type = 'file'

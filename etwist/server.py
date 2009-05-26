@@ -196,7 +196,7 @@ class CubicWebRootResource(resource.PostableResource):
         if self.url_rewriter is not None:
             # XXX should occur before authentication?
             try:
-                path = self.url_rewriter.rewrite(host, origpath)
+                path = self.url_rewriter.rewrite(host, origpath, req)
             except Redirect, ex:
                 return self.redirect(req, ex.location)
             request.uri.replace(origpath, path, 1)
