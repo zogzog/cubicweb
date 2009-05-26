@@ -576,11 +576,15 @@ class FacetRangeWidget(HTMLWidget):
 	min: %(minvalue)s,
 	max: %(maxvalue)s,
         values: [%(minvalue)s, %(maxvalue)s],
+        stop: function(event, ui) { // submit when the user stops sliding
+           var form = $('#%(sliderid)s').closest('form');
+           buildRQL.apply(null, evalJSON(form.attr('cubicweb:facetargs')));
+        },
     	slide: function(event, ui) {
-	    $('#%(sliderid)s_inf').html(ui.values[0]);
-	    $('#%(sliderid)s_sup').html(ui.values[1]);
-	    $('input[name=%(facetid)s_inf]').val(ui.values[0]);
-	    $('input[name=%(facetid)s_sup]').val(ui.values[1]);
+            $('#%(sliderid)s_inf').html(ui.values[0]);
+            $('#%(sliderid)s_sup').html(ui.values[1]);
+            $('input[name=%(facetid)s_inf]').val(ui.values[0]);
+            $('input[name=%(facetid)s_sup]').val(ui.values[1]);
     	}
    });
 '''
