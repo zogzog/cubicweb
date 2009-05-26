@@ -228,6 +228,9 @@ class EditController(ViewController):
                         formparams['name'] = value[0]
                         self.relations.append('X name %(name)s')
                     value = val
+            else:
+                # no specified value, skip
+                return
         elif value is not None:
             if attrtype in ('Date', 'Datetime', 'Time'):
                 try:
