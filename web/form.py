@@ -262,7 +262,9 @@ class FieldsForm(FormMixIn, AppRsetObject):
 
     @iclassmethod
     def field_by_name(cls_or_self, name, role='subject'):
-        """return field with the given name and role"""
+        """return field with the given name and role.
+        Raise FieldNotFound if the field can't be found.
+        """
         if isinstance(cls_or_self, type):
             fields = cls_or_self._fields_
         else:
@@ -271,6 +273,16 @@ class FieldsForm(FormMixIn, AppRsetObject):
             if field.name == name and field.role == role:
                 return field
         raise FieldNotFound(name)
+
+    @iclassmethod
+    def fields_by_name(cls_or_self, name, role='subject'):
+        """return a list of fields with the given name and role"""
+        if isinstance(cls_or_self, type):
+            fields = cls_or_self._fields_
+        else:
+            fields = cls_or_self.fields
+        return [field for field in fields
+                if field.name == name and field.role == role]
 
     @iclassmethod
     def remove_field(cls_or_self, field):
@@ -333,7 +345,9 @@ class FieldsForm(FormMixIn, AppRsetObject):
         # ensure rendervalues is a dict
         if rendervalues is None:
             rendervalues = {}
-        for field in self.fields:
+        # use a copy in case fields are modified while context is build (eg
+        # __linkto handling for instance)
+        for field in self.fields[:]:
             for field in field.actual_fields(self):
                 field.form_init(self)
                 value = self.form_field_display_value(field, rendervalues)
@@ -435,12 +449,13 @@ class EntityFieldsForm(FieldsForm):
             self.edited_entity = self.complete_entity(self.row or 0, self.col or 0)
         self.form_add_hidden('__type', eidparam=True)
         self.form_add_hidden('eid')
-        if msg is not None:
+        if msg:
             # If we need to directly attach the new object to another one
+            self.form_add_hidden('__message', msg)
+        if not self.is_subform:
             for linkto in self.req.list_form_param('__linkto'):
                 self.form_add_hidden('__linkto', linkto)
                 msg = '%s %s' % (msg, self.req._('and linked'))
-            self.form_add_hidden('__message', msg)
         # in case of direct instanciation
         self.schema = self.edited_entity.schema
         self.vreg = self.edited_entity.vreg
@@ -470,7 +485,16 @@ class EntityFieldsForm(FieldsForm):
     def _req_display_value(self, field):
         value = super(EntityFieldsForm, self)._req_display_value(field)
         if value is None:
-            value = self.edited_entity.linked_to(field.name, field.role) or None
+            value = self.edited_entity.linked_to(field.name, field.role)
+            if value:
+                searchedvalues = ['%s:%s:%s' % (field.name, eid, field.role)
+                                  for eid in value]
+                # remove associated __linkto hidden fields
+                for field in self.fields_by_name('__linkto'):
+                    if field.initial in searchedvalues:
+                        self.remove_field(field)
+            else:
+                value = None
         return value
 
     def _form_field_default_value(self, field, load_bytes):
