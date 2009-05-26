@@ -66,13 +66,10 @@ Automatic form configuration
 """
 __docformat__ = "restructuredtext en"
 
+from cubicweb import neg_role
 from cubicweb.rtags import RelationTags, RelationTagsBool, RelationTagsSet
 from cubicweb.web import formwidgets
 
-# primary view configuration ##################################################
-
-def dual_role(role):
-    return role == 'subject' and 'object' or 'subject'
 
 def card_from_role(card, role):
     if role == 'subject':
@@ -80,10 +77,12 @@ def card_from_role(card, role):
     assert role in ('object', 'sobject'), repr(role)
     return card[1]
 
+# primary view configuration ##################################################
+
 def init_primaryview_section(rtag, sschema, rschema, oschema, role):
     if rtag.get(sschema, rschema, oschema, role) is None:
         card = card_from_role(rschema.rproperty(sschema, oschema, 'cardinality'), role)
-        composed = rschema.rproperty(sschema, oschema, 'composite') == dual_role(role)
+        composed = rschema.rproperty(sschema, oschema, 'composite') == neg_role(role)
         if rschema.is_final():
             if rschema.meta or oschema.type in ('Password', 'Bytes'):
                 section = 'hidden'
