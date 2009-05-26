@@ -636,9 +636,10 @@ class Repository(object):
             self.exception('unexpected error')
             raise
 
-    def close(self, sessionid):
+    def close(self, sessionid, checkshuttingdown=True):
         """close the session with the given id"""
-        session = self._get_session(sessionid, setpool=True)
+        session = self._get_session(sessionid, setpool=True,
+                                    checkshuttingdown=checkshuttingdown)
         # operation uncommited before close are rollbacked before hook is called
         session.rollback()
         self.hm.call_hooks('session_close', session=session)
@@ -691,7 +692,7 @@ class Repository(object):
         """close every opened sessions"""
         for sessionid in self._sessions.keys():
             try:
-                self.close(sessionid)
+                self.close(sessionid, checkshuttingdown=False)
             except:
                 self.exception('error while closing session %s' % sessionid)
 
@@ -720,9 +721,9 @@ class Repository(object):
         session.set_pool()
         return session
 
-    def _get_session(self, sessionid, setpool=False):
+    def _get_session(self, sessionid, setpool=False, checkshuttingdown=True):
         """return the user associated to the given session identifier"""
-        if self._shutting_down:
+        if checkshuttingdown and self._shutting_down:
             raise Exception('Repository is shutting down')
         try:
             session = self._sessions[sessionid]
