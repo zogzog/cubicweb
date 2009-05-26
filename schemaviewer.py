@@ -93,10 +93,10 @@ class SchemaViewer(object):
         return data
 
     def eschema_link_url(self, eschema):
-        return self.req.build_url('eetype/%s?vid=eschema' % eschema)
+        return self.req.build_url('cwetype/%s?vid=eschema' % eschema)
 
     def rschema_link_url(self, rschema):
-        return self.req.build_url('ertype/%s?vid=eschema' % rschema)
+        return self.req.build_url('cwrtype/%s?vid=eschema' % rschema)
 
     def possible_views(self, etype):
         rset = self.req.etype_rset(etype)
