@@ -301,8 +301,6 @@ class AutoCompletionWidget(TextInput):
 
     def _render_attrs(self, form, field):
         name, values, attrs = super(AutoCompletionWidget, self)._render_attrs(form, field)
-        if not values[0]:
-            values = (INTERNAL_FIELD_VALUE,)
         init_ajax_attributes(attrs, self.wdgtype, self.loadtype)
         # XXX entity form specific
         attrs['cubicweb:dataurl'] = self._get_url(form.edited_entity, field)
