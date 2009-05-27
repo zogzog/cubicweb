@@ -456,6 +456,9 @@ class EntityInlinedFormRenderer(EntityFormRenderer):
           '#<span class="icounter">1</span> '
           '[<a href="javascript: %(removejs)s;noop();">%(removemsg)s</a>]</div>'
           % values)
+        # cleanup values
+        for key in ('title', 'removejs', 'removemsg'):
+            values.pop(key)
         self.render_fields(w, form, values)
         w(u'</div></div>')
         return '\n'.join(data)
