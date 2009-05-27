@@ -189,7 +189,8 @@ class AutomaticEntityForm(EntityFieldsForm):
         """
         # we'll need an initialized varmaker if there are some inlined relation
         self.initialize_varmaker()
-        return self.erelations_by_category(self.edited_entity, True, 'add', self.rinlined)
+        return self.erelations_by_category(self.edited_entity, True, 'add',
+                                           self.rinlined)
 
     def srelations_by_category(self, categories=None, permission=None):
         """filter out result of relations_by_category(categories, permission) by
