@@ -117,7 +117,7 @@ def sqldropschema(schema, driver, text_index=True,
 try:
     from mx.DateTime import DateTimeType, DateTimeDeltaType
 except ImportError:
-    DateTimeType, DateTimeDeltaType = None
+    DateTimeType = DateTimeDeltaType = None
 
 class SQLAdapterMixIn(object):
     """Mixin for SQL data sources, getting a connection from a configuration
