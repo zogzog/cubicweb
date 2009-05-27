@@ -390,6 +390,8 @@ class EntityFormRenderer(FormRenderer):
 
     def inline_entities_form(self, w, form):
         """create a form to edit entity's inlined relations"""
+        if not hasattr(form, 'inlined_relations'):
+            return
         entity = form.edited_entity
         __ = form.req.__
         for rschema, targettypes, role in form.inlined_relations():
@@ -456,6 +458,9 @@ class EntityInlinedFormRenderer(EntityFormRenderer):
           '#<span class="icounter">1</span> '
           '[<a href="javascript: %(removejs)s;noop();">%(removemsg)s</a>]</div>'
           % values)
+        # cleanup values
+        for key in ('title', 'removejs', 'removemsg'):
+            values.pop(key)
         self.render_fields(w, form, values)
         w(u'</div></div>')
         return '\n'.join(data)
