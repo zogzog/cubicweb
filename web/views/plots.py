@@ -177,10 +177,22 @@ else:
 
         __select__ = at_least_two_columns() & second_column_is_number()
 
+        def _guess_vid(self, row):
+            etype = self.rset.description[row][0]
+            if self.schema.eschema(etype).is_final():
+                return 'final'
+            return 'textincontext'
+
         def call(self, title=None, width=None, height=None):
-            labels = ['%s: %s' % (row[0].encode(self.req.encoding), row[1])
-                      for row in self.rset]
-            values = [(row[1] or 0) for row in self.rset]
+            labels = []
+            values = []
+            for rowidx, (_, value) in enumerate(self.rset):
+                if value is not None:
+                    vid = self._guess_vid(rowidx)
+                    label = '%s: %s' % (self.view(vid, self.rset, row=rowidx, col=0),
+                                        value)
+                    labels.append(label.encode(self.req.encoding))
+                    values.append(value)
             pie = PieChartWidget(labels, values, pieclass=self.pieclass,
                                  title=title)
             if width is not None:
