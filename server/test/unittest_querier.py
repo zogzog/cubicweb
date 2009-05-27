@@ -1080,7 +1080,7 @@ class QuerierTC(BaseQuerierTC):
         cursor = self.pool['system']
         cursor.execute("SELECT %supassword from %sCWUser WHERE %slogin='bob'"
                        % (SQL_PREFIX, SQL_PREFIX, SQL_PREFIX))
-        passwd = cursor.fetchone()[0].getvalue()
+        passwd = str(cursor.fetchone()[0])
         self.assertEquals(passwd, crypt_password('toto', passwd[:2]))
         rset = self.execute("Any X WHERE X is CWUser, X login 'bob', X upassword '%s'" % passwd)
         self.assertEquals(len(rset.rows), 1)
@@ -1094,7 +1094,7 @@ class QuerierTC(BaseQuerierTC):
                             {'pwd': 'tutu'})
         cursor.execute("SELECT %supassword from %sCWUser WHERE %slogin='bob'"
                        % (SQL_PREFIX, SQL_PREFIX, SQL_PREFIX))
-        passwd = cursor.fetchone()[0].getvalue()
+        passwd = str(cursor.fetchone()[0])
         self.assertEquals(passwd, crypt_password('tutu', passwd[:2]))
         rset = self.execute("Any X WHERE X is CWUser, X login 'bob', X upassword '%s'" % passwd)
         self.assertEquals(len(rset.rows), 1)
