@@ -6,7 +6,7 @@ from datetime import date, datetime
 from logilab.common.testlib import TestCase, unittest_main
 from rql import BadRQLQuery, RQLSyntaxError
 
-from cubicweb import QueryError, Unauthorized
+from cubicweb import QueryError, Unauthorized, Binary
 from cubicweb.server.sqlutils import SQL_PREFIX
 from cubicweb.server.utils import crypt_password
 from cubicweb.server.sources.native import make_schema
@@ -207,6 +207,13 @@ class QuerierTC(BaseQuerierTC):
     def test_unknown_eid(self):
         # should return an empty result set
         self.failIf(self.execute('Any X WHERE X eid 99999999'))
+
+    def test_bytes_storage(self):
+        feid = self.execute('INSERT File X: X name "foo.pdf", X data_format "text/plain", X data %(data)s',
+                            {'data': Binary("xxx")})[0][0]
+        fdata = self.execute('Any D WHERE X data D, X eid %(x)s', {'x': feid}, 'x')[0][0]
+        self.assertIsInstance(fdata, Binary)
+        self.assertEquals(fdata.getvalue(), 'xxx')
 
     # selection queries tests #################################################
 
