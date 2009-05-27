@@ -6,6 +6,7 @@ or a list of entities of the same type
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 """
 __docformat__ = "restructuredtext en"
+_ = unicode
 
 from copy import copy
 
@@ -26,7 +27,6 @@ from cubicweb.web.formrenderers import (FormRenderer, EntityFormRenderer,
                                         EntityCompositeFormRenderer,
                                         EntityInlinedFormRenderer)
 
-_ = unicode
 
 def relation_id(eid, rtype, role, reid):
     """return an identifier for a relation between two entities"""
