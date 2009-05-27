@@ -77,7 +77,7 @@ class TwoSourcesTC(RepositoryBasedTC):
                            'type': u'Card', 'extid': None})
         externent = rset.get_entity(3, 0)
         metainf = externent.metainformation()
-        self.assertEquals(metainf['source'], {'adapter': 'pyrorql', 'base-url': 'http://extern.org', 'uri': 'extern'})
+        self.assertEquals(metainf['source'], {'adapter': 'pyrorql', 'base-url': 'http://extern.org/', 'uri': 'extern'})
         self.assertEquals(metainf['type'], 'Card')
         self.assert_(metainf['extid'])
         etype = self.execute('Any ETN WHERE X is ET, ET name ETN, X eid %(x)s',
