@@ -14,6 +14,7 @@ from smtplib import SMTP
 import simplejson
 
 from logilab.common.decorators import cached
+from logilab.mtconverter import html_escape
 
 from cubicweb import NoSelectableObject, ValidationError, ObjectNotFound, typed_eid
 from cubicweb.utils import strptime
@@ -416,6 +417,8 @@ class JSonController(Controller):
             rset = entity.related(rtype, role)
             if rset:
                 output = self.view(vid, rset)
+                if vid == 'textoutofcontext':
+                    output = html_escape(output)
             else:
                 output = default
             return (success, args, output)
