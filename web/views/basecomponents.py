@@ -20,7 +20,7 @@ from cubicweb.web.htmlwidgets import (MenuWidget, PopupBoxMenu, BoxSeparator,
                                       BoxLink)
 
 VISIBLE_PROP_DEF = {
-    _('visible'):  dict(type='Boolean', default=False,
+    _('visible'):  dict(type='Boolean', default=True,
                         help=_('display the component or not')),
     }
 
@@ -125,9 +125,8 @@ class ApplicationMessage(component.Component):
     """
     __select__ = yes()
     id = 'applmessages'
-    property_defs = VISIBLE_PROP_DEF
     # don't want user to hide this component using an cwproperty
-    site_wide = True
+    property_defs = {}
 
     def call(self):
         msgs = [msg for msg in (self.req.get_shared_data('sources_error', pop=True),
