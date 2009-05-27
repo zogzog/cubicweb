@@ -51,7 +51,7 @@ def group_mapping(cursor, interactive=True):
 def _set_sql_prefix(prefix):
     """3.2.0 migration function: allow to unset/reset SQL_PREFIX"""
     for module in ('checkintegrity', 'migractions', 'schemahooks',
-                   'sources.rql2sql', 'sources.native'):
+                   'sources.rql2sql', 'sources.native', 'sqlutils'):
         try:
             sys.modules['cubicweb.server.%s' % module].SQL_PREFIX = prefix
             print 'changed SQL_PREFIX for %s' % module

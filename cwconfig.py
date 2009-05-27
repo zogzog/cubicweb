@@ -11,6 +11,7 @@
 
 """
 __docformat__ = "restructuredtext en"
+_ = unicode
 
 import sys
 import os
@@ -27,7 +28,6 @@ from cubicweb.toolsutils import env_path, create_dir
 
 CONFIGURATIONS = []
 
-_ = unicode
 
 class metaconfiguration(type):
     """metaclass to automaticaly register configuration"""

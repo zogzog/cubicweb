@@ -8,6 +8,7 @@
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 """
 __docformat__ = "restructuredtext en"
+_ = unicode
 
 from rql import parse
 
@@ -17,8 +18,6 @@ from cubicweb.common.uilib import html_escape, toggle_action
 from cubicweb.web import component
 from cubicweb.web.htmlwidgets import (MenuWidget, PopupBoxMenu, BoxSeparator,
                                       BoxLink)
-
-_ = unicode
 
 VISIBLE_PROP_DEF = {
     _('visible'):  dict(type='Boolean', default=False,

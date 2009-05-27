@@ -77,7 +77,7 @@ class TwoSourcesTC(RepositoryBasedTC):
                            'type': u'Card', 'extid': None})
         externent = rset.get_entity(3, 0)
         metainf = externent.metainformation()
-        self.assertEquals(metainf['source'], {'adapter': 'pyrorql', 'base-url': 'http://extern.org', 'uri': 'extern'})
+        self.assertEquals(metainf['source'], {'adapter': 'pyrorql', 'base-url': 'http://extern.org/', 'uri': 'extern'})
         self.assertEquals(metainf['type'], 'Card')
         self.assert_(metainf['extid'])
         etype = self.execute('Any ETN WHERE X is ET, ET name ETN, X eid %(x)s',
@@ -149,7 +149,7 @@ class TwoSourcesTC(RepositoryBasedTC):
         self.execute('Any X ORDERBY DUMB_SORT(RF) WHERE X title RF')
 
     def test_in_eid(self):
-        iec1 = self.repo.extid2eid(self.repo.sources_by_uri['extern'], ec1,
+        iec1 = self.repo.extid2eid(self.repo.sources_by_uri['extern'], str(ec1),
                                    'Card', self.session)
         rset = self.execute('Any X WHERE X eid IN (%s, %s)' % (iec1, self.ic1))
         self.assertEquals(sorted(r[0] for r in rset.rows), sorted([iec1, self.ic1]))

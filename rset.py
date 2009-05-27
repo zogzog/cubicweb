@@ -380,9 +380,6 @@ class ResultSet(object):
             pass
         # build entity instance
         etype = self.description[row][col]
-        if etype == 'EUser':
-            import traceback
-            traceback.printstack()
         entity = self.vreg.etype_class(etype)(req, self, row, col)
         entity.set_eid(eid)
         # cache entity

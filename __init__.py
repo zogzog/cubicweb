@@ -46,7 +46,7 @@ typed_eid = int
 
 class Binary(StringIO):
     """customize StringIO to make sure we don't use unicode"""
-    def __init__(self, buf= ''):
+    def __init__(self, buf=''):
         assert isinstance(buf, (str, buffer)), \
                "Binary objects must use raw strings, not %s" % buf.__class__
         StringIO.__init__(self, buf)

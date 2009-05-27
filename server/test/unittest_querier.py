@@ -6,7 +6,7 @@ from datetime import date, datetime
 from logilab.common.testlib import TestCase, unittest_main
 from rql import BadRQLQuery, RQLSyntaxError
 
-from cubicweb import QueryError, Unauthorized
+from cubicweb import QueryError, Unauthorized, Binary
 from cubicweb.server.sqlutils import SQL_PREFIX
 from cubicweb.server.utils import crypt_password
 from cubicweb.server.sources.native import make_schema
@@ -207,6 +207,13 @@ class QuerierTC(BaseQuerierTC):
     def test_unknown_eid(self):
         # should return an empty result set
         self.failIf(self.execute('Any X WHERE X eid 99999999'))
+
+    def test_bytes_storage(self):
+        feid = self.execute('INSERT File X: X name "foo.pdf", X data_format "text/plain", X data %(data)s',
+                            {'data': Binary("xxx")})[0][0]
+        fdata = self.execute('Any D WHERE X data D, X eid %(x)s', {'x': feid}, 'x')[0][0]
+        self.assertIsInstance(fdata, Binary)
+        self.assertEquals(fdata.getvalue(), 'xxx')
 
     # selection queries tests #################################################
 
@@ -470,7 +477,7 @@ class QuerierTC(BaseQuerierTC):
         self.assertEquals(rset.rows[0][0], self.ueid)
 
     def test_select_complex_sort(self):
-        self.skip('retry me once http://www.sqlite.org/cvstrac/tktview?tn=3773 is fixed')
+        """need sqlite including http://www.sqlite.org/cvstrac/tktview?tn=3773 fix"""
         rset = self.execute('Any X ORDERBY X,D LIMIT 5 WHERE X creation_date D')
         result = rset.rows
         result.sort()
@@ -1073,7 +1080,7 @@ class QuerierTC(BaseQuerierTC):
         cursor = self.pool['system']
         cursor.execute("SELECT %supassword from %sCWUser WHERE %slogin='bob'"
                        % (SQL_PREFIX, SQL_PREFIX, SQL_PREFIX))
-        passwd = cursor.fetchone()[0].getvalue()
+        passwd = str(cursor.fetchone()[0])
         self.assertEquals(passwd, crypt_password('toto', passwd[:2]))
         rset = self.execute("Any X WHERE X is CWUser, X login 'bob', X upassword '%s'" % passwd)
         self.assertEquals(len(rset.rows), 1)
@@ -1087,7 +1094,7 @@ class QuerierTC(BaseQuerierTC):
                             {'pwd': 'tutu'})
         cursor.execute("SELECT %supassword from %sCWUser WHERE %slogin='bob'"
                        % (SQL_PREFIX, SQL_PREFIX, SQL_PREFIX))
-        passwd = cursor.fetchone()[0].getvalue()
+        passwd = str(cursor.fetchone()[0])
         self.assertEquals(passwd, crypt_password('tutu', passwd[:2]))
         rset = self.execute("Any X WHERE X is CWUser, X login 'bob', X upassword '%s'" % passwd)
         self.assertEquals(len(rset.rows), 1)
@@ -1212,8 +1219,9 @@ class QuerierTC(BaseQuerierTC):
 
         cause: old variable ref inserted into a fresh rqlst copy
         (in RQLSpliter._complex_select_plan)
+
+        need sqlite including http://www.sqlite.org/cvstrac/tktview?tn=3773 fix
         """
-        self.skip('retry me once http://www.sqlite.org/cvstrac/tktview?tn=3773 is fixed')
         self.execute('Any X ORDERBY D DESC WHERE X creation_date D')
 
     def test_nonregr_extra_joins(self):

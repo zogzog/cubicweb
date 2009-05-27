@@ -88,13 +88,13 @@ class PageInfo(object):
         self.input_tags = self.find_tag('input')
         self.title_tags = [self.h1_tags, self.h2_tags, self.h3_tags, self.h4_tags]
 
-    def find_tag(self, tag):
+    def find_tag(self, tag, gettext=True):
         """return a list which contains text of all "tag" elements """
         if self.default_ns is None:
             iterstr = ".//%s" % tag
         else:
             iterstr = ".//{%s}%s" % (self.default_ns, tag)
-        if tag in ('a', 'input'):
+        if not gettext or tag in ('a', 'input'):
             return [(elt.text, elt.attrib) for elt in self.etree.iterfind(iterstr)]
         return [u''.join(elt.xpath('.//text()')) for elt in self.etree.iterfind(iterstr)]
 

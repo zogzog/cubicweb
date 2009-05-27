@@ -83,7 +83,7 @@ class FormRenderer(object):
         return tags.label(label, **attrs)
 
     def render_help(self, form, field):
-	help = []
+        help = []
         descr = field.help
         if descr:
             help.append('<div class="helper">%s</div>' % form.req._(descr))

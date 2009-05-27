@@ -13,7 +13,8 @@ __docformat__ = "restructuredtext en"
 from logging import getLogger
 from time import time, clock
 
-from cubicweb import ConnectionError, RequestSessionMixIn, set_log_methods
+from logilab.common.logging_ext import set_log_methods
+from cubicweb import ETYPE_NAME_MAP, ConnectionError, RequestSessionMixIn
 from cubicweb.cwvreg import CubicWebRegistry, MulCnxCubicWebRegistry
 from cubicweb.cwconfig import CubicWebNoAppConfiguration
 
@@ -101,7 +102,12 @@ def connect(database=None, user=None, password=None, host=None,
             vreg = MulCnxCubicWebRegistry(config, initlog=initlog)
         else:
             vreg = CubicWebRegistry(config, initlog=initlog)
-        vreg.set_schema(repo.get_schema())
+        schema = repo.get_schema()
+        for oldetype, newetype in ETYPE_NAME_MAP.items():
+            if oldetype in schema:
+                print 'aliasing', newetype, 'to', oldetype
+                schema._entities[newetype] = schema._entities[oldetype]
+        vreg.set_schema(schema)
     else:
         vreg = None
     cnx = repo_connect(repo, user, password, cnxprops)
@@ -325,11 +331,6 @@ class Connection(object):
         self.vreg = None
         # session's data
         self.data = {}
-        # XXX < 3.2 bw compat
-        if 'EUser' in self._repo.get_schema():
-            self._user_etype = 'EUser'
-        else:
-            self._user_etype = 'CWUser'
 
     def __repr__(self):
         if self.anonymous_connection:
@@ -435,9 +436,9 @@ class Connection(object):
         eid, login, groups, properties = self._repo.user_info(self.sessionid, props)
         if req is None:
             req = self.request()
-        rset = req.eid_rset(eid, self._user_etype)
-        user = self.vreg.etype_class(self._user_etype)(req, rset, row=0, groups=groups,
-                                                       properties=properties)
+        rset = req.eid_rset(eid, 'CWUser')
+        user = self.vreg.etype_class('CWUser')(req, rset, row=0, groups=groups,
+                                               properties=properties)
         user['login'] = login # cache login
         return user
 

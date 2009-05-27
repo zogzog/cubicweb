@@ -73,6 +73,21 @@ class EntityFieldsFormTC(WebTest):
         form.form_build_context({})
         self.assertEquals(form.form_field_display_value(field, {}), 'toto')
 
+
+    def test_linkto_field_duplication(self):
+        e = self.etype_instance('CWUser')
+        e.eid = 'A'
+        e.req = self.req
+        geid = self.execute('CWGroup X WHERE X name "users"')[0][0]
+        self.req.form['__linkto'] = 'in_group:%s:subject' % geid
+        form = self.vreg.select_object('forms', 'edition', self.req, None, entity=e)
+        form.content_type = 'text/html'
+        pageinfo = self._check_html(form.form_render(), form, template=None)
+        inputs = pageinfo.find_tag('select', False)
+        self.failUnless(any(attrs for t, attrs in inputs if attrs.get('name') == 'in_group:A'))
+        inputs = pageinfo.find_tag('input', False)
+        self.failIf(any(attrs for t, attrs in inputs if attrs.get('name') == '__linkto'))
+
     # form view tests #########################################################
 
     def test_massmailing_formview(self):

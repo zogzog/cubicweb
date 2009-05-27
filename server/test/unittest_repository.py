@@ -211,11 +211,8 @@ class RepositoryTC(RepositoryBasedTC):
         t = threading.Thread(target=close_in_a_few_moment)
         t.start()
         try:
-            print 'execute'
             repo.execute(cnxid, 'DELETE CWUser X WHERE X login "toto"')
-            print 'commit'
             repo.commit(cnxid)
-            print 'commited'
         finally:
             t.join()
 
@@ -286,7 +283,8 @@ class RepositoryTC(RepositoryBasedTC):
         repo = self.repo
         cnxid = repo.connect(*self.default_user_password())
         session = repo._get_session(cnxid, setpool=True)
-        self.assertEquals(repo.type_and_source_from_eid(1, session), ('CWGroup', 'system', None))
+        self.assertEquals(repo.type_and_source_from_eid(1, session),
+                          ('CWGroup', 'system', None))
         self.assertEquals(repo.type_from_eid(1, session), 'CWGroup')
         self.assertEquals(repo.source_from_eid(1, session).uri, 'system')
         self.assertEquals(repo.eid2extid(repo.system_source, 1, session), None)
