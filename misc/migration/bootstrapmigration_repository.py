@@ -33,7 +33,7 @@ if applcubicwebversion < (2, 50, 0) and cubicwebversion >= (2, 50, 0):
     add_relation_type('is_instance_of')
     # fill the relation using an efficient sql query instead of using rql
     sql('INSERT INTO is_instance_of_relation '
-	'  SELECT * from is_relation')
+        '  SELECT * from is_relation')
     checkpoint()
     session.set_shared_data('do-not-insert-is_instance_of', False)
 

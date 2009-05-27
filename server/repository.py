@@ -794,10 +794,10 @@ class Repository(object):
             raise UnknownEid(eid)
         return extid
 
-    def extid2eid(self, source, lid, etype, session=None, insert=True,
+    def extid2eid(self, source, extid, etype, session=None, insert=True,
                   recreate=False):
         """get eid from a local id. An eid is attributed if no record is found"""
-        cachekey = (str(lid), source.uri)
+        cachekey = (extid, source.uri)
         try:
             return self._extid_cache[cachekey]
         except KeyError:
@@ -806,17 +806,17 @@ class Repository(object):
         if session is None:
             session = self.internal_session()
             reset_pool = True
-        eid = self.system_source.extid2eid(session, source, lid)
+        eid = self.system_source.extid2eid(session, source, extid)
         if eid is not None:
             self._extid_cache[cachekey] = eid
-            self._type_source_cache[eid] = (etype, source.uri, lid)
+            self._type_source_cache[eid] = (etype, source.uri, extid)
             if recreate:
-                entity = source.before_entity_insertion(session, lid, etype, eid)
+                entity = source.before_entity_insertion(session, extid, etype, eid)
                 entity._cw_recreating = True
                 if source.should_call_hooks:
                     self.hm.call_hooks('before_add_entity', etype, session, entity)
                 # XXX add fti op ?
-                source.after_entity_insertion(session, lid, entity)
+                source.after_entity_insertion(session, extid, entity)
                 if source.should_call_hooks:
                     self.hm.call_hooks('after_add_entity', etype, session, entity)
             if reset_pool:
@@ -824,7 +824,7 @@ class Repository(object):
             return eid
         if not insert:
             return
-        # no link between lid and eid, create one using an internal session
+        # no link between extid and eid, create one using an internal session
         # since the current session user may not have required permissions to
         # do necessary stuff and we don't want to commit user session.
         #
@@ -836,13 +836,13 @@ class Repository(object):
         try:
             eid = self.system_source.create_eid(session)
             self._extid_cache[cachekey] = eid
-            self._type_source_cache[eid] = (etype, source.uri, lid)
-            entity = source.before_entity_insertion(session, lid, etype, eid)
+            self._type_source_cache[eid] = (etype, source.uri, extid)
+            entity = source.before_entity_insertion(session, extid, etype, eid)
             if source.should_call_hooks:
                 self.hm.call_hooks('before_add_entity', etype, session, entity)
             # XXX call add_info with complete=False ?
-            self.add_info(session, entity, source, lid)
-            source.after_entity_insertion(session, lid, entity)
+            self.add_info(session, entity, source, extid)
+            source.after_entity_insertion(session, extid, entity)
             if source.should_call_hooks:
                 self.hm.call_hooks('after_add_entity', etype, session, entity)
             else:

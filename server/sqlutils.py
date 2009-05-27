@@ -111,7 +111,8 @@ def sqldropschema(schema, driver, text_index=True,
         w(indexer.sql_drop_fti())
         w('')
     w(dropschema2sql(schema, prefix=SQL_PREFIX,
-                     skip_entities=skip_entities, skip_relations=skip_relations))
+                     skip_entities=skip_entities,
+                     skip_relations=skip_relations))
     return '\n'.join(output)
 
 try:

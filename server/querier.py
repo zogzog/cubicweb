@@ -599,7 +599,8 @@ class QuerierHelper(object):
                 except KeyError:
                     raise QueryError('bad cache key %s (no value)' % key)
                 except TypeError:
-                    raise QueryError('bad cache key %s (value: %r)' % (key, args[key]))
+                    raise QueryError('bad cache key %s (value: %r)' % (
+                        key, args[key]))
                 except UnknownEid:
                     # we want queries such as "Any X WHERE X eid 9999"
                     # return an empty result instead of raising UnknownEid

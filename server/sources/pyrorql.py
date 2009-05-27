@@ -8,7 +8,6 @@ __docformat__ = "restructuredtext en"
 
 import threading
 from os.path import join
-
 from time import mktime
 from datetime import datetime
 from base64 import b64decode
@@ -570,17 +569,15 @@ class RQL2RQL(object):
         except UnknownEid:
             operator = self.current_operator
             if operator is not None and operator != '=':
-                # deal with query like X eid > 12
+                # deal with query like "X eid > 12"
                 #
-                # The problem is
-                # that eid order in the external source may differ from the
-                # local source
+                # The problem is that eid order in the external source may
+                # differ from the local source
                 #
-                # So search for all eids from this
-                # source matching the condition locally and then to replace the
-                # > 12 branch by IN (eids) (XXX we may have to insert a huge
-                # number of eids...)
-                # planner so that
+                # So search for all eids from this source matching the condition
+                # locally and then to replace the "> 12" branch by "IN (eids)"
+                #
+                # XXX we may have to insert a huge number of eids...)
                 sql = "SELECT extid FROM entities WHERE source='%s' AND type IN (%s) AND eid%s%s"
                 etypes = ','.join("'%s'" % etype for etype in self.current_etypes)
                 cu = self._session.system_sql(sql % (self.source.uri, etypes,

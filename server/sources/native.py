@@ -241,7 +241,7 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
                 pwd = rset[0][0]
             except IndexError:
                 raise AuthenticationError('bad login')
-            # passwords are stored using the bytea type, so we get a StringIO
+            # passwords are stored using the Bytes type, so we get a StringIO
             if pwd is not None:
                 args['pwd'] = crypt_password(password, pwd.getvalue()[:2])
         # get eid from login and (crypted) password
@@ -481,8 +481,7 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
         try:
             result = cursor.fetchone()
             if result:
-                eid = result[0]
-                return eid
+                return result[0]
         except:
             pass
         return None

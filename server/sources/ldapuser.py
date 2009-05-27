@@ -153,7 +153,8 @@ directory (default to once a day).',
     def init(self):
         """method called by the repository once ready to handle request"""
         self.repo.looping_task(self._interval, self.synchronize)
-        self.repo.looping_task(self._query_cache.ttl.seconds/10, self._query_cache.clear_expired)
+        self.repo.looping_task(self._query_cache.ttl.seconds/10,
+                               self._query_cache.clear_expired)
 
     def synchronize(self):
         """synchronize content known by this repository with content in the
