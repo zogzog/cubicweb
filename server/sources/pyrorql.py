@@ -11,6 +11,7 @@ from os.path import join
 
 from time import mktime
 from datetime import datetime
+from base64 import b64decode
 
 from Pyro.errors import PyroError, ConnectionClosedError
 
@@ -177,7 +178,7 @@ repository (default to 5 minutes).',
                 try:
                     exturi = cnx.describe(extid)[1]
                     if exturi == 'system' or not exturi in repo.sources_by_uri:
-                        eid = self.extid2eid(extid, etype, session)
+                        eid = self.extid2eid(str(extid), etype, session)
                         rset = session.eid_rset(eid, etype)
                         entity = rset.get_entity(0, 0)
                         entity.complete(entity.e_schema.indexable_attributes())
@@ -188,7 +189,8 @@ repository (default to 5 minutes).',
                     continue
             for etype, extid in deleted:
                 try:
-                    eid = self.extid2eid(extid, etype, session, insert=False)
+                    eid = self.extid2eid(str(extid), etype, session,
+                                         insert=False)
                     # entity has been deleted from external repository but is not known here
                     if eid is not None:
                         repo.delete_info(session, eid)
@@ -307,7 +309,8 @@ repository (default to 5 minutes).',
                             etype = descr[rowindex][colindex]
                             exttype, exturi, extid = cnx.describe(row[colindex])
                             if exturi == 'system' or not exturi in self.repo.sources_by_uri:
-                                eid = self.extid2eid(row[colindex], etype, session)
+                                eid = self.extid2eid(str(row[colindex]), etype,
+                                                     session)
                                 row[colindex] = eid
                             else:
                                 # skip this row
@@ -494,7 +497,7 @@ class RQL2RQL(object):
             # XXX what about optional relation or outer NOT EXISTS()
             raise
         except ReplaceByInOperator, ex:
-            rhs = 'IN (%s)' % ','.join(str(eid) for eid in ex.eids)
+            rhs = 'IN (%s)' % ','.join(eid for eid in ex.eids)
         self.need_translation = False
         self.current_operator = None
         if node.optional in ('right', 'both'):
@@ -586,6 +589,6 @@ class RQL2RQL(object):
                 # results
                 rows = cu.fetchall()
                 if rows:
-                    raise ReplaceByInOperator((r[0] for r in rows))
+                    raise ReplaceByInOperator((b64decode(r[0]) for r in rows))
             raise
 

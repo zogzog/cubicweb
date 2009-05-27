@@ -1,5 +1,11 @@
 """Adapters for native cubicweb sources.
 
+Notes:
+* extid (aka external id, the primary key of an entity in the external source
+  from which it comes from) are stored in a varchar column encoded as a base64
+  string. This is because it should actually be Bytes but we want an index on
+  it for fast querying.
+  
 :organization: Logilab
 :copyright: 2001-2009 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
@@ -8,6 +14,7 @@ __docformat__ = "restructuredtext en"
 
 from threading import Lock
 from datetime import datetime
+from base64 import b64decode, b64encode
 
 from logilab.common.cache import Cache
 from logilab.common.configuration import REQUIRED
@@ -456,14 +463,18 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
             raise UnknownEid(eid)
         if res is None:
             raise UnknownEid(eid)
+        if res[-1] is not None:
+            if not isinstance(res, list):
+                res = list(res)
+            res[-1] = b64decode(res[-1])
         return res
 
-    def extid2eid(self, session, source, lid):
-        """get eid from a local id. An eid is attributed if no record is found"""
+    def extid2eid(self, session, source, extid):
+        """get eid from an external id. Return None if no record found."""
+        assert isinstance(extid, str)
         cursor = session.system_sql('SELECT eid FROM entities WHERE '
                                     'extid=%(x)s AND source=%(s)s',
-                                    # str() necessary with pg 8.3
-                                    {'x': str(lid), 's': source.uri})
+                                    {'x': b64encode(extid), 's': source.uri})
         # XXX testing rowcount cause strange bug with sqlite, results are there
         #     but rowcount is 0
         #if cursor.rowcount > 0:
@@ -499,8 +510,11 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
     def add_info(self, session, entity, source, extid=None):
         """add type and source info for an eid into the system table"""
         # begin by inserting eid/type/source/extid into the entities table
-        attrs = {'type': str(entity.e_schema), 'eid': entity.eid,
-                 'extid': extid, 'source': source.uri, 'mtime': datetime.now()}
+        if extid is not None:
+            assert isinstance(extid, str)
+            extid = b64encode(extid)
+        attrs = {'type': entity.id, 'eid': entity.eid, 'extid': extid,
+                 'source': source.uri, 'mtime': datetime.now()}
         session.system_sql(self.sqlgen.insert('entities', attrs), attrs)
 
     def delete_info(self, session, eid, etype, uri, extid):
@@ -510,6 +524,9 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
         attrs = {'eid': eid}
         session.system_sql(self.sqlgen.delete('entities', attrs), attrs)
         if self.has_deleted_entitites_table:
+            if extid is not None:
+                assert isinstance(extid, str), type(extid)
+                extid = b64encode(extid)
             attrs = {'type': etype, 'eid': eid, 'extid': extid,
                      'source': uri, 'dtime': datetime.now()}
             session.system_sql(self.sqlgen.insert('deleted_entities', attrs), attrs)

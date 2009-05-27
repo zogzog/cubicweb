@@ -149,7 +149,7 @@ class TwoSourcesTC(RepositoryBasedTC):
         self.execute('Any X ORDERBY DUMB_SORT(RF) WHERE X title RF')
 
     def test_in_eid(self):
-        iec1 = self.repo.extid2eid(self.repo.sources_by_uri['extern'], ec1,
+        iec1 = self.repo.extid2eid(self.repo.sources_by_uri['extern'], str(ec1),
                                    'Card', self.session)
         rset = self.execute('Any X WHERE X eid IN (%s, %s)' % (iec1, self.ic1))
         self.assertEquals(sorted(r[0] for r in rset.rows), sorted([iec1, self.ic1]))

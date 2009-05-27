@@ -20,6 +20,8 @@ WARRANTIES OF TITLE, MERCHANTABILITY, AGAINST INFRINGEMENT, AND FITNESS
 FOR A PARTICULAR PURPOSE.
 """
 
+from base64 import b64decode
+
 from logilab.common.textutils import get_csv
 from rql.nodes import Relation, VariableRef, Constant, Function
 
@@ -166,7 +168,8 @@ directory (default to once a day).',
         try:
             cursor = session.system_sql("SELECT eid, extid FROM entities WHERE "
                                         "source='%s'" % self.uri)
-            for eid, extid in cursor.fetchall():
+            for eid, b64extid in cursor.fetchall():
+                extid = b64decode(b64extid)
                 # if no result found, _search automatically delete entity information
                 res = self._search(session, extid, BASE)
                 if res:
