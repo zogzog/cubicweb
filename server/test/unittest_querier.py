@@ -477,7 +477,7 @@ class QuerierTC(BaseQuerierTC):
         self.assertEquals(rset.rows[0][0], self.ueid)
 
     def test_select_complex_sort(self):
-        self.skip('retry me once http://www.sqlite.org/cvstrac/tktview?tn=3773 is fixed')
+        """need sqlite including http://www.sqlite.org/cvstrac/tktview?tn=3773 fix"""
         rset = self.execute('Any X ORDERBY X,D LIMIT 5 WHERE X creation_date D')
         result = rset.rows
         result.sort()
@@ -1219,8 +1219,9 @@ class QuerierTC(BaseQuerierTC):
 
         cause: old variable ref inserted into a fresh rqlst copy
         (in RQLSpliter._complex_select_plan)
+
+        need sqlite including http://www.sqlite.org/cvstrac/tktview?tn=3773 fix
         """
-        self.skip('retry me once http://www.sqlite.org/cvstrac/tktview?tn=3773 is fixed')
         self.execute('Any X ORDERBY D DESC WHERE X creation_date D')
 
     def test_nonregr_extra_joins(self):
