@@ -390,6 +390,8 @@ class EntityFormRenderer(FormRenderer):
 
     def inline_entities_form(self, w, form):
         """create a form to edit entity's inlined relations"""
+        if not hasattr(form, 'inlined_relations'):
+            return
         entity = form.edited_entity
         __ = form.req.__
         for rschema, targettypes, role in form.inlined_relations():
