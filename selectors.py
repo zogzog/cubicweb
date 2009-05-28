@@ -40,7 +40,6 @@ above by::
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 :license: GNU Lesser General Public License, v2.1 - http://www.gnu.org/licenses
 """
-
 __docformat__ = "restructuredtext en"
 
 import logging
