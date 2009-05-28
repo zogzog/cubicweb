@@ -21,8 +21,9 @@ OPTIONS:
   -o / --report-output <filename>
      Write profiler report into <filename> rather than on stdout
 
-Copyright (c) 2003-2009 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+Copyright (c) 2003-2009 LOGILAB S.A. (Paris, FRANCE), license is LGPL v2.
 http://www.logilab.fr/ -- mailto:contact@logilab.fr
+:license: GNU Lesser General Public License, v2.1 - http://www.gnu.org/licenses
 """
 
 __revision__ = "$Id: stresstester.py,v 1.3 2006-03-05 14:35:27 syt Exp $"

@@ -1,4 +1,5 @@
 """unit tests for module cubicweb.server.migractions
+:license: GNU Lesser General Public License, v2.1 - http://www.gnu.org/licenses
 """
 
 from datetime import date

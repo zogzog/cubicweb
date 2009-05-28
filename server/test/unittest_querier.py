@@ -1,5 +1,6 @@
 # -*- coding: iso-8859-1 -*-
 """unit tests for modules cubicweb.server.querier and cubicweb.server.querier_steps
+:license: GNU Lesser General Public License, v2.1 - http://www.gnu.org/licenses
 """
 from datetime import date, datetime
 

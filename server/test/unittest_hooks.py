@@ -2,6 +2,7 @@
 """functional tests for core hooks
 
 note: most schemahooks.py hooks are actually tested in unittest_migrations.py
+:license: GNU Lesser General Public License, v2.1 - http://www.gnu.org/licenses
 """
 
 from logilab.common.testlib import TestCase, unittest_main

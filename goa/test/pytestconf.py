@@ -1,4 +1,5 @@
 """this pytestconf automatically adds the mx's python version in the PYTHONPATH
+:license: GNU Lesser General Public License, v2.1 - http://www.gnu.org/licenses
 """
 import sys
 import os.path as osp

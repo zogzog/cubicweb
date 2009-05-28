@@ -1,4 +1,11 @@
 #########################################################
+"""
+
+:organization: Logilab
+:copyright: 2001-2009 LOGILAB S.A. (Paris, FRANCE), license is LGPL v2.
+:contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
+:license: GNU Lesser General Public License, v2.1 - http://www.gnu.org/licenses
+"""
 # md5crypt.py
 #
 # 0423.2000 by michal wallace http://www.sabren.com/

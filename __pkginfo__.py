@@ -1,6 +1,7 @@
 # pylint: disable-msg=W0622,C0103
 """cubicweb global packaging information for the cubicweb knowledge management
 software
+:license: GNU Lesser General Public License, v2.1 - http://www.gnu.org/licenses
 """
 
 distname = "cubicweb"

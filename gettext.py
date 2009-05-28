@@ -8,6 +8,7 @@ I18N refers to the operation by which a program is made aware of multiple
 languages.  L10N refers to the adaptation of your program, once
 internationalized, to the local language and cultural habits.
 
+:license: GNU Lesser General Public License, v2.1 - http://www.gnu.org/licenses
 """
 
 # This module represents the integration of work, contributions, feedback, and

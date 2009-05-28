@@ -1,4 +1,5 @@
 """unit tests for module cubicweb.server.sqlutils
+:license: GNU Lesser General Public License, v2.1 - http://www.gnu.org/licenses
 """
 
 import sys

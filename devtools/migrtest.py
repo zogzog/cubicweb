@@ -27,11 +27,12 @@ connections coming from the local machine.
 
 The permissions on .pgpass must disallow any access to world or group;
 achieve this by the command chmod 0600 ~/.pgpass. If the permissions
-are less strict than this, the file will be ignored. 
+are less strict than this, the file will be ignored.
 
 :organization: Logilab
-:copyright: 2001-2006 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+:copyright: 2001-2009 LOGILAB S.A. (Paris, FRANCE), license is LGPL v2.
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
+:license: GNU Lesser General Public License, v2.1 - http://www.gnu.org/licenses
 """
 __docformat__ = "restructuredtext en"
 

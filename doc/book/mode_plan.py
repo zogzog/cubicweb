@@ -5,6 +5,7 @@
 >>> ren('A01','A03')
 rename A010-joe.en.txt to A030-joe.en.txt
 accept [y/N]?
+:license: GNU Lesser General Public License, v2.1 - http://www.gnu.org/licenses
 """
 
 def ren(a,b):

@@ -1,4 +1,5 @@
 """unit tests for the hooks manager
+:license: GNU Lesser General Public License, v2.1 - http://www.gnu.org/licenses
 """
 
 from logilab.common.testlib import TestCase, unittest_main

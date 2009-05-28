@@ -1,4 +1,5 @@
 """functional tests for server'security
+:license: GNU Lesser General Public License, v2.1 - http://www.gnu.org/licenses
 """
 import sys
 

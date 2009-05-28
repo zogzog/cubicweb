@@ -1,4 +1,11 @@
 # Author: David Goodger
+"""
+
+:organization: Logilab
+:copyright: 2001-2009 LOGILAB S.A. (Paris, FRANCE), license is LGPL v2.
+:contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
+:license: GNU Lesser General Public License, v2.1 - http://www.gnu.org/licenses
+"""
 # Contact: goodger@users.sourceforge.net
 # Revision: $Revision: 1.2 $
 # Date: $Date: 2005-07-04 16:36:50 $

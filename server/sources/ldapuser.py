@@ -3,7 +3,7 @@
 this source is for now limited to a read-only CWUser source
 
 :organization: Logilab
-:copyright: 2003-2009 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+:copyright: 2003-2009 LOGILAB S.A. (Paris, FRANCE), license is LGPL v2.
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 
 
@@ -18,6 +18,7 @@ THIS SOFTWARE IS PROVIDED "AS IS" AND ANY AND ALL EXPRESS OR IMPLIED
 WARRANTIES ARE DISCLAIMED, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
 WARRANTIES OF TITLE, MERCHANTABILITY, AGAINST INFRINGEMENT, AND FITNESS
 FOR A PARTICULAR PURPOSE.
+:license: GNU Lesser General Public License, v2.1 - http://www.gnu.org/licenses
 """
 
 from base64 import b64decode

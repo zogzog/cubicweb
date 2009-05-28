@@ -1,5 +1,11 @@
 # -*- coding: utf-8 -*-
-"""unit tests for cubicweb.entities.base module"""
+"""unit tests for cubicweb.entities.base module
+
+:organization: Logilab
+:copyright: 2001-2009 LOGILAB S.A. (Paris, FRANCE), license is LGPL v2.
+:contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
+:license: GNU Lesser General Public License, v2.1 - http://www.gnu.org/licenses
+"""
 
 from logilab.common.testlib import unittest_main
 from logilab.common.decorators import clear_cache

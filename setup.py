@@ -1,4 +1,11 @@
 #!/usr/bin/env python
+"""
+
+:organization: Logilab
+:copyright: 2001-2009 LOGILAB S.A. (Paris, FRANCE), license is LGPL v2.
+:contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
+:license: GNU Lesser General Public License, v2.1 - http://www.gnu.org/licenses
+"""
 # pylint: disable-msg=W0142,W0403,W0404,W0613,W0622,W0622,W0704,R0904,C0103,E0611
 #
 # Copyright (c) 2003-2009 LOGILAB S.A. (Paris, FRANCE).
