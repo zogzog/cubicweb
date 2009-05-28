@@ -200,8 +200,6 @@ class StringField(Field):
         super(StringField, self).init_widget(widget)
         if isinstance(self.widget, TextArea):
             self.init_text_area(self.widget)
-        elif isinstance(self.widget, Select):
-            self.widget.attrs.setdefault('size', 1)
 
     def init_text_area(self, widget):
         if self.max_length < 513:
@@ -242,7 +240,6 @@ class RichTextField(StringField):
             else:
                 # else we want a format selector
                 fkwargs['widget'] = Select()
-                fkwargs['widget'].attrs['size'] = 1
                 fcstr = FormatConstraint()
                 fkwargs['choices'] = fcstr.vocabulary(req=req)
                 fkwargs['internationalizable'] = True
