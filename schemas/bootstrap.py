@@ -58,7 +58,7 @@ class CWAttribute(MetaEntityType):
     constrained_by = SubjectRelation('CWConstraint', cardinality='*1', composite='subject')
 
     cardinality = String(maxsize=2, internationalizable=True,
-                         vocabulary=[_('?1'), _('11'), _('??'), _('1?')],
+                         vocabulary=[_('?1'), _('11')],
                          description=_('subject/object cardinality'))
     ordernum = Int(description=('control subject entity\'s relations order'), default=0)
 
