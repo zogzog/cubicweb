@@ -207,7 +207,7 @@ class View(AppRsetObject):
 
     # view utilities ##########################################################
 
-    def wview(self, __vid, rset, __fallback_vid=None, **kwargs):
+    def wview(self, __vid, rset=None, __fallback_vid=None, **kwargs):
         """shortcut to self.view method automatically passing self.w as argument
         """
         self.view(__vid, rset, __fallback_vid, w=self.w, **kwargs)

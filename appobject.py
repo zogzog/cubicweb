@@ -188,14 +188,8 @@ class AppRsetObject(VObject):
         return rql
 
     def view(self, __vid, rset=None, __fallback_vid=None, **kwargs):
-        """shortcut to self.vreg.render method avoiding to pass self.req"""
-        try:
-            view = self.vreg.select_view(__vid, self.req, rset, **kwargs)
-        except NoSelectableObject:
-            if __fallback_vid is None:
-                raise
-            view = self.vreg.select_view(__fallback_vid, self.req, rset, **kwargs)
-        return view.render(**kwargs)
+        """shortcut to self.vreg.view method avoiding to pass self.req"""
+        return self.vreg.view(__vid, self.req, rset, __fallback_vid, **kwargs)
 
     def initialize_varmaker(self):
         varmaker = self.req.get_page_data('rql_varmaker')

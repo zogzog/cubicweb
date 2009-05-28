@@ -249,6 +249,16 @@ class CubicWebRegistry(VRegistry):
                 self.exception('error while trying to list possible %s views for %s',
                                vid, rset)
 
+    def view(self, __vid, req, rset=None, __fallback_vid=None, **kwargs):
+        """shortcut to self.vreg.render method avoiding to pass self.req"""
+        try:
+            view = self.select_view(__vid, req, rset, **kwargs)
+        except NoSelectableObject:
+            if __fallback_vid is None:
+                raise
+            view = self.select_view(__fallback_vid, req, rset, **kwargs)
+        return view.render(**kwargs)
+
     def select_box(self, oid, *args, **kwargs):
         """return the most specific view according to the result set"""
         try:
@@ -270,11 +280,10 @@ class CubicWebRegistry(VRegistry):
         except (NoSelectableObject, ObjectNotFound):
             return
 
-    def select_view(self, __vid, req, rset, **kwargs):
+    def select_view(self, __vid, req, rset=None, **kwargs):
         """return the most specific view according to the result set"""
         views = self.registry_objects('views', __vid)
         return self.select(views, req, rset, **kwargs)
-
 
     # properties handling #####################################################
 
