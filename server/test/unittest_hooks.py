@@ -2,6 +2,7 @@
 """functional tests for core hooks
 
 note: most schemahooks.py hooks are actually tested in unittest_migrations.py
+:license: GNU Lesser General Public License, v2.1 - http://www.gnu.org/licenses
 """
 
 from logilab.common.testlib import TestCase, unittest_main
@@ -453,6 +454,23 @@ class SchemaModificationHooksTC(RepositoryBasedTC):
             self.commit()
             self.failIf(self.schema['Affaire'].has_unique_values('sujet'))
             self.failIf(self.index_exists('Affaire', 'sujet', unique=True))
+
+    def test_required_change_1(self):
+        self.execute('SET DEF cardinality "?1" '
+                     'WHERE DEF relation_type RT, DEF from_entity E,'
+                     'RT name "nom", E name "Personne"')
+        self.commit()
+        # should now be able to add personne without nom
+        self.execute('INSERT Personne X')
+        self.commit()
+
+    def test_required_change_2(self):
+        self.execute('SET DEF cardinality "11" '
+                     'WHERE DEF relation_type RT, DEF from_entity E,'
+                     'RT name "prenom", E name "Personne"')
+        self.commit()
+        # should not be able anymore to add personne without prenom
+        self.assertRaises(ValidationError, self.execute, 'INSERT Personne X: X nom "toto"')
 
 
 class WorkflowHooksTC(RepositoryBasedTC):

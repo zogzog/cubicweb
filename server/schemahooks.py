@@ -6,8 +6,9 @@
 checking for schema consistency is done in hooks.py
 
 :organization: Logilab
-:copyright: 2001-2009 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+:copyright: 2001-2009 LOGILAB S.A. (Paris, FRANCE), license is LGPL v2.
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
+:license: GNU Lesser General Public License, v2.1 - http://www.gnu.org/licenses
 """
 __docformat__ = "restructuredtext en"
 
@@ -187,7 +188,7 @@ def before_del_ertype(session, eid):
     DeleteCWRTypeOp(session, name)
 
 
-class DelErdefOp(SchemaOperation):
+class DelRelationDefOp(SchemaOperation):
     """actually remove the relation definition from the application's schema"""
     def commit_event(self):
         subjtype, rtype, objtype = self.kobj
@@ -236,7 +237,7 @@ def after_del_relation_type(session, rdefeid, rtype, rteid):
     # if this is the last instance, drop associated relation type
     if lastrel and not rteid in pendings:
         execute('DELETE CWRType X WHERE X eid %(x)s', {'x': rteid}, 'x')
-    DelErdefOp(session, (subjschema, rschema, objschema))
+    DelRelationDefOp(session, (subjschema, rschema, objschema))
 
 
 # addition ####################################################################
@@ -561,7 +562,7 @@ class UpdateEntityTypeName(SchemaOperation):
         self.session.repo.schema.rename_entity_type(self.oldname, self.newname)
 
 
-class UpdateRdefOp(SchemaOperation):
+class UpdateRelationDefOp(SchemaOperation):
     """actually update some properties of a relation definition"""
     rschema = values = None # make pylint happy
 
@@ -575,6 +576,19 @@ class UpdateRdefOp(SchemaOperation):
                 sysource.create_index(self.session, table, column)
             else:
                 sysource.drop_index(self.session, table, column)
+        if 'cardinality' in self.values and self.rschema.is_final():
+            if self.session.pool.source('system').dbdriver == 'sqlite':
+                # not supported (and NOT NULL not set by yams in that case, so
+                # no worry)
+                return
+            sqlexec = self.session.system_sql
+            etype, rtype = self.kobj[0], self.rschema.type
+            if self.values['cardinality'][0] == '1':
+                cmd = 'SET'
+            else:
+                cmd = 'DROP'
+            sqlexec('ALTER TABLE %s ALTER COLUMN %s %s NOT NULL' % (
+                table, SQL_PREFIX + etype, SQL_PREFIX + rtype))
 
     def commit_event(self):
         # structure should be clean, not need to remove entity's relations
@@ -595,8 +609,8 @@ def after_update_erdef(session, entity):
             newvalues[prop] = entity[prop]
     if newvalues:
         subjtype = entity.from_entity[0].name
-        UpdateRdefOp(session, (subjtype, desttype), rschema=rschema,
-                     values=newvalues)
+        UpdateRelationDefOp(session, (subjtype, desttype),
+                            rschema=rschema, values=newvalues)
 
 
 class UpdateRtypeOp(SchemaOperation):
