@@ -31,12 +31,14 @@ from cubicweb.web.views.boxes import EditBox
 class ChangeStateForm(form.EntityFieldsForm):
     id = 'changestate'
 
+    form_renderer_id = 'base' # don't want EntityFormRenderer
+    form_buttons = [SubmitButton(stdmsgs.YES),
+                     Button(stdmsgs.NO, cwaction='cancel')]
+
     __method = StringField(name='__method', initial='set_state',
                            widget=HiddenInput)
     state = StringField(eidparam=True, widget=HiddenInput)
     trcomment = RichTextField(label=_('comment:'), eidparam=True)
-    form_buttons = [SubmitButton(stdmsgs.YES),
-                     Button(stdmsgs.NO, cwaction='cancel')]
 
 
 class ChangeStateFormView(FormViewMixIn, view.EntityView):

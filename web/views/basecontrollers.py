@@ -22,9 +22,9 @@ from cubicweb.selectors import yes, match_user_groups
 from cubicweb.view import STRICT_DOCTYPE, STRICT_DOCTYPE_NOEXT
 from cubicweb.common.mail import format_mail
 from cubicweb.web import ExplicitLogin, Redirect, RemoteCallFailed, json_dumps
-from cubicweb.web.formrenderers import FormRenderer
 from cubicweb.web.controller import Controller
 from cubicweb.web.views import vid_from_rset
+from cubicweb.web.views.formrenderers import FormRenderer
 try:
     from cubicweb.web.facet import (FilterRQLBuilder, get_facet,
                                     prepare_facets_rqlst)
@@ -340,7 +340,7 @@ class JSonController(Controller):
                                        entity=entity)
         form.form_build_context()
         vfield = form.field_by_name('value')
-        renderer = FormRenderer()
+        renderer = FormRenderer(self.req)
         return vfield.render(form, renderer, tabindex=tabindex) \
                + renderer.render_help(form, vfield)
 

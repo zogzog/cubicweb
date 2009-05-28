@@ -13,13 +13,15 @@ from logilab.mtconverter import html_escape
 from simplejson import dumps
 
 from cubicweb.common import tags
+from cubicweb.appobject import AppRsetObject
+from cubicweb.selectors import entity_implements, yes
 from cubicweb.web import eid_param
 from cubicweb.web import formwidgets as fwdgs
 from cubicweb.web.widgets import checkbox
 from cubicweb.web.formfields import HiddenInitialValueField
 
 
-class FormRenderer(object):
+class FormRenderer(AppRsetObject):
     """basic renderer displaying fields in a two columns table label | value
 
     +--------------+--------------+
@@ -31,8 +33,13 @@ class FormRenderer(object):
     | buttons |
     +---------+
     """
+    __registry__ = 'formrenderers'
+    id = 'default'
+
     _options = ('display_fields', 'display_label', 'display_help',
-                'display_progress_div', 'table_class', 'button_bar_class')
+                'display_progress_div', 'table_class', 'button_bar_class',
+                # add entity since it may be given to select the renderer
+                'entity')
     display_fields = None # None -> all fields
     display_label = True
     display_help = True
@@ -40,7 +47,8 @@ class FormRenderer(object):
     table_class = u'attributeForm'
     button_bar_class = u'formButtonBar'
 
-    def __init__(self, **kwargs):
+    def __init__(self, req=None, rset=None, row=None, col=None, **kwargs):
+        super(FormRenderer, self).__init__(req, rset, row, col)
         if self._set_options(kwargs):
             raise ValueError('unconsumed arguments %s' % kwargs)
 
@@ -211,6 +219,8 @@ class HTableFormRenderer(FormRenderer):
     | field1 input | field2 input | buttons
     +--------------+--------------+---------+
     """
+    id = 'htable'
+
     display_help = False
     def _render_fields(self, fields, w, form):
         w(u'<table border="0">')
@@ -246,6 +256,7 @@ class HTableFormRenderer(FormRenderer):
 
 class EntityCompositeFormRenderer(FormRenderer):
     """specific renderer for multiple entities edition form (muledit)"""
+    id = 'composite'
 
     def render_fields(self, w, form, values):
         if not form.is_subform:
@@ -287,10 +298,15 @@ class EntityCompositeFormRenderer(FormRenderer):
                     w(u'<th>%s</th>' % form.req._(field.label))
         w(u'</tr>')
 
-
+class BaseFormRenderer(FormRenderer):
+    """use form_renderer_id = 'base' if you don't want adaptation by selection
+    """
+    id = 'base'
 
 class EntityFormRenderer(FormRenderer):
     """specific renderer for entity edition form (edition)"""
+    __select__ = entity_implements('Any') & yes()
+
     _options = FormRenderer._options + ('display_relations_form',)
     display_relations_form = True
 
@@ -442,6 +458,8 @@ class EntityInlinedFormRenderer(EntityFormRenderer):
     """specific renderer for entity inlined edition form
     (inline-[creation|edition])
     """
+    id = 'inline'
+
     def render(self, form, values):
         form.add_media()
         data = []

@@ -6,6 +6,7 @@
 :license: GNU Lesser General Public License, v2.1 - http://www.gnu.org/licenses
 """
 __docformat__ = "restructuredtext en"
+_ = unicode
 
 import operator
 
@@ -15,11 +16,10 @@ from cubicweb.view import EntityView
 from cubicweb.web import stdmsgs
 from cubicweb.web.action import Action
 from cubicweb.web.form import FieldsForm, FormViewMixIn
-from cubicweb.web.formrenderers import FormRenderer
 from cubicweb.web.formfields import StringField
 from cubicweb.web.formwidgets import CheckBox, TextInput, AjaxWidget, ImgButton
+from cubicweb.web.views import formrenderers
 
-_ = unicode
 
 class SendEmailAction(Action):
     id = 'sendemail'
@@ -45,10 +45,12 @@ class MassMailingForm(FieldsForm):
     subject = StringField(label=_('Subject:'))
     mailbody = StringField(widget=AjaxWidget(wdgtype='TemplateTextField',
                                              inputid='mailbody'))
+
     form_buttons = [ImgButton('sendbutton', "javascript: $('#sendmail').submit()",
                               _('send email'), 'SEND_EMAIL_ICON'),
                     ImgButton('cancelbutton', "javascript: history.back()",
                               stdmsgs.BUTTON_CANCEL, 'CANCEL_EMAIL_ICON')]
+    form_renderer_id = id
 
     def form_field_vocabulary(self, field):
         if field.name == 'recipient':
@@ -79,7 +81,8 @@ class MassMailingForm(FieldsForm):
             helpmsg, u'\n'.join(substs))
 
 
-class MassMailingFormRenderer(FormRenderer):
+class MassMailingFormRenderer(formrenderers.FormRenderer):
+    id = 'massmailing'
     button_bar_class = u'toolbar'
 
     def _render_fields(self, fields, w, form):
@@ -125,4 +128,4 @@ class MassMailingFormView(FormViewMixIn, EntityView):
         from_addr = '%s <%s>' % (req.user.dc_title(), req.user.get_email())
         form = self.vreg.select_object('forms', 'massmailing', self.req, self.rset,
                                        action='sendmail', domid='sendmail')
-        self.w(form.form_render(sender=from_addr, renderer=MassMailingFormRenderer()))
+        self.w(form.form_render(sender=from_addr))

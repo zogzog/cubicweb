@@ -18,10 +18,9 @@ from cubicweb.selectors import (one_line_rset, none_rset, implements,
 from cubicweb.view import StartupView
 from cubicweb.web import uicfg, stdmsgs
 from cubicweb.web.form import CompositeForm, EntityFieldsForm, FormViewMixIn
-from cubicweb.web.formrenderers import FormRenderer
 from cubicweb.web.formfields import FIELDS, StringField
 from cubicweb.web.formwidgets import Select, Button, SubmitButton
-from cubicweb.web.views import primary
+from cubicweb.web.views import primary, formrenderers
 
 
 # some string we want to be internationalizable for nicer display of property
@@ -201,9 +200,8 @@ class SystemCWPropertiesForm(FormViewMixIn, StartupView):
         form.form_add_hidden('__redirectpath', path)
         for key in keys:
             self.form_row(form, key, splitlabel)
-        renderer = CWPropertiesFormRenderer()
-        return form.form_render(display_progress_div=False,
-                                renderer=renderer)
+        renderer = CWPropertiesFormRenderer(self.req, display_progress_div=False)
+        return form.form_render(renderer=renderer)
 
     def form_row(self, form, key, splitlabel):
         entity = self.entity_for_key(key)
@@ -359,8 +357,9 @@ uicfg.autoform_field.tag_attribute(('CWProperty', 'pkey'), PropertyKeyField)
 uicfg.autoform_field.tag_attribute(('CWProperty', 'value'), PropertyValueField)
 
 
-class CWPropertiesFormRenderer(FormRenderer):
+class CWPropertiesFormRenderer(formrenderers.FormRenderer):
     """specific renderer for properties"""
+    id = 'cwproperties'
 
     def open_form(self, form, values):
         err = '<div class="formsg"></div>'

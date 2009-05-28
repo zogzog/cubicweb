@@ -17,18 +17,17 @@ from cubicweb.selectors import yes, non_final_entity, match_kwargs, one_line_rse
 from cubicweb.view import NOINDEX, NOFOLLOW
 from cubicweb.common import tags
 from cubicweb.web import INTERNAL_FIELD_VALUE, eid_param, stdmsgs
-from cubicweb.web.httpcache import NoHTTPCacheManager
+from cubicweb.web import formwidgets as fwdgs, httpcache
 from cubicweb.web.controller import NAV_FORM_PARAMETERS
 from cubicweb.web.formfields import (Field, StringField, RelationField,
                                      HiddenInitialValueField)
-from cubicweb.web import formrenderers
-from cubicweb.web import formwidgets as fwdgs
+
 
 class FormViewMixIn(object):
     """abstract form view mix-in"""
     category = 'form'
     controller = 'edit'
-    http_cache_manager = NoHTTPCacheManager
+    http_cache_manager = httpcache.NoHTTPCacheManager
     add_to_breadcrumbs = False
 
     def html_headers(self):
@@ -91,7 +90,7 @@ class FormMixIn(object):
     domid = 'entityForm'
     category = 'form'
     controller = 'edit'
-    http_cache_manager = NoHTTPCacheManager
+    http_cache_manager = httpcache.NoHTTPCacheManager
     add_to_breadcrumbs = False
 
     def html_headers(self):
@@ -218,7 +217,6 @@ class FieldsForm(FormMixIn, AppRsetObject):
     __registry__ = 'forms'
     __select__ = yes()
 
-    renderer_cls = formrenderers.FormRenderer
     is_subform = False
 
     # attributes overrideable through __init__
@@ -236,6 +234,7 @@ class FieldsForm(FormMixIn, AppRsetObject):
     set_error_url = True
     copy_nav_params = False
     form_buttons = None # form buttons (button widgets instances)
+    form_renderer_id = 'default'
 
     def __init__(self, req, rset=None, row=None, col=None, submitmsg=None,
                  **kwargs):
@@ -334,8 +333,15 @@ class FieldsForm(FormMixIn, AppRsetObject):
         """render this form, using the renderer given in args or the default
         FormRenderer()
         """
-        renderer = values.pop('renderer', self.renderer_cls())
+        renderer = values.pop('renderer', None)
+        if renderer is None:
+            renderer = self.form_default_renderer()
         return renderer.render(self, values)
+
+    def form_default_renderer(self):
+        return self.vreg.select_object('formrenderers', self.form_renderer_id,
+                                       self.req, self.rset,
+                                       row=self.row, col=self.col)
 
     def form_build_context(self, rendervalues=None):
         """build form context values (the .context attribute which is a
@@ -515,6 +521,12 @@ class EntityFieldsForm(FieldsForm):
             value = super(EntityFieldsForm, self).form_field_value(field,
                                                                    load_bytes)
         return value
+
+    def form_default_renderer(self):
+        return self.vreg.select_object('formrenderers', self.form_renderer_id,
+                                       self.req, self.rset,
+                                       row=self.row, col=self.col,
+                                       entity=self.edited_entity)
 
     def form_build_context(self, values=None):
         """overriden to add edit[s|o] hidden fields and to ensure schema fields
@@ -696,6 +708,7 @@ class EntityFieldsForm(FieldsForm):
 
 class CompositeForm(FieldsForm):
     """form composed for sub-forms"""
+    form_renderer_id = 'composite'
 
     def __init__(self, *args, **kwargs):
         super(CompositeForm, self).__init__(*args, **kwargs)

@@ -24,9 +24,7 @@ from cubicweb.web import INTERNAL_FIELD_VALUE, stdmsgs, eid_param
 from cubicweb.web.form import CompositeForm, EntityFieldsForm, FormViewMixIn
 from cubicweb.web.formfields import RelationField
 from cubicweb.web.formwidgets import Button, SubmitButton, ResetButton, Select
-from cubicweb.web.formrenderers import (FormRenderer, EntityFormRenderer,
-                                        EntityCompositeFormRenderer,
-                                        EntityInlinedFormRenderer)
+from cubicweb.web.views.formrenderers import FormRenderer
 
 
 def relation_id(eid, rtype, role, reid):
@@ -114,11 +112,13 @@ class ClickAndEditFormView(FormViewMixIn, EntityView):
             self.w(value)
             return
         if rschema.is_final():
-            form = self._build_attribute_form(entity, value, rtype, role, reload, row, col, default)
+            form = self._build_attribute_form(entity, value, rtype, role,
+                                              reload, row, col, default)
         else:
-            form = self._build_relation_form(entity, value, rtype, role, row, col, vid, default)
+            form = self._build_relation_form(entity, value, rtype, role,
+                                             row, col, vid, default)
         form.form_add_hidden(u'__maineid', entity.eid)
-        renderer = FormRenderer(display_label=False, display_help=False,
+        renderer = FormRenderer(self.req, display_label=False, display_help=False,
                                 display_fields=[(rtype, role)],
                                 table_class='', button_bar_class='buttonbar',
                                 display_progress_div=False)
@@ -129,7 +129,7 @@ class ClickAndEditFormView(FormViewMixIn, EntityView):
         divid = 'd%s' % make_uid('%s-%s' % (rtype, entity.eid))
         event_data = {'divid' : divid, 'eid' : entity.eid, 'rtype' : rtype, 'vid' : vid,
                       'default' : default, 'role' : role}
-        form = EntityFieldsForm(self.req, None, entity=entity, action='#',
+        form = EntityFieldsForm(self.req, entity=entity, action='#',
                                 domid='%s-form' % divid,
                                 cssstyle='display: none',
                                 onsubmit=("return inlineValidateRelationForm('%(divid)s-form', '%(rtype)s', "
@@ -173,7 +173,6 @@ class EditionFormView(FormViewMixIn, EntityView):
     __select__ = one_line_rset() & non_final_entity() & yes()
 
     title = _('edition')
-    renderer = EntityFormRenderer()
 
     def cell_call(self, row, col, **kwargs):
         entity = self.complete_entity(row, col)
@@ -186,7 +185,7 @@ class EditionFormView(FormViewMixIn, EntityView):
                                        row=entity.row, col=entity.col, entity=entity,
                                        submitmsg=self.submited_message())
         self.init_form(form, entity)
-        self.w(form.form_render(renderer=self.renderer, formvid=u'edition'))
+        self.w(form.form_render(formvid=u'edition'))
 
     def init_form(self, form, entity):
         """customize your form before rendering here"""
@@ -320,7 +319,7 @@ class TableEditFormView(FormViewMixIn, EntityView):
         """
         #self.form_title(entity)
         form = self.vreg.select_object('forms', self.id, self.req, self.rset)
-        self.w(form.form_render(renderer=EntityCompositeFormRenderer()))
+        self.w(form.form_render())
 
 
 class InlineEntityEditionFormView(FormViewMixIn, EntityView):
@@ -351,14 +350,15 @@ class InlineEntityEditionFormView(FormViewMixIn, EntityView):
     def render_form(self, entity, peid, rtype, role, **kwargs):
         """fetch and render the form"""
         form = self.vreg.select_object('forms', 'edition', self.req, None,
-                                       entity=entity, set_error_url=False,
+                                       entity=entity, form_renderer_id='inline',
+                                       set_error_url=False,
                                        copy_nav_params=False)
         self.add_hiddens(form, entity, peid, rtype, role)
         divid = '%s-%s-%s' % (peid, rtype, entity.eid)
         title = self.schema.rschema(rtype).display_name(self.req, role)
         removejs = self.removejs % (peid, rtype,entity.eid)
-        self.w(form.form_render(renderer=EntityInlinedFormRenderer(), divid=divid,
-                                title=title, removejs=removejs,**kwargs))
+        self.w(form.form_render(divid=divid, title=title, removejs=removejs,
+                                **kwargs))
 
     def add_hiddens(self, form, entity, peid, rtype, role):
         # to ease overriding (see cubes.vcsfile.views.forms for instance)

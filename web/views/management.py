@@ -17,7 +17,7 @@ from cubicweb.common.uilib import html_traceback, rest_traceback
 from cubicweb.web import formwidgets
 from cubicweb.web.form import FieldsForm, EntityFieldsForm
 from cubicweb.web.formfields import guess_field
-from cubicweb.web.formrenderers import HTableFormRenderer
+from cubicweb.web.views.formrenderers import HTableFormRenderer
 
 SUBMIT_MSGID = _('Submit bug report')
 MAIL_SUBMIT_MSGID = _('Submit bug report by mail')
@@ -183,7 +183,8 @@ class SecurityManagementView(EntityView, SecurityViewMixIn):
         form.append_field(field)
         field = guess_field(cwpermschema, self.schema.rschema('require_group'))
         form.append_field(field)
-        self.w(form.form_render(renderer=HTableFormRenderer(display_progress_div=False)))
+        renderer = HTableFormRenderer(self.req, display_progress_div=False)
+        self.w(form.form_render(renderer=renderer))
 
 
 class ErrorView(AnyRsetView):

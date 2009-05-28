@@ -9,12 +9,12 @@ from logilab.common.testlib import unittest_main, mock_object
 from cubicweb import Binary
 from cubicweb.devtools.testlib import WebTest
 from cubicweb.web.form import EntityFieldsForm, FieldsForm
-from cubicweb.web.formrenderers import FormRenderer
 from cubicweb.web.formfields import (IntField, StringField, RichTextField,
                                      DateTimeField, DateTimePicker,
                                      FileField, EditableFileField)
 from cubicweb.web.formwidgets import PasswordInput
 from cubicweb.web.views.workflow import ChangeStateForm
+from cubicweb.web.views.formrenderers import FormRenderer
 
 
 class FieldsFormTC(WebTest):
@@ -33,7 +33,6 @@ class EntityFieldsFormTC(WebTest):
         super(EntityFieldsFormTC, self).setUp()
         self.req = self.request()
         self.entity = self.user(self.req)
-        self.renderer = FormRenderer()
 
     def test_form_field_vocabulary_unrelated(self):
         b = self.add_entity('BlogEntry', title=u'di mascii code', content=u'a best-seller')
@@ -123,7 +122,8 @@ class EntityFieldsFormTC(WebTest):
 
     def _render_entity_field(self, name, form):
         form.form_build_context({})
-        return form.field_by_name(name).render(form, self.renderer)
+        renderer = FormRenderer(self.req)
+        return form.field_by_name(name).render(form, renderer)
 
     def _test_richtextfield(self, expected):
         class RTFForm(EntityFieldsForm):
