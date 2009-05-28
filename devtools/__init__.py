@@ -329,7 +329,7 @@ def cleanup_sqlite(dbfile, removecube=False):
         pass
     if removecube:
         try:
-            os.remove('%s-cube' % dbfile)
+            os.remove('%s-template' % dbfile)
         except OSError:
             pass
 
@@ -339,11 +339,11 @@ def init_test_database_sqlite(config, source, vreg=None):
     # remove database file if it exists (actually I know driver == 'sqlite' :)
     dbfile = source['system']['db-name']
     cleanup_sqlite(dbfile)
-    cube = '%s-cube' % dbfile
-    if exists(cube):
-        shutil.copy(cube, dbfile)
+    template = '%s-template' % dbfile
+    if exists(template):
+        shutil.copy(template, dbfile)
     else:
         # initialize the database
         from cubicweb.server import init_repository
         init_repository(config, interactive=False, vreg=vreg)
-        shutil.copy(dbfile, cube)
+        shutil.copy(dbfile, template)
