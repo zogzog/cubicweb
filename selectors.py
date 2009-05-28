@@ -245,6 +245,7 @@ class EntitySelector(EClassSelector):
         if kwargs.get('entity'):
             score = self.score_entity(kwargs['entity'])
         elif row is None:
+            col = col or 0
             for row, rowvalue in enumerate(rset.rows):
                 if rowvalue[col] is None: # outer join
                     continue
@@ -255,6 +256,7 @@ class EntitySelector(EClassSelector):
                     return escore
                 score += escore
         else:
+            col = col or 0
             etype = rset.description[row][col]
             if etype is not None: # outer join
                 score = self.score(req, rset, row, col)
