@@ -13,11 +13,11 @@ from logilab.common.textutils import unormalize
 from logilab.mtconverter import html_escape
 
 from cubicweb.view import StartupView
-from cubicweb.selectors import match_user_groups
+from cubicweb.selectors import match_user_groups, implements
 from cubicweb.common.uilib import ureport_as_html
 from cubicweb.web import ajax_replace_url, uicfg, httpcache
+from cubicweb.web.views import tabs
 from cubicweb.web.views.management import SecurityViewMixIn
-
 
 class ManageView(StartupView):
     id = 'manage'
@@ -164,42 +164,44 @@ class IndexView(ManageView):
     def display_folders(self):
         return 'Folder' in self.schema and self.req.execute('Any COUNT(X) WHERE X is Folder')[0][0]
 
-
-
-class SchemaView(StartupView):
+class SchemaView(tabs.TabsMixin, StartupView):
     id = 'schema'
     title = _('application schema')
+    tabs = [_('schema-text'), _('schema-image')]
+    default_tab = 'schema-image'
 
     def call(self):
         """display schema information"""
         self.req.add_js('cubicweb.ajax.js')
         self.req.add_css(('cubicweb.schema.css','cubicweb.acl.css'))
-        withmeta = int(self.req.form.get('withmeta', 0))
-        section = self.req.form.get('sec', '')
+        self.w(u'<h1>%s</h1>' % _('Schema of the data model'))
+        self.render_tabs(self.tabs, self.default_tab)
+
+class SchemaTabImageView(StartupView):
+    id = 'schema-image'
+
+    def call(self):
+        self.w(_(u'<div>This schema of the data model <em>excludes</em> the '
+                 u'meta-data, but you can also display a <a href="%s">complete '
+                 u'schema with meta-data</a>.</div>')
+               % html_escape(self.build_url('view', vid='schemagraph', withmeta=1)))
         self.w(u'<img src="%s" alt="%s"/>\n' % (
-            html_escape(self.req.build_url('view', vid='schemagraph', withmeta=withmeta)),
+            html_escape(self.req.build_url('view', vid='schemagraph', withmeta=0)),
             self.req._("graphical representation of the application'schema")))
-        if withmeta:
-            self.w(u'<div><a href="%s">%s</a></div>' % (
-                html_escape(self.build_url('schema', withmeta=0, sec=section)),
-                self.req._('hide meta-data')))
-        else:
-            self.w(u'<div><a href="%s">%s</a></div>' % (
-                html_escape(self.build_url('schema', withmeta=1, sec=section)),
-                self.req._('show meta-data')))
-        self.w(u'<a href="%s">%s</a><br/>' %
-               (html_escape(ajax_replace_url('detailed_schema', '', 'schematext',
-                                             skipmeta=int(not withmeta))),
-                self.req._('detailed schema view')))
-        if self.req.user.matching_groups('managers'):
-            self.w(u'<a href="%s">%s</a>' %
-                   (html_escape(ajax_replace_url('detailed_schema', '', 'schema_security',
-                                                 skipmeta=int(not withmeta))),
-                self.req._('security')))
-        self.w(u'<div id="detailed_schema">')
-        if section:
-            self.wview(section, None)
-        self.w(u'</div>')
+
+class SchemaTabTextView(StartupView):
+    id = 'schema-text'
+
+    def call(self):
+        self.w(u'<p>%s</p>' % _('This is the list of types defined in the data '
+                                'model ofin this application.'))
+        self.w(u'<p>%s</p>' % _('<em>meta</em> is True for types that are defined by the '
+                                'framework itself (e.g. User and Group). '
+                                '<em>final</em> is True for types that can not be the '
+                                'subject of a relation (e.g. Int and String).'))
+        rset = self.req.execute('Any X,M,F ORDERBY N WHERE X is CWEType, X name N, '
+                                'X meta M, X final F')
+        self.wview('editable-table', rset, displayfilter=True)
 
 
 class ManagerSchemaPermissionsView(StartupView, SecurityViewMixIn):
@@ -314,4 +316,5 @@ class SchemaUreportsView(StartupView):
                                                'owned_by', 'created_by'),
                                      skipmeta=skipmeta)
         self.w(ureport_as_html(layout))
+
 

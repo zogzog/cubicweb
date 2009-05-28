@@ -20,7 +20,7 @@ class CWEType(AnyEntity):
     fetch_attrs, fetch_order = fetch_config(['name'])
 
     def dc_title(self):
-        return self.req._(self.name)
+        return u'%s (%s)' % (self.name, self.req._(self.name))
 
     def dc_long_title(self):
         stereotypes = []
@@ -43,7 +43,7 @@ class CWRType(AnyEntity):
     fetch_attrs, fetch_order = fetch_config(['name'])
 
     def dc_title(self):
-        return self.req._(self.name)
+        return u'%s (%s)' % (self.name, self.req._(self.name))
 
     def dc_long_title(self):
         stereotypes = []
