@@ -14,7 +14,7 @@ from cubicweb import NoSelectableObject, role
 from cubicweb.selectors import partial_has_related_entities
 from cubicweb.view import EntityView
 from cubicweb.common import tags, uilib
-
+from cubicweb.utils import make_uid
 
 class LazyViewMixin(object):
     """provides two convenience methods for the tab machinery
@@ -92,11 +92,11 @@ class TabsMixin(LazyViewMixin):
                 continue
         return selected_tabs
 
-    def render_tabs(self, tabs, default, entity):
+    def render_tabs(self, tabs, default, entity=None):
         # tabbed views do no support concatenation
         # hence we delegate to the default tab if there is more than on entity
         # in the result set
-        if len(self.rset) > 1:
+        if entity and len(self.rset) > 1:
             entity.view(default, w=self.w)
             return
         # XXX (syt) fix below add been introduced at some point to fix something
@@ -118,7 +118,11 @@ class TabsMixin(LazyViewMixin):
         active_tab = self.active_tab(tabs, default)
         # build the html structure
         w = self.w
-        w(u'<div id="entity-tabs-%s">' % entity.eid)
+        if entity:
+            w(u'<div id="entity-tabs-%s">' % entity.eid)
+        else:
+            uid = make_uid('tab')
+            w(u'<div id="entity-tabs-%s">' % uid)
         w(u'<ul>')
         for tab in tabs:
             w(u'<li>')
@@ -132,7 +136,10 @@ class TabsMixin(LazyViewMixin):
         w(u'</div>')
         for tab in tabs:
             w(u'<div id="as-%s">' % tab)
-            self.lazyview(tab, eid=entity.eid)
+            if entity:
+                self.lazyview(tab, eid=entity.eid)
+            else:
+                self.lazyview(tab, static=True)
             w(u'</div>')
         # call the set_tab() JS function *after* each tab is generated
         # because the callback binding needs to be done before
@@ -141,7 +148,7 @@ class TabsMixin(LazyViewMixin):
    set_tab('%(vid)s', '%(cookiename)s');
  """ % {'tabindex'   : tabs.index(active_tab),
         'vid'        : active_tab,
-        'eeid'       : entity.eid,
+        'eeid'       : (entity and entity.eid or uid),
         'cookiename' : self.cookie_name})
 
 
