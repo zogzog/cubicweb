@@ -33,7 +33,7 @@ class AutomaticEntityForm(EntityFieldsForm):
     cwtarget = 'eformframe'
     cssclass = 'entityForm'
     copy_nav_params = True
-    form_buttons = [SubmitButton(stdmsgs.BUTTON_OK),
+    form_buttons = [SubmitButton(),
                     Button(stdmsgs.BUTTON_APPLY, cwaction='apply'),
                     Button(stdmsgs.BUTTON_CANCEL, cwaction='cancel')]
     attrcategories = ('primary', 'secondary')
