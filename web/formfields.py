@@ -101,6 +101,8 @@ class Field(object):
         return self.__unicode__().encode('utf-8')
 
     def init_widget(self, widget):
+        if widget is None and self.choices:
+            widget = Select()
         if widget is not None:
             self.widget = widget
         if isinstance(self.widget, type):
@@ -192,9 +194,9 @@ class StringField(Field):
     def init_widget(self, widget):
         if widget is None:
             if self.choices:
-                self.widget = Select()
+                widget = Select()
             elif self.max_length and self.max_length < 257:
-                self.widget = TextInput()
+                widget = TextInput()
         super(StringField, self).init_widget(widget)
         if isinstance(self.widget, TextArea):
             self.init_text_area(self.widget)
