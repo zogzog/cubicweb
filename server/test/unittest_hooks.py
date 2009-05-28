@@ -455,6 +455,23 @@ class SchemaModificationHooksTC(RepositoryBasedTC):
             self.failIf(self.schema['Affaire'].has_unique_values('sujet'))
             self.failIf(self.index_exists('Affaire', 'sujet', unique=True))
 
+    def test_required_change_1(self):
+        self.execute('SET DEF cardinality "?1" '
+                     'WHERE DEF relation_type RT, DEF from_entity E,'
+                     'RT name "nom", E name "Personne"')
+        self.commit()
+        # should now be able to add personne without nom
+        self.execute('INSERT Personne X')
+        self.commit()
+
+    def test_required_change_2(self):
+        self.execute('SET DEF cardinality "11" '
+                     'WHERE DEF relation_type RT, DEF from_entity E,'
+                     'RT name "prenom", E name "Personne"')
+        self.commit()
+        # should not be able anymore to add personne without prenom
+        self.assertRaises(ValidationError, self.execute, 'INSERT Personne X: X nom "toto"')
+
 
 class WorkflowHooksTC(RepositoryBasedTC):
 

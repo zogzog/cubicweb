@@ -84,10 +84,8 @@ function checkValues(form, success){
     jQuery(form).find('[type=text]').each(function () {
 	    unfreezeButtons = _checkValue(jQuery(this), unfreezeButtons);
 	});
-    jQuery(form).find('input[type=radio]').each(function () {
-	    if (jQuery(this).attr('checked')){
-		unfreezeButtons = _checkValue(jQuery(this), unfreezeButtons);
-	    }
+    jQuery(form).find('input[type=radio]:checked').each(function () {
+            unfreezeButtons = _checkValue(jQuery(this), unfreezeButtons);
      });
 
     if (unfreezeButtons){
@@ -103,7 +101,7 @@ function checkValues(form, success){
 
 function _checkValue(input, unfreezeButtons){
      var currentValueInput = jQuery("input[name=current-" + input.attr('name') + "]");
-     if (currentValueInput.attr('value') != input.attr('value')){
+     if (currentValueInput.val() != input.val()){
 	 input.addClass('changed');
 	 unfreezeButtons = true;
      }else{
@@ -121,12 +119,15 @@ function setCurrentValues(form){
 	    var name = currentValueInput.attr('name').split('-')[1];
 	    jQuery(form).find("[name=" + name + "]").each(function (){
 		    var input = jQuery(this);
-		    if(input.attr('type')=='radio'){
-			if(input.attr('checked')){
-			    currentValueInput.attr('value', input.attr('value'));
+		    if(input.attr('type') == 'radio'){
+			// NOTE: there seems to be a bug with jQuery(input).attr('checked')
+			//       in our case, we can't rely on its value, we use
+			//       the DOM API instead.
+			if(input[0].checked){
+			    currentValueInput.val(input.val());
 			}
 		    }else{
-			currentValueInput.attr('value', input.attr('value'));
+			currentValueInput.val(input.val());
 		    }
 		});
     });

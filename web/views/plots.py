@@ -139,7 +139,7 @@ class PlotView(baseviews.AnyRsetView):
         nbcols = len(self.rset.rows[0])
         for col in xrange(1, nbcols):
             data = [row[col] for row in self.rset]
-            plots.append(filterout_nulls(abscissa, plot))
+            plots.append(filterout_nulls(abscissa, data))
         plotwidget = FlotPlotWidget(varnames, plots, timemode=self.timemode)
         plotwidget.render(self.req, width, height, w=self.w)
 
