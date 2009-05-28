@@ -108,35 +108,6 @@ class Controller(AppObject):
             raise RequestError('missing required parameter(s): %s'
                                % ','.join(missing))
 
-    def parse_datetime(self, value, etype='Datetime'):
-        """get a datetime or time from a string (according to etype)
-        Datetime formatted as Date are accepted
-        """
-        assert etype in ('Datetime', 'Date', 'Time'), etype
-        # XXX raise proper validation error
-        if etype == 'Datetime':
-            format = self.req.property_value('ui.datetime-format')
-            try:
-                return todatetime(strptime(value, format))
-            except:
-                pass
-        elif etype == 'Time':
-            format = self.req.property_value('ui.time-format')
-            try:
-                # (adim) I can't find a way to parse a Time with a custom format
-                date = strptime(value, format) # this returns a DateTime
-                return datetime.time(date.hour, date.minute, date.second)
-            except:
-                raise ValueError('can\'t parse %r (expected %s)' % (value, format))
-        try:
-            format = self.req.property_value('ui.date-format')
-            dt = strptime(value, format)
-            if etype == 'Datetime':
-                return todatetime(dt)
-            return todate(dt)
-        except:
-            raise ValueError('can\'t parse %r (expected %s)' % (value, format))
-
 
     def notify_edited(self, entity):
         """called by edit_entity() to notify which entity is edited"""
