@@ -119,7 +119,7 @@ def generate_sources_file(sourcesfile, sourcescfg, keys=None):
                     _sconfig.set_option(attr, val)
             sconfig = _sconfig
         optsbysect = list(sconfig.options_by_section())
-        assert len(optsbysect) == 1
+        assert len(optsbysect) == 1, 'all options for a source should be in the same group'
         ini_format_section(stream, uri, optsbysect[0][1])
         if hasattr(sconfig, 'adapter'):
             print >> stream
