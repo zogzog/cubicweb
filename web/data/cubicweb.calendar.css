@@ -1,7 +1,7 @@
 /* styles for the calendar views
  *
  *  :organization: Logilab
- *  :copyright: 2003-2008 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+ *  :copyright: 2003-2009 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
  *  :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
  */
 
@@ -74,7 +74,7 @@ table.omcalendar tr td:hover div.calCellTitle div.cmd a {
 }
 
 table.omcalendar tr td {
-  padding: 3px 0.5em 1em;                         
+  padding: 3px 0.5em 1em;
 }
 
 table.omcalendar tr td div.task {
@@ -82,11 +82,11 @@ table.omcalendar tr td div.task {
   height: 2.5ex;
 }
 
-table.omcalendar tr td div.task div.tooltip { 
-  display: none; 
+table.omcalendar tr td div.task div.tooltip {
+  display: none;
 }
 
-table.omcalendar tr td:hover div.task:hover div.tooltip { 
+table.omcalendar tr td:hover div.task:hover div.tooltip {
   font-style: normal;
   display: block;
   position: absolute;
@@ -101,6 +101,7 @@ table.omcalendar tr td:hover div.task:hover div.tooltip {
 
 
 table.omcalendar tr td.outOfRange { background-color: #ddd; }
+table.omcalendar tr td.today { border: 2px solid #2952A3; }
 
 
 table.omcalendar div.col0       { background-color: #FFB117; }
@@ -138,7 +139,7 @@ table#week {
   min-height: 600px;
   width: 100%;
   table-layout: auto;
-  
+
 }
 
 
@@ -209,10 +210,10 @@ table#week tr th.transparent {
 /******************************************************************************/
 
 table.calendarPageHeader,
-table.smallCalendars, 
+table.smallCalendars,
  table.bigCalendars {
  width: 90%;
- border-collapse:separate; 
+ border-collapse:separate;
  margin: 0px 1em;
 }
 
@@ -232,20 +233,20 @@ td.calendar table {
  background: #cfceb7;
 }
 
-.calendar th.month a{ 
+.calendar th.month a{
  font: bold 110%  Georgia, Verdana;
  color : #fff;
  }
 
-table.weekCalendar{ 
+table.weekCalendar{
 }
 
-table.weekCalendar th{ 
+table.weekCalendar th{
  text-align : left;
  padding: 0.6em 0.4em;
  }
 
-table.weekCalendar td{ 
+table.weekCalendar td{
  padding: 0.2em 0.4em }
 
 .semesterCalendar .amCell, .semesterCalendar .amCellEmpty{
@@ -254,7 +255,7 @@ table.weekCalendar td{
   border-right:thin dotted;
 }
 
-table.semesterCalendar th{ 
+table.semesterCalendar th{
  padding: 0.6em 0.4em;
 }
 
@@ -263,25 +264,25 @@ table.semesterCalendar th{
   border-left:1px dotted #ccc;
 }
 
-.weeknum{ 
+.weeknum{
  width:10%
  }
 
-.cell, .cellEmpty{ 
+.cell, .cellEmpty{
  border:1px solid #ccc;
  padding: 3px 0.5em 2em;
  width:10%;
 }
 
-.cellDay{ 
+.cellDay{
  border:1px solid #ccc;
  border-bottom : none;
- padding: 3px 0.5em 3px;  
+ padding: 3px 0.5em 3px;
  width:10%;}
 
 .amCell, .pmCell,
 .amCellEmpty, .pmCellEmpty{
- padding: 3px 0.5em 3px;  
+ padding: 3px 0.5em 3px;
  border:1px solid #ccc;
  border-top:none;
  width:10%;
@@ -309,22 +310,22 @@ table.semesterCalendar th{
 
 .cell span.cellTitle,
 .cellEmpty span.cellTitle {
- background-color:transparent; 
+ background-color:transparent;
 }
 
-div.cellContent{ 
+div.cellContent{
  padding: 0.1em;
  font-size:90%;
  }
 
-.weeknum, th.weekday{ 
+.weeknum, th.weekday{
  padding:0.2em 0.4em;
  color : #666;
  font-size:90%;}
 
-div.event{ 
+div.event{
  padding : 0.1em 0px;
- margin:0.2em 0px; 
+ margin:0.2em 0px;
  background: #eee;
 }
 
