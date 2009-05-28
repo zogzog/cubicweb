@@ -153,8 +153,8 @@ class EntityFieldsFormTC(WebTest):
 
     def test_filefield(self):
         class FFForm(EntityFieldsForm):
-            data = FileField(format_field=StringField(name='data_format'),
-                             encoding_field=StringField(name='data_encoding'))
+            data = FileField(format_field=StringField(name='data_format', max_length=50),
+                             encoding_field=StringField(name='data_encoding', max_length=20))
         file = self.add_entity('File', name=u"pouet.txt", data_encoding=u'UTF-8',
                                data=Binary('new widgets system'))
         form = FFForm(self.req, redirect_path='perdu.com', entity=file)
@@ -162,8 +162,8 @@ class EntityFieldsFormTC(WebTest):
                               '''<input id="data:%(eid)s" name="data:%(eid)s" tabindex="0" type="file" value=""/>
 <a href="javascript: toggleVisibility(&#39;data:%(eid)s-advanced&#39;)" title="show advanced fields"><img src="http://testing.fr/cubicweb/data/puce_down.png" alt="show advanced fields"/></a>
 <div id="data:%(eid)s-advanced" class="hidden">
-<label for="data_format:%(eid)s">data_format</label><input id="data_format:%(eid)s" name="data_format:%(eid)s" tabindex="1" type="text" value="text/plain"/><br/><br/>
-<label for="data_encoding:%(eid)s">data_encoding</label><input id="data_encoding:%(eid)s" name="data_encoding:%(eid)s" tabindex="2" type="text" value="UTF-8"/><br/><br/>
+<label for="data_format:%(eid)s">data_format</label><input id="data_format:%(eid)s" name="data_format:%(eid)s" tabindex="1" type="text" value="text/plain"/><br/>
+<label for="data_encoding:%(eid)s">data_encoding</label><input id="data_encoding:%(eid)s" name="data_encoding:%(eid)s" tabindex="2" type="text" value="UTF-8"/><br/>
 </div>
 <br/>
 <input name="data:%(eid)s__detach" type="checkbox"/>
@@ -173,8 +173,8 @@ detach attached file
 
     def test_editablefilefield(self):
         class EFFForm(EntityFieldsForm):
-            data = EditableFileField(format_field=StringField(name='data_format'),
-                                     encoding_field=StringField(name='data_encoding'))
+            data = EditableFileField(format_field=StringField(name='data_format', max_length=50),
+                                     encoding_field=StringField(name='data_encoding', max_length=20))
             def form_field_encoding(self, field):
                 return 'ascii'
             def form_field_format(self, field):
@@ -186,8 +186,8 @@ detach attached file
                               '''<input id="data:%(eid)s" name="data:%(eid)s" tabindex="0" type="file" value=""/>
 <a href="javascript: toggleVisibility(&#39;data:%(eid)s-advanced&#39;)" title="show advanced fields"><img src="http://testing.fr/cubicweb/data/puce_down.png" alt="show advanced fields"/></a>
 <div id="data:%(eid)s-advanced" class="hidden">
-<label for="data_format:%(eid)s">data_format</label><input id="data_format:%(eid)s" name="data_format:%(eid)s" tabindex="1" type="text" value="text/plain"/><br/><br/>
-<label for="data_encoding:%(eid)s">data_encoding</label><input id="data_encoding:%(eid)s" name="data_encoding:%(eid)s" tabindex="2" type="text" value="UTF-8"/><br/><br/>
+<label for="data_format:%(eid)s">data_format</label><input id="data_format:%(eid)s" name="data_format:%(eid)s" tabindex="1" type="text" value="text/plain"/><br/>
+<label for="data_encoding:%(eid)s">data_encoding</label><input id="data_encoding:%(eid)s" name="data_encoding:%(eid)s" tabindex="2" type="text" value="UTF-8"/><br/>
 </div>
 <br/>
 <input name="data:%(eid)s__detach" type="checkbox"/>
