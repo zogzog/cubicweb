@@ -11,7 +11,6 @@ __docformat__ = "restructuredtext en"
 import datetime
 
 from cubicweb import typed_eid
-from cubicweb.utils import strptime, todate, todatetime
 from cubicweb.selectors import yes, require_group_compat
 from cubicweb.appobject import AppObject
 from cubicweb.web import LOGGER, Redirect, RequestError

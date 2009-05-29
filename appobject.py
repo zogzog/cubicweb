@@ -18,7 +18,7 @@ from rql.stmts import Union, Select
 from cubicweb import Unauthorized, NoSelectableObject
 from cubicweb.vregistry import VObject, AndSelector
 from cubicweb.selectors import yes
-from cubicweb.utils import UStringIO, ustrftime
+from cubicweb.utils import UStringIO, ustrftime, strptime, todate, todatetime
 
 ONESECOND = timedelta(0, 1, 0)
 
