@@ -7,7 +7,7 @@
 """
 __docformat__ = "restructuredtext en"
 
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, time
 
 from logilab.common.decorators import classproperty
 from logilab.common.deprecation import obsolete
@@ -305,15 +305,15 @@ class AppRsetObject(VObject):
             format = self.req.property_value('ui.datetime-format')
             try:
                 return todatetime(strptime(value, format))
-            except:
+            except ValueError:
                 pass
         elif etype == 'Time':
             format = self.req.property_value('ui.time-format')
             try:
                 # (adim) I can't find a way to parse a Time with a custom format
                 date = strptime(value, format) # this returns a DateTime
-                return datetime.time(date.hour, date.minute, date.second)
-            except:
+                return time(date.hour, date.minute, date.second)
+            except ValueError:
                 raise ValueError('can\'t parse %r (expected %s)' % (value, format))
         try:
             format = self.req.property_value('ui.date-format')
@@ -321,7 +321,7 @@ class AppRsetObject(VObject):
             if etype == 'Datetime':
                 return todatetime(dt)
             return todate(dt)
-        except:
+        except ValueError:
             raise ValueError('can\'t parse %r (expected %s)' % (value, format))
 
     # security related methods ################################################
