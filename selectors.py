@@ -275,9 +275,13 @@ class EntitySelector(EClassSelector):
 # very basic selectors ########################################################
 
 class yes(Selector):
-    """return arbitrary score"""
-    def __init__(self, score=1):
+    """return arbitrary score
+
+    default score of 0.5 so any other selector take precedence
+    """
+    def __init__(self, score=0.5):
         self.score = score
+
     def __call__(self, *args, **kwargs):
         return self.score
 
