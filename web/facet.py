@@ -545,6 +545,34 @@ class DateRangeFacet(RangeFacet):
     def formatvalue(self, value):
         return '"%s"' % date.fromtimestamp(float(value) / 1000).strftime('%Y/%m/%d')
 
+class HasRelationFacet(AbstractFacet):
+    rtype = None # override me in subclass
+    role = 'subject' # role of filtered entity in the relation
+
+    @property
+    def title(self):
+        return display_name(self.req, self.rtype, self.role)
+
+    def support_and(self):
+        return False
+
+    def get_widget(self):
+	return CheckBoxFacetWidget(self.req, self,
+                                   '%s:%s' % (self.rtype, self),
+                                   self.req.form.get(self.id))
+
+    def add_rql_restrictions(self):
+        """add restriction for this facet into the rql syntax tree"""
+        self.rqlst.set_distinct(True) # XXX
+        value = self.req.form.get(self.id)
+        if not value: # no value sent for this facet
+            return
+        var = self.rqlst.make_variable()
+        if self.role == 'subject':
+            self.rqlst.add_relation(self.filtered_variable, self.rtype, var)
+        else:
+            self.rqlst.add_relation(var, self.rtype, self.filtered_variable)
+
 ## html widets ################################################################
 
 class FacetVocabularyWidget(HTMLWidget):
@@ -705,6 +733,36 @@ class FacetItem(HTMLWidget):
         self.w(u'<a href="javascript: {}">%s</a>' % html_escape(self.label))
         self.w(u'</div>')
 
+class CheckBoxFacetWidget(HTMLWidget):
+    selected_img = "black-check.png"
+    unselected_img = "black-uncheck.png"
+
+    def __init__(self, req, facet, value, selected):
+    self.req = req
+        self.facet = facet
+    self.value = value
+    self.selected = selected
+
+    def _render(self):
+    title = html_escape(self.facet.title)
+    facetid = html_escape(self.facet.id)
+    self.w(u'<div id="%s" class="facet">\n' % facetid)
+    if self.selected:
+            cssclass = ' facetValueSelected'
+            imgsrc = self.req.datadir_url + self.selected_img
+            imgalt = self.req._('selected')
+        else:
+            cssclass = ''
+            imgsrc = self.req.datadir_url + self.unselected_img
+            imgalt = self.req._('not selected')
+        self.w(u'<div class="facetValue facetCheckBox%s" cubicweb:value="%s">\n'
+               % (cssclass, html_escape(unicode(self.value))))
+    self.w(u'<div class="facetCheckBoxWidget">')
+        self.w(u'<img src="%s" alt="%s" cubicweb:unselimg="true" />&nbsp;' % (imgsrc, imgalt))
+        self.w(u'<label class="facetTitle" cubicweb:facetName="%s"><a href="javascript: {}">%s</a></label>' % (facetid,title))
+        self.w(u'</div>\n')
+        self.w(u'</div>\n')
+    self.w(u'</div>\n')
 
 class FacetSeparator(HTMLWidget):
     def __init__(self, label=None):
