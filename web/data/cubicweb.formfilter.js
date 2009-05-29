@@ -103,7 +103,7 @@ function buildRQL(divid, vid, paginate, vidargs) {
 
 var SELECTED_IMG = baseuri()+"data/black-check.png";
 var UNSELECTED_IMG = baseuri()+"data/no-check-no-border.png";
-var UNSELECTED_BORDER_IMG = baseuri()+"data/black-unchecked.png";
+var UNSELECTED_BORDER_IMG = baseuri()+"data/black-uncheck.png";
 
 function initFacetBoxEvents(root) {
     // facetargs : (divid, vid, paginate, extraargs)
@@ -133,7 +133,7 @@ function initFacetBoxEvents(root) {
 			       this.setAttribute('src', UNSELECTED_BORDER_IMG);
 			    }
 			    else{
-                             this.setAttribute('src', UNSELECTED_IMG);
+			       this.setAttribute('src', UNSELECTED_IMG);
 			    }
 			});
 			var index = parseInt($this.attr('cubicweb:idx'));
