@@ -143,7 +143,11 @@ function initFacetBoxEvents(root) {
 			}).length;
 			index += shift;
 			var parent = this.parentNode;
-			jQuery(parent).find('.facetCheckBox:nth('+index+')').after(this);
+			var $insertAfter = jQuery(parent).find('.facetCheckBox:nth('+index+')');
+			if ( ! ($insertAfter.length == 1 && index == 0) ) {
+			    // only rearrange element if necessary
+			    $insertAfter.after(this);
+			}
 		    } else {
 			var lastSelected = facet.find('.facetValueSelected:last');
 			if (lastSelected.length) {
