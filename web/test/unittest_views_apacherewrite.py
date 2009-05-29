@@ -23,22 +23,23 @@ class ApacheURLRewriteTC(TestCase):
                             rules=[('/(.*)', r'/m_%(cat)s/\1')]),
                 ]
         urlrewriter = MyAppRules()
+        req = None # not used in the above rules, so keep a simple TestCase here
         try:
-            urlrewriter.rewrite('logilab.fr', '/whatever')
+            urlrewriter.rewrite('logilab.fr', '/whatever', req)
             self.fail('redirect exception expected')
         except Redirect, ex:
             self.assertEquals(ex.location, 'http://www.logilab.fr/whatever')
-        self.assertEquals(urlrewriter.rewrite('www.logilab.fr', '/whatever'),
+        self.assertEquals(urlrewriter.rewrite('www.logilab.fr', '/whatever', req),
                           '/whatever')
-        self.assertEquals(urlrewriter.rewrite('www.logilab.fr', '/json/bla'),
+        self.assertEquals(urlrewriter.rewrite('www.logilab.fr', '/json/bla', req),
                           '/json/bla')
-        self.assertEquals(urlrewriter.rewrite('abcd.logilab.fr', '/json/bla'),
+        self.assertEquals(urlrewriter.rewrite('abcd.logilab.fr', '/json/bla', req),
                           '/json/bla')
-        self.assertEquals(urlrewriter.rewrite('abcd.logilab.fr', '/data/bla'),
+        self.assertEquals(urlrewriter.rewrite('abcd.logilab.fr', '/data/bla', req),
                           '/data/bla')
-        self.assertEquals(urlrewriter.rewrite('abcd.logilab.fr', '/whatever'),
+        self.assertEquals(urlrewriter.rewrite('abcd.logilab.fr', '/whatever', req),
                           '/m_abcd/whatever')
-        self.assertEquals(urlrewriter.rewrite('abcd.fr', '/whatever'),
+        self.assertEquals(urlrewriter.rewrite('abcd.fr', '/whatever', req),
                           '/whatever')
 
 

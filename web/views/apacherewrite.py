@@ -88,9 +88,11 @@ class ApacheURLRewrite(Component):
     id = 'urlrewriter'
     rules = []
 
+    def get_rules(self, req):
+        return self.rules
+
     def rewrite(self, host, path, req):
-        self.req = req
-        for cond in self.rules:
+        for cond in self.get_rules(req):
             if cond.match(host=host, path=path):
                 return cond.process(path)
         return path
