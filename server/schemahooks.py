@@ -588,7 +588,7 @@ class UpdateRelationDefOp(SchemaOperation):
             else:
                 cmd = 'DROP'
             sqlexec('ALTER TABLE %s ALTER COLUMN %s %s NOT NULL' % (
-                table, SQL_PREFIX + etype, SQL_PREFIX + rtype))
+                SQL_PREFIX + etype, SQL_PREFIX + rtype, cmd))
 
     def commit_event(self):
         # structure should be clean, not need to remove entity's relations
