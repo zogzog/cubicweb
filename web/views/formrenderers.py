@@ -69,7 +69,7 @@ class FormRenderer(AppRsetObject):
         w = data.append
         w(self.open_form(form, values))
         if self.display_progress_div:
-            w(u'<div id="progress">%s</div>' % form.req._('validating...'))
+            w(u'<div id="progress">%s</div>' % self.req._('validating...'))
         w(u'<fieldset>')
         w(tags.input(type=u'hidden', name=u'__form_id',
                      value=values.get('formvid', form.id)))
@@ -85,7 +85,7 @@ class FormRenderer(AppRsetObject):
         return '\n'.join(data)
 
     def render_label(self, form, field):
-        label = form.req._(field.label)
+        label = self.req._(field.label)
         attrs = {'for': form.context[field]['id']}
         if field.required:
             attrs['class'] = 'required'
@@ -95,11 +95,11 @@ class FormRenderer(AppRsetObject):
         help = []
         descr = field.help
         if descr:
-            help.append('<div class="helper">%s</div>' % form.req._(descr))
-        example = field.example_format(form.req)
+            help.append('<div class="helper">%s</div>' % self.req._(descr))
+        example = field.example_format(self.req)
         if example:
             help.append('<div class="helper">(%s: %s)</div>'
-                        % (form.req._('sample format'), example))
+                        % (self.req._('sample format'), example))
         return u'&nbsp;'.join(help)
 
     # specific methods (mostly to ease overriding) #############################
@@ -109,7 +109,7 @@ class FormRenderer(AppRsetObject):
 
         This method should be called once inlined field errors has been consumed
         """
-        req = form.req
+        req = self.req
         errex = form.form_valerror
         # get extra errors
         if errex is not None:
@@ -138,7 +138,7 @@ class FormRenderer(AppRsetObject):
         else:
             enctype = 'application/x-www-form-urlencoded'
         if form.action is None:
-            action = form.req.build_url('edit')
+            action = self.req.build_url('edit')
         else:
             action = form.action
         tag = ('<form action="%s" method="post" enctype="%s"' % (
@@ -298,11 +298,11 @@ class EntityCompositeFormRenderer(FormRenderer):
             # main form, display table headers
             w(u'<tr class="header">')
             w(u'<th align="left">%s</th>'
-              % tags.input(type='checkbox', title=form.req._('toggle check boxes'),
+              % tags.input(type='checkbox', title=self.req._('toggle check boxes'),
                            onclick="setCheckboxesState('eid', this.checked)"))
             for field in self.forms[0].fields:
                 if self.display_field(form, field) and field.is_visible():
-                    w(u'<th>%s</th>' % form.req._(field.label))
+                    w(u'<th>%s</th>' % self.req._(field.label))
         w(u'</tr>')
 
 
@@ -319,7 +319,7 @@ class EntityFormRenderer(FormRenderer):
 
     def open_form(self, form, values):
         attrs_fs_label = ('<div class="iformTitle"><span>%s</span></div>'
-                          % form.req._('main informations'))
+                          % self.req._('main informations'))
         attrs_fs_label += '<div class="formBody">'
         return attrs_fs_label + super(EntityFormRenderer, self).open_form(form, values)
 
@@ -352,7 +352,7 @@ class EntityFormRenderer(FormRenderer):
         srels_by_cat = form.srelations_by_category('generic', 'add')
         if not srels_by_cat:
             return u''
-        req = form.req
+        req = self.req
         _ = req._
         label = u'%s :' % _('This %s' % form.edited_entity.e_schema).capitalize()
         eid = form.edited_entity.eid
@@ -371,7 +371,7 @@ class EntityFormRenderer(FormRenderer):
                 if not form.force_display and form.maxrelitems < len(related):
                     link = (u'<span class="invisible">'
                             '[<a href="javascript: window.location.href+=\'&amp;__force_display=1\'">%s</a>]'
-                            '</span>' % form.req._('view all'))
+                            '</span>' % self.req._('view all'))
                     w(u'<li class="invisible">%s</li>' % link)
                 w(u'</ul>')
                 w(u'</td>')
@@ -413,7 +413,7 @@ class EntityFormRenderer(FormRenderer):
         if not hasattr(form, 'inlined_relations'):
             return
         entity = form.edited_entity
-        __ = form.req.__
+        __ = self.req.__
         for rschema, targettypes, role in form.inlined_relations():
             # show inline forms only if there's one possible target type
             # for rschema
@@ -473,9 +473,9 @@ class EntityInlinedFormRenderer(EntityFormRenderer):
             w(u'<div id="div-%(divid)s">' % values)
         else:
             w(u'<div id="notice-%s" class="notice">%s</div>' % (
-                values['divid'], form.req._('click on the box to cancel the deletion')))
+                values['divid'], self.req._('click on the box to cancel the deletion')))
         w(u'<div class="iformBody">')
-        values['removemsg'] = form.req.__('remove this %s' % form.edited_entity.e_schema)
+        values['removemsg'] = self.req.__('remove this %s' % form.edited_entity.e_schema)
         w(u'<div class="iformTitle"><span>%(title)s</span> '
           '#<span class="icounter">1</span> '
           '[<a href="javascript: %(removejs)s;noop();">%(removemsg)s</a>]</div>'
