@@ -12,9 +12,9 @@ from yams.constraints import StaticVocabularyConstraint, SizeConstraint
 
 from cubicweb.devtools import TestServerConfiguration
 from cubicweb.devtools.testlib import EnvBasedTC
-from cubicweb.web.form import EntityFieldsForm
 from cubicweb.web.formwidgets import PasswordInput, TextArea, Select
 from cubicweb.web.formfields import *
+from cubicweb.web.views.forms import EntityFieldsForm
 
 from cubes.file.entities import File
 

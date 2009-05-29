@@ -210,6 +210,13 @@ class FormRenderer(AppRsetObject):
         w(u'</tr></table>')
 
 
+class BaseFormRenderer(FormRenderer):
+    """use form_renderer_id = 'base' if you want base FormRenderer without
+    adaptation by selection
+    """
+    id = 'base'
+
+
 class HTableFormRenderer(FormRenderer):
     """display fields horizontally in a table
 
@@ -298,10 +305,6 @@ class EntityCompositeFormRenderer(FormRenderer):
                     w(u'<th>%s</th>' % form.req._(field.label))
         w(u'</tr>')
 
-class BaseFormRenderer(FormRenderer):
-    """use form_renderer_id = 'base' if you don't want adaptation by selection
-    """
-    id = 'base'
 
 class EntityFormRenderer(FormRenderer):
     """specific renderer for entity edition form (edition)"""

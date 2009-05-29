@@ -22,13 +22,12 @@ from cubicweb.web import stdmsgs, action, component, form
 from cubicweb.web.form import FormViewMixIn
 from cubicweb.web.formfields import StringField,  RichTextField
 from cubicweb.web.formwidgets import HiddenInput, SubmitButton, Button
-from cubicweb.web.views import TmpFileViewMixin
-from cubicweb.web.views.boxes import EditBox
+from cubicweb.web.views import TmpFileViewMixin, forms
 
 
 # IWorkflowable views #########################################################
 
-class ChangeStateForm(form.EntityFieldsForm):
+class ChangeStateForm(forms.EntityFieldsForm):
     id = 'changestate'
 
     form_renderer_id = 'base' # don't want EntityFormRenderer

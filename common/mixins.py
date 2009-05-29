@@ -237,8 +237,8 @@ class WorkflowableMixIn(object):
 
     @obsolete('use EntityFieldsForm.subject_in_state_vocabulary')
     def subject_in_state_vocabulary(self, rschema, limit=None):
-        from cubicweb.web.form import EntityFieldsForm
-        return EntityFieldsForm(self.req, None, entity=self).subject_in_state_vocabulary(rschema, limit)
+        form = self.vreg.select_object('forms', 'edition', self.req, entity=self)
+        return form.subject_in_state_vocabulary(rschema, limit)
 
 
 

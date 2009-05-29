@@ -5,14 +5,16 @@
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 :license: GNU Lesser General Public License, v2.1 - http://www.gnu.org/licenses
 """
+
 from logilab.common.testlib import unittest_main, mock_object
+
 from cubicweb import Binary
 from cubicweb.devtools.testlib import WebTest
-from cubicweb.web.form import EntityFieldsForm, FieldsForm
 from cubicweb.web.formfields import (IntField, StringField, RichTextField,
                                      DateTimeField, DateTimePicker,
                                      FileField, EditableFileField)
 from cubicweb.web.formwidgets import PasswordInput
+from cubicweb.web.views.forms import EntityFieldsForm, FieldsForm
 from cubicweb.web.views.workflow import ChangeStateForm
 from cubicweb.web.views.formrenderers import FormRenderer
 

@@ -15,10 +15,10 @@ from cubicweb.selectors import implements, match_user_groups
 from cubicweb.view import EntityView
 from cubicweb.web import stdmsgs
 from cubicweb.web.action import Action
-from cubicweb.web.form import FieldsForm, FormViewMixIn
+from cubicweb.web.form import FormViewMixIn
 from cubicweb.web.formfields import StringField
 from cubicweb.web.formwidgets import CheckBox, TextInput, AjaxWidget, ImgButton
-from cubicweb.web.views import formrenderers
+from cubicweb.web.views import forms, formrenderers
 
 
 class SendEmailAction(Action):
@@ -37,12 +37,12 @@ class SendEmailAction(Action):
                               **params)
 
 
-class MassMailingForm(FieldsForm):
+class MassMailingForm(forms.FieldsForm):
     id = 'massmailing'
 
     sender = StringField(widget=TextInput({'disabled': 'disabled'}), label=_('From:'))
     recipient = StringField(widget=CheckBox(), label=_('Recipients:'))
-    subject = StringField(label=_('Subject:'))
+    subject = StringField(label=_('Subject:'), max_length=256)
     mailbody = StringField(widget=AjaxWidget(wdgtype='TemplateTextField',
                                              inputid='mailbody'))
 

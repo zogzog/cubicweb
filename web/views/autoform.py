@@ -12,13 +12,13 @@ from logilab.common.decorators import iclassmethod
 
 from cubicweb import typed_eid
 from cubicweb.web import stdmsgs, uicfg
-from cubicweb.web.form import FieldNotFound, EntityFieldsForm
+from cubicweb.web.form import FieldNotFound
 from cubicweb.web.formfields import guess_field
 from cubicweb.web.formwidgets import Button, SubmitButton
-from cubicweb.web.views.editforms import toggleable_relation_link, relation_id
+from cubicweb.web.views import forms, editforms
 
 
-class AutomaticEntityForm(EntityFieldsForm):
+class AutomaticEntityForm(forms.EntityFieldsForm):
     """base automatic form to edit any entity.
 
     Designed to be fully generated from schema but highly configurable through:
@@ -235,13 +235,13 @@ class AutomaticEntityForm(EntityFieldsForm):
         for label, rschema, role in self.srelations_by_category('generic', 'add'):
             relatedrset = entity.related(rschema, role, limit=self.related_limit)
             if rschema.has_perm(self.req, 'delete'):
-                toggleable_rel_link_func = toggleable_relation_link
+                toggleable_rel_link_func = editforms.toggleable_relation_link
             else:
                 toggleable_rel_link_func = lambda x, y, z: u''
             related = []
             for row in xrange(relatedrset.rowcount):
-                nodeid = relation_id(entity.eid, rschema, role,
-                                     relatedrset[row][0])
+                nodeid = editforms.relation_id(entity.eid, rschema, role,
+                                               relatedrset[row][0])
                 if nodeid in pending_deletes:
                     status = u'pendingDelete'
                     label = '+'
