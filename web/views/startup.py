@@ -168,7 +168,7 @@ class SchemaView(tabs.TabsMixin, StartupView):
     id = 'schema'
     title = _('application schema')
     tabs = [_('schema-text'), _('schema-image')]
-    default_tab = 'schema-image'
+    default_tab = 'schema-text'
 
     def call(self):
         """display schema information"""
