@@ -10,6 +10,7 @@ __docformat__ = "restructuredtext en"
 
 from itertools import chain
 from copy import deepcopy
+from datetime import date
 
 from logilab.mtconverter import html_escape
 
@@ -20,7 +21,7 @@ from logilab.common.compat import all
 from rql import parse, nodes
 
 from cubicweb import Unauthorized, typed_eid
-from cubicweb.utils import make_uid
+from cubicweb.utils import datetime2ticks, make_uid, ustrftime
 from cubicweb.selectors import match_context_prop, partial_relation_possible
 from cubicweb.appobject import AppRsetObject
 from cubicweb.web.htmlwidgets import HTMLWidget
@@ -476,29 +477,6 @@ class AttributeFacet(RelationFacet):
                                             self.attrtype, self.comparator)
 
 
-class RangeFacet(AttributeFacet):
-
-    def get_widget(self):
-        """return the widget instance to use to display this facet
-        """
-        values = set(value for _, value in self.vocabulary() if value is not None)
-        return FacetRangeWidget(self, min(values), max(values))
-
-    def add_rql_restrictions(self):
-        infvalue = self.req.form.get('%s_inf' % self.id)
-        if not infvalue:
-            return
-        supvalue = self.req.form.get('%s_sup' % self.id)
-        self.rqlst.add_constant_restriction(self.filtered_variable,
-                                            self.rtype,
-                                            u'%s' % infvalue,
-                                            'Float', '>=')
-        self.rqlst.add_constant_restriction(self.filtered_variable,
-                                            self.rtype,
-                                            u'%s' % supvalue,
-                                            'Float', '<=')
-
-
 class FilterRQLBuilder(object):
     """called by javascript to get a rql string from filter form"""
 
@@ -518,6 +496,54 @@ class FilterRQLBuilder(object):
                 toupdate.append(facetid)
         return select.as_string(), toupdate
 
+
+class RangeFacet(AttributeFacet):
+    attrtype = 'Float' # only numerical types are supported
+
+    @property
+    def wdgclass(self):
+        return FacetRangeWidget
+
+    def get_widget(self):
+        """return the widget instance to use to display this facet
+        """
+        values = set(value for _, value in self.vocabulary() if value is not None)
+        return self.wdgclass(self, min(values), max(values))
+
+    def infvalue(self):
+        return self.req.form.get('%s_inf' % self.id)
+
+    def supvalue(self):
+        return self.req.form.get('%s_sup' % self.id)
+
+    def formatvalue(self, value):
+        return unicode(value)
+
+    def add_rql_restrictions(self):
+        infvalue = self.infvalue()
+        if infvalue is None: # nothing sent
+            return
+        supvalue = self.supvalue()
+        self.rqlst.add_constant_restriction(self.filtered_variable,
+                                            self.rtype,
+                                            self.formatvalue(infvalue),
+                                            self.attrtype, '>=')
+        self.rqlst.add_constant_restriction(self.filtered_variable,
+                                            self.rtype,
+                                            self.formatvalue(supvalue),
+                                            self.attrtype, '<=')
+
+class DateRangeFacet(RangeFacet):
+    attrtype = 'Date' # only date types are supported
+
+    @property
+    def wdgclass(self):
+        fmt = self.req.property_value('ui.date-format')
+        self.req.html_headers.define_var('DATE_FMT', fmt)
+        return DateFacetRangeWidget
+
+    def formatvalue(self, value):
+        return '"%s"' % date.fromtimestamp(float(value) / 1000).strftime('%Y/%m/%d')
 
 ## html widets ################################################################
 
@@ -594,6 +620,9 @@ class FacetRangeWidget(HTMLWidget):
         self.minvalue = minvalue
         self.maxvalue = maxvalue
 
+    def formatvalue(self, value):
+        return value
+
     def _render(self):
         facet = self.facet
         facet.req.add_js('ui.slider.js')
@@ -611,13 +640,43 @@ class FacetRangeWidget(HTMLWidget):
         self.w(u'<div class="facetTitle" cubicweb:facetName="%s">%s</div>\n' %
                (facetid, title))
         self.w(u'<span id="%s_inf">%s</span> - <span id="%s_sup">%s</span>'
-               % (sliderid, self.minvalue, sliderid, self.maxvalue))
+               % (sliderid, self.formatvalue(self.minvalue),
+                  sliderid, self.formatvalue(self.maxvalue)))
         self.w(u'<input type="hidden" name="%s_inf" value="%s" />'
                % (facetid, self.minvalue))
         self.w(u'<input type="hidden" name="%s_sup" value="%s" />'
                % (facetid, self.maxvalue))
         self.w(u'<div id="%s"></div>' % sliderid)
         self.w(u'</div>\n')
+
+
+class DateFacetRangeWidget(FacetRangeWidget):
+    onload = u'''
+    jQuery("#%(sliderid)s").slider({
+    	range: true,
+	min: %(minvalue)s,
+	max: %(maxvalue)s,
+        values: [%(minvalue)s, %(maxvalue)s],
+        stop: function(event, ui) { // submit when the user stops sliding
+UI = ui;
+           var form = $('#%(sliderid)s').closest('form');
+           buildRQL.apply(null, evalJSON(form.attr('cubicweb:facetargs')));
+        },
+    	slide: function(event, ui) {
+            $('#%(sliderid)s_inf').html( (new Date(ui.values[0])).strftime(DATE_FMT));
+            $('#%(sliderid)s_sup').html( (new Date(ui.values[1])).strftime(DATE_FMT));
+            $('input[name=%(facetid)s_inf]').val(ui.values[0]);
+            $('input[name=%(facetid)s_sup]').val(ui.values[1]);
+    	}
+   });
+'''
+    def __init__(self, facet, minvalue, maxvalue):
+        super(DateFacetRangeWidget, self).__init__(facet,
+                                                   datetime2ticks(minvalue),
+                                                   datetime2ticks(maxvalue))
+    def formatvalue(self, value):
+        datefmt = self.facet.req.property_value('ui.date-format')
+        return ustrftime(date.fromtimestamp(float(value) / 1000), datefmt)
 
 
 class FacetItem(HTMLWidget):
@@ -653,4 +712,3 @@ class FacetSeparator(HTMLWidget):
 
     def _render(self):
         pass
-
