@@ -15,7 +15,7 @@ from simplejson import dumps
 from logilab.common import flatten
 from logilab.mtconverter import html_escape
 
-from cubicweb.utils import make_uid, UStringIO
+from cubicweb.utils import make_uid, UStringIO, datetime2ticks
 from cubicweb.vregistry import objectify_selector
 from cubicweb.web.views import baseviews
 
@@ -59,9 +59,6 @@ def filterout_nulls(abscissa, plot):
             continue
         filtered.append( (x, y) )
     return sorted(filtered)
-
-def datetime2ticks(date):
-    return time.mktime(date.timetuple()) * 1000
 
 class PlotWidget(object):
     # XXX refactor with cubicweb.web.views.htmlwidgets.HtmlWidget
