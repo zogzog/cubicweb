@@ -517,6 +517,7 @@ class RangeFacet(AttributeFacet):
         return self.req.form.get('%s_sup' % self.id)
 
     def formatvalue(self, value):
+        """format `value` before in order to insert it in the RQL query"""
         return unicode(value)
 
     def add_rql_restrictions(self):
@@ -538,12 +539,12 @@ class DateRangeFacet(RangeFacet):
 
     @property
     def wdgclass(self):
-        fmt = self.req.property_value('ui.date-format')
-        self.req.html_headers.define_var('DATE_FMT', fmt)
         return DateFacetRangeWidget
 
     def formatvalue(self, value):
+        """format `value` before in order to insert it in the RQL query"""
         return '"%s"' % date.fromtimestamp(float(value) / 1000).strftime('%Y/%m/%d')
+
 
 class HasRelationFacet(AbstractFacet):
     rtype = None # override me in subclass
@@ -557,7 +558,7 @@ class HasRelationFacet(AbstractFacet):
         return False
 
     def get_widget(self):
-	return CheckBoxFacetWidget(self.req, self,
+        return CheckBoxFacetWidget(self.req, self,
                                    '%s:%s' % (self.rtype, self),
                                    self.req.form.get(self.id))
 
@@ -625,31 +626,34 @@ class FacetStringWidget(HTMLWidget):
 
 
 class FacetRangeWidget(HTMLWidget):
+    formatter = 'function (value) {return value;}'
     onload = u'''
+    var _formatter = %(formatter)s;
     jQuery("#%(sliderid)s").slider({
-    	range: true,
-	min: %(minvalue)s,
-	max: %(maxvalue)s,
+        range: true,
+        min: %(minvalue)s,
+        max: %(maxvalue)s,
         values: [%(minvalue)s, %(maxvalue)s],
         stop: function(event, ui) { // submit when the user stops sliding
            var form = $('#%(sliderid)s').closest('form');
            buildRQL.apply(null, evalJSON(form.attr('cubicweb:facetargs')));
         },
-    	slide: function(event, ui) {
-            $('#%(sliderid)s_inf').html(ui.values[0]);
-            $('#%(sliderid)s_sup').html(ui.values[1]);
-            $('input[name=%(facetid)s_inf]').val(ui.values[0]);
-            $('input[name=%(facetid)s_sup]').val(ui.values[1]);
-    	}
+        slide: function(event, ui) {
+            jQuery('#%(sliderid)s_inf').html(_formatter(ui.values[0]));
+            jQuery('#%(sliderid)s_sup').html(_formatter(ui.values[1]));
+            jQuery('input[name=%(facetid)s_inf]').val(ui.values[0]);
+            jQuery('input[name=%(facetid)s_sup]').val(ui.values[1]);
+        }
    });
+   // use JS formatter to format value on page load
+   jQuery('#%(sliderid)s_inf').html(_formatter(jQuery('input[name=%(facetid)s_inf]').val()));
+   jQuery('#%(sliderid)s_sup').html(_formatter(jQuery('input[name=%(facetid)s_sup]').val()));
 '''
+    #'# make emacs happier
     def __init__(self, facet, minvalue, maxvalue):
         self.facet = facet
         self.minvalue = minvalue
         self.maxvalue = maxvalue
-
-    def formatvalue(self, value):
-        return value
 
     def _render(self):
         facet = self.facet
@@ -658,18 +662,18 @@ class FacetRangeWidget(HTMLWidget):
         sliderid = make_uid('the slider')
         facetid = html_escape(self.facet.id)
         facet.req.html_headers.add_onload(self.onload % {
-                'sliderid': sliderid,
-                'facetid': facetid,
-                'minvalue': self.minvalue,
-                'maxvalue': self.maxvalue,
-                })
+            'sliderid': sliderid,
+            'facetid': facetid,
+            'minvalue': self.minvalue,
+            'maxvalue': self.maxvalue,
+            'formatter': self.formatter,
+            })
         title = html_escape(self.facet.title)
         self.w(u'<div id="%s" class="facet">\n' % facetid)
         self.w(u'<div class="facetTitle" cubicweb:facetName="%s">%s</div>\n' %
                (facetid, title))
-        self.w(u'<span id="%s_inf">%s</span> - <span id="%s_sup">%s</span>'
-               % (sliderid, self.formatvalue(self.minvalue),
-                  sliderid, self.formatvalue(self.maxvalue)))
+        self.w(u'<span id="%s_inf"></span> - <span id="%s_sup"></span>'
+               % (sliderid, sliderid))
         self.w(u'<input type="hidden" name="%s_inf" value="%s" />'
                % (facetid, self.minvalue))
         self.w(u'<input type="hidden" name="%s_sup" value="%s" />'
@@ -679,32 +683,13 @@ class FacetRangeWidget(HTMLWidget):
 
 
 class DateFacetRangeWidget(FacetRangeWidget):
-    onload = u'''
-    jQuery("#%(sliderid)s").slider({
-    	range: true,
-	min: %(minvalue)s,
-	max: %(maxvalue)s,
-        values: [%(minvalue)s, %(maxvalue)s],
-        stop: function(event, ui) { // submit when the user stops sliding
-UI = ui;
-           var form = $('#%(sliderid)s').closest('form');
-           buildRQL.apply(null, evalJSON(form.attr('cubicweb:facetargs')));
-        },
-    	slide: function(event, ui) {
-            $('#%(sliderid)s_inf').html( (new Date(ui.values[0])).strftime(DATE_FMT));
-            $('#%(sliderid)s_sup').html( (new Date(ui.values[1])).strftime(DATE_FMT));
-            $('input[name=%(facetid)s_inf]').val(ui.values[0]);
-            $('input[name=%(facetid)s_sup]').val(ui.values[1]);
-    	}
-   });
-'''
+    formatter = 'function (value) {return (new Date(parseFloat(value))).strftime(DATE_FMT);}'
     def __init__(self, facet, minvalue, maxvalue):
         super(DateFacetRangeWidget, self).__init__(facet,
                                                    datetime2ticks(minvalue),
                                                    datetime2ticks(maxvalue))
-    def formatvalue(self, value):
-        datefmt = self.facet.req.property_value('ui.date-format')
-        return ustrftime(date.fromtimestamp(float(value) / 1000), datefmt)
+        fmt = facet.req.property_value('ui.date-format')
+        facet.req.html_headers.define_var('DATE_FMT', fmt)
 
 
 class FacetItem(HTMLWidget):
