@@ -14,7 +14,7 @@ __docformat__ = "restructuredtext en"
 
 from yams.schema import BASE_TYPES
 from yams.buildobjs import EntityType, RelationType, RelationDefinition
-from yams.schema2sql import eschema2sql, rschema2sql, _type_from_constraints
+from yams.schema2sql import eschema2sql, rschema2sql, type_from_constraints
 
 from cubicweb import ValidationError, RepositoryError
 from cubicweb.server import schemaserial as ss
@@ -393,8 +393,8 @@ class AddCWAttributePreCommitOp(PreCommitOperation):
                                   constraints=constraints,
                                   eid=entity.eid)
         sysource = session.pool.source('system')
-        attrtype = _type_from_constraints(sysource.dbhelper, rdef.object,
-                                          constraints)
+        attrtype = type_from_constraints(sysource.dbhelper, rdef.object,
+                                         constraints)
         # XXX should be moved somehow into lgc.adbh: sqlite doesn't support to
         # add a new column with UNIQUE, it should be added after the ALTER TABLE
         # using ADD INDEX
@@ -423,20 +423,6 @@ class AddCWAttributePreCommitOp(PreCommitOperation):
             except Exception, ex:
                 self.error('error while creating index for %s.%s: %s',
                            table, column, ex)
-        # postgres doesn't implement, so do it in two times
-        # ALTER TABLE %s ADD COLUMN %s %s SET DEFAULT %s
-        if default is not None:
-            if isinstance(default, unicode):
-                default = default.encode(sysource.encoding)
-            try:
-                session.system_sql('ALTER TABLE %s ALTER COLUMN %s SET DEFAULT '
-                                   '%%(default)s' % (table, column),
-                                   {'default': default})
-            except Exception, ex:
-                # not supported by sqlite for instance
-                self.error('error while altering table %s: %s', table, ex)
-            session.system_sql('UPDATE %s SET %s=%%(default)s' % (table, column),
-                               {'default': default})
         AddErdefOp(session, rdef)
 
 def after_add_efrdef(session, entity):
@@ -567,28 +553,28 @@ class UpdateRelationDefOp(SchemaOperation):
     rschema = values = None # make pylint happy
 
     def precommit_event(self):
+        etype = self.kobj[0]
+        table = SQL_PREFIX + etype
+        column = SQL_PREFIX + self.rschema.type
         if 'indexed' in self.values:
             sysource = self.session.pool.source('system')
-            etype, rtype = self.kobj[0], self.rschema.type
-            table = SQL_PREFIX + etype
-            column = SQL_PREFIX + rtype
             if self.values['indexed']:
                 sysource.create_index(self.session, table, column)
             else:
                 sysource.drop_index(self.session, table, column)
         if 'cardinality' in self.values and self.rschema.is_final():
-            if self.session.pool.source('system').dbdriver == 'sqlite':
+            adbh = self.session.pool.source('system').dbhelper
+            if not adbh.alter_column_support:
                 # not supported (and NOT NULL not set by yams in that case, so
                 # no worry)
                 return
-            sqlexec = self.session.system_sql
-            etype, rtype = self.kobj[0], self.rschema.type
-            if self.values['cardinality'][0] == '1':
-                cmd = 'SET'
-            else:
-                cmd = 'DROP'
-            sqlexec('ALTER TABLE %s ALTER COLUMN %s %s NOT NULL' % (
-                SQL_PREFIX + etype, SQL_PREFIX + rtype, cmd))
+            atype = self.rschema.objects(etype)[0]
+            constraints = self.rschema.rproperty(etype, atype, 'constraints')
+            coltype = type_from_constraints(adbh, atype, constraints,
+                                            creating=False)
+            sql = adbh.sql_set_null_allowed(table, column, coltype,
+                                            self.values['cardinality'][0] != '1')
+            self.session.system_sql(sql)
 
     def commit_event(self):
         # structure should be clean, not need to remove entity's relations
@@ -726,9 +712,13 @@ class ConstraintOp(SchemaOperation):
         # alter the physical schema on size constraint changes
         if self._cstr.type() == 'SizeConstraint' and (
             self.cstr is None or self.cstr.max != self._cstr.max):
+            adbh = self.session.pool.source('system').dbhelper
+            card = rtype.rproperty(subjtype, objtype, 'cardinality')
+            coltype = type_from_constraints(adbh, objtype, [self._cstr],
+                                            creating=False)
+            sql = adbh.sql_change_col_type(table, column, coltype, card != '1')
             try:
-                session.system_sql('ALTER TABLE %s ALTER COLUMN %s TYPE VARCHAR(%s)'
-                                   % (table, column, self._cstr.max))
+                session.system_sql(sql)
                 self.info('altered column %s of table %s: now VARCHAR(%s)',
                           column, table, self._cstr.max)
             except Exception, ex:
@@ -741,7 +731,7 @@ class ConstraintOp(SchemaOperation):
     def commit_event(self):
         if self.cancelled:
             return
-        # in-place removing
+        # in-place modification
         if not self.cstr is None:
             self.constraints.remove(self.cstr)
         self.constraints.append(self._cstr)
