@@ -1,11 +1,13 @@
+// run tests with the following command line :
+// $ crosscheck jstest_python.jst
 
 crosscheck.addTest({
 
     setup: function() {
         crosscheck.load("testutils.js");
         crosscheck.load("../data/jquery.js");
-        crosscheck.load("../data/compat.js");
-        crosscheck.load("../data/python.js");
+        crosscheck.load("../data/cubicweb.compat.js");
+        crosscheck.load("../data/cubicweb.python.js");
     },
 
     test_basic_number_parsing: function () {

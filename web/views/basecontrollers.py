@@ -60,7 +60,6 @@ class ViewController(Controller):
     
     def publish(self, rset=None):
         """publish a request, returning an encoded string"""
-        self.req.update_search_state()
         template = self.req.property_value('ui.main-template')
         if template not in self.vreg.registry('templates') :
             template = self.template
@@ -235,7 +234,7 @@ class JSonController(Controller):
                 stream.write(u'<div id="pageContent">')
                 vtitle = self.req.form.get('vtitle')
                 if vtitle:
-                    w(u'<h1 class="vtitle">%s</h1>\n' % vtitle)
+                    stream.write(u'<h1 class="vtitle">%s</h1>\n' % vtitle)
             view.pagination(req, rset, view.w, not view.need_navigation)
             if divid == 'pageContent':
                 stream.write(u'<div id="contentmain">')
@@ -453,7 +452,14 @@ class JSonController(Controller):
         # link the new entity to the main entity
         rql = 'SET F %(rel)s T WHERE F eid %(eid_to)s, T eid %(eid_from)s' % {'rel' : rel, 'eid_to' : eid_to, 'eid_from' : eid_from}
         return eid_from
-    
+
+    def js_set_cookie(self, cookiename, cookievalue):
+        # XXX we should consider jQuery.Cookie
+        cookiename, cookievalue = str(cookiename), str(cookievalue)
+        cookies = self.req.get_cookie()
+        cookies[cookiename] = cookievalue
+        self.req.set_cookie(cookies, cookiename)
+
 class SendMailController(Controller):
     id = 'sendmail'
     require_groups = ('managers', 'users')

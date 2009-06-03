@@ -24,11 +24,11 @@ What is a cube?
 
 A cube defines entities, their views, their schemas and workflows
 in an independant directory located in ``/path/to/forest/cubicweb/cubes/``
-for a Mercurila installation or in ``/usr/share/cubicweb/cubes`` for
-a debian packages installation.
+for a Mercurial installation or in ``/usr/share/cubicweb/cubes`` for
+a debian package installation.
 
 When an instance is created, you list one or more cubes that your instance
-will use. Use a cube means having the entities defined in your cube's schema
+will use. Using a cube means having the entities defined in your cube's schema
 available in your instance as well as their views and workflows.
 
 .. note::

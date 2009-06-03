@@ -1,7 +1,7 @@
 """Base class for entity objects manipulated in clients
 
 :organization: Logilab
-:copyright: 2001-2008 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+:copyright: 2001-2009 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 """
 __docformat__ = "restructuredtext en"
@@ -390,6 +390,10 @@ class Entity(AppRsetObject, dict):
         res = dict(zip(('type', 'source', 'extid'), self.req.describe(self.eid)))
         res['source'] = self.req.source_defs()[res['source']]
         return res
+
+    def clear_local_perm_cache(self, action):
+        for rqlexpr in self.e_schema.get_rqlexprs(action):
+            self.req.local_perm_cache.pop((rqlexpr.eid, (('x', self.eid),)), None)
 
     def check_perm(self, action):
         self.e_schema.check_perm(self.req, action, self.eid)
@@ -998,6 +1002,7 @@ class Entity(AppRsetObject, dict):
         _done.add(self.eid)
         containers = tuple(self.e_schema.fulltext_containers())
         if containers:
+            yielded = False
             for rschema, target in containers:
                 if target == 'object':
                     targets = getattr(self, rschema.type)
@@ -1008,6 +1013,9 @@ class Entity(AppRsetObject, dict):
                         continue
                     for container in entity.fti_containers(_done):
                         yield container
+                        yielded = True
+            if not yielded:
+                yield self
         else:
             yield self
                     

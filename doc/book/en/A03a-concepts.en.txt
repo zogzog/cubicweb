@@ -11,7 +11,7 @@ Global architecture
 .. image:: images/archi_globale.en.png
 
 
-`CubicWeb` framework is a server/client application framework. Those two 
+`CubicWeb` framework is a server/client application framework. Those two
 parties communicates through RQL (`CubicWeb` query language implementation)
 and ResultSet (which will be explained in :ref:`TermsVocabulary`).
 
@@ -44,7 +44,7 @@ developing with `CubicWeb`.
   stored in the database at the time an instance is created. `CubicWeb`
   provides a certain number of system entities included automatically as
   it is necessary for the core of `CubicWeb` and a library of
-  cubes (which defined application entities) that can be explicitely 
+  cubes (which defined application entities) that can be explicitely
   included if necessary.
 
 *entity type*
@@ -69,7 +69,7 @@ developing with `CubicWeb`.
 *relation definition*
   A relation definition is a 3-uple (subject entity type, relation type, object
   entity type), with an associated set of property such as cardinality, constraints...
-  
+
 *repository*
   This is the RQL server side of `CubicWeb`. Be carefull not to get
   confused with a Mercurial repository or a debian repository.
@@ -77,7 +77,7 @@ developing with `CubicWeb`.
 *source*
   A data source is a container of data (SGBD, LDAP directory, `Google
   App Engine`'s datastore ...) integrated in the
-  `CubicWeb` repository. This repository has at least one source, `system` which 
+  `CubicWeb` repository. This repository has at least one source, `system` which
   contains the schema of the application, plain-text index and others
   vital informations for the system.
 
@@ -86,7 +86,7 @@ developing with `CubicWeb`.
 
   - ``repository`` : repository only, accessible for clients using Pyro
   - ``twisted`` : web interface only, access the repository using Pyro
-  - ``all-in-one`` : web interface and repository in a single process. 
+  - ``all-in-one`` : web interface and repository in a single process.
      The repository could be or not accessible using Pyro.
 
 *cube*
@@ -94,7 +94,7 @@ developing with `CubicWeb`.
   to provide a specific functionnality or a complete `CubicWeb` application
   potentially using other cubes. The available cubes are located in the file
   system at `/path/to/forest/cubicweb/cubes` for a Mercurial forest installation,
-  for a debian packages installation they will be located in 
+  for a debian packages installation they will be located in
   `/usr/share/cubicweb/cubes`.
   Larger applications can be built faster by importing cubes,
   adding entities and relationships and overriding the
@@ -102,7 +102,7 @@ developing with `CubicWeb`.
   cubes.
 
 *instance*
-  An instance is a specific installation of one or multiple cubes. All the required 
+  An instance is a specific installation of one or multiple cubes. All the required
   configuration files necessary for the well being of your web application
   are grouped in an instance. This will refer to the cube(s) your application
   is based on.
@@ -112,7 +112,7 @@ developing with `CubicWeb`.
 
 *application*
   The term application is sometime used to talk about an instance
-  and sometimes to talk of a cube depending on the context. 
+  and sometimes to talk of a cube depending on the context.
   So we would like to avoid using this term and try to use *cube* and
   *instance* instead.
 
@@ -127,7 +127,7 @@ developing with `CubicWeb`.
 
 *query language*
   A full-blown query language named RQL is used to formulate requests
-  to the database or any sources such as LDAP or `Google App Engine`'s 
+  to the database or any sources such as LDAP or `Google App Engine`'s
   datastore.
 
 *views*
@@ -147,7 +147,7 @@ developing with `CubicWeb`.
  This query language is inspired by SQL but is highest level, its implementation
  generates SQL.
 
- 
+
 .. _`Python Remote Object`: http://pyro.sourceforge.net/
 .. _`yams`: http://www.logilab.org/project/yams/
 
@@ -194,14 +194,14 @@ API Python/RQL
 ~~~~~~~~~~~~~~
 
 The Python API developped to interface with RQL is inspired from the standard db-api,
-with a Connection object having the methods cursor, rollback and commit essentially. 
+with a Connection object having the methods cursor, rollback and commit essentially.
 The most important method is the `execute` method of a cursor :
 
 `execute(rqlstring, args=None, eid_key=None, build_descr=True)`
 
 :rqlstring: the RQL query to execute (unicode)
 :args: if the query contains substitutions, a dictionnary containing the values to use
-:eid_key: 
+:eid_key:
    an implementation detail of the RQL queries cache implies that if a substitution
    is used to introduce an eid *susceptible to raise the ambiguities in the query
    type resolution*, then we have to specify the correponding key in the dictionnary
@@ -210,14 +210,14 @@ The most important method is the `execute` method of a cursor :
 
 The `Connection` object owns the methods `commit` and `rollback`. You *should
 never need to use them* during the development of the web interface based on
-the `CubicWeb` framework as it determines the end of the transaction depending 
+the `CubicWeb` framework as it determines the end of the transaction depending
 on the query execution success.
 
 .. note::
   While executing updates queries (SET, INSERT, DELETE), if a query generates
   an error related to security, a rollback is automatically done on the current
   transaction.
-  
+
 
 The `Request` class (`cubicweb.web`)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -243,7 +243,7 @@ But also:
     key or the value `default` if the key is not defined
   * `set_session_data(key, value)`, assign a value to a key
   * `del_session_data(key)`,  suppress the value associated to a key
-    
+
 
 :Cookies handling:
   * `get_cookie()`, returns a dictionnary containing the value of the header
@@ -290,7 +290,7 @@ In general:
   `__registry__`) and its identifier (attribute `id`). Usually we do not have
   to take care of the register, only the identifier `id`.
 
-We can find a certain number of attributes and methods defined in this class 
+We can find a certain number of attributes and methods defined in this class
 and common to all the application objects.
 
 At the recording, the following attributes are dynamically added to
@@ -333,7 +333,7 @@ We also find on instances, the following attributes:
     also call the method `complete()` on the entity before returning it
 
 :Data formatting:
-  * `format_date(date, date_format=None, time=False)` returns a string for a 
+  * `format_date(date, date_format=None, time=False)` returns a string for a
     mx date time according to application's configuration
   * `format_time(time)` returns a string for a mx date time according to
     application's configuration
@@ -342,8 +342,8 @@ We also find on instances, the following attributes:
 
   * `external_resource(rid, default=_MARKER)`, access to a value defined in the
     configuration file `external_resource`
-    
-  * `tal_render(template, variables)`, renders a precompiled page template with 
+
+  * `tal_render(template, variables)`, renders a precompiled page template with
     variables in the given dictionary as context
 
 .. note::
@@ -357,7 +357,7 @@ We also find on instances, the following attributes:
               PrimaryView.f(self, arg1)
 
   You'd better write: ::
-  
+
       class Truc(PrimaryView):
           def f(self, arg1):
               super(Truc, self).f(arg1)
@@ -374,7 +374,7 @@ A cube is a model grouping one or more entity types and/or views associated
 in order to provide a specific feature or even a complete application using
 others cubes.
 
-You can decide to write your own set of cubes if you wish to re-use the 
+You can decide to write your own set of cubes if you wish to re-use the
 entity types you develop. Lots of cubes are available from the `CubicWeb
 Forge`_ under a free software license.
 
@@ -388,12 +388,12 @@ Standard structure for a cube
 A cube is structured as follows:
 
 ::
-  
+
   mycube/
   |
   |-- data/
   |   |-- cubes.mycube.css
-  |   |-- cubes.mycube.js  
+  |   |-- cubes.mycube.js
   |   `-- external_resources
   |
   |-- debian/
@@ -437,12 +437,12 @@ A cube is structured as follows:
   |
   `-- views.py
 
-    
+
 We can use subpackages instead of python modules for ``views.py``, ``entities.py``,
 ``schema.py`` or ``hooks.py``. For example, we could have:
 
 ::
-  
+
   mycube/
   |
   |-- entities.py
@@ -451,7 +451,7 @@ We can use subpackages instead of python modules for ``views.py``, ``entities.py
       |-- forms.py
       |-- primary.py
       `-- widgets.py
-  
+
 
 where :
 
@@ -472,13 +472,13 @@ where :
 * file ``__pkginfo__.py`` provides component meta-data, especially the distribution
   and the current version (server side and web interface) or sub-cubes used by
   the cube.
- 
- 
+
+
 At least you should have:
 
 * the file ``__pkginfo__.py``
 * the schema definition
-  XXX false, we may want to have cubes which are only adding a service, 
+  XXX false, we may want to have cubes which are only adding a service,
   no persistent data (eg embeding for instance)
 
 

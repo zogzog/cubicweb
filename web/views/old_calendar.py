@@ -11,7 +11,7 @@ from logilab.mtconverter import html_escape
 
 from cubicweb.interfaces import ICalendarViews
 from cubicweb.common.utils import date_range
-from cubicweb.common.selectors import interface_selector
+from cubicweb.common.selectors import implement_interface
 from cubicweb.common.registerers import priority_registerer
 from cubicweb.common.view import EntityView
 
@@ -33,7 +33,7 @@ MONTHNAMES = [ _('january'), _('february'), _('march'), _('april'), _('may'),
 class _CalendarView(EntityView):
     """base calendar view containing helpful methods to build calendar views"""
     __registerer__ = priority_registerer
-    __selectors__ = (interface_selector,)
+    __selectors__ = (implement_interface,)
     accepts_interfaces = (ICalendarViews,)
     need_navigation = False
 

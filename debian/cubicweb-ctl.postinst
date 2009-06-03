@@ -2,7 +2,7 @@
 
 case "$1" in
     configure|abort-upgrade|abort-remove|abort-deconfigure)
-        update-rc.d cubicweb defaults >/dev/null
+        update-rc.d cubicweb defaults 99 >/dev/null
     ;;
     *)
         echo "postinst called with unknown argument \`$1'" >&2

@@ -2,7 +2,7 @@
 
 
 :organization: Logilab
-:copyright: 2001-2008 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+:copyright: 2001-2009 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 """
 __docformat__ = "restructuredtext en"
@@ -14,8 +14,8 @@ from logilab.mtconverter import html_escape
 from cubicweb.common.utils import make_uid
 from cubicweb.common.uilib import toggle_action, limitsize, jsonize, htmlescape
 from cubicweb.common.view import EntityView, AnyRsetView
-from cubicweb.common.selectors import (nonempty_rset,  req_form_params_selector,
-                                    accept_rset_selector)
+from cubicweb.common.selectors import (nonempty_rset,  match_form_params,
+                                    accept_rset)
 from cubicweb.web.htmlwidgets import (TableWidget, TableColumn, MenuWidget,
                                    PopupBoxMenu, BoxLink)
 from cubicweb.web.facet import prepare_facets_rqlst, filter_hiddens
@@ -24,8 +24,29 @@ class TableView(AnyRsetView):
     id = 'table'
     title = _('table')
     finalview = 'final'
+
+    def form_filter(self, divid, displaycols, displayactions, displayfilter,
+                    hidden=True):
+        rqlst = self.rset.syntax_tree()
+        # union not yet supported
+        if len(rqlst.children) != 1:
+            return ()
+        rqlst.save_state()
+        mainvar, baserql = prepare_facets_rqlst(rqlst, self.rset.args)
+        wdgs = [facet.get_widget() for facet in self.vreg.possible_vobjects(
+            'facets', self.req, self.rset, context='tablefilter',
+            filtered_variable=mainvar)]
+        wdgs = [wdg for wdg in wdgs if wdg is not None]
+        rqlst.recover()
+        if wdgs:
+            self._generate_form(divid, baserql, wdgs, hidden,
+                               vidargs={'displaycols': displaycols,
+                                        'displayactions': displayactions,
+                                        'displayfilter': displayfilter})
+            return self.show_hide_actions(divid, not hidden)
+        return ()
     
-    def generate_form(self, divid, baserql, facets, hidden=True, vidargs={}):
+    def _generate_form(self, divid, baserql, fwidgets, hidden=True, vidargs={}):
         """display a form to filter table's content. This should only
         occurs when a context eid is given
         """
@@ -36,15 +57,13 @@ class TableView(AnyRsetView):
                html_escape(dumps([divid, 'table', False, vidargs])))
         self.w(u'<fieldset id="%sForm" class="%s">' % (divid, hidden and 'hidden' or ''))
         self.w(u'<input type="hidden" name="divid" value="%s" />' % divid)
-        filter_hiddens(self.w, facets=','.join(facet.id for facet in facets), baserql=baserql)
+        filter_hiddens(self.w, facets=','.join(wdg.facet.id for wdg in fwidgets), baserql=baserql)
         self.w(u'<table class="filter">\n')
         self.w(u'<tr>\n')
-        for facet in facets:
-            wdg = facet.get_widget()
-            if wdg is not None:
-                self.w(u'<td>')
-                wdg.render(w=self.w)
-                self.w(u'</td>\n')
+        for wdg in fwidgets:
+            self.w(u'<td>')
+            wdg.render(w=self.w)
+            self.w(u'</td>\n')
         self.w(u'</tr>\n')
         self.w(u'</table>\n')
         self.w(u'</fieldset>\n')
@@ -72,7 +91,7 @@ class TableView(AnyRsetView):
         return displaycols
     
     def call(self, title=None, subvid=None, displayfilter=None, headers=None,
-             displaycols=None, displayactions=None, actions=(),
+             displaycols=None, displayactions=None, actions=(), divid=None,
              cellvids=None, cellattrs=None):
         """Dumps a table displaying a composite query
 
@@ -84,7 +103,7 @@ class TableView(AnyRsetView):
         rset = self.rset
         req = self.req
         req.add_js('jquery.tablesorter.js')
-        req.add_css('cubicweb.tablesorter.css')
+        req.add_css(('cubicweb.tablesorter.css', 'cubicweb.tableview.css'))
         rqlst = rset.syntax_tree()
         # get rql description first since the filter form may remove some
         # necessary information
@@ -93,7 +112,7 @@ class TableView(AnyRsetView):
         hidden = True
         if not subvid and 'subvid' in req.form:
             subvid = req.form.pop('subvid')
-        divid = req.form.get('divid') or 'rs%s' % make_uid(id(rset))
+        divid = divid or req.form.get('divid') or 'rs%s' % make_uid(id(rset))
         actions = list(actions)
         if mainindex is None:
             displayfilter, displayactions = False, False
@@ -117,22 +136,8 @@ class TableView(AnyRsetView):
             if title:
                 self.w(u'<h2 class="tableTitle">%s</h2>\n' % title)
             if displayfilter:
-                rqlst.save_state()
-                try:
-                    mainvar, baserql = prepare_facets_rqlst(rqlst, rset.args)
-                except NotImplementedError:
-                    # UNION query
-                    facets = None
-                else:
-                    facets = list(self.vreg.possible_vobjects('facets', req, rset,
-                                                              context='tablefilter',
-                                                              filtered_variable=mainvar))
-                    self.generate_form(divid, baserql, facets, hidden,
-                                       vidargs={'displaycols': displaycols,
-                                                'displayfilter': displayfilter,
-                                                'displayactions': displayactions})
-                    actions += self.show_hide_actions(divid, not hidden)
-                rqlst.recover()
+                actions += self.form_filter(divid, displaycols, displayfilter,
+                                            displayactions)
         elif displayfilter:
             actions += self.show_hide_actions(divid, True)
         self.w(u'<div id="%s"' % divid)
@@ -208,7 +213,6 @@ class TableView(AnyRsetView):
             else:
                 column.append_renderer(subvid or 'incontext', colindex)
 
-
             if cellattrs and colindex in cellattrs:
                 for name, value in cellattrs[colindex].iteritems():
                     column.add_attr(name,value)
@@ -249,7 +253,7 @@ class EditableTableView(TableView):
 
     
 class CellView(EntityView):
-    __selectors__ = (nonempty_rset, accept_rset_selector)
+    __selectors__ = (nonempty_rset, accept_rset)
     
     id = 'cell'
     accepts = ('Any',)
@@ -285,13 +289,13 @@ class InitialTableView(TableView):
       displayed with default restrictions set
     """
     id = 'initialtable'
-    __selectors__ = nonempty_rset, req_form_params_selector
+    __selectors__ = nonempty_rset, match_form_params
     form_params = ('actualrql',)
     # should not be displayed in possible view since it expects some specific
     # parameters
     title = None
     
-    def call(self, title=None, subvid=None, headers=None,
+    def call(self, title=None, subvid=None, headers=None, divid=None,
              displaycols=None, displayactions=None):
         """Dumps a table displaying a composite query"""
         actrql = self.req.form['actualrql']
@@ -299,6 +303,8 @@ class InitialTableView(TableView):
         displaycols = self.displaycols(displaycols)
         if displayactions is None and 'displayactions' in self.req.form:
             displayactions = True
+        if divid is None and 'divid' in self.req.form:
+            divid = self.req.form['divid']
         self.w(u'<div class="section">')
         if not title and 'title' in self.req.form:
             # pop title so it's not displayed by the table view as well
@@ -307,33 +313,19 @@ class InitialTableView(TableView):
             self.w(u'<h2>%s</h2>\n' % title)
         mainindex = self.main_var_index()
         if mainindex is not None:
-            rqlst = self.rset.syntax_tree()
-            # union not yet supported
-            if len(rqlst.children) == 1:
-                rqlst.save_state()
-                mainvar, baserql = prepare_facets_rqlst(rqlst, self.rset.args)
-                facets = list(self.vreg.possible_vobjects('facets', self.req, self.rset,
-                                                          context='tablefilter',
-                                                          filtered_variable=mainvar))
-                
-                if facets:
-                    divid = self.req.form.get('divid', 'filteredTable')
-                    self.generate_form(divid, baserql, facets, 
-                                       vidargs={'displaycols': displaycols,
-                                                'displayactions': displayactions,
-                                                'displayfilter': True})
-                    actions = self.show_hide_actions(divid, False)
-                rqlst.recover()
+            actions = self.form_filter(divid, displaycols, displayactions, True)
+        else:
+            actions = ()
         if not subvid and 'subvid' in self.req.form:
             subvid = self.req.form.pop('subvid')
         self.view('table', self.req.execute(actrql),
                   'noresult', w=self.w, displayfilter=False, subvid=subvid,
                   displayactions=displayactions, displaycols=displaycols,
-                  actions=actions, headers=headers)
+                  actions=actions, headers=headers, divid=divid)
         self.w(u'</div>\n')
 
 
-class EditableInitiableTableView(InitialTableView):
+class EditableInitialTableTableView(InitialTableView):
     id = 'editable-initialtable'
     finalview = 'editable-final'
     

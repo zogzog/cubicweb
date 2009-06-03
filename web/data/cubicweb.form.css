@@ -9,7 +9,7 @@ div.formTitle {
   width: 100%;
   font-size : 160%;
   font-weight: bold;
-  color: orangered;
+  color: #ff4500;
   padding-bottom : 0.4em;
   text-transform: capitalize;
   background: url("bg_trame_grise.png") left bottom repeat-x;
@@ -178,6 +178,35 @@ div.inlinedform {
   margin-left: 2em;
 }
 
+/*FIXME inlineedit not used ?*/
+div.inlineedit {
+  display: none;}
+
+div.editableField {
+  display: inline;
+}
+
+div.editableField:hover,
+div.editableField p:hover {
+  background-color: #eeedd9;
+}
+
+input.error {
+  background: transparent url("error.png") 100% 50% no-repeat;
+}
+
+span.error {
+  display: block;
+  font-weight: bold;
+  color: #ed0d0d;
+}
+
+option.separator {
+  font-weight: bold;
+  background: #ccc;
+  text-align: center;
+}
+
 div.trame_grise {
   background: url("bg_trame_grise.png") left top repeat-x;
 }
@@ -189,3 +218,21 @@ div.notice {
   padding-left: 2em;
   background : #f8f8ee url("information.png") 5px center no-repeat ;
 }
+
+.helper{
+  font-size: 96%;
+  color: #555544;
+}
+
+.helper:hover {
+  color: #000;
+  cursor: default;
+}
+
+input.validateButton {  
+  margin: 1em 1em 0px 0px;
+  border: 1px solid #edecd2;
+  border-color:#edecd2 #cfceb7 #cfceb7  #edecd2;
+  background: #fffff8 url("button.png") bottom left repeat-x;
+}
+

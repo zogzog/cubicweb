@@ -78,6 +78,8 @@ def line_context_filter(line_no, center, before=3, after=None):
     return center - before <= line_no <= center + after
 
 ## base webtest class #########################################################
+VALMAP = {None: None, 'dtd': DTDValidator, 'xml': SaxOnlyValidator}
+
 class WebTest(EnvBasedTC):
     """base class for web tests"""
     __abstract__ = True
@@ -93,35 +95,28 @@ class WebTest(EnvBasedTC):
     #  SaxOnlyValidator : guarantees XML is well formed
     #  None : do not try to validate anything
     # validators used must be imported from from.devtools.htmlparser
-    validators = {
-        # maps vid : validator name
-        'hcal' : SaxOnlyValidator,
-        'rss' : SaxOnlyValidator,
-        'rssitem' : None,
-        'xml' : SaxOnlyValidator,
-        'xmlitem' : None,
-        'xbel' : SaxOnlyValidator,
-        'xbelitem' : None,
-        'vcard' : None,
-        'fulltext': None,
-        'fullthreadtext': None,
-        'fullthreadtext_descending': None,
-        'text' : None,
-        'treeitemview': None,
-        'textincontext' : None,
-        'textoutofcontext' : None,
-        'combobox' : None,
-        'csvexport' : None,
-        'ecsvexport' : None,
+    content_type_validators = {
+        # maps MIME type : validator name
+        #
+        # do not set html validators here, we need HTMLValidator for html
+        # snippets
+        #'text/html': DTDValidator,
+        #'application/xhtml+xml': DTDValidator,
+        'application/xml': SaxOnlyValidator,
+        'text/xml': SaxOnlyValidator,
+        'text/plain': None,
+        'text/comma-separated-values': None,
+        'text/x-vcard': None,
+        'text/calendar': None,
+        'application/json': None,
+        'image/png': None,
         }
-    valmap = {None: None, 'dtd': DTDValidator, 'xml': SaxOnlyValidator}
-    no_auto_populate = ()
-    ignored_relations = ()
+    # maps vid : validator name (override content_type_validators)
+    vid_validators = dict((vid, VALMAP[valkey])
+                          for vid, valkey in VIEW_VALIDATORS.iteritems())
     
-    def __init__(self, *args, **kwargs):
-        EnvBasedTC.__init__(self, *args, **kwargs)
-        for view, valkey in VIEW_VALIDATORS.iteritems():
-            self.validators[view] = self.valmap[valkey]
+    no_auto_populate = ()
+    ignored_relations = ()    
         
     def custom_populate(self, how_many, cursor):
         pass
@@ -163,21 +158,24 @@ class WebTest(EnvBasedTC):
         self.commit()
 
     @nocoverage
-    def _check_html(self, output, vid, template='main'):
+    def _check_html(self, output, view, template='main'):
         """raises an exception if the HTML is invalid"""
-        if template is None:
-            default_validator = HTMLValidator
-        else:
-            default_validator = DTDValidator
-        validatorclass = self.validators.get(vid, default_validator)
+        try:
+            validatorclass = self.vid_validators[view.id]
+        except KeyError:
+            if template is None:
+                default_validator = HTMLValidator
+            else:
+                default_validator = DTDValidator
+            validatorclass = self.content_type_validators.get(view.content_type,
+                                                              default_validator)
         if validatorclass is None:
             return None
         validator = validatorclass()
-        output = output.strip()
-        return validator.parse_string(output)
+        return validator.parse_string(output.strip())
 
 
-    def view(self, vid, rset, req=None, template='main', htmlcheck=True, **kwargs):
+    def view(self, vid, rset, req=None, template='main', **kwargs):
         """This method tests the view `vid` on `rset` using `template`
 
         If no error occured while rendering the view, the HTML is analyzed
@@ -194,8 +192,6 @@ class WebTest(EnvBasedTC):
         #     print 
         req.form['vid'] = vid
         view = self.vreg.select_view(vid, req, rset, **kwargs)
-        if view.content_type not in ('application/xml', 'application/xhtml+xml', 'text/html'):
-            htmlcheck = False
         # set explicit test description
         if rset is not None:
             self.set_description("testing %s, mod=%s (%s)" % (vid, view.__module__, rset.printable_rql()))
@@ -207,15 +203,18 @@ class WebTest(EnvBasedTC):
         elif template == 'main':
             _select_view_and_rset = TheMainTemplate._select_view_and_rset
             # patch TheMainTemplate.process_rql to avoid recomputing resultset
-            TheMainTemplate._select_view_and_rset = lambda *a, **k: (view, rset)
+            def __select_view_and_rset(self, view=view, rset=rset):
+                self.rset = rset
+                return view, rset
+            TheMainTemplate._select_view_and_rset = __select_view_and_rset
         try:
-            return self._test_view(viewfunc, vid, htmlcheck, template, **kwargs)
+            return self._test_view(viewfunc, view, template, **kwargs)
         finally:
             if template == 'main':
                 TheMainTemplate._select_view_and_rset = _select_view_and_rset
 
 
-    def _test_view(self, viewfunc, vid, htmlcheck=True, template='main', **kwargs):
+    def _test_view(self, viewfunc, view, template='main', **kwargs):
         """this method does the actual call to the view
 
         If no error occured while rendering the view, the HTML is analyzed
@@ -227,10 +226,7 @@ class WebTest(EnvBasedTC):
         output = None
         try:
             output = viewfunc(**kwargs)
-            if htmlcheck:
-                return self._check_html(output, vid, template)
-            else:
-                return output
+            return self._check_html(output, view, template)
         except (SystemExit, KeyboardInterrupt):
             raise
         except:
@@ -238,19 +234,16 @@ class WebTest(EnvBasedTC):
             # is not an AssertionError
             klass, exc, tcbk = sys.exc_info()
             try:
-                msg = '[%s in %s] %s' % (klass, vid, exc)
+                msg = '[%s in %s] %s' % (klass, view.id, exc)
             except:
-                msg = '[%s in %s] undisplayable exception' % (klass, vid)
+                msg = '[%s in %s] undisplayable exception' % (klass, view.id)
             if output is not None:
                 position = getattr(exc, "position", (0,))[0]
                 if position:
                     # define filter
-                    
-                    
                     output = output.splitlines()
                     width = int(log(len(output), 10)) + 1
                     line_template = " %" + ("%i" % width) + "i: %s"
-
                     # XXX no need to iterate the whole file except to get
                     # the line number
                     output = '\n'.join(line_template % (idx + 1, line)
@@ -259,10 +252,13 @@ class WebTest(EnvBasedTC):
                     msg+= '\nfor output:\n%s' % output
             raise AssertionError, msg, tcbk
 
-        
+
+    def to_test_etypes(self):
+        return unprotected_entities(self.schema, strict=True)
+    
     def iter_automatic_rsets(self):
         """generates basic resultsets for each entity type"""
-        etypes = unprotected_entities(self.schema, strict=True)
+        etypes = self.to_test_etypes()
         for etype in etypes:
             yield self.execute('Any X WHERE X is %s' % etype)
 
@@ -281,23 +277,26 @@ class WebTest(EnvBasedTC):
         """returns the list of views that can be applied on `rset`"""
         req = rset.req
         only_once_vids = ('primary', 'secondary', 'text')
-        skipped = ('restriction', 'cell')
         req.data['ex'] = ValueError("whatever")
         for vid, views in self.vreg.registry('views').items():
             if vid[0] == '_':
                 continue
-            try:
-                view = self.vreg.select(views, req, rset)
-                if view.id in skipped:
-                    continue
-                if view.category == 'startupview':
-                    continue
-                if rset.rowcount > 1 and view.id in only_once_vids:
-                    continue
-                if not isinstance(view, NotificationView):
-                    yield view
-            except NoSelectableObject:
+            if rset.rowcount > 1 and vid in only_once_vids:
                 continue
+            views = [view for view in views
+                     if view.category != 'startupview'
+                     and not issubclass(view, NotificationView)]
+            if views:
+                try:
+                    view = self.vreg.select(views, req, rset)
+                    if view.linkable():
+                        yield view
+                    else:
+                        not_selected(self.vreg, view)
+                    # else the view is expected to be used as subview and should
+                    # not be tested directly
+                except NoSelectableObject:
+                    continue
 
     def list_actions_for(self, rset):
         """returns the list of actions that can be applied on `rset`"""
@@ -305,27 +304,25 @@ class WebTest(EnvBasedTC):
         for action in self.vreg.possible_objects('actions', req, rset):
             yield action
 
-        
     def list_boxes_for(self, rset):
         """returns the list of boxes that can be applied on `rset`"""
         req = rset.req
         for box in self.vreg.possible_objects('boxes', req, rset):
             yield box
             
-        
     def list_startup_views(self):
         """returns the list of startup views"""
         req = self.request()
         for view in self.vreg.possible_views(req, None):
-            if view.category != 'startupview':
-                continue
-            yield view.id
-
+            if view.category == 'startupview':
+                yield view.id
+            else:
+                not_selected(self.vreg, view)
+                
     def _test_everything_for(self, rset):
         """this method tries to find everything that can be tested
         for `rset` and yields a callable test (as needed in generative tests)
         """
-        rqlst = parse(rset.rql)
         propdefs = self.vreg['propertydefs']
         # make all components visible
         for k, v in propdefs.items():
@@ -335,7 +332,7 @@ class WebTest(EnvBasedTC):
             backup_rset = rset._prepare_copy(rset.rows, rset.description)
             yield InnerTest(self._testname(rset, view.id, 'view'),
                             self.view, view.id, rset,
-                            rset.req.reset_headers(), 'main', not view.binary)
+                            rset.req.reset_headers(), 'main')
             # We have to do this because some views modify the
             # resultset's syntax tree
             rset = backup_rset
@@ -347,8 +344,6 @@ class WebTest(EnvBasedTC):
             yield InnerTest(self._testname(rset, action.id, 'action'), action.url)
         for box in self.list_boxes_for(rset):
             yield InnerTest(self._testname(rset, box.id, 'box'), box.dispatch)
-
-
 
     @staticmethod
     def _testname(rset, objid, objtype):
@@ -390,4 +385,36 @@ class RealDBTest(WebTest):
                 rset2 = rset.limit(limit=1, offset=row)
                 yield rset2
 
+def not_selected(vreg, vobject):
+    try:
+        vreg._selected[vobject.__class__] -= 1
+    except (KeyError, AttributeError):
+        pass
         
+def vreg_instrumentize(testclass):
+    from cubicweb.devtools.apptest import TestEnvironment
+    env = testclass._env = TestEnvironment('data', configcls=testclass.configcls,
+                                           requestcls=testclass.requestcls)
+    vreg = env.vreg
+    vreg._selected = {}
+    orig_select = vreg.__class__.select
+    def instr_select(self, *args, **kwargs):
+        selected = orig_select(self, *args, **kwargs)
+        try:
+            self._selected[selected.__class__] += 1
+        except KeyError:
+            self._selected[selected.__class__] = 1
+        except AttributeError:
+            pass # occurs on vreg used to restore database
+        return selected
+    vreg.__class__.select = instr_select
+
+def print_untested_objects(testclass, skipregs=('hooks', 'etypes')):
+    vreg = testclass._env.vreg
+    for registry, vobjectsdict in vreg.items():
+        if registry in skipregs:
+            continue
+        for vobjects in vobjectsdict.values():
+            for vobject in vobjects:
+                if not vreg._selected.get(vobject):
+                    print 'not tested', registry, vobject

@@ -37,11 +37,11 @@ class ManualWebTests(WebTest):
     def test_manual_tests(self):
         rset = self.execute('Any P,F,S WHERE P is EUser, P firstname F, P surname S')
         self.view('table', rset, template=None, displayfilter=True, displaycols=[0,2])
-        rset = self.execute('Any P,F,S WHERE P is EUser, P firstname F, P surname S LIMIT 1')
+        rset = self.execute('Any P,F,S LIMIT 1 WHERE P is EUser, P firstname F, P surname S')
         rset.req.form['rtype'] = 'firstname'
-        self.view('editrelation', rset, template=None, htmlcheck=False)
+        self.view('editrelation', rset, template=None)
         rset.req.form['rtype'] = 'use_email'
-        self.view('editrelation', rset, template=None, htmlcheck=False)
+        self.view('editrelation', rset, template=None)
         
 
     def test_sortable_js_added(self):
@@ -49,7 +49,7 @@ class ManualWebTests(WebTest):
         # sortable.js should not be included by default
         self.failIf('jquery.tablesorter.js' in self.view('oneline', rset))
         # but should be included by the tableview
-        rset = self.execute('Any P,F,S WHERE P is EUser, P firstname F, P surname S LIMIT 1')
+        rset = self.execute('Any P,F,S LIMIT 1 WHERE P is EUser, P firstname F, P surname S')
         self.failUnless('jquery.tablesorter.js' in self.view('table', rset))
 
     def test_js_added_only_once(self):

@@ -2,7 +2,7 @@
 the user connected to a session
 
 :organization: Logilab
-:copyright: 2001-2008 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+:copyright: 2001-2009 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 """
 __docformat__ = "restructuredtext en"
@@ -54,6 +54,7 @@ def after_update_entity(session, entity):
             entity.check_perm('update')
             check_entity_attributes(session, entity)
         except Unauthorized:
+            entity.clear_local_perm_cache('update')
             CheckEntityPermissionOp(session, entity=entity, action='update')
         
 def before_del_entity(session, eid):

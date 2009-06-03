@@ -1,3 +1,10 @@
+"""entity classes user and group entities
+
+:organization: Logilab
+:copyright: 2001-2009 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+:contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
+"""
+__docformat__ = "restructuredtext en"
 from logilab.common.decorators import cached
 
 from cubicweb import Unauthorized
@@ -26,6 +33,7 @@ class EUser(AnyEntity):
                   'in_group'   : 'primary', 
                   ('owned_by', '*', 'object') : ('generated', 'link'),
                   ('created_by','*','object') : ('generated', 'link'),
+                  ('bookmarked_by', '*', 'object'): ('generated', 'create'),
                   }
     
     # used by repository to check if  the user can log in or not
@@ -84,6 +92,13 @@ class EUser(AnyEntity):
         """convience / shortcut method to test if the user belongs to `group`
         """
         return self.matching_groups(group) == 1
+
+    def is_anonymous(self):
+        """ checks if user is an anonymous user"""
+        #FIXME on the web-side anonymous user is detected according
+        # to config['anonymous-user'], we don't have this info on
+        # the server side. 
+        return self.groups == frozenset(('guests', ))
 
     def owns(self, eid):
         if hasattr(self.req, 'unsafe_execute'):

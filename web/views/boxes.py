@@ -10,14 +10,14 @@ additional (disabled by default) boxes
 * startup views box
 
 :organization: Logilab
-:copyright: 2001-2008 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+:copyright: 2001-2009 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 """
 __docformat__ = "restructuredtext en"
 
 from logilab.mtconverter import html_escape
 
-from cubicweb.common.selectors import (rset_selector, appobject_selectable)
+from cubicweb.common.selectors import any_rset, appobject_selectable
 from cubicweb.web.htmlwidgets import BoxWidget, BoxMenu, BoxHtml, RawBoxItem
 from cubicweb.web.box import BoxTemplate, ExtResourcesBoxTemplate
 
@@ -29,7 +29,7 @@ class EditBox(BoxTemplate):
     box with all actions impacting the entity displayed: edit, copy, delete
     change state, add related entities
     """
-    __selectors__ = (rset_selector,) + BoxTemplate.__selectors__
+    __selectors__ = (any_rset,) + BoxTemplate.__selectors__
     id = 'edit_box'
     title = _('actions')
     order = 2
@@ -143,7 +143,7 @@ class SearchBox(BoxTemplate):
 <input type="hidden" name="__fromsearchbox" value="1" />
 <input type="hidden" name="subvid" value="tsearch" />
 </td><td>
-<input tabindex="%s" type="submit" id="rqlboxsubmit" value="" />
+<input tabindex="%s" type="submit" id="rqlboxsubmit" class="rqlsubmit" value="" />
 </td></tr></table>
 </form>"""
 
@@ -175,16 +175,15 @@ class PossibleViewsBox(BoxTemplate):
 
     def call(self, **kwargs):
         box = BoxWidget(self.req._(self.title), self.id)
-        actions = [v for v in self.vreg.possible_views(self.req, self.rset)
-                   if v.category != 'startupview']
-        for category, actions in self.sort_actions(actions):
+        views = [v for v in self.vreg.possible_views(self.req, self.rset)
+                 if v.category != 'startupview']
+        for category, views in self.sort_actions(views):
             menu = BoxMenu(category)
-            for action in actions:
-                menu.append(self.box_action(action))
+            for view in views:
+                menu.append(self.box_action(view))
             box.append(menu)
         if not box.is_empty():
             box.render(self.w)
-
 
         
 class RSSIconBox(ExtResourcesBoxTemplate):
@@ -200,25 +199,8 @@ class RSSIconBox(ExtResourcesBoxTemplate):
         urlgetter = self.vreg.select_component('rss_feed_url', self.req, self.rset)
         url = urlgetter.feed_url()
         rss = self.req.external_resource('RSS_LOGO')
-        self.w(u'<a href="%s"><img src="%s" border="0" /></a>\n' % (html_escape(url), rss))
+        self.w(u'<a href="%s"><img src="%s" alt="rss"/></a>\n' % (html_escape(url), rss))
 
-
-## warning("schemabox ne marche plus pour le moment")
-## class SchemaBox(BoxTemplate):
-##     """display a box containing link to list of entities by type"""
-##     id = 'schema_box'
-##     visible = False # disabled by default
-##     title = _('entity list')
-##     order = 60
-        
-##     def call(self, **kwargs):
-##         box = BoxWidget(self.req._(title), self.id)
-##         for etype in self.config.etypes(self.req.user, 'read'):
-##             view = self.vreg.select_view('list', self.req, self.etype_rset(etype))
-##             box.append(self.mk_action(display_name(self.req, etype, 'plural'),
-##                                       view.url(), etype=etype))
-##         if not box.is_empty():
-##             box.render(self.w)
 
 class StartupViewsBox(BoxTemplate):
     """display a box containing links to all startup views"""

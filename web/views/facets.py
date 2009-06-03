@@ -1,7 +1,7 @@
 """the facets box and some basic facets
 
 :organization: Logilab
-:copyright: 2008 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+:copyright: 2008-2009 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 """
 __docformat__ = "restructuredtext en"
@@ -10,9 +10,9 @@ from simplejson import dumps
 
 from logilab.mtconverter import html_escape
 
-from cubicweb.common.selectors import (chainfirst, chainall, nfentity_selector,
-                                    two_lines_rset, contextprop_selector,
-                                    yes, one_has_relation_selector)
+from cubicweb.common.selectors import (chainfirst, chainall, non_final_entity,
+                                    two_lines_rset, match_context_prop,
+                                    yes, one_has_relation)
 from cubicweb.web.box import BoxTemplate
 from cubicweb.web.facet import (AbstractFacet, VocabularyFacet, FacetStringWidget,
                              RelationFacet, prepare_facets_rqlst, filter_hiddens)
@@ -28,8 +28,8 @@ class FilterBox(BoxTemplate):
     """filter results of a query"""
     id = 'filter_box'
     __selectors__ = (chainfirst(contextview_selector,
-                                chainall(nfentity_selector, two_lines_rset)),
-                     contextprop_selector)
+                                chainall(non_final_entity, two_lines_rset)),
+                     match_context_prop)
     context = 'left'
     title = _('boxes_filter_box')
     visible = True # functionality provided by the search box by default
@@ -153,7 +153,7 @@ class ETypeFacet(RelationFacet):
 
 
 class HasTextFacet(AbstractFacet):
-    __selectors__ = (one_has_relation_selector, contextprop_selector)
+    __selectors__ = (one_has_relation, match_context_prop)
     id = 'has_text-facet'
     rtype = 'has_text'
     role = 'subject'

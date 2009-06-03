@@ -2,7 +2,7 @@
 
 
 :organization: Logilab
-:copyright: 2001-2008 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+:copyright: 2001-2009 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 """
 __docformat__ = "restructuredtext en"
@@ -28,9 +28,9 @@ CW_XHTML_EXTENSIONS = '''[
   <!ATTLIST html xmlns:cubicweb CDATA  #FIXED \'http://www.logilab.org/2008/cubicweb\'  >
 
 <!ENTITY % coreattrs
- "id          ID             #IMPLIED
-  class       CDATA          #IMPLIED
-  style       CDATA   #IMPLIED
+ "id          ID            #IMPLIED
+  class       CDATA         #IMPLIED
+  style       CDATA         #IMPLIED
   title       CDATA         #IMPLIED
 
  cubicweb:sortvalue         CDATA   #IMPLIED
@@ -53,12 +53,14 @@ CW_XHTML_EXTENSIONS = '''[
  cubicweb:vid               CDATA   #IMPLIED
  cubicweb:rql               CDATA   #IMPLIED
  cubicweb:actualrql         CDATA   #IMPLIED
- cubicweb:rooteid           CDATA   #IMPLIED   
+ cubicweb:rooteid           CDATA   #IMPLIED
  cubicweb:dataurl           CDATA   #IMPLIED
- cubicweb:size              CDATA   #IMPLIED   
+ cubicweb:size              CDATA   #IMPLIED
  cubicweb:tlunit            CDATA   #IMPLIED
  cubicweb:loadurl           CDATA   #IMPLIED
  cubicweb:uselabel          CDATA   #IMPLIED
+ cubicweb:facetargs         CDATA   #IMPLIED
+ cubicweb:facetName         CDATA   #IMPLIED
   "> ] '''
 
 TRANSITIONAL_DOCTYPE = u'<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd" %s>\n'
@@ -71,7 +73,7 @@ class View(AppRsetObject):
 
     A view is instantiated to render a [part of a] result set. View
     subclasses may be parametred using the following class attributes:
-    
+
     * `templatable` indicates if the view may be embeded in a main
       template or if it has to be rendered standalone (i.e. XML for
       instance)
@@ -85,14 +87,14 @@ class View(AppRsetObject):
     time to a write function to use.
     """
     __registry__ = 'views'
-    
+
     templatable = True
     need_navigation = True
     # content_type = 'application/xhtml+xml' # text/xhtml'
     binary = False
     add_to_breadcrumbs = True
     category = 'view'
-    
+
     def __init__(self, req, rset):
         super(View, self).__init__(req, rset)
         self.w = None
@@ -102,7 +104,7 @@ class View(AppRsetObject):
         if self.req.xhtml_browser():
             return 'application/xhtml+xml'
         return 'text/html'
-    
+
     def set_stream(self, w=None):
         if self.w is not None:
             return
@@ -118,14 +120,14 @@ class View(AppRsetObject):
         return stream
 
     # main view interface #####################################################
-            
+
     def dispatch(self, w=None, **context):
         """called to render a view object for a result set.
 
         This method is a dispatched to an actual method selected
         according to optional row and col parameters, which are locating
         a particular row or cell in the result set:
-        
+
         * if row [and col] are specified, `cell_call` is called
         * if none of them is supplied, the view is considered to apply on
           the whole result set (which may be None in this case), `call` is
@@ -147,7 +149,7 @@ class View(AppRsetObject):
     # should default .call() method add a <div classs="section"> around each
     # rset item
     add_div_section = True
-    
+
     def call(self, **kwargs):
         """the view is called for an entire result set, by default loop
         other rows of the result set and call the same view on the
@@ -169,10 +171,10 @@ class View(AppRsetObject):
     def cell_call(self, row, col, **kwargs):
         """the view is called for a particular result set cell"""
         raise NotImplementedError, self
-        
+
     def linkable(self):
         """return True if the view may be linked in a menu
-        
+
         by default views without title are not meant to be displayed
         """
         if not getattr(self, 'title', None):
@@ -181,7 +183,7 @@ class View(AppRsetObject):
 
     def is_primary(self):
         return self.id == 'primary'
-    
+
     def url(self):
         """return the url associated with this view. Should not be
         necessary for non linkable views, but a default implementation
@@ -197,7 +199,7 @@ class View(AppRsetObject):
         self.req.set_content_type(self.content_type)
 
     # view utilities ##########################################################
-    
+
     def view(self, __vid, rset, __fallback_vid=None, **kwargs):
         """shortcut to self.vreg.render method avoiding to pass self.req"""
         try:
@@ -207,7 +209,7 @@ class View(AppRsetObject):
                 raise
             view = self.vreg.select_view(__fallback_vid, self.req, rset, **kwargs)
         return view.dispatch(**kwargs)
-    
+
     def wview(self, __vid, rset, __fallback_vid=None, **kwargs):
         """shortcut to self.view method automatically passing self.w as argument
         """
@@ -234,7 +236,7 @@ class View(AppRsetObject):
             label = label or self.req._(action.title)
             return u'<a href="%s">%s</a>' % (html_escape(action.url()), label)
         return u''
-    
+
     def html_headers(self):
         """return a list of html headers (eg something to be inserted between
         <head> and </head> of the returned page
@@ -242,7 +244,7 @@ class View(AppRsetObject):
         by default return a meta tag to disable robot indexation of the page
         """
         return [NOINDEX]
-    
+
     def page_title(self):
         """returns a title according to the result set - used for the
         title in the HTML header
@@ -292,7 +294,7 @@ class View(AppRsetObject):
         """ return the url of the entity creation form for a given entity type"""
         return self.req.build_url('add/%s'%etype, **kwargs)
 
-        
+
 # concrete views base classes #################################################
 
 class EntityView(View):
@@ -301,7 +303,7 @@ class EntityView(View):
     __registerer__ = accepts_registerer
     __selectors__ = (accept,)
     category = 'entityview'
-    
+
     def field(self, label, value, row=True, show_label=True, w=None, tr=True):
         """ read-only field """
         if w is None:
@@ -316,7 +318,7 @@ class EntityView(View):
         if row:
             w(u'</div>')
 
-        
+
 class StartupView(View):
     """base class for views which doesn't need a particular result set
     to be displayed (so they can always be displayed !)
@@ -325,7 +327,7 @@ class StartupView(View):
     __selectors__ = (match_user_group, none_rset)
     require_groups = ()
     category = 'startupview'
-    
+
     def url(self):
         """return the url associated with this view. We can omit rql here"""
         return self.build_url('view', vid=self.id)
@@ -345,9 +347,9 @@ class EntityStartupView(EntityView):
     """
     __registerer__ = accepts_registerer
     __selectors__ = (chainfirst(none_rset, accept),)
-    
+
     default_rql = None
-    
+
     def __init__(self, req, rset):
         super(EntityStartupView, self).__init__(req, rset)
         if rset is None:
@@ -357,7 +359,7 @@ class EntityStartupView(EntityView):
     def startup_rql(self):
         """return some rql to be executedif the result set is None"""
         return self.default_rql
-    
+
     def call(self, **kwargs):
         """override call to execute rql returned by the .startup_rql
         method if necessary
@@ -376,14 +378,14 @@ class EntityStartupView(EntityView):
             return self.build_url(vid=self.id)
         return super(EntityStartupView, self).url()
 
-    
+
 class AnyRsetView(View):
     """base class for views applying on any non empty result sets"""
     __registerer__ = priority_registerer
     __selectors__ = (nonempty_rset,)
-    
+
     category = 'anyrsetview'
-    
+
     def columns_labels(self, tr=True):
         if tr:
             translate = display_name
@@ -400,7 +402,7 @@ class AnyRsetView(View):
                 label = translate(self.req, attr)
             labels.append(label)
         return labels
-    
+
 
 class EmptyRsetView(View):
     """base class for views applying on any empty result sets"""
@@ -419,7 +421,7 @@ class Template(View):
     __selectors__ = (match_user_group,)
 
     require_groups = ()
-    
+
     def template(self, oid, **kwargs):
         """shortcut to self.registry.render method on the templates registry"""
         w = kwargs.pop('w', self.w)

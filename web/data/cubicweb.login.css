@@ -76,7 +76,8 @@ div#loginBox div#loginContent form {
 }
 
 input.loginButton {
-  display:block;
+  border: 1px solid #edecd2;
+  border-color:#edecd2 #cfceb7 #cfceb7  #edecd2;
   margin: 2px 0px 0px;
   background: #f0eff0 url("gradient-grey-up.png") left top repeat-x; 
 }

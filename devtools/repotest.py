@@ -3,7 +3,7 @@
 This module contains functions to initialize a new repository.
 
 :organization: Logilab
-:copyright: 2003-2008 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+:copyright: 2003-2009 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 """
 __docformat__ = "restructuredtext en"
@@ -249,7 +249,8 @@ from cubicweb.server import rqlannotation
 _orig_select_principal = rqlannotation._select_principal
 
 def _select_principal(scope, relations):
-    return _orig_select_principal(scope, sorted(relations, key=lambda x: x.r_type))
+    return _orig_select_principal(scope, relations,
+                                  _sort=lambda rels: sorted(rels, key=lambda x: x.r_type))
 
 try:
     from cubicweb.server.msplanner import PartPlanInformation

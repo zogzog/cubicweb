@@ -45,7 +45,7 @@ table.popupCalendar th.next {
 
 table.popupCalendar th.prev,
 table.popupCalendar th.next {
-  color: orangered;
+  color: #ff4500;
   font-size: 50%;
   font-weight: bold;
   padding: 2px 0px;

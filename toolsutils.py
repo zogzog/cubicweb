@@ -273,7 +273,7 @@ being prompted to give it.',
       }),
     ("host",
      {'short': 'H', 'type' : 'string', 'metavar': '<hostname>',
-      'default': 'all-in-one',
+      'default': None,
       'help': 'specify the name server\'s host name. Will be detected by \
 broadcast if not provided.',
       }),

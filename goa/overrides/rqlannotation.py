@@ -1,4 +1,4 @@
-def set_qdata(union, noinvariant):
+def set_qdata(getrschema, union, noinvariant):
     pass
         
 class SQLGenAnnotator(object):

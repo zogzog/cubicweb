@@ -67,9 +67,9 @@ You need to install the three following packages: `postgres-8.3`,
 
 Then you can install:
 
-* `pyro` if you wish the repository is accessible through Pyro
+* `pyro` if you wish the repository to be accessible through Pyro
   or if the client and the server are not running on the same machine
-  (in suche case the packages will have to be isntalled on both
+  (in which case the packages will have to be installed on both
   machines)
 
 * `python-ldap` if you plan to use a LDAP source on the server
@@ -80,8 +80,8 @@ Environment configuration
 -------------------------
 
 If you installed `CubicWeb` by cloning the Mercurial forest, then you
-will need to update the environment variable PYTHONPATH to add to it 
-the path to the forest ``cubicweb``.
+will need to update the environment variable PYTHONPATH by adding  
+the path to the forest ``cubicweb``:
 
 Add the following lines to either `.bashrc` or `.bash_profile` to configure
 your development environment ::
@@ -117,16 +117,13 @@ Postgres configuration
 
     createuser -s username
 
-  Initialize the password of the superuser you juste created with 
+  Initialize the password of the superuser you just created with 
   ``su - postgres`` and ``psql``.
 
   This password will be asked to you later on where you will create an
   instance with `cubicweb-ctl create`
 
-[XXX]
-Est-ce que ces etapes sont vraiment necessaires? 
-sand : lors de l'installation de ma bdd cela n'a pas ete fait
-et il semble que tout aille bien. Doit etre verifie avec les experts.
+.. [XXX] Est-ce que ces etapes sont vraiment necessaires?  sand : lors de l'installation de ma bdd cela n'a pas ete fait et il semble que tout aille bien. Doit etre verifie avec les experts.
 
 * installation of plain-text index extension ::
 
@@ -140,7 +137,7 @@ et il semble que tout aille bien. Doit etre verifie avec les experts.
 Pyro configuration
 ------------------
 
-If you use Pyro, it is required to have a name server Pyro runing on your
+If you use Pyro, it is required to have a name server Pyro running on your
 network (by default it is identified by a broadcast request).
 
 To do so, you need to :
@@ -151,6 +148,6 @@ To do so, you need to :
   `pyro-nsd start`
 
 * edit the file ``/etc/default/pyro-nsd`` so that the name server pyro
-  will be launched automatically when the macine fire up
+  will be launched automatically when the machine fire up
 
 

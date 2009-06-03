@@ -2,7 +2,7 @@
 or a list of entities of the same type
 
 :organization: Logilab
-:copyright: 2001-2008 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+:copyright: 2001-2009 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 """
 __docformat__ = "restructuredtext en"
@@ -17,9 +17,9 @@ from logilab.common.decorators import cached
 from cubicweb.interfaces import IWorkflowable
 from cubicweb.common.utils import make_uid
 from cubicweb.common.uilib import cut
-from cubicweb.common.selectors import (etype_form_selector, kwargs_selector,
-                                    one_line_rset, interface_selector,
-                                    req_form_params_selector, accept_selector)
+from cubicweb.common.selectors import (accept_etype, match_kwargs,
+                                    one_line_rset, implement_interface,
+                                    match_form_params, accept)
 from cubicweb.common.view import EntityView
 from cubicweb.web import INTERNAL_FIELD_VALUE, stdmsgs, eid_param
 from cubicweb.web.controller import NAV_FORM_PARAMETERS
@@ -33,6 +33,9 @@ class DeleteConfForm(EntityForm):
     title = _('delete')
     domid = 'deleteconf'
     onsubmit = None
+    # don't use navigation, all entities asked to be deleted should be displayed
+    # else we will only delete the displayed page
+    need_navigation = False
     
     def call(self):
         """ask for confirmation before real deletion"""
@@ -87,7 +90,7 @@ class ChangeStateForm(EntityForm):
     id = 'statuschange'
     title = _('status change')
 
-    __selectors__ = (interface_selector, req_form_params_selector)
+    __selectors__ = (implement_interface, match_form_params)
     accepts_interfaces = (IWorkflowable,)
     form_params = ('treid',)
 
@@ -150,7 +153,7 @@ class ChangeStateForm(EntityForm):
 
 class ClickAndEditForm(EntityForm):
     id = 'reledit'
-    __selectors__ = (kwargs_selector, )
+    __selectors__ = (match_kwargs, )
     expected_kwargs = ('rtype',)
 
     #FIXME editableField class could be toggleable from userprefs
@@ -216,7 +219,7 @@ class EditionForm(EntityForm):
     dynamic default values such as the 'tomorrow' date or the user's login
     being connected
     """    
-    __selectors__ = (one_line_rset, accept_selector)
+    __selectors__ = (one_line_rset, accept)
 
     id = 'edition'
     title = _('edition')
@@ -392,17 +395,20 @@ class EditionForm(EntityForm):
                 if rschema != 'eid']
     
     def relations_form(self, entity, kwargs):
+        srels_by_cat = entity.srelations_by_category(('generic', 'metadata'), 'add')
+        if not srels_by_cat:
+            return u''
         req = self.req
         _ = self.req._
         label = u'%s :' % _('This %s' % entity.e_schema).capitalize()
         eid = entity.eid
         html = []
-        pendings = list(self.restore_pending_inserts(entity))
         w = html.append
         w(u'<fieldset class="subentity">')
         w(u'<legend class="iformTitle">%s</legend>' % label)
         w(u'<table id="relatedEntities">')
         for row in self.relations_table(entity):
+            # already linked entities
             if row[2]:
                 w(u'<tr><th class="labelCol">%s</th>' % row[0].display_name(req, row[1]))
                 w(u'<td>')
@@ -415,10 +421,12 @@ class EditionForm(EntityForm):
                 w(u'</ul>')
                 w(u'</td>')
                 w(u'</tr>')
+        pendings = list(self.restore_pending_inserts(entity))
         if not pendings:
             w(u'<tr><th>&nbsp;</th><td>&nbsp;</td></tr>')
         else:
             for row in pendings:
+                # soon to be linked to entities
                 w(u'<tr id="tr%s">' % row[1])
                 w(u'<th>%s</th>' % row[3])
                 w(u'<td>')
@@ -434,7 +442,8 @@ class EditionForm(EntityForm):
         w(u'<select id="relationSelector_%s" tabindex="%s" onchange="javascript:showMatchingSelect(this.options[this.selectedIndex].value,%s);">'
           % (eid, req.next_tabindex(), html_escape(dumps(eid))))
         w(u'<option value="">%s</option>' % _('select a relation'))
-        for i18nrtype, rschema, target in entity.srelations_by_category(('generic', 'metadata'), 'add'):
+        for i18nrtype, rschema, target in srels_by_cat:
+            # more entities to link to
             w(u'<option value="%s_%s">%s</option>' % (rschema, target, i18nrtype))
         w(u'</select>')
         w(u'</th>')
@@ -517,7 +526,7 @@ class EditionForm(EntityForm):
 
     
 class CreationForm(EditionForm):
-    __selectors__ = (etype_form_selector, )
+    __selectors__ = (accept_etype, )
     id = 'creation'
     title = _('creation')
     
@@ -630,7 +639,7 @@ class InlineFormMixIn(object):
 
 class InlineEntityCreationForm(InlineFormMixIn, CreationForm):
     id = 'inline-creation'
-    __selectors__ = (kwargs_selector, etype_form_selector)
+    __selectors__ = (match_kwargs, accept_etype)
     expected_kwargs = ('ptype', 'peid', 'rtype')
     
     EDITION_BODY = u'''\
@@ -669,7 +678,7 @@ class InlineEntityCreationForm(InlineFormMixIn, CreationForm):
 
 class InlineEntityEditionForm(InlineFormMixIn, EditionForm):
     id = 'inline-edition'
-    __selectors__ = (accept_selector, kwargs_selector)
+    __selectors__ = (accept, match_kwargs)
     expected_kwargs = ('ptype', 'peid', 'rtype')
     
     EDITION_BODY = u'''\
@@ -872,7 +881,7 @@ class TableEditForm(EntityForm):
 
 class UnrelatedDivs(EntityView):
     id = 'unrelateddivs'
-    __selectors__ = (req_form_params_selector,)
+    __selectors__ = (match_form_params,)
     form_params = ('relation',)
 
     @property

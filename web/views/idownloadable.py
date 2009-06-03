@@ -11,7 +11,7 @@ from logilab.mtconverter import BINARY_ENCODINGS, TransformError, html_escape
 from cubicweb.interfaces import IDownloadable
 from cubicweb.common.mttransforms import ENGINE
 from cubicweb.common.selectors import (one_line_rset, score_entity_selector,
-                                       interface_selector, contextprop_selector)
+                                       implement_interface, match_context_prop)
 from cubicweb.web.box import EntityBoxTemplate
 from cubicweb.web.views import baseviews
 
@@ -35,7 +35,7 @@ def download_box(w, entity, title=None, label=None):
     
 class DownloadBox(EntityBoxTemplate):
     id = 'download_box'
-    __selectors__ = (one_line_rset, interface_selector, contextprop_selector)
+    __selectors__ = (one_line_rset, implement_interface, match_context_prop)
     accepts_interfaces = (IDownloadable,)
     order = 10
     def cell_call(self, row, col, title=None, label=None, **kwargs):
@@ -48,7 +48,7 @@ class DownloadView(baseviews.EntityView):
     of entities providing the necessary interface
     """
     id = 'download'
-    __selectors__ = (one_line_rset, interface_selector)
+    __selectors__ = (one_line_rset, implement_interface)
     accepts_interfaces = (IDownloadable,)
 
     templatable = False
@@ -77,7 +77,7 @@ class DownloadLinkView(baseviews.EntityView):
     """view displaying a link to download the file"""
     id = 'downloadlink'
     title = None # should not be listed in possible views
-    __selectors__ = (interface_selector,)
+    __selectors__ = (implement_interface,)
 
     accepts_interfaces = (IDownloadable,)
     
@@ -89,7 +89,7 @@ class DownloadLinkView(baseviews.EntityView):
 
                                                                                 
 class IDownloadablePrimaryView(baseviews.PrimaryView):
-    __selectors__ = (interface_selector,)
+    __selectors__ = (implement_interface,)
     #skip_attrs = ('eid', 'data',) # XXX
     accepts_interfaces = (IDownloadable,)
 
@@ -122,7 +122,7 @@ class IDownloadablePrimaryView(baseviews.PrimaryView):
 
 
 class IDownloadableLineView(baseviews.OneLineView):
-    __selectors__ = (interface_selector,)
+    __selectors__ = (implement_interface,)
     # don't kick default oneline view
     accepts_interfaces = (IDownloadable,)
     
@@ -138,7 +138,7 @@ class IDownloadableLineView(baseviews.OneLineView):
 
 
 class ImageView(baseviews.EntityView):
-    __selectors__ = (interface_selector, score_entity_selector)
+    __selectors__ = (implement_interface, score_entity_selector)
     id = 'image'
     title = _('image')
     accepts_interfaces = (IDownloadable,)

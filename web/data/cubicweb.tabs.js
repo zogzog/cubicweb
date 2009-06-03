@@ -1,5 +1,6 @@
-function set_tab(tabname) {
-  // set appropriate cookie
-  // XXX see if we can no just do it with jQuery
-  async_remote_exec('remember_active_tab', tabname);
+function set_tab(tabname, cookiename) {
+    // set appropriate cookie
+    async_remote_exec('set_cookie', cookiename, tabname);
+    // trigger show + tabname event
+    trigger_load(tabname);
 }

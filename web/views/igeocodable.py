@@ -4,7 +4,7 @@ import simplejson
 
 from cubicweb.interfaces import IGeocodable
 from cubicweb.common.view import EntityView
-from cubicweb.common.selectors import interface_selector
+from cubicweb.common.selectors import implement_interface
 
 class GeocodingJsonView(EntityView):
     id = 'geocoding-json'
@@ -12,10 +12,11 @@ class GeocodingJsonView(EntityView):
     templatable = False
     content_type = 'application/json'
 
-    __selectors__ = (interface_selector,)
+    __selectors__ = (implement_interface,)
     accepts_interfaces = (IGeocodable,)
-    
+
     def call(self):
+        zoomlevel = self.req.form.pop('zoomlevel', 8)
         extraparams = self.req.form.copy()
         extraparams.pop('vid', None)
         extraparams.pop('rql', None)
@@ -26,40 +27,41 @@ class GeocodingJsonView(EntityView):
             'longitude': sum(marker['longitude'] for marker in markers) / len(markers),
             }
         geodata = {
+            'zoomlevel': int(zoomlevel),
             'center': center,
             'markers': markers,
             }
         self.w(simplejson.dumps(geodata))
-        
+
     def build_marker_data(self, row, extraparams):
         entity = self.entity(row, 0)
         return {'latitude': entity.latitude, 'longitude': entity.longitude,
                 'title': entity.dc_long_title(),
                 #icon defines : (icon._url, icon.size,  icon.iconAncho', icon.shadow)
-                'icon': entity.marker_icon() or (self.req.external_resource('GMARKER_ICON'), (20, 34), (4, 34), None), 
+                'icon': entity.marker_icon() or (self.req.external_resource('GMARKER_ICON'), (20, 34), (4, 34), None),
                 'bubbleUrl': entity.absolute_url(vid='gmap-bubble', __notemplate=1, **extraparams),
                 }
 
 
 class GoogleMapBubbleView(EntityView):
     id = 'gmap-bubble'
-    
-    __selectors__ = (interface_selector,)
+
+    __selectors__ = (implement_interface,)
     accepts_interfaces = (IGeocodable,)
-    
+
     def cell_call(self, row, col):
         entity = self.entity(row, col)
         self.w(u'<div>%s</div>' % entity.view('oneline'))
         # FIXME: we should call something like address-view if available
-        
+
 
 class GoogleMapsView(EntityView):
     id = 'gmap-view'
-    
-    __selectors__ = (interface_selector,)
+
+    __selectors__ = (implement_interface,)
     accepts_interfaces = (IGeocodable,)
     need_navigation = False
-    
+
     def call(self, gmap_key, width=400, height=400, uselabel=True, urlparams=None):
         self.req.add_js('http://maps.google.com/maps?file=api&amp;v=2&amp;key=%s' % gmap_key,
                         localfile=False);
@@ -70,13 +72,13 @@ class GoogleMapsView(EntityView):
         else:
             loadurl = self.build_url(rql=rql, vid='geocoding-json', **urlparams)
         self.w(u'<div style="width: %spx; height: %spx;" class="widget gmap" '
-               u'cubicweb:wdgtype="GMapWidget" cubicweb:loadtype="auto" ' 
+               u'cubicweb:wdgtype="GMapWidget" cubicweb:loadtype="auto" '
                u'cubicweb:loadurl="%s" cubicweb:uselabel="%s"> </div>' % (width, height, loadurl, uselabel))
 
-        
+
 class GoogeMapsLegend(EntityView):
     id = 'gmap-legend'
-    
+
     def call(self):
         self.w(u'<ol>')
         for rowidx in xrange(len(self.rset)):

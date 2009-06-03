@@ -159,7 +159,8 @@ repository (default to 5 minutes).',
         external repository
         """
         self.info('synchronizing pyro source %s', self.uri)
-        extrepo = self.get_connection()._repo
+        cnx = self.get_connection()
+        extrepo = cnx._repo
         etypes = self.support_entities.keys()
         if mtime is None:
             mtime = self.last_update_time()
@@ -170,11 +171,13 @@ repository (default to 5 minutes).',
         try:
             for etype, extid in modified:
                 try:
-                    eid = self.extid2eid(extid, etype, session)
-                    rset = session.eid_rset(eid, etype)
-                    entity = rset.get_entity(0, 0)
-                    entity.complete(entity.e_schema.indexable_attributes())
-                    repo.index_entity(session, entity)
+                    exturi = cnx.describe(extid)[1]
+                    if exturi == 'system' or not exturi in repo.sources_by_uri:
+                        eid = self.extid2eid(extid, etype, session)
+                        rset = session.eid_rset(eid, etype)
+                        entity = rset.get_entity(0, 0)
+                        entity.complete(entity.e_schema.indexable_attributes())
+                        repo.index_entity(session, entity)
                 except:
                     self.exception('while updating %s with external id %s of source %s',
                                    etype, extid, self.uri)
@@ -277,18 +280,28 @@ repository (default to 5 minutes).',
         descr = rset.description
         if rset:
             needtranslation = []
+            rows = rset.rows
             for i, etype in enumerate(descr[0]):
                 if (etype is None or not self.schema.eschema(etype).is_final() or
                     getattr(union.locate_subquery(i, etype, args).selection[i], 'uidtype', None)):
                     needtranslation.append(i)
             if needtranslation:
-                for rowindex, row in enumerate(rset):
+                cnx = session.pool.connection(self.uri)
+                for rowindex in xrange(rset.rowcount - 1, -1, -1):
+                    row = rows[rowindex]
                     for colindex in needtranslation:
                         if row[colindex] is not None: # optional variable
                             etype = descr[rowindex][colindex]
-                            eid = self.extid2eid(row[colindex], etype, session)
-                            row[colindex] = eid
-            results = rset.rows
+                            exttype, exturi, extid = cnx.describe(row[colindex])
+                            if exturi == 'system' or not exturi in self.repo.sources_by_uri:
+                                eid = self.extid2eid(row[colindex], etype, session)
+                                row[colindex] = eid
+                            else:
+                                # skip this row
+                                del rows[rowindex]
+                                del descr[rowindex]
+                                break
+            results = rows
         else:
             results = []
         if server.DEBUG:

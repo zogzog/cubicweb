@@ -312,12 +312,18 @@ type "exit" or Ctrl-D to quit the shell and resume operation"""
         """a configuration option's type has changed"""
         self._option_changes.append(('typechanged', optname, oldtype, newvalue))
         
-    def cmd_add_cube(self, cube):
+    def cmd_add_cubes(self, cubes):
+        """modify the list of used cubes in the in-memory config
+        returns newly inserted cubes, including dependencies
+        """
+        if isinstance(cubes, basestring):
+            cubes = (cubes,)
         origcubes = self.config.cubes()
-        newcubes = [p for p in self.config.expand_cubes([cube]) 
+        newcubes = [p for p in self.config.expand_cubes(cubes) 
                        if not p in origcubes]
         if newcubes:
-            assert cube in newcubes
+            for cube in cubes:
+                assert cube in newcubes
             self.config.add_cubes(newcubes)
         return newcubes
 
@@ -346,7 +352,7 @@ type "exit" or Ctrl-D to quit the shell and resume operation"""
             if optdescr[0] == 'added':
                 optdict = self.config.get_option_def(optdescr[1])
                 if optdict.get('default') is REQUIRED:
-                    self.config.input_option(option, optdict)
+                    self.config.input_option(optdescr[1], optdict)
         self.config.generate_config(open(newconfig, 'w'))
         show_diffs(configfile, newconfig)
         if exists(newconfig):

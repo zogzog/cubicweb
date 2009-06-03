@@ -2,16 +2,18 @@
 """default templates for CubicWeb web client
 
 :organization: Logilab
-:copyright: 2001-2008 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+:copyright: 2001-2009 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 """
 __docformat__ = "restructuredtext en"
+
 
 from logilab.mtconverter import html_escape
 
 from cubicweb import NoSelectableObject, ObjectNotFound
 from cubicweb.common.view import Template, MainTemplate,  NOINDEX, NOFOLLOW
 from cubicweb.common.utils import make_uid
+from cubicweb.common.utils import UStringIO
 
 from cubicweb.web.views.baseviews import vid_from_rset
 
@@ -56,8 +58,9 @@ class LoggedOutTemplate(LogInOutTemplate):
     title = 'logged out'
 
     def content(self, w):
+        # FIXME Deprecated code ?
         msg = self.req._('you have been logged out')
-        w(u'<h1 class="noborder">%s</h1>\n' % msg)
+        w(u'<h2>%s</h2>\n' % msg)
         if self.config['anonymous-user']:
             indexurl = self.build_url('view', vid='index', __message=msg)
             w(u'<p><a href="%s">%s</a><p>' % (
@@ -162,7 +165,10 @@ class TheMainTemplate(MainTemplate):
                                                  self.req, self.rset)
         if etypefilter and etypefilter.propval('visible'):
             etypefilter.dispatch(w=self.w)
-        self.pagination(self.req, self.rset, self.w, not (view and view.need_navigation))
+        self.nav_html = UStringIO()
+        self.pagination(self.req, self.rset, self.nav_html.write,
+                        not (view and view.need_navigation))
+        self.w(_(self.nav_html.getvalue()))
         self.w(u'<div id="contentmain">\n')
     
     def template_html_header(self, content_type, page_title, additional_headers=()):
@@ -194,10 +200,11 @@ class TheMainTemplate(MainTemplate):
         w(u'<div id="pageContent">\n')
         vtitle = self.req.form.get('vtitle')
         if vtitle:
-            w(u'<h1 class="vtitle">%s</h1>\n' % vtitle)
+            w(u'<h1 class="vtitle">%s</h1>\n' % html_escape(vtitle))
             
     def template_footer(self, view=None):
         self.w(u'</div>\n') # close id=contentmain
+        self.w(_(self.nav_html.getvalue()))
         self.w(u'</div>\n') # closes id=pageContent
         self.content_footer(view)
         self.w(u'</td>\n')
@@ -288,7 +295,7 @@ class SimpleMainTemplate(TheMainTemplate):
         w(u'<div id="pageContent">\n')
         vtitle = self.req.form.get('vtitle')
         if vtitle:
-            w(u'<h1 class="vtitle">%s</h1>' % (vtitle))
+            w(u'<h1 class="vtitle">%s</h1>' % html_escape(vtitle))
             
     def topleft_header(self):
         self.w(u'<table id="header"><tr>\n')
@@ -418,7 +425,7 @@ class HTMLPageFooter(Template):
                                             req._(ChangeLogView.title).lower()))
         self.w(u'<a href="%s">%s</a> | ' % (req.build_url('doc/about'),
                                             req._('about this site')))
-        self.w(u'© 2001-2008 <a href="http://www.logilab.fr">Logilab S.A.</a>')
+        self.w(u'© 2001-2009 <a href="http://www.logilab.fr">Logilab S.A.</a>')
         self.w(u'</div>')
 
 

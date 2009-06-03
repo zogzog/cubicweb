@@ -28,7 +28,7 @@ def datetime2mx(datetimeobj, yamstype=None):
     regular python datetime object
     """
     if yamstype is None:
-        yamstype = guess_yamstype_from_date(datetimeobj)
+        yamstype = guess_yamstype_for_date(datetimeobj)
     assert yamstype is not None
     if yamstype == 'Datetime':
         # don't use date, db model doesn't actually support it, only datetime

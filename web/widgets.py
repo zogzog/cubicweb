@@ -732,12 +732,13 @@ class DateWidget(StringWidget):
         formatstr = req.property_value(self.format_key)
         return now().strftime(formatstr)
 
-    def add_localized_infos(self, req):
+    @classmethod
+    def add_localized_infos(cls, req):
         """inserts JS variables defining localized months and days"""
         # import here to avoid dependancy from cubicweb-common to simplejson
         _ = req._
-        monthnames = [_(mname) for mname in self.monthnames]
-        daynames = [_(dname) for dname in self.daynames]
+        monthnames = [_(mname) for mname in cls.monthnames]
+        daynames = [_(dname) for dname in cls.daynames]
         req.html_headers.define_var('MONTHNAMES', monthnames)
         req.html_headers.define_var('DAYNAMES', daynames)
 

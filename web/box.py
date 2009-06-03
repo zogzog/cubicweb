@@ -14,9 +14,9 @@ from cubicweb.common.registerers import (
     accepts_registerer, extresources_registerer,
     etype_rtype_priority_registerer)
 from cubicweb.common.selectors import (
-    etype_rtype_selector, one_line_rset, accept_selector, accept_rtype_selector,
-    primaryview_selector, contextprop_selector, has_related_entities,
-    _rqlcondition_selector)
+    etype_rtype_selector, one_line_rset, accept, has_relation,
+    primary_view, match_context_prop, has_related_entities,
+    _rql_condition)
 from cubicweb.common.view import Template
 from cubicweb.common.appobject import ReloadableMixIn
 
@@ -42,7 +42,7 @@ class BoxTemplate(Template):
         box.render(self.w)
     """
     __registry__ = 'boxes'
-    __selectors__ = Template.__selectors__ + (contextprop_selector,)
+    __selectors__ = Template.__selectors__ + (match_context_prop,)
     
     categories_in_order = ()
     property_defs = {
@@ -150,17 +150,15 @@ class ExtResourcesBoxTemplate(BoxTemplate):
 class EntityBoxTemplate(BoxTemplate):
     """base class for boxes related to a single entity"""
     __registerer__ = accepts_registerer
-    __selectors__ = (one_line_rset, primaryview_selector,
-                     contextprop_selector, etype_rtype_selector,
-                     accept_rtype_selector, accept_selector,
-                     _rqlcondition_selector)
+    __selectors__ = (one_line_rset, primary_view,
+                     match_context_prop, etype_rtype_selector,
+                     has_relation, accept, _rql_condition)
     accepts = ('Any',)
     context = 'incontext'
     condition = None
     
     def call(self, row=0, col=0, **kwargs):
-        """classes inheriting from EntityBoxTemplate should defined cell_call,
-        """
+        """classes inheriting from EntityBoxTemplate should define cell_call"""
         self.cell_call(row, col, **kwargs)
 
 
@@ -185,7 +183,7 @@ class EditRelationBoxTemplate(ReloadableMixIn, EntityBoxTemplate):
     class attributes.
     """
     
-    def cell_call(self, row, col):
+    def cell_call(self, row, col, view=None):
         self.req.add_js('cubicweb.ajax.js')
         entity = self.entity(row, col)
         box = SideBoxWidget(display_name(self.req, self.rtype), self.id)

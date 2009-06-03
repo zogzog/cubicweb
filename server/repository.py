@@ -11,7 +11,7 @@ repository mainly:
 
 
 :organization: Logilab
-:copyright: 2001-2008 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+:copyright: 2001-2009 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 """
 __docformat__ = "restructuredtext en"
@@ -490,7 +490,7 @@ class Repository(object):
         session = self.internal_session()
         try:
             if session.execute('EUser X WHERE X login %(login)s', {'login': login}):
-                return
+                return False
             # we have to create the user
             user = self.vreg.etype_class('EUser')(session, None)
             if isinstance(password, unicode):
@@ -505,6 +505,7 @@ class Repository(object):
             session.commit()
         finally:
             session.close()
+        return True
         
     def connect(self, login, password, cnxprops=None):
         """open a connection for a given user
@@ -791,7 +792,7 @@ class Repository(object):
         # since the current session user may not have required permissions to
         # do necessary stuff and we don't want to commit user session.
         #
-        # More other, even if session is already an internal session but is
+        # Moreover, even if session is already an internal session but is
         # processing a commit, we have to use another one
         if not session.is_internal_session:
             session = self.internal_session()
@@ -803,6 +804,7 @@ class Repository(object):
             entity = source.before_entity_insertion(session, lid, etype, eid)
             if source.should_call_hooks:
                 self.hm.call_hooks('before_add_entity', etype, session, entity)
+            # XXX call add_info with complete=False ?
             self.add_info(session, entity, source, lid)
             source.after_entity_insertion(session, lid, entity)
             if source.should_call_hooks:

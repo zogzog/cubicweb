@@ -26,7 +26,7 @@ Widgets.GMapWidget = defclass('GMapWidget', null, {
       var self = this; // bind this to a local variable
       jQuery.getJSON(jsonurl, function(geodata) {
 	if (geodata.center) {
-	  var zoomLevel = 8; // FIXME arbitrary !
+	  var zoomLevel = geodata.zoomlevel;
 	  map.setCenter(new GLatLng(geodata.center.latitude, geodata.center.longitude),
 		        zoomLevel);
 	}

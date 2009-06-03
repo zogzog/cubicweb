@@ -8,7 +8,7 @@ from cubicweb.devtools import ApptestConfiguration
 
 def unabsolutize(path):
     parts = path.split(os.sep)
-    for i, part in enumerate(parts):
+    for i, part in reversed(tuple(enumerate(parts))):
         if part in ('cubicweb', 'cubes', 'cubes'):
             return '/'.join(parts[i+1:])
     raise Exception('duh? %s' % path)

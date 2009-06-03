@@ -6,11 +6,11 @@ software
 distname = "cubicweb"
 modname = "cubicweb"
 
-numversion = (3, 0, 3)
+numversion = (3, 0, 10)
 version = '.'.join(str(num) for num in numversion)
 
-license = 'LCL'
-copyright = '''Copyright (c) 2003-2008 LOGILAB S.A. (Paris, FRANCE).
+license = 'GPL'
+copyright = '''Copyright (c) 2003-2009 LOGILAB S.A. (Paris, FRANCE).
 http://www.logilab.fr/ -- mailto:contact@logilab.fr'''
 
 author = "Logilab"
@@ -27,11 +27,12 @@ This package contains:
 * a bunch of other management tools
 """
 
-web = ''
-ftp = ''
-pyversions = ['2.4']
+web = 'http://www.cubicweb.org'
+ftp = 'ftp://ftp.logilab.org/pub/cubicweb'
+pyversions = ['2.4', '2.5']
 
 
+import sys
 from os import listdir, environ
 from os.path import join, isdir
 import glob
@@ -60,7 +61,8 @@ if environ.get('APYCOT_ROOT'):
     # --home install
     pydir = 'python'
 else:
-    pydir = join('python2.4', 'site-packages')
+    python_version = '.'.join(str(num) for num in sys.version_info[0:2])
+    pydir = join('python' + python_version, 'site-packages')
 
 try:
     data_files = [
@@ -90,7 +92,6 @@ try:
         [join('share', 'cubicweb', 'cubes', 'shared', 'i18n'),
          [join(i18n_dir, fname) for fname in listdir(i18n_dir)]],
         # skeleton
-        
         ]
 except OSError:
     # we are in an installed directory, don't care about this

@@ -1,0 +1,27 @@
+/***************************************/
+/* filter table form                   */
+/***************************************/
+
+table.filter th {
+  font-weight: bold;
+  background: #ebe8d9 url("button.png") repeat-x;
+  padding: 0.3em;
+  border-bottom: 1px solid #cfceb7;
+  text-align: left;
+}
+
+table.filter div.facet {
+  padding: 0.6em 0.2em;
+  margin: 0em 1em;
+  border: 1px solid #ccc;
+}
+
+table.filter div.facetTitle {
+  font-weight: bold;
+}
+
+
+div#tableActionsBox {
+ direction:rtl;
+ float:right
+}

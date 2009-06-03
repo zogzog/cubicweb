@@ -7,7 +7,7 @@ from shutil import copy
 # additional monkey patches necessary in regular cubicweb environment
 from cubicweb.server import rqlannotation
 from cubicweb.goa.overrides import rqlannotation as goarqlannotation
-rqlannotation.sqlgen_annotate = goarqlannotation.sqlgen_annotate
+rqlannotation.SQLGenAnnotator = goarqlannotation.SQLGenAnnotator
 rqlannotation.set_qdata = goarqlannotation.set_qdata
 
 try:
@@ -58,7 +58,7 @@ class GAEBasedTC(TestCase):
     _DS_TEMPL_FILE = 'tmpdb-template'
 
     def load_schema_hook(self, loader):
-        loader.import_yams_template_schema('data')
+        loader.import_yams_cube_schema('data')
     
     @property
     def DS_FILE(self):

@@ -6,8 +6,8 @@
 """
 __docformat__ = "restructuredtext en"
 
-from cubicweb.common.selectors import (chainfirst, req_form_params_selector,
-                                    kwargs_selector)
+from cubicweb.common.selectors import (chainfirst, match_form_params,
+                                    match_kwargs)
 from cubicweb.web.box import EditRelationBoxTemplate
 
 class AddRelationView(EditRelationBoxTemplate):
@@ -18,7 +18,7 @@ class AddRelationView(EditRelationBoxTemplate):
     class attributes.
     """
     __registry__ = 'views'
-    __selectors__ = (chainfirst(req_form_params_selector, kwargs_selector),)
+    __selectors__ = (chainfirst(match_form_params, match_kwargs),)
     property_defs = {} # don't want to inherit this from Box
     id = 'xaddrelation'
     expected_kwargs = form_params = ('rtype', 'target')

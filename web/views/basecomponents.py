@@ -14,10 +14,10 @@ from rql import parse
 
 from cubicweb import Unauthorized
 from cubicweb.common.uilib import html_escape, toggle_action
-from cubicweb.common.selectors import yes, nfentity_selector, one_line_rset
+from cubicweb.common.selectors import yes, non_final_entity, one_line_rset
 from cubicweb.schema import display_name
-from cubicweb.common.selectors import (chainfirst, multitype_selector,
-                                    req_form_params_selector)
+from cubicweb.common.selectors import (chainfirst, two_etypes_rset,
+                                    match_form_params)
 
 from cubicweb.web.htmlwidgets import MenuWidget, PopupBoxMenu, BoxSeparator, BoxLink
 from cubicweb.web.component import (VComponent, SingletonVComponent, EntityVComponent, 
@@ -44,11 +44,11 @@ class RQLInputForm(SingletonVComponent):
           <form action="%s">
 <fieldset>
 <input type="text" id="rql" name="rql" value="%s"  title="%s" tabindex="%s" accesskey="q" class="searchField" />
-<input type="submit" value="%s" class="searchButton" tabindex="%s" />
+<input type="submit" value="" class="rqlsubmit" tabindex="%s" />
 </fieldset>
 ''' % (not self.propval('visible') and 'hidden' or '', 
        self.build_url('view'), html_escape(rql), req._('full text or RQL query'), req.next_tabindex(),
-       req._('search'), req.next_tabindex()))
+        req.next_tabindex()))
         if self.req.search_state[0] != 'normal':
             self.w(u'<input type="hidden" name="__mode" value="%s"/>'
                    % ':'.join(req.search_state[1]))
@@ -138,9 +138,9 @@ class WFHistoryVComponent(EntityVComponent):
     target = 'subject'
     title = _('Workflow history')
 
-    def call(self, view=None):
+    def cell_call(self, row, col, view=None):
         _ = self.req._
-        eid = self.rset[0][0]
+        eid = self.rset[row][col]
         sel = 'Any FS,TS,WF,D'
         rql = ' ORDERBY D DESC WHERE WF wf_info_for X,'\
               'WF from_state FS, WF to_state TS, WF comment C,'\
@@ -191,7 +191,7 @@ class EtypeRestrictionComponent(SingletonVComponent):
     to be able to filter accordingly.
     """
     id = 'etypenavigation'
-    __select__ = classmethod(chainfirst(multitype_selector, req_form_params_selector))
+    __select__ = classmethod(chainfirst(two_etypes_rset, match_form_params))
     form_params = ('__restrtype', '__restrtypes', '__restrrql')
     visible = False # disabled by default
     
@@ -238,14 +238,14 @@ class EtypeRestrictionComponent(SingletonVComponent):
 
 class RSSFeedURL(VComponent):
     id = 'rss_feed_url'
-    __selectors__ = (nfentity_selector,)
+    __selectors__ = (non_final_entity,)
     
     def feed_url(self):
         return self.build_url(rql=self.limited_rql(), vid='rss')
 
 class RSSEntityFeedURL(VComponent):
     id = 'rss_feed_url'
-    __selectors__ = (nfentity_selector, one_line_rset)
+    __selectors__ = (non_final_entity, one_line_rset)
     
     def feed_url(self):
         return self.entity(0, 0).rss_feed_url()

@@ -145,7 +145,6 @@ class TreeMixIn(object):
         return self.iterchildren()
 
     def is_leaf(self):
-        print '*' * 80
         return len(self.children()) == 0
 
     def is_root(self):
@@ -165,7 +164,11 @@ class WorkflowableMixIn(object):
     
     @property
     def state(self):
-        return self.in_state[0].name
+        try:
+            return self.in_state[0].name
+        except IndexError:
+            self.warning('entity %s has no state', self)
+            return None
     
     @property
     def displayable_state(self):

@@ -2,7 +2,7 @@
 apply to a result set.
 
 :organization: Logilab
-:copyright: 2001-2008 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+:copyright: 2001-2009 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 """
 __docformat__ = "restructuredtext en"
@@ -26,6 +26,7 @@ class ManageView(StartupView):
     
     def call(self, **kwargs):
         """The default view representing the application's management"""
+        self.req.add_css('cubicweb.manageview.css')
         self.w(u'<div>\n')
         if not self.display_folders():
             self._main_index()

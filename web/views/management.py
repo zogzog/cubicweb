@@ -13,17 +13,16 @@ from logilab.common.decorators import cached
 
 from cubicweb.common.utils import UStringIO
 from cubicweb.common.view import AnyRsetView, StartupView, EntityView
-from cubicweb.common.uilib import (html_traceback, rest_traceback, html_escape,
-                                toggle_link)
+from cubicweb.common.uilib import html_traceback, rest_traceback
 from cubicweb.common.selectors import (yes, one_line_rset,
-                                    accept_rset_selector, none_rset,
-                                    chainfirst, chainall)
+                                       accept_rset, none_rset,
+                                       chainfirst, chainall)
 from cubicweb.web import INTERNAL_FIELD_VALUE, eid_param, stdmsgs
 from cubicweb.web.widgets import StaticComboBoxWidget
 from cubicweb.web.form import FormMixIn
 
 _ = unicode
-            
+
 def begin_form(w, entity, redirectvid, redirectpath=None, msg=None):
     w(u'<form method="post" action="%s">\n' % entity.req.build_url('edit'))
     w(u'<fieldset>\n')
@@ -42,10 +41,10 @@ class SecurityManagementView(EntityView):
     """display security information for a given entity"""
     id = 'security'
     title = _('security')
-        
+
     def cell_call(self, row, col):
-        self.req.add_js('cubicweb.edition.js')            
-        self.req.add_css('cubicweb.acl.css')            
+        self.req.add_js('cubicweb.edition.js')
+        self.req.add_css('cubicweb.acl.css')
         entity = self.entity(row, col)
         w = self.w
         _ = self.req._
@@ -90,7 +89,7 @@ class SecurityManagementView(EntityView):
             w(u'<td>%s</td>' % u'<br/>'.join(expr.expression for expr in rqlexprs))
             w(u'</tr>\n')
         w(u'</table>')
-        
+
     def owned_by_edit_form(self, entity):
         self.w('<h3>%s</h3>' % self.req._('ownership'))
         begin_form(self.w, entity, 'security', msg= _('ownerships have been changed'))
@@ -169,7 +168,7 @@ class SecurityManagementView(EntityView):
         wdg = newperm.get_widget('label')
         w(u'<td>%s</td>\n' % wdg.edit_render(newperm))
         wdg = newperm.get_widget('require_group')
-        w(u'<td>%s</td>\n' % wdg.edit_render(newperm))            
+        w(u'<td>%s</td>\n' % wdg.edit_render(newperm))
         w(u'<td>%s</td></tr>\n' % self.button_ok())
         w(u'</table>')
         w(u'</fieldset></form>\n')
@@ -178,12 +177,12 @@ class SecurityManagementView(EntityView):
         return (u'<input class="validateButton" type="submit" name="submit" value="%s"/>'
                 % self.req._(stdmsgs.BUTTON_OK))
 
-        
+
 class ErrorView(AnyRsetView):
     """default view when no result has been found"""
     __selectors__ = (yes,)
     id = 'error'
-    
+
     def page_title(self):
         """returns a title according to the result set - used for the
         title in the HTML header
@@ -192,11 +191,11 @@ class ErrorView(AnyRsetView):
 
     def call(self):
         req = self.req.reset_headers()
-        _ = req._
+        _ = req._; w = self.w
         ex = req.data.get('ex')#_("unable to find exception information"))
         excinfo = req.data.get('excinfo')
         title = _('an error occured')
-        self.w(u'<h2>%s</h2>' % title)
+        w(u'<h2>%s</h2>' % title)
         if 'errmsg' in req.data:
             ex = req.data['errmsg']
             exclass = None
@@ -205,53 +204,53 @@ class ErrorView(AnyRsetView):
             ex = exc_message(ex, req.encoding)
         if excinfo is not None and self.config['print-traceback']:
             if exclass is None:
-                self.w(u'<div class="tb">%s</div>'
+                w(u'<div class="tb">%s</div>'
                        % html_escape(ex).replace("\n","<br />"))
             else:
-                self.w(u'<div class="tb">%s: %s</div>'
+                w(u'<div class="tb">%s: %s</div>'
                        % (exclass, html_escape(ex).replace("\n","<br />")))
-            self.w(u'<hr />')
-            self.w(u'<div class="tb">%s</div>' % html_traceback(excinfo, ex, ''))
+            w(u'<hr />')
+            w(u'<div class="tb">%s</div>' % html_traceback(excinfo, ex, ''))
         else:
-            self.w(u'<div class="tb">%s</div>' % (html_escape(ex).replace("\n","<br />")))
+            w(u'<div class="tb">%s</div>' % (html_escape(ex).replace("\n","<br />")))
         # if excinfo is not None, it's probably not a bug
         if excinfo is None:
             return
         vcconf = self.config.vc_config()
-        self.w(u"<div>")
+        w(u"<div>")
         eversion = vcconf.get('cubicweb', _('no version information'))
         # NOTE: tuple wrapping needed since eversion is itself a tuple
-        self.w(u"<b>CubicWeb version:</b> %s<br/>\n" % (eversion,))
+        w(u"<b>CubicWeb version:</b> %s<br/>\n" % (eversion,))
         for pkg in self.config.cubes():
             pkgversion = vcconf.get(pkg, _('no version information'))
-            self.w(u"<b>Package %s version:</b> %s<br/>\n" % (pkg, pkgversion))
-        self.w(u"</div>")
+            w(u"<b>Package %s version:</b> %s<br/>\n" % (pkg, pkgversion))
+        w(u"</div>")
         # creates a bug submission link if SUBMIT_URL is set
         submiturl = self.config['submit-url']
         if submiturl:
             binfo = text_error_description(ex, excinfo, req, eversion,
                                            [(pkg, vcconf.get(pkg, _('no version information')))
                                             for pkg in self.config.cubes()])
-            self.w(u'<form action="%s" method="post">\n' % html_escape(submiturl))
-            self.w(u'<fieldset>\n')
-            self.w(u'<textarea class="hidden" name="description">%s</textarea>' % html_escape(binfo))
-            self.w(u'<input type="hidden" name="description_format" value="text/rest"/>')
-            self.w(u'<input type="hidden" name="__bugreporting" value="1"/>')
-            self.w(u'<input type="submit" value="%s"/>' % _('Submit bug report'))
-            self.w(u'</fieldset>\n')
-            self.w(u'</form>\n')
+            w(u'<form action="%s" method="post">\n' % html_escape(submiturl))
+            w(u'<fieldset>\n')
+            w(u'<textarea class="hidden" name="description">%s</textarea>' % html_escape(binfo))
+            w(u'<input type="hidden" name="description_format" value="text/rest"/>')
+            w(u'<input type="hidden" name="__bugreporting" value="1"/>')
+            w(u'<input type="submit" value="%s"/>' % _('Submit bug report'))
+            w(u'</fieldset>\n')
+            w(u'</form>\n')
         submitmail = self.config['submit-mail']
         if submitmail:
             binfo = text_error_description(ex, excinfo, req, eversion,
                                            [(pkg, vcconf.get(pkg, _('no version information')))
                                             for pkg in self.config.cubes()])
-            self.w(u'<form action="%s" method="post">\n' % req.build_url('reportbug'))
-            self.w(u'<fieldset>\n')
-            self.w(u'<input type="hidden" name="description" value="%s"/>' % html_escape(binfo))
-            self.w(u'<input type="hidden" name="__bugreporting" value="1"/>')
-            self.w(u'<input type="submit" value="%s"/>' % _('Submit bug report by mail'))
-            self.w(u'</fieldset>\n')
-            self.w(u'</form>\n')
+            w(u'<form action="%s" method="post">\n' % req.build_url('reportbug'))
+            w(u'<fieldset>\n')
+            w(u'<input type="hidden" name="description" value="%s"/>' % html_escape(binfo))
+            w(u'<input type="hidden" name="__bugreporting" value="1"/>')
+            w(u'<input type="submit" value="%s"/>' % _('Submit bug report by mail'))
+            w(u'</fieldset>\n')
+            w(u'</form>\n')
 
 
 def exc_message(ex, encoding):
@@ -262,7 +261,7 @@ def exc_message(ex, encoding):
             return unicode(str(ex), encoding, 'replace')
         except:
             return unicode(repr(ex), encoding, 'replace')
-    
+
 def text_error_description(ex, excinfo, req, eversion, cubes):
     binfo = rest_traceback(excinfo, html_escape(ex))
     binfo += u'\n\n:URL: %s\n' % req.url()
@@ -284,23 +283,48 @@ _('boxes')
 _('components')
 _('contentnavigation')
 
+
+def make_togglable_link(nodeid, label, cookiename):
+    """builds a HTML link that switches the visibility & remembers it"""
+    action = u"javascript: toggle_and_remember_visibility('%s', '%s')" % \
+        (nodeid, cookiename)
+    return u'<a href="%s">%s</a>' % (action, label)
+
+def css_class(someclass):
+    return someclass and 'class="%s"' % someclass or ''
+
 class SystemEpropertiesForm(FormMixIn, StartupView):
     controller = 'edit'
     id = 'systemepropertiesform'
     title = _('site configuration')
     require_groups = ('managers',)
     category = 'startupview'
-    
+
     def linkable(self):
         return True
-    
+
     def url(self):
         """return the url associated with this view. We can omit rql here"""
         return self.build_url('view', vid=self.id)
-    
+
+    def _cookie_name(self, somestr):
+        return str('%s_property_%s' % (self.config.appid, somestr))
+
+    def _group_status(self, group, default=u'hidden'):
+        cookies = self.req.get_cookie()
+        cookiename = self._cookie_name(group)
+        cookie = cookies.get(cookiename)
+        if cookie is None:
+            cookies[cookiename] = default
+            self.req.set_cookie(cookies, cookiename, maxage=None)
+            status = default
+        else:
+            status = cookie.value
+        return status
+
     def call(self, **kwargs):
         """The default view representing the application's index"""
-        self.req.add_js('cubicweb.edition.js')
+        self.req.add_js(('cubicweb.edition.js', 'cubicweb.preferences.js'))
         self.req.add_css('cubicweb.preferences.css')
         vreg = self.vreg
         values = self.defined_keys
@@ -322,7 +346,7 @@ class SystemEpropertiesForm(FormMixIn, StartupView):
         for group, objects in groupedopts.items():
             for oid, keys in objects.items():
                 groupedopts[group][oid] = self.form(keys, True)
-        
+
         w = self.w
         req = self.req
         _ = req._
@@ -330,17 +354,21 @@ class SystemEpropertiesForm(FormMixIn, StartupView):
         w(self.error_message())
         for label, group, form in sorted((_(g), g, f)
                                          for g, f in mainopts.iteritems()):
+            status = css_class(self._group_status(group)) #'hidden' (collapsed), or '' (open) ?
             w(u'<h2 class="propertiesform">%s</h2>\n' %
-              (toggle_link('fieldset_' + group, label)))
-            w(u'<div id="fieldset_%s" class="hidden">' % group)
+              (make_togglable_link('fieldset_' + group, label,
+                                   self._cookie_name(group))))
+            w(u'<div id="fieldset_%s" %s>' % (group, status))
             w(u'<fieldset class="subentity">')
             w(form)
             w(u'</fieldset></div>')
         for label, group, objects in sorted((_(g), g, o)
                                             for g, o in groupedopts.iteritems()):
+            status = css_class(self._group_status(group))
             w(u'<h2 class="propertiesform">%s</h2>\n' %
-              (toggle_link('fieldset_' + group, label)))
-            w(u'<div id="fieldset_%s" class="hidden">' % group)
+              (make_togglable_link('fieldset_' + group, label,
+                                   self._cookie_name(group))))
+            w(u'<div id="fieldset_%s" %s>' % (group, status))
             for label, oid, form in sorted((self.req.__('%s_%s' % (group, o)), o, f)
                                            for o, f in objects.iteritems()):
                 w(u'<fieldset class="subentity">')
@@ -352,21 +380,19 @@ class SystemEpropertiesForm(FormMixIn, StartupView):
                 w(form)
                 w(u'</fieldset>')
             w(u'</div>')
-            
-                
 
     @property
     @cached
     def eprops_rset(self):
         return self.req.execute('Any P,K,V WHERE P is EProperty, P pkey K, P value V, NOT P for_user U')
-    
+
     @property
     def defined_keys(self):
         values = {}
         for i, entity in enumerate(self.eprops_rset.entities()):
             values[entity.pkey] = i
         return values
-    
+
     def entity_for_key(self, key):
         values = self.defined_keys
         if key in values:
@@ -391,11 +417,11 @@ class SystemEpropertiesForm(FormMixIn, StartupView):
             w(u'<input type="hidden" name="__redirectparams" value="%s"/>\n'
               % html_escape(params))
         w(u'<input type="hidden" name="__redirectpath" value="%s"/>\n' % path)
-        #w(u'<input type="hidden" name="__redirectrql" value=""/>\n') 
+        #w(u'<input type="hidden" name="__redirectrql" value=""/>\n')
         w(u'<input type="hidden" name="__message" value="%s"/>\n'
           % self.req._('changes applied'))
         w(u'<table><tr><td>\n')
-       
+
         w(u'<table>\n')
         for key in keys:
             w(u'<tr>\n')
@@ -409,7 +435,7 @@ class SystemEpropertiesForm(FormMixIn, StartupView):
         w(u'</fieldset>\n')
         w(u'</form>\n')
         return stream.getvalue()
-        
+
     def form_row(self, w, key, splitlabel):
         entity = self.entity_for_key(key)
         eid = entity.eid
@@ -434,13 +460,13 @@ class SystemEpropertiesForm(FormMixIn, StartupView):
         w(u'<input type="hidden" name="%s" value="%s"/>' % (eid_param('pkey', eid), key))
         w(u'<input type="hidden" name="%s" value="%s"/>' % (eid_param('edits-pkey', eid), ''))
 
-        
+
 class EpropertiesForm(SystemEpropertiesForm):
     id = 'epropertiesform'
-    title = _('preferences')    
+    title = _('preferences')
     require_groups = ('users', 'managers') # we don't want guests to be able to come here
     __selectors__ = chainfirst(none_rset,
-                               chainall(one_line_rset, accept_rset_selector)),
+                               chainall(one_line_rset, accept_rset)),
     accepts = ('EUser',)
 
     @classmethod
@@ -449,7 +475,7 @@ class EpropertiesForm(SystemEpropertiesForm):
             row = 0
         score = super(EpropertiesForm, cls).accept_rset(req, rset, row, col)
         # check current user is the rset user or he is in the managers group
-        if score and (req.user.eid == rset[row][col or 0] 
+        if score and (req.user.eid == rset[row][col or 0]
                       or req.user.matching_groups('managers')):
             return score
         return 0
@@ -459,7 +485,7 @@ class EpropertiesForm(SystemEpropertiesForm):
         if self.rset is None:
             return self.req.user
         return self.rset.get_entity(self.row or 0, self.col or 0)
-    
+
     @property
     @cached
     def eprops_rset(self):
@@ -476,9 +502,9 @@ class EpropertiesForm(SystemEpropertiesForm):
               % (eid_param('edits-for_user', eid), INTERNAL_FIELD_VALUE))
             w(u'<input type="hidden" name="%s" value="%s"/>'
               % (eid_param('for_user', eid), self.user.eid))
-    
-                   
-    
+
+
+
 
 class ProcessInformationView(StartupView):
     id = 'info'

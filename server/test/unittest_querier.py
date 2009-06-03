@@ -454,7 +454,7 @@ class QuerierTC(BaseQuerierTC):
                             'WHERE RT name N, RDEF relation_type RT '
                             'HAVING COUNT(RDEF) > 10')
         self.assertListEquals(rset.rows,
-                              [[u'description', 11], ['in_basket', 12],
+                              [[u'description', 11], ['in_basket', 11],
                                [u'name', 13], [u'created_by', 33],
                                [u'creation_date', 33], [u'is', 33], [u'is_instance_of', 33],
                                [u'modification_date', 33], [u'owned_by', 33]])

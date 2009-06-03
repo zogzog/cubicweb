@@ -188,7 +188,7 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
         rqlst.restricted_vars = ()
         rqlst.children[0].solutions = self._sols
         self.repo.querier.sqlgen_annotate(rqlst)
-        set_qdata(rqlst, ())
+        set_qdata(self.schema.rschema, rqlst, ())
         return rqlst
     
     def set_schema(self, schema):

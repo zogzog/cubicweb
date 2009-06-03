@@ -201,7 +201,7 @@ class CubicWebRequestBase(DBAPIRequest):
     def update_search_state(self):
         """update the current search state"""
         searchstate = self.form.get('__mode')
-        if not searchstate:
+        if not searchstate and self.cnx is not None:
             searchstate = self.get_session_data('search_state', 'normal')
         self.set_search_state(searchstate)
 
@@ -212,7 +212,8 @@ class CubicWebRequestBase(DBAPIRequest):
         else:
             self.search_state = ('linksearch', searchstate.split(':'))
             assert len(self.search_state[-1]) == 4
-        self.set_session_data('search_state', searchstate)
+        if self.cnx is not None:
+            self.set_session_data('search_state', searchstate)
 
     def update_breadcrumbs(self):
         """stores the last visisted page in session data"""
@@ -640,7 +641,11 @@ class CubicWebRequestBase(DBAPIRequest):
     
     def xhtml_browser(self):
         useragent = self.useragent()
-        if useragent and ('MSIE' in useragent or 'KHTML' in useragent):
+        # MSIE does not support xml content-type
+        # quick fix: Opera supports xhtml and handles namespaces
+        # properly but it breaks jQuery.attr()
+        if useragent and ('MSIE' in useragent or 'KHTML' in useragent
+                          or 'Opera' in useragent):
             return False
         return True
 

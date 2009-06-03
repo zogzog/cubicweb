@@ -250,8 +250,7 @@ class EntityTC(EnvBasedTC):
         self.assertListEquals(rbc(e.relations_by_category('generic')),
                               [('primary_email', 'subject'),
                                ('evaluee', 'subject'),
-                               ('for_user', 'object'),
-                               ('bookmarked_by', 'object')])
+                               ('for_user', 'object')])
         # owned_by is defined both as subject and object relations on EUser
         self.assertListEquals(rbc(e.relations_by_category('generated')),
                               [('last_login_time', 'subject'),
@@ -263,7 +262,8 @@ class EntityTC(EnvBasedTC):
                                ('owned_by', 'subject'),
                                ('created_by', 'object'),
                                ('wf_info_for', 'object'),
-                               ('owned_by', 'object')])
+                               ('owned_by', 'object'),
+                               ('bookmarked_by', 'object')])
         e = self.etype_instance('Personne')
         self.assertListEquals(rbc(e.relations_by_category('primary')),
                               [('nom', 'subject'), ('eid', 'subject')])

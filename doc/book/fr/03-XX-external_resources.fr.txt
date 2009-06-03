@@ -1,0 +1,135 @@
+.. -*- coding: utf-8 -*-
+
+
+Les ressources externes
+=======================
+
+Les ressources externes à une application regroupent l'ensemble des fichiers qui seront chargés dans l'entête des pages XHTML générées.
+Elles sont donc constituées principalement des feuilles de styles, des scripts javascripts et de certaines ressources graphiques comme l'icône favicon par exemple.
+
+
+Liste des feuilles de styles utilisées par défaut
+-------------------------------------------------
+
+Les fichiers par défaut se trouve dans les sources du framework. En voici le tableau récapitulatif:
+
++--------------------------------------+----------------------------------------------------+-----------------------------------+
+| Fichiers                             | Utilisation                                        | Vues ou widget concernés          |
++======================================+====================================================+===================================+
+| web/data/cubicweb.acl.css            | formulaires pour le contrôle aux accès             | editgroups, security              |
+| web/data/cubicweb.calendar.css       | calendriers                                        | onemonthcal, oneweekcal           |
+| web/data/cubicweb.calendar_popup.css | popup calendriers                                  | DateWidget                        |
+| web/data/cubicweb.css                | gabarit principal de l'application                 |                                   |
+| web/data/cubicweb.facets.css         | surcharge du `MIT Simile Exhibit Web Widgets`_     | filter_box                        |
+| web/data/cubicweb.form.css           | formulaires                                        | creation, inline-creation, copya, |
+|                                      |                                                    | inline-edition, edition, muledit  |
+| web/data/cubicweb.html_tree.css      | style pour les widgets d'arborescence              |                                   |
+| web/data/cubicweb.ie.css             | dédié aux comportements de Internet Explorer       |                                   |
+| web/data/cubicweb.iprogress.css      | style pour les widgets d'avancement                |                                   |
+| web/data/cubicweb.login.css          | page et popup d'authentification                   | logform                           |
+| web/data/cubicweb.mailform.css       | style utilisé dans les formulaires d'envoi de mail |                                   |
+| web/data/cubicweb.preferences.css    | style pour la page des préférences utilisateurs    | systemepropertiesform             |
+| web/data/cubicweb.print.css          | style dédié à l'impression                         |                                   |
+| web/data/cubicweb.schema.css         | style dédié au schéma de l'application             |                                   |
+| web/data/cubicweb.suggest.css        | surcharge utilisée pour les suggestions            |                                   |
+| web/data/cubicweb.tablesorter.css    | surcharge pour le tri dans les tableau             |                                   |
+| web/data/cubicweb.tableview.css      | surcharge pour le tri sélectif                     |                                   |
+| web/data/cubicweb.timetable.css      | style pour le widget Timetable                     | timetable                         |
+| web/data/jquery.autocomplete.css     | surcharge pour le widget `jQuery autocompleter`_   |                                   |
+| web/data/jquery.treeview.css         | surcharge pour le widget `jQuery treeview`_        |                                   |
+| web/data/pygments.css                | style pour la coloration des blocs de code         |                                   |
+| web/data/timeline-bundle.css         | surcharge du `MIT Simile Timeline Web Widgets`_    | TimelineWidget                    |
+| web/data/ui.tabs.css                 | surcharge pour le widget Tabs de `jQuery UI`_      |                                   |
++--------------------------------------+----------------------------------------------------+-----------------------------------+
+
+.. _MIT Simile Exhibit Web Widgets: http://code.google.com/p/simile-widgets/wiki/Exhibit
+.. _MIT Simile Timeline Web Widgets: http://code.google.com/p/simile-widgets/wiki/Timeline
+.. _jQuery autocompleter: http://www.dyve.net/jquery/?autocomplete
+.. _jQuery treeview: http://plugins.jquery.com/project/treeview
+.. _jQuery UI: http://docs.jquery.com/UI
+
+D'une manière générale, si vous réutiliser un nom de fichier existant, vous écrasez le contenu du fichier d'origine.
+
+
+Changer les feuilles de styles
+------------------------------
+
+Configuration statique
+~~~~~~~~~~~~~~~~~~~~~~
+Dans les sources de votre nouveau cube, vous devez éditer le fichier *data/external_resources* et définir la variable de configuration:
+
+    # CSS stylesheets to include in HTML headers
+    # uncomment the line below to use template specific stylesheet
+    STYLESHEETS = DATADIR/cubicweb.css
+
+Les styles sont définis dans le fichier external_resources par 3 variables:
+
+- la variable STYLESHEETS est défine pour tous les types de médias
+- la variable STYLESHEETS_PRINT sont les styles applicables pour l'impression
+- la variable IE_STYLESHEETS s'appliquent uniquement aux versions d'Internet Explorer
+
+En copiant le fichier d'origine **cubicweb.css**, il est alors possible de modifier le gabarit de base du framework CubicWeb.
+Il est également possible de réutiliser le fichier d'origine.
+
+En créant un nouveau fichier **cubes.(le_nom_du_cube).css** dans le répertoire **data/** et en ajoutant une directive css @import, il est possible de réutiliser les styles définis par défaut:
+
+    @import url("cubicweb.css");
+
+
+Chargement dynamique de feuilles de style dans vos vues
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Il est possible de charger des css spécifiques pour une vue par l'utilisation de la méthode add_css():
+
+    self.req.add_css('mon_cube.css')
+
+
+Les ressources graphiques de base
+---------------------------------
+
+Vous pouvez changer certaines ressources graphiques comme:
+
+- le logo du site:
+
+    # path to the logo (relative to the application main script, seen as a
+    # directory, hence .. when you are not using an absolute path)
+    LOGO = DATADIR/logo.png
+
+- la 'favicon' du site:
+
+    FAVICON = DATADIR/favicon.ico
+
+- le logo des flux RSS:
+
+    RSS_LOGO = DATADIR/rss.png
+
+- l'icône permettant l'appel au widget 'calendrier':
+
+    CALENDAR_ICON = DATADIR/calendar.png
+
+- l'icône utilisée pour la validation d'une recherche:
+
+    SEARCH_GO = DATADIR/go.png
+
+- l'icône d'aide en ligne:
+
+    HELP = DATADIR/help.png
+
+
+Ajouter vos scripts javascripts
+-------------------------------
+
+Configuration statique
+~~~~~~~~~~~~~~~~~~~~~~
+Vous devez surcharger la variable JAVASCRIPTS dans le fichier *data/external_resources*  de votre cube.
+
+Chargement dynamique de script javascript dans vos vues
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Il est possible de charger vos scripts par la méthode add_js():
+
+    self.req.add_js('mon_script.js')
+
+
+Problèmes connus
+----------------
+
+Il est important de noter que la méthode de chargement dynamique ne marche pas avec les widgets Ajax. Vos fichiers devront déjà être au préalable avoir été chargés.

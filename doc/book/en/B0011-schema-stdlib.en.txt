@@ -37,34 +37,54 @@ Cubes available
 An application is based on several basic cubes. In the set of available
 basic cubes we can find for example :
 
-* `comment`, provides an entity type for `Comment` allowing us to comment others
-  site's entities
+* addressbook_: PhoneNumber and PostalAddress
 
-* `mailinglist`, provides an entity type for `Mailinglist` which groups informations
-  in a discussion list
+* basket_: Basket (like a shopping cart)
 
-* `file`, provides entity types for `File` et `Image` used to represent
-  files (text or binary) with additionnal informations such as MIME type or
-  encoding.
-  
-* `link`, provides an entity type for hypertext link (`Link`)
+* blog_: Blog (a *very* basic blog)
 
-* `blog`, provides an entity type weblog (`Blog`)
+* comment_: Comment (to attach comment threads to entities)
 
-* `person`, provides an entity type for a person (`Person`)
-
-* `addressbook`, provides an entity type used to represent phone 
-  numbers (`PhoneNumber`) and mailing address (`PostalAddress`)
-  
-* `classtags`, categorization system based on tags (`Tag`)
-
-* `classfolders`, categorization system based on folders hierarchy in order 
-  to create navigation sections (`Folder`)
-
-* `email`, archiving management for emails (`Email`, `Emailpart`,
+* email_: archiving management for emails (`Email`, `Emailpart`,
   `Emailthread`)
 
-* `basket`, basket management (`Basket`) allowing to group entities
+* event_: Event (define events, display them in calendars)
+
+* file_: File (to allow users to upload and store binary or text files)
+
+* folder_: Folder (to organize things but grouping them in folders)
+
+* keyword_: Keyword (to define classification schemes)
+
+* link_: Link (to collect links to web resources)
+
+* mailinglist_: MailingList (to reference a mailing-list and the URLs
+  for its archives and its admin interface)
+
+* person_: Person (easily mixed with addressbook)
+
+* tag_: Tag (to tag anything)
+
+* task_: Task (something to be done between start and stop date)
+
+* zone_: Zone (to define places within larger places, for example a
+  city in a state in a country)
+
+.. _addressbook: http://www.cubicweb.org/project/cubicweb-addressbook
+.. _basket: http://www.cubicweb.org/project/cubicweb-basket
+.. _blog: http://www.cubicweb.org/project/cubicweb-blog
+.. _comment: http://www.cubicweb.org/project/cubicweb-comment
+.. _email: http://www.cubicweb.org/project/cubicweb-email
+.. _event: http://www.cubicweb.org/project/cubicweb-event
+.. _file: http://www.cubicweb.org/project/cubicweb-file
+.. _folder: http://www.cubicweb.org/project/cubicweb-folder
+.. _keyword: http://www.cubicweb.org/project/cubicweb-keyword
+.. _link: http://www.cubicweb.org/project/cubicweb-link
+.. _mailinglist: http://www.cubicweb.org/project/cubicweb-mailinglist
+.. _person: http://www.cubicweb.org/project/cubicweb-person
+.. _tag: http://www.cubicweb.org/project/cubicweb-tag
+.. _task: http://www.cubicweb.org/project/cubicweb-task
+.. _zone: http://www.cubicweb.org/project/cubicweb-zone
 
 To declare the use of a component, once installed, add the name of the component
 to the variable `__use__` in the file `__pkginfo__.py` of your own component.

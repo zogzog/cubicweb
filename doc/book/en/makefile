@@ -43,7 +43,7 @@ all: ${TARGET} apidoc html
 #apydoc: 
 #	epydoc --html -o epydoc/ -n ../server/*.py ../core/*.py ../common/*.py ../server/*/*.py ../modpython/*/*.py ../common/*/*.py
 apidoc:
-	epydoc --html -o apidoc -n "cubicweb" --exclude=setup --exclude=__pkginfo__ ../
+	epydoc --html -o apidoc -n "cubicweb" --exclude=setup --exclude=__pkginfo__ ../../../
 
 # run sphinx ###
 html:

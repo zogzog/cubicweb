@@ -381,6 +381,9 @@ msgstr "Recuerde que no es más que una copia superficial"
 msgid "Problem occured"
 msgstr "Ha ocurrido un error"
 
+msgid "Project linked data"
+msgstr ""
+
 msgid "RQLExpression"
 msgstr "Expresión RQL"
 
@@ -737,6 +740,9 @@ msgstr "activado"
 
 msgid "add"
 msgstr "agregar"
+
+msgid "add Bookmark bookmarked_by EUser object"
+msgstr ""
 
 msgid "add EEType add_permission RQLExpression subject"
 msgstr "Definir una expresión RQL de agregación"
@@ -1359,6 +1365,9 @@ msgstr "creado por"
 msgid "created_by_object"
 msgstr "ha creado"
 
+msgid "creating Bookmark (Bookmark bookmarked_by EUser %(linkto)s)"
+msgstr ""
+
 msgid "creating EConstraint (EFRDef %(linkto)s constrained_by EConstraint)"
 msgstr "creación condicionada por el atributo %(linkto)s"
 
@@ -1745,11 +1754,17 @@ msgstr ""
 msgid "february"
 msgstr "febrero"
 
+msgid "file tree view"
+msgstr ""
+
 msgid "final"
 msgstr "final"
 
 msgid "firstname"
 msgstr "nombre"
+
+msgid "foaf"
+msgstr ""
 
 msgid "follow"
 msgstr "seguir la liga"
@@ -2090,6 +2105,9 @@ msgstr "lier vers chaque ÈlÈment dans"
 msgid "list"
 msgstr "liste"
 
+msgid "loading"
+msgstr ""
+
 msgid "log in"
 msgstr "s'identifier"
 
@@ -2117,6 +2135,9 @@ msgstr "gestion du site"
 
 msgid "manage bookmarks"
 msgstr "gÈrer les signets"
+
+msgid "manage permissions"
+msgstr ""
 
 msgid "manage security"
 msgstr "gestion de la sÈcuritÈ"
@@ -2232,6 +2253,9 @@ msgstr "pas d'information de version"
 msgid "not authorized"
 msgstr "non autorisÈ"
 
+msgid "not selected"
+msgstr ""
+
 msgid "not specified"
 msgstr "non spÈcifiÈ"
 
@@ -2267,6 +2291,15 @@ msgstr "ordre"
 
 msgid "ordernum"
 msgstr "ordre"
+
+msgid "owl (tbox+abox)"
+msgstr ""
+
+msgid "owlabox"
+msgstr ""
+
+msgid "owlaboxlight"
+msgstr ""
 
 msgid "owned_by"
 msgstr "appartient ‡"
@@ -2521,6 +2554,9 @@ msgstr "sÈlectionner une relation"
 msgid "select this entity"
 msgstr "sÈlectionner cette entitÈ"
 
+msgid "selected"
+msgstr ""
+
 msgid "semantic description of this attribute"
 msgstr "description sÈmantique de cet attribut"
 
@@ -2649,6 +2685,9 @@ msgstr "filtre de tableau"
 msgid "task progression"
 msgstr "avancement de la t‚che"
 
+msgid "tbox"
+msgstr ""
+
 msgid "text"
 msgstr "text"
 
@@ -2725,6 +2764,9 @@ msgstr "transition de"
 
 msgid "transition_of_object"
 msgstr "a pour transition"
+
+msgid "tree view"
+msgstr ""
 
 msgid "tuesday"
 msgstr "mardi"
