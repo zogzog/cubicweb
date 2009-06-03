@@ -31,19 +31,20 @@ from cubicweb import CW_SOFTWARE_ROOT, set_log_methods
 from cubicweb import RegistryNotFound, ObjectNotFound, NoSelectableObject
 
 
-def _toload_info(path, _toload=None):
+def _toload_info(path, extrapath, _toload=None):
     """return a dictionary of <modname>: <modpath> and an ordered list of
     (file, module name) to load
     """
     from logilab.common.modutils import modpath_from_file
     if _toload is None:
+        assert isinstance(path, list)
         _toload = {}, []
     for fileordir in path:
         if isdir(fileordir) and exists(join(fileordir, '__init__.py')):
             subfiles = [join(fileordir, fname) for fname in listdir(fileordir)]
-            _toload_info(subfiles, _toload)
+            _toload_info(subfiles, extrapath, _toload)
         elif fileordir[-3:] == '.py':
-            modname = '.'.join(modpath_from_file(fileordir))
+            modname = '.'.join(modpath_from_file(fileordir, extrapath))
             _toload[0][modname] = fileordir
             _toload[1].append((fileordir, modname))
     return _toload
@@ -313,13 +314,13 @@ class VRegistry(object):
 
     # intialization methods ###################################################
 
-    def init_registration(self, path):
+    def init_registration(self, path, extrapath):
         # compute list of all modules that have to be loaded
-        self._toloadmods, filemods = _toload_info(path)
+        self._toloadmods, filemods = _toload_info(path, extrapath)
         self._loadedmods = {}
         return filemods
 
-    def register_objects(self, path, force_reload=None):
+    def register_objects(self, path, force_reload=None, extrapath=None):
         if force_reload is None:
             force_reload = self.config.mode == 'dev'
         elif not force_reload:
@@ -339,7 +340,7 @@ class VRegistry(object):
         if CW_SOFTWARE_ROOT in sys.path:
             sys.path.remove(CW_SOFTWARE_ROOT)
         # load views from each directory in the application's path
-        filemods = self.init_registration(path)
+        filemods = self.init_registration(path, extrapath)
         change = False
         for filepath, modname in filemods:
             if self.load_file(filepath, modname, force_reload):
