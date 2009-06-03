@@ -314,7 +314,7 @@ class VRegistry(object):
 
     # intialization methods ###################################################
 
-    def init_registration(self, path, extrapath):
+    def init_registration(self, path, extrapath=None):
         # compute list of all modules that have to be loaded
         self._toloadmods, filemods = _toload_info(path, extrapath)
         self._loadedmods = {}
