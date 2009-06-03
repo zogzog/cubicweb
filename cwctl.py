@@ -199,7 +199,7 @@ class ListCommand(Command):
                                            or tinfo.__doc__)
                     if shortdesc:
                         print '    '+ '    \n'.join(shortdesc.splitlines())
-                    modes = detect_available_modes(CubicWebConfiguration.cube_dir(cube))
+                    modes = detect_available_modes(cwcfg.cube_dir(cube))
                     print '    available modes: %s' % ', '.join(modes)
         print
         try:
