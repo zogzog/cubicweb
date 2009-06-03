@@ -4,7 +4,8 @@ Priority: optional
 Maintainer: Logilab S.A. <contact@logilab.fr>
 Uploaders: Sylvain Thenault <sylvain.thenault@logilab.fr>,
            Julien Jehannet <julien.jehannet@logilab.fr>,
-           Aurélien Campéas <aurelien.campeas@logilab.fr>
+           Aurélien Campéas <aurelien.campeas@logilab.fr>,
+           Nicolas Chauvat <nicolas.chauvat@logilab.fr>
 Build-Depends: debhelper (>= 7), python-dev (>=2.4), python-central (>= 0.5)
 Standards-Version: 3.8.0
 Homepage: http://www.cubicweb.org
