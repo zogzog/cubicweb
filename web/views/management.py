@@ -184,8 +184,8 @@ class SecurityManagementView(EntityView, SecurityViewMixIn):
         form.append_field(field)
         field = guess_field(cwpermschema, self.schema.rschema('require_group'))
         form.append_field(field)
-        renderer = self.select_object('formrenderers', 'htable', self.req,
-                                      display_progress_div=False)
+        renderer = self.vreg.select_object('formrenderers', 'htable', self.req,
+                                           rset=None, display_progress_div=False)
         self.w(form.form_render(renderer=renderer))
 
 
@@ -242,7 +242,7 @@ class ErrorView(AnyRsetView):
         submiturl = self.config['submit-url']
         submitmail = self.config['submit-mail']
         if submiturl or submitmail:
-            form = self.select_object('forms', 'base', self.req, set_error_url=False)
+            form = self.vreg.select_object('forms', 'base', self.req, rset=None, set_error_url=False)
             binfo = text_error_description(ex, excinfo, req, eversion, cversions)
             form.form_add_hidden('description', binfo)
             form.form_add_hidden('__bugreporting', '1')
