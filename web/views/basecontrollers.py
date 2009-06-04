@@ -211,9 +211,11 @@ class FormValidatorController(Controller):
                 status, args = (False, '???')
         self.req.set_content_type('text/html')
         jsarg = simplejson.dumps( (status, args) )
+        domid = self.req.form.get('__domid', 'entityForm').encode(
+            self.req.encoding)
         return """<script type="text/javascript">
- window.parent.handleFormValidationResponse('entityForm', null, null, %s);
-</script>""" %  simplejson.dumps( (status, args) )
+ window.parent.handleFormValidationResponse('%s', null, null, %s);
+</script>""" %  (domid, simplejson.dumps( (status, args) ))
 
     def validation_error(self, err):
         self.req.cnx.rollback()

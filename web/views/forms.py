@@ -62,6 +62,7 @@ class FieldsForm(form.Form):
         if submitmsg is not None:
             self.form_add_hidden('__message', submitmsg)
         self.context = None
+        self.form_add_hidden('__domid', self.domid)
         if 'domid' in kwargs:# session key changed
             self.restore_previous_post(self.session_key())
 
