@@ -71,7 +71,7 @@ class DeleteConfForm(FormViewMixIn, EntityView):
                 continue
             done.add(entity.eid)
             subform = self.vreg.select_object('forms', 'base', req, entity=entity,
-                                              set_error_url=False)
+                                              set_error_url=False, set_dom_id=False)
             form.form_add_subform(subform)
             # don't use outofcontext view or any other that may contain inline edition form
             w(u'<li>%s</li>' % tags.a(entity.view('textoutofcontext'),
@@ -307,7 +307,7 @@ class TableEditForm(forms.CompositeForm):
         for row in xrange(len(self.rset)):
             form = self.vreg.select_object('forms', 'edition', self.req, self.rset,
                                            row=row, attrcategories=('primary',),
-                                           set_error_url=False)
+                                           set_error_url=False, set_dom_id=False)
             # XXX rely on the EntityCompositeFormRenderer to put the eid input
             form.remove_field(form.field_by_name('eid'))
             self.form_add_subform(form)
@@ -356,7 +356,7 @@ class InlineEntityEditionFormView(FormViewMixIn, EntityView):
         """fetch and render the form"""
         form = self.vreg.select_object('forms', 'edition', self.req, None,
                                        entity=entity, form_renderer_id='inline',
-                                       set_error_url=False,
+                                       set_error_url=False, set_dom_id=False,
                                        copy_nav_params=False)
         self.add_hiddens(form, entity, peid, rtype, role)
         divid = '%s-%s-%s' % (peid, rtype, entity.eid)

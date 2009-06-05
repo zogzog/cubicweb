@@ -37,6 +37,7 @@ class FieldsForm(form.Form):
     cwtarget = None
     redirect_path = None
     set_error_url = True
+    set_dom_id = True
     copy_nav_params = False
     form_buttons = None # form buttons (button widgets instances)
     form_renderer_id = 'default'
@@ -53,6 +54,8 @@ class FieldsForm(form.Form):
                 setattr(self, key, val)
         if self.set_error_url:
             self.form_add_hidden('__errorurl', self.session_key())
+        if self.set_dom_id:
+            self.form_add_hidden('__domid', self.domid)
         if self.copy_nav_params:
             for param in NAV_FORM_PARAMETERS:
                 if not param in kwargs:
@@ -62,7 +65,6 @@ class FieldsForm(form.Form):
         if submitmsg is not None:
             self.form_add_hidden('__message', submitmsg)
         self.context = None
-        self.form_add_hidden('__domid', self.domid)
         if 'domid' in kwargs:# session key changed
             self.restore_previous_post(self.session_key())
 
