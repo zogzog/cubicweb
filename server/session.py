@@ -174,11 +174,12 @@ class Session(RequestSessionMixIn):
         # or rollback
         if self.pool is not None and self.mode == 'read':
             # even in read mode, we must release the current transaction
+            pool = self.pool
             self._threads_in_transaction.remove(threading.currentThread())
-            self.pool.pool_reset(self)
+            pool.pool_reset(self)
             self._threaddata.pool = None
             # free pool once everything is done to avoid race-condition
-            self.repo._free_pool(self.pool)
+            self.repo._free_pool(pool)
 
     def system_sql(self, sql, args=None):
         """return a sql cursor on the system database"""
