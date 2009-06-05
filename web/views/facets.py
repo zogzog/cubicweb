@@ -107,7 +107,7 @@ class FilterBox(BoxTemplate):
             cubicweb.info('after facets with rql: %s' % repr(rqlst))
 
     def get_facets(self, rset, mainvar):
-        return self.vreg.possible_vobjects('facets', self.req, rset,
+        return self.vreg.possible_vobjects('facets', self.req, rset=rset,
                                            context='facetbox',
                                            filtered_variable=mainvar)
 

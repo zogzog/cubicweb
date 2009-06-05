@@ -128,12 +128,12 @@ class ViewController(Controller):
                 req.set_message(req._("error while handling __method: %s") % req._(ex))
         vid = req.form.get('vid') or vid_from_rset(req, rset, self.schema)
         try:
-            view = self.vreg.select_view(vid, req, rset)
+            view = self.vreg.select('views', vid, req, rset=rset)
         except ObjectNotFound:
             self.warning("the view %s could not be found", vid)
             req.set_message(req._("The view %s could not be found") % vid)
             vid = vid_from_rset(req, rset, self.schema)
-            view = self.vreg.select_view(vid, req, rset)
+            view = self.vreg.select('views', vid, req, rset=rset)
         except NoSelectableObject:
             if rset:
                 req.set_message(req._("The view %s can not be applied to this query") % vid)
@@ -141,7 +141,7 @@ class ViewController(Controller):
                 req.set_message(req._("You have no access to this view or it's not applyable to current data"))
             self.warning("the view %s can not be applied to this query", vid)
             vid = vid_from_rset(req, rset, self.schema)
-            view = self.vreg.select_view(vid, req, rset)
+            view = self.vreg.select('views', vid, req, rset=rset)
         return view, rset
 
     def add_to_breadcrumbs(self, view):
@@ -184,8 +184,8 @@ class FormValidatorController(Controller):
     def publish(self, rset=None):
         vreg = self.vreg
         try:
-            ctrl = vreg.select(vreg.registry_objects('controllers', 'edit'),
-                               req=self.req, appli=self.appli)
+            ctrl = vreg.select('controllers', 'edit', self.req,
+                               appli=self.appli)
         except NoSelectableObject:
             status, args = (False, {None: self.req._('not authorized')})
         else:
@@ -254,6 +254,8 @@ class JSonController(Controller):
         except RemoteCallFailed:
             raise
         except Exception, ex:
+            import traceback
+            traceback.print_exc()
             self.exception('an exception occured while calling js_%s(%s): %s',
                            fname, args, ex)
             raise RemoteCallFailed(repr(ex))
@@ -306,10 +308,10 @@ class JSonController(Controller):
             rset = None
         vid = req.form.get('vid') or vid_from_rset(req, rset, self.schema)
         try:
-            view = self.vreg.select_view(vid, req, rset)
+            view = self.vreg.select('views', vid, req, rset=rset)
         except NoSelectableObject:
             vid = req.form.get('fallbackvid', 'noresult')
-            view = self.vreg.select_view(vid, req, rset)
+            view = self.vreg.select('views', vid, req, rset=rset)
         divid = req.form.get('divid', 'pageContent')
         # we need to call pagination before with the stream set
         stream = view.set_stream()
@@ -339,8 +341,7 @@ class JSonController(Controller):
         entity = self.vreg.etype_class('CWProperty')(self.req, None, None)
         entity.eid = varname
         entity['pkey'] = propkey
-        form = self.vreg.select_object('forms', 'edition', self.req, None,
-                                       entity=entity)
+        form = self.vreg.select('forms', 'edition', self.req, entity=entity)
         form.form_build_context()
         vfield = form.field_by_name('value')
         renderer = FormRenderer(self.req)
@@ -353,7 +354,7 @@ class JSonController(Controller):
             rset = self._exec(rql)
         else:
             rset = None
-        comp = self.vreg.select_object(registry, compid, self.req, rset)
+        comp = self.vreg.select(registry, compid, self.req, rset=rset)
         if extraargs is None:
             extraargs = {}
         else: # we receive unicode keys which is not supported by the **syntax
@@ -365,9 +366,8 @@ class JSonController(Controller):
     @check_pageid
     @xhtmlize
     def js_inline_creation_form(self, peid, ttype, rtype, role):
-        view = self.vreg.select_view('inline-creation', self.req, None,
-                                     etype=ttype, peid=peid, rtype=rtype,
-                                     role=role)
+        view = self.vreg.select('views', 'inline-creation', self.req,
+                                etype=ttype, peid=peid, rtype=rtype, role=role)
         return view.render(etype=ttype, peid=peid, rtype=rtype, role=role)
 
     @jsonize
@@ -380,8 +380,7 @@ class JSonController(Controller):
         self.req.form = self._rebuild_posted_form(names, values, action)
         vreg = self.vreg
         try:
-            ctrl = vreg.select(vreg.registry_objects('controllers', 'edit'),
-                               req=self.req)
+            ctrl = vreg.select('controllers', 'edit', self.req)
         except NoSelectableObject:
             return (False, {None: self.req._('not authorized')})
         try:

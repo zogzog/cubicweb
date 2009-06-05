@@ -88,7 +88,7 @@ class EntityFieldsFormTC(WebTest):
         e.req = self.req
         geid = self.execute('CWGroup X WHERE X name "users"')[0][0]
         self.req.form['__linkto'] = 'in_group:%s:subject' % geid
-        form = self.vreg.select_object('forms', 'edition', self.req, None, entity=e)
+        form = self.vreg.select('forms', 'edition', self.req, entity=e)
         form.content_type = 'text/html'
         pageinfo = self._check_html(form.form_render(), form, template=None)
         inputs = pageinfo.find_tag('select', False)

@@ -56,7 +56,8 @@ class RecipientsFinderTC(EnvBasedTC):
         self.execute('INSERT CWProperty X: X pkey "ui.language", X value "fr", X for_user U '
                      'WHERE U eid %(x)s', {'x': urset[0][0]})
         self.commit() # commit so that admin get its properties updated
-        finder = self.vreg.select_component('recipients_finder', self.request(), urset)
+        finder = self.vreg.select('components', 'recipients_finder', self.request(),
+                                  rset=urset)
         self.set_option('default-recipients-mode', 'none')
         self.assertEquals(finder.recipients(), [])
         self.set_option('default-recipients-mode', 'users')
@@ -73,7 +74,7 @@ class StatusChangeViewsTC(EnvBasedTC):
         u = self.create_user('toto', req=req)
         assert u.req
         self.execute('SET X in_state S WHERE X eid %s, S name "deactivated"' % u.eid)
-        v = self.vreg.select_view('notif_status_change', req, u.rset, row=0)
+        v = self.vreg.select('views', 'notif_status_change', req, u.rset, row=0)
         content = v.render(row=0, comment='yeah',
                            previous_state='activated',
                            current_state='deactivated')

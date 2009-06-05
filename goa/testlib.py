@@ -131,7 +131,7 @@ class GAEBasedTC(TestCase):
                 self.vreg.load_module(module)
         for cls in self.MODEL_CLASSES:
             self.vreg.load_object(cls)
-        self.session_manager = self.vreg.select_component('sessionmanager')
+        self.session_manager = self.vreg.select('components', 'sessionmanager')
         if need_ds_init:
             # create default groups and create entities according to the schema
             create_groups()

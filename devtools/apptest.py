@@ -219,18 +219,18 @@ class EnvBasedTC(TestCase):
         return sorted((a.id, a.__class__) for a in self.vreg.possible_views(req, rset))
 
     def pactions(self, req, rset, skipcategories=('addrelated', 'siteactions', 'useractions')):
-        return [(a.id, a.__class__) for a in self.vreg.possible_vobjects('actions', req, rset)
+        return [(a.id, a.__class__) for a in self.vreg.possible_vobjects('actions', req, rset=rset)
                 if a.category not in skipcategories]
 
     def pactions_by_cats(self, req, rset, categories=('addrelated',)):
-        return [(a.id, a.__class__) for a in self.vreg.possible_vobjects('actions', req, rset)
+        return [(a.id, a.__class__) for a in self.vreg.possible_vobjects('actions', req, rset=rset)
                 if a.category in categories]
 
     paddrelactions = deprecated_function(pactions_by_cats)
 
     def pactionsdict(self, req, rset, skipcategories=('addrelated', 'siteactions', 'useractions')):
         res = {}
-        for a in self.vreg.possible_vobjects('actions', req, rset):
+        for a in self.vreg.possible_vobjects('actions', req, rset=rset):
             if a.category not in skipcategories:
                 res.setdefault(a.category, []).append(a.__class__)
         return res
@@ -241,7 +241,7 @@ class EnvBasedTC(TestCase):
         dump = simplejson.dumps
         args = [dump(arg) for arg in args]
         req = self.request(fname=fname, pageid='123', arg=args)
-        ctrl = self.env.app.select_controller('json', req)
+        ctrl = self.vreg.select('controllers', 'json', req)
         return ctrl.publish(), req
 
     # default test setup and teardown #########################################
@@ -286,7 +286,7 @@ else:
         def setUp(self):
             super(ControllerTC, self).setUp()
             self.req = self.request()
-            self.ctrl = self.env.app.select_controller('edit', self.req)
+            self.ctrl = self.vreg.select('controllers', 'edit', self.req)
 
         def publish(self, req):
             assert req is self.ctrl.req
@@ -300,7 +300,7 @@ else:
 
         def expect_redirect_publish(self, req=None):
             if req is not None:
-                self.ctrl = self.env.app.select_controller('edit', req)
+                self.ctrl = self.vreg.select('controllers', 'edit', req)
             else:
                 req = self.req
             try:

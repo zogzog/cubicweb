@@ -368,9 +368,9 @@ class Entity(AppRsetObject, dict):
     def has_perm(self, action):
         return self.e_schema.has_perm(self.req, action, self.eid)
 
-    def view(self, vid, __registry='views', **kwargs):
+    def view(self, vid, **kwargs):
         """shortcut to apply a view on this entity"""
-        return self.vreg.render(__registry, vid, self.req, rset=self.rset,
+        return self.vreg.render(vid, self.req, rset=self.rset,
                                 row=self.row, col=self.col, **kwargs)
 
     def absolute_url(self, method=None, **kwargs):
@@ -725,7 +725,7 @@ class Entity(AppRsetObject, dict):
         interpreted as a separator in case vocabulary results are grouped
         """
         from logilab.common.testlib import mock_object
-        form = self.vreg.select_object('forms', 'edition', self.req, entity=self)
+        form = self.vreg.select('forms', 'edition', self.req, entity=self)
         field = mock_object(name=rtype, role=role)
         return form.form_field_vocabulary(field, limit)
 

@@ -5,8 +5,8 @@
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 :license: GNU Lesser General Public License, v2.1 - http://www.gnu.org/licenses
 """
-
 __docformat__ = "restructuredtext en"
+_ = unicode
 
 from logilab.mtconverter import html_escape
 
@@ -168,7 +168,8 @@ class InContextProgressTableView(ProgressTableView):
     id = 'ic_progress_table_view'
 
     def call(self):
-        view = self.vreg.select_view('progress_table_view', self.req, self.rset)
+        view = self.vreg.select('views', 'progress_table_view', self.req,
+                                rset=self.rset)
         columns = list(view.columns)
         try:
             columns.remove('project')

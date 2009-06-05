@@ -86,7 +86,7 @@ class TabsMixin(LazyViewMixin):
         selected_tabs = []
         for tab in tabs:
             try:
-                self.vreg.select_view(tab, self.req, self.rset)
+                self.vreg.select('views', tab, self.req, rset=self.rset)
                 selected_tabs.append(tab)
             except NoSelectableObject:
                 continue

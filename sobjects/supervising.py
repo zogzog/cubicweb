@@ -218,8 +218,8 @@ class SupervisionMailOp(SendMailOp):
     of changes
     """
     def _get_view(self):
-        return self.session.vreg.select_component('supervision_notif',
-                                                  self.session, None)
+        return self.session.vreg.select('components', 'supervision_notif',
+                                        self.session)
 
     def _prepare_email(self):
         session = self.session

@@ -126,6 +126,6 @@ class MassMailingFormView(FormViewMixIn, EntityView):
         req.add_js('cubicweb.widgets.js')
         req.add_css('cubicweb.mailform.css')
         from_addr = '%s <%s>' % (req.user.dc_title(), req.user.get_email())
-        form = self.vreg.select_object('forms', 'massmailing', self.req, self.rset,
-                                       action='sendmail', domid='sendmail')
+        form = self.vreg.select('forms', 'massmailing', self.req, rset=self.rset,
+                                action='sendmail', domid='sendmail')
         self.w(form.form_render(sender=from_addr))

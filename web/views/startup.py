@@ -80,7 +80,7 @@ class ManageView(StartupView):
 
     def folders(self):
         self.w(u'<h4>%s</h4>\n' % self.req._('Browse by category'))
-        self.vreg.select_view('tree', self.req, None).render(w=self.w)
+        self.vreg.select('views', 'tree', self.req).render(w=self.w)
 
     def startup_views(self):
         self.w(u'<h4>%s</h4>\n' % self.req._('Startup views'))
@@ -140,7 +140,8 @@ class ManageView(StartupView):
             label = display_name(req, etype, 'plural')
             nb = req.execute('Any COUNT(X) WHERE X is %s' % etype)[0][0]
             if nb > 1:
-                view = self.vreg.select_view('list', req, req.etype_rset(etype))
+                view = self.vreg.select('views', 'list', req,
+                                        rset=req.etype_rset(etype))
                 url = view.url()
             else:
                 url = self.build_url('view', rql='%s X' % etype)

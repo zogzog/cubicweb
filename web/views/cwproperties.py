@@ -189,11 +189,11 @@ class SystemCWPropertiesForm(FormViewMixIn, StartupView):
 
     def form(self, formid, keys, splitlabel=False):
         buttons = [SubmitButton()]
-        form = self.vreg.select_object('forms', 'composite', self.req,
-                                  domid=formid, action=self.build_url(),
-                                  form_buttons=buttons,
-                                  onsubmit="return validatePrefsForm('%s')" % formid,
-                                  submitmsg=self.req._('changes applied'))
+        form = self.vreg.select('forms', 'composite', self.req,
+                                domid=formid, action=self.build_url(),
+                                form_buttons=buttons,
+                                onsubmit="return validatePrefsForm('%s')" % formid,
+                                submitmsg=self.req._('changes applied'))
         path = self.req.relative_path()
         if '?' in path:
             path, params = path.split('?', 1)
@@ -201,8 +201,8 @@ class SystemCWPropertiesForm(FormViewMixIn, StartupView):
         form.form_add_hidden('__redirectpath', path)
         for key in keys:
             self.form_row(form, key, splitlabel)
-        renderer = self.vreg.select_object('formrenderers', 'cwproperties', self.req,
-                                           display_progress_div=False)
+        renderer = self.vreg.select('formrenderers', 'cwproperties', self.req,
+                                    display_progress_div=False)
         return form.form_render(renderer=renderer)
 
     def form_row(self, form, key, splitlabel):
@@ -211,8 +211,8 @@ class SystemCWPropertiesForm(FormViewMixIn, StartupView):
             label = key.split('.')[-1]
         else:
             label = key
-        subform = self.vreg.select_object('forms', 'base', self.req, entity=entity,
-                                     mainform=False)
+        subform = self.vreg.select('forms', 'base', self.req, entity=entity,
+                                   mainform=False)
         subform.append_field(PropertyValueField(name='value', label=label,
                                                 eidparam=True))
         subform.vreg = self.vreg

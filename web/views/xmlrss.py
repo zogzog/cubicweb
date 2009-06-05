@@ -13,11 +13,9 @@ from time import timezone
 from logilab.mtconverter import xml_escape
 
 from cubicweb.selectors import non_final_entity, one_line_rset, appobject_selectable
-from cubicweb.view import EntityView, AnyRsetView
-from cubicweb.web.httpcache import MaxAgeHTTPCacheManager
-from cubicweb.web.component import Component
-from cubicweb.web.box import BoxTemplate
+from cubicweb.view import EntityView, AnyRsetView, Component
 from cubicweb.common.uilib import simple_sgml_tag
+from cubicweb.web import httpcache, box
 
 
 # base xml views ##############################################################
@@ -122,10 +120,10 @@ class RSSEntityFeedURL(Component):
         return self.entity(0, 0).rss_feed_url()
 
 
-class RSSIconBox(BoxTemplate):
+class RSSIconBox(box.BoxTemplate):
     """just display the RSS icon on uniform result set"""
     id = 'rss'
-    __select__ = (BoxTemplate.__select__
+    __select__ = (box.BoxTemplate.__select__
                   & appobject_selectable('components', 'rss_feed_url'))
 
     visible = False
@@ -137,7 +135,8 @@ class RSSIconBox(BoxTemplate):
         except KeyError:
             self.error('missing RSS_LOGO external resource')
             return
-        urlgetter = self.vreg.select_component('rss_feed_url', self.req, self.rset)
+        urlgetter = self.vreg.select('components', 'rss_feed_url',
+                                     self.req, rset=self.rset)
         url = urlgetter.feed_url()
         self.w(u'<a href="%s"><img src="%s" alt="rss"/></a>\n' % (xml_escape(url), rss))
 
@@ -147,7 +146,7 @@ class RSSView(XMLView):
     title = _('rss')
     templatable = False
     content_type = 'text/xml'
-    http_cache_manager = MaxAgeHTTPCacheManager
+    http_cache_manager = httpcache.MaxAgeHTTPCacheManager
     cache_max_age = 60*60*2 # stay in http cache for 2 hours by default
 
     def _open(self):

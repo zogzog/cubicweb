@@ -97,10 +97,7 @@ class CubicWebWSGIApplication(object):
 #         assert self.base_url[-1] == '/'
 #         self.https_url = config['https-url']
 #         assert not self.https_url or self.https_url[-1] == '/'
-        try:
-            self.url_rewriter = self.appli.vreg.select_component('urlrewriter')
-        except ObjectNotFound:
-            self.url_rewriter = None
+        self.url_rewriter = self.appli.vreg.select_object('components', 'urlrewriter')
 
     def _render(self, req):
         """this function performs the actual rendering

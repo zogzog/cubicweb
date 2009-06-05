@@ -37,8 +37,7 @@ class EditControllerTC(GAEBasedTC):
         self.ctrl = self.get_ctrl(self.req)
 
     def get_ctrl(self, req):
-        return self.vreg.select(self.vreg.registry_objects('controllers', 'edit'),
-                                req=req, appli=self)
+        return self.vreg.select('controllers', 'edit', req=req, appli=self)
 
     def publish(self, req):
         assert req is self.ctrl.req

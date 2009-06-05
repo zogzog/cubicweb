@@ -83,7 +83,8 @@ class ResultSet(object):
         try:
             return self._rsetactions[key]
         except KeyError:
-            actions = self.vreg.possible_vobjects('actions', self.req, self, **kwargs)
+            actions = self.vreg.possible_vobjects('actions', self.req,
+                                                  rset=self, **kwargs)
             self._rsetactions[key] = actions
             return actions
 

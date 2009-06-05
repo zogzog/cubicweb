@@ -72,7 +72,7 @@ def entity_types_no_count(self, eschemas):
             continue
         etype = eschema.type
         label = display_name(req, etype, 'plural')
-        view = self.vreg.select_view('list', req, req.etype_rset(etype))
+        view = self.vreg.select('views', 'list', req, req.etype_rset(etype))
         url = view.url()
         etypelink = u'&nbsp;<a href="%s">%s</a>' % (html_escape(url), label)
         yield (label, etypelink, self.add_entity_link(eschema, req))

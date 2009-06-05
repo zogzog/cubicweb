@@ -6,6 +6,7 @@
 :license: GNU Lesser General Public License, v2.1 - http://www.gnu.org/licenses
 """
 __docformat__ = "restructuredtext en"
+_ = unicode
 
 from base64 import b64encode, b64decode
 from itertools import repeat
@@ -13,7 +14,7 @@ from time import time
 try:
     from socket import gethostname
 except ImportError:
-    def gethostname():
+    def gethostname(): # gae
         return 'XXX'
 
 from logilab.common.textutils import normalize_text
@@ -28,7 +29,6 @@ from cubicweb.server.pool import PreCommitOperation
 from cubicweb.server.hookhelper import SendMailOp
 from cubicweb.server.hooksmanager import Hook
 
-_ = unicode
 
 class RecipientsFinder(Component):
     """this component is responsible to find recipients of a notification
@@ -76,7 +76,7 @@ class StatusChangeHook(Hook):
             return
         rset = entity.related('wf_info_for')
         try:
-            view = session.vreg.select_view('notif_status_change',
+            view = session.vreg.select('views', 'notif_status_change',
                                             session, rset, row=0)
         except RegistryException:
             return
@@ -100,7 +100,7 @@ class RelationChangeHook(Hook):
         rset = session.eid_rset(fromeid)
         vid = 'notif_%s_%s' % (self.event,  rtype)
         try:
-            view = session.vreg.select_view(vid, session, rset, row=0)
+            view = session.vreg.select('views', vid, session, rset, row=0)
         except RegistryException:
             return
         RenderAndSendNotificationView(session, view=view)
@@ -117,7 +117,7 @@ class EntityChangeHook(Hook):
         rset = entity.as_rset()
         vid = 'notif_%s' % self.event
         try:
-            view = session.vreg.select_view(vid, session, rset, row=0)
+            view = session.vreg.select('views', vid, session, rset, row=0)
         except RegistryException:
             return
         RenderAndSendNotificationView(session, view=view)
@@ -136,7 +136,8 @@ class NotificationView(EntityView):
     msgid_timestamp = True
 
     def recipients(self):
-        finder = self.vreg.select_component('recipients_finder', self.req, self.rset)
+        finder = self.vreg.select('components', 'recipients_finder', self.req,
+                                  rset=self.rset)
         return finder.recipients()
 
     def subject(self):

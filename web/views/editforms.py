@@ -59,19 +59,19 @@ class DeleteConfForm(FormViewMixIn, EntityView):
           % _('this action is not reversible!'))
         # XXX above message should have style of a warning
         w(u'<h4>%s</h4>\n' % _('Do you want to delete the following element(s) ?'))
-        form = self.vreg.select_object('forms', 'composite', req, domid='deleteconf',
-                                       copy_nav_params=True,
-                                       action=self.build_url('edit'), onsubmit=onsubmit,
-                                       form_buttons=[Button(stdmsgs.YES, cwaction='delete'),
-                                                     Button(stdmsgs.NO, cwaction='cancel')])
+        form = self.vreg.select('forms', 'composite', req, domid='deleteconf',
+                                copy_nav_params=True,
+                                action=self.build_url('edit'), onsubmit=onsubmit,
+                                form_buttons=[Button(stdmsgs.YES, cwaction='delete'),
+                                              Button(stdmsgs.NO, cwaction='cancel')])
         done = set()
         w(u'<ul>\n')
         for entity in self.rset.entities():
             if entity.eid in done:
                 continue
             done.add(entity.eid)
-            subform = self.vreg.select_object('forms', 'base', req, entity=entity,
-                                              mainform=False)
+            subform = self.vreg.select('forms', 'base', req, entity=entity,
+                                       mainform=False)
             form.form_add_subform(subform)
             # don't use outofcontext view or any other that may contain inline edition form
             w(u'<li>%s</li>' % tags.a(entity.view('textoutofcontext'),
@@ -119,12 +119,12 @@ class ClickAndEditFormView(FormViewMixIn, EntityView):
         else:
             form = self._build_relation_form(entity, value, rtype, role,
                                              row, col, vid, default)
-        renderer = self.vreg.select_object('formrenderers', 'base', self.req,
-                                      entity=entity,
-                                      display_label=False, display_help=False,
-                                      display_fields=[(rtype, role)],
-                                      table_class='', button_bar_class='buttonbar',
-                                      display_progress_div=False)
+        renderer = self.vreg.select('formrenderers', 'base', self.req,
+                                    entity=entity,
+                                    display_label=False, display_help=False,
+                                    display_fields=[(rtype, role)],
+                                    table_class='', button_bar_class='buttonbar',
+                                    display_progress_div=False)
         self.w(form.form_render(renderer=renderer))
 
     def _build_relation_form(self, entity, value, rtype, role, row, col, vid, default):
@@ -137,12 +137,12 @@ class ClickAndEditFormView(FormViewMixIn, EntityView):
                     % event_data)
         cancelclick = "cancelInlineEdit(%s,\'%s\',\'%s\')" % (
             entity.eid, rtype, divid)
-        form = self.vreg.select_object('forms', 'base', self.req, entity=entity,
-                                       domid='%s-form' % divid, cssstyle='display: none',
-                                       onsubmit=onsubmit, action='#',
-                                       form_buttons=[SubmitButton(),
-                                                     Button(stdmsgs.BUTTON_CANCEL,
-                                                       onclick=cancelclick)])
+        form = self.vreg.select('forms', 'base', self.req, entity=entity,
+                                domid='%s-form' % divid, cssstyle='display: none',
+                                onsubmit=onsubmit, action='#',
+                                form_buttons=[SubmitButton(),
+                                              Button(stdmsgs.BUTTON_CANCEL,
+                                                     onclick=cancelclick)])
         form.append_field(RelationField(name=rtype, role=role, sort=True,
                                         widget=Select(),
                                         label=u' '))
@@ -159,11 +159,11 @@ class ClickAndEditFormView(FormViewMixIn, EntityView):
                    Button(stdmsgs.BUTTON_CANCEL,
                           onclick="cancelInlineEdit(%s,\'%s\',\'%s\')" % (
                               eid, rtype, divid))]
-        form = self.vreg.select_object('forms', 'edition', self.req, self.rset,
-                                       row=row, col=col, form_buttons=buttons,
-                                       domid='%s-form' % divid, action='#',
-                                       cssstyle='display: none',
-                                       onsubmit=self.onsubmit % event_data)
+        form = self.vreg.select('forms', 'edition', self.req, rset=self.rset,
+                                row=row, col=col, form_buttons=buttons,
+                                domid='%s-form' % divid, action='#',
+                                cssstyle='display: none',
+                                onsubmit=self.onsubmit % event_data)
         self.w(tags.div(value, klass='editableField', id=divid,
                         ondblclick=self.ondblclick % event_data))
         return form
@@ -185,9 +185,9 @@ class EditionFormView(FormViewMixIn, EntityView):
     def render_form(self, entity):
         """fetch and render the form"""
         self.form_title(entity)
-        form = self.vreg.select_object('forms', 'edition', self.req, entity.rset,
-                                       row=entity.row, col=entity.col, entity=entity,
-                                       submitmsg=self.submited_message())
+        form = self.vreg.select('forms', 'edition', self.req, rset=entity.rset,
+                                row=entity.row, col=entity.col, entity=entity,
+                                submitmsg=self.submited_message())
         self.init_form(form, entity)
         self.w(form.form_render(formvid=u'edition'))
 
@@ -304,9 +304,9 @@ class TableEditForm(forms.CompositeForm):
         kwargs.setdefault('__redirectrql', rset.printable_rql())
         super(TableEditForm, self).__init__(req, rset, **kwargs)
         for row in xrange(len(self.rset)):
-            form = self.vreg.select_object('forms', 'edition', self.req, self.rset,
-                                           row=row, attrcategories=('primary',),
-                                           mainform=False)
+            form = self.vreg.select('forms', 'edition', self.req, rset=self.rset,
+                                    row=row, attrcategories=('primary',),
+                                    mainform=False)
             # XXX rely on the EntityCompositeFormRenderer to put the eid input
             form.remove_field(form.field_by_name('eid'))
             self.form_add_subform(form)
@@ -322,7 +322,7 @@ class TableEditFormView(FormViewMixIn, EntityView):
         should be the eid
         """
         #self.form_title(entity)
-        form = self.vreg.select_object('forms', self.id, self.req, self.rset)
+        form = self.vreg.select('forms', self.id, self.req, rset=self.rset)
         self.w(form.form_render())
 
 
@@ -353,9 +353,9 @@ class InlineEntityEditionFormView(FormViewMixIn, EntityView):
 
     def render_form(self, entity, peid, rtype, role, **kwargs):
         """fetch and render the form"""
-        form = self.vreg.select_object('forms', 'edition', self.req, None,
-                                       entity=entity, form_renderer_id='inline',
-                                       mainform=False, copy_nav_params=False)
+        form = self.vreg.select('forms', 'edition', self.req, entity=entity,
+                                form_renderer_id='inline', mainform=False,
+                                copy_nav_params=False)
         self.add_hiddens(form, entity, peid, rtype, role)
         divid = '%s-%s-%s' % (peid, rtype, entity.eid)
         title = self.schema.rschema(rtype).display_name(self.req, role)

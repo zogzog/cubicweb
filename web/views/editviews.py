@@ -6,6 +6,7 @@
 :license: GNU Lesser General Public License, v2.1 - http://www.gnu.org/licenses
 """
 __docformat__ = "restructuredtext en"
+_ = unicode
 
 from simplejson import dumps
 
@@ -21,7 +22,6 @@ from cubicweb.web.views import linksearch_select_url
 from cubicweb.web.views.editforms import relation_id
 from cubicweb.web.views.baseviews import FinalView
 
-_ = unicode
 
 class SearchForAssociationView(EntityView):
     """view called by the edition view when the user asks to search for
@@ -120,8 +120,7 @@ class UnrelatedDivs(EntityView):
         eid = entity.eid
         pending_inserts = self.req.get_pending_inserts(eid)
         rtype = rschema.type
-        form = self.vreg.select_object('forms', 'edition', self.req,
-                                       self.rset, entity=entity)
+        form = self.vreg.select('forms', 'edition', self.req, entity=entity)
         field = form.field_by_name(rschema, target, entity.e_schema)
         limit = self.req.property_value('navigation.combobox-limit')
         for eview, reid in form.form_field_vocabulary(field, limit):

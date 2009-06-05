@@ -6,6 +6,7 @@
 :license: GNU Lesser General Public License, v2.1 - http://www.gnu.org/licenses
 """
 __docformat__ = "restructuredtext en"
+_ = unicode
 
 from logilab.mtconverter import html_escape
 
@@ -19,8 +20,6 @@ from cubicweb.view import View, ReloadableMixIn
 from cubicweb.web.htmlwidgets import (BoxLink, BoxWidget, SideBoxWidget,
                                       RawBoxItem, BoxSeparator)
 from cubicweb.web.action import UnregisteredAction
-
-_ = unicode
 
 
 class BoxTemplate(View):
@@ -220,8 +219,8 @@ class EditRelationBoxTemplate(ReloadableMixIn, EntityBoxTemplate):
             return entity.unrelated(self.rtype, self.etype, get_role(self)).entities()
         # in other cases, use vocabulary functions
         entities = []
-        form = self.vreg.select_object('forms', 'edition', self.req, self.rset,
-                                       row=self.row or 0)
+        form = self.vreg.select('forms', 'edition', self.req, rset=self.rset,
+                                row=self.row or 0)
         field = form.field_by_name(self.rtype, get_role(self), entity.e_schema)
         for _, eid in form.form_field_vocabulary(field):
             if eid is not None:

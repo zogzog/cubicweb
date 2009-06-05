@@ -177,7 +177,7 @@ class TestEnvironment(object):
                 self.create_request(rql=rql, **optional_args or {}))
 
     def check_view(self, rql, vid, optional_args, template='main'):
-        """checks if vreg.view() raises an exception in this environment
+        """checks if rendering view raises an exception in this environment
 
         If any exception is raised in this method, it will be considered
         as a TestFailure
@@ -186,7 +186,6 @@ class TestEnvironment(object):
                               template=template, optional_args=optional_args)
 
     def call_view(self, vid, rql, template='main', optional_args=None):
-        """shortcut for self.vreg.view()"""
         assert template
         if optional_args is None:
             optional_args = {}
@@ -196,7 +195,7 @@ class TestEnvironment(object):
 
     def call_edit(self, req):
         """shortcut for self.app.edit()"""
-        controller = self.app.select_controller('edit', req)
+        controller = self.vreg.select('controllers', 'edit', req)
         try:
             controller.publish()
         except Redirect:
@@ -224,7 +223,7 @@ class TestEnvironment(object):
 
     def iter_possible_actions(self, req, rset):
         """returns a list of possible vids for <rql>"""
-        for action in self.vreg.possible_vobjects('actions', req, rset):
+        for action in self.vreg.possible_vobjects('actions', req, rset=rset):
             yield action
 
 class ExistingTestEnvironment(TestEnvironment):

@@ -154,6 +154,25 @@ class FakeRequest(CubicWebRequestBase):
         return self.execute(*args, **kwargs)
 
 
+# class FakeRequestNoCnx(FakeRequest):
+#     def get_session_data(self, key, default=None, pop=False):
+#         """return value associated to `key` in session data"""
+#         if pop:
+#             return self._session_data.pop(key, default)
+#         else:
+#             return self._session_data.get(key, default)
+
+#     def set_session_data(self, key, value):
+#         """set value associated to `key` in session data"""
+#         self._session_data[key] = value
+
+#     def del_session_data(self, key):
+#         try:
+#             del self._session_data[key]
+#         except KeyError:
+#             pass
+
+
 class FakeUser(object):
     login = 'toto'
     eid = 0

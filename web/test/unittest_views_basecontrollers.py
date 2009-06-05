@@ -499,7 +499,7 @@ class EmbedControllerTC(EnvBasedTC):
         # updated (which is what happened before this test)
         req = self.request()
         req.form['url'] = 'http://intranet.logilab.fr/'
-        controller = self.env.app.select_controller('embed', req)
+        controller = self.vreg.select('controllers', 'embed', req)
         result = controller.publish(rset=None)
 
 
@@ -507,7 +507,7 @@ class ReportBugControllerTC(EnvBasedTC):
 
     def test_usable_by_guets(self):
         req = self.request()
-        self.env.app.select_controller('reportbug', req)
+        self.vreg.select('controllers', 'reportbug', req)
 
 
 class SendMailControllerTC(EnvBasedTC):
@@ -523,7 +523,7 @@ class JSONControllerTC(EnvBasedTC):
 
     def ctrl(self, req=None):
         req = req or self.request(url='http://whatever.fr/')
-        return self.env.app.select_controller('json', req)
+        return self.vreg.select('controllers', 'json', req)
 
     def setup_database(self):
         self.pytag = self.add_entity('Tag', name=u'python')

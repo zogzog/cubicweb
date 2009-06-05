@@ -35,7 +35,7 @@ class TableView(AnyRsetView):
         rqlst.save_state()
         mainvar, baserql = prepare_facets_rqlst(rqlst, self.rset.args)
         wdgs = [facet.get_widget() for facet in self.vreg.possible_vobjects(
-            'facets', self.req, self.rset, context='tablefilter',
+            'facets', self.req, rset=self.rset, context='tablefilter',
             filtered_variable=mainvar)]
         wdgs = [wdg for wdg in wdgs if wdg is not None]
         rqlst.recover()

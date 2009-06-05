@@ -169,28 +169,91 @@ class VRegistry(object):
         If no oid is given, return all objects in this registry
         """
         registry = self.registry(name)
-        if oid:
+        if oid is not None:
             try:
                 return registry[oid]
             except KeyError:
                 raise ObjectNotFound(oid), None, sys.exc_info()[-1]
-        else:
-            result = []
-            for objs in registry.values():
-                result += objs
-            return result
+        result = []
+        for objs in registry.values():
+            result += objs
+        return result
 
-    def object_by_id(self, registry, cid, *args, **kwargs):
-        """return the most specific component according to the resultset"""
-        objects = self[registry][cid]
+    # dynamic selection methods ################################################
+
+    def object_by_id(self, registry, oid, *args, **kwargs):
+        """return object in <registry>.<oid>
+
+        raise `ObjectNotFound` if not object with id <oid> in <registry>
+        raise `AssertionError` if there is more than one object there
+        """
+        objects = self.registry_objects(registry, oid)
         assert len(objects) == 1, objects
         return objects[0].selected(*args, **kwargs)
+
+    def select(self, registry, oid, *args, **kwargs):
+        """return the most specific object in <registry>.<oid> according to
+        the given context
+
+        raise `ObjectNotFound` if not object with id <oid> in <registry>
+        raise `NoSelectableObject` if not object apply
+        """
+        return self.select_best(self.registry_objects(registry, oid),
+                                *args, **kwargs)
+
+    def select_object(self, registry, oid, *args, **kwargs):
+        """return the most specific object in <registry>.<oid> according to
+        the given context, or None if no object apply
+        """
+        try:
+            return self.select(registry, oid, *args, **kwargs)
+        except (NoSelectableObject, ObjectNotFound):
+            return None
+
+    def possible_objects(self, registry, *args, **kwargs):
+        """return an iterator on possible objects in <registry> for the given
+        context
+        """
+        for vobjects in self.registry(registry).itervalues():
+            try:
+                yield self.select_best(vobjects, *args, **kwargs)
+            except NoSelectableObject:
+                continue
+
+    def select_best(self, vobjects, *args, **kwargs):
+        """return an instance of the most specific object according
+        to parameters
+
+        raise `NoSelectableObject` if not object apply
+        """
+        score, winners = 0, []
+        for vobject in vobjects:
+            vobjectscore = vobject.__select__(vobject, *args, **kwargs)
+            if vobjectscore > score:
+                score, winners = vobjectscore, [vobject]
+            elif vobjectscore > 0 and vobjectscore == score:
+                winners.append(vobject)
+        if not winners:
+            raise NoSelectableObject('args: %s\nkwargs: %s %s'
+                                     % (args, kwargs.keys(),
+                                        [repr(v) for v in vobjects]))
+        if len(winners) > 1:
+            if self.config.mode == 'installed':
+                self.error('select ambiguity, args: %s\nkwargs: %s %s',
+                           args, kwargs.keys(), [repr(v) for v in winners])
+            else:
+                raise Exception('select ambiguity, args: %s\nkwargs: %s %s'
+                                % (args, kwargs.keys(),
+                                   [repr(v) for v in winners]))
+        # return the result of the .selected method of the vobject
+        return winners[0].selected(*args, **kwargs)
 
     # methods for explicit (un)registration ###################################
 
 #     def clear(self, key):
 #         regname, oid = key.split('.')
 #         self[regname].pop(oid, None)
+
     def register_all(self, objects, modname, butclasses=()):
         for obj in objects:
             try:
@@ -265,52 +328,6 @@ class VRegistry(object):
             self.warning('trying to replace an unregistered view %s by %s',
                          replaced, obj)
         self.register(obj, registryname=registryname)
-
-    # dynamic selection methods ###############################################
-
-    def select(self, vobjects, *args, **kwargs):
-        """return an instance of the most specific object according
-        to parameters
-
-        raise NoSelectableObject if not object apply
-        """
-        score, winners = 0, []
-        for vobject in vobjects:
-            vobjectscore = vobject.__select__(vobject, *args, **kwargs)
-            if vobjectscore > score:
-                score, winners = vobjectscore, [vobject]
-            elif vobjectscore > 0 and vobjectscore == score:
-                winners.append(vobject)
-        if not winners:
-            raise NoSelectableObject('args: %s\nkwargs: %s %s'
-                                     % (args, kwargs.keys(),
-                                        [repr(v) for v in vobjects]))
-        if len(winners) > 1:
-            if self.config.mode == 'installed':
-                self.error('select ambiguity, args: %s\nkwargs: %s %s',
-                           args, kwargs.keys(), [repr(v) for v in winners])
-            else:
-                raise Exception('select ambiguity, args: %s\nkwargs: %s %s'
-                                % (args, kwargs.keys(),
-                                   [repr(v) for v in winners]))
-        winner = winners[0]
-        # return the result of the .selected method of the vobject
-        return winner.selected(*args, **kwargs)
-
-    def possible_objects(self, registry, *args, **kwargs):
-        """return an iterator on possible objects in a registry for this result set
-
-        actions returned are classes, not instances
-        """
-        for vobjects in self.registry(registry).values():
-            try:
-                yield self.select(vobjects, *args, **kwargs)
-            except NoSelectableObject:
-                continue
-
-    def select_object(self, registry, cid, *args, **kwargs):
-        """return the most specific component according to the resultset"""
-        return self.select(self.registry_objects(registry, cid), *args, **kwargs)
 
     # intialization methods ###################################################
 

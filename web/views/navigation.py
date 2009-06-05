@@ -6,6 +6,7 @@
 :license: GNU Lesser General Public License, v2.1 - http://www.gnu.org/licenses
 """
 __docformat__ = "restructuredtext en"
+_ = unicode
 
 from rql.nodes import VariableRef, Constant
 
@@ -18,8 +19,6 @@ from cubicweb.selectors import (paginated_rset, sorted_rset,
                                 one_line_rset, implements)
 from cubicweb.common.uilib import cut
 from cubicweb.web.component import EntityVComponent, NavigationComponent
-
-_ = unicode
 
 
 class PageNavigation(NavigationComponent):
@@ -48,6 +47,7 @@ class PageNavigation(NavigationComponent):
 
     def index_display(self, start, stop):
         return u'%s - %s' % (start+1, stop+1)
+
 
 class SortedNavigation(NavigationComponent):
     """sorted navigation apply if navigation is needed (according to page size)
@@ -148,21 +148,21 @@ class SortedNavigation(NavigationComponent):
 
 def limit_rset_using_paged_nav(self, req, rset, w, forcedisplay=False,
                                show_all_option=True, page_size=None):
-    showall = forcedisplay or req.form.get('__force_display') is not None
-    nav = not showall and self.vreg.select_component('navigation', req, rset,
-                                                     page_size=page_size)
-    if nav:
-        # get boundaries before component rendering
-        start, stop = nav.page_boundaries()
-        nav.render(w=w)
-        params = dict(req.form)
-        nav.clean_params(params)
-        # make a link to see them all
-        if show_all_option:
-            url = html_escape(self.build_url(__force_display=1, **params))
-            w(u'<p><a href="%s">%s</a></p>\n'
-              % (url, req._('show %s results') % len(rset)))
-        rset.limit(offset=start, limit=stop-start, inplace=True)
+    if not (forcedisplay or req.form.get('__force_display') is not None):
+        nav = self.vreg.select_object('components', 'navigation', req,
+                                      rset=rset, page_size=page_size)
+        if nav:
+            # get boundaries before component rendering
+            start, stop = nav.page_boundaries()
+            nav.render(w=w)
+            params = dict(req.form)
+            nav.clean_params(params)
+            # make a link to see them all
+            if show_all_option:
+                url = html_escape(self.build_url(__force_display=1, **params))
+                w(u'<p><a href="%s">%s</a></p>\n'
+                  % (url, req._('show %s results') % len(rset)))
+            rset.limit(offset=start, limit=stop-start, inplace=True)
 
 
 # monkey patch base View class to add a .pagination(req, rset, w, forcedisplay)

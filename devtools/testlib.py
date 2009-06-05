@@ -172,7 +172,8 @@ class WebTest(EnvBasedTC):
         return validator.parse_string(output.strip())
 
 
-    def view(self, vid, rset, req=None, template='main-template', **kwargs):
+    def view(self, vid, rset=None, req=None, template='main-template',
+             **kwargs):
         """This method tests the view `vid` on `rset` using `template`
 
         If no error occured while rendering the view, the HTML is analyzed
@@ -182,24 +183,24 @@ class WebTest(EnvBasedTC):
                   encapsulation the generated HTML
         """
         req = req or rset and rset.req or self.request()
-        # print "testing ", vid,
-        # if rset:
-        #     print rset, len(rset), id(rset)
-        # else:
-        #     print
         req.form['vid'] = vid
-        view = self.vreg.select_view(vid, req, rset, **kwargs)
+        kwargs['rset'] = rset
+        view = self.vreg.select('views', vid, req, **kwargs)
         # set explicit test description
         if rset is not None:
-            self.set_description("testing %s, mod=%s (%s)" % (vid, view.__module__, rset.printable_rql()))
+            self.set_description("testing %s, mod=%s (%s)" % (
+                vid, view.__module__, rset.printable_rql()))
         else:
-            self.set_description("testing %s, mod=%s (no rset)" % (vid, view.__module__))
+            self.set_description("testing %s, mod=%s (no rset)" % (
+                vid, view.__module__))
         if template is None: # raw view testing, no template
             viewfunc = view.render
         else:
-            templateview = self.vreg.select_view(template, req, rset, view=view, **kwargs)
             kwargs['view'] = view
-            viewfunc = lambda **k: self.vreg.main_template(req, template, **kwargs)
+            templateview = self.vreg.select('views', template, req, **kwargs)
+            viewfunc = lambda **k: self.vreg.main_template(req, template,
+                                                           **kwargs)
+        kwargs.pop('rset')
         return self._test_view(viewfunc, view, template, kwargs)
 
 
@@ -279,7 +280,7 @@ class WebTest(EnvBasedTC):
                      and not issubclass(view, NotificationView)]
             if views:
                 try:
-                    view = self.vreg.select(views, req, rset)
+                    view = self.vreg.select_best(views, req, rset=rset)
                     if view.linkable():
                         yield view
                     else:
@@ -292,13 +293,13 @@ class WebTest(EnvBasedTC):
     def list_actions_for(self, rset):
         """returns the list of actions that can be applied on `rset`"""
         req = rset.req
-        for action in self.vreg.possible_objects('actions', req, rset):
+        for action in self.vreg.possible_objects('actions', req, rset=rset):
             yield action
 
     def list_boxes_for(self, rset):
         """returns the list of boxes that can be applied on `rset`"""
         req = rset.req
-        for box in self.vreg.possible_objects('boxes', req, rset):
+        for box in self.vreg.possible_objects('boxes', req, rset=rset):
             yield box
 
     def list_startup_views(self):
@@ -384,8 +385,8 @@ def vreg_instrumentize(testclass):
                                            requestcls=testclass.requestcls)
     vreg = env.vreg
     vreg._selected = {}
-    orig_select = vreg.__class__.select
-    def instr_select(self, *args, **kwargs):
+    orig_select_best = vreg.__class__.select_best
+    def instr_select_best(self, *args, **kwargs):
         selected = orig_select(self, *args, **kwargs)
         try:
             self._selected[selected.__class__] += 1
@@ -394,7 +395,7 @@ def vreg_instrumentize(testclass):
         except AttributeError:
             pass # occurs on vreg used to restore database
         return selected
-    vreg.__class__.select = instr_select
+    vreg.__class__.select_best = instr_select_best
 
 def print_untested_objects(testclass, skipregs=('hooks', 'etypes')):
     vreg = testclass._env.vreg

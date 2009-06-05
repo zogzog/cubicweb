@@ -234,7 +234,7 @@ class VRegistryTC(ViewSelectorTC):
         req = self.request()
         # creation form
         req.form['etype'] = 'CWGroup'
-        self.assertIsInstance(self.vreg.select_view('creation', req, rset),
+        self.assertIsInstance(self.vreg.select('views', 'creation', req, rset=rset),
                               editforms.CreationFormView)
         del req.form['etype']
         # custom creation form
@@ -243,94 +243,94 @@ class VRegistryTC(ViewSelectorTC):
         self.vreg._loadedmods[__name__] = {}
         self.vreg.register_vobject_class(CWUserCreationForm)
         req.form['etype'] = 'CWUser'
-        self.assertIsInstance(self.vreg.select_view('creation', req, rset),
+        self.assertIsInstance(self.vreg.select('views', 'creation', req, rset=rset),
                               CWUserCreationForm)
 
     def test_select_view(self):
         # no entity
         rset = None
         req = self.request()
-        self.assertIsInstance(self.vreg.select_view('index', req, rset),
+        self.assertIsInstance(self.vreg.select('views', 'index', req, rset=rset),
                              startup.IndexView)
         self.failUnlessRaises(NoSelectableObject,
-                             self.vreg.select_view, 'primary', req, rset)
+                             self.vreg.select, 'views', 'primary', req, rset=rset)
         self.failUnlessRaises(NoSelectableObject,
-                             self.vreg.select_view, 'table', req, rset)
+                             self.vreg.select, 'views', 'table', req, rset=rset)
 
         # no entity
         rset, req = self.env.get_rset_and_req('Any X WHERE X eid 999999')
         self.failUnlessRaises(NoSelectableObject,
-                              self.vreg.select_view, 'index', req, rset)
+                              self.vreg.select, 'views', 'index', req, rset=rset)
         self.failUnlessRaises(NoSelectableObject,
-                              self.vreg.select_view, 'creation', req, rset)
+                              self.vreg.select, 'views', 'creation', req, rset=rset)
         self.failUnlessRaises(NoSelectableObject,
-                              self.vreg.select_view, 'primary', req, rset)
+                              self.vreg.select, 'views', 'primary', req, rset=rset)
         self.failUnlessRaises(NoSelectableObject,
-                             self.vreg.select_view, 'table', req, rset)
+                             self.vreg.select, 'views', 'table', req, rset=rset)
         # one entity
         rset, req = self.env.get_rset_and_req('CWGroup X WHERE X name "managers"')
-        self.assertIsInstance(self.vreg.select_view('primary', req, rset),
+        self.assertIsInstance(self.vreg.select('views', 'primary', req, rset=rset),
                              primary.PrimaryView)
-        self.assertIsInstance(self.vreg.select_view('list', req, rset),
+        self.assertIsInstance(self.vreg.select('views', 'list', req, rset=rset),
                              baseviews.ListView)
-        self.assertIsInstance(self.vreg.select_view('edition', req, rset),
+        self.assertIsInstance(self.vreg.select('views', 'edition', req, rset=rset),
                              editforms.EditionFormView)
-        self.assertIsInstance(self.vreg.select_view('table', req, rset),
+        self.assertIsInstance(self.vreg.select('views', 'table', req, rset=rset),
                              tableview.TableView)
         self.failUnlessRaises(NoSelectableObject,
-                              self.vreg.select_view, 'creation', req, rset)
+                              self.vreg.select, 'views', 'creation', req, rset=rset)
         self.failUnlessRaises(NoSelectableObject,
-                              self.vreg.select_view, 'index', req, rset)
+                              self.vreg.select, 'views', 'index', req, rset=rset)
         # list of entities of the same type
         rset, req = self.env.get_rset_and_req('CWGroup X')
-        self.assertIsInstance(self.vreg.select_view('primary', req, rset),
+        self.assertIsInstance(self.vreg.select('views', 'primary', req, rset=rset),
                              primary.PrimaryView)
-        self.assertIsInstance(self.vreg.select_view('list', req, rset),
+        self.assertIsInstance(self.vreg.select('views', 'list', req, rset=rset),
                              baseviews.ListView)
-        self.assertIsInstance(self.vreg.select_view('table', req, rset),
+        self.assertIsInstance(self.vreg.select('views', 'table', req, rset=rset),
                              tableview.TableView)
         self.failUnlessRaises(NoSelectableObject,
-                              self.vreg.select_view, 'creation', req, rset)
+                              self.vreg.select, 'views', 'creation', req, rset=rset)
         # list of entities of different types
         rset, req = self.env.get_rset_and_req('Any X')
-        self.assertIsInstance(self.vreg.select_view('primary', req, rset),
+        self.assertIsInstance(self.vreg.select('views', 'primary', req, rset=rset),
                                   primary.PrimaryView)
-        self.assertIsInstance(self.vreg.select_view('list', req, rset),
+        self.assertIsInstance(self.vreg.select('views', 'list', req, rset=rset),
                                   baseviews.ListView)
-        self.assertIsInstance(self.vreg.select_view('table', req, rset),
+        self.assertIsInstance(self.vreg.select('views', 'table', req, rset=rset),
                                   tableview.TableView)
         self.failUnlessRaises(NoSelectableObject,
-                             self.vreg.select_view, 'creation', req, rset)
+                             self.vreg.select, 'views', 'creation', req, rset=rset)
         self.failUnlessRaises(NoSelectableObject,
-                              self.vreg.select_view, 'index', req, rset)
+                              self.vreg.select, 'views', 'index', req, rset=rset)
         # whatever
         rset, req = self.env.get_rset_and_req('Any N, X WHERE X in_group Y, Y name N')
-        self.assertIsInstance(self.vreg.select_view('table', req, rset),
+        self.assertIsInstance(self.vreg.select('views', 'table', req, rset=rset),
                                   tableview.TableView)
         self.failUnlessRaises(NoSelectableObject,
-                              self.vreg.select_view, 'index', req, rset)
+                              self.vreg.select, 'views', 'index', req, rset=rset)
         self.failUnlessRaises(NoSelectableObject,
-                              self.vreg.select_view, 'creation', req, rset)
+                              self.vreg.select, 'views', 'creation', req, rset=rset)
         self.failUnlessRaises(NoSelectableObject,
-                             self.vreg.select_view, 'primary', req, rset)
+                             self.vreg.select, 'views', 'primary', req, rset=rset)
         self.failUnlessRaises(NoSelectableObject,
-                             self.vreg.select_view, 'list', req, rset)
+                             self.vreg.select, 'views', 'list', req, rset=rset)
         self.failUnlessRaises(NoSelectableObject,
-                             self.vreg.select_view, 'edition', req, rset)
+                             self.vreg.select, 'views', 'edition', req, rset=rset)
         # mixed query
         rset, req = self.env.get_rset_and_req('Any U,G WHERE U is CWUser, G is CWGroup')
         self.failUnlessRaises(NoSelectableObject,
-                              self.vreg.select_view, 'edition', req, rset)
+                              self.vreg.select, 'views', 'edition', req, rset=rset)
         self.failUnlessRaises(NoSelectableObject,
-                              self.vreg.select_view, 'creation', req, rset)
-        self.assertIsInstance(self.vreg.select_view('table', req, rset),
+                              self.vreg.select, 'views', 'creation', req, rset=rset)
+        self.assertIsInstance(self.vreg.select('views', 'table', req, rset=rset),
                               tableview.TableView)
 
     def test_interface_selector(self):
         image = self.add_entity('Image', name=u'bim.png', data=Binary('bim'))
         # image primary view priority
         rset, req = self.env.get_rset_and_req('Image X WHERE X name "bim.png"')
-        self.assertIsInstance(self.vreg.select_view('primary', req, rset),
+        self.assertIsInstance(self.vreg.select('views', 'primary', req, rset=rset),
                               idownloadable.IDownloadablePrimaryView)
 
 
@@ -338,12 +338,12 @@ class VRegistryTC(ViewSelectorTC):
         image = self.add_entity('Image', name=u'bim.png', data=Binary('bim'))
         # image primary view priority
         rset, req = self.env.get_rset_and_req('Image X WHERE X name "bim.png"')
-        self.assertIsInstance(self.vreg.select_view('image', req, rset),
+        self.assertIsInstance(self.vreg.select('views', 'image', req, rset=rset),
                               idownloadable.ImageView)
         fileobj = self.add_entity('File', name=u'bim.txt', data=Binary('bim'))
         # image primary view priority
         rset, req = self.env.get_rset_and_req('File X WHERE X name "bim.txt"')
-        self.assertRaises(NoSelectableObject, self.vreg.select_view, 'image', req, rset)
+        self.assertRaises(NoSelectableObject, self.vreg.select, 'views', 'image', req, rset=rset)
 
 
 
@@ -354,7 +354,7 @@ class VRegistryTC(ViewSelectorTC):
         else:
             rset, req = self.env.get_rset_and_req(rql)
         try:
-            self.vreg.render('views', vid, req, rset=rset, **args)
+            self.vreg.render(vid, req, rset=rset, **args)
         except:
             print vid, rset, args
             raise

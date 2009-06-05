@@ -107,13 +107,12 @@ class SecurityManagementView(EntityView, SecurityViewMixIn):
     def owned_by_edit_form(self, entity):
         self.w('<h3>%s</h3>' % self.req._('ownership'))
         msg = self.req._('ownerships have been changed')
-        form = self.vreg.select_object('forms', 'base', self.req, entity=entity,
-                                       form_renderer_id='base',
-                                  submitmsg=msg,
-                                  form_buttons=[formwidgets.SubmitButton()],
-                                  domid='ownership%s' % entity.eid,
-                                  __redirectvid='security',
-                                  __redirectpath=entity.rest_path())
+        form = self.vreg.select('forms', 'base', self.req, entity=entity,
+                                form_renderer_id='base', submitmsg=msg,
+                                form_buttons=[formwidgets.SubmitButton()],
+                                domid='ownership%s' % entity.eid,
+                                __redirectvid='security',
+                                __redirectpath=entity.rest_path())
         field = guess_field(entity.e_schema, self.schema.rschema('owned_by'))
         form.append_field(field)
         self.w(form.form_render(display_progress_div=False))
@@ -166,11 +165,11 @@ class SecurityManagementView(EntityView, SecurityViewMixIn):
         newperm = self.vreg.etype_class('CWPermission')(self.req, None)
         newperm.eid = self.req.varmaker.next()
         w(u'<p>%s</p>' % _('add a new permission'))
-        form = self.vreg.select_object('forms', 'base', self.req, entity=newperm,
-                                       form_buttons=[formwidgets.SubmitButton()],
-                                       domid='reqperm%s' % entity.eid,
-                                       __redirectvid='security',
-                                       __redirectpath=entity.rest_path())
+        form = self.vreg.select('forms', 'base', self.req, entity=newperm,
+                                form_buttons=[formwidgets.SubmitButton()],
+                                domid='reqperm%s' % entity.eid,
+                                __redirectvid='security',
+                                __redirectpath=entity.rest_path())
         form.form_add_hidden('require_permission', entity.eid, role='object',
                              eidparam=True)
         permnames = getattr(entity, '__permissions__', None)
@@ -186,8 +185,8 @@ class SecurityManagementView(EntityView, SecurityViewMixIn):
         form.append_field(field)
         field = guess_field(cwpermschema, self.schema.rschema('require_group'))
         form.append_field(field)
-        renderer = self.select_object('formrenderers', 'htable', self.req,
-                                      display_progress_div=False)
+        renderer = self.vreg.select('formrenderers', 'htable', self.req,
+                                    display_progress_div=False)
         self.w(form.form_render(renderer=renderer))
 
 
@@ -244,8 +243,8 @@ class ErrorView(AnyRsetView):
         submiturl = self.config['submit-url']
         submitmail = self.config['submit-mail']
         if submiturl or submitmail:
-            form = self.select_object('forms', 'base', self.req,
-                                      mainform=False)
+            form = self.vreg.select('forms', 'base', self.req,
+                                    mainform=False)
             binfo = text_error_description(ex, excinfo, req, eversion, cversions)
             form.form_add_hidden('description', binfo)
             form.form_add_hidden('__bugreporting', '1')

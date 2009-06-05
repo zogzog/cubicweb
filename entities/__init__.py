@@ -242,12 +242,12 @@ class AnyEntity(Entity):
 
     @obsolete('use EntityFieldsForm.subject_relation_vocabulary')
     def subject_relation_vocabulary(self, rtype, limit):
-        form = self.vreg.select_object('forms', 'edition', self.req, entity=self)
+        form = self.vreg.select('forms', 'edition', self.req, entity=self)
         return form.subject_relation_vocabulary(rtype, limit)
 
     @obsolete('use EntityFieldsForm.object_relation_vocabulary')
     def object_relation_vocabulary(self, rtype, limit):
-        form = self.vreg.select_object('forms', 'edition', self.req, entity=self)
+        form = self.vreg.select('forms', 'edition', self.req, entity=self)
         return form.object_relation_vocabulary(rtype, limit)
 
     @obsolete('use AutomaticEntityForm.[e]relations_by_category')

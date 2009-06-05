@@ -106,10 +106,7 @@ class CubicWebRootResource(resource.PostableResource):
                 self.pyro_listen_timeout = 0.02
                 start_task(1, self.pyro_loop_event)
             self.appli.repo.start_looping_tasks()
-        try:
-            self.url_rewriter = self.appli.vreg.select_component('urlrewriter')
-        except ObjectNotFound:
-            self.url_rewriter = None
+        self.url_rewriter = self.appli.vreg.select_object('components', 'urlrewriter')
         interval = min(config['cleanup-session-time'] or 120,
                        config['cleanup-anonymous-session-time'] or 720) / 2.
         start_task(interval, self.appli.session_handler.clean_sessions)

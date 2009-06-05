@@ -239,7 +239,7 @@ class ActionPathEvaluator(URLPathEvaluator):
                 continue
             else:
                 try:
-                    action = self.vreg.select(actions, req, rset)
+                    action = self.vreg.select_best(actions, req, rset=rset)
                 except RegistryException:
                     raise PathDontMatch()
                 else:
