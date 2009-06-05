@@ -156,12 +156,13 @@ class Session(RequestSessionMixIn):
         if self._closed:
             raise Exception('try to set pool on a closed session')
         if self.pool is None:
+            # get pool first to avoid race-condition
             self._threaddata.pool = self.repo._get_pool()
             try:
                 self._threaddata.pool.pool_set(self)
             except:
-                self.repo._free_pool(self.pool)
                 self._threaddata.pool = None
+                self.repo._free_pool(self.pool)
                 raise
             self._threads_in_transaction.add(threading.currentThread())
         return self._threaddata.pool
@@ -174,9 +175,10 @@ class Session(RequestSessionMixIn):
         if self.pool is not None and self.mode == 'read':
             # even in read mode, we must release the current transaction
             self._threads_in_transaction.remove(threading.currentThread())
-            self.repo._free_pool(self.pool)
             self.pool.pool_reset(self)
             self._threaddata.pool = None
+            # free pool once everything is done to avoid race-condition
+            self.repo._free_pool(self.pool)
 
     def system_sql(self, sql, args=None):
         """return a sql cursor on the system database"""
