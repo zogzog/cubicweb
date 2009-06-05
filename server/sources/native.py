@@ -5,7 +5,7 @@ Notes:
   from which it comes from) are stored in a varchar column encoded as a base64
   string. This is because it should actually be Bytes but we want an index on
   it for fast querying.
-  
+
 :organization: Logilab
 :copyright: 2001-2009 LOGILAB S.A. (Paris, FRANCE), license is LGPL v2.
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr

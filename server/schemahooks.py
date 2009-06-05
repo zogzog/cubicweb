@@ -572,6 +572,7 @@ class UpdateRelationDefOp(SchemaOperation):
             constraints = self.rschema.rproperty(etype, atype, 'constraints')
             coltype = type_from_constraints(adbh, atype, constraints,
                                             creating=False)
+            # XXX check self.values['cardinality'][0] actually changed?
             sql = adbh.sql_set_null_allowed(table, column, coltype,
                                             self.values['cardinality'][0] != '1')
             self.session.system_sql(sql)
