@@ -40,6 +40,8 @@ class SecurityViewMixIn(object):
             groups = [(_(group), group) for group in groups]
             for trad, group in sorted(groups):
                 if link:
+                    # XXX we should get a group entity and call its absolute_url
+                    # method
                     l.append(u'<a href="%s" class="%s">%s</a><br/>' % (
                     self.build_url('cwgroup/%s' % group), group, trad))
                 else:
