@@ -119,7 +119,6 @@ class ClickAndEditFormView(FormViewMixIn, EntityView):
         else:
             form = self._build_relation_form(entity, value, rtype, role,
                                              row, col, vid, default)
-        form.form_add_hidden(u'__maineid', entity.eid)
         renderer = self.vreg.select_object('formrenderers', 'base', self.req,
                                       entity=entity,
                                       display_label=False, display_help=False,
@@ -194,7 +193,7 @@ class EditionFormView(FormViewMixIn, EntityView):
 
     def init_form(self, form, entity):
         """customize your form before rendering here"""
-        form.form_add_hidden(u'__maineid', entity.eid)
+        pass
 
     def form_title(self, entity):
         """the form view title"""
@@ -356,8 +355,7 @@ class InlineEntityEditionFormView(FormViewMixIn, EntityView):
         """fetch and render the form"""
         form = self.vreg.select_object('forms', 'edition', self.req, None,
                                        entity=entity, form_renderer_id='inline',
-                                       mainform=False,
-                                       copy_nav_params=False)
+                                       mainform=False, copy_nav_params=False)
         self.add_hiddens(form, entity, peid, rtype, role)
         divid = '%s-%s-%s' % (peid, rtype, entity.eid)
         title = self.schema.rschema(rtype).display_name(self.req, role)

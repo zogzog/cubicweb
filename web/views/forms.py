@@ -268,9 +268,10 @@ class EntityFieldsForm(FieldsForm):
         self.form_add_hidden('__type', eidparam=True)
         self.form_add_hidden('eid')
         if msg:
-            # If we need to directly attach the new object to another one
             self.form_add_hidden('__message', msg)
-        if not self.is_subform:
+        if kwargs.get('mainform'):
+            self.form_add_hidden(u'__maineid', self.edited_entity.eid)
+            # If we need to directly attach the new object to another one
             for linkto in self.req.list_form_param('__linkto'):
                 self.form_add_hidden('__linkto', linkto)
                 msg = '%s %s' % (msg, self.req._('and linked'))
