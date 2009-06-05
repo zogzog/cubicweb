@@ -15,7 +15,7 @@ Details of the recording process
   - appel des méthodes d'enregistrement des objets sur le vreg
 .. note::
     Once the function `registration_callback(vreg)` is implemented, all the objects
-    need to be explicitely registered as it disables the automatic object registering.
+    need to be explicitly registered as it disables the automatic object registering.
     
 * suppression de l'ancien système quand il ne restera plus de réference au
   module registerers dans le code des cubes existants.

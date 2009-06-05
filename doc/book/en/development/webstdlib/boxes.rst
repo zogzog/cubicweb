@@ -12,7 +12,7 @@ The ``add_related`` is an automatic menu in the action box that allows to create
 an entity automatically related to the initial entity (context in
 which the box is displayed). By default, the links generated in this
 box are computed from the schema properties of the displayed entity,
-but it is possible to explicitely specify them thanks to the
+but it is possible to explicitly specify them thanks to the
 `cubicweb.web.uicfg.rmode` *relation tag*:
 
 * `link`, indicates that a relation is in general created pointing
