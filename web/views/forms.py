@@ -36,13 +36,12 @@ class FieldsForm(form.Form):
     cssstyle = None
     cwtarget = None
     redirect_path = None
-    set_error_url = True
-    set_dom_id = True
     copy_nav_params = False
     form_buttons = None # form buttons (button widgets instances)
     form_renderer_id = 'default'
 
-    def __init__(self, req, rset=None, row=None, col=None, submitmsg=None,
+    def __init__(self, req, rset=None, row=None, col=None,
+                 submitmsg=None, mainform=True,
                  **kwargs):
         super(FieldsForm, self).__init__(req, rset, row=row, col=col)
         self.fields = list(self.__class__._fields_)
@@ -52,9 +51,8 @@ class FieldsForm(form.Form):
             else:
                 assert hasattr(self.__class__, key) and not key[0] == '_', key
                 setattr(self, key, val)
-        if self.set_error_url:
+        if mainform:
             self.form_add_hidden('__errorurl', self.session_key())
-        if self.set_dom_id:
             self.form_add_hidden('__domid', self.domid)
         if self.copy_nav_params:
             for param in NAV_FORM_PARAMETERS:

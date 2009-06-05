@@ -243,7 +243,7 @@ class ErrorView(AnyRsetView):
         submitmail = self.config['submit-mail']
         if submiturl or submitmail:
             form = self.select_object('forms', 'base', self.req,
-                                      set_error_url=False, set_dom_id=False)
+                                      mainform=False)
             binfo = text_error_description(ex, excinfo, req, eversion, cversions)
             form.form_add_hidden('description', binfo)
             form.form_add_hidden('__bugreporting', '1')
