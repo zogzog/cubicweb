@@ -212,7 +212,7 @@ class SystemCWPropertiesForm(FormViewMixIn, StartupView):
         else:
             label = key
         subform = self.vreg.select_object('forms', 'base', self.req, entity=entity,
-                                     set_error_url=False)
+                                     mainform=False)
         subform.append_field(PropertyValueField(name='value', label=label,
                                                 eidparam=True))
         subform.vreg = self.vreg

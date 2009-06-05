@@ -40,6 +40,8 @@ class SecurityViewMixIn(object):
             groups = [(_(group), group) for group in groups]
             for trad, group in sorted(groups):
                 if link:
+                    # XXX we should get a group entity and call its absolute_url
+                    # method
                     l.append(u'<a href="%s" class="%s">%s</a><br/>' % (
                     self.build_url('cwgroup/%s' % group), group, trad))
                 else:
@@ -242,7 +244,8 @@ class ErrorView(AnyRsetView):
         submiturl = self.config['submit-url']
         submitmail = self.config['submit-mail']
         if submiturl or submitmail:
-            form = self.vreg.select_object('forms', 'base', self.req, rset=None, set_error_url=False)
+            form = self.vreg.select_object('forms', 'base', self.req, rset=None,
+                                           mainform=False)
             binfo = text_error_description(ex, excinfo, req, eversion, cversions)
             form.form_add_hidden('description', binfo)
             form.form_add_hidden('__bugreporting', '1')

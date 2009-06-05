@@ -71,7 +71,7 @@ class DeleteConfForm(FormViewMixIn, EntityView):
                 continue
             done.add(entity.eid)
             subform = self.vreg.select_object('forms', 'base', req, entity=entity,
-                                              set_error_url=False)
+                                              mainform=False)
             form.form_add_subform(subform)
             # don't use outofcontext view or any other that may contain inline edition form
             w(u'<li>%s</li>' % tags.a(entity.view('textoutofcontext'),
@@ -119,7 +119,6 @@ class ClickAndEditFormView(FormViewMixIn, EntityView):
         else:
             form = self._build_relation_form(entity, value, rtype, role,
                                              row, col, vid, default)
-        form.form_add_hidden(u'__maineid', entity.eid)
         renderer = self.vreg.select_object('formrenderers', 'base', self.req,
                                       entity=entity,
                                       display_label=False, display_help=False,
@@ -194,7 +193,7 @@ class EditionFormView(FormViewMixIn, EntityView):
 
     def init_form(self, form, entity):
         """customize your form before rendering here"""
-        form.form_add_hidden(u'__maineid', entity.eid)
+        pass
 
     def form_title(self, entity):
         """the form view title"""
@@ -307,7 +306,7 @@ class TableEditForm(forms.CompositeForm):
         for row in xrange(len(self.rset)):
             form = self.vreg.select_object('forms', 'edition', self.req, self.rset,
                                            row=row, attrcategories=('primary',),
-                                           set_error_url=False)
+                                           mainform=False)
             # XXX rely on the EntityCompositeFormRenderer to put the eid input
             form.remove_field(form.field_by_name('eid'))
             self.form_add_subform(form)
@@ -356,8 +355,7 @@ class InlineEntityEditionFormView(FormViewMixIn, EntityView):
         """fetch and render the form"""
         form = self.vreg.select_object('forms', 'edition', self.req, None,
                                        entity=entity, form_renderer_id='inline',
-                                       set_error_url=False,
-                                       copy_nav_params=False)
+                                       mainform=False, copy_nav_params=False)
         self.add_hiddens(form, entity, peid, rtype, role)
         divid = '%s-%s-%s' % (peid, rtype, entity.eid)
         title = self.schema.rschema(rtype).display_name(self.req, role)

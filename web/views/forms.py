@@ -36,12 +36,12 @@ class FieldsForm(form.Form):
     cssstyle = None
     cwtarget = None
     redirect_path = None
-    set_error_url = True
     copy_nav_params = False
     form_buttons = None # form buttons (button widgets instances)
     form_renderer_id = 'default'
 
-    def __init__(self, req, rset=None, row=None, col=None, submitmsg=None,
+    def __init__(self, req, rset=None, row=None, col=None,
+                 submitmsg=None, mainform=True,
                  **kwargs):
         super(FieldsForm, self).__init__(req, rset, row=row, col=col)
         self.fields = list(self.__class__._fields_)
@@ -51,8 +51,9 @@ class FieldsForm(form.Form):
             else:
                 assert hasattr(self.__class__, key) and not key[0] == '_', key
                 setattr(self, key, val)
-        if self.set_error_url:
+        if mainform:
             self.form_add_hidden('__errorurl', self.session_key())
+            self.form_add_hidden('__domid', self.domid)
         if self.copy_nav_params:
             for param in NAV_FORM_PARAMETERS:
                 if not param in kwargs:
@@ -266,13 +267,18 @@ class EntityFieldsForm(FieldsForm):
             self.edited_entity = self.complete_entity(self.row or 0, self.col or 0)
         self.form_add_hidden('__type', eidparam=True)
         self.form_add_hidden('eid')
-        if msg:
+        if kwargs.get('mainform'):
+            self.form_add_hidden(u'__maineid', self.edited_entity.eid)
             # If we need to directly attach the new object to another one
+            if self.req.list_form_param('__linkto'):
+                for linkto in self.req.list_form_param('__linkto'):
+                    self.form_add_hidden('__linkto', linkto)
+                if msg:
+                    msg = '%s %s' % (msg, self.req._('and linked'))
+                else:
+                    msg = self.req._('entity linked')
+        if msg:
             self.form_add_hidden('__message', msg)
-        if not self.is_subform:
-            for linkto in self.req.list_form_param('__linkto'):
-                self.form_add_hidden('__linkto', linkto)
-                msg = '%s %s' % (msg, self.req._('and linked'))
 
     def _field_has_error(self, field):
         """return true if the field has some error in given validation exception
