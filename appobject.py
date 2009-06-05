@@ -204,11 +204,18 @@ class AppRsetObject(VObject):
 
     controller = 'view'
 
-    def build_url(self, method=None, **kwargs):
+    def build_url(self, *args, **kwargs):
         """return an absolute URL using params dictionary key/values as URL
         parameters. Values are automatically URL quoted, and the
         publishing method to use may be specified or will be guessed.
         """
+        # use *args since we don't want first argument to be "anonymous" to
+        # avoid potential clash with kwargs
+        if args:
+            assert len(args) == 1, 'only 0 or 1 non-named-argument expected'
+            method = args[0]
+        else:
+            method = None
         # XXX I (adim) think that if method is passed explicitly, we should
         #     not try to process it and directly call req.build_url()
         if method is None:

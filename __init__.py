@@ -109,11 +109,16 @@ class RequestSessionMixIn(object):
 
     # url generation methods ##################################################
 
-    def build_url(self, method, base_url=None, **kwargs):
+    def build_url(self, *args, **kwargs):
         """return an absolute URL using params dictionary key/values as URL
         parameters. Values are automatically URL quoted, and the
         publishing method to use may be specified or will be guessed.
         """
+        # use *args since we don't want first argument to be "anonymous" to
+        # avoid potential clash with kwargs
+        assert len(args) == 1, 'only 0 or 1 non-named-argument expected'
+        method = args[0]
+        base_url = kwargs.pop('base_url', None)
         if base_url is None:
             base_url = self.base_url()
         if '_restpath' in kwargs:

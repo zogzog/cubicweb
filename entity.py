@@ -373,8 +373,15 @@ class Entity(AppRsetObject, dict):
         return self.vreg.render(vid, self.req, rset=self.rset,
                                 row=self.row, col=self.col, **kwargs)
 
-    def absolute_url(self, method=None, **kwargs):
+    def absolute_url(self, *args, **kwargs):
         """return an absolute url to view this entity"""
+        # use *args since we don't want first argument to be "anonymous" to
+        # avoid potential clash with kwargs
+        if args:
+            assert len(args) == 1, 'only 0 or 1 non-named-argument expected'
+            method = args[0]
+        else:
+            method = None
         # in linksearch mode, we don't want external urls else selecting
         # the object for use in the relation is tricky
         # XXX search_state is web specific
