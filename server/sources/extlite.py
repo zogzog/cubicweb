@@ -8,8 +8,6 @@
 __docformat__ = "restructuredtext en"
 
 
-import time
-import threading
 from os.path import join, exists
 
 from cubicweb import server
@@ -17,24 +15,10 @@ from cubicweb.server.sqlutils import SQL_PREFIX, sqlexec, SQLAdapterMixIn
 from cubicweb.server.sources import AbstractSource, native
 from cubicweb.server.sources.rql2sql import SQLGenerator
 
-def timeout_acquire(lock, timeout):
-    while not lock.acquire(False):
-        time.sleep(0.2)
-        timeout -= 0.2
-        if timeout <= 0:
-            raise RuntimeError("svn source is busy, can't acquire connection lock")
-
 class ConnectionWrapper(object):
     def __init__(self, source=None):
         self.source = source
         self._cnx = None
-
-    @property
-    def cnx(self):
-        if self._cnx is None:
-            timeout_acquire(self.source._cnxlock, 5)
-            self._cnx = self.source._sqlcnx
-        return self._cnx
 
     def commit(self):
         if self._cnx is not None:
@@ -45,7 +29,9 @@ class ConnectionWrapper(object):
             self._cnx.rollback()
 
     def cursor(self):
-        return self.cnx.cursor()
+        if self._cnx is None:
+            self._cnx = self.source._sqlcnx
+        return self._cnx.cursor()
 
 
 class SQLiteAbstractSource(AbstractSource):
@@ -87,11 +73,6 @@ repository.',
         self._need_full_import = self._need_sql_create
         AbstractSource.__init__(self, repo, appschema, source_config,
                                 *args, **kwargs)
-        # sql database can only be accessed by one connection at a time, and a
-        # connection can only be used by the thread which created it so:
-        # * create the connection when needed
-        # * use a lock to be sure only one connection is used
-        self._cnxlock = threading.Lock()
 
     @property
     def _sqlcnx(self):
@@ -164,11 +145,10 @@ repository.',
         has a connection set
         """
         if cnx._cnx is not None:
-            try:
-                cnx._cnx.close()
-                cnx._cnx = None
-            finally:
-                self._cnxlock.release()
+            cnx._cnx.close()
+            # reset _cnx to ensure next thread using cnx will get a new
+            # connection
+            cnx._cnx = None
 
     def syntax_tree_search(self, session, union,
                            args=None, cachekey=None, varmap=None, debug=0):
