@@ -21,23 +21,23 @@ Date.prototype.add = function(days) {
     var res = new Date()
     res.setTime(this.getTime() + (days * ONE_DAY))
     return res
-}
+};
 
 Date.prototype.sub = function(days) {
     return this.add(-days);
-}
+};
 
 Date.prototype.iadd = function(days) {
     // in-place add
     this.setTime(this.getTime() + (days * ONE_DAY))
     // avoid strange rounding problems !!
     this.setHours(12);
-}
+};
 
 Date.prototype.isub = function(days) {
     // in-place sub
     this.setTime(this.getTime() - (days * ONE_DAY))
-}
+};
 
 /*
  * returns the first day of the next month
@@ -50,7 +50,7 @@ Date.prototype.nextMonth = function() {
 	var d2 = new Date(this.getFullYear(), this.getMonth()+1, 1);
 	return d2;
     }
-}
+};
 
 /*
  * returns the day of week, 0 being monday, 6 being sunday
@@ -58,8 +58,15 @@ Date.prototype.nextMonth = function() {
 Date.prototype.getRealDay = function() {
     // getDay() returns 0 for Sunday ==> 6 for Saturday
     return (this.getDay()+6) % 7;
-}
+};
 
+Date.prototype.strftime = function(fmt) {
+    if (this.toLocaleFormat !== undefined) { // browser dependent
+	return this.toLocaleFormat(fmt);
+    }
+    // XXX implement at least a decent fallback implementation
+    return this.getFullYear() + '/' + (this.getMonth()+1) + '/' + this.getDate();
+};
 
 var _DATE_FORMAT_REGXES = {
     'Y': new RegExp('^-?[0-9]+'),

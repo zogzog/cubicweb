@@ -33,18 +33,18 @@ class CubicWebConfigurationTC(TestCase):
     def test_reorder_cubes(self):
         # jpl depends on email and file and comment
         # email depends on file
-        self.assertEquals(self.config.reorder_cubes(['file', 'email', 'jpl']),
-                          ('jpl', 'email', 'file'))
-        self.assertEquals(self.config.reorder_cubes(['email', 'file', 'jpl']),
-                          ('jpl', 'email', 'file'))
-        self.assertEquals(self.config.reorder_cubes(['email', 'jpl', 'file']),
-                          ('jpl', 'email', 'file'))
-        self.assertEquals(self.config.reorder_cubes(['file', 'jpl', 'email']),
-                          ('jpl', 'email', 'file'))
-        self.assertEquals(self.config.reorder_cubes(['jpl', 'file', 'email']),
-                          ('jpl', 'email', 'file'))
-        self.assertEquals(self.config.reorder_cubes(('jpl', 'email', 'file')),
-                          ('jpl', 'email', 'file'))
+        self.assertEquals(self.config.reorder_cubes(['file', 'email', 'forge']),
+                          ('forge', 'email', 'file'))
+        self.assertEquals(self.config.reorder_cubes(['email', 'file', 'forge']),
+                          ('forge', 'email', 'file'))
+        self.assertEquals(self.config.reorder_cubes(['email', 'forge', 'file']),
+                          ('forge', 'email', 'file'))
+        self.assertEquals(self.config.reorder_cubes(['file', 'forge', 'email']),
+                          ('forge', 'email', 'file'))
+        self.assertEquals(self.config.reorder_cubes(['forge', 'file', 'email']),
+                          ('forge', 'email', 'file'))
+        self.assertEquals(self.config.reorder_cubes(('forge', 'email', 'file')),
+                          ('forge', 'email', 'file'))
 
     def test_reorder_cubes_recommends(self):
         from cubes.comment import __pkginfo__ as comment_pkginfo
@@ -52,14 +52,14 @@ class CubicWebConfigurationTC(TestCase):
         try:
             # email recommends comment
             # comment recommends file
-            self.assertEquals(self.config.reorder_cubes(('jpl', 'email', 'file', 'comment')),
-                              ('jpl', 'email', 'comment', 'file'))
-            self.assertEquals(self.config.reorder_cubes(('jpl', 'email', 'comment', 'file')),
-                              ('jpl', 'email', 'comment', 'file'))
-            self.assertEquals(self.config.reorder_cubes(('jpl', 'comment', 'email', 'file')),
-                              ('jpl', 'email', 'comment', 'file'))
-            self.assertEquals(self.config.reorder_cubes(('comment', 'jpl', 'email', 'file')),
-                              ('jpl', 'email', 'comment', 'file'))
+            self.assertEquals(self.config.reorder_cubes(('forge', 'email', 'file', 'comment')),
+                              ('forge', 'email', 'comment', 'file'))
+            self.assertEquals(self.config.reorder_cubes(('forge', 'email', 'comment', 'file')),
+                              ('forge', 'email', 'comment', 'file'))
+            self.assertEquals(self.config.reorder_cubes(('forge', 'comment', 'email', 'file')),
+                              ('forge', 'email', 'comment', 'file'))
+            self.assertEquals(self.config.reorder_cubes(('comment', 'forge', 'email', 'file')),
+                              ('forge', 'email', 'comment', 'file'))
         finally:
             comment_pkginfo.__use__ = ()
 

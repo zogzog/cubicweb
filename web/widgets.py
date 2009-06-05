@@ -153,7 +153,7 @@ class Widget(object):
         if example:
             help.append(u'<span>(%s: %s)</span>'
                         % (req._('sample format'), example))
-	help.append(u'</div>')
+        help.append(u'</div>')
         return u'&nbsp;'.join(help)
 
     def render_example(self, req):

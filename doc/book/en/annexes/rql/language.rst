@@ -299,7 +299,7 @@ Examples
 
 
   Note: You can not specify several types with * ... where X is FirstType or X is SecondType*.
-  To specify several types explicitely, you have to do
+  To specify several types explicitly, you have to do
 
   ::
 

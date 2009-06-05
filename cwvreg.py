@@ -114,7 +114,12 @@ class CubicWebRegistry(VRegistry):
 
     def register_objects(self, path, force_reload=None):
         """overriden to remove objects requiring a missing interface"""
-        if super(CubicWebRegistry, self).register_objects(path, force_reload):
+        extrapath = {}
+        for cubesdir in self.config.cubes_search_path():
+            if cubesdir != self.config.CUBES_DIR:
+                extrapath[cubesdir] = 'cubes'
+        if super(CubicWebRegistry, self).register_objects(path, force_reload,
+                                                          extrapath):
             self.initialization_completed()
             # call vreg_initialization_completed on appobjects and print
             # registry content
