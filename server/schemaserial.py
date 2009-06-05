@@ -83,6 +83,9 @@ def _update_database(schema, sqlcu):
                 sqlcu.execute(sql)
 
 # schema / perms deserialization ##############################################
+OLD_SCHEMA_TYPES = frozenset(('EFRDef', 'ENFRDef', 'ERType', 'EEType',
+                              'EConstraintType', 'EConstraint', 'EGroup',
+                              'EUser', 'ECache', 'EPermission', 'EProperty'))
 
 def deserialize_schema(schema, session):
     """return a schema according to information stored in an rql database
@@ -92,16 +95,15 @@ def deserialize_schema(schema, session):
     repo = session.repo
     sqlcu = session.pool['system']
     _3_2_migration = False
-    tables = set(t.lower() for t in repo.system_source.dbhelper.list_tables(sqlcu))
+    dbhelper = repo.system_source.dbhelper
+    tables = set(t.lower() for t in dbhelper.list_tables(sqlcu))
     if 'eetype' in tables:
         _3_2_migration = True
         # 3.2 migration
         _set_sql_prefix('')
         # first rename entity types whose name changed in 3.2 without adding the
         # cw_ prefix
-        for etype in ('EFRDef', 'ENFRDef', 'ERType', 'EEType',
-                      'EConstraintType', 'EConstraint', 'EGroup', 'EUser',
-                      'ECache', 'EPermission', 'EProperty'):
+        for etype in OLD_SCHEMA_TYPES:
             if etype.lower() in tables:
                 sql = 'ALTER TABLE %s RENAME TO %s' % (etype,
                                                        ETYPE_NAME_MAP[etype])
@@ -123,18 +125,25 @@ def deserialize_schema(schema, session):
             eschema.eid = eid
             index[eid] = eschema
             continue
-        if etype in ETYPE_NAME_MAP: # XXX <2.45 bw compat
-            print 'fixing etype name from %s to %s' % (etype, ETYPE_NAME_MAP[etype])
+        if etype in ETYPE_NAME_MAP:
+            netype = ETYPE_NAME_MAP[etype]
+            print 'fixing etype name from %s to %s' % (etype, netype)
             # can't use write rql queries at this point, use raw sql
             session.system_sql('UPDATE %(p)sCWEType SET %(p)sname=%%(n)s WHERE %(p)seid=%%(x)s'
                                % {'p': sqlutils.SQL_PREFIX},
-                               {'x': eid, 'n': ETYPE_NAME_MAP[etype]})
+                               {'x': eid, 'n': netype})
             session.system_sql('UPDATE entities SET type=%(n)s WHERE type=%(x)s',
-                               {'x': etype, 'n': ETYPE_NAME_MAP[etype]})
+                               {'x': etype, 'n': netype})
+            # XXX should be donne as well on sqlite based sources
+            if not etype in OLD_SCHEMA_TYPES and \
+               (getattr(dbhelper, 'case_sensitive', False) 
+                or etype.lower() != netype.lower()):
+                session.system_sql('ALTER TABLE %s%s RENAME TO %s%s' % (
+                    sqlutils.SQL_PREFIX, etype, sqlutils.SQL_PREFIX, netype))
             session.commit(False)
             try:
                 session.system_sql('UPDATE deleted_entities SET type=%(n)s WHERE type=%(x)s',
-                                   {'x': etype, 'n': ETYPE_NAME_MAP[etype]})
+                                   {'x': etype, 'n': netype})
             except:
                 pass
             tocleanup = [eid]
@@ -142,7 +151,7 @@ def deserialize_schema(schema, session):
                           if etype == eidetype)
             repo.clear_caches(tocleanup)
             session.commit(False)
-            etype = ETYPE_NAME_MAP[etype]
+            etype = netype
         etype = ybo.EntityType(name=etype, description=desc, meta=meta, eid=eid)
         eschema = schema.add_entity_type(etype)
         index[eid] = eschema
