@@ -214,6 +214,22 @@ repository.',
         sql = self.sqladapter.sqlgen.delete(SQL_PREFIX + etype, attrs)
         sqlcursor.execute(sql, attrs)
 
+    def local_add_relation(self, session, subject, rtype, object):
+        """add a relation to the source
+
+        This is not provided as add_relation implementation since usually
+        source don't want to simply do this, so let raise NotImplementedError
+        and the source implementor may use this method if necessary
+        """
+        sqlcursor = session.pool[self.uri]
+        attrs = {'eid_from': subject, 'eid_to': object}
+        sql = self.sqladapter.sqlgen.insert('%s_relation' % rtype, attrs)
+        sqlcursor.execute(sql, attrs)
+
+    def add_relation(self, session, subject, rtype, object):
+        """add a relation to the source"""
+        raise NotImplementedError()
+
     def delete_relation(self, session, subject, rtype, object):
         """delete a relation from the source"""
         rschema = self.schema.rschema(rtype)
