@@ -159,7 +159,7 @@ class Session(RequestSessionMixIn):
             # get pool first to avoid race-condition
             self._threaddata.pool = self.repo._get_pool()
             try:
-                self._threaddata.pool.pool_set(self)
+                self._threaddata.pool.pool_set()
             except:
                 self._threaddata.pool = None
                 self.repo._free_pool(self.pool)
@@ -176,7 +176,7 @@ class Session(RequestSessionMixIn):
             # even in read mode, we must release the current transaction
             pool = self.pool
             self._threads_in_transaction.remove(threading.currentThread())
-            pool.pool_reset(self)
+            pool.pool_reset()
             self._threaddata.pool = None
             # free pool once everything is done to avoid race-condition
             self.repo._free_pool(pool)
