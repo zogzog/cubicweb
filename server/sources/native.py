@@ -154,6 +154,22 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
         self._cache = Cache(repo.config['rql-cache-size'])
         self._temp_table_data = {}
         self._eid_creation_lock = Lock()
+        if self.dbdriver == 'sqlite':
+            from cubicweb.server.sources.extlite import ConnectionWrapper
+            self.get_connection = lambda: ConnectionWrapper(self)
+            self.check_connection = lambda cnx: cnx
+            def pool_reset(cnx):
+                if cnx._cnx is not None:
+                    cnx._cnx.close()
+                    cnx._cnx = None
+            self.pool_reset = pool_reset
+
+    @property
+    def _sqlcnx(self):
+        # XXX: sqlite connections can only be used in the same thread, so
+        #      create a new one each time necessary. If it appears to be time
+        #      consuming, find another way
+        return SQLAdapterMixIn.get_connection(self)
 
     def reset_caches(self):
         """method called during test to reset potential source caches"""
@@ -171,21 +187,25 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
         return self.process_result(cursor)
 
     def init_creating(self):
-        # check full text index availibility
         pool = self.repo._get_pool()
+        pool.pool_set()
+        # check full text index availibility
         if not self.indexer.has_fti_table(pool['system']):
             self.error('no text index table')
             self.indexer = None
+        pool.pool_reset()
         self.repo._free_pool(pool)
 
     def init(self):
         self.init_creating()
         pool = self.repo._get_pool()
+        pool.pool_set()
         # XXX cubicweb < 2.42 compat
         if 'deleted_entities' in self.dbhelper.list_tables(pool['system']):
             self.has_deleted_entitites_table = True
         else:
             self.has_deleted_entitites_table = False
+        pool.pool_reset()
         self.repo._free_pool(pool)
 
     # ISource interface #######################################################
