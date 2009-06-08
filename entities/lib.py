@@ -141,4 +141,7 @@ class CWCache(AnyEntity):
                          {'t': datetime.now(), 'x': self.eid}, 'x')
 
     def valid(self, date):
-        return date < self.timestamp
+        if date:
+            return date < self.timestamp
+        return False
+
