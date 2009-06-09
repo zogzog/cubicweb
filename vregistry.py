@@ -216,7 +216,7 @@ class VRegistry(object):
         # registered() is technically a classmethod but is not declared
         # as such because we need to compose registered in some cases
         vobject = obj.registered.im_func(obj, self)
-        assert not vobject in vobjects, vobject, \
+        assert not vobject in vobjects, \
                'object %s is already registered' % vobject
         assert callable(vobject.__select__), vobject
         vobjects.append(vobject)
