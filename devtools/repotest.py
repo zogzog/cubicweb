@@ -11,6 +11,8 @@ __docformat__ = "restructuredtext en"
 
 from pprint import pprint
 
+from logilab.common.decorators import clear_cache
+
 def tuplify(list):
     for i in range(len(list)):
         if type(list[i]) is not type(()):
@@ -206,6 +208,34 @@ class BaseQuerierTC(TestCase):
 
 
 class BasePlannerTC(BaseQuerierTC):
+    def setup(self):
+        clear_cache(self.repo, 'rel_type_sources')
+        clear_cache(self.repo, 'rel_type_sources')
+        clear_cache(self.repo, 'can_cross_relation')
+        clear_cache(self.repo, 'is_multi_sources_relation')
+        # XXX source_defs
+        self.o = self.repo.querier
+        self.session = self.repo._sessions.values()[0]
+        self.pool = self.session.set_pool()
+        self.schema = self.o.schema
+        self.sources = self.o._repo.sources
+        self.system = self.sources[-1]
+        self.newsources = 0
+        do_monkey_patch()
+
+    def add_source(self, sourcecls, uri):
+        self.sources.append(sourcecls(self.repo, self.o.schema,
+                                      {'uri': uri}))
+        self.repo.sources_by_uri[uri] = self.sources[-1]
+        setattr(self, uri, self.sources[-1])
+        self.newsources += 1
+
+    def tearDown(self):
+        while self.newsources:
+            source = self.sources.pop(-1)
+            del self.repo.sources_by_uri[source.uri]
+            self.newsources -= 1
+        undo_monkey_patch()
 
     def _prepare_plan(self, rql, kwargs=None):
         rqlst = self.o.parse(rql, annotate=True)
