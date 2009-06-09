@@ -20,6 +20,17 @@ class ConnectionWrapper(object):
         self.source = source
         self._cnx = None
 
+    @property
+    def logged_user(self):
+        if self._cnx is None:
+            self._cnx = self.source._sqlcnx
+        return self._cnx.logged_user
+
+    def cursor(self):
+        if self._cnx is None:
+            self._cnx = self.source._sqlcnx
+        return self._cnx.cursor()
+
     def commit(self):
         if self._cnx is not None:
             self._cnx.commit()
@@ -28,10 +39,10 @@ class ConnectionWrapper(object):
         if self._cnx is not None:
             self._cnx.rollback()
 
-    def cursor(self):
-        if self._cnx is None:
-            self._cnx = self.source._sqlcnx
-        return self._cnx.cursor()
+    def close(self):
+        if self._cnx is not None:
+            self._cnx.close()
+            self._cnx = None
 
 
 class SQLiteAbstractSource(AbstractSource):
