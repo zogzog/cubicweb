@@ -154,7 +154,10 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
         self._cache = Cache(repo.config['rql-cache-size'])
         self._temp_table_data = {}
         self._eid_creation_lock = Lock()
-        if self.dbdriver == 'sqlite':
+        # XXX no_sqlite_wrap trick since we've a sqlite locking pb when
+        # running unittest_multisources with the wrapping below
+        if self.dbdriver == 'sqlite' and \
+               not getattr(repo.config, 'no_sqlite_wrap', False):
             from cubicweb.server.sources.extlite import ConnectionWrapper
             self.get_connection = lambda: ConnectionWrapper(self)
             self.check_connection = lambda cnx: cnx
