@@ -2073,6 +2073,44 @@ class MSPlannerTwoSameExternalSourcesTC(BasePlannerTC):
                    {'x': 999999})
 
 
+
+class FakeVCSSource(AbstractSource):
+    uri = 'ccc'
+    support_entities = {'Card': True, 'Note': True}
+    support_relations = {'multisource_inlined_rel': True,
+                         'multisource_rel': True}
+    #dont_cross_relations = set(('fiche', 'in_state'))
+    #cross_relations = set(('multisource_crossed_rel',))
+
+    def syntax_tree_search(self, *args, **kwargs):
+        return []
+
+class MSPlannerVCSSource(BasePlannerTC):
+    repo = repo
+
+    def setUp(self):
+        self.setup()
+        self.add_source(FakeVCSSource, 'vcs')
+        self.planner = MSPlanner(self.o.schema, self.o._rqlhelper)
+    _test = test_plan
+
+    def test_multisource_inlined_rel_skipped(self):
+        self._test('Any MAX(VC) '
+                   'WHERE VC multisource_inlined_rel R2, R para %(branch)s, VC in_state S, S name "published", '
+                   '(EXISTS(R identity R2)) OR (EXISTS(R multisource_rel R2))',
+                   [('FetchStep', [('Any VC WHERE VC multisource_inlined_rel R2, R para "???", (EXISTS(R identity R2)) OR (EXISTS(R multisource_rel R2)), R is Note, R2 is Note, VC is Note',
+                                    [{'R': 'Note', 'R2': 'Note', 'VC': 'Note'}])],
+                     [self.vcs, self.system], None,
+                     {'VC': 'table0.C0'},
+                     []),
+                    ('OneFetchStep', [(u'Any MAX(VC) WHERE VC in_state S, S name "published", S is State, VC is Note',
+                                       [{'S': 'State', 'VC': 'Note'}])],
+                     None, None, [self.system],
+                     {'VC': 'table0.C0'},
+                     [])
+                    ])
+
+
 if __name__ == '__main__':
     from logilab.common.testlib import unittest_main
     unittest_main()
