@@ -182,18 +182,15 @@ class WebTest(EnvBasedTC):
                   encapsulation the generated HTML
         """
         req = req or rset and rset.req or self.request()
-        # print "testing ", vid,
-        # if rset:
-        #     print rset, len(rset), id(rset)
-        # else:
-        #     print
         req.form['vid'] = vid
         view = self.vreg.select_view(vid, req, rset, **kwargs)
         # set explicit test description
         if rset is not None:
-            self.set_description("testing %s, mod=%s (%s)" % (vid, view.__module__, rset.printable_rql()))
+            self.set_description("testing %s, mod=%s (%s)" % (
+                vid, view.__module__, rset.printable_rql()))
         else:
-            self.set_description("testing %s, mod=%s (no rset)" % (vid, view.__module__))
+            self.set_description("testing %s, mod=%s (no rset)" % (
+                vid, view.__module__))
         if template is None: # raw view testing, no template
             viewfunc = view.render
         else:
