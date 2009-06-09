@@ -1138,16 +1138,22 @@ class PostgresSQLGeneratorTC(RQLGeneratorTC):
     def _norm_sql(self, sql):
         return sql.strip()
 
-    def _check(self, rql, sql, varmap=None):
+    def _check(self, rql, sql, varmap=None, args=None):
+        if args is None:
+            args = {'text': 'hip hop momo'}
         try:
             union = self._prepare(rql)
-            r, args = self.o.generate(union, {'text': 'hip hop momo'},
+            r, nargs = self.o.generate(union, args,
                                       varmap=varmap)
+            args.update(nargs)
             self.assertLinesEquals((r % args).strip(), self._norm_sql(sql))
         except Exception, ex:
-            print rql
             if 'r' in locals():
-                print (r%args).strip()
+                try:
+                    print (r%args).strip()
+                except KeyError:
+                    print 'strange, missing substitution'
+                    print r, nargs
                 print '!='
                 print sql.strip()
             raise
@@ -1207,17 +1213,26 @@ WHERE rel_in_basket0.eid_to=12''')
 FROM in_basket_relation AS rel_in_basket0
 WHERE rel_in_basket0.eid_to=12''')
 
-    def test_varmap(self):
+    def test_varmap1(self):
         self._check('Any X,L WHERE X is CWUser, X in_group G, X login L, G name "users"',
                     '''SELECT T00.x, T00.l
 FROM T00, cw_CWGroup AS G, in_group_relation AS rel_in_group0
 WHERE rel_in_group0.eid_from=T00.x AND rel_in_group0.eid_to=G.cw_eid AND G.cw_name=users''',
                     varmap={'X': 'T00.x', 'X.login': 'T00.l'})
+
+    def test_varmap2(self):
         self._check('Any X,L,GN WHERE X is CWUser, X in_group G, X login L, G name GN',
                     '''SELECT T00.x, T00.l, G.cw_name
 FROM T00, cw_CWGroup AS G, in_group_relation AS rel_in_group0
 WHERE rel_in_group0.eid_from=T00.x AND rel_in_group0.eid_to=G.cw_eid''',
                     varmap={'X': 'T00.x', 'X.login': 'T00.l'})
+
+    def test_varmap3(self):
+        self.set_debug(True)
+        self._check('Any %(x)s,D WHERE F data D, F is File',
+                    'SELECT 728, _TDF0.C0\nFROM _TDF0',
+                    args={'x': 728},
+                    varmap={'F.data': '_TDF0.C0', 'D': '_TDF0.C0'})
 
     def test_is_null_transform(self):
         union = self._prepare('Any X WHERE X login %(login)s')
