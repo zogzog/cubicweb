@@ -173,11 +173,13 @@ repository.',
         sql, query_args = self.rqlsqlgen.generate(union, args)
         if server.DEBUG:
             print self.uri, 'SOURCE RQL', union.as_string()
-            print 'GENERATED SQL', sql
         args = self.sqladapter.merge_args(args, query_args)
         cursor = session.pool[self.uri]
-        cursor.execute(sql, args)
-        return self.sqladapter.process_result(cursor)
+        self.doexec(cursor, sql, args)
+        res = self.sqladapter.process_result(cursor)
+        if server.DEBUG:
+            print '------>', res
+        return res
 
     def local_add_entity(self, session, entity):
         """insert the entity in the local database.
@@ -186,10 +188,9 @@ repository.',
         don't want to simply do this, so let raise NotImplementedError and the
         source implementor may use this method if necessary
         """
-        cu = session.pool[self.uri]
         attrs = self.sqladapter.preprocess_entity(entity)
         sql = self.sqladapter.sqlgen.insert(SQL_PREFIX + str(entity.e_schema), attrs)
-        cu.execute(sql, attrs)
+        self.doexec(session.pool[self.uri], sql, attrs)
 
     def add_entity(self, session, entity):
         """add a new entity to the source"""
@@ -202,12 +203,11 @@ repository.',
         source don't want to simply do this, so let raise NotImplementedError
         and the source implementor may use this method if necessary
         """
-        cu = session.pool[self.uri]
         if attrs is None:
             attrs = self.sqladapter.preprocess_entity(entity)
         sql = self.sqladapter.sqlgen.update(SQL_PREFIX + str(entity.e_schema),
                                             attrs, [SQL_PREFIX + 'eid'])
-        cu.execute(sql, attrs)
+        self.doexec(session.pool[self.uri], sql, attrs)
 
     def update_entity(self, session, entity):
         """update an entity in the source"""
@@ -220,10 +220,9 @@ repository.',
         source. Main usage is to delete repository content when a Repository
         entity is deleted.
         """
-        sqlcursor = session.pool[self.uri]
         attrs = {SQL_PREFIX + 'eid': eid}
         sql = self.sqladapter.sqlgen.delete(SQL_PREFIX + etype, attrs)
-        sqlcursor.execute(sql, attrs)
+        self.doexec(session.pool[self.uri], sql, attrs)
 
     def local_add_relation(self, session, subject, rtype, object):
         """add a relation to the source
@@ -232,10 +231,9 @@ repository.',
         source don't want to simply do this, so let raise NotImplementedError
         and the source implementor may use this method if necessary
         """
-        sqlcursor = session.pool[self.uri]
         attrs = {'eid_from': subject, 'eid_to': object}
         sql = self.sqladapter.sqlgen.insert('%s_relation' % rtype, attrs)
-        sqlcursor.execute(sql, attrs)
+        self.doexec(session.pool[self.uri], sql, attrs)
 
     def add_relation(self, session, subject, rtype, object):
         """add a relation to the source"""
@@ -254,5 +252,21 @@ repository.',
         else:
             attrs = {'eid_from': subject, 'eid_to': object}
             sql = self.sqladapter.sqlgen.delete('%s_relation' % rtype, attrs)
-        sqlcursor = session.pool[self.uri]
-        sqlcursor.execute(sql, attrs)
+        self.doexec(session.pool[self.uri], sql, attrs)
+
+    def doexec(self, cursor, query, args=None):
+        """Execute a query.
+        it's a function just so that it shows up in profiling
+        """
+        #t1 = time()
+        if server.DEBUG:
+            print 'exec', query, args
+        #import sys
+        #sys.stdout.flush()
+        # str(query) to avoid error if it's an unicode string
+        try:
+            cursor.execute(str(query), args)
+        except Exception, ex:
+            self.critical("sql: %r\n args: %s\ndbms message: %r",
+                          query, args, ex.args[0])
+            raise
