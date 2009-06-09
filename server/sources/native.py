@@ -336,42 +336,22 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
             query = 'INSERT INTO %s %s' % (table, sql.encode(self.encoding))
             self.doexec(session.pool[self.uri], query,
                         self.merge_args(args, query_args))
-# XXX commented until it's proved to be necessary
-#             # XXX probably inefficient
-#             tempdata = self._temp_table_data.setdefault(table, set())
-#             cursor = session.pool[self.uri]
-#             cursor.execute('select * from %s' % table)
-#             for row in cursor.fetchall():
-#                 print 'data', row
-#                 tempdata.add(tuple(row))
         else:
             super(NativeSQLSource, self).flying_insert(table, session, union,
                                                        args, varmap)
 
     def _manual_insert(self, results, table, session):
         """insert given result into a temporary table on the system source"""
-        #print 'manual insert', table, results
         if not results:
             return
-        #cursor.execute('select * from %s'%table)
-        #assert len(cursor.fetchall())== 0
-        encoding = self.encoding
-        # added chr to be sqlite compatible
         query_args = ['%%(%s)s' % i for i in xrange(len(results[0]))]
         query = 'INSERT INTO %s VALUES(%s)' % (table, ','.join(query_args))
         kwargs_list = []
-#        tempdata = self._temp_table_data.setdefault(table, set())
         for row in results:
             kwargs = {}
             row = tuple(row)
-# XXX commented until it's proved to be necessary
-#             if row in tempdata:
-#                 continue
-#             tempdata.add(row)
             for index, cell in enumerate(row):
-                if type(cell) is unicode:
-                    cell = cell.encode(encoding)
-                elif isinstance(cell, Binary):
+                if isinstance(cell, Binary):
                     cell = self.binary(cell.getvalue())
                 kwargs[str(index)] = cell
             kwargs_list.append(kwargs)
