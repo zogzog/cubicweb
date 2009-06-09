@@ -7,7 +7,7 @@
 """
 from logilab.common.decorators import clear_cache
 from cubicweb.devtools import init_test_database
-from cubicweb.devtools.repotest import BasePlannerTC, do_monkey_patch, undo_monkey_patch, test_plan
+from cubicweb.devtools.repotest import BasePlannerTC, test_plan
 
 class _SetGenerator(object):
     """singleton to easily create set using "s[0]" or "s[0,1,2]" for instance
