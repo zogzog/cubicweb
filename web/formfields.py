@@ -376,7 +376,7 @@ class FloatField(IntField):
         return formatstr % float(value)
 
     def render_example(self, req):
-        return self.format_value(req, 1.234)
+        return self.format_single_value(req, 1.234)
 
 
 class DateField(StringField):
@@ -387,7 +387,7 @@ class DateField(StringField):
         return value and ustrftime(value, req.property_value(self.format_prop)) or u''
 
     def render_example(self, req):
-        return self.format_value(req, datetime.now())
+        return self.format_single_value(req, datetime.now())
 
 
 class DateTimeField(DateField):
@@ -395,7 +395,7 @@ class DateTimeField(DateField):
 
 
 class TimeField(DateField):
-    format_prop = 'ui.datetime-format'
+    format_prop = 'ui.time-format'
     widget = TextInput
 
 
