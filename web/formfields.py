@@ -455,17 +455,17 @@ def guess_field(eschema, rschema, role='subject', skip_meta_attr=True, **kwargs)
         help = rschema.rproperty(eschema, targetschema, 'description')
         if rschema.is_final():
             if rschema.rproperty(eschema, targetschema, 'internationalizable'):
-                kwargs['internationalizable'] = True
+                kwargs.setdefault('internationalizable', True)
             def get_default(form, es=eschema, rs=rschema):
                 return es.default(rs)
-            kwargs['initial'] = get_default
+            kwargs.setdefault('initial', get_default)
     else:
         targetschema = rschema.subjects(eschema)[0]
         card = rschema.rproperty(targetschema, eschema, 'cardinality')[1]
         help = rschema.rproperty(targetschema, eschema, 'description')
     kwargs['required'] = card in '1+'
     kwargs['name'] = rschema.type
-    kwargs['help'] = help
+    kwargs.setdefault('help', help)
     if rschema.is_final():
         if skip_meta_attr and rschema in eschema.meta_attributes():
             return None
