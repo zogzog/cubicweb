@@ -6,6 +6,7 @@
 :license: GNU Lesser General Public License, v2.1 - http://www.gnu.org/licenses
 """
 __docformat__ = "restructuredtext en"
+_ = unicode
 
 import os
 from os.path import join, exists, split
@@ -16,7 +17,6 @@ from logilab.common.decorators import cached
 from cubicweb.toolsutils import read_config
 from cubicweb.cwconfig import CubicWebConfiguration, register_persistent_options, merge_options
 
-_ = unicode
 
 register_persistent_options( (
     # site-wide only web ui configuration
