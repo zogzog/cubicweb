@@ -80,7 +80,7 @@ if (typeof SimileAjax == "undefined") {
             SimileAjax.includeJavascriptFile(doc, urlPrefix + filenames[i]);
         }
         SimileAjax.loadingScriptsCount += filenames.length;
-        SimileAjax.includeJavascriptFile(doc, SimileAjax.urlPrefix + "scripts/signal.js?" + filenames.length);
+        // XXX adim SimileAjax.includeJavascriptFile(doc, SimileAjax.urlPrefix + "scripts/signal.js?" + filenames.length);
     };
     SimileAjax.includeCssFile = function(doc, url) {
         if (doc.body == null) {
@@ -208,7 +208,7 @@ if (typeof SimileAjax == "undefined") {
 //         } else {
 //             SimileAjax.includeJavascriptFiles(document, SimileAjax.urlPrefix + "scripts/", javascriptFiles);
 //         }
-        SimileAjax.includeCssFiles(document, SimileAjax.urlPrefix + "styles/", cssFiles);
+//         SimileAjax.includeCssFiles(document, SimileAjax.urlPrefix + "styles/", cssFiles);
 
         SimileAjax.loaded = true;
     })();
@@ -3830,8 +3830,8 @@ SimileAjax.WindowManager._findDropTarget = function(elmt) {
                 includeJavascriptFiles(Timeline.urlPrefix, [ "timeline-bundle.js" ]);
                 includeCssFiles(Timeline.urlPrefix, [ "timeline-bundle.css" ]);
             } else {
-                includeJavascriptFiles(Timeline.urlPrefix + "scripts/", javascriptFiles);
-                includeCssFiles(Timeline.urlPrefix + "styles/", cssFiles);
+                // XXX adim includeJavascriptFiles(Timeline.urlPrefix + "scripts/", javascriptFiles);
+                // XXX adim includeCssFiles(Timeline.urlPrefix + "styles/", cssFiles);
             }
 
             /*
@@ -3879,8 +3879,8 @@ SimileAjax.WindowManager._findDropTarget = function(elmt) {
             for (var l = 0; l < supportedLocales.length; l++) {
                 var locale = supportedLocales[l];
                 if (loadLocale[locale]) {
-                    includeJavascriptFiles(Timeline.urlPrefix + "scripts/l10n/" + locale + "/", localizedJavascriptFiles);
-                    includeCssFiles(Timeline.urlPrefix + "styles/l10n/" + locale + "/", localizedCssFiles);
+                    // XXX adim includeJavascriptFiles(Timeline.urlPrefix + "scripts/l10n/" + locale + "/", localizedJavascriptFiles);
+                    // XXX adim includeCssFiles(Timeline.urlPrefix + "styles/l10n/" + locale + "/", localizedCssFiles);
                 }
             }
 
