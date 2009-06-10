@@ -420,7 +420,7 @@ def anonymous_user():
 
 @objectify_selector
 @lltrace
-def primary_view(cls, req, rset, row=None, col=0, view=None, **kwargs):
+def primary_view(cls, req, rset=None, row=None, col=0, view=None, **kwargs):
     """accept if view given as named argument is a primary view, or if no view
     is given
     """
@@ -430,7 +430,7 @@ def primary_view(cls, req, rset, row=None, col=0, view=None, **kwargs):
 
 @objectify_selector
 @lltrace
-def match_context_prop(cls, req, rset, row=None, col=0, context=None,
+def match_context_prop(cls, req, rset=None, row=None, col=0, context=None,
                        **kwargs):
     """accept if:
     * no context given
@@ -461,7 +461,7 @@ class match_search_state(Selector):
                            ','.join(sorted(str(s) for s in self.expected)))
 
     @lltrace
-    def __call__(self, cls, req, rset, row=None, col=0, **kwargs):
+    def __call__(self, cls, req, rset=None, row=None, col=0, **kwargs):
         try:
             if not req.search_state[0] in self.expected:
                 return 0
@@ -554,7 +554,7 @@ class match_view(match_search_state):
     initializer
     """
     @lltrace
-    def __call__(self, cls, req, rset, row=None, col=0, view=None, **kwargs):
+    def __call__(self, cls, req, rset=None, row=None, col=0, view=None, **kwargs):
         if view is None or not view.id in self.expected:
             return 0
         return 1
@@ -571,7 +571,7 @@ class appobject_selectable(Selector):
         self.registry = registry
         self.oid = oid
 
-    def __call__(self, cls, req, rset, *args, **kwargs):
+    def __call__(self, cls, req, rset=None, *args, **kwargs):
         try:
             cls.vreg.select(self.registry, self.oid, req, rset=rset, **kwargs)
             return 1
@@ -850,7 +850,7 @@ class has_permission(EntitySelector):
         self.action = action
 
     @lltrace
-    def __call__(self, cls, req, rset, row=None, col=0, **kwargs):
+    def __call__(self, cls, req, rset=None, row=None, col=0, **kwargs):
         if rset is None:
             return 0
         user = req.user
@@ -934,6 +934,7 @@ class rql_condition(EntitySelector):
 
     def __repr__(self):
         return u'<rql_condition "%s" at %x>' % (self.rql, id(self))
+
 
 class but_etype(EntitySelector):
     """accept if the given entity types are not found in the result set.
