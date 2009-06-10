@@ -19,7 +19,7 @@ from cubicweb.view import StartupView
 from cubicweb.web import uicfg, stdmsgs
 from cubicweb.web.form import FormViewMixIn
 from cubicweb.web.formfields import FIELDS, StringField
-from cubicweb.web.formwidgets import Select, Button, SubmitButton
+from cubicweb.web.formwidgets import Select, TextInput, Button, SubmitButton
 from cubicweb.web.views import primary, formrenderers
 
 
@@ -346,12 +346,13 @@ class PropertyValueField(StringField):
             else:
                 self.choices = vocab
             wdg = Select()
+        elif pdef['type'] == 'String': # else we'll get a TextArea by default
+            wdg = TextInput()
         else:
-            wdg = FIELDS[pdef['type']].widget()
+            field = FIELDS[pdef['type']]()
+            wdg = field.widget
             if pdef['type'] == 'Boolean':
-                self.choices = [(form.req._('yes'), '1'), (form.req._('no'), '')]
-            elif pdef['type'] in ('Float', 'Int'):
-                wdg.attrs.setdefault('size', 3)
+                self.choices = field.vocabulary(form)
         self.widget = wdg
 
 
