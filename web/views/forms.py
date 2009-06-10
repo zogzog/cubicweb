@@ -513,6 +513,12 @@ class EntityFieldsForm(FieldsForm):
             results.append((state.view('combobox'), state.eid))
         return sorted(results)
 
+    def srelations_by_category(self, categories=None, permission=None):
+        return ()
+
+    def should_display_add_new_relation_link(self, rschema, existant, card):
+        return False
+
 
 class CompositeForm(FieldsForm):
     """form composed for sub-forms"""
