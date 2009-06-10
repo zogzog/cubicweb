@@ -22,10 +22,11 @@
 __docformat__ = "restructuredtext en"
 
 import sys
+import types
 from os import listdir, stat
 from os.path import dirname, join, realpath, split, isdir, exists
 from logging import getLogger
-import types
+from warnings import warn
 
 from cubicweb import CW_SOFTWARE_ROOT, set_log_methods
 from cubicweb import RegistryNotFound, ObjectNotFound, NoSelectableObject
@@ -226,6 +227,9 @@ class VRegistry(object):
 
         raise `NoSelectableObject` if not object apply
         """
+        if len(args) > 1:
+            warn('only the request param can not be named when calling select',
+                 DeprecationWarning, stacklevel=2)
         score, winners = 0, []
         for vobject in vobjects:
             vobjectscore = vobject.__select__(vobject, *args, **kwargs)
