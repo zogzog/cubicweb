@@ -127,8 +127,7 @@ class AppRsetObject(VObject):
         if cachename in CACHE_REGISTRY:
             cache = CACHE_REGISTRY[cachename]
         else:
-            cache = Cache()
-            CACHE_REGISTRY[cachename] = cache
+            cache = CACHE_REGISTRY[cachename] = Cache()
         _now = datetime.now()
         if _now > cache.latest_cache_lookup + ONESECOND:
             ecache = self.req.execute('Any C,T WHERE C is CWCache, C name %(name)s, C timestamp T',
