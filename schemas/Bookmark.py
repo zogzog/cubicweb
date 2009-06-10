@@ -1,4 +1,4 @@
-"""
+"""the Bookmark entity type for internal links
 
 :organization: Logilab
 :copyright: 2001-2009 LOGILAB S.A. (Paris, FRANCE), license is LGPL v2.
@@ -7,8 +7,8 @@
 """
 
 class Bookmark(MetaUserEntityType):
-    """define an entity type, used to build the application schema"""
-    title = String(required=True, maxsize=128)
+    """bookmarks are used to have user's specific internal links"""
+    title = String(required=True, maxsize=128, internationalizable=True)
     path  = String(maxsize=512, required=True,
                    description=_("relative url of the bookmarked page"))
 
