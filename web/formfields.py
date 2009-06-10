@@ -101,10 +101,10 @@ class Field(object):
         return self.__unicode__().encode('utf-8')
 
     def init_widget(self, widget):
-        if widget is None and self.choices:
-            widget = Select()
         if widget is not None:
             self.widget = widget
+        elif self.choices and not self.widget.vocabulary_widget:
+            self.widget = Select()
         if isinstance(self.widget, type):
             self.widget = self.widget()
 

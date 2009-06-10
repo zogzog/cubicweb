@@ -22,6 +22,8 @@ class FieldWidget(object):
     # automatically set id and tabindex attributes ?
     setdomid = True
     settabindex = True
+    # does this widget expect a vocabulary
+    vocabulary_widget = False
 
     def __init__(self, attrs=None, setdomid=None, settabindex=None):
         if attrs is None:
@@ -171,6 +173,8 @@ class FCKEditor(TextArea):
 
 class Select(FieldWidget):
     """<select>, for field having a specific vocabulary"""
+    vocabulary_widget = True
+
     def __init__(self, attrs=None, multiple=False):
         super(Select, self).__init__(attrs)
         self._multiple = multiple
@@ -203,6 +207,7 @@ class CheckBox(Input):
     input will be generated for each possible value.
     """
     type = 'checkbox'
+    vocabulary_widget = True
 
     def render(self, form, field):
         name, curvalues, attrs = self._render_attrs(form, field)
