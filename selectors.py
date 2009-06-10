@@ -573,7 +573,7 @@ class appobject_selectable(Selector):
 
     def __call__(self, cls, req, rset, *args, **kwargs):
         try:
-            cls.vreg.select_object(self.registry, self.oid, req, rset, *args, **kwargs)
+            cls.vreg.select(self.registry, self.oid, req, rset=rset, **kwargs)
             return 1
         except NoSelectableObject:
             return 0
