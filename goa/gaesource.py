@@ -47,7 +47,7 @@ def _clear_related_cache(session, gaesubject, rtype, gaeobject):
                 asession.user.clear_related_cache(rtype, 'object')
 
 def _mark_modified(session, gaeentity):
-    modified = session.query_data('modifiedentities', {}, setdefault=True)
+    modified = session.transaction_data.setdefault('modifiedentities', {})
     modified[str(gaeentity.key())] = gaeentity
     DatastorePutOp(session)
 
@@ -98,8 +98,8 @@ class DatastorePutOp(SingleOperation):
         return 0
 
     def _put_entities(self):
-        pending = self.session.query_data('pendingeids', ())
-        modified = self.session.query_data('modifiedentities', {})
+        pending = self.session.transaction_data.get('pendingeids', ())
+        modified = self.session.transaction_data.get('modifiedentities', {})
         for eid, gaeentity in modified.iteritems():
             assert not eid in pending
             Put(gaeentity)
@@ -263,7 +263,7 @@ class GAESource(AbstractSource):
         Delete(key)
         session.clear_datastore_cache(key)
         session.drop_entity_cache(eid)
-        session.query_data('modifiedentities', {}).pop(eid, None)
+        session.transaction_data.get('modifiedentities', {}).pop(eid, None)
 
     def add_relation(self, session, subject, rtype, object):
         """add a relation to the source"""
@@ -275,7 +275,7 @@ class GAESource(AbstractSource):
     def delete_relation(self, session, subject, rtype, object):
         """delete a relation from the source"""
         gaesubj, gaeobj, cards = _rinfo(session, subject, rtype, object)
-        pending = session.query_data('pendingeids', set(), setdefault=True)
+        pending = session.transaction_data.setdefault('pendingeids', set())
         if not subject in pending:
             _rdel(session, gaesubj, gaeobj.key(), 's_' + rtype, cards[0])
         if not object in pending:

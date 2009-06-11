@@ -45,7 +45,7 @@ class SupervisingTC(EnvBasedTC):
         view = sentops[0]._get_view()
         self.assertEquals(view.recipients(), ['test@logilab.fr'])
         self.assertEquals(view.subject(), '[data supervision] changes summary')
-        data = view.render(changes=session.query_data('pendingchanges')).strip()
+        data = view.render(changes=session.transaction_data.get('pendingchanges')).strip()
         data = re.sub('#\d+', '#EID', data)
         data = re.sub('/\d+', '/EID', data)
         self.assertTextEquals('''user admin has made the following change(s):

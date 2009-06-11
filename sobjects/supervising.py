@@ -226,7 +226,7 @@ class SupervisionMailOp(SendMailOp):
         uinfo = {'email': config['sender-addr'],
                  'name': config['sender-name']}
         view = self._get_view()
-        content = view.render(changes=session.query_data('pendingchanges'))
+        content = view.render(changes=session.transaction_data.get('pendingchanges'))
         recipients = view.recipients()
         msg = format_mail(uinfo, recipients, content, view.subject(), config=config)
         self.to_send = [(msg, recipients)]
