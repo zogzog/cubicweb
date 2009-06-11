@@ -412,8 +412,6 @@ class EntityFormRenderer(FormRenderer):
         """create a form to edit entity's inlined relations"""
         if not hasattr(form, 'inlined_relations'):
             return
-        entity = form.edited_entity
-        __ = self.req.__
         for rschema, targettypes, role in form.inlined_relations():
             # show inline forms only if there's one possible target type
             # for rschema
@@ -424,37 +422,42 @@ class EntityFormRenderer(FormRenderer):
                 continue
             targettype = targettypes[0].type
             if form.should_inline_relation_form(rschema, targettype, role):
-                w(u'<div id="inline%sslot">' % rschema)
-                existant = entity.has_eid() and entity.related(rschema)
-                if existant:
-                    # display inline-edition view for all existing related entities
-                    w(form.view('inline-edition', existant, rtype=rschema, role=role,
-                                ptype=entity.e_schema, peid=entity.eid))
-                if role == 'subject':
-                    card = rschema.rproperty(entity.e_schema, targettype, 'cardinality')[0]
-                else:
-                    card = rschema.rproperty(targettype, entity.e_schema, 'cardinality')[1]
-                # there is no related entity and we need at least one: we need to
-                # display one explicit inline-creation view
-                if form.should_display_inline_creation_form(rschema, existant, card):
-                    w(form.view('inline-creation', None, etype=targettype,
-                                peid=entity.eid, ptype=entity.e_schema,
-                                rtype=rschema, role=role))
-                # we can create more than one related entity, we thus display a link
-                # to add new related entities
-                if form.should_display_add_new_relation_link(rschema, existant, card):
-                    divid = "addNew%s%s%s:%s" % (targettype, rschema, role, entity.eid)
-                    w(u'<div class="inlinedform" id="%s" cubicweb:limit="true">'
-                      % divid)
-                    js = "addInlineCreationForm('%s', '%s', '%s', '%s')" % (
-                        entity.eid, targettype, rschema, role)
-                    if card in '1?':
-                        js = "toggleVisibility('%s'); %s" % (divid, js)
-                    w(u'<a class="addEntity" id="add%s:%slink" href="javascript: %s" >+ %s.</a>'
-                      % (rschema, entity.eid, js, __('add a %s' % targettype)))
-                    w(u'</div>')
-                    w(u'<div class="trame_grise">&nbsp;</div>')
-                w(u'</div>')
+                self.inline_relation_form(w, form, rschema, targettype, role)
+
+    def inline_relation_form(self, w, form, rschema, targettype, role):
+        entity = form.edited_entity
+        __ = self.req.__
+        w(u'<div id="inline%sslot">' % rschema)
+        existant = entity.has_eid() and entity.related(rschema)
+        if existant:
+            # display inline-edition view for all existing related entities
+            w(form.view('inline-edition', existant, rtype=rschema, role=role,
+                        ptype=entity.e_schema, peid=entity.eid))
+        if role == 'subject':
+            card = rschema.rproperty(entity.e_schema, targettype, 'cardinality')[0]
+        else:
+            card = rschema.rproperty(targettype, entity.e_schema, 'cardinality')[1]
+        # there is no related entity and we need at least one: we need to
+        # display one explicit inline-creation view
+        if form.should_display_inline_creation_form(rschema, existant, card):
+            w(form.view('inline-creation', None, etype=targettype,
+                        peid=entity.eid, ptype=entity.e_schema,
+                        rtype=rschema, role=role))
+        # we can create more than one related entity, we thus display a link
+        # to add new related entities
+        if form.should_display_add_new_relation_link(rschema, existant, card):
+            divid = "addNew%s%s%s:%s" % (targettype, rschema, role, entity.eid)
+            w(u'<div class="inlinedform" id="%s" cubicweb:limit="true">'
+              % divid)
+            js = "addInlineCreationForm('%s', '%s', '%s', '%s')" % (
+                entity.eid, targettype, rschema, role)
+            if card in '1?':
+                js = "toggleVisibility('%s'); %s" % (divid, js)
+            w(u'<a class="addEntity" id="add%s:%slink" href="javascript: %s" >+ %s.</a>'
+              % (rschema, entity.eid, js, __('add a %s' % targettype)))
+            w(u'</div>')
+            w(u'<div class="trame_grise">&nbsp;</div>')
+        w(u'</div>')
 
 
 class EntityInlinedFormRenderer(EntityFormRenderer):
