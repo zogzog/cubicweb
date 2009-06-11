@@ -101,36 +101,36 @@ else:
         # activate entity caching on the server side
 
         def set_entity_cache(self, entity):
-            self._query_data.setdefault('_eid_cache', {})[entity.eid] = entity
+            self.transaction_data.setdefault('_eid_cache', {})[entity.eid] = entity
 
         def entity_cache(self, eid):
-            return self._query_data['_eid_cache'][eid]
+            return self.transaction_data['_eid_cache'][eid]
 
         def drop_entity_cache(self, eid=None):
             if eid is None:
-                self._query_data['_eid_cache'] = {}
-            elif '_eid_cache' in self._query_data:
-                self._query_data['_eid_cache'].pop(eid, None)
+                self.transaction_data['_eid_cache'] = {}
+            elif '_eid_cache' in self.transaction_data:
+                self.transaction_data['_eid_cache'].pop(eid, None)
 
         def datastore_get(self, key):
             if isinstance(key, basestring):
                 key = Key(key)
             try:
-                gentity = self._query_data['_key_cache'][key]
+                gentity = self.transaction_data['_key_cache'][key]
                 #self.critical('cached %s', gentity)
             except KeyError:
                 gentity = Get(key)
                 #self.critical('Get %s', gentity)
-                self._query_data.setdefault('_key_cache', {})[key] = gentity
+                self.transaction_data.setdefault('_key_cache', {})[key] = gentity
             return gentity
 
         def clear_datastore_cache(self, key=None):
             if key is None:
-                self._query_data['_key_cache'] = {}
+                self.transaction_data['_key_cache'] = {}
             else:
                 if isinstance(key, basestring):
                     key = Key(key)
-                self._query_data['_key_cache'].pop(key, None)
+                self.transaction_data['_key_cache'].pop(key, None)
 
         from cubicweb.server.session import Session
         Session.set_entity_cache = set_entity_cache

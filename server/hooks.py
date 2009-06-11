@@ -18,7 +18,8 @@ from cubicweb.server.hookhelper import (check_internal_entity, previous_state,
 from cubicweb.server.repository import FTIndexEntityOp
 
 def relation_deleted(session, eidfrom, rtype, eidto):
-    session.add_query_data('pendingrelations', (eidfrom, rtype, eidto))
+    session.transaction_data.setdefault('pendingrelations', []).append(
+        (eidfrom, rtype, eidto))
 
 
 # base meta-data handling #####################################################
@@ -41,7 +42,7 @@ def setmtime_before_update_entity(session, entity):
 class SetCreatorOp(PreCommitOperation):
 
     def precommit_event(self):
-        if self.eid in self.session.query_data('pendingeids', ()):
+        if self.eid in self.session.transaction_data.get('pendingeids', ()):
             # entity have been created and deleted in the same transaction
             return
         ueid = self.session.user.eid
@@ -138,7 +139,7 @@ class DelayedDeleteOp(PreCommitOperation):
 
     def precommit_event(self):
         session = self.session
-        if not self.eid in session.query_data('pendingeids', ()):
+        if not self.eid in session.transaction_data.get('pendingeids', ()):
             etype = session.describe(self.eid)[0]
             session.unsafe_execute('DELETE %s X WHERE X eid %%(x)s, NOT %s'
                                    % (etype, self.relation),
@@ -166,7 +167,7 @@ class CheckConstraintsOperation(LateOperation):
         eidfrom, rtype, eidto = self.rdef
         # first check related entities have not been deleted in the same
         # transaction
-        pending = self.session.query_data('pendingeids', ())
+        pending = self.session.transaction_data.get('pendingeids', ())
         if eidfrom in pending:
             return
         if eidto in pending:
@@ -217,7 +218,7 @@ class CheckRequiredRelationOperation(LateOperation):
 
     def precommit_event(self):
         # recheck pending eids
-        if self.eid in self.session.query_data('pendingeids', ()):
+        if self.eid in self.session.transaction_data.get('pendingeids', ()):
             return
         if self.session.unsafe_execute(*self._rql()).rowcount < 1:
             etype = self.session.describe(self.eid)[0]
@@ -274,7 +275,7 @@ def cardinalitycheck_after_add_entity(session, entity):
 def cardinalitycheck_before_del_relation(session, eidfrom, rtype, eidto):
     """check cardinalities are satisfied"""
     card = rproperty(session, rtype, eidfrom, eidto, 'cardinality')
-    pendingeids = session.query_data('pendingeids', ())
+    pendingeids = session.transaction_data.get('pendingeids', ())
     if card[0] in '1+' and not eidfrom in pendingeids:
         checkrel_if_necessary(session, CheckSRelationOp, rtype, eidfrom)
     if card[1] in '1+' and not eidto in pendingeids:
@@ -423,7 +424,7 @@ class SetInitialStateOp(PreCommitOperation):
                                {'name': str(entity.e_schema)})
         # if there is an initial state and the entity's state is not set,
         # use the initial state as a default state
-        pendingeids = session.query_data('pendingeids', ())
+        pendingeids = session.transaction_data.get('pendingeids', ())
         if rset and not entity.eid in pendingeids and not entity.in_state:
             session.unsafe_execute('SET X in_state S WHERE X eid %(x)s, S eid %(s)s',
                                    {'x' : entity.eid, 's' : rset[0][0]}, 'x')
@@ -505,7 +506,7 @@ def after_update_eproperty(session, entity):
                           key=key, value=value)
 
 def before_del_eproperty(session, eid):
-    for eidfrom, rtype, eidto in session.query_data('pendingrelations', ()):
+    for eidfrom, rtype, eidto in session.transaction_data.get('pendingrelations', ()):
         if rtype == 'for_user' and eidfrom == eid:
             # if for_user was set, delete has already been handled
             break

@@ -243,7 +243,7 @@ repository.',
         """delete a relation from the source"""
         rschema = self.schema.rschema(rtype)
         if rschema.inlined:
-            if subject in session.query_data('pendingeids', ()):
+            if subject in session.transaction_data.get('pendingeids', ()):
                 return
             table = SQL_PREFIX + session.describe(subject)[0]
             column = SQL_PREFIX + rtype

@@ -37,7 +37,7 @@ CORE_RTYPES = ['eid', 'creation_date', 'modification_date',
 
 def get_constraints(session, entity):
     constraints = []
-    for cstreid in session.query_data(entity.eid, ()):
+    for cstreid in session.transaction_data.get(entity.eid, ()):
         cstrent = session.entity(cstreid)
         cstr = CONSTRAINTS[cstrent.type].deserialize(cstrent.value)
         cstr.eid = cstreid
@@ -62,7 +62,8 @@ def add_inline_relation_column(session, etype, rtype):
     # is done by the dbhelper)
     session.pool.source('system').create_index(session, table, column)
     session.info('added index on %s(%s)', table, column)
-    session.add_query_data('createdattrs', '%s.%s' % (etype, rtype))
+    session.transaction_data.setdefault('createdattrs', []).append(
+        '%s.%s' % (etype, rtype))
 
 
 class SchemaOperation(Operation):
@@ -107,8 +108,8 @@ class DropTableOp(PreCommitOperation):
     """actually remove a database from the application's schema"""
     table = None # make pylint happy
     def precommit_event(self):
-        dropped = self.session.query_data('droppedtables',
-                                          default=set(), setdefault=True)
+        dropped = self.session.transaction_data.setdefault('droppedtables',
+                                                           set())
         if self.table in dropped:
             return # already processed
         dropped.add(self.table)
@@ -208,7 +209,7 @@ def after_del_relation_type(session, rdefeid, rtype, rteid):
     * delete the associated relation type when necessary
     """
     subjschema, rschema, objschema = session.repo.schema.schema_by_eid(rdefeid)
-    pendings = session.query_data('pendingeids', ())
+    pendings = session.transaction_data.get('pendingeids', ())
     # first delete existing relation if necessary
     if rschema.is_final():
         rdeftype = 'CWAttribute'
@@ -472,14 +473,14 @@ class AddCWRelationPreCommitOp(PreCommitOperation):
             except KeyError:
                 alreadythere = False
             if not (alreadythere or
-                    key in session.query_data('createdattrs', ())):
+                    key in session.transaction_data.get('createdattrs', ())):
                 add_inline_relation_column(session, subj, rtype)
         else:
             # need to create the relation if no relation definition in the
             # schema and if it has not been added during other event of the same
             # transaction
             if not (rschema.subjects() or
-                    rtype in session.query_data('createdtables', ())):
+                    rtype in session.transaction_data.get('createdtables', ())):
                 try:
                     rschema = schema[rtype]
                     tablesql = rschema2sql(rschema)
@@ -494,7 +495,8 @@ class AddCWRelationPreCommitOp(PreCommitOperation):
                 for sql in tablesql.split(';'):
                     if sql.strip():
                         self.session.system_sql(sql)
-                session.add_query_data('createdtables', rtype)
+                session.transaction_data.setdefault('createdtables', []).append(
+                    rtype)
 
 def after_add_enfrdef(session, entity):
     AddCWRelationPreCommitOp(session, entity=entity)
@@ -620,13 +622,14 @@ class UpdateRtypeOp(SchemaOperation):
         if not inlined:
             # need to create the relation if it has not been already done by another
             # event of the same transaction
-            if not rschema.type in session.query_data('createdtables', ()):
+            if not rschema.type in session.transaction_data.get('createdtables', ()):
                 tablesql = rschema2sql(rschema)
                 # create the necessary table
                 for sql in tablesql.split(';'):
                     if sql.strip():
                         sqlexec(sql)
-                session.add_query_data('createdtables', rschema.type)
+                session.transaction_data.setdefault('createdtables', []).append(
+                    rschema.type)
             # copy existant data
             column = SQL_PREFIX + rtype
             for etype in rschema.subjects():
@@ -697,7 +700,7 @@ class ConstraintOp(SchemaOperation):
         session = self.session
         # when the relation is added in the same transaction, the constraint object
         # is created by AddEN?FRDefPreCommitOp, there is nothing to do here
-        if rdef.eid in session.query_data('neweids', ()):
+        if rdef.eid in session.transaction_data.get('neweids', ()):
             self.cancelled = True
             return
         self.cancelled = False
@@ -773,7 +776,7 @@ class DelConstraintOp(ConstraintOp):
 
 
 def before_delete_constrained_by(session, fromeid, rtype, toeid):
-    if not fromeid in session.query_data('pendingeids', ()):
+    if not fromeid in session.transaction_data.get('pendingeids', ()):
         schema = session.repo.schema
         entity = session.eid_rset(toeid).get_entity(0, 0)
         subjtype, rtype, objtype = schema.schema_by_eid(fromeid)
@@ -786,8 +789,8 @@ def before_delete_constrained_by(session, fromeid, rtype, toeid):
 
 
 def after_add_constrained_by(session, fromeid, rtype, toeid):
-    if fromeid in session.query_data('neweids', ()):
-        session.add_query_data(fromeid, toeid)
+    if fromeid in session.transaction_data.get('neweids', ()):
+        session.transaction_data.setdefault(fromeid, []).append(toeid)
 
 
 # schema permissions synchronization ##########################################
@@ -908,7 +911,7 @@ def before_del_permission(session, subject, rtype, object):
 
     skip the operation if the related type is being deleted
     """
-    if subject in session.query_data('pendingeids', ()):
+    if subject in session.transaction_data.get('pendingeids', ()):
         return
     perm = rtype.split('_', 1)[0]
     if session.describe(object)[0] == 'CWGroup':

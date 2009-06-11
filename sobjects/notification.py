@@ -6,6 +6,7 @@
 :license: GNU Lesser General Public License, v2.1 - http://www.gnu.org/licenses
 """
 __docformat__ = "restructuredtext en"
+_ = unicode
 
 from base64 import b64encode, b64decode
 from itertools import repeat
@@ -28,7 +29,6 @@ from cubicweb.server.pool import PreCommitOperation
 from cubicweb.server.hookhelper import SendMailOp
 from cubicweb.server.hooksmanager import Hook
 
-_ = unicode
 
 class RecipientsFinder(Component):
     """this component is responsible to find recipients of a notification

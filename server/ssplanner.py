@@ -440,7 +440,7 @@ class DeleteEntitiesStep(Step):
         session = self.plan.session
         delete = session.repo.glob_delete_entity
         # register pending eids first to avoid multiple deletion
-        pending = session.query_data('pendingeids', set(), setdefault=True)
+        pending = session.transaction_data.setdefault('pendingeids', set())
         actual = todelete - pending
         pending |= actual
         for eid in actual:
