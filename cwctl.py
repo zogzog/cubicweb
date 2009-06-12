@@ -273,7 +273,8 @@ repository and the web server.',
         cwcfg.creating = True
         config = cwcfg.config_for(appid, configname)
         config.set_language = False
-        config.init_cubes(config.expand_cubes(cubes))
+        cubes = config.expand_cubes(cubes)
+        config.init_cubes(cubes)
         helper = self.config_helper(config)
         # check the cube exists
         try:
