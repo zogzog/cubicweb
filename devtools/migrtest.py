@@ -42,14 +42,14 @@ from os.path import join, basename
 from logilab.common.shellutils import cp, rm
 
 from cubicweb.toolsutils import read_config
-from cubicweb.server.serverctl import generate_sources_file
+from cubicweb.server.utils import generate_sources_file
 
 # XXXX use db-copy instead
 
 # test environment configuration
 chrootpath = '/sandbox/cubicwebtest'
 tmpdbhost = 'crater'
-tmpdbuser = 'syt' 
+tmpdbuser = 'syt'
 tmpdbpasswd = 'syt'
 
 def play_migration(applhome, applhost='', sudo=False):

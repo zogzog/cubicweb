@@ -10,12 +10,48 @@ __docformat__ = "restructuredtext en"
 import os
 from os.path import join, exists
 
-from logilab.common.configuration import Method
+from logilab.common.configuration import Method, Configuration, \
+     ini_format_section
 from logilab.common.decorators import wproperty, cached, clear_cache
 
 from cubicweb import CW_SOFTWARE_ROOT, RegistryNotFound
-from cubicweb.toolsutils import env_path, read_config
+from cubicweb.toolsutils import env_path, read_config, restrict_perms_to_user
 from cubicweb.cwconfig import CubicWebConfiguration, merge_options
+
+
+def generate_sources_file(sourcesfile, sourcescfg, keys=None):
+    """serialize repository'sources configuration into a INI like file
+
+    the `keys` parameter may be used to sort sections
+    """
+    if keys is None:
+        keys = sourcescfg.keys()
+    else:
+        for key in sourcescfg:
+            if not key in keys:
+                keys.append(key)
+    stream = open(sourcesfile, 'w')
+    for uri in keys:
+        sconfig = sourcescfg[uri]
+        if isinstance(sconfig, dict):
+            # get a Configuration object
+            _sconfig = Configuration(options=SOURCE_TYPES[sconfig['adapter']].options)
+            for attr, val in sconfig.items():
+                if attr == 'uri':
+                    continue
+                if attr == 'adapter':
+                    _sconfig.adapter = val
+                else:
+                    _sconfig.set_option(attr, val)
+            sconfig = _sconfig
+        optsbysect = list(sconfig.options_by_section())
+        assert len(optsbysect) == 1, 'all options for a source should be in the same group'
+        ini_format_section(stream, uri, optsbysect[0][1])
+        if hasattr(sconfig, 'adapter'):
+            print >> stream
+            print >> stream, '# adapter for this source (YOU SHOULD NOT CHANGE THIS)'
+            print >> stream, 'adapter=%s' % sconfig.adapter
+        print >> stream
 
 
 class ServerConfiguration(CubicWebConfiguration):
@@ -188,15 +224,23 @@ notified of every changes.',
     # restricted user, this user usually don't have access to the sources
     # configuration file (#16102)
     @cached
+    def read_sources_file(self):
+        return read_config(self.sources_file())
+
     def sources(self):
         """return a dictionnaries containing sources definitions indexed by
         sources'uri
         """
-        allsources = read_config(self.sources_file())
+        allsources = self.read_sources_file()
         if self._enabled_sources is None:
             return allsources
         return dict((uri, config) for uri, config in allsources.items()
                     if uri in self._enabled_sources or uri == 'admin')
+
+    def write_sources_file(self, sourcescfg):
+        sourcesfile = self.sources_file()
+        generate_sources_file(sourcesfile, sourcescfg, ['admin', 'system'])
+        restrict_perms_to_user(sourcesfile)
 
     def pyro_enabled(self):
         """pyro is always enabled in standalone repository configuration"""

@@ -10,12 +10,13 @@ __docformat__ = "restructuredtext en"
 import sys
 import os
 
-from logilab.common.configuration import REQUIRED, Configuration, ini_format_section
+from logilab.common.configuration import REQUIRED, Configuration
 from logilab.common.clcommands import register_commands, cmd_run, pop_arg
 
 from cubicweb import AuthenticationError, ExecutionError, ConfigurationError
-from cubicweb.toolsutils import (Command, CommandHandler, confirm,
-                                 restrict_perms_to_user)
+from cubicweb.toolsutils import Command, CommandHandler, confirm
+from cubicweb.server import SOURCE_TYPES
+from cubicweb.server.utils import ask_source_config
 from cubicweb.server.serverconfig import ServerConfiguration
 
 
@@ -92,41 +93,6 @@ def _db_sys_cnx(source, what, db=None, user=None, verbose=True):
         pass
     return cnx
 
-def generate_sources_file(sourcesfile, sourcescfg, keys=None):
-    """serialize repository'sources configuration into a INI like file
-
-    the `keys` parameter may be used to sort sections
-    """
-    from cubicweb.server.sources import SOURCE_TYPES
-    if keys is None:
-        keys = sourcescfg.keys()
-    else:
-        for key in sourcescfg:
-            if not key in keys:
-                keys.append(key)
-    stream = open(sourcesfile, 'w')
-    for uri in keys:
-        sconfig = sourcescfg[uri]
-        if isinstance(sconfig, dict):
-            # get a Configuration object
-            _sconfig = Configuration(options=SOURCE_TYPES[sconfig['adapter']].options)
-            for attr, val in sconfig.items():
-                if attr == 'uri':
-                    continue
-                if attr == 'adapter':
-                    _sconfig.adapter = val
-                else:
-                    _sconfig.set_option(attr, val)
-            sconfig = _sconfig
-        optsbysect = list(sconfig.options_by_section())
-        assert len(optsbysect) == 1, 'all options for a source should be in the same group'
-        ini_format_section(stream, uri, optsbysect[0][1])
-        if hasattr(sconfig, 'adapter'):
-            print >> stream
-            print >> stream, '# adapter for this source (YOU SHOULD NOT CHANGE THIS)'
-            print >> stream, 'adapter=%s' % sconfig.adapter
-        print >> stream
-
 def repo_cnx(config):
     """return a in-memory repository and a db api connection it"""
     from cubicweb.dbapi import in_memory_cnx
@@ -155,7 +121,6 @@ class RepositoryCreateHandler(CommandHandler):
         """create an application by copying files from the given cube and by
         asking information necessary to build required configuration files
         """
-        from cubicweb.server.sources import SOURCE_TYPES
         config = self.config
         print 'application\'s repository configuration'
         print '-' * 72
@@ -170,25 +135,37 @@ class RepositoryCreateHandler(CommandHandler):
         sconfig.adapter = 'native'
         sconfig.input_config(inputlevel=inputlevel)
         sourcescfg = {'system': sconfig}
+        for cube in cubes:
+            # if a source is named as the cube containing it, we need the
+            # source to use the cube, so add it.
+            if cube in SOURCE_TYPES:
+                sourcescfg[cube] = ask_source_config(cube, inputlevel)
         while raw_input('enter another source [y/N]: ').strip().lower() == 'y':
-            sourcetype = raw_input('source type (%s): ' % ', '.join(SOURCE_TYPES.keys()))
-            sconfig = Configuration(options=SOURCE_TYPES[sourcetype].options)
-            sconfig.adapter = sourcetype
-            sourceuri = raw_input('source uri: ').strip()
-            assert not sourceuri in sourcescfg
-            sconfig.input_config(inputlevel=inputlevel)
-            sourcescfg[sourceuri] = sconfig
-            # module names look like cubes.mycube.themodule
-            sourcecube = SOURCE_TYPES[sourcetype].module.split('.', 2)[1]
-            # if the source adapter is coming from an external component, ensure
-            # it's specified in used cubes
-            if sourcecube != 'cubicweb' and not sourcecube in cubes:
-                cubes.append(sourcecube)
+            available = sorted(stype for stype in SOURCE_TYPES
+                               if not stype in cubes)
+            while True:
+                sourcetype = raw_input('source type (%s): ' % ', '.join(available))
+                if sourcetype in available:
+                    break
+                print 'unknown source type, use one of the available type'
+            while True:
+                sourceuri = raw_input('source uri: ').strip()
+                if sourceuri not in sourcescfg:
+                    break
+                print 'uri already used, choose another one'
+            sourcescfg[sourceuri] = ask_source_config(sourcetype)
+            sourcemodule = SOURCE_TYPES[sourcetype].module
+            if not sourcemodule.startswith('cubicweb.'):
+                # module names look like cubes.mycube.themodule
+                sourcecube = SOURCE_TYPES[sourcetype].module.split('.', 2)[1]
+                # if the source adapter is coming from an external component,
+                # ensure it's specified in used cubes
+                if not sourcecube in cubes:
+                    cubes.append(sourcecube)
         sconfig = Configuration(options=USER_OPTIONS)
         sconfig.input_config(inputlevel=inputlevel)
         sourcescfg['admin'] = sconfig
-        generate_sources_file(sourcesfile, sourcescfg, ['admin', 'system'])
-        restrict_perms_to_user(sourcesfile)
+        config.write_sources_file(sourcescfg)
         # remember selected cubes for later initialization of the database
         config.write_bootstrap_cubes_file(cubes)
 
@@ -435,7 +412,7 @@ class ResetAdminPasswordCommand(Command):
         from cubicweb.server.utils import crypt_password, manager_userpasswd
         appid = pop_arg(args, 1, msg="No application specified !")
         config = ServerConfiguration.config_for(appid)
-        sourcescfg = config.sources()
+        sourcescfg = config.read_sources_file()
         try:
             adminlogin = sourcescfg['admin']['login']
         except KeyError:
@@ -454,9 +431,7 @@ class ResetAdminPasswordCommand(Command):
             sconfig['login'] = adminlogin
             sconfig['password'] = passwd
             sourcescfg['admin'] = sconfig
-            sourcesfile = config.sources_file()
-            generate_sources_file(sourcesfile, sourcescfg)
-            restrict_perms_to_user(sourcesfile)
+            config.write_sources_file(sourcescfg)
         except Exception, ex:
             cnx.rollback()
             import traceback
