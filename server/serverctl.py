@@ -150,7 +150,7 @@ class RepositoryCreateHandler(CommandHandler):
                 print 'unknown source type, use one of the available type'
             while True:
                 sourceuri = raw_input('source uri: ').strip()
-                if sourceuri not in sourcescfg:
+                if sourceuri != 'admin' and sourceuri not in sourcescfg:
                     break
                 print 'uri already used, choose another one'
             sourcescfg[sourceuri] = ask_source_config(sourcetype)
