@@ -10,14 +10,28 @@ __docformat__ = "restructuredtext en"
 import os
 from os.path import join, exists
 
-from logilab.common.configuration import Method, Configuration, \
+from logilab.common.configuration import REQUIRED, Method, Configuration, \
      ini_format_section
 from logilab.common.decorators import wproperty, cached, clear_cache
 
 from cubicweb import CW_SOFTWARE_ROOT, RegistryNotFound
 from cubicweb.toolsutils import env_path, read_config, restrict_perms_to_user
 from cubicweb.cwconfig import CubicWebConfiguration, merge_options
+from cubicweb.server import SOURCE_TYPES
 
+
+USER_OPTIONS =  (
+    ('login', {'type' : 'string',
+               'default': REQUIRED,
+               'help': "cubicweb manager account's login "
+               '(this user will be created)',
+               'inputlevel': 0,
+               }),
+    ('password', {'type' : 'password',
+                  'help': "cubicweb manager account's password",
+                  'inputlevel': 0,
+                  }),
+    )
 
 def generate_sources_file(sourcesfile, sourcescfg, keys=None):
     """serialize repository'sources configuration into a INI like file
@@ -35,7 +49,11 @@ def generate_sources_file(sourcesfile, sourcescfg, keys=None):
         sconfig = sourcescfg[uri]
         if isinstance(sconfig, dict):
             # get a Configuration object
-            _sconfig = Configuration(options=SOURCE_TYPES[sconfig['adapter']].options)
+            if uri == 'admin':
+                options = USER_OPTIONS
+            else:
+                options = SOURCE_TYPES[sconfig['adapter']].options
+            _sconfig = Configuration(options=options)
             for attr, val in sconfig.items():
                 if attr == 'uri':
                     continue
@@ -239,6 +257,9 @@ notified of every changes.',
 
     def write_sources_file(self, sourcescfg):
         sourcesfile = self.sources_file()
+        if exists(sourcesfile):
+            import shutil
+            shutil.copy(sourcesfile, sourcesfile + '.bak')
         generate_sources_file(sourcesfile, sourcescfg, ['admin', 'system'])
         restrict_perms_to_user(sourcesfile)
 

@@ -23,7 +23,7 @@ from os.path import join, exists
 from datetime import datetime
 
 from logilab.common.deprecation import deprecated_function, obsolete
-from logilab.common.decorators import cached
+from logilab.common.decorators import cached, clear_cache
 from logilab.common.adbh import get_adv_func_helper
 
 from yams.constraints import SizeConstraint
@@ -35,8 +35,8 @@ from cubicweb.dbapi import get_repository, repo_connect
 from cubicweb.common.migration import MigrationHelper, yes
 
 try:
-    from cubicweb.server import schemaserial as ss
-    from cubicweb.server.utils import manager_userpasswd
+    from cubicweb.server import SOURCE_TYPES, schemaserial as ss
+    from cubicweb.server.utils import manager_userpasswd, ask_source_config
     from cubicweb.server.sqlutils import sqlexec, SQL_PREFIX
 except ImportError: # LAX
     pass
@@ -77,7 +77,8 @@ class ServerMigrationHelper(MigrationHelper):
         """write current installed versions (of cubicweb software
         and of each used cube) into the database
         """
-        self.cmd_set_property('system.version.cubicweb', self.config.cubicweb_version())
+        self.cmd_set_property('system.version.cubicweb',
+                              self.config.cubicweb_version())
         for pkg in self.config.cubes():
             pkgversion = self.config.cube_version(pkg)
             self.cmd_set_property('system.version.%s' % pkg.lower(), pkgversion)
@@ -479,9 +480,16 @@ class ServerMigrationHelper(MigrationHelper):
         newcubes = super(ServerMigrationHelper, self).cmd_add_cubes(cubes)
         if not newcubes:
             return
-        for pack in newcubes:
-            self.cmd_set_property('system.version.'+pack,
-                                  self.config.cube_version(pack))
+        for cube in newcubes:
+            self.cmd_set_property('system.version.'+cube,
+                                  self.config.cube_version(cube))
+            if cube in SOURCE_TYPES:
+                # don't use config.sources() in case some sources have been
+                # disabled for migration
+                sourcescfg = self.config.read_sources_file()
+                sourcescfg[cube] = ask_source_config(cube)
+                self.config.write_sources_file(sourcescfg)
+                clear_cache(self.config, 'read_sources_file')
         if not update_database:
             self.commit()
             return
@@ -688,7 +696,8 @@ class ServerMigrationHelper(MigrationHelper):
         `newname` is a string giving the name of the renamed entity type
         """
         self.rqlexec('SET ET name %(newname)s WHERE ET is CWEType, ET name %(oldname)s',
-                     {'newname' : unicode(newname), 'oldname' : oldname})
+                     {'newname' : unicode(newname), 'oldname' : oldname},
+                     ask_confirm=False)
         if commit:
             self.commit()
 

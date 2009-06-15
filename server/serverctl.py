@@ -10,14 +10,14 @@ __docformat__ = "restructuredtext en"
 import sys
 import os
 
-from logilab.common.configuration import REQUIRED, Configuration
+from logilab.common.configuration import Configuration
 from logilab.common.clcommands import register_commands, cmd_run, pop_arg
 
 from cubicweb import AuthenticationError, ExecutionError, ConfigurationError
 from cubicweb.toolsutils import Command, CommandHandler, confirm
 from cubicweb.server import SOURCE_TYPES
 from cubicweb.server.utils import ask_source_config
-from cubicweb.server.serverconfig import ServerConfiguration
+from cubicweb.server.serverconfig import USER_OPTIONS, ServerConfiguration
 
 
 # utility functions ###########################################################
@@ -175,19 +175,6 @@ class RepositoryCreateHandler(CommandHandler):
             cmd_run('db-create', self.config.appid, '--verbose=%s' % verbosity)
         else:
             print 'nevermind, you can do it later using the db-create command'
-
-USER_OPTIONS =  (
-    ('login', {'type' : 'string',
-               'default': REQUIRED,
-               'help': "cubicweb manager account's login "
-               '(this user will be created)',
-               'inputlevel': 0,
-               }),
-    ('password', {'type' : 'password',
-                  'help': "cubicweb manager account's password",
-                  'inputlevel': 0,
-                  }),
-    )
 
 
 class RepositoryDeleteHandler(CommandHandler):
