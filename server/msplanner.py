@@ -1216,6 +1216,7 @@ class TermsFiltererVisitor(object):
         self.terms = terms
         self.solindices = solindices
         self.final = final
+        self._pending_vrefs = []
         # terms which appear in unsupported branches
         needsel |= self.extneedsel
         self.needsel = needsel
@@ -1369,9 +1370,12 @@ class TermsFiltererVisitor(object):
         else:
             raise UnsupportedBranch()
         rschema = self.schema.rschema(node.r_type)
+        self._pending_vrefs = []
         try:
             res = self.visit_default(node, newroot, terms)[0]
-        except Exception, ex:
+        except:
+            for vref in self._pending_vrefs:
+                vref.unregister_reference()
             raise
         ored = node.ored()
         if rschema.is_final() or rschema.inlined:
@@ -1434,7 +1438,9 @@ class TermsFiltererVisitor(object):
         # set scope so we can insert types restriction properly
         newvar = newroot.get_variable(node.name)
         newvar.stinfo['scope'] = self.scopes.get(node.variable.scope, newroot)
-        return VariableRef(newvar), node
+        vref = VariableRef(newvar)
+        self._pending_vrefs.append(vref)
+        return vref, node
 
     def visit_constant(self, node, newroot, terms):
         return copy_node(newroot, node), node
