@@ -1374,6 +1374,8 @@ class TermsFiltererVisitor(object):
         try:
             res = self.visit_default(node, newroot, terms)[0]
         except:
+            # when a relation isn't supported, we should dereference potentially
+            # introduced variable refs
             for vref in self._pending_vrefs:
                 vref.unregister_reference()
             raise
