@@ -2110,6 +2110,14 @@ class MSPlannerVCSSource(BasePlannerTC):
                      [])
                     ])
 
+    def test_fully_simplified_extsource(self):
+        self.repo._type_source_cache[999998] = ('Note', 'vcs', 999998)
+        self.repo._type_source_cache[999999] = ('Note', 'vcs', 999999)
+        self._test('Any X, Y WHERE NOT X multisource_rel Y, X eid 999998, Y eid 999999',
+                   [('OneFetchStep', [('Any 999998,999999 WHERE NOT 999998 multisource_rel 999999', [{}])],
+                     None, None, [self.vcs], {}, [])
+                    ])
+
 
 if __name__ == '__main__':
     from logilab.common.testlib import unittest_main

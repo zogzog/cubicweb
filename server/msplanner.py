@@ -352,6 +352,8 @@ class PartPlanInformation(object):
             if source is self.system_source:
                 for const in vconsts:
                     self._set_source_for_term(source, const)
+            elif not self._sourcesterms:
+                self._set_source_for_term(source, const)
             elif source in self._sourcesterms:
                 source_scopes = frozenset(t.scope for t in self._sourcesterms[source])
                 for const in vconsts:
