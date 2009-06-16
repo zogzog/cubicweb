@@ -176,7 +176,7 @@ class DBAPIRequest(RequestSessionMixIn):
         except KeyError:
             # this occurs usually during test execution
             self._ = self.__ = unicode
-        self.debug('request language: %s', self.lang)
+        self.debug('request default language: %s', self.lang)
 
     def decorate_rset(self, rset):
         rset.vreg = self.vreg
