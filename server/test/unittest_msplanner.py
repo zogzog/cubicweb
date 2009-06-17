@@ -2118,6 +2118,15 @@ class MSPlannerVCSSource(BasePlannerTC):
                      None, None, [self.vcs], {}, [])
                     ])
 
+    def test_nonregr_fully_simplified_extsource(self):
+        self.repo._type_source_cache[999998] = ('Note', 'vcs', 999998)
+        self.repo._type_source_cache[999999] = ('Note', 'vcs', 999999)
+        self.repo._type_source_cache[1000000] = ('Note', 'system', 1000000)
+        self._test('DISTINCT Any T,FALSE,L,M WHERE L eid 1000000, M eid 999999, T eid 999998',
+                   [('OneFetchStep', [('DISTINCT Any 999998,FALSE,1000000,999999', [{}])],
+                     None, None, [self.system], {}, [])
+                    ])
+
 
 if __name__ == '__main__':
     from logilab.common.testlib import unittest_main

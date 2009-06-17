@@ -361,7 +361,7 @@ class PartPlanInformation(object):
                         self._set_source_for_term(source, const)
                         # if system source is used, add every rewritten constant
                         # to its supported terms even when associated entity
-                        # doesn't actually comes from it so we get a changes
+                        # doesn't actually come from it so we get a changes
                         # that allequals will return True as expected when
                         # computing needsplit
                         # check const is used in a relation restriction
@@ -555,7 +555,12 @@ class PartPlanInformation(object):
             self.needsplit = False
         elif not self.needsplit:
             if not allequals(self._sourcesterms.itervalues()):
-                self.needsplit = True
+                for terms in self._sourcesterms.itervalues():
+                    if any(x for x in terms if not isinstance(x, Constant)):
+                        self.needsplit = True
+                        return
+                self._sourcesterms = {self.system_source: {}}
+                self.needsplit = False
             else:
                 sample = self._sourcesterms.itervalues().next()
                 if len(sample) > 1:
