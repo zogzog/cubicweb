@@ -140,6 +140,7 @@ class TableView(AnyRsetView):
                 actions += self.form_filter(divid, displaycols, displayfilter,
                                             displayactions)
         elif displayfilter:
+            req.add_css('cubicweb.facets.css')
             actions += self.show_hide_actions(divid, True)
         self.w(u'<div id="%s"' % divid)
         if displayactions:
