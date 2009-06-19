@@ -11,15 +11,15 @@ defined in the `CubicWeb` standard library; or more specific types, that
 
 At this point, it is important to make clear the difference between
 *relation type* and *relation definition*: a *relation type* is only a relation
-name with potentially other additionnal properties (see XXXX), whereas a 
-*relation definition* is a complete triplet 
-"<subject entity type> <relation type> <object entity type>". 
-A relation type could have been implied if none is related to a 
+name with potentially other additionnal properties (see XXXX), whereas a
+*relation definition* is a complete triplet
+"<subject entity type> <relation type> <object entity type>".
+A relation type could have been implied if none is related to a
 relation definition of the schema.
 
 
 All `CubicWeb` built-in types are available : `String`, `Int`, `Float`,
-`Decimal`, `Boolean`, `Date`, `Datetime`, `Time`, `Interval`, `Byte` 
+`Decimal`, `Boolean`, `Date`, `Datetime`, `Time`, `Interval`, `Byte`
 and `Password`.
 They are implicitely imported (as well as the special the function "_"
 for translation :ref:`internationalization`).
@@ -67,7 +67,7 @@ Properties defined below are accessible through the following api:
   RelationSchema.rproperties()
   RelationSchema.rproperty(subjtype, objtype, property name)
 
-* Optional properties for attributes and relations : 
+* Optional properties for attributes and relations :
 
   - `description` : a string describing an attribute or a relation. By default
     this string will be used in the editing form of the entity, which means
@@ -79,7 +79,7 @@ Properties defined below are accessible through the following api:
 
   - `cardinality` : a two character string which specify the cardinality of the
     relation. The first character defines the cardinality of the relation on
-    the subject, and the second on the object. When a relation can have 
+    the subject, and the second on the object. When a relation can have
     multiple subjects or objects, the cardinality applies to all,
     not on a one-to-one basis (so it must be consistent...). The possible
     values are inspired from regular expression syntax :
@@ -92,24 +92,24 @@ Properties defined below are accessible through the following api:
   - `meta` : boolean indicating that the relation is a meta-relation (false by
     default)
 
-* optional properties for attributes : 
+* optional properties for attributes :
 
   - `required` : boolean indicating if the attribute is required (false by default)
 
   - `unique` : boolean indicating if the value of the attribute has to be unique
     or not within all entities of the same type (false by default)
 
-  - `indexed` : boolean indicating if an index needs to be created for this 
+  - `indexed` : boolean indicating if an index needs to be created for this
     attribute in the database (false by default). This is useful only if
     you know that you will have to run numerous searches on the value of this
     attribute.
 
   - `default` : default value of the attribute. In case of date types, the values
     which could be used correspond to the RQL keywords `TODAY` and `NOW`.
-  
+
   - `vocabulary` : specify static possible values of an attribute
 
-* optional properties of type `String` : 
+* optional properties of type `String` :
 
   - `fulltextindexed` : boolean indicating if the attribute is part of
     the full text index (false by default) (*applicable on the type `Byte`
@@ -120,11 +120,11 @@ Properties defined below are accessible through the following api:
 
   - `maxsize` : integer providing the maximum size of the string (no limit by default)
 
-* optional properties for relations : 
+* optional properties for relations :
 
   - `composite` : string indicating that the subject (composite == 'subject')
     is composed of the objects of the relations. For the opposite case (when
-    the object is composed of the subjects of the relation), we just set 
+    the object is composed of the subjects of the relation), we just set
     'object' as value. The composition implies that when the relation
     is deleted (so when the composite is deleted), the composed are also deleted.
 
@@ -137,7 +137,7 @@ By default, the available constraint types are :
 * `SizeConstraint` : allows to specify a minimum and/or maximum size on
   string (generic case of `maxsize`)
 
-* `BoundConstraint` : allows to specify a minimum and/or maximum value on 
+* `BoundConstraint` : allows to specify a minimum and/or maximum value on
   numeric types
 
 * `UniqueConstraint` : identical to "unique=True"
@@ -146,7 +146,7 @@ By default, the available constraint types are :
 
 * `RQLConstraint` : allows to specify a RQL query that has to be satisfied
   by the subject and/or the object of the relation. In this query the variables
-  `S` and `O` are reserved for the entities subject and object of the 
+  `S` and `O` are reserved for the entities subject and object of the
   relation.
 
 * `RQLVocabularyConstraint` : similar to the previous type of constraint except
@@ -160,7 +160,7 @@ XXX note about how to add new constraint
 The security model
 ~~~~~~~~~~~~~~~~~~
 
-The security model of `cubicWeb` is based on `Access Control List`. 
+The security model of `cubicWeb` is based on `Access Control List`.
 The main principles are:
 
 * users and groups of users
@@ -213,13 +213,13 @@ The standard user groups
   This can only be used for the actions `update` and `delete` of an entity
   type.
 
-It is also possible to use specific groups if they are defined in the precreate 
+It is also possible to use specific groups if they are defined in the precreate
 of the cube (``migration/precreate.py``).
 
 
 Use of RQL expression for writing rights
 `````````````````````````````````````````
-It is possible to define RQL expression to provide update permission 
+It is possible to define RQL expression to provide update permission
 (`add`, `delete` and `update`) on relation and entity types.
 
 RQL expression for entity type permission :
@@ -232,13 +232,13 @@ RQL expression for entity type permission :
   respectively on the current entity (on which the action is verified) and
   on the user who send the request
 
-* it is possible to use, in this expression, a special relation 
-  "has_<ACTION>_permission" where the subject is the user and the 
+* it is possible to use, in this expression, a special relation
+  "has_<ACTION>_permission" where the subject is the user and the
   object is a any variable, meaning that the user needs to have
   permission to execute the action <ACTION> on the entities related
-  to this variable 
+  to this variable
 
-For RQL expressions on a relation type, the principles are the same except 
+For RQL expressions on a relation type, the principles are the same except
 for the following :
 
 * you have to use the class `RQLExpression` in the case of a non-final relation
@@ -248,7 +248,7 @@ for the following :
   which the action is being verified) and the user who executed the query
 
 * we can also defined rights on attributes of an entity (non-final relation),
-  knowing that : 
+  knowing that :
 
   - to defines RQL expression, we have to use the class `RQLExpression`
     in which X represents the entity the attribute belongs to
@@ -260,17 +260,17 @@ for the following :
 
   Potentially, the use of an RQL expression to add an entity or a relation
   can cause problems for the user interface, because if the expression uses
-  the entity or the relation to create, then we are not able to verify the 
+  the entity or the relation to create, then we are not able to verify the
   permissions before we actually add the entity (please note that this is
   not a problem for the RQL server at all, because the permissions checks are
-  done after the creation). In such case, the permission check methods 
-  (check_perm, has_perm) can indicate that the user is not allowed to create 
-  this entity but can obtain the permission. 
+  done after the creation). In such case, the permission check methods
+  (check_perm, has_perm) can indicate that the user is not allowed to create
+  this entity but can obtain the permission.
   To compensate this problem, it is usually necessary, for such case,
   to use an action that reflects the schema permissions but which enables
   to check properly the permissions so that it would show up if necessary.
 
-  
+
 Use of RQL expression for reading rights
 ````````````````````````````````````````
 
@@ -318,17 +318,17 @@ The name of the Python attribute corresponds to the name of the attribute
 or the relation in `CubicWeb` application.
 
 An attribute is defined in the schema as follows::
-    
+
     attr_name = attr_type(properties*)
 
 where `attr_type` is one of the type listed above and `properties` is
 a list of  the attribute needs to statisfy (see :ref:`properties`
-for more details). 
+for more details).
 
 
 * relations can be defined by using `ObjectRelation` or `SubjectRelation`.
   The first argument of `SubjectRelation` or `ObjectRelation` gives respectively
-  the object/subject entity type of the relation. This could be :  
+  the object/subject entity type of the relation. This could be :
 
   * a string corresponding to an entity type
 
@@ -337,7 +337,7 @@ for more details).
   * special string such as follows :
 
     - "**" : all types of entities
-    - "*" : all types of non-meta entities 
+    - "*" : all types of non-meta entities
     - "@" : all types of meta entities but not system entities (e.g. used for
       the basic schema description)
 
@@ -356,9 +356,9 @@ XXX add note about defining relation type / definition
 
 A relation is defined by a Python class heriting `RelationType`. The name
 of the class corresponds to the name of the type. The class then contains
-a description of the properties of this type of relation, and could as well 
+a description of the properties of this type of relation, and could as well
 contain a string for the subject and a string for the object. This allows to create
-new definition of associated relations, (so that the class can have the 
+new definition of associated relations, (so that the class can have the
 definition properties from the relation) for example ::
 
   class locked_by(RelationType):

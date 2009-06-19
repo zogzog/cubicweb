@@ -35,7 +35,7 @@ For Ubuntu Hardy::
 
 You can now install the required packages with the following command::
 
-  apt-get update 
+  apt-get update
   apt-get install cubicweb cubicweb-dev
 
 `cubicweb` installs the framework itself, allowing you to create
@@ -89,12 +89,12 @@ Environment configuration
 -------------------------
 
 If you installed `CubicWeb` by cloning the Mercurial forest, then you
-will need to update the environment variable PYTHONPATH by adding  
+will need to update the environment variable PYTHONPATH by adding
 the path to the forest ``cubicweb``:
 
 Add the following lines to either `.bashrc` or `.bash_profile` to configure
 your development environment ::
-  
+
   export PYTHONPATH=/full/path/to/cubicweb-forest
 
 If you installed the debian packages, no configuration is required.
@@ -134,34 +134,34 @@ Postgres configuration
 
     $ initdb -D /path/to/pgsql
 
-  Once initialized, start the database server Postgres 
+  Once initialized, start the database server Postgres
   with the command::
-  
+
     $ postgres -D /path/to/psql
 
   If you cannot execute this command due to permission issues, please
   make sure that your username has write access on the database.
   ::
- 
+
     $ chown username /path/to/pgsql
 
 * The database authentication can be either set to `ident sameuser`
-  or `md5`. 
+  or `md5`.
   If set to `md5`, make sure to use an existing user
   of your database.
   If set to `ident sameuser`, make sure that your
   client's operating system user name has a matching user in
   the database. If not, please do as follow to create a user::
-    
+
     $ su
     $ su - postgres
     $ createuser -s -P username
 
   The option `-P` (for password prompt), will encrypt the password with
-  the method set in the configuration file ``pg_hba.conf``. 
+  the method set in the configuration file ``pg_hba.conf``.
   If you do not use this option `-P`, then the default value will be null
   and you will need to set it with::
-    
+
     $ su postgres -c "echo ALTER USER username WITH PASSWORD 'userpasswd' | psql"
 
   This login/password will be requested when you will create an

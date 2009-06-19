@@ -136,7 +136,7 @@ def deserialize_schema(schema, session):
                                {'x': etype, 'n': netype})
             # XXX should be donne as well on sqlite based sources
             if not etype in OLD_SCHEMA_TYPES and \
-               (getattr(dbhelper, 'case_sensitive', False) 
+               (getattr(dbhelper, 'case_sensitive', False)
                 or etype.lower() != netype.lower()):
                 session.system_sql('ALTER TABLE %s%s RENAME TO %s%s' % (
                     sqlutils.SQL_PREFIX, etype, sqlutils.SQL_PREFIX, netype))

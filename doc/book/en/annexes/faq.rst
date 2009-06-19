@@ -124,7 +124,7 @@ How to implement security?
         """link a version to its project. A version is necessarily linked
         to one and only one project. """
         # some lines voluntarily missing
-        permissions = {'read': ('managers', 'users', 'guests',), 
+        permissions = {'read': ('managers', 'users', 'guests',),
                        'delete': ('managers', ),
                        'add': ('managers', 'logilab',
                             RRQLExpression('O require_permission P, P name "add_version",
@@ -185,10 +185,10 @@ How to update a database after a schema modification?
 
   It depends on what has been modified in the schema.
 
-  * Update of an attribute permissions and properties: 
+  * Update of an attribute permissions and properties:
     ``synchronize_eschema('MyEntity')``.
 
-  * Update of a relation permissions and properties: 
+  * Update of a relation permissions and properties:
     ``synchronize_rschema('MyRelation')``.
 
   * Add an attribute: ``add_attribute('MyEntityType', 'myattr')``.
@@ -304,7 +304,7 @@ How to format an entity date attribute?
   the site configuration panel ``http://appurl/view?vid=systempropertiesform``
   and then set ``ui.date`` and/or ``ui.datetime``.
   Then in the view code, use::
-    
+
     self.format_date(entity.date_attribute)
 
 Can PostgreSQL and CubicWeb authentication work with kerberos ?
@@ -315,7 +315,7 @@ Can PostgreSQL and CubicWeb authentication work with kerberos ?
   file while leaving the password blank. It should be enough for your instance
   to connect to postgresql with a kerberos ticket.
 
-  
+
 How to load data from a script?
 -------------------------------
 
@@ -357,7 +357,7 @@ How to reset the password for user joe?
     >>> from cubicweb.server.utils import crypt_password
     >>> crypt_password('joepass')
     'qHO8282QN5Utg'
-    >>> 
+    >>>
 
   and paste it in the database::
 

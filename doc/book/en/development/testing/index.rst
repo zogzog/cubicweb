@@ -28,11 +28,11 @@ functional tests for your entities, views, hooks, etc...
 Email notifications tests
 -------------------------
 When running tests potentially generated e-mails are not really
-sent but is found in the list `MAILBOX` of module `cubicweb.devtools.apptest`. 
+sent but is found in the list `MAILBOX` of module `cubicweb.devtools.apptest`.
 This list is reset at each test *setUp* (by the setUp of classes `EnvBasedTC`
 and `RepositoryBasedTC`).
 
-	
+
 You can test your notifications by analyzing the contents of this list, which
 contains objects with two attributes:
 * `recipients`, the list of recipients

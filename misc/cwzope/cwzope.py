@@ -5,7 +5,7 @@
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 :license: GNU Lesser General Public License, v2.1 - http://www.gnu.org/licenses
 """
-from AccessControl import getSecurityManager 
+from AccessControl import getSecurityManager
 
 from cubicweb.dbapi import connect, Connection, Cursor
 from cubicweb.common.utils import ResultSet, ResultSetIterator, ResultSetRow, Entity

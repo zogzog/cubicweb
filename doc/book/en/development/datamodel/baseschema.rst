@@ -24,7 +24,7 @@ Entity types used to manage workflows
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 * `State`, workflow state
 * `Transition`, workflow transition
-* `TrInfo`, record of a transition trafic for an entity 
+* `TrInfo`, record of a transition trafic for an entity
 
 Other entity types
 ~~~~~~~~~~~~~~~~~~

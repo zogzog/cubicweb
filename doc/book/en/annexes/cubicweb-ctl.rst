@@ -28,7 +28,7 @@ Command to create a cube
 * ``newcube``, create a new cube on the file system based on the name
   given in the parameters. This command create a cube from an application
   skeleton that includes default files required for debian packaging.
-  
+
 
 Command to create an instance
 -----------------------------
@@ -75,7 +75,7 @@ Commands to maintain i18n catalogs
 ----------------------------------
 * ``i18ncubicweb``, regenerates messages catalogs of the `CubicWeb` library
 * ``i18ncube``, regenerates the messages catalogs of a cube
-* ``i18ninstance``, recompiles the messages catalogs of an instance. 
+* ``i18ninstance``, recompiles the messages catalogs of an instance.
   This is automatically done while upgrading.
 
 See also chapter :ref:`internationalisation`.
@@ -116,7 +116,7 @@ Create first your new cube cube ::
 
 This will create a new cube in ``/path/to/forest/cubicweb/cubes/<mycube>``
 for a Mercurial forest installation, or in ``/usr/share/cubicweb/cubes``
-for a debian packages installation, and then create an instance as 
+for a debian packages installation, and then create an instance as
 explained just above.
 
 

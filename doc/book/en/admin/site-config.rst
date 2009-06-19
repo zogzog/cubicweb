@@ -14,12 +14,12 @@ Navigation
 This menu provides you a way to adjust some navigation options depending on
 your needs, such as the number of entities to display by page of results.
 Follows the detailled list of available options :
-  
+
 * navigation.combobox-limit : maximum number of entities to display in related
   combo box (sample format: 23)
-* navigation.page-size : maximum number of objects displayed by page of results 
+* navigation.page-size : maximum number of objects displayed by page of results
   (sample format: 23)
-* navigation.related-limit : maximum number of related entities to display in 
+* navigation.related-limit : maximum number of related entities to display in
   the primary view (sample format: 23)
 * navigation.short-line-size : maximum number of characters in short description
   (sample format: 23)
@@ -47,17 +47,17 @@ Follows the detailled list of available options :
 Actions
 ~~~~~~~
 This menu provides a way to configure the context in which you expect the actions
-to be displayed to the user and if you want the action to be visible or not. 
-You must have notice that when you view a list of entities, an action box is 
-available on the left column which display some actions as well as a drop-down 
-menu for more actions. 
+to be displayed to the user and if you want the action to be visible or not.
+You must have notice that when you view a list of entities, an action box is
+available on the left column which display some actions as well as a drop-down
+menu for more actions.
 
 The context available are :
 
 * mainactions : actions listed in the left box
 * moreactions : actions listed in the `more` menu of the left box
 * addrelated : add actions listed in the left box
-* useractions : actions listed in the first section of drop-down menu 
+* useractions : actions listed in the first section of drop-down menu
   accessible from the right corner user login link
 * siteactions : actions listed in the second section of drop-down menu
   accessible from the right corner user login link
@@ -65,15 +65,15 @@ The context available are :
 
 Boxes
 ~~~~~
-The application has already a pre-defined set of boxes you can use right away. 
+The application has already a pre-defined set of boxes you can use right away.
 This configuration section allows you to place those boxes where you want in the
-application interface to customize it. 
+application interface to customize it.
 
 The available boxes are :
 
 * actions box : box listing the applicable actions on the displayed data
 
-* boxes_blog_archives_box : box listing the blog archives 
+* boxes_blog_archives_box : box listing the blog archives
 
 * possible views box : box listing the possible views for the displayed data
 
@@ -81,7 +81,7 @@ The available boxes are :
 
 * search box : search box
 
-* startup views box : box listing the configuration options available for 
+* startup views box : box listing the configuration options available for
   the application site, such as `Preferences` and `Site Configuration`
 
 Components

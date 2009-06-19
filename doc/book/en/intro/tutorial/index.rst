@@ -9,7 +9,7 @@ Tutorial
 object-oriented design.
 
 A `cube` is a component that includes a model defining the data types and a set of
-views to display the data. 
+views to display the data.
 
 An application is a `cube`, but usually an application is built by assembling
 a few smaller cubes.

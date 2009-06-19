@@ -134,7 +134,7 @@ New in 3.2: RichString
 see :ref:`yams.BASE_TYPES`
 
 Data level security is defined by setting permissions on entity and relation types.
-  
+
 A schema consist of parts detailed below.
 
 
@@ -215,7 +215,7 @@ appropriately is an essential part of the construction of well behaved cubes.
 When no score is higher than the others, an exception is raised in development
 mode to let you know that the engine was not able to identify the view to
 apply. This error is silented in production mode and one of the objects with the
-higher score is picked. 
+higher score is picked.
 
 If no object has a positive score, ``NoSelectableObject`` exception is raised.
 

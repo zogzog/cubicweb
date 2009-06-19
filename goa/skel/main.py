@@ -41,7 +41,7 @@ custom.postinit(vreg)
 from cubicweb.wsgi.handler import CubicWebWSGIApplication
 application = CubicWebWSGIApplication(config, vreg=vreg)
 
-# main function so this handler module is cached 
+# main function so this handler module is cached
 def main():
     from wsgiref.handlers import CGIHandler
     CGIHandler().run(application)

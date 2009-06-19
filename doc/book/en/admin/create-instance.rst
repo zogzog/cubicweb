@@ -7,7 +7,7 @@ Instance creation
 -----------------
 
 Now that we created our cube, we can create an instance to view our
-application in a web browser. To do so we will use a `all-in-one` 
+application in a web browser. To do so we will use a `all-in-one`
 configuration to simplify things ::
 
   cubicweb-ctl create -c all-in-one mycube myinstance
@@ -45,8 +45,8 @@ located in :file:`~/etc/cubicweb.d/myinstance/*`. To launch it, you just type ::
 The option `-D` specify the *debug mode* : the instance is not running in
 server mode and does not disconnect from the termnial, which simplifies debugging
 in case the instance is not properly launched. You can see how it looks by
-visiting the URL `http://localhost:8080` (the port number depends of your 
-configuration). To login, please use the cubicweb administrator login/psswd you 
+visiting the URL `http://localhost:8080` (the port number depends of your
+configuration). To login, please use the cubicweb administrator login/psswd you
 defined when you created the instance.
 
 To shutdown the instance, Crtl-C in the terminal window is enough.

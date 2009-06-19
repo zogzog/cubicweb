@@ -19,7 +19,7 @@ def header(ustring):
 def addrheader(uaddr, uname=None):
     # even if an email address should be ascii, encode it using utf8 since
     # application tests may generate non ascii email address
-    addr = uaddr.encode('UTF-8') 
+    addr = uaddr.encode('UTF-8')
     if uname:
         return '%s <%s>' % (header(uname).encode(), addr)
     return addr
