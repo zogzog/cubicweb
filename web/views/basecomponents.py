@@ -148,8 +148,10 @@ class ApplicationName(component.Component):
     site_wide = True
 
     def call(self):
-        self.w(u'<span id="appliName"><a href="%s">%s</a></span>' % (
-            self.req.base_url(), self.req.property_value('ui.site-title')))
+        title = self.req.property_value('ui.site-title')
+        if title:
+            self.w(u'<span id="appliName"><a href="%s">%s</a></span>' % (
+                self.req.base_url(), title))
 
 
 class SeeAlsoVComponent(component.RelatedObjectsVComponent):

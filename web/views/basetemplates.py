@@ -431,7 +431,7 @@ class LogFormTemplate(View):
         self.w(u'<div id="%s" class="%s">' % (id, klass))
         if title:
             self.w(u'<div id="loginTitle">%s</div>'
-                   % self.req.property_value('ui.site-title'))
+                   % (self.req.property_value('ui.site-title') or u'&nbsp;'))
         self.w(u'<div id="loginContent">\n')
 
         if message:
