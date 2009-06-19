@@ -63,32 +63,6 @@ def bw_normalize_etype(etype):
         etype = ETYPE_NAME_MAP[etype]
     return etype
 
-# monkey path yams.builder.RelationDefinition to support a new wildcard type '@'
-# corresponding to system entity (ie meta but not schema)
-def _actual_types(self, schema, etype):
-    # two bits of error checking & reporting :
-    if type(etype) not in (str, list, tuple):
-        raise RuntimeError, ('Entity types must not be instances but strings or'
-                             ' list/tuples thereof. Ex. (bad, good) : '
-                             'SubjectRelation(Foo), SubjectRelation("Foo"). '
-                             'Hence, %r is not acceptable.' % etype)
-    # real work :
-    if etype == '**':
-        return self._pow_etypes(schema)
-    if isinstance(etype, (tuple, list)):
-        return etype
-    if '*' in etype or '@' in etype:
-        assert len(etype) in (1, 2)
-        etypes = ()
-        if '*' in etype:
-            etypes += tuple(self._wildcard_etypes(schema))
-        # XXX deprecate, too clumsy
-        if '@' in etype:
-            etypes += tuple(system_etypes(schema))
-        return etypes
-    return (etype,)
-ybo.RelationDefinition._actual_types = _actual_types
-
 
 ## cubicweb provides a RichString class for convenience
 class RichString(ybo.String):
@@ -296,6 +270,15 @@ class CubicWebEntitySchema(EntitySchema):
             if rschema.type == 'has_text':
                 continue
             yield rschema, attrschema
+
+    def main_attribute(self):
+        """convenience method that returns the *main* (i.e. the first non meta)
+        attribute defined in the entity schema
+        """
+        for rschema, _ in self.attribute_definitions():
+            if not (rschema in META_RELATIONS_TYPES
+                    or self.is_metadata(rschema)):
+                return rschema
 
     def add_subject_relation(self, rschema):
         """register the relation schema as possible subject relation"""
