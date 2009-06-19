@@ -17,7 +17,6 @@ class CWEType(MetaEntityType):
                   unique=True, maxsize=64)
     description = RichString(internationalizable=True,
                              description=_('semantic description of this entity type'))
-    meta = Boolean(description=_('is it an application entity type or not ?'))
     # necessary to filter using RQL
     final = Boolean(description=_('automatic'))
 
@@ -30,7 +29,6 @@ class CWRType(MetaEntityType):
                                 default='text/plain', constraints=[format_constraint])
     description = String(internationalizable=True,
                          description=_('semantic description of this relation type'))
-    meta = Boolean(description=_('is it an application relation type or not ?'))
     symetric = Boolean(description=_('is this relation equivalent in both direction ?'))
     inlined = Boolean(description=_('is this relation physically inlined? you should know what you\'re doing if you are changing this!'))
     fulltext_container = String(description=_('if full text content of subject/object entity '
