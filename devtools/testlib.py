@@ -44,7 +44,7 @@ def how_many_dict(schema, cursor, how_many, skip):
     # compute how many entities by type we need to be able to satisfy relation constraint
     relmap = {}
     for rschema in schema.relations():
-        if rschema.meta or rschema.is_final(): # skip meta relations
+        if rschema.is_final():
             continue
         for subj, obj in rschema.iter_rdefs():
             card = rschema.rproperty(subj, obj, 'cardinality')

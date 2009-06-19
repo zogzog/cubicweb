@@ -485,7 +485,7 @@ class Entity(AppRsetObject, dict):
         assert self.has_eid()
         execute = self.req.execute
         for rschema in self.e_schema.subject_relations():
-            if rschema.meta or rschema.is_final():
+            if rschema.is_final() or rschema.meta:
                 continue
             # skip already defined relations
             if getattr(self, rschema.type):

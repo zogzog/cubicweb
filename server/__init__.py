@@ -24,7 +24,7 @@ def init_repository(config, interactive=True, drop=False, vreg=None):
     a initial user)
     """
     from glob import glob
-    from cubicweb.schema import BASEGROUPS
+    from yams import BASE_GROUPS
     from cubicweb.dbapi import in_memory_cnx
     from cubicweb.server.repository import Repository
     from cubicweb.server.utils import manager_userpasswd
@@ -93,7 +93,7 @@ def init_repository(config, interactive=True, drop=False, vreg=None):
             login, pwd = unicode(source['db-user']), source['db-password']
     print 'inserting default user and groups'
     needisfix = []
-    for group in BASEGROUPS:
+    for group in BASE_GROUPS:
         rset = session.execute('INSERT CWGroup X: X name %(name)s',
                                {'name': unicode(group)})
         needisfix.append( (rset.rows[0][0], rset.description[0][0]) )

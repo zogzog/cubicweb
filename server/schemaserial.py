@@ -114,10 +114,10 @@ def deserialize_schema(schema, session):
     index = {}
     permsdict = deserialize_ertype_permissions(session)
     schema.reading_from_database = True
-    for eid, etype, desc, meta in session.execute('Any X, N, D, M WHERE '
-                                                  'X is CWEType, X name N, '
-                                                  'X description D, X meta M',
-                                                  build_descr=False):
+    for eid, etype, desc in session.execute('Any X, N, D WHERE '
+                                            'X is CWEType, X name N, '
+                                            'X description D',
+                                            build_descr=False):
         # base types are already in the schema, skip them
         if etype in schemamod.BASE_TYPES:
             # just set the eid
@@ -152,7 +152,7 @@ def deserialize_schema(schema, session):
             repo.clear_caches(tocleanup)
             session.commit(False)
             etype = netype
-        etype = ybo.EntityType(name=etype, description=desc, meta=meta, eid=eid)
+        etype = ybo.EntityType(name=etype, description=desc, eid=eid)
         eschema = schema.add_entity_type(etype)
         index[eid] = eschema
         set_perms(eschema, permsdict.get(eid, {}))
@@ -167,9 +167,9 @@ def deserialize_schema(schema, session):
             seschema = schema.eschema(stype)
             eschema._specialized_type = stype
             seschema._specialized_by.append(etype)
-    for eid, rtype, desc, meta, sym, il in session.execute(
-        'Any X,N,D,M,S,I WHERE X is CWRType, X name N, X description D, '
-        'X meta M, X symetric S, X inlined I', build_descr=False):
+    for eid, rtype, desc, sym, il in session.execute(
+        'Any X,N,D,S,I WHERE X is CWRType, X name N, X description D, '
+        'X symetric S, X inlined I', build_descr=False):
         try:
             # bw compat: fulltext_container added in 2.47
             ft_container = session.execute('Any FTC WHERE X eid %(x)s, X fulltext_container FTC',
@@ -177,7 +177,7 @@ def deserialize_schema(schema, session):
         except:
             ft_container = None
             session.rollback(False)
-        rtype = ybo.RelationType(name=rtype, description=desc, meta=bool(meta),
+        rtype = ybo.RelationType(name=rtype, description=desc,
                                  symetric=bool(sym), inlined=bool(il),
                                  fulltext_container=ft_container, eid=eid)
         rschema = schema.add_relation_type(rtype)
@@ -326,7 +326,6 @@ def _ervalues(erschema):
         raise Exception("can't decode %s [was %s]" % (erschema.description, e))
     return {
         'name': type_,
-        'meta': erschema.meta,
         'final': erschema.is_final(),
         'description': desc,
         }

@@ -6,6 +6,7 @@
 :license: GNU Lesser General Public License, v2.1 - http://www.gnu.org/licenses
 """
 __docformat__ = "restructuredtext en"
+_ = unicode
 
 import re
 from logging import getLogger
@@ -30,11 +31,24 @@ from yams import schema
 schema.use_py_datetime()
 nodes.use_py_datetime()
 
-_ = unicode
+#  set of meta-relations available for every entity types
+META_RELATIONS_TYPES = set((
+    'owned_by', 'created_by', 'is', 'is_instance_of', 'identity',
+    'eid', 'creation_date', 'modification_date', 'has_text',
+    )))
 
-BASEGROUPS = ('managers', 'users', 'guests', 'owners')
+#  set of entity and relation types used to build the schema
+SCHEMA_TYPES = set((
+    'CWEType', 'CWRType', 'CWAttribute', 'CWRelation',
+    'CWConstraint', 'CWConstraintType', 'RQLExpression',
+    'relation_type', 'from_entity', 'to_entity',
+    'constrained_by', 'cstrtype',
+    # XXX those are not really "schema" entity types
+    #     but we usually don't want them as @* targets
+    'CWProperty', 'CWPermission', 'State', 'Transition',
+    ))
 
-LOGGER = getLogger('cubicweb.schemaloader')
+_LOGGER = getLogger('cubicweb.schemaloader')
 
 # schema entities created from serialized schema have an eid rproperty
 ybo.ETYPE_PROPERTIES += ('eid',)
@@ -68,6 +82,7 @@ def _actual_types(self, schema, etype):
         etypes = ()
         if '*' in etype:
             etypes += tuple(self._wildcard_etypes(schema))
+        # XXX deprecate, too clumsy
         if '@' in etype:
             etypes += tuple(system_etypes(schema))
         return etypes
@@ -242,7 +257,7 @@ def system_etypes(schema):
     """return system entity types only: skip final, schema and application entities
     """
     for eschema in schema.entities():
-        if eschema.is_final() or eschema.schema_entity() or not eschema.meta:
+        if eschema.is_final() or eschema.schema_entity():
             continue
         yield eschema.type
 
@@ -321,7 +336,7 @@ class CubicWebEntitySchema(EntitySchema):
 
     def schema_entity(self):
         """return True if this entity type is used to build the schema"""
-        return self.type in self.schema.schema_entity_types()
+        return self.type in SCHEMA_TYPES
 
     def check_perm(self, session, action, eid=None):
         # NB: session may be a server session or a request object
@@ -358,6 +373,9 @@ class CubicWebRelationSchema(RelationSchema):
             eid = getattr(rdef, 'eid', None)
         self.eid = eid
 
+    @property
+    def meta(self):
+        return self.type in META_RELATIONS_TYPES
 
     def update(self, subjschema, objschema, rdef):
         super(CubicWebRelationSchema, self).update(subjschema, objschema, rdef)
@@ -396,8 +414,8 @@ class CubicWebRelationSchema(RelationSchema):
                (target == 'object' and card[1])
 
     def schema_relation(self):
-        return self.type in ('relation_type', 'from_entity', 'to_entity',
-                             'constrained_by', 'cstrtype')
+        """return True if this relation type is used to build the schema"""
+        return self.type in SCHEMA_TYPES
 
     def physical_mode(self):
         """return an appropriate mode for physical storage of this relation type:
@@ -456,14 +474,6 @@ class CubicWebSchema(Schema):
         rschema = self.add_relation_type(ybo.RelationType('identity', meta=True))
         rschema.final = False
         rschema.set_default_groups()
-
-    def schema_entity_types(self):
-        """return the list of entity types used to build the schema"""
-        return frozenset(('CWEType', 'CWRType', 'CWAttribute', 'CWRelation',
-                          'CWConstraint', 'CWConstraintType', 'RQLExpression',
-                          # XXX those are not really "schema" entity types
-                          #     but we usually don't want them as @* targets
-                          'CWProperty', 'CWPermission', 'State', 'Transition'))
 
     def add_entity_type(self, edef):
         edef.name = edef.name.encode()
@@ -636,8 +646,8 @@ class RQLExpression(object):
             raise RQLSyntaxError(expression)
         for mainvar in mainvars.split(','):
             if len(self.rqlst.defined_vars[mainvar].references()) <= 2:
-                LOGGER.warn('You did not use the %s variable in your RQL expression %s',
-                            mainvar, self)
+                _LOGGER.warn('You did not use the %s variable in your RQL '
+                             'expression %s', mainvar, self)
 
     def __str__(self):
         return self.full_rql

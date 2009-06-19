@@ -6,11 +6,11 @@
 :license: GNU Lesser General Public License, v2.1 - http://www.gnu.org/licenses
 """
 __docformat__ = "restructuredtext en"
+_ = unicode
 
 from logilab.common.ureports import Section, Title, Table, Link, Span, Text
 from yams.schema2dot import CARD_MAP
 
-_ = unicode
 I18NSTRINGS = [_('read'), _('add'), _('delete'), _('update'), _('order')]
 
 class SchemaViewer(object):
@@ -38,8 +38,7 @@ class SchemaViewer(object):
                        klass='acl')
 
 
-    def visit_schema(self, schema, display_relations=0,
-                     skiprels=(), skipmeta=True):
+    def visit_schema(self, schema, display_relations=0, skiptypes=()):
         """get a layout for a whole schema"""
         title = Title(self.req._('Schema %s') % schema.name,
                       klass='titleUnderline')
@@ -48,21 +47,15 @@ class SchemaViewer(object):
                                            klass='titleUnderline'),))
         layout.append(esection)
         eschemas = [eschema for eschema in schema.entities()
-                    if not eschema.is_final()]
-        if skipmeta:
-            eschemas = [eschema for eschema in eschemas
-                        if not eschema.meta]
+                    if not (eschema.is_final() or eschema in skiptypes)]
         for eschema in sorted(eschemas):
-            esection.append(self.visit_entityschema(eschema, skiprels))
+            esection.append(self.visit_entityschema(eschema, skiptypes))
         if display_relations:
             title = Title(self.req._('Relations'), klass='titleUnderline')
             rsection = Section(children=(title,))
             layout.append(rsection)
             relations = [rschema for rschema in schema.relations()
-                         if not (rschema.is_final() or rschema.type in skiprels)]
-            if skipmeta:
-                relations = [rschema for rschema in relations
-                             if not rschema.meta]
+                         if not (rschema.is_final() or rschema.type in skiptypes)]
             keys = [(rschema.type, rschema) for rschema in relations]
             for key, rschema in sorted(keys):
                 relstr = self.visit_relationschema(rschema)
@@ -107,17 +100,13 @@ class SchemaViewer(object):
     def stereotype(self, name):
         return Span((' <<%s>>' % name,), klass='stereotype')
 
-    def visit_entityschema(self, eschema, skiprels=()):
+    def visit_entityschema(self, eschema, skiptypes=()):
         """get a layout for an entity schema"""
         etype = eschema.type
         layout = Section(children=' ', klass='clear')
         layout.append(Link(etype,'&nbsp;' , id=etype)) # anchor
         title = Link(self.eschema_link_url(eschema), etype)
-        if eschema.meta:
-            stereotype = self.stereotype('meta')
-            boxchild = [Section(children=(title, ' (%s)'%eschema.display_name(self.req), stereotype), klass='title')]
-        else:
-            boxchild = [Section(children=(title, ' (%s)'%eschema.display_name(self.req)), klass='title')]
+        boxchild = [Section(children=(title, ' (%s)'% eschema.display_name(self.req)), klass='title')]
         table = Table(cols=4, rheaders=1,
                       children=self._entity_attributes_data(eschema))
         boxchild.append(Section(children=(table,), klass='body'))
@@ -129,7 +118,7 @@ class SchemaViewer(object):
         rels = []
         first = True
         for rschema, targetschemas, x in eschema.relation_definitions():
-            if rschema.type in skiprels:
+            if rschema.type in skiptypes:
                 continue
             if not (rschema.has_local_role('read') or rschema.has_perm(self.req, 'read')):
                 continue

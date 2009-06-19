@@ -154,7 +154,11 @@ primaryview_display_ctrl = DisplayCtrlRelationTags('primaryview_display_ctrl',
 # * 'schema'
 # * 'subobject' (not displayed by default)
 
-indexview_etype_section = {'EmailAddress': 'subobject'}
+indexview_etype_section = {'EmailAddress': 'subobject',
+                           'CWUser': 'system',
+                           'CWGroup': 'system',
+                           'CWPermission': 'system',
+                           }
 
 
 # autoform.AutomaticEntityForm configuration ##################################
