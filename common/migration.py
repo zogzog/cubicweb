@@ -328,14 +328,13 @@ type "exit" or Ctrl-D to quit the shell and resume operation"""
             self.config.add_cubes(newcubes)
         return newcubes
 
-    def cmd_remove_cube(self, cube):
+    def cmd_remove_cube(self, cube, removedeps=True):
+        if removedeps:
+            toremove = self.config.expand_cubes([cube])
+        else:
+            toremove = (cube,)
         origcubes = self.config._cubes
-        basecubes = list(origcubes)
-        for pkg in self.config.expand_cubes([cube]):
-            try:
-                basecubes.remove(pkg)
-            except ValueError:
-                continue
+        basecubes = [c for c in origcubes if not c in toremove]
         self.config._cubes = tuple(self.config.expand_cubes(basecubes))
         removed = [p for p in origcubes if not p in self.config._cubes]
         assert cube in removed, \
