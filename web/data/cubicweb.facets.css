@@ -1,7 +1,7 @@
 #filterbox fieldset{
  margin: 0px;
  padding: 0px;
-} 
+}
 
 div.facet {
  margin-bottom: 8px;
@@ -14,11 +14,11 @@ div.facetTitle, div.bkSearch  {
  font-size: 80%;
  color: #000;
  margin-bottom: 2px;
- cursor: pointer; 
+ cursor: pointer;
  font: bold 100% Georgia;
 }
 
-div.facetTitle a { 
+div.facetTitle a {
  padding-left: 10px;
  background: transparent url("puce.png") 0% 50% no-repeat;
  }
@@ -26,12 +26,12 @@ div.facetTitle a {
 div.facetBody {
 }
 
-.opened{  
- color: #000 !important; 
+.opened{
+ color: #000 !important;
 }
 
 div.overflowed{
-  height: 12em; 
+  height: 12em;
   overflow-y: auto;
 }
 
@@ -50,12 +50,12 @@ clear: both
 }
 
 div.facetValue img{
- float: left; 
+ float: left;
  background: #fff;
 }
 
 div.facetValue a {
- margin-left: 20px; 
+ margin-left: 20px;
  display: block;
  margin-top: -6px; /* FIXME why do we need this ? */
 }
@@ -78,11 +78,11 @@ div#filter_box {
 }
 
 
-div.facetCheckBox{ 
+div.facetCheckBox{
  line-height:0.8em;
  }
 
-.facet input{ 
+.facet input{
  margin-top:3px;
  border:1px solid #ccc;
  font-size:11px;
