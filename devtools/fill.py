@@ -10,7 +10,7 @@ __docformat__ = "restructuredtext en"
 
 from random import randint, choice
 from copy import deepcopy
-from datetime import datetime, date, timedelta
+from datetime import datetime, date, time#timedelta
 from decimal import Decimal
 
 from yams.constraints import (SizeConstraint, StaticVocabularyConstraint,
@@ -163,7 +163,7 @@ title
 
     def generate_time(self, attrname, index):
         """generates a random time (format is ' HH:MM')"""
-        return timedelta(0, 11, index%60) #'11:%02d' % (index % 60)
+        return time(11, index%60) #'11:%02d' % (index % 60)
 
     def generate_datetime(self, attrname, index):
         """generates a random date (format is 'yyyy-mm-dd HH:MM')"""
