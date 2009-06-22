@@ -109,7 +109,7 @@ def deserialize_schema(schema, session):
                                                        ETYPE_NAME_MAP[etype])
                 print sql
                 sqlcu.execute(sql)
-        # other table renaming done once schema has been readen
+        # other table renaming done once schema has been read
     # print 'reading schema from the database...'
     index = {}
     permsdict = deserialize_ertype_permissions(session)
