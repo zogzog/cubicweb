@@ -6,7 +6,7 @@
 :license: GNU Lesser General Public License, v2.1 - http://www.gnu.org/licenses
 """
 
-from cubicweb.schema import format_constraint
+from cubicweb.schema import RichString
 
 
 # not restricted since as "is" is handled as other relations, guests need
@@ -25,10 +25,8 @@ class CWRType(MetaEntityType):
     """define a relation type, used to build the application schema"""
     name = String(required=True, indexed=True, internationalizable=True,
                   unique=True, maxsize=64)
-    description_format = String(meta=True, internationalizable=True, maxsize=50,
-                                default='text/plain', constraints=[format_constraint])
-    description = String(internationalizable=True,
-                         description=_('semantic description of this relation type'))
+    description = RichString(internationalizable=True,
+                             description=_('semantic description of this relation type'))
     symetric = Boolean(description=_('is this relation equivalent in both direction ?'))
     inlined = Boolean(description=_('is this relation physically inlined? you should know what you\'re doing if you are changing this!'))
     fulltext_container = String(description=_('if full text content of subject/object entity '
@@ -65,10 +63,8 @@ class CWAttribute(MetaEntityType):
     internationalizable = Boolean(description=_('is this attribute\'s value translatable'))
     defaultval = String(maxsize=256)
 
-    description_format = String(meta=True, internationalizable=True, maxsize=50,
-                                default='text/plain', constraints=[format_constraint])
-    description = String(internationalizable=True,
-                         description=_('semantic description of this attribute'))
+    description = RichString(internationalizable=True,
+                             description=_('semantic description of this attribute'))
 
 
 CARDINALITY_VOCAB = [_('?*'), _('1*'), _('+*'), _('**'),
@@ -105,10 +101,8 @@ class CWRelation(MetaEntityType):
                        vocabulary=('', _('subject'), _('object')),
                        maxsize=8, default=None)
 
-    description_format = String(meta=True, internationalizable=True, maxsize=50,
-                                default='text/plain', constraints=[format_constraint])
-    description = String(internationalizable=True,
-                         description=_('semantic description of this relation'))
+    description = RichString(internationalizable=True,
+                             description=_('semantic description of this relation'))
 
 
 # not restricted since it has to be read when checking allowed transitions
