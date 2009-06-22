@@ -418,7 +418,7 @@ class TextWidget(Widget):
                 hidden = u'<input type="hidden" name="edits-%s" value="%s"/>\n'\
                          '<input type="hidden" name="%s" value="text/html"/>\n' % (
                     frname, format, frname)
-            return u'%s<textarea cubicweb:type="wysiwyg" onkeypress="autogrow(this)" name="%s" %s>%s</textarea>' % (
+            return u'%s<textarea cubicweb:type="wysiwyg" onkeyup="autogrow(this)" name="%s" %s>%s</textarea>' % (
                 hidden, self.rname, self.format_attrs(), dvalue)
         if with_format and entity.e_schema.has_metadata(self.name, 'format'):
             fmtwdg = entity.get_widget(self.name + '_format')
@@ -426,7 +426,7 @@ class TextWidget(Widget):
             self.attrs['tabindex'] = entity.req.next_tabindex()
         else:
             fmtwdgstr = ''
-        return u'%s<br/><textarea onkeypress="autogrow(this)" name="%s" %s>%s</textarea>' % (
+        return u'%s<br/><textarea onkeyup="autogrow(this)" name="%s" %s>%s</textarea>' % (
             fmtwdgstr, self.rname, self.format_attrs(), dvalue)
 
 
