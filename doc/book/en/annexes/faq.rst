@@ -72,7 +72,7 @@ Why is the RQL query language looking similar to X ?
 
   It may remind you of SQL but it is higher level than SQL, more like
   SPARQL. Except that SPARQL did not exist when we started the project.
-  Having SPARQL has a query language has been in our backlog for years.
+  Having SPARQL as a query language has been in our backlog for years.
 
   That RQL language is what is going to make a difference with django-
   like frameworks for several reasons.
