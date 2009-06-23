@@ -9,6 +9,7 @@ __docformat__ = "restructuredtext en"
 _ = unicode
 
 import re
+from os.path import join
 from logging import getLogger
 from warnings import warn
 
