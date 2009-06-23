@@ -125,7 +125,7 @@ class IDownloadableLineView(baseviews.OneLineView):
         """the secondary view is a link to download the file"""
         entity = self.entity(row, col)
         url = html_escape(entity.absolute_url())
-        name = html_escape(entity.download_file_name())
+        name = html_escape(title or entity.download_file_name())
         durl = html_escape(entity.download_url())
         self.w(u'<a href="%s">%s</a> [<a href="%s">%s</a>]' %
                (url, name, durl, self.req._('download')))
