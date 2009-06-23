@@ -10,7 +10,7 @@ __docformat__ = "restructuredtext en"
 
 from itertools import chain
 from copy import deepcopy
-from datetime import date
+from datetime import date, datetime
 
 from logilab.mtconverter import html_escape
 
@@ -683,8 +683,15 @@ class FacetRangeWidget(HTMLWidget):
 
 
 class DateFacetRangeWidget(FacetRangeWidget):
+
     formatter = 'function (value) {return (new Date(parseFloat(value))).strftime(DATE_FMT);}'
+
+    def round_max_value(self, d):
+        'round to upper value to avoid filtering out the max value'
+        return datetime(d.year, d.month, d.day + 1)
+
     def __init__(self, facet, minvalue, maxvalue):
+        maxvalue = self.round_max_value(maxvalue)
         super(DateFacetRangeWidget, self).__init__(facet,
                                                    datetime2ticks(minvalue),
                                                    datetime2ticks(maxvalue))
