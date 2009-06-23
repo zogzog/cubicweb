@@ -5,9 +5,19 @@
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 :license: GNU Lesser General Public License, v2.1 - http://www.gnu.org/licenses
 """
+__docformat__ = "restructuredtext en"
+_ = unicode
 
-class Bookmark(MetaUserEntityType):
+from yams.buildobjs import EntityType, RelationType, String
+
+class Bookmark(EntityType):
     """define an entity type, used to build the application schema"""
+    permissions = {
+        'read':   ('managers', 'users', 'guests',),
+        'add':    ('managers', 'users',),
+        'delete': ('managers', 'owners',),
+        'update': ('managers', 'owners',),
+        }
     title = String(required=True, maxsize=128)
     path  = String(maxsize=512, required=True,
                    description=_("relative url of the bookmarked page"))
@@ -16,7 +26,7 @@ class Bookmark(MetaUserEntityType):
                                     description=_("users using this bookmark"))
 
 
-class bookmarked_by(MetaUserRelationType):
+class bookmarked_by(RelationType):
     permissions = {'read':   ('managers', 'users', 'guests',),
                    # test user in users group to avoid granting permission to anonymous user
                    'add':    ('managers', RRQLExpression('O identity U, U in_group G, G name "users"')),
