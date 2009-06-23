@@ -6,6 +6,7 @@
 :license: GNU Lesser General Public License, v2.1 - http://www.gnu.org/licenses
 """
 __docformat__ = "restructuredtext en"
+_ = unicode
 
 import re
 from logging import getLogger
@@ -34,7 +35,7 @@ _ = unicode
 
 BASEGROUPS = ('managers', 'users', 'guests', 'owners')
 
-LOGGER = getLogger('cubicweb.schemaloader')
+_LOGGER = getLogger('cubicweb.schemaloader')
 
 # schema entities created from serialized schema have an eid rproperty
 ybo.ETYPE_PROPERTIES += ('eid',)
@@ -636,8 +637,8 @@ class RQLExpression(object):
             raise RQLSyntaxError(expression)
         for mainvar in mainvars.split(','):
             if len(self.rqlst.defined_vars[mainvar].references()) <= 2:
-                LOGGER.warn('You did not use the %s variable in your RQL expression %s',
-                            mainvar, self)
+                _LOGGER.warn('You did not use the %s variable in your RQL '
+                             'expression %s', mainvar, self)
 
     def __str__(self):
         return self.full_rql
@@ -904,9 +905,9 @@ class BootstrapSchemaLoader(SchemaLoader):
 
     def _load_definition_files(self, cubes=None):
         # bootstraping, ignore cubes
-        for filepath in self.include_schema_files('bootstrap'):
-            self.info('loading %s', filepath)
-            self.handle_file(filepath)
+        filepath = join(self.lib_directory, 'bootstrap.py')
+        self.info('loading %s', filepath)
+        self.handle_file(filepath)
 
     def unhandled_file(self, filepath):
         """called when a file without handler associated has been found"""
@@ -930,10 +931,10 @@ class CubicWebSchemaLoader(BootstrapSchemaLoader):
         return super(CubicWebSchemaLoader, self).load(config, path=path, **kwargs)
 
     def _load_definition_files(self, cubes):
-        for filepath in (self.include_schema_files('bootstrap')
-                         + self.include_schema_files('base')
-                         + self.include_schema_files('workflow')
-                         + self.include_schema_files('Bookmark')):
+        for filepath in (join(self.lib_directory, 'bootstrap.py'),
+                         join(self.lib_directory, 'base.py'),
+                         join(self.lib_directory, 'workflow.py'),
+                         join(self.lib_directory, 'Bookmark.py')):
             self.info('loading %s', filepath)
             self.handle_file(filepath)
         for cube in cubes:
