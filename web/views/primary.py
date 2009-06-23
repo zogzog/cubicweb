@@ -54,6 +54,7 @@ class PrimaryView(EntityView):
             self.w(u'<table width="100%"><tr><td style="width: 75%">')
         self.w(u'<div>')
         self.w(u'<div class="mainInfo">')
+        self.content_navigation_components('navcontenttop')
         try:
             self.render_entity_attributes(entity)
         except TypeError: # XXX bw compat
@@ -61,7 +62,6 @@ class PrimaryView(EntityView):
                  'deprecated (%s)' % self.__class__)
             self.render_entity_attributes(entity, [])
         self.w(u'</div>')
-        self.content_navigation_components('navcontenttop')
         if self.main_related_section:
             try:
                 self.render_entity_relations(entity)

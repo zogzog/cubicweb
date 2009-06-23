@@ -197,6 +197,14 @@ class ICalendarable(Interface):
     """interface for items that do have a begin date 'start' and an end date 'stop'
     """
 
+    @property
+    def start(self):
+        """return start date"""
+
+    @property
+    def stop(self):
+        """return stop state"""
+
 class ICalendarViews(Interface):
     """calendar views interface"""
     def matching_dates(self, begin, end):
