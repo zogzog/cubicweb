@@ -10,7 +10,7 @@ __docformat__ = "restructuredtext en"
 
 from itertools import chain
 from copy import deepcopy
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 
 from logilab.mtconverter import html_escape
 
@@ -688,7 +688,7 @@ class DateFacetRangeWidget(FacetRangeWidget):
 
     def round_max_value(self, d):
         'round to upper value to avoid filtering out the max value'
-        return datetime(d.year, d.month, d.day + 1)
+        return datetime(d.year, d.month, d.day) + timedelta(days=1)
 
     def __init__(self, facet, minvalue, maxvalue):
         maxvalue = self.round_max_value(maxvalue)
