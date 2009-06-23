@@ -5,7 +5,7 @@ Notes:
   from which it comes from) are stored in a varchar column encoded as a base64
   string. This is because it should actually be Bytes but we want an index on
   it for fast querying.
-  
+
 :organization: Logilab
 :copyright: 2001-2009 LOGILAB S.A. (Paris, FRANCE), license is LGPL v2.
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
@@ -154,6 +154,25 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
         self._cache = Cache(repo.config['rql-cache-size'])
         self._temp_table_data = {}
         self._eid_creation_lock = Lock()
+        # XXX no_sqlite_wrap trick since we've a sqlite locking pb when
+        # running unittest_multisources with the wrapping below
+        if self.dbdriver == 'sqlite' and \
+               not getattr(repo.config, 'no_sqlite_wrap', False):
+            from cubicweb.server.sources.extlite import ConnectionWrapper
+            self.get_connection = lambda: ConnectionWrapper(self)
+            self.check_connection = lambda cnx: cnx
+            def pool_reset(cnx):
+                if cnx._cnx is not None:
+                    cnx._cnx.close()
+                    cnx._cnx = None
+            self.pool_reset = pool_reset
+
+    @property
+    def _sqlcnx(self):
+        # XXX: sqlite connections can only be used in the same thread, so
+        #      create a new one each time necessary. If it appears to be time
+        #      consuming, find another way
+        return SQLAdapterMixIn.get_connection(self)
 
     def reset_caches(self):
         """method called during test to reset potential source caches"""
@@ -171,21 +190,25 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
         return self.process_result(cursor)
 
     def init_creating(self):
-        # check full text index availibility
         pool = self.repo._get_pool()
+        pool.pool_set()
+        # check full text index availibility
         if not self.indexer.has_fti_table(pool['system']):
             self.error('no text index table')
             self.indexer = None
+        pool.pool_reset()
         self.repo._free_pool(pool)
 
     def init(self):
         self.init_creating()
         pool = self.repo._get_pool()
+        pool.pool_set()
         # XXX cubicweb < 2.42 compat
         if 'deleted_entities' in self.dbhelper.list_tables(pool['system']):
             self.has_deleted_entitites_table = True
         else:
             self.has_deleted_entitites_table = False
+        pool.pool_reset()
         self.repo._free_pool(pool)
 
     # ISource interface #######################################################
@@ -316,42 +339,22 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
             query = 'INSERT INTO %s %s' % (table, sql.encode(self.encoding))
             self.doexec(session.pool[self.uri], query,
                         self.merge_args(args, query_args))
-# XXX commented until it's proved to be necessary
-#             # XXX probably inefficient
-#             tempdata = self._temp_table_data.setdefault(table, set())
-#             cursor = session.pool[self.uri]
-#             cursor.execute('select * from %s' % table)
-#             for row in cursor.fetchall():
-#                 print 'data', row
-#                 tempdata.add(tuple(row))
         else:
             super(NativeSQLSource, self).flying_insert(table, session, union,
                                                        args, varmap)
 
     def _manual_insert(self, results, table, session):
         """insert given result into a temporary table on the system source"""
-        #print 'manual insert', table, results
         if not results:
             return
-        #cursor.execute('select * from %s'%table)
-        #assert len(cursor.fetchall())== 0
-        encoding = self.encoding
-        # added chr to be sqlite compatible
         query_args = ['%%(%s)s' % i for i in xrange(len(results[0]))]
         query = 'INSERT INTO %s VALUES(%s)' % (table, ','.join(query_args))
         kwargs_list = []
-#        tempdata = self._temp_table_data.setdefault(table, set())
         for row in results:
             kwargs = {}
             row = tuple(row)
-# XXX commented until it's proved to be necessary
-#             if row in tempdata:
-#                 continue
-#             tempdata.add(row)
             for index, cell in enumerate(row):
-                if type(cell) is unicode:
-                    cell = cell.encode(encoding)
-                elif isinstance(cell, Binary):
+                if isinstance(cell, Binary):
                     cell = self.binary(cell.getvalue())
                 kwargs[str(index)] = cell
             kwargs_list.append(kwargs)

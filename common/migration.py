@@ -17,6 +17,8 @@ from os.path import exists, join, basename, splitext
 from logilab.common.decorators import cached
 from logilab.common.configuration import REQUIRED, read_old_config
 
+from cubicweb import ConfigurationError
+
 
 def migration_files(config, toupgrade):
     """return an orderer list of path of scripts to execute to upgrade
@@ -328,18 +330,18 @@ type "exit" or Ctrl-D to quit the shell and resume operation"""
             self.config.add_cubes(newcubes)
         return newcubes
 
-    def cmd_remove_cube(self, cube):
+    def cmd_remove_cube(self, cube, removedeps=False):
+        if removedeps:
+            toremove = self.config.expand_cubes([cube])
+        else:
+            toremove = (cube,)
         origcubes = self.config._cubes
-        basecubes = list(origcubes)
-        for pkg in self.config.expand_cubes([cube]):
-            try:
-                basecubes.remove(pkg)
-            except ValueError:
-                continue
+        basecubes = [c for c in origcubes if not c in toremove]
         self.config._cubes = tuple(self.config.expand_cubes(basecubes))
         removed = [p for p in origcubes if not p in self.config._cubes]
-        assert cube in removed, \
-               "can't remove cube %s, used as a dependancy" % cube
+        if not cube in removed:
+            raise ConfigurationError("can't remove cube %s, "
+                                     "used as a dependency" % cube)
         return removed
 
     def rewrite_configuration(self):

@@ -101,10 +101,10 @@ class Field(object):
         return self.__unicode__().encode('utf-8')
 
     def init_widget(self, widget):
-        if widget is None and self.choices:
-            widget = Select()
         if widget is not None:
             self.widget = widget
+        elif self.choices and not self.widget.vocabulary_widget:
+            self.widget = Select()
         if isinstance(self.widget, type):
             self.widget = self.widget()
 
@@ -376,7 +376,7 @@ class FloatField(IntField):
         return formatstr % float(value)
 
     def render_example(self, req):
-        return self.format_value(req, 1.234)
+        return self.format_single_value(req, 1.234)
 
 
 class DateField(StringField):
@@ -387,7 +387,7 @@ class DateField(StringField):
         return value and ustrftime(value, req.property_value(self.format_prop)) or u''
 
     def render_example(self, req):
-        return self.format_value(req, datetime.now())
+        return self.format_single_value(req, datetime.now())
 
 
 class DateTimeField(DateField):
@@ -395,7 +395,7 @@ class DateTimeField(DateField):
 
 
 class TimeField(DateField):
-    format_prop = 'ui.datetime-format'
+    format_prop = 'ui.time-format'
     widget = TextInput
 
 
@@ -455,17 +455,17 @@ def guess_field(eschema, rschema, role='subject', skip_meta_attr=True, **kwargs)
         help = rschema.rproperty(eschema, targetschema, 'description')
         if rschema.is_final():
             if rschema.rproperty(eschema, targetschema, 'internationalizable'):
-                kwargs['internationalizable'] = True
+                kwargs.setdefault('internationalizable', True)
             def get_default(form, es=eschema, rs=rschema):
                 return es.default(rs)
-            kwargs['initial'] = get_default
+            kwargs.setdefault('initial', get_default)
     else:
         targetschema = rschema.subjects(eschema)[0]
         card = rschema.rproperty(targetschema, eschema, 'cardinality')[1]
         help = rschema.rproperty(targetschema, eschema, 'description')
     kwargs['required'] = card in '1+'
     kwargs['name'] = rschema.type
-    kwargs['help'] = help
+    kwargs.setdefault('help', help)
     if rschema.is_final():
         if skip_meta_attr and rschema in eschema.meta_attributes():
             return None

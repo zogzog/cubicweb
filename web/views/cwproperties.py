@@ -19,7 +19,7 @@ from cubicweb.view import StartupView
 from cubicweb.web import uicfg, stdmsgs
 from cubicweb.web.form import FormViewMixIn
 from cubicweb.web.formfields import FIELDS, StringField
-from cubicweb.web.formwidgets import Select, Button, SubmitButton
+from cubicweb.web.formwidgets import Select, TextInput, Button, SubmitButton
 from cubicweb.web.views import primary, formrenderers
 
 
@@ -139,7 +139,6 @@ class SystemCWPropertiesForm(FormViewMixIn, StartupView):
             w(u'<h2 class="propertiesform">%s</h2>\n' %
               (make_togglable_link('fieldset_' + group, label.capitalize())))
             w(u'<div id="fieldset_%s" %s>' % (group, status))
-
             # create selection
             sorted_objects =  sorted((self.req.__('%s_%s' % (group, o)), o, f)
                                            for o, f in objects.iteritems())
@@ -217,10 +216,9 @@ class SystemCWPropertiesForm(FormViewMixIn, StartupView):
                                                 eidparam=True))
         subform.vreg = self.vreg
         subform.form_add_hidden('pkey', key, eidparam=True)
-        subform.form_add_hidden("current-value:%s" % entity.eid,)
         form.form_add_subform(subform)
         return subform
-
+    
 def is_user_prefs(cls, req, rset, row=None, col=0, **kwargs):
     return req.user.eid == rset[row or 0][col]
 
@@ -303,7 +301,7 @@ class PropertyKeyField(StringField):
         choices = entity.vreg.user_property_keys()
         return [(u'', u'')] + sorted(zip((_(v) for v in choices), choices))
 
-
+    
 class PropertyValueField(StringField):
     """specific field for CWProperty.value  which will be different according to
     the selected key type and vocabulary information
@@ -346,14 +344,14 @@ class PropertyValueField(StringField):
             else:
                 self.choices = vocab
             wdg = Select()
+        elif pdef['type'] == 'String': # else we'll get a TextArea by default
+            wdg = TextInput()
         else:
-            wdg = FIELDS[pdef['type']].widget()
+            field = FIELDS[pdef['type']]()
+            wdg = field.widget
             if pdef['type'] == 'Boolean':
-                self.choices = [(form.req._('yes'), '1'), (form.req._('no'), '')]
-            elif pdef['type'] in ('Float', 'Int'):
-                wdg.attrs.setdefault('size', 3)
+                self.choices = field.vocabulary(form)
         self.widget = wdg
-
 
 uicfg.autoform_field.tag_attribute(('CWProperty', 'pkey'), PropertyKeyField)
 uicfg.autoform_field.tag_attribute(('CWProperty', 'value'), PropertyValueField)

@@ -7,6 +7,7 @@ from datetime import date
 from logilab.common.testlib import TestCase, unittest_main
 from cubicweb.devtools.apptest import RepositoryBasedTC, get_versions
 
+from cubicweb import ConfigurationError
 from cubicweb.schema import CubicWebSchemaLoader
 from cubicweb.server.sqlutils import SQL_PREFIX
 from cubicweb.server.repository import Repository
@@ -365,7 +366,7 @@ class MigrationCommandsTC(RepositoryBasedTC):
         finally:
             self.mh.cmd_set_size_constraint('CWEType', 'description', None)
 
-    def test_add_remove_cube(self):
+    def test_add_remove_cube_and_deps(self):
         cubes = set(self.config.cubes())
         schema = self.repo.schema
         self.assertEquals(sorted(schema['see_also']._rproperties.keys()),
@@ -374,11 +375,10 @@ class MigrationCommandsTC(RepositoryBasedTC):
                                   ('Note', 'Note'), ('Note', 'Bookmark')]))
         try:
             try:
-                self.mh.cmd_remove_cube('email')
+                self.mh.cmd_remove_cube('email', removedeps=True)
                 # file was there because it's an email dependancy, should have been removed
-                cubes.remove('email')
-                cubes.remove('file')
-                self.assertEquals(set(self.config.cubes()), cubes)
+                self.failIf('email' in self.config.cubes())
+                self.failIf('file' in self.config.cubes())
                 for ertype in ('Email', 'EmailThread', 'EmailPart', 'File', 'Image',
                                'sender', 'in_thread', 'reply_to', 'data_format'):
                     self.failIf(ertype in schema, ertype)
@@ -392,17 +392,14 @@ class MigrationCommandsTC(RepositoryBasedTC):
                 self.assertEquals(sorted(schema['see_also'].objects()), ['Bookmark', 'Folder', 'Note'])
                 self.assertEquals(self.execute('Any X WHERE X pkey "system.version.email"').rowcount, 0)
                 self.assertEquals(self.execute('Any X WHERE X pkey "system.version.file"').rowcount, 0)
-                self.failIf('email' in self.config.cubes())
-                self.failIf('file' in self.config.cubes())
             except :
                 import traceback
                 traceback.print_exc()
                 raise
         finally:
             self.mh.cmd_add_cube('email')
-            cubes.add('email')
-            cubes.add('file')
-            self.assertEquals(set(self.config.cubes()), cubes)
+            self.failUnless('email' in self.config.cubes())
+            self.failUnless('file' in self.config.cubes())
             for ertype in ('Email', 'EmailThread', 'EmailPart', 'File', 'Image',
                            'sender', 'in_thread', 'reply_to', 'data_format'):
                 self.failUnless(ertype in schema, ertype)
@@ -420,14 +417,44 @@ class MigrationCommandsTC(RepositoryBasedTC):
                               email_version)
             self.assertEquals(self.execute('Any V WHERE X value V, X pkey "system.version.file"')[0][0],
                               file_version)
-            self.failUnless('email' in self.config.cubes())
-            self.failUnless('file' in self.config.cubes())
             # trick: overwrite self.maxeid to avoid deletion of just reintroduced
             #        types (and their associated tables!)
             self.maxeid = self.execute('Any MAX(X)')[0][0]
             # why this commit is necessary is unclear to me (though without it
             # next test may fail complaining of missing tables
             self.commit()
+
+
+    def test_add_remove_cube_no_deps(self):
+        cubes = set(self.config.cubes())
+        schema = self.repo.schema
+        try:
+            try:
+                self.mh.cmd_remove_cube('email')
+                cubes.remove('email')
+                self.failIf('email' in self.config.cubes())
+                self.failUnless('file' in self.config.cubes())
+                for ertype in ('Email', 'EmailThread', 'EmailPart',
+                               'sender', 'in_thread', 'reply_to'):
+                    self.failIf(ertype in schema, ertype)
+            except :
+                import traceback
+                traceback.print_exc()
+                raise
+        finally:
+            self.mh.cmd_add_cube('email')
+            self.failUnless('email' in self.config.cubes())
+            # trick: overwrite self.maxeid to avoid deletion of just reintroduced
+            #        types (and their associated tables!)
+            self.maxeid = self.execute('Any MAX(X)')[0][0]
+            # why this commit is necessary is unclear to me (though without it
+            # next test may fail complaining of missing tables
+            self.commit()
+
+    def test_remove_dep_cube(self):
+        ex = self.assertRaises(ConfigurationError, self.mh.cmd_remove_cube, 'file')
+        self.assertEquals(str(ex), "can't remove cube file, used as a dependency")
+
 
     def test_set_state(self):
         user = self.session.user

@@ -6,6 +6,7 @@
 :license: GNU Lesser General Public License, v2.1 - http://www.gnu.org/licenses
 """
 __docformat__ = "restructuredtext en"
+_ = unicode
 
 from cubicweb.vregistry import objectify_selector
 from cubicweb.selectors import (EntitySelector,
@@ -17,8 +18,6 @@ from cubicweb.selectors import (EntitySelector,
 from cubicweb.web.action import Action
 from cubicweb.web.views import linksearch_select_url, vid_from_rset
 from cubicweb.web.views.autoform import AutomaticEntityForm
-
-_ = unicode
 
 
 class has_editable_relation(EntitySelector):

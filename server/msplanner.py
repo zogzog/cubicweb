@@ -158,6 +158,7 @@ def allequals(solutions):
 # XXX move functions below to rql ##############################################
 
 def is_ancestor(n1, n2):
+    """return True if n2 is a parent scope of n1"""
     p = n1.parent
     while p is not None:
         if p is n2:
@@ -171,17 +172,14 @@ def copy_node(newroot, node, subparts=()):
         newnode.append(part)
     return newnode
 
-def same_scope(var):
-    """return true if the variable is always used in the same scope"""
-    try:
-        return var.stinfo['samescope']
-    except KeyError:
-        for rel in var.stinfo['relations']:
-            if not rel.scope is var.scope:
-                var.stinfo['samescope'] = False
-                return False
-        var.stinfo['samescope'] = True
-        return True
+def used_in_outer_scope(var, scope):
+    """return true if the variable is used in an outer scope of the given scope
+    """
+    for rel in var.stinfo['relations']:
+        rscope = rel.scope
+        if not rscope is scope and is_ancestor(scope, rscope):
+            return True
+    return False
 
 ################################################################################
 
@@ -354,6 +352,8 @@ class PartPlanInformation(object):
             if source is self.system_source:
                 for const in vconsts:
                     self._set_source_for_term(source, const)
+            elif not self._sourcesterms:
+                self._set_source_for_term(source, const)
             elif source in self._sourcesterms:
                 source_scopes = frozenset(t.scope for t in self._sourcesterms[source])
                 for const in vconsts:
@@ -361,7 +361,7 @@ class PartPlanInformation(object):
                         self._set_source_for_term(source, const)
                         # if system source is used, add every rewritten constant
                         # to its supported terms even when associated entity
-                        # doesn't actually comes from it so we get a changes
+                        # doesn't actually come from it so we get a changes
                         # that allequals will return True as expected when
                         # computing needsplit
                         # check const is used in a relation restriction
@@ -555,7 +555,12 @@ class PartPlanInformation(object):
             self.needsplit = False
         elif not self.needsplit:
             if not allequals(self._sourcesterms.itervalues()):
-                self.needsplit = True
+                for terms in self._sourcesterms.itervalues():
+                    if any(x for x in terms if not isinstance(x, Constant)):
+                        self.needsplit = True
+                        return
+                self._sourcesterms = {self.system_source: {}}
+                self.needsplit = False
             else:
                 sample = self._sourcesterms.itervalues().next()
                 if len(sample) > 1:
@@ -1216,6 +1221,7 @@ class TermsFiltererVisitor(object):
         self.terms = terms
         self.solindices = solindices
         self.final = final
+        self._pending_vrefs = []
         # terms which appear in unsupported branches
         needsel |= self.extneedsel
         self.needsel = needsel
@@ -1227,6 +1233,7 @@ class TermsFiltererVisitor(object):
         self.mayneedvar, self.hasvar = {}, {}
         self.use_only_defined = False
         self.scopes = {rqlst: newroot}
+        self.current_scope = rqlst
         if rqlst.where:
             rqlst = self._rqlst_accept(rqlst, rqlst.where, newroot, terms,
                                        newroot.set_where)
@@ -1368,9 +1375,14 @@ class TermsFiltererVisitor(object):
         else:
             raise UnsupportedBranch()
         rschema = self.schema.rschema(node.r_type)
+        self._pending_vrefs = []
         try:
             res = self.visit_default(node, newroot, terms)[0]
-        except Exception, ex:
+        except:
+            # when a relation isn't supported, we should dereference potentially
+            # introduced variable refs
+            for vref in self._pending_vrefs:
+                vref.unregister_reference()
             raise
         ored = node.ored()
         if rschema.is_final() or rschema.inlined:
@@ -1397,7 +1409,7 @@ class TermsFiltererVisitor(object):
             return False
         if var.name in self.extneedsel or var.stinfo['selected']:
             return False
-        if not same_scope(var):
+        if not var in terms or used_in_outer_scope(var, self.current_scope):
             return False
         if any(v for v, _ in var.stinfo['attrvars'] if not v in terms):
             return False
@@ -1433,7 +1445,9 @@ class TermsFiltererVisitor(object):
         # set scope so we can insert types restriction properly
         newvar = newroot.get_variable(node.name)
         newvar.stinfo['scope'] = self.scopes.get(node.variable.scope, newroot)
-        return VariableRef(newvar), node
+        vref = VariableRef(newvar)
+        self._pending_vrefs.append(vref)
+        return vref, node
 
     def visit_constant(self, node, newroot, terms):
         return copy_node(newroot, node), node

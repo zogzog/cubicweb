@@ -25,8 +25,9 @@ ONESECOND = timedelta(0, 1, 0)
 class Cache(dict):
     def __init__(self):
         super(Cache, self).__init__()
-        self.cache_creation_date = None
-        self.latest_cache_lookup = datetime.now()
+        _now = datetime.now()
+        self.cache_creation_date = _now
+        self.latest_cache_lookup = _now
 
 CACHE_REGISTRY = {}
 
@@ -127,8 +128,7 @@ class AppRsetObject(VObject):
         if cachename in CACHE_REGISTRY:
             cache = CACHE_REGISTRY[cachename]
         else:
-            cache = Cache()
-            CACHE_REGISTRY[cachename] = cache
+            cache = CACHE_REGISTRY[cachename] = Cache()
         _now = datetime.now()
         if _now > cache.latest_cache_lookup + ONESECOND:
             ecache = self.req.execute('Any C,T WHERE C is CWCache, C name %(name)s, C timestamp T',

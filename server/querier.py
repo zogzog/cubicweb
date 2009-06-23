@@ -298,7 +298,7 @@ class ExecutionPlan(object):
         localchecks = {}
         if rqlst.where is not None:
             varkwargs = var_kwargs(rqlst.where, self.args)
-            neweids = self.session.query_data('neweids', ())
+            neweids = self.session.transaction_data.get('neweids', ())
         else:
             varkwargs = None
         restricted_vars = set()

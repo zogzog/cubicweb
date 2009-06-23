@@ -897,9 +897,9 @@ class BootstrapSchemaLoader(SchemaLoader):
 
     def _load_definition_files(self, cubes=None):
         # bootstraping, ignore cubes
-        for filepath in self.include_schema_files('bootstrap'):
-            self.info('loading %s', filepath)
-            self.handle_file(filepath)
+        filepath = join(self.lib_directory, 'bootstrap.py')
+        self.info('loading %s', filepath)
+        self.handle_file(filepath)
 
     def unhandled_file(self, filepath):
         """called when a file without handler associated has been found"""
@@ -923,10 +923,10 @@ class CubicWebSchemaLoader(BootstrapSchemaLoader):
         return super(CubicWebSchemaLoader, self).load(config, path=path, **kwargs)
 
     def _load_definition_files(self, cubes):
-        for filepath in (self.include_schema_files('bootstrap')
-                         + self.include_schema_files('base')
-                         + self.include_schema_files('workflow')
-                         + self.include_schema_files('Bookmark')):
+        for filepath in (join(self.lib_directory, 'bootstrap.py'),
+                         join(self.lib_directory, 'base.py'),
+                         join(self.lib_directory, 'workflow.py'),
+                         join(self.lib_directory, 'Bookmark.py')):
             self.info('loading %s', filepath)
             self.handle_file(filepath)
         for cube in cubes:

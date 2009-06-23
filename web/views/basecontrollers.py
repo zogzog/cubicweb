@@ -239,9 +239,11 @@ class JSonController(Controller):
         response content type
         """
         self.req.pageid = self.req.form.get('pageid')
-        fname = self.req.form['fname']
         try:
+            fname = self.req.form['fname']
             func = getattr(self, 'js_%s' % fname)
+        except KeyError:
+            raise RemoteCallFailed('no method specified')
         except AttributeError:
             raise RemoteCallFailed('no %s method' % fname)
         # no <arg> attribute means the callback takes no argument

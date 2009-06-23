@@ -247,6 +247,11 @@ function autogrow(area) {
     }
 }
 
+function limitTextAreaSize(textarea, size) {
+    var $area = jQuery(textarea);
+    $area.val($area.val().slice(0, size));
+}
+
 //============= page loading events ==========================================//
 function roundedCornersOnLoad() {
     jQuery('div.sideBox').corner('bottom 6px');

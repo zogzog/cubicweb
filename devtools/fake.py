@@ -188,12 +188,12 @@ class FakeSession(RequestSessionMixIn):
         self.user = user or FakeUser()
         self.is_internal_session = False
         self.is_super_session = self.user.eid == -1
-        self._query_data = {}
+        self.transaction_data = {}
 
     def execute(self, *args):
         pass
     def commit(self, *args):
-        self._query_data.clear()
+        self.transaction_data.clear()
     def close(self, *args):
         pass
     def system_sql(self, sql, args=None):

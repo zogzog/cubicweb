@@ -390,6 +390,11 @@ du :eid:`1:*ReST*`'''
         metainf['extid']  = 1234
         self.assertEquals(note.absolute_url(), 'http://cubicweb2.com/note/1234')
 
+    def test_absolute_url_empty_field(self):
+        card = self.add_entity('Card', wikiid=u'', title=u'test')
+        self.assertEquals(card.absolute_url(),
+                          'http://testing.fr/cubicweb/card/eid/%s' % card.eid)
+
 if __name__ == '__main__':
     from logilab.common.testlib import unittest_main
     unittest_main()

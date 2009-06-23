@@ -14,6 +14,8 @@ from cubicweb.devtools import TestServerConfiguration, init_test_database
 from cubicweb.devtools.apptest import RepositoryBasedTC
 from cubicweb.devtools.repotest import do_monkey_patch, undo_monkey_patch
 
+TestServerConfiguration.no_sqlite_wrap = True
+
 class TwoSourcesConfiguration(TestServerConfiguration):
     sourcefile = 'sources_multi'
 
@@ -114,6 +116,7 @@ class TwoSourcesTC(RepositoryBasedTC):
         cu = cnx.cursor()
         rset = cu.execute('Any X WHERE X has_text "card"')
         self.assertEquals(len(rset), 5, zip(rset.rows, rset.description))
+        cnx.close()
 
     def test_synchronization(self):
         cu = cnx2.cursor()

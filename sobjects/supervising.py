@@ -36,7 +36,8 @@ class SomethingChangedHook(Hook):
                 # don't record last_login_time update which are done
                 # automatically at login time
                 return False
-        self.session.add_query_data('pendingchanges', (self._event(), args))
+        self.session.transaction_data.setdefault('pendingchanges', []).append(
+            (self._event(), args))
         return True
 
     def _event(self):
@@ -54,10 +55,8 @@ class EntityDeleteHook(SomethingChangedHook):
             # may raise an error during deletion process, for instance due to
             # missing required relation
             title = '#%s' % eid
-        self.session.add_query_data('pendingchanges',
-                                    ('delete_entity',
-                                     (eid, str(entity.e_schema),
-                                      title)))
+        self.session.transaction_data.setdefault('pendingchanges', []).append(
+            ('delete_entity', (eid, str(entity.e_schema), title)))
         return True
 
 
@@ -227,7 +226,7 @@ class SupervisionMailOp(SendMailOp):
         uinfo = {'email': config['sender-addr'],
                  'name': config['sender-name']}
         view = self._get_view()
-        content = view.render(changes=session.query_data('pendingchanges'))
+        content = view.render(changes=session.transaction_data.get('pendingchanges'))
         recipients = view.recipients()
         msg = format_mail(uinfo, recipients, content, view.subject(), config=config)
         self.to_send = [(msg, recipients)]

@@ -60,13 +60,19 @@ class CleanupEidTypeCacheOp(SingleLastOperation):
         """the observed connections pool has been rollbacked,
         remove inserted eid from repository type/source cache
         """
-        self.repo.clear_caches(self.session.query_data('pendingeids', ()))
+        try:
+            self.repo.clear_caches(self.session.transaction_data['pendingeids'])
+        except KeyError:
+            pass
 
     def rollback_event(self):
         """the observed connections pool has been rollbacked,
         remove inserted eid from repository type/source cache
         """
-        self.repo.clear_caches(self.session.query_data('neweids', ()))
+        try:
+            self.repo.clear_caches(self.session.transaction_data['neweids'])
+        except KeyError:
+            pass
 
 
 class FTIndexEntityOp(LateOperation):
@@ -80,7 +86,7 @@ class FTIndexEntityOp(LateOperation):
     def precommit_event(self):
         session = self.session
         entity = self.entity
-        if entity.eid in session.query_data('pendingeids', ()):
+        if entity.eid in session.transaction_data.get('pendingeids', ()):
             return # entity added and deleted in the same transaction
         session.repo.system_source.fti_unindex_entity(session, entity.eid)
         for container in entity.fti_containers():
@@ -864,7 +870,8 @@ class Repository(object):
         self.system_source.add_info(session, entity, source, extid)
         if complete:
             entity.complete(entity.e_schema.indexable_attributes())
-        session.add_query_data('neweids', entity.eid)
+        new = session.transaction_data.setdefault('neweids', set())
+        new.add(entity.eid)
         # now we can update the full text index
         if self.do_fti:
             FTIndexEntityOp(session, entity=entity)
@@ -881,7 +888,7 @@ class Repository(object):
         * setup cache update operation
         """
         self.system_source.fti_unindex_entity(session, eid)
-        pending = session.query_data('pendingeids', set(), setdefault=True)
+        pending = session.transaction_data.setdefault('pendingeids', set())
         pending.add(eid)
         CleanupEidTypeCacheOp(session)
 
@@ -918,7 +925,7 @@ class Repository(object):
 
     def index_entity(self, session, entity):
         """full text index a modified entity"""
-        alreadydone = session.query_data('indexedeids', set(), setdefault=True)
+        alreadydone = session.transaction_data.setdefault('indexedeids', set())
         if entity.eid in alreadydone:
             self.info('skipping reindexation of %s, already done', entity.eid)
             return

@@ -68,11 +68,11 @@ class ConnectionsPool(object):
 
     # internals ###############################################################
 
-    def pool_set(self, session):
+    def pool_set(self):
         """pool is being set"""
         self.check_connections()
 
-    def pool_reset(self, session):
+    def pool_reset(self):
         """pool is being reseted"""
         for source, cnx in self.source_cnxs.values():
             source.pool_reset(cnx)

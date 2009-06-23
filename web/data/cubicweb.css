@@ -1,6 +1,6 @@
 /*
  *  :organization: Logilab
- *  :copyright: 2003-2008 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+ *  :copyright: 2003-2009 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
  *  :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
  */
 /***************************************/
@@ -12,7 +12,7 @@
   padding :0px;
 }
 
-html, body {  
+html, body {
   background: #e2e2e2;
 }
 
@@ -277,8 +277,8 @@ div#page {
   position: relative;
   min-height: 800px;
 }
- 
-table#mainLayout{ 
+
+table#mainLayout{
  margin:0px 3px;
 }
 
@@ -321,7 +321,7 @@ input#rql{
 
 /* boxes */
 div.navboxes {
- margin-top: 8px; 
+ margin-top: 8px;
 }
 
 div.boxFrame {
@@ -459,9 +459,9 @@ div.sideBox {
   max-width: 50em;
 }
 
-ul.sideBox li{ 
+ul.sideBox li{
  list-style: none;
- background: none; 
+ background: none;
  padding: 0px 0px 1px 1px;
  }
 
@@ -576,7 +576,7 @@ div.mainRelated {
 
 div.primaryRight{
   float:right;
-  
+
  }
 
 div.metadata {
@@ -603,7 +603,7 @@ div.row {
  padding-bottom:0.4px
 }
 
-div.row span.label{ 
+div.row span.label{
  padding-right:1em
 }
 
@@ -772,20 +772,20 @@ div.pycontext span.name {
 /* addcombobox                         */
 /***************************************/
 
-input#newopt{ 
- width:120px ; 
+input#newopt{
+ width:120px ;
  display:block;
  float:left;
  }
 
-div#newvalue{ 
+div#newvalue{
  margin-top:2px;
  }
 
 #add_newopt{
  background: #fffff8 url("go.png") 50% 50% no-repeat;
  width: 20px;
- line-height: 20px; 
+ line-height: 20px;
  display:block;
  float:left;
 }
@@ -794,7 +794,7 @@ div#newvalue{
 /* buttons                             */
 /***************************************/
 
-input.button{  
+input.button{
   margin: 1em 1em 0px 0px;
   border: 1px solid #edecd2;
   border-color:#edecd2 #cfceb7 #cfceb7  #edecd2;
@@ -838,7 +838,7 @@ div.footer a {
   font-weight: bold;
 }
 
-input.validateButton {  
+input.validateButton {
   margin: 1em 1em 0px 0px;
   border: 1px solid #edecd2;
   border-color:#edecd2 #cfceb7 #cfceb7  #edecd2;

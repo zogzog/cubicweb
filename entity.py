@@ -405,7 +405,7 @@ class Entity(AppRsetObject, dict):
         path = etype.lower()
         if mainattr != 'eid':
             value = getattr(self, mainattr)
-            if value is None:
+            if value is None or unicode(value) == u'':
                 mainattr = 'eid'
                 path += '/eid'
             elif needcheck:

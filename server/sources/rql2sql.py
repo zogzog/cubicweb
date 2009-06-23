@@ -827,6 +827,9 @@ class SQLGenerator(object):
                 contextrels[var.name] = attrvars[var.name]
             except KeyError:
                 attrvars[var.name] = relation
+            if var.name in self._varmap:
+                # ensure table is added
+                self._var_info(var.variable)
         if not contextrels:
             relation.children[1].accept(self, contextrels)
             return ''

@@ -137,8 +137,10 @@ class AutomaticEntityForm(forms.EntityFieldsForm):
             rschema = cls_or_self.schema.rschema(name)
             # XXX use a sample target type. Document this.
             tschemas = rschema.targets(eschema, role)
-            fieldcls = cls_or_self.rfields.etype_get(eschema, rschema, role, tschemas[0])
-            kwargs = cls_or_self.rfields_kwargs.etype_get(eschema, rschema, role, tschemas[0])
+            fieldcls = cls_or_self.rfields.etype_get(eschema, rschema, role,
+                                                     tschemas[0])
+            kwargs = cls_or_self.rfields_kwargs.etype_get(eschema, rschema,
+                                                          role, tschemas[0])
             if kwargs is None:
                 kwargs = {}
             if fieldcls:
@@ -290,7 +292,7 @@ class AutomaticEntityForm(forms.EntityFieldsForm):
 
         by default true if there is no related entity and we need at least one
         """
-        return not existant and card in '1+'
+        return not existant and card in '1+' or self.req.form.has_key('force_%s_display' % rschema)
 
     def should_display_add_new_relation_link(self, rschema, existant, card):
         """return true if we should add a link to add a new creation form

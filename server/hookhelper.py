@@ -100,7 +100,8 @@ def previous_state(session, eid):
     relation hooks, the relation may has been deleted at this point, so
     we have handle that
     """
-    for eidfrom, rtype, eidto in reversed(session.query_data('pendingrelations', ())):
+    pending = session.transaction_data.get('pendingrelations', ())
+    for eidfrom, rtype, eidto in reversed(pending):
         if rtype == 'in_state' and eidfrom == eid:
             rset = session.execute('Any S,N WHERE S eid %(x)s, S name N',
                                    {'x': eidto}, 'x')

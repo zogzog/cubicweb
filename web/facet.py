@@ -744,7 +744,7 @@ class CheckBoxFacetWidget(HTMLWidget):
                % (cssclass, html_escape(unicode(self.value))))
         self.w(u'<div class="facetCheckBoxWidget">')
         self.w(u'<img src="%s" alt="%s" cubicweb:unselimg="true" />&nbsp;' % (imgsrc, imgalt))
-        self.w(u'<label class="facetTitle" cubicweb:facetName="%s"><a href="javascript: {}">%s</a></label>' % (facetid,title))
+        self.w(u'<label class="facetTitle" cubicweb:facetName="%s"><a href="javascript: {}">%s</a></label>' % (facetid, title))
         self.w(u'</div>\n')
         self.w(u'</div>\n')
         self.w(u'</div>\n')

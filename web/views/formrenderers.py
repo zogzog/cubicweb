@@ -94,6 +94,8 @@ class FormRenderer(AppRsetObject):
     def render_help(self, form, field):
         help = []
         descr = field.help
+        if callable(descr):
+            descr = descr(form)
         if descr:
             help.append('<div class="helper">%s</div>' % self.req._(descr))
         example = field.example_format(self.req)

@@ -1,7 +1,7 @@
 /* styles for the login popup and login form
  *
  *  :organization: Logilab
- *  :copyright: 2003-2008 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
+ *  :copyright: 2003-2009 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
  *  :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
  */
 
@@ -12,7 +12,7 @@ div#popupLoginBox {
   width: 26em;
   padding: 0px 1px 1px;
   font-weight: bold;
-  background: #E4EAD8; 
+  background: #E4EAD8;
 }
 
 div#popupLoginBox div#loginContent {
@@ -20,7 +20,7 @@ div#popupLoginBox div#loginContent {
   padding: 5px 3px 4px;
 }
 
-div#loginBox { 
+div#loginBox {
   position : absolute;
   top: 15%;
   left : 50%;
@@ -32,12 +32,12 @@ div#loginBox {
   text-align: center;
 }
 
-div#loginBox h1 { 
+div#loginBox h1 {
   color: #FF7700;
   font-size: 140%;
 }
 
-div#loginTitle { 
+div#loginTitle {
   color: #fff;
   font-weight: bold;
   font-size: 140%;
@@ -46,32 +46,32 @@ div#loginTitle {
   background: #ff7700 url("banner.png") left top repeat-x;
 }
 
-div#loginBox div#loginContent form { 
+div#loginBox div#loginContent form {
   padding-top: 1em;
-  width: 90%; 
-  margin: auto;  
+  width: 90%;
+  margin: auto;
 }
 
-#popupLoginBox table td { 
-  padding: 0px 3px; 
+#popupLoginBox table td {
+  padding: 0px 3px;
   white-space: nowrap;
 }
 
-#loginContent table { 
+#loginContent table {
   padding: 0px 0.5em;
   margin: auto;
 }
 
-#loginBox table td { 
-  padding: 0px 3px 0.6em; 
+#loginBox table td {
+  padding: 0px 3px 0.6em;
   white-space: nowrap;
 }
 
-#loginBox .loginButton { 
+#loginBox .loginButton {
   margin-top: 0.6em;
  }
 
-#loginContent input.data { 
+#loginContent input.data {
   width:12em;
 }
 
@@ -79,5 +79,5 @@ input.loginButton {
   border: 1px solid #edecd2;
   border-color:#edecd2 #cfceb7 #cfceb7  #edecd2;
   margin: 2px 0px 0px;
-  background: #f0eff0 url("gradient-grey-up.png") left top repeat-x; 
+  background: #f0eff0 url("gradient-grey-up.png") left top repeat-x;
 }

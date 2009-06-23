@@ -8,8 +8,6 @@
 __docformat__ = "restructuredtext en"
 
 
-import time
-import threading
 from os.path import join, exists
 
 from cubicweb import server
@@ -17,24 +15,21 @@ from cubicweb.server.sqlutils import SQL_PREFIX, sqlexec, SQLAdapterMixIn
 from cubicweb.server.sources import AbstractSource, native
 from cubicweb.server.sources.rql2sql import SQLGenerator
 
-def timeout_acquire(lock, timeout):
-    while not lock.acquire(False):
-        time.sleep(0.2)
-        timeout -= 0.2
-        if timeout <= 0:
-            raise RuntimeError("svn source is busy, can't acquire connection lock")
-
 class ConnectionWrapper(object):
     def __init__(self, source=None):
         self.source = source
         self._cnx = None
 
     @property
-    def cnx(self):
+    def logged_user(self):
         if self._cnx is None:
-            timeout_acquire(self.source._cnxlock, 5)
             self._cnx = self.source._sqlcnx
-        return self._cnx
+        return self._cnx.logged_user
+
+    def cursor(self):
+        if self._cnx is None:
+            self._cnx = self.source._sqlcnx
+        return self._cnx.cursor()
 
     def commit(self):
         if self._cnx is not None:
@@ -44,8 +39,10 @@ class ConnectionWrapper(object):
         if self._cnx is not None:
             self._cnx.rollback()
 
-    def cursor(self):
-        return self.cnx.cursor()
+    def close(self):
+        if self._cnx is not None:
+            self._cnx.close()
+            self._cnx = None
 
 
 class SQLiteAbstractSource(AbstractSource):
@@ -87,11 +84,6 @@ repository.',
         self._need_full_import = self._need_sql_create
         AbstractSource.__init__(self, repo, appschema, source_config,
                                 *args, **kwargs)
-        # sql database can only be accessed by one connection at a time, and a
-        # connection can only be used by the thread which created it so:
-        # * create the connection when needed
-        # * use a lock to be sure only one connection is used
-        self._cnxlock = threading.Lock()
 
     @property
     def _sqlcnx(self):
@@ -164,11 +156,10 @@ repository.',
         has a connection set
         """
         if cnx._cnx is not None:
-            try:
-                cnx._cnx.close()
-                cnx._cnx = None
-            finally:
-                self._cnxlock.release()
+            cnx._cnx.close()
+            # reset _cnx to ensure next thread using cnx will get a new
+            # connection
+            cnx._cnx = None
 
     def syntax_tree_search(self, session, union,
                            args=None, cachekey=None, varmap=None, debug=0):
@@ -182,11 +173,13 @@ repository.',
         sql, query_args = self.rqlsqlgen.generate(union, args)
         if server.DEBUG:
             print self.uri, 'SOURCE RQL', union.as_string()
-            print 'GENERATED SQL', sql
         args = self.sqladapter.merge_args(args, query_args)
         cursor = session.pool[self.uri]
-        cursor.execute(sql, args)
-        return self.sqladapter.process_result(cursor)
+        self.doexec(cursor, sql, args)
+        res = self.sqladapter.process_result(cursor)
+        if server.DEBUG:
+            print '------>', res
+        return res
 
     def local_add_entity(self, session, entity):
         """insert the entity in the local database.
@@ -195,10 +188,9 @@ repository.',
         don't want to simply do this, so let raise NotImplementedError and the
         source implementor may use this method if necessary
         """
-        cu = session.pool[self.uri]
         attrs = self.sqladapter.preprocess_entity(entity)
         sql = self.sqladapter.sqlgen.insert(SQL_PREFIX + str(entity.e_schema), attrs)
-        cu.execute(sql, attrs)
+        self.doexec(session.pool[self.uri], sql, attrs)
 
     def add_entity(self, session, entity):
         """add a new entity to the source"""
@@ -211,12 +203,11 @@ repository.',
         source don't want to simply do this, so let raise NotImplementedError
         and the source implementor may use this method if necessary
         """
-        cu = session.pool[self.uri]
         if attrs is None:
             attrs = self.sqladapter.preprocess_entity(entity)
         sql = self.sqladapter.sqlgen.update(SQL_PREFIX + str(entity.e_schema),
                                             attrs, [SQL_PREFIX + 'eid'])
-        cu.execute(sql, attrs)
+        self.doexec(session.pool[self.uri], sql, attrs)
 
     def update_entity(self, session, entity):
         """update an entity in the source"""
@@ -229,16 +220,30 @@ repository.',
         source. Main usage is to delete repository content when a Repository
         entity is deleted.
         """
-        sqlcursor = session.pool[self.uri]
         attrs = {SQL_PREFIX + 'eid': eid}
         sql = self.sqladapter.sqlgen.delete(SQL_PREFIX + etype, attrs)
-        sqlcursor.execute(sql, attrs)
+        self.doexec(session.pool[self.uri], sql, attrs)
+
+    def local_add_relation(self, session, subject, rtype, object):
+        """add a relation to the source
+
+        This is not provided as add_relation implementation since usually
+        source don't want to simply do this, so let raise NotImplementedError
+        and the source implementor may use this method if necessary
+        """
+        attrs = {'eid_from': subject, 'eid_to': object}
+        sql = self.sqladapter.sqlgen.insert('%s_relation' % rtype, attrs)
+        self.doexec(session.pool[self.uri], sql, attrs)
+
+    def add_relation(self, session, subject, rtype, object):
+        """add a relation to the source"""
+        raise NotImplementedError()
 
     def delete_relation(self, session, subject, rtype, object):
         """delete a relation from the source"""
         rschema = self.schema.rschema(rtype)
         if rschema.inlined:
-            if subject in session.query_data('pendingeids', ()):
+            if subject in session.transaction_data.get('pendingeids', ()):
                 return
             table = SQL_PREFIX + session.describe(subject)[0]
             column = SQL_PREFIX + rtype
@@ -247,5 +252,21 @@ repository.',
         else:
             attrs = {'eid_from': subject, 'eid_to': object}
             sql = self.sqladapter.sqlgen.delete('%s_relation' % rtype, attrs)
-        sqlcursor = session.pool[self.uri]
-        sqlcursor.execute(sql, attrs)
+        self.doexec(session.pool[self.uri], sql, attrs)
+
+    def doexec(self, cursor, query, args=None):
+        """Execute a query.
+        it's a function just so that it shows up in profiling
+        """
+        #t1 = time()
+        if server.DEBUG:
+            print 'exec', query, args
+        #import sys
+        #sys.stdout.flush()
+        # str(query) to avoid error if it's an unicode string
+        try:
+            cursor.execute(str(query), args)
+        except Exception, ex:
+            self.critical("sql: %r\n args: %s\ndbms message: %r",
+                          query, args, ex.args[0])
+            raise

@@ -26,7 +26,7 @@ class AutoDeleteBookmark(PreCommitOperation):
     beid = None # make pylint happy
     def precommit_event(self):
         session = self.session
-        if not self.beid in session.query_data('pendingeids', ()):
+        if not self.beid in session.transaction_data.get('pendingeids', ()):
             if not session.unsafe_execute('Any X WHERE X bookmarked_by U, X eid %(x)s',
                                           {'x': self.beid}, 'x'):
                 session.unsafe_execute('DELETE Bookmark X WHERE X eid %(x)s',

@@ -283,7 +283,8 @@ class VRegistry(object):
         # registered() is technically a classmethod but is not declared
         # as such because we need to compose registered in some cases
         vobject = obj.registered.im_func(obj, self)
-        assert not vobject in vobjects, vobject
+        assert not vobject in vobjects, \
+               'object %s is already registered' % vobject
         assert callable(vobject.__select__), vobject
         vobjects.append(vobject)
         try:
@@ -299,24 +300,16 @@ class VRegistry(object):
         registryname = registryname or obj.__registry__
         registry = self.registry(registryname)
         removed_id = obj.classid()
-        for registered in registry[obj.id]:
+        for registered in registry.get(obj.id, ()):
             # use classid() to compare classes because vreg will probably
             # have its own version of the class, loaded through execfile
             if registered.classid() == removed_id:
                 # XXX automatic reloading management
-                try:
-                    registry[obj.id].remove(registered)
-                except KeyError:
-                    self.warning('can\'t remove %s, no id %s in the %s registry',
-                                 removed_id, obj.id, registryname)
-                except ValueError:
-                    self.warning('can\'t remove %s, not in the %s registry with id %s',
-                                 removed_id, registryname, obj.id)
-#                 else:
-#                     # if objects is empty, remove oid from registry
-#                     if not registry[obj.id]:
-#                         del regcontent[oid]
+                registry[obj.id].remove(registered)
                 break
+        else:
+            self.warning('can\'t remove %s, no id %s in the %s registry',
+                         removed_id, obj.id, registryname)
 
     def register_and_replace(self, obj, replaced, registryname=None):
         if hasattr(replaced, 'classid'):

@@ -191,11 +191,18 @@ class WorkflowableMixIn(object):
             return rset.get_entity(0, 0)
         return None
 
-    def change_state(self, stateeid, trcomment=None, trcommentformat=None):
+    def change_state(self, state, trcomment=None, trcommentformat=None):
         """change the entity's state according to a state defined in given
         parameters
         """
-        assert not isinstance(stateeid, basestring), 'change_state wants a state eid'
+        if isinstance(state, basestring):
+            state = self.wf_state(state)
+            assert state is not None, 'not a %s state: %s' % (self.id, state)
+        if hasattr(state, 'eid'):
+            stateeid = state.eid
+        else:
+            stateeid = state
+        stateeid = typed_eid(stateeid)
         if trcomment:
             self.req.set_shared_data('trcomment', trcomment)
         if trcommentformat:

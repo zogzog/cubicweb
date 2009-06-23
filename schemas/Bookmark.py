@@ -1,4 +1,4 @@
-"""
+"""the Bookmark entity type for internal links
 
 :organization: Logilab
 :copyright: 2001-2009 LOGILAB S.A. (Paris, FRANCE), license is LGPL v2.
@@ -11,14 +11,15 @@ _ = unicode
 from yams.buildobjs import EntityType, RelationType, String
 
 class Bookmark(EntityType):
-    """define an entity type, used to build the application schema"""
+    """bookmarks are used to have user's specific internal links"""
     permissions = {
         'read':   ('managers', 'users', 'guests',),
         'add':    ('managers', 'users',),
         'delete': ('managers', 'owners',),
         'update': ('managers', 'owners',),
         }
-    title = String(required=True, maxsize=128)
+
+    title = String(required=True, maxsize=128, internationalizable=True)
     path  = String(maxsize=512, required=True,
                    description=_("relative url of the bookmarked page"))
 

@@ -11,6 +11,7 @@ import sys
 import threading
 from time import time
 
+from logilab.common.deprecation import obsolete
 from rql.nodes import VariableRef, Function, ETYPE_PYOBJ_MAP, etype_from_pyobj
 from yams import BASE_TYPES
 
@@ -65,54 +66,35 @@ class Session(RequestSessionMixIn):
         self.data = {}
         # i18n initialization
         self.set_language(cnxprops.lang)
+        # internals
         self._threaddata = threading.local()
         self._threads_in_transaction = set()
         self._closed = False
 
-    def get_mode(self):
-        return getattr(self._threaddata, 'mode', 'read')
-    def set_mode(self, value):
-        self._threaddata.mode = value
-    # transaction mode (read/write), resetted to read on commit / rollback
-    mode = property(get_mode, set_mode)
+    def __str__(self):
+        return '<%ssession %s (%s 0x%x)>' % (self.cnxtype, self.user.login,
+                                             self.id, id(self))
+    # resource accessors ######################################################
 
-    def get_commit_state(self):
-        return getattr(self._threaddata, 'commit_state', None)
-    def set_commit_state(self, value):
-        self._threaddata.commit_state = value
-    commit_state = property(get_commit_state, set_commit_state)
+    def actual_session(self):
+        """return the original parent session if any, else self"""
+        return self
 
-    # set according to transaction mode for each query
-    @property
-    def pool(self):
-        return getattr(self._threaddata, 'pool', None)
+    def etype_class(self, etype):
+        """return an entity class for the given entity type"""
+        return self.vreg.etype_class(etype)
 
-    # pending transaction operations
-    @property
-    def pending_operations(self):
-        try:
-            return self._threaddata.pending_operations
-        except AttributeError:
-            self._threaddata.pending_operations = []
-            return self._threaddata.pending_operations
+    def entity(self, eid):
+        """return a result set for the given eid"""
+        return self.eid_rset(eid).get_entity(0, 0)
 
-    # rql rewriter
-    @property
-    def rql_rewriter(self):
-        try:
-            return self._threaddata._rewriter
-        except AttributeError:
-            self._threaddata._rewriter = RQLRewriter(self.repo.querier, self)
-            return self._threaddata._rewriter
-
-    # transaction queries data
-    @property
-    def _query_data(self):
-        try:
-            return self._threaddata._query_data
-        except AttributeError:
-            self._threaddata._query_data = {}
-            return self._threaddata._query_data
+    def system_sql(self, sql, args=None):
+        """return a sql cursor on the system database"""
+        if not sql.split(None, 1)[0].upper() == 'SELECT':
+            self.mode = 'write'
+        cursor = self.pool['system']
+        self.pool.source('system').doexec(cursor, sql, args)
+        return cursor
 
     def set_language(self, language):
         """i18n configuration for translation"""
@@ -132,63 +114,61 @@ class Session(RequestSessionMixIn):
         assert prop == 'lang' # this is the only one changeable property for now
         self.set_language(value)
 
-    def __str__(self):
-        return '<%ssession %s (%s 0x%x)>' % (self.cnxtype, self.user.login,
-                                             self.id, id(self))
+    # connection management ###################################################
 
-    def etype_class(self, etype):
-        """return an entity class for the given entity type"""
-        return self.vreg.etype_class(etype)
+    def get_mode(self):
+        return getattr(self._threaddata, 'mode', 'read')
+    def set_mode(self, value):
+        self._threaddata.mode = value
+    mode = property(get_mode, set_mode,
+                    doc='transaction mode (read/write), resetted to read on '
+                    'commit / rollback')
 
-    def entity(self, eid):
-        """return a result set for the given eid"""
-        return self.eid_rset(eid).get_entity(0, 0)
+    def get_commit_state(self):
+        return getattr(self._threaddata, 'commit_state', None)
+    def set_commit_state(self, value):
+        self._threaddata.commit_state = value
+    commit_state = property(get_commit_state, set_commit_state)
 
-    def _touch(self):
-        """update latest session usage timestamp and reset mode to read
-        """
-        self.timestamp = time()
-        self.local_perm_cache.clear()
-        self._threaddata.mode = 'read'
+    @property
+    def pool(self):
+        """connections pool, set according to transaction mode for each query"""
+        return getattr(self._threaddata, 'pool', None)
 
     def set_pool(self):
         """the session need a pool to execute some queries"""
         if self._closed:
             raise Exception('try to set pool on a closed session')
         if self.pool is None:
+            # get pool first to avoid race-condition
             self._threaddata.pool = self.repo._get_pool()
             try:
-                self._threaddata.pool.pool_set(self)
+                self._threaddata.pool.pool_set()
             except:
-                self.repo._free_pool(self.pool)
                 self._threaddata.pool = None
+                self.repo._free_pool(self.pool)
                 raise
             self._threads_in_transaction.add(threading.currentThread())
         return self._threaddata.pool
 
     def reset_pool(self):
-        """the session has no longer using its pool, at least for some time
-        """
+        """the session has no longer using its pool, at least for some time"""
         # pool may be none if no operation has been done since last commit
         # or rollback
         if self.pool is not None and self.mode == 'read':
             # even in read mode, we must release the current transaction
+            pool = self.pool
             self._threads_in_transaction.remove(threading.currentThread())
-            self.repo._free_pool(self.pool)
-            self.pool.pool_reset(self)
+            pool.pool_reset()
             self._threaddata.pool = None
+            # free pool once everything is done to avoid race-condition
+            self.repo._free_pool(pool)
 
-    def system_sql(self, sql, args=None):
-        """return a sql cursor on the system database"""
-        if not sql.split(None, 1)[0].upper() == 'SELECT':
-            self.mode = 'write'
-        cursor = self.pool['system']
-        self.pool.source('system').doexec(cursor, sql, args)
-        return cursor
-
-    def actual_session(self):
-        """return the original parent session if any, else self"""
-        return self
+    def _touch(self):
+        """update latest session usage timestamp and reset mode to read"""
+        self.timestamp = time()
+        self.local_perm_cache.clear()
+        self._threaddata.mode = 'read'
 
     # shared data handling ###################################################
 
@@ -202,7 +182,7 @@ class Session(RequestSessionMixIn):
     def set_shared_data(self, key, value, querydata=False):
         """set value associated to `key` in session data"""
         if querydata:
-            self.set_query_data(key, value)
+            self.transaction_data[key] = value
         else:
             self.data[key] = value
 
@@ -288,7 +268,7 @@ class Session(RequestSessionMixIn):
         """commit the current session's transaction"""
         if self.pool is None:
             assert not self.pending_operations
-            self._query_data.clear()
+            self.transaction_data.clear()
             self._touch()
             return
         if self.commit_state:
@@ -321,7 +301,7 @@ class Session(RequestSessionMixIn):
             self._touch()
             self.commit_state = None
             self.pending_operations[:] = []
-            self._query_data.clear()
+            self.transaction_data.clear()
             if reset_pool:
                 self.reset_pool()
 
@@ -329,7 +309,7 @@ class Session(RequestSessionMixIn):
         """rollback the current session's transaction"""
         if self.pool is None:
             assert not self.pending_operations
-            self._query_data.clear()
+            self.transaction_data.clear()
             self._touch()
             return
         try:
@@ -344,7 +324,7 @@ class Session(RequestSessionMixIn):
         finally:
             self._touch()
             self.pending_operations[:] = []
-            self._query_data.clear()
+            self.transaction_data.clear()
             if reset_pool:
                 self.reset_pool()
 
@@ -371,20 +351,32 @@ class Session(RequestSessionMixIn):
 
     # transaction data/operations management ##################################
 
-    def add_query_data(self, key, value):
-        self._query_data.setdefault(key, []).append(value)
+    @property
+    def transaction_data(self):
+        try:
+            return self._threaddata.transaction_data
+        except AttributeError:
+            self._threaddata.transaction_data = {}
+            return self._threaddata.transaction_data
 
-    def set_query_data(self, key, value):
-        self._query_data[key] = value
-
+    @obsolete('use direct access to session.transaction_data')
     def query_data(self, key, default=None, setdefault=False, pop=False):
         if setdefault:
             assert not pop
-            return self._query_data.setdefault(key, default)
+            return self.transaction_data.setdefault(key, default)
         if pop:
-            return self._query_data.pop(key, default)
+            return self.transaction_data.pop(key, default)
         else:
-            return self._query_data.get(key, default)
+            return self.transaction_data.get(key, default)
+
+    @property
+    def pending_operations(self):
+        try:
+            return self._threaddata.pending_operations
+        except AttributeError:
+            self._threaddata.pending_operations = []
+            return self._threaddata.pending_operations
+
 
     def add_operation(self, operation, index=None):
         """add an observer"""
@@ -395,6 +387,14 @@ class Session(RequestSessionMixIn):
             self.pending_operations.append(operation)
 
     # querier helpers #########################################################
+
+    @property
+    def rql_rewriter(self):
+        try:
+            return self._threaddata._rewriter
+        except AttributeError:
+            self._threaddata._rewriter = RQLRewriter(self.repo.querier, self)
+            return self._threaddata._rewriter
 
     def build_description(self, rqlst, args, result):
         """build a description for a given result"""
@@ -502,8 +502,8 @@ class ChildSession(Session):
     def pending_operations(self):
         return self.parent_session.pending_operations
     @property
-    def _query_data(self):
-        return self.parent_session._query_data
+    def transaction_data(self):
+        return self.parent_session.transaction_data
 
     def set_pool(self):
         """the session need a pool to execute some queries"""

@@ -4,6 +4,8 @@
  *     move me in a more appropriate place
  */
 
+var prefsValues = {};
+
 function togglePrefVisibility(elemId) {
     clearPreviousMessages();
     jQuery('#' + elemId).toggleClass('hidden');
@@ -20,7 +22,6 @@ function openFieldset(fieldsetid){
     var linkhref = 'javascript:closeFieldset("'+ fieldsetid + '")';
     _toggleFieldset(fieldsetid, 0, linklabel, linkhref);
 }
-
 
 function _toggleFieldset(fieldsetid, closeaction, linklabel, linkhref){
     jQuery('#'+fieldsetid).find('div.openlink').each(function(){
@@ -75,7 +76,6 @@ function clearPreviousErrors(formid) {
     jQuery('#err-value:' + formid).remove();
 }
 
-
 function checkValues(form, success){
     var unfreezeButtons = false;
     jQuery(form).find('select').each(function () {
@@ -100,8 +100,8 @@ function checkValues(form, success){
 }
 
 function _checkValue(input, unfreezeButtons){
-     var currentValueInput = jQuery("input[name=current-" + input.attr('name') + "]");
-     if (currentValueInput.val() != input.val()){
+    var currentValue = prefsValues[input.attr('name')];
+     if (currentValue != input.val()){
 	 input.addClass('changed');
 	 unfreezeButtons = true;
      }else{
@@ -112,27 +112,22 @@ function _checkValue(input, unfreezeButtons){
      return unfreezeButtons;
 }
 
-
 function setCurrentValues(form){
-    jQuery(form).find('input[name^=current-value]').each(function () {
-	    var currentValueInput = jQuery(this);
-	    var name = currentValueInput.attr('name').split('-')[1];
-	    jQuery(form).find("[name=" + name + "]").each(function (){
-		    var input = jQuery(this);
-		    if(input.attr('type') == 'radio'){
-			// NOTE: there seems to be a bug with jQuery(input).attr('checked')
-			//       in our case, we can't rely on its value, we use
-			//       the DOM API instead.
-			if(input[0].checked){
-			    currentValueInput.val(input.val());
-			}
-		    }else{
-			currentValueInput.val(input.val());
-		    }
-		});
-    });
+    jQuery(form).find('input[name^=value]').each(function () {
+	    var input = jQuery(this);
+	    if(input.attr('type') == 'radio'){
+		// NOTE: there seems to be a bug with jQuery(input).attr('checked')
+		//       in our case, we can't rely on its value, we use
+		//       the DOM API instead.
+		if(input[0].checked){
+		    prefsValues[input.attr('name')] = input.val();
+		}
+	    }else{
+		prefsValues[input.attr('name')] = input.val();
+	    }
+	});
 }
-
+     
 function initEvents(){
   jQuery('form').each(function() {
 	  var form = jQuery(this);
@@ -153,4 +148,3 @@ function initEvents(){
 $(document).ready(function() {
 	initEvents();
 });
-

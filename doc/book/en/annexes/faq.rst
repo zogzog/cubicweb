@@ -273,14 +273,26 @@ I get NoSelectableObject exceptions: how do I debug selectors ?
 ---------------------------------------------------------------
 
   You just need to put the appropriate context manager around view/component
-  selection: ::
+  selection (one standard place in in vreg.py) : ::
 
-    from cubicweb.common.selectors import traced_selection
-    with traced_selection():
-        comp = self.vreg.select_object('contentnavigation', 'wfhistory',
-                                       self.req, rset, context='navcontentbottom')
+    def possible_objects(self, registry, *args, **kwargs):
+        """return an iterator on possible objects in a registry for this result set
 
-  This will yield additional WARNINGs, like this: ::
+        actions returned are classes, not instances
+        """
+        from cubicweb.selectors import traced_selection
+        with traced_selection():
+            for vobjects in self.registry(registry).values():
+                try:
+                    yield self.select(vobjects, *args, **kwargs)
+                except NoSelectableObject:
+                    continue
+
+  Don't forget the 'from __future__ improt with_statement' at the
+  module top-level.
+
+  This will yield additional WARNINGs, like this:
+  ::
 
     2009-01-09 16:43:52 - (cubicweb.selectors) WARNING: selector one_line_rset returned 0 for <class 'cubicweb.web.views.basecomponents.WFHistoryVComponent'>
 

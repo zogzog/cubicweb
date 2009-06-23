@@ -29,7 +29,8 @@ class RQLInputForm(component.Component):
     """build the rql input form, usually displayed in the header"""
     id = 'rqlinput'
     property_defs = VISIBLE_PROP_DEF
-
+    visible = False
+    
     def call(self, view=None):
         if hasattr(view, 'filter_box_context_info'):
             rset = view.filter_box_context_info()[0]
@@ -148,8 +149,10 @@ class ApplicationName(component.Component):
     site_wide = True
 
     def call(self):
-        self.w(u'<span id="appliName"><a href="%s">%s</a></span>' % (
-            self.req.base_url(), self.req.property_value('ui.site-title')))
+        title = self.req.property_value('ui.site-title')
+        if title:
+            self.w(u'<span id="appliName"><a href="%s">%s</a></span>' % (
+                self.req.base_url(), title))
 
 
 class SeeAlsoVComponent(component.RelatedObjectsVComponent):
