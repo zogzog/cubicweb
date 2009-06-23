@@ -292,7 +292,7 @@ class AutomaticEntityForm(forms.EntityFieldsForm):
 
         by default true if there is no related entity and we need at least one
         """
-        return not existant and card in '1+'
+        return not existant and card in '1+' or self.req.form.has_key('force_%s_display' % rschema)
 
     def should_display_add_new_relation_link(self, rschema, existant, card):
         """return true if we should add a link to add a new creation form
