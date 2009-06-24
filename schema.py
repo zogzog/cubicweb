@@ -32,8 +32,6 @@ from yams import schema
 schema.use_py_datetime()
 nodes.use_py_datetime()
 
-_ = unicode
-
 BASEGROUPS = ('managers', 'users', 'guests', 'owners')
 
 _LOGGER = getLogger('cubicweb.schemaloader')
