@@ -20,13 +20,13 @@ from cubicweb.vregistry import objectify_selector
 from cubicweb.web.views import baseviews
 
 @objectify_selector
-def at_least_two_columns(cls, req, rset, *args, **kwargs):
+def at_least_two_columns(cls, req, rset=None, *args, **kwargs):
     if not rset:
         return 0
     return len(rset.rows[0]) >= 2
 
 @objectify_selector
-def all_columns_are_numbers(cls, req, rset, *args, **kwargs):
+def all_columns_are_numbers(cls, req, rset=None, *args, **kwargs):
     """accept result set with at least one line and two columns of result
     all columns after second must be of numerical types"""
     for etype in rset.description[0]:
@@ -35,14 +35,14 @@ def all_columns_are_numbers(cls, req, rset, *args, **kwargs):
     return 1
 
 @objectify_selector
-def second_column_is_number(cls, req, rset, *args, **kwargs):
+def second_column_is_number(cls, req, rset=None, *args, **kwargs):
     etype = rset.description[0][1]
     if etype not  in ('Int', 'Float'):
         return 0
     return 1
 
 @objectify_selector
-def columns_are_date_then_numbers(cls, req, rset, *args, **kwargs):
+def columns_are_date_then_numbers(cls, req, rset=None, *args, **kwargs):
     etypes = rset.description[0]
     if etypes[0] not in ('Date', 'Datetime'):
         return 0
