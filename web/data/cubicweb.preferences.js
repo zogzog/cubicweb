@@ -113,21 +113,23 @@ function _checkValue(input, unfreezeButtons){
 }
 
 function setCurrentValues(form){
-    jQuery(form).find('input[name^=value]').each(function () {
+    jQuery(form).find('[name^=value]').each(function () {
 	    var input = jQuery(this);
+	    var name = input.attr('name');
 	    if(input.attr('type') == 'radio'){
 		// NOTE: there seems to be a bug with jQuery(input).attr('checked')
 		//       in our case, we can't rely on its value, we use
 		//       the DOM API instead.
 		if(input[0].checked){
-		    prefsValues[input.attr('name')] = input.val();
+		    prefsValues[name] = input.val();
 		}
 	    }else{
-		prefsValues[input.attr('name')] = input.val();
+		prefsValues[name] = input.val();
 	    }
+	    jQuery('[name=edits-'+ name + ']').val(prefsValues[name]);
 	});
 }
-     
+
 function initEvents(){
   jQuery('form').each(function() {
 	  var form = jQuery(this);
