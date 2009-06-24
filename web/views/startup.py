@@ -177,6 +177,7 @@ class SchemaView(tabs.TabsMixin, StartupView):
         self.w(u'<h1>%s</h1>' % _('Schema of the data model'))
         self.render_tabs(self.tabs, self.default_tab)
 
+
 class SchemaTabImageView(StartupView):
     id = 'schema-image'
 
@@ -188,6 +189,7 @@ class SchemaTabImageView(StartupView):
         self.w(u'<img src="%s" alt="%s"/>\n' % (
             html_escape(self.req.build_url('view', vid='schemagraph', withmeta=0)),
             self.req._("graphical representation of the application'schema")))
+
 
 class SchemaTabTextView(StartupView):
     id = 'schema-text'
@@ -205,11 +207,12 @@ class SchemaTabTextView(StartupView):
 
 
 class ManagerSchemaPermissionsView(StartupView, SecurityViewMixIn):
-    id = 'schema_security'
+    id = 'schema-security'
     __select__ = StartupView.__select__ & match_user_groups('managers')
 
     def call(self, display_relations=True,
              skiprels=('is', 'is_instance_of', 'identity', 'owned_by', 'created_by')):
+        self.req.add_css('cubicweb.acl.css')
         _ = self.req._
         formparams = {}
         formparams['sec'] = self.id
@@ -222,28 +225,31 @@ class ManagerSchemaPermissionsView(StartupView, SecurityViewMixIn):
             entities = [eschema for eschema in entities
                         if not eschema.meta]
         # compute relations
-        relations = []
         if display_relations:
             relations = [rschema for rschema in schema.relations()
                          if not (rschema.is_final() or rschema.type in skiprels)]
             if not formparams['withmeta']:
                 relations = [rschema for rschema in relations
                              if not rschema.meta]
+        else:
+            relations = []
         # index
         self.w(u'<div id="schema_security"><a id="index" href="index"/>')
         self.w(u'<h2 class="schema">%s</h2>' % _('index').capitalize())
         self.w(u'<h4>%s</h4>' %   _('Entities').capitalize())
         ents = []
         for eschema in sorted(entities):
-            url = html_escape(self.build_url('schema', **formparams) + '#' + eschema.type)
-            ents.append(u'<a class="grey" href="%s">%s</a> (%s)' % (url,  eschema.type, _(eschema.type)))
-        self.w('%s' %  ', '.join(ents))
+            url = html_escape(self.build_url('schema', **formparams))
+            ents.append(u'<a class="grey" href="%s#%s">%s</a> (%s)' % (
+                url,  eschema.type, eschema.type, _(eschema.type)))
+        self.w(u', '.join(ents))
         self.w(u'<h4>%s</h4>' % (_('relations').capitalize()))
         rels = []
-        for eschema in sorted(relations):
-            url = html_escape(self.build_url('schema', **formparams) + '#' + eschema.type)
-            rels.append(u'<a class="grey" href="%s">%s</a> (%s), ' %  (url , eschema.type, _(eschema.type)))
-        self.w('%s' %  ', '.join(ents))
+        for rschema in sorted(relations):
+            url = html_escape(self.build_url('schema', **formparams))
+            rels.append(u'<a class="grey" href="%s#%s">%s</a> (%s), ' %  (
+                url , rschema.type, rschema.type, _(rschema.type)))
+        self.w(u', '.join(ents))
         # entities
         self.display_entities(entities, formparams)
         # relations
