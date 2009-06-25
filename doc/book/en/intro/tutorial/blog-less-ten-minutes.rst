@@ -17,10 +17,10 @@ Your application is now ready to go::
 
     cubicweb-ctl start -D myblog
 
-This is it. Your blog is ready to you. Go to http://localhost:8080 and enjoy!
+This is it. Your blog is running. Go to http://localhost:8080 and enjoy!
 
-As a developper, you'll want to know more about how to develop new
-cubes and cutomize the look of your application and this is what we
-talk about now.
+As a developer, you'll want to know more about how to develop new
+cubes and cutomize the look of your application and this is what the next
+section is about.
 
 

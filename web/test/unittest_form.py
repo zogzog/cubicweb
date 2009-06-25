@@ -6,6 +6,8 @@
 :license: GNU Lesser General Public License, v2.1 - http://www.gnu.org/licenses
 """
 
+from xml.etree.ElementTree import fromstring
+
 from logilab.common.testlib import unittest_main, mock_object
 
 from cubicweb import Binary
@@ -13,7 +15,7 @@ from cubicweb.devtools.testlib import WebTest
 from cubicweb.web.formfields import (IntField, StringField, RichTextField,
                                      DateTimeField, DateTimePicker,
                                      FileField, EditableFileField)
-from cubicweb.web.formwidgets import PasswordInput
+from cubicweb.web.formwidgets import PasswordInput, Input
 from cubicweb.web.views.forms import EntityFieldsForm, FieldsForm
 from cubicweb.web.views.workflow import ChangeStateForm
 from cubicweb.web.views.formrenderers import FormRenderer
@@ -145,12 +147,12 @@ class EntityFieldsFormTC(WebTest):
 <option value="text/html">text/html</option>
 <option value="text/plain">text/plain</option>
 <option selected="selected" value="text/rest">text/rest</option>
-</select><textarea cols="60" id="description:%(eid)s" name="description:%(eid)s" onkeypress="autogrow(this)" rows="5" tabindex="1"/>''')
+</select><textarea cols="60" id="description:%(eid)s" name="description:%(eid)s" onkeyup="autogrow(this)" rows="5" tabindex="1"/>''')
 
 
     def test_richtextfield_2(self):
         self.req.use_fckeditor = lambda: True
-        self._test_richtextfield('<input name="description_format:%(eid)s" style="display: block" type="hidden" value="text/rest"/><textarea cols="80" cubicweb:type="wysiwyg" id="description:%(eid)s" name="description:%(eid)s" onkeypress="autogrow(this)" rows="20" tabindex="0"/>')
+        self._test_richtextfield('<input name="description_format:%(eid)s" style="display: block" type="hidden" value="text/rest"/><textarea cols="80" cubicweb:type="wysiwyg" id="description:%(eid)s" name="description:%(eid)s" onkeyup="autogrow(this)" rows="20" tabindex="0"/>')
 
 
     def test_filefield(self):
@@ -195,7 +197,7 @@ detach attached file
 <input name="data:%(eid)s__detach" type="checkbox"/>
 detach attached file
 <p><b>You can either submit a new file using the browse button above, or choose to remove already uploaded file by checking the "detach attached file" check-box, or edit file content online with the widget below.</b></p>
-<textarea cols="80" name="data:%(eid)s" onkeypress="autogrow(this)" rows="20" tabindex="3">new widgets system</textarea>''' % {'eid': file.eid})
+<textarea cols="80" name="data:%(eid)s" onkeyup="autogrow(this)" rows="20" tabindex="3">new widgets system</textarea>''' % {'eid': file.eid})
 
 
     def test_passwordfield(self):
@@ -209,6 +211,14 @@ detach attached file
 &nbsp;
 <span class="emphasis">confirm password</span>''' % {'eid': self.entity.eid})
 
+
+    def test_datefield(self):
+        class DFForm(EntityFieldsForm):
+            creation_date = DateTimeField(widget=Input)
+        form = DFForm(self.req, entity=self.entity)
+        init, cur = (fromstring(self._render_entity_field(attr, form)).get('value')
+                     for attr in ('edits-creation_date', 'creation_date'))
+        self.assertEquals(init, cur)
 
 if __name__ == '__main__':
     unittest_main()

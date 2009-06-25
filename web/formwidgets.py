@@ -148,7 +148,7 @@ class TextArea(FieldWidget):
     """<textarea>"""
     def render(self, form, field):
         name, values, attrs = self._render_attrs(form, field)
-        attrs.setdefault('onkeypress', 'autogrow(this)')
+        attrs.setdefault('onkeyup', 'autogrow(this)')
         attrs.setdefault('cols', 80)
         attrs.setdefault('rows', 20)
         if not values:

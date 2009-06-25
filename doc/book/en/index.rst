@@ -29,7 +29,7 @@ The unbeliever will read the :ref:`Tutorial`.
 
 The hacker will join development at the forge_.
 
-The impatient developper will move right away to :ref:`SetUpEnv`.
+The impatient developer will move right away to :ref:`SetUpEnv`.
 
 .. _Logilab: http://www.logilab.fr/
 .. _forge: http://www.cubicweb.org/project/

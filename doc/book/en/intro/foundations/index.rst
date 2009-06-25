@@ -17,7 +17,7 @@ on how to select and how to display content. It allows to browse the knowledge
 database and to display the results with the best rendering according to
 the context.
 This interface flexibility gives back the user the control of the
-rendering parameters that are usually reserved for developpers.
+rendering parameters that are usually reserved for developers.
 
 
 We can list a couple of web applications developped with `CubicWeb`, an online

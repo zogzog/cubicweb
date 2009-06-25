@@ -206,6 +206,8 @@ class FormRenderer(AppRsetObject):
         w(u'</table>')
 
     def render_buttons(self, w, form):
+        if not form.form_buttons:
+            return
         w(u'<table class="%s">\n<tr>\n' % self.button_bar_class)
         for button in form.form_buttons:
             w(u'<td>%s</td>\n' % button.render(form))
