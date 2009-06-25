@@ -553,6 +553,14 @@ class PartPlanInformation(object):
         # NOTE: < 2 since may be 0 on queries such as Any X WHERE X eid 2
         if len(self._sourcesterms) < 2:
             self.needsplit = False
+            # if this is not the system source but we have only constant terms
+            # and no relation (other than eid), apply query on the system source
+            #
+            # testing for rqlst with nothing in vargraph nor defined_vars is the
+            # simplest way the check the condition explained below
+            if not self.system_source in self._sourcesterms and \
+                   not self.rqlst.vargraph and not self.rqlst.defined_vars:
+                self._sourcesterms = {self.system_source: {}}
         elif not self.needsplit:
             if not allequals(self._sourcesterms.itervalues()):
                 for terms in self._sourcesterms.itervalues():

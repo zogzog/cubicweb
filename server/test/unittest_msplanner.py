@@ -2072,6 +2072,14 @@ class MSPlannerTwoSameExternalSourcesTC(BasePlannerTC):
                      )],
                    {'x': 999999})
 
+    def test_nonregr_eid_query(self):
+        self.repo._type_source_cache[999999] = ('Note', 'cards', 999999)
+        self._test('Any X WHERE X eid 999999',
+                   [('OneFetchStep', [('Any 999999', [{}])],
+                     None, None, [self.system], {}, []
+                     )],
+                   {'x': 999999})
+
 
 
 class FakeVCSSource(AbstractSource):
