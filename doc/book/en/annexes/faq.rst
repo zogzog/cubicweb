@@ -46,7 +46,7 @@ Why do you think using pure python is better than using a template language ?
   robust application.
 
 Why do you use the LGPL license to prevent me from doing X ?
------------------------------------------------------------
+------------------------------------------------------------
 
   LGPL means that *if* you redistribute your application, you need to
   redistribute the changes you made to CubicWeb under the LGPL licence.
@@ -92,26 +92,28 @@ Why is the RQL query language looking similar to X ?
 [copy answer from forum, explain why similar to sparql and why better
   than django and SQL]
 
-which ajax library
-------------------
-[we use jquery and things on top of that]
+which ajax library is CubicWeb using ?
+--------------------------------------
+
+[CubicWeb uses jQuery and adds a thin layer on top of that]
 
 
-How to implement security?
---------------------------
+How is security implemented ?
+------------------------------
 
   This is an example of how it works in our framework::
 
     class Version(EntityType):
-    """a version is defining the content of a particular project's
-    release"""
-    # definition of attributes is voluntarily missing
-    permissions = {'read': ('managers', 'users', 'guests',),
-                   'update': ('managers', 'logilab', 'owners',),
-                   'delete': ('managers', ),
-                   'add': ('managers', 'logilab',
-                        ERQLExpression('X version_of PROJ, U in_group G, PROJ
-                        require_permission P, P name "add_version", P require_group G'),)}
+        """a version is defining the content of a particular project's
+        release"""
+        # definition of attributes is voluntarily missing
+        permissions = {'read': ('managers', 'users', 'guests',),
+                       'update': ('managers', 'logilab', 'owners',),
+                       'delete': ('managers', ),
+                       'add': ('managers', 'logilab',
+                           ERQLExpression('X version_of PROJ, U in_group G, '
+                                          'PROJ require_permission P, '
+                                          'P name "add_version", P require_group G'),)}
 
   The above means that permission to read a Version is granted to any
   user that is part of one of the groups 'managers', 'users', 'guests'.
@@ -135,8 +137,9 @@ How to implement security?
   [XXX what does the second example means in addition to the first one?]
 
 
-`Error while publishing rest text ...`
---------------------------------------
+What is `Error while publishing rest text ...` ?
+------------------------------------------------
+
   While modifying the description of an entity, you get an error message in
   the application `Error while publishing ...` for Rest text and plain text.
   The server returns a traceback like as follows ::
@@ -152,8 +155,8 @@ How to implement security?
   This can be fixed by applying the patch described in :
   http://code.google.com/p/googleappengine/issues/detail?id=48
 
-What are hooks used for?
-------------------------
+What are hooks used for ?
+-------------------------
 
   Hooks are executed around (actually before or after) events.  The
   most common events are data creation, update and deletion.  They
@@ -166,8 +169,8 @@ What are hooks used for?
   Other kinds of hooks, called Operations, are available
   for execution just before commit.
 
-When should you define an HTML template rather than define a graphical component?
----------------------------------------------------------------------------------
+When should you define an HTML template rather than define a graphical component ?
+----------------------------------------------------------------------------------
 
   An HTML template cannot contain code, hence it is only about static
   content.  A component is made of code and operations that apply on a
@@ -180,8 +183,8 @@ What is the difference between `AppRsetObject` and `AppObject` ?
   `AppRsetObject` instances are selected on a request and a result
   set. `AppObject` instances are directly selected by id.
 
-How to update a database after a schema modification?
------------------------------------------------------
+How to update a database after a schema modification ?
+------------------------------------------------------
 
   It depends on what has been modified in the schema.
 
@@ -196,8 +199,8 @@ How to update a database after a schema modification?
   * Add a relation: ``add_relation_definition('SubjRelation', 'MyRelation', 'ObjRelation')``.
 
 
-How to create an anonymous user?
---------------------------------
+How to create an anonymous user ?
+---------------------------------
 
   This allows to bypass authentication for your site. In the
   ``all-in-one.conf`` file of your instance, define the anonymous user
@@ -222,8 +225,8 @@ How to create an anonymous user?
     decribed above.
 
 
-How to change the application logo?
------------------------------------
+How to change the application logo ?
+------------------------------------
 
   There are two ways of changing the logo.
 
@@ -239,11 +242,11 @@ How to change the application logo?
 
        LOGO = DATADIR/path/to/mylogo.gif
 
-     where DATADIR is ``mycubes/data``.
+     where DATADIR is ``mycube/data``.
 
 
-How to configure LDAP source?
--------------------------------
+How to configure a LDAP source ?
+--------------------------------
 
   Your instance's sources are defined in ``/etc/cubicweb.d/myapp/sources``.
   Configuring an LDAP source is about declaring that source in your
@@ -269,7 +272,7 @@ How to configure LDAP source?
   Any change applied to configuration file requires to restart your
   application.
 
-I get NoSelectableObject exceptions: how do I debug selectors ?
+I get NoSelectableObject exceptions, how do I debug selectors ?
 ---------------------------------------------------------------
 
   You just need to put the appropriate context manager around view/component
@@ -296,8 +299,8 @@ I get NoSelectableObject exceptions: how do I debug selectors ?
 
     2009-01-09 16:43:52 - (cubicweb.selectors) WARNING: selector one_line_rset returned 0 for <class 'cubicweb.web.views.basecomponents.WFHistoryVComponent'>
 
-How to format an entity date attribute?
----------------------------------------
+How to format an entity date attribute ?
+----------------------------------------
 
   If your schema has an attribute of type Date or Datetime, you might
   want to format it. First, you should define your preferred format using
@@ -310,14 +313,14 @@ How to format an entity date attribute?
 Can PostgreSQL and CubicWeb authentication work with kerberos ?
 ----------------------------------------------------------------
 
-  If you have postgresql set up to accept kerberos authentication, you can set
+  If you have PostgreSQL set up to accept kerberos authentication, you can set
   the db-host, db-name and db-user parameters in the `sources` configuration
-  file while leaving the password blank. It should be enough for your instance
-  to connect to postgresql with a kerberos ticket.
+  file while leaving the password blank. It should be enough for your
+  application to connect to postgresql with a kerberos ticket.
 
 
-How to load data from a script?
--------------------------------
+How to load data from a script ?
+--------------------------------
 
   The following script aims at loading data within a script assuming pyro-nsd is
   running and your application is configured with ``pyro-server=yes``, otherwise
@@ -331,8 +334,8 @@ How to load data from a script?
         cur.execute('INSERT Blog B: B name %s', name)
     cnx.commit()
 
-What is the CubicWeb datatype corresponding to GAE datastore's UserProperty?
-----------------------------------------------------------------------------
+What is the CubicWeb datatype corresponding to GAE datastore's UserProperty ?
+-----------------------------------------------------------------------------
 
   If you take a look at your application schema and
   click on "display detailed view of metadata" you will see that there
@@ -348,8 +351,8 @@ What is the CubicWeb datatype corresponding to GAE datastore's UserProperty?
   mapping Google Accounts to local Euser entities automatically]
 
 
-How to reset the password for user joe?
----------------------------------------
+How to reset the password for user joe ?
+----------------------------------------
 
   You need to generate a new encrypted password::
 

@@ -59,5 +59,6 @@ This is it! All is settled down to start developping your data model...
 
 upgrade
 ~~~~~~~
-XXX feed me
+
+XXX write me
 
