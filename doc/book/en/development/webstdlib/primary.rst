@@ -2,23 +2,21 @@ The default 'primary' view (:mod:`cubicweb.web.views.primary`)
 ---------------------------------------------------------------
 
 The primary view of an entity is the view called by default when a single
-entity is in the result set and needs to be displayed. 
+entity is in the result set and needs to be displayed.
 
 This view is supposed to render a maximum of informations about the entity.
-
-
 
 Rendering methods and attributes for ``PrimaryView``
 ----------------------------------------------------
 
-By default, `CubicWeb` provides a primary view for each new entity type
+By default, *CubicWeb* provides a primary view for each new entity type
 you create. The first view you might be interested in modifying.
 
 Let's have a quick look at the EntityView ``PrimaryView`` as well as
 its rendering method
 
 .. code-block:: python
-    
+
     class PrimaryView(EntityView):
         """the full view of an non final entity"""
         id = 'primary'
@@ -64,8 +62,8 @@ its rendering method
 
 The methods you want to modify while customizing a ``PrimaryView`` are:
 
-*render_entity_title(self, entity)* 
-    Renders the entity title based on the assumption that the method 
+*render_entity_title(self, entity)*
+    Renders the entity title based on the assumption that the method
     ``def content_title(self)`` is implemented for the given entity type.
 
 *render_entity_metadata(self, entity)*
@@ -77,7 +75,7 @@ The methods you want to modify while customizing a ``PrimaryView`` are:
     of type `Password` and `Bytes`.
 
 *content_navigation_components(self, context)*
-    This method is applicable only for entity type implementing the interface 
+    This method is applicable only for entity type implementing the interface
     `IPrevNext`. This interface is for entities which can be linked to a previous
     and/or next entity. This methods will render the navigation links between
     entities of this type, either at the top or at the bottom of the page
@@ -85,7 +83,7 @@ The methods you want to modify while customizing a ``PrimaryView`` are:
 
 *render_entity_relations(self, entity, siderelations)*
     Renders all the relations of the entity in the main section of the page.
-        
+
 *render_side_related(self, entity, siderelations)*
     Renders all the relations of the entity in a side box. This is equivalent
     to *render_entity_relations* in addition to render the relations
@@ -98,7 +96,7 @@ you can already customize some of the rendering:
     Renders the attribute label next to the attribute value if set to True.
     Otherwise, does only display the attribute value.
 
-*show_rel_label* 
+*show_rel_label*
     Renders the relation label next to the relation value if set to True.
     Otherwise, does only display the relation value.
 

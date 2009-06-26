@@ -24,7 +24,7 @@ def read_config(config_file):
     :param config_file: path to the configuration file
 
     :rtype: dict
-    :return: a dictionary with specified values associated to option names 
+    :return: a dictionary with specified values associated to option names
     """
     config = current = {}
     try:

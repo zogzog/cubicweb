@@ -2,7 +2,7 @@ The automatic entity form (:mod:`cubicweb.web.views.autoform`)
 ---------------------------------------------------------------
 
 It is possible to manage attributes/relations in the simple or multiple
-editing form thanks to the following *rtags*: 
+editing form thanks to the following *rtags*:
 
 * `primary`, indicates that an attribute or a relation has to be
   inserted **in the simple or multiple editing forms**. In the case of
@@ -26,6 +26,6 @@ editing form thanks to the following *rtags*:
 * `generated`, indicates that an attribute is dynamically computed
   or other,  and that it should not be displayed in the editing form.
 
-If necessary, it is possible to overwrite the method  
+If necessary, it is possible to overwrite the method
 `relation_category(rtype, x='subject')` to dynamically compute
 a relation editing category.

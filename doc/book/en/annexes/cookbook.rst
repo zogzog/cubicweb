@@ -7,10 +7,10 @@ We gathered together some of our tricks and scripts that could make
 life easier.
 
 
-* How to import LDAP users in `CubicWeb`?
+* How to import LDAP users in *CubicWeb*?
 
   Here is a very useful script which enables you to import LDAP users
-  into your `CubicWeb` application by running the following: ::
+  into your *CubicWeb* application by running the following: ::
 
 
     import os
@@ -70,11 +70,11 @@ life easier.
   you would not be able to use dbapi. ::
 
     from cubicweb import dbapi
-        
+
     cnx = dbapi.connection(database='instance-id', user='admin', password='admin')
     cur = cnx.cursor()
     for name in ('Personal', 'Professional', 'Computers'):
         cur.execute('INSERT Blog B: B name %s', name)
     cnx.commit()
 
-    
+
