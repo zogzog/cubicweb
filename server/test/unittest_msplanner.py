@@ -1949,6 +1949,14 @@ class MSPlannerTC(BaseMSPlannerTC):
                      None, None, [self.system], {}, [])],
                    {'x': 999998, 'u': 999999})
 
+    def test_nonregr14_3(self):
+        repo._type_source_cache[999999] = ('CWUser', 'system', 999999)
+        repo._type_source_cache[999998] = ('CWUser', 'ldap', 999998)
+        self._test('Any X WHERE X eid %(x)s, X owned_by U, U eid %(u)s',
+                   [('OneFetchStep', [('Any 999998 WHERE 999998 owned_by 999999', [{}])],
+                     None, None, [self.system], {}, [])],
+                   {'x': 999998, 'u': 999999})
+
 
 class MSPlannerTwoSameExternalSourcesTC(BasePlannerTC):
     """test planner related feature on a 3-sources repository:
