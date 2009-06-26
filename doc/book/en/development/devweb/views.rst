@@ -3,11 +3,11 @@ Views
 
 This chapter aims to describe the concept of a `view` used all along
 the development of a web application and how it has been implemented
-in `CubicWeb`.
+in *CubicWeb*.
 
 We'll start with a description of the interface providing you with a basic
 understanding of the classes and methods available, then detail the view
-selection principle which makes `CubicWeb` web interface very flexible.
+selection principle which makes *CubicWeb* web interface very flexible.
 
 A `View` is an object applied to another object such as an entity.
 
@@ -186,7 +186,7 @@ now allows to read its description and all its entries.
    :alt: a blog and all its entries
 
 **Before we move forward, remember that the selection/view principle is
-at the core of `CubicWeb`. Everywhere in the engine, data is requested
+at the core of *CubicWeb*. Everywhere in the engine, data is requested
 using the RQL language, then HTML/XML/text/PNG is output by applying a
 view to the result set returned by the query. That is where most of the
 flexibility comes from.**

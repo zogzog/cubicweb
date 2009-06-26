@@ -10,7 +10,7 @@ Tests
 Unit tests
 ----------
 
-`CubicWeb` framework provides essentially two Python test classes in the
+*CubicWeb* framework provides essentially two Python test classes in the
 module `cubicweb.devtools.apptest`:
 
 * `EnvBasedTC`, to simulate a complete environment (web + repository)

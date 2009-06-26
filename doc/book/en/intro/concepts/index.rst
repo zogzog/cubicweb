@@ -3,75 +3,64 @@
 The Core Concepts of CubicWeb
 =============================
 
-.. toctree::
-   :maxdepth: 1
-
-------------------------------
-
-This section aims to provide you the keys of success with *CubicWeb*
-by clarifying the terms specific to our framework. If you want to do anything
-serious with CubicWeb, you should understand concepts in those lines.
-
-*CubicWeb* defines its own terminology. To make sure there is no confusion
-while reading this book, we strongly recommand you take time to go through
-the following definitions that are the basics to understand while
-developing with *CubicWeb*.
-
+This section defines some terms and core concepts of the *CubicWeb*
+framework. To avoid confusion while reading this book, take time to go through
+the following definitions and use this section as a reference during your
+reading.
 
 .. _Cube:
 
 Cubes
 -----
-** Construct your application by assembling cubes **
 
-A cube provides a specific functionality, or a complete *CubicWeb*
-application usually by assembling other cubes.
+A cube is a software component composed of three parts: its data model (schema),
+its logic (entities) and its user interface (views).
 
-It's usually composed of a data model, some logic to manipulate it and some parts
-of web interface.
+A cube can use other cubes as building blocks and assemble them to provide
+a whole with richer functionnalities than its parts. The cubes `cubicweb-blog`_
+and `cubicweb-comment`_ could be used to make a cube named *myblog* with
+commentable blog entries.
 
-You can decide to write your own set of cubes if you wish to re-use the
-entity types you develop or/and if you have specific needs not covered by
-cubes are available from the `CubicWeb Forge`_ under a free software license.
+The `CubicWeb Forge`_ offers a large number of cubes developed by the community
+and available under a free software license.
 
-Available cubes on your system are defined in the directory
-:file:`/usr/share/cubicweb/cubes` when using a system wide installation.  For people
-using the mercurial repository of cubicweb, the :file:`/path/to/forest/cubicweb/cubes`
-directory is used. You can specify additional location using the :envvar:`CW_CUBES_PATH`
-environment variable, using ':' as separator.
+Available cubes on your system are usually stored in the directory
+:file:`/usr/share/cubicweb/cubes` when using a unix system wide
+installation. During development, the cubes are found in the
+:file:`/path/to/cubicweb_forest/cubes` directory. You can specify additional
+locations using the :envvar:`CW_CUBES_PATH` environment variable, using ':' as a
+separator.
 
 .. _`CubicWeb Forge`: http://www.cubicweb.org/project/
-
+.. _`cubicweb-blog`: http://www.cubicweb.org/project/cubicweb-blog
+.. _`cubicweb-comment`: http://www.cubicweb.org/project/cubicweb-comment
 
 
 Instances
 ----------
-** *CubicWeb* framework is a server/client application framework**
 
-An instance is a specific installation of one or multiple cubes. All the required
-configuration files necessary for the well being of your web application are
-grouped in an instance. This will refer to the cube(s) your application is based
-on.  For example logilab.org and our intranet are two instances of a single cube
-`jpl`
+An instance is a runnable application installed on a computer and based on a
+cube.
 
-We recommand not to define schema, entities or views in the instance
-file system itself but in the cube, in order to maintain re-usability of
-entities and their views. We strongly recommand to develop cubes which
-could be used in other instances (modular approach).
+The instance directory includes the configuration files. Several instances can
+be created based on the same cube. For exemple, several software forges can be
+set up on one computer system based on the `cubicweb-forge`_ cube.
 
-An instance usually usually consists into a web interface which is talking to a
-rql repository, itself connected to a SQL database, all into a single
-process. You can have some more complicated configurations using several web
-front-ends talking to a rql repository using `Pyro`_, databases replication...
+.. _`cubicweb-forge`: http://www.cubicweb.org/project/cubicweb-forge
+
+Instances can be of different types: all-in-one, web engine or data repository. For
+applications that support high traffic, several web (front-end) and data
+(back-end) instances can be set-up to share the load.
 
 .. image:: ../../images/archi_globale.en.png
 
-The term application is sometimes used to talk about an instance and sometimes to
-talk of a cube depending on the context.  So we would like to avoid using this
-term and try to use *cube* and *instance* instead.
+The term application can refer to an instance or to a cube, depending on the
+context. This book will try to avoid using this term and use *cube* and
+*instance* as appropriate.
 
-Data Repository
-~~~~~~~~~~~~~~~
+(Data) Repository
+~~~~~~~~~~~~~~~~~~
+
 The repository (Be carefull not to get confused with a Mercurial repository or a
 debian repository!) manages all interactions with various data sources by
 providing access to them using uniformly using the Relation Query Language (RQL).  The

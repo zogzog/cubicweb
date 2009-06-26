@@ -12,7 +12,7 @@ user should see virtually no difference between an attribute and a
 relation).
 
 RQL is inspired by SQL but is the highest level. A knowledge of the
-`CubicWeb` schema defining the application is necessary.
+*CubicWeb* schema defining the application is necessary.
 
 Comparison with existing languages
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -22,7 +22,7 @@ SQL
 RQL builds on the features of SQL but is at a higher level
 (the current implementation of RQL generates SQL). For that it is limited
 to the way of browsing relations and introduces variables.
-The user does not need to know the model underlying SQL, but the `CubicWeb`
+The user does not need to know the model underlying SQL, but the *CubicWeb*
 schema defining the application.
 
 Versa

@@ -11,7 +11,7 @@ The main principles are:
 * permissions (read, update, create, delete)
 * permissions are assigned to groups (and not to users)
 
-For `CubicWeb` in particular:
+For *CubicWeb* in particular:
 
 * we associate rights at the enttities/relations schema level
 * for each entity, we distinguish four kind of permissions: read,

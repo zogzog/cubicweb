@@ -5,7 +5,7 @@
 ``cubicweb-ctl`` tool
 =====================
 
-`cubicweb-ctl` is the swiss knife to manage `CubicWeb` instances.
+`cubicweb-ctl` is the swiss knife to manage *CubicWeb* instances.
 The general syntax is ::
 
   cubicweb-ctl <command> [options command] <arguments commands>
@@ -15,7 +15,7 @@ To view available commands ::
   cubicweb-ctl
   cubicweb-ctl --help
 
-Please note that the commands available depends on the `CubicWeb` packages
+Please note that the commands available depends on the *CubicWeb* packages
 and cubes that have been installed.
 
 To view the help menu on specific command ::
@@ -62,7 +62,7 @@ Commands to control instances
 Commands to maintain instances
 ------------------------------
 * ``upgrade``, launches the existing instances migration when a new version
-  of `CubicWeb` or the cubes installed is available
+  of *CubicWeb* or the cubes installed is available
 * ``shell``, opens a migration shell for manual maintenance of the instance
 * ``db-dump``, creates a dump of the system database
 * ``db-restore``, restores a dump of the system database
@@ -73,7 +73,7 @@ Commands to maintain instances
 
 Commands to maintain i18n catalogs
 ----------------------------------
-* ``i18ncubicweb``, regenerates messages catalogs of the `CubicWeb` library
+* ``i18ncubicweb``, regenerates messages catalogs of the *CubicWeb* library
 * ``i18ncube``, regenerates the messages catalogs of a cube
 * ``i18ninstance``, recompiles the messages catalogs of an instance.
   This is automatically done while upgrading.

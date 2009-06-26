@@ -67,7 +67,7 @@ Logical Operators
   of logical operators (see :ref:`PriorityOperators`).
 
 Mathematical Operators
-````````````````````
+```````````````````````
 ::
 
      +, -, *, /

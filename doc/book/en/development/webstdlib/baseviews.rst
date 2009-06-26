@@ -3,7 +3,7 @@
 Base views (:mod:`cubicweb.web.views.baseviews`)
 ------------------------------------------------
 
-`CubicWeb` provides a lot of standard views. You can find them in
+*CubicWeb* provides a lot of standard views. You can find them in
 ``cubicweb/web/views/``.
 
 A certain number of views are used to build the web interface, which apply

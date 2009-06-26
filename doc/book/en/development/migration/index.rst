@@ -5,7 +5,7 @@
 Migration
 =========
 
-One of the main concept in `CubicWeb` is to create incremental applications.
+One of the main concept in *CubicWeb* is to create incremental applications.
 For this purpose, multiple actions are provided to facilitate the improvement
 of an application, and in particular to handle the changes to be applied
 to the data model, without loosing existing data.
@@ -45,7 +45,7 @@ in which :
 
 Again in the directory `migration`, the file `depends.map` allows to indicate
 that for the migration to a particular model version, you always have to first
-migrate to a particular `CubicWeb` version. This file can contain comments (lines
+migrate to a particular *CubicWeb* version. This file can contain comments (lines
 starting by `#`) and a dependancy is listed as follows: ::
 
   <model version n° X.Y.Z> : <cubicweb version n° X.Y.Z>

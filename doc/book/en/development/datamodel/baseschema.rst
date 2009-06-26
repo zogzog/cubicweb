@@ -3,7 +3,7 @@ Pre-defined schemas in the library
 ----------------------------------
 
 The library defines a set of entity schemas that are required by the system
-or commonly used in `CubicWeb` applications.
+or commonly used in *CubicWeb* applications.
 
 
 Entity types used to store the schema

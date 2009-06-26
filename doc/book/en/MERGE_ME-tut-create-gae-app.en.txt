@@ -7,7 +7,7 @@ Tutoriel : créer votre première application web pour Google AppEngine
 
 Ce tutoriel va vous guider pas à pas a construire une apllication web 
 de gestion de Blog afin de vous faire découvrir les fonctionnalités de
-`CubicWeb`.
+*CubicWeb*.
 
 Nous supposons que vous avec déjà suivi le guide :ref:`installationGAE`.
 
@@ -23,7 +23,7 @@ d'application web et nous allons expliciter toutes les étapes nécessaires
   
   cubicweb-ctl newgapp blogdemo
 
-`newgapp` est la commande permettant de créer une instance `CubicWeb` pour
+`newgapp` est la commande permettant de créer une instance *CubicWeb* pour
 le datastore.
 
 Assurez-vous que votre variable d'environnement ``PYTHONPATH`` est correctement
@@ -32,7 +32,7 @@ initialisée (:ref:`installationGAE`)
 Définissez un schéma
 --------------------
 
-Le modèle de données ou schéma est au coeur d'une application `CubicWeb`.
+Le modèle de données ou schéma est au coeur d'une application *CubicWeb*.
 C'est là où vous allez devoir définir le type de contenu que votre application
 devra gérer.
 
@@ -180,7 +180,7 @@ appartient, ``MyLife``.
    :alt: displaying the detailed view of a blogentry
 
 Rappelez-vous que pour le moment, tout a été géré par la plate-forme
-`CubicWeb` et que la seule chose qui a été fournie est le schéma de
+*CubicWeb* et que la seule chose qui a été fournie est le schéma de
 données. D'ailleurs pour obtenir une vue graphique du schéma, exécutez
 la commande ``laxctl genschema blogdemo`` et vous pourrez visualiser
 votre schéma a l'URL suivante : http://localhost:8080/schema

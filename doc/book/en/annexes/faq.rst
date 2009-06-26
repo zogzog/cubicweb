@@ -18,12 +18,12 @@ Why does not CubicWeb have a template language ?
   preferred template language if you want. [explain how to use a
   template language]
 
-  `CubicWeb` does not define its own templating language as this was
+  *CubicWeb* does not define its own templating language as this was
   not our goal. Based on our experience, we realized that
   we could gain productivity by letting designers use design tools
   and developpers develop without the use of the templating language
   as an intermediary that could not be anyway efficient for both parties.
-  Python is the templating language that we use in `CubicWeb`, but again,
+  Python is the templating language that we use in *CubicWeb*, but again,
   it does not prevent you from using a templating language.
 
   The reason template languages are not used in this book is that
@@ -53,7 +53,7 @@ Why do you use the LGPL license to prevent me from doing X ?
 
   Publishing a web site has nothing to do with redistributing
   source code. A fair amount of companies use modified LGPL code
-  for internal use. And someone could publish a `CubicWeb` component
+  for internal use. And someone could publish a *CubicWeb* component
   under a BSD licence for others to plug into a LGPL framework without
   any problem. The only thing we are trying to prevent here is someone
   taking the framework and packaging it as closed source to his own

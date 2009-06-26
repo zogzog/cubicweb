@@ -3,7 +3,7 @@
 What's next?
 ------------
 
-We demonstrated how from a straight out of the box `CubicWeb`
+We demonstrated how from a straight out of the box *CubicWeb*
 installation, you can build your web-application based on a
 schema. It's all already there: views, templates, permissions,
 etc. The step forward is now for you to customize according

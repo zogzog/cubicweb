@@ -6,7 +6,7 @@
 Part III - Administration
 -------------------------
 
-This part is for installation and administration of the `CubicWeb` framework and
+This part is for installation and administration of the *CubicWeb* framework and
 applications based on that framework.
 
 .. toctree::
@@ -25,7 +25,7 @@ applications based on that framework.
 RQL logs
 --------
 
-You can configure the `CubicWeb` application to keep a log
+You can configure the *CubicWeb* application to keep a log
 of the queries executed against your database. To do so,
 edit the configuration file of your application
 ``.../etc/cubicweb.d/myapp/all-in-one.conf`` and uncomment the

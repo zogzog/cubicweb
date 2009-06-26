@@ -3,10 +3,10 @@
 Yams *schema*
 -------------
 
-The **schema** is the core piece of a `CubicWeb` application as it defines
+The **schema** is the core piece of a *CubicWeb* application as it defines
 the handled data model. It is based on entity types that are either already
-defined in the `CubicWeb` standard library; or more specific types, that
-`CubicWeb` expects to find in one or more Python files under the directory
+defined in the *CubicWeb* standard library; or more specific types, that
+*CubicWeb* expects to find in one or more Python files under the directory
 `schema`.
 
 At this point, it is important to make clear the difference between
@@ -18,7 +18,7 @@ A relation type could have been implied if none is related to a
 relation definition of the schema.
 
 
-All `CubicWeb` built-in types are available : `String`, `Int`, `Float`,
+All *CubicWeb* built-in types are available : `String`, `Int`, `Float`,
 `Decimal`, `Boolean`, `Date`, `Datetime`, `Time`, `Interval`, `Byte`
 and `Password`.
 They are implicitely imported (as well as the special the function "_"
@@ -168,7 +168,7 @@ The main principles are:
 * permissions (read, update, create, delete)
 * permissions are assigned to groups (and not to users)
 
-For `CubicWeb` in particular:
+For *CubicWeb* in particular:
 
 * we associate rights at the enttities/relations schema level
 * for each entity, we distinguish four kind of permissions: read,
@@ -315,7 +315,7 @@ birth and a relation that connects a `Person` to another entity of type
 `Company` through the semantic `works_for`.
 
 The name of the Python attribute corresponds to the name of the attribute
-or the relation in `CubicWeb` application.
+or the relation in *CubicWeb* application.
 
 An attribute is defined in the schema as follows::
 

@@ -3,18 +3,18 @@
 .. _Part1:
 
 -----------------------------------
-Part I - Introduction to `CubicWeb`
+Part I - Introduction to *CubicWeb*
 -----------------------------------
 
-This first part of the book will present different reading path to
-discover the `CubicWeb` framework, provide a tutorial to get a quick
-overview of its features and list its key concepts.
+This first part of the book offers different reading path to
+discover the *CubicWeb* framework, provides a tutorial to get a quick
+overview of its features and lists its key concepts.
 
 
 .. toctree::
    :maxdepth: 2
 
    book-map
-   foundations/index
+   history
    concepts/index
    tutorial/index

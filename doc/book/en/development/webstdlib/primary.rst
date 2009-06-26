@@ -9,7 +9,7 @@ This view is supposed to render a maximum of informations about the entity.
 Rendering methods and attributes for ``PrimaryView``
 ----------------------------------------------------
 
-By default, `CubicWeb` provides a primary view for each new entity type
+By default, *CubicWeb* provides a primary view for each new entity type
 you create. The first view you might be interested in modifying.
 
 Let's have a quick look at the EntityView ``PrimaryView`` as well as

@@ -14,7 +14,7 @@ i.e. a list of possible transitions from one state to another state.
 
 We will define a simple workflow for a blog, with only the following
 two states: `submitted` and `published`. So first, we create a simple
-`CubicWeb` in ten minutes (see :ref:`BlogTenMinutes`).
+*CubicWeb* in ten minutes (see :ref:`BlogFiveMinutes`).
 
 Set-up a workflow
 -----------------
@@ -60,7 +60,7 @@ Create states, transitions and group permissions
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The ``postcreate.py`` script is executed in a special environment, adding
-several `CubicWeb` primitives that can be used.
+several *CubicWeb* primitives that can be used.
 They are all defined in the ``class ServerMigrationHelper``.
 We will only discuss the methods we use to create a workflow in this example.
 
@@ -131,7 +131,7 @@ Under the hood
 ~~~~~~~~~~~~~~
 
 A workflow is a collection of entities of type ``State`` and of type ``Transition``
-which are standard `CubicWeb` entity types.
+which are standard *CubicWeb* entity types.
 For instance, the following lines::
 
   submitted = add_state(_('submitted'), 'BlogEntry', initial=True)

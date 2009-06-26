@@ -20,7 +20,7 @@ The most important method is the `execute` method of a cursor :
 
 The `Connection` object owns the methods `commit` and `rollback`. You *should
 never need to use them* during the development of the web interface based on
-the `CubicWeb` framework as it determines the end of the transaction depending
+the *CubicWeb* framework as it determines the end of the transaction depending
 on the query execution success.
 
 .. note::

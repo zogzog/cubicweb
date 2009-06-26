@@ -4,10 +4,10 @@ Create your cube
 ----------------
 
 The packages ``cubicweb`` and ``cubicweb-dev`` installs a command line tool
-for `CubicWeb` called ``cubicweb-ctl``. This tool provides a wide range of
+for *CubicWeb* called ``cubicweb-ctl``. This tool provides a wide range of
 commands described in details in :ref:`cubicweb-ctl`.
 
-Once your `CubicWeb` development environment is set up, you can create a new
+Once your *CubicWeb* development environment is set up, you can create a new
 cube::
 
   cubicweb-ctl newcube blog
@@ -21,7 +21,7 @@ a directory named ``blog`` reflecting the structure described in :ref:`cubesConc
 Define your data model
 ----------------------
 
-The data model or schema is the core of your `CubicWeb` application.
+The data model or schema is the core of your *CubicWeb* application.
 It defines the type of content your application will handle.
 
 The data model of your cube ``blog`` is defined in the file ``schema.py``:
@@ -91,7 +91,7 @@ and create entities.
 
 .. image:: ../../images/blog-demo-first-page.png
 
-Please notice that so far, the `CubicWeb` franework managed all aspects of
+Please notice that so far, the *CubicWeb* franework managed all aspects of
 the web application based on the schema provided at first.
 
 
@@ -183,7 +183,7 @@ The view selection principle
 
 A view is defined by a Python class which includes:
 
-  - an identifier (all objects in `CubicWeb` are entered in a registry
+  - an identifier (all objects in *CubicWeb* are entered in a registry
     and this identifier will be used as a key)
 
   - a filter to select the result sets it can be applied to
@@ -191,11 +191,11 @@ A view is defined by a Python class which includes:
 A view has a set of methods complying
 with the `View` class interface (`cubicweb.common.view`).
 
-`CubicWeb` provides a lot of standard views for the type `EntityView`;
+*CubicWeb* provides a lot of standard views for the type `EntityView`;
 for a complete list, read the code in directory ``cubicweb/web/views/``.
 
 A view is applied on a `result set` which contains a set of
-entities we are trying to display. `CubicWeb` uses a selector
+entities we are trying to display. *CubicWeb* uses a selector
 mechanism which computes for each available view a score:
 the view with the highest score is then used to display the given `result set`.
 The standard library of selectors is in

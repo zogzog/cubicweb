@@ -11,7 +11,7 @@ framework, but Google stated at Google IO 2008 that it would not
 support a specific Python web framework and that all
 community-supported frameworks would be more than welcome [1]_.
 
-Therefore `Logilab`_ ported `CubicWeb` to run on top of `Google AppEngine`'s
+Therefore `Logilab`_ ported *CubicWeb* to run on top of `Google AppEngine`'s
 datastore.
 
 .. _`Google AppEngine`: http://code.google.com/appengine/docs/whatisgoogleappengine.html
@@ -25,7 +25,7 @@ Download the source
   http://code.google.com/appengine/downloads.html
 
 
-Please follow instructions on how to install `CubicWeb` framework
+Please follow instructions on how to install *CubicWeb* framework
 (:ref:`CubicWebInstallation`).
 
 Installation
@@ -76,7 +76,7 @@ This will create a directory containing ::
 
 This skeleton directory is a working `AppEngine` application. You will
 recognize the files ``app.yaml`` and ``main.py``. All the rest is the
-`CubicWeb` framework and its third-party libraries. You will notice that
+*CubicWeb* framework and its third-party libraries. You will notice that
 the directory ``cubes`` is a library of reusable cubes.
 
 The main directories that you should know about are:
@@ -102,10 +102,10 @@ Setup
 Once you executed ``cubicweb-ctl newgapp <myapp>``, you can use that ``myapp/``
 as an application directory and do as follows.
 
-This installation directory provides a configuration for an instance of `CubicWeb`
+This installation directory provides a configuration for an instance of *CubicWeb*
 ported for Google App Engine. It is installed with its own command ``laxctl``
 which is a port of the command tool ``cubicweb-ctl`` originally developped for
-`CubicWeb`.
+*CubicWeb*.
 
 You can have the details of available commands by running ::
 
@@ -115,7 +115,7 @@ You can have the details of available commands by running ::
 Generating translation files
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-`CubicWeb` is fully internationalized. Translation catalogs are found in
+*CubicWeb* is fully internationalized. Translation catalogs are found in
 ``myapp/i18n``. To compile the translation files, use the `gettext` tools
 or the ``laxctl`` command ::
 

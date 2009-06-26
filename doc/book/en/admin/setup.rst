@@ -3,13 +3,13 @@
 .. _SetUpEnv:
 
 ===================================================
-Installation and set-up of a `CubicWeb` environment
+Installation and set-up of a *CubicWeb* environment
 ===================================================
 
 Installation of `Cubicweb` and its dependencies
 -----------------------------------------------
 
-`CubicWeb` is packaged for Debian and Ubuntu, but can be installed from source
+*CubicWeb* is packaged for Debian and Ubuntu, but can be installed from source
 using a tarball or the Mercurial version control system.
 
 .. _DebianInstallation:
@@ -88,7 +88,7 @@ Then you can install:
 Environment configuration
 -------------------------
 
-If you installed `CubicWeb` by cloning the Mercurial forest, then you
+If you installed *CubicWeb* by cloning the Mercurial forest, then you
 will need to update the environment variable PYTHONPATH by adding
 the path to the forest ``cubicweb``:
 

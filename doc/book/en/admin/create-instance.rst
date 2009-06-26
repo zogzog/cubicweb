@@ -27,7 +27,7 @@ It is important to distinguish here the user used to access the database and the
 user used to login to the cubicweb application. When an instance starts, it uses
 the login/psswd for the database to get the schema and handle low level
 transaction. But, when :command:`cubicweb-ctl create` asks for a manager
-login/psswd of `CubicWeb`, it refers to the user you will use during the
+login/psswd of *CubicWeb*, it refers to the user you will use during the
 development to administrate your web application. It will be possible, later on,
 to use this user to create others users for your final web application.
 
