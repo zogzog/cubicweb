@@ -563,7 +563,9 @@ class PartPlanInformation(object):
                 self._sourcesterms = {self.system_source: {}}
         elif not self.needsplit:
             if not allequals(self._sourcesterms.itervalues()):
-                for terms in self._sourcesterms.itervalues():
+                for source, terms in self._sourcesterms.iteritems():
+                    if source is self.system_source:
+                        continue
                     if any(x for x in terms if not isinstance(x, Constant)):
                         self.needsplit = True
                         return
