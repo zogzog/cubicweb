@@ -141,7 +141,7 @@ class ApplicationCommandFork(ApplicationCommand):
             if forkcmd:
                 status = system('%s %s' % (forkcmd, appid))
                 if status:
-                    sys.exit(status)
+                    print '%s exited with status %s' % (forkcmd, status)
             else:
                 self.run_arg(appid)
 

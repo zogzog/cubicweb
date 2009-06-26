@@ -99,18 +99,17 @@ class EmailAddressMailToView(baseviews.OneLineView):
         if entity.reverse_primary_email:
             self.w(u'<b>')
         if entity.alias:
-            mailto = u'%s <%s>' % (entity.alias, entity.display_address())
+            alias = entity.alias
         elif entity.reverse_use_email:
-            mailto = "mailto:%s <%s>" % \
-                (entity.reverse_use_email[0].dc_title(),
-                 entity.display_address())
+            alias = entity.reverse_use_email[0].dc_title()
+        else:
+            alias = None
+        if alias:
+            mailto = "mailto:%s <%s>" % (alias, entity.display_address())
         else:
             mailto = "mailto:%s" % entity.display_address()
         self.w(u'<a href="%s">%s</a>' % (html_escape(mailto),
                                          html_escape(entity.display_address())))
-
-        if entity.alias:
-            self.w(u'&gt;\n')
         if entity.reverse_primary_email:
             self.w(u'</b>')
 
