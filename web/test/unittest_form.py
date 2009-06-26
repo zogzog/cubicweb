@@ -6,6 +6,8 @@
 :license: GNU Lesser General Public License, v2.1 - http://www.gnu.org/licenses
 """
 
+from xml.etree.ElementTree import fromstring
+
 from logilab.common.testlib import unittest_main, mock_object
 
 from cubicweb import Binary
@@ -13,7 +15,7 @@ from cubicweb.devtools.testlib import WebTest
 from cubicweb.web.formfields import (IntField, StringField, RichTextField,
                                      DateTimeField, DateTimePicker,
                                      FileField, EditableFileField)
-from cubicweb.web.formwidgets import PasswordInput
+from cubicweb.web.formwidgets import PasswordInput, Input
 from cubicweb.web.views.forms import EntityFieldsForm, FieldsForm
 from cubicweb.web.views.workflow import ChangeStateForm
 from cubicweb.web.views.formrenderers import FormRenderer
@@ -181,7 +183,7 @@ detach attached file
                 return 'ascii'
             def form_field_format(self, field):
                 return 'text/plain'
-        file = self.add_entity('File', name=u"pouet.txt", data_encoding=u'UTF-8', 
+        file = self.add_entity('File', name=u"pouet.txt", data_encoding=u'UTF-8',
                                data=Binary('new widgets system'))
         form = EFFForm(self.req, redirect_path='perdu.com', entity=file)
         self.assertTextEquals(self._render_entity_field('data', form),
@@ -209,6 +211,14 @@ detach attached file
 &nbsp;
 <span class="emphasis">confirm password</span>''' % {'eid': self.entity.eid})
 
+
+    def test_datefield(self):
+        class DFForm(EntityFieldsForm):
+            creation_date = DateTimeField(widget=Input)
+        form = DFForm(self.req, entity=self.entity)
+        init, cur = (fromstring(self._render_entity_field(attr, form)).get('value')
+                     for attr in ('edits-creation_date', 'creation_date'))
+        self.assertEquals(init, cur)
 
 if __name__ == '__main__':
     unittest_main()

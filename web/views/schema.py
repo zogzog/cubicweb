@@ -23,6 +23,11 @@ SKIP_TYPES = set()
 SKIP_TYPES.update(META_RELATIONS_TYPES)
 SKIP_TYPES.update(SCHEMA_TYPES)
 
+def skip_types(req):
+    if int(req.form.get('skipmeta', True)):
+        return schema.SKIP_TYPES
+    return ()
+
 class ViewSchemaAction(action.Action):
     id = 'schema'
     __select__ = yes()
@@ -63,7 +68,7 @@ class CWETypePrimaryView(tabs.TabsMixin, primary.PrimaryView):
     __select__ = implements('CWEType')
     title = _('in memory entity schema')
     main_related_section = False
-    tabs = [_('cwetype-schema-text'), _('cwetype-schema-image'), 
+    tabs = [_('cwetype-schema-text'), _('cwetype-schema-image'),
             _('cwetype-schema-permissions'), _('cwetype-workflow')]
     default_tab = 'cwetype-schema-text'
 
@@ -132,22 +137,22 @@ class CWETypeSPermView(EntityView):
         entity = self.entity(row, col)
         self.w(u'<h2>%s</h2>' % _('Add permissions'))
         rset = self.req.execute('Any P WHERE X add_permission P, '
-                                'X eid %(x)s', 
+                                'X eid %(x)s',
                                 {'x': entity.eid})
         self.wview('outofcontext', rset, 'null')
         self.w(u'<h2>%s</h2>' % _('Read permissions'))
         rset = self.req.execute('Any P WHERE X read_permission P, '
-                                'X eid %(x)s', 
+                                'X eid %(x)s',
                                 {'x': entity.eid})
         self.wview('outofcontext', rset, 'null')
         self.w(u'<h2>%s</h2>' % _('Update permissions'))
         rset = self.req.execute('Any P WHERE X update_permission P, '
-                                'X eid %(x)s', 
+                                'X eid %(x)s',
                                 {'x': entity.eid})
         self.wview('outofcontext', rset, 'null')
         self.w(u'<h2>%s</h2>' % _('Delete permissions'))
         rset = self.req.execute('Any P WHERE X delete_permission P, '
-                                'X eid %(x)s', 
+                                'X eid %(x)s',
                                 {'x': entity.eid})
         self.wview('outofcontext', rset, 'null')
 
@@ -217,9 +222,8 @@ class SchemaImageView(TmpFileViewMixin, StartupView):
 
     def _generate(self, tmpfile):
         """display global schema information"""
-        skipmeta = not int(self.req.form.get('withmeta', 0))
         visitor = FullSchemaVisitor(self.req, self.schema,
-                                    skiptypes=skipmeta and SKIP_TYPES or ())
+                                    skiptypes=skip_types(self.req))
         s2d.schema2dot(outputfile=tmpfile, visitor=visitor)
 
 class CWETypeSchemaImageView(TmpFileViewMixin, EntityView):
@@ -231,9 +235,8 @@ class CWETypeSchemaImageView(TmpFileViewMixin, EntityView):
         """display schema information for an entity"""
         entity = self.entity(self.row, self.col)
         eschema = self.vreg.schema.eschema(entity.name)
-        skipmeta = not int(self.req.form.get('withmeta', 0))
         visitor = OneHopESchemaVisitor(self.req, eschema,
-                                       skiptypes=skipmeta and SKIP_TYPES or ())
+                                       skiptypes=skip_types(self.req))
         s2d.schema2dot(outputfile=tmpfile, visitor=visitor)
 
 class CWRTypeSchemaImageView(CWETypeSchemaImageView):

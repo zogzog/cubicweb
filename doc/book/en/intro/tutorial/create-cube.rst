@@ -4,16 +4,16 @@ Create your cube
 ----------------
 
 The packages ``cubicweb`` and ``cubicweb-dev`` installs a command line tool
-for `CubicWeb` called ``cubicweb-ctl``. This tool provides a wide range of
-commands described in details in :ref:`cubicweb-ctl`. 
+for *CubicWeb* called ``cubicweb-ctl``. This tool provides a wide range of
+commands described in details in :ref:`cubicweb-ctl`.
 
-Once your `CubicWeb` development environment is set up, you can create a new
+Once your *CubicWeb* development environment is set up, you can create a new
 cube::
 
   cubicweb-ctl newcube blog
 
 This will create in the cubes directory (``/path/to/forest/cubes`` for Mercurial
-installation, ``/usr/share/cubicweb/cubes`` for debian packages installation) 
+installation, ``/usr/share/cubicweb/cubes`` for debian packages installation)
 a directory named ``blog`` reflecting the structure described in :ref:`cubesConcepts`.
 
 .. _DefineDataModel:
@@ -21,7 +21,7 @@ a directory named ``blog`` reflecting the structure described in :ref:`cubesConc
 Define your data model
 ----------------------
 
-The data model or schema is the core of your `CubicWeb` application.
+The data model or schema is the core of your *CubicWeb* application.
 It defines the type of content your application will handle.
 
 The data model of your cube ``blog`` is defined in the file ``schema.py``:
@@ -36,11 +36,11 @@ The data model of your cube ``blog`` is defined in the file ``schema.py``:
     title = String(required=True, fulltextindexed=True, maxsize=256)
     publish_date = Date(default='TODAY')
     content = String(required=True, fulltextindexed=True)
-    entry_of = SubjectRelation('Blog', cardinality='?*') 
+    entry_of = SubjectRelation('Blog', cardinality='?*')
 
 
 A Blog has a title and a description. The title is a string that is
-required by the class EntityType and must be less than 50 characters. 
+required by the class EntityType and must be less than 50 characters.
 The description is a string that is not constrained.
 
 A BlogEntry has a title, a publish_date and a content. The title is a
@@ -61,7 +61,7 @@ Create your instance
 --------------------
 
 To use this cube as an application and create a new instance named ``blogdemo``, do::
-  
+
   cubicweb-ctl create blog blogdemo
 
 
@@ -86,12 +86,12 @@ create``.
 .. image:: ../../images/login-form.png
 
 
-Once authenticated, you can start playing with your application 
+Once authenticated, you can start playing with your application
 and create entities.
 
 .. image:: ../../images/blog-demo-first-page.png
 
-Please notice that so far, the `CubicWeb` franework managed all aspects of 
+Please notice that so far, the *CubicWeb* franework managed all aspects of
 the web application based on the schema provided at first.
 
 
@@ -142,10 +142,10 @@ saying to what blog it belongs. There is a box on the left entitled
 to edit the blog entry you just created, except that the form now has
 another section with a combobox titled ``add relation``. Chose
 ``entry_of`` in this menu and a second combobox appears where you pick
-``MyLife``. 
+``MyLife``.
 
 You could also have, at the time you started to fill the form for a
-new entity BlogEntry, hit ``Apply`` instead of ``Validate`` and the 
+new entity BlogEntry, hit ``Apply`` instead of ``Validate`` and the
 combobox titled ``add relation`` would have showed up.
 
 
@@ -181,30 +181,30 @@ views are defined.
 The view selection principle
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-A view is defined by a Python class which includes: 
-  
-  - an identifier (all objects in `CubicWeb` are entered in a registry
+A view is defined by a Python class which includes:
+
+  - an identifier (all objects in *CubicWeb* are entered in a registry
     and this identifier will be used as a key)
-  
+
   - a filter to select the result sets it can be applied to
 
 A view has a set of methods complying
 with the `View` class interface (`cubicweb.common.view`).
 
-`CubicWeb` provides a lot of standard views for the type `EntityView`;
+*CubicWeb* provides a lot of standard views for the type `EntityView`;
 for a complete list, read the code in directory ``cubicweb/web/views/``.
 
 A view is applied on a `result set` which contains a set of
-entities we are trying to display. `CubicWeb` uses a selector
-mechanism which computes for each available view a score: 
+entities we are trying to display. *CubicWeb* uses a selector
+mechanism which computes for each available view a score:
 the view with the highest score is then used to display the given `result set`.
-The standard library of selectors is in 
+The standard library of selectors is in
 ``cubicweb.common.selector`` and a library of methods used to
 compute scores is available in ``cubicweb.vregistry.vreq``.
 
 It is possible to define multiple views for the same identifier
 and to associate selectors and filters to allow the application
-to find the best way to render the data. 
+to find the best way to render the data.
 
 For example, the view named ``primary`` is the one used to display
 a single entity. We will now show you how to customize this view.
@@ -213,7 +213,7 @@ a single entity. We will now show you how to customize this view.
 View customization
 ~~~~~~~~~~~~~~~~~~
 
-If you wish to modify the way a `BlogEntry` is rendered, you will have to 
+If you wish to modify the way a `BlogEntry` is rendered, you will have to
 overwrite the `primary` view defined in the module ``views`` of the cube
 ``cubes/blog/views.py``.
 
@@ -244,7 +244,7 @@ To do so, please apply the following changes:
         self.w(u'<h1>%s</h1>' % entity.title)
         self.w(u'<p>published on %s</p>' % entity.publish_date.strftime('%Y-%m-%d'))
         self.w(u'<p>%s</p>' % entity.content)
-        
+
         # display relations
         siderelations = []
         if self.main_related_section:
@@ -261,7 +261,7 @@ You can now see that the publication date has a prefix.
    :alt: modified primary view
 
 
-The above source code defines a new primary view for ``BlogEntry``. 
+The above source code defines a new primary view for ``BlogEntry``.
 
 Since views are applied to result sets and result sets can be tables of
 data, we have to recover the entity from its (row,col)-coordinates.

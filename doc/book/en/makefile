@@ -1,5 +1,5 @@
 MKHTML=mkdoc
-MKHTMLOPTS=--doctype article --target html --stylesheet standard 
+MKHTMLOPTS=--doctype article --target html --stylesheet standard
 SRC=.
 
 TXTFILES:= $(wildcard *.txt)
@@ -9,11 +9,13 @@ TARGET := $(TXTFILES:.txt=.html)
 SPHINXOPTS    =
 SPHINXBUILD   = sphinx-build
 PAPER         =
+#BUILDDIR      = build
+BUILDDIR      = /tmp/cwdoc
 
 # Internal variables for sphinx
 PAPEROPT_a4     = -D latex_paper_size=a4
 PAPEROPT_letter = -D latex_paper_size=letter
-ALLSPHINXOPTS   = -d build/doctrees $(PAPEROPT_$(PAPER)) $(SPHINXOPTS) .
+ALLSPHINXOPTS   = -d ${BUILDDIR}/doctrees $(PAPEROPT_$(PAPER)) $(SPHINXOPTS) .
 
 
 .PHONY: help clean html web pickle htmlhelp latex changes linkcheck
@@ -23,7 +25,7 @@ help:
 	@echo "  all       to make standalone HTML files, developer manual and API doc"
 	@echo "  apidoc    to make API doc"
 	@echo "  html      to make standalone HTML files"
-	@echo "---  "	
+	@echo "---  "
 	@echo "  pickle    to make pickle files (usable by e.g. sphinx-web)"
 	@echo "  htmlhelp  to make HTML files and a HTML help project"
 	@echo "  latex     to make LaTeX files, you can set PAPER=a4 or PAPER=letter"
@@ -33,59 +35,59 @@ help:
 clean:
 	rm -rf apidoc/
 	rm -f *.html
-	-rm -rf build/*
+	-rm -rf ${BUILDDIR}/*
 
 all: ${TARGET} apidoc html
 
 %.html: %.txt
 	${MKHTML} ${MKHTMLOPTS} $<
 
-#apydoc: 
+#apydoc:
 #	epydoc --html -o epydoc/ -n ../server/*.py ../core/*.py ../common/*.py ../server/*/*.py ../modpython/*/*.py ../common/*/*.py
 apidoc:
 	epydoc --html -o apidoc -n "cubicweb" --exclude=setup --exclude=__pkginfo__ ../../../
 
 # run sphinx ###
 html:
-	mkdir -p build/html build/doctrees
-	$(SPHINXBUILD) -b html $(ALLSPHINXOPTS) build/html
+	mkdir -p ${BUILDDIR}/html ${BUILDDIR}/doctrees
+	$(SPHINXBUILD) -b html $(ALLSPHINXOPTS) ${BUILDDIR}/html
 	@echo
-	@echo "Build finished. The HTML pages are in build/html."
+	@echo "Build finished. The HTML pages are in ${BUILDDIR}/html."
 
 pickle:
-	mkdir -p build/pickle build/doctrees
-	$(SPHINXBUILD) -b pickle $(ALLSPHINXOPTS) build/pickle
+	mkdir -p ${BUILDDIR}/pickle ${BUILDDIR}/doctrees
+	$(SPHINXBUILD) -b pickle $(ALLSPHINXOPTS) ${BUILDDIR}/pickle
 	@echo
 	@echo "Build finished; now you can process the pickle files or run"
-	@echo "  sphinx-web build/pickle"
+	@echo "  sphinx-web ${BUILDDIR}/pickle"
 	@echo "to start the sphinx-web server."
 
 web: pickle
 
 htmlhelp:
-	mkdir -p build/htmlhelp build/doctrees
-	$(SPHINXBUILD) -b htmlhelp $(ALLSPHINXOPTS) build/htmlhelp
+	mkdir -p ${BUILDDIR}/htmlhelp ${BUILDDIR}/doctrees
+	$(SPHINXBUILD) -b htmlhelp $(ALLSPHINXOPTS) ${BUILDDIR}/htmlhelp
 	@echo
 	@echo "Build finished; now you can run HTML Help Workshop with the" \
-	      ".hhp project file in build/htmlhelp."
+	      ".hhp project file in ${BUILDDIR}/htmlhelp."
 
 latex:
-	mkdir -p build/latex build/doctrees
-	$(SPHINXBUILD) -b latex $(ALLSPHINXOPTS) build/latex
+	mkdir -p ${BUILDDIR}/latex ${BUILDDIR}/doctrees
+	$(SPHINXBUILD) -b latex $(ALLSPHINXOPTS) ${BUILDDIR}/latex
 	@echo
-	@echo "Build finished; the LaTeX files are in build/latex."
+	@echo "Build finished; the LaTeX files are in ${BUILDDIR}/latex."
 	@echo "Run \`make all-pdf' or \`make all-ps' in that directory to" \
 	      "run these through (pdf)latex."
 
 changes:
-	mkdir -p build/changes build/doctrees
-	$(SPHINXBUILD) -b changes $(ALLSPHINXOPTS) build/changes
+	mkdir -p ${BUILDDIR}/changes ${BUILDDIR}/doctrees
+	$(SPHINXBUILD) -b changes $(ALLSPHINXOPTS) ${BUILDDIR}/changes
 	@echo
-	@echo "The overview file is in build/changes."
+	@echo "The overview file is in ${BUILDDIR}/changes."
 
 linkcheck:
-	mkdir -p build/linkcheck build/doctrees
-	$(SPHINXBUILD) -b linkcheck $(ALLSPHINXOPTS) build/linkcheck
+	mkdir -p ${BUILDDIR}/linkcheck ${BUILDDIR}/doctrees
+	$(SPHINXBUILD) -b linkcheck $(ALLSPHINXOPTS) ${BUILDDIR}/linkcheck
 	@echo
 	@echo "Link check complete; look for any errors in the above output " \
-	      "or in build/linkcheck/output.txt."
+	      "or in ${BUILDDIR}/linkcheck/output.txt."

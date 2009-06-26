@@ -45,7 +45,7 @@ class SchemaImageView(StartupView):
     content_type = 'image/png'
     def call(self):
         """display global schema information"""
-        skipmeta = not int(self.req.form.get('withmeta', 0))
+        skipmeta = int(self.req.form.get('skipmeta', 1))
         if skipmeta:
             url = self.build_url('data/schema.png')
         else:

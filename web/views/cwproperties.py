@@ -14,7 +14,7 @@ from logilab.common.decorators import cached
 
 from cubicweb import UnknownProperty
 from cubicweb.selectors import (one_line_rset, none_rset, implements,
-                                match_user_groups)
+                                match_user_groups, objectify_selector)
 from cubicweb.view import StartupView
 from cubicweb.web import uicfg, stdmsgs
 from cubicweb.web.form import FormViewMixIn
@@ -218,8 +218,10 @@ class SystemCWPropertiesForm(FormViewMixIn, StartupView):
         subform.form_add_hidden('pkey', key, eidparam=True)
         form.form_add_subform(subform)
         return subform
-    
-def is_user_prefs(cls, req, rset, row=None, col=0, **kwargs):
+
+
+@objectify_selector
+def is_user_prefs(cls, req, rset=None, row=None, col=0, **kwargs):
     return req.user.eid == rset[row or 0][col]
 
 
@@ -228,7 +230,7 @@ class CWPropertiesForm(SystemCWPropertiesForm):
     __select__ = (
         # we don't want guests to be able to come here
         match_user_groups('users', 'managers') &
-        (none_rset() | ((one_line_rset() & is_user_prefs) &
+        (none_rset() | ((one_line_rset() & is_user_prefs()) &
                         (one_line_rset() & match_user_groups('managers'))))
         )
 

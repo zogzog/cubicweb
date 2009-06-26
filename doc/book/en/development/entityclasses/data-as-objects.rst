@@ -19,18 +19,18 @@ classes are registered in order to initialize the class according to its schema:
 
   * `absolute_url(**kwargs)`, returns an absolute URL to access the primary view
     of an entity
-    
+
   * `rest_path()`, returns a relative REST URL to get the entity
 
   * `format(attr)`, returns the format (MIME type) of the field given un parameter
 
-  * `printable_value(attr, value=_marker, attrtype=None, format='text/html')`, 
+  * `printable_value(attr, value=_marker, attrtype=None, format='text/html')`,
     returns a string enabling the display of an attribute value in a given format
     (the value is automatically recovered if necessary)
 
 :Data handling:
 
-  * `as_rset()`, converts the entity into an equivalent result set simulating the 
+  * `as_rset()`, converts the entity into an equivalent result set simulating the
      request `Any X WHERE X eid _eid_`
 
   * `complete(skip_bytes=True)`, executes a request that recovers in one time
@@ -57,21 +57,21 @@ classes are registered in order to initialize the class according to its schema:
 
   * `delete()` allows to delete the entity
 
-  
+
 Tne :class:`AnyEntity` class
 ----------------------------
-  
+
 To provide a specific behavior for each entity, we have to define
 a class inheriting from `cubicweb.entities.AnyEntity`. In general, we
 define this class in a module of `mycube.entities` package of an application
 so that it will be available on both server and client side.
 
-The class `AnyEntity` is loaded dynamically from the class `Entity` 
+The class `AnyEntity` is loaded dynamically from the class `Entity`
 (`cubciweb.entity`). We define a sub-class to add methods or to
 specialize the handling of a given entity type
 
 The methods defined for `AnyEntity` or `Entity` are the following ones:
-  
+
 :Standard meta-data (Dublin Core):
 
   * `dc_title()`, returns a unicode string corresponding to the meta-data
@@ -81,15 +81,15 @@ The methods defined for `AnyEntity` or `Entity` are the following ones:
   * `dc_long_title()`, same as dc_title but can return a more
     detailled title
 
-  * `dc_description(format='text/plain')`, returns a unicode string 
+  * `dc_description(format='text/plain')`, returns a unicode string
     corresponding to the meta-data `Description` (look for a description
     attribute by default)
 
-  * `dc_authors()`, returns a unicode string corresponding to the meta-data 
+  * `dc_authors()`, returns a unicode string corresponding to the meta-data
     `Authors` (owners by default)
 
-  * `dc_date(date_format=None)`, returns a unicode string corresponding to 
+  * `dc_date(date_format=None)`, returns a unicode string corresponding to
     the meta-data `Date` (update date by default)
 
-  * `dc_type(form='')`, returns a string to display the entity type by 
+  * `dc_type(form='')`, returns a string to display the entity type by
     specifying the preferred form (`plural` for a plural form)

@@ -312,6 +312,9 @@ class VRegistry(object):
                          removed_id, obj.id, registryname)
 
     def register_and_replace(self, obj, replaced, registryname=None):
+        # XXXFIXME this is a duplication of unregister()
+        # remove register_and_replace in favor of unregister + register
+        # or simplify by calling unregister then register here
         if hasattr(replaced, 'classid'):
             replaced = replaced.classid()
         registryname = registryname or obj.__registry__

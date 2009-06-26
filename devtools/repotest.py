@@ -117,7 +117,7 @@ class RQLGeneratorTC(TestCase):
     def tearDown(self):
         ExecutionPlan._check_permissions = _orig_check_permissions
         rqlannotation._select_principal = _orig_select_principal
-        
+
     def set_debug(self, debug):
         set_debug(debug)
 

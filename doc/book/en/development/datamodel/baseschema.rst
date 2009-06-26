@@ -3,7 +3,7 @@ Pre-defined schemas in the library
 ----------------------------------
 
 The library defines a set of entity schemas that are required by the system
-or commonly used in `CubicWeb` applications.
+or commonly used in *CubicWeb* applications.
 
 
 Entity types used to store the schema
@@ -24,7 +24,7 @@ Entity types used to manage workflows
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 * `State`, workflow state
 * `Transition`, workflow transition
-* `TrInfo`, record of a transition trafic for an entity 
+* `TrInfo`, record of a transition trafic for an entity
 
 Other entity types
 ~~~~~~~~~~~~~~~~~~

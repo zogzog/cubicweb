@@ -406,6 +406,9 @@ class HiddenInitialValueField(Field):
             name=name, widget=HiddenInput, eidparam=True)
         self.visible_field = visible_field
 
+    def format_single_value(self, req, value):
+        return self.visible_field.format_single_value(req, value)
+
 
 class RelationField(Field):
     def __init__(self, **kwargs):

@@ -1,4 +1,4 @@
-""" CW - nevow/twisted client 
+""" CW - nevow/twisted client
 
 :organization: Logilab
 :copyright: 2001-2009 LOGILAB S.A. (Paris, FRANCE), license is LGPL v2.

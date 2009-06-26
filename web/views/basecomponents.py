@@ -30,7 +30,7 @@ class RQLInputForm(component.Component):
     id = 'rqlinput'
     property_defs = VISIBLE_PROP_DEF
     visible = False
-    
+
     def call(self, view=None):
         if hasattr(view, 'filter_box_context_info'):
             rset = view.filter_box_context_info()[0]

@@ -19,7 +19,7 @@ from cubicweb.web.facet import (AbstractFacet, FacetStringWidget, RelationFacet,
                                 prepare_facets_rqlst, filter_hiddens)
 
 @objectify_selector
-def contextview_selector(cls, req, rset, row=None, col=None, view=None,
+def contextview_selector(cls, req, rset=None, row=None, col=None, view=None,
                          **kwargs):
     if view and getattr(view, 'filter_box_context_info', lambda: None)():
         return 1

@@ -67,15 +67,15 @@ Synchronize the data model
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Once you modified your data model, you need to synchronize the
-database with your model. For this purpose, `CubicWeb` provides
+database with your model. For this purpose, *CubicWeb* provides
 a very useful command ``cubicweb-ctl shell blogdemo`` which
-launches an interactive migration Python shell. (see 
+launches an interactive migration Python shell. (see
 :ref:`cubicweb-ctl` for more details))
 As you modified a relation from the `BlogEntry` schema,
 run the following command:
 ::
 
   synchronize_rschema('BlogEntry')
-  
-You can now start your application and add comments to each 
+
+You can now start your application and add comments to each
 `BlogEntry`.
