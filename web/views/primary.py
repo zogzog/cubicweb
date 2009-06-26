@@ -67,7 +67,7 @@ class PrimaryView(EntityView):
         if self.main_related_section:
             try:
                 self.render_entity_relations(entity)
-            except TypeError: # XXX bw compat
+            except TypeError, e: # XXX bw compat
                 if 'render_entity' not in e.args[0]:
                     raise
                 warn('siderelations argument of render_entity_relations is '
