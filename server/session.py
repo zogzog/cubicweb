@@ -84,10 +84,6 @@ class Session(RequestSessionMixIn):
         """return an entity class for the given entity type"""
         return self.vreg.etype_class(etype)
 
-    def entity(self, eid):
-        """return a result set for the given eid"""
-        return self.eid_rset(eid).get_entity(0, 0)
-
     def system_sql(self, sql, args=None):
         """return a sql cursor on the system database"""
         if not sql.split(None, 1)[0].upper() == 'SELECT':
@@ -359,16 +355,6 @@ class Session(RequestSessionMixIn):
             self._threaddata.transaction_data = {}
             return self._threaddata.transaction_data
 
-    @obsolete('use direct access to session.transaction_data')
-    def query_data(self, key, default=None, setdefault=False, pop=False):
-        if setdefault:
-            assert not pop
-            return self.transaction_data.setdefault(key, default)
-        if pop:
-            return self.transaction_data.pop(key, default)
-        else:
-            return self.transaction_data.get(key, default)
-
     @property
     def pending_operations(self):
         try:
@@ -456,6 +442,21 @@ class Session(RequestSessionMixIn):
                         row_descr[index] = row[index] = None
             description.append(tuple(row_descr))
         return description
+
+    @obsolete('use direct access to session.transaction_data')
+    def query_data(self, key, default=None, setdefault=False, pop=False):
+        if setdefault:
+            assert not pop
+            return self.transaction_data.setdefault(key, default)
+        if pop:
+            return self.transaction_data.pop(key, default)
+        else:
+            return self.transaction_data.get(key, default)
+
+    @obsolete('use entity_from_eid(eid, etype=None)')
+    def entity(self, eid):
+        """return a result set for the given eid"""
+        return self.eid_rset(eid).get_entity(0, 0)
 
 
 class ChildSession(Session):
