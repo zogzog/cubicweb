@@ -22,21 +22,7 @@ def _annotate_select(annotator, rqlst):
     has_text_query = False
     need_distinct = rqlst.distinct
     for rel in rqlst.iget_nodes(Relation):
-        if rel.neged(strict=True):
-            if rel.is_types_restriction():
-                need_distinct = True
-            else:
-                rschema = getrschema(rel.r_type)
-                if not rschema.is_final():
-                    if rschema.inlined:
-                        try:
-                            var = rel.children[1].children[0].variable
-                        except AttributeError:
-                            pass # rewritten variable
-                        else:
-                            if not var.stinfo['constnode']:
-                                need_distinct = True
-        elif getrschema(rel.r_type).symetric:
+        if getrschema(rel.r_type).symetric:
             for vref in rel.iget_nodes(VariableRef):
                 stinfo = vref.variable.stinfo
                 if not stinfo['constnode'] and stinfo['selected']:
