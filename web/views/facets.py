@@ -37,7 +37,9 @@ class FilterBox(BoxTemplate):
     visible = True # functionality provided by the search box by default
     order = 1
     roundcorners = True
-
+    css_facets = 'cubicweb.facets.css'
+    js = ('cubicweb.ajax.js', 'cubicweb.formfilter.js')
+    
     def facetargs(self):
         """this method returns the list of extra arguments that should
         be used by the facet
@@ -56,8 +58,8 @@ class FilterBox(BoxTemplate):
 
     def call(self, view=None):
         req = self.req
-        req.add_js( ('cubicweb.ajax.js', 'cubicweb.formfilter.js') )
-        req.add_css('cubicweb.facets.css')
+        req.add_js( self.js )
+        req.add_css( self.css_facets)
         if self.roundcorners:
             req.html_headers.add_onload('jQuery(".facet").corner("tl br 10px");')
         rset, vid, divid, paginate = self._get_context(view)
