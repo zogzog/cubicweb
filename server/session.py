@@ -317,6 +317,7 @@ class Session(RequestSessionMixIn):
                     self.critical('rollback error', exc_info=sys.exc_info())
                     continue
             self.pool.rollback()
+            self.debug('rollback for session %s done', self.id)
         finally:
             self._touch()
             self.pending_operations[:] = []
