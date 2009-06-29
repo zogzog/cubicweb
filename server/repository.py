@@ -343,7 +343,6 @@ class Repository(object):
                             'connections pools size)')
 
     def _free_pool(self, pool):
-        pool.rollback()
         self._available_pools.put_nowait(pool)
 
     def pinfo(self):
