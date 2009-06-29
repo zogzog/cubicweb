@@ -387,7 +387,7 @@ def vreg_instrumentize(testclass):
     vreg._selected = {}
     orig_select_best = vreg.__class__.select_best
     def instr_select_best(self, *args, **kwargs):
-        selected = orig_select(self, *args, **kwargs)
+        selected = orig_select_best(self, *args, **kwargs)
         try:
             self._selected[selected.__class__] += 1
         except KeyError:
