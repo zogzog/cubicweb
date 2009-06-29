@@ -36,7 +36,7 @@ nodes.use_py_datetime()
 META_RELATIONS_TYPES = set((
     'owned_by', 'created_by', 'is', 'is_instance_of', 'identity',
     'eid', 'creation_date', 'modification_date', 'has_text',
-    )))
+    ))
 
 #  set of entity and relation types used to build the schema
 SCHEMA_TYPES = set((
