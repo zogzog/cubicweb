@@ -74,7 +74,7 @@ class OWLView(StartupView):
     def should_display_rschema(self, rschema):
         return not rschema in self.skiptypes and (
             rschema.has_local_role('read') or
-            rschema.has_perm(self.req, 'read')):
+            rschema.has_perm(self.req, 'read'))
 
     def visit_schema(self, skiptypes):
         """get a layout for a whole schema"""
