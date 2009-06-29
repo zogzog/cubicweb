@@ -85,16 +85,16 @@ def fti_update_after_add_relation(session, eidfrom, rtype, eidto):
     """
     ftcontainer = session.repo.schema.rschema(rtype).fulltext_container
     if ftcontainer == 'subject':
-        FTIndexEntityOp(session, entity=session.entity(eidto))
+        FTIndexEntityOp(session, entity=session.entity_from_eid(eidto))
     elif ftcontainer == 'object':
-        FTIndexEntityOp(session, entity=session.entity(eidfrom))
+        FTIndexEntityOp(session, entity=session.entity_from_eid(eidfrom))
 def fti_update_after_delete_relation(session, eidfrom, rtype, eidto):
     """sync fulltext index when relevant relation is deleted. Reindexing both
     entities is necessary.
     """
     if session.repo.schema.rschema(rtype).fulltext_container:
-        FTIndexEntityOp(session, entity=session.entity(eidto))
-        FTIndexEntityOp(session, entity=session.entity(eidfrom))
+        FTIndexEntityOp(session, entity=session.entity_from_eid(eidto))
+        FTIndexEntityOp(session, entity=session.entity_from_eid(eidfrom))
 
 class SyncOwnersOp(PreCommitOperation):
 
@@ -379,7 +379,7 @@ def before_add_in_state(session, fromeid, rtype, toeid):
     etype = session.describe(fromeid)[0]
     if not (session.is_super_session or 'managers' in session.user.groups):
         if not state is None:
-            entity = session.entity(fromeid)
+            entity = session.entity_from_eid(fromeid)
             # we should find at least one transition going to this state
             try:
                 iter(state.transitions(entity, toeid)).next()
