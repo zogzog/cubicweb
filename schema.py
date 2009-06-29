@@ -19,8 +19,7 @@ from logilab.common.compat import any
 from yams import BadSchemaDefinition, buildobjs as ybo
 from yams.schema import Schema, ERSchema, EntitySchema, RelationSchema
 from yams.constraints import BaseConstraint, StaticVocabularyConstraint
-from yams.reader import (CONSTRAINTS, RelationFileReader, PyFileReader,
-                         SchemaLoader)
+from yams.reader import CONSTRAINTS, PyFileReader, SchemaLoader
 
 from rql import parse, nodes, RQLSyntaxError, TypeResolverException
 
@@ -857,23 +856,6 @@ PyFileReader.context['WorkflowableEntityType'] = WorkflowableEntityType
 
 # schema loading ##############################################################
 
-class CubicWebRelationFileReader(RelationFileReader):
-    """cubicweb specific relation file reader, handling additional RQL
-    constraints on a relation definition
-    """
-
-    def handle_constraint(self, rdef, constraint_text):
-        """arbitrary constraint is an rql expression for cubicweb"""
-        if not rdef.constraints:
-            rdef.constraints = []
-        rdef.constraints.append(RQLVocabularyConstraint(constraint_text))
-
-    def process_properties(self, rdef, relation_def):
-        if 'inline' in relation_def:
-            rdef.inlined = True
-        RelationFileReader.process_properties(self, rdef, relation_def)
-
-
 CONSTRAINTS['RQLConstraint'] = RQLConstraint
 CONSTRAINTS['RQLUniqueConstraint'] = RQLUniqueConstraint
 CONSTRAINTS['RQLVocabularyConstraint'] = RQLVocabularyConstraint
@@ -885,8 +867,6 @@ class BootstrapSchemaLoader(SchemaLoader):
     the persistent schema
     """
     schemacls = CubicWebSchema
-    SchemaLoader.file_handlers.update({'.rel' : CubicWebRelationFileReader,
-                                       })
 
     def load(self, config, path=(), **kwargs):
         """return a Schema instance from the schema definition read
