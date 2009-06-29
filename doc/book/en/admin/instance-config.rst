@@ -51,7 +51,7 @@ of configuration file.
      RewriteCond %(REQUEST_URI) ^/demo
      RewriteRule ^/demo$ /demo/
      RewriteRule ^/demo/(.*) http://127.0.0.1:8080/$1 [L,P]
-  
+
    and for the https:::
 
      RewriteCond %(REQUEST_URI) ^/ demo

@@ -7,7 +7,7 @@ are the glue that tie views to the data model. Using them appropriately is an
 essential part of the construction of well behaved cubes.
 
 
-`CubicWeb` provides its own set of selectors that you can use and here is a
+*CubicWeb* provides its own set of selectors that you can use and here is a
 description of some of the most common used:
 
 Of course you will write your own set of selectors as you get familiar with the

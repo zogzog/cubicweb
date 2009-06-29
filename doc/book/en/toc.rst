@@ -9,17 +9,17 @@ Table of contents
 .. toctree::
    :numbered:
 
-   concepts/index
-   cubes/index
-   datamodel/index
-   entityclasses/index
-   devcore/index
-   devweb/index
-   devrepo/index
-   testing/index
-   migration/index
-   webstdlib/index
+   intro/concepts/index
+   development/cubes/index
+   development/datamodel/index
+   development/entityclasses/index
+   development/devcore/index
+   development/devweb/index
+   development/devrepo/index
+   development/testing/index
+   development/migration/index
+   development/webstdlib/index
    admin/index
-   rql/index
+   annexes/rql/index
    annexes/index
 

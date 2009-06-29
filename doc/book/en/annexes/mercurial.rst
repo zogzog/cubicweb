@@ -12,7 +12,7 @@ trees (each revision indicates the changes required to obtain the
 next, and so on). Locally, we have a repository containing revisions
 tree, and a working directory. It is possible
 to put in its working directory, one of the versions of its local repository,
-modify and then push it in its repository. 
+modify and then push it in its repository.
 It is also possible to get revisions from another repository or to export
 its own revisions from the local repository to another repository.
 
@@ -83,7 +83,7 @@ Major commands
 
      hg incoming ssh://myhost//home/src/repo
 
-* See what is the revision of the local repository which has been taken out 
+* See what is the revision of the local repository which has been taken out
   from the working directory and amended::
 
      hg parent
@@ -114,8 +114,8 @@ Best Practices
 Installation of the forest extension
 ````````````````````````````````````
 
-Set up the forest extension by getting a copy of the sources 
-from http://hg.akoha.org/hgforest/ and adding the following 
+Set up the forest extension by getting a copy of the sources
+from http://hg.akoha.org/hgforest/ and adding the following
 lines to your ``~/.hgrc``: ::
 
    [extensions]

@@ -12,14 +12,14 @@ from cubicweb.web.views.apacherewrite import *
 class ApacheURLRewriteTC(TestCase):
 
     def test(self):
-        class MyAppRules(ApacheURLRewrite): 
+        class MyAppRules(ApacheURLRewrite):
             rules = [
                 RewriteCond('logilab\.fr', match='host',
                             rules=[('/(.*)', r'http://www.logilab.fr/\1')],
                             action='redirect'),
                 RewriteCond('(www)\.logilab\.fr', match='host', action='stop'),
                 RewriteCond('/(data|json)/', match='path', action='stop'),
-                RewriteCond('(?P<cat>.*)\.logilab\.fr', match='host', 
+                RewriteCond('(?P<cat>.*)\.logilab\.fr', match='host',
                             rules=[('/(.*)', r'/m_%(cat)s/\1')]),
                 ]
         urlrewriter = MyAppRules()

@@ -43,4 +43,4 @@ from cubicweb.schema import PERM_USE_TEMPLATE_FORMAT
 eid = add_entity('CWPermission', name=PERM_USE_TEMPLATE_FORMAT,
                  label=_('use template languages'))
 rql('SET X require_group G WHERE G name "managers", X eid %(x)s',
-    {'x': eid}, 'x')    
+    {'x': eid}, 'x')

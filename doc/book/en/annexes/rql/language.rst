@@ -67,7 +67,7 @@ Logical Operators
   of logical operators (see :ref:`PriorityOperators`).
 
 Mathematical Operators
-````````````````````
+```````````````````````
 ::
 
      +, -, *, /
@@ -81,7 +81,7 @@ Comparison operators
 * The operator `=` is the default operator.
 
 * The operator `LIKE` equivalent to `~=` can be used with the
-  special character `%` in a string to indicate that the chain 
+  special character `%` in a string to indicate that the chain
   must start or finish by a prefix/suffix:
   ::
 
@@ -90,11 +90,11 @@ Comparison operators
 
 * The operator `IN` provides a list of possible values:
   ::
-  
+
     Any X WHERE X name IN ( 'chauvat', 'fayolle', 'di mascio', 'thenault')
 
 
-XXX nico: "A trick <> 'bar'" wouldn't it be more convenient than 
+XXX nico: "A trick <> 'bar'" wouldn't it be more convenient than
 "NOT A trick 'bar'" ?
 
 .. _PriorityOperators:
@@ -130,7 +130,7 @@ Search Query
    Type of selected variables.
    The special type `Any` is equivalent to not specify a type.
 :restriction:
-   list of conditions to test successively 
+   list of conditions to test successively
      `V1 relation V2 | <static value>`
 :orderterms:
    Definition of the selection order: variable or column number followed by
@@ -167,7 +167,7 @@ Negation
 Identity
 ````````
 
-You can use the special relation `identity` in a query to 
+You can use the special relation `identity` in a query to
 add an identity constraint between two variables. This is equivalent
 to ``is`` in python::
 
@@ -181,23 +181,23 @@ with `RQLExpressions`.
 Limit / offset
 ``````````````
 ::
-    
+
     Any P ORDERBY N LIMIT 5 OFFSET 10 WHERE P is Person, P firstname N
 
 Function calls
 ``````````````
 ::
-    
+
     Any UPPER(N) WHERE P firstname N
 
 Functions on string: UPPER, LOWER
-    
+
 Exists
 ``````
 ::
-    
+
     Any X ORDERBY PN,N
-    WHERE X num N, X version_of P, P name PN, 
+    WHERE X num N, X version_of P, P name PN,
           EXISTS(X in_state S, S name IN ("dev", "ready"))
           OR EXISTS(T tags X, T name "priority")
 
@@ -219,12 +219,12 @@ Optional relations (Left outer join)
        Any C, P WHERE C is Card, P? documented_by C
 
     Any T,P,V WHERE T is Ticket, T concerns P, T done_in V?
-    
-    
+
+
 Having
 ``````
 ::
-    
+
     Any X GROUPBY X WHERE X knows Y HAVING COUNT(Y) > 10
 
 Subqueries
@@ -232,14 +232,14 @@ Subqueries
 ::
 
     (Any X WHERE X is Person) UNION (Any X WHERE X is Company)
-    
+
 
      DISTINCT Any W, REF
-        WITH W, REF BEING 
+        WITH W, REF BEING
             (
-	      (Any W, REF WHERE W is Workcase, W ref REF, 
+	      (Any W, REF WHERE W is Workcase, W ref REF,
                                  W concerned_by D, D name "Logilab")
-               UNION 
+               UNION
               (Any W, REF WHERE W is Workcase, W ref REF, '
                                 W split_into WP, WP name "WP1")
             )
@@ -317,7 +317,7 @@ Insertion query
 
 The restriction can define variables used in assignments.
 
-Caution, if a restriction is specified, the insertion is done for 
+Caution, if a restriction is specified, the insertion is done for
 *each line result returned by the restriction*.
 
 - *Insert a new person named 'foo'*
@@ -331,7 +331,7 @@ Caution, if a restriction is specified, the insertion is done for
 
         INSERT Person X, Person Y: X name 'foo', Y name 'nice', X friend Y
 
-- *Insert a new person named 'foo' and a 'friend' relation with an existing 
+- *Insert a new person named 'foo' and a 'friend' relation with an existing
   person called 'nice'*
   ::
 
@@ -350,7 +350,7 @@ each result line returned by the restriction*.
 
         SET X name 'bar', X first_name 'original' WHERE X is Person, X name 'foo'
 
-- *Insert a relation of type 'know' between objects linked by 
+- *Insert a relation of type 'know' between objects linked by
   the relation of type 'friend'*
   ::
 

@@ -7,7 +7,7 @@ Let's start by creating the cube environment in which we will develop ::
 
   cubicweb-ctl newcube mycube
 
-  # answer questions 
+  # answer questions
   hg init moncube
   cd mycube
   hg add .
@@ -31,12 +31,12 @@ not properly work otherwise).
     the source code of your cube:
     ``cubicweb-ctl newcube --directory=/path/to/cubes/library cube_name``
 
-    
+
 Usage of :command:`cubicweb-ctl liveserver`
 -------------------------------------------
 
 To quickly test a new cube, you can also use the `liveserver` command for cubicweb-ctl
-which allows to create an instance in memory (using an SQLite database by 
+which allows to create an instance in memory (using an SQLite database by
 default) and make it accessible through a web server ::
 
   cubicweb-ctl live-server mycube

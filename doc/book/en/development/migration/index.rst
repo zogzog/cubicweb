@@ -5,7 +5,7 @@
 Migration
 =========
 
-One of the main concept in `CubicWeb` is to create incremental applications.
+One of the main concept in *CubicWeb* is to create incremental applications.
 For this purpose, multiple actions are provided to facilitate the improvement
 of an application, and in particular to handle the changes to be applied
 to the data model, without loosing existing data.
@@ -23,11 +23,11 @@ application and named accordingly:
 
   <version n° X.Y.Z>[_<description>]_<mode>.py
 
-in which : 
+in which :
 
 * X.Y.Z is the model version number to which the script enables to migrate.
 
-* *mode* (between the last "_" and the extension ".py") is used for 
+* *mode* (between the last "_" and the extension ".py") is used for
   distributed installation. It indicates to which part
   of the application (RQL server, web server) the script applies.
   Its value could be :
@@ -44,10 +44,10 @@ in which :
     (schema and data migration for example).
 
 Again in the directory `migration`, the file `depends.map` allows to indicate
-that for the migration to a particular model version, you always have to first 
-migrate to a particular `CubicWeb` version. This file can contain comments (lines
+that for the migration to a particular model version, you always have to first
+migrate to a particular *CubicWeb* version. This file can contain comments (lines
 starting by `#`) and a dependancy is listed as follows: ::
-  
+
   <model version n° X.Y.Z> : <cubicweb version n° X.Y.Z>
 
 For example: ::
@@ -65,7 +65,7 @@ The following identifiers are pre-defined in migration scripts:
 * `config`, instance configuration
 
 * `interactive_mode`, boolean indicating that the script is executed in
-  an interactive mode or not 
+  an interactive mode or not
 
 * `appltemplversion`, application model version of the instance
 
@@ -87,7 +87,7 @@ In the `repository` scripts, the following identifiers are also defined:
 * `repo_schema`, instance persisting schema (e.g. instance schema of the
   current migration)
 
-* `newschema`, installed schema on the file system (e.g. schema of 
+* `newschema`, installed schema on the file system (e.g. schema of
   the updated model and cubicweb)
 
 * `sqlcursor`, SQL cursor for very rare cases where it is really
@@ -95,30 +95,30 @@ In the `repository` scripts, the following identifiers are also defined:
 
 * `repo`, repository object
 
-                        
+
 Schema migration
 ----------------
 The following functions for schema migration are available in `repository`
 scripts:
 
 * `add_attribute(etype, attrname, attrtype=None, commit=True)`, adds a new
-  attribute to an existing entity type. If the attribute type is not specified, 
+  attribute to an existing entity type. If the attribute type is not specified,
   then it is extracted from the updated schema.
-        
+
 * `drop_attribute(etype, attrname, commit=True)`, removes an attribute from an
   existing entity type.
 
 * `rename_attribute(etype, oldname, newname, commit=True)`, renames an attribute
-            
+
 * `add_entity_type(etype, auto=True, commit=True)`, adds a new entity type.
   If `auto` is True, all the relations using this entity type and having a known
   entity type on the other hand will automatically be added.
 
-* `drop_entity_type(etype, commit=True)`, removes an entity type and all the 
+* `drop_entity_type(etype, commit=True)`, removes an entity type and all the
   relations using it.
 
 * `rename_entity_type(oldname, newname, commit=True)`, renames an entity type
-            
+
 * `add_relation_type(rtype, addrdef=True, commit=True)`, adds a new relation
   type. If `addrdef` is True, all the relations definitions of this type will
   be added.
@@ -136,17 +136,17 @@ scripts:
 
 * `synchronize_permissions(ertype, commit=True)`, synchronizes permissions on
   an entity type or relation type.
-        
+
 * `synchronize_rschema(rtype, commit=True)`, synchronizes properties and permissions
   on a relation type.
-                
+
 * `synchronize_eschema(etype, commit=True)`, synchronizes properties and persmissions
   on an entity type.
-    
+
 * `synchronize_schema(commit=True)`, synchronizes the persisting schema with the
-  updated schema (but without adding or removing new entity types, relations types 
+  updated schema (but without adding or removing new entity types, relations types
   or even relations definitions).
-        
+
 * `change_relation_props(subjtype, rtype, objtype, commit=True, **kwargs)`, changes
   properties of a relation definition by using the named parameters of the properties
   to change.
@@ -162,7 +162,7 @@ Data migration
 The following functions for data migration are available in `repository` scripts:
 
 * `rql(rql, kwargs=None, cachekey=None, ask_confirm=True)`, executes an arbitrary RQL
-  query, either to interrogate or update. A result set object is returned.  
+  query, either to interrogate or update. A result set object is returned.
 
 * `add_entity(etype, *args, **kwargs)`, adds a nes entity type of the given
   type. The attribute and relation values are specified using the named and
@@ -176,8 +176,8 @@ scripts:
 
 * `add_state(name, stateof, initial=False, commit=False, **kwargs)`, adds a new state
   in the workflow.
-    
-* `add_transition(name, transitionof, fromstates, tostate, requiredgroups=(), commit=False, **kwargs)`, 
+
+* `add_transition(name, transitionof, fromstates, tostate, requiredgroups=(), commit=False, **kwargs)`,
   adds a new transition in the workflow.
 
 You can find more details about workflows in the chapter :ref:`Workflow` .
@@ -185,7 +185,7 @@ You can find more details about workflows in the chapter :ref:`Workflow` .
 Configuration migration
 -----------------------
 
-The following functions for configuration migration are available in all 
+The following functions for configuration migration are available in all
 scripts:
 
 * `option_renamed(oldname, newname)`, indicates that an option has been renamed
@@ -200,8 +200,8 @@ scripts:
 
 Others migration functions
 --------------------------
-Those functions are only used for low level operations that could not be 
-accomplished otherwise or to repair damaged databases during interactive 
+Those functions are only used for low level operations that could not be
+accomplished otherwise or to repair damaged databases during interactive
 session. They are available in `repository` scripts:
 
 * `sqlexec(sql, args=None, ask_confirm=True)`, executes an arbitrary SQL query

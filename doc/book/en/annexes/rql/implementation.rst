@@ -53,7 +53,7 @@ expression.
 
      relation    ::= 'NOT'? VARIABLE R_TYPE COMP_OP? expression
                    | 'NOT'? R_TYPE VARIABLE 'IN' '(' expression (',' expression)* ')'
-                   
+
      expression  ::= var_or_func_or_const (MATH_OP var_or_func_or_const) *
                    | '(' expression ')'
 
@@ -83,7 +83,7 @@ expression.
 Internal representation (syntactic tree)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The tree research does not contain the selected variables 
+The tree research does not contain the selected variables
 (e.g. there is only what follows "WHERE").
 
 The insertion tree does not contain the variables inserted or relations
@@ -156,7 +156,7 @@ relations (non-recursive rules)::
 
      Document class Type <-> Document occurence_of Fiche class Type
      Sheet class Type    <-> Form collection Collection class Type
-    
+
 Therefore 1. becomes::
 
      Document X where
