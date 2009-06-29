@@ -53,9 +53,15 @@ def need_table_view(rset, schema):
             return True
     return False
 
-VID_BY_MIMETYPE = {'text/xml': 'xml',
-                   # XXX rss, owl...
-                  }
+# FIXME: VID_BY_MIMETYPE is unfortunately a bit too naive since
+#        some browsers (e.g. FF2) send a bunch of mimetypes in
+#        the Accept header, for instance:
+#          text/xml,application/xml,application/xhtml+xml,text/html;q=0.9,
+#          text/plain;q=0.8,image/png,*/*;q=0.5
+VID_BY_MIMETYPE = {
+    #'text/xml': 'xml',
+    # XXX rss, owl...
+}
 def vid_from_rset(req, rset, schema):
     """given a result set, return a view id"""
     if rset is None:
