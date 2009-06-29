@@ -26,7 +26,7 @@ class TreeView(EntityView):
 
     def call(self, subvid=None, treeid=None, initial_load=True):
         if subvid is None:
-            subvid = self.req.form.pop('subvid', 'oneline') # consume it
+            subvid = self.req.form.pop('treesubvid', 'oneline') # consume it
         if treeid is None:
             treeid = self.req.form.pop('treeid', None)
             if treeid is None:
@@ -116,7 +116,7 @@ class TreeViewItemView(EntityView):
                                              pageid=self.req.pageid,
                                              treeid=treeid,
                                              fname='view',
-                                             subvid=vid))
+                                             treesubvid=vid))
             divclasses = ['hitarea']
             if is_open:
                 liclasses.append('collapsable')
