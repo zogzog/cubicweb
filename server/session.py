@@ -266,6 +266,7 @@ class Session(RequestSessionMixIn):
             assert not self.pending_operations
             self.transaction_data.clear()
             self._touch()
+            self.debug('commit session %s done (no db activity)', self.id)
             return
         if self.commit_state:
             return
@@ -307,6 +308,7 @@ class Session(RequestSessionMixIn):
             assert not self.pending_operations
             self.transaction_data.clear()
             self._touch()
+            self.debug('rollback session %s done (no db activity)', self.id)
             return
         try:
             while self.pending_operations:

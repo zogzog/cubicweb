@@ -208,6 +208,7 @@ class BaseQuerierTC(TestCase):
 
 
 class BasePlannerTC(BaseQuerierTC):
+    newsources = 0
     def setup(self):
         clear_cache(self.repo, 'rel_type_sources')
         clear_cache(self.repo, 'rel_type_sources')
@@ -220,7 +221,6 @@ class BasePlannerTC(BaseQuerierTC):
         self.schema = self.o.schema
         self.sources = self.o._repo.sources
         self.system = self.sources[-1]
-        self.newsources = 0
         do_monkey_patch()
 
     def add_source(self, sourcecls, uri):
