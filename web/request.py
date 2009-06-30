@@ -150,6 +150,11 @@ class CubicWebRequestBase(DBAPIRequest):
                 del self.form[k]
             else:
                 self.form[k] = v
+        # special key for created entity, added in controller's reset method
+        if '__createdpath' in params:
+            self.message += ' (<a href="%s">%s</a>)' % (
+                self.build_url(params.pop('__createdpath')),
+                self._('click here to see created entity'))
 
     def no_script_form_param(self, param, default=None, value=None):
         """ensure there is no script in a user form param
