@@ -369,20 +369,20 @@ class AnyRsetView(View):
 
     category = 'anyrsetview'
 
-    def columns_labels(self, tr=True):
+    def columns_labels(self, mainindex=0, tr=True):
         if tr:
             translate = display_name
         else:
             translate = lambda req, val: val
-        rqlstdescr = self.rset.syntax_tree().get_description()[0] # XXX missing Union support
+        # XXX [0] because of missing Union support
+        rqlstdescr = self.rset.syntax_tree().get_description(mainindex,
+                                                             translate)[0]
         labels = []
-        for colindex, attr in enumerate(rqlstdescr):
+        for colindex, label in enumerate(rqlstdescr):
             # compute column header
-            if colindex == 0 or attr == 'Any': # find a better label
+            if label == 'Any': # find a better label
                 label = ','.join(translate(self.req, et)
                                  for et in self.rset.column_types(colindex))
-            else:
-                label = translate(self.req, attr)
             labels.append(label)
         return labels
 
