@@ -92,7 +92,9 @@ def html_publish(view, text):
 
 # fallback implementation, nicer one defined below if lxml is available
 def soup2xhtml(data, encoding):
-    return data
+    # normalize line break
+    # see http://www.w3.org/Protocols/rfc2616/rfc2616-sec3.html#sec3.7.1
+    return u'\n'.join(data.splitlines())
 
 # fallback implementation, nicer one defined below if lxml> 2.0 is available
 def safe_cut(text, length):
@@ -123,6 +125,10 @@ else:
         Note: the function considers a string with no surrounding tag as valid
               if <div>`data`</div> can be parsed by an XML parser
         """
+        # normalize line break
+        # see http://www.w3.org/Protocols/rfc2616/rfc2616-sec3.html#sec3.7.1
+        data = u'\n'.join(data.splitlines())
+        # XXX lxml 1.1 support still needed ?
         xmltree = etree.HTML('<div>%s</div>' % data)
         # NOTE: lxml 1.1 (etch platforms) doesn't recognize
         #       the encoding=unicode parameter (lxml 2.0 does), this is
