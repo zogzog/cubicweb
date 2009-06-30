@@ -105,11 +105,10 @@ class TableView(AnyRsetView):
         req = self.req
         req.add_js('jquery.tablesorter.js')
         req.add_css(('cubicweb.tablesorter.css', 'cubicweb.tableview.css'))
-        rqlst = rset.syntax_tree()
         # get rql description first since the filter form may remove some
         # necessary information
-        rqlstdescr = rqlst.get_description()[0] # XXX missing Union support
         mainindex = self.main_var_index()
+        computed_labels = rset.columns_labels(mainindex)
         hidden = True
         if not subvid and 'subvid' in req.form:
             subvid = req.form.pop('subvid')
@@ -154,8 +153,8 @@ class TableView(AnyRsetView):
             self.render_actions(divid, actions)
         # render table
         table = TableWidget(self)
-        for column in self.get_columns(rqlstdescr, displaycols, headers, subvid,
-                                       cellvids, cellattrs, mainindex):
+        for column in self.get_columns(computed_labels, displaycols, headers,
+                                       subvid, cellvids, cellattrs, mainindex):
             table.append_column(column)
         table.render(self.w)
         self.w(u'</div>\n')
@@ -188,20 +187,15 @@ class TableView(AnyRsetView):
         box.render(w=self.w)
         self.w(u'<div class="clear"/>')
 
-    def get_columns(self, rqlstdescr, displaycols, headers, subvid, cellvids,
-                    cellattrs, mainindex):
+    def get_columns(self, computed_labels, displaycols, headers, subvid,
+                    cellvids, cellattrs, mainindex):
         columns = []
-        for colindex, attr in enumerate(rqlstdescr):
+        for colindex, label in enumerate(computed_labels):
             if colindex not in displaycols:
                 continue
             # compute column header
             if headers is not None:
                 label = headers[displaycols.index(colindex)]
-            elif colindex == 0 or attr == 'Any': # find a better label
-                label = ','.join(display_name(self.req, et)
-                                 for et in self.rset.column_types(colindex))
-            else:
-                label = display_name(self.req, attr)
             if colindex == mainindex:
                 label += ' (%s)' % self.rset.rowcount
             column = TableColumn(label, colindex)
@@ -214,7 +208,6 @@ class TableView(AnyRsetView):
                 column.append_renderer(self.finalview, colindex)
             else:
                 column.append_renderer(subvid or 'incontext', colindex)
-
             if cellattrs and colindex in cellattrs:
                 for name, value in cellattrs[colindex].iteritems():
                     column.add_attr(name, value)
