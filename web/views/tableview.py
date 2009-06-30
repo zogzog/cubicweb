@@ -108,7 +108,7 @@ class TableView(AnyRsetView):
         # get rql description first since the filter form may remove some
         # necessary information
         mainindex = self.main_var_index()
-        computed_labels = rset.columns_labels(mainindex)
+        computed_labels = self.columns_labels(mainindex)
         hidden = True
         if not subvid and 'subvid' in req.form:
             subvid = req.form.pop('subvid')
