@@ -294,9 +294,10 @@ class CubicWebRegistry(VRegistry):
 
     def user_property_keys(self, withsitewide=False):
         if withsitewide:
-            return sorted(self['propertydefs'])
+            return sorted(k for k in self['propertydefs']
+                          if not k.startswith('sources.'))
         return sorted(k for k, kd in self['propertydefs'].iteritems()
-                      if not kd['sitewide'])
+                      if not kd['sitewide'] and not k.startswith('sources.'))
 
     def register_property(self, key, type, help, default=None, vocabulary=None,
                           sitewide=False):
