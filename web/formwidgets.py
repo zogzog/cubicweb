@@ -231,6 +231,7 @@ class Radio(CheckBox):
     """
     type = 'radio'
 
+
 # javascript widgets ###########################################################
 
 class DateTimePicker(TextInput):
