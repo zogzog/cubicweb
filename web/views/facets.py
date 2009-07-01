@@ -38,8 +38,8 @@ class FilterBox(BoxTemplate):
     order = 1
     roundcorners = True
 
-    _css = 'cubicweb.facets.css'
-    _js = ('cubicweb.ajax.js', 'cubicweb.formfilter.js')
+    needs_css = 'cubicweb.facets.css'
+    needs_js = ('cubicweb.ajax.js', 'cubicweb.formfilter.js')
 
     def facetargs(self):
         """this method returns the list of extra arguments that should
@@ -59,8 +59,8 @@ class FilterBox(BoxTemplate):
 
     def call(self, view=None):
         req = self.req
-        req.add_js( self._js )
-        req.add_css( self._css)
+        req.add_js( self.needs_js )
+        req.add_css( self.needs_css)
         if self.roundcorners:
             req.html_headers.add_onload('jQuery(".facet").corner("tl br 10px");')
         rset, vid, divid, paginate = self._get_context(view)
