@@ -245,6 +245,8 @@ class WebTest(EnvBasedTC):
     def iter_automatic_rsets(self, limit=10):
         """generates basic resultsets for each entity type"""
         etypes = self.to_test_etypes()
+        if not etypes:
+            return
         for etype in etypes:
             yield self.execute('Any X LIMIT %s WHERE X is %s' % (limit, etype))
         etype1 = etypes.pop()
