@@ -102,17 +102,25 @@ class ClickAndEditFormView(FormViewMixIn, EntityView):
         if not default:
             default = self.req._('not specified')
         if rschema.is_final():
-            if getattr(entity, rtype) is None:
-                value = default
-            else:
-                value = entity.printable_value(rtype)
+            value = entity.printable_value(rtype)
+            if not entity.has_perm('update'):
+                self.w(value)
+                return
         else:
             rset = entity.related(rtype, role)
             # XXX html_escape but that depends of the actual vid
             value = html_escape(self.view(vid, rset, 'null') or default)
-        if not entity.has_perm('update'):
+        # XXX consider local roles ?
+        if role == 'subject'and not rschema.has_perm(self.req, 'add',
+                                                    fromeid=entity.eid):
             self.w(value)
             return
+        elif role == 'object'and not rschema.has_perm(self.req, 'add',
+                                                      toeid=entity.eid):
+            self.w(value)
+            return
+        if not value.strip():
+            value = default
         if rschema.is_final():
             form = self._build_attribute_form(entity, value, rtype, role,
                                               reload, row, col, default)
