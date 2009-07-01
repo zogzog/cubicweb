@@ -10,7 +10,7 @@ Core APIs
    selectors.rst
    dbapi.rst
 
-   
+
 :mod:`Configuration <cubicweb.cwconfig>`
 ----------------------------------------
 

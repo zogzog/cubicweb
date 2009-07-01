@@ -6,7 +6,7 @@ import os.path as osp
 
 import cubicweb
 # remove 'mx' modules imported by cubicweb
-for modname in sys.modules.keys(): 
+for modname in sys.modules.keys():
     if modname.startswith('mx'):
         sys.modules.pop(modname)
 

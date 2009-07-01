@@ -120,7 +120,7 @@ def init_repository(config, interactive=True, drop=False, vreg=None):
     handler.cmd_add_entity('CWProperty', pkey=u'system.version.cubicweb',
                            value=unicode(config.cubicweb_version()))
     for cube in config.cubes():
-        handler.cmd_add_entity('CWProperty', 
+        handler.cmd_add_entity('CWProperty',
                                pkey=u'system.version.%s' % cube.lower(),
                                value=unicode(config.cube_version(cube)))
     # yoo !

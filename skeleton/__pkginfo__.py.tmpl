@@ -17,16 +17,16 @@ author_email = '%(author-email)s'
 short_desc = '%(shortdesc)s'
 long_desc = '''%(longdesc)s'''
 
-from os import listdir as _listdir
-from os.path import join, isdir
-
 web = 'http://www.cubicweb.org/project/%%s' %% distname
 
 pyversions = ['2.4']
 
-#from cubicweb.devtools.pkginfo import get_distutils_datafiles
-CUBES_DIR = join('share', 'cubicweb', 'cubes')
-THIS_CUBE_DIR = join(CUBES_DIR, '%(cubename)s')
+
+from os import listdir as _listdir
+from os.path import join, isdir, exists, dirname
+from glob import glob
+
+THIS_CUBE_DIR = join('share', 'cubicweb', 'cubes', modname)
 
 def listdir(dirpath):
     return [join(dirpath, fname) for fname in _listdir(dirpath)
@@ -34,12 +34,11 @@ def listdir(dirpath):
             and not fname.endswith('~')
             and not isdir(join(dirpath, fname))]
 
-from glob import glob
 try:
     data_files = [
         # common files
         [THIS_CUBE_DIR, [fname for fname in glob('*.py') if fname != 'setup.py']],
-        ]    
+        ]
     # check for possible extended cube layout
     for dirname in ('entities', 'views', 'sobjects', 'hooks', 'schema', 'data', 'i18n', 'migration'):
         if isdir(dirname):
@@ -47,8 +46,9 @@ try:
     # Note: here, you'll need to add subdirectories if you want
     # them to be included in the debian package
 except OSError:
+    if exists(dirname(__file__)):
+        raise
     # we are in an installed directory
-    pass
 
 
 cube_eid = None # <=== FIXME if you need direct bug-subscription

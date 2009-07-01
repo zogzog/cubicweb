@@ -38,7 +38,7 @@ CORE_RTYPES = ['eid', 'creation_date', 'modification_date',
 def get_constraints(session, entity):
     constraints = []
     for cstreid in session.transaction_data.get(entity.eid, ()):
-        cstrent = session.entity(cstreid)
+        cstrent = session.entity_from_eid(cstreid)
         cstr = CONSTRAINTS[cstrent.type].deserialize(cstrent.value)
         cstr.eid = cstreid
         constraints.append(cstr)

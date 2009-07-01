@@ -5,6 +5,7 @@
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 :license: GNU Lesser General Public License, v2.1 - http://www.gnu.org/licenses
 """
+from __future__ import with_statement
 
 from xml.etree.ElementTree import fromstring
 
@@ -98,6 +99,14 @@ class EntityFieldsFormTC(WebTest):
         inputs = pageinfo.find_tag('input', False)
         self.failIf(any(attrs for t, attrs in inputs if attrs.get('name') == '__linkto'))
 
+    def test_reledit_composite_field(self):
+        rset = self.execute('INSERT BlogEntry X: X title "cubicweb.org", X content "hop"')
+        form = self.vreg.select_object('views', 'reledit', self.request(),
+                                       rset=rset, row=0, rtype='content')
+        data = form.render(row=0, rtype='content')
+        self.failUnless('edits-content' in data)
+        self.failUnless('edits-content_format' in data)
+
     # form view tests #########################################################
 
     def test_massmailing_formview(self):
@@ -183,7 +192,7 @@ detach attached file
                 return 'ascii'
             def form_field_format(self, field):
                 return 'text/plain'
-        file = self.add_entity('File', name=u"pouet.txt", data_encoding=u'UTF-8', 
+        file = self.add_entity('File', name=u"pouet.txt", data_encoding=u'UTF-8',
                                data=Binary('new widgets system'))
         form = EFFForm(self.req, redirect_path='perdu.com', entity=file)
         self.assertTextEquals(self._render_entity_field('data', form),

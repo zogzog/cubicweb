@@ -32,15 +32,15 @@ Customize header
 Let's now move the search box in the header and remove the login form
 from the header. We'll show how to move it to the left column of the application.
 
-Let's say we do not want anymore the login menu to be in the header, but we 
+Let's say we do not want anymore the login menu to be in the header, but we
 prefer it to be in the left column just below the logo. As the left column is
-rendered by ``TheMainTemplate``, we will show how to do it in TheMainTemplate_. 
+rendered by ``TheMainTemplate``, we will show how to do it in TheMainTemplate_.
 
 First, to remove the login menu, we just need to comment out the display of the
 login component such as follows : ::
 
   class MyHTMLPageHeader(HTMLPageHeader):
-    
+
       def main_header(self, view):
           """build the top menu with authentification info and the rql box"""
           self.w(u'<table id="header"><tr>\n')
@@ -101,13 +101,13 @@ table.
         if comp and comp.propval('visible'):
             comp.dispatch(w=self.w, view=view)
         self.w(u'</td>')
-        
+
         # logged user and help
         #self.w(u'<td>\n')
         #comp = self.vreg.select_component('loggeduserlink', self.req, self.rset)
         #comp.dispatch(w=self.w)
         #self.w(u'</td><td>')
-        
+
         # search box
         self.w(u'<td>')
         self.get_searchbox(view, 'left')
@@ -133,14 +133,14 @@ table.
                 if box.id == 'search_box':
                     box.dispatch(w=self.w, view=view)
 
- 
+
 
 
 HTMLPageFooter
 --------------
 
 If you want to change the footer for example, look
-for HTMLPageFooter and override it in your views file as in : 
+for HTMLPageFooter and override it in your views file as in :
 ::
 
   form cubicweb.web.views.basetemplates import HTMLPageFooter
@@ -158,7 +158,7 @@ TheMainTemplate
 ---------------
 .. _TheMainTemplate:
 
-TheMainTemplate is responsible for the general layout of the entire application. 
+TheMainTemplate is responsible for the general layout of the entire application.
 It defines the template of ``id = main`` that is used by the application.
 
 The default main template (`cubicweb.web.views.basetemplates.TheMainTemplate`)
@@ -168,7 +168,7 @@ builds the page based on the following pattern:
 
 The rectangle containing `view.dispatch()` represents the area where the content
 view has to be displayed. The others represents sub-templates called to complete
-the page. A default implementation of those is provided in 
+the page. A default implementation of those is provided in
 `cubicweb.views.basetemplates`. You can, of course, overload those sub-templates
 to implement your own customization of the HTML page.
 
@@ -177,9 +177,9 @@ forms parameters:
 
 * `__notemplate`, if present (whatever the value assigned), only the content view
   is returned
-* `__force_display`, if present and its value is not null, no navigation 
+* `__force_display`, if present and its value is not null, no navigation
   whatever the number of entities to display
-* `__method`, if the result set to render contains only one entity and this 
+* `__method`, if the result set to render contains only one entity and this
   parameter is set, it refers to a method to call on the entity by passing it
   the dictionary of the forms parameters, before going the classic way (through
   step 1 and 2 described juste above)

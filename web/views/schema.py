@@ -64,7 +64,7 @@ class CWETypePrimaryView(tabs.TabsMixin, primary.PrimaryView):
     title = _('in memory entity schema')
     main_related_section = False
     skip_rels = SKIPPED_RELS
-    tabs = [_('cwetype-schema-text'), _('cwetype-schema-image'), 
+    tabs = [_('cwetype-schema-text'), _('cwetype-schema-image'),
             _('cwetype-schema-permissions'), _('cwetype-workflow')]
     default_tab = 'cwetype-schema-text'
 
@@ -133,22 +133,22 @@ class CWETypeSPermView(EntityView):
         entity = self.entity(row, col)
         self.w(u'<h2>%s</h2>' % _('Add permissions'))
         rset = self.req.execute('Any P WHERE X add_permission P, '
-                                'X eid %(x)s', 
+                                'X eid %(x)s',
                                 {'x': entity.eid})
         self.wview('outofcontext', rset, 'null')
         self.w(u'<h2>%s</h2>' % _('Read permissions'))
         rset = self.req.execute('Any P WHERE X read_permission P, '
-                                'X eid %(x)s', 
+                                'X eid %(x)s',
                                 {'x': entity.eid})
         self.wview('outofcontext', rset, 'null')
         self.w(u'<h2>%s</h2>' % _('Update permissions'))
         rset = self.req.execute('Any P WHERE X update_permission P, '
-                                'X eid %(x)s', 
+                                'X eid %(x)s',
                                 {'x': entity.eid})
         self.wview('outofcontext', rset, 'null')
         self.w(u'<h2>%s</h2>' % _('Delete permissions'))
         rset = self.req.execute('Any P WHERE X delete_permission P, '
-                                'X eid %(x)s', 
+                                'X eid %(x)s',
                                 {'x': entity.eid})
         self.wview('outofcontext', rset, 'null')
 

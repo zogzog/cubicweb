@@ -2,7 +2,7 @@ Boxes (:mod:`cubicweb.web.views.boxes`)
 ---------------------------------------------------------------
 
 *sidebox*
-  This view displays usually a side box of some related entities 
+  This view displays usually a side box of some related entities
   in a primary view.
 
 The action box
@@ -23,9 +23,9 @@ but it is possible to explicitly specify them thanks to the
   to new entities and that we should display a link to create a new
   entity and link to it automatically
 
-  
 
-If necessary, it is possible to overwrite the method  
+
+If necessary, it is possible to overwrite the method
 `relation_mode(rtype, targettype, x='subject')` to dynamically
 compute a relation creation category.
 

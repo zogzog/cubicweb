@@ -114,36 +114,37 @@ function _checkValue(input, unfreezeButtons){
 
 function setCurrentValues(form){
     jQuery(form).find('[name^=value]').each(function () {
-	    var input = jQuery(this);
-	    var name = input.attr('name');
-	    if(input.attr('type') == 'radio'){
-		// NOTE: there seems to be a bug with jQuery(input).attr('checked')
-		//       in our case, we can't rely on its value, we use
-		//       the DOM API instead.
-		if(input[0].checked){
-		    prefsValues[name] = input.val();
-		}
-	    }else{
+	var input = jQuery(this);
+	var name = input.attr('name');
+	if(input.attr('type') == 'radio'){
+	    // NOTE: there seems to be a bug with jQuery(input).attr('checked')
+	    //       in our case, we can't rely on its value, we use
+	    //       the DOM API instead.
+	    if(input[0].checked){
 		prefsValues[name] = input.val();
 	    }
-	    jQuery('[name=edits-'+ name + ']').val(prefsValues[name]);
-	});
+	}else{
+	    prefsValues[name] = input.val();
+	}
+	jQuery(form).find('input[name=edits-'+ name + ']').val(prefsValues[name]);
+    });
 }
 
 function initEvents(){
-  jQuery('form').each(function() {
-	  var form = jQuery(this);
-	  freezeFormButtons(form.attr('id'));
-	  form.find('input[type=text]').keyup(function(){
-		  checkValues(form);
-          });
-	  form.find('input[type=radio]').change(function(){
-		  checkValues(form);
-          });
-	  form.find('select').change(function(){
-		  checkValues(form);
-          });
-	  setCurrentValues(form);
+    jQuery('form').each(function() {
+	var form = jQuery(this);
+	//freezeFormButtons(form.attr('id'));
+	form.find('input.validateButton').attr('disabled', 'disabled');
+	form.find('input[type=text]').keyup(function(){
+	    checkValues(form);
+	});
+	form.find('input[type=radio]').change(function(){
+	    checkValues(form);
+	});
+	form.find('select').change(function(){
+	    checkValues(form);
+	});
+	setCurrentValues(form);
     });
 }
 

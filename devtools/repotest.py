@@ -117,7 +117,7 @@ class RQLGeneratorTC(TestCase):
     def tearDown(self):
         ExecutionPlan._check_permissions = _orig_check_permissions
         rqlannotation._select_principal = _orig_select_principal
-        
+
     def set_debug(self, debug):
         set_debug(debug)
 
@@ -208,6 +208,7 @@ class BaseQuerierTC(TestCase):
 
 
 class BasePlannerTC(BaseQuerierTC):
+    newsources = 0
     def setup(self):
         clear_cache(self.repo, 'rel_type_sources')
         clear_cache(self.repo, 'rel_type_sources')
@@ -220,7 +221,6 @@ class BasePlannerTC(BaseQuerierTC):
         self.schema = self.o.schema
         self.sources = self.o._repo.sources
         self.system = self.sources[-1]
-        self.newsources = 0
         do_monkey_patch()
 
     def add_source(self, sourcecls, uri):

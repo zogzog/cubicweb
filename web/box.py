@@ -6,6 +6,7 @@
 :license: GNU Lesser General Public License, v2.1 - http://www.gnu.org/licenses
 """
 __docformat__ = "restructuredtext en"
+_ = unicode
 
 from logilab.mtconverter import html_escape
 
@@ -19,8 +20,6 @@ from cubicweb.view import View, ReloadableMixIn
 from cubicweb.web.htmlwidgets import (BoxLink, BoxWidget, SideBoxWidget,
                                       RawBoxItem, BoxSeparator)
 from cubicweb.web.action import UnregisteredAction
-
-_ = unicode
 
 
 class BoxTemplate(View):

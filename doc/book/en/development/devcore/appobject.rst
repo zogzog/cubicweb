@@ -1,5 +1,5 @@
 
-  
+
 The `AppObject` class
 ~~~~~~~~~~~~~~~~~~~~~
 

@@ -189,7 +189,7 @@ class EClassSelector(Selector):
         self.once_is_enough = once_is_enough
 
     @lltrace
-    def __call__(self, cls, req, rset, row=None, col=0, **kwargs):
+    def __call__(self, cls, req, rset=None, row=None, col=0, **kwargs):
         if not rset:
             return 0
         score = 0
@@ -238,7 +238,7 @@ class EntitySelector(EClassSelector):
     """
 
     @lltrace
-    def __call__(self, cls, req, rset, row=None, col=0, **kwargs):
+    def __call__(self, cls, req, rset=None, row=None, col=0, **kwargs):
         if not rset and not kwargs.get('entity'):
             return 0
         score = 0
@@ -287,7 +287,7 @@ class yes(Selector):
 
 @objectify_selector
 @lltrace
-def none_rset(cls, req, rset, *args, **kwargs):
+def none_rset(cls, req, rset=None, *args, **kwargs):
     """accept no result set (e.g. given rset is None)"""
     if rset is None:
         return 1
@@ -295,7 +295,7 @@ def none_rset(cls, req, rset, *args, **kwargs):
 
 @objectify_selector
 @lltrace
-def any_rset(cls, req, rset, *args, **kwargs):
+def any_rset(cls, req, rset=None, *args, **kwargs):
     """accept result set, whatever the number of result it contains"""
     if rset is not None:
         return 1
@@ -303,7 +303,7 @@ def any_rset(cls, req, rset, *args, **kwargs):
 
 @objectify_selector
 @lltrace
-def nonempty_rset(cls, req, rset, *args, **kwargs):
+def nonempty_rset(cls, req, rset=None, *args, **kwargs):
     """accept any non empty result set"""
     if rset is not None and rset.rowcount:
         return 1
@@ -311,7 +311,7 @@ def nonempty_rset(cls, req, rset, *args, **kwargs):
 
 @objectify_selector
 @lltrace
-def empty_rset(cls, req, rset, *args, **kwargs):
+def empty_rset(cls, req, rset=None, *args, **kwargs):
     """accept empty result set"""
     if rset is not None and rset.rowcount == 0:
         return 1
@@ -319,7 +319,7 @@ def empty_rset(cls, req, rset, *args, **kwargs):
 
 @objectify_selector
 @lltrace
-def one_line_rset(cls, req, rset, row=None, *args, **kwargs):
+def one_line_rset(cls, req, rset=None, row=None, *args, **kwargs):
     """if row is specified, accept result set with a single line of result,
     else accepts anyway
     """
@@ -329,7 +329,7 @@ def one_line_rset(cls, req, rset, row=None, *args, **kwargs):
 
 @objectify_selector
 @lltrace
-def two_lines_rset(cls, req, rset, *args, **kwargs):
+def two_lines_rset(cls, req, rset=None, *args, **kwargs):
     """accept result set with *at least* two lines of result"""
     if rset is not None and rset.rowcount > 1:
         return 1
@@ -337,7 +337,7 @@ def two_lines_rset(cls, req, rset, *args, **kwargs):
 
 @objectify_selector
 @lltrace
-def two_cols_rset(cls, req, rset, *args, **kwargs):
+def two_cols_rset(cls, req, rset=None, *args, **kwargs):
     """accept result set with at least one line and two columns of result"""
     if rset is not None and rset.rowcount and len(rset.rows[0]) > 1:
         return 1
@@ -345,7 +345,7 @@ def two_cols_rset(cls, req, rset, *args, **kwargs):
 
 @objectify_selector
 @lltrace
-def paginated_rset(cls, req, rset, *args, **kwargs):
+def paginated_rset(cls, req, rset=None, *args, **kwargs):
     """accept result set with more lines than the page size.
 
     Page size is searched in (respecting order):
@@ -366,7 +366,7 @@ def paginated_rset(cls, req, rset, *args, **kwargs):
 
 @objectify_selector
 @lltrace
-def sorted_rset(cls, req, rset, row=None, col=0, **kwargs):
+def sorted_rset(cls, req, rset=None, row=None, col=0, **kwargs):
     """accept sorted result set"""
     rqlst = rset.syntax_tree()
     if len(rqlst.children) > 1 or not rqlst.children[0].orderby:
@@ -375,7 +375,7 @@ def sorted_rset(cls, req, rset, row=None, col=0, **kwargs):
 
 @objectify_selector
 @lltrace
-def one_etype_rset(cls, req, rset, row=None, col=0, *args, **kwargs):
+def one_etype_rset(cls, req, rset=None, row=None, col=0, *args, **kwargs):
     """accept result set where entities in the specified column (or 0) are all
     of the same type
     """
@@ -387,7 +387,7 @@ def one_etype_rset(cls, req, rset, row=None, col=0, *args, **kwargs):
 
 @objectify_selector
 @lltrace
-def two_etypes_rset(cls, req, rset, row=None, col=0, **kwargs):
+def two_etypes_rset(cls, req, rset=None, row=None, col=0, **kwargs):
     """accept result set where entities in the specified column (or 0) are not
     of the same type
     """
@@ -420,7 +420,7 @@ def anonymous_user():
 
 @objectify_selector
 @lltrace
-def primary_view(cls, req, rset, row=None, col=0, view=None, **kwargs):
+def primary_view(cls, req, rset=None, row=None, col=0, view=None, **kwargs):
     """accept if view given as named argument is a primary view, or if no view
     is given
     """
@@ -430,7 +430,7 @@ def primary_view(cls, req, rset, row=None, col=0, view=None, **kwargs):
 
 @objectify_selector
 @lltrace
-def match_context_prop(cls, req, rset, row=None, col=0, context=None,
+def match_context_prop(cls, req, rset=None, row=None, col=0, context=None,
                        **kwargs):
     """accept if:
     * no context given
@@ -461,7 +461,7 @@ class match_search_state(Selector):
                            ','.join(sorted(str(s) for s in self.expected)))
 
     @lltrace
-    def __call__(self, cls, req, rset, row=None, col=0, **kwargs):
+    def __call__(self, cls, req, rset=None, row=None, col=0, **kwargs):
         try:
             if not req.search_state[0] in self.expected:
                 return 0
@@ -554,7 +554,7 @@ class match_view(match_search_state):
     initializer
     """
     @lltrace
-    def __call__(self, cls, req, rset, row=None, col=0, view=None, **kwargs):
+    def __call__(self, cls, req, rset=None, row=None, col=0, view=None, **kwargs):
         if view is None or not view.id in self.expected:
             return 0
         return 1
@@ -571,7 +571,7 @@ class appobject_selectable(Selector):
         self.registry = registry
         self.oid = oid
 
-    def __call__(self, cls, req, rset, *args, **kwargs):
+    def __call__(self, cls, req, rset=None, *args, **kwargs):
         try:
             cls.vreg.select_object(self.registry, self.oid, req, rset, *args, **kwargs)
             return 1
@@ -850,7 +850,7 @@ class has_permission(EntitySelector):
         self.action = action
 
     @lltrace
-    def __call__(self, cls, req, rset, row=None, col=0, **kwargs):
+    def __call__(self, cls, req, rset=None, row=None, col=0, **kwargs):
         if rset is None:
             return 0
         user = req.user
@@ -985,11 +985,11 @@ not_anonymous_selector = deprecated_function(authenticated_user)
 primaryview_selector = deprecated_function(primary_view)
 contextprop_selector = deprecated_function(match_context_prop)
 
-def nfentity_selector(cls, req, rset, row=None, col=0, **kwargs):
+def nfentity_selector(cls, req, rset=None, row=None, col=0, **kwargs):
     return non_final_entity()(cls, req, rset, row, col)
 nfentity_selector = deprecated_function(nfentity_selector)
 
-def implement_interface(cls, req, rset, row=None, col=0, **kwargs):
+def implement_interface(cls, req, rset=None, row=None, col=0, **kwargs):
     return implements(*cls.accepts_interfaces)(cls, req, rset, row, col)
 _interface_selector = deprecated_function(implement_interface)
 interface_selector = deprecated_function(implement_interface)
@@ -1001,7 +1001,7 @@ def accept_etype(cls, req, *args, **kwargs):
 etype_form_selector = deprecated_function(accept_etype)
 accept_etype = deprecated_function(accept_etype, 'use specified_etype_implements')
 
-def searchstate_selector(cls, req, rset, row=None, col=0, **kwargs):
+def searchstate_selector(cls, req, rset=None, row=None, col=0, **kwargs):
     return match_search_state(cls.search_states)(cls, req, rset, row, col)
 searchstate_selector = deprecated_function(searchstate_selector)
 
@@ -1010,18 +1010,18 @@ def match_user_group(cls, req, rset=None, row=None, col=0, **kwargs):
 in_group_selector = deprecated_function(match_user_group)
 match_user_group = deprecated_function(match_user_group)
 
-def has_relation(cls, req, rset, row=None, col=0, **kwargs):
+def has_relation(cls, req, rset=None, row=None, col=0, **kwargs):
     return relation_possible(cls.rtype, role(cls), cls.etype,
                              getattr(cls, 'require_permission', 'read'))(cls, req, rset, row, col, **kwargs)
 has_relation = deprecated_function(has_relation)
 
-def one_has_relation(cls, req, rset, row=None, col=0, **kwargs):
+def one_has_relation(cls, req, rset=None, row=None, col=0, **kwargs):
     return relation_possible(cls.rtype, role(cls), cls.etype,
                              getattr(cls, 'require_permission', 'read',
                                      once_is_enough=True))(cls, req, rset, row, col, **kwargs)
 one_has_relation = deprecated_function(one_has_relation, 'use relation_possible selector')
 
-def accept_rset(cls, req, rset, row=None, col=0, **kwargs):
+def accept_rset(cls, req, rset=None, row=None, col=0, **kwargs):
     """simply delegate to cls.accept_rset method"""
     return implements(*cls.accepts)(cls, req, rset, row=row, col=col)
 accept_rset_selector = deprecated_function(accept_rset)
@@ -1036,7 +1036,7 @@ accept_one = deprecated_function(chainall(one_line_rset, accept,
 accept_one_selector = deprecated_function(accept_one)
 
 
-def _rql_condition(cls, req, rset, row=None, col=0, **kwargs):
+def _rql_condition(cls, req, rset=None, row=None, col=0, **kwargs):
     if cls.condition:
         return rql_condition(cls.condition)(cls, req, rset, row, col)
     return 1
@@ -1045,12 +1045,12 @@ _rqlcondition_selector = deprecated_function(_rql_condition)
 rqlcondition_selector = deprecated_function(chainall(non_final_entity(), one_line_rset, _rql_condition,
                          name='rql_condition'))
 
-def but_etype_selector(cls, req, rset, row=None, col=0, **kwargs):
+def but_etype_selector(cls, req, rset=None, row=None, col=0, **kwargs):
     return but_etype(cls.etype)(cls, req, rset, row, col)
 but_etype_selector = deprecated_function(but_etype_selector)
 
 @lltrace
-def etype_rtype_selector(cls, req, rset, row=None, col=0, **kwargs):
+def etype_rtype_selector(cls, req, rset=None, row=None, col=0, **kwargs):
     schema = cls.schema
     perm = getattr(cls, 'require_permission', 'read')
     if hasattr(cls, 'etype'):

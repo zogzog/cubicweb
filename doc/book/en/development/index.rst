@@ -4,7 +4,7 @@
 Part II - Development
 ---------------------
 
-This part is about developing web applications with the `CubicWeb` framework.
+This part is about developing web applications with the *CubicWeb* framework.
 
 .. toctree::
    :maxdepth: 2

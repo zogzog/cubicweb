@@ -11,3 +11,4 @@ This chapter describes how you define a schema and how to make it evolves as the
    baseschema
 
 ..    define-workflows
+..    inheritance

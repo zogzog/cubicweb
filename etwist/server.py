@@ -138,6 +138,9 @@ class CubicWebRootResource(resource.PostableResource):
                     if segments[0] == 'static':
                         # instance static directory
                         datadir = self.config.static_directory
+                    elif segments[1] == 'fckeditor':
+                        fckeditordir = self.config.ext_resources['FCKEDITOR_PATH']
+                        return static.File(fckeditordir), segments[2:]
                     else:
                         # cube static data file
                         datadir = self.config.locate_resource(segments[1])

@@ -2,7 +2,7 @@
 
 .. _QuickInstall:
 
-Quick Installation of a `CubicWeb` instance
+Quick Installation of a *CubicWeb* instance
 ===========================================
 
 .. include:: C010-setup.en.txt

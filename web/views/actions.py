@@ -40,11 +40,11 @@ class has_editable_relation(EntitySelector):
         return 0
 
 @objectify_selector
-def match_searched_etype(cls, req, rset, **kwargs):
+def match_searched_etype(cls, req, rset=None, **kwargs):
     return req.match_search_state(rset)
 
 @objectify_selector
-def view_is_not_default_view(cls, req, rset, **kwargs):
+def view_is_not_default_view(cls, req, rset=None, **kwargs):
     # interesting if it propose another view than the current one
     vid = req.form.get('vid')
     if vid and vid != vid_from_rset(req, rset, cls.schema):
@@ -52,7 +52,7 @@ def view_is_not_default_view(cls, req, rset, **kwargs):
     return 0
 
 @objectify_selector
-def addable_etype_empty_rset(cls, req, rset, **kwargs):
+def addable_etype_empty_rset(cls, req, rset=None, **kwargs):
     if rset is not None and not rset.rowcount:
         rqlst = rset.syntax_tree()
         if len(rqlst.children) > 1:

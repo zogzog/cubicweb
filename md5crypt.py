@@ -85,7 +85,7 @@ def crypt(pw, salt, magic=None):
         i = i >> 1
     final = md5.md5(ctx).digest()
     # The following is supposed to make
-    # things run slower. 
+    # things run slower.
     # my question: WTF???
     for i in xrange(1000):
         ctx1 = ''

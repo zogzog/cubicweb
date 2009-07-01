@@ -18,9 +18,9 @@ class COMMA_JOIN(FunctionDescr):
     rtype = 'String'
 
     @classmethod
-    def st_description(cls, funcnode):
-        return ', '.join(term.get_description()
-                         for term in iter_funcnode_variables(funcnode))
+    def st_description(cls, funcnode, mainindex, tr):
+        return ', '.join(sorted(term.get_description(mainindex, tr)
+                                for term in iter_funcnode_variables(funcnode)))
 
 register_function(COMMA_JOIN)  # XXX do not expose?
 
@@ -41,8 +41,8 @@ class LIMIT_SIZE(FunctionDescr):
     rtype = 'String'
 
     @classmethod
-    def st_description(cls, funcnode):
-        return funcnode.children[0].get_description()
+    def st_description(cls, funcnode, mainindex, tr):
+        return funcnode.children[0].get_description(mainindex, tr)
 
 register_function(LIMIT_SIZE)
 

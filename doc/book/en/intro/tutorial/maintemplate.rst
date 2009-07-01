@@ -11,8 +11,8 @@ A page is composed as indicated on the schema below:
 .. image:: ../../images/lax-book.06-main-template-layout.en.png
 
 In this section we will demonstrate a change in one of the main
-interesting template from the three you will look for, 
-that is to say, the HTMLPageHeader, the HTMLPageFooter 
+interesting template from the three you will look for,
+that is to say, the HTMLPageHeader, the HTMLPageFooter
 and the TheMainTemplate.
 
 
@@ -24,14 +24,14 @@ by your customized template. To do so, we recommand you create
 a Python module ``blog.views.templates`` to keep it organized.
 In this module you will have to import the parent class you are
 interested as follows: ::
-  
+
   from cubicweb.web.views.basetemplates import HTMLPageHeader, \
                                     HTMLPageFooter, TheMainTemplate
 
 and then create your sub-class::
 
   class MyBlogHTMLPageHeader(HTMLPageHeader):
-      ...  
+      ...
 
 Customize header
 `````````````````
@@ -47,7 +47,7 @@ login graphic component such as follows:
 .. code-block :: python
 
   class MyBlogHTMLPageHeader(HTMLPageHeader):
-    
+
       def main_header(self, view):
           """build the top menu with authentification info and the rql box"""
           self.w(u'<table id="header"><tr>\n')
@@ -115,10 +115,10 @@ The MainTemplate is a bit complex as it tries to accomodate many
 different cases. We are now about to go through it and cutomize entirely
 our application.
 
-TheMainTemplate is responsible for the general layout of the entire application. 
-It defines the template of ``id = main`` that is used by the application. Is 
+TheMainTemplate is responsible for the general layout of the entire application.
+It defines the template of ``id = main`` that is used by the application. Is
 also defined in ``cubicweb/web/views/basetemplates.py`` another template that can
-be used based on TheMainTemplate called SimpleMainTemplate which does not have 
+be used based on TheMainTemplate called SimpleMainTemplate which does not have
 a top section.
 
 .. image:: ../../images/lax-book.06-simple-main-template.en.png

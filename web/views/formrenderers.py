@@ -215,10 +215,27 @@ class FormRenderer(AppRsetObject):
 
 
 class BaseFormRenderer(FormRenderer):
-    """use form_renderer_id = 'base' if you want base FormRenderer without
-    adaptation by selection
+    """use form_renderer_id = 'base' if you want base FormRenderer layout even
+    when selected for an entity
     """
     id = 'base'
+
+
+class EntityBaseFormRenderer(BaseFormRenderer):
+    """use form_renderer_id = 'base' if you want base FormRenderer layout even
+    when selected for an entity
+    """
+    __select__ = entity_implements('Any')
+
+    def display_field(self, form, field):
+        if not super(EntityBaseFormRenderer, self).display_field(form, field):
+            if isinstance(field, HiddenInitialValueField):
+                field = field.visible_field
+            ismeta = form.edited_entity.e_schema.is_metadata(field.name)
+            return ismeta is not None and (
+                ismeta[0] in self.display_fields or
+                (ismeta[0], 'subject') in self.display_fields)
+        return True
 
 
 class HTableFormRenderer(FormRenderer):
@@ -310,9 +327,11 @@ class EntityCompositeFormRenderer(FormRenderer):
         w(u'</tr>')
 
 
-class EntityFormRenderer(FormRenderer):
+class EntityFormRenderer(EntityBaseFormRenderer):
     """specific renderer for entity edition form (edition)"""
-    __select__ = entity_implements('Any') & yes()
+    id = 'default'
+    # needs some additional points in some case (XXX explain cases)
+    __select__ = EntityBaseFormRenderer.__select__ & yes()
 
     _options = FormRenderer._options + ('display_relations_form',)
     display_relations_form = True

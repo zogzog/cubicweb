@@ -3,11 +3,11 @@ Views
 
 This chapter aims to describe the concept of a `view` used all along
 the development of a web application and how it has been implemented
-in `CubicWeb`.
+in *CubicWeb*.
 
 We'll start with a description of the interface providing you with a basic
 understanding of the classes and methods available, then detail the view
-selection principle which makes `CubicWeb` web interface very flexible.
+selection principle which makes *CubicWeb* web interface very flexible.
 
 A `View` is an object applied to another object such as an entity.
 
@@ -42,19 +42,19 @@ tabular structure with rows and columns, hence cells):
 
 * `dispatch(**context)`, render the view by calling `call` or
   `cell_call` depending on the given parameters
-* `call(**kwargs)`, call the view for a complete result set or null (default 
+* `call(**kwargs)`, call the view for a complete result set or null (default
   implementation calls `cell_call()` on each cell of the result set)
 * `cell_call(row, col, **kwargs)`, call the view for a given cell of a result set
 * `url()`, returns the URL enabling us to get the view with the current
-  result set 
-* `view(__vid, rset, __fallback_vid=None, **kwargs)`, call the view of identifier 
+  result set
+* `view(__vid, rset, __fallback_vid=None, **kwargs)`, call the view of identifier
   `__vid` on the given result set. It is possible to give a view identifier
   of fallback that will be used if the view requested is not applicable to the
   result set
-  
+
 * `wview(__vid, rset, __fallback_vid=None, **kwargs)`, similar to `view` except
   the flow is automatically passed in the parameters
-  
+
 * `html_headers()`, returns a list of HTML headers to set by the main template
 
 * `page_title()`, returns the title to use in the HTML header `title`
@@ -67,17 +67,17 @@ that are more concrete as they relate to data rendering within the application:
 
 * `EntityView`, view applying to lines or cell containing an entity (e.g. an eid)
 * `StartupView`, start view that does not require a result set to apply to
-* `AnyRsetView`, view applied to any result set 
+* `AnyRsetView`, view applied to any result set
 * `EmptyRsetView`, view applied to an empty result set
 
 
-Examples of views class 
+Examples of views class
 -----------------------
 
 - Using `templatable`, `content_type` and HTTP cache configuration
 
 .. code-block:: python
-    
+
 
     class RSSView(XMLView):
         id = 'rss'
@@ -86,13 +86,13 @@ Examples of views class
         content_type = 'text/xml'
         http_cache_manager = MaxAgeHTTPCacheManager
         cache_max_age = 60*60*2 # stay in http cache for 2 hours by default
-    
+
 
 
 - Using custom selector
 
 .. code-block:: python
-    
+
 
     class SearchForAssociationView(EntityView):
         """view called by the edition view when the user asks
@@ -111,18 +111,18 @@ contredicts our advise of not modifying it.
 
 We'll show you now an example of a ``primary`` view and how to customize it.
 
-If you want to change the way a ``BlogEntry`` is displayed, just override 
+If you want to change the way a ``BlogEntry`` is displayed, just override
 the method ``cell_call()`` of the view ``primary`` in ``BlogDemo/views.py`` ::
 
 .. code-block:: python
 
    from cubicweb.view import EntityView
    from cubicweb.selectors import implements
-  
+
    class BlogEntryPrimaryView(EntityView):
        id = 'primary'
        __select__ =implements('Blog')
-       
+
        def cell_call(self, row, col):
            entity = self.entity(row, col)
            self.w(u'<h1>%s</h1>' % entity.title)
@@ -131,7 +131,7 @@ the method ``cell_call()`` of the view ``primary`` in ``BlogDemo/views.py`` ::
            self.w(u'<p>%s</p>' % entity.text)
 
 The above source code defines a new primary view (`line 03`) for
-``BlogEntry`` (`line 05`). 
+``BlogEntry`` (`line 05`).
 
 Since views are applied to result sets which can be tables of
 data, we have to recover the entity from its (row,col)-coordinates (`line 08`).
@@ -170,9 +170,9 @@ the entities linked to the current ``Blog`` entity by the relationship
 about the schema and infer that such entities have to be of the
 ``BlogEntry`` kind and retrieves them.
 
-The request returns a selection of data called a result set. At 
+The request returns a selection of data called a result set. At
 `line 10` the view 'primary' is applied to this result set to output
-HTML. 
+HTML.
 
 **This is to be compared to interfaces and protocols in object-oriented
 languages. Applying a given view called 'a_view' to all the entities
@@ -186,7 +186,7 @@ now allows to read its description and all its entries.
    :alt: a blog and all its entries
 
 **Before we move forward, remember that the selection/view principle is
-at the core of `CubicWeb`. Everywhere in the engine, data is requested
+at the core of *CubicWeb*. Everywhere in the engine, data is requested
 using the RQL language, then HTML/XML/text/PNG is output by applying a
 view to the result set returned by the query. That is where most of the
 flexibility comes from.**
@@ -202,7 +202,7 @@ to result sets like "Any E WHERE E is BlogEntry"
 
 * create view "blogentry table" with title, publish_date, category
 
-We will show that by default the view that displays 
+We will show that by default the view that displays
 "Any E,D,C WHERE E publish_date D, E category C" is the table view.
 Of course, the same can be obtained by calling
 self.wview('table',rset)
@@ -226,7 +226,7 @@ by the main template (see above), you have to:
 * set, through the attribute `content_type` of the class, the MIME type generated
   by the view to `application/octet-stream`
 
-For views dedicated to binary content creation (like dynamically generated 
+For views dedicated to binary content creation (like dynamically generated
 images), we have to set the attribute `binary` of the class to `True` (which
 implies that `templatable == False`, so that the attribute `w` of the view could be
 replaced by a binary flow instead of unicode).

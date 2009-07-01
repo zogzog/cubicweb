@@ -57,7 +57,9 @@ class PrimaryView(EntityView):
         self.content_navigation_components('navcontenttop')
         try:
             self.render_entity_attributes(entity)
-        except TypeError: # XXX bw compat
+        except TypeError, e: # XXX bw compat
+            if 'render_entity' not in e.args[0]:
+                raise
             warn('siderelations argument of render_entity_attributes is '
                  'deprecated (%s)' % self.__class__)
             self.render_entity_attributes(entity, [])
@@ -65,7 +67,9 @@ class PrimaryView(EntityView):
         if self.main_related_section:
             try:
                 self.render_entity_relations(entity)
-            except TypeError: # XXX bw compat
+            except TypeError, e: # XXX bw compat
+                if 'render_entity' not in e.args[0]:
+                    raise
                 warn('siderelations argument of render_entity_relations is '
                      'deprecated')
                 self.render_entity_relations(entity, [])
@@ -115,7 +119,19 @@ class PrimaryView(EntityView):
 
     def render_entity_attributes(self, entity, siderelations=None):
         for rschema, tschemas, role, dispctrl in self._section_def(entity, 'attributes'):
-            vid =  dispctrl.get('vid', 'reledit')
+            # don't use reledit as default vid for composite relation
+            if rschema.is_final():
+                defaultvid = 'reledit'
+            # XXX use entity.e_schema.role_rproperty(role, rschema, 'composite', tschemas[0]) once yams > 0.23.0 is out
+            elif role == 'subject' and \
+                 rschema.rproperty(entity.e_schema, tschemas[0], 'composite'):
+                defaultvid = 'csv'
+            elif role == 'object' and \
+                 rschema.rproperty(tschemas[0], entity.e_schema, 'composite'):
+                defaultvid = 'csv'
+            else:
+                defaultvid = 'reledit'
+            vid =  dispctrl.get('vid', defaultvid)
             if rschema.is_final() or vid == 'reledit':
                 value = entity.view(vid, rtype=rschema.type, role=role)
             else:

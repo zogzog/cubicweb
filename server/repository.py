@@ -209,11 +209,6 @@ class Repository(object):
             # initialized)
             for source in self.sources:
                 source.init()
-            # call application level initialisation hooks
-            self.hm.call_hooks('server_startup', repo=self)
-            # register a task to cleanup expired session
-            self.looping_task(self.config['session-time']/3.,
-                              self.clean_sessions)
         else:
             # call init_creating so for instance native source can configurate
             # tsearch according to postgres version
@@ -225,6 +220,12 @@ class Repository(object):
         for i in xrange(config['connections-pool-size']):
             self._available_pools.put_nowait(ConnectionsPool(self.sources))
         self._shutting_down = False
+        if not config.creating:
+            # call application level initialisation hooks
+            self.hm.call_hooks('server_startup', repo=self)
+            # register a task to cleanup expired session
+            self.looping_task(self.config['session-time']/3.,
+                              self.clean_sessions)
 
     # internals ###############################################################
 
@@ -342,7 +343,6 @@ class Repository(object):
                             'connections pools size)')
 
     def _free_pool(self, pool):
-        pool.rollback()
         self._available_pools.put_nowait(pool)
 
     def pinfo(self):
