@@ -19,7 +19,7 @@ from cubicweb.selectors import yes, non_final_entity, nonempty_rset, none_rset
 from cubicweb.selectors import require_group_compat, accepts_compat
 from cubicweb.appobject import AppRsetObject
 from cubicweb.utils import UStringIO, HTMLStream
-
+from cubicweb.schema import display_name
 
 # robots control
 NOINDEX = u'<meta name="ROBOTS" content="NOINDEX" />'

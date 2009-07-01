@@ -14,8 +14,8 @@ from logilab.mtconverter import html_escape
 
 from cubicweb import Unauthorized
 from cubicweb.view import EntityView
+from cubicweb.schema import display_name
 from cubicweb.web import uicfg
-
 
 
 class PrimaryView(EntityView):
