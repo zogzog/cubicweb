@@ -743,7 +743,7 @@ the repository',
                     self.warning('site_erudi.py is deprecated, should be renamed to site_cubicweb.py')
 
     def _load_site_cubicweb(self, sitefile):
-        context = {}
+        context = {'__file__': sitefile}
         execfile(sitefile, context, context)
         self.info('%s loaded', sitefile)
         # cube specific options
