@@ -445,16 +445,15 @@ div.shadow{
 }
 
 div.sideBoxTitle {
-  padding: 0.2em 0px;
   background: #cfceb7;
   display: block;
   font: bold 100% Georgia;
+  padding : 2px 0;
 }
 
 div.sideBox {
-  padding: 0.2em 0px;
+  padding: 0 0 0.2em;
   margin-bottom: 0.5em;
-  background: #eeedd9;
   min-width: 21em;
   max-width: 50em;
 }
@@ -467,6 +466,7 @@ ul.sideBox li{
 
 div.sideBoxBody {
   padding: 0.2em 5px;
+  background: #eeedd9;
 }
 
 div.sideBoxBody a {

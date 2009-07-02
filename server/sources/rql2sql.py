@@ -490,10 +490,10 @@ class SQLGenerator(object):
                 sql.insert(1, 'FROM (SELECT 1) AS _T')
             sqls.append('\n'.join(sql))
         if select.need_intersect:
-            if distinct or not self.dbms_helper.intersect_all_support:
-                return '\nINTERSECT\n'.join(sqls)
-            else:
-                return '\nINTERSECT ALL\n'.join(sqls)
+            #if distinct or not self.dbms_helper.intersect_all_support:
+            return '\nINTERSECT\n'.join(sqls)
+            #else:
+            #    return '\nINTERSECT ALL\n'.join(sqls)
         elif distinct:
             return '\nUNION\n'.join(sqls)
         else:
@@ -661,13 +661,27 @@ class SQLGenerator(object):
         lhsvar, _, rhsvar, rhsconst = relation_info(relation)
         # we are sure here to have a lhsvar
         assert lhsvar is not None
-        lhssql = self._inlined_var_sql(lhsvar, relation.r_type)
         if isinstance(relation.parent, Not):
             self._state.done.add(relation.parent)
-            sql = "%s IS NULL" % lhssql
             if rhsvar is not None and not rhsvar._q_invariant:
-                sql = '(%s OR %s!=%s)' % (sql, lhssql, rhsvar.accept(self))
+                # if the lhs variable is only linked to this relation, this mean we
+                # only want the relation to NOT exists
+                self._state.push_scope()
+                lhssql = self._inlined_var_sql(lhsvar, relation.r_type)
+                rhssql = rhsvar.accept(self)
+                restrictions, tables = self._state.pop_scope()
+                restrictions.append('%s=%s' % (lhssql, rhssql))
+                if not tables:
+                    sql = 'NOT EXISTS(SELECT 1 WHERE %s)' % (
+                        ' AND '.join(restrictions))
+                else:
+                    sql = 'NOT EXISTS(SELECT 1 FROM %s WHERE %s)' % (
+                        ', '.join(tables), ' AND '.join(restrictions))
+            else:
+                lhssql = self._inlined_var_sql(lhsvar, relation.r_type)
+                sql = '%s IS NULL' % self._inlined_var_sql(lhsvar, relation.r_type)
             return sql
+        lhssql = self._inlined_var_sql(lhsvar, relation.r_type)
         if rhsconst is not None:
             return '%s=%s' % (lhssql, rhsconst.accept(self))
         if isinstance(rhsvar, Variable) and not rhsvar.name in self._varmap:

@@ -296,6 +296,8 @@ du :eid:`1:*ReST*`'''
         self.assertEquals(e.printable_value('content'), e['content'])
         e['content'] = u'été'
         self.assertEquals(e.printable_value('content'), e['content'])
+        e['content'] = u'hop\r\nhop\nhip\rmomo'
+        self.assertEquals(e.printable_value('content'), u'hop\nhop\nhip\nmomo')
 
 
     def test_fulltextindex(self):

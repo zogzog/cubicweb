@@ -48,7 +48,7 @@ class EntityDeleteHook(SomethingChangedHook):
     events = ('before_delete_entity',)
 
     def _call(self, eid):
-        entity = self.session.entity(eid)
+        entity = self.session.entity_from_eid(eid)
         try:
             title = entity.dc_title()
         except:

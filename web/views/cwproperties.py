@@ -299,11 +299,10 @@ class PropertyKeyField(StringField):
         _ = form.req._
         if entity.has_eid():
             return [(_(entity.pkey), entity.pkey)]
-        # key beginning with 'system.' should usually not be edited by hand
         choices = entity.vreg.user_property_keys()
         return [(u'', u'')] + sorted(zip((_(v) for v in choices), choices))
 
-    
+
 class PropertyValueField(StringField):
     """specific field for CWProperty.value  which will be different according to
     the selected key type and vocabulary information

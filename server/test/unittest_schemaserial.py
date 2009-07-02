@@ -94,7 +94,7 @@ class Schema2RQLTC(TestCase):
             ('INSERT CWConstraint X: X value %(value)s, X cstrtype CT, EDEF constrained_by X WHERE CT name %(ctname)s, EDEF relation_type ER, EDEF from_entity SE, EDEF to_entity OE, ER name %(rt)s, SE name %(se)s, OE name %(oe)s, EDEF is CWAttribute',
              {'rt': 'cardinality', 'oe': 'String', 'ctname': u'SizeConstraint', 'se': 'CWAttribute', 'value': u'max=2'}),
             ('INSERT CWConstraint X: X value %(value)s, X cstrtype CT, EDEF constrained_by X WHERE CT name %(ctname)s, EDEF relation_type ER, EDEF from_entity SE, EDEF to_entity OE, ER name %(rt)s, SE name %(se)s, OE name %(oe)s, EDEF is CWAttribute',
-             {'rt': 'cardinality', 'oe': 'String', 'ctname': u'StaticVocabularyConstraint', 'se': 'CWAttribute', 'value': u"u'?1', u'11', u'??', u'1?'"}),
+             {'rt': 'cardinality', 'oe': 'String', 'ctname': u'StaticVocabularyConstraint', 'se': 'CWAttribute', 'value': u"u'?1', u'11'"}),
             ])
 
 

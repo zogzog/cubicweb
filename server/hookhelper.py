@@ -7,9 +7,6 @@
 """
 __docformat__ = "restructuredtext en"
 
-from smtplib import SMTP
-from threading import Lock
-
 from cubicweb import RepositoryError
 from cubicweb.server.pool import SingleLastOperation
 
@@ -47,8 +44,6 @@ def get_user_sessions(repo, ueid):
 
 # mail related ################################################################
 
-SMTP_LOCK = Lock()
-
 class SendMailOp(SingleLastOperation):
     def __init__(self, session, msg=None, recipients=None, **kwargs):
         # may not specify msg yet, as
@@ -70,26 +65,7 @@ class SendMailOp(SingleLastOperation):
         self.repo.threaded_task(self.sendmails)
 
     def sendmails(self):
-        server, port = self.config['smtp-host'], self.config['smtp-port']
-        SMTP_LOCK.acquire()
-        try:
-            try:
-                smtp = SMTP(server, port)
-            except Exception, ex:
-                self.exception("can't connect to smtp server %s:%s (%s)",
-                               server, port, ex)
-                return
-            heloaddr = '%s <%s>' % (self.config['sender-name'],
-                                    self.config['sender-addr'])
-            for msg, recipients in self.to_send:
-                try:
-                    smtp.sendmail(heloaddr, recipients, msg.as_string())
-                except Exception, ex:
-                    self.exception("error sending mail to %s (%s)",
-                                   recipients, ex)
-            smtp.close()
-        finally:
-            SMTP_LOCK.release()
+        self.config.sendmails(self.to_send)
 
 
 # state related ###############################################################

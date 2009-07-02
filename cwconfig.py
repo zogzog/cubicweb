@@ -17,6 +17,8 @@ _ = unicode
 import sys
 import os
 import logging
+from smtplib import SMTP
+from threading import Lock
 from os.path import exists, join, expanduser, abspath, normpath, basename, isdir
 
 from logilab.common.decorators import cached
@@ -28,6 +30,8 @@ from cubicweb import CW_SOFTWARE_ROOT, CW_MIGRATION_MAP, ConfigurationError
 from cubicweb.toolsutils import env_path, create_dir
 
 CONFIGURATIONS = []
+
+SMTP_LOCK = Lock()
 
 
 class metaconfiguration(type):
@@ -743,7 +747,7 @@ the repository',
                     self.warning('site_erudi.py is deprecated, should be renamed to site_cubicweb.py')
 
     def _load_site_cubicweb(self, sitefile):
-        context = {}
+        context = {'__file__': sitefile}
         execfile(sitefile, context, context)
         self.info('%s loaded', sitefile)
         # cube specific options
@@ -826,6 +830,28 @@ the repository',
         sourcedirs = [join(path, 'i18n') for path in self.cubes_path()]
         sourcedirs.append(self.i18n_lib_dir())
         return i18n.compile_i18n_catalogs(sourcedirs, i18ndir, langs)
+
+    def sendmails(self, msgs):
+        """msgs: list of 2-uple (message object, recipients)"""
+        server, port = self['smtp-host'], self['smtp-port']
+        SMTP_LOCK.acquire()
+        try:
+            try:
+                smtp = SMTP(server, port)
+            except Exception, ex:
+                self.exception("can't connect to smtp server %s:%s (%s)",
+                               server, port, ex)
+                return
+            heloaddr = '%s <%s>' % (self['sender-name'], self['sender-addr'])
+            for msg, recipients in msgs:
+                try:
+                    smtp.sendmail(heloaddr, recipients, msg.as_string())
+                except Exception, ex:
+                    self.exception("error sending mail to %s (%s)",
+                                   recipients, ex)
+            smtp.close()
+        finally:
+            SMTP_LOCK.release()
 
 set_log_methods(CubicWebConfiguration, logging.getLogger('cubicweb.configuration'))
 

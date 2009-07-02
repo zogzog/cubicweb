@@ -56,13 +56,12 @@ class RepositoryTC(RepositoryBasedTC):
         namecol = SQL_PREFIX + 'name'
         finalcol = SQL_PREFIX + 'final'
         try:
-            sqlcursor = pool['system']
-            sqlcursor.execute('SELECT %s FROM %s WHERE %s is NULL' % (
+            cu = self.session.system_sql('SELECT %s FROM %s WHERE %s is NULL' % (
                 namecol, table, finalcol))
-            self.assertEquals(sqlcursor.fetchall(), [])
-            sqlcursor.execute('SELECT %s FROM %s WHERE %s=%%(final)s ORDER BY %s'
+            self.assertEquals(cu.fetchall(), [])
+            cu = self.session.system_sql('SELECT %s FROM %s WHERE %s=%%(final)s ORDER BY %s'
                               % (namecol, table, finalcol, namecol), {'final': 'TRUE'})
-            self.assertEquals(sqlcursor.fetchall(), [(u'Boolean',), (u'Bytes',),
+            self.assertEquals(cu.fetchall(), [(u'Boolean',), (u'Bytes',),
                                                      (u'Date',), (u'Datetime',),
                                                      (u'Decimal',),(u'Float',),
                                                      (u'Int',),
@@ -358,38 +357,36 @@ class DataHelpersTC(RepositoryBasedTC):
         entity.eid = -1
         entity.complete = lambda x: None
         self.repo.add_info(self.session, entity, self.repo.sources_by_uri['system'])
-        cursor = self.session.pool['system']
-        cursor.execute('SELECT * FROM entities WHERE eid = -1')
-        data = cursor.fetchall()
+        cu = self.session.system_sql('SELECT * FROM entities WHERE eid = -1')
+        data = cu.fetchall()
         self.assertIsInstance(data[0][3], datetime)
         data[0] = list(data[0])
         data[0][3] = None
         self.assertEquals(tuplify(data), [(-1, 'Personne', 'system', None, None)])
         self.repo.delete_info(self.session, -1)
         #self.repo.commit()
-        cursor.execute('SELECT * FROM entities WHERE eid = -1')
-        data = cursor.fetchall()
+        cu = self.session.system_sql('SELECT * FROM entities WHERE eid = -1')
+        data = cu.fetchall()
         self.assertEquals(data, [])
 
 
 class FTITC(RepositoryBasedTC):
 
     def test_reindex_and_modified_since(self):
-        cursor = self.session.pool['system']
         eidp = self.execute('INSERT Personne X: X nom "toto", X prenom "tutu"')[0][0]
         self.commit()
         ts = datetime.now()
         self.assertEquals(len(self.execute('Personne X WHERE X has_text "tutu"')), 1)
-        cursor.execute('SELECT mtime, eid FROM entities WHERE eid = %s' % eidp)
-        omtime = cursor.fetchone()[0]
+        cu = self.session.system_sql('SELECT mtime, eid FROM entities WHERE eid = %s' % eidp)
+        omtime = cu.fetchone()[0]
         # our sqlite datetime adapter is ignore seconds fraction, so we have to
         # ensure update is done the next seconds
         time.sleep(1 - (ts.second - int(ts.second)))
         self.execute('SET X nom "tata" WHERE X eid %(x)s', {'x': eidp}, 'x')
         self.commit()
         self.assertEquals(len(self.execute('Personne X WHERE X has_text "tutu"')), 1)
-        cursor.execute('SELECT mtime FROM entities WHERE eid = %s' % eidp)
-        mtime = cursor.fetchone()[0]
+        cu = self.session.system_sql('SELECT mtime FROM entities WHERE eid = %s' % eidp)
+        mtime = cu.fetchone()[0]
         self.failUnless(omtime < mtime)
         self.commit()
         date, modified, deleted = self.repo.entities_modified_since(('Personne',), omtime)

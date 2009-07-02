@@ -164,7 +164,12 @@ class Field(object):
         widgets which desire it."""
         if self.choices is not None:
             if callable(self.choices):
-                vocab = self.choices(req=form.req)
+                try:
+                    vocab = self.choices(form=form)
+                except TypeError:
+                    warn('vocabulary method (eg field.choices) should now take '
+                         'the form instance as argument', DeprecationWarning)
+                    vocab = self.choices(req=form.req)
             else:
                 vocab = self.choices
             if vocab and not isinstance(vocab[0], (list, tuple)):

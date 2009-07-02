@@ -129,6 +129,21 @@ class DisplayCtrlRelationTags(RelationTags):
         self._counter += 1
         tag.setdefault('order', self._counter)
 
+    def tag_subject_of(self, key, tag):
+        subj, rtype, obj = key
+        if obj != '*':
+            self.warning('using explict target type in display_ctrl.tag_subject_of() '
+                         'has no effect, use (%s, %s, "*") instead of (%s, %s, %s)',
+                         subj, rtype, subj, rtype, obj)
+        super(DisplayCtrlRelationTags, self).tag_subject_of((subj, rtype, '*'), tag)
+
+    def tag_object_of(self, key, tag):
+        subj, rtype, obj = key
+        if subj != '*':
+            self.warning('using explict subject type in display_ctrl.tag_object_of() '
+                         'has no effect, use ("*", %s, %s) instead of (%s, %s, %s)',
+                         rtype, obj, subj, rtype, obj)
+        super(DisplayCtrlRelationTags, self).tag_object_of(('*', rtype, obj), tag)
 
 def init_primaryview_display_ctrl(rtag, sschema, rschema, oschema, role):
     if role == 'subject':

@@ -77,7 +77,7 @@ class XMLRsetView(AnyRsetView):
         w = self.w
         rset, descr = self.rset, self.rset.description
         eschema = self.schema.eschema
-        labels = self.columns_labels(False)
+        labels = self.columns_labels(tr=False)
         w(u'<?xml version="1.0" encoding="%s"?>\n' % self.req.encoding)
         w(u'<%s query="%s">\n' % (self.xml_root, xml_escape(rset.printable_rql())))
         for rowindex, row in enumerate(self.rset):

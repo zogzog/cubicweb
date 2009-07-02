@@ -106,7 +106,8 @@ class TreeViewItemView(EntityView):
         liclasses = []
         is_last = row == len(self.rset) - 1
         is_open = self.open_state(entity.eid, treeid)
-        if not hasattr(entity, 'is_leaf') or entity.is_leaf():
+        is_leaf = not hasattr(entity, 'is_leaf') or entity.is_leaf()
+        if is_leaf:
             if is_last:
                 liclasses.append('last')
             w(u'<li class="%s">' % u' '.join(liclasses))
@@ -145,7 +146,7 @@ class TreeViewItemView(EntityView):
                 w(u'<ul class="placeholder"><li>place holder</li></ul>')
         # the local node info
         self.wview(vid, self.rset, row=row, col=col)
-        if is_open: # => not leaf => rql is defined
+        if is_open and not is_leaf: #  => rql is defined
             self.wview(parentvid, self.req.execute(rql), treeid=treeid, initial_load=False)
         w(u'</li>')
 

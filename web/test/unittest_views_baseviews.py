@@ -103,9 +103,9 @@ class TableViewTC(EnvBasedTC):
 
     def test_sortvalue_with_display_col(self):
         e, rset, view = self._prepare_entity()
-        rqlstdescr = rset.syntax_tree().get_description()[0] # XXX missing Union support
+        labels = rset.column_labels()
         table = TableWidget(view)
-        table.columns = view.get_columns(rqlstdescr, [1, 2], None, None, None, None, 0)
+        table.columns = view.get_columns(labels, [1, 2], None, None, None, None, 0)
         expected = ['loo"ong blabla'[:10], e.creation_date.strftime('%Y-%m-%d %H:%M')]
         got = [loadjson(value) for _, value in table.itercols(0)]
         self.assertListEqual(got, expected)

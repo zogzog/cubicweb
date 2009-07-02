@@ -251,9 +251,9 @@ WHERE X.cw_from_entity=44 AND SE.cw_eid=44 AND X.cw_relation_type=139 AND R.cw_e
 
     # Any O WHERE NOT S corrected_in O, S eid %(x)s, S concerns P, O version_of P, O in_state ST, NOT ST name "published", O modification_date MTIME ORDERBY MTIME DESC LIMIT 9
     ('Any O WHERE NOT S ecrit_par O, S eid 1, S inline1 P, O inline2 P',
-     '''SELECT DISTINCT O.cw_eid
+     '''SELECT O.cw_eid
 FROM cw_Note AS S, cw_Personne AS O
-WHERE (S.cw_ecrit_par IS NULL OR S.cw_ecrit_par!=O.cw_eid) AND S.cw_eid=1 AND O.cw_inline2=S.cw_inline1'''),
+WHERE NOT EXISTS(SELECT 1 WHERE S.cw_ecrit_par=O.cw_eid) AND S.cw_eid=1 AND O.cw_inline2=S.cw_inline1'''),
 
     ('DISTINCT Any S ORDERBY stockproc(SI) WHERE NOT S ecrit_par O, S para SI',
      '''SELECT T1.C0 FROM (SELECT DISTINCT S.cw_eid AS C0, STOCKPROC(S.cw_para) AS C1
@@ -698,7 +698,6 @@ SELECT S.cw_eid
 FROM cw_Tag AS S, cw_Tag AS T, tags_relation AS rel_tags0
 WHERE NOT (T.cw_eid=28258) AND rel_tags0.eid_from=T.cw_eid AND rel_tags0.eid_to=S.cw_eid'''),
 
-
     ('Any X,Y WHERE X created_by Y, X eid 5, NOT Y eid 6',
      '''SELECT 5, rel_created_by0.eid_to
 FROM created_by_relation AS rel_created_by0
@@ -736,25 +735,25 @@ FROM cw_Note AS X
 WHERE NOT EXISTS(SELECT 1 FROM evaluee_relation AS rel_evaluee0,cw_CWUser AS Y WHERE rel_evaluee0.eid_from=Y.cw_eid AND rel_evaluee0.eid_to=X.cw_eid)'''),
 
     ('Any X,T WHERE X title T, NOT X is Bookmark',
-     '''SELECT DISTINCT X.cw_eid, X.cw_title
+     '''SELECT X.cw_eid, X.cw_title
 FROM cw_Card AS X
-UNION
-SELECT DISTINCT X.cw_eid, X.cw_title
+UNION ALL
+SELECT X.cw_eid, X.cw_title
 FROM cw_EmailThread AS X'''),
 
     ('Any K,V WHERE P is CWProperty, P pkey K, P value V, NOT P for_user U',
-     '''SELECT DISTINCT P.cw_pkey, P.cw_value
+     '''SELECT P.cw_pkey, P.cw_value
 FROM cw_CWProperty AS P
 WHERE P.cw_for_user IS NULL'''),
 
     ('Any S WHERE NOT X in_state S, X is IN(Affaire, CWUser)',
-     '''SELECT DISTINCT S.cw_eid
-FROM cw_Affaire AS X, cw_State AS S
-WHERE (X.cw_in_state IS NULL OR X.cw_in_state!=S.cw_eid)
+     '''SELECT S.cw_eid
+FROM cw_State AS S
+WHERE NOT EXISTS(SELECT 1 FROM cw_Affaire AS X WHERE X.cw_in_state=S.cw_eid)
 INTERSECT
-SELECT DISTINCT S.cw_eid
-FROM cw_CWUser AS X, cw_State AS S
-WHERE (X.cw_in_state IS NULL OR X.cw_in_state!=S.cw_eid)'''),
+SELECT S.cw_eid
+FROM cw_State AS S
+WHERE NOT EXISTS(SELECT 1 FROM cw_CWUser AS X WHERE X.cw_in_state=S.cw_eid)'''),
     ]
 
 OUTER_JOIN = [
@@ -1030,9 +1029,9 @@ FROM cw_Note AS N, cw_Personne AS P
 WHERE N.cw_ecrit_par=P.cw_eid AND N.cw_eid=0'''),
 
     ('Any N WHERE NOT N ecrit_par P, P nom "toto"',
-     '''SELECT DISTINCT N.cw_eid
+     '''SELECT N.cw_eid
 FROM cw_Note AS N, cw_Personne AS P
-WHERE (N.cw_ecrit_par IS NULL OR N.cw_ecrit_par!=P.cw_eid) AND P.cw_nom=toto'''),
+WHERE NOT EXISTS(SELECT 1 WHERE N.cw_ecrit_par=P.cw_eid) AND P.cw_nom=toto'''),
 
     ('Any P WHERE N ecrit_par P, N eid 0',
     '''SELECT N.cw_ecrit_par
@@ -1045,9 +1044,9 @@ FROM cw_Note AS N, cw_Personne AS P
 WHERE N.cw_ecrit_par=P.cw_eid AND N.cw_eid=0'''),
 
     ('Any P WHERE NOT N ecrit_par P, P is Personne, N eid 512',
-     '''SELECT DISTINCT P.cw_eid
+     '''SELECT P.cw_eid
 FROM cw_Note AS N, cw_Personne AS P
-WHERE (N.cw_ecrit_par IS NULL OR N.cw_ecrit_par!=P.cw_eid) AND N.cw_eid=512'''),
+WHERE NOT EXISTS(SELECT 1 WHERE N.cw_ecrit_par=P.cw_eid) AND N.cw_eid=512'''),
 
     ('Any S,ES,T WHERE S state_of ET, ET name "CWUser", ES allowed_transition T, T destination_state S',
      '''SELECT T.cw_destination_state, rel_allowed_transition1.eid_from, T.cw_eid
@@ -1070,23 +1069,23 @@ WHERE S.cw_eid=0 AND S.cw_in_state IS NOT NULL''')
 
 INTERSECT = [
     ('Any SN WHERE NOT X in_state S, S name SN',
-     '''SELECT DISTINCT S.cw_name
-FROM cw_Affaire AS X, cw_State AS S
-WHERE (X.cw_in_state IS NULL OR X.cw_in_state!=S.cw_eid)
+     '''SELECT S.cw_name
+FROM cw_State AS S
+WHERE NOT EXISTS(SELECT 1 FROM cw_Affaire AS X WHERE X.cw_in_state=S.cw_eid)
 INTERSECT
-SELECT DISTINCT S.cw_name
-FROM cw_CWUser AS X, cw_State AS S
-WHERE (X.cw_in_state IS NULL OR X.cw_in_state!=S.cw_eid)
+SELECT S.cw_name
+FROM cw_State AS S
+WHERE NOT EXISTS(SELECT 1 FROM cw_CWUser AS X WHERE X.cw_in_state=S.cw_eid)
 INTERSECT
-SELECT DISTINCT S.cw_name
-FROM cw_Note AS X, cw_State AS S
-WHERE (X.cw_in_state IS NULL OR X.cw_in_state!=S.cw_eid)'''),
+SELECT S.cw_name
+FROM cw_State AS S
+WHERE NOT EXISTS(SELECT 1 FROM cw_Note AS X WHERE X.cw_in_state=S.cw_eid)'''),
 
     ('Any PN WHERE NOT X travaille S, X nom PN, S is IN(Division, Societe)',
      '''SELECT X.cw_nom
 FROM cw_Personne AS X
 WHERE NOT EXISTS(SELECT 1 FROM travaille_relation AS rel_travaille0,cw_Division AS S WHERE rel_travaille0.eid_from=X.cw_eid AND rel_travaille0.eid_to=S.cw_eid)
-INTERSECT ALL
+INTERSECT
 SELECT X.cw_nom
 FROM cw_Personne AS X
 WHERE NOT EXISTS(SELECT 1 FROM travaille_relation AS rel_travaille0,cw_Societe AS S WHERE rel_travaille0.eid_from=X.cw_eid AND rel_travaille0.eid_to=S.cw_eid)'''),

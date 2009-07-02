@@ -46,8 +46,8 @@ class MockSMTP:
     def sendmail(self, helo_addr, recipients, msg):
         MAILBOX.append(Email(recipients, msg))
 
-from cubicweb.server import hookhelper
-hookhelper.SMTP = MockSMTP
+from cubicweb import cwconfig
+cwconfig.SMTP = MockSMTP
 
 
 def get_versions(self, checkversions=False):

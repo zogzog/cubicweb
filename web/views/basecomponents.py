@@ -110,11 +110,6 @@ class UserLink(component.Component):
             self.w(self.req._('anonymous'))
             self.w(u'''&nbsp;[<a class="logout" href="javascript: popupLoginBox();">%s</a>]'''
                    % (self.req._('i18n_login_popup')))
-            # FIXME maybe have an other option to explicitely authorise registration
-            #       also provide a working register view
-#             if self.config['anonymous-user']:
-#                 self.w(u'''&nbsp;[<a class="logout" href="?vid=register">%s</a>]'''
-#                        % (self.req._('i18n_register_user')))
         else:
             self.w(self.req._('anonymous'))
             self.w(u'&nbsp;[<a class="logout" href="%s">%s</a>]'
