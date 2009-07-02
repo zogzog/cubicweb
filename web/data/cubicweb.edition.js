@@ -305,8 +305,9 @@ function restoreInlinedEntity(peid, rtype, eid) {
 }
 
 function _clearPreviousErrors(formid) {
+    jQuery('#' + formid + 'ErrorMessage').remove();
     jQuery('#' + formid + ' span.error').remove();
-    jQuery('div.errorMessage').remove();
+    jQuery('#' + formid + ' .error').removeClass('error');
 }
 
 function _displayValidationerrors(formid, eid, errors) {
@@ -335,7 +336,7 @@ function _displayValidationerrors(formid, eid, errors) {
 	    var innernode = UL(null, map(LI, globalerrors));
 	}
 	// insert DIV and innernode before the form
-	var div = DIV({'class' : "errorMessage"});
+	var div = DIV({'class' : "errorMessage", 'id': formid + 'ErrorMessage'});
 	div.appendChild(innernode);
 	jQuery('#' + formid).before(div);
     }
