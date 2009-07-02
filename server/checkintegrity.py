@@ -71,6 +71,14 @@ def reindex_entities(schema, session):
                                        uniquecstrcheck_before_modification)
     from cubicweb.server.repository import FTIndexEntityOp
     repo = session.repo
+    cursor = session.pool['system']
+    if not repo.system_source.indexer.has_fti_table(cursor):
+        from indexer import get_indexer
+        print 'no text index table'
+        indexer = get_indexer(repo.system_source.dbdriver)
+        # XXX indexer.init_fti(cursor) once index 0.7 is out
+        indexer.init_extensions(cursor)
+        cursor.execute(indexer.sql_init_fti())
     repo.hm.unregister_hook(setmtime_before_update_entity,
                             'before_update_entity', '')
     repo.hm.unregister_hook(uniquecstrcheck_before_modification,
