@@ -93,7 +93,7 @@ class TableView(AnyRsetView):
 
     def call(self, title=None, subvid=None, displayfilter=None, headers=None,
              displaycols=None, displayactions=None, actions=(), divid=None,
-             cellvids=None, cellattrs=None):
+             cellvids=None, cellattrs=None, mainindex=None):
         """Dumps a table displaying a composite query
 
         :param title: title added before table
@@ -101,18 +101,18 @@ class TableView(AnyRsetView):
         :param displayfilter: filter that selects rows to display
         :param headers: columns' titles
         """
-        rset = self.rset
         req = self.req
         req.add_js('jquery.tablesorter.js')
         req.add_css(('cubicweb.tablesorter.css', 'cubicweb.tableview.css'))
-        # get rql description first since the filter form may remove some
-        # necessary information
-        mainindex = self.main_var_index()
+        # compute label first  since the filter form may remove some necessary
+        # information from the rql syntax tree
+        if mainindex is None:
+            mainindex = self.main_var_index()
         computed_labels = self.columns_labels(mainindex)
         hidden = True
         if not subvid and 'subvid' in req.form:
             subvid = req.form.pop('subvid')
-        divid = divid or req.form.get('divid') or 'rs%s' % make_uid(id(rset))
+        divid = divid or req.form.get('divid') or 'rs%s' % make_uid(id(self.rset))
         actions = list(actions)
         if mainindex is None:
             displayfilter, displayactions = False, False
@@ -290,7 +290,7 @@ class InitialTableView(TableView):
     title = None
 
     def call(self, title=None, subvid=None, headers=None, divid=None,
-             displaycols=None, displayactions=None):
+             displaycols=None, displayactions=None, mainindex=None):
         """Dumps a table displaying a composite query"""
         actrql = self.req.form['actualrql']
         self.ensure_ro_rql(actrql)
@@ -305,7 +305,8 @@ class InitialTableView(TableView):
             title = self.req.form.pop('title')
         if title:
             self.w(u'<h2>%s</h2>\n' % title)
-        mainindex = self.main_var_index()
+        if mainindex is None:
+            mainindex = self.main_var_index()
         if mainindex is not None:
             actions = self.form_filter(divid, displaycols, displayactions, True)
         else:
