@@ -368,8 +368,13 @@ class InlineEntityEditionFormView(FormViewMixIn, EntityView):
         divid = '%s-%s-%s' % (peid, rtype, entity.eid)
         title = self.schema.rschema(rtype).display_name(self.req, role)
         removejs = self.removejs % (peid, rtype,entity.eid)
+        countkey = '%s_count' % rtype
+        try:
+            self.req.data[countkey] += 1
+        except:
+            self.req.data[countkey] = 1
         self.w(form.form_render(divid=divid, title=title, removejs=removejs,
-                                **kwargs))
+                                counter=self.req.data[countkey], **kwargs))
 
     def add_hiddens(self, form, entity, peid, rtype, role):
         # to ease overriding (see cubes.vcsfile.views.forms for instance)
