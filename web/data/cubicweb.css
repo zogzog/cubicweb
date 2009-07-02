@@ -454,7 +454,6 @@ div.sideBoxTitle {
 div.sideBox {
   padding: 0 0 0.2em;
   margin-bottom: 0.5em;
-  background: #eeedd9;
   min-width: 21em;
   max-width: 50em;
 }
@@ -467,6 +466,7 @@ ul.sideBox li{
 
 div.sideBoxBody {
   padding: 0.2em 5px;
+  background: #eeedd9;
 }
 
 div.sideBoxBody a {

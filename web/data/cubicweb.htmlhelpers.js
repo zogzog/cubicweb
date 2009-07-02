@@ -254,7 +254,7 @@ function limitTextAreaSize(textarea, size) {
 
 //============= page loading events ==========================================//
 function roundedCornersOnLoad() {
-    jQuery('div.sideBox').corner('bottom 6px');
+    jQuery('div.sideBoxBody').corner('bottom 6px');
     jQuery('div.boxTitle, div.boxPrefTitle, div.sideBoxTitle, th.month').corner('top 6px');
 }
 
