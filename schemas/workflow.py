@@ -51,7 +51,7 @@ class Transition(MetaEntityType):
     transition_of = SubjectRelation('CWEType', cardinality='+*',
                                     description=_('entity types which may use this transition'),
                                     constraints=[RQLConstraint('O final FALSE')])
-    destination_state = SubjectRelation('State', cardinality='?*',
+    destination_state = SubjectRelation('State', cardinality='1*',
                                         constraints=[RQLConstraint('S transition_of ET, O state_of ET')],
                                         description=_('destination state for this transition'))
 
