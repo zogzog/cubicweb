@@ -42,6 +42,7 @@ class CWRDEFPrimaryView(primary.PrimaryView):
                % (entity.dc_type().capitalize(),
                   html_escape(entity.dc_long_title())))
 
+
 # CWEType ######################################################################
 
 class CWETypeOneLineView(baseviews.OneLineView):
@@ -93,25 +94,22 @@ class CWETypeSTextView(EntityView):
                                 {'x': entity.eid})
         self.wview('editable-table', rset, 'null', displayfilter=True)
         self.w(u'<h2>%s</h2>' % _('Relations'))
-        rset = self.req.execute('Any N,C,F,M,K,D,A ORDERBY N '
-                                'WITH N,C,F,M,D,K,A BEING ('
-                                '(Any N,C,F,M,K,D,A '
-                                'ORDERBY N WHERE A is CWRelation, '
-                                'A description D, A composite K?, '
-                                'A relation_type R, R name N, '
-                                'A to_entity O, O name F, '
-                                'A cardinality C, O meta M, '
-                                'A from_entity S, S eid %(x)s)'
-                                ' UNION '
-                                '(Any N,C,F,M,K,D,A '
-                                'ORDERBY N WHERE A is CWRelation, '
-                                'A description D, A composite K?, '
-                                'A relation_type R, R name N, '
-                                'A from_entity S, S name F, '
-                                'A cardinality C, S meta M, '
-                                'A to_entity O, O eid %(x)s))'
-                                ,{'x': entity.eid})
-        self.wview('editable-table', rset, 'null', displayfilter=True)
+        rset = self.req.execute(
+            'Any R,C,TT,K,D,A,RN,TTN ORDERBY RN '
+            'WHERE A is CWRelation, A description D, A composite K?, '
+            'A relation_type R, R name RN, A to_entity TT, TT name TTN, '
+            'A cardinality C, A from_entity S, S eid %(x)s',
+            {'x': entity.eid})
+        self.wview('editable-table', rset, 'null', displayfilter=True,
+                   displaycols=range(6), mainindex=5)
+        rset = self.req.execute(
+            'Any R,C,TT,K,D,A,RN,TTN ORDERBY RN '
+            'WHERE A is CWRelation, A description D, A composite K?, '
+            'A relation_type R, R name RN, A from_entity TT, TT name TTN, '
+            'A cardinality C, A to_entity O, O eid %(x)s',
+            {'x': entity.eid})
+        self.wview('editable-table', rset, 'null', displayfilter=True,
+                   displaycols=range(6), mainindex=5)
 
 
 class CWETypeSImageView(EntityView):
