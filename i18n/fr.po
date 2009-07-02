@@ -964,7 +964,7 @@ msgstr "avril"
 #, python-format
 msgid "at least one relation %(rtype)s is required on %(etype)s (%(eid)s)"
 msgstr ""
-"L'entité #%(eid)s de type %(etype)s doit nécessairement être reliée à une\n"
+"l'entité #%(eid)s de type %(etype)s doit nécessairement être reliée à une\n"
 "autre via la relation %(rtype)s"
 
 msgid "attribute"
