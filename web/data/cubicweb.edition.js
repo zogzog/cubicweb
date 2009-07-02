@@ -306,6 +306,7 @@ function restoreInlinedEntity(peid, rtype, eid) {
 
 function _clearPreviousErrors(formid) {
     jQuery('#' + formid + ' span.error').remove();
+    jQuery('div.errorMessage').remove();
 }
 
 function _displayValidationerrors(formid, eid, errors) {
@@ -324,7 +325,7 @@ function _displayValidationerrors(formid, eid, errors) {
 	    field.before(span);
 	} else {
 	    firsterrfield = formid;
-	    globalerrors.push(fieldname + ': ' + errmsg);
+	    globalerrors.push(_(fieldname) + ' : ' + errmsg);
 	}
     }
     if (globalerrors.length) {
