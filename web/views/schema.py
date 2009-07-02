@@ -82,11 +82,10 @@ class CWETypeSTextView(EntityView):
     def cell_call(self, row, col):
         entity = self.entity(row, col)
         self.w(u'<h2>%s</h2>' % _('Attributes'))
-        rset = self.req.execute('Any N,F,D,GROUP_CONCAT(C),I,J,DE,A '
-                                'GROUPBY N,F,D,AA,A,I,J,DE '
+        rset = self.req.execute('Any N,F,D,I,J,DE,A '
                                 'ORDERBY AA WHERE A is CWAttribute, '
                                 'A ordernum AA, A defaultval D, '
-                                'A constrained_by C?, A description DE, '
+                                'A description DE, '
                                 'A fulltextindexed I, A internationalizable J, '
                                 'A relation_type R, R name N, '
                                 'A to_entity O, O name F, '
