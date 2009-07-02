@@ -664,12 +664,21 @@ class Repository(object):
           custom properties)
         """
         session = self._get_session(sessionid, setpool=False)
-        if props:
-            # update session properties
-            for prop, value in props.items():
-                session.change_property(prop, value)
+        if props is not None:
+            self.set_session_props(sessionid, props)
         user = session.user
         return user.eid, user.login, user.groups, user.properties
+
+    def set_session_props(self, sessionid, props):
+        """this method should be used by client to:
+        * check session id validity
+        * update user information on each user's request (i.e. groups and
+          custom properties)
+        """
+        session = self._get_session(sessionid, setpool=False)
+        # update session properties
+        for prop, value in props.items():
+            session.change_property(prop, value)
 
     # public (inter-repository) interface #####################################
 

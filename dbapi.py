@@ -245,7 +245,7 @@ class DBAPIRequest(RequestSessionMixIn):
     @property
     def user(self):
         if self._user is None and self.cnx:
-            self.set_user(self.cnx.user(self))
+            self.set_user(self.cnx.user(self, {'lang': self.lang}))
         return self._user
 
     def set_user(self, user):
@@ -367,6 +367,10 @@ class Connection(object):
         """raise `BadSessionId` if the connection is no more valid"""
         self._repo.check_session(self.sessionid)
 
+    def set_session_props(self, **props):
+        """raise `BadSessionId` if the connection is no more valid"""
+        self._repo.set_session_props(self.sessionid, props)
+
     def get_shared_data(self, key, default=None, pop=False):
         """return value associated to `key` in shared data"""
         return self._repo.get_shared_data(self.sessionid, key, default, pop)
@@ -434,7 +438,8 @@ class Connection(object):
     def user(self, req=None, props=None):
         """return the User object associated to this connection"""
         # cnx validity is checked by the call to .user_info
-        eid, login, groups, properties = self._repo.user_info(self.sessionid, props)
+        eid, login, groups, properties = self._repo.user_info(self.sessionid,
+                                                              props)
         if req is None:
             req = self.request()
         rset = req.eid_rset(eid, 'CWUser')
