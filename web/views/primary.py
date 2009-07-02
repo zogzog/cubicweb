@@ -52,7 +52,6 @@ class PrimaryView(EntityView):
         boxes = self._prepare_side_boxes(entity)
         if boxes or hasattr(self, 'render_side_related'):
             self.w(u'<table width="100%"><tr><td style="width: 75%">')
-        self.w(u'<div>')
         self.w(u'<div class="mainInfo">')
         self.content_navigation_components('navcontenttop')
         try:
@@ -63,7 +62,6 @@ class PrimaryView(EntityView):
             warn('siderelations argument of render_entity_attributes is '
                  'deprecated (%s)' % self.__class__)
             self.render_entity_attributes(entity, [])
-        self.w(u'</div>')
         if self.main_related_section:
             try:
                 self.render_entity_relations(entity)
@@ -74,9 +72,9 @@ class PrimaryView(EntityView):
                      'deprecated')
                 self.render_entity_relations(entity, [])
         self.w(u'</div>')
+        # side boxes
         if boxes or hasattr(self, 'render_side_related'):
             self.w(u'</td><td>')
-            # side boxes
             self.w(u'<div class="primaryRight">')
             if hasattr(self, 'render_side_related'):
                 warn('render_side_related is deprecated')
