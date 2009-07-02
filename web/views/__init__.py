@@ -114,4 +114,7 @@ class TmpFileViewMixin(object):
             self._generate(tmpfile)
             self.w(open(tmpfile).read())
         finally:
-            os.unlink(tmpfile)
+            try:
+                os.unlink(tmpfile)
+            except Exception, ex:
+                self.warning('cant delete %s: %s', tmpfile, ex)
