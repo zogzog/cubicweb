@@ -276,8 +276,7 @@ class CubicWebPublisher(object):
     @obsolete("use vreg.select('controllers', ...)")
     def select_controller(self, oid, req):
         try:
-            controller = self.vreg.select('controllers', oid, req=req,
-                                          appli=self)
+            return self.vreg.select('controllers', oid, req=req, appli=self)
         except NoSelectableObject:
             raise Unauthorized(req._('not authorized'))
 
