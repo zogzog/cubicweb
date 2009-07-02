@@ -195,15 +195,9 @@ class SchemaTabTextView(StartupView):
     id = 'schema-text'
 
     def call(self):
-        self.w(u'<p>%s</p>' % _('This is the list of types defined in the data '
-                                'model ofin this application.'))
-        self.w(u'<p>%s</p>' % _('<em>meta</em> is True for types that are defined by the '
-                                'framework itself (e.g. User and Group). '
-                                '<em>final</em> is True for types that can not be the '
-                                'subject of a relation (e.g. Int and String).'))
-        rset = self.req.execute('Any X,M,F ORDERBY N WHERE X is CWEType, X name N, '
-                                'X meta M, X final F')
-        self.wview('editable-table', rset, displayfilter=True)
+        rset = self.req.execute('Any X ORDERBY N WHERE X is CWEType, X name N, '
+                                'X final FALSE')
+        self.wview('table', rset, displayfilter=True)
 
 
 class ManagerSchemaPermissionsView(StartupView, SecurityViewMixIn):
