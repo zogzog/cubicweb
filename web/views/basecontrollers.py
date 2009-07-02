@@ -178,37 +178,50 @@ class ViewController(Controller):
                 req.execute(rql, {'x': eid, 'y': typed_eid(teid)}, ('x', 'y'))
 
 
+def _validation_error(req, ex):
+    forminfo = req.get_session_data(req.form.get('__errorurl'), pop=True)
+    foreid = ex.entity
+    eidmap = req.data.get('eidmap', {})
+    for var, eid in eidmap.items():
+        if foreid == eid:
+            foreid = var
+            break
+    return (foreid, ex.errors)
+
+def _validate_form(req, vreg):
+    # XXX should use the `RemoteCallFailed` mechanism
+    try:
+        ctrl = vreg.select(vreg.registry_objects('controllers', 'edit'),
+                           req=req)
+    except NoSelectableObject:
+        return (False, {None: req._('not authorized')})
+    try:
+        ctrl.publish(None, fromjson=True)
+    except ValidationError, ex:
+        req.cnx.rollback()
+        return (False, _validation_error(req, ex))
+    except Redirect, ex:
+        try:
+            req.cnx.commit() # ValidationError may be raise on commit
+        except ValidationError, ex:
+            req.cnx.rollback()
+            return (False, _validation_error(req, ex))
+        else:
+            return (True, ex.location)
+    except Exception, ex:
+        req.cnx.rollback()
+        req.exception('unexpected error while validating form')
+        return (False, req._(str(ex).decode('utf-8')))
+    return (False, '???')
+
+
 class FormValidatorController(Controller):
     id = 'validateform'
 
     def publish(self, rset=None):
-        vreg = self.vreg
-        try:
-            ctrl = vreg.select(vreg.registry_objects('controllers', 'edit'),
-                               req=self.req, appli=self.appli)
-        except NoSelectableObject:
-            status, args = (False, {None: self.req._('not authorized')})
-        else:
-            try:
-                ctrl.publish(None, fromjson=True)
-            except ValidationError, err:
-                status, args = self.validation_error(err)
-            except Redirect, err:
-                try:
-                    self.req.cnx.commit() # ValidationError may be raise on commit
-                except ValidationError, err:
-                    status, args = self.validation_error(err)
-                else:
-                    status, args = (True, err.location)
-            except Exception, err:
-                self.req.cnx.rollback()
-                self.exception('unexpected error in validateform')
-                try:
-                    status, args = (False, self.req._(unicode(err)))
-                except UnicodeError:
-                    status, args = (False, repr(err))
-            else:
-                status, args = (False, '???')
+        # XXX unclear why we have a separated controller here vs
+        # js_validate_form on the json controller
+        status, args = _validate_form(self.req, self.vreg)
         self.req.set_content_type('text/html')
         jsarg = simplejson.dumps( (status, args) )
         domid = self.req.form.get('__domid', 'entityForm').encode(
@@ -216,14 +229,6 @@ class FormValidatorController(Controller):
         return """<script type="text/javascript">
  window.parent.handleFormValidationResponse('%s', null, null, %s);
 </script>""" %  (domid, simplejson.dumps( (status, args) ))
-
-    def validation_error(self, err):
-        self.req.cnx.rollback()
-        try:
-            eid = err.entity.eid
-        except AttributeError:
-            eid = err.entity
-        return (False, (eid, err.errors))
 
 
 class JSonController(Controller):
@@ -377,27 +382,8 @@ class JSonController(Controller):
         return self.validate_form(action, names, values)
 
     def validate_form(self, action, names, values):
-        # XXX this method (and correspoding js calls) should use the new
-        #     `RemoteCallFailed` mechansim
         self.req.form = self._rebuild_posted_form(names, values, action)
-        vreg = self.vreg
-        try:
-            ctrl = vreg.select(vreg.registry_objects('controllers', 'edit'),
-                               req=self.req)
-        except NoSelectableObject:
-            return (False, {None: self.req._('not authorized')})
-        try:
-            ctrl.publish(None, fromjson=True)
-        except ValidationError, err:
-            self.req.cnx.rollback()
-            return (False, (err.entity, err.errors))
-        except Redirect, redir:
-            return (True, redir.location)
-        except Exception, err:
-            self.req.cnx.rollback()
-            self.exception('unexpected error in js_validateform')
-            return (False, self.req._(str(err).decode('utf-8')))
-        return (False, '???')
+        return _validate_form(self.req, self.vreg)
 
     @jsonize
     def js_edit_field(self, action, names, values, rtype, eid, default):
