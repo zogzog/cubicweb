@@ -24,7 +24,7 @@ class LazyViewMixin(object):
     """
 
     def _prepare_bindings(self, vid, reloadable):
-        self.req.html_headers.add_onload(u"""
+        self.req.add_onload(u"""
   jQuery('#lazy-%(vid)s').bind('%(event)s', function(event) {
      load_now('#lazy-%(vid)s', '#%(vid)s-hole', %(reloadable)s);
   });""" % {'event': 'load_%s' % vid, 'vid': vid,
@@ -59,7 +59,7 @@ class LazyViewMixin(object):
         on dom readyness
         """
         self.req.add_js('cubicweb.lazy.js')
-        self.req.html_headers.add_onload("trigger_load('%s');" % vid)
+        self.req.add_onload("trigger_load('%s');" % vid)
 
 
 class TabsMixin(LazyViewMixin):
@@ -143,7 +143,7 @@ class TabsMixin(LazyViewMixin):
             w(u'</div>')
         # call the set_tab() JS function *after* each tab is generated
         # because the callback binding needs to be done before
-        self.req.html_headers.add_onload(u"""
+        self.req.add_onload(u"""
    jQuery('#entity-tabs-%(eeid)s > ul').tabs( { selected: %(tabindex)s });
    set_tab('%(vid)s', '%(cookiename)s');
  """ % {'tabindex'   : tabs.index(active_tab),
