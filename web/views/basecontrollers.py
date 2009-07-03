@@ -196,7 +196,7 @@ def _validate_form(req, vreg):
     except NoSelectableObject:
         return (False, {None: req._('not authorized')})
     try:
-        ctrl.publish(None, fromjson=True)
+        ctrl.publish(None)
     except ValidationError, ex:
         req.cnx.rollback()
         return (False, _validation_error(req, ex))
@@ -219,6 +219,7 @@ class FormValidatorController(Controller):
     id = 'validateform'
 
     def publish(self, rset=None):
+        self.req.json_request = True
         # XXX unclear why we have a separated controller here vs
         # js_validate_form on the json controller
         status, args = _validate_form(self.req, self.vreg)
@@ -243,6 +244,7 @@ class JSonController(Controller):
         note: it's the responsability of js_* methods to set the correct
         response content type
         """
+        self.req.json_request = True
         self.req.pageid = self.req.form.get('pageid')
         try:
             fname = self.req.form['fname']
