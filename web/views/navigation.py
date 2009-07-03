@@ -6,6 +6,7 @@
 :license: GNU Lesser General Public License, v2.1 - http://www.gnu.org/licenses
 """
 __docformat__ = "restructuredtext en"
+_ = unicode
 
 from rql.nodes import VariableRef, Constant
 
@@ -18,8 +19,6 @@ from cubicweb.selectors import (paginated_rset, sorted_rset,
                                 one_line_rset, implements)
 from cubicweb.common.uilib import cut
 from cubicweb.web.component import EntityVComponent, NavigationComponent
-
-_ = unicode
 
 
 class PageNavigation(NavigationComponent):

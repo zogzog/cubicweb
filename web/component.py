@@ -6,6 +6,7 @@
 :license: GNU Lesser General Public License, v2.1 - http://www.gnu.org/licenses
 """
 __docformat__ = "restructuredtext en"
+_ = unicode
 
 from logilab.common.deprecation import class_renamed
 from logilab.mtconverter import html_escape
@@ -18,7 +19,6 @@ from cubicweb.selectors import (
     partial_has_related_entities, condition_compat, accepts_compat,
     has_relation_compat)
 
-_ = unicode
 
 class EntityVComponent(Component):
     """abstract base class for additinal components displayed in content
