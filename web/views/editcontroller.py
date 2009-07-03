@@ -112,7 +112,6 @@ class EditController(ViewController):
                 entity = execute(rql, formparams).get_entity(0, 0)
                 eid = entity.eid
             except ValidationError, ex:
-                # ex.entity may be an int or an entity instance
                 self._to_create[formparams['eid']] = ex.entity
                 if self.req.json_request: # XXX (syt) why?
                     ex.entity = formparams['eid']
