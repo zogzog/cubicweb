@@ -404,8 +404,8 @@ class CubicWebPublisher(object):
         return self.vreg.main_template(req, template, view=view)
 
     def main_template_id(self, req):
-        template = req.property_value('ui.main-template')
-        if template not in self.vreg.registry('views') :
+        template = req.form.get('__template', req.property_value('ui.main-template'))
+        if template not in self.vreg.registry('views'):
             template = 'main-template'
         return template
 
