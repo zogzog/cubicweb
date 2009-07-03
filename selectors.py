@@ -482,8 +482,7 @@ class match_form_params(match_search_state):
     def __call__(self, cls, req, *args, **kwargs):
         score = 0
         for param in self.expected:
-            val = req.form.get(param)
-            if not val:
+            if not param in req.form:
                 return 0
             score += 1
         return len(self.expected)
