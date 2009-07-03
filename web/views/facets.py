@@ -41,6 +41,8 @@ class FilterBox(BoxTemplate):
     needs_css = 'cubicweb.facets.css'
     needs_js = ('cubicweb.ajax.js', 'cubicweb.formfilter.js')
 
+    bkLinkBox_template = u'<div class="facetTitle">%s</div>'
+    
     def facetargs(self):
         """this method returns the list of extra arguments that should
         be used by the facet
@@ -80,18 +82,8 @@ class FilterBox(BoxTemplate):
                         widgets.append(wdg)
             if not widgets:
                 return
+            self.displayBookmarkLink(rset)
             w = self.w
-            eschema = self.schema.eschema('Bookmark')
-            if eschema.has_perm(req, 'add'):
-                bk_path = 'view?rql=%s' % rset.printable_rql()
-                bk_title = req._('my custom search')
-                linkto = 'bookmarked_by:%s:subject' % self.req.user.eid
-                bk_add_url = self.build_url('add/Bookmark', path=bk_path, title=bk_title, __linkto=linkto)
-                bk_base_url = self.build_url('add/Bookmark', title=bk_title, __linkto=linkto)
-                w(u'<div class="facetTitle"><a cubicweb:target="%s" id="facetBkLink" href="%s">%s</a></div>' % (
-                    html_escape(bk_base_url),
-                    html_escape(bk_add_url),
-                    req._('bookmark this search')))
             w(u'<form method="post" id="%sForm" cubicweb:facetargs="%s" action="">'  % (
                 divid, html_escape(dumps([divid, vid, paginate, self.facetargs()]))))
             w(u'<fieldset>')
@@ -108,6 +100,20 @@ class FilterBox(BoxTemplate):
             rqlst.recover()
             import cubicweb
             cubicweb.info('after facets with rql: %s' % repr(rqlst))
+
+    def displayBookmarkLink(self, rset):
+        eschema = self.schema.eschema('Bookmark')
+        if eschema.has_perm(self.req, 'add'):
+            bk_path = 'view?rql=%s' % rset.printable_rql()
+            bk_title = self.req._('my custom search')
+            linkto = 'bookmarked_by:%s:subject' % self.req.user.eid
+            bk_add_url = self.build_url('add/Bookmark', path=bk_path, title=bk_title, __linkto=linkto)
+            bk_base_url = self.build_url('add/Bookmark', title=bk_title, __linkto=linkto)
+            bk_link = u'<a cubicweb:target="%s" id="facetBkLink" href="%s">%s</a>' % (
+                    html_escape(bk_base_url),
+                    html_escape(bk_add_url),
+                    self.req._('bookmark this search'))
+            self.w(self.bkLinkBox_template % bk_link)
 
     def get_facets(self, rset, mainvar):
         return self.vreg.possible_vobjects('facets', self.req, rset,
