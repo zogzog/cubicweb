@@ -655,7 +655,7 @@ given, appropriate sources for migration will be automatically selected \
         else:
             applcubicwebversion = vcconf.get('cubicweb')
         if cubicwebversion > applcubicwebversion:
-            toupgrade.append( ('cubicweb', applcubicwebversion, cubicwebversion) )
+            toupgrade.append(('cubicweb', applcubicwebversion, cubicwebversion))
         if not self.config.fs_only and not toupgrade:
             print 'no software migration needed for application %s' % appid
             return
@@ -682,7 +682,6 @@ given, appropriate sources for migration will be automatically selected \
                            'continue anyway ?'):
                 print 'migration not completed'
                 return
-        mih.rewrite_vcconfiguration()
         mih.shutdown()
         print
         print 'application migrated'
@@ -733,7 +732,8 @@ sources for migration will be automatically selected.",
         config.set_sources_mode(sources)
         mih = config.migration_handler()
         if args:
-            mih.scripts_session(args)
+            for arg in args:
+                mih.process_script(script)
         else:
             mih.interactive_shell()
         mih.shutdown()
