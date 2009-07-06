@@ -42,7 +42,7 @@ class FilterBox(BoxTemplate):
     needs_js = ('cubicweb.ajax.js', 'cubicweb.formfilter.js')
 
     bkLinkBox_template = u'<div class="facetTitle">%s</div>'
-    
+
     def facetargs(self):
         """this method returns the list of extra arguments that should
         be used by the facet
