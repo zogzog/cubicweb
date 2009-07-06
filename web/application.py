@@ -14,10 +14,11 @@ from rql import BadRQLQuery
 
 from cubicweb import set_log_methods
 from cubicweb import (ValidationError, Unauthorized, AuthenticationError,
-                   NoSelectableObject, RepositoryError)
+                      NoSelectableObject, RepositoryError)
 from cubicweb.cwvreg import CubicWebRegistry
-from cubicweb.web import (LOGGER, StatusResponse, DirectResponse, Redirect, NotFound,
-                       RemoteCallFailed, ExplicitLogin, InvalidSession)
+from cubicweb.web import (LOGGER, StatusResponse, DirectResponse, Redirect,
+                          NotFound, RemoteCallFailed, ExplicitLogin,
+                          InvalidSession, RequestError)
 from cubicweb.web.component import Component
 
 # make session manager available through a global variable so the debug view can
@@ -348,7 +349,7 @@ class CubicWebPublisher(object):
                 raise
             except ValidationError, ex:
                 self.validation_error_handler(req, ex)
-            except (Unauthorized, BadRQLQuery), ex:
+            except (Unauthorized, BadRQLQuery, RequestError), ex:
                 self.error_handler(req, ex, tb=False)
             except Exception, ex:
                 self.error_handler(req, ex, tb=True)
