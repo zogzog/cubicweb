@@ -159,6 +159,12 @@ msgstr "1 1"
 msgid "1?"
 msgstr "1 0..1"
 
+#, python-format
+msgid ""
+"<div>This schema of the data model <em>excludes</em> the meta-data, but you "
+"can also display a <a href=\"%s\">complete schema with meta-data</a>.</div>"
+msgstr ""
+
 msgid "?*"
 msgstr "0..1 0..n"
 
@@ -174,11 +180,17 @@ msgstr "0..1 0..1"
 msgid "AND"
 msgstr "ET"
 
+msgid "Add permissions"
+msgstr ""
+
 msgid "Any"
 msgstr "N'importe"
 
 msgid "Application"
 msgstr "Application"
+
+msgid "Attributes"
+msgstr ""
 
 msgid "Bookmark"
 msgstr "Signet"
@@ -288,6 +300,9 @@ msgstr "Nombre décimal"
 
 msgid "Decimal_plural"
 msgstr "Nombres décimaux"
+
+msgid "Delete permissions"
+msgstr ""
 
 msgid "Do you want to delete the following element(s) ?"
 msgstr "Voulez vous supprimer le(s) élément(s) suivant(s)"
@@ -400,6 +415,9 @@ msgstr "Expression RQL"
 msgid "RQLExpression_plural"
 msgstr "Expressions RQL"
 
+msgid "Read permissions"
+msgstr ""
+
 msgid "Recipients:"
 msgstr "Destinataires :"
 
@@ -412,6 +430,9 @@ msgstr "Requête"
 #, python-format
 msgid "Schema %s"
 msgstr "Schéma %s"
+
+msgid "Schema of the data model"
+msgstr ""
 
 msgid "Search for"
 msgstr "Rechercher"
@@ -453,6 +474,9 @@ msgstr "La vue %s ne peut être appliquée à cette requête"
 #, python-format
 msgid "The view %s could not be found"
 msgstr "La vue %s est introuvable"
+
+msgid "There is no workflow defined for this entity."
+msgstr ""
 
 #, python-format
 msgid "This %s"
@@ -530,6 +554,9 @@ msgstr "Transitions"
 #, python-format
 msgid "Unable to find anything named \"%s\" in the schema !"
 msgstr "Rien de nommé \"%s\" dans le schéma"
+
+msgid "Update permissions"
+msgstr ""
 
 msgid "Used by:"
 msgstr "Utilisé par :"
@@ -1006,6 +1033,9 @@ msgstr "a pour signets"
 msgid "bookmarks"
 msgstr "signets"
 
+msgid "bookmarks are used to have user's specific internal links"
+msgstr ""
+
 msgid "boxes"
 msgstr "boîtes"
 
@@ -1139,6 +1169,9 @@ msgstr "changement de l'état de %(etype)s #%(eid)s (%(title)s)"
 msgid "changes applied"
 msgstr "changements appliqués"
 
+msgid "click here to see created entity"
+msgstr ""
+
 msgid "click on the box to cancel the deletion"
 msgstr "cliquer dans la zone d'édition pour annuler la suppression"
 
@@ -1159,12 +1192,6 @@ msgstr "titre de l'application"
 
 msgid "components_appliname_description"
 msgstr "affiche le titre de l'application dans l'en-tête de page"
-
-msgid "components_applmessages"
-msgstr "messages applicatifs"
-
-msgid "components_applmessages_description"
-msgstr "affiche les messages applicatifs"
 
 msgid "components_breadcrumbs"
 msgstr "fil d'ariane"
@@ -1475,6 +1502,18 @@ msgstr "export CSV"
 msgid "currently attached file: %s"
 msgstr "fichie actuellement attaché %s"
 
+msgid "cwetype-schema-image"
+msgstr ""
+
+msgid "cwetype-schema-permissions"
+msgstr ""
+
+msgid "cwetype-schema-text"
+msgstr ""
+
+msgid "cwetype-workflow"
+msgstr ""
+
 msgid "data directory url"
 msgstr "url du répertoire de données"
 
@@ -1606,9 +1645,6 @@ msgstr "détacher le fichier existant"
 msgid "detach attached file %s"
 msgstr "détacher le fichier existant %s"
 
-msgid "detailed schema view"
-msgstr "vue détaillée du schéma"
-
 msgid "display order of the action"
 msgstr "ordre d'affichage de l'action"
 
@@ -1694,6 +1730,9 @@ msgstr "entité supprimée"
 msgid "entity edited"
 msgstr "entité éditée"
 
+msgid "entity linked"
+msgstr ""
+
 msgid "entity type"
 msgstr "type d'entité"
 
@@ -1748,6 +1787,18 @@ msgid "facets_created_by-facet"
 msgstr "facette \"créé par\""
 
 msgid "facets_created_by-facet_description"
+msgstr ""
+
+msgid "facets_cwfinal-facet"
+msgstr ""
+
+msgid "facets_cwfinal-facet_description"
+msgstr ""
+
+msgid "facets_cwmeta-facet"
+msgstr ""
+
+msgid "facets_cwmeta-facet_description"
 msgstr ""
 
 msgid "facets_etype-facet"
@@ -1894,9 +1945,6 @@ msgstr "aide"
 
 msgid "hide filter form"
 msgstr "cacher le filtre"
-
-msgid "hide meta-data"
-msgstr "cacher les entités et relations \"méta\""
 
 msgid "home"
 msgstr "maison"
@@ -2106,8 +2154,8 @@ msgid ""
 "link a permission to the entity. This permission should be used in the "
 "security definition of the entity's type to be useful."
 msgstr ""
-"lie une permission à une entité. Cette permission doit généralement être utilisée "
-"dans la définition de sécurité du type d'entité pour être utile."
+"lie une permission à une entité. Cette permission doit généralement être "
+"utilisée dans la définition de sécurité du type d'entité pour être utile."
 
 msgid ""
 "link a property to the user which want this property customization. Unless "
@@ -2590,6 +2638,12 @@ msgstr "entités définissant le schéma"
 msgid "schema's permissions definitions"
 msgstr "permissions définies dans le schéma"
 
+msgid "schema-image"
+msgstr ""
+
+msgid "schema-text"
+msgstr ""
+
 msgid "search"
 msgstr "rechercher"
 
@@ -2677,9 +2731,6 @@ msgstr "montrer les champs avancés"
 
 msgid "show filter form"
 msgstr "afficher le filtre"
-
-msgid "show meta-data"
-msgstr "afficher le schéma complet"
 
 msgid "sioc"
 msgstr "sioc"
@@ -2794,6 +2845,9 @@ msgstr "cette ressource est introuvable"
 
 msgid "thursday"
 msgstr "jeudi"
+
+msgid "timeline"
+msgstr ""
 
 msgid "timestamp"
 msgstr "date"
@@ -3133,6 +3187,12 @@ msgstr "vous devriez probablement supprimer cette propriété"
 #~ msgid "close all"
 #~ msgstr "tout fermer"
 
+#~ msgid "components_applmessages"
+#~ msgstr "messages applicatifs"
+
+#~ msgid "components_applmessages_description"
+#~ msgstr "affiche les messages applicatifs"
+
 #~ msgid "components_rss_feed_url"
 #~ msgstr "syndication rss"
 
@@ -3149,6 +3209,9 @@ msgstr "vous devriez probablement supprimer cette propriété"
 #~ "langue par défaut (regarder le répertoire i18n de l'application pour voir "
 #~ "les langues disponibles)"
 
+#~ msgid "detailed schema view"
+#~ msgstr "vue détaillée du schéma"
+
 #~ msgid "filter"
 #~ msgstr "filtrer"
 
@@ -3157,6 +3220,9 @@ msgstr "vous devriez probablement supprimer cette propriété"
 
 #~ msgid "header"
 #~ msgstr "en-tête de page"
+
+#~ msgid "hide meta-data"
+#~ msgstr "cacher les entités et relations \"méta\""
 
 #~ msgid "iCal"
 #~ msgstr "iCal"
@@ -3192,6 +3258,9 @@ msgstr "vous devriez probablement supprimer cette propriété"
 
 #~ msgid "see also"
 #~ msgstr "voir aussi"
+
+#~ msgid "show meta-data"
+#~ msgstr "afficher le schéma complet"
 
 #~ msgid "status will change from %s to %s"
 #~ msgstr "l'état va passer de %s à %s"
