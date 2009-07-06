@@ -23,6 +23,8 @@ The available application entities are:
 
 * classtags: Tag (to tag anything)
 
+* comment: Comment (to attach comment threads to entities)
+
 * file: File (to allow users to upload and store binary or text files)
 
 * link: Link (to collect links to web resources)
@@ -36,10 +38,6 @@ The available application entities are:
 
 * zone: Zone (to define places within larger places, for example a
   city in a state in a country)
-
-The available system entities are:
-
-* comment: Comment (to attach comment threads to entities)
 
 
 Adding comments to BlogDemo
