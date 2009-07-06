@@ -392,10 +392,23 @@ class Repository(object):
         except ZeroDivisionError:
             pass
 
+    def _login_from_email(self, login):
+        session = self.internal_session()
+        try:
+            rset = session.execute('Any L WHERE U login L, U primary_email M, '
+                                   'M address %(login)s', {'login': login})
+            if rset.rowcount == 1:
+                login = rset[0][0]
+        finally:
+            session.close()
+        return login
+
     def authenticate_user(self, session, login, password):
         """validate login / password, raise AuthenticationError on failure
         return associated CWUser instance on success
         """
+        if self.vreg.config['allow-email-login'] and '@' in login:
+            login = self._login_from_email(login)
         for source in self.sources:
             if source.support_entity('CWUser'):
                 try:
