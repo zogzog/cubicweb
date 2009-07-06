@@ -305,7 +305,9 @@ function restoreInlinedEntity(peid, rtype, eid) {
 }
 
 function _clearPreviousErrors(formid) {
+    jQuery('#' + formid + 'ErrorMessage').remove();
     jQuery('#' + formid + ' span.error').remove();
+    jQuery('#' + formid + ' .error').removeClass('error');
 }
 
 function _displayValidationerrors(formid, eid, errors) {
@@ -324,7 +326,7 @@ function _displayValidationerrors(formid, eid, errors) {
 	    field.before(span);
 	} else {
 	    firsterrfield = formid;
-	    globalerrors.push(fieldname + ': ' + errmsg);
+	    globalerrors.push(_(fieldname) + ' : ' + errmsg);
 	}
     }
     if (globalerrors.length) {
@@ -334,7 +336,7 @@ function _displayValidationerrors(formid, eid, errors) {
 	    var innernode = UL(null, map(LI, globalerrors));
 	}
 	// insert DIV and innernode before the form
-	var div = DIV({'class' : "errorMessage"});
+	var div = DIV({'class' : "errorMessage", 'id': formid + 'ErrorMessage'});
 	div.appendChild(innernode);
 	jQuery('#' + formid).before(div);
     }

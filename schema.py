@@ -354,6 +354,7 @@ class CubicWebEntitySchema(EntitySchema):
         """rql expression factory"""
         return ERQLExpression(expression, mainvars, eid)
 
+
 class CubicWebRelationSchema(RelationSchema):
     RelationSchema._RPROPERTIES['eid'] = None
     _perms_checked = False

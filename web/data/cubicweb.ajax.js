@@ -11,15 +11,20 @@ var JSON_BASE_URL = baseuri() + 'json?';
 
 function _loadAjaxHtmlHead(node, head, tag, srcattr) {
     var loaded = [];
-    jQuery('head ' + tag).each(function(i) {
+    var jqtagfilter = tag + '[' + srcattr + ']';
+    jQuery('head ' + jqtagfilter).each(function(i) {
 	loaded.push(this.getAttribute(srcattr));
     });
     node.find(tag).each(function(i) {
-	if (!loaded.contains(this.getAttribute(srcattr))) {
+	if (this.getAttribute(srcattr)) {
+	    if (!loaded.contains(this.getAttribute(srcattr))) {
+		jQuery(this).appendTo(head);
+	    }
+	} else {
 	    jQuery(this).appendTo(head);
 	}
     });
-    node.find(tag).remove();
+    node.find(jqtagfilter).remove();
 }
 
 /*

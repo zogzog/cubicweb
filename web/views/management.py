@@ -14,7 +14,7 @@ from logilab.mtconverter import html_escape
 from cubicweb.selectors import yes, none_rset, match_user_groups, authenticated_user
 from cubicweb.view import AnyRsetView, StartupView, EntityView
 from cubicweb.common.uilib import html_traceback, rest_traceback
-from cubicweb.web import formwidgets
+from cubicweb.web import formwidgets as wdgs
 from cubicweb.web.formfields import guess_field
 
 SUBMIT_MSGID = _('Submit bug report')
@@ -160,11 +160,9 @@ class SecurityManagementView(EntityView, SecurityViewMixIn):
             self.w(self.req._('no associated permissions'))
 
     def require_permission_edit_form(self, entity):
-        w = self.w
-        _ = self.req._
         newperm = self.vreg.etype_class('CWPermission')(self.req, None)
         newperm.eid = self.req.varmaker.next()
-        w(u'<p>%s</p>' % _('add a new permission'))
+        self.w(u'<p>%s</p>' % self.req._('add a new permission'))
         form = self.vreg.select('forms', 'base', self.req, entity=newperm,
                                 form_buttons=[formwidgets.SubmitButton()],
                                 domid='reqperm%s' % entity.eid,
@@ -176,7 +174,7 @@ class SecurityManagementView(EntityView, SecurityViewMixIn):
         cwpermschema = newperm.e_schema
         if permnames is not None:
             field = guess_field(cwpermschema, self.schema.rschema('name'),
-                                widget=formwidgets.Select({'size': 1}),
+                                widget=wdgs.Select({'size': 1}),
                                 choices=permnames)
         else:
             field = guess_field(cwpermschema, self.schema.rschema('name'))
@@ -246,15 +244,17 @@ class ErrorView(AnyRsetView):
             form = self.vreg.select('forms', 'base', self.req, rset=None,
                                     mainform=False)
             binfo = text_error_description(ex, excinfo, req, eversion, cversions)
-            form.form_add_hidden('description', binfo)
+            form.form_add_hidden('description', binfo,
+                                 # we must use a text area to keep line breaks
+                                 widget=wdgs.TextArea({'class': 'hidden'}))
             form.form_add_hidden('__bugreporting', '1')
             if submitmail:
-                form.form_buttons = [formwidgets.SubmitButton(MAIL_SUBMIT_MSGID)]
+                form.form_buttons = [wdgs.SubmitButton(MAIL_SUBMIT_MSGID)]
                 form.action = req.build_url('reportbug')
                 w(form.form_render())
             if submiturl:
                 form.form_add_hidden('description_format', 'text/rest')
-                form.form_buttons = [formwidgets.SubmitButton(SUBMIT_MSGID)]
+                form.form_buttons = [wdgs.SubmitButton(SUBMIT_MSGID)]
                 form.action = submiturl
                 w(form.form_render())
 

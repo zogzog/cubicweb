@@ -154,6 +154,12 @@ msgstr "1 1"
 msgid "1?"
 msgstr "1 0..1"
 
+#, python-format
+msgid ""
+"<div>This schema of the data model <em>excludes</em> the meta-data, but you "
+"can also display a <a href=\"%s\">complete schema with meta-data</a>.</div>"
+msgstr ""
+
 msgid "?*"
 msgstr "0..1 0..n"
 
@@ -169,10 +175,16 @@ msgstr "0..1 0..1"
 msgid "AND"
 msgstr ""
 
+msgid "Add permissions"
+msgstr ""
+
 msgid "Any"
 msgstr ""
 
 msgid "Application"
+msgstr ""
+
+msgid "Attributes"
 msgstr ""
 
 msgid "Bookmark"
@@ -283,6 +295,9 @@ msgstr "Decimal number"
 
 msgid "Decimal_plural"
 msgstr "Decimal numbers"
+
+msgid "Delete permissions"
+msgstr ""
 
 msgid "Do you want to delete the following element(s) ?"
 msgstr ""
@@ -395,6 +410,9 @@ msgstr "RQL expression"
 msgid "RQLExpression_plural"
 msgstr "RQL expressions"
 
+msgid "Read permissions"
+msgstr ""
+
 msgid "Recipients:"
 msgstr ""
 
@@ -406,6 +424,9 @@ msgstr ""
 
 #, python-format
 msgid "Schema %s"
+msgstr ""
+
+msgid "Schema of the data model"
 msgstr ""
 
 msgid "Search for"
@@ -447,6 +468,9 @@ msgstr ""
 
 #, python-format
 msgid "The view %s could not be found"
+msgstr ""
+
+msgid "There is no workflow defined for this entity."
 msgstr ""
 
 #, python-format
@@ -524,6 +548,9 @@ msgstr "Transitions"
 
 #, python-format
 msgid "Unable to find anything named \"%s\" in the schema !"
+msgstr ""
+
+msgid "Update permissions"
 msgstr ""
 
 msgid "Used by:"
@@ -981,6 +1008,9 @@ msgstr "has bookmarks"
 msgid "bookmarks"
 msgstr ""
 
+msgid "bookmarks are used to have user's specific internal links"
+msgstr ""
+
 msgid "boxes"
 msgstr ""
 
@@ -1111,6 +1141,9 @@ msgstr ""
 msgid "changes applied"
 msgstr ""
 
+msgid "click here to see created entity"
+msgstr ""
+
 msgid "click on the box to cancel the deletion"
 msgstr ""
 
@@ -1131,12 +1164,6 @@ msgstr "application title"
 
 msgid "components_appliname_description"
 msgstr "display the application title in the page's header"
-
-msgid "components_applmessages"
-msgstr "application messages"
-
-msgid "components_applmessages_description"
-msgstr "display the application messages"
 
 msgid "components_breadcrumbs"
 msgstr "breadcrumbs"
@@ -1419,6 +1446,18 @@ msgstr ""
 msgid "currently attached file: %s"
 msgstr ""
 
+msgid "cwetype-schema-image"
+msgstr "schema"
+
+msgid "cwetype-schema-permissions"
+msgstr "permissions"
+
+msgid "cwetype-schema-text"
+msgstr "description"
+
+msgid "cwetype-workflow"
+msgstr "workflow"
+
 msgid "data directory url"
 msgstr ""
 
@@ -1538,9 +1577,6 @@ msgstr ""
 msgid "detach attached file %s"
 msgstr ""
 
-msgid "detailed schema view"
-msgstr ""
-
 msgid "display order of the action"
 msgstr ""
 
@@ -1624,6 +1660,9 @@ msgstr ""
 msgid "entity edited"
 msgstr ""
 
+msgid "entity linked"
+msgstr ""
+
 msgid "entity type"
 msgstr ""
 
@@ -1674,6 +1713,18 @@ msgid "facets_created_by-facet"
 msgstr "\"created by\" facet"
 
 msgid "facets_created_by-facet_description"
+msgstr ""
+
+msgid "facets_cwfinal-facet"
+msgstr "\"final entity or relation type\" facet"
+
+msgid "facets_cwfinal-facet_description"
+msgstr ""
+
+msgid "facets_cwmeta-facet"
+msgstr ""
+
+msgid "facets_cwmeta-facet_description"
 msgstr ""
 
 msgid "facets_etype-facet"
@@ -1819,9 +1870,6 @@ msgstr ""
 
 msgid "hide filter form"
 msgstr ""
-
-msgid "hide meta-data"
-msgstr "hide meta entities and relations"
 
 msgid "home"
 msgstr ""
@@ -2484,6 +2532,12 @@ msgstr ""
 msgid "schema's permissions definitions"
 msgstr ""
 
+msgid "schema-image"
+msgstr "schema"
+
+msgid "schema-text"
+msgstr "description"
+
 msgid "search"
 msgstr ""
 
@@ -2568,9 +2622,6 @@ msgstr ""
 
 msgid "show filter form"
 msgstr ""
-
-msgid "show meta-data"
-msgstr "show the complete schema"
 
 msgid "sioc"
 msgstr ""
@@ -2683,6 +2734,9 @@ msgid "this resource does not exist"
 msgstr ""
 
 msgid "thursday"
+msgstr ""
+
+msgid "timeline"
 msgstr ""
 
 msgid "timestamp"
@@ -2957,14 +3011,26 @@ msgstr ""
 #~ msgid "add a Card"
 #~ msgstr "add a card"
 
+#~ msgid "components_applmessages"
+#~ msgstr "application messages"
+
+#~ msgid "components_applmessages_description"
+#~ msgstr "display the application messages"
+
 #~ msgid "content_format"
 #~ msgstr "content format"
+
+#~ msgid "hide meta-data"
+#~ msgstr "hide meta entities and relations"
 
 #~ msgid "planned_delivery"
 #~ msgstr "planned delivery"
 
 #~ msgid "remove this Card"
 #~ msgstr "remove this card"
+
+#~ msgid "show meta-data"
+#~ msgstr "show the complete schema"
 
 #~ msgid "wikiid"
 #~ msgstr "wiki identifier"

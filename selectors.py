@@ -482,8 +482,7 @@ class match_form_params(match_search_state):
     def __call__(self, cls, req, *args, **kwargs):
         score = 0
         for param in self.expected:
-            val = req.form.get(param)
-            if not val:
+            if not param in req.form:
                 return 0
             score += 1
         return len(self.expected)
@@ -621,6 +620,14 @@ class specified_etype_implements(implements):
         except KeyError:
             try:
                 etype = kwargs['etype']
+            except KeyError:
+                return 0
+        else:
+            # only check this is a known type if etype comes from req.form,
+            # else we want the error to propagate
+            try:
+                etype = cls.vreg.case_insensitive_etypes[etype.lower()]
+                req.form['etype'] = etype
             except KeyError:
                 return 0
         return self.score_class(cls.vreg.etype_class(etype), req)

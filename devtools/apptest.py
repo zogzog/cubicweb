@@ -462,14 +462,13 @@ class RepositoryBasedTC(TestCase):
         self.__close = repo.close
         self.cnxid = self.cnx.sessionid
         self.session = repo._sessions[self.cnxid]
-        # XXX copy schema since hooks may alter it and it may be not fully
-        #     cleaned (missing some schema synchronization support)
-        try:
-            origschema = repo.__schema
-        except AttributeError:
-            origschema = repo.schema
-            repo.__schema = origschema
         if self.copy_schema:
+            # XXX copy schema since hooks may alter it and it may be not fully
+            #     cleaned (missing some schema synchronization support)
+            try:
+                origschema = repo.__schema
+            except AttributeError:
+                repo.__schema = origschema = repo.schema
             repo.schema = deepcopy(origschema)
             repo.set_schema(repo.schema) # reset hooks
             repo.vreg.update_schema(repo.schema)

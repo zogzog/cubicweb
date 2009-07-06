@@ -64,25 +64,48 @@ class ServerMigrationHelper(MigrationHelper):
         self.fs_schema = schema
         self._synchronized = set()
 
+    # overriden from base MigrationHelper ######################################
+
     @cached
     def repo_connect(self):
         self.repo = get_repository(method='inmemory', config=self.config)
         return self.repo
 
+    def cube_upgraded(self, cube, version):
+        self.cmd_set_property('system.version.%s' % cube.lower(),
+                              unicode(version))
+        self.commit()
+
     def shutdown(self):
         if self.repo is not None:
             self.repo.shutdown()
 
-    def rewrite_vcconfiguration(self):
-        """write current installed versions (of cubicweb software
-        and of each used cube) into the database
+    def migrate(self, vcconf, toupgrade, options):
+        if not options.fs_only:
+            if options.backup_db is None:
+                self.backup_database()
+            elif options.backup_db:
+                self.backup_database(askconfirm=False)
+        super(ServerMigrationHelper, self).migrate(vcconf, toupgrade, options)
+
+    def process_script(self, migrscript, funcname=None, *args, **kwargs):
+        """execute a migration script
+        in interactive mode,  display the migration script path, ask for
+        confirmation and execute it if confirmed
         """
-        self.cmd_set_property('system.version.cubicweb',
-                              self.config.cubicweb_version())
-        for pkg in self.config.cubes():
-            pkgversion = self.config.cube_version(pkg)
-            self.cmd_set_property('system.version.%s' % pkg.lower(), pkgversion)
-        self.commit()
+        try:
+            if migrscript.endswith('.sql'):
+                if self.execscript_confirm(migrscript):
+                    sqlexec(open(migrscript).read(), self.session.system_sql)
+            else:
+                return super(ServerMigrationHelper, self).process_script(
+                    migrscript, funcname, *args, **kwargs)
+            self.commit()
+        except:
+            self.rollback()
+            raise
+
+    # server specific migration methods ########################################
 
     def backup_database(self, backupfile=None, askconfirm=True):
         config = self.config
@@ -141,26 +164,6 @@ class ServerMigrationHelper(MigrationHelper):
                     else:
                         break
             print 'database restored'
-
-    def migrate(self, vcconf, toupgrade, options):
-        if not options.fs_only:
-            if options.backup_db is None:
-                self.backup_database()
-            elif options.backup_db:
-                self.backup_database(askconfirm=False)
-        super(ServerMigrationHelper, self).migrate(vcconf, toupgrade, options)
-
-    def process_script(self, migrscript, funcname=None, *args, **kwargs):
-        """execute a migration script
-        in interactive mode,  display the migration script path, ask for
-        confirmation and execute it if confirmed
-        """
-        if migrscript.endswith('.sql'):
-            if self.execscript_confirm(migrscript):
-                sqlexec(open(migrscript).read(), self.session.system_sql)
-        else:
-            return super(ServerMigrationHelper, self).process_script(
-                migrscript, funcname, *args, **kwargs)
 
     @property
     def cnx(self):

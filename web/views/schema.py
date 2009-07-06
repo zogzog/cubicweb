@@ -248,12 +248,7 @@ class CWRTypeSchemaImageView(CWETypeSchemaImageView):
 
 ### facets
 
-class CWMetaFacet(AttributeFacet):
-    id = 'cwmeta-facet'
-    __select__ = AttributeFacet.__select__ & implements('CWEType')
-    rtype = 'meta'
-
 class CWFinalFacet(AttributeFacet):
     id = 'cwfinal-facet'
-    __select__ = AttributeFacet.__select__ & implements('CWEType')
+    __select__ = AttributeFacet.__select__ & implements('CWEType', 'CWRType')
     rtype = 'final'

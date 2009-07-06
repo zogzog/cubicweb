@@ -105,7 +105,7 @@ msgstr "%d&nbsp;semanas"
 
 #, python-format
 msgid "%d&nbsp;years"
-msgstr ""
+msgstr "%d&nbsp;años"
 
 #, python-format
 msgid "%s error report"
@@ -159,6 +159,14 @@ msgstr "1 1"
 msgid "1?"
 msgstr "1 0..1"
 
+#, python-format
+msgid ""
+"<div>This schema of the data model <em>excludes</em> the meta-data, but you "
+"can also display a <a href=\"%s\">complete schema with meta-data</a>.</div>"
+msgstr ""
+"<div>Este esquema del modelo de datos <em>no incluye</em> los meta-datos, pero "
+"se puede ver a un <a href=\"%s\">modelo completo con meta-datos</a>.</div>"
+
 msgid "?*"
 msgstr "0..1 0..n"
 
@@ -174,11 +182,17 @@ msgstr "0..1 0..1"
 msgid "AND"
 msgstr "Y"
 
+msgid "Add permissions"
+msgstr "Añadir autorizaciónes"
+
 msgid "Any"
 msgstr "Cualquiera"
 
 msgid "Application"
 msgstr "Aplicación"
+
+msgid "Attributes"
+msgstr "Atributos"
 
 msgid "Bookmark"
 msgstr "Favorito"
@@ -289,6 +303,9 @@ msgstr "Decimal"
 msgid "Decimal_plural"
 msgstr "Decimales"
 
+msgid "Delete permissions"
+msgstr "Autorización de suprimir"
+
 msgid "Do you want to delete the following element(s) ?"
 msgstr "Desea suprimir el(los) elemento(s) siguiente(s)"
 
@@ -311,7 +328,7 @@ msgid "Float_plural"
 msgstr "Números flotantes"
 
 msgid "From:"
-msgstr ""
+msgstr "De: "
 
 msgid "Int"
 msgstr "Número entero"
@@ -400,8 +417,11 @@ msgstr "Expresión RQL"
 msgid "RQLExpression_plural"
 msgstr "Expresiones RQL"
 
+msgid "Read permissions"
+msgstr "Autorización de leer"
+
 msgid "Recipients:"
-msgstr ""
+msgstr "Destinatarios"
 
 msgid "Relations"
 msgstr "Relaciones"
@@ -412,6 +432,9 @@ msgstr "Petición"
 #, python-format
 msgid "Schema %s"
 msgstr "Esquema %s"
+
+msgid "Schema of the data model"
+msgstr "Esquema del modelo de datos"
 
 msgid "Search for"
 msgstr "Buscar"
@@ -435,7 +458,7 @@ msgid "String_plural"
 msgstr "Cadenas de caracteres"
 
 msgid "Subject:"
-msgstr ""
+msgstr "Sujeto:"
 
 msgid "Submit bug report"
 msgstr "Enviar un reporte de error (bug)"
@@ -453,6 +476,9 @@ msgstr "La vista %s no puede ser aplicada a esta búsqueda"
 #, python-format
 msgid "The view %s could not be found"
 msgstr "La vista %s no ha podido ser encontrada"
+
+msgid "There is no workflow defined for this entity."
+msgstr "No hay workflow para este entidad"
 
 #, python-format
 msgid "This %s"
@@ -530,6 +556,9 @@ msgstr "Transiciones"
 #, python-format
 msgid "Unable to find anything named \"%s\" in the schema !"
 msgstr "No encontramos el nombre \"%s\" en el esquema"
+
+msgid "Update permissions"
+msgstr "Autorización de modificar"
 
 msgid "Used by:"
 msgstr "Utilizado por :"
@@ -683,7 +712,7 @@ msgid "actions_manage_description"
 msgstr ""
 
 msgid "actions_managepermission"
-msgstr ""
+msgstr "Administración de autorizaciónes"
 
 msgid "actions_managepermission_description"
 msgstr ""
@@ -973,7 +1002,7 @@ msgid "attribute"
 msgstr "Atributo"
 
 msgid "attributes with modified permissions:"
-msgstr ""
+msgstr "atributos con autorizaciónes modificadas:"
 
 msgid "august"
 msgstr "Agosto"
@@ -1007,6 +1036,9 @@ msgstr "selecciona en sus favoritos a"
 
 msgid "bookmarks"
 msgstr "Favoritos"
+
+msgid "bookmarks are used to have user's specific internal links"
+msgstr "favoritos son usados para que un usuario recorde ligas"
 
 msgid "boxes"
 msgstr "Cajas"
@@ -1132,7 +1164,7 @@ msgid "cardinality"
 msgstr "cardinalidad"
 
 msgid "category"
-msgstr ""
+msgstr "categoria"
 
 #, python-format
 msgid "changed state of %(etype)s #%(eid)s (%(title)s)"
@@ -1140,6 +1172,9 @@ msgstr "Cambiar del estado de %(etype)s #%(eid)s (%(title)s)"
 
 msgid "changes applied"
 msgstr "Cambios realizados"
+
+msgid "click here to see created entity"
+msgstr "ver la entidad creada"
 
 msgid "click on the box to cancel the deletion"
 msgstr "Seleccione la zona de edición para cancelar la eliminación"
@@ -1161,12 +1196,6 @@ msgstr "Título de la aplicación"
 
 msgid "components_appliname_description"
 msgstr "Muestra el título de la aplicación en el encabezado de la página"
-
-msgid "components_applmessages"
-msgstr "Mensajes de la aplicación"
-
-msgid "components_applmessages_description"
-msgstr "Muestra los mensajes de la aplicación"
 
 msgid "components_breadcrumbs"
 msgstr "Ruta de Navegación"
@@ -1474,7 +1503,19 @@ msgstr "Exportar CSV"
 
 #, python-format
 msgid "currently attached file: %s"
-msgstr ""
+msgstr "archivo adjunto: %s"
+
+msgid "cwetype-schema-image"
+msgstr "Esquema"
+
+msgid "cwetype-schema-permissions"
+msgstr "Autorizaciónes"
+
+msgid "cwetype-schema-text"
+msgstr "Modelo de datos"
+
+msgid "cwetype-workflow"
+msgstr "Workflow"
 
 msgid "data directory url"
 msgstr "Url del repertorio de datos"
@@ -1608,9 +1649,6 @@ msgstr "soltar el archivo existente"
 msgid "detach attached file %s"
 msgstr "Quitar archivo adjunto %s"
 
-msgid "detailed schema view"
-msgstr "Vista detallada del esquema"
-
 msgid "display order of the action"
 msgstr "Orden de aparición de la acción"
 
@@ -1685,16 +1723,19 @@ msgid "entities deleted"
 msgstr "Entidades eliminadas"
 
 msgid "entity copied"
-msgstr ""
+msgstr "entidad copiada"
 
 msgid "entity created"
-msgstr ""
+msgstr "entidad creada"
 
 msgid "entity deleted"
 msgstr "Entidad eliminada"
 
 msgid "entity edited"
-msgstr ""
+msgstr "entidad modificada"
+
+msgid "entity linked"
+msgstr "entidad asociada"
 
 msgid "entity type"
 msgstr "Tipo de entidad"
@@ -1753,6 +1794,18 @@ msgstr "faceta \"creada por\""
 msgid "facets_created_by-facet_description"
 msgstr "faceta creado por"
 
+msgid "facets_cwfinal-facet"
+msgstr "faceta \"final\""
+
+msgid "facets_cwfinal-facet_description"
+msgstr "faceta para las entidades \"finales\""
+
+msgid "facets_cwmeta-facet"
+msgstr "faceta \"meta\""
+
+msgid "facets_cwmeta-facet_description"
+msgstr "faceta para las entidades \"meta\""
+
 msgid "facets_etype-facet"
 msgstr "faceta \"es de tipo\""
 
@@ -1809,7 +1862,7 @@ msgstr "De"
 
 #, python-format
 msgid "from %(date)s"
-msgstr ""
+msgstr "de %(date)s"
 
 msgid "from_entity"
 msgstr "De la entidad"
@@ -1836,7 +1889,7 @@ msgid "generic plot"
 msgstr "Trazado de curbas estándares"
 
 msgid "generic relation to link one entity to another"
-msgstr ""
+msgstr "relación generica para ligar entidades"
 
 msgid "go back to the index page"
 msgstr "Regresar a la página de inicio"
@@ -1896,9 +1949,6 @@ msgstr "Ayuda"
 
 msgid "hide filter form"
 msgstr "Esconder el filtro"
-
-msgid "hide meta-data"
-msgstr "Esconder los meta-datos"
 
 msgid "home"
 msgstr "Inicio"
@@ -2106,7 +2156,8 @@ msgstr "izquierda"
 msgid ""
 "link a permission to the entity. This permission should be used in the "
 "security definition of the entity's type to be useful."
-msgstr ""
+msgstr "relaciónar una autorización con la entidad. Este autorización debe "
+"ser usada en la definición de la entidad para ser utíl."
 
 msgid ""
 "link a property to the user which want this property customization. Unless "
@@ -2150,7 +2201,7 @@ msgid "login"
 msgstr "Clave de acesso"
 
 msgid "login or email"
-msgstr ""
+msgstr "Clave de acesso o dirección de correo"
 
 msgid "login_action"
 msgstr "Ingresa tus datos"
@@ -2259,15 +2310,19 @@ msgstr "Navegación"
 
 msgid "navigation.combobox-limit"
 msgstr ""
+# msgstr "Navegación: numero maximo de elementos en una caja de elección (combobox)"
 
 msgid "navigation.page-size"
 msgstr ""
+# msgstr "Navegación: numero maximo de elementos por pagina"
 
 msgid "navigation.related-limit"
 msgstr ""
+# msgstr "Navegación: numero maximo de elementos relacionados"
 
 msgid "navigation.short-line-size"
 msgstr ""
+#msgstr "Navegación: numero maximo de caracteres en una linéa corta"
 
 msgid "navtop"
 msgstr "Encabezado del contenido principal"
@@ -2282,7 +2337,7 @@ msgid "no"
 msgstr "no"
 
 msgid "no associated permissions"
-msgstr ""
+msgstr "no autorización relacionada"
 
 msgid "no possible transition"
 msgstr "transición no posible"
@@ -2322,7 +2377,7 @@ msgid "object"
 msgstr "objeto"
 
 msgid "object_plural:"
-msgstr ""
+msgstr "objetos:"
 
 msgid "october"
 msgstr "octubre"
@@ -2340,7 +2395,7 @@ msgid "only select queries are authorized"
 msgstr "solo estan permitidas consultas de lectura"
 
 msgid "open all"
-msgstr ""
+msgstr "abrir todos"
 
 msgid "order"
 msgstr "orden"
@@ -2349,10 +2404,10 @@ msgid "ordernum"
 msgstr "orden"
 
 msgid "owl"
-msgstr ""
+msgstr "owl"
 
 msgid "owlabox"
-msgstr ""
+msgstr "owlabox"
 
 msgid "owned_by"
 msgstr "pertenece a"
@@ -2385,10 +2440,10 @@ msgid "permission"
 msgstr "Permiso"
 
 msgid "permissions for entities"
-msgstr ""
+msgstr "autorizaciónes para entidades"
 
 msgid "permissions for relations"
-msgstr ""
+msgstr "autorizaciónes para relaciones"
 
 msgid "permissions for this entity"
 msgstr "Permisos para esta entidad"
@@ -2400,7 +2455,7 @@ msgid "pick existing bookmarks"
 msgstr "Seleccione los favoritos existentes"
 
 msgid "pkey"
-msgstr ""
+msgstr "pkey"
 
 msgid "please correct errors below"
 msgstr "Favor de corregir errores"
@@ -2458,7 +2513,7 @@ msgid "relation_type_object"
 msgstr "Definición"
 
 msgid "relations"
-msgstr ""
+msgstr "relaciones"
 
 msgid "relations deleted"
 msgstr "Relaciones eliminadas"
@@ -2518,16 +2573,16 @@ msgid "remove this Transition"
 msgstr "Eliminar esta transición"
 
 msgid "require_group"
-msgstr "Requiere_grupo"
+msgstr "Requiere grupo"
 
 msgid "require_group_object"
-msgstr "Objeto_grupo_requerido"
+msgstr "Requerido por grupo"
 
 msgid "require_permission"
-msgstr ""
+msgstr "Requiere autorización"
 
 msgid "require_permission_object"
-msgstr ""
+msgstr "Requerido por autorización"
 
 msgid "required attribute"
 msgstr "Atributo requerido"
@@ -2582,6 +2637,12 @@ msgstr "entidades del esquema"
 msgid "schema's permissions definitions"
 msgstr "definiciones de permisos del esquema"
 
+msgid "schema-image"
+msgstr "esquema imagen"
+
+msgid "schema-text"
+msgstr "esquema text"
+
 msgid "search"
 msgstr "buscar"
 
@@ -2601,7 +2662,7 @@ msgid "see them all"
 msgstr "Ver todos"
 
 msgid "see_also"
-msgstr ""
+msgstr "Ver tambíen"
 
 msgid "select"
 msgstr "Seleccionar"
@@ -2610,7 +2671,7 @@ msgid "select a"
 msgstr "seleccione un"
 
 msgid "select a key first"
-msgstr ""
+msgstr "seleccione una clave"
 
 msgid "select a relation"
 msgstr "seleccione una relación"
@@ -2670,9 +2731,6 @@ msgstr "mostrar campos avanzados"
 msgid "show filter form"
 msgstr "afficher le filtre"
 
-msgid "show meta-data"
-msgstr "mostrar meta-data"
-
 msgid "sioc"
 msgstr ""
 
@@ -2730,7 +2788,7 @@ msgid "subject/object cardinality"
 msgstr "cardinalidad sujeto/objeto"
 
 msgid "subject_plural:"
-msgstr ""
+msgstr "sujetos:"
 
 msgid "sunday"
 msgstr "domingo"
@@ -2787,6 +2845,9 @@ msgstr "este recurso no existe"
 msgid "thursday"
 msgstr "jueves"
 
+msgid "timeline"
+msgstr ""
+
 msgid "timestamp"
 msgstr "fecha"
 
@@ -2804,7 +2865,7 @@ msgstr "a"
 
 #, python-format
 msgid "to %(date)s"
-msgstr ""
+msgstr "a %(date)s"
 
 msgid "to associate with"
 msgstr "a asociar con"
@@ -2825,7 +2886,7 @@ msgid "todo_by"
 msgstr "a hacer por"
 
 msgid "toggle check boxes"
-msgstr ""
+msgstr "cambiar valor"
 
 msgid "transition is not allowed"
 msgstr "transition no permitida"
@@ -2894,7 +2955,7 @@ msgid "unknown property key"
 msgstr "propiedad desconocida"
 
 msgid "up"
-msgstr ""
+msgstr "arriba"
 
 msgid "upassword"
 msgstr "clave de acceso"
@@ -3055,7 +3116,7 @@ msgid "you have been logged out"
 msgstr "ha terminado la sesion"
 
 msgid "you should probably delete that property"
-msgstr ""
+msgstr "deberia probablamente suprimir esta propriedad"
 
 #~ msgid "%s constraint failed"
 #~ msgstr "La contrainte %s n'est pas satisfaite"
@@ -3121,6 +3182,12 @@ msgstr ""
 #~ msgid "cancel edition"
 #~ msgstr "annuler l'Èdition"
 
+#~ msgid "components_applmessages"
+#~ msgstr "Mensajes de la aplicación"
+
+#~ msgid "components_applmessages_description"
+#~ msgstr "Muestra los mensajes de la aplicación"
+
 #~ msgid "components_rss_feed_url"
 #~ msgstr "RSS FEED URL"
 
@@ -3140,6 +3207,9 @@ msgstr ""
 #~ "langue par dÈfaut (regarder le rÈpertoire i18n de l'application pour voir "
 #~ "les langues disponibles)"
 
+#~ msgid "detailed schema view"
+#~ msgstr "Vista detallada del esquema"
+
 #~ msgid "filter"
 #~ msgstr "filtrer"
 
@@ -3148,6 +3218,9 @@ msgstr ""
 
 #~ msgid "header"
 #~ msgstr "en-tÍte de page"
+
+#~ msgid "hide meta-data"
+#~ msgstr "Esconder los meta-datos"
 
 #~ msgid "iCal"
 #~ msgstr "iCal"
@@ -3189,6 +3262,9 @@ msgstr ""
 
 #~ msgid "see also"
 #~ msgstr "voir aussi"
+
+#~ msgid "show meta-data"
+#~ msgstr "mostrar meta-data"
 
 #~ msgid "status will change from %s to %s"
 #~ msgstr "l'Ètat va passer de %s ‡ %s"

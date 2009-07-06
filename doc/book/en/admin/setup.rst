@@ -46,6 +46,13 @@ develop new cubes.
 
 There is also a wide variety of cubes listed on http://www.cubicweb.org/Project available as debian packages and tarball.
 
+The repositories are signed with `Logilab's gnupg key`_. To avoid warning on "apt-get update":
+1. become root using sudo 
+2. download http://ftp.logilab.org/dists/logilab-dists-key.asc using e.g. wget
+3. run "apt-key add logilab-dists-key.asc"
+4. re-run apt-get update (manually or through the package manager, whichever you prefer)
+
+.. `Logilab's gnupg key` _http://ftp.logilab.org/dists/logilab-dists-key.asc
 
 Install from source
 ```````````````````

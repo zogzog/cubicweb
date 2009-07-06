@@ -144,18 +144,12 @@ class RestPathEvaluator(URLPathEvaluator):
         <etype>[[/<attribute name>]/<attribute value>]*
     """
     priority = 2
-    def __init__(self, urlpublisher):
-        super(RestPathEvaluator, self).__init__(urlpublisher)
-        self.etype_map = {}
-        for etype in self.schema.entities():
-            etype = str(etype)
-            self.etype_map[etype.lower()] = etype
 
     def evaluate_path(self, req, parts):
         if not (0 < len(parts) < 4):
             raise PathDontMatch()
         try:
-            etype = self.etype_map[parts.pop(0).lower()]
+            etype = self.vreg.case_insensitive_etypes[parts.pop(0).lower()]
         except KeyError:
             raise PathDontMatch()
         cls = self.vreg.etype_class(etype)

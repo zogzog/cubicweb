@@ -14,7 +14,7 @@ from logilab.mtconverter import html_escape
 
 from cubicweb.view import StartupView
 from cubicweb.selectors import match_user_groups, implements
-from cubicweb.schema import META_RELATIONS_TYPES
+from cubicweb.schema import META_RELATIONS_TYPES, display_name
 from cubicweb.common.uilib import ureport_as_html
 from cubicweb.web import ajax_replace_url, uicfg, httpcache
 from cubicweb.web.views import tabs, management, schema as schemamod

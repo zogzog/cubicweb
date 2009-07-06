@@ -61,6 +61,7 @@ def list_form_param(form, param, pop=False):
 
 class CubicWebRequestBase(DBAPIRequest):
     """abstract HTTP request, should be extended according to the HTTP backend"""
+    json_request = False # to be set to True by json controllers
 
     def __init__(self, vreg, https, form=None):
         super(CubicWebRequestBase, self).__init__(vreg)
@@ -91,7 +92,7 @@ class CubicWebRequestBase(DBAPIRequest):
         or an anonymous connection is open
         """
         super(CubicWebRequestBase, self).set_connection(cnx, user)
-        # get request language:
+        # set request language
         vreg = self.vreg
         if self.user:
             try:
@@ -114,6 +115,7 @@ class CubicWebRequestBase(DBAPIRequest):
     def set_language(self, lang):
         self._ = self.__ = self.translations[lang]
         self.lang = lang
+        self.cnx.set_session_props(lang=lang)
         self.debug('request language: %s', lang)
 
     # input form parameters management ########################################
@@ -336,7 +338,6 @@ class CubicWebRequestBase(DBAPIRequest):
                 params[name] = value
         params['eid'] = eid
         if len(params) < minparams:
-            print eid, params
             raise RequestError(self._('missing parameters for entity %s') % eid)
         return params
 
@@ -451,6 +452,9 @@ class CubicWebRequestBase(DBAPIRequest):
                             % filename)
 
     # high level methods for HTML headers management ##########################
+
+    def add_onload(self, jscode):
+        self.html_headers.add_onload(jscode, self.json_request)
 
     def add_js(self, jsfiles, localfile=True):
         """specify a list of JS files to include in the HTML headers

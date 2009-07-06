@@ -7,6 +7,7 @@
 """
 __docformat__ = "restructuredtext en"
 
+from warnings import warn
 from datetime import datetime
 
 from logilab.mtconverter import html_escape

@@ -21,8 +21,7 @@ from cubicweb import (
 from cubicweb.web import LOGGER, component
 from cubicweb.web import (
     StatusResponse, DirectResponse, Redirect, NotFound,
-    RemoteCallFailed, ExplicitLogin, InvalidSession)
-from cubicweb.web.component import Component
+    RemoteCallFailed, ExplicitLogin, InvalidSession, RequestError)
 
 # make session manager available through a global variable so the debug view can
 # print information about web session
@@ -340,7 +339,7 @@ class CubicWebPublisher(object):
                 raise
             except ValidationError, ex:
                 self.validation_error_handler(req, ex)
-            except (Unauthorized, BadRQLQuery), ex:
+            except (Unauthorized, BadRQLQuery, RequestError), ex:
                 self.error_handler(req, ex, tb=False)
             except Exception, ex:
                 self.error_handler(req, ex, tb=True)
@@ -396,8 +395,8 @@ class CubicWebPublisher(object):
         return self.vreg.main_template(req, template, view=view)
 
     def main_template_id(self, req):
-        template = req.property_value('ui.main-template')
-        if template not in self.vreg.registry('views') :
+        template = req.form.get('__template', req.property_value('ui.main-template'))
+        if template not in self.vreg.registry('views'):
             template = 'main-template'
         return template
 

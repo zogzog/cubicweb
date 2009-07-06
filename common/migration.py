@@ -20,24 +20,6 @@ from logilab.common.configuration import REQUIRED, read_old_config
 from cubicweb import ConfigurationError
 
 
-def migration_files(config, toupgrade):
-    """return an orderer list of path of scripts to execute to upgrade
-    an installed application according to installed cube and cubicweb versions
-    """
-    merged = []
-    for cube, fromversion, toversion in toupgrade:
-        if cube == 'cubicweb':
-            migrdir = config.migration_scripts_dir()
-        else:
-            migrdir = config.cube_migration_scripts_dir(cube)
-        scripts = filter_scripts(config, migrdir, fromversion, toversion)
-        merged += [s[1] for s in scripts]
-    if config.accept_mode('Any'):
-        migrdir = config.migration_scripts_dir()
-        merged.insert(0, join(migrdir, 'bootstrapmigration_repository.py'))
-    return merged
-
-
 def filter_scripts(config, directory, fromversion, toversion, quiet=True):
     """return a list of paths of migration files to consider to upgrade
     from a version to a greater one
@@ -126,6 +108,18 @@ class MigrationHelper(object):
                           'interactive_mode': interactive,
                           }
 
+    def __getattribute__(self, name):
+        try:
+            return object.__getattribute__(self, name)
+        except AttributeError:
+            cmd = 'cmd_%s' % name
+            if hasattr(self, cmd):
+                meth = getattr(self, cmd)
+                return lambda *args, **kwargs: self.interact(args, kwargs,
+                                                             meth=meth)
+            raise
+        raise AttributeError(name)
+
     def repo_connect(self):
         return self.config.repository()
 
@@ -144,30 +138,34 @@ class MigrationHelper(object):
                     return False
                 return orig_accept_mode(mode)
             self.config.accept_mode = accept_mode
-        scripts = migration_files(self.config, toupgrade)
-        if scripts:
-            vmap = dict( (pname, (fromver, tover)) for pname, fromver, tover in toupgrade)
-            self.__context.update({'applcubicwebversion': vcconf['cubicweb'],
-                                   'cubicwebversion': self.config.cubicweb_version(),
-                                   'versions_map': vmap})
-            self.scripts_session(scripts)
-        else:
-            print 'no migration script to execute'
+        # may be an iterator
+        toupgrade = tuple(toupgrade)
+        vmap = dict( (cube, (fromver, tover)) for cube, fromver, tover in toupgrade)
+        ctx = self.__context
+        ctx['versions_map'] = vmap
+        if self.config.accept_mode('Any') and 'cubicweb' in vmap:
+            migrdir = self.config.migration_scripts_dir()
+            self.process_script(join(migrdir, 'bootstrapmigration_repository.py'))
+        for cube, fromversion, toversion in toupgrade:
+            if cube == 'cubicweb':
+                migrdir = self.config.migration_scripts_dir()
+            else:
+                migrdir = self.config.cube_migration_scripts_dir(cube)
+            scripts = filter_scripts(self.config, migrdir, fromversion, toversion)
+            if scripts:
+                for version, script in scripts:
+                    self.process_script(script)
+                    self.cube_upgraded(cube, version)
+                if version != toversion:
+                    self.cube_upgraded(cube, toversion)
+            else:
+                self.cube_upgraded(cube, toversion)
+
+    def cube_upgraded(self, cube, version):
+        pass
 
     def shutdown(self):
         pass
-
-    def __getattribute__(self, name):
-        try:
-            return object.__getattribute__(self, name)
-        except AttributeError:
-            cmd = 'cmd_%s' % name
-            if hasattr(self, cmd):
-                meth = getattr(self, cmd)
-                return lambda *args, **kwargs: self.interact(args, kwargs,
-                                                             meth=meth)
-            raise
-        raise AttributeError(name)
 
     def interact(self, args, kwargs, meth):
         """execute the given method according to user's confirmation"""
@@ -205,7 +203,6 @@ class MigrationHelper(object):
         if answer in ('r', 'retry'):
             return 2
         if answer in ('a', 'abort'):
-            self.rollback()
             raise SystemExit(1)
         if shell and answer in ('s', 'shell'):
             self.interactive_shell()
@@ -283,16 +280,6 @@ type "exit" or Ctrl-D to quit the shell and resume operation"""
                     self.critical('no %s in script %s', funcname, migrscript)
                     return None
                 return func(*args, **kwargs)
-
-    def scripts_session(self, migrscripts):
-        """execute some scripts in a transaction"""
-        try:
-            for migrscript in migrscripts:
-                self.process_script(migrscript)
-            self.commit()
-        except:
-            self.rollback()
-            raise
 
     def cmd_option_renamed(self, oldname, newname):
         """a configuration option has been renamed"""

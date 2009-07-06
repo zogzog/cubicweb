@@ -36,7 +36,10 @@ class RepositoryAuthenticationManager(AbstractAuthenticationManager):
             # calling cnx.user() check connection validity, raise
             # BadConnectionId on failure
             user = cnx.user(req)
-            if login and user.login != login:
+            # check cnx.login and not user.login, since in case of login by
+            # email, login and cnx.login are the email while user.login is the
+            # actual user login
+            if login and cnx.login != login:
                 cnx.close()
                 raise InvalidSession('login mismatch')
         except BadConnectionId:
@@ -53,18 +56,6 @@ class RepositoryAuthenticationManager(AbstractAuthenticationManager):
         req.set_connection(cnx, user)
         return cnx
 
-    def login_from_email(self, login):
-        # XXX should not be called from web interface
-        session = self.repo.internal_session()
-        try:
-            rset = session.execute('Any L WHERE U login L, U primary_email M, '
-                                   'M address %(login)s', {'login': login})
-            if rset.rowcount == 1:
-                login = rset[0][0]
-        finally:
-            session.close()
-        return login
-
     def authenticate(self, req, _login=None, _password=None):
         """authenticate user and return corresponding user object
 
@@ -79,8 +70,6 @@ class RepositoryAuthenticationManager(AbstractAuthenticationManager):
             login, password = _login, _password
         else:
             login, password = req.get_authorization()
-        if self.vreg.config['allow-email-login'] and '@' in (login or u''):
-            login = self.login_from_email(login)
         if not login:
             # No session and no login -> try anonymous
             login, password = self.vreg.config.anonymous_user()

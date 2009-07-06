@@ -1,3 +1,16 @@
+cubicweb (3.3.3-2) unstable; urgency=low
+
+  * re-release with "from __future__ import with_statement" commented out to
+    avoid broken installation if 2.4 is installed
+
+ -- Sylvain Thénault <sylvain.thenault@logilab.fr>  Mon, 06 Jul 2009 17:33:15 +0200
+
+cubicweb (3.3.3-1) unstable; urgency=low
+
+  * new upstream release
+
+ -- Sylvain Thénault <sylvain.thenault@logilab.fr>  Mon, 06 Jul 2009 13:24:29 +0200
+
 cubicweb (3.3.2-1) unstable; urgency=low
 
   * new upstream release

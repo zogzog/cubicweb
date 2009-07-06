@@ -8,6 +8,8 @@ it should only include low level schema changes
 :license: GNU Lesser General Public License, v2.1 - http://www.gnu.org/licenses
 """
 
+applcubicwebversion, cubicwebversion = versions_map['cubicweb']
+
 if applcubicwebversion < (3, 2, 2) and cubicwebversion >= (3, 2, 1):
    from base64 import b64encode
    for table in ('entities', 'deleted_entities'):

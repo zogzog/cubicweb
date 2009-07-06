@@ -503,7 +503,7 @@ class EntityInlinedFormRenderer(EntityFormRenderer):
         w(u'<div class="iformBody">')
         values['removemsg'] = self.req.__('remove this %s' % form.edited_entity.e_schema)
         w(u'<div class="iformTitle"><span>%(title)s</span> '
-          '#<span class="icounter">1</span> '
+          '#<span class="icounter">%(counter)s</span> '
           '[<a href="javascript: %(removejs)s;noop();">%(removemsg)s</a>]</div>'
           % values)
         # cleanup values

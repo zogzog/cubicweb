@@ -1,5 +1,7 @@
 .. -*- coding: utf-8 -*-
 
+.. _Concepts:
+
 The Core Concepts of CubicWeb
 =============================
 
@@ -13,8 +15,9 @@ reading.
 Cubes
 -----
 
-A cube is a software component composed of three parts: its data model (schema),
-its logic (entities) and its user interface (views).
+A cube is a software component made of three parts: its data model
+(:file:`schema`), its logic (:file:`entities`) and its user interface
+(:file:`views`).
 
 A cube can use other cubes as building blocks and assemble them to provide
 a whole with richer functionnalities than its parts. The cubes `cubicweb-blog`_
@@ -24,12 +27,14 @@ commentable blog entries.
 The `CubicWeb Forge`_ offers a large number of cubes developed by the community
 and available under a free software license.
 
-Available cubes on your system are usually stored in the directory
-:file:`/usr/share/cubicweb/cubes` when using a unix system wide
-installation. During development, the cubes are found in the
-:file:`/path/to/cubicweb_forest/cubes` directory. You can specify additional
-locations using the :envvar:`CW_CUBES_PATH` environment variable, using ':' as a
-separator.
+The command ``cubicweb-ctl list`` displays the list of cubes installed on your
+system.
+
+On a Unix system, the available cubes are usually stored in the directory
+:file:`/usr/share/cubicweb/cubes`. During development, the cubes are commonly
+found in the directory :file:`/path/to/cubicweb_forest/cubes`. The environment
+variable :envvar:`CW_CUBES_PATH` gives additionnal locations where to search for
+cubes.
 
 .. _`CubicWeb Forge`: http://www.cubicweb.org/project/
 .. _`cubicweb-blog`: http://www.cubicweb.org/project/cubicweb-blog
@@ -37,124 +42,113 @@ separator.
 
 
 Instances
-----------
+---------
 
 An instance is a runnable application installed on a computer and based on a
 cube.
 
-The instance directory includes the configuration files. Several instances can
-be created based on the same cube. For exemple, several software forges can be
-set up on one computer system based on the `cubicweb-forge`_ cube.
+The instance directory contains the configuration files. Several instances can
+be created and based on the same cube. For exemple, several software forges can
+be set up on one computer system based on the `cubicweb-forge`_ cube.
 
 .. _`cubicweb-forge`: http://www.cubicweb.org/project/cubicweb-forge
 
-Instances can be of different types: all-in-one, web engine or data repository. For
-applications that support high traffic, several web (front-end) and data
-(back-end) instances can be set-up to share the load.
+Instances can be of three different types: all-in-one, web engine or data
+repository. For applications that support high traffic, several web (front-end)
+and data (back-end) instances can be set-up to share the load.
 
 .. image:: ../../images/archi_globale.en.png
+
+The command ``cubicweb-ctl list`` displays the list of instances installed on
+your system.
+
+On a Unix system, the instances are usually stored in the directory
+:file:`/etc/cubicweb.d/`. During development, the :file:`~/etc/cubicweb.d/`
+directory is looked up, as well as the paths in :envvar:`CW_REGISTRY`
+environment variable.
 
 The term application can refer to an instance or to a cube, depending on the
 context. This book will try to avoid using this term and use *cube* and
 *instance* as appropriate.
 
-(Data) Repository
-~~~~~~~~~~~~~~~~~~
+Data Repository
+---------------
 
-The repository (Be carefull not to get confused with a Mercurial repository or a
-debian repository!) manages all interactions with various data sources by
-providing access to them using uniformly using the Relation Query Language (RQL).  The
-web interface and the repository communicate using this language.
+The data repository [#]_ provides access to one or more data sources (including
+SQL databases, LDAP repositories, Mercurial or Subversion version control
+systems, other CubicWeb repositories, GAE's DataStore, etc).
 
-Usually, the web server and repository sides are integrated in the same process and
-interact directly, without the need for distant calls using Pyro. But, it is
-important to note that those two sides, client/server, are disjointed and it is
-possible to execute a couple of calls in distinct processes to balance the load
-of your web site on one or more machines.
+All interactions with the repository are done using the Relation Query Language
+(RQL). The repository federates the data sources and hides them from the
+querier, which does not realize when a query spans accross several data sources
+and requires running sub-queries and merges to complete.
 
+It is common to run the web engine and the repository in the same process (see
+instances of type all-in-one above), but this is not a requirement. A repository
+can be set up to be accessed remotely using Pyro (`Python Remote Objects`_) and
+act as a server.
 
-A data source is a container of data integrated in the *CubicWeb* repository. A
-repository has at least one source, named `system`, which contains the schema of
-the application, plain-text index and other vital informations for the
-system. You'll find source for SQL databases, LDAP servers, other RQL
-repositories and even mercurial /svn repositories or `Google App Engine`'s
-datastore.
+Some logic can be attached to events that happen in the repository, like
+creation of entities, deletion of relations, etc. This is used for example to
+send email notifications when the state of an object changes. See `Hooks` below.
 
-Web interface
-~~~~~~~~~~~~~
-By default the web server provides a generated interface based on its schema.
-Entities can be created, displayed, updated and deleted. As display views are not
-very fancy, it is usually necessary to develop your own.
+.. _[#]: not to be confused with a Mercurial repository or a Debian repository.
+.. _`Python Remote Objects`: http://pyro.sourceforge.net/
 
-Instances are defined on your system in the directory :file:`/etc/cubicweb.d` when
-using a system wide installation.  For people using the mercurial repository of
-cubicweb, the :file:`etc` directory is searched in the user home directory. You can
-also specify an alternative directory using the :envvar:`CW_REGISTRY` environment
-variable.
+Web Engine
+----------
 
+The web engine replies to http requests and runs the user interface and most of
+the application logic.
 
+By default the web engine provides a generated user interface based on the data
+model of the instance. Entities can be created, displayed, updated and
+deleted. As the default user interface is not very fancy, it is usually
+necessary to develop your own.
 
-Schema
-------
-** *CubicWeb* is schema driven **
+Schema (Data Model)
+-------------------
 
-The schema describes the persistent data model using entities and
-relations. It is modeled with a comprehensive language made of Python classes based on
-the `yams`_ library.
+The data model of a cube is described as an entity-relationship schema using a
+comprehensive language made of Python classes imported from the yams_ library.
 
-When you create a new cubicweb instance, the schema is stored in the database,
-and it will usually evolves as you upgrade cubicweb and used cubes.
+.. _yams: http://www.logilab.org/project/yams/
 
-*CubicWeb* provides a certain number of system entities included
-sytematically (necessary for the core of *CubicWeb*, notably the schema itself).
-You will also find a library of cubes which defines more piece of schema for standard needs.
-necessary.
+An `entity type` defines a set of attributes and is used in some relations.
+Attributes may be of the following types: `String`, `Int`, `Float`, `Boolean`,
+`Date`, `Time`, `Datetime`, `Interval`, `Password`, `Bytes`, `RichString`. See
+:ref:`yams.BASE_TYPES` for details.
 
-*CubicWeb* add some metadata to every entity type, such as the eid (a global
-  identifier, unique into an instance), entity's creation date...
+A `relation type` is used to define a binary oriented relation between two
+entity types.  The left-hand part of a relation is named the `subject` and the
+right-hand part is named the `object`.
 
+A `relation definition` is a triple (*subject entity type*, *relation type*, *object
+entity type*) associated with a set of properties such as cardinality,
+constraints, etc.
 
-Attributes may be of the following types:
-  `String`, `Int`, `Float`, `Boolean`, `Date`, `Time`, `Datetime`,
-  `Interval`, `Password`, `Bytes`.
+Permissions can be set on entity types and relation types to control who will be
+able to create, read, update or delete entities and relations.
 
-New in 3.2: RichString
+Some meta-data necessary to the system is added to the data model. That includes
+entities like users and groups, the entities used to store the data model
+itself and attributes like unique identifier, creation date, creator, etc.
 
-see :ref:`yams.BASE_TYPES`
+When you create a new *CubicWeb* instance, the schema is stored in the database.
+When the cubes the instance is based on evolve, they may change their data model
+and provide migration scripts that will be executed when the administrator will
+run the upgrade process for the instance.
 
-Data level security is defined by setting permissions on entity and relation types.
+Registries and Objects
+----------------------
 
-A schema consist of parts detailed below.
-
-
-Entity type
-~~~~~~~~~~~
-An *entity type* defines set of attributes and is used in some relations. It may
-have some permissions telling who can read/add/update/delete entities of this type.
-
-Relation type
-~~~~~~~~~~~~~
-A *relation type* is used to define a semantic relation between two entity types.
-It may have some permissions telling who can read/add/delete relation of this type.
-
-In *CubicWeb* relations are ordered and binary: by convention we name the first
-item of a relation the `subject` and the second the `object`.
-
-Relation definition
-~~~~~~~~~~~~~~~~~~~
-A *relation definition* is a 3-uple (*subject entity type*, *relation type*, *object
-entity type*), with an associated set of property such as cardinality, constraints...
-
-
-
-Dynamic objects for reusable components
----------------------------------------
-** Dynamic objects management or how CubicWeb provides really reusable components **
+XXX registry, register, registries, registers ???
 
 Application objects
 ~~~~~~~~~~~~~~~~~~~
+
 Beside a few core functionalities, almost every feature of the framework is
-acheived by dynamic objects (`application objects` or `appobjects`) stored in a
+achieved by dynamic objects (`application objects` or `appobjects`) stored in a
 two-levels registry (the `vregistry`). Each object is affected to a registry with
 an identifier in this registry. You may have more than one object sharing an
 identifier in the same registry, At runtime, appobjects are selected in the
@@ -168,6 +162,7 @@ The base class of appobjects is `AppRsetObject` (module `cubicweb.appobject`).
 
 The `vregistry`
 ~~~~~~~~~~~~~~~
+
 At startup, the `registry` or registers base, inspects a number of directories
 looking for compatible classes definition. After a recording process, the objects
 are assigned to registers so that they can be selected dynamically while the
@@ -175,23 +170,22 @@ application is running.
 
 Selectors
 ~~~~~~~~~
-Each appobject has a selector, which is used to score how well it suits to a
-given context by returning a score.  A score of 0 means the object doesn't apply
-to the context. The score is used to choose the most pertinent object: the "more"
-the appobject suits the context the higher the score.
 
-CubicWeb provides a set of basic selectors which may be parametrized and combined
-using binary `&` and `|` operators to provide a custom selector (which can be
-itself reused...).
+Each appobject has a selector, that is used to compute how well the object fits
+a given context. The better the object fits the context, the higher the score.
 
-There is 3 current ways to retreive some appobject from the repository:
+CubicWeb provides a set of basic selectors that may be parametrized. Selectors
+can be combined with the binary operators `&` and `|` to build more complex
+selector that can be combined too.
+
+There are three common ways to retrieve some appobject from the repository:
 
 * get the most appropriate objects by specifying a registry and an identifier. In
   that case, the object with the greatest score is selected. There should always
   be a single appobject with a greater score than others.
 
 * get all appobjects applying to a context by specifying a registry.In
-  that case, every objects with the a postive score are selected.
+  that case, every object with the a postive score is selected.
 
 * get the object within a particular registry/identifier. In that case no
   selection process is involved, the vregistry will expect to find a single
@@ -218,9 +212,10 @@ properly defined.
 
 The RQL query language
 ----------------------
-**No needs for a complicated ORM when you've a powerful query language**
 
-All the persistant data in a CubicWeb application is retreived and modified by using the
+**No need for a complicated ORM when you have a powerful query language**
+
+All the persistant data in a CubicWeb application is retrieved and modified by using the
 Relation Query Language.
 
 This query language is inspired by SQL but is on a higher level in order to
@@ -228,16 +223,19 @@ emphasize browsing relations.
 
 db-api
 ~~~~~~
+
 The repository exposes a `db-api`_ like api but using the RQL instead of SQL.
 XXX feed me
 
 Result set
 ~~~~~~~~~~
+
 XXX feed me
 
 
 Views
 -----
+
 ** *CubicWeb* is data driven **
 
 XXX feed me.
@@ -248,7 +246,3 @@ Hooks
 ** *CubicWeb* provides an extensible data repository **
 
 XXX feed me.
-
-
-.. _`Python Remote Object`: http://pyro.sourceforge.net/
-.. _`yams`: http://www.logilab.org/project/yams/

@@ -392,10 +392,23 @@ class Repository(object):
         except ZeroDivisionError:
             pass
 
+    def _login_from_email(self, login):
+        session = self.internal_session()
+        try:
+            rset = session.execute('Any L WHERE U login L, U primary_email M, '
+                                   'M address %(login)s', {'login': login})
+            if rset.rowcount == 1:
+                login = rset[0][0]
+        finally:
+            session.close()
+        return login
+
     def authenticate_user(self, session, login, password):
         """validate login / password, raise AuthenticationError on failure
         return associated CWUser instance on success
         """
+        if self.vreg.config['allow-email-login'] and '@' in login:
+            login = self._login_from_email(login)
         for source in self.sources:
             if source.support_entity('CWUser'):
                 try:
@@ -405,11 +418,11 @@ class Repository(object):
                     continue
         else:
             raise AuthenticationError('authentication failed with all sources')
-        euser = self._build_user(session, eid)
+        cwuser = self._build_user(session, eid)
         if self.config.consider_user_state and \
-               not euser.state in euser.AUTHENTICABLE_STATES:
+               not cwuser.state in cwuser.AUTHENTICABLE_STATES:
             raise AuthenticationError('user is not in authenticable state')
-        return euser
+        return cwuser
 
     def _build_user(self, session, eid):
         """return a CWUser entity for user with the given eid"""
@@ -417,13 +430,13 @@ class Repository(object):
         rql = cls.fetch_rql(session.user, ['X eid %(x)s'])
         rset = session.execute(rql, {'x': eid}, 'x')
         assert len(rset) == 1, rset
-        euser = rset.get_entity(0, 0)
+        cwuser = rset.get_entity(0, 0)
         # pylint: disable-msg=W0104
-        # prefetch / cache euser's groups and properties. This is especially
+        # prefetch / cache cwuser's groups and properties. This is especially
         # useful for internal sessions to avoid security insertions
-        euser.groups
-        euser.properties
-        return euser
+        cwuser.groups
+        cwuser.properties
+        return cwuser
 
     # public (dbapi) interface ################################################
 
@@ -664,12 +677,21 @@ class Repository(object):
           custom properties)
         """
         session = self._get_session(sessionid, setpool=False)
-        if props:
-            # update session properties
-            for prop, value in props.items():
-                session.change_property(prop, value)
+        if props is not None:
+            self.set_session_props(sessionid, props)
         user = session.user
         return user.eid, user.login, user.groups, user.properties
+
+    def set_session_props(self, sessionid, props):
+        """this method should be used by client to:
+        * check session id validity
+        * update user information on each user's request (i.e. groups and
+          custom properties)
+        """
+        session = self._get_session(sessionid, setpool=False)
+        # update session properties
+        for prop, value in props.items():
+            session.change_property(prop, value)
 
     # public (inter-repository) interface #####################################
 

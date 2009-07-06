@@ -307,7 +307,7 @@ class ApplicationTC(EnvBasedTC):
         self.assertEquals(cnx.password, origcnx.password)
         self.assertEquals(cnx.anonymous_connection, False)
         self.assertEquals(path, 'view')
-        self.assertEquals(params, {'__message': 'welcome %s !' % origcnx.login})
+        self.assertEquals(params, {'__message': 'welcome %s !' % cnx.user().login})
 
     def _test_auth_fail(self, req):
         self.assertRaises(AuthenticationError, self.app.connect, req)
@@ -351,8 +351,8 @@ class ApplicationTC(EnvBasedTC):
         req.form['__password'] = origcnx.password
         self._test_auth_fail(req)
         # option allow-email-login set
+        origcnx.login = address
         self.set_option('allow-email-login', True)
-        req, origcnx = self._init_auth('cookie')
         req.form['__login'] = address
         req.form['__password'] = origcnx.password
         self._test_auth_succeed(req, origcnx)

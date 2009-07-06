@@ -23,7 +23,7 @@ def teardown_module(*args):
 
 
 class MigrationCommandsTC(RepositoryBasedTC):
-    copy_schema = True
+    copy_schema = False
 
     def setUp(self):
         if not hasattr(self, '_repo'):
@@ -146,7 +146,7 @@ class MigrationCommandsTC(RepositoryBasedTC):
         for cstr in eschema.constraints('name'):
             self.failUnless(hasattr(cstr, 'eid'))
 
-    def test_drop_entity_type(self):
+    def test_add_drop_entity_type(self):
         self.mh.cmd_add_entity_type('Folder2')
         todoeid = self.mh.cmd_add_state(u'todo', 'Folder2', initial=True)
         doneeid = self.mh.cmd_add_state(u'done', 'Folder2')
@@ -161,7 +161,7 @@ class MigrationCommandsTC(RepositoryBasedTC):
         self.failIf(self.execute('State X WHERE NOT X state_of ET'))
         self.failIf(self.execute('Transition X WHERE NOT X transition_of ET'))
 
-    def test_add_relation_type(self):
+    def test_add_drop_relation_type(self):
         self.mh.cmd_add_entity_type('Folder2', auto=False)
         self.mh.cmd_add_relation_type('filed_under2')
         self.failUnless('filed_under2' in self.schema)
@@ -169,52 +169,40 @@ class MigrationCommandsTC(RepositoryBasedTC):
                           ['Affaire', 'Card', 'Division', 'Email', 'EmailThread', 'File',
                            'Folder2', 'Image', 'Note', 'Personne', 'Societe', 'SubDivision'])
         self.assertEquals(self.schema['filed_under2'].objects(), ('Folder2',))
-
-
-    def test_drop_relation_type(self):
-        self.mh.cmd_add_entity_type('Folder2', auto=False)
-        self.mh.cmd_add_relation_type('filed_under2')
-        self.failUnless('filed_under2' in self.schema)
         self.mh.cmd_drop_relation_type('filed_under2')
         self.failIf('filed_under2' in self.schema)
-
-    def test_add_relation_definition(self):
-        self.mh.cmd_add_relation_definition('Societe', 'in_state', 'State')
-        self.assertEquals(sorted(str(x) for x in self.schema['in_state'].subjects()),
-                          ['Affaire', 'CWUser', 'Division', 'Note', 'Societe', 'SubDivision'])
-        self.assertEquals(self.schema['in_state'].objects(), ('State',))
 
     def test_add_relation_definition_nortype(self):
         self.mh.cmd_add_relation_definition('Personne', 'concerne2', 'Affaire')
         self.assertEquals(self.schema['concerne2'].subjects(),
                           ('Personne',))
         self.assertEquals(self.schema['concerne2'].objects(), ('Affaire',))
+        self.mh.cmd_drop_relation_definition('Personne', 'concerne2', 'Affaire')
+        self.failIf('concerne2' in self.schema)
 
-    def test_drop_relation_definition1(self):
-        self.failUnless('concerne' in self.schema)
+    def test_drop_relation_definition_existant_rtype(self):
         self.assertEquals(sorted(str(e) for e in self.schema['concerne'].subjects()), ['Affaire', 'Personne'])
         self.assertEquals(sorted(str(e) for e in self.schema['concerne'].objects()), ['Affaire', 'Division', 'Note', 'Societe', 'SubDivision'])
         self.mh.cmd_drop_relation_definition('Personne', 'concerne', 'Affaire')
         self.assertEquals(sorted(str(e) for e in self.schema['concerne'].subjects()), ['Affaire'])
         self.assertEquals(sorted(str(e) for e in self.schema['concerne'].objects()), ['Division', 'Note', 'Societe', 'SubDivision'])
+        self.mh.cmd_add_relation_definition('Personne', 'concerne', 'Affaire')
+        self.assertEquals(sorted(str(e) for e in self.schema['concerne'].subjects()), ['Affaire', 'Personne'])
+        self.assertEquals(sorted(str(e) for e in self.schema['concerne'].objects()), ['Affaire', 'Division', 'Note', 'Societe', 'SubDivision'])
+        # trick: overwrite self.maxeid to avoid deletion of just reintroduced types
+        self.maxeid = self.execute('Any MAX(X)')[0][0]
 
     def test_drop_relation_definition_with_specialization(self):
-        self.failUnless('concerne' in self.schema)
         self.assertEquals(sorted(str(e) for e in self.schema['concerne'].subjects()), ['Affaire', 'Personne'])
         self.assertEquals(sorted(str(e) for e in self.schema['concerne'].objects()), ['Affaire', 'Division', 'Note', 'Societe', 'SubDivision'])
         self.mh.cmd_drop_relation_definition('Affaire', 'concerne', 'Societe')
-        self.mh.cmd_drop_relation_definition('None', 'concerne', 'Societe')
         self.assertEquals(sorted(str(e) for e in self.schema['concerne'].subjects()), ['Affaire', 'Personne'])
         self.assertEquals(sorted(str(e) for e in self.schema['concerne'].objects()), ['Affaire', 'Note'])
-
-    def test_drop_relation_definition2(self):
-        self.failUnless('evaluee' in self.schema)
-        self.mh.cmd_drop_relation_definition('Personne', 'evaluee', 'Note')
-        self.failUnless('evaluee' in self.schema)
-        self.assertEquals(sorted(self.schema['evaluee'].subjects()),
-                          ['CWUser', 'Division', 'Societe', 'SubDivision'])
-        self.assertEquals(sorted(self.schema['evaluee'].objects()),
-                          ['Note'])
+        self.mh.cmd_add_relation_definition('Affaire', 'concerne', 'Societe')
+        self.assertEquals(sorted(str(e) for e in self.schema['concerne'].subjects()), ['Affaire', 'Personne'])
+        self.assertEquals(sorted(str(e) for e in self.schema['concerne'].objects()), ['Affaire', 'Division', 'Note', 'Societe', 'SubDivision'])
+        # trick: overwrite self.maxeid to avoid deletion of just reintroduced types
+        self.maxeid = self.execute('Any MAX(X)')[0][0]
 
     def test_rename_relation(self):
         self.skip('implement me')
@@ -454,7 +442,6 @@ class MigrationCommandsTC(RepositoryBasedTC):
     def test_remove_dep_cube(self):
         ex = self.assertRaises(ConfigurationError, self.mh.cmd_remove_cube, 'file')
         self.assertEquals(str(ex), "can't remove cube file, used as a dependency")
-
 
     def test_set_state(self):
         user = self.session.user

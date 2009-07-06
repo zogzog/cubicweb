@@ -247,8 +247,7 @@ class AddCWETypeOp(EarlySchemaOperation):
     """actually add the entity type to the application's schema"""
     eid = None # make pylint happy
     def commit_event(self):
-        eschema = self.schema.add_entity_type(self.kobj)
-        eschema.eid = self.eid
+        self.schema.add_entity_type(self.kobj)
 
 def before_add_eetype(session, entity):
     """before adding a CWEType entity:
@@ -299,7 +298,8 @@ def after_add_eetype(session, entity):
     # register operation to modify the schema on commit
     # this have to be done before adding other relations definitions
     # or permission settings
-    AddCWETypeOp(session, etype, eid=entity.eid)
+    etype.eid = entity.eid
+    AddCWETypeOp(session, etype)
     # add meta creation_date, modification_date and owned_by relations
     for rql, kwargs in relrqls:
         session.execute(rql, kwargs)
@@ -311,7 +311,6 @@ class AddCWRTypeOp(EarlySchemaOperation):
     def commit_event(self):
         rschema = self.schema.add_relation_type(self.kobj)
         rschema.set_default_groups()
-        rschema.eid = self.eid
 
 def before_add_ertype(session, entity):
     """before adding a CWRType entity:
@@ -331,12 +330,13 @@ def after_add_ertype(session, entity):
       schema on commit
     We don't know yeat this point if a table is necessary
     """
-    AddCWRTypeOp(session, RelationType(name=entity['name'],
-                                      description=entity.get('description'),
-                                      meta=entity.get('meta', False),
-                                      inlined=entity.get('inlined', False),
-                                      symetric=entity.get('symetric', False)),
-                eid=entity.eid)
+    rtype = RelationType(name=entity['name'],
+                         description=entity.get('description'),
+                         meta=entity.get('meta', False),
+                         inlined=entity.get('inlined', False),
+                         symetric=entity.get('symetric', False))
+    rtype.eid = entity.eid
+    AddCWRTypeOp(session, rtype)
 
 
 class AddErdefOp(EarlySchemaOperation):

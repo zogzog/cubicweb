@@ -24,7 +24,7 @@ class LazyViewMixin(object):
     """
 
     def _prepare_bindings(self, vid, reloadable):
-        self.req.html_headers.add_onload(u"""
+        self.req.add_onload(u"""
   jQuery('#lazy-%(vid)s').bind('%(event)s', function(event) {
      load_now('#lazy-%(vid)s', '#%(vid)s-hole', %(reloadable)s);
   });""" % {'event': 'load_%s' % vid, 'vid': vid,
@@ -59,7 +59,7 @@ class LazyViewMixin(object):
         on dom readyness
         """
         self.req.add_js('cubicweb.lazy.js')
-        self.req.html_headers.add_onload("trigger_load('%s');" % vid)
+        self.req.add_onload("trigger_load('%s');" % vid)
 
 
 class TabsMixin(LazyViewMixin):
@@ -93,22 +93,11 @@ class TabsMixin(LazyViewMixin):
         return selected_tabs
 
     def render_tabs(self, tabs, default, entity=None):
-        # tabbed views do no support concatenation
-        # hence we delegate to the default tab if there is more than on entity
-        # in the result set
+        # delegate to the default tab if there is more than one entity
+        # in the result set (tabs are pretty useless there)
         if entity and len(self.rset) > 1:
             entity.view(default, w=self.w)
             return
-        # XXX (syt) fix below add been introduced at some point to fix something
-        # (http://intranet.logilab.fr/jpl/ticket/32174 ?) but this is not a clean
-        # way. We must not consider form['rql'] here since it introduces some
-        # other failures on non rql queries (plain text, shortcuts,... handled by
-        # magicsearch) which has a single result whose primary view is using tabs
-        # (https://www.logilab.net/cwo/ticket/342789)
-        #rql = self.req.form.get('rql')
-        #if rql:
-        #    self.req.execute(rql).get_entity(0,0).view(default, w=self.w)
-        #    return
         self.req.add_css('tabs-no-images.css')
         self.req.add_js(('jquery.tools.min.js', 'cubicweb.htmlhelpers.js',
                          'cubicweb.ajax.js', 'cubicweb.tabs.js', 'cubicweb.lazy.js'))
@@ -145,11 +134,11 @@ class TabsMixin(LazyViewMixin):
         w(u'</div>')
         # call the set_tab() JS function *after* each tab is generated
         # because the callback binding needs to be done before
-        self.req.html_headers.add_onload(u"""
+        self.req.add_onload(u'''
     jQuery(function() {
       jQuery("#tabs-%(eeid)s").tabs("#panes-%(eeid)s > div", {initialIndex: %(tabindex)s});
       set_tab('%(vid)s', '%(cookiename)s');
-    });""" % {'eeid' : entity.eid,
+    });''' % {'eeid' : entity.eid,
               'vid'  : active_tab,
               'cookiename' : self.cookie_name,
               'tabindex' : tabs.index(active_tab)})

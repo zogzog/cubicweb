@@ -25,9 +25,8 @@ class ToDoLater(Exception):
 class EditController(ViewController):
     id = 'edit'
 
-    def publish(self, rset=None, fromjson=False):
+    def publish(self, rset=None):
         """edit / create / copy / delete entity / relations"""
-        self.fromjson = fromjson
         for key in self.req.form:
             # There should be 0 or 1 action
             if key.startswith('__action_'):
@@ -113,9 +112,8 @@ class EditController(ViewController):
                 entity = execute(rql, formparams).get_entity(0, 0)
                 eid = entity.eid
             except ValidationError, ex:
-                # ex.entity may be an int or an entity instance
                 self._to_create[formparams['eid']] = ex.entity
-                if self.fromjson:
+                if self.req.json_request: # XXX (syt) why?
                     ex.entity = formparams['eid']
                 raise
             self._to_create[formparams['eid']] = eid

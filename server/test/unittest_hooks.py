@@ -242,7 +242,7 @@ class SchemaHooksTC(RepositoryBasedTC):
 
 
 class SchemaModificationHooksTC(RepositoryBasedTC):
-    copy_schema = True
+    #copy_schema = True
 
     def setUp(self):
         if not hasattr(self, '_repo'):
@@ -471,6 +471,10 @@ class SchemaModificationHooksTC(RepositoryBasedTC):
         self.commit()
         # should not be able anymore to add personne without prenom
         self.assertRaises(ValidationError, self.execute, 'INSERT Personne X: X nom "toto"')
+        self.execute('SET DEF cardinality "?1" '
+                     'WHERE DEF relation_type RT, DEF from_entity E,'
+                     'RT name "prenom", E name "Personne"')
+        self.commit()
 
 
 class WorkflowHooksTC(RepositoryBasedTC):

@@ -13,16 +13,15 @@ Let's start by creating the cube environment in which we will develop ::
   hg add .
   hg ci
 
-If all went well, you should see the cube you just create in the list
-returned by `cubicweb-ctl list` in the section *Available components*,
+If all went well, you should see the cube you just created in the list
+returned by ``cubicweb-ctl list`` in the section *Available components*,
 and if it is not the case please refer to :ref:`ConfigurationEnv`.
 
-To use a cube, you have to list it in the variable ``__use__``
-of the file ``__pkginfo__.py`` of the instance.
-This variable is used for the instance packaging (dependencies
-handled by system utility tools such as APT) and the usable cubes
-at the time the base is created (import_erschema('MyCube') will
-not properly work otherwise).
+To reuse an existing cube, add it to the list named ``__use__`` and defined in
+:file:`__pkginfo__.py`.  This variable is used for the instance packaging
+(dependencies handled by system utility tools such as APT) and the usable cubes
+at the time the base is created (import_erschema('MyCube') will not properly
+work otherwise).
 
 .. note::
     Please note that if you do not wish to use default directory

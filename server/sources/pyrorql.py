@@ -164,7 +164,12 @@ repository (default to 5 minutes).',
         """
         self.info('synchronizing pyro source %s', self.uri)
         cnx = self.get_connection()
-        extrepo = cnx._repo
+        try:
+            extrepo = cnx._repo
+        except AttributeError:
+            # fake connection wrapper returned when we can't connect to the
+            # external source (hence we've no chance to synchronize...)
+            return
         etypes = self.support_entities.keys()
         if mtime is None:
             mtime = self.last_update_time()
@@ -212,7 +217,7 @@ repository (default to 5 minutes).',
         nsgroup = self.config.get('pyro-ns-group') or self.repo.config['pyro-ns-group']
         #cnxprops = ConnectionProperties(cnxtype=self.config['cnx-type'])
         return dbapi.connect(database=self.config['pyro-ns-id'],
-                             user=self.config['cubicweb-user'],
+                             login=self.config['cubicweb-user'],
                              password=self.config['cubicweb-password'],
                              host=nshost, port=nsport, group=nsgroup,
                              setvreg=False) #cnxprops=cnxprops)

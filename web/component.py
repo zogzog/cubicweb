@@ -37,7 +37,7 @@ class EntityVComponent(Component):
 
     property_defs = {
         _('visible'):  dict(type='Boolean', default=True,
-                            help=_('display the box or not')),
+                            help=_('display the component or not')),
         _('order'):    dict(type='Int', default=99,
                             help=_('display order of the component')),
         _('context'):  dict(type='String', default='header',
