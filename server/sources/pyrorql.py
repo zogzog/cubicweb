@@ -212,7 +212,7 @@ repository (default to 5 minutes).',
         nsgroup = self.config.get('pyro-ns-group') or self.repo.config['pyro-ns-group']
         #cnxprops = ConnectionProperties(cnxtype=self.config['cnx-type'])
         return dbapi.connect(database=self.config['pyro-ns-id'],
-                             user=self.config['cubicweb-user'],
+                             login=self.config['cubicweb-user'],
                              password=self.config['cubicweb-password'],
                              host=nshost, port=nsport, group=nsgroup,
                              setvreg=False) #cnxprops=cnxprops)
