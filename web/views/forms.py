@@ -119,8 +119,8 @@ class FieldsForm(form.Form):
 
     def form_add_hidden(self, name, value=None, **kwargs):
         """add an hidden field to the form"""
-        field = StringField(name=name, widget=fwdgs.HiddenInput, initial=value,
-                            **kwargs)
+        kwargs.setdefault('widget', fwdgs.HiddenInput)
+        field = StringField(name=name, initial=value, **kwargs)
         if 'id' in kwargs:
             # by default, hidden input don't set id attribute. If one is
             # explicitly specified, ensure it will be set
