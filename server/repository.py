@@ -418,11 +418,11 @@ class Repository(object):
                     continue
         else:
             raise AuthenticationError('authentication failed with all sources')
-        euser = self._build_user(session, eid)
+        cwuser = self._build_user(session, eid)
         if self.config.consider_user_state and \
-               not euser.state in euser.AUTHENTICABLE_STATES:
+               not cwuser.state in cwuser.AUTHENTICABLE_STATES:
             raise AuthenticationError('user is not in authenticable state')
-        return euser
+        return cwuser
 
     def _build_user(self, session, eid):
         """return a CWUser entity for user with the given eid"""
@@ -430,13 +430,13 @@ class Repository(object):
         rql = cls.fetch_rql(session.user, ['X eid %(x)s'])
         rset = session.execute(rql, {'x': eid}, 'x')
         assert len(rset) == 1, rset
-        euser = rset.get_entity(0, 0)
+        cwuser = rset.get_entity(0, 0)
         # pylint: disable-msg=W0104
-        # prefetch / cache euser's groups and properties. This is especially
+        # prefetch / cache cwuser's groups and properties. This is especially
         # useful for internal sessions to avoid security insertions
-        euser.groups
-        euser.properties
-        return euser
+        cwuser.groups
+        cwuser.properties
+        return cwuser
 
     # public (dbapi) interface ################################################
 
