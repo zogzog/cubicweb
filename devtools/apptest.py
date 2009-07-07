@@ -34,6 +34,14 @@ class Email:
     def message(self):
         return message_from_string(self.msg)
 
+    @property
+    def subject(self):
+        return self.message.get('Subject')
+
+    @property
+    def content(self):
+        return self.message.get_payload(decode=True)
+
     def __repr__(self):
         return '<Email to %s with subject %s>' % (','.join(self.recipients),
                                                   self.message.get('Subject'))
