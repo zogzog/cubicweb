@@ -46,8 +46,6 @@ class CWRType(AnyEntity):
     def dc_long_title(self):
         stereotypes = []
         _ = self.req._
-        if self.meta:
-            stereotypes.append(_('meta'))
         if self.symetric:
             stereotypes.append(_('symetric'))
         if self.inlined:
