@@ -82,7 +82,8 @@ class FilterBox(BoxTemplate):
                         widgets.append(wdg)
             if not widgets:
                 return
-            self.displayBookmarkLink(rset)
+            if self.bkLinkBox_template:
+                self.displayBookmarkLink(rset)
             w = self.w
             w(u'<form method="post" id="%sForm" cubicweb:facetargs="%s" action="">'  % (
                 divid, html_escape(dumps([divid, vid, paginate, self.facetargs()]))))
