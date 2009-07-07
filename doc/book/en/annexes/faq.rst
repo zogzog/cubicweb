@@ -375,4 +375,4 @@ You are probably getting errors such as ::
 
   remove {'PR': 'Project', 'C': 'CWUser'} from solutions since your_user has no read access to cost  
 
-This is because you have to put your user in the "user" group. The user has to be in both groups.  
+This is because you have to put your user in the "users" group. The user has to be in both groups.  
