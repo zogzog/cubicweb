@@ -192,8 +192,7 @@ def _validation_error(req, ex):
 def _validate_form(req, vreg):
     # XXX should use the `RemoteCallFailed` mechanism
     try:
-        ctrl = vreg.select(vreg.registry_objects('controllers', 'edit'),
-                           req=req)
+        ctrl = vreg.select('controllers', 'edit', req=req)
     except NoSelectableObject:
         return (False, {None: req._('not authorized')})
     try:
