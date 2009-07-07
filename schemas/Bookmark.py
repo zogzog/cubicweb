@@ -8,7 +8,8 @@
 __docformat__ = "restructuredtext en"
 _ = unicode
 
-from yams.buildobjs import EntityType, RelationType, String
+from yams.buildobjs import EntityType, RelationType, SubjectRelation, String
+from cubicweb.schema import RRQLExpression
 
 class Bookmark(EntityType):
     """bookmarks are used to have user's specific internal links"""
