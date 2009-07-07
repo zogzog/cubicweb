@@ -128,11 +128,10 @@ class OWLView(StartupView):
             if not self.should_display_rschema(rschema):
                 continue
             for oeschema in targetschemas:
-                label = rschema.type
                 self.w(u'''<owl:ObjectProperty rdf:ID="%s">
  <rdfs:domain rdf:resource="#%s"/>
  <rdfs:range rdf:resource="#%s"/>
-</owl:ObjectProperty>''' % (label, eschema, oeschema.type))
+</owl:ObjectProperty>''' % (rschema, eschema, oeschema.type))
 
     def visit_property_object_schema(self, eschema):
         for rschema, aschema in eschema.attribute_definitions():
@@ -141,7 +140,7 @@ class OWLView(StartupView):
             self.w(u'''<owl:DatatypeProperty rdf:ID="%s">
   <rdfs:domain rdf:resource="#%s"/>
   <rdfs:range rdf:resource="%s"/>
-</owl:DatatypeProperty>''' % (aname, eschema, OWL_TYPE_MAP[aschema.type]))
+</owl:DatatypeProperty>''' % (rschema, eschema, OWL_TYPE_MAP[aschema.type]))
 
 
 class OWLABOXView(EntityView):
