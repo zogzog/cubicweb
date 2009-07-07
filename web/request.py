@@ -80,7 +80,7 @@ class CubicWebRequestBase(DBAPIRequest):
         # to create a relation with another)
         self.search_state = ('normal',)
         # tabindex generator
-        self.tabindexgen = count()
+        self.tabindexgen = count(1)
         self.next_tabindex = self.tabindexgen.next
         # page id, set by htmlheader template
         self.pageid = None
