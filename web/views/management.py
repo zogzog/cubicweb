@@ -109,7 +109,7 @@ class SecurityManagementView(EntityView, SecurityViewMixIn):
         msg = self.req._('ownerships have been changed')
         form = self.vreg.select('forms', 'base', self.req, entity=entity,
                                 form_renderer_id='base', submitmsg=msg,
-                                form_buttons=[formwidgets.SubmitButton()],
+                                form_buttons=[wdgs.SubmitButton()],
                                 domid='ownership%s' % entity.eid,
                                 __redirectvid='security',
                                 __redirectpath=entity.rest_path())
@@ -164,7 +164,7 @@ class SecurityManagementView(EntityView, SecurityViewMixIn):
         newperm.eid = self.req.varmaker.next()
         self.w(u'<p>%s</p>' % self.req._('add a new permission'))
         form = self.vreg.select('forms', 'base', self.req, entity=newperm,
-                                form_buttons=[formwidgets.SubmitButton()],
+                                form_buttons=[wdgs.SubmitButton()],
                                 domid='reqperm%s' % entity.eid,
                                 __redirectvid='security',
                                 __redirectpath=entity.rest_path())
