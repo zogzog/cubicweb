@@ -76,8 +76,8 @@ class RichString(ybo.String):
     is equivalent to::
 
       class Card(EntityType):
-          content_format = String(meta=True, internationalizable=True,
-                                 default='text/rest', constraints=[format_constraint])
+          content_format = String(internationalizable=True,
+                                  default='text/rest', constraints=[format_constraint])
           content  = String(fulltextindexed=True)
     """
     def __init__(self, default_format='text/plain', format_constraints=None, **kwargs):
@@ -92,7 +92,7 @@ yams_add_relation = ybo._add_relation
 @monkeypatch(ybo)
 def _add_relation(relations, rdef, name=None, insertidx=None):
     if isinstance(rdef, RichString):
-        format_attrdef = ybo.String(meta=True, internationalizable=True,
+        format_attrdef = ybo.String(internationalizable=True,
                                     default=rdef.default_format, maxsize=50,
                                     constraints=rdef.format_constraints)
         yams_add_relation(relations, format_attrdef, name+'_format', insertidx)
@@ -460,13 +460,13 @@ class CubicWebSchema(Schema):
         self._eid_index = {}
         super(CubicWebSchema, self).__init__(*args, **kwargs)
         ybo.register_base_types(self)
-        rschema = self.add_relation_type(ybo.RelationType('eid', meta=True))
+        rschema = self.add_relation_type(ybo.RelationType('eid'))
         rschema.final = True
         rschema.set_default_groups()
-        rschema = self.add_relation_type(ybo.RelationType('has_text', meta=True))
+        rschema = self.add_relation_type(ybo.RelationType('has_text'))
         rschema.final = True
         rschema.set_default_groups()
-        rschema = self.add_relation_type(ybo.RelationType('identity', meta=True))
+        rschema = self.add_relation_type(ybo.RelationType('identity'))
         rschema.final = False
         rschema.set_default_groups()
 
