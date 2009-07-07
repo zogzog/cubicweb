@@ -506,7 +506,7 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
         self._eid_creation_lock.acquire()
         try:
             for sql in self.dbhelper.sqls_increment_sequence('entities_id_seq'):
-                self.doexec(session, sql)
+                cursor = self.doexec(session, sql)
             return cursor.fetchone()[0]
         finally:
             self._eid_creation_lock.release()
