@@ -21,6 +21,7 @@ from logilab.common.compat import all
 from rql import parse, nodes
 
 from cubicweb import Unauthorized, typed_eid
+from cubicweb.schema import display_name
 from cubicweb.utils import datetime2ticks, make_uid, ustrftime
 from cubicweb.selectors import match_context_prop, partial_relation_possible
 from cubicweb.appobject import AppRsetObject
