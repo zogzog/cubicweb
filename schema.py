@@ -20,7 +20,8 @@ from logilab.common.compat import any
 from yams import BadSchemaDefinition, buildobjs as ybo
 from yams.schema import Schema, ERSchema, EntitySchema, RelationSchema
 from yams.constraints import BaseConstraint, StaticVocabularyConstraint
-from yams.reader import CONSTRAINTS, PyFileReader, SchemaLoader
+from yams.reader import CONSTRAINTS, PyFileReader, SchemaLoader, \
+     obsolete as yobsolete
 
 from rql import parse, nodes, RQLSyntaxError, TypeResolverException
 
@@ -85,7 +86,7 @@ class RichString(ybo.String):
         self.format_constraints = format_constraints or [format_constraint]
         super(RichString, self).__init__(**kwargs)
 
-PyFileReader.context['RichString'] = RichString
+PyFileReader.context['RichString'] = yobsolete(RichString)
 
 ## need to monkeypatch yams' _add_relation function to handle RichString
 yams_add_relation = ybo._add_relation
@@ -792,7 +793,7 @@ class ERQLExpression(RQLExpression):
             return self._check(session, x=eid)
         return self._check(session)
 
-PyFileReader.context['ERQLExpression'] = ERQLExpression
+PyFileReader.context['ERQLExpression'] = yobsolete(ERQLExpression)
 
 class RRQLExpression(RQLExpression):
     def __init__(self, expression, mainvars=None, eid=None):
@@ -836,7 +837,7 @@ class RRQLExpression(RQLExpression):
             kwargs['o'] = toeid
         return self._check(session, **kwargs)
 
-PyFileReader.context['RRQLExpression'] = RRQLExpression
+PyFileReader.context['RRQLExpression'] = yobsolete(RRQLExpression)
 
 # workflow extensions #########################################################
 
