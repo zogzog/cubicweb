@@ -11,11 +11,12 @@
 __docformat__ = "restructuredtext en"
 _ = unicode
 
+from logilab.mtconverter import xml_escape
 from rql import parse
 
 from cubicweb.selectors import yes, two_etypes_rset, match_form_params
 from cubicweb.schema import display_name
-from cubicweb.common.uilib import xml_escape, toggle_action
+from cubicweb.common.uilib import toggle_action
 from cubicweb.web import component
 from cubicweb.web.htmlwidgets import (MenuWidget, PopupBoxMenu, BoxSeparator,
                                       BoxLink)
