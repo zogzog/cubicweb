@@ -77,7 +77,7 @@ class StatusChangeHook(Hook):
         rset = entity.related('wf_info_for')
         try:
             view = session.vreg.select('views', 'notif_status_change',
-                                            session, rset, row=0)
+                                       session, rset=rset, row=0)
         except RegistryException:
             return
         comment = entity.printable_value('comment', format='text/plain')
@@ -100,7 +100,7 @@ class RelationChangeHook(Hook):
         rset = session.eid_rset(fromeid)
         vid = 'notif_%s_%s' % (self.event,  rtype)
         try:
-            view = session.vreg.select('views', vid, session, rset, row=0)
+            view = session.vreg.select('views', vid, session, rset=rset, row=0)
         except RegistryException:
             return
         RenderAndSendNotificationView(session, view=view)
@@ -117,7 +117,7 @@ class EntityChangeHook(Hook):
         rset = entity.as_rset()
         vid = 'notif_%s' % self.event
         try:
-            view = session.vreg.select('views', vid, session, rset, row=0)
+            view = session.vreg.select('views', vid, session, rset=rset, row=0)
         except RegistryException:
             return
         RenderAndSendNotificationView(session, view=view)
