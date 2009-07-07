@@ -229,7 +229,7 @@ class VRegistry(object):
         """
         if len(args) > 1:
             warn('only the request param can not be named when calling select',
-                 DeprecationWarning, stacklevel=2)
+                 DeprecationWarning, stacklevel=3)
         score, winners = 0, []
         for vobject in vobjects:
             vobjectscore = vobject.__select__(vobject, *args, **kwargs)
