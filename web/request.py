@@ -20,7 +20,7 @@ from rql.utils import rqlvar_maker
 from logilab.common.decorators import cached
 from logilab.common.deprecation import obsolete
 
-from logilab.mtconverter import html_escape
+from logilab.mtconverter import xml_escape
 
 from cubicweb.dbapi import DBAPIRequest
 from cubicweb.common.mail import header
@@ -505,7 +505,7 @@ class CubicWebRequestBase(DBAPIRequest):
         url = self.build_url('view', rql=rql, vid=vid, __notemplate=1,
                              **extraparams)
         return "javascript: loadxhtml('%s', '%s', '%s')" % (
-            nodeid, html_escape(url), replacemode)
+            nodeid, xml_escape(url), replacemode)
 
     # urls/path management ####################################################
 

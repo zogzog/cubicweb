@@ -8,7 +8,7 @@
 
 from datetime import date, time, timedelta
 
-from logilab.mtconverter import html_escape
+from logilab.mtconverter import xml_escape
 
 from cubicweb.interfaces import ICalendarViews
 from cubicweb.utils import ONEDAY, ONEWEEK, date_range, first_day, last_day, previous_month, next_month, days_in_month
@@ -46,13 +46,13 @@ class _CalendarView(EntityView):
         next2 = next_month(date, bigshift)
         rql = self.rset.printable_rql()
         return self.NAV_HEADER % (
-            html_escape(self.build_url(rql=rql, vid=self.id, year=prev2.year,
+            xml_escape(self.build_url(rql=rql, vid=self.id, year=prev2.year,
                                        month=prev2.month)),
-            html_escape(self.build_url(rql=rql, vid=self.id, year=prev1.year,
+            xml_escape(self.build_url(rql=rql, vid=self.id, year=prev1.year,
                                        month=prev1.month)),
-            html_escape(self.build_url(rql=rql, vid=self.id, year=next1.year,
+            xml_escape(self.build_url(rql=rql, vid=self.id, year=next1.year,
                                        month=next1.month)),
-            html_escape(self.build_url(rql=rql, vid=self.id, year=next2.year,
+            xml_escape(self.build_url(rql=rql, vid=self.id, year=next2.year,
                                        month=next2.month)))
 
 
@@ -91,7 +91,7 @@ class _CalendarView(EntityView):
             rows.append(u'<tr>%s%s</tr>' % (WEEKNUM_CELL % day.isocalendar()[1], ''.join(current_row)))
         url = self.build_url(rql=rql, vid='calendarmonth',
                              year=first_day.year, month=first_day.month)
-        monthlink = u'<a href="%s">%s</a>' % (html_escape(url), umonth)
+        monthlink = u'<a href="%s">%s</a>' % (xml_escape(url), umonth)
         return CALENDAR(self.req) % (monthlink, '\n'.join(rows))
 
     def _mk_schedule(self, begin, end, itemvid='calendaritem'):
@@ -203,7 +203,7 @@ class SemesterCalendarView(_CalendarView):
             umonth = u'%s&nbsp;%s' % (self.format_date(cur_month, '%B'), cur_month.year)
             url = self.build_url(rql=rql, vid=self.id,
                                  year=cur_month.year, month=cur_month.month)
-            self.w(u'<th colspan="2"><a href="%s">%s</a></th>' % (html_escape(url),
+            self.w(u'<th colspan="2"><a href="%s">%s</a></th>' % (xml_escape(url),
                                                                   umonth))
         self.w(u'</tr>')
         _ = self.req._
@@ -272,7 +272,7 @@ class WeekCalendarView(_CalendarView):
             umonth = self.format_date(monday, '%B %Y')
             url = self.build_url(rql=rql, vid='calendarmonth',
                                  year=monday.year, month=monday.month)
-            monthlink = '<a href="%s">%s</a>' % (html_escape(url), umonth)
+            monthlink = '<a href="%s">%s</a>' % (xml_escape(url), umonth)
             self.w(u'<tr><th colspan="3">%s %s (%s)</th></tr>' \
                   % (_('week'), monday.isocalendar()[1], monthlink))
             for day in date_range(monday, sunday):
@@ -295,10 +295,10 @@ class WeekCalendarView(_CalendarView):
         next2 = date + ONEWEEK * bigshift
         rql = self.rset.printable_rql()
         return self.NAV_HEADER % (
-            html_escape(self.build_url(rql=rql, vid=self.id, year=prev2.year, week=prev2.isocalendar()[1])),
-            html_escape(self.build_url(rql=rql, vid=self.id, year=prev1.year, week=prev1.isocalendar()[1])),
-            html_escape(self.build_url(rql=rql, vid=self.id, year=next1.year, week=next1.isocalendar()[1])),
-            html_escape(self.build_url(rql=rql, vid=self.id, year=next2.year, week=next2.isocalendar()[1])))
+            xml_escape(self.build_url(rql=rql, vid=self.id, year=prev2.year, week=prev2.isocalendar()[1])),
+            xml_escape(self.build_url(rql=rql, vid=self.id, year=prev1.year, week=prev1.isocalendar()[1])),
+            xml_escape(self.build_url(rql=rql, vid=self.id, year=next1.year, week=next1.isocalendar()[1])),
+            xml_escape(self.build_url(rql=rql, vid=self.id, year=next2.year, week=next2.isocalendar()[1])))
 
 
 
@@ -326,7 +326,7 @@ class AMPMYearCalendarView(YearCalendarView):
             if day.weekday() == 6:
                 url = self.build_url(rql=rql, vid='ampmcalendarweek',
                                      year=day.year, week=day.isocalendar()[1])
-                weeklink = '<a href="%s">%s</a>' % (html_escape(url),
+                weeklink = '<a href="%s">%s</a>' % (xml_escape(url),
                                                     day.isocalendar()[1])
                 current_row.append(WEEKNUM_CELL % weeklink)
                 rows.append(current_row)
@@ -334,7 +334,7 @@ class AMPMYearCalendarView(YearCalendarView):
         current_row.extend([(NO_CELL, NO_CELL, NO_CELL)] * (6-day.weekday()))
         url = self.build_url(rql=rql, vid='ampmcalendarweek',
                              year=day.year, week=day.isocalendar()[1])
-        weeklink = '<a href="%s">%s</a>' % (html_escape(url), day.isocalendar()[1])
+        weeklink = '<a href="%s">%s</a>' % (xml_escape(url), day.isocalendar()[1])
         current_row.append(WEEKNUM_CELL % weeklink)
         rows.append(current_row)
         # build two rows for each week: am & pm
@@ -350,7 +350,7 @@ class AMPMYearCalendarView(YearCalendarView):
         # tigh everything together
         url = self.build_url(rql=rql, vid='ampmcalendarmonth',
                              year=first_day.year, month=first_day.month)
-        monthlink = '<a href="%s">%s</a>' % (html_escape(url), umonth)
+        monthlink = '<a href="%s">%s</a>' % (xml_escape(url), umonth)
         return CALENDAR(self.req) % (monthlink, '\n'.join(formatted_rows))
 
 
@@ -367,7 +367,7 @@ class AMPMSemesterCalendarView(SemesterCalendarView):
             umonth = u'%s&nbsp;%s' % (self.format_date(cur_month, '%B'), cur_month.year)
             url = self.build_url(rql=rql, vid=self.id,
                                  year=cur_month.year, month=cur_month.month)
-            self.w(u'<th colspan="3"><a href="%s">%s</a></th>' % (html_escape(url),
+            self.w(u'<th colspan="3"><a href="%s">%s</a></th>' % (xml_escape(url),
                                                                   umonth))
         self.w(u'</tr>')
         _ = self.req._
@@ -417,7 +417,7 @@ class AMPMMonthCalendarView(MonthCalendarView):
             if day.weekday() == 6:
                 url = self.build_url(rql=rql, vid='ampmcalendarweek',
                                      year=day.year, week=day.isocalendar()[1])
-                weeklink = '<a href="%s">%s</a>' % (html_escape(url),
+                weeklink = '<a href="%s">%s</a>' % (xml_escape(url),
                                                     day.isocalendar()[1])
                 current_row.append(WEEKNUM_CELL % weeklink)
                 rows.append(current_row)
@@ -425,7 +425,7 @@ class AMPMMonthCalendarView(MonthCalendarView):
         current_row.extend([(NO_CELL, NO_CELL, NO_CELL)] * (6-day.weekday()))
         url = self.build_url(rql=rql, vid='ampmcalendarweek',
                              year=day.year, week=day.isocalendar()[1])
-        weeklink = '<a href="%s">%s</a>' % (html_escape(url),
+        weeklink = '<a href="%s">%s</a>' % (xml_escape(url),
                                             day.isocalendar()[1])
         current_row.append(WEEKNUM_CELL % weeklink)
         rows.append(current_row)
@@ -442,7 +442,7 @@ class AMPMMonthCalendarView(MonthCalendarView):
         # tigh everything together
         url = self.build_url(rql=rql, vid='ampmcalendarmonth',
                              year=first_day.year, month=first_day.month)
-        monthlink = '<a href="%s">%s</a>' % (html_escape(url),
+        monthlink = '<a href="%s">%s</a>' % (xml_escape(url),
                                              umonth)
         return CALENDAR(self.req) % (monthlink, '\n'.join(formatted_rows))
 
@@ -461,7 +461,7 @@ class AMPMWeekCalendarView(WeekCalendarView):
             umonth = self.format_date(monday, '%B %Y')
             url = self.build_url(rql=rql, vid='ampmcalendarmonth',
                                  year=monday.year, month=monday.month)
-            monthlink = '<a href="%s">%s</a>' % (html_escape(url), umonth)
+            monthlink = '<a href="%s">%s</a>' % (xml_escape(url), umonth)
             w(u'<tr>%s</tr>' % (
                 WEEK_TITLE % (_('week'), monday.isocalendar()[1], monthlink)))
             w(u'<tr><th>%s</th><th>&nbsp;</th></tr>'% _(u'Date'))

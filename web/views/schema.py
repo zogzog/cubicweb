@@ -9,7 +9,7 @@ __docformat__ = "restructuredtext en"
 
 from itertools import cycle
 
-from logilab.mtconverter import html_escape
+from logilab.mtconverter import xml_escape
 from yams import schema2dot as s2d
 
 from cubicweb.selectors import implements, yes
@@ -40,7 +40,7 @@ class CWRDEFPrimaryView(primary.PrimaryView):
     def render_entity_title(self, entity):
         self.w(u'<h1><span class="etype">%s</span> %s</h1>'
                % (entity.dc_type().capitalize(),
-                  html_escape(entity.dc_long_title())))
+                  xml_escape(entity.dc_long_title())))
 
 
 # CWEType ######################################################################
@@ -119,8 +119,8 @@ class CWETypeSImageView(EntityView):
         entity = self.entity(row, col)
         url = entity.absolute_url(vid='schemagraph')
         self.w(u'<img src="%s" alt="%s"/>' % (
-            html_escape(url),
-            html_escape(self.req._('graphical schema for %s') % entity.name)))
+            xml_escape(url),
+            xml_escape(self.req._('graphical schema for %s') % entity.name)))
 
 class CWETypeSPermView(EntityView):
     id = 'cwetype-schema-permissions'
@@ -157,8 +157,8 @@ class CWETypeSWorkflowView(EntityView):
         entity = self.entity(row, col)
         if entity.reverse_state_of:
             self.w(u'<img src="%s" alt="%s"/>' % (
-                    html_escape(entity.absolute_url(vid='ewfgraph')),
-                    html_escape(self.req._('graphical workflow for %s') % entity.name)))
+                    xml_escape(entity.absolute_url(vid='ewfgraph')),
+                    xml_escape(self.req._('graphical workflow for %s') % entity.name)))
         else:
             self.w(u'<p>%s</p>' % _('There is no workflow defined for this entity.'))
 

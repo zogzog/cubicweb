@@ -17,7 +17,7 @@ _ = unicode
 
 from rql import nodes
 
-from logilab.mtconverter import TransformError, html_escape, xml_escape
+from logilab.mtconverter import TransformError, xml_escape, xml_escape
 
 from cubicweb import NoSelectableObject
 from cubicweb.selectors import yes, empty_rset
@@ -121,8 +121,8 @@ class OneLineView(EntityView):
         """the one line view for an entity: linked text view
         """
         entity = self.entity(row, col)
-        self.w(u'<a href="%s">' % html_escape(entity.absolute_url()))
-        self.w(html_escape(self.view('text', self.rset, row=row, col=col)))
+        self.w(u'<a href="%s">' % xml_escape(entity.absolute_url()))
+        self.w(xml_escape(self.view('text', self.rset, row=row, col=col)))
         self.w(u'</a>')
 
 
@@ -205,8 +205,8 @@ class InContextView(EntityView):
         entity = self.entity(row, col)
         desc = cut(entity.dc_description(), 50)
         self.w(u'<a href="%s" title="%s">' % (
-            html_escape(entity.absolute_url()), html_escape(desc)))
-        self.w(html_escape(self.view('textincontext', self.rset,
+            xml_escape(entity.absolute_url()), xml_escape(desc)))
+        self.w(xml_escape(self.view('textincontext', self.rset,
                                      row=row, col=col)))
         self.w(u'</a>')
 
@@ -218,8 +218,8 @@ class OutOfContextView(EntityView):
         entity = self.entity(row, col)
         desc = cut(entity.dc_description(), 50)
         self.w(u'<a href="%s" title="%s">' % (
-            html_escape(entity.absolute_url()), html_escape(desc)))
-        self.w(html_escape(self.view('textoutofcontext', self.rset,
+            xml_escape(entity.absolute_url()), xml_escape(desc)))
+        self.w(xml_escape(self.view('textoutofcontext', self.rset,
                                      row=row, col=col)))
         self.w(u'</a>')
 

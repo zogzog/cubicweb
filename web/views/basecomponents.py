@@ -15,7 +15,7 @@ from rql import parse
 
 from cubicweb.selectors import yes, two_etypes_rset, match_form_params
 from cubicweb.schema import display_name
-from cubicweb.common.uilib import html_escape, toggle_action
+from cubicweb.common.uilib import xml_escape, toggle_action
 from cubicweb.web import component
 from cubicweb.web.htmlwidgets import (MenuWidget, PopupBoxMenu, BoxSeparator,
                                       BoxLink)
@@ -47,7 +47,7 @@ class RQLInputForm(component.Component):
 <input type="submit" value="" class="rqlsubmit" tabindex="%s" />
 </fieldset>
 ''' % (not self.propval('visible') and 'hidden' or '',
-       self.build_url('view'), html_escape(rql), req._('full text or RQL query'), req.next_tabindex(),
+       self.build_url('view'), xml_escape(rql), req._('full text or RQL query'), req.next_tabindex(),
         req.next_tabindex()))
         if self.req.search_state[0] != 'normal':
             self.w(u'<input type="hidden" name="__mode" value="%s"/>'
@@ -202,7 +202,7 @@ class EtypeRestrictionComponent(component.Component):
                 url = self.build_url(rql=newrql, __restrrql=restrrql,
                                      __restrtype=etype, __restrtypes=','.join(restrtypes))
                 html.append(u'<span><a href="%s">%s</a></span>' % (
-                        html_escape(url), elabel))
+                        xml_escape(url), elabel))
                 rqlst.recover()
         if on_etype:
             url = self.build_url(rql=restrrql)

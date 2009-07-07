@@ -15,7 +15,7 @@ import re
 from urllib import quote as urlquote
 from StringIO import StringIO
 
-from logilab.mtconverter import html_escape, html_unescape
+from logilab.mtconverter import xml_escape, html_unescape
 
 from cubicweb.utils import ustrftime
 
@@ -66,7 +66,7 @@ try:
 except ImportError:
     def rest_publish(entity, data):
         """default behaviour if docutils was not found"""
-        return html_escape(data)
+        return xml_escape(data)
 
 TAG_PROG = re.compile(r'</?.*?>', re.U)
 def remove_html_tags(text):
@@ -108,7 +108,7 @@ def safe_cut(text, length):
     if len(text_nohtml) <= length:
         return text
     # else if un-tagged text is too long, cut it
-    return html_escape(text_nohtml[:length] + u'...')
+    return xml_escape(text_nohtml[:length] + u'...')
 
 fallback_safe_cut = safe_cut
 
@@ -220,12 +220,12 @@ def simple_sgml_tag(tag, content=None, escapecontent=True, **attrs):
             attrs['class'] = attrs.pop('klass')
         except KeyError:
             pass
-        value += u' ' + u' '.join(u'%s="%s"' % (attr, html_escape(unicode(value)))
+        value += u' ' + u' '.join(u'%s="%s"' % (attr, xml_escape(unicode(value)))
                                   for attr, value in sorted(attrs.items())
                                   if value is not None)
     if content:
         if escapecontent:
-            content = html_escape(unicode(content))
+            content = xml_escape(unicode(content))
         value += u'>%s</%s>' % (content, tag)
     else:
         value += u'/>'
@@ -406,9 +406,9 @@ def html_traceback(info, exception, title='',
         strings.append(body)
         strings.append(u'</div>')
     if title:
-        strings.append(u'<h1 class="error">%s</h1>'% html_escape(title))
+        strings.append(u'<h1 class="error">%s</h1>'% xml_escape(title))
     try:
-        strings.append(u'<p class="error">%s</p>' % html_escape(str(exception)).replace("\n","<br />"))
+        strings.append(u'<p class="error">%s</p>' % xml_escape(str(exception)).replace("\n","<br />"))
     except UnicodeError:
         pass
     strings.append(u'<div class="error_traceback">')
@@ -416,9 +416,9 @@ def html_traceback(info, exception, title='',
         strings.append(u'<b>File</b> <b class="file">%s</b>, <b>line</b> '
                        u'<b class="line">%s</b>, <b>function</b> '
                        u'<b class="function">%s</b>:<br/>'%(
-            html_escape(stackentry[0]), stackentry[1], html_escape(stackentry[2])))
+            xml_escape(stackentry[0]), stackentry[1], xml_escape(stackentry[2])))
         if stackentry[3]:
-            string = html_escape(stackentry[3]).decode('utf-8', 'replace')
+            string = xml_escape(stackentry[3]).decode('utf-8', 'replace')
             strings.append(u'&nbsp;&nbsp;%s<br/>\n' % (string))
         # add locals info for each entry
         try:
@@ -426,7 +426,7 @@ def html_traceback(info, exception, title='',
             html_info = []
             chars = 0
             for name, value in local_context.iteritems():
-                value = html_escape(repr(value))
+                value = xml_escape(repr(value))
                 info = u'<span class="name">%s</span>=%s, ' % (name, value)
                 line_length = len(name) + len(value)
                 chars += line_length
@@ -491,5 +491,5 @@ def htmlescape(function):
     def newfunc(*args, **kwargs):
         ret = function(*args, **kwargs)
         assert isinstance(ret, basestring)
-        return html_escape(ret)
+        return xml_escape(ret)
     return newfunc

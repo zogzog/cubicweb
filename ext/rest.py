@@ -29,7 +29,7 @@ from docutils.core import publish_string
 from docutils.parsers.rst import Parser, states, directives
 from docutils.parsers.rst.roles import register_canonical_role, set_classes
 
-from logilab.mtconverter import ESC_UCAR_TABLE, ESC_CAR_TABLE, html_escape
+from logilab.mtconverter import ESC_UCAR_TABLE, ESC_CAR_TABLE, xml_escape
 
 from cubicweb.ext.html4zope import Writer
 
@@ -236,5 +236,5 @@ def rest_publish(context, data):
         LOGGER.exception('error while publishing ReST text')
         if not isinstance(data, unicode):
             data = unicode(data, encoding, 'replace')
-        return html_escape(req._('error while publishing ReST text')
+        return xml_escape(req._('error while publishing ReST text')
                            + '\n\n' + data)

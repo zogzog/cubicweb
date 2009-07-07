@@ -8,7 +8,7 @@
 __docformat__ = "restructuredtext en"
 
 from logilab.common.decorators import monkeypatch
-from logilab.mtconverter import html_escape
+from logilab.mtconverter import xml_escape
 
 from cubicweb.utils import make_uid
 from cubicweb.interfaces import ITree
@@ -113,7 +113,7 @@ class TreeViewItemView(EntityView):
             w(u'<li class="%s">' % u' '.join(liclasses))
         else:
             rql = entity.children_rql() % {'x': entity.eid}
-            url = html_escape(self.build_url('json', rql=rql, vid=parentvid,
+            url = xml_escape(self.build_url('json', rql=rql, vid=parentvid,
                                              pageid=self.req.pageid,
                                              treeid=treeid,
                                              fname='view',
