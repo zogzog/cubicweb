@@ -22,8 +22,8 @@ from cubicweb.view import EntityView
 from cubicweb.common import tags
 from cubicweb.web import INTERNAL_FIELD_VALUE, stdmsgs, eid_param
 from cubicweb.web.form import FormViewMixIn
-from cubicweb.web.formfields import RelationField
-from cubicweb.web.formwidgets import Button, SubmitButton, ResetButton, Select
+from cubicweb.web.formfields import guess_field
+from cubicweb.web.formwidgets import Button, SubmitButton, ResetButton
 from cubicweb.web.views import forms
 
 
@@ -148,9 +148,8 @@ class ClickAndEditFormView(FormViewMixIn, EntityView):
                                        form_buttons=[SubmitButton(),
                                                      Button(stdmsgs.BUTTON_CANCEL,
                                                        onclick=cancelclick)])
-        form.append_field(RelationField(name=rtype, role=role, sort=True,
-                                        widget=Select(),
-                                        label=u' '))
+        field = guess_field(entity.e_schema, entity.schema.rschema(rtype), role)
+        form.append_field(field)
         self.w(tags.div(value, klass='editableField', id=divid,
                         ondblclick=self.ondblclick % event_data))
         return form
