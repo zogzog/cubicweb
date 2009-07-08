@@ -146,13 +146,16 @@ class Session(RequestSessionMixIn):
         return self._threaddata.pool
 
     def reset_pool(self):
-        """the session has no longer using its pool, at least for some time"""
+        """the session is no longer using its pool, at least for some time"""
         # pool may be none if no operation has been done since last commit
         # or rollback
         if self.pool is not None and self.mode == 'read':
             # even in read mode, we must release the current transaction
             pool = self.pool
-            self._threads_in_transaction.remove(threading.currentThread())
+            try:
+                self._threads_in_transaction.remove(threading.currentThread())
+            except KeyError:
+                pass
             pool.pool_reset()
             self._threaddata.pool = None
             # free pool once everything is done to avoid race-condition
