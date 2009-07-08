@@ -12,7 +12,7 @@ __docformat__ = "restructuredtext en"
 
 from datetime import datetime
 
-from logilab.mtconverter import html_escape
+from logilab.mtconverter import xml_escape
 
 from yams.constraints import SizeConstraint, StaticVocabularyConstraint
 
@@ -247,9 +247,9 @@ class InputWidget(Widget):
         value = self.current_value(entity)
         dvalue = self.current_display_value(entity)
         if isinstance(value, basestring):
-            value = html_escape(value)
+            value = xml_escape(value)
         if isinstance(dvalue, basestring):
-            dvalue = html_escape(dvalue)
+            dvalue = xml_escape(dvalue)
         return u'%s<input type="%s" name="%s" value="%s" %s/>' % (
             self.hidden_input(entity, value), self.input_type,
             self.rname, dvalue, self.format_attrs())
@@ -323,9 +323,9 @@ class AutoCompletionWidget(StringWidget):
         value = self.current_value(entity)
         dvalue = self.current_display_value(entity)
         if isinstance(value, basestring):
-            value = html_escape(value)
+            value = xml_escape(value)
         if isinstance(dvalue, basestring):
-            dvalue = html_escape(dvalue)
+            dvalue = xml_escape(dvalue)
         iid = self.attrs.pop('id')
         if self.required(entity):
             cssclass = u' required'
@@ -337,7 +337,7 @@ class AutoCompletionWidget(StringWidget):
                     'iid': iid,
                     'hidden': self.hidden_input(entity, value),
                     'wdgtype': self.wdgtype,
-                    'url': html_escape(dataurl),
+                    'url': xml_escape(dataurl),
                     'tabindex': self.attrs.pop('tabindex'),
                     'value': dvalue,
                     'attrs': self.format_attrs(),
@@ -398,7 +398,7 @@ class TextWidget(Widget):
         editor = self._edit_render_textarea(entity, with_format)
         value = self.current_value(entity)
         if isinstance(value, basestring):
-            value = html_escape(value)
+            value = xml_escape(value)
         return u'%s%s' % (self.hidden_input(entity, value), editor)
 
     def _edit_render_textarea(self, entity, with_format):
@@ -406,7 +406,7 @@ class TextWidget(Widget):
         self.attrs.setdefault('rows', 20)
         dvalue = self.current_display_value(entity)
         if isinstance(dvalue, basestring):
-            dvalue = html_escape(dvalue)
+            dvalue = xml_escape(dvalue)
         if entity.use_fckeditor(self.name):
             entity.req.fckeditor_config()
             if with_format:
@@ -472,9 +472,9 @@ class FileWidget(Widget):
             or entity.e_schema.has_metadata(self.name, 'encoding')):
             divid = '%s-%s-advanced' % (self.name, entity.eid)
             wdgs.append(u'<a href="%s" title="%s"><img src="%s" alt="%s"/></a>' %
-                        (html_escape(toggle_action(divid)),
+                        (xml_escape(toggle_action(divid)),
                          req._('show advanced fields'),
-                         html_escape(req.build_url('data/puce_down.png')),
+                         xml_escape(req.build_url('data/puce_down.png')),
                          req._('show advanced fields')))
             wdgs.append(u'<div id="%s" class="hidden">' % divid)
             for extraattr in ('_format', '_encoding'):
@@ -572,7 +572,7 @@ class ComboBoxWidget(Widget):
                 res.append(u'<optgroup label="%s"/>' % (label or ''))
             else:
                 value, flag = self.form_value(entity, value, dvalues)
-                res.append(u'<option value="%s" %s>%s</option>' % (value, flag, html_escape(label)))
+                res.append(u'<option value="%s" %s>%s</option>' % (value, flag, xml_escape(label)))
         res.append(u'</select>')
         return '\n'.join(res)
 
@@ -658,7 +658,7 @@ class AddComboBoxWidget(DynamicComboBoxWidget):
                 res.append(u'<optgroup label="%s"/>' % (label or ''))
             else:
                 value, flag = self.form_value(entity, value, dvalues)
-                res.append(u'<option value="%s" %s>%s</option>' % (value, flag, html_escape(label)))
+                res.append(u'<option value="%s" %s>%s</option>' % (value, flag, xml_escape(label)))
         res.append(u'</select>')
         res.append(u'<div id="newvalue">')
         res.append(u'<input type="text" id="newopt" />')
@@ -819,7 +819,7 @@ class URLWidget(StringWidget):
         url = getattr(entity, self.name)
         if not url:
             return u''
-        url = html_escape(url)
+        url = xml_escape(url)
         return u'<a href="%s">%s</a>' % (url, url)
 
 class EmbededURLWidget(StringWidget):
@@ -828,7 +828,7 @@ class EmbededURLWidget(StringWidget):
         url = getattr(entity, self.name)
         if not url:
             return u''
-        aurl = html_escape(entity.build_url('embed', url=url))
+        aurl = xml_escape(entity.build_url('embed', url=url))
         return u'<a href="%s">%s</a>' % (aurl, url)
 
 

@@ -12,7 +12,7 @@ _ = unicode
 from cStringIO import StringIO
 
 from logilab.common.deprecation import obsolete
-from logilab.mtconverter import html_escape
+from logilab.mtconverter import xml_escape
 
 from cubicweb import NotAnEntity
 from cubicweb.selectors import yes, non_final_entity, nonempty_rset, none_rset
@@ -219,7 +219,7 @@ class View(AppRsetObject):
 
     def wdata(self, data):
         """simple helper that escapes `data` and writes into `self.w`"""
-        self.w(html_escape(data))
+        self.w(xml_escape(data))
 
     def html_headers(self):
         """return a list of html headers (eg something to be inserted between
@@ -440,10 +440,10 @@ class ReloadableMixIn(object):
             def cb(*args):
                 _cb(*args)
         cbname = self.req.register_onetime_callback(cb, *args)
-        return self.build_js(cbname, html_escape(msg or ''))
+        return self.build_js(cbname, xml_escape(msg or ''))
 
     def build_update_js_call(self, cbname, msg):
-        rql = html_escape(self.rset.printable_rql())
+        rql = xml_escape(self.rset.printable_rql())
         return "javascript:userCallbackThenUpdateUI('%s', '%s', '%s', '%s', '%s', '%s')" % (
             cbname, self.id, rql, msg, self.__registry__, self.div_id())
 

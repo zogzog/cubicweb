@@ -20,7 +20,7 @@ from rql.utils import rqlvar_maker
 from logilab.common.decorators import cached
 from logilab.common.deprecation import obsolete
 
-from logilab.mtconverter import html_escape
+from logilab.mtconverter import xml_escape
 
 from cubicweb.dbapi import DBAPIRequest
 from cubicweb.common.mail import header
@@ -153,7 +153,8 @@ class CubicWebRequestBase(DBAPIRequest):
             else:
                 self.form[k] = v
         # special key for created entity, added in controller's reset method
-        if '__createdpath' in params:
+        # if no message set, we don't want this neither
+        if '__createdpath' in params and self.message:
             self.message += ' (<a href="%s">%s</a>)' % (
                 self.build_url(params.pop('__createdpath')),
                 self._('click here to see created entity'))
@@ -505,7 +506,7 @@ class CubicWebRequestBase(DBAPIRequest):
         url = self.build_url('view', rql=rql, vid=vid, __notemplate=1,
                              **extraparams)
         return "javascript: loadxhtml('%s', '%s', '%s')" % (
-            nodeid, html_escape(url), replacemode)
+            nodeid, xml_escape(url), replacemode)
 
     # urls/path management ####################################################
 

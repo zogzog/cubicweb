@@ -733,7 +733,7 @@ sources for migration will be automatically selected.",
         mih = config.migration_handler()
         if args:
             for arg in args:
-                mih.process_script(script)
+                mih.process_script(arg)
         else:
             mih.interactive_shell()
         mih.shutdown()

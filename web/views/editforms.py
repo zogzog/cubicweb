@@ -13,7 +13,7 @@ from copy import copy
 
 from simplejson import dumps
 
-from logilab.mtconverter import html_escape
+from logilab.mtconverter import xml_escape
 
 from cubicweb.selectors import (match_kwargs, one_line_rset, non_final_entity,
                                 specified_etype_implements, yes)
@@ -38,7 +38,7 @@ def toggleable_relation_link(eid, nodeid, label='x'):
     entities
     """
     js = u"javascript: togglePendingDelete('%s', %s);" % (
-        nodeid, html_escape(dumps(eid)))
+        nodeid, xml_escape(dumps(eid)))
     return u'[<a class="handle" href="%s" id="handle%s">%s</a>]' % (
         js, nodeid, label)
 
@@ -108,8 +108,8 @@ class ClickAndEditFormView(FormViewMixIn, EntityView):
                 return
         else:
             rset = entity.related(rtype, role)
-            # XXX html_escape but that depends of the actual vid
-            value = html_escape(self.view(vid, rset, 'null') or default)
+            # XXX xml_escape but that depends of the actual vid
+            value = xml_escape(self.view(vid, rset, 'null') or default)
         # XXX consider local roles ?
         if role == 'subject'and not rschema.has_perm(self.req, 'add',
                                                     fromeid=entity.eid):

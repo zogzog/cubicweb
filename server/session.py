@@ -88,9 +88,7 @@ class Session(RequestSessionMixIn):
         """return a sql cursor on the system database"""
         if not sql.split(None, 1)[0].upper() == 'SELECT':
             self.mode = 'write'
-        cursor = self.pool['system']
-        self.pool.source('system').doexec(cursor, sql, args)
-        return cursor
+        return self.pool.source('system').doexec(self, sql, args)
 
     def set_language(self, language):
         """i18n configuration for translation"""
@@ -137,24 +135,27 @@ class Session(RequestSessionMixIn):
             raise Exception('try to set pool on a closed session')
         if self.pool is None:
             # get pool first to avoid race-condition
-            self._threaddata.pool = self.repo._get_pool()
+            self._threaddata.pool = pool = self.repo._get_pool()
             try:
-                self._threaddata.pool.pool_set()
+                pool.pool_set()
             except:
                 self._threaddata.pool = None
-                self.repo._free_pool(self.pool)
+                self.repo._free_pool(pool)
                 raise
             self._threads_in_transaction.add(threading.currentThread())
         return self._threaddata.pool
 
     def reset_pool(self):
-        """the session has no longer using its pool, at least for some time"""
+        """the session is no longer using its pool, at least for some time"""
         # pool may be none if no operation has been done since last commit
         # or rollback
         if self.pool is not None and self.mode == 'read':
             # even in read mode, we must release the current transaction
             pool = self.pool
-            self._threads_in_transaction.remove(threading.currentThread())
+            try:
+                self._threads_in_transaction.remove(threading.currentThread())
+            except KeyError:
+                pass
             pool.pool_reset()
             self._threaddata.pool = None
             # free pool once everything is done to avoid race-condition

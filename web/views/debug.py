@@ -10,7 +10,7 @@ __docformat__ = "restructuredtext en"
 
 from time import strftime, localtime
 
-from logilab.mtconverter import html_escape
+from logilab.mtconverter import xml_escape
 
 from cubicweb.selectors import none_rset, match_user_groups
 from cubicweb.view import StartupView
@@ -21,7 +21,7 @@ def dict_to_html(w, dict):
         w(u'<ul>')
         for key in sorted(dict):
             w(u'<li><span class="label">%s</span>: <span>%s</span></li>' % (
-                html_escape(str(key)), html_escape(repr(dict[key]))))
+                xml_escape(str(key)), xml_escape(repr(dict[key]))))
         w(u'</ul>')
 
 
@@ -38,7 +38,7 @@ class DebugView(StartupView):
         if sessions:
             w(u'<ul>')
             for sid, session in sessions:
-                w(u'<li>%s  (last usage: %s)<br/>' % (html_escape(str(session)),
+                w(u'<li>%s  (last usage: %s)<br/>' % (xml_escape(str(session)),
                                                       strftime('%Y-%m-%d %H:%M:%S',
                                                                localtime(session.timestamp))))
                 dict_to_html(w, session.data)

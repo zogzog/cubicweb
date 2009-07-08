@@ -24,7 +24,7 @@ http://cvs.zope.org/Zope/lib/python/docutils/writers/Attic/html4zope.py?rev=1.1.
 
 __docformat__ = 'reStructuredText'
 
-from logilab.mtconverter import html_escape
+from logilab.mtconverter import xml_escape
 
 from docutils import nodes
 from docutils.writers.html4css1 import Writer as CSS1Writer
@@ -154,7 +154,7 @@ class HTMLTranslator(CSS1HTMLTranslator):
         error = u'System Message: %s%s/%s%s (%s %s)%s</p>\n' % (
             a_start, node['type'], node['level'], a_end,
             self.encode(node['source']), line, backref_text)
-        self.body.append(u'<div class="system-message"><b>ReST / HTML errors:</b>%s</div>' % html_escape(error))
+        self.body.append(u'<div class="system-message"><b>ReST / HTML errors:</b>%s</div>' % xml_escape(error))
 
     def depart_system_message(self, node):
         pass

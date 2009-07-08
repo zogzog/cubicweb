@@ -8,7 +8,7 @@
 __docformat__ = "restructuredtext en"
 _ = unicode
 
-from logilab.mtconverter import html_escape
+from logilab.mtconverter import xml_escape
 
 # don't use AnyEntity since this may cause bug with isinstance() due to reloading
 from cubicweb.interfaces import IBreadCrumbs
@@ -21,7 +21,7 @@ from cubicweb.web.component import EntityVComponent
 
 def bc_title(entity):
     textsize = entity.req.property_value('navigation.short-line-size')
-    return html_escape(cut(entity.dc_title(), textsize))
+    return xml_escape(cut(entity.dc_title(), textsize))
 
 
 class BreadCrumbEntityVComponent(EntityVComponent):
@@ -64,7 +64,7 @@ class BreadCrumbEntityVComponent(EntityVComponent):
             url, title = part
             textsize = self.req.property_value('navigation.short-line-size')
             self.w(u'<a href="%s">%s</a>' % (
-                html_escape(url), html_escape(cut(title, textsize))))
+                xml_escape(url), xml_escape(cut(title, textsize))))
         else:
             textsize = self.req.property_value('navigation.short-line-size')
             self.w(cut(unicode(part), textsize))
@@ -81,6 +81,6 @@ class BreadCrumbView(EntityView):
 
     def cell_call(self, row, col):
         entity = self.entity(row, col)
-        desc = html_escape(cut(entity.dc_description(), 50))
+        desc = xml_escape(cut(entity.dc_description(), 50))
         self.w(u'<a href="%s" title="%s">%s</a>' % (
-            html_escape(entity.absolute_url()), desc, bc_title(entity)))
+            xml_escape(entity.absolute_url()), desc, bc_title(entity)))

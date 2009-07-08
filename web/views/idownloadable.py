@@ -8,7 +8,7 @@
 __docformat__ = "restructuredtext en"
 _ = unicode
 
-from logilab.mtconverter import BINARY_ENCODINGS, TransformError, html_escape
+from logilab.mtconverter import BINARY_ENCODINGS, TransformError, xml_escape
 
 from cubicweb.view import EntityView
 from cubicweb.selectors import (one_line_rset, score_entity,
@@ -31,12 +31,12 @@ def download_box(w, entity, title=None, label=None):
     if title is None:
         title = req._('download')
     w(u'<div class="sideBoxTitle downloadBoxTitle"><span>%s</span></div>'
-      % html_escape(title))
+      % xml_escape(title))
     w(u'<div class="sideBox downloadBox"><div class="sideBoxBody">')
     w(u'<a href="%s"><img src="%s" alt="%s"/> %s</a>'
-      % (html_escape(entity.download_url()),
+      % (xml_escape(entity.download_url()),
          req.external_resource('DOWNLOAD_ICON'),
-         _('download icon'), html_escape(label or entity.dc_title())))
+         _('download icon'), xml_escape(label or entity.dc_title())))
     w(u'</div>')
     w(u'</div>\n</div>\n')
 
@@ -92,8 +92,8 @@ class DownloadLinkView(EntityView):
 
     def cell_call(self, row, col, title=None, **kwargs):
         entity = self.entity(row, col)
-        url = html_escape(entity.download_url())
-        self.w(u'<a href="%s">%s</a>' % (url, html_escape(title or entity.dc_title())))
+        url = xml_escape(entity.download_url())
+        self.w(u'<a href="%s">%s</a>' % (url, xml_escape(title or entity.dc_title())))
 
 
 class IDownloadablePrimaryView(primary.PrimaryView):
@@ -124,9 +124,9 @@ class IDownloadableLineView(baseviews.OneLineView):
     def cell_call(self, row, col, title=None, **kwargs):
         """the secondary view is a link to download the file"""
         entity = self.entity(row, col)
-        url = html_escape(entity.absolute_url())
-        name = html_escape(title or entity.download_file_name())
-        durl = html_escape(entity.download_url())
+        url = xml_escape(entity.absolute_url())
+        name = xml_escape(title or entity.download_file_name())
+        durl = xml_escape(entity.download_url())
         self.w(u'<a href="%s">%s</a> [<a href="%s">%s</a>]' %
                (url, name, durl, self.req._('download')))
 
@@ -147,6 +147,6 @@ class ImageView(EntityView):
     def cell_call(self, row, col):
         entity = self.entity(row, col)
         #if entity.data_format.startswith('image/'):
-        self.w(u'<img src="%s" alt="%s"/>' % (html_escape(entity.download_url()),
-                                              html_escape(entity.download_file_name())))
+        self.w(u'<img src="%s" alt="%s"/>' % (xml_escape(entity.download_url()),
+                                              xml_escape(entity.download_file_name())))
 

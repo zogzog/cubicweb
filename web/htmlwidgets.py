@@ -9,7 +9,7 @@ serialization time
 :license: GNU Lesser General Public License, v2.1 - http://www.gnu.org/licenses
 """
 
-from logilab.mtconverter import html_escape
+from logilab.mtconverter import xml_escape
 
 from cubicweb.utils import UStringIO
 from cubicweb.common.uilib import toggle_action
@@ -81,7 +81,7 @@ class BoxWidget(HTMLWidget):
             self.w(u'<div class="%s">' % self._class)
         if self.title:
             if self.escape:
-                title = '<span>%s</span>' % html_escape(self.title)
+                title = '<span>%s</span>' % xml_escape(self.title)
             else:
                 title = '<span>%s</span>' % self.title
             self.w(u'<div class="%s">%s</div>' % (self.title_class, title))
@@ -204,7 +204,7 @@ class BoxLink(HTMLWidget):
     def __init__(self, href, label, _class='', title='', ident='', escape=False):
         self.href = href
         if escape:
-            self.label = html_escape(label)
+            self.label = xml_escape(label)
         else:
             self.label = label
         self._class = _class or ''
@@ -213,7 +213,7 @@ class BoxLink(HTMLWidget):
 
     def _render(self):
         link = u'<a href="%s" title="%s">%s</a>' % (
-            html_escape(self.href), html_escape(self.title), self.label)
+            xml_escape(self.href), xml_escape(self.title), self.label)
         if self.ident:
             self.w(u'<li id="%s" class="%s">%s</li>\n' % (self.ident, self._class, link))
         else:

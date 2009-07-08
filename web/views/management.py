@@ -9,7 +9,7 @@
 __docformat__ = "restructuredtext en"
 _ = unicode
 
-from logilab.mtconverter import html_escape
+from logilab.mtconverter import xml_escape
 
 from cubicweb.selectors import yes, none_rset, match_user_groups, authenticated_user
 from cubicweb.view import AnyRsetView, StartupView, EntityView
@@ -84,8 +84,8 @@ class SecurityManagementView(EntityView, SecurityViewMixIn):
         _ = self.req._
         w(u'<h1><span class="etype">%s</span> <a href="%s">%s</a></h1>'
           % (entity.dc_type().capitalize(),
-             html_escape(entity.absolute_url()),
-             html_escape(entity.dc_title())))
+             xml_escape(entity.absolute_url()),
+             xml_escape(entity.dc_title())))
         # first show permissions defined by the schema
         self.w('<h2>%s</h2>' % _('schema\'s permissions definitions'))
         self.schema_definition(entity.e_schema)
@@ -141,7 +141,7 @@ class SecurityManagementView(EntityView, SecurityViewMixIn):
                 # and this will replace %s by %25s
                 delurl += '&__delete=%s:require_permission:%%s' % entity.eid
                 dellinktempl = u'[<a href="%s" title="%s">-</a>]&nbsp;' % (
-                    html_escape(delurl), _('delete this permission'))
+                    xml_escape(delurl), _('delete this permission'))
             else:
                 dellinktempl = None
             w(u'<table class="schemaInfo">')
@@ -218,14 +218,14 @@ class ErrorView(AnyRsetView):
         if excinfo is not None and self.config['print-traceback']:
             if exclass is None:
                 w(u'<div class="tb">%s</div>'
-                       % html_escape(ex).replace("\n","<br />"))
+                       % xml_escape(ex).replace("\n","<br />"))
             else:
                 w(u'<div class="tb">%s: %s</div>'
-                       % (exclass, html_escape(ex).replace("\n","<br />")))
+                       % (exclass, xml_escape(ex).replace("\n","<br />")))
             w(u'<hr />')
             w(u'<div class="tb">%s</div>' % html_traceback(excinfo, ex, ''))
         else:
-            w(u'<div class="tb">%s</div>' % (html_escape(ex).replace("\n","<br />")))
+            w(u'<div class="tb">%s</div>' % (xml_escape(ex).replace("\n","<br />")))
         # if excinfo is not None, it's probably not a bug
         if excinfo is None:
             return
@@ -272,7 +272,7 @@ def exc_message(ex, encoding):
             return unicode(repr(ex), encoding, 'replace')
 
 def text_error_description(ex, excinfo, req, eversion, cubes):
-    binfo = rest_traceback(excinfo, html_escape(ex))
+    binfo = rest_traceback(excinfo, xml_escape(ex))
     binfo += u'\n\n:URL: %s\n' % req.url()
     if not '__bugreporting' in req.form:
         binfo += u'\n:form params:\n'
@@ -322,7 +322,7 @@ class ProcessInformationView(StartupView):
         self.w(u'<table border="1">')
         for attr in env.keys():
             self.w(u'<tr><th align="left">%s</th><td>%s</td></tr>'
-                   % (attr, html_escape(env[attr])))
+                   % (attr, xml_escape(env[attr])))
         self.w(u'</table>')
         self.w(u'<h3>%s</h3>' % _('Request'))
         self.w(u'<table border="1">')
@@ -331,7 +331,7 @@ class ProcessInformationView(StartupView):
                      'search_state', 'the_request', 'unparsed_uri', 'uri'):
             val = getattr(req, attr)
             self.w(u'<tr><th align="left">%s</th><td>%s</td></tr>'
-                   % (attr, html_escape(val)))
+                   % (attr, xml_escape(val)))
         self.w(u'</table>')
         server = req.server
         self.w(u'<h3>%s</h3>' % _('Server'))
@@ -341,6 +341,6 @@ class ProcessInformationView(StartupView):
             if attr.startswith('_') or callable(val):
                 continue
             self.w(u'<tr><th align="left">%s</th><td>%s</td></tr>'
-                   % (attr, html_escape(val)))
+                   % (attr, xml_escape(val)))
         self.w(u'</table>')
 

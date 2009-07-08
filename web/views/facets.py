@@ -9,7 +9,7 @@ __docformat__ = "restructuredtext en"
 
 from simplejson import dumps
 
-from logilab.mtconverter import html_escape
+from logilab.mtconverter import xml_escape
 
 from cubicweb.vregistry import objectify_selector
 from cubicweb.selectors import (non_final_entity, two_lines_rset,
@@ -86,7 +86,7 @@ class FilterBox(BoxTemplate):
                 self.display_bookmark_link(rset)
             w = self.w
             w(u'<form method="post" id="%sForm" cubicweb:facetargs="%s" action="">'  % (
-                divid, html_escape(dumps([divid, vid, paginate, self.facetargs()]))))
+                divid, xml_escape(dumps([divid, vid, paginate, self.facetargs()]))))
             w(u'<fieldset>')
             hiddens = {'facets': ','.join(wdg.facet.id for wdg in widgets),
                        'baserql': baserql}
@@ -111,8 +111,8 @@ class FilterBox(BoxTemplate):
             bk_add_url = self.build_url('add/Bookmark', path=bk_path, title=bk_title, __linkto=linkto)
             bk_base_url = self.build_url('add/Bookmark', title=bk_title, __linkto=linkto)
             bk_link = u'<a cubicweb:target="%s" id="facetBkLink" href="%s">%s</a>' % (
-                    html_escape(bk_base_url),
-                    html_escape(bk_add_url),
+                    xml_escape(bk_base_url),
+                    xml_escape(bk_add_url),
                     self.req._('bookmark this search'))
             self.w(self.bk_linkbox_template % bk_link)
 

@@ -10,7 +10,7 @@ _ = unicode
 
 from warnings import warn
 
-from logilab.mtconverter import html_escape
+from logilab.mtconverter import xml_escape
 
 from cubicweb import Unauthorized
 from cubicweb.view import EntityView
@@ -100,7 +100,7 @@ class PrimaryView(EntityView):
 
     def render_entity_title(self, entity):
         """default implementation return dc_title"""
-        title = html_escape(entity.dc_title())
+        title = xml_escape(entity.dc_title())
         if title:
             self.w(u'<h1><span class="etype">%s</span> %s</h1>'
                    % (entity.dc_type().capitalize(), title))

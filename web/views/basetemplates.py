@@ -8,7 +8,7 @@
 """
 __docformat__ = "restructuredtext en"
 
-from logilab.mtconverter import html_escape
+from logilab.mtconverter import xml_escape
 
 from cubicweb.vregistry import objectify_selector
 from cubicweb.selectors import match_kwargs
@@ -31,14 +31,14 @@ class LogInOutTemplate(MainTemplate):
     def template_header(self, content_type, view=None, page_title='', additional_headers=()):
         w = self.whead
         # explictly close the <base> tag to avoid IE 6 bugs while browsing DOM
-        w(u'<base href="%s"></base>' % html_escape(self.req.base_url()))
+        w(u'<base href="%s"></base>' % xml_escape(self.req.base_url()))
         w(u'<meta http-equiv="content-type" content="%s; charset=%s"/>\n'
           % (content_type, self.req.encoding))
         w(NOINDEX)
         w(NOFOLLOW)
         w(u'\n'.join(additional_headers) + u'\n')
         self.wview('htmlheader', rset=self.rset)
-        w(u'<title>%s</title>\n' % html_escape(page_title))
+        w(u'<title>%s</title>\n' % xml_escape(page_title))
 
 
 class LogInTemplate(LogInOutTemplate):
@@ -60,7 +60,7 @@ class LoggedOutTemplate(LogInOutTemplate):
         if self.config['anonymous-user']:
             indexurl = self.build_url('view', vid='index', __message=msg)
             w(u'<p><a href="%s">%s</a><p>' % (
-                html_escape(indexurl),
+                xml_escape(indexurl),
                 self.req._('go back to the index page')))
 
 @objectify_selector
@@ -110,7 +110,7 @@ class TheMainTemplate(MainTemplate):
         w(u'<div id="pageContent">\n')
         vtitle = self.req.form.get('vtitle')
         if vtitle:
-            w(u'<h1 class="vtitle">%s</h1>\n' % html_escape(vtitle))
+            w(u'<h1 class="vtitle">%s</h1>\n' % xml_escape(vtitle))
         # display entity type restriction component
         etypefilter = self.vreg.select_component('etypenavigation',
                                                  self.req, self.rset)
@@ -137,13 +137,13 @@ class TheMainTemplate(MainTemplate):
         w = self.whead
         lang = self.req.lang
         self.write_doctype()
-        w(u'<base href="%s" />' % html_escape(self.req.base_url()))
+        w(u'<base href="%s" />' % xml_escape(self.req.base_url()))
         w(u'<meta http-equiv="content-type" content="%s; charset=%s"/>\n'
           % (content_type, self.req.encoding))
         w(u'\n'.join(additional_headers) + u'\n')
         self.wview('htmlheader', rset=self.rset)
         if page_title:
-            w(u'<title>%s</title>\n' % html_escape(page_title))
+            w(u'<title>%s</title>\n' % xml_escape(page_title))
 
     def template_body_header(self, view):
         w = self.w
@@ -210,7 +210,7 @@ class ErrorTemplate(TheMainTemplate):
           % (content_type, self.req.encoding))
         w(u'\n'.join(additional_headers))
         self.wview('htmlheader', rset=self.rset)
-        w(u'<title>%s</title>\n' % html_escape(page_title))
+        w(u'<title>%s</title>\n' % xml_escape(page_title))
         self.w(u'<body>\n')
 
     def template_footer(self, view=None):
@@ -232,7 +232,7 @@ class SimpleMainTemplate(TheMainTemplate):
         whead(u'\n'.join(additional_headers) + u'\n')
         self.wview('htmlheader', rset=self.rset)
         w = self.w
-        w(u'<title>%s</title>\n' % html_escape(page_title))
+        w(u'<title>%s</title>\n' % xml_escape(page_title))
         w(u'<body>\n')
         w(u'<div id="page">')
         w(u'<table width="100%" height="100%" border="0"><tr>\n')
@@ -250,7 +250,7 @@ class SimpleMainTemplate(TheMainTemplate):
         w(u'<div id="pageContent">\n')
         vtitle = self.req.form.get('vtitle')
         if vtitle:
-            w(u'<h1 class="vtitle">%s</h1>' % html_escape(vtitle))
+            w(u'<h1 class="vtitle">%s</h1>' % xml_escape(vtitle))
 
     def topleft_header(self):
         self.w(u'<table id="header"><tr>\n')
@@ -296,7 +296,7 @@ class HTMLHeader(View):
         if urlgetter is not None:
             url = urlgetter.feed_url()
             self.whead(u'<link rel="alternate" type="application/rss+xml" title="RSS feed" href="%s"/>\n'
-                       %  html_escape(url))
+                       %  xml_escape(url))
 
     def pageid(self):
         req = self.req
@@ -452,7 +452,7 @@ class LogFormTemplate(View):
     def login_form(self, id):
         _ = self.req._
         self.w(u'<form method="post" action="%s" id="login_form">\n'
-               % html_escape(login_form_url(self.config, self.req)))
+               % xml_escape(login_form_url(self.config, self.req)))
         self.w(u'<table>\n')
         self.w(u'<tr>\n')
         msg = (self.config['allow-email-login'] and _('login or email')) or _('login')

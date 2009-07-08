@@ -7,7 +7,7 @@
 """
 __docformat__ = "restructuredtext en"
 
-from logilab.mtconverter import html_escape
+from logilab.mtconverter import xml_escape
 
 from cubicweb.view import EntityView
 from cubicweb.selectors import implements
@@ -45,11 +45,11 @@ class SIOCContainerView(EntityView):
 
     def cell_call(self, row, col):
         entity = self.complete_entity(row, col)
-        sioct = html_escape(entity.isioc_type())
+        sioct = xml_escape(entity.isioc_type())
         self.w(u'<sioc:%s rdf:about="%s">\n'
-               % (sioct, html_escape(entity.absolute_url())))
+               % (sioct, xml_escape(entity.absolute_url())))
         self.w(u'<dcterms:title>%s</dcterms:title>'
-               % html_escape(entity.dc_title()))
+               % xml_escape(entity.dc_title()))
         self.w(u'<dcterms:created>%s</dcterms:created>'
                % entity.creation_date)
         self.w(u'<dcterms:modified>%s</dcterms:modified>'
@@ -66,25 +66,25 @@ class SIOCItemView(EntityView):
 
     def cell_call(self, row, col):
         entity = self.complete_entity(row, col)
-        sioct = html_escape(entity.isioc_type())
+        sioct = xml_escape(entity.isioc_type())
         self.w(u'<sioc:%s rdf:about="%s">\n'
-               %  (sioct, html_escape(entity.absolute_url())))
+               %  (sioct, xml_escape(entity.absolute_url())))
         self.w(u'<dcterms:title>%s</dcterms:title>'
-               % html_escape(entity.dc_title()))
+               % xml_escape(entity.dc_title()))
         self.w(u'<dcterms:created>%s</dcterms:created>'
                % entity.creation_date)
         self.w(u'<dcterms:modified>%s</dcterms:modified>'
                % entity.modification_date)
         if entity.content:
             self.w(u'<sioc:content>%s</sioc:content>'''
-                   % html_escape(entity.isioc_content()))
+                   % xml_escape(entity.isioc_content()))
         if entity.related('entry_of'):
             self.w(u'<sioc:has_container rdf:resource="%s"/>\n'
-                   % html_escape(entity.isioc_container().absolute_url()))
+                   % xml_escape(entity.isioc_container().absolute_url()))
         if entity.creator:
             self.w(u'<sioc:has_creator>\n')
             self.w(u'<sioc:User rdf:about="%s">\n'
-                   % html_escape(entity.creator.absolute_url()))
+                   % xml_escape(entity.creator.absolute_url()))
             self.w(entity.creator.view('foaf'))
             self.w(u'</sioc:User>\n')
             self.w(u'</sioc:has_creator>\n')

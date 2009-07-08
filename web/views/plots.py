@@ -13,7 +13,7 @@ import time
 from simplejson import dumps
 
 from logilab.common import flatten
-from logilab.mtconverter import html_escape
+from logilab.mtconverter import xml_escape
 
 from cubicweb.utils import make_uid, UStringIO, datetime2ticks
 from cubicweb.vregistry import objectify_selector
@@ -167,7 +167,7 @@ else:
                 piechart.size(width, height)
             if self.title:
                 piechart.title(self.title)
-            self.w(u'<img src="%s" />' % html_escape(piechart.url))
+            self.w(u'<img src="%s" />' % xml_escape(piechart.url))
 
     class PieChartView(baseviews.AnyRsetView):
         id = 'piechart'
