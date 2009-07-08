@@ -90,8 +90,6 @@ class ClickAndEditFormView(FormViewMixIn, EntityView):
 
     # FIXME editableField class could be toggleable from userprefs
 
-    onsubmit = ("return inlineValidateAttributeForm('%(divid)s-form', '%(rtype)s', "
-                "'%(eid)s', '%(divid)s', %(reload)s, '%(default)s');")
     ondblclick = "showInlineEditionForm(%(eid)s, '%(rtype)s', '%(divid)s')"
 
     def cell_call(self, row, col, rtype=None, role='subject', reload=False,
@@ -136,7 +134,6 @@ class ClickAndEditFormView(FormViewMixIn, EntityView):
         self.w(form.form_render(renderer=renderer))
 
     def _build_relation_form(self, entity, value, rtype, role, row, col, vid, default):
-        entity = self.entity(row, col)
         divid = 'd%s' % make_uid('%s-%s' % (rtype, entity.eid))
         event_data = {'divid' : divid, 'eid' : entity.eid, 'rtype' : rtype, 'vid' : vid,
                       'default' : default, 'role' : role}
@@ -163,6 +160,8 @@ class ClickAndEditFormView(FormViewMixIn, EntityView):
         divid = 'd%s' % make_uid('%s-%s' % (rtype, eid))
         event_data = {'divid' : divid, 'eid' : eid, 'rtype' : rtype,
                       'reload' : dumps(reload), 'default' : default}
+        onsubmit = ("return inlineValidateAttributeForm('%(divid)s-form', '%(rtype)s', "
+                    "'%(eid)s', '%(divid)s', %(reload)s, '%(default)s');")
         buttons = [SubmitButton(stdmsgs.BUTTON_OK),
                    Button(stdmsgs.BUTTON_CANCEL,
                           onclick="cancelInlineEdit(%s,\'%s\',\'%s\')" % (
@@ -171,7 +170,7 @@ class ClickAndEditFormView(FormViewMixIn, EntityView):
                                        row=row, col=col, form_buttons=buttons,
                                        domid='%s-form' % divid, action='#',
                                        cssstyle='display: none',
-                                       onsubmit=self.onsubmit % event_data)
+                                       onsubmit=onsubmit % event_data)
         self.w(tags.div(value, klass='editableField', id=divid,
                         ondblclick=self.ondblclick % event_data))
         return form
