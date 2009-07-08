@@ -172,8 +172,11 @@ class ETypeFacet(RelationFacet):
         rqlst.save_state()
         try:
             _cleanup_rqlst(rqlst, self.filtered_variable)
-            _prepare_vocabulary_rqlst(rqlst, self.filtered_variable, self.rtype, self.role)
-            return [x.name for x in self.rqlexec(rqlst.as_string()).entities()]
+            etype_var = _prepare_vocabulary_rqlst(rqlst, self.filtered_variable, self.rtype, self.role)
+            attrvar = rqlst.make_variable()
+            rqlst.add_selected(attrvar)
+            rqlst.add_relation(etype_var, 'name', attrvar)
+            return [etype for _, etype in self.rqlexec(rqlst.as_string())]
         finally:
             rqlst.recover()
 
