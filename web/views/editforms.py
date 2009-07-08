@@ -90,15 +90,20 @@ class ClickAndEditFormView(FormViewMixIn, EntityView):
 
     # FIXME editableField class could be toggleable from userprefs
 
-    ondblclick = "showInlineEditionForm(%(eid)s, '%(rtype)s', '%(divid)s')"
+    _ondblclick = "showInlineEditionForm(%(eid)s, '%(rtype)s', '%(divid)s')"
 
-    def cell_call(self, row, col, rtype=None, role='subject', reload=False,
-                  vid='textoutofcontext', default=None):
+    def cell_call(self, row, col, rtype=None, role='subject',
+                  reload=False,             # controls reloading the whole page after change
+                  rvid='textoutofcontext',  # vid to be applied to other side of rtype
+                  escape=True,              # depending on the vid, will xml_escape or not
+                  default=None              # default value
+                  ):
         """display field to edit entity's `rtype` relation on double-click"""
+        assert rtype
         rschema = self.schema.rschema(rtype)
         entity = self.entity(row, col)
         if not default:
-            default = self.req._('not specified')
+            default = xml_escape(self.req._('not specified'))
         if rschema.is_final():
             value = entity.printable_value(rtype)
             if not entity.has_perm('update'):
@@ -106,25 +111,28 @@ class ClickAndEditFormView(FormViewMixIn, EntityView):
                 return
         else:
             rset = entity.related(rtype, role)
-            # XXX xml_escape but that depends of the actual vid
-            value = xml_escape(self.view(vid, rset, 'null') or default)
-        # XXX consider local roles ?
+            candidate = self.view(rvid, rset, 'null').strip()
+            if candidate and escape:
+                value = xml_escape(candidate)
+            value = candidate or default
+        # check perms.
         if role == 'subject'and not rschema.has_perm(self.req, 'add',
-                                                    fromeid=entity.eid):
+                                                     fromeid=entity.eid):
             self.w(value)
             return
-        elif role == 'object'and not rschema.has_perm(self.req, 'add',
-                                                      toeid=entity.eid):
+        elif role == 'object' and not rschema.has_perm(self.req, 'add',
+                                                       toeid=entity.eid):
             self.w(value)
             return
         if not value.strip():
             value = default
+        # build form.
         if rschema.is_final():
             form = self._build_attribute_form(entity, value, rtype, role,
                                               reload, row, col, default)
         else:
             form = self._build_relation_form(entity, value, rtype, role,
-                                             row, col, vid, default)
+                                             row, col, rvid, default)
         renderer = self.vreg.select_object('formrenderers', 'base', self.req,
                                       entity=entity,
                                       display_label=False, display_help=False,
@@ -151,7 +159,7 @@ class ClickAndEditFormView(FormViewMixIn, EntityView):
         field = guess_field(entity.e_schema, entity.schema.rschema(rtype), role)
         form.append_field(field)
         self.w(tags.div(value, klass='editableField', id=divid,
-                        ondblclick=self.ondblclick % event_data))
+                        ondblclick=self._ondblclick % event_data))
         return form
 
     def _build_attribute_form(self, entity, value, rtype, role, reload, row, col, default):
@@ -171,7 +179,7 @@ class ClickAndEditFormView(FormViewMixIn, EntityView):
                                        cssstyle='display: none',
                                        onsubmit=onsubmit % event_data)
         self.w(tags.div(value, klass='editableField', id=divid,
-                        ondblclick=self.ondblclick % event_data))
+                        ondblclick=self._ondblclick % event_data))
         return form
 
 
