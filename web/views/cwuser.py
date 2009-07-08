@@ -7,7 +7,7 @@
 """
 __docformat__ = "restructuredtext en"
 
-from logilab.mtconverter import html_escape
+from logilab.mtconverter import xml_escape
 
 from cubicweb.selectors import one_line_rset, implements, match_user_groups
 from cubicweb.view import EntityView
@@ -52,14 +52,14 @@ class FoafView(EntityView):
                       <foaf:primaryTopic rdf:resource="%s"/>
                    </foaf:PersonalProfileDocument>''' % (entity.absolute_url(), entity.absolute_url()))
         self.w(u'<foaf:Person rdf:ID="%s">\n' % entity.eid)
-        self.w(u'<foaf:name>%s</foaf:name>\n' % html_escape(entity.dc_long_title()))
+        self.w(u'<foaf:name>%s</foaf:name>\n' % xml_escape(entity.dc_long_title()))
         if entity.surname:
             self.w(u'<foaf:family_name>%s</foaf:family_name>\n'
-                   % html_escape(entity.surname))
+                   % xml_escape(entity.surname))
         if entity.firstname:
             self.w(u'<foaf:givenname>%s</foaf:givenname>\n'
-                   % html_escape(entity.firstname))
+                   % xml_escape(entity.firstname))
         emailaddr = entity.get_email()
         if emailaddr:
-            self.w(u'<foaf:mbox>%s</foaf:mbox>\n' % html_escape(emailaddr))
+            self.w(u'<foaf:mbox>%s</foaf:mbox>\n' % xml_escape(emailaddr))
         self.w(u'</foaf:Person>\n')

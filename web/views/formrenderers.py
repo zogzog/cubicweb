@@ -8,7 +8,7 @@
 __docformat__ = "restructuredtext en"
 
 from logilab.common import dictattr
-from logilab.mtconverter import html_escape
+from logilab.mtconverter import xml_escape
 
 from simplejson import dumps
 
@@ -144,17 +144,17 @@ class FormRenderer(AppRsetObject):
         else:
             action = form.action
         tag = ('<form action="%s" method="post" enctype="%s"' % (
-            html_escape(action or '#'), enctype))
+            xml_escape(action or '#'), enctype))
         if form.domid:
             tag += ' id="%s"' % form.domid
         if form.onsubmit:
-            tag += ' onsubmit="%s"' % html_escape(form.onsubmit % dictattr(form))
+            tag += ' onsubmit="%s"' % xml_escape(form.onsubmit % dictattr(form))
         if form.cssstyle:
-            tag += ' style="%s"' % html_escape(form.cssstyle)
+            tag += ' style="%s"' % xml_escape(form.cssstyle)
         if form.cssclass:
-            tag += ' class="%s"' % html_escape(form.cssclass)
+            tag += ' class="%s"' % xml_escape(form.cssclass)
         if form.cwtarget:
-            tag += ' cubicweb:target="%s"' % html_escape(form.cwtarget)
+            tag += ' cubicweb:target="%s"' % xml_escape(form.cwtarget)
         return tag + '>'
 
     def display_field(self, form, field):
@@ -298,7 +298,7 @@ class EntityCompositeFormRenderer(FormRenderer):
             entity = form.edited_entity
             values = form.form_previous_values
             qeid = eid_param('eid', entity.eid)
-            cbsetstate = "setCheckboxesState2('eid', %s, 'checked')" % html_escape(dumps(entity.eid))
+            cbsetstate = "setCheckboxesState2('eid', %s, 'checked')" % xml_escape(dumps(entity.eid))
             w(u'<tr class="%s">' % (entity.row % 2 and u'even' or u'odd'))
             # XXX turn this into a widget used on the eid field
             w(u'<td>%s</td>' % checkbox('eid', entity.eid, checked=qeid in values))
@@ -411,7 +411,7 @@ class EntityFormRenderer(EntityBaseFormRenderer):
                 w(u'<a class="handle" title="%s" href="%s">[x]</a>' %
                   (_('cancel this insert'), row[2]))
                 w(u'<a id="a%s" class="editionPending" href="%s">%s</a>'
-                  % (row[1], row[4], html_escape(row[5])))
+                  % (row[1], row[4], xml_escape(row[5])))
                 w(u'</td>')
                 w(u'</tr>')
         w(u'<tr id="relationSelectorRow_%s" class="separator">' % eid)
@@ -419,7 +419,7 @@ class EntityFormRenderer(EntityBaseFormRenderer):
         w(u'<span>%s</span>' % _('add relation'))
         w(u'<select id="relationSelector_%s" tabindex="%s" '
           'onchange="javascript:showMatchingSelect(this.options[this.selectedIndex].value,%s);">'
-          % (eid, req.next_tabindex(), html_escape(dumps(eid))))
+          % (eid, req.next_tabindex(), xml_escape(dumps(eid))))
         w(u'<option value="">%s</option>' % _('select a relation'))
         for i18nrtype, rschema, target in srels_by_cat:
             # more entities to link to

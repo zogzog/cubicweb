@@ -29,7 +29,7 @@ from docutils.core import publish_string
 from docutils.parsers.rst import Parser, states, directives
 from docutils.parsers.rst.roles import register_canonical_role, set_classes
 
-from logilab.mtconverter import html_escape
+from logilab.mtconverter import ESC_UCAR_TABLE, ESC_CAR_TABLE, xml_escape
 
 from cubicweb.ext.html4zope import Writer
 
@@ -207,8 +207,12 @@ def rest_publish(context, data):
     req = context.req
     if isinstance(data, unicode):
         encoding = 'unicode'
+        # remove unprintable characters unauthorized in xml
+        data = data.translate(ESC_UCAR_TABLE)
     else:
         encoding = req.encoding
+        # remove unprintable characters unauthorized in xml
+        data = data.translate(ESC_CAR_TABLE)
     settings = {'input_encoding': encoding, 'output_encoding': 'unicode',
                 'warning_stream': StringIO(), 'context': context,
                 # dunno what's the max, severe is 4, and we never want a crash
@@ -232,5 +236,5 @@ def rest_publish(context, data):
         LOGGER.exception('error while publishing ReST text')
         if not isinstance(data, unicode):
             data = unicode(data, encoding, 'replace')
-        return html_escape(req._('error while publishing ReST text')
+        return xml_escape(req._('error while publishing ReST text')
                            + '\n\n' + data)

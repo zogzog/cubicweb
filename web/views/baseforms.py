@@ -12,7 +12,7 @@ from copy import copy
 
 from simplejson import dumps
 
-from logilab.mtconverter import html_escape
+from logilab.mtconverter import xml_escape
 from logilab.common.decorators import cached
 
 from cubicweb.selectors import (specified_etype_implements, accepts_etype_compat,
@@ -148,7 +148,7 @@ class EditionForm(FormMixIn, EntityView):
         output = []
         for name, value, iid in self._hiddens:
             if isinstance(value, basestring):
-                value = html_escape(value)
+                value = xml_escape(value)
             if iid:
                 output.append(u'<input id="%s" type="hidden" name="%s" value="%s" />'
                               % (iid, name, value))
@@ -249,14 +249,14 @@ class EditionForm(FormMixIn, EntityView):
                 w(u'<a class="handle" title="%s" href="%s">[x]</a>' %
                   (_('cancel this insert'), row[2]))
                 w(u'<a id="a%s" class="editionPending" href="%s">%s</a>'
-                  % (row[1], row[4], html_escape(row[5])))
+                  % (row[1], row[4], xml_escape(row[5])))
                 w(u'</td>')
                 w(u'</tr>')
         w(u'<tr id="relationSelectorRow_%s" class="separator">' % eid)
         w(u'<th class="labelCol">')
         w(u'<span>%s</span>' % _('add relation'))
         w(u'<select id="relationSelector_%s" tabindex="%s" onchange="javascript:showMatchingSelect(this.options[this.selectedIndex].value,%s);">'
-          % (eid, req.next_tabindex(), html_escape(dumps(eid))))
+          % (eid, req.next_tabindex(), xml_escape(dumps(eid))))
         w(u'<option value="">%s</option>' % _('select a relation'))
         for i18nrtype, rschema, target in srels_by_cat:
             # more entities to link to
@@ -551,10 +551,10 @@ class TableEditForm(FormMixIn, EntityView):
         ctx = {'action' : self.build_url('edit'),
                'error': self.error_message(),
                'progress': _('validating...'),
-               'url': html_escape(req.url()),
+               'url': xml_escape(req.url()),
                'formid': self.id,
-               'redirectvid': html_escape(form.get('__redirectvid', 'list')),
-               'redirectrql': html_escape(form.get('__redirectrql', self.rset.printable_rql())),
+               'redirectvid': xml_escape(form.get('__redirectvid', 'list')),
+               'redirectrql': xml_escape(form.get('__redirectrql', self.rset.printable_rql())),
                'attrheaders': u'\n'.join(attrheaders),
                'lines': u'\n'.join(self.edit_form(ent) for ent in self.rset.entities()),
                'okvalue': _('button_ok').capitalize(),
@@ -583,7 +583,7 @@ class TableEditForm(FormMixIn, EntityView):
         wdg = entity.get_widget
         wdgfactories = [wdg(rschema, x) for rschema, _, x in entity.relations_by_category('primary', 'add')
                         if rschema.type != 'eid'] # XXX both (add, delete)
-        seid = html_escape(dumps(eid))
+        seid = xml_escape(dumps(eid))
         for wobj in wdgfactories:
             if isinstance(wobj, ComboBoxWidget):
                 wobj.attrs['onchange'] = "setCheckboxesState2('eid', %s, 'checked')" % seid

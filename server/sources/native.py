@@ -185,9 +185,7 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
 
     def sqlexec(self, session, sql, args=None):
         """execute the query and return its result"""
-        cursor = session.pool[self.uri]
-        self.doexec(cursor, sql, args)
-        return self.process_result(cursor)
+        return self.process_result(self.doexec(session, sql, args))
 
     def init_creating(self):
         pool = self.repo._get_pool()
@@ -305,17 +303,15 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
                 sql, query_args = self._rql_sqlgen.generate(union, args, varmap)
                 self._cache[cachekey] = sql, query_args
         args = self.merge_args(args, query_args)
-        cursor = session.pool[self.uri]
         assert isinstance(sql, basestring), repr(sql)
         try:
-            self.doexec(cursor, sql, args)
+            cursor = self.doexec(session, sql, args)
         except (self.dbapi_module.OperationalError,
                 self.dbapi_module.InterfaceError):
             # FIXME: better detection of deconnection pb
             self.info("request failed '%s' ... retry with a new cursor", sql)
             session.pool.reconnect(self)
-            cursor = session.pool[self.uri]
-            self.doexec(cursor, sql, args)
+            cursor = self.doexec(session, sql, args)
         res = self.process_result(cursor)
         if server.DEBUG:
             print '------>', res
@@ -337,8 +333,7 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
             # generate sql queries if we are able to do so
             sql, query_args = self._rql_sqlgen.generate(union, args, varmap)
             query = 'INSERT INTO %s %s' % (table, sql.encode(self.encoding))
-            self.doexec(session.pool[self.uri], query,
-                        self.merge_args(args, query_args))
+            self.doexec(session, query, self.merge_args(args, query_args))
         else:
             super(NativeSQLSource, self).flying_insert(table, session, union,
                                                        args, varmap)
@@ -358,15 +353,14 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
                     cell = self.binary(cell.getvalue())
                 kwargs[str(index)] = cell
             kwargs_list.append(kwargs)
-        self.doexecmany(session.pool[self.uri], query, kwargs_list)
+        self.doexecmany(session, query, kwargs_list)
 
     def clean_temp_data(self, session, temptables):
         """remove temporary data, usually associated to temporary tables"""
         if temptables:
-            cursor = session.pool[self.uri]
             for table in temptables:
                 try:
-                    self.doexec(cursor,'DROP TABLE %s' % table)
+                    self.doexec(session,'DROP TABLE %s' % table)
                 except:
                     pass
                 try:
@@ -378,25 +372,25 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
         """add a new entity to the source"""
         attrs = self.preprocess_entity(entity)
         sql = self.sqlgen.insert(SQL_PREFIX + str(entity.e_schema), attrs)
-        self.doexec(session.pool[self.uri], sql, attrs)
+        self.doexec(session, sql, attrs)
 
     def update_entity(self, session, entity):
         """replace an entity in the source"""
         attrs = self.preprocess_entity(entity)
         sql = self.sqlgen.update(SQL_PREFIX + str(entity.e_schema), attrs, [SQL_PREFIX + 'eid'])
-        self.doexec(session.pool[self.uri], sql, attrs)
+        self.doexec(session, sql, attrs)
 
     def delete_entity(self, session, etype, eid):
         """delete an entity from the source"""
         attrs = {SQL_PREFIX + 'eid': eid}
         sql = self.sqlgen.delete(SQL_PREFIX + etype, attrs)
-        self.doexec(session.pool[self.uri], sql, attrs)
+        self.doexec(session, sql, attrs)
 
     def add_relation(self, session, subject, rtype, object):
         """add a relation to the source"""
         attrs = {'eid_from': subject, 'eid_to': object}
         sql = self.sqlgen.insert('%s_relation' % rtype, attrs)
-        self.doexec(session.pool[self.uri], sql, attrs)
+        self.doexec(session, sql, attrs)
 
     def delete_relation(self, session, subject, rtype, object):
         """delete a relation from the source"""
@@ -410,39 +404,47 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
         else:
             attrs = {'eid_from': subject, 'eid_to': object}
             sql = self.sqlgen.delete('%s_relation' % rtype, attrs)
-        self.doexec(session.pool[self.uri], sql, attrs)
+        self.doexec(session, sql, attrs)
 
-    def doexec(self, cursor, query, args=None):
+    def doexec(self, session, query, args=None):
         """Execute a query.
         it's a function just so that it shows up in profiling
         """
-        #t1 = time()
         if server.DEBUG:
             print 'exec', query, args
-        #import sys
-        #sys.stdout.flush()
-        # str(query) to avoid error if it's an unicode string
+        cursor = session.pool[self.uri]
         try:
+            # str(query) to avoid error if it's an unicode string
             cursor.execute(str(query), args)
         except Exception, ex:
             self.critical("sql: %r\n args: %s\ndbms message: %r",
                           query, args, ex.args[0])
+            try:
+                session.pool.connection(self.uri).rollback()
+                self.critical('transaction has been rollbacked')
+            except:
+                pass
             raise
+        return cursor
 
-    def doexecmany(self, cursor, query, args):
+    def doexecmany(self, session, query, args):
         """Execute a query.
         it's a function just so that it shows up in profiling
         """
-        #t1 = time()
         if server.DEBUG:
             print 'execmany', query, 'with', len(args), 'arguments'
-        #import sys
-        #sys.stdout.flush()
-        # str(query) to avoid error if it's an unicode string
+        cursor = session.pool[self.uri]
         try:
+            # str(query) to avoid error if it's an unicode string
             cursor.executemany(str(query), args)
-        except:
-            self.critical("sql many: %r\n args: %s", query, args)
+        except Exception, ex:
+            self.critical("sql many: %r\n args: %s\ndbms message: %r",
+                          query, args, ex.args[0])
+            try:
+                session.pool.connection(self.uri).rollback()
+                self.critical('transaction has been rollbacked')
+            except:
+                pass
             raise
 
     # short cut to method requiring advanced db helper usage ##################
@@ -498,14 +500,13 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
         # running with an ldap source, and table will be deleted manually any way
         # on commit
         sql = self.dbhelper.sql_temporary_table(table, schema, False)
-        self.doexec(session.pool[self.uri], sql)
+        self.doexec(session, sql)
 
     def create_eid(self, session):
         self._eid_creation_lock.acquire()
         try:
-            cursor = session.pool[self.uri]
             for sql in self.dbhelper.sqls_increment_sequence('entities_id_seq'):
-                self.doexec(cursor, sql)
+                cursor = self.doexec(session, sql)
             return cursor.fetchone()[0]
         finally:
             self._eid_creation_lock.release()

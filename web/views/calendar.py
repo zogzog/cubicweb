@@ -10,7 +10,7 @@ _ = unicode
 
 from datetime import datetime, date, timedelta
 
-from logilab.mtconverter import html_escape
+from logilab.mtconverter import xml_escape
 
 from cubicweb.interfaces import ICalendarable
 from cubicweb.selectors import implements
@@ -82,7 +82,7 @@ class hCalView(EntityView):
         for i in range(len(self.rset.rows)):
             task = self.complete_entity(i)
             self.w(u'<div class="vevent">')
-            self.w(u'<h3 class="summary">%s</h3>' % html_escape(task.dc_title()))
+            self.w(u'<h3 class="summary">%s</h3>' % xml_escape(task.dc_title()))
             self.w(u'<div class="description">%s</div>'
                    % task.dc_description(format='text/html'))
             if task.start:
@@ -244,8 +244,8 @@ class OneMonthCal(EntityView):
         prevlink, nextlink = self._prevnext_links(curdate)  # XXX
         self.w(u'<tr><th><a href="%s">&lt;&lt;</a></th><th colspan="5">%s %s</th>'
                u'<th><a href="%s">&gt;&gt;</a></th></tr>' %
-               (html_escape(prevlink), self.req._(curdate.strftime('%B').lower()),
-                curdate.year, html_escape(nextlink)))
+               (xml_escape(prevlink), self.req._(curdate.strftime('%B').lower()),
+                curdate.year, xml_escape(nextlink)))
 
         # output header
         self.w(u'<tr><th>%s</th><th>%s</th><th>%s</th><th>%s</th><th>%s</th><th>%s</th><th>%s</th></tr>' %
@@ -292,7 +292,7 @@ class OneMonthCal(EntityView):
                                  __redirectparams=self.req.build_url_params(year=curdate.year, month=curmonth),
                                  __redirectvid=self.id
                                  )
-            self.w(u'<div class="cmd"><a href="%s">%s</a></div>' % (html_escape(url), self.req._(u'add')))
+            self.w(u'<div class="cmd"><a href="%s">%s</a></div>' % (xml_escape(url), self.req._(u'add')))
             self.w(u'&nbsp;')
         self.w(u'</div>')
         self.w(u'<div class="cellContent">')
@@ -307,7 +307,7 @@ class OneMonthCal(EntityView):
                                         __redirectvid=self.id
                                         )
 
-                self.w(u'<div class="tooltip" ondblclick="stopPropagation(event); window.location.assign(\'%s\'); return false;">' % html_escape(url))
+                self.w(u'<div class="tooltip" ondblclick="stopPropagation(event); window.location.assign(\'%s\'); return false;">' % xml_escape(url))
                 task.view('tooltip', w=self.w )
                 self.w(u'</div>')
             else:
@@ -388,9 +388,9 @@ class OneWeekCal(EntityView):
         self.w(u'<tr><th class="transparent"></th>')
         self.w(u'<th><a href="%s">&lt;&lt;</a></th><th colspan="5">%s %s %s</th>'
                u'<th><a href="%s">&gt;&gt;</a></th></tr>' %
-               (html_escape(prevlink), first_day_of_week.year,
+               (xml_escape(prevlink), first_day_of_week.year,
                 self.req._(u'week'), first_day_of_week.isocalendar()[1],
-                html_escape(nextlink)))
+                xml_escape(nextlink)))
 
         # output header
         self.w(u'<tr>')
@@ -429,7 +429,7 @@ class OneWeekCal(EntityView):
                                      __redirectvid=self.id
                                      )
                 extra = ' ondblclick="addCalendarItem(event, hmin=8, hmax=20, year=%s, month=%s, day=%s, duration=2, baseurl=\'%s\')"' % (
-                    wdate.year, wdate.month, wdate.day, html_escape(url))
+                    wdate.year, wdate.month, wdate.day, xml_escape(url))
             else:
                 extra = ""
             self.w(u'<div class="columndiv"%s>'% extra)
@@ -501,7 +501,7 @@ class OneWeekCal(EntityView):
                                     __redirectvid=self.id
                                  )
 
-            self.w(u'<div class="tooltip" ondblclick="stopPropagation(event); window.location.assign(\'%s\'); return false;">' % html_escape(url))
+            self.w(u'<div class="tooltip" ondblclick="stopPropagation(event); window.location.assign(\'%s\'); return false;">' % xml_escape(url))
             task.view('tooltip', w=self.w)
             self.w(u'</div>')
             if task.start is None:

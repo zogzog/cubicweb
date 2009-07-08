@@ -10,7 +10,7 @@ __docformat__ = "restructuredtext en"
 from warnings import warn
 from datetime import datetime
 
-from logilab.mtconverter import html_escape
+from logilab.mtconverter import xml_escape
 from yams.constraints import SizeConstraint, StaticVocabularyConstraint
 
 from cubicweb.schema import FormatConstraint
@@ -300,9 +300,9 @@ class FileField(StringField):
         if self.format_field or self.encoding_field:
             divid = '%s-advanced' % form.context[self]['name']
             wdgs.append(u'<a href="%s" title="%s"><img src="%s" alt="%s"/></a>' %
-                        (html_escape(uilib.toggle_action(divid)),
+                        (xml_escape(uilib.toggle_action(divid)),
                          form.req._('show advanced fields'),
-                         html_escape(form.req.build_url('data/puce_down.png')),
+                         xml_escape(form.req.build_url('data/puce_down.png')),
                          form.req._('show advanced fields')))
             wdgs.append(u'<div id="%s" class="hidden">' % divid)
             if self.format_field:

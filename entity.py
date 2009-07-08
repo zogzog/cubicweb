@@ -13,7 +13,7 @@ from logilab.common import interface
 from logilab.common.compat import all
 from logilab.common.decorators import cached
 from logilab.common.deprecation import obsolete
-from logilab.mtconverter import TransformData, TransformError, html_escape
+from logilab.mtconverter import TransformData, TransformError, xml_escape
 
 from rql.utils import rqlvar_maker
 
@@ -456,7 +456,7 @@ class Entity(AppRsetObject, dict):
             return u''
         value = printable_value(self.req, attrtype, value, props, displaytime)
         if format == 'text/html':
-            value = html_escape(value)
+            value = xml_escape(value)
         return value
 
     def mtc_transform(self, data, format, target_format, encoding,
@@ -659,6 +659,7 @@ class Entity(AppRsetObject, dict):
                     self.critical("can't get value for attribute %s of entity with eid %s",
                                   name, self.eid)
                     if self.e_schema.destination(name) == 'String':
+                        # XXX (syt) imo emtpy string is better
                         self[name] = value = self.req._('unaccessible')
                     else:
                         self[name] = value = None

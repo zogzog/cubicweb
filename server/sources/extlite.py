@@ -174,9 +174,7 @@ repository.',
         if server.DEBUG:
             print self.uri, 'SOURCE RQL', union.as_string()
         args = self.sqladapter.merge_args(args, query_args)
-        cursor = session.pool[self.uri]
-        self.doexec(cursor, sql, args)
-        res = self.sqladapter.process_result(cursor)
+        res = self.sqladapter.process_result(self.doexec(session, sql, args))
         if server.DEBUG:
             print '------>', res
         return res
@@ -190,7 +188,7 @@ repository.',
         """
         attrs = self.sqladapter.preprocess_entity(entity)
         sql = self.sqladapter.sqlgen.insert(SQL_PREFIX + str(entity.e_schema), attrs)
-        self.doexec(session.pool[self.uri], sql, attrs)
+        self.doexec(session, sql, attrs)
 
     def add_entity(self, session, entity):
         """add a new entity to the source"""
@@ -207,7 +205,7 @@ repository.',
             attrs = self.sqladapter.preprocess_entity(entity)
         sql = self.sqladapter.sqlgen.update(SQL_PREFIX + str(entity.e_schema),
                                             attrs, [SQL_PREFIX + 'eid'])
-        self.doexec(session.pool[self.uri], sql, attrs)
+        self.doexec(session, sql, attrs)
 
     def update_entity(self, session, entity):
         """update an entity in the source"""
@@ -222,7 +220,7 @@ repository.',
         """
         attrs = {SQL_PREFIX + 'eid': eid}
         sql = self.sqladapter.sqlgen.delete(SQL_PREFIX + etype, attrs)
-        self.doexec(session.pool[self.uri], sql, attrs)
+        self.doexec(session, sql, attrs)
 
     def local_add_relation(self, session, subject, rtype, object):
         """add a relation to the source
@@ -233,7 +231,7 @@ repository.',
         """
         attrs = {'eid_from': subject, 'eid_to': object}
         sql = self.sqladapter.sqlgen.insert('%s_relation' % rtype, attrs)
-        self.doexec(session.pool[self.uri], sql, attrs)
+        self.doexec(session, sql, attrs)
 
     def add_relation(self, session, subject, rtype, object):
         """add a relation to the source"""
@@ -252,21 +250,25 @@ repository.',
         else:
             attrs = {'eid_from': subject, 'eid_to': object}
             sql = self.sqladapter.sqlgen.delete('%s_relation' % rtype, attrs)
-        self.doexec(session.pool[self.uri], sql, attrs)
+        self.doexec(session, sql, attrs)
 
-    def doexec(self, cursor, query, args=None):
+    def doexec(self, session, query, args=None):
         """Execute a query.
         it's a function just so that it shows up in profiling
         """
-        #t1 = time()
         if server.DEBUG:
             print 'exec', query, args
-        #import sys
-        #sys.stdout.flush()
-        # str(query) to avoid error if it's an unicode string
+        cursor = session.pool[self.uri]
         try:
+            # str(query) to avoid error if it's an unicode string
             cursor.execute(str(query), args)
         except Exception, ex:
             self.critical("sql: %r\n args: %s\ndbms message: %r",
                           query, args, ex.args[0])
+            try:
+                session.pool.connection(self.uri).rollback()
+                self.critical('transaction has been rollbacked')
+            except:
+                pass
             raise
+        return cursor

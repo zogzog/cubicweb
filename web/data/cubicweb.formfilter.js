@@ -135,7 +135,7 @@ function initFacetBoxEvents(root) {
 			    }
 			    else{
 			       this.setAttribute('src', UNSELECTED_IMG);
-       			       this.setAttribute('alt', (_('not selected')));
+			       this.setAttribute('alt', (_('not selected')));
 			    }
 			});
 			var index = parseInt($this.attr('cubicweb:idx'));
@@ -149,8 +149,7 @@ function initFacetBoxEvents(root) {
 			if ( ! ($insertAfter.length == 1 && shift == 0) ) {
 			    // only rearrange element if necessary
 			    $insertAfter.after(this);
-			}else{
-                         }
+			}
 		    } else {
 			var lastSelected = facet.find('.facetValueSelected:last');
 			if (lastSelected.length) {
@@ -160,10 +159,8 @@ function initFacetBoxEvents(root) {
 			    jQuery(parent).prepend(this);
 			}
 			jQuery(this).addClass('facetValueSelected');
-			var img = jQuery(this).find('img');
-			img.attr('src', SELECTED_IMG);
-			img.attr('alt', (_('selected')));
-
+			var $img = jQuery(this).find('img');
+			$img.attr('src', SELECTED_IMG).attr('alt', (_('selected')));
 		    }
 		    buildRQL.apply(null, evalJSON(form.attr('cubicweb:facetargs')));
 		    facet.find('.facetBody').animate({scrollTop: 0}, '');

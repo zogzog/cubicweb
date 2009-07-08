@@ -8,7 +8,7 @@
 
 __docformat__ = "restructuredtext en"
 
-from logilab.mtconverter import html_escape
+from logilab.mtconverter import xml_escape
 
 from cubicweb.selectors import implements
 from cubicweb.interfaces import IProgress, IMileStone
@@ -99,7 +99,7 @@ class ProgressTableView(EntityView):
                 colname = meth(ecls)
             else:
                 colname = _(column)
-            self.w(u'<th>%s</th>' % html_escape(colname))
+            self.w(u'<th>%s</th>' % xml_escape(colname))
         self.w(u'</tr></thead>\n')
 
 
@@ -117,7 +117,7 @@ class ProgressTableView(EntityView):
 
     def build_state_cell(self, entity):
         """``state`` column cell renderer"""
-        return html_escape(self.req._(entity.state))
+        return xml_escape(self.req._(entity.state))
 
     def build_eta_date_cell(self, entity):
         """``eta_date`` column cell renderer"""

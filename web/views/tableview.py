@@ -10,7 +10,7 @@ __docformat__ = "restructuredtext en"
 
 from simplejson import dumps
 
-from logilab.mtconverter import html_escape
+from logilab.mtconverter import xml_escape
 
 from cubicweb.selectors import nonempty_rset, match_form_params
 from cubicweb.utils import make_uid
@@ -55,7 +55,7 @@ class TableView(AnyRsetView):
         # drop False / None values from vidargs
         vidargs = dict((k, v) for k, v in vidargs.iteritems() if v)
         self.w(u'<form method="post" cubicweb:facetargs="%s" action="">' %
-               html_escape(dumps([divid, 'table', False, vidargs])))
+               xml_escape(dumps([divid, 'table', False, vidargs])))
         self.w(u'<fieldset id="%sForm" class="%s">' % (divid, hidden and 'hidden' or ''))
         self.w(u'<input type="hidden" name="divid" value="%s" />' % divid)
         filter_hiddens(self.w, facets=','.join(wdg.facet.id for wdg in fwidgets), baserql=baserql)
@@ -178,7 +178,7 @@ class TableView(AnyRsetView):
         box = MenuWidget('', 'tableActionsBox', _class='', islist=False)
         label = '<img src="%s" alt="%s"/>' % (
             self.req.datadir_url + 'liveclipboard-icon.png',
-            html_escape(self.req._('action(s) on this selection')))
+            xml_escape(self.req._('action(s) on this selection')))
         menu = PopupBoxMenu(label, isitem=False, link_class='actionsBox',
                             ident='%sActions' % divid)
         box.append(menu)

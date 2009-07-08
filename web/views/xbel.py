@@ -8,7 +8,7 @@
 __docformat__ = "restructuredtext en"
 _ = unicode
 
-from logilab.mtconverter import html_escape
+from logilab.mtconverter import xml_escape
 
 from cubicweb.selectors import implements
 from cubicweb.view import EntityView
@@ -42,8 +42,8 @@ class XbelItemView(EntityView):
 
     def cell_call(self, row, col):
         entity = self.complete_entity(row, col)
-        self.w(u'<bookmark href="%s">' % html_escape(self.url(entity)))
-        self.w(u'  <title>%s</title>' % html_escape(entity.dc_title()))
+        self.w(u'<bookmark href="%s">' % xml_escape(self.url(entity)))
+        self.w(u'  <title>%s</title>' % xml_escape(entity.dc_title()))
         self.w(u'</bookmark>')
 
     def url(self, entity):

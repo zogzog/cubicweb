@@ -12,7 +12,7 @@ from itertools import chain
 from copy import deepcopy
 from datetime import date, datetime, timedelta
 
-from logilab.mtconverter import html_escape
+from logilab.mtconverter import xml_escape
 
 from logilab.common.graph import has_path
 from logilab.common.decorators import cached
@@ -21,6 +21,7 @@ from logilab.common.compat import all
 from rql import parse, nodes
 
 from cubicweb import Unauthorized, typed_eid
+from cubicweb.schema import display_name
 from cubicweb.utils import datetime2ticks, make_uid, ustrftime
 from cubicweb.selectors import match_context_prop, partial_relation_possible
 from cubicweb.appobject import AppRsetObject
@@ -70,7 +71,7 @@ def get_facet(req, facetid, rqlst, mainvar):
 def filter_hiddens(w, **kwargs):
     for key, val in kwargs.items():
         w(u'<input type="hidden" name="%s" value="%s" />' % (
-            key, html_escape(val)))
+            key, xml_escape(val)))
 
 
 def _may_be_removed(rel, schema, mainvar):
@@ -586,11 +587,11 @@ class FacetVocabularyWidget(HTMLWidget):
         self.items.append(item)
 
     def _render(self):
-        title = html_escape(self.facet.title)
-        facetid = html_escape(self.facet.id)
+        title = xml_escape(self.facet.title)
+        facetid = xml_escape(self.facet.id)
         self.w(u'<div id="%s" class="facet">\n' % facetid)
         self.w(u'<div class="facetTitle" cubicweb:facetName="%s">%s</div>\n' %
-               (html_escape(facetid), title))
+               (xml_escape(facetid), title))
         if self.facet.support_and():
             _ = self.facet.req._
             self.w(u'''<select name="%s" class="radio facetOperator" title="%s">
@@ -616,8 +617,8 @@ class FacetStringWidget(HTMLWidget):
         self.value = None
 
     def _render(self):
-        title = html_escape(self.facet.title)
-        facetid = html_escape(self.facet.id)
+        title = xml_escape(self.facet.title)
+        facetid = xml_escape(self.facet.id)
         self.w(u'<div id="%s" class="facet">\n' % facetid)
         self.w(u'<div class="facetTitle" cubicweb:facetName="%s">%s</div>\n' %
                (facetid, title))
@@ -660,7 +661,7 @@ class FacetRangeWidget(HTMLWidget):
         facet.req.add_js('ui.slider.js')
         facet.req.add_css('ui.all.css')
         sliderid = make_uid('the slider')
-        facetid = html_escape(self.facet.id)
+        facetid = xml_escape(self.facet.id)
         facet.req.html_headers.add_onload(self.onload % {
             'sliderid': sliderid,
             'facetid': facetid,
@@ -668,7 +669,7 @@ class FacetRangeWidget(HTMLWidget):
             'maxvalue': self.maxvalue,
             'formatter': self.formatter,
             })
-        title = html_escape(self.facet.title)
+        title = xml_escape(self.facet.title)
         self.w(u'<div id="%s" class="facet">\n' % facetid)
         self.w(u'<div class="facetTitle" cubicweb:facetName="%s">%s</div>\n' %
                (facetid, title))
@@ -720,9 +721,9 @@ class FacetItem(HTMLWidget):
             imgsrc = self.req.datadir_url + self.unselected_img
             imgalt = self.req._('not selected')
         self.w(u'<div class="facetValue facetCheckBox%s" cubicweb:value="%s">\n'
-               % (cssclass, html_escape(unicode(self.value))))
+               % (cssclass, xml_escape(unicode(self.value))))
         self.w(u'<img src="%s" alt="%s"/>&nbsp;' % (imgsrc, imgalt))
-        self.w(u'<a href="javascript: {}">%s</a>' % html_escape(self.label))
+        self.w(u'<a href="javascript: {}">%s</a>' % xml_escape(self.label))
         self.w(u'</div>')
 
 class CheckBoxFacetWidget(HTMLWidget):
@@ -736,8 +737,8 @@ class CheckBoxFacetWidget(HTMLWidget):
         self.selected = selected
 
     def _render(self):
-        title = html_escape(self.facet.title)
-        facetid = html_escape(self.facet.id)
+        title = xml_escape(self.facet.title)
+        facetid = xml_escape(self.facet.id)
         self.w(u'<div id="%s" class="facet">\n' % facetid)
         if self.selected:
             cssclass = ' facetValueSelected'
@@ -748,7 +749,7 @@ class CheckBoxFacetWidget(HTMLWidget):
             imgsrc = self.req.datadir_url + self.unselected_img
             imgalt = self.req._('not selected')
         self.w(u'<div class="facetValue facetCheckBox%s" cubicweb:value="%s">\n'
-               % (cssclass, html_escape(unicode(self.value))))
+               % (cssclass, xml_escape(unicode(self.value))))
         self.w(u'<div class="facetCheckBoxWidget">')
         self.w(u'<img src="%s" alt="%s" cubicweb:unselimg="true" />&nbsp;' % (imgsrc, imgalt))
         self.w(u'<label class="facetTitle" cubicweb:facetName="%s"><a href="javascript: {}">%s</a></label>' % (facetid, title))
