@@ -41,7 +41,7 @@ class FilterBox(BoxTemplate):
     needs_css = 'cubicweb.facets.css'
     needs_js = ('cubicweb.ajax.js', 'cubicweb.formfilter.js')
 
-    bkLinkBox_template = u'<div class="facetTitle">%s</div>'
+    bk_linkbox_template = u'<div class="facetTitle">%s</div>'
 
     def facetargs(self):
         """this method returns the list of extra arguments that should
@@ -82,8 +82,8 @@ class FilterBox(BoxTemplate):
                         widgets.append(wdg)
             if not widgets:
                 return
-            if self.bkLinkBox_template:
-                self.displayBookmarkLink(rset)
+            if self.bk_linkbox_template:
+                self.display_bookmark_link(rset)
             w = self.w
             w(u'<form method="post" id="%sForm" cubicweb:facetargs="%s" action="">'  % (
                 divid, html_escape(dumps([divid, vid, paginate, self.facetargs()]))))
@@ -102,7 +102,7 @@ class FilterBox(BoxTemplate):
             import cubicweb
             cubicweb.info('after facets with rql: %s' % repr(rqlst))
 
-    def displayBookmarkLink(self, rset):
+    def display_bookmark_link(self, rset):
         eschema = self.schema.eschema('Bookmark')
         if eschema.has_perm(self.req, 'add'):
             bk_path = 'view?rql=%s' % rset.printable_rql()
@@ -114,7 +114,7 @@ class FilterBox(BoxTemplate):
                     html_escape(bk_base_url),
                     html_escape(bk_add_url),
                     self.req._('bookmark this search'))
-            self.w(self.bkLinkBox_template % bk_link)
+            self.w(self.bk_linkbox_template % bk_link)
 
     def get_facets(self, rset, mainvar):
         return self.vreg.possible_vobjects('facets', self.req, rset,
