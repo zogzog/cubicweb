@@ -17,7 +17,7 @@ from logilab.mtconverter import xml_escape
 
 from cubicweb.selectors import (match_kwargs, one_line_rset, non_final_entity,
                                 specified_etype_implements, yes)
-from cubicweb.utils import make_uid
+from cubicweb.utils import make_uid, compute_cardinality
 from cubicweb.view import EntityView
 from cubicweb.common import tags
 from cubicweb.web import INTERNAL_FIELD_VALUE, stdmsgs, eid_param
@@ -93,19 +93,29 @@ class ClickAndEditFormView(FormViewMixIn, EntityView):
     _ondblclick = "showInlineEditionForm(%(eid)s, '%(rtype)s', '%(divid)s')"
     _defaultlandingzone = u'<img title="%s" class="needsvalidation" src="data/file.gif"/>'
     _landingzonemsg = _('double click to edit this field')
+    # default relation vids according to cardinality
+    _one_rvid = 'incontext'
+    _many_rvid = 'csv'
+
+    def _compute_best_vid(self, entity, rtype, role):
+        if compute_cardinality(entity.e_schema,
+                               entity.schema.rschema(rtype),
+                               role) in '+*':
+            return self._many_rvid
+        return self._one_rvid
 
     def cell_call(self, row, col, rtype=None, role='subject',
-                  reload=False,             # controls reloading the whole page after change
-                  rvid='textoutofcontext',  # vid to be applied to other side of rtype
-                  escape=True,              # depending on the vid, will xml_escape or not
-                  default=None,             # default value
-                  landing_zone=None         # prepend value with a separate html element to click onto
-                                            # (esp. needed when values are links)
+                  reload=False,      # controls reloading the whole page after change
+                  rvid=None,         # vid to be applied to other side of rtype
+                  escape=True,       # depending on the vid, will xml_escape or not
+                  default=None,      # default value
+                  landing_zone=None  # prepend value with a separate html element to click onto
+                                     # (esp. needed when values are links)
                   ):
         """display field to edit entity's `rtype` relation on double-click"""
         assert rtype
-        rschema = self.schema.rschema(rtype)
         entity = self.entity(row, col)
+        rschema = entity.schema.rschema(rtype)
         if not default:
             default = xml_escape(self.req._('<no value>'))
         if rschema.is_final():
@@ -114,6 +124,8 @@ class ClickAndEditFormView(FormViewMixIn, EntityView):
                 self.w(value)
                 return
         else:
+            if rvid is None:
+                rvid = self._compute_best_vid(entity, rtype, role)
             rset = entity.related(rtype, role)
             candidate = self.view(rvid, rset, 'null')
             if candidate and escape:
@@ -146,6 +158,7 @@ class ClickAndEditFormView(FormViewMixIn, EntityView):
         self.w(form.form_render(renderer=renderer))
 
     def _build_relation_form(self, entity, value, rtype, role, row, col, rvid, default, escape, lzone):
+        print 'relation', rvid
         divid = 'd%s' % make_uid('%s-%s' % (rtype, entity.eid))
         event_data = {'divid' : divid, 'eid' : entity.eid, 'rtype' : rtype, 'vid' : rvid,
                       'default' : default, 'role' : role, 'escape' : escape, 'lzone' : lzone}

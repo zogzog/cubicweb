@@ -326,4 +326,11 @@ class AcceptMixIn(object):
     """
     # XXX deprecated, no more necessary
 
+def compute_cardinality(eschema, rschema, role):
+    if role == 'subject':
+        targetschema = rschema.objects(eschema)[0]
+        return rschema.rproperty(eschema, targetschema, 'cardinality')[0]
+    targetschema = rschema.subjects(eschema)[0]
+    return rschema.rproperty(targetschema, eschema, 'cardinality')[1]
+
 

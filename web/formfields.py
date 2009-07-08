@@ -14,7 +14,7 @@ from logilab.mtconverter import xml_escape
 from yams.constraints import SizeConstraint, StaticVocabularyConstraint
 
 from cubicweb.schema import FormatConstraint
-from cubicweb.utils import ustrftime
+from cubicweb.utils import ustrftime, compute_cardinality
 from cubicweb.common import tags, uilib
 from cubicweb.web import INTERNAL_FIELD_VALUE
 from cubicweb.web.formwidgets import (
@@ -460,7 +460,7 @@ def guess_field(eschema, rschema, role='subject', skip_meta_attr=True, **kwargs)
     fieldclass = None
     if role == 'subject':
         targetschema = rschema.objects(eschema)[0]
-        card = rschema.rproperty(eschema, targetschema, 'cardinality')[0]
+        card = compute_cardinality(eschema, rschema, role)
         help = rschema.rproperty(eschema, targetschema, 'description')
         if rschema.is_final():
             if rschema.rproperty(eschema, targetschema, 'internationalizable'):
@@ -470,7 +470,7 @@ def guess_field(eschema, rschema, role='subject', skip_meta_attr=True, **kwargs)
             kwargs.setdefault('initial', get_default)
     else:
         targetschema = rschema.subjects(eschema)[0]
-        card = rschema.rproperty(targetschema, eschema, 'cardinality')[1]
+        card = compute_cardinality(eschema, rschema, role)
         help = rschema.rproperty(targetschema, eschema, 'description')
     kwargs['required'] = card in '1+'
     kwargs['name'] = rschema.type
