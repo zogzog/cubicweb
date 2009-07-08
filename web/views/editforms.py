@@ -118,11 +118,14 @@ class ClickAndEditFormView(FormViewMixIn, EntityView):
         rschema = entity.schema.rschema(rtype)
         if not default:
             default = xml_escape(self.req._('<no value>'))
+        # compute value, checking perms, build form
         if rschema.is_final():
             value = entity.printable_value(rtype) or default
             if not entity.has_perm('update'):
                 self.w(value)
                 return
+            form = self._build_attribute_form(entity, value, rtype, role, reload,
+                                              row, col, default, landing_zone)
         else:
             if rvid is None:
                 rvid = self._compute_best_vid(entity, rtype, role)
@@ -131,22 +134,12 @@ class ClickAndEditFormView(FormViewMixIn, EntityView):
             if candidate and escape:
                 value = xml_escape(candidate)
             value = candidate or default
-        # check perms.
-        if role == 'subject'and not rschema.has_perm(self.req, 'add',
-                                                     fromeid=entity.eid):
-            self.w(value)
-            return
-        elif role == 'object' and not rschema.has_perm(self.req, 'add',
-                                                       toeid=entity.eid):
-            self.w(value)
-            return
-        # build form.
-        landing_zone = landing_zone or self._defaultlandingzone % self.req._(self._landingzonemsg)
-        value = landing_zone + value
-        if rschema.is_final():
-            form = self._build_attribute_form(entity, value, rtype, role, reload,
-                                              row, col, default, landing_zone)
-        else:
+            if role == 'subject'and not rschema.has_perm(self.req, 'add',
+                                                         fromeid=entity.eid):
+                return self.w(value)
+            elif role == 'object' and not rschema.has_perm(self.req, 'add',
+                                                           toeid=entity.eid):
+                return self.w(value)
             form = self._build_relation_form(entity, value, rtype, role, row, col,
                                              rvid, default, escape, landing_zone)
         renderer = self.vreg.select_object('formrenderers', 'base', self.req,
@@ -158,7 +151,8 @@ class ClickAndEditFormView(FormViewMixIn, EntityView):
         self.w(form.form_render(renderer=renderer))
 
     def _build_relation_form(self, entity, value, rtype, role, row, col, rvid, default, escape, lzone):
-        print 'relation', rvid
+        lzone = lzone or self._defaultlandingzone % self.req._(self._landingzonemsg)
+        value = lzone + value
         divid = 'd%s' % make_uid('%s-%s' % (rtype, entity.eid))
         event_data = {'divid' : divid, 'eid' : entity.eid, 'rtype' : rtype, 'vid' : rvid,
                       'default' : default, 'role' : role, 'escape' : escape, 'lzone' : lzone}
