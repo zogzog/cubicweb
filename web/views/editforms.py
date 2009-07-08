@@ -90,9 +90,9 @@ class ClickAndEditFormView(FormViewMixIn, EntityView):
 
     # FIXME editableField class could be toggleable from userprefs
 
-    _ondblclick = "showInlineEditionForm(%(eid)s, '%(rtype)s', '%(divid)s')"
+    _onclick = "showInlineEditionForm(%(eid)s, '%(rtype)s', '%(divid)s')"
     _defaultlandingzone = u'<img title="%s" src="data/file.gif"/>'
-    _landingzonemsg = _('double click to edit this field')
+    _landingzonemsg = _('click to edit this field')
     # default relation vids according to cardinality
     _one_rvid = 'incontext'
     _many_rvid = 'csv'
@@ -105,7 +105,7 @@ class ClickAndEditFormView(FormViewMixIn, EntityView):
         return self._one_rvid
 
     def cell_call(self, row, col, rtype=None, role='subject',
-                  reload=False,      # controls reloading the whole page after change
+                  reload=True,      # controls reloading the whole page after change
                   rvid=None,         # vid to be applied to other side of rtype
                   escape=True,       # depending on the vid, will xml_escape or not
                   default=None,      # default value
@@ -159,7 +159,7 @@ class ClickAndEditFormView(FormViewMixIn, EntityView):
                       'reload' : reload, 'default' : default, 'role' : role,
                       'escape' : escape, 'lzone' : lzone}
         onsubmit = ("return inlineValidateRelationForm('%(divid)s-form', '%(rtype)s', "
-                    "'%(role)s', '%(eid)s', '%(divid)s', '%(reload)s', '%(vid)s', "
+                    "'%(role)s', '%(eid)s', '%(divid)s', %(reload)s, '%(vid)s', "
                     "'%(default)s', '%(escape)s', '%(lzone)s');"
                     % event_data)
         cancelclick = "cancelInlineEdit(%s,\'%s\',\'%s\')" % (
@@ -173,7 +173,7 @@ class ClickAndEditFormView(FormViewMixIn, EntityView):
         field = guess_field(entity.e_schema, entity.schema.rschema(rtype), role)
         form.append_field(field)
         self.w(tags.div(value, klass='editableField', id=divid,
-                        ondblclick=self._ondblclick % event_data))
+                        onclick=self._onclick % event_data))
         return form
 
     def _build_attribute_form(self, entity, value, rtype, role, reload, row, col, default, lzone):
@@ -193,7 +193,7 @@ class ClickAndEditFormView(FormViewMixIn, EntityView):
                                        cssstyle='display: none',
                                        onsubmit=onsubmit % event_data)
         self.w(tags.div(value, klass='editableField', id=divid,
-                        ondblclick=self._ondblclick % event_data))
+                        onclick=self._onclick % event_data))
         return form
 
 
