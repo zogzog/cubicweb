@@ -367,3 +367,12 @@ How to reset the password for user joe ?
     $ psql mydb
     mydb=> update cw_cwuser set cw_upassword='qHO8282QN5Utg' where cw_login='joe';
     UPDATE 1
+
+I've just created a user in a group and it doesn't work !
+---------------------------------------------------------
+
+You are probably getting errors such as ::
+
+  remove {'PR': 'Project', 'C': 'CWUser'} from solutions since your_user has no read access to cost  
+
+This is because you have to put your user in the "users" group. The user has to be in both groups.  
