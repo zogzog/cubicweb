@@ -659,6 +659,7 @@ class Entity(AppRsetObject, dict):
                     self.critical("can't get value for attribute %s of entity with eid %s",
                                   name, self.eid)
                     if self.e_schema.destination(name) == 'String':
+                        # XXX (syt) imo emtpy string is better
                         self[name] = value = self.req._('unaccessible')
                     else:
                         self[name] = value = None
