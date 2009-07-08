@@ -495,7 +495,7 @@ function inlineValidateAttributeForm(formid, rtype, eid, divid, reload,
     return false;
 }
 
-function inlineValidateRelationForm(formid, rtype, role, eid, divid, vid,
+function inlineValidateRelationForm(formid, rtype, role, eid, divid, reload, vid,
                                     default_value, escape, lzone) {
     try {
 	var form = getNode(formid);
@@ -509,17 +509,21 @@ function inlineValidateRelationForm(formid, rtype, role, eid, divid, vid,
 	return false;
     }
     d.addCallback(function (result, req) {
-        handleFormValidationResponse(formid, noop, noop, result);
-	var fieldview = getNode(divid);
-        fieldview.innerHTML = result[2];
-	// switch inline form off only if no error
-	if (result[0]) {
-          // hide global error messages
-	  jQuery('div.errorMessage').remove();
-	  jQuery('#appMsg').hide();
-          var inputname = 'edit' + role[0] + '-' + relname;
-          jQuery('input[name=' + inputname + ']').val(newtarget);
-	  cancelInlineEdit(eid, rtype, divid);
+        if (reload) {
+          document.location.href = result[1];
+        } else {
+          handleFormValidationResponse(formid, noop, noop, result);
+	  var fieldview = getNode(divid);
+          fieldview.innerHTML = result[2];
+	  // switch inline form off only if no error
+	  if (result[0]) {
+            // hide global error messages
+	    jQuery('div.errorMessage').remove();
+	    jQuery('#appMsg').hide();
+            var inputname = 'edit' + role[0] + '-' + relname;
+            jQuery('input[name=' + inputname + ']').val(newtarget);
+	    cancelInlineEdit(eid, rtype, divid);
+          }
 	}
         return false;
     });

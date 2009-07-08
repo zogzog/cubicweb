@@ -91,7 +91,7 @@ class ClickAndEditFormView(FormViewMixIn, EntityView):
     # FIXME editableField class could be toggleable from userprefs
 
     _ondblclick = "showInlineEditionForm(%(eid)s, '%(rtype)s', '%(divid)s')"
-    _defaultlandingzone = u'<img title="%s" class="needsvalidation" src="data/file.gif"/>'
+    _defaultlandingzone = u'<img title="%s" src="data/file.gif"/>'
     _landingzonemsg = _('double click to edit this field')
     # default relation vids according to cardinality
     _one_rvid = 'incontext'
@@ -140,7 +140,7 @@ class ClickAndEditFormView(FormViewMixIn, EntityView):
             elif role == 'object' and not rschema.has_perm(self.req, 'add',
                                                            toeid=entity.eid):
                 return self.w(value)
-            form = self._build_relation_form(entity, value, rtype, role, row, col,
+            form = self._build_relation_form(entity, value, rtype, role, reload, row, col,
                                              rvid, default, escape, landing_zone)
         renderer = self.vreg.select_object('formrenderers', 'base', self.req,
                                       entity=entity,
@@ -150,14 +150,17 @@ class ClickAndEditFormView(FormViewMixIn, EntityView):
                                       display_progress_div=False)
         self.w(form.form_render(renderer=renderer))
 
-    def _build_relation_form(self, entity, value, rtype, role, row, col, rvid, default, escape, lzone):
+    def _build_relation_form(self, entity, value, rtype, role, row, col, reload, rvid,
+                             default, escape, lzone):
         lzone = lzone or self._defaultlandingzone % self.req._(self._landingzonemsg)
         value = lzone + value
         divid = 'd%s' % make_uid('%s-%s' % (rtype, entity.eid))
         event_data = {'divid' : divid, 'eid' : entity.eid, 'rtype' : rtype, 'vid' : rvid,
-                      'default' : default, 'role' : role, 'escape' : escape, 'lzone' : lzone}
+                      'reload' : reload, 'default' : default, 'role' : role,
+                      'escape' : escape, 'lzone' : lzone}
         onsubmit = ("return inlineValidateRelationForm('%(divid)s-form', '%(rtype)s', "
-                    "'%(role)s', '%(eid)s', '%(divid)s', '%(vid)s', '%(default)s', '%(escape)s', '%(lzone)s');"
+                    "'%(role)s', '%(eid)s', '%(divid)s', '%(reload)s', '%(vid)s', "
+                    "'%(default)s', '%(escape)s', '%(lzone)s');"
                     % event_data)
         cancelclick = "cancelInlineEdit(%s,\'%s\',\'%s\')" % (
             entity.eid, rtype, divid)
