@@ -109,14 +109,13 @@ class ClickAndEditFormView(FormViewMixIn, EntityView):
         if not default:
             default = xml_escape(self.req._('<no value>'))
         if rschema.is_final():
-            value = entity.printable_value(rtype)
-            value = value.strip() or default
+            value = entity.printable_value(rtype) or default
             if not entity.has_perm('update'):
                 self.w(value)
                 return
         else:
             rset = entity.related(rtype, role)
-            candidate = self.view(rvid, rset, 'null').strip()
+            candidate = self.view(rvid, rset, 'null')
             if candidate and escape:
                 value = xml_escape(candidate)
             value = candidate or default
@@ -147,7 +146,6 @@ class ClickAndEditFormView(FormViewMixIn, EntityView):
         self.w(form.form_render(renderer=renderer))
 
     def _build_relation_form(self, entity, value, rtype, role, row, col, rvid, default, escape, lzone):
-        print rvid, escape
         divid = 'd%s' % make_uid('%s-%s' % (rtype, entity.eid))
         event_data = {'divid' : divid, 'eid' : entity.eid, 'rtype' : rtype, 'vid' : rvid,
                       'default' : default, 'role' : role, 'escape' : escape, 'lzone' : lzone}
