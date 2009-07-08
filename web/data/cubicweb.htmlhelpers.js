@@ -1,4 +1,5 @@
 CubicWeb.require('python.js');
+CubicWeb.require('jquery.corner.js');
 
 /* returns the document's baseURI. (baseuri() uses document.baseURI if
  * available and inspects the <base> tag manually otherwise.)
@@ -253,13 +254,25 @@ function limitTextAreaSize(textarea, size) {
 }
 
 //============= page loading events ==========================================//
+
+CubicWeb.rounded = [
+		    ['div.sideBoxBody', 'bottom 6px'],
+		    ['div.boxTitle, div.boxPrefTitle, div.sideBoxTitle, th.month', 'top 6px'],
+		    ];
+
 function roundedCornersOnLoad() {
-    jQuery('div.sideBoxBody').corner('bottom 6px');
-    jQuery('div.boxTitle, div.boxPrefTitle, div.sideBoxTitle, th.month').corner('top 6px');
+    roundedCorners();
+}
+
+function roundedCorners(node) {
+    node == node || document.body;
+    node = jQuery(node);
+    for(var r=0; r<CubicWeb.rounded.length;r++){
+       node.find(CubicWeb.rounded[r][0]).corner(CubicWeb.rounded[r][1]);
+    }
 }
 
 jQuery(document).ready(roundedCornersOnLoad);
-
 
 CubicWeb.provide('htmlhelpers.js');
 
