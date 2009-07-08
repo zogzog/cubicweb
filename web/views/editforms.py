@@ -105,7 +105,7 @@ class ClickAndEditFormView(FormViewMixIn, EntityView):
         return self._one_rvid
 
     def cell_call(self, row, col, rtype=None, role='subject',
-                  reload=True,      # controls reloading the whole page after change
+                  reload=False,      # controls reloading the whole page after change
                   rvid=None,         # vid to be applied to other side of rtype
                   escape=True,       # depending on the vid, will xml_escape or not
                   default=None,      # default value
