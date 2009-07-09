@@ -107,7 +107,6 @@ class ClickAndEditFormView(FormViewMixIn, EntityView):
     def cell_call(self, row, col, rtype=None, role='subject',
                   reload=False,      # controls reloading the whole page after change
                   rvid=None,         # vid to be applied to other side of rtype
-                  escape=True,       # depending on the vid, will xml_escape or not
                   default=None,      # default value
                   landing_zone=None  # prepend value with a separate html element to click onto
                                      # (esp. needed when values are links)
@@ -131,8 +130,6 @@ class ClickAndEditFormView(FormViewMixIn, EntityView):
                 rvid = self._compute_best_vid(entity, rtype, role)
             rset = entity.related(rtype, role)
             candidate = self.view(rvid, rset, 'null')
-            if candidate and escape:
-                value = xml_escape(candidate)
             value = candidate or default
             if role == 'subject'and not rschema.has_perm(self.req, 'add',
                                                          fromeid=entity.eid):
@@ -141,7 +138,7 @@ class ClickAndEditFormView(FormViewMixIn, EntityView):
                                                            toeid=entity.eid):
                 return self.w(value)
             form = self._build_relation_form(entity, value, rtype, role, reload, row, col,
-                                             rvid, default, escape, landing_zone)
+                                             rvid, default, landing_zone)
         renderer = self.vreg.select_object('formrenderers', 'base', self.req,
                                       entity=entity,
                                       display_label=False, display_help=False,
@@ -151,16 +148,16 @@ class ClickAndEditFormView(FormViewMixIn, EntityView):
         self.w(form.form_render(renderer=renderer))
 
     def _build_relation_form(self, entity, value, rtype, role, row, col, reload, rvid,
-                             default, escape, lzone):
+                             default, lzone):
         lzone = lzone or self._defaultlandingzone % self.req._(self._landingzonemsg)
         value = lzone + value
         divid = 'd%s' % make_uid('%s-%s' % (rtype, entity.eid))
         event_data = {'divid' : divid, 'eid' : entity.eid, 'rtype' : rtype, 'vid' : rvid,
                       'reload' : reload, 'default' : default, 'role' : role,
-                      'escape' : escape, 'lzone' : lzone}
+                      'lzone' : lzone}
         onsubmit = ("return inlineValidateRelationForm('%(divid)s-form', '%(rtype)s', "
                     "'%(role)s', '%(eid)s', '%(divid)s', %(reload)s, '%(vid)s', "
-                    "'%(default)s', '%(escape)s', '%(lzone)s');"
+                    "'%(default)s', '%(lzone)s');"
                     % event_data)
         cancelclick = "cancelInlineEdit(%s,\'%s\',\'%s\')" % (
             entity.eid, rtype, divid)

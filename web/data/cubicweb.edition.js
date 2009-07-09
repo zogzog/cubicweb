@@ -454,8 +454,7 @@ function validateForm(formid, action, onsuccess, onfailure) {
  * @param eid : the eid of the entity being edited
  * @param reload: boolean to reload page if true (when changing URL dependant data)
  */
-function inlineValidateAttributeForm(formid, rtype, eid, divid, reload,
-                                     default_value, lzone) {
+function inlineValidateAttributeForm(formid, rtype, eid, divid, reload, default_value) {
     try {
 	var form = getNode(formid);
 	if (typeof FCKeditorAPI != "undefined") {
@@ -468,7 +467,7 @@ function inlineValidateAttributeForm(formid, rtype, eid, divid, reload,
 	}
 	var zipped = formContents(form);
 	var d = asyncRemoteExec('edit_field', 'apply', zipped[0], zipped[1],
-                                rtype, eid, default_value, lzone);
+                                rtype, eid, default_value);
     } catch (ex) {
 	log('got exception', ex);
 	return false;
@@ -496,14 +495,14 @@ function inlineValidateAttributeForm(formid, rtype, eid, divid, reload,
 }
 
 function inlineValidateRelationForm(formid, rtype, role, eid, divid, reload, vid,
-                                    default_value, escape, lzone) {
+                                    default_value, lzone) {
     try {
 	var form = getNode(formid);
         var relname = rtype + ':' + eid;
         var newtarget = jQuery('[name=' + relname + ']').val();
 	var zipped = formContents(form);
 	var d = asyncRemoteExec('edit_relation', 'apply', zipped[0], zipped[1], rtype, role,
-                                eid, vid, default_value, escape, lzone);
+                                eid, vid, default_value, lzone);
     } catch (ex) {
 	log('got exception', ex);
 	return false;

@@ -388,7 +388,7 @@ class JSonController(Controller):
         return _validate_form(self.req, self.vreg)
 
     @jsonize
-    def js_edit_field(self, action, names, values, rtype, eid, default, lzone):
+    def js_edit_field(self, action, names, values, rtype, eid, default):
         success, args = self.validate_form(action, names, values)
         if success:
             # Any X,N where we don't seem to use N is an optimisation
@@ -397,21 +397,19 @@ class JSonController(Controller):
                                     {'x': eid}, 'x')
             entity = rset.get_entity(0, 0)
             value = entity.printable_value(rtype) or default
-            return (success, args, lzone + value)
+            return (success, args, value)
         else:
             return (success, args, None)
 
     @jsonize
     def js_edit_relation(self, action, names, values, rtype,
-                         role, eid, vid, default, escape, lzone):
+                         role, eid, vid, default, lzone):
         success, args = self.validate_form(action, names, values)
         if success:
             entity = self.req.eid_rset(eid).get_entity(0, 0)
             rset = entity.related(rtype, role)
             if rset:
                 output = self.view(vid, rset)
-                if escape == 'True':
-                    output = xml_escape(output)
             else:
                 output = default
             return (success, args, lzone + output)
