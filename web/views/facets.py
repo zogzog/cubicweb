@@ -16,7 +16,8 @@ from cubicweb.selectors import (non_final_entity, two_lines_rset,
                                 match_context_prop, yes, relation_possible)
 from cubicweb.web.box import BoxTemplate
 from cubicweb.web.facet import (AbstractFacet, FacetStringWidget, RelationFacet,
-                                prepare_facets_rqlst, filter_hiddens)
+                                prepare_facets_rqlst, filter_hiddens, _cleanup_rqlst,
+                                _prepare_vocabulary_rqlst)
 
 @objectify_selector
 def contextview_selector(cls, req, rset=None, row=None, col=None, view=None,
@@ -163,6 +164,21 @@ class ETypeFacet(RelationFacet):
             return
         self.rqlst.add_type_restriction(self.filtered_variable, value)
 
+    def possible_values(self):
+        """return a list of possible values (as string since it's used to
+        compare to a form value in javascript) for this facet
+        """
+        rqlst = self.rqlst
+        rqlst.save_state()
+        try:
+            _cleanup_rqlst(rqlst, self.filtered_variable)
+            etype_var = _prepare_vocabulary_rqlst(rqlst, self.filtered_variable, self.rtype, self.role)
+            attrvar = rqlst.make_variable()
+            rqlst.add_selected(attrvar)
+            rqlst.add_relation(etype_var, 'name', attrvar)
+            return [etype for _, etype in self.rqlexec(rqlst.as_string())]
+        finally:
+            rqlst.recover()
 
 class HasTextFacet(AbstractFacet):
     __select__ = relation_possible('has_text', 'subject') & match_context_prop()
