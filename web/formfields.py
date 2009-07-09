@@ -203,8 +203,6 @@ class StringField(Field):
                 widget = Select()
             elif self.max_length and self.max_length < 257:
                 widget = TextInput()
-                widget.attrs.setdefault('size', min(45, self.max_length))
-                widget.attrs.setdefault('maxlength', self.max_length)
 
         super(StringField, self).init_widget(widget)
         if isinstance(self.widget, TextArea):
