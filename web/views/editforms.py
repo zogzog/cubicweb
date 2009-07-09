@@ -90,8 +90,8 @@ class ClickAndEditFormView(FormViewMixIn, EntityView):
 
     # FIXME editableField class could be toggleable from userprefs
 
-    _onclick = "showInlineEditionForm(%(eid)s, '%(rtype)s', '%(divid)s')"
-    _defaultlandingzone = u'<img title="%s" src="data/file.gif"/>'
+    _onclick = u"showInlineEditionForm(%(eid)s, '%(rtype)s', '%(divid)s')"
+    _defaultlandingzone = u'<img title="%(msg)s" src="data/file.gif" alt="%(msg)s"/>'
     _landingzonemsg = _('click to edit this field')
     # default relation vids according to cardinality
     _one_rvid = 'incontext'
@@ -138,8 +138,8 @@ class ClickAndEditFormView(FormViewMixIn, EntityView):
                                                            toeid=entity.eid):
                 return self.w(value)
             elif get_schema_property(entity.e_schema,
-                                   entity.schema.rschema(rtype),
-                                   role, 'composite'):
+                                     entity.schema.rschema(rtype),
+                                     role, 'composite') == role:
                 return self.w(value)
             form = self._build_relation_form(entity, value, rtype, role, reload, row, col,
                                              rvid, default, landing_zone)
@@ -151,9 +151,12 @@ class ClickAndEditFormView(FormViewMixIn, EntityView):
                                       display_progress_div=False)
         self.w(form.form_render(renderer=renderer))
 
+    def _build_landing_zone(self, lzone):
+        return lzone or self._defaultlandingzone % {'msg' : self.req._(self._landingzonemsg)}
+
     def _build_relation_form(self, entity, value, rtype, role, row, col, reload, rvid,
                              default, lzone):
-        lzone = lzone or self._defaultlandingzone % self.req._(self._landingzonemsg)
+        lzone = self._build_landing_zone(lzone)
         value = lzone + value
         divid = 'd%s' % make_uid('%s-%s' % (rtype, entity.eid))
         event_data = {'divid' : divid, 'eid' : entity.eid, 'rtype' : rtype, 'vid' : rvid,
