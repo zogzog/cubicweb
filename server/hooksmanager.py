@@ -216,7 +216,14 @@ class Hook(AppObject):
             cls.warning('%s hook has been disabled', cls)
             return
         done = set()
+        assert isinstance(cls.events, (tuple, list)), \
+               '%s: events is expected to be a tuple, not %s' % (
+            cls, type(cls.events))
         for event in cls.events:
+            if event == 'server_startup':
+                assert not cls.accepts or cls.accepts == ('Any',), \
+                       '%s doesnt make sense on server_startup' % cls.accepts
+                cls.accepts = ('Any',)
             for ertype in cls.accepts:
                 if (event, ertype) in done:
                     continue
