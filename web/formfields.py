@@ -207,6 +207,13 @@ class StringField(Field):
         super(StringField, self).init_widget(widget)
         if isinstance(self.widget, TextArea):
             self.init_text_area(self.widget)
+        if isinstance(self.widget, TextInput):
+            self.init_text_input(self.widget)
+
+    def init_text_input(self, widget):
+        if self.max_length:
+            widget.attrs.setdefault('size', min(45, self.max_length))
+            widget.attrs.setdefault('maxlength', self.max_length)
 
     def init_text_area(self, widget):
         if self.max_length < 513:
