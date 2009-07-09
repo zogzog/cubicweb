@@ -348,11 +348,11 @@ function handleFormValidationResponse(formid, onsuccess, onfailure, result) {
     // Success
     if (result[0]) {
 	if (onsuccess) {
-	    return onsuccess(result[1], formid);
+             onsuccess(result[1], formid);
 	} else {
 	    document.location.href = result[1];
-	    return ;
 	}
+      return;
     }
     unfreezeFormButtons(formid);
     // Failures
@@ -362,7 +362,7 @@ function handleFormValidationResponse(formid, onsuccess, onfailure, result) {
     if ( !isArrayLike(descr) || descr.length != 2 ) {
 	log('got strange error :', descr);
 	updateMessage(descr);
-	return ;
+	return;
     }
     _displayValidationerrors(formid, descr[0], descr[1]);
     updateMessage(_("please correct errors below"));
@@ -370,7 +370,7 @@ function handleFormValidationResponse(formid, onsuccess, onfailure, result) {
     if (onfailure){
 	onfailure(formid);
     }
-    return false;
+    return;
 }
 
 
@@ -422,7 +422,7 @@ function setFormsTarget() {
     });
 }
 
-$(document).ready(setFormsTarget);
+jQuery(document).ready(setFormsTarget);
 
 
 /*
