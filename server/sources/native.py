@@ -31,6 +31,7 @@ from cubicweb.server.sources import AbstractSource
 from cubicweb.server.sources.rql2sql import SQLGenerator
 
 
+ATTR_MAP = {}
 NONSYSTEM_ETYPES = set()
 NONSYSTEM_RELATIONS = set()
 
@@ -90,6 +91,7 @@ def _modified_sql(table, etypes):
 class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
     """adapter for source using the native cubicweb schema (see below)
     """
+    sqlgen_class = SQLGenerator
     # need default value on class since migration doesn't call init method
     has_deleted_entitites_table = True
 
@@ -141,8 +143,8 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
         AbstractSource.__init__(self, repo, appschema, source_config,
                                 *args, **kwargs)
         # sql generator
-        self._rql_sqlgen = SQLGenerator(appschema, self.dbhelper,
-                                        self.encoding)
+        self._rql_sqlgen = self.sqlgen_class(appschema, self.dbhelper,
+                                             self.encoding, ATTR_MAP.copy())
         # full text index helper
         self.indexer = get_indexer(self.dbdriver, self.encoding)
         # advanced functionality helper
@@ -209,6 +211,9 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
         pool.pool_reset()
         self.repo._free_pool(pool)
 
+    def map_attribute(self, etype, attr, cb):
+        self._rql_sqlgen.attr_map['%s.%s' % (etype, attr)] = cb
+        
     # ISource interface #######################################################
 
     def compile_rql(self, rql):
