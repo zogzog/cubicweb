@@ -17,7 +17,7 @@ from logilab.mtconverter import xml_escape
 
 from cubicweb.selectors import (match_kwargs, one_line_rset, non_final_entity,
                                 specified_etype_implements, yes)
-from cubicweb.utils import make_uid, compute_cardinality
+from cubicweb.utils import make_uid, compute_cardinality, get_schema_property
 from cubicweb.view import EntityView
 from cubicweb.common import tags
 from cubicweb.web import INTERNAL_FIELD_VALUE, stdmsgs, eid_param
@@ -136,6 +136,10 @@ class ClickAndEditFormView(FormViewMixIn, EntityView):
                 return self.w(value)
             elif role == 'object' and not rschema.has_perm(self.req, 'add',
                                                            toeid=entity.eid):
+                return self.w(value)
+            elif get_schema_property(entity.e_schema,
+                                   entity.schema.rschema(rtype),
+                                   role, 'composite'):
                 return self.w(value)
             form = self._build_relation_form(entity, value, rtype, role, reload, row, col,
                                              rvid, default, landing_zone)
