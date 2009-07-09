@@ -175,8 +175,8 @@ class EntityFieldsFormTC(WebTest):
                               '''<input id="data:%(eid)s" name="data:%(eid)s" tabindex="0" type="file" value=""/>
 <a href="javascript: toggleVisibility(&#39;data:%(eid)s-advanced&#39;)" title="show advanced fields"><img src="http://testing.fr/cubicweb/data/puce_down.png" alt="show advanced fields"/></a>
 <div id="data:%(eid)s-advanced" class="hidden">
-<label for="data_format:%(eid)s">data_format</label><input id="data_format:%(eid)s" name="data_format:%(eid)s" tabindex="1" type="text" value="text/plain"/><br/>
-<label for="data_encoding:%(eid)s">data_encoding</label><input id="data_encoding:%(eid)s" name="data_encoding:%(eid)s" tabindex="2" type="text" value="UTF-8"/><br/>
+<label for="data_format:%(eid)s">data_format</label><input id="data_format:%(eid)s" maxlength="50" name="data_format:%(eid)s" size="45" tabindex="1" type="text" value="text/plain"/><br/>
+<label for="data_encoding:%(eid)s">data_encoding</label><input id="data_encoding:%(eid)s" maxlength="20" name="data_encoding:%(eid)s" size="20" tabindex="2" type="text" value="UTF-8"/><br/>
 </div>
 <br/>
 <input name="data:%(eid)s__detach" type="checkbox"/>
@@ -199,8 +199,8 @@ detach attached file
                               '''<input id="data:%(eid)s" name="data:%(eid)s" tabindex="0" type="file" value=""/>
 <a href="javascript: toggleVisibility(&#39;data:%(eid)s-advanced&#39;)" title="show advanced fields"><img src="http://testing.fr/cubicweb/data/puce_down.png" alt="show advanced fields"/></a>
 <div id="data:%(eid)s-advanced" class="hidden">
-<label for="data_format:%(eid)s">data_format</label><input id="data_format:%(eid)s" name="data_format:%(eid)s" tabindex="1" type="text" value="text/plain"/><br/>
-<label for="data_encoding:%(eid)s">data_encoding</label><input id="data_encoding:%(eid)s" name="data_encoding:%(eid)s" tabindex="2" type="text" value="UTF-8"/><br/>
+<label for="data_format:%(eid)s">data_format</label><input id="data_format:%(eid)s" maxlength="50" name="data_format:%(eid)s" size="45" tabindex="1" type="text" value="text/plain"/><br/>
+<label for="data_encoding:%(eid)s">data_encoding</label><input id="data_encoding:%(eid)s" maxlength="20" name="data_encoding:%(eid)s" size="20" tabindex="2" type="text" value="UTF-8"/><br/>
 </div>
 <br/>
 <input name="data:%(eid)s__detach" type="checkbox"/>
