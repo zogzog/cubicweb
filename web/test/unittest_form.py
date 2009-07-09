@@ -156,12 +156,12 @@ class EntityFieldsFormTC(WebTest):
 <option value="text/html">text/html</option>
 <option value="text/plain">text/plain</option>
 <option selected="selected" value="text/rest">text/rest</option>
-</select><textarea cols="80" id="description:%(eid)s" name="description:%(eid)s" onkeyup="autogrow(this)" rows="20" tabindex="1"/>''')
+</select><textarea cols="80" id="description:%(eid)s" name="description:%(eid)s" onkeyup="autogrow(this)" rows="2" tabindex="1"/>''')
 
 
     def test_richtextfield_2(self):
         self.req.use_fckeditor = lambda: True
-        self._test_richtextfield('<input name="description_format:%(eid)s" style="display: block" type="hidden" value="text/rest"/><textarea cols="80" cubicweb:type="wysiwyg" id="description:%(eid)s" name="description:%(eid)s" onkeyup="autogrow(this)" rows="20" tabindex="0"/>')
+        self._test_richtextfield('<input name="description_format:%(eid)s" style="display: block" type="hidden" value="text/rest"/><textarea cols="80" cubicweb:type="wysiwyg" id="description:%(eid)s" name="description:%(eid)s" onkeyup="autogrow(this)" rows="2" tabindex="0"/>')
 
 
     def test_filefield(self):
@@ -206,7 +206,7 @@ detach attached file
 <input name="data:%(eid)s__detach" type="checkbox"/>
 detach attached file
 <p><b>You can either submit a new file using the browse button above, or choose to remove already uploaded file by checking the "detach attached file" check-box, or edit file content online with the widget below.</b></p>
-<textarea cols="80" name="data:%(eid)s" onkeyup="autogrow(this)" rows="20" tabindex="3">new widgets system</textarea>''' % {'eid': file.eid})
+<textarea cols="80" name="data:%(eid)s" onkeyup="autogrow(this)" rows="3" tabindex="3">new widgets system</textarea>''' % {'eid': file.eid})
 
 
     def test_passwordfield(self):
