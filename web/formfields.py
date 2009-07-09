@@ -222,6 +222,9 @@ class RichTextField(StringField):
         super(RichTextField, self).__init__(**kwargs)
         self.format_field = format_field
 
+    def init_text_area(self, widget):
+        pass
+
     def get_widget(self, form):
         if self.widget is None:
             if self.use_fckeditor(form):

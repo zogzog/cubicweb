@@ -156,7 +156,7 @@ class EntityFieldsFormTC(WebTest):
 <option value="text/html">text/html</option>
 <option value="text/plain">text/plain</option>
 <option selected="selected" value="text/rest">text/rest</option>
-</select><textarea cols="60" id="description:%(eid)s" name="description:%(eid)s" onkeyup="autogrow(this)" rows="5" tabindex="1"/>''')
+</select><textarea cols="80" id="description:%(eid)s" name="description:%(eid)s" onkeyup="autogrow(this)" rows="20" tabindex="1"/>''')
 
 
     def test_richtextfield_2(self):
