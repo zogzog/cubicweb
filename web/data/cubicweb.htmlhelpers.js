@@ -260,19 +260,16 @@ CubicWeb.rounded = [
 		    ['div.boxTitle, div.boxPrefTitle, div.sideBoxTitle, th.month', 'top 6px'],
 		    ];
 
-function roundedCornersOnLoad() {
-    roundedCorners();
-}
+
 
 function roundedCorners(node) {
-    node == node || document.body;
     node = jQuery(node);
-    for(var r=0; r<CubicWeb.rounded.length;r++){
+    for(var r=0; r < CubicWeb.rounded.length; r++) {
        node.find(CubicWeb.rounded[r][0]).corner(CubicWeb.rounded[r][1]);
     }
 }
 
-jQuery(document).ready(roundedCornersOnLoad);
+jQuery(document).ready(function () {roundedCorners(this.body)});
 
 CubicWeb.provide('htmlhelpers.js');
 
