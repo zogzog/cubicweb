@@ -89,6 +89,13 @@ class TextInput(Input):
     """<input type='text'>"""
     type = 'text'
 
+    def render(self, form, field):
+        if hasattr(field, 'max_length') and field.max_length:
+            self.attrs.setdefault('size', min(45, field.max_length))
+            self.attrs.setdefault('maxlength', field.max_length)
+        return super(TextInput, self).render(form, field)
+
+
 
 class PasswordInput(Input):
     """<input type='password'> and its confirmation field (using
