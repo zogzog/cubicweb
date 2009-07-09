@@ -207,7 +207,7 @@ class StringField(Field):
         super(StringField, self).init_widget(widget)
         if isinstance(self.widget, TextArea):
             self.init_text_area(self.widget)
-        if isinstance(self.widget, TextInput):
+        elif isinstance(self.widget, TextInput):
             self.init_text_input(self.widget)
 
     def init_text_input(self, widget):
