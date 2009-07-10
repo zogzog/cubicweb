@@ -101,6 +101,7 @@ class RelationTags(object):
                    '%r is not an allowed tag (should be in %s)' % (
                 tag, self._allowed_values)
         self._tagdefs[(rtype, tagged, stype, otype)] = tag
+        return tag
 
     # rtag runtime api ########################################################
 
@@ -123,21 +124,50 @@ class RelationTags(object):
 
 
 class RelationTagsSet(RelationTags):
-    """This class associates a set of tags to each key."""
+    """This class associates a set of tags to each key.
+    """
+    tag_container_cls = set
 
     def tag_relation(self, key, tag):
         stype, rtype, otype, tagged = [str(k) for k in key]
-        rtags = self._tagdefs.setdefault((rtype, tagged, stype, otype), set())
+        rtags = self._tagdefs.setdefault((rtype, tagged, stype, otype),
+                                         self.tag_container_cls())
         rtags.add(tag)
+        return rtags
 
     def get(self, stype, rtype, otype, tagged):
-        rtags = set()
+        rtags = self.tag_container_cls()
         for key in self._get_keys(stype, rtype, otype, tagged):
             try:
                 rtags.update(self._tagdefs[key])
             except KeyError:
                 continue
         return rtags
+
+
+class RelationTagsDict(RelationTagsSet):
+    """This class associates a set of tags to each key."""
+    tag_container_cls = dict
+
+    def tag_relation(self, key, tag):
+        stype, rtype, otype, tagged = [str(k) for k in key]
+        try:
+            rtags = self._tagdefs[(rtype, tagged, stype, otype)]
+            rtags.update(tag)
+            return rtags
+        except KeyError:
+            self._tagdefs[(rtype, tagged, stype, otype)] = tag
+            return tag
+
+    def setdefault(self, key, tagkey, tagvalue):
+        stype, rtype, otype, tagged = [str(k) for k in key]
+        try:
+            rtags = self._tagdefs[(rtype, tagged, stype, otype)]
+            rtags.setdefault(tagkey, tagvalue)
+            return rtags
+        except KeyError:
+            self._tagdefs[(rtype, tagged, stype, otype)] = {tagkey: tagvalue}
+            return self._tagdefs[(rtype, tagged, stype, otype)]
 
 
 class RelationTagsBool(RelationTags):
