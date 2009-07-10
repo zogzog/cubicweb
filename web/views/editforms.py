@@ -20,7 +20,7 @@ from cubicweb.selectors import (match_kwargs, one_line_rset, non_final_entity,
 from cubicweb.utils import make_uid, compute_cardinality, get_schema_property
 from cubicweb.view import EntityView
 from cubicweb.common import tags
-from cubicweb.web import INTERNAL_FIELD_VALUE, stdmsgs, eid_param
+from cubicweb.web import INTERNAL_FIELD_VALUE, stdmsgs, eid_param, uicfg
 from cubicweb.web.form import FormViewMixIn
 from cubicweb.web.formfields import guess_field
 from cubicweb.web.formwidgets import Button, SubmitButton, ResetButton
@@ -87,7 +87,6 @@ class ClickAndEditFormView(FormViewMixIn, EntityView):
     """
     id = 'reledit'
     __select__ = non_final_entity() & match_kwargs('rtype')
-
     # FIXME editableField class could be toggleable from userprefs
 
     _onclick = u"showInlineEditionForm(%(eid)s, '%(rtype)s', '%(divid)s')"
@@ -126,6 +125,11 @@ class ClickAndEditFormView(FormViewMixIn, EntityView):
             form = self._build_attribute_form(entity, value, rtype, role, reload,
                                               row, col, default, landing_zone)
         else:
+            vid = uicfg.primaryview_display_ctrl.etype_get(entity.e_schema,
+                                                           rtype, role)
+            if vid != 'reledit': # reledit explicitly disabled
+                self.wview(vid, entity.related(rtype, role))
+                return
             if rvid is None:
                 rvid = self._compute_best_vid(entity, rtype, role)
             rset = entity.related(rtype, role)
