@@ -151,6 +151,8 @@ class ClickAndEditFormView(FormViewMixIn, EntityView):
                 return self.w(value)
             elif get_schema_property(entity.e_schema, rschema,
                                      role, 'composite') == role:
+                self.warning('reledit cannot be applied : (... %s %s [composite])'
+                             % (rtype, entity.e_schema))
                 return self.w(value)
             self._relation_form(entity, value, rtype, role, reload, row, col,
                                 rvid, default, landing_zone)
