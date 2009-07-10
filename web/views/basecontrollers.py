@@ -404,17 +404,16 @@ class JSonController(Controller):
     @jsonize
     def js_edit_relation(self, action, names, values, rtype,
                          role, eid, vid, default, lzone):
-        success, args = self.validate_form(action, names, values)
-        if success:
-            entity = self.req.eid_rset(eid).get_entity(0, 0)
-            rset = entity.related(rtype, role)
-            if rset:
-                output = self.view(vid, rset)
-            else:
-                output = default
-            return (success, args, lzone + output)
-        else:
-            return (success, args, None)
+        if rtype == 'license_of':
+            print action, names, values, rtype, role, eid, vid, default
+        success, url = self.validate_form(action, names, values)
+        return (success, url)
+
+    @jsonize
+    def js_reledit_form(self, eid, rtype, role, lzone):
+        entity = self.req.eid_rset(eid).get_entity(0, 0)
+        return entity.view('reledit', rtype=rtype, role=role,
+                           landing_zone=lzone)
 
     @jsonize
     def js_i18n(self, msgids):

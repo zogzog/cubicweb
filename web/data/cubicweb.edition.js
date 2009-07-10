@@ -454,9 +454,9 @@ function validateForm(formid, action, onsuccess, onfailure) {
  * @param eid : the eid of the entity being edited
  * @param reload: boolean to reload page if true (when changing URL dependant data)
  */
-function inlineValidateAttributeForm(formid, rtype, eid, divid, reload, default_value) {
+function inlineValidateAttributeForm(rtype, eid, divid, reload, default_value) {
     try {
-	var form = getNode(formid);
+	var form = getNode(divid+'-form');
 	if (typeof FCKeditorAPI != "undefined") {
 	    for ( var name in FCKeditorAPI.__Instances ) {
 		var oEditor = FCKeditorAPI.__Instances[name] ;
@@ -473,7 +473,7 @@ function inlineValidateAttributeForm(formid, rtype, eid, divid, reload, default_
 	return false;
     }
     d.addCallback(function (result, req) {
-    handleFormValidationResponse(formid, noop, noop, result);
+        handleFormValidationResponse(divid+'-form', noop, noop, result);
 	if (reload) {
 	    document.location.href = result[1];
 	} else {
@@ -486,7 +486,7 @@ function inlineValidateAttributeForm(formid, rtype, eid, divid, reload, default_
 		// hide global error messages
 		jQuery('div.errorMessage').remove();
 		jQuery('#appMsg').hide();
-		cancelInlineEdit(eid, rtype, divid);
+		hideInlineEdit(eid, rtype, divid);
 	    }
 	}
 	return false;
@@ -494,10 +494,10 @@ function inlineValidateAttributeForm(formid, rtype, eid, divid, reload, default_
     return false;
 }
 
-function inlineValidateRelationForm(formid, rtype, role, eid, divid, reload, vid,
+function inlineValidateRelationForm(rtype, role, eid, divid, reload, vid,
                                     default_value, lzone) {
     try {
-	var form = getNode(formid);
+	var form = getNode(divid+'-form');
         var relname = rtype + ':' + eid;
         var newtarget = jQuery('[name=' + relname + ']').val();
 	var zipped = formContents(form);
@@ -508,20 +508,15 @@ function inlineValidateRelationForm(formid, rtype, role, eid, divid, reload, vid
 	return false;
     }
     d.addCallback(function (result, req) {
+        handleFormValidationResponse(divid+'-form', noop, noop, result);
         if (reload) {
           document.location.href = result[1];
         } else {
-          handleFormValidationResponse(formid, noop, noop, result);
-	  var fieldview = getNode(divid);
-          fieldview.innerHTML = result[2];
-	  // switch inline form off only if no error
 	  if (result[0]) {
-            // hide global error messages
-	    jQuery('div.errorMessage').remove();
-	    jQuery('#appMsg').hide();
-            var inputname = 'edit' + role[0] + '-' + relname;
-            jQuery('input[name=' + inputname + ']').val(newtarget);
-	    cancelInlineEdit(eid, rtype, divid);
+            var d = asyncRemoteExec('reledit_form', eid, rtype, role, lzone);
+            d.addCallback(function (result) {
+              jQuery('#'+divid+'-reledit').replaceWith(result);
+            });
           }
 	}
         return false;
@@ -533,12 +528,12 @@ function inlineValidateRelationForm(formid, rtype, role, eid, divid, reload, vid
 /**** inline edition ****/
 function showInlineEditionForm(eid, rtype, divid) {
     jQuery('#' + divid).hide();
-    jQuery('#' + divid + '-form').show();
+    jQuery('#' + divid+'-form').show();
 }
 
-function cancelInlineEdit(eid, rtype, divid) {
+function hideInlineEdit(eid, rtype, divid) {
     jQuery('#' + divid).show();
-    jQuery('#' + divid + '-form').hide();
+    jQuery('#' + divid+'-form').hide();
 }
 
 CubicWeb.provide('edition.js');
