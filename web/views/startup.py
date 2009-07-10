@@ -22,7 +22,7 @@ from cubicweb.web.views.management import SecurityViewMixIn
 
 class ManageView(StartupView):
     id = 'manage'
-    title = _('manage')
+    title = _('view_manage')
     http_cache_manager = httpcache.EtagHTTPCacheManager
 
     @classmethod
@@ -160,7 +160,7 @@ class ManageView(StartupView):
 
 class IndexView(ManageView):
     id = 'index'
-    title = _('index')
+    title = _('view_index')
 
     def display_folders(self):
         return 'Folder' in self.schema and self.req.execute('Any COUNT(X) WHERE X is Folder')[0][0]

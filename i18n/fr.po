@@ -164,8 +164,11 @@ msgid ""
 "<div>This schema of the data model <em>excludes</em> the meta-data, but you "
 "can also display a <a href=\"%s\">complete schema with meta-data</a>.</div>"
 msgstr ""
-"<div>Ce schéma du modèle de données <em>exclue</em> les méta-données, mais vous "
-"pouvez afficher un <a href=\"%s\">schéma complet</a>.</div>"
+"<div>Ce schéma du modèle de données <em>exclue</em> les méta-données, mais "
+"vous pouvez afficher un <a href=\"%s\">schéma complet</a>.</div>"
+
+msgid "<no value>"
+msgstr "<non spécifié>"
 
 msgid "?*"
 msgstr "0..1 0..n"
@@ -633,9 +636,10 @@ msgid ""
 "invalidate the cache (typically in hooks). Also, checkout the AppRsetObject."
 "get_cache() method."
 msgstr ""
-"une simple entité de cache, caractérisées par un nom et une date de validité. L'application "
-"est responsable de la mise à jour de la date quand il est nécessaire d'invalider le cache (typiquement dans les crochets). "
-"Voir aussi la méthode get_cache() sur la classe AppRsetObject."
+"une simple entité de cache, caractérisées par un nom et une date de "
+"validité. L'application est responsable de la mise à jour de la date quand "
+"il est nécessaire d'invalider le cache (typiquement dans les crochets). Voir "
+"aussi la méthode get_cache() sur la classe AppRsetObject."
 
 msgid "about this site"
 msgstr "à propos de ce site"
@@ -1039,7 +1043,8 @@ msgid "bookmarks"
 msgstr "signets"
 
 msgid "bookmarks are used to have user's specific internal links"
-msgstr "les signets sont utilisés pour gérer des liens internes par utilisateur"
+msgstr ""
+"les signets sont utilisés pour gérer des liens internes par utilisateur"
 
 msgid "boxes"
 msgstr "boîtes"
@@ -1178,7 +1183,10 @@ msgid "click here to see created entity"
 msgstr "cliquez ici pour voir l'entité créée"
 
 msgid "click on the box to cancel the deletion"
-msgstr "cliquer dans la zone d'édition pour annuler la suppression"
+msgstr "cliquez dans la zone d'édition pour annuler la suppression"
+
+msgid "click to edit this field"
+msgstr "cliquez pour éditer ce champ"
 
 msgid "comment"
 msgstr "commentaire"
@@ -1800,12 +1808,6 @@ msgstr "facette \"type d'entité ou de relation final\""
 msgid "facets_cwfinal-facet_description"
 msgstr ""
 
-msgid "facets_cwmeta-facet"
-msgstr ""
-
-msgid "facets_cwmeta-facet_description"
-msgstr ""
-
 msgid "facets_etype-facet"
 msgstr "facette \"est de type\""
 
@@ -2359,9 +2361,6 @@ msgstr "non autorisé"
 
 msgid "not selected"
 msgstr "non sélectionné"
-
-msgid "not specified"
-msgstr "non spécifié"
 
 msgid "not the initial state for this entity"
 msgstr "n'est pas l'état initial pour cette entité"
@@ -3069,6 +3068,12 @@ msgstr "voir les détails de cette entité"
 msgid "view workflow"
 msgstr "voir les états possibles"
 
+msgid "view_index"
+msgstr "accueil"
+
+msgid "view_manage"
+msgstr "gestion du site"
+
 msgid "views"
 msgstr "vues"
 
@@ -3251,6 +3256,9 @@ msgstr "vous devriez probablement supprimer cette propriété"
 
 #~ msgid "no associated epermissions"
 #~ msgstr "aucune permission spécifique n'est définie"
+
+#~ msgid "not specified"
+#~ msgstr "non spécifié"
 
 #~ msgid "owned by"
 #~ msgstr "appartient à"
