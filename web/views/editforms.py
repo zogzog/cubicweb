@@ -103,6 +103,17 @@ class ClickAndEditFormView(FormViewMixIn, EntityView):
             return self._many_rvid
         return self._one_rvid
 
+    def _build_landing_zone(self, lzone):
+        return lzone or self._defaultlandingzone % {'msg' : self.req._(self._landingzonemsg)}
+
+    def _build_renderer(self, entity, rtype, role):
+        return self.vreg.select_object('formrenderers', 'base', self.req,
+                                       entity=entity,
+                                       display_label=False, display_help=False,
+                                       display_fields=[(rtype, role)],
+                                       table_class='', button_bar_class='buttonbar',
+                                       display_progress_div=False)
+
     def cell_call(self, row, col, rtype=None, role='subject',
                   reload=False,      # controls reloading the whole page after change
                   rvid=None,         # vid to be applied to other side of rtype
@@ -110,20 +121,21 @@ class ClickAndEditFormView(FormViewMixIn, EntityView):
                   landing_zone=None  # prepend value with a separate html element to click onto
                                      # (esp. needed when values are links)
                   ):
-        """display field to edit entity's `rtype` relation on double-click"""
+        """display field to edit entity's `rtype` relation on click"""
         assert rtype
+        assert role in ('subject', 'object')
+        if default is None:
+            default = xml_escape(self.req._('<no value>'))
         entity = self.entity(row, col)
         rschema = entity.schema.rschema(rtype)
-        if not default:
-            default = xml_escape(self.req._('<no value>'))
         # compute value, checking perms, build form
         if rschema.is_final():
             value = entity.printable_value(rtype) or default
             if not entity.has_perm('update'):
                 self.w(value)
                 return
-            form = self._build_attribute_form(entity, value, rtype, role, reload,
-                                              row, col, default, landing_zone)
+            self._attribute_form(entity, value, rtype, role, reload,
+                                 row, col, default, landing_zone)
         else:
             vid = uicfg.primaryview_display_ctrl.etype_get(entity.e_schema,
                                                            rtype, role)
@@ -135,65 +147,58 @@ class ClickAndEditFormView(FormViewMixIn, EntityView):
             rset = entity.related(rtype, role)
             candidate = self.view(rvid, rset, 'null')
             value = candidate or default
-            if role == 'subject'and not rschema.has_perm(self.req, 'add',
-                                                         fromeid=entity.eid):
+            if role == 'subject' and not rschema.has_perm(self.req, 'add',
+                                                          fromeid=entity.eid):
                 return self.w(value)
             elif role == 'object' and not rschema.has_perm(self.req, 'add',
                                                            toeid=entity.eid):
                 return self.w(value)
-            elif get_schema_property(entity.e_schema,
-                                     entity.schema.rschema(rtype),
+            elif get_schema_property(entity.e_schema, rschema,
                                      role, 'composite') == role:
+                self.warning('reledit cannot be applied : (... %s %s [composite])'
+                             % (rtype, entity.e_schema))
                 return self.w(value)
-            form = self._build_relation_form(entity, value, rtype, role, reload, row, col,
-                                             rvid, default, landing_zone)
-        renderer = self.vreg.select_object('formrenderers', 'base', self.req,
-                                      entity=entity,
-                                      display_label=False, display_help=False,
-                                      display_fields=[(rtype, role)],
-                                      table_class='', button_bar_class='buttonbar',
-                                      display_progress_div=False)
-        self.w(form.form_render(renderer=renderer))
+            self._relation_form(entity, value, rtype, role, reload, row, col,
+                                rvid, default, landing_zone)
 
-    def _build_landing_zone(self, lzone):
-        return lzone or self._defaultlandingzone % {'msg' : self.req._(self._landingzonemsg)}
 
-    def _build_relation_form(self, entity, value, rtype, role, row, col, reload, rvid,
-                             default, lzone):
+    def _relation_form(self, entity, value, rtype, role, row, col, reload, rvid, default, lzone):
         lzone = self._build_landing_zone(lzone)
         value = lzone + value
         divid = 'd%s' % make_uid('%s-%s' % (rtype, entity.eid))
         event_data = {'divid' : divid, 'eid' : entity.eid, 'rtype' : rtype, 'vid' : rvid,
                       'reload' : reload, 'default' : default, 'role' : role,
                       'lzone' : lzone}
-        onsubmit = ("return inlineValidateRelationForm('%(divid)s-form', '%(rtype)s', "
-                    "'%(role)s', '%(eid)s', '%(divid)s', %(reload)s, '%(vid)s', "
-                    "'%(default)s', '%(lzone)s');"
+        onsubmit = ("return inlineValidateRelationForm('%(rtype)s', '%(role)s', '%(eid)s', "
+                    "'%(divid)s', %(reload)s, '%(vid)s', '%(default)s', '%(lzone)s');"
                     % event_data)
-        cancelclick = "cancelInlineEdit(%s,\'%s\',\'%s\')" % (
+        cancelclick = "hideInlineEdit(%s,\'%s\',\'%s\')" % (
             entity.eid, rtype, divid)
         form = self.vreg.select_object('forms', 'base', self.req, entity=entity,
                                        domid='%s-form' % divid, cssstyle='display: none',
                                        onsubmit=onsubmit, action='#',
                                        form_buttons=[SubmitButton(),
                                                      Button(stdmsgs.BUTTON_CANCEL,
-                                                       onclick=cancelclick)])
+                                                            onclick=cancelclick)])
         field = guess_field(entity.e_schema, entity.schema.rschema(rtype), role)
         form.append_field(field)
+        self.w(u'<div id="%s-reledit" class="field">' % divid)
         self.w(tags.div(value, klass='editableField', id=divid,
                         onclick=self._onclick % event_data))
-        return form
+        renderer = self._build_renderer(entity, rtype, role)
+        self.w(form.form_render(renderer=renderer))
+        self.w(u'</div>')
 
-    def _build_attribute_form(self, entity, value, rtype, role, reload, row, col, default, lzone):
+    def _attribute_form(self, entity, value, rtype, role, reload, row, col, default, lzone):
         eid = entity.eid
         divid = 'd%s' % make_uid('%s-%s' % (rtype, eid))
         event_data = {'divid' : divid, 'eid' : eid, 'rtype' : rtype,
                       'reload' : dumps(reload), 'default' : default, 'lzone' : lzone}
-        onsubmit = ("return inlineValidateAttributeForm('%(divid)s-form', '%(rtype)s', "
-                    "'%(eid)s', '%(divid)s', %(reload)s, '%(default)s', '%(lzone)s');")
+        onsubmit = ("return inlineValidateAttributeForm('%(rtype)s', '%(eid)s', '%(divid)s', "
+                    "%(reload)s, '%(default)s', '%(lzone)s');")
         buttons = [SubmitButton(stdmsgs.BUTTON_OK),
                    Button(stdmsgs.BUTTON_CANCEL,
-                          onclick="cancelInlineEdit(%s,\'%s\',\'%s\')" % (
+                          onclick="hideInlineEdit(%s,\'%s\',\'%s\')" % (
                               eid, rtype, divid))]
         form = self.vreg.select_object('forms', 'edition', self.req, self.rset,
                                        row=row, col=col, form_buttons=buttons,
@@ -202,7 +207,8 @@ class ClickAndEditFormView(FormViewMixIn, EntityView):
                                        onsubmit=onsubmit % event_data)
         self.w(tags.div(value, klass='editableField', id=divid,
                         onclick=self._onclick % event_data))
-        return form
+        renderer = self._build_renderer(entity, rtype, role)
+        self.w(form.form_render(renderer=renderer))
 
 
 class EditionFormView(FormViewMixIn, EntityView):
