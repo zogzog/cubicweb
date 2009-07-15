@@ -230,8 +230,6 @@ function changeLinkText(link, newText) {
 
 
 function autogrow(area) {
-    log('scrollHeight ' + area.scrollHeight);
-    log('clientHeight ' + area.clientHeight);
     if (area.scrollHeight > area.clientHeight && !window.opera) {
 	if (area.rows < 20) {
 	    area.rows += 2;
