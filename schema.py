@@ -100,14 +100,14 @@ def _add_relation(relations, rdef, name=None, insertidx=None):
     yams_add_relation(relations, rdef, name, insertidx)
 
 
-yams_EntityType_add_relation = ybo.EntityType.add_relation
-@monkeypatch(ybo.EntityType)
-def add_relation(self, rdef, name=None):
-    yams_EntityType_add_relation(self, rdef, name)
-    if isinstance(rdef, RichString) and not rdef in self._defined:
+@monkeypatch(ybo.EntityType, methodname='add_relation')
+@classmethod
+def add_relation(cls, rdef, name=None):
+    ybo.add_relation_function(cls, rdef, name)
+    if isinstance(rdef, RichString) and not rdef in cls._defined:
         format_attr_name = (name or rdef.name) + '_format'
-        rdef = self.get_relations(format_attr_name).next()
-        self._ensure_relation_type(rdef)
+        rdef = cls.get_relations(format_attr_name).next()
+        cls._ensure_relation_type(rdef)
 
 def display_name(req, key, form=''):
     """return a internationalized string for the key (schema entity or relation
