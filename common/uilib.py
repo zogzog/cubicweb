@@ -228,7 +228,7 @@ def simple_sgml_tag(tag, content=None, escapecontent=True, **attrs):
             content = xml_escape(unicode(content))
         value += u'>%s</%s>' % (content, tag)
     else:
-        value += u'/>'
+        value += u'></%s>' % tag
     return value
 
 def tooltipize(text, tooltip, url=None):
