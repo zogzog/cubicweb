@@ -39,7 +39,7 @@ class TreeView(EntityView):
         self.w(u'</ul>')
         if initial_load and not self.req.form.get('fname'):
             self.req.add_css('jquery.treeview.css')
-            self.req.add_js(('cubicweb.ajax.js', 'jquery.treeview.js'))
+            self.req.add_js(('cubicweb.ajax.js', 'cubicweb.widgets.js', 'jquery.treeview.js'))
             self.req.html_headers.add_onload(u"""
 jQuery("#tree-%s").treeview({toggle: toggleTree, prerendered: true});""" % treeid)
 
