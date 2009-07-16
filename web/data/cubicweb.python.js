@@ -157,7 +157,7 @@ function strptime(datestring, format) {
 // ========== ARRAY EXTENSIONS ========== ///
 Array.prototype.contains = function(element) {
     return findValue(this, element) != -1;
-}
+};
 
 // ========== END OF ARRAY EXTENSIONS ========== ///
 
@@ -201,7 +201,7 @@ String.prototype.join = function(args) {
  * [0,2,4,6,8]
  */
 function list(iterable) {
-    iterator = iter(iterable);
+    var iterator = iter(iterable);
     var result = [];
     while (true) {
 	/* iterates until StopIteration occurs */
@@ -267,14 +267,6 @@ function methodcaller(methname) {
 function min() { return listMin(arguments); }
 function max() { return listMax(arguments); }
 
-// tricky multiple assign
-// function assign(lst, varnames) {
-//     var length = min(lst.length, varnames.length);
-//     for(var i=0; i<length; i++) {
-// 	window[varnames[i]] = lst[i];
-//     }
-// }
-
 /*
  * >>> d = dict(["x", "y", "z"], [0, 1, 2])
  * >>> d['y']
@@ -335,7 +327,7 @@ function _isAttrSkipped(attrname) {
 function makeConstructor(userctor) {
     return function() {
 	// this is a proxy to user's __init__
-	if(userctor) {
+	if (userctor) {
 	    userctor.apply(this, arguments);
 	}
     };
@@ -369,7 +361,7 @@ function defclass(name, bases, classdict) {
 	}
     }
     var userctor = basemeths['__init__'];
-    constructor = makeConstructor(userctor);
+    var constructor = makeConstructor(userctor);
 
     // python-like interface
     constructor.__name__ = name;

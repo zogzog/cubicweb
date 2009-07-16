@@ -3,7 +3,7 @@
 ul.css-tabs {
 	margin:0 !important;
 	padding:0;
-	height:24px;
+	height:20px;
 	border-bottom:1px solid #666;
 }
 
@@ -24,12 +24,10 @@ ul.css-tabs a {
 	text-decoration:none;
 	border:1px solid #666;
 	border-bottom:0px;
-	height:18px;
+	height:14px;
 	background-color:#efefef;
 	color:#777;
 	margin-right:2px;
-	-moz-border-radius-topleft: 4px;
-	-moz-border-radius-topright:4px;
 	position:relative;
 	top:1px;
 }
@@ -42,9 +40,8 @@ ul.css-tabs a:hover {
 /* selected tab */
 ul.css-tabs a.current {
 	background-color: white;
-	border-bottom:2px solid #ddd;
+	border-bottom:2px solid white;
 	color:#000;
-	cursor:default;
 }
 
 

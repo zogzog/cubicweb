@@ -27,7 +27,7 @@ SKIP_TYPES.update(SCHEMA_TYPES)
 
 def skip_types(req):
     if int(req.form.get('skipmeta', True)):
-        return schema.SKIP_TYPES
+        return SKIP_TYPES
     return ()
 
 class ViewSchemaAction(action.Action):
@@ -191,15 +191,15 @@ class CWRTypeSchemaView(primary.PrimaryView):
 
 class RestrictedSchemaVisitorMixIn(object):
     def __init__(self, req, *args, **kwargs):
-        super(RestrictedSchemaVisitorMixIn, self).__init__(*args, **kwargs)
         self.req = req
+        super(RestrictedSchemaVisitorMixIn, self).__init__(*args, **kwargs)
 
-    def should_display_schema(self, schema):
-        return (super(RestrictedSchemaVisitorMixIn, self).should_display_schema(schema)
+    def should_display_schema(self, rschema):
+        return (super(RestrictedSchemaVisitorMixIn, self).should_display_schema(rschema)
                 and rschema.has_local_role('read') or rschema.has_perm(self.req, 'read'))
 
-    def should_display_attr(self, schema):
-        return (super(RestrictedSchemaVisitorMixIn, self).should_display_attr(schema)
+    def should_display_attr(self, rschema):
+        return (super(RestrictedSchemaVisitorMixIn, self).should_display_attr(rschema)
                 and rschema.has_local_role('read') or rschema.has_perm(self.req, 'read'))
 
 
