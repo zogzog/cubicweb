@@ -39,12 +39,7 @@ class PrimaryView(EntityView):
 
     def cell_call(self, row, col):
         self.row = row
-        # XXX move render_entity implementation here
-        self.render_entity(self.complete_entity(row, col))
-        self.maxrelated = self.req.property_value('navigation.related-limit')
-
-    def render_entity(self, entity):
-        """return html to display the given entity"""
+        entity = self.complete_entity(row, col)
         self.render_entity_title(entity)
         self.render_entity_metadata(entity)
         # entity's attributes and relations, excluding meta data
@@ -54,23 +49,9 @@ class PrimaryView(EntityView):
             self.w(u'<table width="100%"><tr><td style="width: 75%">')
         self.w(u'<div class="mainInfo">')
         self.content_navigation_components('navcontenttop')
-        try:
-            self.render_entity_attributes(entity)
-        except TypeError, e: # XXX bw compat
-            if 'render_entity' not in e.args[0]:
-                raise
-            warn('siderelations argument of render_entity_attributes is '
-                 'deprecated (%s)' % self.__class__)
-            self.render_entity_attributes(entity, [])
+        self.render_entity_attributes(entity)
         if self.main_related_section:
-            try:
-                self.render_entity_relations(entity)
-            except TypeError, e: # XXX bw compat
-                if 'render_entity' not in e.args[0]:
-                    raise
-                warn('siderelations argument of render_entity_relations is '
-                     'deprecated')
-                self.render_entity_relations(entity, [])
+            self.render_entity_relations(entity)
         self.w(u'</div>')
         # side boxes
         if boxes or hasattr(self, 'render_side_related'):
@@ -83,7 +64,7 @@ class PrimaryView(EntityView):
             self.w(u'</div>')
             self.w(u'</td></tr></table>')
         self.content_navigation_components('navcontentbottom')
-
+        self.maxrelated = self.req.property_value('navigation.related-limit')
 
     def content_navigation_components(self, context):
         self.w(u'<div class="%s">' % context)
