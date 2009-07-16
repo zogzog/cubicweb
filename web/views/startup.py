@@ -10,7 +10,7 @@ __docformat__ = "restructuredtext en"
 _ = unicode
 
 from logilab.common.textutils import unormalize
-from logilab.mtconverter import html_escape
+from logilab.mtconverter import xml_escape
 
 from cubicweb.view import StartupView
 from cubicweb.selectors import match_user_groups, implements
