@@ -501,8 +501,7 @@ function inlineValidateRelationForm(rtype, role, eid, divid, reload, vid,
         var relname = rtype + ':' + eid;
         var newtarget = jQuery('[name=' + relname + ']').val();
 	var zipped = formContents(form);
-	var d = asyncRemoteExec('edit_relation', 'apply', zipped[0], zipped[1], rtype, role,
-                                eid, vid, default_value, lzone);
+	var d = asyncRemoteExec('validate_form', 'apply', zipped[0], zipped[1]);
     } catch (ex) {
 	log('got exception', ex);
 	return false;
@@ -513,7 +512,7 @@ function inlineValidateRelationForm(rtype, role, eid, divid, reload, vid,
           document.location.href = result[1];
         } else {
 	  if (result[0]) {
-            var d = asyncRemoteExec('reledit_form', eid, rtype, role, lzone);
+            var d = asyncRemoteExec('reledit_form', eid, rtype, role, default_value, lzone);
             d.addCallback(function (result) {
               jQuery('#'+divid+'-reledit').replaceWith(result);
             });
