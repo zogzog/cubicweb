@@ -107,12 +107,9 @@ class TabsMixin(LazyViewMixin):
         active_tab = self.active_tab(tabs, default)
         # build the html structure
         w = self.w
-        if entity:
-            w(u'<div id="entity-tabs-%s">' % entity.eid)
-        else:
-            uid = make_uid('tab')
-            w(u'<div id="entity-tabs-%s">' % uid)
-        w(u'<ul class="css-tabs" id="tabs-%s">' % entity.eid)
+        uid = entity and entity.eid or make_uid('tab')
+        w(u'<div id="entity-tabs-%s">' % uid)
+        w(u'<ul class="css-tabs" id="tabs-%s">' % uid)
         for tab in tabs:
             w(u'<li>')
             w(u'<a href="#as-%s">' % tab)
@@ -123,7 +120,7 @@ class TabsMixin(LazyViewMixin):
             w(u'</li>')
         w(u'</ul>')
         w(u'</div>')
-        w(u'<div id="panes-%s">' % entity.eid)
+        w(u'<div id="panes-%s">' % uid)
         for tab in tabs:
             w(u'<div>')
             if entity:
@@ -139,7 +136,7 @@ class TabsMixin(LazyViewMixin):
     jQuery(function() {
       jQuery("#tabs-%(eeid)s").tabs("#panes-%(eeid)s > div", {initialIndex: %(tabindex)s});
       set_tab('%(vid)s', '%(cookiename)s');
-    });''' % {'eeid' : entity.eid,
+    });''' % {'eeid' : (entity and entity.eid or uid),
               'vid'  : active_tab,
               'cookiename' : self.cookie_name,
               'tabindex' : tabs.index(active_tab)})
