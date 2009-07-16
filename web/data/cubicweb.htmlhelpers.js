@@ -16,78 +16,6 @@ function baseuri() {
     return '';
 }
 
-// XXX this is used exactly ONCE in web/views/massmailing.py
-function insertText(text, areaId) {
-    var textarea = jQuery('#' + areaId);
-    if (document.selection) { // IE
-        var selLength;
-        textarea.focus();
-        sel = document.selection.createRange();
-        selLength = sel.text.length;
-        sel.text = text;
-        sel.moveStart('character', selLength-text.length);
-        sel.select();
-    } else if (textarea.selectionStart || textarea.selectionStart == '0') { // mozilla
-        var startPos = textarea.selectionStart;
-        var endPos = textarea.selectionEnd;
-	// insert text so that it replaces the [startPos, endPos] part
-        textarea.value = textarea.value.substring(0,startPos) + text + textarea.value.substring(endPos,textarea.value.length);
-	// set cursor pos at the end of the inserted text
-        textarea.selectionStart = textarea.selectionEnd = startPos+text.length;
-        textarea.focus();
-    } else { // safety belt for other browsers
-        textarea.value += text;
-    }
-}
-
-/* taken from dojo toolkit */
-// XXX this looks unused
-function setCaretPos(element, start, end){
-    if(!end){ end = element.value.length; }  // NOTE: Strange - should be able to put caret at start of text?
-    // Mozilla
-    // parts borrowed from http://www.faqts.com/knowledge_base/view.phtml/aid/13562/fid/130
-    if(element.setSelectionRange){
-        element.focus();
-        element.setSelectionRange(start, end);
-    } else if(element.createTextRange){ // IE
-        var range = element.createTextRange();
-        with(range){
-            collapse(true);
-            moveEnd('character', end);
-            moveStart('character', start);
-            select();
-        }
-    } else { //otherwise try the event-creation hack (our own invention)
-        // do we need these?
-        element.value = element.value;
-        element.blur();
-        element.focus();
-        // figure out how far back to go
-        var dist = parseInt(element.value.length)-end;
-        var tchar = String.fromCharCode(37);
-        var tcc = tchar.charCodeAt(0);
-        for(var x = 0; x < dist; x++){
-            var te = document.createEvent("KeyEvents");
-            te.initKeyEvent("keypress", true, true, null, false, false, false, false, tcc, tcc);
-            element.dispatchEvent(te);
-        }
-    }
-}
-
-
-// XXX this looks unused
-function setProgressMessage(label) {
-    var body = document.getElementsByTagName('body')[0];
-    body.appendChild(DIV({id: 'progress'}, label));
-    jQuery('#progress').show();
-}
-
-// XXX this looks unused
-function resetProgressMessage() {
-    var body = document.getElementsByTagName('body')[0];
-    jQuery('#progress').hide();
-}
-
 
 /* set body's cursor to 'progress' */
 function setProgressCursor() {
@@ -151,7 +79,7 @@ function toggleVisibility(elemId) {
 
 
 /* toggles visibility of login popup div */
-// XXX used exactly ONCE
+// XXX used exactly ONCE in basecomponents
 function popupLoginBox() {
     toggleVisibility('popupLoginBox');
     jQuery('#__login:visible').focus();
@@ -193,14 +121,6 @@ function setCheckboxesState2(nameprefix, value, checked){
     forEach(filter(filterfunc, elements), function(cb) {cb.checked=checked;});
 }
 
-/* centers an HTML element on the screen */
-// XXX looks unused
-function centerElement(obj){
-    var vpDim = getViewportDimensions();
-    var elemDim = getElementDimensions(obj);
-    setElementPosition(obj, {'x':((vpDim.w - elemDim.w)/2),
-			     'y':((vpDim.h - elemDim.h)/2)});
-}
 
 /* this function is a hack to build a dom node from html source */
 function html2dom(source) {
@@ -223,12 +143,6 @@ function rql_for_eid(eid) { return 'Any X WHERE X eid ' + eid; }
 function isTextNode(domNode) { return domNode.nodeType == 3; }
 function isElementNode(domNode) { return domNode.nodeType == 1; }
 
-// XXX this looks unused
-function changeLinkText(link, newText) {
-    jQuery(link).text(newText);
-}
-
-
 function autogrow(area) {
     if (area.scrollHeight > area.clientHeight && !window.opera) {
 	if (area.rows < 20) {
@@ -236,21 +150,12 @@ function autogrow(area) {
 	}
     }
 }
-
-// XXX this looks unused
-function limitTextAreaSize(textarea, size) {
-    var $area = jQuery(textarea);
-    $area.val($area.val().slice(0, size));
-}
-
 //============= page loading events ==========================================//
 
 CubicWeb.rounded = [
 		    ['div.sideBoxBody', 'bottom 6px'],
 		    ['div.boxTitle, div.boxPrefTitle, div.sideBoxTitle, th.month', 'top 6px']
 		    ];
-
-
 
 function roundedCorners(node) {
     node = jQuery(node);
@@ -259,7 +164,8 @@ function roundedCorners(node) {
     }
 }
 
-jQuery(document).ready(function () {roundedCorners(this.body)});
+jQuery(document).ready(function () {roundedCorners(this.body);});
+
+CubicWeb.provide('corners.js');
 
 CubicWeb.provide('htmlhelpers.js');
-
