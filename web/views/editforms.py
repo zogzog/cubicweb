@@ -137,6 +137,12 @@ class ClickAndEditFormView(FormViewMixIn, EntityView):
             self._attribute_form(entity, value, rtype, role, reload,
                                  row, col, default, landing_zone)
         else:
+            dispctrl = uicfg.primaryview_display_ctrl.etype_get(entity.e_schema,
+                                                                rtype, role)
+            vid = dispctrl.get('vid', 'reledit')
+            if vid != 'reledit': # reledit explicitly disabled
+                self.wview(vid, entity.related(rtype, role))
+                return
             if rvid is None:
                 rvid = self._compute_best_vid(entity, rtype, role)
             rset = entity.related(rtype, role)
