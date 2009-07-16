@@ -134,6 +134,7 @@ class TabsMixin(LazyViewMixin):
         w(u'</div>')
         # call the set_tab() JS function *after* each tab is generated
         # because the callback binding needs to be done before
+        # XXX make work history: true
         self.req.add_onload(u'''
     jQuery(function() {
       jQuery("#tabs-%(eeid)s").tabs("#panes-%(eeid)s > div", {initialIndex: %(tabindex)s});
