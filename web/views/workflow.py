@@ -11,7 +11,7 @@
 __docformat__ = "restructuredtext en"
 _ = unicode
 
-from logilab.mtconverter import html_escape
+from logilab.mtconverter import xml_escape
 from logilab.common.graph import escape, GraphGenerator, DotBackend
 
 from cubicweb import Unauthorized, view
@@ -118,7 +118,7 @@ class StateInContextView(view.EntityView):
     __select__ = implements('State')
 
     def cell_call(self, row, col):
-        self.w(html_escape(self.view('textincontext', self.rset,
+        self.w(xml_escape(self.view('textincontext', self.rset,
                                      row=row, col=col)))
 
 
@@ -145,8 +145,8 @@ class CWETypeWorkflowView(view.EntityView):
         self.w(u'<h1>%s</h1>' % (self.req._('workflow for %s')
                                  % display_name(self.req, entity.name)))
         self.w(u'<img src="%s" alt="%s"/>' % (
-            html_escape(entity.absolute_url(vid='ewfgraph')),
-            html_escape(self.req._('graphical workflow for %s') % entity.name)))
+            xml_escape(entity.absolute_url(vid='ewfgraph')),
+            xml_escape(self.req._('graphical workflow for %s') % entity.name)))
 
 
 class WorkflowDotPropsHandler(object):

@@ -6,7 +6,7 @@
 :license: GNU Lesser General Public License, v2.1 - http://www.gnu.org/licenses
 """
 from logilab.common.testlib import TestCase, unittest_main
-from cubicweb.rtags import RelationTags, RelationTagsSet
+from cubicweb.rtags import RelationTags, RelationTagsSet, RelationTagsDict
 
 class RelationTagsTC(TestCase):
 
@@ -53,12 +53,30 @@ class RelationTagsTC(TestCase):
         rtags.tag_subject_of(('*', 'travaille', '*'), 'secondary')
         self.assertEquals(rtags.get('Societe', 'travaille', '*', 'subject'),
                           set(('primary', 'secondary')))
-        self.assertEquals(rtags.get('Societe', 'travaille', '*', 'subject'),
-                          set(('primary', 'secondary')))
         self.assertEquals(rtags.get('Note', 'travaille', '*', 'subject'),
                           set(('secondary',)))
         self.assertEquals(rtags.get('Note', 'tags', "*", 'subject'),
                           set())
+
+    def test_rtagdict_expansion(self):
+        rtags = RelationTagsDict()
+        rtags.tag_subject_of(('Societe', 'travaille', '*'),
+                             {'key1': 'val1', 'key2': 'val1'})
+        rtags.tag_subject_of(('*', 'travaille', '*'),
+                             {'key1': 'val0', 'key3': 'val0'})
+        rtags.tag_subject_of(('Societe', 'travaille', '*'),
+                             {'key2': 'val2'})
+        self.assertEquals(rtags.get('Societe', 'travaille', '*', 'subject'),
+                          {'key1': 'val1', 'key2': 'val2', 'key3': 'val0'})
+        self.assertEquals(rtags.get('Note', 'travaille', '*', 'subject'),
+                          {'key1': 'val0', 'key3': 'val0'})
+        self.assertEquals(rtags.get('Note', 'tags', "*", 'subject'),
+                          {})
+
+        rtags.setdefault(('Societe', 'travaille', '*', 'subject'), 'key1', 'val4')
+        rtags.setdefault(('Societe', 'travaille', '*', 'subject'), 'key4', 'val4')
+        self.assertEquals(rtags.get('Societe', 'travaille', '*', 'subject'),
+                          {'key1': 'val1', 'key2': 'val2', 'key3': 'val0', 'key4': 'val4'})
 
 if __name__ == '__main__':
     unittest_main()

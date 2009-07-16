@@ -7,8 +7,9 @@
 """
 __docformat__ = "restructuredtext en"
 
-from logilab.mtconverter import html_escape
+from logilab.mtconverter import xml_escape
 
+from cubicweb.schema import display_name
 from cubicweb.selectors import implements
 from cubicweb.common import Unauthorized
 from cubicweb.web.views import baseviews, primary
@@ -79,9 +80,9 @@ class EmailAddressOneLineView(baseviews.OneLineView):
         if entity.reverse_primary_email:
             self.w(u'<b>')
         if entity.alias:
-            self.w(u'%s &lt;' % html_escape(entity.alias))
-        self.w('<a href="%s">%s</a>' % (html_escape(entity.absolute_url()),
-                                        html_escape(entity.display_address())))
+            self.w(u'%s &lt;' % xml_escape(entity.alias))
+        self.w('<a href="%s">%s</a>' % (xml_escape(entity.absolute_url()),
+                                        xml_escape(entity.display_address())))
         if entity.alias:
             self.w(u'&gt;\n')
         if entity.reverse_primary_email:
@@ -108,8 +109,8 @@ class EmailAddressMailToView(baseviews.OneLineView):
             mailto = "mailto:%s <%s>" % (alias, entity.display_address())
         else:
             mailto = "mailto:%s" % entity.display_address()
-        self.w(u'<a href="%s">%s</a>' % (html_escape(mailto),
-                                         html_escape(entity.display_address())))
+        self.w(u'<a href="%s">%s</a>' % (xml_escape(mailto),
+                                         xml_escape(entity.display_address())))
         if entity.reverse_primary_email:
             self.w(u'</b>')
 

@@ -326,4 +326,18 @@ class AcceptMixIn(object):
     """
     # XXX deprecated, no more necessary
 
+def get_schema_property(eschema, rschema, role, property):
+    # XXX use entity.e_schema.role_rproperty(role, rschema, property, tschemas[0]) once yams > 0.23.0 is out
+    if role == 'subject':
+        targetschema = rschema.objects(eschema)[0]
+        return rschema.rproperty(eschema, targetschema, property)
+    targetschema = rschema.subjects(eschema)[0]
+    return rschema.rproperty(targetschema, eschema, property)
+
+def compute_cardinality(eschema, rschema, role):
+    if role == 'subject':
+        targetschema = rschema.objects(eschema)[0]
+        return rschema.rproperty(eschema, targetschema, 'cardinality')[0]
+    targetschema = rschema.subjects(eschema)[0]
+    return rschema.rproperty(targetschema, eschema, 'cardinality')[1]
 

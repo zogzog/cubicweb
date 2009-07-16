@@ -15,7 +15,7 @@ from smtplib import SMTP
 import simplejson
 
 from logilab.common.decorators import cached
-from logilab.mtconverter import html_escape
+from logilab.mtconverter import xml_escape
 
 from cubicweb import NoSelectableObject, ValidationError, ObjectNotFound, typed_eid
 from cubicweb.utils import strptime
@@ -394,27 +394,16 @@ class JSonController(Controller):
             rset = self.req.execute('Any X,N WHERE X eid %%(x)s, X %s N' % rtype,
                                     {'x': eid}, 'x')
             entity = rset.get_entity(0, 0)
-            value = entity.printable_value(rtype)
-            return (success, args, value or default)
+            value = entity.printable_value(rtype) or default
+            return (success, args, value)
         else:
             return (success, args, None)
 
     @jsonize
-    def js_edit_relation(self, action, names, values,
-                         rtype, role, eid, vid, default):
-        success, args = self.validate_form(action, names, values)
-        if success:
-            entity = self.req.eid_rset(eid).get_entity(0, 0)
-            rset = entity.related(rtype, role)
-            if rset:
-                output = self.view(vid, rset)
-                if vid == 'textoutofcontext':
-                    output = html_escape(output)
-            else:
-                output = default
-            return (success, args, output)
-        else:
-            return (success, args, None)
+    def js_reledit_form(self, eid, rtype, role, lzone):
+        entity = self.req.eid_rset(eid).get_entity(0, 0)
+        return entity.view('reledit', rtype=rtype, role=role,
+                           landing_zone=lzone)
 
     @jsonize
     def js_i18n(self, msgids):

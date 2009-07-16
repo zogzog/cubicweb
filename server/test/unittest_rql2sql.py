@@ -1436,6 +1436,22 @@ WHERE NOT EXISTS(SELECT 1 FROM created_by_relation AS rel_created_by0 WHERE rel_
                     '''SELECT COUNT(1)
 WHERE EXISTS(SELECT 1 FROM owned_by_relation AS rel_owned_by0, cw_Affaire AS P WHERE rel_owned_by0.eid_from=P.cw_eid AND rel_owned_by0.eid_to=1 UNION SELECT 1 FROM owned_by_relation AS rel_owned_by1, cw_Note AS P WHERE rel_owned_by1.eid_from=P.cw_eid AND rel_owned_by1.eid_to=1)''')
 
+    def test_attr_map(self):
+        def generate_ref(gen, linkedvar, rel):
+            linkedvar.accept(gen)
+            return 'VERSION_DATA(%s)' % linkedvar._q_sql
+        self.o.attr_map['Affaire.ref'] = generate_ref
+        try:
+            self._check('Any R WHERE X ref R',
+                        '''SELECT VERSION_DATA(X.cw_eid)
+FROM cw_Affaire AS X''')
+            self._check('Any X WHERE X ref 1',
+                        '''SELECT X.cw_eid
+FROM cw_Affaire AS X
+WHERE VERSION_DATA(X.cw_eid)=1''')
+        finally:
+            self.o.attr_map.clear()
+
 
 class SqliteSQLGeneratorTC(PostgresSQLGeneratorTC):
 

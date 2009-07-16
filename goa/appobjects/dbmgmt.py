@@ -12,7 +12,7 @@ from os.path import exists, join, abspath
 from pickle import loads, dumps
 
 from logilab.common.decorators import cached
-from logilab.mtconverter import html_escape
+from logilab.mtconverter import xml_escape
 
 from cubicweb.selectors import none_rset, match_user_groups
 from cubicweb.common.view import StartupView
@@ -54,7 +54,7 @@ class AuthInfo(StartupView):
                     break
         values.append('__session=%s' % cookie['__session'].value)
         self.w(u"<p>pass this flag to the client: --cookie='%s'</p>"
-               % html_escape('; '.join(values)))
+               % xml_escape('; '.join(values)))
 
 
 
@@ -148,7 +148,7 @@ class ContentInit(StartupView):
                          % cpath)
                 self.w(u'<div>click <a href="%s?vid=contentclear">here</a> to '
                        '<b>delete all datastore content</b> so process can be '
-                       'reinitialized</div>' % html_escape(self.req.base_url()))
+                       'reinitialized</div>' % xml_escape(self.req.base_url()))
         Put(status)
 
     @property
@@ -159,11 +159,11 @@ class ContentInit(StartupView):
                                              repo=self.config.repository())
 
     def msg(self, msg):
-        self.w(u'<div class="message">%s</div>' % html_escape(msg))
+        self.w(u'<div class="message">%s</div>' % xml_escape(msg))
     def redirect(self, msg):
         raise Redirect(self.req.build_url('', msg))
     def continue_link(self):
-        self.w(u'<a href="%s">continue</a><br/>' % html_escape(self.req.url()))
+        self.w(u'<a href="%s">continue</a><br/>' % xml_escape(self.req.url()))
 
 
 class ContentClear(StartupView):

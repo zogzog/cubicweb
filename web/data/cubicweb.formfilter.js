@@ -126,27 +126,35 @@ function initFacetBoxEvents(root) {
 		});
 		facet.find('div.facetCheckBox').click(function () {
 		    var $this = jQuery(this);
+		    if ($this.hasClass('facetValueDisabled')){
+		     	    return
+		    }
 		    if ($this.hasClass('facetValueSelected')) {
 			$this.removeClass('facetValueSelected');
 			$this.find('img').each(function (i){
 			if (this.getAttribute('cubicweb:unselimg')){
 			       this.setAttribute('src', UNSELECTED_BORDER_IMG);
+			       this.setAttribute('alt', (_('not selected')));
 			    }
 			    else{
 			       this.setAttribute('src', UNSELECTED_IMG);
+			       this.setAttribute('alt', (_('not selected')));
 			    }
 			});
 			var index = parseInt($this.attr('cubicweb:idx'));
-			var shift = jQuery.grep(facet.find('.facetValueSelected'), function (n) {
-			    var nindex = parseInt(n.getAttribute('cubicweb:idx'));
-			    return nindex > index;
-			}).length;
-			index += shift;
-			var parent = this.parentNode;
-			var $insertAfter = jQuery(parent).find('.facetCheckBox:nth('+index+')');
-			if ( ! ($insertAfter.length == 1 && index == 0) ) {
-			    // only rearrange element if necessary
-			    $insertAfter.after(this);
+			// we dont need to move the element when cubicweb:idx == 0
+			if (index > 0){
+			    var shift = jQuery.grep(facet.find('.facetValueSelected'), function (n) {
+				    var nindex = parseInt(n.getAttribute('cubicweb:idx'));
+				    return nindex > index;
+				}).length;
+			    index += shift;
+			    var parent = this.parentNode;
+			    var $insertAfter = jQuery(parent).find('.facetCheckBox:nth('+index+')');
+			    if ( ! ($insertAfter.length == 1 && shift == 0) ) {
+				// only rearrange element if necessary
+				$insertAfter.after(this);
+			    }
 			}
 		    } else {
 			var lastSelected = facet.find('.facetValueSelected:last');
@@ -157,7 +165,8 @@ function initFacetBoxEvents(root) {
 			    jQuery(parent).prepend(this);
 			}
 			jQuery(this).addClass('facetValueSelected');
-			jQuery(this).find('img').attr('src', SELECTED_IMG);
+			var $img = jQuery(this).find('img');
+			$img.attr('src', SELECTED_IMG).attr('alt', (_('selected')));
 		    }
 		    buildRQL.apply(null, evalJSON(form.attr('cubicweb:facetargs')));
 		    facet.find('.facetBody').animate({scrollTop: 0}, '');

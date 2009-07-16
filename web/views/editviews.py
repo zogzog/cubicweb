@@ -11,7 +11,7 @@ _ = unicode
 from simplejson import dumps
 
 from logilab.common.decorators import cached
-from logilab.mtconverter import html_escape
+from logilab.mtconverter import xml_escape
 
 from cubicweb import typed_eid
 from cubicweb.view import EntityView
@@ -64,10 +64,10 @@ class OutOfContextSearch(EntityView):
         erset = entity.as_rset()
         if self.req.match_search_state(erset):
             self.w(u'<a href="%s" title="%s">%s</a>&nbsp;<a href="%s" title="%s">[...]</a>' % (
-                html_escape(linksearch_select_url(self.req, erset)),
+                xml_escape(linksearch_select_url(self.req, erset)),
                 self.req._('select this entity'),
-                html_escape(entity.view('textoutofcontext')),
-                html_escape(entity.absolute_url(vid='primary')),
+                xml_escape(entity.view('textoutofcontext')),
+                xml_escape(entity.absolute_url(vid='primary')),
                 self.req._('view detail for this entity')))
         else:
             entity.view('outofcontext', w=self.w)
@@ -111,7 +111,7 @@ class UnrelatedDivs(EntityView):
   </select>
 </div>
 """ % (hidden and 'hidden' or '', divid, selectid,
-       html_escape(dumps(entity.eid)), is_cell and 'true' or 'null', relname,
+       xml_escape(dumps(entity.eid)), is_cell and 'true' or 'null', relname,
        '\n'.join(options))
 
     def _get_select_options(self, entity, rschema, target):
@@ -126,13 +126,13 @@ class UnrelatedDivs(EntityView):
         for eview, reid in form.form_field_vocabulary(field, limit):
             if reid is None:
                 options.append('<option class="separator">-- %s --</option>'
-                               % html_escape(eview))
+                               % xml_escape(eview))
             else:
                 optionid = relation_id(eid, rtype, target, reid)
                 if optionid not in pending_inserts:
                     # prefix option's id with letters to make valid XHTML wise
                     options.append('<option id="id%s" value="%s">%s</option>' %
-                                   (optionid, reid, html_escape(eview)))
+                                   (optionid, reid, xml_escape(eview)))
         return options
 
     def _get_search_options(self, entity, rschema, target, targettypes):
@@ -145,7 +145,7 @@ class UnrelatedDivs(EntityView):
                                  __mode=mode)
             options.append((eschema.display_name(self.req),
                             '<option value="%s">%s %s</option>' % (
-                html_escape(url), _('Search for'), eschema.display_name(self.req))))
+                xml_escape(url), _('Search for'), eschema.display_name(self.req))))
         return [o for l, o in sorted(options)]
 
     def _get_basket_options(self, entity, rschema, target, targettypes):
@@ -156,7 +156,7 @@ class UnrelatedDivs(EntityView):
                                                             target, targettypes):
             optionid = relation_id(entity.eid, rtype, target, basketeid)
             options.append('<option id="%s" value="%s">%s %s</option>' % (
-                optionid, basketeid, _('link to each item in'), html_escape(basketname)))
+                optionid, basketeid, _('link to each item in'), xml_escape(basketname)))
         return options
 
     def _get_basket_links(self, ueid, target, targettypes):

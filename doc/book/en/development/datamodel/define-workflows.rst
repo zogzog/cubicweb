@@ -118,7 +118,7 @@ variables:
 * `%(seid)s`, the object's current state eid
 
 
-.. image:: images/lax-book.03-transitions-view.en.png
+.. image:: ../../images/lax-book.03-transitions-view.en.png
 
 You can notice that in the action box of a BlogEntry, the state
 is now listed as well as the possible transitions defined by the workflow.

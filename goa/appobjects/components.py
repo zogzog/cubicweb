@@ -7,7 +7,7 @@
 """
 __docformat__ = "restructuredtext en"
 
-from logilab.mtconverter import html_escape
+from logilab.mtconverter import xml_escape
 
 from cubicweb import typed_eid
 from cubicweb.selectors import one_line_rset, match_search_state, accept
@@ -74,7 +74,7 @@ def entity_types_no_count(self, eschemas):
         label = display_name(req, etype, 'plural')
         view = self.vreg.select('views', 'list', req, req.etype_rset(etype))
         url = view.url()
-        etypelink = u'&nbsp;<a href="%s">%s</a>' % (html_escape(url), label)
+        etypelink = u'&nbsp;<a href="%s">%s</a>' % (xml_escape(url), label)
         yield (label, etypelink, self.add_entity_link(eschema, req))
 
 ManageView.entity_types = entity_types_no_count

@@ -571,7 +571,7 @@ repository.',
           }),
         ('sender-addr',
          {'type' : 'string',
-          'default': 'devel@logilab.fr',
+          'default': 'cubicweb@mydomain.com',
           'help': 'email address used as HELO address for outgoing emails from \
 the repository',
           'group': 'email', 'inputlevel': 1,

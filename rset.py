@@ -538,10 +538,12 @@ def attr_desc_iterator(rqlst, index=0):
     for i, term in enumerate(rqlst.selection):
         if i == index:
             continue
-        try:
-            # XXX rewritten const
-            var = term.variable
-        except AttributeError:
+        # XXX rewritten const
+        # use iget_nodes for (hack) case where we have things like MAX(V)
+        for vref in term.iget_nodes(nodes.VariableRef):
+            var = vref.variable
+            break
+        else:
             continue
         #varname = var.name
         for ref in var.references():

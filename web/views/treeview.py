@@ -8,7 +8,7 @@
 __docformat__ = "restructuredtext en"
 
 from logilab.common.decorators import monkeypatch
-from logilab.mtconverter import html_escape
+from logilab.mtconverter import xml_escape
 
 from cubicweb.utils import make_uid
 from cubicweb.interfaces import ITree
@@ -39,7 +39,7 @@ class TreeView(EntityView):
         self.w(u'</ul>')
         if initial_load and not self.req.form.get('fname'):
             self.req.add_css('jquery.treeview.css')
-            self.req.add_js(('cubicweb.ajax.js', 'jquery.treeview.js'))
+            self.req.add_js(('cubicweb.ajax.js', 'cubicweb.widgets.js', 'jquery.treeview.js'))
             self.req.html_headers.add_onload(u"""
 jQuery("#tree-%s").treeview({toggle: toggleTree, prerendered: true});""" % treeid)
 
@@ -113,7 +113,7 @@ class TreeViewItemView(EntityView):
             w(u'<li class="%s">' % u' '.join(liclasses))
         else:
             rql = entity.children_rql() % {'x': entity.eid}
-            url = html_escape(self.build_url('json', rql=rql, vid=parentvid,
+            url = xml_escape(self.build_url('json', rql=rql, vid=parentvid,
                                              pageid=self.req.pageid,
                                              treeid=treeid,
                                              fname='view',

@@ -8,7 +8,7 @@
 
 __docformat__ = "restructuredtext en"
 
-from logilab.mtconverter import html_escape
+from logilab.mtconverter import xml_escape
 
 from cubicweb import NoSelectableObject, role
 from cubicweb.selectors import partial_has_related_entities
@@ -47,7 +47,7 @@ class LazyViewMixin(object):
         elif rset:
             urlparams['rql'] = rset.printable_rql()
         w(u'<div id="lazy-%s" cubicweb:loadurl="%s">' % (
-            vid, html_escape(self.build_url('json', **urlparams))))
+            vid, xml_escape(self.build_url('json', **urlparams))))
         if show_spinbox:
             w(u'<img src="data/loading.gif" id="%s-hole" alt="%s"/>'
               % (vid, self.req._('loading')))

@@ -10,11 +10,11 @@ __docformat__ = "restructuredtext en"
 from warnings import warn
 from datetime import datetime
 
-from logilab.mtconverter import html_escape
+from logilab.mtconverter import xml_escape
 from yams.constraints import SizeConstraint, StaticVocabularyConstraint
 
 from cubicweb.schema import FormatConstraint
-from cubicweb.utils import ustrftime
+from cubicweb.utils import ustrftime, compute_cardinality
 from cubicweb.common import tags, uilib
 from cubicweb.web import INTERNAL_FIELD_VALUE
 from cubicweb.web.formwidgets import (
@@ -203,9 +203,17 @@ class StringField(Field):
                 widget = Select()
             elif self.max_length and self.max_length < 257:
                 widget = TextInput()
+
         super(StringField, self).init_widget(widget)
         if isinstance(self.widget, TextArea):
             self.init_text_area(self.widget)
+        elif isinstance(self.widget, TextInput):
+            self.init_text_input(self.widget)
+
+    def init_text_input(self, widget):
+        if self.max_length:
+            widget.attrs.setdefault('size', min(45, self.max_length))
+            widget.attrs.setdefault('maxlength', self.max_length)
 
     def init_text_area(self, widget):
         if self.max_length < 513:
@@ -218,6 +226,9 @@ class RichTextField(StringField):
     def __init__(self, format_field=None, **kwargs):
         super(RichTextField, self).__init__(**kwargs)
         self.format_field = format_field
+
+    def init_text_area(self, widget):
+        pass
 
     def get_widget(self, form):
         if self.widget is None:
@@ -300,9 +311,9 @@ class FileField(StringField):
         if self.format_field or self.encoding_field:
             divid = '%s-advanced' % form.context[self]['name']
             wdgs.append(u'<a href="%s" title="%s"><img src="%s" alt="%s"/></a>' %
-                        (html_escape(uilib.toggle_action(divid)),
+                        (xml_escape(uilib.toggle_action(divid)),
                          form.req._('show advanced fields'),
-                         html_escape(form.req.build_url('data/puce_down.png')),
+                         xml_escape(form.req.build_url('data/puce_down.png')),
                          form.req._('show advanced fields')))
             wdgs.append(u'<div id="%s" class="hidden">' % divid)
             if self.format_field:
@@ -460,7 +471,7 @@ def guess_field(eschema, rschema, role='subject', skip_meta_attr=True, **kwargs)
     fieldclass = None
     if role == 'subject':
         targetschema = rschema.objects(eschema)[0]
-        card = rschema.rproperty(eschema, targetschema, 'cardinality')[0]
+        card = compute_cardinality(eschema, rschema, role)
         help = rschema.rproperty(eschema, targetschema, 'description')
         if rschema.is_final():
             if rschema.rproperty(eschema, targetschema, 'internationalizable'):
@@ -470,7 +481,7 @@ def guess_field(eschema, rschema, role='subject', skip_meta_attr=True, **kwargs)
             kwargs.setdefault('initial', get_default)
     else:
         targetschema = rschema.subjects(eschema)[0]
-        card = rschema.rproperty(targetschema, eschema, 'cardinality')[1]
+        card = compute_cardinality(eschema, rschema, role)
         help = rschema.rproperty(targetschema, eschema, 'description')
     kwargs['required'] = card in '1+'
     kwargs['name'] = rschema.type

@@ -10,7 +10,7 @@ _ = unicode
 
 from warnings import warn
 
-from logilab.mtconverter import html_escape
+from logilab.mtconverter import xml_escape
 
 from cubicweb import Unauthorized
 from cubicweb.view import EntityView
@@ -100,7 +100,7 @@ class PrimaryView(EntityView):
 
     def render_entity_title(self, entity):
         """default implementation return dc_title"""
-        title = html_escape(entity.dc_title())
+        title = xml_escape(entity.dc_title())
         if title:
             self.w(u'<h1><span class="etype">%s</span> %s</h1>'
                    % (entity.dc_type().capitalize(), title))
@@ -117,19 +117,7 @@ class PrimaryView(EntityView):
 
     def render_entity_attributes(self, entity, siderelations=None):
         for rschema, tschemas, role, dispctrl in self._section_def(entity, 'attributes'):
-            # don't use reledit as default vid for composite relation
-            if rschema.is_final():
-                defaultvid = 'reledit'
-            # XXX use entity.e_schema.role_rproperty(role, rschema, 'composite', tschemas[0]) once yams > 0.23.0 is out
-            elif role == 'subject' and \
-                 rschema.rproperty(entity.e_schema, tschemas[0], 'composite'):
-                defaultvid = 'csv'
-            elif role == 'object' and \
-                 rschema.rproperty(tschemas[0], entity.e_schema, 'composite'):
-                defaultvid = 'csv'
-            else:
-                defaultvid = 'reledit'
-            vid =  dispctrl.get('vid', defaultvid)
+            vid = dispctrl.get('vid', 'reledit')
             if rschema.is_final() or vid == 'reledit':
                 value = entity.view(vid, rtype=rschema.type, role=role)
             else:

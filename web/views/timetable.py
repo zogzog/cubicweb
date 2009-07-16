@@ -6,7 +6,7 @@
 :license: GNU Lesser General Public License, v2.1 - http://www.gnu.org/licenses
 """
 
-from logilab.mtconverter import html_escape
+from logilab.mtconverter import xml_escape
 
 from cubicweb.interfaces import ITimetableViews
 from cubicweb.selectors import implements
@@ -190,7 +190,7 @@ class TimeTableView(AnyRsetView):
                     if value:
                         task_descr, first_row = value
                         if first_row:
-                            url = html_escape(task_descr.task.absolute_url(vid="edition"))
+                            url = xml_escape(task_descr.task.absolute_url(vid="edition"))
                             self.w(u'<td rowspan="%d" class="%s %s" onclick="document.location=\'%s\'">&nbsp;<div>' % (
                                 task_descr.lines, task_descr.color, filled_klasses[kj], url))
                             task_descr.task.view('tooltip', w=self.w)

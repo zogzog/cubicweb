@@ -9,14 +9,15 @@ __docformat__ = "restructuredtext en"
 
 from simplejson import dumps
 
-from logilab.mtconverter import html_escape
+from logilab.mtconverter import xml_escape
 
 from cubicweb.vregistry import objectify_selector
 from cubicweb.selectors import (non_final_entity, two_lines_rset,
                                 match_context_prop, yes, relation_possible)
 from cubicweb.web.box import BoxTemplate
 from cubicweb.web.facet import (AbstractFacet, FacetStringWidget, RelationFacet,
-                                prepare_facets_rqlst, filter_hiddens)
+                                prepare_facets_rqlst, filter_hiddens, _cleanup_rqlst,
+                                _prepare_vocabulary_rqlst)
 
 @objectify_selector
 def contextview_selector(cls, req, rset=None, row=None, col=None, view=None,
@@ -41,7 +42,7 @@ class FilterBox(BoxTemplate):
     needs_css = 'cubicweb.facets.css'
     needs_js = ('cubicweb.ajax.js', 'cubicweb.formfilter.js')
 
-    bkLinkBox_template = u'<div class="facetTitle">%s</div>'
+    bk_linkbox_template = u'<div class="facetTitle">%s</div>'
 
     def facetargs(self):
         """this method returns the list of extra arguments that should
@@ -82,10 +83,11 @@ class FilterBox(BoxTemplate):
                         widgets.append(wdg)
             if not widgets:
                 return
-            self.displayBookmarkLink(rset)
+            if self.bk_linkbox_template:
+                self.display_bookmark_link(rset)
             w = self.w
             w(u'<form method="post" id="%sForm" cubicweb:facetargs="%s" action="">'  % (
-                divid, html_escape(dumps([divid, vid, paginate, self.facetargs()]))))
+                divid, xml_escape(dumps([divid, vid, paginate, self.facetargs()]))))
             w(u'<fieldset>')
             hiddens = {'facets': ','.join(wdg.facet.id for wdg in widgets),
                        'baserql': baserql}
@@ -101,7 +103,7 @@ class FilterBox(BoxTemplate):
             import cubicweb
             cubicweb.info('after facets with rql: %s' % repr(rqlst))
 
-    def displayBookmarkLink(self, rset):
+    def display_bookmark_link(self, rset):
         eschema = self.schema.eschema('Bookmark')
         if eschema.has_perm(self.req, 'add'):
             bk_path = 'view?rql=%s' % rset.printable_rql()
@@ -110,10 +112,10 @@ class FilterBox(BoxTemplate):
             bk_add_url = self.build_url('add/Bookmark', path=bk_path, title=bk_title, __linkto=linkto)
             bk_base_url = self.build_url('add/Bookmark', title=bk_title, __linkto=linkto)
             bk_link = u'<a cubicweb:target="%s" id="facetBkLink" href="%s">%s</a>' % (
-                    html_escape(bk_base_url),
-                    html_escape(bk_add_url),
+                    xml_escape(bk_base_url),
+                    xml_escape(bk_add_url),
                     self.req._('bookmark this search'))
-            self.w(self.bkLinkBox_template % bk_link)
+            self.w(self.bk_linkbox_template % bk_link)
 
     def get_facets(self, rset, mainvar):
         return self.vreg.possible_vobjects('facets', self.req, rset=rset,
@@ -162,6 +164,21 @@ class ETypeFacet(RelationFacet):
             return
         self.rqlst.add_type_restriction(self.filtered_variable, value)
 
+    def possible_values(self):
+        """return a list of possible values (as string since it's used to
+        compare to a form value in javascript) for this facet
+        """
+        rqlst = self.rqlst
+        rqlst.save_state()
+        try:
+            _cleanup_rqlst(rqlst, self.filtered_variable)
+            etype_var = _prepare_vocabulary_rqlst(rqlst, self.filtered_variable, self.rtype, self.role)
+            attrvar = rqlst.make_variable()
+            rqlst.add_selected(attrvar)
+            rqlst.add_relation(etype_var, 'name', attrvar)
+            return [etype for _, etype in self.rqlexec(rqlst.as_string())]
+        finally:
+            rqlst.recover()
 
 class HasTextFacet(AbstractFacet):
     __select__ = relation_possible('has_text', 'subject') & match_context_prop()

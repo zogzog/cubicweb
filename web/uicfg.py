@@ -68,7 +68,8 @@ Automatic form configuration
 __docformat__ = "restructuredtext en"
 
 from cubicweb import neg_role
-from cubicweb.rtags import RelationTags, RelationTagsBool, RelationTagsSet
+from cubicweb.rtags import (RelationTags, RelationTagsBool,
+                            RelationTagsSet, RelationTagsDict)
 from cubicweb.web import formwidgets
 
 
@@ -118,14 +119,13 @@ for attr in ('name', 'meta', 'final', 'symetric', 'inlined'):
     primaryview_section.tag_attribute(('CWRType', attr), 'hidden')
 
 
-class DisplayCtrlRelationTags(RelationTags):
+class DisplayCtrlRelationTags(RelationTagsDict):
     def __init__(self, *args, **kwargs):
         super(DisplayCtrlRelationTags, self).__init__(*args, **kwargs)
         self._counter = 0
 
     def tag_relation(self, key, tag):
-        assert isinstance(tag, dict)
-        super(DisplayCtrlRelationTags, self).tag_relation(key, tag)
+        tag = super(DisplayCtrlRelationTags, self).tag_relation(key, tag)
         self._counter += 1
         tag.setdefault('order', self._counter)
 
@@ -152,11 +152,8 @@ def init_primaryview_display_ctrl(rtag, sschema, rschema, oschema, role):
     else:
         sschema = '*'
         label = '%s_%s' % (rschema, role)
-    displayinfo = rtag.get(sschema, rschema, oschema, role)
-    if displayinfo is None:
-        displayinfo = {}
-        rtag.tag_relation((sschema, rschema, oschema, role), displayinfo)
-    displayinfo.setdefault('label', label)
+    rtag.setdefault((sschema, rschema, oschema, role), 'label', label)
+    rtag.setdefault((sschema, rschema, oschema, role), 'order', rtag._counter)
 
 primaryview_display_ctrl = DisplayCtrlRelationTags('primaryview_display_ctrl',
                                                    init_primaryview_display_ctrl)
@@ -243,7 +240,7 @@ autoform_section.tag_subject_of(('*', 'primary_email', '*'), 'generic')
 autoform_field = RelationTags('autoform_field')
 
 # relations'field explicit kwargs (given to field's __init__)
-autoform_field_kwargs = RelationTags()
+autoform_field_kwargs = RelationTagsDict()
 autoform_field_kwargs.tag_attribute(('RQLExpression', 'expression'),
                                     {'widget': formwidgets.TextInput})
 autoform_field_kwargs.tag_attribute(('Bookmark', 'path'),

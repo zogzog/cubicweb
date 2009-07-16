@@ -15,12 +15,12 @@ Date.prototype.equals = function(other) {
 	return true;
     }
     return false;
-}
+};
 
 Date.prototype.add = function(days) {
-    var res = new Date()
-    res.setTime(this.getTime() + (days * ONE_DAY))
-    return res
+    var res = new Date();
+    res.setTime(this.getTime() + (days * ONE_DAY));
+    return res;
 };
 
 Date.prototype.sub = function(days) {
@@ -29,14 +29,14 @@ Date.prototype.sub = function(days) {
 
 Date.prototype.iadd = function(days) {
     // in-place add
-    this.setTime(this.getTime() + (days * ONE_DAY))
+    this.setTime(this.getTime() + (days * ONE_DAY));
     // avoid strange rounding problems !!
     this.setHours(12);
 };
 
 Date.prototype.isub = function(days) {
     // in-place sub
-    this.setTime(this.getTime() - (days * ONE_DAY))
+    this.setTime(this.getTime() - (days * ONE_DAY));
 };
 
 /*
@@ -170,14 +170,14 @@ Array.prototype.contains = function(element) {
  */
 String.prototype.startsWith = function(prefix) {
     return this.indexOf(prefix) == 0;
-}
+};
 
 /* python-like endsWith method for js strings */
 String.prototype.endsWith = function(suffix) {
     var startPos = this.length - suffix.length;
     if (startPos < 0) { return false; }
     return this.lastIndexOf(suffix, startPos) == startPos;
-}
+};
 
 /* python-like strip method for js strings */
 String.prototype.strip = function() {
@@ -187,12 +187,12 @@ String.prototype.strip = function() {
 /* py-equiv: string in list */
 String.prototype.in_ = function(values) {
     return findValue(values, this) != -1;
-}
+};
 
 /* py-equiv: str.join(list) */
 String.prototype.join = function(args) {
     return args.join(this);
-}
+};
 
 /* python-like list builtin
  * transforms an iterable in a js sequence

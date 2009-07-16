@@ -59,8 +59,8 @@ function postAjaxLoad(node) {
     if (typeof buildWidgets != 'undefined') {
 	buildWidgets(node);
     }
-    if (typeof roundedCornersOnLoad != 'undefined') {
-	roundedCornersOnLoad();
+    if (typeof roundedCorners != 'undefined') {
+	roundedCorners(node);
     }
     loadDynamicFragments(node);
     jQuery(CubicWeb).trigger('ajax-loaded');
@@ -231,6 +231,7 @@ function reloadComponent(compid, rql, registry, nodeid, extraargs) {
 	    // make sure the component is visible
 	    removeElementClass(node, "hidden");
 	    swapDOM(node, domnode);
+	    postAjaxLoad(domnode);
 	}
     });
     d.addCallback(resetCursor);

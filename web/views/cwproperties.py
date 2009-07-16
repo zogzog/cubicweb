@@ -8,7 +8,7 @@
 __docformat__ = "restructuredtext en"
 _ = unicode
 
-from logilab.mtconverter import html_escape
+from logilab.mtconverter import xml_escape
 
 from logilab.common.decorators import cached
 
@@ -154,7 +154,7 @@ class SystemCWPropertiesForm(FormViewMixIn, StartupView):
                 docmsgid = '%s_%s_description' % (group, oid)
                 doc = _(docmsgid)
                 if doc != docmsgid:
-                    w(u'<div class="helper">%s</div>' % html_escape(doc).capitalize())
+                    w(u'<div class="helper">%s</div>' % xml_escape(doc).capitalize())
                 w(u'</div>')
                 w(u'<fieldset id="field_%(oid)s_%(group)s" class="%(group)s preferences hidden">'
                   % {'oid':oid, 'group':group})

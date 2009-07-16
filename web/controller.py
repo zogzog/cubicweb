@@ -184,11 +184,9 @@ class Controller(AppObject):
         elif '__redirectpath' in self.req.form:
             # if redirect path was explicitly specified in the form, use it
             path = self.req.form['__redirectpath']
-            if self._edited_entity:
-                msg = newparams.get('__message', '')
-                msg += ' (<a href="%s">%s</a>)' % (
-                    self._edited_entity.absolute_url(),
-                    self.req._('click here to see created entity'))
+            if self._edited_entity and path != self._edited_entity.rest_path():
+                # XXX may be here on modification? if yes the message should be
+                # modified where __createdpath is detected (cw.web.request)
                 newparams['__createdpath'] = self._edited_entity.rest_path()
         elif self._after_deletion_path:
             # else it should have been set during form processing

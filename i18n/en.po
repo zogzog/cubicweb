@@ -160,6 +160,9 @@ msgid ""
 "can also display a <a href=\"%s\">complete schema with meta-data</a>.</div>"
 msgstr ""
 
+msgid "<no value>"
+msgstr ""
+
 msgid "?*"
 msgstr "0..1 0..n"
 
@@ -1147,6 +1150,9 @@ msgstr ""
 msgid "click on the box to cancel the deletion"
 msgstr ""
 
+msgid "click to edit this field"
+msgstr ""
+
 msgid "comment"
 msgstr ""
 
@@ -1721,12 +1727,6 @@ msgstr "\"final entity or relation type\" facet"
 msgid "facets_cwfinal-facet_description"
 msgstr ""
 
-msgid "facets_cwmeta-facet"
-msgstr ""
-
-msgid "facets_cwmeta-facet_description"
-msgstr ""
-
 msgid "facets_etype-facet"
 msgstr "\"entity type\" facet"
 
@@ -2257,9 +2257,6 @@ msgid "not authorized"
 msgstr ""
 
 msgid "not selected"
-msgstr ""
-
-msgid "not specified"
 msgstr ""
 
 msgid "not the initial state for this entity"
@@ -2945,6 +2942,12 @@ msgstr ""
 
 msgid "view workflow"
 msgstr ""
+
+msgid "view_index"
+msgstr "index"
+
+msgid "view_manage"
+msgstr "site management"
 
 msgid "views"
 msgstr ""

@@ -146,17 +146,22 @@ class ButtonInput(Input):
 
 class TextArea(FieldWidget):
     """<textarea>"""
+
     def render(self, form, field):
         name, values, attrs = self._render_attrs(form, field)
         attrs.setdefault('onkeyup', 'autogrow(this)')
-        attrs.setdefault('cols', 80)
-        attrs.setdefault('rows', 20)
         if not values:
             value = u''
         elif len(values) == 1:
             value = values[0]
         else:
             raise ValueError('a textarea is not supposed to be multivalued')
+        lines = value.splitlines()
+        linecount = len(lines)
+        for line in lines:
+            linecount += len(line) / 80
+        attrs.setdefault('cols', 80)
+        attrs.setdefault('rows', min(15, linecount + 2))
         return tags.textarea(value, name=name, **attrs)
 
 

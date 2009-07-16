@@ -9,7 +9,7 @@ __docformat__ = "restructuredtext en"
 _ = unicode
 
 from logilab.common.deprecation import class_renamed
-from logilab.mtconverter import html_escape
+from logilab.mtconverter import xml_escape
 
 from cubicweb import role
 from cubicweb.utils import merge_dicts
@@ -117,7 +117,7 @@ class NavigationComponent(Component):
     def page_link(self, path, params, start, stop, content):
         url = self.build_url(path, **merge_dicts(params, {self.start_param : start,
                                                           self.stop_param : stop,}))
-        url = html_escape(url)
+        url = xml_escape(url)
         if start == self.starting_from:
             return self.selected_page_link_templ % (url, content, content)
         return self.page_link_templ % (url, content, content)
@@ -130,7 +130,7 @@ class NavigationComponent(Component):
         stop = start + self.page_size - 1
         url = self.build_url(**merge_dicts(params, {self.start_param : start,
                                                     self.stop_param : stop,}))
-        url = html_escape(url)
+        url = xml_escape(url)
         return self.previous_page_link_templ % (url, title, content)
 
     def next_link(self, params, content='&gt;&gt;', title=_('next_results')):
@@ -140,7 +140,7 @@ class NavigationComponent(Component):
         stop = start + self.page_size - 1
         url = self.build_url(**merge_dicts(params, {self.start_param : start,
                                                     self.stop_param : stop,}))
-        url = html_escape(url)
+        url = xml_escape(url)
         return self.next_page_link_templ % (url, title, content)
 
 

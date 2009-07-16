@@ -50,8 +50,7 @@ def init_repository(config, interactive=True, drop=False, vreg=None):
     driver = source['db-driver']
     sqlcnx = repo.system_source.get_connection()
     sqlcursor = sqlcnx.cursor()
-    def execute(sql, args=None):
-        repo.system_source.doexec(sqlcursor, sql, args)
+    execute = sqlcursor.execute
     if drop:
         dropsql = sqldropschema(schema, driver)
         try:

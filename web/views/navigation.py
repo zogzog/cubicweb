@@ -10,7 +10,7 @@ _ = unicode
 
 from rql.nodes import VariableRef, Constant
 
-from logilab.mtconverter import html_escape
+from logilab.mtconverter import xml_escape
 from logilab.common.deprecation import obsolete
 
 from cubicweb.interfaces import IPrevNext
@@ -136,7 +136,7 @@ class SortedNavigation(NavigationComponent):
     def format_link_content(self, startstr, stopstr):
         text = u'%s - %s' % (startstr.lower()[:self.nb_chars],
                              stopstr.lower()[:self.nb_chars])
-        return html_escape(text)
+        return xml_escape(text)
 
     def write_links(self, params, blocklist):
         self.w(u'<div class="pagination">')
@@ -159,7 +159,7 @@ def limit_rset_using_paged_nav(self, req, rset, w, forcedisplay=False,
             nav.clean_params(params)
             # make a link to see them all
             if show_all_option:
-                url = html_escape(self.build_url(__force_display=1, **params))
+                url = xml_escape(self.build_url(__force_display=1, **params))
                 w(u'<p><a href="%s">%s</a></p>\n'
                   % (url, req._('show %s results') % len(rset)))
             rset.limit(offset=start, limit=stop-start, inplace=True)
@@ -198,24 +198,24 @@ class NextPrevNavigationComponent(EntityVComponent):
                 self.w(self.previous_link(previous, textsize))
                 self.w(u'</div>')
                 self.req.html_headers.add_raw('<link rel="prev" href="%s" />'
-                                              % html_escape(previous.absolute_url()))
+                                              % xml_escape(previous.absolute_url()))
             if next:
                 self.w(u'<div class="nextEntity right">')
                 self.w(self.next_link(next, textsize))
                 self.w(u'</div>')
                 self.req.html_headers.add_raw('<link rel="next" href="%s" />'
-                                              % html_escape(next.absolute_url()))
+                                              % xml_escape(next.absolute_url()))
             self.w(u'</div>')
             self.w(u'<div class="clear"></div>')
 
     def previous_link(self, previous, textsize):
         return u'<a href="%s" title="%s">&lt;&lt; %s</a>' % (
-            html_escape(previous.absolute_url()),
+            xml_escape(previous.absolute_url()),
             self.req._('i18nprevnext_previous'),
-            html_escape(cut(previous.dc_title(), textsize)))
+            xml_escape(cut(previous.dc_title(), textsize)))
 
     def next_link(self, next, textsize):
         return u'<a href="%s" title="%s">%s &gt;&gt;</a>' % (
-            html_escape(next.absolute_url()),
+            xml_escape(next.absolute_url()),
             self.req._('i18nprevnext_next'),
-            html_escape(cut(next.dc_title(), textsize)))
+            xml_escape(cut(next.dc_title(), textsize)))

@@ -11,7 +11,7 @@ __docformat__ = "restructuredtext en"
 
 import simplejson
 
-from logilab.mtconverter import html_escape
+from logilab.mtconverter import xml_escape
 
 from cubicweb.interfaces import ICalendarable
 from cubicweb.selectors import implements
@@ -68,7 +68,7 @@ class TimelineJsonView(EntityView):
         if start is None and stop is None:
             return None
         event_data = {'start': start.strftime(self.date_fmt),
-                      'title': html_escape(entity.dc_title()),
+                      'title': xml_escape(entity.dc_title()),
                       'description': entity.dc_description(format='text/html'),
                       'link': entity.absolute_url(),
                       }
@@ -95,7 +95,7 @@ class TimelineViewMixIn(object):
             additional = u''
         self.w(u'<div class="widget" cubicweb:wdgtype="%s" '
                u'cubicweb:loadtype="auto" cubicweb:loadurl="%s" %s >' %
-               (self.widget_class, html_escape(loadurl),
+               (self.widget_class, xml_escape(loadurl),
                 additional))
         self.w(u'</div>')
 

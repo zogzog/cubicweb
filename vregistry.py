@@ -1,10 +1,10 @@
 """
-* the vregistry handle various type of objects interacting
-  together. The vregistry handle registration of dynamically loaded
-  objects and provide a convenient api access to those objects
+* the vregistry handles various types of objects interacting
+  together. The vregistry handles registration of dynamically loaded
+  objects and provides a convenient api to access those objects
   according to a context
 
-* to interact with the vregistry, object should inherit from the
+* to interact with the vregistry, objects should inherit from the
   VObject abstract class
 
 * the selection procedure has been generalized by delegating to a

@@ -74,7 +74,7 @@ class ManageView(StartupView):
             else:
                 href = req.build_url('view', vid='creation', etype='Card', wikiid='index')
                 label = self.req._('create an index page')
-            self.w(u'<br/><a href="%s">%s</a>\n' % (html_escape(href), label))
+            self.w(u'<br/><a href="%s">%s</a>\n' % (xml_escape(href), label))
 
     def folders(self):
         self.w(u'<h4>%s</h4>\n' % self.req._('Browse by category'))
@@ -89,7 +89,7 @@ class ManageView(StartupView):
             if v.category != 'startupview' or v.id in ('index', 'tree', 'manage'):
                 continue
             self.w('<p><a href="%s">%s</a></p>' % (
-                html_escape(v.url()), html_escape(self.req._(v.title).capitalize())))
+                xml_escape(v.url()), xml_escape(self.req._(v.title).capitalize())))
 
     def entities(self):
         schema = self.schema
@@ -144,7 +144,7 @@ class ManageView(StartupView):
             else:
                 url = self.build_url('view', rql='%s X' % etype)
             etypelink = u'&nbsp;<a href="%s">%s</a> (%d)' % (
-                html_escape(url), label, nb)
+                xml_escape(url), label, nb)
             yield (label, etypelink, self.add_entity_link(eschema, req))
 
     def add_entity_link(self, eschema, req):
@@ -152,13 +152,13 @@ class ManageView(StartupView):
         if not eschema.has_perm(req, 'add'):
             return u''
         return u'[<a href="%s" title="%s">+</a>]' % (
-            html_escape(self.create_url(eschema.type)),
+            xml_escape(self.create_url(eschema.type)),
             self.req.__('add a %s' % eschema))
 
 
 class IndexView(ManageView):
     id = 'index'
-    title = _('index')
+    title = _('view_index')
 
     def display_folders(self):
         return 'Folder' in self.schema and self.req.execute('Any COUNT(X) WHERE X is Folder')[0][0]
@@ -184,9 +184,9 @@ class SchemaTabImageView(StartupView):
         self.w(_(u'<div>This schema of the data model <em>excludes</em> the '
                  u'meta-data, but you can also display a <a href="%s">complete '
                  u'schema with meta-data</a>.</div>')
-               % html_escape(self.build_url('view', vid='schemagraph', skipmeta=0)))
+               % xml_escape(self.build_url('view', vid='schemagraph', withmeta=1)))
         self.w(u'<img src="%s" alt="%s"/>\n' % (
-            html_escape(self.req.build_url('view', vid='schemagraph', skipmeta=1)),
+            xml_escape(self.req.build_url('view', vid='schemagraph', skipmeta=1)),
             self.req._("graphical representation of the application'schema")))
 
 
@@ -228,15 +228,15 @@ class ManagerSchemaPermissionsView(StartupView, management.SecurityViewMixIn):
         self.w(u'<h2 class="schema">%s</h2>' % _('index').capitalize())
         self.w(u'<h4>%s</h4>' %   _('Entities').capitalize())
         ents = []
-        for eschema in entities:
-            url = html_escape(self.build_url('schema', **formparams))
+        for eschema in sorted(entities):
+            url = xml_escape(self.build_url('schema', **formparams))
             ents.append(u'<a class="grey" href="%s#%s">%s</a> (%s)' % (
                 url,  eschema.type, eschema.type, _(eschema.type)))
         self.w(u', '.join(ents))
         self.w(u'<h4>%s</h4>' % (_('relations').capitalize()))
         rels = []
-        for rschema in relations:
-            url = html_escape(self.build_url('schema', **formparams))
+        for rschema in sorted(relations):
+            url = xml_escape(self.build_url('schema', **formparams))
             rels.append(u'<a class="grey" href="%s#%s">%s</a> (%s), ' %  (
                 url , rschema.type, rschema.type, _(rschema.type)))
         self.w(u', '.join(ents))
@@ -254,7 +254,7 @@ class ManagerSchemaPermissionsView(StartupView, management.SecurityViewMixIn):
         for eschema in entities:
             self.w(u'<a id="%s" href="%s"/>' %  (eschema.type, eschema.type))
             self.w(u'<h3 class="schema">%s (%s) ' % (eschema.type, _(eschema.type)))
-            url = html_escape(self.build_url('schema', **formparams) + '#index')
+            url = xml_escape(self.build_url('schema', **formparams) + '#index')
             self.w(u'<a href="%s"><img src="%s" alt="%s"/></a>' % (
                 url,  self.req.external_resource('UP_ICON'), _('up')))
             self.w(u'</h3>')
@@ -281,7 +281,7 @@ class ManagerSchemaPermissionsView(StartupView, management.SecurityViewMixIn):
         for rschema in relations:
             self.w(u'<a id="%s" href="%s"/>' %  (rschema.type, rschema.type))
             self.w(u'<h3 class="schema">%s (%s) ' % (rschema.type, _(rschema.type)))
-            url = html_escape(self.build_url('schema', **formparams) + '#index')
+            url = xml_escape(self.build_url('schema', **formparams) + '#index')
             self.w(u'<a href="%s"><img src="%s" alt="%s"/></a>' % (
                 url,  self.req.external_resource('UP_ICON'), _('up')))
             self.w(u'</h3>')

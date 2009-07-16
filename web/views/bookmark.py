@@ -7,7 +7,7 @@
 """
 __docformat__ = "restructuredtext en"
 
-from logilab.mtconverter import html_escape
+from logilab.mtconverter import xml_escape
 
 from cubicweb import Unauthorized
 from cubicweb.selectors import implements
@@ -35,12 +35,12 @@ class BookmarkPrimaryView(primary.PrimaryView):
         entity = self.complete_entity(row, col)
         self.w(u'&nbsp;')
         self.w(u"<span class='title'><b>")
-        self.w(u"%s : %s" % (self.req._('Bookmark'), html_escape(entity.title)))
+        self.w(u"%s : %s" % (self.req._('Bookmark'), xml_escape(entity.title)))
         self.w(u"</b></span>")
         self.w(u'<br/><br/><div class="content"><a href="%s">' % (
-            html_escape(entity.actual_url())))
+            xml_escape(entity.actual_url())))
         self.w(u'</a>')
-        self.w(u'<p>%s%s</p>' % (self.req._('Used by:'), ', '.join(html_escape(u.name())
+        self.w(u'<p>%s%s</p>' % (self.req._('Used by:'), ', '.join(xml_escape(u.name())
                                                                    for u in entity.bookmarked_by)))
         self.w(u'</div>')
 
@@ -75,8 +75,8 @@ class BookmarksBox(box.UserRQLBoxTemplate):
         else:
             dlink = None
         for bookmark in rset.entities():
-            label = '<a href="%s">%s</a>' % (html_escape(bookmark.action_url()),
-                                             html_escape(bookmark.title))
+            label = '<a href="%s">%s</a>' % (xml_escape(bookmark.action_url()),
+                                             xml_escape(bookmark.title))
             if candelete:
                 dlink = u'[<a href="javascript:removeBookmark(%s)" title="%s">-</a>]' % (
                     bookmark.eid, _('delete this bookmark'))

@@ -16,7 +16,7 @@ additional (disabled by default) boxes
 __docformat__ = "restructuredtext en"
 _ = unicode
 
-from logilab.mtconverter import html_escape
+from logilab.mtconverter import xml_escape
 
 from cubicweb.selectors import match_user_groups, non_final_entity
 from cubicweb.view import EntityView
@@ -191,7 +191,7 @@ class SearchBox(BoxTemplate):
         else:
             rql = ''
         form = self.formdef % (req.build_url('view'), req.next_tabindex(),
-                               html_escape(rql), req.next_tabindex())
+                               xml_escape(rql), req.next_tabindex())
         title = u"""<span onclick="javascript: toggleVisibility('rqlinput')">%s</span>""" % req._(self.title)
         box = BoxWidget(title, self.id, _class="searchBoxFrame", islist=False, escape=False)
         box.append(BoxHtml(form))

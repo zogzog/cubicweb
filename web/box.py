@@ -8,7 +8,7 @@
 __docformat__ = "restructuredtext en"
 _ = unicode
 
-from logilab.mtconverter import html_escape
+from logilab.mtconverter import xml_escape
 
 from cubicweb import Unauthorized, role as get_role, target as get_target
 from cubicweb.selectors import (one_line_rset,  primary_view,
@@ -74,7 +74,7 @@ class BoxTemplate(View):
         .format_actions method
         """
         if escape:
-            title = html_escape(title)
+            title = xml_escape(title)
         return self.box_action(self._action(title, path, **kwargs))
 
     def _action(self, title, path, **kwargs):

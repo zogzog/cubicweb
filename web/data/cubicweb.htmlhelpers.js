@@ -1,4 +1,5 @@
 CubicWeb.require('python.js');
+CubicWeb.require('jquery.corner.js');
 
 /* returns the document's baseURI. (baseuri() uses document.baseURI if
  * available and inspects the <base> tag manually otherwise.)
@@ -15,6 +16,7 @@ function baseuri() {
     return '';
 }
 
+// XXX this is used exactly ONCE in web/views/massmailing.py
 function insertText(text, areaId) {
     var textarea = jQuery('#' + areaId);
     if (document.selection) { // IE
@@ -39,6 +41,7 @@ function insertText(text, areaId) {
 }
 
 /* taken from dojo toolkit */
+// XXX this looks unused
 function setCaretPos(element, start, end){
     if(!end){ end = element.value.length; }  // NOTE: Strange - should be able to put caret at start of text?
     // Mozilla
@@ -71,30 +74,30 @@ function setCaretPos(element, start, end){
     }
 }
 
+
+// XXX this looks unused
 function setProgressMessage(label) {
     var body = document.getElementsByTagName('body')[0];
     body.appendChild(DIV({id: 'progress'}, label));
     jQuery('#progress').show();
 }
 
+// XXX this looks unused
 function resetProgressMessage() {
     var body = document.getElementsByTagName('body')[0];
     jQuery('#progress').hide();
 }
 
 
-/* set body's cursor to 'progress'
- */
+/* set body's cursor to 'progress' */
 function setProgressCursor() {
     var body = document.getElementsByTagName('body')[0];
     body.style.cursor = 'progress';
 }
 
-/*
- * reset body's cursor to default (mouse cursor). The main
+/* reset body's cursor to default (mouse cursor). The main
  * purpose of this function is to be used as a callback in the
- * deferreds' callbacks chain.
- */
+ * deferreds' callbacks chain. */
 function resetCursor(result) {
     var body = document.getElementsByTagName('body')[0];
     body.style.cursor = 'default';
@@ -137,7 +140,7 @@ function asURL(props) {
  */
 function firstSelected(selectNode) {
     var selection = filter(attrgetter('selected'), selectNode.options);
-    return (selection.length>0) ? getNodeAttribute(selection[0], 'value'):null;
+    return (selection.length > 0) ? getNodeAttribute(selection[0], 'value'):null;
 }
 
 /* toggle visibility of an element by its id
@@ -148,22 +151,12 @@ function toggleVisibility(elemId) {
 
 
 /* toggles visibility of login popup div */
+// XXX used exactly ONCE
 function popupLoginBox() {
     toggleVisibility('popupLoginBox');
     jQuery('#__login:visible').focus();
 }
 
-/*
- * return true (resp. false) if <element> (resp. doesn't) matches <properties>
- */
-function elementMatches(properties, element) {
-    for (prop in properties) {
-	if (getNodeAttribute(element, prop) != properties[prop]) {
-	    return false;
-	}
-    }
-    return true;
-}
 
 /* returns the list of elements in the document matching the tag name
  * and the properties provided
@@ -174,9 +167,13 @@ function elementMatches(properties, element) {
  *                      list() function)
  */
 function getElementsMatching(tagName, properties, /* optional */ parent) {
-    var filterfunc = partial(elementMatches, properties);
     parent = parent || document;
-    return filter(filterfunc, parent.getElementsByTagName(tagName));
+    return filter(function elementMatches(element) {
+                     for (prop in properties) {
+                       if (getNodeAttribute(element, prop) != properties[prop]) {
+	                 return false;}}
+                    return true;},
+                  parent.getElementsByTagName(tagName));
 }
 
 /*
@@ -196,9 +193,8 @@ function setCheckboxesState2(nameprefix, value, checked){
     forEach(filter(filterfunc, elements), function(cb) {cb.checked=checked;});
 }
 
-/*
- * centers an HTML element on the screen
- */
+/* centers an HTML element on the screen */
+// XXX looks unused
 function centerElement(obj){
     var vpDim = getViewportDimensions();
     var elemDim = getElementDimensions(obj);
@@ -227,15 +223,9 @@ function rql_for_eid(eid) { return 'Any X WHERE X eid ' + eid; }
 function isTextNode(domNode) { return domNode.nodeType == 3; }
 function isElementNode(domNode) { return domNode.nodeType == 1; }
 
+// XXX this looks unused
 function changeLinkText(link, newText) {
     jQuery(link).text(newText);
-//    for (var i=0; i<link.childNodes.length; i++) {
-//	var node = link.childNodes[i];
-//	if (isTextNode(node)) {
-//	    swapDOM(node, document.createTextNode(newText));
-//	    break;
-//	}
-//    }
 }
 
 
@@ -247,19 +237,29 @@ function autogrow(area) {
     }
 }
 
+// XXX this looks unused
 function limitTextAreaSize(textarea, size) {
     var $area = jQuery(textarea);
     $area.val($area.val().slice(0, size));
 }
 
 //============= page loading events ==========================================//
-function roundedCornersOnLoad() {
-    jQuery('div.sideBoxBody').corner('bottom 6px');
-    jQuery('div.boxTitle, div.boxPrefTitle, div.sideBoxTitle, th.month').corner('top 6px');
+
+CubicWeb.rounded = [
+		    ['div.sideBoxBody', 'bottom 6px'],
+		    ['div.boxTitle, div.boxPrefTitle, div.sideBoxTitle, th.month', 'top 6px']
+		    ];
+
+
+
+function roundedCorners(node) {
+    node = jQuery(node);
+    for(var r=0; r < CubicWeb.rounded.length; r++) {
+       node.find(CubicWeb.rounded[r][0]).corner(CubicWeb.rounded[r][1]);
+    }
 }
 
-jQuery(document).ready(roundedCornersOnLoad);
-
+jQuery(document).ready(function () {roundedCorners(this.body)});
 
 CubicWeb.provide('htmlhelpers.js');
 
