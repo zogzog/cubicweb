@@ -184,8 +184,7 @@ function toggleTree(event) {
 Widgets.TreeView = defclass("TreeView", null, {
     __init__: function(wdgnode) {
 	jQuery(wdgnode).treeview({toggle: toggleTree,
-				  prerendered: true
-				 });
+				  prerendered: true});
     }
 });
 

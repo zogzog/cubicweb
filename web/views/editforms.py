@@ -183,9 +183,10 @@ class ClickAndEditFormView(FormViewMixIn, EntityView):
                                                             onclick=cancelclick)])
         field = guess_field(entity.e_schema, entity.schema.rschema(rtype), role)
         form.append_field(field)
-        self.w(u'<div id="%s-reledit" class="field">%s&nbsp;' % (divid, value))
+        self.w(u'<div id="%s-reledit" class="field">' % divid)
         self.w(tags.div(lzone, klass='editableField', id=divid,
                         onclick=self._onclick % event_data))
+        self.w(value)
         renderer = self._build_renderer(entity, rtype, role)
         self.w(form.form_render(renderer=renderer))
         self.w(u'</div>')
