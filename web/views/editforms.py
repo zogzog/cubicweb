@@ -165,7 +165,6 @@ class ClickAndEditFormView(FormViewMixIn, EntityView):
 
     def _relation_form(self, entity, value, rtype, role, row, col, reload, rvid, default, lzone):
         lzone = self._build_landing_zone(lzone)
-        value = lzone + value
         divid = 'd%s' % make_uid('%s-%s' % (rtype, entity.eid))
         event_data = {'divid' : divid, 'eid' : entity.eid, 'rtype' : rtype, 'vid' : rvid,
                       'reload' : reload, 'default' : default, 'role' : role,
@@ -184,8 +183,9 @@ class ClickAndEditFormView(FormViewMixIn, EntityView):
         field = guess_field(entity.e_schema, entity.schema.rschema(rtype), role)
         form.append_field(field)
         self.w(u'<div id="%s-reledit" class="field">' % divid)
-        self.w(tags.div(value, klass='editableField', id=divid,
+        self.w(tags.div(lzone, klass='editableField', id=divid,
                         onclick=self._onclick % event_data))
+        self.w(value)
         renderer = self._build_renderer(entity, rtype, role)
         self.w(form.form_render(renderer=renderer))
         self.w(u'</div>')
