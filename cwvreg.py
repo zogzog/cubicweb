@@ -414,7 +414,7 @@ class MulCnxCubicWebRegistry(CubicWebRegistry):
         """return an instance of the most specific object according
         to parameters
 
-        raise NoSelectableObject if not object apply
+        raise NoSelectableObject if no object apply
         """
         for vobjectcls in vobjects:
             self._fix_cls_attrs(vobjectcls)
