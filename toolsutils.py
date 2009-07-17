@@ -289,5 +289,5 @@ def config_connect(appid, optconfig):
     password = optconfig.password
     if not password:
         password = getpass('password: ')
-    return connect(user=user, password=password, host=optconfig.host, database=appid)
+    return connect(login=user, password=password, host=optconfig.host, database=appid)
 
