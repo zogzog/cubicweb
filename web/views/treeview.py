@@ -16,7 +16,7 @@ from cubicweb.selectors import implements
 from cubicweb.view import EntityView
 
 def treecookiename(treeid):
-    return str('treestate-%s' % treeid)
+    return str('%s-treestate' % treeid)
 
 class TreeView(EntityView):
     id = 'treeview'
