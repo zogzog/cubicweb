@@ -277,7 +277,7 @@ def serialize_schema(cursor, schema, verbose=False):
     """synchronize schema and permissions in the database according to
     current schema
     """
-    print 'serializing the schema, this may take some time'
+    print '-> storing the schema in the system source, this may take some time'
     eschemas = schema.entities()
     aller = eschemas + schema.relations()
     if not verbose:
