@@ -47,12 +47,12 @@ develop new cubes.
 There is also a wide variety of cubes listed on http://www.cubicweb.org/Project available as debian packages and tarball.
 
 The repositories are signed with `Logilab's gnupg key`_. To avoid warning on "apt-get update":
-1. become root using sudo 
+1. become root using sudo
 2. download http://ftp.logilab.org/dists/logilab-dists-key.asc using e.g. wget
 3. run "apt-key add logilab-dists-key.asc"
 4. re-run apt-get update (manually or through the package manager, whichever you prefer)
 
-.. `Logilab's gnupg key` _http://ftp.logilab.org/dists/logilab-dists-key.asc
+.. _`Logilab's gnupg key`: http://ftp.logilab.org/dists/logilab-dists-key.asc
 
 Install from source
 ```````````````````
@@ -69,6 +69,9 @@ extension::
   hg fclone http://www.logilab.org/hg/forests/cubicweb
 
 See :ref:`MercurialPresentation` for more details about Mercurial.
+
+In both cases, make sure you have installed the dependencies (see appendixes for
+the list).
 
 Postgres installation
 `````````````````````

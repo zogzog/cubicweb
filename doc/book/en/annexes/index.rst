@@ -16,6 +16,7 @@ The following chapters are reference material.
    cubicweb-ctl
    rql/index
    mercurial
+   depends
 
 (X)HTML tricks to apply
 -----------------------
