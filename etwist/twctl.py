@@ -8,6 +8,7 @@
 
 import sys
 
+from cubicweb import underline_title
 from cubicweb.toolsutils import CommandHandler
 from cubicweb.web.webctl import WebCreateHandler
 
@@ -20,7 +21,7 @@ class TWCreateHandler(WebCreateHandler):
 
     def bootstrap(self, cubes, inputlevel=0):
         """bootstrap this configuration"""
-        print '** twisted configuration'
+        print '\n'+underline_title('Configuring Twisted')
         mainpyfile = self.config.server_file()
         mainpy = open(mainpyfile, 'w')
         mainpy.write('''
@@ -28,7 +29,7 @@ from cubicweb.etwist import server
 application = server.main(%r, %r)
 ''' % (self.config.appid, self.config.name))
         mainpy.close()
-        print 'application\'s twisted file %s generated' % mainpyfile
+        print '-> generated %s' % mainpyfile
         super(TWCreateHandler, self).bootstrap(cubes, inputlevel)
 
 

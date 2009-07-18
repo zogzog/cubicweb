@@ -295,3 +295,6 @@ def target(obj):
     except AttributeError:
         return neg_role(obj.role)
 
+def underline_title(title, car='-'):
+    return title+'\n'+(car*len(title))
+

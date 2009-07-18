@@ -34,12 +34,12 @@ def create_dir(directory):
     """create a directory if it doesn't exist yet"""
     try:
         makedirs(directory)
-        print 'created directory', directory
+        print '-> created directory %s.' % directory
     except OSError, ex:
         import errno
         if ex.errno != errno.EEXIST:
             raise
-        print 'directory %s already exists' % directory
+        print '-> directory %s already exists, no need to create it.' % directory
 
 def create_symlink(source, target):
     """create a symbolic link"""
@@ -56,7 +56,7 @@ def create_copy(source, target):
 def rm(whatever):
     import shutil
     shutil.rmtree(whatever)
-    print 'removed %s' % whatever
+    print '-> removed %s' % whatever
 
 def show_diffs(appl_file, ref_file, askconfirm=True):
     """interactivly replace the old file with the new file according to
@@ -133,7 +133,7 @@ def restrict_perms_to_user(filepath, log=None):
     if log:
         log('set %s permissions to 0600', filepath)
     else:
-        print 'set %s permissions to 0600' % filepath
+        print '-> set %s permissions to 0600' % filepath
     chmod(filepath, 0600)
 
 def confirm(question, default_is_yes=True):

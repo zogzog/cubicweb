@@ -8,6 +8,7 @@ web configuration
 """
 __docformat__ = "restructuredtext en"
 
+from cubicweb import underline_title
 from cubicweb.toolsutils import CommandHandler, confirm
 
 
@@ -16,14 +17,12 @@ class WebCreateHandler(CommandHandler):
 
     def bootstrap(self, cubes, inputlevel=0):
         """bootstrap this configuration"""
-        print '** generic web configuration'
+        print '\n'+underline_title('Generic web configuration')
         config = self.config
         if config.repo_method == 'pyro':
-            print
-            print '** repository server configuration'
-            print '-' * 72
+            print '\n'+underline_title('Repository server configuration')
             config.input_config('pyro-client', inputlevel)
-        if confirm('allow anonymous access', False):
+        if confirm('Allow anonymous access ?', False):
             config.global_set_option('anonymous-user', 'anon')
             config.global_set_option('anonymous-password', 'anon')
 

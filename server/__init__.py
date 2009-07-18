@@ -45,7 +45,7 @@ def init_repository(config, interactive=True, drop=False, vreg=None):
     assert len(repo.sources) == 1, repo.sources
     schema = repo.schema
     sourcescfg = config.sources()
-    print '-> creating necessary tables into the system source.'
+    print '-> creating tables...'
     source = sourcescfg['system']
     driver = source['db-driver']
     sqlcnx = repo.system_source.get_connection()

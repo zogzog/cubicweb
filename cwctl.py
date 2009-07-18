@@ -10,7 +10,7 @@ from os.path import exists, join, isfile, isdir
 
 from logilab.common.clcommands import register_commands, pop_arg
 
-from cubicweb import ConfigurationError, ExecutionError, BadCommandUsage
+from cubicweb import ConfigurationError, ExecutionError, BadCommandUsage, underline_title
 from cubicweb.cwconfig import CubicWebConfiguration as cwcfg, CONFIGURATIONS
 from cubicweb.toolsutils import Command, main_run,  rm, create_dir, confirm
 
@@ -286,20 +286,22 @@ repository and the web server.',
             print ', '.join(cwcfg.available_cubes())
             return
         # create the registry directory for this application
+        print '\n'+underline_title('Creating the application %s' % appid)
         create_dir(config.apphome)
         # load site_cubicweb from the cubes dir (if any)
         config.load_site_cubicweb()
         # cubicweb-ctl configuration
-        print '** application\'s %s configuration' % configname
-        print '-' * 72
+        print '\n'+underline_title('Configuring the application (%s.conf)' % configname)
         config.input_config('main', self.config.config_level)
         # configuration'specific stuff
         print
         helper.bootstrap(cubes, self.config.config_level)
         # write down configuration
         config.save()
+        print '-> generated %s' % config.main_config_file()
         # handle i18n files structure
         # in the first cube given
+        print '-> preparing i18n catalogs'
         from cubicweb.common import i18n
         langs = [lang for lang, _ in i18n.available_catalogs(join(templdirs[0], 'i18n'))]
         errors = config.i18ncompile(langs)
@@ -317,12 +319,7 @@ repository and the web server.',
             # this directory should be owned by the uid of the server process
             print 'set %s as owner of the data directory' % config['uid']
             chown(config.appdatahome, config['uid'])
-        print
-        print
-        print '*' * 72
-        print 'application %s (%s) created in %r' % (appid, configname,
-                                                     config.apphome)
-        print
+        print '\n-> creation done for %r.\n' % config.apphome
         helper.postcreate()
 
 

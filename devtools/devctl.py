@@ -262,7 +262,7 @@ class UpdateCubicWebCatalogCommand(Command):
         tempdir = mktemp()
         mkdir(tempdir)
         potfiles = [join(I18NDIR, 'entities.pot')]
-        print '******** extract schema messages'
+        print '-> extract schema messages.'
         schemapot = join(tempdir, 'schema.pot')
         potfiles.append(schemapot)
         # explicit close necessary else the file may not be yet flushed when
@@ -270,10 +270,10 @@ class UpdateCubicWebCatalogCommand(Command):
         schemapotstream = file(schemapot, 'w')
         generate_schema_pot(schemapotstream.write, cubedir=None)
         schemapotstream.close()
-        print '******** extract TAL messages'
+        print '-> extract TAL messages.'
         tali18nfile = join(tempdir, 'tali18n.py')
         extract_from_tal(find(join(BASEDIR, 'web'), ('.py', '.pt')), tali18nfile)
-        print '******** .pot files generation'
+        print '-> generate .pot files.'
         for id, files, lang in [('pycubicweb', get_module_files(BASEDIR) + list(globfind(join(BASEDIR, 'misc', 'migration'), '*.py')), None),
                                 ('schemadescr', globfind(join(BASEDIR, 'schemas'), '*.py'), None),
                                 ('yams', get_module_files(yams.__path__[0]), None),
@@ -288,11 +288,11 @@ class UpdateCubicWebCatalogCommand(Command):
             if exists(potfile):
                 potfiles.append(potfile)
             else:
-                print 'WARNING: %s file not generated' % potfile
-        print '******** merging .pot files'
+                print '-> WARNING: %s file was not generated' % potfile
+        print '-> merging %i .pot files' % len(potfiles)
         cubicwebpot = join(tempdir, 'cubicweb.pot')
         execute('msgcat %s > %s' % (' '.join(potfiles), cubicwebpot))
-        print '******** merging main pot file with existing translations'
+        print '-> merging main pot file with existing translations.'
         chdir(I18NDIR)
         toedit = []
         for lang in LANGS:
@@ -332,14 +332,14 @@ def update_cubes_catalogs(cubes):
     toedit = []
     for cubedir in cubes:
         if not isdir(cubedir):
-            print 'not a directory', cubedir
+            print '-> ignoring %s that is not a directory.' % cubedir
             continue
         try:
             toedit += update_cube_catalogs(cubedir)
         except Exception:
             import traceback
             traceback.print_exc()
-            print 'error while updating catalogs for', cubedir
+            print '-> Error while updating catalogs for cube', cubedir
     # instructions pour la suite
     print '*' * 72
     print 'you can now edit the following files:'
@@ -357,11 +357,11 @@ def update_cube_catalogs(cubedir):
     tempdir = mktemp()
     mkdir(tempdir)
     print '*' * 72
-    print 'updating %s cube...' % cube
+    print '-> updating cube %s' % cube
     chdir(cubedir)
     potfiles = [join('i18n', scfile) for scfile in ('entities.pot',)
                 if exists(join('i18n', scfile))]
-    print '******** extract schema messages'
+    print '-> extract schema messages'
     schemapot = join(tempdir, 'schema.pot')
     potfiles.append(schemapot)
     # explicit close necessary else the file may not be yet flushed when
@@ -369,10 +369,10 @@ def update_cube_catalogs(cubedir):
     schemapotstream = file(schemapot, 'w')
     generate_schema_pot(schemapotstream.write, cubedir)
     schemapotstream.close()
-    print '******** extract TAL messages'
+    print '-> extract TAL messages'
     tali18nfile = join(tempdir, 'tali18n.py')
     extract_from_tal(find('.', ('.py', '.pt'), blacklist=STD_BLACKLIST+('test',)), tali18nfile)
-    print '******** extract Javascript messages'
+    print '-> extract Javascript messages'
     jsfiles =  [jsfile for jsfile in find('.', '.js') if basename(jsfile).startswith('cub')]
     if jsfiles:
         tmppotfile = join(tempdir, 'js.pot')
@@ -381,7 +381,7 @@ def update_cube_catalogs(cubedir):
         # no pot file created if there are no string to translate
         if exists(tmppotfile):
             potfiles.append(tmppotfile)
-    print '******** create cube specific catalog'
+    print '-> create cube-specific catalog'
     tmppotfile = join(tempdir, 'generated.pot')
     cubefiles = find('.', '.py', blacklist=STD_BLACKLIST+('test',))
     cubefiles.append(tali18nfile)
@@ -390,12 +390,12 @@ def update_cube_catalogs(cubedir):
     if exists(tmppotfile): # doesn't exists of no translation string found
         potfiles.append(tmppotfile)
     potfile = join(tempdir, 'cube.pot')
-    print '******** merging .pot files'
+    print '-> merging %i .pot files:' % len(potfiles)
     execute('msgcat %s > %s' % (' '.join(potfiles), potfile))
-    print '******** merging main pot file with existing translations'
+    print '-> merging main pot file with existing translations:'
     chdir('i18n')
     for lang in LANGS:
-        print '****', lang
+        print '-> language', lang
         cubepo = '%s.po' % lang
         if not exists(cubepo):
             shutil.copy(potfile, cubepo)

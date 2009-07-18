@@ -13,7 +13,7 @@ import os
 from logilab.common.configuration import Configuration
 from logilab.common.clcommands import register_commands, cmd_run, pop_arg
 
-from cubicweb import AuthenticationError, ExecutionError, ConfigurationError
+from cubicweb import AuthenticationError, ExecutionError, ConfigurationError, underline_title
 from cubicweb.toolsutils import Command, CommandHandler, confirm
 from cubicweb.server import SOURCE_TYPES
 from cubicweb.server.utils import ask_source_config
@@ -47,7 +47,7 @@ def source_cnx(source, dbname=None, special_privs=False, verbose=True):
             print special_privs
             print
         default_user = source.get('db-user', os.environ.get('USER', ''))
-        user = raw_input('user (%r by default): ' % default_user)
+        user = raw_input('Connect as user ? [%r]: ' % default_user)
         user = user or default_user
         if user == source.get('db-user') and source.get('db-password'):
             password = source['db-password']
@@ -121,14 +121,11 @@ class RepositoryCreateHandler(CommandHandler):
         asking information necessary to build required configuration files
         """
         config = self.config
-        print 'application\'s repository configuration'
-        print '-' * 72
+        print underline_title('Configuring the repository')
         config.input_config('email', inputlevel)
         if config.pyro_enabled():
             config.input_config('pyro-server', inputlevel)
-        print
-        print 'repository sources configuration'
-        print '-' * 72
+        print '\n'+underline_title('Configuring the sources')
         sourcesfile = config.sources_file()
         sconfig = Configuration(options=SOURCE_TYPES['native'].options)
         sconfig.adapter = 'native'
@@ -139,7 +136,8 @@ class RepositoryCreateHandler(CommandHandler):
             # source to use the cube, so add it.
             if cube in SOURCE_TYPES:
                 sourcescfg[cube] = ask_source_config(cube, inputlevel)
-        while raw_input('enter another source [y/N]: ').strip().lower() == 'y':
+        print
+        while confirm('Enter another source ?', default_is_yes=False):
             available = sorted(stype for stype in SOURCE_TYPES
                                if not stype in cubes)
             while True:
@@ -169,11 +167,12 @@ class RepositoryCreateHandler(CommandHandler):
         config.write_bootstrap_cubes_file(cubes)
 
     def postcreate(self):
-        if confirm('Do you want to run db-create to create repository\'s system database?'):
+        if confirm('Do you want to run db-create to create the "system database" ?'):
             verbosity = (self.config.mode == 'installed') and 'y' or 'n'
             cmd_run('db-create', self.config.appid, '--verbose=%s' % verbosity)
         else:
-            print '-> nevermind, you can do it later using the db-create command.'
+            print ('-> nevermind, you can do it later with '
+                   '"cubicweb-ctl db-create %s".' % self.config.appid)
 
 
 class RepositoryDeleteHandler(CommandHandler):
@@ -268,6 +267,7 @@ class CreateApplicationDBCommand(Command):
         driver = source['db-driver']
         helper = get_adv_func_helper(driver)
         if create_db:
+            print '\n'+underline_title('Creating the "system database"')
             # connect on the dbms system base to create our base
             dbcnx = _db_sys_cnx(source, 'CREATE DATABASE and / or USER', verbose=verbose)
             cursor = dbcnx.cursor()
@@ -308,10 +308,11 @@ class CreateApplicationDBCommand(Command):
         cnx.commit()
         print '-> database for application %s created and necessary extensions installed.' % appid
         print
-        if confirm('Do you want to run db-init to initialize the system database?'):
+        if confirm('Do you want to run db-init to initialize the "system database" ?'):
             cmd_run('db-init', config.appid)
         else:
-            print '-> nevermind, you can do it later using the db-init command.'
+            print ('-> nevermind, you can do it later with '
+                   '"cubicweb-ctl db-init %s".' % self.config.appid)
 
 
 class InitApplicationCommand(Command):
@@ -336,6 +337,7 @@ tables, indexes... (no by default)'}),
         )
 
     def run(self, args):
+        print '\n'+underline_title('Initializing the "system database"')
         from cubicweb.server import init_repository
         appid = pop_arg(args, msg="No application specified !")
         config = ServerConfiguration.config_for(appid)
