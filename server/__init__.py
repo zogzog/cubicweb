@@ -45,7 +45,8 @@ def init_repository(config, interactive=True, drop=False, vreg=None):
     assert len(repo.sources) == 1, repo.sources
     schema = repo.schema
     sourcescfg = config.sources()
-    print '-> creating tables...'
+    _title = '-> creating tables '
+    print _title,
     source = sourcescfg['system']
     driver = source['db-driver']
     sqlcnx = repo.system_source.get_connection()
@@ -68,7 +69,7 @@ def init_repository(config, interactive=True, drop=False, vreg=None):
         schemasql = sqlschema(schema, driver)
         #skip_entities=[str(e) for e in schema.entities()
         #               if not repo.system_source.support_entity(str(e))])
-    sqlexec(schemasql, execute)
+    sqlexec(schemasql, execute, pbtitle=_title)
     # install additional driver specific sql files
     for fpath in glob(join(config.schemas_lib_dir(), '*.sql.%s' % driver)):
         print '-> installing', fpath
@@ -140,7 +141,7 @@ def init_repository(config, interactive=True, drop=False, vreg=None):
     config.bootstrap_schema = bootstrap_schema
     config.consider_user_state = True
     config.set_language = True
-    print '-> application %s initialized.' % config.appid
+    print '-> database for application %s initialized.' % config.appid
 
 
 def initialize_schema(config, schema, mhandler, event='create'):

@@ -19,7 +19,7 @@ from logilab.common.modutils import get_module_files
 from logilab.common.textutils import get_csv
 from logilab.common.clcommands import register_commands
 
-from cubicweb import CW_SOFTWARE_ROOT as BASEDIR, BadCommandUsage
+from cubicweb import CW_SOFTWARE_ROOT as BASEDIR, BadCommandUsage, underline_title
 from cubicweb.__pkginfo__ import version as cubicwebversion
 from cubicweb.toolsutils import Command, confirm, copy_skeleton
 from cubicweb.web.webconfig import WebConfiguration
@@ -304,11 +304,10 @@ class UpdateCubicWebCatalogCommand(Command):
         # cleanup
         rm(tempdir)
         # instructions pour la suite
-        print '*' * 72
-        print 'you can now edit the following files:'
+        print '-> regenerated CubicWeb\'s .po catalogs.'
+        print '\nYou can now edit the following files:'
         print '* ' + '\n* '.join(toedit)
-        print
-        print "then you'll have to update cubes catalogs using the i18ncube command"
+        print 'when you are done, run "cubicweb-ctl i18ncube yourcube".'
 
 
 class UpdateTemplateCatalogCommand(Command):
@@ -341,10 +340,10 @@ def update_cubes_catalogs(cubes):
             traceback.print_exc()
             print '-> Error while updating catalogs for cube', cubedir
     # instructions pour la suite
-    print '*' * 72
-    print 'you can now edit the following files:'
+    print '-> regenerated this cube\'s .po catalogs.'
+    print '\nYou can now edit the following files:'
     print '* ' + '\n* '.join(toedit)
-
+    print 'when you are done, run "cubicweb-ctl i18ninstance yourinstance".'
 
 def update_cube_catalogs(cubedir):
     import shutil
@@ -356,8 +355,7 @@ def update_cube_catalogs(cubedir):
     cube = basename(normpath(cubedir))
     tempdir = mktemp()
     mkdir(tempdir)
-    print '*' * 72
-    print '-> updating cube %s' % cube
+    print underline_title('Updating i18n catalogs for cube %s' % cube)
     chdir(cubedir)
     potfiles = [join('i18n', scfile) for scfile in ('entities.pot',)
                 if exists(join('i18n', scfile))]
