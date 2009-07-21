@@ -7,6 +7,8 @@
 """
 __docformat__ = "restructuredtext en"
 
+# XXX move most of this in logilab.common (shellutils ?)
+
 import os, sys
 from os import listdir, makedirs, symlink, environ, chmod, walk, remove
 from os.path import exists, join, abspath, normpath
@@ -14,6 +16,7 @@ from os.path import exists, join, abspath, normpath
 from logilab.common.clcommands import Command as BaseCommand, \
      main_run as base_main_run
 from logilab.common.compat import any
+from logilab.common.shellutils import confirm
 
 from cubicweb import warning
 from cubicweb import ConfigurationError, ExecutionError
@@ -135,21 +138,6 @@ def restrict_perms_to_user(filepath, log=None):
     else:
         print '-> set %s permissions to 0600' % filepath
     chmod(filepath, 0600)
-
-def confirm(question, default_is_yes=True):
-    """ask for confirmation and return true on positive answer"""
-    if default_is_yes:
-        input_str = '%s [Y/n]: '
-    else:
-        input_str = '%s [y/N]: '
-    answer = raw_input(input_str % (question)).strip().lower()
-    if default_is_yes:
-        if answer in ('n', 'no'):
-            return False
-        return True
-    if answer in ('y', 'yes'):
-        return True
-    return False
 
 def read_config(config_file):
     """read the application configuration from a file and return it as a
