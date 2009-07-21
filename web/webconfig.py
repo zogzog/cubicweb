@@ -145,6 +145,13 @@ class WebConfiguration(CubicWebConfiguration):
           'sessions. Default to 2 min.',
           'group': 'web', 'inputlevel': 2,
           }),
+        ('force-html-content-type',
+         {'type' : 'yn',
+          'default': False,
+          'help': 'force text/html content type for your html pages instead of cubicweb user-agent based'\
+          'deduction of an appropriate content type',
+          'group': 'web', 'inputlevel': 2,
+          }),
         ('embed-allowed',
          {'type' : 'regexp',
           'default': None,
