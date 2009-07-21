@@ -209,6 +209,9 @@ def cut(text, length):
 
 # HTML generation helper functions ############################################
 
+HTML4_EMPTY_TAGS = frozenset(('base', 'meta', 'link', 'hr', 'br', 'param',
+                              'img', 'area', 'input', 'col'))
+
 def simple_sgml_tag(tag, content=None, escapecontent=True, **attrs):
     """generation of a simple sgml tag (eg without children tags) easier
 
@@ -228,7 +231,10 @@ def simple_sgml_tag(tag, content=None, escapecontent=True, **attrs):
             content = xml_escape(unicode(content))
         value += u'>%s</%s>' % (content, tag)
     else:
-        value += u'></%s>' % tag
+        if tag in HTML4_EMPTY_TAGS:
+            value += u' />'
+        else:
+            value += u'></%s>' % tag
     return value
 
 def tooltipize(text, tooltip, url=None):
