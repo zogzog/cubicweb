@@ -39,9 +39,9 @@ class PrimaryView(EntityView):
 
     def cell_call(self, row, col):
         self.row = row
+        self.maxrelated = self.req.property_value('navigation.related-limit')
         entity = self.complete_entity(row, col)
         self.render_entity(entity)
-        self.maxrelated = self.req.property_value('navigation.related-limit')
 
     def render_entity(self, entity):
         self.render_entity_title(entity)
