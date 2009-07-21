@@ -230,7 +230,7 @@ class CWPropertiesForm(SystemCWPropertiesForm):
     __select__ = (
         (none_rset() & match_user_groups('users','managers'))
         | (one_line_rset() & match_user_groups('users') & is_user_prefs())
-        | (one_line_rset() & match_user_groups('managers') & implements('CWUSer'))
+        | (one_line_rset() & match_user_groups('managers') & implements('CWUser'))
         )
 
     title = _('preferences')
