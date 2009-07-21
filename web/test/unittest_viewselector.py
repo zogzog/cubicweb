@@ -2,8 +2,6 @@
 """XXX rename, split, reorganize this
 :license: GNU Lesser General Public License, v2.1 - http://www.gnu.org/licenses
 """
-from __future__ import with_statement
-
 from logilab.common.testlib import unittest_main
 
 from cubicweb.devtools.apptest import EnvBasedTC
@@ -127,29 +125,26 @@ class VRegistryTC(ViewSelectorTC):
     def test_propertiesform_admin(self):
         rset1, req1 = self.env.get_rset_and_req('CWUser X WHERE X login "admin"')
         rset2, req2 = self.env.get_rset_and_req('CWUser X WHERE X login "anon"')
-        with traced_selection():
-            self.failUnless(self.vreg.select_object('views', 'propertiesform', req1, rset=None))
-            self.failUnless(self.vreg.select_object('views', 'propertiesform', req1, rset=rset1))
-            self.failUnless(self.vreg.select_object('views', 'propertiesform', req2, rset=rset2))
+        self.failUnless(self.vreg.select_object('views', 'propertiesform', req1, rset=None))
+        self.failUnless(self.vreg.select_object('views', 'propertiesform', req1, rset=rset1))
+        self.failUnless(self.vreg.select_object('views', 'propertiesform', req2, rset=rset2))
 
     def test_propertiesform_anon(self):
         self.login('anon')
         rset1, req1 = self.env.get_rset_and_req('CWUser X WHERE X login "admin"')
         rset2, req2 = self.env.get_rset_and_req('CWUser X WHERE X login "anon"')
-        with traced_selection():
-            self.assertRaises(NoSelectableObject, self.vreg.select_object, 'views', 'propertiesform', req1, rset=None)
-            self.assertRaises(NoSelectableObject, self.vreg.select_object, 'views', 'propertiesform', req1, rset=rset1)
-            self.assertRaises(NoSelectableObject, self.vreg.select_object, 'views', 'propertiesform', req1, rset=rset2)
+        self.assertRaises(NoSelectableObject, self.vreg.select_object, 'views', 'propertiesform', req1, rset=None)
+        self.assertRaises(NoSelectableObject, self.vreg.select_object, 'views', 'propertiesform', req1, rset=rset1)
+        self.assertRaises(NoSelectableObject, self.vreg.select_object, 'views', 'propertiesform', req1, rset=rset2)
 
     def test_propertiesform_jdoe(self):
         self.create_user('jdoe')
         self.login('jdoe')
         rset1, req1 = self.env.get_rset_and_req('CWUser X WHERE X login "admin"')
         rset2, req2 = self.env.get_rset_and_req('CWUser X WHERE X login "jdoe"')
-        with traced_selection():
-            self.failUnless(self.vreg.select_object('views', 'propertiesform', req1, rset=None))
-            self.assertRaises(NoSelectableObject, self.vreg.select_object, 'views', 'propertiesform', req1, rset=rset1)
-            self.failUnless(self.vreg.select_object('views', 'propertiesform', req2, rset=rset2))
+        self.failUnless(self.vreg.select_object('views', 'propertiesform', req1, rset=None))
+        self.assertRaises(NoSelectableObject, self.vreg.select_object, 'views', 'propertiesform', req1, rset=rset1)
+        self.failUnless(self.vreg.select_object('views', 'propertiesform', req2, rset=rset2))
 
     def test_possible_views_multiple_different_types(self):
         rset, req = self.env.get_rset_and_req('Any X')
