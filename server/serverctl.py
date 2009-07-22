@@ -74,7 +74,9 @@ def _db_sys_cnx(source, what, db=None, user=None, verbose=True):
     """return a connection on the RDMS system table (to create/drop a user
     or a database
     """
+    import logilab.common as lgp
     from logilab.common.adbh import get_adv_func_helper
+    lgp.USE_MX_DATETIME = False
     special_privs = ''
     driver = source['db-driver']
     helper = get_adv_func_helper(driver)
