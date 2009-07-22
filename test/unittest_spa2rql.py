@@ -4,7 +4,8 @@ from cubicweb.xy import xy
 from cubicweb.spa2rql import Sparql2rqlTranslator
 
 xy.add_equivalence('Project', 'doap:Project')
-xy.add_equivalence('Project.creation_date', 'doap:Project.doap:created')
+xy.add_equivalence('Project creation_date', 'doap:Project doap:created')
+xy.add_equivalence('Project name', 'doap:Project doap:name')
 
 
 config = TestServerConfiguration('data')
@@ -69,7 +70,7 @@ class XYTC(TestCase):
     }''', 'Any X, CD WHERE X creation_date CD')
 
     def test_base_any_attr_sel_amb(self):
-        xy.add_equivalence('Version.publication_date', 'doap:Version.dc:date')
+        xy.add_equivalence('Version publication_date', 'doap:Version dc:date')
         try:
             self._test('''
     PREFIX dc: <http://purl.org/dc/elements/1.1/>
@@ -78,7 +79,7 @@ class XYTC(TestCase):
       ?x dc:date ?cd;
     }''', '(Any X, CD WHERE , X creation_date CD) UNION (Any X, CD WHERE , X publication_date CD, X is Version)')
         finally:
-            xy.remove_equivalence('Version.publication_date', 'doap:Version.dc:date')
+            xy.remove_equivalence('Version publication_date', 'doap:Version dc:date')
 
 # # Two elements in the group
 # PREFIX :  <http://example.org/ns#>
