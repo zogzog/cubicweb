@@ -32,6 +32,13 @@ web = 'http://www.cubicweb.org'
 ftp = 'ftp://ftp.logilab.org/pub/cubicweb'
 pyversions = ['2.4', '2.5']
 
+classifiers = [
+           'Environment :: Web Environment',
+           'Framework :: CubicWeb',
+           'Programming Language :: Python',
+           'Programming Language :: JavaScript',
+]
+
 
 import sys
 from os import listdir, environ
