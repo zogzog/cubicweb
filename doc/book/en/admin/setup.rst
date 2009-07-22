@@ -47,7 +47,7 @@ develop new cubes.
 There is also a wide variety of cubes listed on http://www.cubicweb.org/Project available as debian packages and tarball.
 
 The repositories are signed with `Logilab's gnupg key`_. To avoid warning on "apt-get update":
-1. become root using sudo 
+1. become root using sudo
 2. download http://ftp.logilab.org/dists/logilab-dists-key.asc using e.g. wget
 3. run "apt-key add logilab-dists-key.asc"
 4. re-run apt-get update (manually or through the package manager, whichever you prefer)
@@ -69,6 +69,10 @@ extension::
   hg fclone http://www.logilab.org/hg/forests/cubicweb
 
 See :ref:`MercurialPresentation` for more details about Mercurial.
+When cloning a repository, you might be set in a development branch
+(the 'default' branch). You should check that the branches of the
+repositories are set to 'stable' (using `hg up stable` for each one)
+if you do not intend to develop the framework itself.
 
 Postgres installation
 `````````````````````
