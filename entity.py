@@ -23,13 +23,9 @@ from cubicweb.selectors import yes
 from cubicweb.appobject import AppRsetObject
 from cubicweb.schema import RQLVocabularyConstraint, RQLConstraint, bw_normalize_etype
 
-try:
-    from cubicweb.common.uilib import printable_value, soup2xhtml
-    from cubicweb.common.mixins import MI_REL_TRIGGERS
-    from cubicweb.common.mttransforms import ENGINE
-except ImportError:
-    # missing -common
-    MI_REL_TRIGGERS = {}
+from cubicweb.common.uilib import printable_value, soup2xhtml
+from cubicweb.common.mixins import MI_REL_TRIGGERS
+from cubicweb.common.mttransforms import ENGINE
 
 _marker = object()
 
