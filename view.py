@@ -334,7 +334,7 @@ class EntityStartupView(EntityView):
 
     default_rql = None
 
-    def __init__(self, req, rset, **kwargs):
+    def __init__(self, req, rset=None, **kwargs):
         super(EntityStartupView, self).__init__(req, rset, **kwargs)
         if rset is None:
             # this instance is not in the "entityview" category
