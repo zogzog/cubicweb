@@ -45,6 +45,8 @@ class QueryInfo(object):
                 unions = zip(*make_domains([unions, thisunions]))
         baserql = 'Any %s WHERE %s' % (', '.join(self.selection),
                                        ', '.join(self.restrictions))
+        if self.sparqlst.distinct:
+            baserql = 'DISTINCT ' + baserql
         if not unions:
             return baserql
         rqls = ['(%s, %s)' % (baserql, ', '.join(unionrestrs))

@@ -41,6 +41,24 @@ class XYTC(TestCase):
               doap:created ?created.
     }''', 'Any CREATED WHERE PROJECT creation_date CREATED, PROJECT is Project')
 
+    def test_base_attr_sel_distinct(self):
+        self._test('''
+    PREFIX doap: <http://usefulinc.com/ns/doap#>
+    SELECT DISTINCT ?name
+    WHERE  {
+      ?project a doap:Project;
+              doap:name ?name.
+    }''', 'DISTINCT Any NAME WHERE PROJECT name NAME, PROJECT is Project')
+
+    def test_base_attr_sel_reduced(self):
+        self._test('''
+    PREFIX doap: <http://usefulinc.com/ns/doap#>
+    SELECT REDUCED ?name
+    WHERE  {
+      ?project a doap:Project;
+              doap:name ?name.
+    }''', 'Any NAME WHERE PROJECT name NAME, PROJECT is Project')
+
 
     def test_base_any_attr_sel(self):
         self._test('''
