@@ -10,37 +10,178 @@ __docformat__ = "restructuredtext en"
 from itertools import cycle
 
 from logilab.mtconverter import xml_escape
-from yams import schema2dot as s2d
+from yams import BASE_TYPES, schema2dot as s2d
 
-from cubicweb.selectors import implements, yes
+from cubicweb.selectors import implements, yes, match_user_groups
 from cubicweb.schema import META_RELATIONS_TYPES, SCHEMA_TYPES
 from cubicweb.schemaviewer import SchemaViewer
 from cubicweb.view import EntityView, StartupView
 from cubicweb.common import tags, uilib
-from cubicweb.web import action
-from cubicweb.web.views import TmpFileViewMixin, primary, baseviews, tabs
-from cubicweb.web.facet import AttributeFacet
+from cubicweb.web import action, facet
+from cubicweb.web.views import TmpFileViewMixin
+from cubicweb.web.views import primary, baseviews, tabs, management
 
-SKIP_TYPES = set()
-SKIP_TYPES.update(META_RELATIONS_TYPES)
-SKIP_TYPES.update(SCHEMA_TYPES)
+ALWAYS_SKIP_TYPES = BASE_TYPES | SCHEMA_TYPES
+SKIP_TYPES = ALWAYS_SKIP_TYPES | META_RELATIONS_TYPES
+SKIP_TYPES.update(set(('Transition', 'State', 'TrInfo',
+                       'CWUser', 'CWGroup',
+                       'CWCache', 'CWProperty', 'CWPermission',
+                       'ExternalUri')))
 
 def skip_types(req):
     if int(req.form.get('skipmeta', True)):
         return SKIP_TYPES
-    return ()
+    return ALWAYS_SKIP_TYPES
 
-class ViewSchemaAction(action.Action):
+# global schema view ###########################################################
+
+class SchemaView(tabs.TabsMixin, StartupView):
     id = 'schema'
-    __select__ = yes()
+    title = _('application schema')
+    tabs = [_('schema-text'), _('schema-image')]
+    default_tab = 'schema-text'
 
-    title = _("site schema")
-    category = 'siteactions'
-    order = 30
+    def call(self):
+        """display schema information"""
+        self.req.add_js('cubicweb.ajax.js')
+        self.req.add_css(('cubicweb.schema.css','cubicweb.acl.css'))
+        self.w(u'<h1>%s</h1>' % _('Schema of the data model'))
+        self.render_tabs(self.tabs, self.default_tab)
 
-    def url(self):
-        return self.build_url(self.id)
 
+class SchemaTabImageView(StartupView):
+    id = 'schema-image'
+
+    def call(self):
+        self.w(_(u'<div>This schema of the data model <em>excludes</em> the '
+                 u'meta-data, but you can also display a <a href="%s">complete '
+                 u'schema with meta-data</a>.</div>')
+               % xml_escape(self.build_url('view', vid='schemagraph', skipmeta=0)))
+        self.w(u'<img src="%s" alt="%s"/>\n' % (
+            xml_escape(self.req.build_url('view', vid='schemagraph', skipmeta=1)),
+            self.req._("graphical representation of the application'schema")))
+
+
+class SchemaTabTextView(StartupView):
+    id = 'schema-text'
+
+    def call(self):
+        rset = self.req.execute('Any X ORDERBY N WHERE X is CWEType, X name N, '
+                                'X final FALSE')
+        self.wview('table', rset, displayfilter=True)
+
+
+class ManagerSchemaPermissionsView(StartupView, management.SecurityViewMixIn):
+    id = 'schema-security'
+    __select__ = StartupView.__select__ & match_user_groups('managers')
+
+    def call(self, display_relations=True):
+        self.req.add_css('cubicweb.acl.css')
+        skiptypes = skip_types(self.req)
+        formparams = {}
+        formparams['sec'] = self.id
+        if not skiptypes:
+            formparams['skipmeta'] = u'0'
+        schema = self.schema
+        # compute entities
+        entities = sorted(eschema for eschema in schema.entities()
+                          if not (eschema.is_final() or eschema in skiptypes))
+        # compute relations
+        if display_relations:
+            relations = sorted(rschema for rschema in schema.relations()
+                               if not (rschema.is_final()
+                                       or rschema in skiptypes
+                                       or rschema in META_RELATIONS_TYPES))
+        else:
+            relations = []
+        # index
+        _ = self.req._
+        self.w(u'<div id="schema_security"><a id="index" href="index"/>')
+        self.w(u'<h2 class="schema">%s</h2>' % _('index').capitalize())
+        self.w(u'<h4>%s</h4>' %   _('Entities').capitalize())
+        ents = []
+        for eschema in sorted(entities):
+            url = xml_escape(self.build_url('schema', **formparams))
+            ents.append(u'<a class="grey" href="%s#%s">%s</a> (%s)' % (
+                url,  eschema.type, eschema.type, _(eschema.type)))
+        self.w(u', '.join(ents))
+        self.w(u'<h4>%s</h4>' % (_('relations').capitalize()))
+        rels = []
+        for rschema in sorted(relations):
+            url = xml_escape(self.build_url('schema', **formparams))
+            rels.append(u'<a class="grey" href="%s#%s">%s</a> (%s), ' %  (
+                url , rschema.type, rschema.type, _(rschema.type)))
+        self.w(u', '.join(ents))
+        # entities
+        self.display_entities(entities, formparams)
+        # relations
+        if relations:
+            self.display_relations(relations, formparams)
+        self.w(u'</div>')
+
+    def display_entities(self, entities, formparams):
+        _ = self.req._
+        self.w(u'<a id="entities" href="entities"/>')
+        self.w(u'<h2 class="schema">%s</h2>' % _('permissions for entities').capitalize())
+        for eschema in entities:
+            self.w(u'<a id="%s" href="%s"/>' %  (eschema.type, eschema.type))
+            self.w(u'<h3 class="schema">%s (%s) ' % (eschema.type, _(eschema.type)))
+            url = xml_escape(self.build_url('schema', **formparams) + '#index')
+            self.w(u'<a href="%s"><img src="%s" alt="%s"/></a>' % (
+                url,  self.req.external_resource('UP_ICON'), _('up')))
+            self.w(u'</h3>')
+            self.w(u'<div style="margin: 0px 1.5em">')
+            self.schema_definition(eschema, link=False)
+            # display entity attributes only if they have some permissions modified
+            modified_attrs = []
+            for attr, etype in  eschema.attribute_definitions():
+                if self.has_schema_modified_permissions(attr, attr.ACTIONS):
+                    modified_attrs.append(attr)
+            if  modified_attrs:
+                self.w(u'<h4>%s</h4>' % _('attributes with modified permissions:').capitalize())
+                self.w(u'</div>')
+                self.w(u'<div style="margin: 0px 6em">')
+                for attr in  modified_attrs:
+                    self.w(u'<h4 class="schema">%s (%s)</h4> ' % (attr.type, _(attr.type)))
+                    self.schema_definition(attr, link=False)
+            self.w(u'</div>')
+
+    def display_relations(self, relations, formparams):
+        _ = self.req._
+        self.w(u'<a id="relations" href="relations"/>')
+        self.w(u'<h2 class="schema">%s </h2>' % _('permissions for relations').capitalize())
+        for rschema in relations:
+            self.w(u'<a id="%s" href="%s"/>' %  (rschema.type, rschema.type))
+            self.w(u'<h3 class="schema">%s (%s) ' % (rschema.type, _(rschema.type)))
+            url = xml_escape(self.build_url('schema', **formparams) + '#index')
+            self.w(u'<a href="%s"><img src="%s" alt="%s"/></a>' % (
+                url,  self.req.external_resource('UP_ICON'), _('up')))
+            self.w(u'</h3>')
+            self.w(u'<div style="margin: 0px 1.5em">')
+            subjects = [str(subj) for subj in rschema.subjects()]
+            self.w(u'<div><strong>%s</strong> %s (%s)</div>' % (
+                _('subject_plural:'),
+                ', '.join(str(subj) for subj in rschema.subjects()),
+                ', '.join(_(str(subj)) for subj in rschema.subjects())))
+            self.w(u'<div><strong>%s</strong> %s (%s)</div>' % (
+                _('object_plural:'),
+                ', '.join(str(obj) for obj in rschema.objects()),
+                ', '.join(_(str(obj)) for obj in rschema.objects())))
+            self.schema_definition(rschema, link=False)
+            self.w(u'</div>')
+
+
+class SchemaUreportsView(StartupView):
+    id = 'schema-block'
+
+    def call(self):
+        viewer = SchemaViewer(self.req)
+        layout = viewer.visit_schema(self.schema, display_relations=True,
+                                     skiptypes=skip_types(self.req))
+        self.w(uilib.ureport_as_html(layout))
+
+
+# CWAttribute / CWRelation #####################################################
 
 class CWRDEFPrimaryView(primary.PrimaryView):
     __select__ = implements('CWAttribute', 'CWRelation')
@@ -196,11 +337,13 @@ class RestrictedSchemaVisitorMixIn(object):
 
     def should_display_schema(self, rschema):
         return (super(RestrictedSchemaVisitorMixIn, self).should_display_schema(rschema)
-                and rschema.has_local_role('read') or rschema.has_perm(self.req, 'read'))
+                and (rschema.has_local_role('read')
+                     or rschema.has_perm(self.req, 'read')))
 
     def should_display_attr(self, rschema):
         return (super(RestrictedSchemaVisitorMixIn, self).should_display_attr(rschema)
-                and rschema.has_local_role('read') or rschema.has_perm(self.req, 'read'))
+                and (rschema.has_local_role('read')
+                     or rschema.has_perm(self.req, 'read')))
 
 
 class FullSchemaVisitor(RestrictedSchemaVisitorMixIn, s2d.FullSchemaVisitor):
@@ -221,9 +364,11 @@ class SchemaImageView(TmpFileViewMixin, StartupView):
 
     def _generate(self, tmpfile):
         """display global schema information"""
+        print 'skipedtypes', skip_types(self.req)
         visitor = FullSchemaVisitor(self.req, self.schema,
                                     skiptypes=skip_types(self.req))
         s2d.schema2dot(outputfile=tmpfile, visitor=visitor)
+
 
 class CWETypeSchemaImageView(TmpFileViewMixin, EntityView):
     id = 'schemagraph'
@@ -238,6 +383,7 @@ class CWETypeSchemaImageView(TmpFileViewMixin, EntityView):
                                        skiptypes=skip_types(self.req))
         s2d.schema2dot(outputfile=tmpfile, visitor=visitor)
 
+
 class CWRTypeSchemaImageView(CWETypeSchemaImageView):
     __select__ = implements('CWRType')
 
@@ -248,9 +394,21 @@ class CWRTypeSchemaImageView(CWETypeSchemaImageView):
         visitor = OneHopRSchemaVisitor(self.req, rschema)
         s2d.schema2dot(outputfile=tmpfile, visitor=visitor)
 
-### facets
 
-class CWFinalFacet(AttributeFacet):
+# misc: facets, actions ########################################################
+
+class CWFinalFacet(facet.AttributeFacet):
     id = 'cwfinal-facet'
-    __select__ = AttributeFacet.__select__ & implements('CWEType', 'CWRType')
+    __select__ = facet.AttributeFacet.__select__ & implements('CWEType', 'CWRType')
     rtype = 'final'
+
+class ViewSchemaAction(action.Action):
+    id = 'schema'
+    __select__ = yes()
+
+    title = _("site schema")
+    category = 'siteactions'
+    order = 30
+
+    def url(self):
+        return self.build_url(self.id)

@@ -45,9 +45,6 @@ SCHEMA_TYPES = set((
     'CWConstraint', 'CWConstraintType', 'RQLExpression',
     'relation_type', 'from_entity', 'to_entity',
     'constrained_by', 'cstrtype',
-    # XXX those are not really "schema" entity types
-    #     but we usually don't want them as @* targets
-    'CWProperty', 'CWPermission', 'State', 'Transition',
     ))
 
 _LOGGER = getLogger('cubicweb.schemaloader')
