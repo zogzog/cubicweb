@@ -581,24 +581,24 @@ the repository',
     @classmethod
     def runtime_dir(cls):
         """run time directory for pid file..."""
-        return env_path('CW_RUNTIME', cls.RUNTIME_DIR, 'run time')
+        return env_path('CW_RUNTIME_DIR', cls.RUNTIME_DIR, 'run time')
 
     @classmethod
     def registry_dir(cls):
         """return the control directory"""
-        return env_path('CW_REGISTRY', cls.REGISTRY_DIR, 'registry')
+        return env_path('CW_INSTANCES_DIR', cls.REGISTRY_DIR, 'registry')
 
     @classmethod
     def instance_data_dir(cls):
         """return the instance data directory"""
-        return env_path('CW_INSTANCE_DATA',
+        return env_path('CW_INSTANCES_DATA_DIR',
                         cls.INSTANCE_DATA_DIR or cls.REGISTRY_DIR,
                         'additional data')
 
     @classmethod
     def migration_scripts_dir(cls):
         """cubicweb migration scripts directory"""
-        return env_path('CW_MIGRATION', cls.MIGRATION_DIR, 'migration')
+        return env_path('CW_MIGRATION_DIR', cls.MIGRATION_DIR, 'migration')
 
     @classmethod
     def config_for(cls, appid, config=None):

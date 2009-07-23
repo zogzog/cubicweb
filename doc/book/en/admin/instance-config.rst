@@ -6,7 +6,7 @@ Configure an instance
 
 While creating an instance, a configuration file is generated in::
 
-    $ (CW_REGISTRY) / <instance> / <configuration name>.conf
+    $ (CW_INSTANCES_DIR) / <instance> / <configuration name>.conf
 
 For example::
 
