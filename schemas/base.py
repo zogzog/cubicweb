@@ -205,6 +205,29 @@ class see_also(RelationType):
     """generic relation to link one entity to another"""
     symetric = True
 
+class ExternalUri(EntityType):
+    """a URI representing an object in external data store"""
+    uri = String(required=True, unique=True, maxsize=256,
+                 description=_('the URI of the object'))
+
+class same_as(RelationType):
+    """generic relation to specify that an external entity represent the same
+    object as a local one:
+       http://www.w3.org/TR/owl-ref/#sameAs-def
+
+    NOTE: You'll have to explicitly declare which entity types can have a
+    same_as relation
+    """
+    permissions = {
+        'read':   ('managers', 'users', 'guests',),
+        'add':    ('managers', 'users'),
+        'delete': ('managers', 'owners'),
+        }
+    cardinality = '*1'
+    symetric = True
+    # NOTE: the 'object = ExternalUri' declaration will still be mandatory
+    #       in the cube's schema.
+    object = 'ExternalUri'
 
 class CWCache(EntityType):
     """a simple cache entity characterized by a name and
