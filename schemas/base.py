@@ -131,6 +131,12 @@ class modification_date(RelationType):
     subject = '*'
     object = 'Datetime'
 
+class cwuri(RelationType):
+    """internal entity uri"""
+    cardinality = '11'
+    subject = '**'
+    object = 'String'
+
 
 class CWProperty(EntityType):
     """used for cubicweb configuration. Once a property has been created you

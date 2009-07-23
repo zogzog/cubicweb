@@ -26,7 +26,7 @@ from cubicweb.server.hookhelper import (entity_attr, entity_name,
 # core entity and relation types which can't be removed
 CORE_ETYPES = list(BASE_TYPES) + ['CWEType', 'CWRType', 'CWUser', 'CWGroup',
                                   'CWConstraint', 'CWAttribute', 'CWRelation']
-CORE_RTYPES = ['eid', 'creation_date', 'modification_date',
+CORE_RTYPES = ['eid', 'creation_date', 'modification_date', 'cwuri',
                'login', 'upassword', 'name',
                'is', 'instanceof', 'owned_by', 'created_by', 'in_group',
                'relation_type', 'from_entity', 'to_entity',
@@ -283,7 +283,7 @@ def after_add_eetype(session, entity):
                            prefix=SQL_PREFIX)
     relrqls = []
     for rtype in ('is', 'is_instance_of', 'creation_date', 'modification_date',
-                  'created_by', 'owned_by'):
+                  'cwuri', 'created_by', 'owned_by'):
         rschema = schema[rtype]
         sampletype = rschema.subjects()[0]
         desttype = rschema.objects()[0]

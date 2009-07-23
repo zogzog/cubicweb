@@ -618,6 +618,11 @@ class WorkflowHooksTC(RepositoryBasedTC):
         self.failUnless(cu.execute("INSERT Note X: X type 'a', X in_state S WHERE S name 'todo'"))
         cnx.commit()
 
+    def test_metadata_cwuri(self):
+        eid = self.execute('INSERT Note X')[0][0]
+        cwuri = self.execute('Any U WHERE X eid %s, X cwuri U' % eid)[0][0]
+        self.assertEquals(cwuri, self.repo.config['base-url'] + 'eid/%s' % eid)
+
     def test_metadata_creation_modification_date(self):
         _now = datetime.now()
         eid = self.execute('INSERT Note X')[0][0]

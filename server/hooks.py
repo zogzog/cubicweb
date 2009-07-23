@@ -33,6 +33,8 @@ def setctime_before_add_entity(session, entity):
         entity['creation_date'] = datetime.now()
     if not 'modification_date' in entity:
         entity['modification_date'] = datetime.now()
+    if not 'cwuri' in entity:
+        entity['cwuri'] = session.base_url() + u'eid/%s' % entity.eid
 
 def setmtime_before_update_entity(session, entity):
     """update an entity -> set modification date"""
