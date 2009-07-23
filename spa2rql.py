@@ -15,6 +15,17 @@ from cubicweb.xy import xy
 
 class UnsupportedQuery(Exception): pass
 
+def order_limit_offset(sparqlst):
+    addons = ''
+    if sparqlst.orderby:
+        sortterms = ', '.join('%s %s' % (var.name.upper(), ascdesc.upper())
+                              for var, ascdesc in sparqlst.orderby)
+        addons += ' ORDERBY %s' % sortterms
+    if sparqlst.limit:
+        addons += ' LIMIT %s' % sparqlst.limit
+    if sparqlst.offset:
+        addons += ' OFFSET %s' % sparqlst.offset
+    return addons
 
 class QueryInfo(object):
     """wrapper class containing necessary information to generate a RQL query
@@ -49,15 +60,22 @@ class QueryInfo(object):
                 unions = thisunions
             else:
                 unions = zip(*make_domains([unions, thisunions]))
-        baserql = 'Any %s WHERE %s' % (', '.join(self.selection),
-                                       ', '.join(self.restrictions))
-        if self.sparqlst.distinct:
-            baserql = 'DISTINCT ' + baserql
+        selection = 'Any ' + ', '.join(self.selection)
+        sparqlst = self.sparqlst
+        if sparqlst.distinct:
+            selection = 'DISTINCT ' + selection
         if not unions:
-            return baserql
+            return '%s%s WHERE %s' % (selection, order_limit_offset(sparqlst),
+                                      ', '.join(self.restrictions))
+        baserql = '%s WHERE %s' % (selection, ', '.join(self.restrictions))
         rqls = ['(%s, %s)' % (baserql, ', '.join(unionrestrs))
                 for unionrestrs in unions]
-        return ' UNION '.join(rqls)
+        rql = ' UNION '.join(rqls)
+        if sparqlst.orderby or sparqlst.limit or sparqlst.offset:
+            rql = '%s%s WITH %s BEING (%s)' % (
+                selection, order_limit_offset(sparqlst),
+                ', '.join(self.selection), rql)
+        return rql
 
     def set_possible_types(self, var, varpossibletypes):
         """set/restrict possible types for the given variable.

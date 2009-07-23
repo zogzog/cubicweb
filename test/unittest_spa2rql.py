@@ -24,6 +24,7 @@ class XYTC(TestCase):
     def XXX_test_base_01(self):
         self._test('SELECT * WHERE { }', 'Any X')
 
+
     def test_base_is(self):
         self._test('''
     PREFIX doap: <http://usefulinc.com/ns/doap#>
@@ -42,6 +43,7 @@ class XYTC(TestCase):
               doap:created ?created.
     }''', 'Any CREATED WHERE PROJECT creation_date CREATED, PROJECT is Project')
 
+
     def test_base_attr_sel_distinct(self):
         self._test('''
     PREFIX doap: <http://usefulinc.com/ns/doap#>
@@ -50,6 +52,7 @@ class XYTC(TestCase):
       ?project a doap:Project;
               doap:name ?name.
     }''', 'DISTINCT Any NAME WHERE PROJECT name NAME, PROJECT is Project')
+
 
     def test_base_attr_sel_reduced(self):
         self._test('''
@@ -61,6 +64,37 @@ class XYTC(TestCase):
     }''', 'Any NAME WHERE PROJECT name NAME, PROJECT is Project')
 
 
+    def test_base_attr_sel_limit_offset(self):
+        self._test('''
+    PREFIX doap: <http://usefulinc.com/ns/doap#>
+    SELECT ?name
+    WHERE  {
+      ?project a doap:Project;
+              doap:name ?name.
+    }
+    LIMIT 20''', 'Any NAME LIMIT 20 WHERE PROJECT name NAME, PROJECT is Project')
+        self._test('''
+    PREFIX doap: <http://usefulinc.com/ns/doap#>
+    SELECT ?name
+    WHERE  {
+      ?project a doap:Project;
+              doap:name ?name.
+    }
+    LIMIT 20 OFFSET 10''', 'Any NAME LIMIT 20 OFFSET 10 WHERE PROJECT name NAME, PROJECT is Project')
+
+
+    def test_base_attr_sel_orderby(self):
+        self._test('''
+    PREFIX doap: <http://usefulinc.com/ns/doap#>
+    SELECT ?name
+    WHERE  {
+      ?project a doap:Project;
+              doap:name ?name;
+              doap:created ?created.
+    }
+    ORDER BY ?name DESC(?created)''', 'Any NAME ORDERBY NAME ASC, CREATED DESC WHERE PROJECT name NAME, PROJECT creation_date CREATED, PROJECT is Project')
+
+
     def test_base_any_attr_sel(self):
         self._test('''
     PREFIX dc: <http://purl.org/dc/elements/1.1/>
@@ -68,6 +102,7 @@ class XYTC(TestCase):
     WHERE  {
       ?x dc:date ?cd;
     }''', 'Any X, CD WHERE X creation_date CD')
+
 
     def test_base_any_attr_sel_amb(self):
         xy.add_equivalence('Version publication_date', 'doap:Version dc:date')
@@ -78,6 +113,34 @@ class XYTC(TestCase):
     WHERE  {
       ?x dc:date ?cd;
     }''', '(Any X, CD WHERE , X creation_date CD) UNION (Any X, CD WHERE , X publication_date CD, X is Version)')
+        finally:
+            xy.remove_equivalence('Version publication_date', 'doap:Version dc:date')
+
+
+    def test_base_any_attr_sel_amb_limit_offset(self):
+        xy.add_equivalence('Version publication_date', 'doap:Version dc:date')
+        try:
+            self._test('''
+    PREFIX dc: <http://purl.org/dc/elements/1.1/>
+    SELECT ?x ?cd
+    WHERE  {
+      ?x dc:date ?cd;
+    }
+    LIMIT 20 OFFSET 10''', 'Any X, CD LIMIT 20 OFFSET 10 WITH X, CD BEING ((Any X, CD WHERE , X creation_date CD) UNION (Any X, CD WHERE , X publication_date CD, X is Version))')
+        finally:
+            xy.remove_equivalence('Version publication_date', 'doap:Version dc:date')
+
+
+    def test_base_any_attr_sel_amb_orderby(self):
+        xy.add_equivalence('Version publication_date', 'doap:Version dc:date')
+        try:
+            self._test('''
+    PREFIX dc: <http://purl.org/dc/elements/1.1/>
+    SELECT ?x ?cd
+    WHERE  {
+      ?x dc:date ?cd;
+    }
+    ORDER BY DESC(?cd)''', 'Any X, CD ORDERBY CD DESC WITH X, CD BEING ((Any X, CD WHERE , X creation_date CD) UNION (Any X, CD WHERE , X publication_date CD, X is Version))')
         finally:
             xy.remove_equivalence('Version publication_date', 'doap:Version dc:date')
 
