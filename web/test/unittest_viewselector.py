@@ -174,6 +174,7 @@ class VRegistryTC(ViewSelectorTC):
                               ('text', baseviews.TextView),
                               ('treeview', treeview.TreeView),
                               ('vcard', vcard.VCardCWUserView),
+                              ('wfhistory', workflow.WFHistoryView),
                               ('xbel', xbel.XbelView),
                               ('xml', xmlrss.XMLView),
                               ])
