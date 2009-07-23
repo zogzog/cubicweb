@@ -18,7 +18,7 @@
 #IE_STYLESHEETS = DATADIR/cubicweb.ie.css
 
 # Javascripts files to include in HTML headers
-#JAVASCRIPTS = DATADIR/jqyery.js, DATADIR/cubicweb.python.js, DATADIR/jquery.json.js, DATADIR/cubicweb.compat.js, DATADIR/cubicweb.htmlhelpers.js
+#JAVASCRIPTS = DATADIR/jquery.js, DATADIR/cubicweb.python.js, DATADIR/jquery.json.js, DATADIR/cubicweb.compat.js, DATADIR/cubicweb.htmlhelpers.js
 
 # path to favicon (relative to the application main script, seen as a
 # directory, hence .. when you are not using an absolute path)
