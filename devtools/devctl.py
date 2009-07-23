@@ -254,13 +254,12 @@ class UpdateCubicWebCatalogCommand(Command):
         if args:
             raise BadCommandUsage('Too much arguments')
         import shutil
-        from tempfile import mktemp
+        import tempfile
         import yams
         from logilab.common.fileutils import ensure_fs_mode
         from logilab.common.shellutils import globfind, find, rm
         from cubicweb.common.i18n import extract_from_tal, execute
-        tempdir = mktemp()
-        mkdir(tempdir)
+        tempdir = tempdir.mkdtemp()
         potfiles = [join(I18NDIR, 'entities.pot')]
         print '******** extract schema messages'
         schemapot = join(tempdir, 'schema.pot')
@@ -348,14 +347,13 @@ def update_cubes_catalogs(cubes):
 
 def update_cube_catalogs(cubedir):
     import shutil
-    from tempfile import mktemp
+    import tempfile
     from logilab.common.fileutils import ensure_fs_mode
     from logilab.common.shellutils import find, rm
     from cubicweb.common.i18n import extract_from_tal, execute
     toedit = []
     cube = basename(normpath(cubedir))
-    tempdir = mktemp()
-    mkdir(tempdir)
+    tempdir = tempfile.mkdtemp()
     print '*' * 72
     print 'updating %s cube...' % cube
     chdir(cubedir)
