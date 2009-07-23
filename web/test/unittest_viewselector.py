@@ -22,8 +22,9 @@ USERACTIONS = [('myprefs', actions.UserPreferencesAction),
                ('logout', actions.LogoutAction)]
 SITEACTIONS = [('siteconfig', actions.SiteConfigurationAction),
                ('manage', actions.ManageAction),
-               ('schema', schema.ViewSchemaAction)]
-
+               ('schema', schema.ViewSchemaAction),
+               ('siteinfo', actions.SiteInfoAction),
+               ]
 
 class ViewSelectorTC(EnvBasedTC):
 

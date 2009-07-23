@@ -161,7 +161,7 @@ class EntityFieldsFormTC(WebTest):
 
     def test_richtextfield_2(self):
         self.req.use_fckeditor = lambda: True
-        self._test_richtextfield('<input name="description_format:%(eid)s" style="display: block" type="hidden" value="text/rest"></input><textarea cols="80" cubicweb:type="wysiwyg" id="description:%(eid)s" name="description:%(eid)s" onkeyup="autogrow(this)" rows="2" tabindex="0"></textarea>')
+        self._test_richtextfield('<input name="description_format:%(eid)s" style="display: block" type="hidden" value="text/rest" /><textarea cols="80" cubicweb:type="wysiwyg" id="description:%(eid)s" name="description:%(eid)s" onkeyup="autogrow(this)" rows="2" tabindex="0"></textarea>')
 
 
     def test_filefield(self):
@@ -172,14 +172,14 @@ class EntityFieldsFormTC(WebTest):
                                data=Binary('new widgets system'))
         form = FFForm(self.req, redirect_path='perdu.com', entity=file)
         self.assertTextEquals(self._render_entity_field('data', form),
-                              '''<input id="data:%(eid)s" name="data:%(eid)s" tabindex="0" type="file" value=""></input>
+                              '''<input id="data:%(eid)s" name="data:%(eid)s" tabindex="0" type="file" value="" />
 <a href="javascript: toggleVisibility(&#39;data:%(eid)s-advanced&#39;)" title="show advanced fields"><img src="http://testing.fr/cubicweb/data/puce_down.png" alt="show advanced fields"/></a>
 <div id="data:%(eid)s-advanced" class="hidden">
-<label for="data_format:%(eid)s">data_format</label><input id="data_format:%(eid)s" maxlength="50" name="data_format:%(eid)s" size="45" tabindex="1" type="text" value="text/plain"></input><br/>
-<label for="data_encoding:%(eid)s">data_encoding</label><input id="data_encoding:%(eid)s" maxlength="20" name="data_encoding:%(eid)s" size="20" tabindex="2" type="text" value="UTF-8"></input><br/>
+<label for="data_format:%(eid)s">data_format</label><input id="data_format:%(eid)s" maxlength="50" name="data_format:%(eid)s" size="45" tabindex="1" type="text" value="text/plain" /><br/>
+<label for="data_encoding:%(eid)s">data_encoding</label><input id="data_encoding:%(eid)s" maxlength="20" name="data_encoding:%(eid)s" size="20" tabindex="2" type="text" value="UTF-8" /><br/>
 </div>
 <br/>
-<input name="data:%(eid)s__detach" type="checkbox"></input>
+<input name="data:%(eid)s__detach" type="checkbox" />
 detach attached file
 ''' % {'eid': file.eid})
 
@@ -196,14 +196,14 @@ detach attached file
                                data=Binary('new widgets system'))
         form = EFFForm(self.req, redirect_path='perdu.com', entity=file)
         self.assertTextEquals(self._render_entity_field('data', form),
-                              '''<input id="data:%(eid)s" name="data:%(eid)s" tabindex="0" type="file" value=""></input>
+                              '''<input id="data:%(eid)s" name="data:%(eid)s" tabindex="0" type="file" value="" />
 <a href="javascript: toggleVisibility(&#39;data:%(eid)s-advanced&#39;)" title="show advanced fields"><img src="http://testing.fr/cubicweb/data/puce_down.png" alt="show advanced fields"/></a>
 <div id="data:%(eid)s-advanced" class="hidden">
-<label for="data_format:%(eid)s">data_format</label><input id="data_format:%(eid)s" maxlength="50" name="data_format:%(eid)s" size="45" tabindex="1" type="text" value="text/plain"></input><br/>
-<label for="data_encoding:%(eid)s">data_encoding</label><input id="data_encoding:%(eid)s" maxlength="20" name="data_encoding:%(eid)s" size="20" tabindex="2" type="text" value="UTF-8"></input><br/>
+<label for="data_format:%(eid)s">data_format</label><input id="data_format:%(eid)s" maxlength="50" name="data_format:%(eid)s" size="45" tabindex="1" type="text" value="text/plain" /><br/>
+<label for="data_encoding:%(eid)s">data_encoding</label><input id="data_encoding:%(eid)s" maxlength="20" name="data_encoding:%(eid)s" size="20" tabindex="2" type="text" value="UTF-8" /><br/>
 </div>
 <br/>
-<input name="data:%(eid)s__detach" type="checkbox"></input>
+<input name="data:%(eid)s__detach" type="checkbox" />
 detach attached file
 <p><b>You can either submit a new file using the browse button above, or choose to remove already uploaded file by checking the "detach attached file" check-box, or edit file content online with the widget below.</b></p>
 <textarea cols="80" name="data:%(eid)s" onkeyup="autogrow(this)" rows="3" tabindex="3">new widgets system</textarea>''' % {'eid': file.eid})
@@ -214,9 +214,9 @@ detach attached file
             upassword = StringField(widget=PasswordInput)
         form = PFForm(self.req, redirect_path='perdu.com', entity=self.entity)
         self.assertTextEquals(self._render_entity_field('upassword', form),
-                              '''<input id="upassword:%(eid)s" name="upassword:%(eid)s" tabindex="0" type="password" value="__cubicweb_internal_field__"></input>
+                              '''<input id="upassword:%(eid)s" name="upassword:%(eid)s" tabindex="0" type="password" value="__cubicweb_internal_field__" />
 <br/>
-<input name="upassword-confirm:%(eid)s" tabindex="0" type="password" value="__cubicweb_internal_field__"></input>
+<input name="upassword-confirm:%(eid)s" tabindex="0" type="password" value="__cubicweb_internal_field__" />
 &nbsp;
 <span class="emphasis">confirm password</span>''' % {'eid': self.entity.eid})
 

@@ -286,7 +286,7 @@ class ManageAction(ManagersAction):
     title = _('manage')
     order = 20
 
-class ManageAction(ManagersAction):
+class SiteInfoAction(ManagersAction):
     id = 'siteinfo'
     title = _('info')
     order = 30
