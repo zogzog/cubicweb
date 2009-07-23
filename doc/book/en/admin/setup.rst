@@ -106,15 +106,16 @@ the path to the forest ``cubicweb``:
 Add the following lines to either `.bashrc` or `.bash_profile` to configure
 your development environment ::
 
-  export PYTHONPATH=/full/path/to/cubicweb-forest
+    export PYTHONPATH=/full/path/to/cubicweb-forest
 
-If you installed the debian packages, no configuration is required.
-Your new cubes will be placed in `/usr/share/cubicweb/cubes` and
-your applications will be placed in `/etc/cubicweb.d`.
+If you installed *CubicWeb* with packages, no configuration is required and your
+new cubes will be placed in `/usr/share/cubicweb/cubes` and your applications
+will be placed in `/etc/cubicweb.d`.
 
-To use others directories then you will have to configure the
-following environment variables as follows::
+You may run a system-wide install of *CubicWeb* in "user mode" and use it for
+development by setting the following environment variable::
 
+    export CW_MODE=user
     export CW_CUBES_PATH=~/lib/cubes
     export CW_INSTANCES_DIR=~/etc/cubicweb.d/
     export CW_INSTANCES_DATA_DIR=$CW_INSTANCES_DIR
