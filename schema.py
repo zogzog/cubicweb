@@ -793,6 +793,7 @@ class RRQLExpression(RQLExpression):
 PyFileReader.context['RRQLExpression'] = yobsolete(RRQLExpression)
 
 # workflow extensions #########################################################
+from yams.buildobjs import _add_relation as yams_add_relation
 
 class workflowable_definition(ybo.metadefinition):
     """extends default EntityType's metaclass to add workflow relations
