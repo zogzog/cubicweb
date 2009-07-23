@@ -102,7 +102,7 @@ class owned_by(RelationType):
     # 0..n cardinality for entities created by internal session (no attached user)
     # and to support later deletion of a user which has created some entities
     cardinality = '**'
-    subject = '**'
+    subject = '*'
     object = 'CWUser'
 
 class created_by(RelationType):
@@ -115,20 +115,20 @@ class created_by(RelationType):
     # 0..1 cardinality for entities created by internal session (no attached user)
     # and to support later deletion of a user which has created some entities
     cardinality = '?*'
-    subject = '**'
+    subject = '*'
     object = 'CWUser'
 
 
 class creation_date(RelationType):
     """creation time of an entity"""
     cardinality = '11'
-    subject = '**'
+    subject = '*'
     object = 'Datetime'
 
 class modification_date(RelationType):
     """latest modification time of an entity"""
     cardinality = '11'
-    subject = '**'
+    subject = '*'
     object = 'Datetime'
 
 

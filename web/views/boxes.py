@@ -144,20 +144,16 @@ class EditBox(BoxTemplate):
         if 'in_state' in entity.e_schema.subject_relations() and entity.in_state:
             _ = self.req._
             state = entity.in_state[0]
-            transitions = list(state.transitions(entity))
-            if transitions:
-                menu_title = u'%s: %s' % (_('state'), state.view('text'))
-                menu_items = []
-                for tr in transitions:
-                    url = entity.absolute_url(vid='statuschange', treid=tr.eid)
-                    menu_items.append(self.mk_action(_(tr.name), url))
-                box.append(BoxMenu(menu_title, menu_items))
-            # when there are no possible transition, put state if the menu if
-            # there are some other actions
-            elif not box.is_empty():
-                menu_title = u'<a title="%s">%s: <i>%s</i></a>' % (
-                    _('no possible transition'), _('state'), state.view('text'))
-                box.append(RawBoxItem(menu_title, 'boxMainactions'))
+            menu_title = u'%s: %s' % (_('state'), state.view('text'))
+            menu_items = []
+            for tr in state.transitions(entity):
+                url = entity.absolute_url(vid='statuschange', treid=tr.eid)
+                menu_items.append(self.mk_action(_(tr.name), url))
+            wfurl = self.build_url('cwetype/%s'%entity.e_schema, vid='workflow')
+            menu_items.append(self.mk_action(_('view workflow'), wfurl))
+            wfurl = entity.absolute_url(vid='wfhistory')
+            menu_items.append(self.mk_action(_('view history'), wfurl))
+            box.append(BoxMenu(menu_title, menu_items))
         return None
 
     def linkto_url(self, entity, rtype, etype, target):

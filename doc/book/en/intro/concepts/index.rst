@@ -64,7 +64,7 @@ your system.
 
 On a Unix system, the instances are usually stored in the directory
 :file:`/etc/cubicweb.d/`. During development, the :file:`~/etc/cubicweb.d/`
-directory is looked up, as well as the paths in :envvar:`CW_REGISTRY`
+directory is looked up, as well as the paths in :envvar:`CW_INSTANCES_DIR`
 environment variable.
 
 The term application can refer to an instance or to a cube, depending on the

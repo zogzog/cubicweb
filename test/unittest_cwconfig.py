@@ -8,7 +8,6 @@
 import sys
 import os
 from os.path import dirname, join, abspath
-from tempfile import mktemp
 
 from logilab.common.testlib import TestCase, unittest_main
 from logilab.common.changelog import Version

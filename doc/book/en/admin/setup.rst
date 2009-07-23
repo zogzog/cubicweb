@@ -116,9 +116,9 @@ To use others directories then you will have to configure the
 following environment variables as follows::
 
     export CW_CUBES_PATH=~/lib/cubes
-    export CW_REGISTRY=~/etc/cubicweb.d/
-    export CW_INSTANCE_DATA=$CW_REGISTRY
-    export CW_RUNTIME=/tmp
+    export CW_INSTANCES_DIR=~/etc/cubicweb.d/
+    export CW_INSTANCES_DATA_DIR=$CW_INSTANCES_DIR
+    export CW_RUNTIME_DIR=/tmp
 
 .. note::
     The values given above are our suggestions but of course

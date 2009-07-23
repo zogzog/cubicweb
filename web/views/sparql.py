@@ -21,7 +21,7 @@ from cubicweb.spa2rql import Sparql2rqlTranslator
 
 class SparqlForm(forms.FieldsForm):
     id = 'sparql'
-    sparql = formfields.StringField(help=_('type here a sparql qyery'))
+    sparql = formfields.StringField(help=_('type here a sparql query'))
     resultvid = formfields.StringField(choices=((_('table'), 'table'),
                                                 (_('sparql xml'), 'sparqlxml')),
                                        widget=fwdgs.Radio,

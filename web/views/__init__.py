@@ -8,7 +8,7 @@
 __docformat__ = "restructuredtext en"
 
 import os
-from tempfile import mktemp
+import tempfile
 
 from rql import nodes
 
@@ -109,7 +109,7 @@ class TmpFileViewMixin(object):
 
     def cell_call(self, row=0, col=0):
         self.row, self.col = row, col # in case one need it
-        tmpfile = mktemp('.png')
+        tmpfile = tempfile.mkstemp('.png')
         try:
             self._generate(tmpfile)
             self.w(open(tmpfile).read())

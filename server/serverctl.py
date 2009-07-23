@@ -649,7 +649,7 @@ class DBCopyCommand(Command):
         import tempfile
         srcappid = pop_arg(args, 1, msg="No source application specified !")
         destappid = pop_arg(args, msg="No destination application specified !")
-        output = tempfile.mktemp()
+        output = tempfile.mkstemp()
         if ':' in srcappid:
             host, srcappid = srcappid.split(':')
             _remote_dump(host, srcappid, output, self.config.sudo)

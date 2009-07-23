@@ -18,6 +18,7 @@ from cubicweb import Unauthorized, view
 from cubicweb.selectors import (implements, has_related_entities,
                                 relation_possible, match_form_params)
 from cubicweb.interfaces import IWorkflowable
+from cubicweb.view import EntityView
 from cubicweb.web import stdmsgs, action, component, form
 from cubicweb.web.form import FormViewMixIn
 from cubicweb.web.formfields import StringField,  RichTextField
@@ -66,13 +67,9 @@ class ChangeStateFormView(FormViewMixIn, view.EntityView):
     def redirectpath(self, entity):
         return entity.rest_path()
 
-
-class WFHistoryVComponent(component.EntityVComponent):
-    """display the workflow history for entities supporting it"""
+class WFHistoryView(EntityView):
     id = 'wfhistory'
-    __select__ = (component.EntityVComponent.__select__
-                  & relation_possible('wf_info_for', role='object'))
-    context = 'navcontentbottom'
+    __select__ = relation_possible('wf_info_for', role='object')
     title = _('Workflow history')
 
     def cell_call(self, row, col, view=None):
@@ -101,6 +98,15 @@ class WFHistoryVComponent(component.EntityVComponent):
             self.wview('table', rset, title=_(self.title), displayactions=False,
                        displaycols=displaycols, headers=headers)
 
+class WFHistoryVComponent(component.EntityVComponent):
+    """display the workflow history for entities supporting it"""
+    id = 'wfhistory'
+    __select__ = WFHistoryView.__select__ & component.EntityVComponent.__select__
+    context = 'navcontentbottom'
+    title = _('Workflow history')
+
+    def cell_call(self, row, col, view=None):
+        self.wview('wfhistory', self.rset, row=row, col=col, view=view)
 
 # workflow entity types views #################################################
 
