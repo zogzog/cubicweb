@@ -5,7 +5,6 @@
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 :license: GNU Lesser General Public License, v2.1 - http://www.gnu.org/licenses
 """
-from cubicweb.schema import format_constraint
 
 class Affaire(WorkflowableEntityType):
     permissions = {
@@ -20,10 +19,8 @@ class Affaire(WorkflowableEntityType):
                  constraints=[SizeConstraint(16)])
     sujet = String(fulltextindexed=True,
                    constraints=[SizeConstraint(256)])
-    descr_format = String(meta=True, internationalizable=True,
-                                default='text/rest', constraints=[format_constraint])
-    descr = String(fulltextindexed=True,
-                   description=_('more detailed description'))
+    descr = RichString(fulltextindexed=True,
+                       description=_('more detailed description'))
 
     duration = Int()
     invoiced = Int()

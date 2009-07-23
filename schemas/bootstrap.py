@@ -9,8 +9,8 @@ __docformat__ = "restructuredtext en"
 _ = unicode
 
 from yams.buildobjs import (EntityType, RelationType, SubjectRelation,
-                            ObjectRelation, String, Boolean, Int)
-from cubicweb.schema import RichString, RQLConstraint
+                            ObjectRelation, RichString, String, Boolean, Int)
+from cubicweb.schema import RQLConstraint
 from cubicweb.schemas import META_ETYPE_PERMS, META_RTYPE_PERMS
 
 # not restricted since as "is" is handled as other relations, guests need

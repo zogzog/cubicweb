@@ -5,7 +5,6 @@
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 :license: GNU Lesser General Public License, v2.1 - http://www.gnu.org/licenses
 """
-from cubicweb.schema import format_constraint
 
 class Folder2(MetaUserEntityType):
     """folders are used to classify entities. They may be defined as a tree.
@@ -14,9 +13,7 @@ class Folder2(MetaUserEntityType):
     """
     name = String(required=True, indexed=True, internationalizable=True,
                   constraints=[UniqueConstraint(), SizeConstraint(64)])
-    description_format = String(meta=True, internationalizable=True,
-                                default='text/rest', constraints=[format_constraint])
-    description = String(fulltextindexed=True)
+    description = RichString(fulltextindexed=True)
 
     filed_under2 = BothWayRelation(
         SubjectRelation('Folder2', description=_("parent folder")),

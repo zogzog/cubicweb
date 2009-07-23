@@ -11,9 +11,9 @@ from warnings import warn
 from datetime import datetime
 
 from logilab.mtconverter import xml_escape
-from yams.constraints import SizeConstraint, StaticVocabularyConstraint
+from yams.constraints import (SizeConstraint, StaticVocabularyConstraint,
+                              FormatConstraint)
 
-from cubicweb.schema import FormatConstraint
 from cubicweb.utils import ustrftime, compute_cardinality
 from cubicweb.common import tags, uilib
 from cubicweb.web import INTERNAL_FIELD_VALUE

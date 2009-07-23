@@ -46,8 +46,8 @@ try:
     from cubicweb.ext.tal import compile_template
 except ImportError:
     HAS_TAL = False
-    from cubicweb.schema import FormatConstraint
-    FormatConstraint.need_perm_formats.remove('text/cubicweb-page-template')
+    from cubicweb import schema
+    schema.NEED_PERM_FORMATS.remove('text/cubicweb-page-template')
 
 else:
     HAS_TAL = True

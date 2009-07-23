@@ -17,7 +17,7 @@ from logilab.common.decorators import cached, clear_cache, monkeypatch
 from logilab.common.deprecation import obsolete
 from logilab.common.compat import any
 
-from yams import BadSchemaDefinition, buildobjs as ybo
+from yams import BadSchemaDefinition, buildobjs as ybo, constraints
 from yams.schema import Schema, ERSchema, EntitySchema, RelationSchema
 from yams.constraints import BaseConstraint, StaticVocabularyConstraint
 from yams.reader import CONSTRAINTS, PyFileReader, SchemaLoader, \
@@ -61,50 +61,6 @@ def bw_normalize_etype(etype):
         warn(msg, DeprecationWarning, stacklevel=4)
         etype = ETYPE_NAME_MAP[etype]
     return etype
-
-
-## cubicweb provides a RichString class for convenience
-class RichString(ybo.String):
-    """Convenience RichString attribute type
-    The following declaration::
-
-      class Card(EntityType):
-          content = RichString(fulltextindexed=True, default_format='text/rest')
-
-    is equivalent to::
-
-      class Card(EntityType):
-          content_format = String(internationalizable=True,
-                                  default='text/rest', constraints=[format_constraint])
-          content  = String(fulltextindexed=True)
-    """
-    def __init__(self, default_format='text/plain', format_constraints=None, **kwargs):
-        self.default_format = default_format
-        self.format_constraints = format_constraints or [format_constraint]
-        super(RichString, self).__init__(**kwargs)
-
-PyFileReader.context['RichString'] = yobsolete(RichString)
-
-## need to monkeypatch yams' _add_relation function to handle RichString
-yams_add_relation = ybo._add_relation
-@monkeypatch(ybo)
-def _add_relation(relations, rdef, name=None, insertidx=None):
-    if isinstance(rdef, RichString):
-        format_attrdef = ybo.String(internationalizable=True,
-                                    default=rdef.default_format, maxsize=50,
-                                    constraints=rdef.format_constraints)
-        yams_add_relation(relations, format_attrdef, name+'_format', insertidx)
-    yams_add_relation(relations, rdef, name, insertidx)
-
-
-@monkeypatch(ybo.EntityType, methodname='add_relation')
-@classmethod
-def add_relation(cls, rdef, name=None):
-    ybo.add_relation_function(cls, rdef, name)
-    if isinstance(rdef, RichString) and not rdef in cls._defined:
-        format_attr_name = (name or rdef.name) + '_format'
-        rdef = cls.get_relations(format_attr_name).next()
-        cls._ensure_relation_type(rdef)
 
 def display_name(req, key, form=''):
     """return a internationalized string for the key (schema entity or relation
@@ -926,49 +882,22 @@ class CubicWebSchemaLoader(BootstrapSchemaLoader):
                 self.handle_file(filepath)
 
 
-# _() is just there to add messages to the catalog, don't care about actual
-# translation
-PERM_USE_TEMPLATE_FORMAT = _('use_template_format')
-
-class FormatConstraint(StaticVocabularyConstraint):
-    need_perm_formats = [_('text/cubicweb-page-template')]
-
-    regular_formats = (_('text/rest'),
-                       _('text/html'),
-                       _('text/plain'),
-                       )
-    def __init__(self):
-        pass
-
-    def serialize(self):
-        """called to make persistent valuable data of a constraint"""
-        return None
-
-    @classmethod
-    def deserialize(cls, value):
-        """called to restore serialized data of a constraint. Should return
-        a `cls` instance
-        """
-        return cls()
-
-    def vocabulary(self, entity=None, req=None):
-        if req is None and entity is not None:
-            req = entity.req
-        if req is not None and req.user.has_permission(PERM_USE_TEMPLATE_FORMAT):
-            return self.regular_formats + tuple(self.need_perm_formats)
-        return self.regular_formats
-
-    def __str__(self):
-        return 'value in (%s)' % u', '.join(repr(unicode(word)) for word in self.vocabulary())
-
-
-format_constraint = FormatConstraint()
-CONSTRAINTS['FormatConstraint'] = FormatConstraint
-PyFileReader.context['format_constraint'] = format_constraint
-
 set_log_methods(CubicWebSchemaLoader, getLogger('cubicweb.schemaloader'))
 set_log_methods(BootstrapSchemaLoader, getLogger('cubicweb.bootstrapschemaloader'))
 set_log_methods(RQLExpression, getLogger('cubicweb.schema'))
+
+# _() is just there to add messages to the catalog, don't care about actual
+# translation
+PERM_USE_TEMPLATE_FORMAT = _('use_template_format')
+NEED_PERM_FORMATS = [_('text/cubicweb-page-template')]
+
+@monkeypatch(constraints.FormatConstraint)
+def vocabulary(self, entity=None, req=None):
+    if req is None and entity is not None:
+        req = entity.req
+    if req is not None and req.user.has_permission(PERM_USE_TEMPLATE_FORMAT):
+        return self.regular_formats + tuple(NEED_PERM_FORMATS)
+    return self.regular_formats
 
 # XXX monkey patch PyFileReader.import_erschema until bw_normalize_etype is
 # necessary
