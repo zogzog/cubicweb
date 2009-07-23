@@ -286,6 +286,12 @@ class ManageAction(ManagersAction):
     title = _('manage')
     order = 20
 
+class ManageAction(ManagersAction):
+    id = 'siteinfo'
+    title = _('info')
+    order = 30
+    __select__ = match_user_groups('users','managers')
+
 
 from logilab.common.deprecation import class_moved
 from cubicweb.web.views.bookmark import FollowAction
