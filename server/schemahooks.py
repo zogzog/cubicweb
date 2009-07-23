@@ -189,7 +189,7 @@ def before_del_ertype(session, eid):
     DeleteCWRTypeOp(session, name)
 
 
-class DelRelationDefOp(SchemaOperation):
+class DeleteRelationDefOp(SchemaOperation):
     """actually remove the relation definition from the application's schema"""
     def commit_event(self):
         subjtype, rtype, objtype = self.kobj
@@ -238,7 +238,7 @@ def after_del_relation_type(session, rdefeid, rtype, rteid):
     # if this is the last instance, drop associated relation type
     if lastrel and not rteid in pendings:
         execute('DELETE CWRType X WHERE X eid %(x)s', {'x': rteid}, 'x')
-    DelRelationDefOp(session, (subjschema, rschema, objschema))
+    DeleteRelationDefOp(session, (subjschema, rschema, objschema))
 
 
 # addition ####################################################################
@@ -883,7 +883,7 @@ class DelGroupPermissionOp(AddGroupPermissionOp):
                 self.perm, erschema.type, self.group)
 
 
-class DelRQLExpressionPermissionOp(AddRQLExpressionPermissionOp):
+class DeleteRQLExpressionPermissionOp(AddRQLExpressionPermissionOp):
     """synchronize schema when a *_permission relation has been deleted from an rql expression"""
 
     def commit_event(self):
@@ -919,7 +919,7 @@ def before_del_permission(session, subject, rtype, object):
     else: # RQLExpression
         expr = session.execute('Any EXPR WHERE X eid %(x)s, X expression EXPR',
                                {'x': object}, 'x')[0][0]
-        DelRQLExpressionPermissionOp(session, perm, subject, expr)
+        DeleteRQLExpressionPermissionOp(session, perm, subject, expr)
 
 
 def rebuild_infered_relations(session, subject, rtype, object):

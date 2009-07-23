@@ -63,8 +63,8 @@ class SubDivision(Division):
     __specializes_schema__ = True
     travaille_subdivision = ObjectRelation('Personne')
 
-_euser = import_schema('base').CWUser
-_euser.__relations__[0].fulltextindexed = True
+from cubicweb.schemas.base import CWUser
+CWUser.get_relations('login').next().fulltextindexed = True
 
 class Note(EntityType):
     date = String(maxsize=10)
@@ -131,14 +131,14 @@ class travaille(RelationType):
         'delete': ('managers', RRQLExpression('O owned_by U')),
         }
 
-class para(AttributeRelationType):
+class para(RelationType):
     permissions = {
         'read':   ('managers', 'users', 'guests'),
         'add':    ('managers', ERQLExpression('X in_state S, S name "todo"')),
         'delete': ('managers', ERQLExpression('X in_state S, S name "todo"')),
         }
 
-class test(AttributeRelationType):
+class test(RelationType):
     permissions = {'read': ('managers', 'users', 'guests'),
                    'delete': ('managers',),
                    'add': ('managers',)}
