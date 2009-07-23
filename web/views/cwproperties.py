@@ -228,10 +228,9 @@ def is_user_prefs(cls, req, rset=None, row=None, col=0, **kwargs):
 class CWPropertiesForm(SystemCWPropertiesForm):
     id = 'propertiesform'
     __select__ = (
-        # we don't want guests to be able to come here
-        match_user_groups('users', 'managers') &
-        (none_rset() | ((one_line_rset() & is_user_prefs()) &
-                        (one_line_rset() & match_user_groups('managers'))))
+        (none_rset() & match_user_groups('users','managers'))
+        | (one_line_rset() & match_user_groups('users') & is_user_prefs())
+        | (one_line_rset() & match_user_groups('managers') & implements('CWUser'))
         )
 
     title = _('preferences')

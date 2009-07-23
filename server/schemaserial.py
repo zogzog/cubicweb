@@ -277,12 +277,13 @@ def serialize_schema(cursor, schema, verbose=False):
     """synchronize schema and permissions in the database according to
     current schema
     """
-    print 'serializing the schema, this may take some time'
+    _title = '-> storing the schema in the database '
+    print _title,
     eschemas = schema.entities()
     aller = eschemas + schema.relations()
     if not verbose:
         pb_size = len(aller) + len(CONSTRAINTS) + len([x for x in eschemas if x.specializes()])
-        pb = ProgressBar(pb_size)
+        pb = ProgressBar(pb_size, title=_title)
     for cstrtype in CONSTRAINTS:
         rql = 'INSERT CWConstraintType X: X name "%s"' % cstrtype
         if verbose:

@@ -7,7 +7,7 @@ software
 distname = "cubicweb"
 modname = "cubicweb"
 
-numversion = (3, 3, 3)
+numversion = (3, 3, 4)
 version = '.'.join(str(num) for num in numversion)
 
 license = 'LGPL v2'
@@ -31,6 +31,13 @@ This package contains:
 web = 'http://www.cubicweb.org'
 ftp = 'ftp://ftp.logilab.org/pub/cubicweb'
 pyversions = ['2.4', '2.5']
+
+classifiers = [
+           'Environment :: Web Environment',
+           'Framework :: CubicWeb',
+           'Programming Language :: Python',
+           'Programming Language :: JavaScript',
+]
 
 
 import sys

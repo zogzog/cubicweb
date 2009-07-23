@@ -106,7 +106,7 @@ class RQLCli(CLIHelper):
             password = getpass('password: ')
         if self.cnx is not None:
             self.cnx.close()
-        self.cnx = connect(user=user, password=password, host=host,
+        self.cnx = connect(login=user, password=password, host=host,
                            database=application)
         self.schema = self.cnx.get_schema()
         self.cursor = self.cnx.cursor()

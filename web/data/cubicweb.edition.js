@@ -512,7 +512,7 @@ function inlineValidateRelationForm(rtype, role, eid, divid, reload, vid,
           document.location.href = result[1];
         } else {
 	  if (result[0]) {
-            var d = asyncRemoteExec('reledit_form', eid, rtype, role, lzone);
+            var d = asyncRemoteExec('reledit_form', eid, rtype, role, default_value, lzone);
             d.addCallback(function (result) {
               jQuery('#'+divid+'-reledit').replaceWith(result);
             });

@@ -65,7 +65,7 @@ class RQLSensor(Sensor):
             return self._v_cnx
         except AttributeError:
             appid, user, passwd = self._get_config("appid"), self._get_config("user"), self._get_config("passwd")
-            cnx = connect(database=appid, user=user, password=passwd)
+            cnx = connect(database=appid, login=user, password=passwd)
             self._v_cnx = cnx
             return cnx
 

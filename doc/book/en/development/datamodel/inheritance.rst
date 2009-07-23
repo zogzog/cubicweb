@@ -1,1 +1,5 @@
+
+Inheritance
+-----------
+
 XXX WRITME

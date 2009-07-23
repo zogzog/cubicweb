@@ -47,12 +47,13 @@ install: build $(basename $(wildcard debian/*.in))
 	dh_lintian
 
 	# Remove unittests directory (should be available in cubicweb-dev only)
-	rm -rf debian/cubicweb-server/usr/share/pyshared/cubicweb/server/test
-	rm -rf debian/cubicweb-server/usr/share/pyshared/cubicweb/sobjects/test
-	rm -rf debian/cubicweb-dev/usr/share/pyshared/cubicweb/devtools/test
-	rm -rf debian/cubicweb-web/usr/share/pyshared/cubicweb/web/test
-	rm -rf debian/cubicweb-common/usr/share/pyshared/cubicweb/common/test
-	rm -rf debian/cubicweb-common/usr/share/pyshared/cubicweb/entities/test
+	rm -rf debian/cubicweb-server/usr/lib/${PY_VERSION}/site-packages/cubicweb/server/test
+	rm -rf debian/cubicweb-server/usr/lib/${PY_VERSION}/site-packages/cubicweb/sobjects/test
+	rm -rf debian/cubicweb-web/usr/lib/${PY_VERSION}/site-packages/cubicweb/web/test
+	rm -rf debian/cubicweb-twisted/usr/lib/${PY_VERSION}/site-packages/cubicweb/etwist/test
+	rm -rf debian/cubicweb-common/usr/lib/${PY_VERSION}/site-packages/cubicweb/ext/test
+	rm -rf debian/cubicweb-common/usr/lib/${PY_VERSION}/site-packages/cubicweb/common/test
+	rm -rf debian/cubicweb-common/usr/lib/${PY_VERSION}/site-packages/cubicweb/entities/test
 
 	# cubes directory must be managed as a valid python module
 	touch debian/cubicweb-common/usr/share/cubicweb/cubes/__init__.py

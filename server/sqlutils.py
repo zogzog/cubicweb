@@ -29,7 +29,7 @@ lgc.USE_MX_DATETIME = False
 SQL_PREFIX = 'cw_'
 
 
-def sqlexec(sqlstmts, cursor_or_execute, withpb=True, delimiter=';'):
+def sqlexec(sqlstmts, cursor_or_execute, withpb=True, pbtitle='', delimiter=';'):
     """execute sql statements ignoring DROP/ CREATE GROUP or USER statements
     error. If a cnx is given, commit at each statement
     """
@@ -39,7 +39,7 @@ def sqlexec(sqlstmts, cursor_or_execute, withpb=True, delimiter=';'):
         execute = cursor_or_execute
     sqlstmts = sqlstmts.split(delimiter)
     if withpb:
-        pb = ProgressBar(len(sqlstmts))
+        pb = ProgressBar(len(sqlstmts), title=pbtitle)
     for sql in sqlstmts:
         sql = sql.strip()
         if withpb:

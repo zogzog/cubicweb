@@ -45,7 +45,8 @@ def init_repository(config, interactive=True, drop=False, vreg=None):
     assert len(repo.sources) == 1, repo.sources
     schema = repo.schema
     sourcescfg = config.sources()
-    print 'creating necessary tables into the system source'
+    _title = '-> creating tables '
+    print _title,
     source = sourcescfg['system']
     driver = source['db-driver']
     sqlcnx = repo.system_source.get_connection()
@@ -56,7 +57,7 @@ def init_repository(config, interactive=True, drop=False, vreg=None):
         try:
             sqlexec(dropsql, execute)
         except Exception, ex:
-            print 'drop failed, skipped (%s)' % ex
+            print '-> drop failed, skipped (%s).' % ex
             sqlcnx.rollback()
     # schema entities and relations tables
     # can't skip entities table even if system source doesn't support them,
@@ -68,14 +69,14 @@ def init_repository(config, interactive=True, drop=False, vreg=None):
         schemasql = sqlschema(schema, driver)
         #skip_entities=[str(e) for e in schema.entities()
         #               if not repo.system_source.support_entity(str(e))])
-    sqlexec(schemasql, execute)
+    sqlexec(schemasql, execute, pbtitle=_title)
     # install additional driver specific sql files
     for fpath in glob(join(config.schemas_lib_dir(), '*.sql.%s' % driver)):
-        print 'install', fpath
+        print '-> installing', fpath
         sqlexec(open(fpath).read(), execute, False, delimiter=';;')
     for directory in config.cubes_path():
         for fpath in glob(join(directory, 'schema', '*.sql.%s' % driver)):
-            print 'install', fpath
+            print '-> installing', fpath
             sqlexec(open(fpath).read(), execute, False, delimiter=';;')
     sqlcursor.close()
     sqlcnx.commit()
@@ -90,7 +91,7 @@ def init_repository(config, interactive=True, drop=False, vreg=None):
             login, pwd = manager_userpasswd(msg=msg, confirm=True)
         else:
             login, pwd = unicode(source['db-user']), source['db-password']
-    print 'inserting default user and groups'
+    print '-> inserting default user and default groups.'
     needisfix = []
     for group in BASE_GROUPS:
         rset = session.execute('INSERT CWGroup X: X name %(name)s',
@@ -140,7 +141,7 @@ def init_repository(config, interactive=True, drop=False, vreg=None):
     config.bootstrap_schema = bootstrap_schema
     config.consider_user_state = True
     config.set_language = True
-    print 'application %s initialized' % config.appid
+    print '-> database for application %s initialized.' % config.appid
 
 
 def initialize_schema(config, schema, mhandler, event='create'):

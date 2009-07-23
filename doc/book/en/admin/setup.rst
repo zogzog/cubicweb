@@ -52,7 +52,7 @@ The repositories are signed with `Logilab's gnupg key`_. To avoid warning on "ap
 3. run "apt-key add logilab-dists-key.asc"
 4. re-run apt-get update (manually or through the package manager, whichever you prefer)
 
-.. `Logilab's gnupg key` _http://ftp.logilab.org/dists/logilab-dists-key.asc
+.. _`Logilab's gnupg key`: http://ftp.logilab.org/dists/logilab-dists-key.asc
 
 Install from source
 ```````````````````
@@ -73,6 +73,9 @@ When cloning a repository, you might be set in a development branch
 (the 'default' branch). You should check that the branches of the
 repositories are set to 'stable' (using `hg up stable` for each one)
 if you do not intend to develop the framework itself.
+
+In both cases, make sure you have installed the dependencies (see appendixes for
+the list).
 
 Postgres installation
 `````````````````````
