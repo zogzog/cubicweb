@@ -27,6 +27,7 @@ def order_limit_offset(sparqlst):
         addons += ' OFFSET %s' % sparqlst.offset
     return addons
 
+
 class QueryInfo(object):
     """wrapper class containing necessary information to generate a RQL query
     from a sparql syntax tree
@@ -41,41 +42,14 @@ class QueryInfo(object):
         self.infer_types_info = []
         self.union_params = []
         self.restrictions = []
+        self.literals = {}
+        self._litcount = 0
 
-    def finalize(self):
-        """return corresponding rql query"""
-        for varname, ptypes in self.possible_types.iteritems():
-            if len(ptypes) == 1:
-                self.restrictions.append('%s is %s' % (varname, iter(ptypes).next()))
-        unions = []
-        for releq, subjvar, objvar in self.union_params:
-            thisunions = []
-            for st, rt, ot in releq:
-                thisunions.append(['%s %s %s' % (subjvar, rt, objvar)])
-                if st != '*':
-                    thisunions[-1].append('%s is %s' % (subjvar, st))
-                if ot != '*':
-                    thisunions[-1].append('%s is %s' % (objvar, ot))
-            if not unions:
-                unions = thisunions
-            else:
-                unions = zip(*make_domains([unions, thisunions]))
-        selection = 'Any ' + ', '.join(self.selection)
-        sparqlst = self.sparqlst
-        if sparqlst.distinct:
-            selection = 'DISTINCT ' + selection
-        if not unions:
-            return '%s%s WHERE %s' % (selection, order_limit_offset(sparqlst),
-                                      ', '.join(self.restrictions))
-        baserql = '%s WHERE %s' % (selection, ', '.join(self.restrictions))
-        rqls = ['(%s, %s)' % (baserql, ', '.join(unionrestrs))
-                for unionrestrs in unions]
-        rql = ' UNION '.join(rqls)
-        if sparqlst.orderby or sparqlst.limit or sparqlst.offset:
-            rql = '%s%s WITH %s BEING (%s)' % (
-                selection, order_limit_offset(sparqlst),
-                ', '.join(self.selection), rql)
-        return rql
+    def add_literal(self, value):
+        key = chr(ord('a') + self._litcount)
+        self._litcount += 1
+        self.literals[key] = value
+        return key
 
     def set_possible_types(self, var, varpossibletypes):
         """set/restrict possible types for the given variable.
@@ -131,19 +105,69 @@ class QueryInfo(object):
                     raise TypeResolverException()
                 if len(yams_predicates) != nbchoices:
                     modified = True
+
+    def build_restrictions(self):
         # now, for each predicate
         for yams_predicates, subjvar, obj in self.infer_types_info:
             rel = yams_predicates[0]
-            objvar = obj.name.upper()
             # if there are several yams relation type equivalences, we will have
             # to generate several unioned rql queries
             for s, r, o in yams_predicates[1:]:
                 if r != rel[1]:
-                    self.union_params.append((yams_predicates, subjvar, objvar))
+                    self.union_params.append((yams_predicates, subjvar, obj))
                     break
+            # else we can simply add it to base rql restrictions
             else:
-                # else we can simply add it to base rql restrictions
-                self.restrictions.append('%s %s %s' % (subjvar, rel[1], objvar))
+                restr = self.build_restriction(subjvar, rel[1], obj)
+                self.restrictions.append(restr)
+
+    def build_restriction(self, subjvar, rtype, obj):
+        if isinstance(obj, ast.SparqlLiteral):
+            key = self.add_literal(obj.value)
+            objvar = '%%(%s)s' % key
+        else:
+            assert isinstance(obj, ast.SparqlVar)
+            # make a valid rql var name
+            objvar = obj.name.upper()
+        # else we can simply add it to base rql restrictions
+        return '%s %s %s' % (subjvar, rtype, objvar)
+
+    def finalize(self):
+        """return corresponding rql query (string) / args (dict)"""
+        for varname, ptypes in self.possible_types.iteritems():
+            if len(ptypes) == 1:
+                self.restrictions.append('%s is %s' % (varname, iter(ptypes).next()))
+        unions = []
+        for releq, subjvar, obj in self.union_params:
+            thisunions = []
+            for st, rt, ot in releq:
+                thisunions.append([self.build_restriction(subjvar, rt, obj)])
+                if st != '*':
+                    thisunions[-1].append('%s is %s' % (subjvar, st))
+                if isinstance(obj, ast.SparqlVar) and ot != '*':
+                    objvar = obj.name.upper()
+                    thisunions[-1].append('%s is %s' % (objvar, objvar))
+            if not unions:
+                unions = thisunions
+            else:
+                unions = zip(*make_domains([unions, thisunions]))
+        selection = 'Any ' + ', '.join(self.selection)
+        sparqlst = self.sparqlst
+        if sparqlst.distinct:
+            selection = 'DISTINCT ' + selection
+        if unions:
+            baserql = '%s WHERE %s' % (selection, ', '.join(self.restrictions))
+            rqls = ['(%s, %s)' % (baserql, ', '.join(unionrestrs))
+                    for unionrestrs in unions]
+            rql = ' UNION '.join(rqls)
+            if sparqlst.orderby or sparqlst.limit or sparqlst.offset:
+                rql = '%s%s WITH %s BEING (%s)' % (
+                    selection, order_limit_offset(sparqlst),
+                    ', '.join(self.selection), rql)
+        else:
+            rql = '%s%s WHERE %s' % (selection, order_limit_offset(sparqlst),
+                                      ', '.join(self.restrictions))
+        return rql, self.literals
 
 
 class Sparql2rqlTranslator(object):
@@ -176,10 +200,8 @@ class Sparql2rqlTranslator(object):
                 # where subject / object entity type may '*' if not specified
                 yams_predicates = xy.yeq(':'.join(predicate))
                 qi.infer_types_info.append((yams_predicates, subjvar, obj))
-                if isinstance(obj, ast.SparqlVar):
-                    # make a valid rql var name
-                    objvar = obj.name.upper()
-                else:
+                if not isinstance(obj, (ast.SparqlLiteral, ast.SparqlVar)):
                     raise UnsupportedQuery()
         qi.infer_types()
+        qi.build_restrictions()
         return qi

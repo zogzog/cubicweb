@@ -17,9 +17,9 @@ class XYTC(TestCase):
     def setUp(self):
         self.tr = Sparql2rqlTranslator(schema)
 
-    def _test(self, sparql, rql):
+    def _test(self, sparql, rql, args={}):
         qi = self.tr.translate(sparql)
-        self.assertEquals(qi.finalize(), rql)
+        self.assertEquals(qi.finalize(), (rql, args))
 
     def XXX_test_base_01(self):
         self._test('SELECT * WHERE { }', 'Any X')
@@ -143,6 +143,16 @@ class XYTC(TestCase):
     ORDER BY DESC(?cd)''', 'Any X, CD ORDERBY CD DESC WITH X, CD BEING ((Any X, CD WHERE , X creation_date CD) UNION (Any X, CD WHERE , X publication_date CD, X is Version))')
         finally:
             xy.remove_equivalence('Version publication_date', 'doap:Version dc:date')
+
+
+    def test_restr_attr(self):
+        self._test('''
+    PREFIX doap: <http://usefulinc.com/ns/doap#>
+    SELECT ?project
+    WHERE  {
+      ?project a doap:Project;
+              doap:name "cubicweb".
+    }''', 'Any PROJECT WHERE PROJECT name %(a)s, PROJECT is Project', {'a': 'cubicweb'})
 
 # # Two elements in the group
 # PREFIX :  <http://example.org/ns#>
