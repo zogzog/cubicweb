@@ -6,9 +6,13 @@ note: most schemahooks.py hooks are actually tested in unittest_migrations.py
 """
 
 from logilab.common.testlib import TestCase, unittest_main
+
+from datetime import datetime
+
+from cubicweb import (ConnectionError, RepositoryError, ValidationError,
+                      AuthenticationError, BadConnectionId)
 from cubicweb.devtools.apptest import RepositoryBasedTC, get_versions
 
-from cubicweb import ConnectionError, RepositoryError, ValidationError, AuthenticationError, BadConnectionId
 from cubicweb.server.sqlutils import SQL_PREFIX
 from cubicweb.server.repository import Repository
 
@@ -613,6 +617,35 @@ class WorkflowHooksTC(RepositoryBasedTC):
         cu = cnx.cursor()
         self.failUnless(cu.execute("INSERT Note X: X type 'a', X in_state S WHERE S name 'todo'"))
         cnx.commit()
+
+    def test_metadata_creation_modification_date(self):
+        _now = datetime.now()
+        eid = self.execute('INSERT Note X')[0][0]
+        creation_date, modification_date = self.execute('Any CD, MD WHERE X eid %s, '
+                                                        'X creation_date CD, '
+                                                        'X modification_date MD' % eid)[0]
+        self.assertEquals((creation_date - _now).seconds, 0)
+        self.assertEquals((modification_date - _now).seconds, 0)
+
+    def test_metadata__date(self):
+        _now = datetime.now()
+        eid = self.execute('INSERT Note X')[0][0]
+        creation_date = self.execute('Any D WHERE X eid %s, X creation_date D' % eid)[0][0]
+        self.assertEquals((creation_date - _now).seconds, 0)
+
+    def test_metadata_created_by(self):
+        eid = self.execute('INSERT Note X')[0][0]
+        self.commit() # fire operations
+        rset = self.execute('Any U WHERE X eid %s, X created_by U' % eid)
+        self.assertEquals(len(rset), 1) # make sure we have only one creator
+        self.assertEquals(rset[0][0], self.session.user.eid)
+
+    def test_metadata_owned_by(self):
+        eid = self.execute('INSERT Note X')[0][0]
+        self.commit() # fire operations
+        rset = self.execute('Any U WHERE X eid %s, X owned_by U' % eid)
+        self.assertEquals(len(rset), 1) # make sure we have only one owner
+        self.assertEquals(rset[0][0], self.session.user.eid)
 
 if __name__ == '__main__':
     unittest_main()
