@@ -18,6 +18,7 @@ from cubicweb import Unauthorized, view
 from cubicweb.selectors import (implements, has_related_entities,
                                 relation_possible, match_form_params)
 from cubicweb.interfaces import IWorkflowable
+from cubicweb.view import EntityView
 from cubicweb.web import stdmsgs, action, component, form
 from cubicweb.web.form import FormViewMixIn
 from cubicweb.web.formfields import StringField,  RichTextField

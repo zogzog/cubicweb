@@ -233,7 +233,7 @@ class is_(RelationType):
         'delete': (),
         }
     cardinality = '1*'
-    subject = '**'
+    subject = '*'
     object = 'CWEType'
 
 class is_instance_of(RelationType):
@@ -248,7 +248,7 @@ class is_instance_of(RelationType):
         'delete': (),
         }
     cardinality = '+*'
-    subject = '**'
+    subject = '*'
     object = 'CWEType'
 
 class specializes(RelationType):
