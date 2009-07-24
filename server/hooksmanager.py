@@ -220,9 +220,9 @@ class Hook(AppObject):
                '%s: events is expected to be a tuple, not %s' % (
             cls, type(cls.events))
         for event in cls.events:
-            if event == 'server_startup':
+            if event in SYSTEM_HOOKS:
                 assert not cls.accepts or cls.accepts == ('Any',), \
-                       '%s doesnt make sense on server_startup' % cls.accepts
+                       '%s doesnt make sense on %s' % (cls.accepts, event)
                 cls.accepts = ('Any',)
             for ertype in cls.accepts:
                 if (event, ertype) in done:
