@@ -102,7 +102,7 @@ primaryview_section = RelationTags('primaryview_section',
                                    init_primaryview_section,
                                    frozenset(('attributes', 'relations',
                                                'sideboxes', 'hidden')))
-for rtype in ('eid', 'creation_date', 'modification_date',
+for rtype in ('eid', 'creation_date', 'modification_date', 'cwuri',
               'is', 'is_instance_of', 'identity',
               'owned_by', 'created_by',
               'in_state', 'wf_info_for', 'require_permission',
@@ -206,6 +206,7 @@ autoform_section.tag_attribute(('*', 'eid'), 'primary')
 autoform_section.tag_attribute(('*', 'description'), 'secondary')
 autoform_section.tag_attribute(('*', 'creation_date'), 'metadata')
 autoform_section.tag_attribute(('*', 'modification_date'), 'metadata')
+autoform_section.tag_attribute(('*', 'cwuri'), 'metadata')
 autoform_section.tag_attribute(('*', 'has_text'), 'generated')
 autoform_section.tag_subject_of(('*', 'in_state', '*'), 'primary')
 autoform_section.tag_subject_of(('*', 'owned_by', '*'), 'metadata')
