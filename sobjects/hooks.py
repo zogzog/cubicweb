@@ -12,7 +12,7 @@ from cubicweb.server.hooksmanager import Hook
 from cubicweb.server.pool import PreCommitOperation
 
 
-class SetModificationDateOnStateChange(hooksmanager.Hook):
+class SetModificationDateOnStateChange(Hook):
     """update entity's modification date after changing its state"""
     events = ('after_add_relation',)
     accepts = ('in_state',)
