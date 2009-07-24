@@ -31,6 +31,7 @@ from docutils.parsers.rst.roles import register_canonical_role, set_classes
 
 from logilab.mtconverter import ESC_UCAR_TABLE, ESC_CAR_TABLE, xml_escape
 
+from cubicweb import UnknownEid
 from cubicweb.ext.html4zope import Writer
 
 # We provide our own parser as an attempt to get rid of
@@ -68,8 +69,13 @@ def eid_reference_role(role, rawtext, text, lineno, inliner,
         return [prb], [msg]
     # Base URL mainly used by inliner.pep_reference; so this is correct:
     context = inliner.document.settings.context
-    refedentity = context.req.eid_rset(eid_num).get_entity(0, 0)
-    ref = refedentity.absolute_url()
+    try:
+        refedentity = context.req.eid_rset(eid_num).get_entity(0, 0)
+    except UnknownEid:
+        ref = '#'
+        rest += u' ' + context.req._('(UNEXISTANT EID)')
+    else:
+        ref = refedentity.absolute_url()
     set_classes(options)
     return [nodes.reference(rawtext, utils.unescape(rest), refuri=ref,
                             **options)], []
