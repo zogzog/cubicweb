@@ -692,6 +692,11 @@ is set to "y" or "yes", else only display them'}
           'help': 're-indexes the database for full text search if this \
 option is set to "y" or "yes" (may be long for large database).'}
          ),
+        ("force",
+         {'short': 'f', 'action' : "store_true",
+          'default' : False,
+          'help': 'don\'t check instance is up to date.'}
+         ),
 
         )
 
@@ -699,6 +704,7 @@ option is set to "y" or "yes" (may be long for large database).'}
         from cubicweb.server.checkintegrity import check
         appid = pop_arg(args, 1, msg="No application specified !")
         config = ServerConfiguration.config_for(appid)
+        config.repairing = self.config.force
         repo, cnx = repo_cnx(config)
         check(repo, cnx,
               self.config.checks, self.config.reindex, self.config.autofix)

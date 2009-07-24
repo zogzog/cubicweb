@@ -220,8 +220,8 @@ class Repository(object):
         for i in xrange(config['connections-pool-size']):
             self._available_pools.put_nowait(ConnectionsPool(self.sources))
         self._shutting_down = False
-        if not config.creating:
-            # call application level initialisation hooks
+        if not (config.creating or config.repairing):
+            # call instance level initialisation hooks
             self.hm.call_hooks('server_startup', repo=self)
             # register a task to cleanup expired session
             self.looping_task(self.config['session-time']/3.,
@@ -455,7 +455,8 @@ class Repository(object):
         """return the list of cubes used by this application. This is a
         public method, not requiring a session id.
         """
-        versions = self.get_versions(not self.config.creating)
+        versions = self.get_versions(not (self.config.creating
+                                          or self.config.repairing))
         cubes = list(versions)
         cubes.remove('cubicweb')
         return cubes

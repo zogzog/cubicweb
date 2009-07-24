@@ -616,7 +616,7 @@ given, appropriate sources for migration will be automatically selected \
     def upgrade_application(self, appid):
         from logilab.common.changelog import Version
         config = cwcfg.config_for(appid)
-        config.creating = True # notice we're not starting the server
+        config.repairing = True # notice we're not starting the server
         config.verbosity = self.config.verbosity
         try:
             config.set_sources_mode(self.config.ext_sources or ('migration',))

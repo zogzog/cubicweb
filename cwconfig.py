@@ -541,6 +541,8 @@ class CubicWebConfiguration(CubicWebNoAppConfiguration):
     set_language = True
     # set this to true to avoid false error message while creating an application
     creating = False
+    # set this to true to allow somethings which would'nt be possible
+    repairing = False
 
     options = CubicWebNoAppConfiguration.options + (
         ('log-file',
