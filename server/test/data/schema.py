@@ -5,6 +5,12 @@
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 :license: GNU Lesser General Public License, v2.1 - http://www.gnu.org/licenses
 """
+from yams.buildobjs import (EntityType, RelationType, RelationDefinition,
+                            SubjectRelation, ObjectRelation,
+                            RichString, String, Int, Boolean, Datetime)
+from yams.constraints import SizeConstraint
+from cubicweb.schema import (WorkflowableEntityType, RQLConstraint,
+                             ERQLExpression, RRQLExpression)
 
 class Affaire(WorkflowableEntityType):
     permissions = {
