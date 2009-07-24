@@ -111,7 +111,7 @@ class TmpFileViewMixin(object):
 
     def cell_call(self, row=0, col=0):
         self.row, self.col = row, col # in case one need it
-        tmpfile = tempfile.mkstemp('.png')
+        _, tmpfile = tempfile.mkstemp('.png')
         try:
             self._generate(tmpfile)
             self.w(open(tmpfile).read())

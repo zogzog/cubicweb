@@ -67,6 +67,7 @@ class ChangeStateFormView(FormViewMixIn, view.EntityView):
     def redirectpath(self, entity):
         return entity.rest_path()
 
+
 class WFHistoryView(EntityView):
     id = 'wfhistory'
     __select__ = relation_possible('wf_info_for', role='object')
@@ -97,6 +98,7 @@ class WFHistoryView(EntityView):
         if rset:
             self.wview('table', rset, title=_(self.title), displayactions=False,
                        displaycols=displaycols, headers=headers)
+
 
 class WFHistoryVComponent(component.EntityVComponent):
     """display the workflow history for entities supporting it"""
