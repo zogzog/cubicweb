@@ -21,6 +21,7 @@ from logilab.mtconverter import TransformError, xml_escape, xml_escape
 
 from cubicweb import NoSelectableObject
 from cubicweb.selectors import yes, empty_rset
+from cubicweb.schema import display_name
 from cubicweb.view import EntityView, AnyRsetView, View
 from cubicweb.common.uilib import cut, printable_value
 
@@ -236,6 +237,7 @@ class ListView(EntityView):
 
         :param listid: the DOM id to use for the root element
         """
+        # XXX much of the behaviour here should probably be outside this view
         if subvid is None and 'subvid' in self.req.form:
             subvid = self.req.form.pop('subvid') # consume it
         if listid:
@@ -283,6 +285,31 @@ class SimpleListView(ListItemView):
     """list without bullets"""
     id = 'simplelist'
     redirect_vid = 'incontext'
+
+
+class AdaptedListView(ListItemView):
+    """list of entities of the same type"""
+    id = 'adaptedlist'
+    __select__ = non_final_entity() & one_etype_rset()
+    item_vid = 'adaptedlistitem'
+
+    @property
+    def title(self):
+        etype = iter(self.rset.column_types(0)).next()
+        return display_name(self.req, etype, form='plural'))
+
+    def call(self, **kwargs):
+        """display a list of entities by calling their <item_vid> view"""
+        if not 'vtitle' in self.req.form:
+            self.w(u'<h1>%s</h1>' % self.title)
+        super(AdaptedListView, self).call(**kwargs)
+
+    def cell_call(self, row, col=0, vid=None, **kwargs):
+        self.wview(self.item_vid, self.rset, row=row, col=col, vid=vid, **kwargs)
+
+
+class AdaptedListItemView(ListItemView):
+    id = 'adaptedlistitem'
 
 
 class CSVView(SimpleListView):
