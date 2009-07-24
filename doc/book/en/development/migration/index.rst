@@ -67,8 +67,8 @@ The following identifiers are pre-defined in migration scripts:
 * `interactive_mode`, boolean indicating that the script is executed in
   an interactive mode or not
 
-* `versions_map`, dictionary of versions used by this instance (key are cubes
-  names, including 'cubicweb', values are version, eg 3-uple)
+* `versions_map`, dictionary of migrated versions  (key are cubes
+  names, including 'cubicweb', values are (from version, to version)
 
 * `confirm(question)`, function asking the user and returning true
   if the user answers yes, false otherwise (always returns true in
