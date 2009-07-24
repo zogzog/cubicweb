@@ -2,7 +2,7 @@
 Available cubes
 ---------------
 
-An application is based on several basic cubes. In the set of available
+An instance is based on several basic cubes. In the set of available
 basic cubes we can find for example :
 
 Base entity types
