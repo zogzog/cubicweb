@@ -1,4 +1,5 @@
-
+# permissions for "meta" entity type (readable by anyone, can only be
+# added/deleted by managers)
 META_ETYPE_PERMS = {
     'read':   ('managers', 'users', 'guests',),
     'add':    ('managers',),
@@ -6,6 +7,8 @@ META_ETYPE_PERMS = {
     'update': ('managers', 'owners',),
     }
 
+# permissions for "meta" relation type (readable by anyone, can only be
+# added/deleted by managers)
 META_RTYPE_PERMS = {
     'read':   ('managers', 'users', 'guests',),
     'add':    ('managers',),
