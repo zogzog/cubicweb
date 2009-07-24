@@ -499,7 +499,7 @@ class BaseSchemaSecurityTC(BaseSecurityTC):
         self.assertRaises(Unauthorized,
                           self.schema['Affaire'].check_perm, session, 'update', eid)
         cu = cnx.cursor()
-        cu.execute('SET X in_state S WHERE X ref "ARCT01", S name "abort"')
+        cu.execute('SET X in_state S WHERE X ref "ARCT01", S name "ben non"')
         cnx.commit()
         # though changing a user state (even logged user) is reserved to managers
         rql = u"SET X in_state S WHERE X eid %(x)s, S name 'deactivated'"
