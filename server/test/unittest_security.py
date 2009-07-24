@@ -508,5 +508,25 @@ class BaseSchemaSecurityTC(BaseSecurityTC):
         # from the current state but Unauthorized if it exists but user can't pass it
         self.assertRaises(ValidationError, cu.execute, rql, {'x': cnx.user(self.current_session()).eid}, 'x')
 
+    def test_trinfo_security(self):
+        aff = self.execute('INSERT Affaire X: X ref "ARCT01"').get_entity(0, 0)
+        self.commit()
+        # can change tr info comment
+        self.execute('SET TI comment %(c)s WHERE TI wf_info_for X, X ref "ARCT01"',
+                     {'c': u'creation'})
+        self.commit()
+        self.assertEquals(aff.latest_trinfo().comment, 'creation')
+        # but not from_state/to_state
+        self.execute('SET X in_state S WHERE X ref "ARCT01", S name "ben non"')
+        self.commit()
+        aff.clear_related_cache('wf_info_for', role='object')
+        trinfo = aff.latest_trinfo()
+        self.assertRaises(Unauthorized,
+                          self.execute, 'SET TI from_state S WHERE TI eid %(ti)s, S name "ben non"',
+                          {'ti': trinfo.eid}, 'ti')
+        self.assertRaises(Unauthorized,
+                          self.execute, 'SET TI to_state S WHERE TI eid %(ti)s, S name "pitetre"',
+                          {'ti': trinfo.eid}, 'ti')
+
 if __name__ == '__main__':
     unittest_main()

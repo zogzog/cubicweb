@@ -11,7 +11,7 @@ _ = unicode
 from yams.buildobjs import (EntityType, RelationType, SubjectRelation,
                             ObjectRelation, RichString, String)
 from cubicweb.schema import RQLConstraint
-from cubicweb.schemas import META_ETYPE_PERMS, META_RTYPE_PERMS
+from cubicweb.schemas import META_ETYPE_PERMS, META_RTYPE_PERMS, HOOKS_RTYPE_PERMS
 
 class State(EntityType):
     """used to associate simple states to an entity type and/or to define
@@ -75,11 +75,12 @@ class TrInfo(EntityType):
 
 
 class from_state(RelationType):
-    permissions = META_RTYPE_PERMS
+    permissions = HOOKS_RTYPE_PERMS
     inlined = True
 class to_state(RelationType):
-    permissions = META_RTYPE_PERMS
+    permissions = HOOKS_RTYPE_PERMS
     inlined = True
+
 class wf_info_for(RelationType):
     """link a transition information to its object"""
     permissions = {
