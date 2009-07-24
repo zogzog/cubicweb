@@ -152,11 +152,15 @@ class MigrationHelper(object):
                 migrdir = self.config.cube_migration_scripts_dir(cube)
             scripts = filter_scripts(self.config, migrdir, fromversion, toversion)
             if scripts:
+                prevversion = None
                 for version, script in scripts:
+                    # take care to X.Y.Z_Any.py / X.Y.Z_common.py: we've to call
+                    # cube_upgraded once all script of X.Y.Z have been executed
+                    if prevversion is not None and version != prevversion:
+                        self.cube_upgraded(cube, version)
+                    prevversion = version
                     self.process_script(script)
-                    self.cube_upgraded(cube, version)
-                if version != toversion:
-                    self.cube_upgraded(cube, toversion)
+                self.cube_upgraded(cube, toversion)
             else:
                 self.cube_upgraded(cube, toversion)
 
