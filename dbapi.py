@@ -13,6 +13,7 @@ __docformat__ = "restructuredtext en"
 
 from logging import getLogger
 from time import time, clock
+from itertools import count
 
 from logilab.common.logging_ext import set_log_methods
 from cubicweb import ETYPE_NAME_MAP, ConnectionError, RequestSessionMixIn
@@ -20,6 +21,12 @@ from cubicweb.cwvreg import CubicWebRegistry, MulCnxCubicWebRegistry
 from cubicweb.cwconfig import CubicWebNoAppConfiguration
 
 _MARKER = object()
+
+def _fake_property_value(self, name):
+    try:
+        return super(dbapi.DBAPIRequest, self).property_value(name)
+    except KeyError:
+        return ''
 
 class ConnectionProperties(object):
     def __init__(self, cnxtype=None, lang=None, close=True, log=False):
@@ -394,7 +401,8 @@ class Connection(object):
             raise ProgrammingError('Closed connection')
         return self._repo.get_schema()
 
-    def load_vobjects(self, cubes=_MARKER, subpath=None, expand=True, force_reload=None):
+    def load_vobjects(self, cubes=_MARKER, subpath=None, expand=True,
+                      force_reload=None):
         config = self.vreg.config
         if cubes is _MARKER:
             cubes = self._repo.get_cubes()
@@ -425,6 +433,31 @@ class Connection(object):
             # instance specific hooks
             if self._repo.config.instance_hooks:
                 hm.register_hooks(config.load_hooks(self.vreg))
+
+    def use_web_compatible_requests(self, baseurl, sitetitle=None):
+        """monkey patch DBAPIRequest to fake a cw.web.request, so you should
+        able to call html views using rset from a simple dbapi connection.
+
+        You should call `load_vobjects` at some point to register those views.
+        """
+        from cubicweb.web.request import CubicWebRequestBase as cwrb
+        DBAPIRequest.build_ajax_replace_url = cwrb.build_ajax_replace_url.im_func
+        DBAPIRequest.list_form_param = cwrb.list_form_param.im_func
+        DBAPIRequest.property_value = _fake_property_value
+        DBAPIRequest.next_tabindex = count().next
+        DBAPIRequest.form = {}
+        DBAPIRequest.data = {}
+        fake = lambda *args, **kwargs: None
+        DBAPIRequest.relative_path = fake
+        DBAPIRequest.url = fake
+        DBAPIRequest.next_tabindex = fake
+        DBAPIRequest.add_js = fake #cwrb.add_js.im_func
+        DBAPIRequest.add_css = fake #cwrb.add_css.im_func
+        # XXX could ask the repo for it's base-url configuration
+        self.vreg.config.set_option('base-url', baseurl)
+        # XXX why is this needed? if really needed, could be fetched by a query
+        if sitetitle is not None:
+            self.vreg['propertydefs']['ui.site-title'] = {'default': sitetitle}
 
     def source_defs(self):
         """Return the definition of sources used by the repository.
