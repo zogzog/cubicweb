@@ -87,8 +87,11 @@ class ClickAndEditFormView(FormViewMixIn, EntityView):
     """
     id = 'reledit'
     __select__ = non_final_entity() & match_kwargs('rtype')
-
     # FIXME editableField class could be toggleable from userprefs
+
+    # add metadata to allow edition of metadata attributes (not considered by
+    # edition form by default)
+    attrcategories = ('primary', 'secondary', 'metadata')
 
     _onclick = u"showInlineEditionForm(%(eid)s, '%(rtype)s', '%(divid)s')"
     _defaultlandingzone = (u'<img title="%(msg)s" '
@@ -134,10 +137,14 @@ class ClickAndEditFormView(FormViewMixIn, EntityView):
         lzone = self._build_landing_zone(landing_zone)
         # compute value, checking perms, build form
         if rschema.is_final():
-            value = entity.printable_value(rtype) or default
-            if not entity.has_perm('update'):
+            value = entity.printable_value(rtype)
+            etype = str(entity.e_schema)
+            ttype = rschema.targets(etype, role)[0]
+            afs = uicfg.autoform_section.etype_get(etype, rtype, role, ttype)
+            if not (afs in self.attrcategories and entity.has_perm('update')):
                 self.w(value)
                 return
+            value = value or default
             self._attribute_form(entity, value, rtype, role, reload,
                                  row, col, default, lzone)
         else:
@@ -150,8 +157,11 @@ class ClickAndEditFormView(FormViewMixIn, EntityView):
             if rvid is None:
                 rvid = self._compute_best_vid(entity, rtype, role)
             rset = entity.related(rtype, role)
-            candidate = self.view(rvid, rset, 'null')
-            value = candidate or default
+            if rset:
+                value = self.view(rvid, rset)
+            else:
+                value = default
+            # XXX check autoform_section. what if 'generic'?
             if role == 'subject' and not rschema.has_perm(self.req, 'add',
                                                           fromeid=entity.eid):
                 return self.w(value)
@@ -183,12 +193,13 @@ class ClickAndEditFormView(FormViewMixIn, EntityView):
                     % event_data)
         cancelclick = "hideInlineEdit(%s,\'%s\',\'%s\')" % (
             entity.eid, rtype, divid)
-        form = self.vreg.select_object('forms', 'base', self.req, entity=entity,
-                                       domid='%s-form' % divid, cssstyle='display: none',
-                                       onsubmit=onsubmit, action='#',
-                                       form_buttons=[SubmitButton(),
-                                                     Button(stdmsgs.BUTTON_CANCEL,
-                                                            onclick=cancelclick)])
+        form = self.vreg.select('forms', 'base', self.req, entity=entity,
+                                attrcategories=self.attrcategories,
+                                domid='%s-form' % divid, cssstyle='display: none',
+                                onsubmit=onsubmit, action='#',
+                                form_buttons=[SubmitButton(),
+                                              Button(stdmsgs.BUTTON_CANCEL,
+                                                     onclick=cancelclick)])
         field = guess_field(entity.e_schema, entity.schema.rschema(rtype), role)
         form.append_field(field)
         w = self.w
@@ -219,11 +230,12 @@ class ClickAndEditFormView(FormViewMixIn, EntityView):
                    Button(stdmsgs.BUTTON_CANCEL,
                           onclick="hideInlineEdit(%s,\'%s\',\'%s\')" % (
                               eid, rtype, divid))]
-        form = self.vreg.select_object('forms', 'edition', self.req, self.rset,
-                                       row=row, col=col, form_buttons=buttons,
-                                       domid='%s-form' % divid, action='#',
-                                       cssstyle='display: none',
-                                       onsubmit=onsubmit % event_data)
+        form = self.vreg.select('forms', 'edition', self.req, rset=self.rset,
+                                row=row, col=col, form_buttons=buttons,
+                                attrcategories=self.attrcategories,
+                                domid='%s-form' % divid, action='#',
+                                cssstyle='display: none',
+                                onsubmit=onsubmit % event_data)
         w = self.w
         w(u'<div class="field">')
         w(u'<div id="%s" style="display: inline">' % divid)
