@@ -113,7 +113,7 @@ class ServerMigrationHelper(MigrationHelper):
         helper = get_adv_func_helper(source['db-driver'])
         date = datetime.now().strftime('%Y-%m-%d_%H:%M:%S')
         app = config.appid
-        backupfile = backupfile or join(config.backup_dir(),
+        backupfile = backupfile or join(config.appdatahome, 'backup',
                                         '%s-%s.dump' % (app, date))
         if exists(backupfile):
             if not self.confirm('a backup already exists for %s, overwrite it?' % app):

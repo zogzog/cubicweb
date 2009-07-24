@@ -211,11 +211,6 @@ notified of every changes.',
         """instance schema directory"""
         return env_path('CW_SCHEMA_LIB', cls.SCHEMAS_LIB_DIR, 'schemas')
 
-    @classmethod
-    def backup_dir(cls):
-        """backup directory where a stored db backups before migration"""
-        return env_path('CW_BACKUP', cls.BACKUP_DIR, 'run time')
-
     def bootstrap_cubes(self):
         from logilab.common.textutils import get_csv
         for line in file(join(self.apphome, 'bootstrap_cubes')):

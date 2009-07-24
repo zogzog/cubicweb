@@ -313,6 +313,7 @@ repository and the web server.',
         # create the additional data directory for this instance
         if config.appdatahome != config.apphome: # true in dev mode
             create_dir(config.appdatahome)
+        create_dir(join(config.appdatahome, 'backup'))
         if config['uid']:
             from logilab.common.shellutils import chown
             # this directory should be owned by the uid of the server process
