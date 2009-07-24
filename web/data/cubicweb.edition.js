@@ -453,6 +453,8 @@ function validateForm(formid, action, onsuccess, onfailure) {
  * @param rtype : the attribute being edited
  * @param eid : the eid of the entity being edited
  * @param reload: boolean to reload page if true (when changing URL dependant data)
+ * @param default_value : value if the field is empty
+ * @param lzone : html fragment (string) for a clic-zone triggering actual edition
  */
 function inlineValidateAttributeForm(rtype, eid, divid, reload, default_value) {
     try {
@@ -477,7 +479,7 @@ function inlineValidateAttributeForm(rtype, eid, divid, reload, default_value) {
 	if (reload) {
 	    document.location.href = result[1];
 	} else {
-	    var fieldview = getNode(divid);
+	    var fieldview = getNode('value-' + divid);
 	    // XXX using innerHTML is very fragile and won't work if
 	    // we mix XHTML and HTML
 	    fieldview.innerHTML = result[2];
@@ -514,6 +516,7 @@ function inlineValidateRelationForm(rtype, role, eid, divid, reload, vid,
 	  if (result[0]) {
             var d = asyncRemoteExec('reledit_form', eid, rtype, role, default_value, lzone);
             d.addCallback(function (result) {
+              // XXX brittle ... replace with loadxhtml
               jQuery('#'+divid+'-reledit').replaceWith(result);
             });
           }
