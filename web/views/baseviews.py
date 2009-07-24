@@ -20,7 +20,7 @@ from rql import nodes
 from logilab.mtconverter import TransformError, xml_escape, xml_escape
 
 from cubicweb import NoSelectableObject
-from cubicweb.selectors import yes, empty_rset
+from cubicweb.selectors import yes, empty_rset, one_etype_rset
 from cubicweb.schema import display_name
 from cubicweb.view import EntityView, AnyRsetView, View
 from cubicweb.common.uilib import cut, printable_value
@@ -285,16 +285,16 @@ class SimpleListView(ListItemView):
     redirect_vid = 'incontext'
 
 
-class AdaptedListView(ListItemView):
+class AdaptedListView(EntityView):
     """list of entities of the same type"""
     id = 'adaptedlist'
-    __select__ = non_final_entity() & one_etype_rset()
+    __select__ = one_etype_rset()
     item_vid = 'adaptedlistitem'
 
     @property
     def title(self):
         etype = iter(self.rset.column_types(0)).next()
-        return display_name(self.req, etype, form='plural'))
+        return display_name(self.req, etype, form='plural')
 
     def call(self, **kwargs):
         """display a list of entities by calling their <item_vid> view"""
