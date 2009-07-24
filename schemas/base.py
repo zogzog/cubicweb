@@ -134,7 +134,7 @@ class modification_date(RelationType):
 class cwuri(RelationType):
     """internal entity uri"""
     cardinality = '11'
-    subject = '**'
+    subject = '*'
     object = 'String'
 
 
