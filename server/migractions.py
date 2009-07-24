@@ -477,7 +477,7 @@ class ServerMigrationHelper(MigrationHelper):
     def cmd_add_cubes(self, cubes, update_database=True):
         """update_database is telling if the database schema should be updated
         or if only the relevant eproperty should be inserted (for the case where
-        a cube has been extracted from an existing application, so the
+        a cube has been extracted from an existing instance, so the
         cube schema is already in there)
         """
         newcubes = super(ServerMigrationHelper, self).cmd_add_cubes(cubes)
@@ -642,7 +642,7 @@ class ServerMigrationHelper(MigrationHelper):
                 rtypeadded = rschema.type in applschema
                 for targetschema in rschema.objects(etype):
                     # ignore relations where the targeted type is not in the
-                    # current application schema
+                    # current instance schema
                     targettype = targetschema.type
                     if not targettype in applschema and targettype != etype:
                         continue
@@ -662,7 +662,7 @@ class ServerMigrationHelper(MigrationHelper):
                 rtypeadded = rschema.type in applschema or rschema.type in added
                 for targetschema in rschema.subjects(etype):
                     # ignore relations where the targeted type is not in the
-                    # current application schema
+                    # current instance schema
                     targettype = targetschema.type
                     # don't check targettype != etype since in this case the
                     # relation has already been added as a subject relation

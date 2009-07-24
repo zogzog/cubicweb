@@ -36,7 +36,7 @@ class ManageView(StartupView):
         return False
 
     def call(self, **kwargs):
-        """The default view representing the application's management"""
+        """The default view representing the instance's management"""
         self.req.add_css('cubicweb.manageview.css')
         self.w(u'<div>\n')
         if not self.display_folders():

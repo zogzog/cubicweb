@@ -282,7 +282,7 @@ def check_metadata(schema, session, eids, fix=1):
 
 
 def check(repo, cnx, checks, reindex, fix):
-    """check integrity of application's repository,
+    """check integrity of instance's repository,
     using given user and password to locally connect to the repository
     (no running cubicweb server needed)
     """

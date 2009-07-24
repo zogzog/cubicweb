@@ -69,7 +69,7 @@ class GenerateSchemaCommand(LaxCommand):
 
 
 class PopulateDataDirCommand(LaxCommand):
-    """populate application's data directory according to used cubes"""
+    """populate instance's data directory according to used cubes"""
     name = 'populatedata'
 
     def _run(self, args):
@@ -118,7 +118,7 @@ class GetSessionIdHandler(urllib2.HTTPRedirectHandler):
 
 
 class URLCommand(LaxCommand):
-    """abstract class for commands doing stuff by accessing the web application
+    """abstract class for commands doing stuff by accessing the web instance
     """
     min_args = max_args = 1
     arguments = '<site url>'

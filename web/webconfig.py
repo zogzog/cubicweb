@@ -1,4 +1,4 @@
-"""common web configuration for twisted/modpython applications
+"""common web configuration for twisted/modpython instances
 
 :organization: Logilab
 :copyright: 2001-2009 LOGILAB S.A. (Paris, FRANCE), license is LGPL v2.
@@ -60,7 +60,7 @@ register_persistent_options( (
 
 
 class WebConfiguration(CubicWebConfiguration):
-    """the WebConfiguration is a singleton object handling application's
+    """the WebConfiguration is a singleton object handling instance's
     configuration and preferences
     """
     cubicweb_vobject_path = CubicWebConfiguration.cubicweb_vobject_path | set(['web/views'])
@@ -83,13 +83,13 @@ class WebConfiguration(CubicWebConfiguration):
         ('query-log-file',
          {'type' : 'string',
           'default': None,
-          'help': 'web application query log file',
+          'help': 'web instance query log file',
           'group': 'main', 'inputlevel': 2,
           }),
-        ('pyro-application-id',
+        ('pyro-instance-id',
          {'type' : 'string',
-          'default': Method('default_application_id'),
-          'help': 'CubicWeb application identifier in the Pyro name server',
+          'default': Method('default_instance_id'),
+          'help': 'CubicWeb instance identifier in the Pyro name server',
           'group': 'pyro-client', 'inputlevel': 1,
           }),
         # web configuration
@@ -156,7 +156,7 @@ if you want to allow everything',
         ('submit-url',
          {'type' : 'string',
           'default': Method('default_submit_url'),
-          'help': ('URL that may be used to report bug in this application '
+          'help': ('URL that may be used to report bug in this instance '
                    'by direct access to the project\'s (jpl) tracker, '
                    'if you want this feature on. The url should looks like '
                    'http://mytracker.com/view?__linkto=concerns:1234:subject&etype=Ticket&type=bug&vid=creation '
@@ -168,7 +168,7 @@ if you want to allow everything',
         ('submit-mail',
          {'type' : 'string',
           'default': None,
-          'help': ('Mail used as recipient to report bug in this application, '
+          'help': ('Mail used as recipient to report bug in this instance, '
                    'if you want this feature on'),
           'group': 'web', 'inputlevel': 2,
           }),
@@ -215,7 +215,7 @@ if you want to allow everything',
     # don't use @cached: we want to be able to disable it while this must still
     # be cached
     def repository(self, vreg=None):
-        """return the application's repository object"""
+        """return the instance's repository object"""
         try:
             return self.__repo
         except AttributeError:
@@ -223,7 +223,7 @@ if you want to allow everything',
             if self.repo_method == 'inmemory':
                 repo = get_repository('inmemory', vreg=vreg, config=self)
             else:
-                repo = get_repository('pyro', self['pyro-application-id'],
+                repo = get_repository('pyro', self['pyro-instance-id'],
                                       config=self)
             self.__repo = repo
             return repo
@@ -298,7 +298,7 @@ if you want to allow everything',
                 yield join(fpath)
 
     def load_configuration(self):
-        """load application's configuration files"""
+        """load instance's configuration files"""
         super(WebConfiguration, self).load_configuration()
         # load external resources definition
         self._build_ext_resources()

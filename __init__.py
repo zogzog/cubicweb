@@ -198,7 +198,7 @@ class RequestSessionMixIn(object):
     # abstract methods to override according to the web front-end #############
 
     def base_url(self):
-        """return the root url of the application"""
+        """return the root url of the instance"""
         raise NotImplementedError
 
     def decorate_rset(self, rset):

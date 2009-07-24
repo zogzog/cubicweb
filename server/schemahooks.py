@@ -105,7 +105,7 @@ class UpdateSchemaOp(SingleLastOperation):
 
 
 class DropTableOp(PreCommitOperation):
-    """actually remove a database from the application's schema"""
+    """actually remove a database from the instance's schema"""
     table = None # make pylint happy
     def precommit_event(self):
         dropped = self.session.transaction_data.setdefault('droppedtables',
@@ -137,7 +137,7 @@ class DropColumnOp(PreCommitOperation):
 # deletion ####################################################################
 
 class DeleteCWETypeOp(SchemaOperation):
-    """actually remove the entity type from the application's schema"""
+    """actually remove the entity type from the instance's schema"""
     def commit_event(self):
         try:
             # del_entity_type also removes entity's relations
@@ -166,7 +166,7 @@ def after_del_eetype(session, eid):
 
 
 class DeleteCWRTypeOp(SchemaOperation):
-    """actually remove the relation type from the application's schema"""
+    """actually remove the relation type from the instance's schema"""
     def commit_event(self):
         try:
             self.schema.del_relation_type(self.kobj)
@@ -190,7 +190,7 @@ def before_del_ertype(session, eid):
 
 
 class DeleteRelationDefOp(SchemaOperation):
-    """actually remove the relation definition from the application's schema"""
+    """actually remove the relation definition from the instance's schema"""
     def commit_event(self):
         subjtype, rtype, objtype = self.kobj
         try:
@@ -244,7 +244,7 @@ def after_del_relation_type(session, rdefeid, rtype, rteid):
 # addition ####################################################################
 
 class AddCWETypeOp(EarlySchemaOperation):
-    """actually add the entity type to the application's schema"""
+    """actually add the entity type to the instance's schema"""
     eid = None # make pylint happy
     def commit_event(self):
         self.schema.add_entity_type(self.kobj)
@@ -264,7 +264,7 @@ def after_add_eetype(session, entity):
     * set creation_date and modification_date by creating the necessary
       CWAttribute entities
     * add owned_by relation by creating the necessary CWRelation entity
-    * register an operation to add the entity type to the application's
+    * register an operation to add the entity type to the instance's
       schema on commit
     """
     if entity.get('final'):
@@ -306,7 +306,7 @@ def after_add_eetype(session, entity):
 
 
 class AddCWRTypeOp(EarlySchemaOperation):
-    """actually add the relation type to the application's schema"""
+    """actually add the relation type to the instance's schema"""
     eid = None # make pylint happy
     def commit_event(self):
         rschema = self.schema.add_relation_type(self.kobj)
@@ -315,7 +315,7 @@ class AddCWRTypeOp(EarlySchemaOperation):
 def before_add_ertype(session, entity):
     """before adding a CWRType entity:
     * check that we are not using an existing relation type,
-    * register an operation to add the relation type to the application's
+    * register an operation to add the relation type to the instance's
       schema on commit
 
     We don't know yeat this point if a table is necessary
@@ -326,7 +326,7 @@ def before_add_ertype(session, entity):
 
 def after_add_ertype(session, entity):
     """after a CWRType entity has been added:
-    * register an operation to add the relation type to the application's
+    * register an operation to add the relation type to the instance's
       schema on commit
     We don't know yeat this point if a table is necessary
     """
@@ -340,7 +340,7 @@ def after_add_ertype(session, entity):
 
 
 class AddErdefOp(EarlySchemaOperation):
-    """actually add the attribute relation definition to the application's
+    """actually add the attribute relation definition to the instance's
     schema
     """
     def commit_event(self):
@@ -363,7 +363,7 @@ class AddCWAttributePreCommitOp(PreCommitOperation):
     * add the necessary column
     * set default on this column if any and possible
     * register an operation to add the relation definition to the
-      application's schema on commit
+      instance's schema on commit
 
     constraints are handled by specific hooks
     """
@@ -436,7 +436,7 @@ class AddCWRelationPreCommitOp(PreCommitOperation):
       else if it's the first instance of this relation type, add the
       necessary table and set default permissions
     * register an operation to add the relation definition to the
-      application's schema on commit
+      instance's schema on commit
 
     constraints are handled by specific hooks
     """

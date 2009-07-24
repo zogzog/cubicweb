@@ -24,7 +24,7 @@ class Schema2RQLTC(TestCase):
         self.assertListEquals(list(eschema2rql(schema.eschema('CWAttribute'))),
                               [
             ('INSERT CWEType X: X description %(description)s,X final %(final)s,X name %(name)s',
-             {'description': u'define a final relation: link a final relation type from a non final entity to a final entity type. used to build the application schema',
+             {'description': u'define a final relation: link a final relation type from a non final entity to a final entity type. used to build the instance schema',
               'name': u'CWAttribute', 'final': False})
             ])
 
@@ -101,7 +101,7 @@ class Schema2RQLTC(TestCase):
     def test_updateeschema2rql1(self):
         self.assertListEquals(list(updateeschema2rql(schema.eschema('CWAttribute'))),
                               [('SET X description %(description)s,X final %(final)s,X name %(name)s WHERE X is CWEType, X name %(et)s',
-                                {'description': u'define a final relation: link a final relation type from a non final entity to a final entity type. used to build the application schema', 'et': 'CWAttribute', 'final': False, 'name': u'CWAttribute'}),
+                                {'description': u'define a final relation: link a final relation type from a non final entity to a final entity type. used to build the instance schema', 'et': 'CWAttribute', 'final': False, 'name': u'CWAttribute'}),
                                ])
 
     def test_updateeschema2rql2(self):

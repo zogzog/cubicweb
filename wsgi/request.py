@@ -34,7 +34,7 @@ class CubicWebWsgiRequest(CubicWebRequestBase):
         self._headers = dict([(normalize_header(k[5:]), v) for k, v in self.environ.items()
                               if k.startswith('HTTP_')])
         https = environ.get("HTTPS") in ('yes', 'on', '1')
-        self._base_url = base_url or self.application_uri()
+        self._base_url = base_url or self.instance_uri()
         post, files = self.get_posted_data()
         super(CubicWebWsgiRequest, self).__init__(vreg, https, post)
         if files is not None:
@@ -63,7 +63,7 @@ class CubicWebWsgiRequest(CubicWebRequestBase):
 
     def relative_path(self, includeparams=True):
         """return the normalized path of the request (ie at least relative
-        to the application's root, but some other normalization may be needed
+        to the instance's root, but some other normalization may be needed
         so that the returned path may be used to compare to generated urls
 
         :param includeparams:
@@ -105,10 +105,10 @@ class CubicWebWsgiRequest(CubicWebRequestBase):
 
     ## wsgi request helpers ###################################################
 
-    def application_uri(self):
-        """Return the application's base URI (no PATH_INFO or QUERY_STRING)
+    def instance_uri(self):
+        """Return the instance's base URI (no PATH_INFO or QUERY_STRING)
 
-        see python2.5's wsgiref.util.application_uri code
+        see python2.5's wsgiref.util.instance_uri code
         """
         environ = self.environ
         url = environ['wsgi.url_scheme'] + '://'

@@ -64,6 +64,7 @@ class CWPropertyPrimaryView(primary.PrimaryView):
 
 
 class SystemCWPropertiesForm(FormViewMixIn, StartupView):
+    """site-wide properties edition form"""
     id = 'systempropertiesform'
     __select__ = none_rset() & match_user_groups('managers')
 
@@ -94,7 +95,6 @@ class SystemCWPropertiesForm(FormViewMixIn, StartupView):
         return status
 
     def call(self, **kwargs):
-        """The default view representing the application's index"""
         self.req.add_js(('cubicweb.edition.js', 'cubicweb.preferences.js', 'cubicweb.ajax.js'))
         self.req.add_css('cubicweb.preferences.css')
         vreg = self.vreg
@@ -226,6 +226,7 @@ def is_user_prefs(cls, req, rset=None, row=None, col=0, **kwargs):
 
 
 class CWPropertiesForm(SystemCWPropertiesForm):
+    """user's preferences properties edition form"""
     id = 'propertiesform'
     __select__ = (
         (none_rset() & match_user_groups('users','managers'))

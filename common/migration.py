@@ -1,5 +1,4 @@
-"""utility to ease migration of application version to newly installed
-version
+"""utilities for instances migration
 
 :organization: Logilab
 :copyright: 2001-2009 LOGILAB S.A. (Paris, FRANCE), license is LGPL v2.

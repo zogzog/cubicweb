@@ -17,7 +17,7 @@ def lines(path, comments=None):
     return result
 
 def read_config(config_file):
-    """read the application configuration from a file and return it as a
+    """read the instance configuration from a file and return it as a
     dictionnary
 
     :type config_file: str

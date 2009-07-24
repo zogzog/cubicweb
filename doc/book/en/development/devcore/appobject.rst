@@ -19,9 +19,9 @@ and common to all the application objects.
 At the recording, the following attributes are dynamically added to
 the *subclasses*:
 
-* `vreg`, the `vregistry` of the application
-* `schema`, the application schema
-* `config`, the application configuration
+* `vreg`, the `vregistry` of the instance
+* `schema`, the instance schema
+* `config`, the instance configuration
 
 We also find on instances, the following attributes:
 
@@ -36,7 +36,7 @@ We also find on instances, the following attributes:
     can be specified through the special parameter `method` (the connection
     is theoretically done automatically :).
 
-  * `datadir_url()`, returns the directory of the application data
+  * `datadir_url()`, returns the directory of the instance data
     (contains static files such as images, css, js...)
 
   * `base_url()`, shortcut to `req.base_url()`
@@ -57,9 +57,9 @@ We also find on instances, the following attributes:
 
 :Data formatting:
   * `format_date(date, date_format=None, time=False)` returns a string for a
-    mx date time according to application's configuration
+    mx date time according to instance's configuration
   * `format_time(time)` returns a string for a mx date time according to
-    application's configuration
+    instance's configuration
 
 :And more...:
 

@@ -64,8 +64,8 @@ try:
     from cubicweb.server import serverctl
 
     class AllInOneCreateHandler(serverctl.RepositoryCreateHandler, TWCreateHandler):
-        """configuration to get a web application running in a twisted web
-        server integrating a repository server in the same process
+        """configuration to get an instance running in a twisted web server
+        integrating a repository server in the same process
         """
         cfgname = 'all-in-one'
 

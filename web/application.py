@@ -201,7 +201,7 @@ class CookieSessionHandler(object):
         raise Redirect(req.build_url(path, **args))
 
     def logout(self, req):
-        """logout from the application by cleaning the session and raising
+        """logout from the instance by cleaning the session and raising
         `AuthenticationError`
         """
         self.session_manager.close_session(req.cnx)
@@ -218,11 +218,11 @@ class CubicWebPublisher(object):
                  session_handler_fact=CookieSessionHandler,
                  vreg=None):
         super(CubicWebPublisher, self).__init__()
-        # connect to the repository and get application's schema
+        # connect to the repository and get instance's schema
         if vreg is None:
             vreg = cwvreg.CubicWebRegistry(config, debug=debug)
         self.vreg = vreg
-        self.info('starting web application from %s', config.apphome)
+        self.info('starting web instance from %s', config.apphome)
         self.repo = config.repository(vreg)
         if not vreg.initialized:
             self.config.init_cubes(self.repo.get_cubes())

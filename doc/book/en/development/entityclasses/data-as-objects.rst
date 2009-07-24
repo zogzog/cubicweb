@@ -61,10 +61,10 @@ classes are registered in order to initialize the class according to its schema:
 Tne :class:`AnyEntity` class
 ----------------------------
 
-To provide a specific behavior for each entity, we have to define
-a class inheriting from `cubicweb.entities.AnyEntity`. In general, we
-define this class in a module of `mycube.entities` package of an application
-so that it will be available on both server and client side.
+To provide a specific behavior for each entity, we have to define a class
+inheriting from `cubicweb.entities.AnyEntity`. In general, we define this class
+in `mycube.entities` module (or in a submodule if we want to split code among
+multiple files) so that it will be available on both server and client side.
 
 The class `AnyEntity` is loaded dynamically from the class `Entity`
 (`cubciweb.entity`). We define a sub-class to add methods or to

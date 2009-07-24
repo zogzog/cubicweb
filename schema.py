@@ -401,7 +401,7 @@ class CubicWebSchema(Schema):
 
 
     :type name: str
-    :ivar name: name of the schema, usually the application identifier
+    :ivar name: name of the schema, usually the instance identifier
 
     :type base: str
     :ivar base: path of the directory where the schema is defined
@@ -856,7 +856,7 @@ class BootstrapSchemaLoader(SchemaLoader):
 
 class CubicWebSchemaLoader(BootstrapSchemaLoader):
     """cubicweb specific schema loader, automatically adding metadata to the
-    application's schema
+    instance's schema
     """
 
     def load(self, config, **kwargs):

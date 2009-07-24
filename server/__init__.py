@@ -31,9 +31,9 @@ def init_repository(config, interactive=True, drop=False, vreg=None):
     from cubicweb.server.sqlutils import sqlexec, sqlschema, sqldropschema
     # configuration to avoid db schema loading and user'state checking
     # on connection
-    read_application_schema = config.read_application_schema
+    read_instance_schema = config.read_instance_schema
     bootstrap_schema = config.bootstrap_schema
-    config.read_application_schema = False
+    config.read_instance_schema = False
     config.creating = True
     config.bootstrap_schema = True
     config.consider_user_state = False
@@ -137,11 +137,11 @@ def init_repository(config, interactive=True, drop=False, vreg=None):
     session.close()
     # restore initial configuration
     config.creating = False
-    config.read_application_schema = read_application_schema
+    config.read_instance_schema = read_instance_schema
     config.bootstrap_schema = bootstrap_schema
     config.consider_user_state = True
     config.set_language = True
-    print '-> database for application %s initialized.' % config.appid
+    print '-> database for instance %s initialized.' % config.appid
 
 
 def initialize_schema(config, schema, mhandler, event='create'):
@@ -153,7 +153,7 @@ def initialize_schema(config, schema, mhandler, event='create'):
     # execute cubes pre<event> script if any
     for path in reversed(paths):
         mhandler.exec_event_script('pre%s' % event, path)
-    # enter application'schema into the database
+    # enter instance'schema into the database
     serialize_schema(mhandler.rqlcursor, schema)
     # execute cubicweb's post<event> script
     mhandler.exec_event_script('post%s' % event)

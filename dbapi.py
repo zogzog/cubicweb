@@ -60,7 +60,7 @@ def get_repository(method, database=None, config=None, vreg=None):
             raise ConnectionError('Could not get repository for %s '
                                   '(not registered in Pyro), '
                                   'you may have to restart your server-side '
-                                  'application' % nsid)
+                                  'instance' % nsid)
         return core.getProxyForURI(uri)
 
 def repo_connect(repo, login, password, cnxprops=None):
@@ -422,8 +422,8 @@ class Connection(object):
             hm, config = self._repo.hm, self._repo.config
             hm.set_schema(hm.schema) # reset structure
             hm.register_system_hooks(config)
-            # application specific hooks
-            if self._repo.config.application_hooks:
+            # instance specific hooks
+            if self._repo.config.instance_hooks:
                 hm.register_hooks(config.load_hooks(self.vreg))
 
     def source_defs(self):

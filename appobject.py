@@ -40,11 +40,11 @@ class AppRsetObject(VObject):
 
     At registration time, the following attributes are set on the class:
     :vreg:
-      the application's registry
+      the instance's registry
     :schema:
-      the application's schema
+      the instance's schema
     :config:
-      the application's configuration
+      the instance's configuration
 
     At instantiation time, the following attributes are set on the instance:
     :req:
@@ -276,7 +276,7 @@ class AppRsetObject(VObject):
         return output.getvalue()
 
     def format_date(self, date, date_format=None, time=False):
-        """return a string for a date time according to application's
+        """return a string for a date time according to instance's
         configuration
         """
         if date:
@@ -289,7 +289,7 @@ class AppRsetObject(VObject):
         return u''
 
     def format_time(self, time):
-        """return a string for a time according to application's
+        """return a string for a time according to instance's
         configuration
         """
         if time:
@@ -297,7 +297,7 @@ class AppRsetObject(VObject):
         return u''
 
     def format_float(self, num):
-        """return a string for floating point number according to application's
+        """return a string for floating point number according to instance's
         configuration
         """
         if num:

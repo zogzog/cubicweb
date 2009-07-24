@@ -1,4 +1,4 @@
-"""twisted server for CubicWeb web applications
+"""twisted server for CubicWeb web instances
 
 :organization: Logilab
 :copyright: 2001-2009 LOGILAB S.A. (Paris, FRANCE), license is LGPL v2.
@@ -271,9 +271,9 @@ class CubicWebRootResource(resource.PostableResource):
 
 # This part gets run when you run this file via: "twistd -noy demo.py"
 def main(appid, cfgname):
-    """Starts an cubicweb  twisted server for an application
+    """Starts an cubicweb  twisted server for an instance
 
-    appid: application's identifier
+    appid: instance's identifier
     cfgname: name of the configuration to use (twisted or all-in-one)
     """
     from cubicweb.cwconfig import CubicWebConfiguration

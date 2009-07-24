@@ -17,7 +17,7 @@ from cubicweb.server.serverconfig import ServerConfiguration
 from cubicweb.goa.dbmyams import load_schema
 
 UNSUPPORTED_OPTIONS = set(('connections-pool-size',
-                           'pyro-port', 'pyro-id', 'pyro-application-id',
+                           'pyro-port', 'pyro-id', 'pyro-instance-id',
                            'pyro-ns-host', 'pyro-ns-port', 'pyro-ns-group',
                            'https-url', 'host', 'pid-file', 'uid', 'base-url', 'log-file',
                            'smtp-host', 'smtp-port',
@@ -30,41 +30,41 @@ UNSUPPORTED_OPTIONS = set(('connections-pool-size',
 # * check auth-mode=http + fix doc (eg require use-google-auth = False)
 
 class GAEConfiguration(ServerConfiguration, WebConfiguration):
-    """repository and web application in the same twisted process"""
+    """repository and web instance in Google AppEngine environment"""
     name = 'app'
     repo_method = 'inmemory'
     options = merge_options((
         ('included-cubes',
          {'type' : 'csv',
           'default': [],
-          'help': 'list of db model based cubes used by the application.',
+          'help': 'list of db model based cubes used by the instance.',
           'group': 'main', 'inputlevel': 1,
           }),
         ('included-yams-cubes',
          {'type' : 'csv',
           'default': [],
-          'help': 'list of yams based cubes used by the application.',
+          'help': 'list of yams based cubes used by the instance.',
           'group': 'main', 'inputlevel': 1,
           }),
         ('use-google-auth',
          {'type' : 'yn',
           'default': True,
-          'help': 'does this application rely on google authentication service or not.',
+          'help': 'does this instance rely on google authentication service or not.',
           'group': 'main', 'inputlevel': 1,
           }),
         ('schema-type',
          {'type' : 'choice', 'choices': ('yams', 'dbmodel'),
           'default': 'yams',
-          'help': 'does this application is defining its schema using yams or db model.',
+          'help': 'does this instance is defining its schema using yams or db model.',
           'group': 'main', 'inputlevel': 1,
           }),
         # overriden options
         ('query-log-file',
          {'type' : 'string',
           'default': None,
-          'help': 'web application query log file: DON\'T SET A VALUE HERE WHEN '
-          'UPLOADING YOUR APPLICATION. This should only be used to analyse '
-          'queries issued by your application in the development environment.',
+          'help': 'web instance query log file: DON\'T SET A VALUE HERE WHEN '
+          'UPLOADING YOUR INSTANCE. This should only be used to analyse '
+          'queries issued by your instance in the development environment.',
           'group': 'main', 'inputlevel': 2,
           }),
         ('anonymous-user',
@@ -86,7 +86,7 @@ class GAEConfiguration(ServerConfiguration, WebConfiguration):
     cube_vobject_path = WebConfiguration.cube_vobject_path | ServerConfiguration.cube_vobject_path
 
     # use file system schema
-    bootstrap_schema = read_application_schema = False
+    bootstrap_schema = read_instance_schema = False
     # schema is not persistent, don't load schema hooks (unavailable)
     schema_hooks = False
     # no user workflow for now
@@ -130,7 +130,7 @@ class GAEConfiguration(ServerConfiguration, WebConfiguration):
         return self._cubes
 
     def vc_config(self):
-        """return CubicWeb's engine and application's cube versions number"""
+        """return CubicWeb's engine and instance's cube versions number"""
         return {}
 
     # overriden from cubicweb web configuration

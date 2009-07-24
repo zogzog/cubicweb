@@ -78,7 +78,7 @@ class LoginController(Controller):
     id = 'login'
 
     def publish(self, rset=None):
-        """log in the application"""
+        """log in the instance"""
         if self.config['auth-mode'] == 'http':
             # HTTP authentication
             raise ExplicitLogin()
@@ -91,7 +91,7 @@ class LogoutController(Controller):
     id = 'logout'
 
     def publish(self, rset=None):
-        """logout from the application"""
+        """logout from the instance"""
         return self.appli.session_handler.logout(self.req)
 
 
@@ -568,7 +568,8 @@ class SendMailController(Controller):
         self.smtp.sendmail(helo_addr, [recipient], msg.as_string())
 
     def publish(self, rset=None):
-        # XXX this allow anybody with access to an cubicweb application to use it as a mail relay
+        # XXX this allows users with access to an cubicweb instance to use it as
+        # a mail relay
         body = self.req.form['mailbody']
         subject = self.req.form['subject']
         for recipient in self.recipients():

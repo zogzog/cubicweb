@@ -1,4 +1,4 @@
-""" Usage: %s [OPTIONS] <application id> <queries file>
+""" Usage: %s [OPTIONS] <instance id> <queries file>
 
 Stress test a CubicWeb repository
 
@@ -151,8 +151,8 @@ def run(args):
         user = raw_input('login: ')
     if password is None:
         password = getpass('password: ')
-    from cubicweb.cwconfig import application_configuration
-    config = application_configuration(args[0])
+    from cubicweb.cwconfig import instance_configuration
+    config = instance_configuration(args[0])
     # get local access to the repository
     print "Creating repo", prof_file
     repo = Repository(config, prof_file)

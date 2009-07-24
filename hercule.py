@@ -1,4 +1,4 @@
-"""RQL client for cubicweb, connecting to application using pyro
+"""RQL client for cubicweb, connecting to instance using pyro
 
 :organization: Logilab
 :copyright: 2001-2009 LOGILAB S.A. (Paris, FRANCE), license is LGPL v2.
@@ -79,7 +79,7 @@ class RQLCli(CLIHelper):
         'debug' :        "Others",
         })
 
-    def __init__(self, application=None, user=None, password=None,
+    def __init__(self, instance=None, user=None, password=None,
                  host=None, debug=0):
         CLIHelper.__init__(self, os.path.join(os.environ["HOME"], ".erqlhist"))
         self.cnx = None
@@ -92,12 +92,12 @@ class RQLCli(CLIHelper):
         self.autocommit = False
         self._last_result = None
         self._previous_lines = []
-        if application is not None:
-            self.do_connect(application, user, password, host)
+        if instance is not None:
+            self.do_connect(instance, user, password, host)
         self.do_debug(debug)
 
-    def do_connect(self, application, user=None, password=None, host=None):
-        """connect to an cubicweb application"""
+    def do_connect(self, instance, user=None, password=None, host=None):
+        """connect to an cubicweb instance"""
         from cubicweb.dbapi import connect
         if user is None:
             user = raw_input('login: ')
@@ -107,16 +107,16 @@ class RQLCli(CLIHelper):
         if self.cnx is not None:
             self.cnx.close()
         self.cnx = connect(login=user, password=password, host=host,
-                           database=application)
+                           database=instance)
         self.schema = self.cnx.get_schema()
         self.cursor = self.cnx.cursor()
         # add entities types to the completion commands
         self._completer.list = (self.commands.keys() +
                                 self.schema.entities() + ['Any'])
-        print _('You are now connected to %s') % application
+        print _('You are now connected to %s') % instance
 
 
-    help_do_connect = ('connect', "connect <application> [<user> [<password> [<host>]]]",
+    help_do_connect = ('connect', "connect <instance> [<user> [<password> [<host>]]]",
                        _(do_connect.__doc__))
 
     def do_debug(self, debug=1):
@@ -142,9 +142,9 @@ class RQLCli(CLIHelper):
     help_do_description = ('description', "description", _(do_description.__doc__))
 
     def do_schema(self, name=None):
-        """display information about the application schema """
+        """display information about the instance schema """
         if self.cnx is None:
-            print _('You are not connected to an application !')
+            print _('You are not connected to an instance !')
             return
         done = None
         if name is None:
@@ -189,7 +189,7 @@ class RQLCli(CLIHelper):
         else, stores the query line and waits for the suite
         """
         if self.cnx is None:
-            print _('You are not connected to an application !')
+            print _('You are not connected to an instance !')
             return
         # append line to buffer
         self._previous_lines.append(stripped_line)
@@ -232,11 +232,11 @@ class RQLCli(CLIHelper):
 class CubicWebClientCommand(Command):
     """A command line querier for CubicWeb, using the Relation Query Language.
 
-    <application>
-      identifier of the application to connect to
+    <instance>
+      identifier of the instance to connect to
     """
     name = 'client'
-    arguments = '<application>'
+    arguments = '<instance>'
     options = CONNECT_OPTIONS + (
         ("verbose",
          {'short': 'v', 'type' : 'int', 'metavar': '<level>',

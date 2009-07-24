@@ -42,7 +42,7 @@ def translate_rql_tree(rqlst, translations, schema):
     :param translations: the reverted l10n dict
 
     :type schema: `cubicweb.schema.Schema`
-    :param schema: the application's schema
+    :param schema: the instance's schema
     """
     # var_types is used as a map : var_name / var_type
     vartypes = {}
@@ -94,7 +94,7 @@ def resolve_ambiguities(var_types, ambiguous_nodes, schema):
     :param ambiguous_nodes: a map : relation_node / (var_name, available_translations)
 
     :type schema: `cubicweb.schema.Schema`
-    :param schema: the application's schema
+    :param schema: the instance's schema
     """
     # Now, try to resolve ambiguous translations
     for relation, (var_name, translations_found) in ambiguous_nodes.items():

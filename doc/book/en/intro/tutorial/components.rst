@@ -11,7 +11,7 @@ Standard library
 A library of standard cubes are available from `CubicWeb Forge`_
 Cubes provide entities and views.
 
-The available application entities are:
+The available application entities in standard cubes are:
 
 * addressbook: PhoneNumber and PostalAddress
 
@@ -43,7 +43,7 @@ The available application entities are:
 Adding comments to BlogDemo
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-To import a cube in your application just change the line in the
+To import a cube in your instance just change the line in the
 ``__pkginfo__.py`` file and verify that the cube you are planning
 to use is listed by the command ``cubicweb-ctl list``.
 For example::
@@ -51,7 +51,7 @@ For example::
     __use__ = ('comment',)
 
 will make the ``Comment`` entity available in your ``BlogDemo``
-application.
+cube.
 
 Change the schema to add a relationship between ``BlogEntry`` and
 ``Comment`` and you are done. Since the comment cube defines the
@@ -75,5 +75,4 @@ run the following command:
 
   synchronize_rschema('BlogEntry')
 
-You can now start your application and add comments to each
-`BlogEntry`.
+You can now start your instance and add comments to each `BlogEntry`.

@@ -141,7 +141,7 @@ What is `Error while publishing rest text ...` ?
 ------------------------------------------------
 
   While modifying the description of an entity, you get an error message in
-  the application `Error while publishing ...` for Rest text and plain text.
+  the instance `Error while publishing ...` for Rest text and plain text.
   The server returns a traceback like as follows ::
 
       2008-10-06 15:05:08 - (cubicweb.rest) ERROR: error while publishing ReST text
@@ -225,14 +225,14 @@ How to create an anonymous user ?
     decribed above.
 
 
-How to change the application logo ?
+How to change the instance logo ?
 ------------------------------------
 
   There are two ways of changing the logo.
 
   1. The easiest way to use a different logo is to replace the existing
      ``logo.png`` in ``myapp/data`` by your prefered icon and refresh.
-     By default all application will look for a ``logo.png`` to be
+     By default all instance will look for a ``logo.png`` to be
      rendered in the logo section.
 
      .. image:: ../images/lax-book.06-main-template-logo.en.png
@@ -270,7 +270,7 @@ How to configure a LDAP source ?
     user-attrs-map=gecos:email,uid:login
 
   Any change applied to configuration file requires to restart your
-  application.
+  instance.
 
 I get NoSelectableObject exceptions, how do I debug selectors ?
 ---------------------------------------------------------------
@@ -316,14 +316,14 @@ Can PostgreSQL and CubicWeb authentication work with kerberos ?
   If you have PostgreSQL set up to accept kerberos authentication, you can set
   the db-host, db-name and db-user parameters in the `sources` configuration
   file while leaving the password blank. It should be enough for your
-  application to connect to postgresql with a kerberos ticket.
+  instance to connect to postgresql with a kerberos ticket.
 
 
 How to load data from a script ?
 --------------------------------
 
   The following script aims at loading data within a script assuming pyro-nsd is
-  running and your application is configured with ``pyro-server=yes``, otherwise
+  running and your instance is configured with ``pyro-server=yes``, otherwise
   you would not be able to use dbapi. ::
 
     from cubicweb import dbapi
@@ -337,7 +337,7 @@ How to load data from a script ?
 What is the CubicWeb datatype corresponding to GAE datastore's UserProperty ?
 -----------------------------------------------------------------------------
 
-  If you take a look at your application schema and
+  If you take a look at your instance schema and
   click on "display detailed view of metadata" you will see that there
   is a Euser entity in there. That's the one that is modeling users. The
   thing that corresponds to a UserProperty is a relationship between

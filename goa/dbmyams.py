@@ -167,7 +167,7 @@ else:
     SCHEMAS_LIB_DIRECTORY = join(CW_SOFTWARE_ROOT, 'schemas')
 
 def load_schema(config, schemaclasses=None, extrahook=None):
-    """high level method to load all the schema for a lax application"""
+    """high level method to load all the schema for a lax instance"""
     # IMPORTANT NOTE: dbmodel schemas must be imported **BEFORE**
     # the loader is instantiated because this is where the dbmodels
     # are registered in the yams schema

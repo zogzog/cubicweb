@@ -27,4 +27,4 @@ class WebCreateHandler(CommandHandler):
             config.global_set_option('anonymous-password', 'anon')
 
     def postcreate(self):
-        """hooks called once application's initialization has been completed"""
+        """hooks called once instance's initialization has been completed"""

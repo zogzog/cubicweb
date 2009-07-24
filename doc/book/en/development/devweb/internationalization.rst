@@ -16,7 +16,7 @@ Cubicweb' internalization involves two steps:
 
 * in your Python code and cubicweb-tal templates : mark translatable strings
 
-* in your application : handle the translation catalog
+* in your instance : handle the translation catalog
 
 String internationalization
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -66,16 +66,16 @@ Translations in cubicweb-tal template can also be done with TAL tags
 .. note::
 
    We dont need to mark the translation strings of entities/relations
-   used by a particular application's schema as they are generated
+   used by a particular instance's schema as they are generated
    automatically.
 
 
 Handle the translation catalog
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Once the internationalization is done in your application's code, you need
-to populate and update the translation catalog. Cubicweb provides the
-following commands for this purpose:
+Once the internationalization is done in your code, you need to populate and
+update the translation catalog. Cubicweb provides the following commands for this
+purpose:
 
 
 * `i18ncubicweb` updates Cubicweb framework's translation
@@ -83,28 +83,28 @@ following commands for this purpose:
   need to use this command.
 
 * `i18ncube` updates the translation catalogs of *one particular
-  component* (or of all components). After this command is
+  cube* (or of all cubes). After this command is
   executed you must update the translation files *.po* in the "i18n"
   directory of your template. This command will of course not remove
   existing translations still in use.
 
 * `i18ninstance` recompile the translation catalogs of *one particular
   instance* (or of all instances) after the translation catalogs of
-  its components have been updated. This command is automatically
+  its cubes have been updated. This command is automatically
   called every time you create or update your instance. The compiled
   catalogs (*.mo*) are stored in the i18n/<lang>/LC_MESSAGES of
-  application where `lang` is the language identifier ('en' or 'fr'
+  instance where `lang` is the language identifier ('en' or 'fr'
   for exemple).
 
 
 Example
 ```````
-You have added and/or modified some translation strings in your application
-(after creating a new view or modifying the application's schema for exemple).
+You have added and/or modified some translation strings in your cube
+(after creating a new view or modifying the cube's schema for exemple).
 To update the translation catalogs you need to do:
 
-1. `cubicweb-ctl i18ncube <component>`
-2. Edit the <component>/xxx.po  files and add missing translations (empty `msgstr`)
+1. `cubicweb-ctl i18ncube <cube>`
+2. Edit the <cube>/i18n/xxx.po  files and add missing translations (empty `msgstr`)
 3. `hg ci -m "updated i18n catalogs"`
-4. `cubicweb-ctl i18ninstance <myapplication>`
+4. `cubicweb-ctl i18ninstance <myinstance>`
 

@@ -519,7 +519,7 @@ class QuerierHelper(object):
     def __init__(self, repo, schema):
         # system info helper
         self._repo = repo
-        # application schema
+        # instance schema
         self.set_schema(schema)
 
     def set_schema(self, schema):

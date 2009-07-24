@@ -26,8 +26,8 @@ Command to create a cube
 ------------------------
 
 * ``newcube``, create a new cube on the file system based on the name
-  given in the parameters. This command create a cube from an application
-  skeleton that includes default files required for debian packaging.
+  given in the parameters. This command create a cube from a skeleton
+  that includes default files required for debian packaging.
 
 
 Command to create an instance
@@ -69,7 +69,7 @@ Commands to maintain instances
 * ``db-check``, checks data integrity of an instance. If the automatic correction
   is activated, it is recommanded to create a dump before this operation.
 * ``schema-sync``, synchronizes the persistent schema of an instance with
-  the application schema. It is recommanded to create a dump before this operation.
+  the instance schema. It is recommanded to create a dump before this operation.
 
 Commands to maintain i18n catalogs
 ----------------------------------

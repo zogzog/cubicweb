@@ -1,4 +1,4 @@
-"""core CubicWeb schema necessary for bootstrapping the actual application's schema
+"""core CubicWeb schema necessary for bootstrapping the actual instance's schema
 
 :organization: Logilab
 :copyright: 2001-2009 LOGILAB S.A. (Paris, FRANCE), license is LGPL v2.
@@ -16,7 +16,7 @@ from cubicweb.schemas import META_ETYPE_PERMS, META_RTYPE_PERMS
 # not restricted since as "is" is handled as other relations, guests need
 # access to this
 class CWEType(EntityType):
-    """define an entity type, used to build the application schema"""
+    """define an entity type, used to build the instance schema"""
     permissions = META_ETYPE_PERMS
     name = String(required=True, indexed=True, internationalizable=True,
                   unique=True, maxsize=64)
@@ -27,7 +27,7 @@ class CWEType(EntityType):
 
 
 class CWRType(EntityType):
-    """define a relation type, used to build the application schema"""
+    """define a relation type, used to build the instance schema"""
     permissions = META_ETYPE_PERMS
     name = String(required=True, indexed=True, internationalizable=True,
                   unique=True, maxsize=64)
@@ -46,7 +46,7 @@ class CWAttribute(EntityType):
     """define a final relation: link a final relation type from a non final
     entity to a final entity type.
 
-    used to build the application schema
+    used to build the instance schema
     """
     permissions = META_ETYPE_PERMS
     relation_type = SubjectRelation('CWRType', cardinality='1*',
@@ -83,7 +83,7 @@ class CWRelation(EntityType):
     """define a non final relation: link a non final relation type from a non
     final entity to a non final entity type.
 
-    used to build the application schema
+    used to build the instance schema
     """
     permissions = META_ETYPE_PERMS
     relation_type = SubjectRelation('CWRType', cardinality='1*',

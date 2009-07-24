@@ -3,7 +3,7 @@
 Yams *schema*
 -------------
 
-The **schema** is the core piece of a *CubicWeb* application as it defines
+The **schema** is the core piece of a *CubicWeb* instance as it defines
 the handled data model. It is based on entity types that are either already
 defined in the *CubicWeb* standard library; or more specific types, that
 *CubicWeb* expects to find in one or more Python files under the directory
@@ -24,9 +24,8 @@ and `Password`.
 They are implicitely imported (as well as the special the function "_"
 for translation :ref:`internationalization`).
 
-The instance schema of an application is defined on all appobjects by a .schema
-class attribute set on registration.  It's an instance of
-:class:`yams.schema.Schema`.
+The instance schema is defined on all appobjects by a .schema class attribute set
+on registration.  It's an instance of :class:`yams.schema.Schema`.
 
 Entity type
 ~~~~~~~~~~~

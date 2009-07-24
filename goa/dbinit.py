@@ -20,7 +20,7 @@ def _get_group(groupname):
         try:
             group = Get(key)
         except datastore_errors.EntityNotFoundError:
-            raise Exception('can\'t find required group %s, is your application '
+            raise Exception('can\'t find required group %s, is your instance '
                             'correctly initialized (eg did you run the '
                             'initialization script) ?' % groupname)
         _GROUP_CACHE[groupname] = group

@@ -85,7 +85,7 @@ class BookmarksBox(box.UserRQLBoxTemplate):
         if eschema.has_perm(req, 'add') and rschema.has_perm(req, 'add', toeid=ueid):
             boxmenu = BoxMenu(req._('manage bookmarks'))
             linkto = 'bookmarked_by:%s:subject' % ueid
-            # use a relative path so that we can move the application without
+            # use a relative path so that we can move the instance without
             # loosing bookmarks
             path = req.relative_path()
             url = self.create_url(self.etype, __linkto=linkto, path=path)

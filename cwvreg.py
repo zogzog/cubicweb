@@ -40,15 +40,15 @@ def use_interfaces(obj):
 
 
 class CubicWebRegistry(VRegistry):
-    """Central registry for the cubicweb application, extending the generic
+    """Central registry for the cubicweb instance, extending the generic
     VRegistry with some cubicweb specific stuff.
 
-    This is one of the central object in cubicweb application, coupling
+    This is one of the central object in cubicweb instance, coupling
     dynamically loaded objects with the schema and the configuration objects.
 
     It specializes the VRegistry by adding some convenience methods to access to
     stored objects. Currently we have the following registries of objects known
-    by the web application (library may use some others additional registries):
+    by the web instance (library may use some others additional registries):
 
     * etypes
     * views
@@ -91,7 +91,7 @@ class CubicWebRegistry(VRegistry):
             self.register_property(key, **propdef)
 
     def set_schema(self, schema):
-        """set application'schema and load application objects"""
+        """set instance'schema and load application objects"""
         self.schema = schema
         clear_cache(self, 'rqlhelper')
         # now we can load application's web objects

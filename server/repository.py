@@ -5,7 +5,7 @@ data sources. Most of the work is actually done in helper classes. The
 repository mainly:
 
 * brings these classes all together to provide a single access
-  point to a cubicweb application.
+  point to a cubicweb instance.
 * handles session management
 * provides method for pyro registration, to call if pyro is enabled
 
@@ -179,12 +179,12 @@ class Repository(object):
         # open some connections pools
         self._available_pools = Queue.Queue()
         self._available_pools.put_nowait(ConnectionsPool(self.sources))
-        if config.read_application_schema:
-            # normal start: load the application schema from the database
+        if config.read_instance_schema:
+            # normal start: load the instance schema from the database
             self.fill_schema()
         elif config.bootstrap_schema:
             # usually during repository creation
-            self.warning("set fs application'schema as bootstrap schema")
+            self.warning("set fs instance'schema as bootstrap schema")
             config.bootstrap_cubes()
             self.set_bootstrap_schema(self.config.load_schema())
             # need to load the Any and CWUser entity types
@@ -197,7 +197,7 @@ class Repository(object):
                                 'cubicweb.entities.authobjs')
         else:
             # test start: use the file system schema (quicker)
-            self.warning("set fs application'schema")
+            self.warning("set fs instance'schema")
             config.bootstrap_cubes()
             self.set_schema(self.config.load_schema())
         if not config.creating:
@@ -247,9 +247,9 @@ class Repository(object):
             self.vreg.set_schema(schema)
         self.hm.set_schema(schema)
         self.hm.register_system_hooks(self.config)
-        # application specific hooks
-        if self.config.application_hooks:
-            self.info('loading application hooks')
+        # instance specific hooks
+        if self.config.instance_hooks:
+            self.info('loading instance hooks')
             self.hm.register_hooks(self.config.load_hooks(self.vreg))
 
     def fill_schema(self):
@@ -297,13 +297,13 @@ class Repository(object):
         config.usergroup_hooks = False
         config.schema_hooks = False
         config.notification_hooks = False
-        config.application_hooks = False
+        config.instance_hooks = False
         self.set_schema(schema, resetvreg=False)
         config.core_hooks = True
         config.usergroup_hooks = True
         config.schema_hooks = True
         config.notification_hooks = True
-        config.application_hooks = True
+        config.instance_hooks = True
 
     def start_looping_tasks(self):
         assert isinstance(self._looping_tasks, list), 'already started'
@@ -441,7 +441,7 @@ class Repository(object):
     # public (dbapi) interface ################################################
 
     def get_schema(self):
-        """return the application schema. This is a public method, not
+        """return the instance schema. This is a public method, not
         requiring a session id
         """
         try:
@@ -452,7 +452,7 @@ class Repository(object):
             self.schema.__hashmode__ = None
 
     def get_cubes(self):
-        """return the list of cubes used by this application. This is a
+        """return the list of cubes used by this instance. This is a
         public method, not requiring a session id.
         """
         versions = self.get_versions(not (self.config.creating
@@ -463,7 +463,7 @@ class Repository(object):
 
     @cached
     def get_versions(self, checkversions=False):
-        """return the a dictionary containing cubes used by this application
+        """return the a dictionary containing cubes used by this instance
         as key with their version as value, including cubicweb version. This is a
         public method, not requiring a session id.
         """
@@ -486,7 +486,7 @@ class Repository(object):
                     else:
                         fsversion = self.config.cubicweb_version()
                     if version < fsversion:
-                        msg = ('application has %s version %s but %s '
+                        msg = ('instance has %s version %s but %s '
                                'is installed. Run "cubicweb-ctl upgrade".')
                         raise ExecutionError(msg % (cube, version, fsversion))
         finally:

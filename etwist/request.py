@@ -38,7 +38,7 @@ class CubicWebTwistedRequestAdapter(CubicWebRequestBase):
         self._headers = req.headers
 
     def base_url(self):
-        """return the root url of the application"""
+        """return the root url of the instance"""
         return self._base_url
 
     def http_method(self):
@@ -47,7 +47,7 @@ class CubicWebTwistedRequestAdapter(CubicWebRequestBase):
 
     def relative_path(self, includeparams=True):
         """return the normalized path of the request (ie at least relative
-        to the application's root, but some other normalization may be needed
+        to the instance's root, but some other normalization may be needed
         so that the returned path may be used to compare to generated urls
 
         :param includeparams:
