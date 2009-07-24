@@ -21,7 +21,7 @@ from cubicweb.server import schemaserial as ss
 from cubicweb.server.sqlutils import SQL_PREFIX
 from cubicweb.server.pool import Operation, SingleLastOperation, PreCommitOperation
 from cubicweb.server.hookhelper import (entity_attr, entity_name,
-                                     check_internal_entity)
+                                        check_internal_entity)
 
 # core entity and relation types which can't be removed
 CORE_ETYPES = list(BASE_TYPES) + ['CWEType', 'CWRType', 'CWUser', 'CWGroup',
