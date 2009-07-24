@@ -186,7 +186,7 @@ def init_autoform_section(rtag, sschema, rschema, oschema, role):
             card = rschema.rproperty(sschema, oschema, 'cardinality')[1]
             composed = rschema.rproperty(sschema, oschema, 'composite') == 'subject'
         if sschema.is_metadata(rschema):
-            section = 'generated'
+            section = 'metadata'
         elif card in '1+':
             if not rschema.is_final() and composed:
                 section = 'generated'
@@ -229,8 +229,8 @@ autoform_section.tag_attribute(('CWUser', 'firstname'), 'secondary')
 autoform_section.tag_attribute(('CWUser', 'surname'), 'secondary')
 autoform_section.tag_attribute(('CWUser', 'last_login_time'), 'metadata')
 autoform_section.tag_subject_of(('CWUser', 'in_group', '*'), 'primary')
-autoform_section.tag_object_of(('*', 'owned_by', 'CWUser'), 'generated')
-autoform_section.tag_object_of(('*', 'created_by', 'CWUser'), 'generated')
+autoform_section.tag_object_of(('*', 'owned_by', 'CWUser'), 'metadata')
+autoform_section.tag_object_of(('*', 'created_by', 'CWUser'), 'metadata')
 autoform_section.tag_object_of(('*', 'bookmarked_by', 'CWUser'), 'metadata')
 autoform_section.tag_attribute(('Bookmark', 'path'), 'primary')
 autoform_section.tag_subject_of(('*', 'use_email', '*'), 'generated') # inlined actually
