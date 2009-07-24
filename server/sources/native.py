@@ -25,7 +25,8 @@ from indexer import get_indexer
 
 from cubicweb import UnknownEid, AuthenticationError, Binary, server
 from cubicweb.server.utils import crypt_password
-from cubicweb.server.sqlutils import SQL_PREFIX, SQLAdapterMixIn
+from cubicweb.server.sqlutils import (SQL_PREFIX, SQLAdapterMixIn,
+                                      sql_source_backup, sql_source_restore)
 from cubicweb.server.rqlannotation import set_qdata
 from cubicweb.server.sources import AbstractSource
 from cubicweb.server.sources.rql2sql import SQLGenerator
@@ -199,6 +200,18 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
         pool.pool_reset()
         self.repo._free_pool(pool)
 
+    def backup(self, confirm, backupfile=None, timestamp=None,
+               askconfirm=False):
+        """method called to create a backup of source's data"""
+        backupfile = self.backup_file(backupfile, timestamp)
+        sql_source_backup(self, self, confirm, backupfile, askconfirm)
+
+    def restore(self, confirm, backupfile=None, timestamp=None, drop=True,
+               askconfirm=False):
+        """method called to restore a backup of source's data"""
+        backupfile = self.backup_file(backupfile, timestamp)
+        sql_source_restore(self, self, confirm, backupfile, drop, askconfirm)
+
     def init(self):
         self.init_creating()
         pool = self.repo._get_pool()
@@ -213,7 +226,7 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
 
     def map_attribute(self, etype, attr, cb):
         self._rql_sqlgen.attr_map['%s.%s' % (etype, attr)] = cb
-        
+
     # ISource interface #######################################################
 
     def compile_rql(self, rql):

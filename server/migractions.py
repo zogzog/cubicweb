@@ -109,61 +109,26 @@ class ServerMigrationHelper(MigrationHelper):
 
     def backup_database(self, backupfile=None, askconfirm=True):
         config = self.config
-        source = config.sources()['system']
-        helper = get_adv_func_helper(source['db-driver'])
-        date = datetime.now().strftime('%Y-%m-%d_%H:%M:%S')
-        app = config.appid
-        backupfile = backupfile or join(config.appdatahome, 'backup',
-                                        '%s-%s.dump' % (app, date))
-        if exists(backupfile):
-            if not self.confirm('a backup already exists for %s, overwrite it?' % app):
-                return
-        elif askconfirm and not self.confirm('backup %s database?' % app):
-            return
-        cmd = helper.backup_command(source['db-name'], source.get('db-host'),
-                                    source.get('db-user'), backupfile,
-                                    keepownership=False)
-        while True:
-            print cmd
-            if os.system(cmd):
-                print 'error while backuping the base'
-                answer = self.confirm('continue anyway?',
-                                      shell=False, abort=False, retry=True)
-                if not answer:
-                    raise SystemExit(1)
-                if answer == 1: # 1: continue, 2: retry
-                    break
-            else:
-                from cubicweb.toolsutils import restrict_perms_to_user
-                print 'database backup:', backupfile
-                restrict_perms_to_user(backupfile, self.info)
-                break
+        repo = self.repo_connect()
+        timestamp = datetime.now().strftime('%Y-%m-%d_%H:%M:%S')
+        for source in repo.sources:
+            source.backup(self.confirm, backupfile, timestamp,
+                          askconfirm=askconfirm)
+        repo.hm.call_hooks('server_backup', repo=repo, timestamp=timestamp)
 
-    def restore_database(self, backupfile, drop=True):
+    def restore_database(self, backupfile, drop=True, systemonly=True,
+                         askconfirm=True):
         config = self.config
-        source = config.sources()['system']
-        helper = get_adv_func_helper(source['db-driver'])
-        app = config.appid
-        if not exists(backupfile):
-            raise Exception("backup file %s doesn't exist" % backupfile)
-        if self.confirm('restore %s database from %s ?' % (app, backupfile)):
-            for cmd in helper.restore_commands(source['db-name'], source.get('db-host'),
-                                               source.get('db-user'), backupfile,
-                                               source['db-encoding'],
-                                               keepownership=False, drop=drop):
-                while True:
-                    print cmd
-                    if os.system(cmd):
-                        print 'error while restoring the base'
-                        answer = self.confirm('continue anyway?',
-                                              shell=False, abort=False, retry=True)
-                        if not answer:
-                            raise SystemExit(1)
-                        if answer == 1: # 1: continue, 2: retry
-                            break
-                    else:
-                        break
-            print 'database restored'
+        repo = self.repo_connect()
+        if systemonly:
+            repo.system_source.restore(self.confirm, backupfile=backupfile,
+                                       drop=drop, askconfirm=askconfirm)
+        else:
+            # in that case, backup file is expected to be a time stamp
+            for source in repo.sources:
+                source.backup(self.confirm, timestamp=backupfile, drop=drop,
+                              askconfirm=askconfirm)
+            repo.hm.call_hooks('server_restore', repo=repo, timestamp=backupfile)
 
     @property
     def cnx(self):

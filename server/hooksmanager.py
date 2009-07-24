@@ -34,7 +34,8 @@ ENTITIES_HOOKS = ('before_add_entity',    'after_add_entity',
                   'before_delete_entity', 'after_delete_entity')
 RELATIONS_HOOKS = ('before_add_relation',   'after_add_relation' ,
                    'before_delete_relation','after_delete_relation')
-SYSTEM_HOOKS = ('server_startup', 'server_shutdown',
+SYSTEM_HOOKS = ('server_backup', 'server_restore',
+                'server_startup', 'server_shutdown',
                 'session_open', 'session_close')
 
 ALL_HOOKS = frozenset(ENTITIES_HOOKS + RELATIONS_HOOKS + SYSTEM_HOOKS)

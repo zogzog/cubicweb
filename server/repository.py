@@ -217,8 +217,11 @@ class Repository(object):
         # close initialization pool and reopen fresh ones for proper
         # initialization now that we know cubes
         self._get_pool().close(True)
+        # list of available pools (we can't iterated on Queue instance)
+        self.pools = []
         for i in xrange(config['connections-pool-size']):
-            self._available_pools.put_nowait(ConnectionsPool(self.sources))
+            self.pools.append(ConnectionsPool(self.sources))
+            self._available_pools.put_nowait(self.pools[-1])
         self._shutting_down = False
         if not (config.creating or config.repairing):
             # call instance level initialisation hooks

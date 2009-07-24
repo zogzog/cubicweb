@@ -5,7 +5,7 @@
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 :license: GNU Lesser General Public License, v2.1 - http://www.gnu.org/licenses
 """
-__docformat__ = "restructuredtext en"
+__docformat__ = 'restructuredtext en'
 
 import sys
 import os
@@ -169,7 +169,7 @@ class RepositoryCreateHandler(CommandHandler):
         config.write_bootstrap_cubes_file(cubes)
 
     def postcreate(self):
-        if confirm('Do you want to run db-create to create the "system database" ?'):
+        if confirm('Do you want to run db-create to create the system database ?'):
             verbosity = (self.config.mode == 'installed') and 'y' or 'n'
             cmd_run('db-create', self.config.appid, '--verbose=%s' % verbosity)
         else:
@@ -246,11 +246,11 @@ class CreateInstanceDBCommand(Command):
     arguments = '<instance>'
 
     options = (
-        ("create-db",
-         {'short': 'c', 'type': "yn", 'metavar': '<y or n>',
+        ('create-db',
+         {'short': 'c', 'type': 'yn', 'metavar': '<y or n>',
           'default': True,
           'help': 'create the database (yes by default)'}),
-        ("verbose",
+        ('verbose',
          {'short': 'v', 'type' : 'yn', 'metavar': '<verbose>',
           'default': 'n',
           'help': 'verbose mode: will ask all possible configuration questions',
@@ -262,14 +262,14 @@ class CreateInstanceDBCommand(Command):
         from logilab.common.adbh import get_adv_func_helper
         from indexer import get_indexer
         verbose = self.get('verbose')
-        appid = pop_arg(args, msg="No instance specified !")
+        appid = pop_arg(args, msg='No instance specified !')
         config = ServerConfiguration.config_for(appid)
         create_db = self.config.create_db
         source = config.sources()['system']
         driver = source['db-driver']
         helper = get_adv_func_helper(driver)
         if create_db:
-            print '\n'+underline_title('Creating the "system database"')
+            print '\n'+underline_title('Creating the system database')
             # connect on the dbms system base to create our base
             dbcnx = _db_sys_cnx(source, 'CREATE DATABASE and / or USER', verbose=verbose)
             cursor = dbcnx.cursor()
@@ -310,7 +310,7 @@ class CreateInstanceDBCommand(Command):
         cnx.commit()
         print '-> database for instance %s created and necessary extensions installed.' % appid
         print
-        if confirm('Do you want to run db-init to initialize the "system database" ?'):
+        if confirm('Do you want to run db-init to initialize the system database ?'):
             cmd_run('db-init', config.appid)
         else:
             print ('-> nevermind, you can do it later with '
@@ -331,7 +331,7 @@ class InitInstanceCommand(Command):
     arguments = '<instance>'
 
     options = (
-        ("drop",
+        ('drop',
          {'short': 'd', 'action': 'store_true',
           'default': False,
           'help': 'insert drop statements to remove previously existant \
@@ -339,9 +339,9 @@ tables, indexes... (no by default)'}),
         )
 
     def run(self, args):
-        print '\n'+underline_title('Initializing the "system database"')
+        print '\n'+underline_title('Initializing the system database')
         from cubicweb.server import init_repository
-        appid = pop_arg(args, msg="No instance specified !")
+        appid = pop_arg(args, msg='No instance specified !')
         config = ServerConfiguration.config_for(appid)
         init_repository(config, drop=self.config.drop)
 
@@ -358,8 +358,8 @@ class GrantUserOnInstanceCommand(Command):
     arguments = '<instance> <user>'
 
     options = (
-        ("set-owner",
-         {'short': 'o', 'type' : "yn", 'metavar' : '<yes or no>',
+        ('set-owner',
+         {'short': 'o', 'type' : 'yn', 'metavar' : '<yes or no>',
           'default' : False,
           'help': 'Set the user as tables owner if yes (no by default).'}
          ),
@@ -367,8 +367,8 @@ class GrantUserOnInstanceCommand(Command):
     def run(self, args):
         """run the command with its specific arguments"""
         from cubicweb.server.sqlutils import sqlexec, sqlgrants
-        appid = pop_arg(args, 1, msg="No instance specified !")
-        user = pop_arg(args, msg="No user specified !")
+        appid = pop_arg(args, 1, msg='No instance specified !')
+        user = pop_arg(args, msg='No user specified !')
         config = ServerConfiguration.config_for(appid)
         source = config.sources()['system']
         set_owner = self.config.set_owner
@@ -400,7 +400,7 @@ class ResetAdminPasswordCommand(Command):
         """run the command with its specific arguments"""
         from cubicweb.server.sqlutils import sqlexec, SQL_PREFIX
         from cubicweb.server.utils import crypt_password, manager_userpasswd
-        appid = pop_arg(args, 1, msg="No instance specified !")
+        appid = pop_arg(args, 1, msg='No instance specified !')
         config = ServerConfiguration.config_for(appid)
         sourcescfg = config.read_sources_file()
         try:
@@ -444,14 +444,14 @@ class StartRepositoryCommand(Command):
     arguments = '<instance>'
 
     options = (
-        ("debug",
+        ('debug',
          {'short': 'D', 'action' : 'store_true',
           'help': 'start server in debug mode.'}),
         )
 
     def run(self, args):
         from cubicweb.server.server import RepositoryServer
-        appid = pop_arg(args, msg="No instance specified !")
+        appid = pop_arg(args, msg='No instance specified !')
         config = ServerConfiguration.config_for(appid)
         debug = self.config.debug
         # create the server
@@ -473,6 +473,7 @@ class StartRepositoryCommand(Command):
 
 
 def _remote_dump(host, appid, output, sudo=False):
+    # XXX generate unique/portable file name
     dmpcmd = 'cubicweb-ctl db-dump -o /tmp/%s.dump %s' % (appid, appid)
     if sudo:
         dmpcmd = 'sudo %s' % (dmpcmd)
@@ -497,14 +498,16 @@ def _remote_dump(host, appid, output, sudo=False):
 def _local_dump(appid, output):
     config = ServerConfiguration.config_for(appid)
     # schema=1 to avoid unnecessary schema loading
-    mih = config.migration_handler(connect=False, schema=1)
+    mih = config.migration_handler(connect=False, schema=1, verbosity=1)
     mih.backup_database(output, askconfirm=False)
+    mih.shutdown()
 
-def _local_restore(appid, backupfile, drop):
+def _local_restore(appid, backupfile, drop, systemonly=True):
     config = ServerConfiguration.config_for(appid)
+    config.verbosity = 1 # else we won't be asked for confirmation on problems
     # schema=1 to avoid unnecessary schema loading
-    mih = config.migration_handler(connect=False, schema=1)
-    mih.restore_database(backupfile, drop)
+    mih = config.migration_handler(connect=False, schema=1, verbosity=1)
+    mih.restore_database(backupfile, drop, systemonly, askconfirm=False)
     repo = mih.repo_connect()
     # version of the database
     dbversions = repo.get_versions()
@@ -542,12 +545,12 @@ def instance_status(config, cubicwebapplversion, vcconf):
         try:
             softversion = config.cube_version(cube)
         except ConfigurationError:
-            print "-> Error: no cube version information for %s, please check that the cube is installed." % cube
+            print '-> Error: no cube version information for %s, please check that the cube is installed.' % cube
             continue
         try:
             applversion = vcconf[cube]
         except KeyError:
-            print "-> Error: no cube version information for %s in version configuration." % cube
+            print '-> Error: no cube version information for %s in version configuration.' % cube
             continue
         if softversion == applversion:
             continue
@@ -569,8 +572,8 @@ class DBDumpCommand(Command):
     arguments = '<instance>'
 
     options = (
-        ("output",
-         {'short': 'o', 'type' : "string", 'metavar' : '<file>',
+        ('output',
+         {'short': 'o', 'type' : 'string', 'metavar' : '<file>',
           'default' : None,
           'help': 'Specify the backup file where the backup will be stored.'}
          ),
@@ -582,7 +585,7 @@ class DBDumpCommand(Command):
         )
 
     def run(self, args):
-        appid = pop_arg(args, 1, msg="No instance specified !")
+        appid = pop_arg(args, 1, msg='No instance specified !')
         if ':' in appid:
             host, appid = appid.split(':')
             _remote_dump(host, appid, self.config.output, self.config.sudo)
@@ -600,18 +603,26 @@ class DBRestoreCommand(Command):
     arguments = '<instance> <backupfile>'
 
     options = (
-        ("no-drop",
-         {'short': 'n', 'action' : 'store_true',
-          'default' : False,
+        ('no-drop',
+         {'short': 'n', 'action' : 'store_true', 'default' : False,
           'help': 'for some reason the database doesn\'t exist and so '
           'should not be dropped.'}
+         ),
+        ('restore-all',
+         {'short': 'r', 'action' : 'store_true', 'default' : False,
+          'help': 'restore everything, eg not only the system source database '
+          'but also data for all sources supporting backup/restore and custom '
+          'instance data. In that case, <backupfile> is expected to be the '
+          'timestamp of the backup to restore, not a file'}
          ),
         )
 
     def run(self, args):
-        appid = pop_arg(args, 1, msg="No instance specified !")
-        backupfile = pop_arg(args, msg="No backup file specified !")
-        _local_restore(appid, backupfile, not self.config.no_drop)
+        appid = pop_arg(args, 1, msg='No instance specified !')
+        backupfile = pop_arg(args, msg='No backup file or timestamp specified !')
+        _local_restore(appid, backupfile,
+                       drop=not self.config.no_drop,
+                       systemonly=not self.config.restore_all)
 
 
 class DBCopyCommand(Command):
@@ -628,13 +639,13 @@ class DBCopyCommand(Command):
     arguments = '<src-instance> <dest-instance>'
 
     options = (
-        ("no-drop",
+        ('no-drop',
          {'short': 'n', 'action' : 'store_true',
           'default' : False,
           'help': 'For some reason the database doesn\'t exist and so '
           'should not be dropped.'}
          ),
-        ("keep-dump",
+        ('keep-dump',
          {'short': 'k', 'action' : 'store_true',
           'default' : False,
           'help': 'Specify that the dump file should not be automatically removed.'}
@@ -648,8 +659,8 @@ class DBCopyCommand(Command):
 
     def run(self, args):
         import tempfile
-        srcappid = pop_arg(args, 1, msg="No source instance specified !")
-        destappid = pop_arg(args, msg="No destination instance specified !")
+        srcappid = pop_arg(args, 1, msg='No source instance specified !')
+        destappid = pop_arg(args, msg='No destination instance specified !')
         _, output = tempfile.mkstemp()
         if ':' in srcappid:
             host, srcappid = srcappid.split(':')
@@ -673,27 +684,27 @@ class CheckRepositoryCommand(Command):
     arguments = '<instance>'
 
     options = (
-        ("checks",
-         {'short': 'c', 'type' : "csv", 'metavar' : '<check list>',
+        ('checks',
+         {'short': 'c', 'type' : 'csv', 'metavar' : '<check list>',
           'default' : ('entities', 'relations', 'metadata', 'schema', 'text_index'),
           'help': 'Comma separated list of check to run. By default run all \
 checks, i.e. entities, relations, text_index and metadata.'}
          ),
 
-        ("autofix",
-         {'short': 'a', 'type' : "yn", 'metavar' : '<yes or no>',
+        ('autofix',
+         {'short': 'a', 'type' : 'yn', 'metavar' : '<yes or no>',
           'default' : False,
           'help': 'Automatically correct integrity problems if this option \
 is set to "y" or "yes", else only display them'}
          ),
-        ("reindex",
-         {'short': 'r', 'type' : "yn", 'metavar' : '<yes or no>',
+        ('reindex',
+         {'short': 'r', 'type' : 'yn', 'metavar' : '<yes or no>',
           'default' : False,
           'help': 're-indexes the database for full text search if this \
 option is set to "y" or "yes" (may be long for large database).'}
          ),
-        ("force",
-         {'short': 'f', 'action' : "store_true",
+        ('force',
+         {'short': 'f', 'action' : 'store_true',
           'default' : False,
           'help': 'don\'t check instance is up to date.'}
          ),
@@ -702,7 +713,7 @@ option is set to "y" or "yes" (may be long for large database).'}
 
     def run(self, args):
         from cubicweb.server.checkintegrity import check
-        appid = pop_arg(args, 1, msg="No instance specified !")
+        appid = pop_arg(args, 1, msg='No instance specified !')
         config = ServerConfiguration.config_for(appid)
         config.repairing = self.config.force
         repo, cnx = repo_cnx(config)
@@ -723,7 +734,7 @@ class RebuildFTICommand(Command):
 
     def run(self, args):
         from cubicweb.server.checkintegrity import reindex_entities
-        appid = pop_arg(args, 1, msg="No instance specified !")
+        appid = pop_arg(args, 1, msg='No instance specified !')
         config = ServerConfiguration.config_for(appid)
         repo, cnx = repo_cnx(config)
         session = repo._get_session(cnx.sessionid, setpool=True)
@@ -744,7 +755,7 @@ class SynchronizeInstanceSchemaCommand(Command):
     arguments = '<instance>'
 
     def run(self, args):
-        appid = pop_arg(args, msg="No instance specified !")
+        appid = pop_arg(args, msg='No instance specified !')
         config = ServerConfiguration.config_for(appid)
         mih = config.migration_handler()
         mih.cmd_synchronize_schema()

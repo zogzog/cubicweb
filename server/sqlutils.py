@@ -7,6 +7,8 @@
 """
 __docformat__ = "restructuredtext en"
 
+import os
+from os.path import exists
 from warnings import warn
 from datetime import datetime, date, timedelta
 
@@ -21,6 +23,7 @@ from indexer import get_indexer
 from cubicweb import Binary, ConfigurationError
 from cubicweb.utils import todate, todatetime
 from cubicweb.common.uilib import remove_html_tags
+from cubicweb.toolsutils import restrict_perms_to_user
 from cubicweb.server import SQL_CONNECT_HOOKS
 from cubicweb.server.utils import crypt_password
 
@@ -116,6 +119,38 @@ def sqldropschema(schema, driver, text_index=True,
                      skip_relations=skip_relations))
     return '\n'.join(output)
 
+
+def sql_source_backup(source, sqladapter, confirm, backupfile,
+                      askconfirm=False):
+    if exists(backupfile):
+        if not confirm('backup file %s exists, overwrite it?' % backupfile):
+            return
+    elif askconfirm and not confirm('backup %s %database?'
+                                    % source.repo.config.appid):
+        return
+    # should close opened connection before backuping
+    source.close_pool_connections()
+    try:
+        sqladapter.backup_to_file(backupfile, confirm)
+    finally:
+        source.open_pool_connections()
+
+def sql_source_restore(source, sqladapter, confirm, backupfile, drop=True,
+                       askconfirm=False):
+    if not exists(backupfile):
+        raise Exception("backup file %s doesn't exist" % backupfile)
+    app = source.repo.config.appid
+    if askconfirm and not confirm('restore %s %s database from %s ?'
+                                  % (app, source.uri, backupfile)):
+        return
+    # should close opened connection before restoring
+    source.close_pool_connections()
+    try:
+        sqladapter.restore_from_file(backupfile, confirm, drop=drop)
+    finally:
+        source.open_pool_connections()
+
+
 try:
     from mx.DateTime import DateTimeType, DateTimeDeltaType
 except ImportError:
@@ -158,6 +193,46 @@ class SQLAdapterMixIn(object):
         init_cnx(self.dbdriver, cnx)
         #self.dbapi_module.type_code_test(cnx.cursor())
         return cnx
+
+    def backup_to_file(self, backupfile, confirm):
+        cmd = self.dbhelper.backup_command(self.dbname, self.dbhost,
+                                           self.dbuser, backupfile,
+                                           keepownership=False)
+        while True:
+            print cmd
+            if os.system(cmd):
+                print 'error while backuping the base'
+                answer = confirm('continue anyway?',
+                                 shell=False, abort=False, retry=True)
+                if not answer:
+                    raise SystemExit(1)
+                if answer == 1: # 1: continue, 2: retry
+                    break
+            else:
+                print 'database backup:', backupfile
+                restrict_perms_to_user(backupfile, self.info)
+                break
+
+    def restore_from_file(self, backupfile, confirm, drop=True):
+        for cmd in self.dbhelper.restore_commands(self.dbname, self.dbhost,
+                                                  self.dbuser, backupfile,
+                                                  self.encoding,
+                                                  keepownership=False,
+                                                  drop=drop):
+            while True:
+                print cmd
+                if os.system(cmd):
+                    print 'error while restoring the base'
+                    print 'OOOOOPS', confirm
+                    answer = confirm('continue anyway?',
+                                     shell=False, abort=False, retry=True)
+                    if not answer:
+                        raise SystemExit(1)
+                    if answer == 1: # 1: continue, 2: retry
+                        break
+                else:
+                    break
+        print 'database restored'
 
     def merge_args(self, args, query_args):
         if args is not None:

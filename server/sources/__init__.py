@@ -7,11 +7,13 @@
 """
 __docformat__ = "restructuredtext en"
 
+from os.path import join, splitext
 from datetime import datetime, timedelta
 from logging import getLogger
 
 from cubicweb import set_log_methods
 from cubicweb.server.sqlutils import SQL_PREFIX
+
 
 
 class TimedCache(dict):
@@ -70,6 +72,42 @@ class AbstractSource(object):
     def init(self):
         """method called by the repository once ready to handle request"""
         pass
+
+    def backup_file(self, backupfile=None, timestamp=None):
+        """return a unique file name for a source's dump
+
+        either backupfile or timestamp (used to generated a backup file name if
+        needed) should be specified.
+        """
+        if backupfile is None:
+            config = self.repo.config
+            return join(config.appdatahome, 'backup',
+                        '%s-%s-%s.dump' % (config.appid, timestamp, self.uri))
+        # backup file is the system database backup file, add uri to it if not
+        # already there
+        base, ext = splitext(backupfile)
+        if not base.endswith('-%s' % self.uri):
+            return '%s-%s%s' % (base, self.uri, ext)
+        return backupfile
+
+    def backup(self, confirm, backupfile=None, timestamp=None,
+               askconfirm=False):
+        """method called to create a backup of source's data"""
+        pass
+
+    def restore(self, confirm, backupfile=None, timestamp=None, drop=True,
+               askconfirm=False):
+        """method called to restore a backup of source's data"""
+        pass
+
+    def close_pool_connections(self):
+        for pool in self.repo.pools:
+            pool._cursors.pop(self.uri, None)
+            pool.source_cnxs[self.uri][1].close()
+
+    def open_pool_connections(self):
+        for pool in self.repo.pools:
+            pool.source_cnxs[self.uri] = (self, self.get_connection())
 
     def reset_caches(self):
         """method called during test to reset potential source caches"""

@@ -320,9 +320,11 @@ notified of every changes.',
         clear_cache(self, 'sources')
 
     def migration_handler(self, schema=None, interactive=True,
-                          cnx=None, repo=None, connect=True):
+                          cnx=None, repo=None, connect=True, verbosity=None):
         """return a migration handler instance"""
         from cubicweb.server.migractions import ServerMigrationHelper
+        if verbosity is None:
+            verbosity = getattr(self, 'verbosity', 0)
         return ServerMigrationHelper(self, schema, interactive=interactive,
                                      cnx=cnx, repo=repo, connect=connect,
-                                     verbosity=getattr(self, 'verbosity', 0))
+                                     verbosity=verbosity)

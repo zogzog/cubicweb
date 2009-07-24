@@ -11,7 +11,8 @@ __docformat__ = "restructuredtext en"
 from os.path import join, exists
 
 from cubicweb import server
-from cubicweb.server.sqlutils import SQL_PREFIX, sqlexec, SQLAdapterMixIn
+from cubicweb.server.sqlutils import (SQL_PREFIX, SQLAdapterMixIn, sqlexec,
+                                      sql_source_backup, sql_source_restore)
 from cubicweb.server.sources import AbstractSource, native
 from cubicweb.server.sources.rql2sql import SQLGenerator
 
@@ -84,6 +85,19 @@ repository.',
         self._need_full_import = self._need_sql_create
         AbstractSource.__init__(self, repo, appschema, source_config,
                                 *args, **kwargs)
+
+    def backup(self, confirm, backupfile=None, timestamp=None, askconfirm=False):
+        """method called to create a backup of source's data"""
+        backupfile = self.backup_file(backupfile, timestamp)
+        sql_source_backup(self, self.sqladapter, confirm, backupfile,
+                          askconfirm)
+
+    def restore(self, confirm, backupfile=None, timestamp=None, drop=True,
+               askconfirm=False):
+        """method called to restore a backup of source's data"""
+        backupfile = self.backup_file(backupfile, timestamp)
+        sql_source_restore(self, self.sqladapter, confirm, backupfile, drop,
+                           askconfirm)
 
     @property
     def _sqlcnx(self):
