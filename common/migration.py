@@ -337,7 +337,7 @@ type "exit" or Ctrl-D to quit the shell and resume operation"""
         configfile = self.config.main_config_file()
         if self._option_changes:
             read_old_config(self.config, self._option_changes, configfile)
-        newconfig = tempfile.mkstemp()
+        _, newconfig = tempfile.mkstemp()
         for optdescr in self._option_changes:
             if optdescr[0] == 'added':
                 optdict = self.config.get_option_def(optdescr[1])
