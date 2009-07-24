@@ -91,7 +91,9 @@ class ClickAndEditFormView(FormViewMixIn, EntityView):
     # FIXME editableField class could be toggleable from userprefs
 
     _onclick = u"showInlineEditionForm(%(eid)s, '%(rtype)s', '%(divid)s')"
-    _defaultlandingzone = u'<img title="%(msg)s" src="data/file.gif" alt="%(msg)s"/>'
+    _defaultlandingzone = (u'<img title="%(msg)s" '
+                           'src="data/accessories-text-editor.png" '
+                           'alt="%(msg)s"/>')
     _landingzonemsg = _('click to edit this field')
     # default relation vids according to cardinality
     _one_rvid = 'incontext'
