@@ -258,28 +258,6 @@ class ListView(EntityView):
         self.wview(self.item_vid, self.rset, row=row, col=col, vid=vid, **kwargs)
         self.w(u'</li>\n')
 
-    def url(self):
-        """overrides url method so that by default, the view list is called
-        with sorted entities
-        """
-        coltypes = self.rset.column_types(0)
-        # don't want to generate the rql if there is some restriction on
-        # something else than the entity type
-        if len(coltypes) == 1:
-            # XXX norestriction is not correct here. For instance, in cases like
-            # Any P,N WHERE P is Project, P name N
-            # norestriction should equal True
-            restr = self.rset.syntax_tree().children[0].where
-            norestriction = (isinstance(restr, nodes.Relation) and
-                             restr.is_types_restriction())
-            if norestriction:
-                etype = iter(coltypes).next()
-                return self.build_url(etype.lower(), vid=self.id)
-        if len(self.rset) == 1:
-            entity = self.rset.get_entity(0, 0)
-            return self.build_url(entity.rest_path(), vid=self.id)
-        return self.build_url(rql=self.rset.printable_rql(), vid=self.id)
-
 
 class ListItemView(EntityView):
     id = 'listitem'

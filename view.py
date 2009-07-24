@@ -195,10 +195,27 @@ class View(AppRsetObject):
         necessary for non linkable views, but a default implementation
         is provided anyway.
         """
-        try:
-            return self.build_url(vid=self.id, rql=self.req.form['rql'])
-        except KeyError:
-            return self.build_url(vid=self.id)
+        rset = self.rset
+        if rset is None:
+            return self.build_url('view', vid=self.id)
+        coltypes = rset.column_types(0)
+        if len(coltypes) == 1:
+            etype = iter(coltypes).next()
+            if not self.schema.eschema(etype).is_final():
+                if len(rset) == 1:
+                    entity = rset.get_entity(0, 0)
+                    return entity.absolute_url(vid=self.id)
+            # don't want to generate /<etype> url if there is some restriction
+            # on something else than the entity type
+            restr = rset.syntax_tree().children[0].where
+            # XXX norestriction is not correct here. For instance, in cases like
+            # "Any P,N WHERE P is Project, P name N" norestriction should equal
+            # True
+            norestriction = (isinstance(restr, nodes.Relation) and
+                             restr.is_types_restriction())
+            if norestriction:
+                return self.build_url(etype.lower(), vid=self.id)
+        return self.build_url('view', rql=rset.printable_rql(), vid=self.id)
 
     def set_request_content_type(self):
         """set the content type returned by this view"""
@@ -313,10 +330,6 @@ class StartupView(View):
 
     category = 'startupview'
 
-    def url(self):
-        """return the url associated with this view. We can omit rql here"""
-        return self.build_url('view', vid=self.id)
-
     def html_headers(self):
         """return a list of html headers (eg something to be inserted between
         <head> and </head> of the returned page
@@ -353,14 +366,6 @@ class EntityStartupView(EntityView):
         rset = self.rset
         for i in xrange(len(rset)):
             self.wview(self.id, rset, row=i, **kwargs)
-
-    def url(self):
-        """return the url associated with this view. We can omit rql if we are
-        on a result set on which we do not apply.
-        """
-        if self.rset is None:
-            return self.build_url(vid=self.id)
-        return super(EntityStartupView, self).url()
 
 
 class AnyRsetView(View):
