@@ -7,6 +7,7 @@
 """
 __docformat__ = "restructuredtext en"
 
+from cubicweb import RepositoryError
 from cubicweb.common.uilib import soup2xhtml
 from cubicweb.server.hooksmanager import Hook
 from cubicweb.server.pool import PreCommitOperation
