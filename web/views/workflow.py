@@ -117,7 +117,7 @@ class CellView(view.EntityView):
     __select__ = implements('TrInfo')
 
     def cell_call(self, row, col, cellvid=None):
-        self.w(self.entity(row, col).printable_value('comment'))
+        self.w(self.entity(row, col).view('reledit', rtype='comment'))
 
 
 class StateInContextView(view.EntityView):
