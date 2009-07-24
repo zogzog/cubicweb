@@ -81,7 +81,7 @@ def vid_from_rset(req, rset, schema):
             if req.search_state[0] == 'normal':
                 return 'primary'
             return 'outofcontext-search'
-        if len(rset.columns_type(0)) == 1:
+        if len(rset.column_types(0)) == 1:
             return 'adaptedlist'
         return 'list'
     return 'table'
