@@ -138,7 +138,7 @@ class TimeTableView(AnyRsetView):
         for user, width in zip(users, widths):
             self.w(u'<th colspan="%s">' % max(MIN_COLS, width))
             if user != u"*":
-                user.view('secondary', w=self.w)
+                user.view('oneline', w=self.w)
             else:
                 self.w(user)
             self.w(u'</th>')

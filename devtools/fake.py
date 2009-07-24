@@ -49,8 +49,7 @@ class FakeVReg(object):
     _registries = {
         'controllers' : [Mock(id='view'), Mock(id='login'),
                          Mock(id='logout'), Mock(id='edit')],
-        'views' : [Mock(id='primary'), Mock(id='secondary'),
-                         Mock(id='oneline'), Mock(id='list')],
+        'views' : [Mock(id='primary'), Mock(id='oneline'), Mock(id='list')],
         }
 
     def registry_objects(self, name, oid=None):

@@ -2,7 +2,7 @@
 
 * noresult, final
 * primary, sidebox
-* secondary, oneline, incontext, outofcontext, text
+* oneline, incontext, outofcontext, text
 * list
 
 
@@ -101,6 +101,7 @@ class FinalView(AnyRsetView):
         self.wdata(printable_value(self.req, etype, value, props, displaytime=displaytime))
 
 
+# XXX deprecated
 class SecondaryView(EntityView):
     id = 'secondary'
     title = _('secondary')
@@ -179,9 +180,6 @@ class MetaDataView(EntityView):
             self.w(u'<span class="value">%s</span>' % entity.creator.name())
         self.w(u'</div>')
 
-
-# new default views for finner control in general views , to use instead of
-# oneline / secondary
 
 class InContextTextView(TextView):
     id = 'textincontext'
