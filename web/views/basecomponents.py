@@ -57,7 +57,7 @@ class RQLInputForm(component.Component):
 
 
 class ApplLogo(component.Component):
-    """build the application logo, usually displayed in the header"""
+    """build the instance logo, usually displayed in the header"""
     id = 'logo'
     property_defs = VISIBLE_PROP_DEF
     # don't want user to hide this component using an cwproperty
@@ -118,8 +118,8 @@ class UserLink(component.Component):
 
 
 class ApplicationMessage(component.Component):
-    """display application's messages given using the __message parameter
-    into a special div section
+    """display messages given using the __message parameter into a special div
+    section
     """
     __select__ = yes()
     id = 'applmessages'
@@ -138,7 +138,7 @@ class ApplicationMessage(component.Component):
 
 
 class ApplicationName(component.Component):
-    """display the application name"""
+    """display the instance name"""
     id = 'appliname'
     property_defs = VISIBLE_PROP_DEF
     # don't want user to hide this component using an cwproperty

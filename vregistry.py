@@ -356,7 +356,7 @@ class VRegistry(object):
                 sys.path.remove(webdir)
         if CW_SOFTWARE_ROOT in sys.path:
             sys.path.remove(CW_SOFTWARE_ROOT)
-        # load views from each directory in the application's path
+        # load views from each directory in the instance's path
         filemods = self.init_registration(path, extrapath)
         change = False
         for filepath, modname in filemods:

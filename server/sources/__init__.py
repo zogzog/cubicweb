@@ -53,7 +53,7 @@ class AbstractSource(object):
     uri = None
     # a reference to the system information helper
     repo = None
-    # a reference to the application'schema (may differs from the source'schema)
+    # a reference to the instance'schema (may differs from the source'schema)
     schema = None
 
     def __init__(self, repo, appschema, source_config, *args, **kwargs):
@@ -95,7 +95,7 @@ class AbstractSource(object):
         return cmp(self.uri, other.uri)
 
     def set_schema(self, schema):
-        """set the application'schema"""
+        """set the instance'schema"""
         self.schema = schema
 
     def support_entity(self, etype, write=False):

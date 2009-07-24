@@ -140,7 +140,7 @@ def restrict_perms_to_user(filepath, log=None):
     chmod(filepath, 0600)
 
 def read_config(config_file):
-    """read the application configuration from a file and return it as a
+    """read the instance configuration from a file and return it as a
     dictionnary
 
     :type config_file: str

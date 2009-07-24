@@ -5,7 +5,7 @@ User interface for web site configuration
 
 .. image:: ../images/lax-book.03-site-config-panel.en.png
 
-This panel allows you to configure the appearance of your application site.
+This panel allows you to configure the appearance of your instance site.
 Six menus are available and we will go through each of them to explain how
 to use them.
 
@@ -65,9 +65,9 @@ The context available are :
 
 Boxes
 ~~~~~
-The application has already a pre-defined set of boxes you can use right away.
+The instance has already a pre-defined set of boxes you can use right away.
 This configuration section allows you to place those boxes where you want in the
-application interface to customize it.
+instance interface to customize it.
 
 The available boxes are :
 
@@ -82,7 +82,7 @@ The available boxes are :
 * search box : search box
 
 * startup views box : box listing the configuration options available for
-  the application site, such as `Preferences` and `Site Configuration`
+  the instance site, such as `Preferences` and `Site Configuration`
 
 Components
 ~~~~~~~~~~

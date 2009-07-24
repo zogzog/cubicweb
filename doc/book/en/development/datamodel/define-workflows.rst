@@ -20,7 +20,7 @@ Set-up a workflow
 -----------------
 
 We want to create a workflow to control the quality of the BlogEntry
-submitted on your application. When a BlogEntry is created by a user
+submitted on your instance. When a BlogEntry is created by a user
 its state should be `submitted`. To be visible to all, it has to
 be in the state `published`. To move it from `submitted` to `published`,
 we need a transition that we can call `approve_blogentry`.

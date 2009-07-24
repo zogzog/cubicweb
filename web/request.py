@@ -515,7 +515,7 @@ class CubicWebRequestBase(DBAPIRequest):
         return self.base_url() + self.relative_path(includeparams)
 
     def _datadir_url(self):
-        """return url of the application's data directory"""
+        """return url of the instance's data directory"""
         return self.base_url() + 'data%s/' % self.vreg.config.instance_md5_version()
 
     def selected(self, url):
@@ -587,7 +587,7 @@ class CubicWebRequestBase(DBAPIRequest):
 
     def relative_path(self, includeparams=True):
         """return the normalized path of the request (ie at least relative
-        to the application's root, but some other normalization may be needed
+        to the instance's root, but some other normalization may be needed
         so that the returned path may be used to compare to generated urls
 
         :param includeparams:

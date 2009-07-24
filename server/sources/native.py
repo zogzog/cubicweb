@@ -225,7 +225,7 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
         return rqlst
 
     def set_schema(self, schema):
-        """set the application'schema"""
+        """set the instance'schema"""
         self._cache = Cache(self.repo.config['rql-cache-size'])
         self.cache_hit, self.cache_miss, self.no_cache = 0, 0, 0
         self.schema = schema

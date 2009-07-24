@@ -159,7 +159,7 @@ TheMainTemplate
 .. _TheMainTemplate:
 
 TheMainTemplate is responsible for the general layout of the entire application.
-It defines the template of ``id = main`` that is used by the application.
+It defines the template of ``id = main`` that is used by the instance.
 
 The default main template (`cubicweb.web.views.basetemplates.TheMainTemplate`)
 builds the page based on the following pattern:

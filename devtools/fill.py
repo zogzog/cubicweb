@@ -225,7 +225,7 @@ def insert_entity_queries(etype, schema, vreg, entity_num,
     :param etype: the entity's type
 
     :type schema: cubicweb.schema.Schema
-    :param schema: the application schema
+    :param schema: the instance schema
 
     :type entity_num: int
     :param entity_num: the number of entities to insert
@@ -325,7 +325,7 @@ def select(constraints, cursor, selectvar='O'):
 def make_relations_queries(schema, edict, cursor, ignored_relations=(),
                            existingrels=None):
     """returns a list of generated RQL queries for relations
-    :param schema: The application schema
+    :param schema: The instance schema
 
     :param e_dict: mapping between etypes and eids
 

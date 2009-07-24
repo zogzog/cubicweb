@@ -22,7 +22,7 @@ Configuring the Web server
 :`web.auth-model` [cookie]:
     authentication mode, cookie or http
 :`web.realm`:
-    realm of the application in http authentication mode
+    realm of the instance in http authentication mode
 :`web.http-session-time` [0]:
     period of inactivity of an HTTP session before it closes automatically.
     Duration in seconds, 0 meaning no expiration (or more exactly at the
@@ -70,7 +70,7 @@ Setting up the web
     regular expression matching sites which could be "embedded" in
     the site (controllers 'embed')
 :`web.submit-url`:
-    url where the bugs encountered in the application can be mailed to
+    url where the bugs encountered in the instance can be mailed to
 
 
 RQL server configuration
@@ -92,7 +92,7 @@ Pyro configuration for the instance
 -----------------------------------
 Web server side:
 
-:`pyro-client.pyro-application-id`:
+:`pyro-client.pyro-instance-id`:
     pyro identifier of RQL server (e.g. the instance name)
 
 RQL server side:
@@ -107,7 +107,7 @@ RQL and web servers side:
     hostname hosting pyro server name. If no value is
     specified, it is located by a request from broadcast
 :`pyro-name-server.pyro-ns-group` [cubicweb]:
-    pyro group in which to save the application
+    pyro group in which to save the instance
 
 
 Configuring e-mail
@@ -125,9 +125,9 @@ RQL server side:
 :`email.smtp-port [25]`:
     SMTP server port to use for outgoing mail
 :`email.sender-name`:
-    name to use for outgoing mail of the application
+    name to use for outgoing mail of the instance
 :`email.sender-addr`:
-    address for outgoing mail of the application
+    address for outgoing mail of the instance
 :`email.default dest-addrs`:
     destination addresses by default, if used by the configuration of the
     dissemination of the model (separated by commas)

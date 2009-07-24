@@ -7,17 +7,17 @@ Migration
 
 One of the main concept in *CubicWeb* is to create incremental applications.
 For this purpose, multiple actions are provided to facilitate the improvement
-of an application, and in particular to handle the changes to be applied
+of an instance, and in particular to handle the changes to be applied
 to the data model, without loosing existing data.
 
-The current version of an application model is provided in the file
+The current version of a cube (and of cubicweb itself) is provided in the file
 `__pkginfo__.py` as a tuple of 3 integers.
 
 Migration scripts management
 ----------------------------
 
 Migration scripts has to be located in the directory `migration` of your
-application and named accordingly:
+cube and named accordingly:
 
 ::
 
@@ -67,11 +67,8 @@ The following identifiers are pre-defined in migration scripts:
 * `interactive_mode`, boolean indicating that the script is executed in
   an interactive mode or not
 
-* `appltemplversion`, application model version of the instance
-
-* `templversion`, installed application model version
-
-* `cubicwebversion`, installed cubicweb version
+* `versions_map`, dictionary of versions used by this instance (key are cubes
+  names, including 'cubicweb', values are version, eg 3-uple)
 
 * `confirm(question)`, function asking the user and returning true
   if the user answers yes, false otherwise (always returns true in
@@ -84,16 +81,14 @@ In the `repository` scripts, the following identifiers are also defined:
 
 * `checkpoint`, request confirming and executing a "commit" at checking point
 
-* `repo_schema`, instance persisting schema (e.g. instance schema of the
-  current migration)
+* `schema`, instance schema (readen from the database)
 
-* `newschema`, installed schema on the file system (e.g. schema of
+* `fsschema`, installed schema on the file system (e.g. schema of
   the updated model and cubicweb)
 
-* `sqlcursor`, SQL cursor for very rare cases where it is really
-   necessary or beneficial to go through the sql
-
 * `repo`, repository object
+
+* `session`, repository session object
 
 
 Schema migration
@@ -134,18 +129,12 @@ scripts:
 * `drop_relation_definition(subjtype, rtype, objtype, commit=True)`, removes
   a relation definition.
 
-* `synchronize_permissions(ertype, commit=True)`, synchronizes permissions on
-  an entity type or relation type.
-
-* `synchronize_rschema(rtype, commit=True)`, synchronizes properties and permissions
-  on a relation type.
-
-* `synchronize_eschema(etype, commit=True)`, synchronizes properties and persmissions
-  on an entity type.
-
-* `synchronize_schema(commit=True)`, synchronizes the persisting schema with the
-  updated schema (but without adding or removing new entity types, relations types
-  or even relations definitions).
+* `sync_schema_props_perms(ertype=None, syncperms=True,
+                           syncprops=True, syncrdefs=True, commit=True)`,
+  synchronizes properties and/or permissions on:
+  * the whole schema if ertype is None
+  * an entity or relation type schema if ertype is a string
+  * a relation definition  if ertype is a 3-uple (subject, relation, object)
 
 * `change_relation_props(subjtype, rtype, objtype, commit=True, **kwargs)`, changes
   properties of a relation definition by using the named parameters of the properties
@@ -204,7 +193,7 @@ Those functions are only used for low level operations that could not be
 accomplished otherwise or to repair damaged databases during interactive
 session. They are available in `repository` scripts:
 
-* `sqlexec(sql, args=None, ask_confirm=True)`, executes an arbitrary SQL query
+* `sql(sql, args=None, ask_confirm=True)`, executes an arbitrary SQL query on the system source
 * `add_entity_type_table(etype, commit=True)`
 * `add_relation_type_table(rtype, commit=True)`
 * `uninline_relation(rtype, commit=True)`

@@ -37,7 +37,7 @@ class GAERegistry(CubicWebRegistry):
                             'cubicweb.goa.appobjects')
         for cube in reversed(self.config.cubes()):
             self.load_cube(cube)
-        self.load_application(applroot)
+        self.load_instance(applroot)
 
     def load_directory(self, directory, cube, skip=()):
         for filename in listdir(directory):
@@ -49,7 +49,7 @@ class GAERegistry(CubicWebRegistry):
                         cube in self.config['included-cubes'],
                         cube)
 
-    def load_application(self, applroot):
+    def load_instance(self, applroot):
         self._auto_load(applroot, self.config['schema-type'] == 'dbmodel')
 
     def _import(self, modname):

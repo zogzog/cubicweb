@@ -155,7 +155,7 @@ class GAESource(AbstractSource):
         return rqlst
 
     def set_schema(self, schema):
-        """set the application'schema"""
+        """set the instance'schema"""
         self.interpreter = RQLInterpreter(schema)
         self.schema = schema
         if 'CWUser' in schema and not self.repo.config['use-google-auth']:

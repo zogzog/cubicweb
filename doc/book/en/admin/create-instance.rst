@@ -7,7 +7,7 @@ Instance creation
 -----------------
 
 Now that we created our cube, we can create an instance to view our
-application in a web browser. To do so we will use a `all-in-one`
+instance in a web browser. To do so we will use a `all-in-one`
 configuration to simplify things ::
 
   cubicweb-ctl create -c all-in-one mycube myinstance
@@ -24,12 +24,12 @@ please use the login you create at the time you configured the database
 (:ref:`ConfigurationPostgres`).
 
 It is important to distinguish here the user used to access the database and the
-user used to login to the cubicweb application. When an instance starts, it uses
+user used to login to the cubicweb instance. When an instance starts, it uses
 the login/psswd for the database to get the schema and handle low level
 transaction. But, when :command:`cubicweb-ctl create` asks for a manager
 login/psswd of *CubicWeb*, it refers to the user you will use during the
-development to administrate your web application. It will be possible, later on,
-to use this user to create others users for your final web application.
+development to administrate your web instance. It will be possible, later on,
+to use this user to create others users for your final web instance.
 
 
 Instance administration

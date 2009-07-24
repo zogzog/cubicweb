@@ -73,7 +73,7 @@ def compile_i18n_catalogs(sourcedirs, destdir, langs):
         pofiles = [pof for pof in pofiles if exists(pof)]
         mergedpo = join(destdir, '%s_merged.po' % lang)
         try:
-            # merge application messages' catalog with the stdlib's one
+            # merge instance/cubes messages catalogs with the stdlib's one
             execute('msgcat --use-first --sort-output --strict %s > %s'
                     % (' '.join(pofiles), mergedpo))
             # make sure the .mo file is writeable and compile with *msgfmt*

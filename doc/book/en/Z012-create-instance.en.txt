@@ -8,14 +8,14 @@ What is an instance?
 --------------------
 
 A *CubicWeb* instance is a container that
-refers to cubes and configuration parameters for your web application.
+refers to cubes and configuration parameters for your web instance.
 Each instance is stored as a directory in ``~/etc/cubicweb.d`` which enables 
-us to run your application.
+us to run your instance.
 
 What is a cube?
 ---------------
 
-Cubes represent data and basic building bricks of your web applications :
+Cubes represent data and basic building bricks of your web instances :
 blogs, person, date, addressbook and a lot more.
 
 .. XXX They related to each other by a 'Schema' which is also the PostGres representation.
@@ -35,7 +35,7 @@ Creating a basic *CubicWeb* Instance
 ------------------------------------
 
 We can create an instance to view our
-application in a web browser. ::
+instance in a web browser. ::
 
   cubicweb-ctl create blog myblog
 
@@ -55,14 +55,14 @@ please use the login you create at the time you configured the database
 (:ref:`ConfigurationPostgres`).
 
 It is important to distinguish here the user used to access the database and
-the user used to login to the cubicweb application. When a *CubicWeb* application
+the user used to login to the cubicweb instance. When a *CubicWeb* instance
 starts, it uses the login/psswd for the database to get the schema and handle
 low level transaction. But, when ``cubicweb-ctl create`` asks for
-a manager login/psswd of *CubicWeb*, it refers to an application user
-to administrate your web application. 
+a manager login/psswd of *CubicWeb*, it refers to an instance user
+to administrate your web instance. 
 The configuration files are stored in *~/etc/cubicweb.d/myblog/*. 
 
-To launch the web application, you just type ::
+To launch the web instance, you just type ::
 
   cubicweb-ctl start myblog
 

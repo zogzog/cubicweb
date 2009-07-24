@@ -39,7 +39,7 @@ You can now install the required packages with the following command::
   apt-get install cubicweb cubicweb-dev
 
 `cubicweb` installs the framework itself, allowing you to create
-new applications.
+new instances.
 
 `cubicweb-dev` installs the development environment allowing you to
 develop new cubes.
@@ -112,7 +112,7 @@ your development environment ::
     export PYTHONPATH=/full/path/to/cubicweb-forest
 
 If you installed *CubicWeb* with packages, no configuration is required and your
-new cubes will be placed in `/usr/share/cubicweb/cubes` and your applications
+new cubes will be placed in `/usr/share/cubicweb/cubes` and your instances
 will be placed in `/etc/cubicweb.d`.
 
 You may run a system-wide install of *CubicWeb* in "user mode" and use it for
@@ -181,7 +181,7 @@ Postgres configuration
 
   This login/password will be requested when you will create an
   instance with `cubicweb-ctl create` to initialize the database of
-  your application.
+  your instance.
 
 .. note::
     The authentication method can be configured in ``pg_hba.conf``.

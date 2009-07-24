@@ -43,7 +43,7 @@ DEFAULT_SOURCES = {'system': {'adapter' : 'native',
 class TestServerConfiguration(ServerConfiguration):
     mode = 'test'
     set_language = False
-    read_application_schema = False
+    read_instance_schema = False
     bootstrap_schema = False
     init_repository = True
     options = merge_options(ServerConfiguration.options + (
@@ -77,12 +77,12 @@ class TestServerConfiguration(ServerConfiguration):
     def apphome(self):
         if exists(self.appid):
             return abspath(self.appid)
-        # application cube test
+        # cube test
         return abspath('..')
     appdatahome = apphome
 
     def main_config_file(self):
-        """return application's control configuration file"""
+        """return instance's control configuration file"""
         return join(self.apphome, '%s.conf' % self.name)
 
     def instance_md5_version(self):
@@ -149,7 +149,7 @@ class BaseApptestConfiguration(TestServerConfiguration, TwistedConfiguration):
         return ('en', 'fr', 'de')
 
     def ext_resources_file(self):
-        """return application's external resources file"""
+        """return instance's external resources file"""
         return join(self.apphome, 'data', 'external_resources')
 
     def pyro_enabled(self):
@@ -235,14 +235,14 @@ class LivetestConfiguration(BaseApptestConfiguration):
         # XXX I'm afraid this test will prevent to run test from a production
         # environment
         self._sources = None
-        # application cube test
+        # instance cube test
         if cube is not None:
             self.apphome = self.cube_dir(cube)
         elif 'web' in os.getcwd().split(os.sep):
             # web test
             self.apphome = join(normpath(join(dirname(__file__), '..')), 'web')
         else:
-            # application cube test
+            # cube test
             self.apphome = abspath('..')
         self.sourcefile = sourcefile
         self.global_set_option('realm', '')

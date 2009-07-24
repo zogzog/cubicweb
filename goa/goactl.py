@@ -172,13 +172,13 @@ def create_init_file(pkgdir, pkgname):
 
 
 class NewGoogleAppCommand(Command):
-    """Create a new google appengine application.
+    """Create a new google appengine instance.
 
-    <application directory>
-      the path to the appengine application directory
+    <instance directory>
+      the path to the appengine instance directory
     """
     name = 'newgapp'
-    arguments = '<application directory>'
+    arguments = '<instance directory>'
 
     def run(self, args):
         if len(args) != 1:
@@ -187,7 +187,7 @@ class NewGoogleAppCommand(Command):
         appldir = normpath(abspath(appldir))
         appid = basename(appldir)
         context = {'appname': appid}
-        # goa application'skeleton
+        # goa instance'skeleton
         copy_skeleton(join(CW_SOFTWARE_ROOT, 'goa', 'skel'),
                       appldir, context, askconfirm=True)
         # cubicweb core dependancies

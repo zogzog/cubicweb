@@ -37,7 +37,7 @@ def skip_types(req):
 
 class SchemaView(tabs.TabsMixin, StartupView):
     id = 'schema'
-    title = _('application schema')
+    title = _('instance schema')
     tabs = [_('schema-text'), _('schema-image')]
     default_tab = 'schema-text'
 
@@ -59,7 +59,7 @@ class SchemaTabImageView(StartupView):
                % xml_escape(self.build_url('view', vid='schemagraph', skipmeta=0)))
         self.w(u'<img src="%s" alt="%s"/>\n' % (
             xml_escape(self.req.build_url('view', vid='schemagraph', skipmeta=1)),
-            self.req._("graphical representation of the application'schema")))
+            self.req._("graphical representation of the instance'schema")))
 
 
 class SchemaTabTextView(StartupView):

@@ -12,11 +12,11 @@ if __name__ == '__main__':
     from cubicweb.goa.goaconfig import GAEConfiguration
     from cubicweb.goa.dbinit import create_user, create_groups
 
-    # compute application's root directory
+    # compute instance's root directory
     APPLROOT = dirname(abspath(__file__))
     # apply monkey patches first
     goa.do_monkey_patch()
-    # get application's configuration (will be loaded from app.conf file)
+    # get instance's configuration (will be loaded from app.conf file)
     GAEConfiguration.ext_resources['JAVASCRIPTS'].append('DATADIR/goa.js')
     config = GAEConfiguration('toto', APPLROOT)
     # create default groups

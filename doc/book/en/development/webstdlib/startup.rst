@@ -9,5 +9,5 @@ Views that don't apply to a result set
     a result set to apply to.
 
 *schema*
-    A view dedicated to the display of the schema of the application
+    A view dedicated to the display of the schema of the instance
 

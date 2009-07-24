@@ -1,4 +1,4 @@
-"""This module provides misc utilities to test applications
+"""This module provides misc utilities to test instances
 
 :organization: Logilab
 :copyright: 2001-2009 LOGILAB S.A. (Paris, FRANCE), license is LGPL v2.
@@ -59,7 +59,7 @@ cwconfig.SMTP = MockSMTP
 
 
 def get_versions(self, checkversions=False):
-    """return the a dictionary containing cubes used by this application
+    """return the a dictionary containing cubes used by this instance
     as key with their version as value, including cubicweb version. This is a
     public method, not requiring a session id.
 
@@ -406,7 +406,7 @@ class RepositoryBasedTC(TestCase):
         rset.vreg = self.vreg
         rset.req = self.session
         # call to set_pool is necessary to avoid pb when using
-        # application entities for convenience
+        # instance entities for convenience
         self.session.set_pool()
         return rset
 

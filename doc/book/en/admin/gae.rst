@@ -126,14 +126,14 @@ Ignore the errors that print "No translation file found for domain
 'cubicweb'". They disappear after the first run of i18ninstance.
 
 .. note:: The command  myapp/bin/laxctl i18ncube needs to be executed
-   only if your application is using cubes from cubicweb-apps.
+   only if your instance is using cubes from cubicweb-apps.
    Otherwise, please skip it.
 
-You will never need to add new entries in the translation catalog. Instead we would
-recommand you to use ``self.req._("msgId")`` in your application code
-to flag new message id to add to the catalog, where ``_`` refers to
-xgettext that is used to collect new strings to translate.
-While running ``laxctl i18ncube``, new string will be added to the catalogs.
+You will never need to add new entries in the translation catalog. Instead we
+would recommand you to use ``self.req._("msgId")`` in your code to flag new
+message id to add to the catalog, where ``_`` refers to xgettext that is used to
+collect new strings to translate.  While running ``laxctl i18ncube``, new string
+will be added to the catalogs.
 
 Generating the data directory
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -152,18 +152,18 @@ be generated from the command line::
 
   $ python myapp/bin/laxctl genschema
 
-Application configuration
+Instance configuration
 -------------------------
 
 Authentication
 ~~~~~~~~~~~~~~
 
-You have the option of using or not google authentication for your application.
+You have the option of using or not google authentication for your instance.
 This has to be define in ``app.conf`` and ``app.yaml``.
 
 In ``app.conf`` modify the following variable::
  
-  # does this application rely on google authentication service or not.
+  # does this instance rely on google authentication service or not.
   use-google-auth=no
 
 In ``app.yaml`` comment the `login: required` set by default in the handler::
@@ -177,7 +177,7 @@ In ``app.yaml`` comment the `login: required` set by default in the handler::
 
 
 
-Quickstart : launch the application
+Quickstart : launch the instance
 -----------------------------------
 
 On Mac OS X platforms, drag that directory on the
@@ -189,7 +189,7 @@ On Unix and Windows platforms, run it with the dev_appserver::
 
 Once the local server is started, visit `http://MYAPP_URL/_load <http://localhost:8080/_load>`_ and sign in as administrator.
 This will initialize the repository and enable you to log in into
-the application and continue the installation.
+the instance and continue the installation.
 
 You should be redirected to a page displaying a message `content initialized`.
 
