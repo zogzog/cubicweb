@@ -477,7 +477,7 @@ function inlineValidateAttributeForm(rtype, eid, divid, reload, default_value) {
     d.addCallback(function (result, req) {
         handleFormValidationResponse(divid+'-form', noop, noop, result);
 	if (reload) {
-	    document.location.href = result[1];
+	    document.location.href = result[1].split('?')[0];
 	} else {
 	    var fieldview = getNode('value-' + divid);
 	    // XXX using innerHTML is very fragile and won't work if
