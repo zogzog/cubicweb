@@ -7,6 +7,8 @@
 """
 __docformat__ = "restructuredtext en"
 
+from datetime import datetime
+
 from cubicweb import RepositoryError
 from cubicweb.common.uilib import soup2xhtml
 from cubicweb.server.hooksmanager import Hook
