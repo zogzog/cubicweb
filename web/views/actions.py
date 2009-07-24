@@ -66,7 +66,7 @@ def addable_etype_empty_rset(cls, req, rset=None, **kwargs):
                 return 1
     return 0
 
-# generic primary actions #####################################################
+# generic 'main' actions #######################################################
 
 class SelectAction(Action):
     """base class for link search actions. By default apply on
@@ -146,7 +146,7 @@ class MultipleEditAction(Action):
         return self.build_url('view', rql=self.rset.rql, vid='muledit')
 
 
-# generic secondary actions ###################################################
+# generic "more" actions #######################################################
 
 class ManagePermissionsAction(Action):
     id = 'managepermission'
