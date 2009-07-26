@@ -125,7 +125,7 @@ def sql_source_backup(source, sqladapter, confirm, backupfile,
     if exists(backupfile):
         if not confirm('backup file %s exists, overwrite it?' % backupfile):
             return
-    elif askconfirm and not confirm('backup %s %database?'
+    elif askconfirm and not confirm('backup %s database?'
                                     % source.repo.config.appid):
         return
     # should close opened connection before backuping
