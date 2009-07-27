@@ -85,6 +85,8 @@ class FormRenderer(AppRsetObject):
         return '\n'.join(data)
 
     def render_label(self, form, field):
+        if field.label is None:
+            return u''
         label = self.req._(field.label)
         attrs = {'for': form.context[field]['id']}
         if field.required:
