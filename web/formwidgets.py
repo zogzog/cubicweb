@@ -224,7 +224,7 @@ class CheckBox(Input):
     def render(self, form, field):
         name, curvalues, attrs = self._render_attrs(form, field)
         domid = attrs.pop('id', None)
-        sep = attrs.pop('separator', u'<br/>')
+        sep = attrs.pop('separator', u'<br/>\n')
         options = []
         for i, option in enumerate(field.vocabulary(form)):
             try:
@@ -239,8 +239,8 @@ class CheckBox(Input):
             if value in curvalues:
                 iattrs['checked'] = u'checked'
             tag = tags.input(name=name, type=self.type, value=value, **iattrs)
-            options.append(tag + label + sep)
-        return '\n'.join(options)
+            options.append(tag + label)
+        return sep.join(options)
 
 
 class Radio(CheckBox):
