@@ -194,7 +194,6 @@ class ClickAndEditFormView(FormViewMixIn, EntityView):
         cancelclick = "hideInlineEdit(%s,\'%s\',\'%s\')" % (
             entity.eid, rtype, divid)
         form = self.vreg.select('forms', 'base', self.req, entity=entity,
-                                attrcategories=self.attrcategories,
                                 domid='%s-form' % divid, cssstyle='display: none',
                                 onsubmit=onsubmit, action='#',
                                 form_buttons=[SubmitButton(),
