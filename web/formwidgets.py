@@ -10,7 +10,7 @@ __docformat__ = "restructuredtext en"
 from datetime import date
 from warnings import warn
 
-from cubicweb.common import tags
+from cubicweb.common import tags, uilib
 from cubicweb.web import stdmsgs, INTERNAL_FIELD_VALUE
 
 
@@ -190,17 +190,24 @@ class Select(FieldWidget):
             attrs['size'] = self._multiple and '5' or '1'
         options = []
         optgroup_opened = False
-        for label, value in field.vocabulary(form):
+        for option in field.vocabulary(form):
+            try:
+                label, value, oattrs = option
+            except ValueError:
+                label, value = option
+                oattrs = {}
             if value is None:
                 # handle separator
                 if optgroup_opened:
                     options.append(u'</optgroup>')
-                options.append(u'<optgroup label="%s">' % (label or ''))
+                oattrs.setdefault('label', label or '')
+                options.append(u'<optgroup %s>' % uilib.sgml_attributes(oattrs))
                 optgroup_opened = True
             elif value in curvalues:
-                options.append(tags.option(label, value=value, selected='selected'))
+                options.append(tags.option(label, value=value,
+                                           selected='selected', **oattrs))
             else:
-                options.append(tags.option(label, value=value))
+                options.append(tags.option(label, value=value, **oattrs))
         if optgroup_opened:
             options.append(u'</optgroup>')
         return tags.select(name=name, multiple=self._multiple,
@@ -219,10 +226,16 @@ class CheckBox(Input):
         domid = attrs.pop('id', None)
         sep = attrs.pop('separator', u'<br/>')
         options = []
-        for i, (label, value) in enumerate(field.vocabulary(form)):
+        for i, option in enumerate(field.vocabulary(form)):
+            try:
+                label, value, oattrs = option
+            except ValueError:
+                label, value = option
+                oattrs = {}
             iattrs = attrs.copy()
+            iattrs.update(oattrs)
             if i == 0 and domid is not None:
-                iattrs['id'] = domid
+                iattrs.setdefault('id', domid)
             if value in curvalues:
                 iattrs['checked'] = u'checked'
             tag = tags.input(name=name, type=self.type, value=value, **iattrs)
