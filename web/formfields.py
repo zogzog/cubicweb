@@ -161,7 +161,13 @@ class Field(object):
         """render this field, which is part of form, using the given form
         renderer
         """
-        return self.get_widget(form).render(form, self)
+        widget = self.get_widget(form)
+        try:
+            return widget.render(form, self, renderer)
+        except TypeError:
+            warn('widget.render now take the renderer as third argument, please update %s implementation'
+                 % widget.__class__.__name__, DeprecationWarning)
+            return widget.render(form, self)
 
     def vocabulary(self, form):
         """return vocabulary for this field. This method will be called by
@@ -290,7 +296,7 @@ class RichTextField(StringField):
             result = format_field.render(form, renderer)
         else:
             result = u''
-        return result + self.get_widget(form).render(form, self)
+        return result + self.get_widget(form).render(form, self, renderer)
 
 
 class FileField(StringField):
@@ -310,7 +316,7 @@ class FileField(StringField):
             yield self.encoding_field
 
     def render(self, form, renderer):
-        wdgs = [self.get_widget(form).render(form, self)]
+        wdgs = [self.get_widget(form).render(form, self, renderer)]
         if self.format_field or self.encoding_field:
             divid = '%s-advanced' % form.context[self]['name']
             wdgs.append(u'<a href="%s" title="%s"><img src="%s" alt="%s"/></a>' %
@@ -364,7 +370,7 @@ class EditableFileField(FileField):
                             'You can either submit a new file using the browse button above'
                             ', or edit file content online with the widget below.')
                     wdgs.append(u'<p><b>%s</b></p>' % msg)
-                    wdgs.append(TextArea(setdomid=False).render(form, self))
+                    wdgs.append(TextArea(setdomid=False).render(form, self, renderer))
                     # XXX restore form context?
         return '\n'.join(wdgs)
 

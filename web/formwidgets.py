@@ -43,7 +43,7 @@ class FieldWidget(object):
         if self.needs_css:
             form.req.add_css(self.needs_css)
 
-    def render(self, form, field):
+    def render(self, form, field, renderer):
         """render the widget for the given `field` of `form`.
         To override in concrete class
         """
@@ -68,7 +68,7 @@ class Input(FieldWidget):
     """abstract widget class for <input> tag based widgets"""
     type = None
 
-    def render(self, form, field):
+    def render(self, form, field, renderer):
         """render the widget for the given `field` of `form`.
 
         Generate one <input> tag for each field's value
@@ -96,7 +96,7 @@ class PasswordInput(Input):
     """
     type = 'password'
 
-    def render(self, form, field):
+    def render(self, form, field, renderer):
         self.add_media(form)
         name, values, attrs = self._render_attrs(form, field)
         assert len(values) == 1
@@ -105,9 +105,11 @@ class PasswordInput(Input):
             confirmname = '%s-confirm:%s' % tuple(name.rsplit(':', 1))
         except TypeError:
             confirmname = '%s-confirm' % name
-        inputs = [tags.input(name=name, value=values[0], type=self.type, id=id, **attrs),
+        inputs = [tags.input(name=name, value=values[0], type=self.type, id=id,
+                             **attrs),
                   '<br/>',
-                  tags.input(name=confirmname, value=values[0], type=self.type, **attrs),
+                  tags.input(name=confirmname, value=values[0], type=self.type,
+                             **attrs),
                   '&nbsp;', tags.span(form.req._('confirm password'),
                                       **{'class': 'emphasis'})]
         return u'\n'.join(inputs)
@@ -147,7 +149,7 @@ class ButtonInput(Input):
 class TextArea(FieldWidget):
     """<textarea>"""
 
-    def render(self, form, field):
+    def render(self, form, field, renderer):
         name, values, attrs = self._render_attrs(form, field)
         attrs.setdefault('onkeyup', 'autogrow(this)')
         if not values:
@@ -171,9 +173,9 @@ class FCKEditor(TextArea):
         super(FCKEditor, self).__init__(*args, **kwargs)
         self.attrs['cubicweb:type'] = 'wysiwyg'
 
-    def render(self, form, field):
+    def render(self, form, field, renderer):
         form.req.fckeditor_config()
-        return super(FCKEditor, self).render(form, field)
+        return super(FCKEditor, self).render(form, field, renderer)
 
 
 class Select(FieldWidget):
@@ -184,7 +186,7 @@ class Select(FieldWidget):
         super(Select, self).__init__(attrs)
         self._multiple = multiple
 
-    def render(self, form, field):
+    def render(self, form, field, renderer):
         name, curvalues, attrs = self._render_attrs(form, field)
         if not 'size' in attrs:
             attrs['size'] = self._multiple and '5' or '1'
@@ -221,7 +223,7 @@ class CheckBox(Input):
     type = 'checkbox'
     vocabulary_widget = True
 
-    def render(self, form, field):
+    def render(self, form, field, renderer):
         name, curvalues, attrs = self._render_attrs(form, field)
         domid = attrs.pop('id', None)
         sep = attrs.pop('separator', u'<br/>\n')
@@ -275,8 +277,8 @@ class DateTimePicker(TextInput):
         req.html_headers.define_var('MONTHNAMES', monthnames)
         req.html_headers.define_var('DAYNAMES', daynames)
 
-    def render(self, form, field):
-        txtwidget = super(DateTimePicker, self).render(form, field)
+    def render(self, form, field, renderer):
+        txtwidget = super(DateTimePicker, self).render(form, field, renderer)
         self.add_localized_infos(form.req)
         cal_button = self._render_calendar_popup(form, field)
         return txtwidget + cal_button
@@ -315,7 +317,7 @@ class AjaxWidget(FieldWidget):
         if inputid is not None:
             self.attrs['cubicweb:inputid'] = inputid
 
-    def render(self, form, field):
+    def render(self, form, field, renderer):
         self.add_media(form)
         attrs = self._render_attrs(form, field)[-1]
         return tags.div(**attrs)
@@ -386,8 +388,8 @@ class AddComboBoxWidget(Select):
         etype_from = entity.e_schema.subject_relation(self.name).objects(entity.e_schema)[0]
         attrs['cubicweb:etype_from'] = etype_from
 
-    def render(self, form, field):
-        return super(AddComboBoxWidget, self).render(form, field) + u'''
+    def render(self, form, field, renderer):
+        return super(AddComboBoxWidget, self).render(form, field, renderer) + u'''
 <div id="newvalue">
   <input type="text" id="newopt" />
   <a href="javascript:noop()" id="add_newopt">&nbsp;</a></div>
@@ -413,7 +415,7 @@ class Button(Input):
         self.cwaction = cwaction
         self.attrs.setdefault('klass', 'validateButton')
 
-    def render(self, form, field=None):
+    def render(self, form, field=None, renderer=None):
         label = form.req._(self.label)
         attrs = self.attrs.copy()
         if self.cwaction:
@@ -456,7 +458,7 @@ class ImgButton(object):
         self.imgressource = imgressource
         self.label = label
 
-    def render(self, form, field=None):
+    def render(self, form, field=None, renderer=None):
         label = form.req._(self.label)
         imgsrc = form.req.external_resource(self.imgressource)
         return '<a id="%(domid)s" href="%(href)s">'\
