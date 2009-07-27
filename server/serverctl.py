@@ -505,6 +505,7 @@ def _local_dump(appid, output):
 def _local_restore(appid, backupfile, drop, systemonly=True):
     config = ServerConfiguration.config_for(appid)
     config.verbosity = 1 # else we won't be asked for confirmation on problems
+    config.repairing = 1 # don't check versions
     # schema=1 to avoid unnecessary schema loading
     mih = config.migration_handler(connect=False, schema=1, verbosity=1)
     mih.restore_database(backupfile, drop, systemonly, askconfirm=False)
