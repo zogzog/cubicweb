@@ -7,7 +7,7 @@
 """
 __docformat__ = "restructuredtext en"
 
-from cubicweb.common.uilib import simple_sgml_tag
+from cubicweb.common.uilib import simple_sgml_tag, sgml_attributes
 
 class tag(object):
     def __init__(self, name, escapecontent=True):
@@ -38,8 +38,7 @@ def select(name, id=None, multiple=False, options=[], **attrs):
     if id:
         attrs['id'] = id
     attrs['name'] = name
-    html = [u'<select %s>' % ' '.join('%s="%s"' % kv
-                                      for kv in sorted(attrs.items()))]
+    html = [u'<select %s>' % sgml_attributes(attrs)]
     html += options
     html.append(u'</select>')
     return u'\n'.join(html)
