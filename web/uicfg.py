@@ -113,9 +113,9 @@ for rtype in ('eid', 'creation_date', 'modification_date', 'cwuri',
 primaryview_section.tag_subject_of(('*', 'use_email', '*'), 'attributes')
 primaryview_section.tag_subject_of(('*', 'primary_email', '*'), 'hidden')
 
-for attr in ('name', 'meta', 'final'):
+for attr in ('name', 'final'):
     primaryview_section.tag_attribute(('CWEType', attr), 'hidden')
-for attr in ('name', 'meta', 'final', 'symetric', 'inlined'):
+for attr in ('name', 'final', 'symetric', 'inlined'):
     primaryview_section.tag_attribute(('CWRType', attr), 'hidden')
 
 
