@@ -212,6 +212,11 @@ def cut(text, length):
 HTML4_EMPTY_TAGS = frozenset(('base', 'meta', 'link', 'hr', 'br', 'param',
                               'img', 'area', 'input', 'col'))
 
+def sgml_attributes(attrs):
+    return u' '.join(u'%s="%s"' % (attr, xml_escape(unicode(value)))
+                     for attr, value in sorted(attrs.items())
+                     if value is not None)
+
 def simple_sgml_tag(tag, content=None, escapecontent=True, **attrs):
     """generation of a simple sgml tag (eg without children tags) easier
 
@@ -223,9 +228,7 @@ def simple_sgml_tag(tag, content=None, escapecontent=True, **attrs):
             attrs['class'] = attrs.pop('klass')
         except KeyError:
             pass
-        value += u' ' + u' '.join(u'%s="%s"' % (attr, xml_escape(unicode(value)))
-                                  for attr, value in sorted(attrs.items())
-                                  if value is not None)
+        value += u' ' + sgml_attributes(attrs)
     if content:
         if escapecontent:
             content = xml_escape(unicode(content))
