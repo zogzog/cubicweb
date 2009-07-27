@@ -122,7 +122,7 @@ class IDownloadableLineView(baseviews.OneLineView):
     __select__ = implements(IDownloadable)
 
     def cell_call(self, row, col, title=None, **kwargs):
-        """the oneline view is a link to download the file"""
+        """the secondary view is a link to download the file"""
         entity = self.entity(row, col)
         url = xml_escape(entity.absolute_url())
         name = xml_escape(title or entity.download_file_name())
@@ -144,9 +144,21 @@ class ImageView(EntityView):
             self.wview(self.id, rset, row=i, col=0)
             self.w(u'</div>')
 
-    def cell_call(self, row, col):
+    def cell_call(self, row, col, width=None, height=None, link=False):
         entity = self.entity(row, col)
         #if entity.data_format.startswith('image/'):
-        self.w(u'<img src="%s" alt="%s"/>' % (xml_escape(entity.download_url()),
-                                              xml_escape(entity.download_file_name())))
+        imgtag = u'<img src="%s" alt="%s" ' % (xml_escape(entity.download_url()),
+                                               xml_escape(entity.download_file_name()))
+        if width:
+            imgtag += u'width="%i" ' % width
+        if height:
+            imgtag += u'height="%i" ' % height
+        imgtag += u'/>'
+        if link:
+            self.w(u'<a href="%s" alt="%s">%s</a>' % (entity.absolute_url(vid='download'),
+                                                      self.req._('download image'),
+                                                      imgtag))
+        else:
+            self.w(imgtag)
+
 
