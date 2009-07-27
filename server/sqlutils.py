@@ -123,10 +123,11 @@ def sqldropschema(schema, driver, text_index=True,
 def sql_source_backup(source, sqladapter, confirm, backupfile,
                       askconfirm=False):
     if exists(backupfile):
-        if not confirm('backup file %s exists, overwrite it?' % backupfile):
+        if not confirm('Backup file %s exists, overwrite it?' % backupfile):
             return
-    elif askconfirm and not confirm('backup %s %database?'
+    elif askconfirm and not confirm('Backup %s database?'
                                     % source.repo.config.appid):
+        print '-> no backup done.'
         return
     # should close opened connection before backuping
     source.close_pool_connections()
@@ -140,7 +141,7 @@ def sql_source_restore(source, sqladapter, confirm, backupfile, drop=True,
     if not exists(backupfile):
         raise Exception("backup file %s doesn't exist" % backupfile)
     app = source.repo.config.appid
-    if askconfirm and not confirm('restore %s %s database from %s ?'
+    if askconfirm and not confirm('Restore %s %s database from %s ?'
                                   % (app, source.uri, backupfile)):
         return
     # should close opened connection before restoring
@@ -201,15 +202,15 @@ class SQLAdapterMixIn(object):
         while True:
             print cmd
             if os.system(cmd):
-                print 'error while backuping the base'
-                answer = confirm('continue anyway?',
+                print '-> error while backuping the base'
+                answer = confirm('Continue anyway?',
                                  shell=False, abort=False, retry=True)
                 if not answer:
                     raise SystemExit(1)
                 if answer == 1: # 1: continue, 2: retry
                     break
             else:
-                print 'database backup:', backupfile
+                print '-> backup file',  backupfile
                 restrict_perms_to_user(backupfile, self.info)
                 break
 

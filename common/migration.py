@@ -69,7 +69,7 @@ def execscript_confirm(scriptpath):
     ability to show the script's content
     """
     while True:
-        confirm = raw_input('** execute %r (Y/n/s[how]) ?' % scriptpath)
+        confirm = raw_input('Execute %r (Y/n/s[how]) ?' % scriptpath)
         confirm = confirm.strip().lower()
         if confirm in ('n', 'no'):
             return False
@@ -172,7 +172,7 @@ class MigrationHelper(object):
 
     def interact(self, args, kwargs, meth):
         """execute the given method according to user's confirmation"""
-        msg = 'execute command: %s(%s) ?' % (
+        msg = 'Execute command: %s(%s) ?' % (
             meth.__name__[4:],
             ', '.join([repr(arg) for arg in args] +
                       ['%s=%r' % (n,v) for n,v in kwargs.items()]))

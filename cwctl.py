@@ -614,6 +614,7 @@ given, appropriate sources for migration will be automatically selected \
         return InstanceCommand.ordered_instances(self)
 
     def upgrade_instance(self, appid):
+        print '\n' + underline_title('Upgrading the instance %s' % appid)
         from logilab.common.changelog import Version
         config = cwcfg.config_for(appid)
         config.repairing = True # notice we're not starting the server
@@ -624,11 +625,9 @@ given, appropriate sources for migration will be automatically selected \
             # not a server config
             pass
         # get instance and installed versions for the server and the componants
-        print 'getting versions configuration from the repository...'
         mih = config.migration_handler()
         repo = mih.repo_connect()
         vcconf = repo.get_versions()
-        print 'done'
         if self.config.force_componant_version:
             packversions = {}
             for vdef in self.config.force_componant_version:
@@ -654,10 +653,11 @@ given, appropriate sources for migration will be automatically selected \
         if cubicwebversion > applcubicwebversion:
             toupgrade.append(('cubicweb', applcubicwebversion, cubicwebversion))
         if not self.config.fs_only and not toupgrade:
-            print 'no software migration needed for instance %s' % appid
+            print '-> no software migration needed for instance %s.' % appid
             return
         for cube, fromversion, toversion in toupgrade:
-            print '**** %s migration %s -> %s' % (cube, fromversion, toversion)
+            print '\n' + underline_title('%s migration %s -> %s' %
+                                         (cube, fromversion, toversion))
         # only stop once we're sure we have something to do
         if not (cwcfg.mode == 'dev' or self.config.nostartstop):
             self.stop_instance(appid)
@@ -675,13 +675,13 @@ given, appropriate sources for migration will be automatically selected \
         errors = config.i18ncompile(langs)
         if errors:
             print '\n'.join(errors)
-            if not confirm('error while compiling message catalogs, '
+            if not confirm('Error while compiling message catalogs, '
                            'continue anyway ?'):
-                print 'migration not completed'
+                print '-> migration not completed.'
                 return
         mih.shutdown()
         print
-        print 'instance migrated'
+        print '-> instance migrated.'
         if not (cwcfg.mode == 'dev' or self.config.nostartstop):
             self.start_instance(appid)
         print
