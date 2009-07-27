@@ -252,6 +252,51 @@ class Radio(CheckBox):
     type = 'radio'
 
 
+# compound widgets #############################################################
+
+class IntervalWidget(FieldWidget):
+    """custom widget to display an interval composed by 2 fields. This widget
+    is expected to be used with a CompoundField containing the two actual
+    fields.
+
+    Exemple usage::
+
+from uicfg import autoform_field, autoform_section
+autoform_field.tag_attribute(('Concert', 'minprice'),
+                              CompoundField(fields=(IntField(name='minprice'),
+                                                    IntField(name='maxprice')),
+                                            label=_('price'),
+                                            widget=IntervalWidget()
+                                            ))
+# we've to hide the other field manually for now
+autoform_section.tag_attribute(('Concert', 'maxprice'), 'generated')
+    """
+    def render(self, form, field, renderer):
+        actual_fields = field.fields
+        assert len(actual_fields) == 2
+        return u'<div>%s %s %s %s</div>' % (
+            form.req._('from_interval_start'),
+            actual_fields[0].render(form, renderer),
+            form.req._('to_interval_end'),
+            actual_fields[1].render(form, renderer),
+            )
+
+
+class HorizontalLayoutWidget(FieldWidget):
+    """custom widget to display a set of fields grouped together horizontally
+    in a form. See `IntervalWidget` for example usage.
+    """
+    def render(self, form, field, renderer):
+        if self.attrs.get('display_label', True):
+            subst = self.attrs.get('label_input_substitution', '%(label)s %(input)s')
+            fields = [subst % {'label': renderer.render_label(form, f),
+                              'input': f.render(form, renderer)}
+                      for f in field.fields]
+        else:
+            fields = [f.render(form, renderer) for f in field.fields]
+        return u'<div>%s</div>' % ' '.join(fields)
+
+
 # javascript widgets ###########################################################
 
 class DateTimePicker(TextInput):

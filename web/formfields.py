@@ -473,6 +473,15 @@ class RelationField(Field):
         return value
 
 
+class CompoundField(Field):
+    def __init__(self, fields, *args, **kwargs):
+        super(CompoundField, self).__init__(*args, **kwargs)
+        self.fields = fields
+
+    def actual_fields(self, form):
+        return [self] + list(self.fields)
+
+
 def guess_field(eschema, rschema, role='subject', skip_meta_attr=True, **kwargs):
     """return the most adapated widget to edit the relation
     'subjschema rschema objschema' according to information found in the schema
