@@ -63,6 +63,8 @@ class Field(object):
     :role:
        when the field is linked to an entity attribute or relation, tells the
        role of the entity in the relation (eg 'subject' or 'object')
+    :fieldset:
+       optional fieldset to which this field belongs to
 
     """
     # default widget associated to this class of fields. May be overriden per
@@ -76,7 +78,7 @@ class Field(object):
     def __init__(self, name=None, id=None, label=None, help=None,
                  widget=None, required=False, initial=None,
                  choices=None, sort=True, internationalizable=False,
-                 eidparam=False, role='subject'):
+                 eidparam=False, role='subject', fieldset=None):
         self.name = name
         self.id = id or name
         self.label = label or name
@@ -88,6 +90,7 @@ class Field(object):
         self.internationalizable = internationalizable
         self.eidparam = eidparam
         self.role = role
+        self.fieldset = fieldset
         self.init_widget(widget)
         # ordering number for this field instance
         self.creation_rank = Field.__creation_rank
