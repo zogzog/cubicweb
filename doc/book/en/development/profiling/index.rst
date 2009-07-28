@@ -23,7 +23,9 @@ The structure of each line is::
 
 CubicWeb also provides the **exlog** command to examine and summarize data found
 in such a file:
-::
+
+.. sourcecode:: sh
+
     $ cubicweb-ctl exlog < ~/myapp-rql.log
     0.07 50 Any A WHERE X eid %(x)s, X firstname A {}
     0.05 50 Any A WHERE X eid %(x)s, X lastname A {}
@@ -35,9 +37,9 @@ in such a file:
 This command sorts and uniquifies queries so that it's easy to see where
 is the hot spot that needs optimization.
 
-Having said all this, it would probably be worth talking about the **fetch_attrs** attribute
-you can define in your entity classes because it can greatly reduce the
-number of queries executed. XXX say more about it XXX
+Do not neglect to set the **fetch_attrs** attribute you can define in your
+entity classes because it can greatly reduce the number of queries executed (see
+:ref:`FetchAttrs`).
 
 You should also know about the **profile** option in the ``all-in-on.conf``. If
 set, this option will make your application run in an `hotshot`_ session and
