@@ -403,7 +403,7 @@ class MainTemplate(View):
 
     @property
     def doctype(self):
-        if self.req.xhtml_browser():
+        if not self.config['force-html-content-type'] and self.req.xhtml_browser():
             return STRICT_DOCTYPE
         return STRICT_DOCTYPE_NOEXT
 

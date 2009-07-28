@@ -13,7 +13,9 @@ from logilab.mtconverter import xml_escape
 from cubicweb.vregistry import objectify_selector
 from cubicweb.selectors import match_kwargs
 from cubicweb.view import View, MainTemplate, NOINDEX, NOFOLLOW
+from cubicweb.web.views.basecontrollers import xhtml_wrap_header, xhtml_wrap_tail
 from cubicweb.utils import make_uid, UStringIO
+
 
 # main templates ##############################################################
 
@@ -83,15 +85,12 @@ class NonTemplatableViewTemplate(MainTemplate):
     def call(self, view):
         view.set_request_content_type()
         view.set_stream()
-        xhtml_wrap = (self.req.form.has_key('__notemplate') and view.templatable
-                      and view.content_type == self.req.html_content_type())
-        if xhtml_wrap:
-            view.w(u'<?xml version="1.0"?>\n' + self.doctype)
-            view.w(u'<div xmlns="http://www.w3.org/1999/xhtml" xmlns:cubicweb="http://www.logilab.org/2008/cubicweb">')
-        # have to replace our unicode stream using view's binary stream
-        view.render()
-        if xhtml_wrap:
-            view.w(u'</div>')
+        if view.content_type == self.req.html_content_type():
+            view.w(xhtml_wrap_header(self))
+            view.render()
+            view.w(xhtml_wrap_tail(self))
+        else:
+            view.render()
         self._stream = view._stream
 
 
