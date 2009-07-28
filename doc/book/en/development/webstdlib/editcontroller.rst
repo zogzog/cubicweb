@@ -1,4 +1,5 @@
 .. -*- coding: utf-8 -*-
+
 The 'edit' controller (:mod:`cubicweb.web.views.editcontroller`)
 ----------------------------------------------------------------
 

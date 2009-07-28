@@ -1,4 +1,5 @@
 .. -*- coding: utf-8 -*-
+
 URL Rewriting (:mod:`cubicweb.web.views.urlpublish`) and (:mod:`cubicweb.web.views.urlrewrite`)
 ------------------------------------------------------------------------------------------------
 

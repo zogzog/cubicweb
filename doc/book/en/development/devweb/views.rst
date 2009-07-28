@@ -1,3 +1,6 @@
+
+.. _Views:
+
 Views
 -----
 
@@ -76,8 +79,7 @@ Examples of views class
 
 - Using `templatable`, `content_type` and HTTP cache configuration
 
-.. code-block:: python
-
+.. sourcecode:: python
 
     class RSSView(XMLView):
         id = 'rss'
@@ -88,11 +90,9 @@ Examples of views class
         cache_max_age = 60*60*2 # stay in http cache for 2 hours by default
 
 
-
 - Using custom selector
 
-.. code-block:: python
-
+.. sourcecode:: python
 
     class SearchForAssociationView(EntityView):
         """view called by the edition view when the user asks
@@ -112,9 +112,9 @@ contredicts our advise of not modifying it.
 We'll show you now an example of a ``primary`` view and how to customize it.
 
 If you want to change the way a ``BlogEntry`` is displayed, just override
-the method ``cell_call()`` of the view ``primary`` in ``BlogDemo/views.py`` ::
+the method ``cell_call()`` of the view ``primary`` in ``BlogDemo/views.py``:
 
-.. code-block:: python
+.. sourcecode:: python
 
    from cubicweb.view import EntityView
    from cubicweb.selectors import implements
@@ -148,7 +148,7 @@ page is now looking much nicer. [FIXME: it is not clear to what this refers.]
 
 Let us now improve the primary view of a blog
 
-.. code-block:: python
+.. sourcecode:: python
 
  class BlogPrimaryView(EntityView):
      id = 'primary'
@@ -215,9 +215,9 @@ and show that ajax comes for free.
 [FILLME]
 
 
-
 XML views, binaries...
 ----------------------
+
 For views generating other formats than HTML (an image generated dynamically
 for example), and which can not simply be included in the HTML page generated
 by the main template (see above), you have to:

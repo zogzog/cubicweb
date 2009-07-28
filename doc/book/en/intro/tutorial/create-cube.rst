@@ -14,7 +14,7 @@ cube::
 
 This will create in the cubes directory (``/path/to/forest/cubes`` for Mercurial
 installation, ``/usr/share/cubicweb/cubes`` for debian packages installation)
-a directory named ``blog`` reflecting the structure described in :ref:`cubesConcepts`.
+a directory named ``blog`` reflecting the structure described in :ref:`Concepts`.
 
 .. _DefineDataModel:
 
@@ -268,6 +268,7 @@ data, we have to recover the entity from its (row,col)-coordinates.
 The view has a ``self.w()`` method that is used to output data, in our
 example HTML output.
 
-You can find more details about views and selectors in :ref:`ViewDefinition`.
+.. note::
+   You can find more details about views and selectors in :ref:`ViewDefinition`.
 
 

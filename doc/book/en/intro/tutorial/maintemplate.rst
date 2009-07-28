@@ -89,9 +89,9 @@ Customize footer
 ````````````````
 
 If you want to change the footer for example, look
-for HTMLPageFooter and override it in your views file as in: ::
+for HTMLPageFooter and override it in your views file as in:
 
-..code-block :: python
+.. sourcecode:: python
 
   from cubicweb.web.views.basetemplates import HTMLPageFooter
 

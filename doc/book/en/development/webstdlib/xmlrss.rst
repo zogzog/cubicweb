@@ -1,3 +1,5 @@
+.. _XmlAndRss:
+
 XML and RSS views (:mod:`cubicweb.web.views.xmlrss`)
 ----------------------------------------------------
 

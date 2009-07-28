@@ -1,5 +1,7 @@
 .. -*- coding: utf-8 -*-
 
+.. _GoogleAppEngineSource:
+
 CubicWeb in Google AppEngine
 ============================
 
@@ -26,7 +28,7 @@ Download the source
 
 
 Please follow instructions on how to install *CubicWeb* framework
-(:ref:`CubicWebInstallation`).
+(:ref:`SetUpEnv`).
 
 Installation
 ------------

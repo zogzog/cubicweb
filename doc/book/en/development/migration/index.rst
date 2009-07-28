@@ -129,12 +129,11 @@ scripts:
 * `drop_relation_definition(subjtype, rtype, objtype, commit=True)`, removes
   a relation definition.
 
-* `sync_schema_props_perms(ertype=None, syncperms=True,
-                           syncprops=True, syncrdefs=True, commit=True)`,
+* `sync_schema_props_perms(ertype=None, syncperms=True, syncprops=True, syncrdefs=True, commit=True)`,
   synchronizes properties and/or permissions on:
-  * the whole schema if ertype is None
-  * an entity or relation type schema if ertype is a string
-  * a relation definition  if ertype is a 3-uple (subject, relation, object)
+  - the whole schema if ertype is None
+  - an entity or relation type schema if ertype is a string
+  - a relation definition  if ertype is a 3-uple (subject, relation, object)
 
 * `change_relation_props(subjtype, rtype, objtype, commit=True, **kwargs)`, changes
   properties of a relation definition by using the named parameters of the properties

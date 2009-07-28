@@ -8,5 +8,4 @@ This chapter describes the Relation Query Language syntax and its implementation
 
    intro
    language
-   dbapi
    implementation

@@ -5,7 +5,6 @@ Core APIs
    :maxdepth: 1
 
    vreg.rst
-   selection.rst
    appobject.rst
    selectors.rst
    dbapi.rst

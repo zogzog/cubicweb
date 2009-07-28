@@ -20,7 +20,7 @@ A serie of questions will be prompted to you, the default answer is usually
 sufficient. You can anyway modify the configuration later on by editing
 configuration files. When a user/psswd is requested to access the database
 please use the login you create at the time you configured the database
-(:ref:`ConfigurationPostgres`).
+(:ref:`ConfigurationPostgresql`).
 
 It is important to distinguish here the user used to access the database and the
 user used to login to the cubicweb instance. When an instance starts, it uses

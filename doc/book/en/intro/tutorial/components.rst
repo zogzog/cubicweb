@@ -39,6 +39,7 @@ The available application entities in standard cubes are:
 * zone: Zone (to define places within larger places, for example a
   city in a state in a country)
 
+.. _`CubicWeb Forge`: http://www.cubicweb.org/project/
 
 Adding comments to BlogDemo
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
