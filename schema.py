@@ -17,11 +17,12 @@ from logilab.common.decorators import cached, clear_cache, monkeypatch
 from logilab.common.deprecation import obsolete
 from logilab.common.compat import any
 
-from yams import BadSchemaDefinition, buildobjs as ybo, constraints
+from yams import BadSchemaDefinition, buildobjs as ybo
 from yams.schema import Schema, ERSchema, EntitySchema, RelationSchema
-from yams.constraints import BaseConstraint, StaticVocabularyConstraint
-from yams.reader import CONSTRAINTS, PyFileReader, SchemaLoader, \
-     obsolete as yobsolete, cleanup_sys_modules
+from yams.constraints import (BaseConstraint, StaticVocabularyConstraint,
+                              FormatConstraint)
+from yams.reader import (CONSTRAINTS, PyFileReader, SchemaLoader,
+                         obsolete as yobsolete, cleanup_sys_modules)
 
 from rql import parse, nodes, RQLSyntaxError, TypeResolverException
 
@@ -896,7 +897,7 @@ set_log_methods(RQLExpression, getLogger('cubicweb.schema'))
 PERM_USE_TEMPLATE_FORMAT = _('use_template_format')
 NEED_PERM_FORMATS = [_('text/cubicweb-page-template')]
 
-@monkeypatch(constraints.FormatConstraint)
+@monkeypatch(FormatConstraint)
 def vocabulary(self, entity=None, req=None):
     if req is None and entity is not None:
         req = entity.req
