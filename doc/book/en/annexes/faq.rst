@@ -188,11 +188,8 @@ How to update a database after a schema modification ?
 
   It depends on what has been modified in the schema.
 
-  * Update of an attribute permissions and properties:
-    ``synchronize_eschema('MyEntity')``.
-
-  * Update of a relation permissions and properties:
-    ``synchronize_rschema('MyRelation')``.
+  * Update the permissions and properties of an entity or a relation:
+    ``sync_schema_props_perms('MyEntityOrRelation')``.
 
   * Add an attribute: ``add_attribute('MyEntityType', 'myattr')``.
 
