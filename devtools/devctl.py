@@ -260,7 +260,7 @@ class UpdateCubicWebCatalogCommand(Command):
         from logilab.common.shellutils import globfind, find, rm
         from cubicweb.common.i18n import extract_from_tal, execute
         tempdir = tempdir.mkdtemp()
-        potfiles = [join(I18NDIR, 'entities.pot')]
+        potfiles = [join(I18NDIR, 'static-messages.pot')]
         print '-> extract schema messages.'
         schemapot = join(tempdir, 'schema.pot')
         potfiles.append(schemapot)
@@ -357,7 +357,7 @@ def update_cube_catalogs(cubedir):
     tempdir = tempfile.mkdtemp()
     print underline_title('Updating i18n catalogs for cube %s' % cube)
     chdir(cubedir)
-    potfiles = [join('i18n', scfile) for scfile in ('entities.pot',)
+    potfiles = [join('i18n', scfile) for scfile in ('static-messages.pot',)
                 if exists(join('i18n', scfile))]
     print '-> extract schema messages'
     schemapot = join(tempdir, 'schema.pot')
