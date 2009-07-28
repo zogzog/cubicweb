@@ -15,7 +15,7 @@ you create. The first view you might be interested in modifying.
 Let's have a quick look at the EntityView ``PrimaryView`` as well as
 its rendering method
 
-.. code-block:: python
+.. sourcecode:: python
 
     class PrimaryView(EntityView):
         """the full view of an non final entity"""

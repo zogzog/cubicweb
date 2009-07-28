@@ -222,7 +222,7 @@ that the date we see is the publication date.
 
 To do so, please apply the following changes:
 
-.. code-block:: python
+.. sourcecode:: python
 
   from cubicweb.web.views import baseviews
 

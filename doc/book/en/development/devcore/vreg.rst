@@ -27,7 +27,7 @@ XXX this part needs to be updated and checked
 
 Examples:
 
-.. code-block:: python
+.. sourcecode:: python
 
    # web/views/basecomponents.py
    def registration_callback(vreg):
@@ -45,7 +45,7 @@ Examples:
 API d'enregistrement des objets
 ```````````````````````````````
 
-.. code-block:: python
+.. sourcecode:: python
 
    register(obj, registryname=None, oid=None, clear=False)
 

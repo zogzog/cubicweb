@@ -44,7 +44,7 @@ Let's say we do not want anymore the login menu to be in the header
 First, to remove the login menu, we just need to comment out the display of the
 login graphic component such as follows:
 
-.. code-block :: python
+.. sourcecode:: python
 
   class MyBlogHTMLPageHeader(HTMLPageHeader):
 
