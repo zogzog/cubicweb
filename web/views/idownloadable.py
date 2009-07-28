@@ -122,7 +122,7 @@ class IDownloadableLineView(baseviews.OneLineView):
     __select__ = implements(IDownloadable)
 
     def cell_call(self, row, col, title=None, **kwargs):
-        """the secondary view is a link to download the file"""
+        """the oneline view is a link to download the file"""
         entity = self.entity(row, col)
         url = xml_escape(entity.absolute_url())
         name = xml_escape(title or entity.download_file_name())
