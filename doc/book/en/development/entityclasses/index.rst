@@ -2,7 +2,7 @@ Data as objects
 ===============
 
 In this chapter, we will introduce the objects that are used to handle
-the data stored in the database.
+the logic associated to the data stored in the database.
 
 .. toctree::
    :maxdepth: 1

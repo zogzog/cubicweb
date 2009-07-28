@@ -2,8 +2,8 @@
 
 .. _Workflow:
 
-An Example: Workflow definition
-===============================
+Define a Workflow
+=================
 
 General
 -------

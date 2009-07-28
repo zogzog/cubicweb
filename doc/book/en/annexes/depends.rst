@@ -44,5 +44,8 @@ to have installed in order for CubicWeb to work:
 * indexer - http://www.logilab.org/project/indexer -
   http://pypi.python.org/pypi/indexer - included in the forest
 
+* fyzz - http://www.logilab.org/project/fyzz - http://pypi.python.org/pypi/fyzz
+  - included in the forest
+
 Any help with the packaging of CubicWeb for more than Debian/Ubuntu (including
 eggs, buildouts, etc) will be greatly appreciated.

@@ -6,9 +6,8 @@ Creation of your first instance
 Instance creation
 -----------------
 
-Now that we created our cube, we can create an instance to view our
-instance in a web browser. To do so we will use a `all-in-one`
-configuration to simplify things ::
+Now that we created a cube, we can create an instance and access it via a web
+browser. We will use a `all-in-one` configuration to simplify things ::
 
   cubicweb-ctl create -c all-in-one mycube myinstance
 
@@ -59,6 +58,10 @@ This is it! All is settled down to start developping your data model...
 
 upgrade
 ~~~~~~~
+
+The command is::
+
+  cubicweb-ctl upgrade myinstance
 
 XXX write me
 

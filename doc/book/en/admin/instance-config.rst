@@ -10,7 +10,7 @@ While creating an instance, a configuration file is generated in::
 
 For example::
 
-    /etc/cubicweb.d/JPL/all-in-one.conf
+    /etc/cubicweb.d/myblog/all-in-one.conf
 
 It is a simple text file format INI. In the following description,
 each option name is prefixed with its own section and followed by its

@@ -2,14 +2,14 @@
 Loaded attributes and default sorting management
 ````````````````````````````````````````````````
 
-* The class attribute `fetch_attrs` allows to defined in an entity class
-  a list of names of attributes or relations that should be automatically
-  loaded when we recover the entities of this type. In the case of relations,
+* The class attribute `fetch_attrs` allows to define in an entity class a list
+  of names of attributes or relations that should be automatically loaded when
+  entities of this type are fetched from the database. In the case of relations,
   we are limited to *subject of cardinality `?` or `1`* relations.
 
 * The class method `fetch_order(attr, var)` expects an attribute (or relation)
   name as a parameter and a variable name, and it should return a string
-  to use in the requirement `ORDER BY` of an RQL query to automatically
+  to use in the requirement `ORDERBY` of an RQL query to automatically
   sort the list of entities of such type according to this attribute, or
   `None` if we do not want to sort on the attribute given in the parameter.
   By default, the entities are sorted according to their creation date.

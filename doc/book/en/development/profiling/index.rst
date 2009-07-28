@@ -22,9 +22,7 @@ The structure of each line is::
     <RQL QUERY> <QUERY ARGS IF ANY> -- <TIME SPENT>
 
 CubicWeb also provides the **exlog** command to examine and summarize data found
-in such a file:
-
-::
+in such a file::
     $ cubicweb-ctl exlog < ~/myapp-rql.log
     0.07 50 Any A WHERE X eid %(x)s, X firstname A {}
     0.05 50 Any A WHERE X eid %(x)s, X lastname A {}

@@ -1,5 +1,5 @@
 
-Pre-defined schemas in the library
+Pre-defined entities in the library
 ----------------------------------
 
 The library defines a set of entity schemas that are required by the system
@@ -28,7 +28,7 @@ Entity types used to manage workflows
 
 Other entity types
 ~~~~~~~~~~~~~~~~~~
-* `CWCache`
+* `CWCache`, cache entities used to improve performances
 * `CWProperty`, used to configure the instance
 
 * `EmailAddress`, email address, used by the system to send notifications

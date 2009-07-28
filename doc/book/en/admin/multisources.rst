@@ -1,4 +1,6 @@
-Integrating some data from another instance
-===========================================
+Multiple sources of data
+========================
+
+Data sources include SQL, LDAP, RQL, mercurial and subversion.
 
 XXX feed me

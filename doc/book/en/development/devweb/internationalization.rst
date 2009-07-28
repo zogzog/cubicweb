@@ -6,7 +6,7 @@
 Internationalisation
 ---------------------
 
-Cubicweb fully supports the internalization of it's content and interface.
+Cubicweb fully supports the internalization of its content and interface.
 
 Cubicweb's interface internationalization is based on the translation project `GNU gettext`_.
 

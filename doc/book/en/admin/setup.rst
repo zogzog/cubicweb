@@ -77,18 +77,21 @@ if you do not intend to develop the framework itself.
 In both cases, make sure you have installed the dependencies (see appendixes for
 the list).
 
-Postgres installation
-`````````````````````
+PostgreSQL installation
+```````````````````````
 
-Please refer to the `Postgresql project online documentation`_.
+Please refer to the `PostgreSQL project online documentation`_.
 
-.. _`Postgresql project online documentation`: http://www.postgresql.org/
+.. _`PostgreSQL project online documentation`: http://www.postgresql.org/
 
-You need to install the three following packages: `postgres-8.3`,
-`postgres-contrib-8.3` and `postgresql-plpython-8.3`.
+You need to install the three following packages: `postgresql-8.3`,
+`postgresql-contrib-8.3` and `postgresql-plpython-8.3`.
 
 
-Then you can install:
+Other dependencies
+``````````````````
+
+You can also install:
 
 * `pyro` if you wish the repository to be accessible through Pyro
   or if the client and the server are not running on the same machine
@@ -134,22 +137,22 @@ Databases configuration
 
 
 
-.. _ConfigurationPostgres:
+.. _ConfigurationPostgresql:
 
-Postgres configuration
-``````````````````````
+PostgreSQL configuration
+````````````````````````
 
 .. note::
-    If you already have an existing cluster and postgres server
+    If you already have an existing cluster and PostgreSQL server
     running, you do not need to execute the initilization step
-    of your Postgres database.
+    of your PostgreSQL database.
 
-* First, initialize the database Postgres with the command ``initdb``.
+* First, initialize the database PostgreSQL with the command ``initdb``.
   ::
 
     $ initdb -D /path/to/pgsql
 
-  Once initialized, start the database server Postgres
+  Once initialized, start the database server PostgreSQL
   with the command::
 
     $ postgres -D /path/to/psql
