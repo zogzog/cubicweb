@@ -36,8 +36,8 @@ and then create your sub-class::
 Customize header
 `````````````````
 
-Let's now move the search box in the header and remove the login form
-from the header. We'll show how to move it to the left column of the application.
+Let's now move the search box in the header and remove the login form from the
+header. We'll show how to move it to the left column of the user interface.
 
 Let's say we do not want anymore the login menu to be in the header
 

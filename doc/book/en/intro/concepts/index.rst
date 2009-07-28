@@ -155,7 +155,7 @@ an identifier in this registry. You may have more than one object sharing an
 identifier in the same registry, At runtime, appobjects are selected in the
 vregistry according to the context.
 
-Application objects are stored in the registry using a two level hierarchy :
+Application objects are stored in the registry using a two-level hierarchy :
 
   object's `__registry__` : object's `id` : [list of app objects]
 

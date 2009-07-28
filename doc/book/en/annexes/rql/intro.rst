@@ -5,41 +5,38 @@ Introduction
 Goals of RQL
 ~~~~~~~~~~~~
 
-The goal is to have a language emphasizing the way of browsing
-relations. As such, attributes will be regarded as cases of
-special relations (in terms of implementation, the language
-user should see virtually no difference between an attribute and a
+The goal is to have a language emphasizing the way of browsing relations. As
+such, attributes will be regarded as cases of special relations (in terms of
+implementation, the user should see no difference between an attribute and a
 relation).
-
-RQL is inspired by SQL but is the highest level. A knowledge of the
-*CubicWeb* schema defining the application is necessary.
 
 Comparison with existing languages
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 SQL
 ```
-RQL builds on the features of SQL but is at a higher level
-(the current implementation of RQL generates SQL). For that it is limited
-to the way of browsing relations and introduces variables.
-The user does not need to know the model underlying SQL, but the *CubicWeb*
-schema defining the application.
 
-Versa
-`````
-We should look in more detail, but here are already some ideas for
-the moment ... Versa_ is the language most similar to what we wanted
-to do, but the model underlying data being RDF, there is some
-number of things such as namespaces or handling of the RDF types which
-does not interest us. On the functionality level, Versa_ is very comprehensive
-including through many functions of conversion and basic types manipulation,
-which may need to be guided at one time or another.
-Finally, the syntax is a little esoteric.
+RQL may remind of SQL but works at a higher abstraction level (the *CubicWeb*
+framework generates SQL from RQL to fetch data from relation databases). RQL is
+focused on browsing relations. The user needs only to know about the *CubicWeb*
+data model he is querying, but not about the underlying SQL model.
 
 Sparql
 ``````
+
 The query language most similar to RQL is SPARQL_, defined by the W3C to serve
 for the semantic web.
+
+Versa
+`````
+
+We should look in more detail, but here are already some ideas for the moment
+... Versa_ is the language most similar to what we wanted to do, but the model
+underlying data being RDF, there is some number of things such as namespaces or
+handling of the RDF types which does not interest us. On the functionality
+level, Versa_ is very comprehensive including through many functions of
+conversion and basic types manipulation, which may need to be guided at one time
+or another.  Finally, the syntax is a little esoteric.
 
 
 The different types of queries

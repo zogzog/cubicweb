@@ -69,6 +69,8 @@ Translations in cubicweb-tal template can also be done with TAL tags
    used by a particular instance's schema as they are generated
    automatically.
 
+If you need to add messages on top of those that can be found in the source,
+you can create a file named `i18n/static-messages.pot`.
 
 Handle the translation catalog
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

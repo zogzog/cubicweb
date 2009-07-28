@@ -39,11 +39,10 @@ Why do you think using pure python is better than using a template language ?
   When doing development, you need a real language and template
   languages are not real languages.
 
-  Using Python enables developing applications for which code is
-  easier to maintain with real functions/classes/contexts
-  without the need of learning a new dialect. By using Python,
-  we use standard OOP techniques and this is a key factor in a
-  robust application.
+  Using Python instead of a template langage for describing the user interface
+  makes it to maintain with real functions/classes/contexts without the need of
+  learning a new dialect. By using Python, we use standard OOP techniques and
+  this is a key factor in a robust application.
 
 Why do you use the LGPL license to prevent me from doing X ?
 ------------------------------------------------------------

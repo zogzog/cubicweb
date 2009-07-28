@@ -91,8 +91,8 @@ and create entities.
 
 .. image:: ../../images/blog-demo-first-page.png
 
-Please notice that so far, the *CubicWeb* franework managed all aspects of
-the web application based on the schema provided at first.
+Please notice that so far, the *CubicWeb* framework managed all aspects of
+the web application based on the schema provided at the beginning.
 
 
 Add entities

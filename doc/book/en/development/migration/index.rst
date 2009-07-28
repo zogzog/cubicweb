@@ -5,10 +5,10 @@
 Migration
 =========
 
-One of the main concept in *CubicWeb* is to create incremental applications.
-For this purpose, multiple actions are provided to facilitate the improvement
-of an instance, and in particular to handle the changes to be applied
-to the data model, without loosing existing data.
+One of the main design goals of *CubicWeb* was to support iterative and agile
+development. For this purpose, multiple actions are provided to facilitate the
+improvement of an instance, and in particular to handle the changes to be
+applied to the data model, without loosing existing data.
 
 The current version of a cube (and of cubicweb itself) is provided in the file
 `__pkginfo__.py` as a tuple of 3 integers.
