@@ -353,7 +353,7 @@ class DeleteInstanceCommand(Command):
             if ex.errno != errno.ENOENT:
                 raise
         confignames = ', '.join([config.name for config in configs])
-        print 'instance %s (%s) deleted' % (appid, confignames)
+        print '-> instance %s (%s) deleted.' % (appid, confignames)
 
 
 # instance commands ########################################################
@@ -407,7 +407,7 @@ the --force option."
             print
             return False
         if not debug:
-            print 'instance %s started' % appid
+            print '-> instance %s started.' % appid
         return True
 
 
@@ -656,8 +656,7 @@ given, appropriate sources for migration will be automatically selected \
             print '-> no software migration needed for instance %s.' % appid
             return
         for cube, fromversion, toversion in toupgrade:
-            print '\n' + underline_title('%s migration %s -> %s' %
-                                         (cube, fromversion, toversion))
+            print '-> migration needed from %s to %s for %s' % (fromversion, toversion, cube)
         # only stop once we're sure we have something to do
         if not (cwcfg.mode == 'dev' or self.config.nostartstop):
             self.stop_instance(appid)
