@@ -221,18 +221,21 @@ def _validate_form(req, vreg):
 class FormValidatorController(Controller):
     id = 'validateform'
 
+    def response(self, domid, status, args):
+        self.req.set_content_type('text/html')
+        jsargs = simplejson.dumps( (status, args) )
+        return """<script type="text/javascript">
+ window.parent.handleFormValidationResponse('%s', null, null, %s);
+</script>""" %  (domid, jsargs)
+
     def publish(self, rset=None):
         self.req.json_request = True
         # XXX unclear why we have a separated controller here vs
         # js_validate_form on the json controller
         status, args = _validate_form(self.req, self.vreg)
-        self.req.set_content_type('text/html')
-        jsarg = simplejson.dumps( (status, args) )
         domid = self.req.form.get('__domid', 'entityForm').encode(
             self.req.encoding)
-        return """<script type="text/javascript">
- window.parent.handleFormValidationResponse('%s', null, null, %s);
-</script>""" %  (domid, simplejson.dumps( (status, args) ))
+        return self.response(domid, status, args)
 
 
 class JSonController(Controller):
