@@ -116,6 +116,7 @@ def _generate_schema_pot(w, vreg, schema, libconfig=None, cube=None):
     w('# singular and plural forms for each entity type\n')
     w('\n')
     if libconfig is not None:
+        print 'lib conf cubes', libconfig.cubes()
         libschema = libconfig.load_schema(remove_unused_rtypes=False)
         entities = [e for e in schema.entities() if not e in libschema]
     else:
@@ -327,8 +328,8 @@ class UpdateTemplateCatalogCommand(Command):
 
 
 def update_cubes_catalogs(cubes):
-    toedit = []
     for cubedir in cubes:
+        toedit = []
         if not isdir(cubedir):
             print '-> ignoring %s that is not a directory.' % cubedir
             continue
@@ -337,12 +338,14 @@ def update_cubes_catalogs(cubes):
         except Exception:
             import traceback
             traceback.print_exc()
-            print '-> Error while updating catalogs for cube', cubedir
-    # instructions pour la suite
-    print '-> regenerated this cube\'s .po catalogs.'
-    print '\nYou can now edit the following files:'
-    print '* ' + '\n* '.join(toedit)
-    print 'when you are done, run "cubicweb-ctl i18ninstance yourinstance".'
+            print '-> error while updating catalogs for cube', cubedir
+        else:
+            # instructions pour la suite
+            print '-> regenerated .po catalogs for cube %s.' % cubedir
+            print '\nYou can now edit the following files:'
+            print '* ' + '\n* '.join(toedit)
+            print ('When you are done, run "cubicweb-ctl i18ninstance '
+                   '<yourinstance>" to see changes in your instances.')
 
 def update_cube_catalogs(cubedir):
     import shutil
