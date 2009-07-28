@@ -16,8 +16,11 @@ from lxml.builder import E
 from cubicweb.view import StartupView, AnyRsetView
 from cubicweb.web import Redirect, form, formfields, formwidgets as fwdgs
 from cubicweb.web.views import forms, urlrewrite
-from cubicweb.spa2rql import Sparql2rqlTranslator
-
+try:
+    from cubicweb.spa2rql import Sparql2rqlTranslator
+except ImportError:
+    # fyzz not available (only a recommends)
+    Sparql2rqlTranslator = None
 
 class SparqlForm(forms.FieldsForm):
     id = 'sparql'
@@ -113,3 +116,7 @@ class SparqlResultXmlView(AnyRsetView):
         self.req.set_content_type(self.content_type,
                                   filename='sparql.xml',
                                   encoding=self.req.encoding)
+
+def registration_callback(vreg):
+    if Sparql2rqlTranslator is not None:
+        vreg.register_all(globals().values(), __name__)
