@@ -247,9 +247,10 @@ function IFRAME(params){
   if ('name' in params){
     try {
       var node = document.createElement('<iframe name="'+params['name']+'">');
-      }catch (ex) {
-	 var node = document.createElement('iframe');
-      }
+    } catch (ex) {
+      var node = document.createElement('iframe');
+      node.id = node.name = params.name;
+    }
   }
   else{
     var node = document.createElement('iframe');
