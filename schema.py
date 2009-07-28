@@ -21,7 +21,7 @@ from yams import BadSchemaDefinition, buildobjs as ybo, constraints
 from yams.schema import Schema, ERSchema, EntitySchema, RelationSchema
 from yams.constraints import BaseConstraint, StaticVocabularyConstraint
 from yams.reader import CONSTRAINTS, PyFileReader, SchemaLoader, \
-     obsolete as yobsolete
+     obsolete as yobsolete, cleanup_sys_modules
 
 from rql import parse, nodes, RQLSyntaxError, TypeResolverException
 
@@ -868,7 +868,11 @@ class CubicWebSchemaLoader(BootstrapSchemaLoader):
             path = reversed([config.apphome] + config.cubes_path())
         else:
             path = reversed(config.cubes_path())
-        return super(CubicWebSchemaLoader, self).load(config, path=path, **kwargs)
+        try:
+            return super(CubicWebSchemaLoader, self).load(config, path=path, **kwargs)
+        finally:
+            # we've to cleanup modules imported from cubicweb.schemas as well
+            cleanup_sys_modules([self.lib_directory])
 
     def _load_definition_files(self, cubes):
         for filepath in (join(self.lib_directory, 'bootstrap.py'),
