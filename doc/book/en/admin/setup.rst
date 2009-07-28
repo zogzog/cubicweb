@@ -199,12 +199,16 @@ Postgres configuration
 
 MySql configuration
 ```````````````````
-Yout must add the following lines in /etc/mysql/my.cnf file::
+Yout must add the following lines in ``/etc/mysql/my.cnf`` file::
 
     transaction-isolation = READ-COMMITTED
     default-storage-engine=INNODB
     default-character-set=utf8
     max_allowed_packet = 128M
+
+.. note::
+    It is unclear whether mysql supports indexed string of arbitrary lenght or
+    not.
 
 Pyro configuration
 ------------------

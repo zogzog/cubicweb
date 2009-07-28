@@ -18,3 +18,4 @@ This part is about developing web applications with the *CubicWeb* framework.
    testing/index
    migration/index
    webstdlib/index
+   profiling/index
