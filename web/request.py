@@ -709,7 +709,7 @@ class CubicWebRequestBase(DBAPIRequest):
         return True
 
     def html_content_type(self):
-        if self.xhtml_browser():
+        if not self.vreg.config['force-html-content-type'] and self.xhtml_browser():
             return 'application/xhtml+xml'
         return 'text/html'
 
