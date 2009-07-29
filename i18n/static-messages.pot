@@ -1,18 +1,3 @@
-msgid "__msg state changed"
-msgstr ""
-
-msgid "managers"
-msgstr ""
-
-msgid "users"
-msgstr ""
-
-msgid "guests"
-msgstr ""
-
-msgid "owners"
-msgstr ""
-
 msgid "read_perm"
 msgstr ""
 
