@@ -26,6 +26,7 @@ from cubicweb.dbapi import DBAPIRequest
 from cubicweb.common.mail import header
 from cubicweb.common.uilib import remove_html_tags
 from cubicweb.utils import SizeConstrainedList, HTMLHead
+from cubicweb.view import STRICT_DOCTYPE
 from cubicweb.web import (INTERNAL_FIELD_VALUE, LOGGER, NothingToEdit,
                           RequestError, StatusResponse)
 
@@ -720,6 +721,12 @@ class CubicWebRequestBase(DBAPIRequest):
         if self.xhtml_browser():
             return 'application/xhtml+xml'
         return 'text/html'
+
+    def document_surrounding_div(self):
+        if self.xhtml_browser():
+            return (u'<?xml version="1.0"?>\n' + STRICT_DOCTYPE +
+                    u'<div xmlns="http://www.w3.org/1999/xhtml" xmlns:cubicweb="http://www.logilab.org/2008/cubicweb">')
+        return u'<div>'
 
 from cubicweb import set_log_methods
 set_log_methods(CubicWebRequestBase, LOGGER)

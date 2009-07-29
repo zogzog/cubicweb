@@ -33,21 +33,6 @@ try:
 except ImportError: # gae
     HAS_SEARCH_RESTRICTION = False
 
-def xhtml_wrap_header(self):
-    # XXX factor out, watch view.py ~ Maintemplate.doctype
-    if not self.vreg.config['force-html-content-type'] and self.req.xhtml_browser():
-        head = (u'<?xml version="1.0"?>\n' + STRICT_DOCTYPE +
-                u'<div xmlns="http://www.w3.org/1999/xhtml" xmlns:cubicweb="http://www.logilab.org/2008/cubicweb">')
-    else:
-        head = u'<div>'
-    return head
-
-def xhtml_wrap_tail(self):
-    return u'</div>'
-
-def xhtml_wrap(self, source):
-    return u''.join((xhtml_wrap_header(self), source.strip(), xhtml_wrap_tail(self)))
-
 def jsonize(func):
     """decorator to sets correct content_type and calls `simplejson.dumps` on
     results
@@ -63,7 +48,8 @@ def xhtmlize(func):
     def wrapper(self, *args, **kwargs):
         self.req.set_content_type(self.req.html_content_type())
         result = func(self, *args, **kwargs)
-        return xhtml_wrap(self, result)
+        return ''.join((self.req.document_surrounding_div(), result.strip(),
+                        u'</div>'))
     wrapper.__name__ = func.__name__
     return wrapper
 
