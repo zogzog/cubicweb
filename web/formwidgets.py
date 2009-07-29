@@ -291,9 +291,9 @@ class HorizontalLayoutWidget(FieldWidget):
             subst = self.attrs.get('label_input_substitution', '%(label)s %(input)s')
             fields = [subst % {'label': renderer.render_label(form, f),
                               'input': f.render(form, renderer)}
-                      for f in field.fields]
+                      for f in field.subfields(form)]
         else:
-            fields = [f.render(form, renderer) for f in field.fields]
+            fields = [f.render(form, renderer) for f in field.subfields(form)]
         return u'<div>%s</div>' % ' '.join(fields)
 
 

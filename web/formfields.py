@@ -478,6 +478,9 @@ class CompoundField(Field):
         super(CompoundField, self).__init__(*args, **kwargs)
         self.fields = fields
 
+    def subfields(self, form):
+        return self.fields
+    
     def actual_fields(self, form):
         return [self] + list(self.fields)
 
