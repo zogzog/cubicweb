@@ -699,6 +699,14 @@ class CubicWebRequestBase(DBAPIRequest):
         return useragent and 'MSIE' in useragent
 
     def xhtml_browser(self):
+        """return True if the browser is considered as xhtml compatible.
+
+        If the instance is configured to always return text/html and not
+        application/xhtml+xml, this method will always return False, even though
+        this is semantically different
+        """
+        if self.vreg.config['force-html-content-type']:
+            return False
         useragent = self.useragent()
         # * MSIE/Konqueror does not support xml content-type
         # * Opera supports xhtml and handles namespaces properly but it breaks
@@ -709,7 +717,7 @@ class CubicWebRequestBase(DBAPIRequest):
         return True
 
     def html_content_type(self):
-        if not self.vreg.config['force-html-content-type'] and self.xhtml_browser():
+        if self.xhtml_browser():
             return 'application/xhtml+xml'
         return 'text/html'
 
