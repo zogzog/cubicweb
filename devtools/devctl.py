@@ -12,7 +12,7 @@ import sys
 from datetime import datetime
 from os import mkdir, chdir
 from os.path import join, exists, abspath, basename, normpath, split, isdir
-
+from warnings import warn
 
 from logilab.common import STD_BLACKLIST
 from logilab.common.modutils import get_module_files
@@ -357,8 +357,14 @@ def update_cube_catalogs(cubedir):
     tempdir = tempfile.mkdtemp()
     print underline_title('Updating i18n catalogs for cube %s' % cube)
     chdir(cubedir)
-    potfiles = [join('i18n', scfile) for scfile in ('static-messages.pot',)
-                if exists(join('i18n', scfile))]
+    if exists(join('i18n', 'entities.pot')):
+        warn('entities.pot is deprecated, rename file to static-messages.pot (%s)'
+             % join('i18n', 'entities.pot'), DeprecationWarning)
+        potfiles = [join('i18n', 'entities.pot')]
+    elif exists(join('i18n', 'static-messages.pot')):
+        potfiles = [join('i18n', 'static-messages.pot')]
+    else:
+        potfiles = []
     print '-> extract schema messages'
     schemapot = join(tempdir, 'schema.pot')
     potfiles.append(schemapot)
