@@ -1,18 +1,27 @@
-CubicWeb semantic web framework 
+CubicWeb semantic web framework
 ===============================
- 
+
 Install
 -------
-From the source distribution, extract the tarball and run ::
-  
-    python setup.py install
-  
-For deb and rpm packages, use the tools recommended by your distribution.
 
-  
+More details at http://www.cubicweb.org/doc/en/admin/setup
+
+Getting started
+---------------
+
+Execute:
+
+ apt-get install cubicweb cubicweb-dev cubicweb-blog
+ cubicweb-ctl create blog myblog
+ cubicweb-ctl start -D myblog
+ sensible-browser http://localhost:8080/
+
+Details at http://www.cubicweb.org/doc/en/intro/tutorial/blog-in-five-minutes
+
 Documentation
 -------------
-Look in the doc/ subdirectory.
+
+Look in the doc/ subdirectory or read http://www.cubicweb.org/doc/en/
 
 
 
