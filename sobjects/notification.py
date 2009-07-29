@@ -62,7 +62,7 @@ class RecipientsFinder(Component):
 class RenderAndSendNotificationView(PreCommitOperation):
     """delay rendering of notification view until precommit"""
     def precommit_event(self):
-        if self.view.rset[0][0] in self.session.transaction_data.get('pendingeids', ()):
+        if self.view.rset and self.view.rset[0][0] in self.session.transaction_data.get('pendingeids', ()):
             return # entity added and deleted in the same transaction
         self.view.render_and_send(**getattr(self, 'viewargs', {}))
 
@@ -184,15 +184,19 @@ class NotificationView(EntityView):
                  DeprecationWarning, stacklevel=1)
             lang = self.vreg.property_value('ui.language')
             recipients = zip(recipients, repeat(lang))
-        entity = self.entity(0, 0)
-        # if the view is using timestamp in message ids, no way to reference
-        # previous email
-        if not self.msgid_timestamp:
-            refs = [self.construct_message_id(eid)
-                    for eid in entity.notification_references(self)]
+        if self.rset is not None:
+            entity = self.entity(0, 0)
+            # if the view is using timestamp in message ids, no way to reference
+            # previous email
+            if not self.msgid_timestamp:
+                refs = [self.construct_message_id(eid)
+                        for eid in entity.notification_references(self)]
+            else:
+                refs = ()
+            msgid = self.construct_message_id(entity.eid)
         else:
             refs = ()
-        msgid = self.construct_message_id(entity.eid)
+            msgid = None
         userdata = self.req.user_data()
         origlang = self.req.lang
         for emailaddr, lang in recipients:
