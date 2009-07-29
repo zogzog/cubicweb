@@ -199,7 +199,7 @@ class FormRenderer(AppRsetObject):
                 w(u'<legend>%s</legend>' % self.req._(fieldset))
             w(u'<table class="%s">' % self.table_class)
             for field in fields:
-                w(u'<tr id="%s_%s_row">' % (field.name, field.role))
+                w(u'<tr class="%s_%s_row">' % (field.name, field.role))
                 if self.display_label:
                     w(u'<th class="labelCol">%s</th>' % self.render_label(form, field))
                 error = form.form_field_error(field)
