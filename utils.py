@@ -255,10 +255,10 @@ class HTMLHead(UStringIO):
         # 1/ variable declaration if any
         if self.jsvars:
             from simplejson import dumps
-            w(u'<script type="text/javascript">\n')
+            w(u'<script type="text/javascript"><!--//--><![CDATA[//><!--\n')
             for var, value in self.jsvars:
                 w(u'%s = %s;\n' % (var, dumps(value)))
-            w(u'</script>\n')
+            w(u'//--><!]]></script>\n')
         # 2/ css files
         for cssfile, media in self.cssfiles:
             w(u'<link rel="stylesheet" type="text/css" media="%s" href="%s"/>\n' %

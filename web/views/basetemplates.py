@@ -15,6 +15,7 @@ from cubicweb.selectors import match_kwargs
 from cubicweb.view import View, MainTemplate, NOINDEX, NOFOLLOW
 from cubicweb.utils import make_uid, UStringIO
 
+
 # main templates ##############################################################
 
 class LogInOutTemplate(MainTemplate):
@@ -83,15 +84,15 @@ class NonTemplatableViewTemplate(MainTemplate):
     def call(self, view):
         view.set_request_content_type()
         view.set_stream()
-        xhtml_wrap = (self.req.form.has_key('__notemplate') and view.templatable
-                      and view.content_type == self.req.html_content_type())
-        if xhtml_wrap:
-            view.w(u'<?xml version="1.0"?>\n' + self.doctype)
-            view.w(u'<div xmlns="http://www.w3.org/1999/xhtml" xmlns:cubicweb="http://www.logilab.org/2008/cubicweb">')
-        # have to replace our unicode stream using view's binary stream
-        view.render()
-        if xhtml_wrap:
+        if (self.req.form.has_key('__notemplate') and view.templatable
+            and view.content_type == self.req.html_content_type()):
+            view.w(self.req.document_surrounding_div())
+            view.render()
             view.w(u'</div>')
+        else:
+            view.render()
+        # have to replace our stream by view's stream (which may be a binary
+        # stream)
         self._stream = view._stream
 
 

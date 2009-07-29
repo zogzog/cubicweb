@@ -8,16 +8,13 @@
 import simplejson
 
 from logilab.common.testlib import unittest_main, mock_object
-
-from cubicweb import Binary, Unauthorized
-from cubicweb.devtools._apptest import TestEnvironment
 from cubicweb.devtools.apptest import EnvBasedTC, ControllerTC
 
-from cubicweb.common import ValidationError
+from cubicweb import Binary, NoSelectableObject, ValidationError
+from cubicweb.view import STRICT_DOCTYPE
 from cubicweb.common.uilib import rql_for_eid
 
 from cubicweb.web import INTERNAL_FIELD_VALUE, Redirect, RequestError
-from cubicweb.web.views.basecontrollers import xhtml_wrap
 
 from cubicweb.entities.authobjs import CWUser
 
@@ -515,7 +512,7 @@ class SendMailControllerTC(EnvBasedTC):
     def test_not_usable_by_guets(self):
         self.login('anon')
         req = self.request()
-        self.assertRaises(Unauthorized, self.env.app.select_controller, 'sendmail', req)
+        self.assertRaises(NoSelectableObject, self.env.vreg.select, 'controllers', 'sendmail', req)
 
 
 
@@ -538,8 +535,13 @@ class JSONControllerTC(EnvBasedTC):
         ctrl = self.ctrl(req)
         rset = self.john.as_rset()
         rset.req = req
-        self.assertTextEquals(ctrl.publish(),
-                              xhtml_wrap(mock_object(req=req), ctrl.view('primary', rset)))
+        source = ctrl.publish()
+        self.failUnless(source.startswith('<?xml version="1.0"?>\n' + STRICT_DOCTYPE +
+                                          u'<div xmlns="http://www.w3.org/1999/xhtml" xmlns:cubicweb="http://www.logilab.org/2008/cubicweb">')
+                        )
+        req.xhtml_browser = lambda: False
+        source = ctrl.publish()
+        self.failUnless(source.startswith('<div>'))
 
 #     def test_json_exec(self):
 #         rql = 'Any T,N WHERE T is Tag, T name N'

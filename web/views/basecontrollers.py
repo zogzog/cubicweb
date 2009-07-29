@@ -33,16 +33,6 @@ try:
 except ImportError: # gae
     HAS_SEARCH_RESTRICTION = False
 
-
-def xhtml_wrap(self, source):
-    # XXX factor out, watch view.py ~ Maintemplate.doctype
-    if self.req.xhtml_browser():
-        dt = STRICT_DOCTYPE
-    else:
-        dt = STRICT_DOCTYPE_NOEXT
-    head = u'<?xml version="1.0"?>\n' + dt
-    return head + u'<div xmlns="http://www.w3.org/1999/xhtml" xmlns:cubicweb="http://www.logilab.org/2008/cubicweb">%s</div>' % source.strip()
-
 def jsonize(func):
     """decorator to sets correct content_type and calls `simplejson.dumps` on
     results
@@ -58,7 +48,8 @@ def xhtmlize(func):
     def wrapper(self, *args, **kwargs):
         self.req.set_content_type(self.req.html_content_type())
         result = func(self, *args, **kwargs)
-        return xhtml_wrap(self, result)
+        return ''.join((self.req.document_surrounding_div(), result.strip(),
+                        u'</div>'))
     wrapper.__name__ = func.__name__
     return wrapper
 
@@ -216,18 +207,21 @@ def _validate_form(req, vreg):
 class FormValidatorController(Controller):
     id = 'validateform'
 
+    def response(self, domid, status, args):
+        self.req.set_content_type('text/html')
+        jsargs = simplejson.dumps( (status, args) )
+        return """<script type="text/javascript">
+ window.parent.handleFormValidationResponse('%s', null, null, %s);
+</script>""" %  (domid, jsargs)
+
     def publish(self, rset=None):
         self.req.json_request = True
         # XXX unclear why we have a separated controller here vs
         # js_validate_form on the json controller
         status, args = _validate_form(self.req, self.vreg)
-        self.req.set_content_type('text/html')
-        jsarg = simplejson.dumps( (status, args) )
         domid = self.req.form.get('__domid', 'entityForm').encode(
             self.req.encoding)
-        return """<script type="text/javascript">
- window.parent.handleFormValidationResponse('%s', null, null, %s);
-</script>""" %  (domid, simplejson.dumps( (status, args) ))
+        return self.response(domid, status, args)
 
 
 class JSonController(Controller):

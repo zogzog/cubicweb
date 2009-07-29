@@ -26,6 +26,7 @@ from cubicweb.dbapi import DBAPIRequest
 from cubicweb.common.mail import header
 from cubicweb.common.uilib import remove_html_tags
 from cubicweb.utils import SizeConstrainedList, HTMLHead
+from cubicweb.view import STRICT_DOCTYPE
 from cubicweb.web import (INTERNAL_FIELD_VALUE, LOGGER, NothingToEdit,
                           RequestError, StatusResponse)
 
@@ -80,7 +81,7 @@ class CubicWebRequestBase(DBAPIRequest):
         # to create a relation with another)
         self.search_state = ('normal',)
         # tabindex generator
-        self.tabindexgen = count()
+        self.tabindexgen = count(1)
         self.next_tabindex = self.tabindexgen.next
         # page id, set by htmlheader template
         self.pageid = None
@@ -699,6 +700,14 @@ class CubicWebRequestBase(DBAPIRequest):
         return useragent and 'MSIE' in useragent
 
     def xhtml_browser(self):
+        """return True if the browser is considered as xhtml compatible.
+
+        If the instance is configured to always return text/html and not
+        application/xhtml+xml, this method will always return False, even though
+        this is semantically different
+        """
+        if self.vreg.config['force-html-content-type']:
+            return False
         useragent = self.useragent()
         # * MSIE/Konqueror does not support xml content-type
         # * Opera supports xhtml and handles namespaces properly but it breaks
@@ -712,6 +721,12 @@ class CubicWebRequestBase(DBAPIRequest):
         if self.xhtml_browser():
             return 'application/xhtml+xml'
         return 'text/html'
+
+    def document_surrounding_div(self):
+        if self.xhtml_browser():
+            return (u'<?xml version="1.0"?>\n' + STRICT_DOCTYPE +
+                    u'<div xmlns="http://www.w3.org/1999/xhtml" xmlns:cubicweb="http://www.logilab.org/2008/cubicweb">')
+        return u'<div>'
 
 from cubicweb import set_log_methods
 set_log_methods(CubicWebRequestBase, LOGGER)
