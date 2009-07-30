@@ -66,10 +66,11 @@ class HooksManager(object):
     def register_hook(self, function, event, etype=''):
         """register a function to call when <event> occurs
 
-         <etype> is an entity/relation type or an empty string.
-         If etype is the empty string, the function will be called at each
-         event, else the function will be called only when event occurs on an
-         entity/relation of the given type.
+        <etype> is an entity/relation type or an empty string.
+
+        If etype is the empty string, the function will be called at each event,
+        else the function will be called only when event occurs on an entity or
+        relation of the given type.
         """
         assert event in ALL_HOOKS, '%r NOT IN %r' % (event, ALL_HOOKS)
         assert (not event in SYSTEM_HOOKS or not etype), (event, etype)
@@ -83,19 +84,28 @@ class HooksManager(object):
             self.error('can\'t register hook %s on %s (%s)',
                        event, etype or 'any', function.func_name)
 
-    def unregister_hook(self, function, event, etype=''):
-        """register a function to call when <event> occurs
-
-        <etype> is an entity/relation type or an empty string.
-        If etype is the empty string, the function will be called at each
-        event, else the function will be called only when event occurs on an
-        entity/relation of the given type.
+    def unregister_hook(self, function_or_cls, event=None, etype=''):
+        """unregister a function to call when <event> occurs, or a Hook subclass.
+        In the later case, event/type information are extracted from the given
+        class.
         """
-        assert event in ALL_HOOKS, event
-        etype = etype or ''
-        self.info('unregister hook %s on %s (%s)', event, etype,
-                  function.func_name)
-        self._hooks[event][etype].remove(function)
+        if isinstance(function_or_cls, type) and issubclass(function_or_cls, Hook):
+            for event, ertype in function_or_cls.register_to():
+                for hook in self._hooks[event][ertype]:
+                    if getattr(hook, 'im_self', None).__class__ is function_or_cls:
+                        self._hooks[event][ertype].remove(hook)
+                        self.info('unregister hook %s on %s (%s)', event, etype,
+                                  function_or_cls.__name__)
+                        break
+                else:
+                    self.warning("can't unregister hook %s on %s (%s), not found",
+                                 event, etype, function_or_cls.__name__)
+        else:
+            assert event in ALL_HOOKS, event
+            etype = etype or ''
+            self.info('unregister hook %s on %s (%s)', event, etype,
+                      function_or_cls.func_name)
+            self._hooks[event][etype].remove(function_or_cls)
 
     def call_hooks(self, __event, __type='', *args, **kwargs):
         """call hook matching event and optional type"""
