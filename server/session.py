@@ -59,6 +59,7 @@ class Session(RequestSessionMixIn):
         self.timestamp = self.creation
         self.is_internal_session = False
         self.is_super_session = False
+        self.default_mode = 'read'
         # short cut to querier .execute method
         self._execute = repo.querier.execute
         # shared data, used to communicate extra information between the client
@@ -110,13 +111,33 @@ class Session(RequestSessionMixIn):
 
     # connection management ###################################################
 
+    def keep_pool_mode(self, mode):
+        """set pool_mode, e.g. how the session will keep its pool:
+
+        * if mode == 'write', the pool is freed after each ready query, but kept
+          until the transaction's end (eg commit or rollback) when a write query
+          is detected (eg INSERT/SET/DELETE queries)
+
+        * if mode == 'transaction', the pool is only freed after the
+          transaction's end
+
+        notice that a repository has a limited set of pools, and a session has to
+        wait for a free pool to run any rql query (unless it already has a pool
+        set).
+        """
+        assert mode in ('transaction', 'write')
+        if mode == 'transaction':
+            self.default_mode = 'transaction'
+        else: # mode == 'write'
+            self.default_mode = 'read'
+
     def get_mode(self):
-        return getattr(self._threaddata, 'mode', 'read')
+        return getattr(self._threaddata, 'mode', self.default_mode)
     def set_mode(self, value):
         self._threaddata.mode = value
     mode = property(get_mode, set_mode,
-                    doc='transaction mode (read/write), resetted to read on '
-                    'commit / rollback')
+                    doc='transaction mode (read/write/transaction), resetted to'
+                    ' default_mode on commit / rollback')
 
     def get_commit_state(self):
         return getattr(self._threaddata, 'commit_state', None)
@@ -145,11 +166,11 @@ class Session(RequestSessionMixIn):
             self._threads_in_transaction.add(threading.currentThread())
         return self._threaddata.pool
 
-    def reset_pool(self):
+    def reset_pool(self, ignoremode=False):
         """the session is no longer using its pool, at least for some time"""
         # pool may be none if no operation has been done since last commit
         # or rollback
-        if self.pool is not None and self.mode == 'read':
+        if self.pool is not None and (ignoremode or self.mode == 'read'):
             # even in read mode, we must release the current transaction
             pool = self.pool
             try:
@@ -165,7 +186,7 @@ class Session(RequestSessionMixIn):
         """update latest session usage timestamp and reset mode to read"""
         self.timestamp = time()
         self.local_perm_cache.clear()
-        self._threaddata.mode = 'read'
+        self._threaddata.mode = self.default_mode
 
     # shared data handling ###################################################
 
@@ -301,7 +322,7 @@ class Session(RequestSessionMixIn):
             self.pending_operations[:] = []
             self.transaction_data.clear()
             if reset_pool:
-                self.reset_pool()
+                self.reset_pool(ignoremode=True)
 
     def rollback(self, reset_pool=True):
         """rollback the current session's transaction"""
@@ -326,7 +347,7 @@ class Session(RequestSessionMixIn):
             self.pending_operations[:] = []
             self.transaction_data.clear()
             if reset_pool:
-                self.reset_pool()
+                self.reset_pool(ignoremode=True)
 
     def close(self):
         """do not close pool on session close, since they are shared now"""

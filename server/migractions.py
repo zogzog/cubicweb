@@ -194,6 +194,7 @@ class ServerMigrationHelper(MigrationHelper):
                 except (KeyboardInterrupt, EOFError):
                     print 'aborting...'
                     sys.exit(0)
+            self.session.keep_pool_mode = 'transaction'
             return self._cnx
 
     @property
