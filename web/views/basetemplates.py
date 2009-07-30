@@ -138,7 +138,8 @@ class TheMainTemplate(MainTemplate):
         w = self.whead
         lang = self.req.lang
         self.write_doctype()
-        w(u'<base href="%s" />' % xml_escape(self.req.base_url()))
+        # explictly close the <base> tag to avoid IE 6 bugs while browsing DOM
+        w(u'<base href="%s"></base>' % xml_escape(self.req.base_url()))
         w(u'<meta http-equiv="content-type" content="%s; charset=%s"/>\n'
           % (content_type, self.req.encoding))
         w(u'\n'.join(additional_headers) + u'\n')
