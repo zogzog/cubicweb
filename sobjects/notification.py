@@ -133,8 +133,10 @@ class NotificationView(EntityView):
     * set a content attribute to define the content of the email (unless you
       override call)
     """
+    # XXX refactor this class to work with len(rset) > 1
+
     msgid_timestamp = True
-    # XXX refactor to work with len(rset) > 1
+
     def recipients(self):
         finder = self.vreg.select('components', 'recipients_finder', self.req,
                                   rset=self.rset)

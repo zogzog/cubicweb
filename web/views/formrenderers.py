@@ -323,10 +323,12 @@ class EntityCompositeFormRenderer(FormRenderer):
             entity = form.edited_entity
             values = form.form_previous_values
             qeid = eid_param('eid', entity.eid)
-            cbsetstate = "setCheckboxesState2('eid', %s, 'checked')" % xml_escape(dumps(entity.eid))
+            cbsetstate = "setCheckboxesState2('eid', %s, 'checked')" % \
+                         xml_escape(dumps(entity.eid))
             w(u'<tr class="%s">' % (entity.row % 2 and u'even' or u'odd'))
             # XXX turn this into a widget used on the eid field
-            w(u'<td>%s</td>' % checkbox('eid', entity.eid, checked=qeid in values))
+            w(u'<td>%s</td>' % checkbox('eid', entity.eid,
+                                        checked=qeid in values))
             for field in fields:
                 error = form.form_field_error(field)
                 if error:
@@ -334,10 +336,12 @@ class EntityCompositeFormRenderer(FormRenderer):
                     w(error)
                 else:
                     w(u'<td>')
-                if isinstance(field.widget, (fwdgs.Select, fwdgs.CheckBox, fwdgs.Radio)):
+                if isinstance(field.widget, (fwdgs.Select, fwdgs.CheckBox,
+                                             fwdgs.Radio)):
                     field.widget.attrs['onchange'] = cbsetstate
                 elif isinstance(field.widget, fwdgs.Input):
                     field.widget.attrs['onkeypress'] = cbsetstate
+                # XXX else
                 w(u'<div>%s</div>' % field.render(form, self))
                 w(u'</td></tr>')
         else:
