@@ -83,7 +83,8 @@ class DeleteConfFormView(FormViewMixIn, EntityView):
           % _('this action is not reversible!'))
         # XXX above message should have style of a warning
         w(u'<h4>%s</h4>\n' % _('Do you want to delete the following element(s) ?'))
-        form = self.vreg.select('forms', 'composite', req, onsubmit=onsubmit)
+        form = self.vreg.select('forms', self.id, req, rset=self.rset,
+                                onsubmit=onsubmit)
         w(u'<ul>\n')
         for entity in self.rset.entities():
             # don't use outofcontext view or any other that may contain inline edition form
