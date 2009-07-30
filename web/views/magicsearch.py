@@ -170,10 +170,7 @@ class QueryTranslator(BaseQueryProcessor):
     """
     priority = 2
     def preprocess_query(self, uquery, req):
-        try:
-            rqlst = parse(uquery, print_errors=False)
-        except (RQLSyntaxError, BadRQLQuery), err:
-            return uquery,
+        rqlst = parse(uquery, print_errors=False)
         schema = self.vreg.schema
         # rql syntax tree will be modified in place if necessary
         translate_rql_tree(rqlst, trmap(self.config, schema, req.lang), schema)
@@ -204,7 +201,7 @@ class QSPreProcessor(BaseQueryProcessor):
             elif len(words) == 3:
                 args = self._three_words_query(*words)
             else:
-                args = self._multiple_words_query(words)
+                raise
         return args
 
     def _get_entity_type(self, word):
@@ -290,11 +287,6 @@ class QSPreProcessor(BaseQueryProcessor):
         rql = '%s %s WHERE %s' % (etype, etype[0],
                                   self._complete_rql(word3, etype, searchattr=rtype))
         return rql, {'text': word3}
-
-    def _multiple_words_query(self, words):
-        """specific process for more than 3 words query"""
-        return ' '.join(words),
-
 
     def _expand_shortcut(self, etype, rtype, searchstr):
         """Expands shortcut queries on a non final relation to use has_text or

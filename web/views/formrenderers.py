@@ -193,7 +193,16 @@ class FormRenderer(AppRsetObject):
         byfieldset = {}
         for field in fields:
             byfieldset.setdefault(field.fieldset, []).append(field)
-        for fieldset, fields in byfieldset.iteritems():
+        if form.fieldsets_in_order:
+            fieldsets = form.fieldsets_in_order
+        else:
+            fieldsets = byfieldset.keys()
+        for fieldset in fieldsets:
+            try:
+                fields = byfieldset.pop(fieldset)
+            except KeyError:
+                self.warning('no such fieldset: %s (%s)', fieldset, form)
+                continue
             w(u'<fieldset class="%s">' % (fieldset or u'default'))
             if fieldset:
                 w(u'<legend>%s</legend>' % self.req._(fieldset))
@@ -213,6 +222,8 @@ class FormRenderer(AppRsetObject):
                     w(self.render_help(form, field))
                 w(u'</td></tr>')
             w(u'</table></fieldset>')
+        if byfieldset:
+            self.warning('unused fieldsets: %s', ', '.join(byfieldset))
 
     def render_buttons(self, w, form):
         if not form.form_buttons:
@@ -295,22 +306,29 @@ class EntityCompositeFormRenderer(FormRenderer):
     """specific renderer for multiple entities edition form (muledit)"""
     id = 'composite'
 
+    _main_display_fields = None
+
     def render_fields(self, w, form, values):
         if not form.is_subform:
             w(u'<table class="listing">')
         super(EntityCompositeFormRenderer, self).render_fields(w, form, values)
         if not form.is_subform:
             w(u'</table>')
+            if self._main_display_fields:
+                super(EntityCompositeFormRenderer, self)._render_fields(
+                    self._main_display_fields, w, form)
 
     def _render_fields(self, fields, w, form):
         if form.is_subform:
             entity = form.edited_entity
             values = form.form_previous_values
             qeid = eid_param('eid', entity.eid)
-            cbsetstate = "setCheckboxesState2('eid', %s, 'checked')" % xml_escape(dumps(entity.eid))
+            cbsetstate = "setCheckboxesState2('eid', %s, 'checked')" % \
+                         xml_escape(dumps(entity.eid))
             w(u'<tr class="%s">' % (entity.row % 2 and u'even' or u'odd'))
             # XXX turn this into a widget used on the eid field
-            w(u'<td>%s</td>' % checkbox('eid', entity.eid, checked=qeid in values))
+            w(u'<td>%s</td>' % checkbox('eid', entity.eid,
+                                        checked=qeid in values))
             for field in fields:
                 error = form.form_field_error(field)
                 if error:
@@ -318,22 +336,29 @@ class EntityCompositeFormRenderer(FormRenderer):
                     w(error)
                 else:
                     w(u'<td>')
-                if isinstance(field.widget, (fwdgs.Select, fwdgs.CheckBox, fwdgs.Radio)):
+                if isinstance(field.widget, (fwdgs.Select, fwdgs.CheckBox,
+                                             fwdgs.Radio)):
                     field.widget.attrs['onchange'] = cbsetstate
                 elif isinstance(field.widget, fwdgs.Input):
                     field.widget.attrs['onkeypress'] = cbsetstate
+                # XXX else
                 w(u'<div>%s</div>' % field.render(form, self))
-                w(u'</td>')
+                w(u'</td></tr>')
         else:
-            # main form, display table headers
-            w(u'<tr class="header">')
-            w(u'<th align="left">%s</th>'
-              % tags.input(type='checkbox', title=self.req._('toggle check boxes'),
-                           onclick="setCheckboxesState('eid', this.checked)"))
-            for field in self.forms[0].fields:
-                if self.display_field(form, field) and field.is_visible():
+            self._main_display_fields = fields
+            subfields = [field for field in form.forms[0].fields
+                         if self.display_field(form, field)
+                         and field.is_visible()]
+            if subfields:
+                # main form, display table headers
+                w(u'<tr class="header">')
+                w(u'<th align="left">%s</th>' %
+                  tags.input(type='checkbox',
+                             title=self.req._('toggle check boxes'),
+                             onclick="setCheckboxesState('eid', this.checked)"))
+                for field in subfields:
                     w(u'<th>%s</th>' % self.req._(field.label))
-        w(u'</tr>')
+                w(u'</tr>')
 
 
 class EntityFormRenderer(EntityBaseFormRenderer):

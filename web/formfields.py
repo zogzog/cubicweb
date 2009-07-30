@@ -480,7 +480,7 @@ class CompoundField(Field):
 
     def subfields(self, form):
         return self.fields
-    
+
     def actual_fields(self, form):
         return [self] + list(self.fields)
 

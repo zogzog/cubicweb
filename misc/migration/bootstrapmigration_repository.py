@@ -29,6 +29,7 @@ if applcubicwebversion < (3, 4, 0) and cubicwebversion >= (3, 4, 0):
     isession.commit()
     repo.hm.register_hook(uniquecstrcheck_before_modification, 'before_add_entity', '')
     repo.hm.register_hook(uniquecstrcheck_before_modification, 'before_update_entity', '')
+    session.set_shared_data('do-not-insert-cwuri', False)
 
 if applcubicwebversion < (3, 2, 2) and cubicwebversion >= (3, 2, 1):
     from base64 import b64encode

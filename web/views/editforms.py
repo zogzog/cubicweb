@@ -43,7 +43,31 @@ def toggleable_relation_link(eid, nodeid, label='x'):
         js, nodeid, label)
 
 
-class DeleteConfForm(FormViewMixIn, EntityView):
+class DeleteConfForm(forms.CompositeForm):
+    id = 'deleteconf'
+    __select__ = non_final_entity()
+
+    domid = 'deleteconf'
+    copy_nav_params = True
+    form_buttons = [Button(stdmsgs.YES, cwaction='delete'),
+                    Button(stdmsgs.NO, cwaction='cancel')]
+    @property
+    def action(self):
+        return self.build_url('edit')
+
+    def __init__(self, *args, **kwargs):
+        super(DeleteConfForm, self).__init__(*args, **kwargs)
+        done = set()
+        for entity in self.rset.entities():
+            if entity.eid in done:
+                continue
+            done.add(entity.eid)
+            subform = self.vreg.select('forms', 'base', self.req, entity=entity,
+                                       mainform=False)
+            self.form_add_subform(subform)
+
+
+class DeleteConfFormView(FormViewMixIn, EntityView):
     """form used to confirm deletion of some entities"""
     id = 'deleteconf'
     title = _('delete')
@@ -59,20 +83,10 @@ class DeleteConfForm(FormViewMixIn, EntityView):
           % _('this action is not reversible!'))
         # XXX above message should have style of a warning
         w(u'<h4>%s</h4>\n' % _('Do you want to delete the following element(s) ?'))
-        form = self.vreg.select('forms', 'composite', req, domid='deleteconf',
-                                copy_nav_params=True,
-                                action=self.build_url('edit'), onsubmit=onsubmit,
-                                form_buttons=[Button(stdmsgs.YES, cwaction='delete'),
-                                              Button(stdmsgs.NO, cwaction='cancel')])
-        done = set()
+        form = self.vreg.select('forms', self.id, req, rset=self.rset,
+                                onsubmit=onsubmit)
         w(u'<ul>\n')
         for entity in self.rset.entities():
-            if entity.eid in done:
-                continue
-            done.add(entity.eid)
-            subform = self.vreg.select('forms', 'base', req, entity=entity,
-                                       mainform=False)
-            form.form_add_subform(subform)
             # don't use outofcontext view or any other that may contain inline edition form
             w(u'<li>%s</li>' % tags.a(entity.view('textoutofcontext'),
                                       href=entity.absolute_url()))
