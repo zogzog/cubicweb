@@ -134,14 +134,14 @@ class NotificationView(EntityView):
       override call)
     """
     msgid_timestamp = True
-
+    # XXX refactor to work with len(rset) > 1
     def recipients(self):
         finder = self.vreg.select('components', 'recipients_finder', self.req,
                                   rset=self.rset)
         return finder.recipients()
 
     def subject(self):
-        entity = self.entity(0, 0)
+        entity = self.entity(self.row or 0, self.col or 0)
         subject = self.req._(self.message)
         etype = entity.dc_type()
         eid = entity.eid
@@ -154,7 +154,7 @@ class NotificationView(EntityView):
         return self.req.actual_session().user.login
 
     def context(self, **kwargs):
-        entity = self.entity(0, 0)
+        entity = self.entity(self.row or 0, self.col or 0)
         for key, val in kwargs.iteritems():
             if val and isinstance(val, unicode) and val.strip():
                kwargs[key] = self.req._(val)
@@ -185,7 +185,7 @@ class NotificationView(EntityView):
             lang = self.vreg.property_value('ui.language')
             recipients = zip(recipients, repeat(lang))
         if self.rset is not None:
-            entity = self.entity(0, 0)
+            entity = self.entity(self.row or 0, self.col or 0)
             # if the view is using timestamp in message ids, no way to reference
             # previous email
             if not self.msgid_timestamp:
@@ -282,7 +282,7 @@ url: %(url)s
 """
 
     def context(self, **kwargs):
-        entity = self.entity(0, 0)
+        entity = self.entity(self.row or 0, self.col or 0)
         content = entity.printable_value(self.content_attr, format='text/plain')
         if content:
             contentformat = getattr(entity, self.content_attr + '_format', 'text/rest')
@@ -290,7 +290,7 @@ url: %(url)s
         return super(ContentAddedView, self).context(content=content, **kwargs)
 
     def subject(self):
-        entity = self.entity(0, 0)
+        entity = self.entity(self.row or 0, self.col or 0)
         return  u'%s #%s (%s)' % (self.req.__('New %s' % entity.e_schema),
                                   entity.eid, self.user_login())
 
