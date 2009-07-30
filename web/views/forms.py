@@ -20,16 +20,49 @@ from cubicweb.web.formfields import HiddenInitialValueField, StringField
 
 
 class FieldsForm(form.Form):
+    """base class for fields based forms.
+
+    The following attributes may be either set on subclasses or given on
+    form selection to customize the generated form:
+
+    * `needs_js`: sequence of javascript files that should be added to handle
+      this form (through `req.add_js`)
+
+    * `needs_css`: sequence of css files that should be added to handle this
+      form (through `req.add_css`)
+
+    * `domid`: value for the "id" attribute of the <form> tag
+
+    * `action`: value for the "action" attribute of the <form> tag
+
+    * `onsubmit`: value for the "onsubmit" attribute of the <form> tag
+
+    * `cssclass`: value for the "class" attribute of the <form> tag
+
+    * `cssstyle`: value for the "style" attribute of the <form> tag
+
+    * `cwtarget`: value for the "cubicweb:target" attribute of the <form> tag
+
+    * `redirect_path`: relative to redirect to after submitting the form
+
+    * `copy_nav_params`: flag telling if navigation paramenters should be copied
+      back in hidden input
+
+    * `form_buttons`:  form buttons sequence (button widgets instances)
+
+    * `form_renderer_id`: id of the form renderer to use to render the form
+
+    * `fieldsets_in_order`: fieldset name sequence, to control order
+    """
     id = 'base'
 
     is_subform = False
-
-    # attributes overrideable through __init__
     internal_fields = ('__errorurl',) + NAV_FORM_PARAMETERS
+
+    # attributes overrideable by subclasses or through __init__
     needs_js = ('cubicweb.ajax.js', 'cubicweb.edition.js',)
     needs_css = ('cubicweb.form.css',)
     domid = 'form'
-    title = None
     action = None
     onsubmit = "return freezeFormButtons('%(domid)s');"
     cssclass = None
@@ -37,8 +70,9 @@ class FieldsForm(form.Form):
     cwtarget = None
     redirect_path = None
     copy_nav_params = False
-    form_buttons = None # form buttons (button widgets instances)
+    form_buttons = None
     form_renderer_id = 'default'
+    fieldsets_in_order = None
 
     def __init__(self, req, rset=None, row=None, col=None,
                  submitmsg=None, mainform=True,
