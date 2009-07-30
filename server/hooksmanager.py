@@ -251,7 +251,7 @@ class Hook(AppObject):
         raise NotImplementedError
 
 class SystemHook(Hook):
-    accepts = ('',)
+    accepts = ()
 
 from logging import getLogger
 from cubicweb import set_log_methods
