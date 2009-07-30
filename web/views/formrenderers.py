@@ -193,7 +193,16 @@ class FormRenderer(AppRsetObject):
         byfieldset = {}
         for field in fields:
             byfieldset.setdefault(field.fieldset, []).append(field)
-        for fieldset, fields in byfieldset.iteritems():
+        if form.fieldsets_in_order:
+            fieldsets = form.fieldsets_in_order
+        else:
+            fieldsets = byfieldset.keys()
+        for fieldset in fieldsets:
+            try:
+                fields = byfieldset.pop(fieldset)
+            except KeyError:
+                self.warning('no such fieldset: %s (%s)', fieldset, form)
+                continue
             w(u'<fieldset class="%s">' % (fieldset or u'default'))
             if fieldset:
                 w(u'<legend>%s</legend>' % self.req._(fieldset))
@@ -213,6 +222,8 @@ class FormRenderer(AppRsetObject):
                     w(self.render_help(form, field))
                 w(u'</td></tr>')
             w(u'</table></fieldset>')
+        if byfieldset:
+            self.warning('unused fieldsets: %s', ', '.join(byfieldset))
 
     def render_buttons(self, w, form):
         if not form.form_buttons:
