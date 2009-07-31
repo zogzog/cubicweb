@@ -168,7 +168,9 @@ class DelayedDeleteOp(PreCommitOperation):
 
     def precommit_event(self):
         session = self.session
-        if not self.eid in session.transaction_data.get('pendingeids', ()):
+        # don't do anything if the entity is being created or deleted
+        if not (self.eid in session.transaction_data.get('pendingeids', ()) or
+                self.eid in session.transaction_data.get('neweids', ())):
             etype = session.describe(self.eid)[0]
             session.unsafe_execute('DELETE %s X WHERE X eid %%(x)s, NOT %s'
                                    % (etype, self.relation),
