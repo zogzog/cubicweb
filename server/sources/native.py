@@ -432,7 +432,7 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
             sql = self.sqlgen.delete('%s_relation' % rtype, attrs)
         self.doexec(session, sql, attrs)
 
-    def doexec(self, session, query, args=None):
+    def doexec(self, session, query, args=None, rollback=True):
         """Execute a query.
         it's a function just so that it shows up in profiling
         """
@@ -445,11 +445,12 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
         except Exception, ex:
             self.critical("sql: %r\n args: %s\ndbms message: %r",
                           query, args, ex.args[0])
-            try:
-                session.pool.connection(self.uri).rollback()
-                self.critical('transaction has been rollbacked')
-            except:
-                pass
+            if rollback:
+                try:
+                    session.pool.connection(self.uri).rollback()
+                    self.critical('transaction has been rollbacked')
+                except:
+                    pass
             raise
         return cursor
 

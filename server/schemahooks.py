@@ -51,7 +51,7 @@ def add_inline_relation_column(session, etype, rtype):
     column = SQL_PREFIX + rtype
     try:
         session.system_sql(str('ALTER TABLE %s ADD COLUMN %s integer'
-                               % (table, column)))
+                               % (table, column)), rollback_on_failure=False)
         session.info('added column %s to table %s', column, table)
     except:
         # silent exception here, if this error has not been raised because the
@@ -128,7 +128,7 @@ class DropColumnOp(PreCommitOperation):
         session.pool.source('system').drop_index(session, table, column)
         try:
             session.system_sql('ALTER TABLE %s DROP COLUMN %s'
-                               % (table, column))
+                               % (table, column), rollback_on_failure=False)
             self.info('dropped column %s from table %s', column, table)
         except Exception, ex:
             # not supported by sqlite for instance
@@ -410,7 +410,8 @@ class AddCWAttributePreCommitOp(PreCommitOperation):
         column = SQL_PREFIX + rtype
         try:
             session.system_sql(str('ALTER TABLE %s ADD COLUMN %s %s'
-                                   % (table, column, attrtype)))
+                                   % (table, column, attrtype)),
+                               rollback_on_failure=False)
             self.info('added column %s to table %s', table, column)
         except Exception, ex:
             # the column probably already exists. this occurs when
@@ -722,7 +723,7 @@ class ConstraintOp(SchemaOperation):
                                             creating=False)
             sql = adbh.sql_change_col_type(table, column, coltype, card != '1')
             try:
-                session.system_sql(sql)
+                session.system_sql(sql, rollback_on_failure=False)
                 self.info('altered column %s of table %s: now VARCHAR(%s)',
                           column, table, self._cstr.max)
             except Exception, ex:
@@ -761,7 +762,8 @@ class DelConstraintOp(ConstraintOp):
         if cstrtype == 'SizeConstraint':
             try:
                 self.session.system_sql('ALTER TABLE %s ALTER COLUMN %s TYPE TEXT'
-                                        % (table, column))
+                                        % (table, column),
+                                        rollback_on_failure=False)
                 self.info('altered column %s of table %s: now TEXT',
                           column, table)
             except Exception, ex:
