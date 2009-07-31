@@ -987,6 +987,8 @@ class Repository(object):
         source = self.locate_etype_source(etype)
         # attribute an eid to the entity before calling hooks
         entity.set_eid(self.system_source.create_eid(session))
+        if server.DEBUG & server.DBG_REPO:
+            print 'ADD entity', etype, entity.eid, dict(entity)
         entity._is_saved = False # entity has an eid but is not yet saved
         relations = []
         # if inlined relations are specified, fill entity's related cache to
@@ -1025,9 +1027,10 @@ class Repository(object):
         """replace an entity in the repository
         the type and the eid of an entity must not be changed
         """
-        #print 'update', entity
-        entity.check()
         etype = str(entity.e_schema)
+        if server.DEBUG & server.DBG_REPO:
+            print 'UPDATE entity', etype, entity.eid, dict(entity)
+        entity.check()
         eschema = entity.e_schema
         only_inline_rels, need_fti_update = True, False
         relations = []
@@ -1078,10 +1081,11 @@ class Repository(object):
 
     def glob_delete_entity(self, session, eid):
         """delete an entity and all related entities from the repository"""
-        #print 'deleting', eid
         # call delete_info before hooks
         self._prepare_delete_info(session, eid)
         etype, uri, extid = self.type_and_source_from_eid(eid, session)
+        if server.DEBUG & server.DBG_REPO:
+            print 'DELETE entity', etype, eid
         source = self.sources_by_uri[uri]
         if source.should_call_hooks:
             self.hm.call_hooks('before_delete_entity', etype, session, eid)
@@ -1093,11 +1097,9 @@ class Repository(object):
 
     def glob_add_relation(self, session, subject, rtype, object):
         """add a relation to the repository"""
-        assert subject is not None
-        assert rtype
-        assert object is not None
+        if server.DEBUG & server.DBG_REPO:
+            print 'ADD relation', subject, rtype, object
         source = self.locate_relation_source(session, subject, rtype, object)
-        #print 'adding', subject, rtype, object, 'to', source
         if source.should_call_hooks:
             del_existing_rel_if_needed(session, subject, rtype, object)
             self.hm.call_hooks('before_add_relation', rtype, session,
@@ -1109,11 +1111,9 @@ class Repository(object):
 
     def glob_delete_relation(self, session, subject, rtype, object):
         """delete a relation from the repository"""
-        assert subject is not None
-        assert rtype
-        assert object is not None
+        if server.DEBUG & server.DBG_REPO:
+            print 'DELETE relation', subject, rtype, object
         source = self.locate_relation_source(session, subject, rtype, object)
-        #print 'delete rel', subject, rtype, object
         if source.should_call_hooks:
             self.hm.call_hooks('before_delete_relation', rtype, session,
                                subject, rtype, object)
