@@ -110,7 +110,7 @@ class UtilsTC(BaseQuerierTC):
                                        'ET': 'CWEType', 'ETN': 'String'}])
         rql, solutions = partrqls[1]
         self.assertEquals(rql,  'Any ETN,X WHERE X is ET, ET name ETN, ET is CWEType, '
-                          'X is IN(Bookmark, CWAttribute, CWCache, CWConstraint, CWConstraintType, CWEType, CWGroup, CWPermission, CWProperty, CWRType, CWRelation, CWUser, Card, Comment, Division, Email, EmailAddress, EmailPart, EmailThread, File, Folder, Image, Note, Personne, RQLExpression, Societe, State, SubDivision, Tag, TrInfo, Transition)')
+                          'X is IN(Bookmark, CWAttribute, CWCache, CWConstraint, CWConstraintType, CWEType, CWGroup, CWPermission, CWProperty, CWRType, CWRelation, CWUser, Card, Comment, Division, Email, EmailAddress, EmailPart, EmailThread, ExternalUri, File, Folder, Image, Note, Personne, RQLExpression, Societe, State, SubDivision, Tag, TrInfo, Transition)')
         self.assertListEquals(sorted(solutions),
                               sorted([{'X': 'Bookmark', 'ETN': 'String', 'ET': 'CWEType'},
                                       {'X': 'Card', 'ETN': 'String', 'ET': 'CWEType'},
@@ -131,6 +131,7 @@ class UtilsTC(BaseQuerierTC):
                                       {'X': 'CWProperty', 'ETN': 'String', 'ET': 'CWEType'},
                                       {'X': 'CWRType', 'ETN': 'String', 'ET': 'CWEType'},
                                       {'X': 'CWUser', 'ETN': 'String', 'ET': 'CWEType'},
+                                      {'X': 'ExternalUri', 'ETN': 'String', 'ET': 'CWEType'},
                                       {'X': 'File', 'ETN': 'String', 'ET': 'CWEType'},
                                       {'X': 'Folder', 'ETN': 'String', 'ET': 'CWEType'},
                                       {'X': 'Image', 'ETN': 'String', 'ET': 'CWEType'},
@@ -226,10 +227,10 @@ class QuerierTC(BaseQuerierTC):
 
     def test_select_2(self):
         rset = self.execute('Any X ORDERBY N WHERE X is CWGroup, X name N')
-        self.assertEquals(tuplify(rset.rows), [(3,), (1,), (4,), (2,)])
+        self.assertEquals(tuplify(rset.rows), [(1,), (2,), (3,), (4,)])
         self.assertEquals(rset.description, [('CWGroup',), ('CWGroup',), ('CWGroup',), ('CWGroup',)])
         rset = self.execute('Any X ORDERBY N DESC WHERE X is CWGroup, X name N')
-        self.assertEquals(tuplify(rset.rows), [(2,), (4,), (1,), (3,)])
+        self.assertEquals(tuplify(rset.rows), [(4,), (3,), (2,), (1,)])
 
     def test_select_3(self):
         rset = self.execute('Any N GROUPBY N WHERE X is CWGroup, X name N')
@@ -272,7 +273,7 @@ class QuerierTC(BaseQuerierTC):
 
     def test_select_5(self):
         rset = self.execute('Any X, TMP ORDERBY TMP WHERE X name TMP, X is CWGroup')
-        self.assertEquals(tuplify(rset.rows), [(3, 'guests',), (1, 'managers',), (4, 'owners',), (2, 'users',)])
+        self.assertEquals(tuplify(rset.rows), [(1, 'guests',), (2, 'managers',), (3, 'owners',), (4, 'users',)])
         self.assertEquals(rset.description, [('CWGroup', 'String',), ('CWGroup', 'String',), ('CWGroup', 'String',), ('CWGroup', 'String',)])
 
     def test_select_6(self):
@@ -344,7 +345,8 @@ class QuerierTC(BaseQuerierTC):
         peid1 = self.execute("INSERT Personne X: X nom 'bidule'")[0][0]
         rset = self.execute('Any X WHERE X eid %(x)s, P? connait X', {'x':peid1}, 'x')
         self.assertEquals(rset.rows, [[peid1]])
-        rset = self.execute('Any X WHERE X eid %(x)s, X require_permission P?', {'x':peid1}, 'x')
+        rset = self.execute('Any X WHERE X eid %(x)s, X require_permission P?',
+                            {'x':peid1}, 'x')
         self.assertEquals(rset.rows, [[peid1]])
 
     def test_select_left_outer_join(self):
@@ -464,10 +466,12 @@ class QuerierTC(BaseQuerierTC):
                             'WHERE RT name N, RDEF relation_type RT '
                             'HAVING COUNT(RDEF) > 10')
         self.assertListEquals(rset.rows,
-                              [[u'description', 11], ['in_basket', 11],
-                               [u'name', 13], [u'created_by', 33],
-                               [u'creation_date', 33], [u'is', 33], [u'is_instance_of', 33],
-                               [u'modification_date', 33], [u'owned_by', 33]])
+                              [[u'description', 11],
+                               [u'name', 13], [u'created_by', 34],
+                               [u'creation_date', 34], [u'cwuri', 34],
+                               ['in_basket', 34],
+                               [u'is', 34], [u'is_instance_of', 34],
+                               [u'modification_date', 34], [u'owned_by', 34]])
 
     def test_select_aggregat_having_dumb(self):
         # dumb but should not raise an error
@@ -553,10 +557,10 @@ class QuerierTC(BaseQuerierTC):
 
     def test_select_limit_offset(self):
         rset = self.execute('CWGroup X ORDERBY N LIMIT 2 WHERE X name N')
-        self.assertEquals(tuplify(rset.rows), [(3,), (1,)])
+        self.assertEquals(tuplify(rset.rows), [(1,), (2,)])
         self.assertEquals(rset.description, [('CWGroup',), ('CWGroup',)])
         rset = self.execute('CWGroup X ORDERBY N LIMIT 2 OFFSET 2 WHERE X name N')
-        self.assertEquals(tuplify(rset.rows), [(4,), (2,)])
+        self.assertEquals(tuplify(rset.rows), [(3,), (4,)])
 
     def test_select_symetric(self):
         self.execute("INSERT Personne X: X nom 'machin'")

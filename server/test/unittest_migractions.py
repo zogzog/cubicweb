@@ -3,11 +3,12 @@
 """
 
 from datetime import date
+from os.path import join
 
 from logilab.common.testlib import TestCase, unittest_main
-from cubicweb.devtools.apptest import RepositoryBasedTC, get_versions
 
 from cubicweb import ConfigurationError
+from cubicweb.devtools.apptest import RepositoryBasedTC, get_versions
 from cubicweb.schema import CubicWebSchemaLoader
 from cubicweb.server.sqlutils import SQL_PREFIX
 from cubicweb.server.repository import Repository
@@ -32,10 +33,10 @@ class MigrationCommandsTC(RepositoryBasedTC):
             repo.config._cubes = None
             repo.fill_schema()
             # hack to read the schema from data/migrschema
-            CubicWebSchemaLoader.main_schema_directory = 'migrschema'
+            self.repo.config.appid = join('data', 'migratedapp')
             global migrschema
             migrschema = self.repo.config.load_schema()
-            del CubicWebSchemaLoader.main_schema_directory
+            self.repo.config.appid = 'data'
             assert 'Folder' in migrschema
             self.repo.hm.deactivate_verification_hooks()
         RepositoryBasedTC.setUp(self)
@@ -356,7 +357,7 @@ class MigrationCommandsTC(RepositoryBasedTC):
     def test_add_remove_cube_and_deps(self):
         cubes = set(self.config.cubes())
         schema = self.repo.schema
-        self.assertEquals(sorted(schema['see_also']._rproperties.keys()),
+        self.assertEquals(sorted((str(s), str(o)) for s, o in schema['see_also']._rproperties.keys()),
                           sorted([('EmailThread', 'EmailThread'), ('Folder', 'Folder'),
                                   ('Bookmark', 'Bookmark'), ('Bookmark', 'Note'),
                                   ('Note', 'Note'), ('Note', 'Bookmark')]))

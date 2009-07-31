@@ -76,7 +76,7 @@ class Note(EntityType):
 
     migrated_from = SubjectRelation('Note')
     attachment = SubjectRelation(('File', 'Image'))
-    inline1 = SubjectRelation('Affaire', inlined=True)
+    inline1 = SubjectRelation('Affaire', inlined=True, cardinality='?*')
     todo_by = SubjectRelation('CWUser')
 
 class Personne(EntityType):
@@ -98,7 +98,7 @@ class Personne(EntityType):
     travaille = SubjectRelation('Societe')
     concerne = SubjectRelation('Affaire')
     connait = SubjectRelation('Personne')
-    inline2 = SubjectRelation('Affaire', inlined=True)
+    inline2 = SubjectRelation('Affaire', inlined=True, cardinality='?*')
     comments = ObjectRelation('Comment')
 
 
@@ -167,7 +167,12 @@ class multisource_crossed_rel(RelationDefinition):
     object = 'Note'
 
 
-class see_also(RelationDefinition):
+class see_also_1(RelationDefinition):
+    name = 'see_also'
+    subject = object = 'Folder'
+
+class see_also_2(RelationDefinition):
+    name = 'see_also'
     subject = ('Bookmark', 'Note')
     object = ('Bookmark', 'Note')
 
@@ -180,14 +185,13 @@ class ecrit_par_1(RelationDefinition):
     subject = 'Note'
     object ='Personne'
     constraints = [RQLConstraint('E concerns P, X version_of P')]
+    cardinality = '?*'
 
 class ecrit_par_2(RelationDefinition):
     name = 'ecrit_par'
     subject = 'Note'
     object ='CWUser'
-
-class see_also(RelationDefinition):
-    subject = object = 'Folder'
+    cardinality='?*'
 
 
 class copain(RelationDefinition):
@@ -202,7 +206,7 @@ class filed_under(RelationDefinition):
     object = 'Folder'
 
 class require_permission(RelationDefinition):
-    subject = ('Card', 'Note')
+    subject = ('Card', 'Note', 'Personne')
     object = 'CWPermission'
 
 class require_state(RelationDefinition):

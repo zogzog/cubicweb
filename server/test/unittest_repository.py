@@ -226,12 +226,12 @@ class RepositoryTC(RepositoryBasedTC):
         # check order of attributes is respected
         self.assertListEquals([r.type for r in schema.eschema('CWAttribute').ordered_relations()
                                if not r.type in ('eid', 'is', 'is_instance_of', 'identity',
-                                                 'creation_date', 'modification_date',
+                                                 'creation_date', 'modification_date', 'cwuri',
                                                  'owned_by', 'created_by')],
-                              ['relation_type', 'from_entity', 'to_entity', 'constrained_by',
+                              ['relation_type', 'from_entity', 'in_basket', 'to_entity', 'constrained_by',
                                'cardinality', 'ordernum',
                                'indexed', 'fulltextindexed', 'internationalizable',
-                               'defaultval', 'description_format', 'description'])
+                               'defaultval', 'description', 'description_format'])
 
         self.assertEquals(schema.eschema('CWEType').main_attribute(), 'name')
         self.assertEquals(schema.eschema('State').main_attribute(), 'name')

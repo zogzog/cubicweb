@@ -515,6 +515,7 @@ class BaseSchemaSecurityTC(BaseSecurityTC):
         self.execute('SET TI comment %(c)s WHERE TI wf_info_for X, X ref "ARCT01"',
                      {'c': u'creation'})
         self.commit()
+        aff.clear_related_cache('wf_info_for', 'object')
         self.assertEquals(aff.latest_trinfo().comment, 'creation')
         # but not from_state/to_state
         self.execute('SET X in_state S WHERE X ref "ARCT01", S name "ben non"')

@@ -62,12 +62,12 @@ class CoreHooksTC(RepositoryBasedTC):
 
     def test_delete_if_singlecard1(self):
         self.assertEquals(self.repo.schema['in_state'].inlined, False)
-        ueid, = self.execute('INSERT CWUser X: X login "toto", X upassword "hop", X in_group Y, X in_state S '
-                             'WHERE Y name "users", S name "activated"')[0]
+        ueid = self.create_user('toto')
         self.commit()
         self.execute('SET X in_state S WHERE S name "deactivated", X eid %(x)s', {'x': ueid})
         rset = self.execute('Any S WHERE X in_state S, X eid %(x)s', {'x': ueid})
         self.assertEquals(len(rset), 1)
+        self.commit()
         self.assertRaises(Exception, self.execute, 'SET X in_state S WHERE S name "deactivated", X eid %s' % ueid)
         rset2 = self.execute('Any S WHERE X in_state S, X eid %(x)s', {'x': ueid})
         self.assertEquals(rset.rows, rset2.rows)
@@ -251,7 +251,7 @@ class SchemaModificationHooksTC(RepositoryBasedTC):
         if not hasattr(self, '_repo'):
             # first initialization
             repo = self.repo # set by the RepositoryBasedTC metaclass
-            # force to read schema from the database
+            # force to read schema from the database to get proper eid set on schema instances
             repo.config._cubes = None
             repo.fill_schema()
         RepositoryBasedTC.setUp(self)
