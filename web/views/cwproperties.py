@@ -292,7 +292,7 @@ class PropertyKeyField(StringField):
         wdg.attrs['tabindex'] = form.req.next_tabindex()
         wdg.attrs['onchange'] = "javascript:setPropValueWidget('%s', %s)" % (
             form.edited_entity.eid, form.req.next_tabindex())
-        return wdg.render(form, self)
+        return wdg.render(form, self, renderer)
 
     def vocabulary(self, form):
         entity = form.edited_entity
@@ -313,7 +313,7 @@ class PropertyValueField(StringField):
         wdg = self.get_widget(form)
         if tabindex is not None:
             wdg.attrs['tabindex'] = tabindex
-        return wdg.render(form, self)
+        return wdg.render(form, self, renderer)
 
     def form_init(self, form):
         entity = form.edited_entity
