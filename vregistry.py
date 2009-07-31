@@ -266,7 +266,7 @@ class VRegistry(object):
                 oid = obj.id
             except AttributeError:
                 continue
-            if oid:
+            if oid and not '__abstract__' in obj.__dict__:
                 self.register(obj)
 
     def register(self, obj, registryname=None, oid=None, clear=False):

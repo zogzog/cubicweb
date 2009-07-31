@@ -324,6 +324,10 @@ class RepositoryTC(RepositoryBasedTC):
         self.assertRaises(BadConnectionId, repo.set_shared_data, cnxid, 'data', 0)
         self.assertRaises(BadConnectionId, repo.get_shared_data, cnxid, 'data')
 
+    def test_schema_is_relation(self):
+        no_is_rset = self.execute('Any X WHERE NOT X is ET')
+        self.failIf(no_is_rset, no_is_rset.description)
+
 
 class DataHelpersTC(RepositoryBasedTC):
 
