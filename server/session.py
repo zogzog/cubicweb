@@ -94,11 +94,12 @@ class Session(RequestSessionMixIn):
         """return an entity class for the given entity type"""
         return self.vreg.etype_class(etype)
 
-    def system_sql(self, sql, args=None):
+    def system_sql(self, sql, args=None, rollback_on_failure=True):
         """return a sql cursor on the system database"""
         if not sql.split(None, 1)[0].upper() == 'SELECT':
             self.mode = 'write'
-        return self.pool.source('system').doexec(self, sql, args)
+        return self.pool.source('system').doexec(self, sql, args,
+                                                 rollback=rollback_on_failure)
 
     def set_language(self, language):
         """i18n configuration for translation"""
