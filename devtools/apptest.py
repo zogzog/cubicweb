@@ -457,7 +457,6 @@ class RepositoryBasedTC(TestCase):
     pactionsdict = EnvBasedTC.pactionsdict.im_func
 
     # default test setup and teardown #########################################
-    copy_schema = False
 
     def _prepare(self):
         MAILBOX[:] = [] # reset mailbox
@@ -470,16 +469,6 @@ class RepositoryBasedTC(TestCase):
         self.__close = repo.close
         self.cnxid = self.cnx.sessionid
         self.session = repo._sessions[self.cnxid]
-        if self.copy_schema:
-            # XXX copy schema since hooks may alter it and it may be not fully
-            #     cleaned (missing some schema synchronization support)
-            try:
-                origschema = repo.__schema
-            except AttributeError:
-                repo.__schema = origschema = repo.schema
-            repo.schema = deepcopy(origschema)
-            repo.set_schema(repo.schema) # reset hooks
-            repo.vreg.update_schema(repo.schema)
         self.cnxs = []
         # reset caches, they may introduce bugs among tests
         repo._type_source_cache = {}

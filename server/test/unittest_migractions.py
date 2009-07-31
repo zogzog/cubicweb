@@ -23,7 +23,6 @@ def teardown_module(*args):
 
 
 class MigrationCommandsTC(RepositoryBasedTC):
-    copy_schema = False
 
     def setUp(self):
         if not hasattr(self, '_repo'):

@@ -246,7 +246,6 @@ class SchemaHooksTC(RepositoryBasedTC):
 
 
 class SchemaModificationHooksTC(RepositoryBasedTC):
-    #copy_schema = True
 
     def setUp(self):
         if not hasattr(self, '_repo'):
