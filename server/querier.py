@@ -24,6 +24,8 @@ from cubicweb.server.utils import cleanup_solutions
 from cubicweb.server.rqlannotation import SQLGenAnnotator, set_qdata
 from cubicweb.server.ssplanner import add_types_restriction
 
+READ_ONLY_RTYPES = set(('eid', 'has_text', 'is', 'is_instance_of', 'identity'))
+
 def empty_rset(session, rql, args, rqlst=None):
     """build an empty result set object"""
     return ResultSet([], rql, args, rqlst=rqlst)
@@ -67,7 +69,7 @@ def check_read_access(schema, user, rqlst, solution):
     if rqlst.where is not None:
         for rel in rqlst.where.iget_nodes(Relation):
             # XXX has_text may have specific perm ?
-            if rel.r_type in ('is', 'is_instance_of', 'has_text', 'identity', 'eid'):
+            if rel.r_type in READ_ONLY_RTYPES:
                 continue
             if not schema.rschema(rel.r_type).has_access(user, 'read'):
                 raise Unauthorized('read', rel.r_type)
@@ -371,7 +373,7 @@ class InsertPlan(ExecutionPlan):
         for relation in rqlst.main_relations:
             lhs, rhs = relation.get_variable_parts()
             rtype = relation.r_type
-            if rtype in ('eid', 'has_text', 'is', 'is_instance_of', 'identity'):
+            if rtype in READ_ONLY_RTYPES:
                 raise QueryError("can't assign to %s" % rtype)
             try:
                 edef = to_build[str(lhs)]
