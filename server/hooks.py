@@ -17,6 +17,15 @@ from cubicweb.server.hookhelper import (check_internal_entity, previous_state,
                                      get_user_sessions, rproperty)
 from cubicweb.server.repository import FTIndexEntityOp
 
+# special relations that don't have to be checked for integrity, usually
+# because they are handled internally by hooks (so we trust ourselves)
+DONT_CHECK_RTYPES_ON_ADD = set(('owned_by', 'created_by',
+                                'is', 'is_instance_of',
+                                'wf_info_for', 'from_state', 'to_state'))
+DONT_CHECK_RTYPES_ON_DEL = set(('is', 'is_instance_of',
+                                'wf_info_for', 'from_state', 'to_state'))
+
+
 def relation_deleted(session, eidfrom, rtype, eidto):
     session.transaction_data.setdefault('pendingrelations', []).append(
         (eidfrom, rtype, eidto))
@@ -280,7 +289,7 @@ def cardinalitycheck_after_add_entity(session, entity):
     eid = entity.eid
     for rschema, targetschemas, x in entity.e_schema.relation_definitions():
         # skip automatically handled relations
-        if rschema.type in ('owned_by', 'created_by', 'is', 'is_instance_of'):
+        if rschema.type in DONT_CHECK_RTYPES_ON_ADD:
             continue
         if x == 'subject':
             subjtype = entity.e_schema
@@ -299,6 +308,8 @@ def cardinalitycheck_after_add_entity(session, entity):
 
 def cardinalitycheck_before_del_relation(session, eidfrom, rtype, eidto):
     """check cardinalities are satisfied"""
+    if rtype in DONT_CHECK_RTYPES_ON_DEL:
+        return
     card = rproperty(session, rtype, eidfrom, eidto, 'cardinality')
     pendingeids = session.transaction_data.get('pendingeids', ())
     if card[0] in '1+' and not eidfrom in pendingeids:
