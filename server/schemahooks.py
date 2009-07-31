@@ -371,12 +371,12 @@ class AddCWAttributePreCommitOp(PreCommitOperation):
     def precommit_event(self):
         session = self.session
         entity = self.entity
-        fromentity = entity.from_entity[0]
-        relationtype = entity.relation_type[0]
+        fromentity = entity.stype
+        relationtype = entity.rtype
         session.execute('SET X ordernum Y+1 WHERE X from_entity SE, SE eid %(se)s, X ordernum Y, X ordernum >= %(order)s, NOT X eid %(x)s',
                         {'x': entity.eid, 'se': fromentity.eid, 'order': entity.ordernum or 0})
         subj, rtype = str(fromentity.name), str(relationtype.name)
-        obj = str(entity.to_entity[0].name)
+        obj = str(entity.otype.name)
         # at this point default is a string or None, but we need a correctly
         # typed value
         default = entity.defaultval
@@ -444,12 +444,12 @@ class AddCWRelationPreCommitOp(PreCommitOperation):
     def precommit_event(self):
         session = self.session
         entity = self.entity
-        fromentity = entity.from_entity[0]
-        relationtype = entity.relation_type[0]
+        fromentity = entity.stype.name
+        relationtype = entity.rtype
         session.execute('SET X ordernum Y+1 WHERE X from_entity SE, SE eid %(se)s, X ordernum Y, X ordernum >= %(order)s, NOT X eid %(x)s',
                         {'x': entity.eid, 'se': fromentity.eid, 'order': entity.ordernum or 0})
         subj, rtype = str(fromentity.name), str(relationtype.name)
-        obj = str(entity.to_entity[0].name)
+        obj = str(entity.otype.name)
         card = entity.get('cardinality')
         rdef = RelationDefinition(subj, rtype, obj,
                                   cardinality=card,
@@ -586,8 +586,8 @@ class UpdateRelationDefOp(SchemaOperation):
 
 
 def after_update_erdef(session, entity):
-    desttype = entity.to_entity[0].name
-    rschema = session.repo.schema[entity.relation_type[0].name]
+    desttype = entity.otype.name
+    rschema = session.repo.schema[entity.rtype.name]
     newvalues = {}
     for prop in rschema.rproperty_defs(desttype):
         if prop == 'constraints':
@@ -597,7 +597,7 @@ def after_update_erdef(session, entity):
         if prop in entity:
             newvalues[prop] = entity[prop]
     if newvalues:
-        subjtype = entity.from_entity[0].name
+        subjtype = entity.stype.name
         UpdateRelationDefOp(session, (subjtype, desttype),
                             rschema=rschema, values=newvalues)
 
