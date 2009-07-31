@@ -124,7 +124,8 @@ def init_repository(config, interactive=True, drop=False, vreg=None):
         else:
             login, pwd = unicode(source['db-user']), source['db-password']
     print '-> inserting default user and default groups.'
-    for group in BASE_GROUPS:
+    # sort for eid predicatability as expected in some server tests
+    for group in sorted(BASE_GROUPS):
         rset = session.execute('INSERT CWGroup X: X name %(name)s',
                                {'name': unicode(group)})
     rset = session.execute('INSERT CWUser X: X login %(login)s, X upassword %(pwd)s',
