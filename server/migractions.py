@@ -30,7 +30,7 @@ from yams.constraints import SizeConstraint
 from yams.schema2sql import eschema2sql, rschema2sql
 
 from cubicweb import AuthenticationError, ETYPE_NAME_MAP
-from cubicweb.schema import VIRTUAL_RTYPES, CubicWebRelationSchema
+from cubicweb.schema import META_RTYPES, VIRTUAL_RTYPES, CubicWebRelationSchema
 from cubicweb.dbapi import get_repository, repo_connect
 from cubicweb.common.migration import MigrationHelper, yes
 
@@ -587,7 +587,7 @@ class ServerMigrationHelper(MigrationHelper):
         # register entity's attributes
         for rschema, attrschema in eschema.attribute_definitions():
             # ignore those meta relations, they will be automatically added
-            if rschema.type in ('eid', 'creation_date', 'modification_date'):
+            if rschema.type in META_RTYPES:
                 continue
             if not rschema.type in applschema:
                 # need to add the relation type and to commit to get it
@@ -603,7 +603,7 @@ class ServerMigrationHelper(MigrationHelper):
             for rschema in eschema.subject_relations():
                 # attribute relation have already been processed and
                 # 'owned_by'/'created_by' will be automatically added
-                if rschema.final or rschema.type in ('owned_by', 'created_by', 'is', 'is_instance_of'):
+                if rschema.final or rschema.type in META_RTYPES:
                     continue
                 rtypeadded = rschema.type in applschema
                 for targetschema in rschema.objects(etype):

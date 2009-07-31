@@ -13,7 +13,7 @@ from logilab.mtconverter import xml_escape
 from yams import BASE_TYPES, schema2dot as s2d
 
 from cubicweb.selectors import implements, yes, match_user_groups
-from cubicweb.schema import META_RELATIONS_TYPES, SCHEMA_TYPES
+from cubicweb.schema import META_RTYPES, SCHEMA_TYPES
 from cubicweb.schemaviewer import SchemaViewer
 from cubicweb.view import EntityView, StartupView
 from cubicweb.common import tags, uilib
@@ -22,7 +22,7 @@ from cubicweb.web.views import TmpFileViewMixin
 from cubicweb.web.views import primary, baseviews, tabs, management
 
 ALWAYS_SKIP_TYPES = BASE_TYPES | SCHEMA_TYPES
-SKIP_TYPES = ALWAYS_SKIP_TYPES | META_RELATIONS_TYPES
+SKIP_TYPES = ALWAYS_SKIP_TYPES | META_RTYPES
 SKIP_TYPES.update(set(('Transition', 'State', 'TrInfo',
                        'CWUser', 'CWGroup',
                        'CWCache', 'CWProperty', 'CWPermission',
@@ -91,7 +91,7 @@ class ManagerSchemaPermissionsView(StartupView, management.SecurityViewMixIn):
             relations = sorted(rschema for rschema in schema.relations()
                                if not (rschema.is_final()
                                        or rschema in skiptypes
-                                       or rschema in META_RELATIONS_TYPES))
+                                       or rschema in META_RTYPES))
         else:
             relations = []
         # index

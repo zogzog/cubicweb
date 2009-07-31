@@ -17,6 +17,7 @@ from yams.buildobjs import EntityType, RelationType, RelationDefinition
 from yams.schema2sql import eschema2sql, rschema2sql, type_from_constraints
 
 from cubicweb import ValidationError, RepositoryError
+from cubicweb.schema import META_RTYPES, VIRTUAL_RTYPES
 from cubicweb.server import schemaserial as ss
 from cubicweb.server.sqlutils import SQL_PREFIX
 from cubicweb.server.pool import Operation, SingleLastOperation, PreCommitOperation
@@ -282,8 +283,7 @@ def after_add_eetype(session, entity):
     tablesql = eschema2sql(session.pool.source('system').dbhelper, eschema,
                            prefix=SQL_PREFIX)
     relrqls = []
-    for rtype in ('is', 'is_instance_of', 'creation_date', 'modification_date',
-                  'cwuri', 'created_by', 'owned_by'):
+    for rtype in (META_RTYPES - VIRTUAL_RTYPES):
         rschema = schema[rtype]
         sampletype = rschema.subjects()[0]
         desttype = rschema.objects()[0]
@@ -300,7 +300,7 @@ def after_add_eetype(session, entity):
     # or permission settings
     etype.eid = entity.eid
     AddCWETypeOp(session, etype)
-    # add meta creation_date, modification_date and owned_by relations
+    # add meta relations
     for rql, kwargs in relrqls:
         session.execute(rql, kwargs)
 
