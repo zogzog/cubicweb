@@ -30,19 +30,26 @@ class ConnectionWrapper(object):
     def cursor(self):
         if self._cnx is None:
             self._cnx = self.source._sqlcnx
+            if server.DEBUG & server.DBG_SQL:
+                print 'sql cnx open', self._cnx
         return self._cnx.cursor()
 
     def commit(self):
         if self._cnx is not None:
-            self._cnx.commit()
+            if server.DEBUG & server.DBG_SQL:
+                print 'sql cnx commit', self._cnx
 
     def rollback(self):
         if self._cnx is not None:
+            if server.DEBUG & server.DBG_SQL:
+                print 'sql cnx rollback', self._cnx
             self._cnx.rollback()
 
     def close(self):
         if self._cnx is not None:
             self._cnx.close()
+            if server.DEBUG & server.DBG_SQL:
+                print 'sql cnx close', self._cnx
             self._cnx = None
 
 
@@ -184,11 +191,11 @@ repository.',
         if self._need_sql_create:
             return []
         sql, query_args = self.rqlsqlgen.generate(union, args)
-        if server.DEBUG:
-            print self.uri, 'SOURCE RQL', union.as_string()
+        if server.DEBUG & server.DBG_RQL:
+            print 'RQL FOR %s SOURCE:' % (self.uri, union.as_string())
         args = self.sqladapter.merge_args(args, query_args)
         res = self.sqladapter.process_result(self.doexec(session, sql, args))
-        if server.DEBUG:
+        if server.DEBUG & (server.DBG_SQL | server.DBG_RQL):
             print '------>', res
         return res
 

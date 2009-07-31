@@ -309,9 +309,8 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
             print 'RQL FOR NATIVE SOURCE %s: %s' % (self.uri, union.as_string())
             if varmap:
                 print 'using varmap', varmap
-            if args:
-                print 'args', args
             if server.DEBUG & server.DBG_MORE:
+                print 'args', args
                 print 'cache key', cachekey
                 print 'solutions', ','.join(str(s.solutions) for s in union.children)
         # remember number of actually selected term (sql generation may append some)
@@ -438,7 +437,7 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
         """
         cursor = session.pool[self.uri]
         if server.DEBUG & server.DBG_SQL:
-            print 'exec', query, args, session.pool.connection(self.uri)._cnx
+            print 'exec', query, args
         try:
             # str(query) to avoid error if it's an unicode string
             cursor.execute(str(query), args)
