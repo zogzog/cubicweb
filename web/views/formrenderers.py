@@ -311,6 +311,19 @@ class EntityCompositeFormRenderer(FormRenderer):
     def render_fields(self, w, form, values):
         if not form.is_subform:
             w(u'<table class="listing">')
+            subfields = [field for field in form.forms[0].fields
+                         if self.display_field(form, field)
+                         and field.is_visible()]
+            if subfields:
+                # main form, display table headers
+                w(u'<tr class="header">')
+                w(u'<th align="left">%s</th>' %
+                  tags.input(type='checkbox',
+                             title=self.req._('toggle check boxes'),
+                             onclick="setCheckboxesState('eid', this.checked)"))
+                for field in subfields:
+                    w(u'<th>%s</th>' % self.req._(field.label))
+                w(u'</tr>')
         super(EntityCompositeFormRenderer, self).render_fields(w, form, values)
         if not form.is_subform:
             w(u'</table>')
@@ -343,22 +356,10 @@ class EntityCompositeFormRenderer(FormRenderer):
                     field.widget.attrs['onkeypress'] = cbsetstate
                 # XXX else
                 w(u'<div>%s</div>' % field.render(form, self))
-                w(u'</td></tr>')
+                w(u'</td>\n')
+            w(u'</tr>')
         else:
             self._main_display_fields = fields
-            subfields = [field for field in form.forms[0].fields
-                         if self.display_field(form, field)
-                         and field.is_visible()]
-            if subfields:
-                # main form, display table headers
-                w(u'<tr class="header">')
-                w(u'<th align="left">%s</th>' %
-                  tags.input(type='checkbox',
-                             title=self.req._('toggle check boxes'),
-                             onclick="setCheckboxesState('eid', this.checked)"))
-                for field in subfields:
-                    w(u'<th>%s</th>' % self.req._(field.label))
-                w(u'</tr>')
 
 
 class EntityFormRenderer(EntityBaseFormRenderer):
