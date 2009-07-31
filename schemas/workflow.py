@@ -119,7 +119,7 @@ class in_state(RelationType):
     """indicate the current state of an entity"""
     # not inlined intentionnaly since when using ldap sources, user'state
     # has to be stored outside the CWUser table
-
+    inlined = False
     # add/delete perms given to managers/users, after what most of the job
     # is done by workflow enforcment
     permissions = {
