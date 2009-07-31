@@ -189,8 +189,6 @@ class ExecutionPlan(object):
 
         return rqlst to actually execute
         """
-        #if server.DEBUG:
-        #    print '------- preprocessing', union.as_string('utf8')
         noinvariant = set()
         if security and not self.session.is_super_session:
             self._insert_security(union, noinvariant)
@@ -586,9 +584,9 @@ class QuerierHelper(object):
         always use substitute arguments in queries (eg avoid query such as
         'Any X WHERE X eid 123'!)
         """
-        if server.DEBUG:
+        if server.DEBUG & (server.DBG_RQL | server.DBG_RQL):
             print '*'*80
-            print rql
+            print 'QUERIER INPUT', rql
         # parse the query and binds variables
         if eid_key is not None:
             if not isinstance(eid_key, (tuple, list)):

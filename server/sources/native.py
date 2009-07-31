@@ -44,7 +44,7 @@ class LogCursor(object):
         """Execute a query.
         it's a function just so that it shows up in profiling
         """
-        if server.DEBUG:
+        if server.DEBUG & server.DBG_SQL:
             print 'exec', query, args
         try:
             self.cu.execute(str(query), args)
@@ -305,13 +305,15 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
         necessary to fetch the results (but not the results themselves)
         may be cached using this key.
         """
-        if server.DEBUG:
-            print 'RQL FOR NATIVE SOURCE', self.uri, cachekey
+        if server.DEBUG & server.DBG_RQL:
+            print 'RQL FOR NATIVE SOURCE %s: %s' % (self.uri, union.as_string())
             if varmap:
-                print 'USING VARMAP', varmap
-            print union.as_string()
-            if args: print 'ARGS', args
-            print 'SOLUTIONS', ','.join(str(s.solutions) for s in union.children)
+                print 'using varmap', varmap
+            if args:
+                print 'args', args
+            if server.DEBUG & server.DBG_MORE:
+                print 'cache key', cachekey
+                print 'solutions', ','.join(str(s.solutions) for s in union.children)
         # remember number of actually selected term (sql generation may append some)
         if cachekey is None:
             self.no_cache += 1
@@ -337,7 +339,7 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
             session.pool.reconnect(self)
             cursor = self.doexec(session, sql, args)
         res = self.process_result(cursor)
-        if server.DEBUG:
+        if server.DEBUG & (server.DBG_SQL | server.DBG_RQL):
             print '------>', res
         return res
 
@@ -348,12 +350,12 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
         inserts all data by calling .executemany().
         """
         if self.uri == 'system':
-            if server.DEBUG:
-                print 'FLYING RQL FOR SOURCE', self.uri
+            if server.DEBUG & server.DBG_RQL:
+                print 'FLYING RQL FOR SOURCE %s: %s', self.uri, union.as_string()
                 if varmap:
                     print 'USING VARMAP', varmap
-                print union.as_string()
-                print 'SOLUTIONS', ','.join(str(s.solutions) for s in union.children)
+                if server.DEBUG & server.DBG_MORE:
+                    print 'SOLUTIONS', ','.join(str(s.solutions) for s in union.children)
             # generate sql queries if we are able to do so
             sql, query_args = self._rql_sqlgen.generate(union, args, varmap)
             query = 'INSERT INTO %s %s' % (table, sql.encode(self.encoding))
@@ -437,6 +439,8 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
         if server.DEBUG:
             print 'exec', query, args
         cursor = session.pool[self.uri]
+        if server.DEBUG & server.DBG_SQL:
+            print 'exec', query, args, session.pool.connection(self.uri)._cnx
         try:
             # str(query) to avoid error if it's an unicode string
             cursor.execute(str(query), args)
@@ -455,7 +459,7 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
         """Execute a query.
         it's a function just so that it shows up in profiling
         """
-        if server.DEBUG:
+        if server.DEBUG & server.DBG_SQL:
             print 'execmany', query, 'with', len(args), 'arguments'
         cursor = session.pool[self.uri]
         try:

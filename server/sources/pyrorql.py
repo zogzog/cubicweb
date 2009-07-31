@@ -270,11 +270,12 @@ repository (default to 5 minutes).',
         """
         if not args is None:
             args = args.copy()
-        if server.DEBUG:
-            print 'RQL FOR PYRO SOURCE', self.uri
-            print union.as_string()
-            if args: print 'ARGS', args
-            print 'SOLUTIONS', ','.join(str(s.solutions) for s in union.children)
+        if server.DEBUG & server.DBG_RQL:
+            print 'RQL FOR PYRO SOURCE %s: %s', self.uri, union.as_string()
+            if args:
+                print 'ARGS', args
+            if server.DEBUG & server.DBG_MORE:
+                print 'SOLUTIONS', ','.join(str(s.solutions) for s in union.children)
         # get cached cursor anyway
         cu = session.pool[self.uri]
         if cu is None:
@@ -288,7 +289,7 @@ repository (default to 5 minutes).',
             if server.DEBUG:
                 print 'unknown eid', ex, 'no results'
             return []
-        if server.DEBUG:
+        if server.DEBUG & server.DBG_RQL:
             print 'TRANSLATED RQL', rql
         try:
             rset = cu.execute(rql, args, cachekey)
@@ -325,11 +326,11 @@ repository (default to 5 minutes).',
             results = rows
         else:
             results = []
-        if server.DEBUG:
+        if server.DEBUG & server.DBG_RQL:
             if len(results)>10:
-                print '--------------->', results[:10], '...', len(results)
+                print '-->', results[:10], '...', len(results)
             else:
-                print '--------------->', results
+                print '-->', results
         return results
 
     def _entity_relations_and_kwargs(self, session, entity):

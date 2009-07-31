@@ -15,8 +15,40 @@ from os.path import join, exists
 
 from logilab.common.modutils import LazyObject
 
+# server-side debugging #########################################################
+
 # server debugging flag
-DEBUG = False
+DBG_RQL = 1 # rql execution information
+DBG_SQL = 2 # executed sql
+DBG_REPO = 4 # repository events
+DBG_MORE = 8 # repository events
+
+
+# 2: + executed sql
+# 3: + additional debug information
+DEBUG = 0
+def set_debug(debugmode):
+    global DEBUG
+    if not debugmode:
+        DEBUG = 0
+        return
+    if isinstance(debugmode, basestring):
+        debugmode = globals()[debugmode]
+    DEBUG |= debugmode
+
+def debugged(func):
+    """decorator to activate debug mode"""
+    def wrapped(*args, **kwargs):
+        global DEBUG
+        DEBUG = True
+        try:
+            return func(*args, **kwargs)
+        finally:
+            DEBUG = False
+    return wrapped
+
+
+# database initialization ######################################################
 
 def init_repository(config, interactive=True, drop=False, vreg=None):
     """initialise a repository database by creating tables add filling them
@@ -160,20 +192,6 @@ def initialize_schema(config, schema, mhandler, event='create'):
     for path in reversed(paths):
         mhandler.exec_event_script('post%s' % event, path)
 
-def set_debug(debugmode):
-    global DEBUG
-    DEBUG = debugmode
-
-def debugged(func):
-    """decorator to activate debug mode"""
-    def wrapped(*args, **kwargs):
-        global DEBUG
-        DEBUG = True
-        try:
-            return func(*args, **kwargs)
-        finally:
-            DEBUG = False
-    return wrapped
 
 # sqlite'stored procedures have to be registered at connexion opening time
 SQL_CONNECT_HOOKS = {}
