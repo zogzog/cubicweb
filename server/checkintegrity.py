@@ -13,6 +13,7 @@ from datetime import datetime
 
 from logilab.common.shellutils import ProgressBar
 
+from cubicweb.schema import PURE_VIRTUAL_RTYPES
 from cubicweb.server.sqlutils import SQL_PREFIX
 
 def has_eid(sqlcursor, eid, eids):
@@ -196,9 +197,7 @@ def check_relations(schema, session, eids, fix=1):
     """check all relations registered in the repo system table"""
     print 'Checking relations'
     for rschema in schema.relations():
-        if rschema.is_final():
-            continue
-        if rschema == 'identity':
+        if rschema.is_final() or rschema in PURE_VIRTUAL_RTYPES:
             continue
         if rschema.inlined:
             for subjtype in rschema.subjects():

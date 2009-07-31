@@ -12,6 +12,7 @@ from datetime import datetime, timedelta
 from logging import getLogger
 
 from cubicweb import set_log_methods
+from cubicweb.schema import VIRTUAL_RTYPES
 from cubicweb.server.sqlutils import SQL_PREFIX
 
 
@@ -201,7 +202,7 @@ class AbstractSource(object):
         # delete relations referencing one of those eids
         eidcolum = SQL_PREFIX + 'eid'
         for rschema in self.schema.relations():
-            if rschema.is_final() or rschema.type == 'identity':
+            if rschema.is_final() or rschema.type in VIRTUAL_RTYPES:
                 continue
             if rschema.inlined:
                 column = SQL_PREFIX + rschema.type

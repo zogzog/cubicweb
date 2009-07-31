@@ -24,6 +24,7 @@ from cubicweb import Binary, ConfigurationError
 from cubicweb.utils import todate, todatetime
 from cubicweb.common.uilib import remove_html_tags
 from cubicweb.toolsutils import restrict_perms_to_user
+from cubicweb.schema import PURE_VIRTUAL_RTYPES
 from cubicweb.server import SQL_CONNECT_HOOKS
 from cubicweb.server.utils import crypt_password
 
@@ -77,7 +78,7 @@ def sqlgrants(schema, driver, user,
 
 def sqlschema(schema, driver, text_index=True,
               user=None, set_owner=False,
-              skip_relations=('has_text', 'identity'), skip_entities=()):
+              skip_relations=PURE_VIRTUAL_RTYPES, skip_entities=()):
     """return the system sql schema, according to the given parameters"""
     from yams.schema2sql import schema2sql
     from cubicweb.server.sources import native
@@ -102,7 +103,7 @@ def sqlschema(schema, driver, text_index=True,
 
 
 def sqldropschema(schema, driver, text_index=True,
-                  skip_relations=('has_text', 'identity'), skip_entities=()):
+                  skip_relations=PURE_VIRTUAL_RTYPES, skip_entities=()):
     """return the sql to drop the schema, according to the given parameters"""
     from yams.schema2sql import dropschema2sql
     from cubicweb.server.sources import native

@@ -34,6 +34,9 @@ from yams import schema
 schema.use_py_datetime()
 nodes.use_py_datetime()
 
+PURE_VIRTUAL_RTYPES = set(('identity', 'has_text',))
+VIRTUAL_RTYPES = set(('eid', 'identity', 'has_text',))
+
 #  set of meta-relations available for every entity types
 META_RELATIONS_TYPES = set((
     'owned_by', 'created_by', 'is', 'is_instance_of', 'identity',

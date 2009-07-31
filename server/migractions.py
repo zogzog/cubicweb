@@ -30,7 +30,7 @@ from yams.constraints import SizeConstraint
 from yams.schema2sql import eschema2sql, rschema2sql
 
 from cubicweb import AuthenticationError, ETYPE_NAME_MAP
-from cubicweb.schema import CubicWebRelationSchema
+from cubicweb.schema import VIRTUAL_RTYPES, CubicWebRelationSchema
 from cubicweb.dbapi import get_repository, repo_connect
 from cubicweb.common.migration import MigrationHelper, yes
 
@@ -241,7 +241,7 @@ class ServerMigrationHelper(MigrationHelper):
 
     def _synchronize_permissions(self, ertype):
         """permission synchronization for an entity or relation type"""
-        if ertype in ('eid', 'has_text', 'identity'):
+        if ertype in VIRTUAL_RTYPES:
             return
         newrschema = self.fs_schema[ertype]
         teid = self.repo.schema[ertype].eid

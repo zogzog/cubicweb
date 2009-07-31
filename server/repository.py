@@ -34,8 +34,8 @@ from cubicweb import (CW_SOFTWARE_ROOT, UnknownEid, AuthenticationError,
                       ExecutionError, typed_eid,
                       CW_MIGRATION_MAP)
 from cubicweb.cwvreg import CubicWebRegistry
-from cubicweb.schema import CubicWebSchema
-
+from cubicweb.schema import VIRTUAL_RTYPES, CubicWebSchema
+from cubicweb import server
 from cubicweb.server.utils import RepoThread, LoopTask
 from cubicweb.server.pool import ConnectionsPool, LateOperation, SingleLastOperation
 from cubicweb.server.session import Session, InternalSession
@@ -115,7 +115,6 @@ def del_existing_rel_if_needed(session, eidfrom, rtype, eidto):
     # the web interface but may occurs during test or dbapi connection (though
     # not expected for this).  So: don't do it, we pretend to ensure repository
     # consistency.
-    # XXX should probably not use unsafe_execute!
     if card[0] in '1?':
         rschema = session.repo.schema.rschema(rtype)
         if not rschema.inlined:
@@ -935,7 +934,7 @@ class Repository(object):
         eschema = self.schema.eschema(etype)
         for rschema, targetschemas, x in eschema.relation_definitions():
             rtype = rschema.type
-            if rtype == 'identity':
+            if rtype in VIRTUAL_RTYPES:
                 continue
             var = '%s%s' % (rtype.upper(), x.upper())
             if x == 'subject':

@@ -14,7 +14,7 @@ from logilab.common.shellutils import ProgressBar
 
 from yams import schema as schemamod, buildobjs as ybo
 
-from cubicweb.schema import CONSTRAINTS, ETYPE_NAME_MAP
+from cubicweb.schema import CONSTRAINTS, ETYPE_NAME_MAP, VIRTUAL_RTYPES
 from cubicweb.server import sqlutils
 
 def group_mapping(cursor, interactive=True):
@@ -294,7 +294,7 @@ def serialize_schema(cursor, schema, verbose=False):
     groupmap = group_mapping(cursor, interactive=False)
     for ertype in aller:
         # skip eid and has_text relations
-        if ertype in ('eid', 'identity', 'has_text',):
+        if ertype in VIRTUAL_RTYPES:
             pb.update()
             continue
         for rql, kwargs in erschema2rql(schema[ertype]):

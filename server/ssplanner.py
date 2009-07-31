@@ -13,6 +13,7 @@ from rql.stmts import Union, Select
 from rql.nodes import Constant
 
 from cubicweb import QueryError, typed_eid
+from cubicweb.schema import VIRTUAL_RTYPES
 
 def add_types_restriction(schema, rqlst, newroot=None, solutions=None):
     if newroot is None:
@@ -196,7 +197,7 @@ class SSPlanner(object):
         relations, attrrelations = [], []
         getrschema = self.schema.rschema
         for relation in rqlst.main_relations:
-            if relation.r_type in ('eid', 'has_text', 'identity'):
+            if relation.r_type in VIRTUAL_RTYPES:
                 raise QueryError('can not assign to %r relation'
                                  % relation.r_type)
             lhs, rhs = relation.get_variable_parts()
