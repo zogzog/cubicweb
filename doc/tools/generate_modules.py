@@ -8,11 +8,15 @@
 
 import sys
 
-EXCLUDE_DIRS = ('test', 'tests', 'examples', 'data', 'doc', '.hg', 'migration')
+EXCLUDE_DIRS = ('test', 'tests', 'examples', 'data', 'doc', 'dist',
+                '.hg', 'migration')
 if __name__ == '__main__':
 
-    from logilab.common.sphinxutils import generate_modules_file
-
-    gen = generate_modules_file(sys.argv[1:])
-    gen.set_docdir("cubicweb/doc/book/en")
-    gen.make(['cubicweb', '/indexer', '/logilab', '/rql', '/yams'], EXCLUDE_DIRS)
+    from logilab.common.sphinxutils import ModuleGenerator
+    cw_gen = ModuleGenerator('cubicweb', '../..')
+    cw_gen.generate("../book/en/annexes/api_cubicweb.rst",
+                    EXCLUDE_DIRS + ('cwdesklets', 'misc', 'skel', 'skeleton'))
+    for modname in ('indexer', 'logilab', 'rql', 'yams'):
+        cw_gen = ModuleGenerator(modname, '../../../' + modname)
+        cw_gen.generate("../book/en/annexes/api_%s.rst" % modname,
+                        EXCLUDE_DIRS + ('tools',))

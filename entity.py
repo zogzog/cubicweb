@@ -12,7 +12,7 @@ from warnings import warn
 from logilab.common import interface
 from logilab.common.compat import all
 from logilab.common.decorators import cached
-from logilab.common.deprecation import obsolete
+from logilab.common.deprecation import deprecated
 from logilab.mtconverter import TransformData, TransformError, xml_escape
 
 from rql.utils import rqlvar_maker
@@ -719,7 +719,7 @@ class Entity(AppRsetObject, dict):
 
     # generic vocabulary methods ##############################################
 
-    @obsolete('see new form api')
+    @deprecated('see new form api')
     def vocabulary(self, rtype, role='subject', limit=None):
         """vocabulary functions must return a list of couples
         (label, eid) that will typically be used to fill the

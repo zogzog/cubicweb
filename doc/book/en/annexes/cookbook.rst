@@ -12,8 +12,9 @@ life easier.
   [XXX distribute this script with cubicweb instead]
 
   Here is a very useful script which enables you to import LDAP users
-  into your *CubicWeb* instance by running the following: ::
+  into your *CubicWeb* instance by running the following:
 
+.. sourcecode:: python
 
     import os
     import pwd
@@ -69,7 +70,9 @@ life easier.
 
   The following script aims at loading data within a script assuming pyro-nsd is
   running and your instance is configured with ``pyro-server=yes``, otherwise
-  you would not be able to use dbapi. ::
+  you would not be able to use dbapi.
+
+.. sourcecode:: python
 
     from cubicweb import dbapi
 

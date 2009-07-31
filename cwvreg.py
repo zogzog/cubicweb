@@ -9,7 +9,7 @@ __docformat__ = "restructuredtext en"
 _ = unicode
 
 from logilab.common.decorators import cached, clear_cache
-from logilab.common.deprecation import  obsolete
+from logilab.common.deprecation import  deprecated
 
 from rql import RQLHelper
 
@@ -284,22 +284,22 @@ class CubicWebRegistry(VRegistry):
                 self.exception('error while trying to select %s view for %s',
                                vid, rset)
 
-    @obsolete("use .select_object('boxes', ...)")
+    @deprecated("use .select_object('boxes', ...)")
     def select_box(self, oid, *args, **kwargs):
         """return the most specific view according to the result set"""
         return self.select_object('boxes', oid, *args, **kwargs)
 
-    @obsolete("use .select_object('components', ...)")
+    @deprecated("use .select_object('components', ...)")
     def select_component(self, cid, *args, **kwargs):
         """return the most specific component according to the result set"""
         return self.select_object('components', cid, *args, **kwargs)
 
-    @obsolete("use .select_object('actions', ...)")
+    @deprecated("use .select_object('actions', ...)")
     def select_action(self, oid, *args, **kwargs):
         """return the most specific view according to the result set"""
         return self.select_object('actions', oid, *args, **kwargs)
 
-    @obsolete("use .select('views', ...)")
+    @deprecated("use .select('views', ...)")
     def select_view(self, __vid, req, rset=None, **kwargs):
         """return the most specific view according to the result set"""
         return self.select('views', __vid, req, rset=rset, **kwargs)

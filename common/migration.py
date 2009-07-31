@@ -15,6 +15,7 @@ from os.path import exists, join, basename, splitext
 
 from logilab.common.decorators import cached
 from logilab.common.configuration import REQUIRED, read_old_config
+from logilab.common.shellutils import ASK
 
 from cubicweb import ConfigurationError
 
@@ -69,11 +70,10 @@ def execscript_confirm(scriptpath):
     ability to show the script's content
     """
     while True:
-        confirm = raw_input('Execute %r (Y/n/s[how]) ?' % scriptpath)
-        confirm = confirm.strip().lower()
-        if confirm in ('n', 'no'):
+        answer = ASK.ask('Execute %r ?' % scriptpath, ('Y','n','show'), 'Y')
+        if answer == 'n':
             return False
-        elif confirm in ('s', 'show'):
+        elif answer == 'show':
             stream = open(scriptpath)
             scriptcontent = stream.read()
             stream.close()
@@ -188,26 +188,24 @@ class MigrationHelper(object):
 
         if `retry` is true the r[etry] answer may return 2
         """
-        print question,
-        possibleanswers = 'Y/n'
+        possibleanswers = ['Y','n']
         if abort:
-            possibleanswers += '/a[bort]'
+            possibleanswers.append('abort')
         if shell:
-            possibleanswers += '/s[hell]'
+            possibleanswers.append('shell')
         if retry:
-            possibleanswers += '/r[etry]'
+            possibleanswers.append('retry')
         try:
-            confirm = raw_input('(%s): ' % ( possibleanswers, ))
-            answer = confirm.strip().lower()
+            answer = ASK.ask(question, possibleanswers, 'Y')
         except (EOFError, KeyboardInterrupt):
             answer = 'abort'
-        if answer in ('n', 'no'):
+        if answer == 'n':
             return False
-        if answer in ('r', 'retry'):
+        if answer == 'retry':
             return 2
-        if answer in ('a', 'abort'):
+        if answer == 'abort':
             raise SystemExit(1)
-        if shell and answer in ('s', 'shell'):
+        if shell and answer == 'shell':
             self.interactive_shell()
             return self.confirm(question)
         return True

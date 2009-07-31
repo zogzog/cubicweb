@@ -11,7 +11,7 @@ import sys
 import threading
 from time import time
 
-from logilab.common.deprecation import obsolete
+from logilab.common.deprecation import deprecated
 from rql.nodes import VariableRef, Function, ETYPE_PYOBJ_MAP, etype_from_pyobj
 from yams import BASE_TYPES
 
@@ -484,7 +484,7 @@ class Session(RequestSessionMixIn):
             description.append(tuple(row_descr))
         return description
 
-    @obsolete('use direct access to session.transaction_data')
+    @deprecated('use direct access to session.transaction_data')
     def query_data(self, key, default=None, setdefault=False, pop=False):
         if setdefault:
             assert not pop
@@ -494,7 +494,7 @@ class Session(RequestSessionMixIn):
         else:
             return self.transaction_data.get(key, default)
 
-    @obsolete('use entity_from_eid(eid, etype=None)')
+    @deprecated('use entity_from_eid(eid, etype=None)')
     def entity(self, eid):
         """return a result set for the given eid"""
         return self.eid_rset(eid).get_entity(0, 0)

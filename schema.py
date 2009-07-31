@@ -14,7 +14,7 @@ from logging import getLogger
 from warnings import warn
 
 from logilab.common.decorators import cached, clear_cache, monkeypatch
-from logilab.common.deprecation import obsolete
+from logilab.common.deprecation import deprecated
 from logilab.common.compat import any
 
 from yams import BadSchemaDefinition, buildobjs as ybo
@@ -78,7 +78,7 @@ def display_name(req, key, form=''):
     # ensure unicode
     # added .lower() in case no translation are available
     return unicode(req._(key)).lower()
-__builtins__['display_name'] = obsolete('display_name should be imported from cubicweb.schema')(display_name)
+__builtins__['display_name'] = deprecated('display_name should be imported from cubicweb.schema')(display_name)
 
 def ERSchema_display_name(self, req, form=''):
     """return a internationalized string for the entity/relation type name in

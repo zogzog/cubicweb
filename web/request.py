@@ -18,7 +18,7 @@ from itertools import count
 from rql.utils import rqlvar_maker
 
 from logilab.common.decorators import cached
-from logilab.common.deprecation import obsolete
+from logilab.common.deprecation import deprecated
 
 from logilab.mtconverter import xml_escape
 
@@ -630,7 +630,7 @@ class CubicWebRequestBase(DBAPIRequest):
                            auth, ex.__class__.__name__, ex)
         return None, None
 
-    @obsolete("use parse_accept_header('Accept-Language')")
+    @deprecated("use parse_accept_header('Accept-Language')")
     def header_accept_language(self):
         """returns an ordered list of preferred languages"""
         return [value.split('-')[0] for value in

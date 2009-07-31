@@ -200,20 +200,21 @@ class SQLAdapterMixIn(object):
         cmd = self.dbhelper.backup_command(self.dbname, self.dbhost,
                                            self.dbuser, backupfile,
                                            keepownership=False)
-        while True:
-            print cmd
-            if os.system(cmd):
-                print '-> error while backuping the base'
-                answer = confirm('Continue anyway?',
-                                 shell=False, abort=False, retry=True)
-                if not answer:
-                    raise SystemExit(1)
-                if answer == 1: # 1: continue, 2: retry
-                    break
+        backupdir = os.path.dirname(backupfile)
+        if not os.path.exists(backupdir):
+            if confirm('%s does not exist. Create it?' % backupdir,
+                       abort=False, shell=False):
+                os.mkdir(backupdir)
             else:
-                print '-> backup file',  backupfile
-                restrict_perms_to_user(backupfile, self.info)
-                break
+                print '-> failed to backup instance'
+                return
+        if os.system(cmd):
+            print '-> error trying to backup with command', cmd
+            if not confirm('Continue anyway?', default_is_yes=False):
+                raise SystemExit(1)
+        else:
+            print '-> backup file',  backupfile
+            restrict_perms_to_user(backupfile, self.info)
 
     def restore_from_file(self, backupfile, confirm, drop=True):
         for cmd in self.dbhelper.restore_commands(self.dbname, self.dbhost,
@@ -224,9 +225,8 @@ class SQLAdapterMixIn(object):
             while True:
                 print cmd
                 if os.system(cmd):
-                    print 'error while restoring the base'
-                    print 'OOOOOPS', confirm
-                    answer = confirm('continue anyway?',
+                    print '-> error while restoring the base'
+                    answer = confirm('Continue anyway?',
                                      shell=False, abort=False, retry=True)
                     if not answer:
                         raise SystemExit(1)
@@ -234,7 +234,7 @@ class SQLAdapterMixIn(object):
                         break
                 else:
                     break
-        print 'database restored'
+        print '-> database restored.'
 
     def merge_args(self, args, query_args):
         if args is not None:

@@ -16,7 +16,7 @@ from os.path import exists, join, abspath, normpath
 from logilab.common.clcommands import Command as BaseCommand, \
      main_run as base_main_run
 from logilab.common.compat import any
-from logilab.common.shellutils import confirm
+from logilab.common.shellutils import ASK
 
 from cubicweb import warning
 from cubicweb import ConfigurationError, ExecutionError
@@ -72,7 +72,7 @@ def show_diffs(appl_file, ref_file, askconfirm=True):
         if askconfirm:
             print
             print diffs
-            action = raw_input('replace (N/y/q) ? ').lower()
+            action = ASK.ask('Replace ?', ('N','y','q'), 'N')
         else:
             action = 'y'
         if action == 'y':
@@ -117,7 +117,7 @@ def copy_skeleton(skeldir, targetdir, context,
             if fname.endswith('.tmpl'):
                 tfpath = tfpath[:-5]
                 if not askconfirm or not exists(tfpath) or \
-                       confirm('%s exists, overwrite?' % tfpath):
+                       ASK.confirm('%s exists, overwrite?' % tfpath):
                     fill_templated_file(fpath, tfpath, context)
                     print '[generate] %s <-- %s' % (tfpath, fpath)
             elif exists(tfpath):
