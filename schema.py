@@ -869,9 +869,9 @@ class CubicWebSchemaLoader(BootstrapSchemaLoader):
         """
         self.info('loading %s schemas', ', '.join(config.cubes()))
         if config.apphome:
-            path = reversed([config.apphome] + config.cubes_path())
+            path = tuple(reversed([config.apphome] + config.cubes_path()))
         else:
-            path = reversed(config.cubes_path())
+            path = tuple(reversed(config.cubes_path()))
         try:
             return super(CubicWebSchemaLoader, self).load(config, path=path, **kwargs)
         finally:
