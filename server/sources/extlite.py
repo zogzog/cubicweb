@@ -170,10 +170,9 @@ repository.',
         has a connection set
         """
         if cnx._cnx is not None:
-            cnx._cnx.close()
             # reset _cnx to ensure next thread using cnx will get a new
             # connection
-            cnx._cnx = None
+            cnx.close()
 
     def syntax_tree_search(self, session, union,
                            args=None, cachekey=None, varmap=None, debug=0):

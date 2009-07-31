@@ -172,8 +172,7 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
             self.check_connection = lambda cnx: cnx
             def pool_reset(cnx):
                 if cnx._cnx is not None:
-                    cnx._cnx.close()
-                    cnx._cnx = None
+                    cnx.close()
             self.pool_reset = pool_reset
 
     @property
