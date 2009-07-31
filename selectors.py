@@ -46,7 +46,7 @@ import logging
 from warnings import warn
 
 from logilab.common.compat import all
-from logilab.common.deprecation import deprecated_function
+from logilab.common.deprecation import deprecated
 from logilab.common.interface import implements as implements_iface
 
 from yams import BASE_TYPES
@@ -976,86 +976,86 @@ class score_entity(EntitySelector):
 
 # XXX DEPRECATED ##############################################################
 
-yes_selector = deprecated_function(yes)
-norset_selector = deprecated_function(none_rset)
-rset_selector = deprecated_function(any_rset)
-anyrset_selector = deprecated_function(nonempty_rset)
-emptyrset_selector = deprecated_function(empty_rset)
-onelinerset_selector = deprecated_function(one_line_rset)
-twolinerset_selector = deprecated_function(two_lines_rset)
-twocolrset_selector = deprecated_function(two_cols_rset)
-largerset_selector = deprecated_function(paginated_rset)
-sortedrset_selector = deprecated_function(sorted_rset)
-oneetyperset_selector = deprecated_function(one_etype_rset)
-multitype_selector = deprecated_function(two_etypes_rset)
-anonymous_selector = deprecated_function(anonymous_user)
-not_anonymous_selector = deprecated_function(authenticated_user)
-primaryview_selector = deprecated_function(primary_view)
-contextprop_selector = deprecated_function(match_context_prop)
+yes_selector = deprecated()(yes)
+norset_selector = deprecated()(none_rset)
+rset_selector = deprecated()(any_rset)
+anyrset_selector = deprecated()(nonempty_rset)
+emptyrset_selector = deprecated()(empty_rset)
+onelinerset_selector = deprecated()(one_line_rset)
+twolinerset_selector = deprecated()(two_lines_rset)
+twocolrset_selector = deprecated()(two_cols_rset)
+largerset_selector = deprecated()(paginated_rset)
+sortedrset_selector = deprecated()(sorted_rset)
+oneetyperset_selector = deprecated()(one_etype_rset)
+multitype_selector = deprecated()(two_etypes_rset)
+anonymous_selector = deprecated()(anonymous_user)
+not_anonymous_selector = deprecated()(authenticated_user)
+primaryview_selector = deprecated()(primary_view)
+contextprop_selector = deprecated()(match_context_prop)
 
+@deprecated('use non_final_entity instead of %s')
 def nfentity_selector(cls, req, rset=None, row=None, col=0, **kwargs):
     return non_final_entity()(cls, req, rset, row, col)
-nfentity_selector = deprecated_function(nfentity_selector)
 
+@deprecated('use implements instead of %s')
 def implement_interface(cls, req, rset=None, row=None, col=0, **kwargs):
     return implements(*cls.accepts_interfaces)(cls, req, rset, row, col)
-_interface_selector = deprecated_function(implement_interface)
-interface_selector = deprecated_function(implement_interface)
-implement_interface = deprecated_function(implement_interface, 'use implements')
+_interface_selector = deprecated()(implement_interface)
+interface_selector = deprecated()(implement_interface)
 
+@deprecated('use specified_etype_implements instead of %s')
 def accept_etype(cls, req, *args, **kwargs):
     """check etype presence in request form *and* accepts conformance"""
     return specified_etype_implements(*cls.accepts)(cls, req, *args)
-etype_form_selector = deprecated_function(accept_etype)
-accept_etype = deprecated_function(accept_etype, 'use specified_etype_implements')
+etype_form_selector = accept_etype
 
+@deprecated('use match_search_state instead of %s')
 def searchstate_selector(cls, req, rset=None, row=None, col=0, **kwargs):
     return match_search_state(cls.search_states)(cls, req, rset, row, col)
-searchstate_selector = deprecated_function(searchstate_selector)
 
+@deprecated('use match_user_groups instead of %s')
 def match_user_group(cls, req, rset=None, row=None, col=0, **kwargs):
     return match_user_groups(*cls.require_groups)(cls, req, rset, row, col, **kwargs)
-in_group_selector = deprecated_function(match_user_group)
-match_user_group = deprecated_function(match_user_group)
+in_group_selector = match_user_group
 
+@deprecated('use relation_possible instead of %s')
 def has_relation(cls, req, rset=None, row=None, col=0, **kwargs):
     return relation_possible(cls.rtype, role(cls), cls.etype,
                              getattr(cls, 'require_permission', 'read'))(cls, req, rset, row, col, **kwargs)
-has_relation = deprecated_function(has_relation)
 
+@deprecated('use relation_possible instead of %s')
 def one_has_relation(cls, req, rset=None, row=None, col=0, **kwargs):
     return relation_possible(cls.rtype, role(cls), cls.etype,
                              getattr(cls, 'require_permission', 'read',
                                      once_is_enough=True))(cls, req, rset, row, col, **kwargs)
-one_has_relation = deprecated_function(one_has_relation, 'use relation_possible selector')
 
+@deprecated('use implements instead of %s')
 def accept_rset(cls, req, rset=None, row=None, col=0, **kwargs):
     """simply delegate to cls.accept_rset method"""
     return implements(*cls.accepts)(cls, req, rset, row=row, col=col)
-accept_rset_selector = deprecated_function(accept_rset)
-accept_rset = deprecated_function(accept_rset, 'use implements selector')
+accept_rset_selector = accept_rset
 
 accept = chainall(non_final_entity(), accept_rset, name='accept')
-accept_selector = deprecated_function(accept)
-accept = deprecated_function(accept, 'use implements selector')
+accept = deprecated('use implements selector')(accept)
+accept_selector = deprecated()(accept)
 
-accept_one = deprecated_function(chainall(one_line_rset, accept,
+accept_one = deprecated()(chainall(one_line_rset, accept,
                                           name='accept_one'))
-accept_one_selector = deprecated_function(accept_one)
+accept_one_selector = deprecated()(accept_one)
 
 
 def _rql_condition(cls, req, rset=None, row=None, col=0, **kwargs):
     if cls.condition:
         return rql_condition(cls.condition)(cls, req, rset, row, col)
     return 1
-_rqlcondition_selector = deprecated_function(_rql_condition)
+_rqlcondition_selector = deprecated()(_rql_condition)
 
-rqlcondition_selector = deprecated_function(chainall(non_final_entity(), one_line_rset, _rql_condition,
+rqlcondition_selector = deprecated()(chainall(non_final_entity(), one_line_rset, _rql_condition,
                          name='rql_condition'))
 
+@deprecated('use but_etype instead of %s')
 def but_etype_selector(cls, req, rset=None, row=None, col=0, **kwargs):
     return but_etype(cls.etype)(cls, req, rset, row, col)
-but_etype_selector = deprecated_function(but_etype_selector)
 
 @lltrace
 def etype_rtype_selector(cls, req, rset=None, row=None, col=0, **kwargs):
@@ -1070,24 +1070,25 @@ def etype_rtype_selector(cls, req, rset=None, row=None, col=0, **kwargs):
         if not (rschema.has_perm(req, perm) or rschema.has_local_role(perm)):
             return 0
     return 1
-etype_rtype_selector = deprecated_function(etype_rtype_selector)
+etype_rtype_selector = deprecated()(etype_rtype_selector)
 
-#req_form_params_selector = deprecated_function(match_form_params) # form_params
-#kwargs_selector = deprecated_function(match_kwargs) # expected_kwargs
+#req_form_params_selector = deprecated()(match_form_params) # form_params
+#kwargs_selector = deprecated()(match_kwargs) # expected_kwargs
 
 # compound selectors ##########################################################
 
 searchstate_accept = chainall(nonempty_rset(), accept,
                               name='searchstate_accept')
-searchstate_accept_selector = deprecated_function(searchstate_accept)
+searchstate_accept_selector = deprecated()(searchstate_accept)
 
 searchstate_accept_one = chainall(one_line_rset, accept, _rql_condition,
                                   name='searchstate_accept_one')
-searchstate_accept_one_selector = deprecated_function(searchstate_accept_one)
+searchstate_accept_one_selector = deprecated()(searchstate_accept_one)
 
-searchstate_accept = deprecated_function(searchstate_accept)
-searchstate_accept_one = deprecated_function(searchstate_accept_one)
+searchstate_accept = deprecated()(searchstate_accept)
+searchstate_accept_one = deprecated()(searchstate_accept_one)
 
+# end of deprecation section ##################################################
 
 def unbind_method(selector):
     def new_selector(registered):

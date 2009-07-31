@@ -15,7 +15,7 @@ from logilab.common.testlib import TestCase
 from logilab.common.pytest import nocoverage
 from logilab.common.umessage import message_from_string
 
-from logilab.common.deprecation import deprecated_function
+from logilab.common.deprecation import deprecated
 
 from cubicweb.devtools import init_test_database, TestServerConfiguration, ApptestConfiguration
 from cubicweb.devtools._apptest import TestEnvironment
@@ -234,7 +234,7 @@ class EnvBasedTC(TestCase):
         return [(a.id, a.__class__) for a in self.vreg.possible_vobjects('actions', req, rset=rset)
                 if a.category in categories]
 
-    paddrelactions = deprecated_function(pactions_by_cats)
+    paddrelactions = deprecated()(pactions_by_cats)
 
     def pactionsdict(self, req, rset, skipcategories=('addrelated', 'siteactions', 'useractions')):
         res = {}

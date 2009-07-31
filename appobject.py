@@ -10,7 +10,7 @@ __docformat__ = "restructuredtext en"
 from datetime import datetime, timedelta, time
 
 from logilab.common.decorators import classproperty
-from logilab.common.deprecation import obsolete
+from logilab.common.deprecation import deprecated
 
 from rql.nodes import VariableRef, SubQuery
 from rql.stmts import Union, Select
@@ -101,7 +101,7 @@ class AppRsetObject(VObject):
         return '%s.%s.%s' % (cls.__registry__, cls.id, propid)
 
     @classproperty
-    @obsolete('use __select__ and & or | operators')
+    @deprecated('use __select__ and & or | operators')
     def __selectors__(cls):
         selector = cls.__select__
         if isinstance(selector, AndSelector):

@@ -11,7 +11,7 @@ _ = unicode
 
 from cStringIO import StringIO
 
-from logilab.common.deprecation import obsolete
+from logilab.common.deprecation import deprecated
 from logilab.mtconverter import xml_escape
 
 from cubicweb import NotAnEntity
@@ -150,7 +150,7 @@ class View(AppRsetObject):
         if stream is not None:
             return self._stream.getvalue()
 
-    dispatch = obsolete('.dispatch is deprecated, use .render')(render)
+    dispatch = deprecated('.dispatch is deprecated, use .render')(render)
 
     # should default .call() method add a <div classs="section"> around each
     # rset item
@@ -229,7 +229,7 @@ class View(AppRsetObject):
         self.view(__vid, rset, __fallback_vid, w=self.w, **kwargs)
 
     # XXX Template bw compat
-    template = obsolete('.template is deprecated, use .view')(wview)
+    template = deprecated('.template is deprecated, use .view')(wview)
 
     def whead(self, data):
         self.req.html_headers.write(data)

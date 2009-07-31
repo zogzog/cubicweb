@@ -10,7 +10,7 @@ __docformat__ = "restructuredtext en"
 import sys
 from time import clock, time
 
-from logilab.common.deprecation import obsolete
+from logilab.common.deprecation import deprecated
 
 from rql import BadRQLQuery
 
@@ -272,7 +272,7 @@ class CubicWebPublisher(object):
             finally:
                 self._logfile_lock.release()
 
-    @obsolete("use vreg.select('controllers', ...)")
+    @deprecated("use vreg.select('controllers', ...)")
     def select_controller(self, oid, req):
         try:
             return self.vreg.select('controllers', oid, req=req, appli=self)

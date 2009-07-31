@@ -22,7 +22,7 @@ import os
 from os.path import join, exists
 from datetime import datetime
 
-from logilab.common.deprecation import deprecated_function, obsolete
+from logilab.common.deprecation import deprecated
 from logilab.common.decorators import cached, clear_cache
 from logilab.common.adbh import get_adv_func_helper
 
@@ -198,9 +198,9 @@ class ServerMigrationHelper(MigrationHelper):
                         'fsschema': self.fs_schema,
                         'session' : self.session,
                         'repo' : self.repo,
-                        'synchronize_schema': deprecated_function(self.cmd_sync_schema_props_perms),
-                        'synchronize_eschema': deprecated_function(self.cmd_sync_schema_props_perms),
-                        'synchronize_rschema': deprecated_function(self.cmd_sync_schema_props_perms),
+                        'synchronize_schema': deprecated()(self.cmd_sync_schema_props_perms),
+                        'synchronize_eschema': deprecated()(self.cmd_sync_schema_props_perms),
+                        'synchronize_rschema': deprecated()(self.cmd_sync_schema_props_perms),
                         })
         return context
 
@@ -837,7 +837,7 @@ class ServerMigrationHelper(MigrationHelper):
         if commit:
             self.commit()
 
-    @obsolete('use sync_schema_props_perms(ertype, syncprops=False)')
+    @deprecated('use sync_schema_props_perms(ertype, syncprops=False)')
     def cmd_synchronize_permissions(self, ertype, commit=True):
         self.cmd_sync_schema_props_perms(ertype, syncprops=False, commit=commit)
 

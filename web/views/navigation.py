@@ -11,7 +11,7 @@ _ = unicode
 from rql.nodes import VariableRef, Constant
 
 from logilab.mtconverter import xml_escape
-from logilab.common.deprecation import obsolete
+from logilab.common.deprecation import deprecated
 
 from cubicweb.interfaces import IPrevNext
 from cubicweb.selectors import (paginated_rset, sorted_rset,
@@ -168,7 +168,7 @@ def limit_rset_using_paged_nav(self, req, rset, w, forcedisplay=False,
 # monkey patch base View class to add a .pagination(req, rset, w, forcedisplay)
 # method to be called on view's result set and printing pages index in the view
 from cubicweb.view import View
-View.pagination = obsolete('.pagination is deprecated, use paginate')(limit_rset_using_paged_nav)
+View.pagination = deprecated('.pagination is deprecated, use paginate')(limit_rset_using_paged_nav)
 
 def paginate(view, show_all_option=True, w=None, page_size=None):
     limit_rset_using_paged_nav(view, view.req, view.rset, w or view.w,

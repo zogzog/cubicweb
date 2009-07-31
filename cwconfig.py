@@ -22,7 +22,7 @@ from threading import Lock
 from os.path import exists, join, expanduser, abspath, normpath, basename, isdir
 
 from logilab.common.decorators import cached
-from logilab.common.deprecation import deprecated_function
+from logilab.common.deprecation import deprecated
 from logilab.common.logging_ext import set_log_methods, init_log
 from logilab.common.configuration import (Configuration, Method,
                                           ConfigurationMixIn, merge_options)
@@ -866,4 +866,4 @@ set_log_methods(CubicWebConfiguration, logging.getLogger('cubicweb.configuration
 
 # alias to get a configuration instance from an instance id
 instance_configuration = CubicWebConfiguration.config_for
-application_configuration = deprecated_function(instance_configuration, 'use instance_configuration')
+application_configuration = deprecated('use instance_configuration')(instance_configuration)
