@@ -40,8 +40,6 @@ def _make_description(selected, args, solution):
         description.append(term.get_type(solution, args))
     return description
 
-from rql import stmts
-assert hasattr(stmts.Union, 'get_variable_variables'), "You need RQL > 0.18.3"
 
 class Session(RequestSessionMixIn):
     """tie session id, user, connections pool and other session data all
