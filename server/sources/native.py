@@ -189,8 +189,9 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
 
     def clear_eid_cache(self, eid, etype):
         """clear potential caches for the given eid"""
-        self._cache.pop('%s X WHERE X eid %s' % (etype, eid), None)
+        self._cache.pop('Any X WHERE X eid %s, X is %s' % (eid, etype), None)
         self._cache.pop('Any X WHERE X eid %s' % eid, None)
+        self._cache.pop('Any %s' % eid, None)
 
     def sqlexec(self, session, sql, args=None):
         """execute the query and return its result"""
@@ -436,8 +437,6 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
         """Execute a query.
         it's a function just so that it shows up in profiling
         """
-        if server.DEBUG:
-            print 'exec', query, args
         cursor = session.pool[self.uri]
         if server.DEBUG & server.DBG_SQL:
             print 'exec', query, args, session.pool.connection(self.uri)._cnx
