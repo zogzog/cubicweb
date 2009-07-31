@@ -12,9 +12,10 @@ import os
 
 from logilab.common.configuration import Configuration
 from logilab.common.clcommands import register_commands, cmd_run, pop_arg
+from logilab.common.shellutils import ASK
 
 from cubicweb import AuthenticationError, ExecutionError, ConfigurationError, underline_title
-from cubicweb.toolsutils import Command, CommandHandler, confirm
+from cubicweb.toolsutils import Command, CommandHandler
 from cubicweb.server import SOURCE_TYPES
 from cubicweb.server.utils import ask_source_config
 from cubicweb.server.serverconfig import USER_OPTIONS, ServerConfiguration
@@ -139,7 +140,7 @@ class RepositoryCreateHandler(CommandHandler):
             if cube in SOURCE_TYPES:
                 sourcescfg[cube] = ask_source_config(cube, inputlevel)
         print
-        while confirm('Enter another source ?', default_is_yes=False):
+        while ASK.confirm('Enter another source ?', default_is_yes=False):
             available = sorted(stype for stype in SOURCE_TYPES
                                if not stype in cubes)
             while True:
@@ -169,7 +170,7 @@ class RepositoryCreateHandler(CommandHandler):
         config.write_bootstrap_cubes_file(cubes)
 
     def postcreate(self):
-        if confirm('Do you want to run db-create to create the system database ?'):
+        if ASK.confirm('Run db-create to create the system database ?'):
             verbosity = (self.config.mode == 'installed') and 'y' or 'n'
             cmd_run('db-create', self.config.appid, '--verbose=%s' % verbosity)
         else:
@@ -187,7 +188,7 @@ class RepositoryDeleteHandler(CommandHandler):
         source = self.config.sources()['system']
         dbname = source['db-name']
         helper = get_adv_func_helper(source['db-driver'])
-        if confirm('Delete database %s ?' % dbname):
+        if ASK.confirm('Delete database %s ?' % dbname):
             user = source['db-user'] or None
             cnx = _db_sys_cnx(source, 'DROP DATABASE', user=user)
             cursor = cnx.cursor()
@@ -196,7 +197,7 @@ class RepositoryDeleteHandler(CommandHandler):
                 print '-> database %s dropped.' % dbname
                 # XXX should check we are not connected as user
                 if user and helper.users_support and \
-                       confirm('Delete user %s ?' % user, default_is_yes=False):
+                       ASK.confirm('Delete user %s ?' % user, default_is_yes=False):
                     cursor.execute('DROP USER %s' % user)
                     print '-> user %s dropped.' % user
                 cnx.commit()
@@ -277,12 +278,12 @@ class CreateInstanceDBCommand(Command):
                 if helper.users_support:
                     user = source['db-user']
                     if not helper.user_exists(cursor, user) and \
-                           confirm('Create db user %s ?' % user, default_is_yes=False):
+                           ASK.confirm('Create db user %s ?' % user, default_is_yes=False):
                         helper.create_user(source['db-user'], source['db-password'])
                         print '-> user %s created.' % user
                 dbname = source['db-name']
                 if dbname in helper.list_databases(cursor):
-                    if confirm('Database %s already exists -- do you want to drop it ?' % dbname):
+                    if ASK.confirm('Database %s already exists -- do you want to drop it ?' % dbname):
                         cursor.execute('DROP DATABASE %s' % dbname)
                     else:
                         return
@@ -310,7 +311,7 @@ class CreateInstanceDBCommand(Command):
         cnx.commit()
         print '-> database for instance %s created and necessary extensions installed.' % appid
         print
-        if confirm('Do you want to run db-init to initialize the system database ?'):
+        if ASK.confirm('Run db-init to initialize the system database ?'):
             cmd_run('db-init', config.appid)
         else:
             print ('-> nevermind, you can do it later with '
@@ -491,7 +492,7 @@ def _remote_dump(host, appid, output, sudo=False):
         raise ExecutionError('Error while retrieving the dump')
     rmcmd = 'ssh -t %s "rm -f /tmp/%s.dump"' % (host, appid)
     print rmcmd
-    if os.system(rmcmd) and not confirm(
+    if os.system(rmcmd) and not ASK.confirm(
         'An error occured while deleting remote dump. Continue anyway?'):
         raise ExecutionError('Error while deleting remote dump')
 

@@ -17,14 +17,14 @@ from warnings import warn
 from logilab.common import STD_BLACKLIST
 from logilab.common.modutils import get_module_files
 from logilab.common.textutils import get_csv
+from logilab.common.shellutils import ASK
 from logilab.common.clcommands import register_commands
 
 from cubicweb import CW_SOFTWARE_ROOT as BASEDIR, BadCommandUsage, underline_title
 from cubicweb.__pkginfo__ import version as cubicwebversion
-from cubicweb.toolsutils import Command, confirm, copy_skeleton
+from cubicweb.toolsutils import Command, copy_skeleton
 from cubicweb.web.webconfig import WebConfiguration
 from cubicweb.server.serverconfig import ServerConfiguration
-
 
 class DevCubeConfiguration(ServerConfiguration, WebConfiguration):
     """dummy config to get full library schema and entities"""
@@ -483,7 +483,7 @@ class NewCubeCommand(Command):
                                       " Please specify it using the --directory option")
             cubesdir = cubespath[0]
         if not isdir(cubesdir):
-            print "creating cubes directory", cubesdir
+            print "-> creating cubes directory", cubesdir
             try:
                 mkdir(cubesdir)
             except OSError, err:
@@ -492,19 +492,20 @@ class NewCubeCommand(Command):
         if exists(cubedir):
             self.fail("%s already exists !" % (cubedir))
         skeldir = join(BASEDIR, 'skeleton')
+        default_name = 'cubicweb-%s' % cubename.lower()
         if verbose:
-            distname = raw_input('Debian name for your cube (just type enter to use the cube name): ').strip()
+            distname = raw_input('Debian name for your cube ? [%s]): ' % default_name).strip()
             if not distname:
-                distname = 'cubicweb-%s' % cubename.lower()
+                distname = default_name
             elif not distname.startswith('cubicweb-'):
-                if confirm('do you mean cubicweb-%s ?' % distname):
+                if ASK.confirm('Do you mean cubicweb-%s ?' % distname):
                     distname = 'cubicweb-' + distname
         else:
-            distname = 'cubicweb-%s' % cubename.lower()
+            distname = default_name
 
         longdesc = shortdesc = raw_input('Enter a short description for your cube: ')
         if verbose:
-            longdesc = raw_input('Enter a long description (or nothing if you want to reuse the short one): ')
+            longdesc = raw_input('Enter a long description (leave empty to reuse the short one): ')
         if verbose:
             includes = self._ask_for_dependancies()
             if len(includes) == 1:
@@ -529,14 +530,14 @@ class NewCubeCommand(Command):
     def _ask_for_dependancies(self):
         includes = []
         for stdtype in ServerConfiguration.available_cubes():
-            ans = raw_input("Depends on cube %s? (N/y/s(kip)/t(ype)"
-                            % stdtype).lower().strip()
-            if ans == 'y':
+            answer = ASK.ask("Depends on cube %s? " % stdtype,
+                             ('N','y','skip','type'), 'N')
+            if answer == 'y':
                 includes.append(stdtype)
-            if ans == 't':
+            if answer == 'type':
                 includes = get_csv(raw_input('type dependancies: '))
                 break
-            elif ans == 's':
+            elif answer == 'skip':
                 break
         return includes
 

@@ -9,8 +9,8 @@ web configuration
 __docformat__ = "restructuredtext en"
 
 from cubicweb import underline_title
-from cubicweb.toolsutils import CommandHandler, confirm
-
+from cubicweb.toolsutils import CommandHandler
+from logilab.common.shellutils import ASK
 
 class WebCreateHandler(CommandHandler):
     cmdname = 'create'
@@ -22,7 +22,7 @@ class WebCreateHandler(CommandHandler):
         if config.repo_method == 'pyro':
             print '\n'+underline_title('Repository server configuration')
             config.input_config('pyro-client', inputlevel)
-        if confirm('Allow anonymous access ?', False):
+        if ASK.confirm('Allow anonymous access ?', False):
             config.global_set_option('anonymous-user', 'anon')
             config.global_set_option('anonymous-password', 'anon')
 
