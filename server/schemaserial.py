@@ -284,11 +284,11 @@ def serialize_schema(cursor, schema, verbose=False):
     if not verbose:
         pb_size = len(aller) + len(CONSTRAINTS) + len([x for x in eschemas if x.specializes()])
         pb = ProgressBar(pb_size, title=_title)
+    rql = 'INSERT CWConstraintType X: X name %(ct)s'
     for cstrtype in CONSTRAINTS:
-        rql = 'INSERT CWConstraintType X: X name "%s"' % cstrtype
         if verbose:
             print rql
-        cursor.execute(rql)
+        cursor.execute(rql, {'ct': unicode(cstrtype)})
         if not verbose:
             pb.update()
     groupmap = group_mapping(cursor, interactive=False)
@@ -549,12 +549,12 @@ def updatefrdef2rql(rschema, subjtype, objtype, props):
     relations, values = frdef_relations_values(rschema, objtype, props)
     values.update({'se': subjtype, 'rt': str(rschema), 'oe': objtype})
     yield 'SET %s WHERE %s, %s, X is CWAttribute' % (','.join(relations),
-                                                 _LOCATE_RDEF_RQL0,
-                                                 _LOCATE_RDEF_RQL1), values
+                                                     _LOCATE_RDEF_RQL0,
+                                                     _LOCATE_RDEF_RQL1), values
 
 def updatenfrdef2rql(rschema, subjtype, objtype, props):
     relations, values = nfrdef_relations_values(rschema, objtype, props)
     values.update({'se': subjtype, 'rt': str(rschema), 'oe': objtype})
     yield 'SET %s WHERE %s, %s, X is CWRelation' % (','.join(relations),
-                                                 _LOCATE_RDEF_RQL0,
-                                                 _LOCATE_RDEF_RQL1), values
+                                                    _LOCATE_RDEF_RQL0,
+                                                    _LOCATE_RDEF_RQL1), values
