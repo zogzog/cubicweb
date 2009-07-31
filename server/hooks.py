@@ -461,14 +461,14 @@ class SetInitialStateOp(PreCommitOperation):
     def precommit_event(self):
         session = self.session
         entity = self.entity
-        rset = session.execute('Any S WHERE ET initial_state S, ET name %(name)s',
-                               {'name': str(entity.e_schema)})
         # if there is an initial state and the entity's state is not set,
         # use the initial state as a default state
         pendingeids = session.transaction_data.get('pendingeids', ())
-        if rset and not entity.eid in pendingeids and not entity.in_state:
-            session.unsafe_execute('SET X in_state S WHERE X eid %(x)s, S eid %(s)s',
-                                   {'x' : entity.eid, 's' : rset[0][0]}, 'x')
+        if not entity.eid in pendingeids and not entity.in_state:
+            rset = session.execute('Any S WHERE ET initial_state S, ET name %(name)s',
+                                   {'name': entity.id})
+            if rset:
+                session.add_relation(entity.eid, 'in_state', rset[0][0])
 
 
 def set_initial_state_after_add(session, entity):
