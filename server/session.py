@@ -73,6 +73,17 @@ class Session(RequestSessionMixIn):
     def __str__(self):
         return '<%ssession %s (%s 0x%x)>' % (self.cnxtype, self.user.login,
                                              self.id, id(self))
+
+    def add_relation(self, fromeid, rtype, toeid):
+        if self.is_super_session:
+            self.repo.glob_add_relation(self, fromeid, rtype, toeid)
+            return
+        self.is_super_session = True
+        try:
+            self.repo.glob_add_relation(self, fromeid, rtype, toeid)
+        finally:
+            self.is_super_session = False
+
     # resource accessors ######################################################
 
     def actual_session(self):
