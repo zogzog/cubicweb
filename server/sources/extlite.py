@@ -176,10 +176,9 @@ repository.',
         attached session: release the connection lock if the connection wrapper
         has a connection set
         """
-        if cnx._cnx is not None:
-            # reset _cnx to ensure next thread using cnx will get a new
-            # connection
-            cnx.close()
+        # reset _cnx to ensure next thread using cnx will get a new
+        # connection
+        cnx.close()
 
     def syntax_tree_search(self, session, union,
                            args=None, cachekey=None, varmap=None, debug=0):
