@@ -260,7 +260,7 @@ class CWPropertiesForm(SystemCWPropertiesForm):
 
 class PlaceHolderWidget(object):
 
-    def render(self, form, field):
+    def render(self, form, field, renderer):
         domid = form.context[field]['id']
         # empty span as well else html validation fail (label is refering to
         # this id)
@@ -273,7 +273,7 @@ class NotEditableWidget(object):
         self.value = value
         self.msg = msg
 
-    def render(self, form, field):
+    def render(self, form, field, renderer):
         domid = form.context[field]['id']
         value = '<span class="value" id="%s">%s</span>' % (domid, self.value)
         if self.msg:
