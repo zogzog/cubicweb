@@ -372,10 +372,10 @@ class AddCWAttributePreCommitOp(PreCommitOperation):
         session = self.session
         entity = self.entity
         fromentity = entity.stype
-        relationtype = entity.rtype
         session.execute('SET X ordernum Y+1 WHERE X from_entity SE, SE eid %(se)s, X ordernum Y, X ordernum >= %(order)s, NOT X eid %(x)s',
                         {'x': entity.eid, 'se': fromentity.eid, 'order': entity.ordernum or 0})
-        subj, rtype = str(fromentity.name), str(relationtype.name)
+        subj = str(fromentity.name)
+        rtype = entity.rtype.name
         obj = str(entity.otype.name)
         # at this point default is a string or None, but we need a correctly
         # typed value
@@ -445,11 +445,14 @@ class AddCWRelationPreCommitOp(PreCommitOperation):
     def precommit_event(self):
         session = self.session
         entity = self.entity
-        fromentity = entity.stype.name
-        relationtype = entity.rtype
-        session.execute('SET X ordernum Y+1 WHERE X from_entity SE, SE eid %(se)s, X ordernum Y, X ordernum >= %(order)s, NOT X eid %(x)s',
-                        {'x': entity.eid, 'se': fromentity.eid, 'order': entity.ordernum or 0})
-        subj, rtype = str(fromentity.name), str(relationtype.name)
+        fromentity = entity.stype
+        session.execute('SET X ordernum Y+1 '
+                        'WHERE X from_entity SE, SE eid %(se)s, X ordernum Y, '
+                        'X ordernum >= %(order)s, NOT X eid %(x)s',
+                        {'x': entity.eid, 'se': fromentity.eid,
+                         'order': entity.ordernum or 0})
+        subj = str(fromentity.name)
+        rtype = entity.rtype.name
         obj = str(entity.otype.name)
         card = entity.get('cardinality')
         rdef = RelationDefinition(subj, rtype, obj,
