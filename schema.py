@@ -38,7 +38,7 @@ PURE_VIRTUAL_RTYPES = set(('identity', 'has_text',))
 VIRTUAL_RTYPES = set(('eid', 'identity', 'has_text',))
 
 #  set of meta-relations available for every entity types
-META_RELATIONS_TYPES = set((
+META_RTYPES = set((
     'owned_by', 'created_by', 'is', 'is_instance_of', 'identity',
     'eid', 'creation_date', 'modification_date', 'has_text', 'cwuri',
     ))
@@ -245,7 +245,7 @@ class CubicWebEntitySchema(EntitySchema):
         attribute defined in the entity schema
         """
         for rschema, _ in self.attribute_definitions():
-            if not (rschema in META_RELATIONS_TYPES
+            if not (rschema in META_RTYPES
                     or self.is_metadata(rschema)):
                 return rschema
 
@@ -328,7 +328,7 @@ class CubicWebRelationSchema(RelationSchema):
 
     @property
     def meta(self):
-        return self.type in META_RELATIONS_TYPES
+        return self.type in META_RTYPES
 
     def update(self, subjschema, objschema, rdef):
         super(CubicWebRelationSchema, self).update(subjschema, objschema, rdef)
