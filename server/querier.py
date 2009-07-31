@@ -586,9 +586,10 @@ class QuerierHelper(object):
         always use substitute arguments in queries (eg avoid query such as
         'Any X WHERE X eid 123'!)
         """
-        if server.DEBUG & (server.DBG_RQL | server.DBG_RQL):
-            print '*'*80
-            print 'QUERIER INPUT', rql
+        if server.DEBUG & (server.DBG_RQL | server.DBG_SQL):
+            if server.DEBUG & server.DBG_MORE:
+                print '*'*80
+            print 'QUERIER INPUT', rql, args
         # parse the query and binds variables
         if eid_key is not None:
             if not isinstance(eid_key, (tuple, list)):
