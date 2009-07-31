@@ -76,6 +76,8 @@ def previous_state(session, eid):
     relation hooks, the relation may has been deleted at this point, so
     we have handle that
     """
+    if eid in session.transaction_data.get('neweids', ()):
+        return
     pending = session.transaction_data.get('pendingrelations', ())
     for eidfrom, rtype, eidto in reversed(pending):
         if rtype == 'in_state' and eidfrom == eid:
