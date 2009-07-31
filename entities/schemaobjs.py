@@ -112,6 +112,18 @@ class CWRelation(AnyEntity):
             return self.relation_type[0].rest_path(), {}
         return super(CWRelation, self).after_deletion_path()
 
+    @property
+    def rtype(self):
+        return self.relation_type[0]
+
+    @property
+    def stype(self):
+        return self.from_entity[0]
+
+    @property
+    def otype(self):
+        return self.to_entity[0]
+
 
 class CWAttribute(CWRelation):
     id = 'CWAttribute'
