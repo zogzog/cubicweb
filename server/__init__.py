@@ -14,39 +14,76 @@ import sys
 from os.path import join, exists
 
 from logilab.common.modutils import LazyObject
+from logilab.common.textutils import get_csv
 
 # server-side debugging #########################################################
 
-# server debugging flag
-DBG_RQL = 1 # rql execution information
-DBG_SQL = 2 # executed sql
+# server debugging flags. They may be combined using binary operators.
+DBG_NONE = 0 # no debug information
+DBG_RQL = 1  # rql execution information
+DBG_SQL = 2  # executed sql
 DBG_REPO = 4 # repository events
 DBG_MORE = 8 # repository events
 
-
-# 2: + executed sql
-# 3: + additional debug information
+# current debug mode
 DEBUG = 0
+
 def set_debug(debugmode):
+    """change the repository debugging mode"""
     global DEBUG
     if not debugmode:
         DEBUG = 0
         return
     if isinstance(debugmode, basestring):
-        debugmode = globals()[debugmode]
-    DEBUG |= debugmode
+        for mode in get_csv(debugmode, sep='|'):
+            DEBUG |= globals()[mode]
+    else:
+        DEBUG |= debugmode
 
-def debugged(func):
-    """decorator to activate debug mode"""
-    def wrapped(*args, **kwargs):
-        global DEBUG
-        DEBUG = True
-        try:
-            return func(*args, **kwargs)
-        finally:
-            DEBUG = False
-    return wrapped
 
+class debugged(object):
+    """repository debugging context manager / decorator
+
+    Can be used either as a context manager:
+
+    >>> with debugged(server.DBG_RQL | server.DBG_REPO):
+    ...     # some code in which you want to debug repository activity,
+    ...     # seing information about RQL being executed an repository events.
+
+    or as a function decorator:
+
+    >>> @debugged(server.DBG_RQL | server.DBG_REPO)
+    ... def some_function():
+    ...     # some code in which you want to debug repository activity,
+    ...     # seing information about RQL being executed an repository events
+
+    debug mode will be reseted at its original value when leaving the "with"
+    block or the decorated function
+    """
+    def __init__(self, debugmode):
+        self.debugmode = debugmode
+        self._clevel = None
+
+    def __enter__(self):
+        """enter with block"""
+        self._clevel = DEBUG
+        set_debug(self.debugmode)
+
+    def __exit__(self, exctype, exc, traceback):
+        """leave with block"""
+        set_debug(self._clevel)
+        return traceback is None
+
+    def __call__(self, func):
+        """decorate function"""
+        def wrapped(*args, **kwargs):
+            _clevel = DEBUG
+            set_debug(self.debugmode)
+            try:
+                return func(*args, **kwargs)
+            finally:
+                set_debug(self._clevel)
+        return wrapped
 
 # database initialization ######################################################
 
