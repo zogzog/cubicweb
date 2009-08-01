@@ -13,8 +13,8 @@ from os.path import join, exists
 from cubicweb import server
 from cubicweb.server.sqlutils import (SQL_PREFIX, SQLAdapterMixIn, sqlexec,
                                       sql_source_backup, sql_source_restore)
-from cubicweb.server.sources import AbstractSource, native
-from cubicweb.server.sources.rql2sql import SQLGenerator
+from cubicweb.server.sources import native, rql2sql
+from cubicweb.server.sources import AbstractSource, dbg_st_search, dbg_results
 
 class ConnectionWrapper(object):
     def __init__(self, source=None):
@@ -31,32 +31,33 @@ class ConnectionWrapper(object):
         if self._cnx is None:
             self._cnx = self.source._sqlcnx
             if server.DEBUG & server.DBG_SQL:
-                print 'sql cnx open', self._cnx
+                print 'sql cnx OPEN', self._cnx
         return self._cnx.cursor()
 
     def commit(self):
         if self._cnx is not None:
             if server.DEBUG & server.DBG_SQL:
-                print 'sql cnx commit', self._cnx
+                print 'sql cnx COMMIT', self._cnx
+            self._cnx.commit()
 
     def rollback(self):
         if self._cnx is not None:
             if server.DEBUG & server.DBG_SQL:
-                print 'sql cnx rollback', self._cnx
+                print 'sql cnx ROLLBACK', self._cnx
             self._cnx.rollback()
 
     def close(self):
         if self._cnx is not None:
-            self._cnx.close()
             if server.DEBUG & server.DBG_SQL:
-                print 'sql cnx close', self._cnx
+                print 'sql cnx CLOSE', self._cnx
+            self._cnx.close()
             self._cnx = None
 
 
 class SQLiteAbstractSource(AbstractSource):
     """an abstract class for external sources using a sqlite database helper
     """
-    sqlgen_class = SQLGenerator
+    sqlgen_class = rql2sql.SQLGenerator
     @classmethod
     def set_nonsystem_types(cls):
         # those entities are only in this source, we don't want them in the
@@ -180,8 +181,8 @@ repository.',
         # connection
         cnx.close()
 
-    def syntax_tree_search(self, session, union,
-                           args=None, cachekey=None, varmap=None, debug=0):
+    def syntax_tree_search(self, session, union, args=None, cachekey=None,
+                           varmap=None):
         """return result from this source for a rql query (actually from a rql
         syntax tree and a solution dictionary mapping each used variable to a
         possible type). If cachekey is given, the query necessary to fetch the
@@ -189,14 +190,12 @@ repository.',
         """
         if self._need_sql_create:
             return []
+        assert dbg_st_search(self.uri, union, varmap, args, cachekey)
         sql, query_args = self.rqlsqlgen.generate(union, args)
-        if server.DEBUG & server.DBG_RQL:
-            print 'RQL FOR %s SOURCE:' % (self.uri, union.as_string())
         args = self.sqladapter.merge_args(args, query_args)
-        res = self.sqladapter.process_result(self.doexec(session, sql, args))
-        if server.DEBUG & (server.DBG_SQL | server.DBG_RQL):
-            print '------>', res
-        return res
+        results = self.sqladapter.process_result(self.doexec(session, sql, args))
+        assert dbg_results(results)
+        return results
 
     def local_add_entity(self, session, entity):
         """insert the entity in the local database.

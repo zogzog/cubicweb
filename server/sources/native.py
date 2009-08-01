@@ -28,7 +28,7 @@ from cubicweb.server.utils import crypt_password
 from cubicweb.server.sqlutils import (SQL_PREFIX, SQLAdapterMixIn,
                                       sql_source_backup, sql_source_restore)
 from cubicweb.server.rqlannotation import set_qdata
-from cubicweb.server.sources import AbstractSource
+from cubicweb.server.sources import AbstractSource, dbg_st_search, dbg_results
 from cubicweb.server.sources.rql2sql import SQLGenerator
 
 
@@ -59,6 +59,7 @@ class LogCursor(object):
     def fetchone(self):
         return self.cu.fetchone()
 
+
 def make_schema(selected, solution, table, typemap):
     """return a sql schema to store RQL query result"""
     sql = []
@@ -74,6 +75,7 @@ def make_schema(selected, solution, table, typemap):
             # assert not schema(ttype).is_final()
             sql.append('%s %s' % (name, typemap['Int']))
     return ','.join(sql), varmap
+
 
 def _modified_sql(table, etypes):
     # XXX protect against sql injection
@@ -304,14 +306,7 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
         necessary to fetch the results (but not the results themselves)
         may be cached using this key.
         """
-        if server.DEBUG & server.DBG_RQL:
-            print 'RQL FOR NATIVE SOURCE %s: %s' % (self.uri, union.as_string())
-            if varmap:
-                print 'using varmap', varmap
-            if server.DEBUG & server.DBG_MORE:
-                print 'args', args
-                print 'cache key', cachekey
-                print 'solutions', ','.join(str(s.solutions) for s in union.children)
+        assert dbg_st_search(self.uri, union, varmap, args, cachekey)
         # remember number of actually selected term (sql generation may append some)
         if cachekey is None:
             self.no_cache += 1
@@ -336,10 +331,9 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
             self.info("request failed '%s' ... retry with a new cursor", sql)
             session.pool.reconnect(self)
             cursor = self.doexec(session, sql, args)
-        res = self.process_result(cursor)
-        if server.DEBUG & (server.DBG_SQL | server.DBG_RQL):
-            print '------>', res
-        return res
+        results = self.process_result(cursor)
+        assert dbg_results(results)
+        return results
 
     def flying_insert(self, table, session, union, args=None, varmap=None):
         """similar as .syntax_tree_search, but inserts data in the
@@ -347,23 +341,18 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
         source whose the given cursor come from). If not possible,
         inserts all data by calling .executemany().
         """
-        if self.uri == 'system':
-            if server.DEBUG & server.DBG_RQL:
-                print 'FLYING RQL FOR SOURCE %s: %s', self.uri, union.as_string()
-                if varmap:
-                    print 'USING VARMAP', varmap
-                if server.DEBUG & server.DBG_MORE:
-                    print 'SOLUTIONS', ','.join(str(s.solutions) for s in union.children)
-            # generate sql queries if we are able to do so
-            sql, query_args = self._rql_sqlgen.generate(union, args, varmap)
-            query = 'INSERT INTO %s %s' % (table, sql.encode(self.encoding))
-            self.doexec(session, query, self.merge_args(args, query_args))
-        else:
-            super(NativeSQLSource, self).flying_insert(table, session, union,
-                                                       args, varmap)
+        assert dbg_st_search(
+            uri, union, varmap, args,
+            prefix='ON THE FLY temp data insertion into %s from' % table)
+        # generate sql queries if we are able to do so
+        sql, query_args = self._rql_sqlgen.generate(union, args, varmap)
+        query = 'INSERT INTO %s %s' % (table, sql.encode(self.encoding))
+        self.doexec(session, query, self.merge_args(args, query_args))
 
     def _manual_insert(self, results, table, session):
         """insert given result into a temporary table on the system source"""
+        if server.DEBUG & server.DBG_RQL:
+            print '  manual insertion of', res, 'into', table
         if not results:
             return
         query_args = ['%%(%s)s' % i for i in xrange(len(results[0]))]
@@ -436,7 +425,10 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
         """
         cursor = session.pool[self.uri]
         if server.DEBUG & server.DBG_SQL:
-            print 'exec', query, args
+            cnx = session.pool.connection(self.uri)
+            # getattr to get the actual connection if cnx is a ConnectionWrapper
+            # instance
+            print 'exec', query, args, getattr(cnx, '_cnx', cnx)
         try:
             # str(query) to avoid error if it's an unicode string
             cursor.execute(str(query), args)

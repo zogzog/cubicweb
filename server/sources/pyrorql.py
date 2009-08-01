@@ -23,7 +23,8 @@ from rql.utils import rqlvar_maker
 from cubicweb import dbapi, server
 from cubicweb import BadConnectionId, UnknownEid, ConnectionError
 from cubicweb.cwconfig import register_persistent_options
-from cubicweb.server.sources import AbstractSource, ConnectionWrapper, TimedCache
+from cubicweb.server.sources import (AbstractSource, ConnectionWrapper,
+                                     TimedCache, dbg_st_search, dbg_results)
 
 class ReplaceByInOperator(Exception):
     def __init__(self, eids):
@@ -253,13 +254,14 @@ repository (default to 5 minutes).',
 
     def syntax_tree_search(self, session, union, args=None, cachekey=None,
                            varmap=None):
-        #assert not varmap, (varmap, union)
+        assert dbg_st_search(self.uri, union, varmap, args, cachekey)
         rqlkey = union.as_string(kwargs=args)
         try:
             results = self._query_cache[rqlkey]
         except KeyError:
             results = self._syntax_tree_search(session, union, args)
             self._query_cache[rqlkey] = results
+        assert dbg_results(results)
         return results
 
     def _syntax_tree_search(self, session, union, args):
@@ -270,12 +272,6 @@ repository (default to 5 minutes).',
         """
         if not args is None:
             args = args.copy()
-        if server.DEBUG & server.DBG_RQL:
-            print 'RQL FOR PYRO SOURCE %s: %s', self.uri, union.as_string()
-            if args:
-                print 'ARGS', args
-            if server.DEBUG & server.DBG_MORE:
-                print 'SOLUTIONS', ','.join(str(s.solutions) for s in union.children)
         # get cached cursor anyway
         cu = session.pool[self.uri]
         if cu is None:
@@ -287,10 +283,10 @@ repository (default to 5 minutes).',
             rql, cachekey = RQL2RQL(self).generate(session, union, args)
         except UnknownEid, ex:
             if server.DEBUG:
-                print 'unknown eid', ex, 'no results'
+                print '  unknown eid', ex, 'no results'
             return []
         if server.DEBUG & server.DBG_RQL:
-            print 'TRANSLATED RQL', rql
+            print '  translated rql', rql
         try:
             rset = cu.execute(rql, args, cachekey)
         except Exception, ex:
@@ -326,11 +322,6 @@ repository (default to 5 minutes).',
             results = rows
         else:
             results = []
-        if server.DEBUG & server.DBG_RQL:
-            if len(results)>10:
-                print '-->', results[:10], '...', len(results)
-            else:
-                print '-->', results
         return results
 
     def _entity_relations_and_kwargs(self, session, entity):
