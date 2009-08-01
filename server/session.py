@@ -74,6 +74,10 @@ class Session(RequestSessionMixIn):
         return '<%ssession %s (%s 0x%x)>' % (self.cnxtype, self.user.login,
                                              self.id, id(self))
 
+    @property
+    def schema(self):
+        return self.repo.schema
+
     def add_relation(self, fromeid, rtype, toeid):
         if self.is_super_session:
             self.repo.glob_add_relation(self, fromeid, rtype, toeid)
