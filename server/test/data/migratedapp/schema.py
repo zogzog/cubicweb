@@ -61,6 +61,7 @@ class ecrit_par(RelationType):
     inlined = True
     cardinality = '?*'
 
+
 class Folder2(EntityType):
     """folders are used to classify entities. They may be defined as a tree.
     When you include the Folder entity, all application specific entities
@@ -72,12 +73,6 @@ class Folder2(EntityType):
 
     filed_under2 = ObjectRelation('*')
 
-
-class filed_under2(RelationType):
-    """indicates that an entity is classified under a folder"""
-    # is_about has been renamed into filed_under
-    #//* is_about Folder
-    #* filed_under Folder
 
 class Personne(EntityType):
     nom    = String(fulltextindexed=True, required=True, maxsize=64)
