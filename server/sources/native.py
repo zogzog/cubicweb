@@ -349,7 +349,7 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
         query = 'INSERT INTO %s %s' % (table, sql.encode(self.encoding))
         self.doexec(session, query, self.merge_args(args, query_args))
 
-    def _manual_insert(self, results, table, session):
+    def manual_insert(self, results, table, session):
         """insert given result into a temporary table on the system source"""
         if server.DEBUG & server.DBG_RQL:
             print '  manual insertion of', res, 'into', table

@@ -313,8 +313,7 @@ class AbstractSource(object):
         .executemany().
         """
         res = self.syntax_tree_search(session, union, args, varmap=varmap)
-        session.pool.source('system')._manual_insert(res, table, session)
-
+        session.pool.source('system').manual_insert(res, table, session)
 
     # system source don't have to implement the two methods below
 
