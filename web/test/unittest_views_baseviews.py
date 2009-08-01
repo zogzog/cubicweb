@@ -44,11 +44,16 @@ class VidFromRsetTC(EnvBasedTC):
         rset = self.execute('Any X WHERE X eid 1')
         self.assertEquals(vid_from_rset(req, rset, self.schema), 'primary')
 
-    def test_more_than_one_entity(self):
+    def test_more_than_one_entity_same_type(self):
         req = self.request()
         rset = self.execute('Any X WHERE X is CWUser')
-        self.assertEquals(vid_from_rset(req, rset, self.schema), 'list')
+        self.assertEquals(vid_from_rset(req, rset, self.schema), 'adaptedlist')
         rset = self.execute('Any X, L WHERE X login L')
+        self.assertEquals(vid_from_rset(req, rset, self.schema), 'adaptedlist')
+
+    def test_more_than_one_entity_diff_type(self):
+        req = self.request()
+        rset = self.execute('Any X WHERE X is IN (CWUser, CWGroup)')
         self.assertEquals(vid_from_rset(req, rset, self.schema), 'list')
 
     def test_more_than_one_entity_by_row(self):
@@ -86,7 +91,7 @@ class TableViewTC(EnvBasedTC):
         rset = self.execute('Any X, D, CD, NOW - CD WHERE X is State, X description D, X creation_date CD, X eid %(x)s',
                             {'x': e.eid}, 'x')
         req = self.request()
-        view = self.vreg.select('views', 'table', req, rset)
+        view = self.vreg.select('views', 'table', req, rset=rset)
         return e, rset, view
 
     def test_headers(self):
@@ -102,9 +107,8 @@ class TableViewTC(EnvBasedTC):
         # self.assertAlmostEquals(value, rset.rows[0][3].seconds)
 
     def test_sortvalue_with_display_col(self):
-        self.skip('XXX there is no column_labels on rset')
         e, rset, view = self._prepare_entity()
-        labels = rset.column_labels()
+        labels = view.columns_labels()
         table = TableWidget(view)
         table.columns = view.get_columns(labels, [1, 2], None, None, None, None, 0)
         expected = ['loo"ong blabla'[:10], e.creation_date.strftime('%Y-%m-%d %H:%M')]

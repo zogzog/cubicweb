@@ -25,12 +25,12 @@ class AutomaticEntityFormTC(EnvBasedTC):
         AEF.rfields_kwargs.del_rtag('CWUser', 'login', '*', 'subject')
 
 
-    def test_euser_relations_by_category(self):
+    def test_cwuser_relations_by_category(self):
         #for (rtype, role, stype, otype), tag in AEF.rcategories._tagdefs.items():
         #    if rtype == 'tags':
         #        print rtype, role, stype, otype, ':', tag
         e = self.etype_instance('CWUser')
-        # see custom configuration in views.euser
+        # see custom configuration in views.cwuser
         self.assertEquals(rbc(e, 'primary'),
                           [('login', 'subject'),
                            ('upassword', 'subject'),
@@ -46,6 +46,7 @@ class AutomaticEntityFormTC(EnvBasedTC):
                               [('last_login_time', 'subject'),
                                ('created_by', 'subject'),
                                ('creation_date', 'subject'),
+                               ('cwuri', 'subject'),
                                ('modification_date', 'subject'),
                                ('owned_by', 'subject'),
                                ('bookmarked_by', 'object'),
@@ -97,6 +98,7 @@ class AutomaticEntityFormTC(EnvBasedTC):
         self.assertListEquals(rbc(e, 'metadata'),
                               [('created_by', 'subject'),
                                ('creation_date', 'subject'),
+                               ('cwuri', 'subject'),
                                ('modification_date', 'subject'),
                                ('owned_by', 'subject'),
                                ])
@@ -158,3 +160,4 @@ class FormViewsTC(WebTest):
 
 if __name__ == '__main__':
     unittest_main()
+

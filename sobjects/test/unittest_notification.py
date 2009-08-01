@@ -74,7 +74,7 @@ class StatusChangeViewsTC(EnvBasedTC):
         u = self.create_user('toto', req=req)
         assert u.req
         self.execute('SET X in_state S WHERE X eid %s, S name "deactivated"' % u.eid)
-        v = self.vreg.select('views', 'notif_status_change', req, u.rset, row=0)
+        v = self.vreg.select('views', 'notif_status_change', req, rset=u.rset, row=0)
         content = v.render(row=0, comment='yeah',
                            previous_state='activated',
                            current_state='deactivated')

@@ -133,14 +133,16 @@ class MigrationCommandsTC(RepositoryBasedTC):
         self.failUnless('filed_under2' in self.schema)
         self.failUnless(self.execute('CWRType X WHERE X name "filed_under2"'))
         self.assertEquals(sorted(str(rs) for rs in self.schema['Folder2'].subject_relations()),
-                          ['created_by', 'creation_date', 'description', 'description_format', 'eid',
-                           'filed_under2', 'has_text', 'identity', 'is', 'is_instance_of',
+                          ['created_by', 'creation_date', 'cwuri',
+                           'description', 'description_format',
+                           'eid',
+                           'filed_under2', 'has_text',
+                           'identity', 'in_basket', 'is', 'is_instance_of',
                            'modification_date', 'name', 'owned_by'])
         self.assertEquals([str(rs) for rs in self.schema['Folder2'].object_relations()],
                           ['filed_under2', 'identity'])
         self.assertEquals(sorted(str(e) for e in self.schema['filed_under2'].subjects()),
-                          ['Affaire', 'Card', 'Division', 'Email', 'EmailThread', 'File',
-                           'Folder2', 'Image', 'Note', 'Personne', 'Societe', 'SubDivision'])
+                          sorted(str(e) for e in self.schema.entities() if not e.is_final()))
         self.assertEquals(self.schema['filed_under2'].objects(), ('Folder2',))
         eschema = self.schema.eschema('Folder2')
         for cstr in eschema.constraints('name'):
@@ -166,8 +168,7 @@ class MigrationCommandsTC(RepositoryBasedTC):
         self.mh.cmd_add_relation_type('filed_under2')
         self.failUnless('filed_under2' in self.schema)
         self.assertEquals(sorted(str(e) for e in self.schema['filed_under2'].subjects()),
-                          ['Affaire', 'Card', 'Division', 'Email', 'EmailThread', 'File',
-                           'Folder2', 'Image', 'Note', 'Personne', 'Societe', 'SubDivision'])
+                          sorted(str(e) for e in self.schema.entities() if not e.is_final()))
         self.assertEquals(self.schema['filed_under2'].objects(), ('Folder2',))
         self.mh.cmd_drop_relation_type('filed_under2')
         self.failIf('filed_under2' in self.schema)
@@ -181,26 +182,38 @@ class MigrationCommandsTC(RepositoryBasedTC):
         self.failIf('concerne2' in self.schema)
 
     def test_drop_relation_definition_existant_rtype(self):
-        self.assertEquals(sorted(str(e) for e in self.schema['concerne'].subjects()), ['Affaire', 'Personne'])
-        self.assertEquals(sorted(str(e) for e in self.schema['concerne'].objects()), ['Affaire', 'Division', 'Note', 'Societe', 'SubDivision'])
+        self.assertEquals(sorted(str(e) for e in self.schema['concerne'].subjects()),
+                          ['Affaire', 'Personne'])
+        self.assertEquals(sorted(str(e) for e in self.schema['concerne'].objects()),
+                          ['Affaire', 'Division', 'Note', 'Societe', 'SubDivision'])
         self.mh.cmd_drop_relation_definition('Personne', 'concerne', 'Affaire')
-        self.assertEquals(sorted(str(e) for e in self.schema['concerne'].subjects()), ['Affaire'])
-        self.assertEquals(sorted(str(e) for e in self.schema['concerne'].objects()), ['Division', 'Note', 'Societe', 'SubDivision'])
+        self.assertEquals(sorted(str(e) for e in self.schema['concerne'].subjects()),
+                          ['Affaire'])
+        self.assertEquals(sorted(str(e) for e in self.schema['concerne'].objects()),
+                          ['Division', 'Note', 'Societe', 'SubDivision'])
         self.mh.cmd_add_relation_definition('Personne', 'concerne', 'Affaire')
-        self.assertEquals(sorted(str(e) for e in self.schema['concerne'].subjects()), ['Affaire', 'Personne'])
-        self.assertEquals(sorted(str(e) for e in self.schema['concerne'].objects()), ['Affaire', 'Division', 'Note', 'Societe', 'SubDivision'])
+        self.assertEquals(sorted(str(e) for e in self.schema['concerne'].subjects()),
+                          ['Affaire', 'Personne'])
+        self.assertEquals(sorted(str(e) for e in self.schema['concerne'].objects()),
+                          ['Affaire', 'Division', 'Note', 'Societe', 'SubDivision'])
         # trick: overwrite self.maxeid to avoid deletion of just reintroduced types
         self.maxeid = self.execute('Any MAX(X)')[0][0]
 
     def test_drop_relation_definition_with_specialization(self):
-        self.assertEquals(sorted(str(e) for e in self.schema['concerne'].subjects()), ['Affaire', 'Personne'])
-        self.assertEquals(sorted(str(e) for e in self.schema['concerne'].objects()), ['Affaire', 'Division', 'Note', 'Societe', 'SubDivision'])
+        self.assertEquals(sorted(str(e) for e in self.schema['concerne'].subjects()),
+                          ['Affaire', 'Personne'])
+        self.assertEquals(sorted(str(e) for e in self.schema['concerne'].objects()),
+                          ['Affaire', 'Division', 'Note', 'Societe', 'SubDivision'])
         self.mh.cmd_drop_relation_definition('Affaire', 'concerne', 'Societe')
-        self.assertEquals(sorted(str(e) for e in self.schema['concerne'].subjects()), ['Affaire', 'Personne'])
-        self.assertEquals(sorted(str(e) for e in self.schema['concerne'].objects()), ['Affaire', 'Note'])
+        self.assertEquals(sorted(str(e) for e in self.schema['concerne'].subjects()),
+                          ['Affaire', 'Personne'])
+        self.assertEquals(sorted(str(e) for e in self.schema['concerne'].objects()),
+                          ['Affaire', 'Note'])
         self.mh.cmd_add_relation_definition('Affaire', 'concerne', 'Societe')
-        self.assertEquals(sorted(str(e) for e in self.schema['concerne'].subjects()), ['Affaire', 'Personne'])
-        self.assertEquals(sorted(str(e) for e in self.schema['concerne'].objects()), ['Affaire', 'Division', 'Note', 'Societe', 'SubDivision'])
+        self.assertEquals(sorted(str(e) for e in self.schema['concerne'].subjects()),
+                          ['Affaire', 'Personne'])
+        self.assertEquals(sorted(str(e) for e in self.schema['concerne'].objects()),
+                          ['Affaire', 'Division', 'Note', 'Societe', 'SubDivision'])
         # trick: overwrite self.maxeid to avoid deletion of just reintroduced types
         self.maxeid = self.execute('Any MAX(X)')[0][0]
 
@@ -233,28 +246,15 @@ class MigrationCommandsTC(RepositoryBasedTC):
             self.mh.cmd_change_relation_props('Personne', 'adel', 'String',
                                               fulltextindexed=False)
 
-    def test_synchronize_schema(self):
+    def test_sync_schema_props_perms(self):
         cursor = self.mh.rqlcursor
         nbrqlexpr_start = len(cursor.execute('RQLExpression X'))
         migrschema['titre']._rproperties[('Personne', 'String')]['order'] = 7
         migrschema['adel']._rproperties[('Personne', 'String')]['order'] = 6
         migrschema['ass']._rproperties[('Personne', 'String')]['order'] = 5
-#         expected = ['eid', 'has_text', 'creation_date', 'modification_date',
-#                     'nom', 'prenom', 'civility', 'promo', 'ass', 'adel', 'titre',
-#                     'web', 'tel', 'fax', 'datenaiss', 'test']
-#         self.assertEquals([rs.type for rs in migrschema['Personne'].ordered_relations() if rs.is_final()],
-#                           expected)
         migrschema['Personne'].description = 'blabla bla'
         migrschema['titre'].description = 'usually a title'
         migrschema['titre']._rproperties[('Personne', 'String')]['description'] = 'title for this person'
-#         rinorderbefore = cursor.execute('Any O,N WHERE X is CWAttribute, X relation_type RT, RT name N,'
-#                                         'X from_entity FE, FE name "Personne",'
-#                                         'X ordernum O ORDERBY O')
-#         expected = [u'creation_date', u'modification_date', u'nom', u'prenom',
-#                     u'sexe', u'promo', u'titre', u'adel', u'ass', u'web', u'tel',
-#                     u'fax', u'datenaiss', u'test', u'description']
-#        self.assertListEquals(rinorderbefore, map(list, zip([0, 0]+range(1, len(expected)), expected)))
-
         self.mh.cmd_sync_schema_props_perms(commit=False)
 
         self.assertEquals(cursor.execute('Any D WHERE X name "Personne", X description D')[0][0],
@@ -265,16 +265,13 @@ class MigrationCommandsTC(RepositoryBasedTC):
                                          'X from_entity FE, FE name "Personne",'
                                          'X description D')[0][0],
                           'title for this person')
-        # skip "sexe" and "description" since they aren't in the migration
-        # schema and so behaviour is undefined
-        # "civility" is also skipped since it may have been added by
-        # test_rename_attribut :o/
-        rinorder = [n for n, in cursor.execute('Any N ORDERBY O WHERE X is CWAttribute, X relation_type RT, RT name N,'
-                                               'X from_entity FE, FE name "Personne",'
-                                               'X ordernum O') if n not in ('sexe', 'description', 'civility')]
+        rinorder = [n for n, in cursor.execute(
+            'Any N ORDERBY O WHERE X is CWAttribute, X relation_type RT, RT name N,'
+            'X from_entity FE, FE name "Personne",'
+            'X ordernum O')]
         expected = [u'nom', u'prenom', u'promo', u'ass', u'adel', u'titre',
-                    u'web', u'tel', u'fax', u'datenaiss', u'test', u'firstname',
-                    u'creation_date', u'modification_date']
+                    u'web', u'tel', u'fax', u'datenaiss', u'test', 'description', u'firstname',
+                    u'creation_date', 'cwuri', u'modification_date']
         self.assertEquals(rinorder, expected)
 
         # test permissions synchronization ####################################

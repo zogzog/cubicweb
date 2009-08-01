@@ -77,7 +77,7 @@ class Folder2(EntityType):
 class Personne(EntityType):
     nom    = String(fulltextindexed=True, required=True, maxsize=64)
     prenom = String(fulltextindexed=True, maxsize=64)
-    sexe   = String(maxsize=1, default='M')
+    civility   = String(maxsize=1, default='M')
     promo  = String(vocabulary=('bon','pasbon'))
     titre  = String(fulltextindexed=True, maxsize=128)
     adel   = String(maxsize=128)

@@ -147,11 +147,6 @@ class QSPreProcessorTC(EnvBasedTC):
                           ('CWUser C WHERE C use_email C1, C1 alias LIKE %(text)s', {'text': '%Logilab'}))
         self.assertRaises(BadRQLQuery, transform, 'word1', 'word2', 'word3')
 
-    def test_multiple_words_query(self):
-        """tests multiple_words_query()"""
-        self.assertEquals(self.proc._multiple_words_query(['a', 'b', 'c', 'd', 'e']),
-                          ('a b c d e',))
-
     def test_quoted_queries(self):
         """tests how quoted queries are handled"""
         queries = [

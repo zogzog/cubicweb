@@ -5,6 +5,8 @@
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 :license: GNU Lesser General Public License, v2.1 - http://www.gnu.org/licenses
 """
+from yams.buildobjs import EntityType, String
+
 class Company(EntityType):
     name = String()
 

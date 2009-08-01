@@ -17,7 +17,7 @@ class SQLiteTC(TestCase):
             os.remove(self.sqlite_file)
         except:
             pass
-        
+
     def test(self):
         lock = threading.Lock()
 
