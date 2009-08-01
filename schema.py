@@ -256,10 +256,11 @@ class CubicWebEntitySchema(EntitySchema):
 
     def del_subject_relation(self, rtype):
         super(CubicWebEntitySchema, self).del_subject_relation(rtype)
-        self._update_has_text(False)
+        self._update_has_text(True)
 
-    def _update_has_text(self, need_has_text=None):
+    def _update_has_text(self, deletion=False):
         may_need_has_text, has_has_text = False, False
+        need_has_text = None
         for rschema in self.subject_relations():
             if rschema.is_final():
                 if rschema == 'has_text':
@@ -277,10 +278,9 @@ class CubicWebEntitySchema(EntitySchema):
                     may_need_has_text = True
                 else:
                     need_has_text = False
-                    break
         if need_has_text is None:
             need_has_text = may_need_has_text
-        if need_has_text and not has_has_text:
+        if need_has_text and not has_has_text and not deletion:
             rdef = ybo.RelationDefinition(self.type, 'has_text', 'String')
             self.schema.add_relation_def(rdef)
         elif not need_has_text and has_has_text:
