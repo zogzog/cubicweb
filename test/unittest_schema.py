@@ -16,6 +16,7 @@ from rql import RQLSyntaxError
 from yams import BadSchemaDefinition
 from yams.constraints import SizeConstraint, StaticVocabularyConstraint
 from yams.buildobjs import RelationDefinition, EntityType, RelationType
+from yams.reader import PyFileReader
 
 from cubicweb.schema import CubicWebSchema, CubicWebEntitySchema, \
      RQLConstraint, CubicWebSchemaLoader, ERQLExpression, RRQLExpression, \
@@ -133,12 +134,6 @@ loader.lib_directory = config.schemas_lib_dir()
 
 class SQLSchemaReaderClassTest(TestCase):
 
-    def test_knownValues_include_schema_files(self):
-        schema_files = loader.include_schema_files('Bookmark')
-        for file in schema_files:
-            self.assert_(isabs(file))
-        self.assertListEquals([basename(f) for f in schema_files], ['Bookmark.py'])
-
     def test_knownValues_load_schema(self):
         schema = loader.load(config)
         self.assert_(isinstance(schema, CubicWebSchema))
@@ -233,7 +228,7 @@ class BadSchemaRQLExprTC(TestCase):
         self.loader = CubicWebSchemaLoader()
         self.loader.defined = {}
         self.loader.loaded_files = []
-        self.loader._instantiate_handlers()
+        self.loader._pyreader = PyFileReader(self.loader)
 
     def _test(self, schemafile, msg):
         self.loader.handle_file(join(DATADIR, schemafile))

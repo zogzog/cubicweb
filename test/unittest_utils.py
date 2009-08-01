@@ -8,7 +8,7 @@
 
 from logilab.common.testlib import TestCase, unittest_main
 
-from cubicweb.common.utils import make_uid, UStringIO, SizeConstrainedList
+from cubicweb.utils import make_uid, UStringIO, SizeConstrainedList
 
 
 class MakeUidTC(TestCase):

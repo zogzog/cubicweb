@@ -346,10 +346,9 @@ class ResultSetTC(EnvBasedTC):
                           set(['CWGroup',]))
 
     def test_printable_rql(self):
-        rset = self.execute(u'CWEType X WHERE X final FALSE, X meta FALSE')
+        rset = self.execute(u'CWEType X WHERE X final FALSE')
         self.assertEquals(rset.printable_rql(),
-                          'Any X WHERE X final FALSE, X meta FALSE, X is CWEType')
-
+                          'Any X WHERE X final FALSE, X is CWEType')
 
     def test_searched_text(self):
         rset = self.execute(u'Any X WHERE X has_text "foobar"')

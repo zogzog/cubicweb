@@ -55,7 +55,9 @@ class EntityTC(EnvBasedTC):
         e.copy_relations(oe.eid)
         self.assertEquals(len(e.ecrit_par), 1)
         self.assertEquals(e.ecrit_par[0].eid, p.eid)
-        self.assertEquals(len(e.reverse_tags), 0)
+        self.assertEquals(len(e.reverse_tags), 1)
+        # check meta-relations are not copied, set on commit
+        self.assertEquals(len(e.created_by), 0)
 
     def test_copy_with_nonmeta_composite_inlined(self):
         p = self.add_entity('Personne', nom=u'toto')
@@ -215,7 +217,7 @@ class EntityTC(EnvBasedTC):
         e = self.add_entity('Card', title=u'rest test', content=u'du :eid:`1:*ReST*`',
                             content_format=u'text/rest')
         self.assertEquals(e.printable_value('content'),
-                          '<p>du <a class="reference" href="http://testing.fr/cubicweb/cwgroup/managers">*ReST*</a></p>\n')
+                          '<p>du <a class="reference" href="http://testing.fr/cubicweb/cwgroup/guests">*ReST*</a></p>\n')
         e['content'] = 'du <em>html</em> <ref rql="CWUser X">users</ref>'
         e['content_format'] = 'text/html'
         self.assertEquals(e.printable_value('content'),
@@ -322,19 +324,20 @@ du :eid:`1:*ReST*`'''
     def test_complete_relation(self):
         self.execute('SET RT add_permission G WHERE RT name "wf_info_for", G name "managers"')
         self.commit()
+        session = self.session()
         try:
-            eid = self.execute('INSERT TrInfo X: X comment "zou", X wf_info_for U,'
-                               'X from_state S1, X to_state S2 WHERE '
-                               'U login "admin", S1 name "activated", S2 name "deactivated"')[0][0]
+            eid = session.unsafe_execute(
+                'INSERT TrInfo X: X comment "zou", X wf_info_for U, X from_state S1, X to_state S2 '
+                'WHERE U login "admin", S1 name "activated", S2 name "deactivated"')[0][0]
             trinfo = self.entity('Any X WHERE X eid %(x)s', {'x': eid}, 'x')
             trinfo.complete()
             self.failUnless(trinfo.relation_cached('from_state', 'subject'))
             self.failUnless(trinfo.relation_cached('to_state', 'subject'))
             self.failUnless(trinfo.relation_cached('wf_info_for', 'subject'))
             # check with a missing relation
-            eid = self.execute('INSERT TrInfo X: X comment "zou", X wf_info_for U,'
-                               'X to_state S2 WHERE '
-                               'U login "admin", S2 name "activated"')[0][0]
+            eid = session.unsafe_execute(
+                'INSERT TrInfo X: X comment "zou", X wf_info_for U,X to_state S2 '
+                'WHERE U login "admin", S2 name "activated"')[0][0]
             trinfo = self.entity('Any X WHERE X eid %(x)s', {'x': eid}, 'x')
             trinfo.complete()
             self.failUnless(isinstance(trinfo.creation_date, datetime))
