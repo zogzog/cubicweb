@@ -10,6 +10,7 @@ __docformat__ = "restructuredtext en"
 
 from cubicweb import UnknownEid
 from cubicweb.selectors import none_rset
+from cubicweb.schema import display_name
 from cubicweb.view import Component
 from cubicweb.common.mail import format_mail
 from cubicweb.server.hooksmanager import Hook
