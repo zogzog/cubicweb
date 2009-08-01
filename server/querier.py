@@ -587,9 +587,9 @@ class QuerierHelper(object):
         'Any X WHERE X eid 123'!)
         """
         if server.DEBUG & (server.DBG_RQL | server.DBG_SQL):
-            if server.DEBUG & server.DBG_MORE:
+            if server.DEBUG & (server.DBG_MORE | server.DBG_SQL):
                 print '*'*80
-            print 'QUERIER INPUT', rql, args
+            print 'querier INPUT', rql, args
         # parse the query and binds variables
         if eid_key is not None:
             if not isinstance(eid_key, (tuple, list)):
