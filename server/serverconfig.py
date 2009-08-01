@@ -212,12 +212,12 @@ notified of every changes.',
         return env_path('CW_SCHEMA_LIB', cls.SCHEMAS_LIB_DIR, 'schemas')
 
     def bootstrap_cubes(self):
-        from logilab.common.textutils import get_csv
+        from logilab.common.textutils import splitstrip
         for line in file(join(self.apphome, 'bootstrap_cubes')):
             line = line.strip()
             if not line or line.startswith('#'):
                 continue
-            self.init_cubes(self.expand_cubes(get_csv(line)))
+            self.init_cubes(self.expand_cubes(splitstrip(line)))
             break
         else:
             # no cubes

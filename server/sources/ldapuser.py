@@ -23,7 +23,7 @@ FOR A PARTICULAR PURPOSE.
 
 from base64 import b64decode
 
-from logilab.common.textutils import get_csv
+from logilab.common.textutils import splitstrip
 from rql.nodes import Relation, VariableRef, Constant, Function
 
 import ldap
@@ -131,10 +131,10 @@ directory (default to once a day).',
         self.host = source_config['host']
         self.user_base_dn = source_config['user-base-dn']
         self.user_base_scope = globals()[source_config['user-scope']]
-        self.user_classes = get_csv(source_config['user-classes'])
+        self.user_classes = splitstrip(source_config['user-classes'])
         self.user_login_attr = source_config['user-login-attr']
-        self.user_default_groups = get_csv(source_config['user-default-group'])
-        self.user_attrs = dict(v.split(':', 1) for v in get_csv(source_config['user-attrs-map']))
+        self.user_default_groups = splitstrip(source_config['user-default-group'])
+        self.user_attrs = dict(v.split(':', 1) for v in splitstrip(source_config['user-attrs-map']))
         self.user_rev_attrs = {'eid': 'dn'}
         for ldapattr, cwattr in self.user_attrs.items():
             self.user_rev_attrs[cwattr] = ldapattr

@@ -265,9 +265,9 @@ repository and the web server.',
 
     def run(self, args):
         """run the command with its specific arguments"""
-        from logilab.common.textutils import get_csv
+        from logilab.common.textutils import splitstrip
         configname = self.config.config
-        cubes = get_csv(pop_arg(args, 1))
+        cubes = splitstrip(pop_arg(args, 1))
         appid = pop_arg(args)
         # get the configuration and helper
         cwcfg.creating = True

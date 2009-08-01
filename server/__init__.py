@@ -14,7 +14,7 @@ import sys
 from os.path import join, exists
 
 from logilab.common.modutils import LazyObject
-from logilab.common.textutils import get_csv
+from logilab.common.textutils import splitstrip
 
 # server-side debugging #########################################################
 
@@ -35,7 +35,7 @@ def set_debug(debugmode):
         DEBUG = 0
         return
     if isinstance(debugmode, basestring):
-        for mode in get_csv(debugmode, sep='|'):
+        for mode in splitstrip(debugmode, sep='|'):
             DEBUG |= globals()[mode]
     else:
         DEBUG |= debugmode

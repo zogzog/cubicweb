@@ -16,7 +16,7 @@ from warnings import warn
 
 from logilab.common import STD_BLACKLIST
 from logilab.common.modutils import get_module_files
-from logilab.common.textutils import get_csv
+from logilab.common.textutils import splitstrip
 from logilab.common.shellutils import ASK
 from logilab.common.clcommands import register_commands
 
@@ -535,7 +535,7 @@ class NewCubeCommand(Command):
             if answer == 'y':
                 includes.append(stdtype)
             if answer == 'type':
-                includes = get_csv(raw_input('type dependancies: '))
+                includes = splitstrip(raw_input('type dependancies: '))
                 break
             elif answer == 'skip':
                 break
