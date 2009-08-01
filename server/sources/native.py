@@ -342,7 +342,7 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
         inserts all data by calling .executemany().
         """
         assert dbg_st_search(
-            uri, union, varmap, args,
+            self.uri, union, varmap, args,
             prefix='ON THE FLY temp data insertion into %s from' % table)
         # generate sql queries if we are able to do so
         sql, query_args = self._rql_sqlgen.generate(union, args, varmap)
