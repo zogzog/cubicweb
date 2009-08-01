@@ -932,9 +932,10 @@ class Repository(object):
         """
         rql = []
         eschema = self.schema.eschema(etype)
+        pendingrtypes = session.transaction_data.get('pendingrtypes', ())
         for rschema, targetschemas, x in eschema.relation_definitions():
             rtype = rschema.type
-            if rtype in VIRTUAL_RTYPES:
+            if rtype in VIRTUAL_RTYPES or rtype in pendingrtypes:
                 continue
             var = '%s%s' % (rtype.upper(), x.upper())
             if x == 'subject':
