@@ -1011,7 +1011,6 @@ class Repository(object):
             extid = None
         self.add_info(session, entity, source, extid, complete=False)
         entity._is_saved = True # entity has an eid and is saved
-        #print 'added', entity#, entity.items()
         # trigger after_add_entity after after_add_relation
         if source.should_call_hooks:
             self.hm.call_hooks('after_add_entity', etype, session, entity)

@@ -163,10 +163,10 @@ def init_repository(config, interactive=True, drop=False, vreg=None):
     print '-> inserting default user and default groups.'
     # sort for eid predicatability as expected in some server tests
     for group in sorted(BASE_GROUPS):
-        rset = session.execute('INSERT CWGroup X: X name %(name)s',
-                               {'name': unicode(group)})
-    rset = session.execute('INSERT CWUser X: X login %(login)s, X upassword %(pwd)s',
-                           {'login': login, 'pwd': pwd})
+        session.execute('INSERT CWGroup X: X name %(name)s',
+                        {'name': unicode(group)})
+    session.execute('INSERT CWUser X: X login %(login)s, X upassword %(pwd)s',
+                    {'login': login, 'pwd': pwd})
     session.execute('SET U in_group G WHERE G name "managers"')
     session.commit()
     # reloging using the admin user
