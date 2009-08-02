@@ -13,6 +13,7 @@ from cStringIO import StringIO
 
 from logilab.common.deprecation import deprecated
 from logilab.mtconverter import xml_escape
+from rql import nodes
 
 from cubicweb import NotAnEntity
 from cubicweb.selectors import yes, non_final_entity, nonempty_rset, none_rset
