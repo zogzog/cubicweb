@@ -78,6 +78,7 @@ class MigrationCommandsTC(RepositoryBasedTC):
 
     def test_add_datetime_with_default_value_attribute(self):
         self.failIf('mydate' in self.schema)
+        self.failIf('shortpara' in self.schema)
         self.mh.cmd_add_attribute('Note', 'mydate')
         self.failUnless('mydate' in self.schema)
         self.assertEquals(self.schema['mydate'].subjects(), ('Note', ))

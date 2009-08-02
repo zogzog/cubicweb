@@ -1227,7 +1227,6 @@ WHERE rel_in_group0.eid_from=T00.x AND rel_in_group0.eid_to=G.cw_eid''',
                     varmap={'X': 'T00.x', 'X.login': 'T00.l'})
 
     def test_varmap3(self):
-        self.set_debug(True)
         self._check('Any %(x)s,D WHERE F data D, F is File',
                     'SELECT 728, _TDF0.C0\nFROM _TDF0',
                     args={'x': 728},
