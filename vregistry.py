@@ -32,6 +32,13 @@ from cubicweb import CW_SOFTWARE_ROOT, set_log_methods
 from cubicweb import (RegistryNotFound, ObjectNotFound, NoSelectableObject,
                       RegistryOutOfDate)
 
+# XXX depending on cubicweb.web is ugly, we should deal with uicfg
+#     reset with a good old event / callback system
+try:
+    from cubicweb.web import uicfg
+except ImportError: # cubicweb.web not installed
+    uicfg = None
+
 def _toload_info(path, extrapath, _toload=None):
     """return a dictionary of <modname>: <modpath> and an ordered list of
     (file, module name) to load
@@ -140,6 +147,8 @@ class VRegistry(object):
     def reset(self):
         self._registries = {}
         self._lastmodifs = {}
+        if uicfg is not None:
+            reload(uicfg)
 
     def __getitem__(self, key):
         return self._registries[key]
