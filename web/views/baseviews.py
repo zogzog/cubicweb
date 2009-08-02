@@ -288,7 +288,7 @@ class SimpleListView(ListItemView):
 class AdaptedListView(EntityView):
     """list of entities of the same type"""
     id = 'adaptedlist'
-    __select__ = one_etype_rset()
+    __select__ = EntityView.__select__ & one_etype_rset()
     item_vid = 'adaptedlistitem'
 
     @property
