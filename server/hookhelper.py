@@ -17,9 +17,7 @@ def entity_name(session, eid):
 
 def entity_attr(session, eid, attr):
     """return an arbitrary attribute of the entity with the given eid"""
-    rset = session.execute('Any N WHERE X eid %%(x)s, X %s N' % attr,
-                           {'x': eid}, 'x')
-    return rset[0][0]
+    return getattr(session.entity_from_eid(eid), attr)
 
 def rproperty(session, rtype, eidfrom, eidto, rprop):
     rschema = session.repo.schema[rtype]

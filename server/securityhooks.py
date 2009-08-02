@@ -18,7 +18,11 @@ def check_entity_attributes(session, entity):
     # ._default_set is only there on entity creation to indicate unspecified
     # attributes which has been set to a default value defined in the schema
     defaults = getattr(entity, '_default_set', ())
-    for attr in entity.keys():
+    try:
+        editedattrs = entity.edited_attributes
+    except AttributeError:
+        editedattrs = entity.keys()
+    for attr in editedattrs:
         if attr in defaults:
             continue
         rschema = eschema.subject_relation(attr)

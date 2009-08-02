@@ -997,11 +997,10 @@ class Repository(object):
         for attr in entity.keys():
             rschema = eschema.subject_relation(attr)
             if not rschema.is_final(): # inlined relation
-                entity.set_related_cache(attr, 'subject',
-                                         entity.req.eid_rset(entity[attr]))
                 relations.append((attr, entity[attr]))
         if source.should_call_hooks:
             self.hm.call_hooks('before_add_entity', etype, session, entity)
+        entity.edited_attributes = entity.keys()
         entity.set_defaults()
         entity.check(creation=True)
         source.add_entity(session, entity)
@@ -1012,6 +1011,21 @@ class Repository(object):
             extid = None
         self.add_info(session, entity, source, extid, complete=False)
         entity._is_saved = True # entity has an eid and is saved
+        # prefill entity relation caches
+        session.set_entity_cache(entity)
+        for rschema in eschema.subject_relations():
+            rtype = str(rschema)
+            if rtype in VIRTUAL_RTYPES:
+                continue
+            if rschema.is_final():
+                entity.setdefault(rtype, None)
+            else:
+                entity.set_related_cache(rtype, 'subject', session.empty_rset())
+        for rschema in eschema.object_relations():
+            rtype = str(rschema)
+            if rtype in VIRTUAL_RTYPES:
+                continue
+            entity.set_related_cache(rtype, 'object', session.empty_rset())
         # trigger after_add_entity after after_add_relation
         if source.should_call_hooks:
             self.hm.call_hooks('after_add_entity', etype, session, entity)
@@ -1019,6 +1033,7 @@ class Repository(object):
             for attr, value in relations:
                 self.hm.call_hooks('before_add_relation', attr, session,
                                     entity.eid, attr, value)
+                session.update_rel_cache_add(entity.eid, attr, value)
                 self.hm.call_hooks('after_add_relation', attr, session,
                                     entity.eid, attr, value)
         return entity.eid
@@ -1032,6 +1047,7 @@ class Repository(object):
             print 'UPDATE entity', etype, entity.eid, dict(entity)
         entity.check()
         eschema = entity.e_schema
+        session.set_entity_cache(entity)
         only_inline_rels, need_fti_update = True, False
         relations = []
         for attr in entity.keys():
@@ -1047,10 +1063,12 @@ class Repository(object):
                 previous_value = entity.related(attr)
                 if previous_value:
                     previous_value = previous_value[0][0] # got a result set
-                    self.hm.call_hooks('before_delete_relation', attr, session,
-                                       entity.eid, attr, previous_value)
-                entity.set_related_cache(attr, 'subject',
-                                         entity.req.eid_rset(entity[attr]))
+                    if previous_value == entity[attr]:
+                        previous_value = None
+                    else:
+                        self.hm.call_hooks('before_delete_relation', attr,
+                                           session, entity.eid, attr,
+                                           previous_value)
                 relations.append((attr, entity[attr], previous_value))
         source = self.source_from_eid(entity.eid, session)
         if source.should_call_hooks:
@@ -1072,10 +1090,19 @@ class Repository(object):
                                     entity)
         if source.should_call_hooks:
             for attr, value, prevvalue in relations:
+                # if the relation is already cached, update existant cache
+                relcache = entity.relation_cached(attr, 'subject')
                 if prevvalue:
                     self.hm.call_hooks('after_delete_relation', attr, session,
                                        entity.eid, attr, prevvalue)
+                    if relcache is not None:
+                        session.update_rel_cache_del(entity.eid, attr, prevvalue)
                 del_existing_rel_if_needed(session, entity.eid, attr, value)
+                if relcache is not None:
+                    session.update_rel_cache_add(entity.eid, attr, value)
+                else:
+                    entity.set_related_cache(attr, 'subject',
+                                             session.eid_rset(value))
                 self.hm.call_hooks('after_add_relation', attr, session,
                                     entity.eid, attr, value)
 
@@ -1086,6 +1113,8 @@ class Repository(object):
         etype, uri, extid = self.type_and_source_from_eid(eid, session)
         if server.DEBUG & server.DBG_REPO:
             print 'DELETE entity', etype, eid
+            if eid == 937:
+                server.DEBUG |= (server.DBG_SQL | server.DBG_RQL | server.DBG_MORE)
         source = self.sources_by_uri[uri]
         if source.should_call_hooks:
             self.hm.call_hooks('before_delete_entity', etype, session, eid)
@@ -1105,6 +1134,8 @@ class Repository(object):
             self.hm.call_hooks('before_add_relation', rtype, session,
                                subject, rtype, object)
         source.add_relation(session, subject, rtype, object)
+        rschema = self.schema.rschema(rtype)
+        session.update_rel_cache_add(subject, rtype, object, rschema.symetric)
         if source.should_call_hooks:
             self.hm.call_hooks('after_add_relation', rtype, session,
                                subject, rtype, object)
@@ -1118,7 +1149,9 @@ class Repository(object):
             self.hm.call_hooks('before_delete_relation', rtype, session,
                                subject, rtype, object)
         source.delete_relation(session, subject, rtype, object)
-        if self.schema.rschema(rtype).symetric:
+        rschema = self.schema.rschema(rtype)
+        session.update_rel_cache_del(subject, rtype, object, rschema.symetric)
+        if rschema.symetric:
             # on symetric relation, we can't now in which sense it's
             # stored so try to delete both
             source.delete_relation(session, object, rtype, subject)

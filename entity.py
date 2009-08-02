@@ -647,7 +647,8 @@ class Entity(AppRsetObject, dict):
             if not self.is_saved():
                 return None
             rql = "Any A WHERE X eid %%(x)s, X %s A" % name
-            # XXX should we really use unsafe_execute here??
+            # XXX should we really use unsafe_execute here? I think so (syt),
+            # see #344874
             execute = getattr(self.req, 'unsafe_execute', self.req.execute)
             try:
                 rset = execute(rql, {'x': self.eid}, 'x')
@@ -681,7 +682,10 @@ class Entity(AppRsetObject, dict):
             pass
         assert self.has_eid()
         rql = self.related_rql(rtype, role)
-        rset = self.req.execute(rql, {'x': self.eid}, 'x')
+        # XXX should we really use unsafe_execute here? I think so (syt),
+        # see #344874
+        execute = getattr(self.req, 'unsafe_execute', self.req.execute)
+        rset = execute(rql, {'x': self.eid}, 'x')
         self.set_related_cache(rtype, role, rset)
         return self.related(rtype, role, limit, entities)
 
@@ -787,7 +791,7 @@ class Entity(AppRsetObject, dict):
     def relation_cached(self, rtype, role):
         """return true if the given relation is already cached on the instance
         """
-        return '%s_%s' % (rtype, role) in self._related_cache
+        return self._related_cache.get('%s_%s' % (rtype, role))
 
     def related_cache(self, rtype, role, entities=True, limit=None):
         """return values for the given relation if it's cached on the instance,

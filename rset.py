@@ -347,7 +347,7 @@ class ResultSet(object):
             raise NotAnEntity(etype)
         return self._build_entity(row, col)
 
-    def _build_entity(self, row, col, _localcache=None):
+    def _build_entity(self, row, col):
         """internal method to get a single entity, returns a
         partially initialized Entity instance.
 
@@ -370,14 +370,7 @@ class ResultSet(object):
         # XXX should we consider updating a cached entity with possible
         #     new attributes found in this resultset ?
         try:
-            if hasattr(req, 'is_super_session'):
-                # this is a Session object which is not caching entities, so we
-                # have to use a local cache to avoid recursion pb
-                if _localcache is None:
-                    _localcache = {}
-                return _localcache[eid]
-            else:
-                return req.entity_cache(eid)
+            return req.entity_cache(eid)
         except KeyError:
             pass
         # build entity instance
@@ -385,8 +378,6 @@ class ResultSet(object):
         entity = self.vreg.etype_class(etype)(req, self, row, col)
         entity.set_eid(eid)
         # cache entity
-        if _localcache is not None:
-            _localcache[eid] = entity
         req.set_entity_cache(entity)
         eschema = entity.e_schema
         # try to complete the entity if there are some additional columns
@@ -420,7 +411,7 @@ class ResultSet(object):
                         rrset = ResultSet([], rql % (attr, entity.eid))
                         req.decorate_rset(rrset)
                     else:
-                        rrset = self._build_entity(row, i, _localcache).as_rset()
+                        rrset = self._build_entity(row, i).as_rset()
                     entity.set_related_cache(attr, x, rrset)
         return entity
 

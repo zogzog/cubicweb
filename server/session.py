@@ -88,6 +88,54 @@ class Session(RequestSessionMixIn):
         finally:
             self.is_super_session = False
 
+    def update_rel_cache_add(self, subject, rtype, object, symetric=False):
+        self._update_entity_rel_cache_add(subject, rtype, 'subject', object)
+        if symetric:
+            self._update_entity_rel_cache_add(object, rtype, 'subject', subject)
+        else:
+            self._update_entity_rel_cache_add(object, rtype, 'object', subject)
+
+    def update_rel_cache_del(self, subject, rtype, object, symetric=False):
+        self._update_entity_rel_cache_del(subject, rtype, 'subject', object)
+        if symetric:
+            self._update_entity_rel_cache_del(object, rtype, 'object', object)
+        else:
+            self._update_entity_rel_cache_del(object, rtype, 'object', subject)
+
+    def _rel_cache(self, eid, rtype, role):
+        try:
+            entity = self.entity_cache(eid)
+        except KeyError:
+            return
+        return entity.relation_cached(rtype, role)
+
+    def _update_entity_rel_cache_add(self, eid, rtype, role, targeteid):
+        rcache = self._rel_cache(eid, rtype, role)
+        if rcache is not None:
+            rset, entities = rcache
+            rset.rows.append([targeteid])
+            if isinstance(rset.description, list): # else description not set
+                rset.description.append([self.describe(targeteid)[0]])
+            rset.rowcount += 1
+            targetentity = self.entity_from_eid(targeteid)
+            entities.append(targetentity)
+
+    def _update_entity_rel_cache_del(self, eid, rtype, role, targeteid):
+        rcache = self._rel_cache(eid, rtype, role)
+        if rcache is not None:
+            rset, entities = rcache
+            for idx, row in enumerate(rset.rows):
+                if row[0] == targeteid:
+                    break
+            else:
+                raise Exception('cache inconsistency for %s %s %s %s' %
+                                (eid, rtype, role, targeteid))
+            del rset.rows[idx]
+            if isinstance(rset.description, list): # else description not set
+                del rset.description[idx]
+            del entities[idx]
+            rset.rowcount -= 1
+
     # resource accessors ######################################################
 
     def actual_session(self):
@@ -221,12 +269,30 @@ class Session(RequestSessionMixIn):
     # request interface #######################################################
 
     def set_entity_cache(self, entity):
-        # no entity cache in the server, too high risk of inconsistency
-        # between pre/post hooks
-        pass
+        # XXX session level caching may be a pb with multiple repository
+        #     instances, but 1. this is probably not the only one :$ and 2. it
+        #     may be an acceptable risk. Anyway we could activate it or not
+        #     according to a configuration option
+        try:
+            self.transaction_data['ecache'].setdefault(entity.eid, entity)
+        except KeyError:
+            self.transaction_data['ecache'] = ecache = {}
+            ecache[entity.eid] = entity
 
     def entity_cache(self, eid):
-        raise KeyError(eid)
+        try:
+            return self.transaction_data['ecache'][eid]
+        except:
+            raise
+
+    def cached_entities(self):
+        return self.transaction_data.get('ecache', {}).values()
+
+    def drop_entity_cache(self, eid=None):
+        if eid is None:
+            self.transaction_data.pop('ecache', None)
+        else:
+            del self.transaction_data['ecache'][eid]
 
     def base_url(self):
         url = self.repo.config['base-url']
@@ -276,7 +342,7 @@ class Session(RequestSessionMixIn):
         self.set_pool()
         return csession
 
-    def unsafe_execute(self, rql, kwargs=None, eid_key=None, build_descr=False,
+    def unsafe_execute(self, rql, kwargs=None, eid_key=None, build_descr=True,
                        propagate=False):
         """like .execute but with security checking disabled (this method is
         internal to the server, it's not part of the db-api)

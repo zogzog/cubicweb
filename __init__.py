@@ -100,13 +100,27 @@ class RequestSessionMixIn(object):
                          [(etype,)])
         return self.decorate_rset(rset)
 
-    def entity_from_eid(self, eid, etype=None):
-        rset = self.eid_rset(eid, etype)
-        if rset:
-            return rset.get_entity(0, 0)
-        else:
-            return None
+    def empty_rset(self):
+        """return a result set for the given eid without doing actual query
+        (we have the eid, we can suppose it exists and user has access to the
+        entity)
+        """
+        from cubicweb.rset import ResultSet
+        return self.decorate_rset(ResultSet([], 'Any X WHERE X eid -1'))
 
+    def entity_from_eid(self, eid, etype=None):
+        try:
+            return self.entity_cache(eid)
+        except KeyError:
+            rset = self.eid_rset(eid, etype)
+            entity = rset.get_entity(0, 0)
+            self.set_entity_cache(entity)
+            return entity
+
+    def entity_cache(self, eid):
+        raise KeyError
+    def set_entity_cache(self, entity):
+        pass
     # url generation methods ##################################################
 
     def build_url(self, *args, **kwargs):
