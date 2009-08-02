@@ -13,7 +13,8 @@ from logilab.common.deprecation import  deprecated
 
 from rql import RQLHelper
 
-from cubicweb import ETYPE_NAME_MAP, Binary, UnknownProperty, UnknownEid
+from cubicweb import (ETYPE_NAME_MAP, Binary, UnknownProperty, UnknownEid,
+                      RegistryOutOfDate)
 from cubicweb.vregistry import VRegistry, ObjectNotFound, NoSelectableObject
 from cubicweb.rtags import RTAGS
 
@@ -138,6 +139,15 @@ class CubicWebRegistry(VRegistry):
             self._needs_iface[obj] = ifaces
 
     def register_objects(self, path, force_reload=None):
+        """overriden to remove objects requiring a missing interface"""
+        try:
+            self._register_objects(path, force_reload)
+        except RegistryOutOfDate:
+            # modification detected, reset and reload
+            self.reset()
+            self._register_objects(path, force_reload)
+
+    def _register_objects(self, path, force_reload=None):
         """overriden to remove objects requiring a missing interface"""
         extrapath = {}
         for cubesdir in self.config.cubes_search_path():

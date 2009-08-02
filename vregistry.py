@@ -29,8 +29,8 @@ from logging import getLogger
 from warnings import warn
 
 from cubicweb import CW_SOFTWARE_ROOT, set_log_methods
-from cubicweb import RegistryNotFound, ObjectNotFound, NoSelectableObject
-
+from cubicweb import (RegistryNotFound, ObjectNotFound, NoSelectableObject,
+                      RegistryOutOfDate)
 
 def _toload_info(path, extrapath, _toload=None):
     """return a dictionary of <modname>: <modpath> and an ordered list of
@@ -293,7 +293,6 @@ class VRegistry(object):
             vname = vobject.__class__.__name__
         self.debug('registered vobject %s in registry %s with id %s',
                    vname, registryname, oid)
-        # automatic reloading management
         self._loadedmods[obj.__module__]['%s.%s' % (obj.__module__, oid)] = obj
 
     def unregister(self, obj, registryname=None):
@@ -334,6 +333,9 @@ class VRegistry(object):
     def init_registration(self, path, extrapath=None):
         # compute list of all modules that have to be loaded
         self._toloadmods, filemods = _toload_info(path, extrapath)
+        # XXX is _loadedmods still necessary ? It seems like it's useful
+        #     to avoid loading same module twice, especially with the
+        #     _load_ancestors_then_object logic but this needs to be checked
         self._loadedmods = {}
         return filemods
 
@@ -365,7 +367,7 @@ class VRegistry(object):
         return change
 
     def load_file(self, filepath, modname, force_reload=False):
-        """load visual objects from a python file"""
+        """load app objects from a python file"""
         from logilab.common.modutils import load_module_from_name
         if modname in self._loadedmods:
             return
@@ -381,22 +383,12 @@ class VRegistry(object):
             # only load file if it was modified
             if modified_on <= self._lastmodifs[filepath]:
                 return
-            # if it was modified, unregister all exisiting objects
-            # from this module, and keep track of what was unregistered
-            unregistered = self.unregister_module_vobjects(modname)
-        else:
-            unregistered = None
+            # if it was modified, raise RegistryOutOfDate to reload everything
+            self.info('File %s changed since last visit', filepath)
+            raise RegistryOutOfDate()
         # load the module
         module = load_module_from_name(modname, use_sys=not force_reload)
         self.load_module(module)
-        # if something was unregistered, we need to update places where it was
-        # referenced
-        if unregistered:
-            # oldnew_mapping = {}
-            registered = self._loadedmods[modname]
-            oldnew_mapping = dict((unregistered[name], registered[name])
-                                  for name in unregistered if name in registered)
-            self.update_registered_subclasses(oldnew_mapping)
         self._lastmodifs[filepath] = modified_on
         return True
 
@@ -457,68 +449,6 @@ class VRegistry(object):
         if '%s.%s' % (regname, cls.id) in self.config['disable-appobjects']:
             return
         self.register(cls)
-
-    def unregister_module_vobjects(self, modname):
-        """removes registered objects coming from a given module
-
-        returns a dictionnary classid/class of all classes that will need
-        to be updated after reload (i.e. vobjects referencing classes defined
-        in the <modname> module)
-        """
-        unregistered = {}
-        # browse each registered object
-        for registry, objdict in self.items():
-            for oid, objects in objdict.items():
-                for obj in objects[:]:
-                    objname = obj.classid()
-                    # if the vobject is defined in this module, remove it
-                    if objname.startswith(modname):
-                        unregistered[objname] = obj
-                        objects.remove(obj)
-                        self.debug('unregistering %s in %s registry',
-                                  objname, registry)
-                    # if not, check if the vobject can be found in baseclasses
-                    # (because we also want subclasses to be updated)
-                    else:
-                        if not isinstance(obj, type):
-                            obj = obj.__class__
-                        for baseclass in obj.__bases__:
-                            if hasattr(baseclass, 'classid'):
-                                baseclassid = baseclass.classid()
-                                if baseclassid.startswith(modname):
-                                    unregistered[baseclassid] = baseclass
-                # update oid entry
-                if objects:
-                    objdict[oid] = objects
-                else:
-                    del objdict[oid]
-        return unregistered
-
-    def update_registered_subclasses(self, oldnew_mapping):
-        """updates subclasses of re-registered vobjects
-
-        if baseviews.PrimaryView is changed, baseviews.py will be reloaded
-        automatically and the new version of PrimaryView will be registered.
-        But all existing subclasses must also be notified of this change, and
-        that's what this method does
-
-        :param oldnew_mapping: a dict mapping old version of a class to
-                               the new version
-        """
-        # browse each registered object
-        for objdict in self.values():
-            for objects in objdict.values():
-                for obj in objects:
-                    if not isinstance(obj, type):
-                        obj = obj.__class__
-                    # build new baseclasses tuple
-                    newbases = tuple(oldnew_mapping.get(baseclass, baseclass)
-                                     for baseclass in obj.__bases__)
-                    # update obj's baseclasses tuple (__bases__) if needed
-                    if newbases != obj.__bases__:
-                        self.debug('updating %s.%s base classes',
-                                  obj.__module__, obj.__name__)
-                        obj.__bases__ = newbases
 
 # init logging
 set_log_methods(VObject, getLogger('cubicweb'))

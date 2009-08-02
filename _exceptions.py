@@ -129,6 +129,9 @@ class NoSelectableObject(RegistryException):
 class UnknownProperty(RegistryException):
     """property found in database but unknown in registry"""
 
+class RegistryOutOfDate(RegistryException):
+    """raised when a source file modification is detected"""
+
 # query exception #############################################################
 
 class QueryError(CubicWebRuntimeError):
