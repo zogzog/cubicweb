@@ -589,7 +589,7 @@ class QuerierHelper(object):
         if server.DEBUG & (server.DBG_RQL | server.DBG_SQL):
             if server.DEBUG & (server.DBG_MORE | server.DBG_SQL):
                 print '*'*80
-            print 'querier INPUT', rql, args
+            print 'querier input', rql, args
         # parse the query and binds variables
         if eid_key is not None:
             if not isinstance(eid_key, (tuple, list)):
