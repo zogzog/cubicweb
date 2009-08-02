@@ -17,7 +17,7 @@ class AutomaticEntityFormTC(EnvBasedTC):
 
     def test_custom_widget(self):
         AEF.rfields_kwargs.tag_subject_of(('CWUser', 'login', '*'),
-                                          {'widget':AutoCompletionWidget})
+                                          {'widget': AutoCompletionWidget(autocomplete_initfunc='get_logins')})
         form = self.vreg.select('forms', 'edition', self.request(),
                                 entity=self.user())
         field = form.field_by_name('login')

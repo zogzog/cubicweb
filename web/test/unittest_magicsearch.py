@@ -169,10 +169,11 @@ class QSPreProcessorTC(EnvBasedTC):
             (u'Utilisateur P', (u"CWUser P",)),
             (u'Utilisateur cubicweb', (u'CWUser C WHERE C has_text %(text)s', {'text': u'cubicweb'})),
             (u'CWUser prÃ©nom cubicweb', (u'CWUser C WHERE C firstname %(text)s', {'text': 'cubicweb'},)),
-            (u'Any X WHERE X is Something', (u"Any X WHERE X is Something",)),
             ]
         for query, expected in queries:
             self.assertEquals(self.proc.preprocess_query(query, self.req), expected)
+        self.assertRaises(BadRQLQuery,
+                          self.proc.preprocess_query, 'Any X WHERE X is Something', self.req)
 
 
 
