@@ -14,7 +14,7 @@ from cubicweb import typed_eid
 from cubicweb.web import stdmsgs, uicfg
 from cubicweb.web.form import FieldNotFound
 from cubicweb.web.formfields import guess_field
-from cubicweb.web.formwidgets import Button, SubmitButton
+from cubicweb.web import formwidgets
 from cubicweb.web.views import forms, editforms
 
 
@@ -33,9 +33,9 @@ class AutomaticEntityForm(forms.EntityFieldsForm):
     cwtarget = 'eformframe'
     cssclass = 'entityForm'
     copy_nav_params = True
-    form_buttons = [SubmitButton(),
-                    Button(stdmsgs.BUTTON_APPLY, cwaction='apply'),
-                    Button(stdmsgs.BUTTON_CANCEL, cwaction='cancel')]
+    form_buttons = [formwidgets.SubmitButton(),
+                    formwidgets.Button(stdmsgs.BUTTON_APPLY, cwaction='apply'),
+                    formwidgets.Button(stdmsgs.BUTTON_CANCEL, cwaction='cancel')]
     attrcategories = ('primary', 'secondary')
     # class attributes below are actually stored in the uicfg module since we
     # don't want them to be reloaded
@@ -307,3 +307,51 @@ class AutomaticEntityForm(forms.EntityFieldsForm):
 def etype_relation_field(etype, rtype, role='subject'):
     eschema = AutomaticEntityForm.schema.eschema(etype)
     return AutomaticEntityForm.field_by_name(rtype, role, eschema)
+
+
+## default form ui configuration ##############################################
+
+# use primary and not generated for eid since it has to be an hidden
+uicfg.autoform_section.tag_attribute(('*', 'eid'), 'primary')
+uicfg.autoform_section.tag_attribute(('*', 'description'), 'secondary')
+uicfg.autoform_section.tag_attribute(('*', 'creation_date'), 'metadata')
+uicfg.autoform_section.tag_attribute(('*', 'modification_date'), 'metadata')
+uicfg.autoform_section.tag_attribute(('*', 'cwuri'), 'metadata')
+uicfg.autoform_section.tag_attribute(('*', 'has_text'), 'generated')
+uicfg.autoform_section.tag_subject_of(('*', 'in_state', '*'), 'primary')
+uicfg.autoform_section.tag_subject_of(('*', 'owned_by', '*'), 'metadata')
+uicfg.autoform_section.tag_subject_of(('*', 'created_by', '*'), 'metadata')
+uicfg.autoform_section.tag_subject_of(('*', 'is', '*'), 'generated')
+uicfg.autoform_section.tag_object_of(('*', 'is', '*'), 'generated')
+uicfg.autoform_section.tag_subject_of(('*', 'is_instance_of', '*'), 'generated')
+uicfg.autoform_section.tag_object_of(('*', 'is_instance_of', '*'), 'generated')
+uicfg.autoform_section.tag_subject_of(('*', 'identity', '*'), 'generated')
+uicfg.autoform_section.tag_object_of(('*', 'identity', '*'), 'generated')
+uicfg.autoform_section.tag_subject_of(('*', 'require_permission', '*'), 'generated')
+uicfg.autoform_section.tag_subject_of(('*', 'wf_info_for', '*'), 'generated')
+uicfg.autoform_section.tag_object_of(('*', 'wf_info_for', '*'), 'generated')
+uicfg.autoform_section.tag_subject_of(('*', 'for_user', '*'), 'generated')
+uicfg.autoform_section.tag_object_of(('*', 'for_user', '*'), 'generated')
+uicfg.autoform_section.tag_subject_of(('CWPermission', 'require_group', '*'), 'primary')
+uicfg.autoform_section.tag_attribute(('CWEType', 'final'), 'generated')
+uicfg.autoform_section.tag_attribute(('CWRType', 'final'), 'generated')
+uicfg.autoform_section.tag_attribute(('CWUser', 'firstname'), 'secondary')
+uicfg.autoform_section.tag_attribute(('CWUser', 'surname'), 'secondary')
+uicfg.autoform_section.tag_attribute(('CWUser', 'last_login_time'), 'metadata')
+uicfg.autoform_section.tag_subject_of(('CWUser', 'in_group', '*'), 'primary')
+uicfg.autoform_section.tag_object_of(('*', 'owned_by', 'CWUser'), 'generated')
+uicfg.autoform_section.tag_object_of(('*', 'created_by', 'CWUser'), 'generated')
+uicfg.autoform_section.tag_object_of(('*', 'bookmarked_by', 'CWUser'), 'metadata')
+uicfg.autoform_section.tag_attribute(('Bookmark', 'path'), 'primary')
+uicfg.autoform_section.tag_subject_of(('*', 'use_email', '*'), 'generated') # inlined actually
+uicfg.autoform_section.tag_subject_of(('*', 'primary_email', '*'), 'generic')
+
+uicfg.autoform_field_kwargs.tag_attribute(('RQLExpression', 'expression'),
+                                          {'widget': formwidgets.TextInput})
+uicfg.autoform_field_kwargs.tag_attribute(('Bookmark', 'path'),
+                                          {'widget': formwidgets.TextInput})
+
+uicfg.autoform_is_inlined.tag_subject_of(('*', 'use_email', '*'), True)
+uicfg.autoform_is_inlined.tag_subject_of(('CWRelation', 'relation_type', '*'), True)
+uicfg.autoform_is_inlined.tag_subject_of(('CWRelation', 'from_entity', '*'), True)
+uicfg.autoform_is_inlined.tag_subject_of(('CWRelation', 'to_entity', '*'), True)

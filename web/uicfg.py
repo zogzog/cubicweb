@@ -102,21 +102,6 @@ primaryview_section = RelationTags('primaryview_section',
                                    init_primaryview_section,
                                    frozenset(('attributes', 'relations',
                                                'sideboxes', 'hidden')))
-for rtype in ('eid', 'creation_date', 'modification_date', 'cwuri',
-              'is', 'is_instance_of', 'identity',
-              'owned_by', 'created_by',
-              'in_state', 'wf_info_for', 'require_permission',
-              'from_entity', 'to_entity',
-              'see_also'):
-    primaryview_section.tag_subject_of(('*', rtype, '*'), 'hidden')
-    primaryview_section.tag_object_of(('*', rtype, '*'), 'hidden')
-primaryview_section.tag_subject_of(('*', 'use_email', '*'), 'attributes')
-primaryview_section.tag_subject_of(('*', 'primary_email', '*'), 'hidden')
-
-for attr in ('name', 'final'):
-    primaryview_section.tag_attribute(('CWEType', attr), 'hidden')
-for attr in ('name', 'final', 'symetric', 'inlined'):
-    primaryview_section.tag_attribute(('CWRType', attr), 'hidden')
 
 
 class DisplayCtrlRelationTags(RelationTagsDict):
@@ -201,62 +186,17 @@ def init_autoform_section(rtag, sschema, rschema, oschema, role):
 autoform_section = RelationTags('autoform_section', init_autoform_section,
                                 set(('primary', 'secondary', 'generic',
                                      'metadata', 'generated')))
-# use primary and not generated for eid since it has to be an hidden
-autoform_section.tag_attribute(('*', 'eid'), 'primary')
-autoform_section.tag_attribute(('*', 'description'), 'secondary')
-autoform_section.tag_attribute(('*', 'creation_date'), 'metadata')
-autoform_section.tag_attribute(('*', 'modification_date'), 'metadata')
-autoform_section.tag_attribute(('*', 'cwuri'), 'metadata')
-autoform_section.tag_attribute(('*', 'has_text'), 'generated')
-autoform_section.tag_subject_of(('*', 'in_state', '*'), 'primary')
-autoform_section.tag_subject_of(('*', 'owned_by', '*'), 'metadata')
-autoform_section.tag_subject_of(('*', 'created_by', '*'), 'metadata')
-autoform_section.tag_subject_of(('*', 'is', '*'), 'generated')
-autoform_section.tag_object_of(('*', 'is', '*'), 'generated')
-autoform_section.tag_subject_of(('*', 'is_instance_of', '*'), 'generated')
-autoform_section.tag_object_of(('*', 'is_instance_of', '*'), 'generated')
-autoform_section.tag_subject_of(('*', 'identity', '*'), 'generated')
-autoform_section.tag_object_of(('*', 'identity', '*'), 'generated')
-autoform_section.tag_subject_of(('*', 'require_permission', '*'), 'generated')
-autoform_section.tag_subject_of(('*', 'wf_info_for', '*'), 'generated')
-autoform_section.tag_object_of(('*', 'wf_info_for', '*'), 'generated')
-autoform_section.tag_subject_of(('*', 'for_user', '*'), 'generated')
-autoform_section.tag_object_of(('*', 'for_user', '*'), 'generated')
-autoform_section.tag_subject_of(('CWPermission', 'require_group', '*'), 'primary')
-autoform_section.tag_attribute(('CWEType', 'final'), 'generated')
-autoform_section.tag_attribute(('CWRType', 'final'), 'generated')
-autoform_section.tag_attribute(('CWUser', 'firstname'), 'secondary')
-autoform_section.tag_attribute(('CWUser', 'surname'), 'secondary')
-autoform_section.tag_attribute(('CWUser', 'last_login_time'), 'metadata')
-autoform_section.tag_subject_of(('CWUser', 'in_group', '*'), 'primary')
-autoform_section.tag_object_of(('*', 'owned_by', 'CWUser'), 'generated')
-autoform_section.tag_object_of(('*', 'created_by', 'CWUser'), 'generated')
-autoform_section.tag_object_of(('*', 'bookmarked_by', 'CWUser'), 'metadata')
-autoform_section.tag_attribute(('Bookmark', 'path'), 'primary')
-autoform_section.tag_subject_of(('*', 'use_email', '*'), 'generated') # inlined actually
-autoform_section.tag_subject_of(('*', 'primary_email', '*'), 'generic')
-
 
 # relations'field class
 autoform_field = RelationTags('autoform_field')
 
 # relations'field explicit kwargs (given to field's __init__)
 autoform_field_kwargs = RelationTagsDict()
-autoform_field_kwargs.tag_attribute(('RQLExpression', 'expression'),
-                                    {'widget': formwidgets.TextInput})
-autoform_field_kwargs.tag_attribute(('Bookmark', 'path'),
-                                    {'widget': formwidgets.TextInput})
-
-
 
 # inlined view flag for non final relations: when True for an entry, the
 # entity(ies) at the other end of the relation will be editable from the
 # form of the edited entity
 autoform_is_inlined = RelationTagsBool('autoform_is_inlined')
-autoform_is_inlined.tag_subject_of(('*', 'use_email', '*'), True)
-autoform_is_inlined.tag_subject_of(('CWRelation', 'relation_type', '*'), True)
-autoform_is_inlined.tag_subject_of(('CWRelation', 'from_entity', '*'), True)
-autoform_is_inlined.tag_subject_of(('CWRelation', 'to_entity', '*'), True)
 
 
 # set of tags of the form <action>_on_new on relations. <action> is a
@@ -277,28 +217,4 @@ def init_actionbox_appearsin_addmenu(rtag, sschema, rschema, oschema, role):
 
 actionbox_appearsin_addmenu = RelationTagsBool('actionbox_appearsin_addmenu',
                                                init_actionbox_appearsin_addmenu)
-actionbox_appearsin_addmenu.tag_subject_of(('*', 'is', '*'), False)
-actionbox_appearsin_addmenu.tag_object_of(('*', 'is', '*'), False)
-actionbox_appearsin_addmenu.tag_subject_of(('*', 'is_instance_of', '*'), False)
-actionbox_appearsin_addmenu.tag_object_of(('*', 'is_instance_of', '*'), False)
-actionbox_appearsin_addmenu.tag_subject_of(('*', 'identity', '*'), False)
-actionbox_appearsin_addmenu.tag_object_of(('*', 'identity', '*'), False)
-actionbox_appearsin_addmenu.tag_subject_of(('*', 'owned_by', '*'), False)
-actionbox_appearsin_addmenu.tag_subject_of(('*', 'created_by', '*'), False)
-actionbox_appearsin_addmenu.tag_subject_of(('*', 'require_permission', '*'), False)
-actionbox_appearsin_addmenu.tag_subject_of(('*', 'wf_info_for', '*'), False)
-actionbox_appearsin_addmenu.tag_object_of(('*', 'wf_info_for', '*'), False)
-actionbox_appearsin_addmenu.tag_object_of(('*', 'state_of', 'CWEType'), True)
-actionbox_appearsin_addmenu.tag_object_of(('*', 'transition_of', 'CWEType'), True)
-actionbox_appearsin_addmenu.tag_object_of(('*', 'relation_type', 'CWRType'), True)
-actionbox_appearsin_addmenu.tag_object_of(('*', 'from_entity', 'CWEType'), False)
-actionbox_appearsin_addmenu.tag_object_of(('*', 'to_entity', 'CWEType'), False)
-actionbox_appearsin_addmenu.tag_object_of(('*', 'in_group', 'CWGroup'), True)
-actionbox_appearsin_addmenu.tag_object_of(('*', 'owned_by', 'CWUser'), False)
-actionbox_appearsin_addmenu.tag_object_of(('*', 'created_by', 'CWUser'), False)
-actionbox_appearsin_addmenu.tag_object_of(('*', 'bookmarked_by', 'CWUser'), True)
-actionbox_appearsin_addmenu.tag_subject_of(('Transition', 'destination_state', '*'), True)
-actionbox_appearsin_addmenu.tag_object_of(('*', 'allowed_transition', 'Transition'), True)
-actionbox_appearsin_addmenu.tag_object_of(('*', 'destination_state', 'State'), True)
-actionbox_appearsin_addmenu.tag_subject_of(('State', 'allowed_transition', '*'), True)
 
