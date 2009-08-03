@@ -389,7 +389,10 @@ def vreg_instrumentize(testclass):
                                            requestcls=testclass.requestcls)
     for reg in env.vreg.values():
         reg._selected = {}
-        orig_select_best = reg.__class__.select_best
+        try:
+            orig_select_best = reg.__class__.__orig_select_best
+        except:
+            orig_select_best = reg.__class__.select_best
         def instr_select_best(self, *args, **kwargs):
             selected = orig_select_best(self, *args, **kwargs)
             try:
@@ -400,6 +403,7 @@ def vreg_instrumentize(testclass):
                 pass # occurs on reg used to restore database
             return selected
         reg.__class__.select_best = instr_select_best
+        reg.__class__.__orig_select_best = orig_select_best
 
 def print_untested_objects(testclass, skipregs=('hooks', 'etypes')):
     for regname, reg in testclass._env.vreg.iteritems():
