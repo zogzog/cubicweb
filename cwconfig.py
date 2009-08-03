@@ -777,7 +777,7 @@ the repository',
             return
         self._logging_initialized = True
         CubicWebNoAppConfiguration.init_log(self, logthreshold, debug,
-                                         logfile=self.get('log-file'))
+                                            logfile=self.get('log-file'))
         # read a config file if it exists
         logconfig = join(self.apphome, 'logging.conf')
         if exists(logconfig):
