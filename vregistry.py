@@ -213,11 +213,15 @@ class VRegistry(dict):
         super(VRegistry, self).__init__()
         self.config = config
 
-    def reset(self):
+    def reset(self, force_reload=None):
         self.clear()
         self._lastmodifs = {}
+        # don't reload uicfg when appobjects modules won't be reloaded as well
         if uicfg is not None:
-            reload(uicfg)
+            if force_reload is None:
+                force_reload = self.config.mode == 'dev'
+            if force_reload:
+                reload(uicfg)
 
     def __getitem__(self, name):
         """return the registry (dictionary of class objects) associated to
