@@ -13,7 +13,7 @@ from logilab.mtconverter import xml_escape
 from simplejson import dumps
 
 from cubicweb.common import tags
-from cubicweb.appobject import AppRsetObject
+from cubicweb.appobject import AppObject
 from cubicweb.selectors import entity_implements, yes
 from cubicweb.web import eid_param
 from cubicweb.web import formwidgets as fwdgs
@@ -21,7 +21,7 @@ from cubicweb.web.widgets import checkbox
 from cubicweb.web.formfields import HiddenInitialValueField
 
 
-class FormRenderer(AppRsetObject):
+class FormRenderer(AppObject):
     """basic renderer displaying fields in a two columns table label | value
 
     +--------------+--------------+

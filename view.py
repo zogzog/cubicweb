@@ -18,7 +18,7 @@ from rql import nodes
 from cubicweb import NotAnEntity
 from cubicweb.selectors import yes, non_final_entity, nonempty_rset, none_rset
 from cubicweb.selectors import require_group_compat, accepts_compat
-from cubicweb.appobject import AppRsetObject
+from cubicweb.appobject import AppObject
 from cubicweb.utils import UStringIO, HTMLStream
 from cubicweb.schema import display_name
 
@@ -73,7 +73,7 @@ STRICT_DOCTYPE_NOEXT = u'<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN
 
 # base view object ############################################################
 
-class View(AppRsetObject):
+class View(AppObject):
     """abstract view class, used as base for every renderable object such
     as views, templates, some components...web
 
@@ -93,7 +93,7 @@ class View(AppRsetObject):
     time to a write function to use.
     """
     __registry__ = 'views'
-    registered = require_group_compat(AppRsetObject.registered)
+    registered = require_group_compat(AppObject.registered)
 
     templatable = True
     need_navigation = True

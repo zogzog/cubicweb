@@ -24,7 +24,7 @@ from cubicweb import Unauthorized, typed_eid
 from cubicweb.schema import display_name
 from cubicweb.utils import datetime2ticks, make_uid, ustrftime
 from cubicweb.selectors import match_context_prop, partial_relation_possible
-from cubicweb.appobject import AppRsetObject
+from cubicweb.appobject import AppObject
 from cubicweb.web.htmlwidgets import HTMLWidget
 
 ## rqlst manipulation functions used by facets ################################
@@ -241,7 +241,7 @@ def _cleanup_rqlst(rqlst, mainvar):
 
 
 ## base facet classes #########################################################
-class AbstractFacet(AppRsetObject):
+class AbstractFacet(AppObject):
     __abstract__ = True
     __registry__ = 'facets'
     property_defs = {
@@ -265,7 +265,7 @@ class AbstractFacet(AppRsetObject):
         assert rset is not None or rqlst is not None
         assert filtered_variable
         instance = super(AbstractFacet, cls).selected(req, rset)
-        #instance = AppRsetObject.selected(req, rset)
+        #instance = AppObject.selected(req, rset)
         #instance.__class__ = cls
         # facet retreived using `object_by_id` from an ajax call
         if rset is None:

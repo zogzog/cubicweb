@@ -20,7 +20,7 @@ from rql.utils import rqlvar_maker
 from cubicweb import Unauthorized
 from cubicweb.rset import ResultSet
 from cubicweb.selectors import yes
-from cubicweb.appobject import AppRsetObject
+from cubicweb.appobject import AppObject
 from cubicweb.schema import RQLVocabularyConstraint, RQLConstraint, bw_normalize_etype
 
 from cubicweb.common.uilib import printable_value, soup2xhtml
@@ -132,7 +132,7 @@ class _metaentity(type):
         return super(_metaentity, mcs).__new__(mcs, name, bases, classdict)
 
 
-class Entity(AppRsetObject, dict):
+class Entity(AppObject, dict):
     """an entity instance has e_schema automagically set on
     the class and instances has access to their issuing cursor.
 
@@ -300,7 +300,7 @@ class Entity(AppRsetObject, dict):
         return mainattr, needcheck
 
     def __init__(self, req, rset=None, row=None, col=0):
-        AppRsetObject.__init__(self, req, rset, row, col)
+        AppObject.__init__(self, req, rset, row, col)
         dict.__init__(self)
         self._related_cache = {}
         if rset is not None:

@@ -242,7 +242,7 @@ class CWCache(EntityType):
     The target application is responsible for updating timestamp
     when necessary to invalidate the cache (typically in hooks).
 
-    Also, checkout the AppRsetObject.get_cache() method.
+    Also, checkout the AppObject.get_cache() method.
     """
     permissions = {
         'read':   ('managers', 'users', 'guests'),

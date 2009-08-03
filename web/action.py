@@ -11,12 +11,12 @@ from cubicweb import target
 from cubicweb.selectors import (partial_relation_possible, match_search_state,
                                 one_line_rset, partial_may_add_relation, yes,
                                 accepts_compat, condition_compat, deprecate)
-from cubicweb.appobject import AppRsetObject
+from cubicweb.appobject import AppObject
 
 _ = unicode
 
 
-class Action(AppRsetObject):
+class Action(AppObject):
     """abstract action. Handle the .search_states attribute to match
     request search state.
     """

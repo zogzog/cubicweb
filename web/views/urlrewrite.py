@@ -54,8 +54,6 @@ class URLRewriter(AppObject):
     __metaclass__ = metarewriter
     __registry__ = 'urlrewriting'
     __abstract__ = True
-
-    id = 'urlrewriting'
     priority = 1
 
     def rewrite(self, req, uri):

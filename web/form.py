@@ -7,7 +7,7 @@
 """
 __docformat__ = "restructuredtext en"
 
-from cubicweb.appobject import AppRsetObject
+from cubicweb.appobject import AppObject
 from cubicweb.view import NOINDEX, NOFOLLOW
 from cubicweb.common import tags
 from cubicweb.web import stdmsgs, httpcache, formfields
@@ -202,6 +202,6 @@ class FieldNotFound(Exception):
     found
     """
 
-class Form(FormMixIn, AppRsetObject):
+class Form(FormMixIn, AppObject):
     __metaclass__ = metafieldsform
     __registry__ = 'forms'

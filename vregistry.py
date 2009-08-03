@@ -114,7 +114,7 @@ class VObject(object):
     @classmethod
     def build___select__(cls):
         for klass in cls.mro():
-            if klass.__name__ == 'AppRsetObject':
+            if klass.__name__ == 'AppObject':
                 continue # the bw compat __selector__ is there
             klassdict = klass.__dict__
             if ('__select__' in klassdict and '__selectors__' in klassdict

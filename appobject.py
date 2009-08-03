@@ -31,7 +31,7 @@ class Cache(dict):
 
 CACHE_REGISTRY = {}
 
-class AppRsetObject(VObject):
+class AppObject(VObject):
     """This is the base class for CubicWeb application objects
     which are selected according to a request and result set.
 
@@ -56,7 +56,7 @@ class AppRsetObject(VObject):
 
     @classmethod
     def registered(cls, reg):
-        super(AppRsetObject, cls).registered(reg)
+        super(AppObject, cls).registered(reg)
         cls.vreg = reg.vreg
         cls.schema = reg.schema
         cls.config = reg.config
@@ -73,7 +73,6 @@ class AppRsetObject(VObject):
         selection according to a request, a result set, and optional
         row and col
         """
-        assert len(args) <= 2
         return cls(*args, **kwargs)
 
     # Eproperties definition:
@@ -111,7 +110,7 @@ class AppRsetObject(VObject):
         return selector
 
     def __init__(self, req=None, rset=None, row=None, col=None, **extra):
-        super(AppRsetObject, self).__init__()
+        super(AppObject, self).__init__()
         self.req = req
         self.rset = rset
         self.row = row
@@ -341,23 +340,3 @@ class AppRsetObject(VObject):
         first = rql.split(' ', 1)[0].lower()
         if first in ('insert', 'set', 'delete'):
             raise Unauthorized(self.req._('only select queries are authorized'))
-
-
-class AppObject(AppRsetObject):
-    """base class for application objects which are not selected
-    according to a result set, only by their identifier.
-
-    Those objects may not have req, rset and cursor set.
-    """
-
-    @classmethod
-    def selected(cls, *args, **kwargs):
-        """by default web app objects are usually instantiated on
-        selection
-        """
-        return cls(*args, **kwargs)
-
-    def __init__(self, req=None, rset=None, **kwargs):
-        self.req = req
-        self.rset = rset
-        self.__dict__.update(kwargs)
