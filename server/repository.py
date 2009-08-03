@@ -1164,35 +1164,15 @@ class Repository(object):
 
     def pyro_register(self, host=''):
         """register the repository as a pyro object"""
-        from Pyro import core
-        port = self.config['pyro-port']
-        nshost, nsgroup = self.config['pyro-ns-host'], self.config['pyro-ns-group']
-        nsgroup = ':' + nsgroup
-        core.initServer(banner=0)
-        daemon = core.Daemon(host=host, port=port)
-        daemon.useNameServer(self.pyro_nameserver(nshost, nsgroup))
-        # use Delegation approach
-        impl = core.ObjBase()
-        impl.delegateTo(self)
-        nsid = self.config['pyro-id'] or self.config.appid
-        daemon.connect(impl, '%s.%s' % (nsgroup, nsid))
+        from logilab.common.pyro_ext import register_object
+        appid = self.config['pyro-id'] or self.config.appid
+        daemon = register_object(self, appid, self.config['pyro-ns-group'],
+                                 self.config['pyro-host'],
+                                 self.config['pyro-ns-host'])
         msg = 'repository registered as a pyro object using group %s and id %s'
-        self.info(msg, nsgroup, nsid)
+        self.info(msg, self.config['pyro-ns-group'], appid)
         self.pyro_registered = True
         return daemon
-
-    def pyro_nameserver(self, host=None, group=None):
-        """locate and bind the the name server to the daemon"""
-        from Pyro import naming, errors
-        # locate the name server
-        nameserver = naming.NameServerLocator().getNS(host)
-        if group is not None:
-            # make sure our namespace group exists
-            try:
-                nameserver.createGroup(group)
-            except errors.NamingError:
-                pass
-        return nameserver
 
     # multi-sources planner helpers ###########################################
 
@@ -1217,21 +1197,9 @@ class Repository(object):
 
 def pyro_unregister(config):
     """unregister the repository from the pyro name server"""
-    nshost, nsgroup = config['pyro-ns-host'], config['pyro-ns-group']
+    from logilab.common.pyro_ext import ns_unregister
     appid = config['pyro-id'] or config.appid
-    from Pyro import core, naming, errors
-    core.initClient(banner=False)
-    try:
-        nameserver = naming.NameServerLocator().getNS(nshost)
-    except errors.PyroError, ex:
-        # name server not responding
-        config.error('can\'t locate pyro name server: %s', ex)
-        return
-    try:
-        nameserver.unregister(':%s.%s' % (nsgroup, appid))
-        config.info('%s unregistered from pyro name server', appid)
-    except errors.NamingError:
-        config.warning('%s already unregistered from pyro name server', appid)
+    ns_unregister(appid, config['pyro-ns-group'], config['pyro-ns-host'])
 
 
 from logging import getLogger

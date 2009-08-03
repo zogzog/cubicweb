@@ -101,24 +101,14 @@ def get_repository(method, database=None, config=None, vreg=None):
         from cubicweb.server.repository import Repository
         return Repository(config, vreg=vreg)
     else: # method == 'pyro'
-        from Pyro import core, naming
-        from Pyro.errors import NamingError, ProtocolError
-        core.initClient(banner=0)
-        nsid = ':%s.%s' % (config['pyro-ns-group'], database)
-        locator = naming.NameServerLocator()
         # resolve the Pyro object
+        from logilab.common.pyro_ext import ns_get_proxy
         try:
-            nshost, nsport = config['pyro-ns-host'], config['pyro-ns-port']
-            uri = locator.getNS(nshost, nsport).resolve(nsid)
-        except ProtocolError:
-            raise ConnectionError('Could not connect to the Pyro name server '
-                                  '(host: %s:%i)' % (nshost, nsport))
-        except NamingError:
-            raise ConnectionError('Could not get repository for %s '
-                                  '(not registered in Pyro), '
-                                  'you may have to restart your server-side '
-                                  'instance' % nsid)
-        return core.getProxyForURI(uri)
+            return ns_get_proxy(database,
+                                defaultnsgroup=config['pyro-ns-group'],
+                                nshost=config['pyro-ns-host'])
+        except Exception, ex:
+            raise ConnectionError(str(ex))
 
 def repo_connect(repo, login, password, cnxprops=None):
     """Constructor to create a new connection to the CubicWeb repository.
@@ -132,9 +122,8 @@ def repo_connect(repo, login, password, cnxprops=None):
         cnx.vreg = repo.vreg
     return cnx
 
-def connect(database=None, login=None, password=None, host=None,
-            group=None, cnxprops=None, port=None, setvreg=True, mulcnx=True,
-            initlog=True):
+def connect(database=None, login=None, password=None, host=None, group=None,
+            cnxprops=None, setvreg=True, mulcnx=True, initlog=True):
     """Constructor for creating a connection to the CubicWeb repository.
     Returns a Connection object.
 
@@ -145,8 +134,6 @@ def connect(database=None, login=None, password=None, host=None,
     config = cwconfig.CubicWebNoAppConfiguration()
     if host:
         config.global_set_option('pyro-ns-host', host)
-    if port:
-        config.global_set_option('pyro-ns-port', port)
     if group:
         config.global_set_option('pyro-ns-group', group)
     cnxprops = cnxprops or ConnectionProperties()

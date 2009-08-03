@@ -165,10 +165,12 @@ notified of every changes.',
           'group': 'email', 'inputlevel': 2,
           }),
         # pyro server.serverconfig
-        ('pyro-port',
+        ('pyro-host',
          {'type' : 'int',
           'default': None,
-          'help': 'Pyro server port. If not set, it will be choosen randomly',
+          'help': 'Pyro server host, if not detectable correctly through \
+gethostname(). It may contains port information using <host>:<port> notation, \
+and if not set, it will be choosen randomly',
           'group': 'pyro-server', 'inputlevel': 2,
           }),
         ('pyro-id', # XXX reuse pyro-instance-id

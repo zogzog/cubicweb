@@ -169,14 +169,7 @@ class CubicWebNoAppConfiguration(ConfigurationMixIn):
          {'type' : 'string',
           'default': '',
           'help': 'Pyro name server\'s host. If not set, will be detected by a \
-broadcast query',
-          'group': 'pyro-name-server', 'inputlevel': 1,
-          }),
-        ('pyro-ns-port',
-         {'type' : 'int',
-          'default': None,
-          'help': 'Pyro name server\'s listening port. If not set, default \
-port will be used.',
+broadcast query. It may contains port information using <host>:<port> notation.',
           'group': 'pyro-name-server', 'inputlevel': 1,
           }),
         ('pyro-ns-group',

@@ -79,14 +79,7 @@ class PyroRQLSource(AbstractSource):
          {'type' : 'string',
           'default': None,
           'help': 'Pyro name server\'s host. If not set, default to the value \
-from all_in_one.conf.',
-          'group': 'pyro-source', 'inputlevel': 1,
-          }),
-        ('pyro-ns-port',
-         {'type' : 'int',
-          'default': None,
-          'help': 'Pyro name server\'s listening port. If not set, default to \
-the value from all_in_one.conf.',
+from all_in_one.conf. It may contains port information using <host>:<port> notation.',
           'group': 'pyro-source', 'inputlevel': 1,
           }),
         ('pyro-ns-group',
@@ -214,13 +207,12 @@ repository (default to 5 minutes).',
     def _get_connection(self):
         """open and return a connection to the source"""
         nshost = self.config.get('pyro-ns-host') or self.repo.config['pyro-ns-host']
-        nsport = self.config.get('pyro-ns-port') or self.repo.config['pyro-ns-port']
         nsgroup = self.config.get('pyro-ns-group') or self.repo.config['pyro-ns-group']
         #cnxprops = ConnectionProperties(cnxtype=self.config['cnx-type'])
         return dbapi.connect(database=self.config['pyro-ns-id'],
                              login=self.config['cubicweb-user'],
                              password=self.config['cubicweb-password'],
-                             host=nshost, port=nsport, group=nsgroup,
+                             host=nshost, group=nsgroup,
                              setvreg=False) #cnxprops=cnxprops)
 
     def get_connection(self):
