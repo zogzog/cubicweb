@@ -151,7 +151,7 @@ class RestPathEvaluator(URLPathEvaluator):
             etype = self.vreg.case_insensitive_etypes[parts.pop(0).lower()]
         except KeyError:
             raise PathDontMatch()
-        cls = self.vreg.etype_class(etype)
+        cls = self.vreg['etypes'].etype_class(etype)
         if parts:
             if len(parts) == 2:
                 attrname = parts.pop(0).lower()

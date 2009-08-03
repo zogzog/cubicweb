@@ -68,7 +68,7 @@ class MassMailingForm(forms.FieldsForm):
     def get_allowed_substitutions(self):
         attrs = []
         for coltype in self.rset.column_types(0):
-            eclass = self.vreg.etype_class(coltype)
+            eclass = self.vreg['etypes'].etype_class(coltype)
             attrs.append(eclass.allowed_massmail_keys())
         return sorted(reduce(operator.and_, attrs))
 
