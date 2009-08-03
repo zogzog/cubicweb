@@ -220,7 +220,7 @@ class CubicWebPublisher(object):
         super(CubicWebPublisher, self).__init__()
         # connect to the repository and get instance's schema
         if vreg is None:
-            vreg = cwvreg.CubicWebRegistry(config, debug=debug)
+            vreg = cwvreg.CubicWebVRegistry(config, debug=debug)
         self.vreg = vreg
         self.info('starting web instance from %s', config.apphome)
         self.repo = config.repository(vreg)
