@@ -370,7 +370,15 @@ class ResultSet(object):
         # XXX should we consider updating a cached entity with possible
         #     new attributes found in this resultset ?
         try:
-            return req.entity_cache(eid)
+            entity = req.entity_cache(eid)
+            if entity.rset is None:
+                # entity has no rset set, this means entity has been cached by
+                # the repository (req is a repository session) which had no rset
+                # info. Add id.
+                entity.rset = self
+                entity.row = row
+                entity.col = col
+            return entity
         except KeyError:
             pass
         # build entity instance
