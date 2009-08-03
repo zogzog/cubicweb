@@ -380,19 +380,19 @@ class CubicWebVRegistry(VRegistry):
     def possible_actions(self, req, rset=None, **kwargs):
         return self["actions"].possible_actions(req, rest=rset, **kwargs)
 
-    @deprecated("use .select_object('boxes', ...)")
+    @deprecated("use vreg['boxes'].select_object(...)")
     def select_box(self, oid, *args, **kwargs):
         return self['boxes'].select_object(oid, *args, **kwargs)
 
-    @deprecated("use .select_object('components', ...)")
+    @deprecated("use vreg['components'].select_object(...)")
     def select_component(self, cid, *args, **kwargs):
         return self['components'].select_object(cid, *args, **kwargs)
 
-    @deprecated("use .select_object('actions', ...)")
+    @deprecated("use vreg['actions'].select_object(...)")
     def select_action(self, oid, *args, **kwargs):
         return self['actions'].select_object(oid, *args, **kwargs)
 
-    @deprecated("use .select('views', ...)")
+    @deprecated("use vreg['views'].select(...)")
     def select_view(self, __vid, req, rset=None, **kwargs):
         return self['views'].select(__vid, req, rset=rset, **kwargs)
 
