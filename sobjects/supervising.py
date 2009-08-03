@@ -31,12 +31,16 @@ class SomethingChangedHook(Hook):
             SupervisionMailOp(session)
 
     def _call(self, *args):
-        if self._event() == 'update_entity' and args[0].e_schema == 'CWUser':
-            updated = set(args[0].iterkeys())
-            if not (updated - frozenset(('eid', 'modification_date', 'last_login_time'))):
-                # don't record last_login_time update which are done
-                # automatically at login time
+        if self._event() == 'update_entity':
+            if args[0].eid in self.session.transaction_data.get('neweids', ()):
                 return False
+            if args[0].e_schema == 'CWUser':
+                updated = set(args[0].iterkeys())
+                if not (updated - frozenset(('eid', 'modification_date',
+                                             'last_login_time'))):
+                    # don't record last_login_time update which are done
+                    # automatically at login time
+                    return False
         self.session.transaction_data.setdefault('pendingchanges', []).append(
             (self._event(), args))
         return True
