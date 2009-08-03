@@ -53,8 +53,8 @@ from yams import BASE_TYPES
 
 from cubicweb import (Unauthorized, NoSelectableObject, NotAnEntity,
                       role, typed_eid)
-from cubicweb.vregistry import (NoSelectableObject, Selector,
-                                chainall, objectify_selector)
+# even if not used, let yes here so it's importable through this module
+from cubicweb.appobject import Selector, objectify_selector, yes
 from cubicweb.cwconfig import CubicWebConfiguration
 from cubicweb.schema import split_expression
 
@@ -273,17 +273,6 @@ class EntitySelector(EClassSelector):
 
 
 # very basic selectors ########################################################
-
-class yes(Selector):
-    """return arbitrary score
-
-    default score of 0.5 so any other selector take precedence
-    """
-    def __init__(self, score=0.5):
-        self.score = score
-
-    def __call__(self, *args, **kwargs):
-        return self.score
 
 @objectify_selector
 @lltrace
@@ -975,6 +964,7 @@ class score_entity(EntitySelector):
 
 
 # XXX DEPRECATED ##############################################################
+from cubicweb.vregistry import chainall
 
 yes_selector = deprecated()(yes)
 norset_selector = deprecated()(none_rset)
@@ -1040,7 +1030,7 @@ accept = deprecated('use implements selector')(accept)
 accept_selector = deprecated()(accept)
 
 accept_one = deprecated()(chainall(one_line_rset, accept,
-                                          name='accept_one'))
+                                   name='accept_one'))
 accept_one_selector = deprecated()(accept_one)
 
 

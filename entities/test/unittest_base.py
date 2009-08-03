@@ -266,7 +266,7 @@ class InterfaceTC(EnvBasedTC):
         class MyUser(CWUser):
             __implements__ = (IMileStone,)
         self.vreg._loadedmods[__name__] = {}
-        self.vreg.register_vobject_class(MyUser)
+        self.vreg.register_appobject_class(MyUser)
         self.failUnless(implements(CWUser, IWorkflowable))
         self.failUnless(implements(MyUser, IMileStone))
         self.failUnless(implements(MyUser, IWorkflowable))
@@ -290,7 +290,7 @@ class SpecializedEntityClassesTC(EnvBasedTC):
         for etype in ('Company', 'Division', 'SubDivision'):
             class Foo(AnyEntity):
                 id = etype
-            self.vreg.register_vobject_class(Foo)
+            self.vreg.register_appobject_class(Foo)
             eclass = self.select_eclass('SubDivision')
             if etype == 'SubDivision':
                 self.failUnless(eclass is Foo)

@@ -87,8 +87,8 @@ try:
         options = merge_options(TwistedConfiguration.options
                                 + ServerConfiguration.options)
 
-        cubicweb_vobject_path = TwistedConfiguration.cubicweb_vobject_path | ServerConfiguration.cubicweb_vobject_path
-        cube_vobject_path = TwistedConfiguration.cube_vobject_path | ServerConfiguration.cube_vobject_path
+        cubicweb_appobject_path = TwistedConfiguration.cubicweb_appobject_path | ServerConfiguration.cubicweb_appobject_path
+        cube_appobject_path = TwistedConfiguration.cube_appobject_path | ServerConfiguration.cube_appobject_path
         def pyro_enabled(self):
             """tell if pyro is activated for the in memory repository"""
             return self['pyro-server']

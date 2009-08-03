@@ -63,8 +63,8 @@ class WebConfiguration(CubicWebConfiguration):
     """the WebConfiguration is a singleton object handling instance's
     configuration and preferences
     """
-    cubicweb_vobject_path = CubicWebConfiguration.cubicweb_vobject_path | set(['web/views'])
-    cube_vobject_path = CubicWebConfiguration.cube_vobject_path | set(['views'])
+    cubicweb_appobject_path = CubicWebConfiguration.cubicweb_appobject_path | set(['web/views'])
+    cube_appobject_path = CubicWebConfiguration.cube_appobject_path | set(['views'])
 
     options = merge_options(CubicWebConfiguration.options + (
         ('anonymous-user',

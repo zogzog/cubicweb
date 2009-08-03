@@ -59,7 +59,7 @@ class GAEVRegistry(CubicWebVRegistry):
         self.load_module(obj)
 
     def _auto_load(self, path, loadschema, cube=None):
-        vobjpath = self.config.cube_vobject_path
+        vobjpath = self.config.cube_appobject_path
         for filename in listdir(path):
             if filename[-3:] == '.py' and filename[:-3] in vobjpath:
                 self._import(_pkg_name(cube, filename[:-3]))

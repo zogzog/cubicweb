@@ -142,8 +142,8 @@ class TestServerConfiguration(ServerConfiguration):
 class BaseApptestConfiguration(TestServerConfiguration, TwistedConfiguration):
     repo_method = 'inmemory'
     options = merge_options(TestServerConfiguration.options + TwistedConfiguration.options)
-    cubicweb_vobject_path = TestServerConfiguration.cubicweb_vobject_path | TwistedConfiguration.cubicweb_vobject_path
-    cube_vobject_path = TestServerConfiguration.cube_vobject_path | TwistedConfiguration.cube_vobject_path
+    cubicweb_appobject_path = TestServerConfiguration.cubicweb_appobject_path | TwistedConfiguration.cubicweb_appobject_path
+    cube_appobject_path = TestServerConfiguration.cube_appobject_path | TwistedConfiguration.cube_appobject_path
 
     def available_languages(self, *args):
         return ('en', 'fr', 'de')

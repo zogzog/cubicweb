@@ -194,9 +194,9 @@ class URLRewriteEvaluator(URLPathEvaluator):
     def evaluate_path(self, req, parts):
         # uri <=> req._twreq.path or req._twreq.uri
         uri = req.url_unquote('/' + '/'.join(parts))
-        vobjects = sorted(self.vreg['urlrewriting'].all_objects(),
-                          key=lambda x: x.priority, reverse=True)
-        for rewritercls in vobjects:
+        evaluators = sorted(self.vreg['urlrewriting'].all_objects(),
+                            key=lambda x: x.priority, reverse=True)
+        for rewritercls in evaluators:
             rewriter = rewritercls()
             try:
                 # XXX we might want to chain url rewrites

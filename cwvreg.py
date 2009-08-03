@@ -34,7 +34,7 @@ def use_interfaces(obj):
             if impl:
                 return sorted(impl.expected_ifaces)
         except AttributeError:
-            pass # old-style vobject classes with no accepts_interfaces
+            pass # old-style appobject classes with no accepts_interfaces
         except:
             print 'bad selector %s on %s' % (obj.__select__, obj)
             raise
@@ -308,7 +308,7 @@ class CubicWebVRegistry(VRegistry):
         # we may want to keep interface dependent objects (e.g.for i18n
         # catalog generation)
         if self.config.cleanup_interface_sobjects:
-            # remove vobjects that don't support any available interface
+            # remove appobjects that don't support any available interface
             implemented_interfaces = set()
             if 'Any' in self.get('etypes', ()):
                 for etype in self.schema.entities():
@@ -323,7 +323,7 @@ class CubicWebVRegistry(VRegistry):
                                    or iface
                                    for iface in ifaces)
                 if not ('Any' in ifaces or ifaces & implemented_interfaces):
-                    self.debug('kicking vobject %s (no implemented '
+                    self.debug('kicking appobject %s (no implemented '
                                'interface among %s)', obj, ifaces)
                     self.unregister(obj)
         # clear needs_iface so we don't try to remove some not-anymore-in

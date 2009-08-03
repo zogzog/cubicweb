@@ -85,8 +85,8 @@ class ServerConfiguration(CubicWebConfiguration):
         SCHEMAS_LIB_DIR = '/usr/share/cubicweb/schemas/'
         BACKUP_DIR = '/var/lib/cubicweb/backup/'
 
-    cubicweb_vobject_path = CubicWebConfiguration.cubicweb_vobject_path | set(['sobjects'])
-    cube_vobject_path = CubicWebConfiguration.cube_vobject_path | set(['sobjects', 'hooks'])
+    cubicweb_appobject_path = CubicWebConfiguration.cubicweb_appobject_path | set(['sobjects'])
+    cube_appobject_path = CubicWebConfiguration.cube_appobject_path | set(['sobjects', 'hooks'])
 
     options = merge_options((
         # ctl configuration

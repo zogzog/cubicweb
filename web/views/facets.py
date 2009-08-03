@@ -11,7 +11,7 @@ from simplejson import dumps
 
 from logilab.mtconverter import xml_escape
 
-from cubicweb.vregistry import objectify_selector
+from cubicweb.appobject import objectify_selector
 from cubicweb.selectors import (non_final_entity, two_lines_rset,
                                 match_context_prop, yes, relation_possible)
 from cubicweb.web.box import BoxTemplate

@@ -8,7 +8,7 @@
 __docformat__ = "restructuredtext en"
 _ = unicode
 
-from cubicweb.vregistry import objectify_selector
+from cubicweb.appobject import objectify_selector
 from cubicweb.selectors import (EntitySelector,
     one_line_rset, two_lines_rset, one_etype_rset, relation_possible,
     nonempty_rset, non_final_entity,

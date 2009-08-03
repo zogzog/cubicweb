@@ -10,7 +10,7 @@ __docformat__ = "restructuredtext en"
 
 from logilab.mtconverter import xml_escape
 
-from cubicweb.vregistry import objectify_selector
+from cubicweb.appobject import objectify_selector
 from cubicweb.selectors import match_kwargs
 from cubicweb.view import View, MainTemplate, NOINDEX, NOFOLLOW
 from cubicweb.utils import make_uid, UStringIO

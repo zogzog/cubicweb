@@ -29,8 +29,8 @@ from cubicweb.server.serverconfig import ServerConfiguration
 class DevCubeConfiguration(ServerConfiguration, WebConfiguration):
     """dummy config to get full library schema and entities"""
     creating = True
-    cubicweb_vobject_path = ServerConfiguration.cubicweb_vobject_path | WebConfiguration.cubicweb_vobject_path
-    cube_vobject_path = ServerConfiguration.cube_vobject_path | WebConfiguration.cube_vobject_path
+    cubicweb_appobject_path = ServerConfiguration.cubicweb_appobject_path | WebConfiguration.cubicweb_appobject_path
+    cube_appobject_path = ServerConfiguration.cube_appobject_path | WebConfiguration.cube_appobject_path
 
     def __init__(self, cube):
         super(DevCubeConfiguration, self).__init__(cube)

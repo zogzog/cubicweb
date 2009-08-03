@@ -81,9 +81,9 @@ class GAEConfiguration(ServerConfiguration, WebConfiguration):
     options = [(optname, optdict) for optname, optdict in options
                if not optname in UNSUPPORTED_OPTIONS]
 
-    cubicweb_vobject_path = WebConfiguration.cubicweb_vobject_path | ServerConfiguration.cubicweb_vobject_path
-    cubicweb_vobject_path = list(cubicweb_vobject_path) + ['goa/appobjects']
-    cube_vobject_path = WebConfiguration.cube_vobject_path | ServerConfiguration.cube_vobject_path
+    cubicweb_appobject_path = WebConfiguration.cubicweb_appobject_path | ServerConfiguration.cubicweb_appobject_path
+    cubicweb_appobject_path = list(cubicweb_appobject_path) + ['goa/appobjects']
+    cube_appobject_path = WebConfiguration.cube_appobject_path | ServerConfiguration.cube_appobject_path
 
     # use file system schema
     bootstrap_schema = read_instance_schema = False

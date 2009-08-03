@@ -17,6 +17,7 @@ from itertools import count
 
 from logilab.common.logging_ext import set_log_methods
 from logilab.common.decorators import monkeypatch
+from logilab.common.deprecation import deprecated
 
 from cubicweb import ETYPE_NAME_MAP, ConnectionError, RequestSessionMixIn
 from cubicweb import cwvreg, cwconfig
@@ -29,10 +30,10 @@ def _fake_property_value(self, name):
     except KeyError:
         return ''
 
-def _fix_cls_attrs(reg, vobject):
-    vobject.vreg = reg.vreg
-    vobject.schema = reg.schema
-    vobject.config = reg.config
+def _fix_cls_attrs(reg, appobject):
+    appobject.vreg = reg.vreg
+    appobject.schema = reg.schema
+    appobject.config = reg.config
 
 def multiple_connections_fix():
     """some monkey patching necessary when an application has to deal with
@@ -43,15 +44,15 @@ def multiple_connections_fix():
     defaultcls = cwvreg.VRegistry.REGISTRY_FACTORY[None]
     orig_select_best = defaultcls.orig_select_best = defaultcls.select_best
     @monkeypatch(defaultcls)
-    def select_best(self, vobjects, *args, **kwargs):
+    def select_best(self, appobjects, *args, **kwargs):
         """return an instance of the most specific object according
         to parameters
 
         raise NoSelectableObject if no object apply
         """
-        for vobjectcls in vobjects:
-            _fix_cls_attrs(self, vobjectcls)
-        selected = orig_select_best(self, vobjects, *args, **kwargs)
+        for appobjectcls in appobjects:
+            _fix_cls_attrs(self, appobjectcls)
+        selected = orig_select_best(self, appobjects, *args, **kwargs)
         # redo the same thing on the instance so it won't use equivalent class
         # attributes (which may change)
         _fix_cls_attrs(self, selected)
@@ -448,7 +449,7 @@ class Connection(object):
             raise ProgrammingError('Closed connection')
         return self._repo.get_schema()
 
-    def load_vobjects(self, cubes=_MARKER, subpath=None, expand=True,
+    def load_appobjects(self, cubes=_MARKER, subpath=None, expand=True,
                       force_reload=None):
         config = self.vreg.config
         if cubes is _MARKER:
@@ -481,11 +482,13 @@ class Connection(object):
             if self._repo.config.instance_hooks:
                 hm.register_hooks(config.load_hooks(self.vreg))
 
+    load_vobjects = deprecated()(load_appobjects)
+
     def use_web_compatible_requests(self, baseurl, sitetitle=None):
         """monkey patch DBAPIRequest to fake a cw.web.request, so you should
         able to call html views using rset from a simple dbapi connection.
 
-        You should call `load_vobjects` at some point to register those views.
+        You should call `load_appobjects` at some point to register those views.
         """
         from cubicweb.web.request import CubicWebRequestBase as cwrb
         DBAPIRequest.build_ajax_replace_url = cwrb.build_ajax_replace_url.im_func

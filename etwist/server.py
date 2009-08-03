@@ -330,7 +330,7 @@ set_log_methods(CubicWebRootResource, getLogger('cubicweb.twisted'))
 def _gc_debug():
     import gc
     from pprint import pprint
-    from cubicweb.vregistry import VObject
+    from cubicweb.appobject import AppObject
     gc.collect()
     count = 0
     acount = 0
@@ -338,7 +338,7 @@ def _gc_debug():
     for obj in gc.get_objects():
         if isinstance(obj, CubicWebTwistedRequestAdapter):
             count += 1
-        elif isinstance(obj, VObject):
+        elif isinstance(obj, AppObject):
             acount += 1
         else:
             try:

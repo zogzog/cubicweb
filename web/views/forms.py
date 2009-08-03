@@ -288,7 +288,8 @@ class FieldsForm(form.Form):
 
 class EntityFieldsForm(FieldsForm):
     id = 'base'
-    __select__ = (match_kwargs('entity') | (one_line_rset & non_final_entity()))
+    __select__ = (match_kwargs('entity')
+                  | (one_line_rset() & non_final_entity()))
 
     internal_fields = FieldsForm.internal_fields + ('__type', 'eid', '__maineid')
     domid = 'entityForm'

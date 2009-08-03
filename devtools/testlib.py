@@ -377,9 +377,9 @@ class RealDBTest(WebTest):
                 rset2 = rset.limit(limit=1, offset=row)
                 yield rset2
 
-def not_selected(vreg, vobject):
+def not_selected(vreg, appobject):
     try:
-        vreg._selected[vobject.__class__] -= 1
+        vreg._selected[appobject.__class__] -= 1
     except (KeyError, AttributeError):
         pass
 
@@ -405,7 +405,7 @@ def print_untested_objects(testclass, skipregs=('hooks', 'etypes')):
     for regname, reg in testclass._env.vreg.iteritems():
         if regname in skipregs:
             continue
-        for vobjects in reg.itervalues():
-            for vobject in vobjects:
-                if not reg._selected.get(vobject):
-                    print 'not tested', regname, vobject
+        for appobjects in reg.itervalues():
+            for appobject in appobjects:
+                if not reg._selected.get(appobject):
+                    print 'not tested', regname, appobject
