@@ -7,16 +7,17 @@
 :license: GNU Lesser General Public License, v2.1 - http://www.gnu.org/licenses
 """
 
-from logilab.common.testlib import TestCase, unittest_main
 import base64, Cookie
-
 import sys
 from urllib import unquote
+
+from logilab.common.testlib import TestCase, unittest_main
 from logilab.common.decorators import clear_cache
 
+from cubicweb.devtools.apptest import EnvBasedTC
+from cubicweb.devtools.fake import FakeRequest
 from cubicweb.web import Redirect, AuthenticationError, ExplicitLogin, INTERNAL_FIELD_VALUE
 from cubicweb.web.views.basecontrollers import ViewController
-from cubicweb.devtools._apptest import FakeRequest
 
 class FakeMapping:
     """emulates a mapping module"""
@@ -131,9 +132,6 @@ class UtilsTC(TestCase):
         self.assertEquals(self.ctrl._cursor.executed,
                           ['SET X works_for Y WHERE X eid 8, Y eid %s' % i
                            for i in (12, 13, 14)])
-
-
-from cubicweb.devtools.apptest import EnvBasedTC
 
 
 class ApplicationTC(EnvBasedTC):

@@ -249,7 +249,7 @@ class EnvBasedTC(TestCase):
         dump = simplejson.dumps
         args = [dump(arg) for arg in args]
         req = self.request(fname=fname, pageid='123', arg=args)
-        ctrl = self.vreg.select('controllers', 'json', req)
+        ctrl = self.vreg['controllers'].select('json', req)
         return ctrl.publish(), req
 
     # default test setup and teardown #########################################
@@ -294,7 +294,7 @@ else:
         def setUp(self):
             super(ControllerTC, self).setUp()
             self.req = self.request()
-            self.ctrl = self.vreg.select('controllers', 'edit', self.req)
+            self.ctrl = self.vreg['controllers'].select('edit', self.req)
 
         def publish(self, req):
             assert req is self.ctrl.req
@@ -308,7 +308,7 @@ else:
 
         def expect_redirect_publish(self, req=None):
             if req is not None:
-                self.ctrl = self.vreg.select('controllers', 'edit', req)
+                self.ctrl = self.vreg['controllers'].select('edit', req)
             else:
                 req = self.req
             try:

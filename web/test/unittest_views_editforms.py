@@ -18,8 +18,8 @@ class AutomaticEntityFormTC(EnvBasedTC):
     def test_custom_widget(self):
         AEF.rfields_kwargs.tag_subject_of(('CWUser', 'login', '*'),
                                           {'widget': AutoCompletionWidget(autocomplete_initfunc='get_logins')})
-        form = self.vreg.select('forms', 'edition', self.request(),
-                                entity=self.user())
+        form = self.vreg['forms'].select('edition', self.request(),
+                                         entity=self.user())
         field = form.field_by_name('login')
         self.assertIsInstance(field.widget, AutoCompletionWidget)
         AEF.rfields_kwargs.del_rtag('CWUser', 'login', '*', 'subject')
@@ -116,10 +116,10 @@ class AutomaticEntityFormTC(EnvBasedTC):
 
     def test_edition_form(self):
         rset = self.execute('CWUser X LIMIT 1')
-        form = self.vreg.select('forms', 'edition', rset.req, rset=rset,
+        form = self.vreg['forms'].select('edition', rset.req, rset=rset,
                                 row=0, col=0)
         # should be also selectable by specifying entity
-        self.vreg.select('forms', 'edition', rset.req,
+        self.vreg['forms'].select('edition', rset.req,
                          entity=rset.get_entity(0, 0))
         self.failIf(any(f for f in form.fields if f is None))
 

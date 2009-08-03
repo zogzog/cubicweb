@@ -44,7 +44,7 @@ class QueryTranslatorTC(EnvBasedTC):
         super(QueryTranslatorTC, self).setUp()
         self.req = self.env.create_request()
         self.vreg.config.translations = {'en': _translate}
-        proc = self.vreg.select('components', 'magicsearch', self.req)
+        proc = self.vreg['components'].select('magicsearch', self.req)
         self.proc = [p for p in proc.processors if isinstance(p, QueryTranslator)][0]
 
     def test_basic_translations(self):
@@ -69,7 +69,7 @@ class QSPreProcessorTC(EnvBasedTC):
         super(QSPreProcessorTC, self).setUp()
         self.vreg.config.translations = {'en': _translate}
         self.req = self.request()
-        proc = self.vreg.select('components', 'magicsearch', self.req)
+        proc = self.vreg['components'].select('magicsearch', self.req)
         self.proc = [p for p in proc.processors if isinstance(p, QSPreProcessor)][0]
         self.proc.req = self.req
 
@@ -187,7 +187,7 @@ class ProcessorChainTC(EnvBasedTC):
         super(ProcessorChainTC, self).setUp()
         self.vreg.config.translations = {'en': _translate}
         self.req = self.request()
-        self.proc = self.vreg.select('components', 'magicsearch', self.req)
+        self.proc = self.vreg['components'].select('magicsearch', self.req)
 
     def test_main_preprocessor_chain(self):
         """tests QUERY_PROCESSOR"""
