@@ -71,6 +71,7 @@ class Controller(AppObject):
     registered = require_group_compat(AppObject.registered)
 
     def __init__(self, *args, **kwargs):
+        self.appli = kwargs.pop('appli', None)
         super(Controller, self).__init__(*args, **kwargs)
         # attributes use to control after edition redirection
         self._after_deletion_path = None
