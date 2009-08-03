@@ -240,9 +240,14 @@ class CubicWebVRegistry(VRegistry):
     def items(self):
         return [item for item in super(CubicWebVRegistry, self).items()
                 if not item[0] in ('propertydefs', 'propertyvalues')]
+    def iteritems(self):
+        return (item for item in super(CubicWebVRegistry, self).iteritems()
+                if not item[0] in ('propertydefs', 'propertyvalues'))
 
     def values(self):
         return [value for key, value in self.items()]
+    def itervalues(self):
+        return (value for key, value in self.items())
 
     def reset(self):
         super(CubicWebVRegistry, self).reset()
