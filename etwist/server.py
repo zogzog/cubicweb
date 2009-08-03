@@ -8,12 +8,15 @@
 __docformat__ = "restructuredtext en"
 
 import sys
+import os
 import select
 from time import mktime
 from datetime import date, timedelta
 from urlparse import urlsplit, urlunsplit
+import hotshot
 
 from twisted.application import service, strports
+from twisted.scripts._twistd_unix import daemonize
 from twisted.internet import reactor, task, threads
 from twisted.internet.defer import maybeDeferred
 from twisted.web2 import channel, http, server, iweb
@@ -268,35 +271,6 @@ class CubicWebRootResource(resource.PostableResource):
             content = self.appli.need_login_content(req)
         return http.Response(code, req.headers_out, content)
 
-
-# This part gets run when you run this file via: "twistd -noy demo.py"
-def main(appid, cfgname):
-    """Starts an cubicweb  twisted server for an instance
-
-    appid: instance's identifier
-    cfgname: name of the configuration to use (twisted or all-in-one)
-    """
-    from cubicweb.cwconfig import CubicWebConfiguration
-    from cubicweb.etwist import twconfig # trigger configuration registration
-    config = CubicWebConfiguration.config_for(appid, cfgname)
-    # XXX why calling init_available_cubes here ?
-    config.init_available_cubes()
-    # create the site and application objects
-    if '-n' in sys.argv: # debug mode
-        cubicweb = CubicWebRootResource(config, debug=True)
-    else:
-        cubicweb = CubicWebRootResource(config)
-    #toplevel = vhost.VHostURIRewrite(base_url, cubicweb)
-    toplevel = cubicweb
-    website = server.Site(toplevel)
-    application = service.Application("cubicweb")
-    # serve it via standard HTTP on port set in the configuration
-    s = strports.service('tcp:%04d' % (config['port'] or 8080),
-                         channel.HTTPFactory(website))
-    s.setServiceParent(application)
-    return application
-
-
 from twisted.python import failure
 from twisted.internet import defer
 from twisted.web2 import fileupload
@@ -378,3 +352,22 @@ def _gc_debug():
     ocount = sorted(ocount.items(), key=lambda x: x[1], reverse=True)[:20]
     pprint(ocount)
     print 'UNREACHABLE', gc.garbage
+
+def run(config, debug):
+    # create the site
+    root_resource = CubicWebRootResource(config, debug)
+    website = server.Site(root_resource)
+    # serve it via standard HTTP on port set in the configuration
+    port = config['port'] or 8080
+    reactor.listenTCP(port, channel.HTTPFactory(website))
+    baseurl = config['base-url'] or config.default_base_url()
+    print "-> Instance started on", baseurl
+    if not debug:
+        daemonize()
+        if config['pid-file']:
+            file(config['pid-file'], 'w').write(str(os.getpid()))
+    if config['profile']:
+        prof = hotshot.Profile(config['profile'])
+        prof.runcall(reactor.run)
+    else:
+        reactor.run()

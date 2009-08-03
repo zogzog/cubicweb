@@ -382,6 +382,11 @@ running.'}),
           'default': None,
           'help': 'profile code and use the specified file to store stats',
           }),
+        ('loglevel',
+         {'short': 'l', 'type' : 'choice', 'metavar': '<log level>',
+          'default': None, 'choices': ('debug', 'info', 'warning', 'error'),
+          'help': 'debug if -D is set, error otherwise',
+          }),
         )
 
     def start_instance(self, appid):
@@ -390,7 +395,12 @@ running.'}),
         # without all options defined
         debug = self.get('debug')
         force = self.get('force')
+        loglevel = self.get('loglevel')
         config = cwcfg.config_for(appid)
+        if loglevel is not None:
+            loglevel = 'LOG_%s' % loglevel.upper()
+            config.global_set_option('log-threshold', loglevel)
+            config.init_log(loglevel, debug=debug, force=True)
         if self.get('profile'):
             config.global_set_option('profile', self.config.profile)
         helper = self.config_helper(config, cmdname='start')
@@ -399,16 +409,7 @@ running.'}),
             msg = "%s seems to be running. Remove %s by hand if necessary or use \
 the --force option."
             raise ExecutionError(msg % (appid, pidf))
-        command = helper.start_command(config, debug)
-        if debug:
-            print "starting server with command :"
-            print command
-        if system(command):
-            print 'an error occured while starting the instance, not started'
-            print
-            return False
-        if not debug:
-            print '-> instance %s started.' % appid
+        helper.start_command(config, debug)
         return True
 
 
