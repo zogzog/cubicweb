@@ -141,7 +141,7 @@ class Registry(dict):
         """
         objects = self[oid]
         assert len(objects) == 1, objects
-        return objects[0].selected(*args, **kwargs)
+        return objects[0](*args, **kwargs)
 
     def select(self, oid, *args, **kwargs):
         """return the most specific object among those with the given oid
@@ -199,8 +199,8 @@ class Registry(dict):
                 raise Exception('select ambiguity, args: %s\nkwargs: %s %s'
                                 % (args, kwargs.keys(),
                                    [repr(v) for v in winners]))
-        # return the result of the .selected method of the appobject
-        return winners[0].selected(*args, **kwargs)
+        # return the result of calling the appobject
+        return winners[0](*args, **kwargs)
 
 
 class VRegistry(dict):

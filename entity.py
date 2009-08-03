@@ -167,15 +167,6 @@ class Entity(AppObject, dict):
     # class attributes set automatically at registration time
     e_schema = None
 
-    @classmethod
-    def registered(cls, registry):
-        """build class using descriptor at registration time"""
-        assert cls.id is not None
-        super(Entity, cls).registered(registry)
-        if cls.id != 'Any':
-            cls.__initialize__()
-        return cls
-
     MODE_TAGS = set(('link', 'create'))
     CATEGORY_TAGS = set(('primary', 'secondary', 'generic', 'generated')) # , 'metadata'))
     @classmethod

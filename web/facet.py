@@ -259,22 +259,18 @@ class AbstractFacet(AppObject):
     needs_update = False
     start_unfolded = True
 
-    @classmethod
-    def selected(cls, req, rset=None, rqlst=None, context=None,
-                 filtered_variable=None):
+    def __init__(self, req, rset=None, rqlst=None, filtered_variable=None,
+                 **kwargs):
+        super(AbstractFacet, self).__init__(req, rset, **kwargs)
         assert rset is not None or rqlst is not None
         assert filtered_variable
-        instance = super(AbstractFacet, cls).selected(req, rset)
-        #instance = AppObject.selected(req, rset)
-        #instance.__class__ = cls
         # facet retreived using `object_by_id` from an ajax call
         if rset is None:
-            instance.init_from_form(rqlst=rqlst)
+            self.init_from_form(rqlst=rqlst)
         # facet retreived from `select` using the result set to filter
         else:
-            instance.init_from_rset()
-        instance.filtered_variable = filtered_variable
-        return instance
+            self.init_from_rset()
+        self.filtered_variable = filtered_variable
 
     def init_from_rset(self):
         self.rqlst = self.rset.syntax_tree().children[0]

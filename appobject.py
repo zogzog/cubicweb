@@ -302,18 +302,6 @@ class AppObject(object):
     def vreg_initialization_completed(cls):
         pass
 
-    @classmethod
-    def selected(cls, *args, **kwargs):
-        """called by the registry when the appobject has been selected.
-
-        It must return the object that will be actually returned by the .select
-        method (this may be the right hook to create an instance for
-        example). By default the selected object is called using the given args
-        and kwargs and the resulting value (usually a class instance) is
-        returned without any transformation.
-        """
-        return cls(*args, **kwargs)
-
     # Eproperties definition:
     # key: id of the property (the actual CWProperty key is build using
     #      <registry name>.<obj id>.<property id>

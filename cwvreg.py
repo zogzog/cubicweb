@@ -16,6 +16,7 @@ from rql import RQLHelper
 from cubicweb import (ETYPE_NAME_MAP, Binary, UnknownProperty, UnknownEid,
                       ObjectNotFound, NoSelectableObject, RegistryNotFound,
                       RegistryOutOfDate)
+from cubicweb.utils import dump_class
 from cubicweb.vregistry import VRegistry, Registry
 from cubicweb.rtags import RTAGS
 
@@ -88,6 +89,8 @@ VRegistry.REGISTRY_FACTORY[None] = CWRegistry
 class ETypeRegistry(CWRegistry):
 
     def initialization_completed(self):
+        """on registration completed, clear etype_class internal cache
+        """
         super(ETypeRegistry, self).initialization_completed()
         # clear etype cache if you don't want to run into deep weirdness
         clear_cache(self, 'etype_class')
@@ -104,30 +107,43 @@ class ETypeRegistry(CWRegistry):
     @cached
     def etype_class(self, etype):
         """return an entity class for the given entity type.
-        Try to find out a specific class for this kind of entity or
-        default to a dump of the class registered for 'Any'
+
+        Try to find out a specific class for this kind of entity or default to a
+        dump of the nearest parent class (in yams inheritance) registered.
+
+        Fall back to 'Any' if not yams parent class found.
         """
         etype = str(etype)
         if etype == 'Any':
             return self.select('Any', 'Any')
         eschema = self.schema.eschema(etype)
         baseschemas = [eschema] + eschema.ancestors()
-        # browse ancestors from most specific to most generic and
-        # try to find an associated custom entity class
+        # browse ancestors from most specific to most generic and try to find an
+        # associated custom entity class
         for baseschema in baseschemas:
             try:
                 btype = ETYPE_NAME_MAP[baseschema]
             except KeyError:
                 btype = str(baseschema)
             try:
-                cls = self.select(btype, etype)
+                objects = self[btype]
+                assert len(objects) == 1, objects
+                cls = objects[0]
                 break
             except ObjectNotFound:
                 pass
         else:
             # no entity class for any of the ancestors, fallback to the default
             # one
-            cls = self.select('Any', etype)
+            objects = self['Any']
+            assert len(objects) == 1, objects
+            cls = objects[0]
+        if cls.id == etype:
+            cls.__initialize__()
+            return cls
+        cls = dump_class(cls, etype)
+        cls.id = etype
+        cls.__initialize__()
         return cls
 
 VRegistry.REGISTRY_FACTORY['etypes'] = ETypeRegistry
