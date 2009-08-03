@@ -263,13 +263,16 @@ class CWUserTC(BaseEntityTC):
 class InterfaceTC(EnvBasedTC):
 
     def test_nonregr_subclasses_and_mixins_interfaces(self):
+        self.failUnless(implements(CWUser, IWorkflowable))
         class MyUser(CWUser):
             __implements__ = (IMileStone,)
         self.vreg._loadedmods[__name__] = {}
         self.vreg.register_appobject_class(MyUser)
-        self.failUnless(implements(CWUser, IWorkflowable))
-        self.failUnless(implements(MyUser, IMileStone))
-        self.failUnless(implements(MyUser, IWorkflowable))
+        self.vreg['etypes'].initialization_completed()
+        MyUser_ = self.vreg['etypes'].etype_class('CWUser')
+        self.failUnless(MyUser is MyUser_)
+        self.failUnless(implements(MyUser_, IMileStone))
+        self.failUnless(implements(MyUser_, IWorkflowable))
 
 
 class SpecializedEntityClassesTC(EnvBasedTC):
