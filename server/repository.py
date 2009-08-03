@@ -1038,13 +1038,15 @@ class Repository(object):
                                     entity.eid, attr, value)
         return entity.eid
 
-    def glob_update_entity(self, session, entity):
+    def glob_update_entity(self, session, entity, edited_attributes):
         """replace an entity in the repository
         the type and the eid of an entity must not be changed
         """
         etype = str(entity.e_schema)
         if server.DEBUG & server.DBG_REPO:
-            print 'UPDATE entity', etype, entity.eid, dict(entity)
+            print 'UPDATE entity', etype, entity.eid, \
+                  dict(entity), edited_attributes
+        entity.edited_attributes = edited_attributes
         entity.check()
         eschema = entity.e_schema
         session.set_entity_cache(entity)
