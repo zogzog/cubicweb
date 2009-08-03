@@ -35,25 +35,20 @@ class FakeConfig(dict, BaseApptestConfiguration):
     def sources(self):
         return {}
 
-class FakeVReg(object):
+class FakeVReg(dict):
     def __init__(self, schema=None, config=None):
         self.schema = schema
         self.config = config or FakeConfig()
         self.properties = {'ui.encoding': 'UTF8',
                            'ui.language': 'en',
                            }
+        self.update({
+            'controllers' : {'login': []},
+            'views' : {},
+            })
 
     def property_value(self, key):
         return self.properties[key]
-
-    _registries = {
-        'controllers' : [Mock(id='view'), Mock(id='login'),
-                         Mock(id='logout'), Mock(id='edit')],
-        'views' : [Mock(id='primary'), Mock(id='oneline'), Mock(id='list')],
-        }
-
-    def registry_objects(self, name, oid=None):
-        return self._registries[name]
 
     def etype_class(self, etype):
         class Entity(dict):

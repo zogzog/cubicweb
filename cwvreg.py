@@ -8,13 +8,14 @@
 __docformat__ = "restructuredtext en"
 _ = unicode
 
-from logilab.common.decorators import cached, clear_cache
+from logilab.common.decorators import cached, clear_cache, monkeypatch
 from logilab.common.deprecation import  deprecated
 
 from rql import RQLHelper
 
-from cubicweb import ETYPE_NAME_MAP, Binary, UnknownProperty, UnknownEid
-from cubicweb.vregistry import VRegistry, ObjectNotFound, NoSelectableObject
+from cubicweb import (ETYPE_NAME_MAP, Binary, UnknownProperty, UnknownEid,
+                      ObjectNotFound, NoSelectableObject, RegistryNotFound)
+from cubicweb.vregistry import VRegistry, Registry
 from cubicweb.rtags import RTAGS
 
 
@@ -39,7 +40,149 @@ def use_interfaces(obj):
         return ()
 
 
-class CubicWebRegistry(VRegistry):
+class CWRegistry(Registry):
+    def __init__(self, vreg):
+        super(CWRegistry, self).__init__(vreg.config)
+        self.vreg = vreg
+        self.schema = vreg.schema
+
+    def initialization_completed(self):
+        # call vreg_initialization_completed on appobjects and print
+        # registry content
+        for appobjects in self.itervalues():
+            for appobject in appobjects:
+                appobject.vreg_initialization_completed()
+
+    def render(self, __oid, req, __fallback_oid=None, rset=None, **kwargs):
+        """select object, or fallback object if specified and the first one
+        isn't selectable, then render it
+        """
+        try:
+            obj = self.select(__oid, req, rset=rset, **kwargs)
+        except NoSelectableObject:
+            if __fallback_oid is None:
+                raise
+            obj = self.select(__fallback_oid, req, **kwargs)
+        return obj.render(**kwargs)
+
+    def select_vobject(self, oid, *args, **kwargs):
+        selected = self.select_object(oid, *args, **kwargs)
+        if selected and selected.propval('visible'):
+            return selected
+        return None
+
+    def possible_vobjects(self, *args, **kwargs):
+        """return an ordered list of possible app objects in a given registry,
+        supposing they support the 'visible' and 'order' properties (as most
+        visualizable objects)
+        """
+        return sorted([x for x in self.possible_objects(*args, **kwargs)
+                       if x.propval('visible')],
+                      key=lambda x: x.propval('order'))
+
+
+VRegistry.REGISTRY_FACTORY[None] = CWRegistry
+
+
+class ETypeRegistry(CWRegistry):
+
+    def initialization_completed(self):
+        super(ETypeRegistry, self).initialization_completed()
+        # clear etype cache if you don't want to run into deep weirdness
+        clear_cache(self, 'etype_class')
+
+    def register(self, obj, **kwargs):
+        oid = kwargs.get('oid') or obj.id
+        if oid != 'Any' and not oid in self.schema:
+            self.error('don\'t register %s, %s type not defined in the '
+                       'schema', obj, obj.id)
+            return
+        kwargs['clear'] = True
+        super(ETypeRegistry, self).register(obj, **kwargs)
+
+    @cached
+    def etype_class(self, etype):
+        """return an entity class for the given entity type.
+        Try to find out a specific class for this kind of entity or
+        default to a dump of the class registered for 'Any'
+        """
+        etype = str(etype)
+        if etype == 'Any':
+            return self.select('Any', 'Any')
+        eschema = self.schema.eschema(etype)
+        baseschemas = [eschema] + eschema.ancestors()
+        # browse ancestors from most specific to most generic and
+        # try to find an associated custom entity class
+        for baseschema in baseschemas:
+            try:
+                btype = ETYPE_NAME_MAP[baseschema]
+            except KeyError:
+                btype = str(baseschema)
+            try:
+                cls = self.select(btype, etype)
+                break
+            except ObjectNotFound:
+                pass
+        else:
+            # no entity class for any of the ancestors, fallback to the default
+            # one
+            cls = self.select('Any', etype)
+        return cls
+
+VRegistry.REGISTRY_FACTORY['etypes'] = ETypeRegistry
+
+
+class ViewsRegistry(CWRegistry):
+
+    def main_template(self, req, oid='main-template', **kwargs):
+        """display query by calling the given template (default to main),
+        and returning the output as a string instead of requiring the [w]rite
+        method as argument
+        """
+        res = self.render(oid, req, **kwargs)
+        if isinstance(res, unicode):
+            return res.encode(req.encoding)
+        assert isinstance(res, str)
+        return res
+
+    def possible_views(self, req, rset=None, **kwargs):
+        """return an iterator on possible views for this result set
+
+        views returned are classes, not instances
+        """
+        for vid, views in self.items():
+            if vid[0] == '_':
+                continue
+            try:
+                view = self.select_best(views, req, rset=rset, **kwargs)
+                if view.linkable():
+                    yield view
+            except NoSelectableObject:
+                continue
+            except Exception:
+                self.exception('error while trying to select %s view for %s',
+                               vid, rset)
+
+VRegistry.REGISTRY_FACTORY['views'] = ViewsRegistry
+
+
+class ActionsRegistry(CWRegistry):
+
+    def possible_actions(self, req, rset=None, **kwargs):
+        if rset is None:
+            actions = self.possible_vobjects(req, rset=rset, **kwargs)
+        else:
+            actions = rset.possible_actions(**kwargs) # cached implementation
+        result = {}
+        for action in actions:
+            result.setdefault(action.category, []).append(action)
+        return result
+
+VRegistry.REGISTRY_FACTORY['actions'] = ActionsRegistry
+
+
+
+class CubicWebVRegistry(VRegistry):
     """Central registry for the cubicweb instance, extending the generic
     VRegistry with some cubicweb specific stuff.
 
@@ -65,28 +208,33 @@ class CubicWebRegistry(VRegistry):
         if initlog:
             # first init log service
             config.init_log(debug=debug)
-        super(CubicWebRegistry, self).__init__(config)
+        super(CubicWebVRegistry, self).__init__(config)
         self.schema = None
         self.reset()
         self.initialized = False
 
+    def setdefault(self, regid):
+        try:
+            return self[regid]
+        except RegistryNotFound:
+            self[regid] = self.registry_class(regid)(self)
+            return self[regid]
+
     def items(self):
-        return [item for item in self._registries.items()
+        return [item for item in super(CubicWebVRegistry, self).items()
                 if not item[0] in ('propertydefs', 'propertyvalues')]
 
     def values(self):
-        return [value for key, value in self._registries.items()
-                if not key in ('propertydefs', 'propertyvalues')]
+        return [value for key, value in self.items()]
 
     def reset(self):
-        self._registries = {}
-        self._lastmodifs = {}
+        super(CubicWebVRegistry, self).reset()
         self._needs_iface = {}
         # two special registries, propertydefs which care all the property
         # definitions, and propertyvals which contains values for those
         # properties
-        self._registries['propertydefs'] = {}
-        self._registries['propertyvalues'] = self.eprop_values = {}
+        self['propertydefs'] = {}
+        self['propertyvalues'] = self.eprop_values = {}
         for key, propdef in self.config.eproperty_definitions():
             self.register_property(key, **propdef)
 
@@ -107,9 +255,7 @@ class CubicWebRegistry(VRegistry):
         tests
         """
         self.schema = schema
-        for registry, regcontent in self._registries.items():
-            if registry in ('propertydefs', 'propertyvalues'):
-                continue
+        for registry, regcontent in self.items():
             for objects in regcontent.values():
                 for obj in objects:
                     obj.schema = schema
@@ -125,13 +271,7 @@ class CubicWebRegistry(VRegistry):
             self._needs_iface[obj] = ifaces
 
     def register(self, obj, **kwargs):
-        if kwargs.get('registryname', obj.__registry__) == 'etypes':
-            if obj.id != 'Any' and not obj.id in self.schema:
-                self.error('don\'t register %s, %s type not defined in the '
-                           'schema', obj, obj.id)
-                return
-            kwargs['clear'] = True
-        super(CubicWebRegistry, self).register(obj, **kwargs)
+        super(CubicWebVRegistry, self).register(obj, **kwargs)
         # XXX bw compat
         ifaces = use_interfaces(obj)
         if ifaces:
@@ -143,25 +283,18 @@ class CubicWebRegistry(VRegistry):
         for cubesdir in self.config.cubes_search_path():
             if cubesdir != self.config.CUBES_DIR:
                 extrapath[cubesdir] = 'cubes'
-        if super(CubicWebRegistry, self).register_objects(path, force_reload,
+        if super(CubicWebVRegistry, self).register_objects(path, force_reload,
                                                           extrapath):
             self.initialization_completed()
-            # call vreg_initialization_completed on appobjects and print
-            # registry content
-            for registry, objects in self.items():
-                self.debug('available in registry %s: %s', registry,
-                           sorted(objects))
-                for appobjects in objects.itervalues():
-                    for appobject in appobjects:
-                        appobject.vreg_initialization_completed()
             # don't check rtags if we don't want to cleanup_interface_sobjects
             for rtag in RTAGS:
                 rtag.init(self.schema,
                           check=self.config.cleanup_interface_sobjects)
 
     def initialization_completed(self):
-        # clear etype cache if you don't want to run into deep weirdness
-        clear_cache(self, 'etype_class')
+        for regname, reg in self.items():
+            self.debug('available in registry %s: %s', regname, sorted(reg))
+            reg.initialization_completed()
         # we may want to keep interface dependent objects (e.g.for i18n
         # catalog generation)
         if self.config.cleanup_interface_sobjects:
@@ -169,14 +302,14 @@ class CubicWebRegistry(VRegistry):
             implemented_interfaces = set()
             if 'Any' in self.get('etypes', ()):
                 for etype in self.schema.entities():
-                    cls = self.etype_class(etype)
+                    cls = self['etypes'].etype_class(etype)
                     for iface in cls.__implements__:
                         implemented_interfaces.update(iface.__mro__)
                     implemented_interfaces.update(cls.__mro__)
             for obj, ifaces in self._needs_iface.items():
                 ifaces = frozenset(isinstance(iface, basestring)
                                    and iface in self.schema
-                                   and self.etype_class(iface)
+                                   and self['etypes'].etype_class(iface)
                                    or iface
                                    for iface in ifaces)
                 if not ('Any' in ifaces or ifaces & implemented_interfaces):
@@ -187,122 +320,55 @@ class CubicWebRegistry(VRegistry):
         # objects on automatic reloading
         self._needs_iface.clear()
 
-    @cached
-    def etype_class(self, etype):
-        """return an entity class for the given entity type.
-        Try to find out a specific class for this kind of entity or
-        default to a dump of the class registered for 'Any'
-        """
-        etype = str(etype)
-        if etype == 'Any':
-            return self.select('etypes', 'Any', 'Any')
-        eschema = self.schema.eschema(etype)
-        baseschemas = [eschema] + eschema.ancestors()
-        # browse ancestors from most specific to most generic and
-        # try to find an associated custom entity class
-        for baseschema in baseschemas:
-            try:
-                btype = ETYPE_NAME_MAP[baseschema]
-            except KeyError:
-                btype = str(baseschema)
-            try:
-                cls = self.select('etypes', btype, etype)
-                break
-            except ObjectNotFound:
-                pass
-        else:
-            # no entity class for any of the ancestors, fallback to the default
-            # one
-            cls = self.select('etypes', 'Any', etype)
-        return cls
-
-    def render(self, __oid, req, __fallback_oid=None, __registry='views',
-               rset=None, **kwargs):
-        """select object, or fallback object if specified and the first one
-        isn't selectable, then render it
-        """
+    def parse(self, session, rql, args=None):
+        rqlst = self.rqlhelper.parse(rql)
+        def type_from_eid(eid, session=session):
+            return session.describe(eid)[0]
         try:
-            obj = self.select(__registry, __oid, req, rset=rset, **kwargs)
-        except NoSelectableObject:
-            if __fallback_oid is None:
-                raise
-            obj = self.select(__registry, __fallback_oid, req, rset=rset,
-                              **kwargs)
-        return obj.render(**kwargs)
+            self.rqlhelper.compute_solutions(rqlst, {'eid': type_from_eid}, args)
+        except UnknownEid:
+            for select in rqlst.children:
+                select.solutions = []
+        return rqlst
 
+    @property
+    @cached
+    def rqlhelper(self):
+        return RQLHelper(self.schema,
+                         special_relations={'eid': 'uid', 'has_text': 'fti'})
+
+
+    @deprecated('use vreg["etypes"].etype_class(etype)')
+    def etype_class(self, etype):
+        return self["etypes"].etype_class(etype)
+
+    @deprecated('use vreg["views"].main_template(*args, **kwargs)')
     def main_template(self, req, oid='main-template', **context):
-        """display query by calling the given template (default to main),
-        and returning the output as a string instead of requiring the [w]rite
-        method as argument
-        """
-        res = self.render(oid, req, **context)
-        if isinstance(res, unicode):
-            return res.encode(req.encoding)
-        assert isinstance(res, str)
-        return res
+        return self["views"].main_template(req, oid, **context)
 
-    def select_vobject(self, registry, oid, *args, **kwargs):
-        selected = self.select_object(registry, oid, *args, **kwargs)
-        if selected and selected.propval('visible'):
-            return selected
-        return None
-
+    @deprecated('use vreg[registry].possible_vobjects(*args, **kwargs)')
     def possible_vobjects(self, registry, *args, **kwargs):
-        """return an ordered list of possible app objects in a given registry,
-        supposing they support the 'visible' and 'order' properties (as most
-        visualizable objects)
-        """
-        return [x for x in sorted(self.possible_objects(registry, *args, **kwargs),
-                                  key=lambda x: x.propval('order'))
-                if x.propval('visible')]
+        return self[registry].possible_vobjects(*args, **kwargs)
 
+    @deprecated('use vreg["actions"].possible_actions(*args, **kwargs)')
     def possible_actions(self, req, rset=None, **kwargs):
-        if rset is None:
-            actions = self.possible_vobjects('actions', req, rset=rset, **kwargs)
-        else:
-            actions = rset.possible_actions(**kwargs) # cached implementation
-        result = {}
-        for action in actions:
-            result.setdefault(action.category, []).append(action)
-        return result
-
-    def possible_views(self, req, rset=None, **kwargs):
-        """return an iterator on possible views for this result set
-
-        views returned are classes, not instances
-        """
-        for vid, views in self.registry('views').items():
-            if vid[0] == '_':
-                continue
-            try:
-                view = self.select_best(views, req, rset=rset, **kwargs)
-                if view.linkable():
-                    yield view
-            except NoSelectableObject:
-                continue
-            except Exception:
-                self.exception('error while trying to select %s view for %s',
-                               vid, rset)
+        return self["actions"].possible_actions(req, rest=rset, **kwargs)
 
     @deprecated("use .select_object('boxes', ...)")
     def select_box(self, oid, *args, **kwargs):
-        """return the most specific view according to the result set"""
-        return self.select_object('boxes', oid, *args, **kwargs)
+        return self['boxes'].select_object(oid, *args, **kwargs)
 
     @deprecated("use .select_object('components', ...)")
     def select_component(self, cid, *args, **kwargs):
-        """return the most specific component according to the result set"""
-        return self.select_object('components', cid, *args, **kwargs)
+        return self['components'].select_object(cid, *args, **kwargs)
 
     @deprecated("use .select_object('actions', ...)")
     def select_action(self, oid, *args, **kwargs):
-        """return the most specific view according to the result set"""
-        return self.select_object('actions', oid, *args, **kwargs)
+        return self['actions'].select_object(oid, *args, **kwargs)
 
     @deprecated("use .select('views', ...)")
     def select_view(self, __vid, req, rset=None, **kwargs):
-        """return the most specific view according to the result set"""
-        return self.select('views', __vid, req, rset=rset, **kwargs)
+        return self['views'].select(__vid, req, rset=rset, **kwargs)
 
     # properties handling #####################################################
 
@@ -316,7 +382,7 @@ class CubicWebRegistry(VRegistry):
     def register_property(self, key, type, help, default=None, vocabulary=None,
                           sitewide=False):
         """register a given property"""
-        properties = self._registries['propertydefs']
+        properties = self['propertydefs']
         assert type in YAMS_TO_PY
         properties[key] = {'type': type, 'vocabulary': vocabulary,
                            'default': default, 'help': help,
@@ -328,7 +394,7 @@ class CubicWebRegistry(VRegistry):
         boolean)
         """
         try:
-            return self._registries['propertydefs'][key]
+            return self['propertydefs'][key]
         except KeyError:
             if key.startswith('system.version.'):
                 soft = key.split('.')[-1]
@@ -339,9 +405,9 @@ class CubicWebRegistry(VRegistry):
 
     def property_value(self, key):
         try:
-            return self._registries['propertyvalues'][key]
+            return self['propertyvalues'][key]
         except KeyError:
-            return self._registries['propertydefs'][key]['default']
+            return self['propertydefs'][key]['default']
 
     def typed_value(self, key, value):
         """value is an unicode string, return it correctly typed. Let potential
@@ -364,7 +430,7 @@ class CubicWebRegistry(VRegistry):
         """init the property values registry using the given set of couple (key, value)
         """
         self.initialized = True
-        values = self._registries['propertyvalues']
+        values = self['propertyvalues']
         for key, val in propvalues:
             try:
                 values[key] = self.typed_value(key, val)
@@ -374,61 +440,6 @@ class CubicWebRegistry(VRegistry):
             except UnknownProperty, ex:
                 self.warning('%s (you should probably delete that property '
                              'from the database)', ex)
-
-    def parse(self, session, rql, args=None):
-        rqlst = self.rqlhelper.parse(rql)
-        def type_from_eid(eid, session=session):
-            return session.describe(eid)[0]
-        try:
-            self.rqlhelper.compute_solutions(rqlst, {'eid': type_from_eid}, args)
-        except UnknownEid:
-            for select in rqlst.children:
-                select.solutions = []
-        return rqlst
-
-    @property
-    @cached
-    def rqlhelper(self):
-        return RQLHelper(self.schema,
-                         special_relations={'eid': 'uid', 'has_text': 'fti'})
-
-
-class MulCnxCubicWebRegistry(CubicWebRegistry):
-    """special registry to be used when an application has to deal with
-    connections to differents repository. This class add some additional wrapper
-    trying to hide buggy class attributes since classes are not designed to be
-    shared among multiple registries.
-    """
-    def etype_class(self, etype):
-        """return an entity class for the given entity type.
-        Try to find out a specific class for this kind of entity or
-        default to a dump of the class registered for 'Any'
-        """
-        usercls = super(MulCnxCubicWebRegistry, self).etype_class(etype)
-        if etype == 'Any':
-            return usercls
-        usercls.e_schema = self.schema.eschema(etype)
-        return usercls
-
-    def select_best(self, vobjects, *args, **kwargs):
-        """return an instance of the most specific object according
-        to parameters
-
-        raise NoSelectableObject if no object apply
-        """
-        for vobjectcls in vobjects:
-            self._fix_cls_attrs(vobjectcls)
-        selected = super(MulCnxCubicWebRegistry, self).select_best(
-            vobjects, *args, **kwargs)
-        # redo the same thing on the instance so it won't use equivalent class
-        # attributes (which may change)
-        self._fix_cls_attrs(selected)
-        return selected
-
-    def _fix_cls_attrs(self, vobject):
-        vobject.vreg = self
-        vobject.schema = self.schema
-        vobject.config = self.config
 
 
 from datetime import datetime, date, time, timedelta

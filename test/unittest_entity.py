@@ -121,9 +121,9 @@ class EntityTC(EnvBasedTC):
 
     def test_fetch_rql(self):
         user = self.user()
-        Personne = self.vreg.etype_class('Personne')
-        Societe = self.vreg.etype_class('Societe')
-        Note = self.vreg.etype_class('Note')
+        Personne = self.vreg['etypes'].etype_class('Personne')
+        Societe = self.vreg['etypes'].etype_class('Societe')
+        Note = self.vreg['etypes'].etype_class('Note')
         peschema = Personne.e_schema
         seschema = Societe.e_schema
         peschema.subject_relation('travaille').set_rproperty(peschema, seschema, 'cardinality', '1*')
@@ -175,8 +175,8 @@ class EntityTC(EnvBasedTC):
 
     def test_related_rql(self):
         from cubicweb.entities import fetch_config
-        Personne = self.vreg.etype_class('Personne')
-        Note = self.vreg.etype_class('Note')
+        Personne = self.vreg['etypes'].etype_class('Personne')
+        Note = self.vreg['etypes'].etype_class('Note')
         Personne.fetch_attrs, Personne.fetch_order = fetch_config(('nom', 'type'))
         Note.fetch_attrs, Note.fetch_order = fetch_config(('type',))
         aff = self.add_entity('Personne', nom=u'pouet')

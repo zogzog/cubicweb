@@ -276,8 +276,8 @@ class SpecializedEntityClassesTC(EnvBasedTC):
 
     def select_eclass(self, etype):
         # clear selector cache
-        clear_cache(self.vreg, 'etype_class')
-        return self.vreg.etype_class(etype)
+        clear_cache(self.vreg['etypes'], 'etype_class')
+        return self.vreg['etypes'].etype_class(etype)
 
     def test_etype_class_selection_and_specialization(self):
         # no specific class for Subdivisions, the default one should be selected

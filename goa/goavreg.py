@@ -11,7 +11,7 @@ from os import listdir
 from os.path import join, isdir
 
 from cubicweb import CW_SOFTWARE_ROOT
-from cubicweb.cwvreg import CubicWebRegistry
+from cubicweb.cwvreg import CubicWebVRegistry
 
 
 def _pkg_name(cube, module):
@@ -19,7 +19,7 @@ def _pkg_name(cube, module):
         return module
     return 'cubes.%s.%s' % (cube, module)
 
-class GAERegistry(CubicWebRegistry):
+class GAEVRegistry(CubicWebVRegistry):
 
     def set_schema(self, schema):
         """disable reload hooks of cubicweb registry set_schema method"""

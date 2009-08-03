@@ -179,9 +179,9 @@ class FieldsForm(form.Form):
         return renderer.render(self, values)
 
     def form_default_renderer(self):
-        return self.vreg.select('formrenderers', self.form_renderer_id,
-                                self.req, rset=self.rset,
-                                row=self.row, col=self.col)
+        return self.vreg['formrenderers'].select(self.form_renderer_id,
+                                                self.req, rset=self.rset,
+                                                row=self.row, col=self.col)
 
     def form_build_context(self, rendervalues=None):
         """build form context values (the .context attribute which is a
@@ -366,9 +366,9 @@ class EntityFieldsForm(FieldsForm):
         return value
 
     def form_default_renderer(self):
-        return self.vreg.select('formrenderers', self.form_renderer_id,
-                                self.req, rset=self.rset, row=self.row,
-                                col=self.col, entity=self.edited_entity)
+        return self.vreg['formrenderers'].select(
+            self.form_renderer_id, self.req, rset=self.rset, row=self.row,
+            col=self.col, entity=self.edited_entity)
 
     def form_build_context(self, values=None):
         """overriden to add edit[s|o] hidden fields and to ensure schema fields

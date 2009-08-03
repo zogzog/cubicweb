@@ -100,7 +100,8 @@ class ViewController(Controller):
         self.add_to_breadcrumbs(view)
         self.validate_cache(view)
         template = self.appli.main_template_id(self.req)
-        return self.vreg.main_template(self.req, template, rset=rset, view=view)
+        return self.vreg['views'].main_template(self.req, template,
+                                                rset=rset, view=view)
 
     def _select_view_and_rset(self, rset):
         req = self.req
@@ -119,12 +120,12 @@ class ViewController(Controller):
                 req.set_message(req._("error while handling __method: %s") % req._(ex))
         vid = req.form.get('vid') or vid_from_rset(req, rset, self.schema)
         try:
-            view = self.vreg.select('views', vid, req, rset=rset)
+            view = self.vreg['views'].select(vid, req, rset=rset)
         except ObjectNotFound:
             self.warning("the view %s could not be found", vid)
             req.set_message(req._("The view %s could not be found") % vid)
             vid = vid_from_rset(req, rset, self.schema)
-            view = self.vreg.select('views', vid, req, rset=rset)
+            view = self.vreg['views'].select(vid, req, rset=rset)
         except NoSelectableObject:
             if rset:
                 req.set_message(req._("The view %s can not be applied to this query") % vid)
@@ -132,7 +133,7 @@ class ViewController(Controller):
                 req.set_message(req._("You have no access to this view or it's not applyable to current data"))
             self.warning("the view %s can not be applied to this query", vid)
             vid = vid_from_rset(req, rset, self.schema)
-            view = self.vreg.select('views', vid, req, rset=rset)
+            view = self.vreg['views'].select(vid, req, rset=rset)
         return view, rset
 
     def add_to_breadcrumbs(self, view):
@@ -183,7 +184,7 @@ def _validation_error(req, ex):
 def _validate_form(req, vreg):
     # XXX should use the `RemoteCallFailed` mechanism
     try:
-        ctrl = vreg.select('controllers', 'edit', req=req)
+        ctrl = vreg['controllers'].select('edit', req=req)
     except NoSelectableObject:
         return (False, {None: req._('not authorized')})
     try:
@@ -309,10 +310,10 @@ class JSonController(Controller):
             rset = None
         vid = req.form.get('vid') or vid_from_rset(req, rset, self.schema)
         try:
-            view = self.vreg.select('views', vid, req, rset=rset)
+            view = self.vreg['views'].select(vid, req, rset=rset)
         except NoSelectableObject:
             vid = req.form.get('fallbackvid', 'noresult')
-            view = self.vreg.select('views', vid, req, rset=rset)
+            view = self.vreg['views'].select(vid, req, rset=rset)
         divid = req.form.get('divid', 'pageContent')
         # we need to call pagination before with the stream set
         stream = view.set_stream()
@@ -339,10 +340,10 @@ class JSonController(Controller):
     @xhtmlize
     def js_prop_widget(self, propkey, varname, tabindex=None):
         """specific method for CWProperty handling"""
-        entity = self.vreg.etype_class('CWProperty')(self.req, None, None)
+        entity = self.vreg['etypes'].etype_class('CWProperty')(self.req)
         entity.eid = varname
         entity['pkey'] = propkey
-        form = self.vreg.select('forms', 'edition', self.req, entity=entity)
+        form = self.vreg['forms'].select('edition', self.req, entity=entity)
         form.form_build_context()
         vfield = form.field_by_name('value')
         renderer = FormRenderer(self.req)
@@ -355,7 +356,7 @@ class JSonController(Controller):
             rset = self._exec(rql)
         else:
             rset = None
-        comp = self.vreg.select(registry, compid, self.req, rset=rset)
+        comp = self.vreg[registry].select(compid, self.req, rset=rset)
         if extraargs is None:
             extraargs = {}
         else: # we receive unicode keys which is not supported by the **syntax
@@ -367,8 +368,9 @@ class JSonController(Controller):
     @check_pageid
     @xhtmlize
     def js_inline_creation_form(self, peid, ttype, rtype, role):
-        view = self.vreg.select('views', 'inline-creation', self.req,
-                                etype=ttype, peid=peid, rtype=rtype, role=role)
+        view = self.vreg['views'].select('inline-creation', self.req,
+                                         etype=ttype, peid=peid, rtype=rtype,
+                                         role=role)
         return view.render(etype=ttype, peid=peid, rtype=rtype, role=role)
 
     @jsonize

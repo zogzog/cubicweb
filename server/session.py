@@ -142,10 +142,6 @@ class Session(RequestSessionMixIn):
         """return the original parent session if any, else self"""
         return self
 
-    def etype_class(self, etype):
-        """return an entity class for the given entity type"""
-        return self.vreg.etype_class(etype)
-
     def system_sql(self, sql, args=None, rollback_on_failure=True):
         """return a sql cursor on the system database"""
         if not sql.split(None, 1)[0].upper() == 'SELECT':
@@ -554,6 +550,11 @@ class Session(RequestSessionMixIn):
                         row_descr[index] = row[index] = None
             description.append(tuple(row_descr))
         return description
+
+    @deprecated("use vreg['etypes'].etype_class(etype)")
+    def etype_class(self, etype):
+        """return an entity class for the given entity type"""
+        return self.vreg['etypes'].etype_class(etype)
 
     @deprecated('use direct access to session.transaction_data')
     def query_data(self, key, default=None, setdefault=False, pop=False):

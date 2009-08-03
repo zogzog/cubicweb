@@ -165,7 +165,7 @@ class ImplementsMixIn(object):
             if isinstance(iface, basestring):
                 # entity type
                 try:
-                    iface = vreg.etype_class(iface)
+                    iface = vreg['etypes'].etype_class(iface)
                 except KeyError:
                     continue # entity type not in the schema
             score += score_interface(cls_or_inst, cls, iface)
@@ -212,7 +212,7 @@ class EClassSelector(Selector):
     def score(self, cls, req, etype):
         if etype in BASE_TYPES:
             return 0
-        return self.score_class(cls.vreg.etype_class(etype), req)
+        return self.score_class(cls.vreg['etypes'].etype_class(etype), req)
 
     def score_class(self, eclass, req):
         raise NotImplementedError()
@@ -570,9 +570,9 @@ class appobject_selectable(Selector):
         self.registry = registry
         self.oid = oid
 
-    def __call__(self, cls, req, rset=None, *args, **kwargs):
+    def __call__(self, cls, req, **kwargs):
         try:
-            cls.vreg.select(self.registry, self.oid, req, rset=rset, **kwargs)
+            cls.vreg[self.registry].select(self.oid, req, **kwargs)
             return 1
         except NoSelectableObject:
             return 0
@@ -630,7 +630,7 @@ class specified_etype_implements(implements):
                 req.form['etype'] = etype
             except KeyError:
                 return 0
-        return self.score_class(cls.vreg.etype_class(etype), req)
+        return self.score_class(cls.vreg['etypes'].etype_class(etype), req)
 
 
 class entity_implements(ImplementsMixIn, EntitySelector):

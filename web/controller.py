@@ -92,7 +92,7 @@ class Controller(AppObject):
             self.ensure_ro_rql(rql)
             if not isinstance(rql, unicode):
                 rql = unicode(rql, self.req.encoding)
-            pp = self.vreg.select_object('components', 'magicsearch', self.req)
+            pp = self.vreg['components'].select_object('magicsearch', self.req)
             if pp is not None:
                 self.rset = pp.process_query(rql, self.req)
         return self.rset

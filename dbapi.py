@@ -16,9 +16,10 @@ from time import time, clock
 from itertools import count
 
 from logilab.common.logging_ext import set_log_methods
+from logilab.common.decorators import monkeypatch
+
 from cubicweb import ETYPE_NAME_MAP, ConnectionError, RequestSessionMixIn
-from cubicweb.cwvreg import CubicWebRegistry, MulCnxCubicWebRegistry
-from cubicweb.cwconfig import CubicWebNoAppConfiguration
+from cubicweb import cwvreg, cwconfig
 
 _MARKER = object()
 
@@ -27,6 +28,54 @@ def _fake_property_value(self, name):
         return super(dbapi.DBAPIRequest, self).property_value(name)
     except KeyError:
         return ''
+
+def _fix_cls_attrs(reg, vobject):
+    vobject.vreg = reg.vreg
+    vobject.schema = reg.schema
+    vobject.config = reg.config
+
+def multiple_connections_fix():
+    """some monkey patching necessary when an application has to deal with
+    several connections to different repositories. It tries to hide buggy class
+    attributes since classes are not designed to be shared among multiple
+    registries.
+    """
+    defaultcls = cwvreg.VRegistry.REGISTRY_FACTORY[None]
+    orig_select_best = defaultcls.orig_select_best = defaultcls.select_best
+    @monkeypatch(defaultcls)
+    def select_best(self, vobjects, *args, **kwargs):
+        """return an instance of the most specific object according
+        to parameters
+
+        raise NoSelectableObject if no object apply
+        """
+        for vobjectcls in vobjects:
+            _fix_cls_attrs(self, vobjectcls)
+        selected = orig_select_best(self, vobjects, *args, **kwargs)
+        # redo the same thing on the instance so it won't use equivalent class
+        # attributes (which may change)
+        _fix_cls_attrs(self, selected)
+        return selected
+
+    etypescls = cwvreg.VRegistry.REGISTRY_FACTORY['etypes']
+    orig_etype_class = etypescls.orig_etype_class = etypescls.etype_class
+    @monkeypatch(defaultcls)
+    def etype_class(self, etype):
+        """return an entity class for the given entity type.
+        Try to find out a specific class for this kind of entity or
+        default to a dump of the class registered for 'Any'
+        """
+        usercls = orig_etype_class(self, etype)
+        if etype == 'Any':
+            return usercls
+        usercls.e_schema = self.schema.eschema(etype)
+        return usercls
+
+def multiple_connections_unfix():
+    defaultcls = cwvreg.VRegistry.REGISTRY_FACTORY[None]
+    defaultcls.select_best = defaultcls.orig_select_best
+    etypescls = cwvreg.VRegistry.REGISTRY_FACTORY['etypes']
+    etypescls.etype_class = etypescls.orig_etype_class
 
 class ConnectionProperties(object):
     def __init__(self, cnxtype=None, lang=None, close=True, log=False):
@@ -88,12 +137,11 @@ def connect(database=None, login=None, password=None, host=None,
     """Constructor for creating a connection to the CubicWeb repository.
     Returns a Connection object.
 
-    When method is 'pyro' and setvreg is True, use a special registry class
-    (MulCnxCubicWebRegistry) made to deal with connections to differents instances
-    in the same process unless specified otherwise by setting the mulcnx to
-    False.
+    When method is 'pyro', setvreg is True, try to deal with connections to
+    differents instances in the same process unless specified otherwise by
+    setting the mulcnx to False.
     """
-    config = CubicWebNoAppConfiguration()
+    config = cwconfig.CubicWebNoAppConfiguration()
     if host:
         config.global_set_option('pyro-ns-host', host)
     if port:
@@ -107,9 +155,8 @@ def connect(database=None, login=None, password=None, host=None,
         vreg = repo.vreg
     elif setvreg:
         if mulcnx:
-            vreg = MulCnxCubicWebRegistry(config, initlog=initlog)
-        else:
-            vreg = CubicWebRegistry(config, initlog=initlog)
+            multiple_connections_fix()
+        vreg = cwvreg.CubicWebVRegistry(config, initlog=initlog)
         schema = repo.get_schema()
         for oldetype, newetype in ETYPE_NAME_MAP.items():
             if oldetype in schema:
@@ -126,7 +173,7 @@ def in_memory_cnx(config, login, password):
     """usefull method for testing and scripting to get a dbapi.Connection
     object connected to an in-memory repository instance
     """
-    if isinstance(config, CubicWebRegistry):
+    if isinstance(config, cwvreg.CubicWebVRegistry):
         vreg = config
         config = None
     else:
@@ -476,8 +523,9 @@ class Connection(object):
         if req is None:
             req = self.request()
         rset = req.eid_rset(eid, 'CWUser')
-        user = self.vreg.etype_class('CWUser')(req, rset, row=0, groups=groups,
-                                               properties=properties)
+        user = self.vreg['etypes'].etype_class('CWUser')(req, rset, row=0,
+                                                         groups=groups,
+                                                         properties=properties)
         user['login'] = login # cache login
         return user
 

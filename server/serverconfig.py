@@ -265,7 +265,7 @@ notified of every changes.',
     def load_hooks(self, vreg):
         hooks = {}
         try:
-            apphookdefs = vreg.registry_objects('hooks')
+            apphookdefs = vreg['hooks'].all_objects()
         except RegistryNotFound:
             return hooks
         for hookdef in apphookdefs:

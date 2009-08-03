@@ -71,9 +71,8 @@ class PrimaryView(EntityView):
 
     def content_navigation_components(self, context):
         self.w(u'<div class="%s">' % context)
-        for comp in self.vreg.possible_vobjects('contentnavigation', self.req,
-                                                rset=self.rset, row=self.row,
-                                                view=self, context=context):
+        for comp in self.vreg['contentnavigation'].possible_vobjects(
+            self.req, rset=self.rset, row=self.row, view=self, context=context):
             try:
                 comp.render(w=self.w, row=self.row, view=self)
             except NotImplementedError:
@@ -148,9 +147,9 @@ class PrimaryView(EntityView):
             label = display_name(self.req, rschema.type, role)
             vid = dispctrl.get('vid', 'sidebox')
             sideboxes.append( (label, rset, vid) )
-        sideboxes += self.vreg.possible_vobjects('boxes', self.req, rset=self.rset,
-                                                 row=self.row, view=self,
-                                                 context='incontext')
+        sideboxes += self.vreg['boxes'].possible_vobjects(
+            self.req, rset=self.rset, row=self.row, view=self,
+            context='incontext')
         return sideboxes
 
     def _section_def(self, entity, where):

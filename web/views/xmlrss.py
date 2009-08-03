@@ -135,8 +135,8 @@ class RSSIconBox(box.BoxTemplate):
         except KeyError:
             self.error('missing RSS_LOGO external resource')
             return
-        urlgetter = self.vreg.select('components', 'rss_feed_url',
-                                     self.req, rset=self.rset)
+        urlgetter = self.vreg['components'].select('rss_feed_url', self.req,
+                                                   rset=self.rset)
         url = urlgetter.feed_url()
         self.w(u'<a href="%s"><img src="%s" alt="rss"/></a>\n' % (xml_escape(url), rss))
 

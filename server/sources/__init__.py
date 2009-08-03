@@ -325,7 +325,7 @@ class AbstractSource(object):
         This method must return the an Entity instance representation of this
         entity.
         """
-        entity = self.repo.vreg.etype_class(etype)(session, None)
+        entity = self.repo.vreg['etypes'].etype_class(etype)(session)
         entity.set_eid(eid)
         return entity
 

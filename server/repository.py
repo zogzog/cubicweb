@@ -33,7 +33,7 @@ from cubicweb import (CW_SOFTWARE_ROOT, UnknownEid, AuthenticationError,
                       BadConnectionId, Unauthorized, ValidationError,
                       ExecutionError, typed_eid,
                       CW_MIGRATION_MAP)
-from cubicweb.cwvreg import CubicWebRegistry
+from cubicweb.cwvreg import CubicWebVRegistry
 from cubicweb.schema import VIRTUAL_RTYPES, CubicWebSchema
 from cubicweb import server
 from cubicweb.server.utils import RepoThread, LoopTask
@@ -137,7 +137,7 @@ class Repository(object):
     def __init__(self, config, vreg=None, debug=False):
         self.config = config
         if vreg is None:
-            vreg = CubicWebRegistry(config, debug)
+            vreg = CubicWebVRegistry(config, debug)
         self.vreg = vreg
         self.pyro_registered = False
         self.info('starting repository from %s', self.config.apphome)
@@ -428,7 +428,7 @@ class Repository(object):
 
     def _build_user(self, session, eid):
         """return a CWUser entity for user with the given eid"""
-        cls = self.vreg.etype_class('CWUser')
+        cls = self.vreg['etypes'].etype_class('CWUser')
         rql = cls.fetch_rql(session.user, ['X eid %(x)s'])
         rset = session.execute(rql, {'x': eid}, 'x')
         assert len(rset) == 1, rset
@@ -532,7 +532,7 @@ class Repository(object):
                                    {'login': login})):
                 raise ValidationError(None, {'login': errmsg % login})
             # we have to create the user
-            user = self.vreg.etype_class('CWUser')(session, None)
+            user = self.vreg['etypes'].etype_class('CWUser')(session, None)
             if isinstance(password, unicode):
                 # password should *always* be utf8 encoded
                 password = password.encode('UTF8')

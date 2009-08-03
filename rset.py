@@ -83,8 +83,8 @@ class ResultSet(object):
         try:
             return self._rsetactions[key]
         except KeyError:
-            actions = self.vreg.possible_vobjects('actions', self.req,
-                                                  rset=self, **kwargs)
+            actions = self.vreg['actions'].possible_vobjects(
+                self.req, rset=self, **kwargs)
             self._rsetactions[key] = actions
             return actions
 
@@ -383,7 +383,8 @@ class ResultSet(object):
             pass
         # build entity instance
         etype = self.description[row][col]
-        entity = self.vreg.etype_class(etype)(req, self, row, col)
+        entity = self.vreg['etypes'].etype_class(etype)(req, rset=self,
+                                                        row=row, col=col)
         entity.set_eid(eid)
         # cache entity
         req.set_entity_cache(entity)

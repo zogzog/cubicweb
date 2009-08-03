@@ -11,7 +11,7 @@ from os.path import join
 
 from cubicweb import CW_SOFTWARE_ROOT as BASE
 from cubicweb.vregistry import VObject
-from cubicweb.cwvreg import CubicWebRegistry, UnknownProperty
+from cubicweb.cwvreg import CubicWebVRegistry, UnknownProperty
 from cubicweb.devtools import TestServerConfiguration
 from cubicweb.interfaces import IMileStone
 
@@ -27,7 +27,7 @@ class VRegistryTC(TestCase):
 
     def setUp(self):
         config = TestServerConfiguration('data')
-        self.vreg = CubicWebRegistry(config)
+        self.vreg = CubicWebVRegistry(config)
         config.bootstrap_cubes()
         self.vreg.schema = config.load_schema()
 

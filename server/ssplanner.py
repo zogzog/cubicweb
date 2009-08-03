@@ -114,9 +114,10 @@ class SSPlanner(object):
         # each variable in main variables is a new entity to insert
         to_build = {}
         session = plan.session
+        etype_class = session.vreg['etypes'].etype_class
         for etype, var in rqlst.main_variables:
             # need to do this since entity class is shared w. web client code !
-            to_build[var.name] = session.etype_class(etype)(session, None, None)
+            to_build[var.name] = etype_class(etype)(session)
             plan.add_entity_def(to_build[var.name])
         # add constant values to entity def, mark variables to be selected
         to_select = plan.relation_definitions(rqlst, to_build)

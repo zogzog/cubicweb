@@ -73,7 +73,8 @@ class EmbedController(Controller):
                 body = '<h2>%s</h2><h3>%s</h3>' % (
                     _('error while embedding page'), err)
         self.process_rql(req.form.get('rql'))
-        return self.vreg.main_template(req, self.template, rset=self.rset, body=body)
+        return self.vreg['views'].main_template(req, self.template,
+                                                rset=self.rset, body=body)
 
 
 def entity_has_embedable_url(entity):

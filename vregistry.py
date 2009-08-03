@@ -28,6 +28,8 @@ from os.path import dirname, join, realpath, split, isdir, exists
 from logging import getLogger
 from warnings import warn
 
+from logilab.common.deprecation import deprecated
+
 from cubicweb import CW_SOFTWARE_ROOT, set_log_methods
 from cubicweb import RegistryNotFound, ObjectNotFound, NoSelectableObject
 
@@ -125,97 +127,111 @@ class VObject(object):
                 cls.__select__ = select
 
 
-class VRegistry(object):
-    """class responsible to register, propose and select the various
-    elements used to build the web interface. Currently, we have templates,
-    views, actions and components.
-    """
+class Registry(dict):
 
-    def __init__(self, config):#, cache_size=1000):
+    def __init__(self, config):
+        super(Registry, self).__init__()
         self.config = config
-        # dictionnary of registry (themself dictionnary) by name
-        self._registries = {}
-        self._lastmodifs = {}
 
-    def reset(self):
-        self._registries = {}
-        self._lastmodifs = {}
-
-    def __getitem__(self, key):
-        return self._registries[key]
-
-    def get(self, key, default=None):
-        return self._registries.get(key, default)
-
-    def items(self):
-        return self._registries.items()
-
-    def values(self):
-        return self._registries.values()
-
-    def __contains__(self, key):
-        return key in self._registries
-
-    def registry(self, name):
+    def __getitem__(self, name):
         """return the registry (dictionary of class objects) associated to
         this name
         """
         try:
-            return self._registries[name]
+            return super(Registry, self).__getitem__(name)
         except KeyError:
-            raise RegistryNotFound(name), None, sys.exc_info()[-1]
+            raise ObjectNotFound(name), None, sys.exc_info()[-1]
 
-    def registry_objects(self, name, oid=None):
-        """returns objects registered with the given oid in the given registry.
-        If no oid is given, return all objects in this registry
+    def register(self, obj, oid=None, clear=False):
+        """base method to add an object in the registry"""
+        assert not '__abstract__' in obj.__dict__
+        oid = oid or obj.id
+        assert oid
+        if clear:
+            vobjects = self[oid] =  []
+        else:
+            vobjects = self.setdefault(oid, [])
+        # registered() is technically a classmethod but is not declared
+        # as such because we need to compose registered in some cases
+        vobject = obj.registered.im_func(obj, self)
+        assert not vobject in vobjects, \
+               'object %s is already registered' % vobject
+        assert callable(vobject.__select__), vobject
+        vobjects.append(vobject)
+
+    def register_and_replace(self, obj, replaced):
+        # XXXFIXME this is a duplication of unregister()
+        # remove register_and_replace in favor of unregister + register
+        # or simplify by calling unregister then register here
+        if hasattr(replaced, 'classid'):
+            replaced = replaced.classid()
+        registered_objs = self.get(obj.id, ())
+        for index, registered in enumerate(registered_objs):
+            if registered.classid() == replaced:
+                del registered_objs[index]
+                break
+        else:
+            self.warning('trying to replace an unregistered view %s by %s',
+                         replaced, obj)
+        self.register(obj)
+
+    def unregister(self, obj):
+        oid = obj.classid()
+        for registered in self.get(obj.id, ()):
+            # use classid() to compare classes because vreg will probably
+            # have its own version of the class, loaded through execfile
+            if registered.classid() == oid:
+                # XXX automatic reloading management
+                self[obj.id].remove(registered)
+                break
+        else:
+            self.warning('can\'t remove %s, no id %s in the registry',
+                         oid, obj.id)
+
+    def all_objects(self):
+        """return a list containing all objects in this registry.
         """
-        registry = self.registry(name)
-        if oid is not None:
-            try:
-                return registry[oid]
-            except KeyError:
-                raise ObjectNotFound(oid), None, sys.exc_info()[-1]
         result = []
-        for objs in registry.values():
+        for objs in self.values():
             result += objs
         return result
 
     # dynamic selection methods ################################################
 
-    def object_by_id(self, registry, oid, *args, **kwargs):
-        """return object in <registry>.<oid>
+    def object_by_id(self, oid, *args, **kwargs):
+        """return object with the given oid. Only one object is expected to be
+        found.
 
         raise `ObjectNotFound` if not object with id <oid> in <registry>
         raise `AssertionError` if there is more than one object there
         """
-        objects = self.registry_objects(registry, oid)
+        objects = self[oid]
         assert len(objects) == 1, objects
         return objects[0].selected(*args, **kwargs)
 
-    def select(self, registry, oid, *args, **kwargs):
-        """return the most specific object in <registry>.<oid> according to
-        the given context
+    def select(self, oid, *args, **kwargs):
+        """return the most specific object among those with the given oid
+        according to the given context.
 
         raise `ObjectNotFound` if not object with id <oid> in <registry>
         raise `NoSelectableObject` if not object apply
         """
-        return self.select_best(self.registry_objects(registry, oid),
-                                *args, **kwargs)
+        return self.select_best(self[oid], *args, **kwargs)
 
-    def select_object(self, registry, oid, *args, **kwargs):
-        """return the most specific object in <registry>.<oid> according to
-        the given context, or None if no object apply
+    def select_object(self, oid, *args, **kwargs):
+        """return the most specific object among those with the given oid
+        according to the given context, or None if no object applies.
         """
         try:
-            return self.select(registry, oid, *args, **kwargs)
+            return self.select(oid, *args, **kwargs)
         except (NoSelectableObject, ObjectNotFound):
             return None
 
-    def possible_objects(self, registry, *args, **kwargs):
-        """return an iterator on possible objects in <registry> for the given
+    def possible_objects(self, *args, **kwargs):
+        """return an iterator on possible objects in this registry for the given
         context
         """
-        for vobjects in self.registry(registry).itervalues():
+        for vobjects in self.itervalues():
             try:
                 yield self.select_best(vobjects, *args, **kwargs)
             except NoSelectableObject:
@@ -252,7 +268,82 @@ class VRegistry(object):
         # return the result of the .selected method of the vobject
         return winners[0].selected(*args, **kwargs)
 
+
+class VRegistry(dict):
+    """class responsible to register, propose and select the various
+    elements used to build the web interface. Currently, we have templates,
+    views, actions and components.
+    """
+
+    def __init__(self, config):
+        super(VRegistry, self).__init__()
+        self.config = config
+
+    def reset(self):
+        self.clear()
+        self._lastmodifs = {}
+
+    def __getitem__(self, name):
+        """return the registry (dictionary of class objects) associated to
+        this name
+        """
+        try:
+            return super(VRegistry, self).__getitem__(name)
+        except KeyError:
+            raise RegistryNotFound(name), None, sys.exc_info()[-1]
+
+    # dynamic selection methods ################################################
+
+    @deprecated('use vreg[registry].object_by_id(oid, *args, **kwargs)')
+    def object_by_id(self, registry, oid, *args, **kwargs):
+        """return object in <registry>.<oid>
+
+        raise `ObjectNotFound` if not object with id <oid> in <registry>
+        raise `AssertionError` if there is more than one object there
+        """
+        return self[registry].object_by_id(oid)
+
+    @deprecated('use vreg[registry].select(oid, *args, **kwargs)')
+    def select(self, registry, oid, *args, **kwargs):
+        """return the most specific object in <registry>.<oid> according to
+        the given context
+
+        raise `ObjectNotFound` if not object with id <oid> in <registry>
+        raise `NoSelectableObject` if not object apply
+        """
+        return self[registry].select(oid, *args, **kwargs)
+
+    @deprecated('use vreg[registry].select_object(oid, *args, **kwargs)')
+    def select_object(self, registry, oid, *args, **kwargs):
+        """return the most specific object in <registry>.<oid> according to
+        the given context, or None if no object apply
+        """
+        return self[registry].select_object(oid, *args, **kwargs)
+
+    @deprecated('use vreg[registry].possible_objects(*args, **kwargs)')
+    def possible_objects(self, registry, *args, **kwargs):
+        """return an iterator on possible objects in <registry> for the given
+        context
+        """
+        return self[registry].possible_objects(*args, **kwargs)
+
     # methods for explicit (un)registration ###################################
+
+    # default class, when no specific class set
+    REGISTRY_FACTORY = {None: Registry}
+
+    def registry_class(self, regid):
+        try:
+            return self.REGISTRY_FACTORY[regid]
+        except KeyError:
+            return self.REGISTRY_FACTORY[None]
+
+    def setdefault(self, regid):
+        try:
+            return self[regid]
+        except KeyError:
+            self[regid] = self.registry_class(regid)(self.config)
+            return self[regid]
 
 #     def clear(self, key):
 #         regname, oid = key.split('.')
@@ -273,63 +364,24 @@ class VRegistry(object):
         """base method to add an object in the registry"""
         assert not '__abstract__' in obj.__dict__
         registryname = registryname or obj.__registry__
-        oid = oid or obj.id
-        assert oid
-        registry = self._registries.setdefault(registryname, {})
-        if clear:
-            vobjects = registry[oid] =  []
-        else:
-            vobjects = registry.setdefault(oid, [])
-        # registered() is technically a classmethod but is not declared
-        # as such because we need to compose registered in some cases
-        vobject = obj.registered.im_func(obj, self)
-        assert not vobject in vobjects, \
-               'object %s is already registered' % vobject
-        assert callable(vobject.__select__), vobject
-        vobjects.append(vobject)
+        registry = self.setdefault(registryname)
+        registry.register(obj, oid=oid, clear=clear)
         try:
-            vname = vobject.__name__
+            vname = obj.__name__
         except AttributeError:
-            vname = vobject.__class__.__name__
+            vname = obj.__class__.__name__
         self.debug('registered vobject %s in registry %s with id %s',
                    vname, registryname, oid)
         # automatic reloading management
         self._loadedmods[obj.__module__]['%s.%s' % (obj.__module__, oid)] = obj
 
     def unregister(self, obj, registryname=None):
-        registryname = registryname or obj.__registry__
-        registry = self.registry(registryname)
-        removed_id = obj.classid()
-        for registered in registry.get(obj.id, ()):
-            # use classid() to compare classes because vreg will probably
-            # have its own version of the class, loaded through execfile
-            if registered.classid() == removed_id:
-                # XXX automatic reloading management
-                registry[obj.id].remove(registered)
-                break
-        else:
-            self.warning('can\'t remove %s, no id %s in the %s registry',
-                         removed_id, obj.id, registryname)
+        self[registryname or obj.__registry__].unregister(obj)
 
     def register_and_replace(self, obj, replaced, registryname=None):
-        # XXXFIXME this is a duplication of unregister()
-        # remove register_and_replace in favor of unregister + register
-        # or simplify by calling unregister then register here
-        if hasattr(replaced, 'classid'):
-            replaced = replaced.classid()
-        registryname = registryname or obj.__registry__
-        registry = self.registry(registryname)
-        registered_objs = registry.get(obj.id, ())
-        for index, registered in enumerate(registered_objs):
-            if registered.classid() == replaced:
-                del registry[obj.id][index]
-                break
-        else:
-            self.warning('trying to replace an unregistered view %s by %s',
-                         replaced, obj)
-        self.register(obj, registryname=registryname)
+        self[registryname or obj.__registry__].register_and_replace(obj, replaced)
 
-    # intialization methods ###################################################
+    # initialization methods ###################################################
 
     def init_registration(self, path, extrapath=None):
         # compute list of all modules that have to be loaded
@@ -521,8 +573,9 @@ class VRegistry(object):
                         obj.__bases__ = newbases
 
 # init logging
-set_log_methods(VObject, getLogger('cubicweb'))
-set_log_methods(VRegistry, getLogger('cubicweb.registry'))
+set_log_methods(VObject, getLogger('cubicweb.appobject'))
+set_log_methods(VRegistry, getLogger('cubicweb.vreg'))
+set_log_methods(Registry, getLogger('cubicweb.registry'))
 
 
 # selector base classes and operations ########################################

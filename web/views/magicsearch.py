@@ -348,8 +348,7 @@ class MagicSearchComponent(Component):
         super(MagicSearchComponent, self).__init__(req, rset)
         processors = []
         self.by_name = {}
-        for processorcls in self.vreg.registry_objects('components',
-                                                       'magicsearch_processor'):
+        for processorcls in self.vreg['components']['magicsearch_processor']:
             # instantiation needed
             processor = processorcls()
             processors.append(processor)

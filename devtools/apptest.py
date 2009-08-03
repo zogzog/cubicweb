@@ -175,7 +175,7 @@ class EnvBasedTC(TestCase):
 
     def etype_instance(self, etype, req=None):
         req = req or self.request()
-        e = self.env.vreg.etype_class(etype)(req, None, None)
+        e = self.env.vreg['etypes'].etype_class(etype)(req)
         e.eid = None
         return e
 
@@ -224,21 +224,21 @@ class EnvBasedTC(TestCase):
         self.vreg.config.global_set_option(optname, value)
 
     def pviews(self, req, rset):
-        return sorted((a.id, a.__class__) for a in self.vreg.possible_views(req, rset))
+        return sorted((a.id, a.__class__) for a in self.vreg['views'].possible_views(req, rset=rset))
 
     def pactions(self, req, rset, skipcategories=('addrelated', 'siteactions', 'useractions')):
-        return [(a.id, a.__class__) for a in self.vreg.possible_vobjects('actions', req, rset=rset)
+        return [(a.id, a.__class__) for a in self.vreg['actions'].possible_vobjects(req, rset=rset)
                 if a.category not in skipcategories]
 
     def pactions_by_cats(self, req, rset, categories=('addrelated',)):
-        return [(a.id, a.__class__) for a in self.vreg.possible_vobjects('actions', req, rset=rset)
+        return [(a.id, a.__class__) for a in self.vreg['actions'].possible_vobjects(req, rset=rset)
                 if a.category in categories]
 
     paddrelactions = deprecated()(pactions_by_cats)
 
     def pactionsdict(self, req, rset, skipcategories=('addrelated', 'siteactions', 'useractions')):
         res = {}
-        for a in self.vreg.possible_vobjects('actions', req, rset=rset):
+        for a in self.vreg['actions'].possible_vobjects(req, rset=rset):
             if a.category not in skipcategories:
                 res.setdefault(a.category, []).append(a.__class__)
         return res

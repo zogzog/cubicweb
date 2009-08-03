@@ -274,8 +274,8 @@ class Model(entities.AnyEntity):
 
     def view(self, vid, __registry='views', **kwargs):
         """shortcut to apply a view on this entity"""
-        return self.vreg.render(__registry, vid, self.req, rset=self.rset,
-                                row=self.row, col=self.col, **kwargs)
+        return self.vreg[__registry]render(vid, self.req, rset=self.rset,
+                                           row=self.row, col=self.col, **kwargs)
 
     @classmethod
     def _rest_attr_info(cls):

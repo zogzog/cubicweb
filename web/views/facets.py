@@ -118,9 +118,9 @@ class FilterBox(BoxTemplate):
             self.w(self.bk_linkbox_template % bk_link)
 
     def get_facets(self, rset, mainvar):
-        return self.vreg.possible_vobjects('facets', self.req, rset=rset,
-                                           context='facetbox',
-                                           filtered_variable=mainvar)
+        return self.vreg['facets'].possible_vobjects(self.req, rset=rset,
+                                                     context='facetbox',
+                                                     filtered_variable=mainvar)
 
 # facets ######################################################################
 

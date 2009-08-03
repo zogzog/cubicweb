@@ -90,7 +90,7 @@ def generate_schema_pot(w, cubedir=None):
     notice that relation definitions description and static vocabulary
     should be marked using '_' and extracted using xgettext
     """
-    from cubicweb.cwvreg import CubicWebRegistry
+    from cubicweb.cwvreg import CubicWebVRegistry
     cube = cubedir and split(cubedir)[-1]
     libconfig = DevDepConfiguration(cube)
     libconfig.cleanup_interface_sobjects = False
@@ -102,7 +102,7 @@ def generate_schema_pot(w, cubedir=None):
         config = libconfig
         libconfig = None
     schema = config.load_schema(remove_unused_rtypes=False)
-    vreg = CubicWebRegistry(config)
+    vreg = CubicWebVRegistry(config)
     # set_schema triggers objects registrations
     vreg.set_schema(schema)
     w(DEFAULT_POT_HEAD)
@@ -187,8 +187,8 @@ def _generate_schema_pot(w, vreg, schema, libconfig=None, cube=None):
     #cube = (cube and 'cubes.%s.' % cube or 'cubicweb.')
     done = set()
     if libconfig is not None:
-        from cubicweb.cwvreg import CubicWebRegistry
-        libvreg = CubicWebRegistry(libconfig)
+        from cubicweb.cwvreg import CubicWebVRegistry
+        libvreg = CubicWebVRegistry(libconfig)
         libvreg.set_schema(libschema) # trigger objects registration
         # prefill done set
         list(_iter_vreg_objids(libvreg, done))
