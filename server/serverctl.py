@@ -663,7 +663,9 @@ class DBCopyCommand(Command):
         import tempfile
         srcappid = pop_arg(args, 1, msg='No source instance specified !')
         destappid = pop_arg(args, msg='No destination instance specified !')
-        _, output = tempfile.mkstemp()
+        # XXX -system necessary to match file name modified on source restore.
+        # should not have to expect this.
+        _, output = tempfile.mkstemp('-system.sql')
         if ':' in srcappid:
             host, srcappid = srcappid.split(':')
             _remote_dump(host, srcappid, output, self.config.sudo)
