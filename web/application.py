@@ -17,7 +17,7 @@ from rql import BadRQLQuery
 from cubicweb import set_log_methods, cwvreg
 from cubicweb import (
     ValidationError, Unauthorized, AuthenticationError, NoSelectableObject,
-    RepositoryError)
+    RepositoryError, CW_EVENT_MANAGER)
 from cubicweb.web import LOGGER, component
 from cubicweb.web import (
     StatusResponse, DirectResponse, Redirect, NotFound,
@@ -41,6 +41,10 @@ class AbstractSessionManager(component.Component):
         if self.session_time:
             assert self.cleanup_session_time < self.session_time
             assert self.cleanup_anon_session_time < self.session_time
+        self.set_authmanager()
+        CW_EVENT_MANAGER.bind('after-source-reload', self.set_authmanager)
+
+    def set_authmanager(self):
         self.authmanager = self.vreg['components'].select('authmanager')
 
     def clean_sessions(self):
@@ -239,7 +243,11 @@ class CubicWebPublisher(object):
             self.publish = self.main_publish
         # instantiate session and url resolving helpers
         self.session_handler = session_handler_fact(self)
-        self.url_resolver = vreg['components'].select('urlpublisher')
+        self.set_urlresolver()
+        CW_EVENT_MANAGER.bind('after-source-reload', self.set_urlresolver)
+
+    def set_urlresolver(self):
+        self.url_resolver = self.vreg['components'].select('urlpublisher')
 
     def connect(self, req):
         """return a connection for a logged user object according to existing

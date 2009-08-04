@@ -16,7 +16,7 @@ from rql import RQLHelper
 
 from cubicweb import (ETYPE_NAME_MAP, Binary, UnknownProperty, UnknownEid,
                       ObjectNotFound, NoSelectableObject, RegistryNotFound,
-                      RegistryOutOfDate)
+                      RegistryOutOfDate, CW_EVENT_MANAGER)
 from cubicweb.utils import dump_class
 from cubicweb.vregistry import VRegistry, Registry
 from cubicweb.rtags import RTAGS
@@ -305,10 +305,12 @@ class CubicWebVRegistry(VRegistry):
         try:
             self._register_objects(path, force_reload)
         except RegistryOutOfDate:
+            CW_EVENT_MANAGER.emit('before-source-reload')
             # modification detected, reset and reload
             self.reset()
             cleanup_sys_modules(path)
             self._register_objects(path, force_reload)
+            CW_EVENT_MANAGER.emit('after-source-reload')
 
     def _register_objects(self, path, force_reload=None):
         """overriden to remove objects requiring a missing interface"""

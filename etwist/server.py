@@ -22,10 +22,10 @@ from twisted.internet.defer import maybeDeferred
 from twisted.web2 import channel, http, server, iweb
 from twisted.web2 import static, resource, responsecode
 
-from cubicweb import ObjectNotFound
+from cubicweb import ObjectNotFound, CW_EVENT_MANAGER
 from cubicweb.web import (AuthenticationError, NotFound, Redirect,
-                       RemoteCallFailed, DirectResponse, StatusResponse,
-                       ExplicitLogin)
+                          RemoteCallFailed, DirectResponse, StatusResponse,
+                          ExplicitLogin)
 from cubicweb.web.application import CubicWebPublisher
 
 from cubicweb.etwist.request import CubicWebTwistedRequestAdapter
@@ -109,10 +109,14 @@ class CubicWebRootResource(resource.PostableResource):
                 self.pyro_listen_timeout = 0.02
                 start_task(1, self.pyro_loop_event)
             self.appli.repo.start_looping_tasks()
-        self.url_rewriter = self.appli.vreg['components'].select_object('urlrewriter')
+        self.set_url_rewriter()
+        CW_EVENT_MANAGER.bind('after-source-reload', self.set_url_rewriter)
         interval = min(config['cleanup-session-time'] or 120,
                        config['cleanup-anonymous-session-time'] or 720) / 2.
         start_task(interval, self.appli.session_handler.clean_sessions)
+
+    def set_url_rewriter(self):
+        self.url_rewriter = self.appli.vreg['components'].select_object('urlrewriter')
 
     def shutdown_event(self):
         """callback fired when the server is shutting down to properly
