@@ -10,6 +10,7 @@ _ = unicode
 
 from logilab.common.decorators import cached, clear_cache, monkeypatch
 from logilab.common.deprecation import  deprecated
+from logilab.common.modutils import cleanup_sys_modules
 
 from rql import RQLHelper
 
@@ -306,6 +307,7 @@ class CubicWebVRegistry(VRegistry):
         except RegistryOutOfDate:
             # modification detected, reset and reload
             self.reset()
+            cleanup_sys_modules(path)
             self._register_objects(path, force_reload)
 
     def _register_objects(self, path, force_reload=None):
