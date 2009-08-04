@@ -95,9 +95,10 @@ class DeleteConfFormView(FormViewMixIn, EntityView):
 
 
 class ClickAndEditFormView(FormViewMixIn, EntityView):
-    """form used to permit ajax edition of an attribute of an entity in a view
+    """form used to permit ajax edition of a relation or attribute of an entity
+    in a view, if logged user have the permission to edit it.
 
-    (double-click on the field to see an appropriate edition widget)
+    (double-click on the field to see an appropriate edition widget).
     """
     id = 'doreledit'
     __select__ = non_final_entity() & match_kwargs('rtype')
@@ -272,8 +273,6 @@ class AutoClickAndEditFormView(ClickAndEditFormView):
             self.wview(vid, entity.related(rtype, role), 'null')
             return False
         if eschema.role_rproperty(role, rschema, 'composite') == role:
-            self.warning('reledit cannot be applied : (... %s %s [composite])'
-                         % (rschema, eschema))
             self.wview(rvid, entity.related(rtype, role), 'null')
             return False
         return super(AutoClickAndEditFormView, self).should_edit_relation(
