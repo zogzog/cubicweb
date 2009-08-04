@@ -160,7 +160,7 @@ class SecurityManagementView(EntityView, SecurityViewMixIn):
             self.w(self.req._('no associated permissions'))
 
     def require_permission_edit_form(self, entity):
-        newperm = self.vreg.etype_class('CWPermission')(self.req, None)
+        newperm = self.vreg['etypes'].etype_class('CWPermission')(self.req)
         newperm.eid = self.req.varmaker.next()
         self.w(u'<p>%s</p>' % self.req._('add a new permission'))
         form = self.vreg['forms'].select('base', self.req, entity=newperm,
