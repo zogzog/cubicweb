@@ -98,8 +98,8 @@ class TabsMixin(LazyViewMixin):
         if entity and len(self.rset) > 1:
             entity.view(default, w=self.w)
             return
-        self.req.add_css('tabs-no-images.css')
-        self.req.add_js(('jquery.tools.min.js', 'cubicweb.htmlhelpers.js',
+        self.req.add_css('ui.tabs.css')
+        self.req.add_js(('ui.core.js', 'ui.tabs.js',
                          'cubicweb.ajax.js', 'cubicweb.tabs.js', 'cubicweb.lazy.js'))
         # prune tabs : not all are to be shown
         tabs = self.prune_tabs(tabs)
@@ -109,7 +109,7 @@ class TabsMixin(LazyViewMixin):
         w = self.w
         uid = entity and entity.eid or make_uid('tab')
         w(u'<div id="entity-tabs-%s">' % uid)
-        w(u'<ul class="css-tabs" id="tabs-%s">' % uid)
+        w(u'<ul>')
         for tab in tabs:
             w(u'<li>')
             w(u'<a href="#as-%s">' % tab)
@@ -120,27 +120,23 @@ class TabsMixin(LazyViewMixin):
             w(u'</li>')
         w(u'</ul>')
         w(u'</div>')
-        w(u'<div id="panes-%s">' % uid)
         for tab in tabs:
-            w(u'<div>')
+            w(u'<div id="as-%s">' % tab)
             if entity:
                 self.lazyview(tab, eid=entity.eid)
             else:
                 self.lazyview(tab, static=True)
             w(u'</div>')
-        w(u'</div>')
         # call the set_tab() JS function *after* each tab is generated
         # because the callback binding needs to be done before
         # XXX make work history: true
         self.req.add_onload(u'''
-    jQuery(function() {
-      jQuery("#tabs-%(eeid)s").tabs("#panes-%(eeid)s > div", {initialIndex: %(tabindex)s});
-      set_tab('%(vid)s', '%(cookiename)s');
-    });''' % {'eeid' : (entity and entity.eid or uid),
-              'vid'  : active_tab,
-              'cookiename' : self.cookie_name,
-              'tabindex' : tabs.index(active_tab)})
-
+  jQuery('#entity-tabs-%(eeid)s > ul').tabs( { selected: %(tabindex)s });
+  set_tab('%(vid)s', '%(cookiename)s');
+''' % {'tabindex'   : tabs.index(active_tab),
+       'vid'        : active_tab,
+       'eeid'       : (entity and entity.eid or uid),
+       'cookiename' : self.cookie_name})
 
 class EntityRelationView(EntityView):
     """view displaying entity related stuff.
