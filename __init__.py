@@ -348,3 +348,18 @@ class CubicWebEventManager(object):
                 callback(context, *args, **kwargs)
 
 CW_EVENT_MANAGER = CubicWebEventManager()
+
+def onevent(event):
+    """decorator to ease event / callback binding
+
+    >>> from cubicweb import onevent
+    >>> @onevent('before-source-reload')
+    ... def mycallback():
+    ...     print 'hello'
+    ...
+    >>>
+    """
+    def _decorator(func):
+        CW_EVENT_MANAGER.bind(event, func)
+        return func
+    return _decorator

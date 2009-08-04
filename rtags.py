@@ -41,6 +41,9 @@ class RelationTags(object):
         return self.get(*key)
     __contains__ = __getitem__
 
+    def clear(self):
+        self._tagdefs.clear()
+
     def _get_keys(self, stype, rtype, otype, tagged):
         keys = [(rtype, tagged, '*', '*'),
                 (rtype, tagged, '*', otype),

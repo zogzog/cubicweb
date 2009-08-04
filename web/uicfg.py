@@ -67,7 +67,7 @@ Automatic form configuration
 """
 __docformat__ = "restructuredtext en"
 
-from cubicweb import neg_role
+from cubicweb import neg_role, onevent
 from cubicweb.rtags import (RelationTags, RelationTagsBool,
                             RelationTagsSet, RelationTagsDict)
 from cubicweb.web import formwidgets
@@ -144,7 +144,6 @@ def init_primaryview_display_ctrl(rtag, sschema, rschema, oschema, role):
 primaryview_display_ctrl = DisplayCtrlRelationTags('primaryview_display_ctrl',
                                                    init_primaryview_display_ctrl)
 
-
 # index view configuration ####################################################
 # entity type section in the index/manage page. May be one of
 # * 'application'
@@ -205,7 +204,6 @@ autoform_is_inlined = RelationTagsBool('autoform_is_inlined')
 # permissions checking is by-passed and supposed to be ok
 autoform_permissions_overrides = RelationTagsSet('autoform_permissions_overrides')
 
-
 # boxes.EditBox configuration #################################################
 
 # 'link' / 'create' relation tags, used to control the "add entity" submenu
@@ -219,3 +217,14 @@ def init_actionbox_appearsin_addmenu(rtag, sschema, rschema, oschema, role):
 actionbox_appearsin_addmenu = RelationTagsBool('actionbox_appearsin_addmenu',
                                                init_actionbox_appearsin_addmenu)
 
+@onevent('before-source-reload')
+def clear_rtag_objects():
+    print 'YAHOO ' * 80
+    primaryview_section.clear()
+    primaryview_display_ctrl.clear()
+    autoform_section.clear()
+    autoform_field.clear()
+    autoform_field_kwargs.clear()
+    autoform_is_inlined.clear()
+    autoform_permissions_overrides.clear()
+    actionbox_appearsin_addmenu.clear()
