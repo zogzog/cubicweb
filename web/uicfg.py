@@ -86,7 +86,8 @@ def init_primaryview_section(rtag, sschema, rschema, oschema, role):
         card = card_from_role(rschema.rproperty(sschema, oschema, 'cardinality'), role)
         composed = rschema.rproperty(sschema, oschema, 'composite') == neg_role(role)
         if rschema.is_final():
-            if rschema.meta or oschema.type in ('Password', 'Bytes'):
+            if rschema.meta or sschema.is_metadata(rschema) \
+                    or oschema.type in ('Password', 'Bytes'):
                 section = 'hidden'
             else:
                 section = 'attributes'
