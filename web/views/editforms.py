@@ -17,7 +17,7 @@ from logilab.mtconverter import xml_escape
 
 from cubicweb.selectors import (match_kwargs, one_line_rset, non_final_entity,
                                 specified_etype_implements, yes)
-from cubicweb.utils import make_uid, compute_cardinality, get_schema_property
+from cubicweb.utils import make_uid
 from cubicweb.view import EntityView
 from cubicweb.common import tags
 from cubicweb.web import INTERNAL_FIELD_VALUE, stdmsgs, eid_param, uicfg
@@ -116,10 +116,8 @@ class ClickAndEditFormView(FormViewMixIn, EntityView):
     _one_rvid = 'incontext'
     _many_rvid = 'csv'
 
-    def _compute_best_vid(self, entity, rtype, role):
-        if compute_cardinality(entity.e_schema,
-                               entity.schema.rschema(rtype),
-                               role) in '+*':
+    def _compute_best_vid(self, eschema, rschema, role):
+        if eschema.cardinality(rschema, role) in '+*':
             return self._many_rvid
         return self._one_rvid
 
