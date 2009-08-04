@@ -21,7 +21,7 @@ from cubicweb.utils import make_uid, compute_cardinality, get_schema_property
 from cubicweb.view import EntityView
 from cubicweb.common import tags
 from cubicweb.web import INTERNAL_FIELD_VALUE, stdmsgs, eid_param, uicfg
-from cubicweb.web.form import FormViewMixIn
+from cubicweb.web.form import FormViewMixIn, FieldNotFound
 from cubicweb.web.formfields import guess_field
 from cubicweb.web.formwidgets import Button, SubmitButton, ResetButton
 from cubicweb.web.views import forms
@@ -249,6 +249,11 @@ class ClickAndEditFormView(FormViewMixIn, EntityView):
                                 domid='%s-form' % divid, action='#',
                                 cssstyle='display: none',
                                 onsubmit=onsubmit % event_data)
+        try:
+            field = form.field_by_name(rtype, role)
+        except FieldNotFound:
+            self.w(value)
+            return
         w = self.w
         w(u'<div class="field">')
         w(u'<div id="%s" style="display: inline">' % divid)
