@@ -15,7 +15,6 @@ from smtplib import SMTP
 import simplejson
 
 from logilab.common.decorators import cached
-from logilab.mtconverter import xml_escape
 
 from cubicweb import NoSelectableObject, ValidationError, ObjectNotFound, typed_eid
 from cubicweb.utils import strptime
