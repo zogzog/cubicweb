@@ -317,3 +317,34 @@ def target(obj):
 def underline_title(title, car='-'):
     return title+'\n'+(car*len(title))
 
+
+class CubicWebEventManager(object):
+    """simple event / callback manager.
+
+    Typical usage to register a callback::
+
+      >>> from cubicweb import CW_EVENT_MANAGER
+      >>> CW_EVENT_MANAGER.bind('after-source-reload', mycallback)
+
+    Typical usage to emit an event::
+
+      >>> from cubicweb import CW_EVENT_MANAGER
+      >>> CW_EVENT_MANAGER.emit('after-source-reload')
+
+    emit() accepts an additional context parameter that will be passed
+    to the callback if specified (and only in that case)
+    """
+    def __init__(self):
+        self.callbacks = {}
+
+    def bind(self, event, callback, *args, **kwargs):
+        self.callbacks.setdefault(event, []).append( (callback, args, kwargs) )
+
+    def emit(self, event, context=None):
+        for callback, args, kwargs in self.callbacks.get(event, ()):
+            if context is None:
+                callback(*args, **kwargs)
+            else:
+                callback(context, *args, **kwargs)
+
+CW_EVENT_MANAGER = CubicWebEventManager()
