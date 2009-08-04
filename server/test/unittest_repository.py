@@ -20,7 +20,7 @@ from yams.constraints import UniqueConstraint
 
 from cubicweb import BadConnectionId, RepositoryError, ValidationError, UnknownEid, AuthenticationError
 from cubicweb.schema import CubicWebSchema, RQLConstraint
-from cubicweb.dbapi import connect, repo_connect
+from cubicweb.dbapi import connect, repo_connect, multiple_connections_unfix
 from cubicweb.devtools.apptest import RepositoryBasedTC
 from cubicweb.devtools.repotest import tuplify
 from cubicweb.server import repository
@@ -276,13 +276,17 @@ class RepositoryTC(RepositoryBasedTC):
 
     def _pyro_client(self, done):
         cnx = connect(self.repo.config.appid, u'admin', 'gingkow')
-        # check we can get the schema
-        schema = cnx.get_schema()
-        self.assertEquals(schema.__hashmode__, None)
-        cu = cnx.cursor()
-        rset = cu.execute('Any U,G WHERE U in_group G')
-        cnx.close()
-        done.append(True)
+        try:
+            # check we can get the schema
+            schema = cnx.get_schema()
+            self.assertEquals(schema.__hashmode__, None)
+            cu = cnx.cursor()
+            rset = cu.execute('Any U,G WHERE U in_group G')
+            cnx.close()
+            done.append(True)
+        finally:
+            # connect monkey path some method by default, remove them
+            multiple_connections_unfix()
 
     def test_internal_api(self):
         repo = self.repo
@@ -367,7 +371,7 @@ class DataHelpersTC(RepositoryBasedTC):
         self.assertRaises(UnknownEid, self.repo.type_from_eid, -2, self.session)
 
     def test_add_delete_info(self):
-        entity = self.repo.vreg.etype_class('Personne')(self.session, None, None)
+        entity = self.repo.vreg['etypes'].etype_class('Personne')(self.session)
         entity.eid = -1
         entity.complete = lambda x: None
         self.repo.add_info(self.session, entity, self.repo.sources_by_uri['system'])

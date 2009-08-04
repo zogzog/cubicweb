@@ -539,8 +539,7 @@ class CubicWebRequestBase(DBAPIRequest):
     def from_controller(self):
         """return the id (string) of the controller issuing the request"""
         controller = self.relative_path(False).split('/', 1)[0]
-        registered_controllers = (ctrl.id for ctrl in
-                                  self.vreg.registry_objects('controllers'))
+        registered_controllers = self.vreg['controllers'].keys()
         if controller in registered_controllers:
             return controller
         return 'view'

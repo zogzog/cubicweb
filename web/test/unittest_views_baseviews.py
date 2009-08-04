@@ -91,7 +91,7 @@ class TableViewTC(EnvBasedTC):
         rset = self.execute('Any X, D, CD, NOW - CD WHERE X is State, X description D, X creation_date CD, X eid %(x)s',
                             {'x': e.eid}, 'x')
         req = self.request()
-        view = self.vreg.select('views', 'table', req, rset=rset)
+        view = self.vreg['views'].select('table', req, rset=rset)
         return e, rset, view
 
     def test_headers(self):

@@ -17,8 +17,8 @@ from cubicweb.server.serverconfig import ServerConfiguration
 from cubicweb.goa.dbmyams import load_schema
 
 UNSUPPORTED_OPTIONS = set(('connections-pool-size',
-                           'pyro-port', 'pyro-id', 'pyro-instance-id',
-                           'pyro-ns-host', 'pyro-ns-port', 'pyro-ns-group',
+                           'pyro-host', 'pyro-id', 'pyro-instance-id',
+                           'pyro-ns-host', 'pyro-ns-group',
                            'https-url', 'host', 'pid-file', 'uid', 'base-url', 'log-file',
                            'smtp-host', 'smtp-port',
                            'embed-allowed',
@@ -81,9 +81,9 @@ class GAEConfiguration(ServerConfiguration, WebConfiguration):
     options = [(optname, optdict) for optname, optdict in options
                if not optname in UNSUPPORTED_OPTIONS]
 
-    cubicweb_vobject_path = WebConfiguration.cubicweb_vobject_path | ServerConfiguration.cubicweb_vobject_path
-    cubicweb_vobject_path = list(cubicweb_vobject_path) + ['goa/appobjects']
-    cube_vobject_path = WebConfiguration.cube_vobject_path | ServerConfiguration.cube_vobject_path
+    cubicweb_appobject_path = WebConfiguration.cubicweb_appobject_path | ServerConfiguration.cubicweb_appobject_path
+    cubicweb_appobject_path = list(cubicweb_appobject_path) + ['goa/appobjects']
+    cube_appobject_path = WebConfiguration.cube_appobject_path | ServerConfiguration.cube_appobject_path
 
     # use file system schema
     bootstrap_schema = read_instance_schema = False

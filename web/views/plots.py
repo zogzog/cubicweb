@@ -16,7 +16,7 @@ from logilab.common import flatten
 from logilab.mtconverter import xml_escape
 
 from cubicweb.utils import make_uid, UStringIO, datetime2ticks
-from cubicweb.vregistry import objectify_selector
+from cubicweb.appobject import objectify_selector
 from cubicweb.web.views import baseviews
 
 @objectify_selector

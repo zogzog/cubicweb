@@ -83,7 +83,7 @@ class ManageView(StartupView):
         self.startupviews_table()
 
     def startupviews_table(self):
-        for v in self.vreg.possible_views(self.req, None):
+        for v in self.vreg['views'].possible_views(self.req, None):
             if v.category != 'startupview' or v.id in ('index', 'tree', 'manage'):
                 continue
             self.w('<p><a href="%s">%s</a></p>' % (

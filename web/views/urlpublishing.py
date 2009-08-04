@@ -56,8 +56,7 @@ class URLPublisherComponent(Component):
         super(URLPublisherComponent, self).__init__()
         self.default_method = default_method
         evaluators = []
-        for evaluatorcls in self.vreg.registry_objects('components',
-                                                       'urlpathevaluator'):
+        for evaluatorcls in self.vreg['components']['urlpathevaluator']:
             # instantiation needed
             evaluator = evaluatorcls(self)
             evaluators.append(evaluator)
@@ -83,7 +82,7 @@ class URLPublisherComponent(Component):
         parts = [part for part in path.split('/')
                  if part != ''] or (self.default_method,)
         if req.form.get('rql'):
-            if parts[0] in self.vreg.registry('controllers'):
+            if parts[0] in self.vreg['controllers']:
                 return parts[0], None
             return 'view', None
         for evaluator in self.evaluators:
@@ -114,7 +113,7 @@ class RawPathEvaluator(URLPathEvaluator):
     """
     priority = 0
     def evaluate_path(self, req, parts):
-        if len(parts) == 1 and parts[0] in self.vreg.registry('controllers'):
+        if len(parts) == 1 and parts[0] in self.vreg['controllers']:
             return parts[0], None
         raise PathDontMatch()
 
@@ -152,7 +151,7 @@ class RestPathEvaluator(URLPathEvaluator):
             etype = self.vreg.case_insensitive_etypes[parts.pop(0).lower()]
         except KeyError:
             raise PathDontMatch()
-        cls = self.vreg.etype_class(etype)
+        cls = self.vreg['etypes'].etype_class(etype)
         if parts:
             if len(parts) == 2:
                 attrname = parts.pop(0).lower()
@@ -195,10 +194,9 @@ class URLRewriteEvaluator(URLPathEvaluator):
     def evaluate_path(self, req, parts):
         # uri <=> req._twreq.path or req._twreq.uri
         uri = req.url_unquote('/' + '/'.join(parts))
-        vobjects = sorted(self.vreg.registry_objects('urlrewriting'),
-                          key=lambda x: x.priority,
-                          reverse=True)
-        for rewritercls in vobjects:
+        evaluators = sorted(self.vreg['urlrewriting'].all_objects(),
+                            key=lambda x: x.priority, reverse=True)
+        for rewritercls in evaluators:
             rewriter = rewritercls()
             try:
                 # XXX we might want to chain url rewrites
@@ -220,8 +218,9 @@ class ActionPathEvaluator(URLPathEvaluator):
         # remove last part and see if this is something like an actions
         # if so, call
         try:
+            actionsreg = self.vreg['actions']
             requested = parts.pop(-1)
-            actions = self.vreg.registry_objects('actions', requested)
+            actions = actionsreg[requested]
         except RegistryException:
             raise PathDontMatch()
         for evaluator in self.urlpublisher.evaluators:
@@ -233,9 +232,9 @@ class ActionPathEvaluator(URLPathEvaluator):
                 continue
             else:
                 try:
-                    action = self.vreg.select_best(actions, req, rset=rset)
+                    action = actionsreg.select_best(actions, req, rset=rset)
                 except RegistryException:
-                    raise PathDontMatch()
+                    continue
                 else:
                     # XXX avoid redirect
                     raise Redirect(action.url())

@@ -85,8 +85,8 @@ class ServerConfiguration(CubicWebConfiguration):
         SCHEMAS_LIB_DIR = '/usr/share/cubicweb/schemas/'
         BACKUP_DIR = '/var/lib/cubicweb/backup/'
 
-    cubicweb_vobject_path = CubicWebConfiguration.cubicweb_vobject_path | set(['sobjects'])
-    cube_vobject_path = CubicWebConfiguration.cube_vobject_path | set(['sobjects', 'hooks'])
+    cubicweb_appobject_path = CubicWebConfiguration.cubicweb_appobject_path | set(['sobjects'])
+    cube_appobject_path = CubicWebConfiguration.cube_appobject_path | set(['sobjects', 'hooks'])
 
     options = merge_options((
         # ctl configuration
@@ -165,10 +165,12 @@ notified of every changes.',
           'group': 'email', 'inputlevel': 2,
           }),
         # pyro server.serverconfig
-        ('pyro-port',
+        ('pyro-host',
          {'type' : 'int',
           'default': None,
-          'help': 'Pyro server port. If not set, it will be choosen randomly',
+          'help': 'Pyro server host, if not detectable correctly through \
+gethostname(). It may contains port information using <host>:<port> notation, \
+and if not set, it will be choosen randomly',
           'group': 'pyro-server', 'inputlevel': 2,
           }),
         ('pyro-id', # XXX reuse pyro-instance-id
@@ -265,7 +267,7 @@ notified of every changes.',
     def load_hooks(self, vreg):
         hooks = {}
         try:
-            apphookdefs = vreg.registry_objects('hooks')
+            apphookdefs = vreg['hooks'].all_objects()
         except RegistryNotFound:
             return hooks
         for hookdef in apphookdefs:

@@ -9,7 +9,7 @@
 from logilab.common.testlib import TestCase, unittest_main
 
 from cubicweb.devtools.testlib import EnvBasedTC
-from cubicweb.vregistry import Selector, AndSelector, OrSelector
+from cubicweb.appobject import Selector, AndSelector, OrSelector
 from cubicweb.selectors import implements, match_user_groups
 from cubicweb.interfaces import IDownloadable
 from cubicweb.web import action
@@ -91,7 +91,7 @@ class SelectorsTC(TestCase):
 class ImplementsSelectorTC(EnvBasedTC):
     def test_etype_priority(self):
         req = self.request()
-        cls = self.vreg.etype_class('File')
+        cls = self.vreg['etypes'].etype_class('File')
         anyscore = implements('Any').score_class(cls, req)
         idownscore = implements(IDownloadable).score_class(cls, req)
         self.failUnless(idownscore > anyscore, (idownscore, anyscore))
@@ -99,7 +99,7 @@ class ImplementsSelectorTC(EnvBasedTC):
         self.failUnless(filescore > idownscore, (filescore, idownscore))
 
     def test_etype_inheritance_no_yams_inheritance(self):
-        cls = self.vreg.etype_class('Personne')
+        cls = self.vreg['etypes'].etype_class('Personne')
         self.failIf(implements('Societe').score_class(cls, self.request()))
 
 
@@ -111,7 +111,7 @@ class MatchUserGroupsTC(EnvBasedTC):
             category = 'foo'
             __select__ = match_user_groups('owners')
         self.vreg._loadedmods[__name__] = {}
-        self.vreg.register_vobject_class(SomeAction)
+        self.vreg.register_appobject_class(SomeAction)
         self.failUnless(SomeAction in self.vreg['actions']['yo'], self.vreg['actions'])
         try:
             # login as a simple user

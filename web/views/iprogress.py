@@ -48,7 +48,7 @@ class ProgressTableView(EntityView):
         self.req.add_css('cubicweb.iprogress.css')
         _ = self.req._
         self.columns = columns or self.columns
-        ecls = self.vreg.etype_class(self.rset.description[0][0])
+        ecls = self.vreg['etypes'].etype_class(self.rset.description[0][0])
         self.w(u'<table class="progress">')
         self.table_header(ecls)
         self.w(u'<tbody>')
@@ -168,8 +168,8 @@ class InContextProgressTableView(ProgressTableView):
     id = 'ic_progress_table_view'
 
     def call(self):
-        view = self.vreg.select('views', 'progress_table_view', self.req,
-                                rset=self.rset)
+        view = self.vreg['views'].select('progress_table_view', self.req,
+                                         rset=self.rset)
         columns = list(view.columns)
         try:
             columns.remove('project')

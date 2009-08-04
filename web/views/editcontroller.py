@@ -81,7 +81,7 @@ class EditController(ViewController):
     def edit_entity(self, formparams, multiple=False):
         """edit / create / copy an entity and return its eid"""
         etype = formparams['__type']
-        entity = self.vreg.etype_class(etype)(self.req, None, None)
+        entity = self.vreg['etypes'].etype_class(etype)(self.req)
         entity.eid = eid = self._get_eid(formparams['eid'])
         edited = self.req.form.get('__maineid') == formparams['eid']
         # let a chance to do some entity specific stuff.

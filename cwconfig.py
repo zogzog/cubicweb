@@ -142,7 +142,7 @@ class CubicWebNoAppConfiguration(ConfigurationMixIn):
     name = None
     # log messages format (see logging module documentation for available keys)
     log_format = '%(asctime)s - (%(name)s) %(levelname)s: %(message)s'
-    # nor remove vobjects based on unused interface
+    # nor remove appobjects based on unused interface
     cleanup_interface_sobjects = True
 
     if os.environ.get('APYCOT_ROOT'):
@@ -169,14 +169,7 @@ class CubicWebNoAppConfiguration(ConfigurationMixIn):
          {'type' : 'string',
           'default': '',
           'help': 'Pyro name server\'s host. If not set, will be detected by a \
-broadcast query',
-          'group': 'pyro-name-server', 'inputlevel': 1,
-          }),
-        ('pyro-ns-port',
-         {'type' : 'int',
-          'default': None,
-          'help': 'Pyro name server\'s listening port. If not set, default \
-port will be used.',
+broadcast query. It may contains port information using <host>:<port> notation.',
           'group': 'pyro-name-server', 'inputlevel': 1,
           }),
         ('pyro-ns-group',
@@ -419,8 +412,8 @@ this option is set to yes",
             except Exception, ex:
                 cls.warning("can't init cube %s: %s", cube, ex)
 
-    cubicweb_vobject_path = set(['entities'])
-    cube_vobject_path = set(['entities'])
+    cubicweb_appobject_path = set(['entities'])
+    cube_appobject_path = set(['entities'])
 
     @classmethod
     def build_vregistry_path(cls, templpath, evobjpath=None, tvobjpath=None):
@@ -430,13 +423,13 @@ this option is set to yes",
         :param evobjpath:
           optional list of sub-directories (or files without the .py ext) of
           the cubicweb library that should be tested and added to the output list
-          if they exists. If not give, default to `cubicweb_vobject_path` class
+          if they exists. If not give, default to `cubicweb_appobject_path` class
           attribute.
         :param tvobjpath:
           optional list of sub-directories (or files without the .py ext) of
           directories given in `templpath` that should be tested and added to
           the output list if they exists. If not give, default to
-          `cube_vobject_path` class attribute.
+          `cube_appobject_path` class attribute.
         """
         vregpath = cls.build_vregistry_cubicweb_path(evobjpath)
         vregpath += cls.build_vregistry_cube_path(templpath, tvobjpath)
@@ -446,7 +439,7 @@ this option is set to yes",
     def build_vregistry_cubicweb_path(cls, evobjpath=None):
         vregpath = []
         if evobjpath is None:
-            evobjpath = cls.cubicweb_vobject_path
+            evobjpath = cls.cubicweb_appobject_path
         for subdir in evobjpath:
             path = join(CW_SOFTWARE_ROOT, subdir)
             if exists(path):
@@ -457,7 +450,7 @@ this option is set to yes",
     def build_vregistry_cube_path(cls, templpath, tvobjpath=None):
         vregpath = []
         if tvobjpath is None:
-            tvobjpath = cls.cube_vobject_path
+            tvobjpath = cls.cube_appobject_path
         for directory in templpath:
             for subdir in tvobjpath:
                 path = join(directory, subdir)

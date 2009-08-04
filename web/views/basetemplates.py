@@ -10,7 +10,7 @@ __docformat__ = "restructuredtext en"
 
 from logilab.mtconverter import xml_escape
 
-from cubicweb.vregistry import objectify_selector
+from cubicweb.appobject import objectify_selector
 from cubicweb.selectors import match_kwargs
 from cubicweb.view import View, MainTemplate, NOINDEX, NOFOLLOW
 from cubicweb.utils import make_uid, UStringIO
@@ -113,8 +113,8 @@ class TheMainTemplate(MainTemplate):
         if vtitle:
             w(u'<h1 class="vtitle">%s</h1>\n' % xml_escape(vtitle))
         # display entity type restriction component
-        etypefilter = self.vreg.select_vobject('components', 'etypenavigation',
-                                              self.req, rset=self.rset)
+        etypefilter = self.vreg['components'].select_vobject(
+            'etypenavigation', self.req, rset=self.rset)
         if etypefilter:
             etypefilter.render(w=w)
         self.nav_html = UStringIO()
@@ -154,12 +154,12 @@ class TheMainTemplate(MainTemplate):
         w(u'<div id="page"><table width="100%" border="0" id="mainLayout"><tr>\n')
         self.nav_column(view, 'left')
         w(u'<td id="contentcol">\n')
-        rqlcomp = self.vreg.select_object('components', 'rqlinput', self.req,
-                                          rset=self.rset)
+        rqlcomp = self.vreg['components'].select_object('rqlinput', self.req,
+                                                        rset=self.rset)
         if rqlcomp:
             rqlcomp.render(w=self.w, view=view)
-        msgcomp = self.vreg.select_object('components', 'applmessages',
-                                          self.req, rset=self.rset)
+        msgcomp = self.vreg['components'].select_object('applmessages',
+                                                        self.req, rset=self.rset)
         if msgcomp:
             msgcomp.render(w=self.w)
         self.content_header(view)
@@ -173,8 +173,8 @@ class TheMainTemplate(MainTemplate):
         self.w(u'</body>')
 
     def nav_column(self, view, context):
-        boxes = list(self.vreg.possible_vobjects('boxes', self.req, rset=self.rset,
-                                                 view=view, context=context))
+        boxes = list(self.vreg['boxes'].possible_vobjects(
+            self.req, rset=self.rset, view=view, context=context))
         if boxes:
             self.w(u'<td class="navcol"><div class="navboxes">\n')
             for box in boxes:
@@ -200,7 +200,7 @@ class ErrorTemplate(TheMainTemplate):
         """display an unexpected error"""
         self.set_request_content_type()
         self.req.reset_headers()
-        view = self.vreg.select('views', 'error', self.req, rset=self.rset)
+        view = self.vreg['views'].select('error', self.req, rset=self.rset)
         self.template_header(self.content_type, view, self.req._('an error occured'),
                              [NOINDEX, NOFOLLOW])
         view.render(w=self.w)
@@ -242,8 +242,8 @@ class SimpleMainTemplate(TheMainTemplate):
         w(u'<table width="100%" height="100%" border="0"><tr>\n')
         w(u'<td class="navcol">\n')
         self.topleft_header()
-        boxes = list(self.vreg.possible_vobjects('boxes', self.req, rset=self.rset,
-                                                 view=view, context='left'))
+        boxes = list(self.vreg['boxes'].possible_vobjects(
+            self.req, rset=self.rset, view=view, context='left'))
         if boxes:
             w(u'<div class="navboxes">\n')
             for box in boxes:
@@ -257,8 +257,8 @@ class SimpleMainTemplate(TheMainTemplate):
             w(u'<h1 class="vtitle">%s</h1>' % xml_escape(vtitle))
 
     def topleft_header(self):
-        logo = self.vreg.select_vobject('components', 'logo', self.req,
-                                        rset=self.rset)
+        logo = self.vreg['components'].select_vobject('logo', self.req,
+                                                      rset=self.rset)
         if logo:
             self.w(u'<table id="header"><tr>\n')
             self.w(u'<td>')
@@ -299,7 +299,7 @@ class HTMLHeader(View):
             self.req.add_js(jscript, localfile=False)
 
     def alternates(self):
-        urlgetter = self.vreg.select_object('components', 'rss_feed_url',
+        urlgetter = self.vreg['components'].select_object('rss_feed_url',
                                             self.req, rset=self.rset)
         if urlgetter is not None:
             self.whead(u'<link rel="alternate" type="application/rss+xml" title="RSS feed" href="%s"/>\n'
@@ -329,28 +329,28 @@ class HTMLPageHeader(View):
         """build the top menu with authentification info and the rql box"""
         self.w(u'<table id="header"><tr>\n')
         self.w(u'<td id="firstcolumn">')
-        logo = self.vreg.select_vobject('components', 'logo',
-                                        self.req, rset=self.rset)
+        logo = self.vreg['components'].select_vobject(
+            'logo', self.req, rset=self.rset)
         if logo:
             logo.render(w=self.w)
         self.w(u'</td>\n')
         # appliname and breadcrumbs
         self.w(u'<td id="headtext">')
         for cid in ('appliname', 'breadcrumbs'):
-            comp = self.vreg.select_vobject('components', cid,
-                                            self.req, rset=self.rset)
+            comp = self.vreg['components'].select_vobject(
+                cid, self.req, rset=self.rset)
             if comp:
                 comp.render(w=self.w)
         self.w(u'</td>')
         # logged user and help
         self.w(u'<td>\n')
-        comp = self.vreg.select_vobject('components', 'loggeduserlink',
-                                        self.req, rset=self.rset)
+        comp = self.vreg['components'].select_vobject(
+            'loggeduserlink', self.req, rset=self.rset)
         if comp:
             comp.render(w=self.w)
         self.w(u'</td><td>')
-        helpcomp = self.vreg.select_vobject('components', 'help',
-                                            self.req, rset=self.rset)
+        helpcomp = self.vreg['components'].select_vobject(
+            'help', self.req, rset=self.rset)
         if helpcomp:
             helpcomp.render(w=self.w)
         self.w(u'</td>')
@@ -405,9 +405,8 @@ class HTMLContentHeader(View):
 
     def call(self, view, **kwargs):
         """by default, display informal messages in content header"""
-        components = self.vreg.possible_vobjects('contentnavigation',
-                                                 self.req, rset=self.rset,
-                                                 view=view, context='navtop')
+        components = self.vreg['contentnavigation'].possible_vobjects(
+            self.req, rset=self.rset, view=view, context='navtop')
         if components:
             self.w(u'<div id="contentheader">')
             for comp in components:
@@ -422,9 +421,8 @@ class HTMLContentFooter(View):
     id = 'contentfooter'
 
     def call(self, view, **kwargs):
-        components = self.vreg.possible_vobjects('contentnavigation',
-                                                 self.req, rset=self.rset,
-                                                 view=view, context='navbottom')
+        components = self.vreg['contentnavigation'].possible_vobjects(
+            self.req, rset=self.rset, view=view, context='navbottom')
         if components:
             self.w(u'<div id="contentfooter">')
             for comp in components:

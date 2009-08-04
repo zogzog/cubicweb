@@ -109,7 +109,7 @@ class CubicWebRootResource(resource.PostableResource):
                 self.pyro_listen_timeout = 0.02
                 start_task(1, self.pyro_loop_event)
             self.appli.repo.start_looping_tasks()
-        self.url_rewriter = self.appli.vreg.select_object('components', 'urlrewriter')
+        self.url_rewriter = self.appli.vreg['components'].select_object('urlrewriter')
         interval = min(config['cleanup-session-time'] or 120,
                        config['cleanup-anonymous-session-time'] or 720) / 2.
         start_task(interval, self.appli.session_handler.clean_sessions)
@@ -330,7 +330,7 @@ set_log_methods(CubicWebRootResource, getLogger('cubicweb.twisted'))
 def _gc_debug():
     import gc
     from pprint import pprint
-    from cubicweb.vregistry import VObject
+    from cubicweb.appobject import AppObject
     gc.collect()
     count = 0
     acount = 0
@@ -338,7 +338,7 @@ def _gc_debug():
     for obj in gc.get_objects():
         if isinstance(obj, CubicWebTwistedRequestAdapter):
             count += 1
-        elif isinstance(obj, VObject):
+        elif isinstance(obj, AppObject):
             acount += 1
         else:
             try:

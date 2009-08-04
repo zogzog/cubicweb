@@ -46,10 +46,10 @@ class SomeViewsTC(GAEBasedTC):
         self.blog.put(self.req)
 
     def test_hcal(self):
-        self.vreg.render('views', 'hcal', self.req, rset=self.blog.rset)
+        self.vreg['views'].render('hcal', self.req, rset=self.blog.rset)
 
     def test_django_index(self):
-        self.vreg.render('views', 'index', self.req, rset=None)
+        self.vreg'views'].render('index', self.req, rset=None)
 
 for vid in ('primary', 'oneline', 'incontext', 'outofcontext', 'text'):
     setattr(SomeViewsTC, 'test_%s'%vid, lambda self, vid=vid: self.blog.view(vid))

@@ -90,7 +90,7 @@ class UserLink(component.Component):
     def call(self):
         if not self.req.cnx.anonymous_connection:
             # display useractions and siteactions
-            actions = self.vreg.possible_actions(self.req, self.rset)
+            actions = self.vreg['actions'].possible_actions(self.req, rset=self.rset)
             box = MenuWidget('', 'userActionsBox', _class='', islist=False)
             menu = PopupBoxMenu(self.req.user.login, isitem=False)
             box.append(menu)

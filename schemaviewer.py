@@ -19,7 +19,7 @@ class SchemaViewer(object):
         self.req = req
         if req is not None:
             self.req.add_css('cubicweb.schema.css')
-            self._possible_views = req.vreg.possible_views
+            self._possible_views = req.vreg['views'].possible_views
             if not encoding:
                 encoding = req.encoding
         else:

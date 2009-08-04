@@ -13,7 +13,7 @@ class LogFormTemplateTC(WebTest):
 
     def _login_labels(self):
         valid = self.content_type_validators.get('text/html', DTDValidator)()
-        page = valid.parse_string(self.vreg.main_template(self.request(), 'login'))
+        page = valid.parse_string(self.vreg['views'].main_template(self.request(), 'login'))
         return page.find_tag('label')
 
     def test_label(self):

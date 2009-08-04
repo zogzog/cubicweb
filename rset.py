@@ -83,8 +83,8 @@ class ResultSet(object):
         try:
             return self._rsetactions[key]
         except KeyError:
-            actions = self.vreg.possible_vobjects('actions', self.req,
-                                                  rset=self, **kwargs)
+            actions = self.vreg['actions'].possible_vobjects(
+                self.req, rset=self, **kwargs)
             self._rsetactions[key] = actions
             return actions
 
@@ -370,12 +370,21 @@ class ResultSet(object):
         # XXX should we consider updating a cached entity with possible
         #     new attributes found in this resultset ?
         try:
-            return req.entity_cache(eid)
+            entity = req.entity_cache(eid)
+            if entity.rset is None:
+                # entity has no rset set, this means entity has been cached by
+                # the repository (req is a repository session) which had no rset
+                # info. Add id.
+                entity.rset = self
+                entity.row = row
+                entity.col = col
+            return entity
         except KeyError:
             pass
         # build entity instance
         etype = self.description[row][col]
-        entity = self.vreg.etype_class(etype)(req, self, row, col)
+        entity = self.vreg['etypes'].etype_class(etype)(req, rset=self,
+                                                        row=row, col=col)
         entity.set_eid(eid)
         # cache entity
         req.set_entity_cache(entity)

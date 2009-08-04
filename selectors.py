@@ -53,8 +53,8 @@ from yams import BASE_TYPES
 
 from cubicweb import (Unauthorized, NoSelectableObject, NotAnEntity,
                       role, typed_eid)
-from cubicweb.vregistry import (NoSelectableObject, Selector,
-                                chainall, objectify_selector)
+# even if not used, let yes here so it's importable through this module
+from cubicweb.appobject import Selector, objectify_selector, yes
 from cubicweb.cwconfig import CubicWebConfiguration
 from cubicweb.schema import split_expression
 
@@ -165,7 +165,7 @@ class ImplementsMixIn(object):
             if isinstance(iface, basestring):
                 # entity type
                 try:
-                    iface = vreg.etype_class(iface)
+                    iface = vreg['etypes'].etype_class(iface)
                 except KeyError:
                     continue # entity type not in the schema
             score += score_interface(cls_or_inst, cls, iface)
@@ -212,7 +212,7 @@ class EClassSelector(Selector):
     def score(self, cls, req, etype):
         if etype in BASE_TYPES:
             return 0
-        return self.score_class(cls.vreg.etype_class(etype), req)
+        return self.score_class(cls.vreg['etypes'].etype_class(etype), req)
 
     def score_class(self, eclass, req):
         raise NotImplementedError()
@@ -273,17 +273,6 @@ class EntitySelector(EClassSelector):
 
 
 # very basic selectors ########################################################
-
-class yes(Selector):
-    """return arbitrary score
-
-    default score of 0.5 so any other selector take precedence
-    """
-    def __init__(self, score=0.5):
-        self.score = score
-
-    def __call__(self, *args, **kwargs):
-        return self.score
 
 @objectify_selector
 @lltrace
@@ -570,9 +559,9 @@ class appobject_selectable(Selector):
         self.registry = registry
         self.oid = oid
 
-    def __call__(self, cls, req, rset=None, *args, **kwargs):
+    def __call__(self, cls, req, **kwargs):
         try:
-            cls.vreg.select(self.registry, self.oid, req, rset=rset, **kwargs)
+            cls.vreg[self.registry].select(self.oid, req, **kwargs)
             return 1
         except NoSelectableObject:
             return 0
@@ -630,7 +619,7 @@ class specified_etype_implements(implements):
                 req.form['etype'] = etype
             except KeyError:
                 return 0
-        return self.score_class(cls.vreg.etype_class(etype), req)
+        return self.score_class(cls.vreg['etypes'].etype_class(etype), req)
 
 
 class entity_implements(ImplementsMixIn, EntitySelector):
@@ -975,6 +964,7 @@ class score_entity(EntitySelector):
 
 
 # XXX DEPRECATED ##############################################################
+from cubicweb.vregistry import chainall
 
 yes_selector = deprecated()(yes)
 norset_selector = deprecated()(none_rset)
@@ -1040,7 +1030,7 @@ accept = deprecated('use implements selector')(accept)
 accept_selector = deprecated()(accept)
 
 accept_one = deprecated()(chainall(one_line_rset, accept,
-                                          name='accept_one'))
+                                   name='accept_one'))
 accept_one_selector = deprecated()(accept_one)
 
 

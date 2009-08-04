@@ -14,7 +14,6 @@ from logilab.common.decorators import cached
 
 from cubicweb import Unauthorized, typed_eid
 from cubicweb.entity import Entity
-from cubicweb.utils import dump_class
 
 from cubicweb.interfaces import IBreadCrumbs, IFeed
 
@@ -25,19 +24,6 @@ class AnyEntity(Entity):
     """
     id = 'Any'
     __implements__ = (IBreadCrumbs, IFeed)
-
-    @classmethod
-    def selected(cls, etype):
-        """the special Any entity is used as the default factory, so
-        the actual class has to be constructed at selection time once we
-        have an actual entity'type
-        """
-        if cls.id == etype:
-            return cls
-        usercls = dump_class(cls, etype)
-        usercls.id = etype
-        usercls.__initialize__()
-        return usercls
 
     fetch_attrs = ('modification_date',)
     @classmethod

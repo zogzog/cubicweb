@@ -263,21 +263,24 @@ class CWUserTC(BaseEntityTC):
 class InterfaceTC(EnvBasedTC):
 
     def test_nonregr_subclasses_and_mixins_interfaces(self):
+        self.failUnless(implements(CWUser, IWorkflowable))
         class MyUser(CWUser):
             __implements__ = (IMileStone,)
         self.vreg._loadedmods[__name__] = {}
-        self.vreg.register_vobject_class(MyUser)
-        self.failUnless(implements(CWUser, IWorkflowable))
-        self.failUnless(implements(MyUser, IMileStone))
-        self.failUnless(implements(MyUser, IWorkflowable))
+        self.vreg.register_appobject_class(MyUser)
+        self.vreg['etypes'].initialization_completed()
+        MyUser_ = self.vreg['etypes'].etype_class('CWUser')
+        self.failUnless(MyUser is MyUser_)
+        self.failUnless(implements(MyUser_, IMileStone))
+        self.failUnless(implements(MyUser_, IWorkflowable))
 
 
 class SpecializedEntityClassesTC(EnvBasedTC):
 
     def select_eclass(self, etype):
         # clear selector cache
-        clear_cache(self.vreg, 'etype_class')
-        return self.vreg.etype_class(etype)
+        clear_cache(self.vreg['etypes'], 'etype_class')
+        return self.vreg['etypes'].etype_class(etype)
 
     def test_etype_class_selection_and_specialization(self):
         # no specific class for Subdivisions, the default one should be selected
@@ -290,7 +293,7 @@ class SpecializedEntityClassesTC(EnvBasedTC):
         for etype in ('Company', 'Division', 'SubDivision'):
             class Foo(AnyEntity):
                 id = etype
-            self.vreg.register_vobject_class(Foo)
+            self.vreg.register_appobject_class(Foo)
             eclass = self.select_eclass('SubDivision')
             if etype == 'SubDivision':
                 self.failUnless(eclass is Foo)

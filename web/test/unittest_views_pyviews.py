@@ -4,9 +4,9 @@ from cubicweb.devtools.apptest import EnvBasedTC
 class PyViewsTC(EnvBasedTC):
 
     def test_pyvaltable(self):
-        content = self.vreg.render('pyvaltable', self.request(),
-                                   pyvalue=[[1, 'a'], [2, 'b']],
-                                   headers=['num', 'char'])
+        content = self.vreg['views'].render('pyvaltable', self.request(),
+                                            pyvalue=[[1, 'a'], [2, 'b']],
+                                            headers=['num', 'char'])
         self.assertEquals(content.strip(), '''<table class="listing">
 <tr><th>num</th><th>char</th></tr>
 <tr><td>1</td><td>a</td></tr>
@@ -14,8 +14,8 @@ class PyViewsTC(EnvBasedTC):
 </table>''')
 
     def test_pyvallist(self):
-        content = self.vreg.render('pyvallist', self.request(),
-                                   pyvalue=[1, 'a'])
+        content = self.vreg['views'].render('pyvallist', self.request(),
+                                            pyvalue=[1, 'a'])
         self.assertEquals(content.strip(), '''<ul>
 <li>1</li>
 <li>a</li>

@@ -51,7 +51,8 @@ class EditBox(BoxTemplate):
                 title = u'%s - %s' % (title, etypelabel.lower())
         box = BoxWidget(title, self.id, _class="greyBoxFrame")
         # build list of actions
-        actions = self.vreg.possible_actions(self.req, self.rset, view=view)
+        actions = self.vreg['actions'].possible_actions(self.req, self.rset,
+                                                        view=view)
         add_menu = BoxMenu(_('add')) # 'addrelated' category
         other_menu = BoxMenu(_('more actions')) # 'moreactions' category
         searchstate = self.req.search_state[0]
@@ -207,7 +208,8 @@ class PossibleViewsBox(BoxTemplate):
 
     def call(self, **kwargs):
         box = BoxWidget(self.req._(self.title), self.id)
-        views = [v for v in self.vreg.possible_views(self.req, self.rset)
+        views = [v for v in self.vreg['views'].possible_views(self.req,
+                                                              rset=self.rset)
                  if v.category != 'startupview']
         for category, views in self.sort_actions(views):
             menu = BoxMenu(category)
@@ -227,7 +229,7 @@ class StartupViewsBox(BoxTemplate):
 
     def call(self, **kwargs):
         box = BoxWidget(self.req._(self.title), self.id)
-        for view in self.vreg.possible_views(self.req, None):
+        for view in self.vreg['views'].possible_views(self.req, None):
             if view.category == 'startupview':
                 box.append(self.box_action(view))
 

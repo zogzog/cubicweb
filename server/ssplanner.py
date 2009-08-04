@@ -114,9 +114,10 @@ class SSPlanner(object):
         # each variable in main variables is a new entity to insert
         to_build = {}
         session = plan.session
+        etype_class = session.vreg['etypes'].etype_class
         for etype, var in rqlst.main_variables:
             # need to do this since entity class is shared w. web client code !
-            to_build[var.name] = session.etype_class(etype)(session, None, None)
+            to_build[var.name] = etype_class(etype)(session)
             plan.add_entity_def(to_build[var.name])
         # add constant values to entity def, mark variables to be selected
         to_select = plan.relation_definitions(rqlst, to_build)
@@ -481,6 +482,7 @@ class UpdateStep(Step):
         repo = session.repo
         edefs = {}
         # insert relations
+        attributes = [relation.r_type for relation in self.attribute_relations]
         for row in self.execute_child():
             for relation in self.attribute_relations:
                 lhs, rhs = relation.get_variable_parts()
@@ -488,7 +490,7 @@ class UpdateStep(Step):
                 try:
                     edef = edefs[eid]
                 except KeyError:
-                    edefs[eid] = edef = session.eid_rset(eid).get_entity(0, 0)
+                    edefs[eid] = edef = session.entity_from_eid(eid)
                 if isinstance(rhs, Constant):
                     # add constant values to entity def
                     value = rhs.eval(plan.args)
@@ -502,6 +504,6 @@ class UpdateStep(Step):
         # update entities
         result = []
         for eid, edef in edefs.iteritems():
-            repo.glob_update_entity(session, edef)
+            repo.glob_update_entity(session, edef, attributes)
             result.append( (eid,) )
         return result

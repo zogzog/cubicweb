@@ -22,8 +22,8 @@ GAEConfiguration.ext_resources['JAVASCRIPTS'].append('DATADIR/goa.js')
 config = GAEConfiguration('toto', APPLROOT)
 
 # dynamic objects registry
-from cubicweb.goa.goavreg import GAERegistry
-vreg = GAERegistry(config, debug=goa.MODE == 'dev')
+from cubicweb.goa.goavreg import GAEVregistry
+vreg = GAEVregistry(config, debug=goa.MODE == 'dev')
 
 # trigger automatic classes registration (metaclass magic), should be done
 # before schema loading

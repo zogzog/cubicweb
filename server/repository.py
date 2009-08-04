@@ -33,7 +33,7 @@ from cubicweb import (CW_SOFTWARE_ROOT, UnknownEid, AuthenticationError,
                       BadConnectionId, Unauthorized, ValidationError,
                       ExecutionError, typed_eid,
                       CW_MIGRATION_MAP)
-from cubicweb.cwvreg import CubicWebRegistry
+from cubicweb.cwvreg import CubicWebVRegistry
 from cubicweb.schema import VIRTUAL_RTYPES, CubicWebSchema
 from cubicweb import server
 from cubicweb.server.utils import RepoThread, LoopTask
@@ -137,7 +137,7 @@ class Repository(object):
     def __init__(self, config, vreg=None, debug=False):
         self.config = config
         if vreg is None:
-            vreg = CubicWebRegistry(config, debug)
+            vreg = CubicWebVRegistry(config, debug)
         self.vreg = vreg
         self.pyro_registered = False
         self.info('starting repository from %s', self.config.apphome)
@@ -428,7 +428,7 @@ class Repository(object):
 
     def _build_user(self, session, eid):
         """return a CWUser entity for user with the given eid"""
-        cls = self.vreg.etype_class('CWUser')
+        cls = self.vreg['etypes'].etype_class('CWUser')
         rql = cls.fetch_rql(session.user, ['X eid %(x)s'])
         rset = session.execute(rql, {'x': eid}, 'x')
         assert len(rset) == 1, rset
@@ -532,7 +532,7 @@ class Repository(object):
                                    {'login': login})):
                 raise ValidationError(None, {'login': errmsg % login})
             # we have to create the user
-            user = self.vreg.etype_class('CWUser')(session, None)
+            user = self.vreg['etypes'].etype_class('CWUser')(session, None)
             if isinstance(password, unicode):
                 # password should *always* be utf8 encoded
                 password = password.encode('UTF8')
@@ -1038,13 +1038,15 @@ class Repository(object):
                                     entity.eid, attr, value)
         return entity.eid
 
-    def glob_update_entity(self, session, entity):
+    def glob_update_entity(self, session, entity, edited_attributes):
         """replace an entity in the repository
         the type and the eid of an entity must not be changed
         """
         etype = str(entity.e_schema)
         if server.DEBUG & server.DBG_REPO:
-            print 'UPDATE entity', etype, entity.eid, dict(entity)
+            print 'UPDATE entity', etype, entity.eid, \
+                  dict(entity), edited_attributes
+        entity.edited_attributes = edited_attributes
         entity.check()
         eschema = entity.e_schema
         session.set_entity_cache(entity)
@@ -1164,35 +1166,15 @@ class Repository(object):
 
     def pyro_register(self, host=''):
         """register the repository as a pyro object"""
-        from Pyro import core
-        port = self.config['pyro-port']
-        nshost, nsgroup = self.config['pyro-ns-host'], self.config['pyro-ns-group']
-        nsgroup = ':' + nsgroup
-        core.initServer(banner=0)
-        daemon = core.Daemon(host=host, port=port)
-        daemon.useNameServer(self.pyro_nameserver(nshost, nsgroup))
-        # use Delegation approach
-        impl = core.ObjBase()
-        impl.delegateTo(self)
-        nsid = self.config['pyro-id'] or self.config.appid
-        daemon.connect(impl, '%s.%s' % (nsgroup, nsid))
+        from logilab.common.pyro_ext import register_object
+        appid = self.config['pyro-id'] or self.config.appid
+        daemon = register_object(self, appid, self.config['pyro-ns-group'],
+                                 self.config['pyro-host'],
+                                 self.config['pyro-ns-host'])
         msg = 'repository registered as a pyro object using group %s and id %s'
-        self.info(msg, nsgroup, nsid)
+        self.info(msg, self.config['pyro-ns-group'], appid)
         self.pyro_registered = True
         return daemon
-
-    def pyro_nameserver(self, host=None, group=None):
-        """locate and bind the the name server to the daemon"""
-        from Pyro import naming, errors
-        # locate the name server
-        nameserver = naming.NameServerLocator().getNS(host)
-        if group is not None:
-            # make sure our namespace group exists
-            try:
-                nameserver.createGroup(group)
-            except errors.NamingError:
-                pass
-        return nameserver
 
     # multi-sources planner helpers ###########################################
 
@@ -1217,21 +1199,9 @@ class Repository(object):
 
 def pyro_unregister(config):
     """unregister the repository from the pyro name server"""
-    nshost, nsgroup = config['pyro-ns-host'], config['pyro-ns-group']
+    from logilab.common.pyro_ext import ns_unregister
     appid = config['pyro-id'] or config.appid
-    from Pyro import core, naming, errors
-    core.initClient(banner=False)
-    try:
-        nameserver = naming.NameServerLocator().getNS(nshost)
-    except errors.PyroError, ex:
-        # name server not responding
-        config.error('can\'t locate pyro name server: %s', ex)
-        return
-    try:
-        nameserver.unregister(':%s.%s' % (nsgroup, appid))
-        config.info('%s unregistered from pyro name server', appid)
-    except errors.NamingError:
-        config.warning('%s already unregistered from pyro name server', appid)
+    ns_unregister(appid, config['pyro-ns-group'], config['pyro-ns-host'])
 
 
 from logging import getLogger

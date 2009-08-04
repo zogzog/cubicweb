@@ -62,8 +62,8 @@ class DeleteConfForm(forms.CompositeForm):
             if entity.eid in done:
                 continue
             done.add(entity.eid)
-            subform = self.vreg.select('forms', 'base', self.req, entity=entity,
-                                       mainform=False)
+            subform = self.vreg['forms'].select('base', self.req, entity=entity,
+                                                mainform=False)
             self.form_add_subform(subform)
 
 
@@ -83,8 +83,8 @@ class DeleteConfFormView(FormViewMixIn, EntityView):
           % _('this action is not reversible!'))
         # XXX above message should have style of a warning
         w(u'<h4>%s</h4>\n' % _('Do you want to delete the following element(s) ?'))
-        form = self.vreg.select('forms', self.id, req, rset=self.rset,
-                                onsubmit=onsubmit)
+        form = self.vreg['forms'].select(self.id, req, rset=self.rset,
+                                         onsubmit=onsubmit)
         w(u'<ul>\n')
         for entity in self.rset.entities():
             # don't use outofcontext view or any other that may contain inline edition form
@@ -127,12 +127,10 @@ class ClickAndEditFormView(FormViewMixIn, EntityView):
         return lzone or self._defaultlandingzone % {'msg' : xml_escape(self.req._(self._landingzonemsg))}
 
     def _build_renderer(self, entity, rtype, role):
-        return self.vreg.select_object('formrenderers', 'base', self.req,
-                                       entity=entity,
-                                       display_label=False, display_help=False,
-                                       display_fields=[(rtype, role)],
-                                       table_class='', button_bar_class='buttonbar',
-                                       display_progress_div=False)
+        return self.vreg['formrenderers'].select(
+            'base', self.req, entity=entity, display_label=False,
+            display_help=False, display_fields=[(rtype, role)], table_class='',
+            button_bar_class='buttonbar', display_progress_div=False)
 
     def cell_call(self, row, col, rtype=None, role='subject',
                   reload=False,      # controls reloading the whole page after change
@@ -207,12 +205,12 @@ class ClickAndEditFormView(FormViewMixIn, EntityView):
                     % event_data)
         cancelclick = "hideInlineEdit(%s,\'%s\',\'%s\')" % (
             entity.eid, rtype, divid)
-        form = self.vreg.select('forms', 'base', self.req, entity=entity,
-                                domid='%s-form' % divid, cssstyle='display: none',
-                                onsubmit=onsubmit, action='#',
-                                form_buttons=[SubmitButton(),
-                                              Button(stdmsgs.BUTTON_CANCEL,
-                                                     onclick=cancelclick)])
+        form = self.vreg['forms'].select('base', self.req, entity=entity,
+                                         domid='%s-form' % divid, cssstyle='display: none',
+                                         onsubmit=onsubmit, action='#',
+                                         form_buttons=[SubmitButton(),
+                                                       Button(stdmsgs.BUTTON_CANCEL,
+                                                              onclick=cancelclick)])
         field = guess_field(entity.e_schema, entity.schema.rschema(rtype), role)
         form.append_field(field)
         w = self.w
@@ -243,12 +241,12 @@ class ClickAndEditFormView(FormViewMixIn, EntityView):
                    Button(stdmsgs.BUTTON_CANCEL,
                           onclick="hideInlineEdit(%s,\'%s\',\'%s\')" % (
                               eid, rtype, divid))]
-        form = self.vreg.select('forms', 'edition', self.req, rset=self.rset,
-                                row=row, col=col, form_buttons=buttons,
-                                attrcategories=self.attrcategories,
-                                domid='%s-form' % divid, action='#',
-                                cssstyle='display: none',
-                                onsubmit=onsubmit % event_data)
+        form = self.vreg['forms'].select('edition', self.req, rset=self.rset,
+                                         row=row, col=col, form_buttons=buttons,
+                                         attrcategories=self.attrcategories,
+                                         domid='%s-form' % divid, action='#',
+                                         cssstyle='display: none',
+                                         onsubmit=onsubmit % event_data)
         try:
             field = form.field_by_name(rtype, role)
         except FieldNotFound:
@@ -283,9 +281,9 @@ class EditionFormView(FormViewMixIn, EntityView):
     def render_form(self, entity):
         """fetch and render the form"""
         self.form_title(entity)
-        form = self.vreg.select('forms', 'edition', self.req, rset=entity.rset,
-                                row=entity.row, col=entity.col, entity=entity,
-                                submitmsg=self.submited_message())
+        form = self.vreg['forms'].select('edition', self.req, rset=entity.rset,
+                                         row=entity.row, col=entity.col, entity=entity,
+                                         submitmsg=self.submited_message())
         self.init_form(form, entity)
         self.w(form.form_render(formvid=u'edition'))
 
@@ -315,7 +313,7 @@ class CreationFormView(EditionFormView):
         """creation view for an entity"""
         etype = kwargs.pop('etype', self.req.form.get('etype'))
         try:
-            entity = self.vreg.etype_class(etype)(self.req)
+            entity = self.vreg['etypes'].etype_class(etype)(self.req)
         except:
             self.w(self.req._('no such entity type %s') % etype)
         else:
@@ -402,9 +400,10 @@ class TableEditForm(forms.CompositeForm):
         kwargs.setdefault('__redirectrql', rset.printable_rql())
         super(TableEditForm, self).__init__(req, rset, **kwargs)
         for row in xrange(len(self.rset)):
-            form = self.vreg.select('forms', 'edition', self.req, rset=self.rset,
-                                    row=row, attrcategories=('primary',),
-                                    mainform=False)
+            form = self.vreg['forms'].select('edition', self.req,
+                                             rset=self.rset, row=row,
+                                             attrcategories=('primary',),
+                                             mainform=False)
             # XXX rely on the EntityCompositeFormRenderer to put the eid input
             form.remove_field(form.field_by_name('eid'))
             self.form_add_subform(form)
@@ -420,7 +419,7 @@ class TableEditFormView(FormViewMixIn, EntityView):
         should be the eid
         """
         #self.form_title(entity)
-        form = self.vreg.select('forms', self.id, self.req, rset=self.rset)
+        form = self.vreg['forms'].select(self.id, self.req, rset=self.rset)
         self.w(form.form_render())
 
 
@@ -451,9 +450,9 @@ class InlineEntityEditionFormView(FormViewMixIn, EntityView):
 
     def render_form(self, entity, peid, rtype, role, **kwargs):
         """fetch and render the form"""
-        form = self.vreg.select('forms', 'edition', self.req, entity=entity,
-                                form_renderer_id='inline', mainform=False,
-                                copy_nav_params=False)
+        form = self.vreg['forms'].select('edition', self.req, entity=entity,
+                                         form_renderer_id='inline',
+                                         mainform=False, copy_nav_params=False)
         self.add_hiddens(form, entity, peid, rtype, role)
         divid = '%s-%s-%s' % (peid, rtype, entity.eid)
         title = self.schema.rschema(rtype).display_name(self.req, role)
@@ -503,7 +502,7 @@ class InlineEntityCreationFormView(InlineEntityEditionFormView):
         :param role: the role played by the `peid` in the relation
         """
         try:
-            entity = self.vreg.etype_class(etype)(self.req, None, None)
+            entity = self.vreg['etypes'].etype_class(etype)(self.req, None, None)
         except:
             self.w(self.req._('no such entity type %s') % etype)
             return

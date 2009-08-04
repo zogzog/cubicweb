@@ -20,7 +20,7 @@ from rql.utils import rqlvar_maker
 from cubicweb import Unauthorized
 from cubicweb.rset import ResultSet
 from cubicweb.selectors import yes
-from cubicweb.appobject import AppRsetObject
+from cubicweb.appobject import AppObject
 from cubicweb.schema import RQLVocabularyConstraint, RQLConstraint, bw_normalize_etype
 
 from cubicweb.common.uilib import printable_value, soup2xhtml
@@ -132,7 +132,7 @@ class _metaentity(type):
         return super(_metaentity, mcs).__new__(mcs, name, bases, classdict)
 
 
-class Entity(AppRsetObject, dict):
+class Entity(AppObject, dict):
     """an entity instance has e_schema automagically set on
     the class and instances has access to their issuing cursor.
 
@@ -166,15 +166,6 @@ class Entity(AppRsetObject, dict):
     skip_copy_for = ()
     # class attributes set automatically at registration time
     e_schema = None
-
-    @classmethod
-    def registered(cls, registry):
-        """build class using descriptor at registration time"""
-        assert cls.id is not None
-        super(Entity, cls).registered(registry)
-        if cls.id != 'Any':
-            cls.__initialize__()
-        return cls
 
     MODE_TAGS = set(('link', 'create'))
     CATEGORY_TAGS = set(('primary', 'secondary', 'generic', 'generated')) # , 'metadata'))
@@ -265,7 +256,7 @@ class Entity(AppRsetObject, dict):
                     continue
                 if card == '?':
                     restrictions[-1] += '?' # left outer join if not mandatory
-                destcls = cls.vreg.etype_class(desttype)
+                destcls = cls.vreg['etypes'].etype_class(desttype)
                 destcls._fetch_restrictions(var, varmaker, destcls.fetch_attrs,
                                             selection, orderby, restrictions,
                                             user, ordermethod, visited=visited)
@@ -277,8 +268,9 @@ class Entity(AppRsetObject, dict):
     @classmethod
     @cached
     def parent_classes(cls):
-        parents = [cls.vreg.etype_class(e.type) for e in cls.e_schema.ancestors()]
-        parents.append(cls.vreg.etype_class('Any'))
+        parents = [cls.vreg['etypes'].etype_class(e.type)
+                   for e in cls.e_schema.ancestors()]
+        parents.append(cls.vreg['etypes'].etype_class('Any'))
         return parents
 
     @classmethod
@@ -299,7 +291,7 @@ class Entity(AppRsetObject, dict):
         return mainattr, needcheck
 
     def __init__(self, req, rset=None, row=None, col=0):
-        AppRsetObject.__init__(self, req, rset, row, col)
+        AppObject.__init__(self, req, rset, row, col)
         dict.__init__(self)
         self._related_cache = {}
         if rset is not None:
@@ -364,10 +356,10 @@ class Entity(AppRsetObject, dict):
     def has_perm(self, action):
         return self.e_schema.has_perm(self.req, action, self.eid)
 
-    def view(self, vid, **kwargs):
+    def view(self, vid, __registry='views', **kwargs):
         """shortcut to apply a view on this entity"""
-        return self.vreg.render(vid, self.req, rset=self.rset,
-                                row=self.row, col=self.col, **kwargs)
+        return self.vreg[__registry].render(vid, self.req, rset=self.rset,
+                                            row=self.row, col=self.col, **kwargs)
 
     def absolute_url(self, *args, **kwargs):
         """return an absolute url to view this entity"""
@@ -702,13 +694,13 @@ class Entity(AppRsetObject, dict):
         if len(targettypes) > 1:
             fetchattrs_list = []
             for ttype in targettypes:
-                etypecls = self.vreg.etype_class(ttype)
+                etypecls = self.vreg['etypes'].etype_class(ttype)
                 fetchattrs_list.append(set(etypecls.fetch_attrs))
             fetchattrs = reduce(set.intersection, fetchattrs_list)
             rql = etypecls.fetch_rql(self.req.user, [restriction], fetchattrs,
                                      settype=False)
         else:
-            etypecls = self.vreg.etype_class(targettypes[0])
+            etypecls = self.vreg['etypes'].etype_class(targettypes[0])
             rql = etypecls.fetch_rql(self.req.user, [restriction], settype=False)
         # optimisation: remove ORDERBY if cardinality is 1 or ? (though
         # greater_card return 1 for those both cases)
@@ -764,7 +756,7 @@ class Entity(AppRsetObject, dict):
         else:
             restriction += [cstr.restriction for cstr in constraints
                             if isinstance(cstr, RQLConstraint)]
-        etypecls = self.vreg.etype_class(targettype)
+        etypecls = self.vreg['etypes'].etype_class(targettype)
         rql = etypecls.fetch_rql(self.req.user, restriction,
                                  mainvar=searchedvar, ordermethod=ordermethod)
         # ensure we have an order defined

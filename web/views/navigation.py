@@ -149,7 +149,7 @@ class SortedNavigation(NavigationComponent):
 def limit_rset_using_paged_nav(self, req, rset, w, forcedisplay=False,
                                show_all_option=True, page_size=None):
     if not (forcedisplay or req.form.get('__force_display') is not None):
-        nav = self.vreg.select_object('components', 'navigation', req,
+        nav = self.vreg['components'].select_object('navigation', req,
                                       rset=rset, page_size=page_size)
         if nav:
             # get boundaries before component rendering

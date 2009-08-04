@@ -10,8 +10,8 @@ from logilab.common.testlib import unittest_main, TestCase
 from os.path import join
 
 from cubicweb import CW_SOFTWARE_ROOT as BASE
-from cubicweb.vregistry import VObject
-from cubicweb.cwvreg import CubicWebRegistry, UnknownProperty
+from cubicweb.appobject import AppObject
+from cubicweb.cwvreg import CubicWebVRegistry, UnknownProperty
 from cubicweb.devtools import TestServerConfiguration
 from cubicweb.interfaces import IMileStone
 
@@ -27,7 +27,7 @@ class VRegistryTC(TestCase):
 
     def setUp(self):
         config = TestServerConfiguration('data')
-        self.vreg = CubicWebRegistry(config)
+        self.vreg = CubicWebVRegistry(config)
         config.bootstrap_cubes()
         self.vreg.schema = config.load_schema()
 
@@ -43,7 +43,7 @@ class VRegistryTC(TestCase):
     def test___selectors__compat(self):
         myselector1 = lambda *args: 1
         myselector2 = lambda *args: 1
-        class AnAppObject(VObject):
+        class AnAppObject(AppObject):
             __selectors__ = (myselector1, myselector2)
         AnAppObject.build___select__()
         self.assertEquals(AnAppObject.__select__(AnAppObject), 2)
@@ -53,7 +53,7 @@ class VRegistryTC(TestCase):
         self.failUnless(self.vreg.property_info('system.version.cubicweb'))
         self.assertRaises(UnknownProperty, self.vreg.property_info, 'a.non.existent.key')
 
-    def test_load_subinterface_based_vobjects(self):
+    def test_load_subinterface_based_appobjects(self):
         self.vreg.reset()
         self.vreg.register_objects([join(BASE, 'web', 'views', 'iprogress.py')])
         # check progressbar was kicked
@@ -62,7 +62,7 @@ class VRegistryTC(TestCase):
             __implements__ = (IMileStone,)
         self.vreg.reset()
         self.vreg._loadedmods[__name__] = {}
-        self.vreg.register_vobject_class(MyCard)
+        self.vreg.register_appobject_class(MyCard)
         self.vreg.register_objects([join(BASE, 'entities', '__init__.py'),
                                     join(BASE, 'web', 'views', 'iprogress.py')])
         # check progressbar isn't kicked

@@ -28,11 +28,11 @@ def initialize_vregistry(applroot):
     # apply monkey patches first
     from cubicweb.goa import do_monkey_patch
     do_monkey_patch()
-    from cubicweb.goa.goavreg import GAERegistry
+    from cubicweb.goa.goavreg import GAEVregistry
     from cubicweb.goa.goaconfig import GAEConfiguration
     #WebConfiguration.ext_resources['JAVASCRIPTS'].append('DATADIR/goa.js')
     config = GAEConfiguration('toto', applroot)
-    vreg = GAERegistry(config)
+    vreg = GAEVregistry(config)
     vreg.set_schema(config.load_schema())
     return vreg
 

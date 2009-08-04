@@ -71,6 +71,7 @@ class Controller(AppObject):
     registered = require_group_compat(AppObject.registered)
 
     def __init__(self, *args, **kwargs):
+        self.appli = kwargs.pop('appli', None)
         super(Controller, self).__init__(*args, **kwargs)
         # attributes use to control after edition redirection
         self._after_deletion_path = None
@@ -92,7 +93,7 @@ class Controller(AppObject):
             self.ensure_ro_rql(rql)
             if not isinstance(rql, unicode):
                 rql = unicode(rql, self.req.encoding)
-            pp = self.vreg.select_object('components', 'magicsearch', self.req)
+            pp = self.vreg['components'].select_object('magicsearch', self.req)
             if pp is not None:
                 self.rset = pp.process_query(rql, self.req)
         return self.rset

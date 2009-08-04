@@ -68,7 +68,7 @@ class MassMailingForm(forms.FieldsForm):
     def get_allowed_substitutions(self):
         attrs = []
         for coltype in self.rset.column_types(0):
-            eclass = self.vreg.etype_class(coltype)
+            eclass = self.vreg['etypes'].etype_class(coltype)
             attrs.append(eclass.allowed_massmail_keys())
         return sorted(reduce(operator.and_, attrs))
 
@@ -126,6 +126,6 @@ class MassMailingFormView(FormViewMixIn, EntityView):
         req.add_js('cubicweb.widgets.js', 'cubicweb.massmailing.js')
         req.add_css('cubicweb.mailform.css')
         from_addr = '%s <%s>' % (req.user.dc_title(), req.user.get_email())
-        form = self.vreg.select('forms', 'massmailing', self.req, rset=self.rset,
+        form = self.vreg['forms'].select('massmailing', self.req, rset=self.rset,
                                 action='sendmail', domid='sendmail')
         self.w(form.form_render(sender=from_addr))

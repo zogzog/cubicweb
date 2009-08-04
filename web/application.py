@@ -41,7 +41,7 @@ class AbstractSessionManager(component.Component):
         if self.session_time:
             assert self.cleanup_session_time < self.session_time
             assert self.cleanup_anon_session_time < self.session_time
-        self.authmanager = self.vreg.select('components', 'authmanager')
+        self.authmanager = self.vreg['components'].select('authmanager')
 
     def clean_sessions(self):
         """cleanup sessions which has not been unused since a given amount of
@@ -112,7 +112,7 @@ class CookieSessionHandler(object):
     SESSION_VAR = '__session'
 
     def __init__(self, appli):
-        self.session_manager = appli.vreg.select('components', 'sessionmanager')
+        self.session_manager = appli.vreg['components'].select('sessionmanager')
         global SESSION_MANAGER
         SESSION_MANAGER = self.session_manager
         if not 'last_login_time' in appli.vreg.schema:
@@ -220,7 +220,7 @@ class CubicWebPublisher(object):
         super(CubicWebPublisher, self).__init__()
         # connect to the repository and get instance's schema
         if vreg is None:
-            vreg = cwvreg.CubicWebRegistry(config, debug=debug)
+            vreg = cwvreg.CubicWebVRegistry(config, debug=debug)
         self.vreg = vreg
         self.info('starting web instance from %s', config.apphome)
         self.repo = config.repository(vreg)
@@ -239,7 +239,7 @@ class CubicWebPublisher(object):
             self.publish = self.main_publish
         # instantiate session and url resolving helpers
         self.session_handler = session_handler_fact(self)
-        self.url_resolver = vreg.select('components', 'urlpublisher')
+        self.url_resolver = vreg['components'].select('urlpublisher')
 
     def connect(self, req):
         """return a connection for a logged user object according to existing
@@ -275,7 +275,7 @@ class CubicWebPublisher(object):
     @deprecated("use vreg.select('controllers', ...)")
     def select_controller(self, oid, req):
         try:
-            return self.vreg.select('controllers', oid, req=req, appli=self)
+            return self.vreg['controllers'].select(oid, req=req, appli=self)
         except NoSelectableObject:
             raise Unauthorized(req._('not authorized'))
 
@@ -304,8 +304,8 @@ class CubicWebPublisher(object):
             try:
                 ctrlid, rset = self.url_resolver.process(req, path)
                 try:
-                    controller = self.vreg.select('controllers', ctrlid, req,
-                                                  appli=self)
+                    controller = self.vreg['controllers'].select(ctrlid, req,
+                                                                 appli=self)
                 except NoSelectableObject:
                     raise Unauthorized(req._('not authorized'))
                 req.update_search_state()
@@ -375,28 +375,28 @@ class CubicWebPublisher(object):
             if tb:
                 req.data['excinfo'] = excinfo
             req.form['vid'] = 'error'
-            errview = self.vreg.select('views', 'error', req)
+            errview = self.vreg['views'].select('error', req)
             template = self.main_template_id(req)
-            content = self.vreg.main_template(req, template, view=errview)
+            content = self.vreg['views'].main_template(req, template, view=errview)
         except:
-            content = self.vreg.main_template(req, 'error-template')
+            content = self.vreg['views'].main_template(req, 'error-template')
         raise StatusResponse(500, content)
 
     def need_login_content(self, req):
-        return self.vreg.main_template(req, 'login')
+        return self.vreg['views'].main_template(req, 'login')
 
     def loggedout_content(self, req):
-        return self.vreg.main_template(req, 'loggedout')
+        return self.vreg['views'].main_template(req, 'loggedout')
 
     def notfound_content(self, req):
         req.form['vid'] = '404'
-        view = self.vreg.select('views', '404', req)
+        view = self.vreg['views'].select('404', req)
         template = self.main_template_id(req)
-        return self.vreg.main_template(req, template, view=view)
+        return self.vreg['views'].main_template(req, template, view=view)
 
     def main_template_id(self, req):
         template = req.form.get('__template', req.property_value('ui.main-template'))
-        if template not in self.vreg.registry('views'):
+        if template not in self.vreg['views']:
             template = 'main-template'
         return template
 

@@ -180,7 +180,7 @@ class SystemCWPropertiesForm(FormViewMixIn, StartupView):
         if key in values:
             entity = self.cwprops_rset.get_entity(values[key], 0)
         else:
-            entity = self.vreg.etype_class('CWProperty')(self.req, None, None)
+            entity = self.vreg['etypes'].etype_class('CWProperty')(self.req)
             entity.eid = self.req.varmaker.next()
             entity['pkey'] = key
             entity['value'] = self.vreg.property_value(key)
@@ -188,11 +188,11 @@ class SystemCWPropertiesForm(FormViewMixIn, StartupView):
 
     def form(self, formid, keys, splitlabel=False):
         buttons = [SubmitButton()]
-        form = self.vreg.select('forms', 'composite', self.req,
-                                domid=formid, action=self.build_url(),
-                                form_buttons=buttons,
-                                onsubmit="return validatePrefsForm('%s')" % formid,
-                                submitmsg=self.req._('changes applied'))
+        form = self.vreg['forms'].select(
+            'composite', self.req, domid=formid, action=self.build_url(),
+            form_buttons=buttons,
+            onsubmit="return validatePrefsForm('%s')" % formid,
+            submitmsg=self.req._('changes applied'))
         path = self.req.relative_path()
         if '?' in path:
             path, params = path.split('?', 1)
@@ -200,8 +200,8 @@ class SystemCWPropertiesForm(FormViewMixIn, StartupView):
         form.form_add_hidden('__redirectpath', path)
         for key in keys:
             self.form_row(form, key, splitlabel)
-        renderer = self.vreg.select('formrenderers', 'cwproperties', self.req,
-                                    display_progress_div=False)
+        renderer = self.vreg['formrenderers'].select('cwproperties', self.req,
+                                                     display_progress_div=False)
         return form.form_render(renderer=renderer)
 
     def form_row(self, form, key, splitlabel):
@@ -210,8 +210,8 @@ class SystemCWPropertiesForm(FormViewMixIn, StartupView):
             label = key.split('.')[-1]
         else:
             label = key
-        subform = self.vreg.select('forms', 'base', self.req, entity=entity,
-                                   mainform=False)
+        subform = self.vreg['forms'].select('base', self.req, entity=entity,
+                                            mainform=False)
         subform.append_field(PropertyValueField(name='value', label=label,
                                                 eidparam=True))
         subform.vreg = self.vreg

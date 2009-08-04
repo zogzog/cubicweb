@@ -11,7 +11,7 @@ from simplejson import dumps
 
 from logilab.mtconverter import xml_escape
 
-from cubicweb.vregistry import objectify_selector
+from cubicweb.appobject import objectify_selector
 from cubicweb.selectors import (non_final_entity, two_lines_rset,
                                 match_context_prop, yes, relation_possible)
 from cubicweb.web.box import BoxTemplate
@@ -118,9 +118,9 @@ class FilterBox(BoxTemplate):
             self.w(self.bk_linkbox_template % bk_link)
 
     def get_facets(self, rset, mainvar):
-        return self.vreg.possible_vobjects('facets', self.req, rset=rset,
-                                           context='facetbox',
-                                           filtered_variable=mainvar)
+        return self.vreg['facets'].possible_vobjects(self.req, rset=rset,
+                                                     context='facetbox',
+                                                     filtered_variable=mainvar)
 
 # facets ######################################################################
 
