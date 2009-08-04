@@ -155,7 +155,7 @@ class TreeMixIn(object):
 
     def root(self):
         """return the root object"""
-        return self.req.eid_rset(self.path()[0]).get_entity(0, 0)
+        return self.req.entity_from_eid(self.path()[0])
 
 
 class WorkflowableMixIn(object):

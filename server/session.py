@@ -569,7 +569,7 @@ class Session(RequestSessionMixIn):
     @deprecated('use entity_from_eid(eid, etype=None)')
     def entity(self, eid):
         """return a result set for the given eid"""
-        return self.eid_rset(eid).get_entity(0, 0)
+        return self.entity_from_eid(eid)
 
 
 class ChildSession(Session):

@@ -124,7 +124,7 @@ class Controller(AppObject):
         redirect_info = set()
         eidtypes = tuple(eidtypes)
         for eid, etype in eidtypes:
-            entity = self.req.eid_rset(eid, etype).get_entity(0, 0)
+            entity = self.req.entity_from_eid(eid, etype)
             path, params = entity.after_deletion_path()
             redirect_info.add( (path, tuple(params.iteritems())) )
             entity.delete()

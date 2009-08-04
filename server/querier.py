@@ -506,7 +506,7 @@ class InsertPlan(ExecutionPlan):
             elif not isinstance(obj, (int, long)):
                 obj = obj.eid
             if repo.schema.rschema(rtype).inlined:
-                entity = session.eid_rset(subj).get_entity(0, 0)
+                entity = session.entity_from_eid(subj)
                 entity[rtype] = obj
                 repo.glob_update_entity(session, entity)
             else:

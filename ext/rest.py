@@ -70,7 +70,7 @@ def eid_reference_role(role, rawtext, text, lineno, inliner,
     # Base URL mainly used by inliner.pep_reference; so this is correct:
     context = inliner.document.settings.context
     try:
-        refedentity = context.req.eid_rset(eid_num).get_entity(0, 0)
+        refedentity = context.req.entity_from_eid(eid_num)
     except UnknownEid:
         ref = '#'
         rest += u' ' + context.req._('(UNEXISTANT EID)')

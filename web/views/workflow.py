@@ -49,7 +49,7 @@ class ChangeStateFormView(FormViewMixIn, view.EntityView):
     def cell_call(self, row, col):
         entity = self.entity(row, col)
         state = entity.in_state[0]
-        transition = self.req.eid_rset(self.req.form['treid']).get_entity(0, 0)
+        transition = self.req.entity_from_eid(self.req.form['treid'])
         dest = transition.destination()
         _ = self.req._
         form = self.vreg.select('forms', 'changestate', self.req, rset=self.rset,

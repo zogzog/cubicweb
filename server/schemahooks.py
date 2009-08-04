@@ -963,7 +963,7 @@ def after_update_econstraint(session, entity):
 def before_delete_constrained_by(session, fromeid, rtype, toeid):
     if not fromeid in session.transaction_data.get('pendingeids', ()):
         schema = session.schema
-        entity = session.eid_rset(toeid).get_entity(0, 0)
+        entity = session.entity_from_eid(toeid)
         subjtype, rtype, objtype = schema.schema_by_eid(fromeid)
         try:
             cstr = rtype.constraint_by_type(subjtype, objtype,

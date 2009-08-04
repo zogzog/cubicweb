@@ -452,7 +452,7 @@ class RelationField(Field):
         # first see if its specified by __linkto form parameters
         linkedto = entity.linked_to(self.name, self.role)
         if linkedto:
-            entities = (req.eid_rset(eid).get_entity(0, 0) for eid in linkedto)
+            entities = (req.entity_from_eid(eid) for eid in linkedto)
             return [(entity.view('combobox'), entity.eid) for entity in entities]
         # it isn't, check if the entity provides a method to get correct values
         res = []

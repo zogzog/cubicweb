@@ -398,7 +398,7 @@ class JSonController(Controller):
     @jsonize
     def js_reledit_form(self, eid, rtype, role, default, lzone):
         """XXX we should get rid of this and use loadxhtml"""
-        entity = self.req.eid_rset(eid).get_entity(0, 0)
+        entity = self.req.entity_from_eid(eid)
         return entity.view('reledit', rtype=rtype, role=role,
                            default=default, landing_zone=lzone)
 

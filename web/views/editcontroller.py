@@ -53,7 +53,7 @@ class EditController(ViewController):
             for eid in req.edited_eids():
                 formparams = req.extract_entity_params(eid)
                 if methodname is not None:
-                    entity = req.eid_rset(eid).get_entity(0, 0)
+                    entity = req.entity_from_eid(eid)
                     method = getattr(entity, methodname)
                     method(formparams)
                 eid = self.edit_entity(formparams)
