@@ -516,6 +516,11 @@ class RQLVocabularyConstraint(BaseConstraint):
     def __init__(self, restriction):
         self.restriction = restriction
 
+    def check_consistency(self, subjschema, objschema):
+        if objschema.is_final():
+            raise BadSchemaDefinition("unique constraint doesn't apply to "
+                                      "final entity type")
+
     def serialize(self):
         return self.restriction
 
