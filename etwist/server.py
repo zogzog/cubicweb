@@ -365,7 +365,8 @@ def run(config, debug):
     port = config['port'] or 8080
     reactor.listenTCP(port, channel.HTTPFactory(website))
     baseurl = config['base-url'] or config.default_base_url()
-    print "-> Instance started on", baseurl
+    logger = getLogger('cubicweb.twisted')
+    logger.info('instance started on %s', baseurl)
     if not debug:
         daemonize()
         if config['pid-file']:
