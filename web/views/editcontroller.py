@@ -83,8 +83,8 @@ class EditController(ViewController):
         etype = formparams['__type']
         entity = self.vreg['etypes'].etype_class(etype)(self.req)
         entity.eid = eid = self._get_eid(formparams['eid'])
-        edited = self.req.form.get('__maineid') == formparams['eid']
         # let a chance to do some entity specific stuff.
+        is_main_entity = self.req.form.get('__maineid') == formparams['eid']
         entity.pre_web_edit()
         # create a rql query from parameters
         self.relations = []
@@ -135,7 +135,7 @@ class EditController(ViewController):
             if rschema.is_final():
                 continue
             self.handle_relation(rschema, formparams, 'object', entity)
-        if edited:
+        if is_main_entity:
             self.notify_edited(entity)
         if formparams.has_key('__delete'):
             todelete = self.req.list_form_param('__delete', formparams, pop=True)
@@ -145,7 +145,7 @@ class EditController(ViewController):
         if formparams.has_key('__insert'):
             toinsert = self.req.list_form_param('__insert', formparams, pop=True)
             self.insert_relations(parse_relations_descr(toinsert))
-        if edited: # only execute linkto for the main entity
+        if is_main_entity: # only execute linkto for the main entity
             self.execute_linkto(eid)
         return eid
 
