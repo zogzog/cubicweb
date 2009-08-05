@@ -41,35 +41,61 @@ BASE = ldap.SCOPE_BASE
 ONELEVEL = ldap.SCOPE_ONELEVEL
 SUBTREE = ldap.SCOPE_SUBTREE
 
-# XXX only for edition ??
-## password encryption possibilities
-#ENCRYPTIONS = ('SHA', 'CRYPT', 'MD5', 'CLEAR') # , 'SSHA'
-
-# mode identifier : (port, protocol)
-MODES = {
-    0: (389, 'ldap'),
-    1: (636, 'ldaps'),
-    2: (0,   'ldapi'),
-    }
+# map ldap protocol to their standard port
+PROTO_PORT = {'ldap': 389,
+              'ldaps': 636,
+              'ldapi': None,
+              }
 
 
 class LDAPUserSource(AbstractSource):
     """LDAP read-only CWUser source"""
     support_entities = {'CWUser': False}
 
-    port = None
-
-    cnx_mode = 0
-    cnx_dn = ''
-    cnx_pwd = ''
-
     options = (
         ('host',
          {'type' : 'string',
           'default': 'ldap',
-          'help': 'ldap host',
+          'help': 'ldap host. It may contains port information using \
+<host>:<port> notation.',
           'group': 'ldap-source', 'inputlevel': 1,
           }),
+        ('protocol',
+         {'type' : 'choice',
+          'default': 'ldap',
+          'choices': ('ldap', 'ldaps', 'ldapi'),
+          'help': 'ldap protocol',
+          'group': 'ldap-source', 'inputlevel': 1,
+          }),
+
+        ('auth-mode',
+         {'type' : 'choice',
+          'default': 'simple',
+          'choices': ('simple', 'cram_md5', 'digest_md5', 'gssapi'),
+          'help': 'authentication mode used to authenticate user to the ldap.',
+          'group': 'ldap-source', 'inputlevel': 1,
+          }),
+        ('auth-realm',
+         {'type' : 'string',
+          'default': None,
+          'help': 'realm to use when using gssapp/kerberos authentication.',
+          'group': 'ldap-source', 'inputlevel': 1,
+          }),
+
+        ('data-cnx-dn',
+         {'type' : 'string',
+          'default': '',
+          'help': 'user dn to use to open data connection to the ldap (eg used \
+to respond to rql queries).',
+          'group': 'ldap-source', 'inputlevel': 1,
+          }),
+        ('data-cnx-password',
+         {'type' : 'string',
+          'default': '',
+          'help': 'password to use to open data connection to the ldap (eg used to respond to rql queries).',
+          'group': 'ldap-source', 'inputlevel': 1,
+          }),
+
         ('user-base-dn',
          {'type' : 'string',
           'default': 'ou=People,dc=logilab,dc=fr',
@@ -129,6 +155,12 @@ directory (default to once a day).',
         AbstractSource.__init__(self, repo, appschema, source_config,
                                 *args, **kwargs)
         self.host = source_config['host']
+        self.protocol = source_config.get('protocol', 'ldap')
+        self.authmode = source_config.get('auth-mode', 'simple')
+        self._authenticate = getattr(self, '_auth_%s' % self.authmode)
+        self.cnx_dn = source_config.get('data-cnx-dn') or ''
+        self.cnx_pwd = source_config.get('data-cnx-password') or ''
+        self.user_base_scope = globals()[source_config['user-scope']]
         self.user_base_dn = source_config['user-base-dn']
         self.user_base_scope = globals()[source_config['user-scope']]
         self.user_classes = splitstrip(source_config['user-classes'])
@@ -225,8 +257,9 @@ directory (default to once a day).',
             raise AuthenticationError()
         # check password by establishing a (unused) connection
         try:
-            self._connect(user['dn'], password)
-        except:
+            self._connect(user, password)
+        except Exception, ex:
+            self.info('while trying to authenticate %s: %s', user, ex)
             # Something went wrong, most likely bad credentials
             raise AuthenticationError()
         return self.extid2eid(user['dn'], 'CWUser', session)
@@ -368,15 +401,16 @@ directory (default to once a day).',
         return result
 
 
-    def _connect(self, userdn=None, userpwd=None):
-        port, protocol = MODES[self.cnx_mode]
-        if protocol == 'ldapi':
+    def _connect(self, user=None, userpwd=None):
+        if self.protocol == 'ldapi':
             hostport = self.host
+        elif not ':' in self.host:
+            hostport = '%s:%s' % (self.host, PROTO_PORT[self.protocol])
         else:
-            hostport = '%s:%s' % (self.host, self.port or port)
-        self.info('connecting %s://%s as %s', protocol, hostport,
-                  userdn or 'anonymous')
-        url = LDAPUrl(urlscheme=protocol, hostport=hostport)
+            hostport = self.host
+        self.info('connecting %s://%s as %s', self.protocol, hostport,
+                  user and user['dn'] or 'anonymous')
+        url = LDAPUrl(urlscheme=self.protocol, hostport=hostport)
         conn = ReconnectLDAPObject(url.initializeUrl())
         # Set the protocol version - version 3 is preferred
         try:
@@ -391,13 +425,41 @@ directory (default to once a day).',
         #conn.set_option(ldap.OPT_NETWORK_TIMEOUT, conn_timeout)
         #conn.timeout = op_timeout
         # Now bind with the credentials given. Let exceptions propagate out.
-        if userdn is None:
+        if user is None:
+            # no user specified, we want to initialize the 'data' connection,
             assert self._conn is None
             self._conn = conn
-            userdn = self.cnx_dn
-            userpwd = self.cnx_pwd
-        conn.simple_bind_s(userdn, userpwd)
+            # XXX always use simple bind for data connection
+            if not self.cnx_dn:
+                conn.simple_bind_s(self.cnx_dn, self.cnx_pwd)
+            else:
+                self._authenticate(conn, {'dn': self.cnx_dn}, self.cnx_pwd)
+        else:
+            # user specified, we want to check user/password, no need to return
+            # the connection which will be thrown out
+            self._authenticate(conn, user, userpwd)
         return conn
+
+    def _auth_simple(self, conn, user, userpwd):
+        conn.simple_bind_s(user['dn'], userpwd)
+
+    def _auth_cram_md5(self, conn, user, userpwd):
+        from ldap import sasl
+        auth_token = sasl.cram_md5(user['dn'], userpwd)
+        conn.sasl_interactive_bind_s("", auth_tokens)
+
+    def _auth_digest_md5(self, conn, user, userpwd):
+        from ldap import sasl
+        auth_token = sasl.digest_md5(user['dn'], userpwd)
+        conn.sasl_interactive_bind_s("", auth_tokens)
+
+    def _auth_gssapi(self, conn, user, userpwd):
+        # print XXX not proper sasl/gssapi
+        from ldap import sasl
+        import kerberos
+        if not kerberos.checkPassword(user[self.user_login_attr], userpwd):
+            raise Exception('BAD login / mdp')
+        #conn.sasl_interactive_bind_s("", auth_tokens)
 
     def _search(self, session, base, scope,
                 searchstr='(objectClass=*)', attrs=()):
