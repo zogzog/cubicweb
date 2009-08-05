@@ -371,24 +371,20 @@ class EntityFieldsForm(FieldsForm):
             self.form_renderer_id, self.req, rset=self.rset, row=self.row,
             col=self.col, entity=self.edited_entity)
 
-    def form_build_context(self, values=None):
-        """overriden to add edit[s|o] hidden fields and to ensure schema fields
-        have eidparam set to True
-
-        edit[s|o] hidden fields are used to indicate the value for the
-        associated field before the (potential) modification made when
-        submitting the form.
-        """
-        eschema = self.edited_entity.e_schema
-        for field in self.fields[:]:
-            for field in field.actual_fields(self):
-                fieldname = field.name
-                if fieldname != 'eid' and (
-                    (eschema.has_subject_relation(fieldname) or
-                     eschema.has_object_relation(fieldname))):
-                    field.eidparam = True
-                    self.fields.append(HiddenInitialValueField(field))
-        return super(EntityFieldsForm, self).form_build_context(values)
+##    def form_build_context(self, values=None):
+##        """overriden to add edit[s|o] hidden fields and to ensure schema fields
+##        have eidparam set to True
+##        """
+##        eschema = self.edited_entity.e_schema
+##        for field in self.fields[:]:
+##            for field in field.actual_fields(self):
+##                fieldname = field.name
+##                if fieldname != 'eid' and (
+##                    (eschema.has_subject_relation(fieldname) or
+##                     eschema.has_object_relation(fieldname))):
+##                    # XXX why do we need to do this here ?
+##                    field.eidparam = True
+##        return super(EntityFieldsForm, self).form_build_context(values)
 
     def form_field_value(self, field, load_bytes=False):
         """return field's *typed* value

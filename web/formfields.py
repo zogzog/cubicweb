@@ -270,6 +270,7 @@ class RichTextField(StringField):
                 fkwargs['choices'] = fcstr.vocabulary(req=req)
                 fkwargs['internationalizable'] = True
                 fkwargs['initial'] = lambda f: f.form_field_format(self)
+            fkwargs['eidparam'] = self.eidparam
             field = StringField(name=self.name + '_format', **fkwargs)
             req.data[self] = field
             return field
@@ -494,6 +495,7 @@ def guess_field(eschema, rschema, role='subject', skip_meta_attr=True, **kwargs)
         help = rschema.rproperty(targetschema, eschema, 'description')
     kwargs['required'] = card in '1+'
     kwargs['name'] = rschema.type
+    kwargs['eidparam'] = True
     kwargs.setdefault('help', help)
     if rschema.is_final():
         if skip_meta_attr and rschema in eschema.meta_attributes():
