@@ -446,26 +446,26 @@ class SourceDbCWConstraintAdd(PreCommitOperation):
             return
         subjtype, rtype, objtype = session.schema.schema_by_eid(rdef.eid)
         cstrtype = self.entity.type
-        cstr = rtype.constraint_by_type(subjtype, objtype, cstrtype)
-        prevcstr = CONSTRAINTS[cstrtype].deserialize(self.entity.value)
+        oldcstr = rtype.constraint_by_type(subjtype, objtype, cstrtype)
+        newcstr = CONSTRAINTS[cstrtype].deserialize(self.entity.value)
         table = SQL_PREFIX + str(subjtype)
         column = SQL_PREFIX + str(rtype)
         # alter the physical schema on size constraint changes
-        if prevcstr.type() == 'SizeConstraint' and (
-            cstr is None or cstr.max != prevcstr.max):
+        if newcstr.type() == 'SizeConstraint' and (
+            oldcstr is None or oldcstr.max != newcstr.max):
             adbh = self.session.pool.source('system').dbhelper
             card = rtype.rproperty(subjtype, objtype, 'cardinality')
-            coltype = type_from_constraints(adbh, objtype, [prevcstr],
+            coltype = type_from_constraints(adbh, objtype, [newcstr],
                                             creating=False)
             sql = adbh.sql_change_col_type(table, column, coltype, card != '1')
             try:
                 session.system_sql(sql, rollback_on_failure=False)
                 self.info('altered column %s of table %s: now VARCHAR(%s)',
-                          column, table, prevcstr.max)
+                          column, table, newcstr.max)
             except Exception, ex:
                 # not supported by sqlite for instance
                 self.error('error while altering table %s: %s', table, ex)
-        elif cstrtype == 'UniqueConstraint':
+        elif cstrtype == 'UniqueConstraint' and oldcstr is None:
             session.pool.source('system').create_index(
                 self.session, table, column, unique=True)
 
@@ -598,8 +598,8 @@ class MemSchemaCWConstraintAdd(MemSchemaOperation):
         self.prepare_constraints(subjtype, rtype, objtype)
         cstrtype = self.entity.type
         self.cstr = rtype.constraint_by_type(subjtype, objtype, cstrtype)
-        self.prevcstr = CONSTRAINTS[cstrtype].deserialize(self.entity.value)
-        self.prevcstr.eid = self.entity.eid
+        self.newcstr = CONSTRAINTS[cstrtype].deserialize(self.entity.value)
+        self.newcstr.eid = self.entity.eid
 
     def commit_event(self):
         if self.cancelled:
@@ -607,7 +607,7 @@ class MemSchemaCWConstraintAdd(MemSchemaOperation):
         # in-place modification
         if not self.cstr is None:
             self.constraints.remove(self.cstr)
-        self.constraints.append(self.prevcstr)
+        self.constraints.append(self.newcstr)
 
 
 class MemSchemaCWConstraintDel(MemSchemaOperation):
