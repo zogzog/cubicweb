@@ -21,11 +21,10 @@ if applcubicwebversion < (3, 4, 0) and cubicwebversion >= (3, 4, 0):
     # use an internal session since some entity might forbid modifications to admin
     isession = repo.internal_session()
     for eid, in rql('Any X', ask_confirm=False):
-        try:
+        type, source, extid = session.describe(eid)
+        if source == 'system':
             isession.execute('SET X cwuri %(u)s WHERE X eid %(x)s',
                              {'x': eid, 'u': base_url + u'eid/%s' % eid})
-        except RepositoryError:
-            print 'unable to set cwuri for', eid, session.describe(eid)
     isession.commit()
     repo.hm.register_hook(uniquecstrcheck_before_modification, 'before_add_entity', '')
     repo.hm.register_hook(uniquecstrcheck_before_modification, 'before_update_entity', '')
