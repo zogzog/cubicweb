@@ -446,20 +446,20 @@ directory (default to once a day).',
     def _auth_cram_md5(self, conn, user, userpwd):
         from ldap import sasl
         auth_token = sasl.cram_md5(user['dn'], userpwd)
-        conn.sasl_interactive_bind_s("", auth_tokens)
+        conn.sasl_interactive_bind_s('', auth_tokens)
 
     def _auth_digest_md5(self, conn, user, userpwd):
         from ldap import sasl
         auth_token = sasl.digest_md5(user['dn'], userpwd)
-        conn.sasl_interactive_bind_s("", auth_tokens)
+        conn.sasl_interactive_bind_s('', auth_tokens)
 
     def _auth_gssapi(self, conn, user, userpwd):
         # print XXX not proper sasl/gssapi
-        from ldap import sasl
         import kerberos
         if not kerberos.checkPassword(user[self.user_login_attr], userpwd):
             raise Exception('BAD login / mdp')
-        #conn.sasl_interactive_bind_s("", auth_tokens)
+        #from ldap import sasl
+        #conn.sasl_interactive_bind_s('', sasl.gssapi())
 
     def _search(self, session, base, scope,
                 searchstr='(objectClass=*)', attrs=()):
