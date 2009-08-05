@@ -259,7 +259,7 @@ class UpdateCubicWebCatalogCommand(Command):
         from logilab.common.fileutils import ensure_fs_mode
         from logilab.common.shellutils import globfind, find, rm
         from cubicweb.common.i18n import extract_from_tal, execute
-        tempdir = tempdir.mkdtemp()
+        tempdir = tempfile.mkdtemp()
         potfiles = [join(I18NDIR, 'static-messages.pot')]
         print '-> extract schema messages.'
         schemapot = join(tempdir, 'schema.pot')
