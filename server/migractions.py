@@ -694,6 +694,22 @@ class ServerMigrationHelper(MigrationHelper):
             self.commit()
             self.rqlexecall(ss.rdef2rql(rschema),
                             ask_confirm=self.verbosity>=2)
+            if rtype in META_RTYPES:
+                # if the relation is in META_RTYPES, ensure we're adding it for
+                # all entity types *in the persistent schema*, not only those in
+                # the fs schema
+                for etype in self.repo.schema.entities():
+                    if not etype in self.fs_schema:
+                        # get sample object type and rproperties
+                        objtypes = rschema.objects()
+                        assert len(objtypes) == 1
+                        objtype = objtypes[0]
+                        props = rschema.rproperties(
+                            rschema.subjects(objtype)[0], objtype)
+                        assert props
+                        self.rqlexecall(ss.rdef2rql(rschema, etype, objtype, props),
+                                        ask_confirm=self.verbosity>=2)
+
         if commit:
             self.commit()
 
