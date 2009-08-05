@@ -110,7 +110,7 @@ class CubicWebRootResource(resource.PostableResource):
                 start_task(1, self.pyro_loop_event)
             self.appli.repo.start_looping_tasks()
         self.set_url_rewriter()
-        CW_EVENT_MANAGER.bind('after-source-reload', self.set_url_rewriter)
+        CW_EVENT_MANAGER.bind('after-registry-reload', self.set_url_rewriter)
         interval = min(config['cleanup-session-time'] or 120,
                        config['cleanup-anonymous-session-time'] or 720) / 2.
         start_task(interval, self.appli.session_handler.clean_sessions)

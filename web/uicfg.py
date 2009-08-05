@@ -217,7 +217,7 @@ def init_actionbox_appearsin_addmenu(rtag, sschema, rschema, oschema, role):
 actionbox_appearsin_addmenu = RelationTagsBool('actionbox_appearsin_addmenu',
                                                init_actionbox_appearsin_addmenu)
 
-@onevent('before-source-reload')
+@onevent('before-registry-reload')
 def clear_rtag_objects():
     primaryview_section.clear()
     primaryview_display_ctrl.clear()

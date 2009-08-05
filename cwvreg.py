@@ -305,12 +305,12 @@ class CubicWebVRegistry(VRegistry):
         try:
             self._register_objects(path, force_reload)
         except RegistryOutOfDate:
-            CW_EVENT_MANAGER.emit('before-source-reload')
+            CW_EVENT_MANAGER.emit('before-registry-reload')
             # modification detected, reset and reload
             self.reset()
             cleanup_sys_modules(path)
             self._register_objects(path, force_reload)
-            CW_EVENT_MANAGER.emit('after-source-reload')
+            CW_EVENT_MANAGER.emit('after-registry-reload')
 
     def _register_objects(self, path, force_reload=None):
         """overriden to remove objects requiring a missing interface"""

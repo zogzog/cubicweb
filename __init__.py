@@ -324,12 +324,12 @@ class CubicWebEventManager(object):
     Typical usage to register a callback::
 
       >>> from cubicweb import CW_EVENT_MANAGER
-      >>> CW_EVENT_MANAGER.bind('after-source-reload', mycallback)
+      >>> CW_EVENT_MANAGER.bind('after-registry-reload', mycallback)
 
     Typical usage to emit an event::
 
       >>> from cubicweb import CW_EVENT_MANAGER
-      >>> CW_EVENT_MANAGER.emit('after-source-reload')
+      >>> CW_EVENT_MANAGER.emit('after-registry-reload')
 
     emit() accepts an additional context parameter that will be passed
     to the callback if specified (and only in that case)
@@ -353,7 +353,7 @@ def onevent(event):
     """decorator to ease event / callback binding
 
     >>> from cubicweb import onevent
-    >>> @onevent('before-source-reload')
+    >>> @onevent('before-registry-reload')
     ... def mycallback():
     ...     print 'hello'
     ...

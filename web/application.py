@@ -42,7 +42,7 @@ class AbstractSessionManager(component.Component):
             assert self.cleanup_session_time < self.session_time
             assert self.cleanup_anon_session_time < self.session_time
         self.set_authmanager()
-        CW_EVENT_MANAGER.bind('after-source-reload', self.set_authmanager)
+        CW_EVENT_MANAGER.bind('after-registry-reload', self.set_authmanager)
 
     def set_authmanager(self):
         self.authmanager = self.vreg['components'].select('authmanager')
@@ -244,7 +244,7 @@ class CubicWebPublisher(object):
         # instantiate session and url resolving helpers
         self.session_handler = session_handler_fact(self)
         self.set_urlresolver()
-        CW_EVENT_MANAGER.bind('after-source-reload', self.set_urlresolver)
+        CW_EVENT_MANAGER.bind('after-registry-reload', self.set_urlresolver)
 
     def set_urlresolver(self):
         self.url_resolver = self.vreg['components'].select('urlpublisher')
