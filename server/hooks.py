@@ -536,6 +536,9 @@ def after_add_eproperty(session, entity):
 
 
 def after_update_eproperty(session, entity):
+    if not ('pkey' in entity.edited_attributes or
+            'value' in entity.edited_attributes):
+        return
     key, value = entity.pkey, entity.value
     try:
         value = session.vreg.typed_value(key, value)
