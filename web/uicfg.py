@@ -219,7 +219,6 @@ actionbox_appearsin_addmenu = RelationTagsBool('actionbox_appearsin_addmenu',
 
 @onevent('before-source-reload')
 def clear_rtag_objects():
-    print 'YAHOO ' * 80
     primaryview_section.clear()
     primaryview_display_ctrl.clear()
     autoform_section.clear()

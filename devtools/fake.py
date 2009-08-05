@@ -187,7 +187,7 @@ class FakeSession(RequestSessionMixIn):
     def execute(self, *args):
         pass
     unsafe_execute = execute
-    
+
     def commit(self, *args):
         self.transaction_data.clear()
     def close(self, *args):
