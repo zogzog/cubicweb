@@ -309,22 +309,22 @@ class Repository(object):
 
     def start_looping_tasks(self):
         assert isinstance(self._looping_tasks, list), 'already started'
-        for i, (interval, func) in enumerate(self._looping_tasks):
-            self._looping_tasks[i] = task = LoopTask(interval, func)
+        for i, (interval, func, args) in enumerate(self._looping_tasks):
+            self._looping_tasks[i] = task = LoopTask(interval, func, args)
             self.info('starting task %s with interval %.2fs', task.name,
                       interval)
             task.start()
         # ensure no tasks will be further added
         self._looping_tasks = tuple(self._looping_tasks)
 
-    def looping_task(self, interval, func):
+    def looping_task(self, interval, func, *args):
         """register a function to be called every `interval` seconds.
 
         looping tasks can only be registered during repository initialization,
         once done this method will fail.
         """
         try:
-            self._looping_tasks.append( (interval, func) )
+            self._looping_tasks.append( (interval, func, args) )
         except AttributeError:
             raise RuntimeError("can't add looping task once the repository is started")
 

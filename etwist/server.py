@@ -36,12 +36,12 @@ def start_task(interval, func):
     lc.start(interval)
 
 def start_looping_tasks(repo):
-    for interval, func in repo._looping_tasks:
+    for interval, func, args in repo._looping_tasks:
         repo.info('starting twisted task %s with interval %.2fs',
                   func.__name__, interval)
-        def catch_error_func(repo=repo, func=func):
+        def catch_error_func(repo=repo, func=func, args=args):
             try:
-                func()
+                func(*args)
             except:
                 repo.exception('error in looping task')
         start_task(interval, catch_error_func)

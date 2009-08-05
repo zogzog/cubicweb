@@ -96,11 +96,11 @@ def ask_source_config(sourcetype, inputlevel=0):
 
 class LoopTask(object):
     """threaded task restarting itself once executed"""
-    def __init__(self, interval, func):
+    def __init__(self, interval, func, args):
         self.interval = interval
-        def auto_restart_func(self=self, func=func):
+        def auto_restart_func(self=self, func=func, args=args):
             try:
-                func()
+                func(*args)
             finally:
                 self.start()
         self.func = auto_restart_func
