@@ -16,7 +16,7 @@ from cubicweb.selectors import non_final_entity, match_kwargs, one_line_rset
 from cubicweb.web import INTERNAL_FIELD_VALUE, eid_param
 from cubicweb.web import form, formwidgets as fwdgs
 from cubicweb.web.controller import NAV_FORM_PARAMETERS
-from cubicweb.web.formfields import HiddenInitialValueField, StringField
+from cubicweb.web.formfields import StringField
 
 
 class FieldsForm(form.Form):
@@ -280,6 +280,9 @@ class FieldsForm(form.Form):
         """
         raise NotImplementedError
 
+    def form_field_modified(self, field):
+        return field.is_visible()
+
     def _field_has_error(self, field):
         """return true if the field has some error in given validation exception
         """
@@ -473,6 +476,32 @@ class EntityFieldsForm(FieldsForm):
         #       couples (label, None) which act as separators. In these
         #       cases, it doesn't make sense to sort results afterwards.
         return vocabfunc(rtype, limit)
+
+    def form_field_modified(self, field):
+        if field.is_visible():
+            # fields not corresponding to an entity attribute / relations
+            # are considered modified
+            if not field.eidparam:
+                return True # XXX
+            try:
+                if field.role == 'subject':
+                    previous_value = getattr(self.edited_entity, field.name)
+                else:
+                    previous_value = getattr(self.edited_entity,
+                                             'reverse_%s' % field.name)
+            except AttributeError:
+                # fields with eidparam=True but not corresponding to an actual
+                # attribute or relation
+                return True
+            # if it's a non final relation, we need the eids
+            if isinstance(previous_value, list):
+                # widget should return untyped eids
+                previous_value = set(unicode(e.eid) for e in previous_value)
+            new_value = field.process_form_value(self)
+            if self.edited_entity.has_eid() and (previous_value == new_value):
+                return False # not modified
+            return True
+        return False
 
     def subject_relation_vocabulary(self, rtype, limit=None):
         """defaut vocabulary method for the given relation, looking for

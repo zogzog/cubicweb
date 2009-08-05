@@ -198,6 +198,21 @@ class Field(object):
         """
         pass
 
+    def process_form_value(self, form):
+        """process posted form and return correctly typed value"""
+        widget = self.get_widget(form)
+        return widget.process_field_data(form, self)
+
+    def process_posted(self, form):
+        for field in self.actual_fields(form):
+            if field is self:
+                yield field.name, field.process_form_value(form)
+            else:
+                # recursive function: we might have compound fields
+                # of compound fields (of compound fields of ...)
+                for fieldname, value in field.process_posted(form):
+                    yield fieldname, value
+
 
 class StringField(Field):
     widget = TextArea
@@ -345,6 +360,25 @@ class FileField(StringField):
                 + renderer.render_help(form, field)
                 + u'<br/>')
 
+    def process_form_value(self, form):
+        posted = form.req.form
+        value = posted.get(form.form_field_name(self))
+        formkey = form.form_field_name(self)
+        if ('%s__detach' % form.context[self]['name']) in posted:
+            # drop current file value
+            value = None
+        # no need to check value when nor explicit detach nor new file
+        # submitted, since it will think the attribute is not modified
+        elif value:
+            filename, _, stream = value
+            # value is a  3-uple (filename, mimetype, stream)
+            value = Binary(stream.read())
+            if not val.getvalue(): # usually an unexistant file
+                value = None
+            else:
+                value.filename = filename
+        return value
+
 
 class EditableFileField(FileField):
     editable_formats = ('text/plain', 'text/html', 'text/rest')
@@ -375,6 +409,14 @@ class EditableFileField(FileField):
                     # XXX restore form context?
         return '\n'.join(wdgs)
 
+    def process_form_value(self, form):
+        value = form.req.form.get(form.form_field_name(self))
+        if isinstance(value, unicode):
+            # file modified using a text widget
+            encoding = form.form_field_encoding(self)
+            return Binary(value.encode(encoding))
+        return super(EditableFileField, self).process_form_value(form)
+
 
 class IntField(Field):
     def __init__(self, min=None, max=None, **kwargs):
@@ -385,6 +427,8 @@ class IntField(Field):
             self.widget.attrs.setdefault('size', 5)
             self.widget.attrs.setdefault('maxlength', 15)
 
+    def process_form_value(self, form):
+        return int(Field.process_form_value(self, form))
 
 class BooleanField(Field):
     widget = Radio
@@ -394,6 +438,8 @@ class BooleanField(Field):
             return self.choices
         return [(form.req._('yes'), '1'), (form.req._('no'), '')]
 
+    def process_form_value(self, form):
+        return bool(Field.process_form_value(self, form))
 
 class FloatField(IntField):
     def format_single_value(self, req, value):
@@ -405,6 +451,8 @@ class FloatField(IntField):
     def render_example(self, req):
         return self.format_single_value(req, 1.234)
 
+    def process_form_value(self, form):
+        return float(Field.process_form_value(self, form))
 
 class DateField(StringField):
     format_prop = 'ui.date-format'
@@ -416,15 +464,39 @@ class DateField(StringField):
     def render_example(self, req):
         return self.format_single_value(req, datetime.now())
 
+    def process_form_value(self, form):
+        # widget is supposed to return a date as a correctly formatted string
+        date = Field.process_form_value(self, form)
+        # but for some widgets, it might be simpler to return date objects
+        # directly, so handle that case :
+        if isinstance(date, basestring):
+            date = form.parse_date(wdgdate, 'Date')
+        return date
 
 class DateTimeField(DateField):
     format_prop = 'ui.datetime-format'
 
+    def process_form_value(self, form):
+        # widget is supposed to return a date as a correctly formatted string
+        date = Field.process_form_value(self, form)
+        # but for some widgets, it might be simpler to return date objects
+        # directly, so handle that case :
+        if isinstance(date, basestring):
+            date = form.parse_datetime(wdgdate, 'Datetime')
+        return date
 
 class TimeField(DateField):
     format_prop = 'ui.time-format'
     widget = TextInput
 
+    def process_form_value(self, form):
+        # widget is supposed to return a date as a correctly formatted string
+        time = Field.process_form_value(self, form)
+        # but for some widgets, it might be simpler to return time objects
+        # directly, so handle that case :
+        if isinstance(time, basestring):
+            time = form.parse_time(wdgdate, 'Time')
+        return time
 
 class RelationField(Field):
     def __init__(self, **kwargs):

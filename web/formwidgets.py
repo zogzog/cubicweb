@@ -11,7 +11,7 @@ from datetime import date
 from warnings import warn
 
 from cubicweb.common import tags, uilib
-from cubicweb.web import stdmsgs, INTERNAL_FIELD_VALUE
+from cubicweb.web import stdmsgs, INTERNAL_FIELD_VALUE, ProcessFormError
 
 
 class FieldWidget(object):
@@ -63,6 +63,10 @@ class FieldWidget(object):
             attrs['tabindex'] = form.req.next_tabindex()
         return name, values, attrs
 
+    def process_field_data(self, form, field):
+        formkey = form.form_field_name(field)
+        posted = form.req.form
+        return posted.get(formkey)
 
 class Input(FieldWidget):
     """abstract widget class for <input> tag based widgets"""
@@ -114,11 +118,25 @@ class PasswordInput(Input):
                                       **{'class': 'emphasis'})]
         return u'\n'.join(inputs)
 
+    def process_field_data(self, form, field):
+        passwd1 = super(PasswordInput, self).process_field_data(form, field)
+        fieldname = form.form_field_name(field)
+        passwd2 = form.req.form[fieldname+'-confirm']
+        if passwd1 == passwd2:
+            if passwd1 is None:
+                return None
+            return passwd1.encode('utf-8')
+        raise ProcessFormError(form.req._("password and confirmation don't match"))
 
 class PasswordSingleInput(Input):
     """<input type='password'> without a confirmation field"""
     type = 'password'
 
+    def process_field_data(self, form, field):
+        value = super(PasswordSingleInput, self).process_field_data(form, field)
+        if value is not None:
+            return value.encode('utf-8')
+        return value
 
 class FileInput(Input):
     """<input type='file'>"""
