@@ -123,6 +123,9 @@ msgstr "%s resultados de la demanda"
 msgid "%s software version of the database"
 msgstr "versión sistema de la base para %s"
 
+msgid "(UNEXISTANT EID)"
+msgstr ""
+
 msgid "**"
 msgstr "0..n 0..n"
 
@@ -164,8 +167,12 @@ msgid ""
 "<div>This schema of the data model <em>excludes</em> the meta-data, but you "
 "can also display a <a href=\"%s\">complete schema with meta-data</a>.</div>"
 msgstr ""
-"<div>Este esquema del modelo de datos <em>no incluye</em> los meta-datos, pero "
-"se puede ver a un <a href=\"%s\">modelo completo con meta-datos</a>.</div>"
+"<div>Este esquema del modelo de datos <em>no incluye</em> los meta-datos, "
+"pero se puede ver a un <a href=\"%s\">modelo completo con meta-datos</a>.</"
+"div>"
+
+msgid "<no value>"
+msgstr ""
 
 msgid "?*"
 msgstr "0..1 0..n"
@@ -321,6 +328,12 @@ msgstr "Entidades"
 msgid "Environment"
 msgstr "Ambiente"
 
+msgid "ExternalUri"
+msgstr ""
+
+msgid "ExternalUri_plural"
+msgstr ""
+
 msgid "Float"
 msgstr "Número flotante"
 
@@ -380,6 +393,9 @@ msgstr "Agregar usuario"
 
 msgid "New EmailAddress"
 msgstr "Agregar Email"
+
+msgid "New ExternalUri"
+msgstr ""
 
 msgid "New RQLExpression"
 msgstr "Agregar expresión rql"
@@ -523,6 +539,9 @@ msgstr "Este usuario"
 msgid "This EmailAddress"
 msgstr "Esta dirección electrónica"
 
+msgid "This ExternalUri"
+msgstr ""
+
 msgid "This RQLExpression"
 msgstr "Esta expresión RQL"
 
@@ -569,8 +588,8 @@ msgstr "Lo último en el sitio"
 msgid "Workflow history"
 msgstr "Histórico del Workflow"
 
-msgid "You are not connected to an application !"
-msgstr "Usted no esta conectado a una aplicación"
+msgid "You are not connected to an instance !"
+msgstr ""
 
 #, python-format
 msgid "You are now connected to %s"
@@ -625,16 +644,15 @@ msgstr ""
 "pueda ser realizada. Esta expresión puede utilizar las variables X y U que "
 "representan respectivamente la entidad en transición y el usuario actual. "
 
+msgid "a URI representing an object in external data store"
+msgstr ""
+
 msgid ""
 "a simple cache entity characterized by a name and a validity date. The "
 "target application is responsible for updating timestamp when necessary to "
-"invalidate the cache (typically in hooks). Also, checkout the AppRsetObject."
+"invalidate the cache (typically in hooks). Also, checkout the AppObject."
 "get_cache() method."
 msgstr ""
-"una entidad cache simple caracterizada por un nombre y una fecha correcta. "
-"El sistema objetivo es responsable de actualizar timestamp cuand se "
-"necesario para invalidar el cache (usualmente en hooks).Recomendamos revisar "
-"el METODO  AppRsetObject.get_cache()."
 
 msgid "about this site"
 msgstr "Sobre este Espacio"
@@ -765,6 +783,12 @@ msgstr "Configuración del sitio"
 msgid "actions_siteconfig_description"
 msgstr ""
 
+msgid "actions_siteinfo"
+msgstr ""
+
+msgid "actions_siteinfo_description"
+msgstr ""
+
 msgid "actions_view"
 msgstr "Ver"
 
@@ -891,6 +915,9 @@ msgstr "Agregar un usuario"
 msgid "add a EmailAddress"
 msgstr "Agregar un email"
 
+msgid "add a ExternalUri"
+msgstr ""
+
 msgid "add a RQLExpression"
 msgstr "Agregar una expresión rql"
 
@@ -985,9 +1012,6 @@ msgstr "Anónimo"
 
 msgid "application entities"
 msgstr "Entidades de la aplicación"
-
-msgid "application schema"
-msgstr "Esquema de la aplicación"
 
 msgid "april"
 msgstr "Abril"
@@ -1131,6 +1155,9 @@ msgstr "calendario (semanal)"
 msgid "calendar (year)"
 msgstr "calendario (anual)"
 
+msgid "can not resolve entity types:"
+msgstr ""
+
 #, python-format
 msgid "can't change the %s attribute"
 msgstr "no puede modificar el atributo %s"
@@ -1178,6 +1205,9 @@ msgstr "ver la entidad creada"
 
 msgid "click on the box to cancel the deletion"
 msgstr "Seleccione la zona de edición para cancelar la eliminación"
+
+msgid "click to edit this field"
+msgstr ""
 
 msgid "comment"
 msgstr "Comentario"
@@ -1517,6 +1547,9 @@ msgstr "Modelo de datos"
 msgid "cwetype-workflow"
 msgstr "Workflow"
 
+msgid "cwuri"
+msgstr ""
+
 msgid "data directory url"
 msgstr "Url del repertorio de datos"
 
@@ -1549,23 +1582,16 @@ msgstr "Define un grupo de usuarios CubicWeb"
 
 msgid ""
 "define a final relation: link a final relation type from a non final entity "
-"to a final entity type. used to build the application schema"
+"to a final entity type. used to build the instance schema"
 msgstr ""
-"Define una relación no final: liga un tipo de relación no final desde una "
-"entidad hacia un tipo de entidad no final. Utilizada para construir el "
-"esquema de la aplicación"
 
 msgid ""
 "define a non final relation: link a non final relation type from a non final "
-"entity to a non final entity type. used to build the application schema"
+"entity to a non final entity type. used to build the instance schema"
 msgstr ""
-"Define una relación 'atributo', utilizada para construir el esquema dela "
-"aplicación"
 
-msgid "define a relation type, used to build the application schema"
+msgid "define a relation type, used to build the instance schema"
 msgstr ""
-"Define un tipo de relación, utilizada para construir el esquema de la "
-"aplicación"
 
 msgid "define a rql expression used to define permissions"
 msgstr "Expresión RQL utilizada para definir los derechos de acceso"
@@ -1576,10 +1602,8 @@ msgstr "Define una condición de esquema"
 msgid "define a schema constraint type"
 msgstr "Define un tipo de condición de esquema"
 
-msgid "define an entity type, used to build the application schema"
+msgid "define an entity type, used to build the instance schema"
 msgstr ""
-"Define un tipo de entidad, utilizada para construir el esquema de la "
-"aplicación"
 
 msgid ""
 "defines what's the property is applied for. You must select this first to be "
@@ -1679,6 +1703,9 @@ msgstr "Descargar"
 
 msgid "download icon"
 msgstr "ícono de descarga"
+
+msgid "download image"
+msgstr ""
 
 msgid "download schema as owl"
 msgstr "Descargar esquema en OWL"
@@ -1800,12 +1827,6 @@ msgstr "faceta \"final\""
 msgid "facets_cwfinal-facet_description"
 msgstr "faceta para las entidades \"finales\""
 
-msgid "facets_cwmeta-facet"
-msgstr "faceta \"meta\""
-
-msgid "facets_cwmeta-facet_description"
-msgstr "faceta para las entidades \"meta\""
-
 msgid "facets_etype-facet"
 msgstr "faceta \"es de tipo\""
 
@@ -1870,6 +1891,9 @@ msgstr "De la entidad"
 msgid "from_entity_object"
 msgstr "Relación sujeto"
 
+msgid "from_interval_start"
+msgstr ""
+
 msgid "from_state"
 msgstr "De el estado"
 
@@ -1891,14 +1915,20 @@ msgstr "Trazado de curbas estándares"
 msgid "generic relation to link one entity to another"
 msgstr "relación generica para ligar entidades"
 
+msgid ""
+"generic relation to specify that an external entity represent the same "
+"object as a local one: http://www.w3.org/TR/owl-ref/#sameAs-def NOTE: You'll "
+"have to explicitly declare which entity types can have a same_as relation"
+msgstr ""
+
 msgid "go back to the index page"
 msgstr "Regresar a la página de inicio"
 
 msgid "granted to groups"
 msgstr "Otorgado a los grupos"
 
-msgid "graphical representation of the application'schema"
-msgstr "Representación gráfica del esquema de la aplicación"
+msgid "graphical representation of the instance'schema"
+msgstr ""
 
 #, python-format
 msgid "graphical schema for %s"
@@ -2059,6 +2089,9 @@ msgid ""
 msgstr ""
 "Indica cual estado deberá ser utilizado por defecto al crear una entidad"
 
+msgid "info"
+msgstr ""
+
 #, python-format
 msgid "initial estimation %s"
 msgstr "Estimación inicial %s"
@@ -2075,6 +2108,12 @@ msgstr "es el estado inicial de"
 msgid "inlined"
 msgstr "Puesto en línea"
 
+msgid "instance schema"
+msgstr ""
+
+msgid "internal entity uri"
+msgstr ""
+
 msgid "internationalizable"
 msgstr "Internacionalizable"
 
@@ -2087,12 +2126,6 @@ msgstr "Esta fecha no es válida"
 
 msgid "is"
 msgstr "es"
-
-msgid "is it an application entity type or not ?"
-msgstr "Es un Tipo de entidad en la aplicación o no ?"
-
-msgid "is it an application relation type or not ?"
-msgstr "Es una relación aplicativa o no ?"
 
 msgid ""
 "is the subject/object entity of the relation composed of the other ? This "
@@ -2156,8 +2189,9 @@ msgstr "izquierda"
 msgid ""
 "link a permission to the entity. This permission should be used in the "
 "security definition of the entity's type to be useful."
-msgstr "relaciónar una autorización con la entidad. Este autorización debe "
-"ser usada en la definición de la entidad para ser utíl."
+msgstr ""
+"relaciónar una autorización con la entidad. Este autorización debe ser usada "
+"en la definición de la entidad para ser utíl."
 
 msgid ""
 "link a property to the user which want this property customization. Unless "
@@ -2252,9 +2286,6 @@ msgstr "Numero maximo de entidades ligadas a mostrar en la vista primaria"
 msgid "may"
 msgstr "Mayo"
 
-msgid "meta"
-msgstr "Meta"
-
 msgid "milestone"
 msgstr "Milestone"
 
@@ -2310,20 +2341,20 @@ msgstr "Navegación"
 
 msgid "navigation.combobox-limit"
 msgstr ""
-# msgstr "Navegación: numero maximo de elementos en una caja de elección (combobox)"
 
+# msgstr "Navegación: numero maximo de elementos en una caja de elección (combobox)"
 msgid "navigation.page-size"
 msgstr ""
-# msgstr "Navegación: numero maximo de elementos por pagina"
 
+# msgstr "Navegación: numero maximo de elementos por pagina"
 msgid "navigation.related-limit"
 msgstr ""
-# msgstr "Navegación: numero maximo de elementos relacionados"
 
+# msgstr "Navegación: numero maximo de elementos relacionados"
 msgid "navigation.short-line-size"
 msgstr ""
-#msgstr "Navegación: numero maximo de caracteres en una linéa corta"
 
+# msgstr "Navegación: numero maximo de caracteres en una linéa corta"
 msgid "navtop"
 msgstr "Encabezado del contenido principal"
 
@@ -2338,9 +2369,6 @@ msgstr "no"
 
 msgid "no associated permissions"
 msgstr "no autorización relacionada"
-
-msgid "no possible transition"
-msgstr "transición no posible"
 
 msgid "no related project"
 msgstr "no hay proyecto relacionado"
@@ -2360,9 +2388,6 @@ msgstr "no autorizado"
 
 msgid "not selected"
 msgstr "no seleccionado"
-
-msgid "not specified"
-msgstr "no especificado"
 
 msgid "not the initial state for this entity"
 msgstr "no el estado inicial para esta entidad"
@@ -2560,6 +2585,9 @@ msgstr "Eliminar este usuario"
 msgid "remove this EmailAddress"
 msgstr "Eliminar este correo electronico"
 
+msgid "remove this ExternalUri"
+msgstr ""
+
 msgid "remove this RQLExpression"
 msgstr "Eliminar esta expresión RQL"
 
@@ -2624,6 +2652,9 @@ msgstr "expresiones rql"
 
 msgid "rss"
 msgstr "RSS"
+
+msgid "same_as"
+msgstr ""
 
 msgid "sample format"
 msgstr "ejemplo"
@@ -2753,6 +2784,9 @@ msgstr ""
 msgid "sorry, the server is unable to handle this query"
 msgstr "lo sentimos, el servidor no puede manejar esta consulta"
 
+msgid "sparql xml"
+msgstr ""
+
 msgid "specializes"
 msgstr "derivado de"
 
@@ -2826,6 +2860,9 @@ msgstr "text/plain"
 msgid "text/rest"
 msgstr "text/rest"
 
+msgid "the URI of the object"
+msgstr ""
+
 msgid "the prefered email"
 msgstr "dirección principal de email"
 
@@ -2876,6 +2913,9 @@ msgstr "hacia entidad"
 msgid "to_entity_object"
 msgstr "hacia entidad objeto"
 
+msgid "to_interval_end"
+msgstr ""
+
 msgid "to_state"
 msgstr "hacia el estado"
 
@@ -2905,6 +2945,9 @@ msgstr "martes"
 
 msgid "type"
 msgstr "type"
+
+msgid "type here a sparql query"
+msgstr ""
 
 msgid "ui"
 msgstr "interfaz de usuario"
@@ -2954,6 +2997,9 @@ msgstr "entidad externa desconocida"
 msgid "unknown property key"
 msgstr "propiedad desconocida"
 
+msgid "unknown vocabulary:"
+msgstr ""
+
 msgid "up"
 msgstr "arriba"
 
@@ -2975,6 +3021,9 @@ msgstr "objeto de autorización de modificaciones"
 #, python-format
 msgid "updated %(etype)s #%(eid)s (%(title)s)"
 msgstr "actualización de la entidad %(etype)s #%(eid)s (%(title)s)"
+
+msgid "uri"
+msgstr ""
 
 msgid "use template languages"
 msgstr "utilizar plantillas de lenguaje"
@@ -3062,14 +3111,23 @@ msgstr "ver todos"
 msgid "view detail for this entity"
 msgstr "ver detalle de esta entidad"
 
+msgid "view history"
+msgstr ""
+
 msgid "view workflow"
 msgstr "ver workflow"
+
+msgid "view_index"
+msgstr ""
 
 msgid "views"
 msgstr "vistas"
 
 msgid "visible"
 msgstr "visible"
+
+msgid "we are not yet ready to handle this query"
+msgstr ""
 
 msgid "wednesday"
 msgstr "miercoles"
@@ -3160,12 +3218,26 @@ msgstr "deberia probablamente suprimir esta propriedad"
 #~ msgid "This Card"
 #~ msgstr "Esta Ficha"
 
+#~ msgid "You are not connected to an application !"
+#~ msgstr "Usted no esta conectado a una aplicación"
+
 #~ msgid ""
 #~ "a card is a textual content used as documentation, reference, procedure "
 #~ "reminder"
 #~ msgstr ""
 #~ "una ficha es un texto utilizado como documentación, referencia, memoria "
 #~ "de algún procedimiento..."
+
+#~ msgid ""
+#~ "a simple cache entity characterized by a name and a validity date. The "
+#~ "target application is responsible for updating timestamp when necessary "
+#~ "to invalidate the cache (typically in hooks). Also, checkout the "
+#~ "AppRsetObject.get_cache() method."
+#~ msgstr ""
+#~ "una entidad cache simple caracterizada por un nombre y una fecha "
+#~ "correcta. El sistema objetivo es responsable de actualizar timestamp "
+#~ "cuand se necesario para invalidar el cache (usualmente en hooks)."
+#~ "Recomendamos revisar el METODO  AppRsetObject.get_cache()."
 
 #~ msgid "add a Card"
 #~ msgstr "Agregar una ficha"
@@ -3175,6 +3247,9 @@ msgstr "deberia probablamente suprimir esta propriedad"
 
 #~ msgid "and"
 #~ msgstr "et"
+
+#~ msgid "application schema"
+#~ msgstr "Esquema de la aplicación"
 
 #~ msgid "at least one relation %s is required on %s(%s)"
 #~ msgstr "au moins une relation %s est nÈcessaire sur %s(%s)"
@@ -3207,14 +3282,49 @@ msgstr "deberia probablamente suprimir esta propriedad"
 #~ "langue par dÈfaut (regarder le rÈpertoire i18n de l'application pour voir "
 #~ "les langues disponibles)"
 
+#~ msgid ""
+#~ "define a final relation: link a final relation type from a non final "
+#~ "entity to a final entity type. used to build the application schema"
+#~ msgstr ""
+#~ "Define una relación no final: liga un tipo de relación no final desde una "
+#~ "entidad hacia un tipo de entidad no final. Utilizada para construir el "
+#~ "esquema de la aplicación"
+
+#~ msgid ""
+#~ "define a non final relation: link a non final relation type from a non "
+#~ "final entity to a non final entity type. used to build the application "
+#~ "schema"
+#~ msgstr ""
+#~ "Define una relación 'atributo', utilizada para construir el esquema dela "
+#~ "aplicación"
+
+#~ msgid "define a relation type, used to build the application schema"
+#~ msgstr ""
+#~ "Define un tipo de relación, utilizada para construir el esquema de la "
+#~ "aplicación"
+
+#~ msgid "define an entity type, used to build the application schema"
+#~ msgstr ""
+#~ "Define un tipo de entidad, utilizada para construir el esquema de la "
+#~ "aplicación"
+
 #~ msgid "detailed schema view"
 #~ msgstr "Vista detallada del esquema"
+
+#~ msgid "facets_cwmeta-facet"
+#~ msgstr "faceta \"meta\""
+
+#~ msgid "facets_cwmeta-facet_description"
+#~ msgstr "faceta para las entidades \"meta\""
 
 #~ msgid "filter"
 #~ msgstr "filtrer"
 
 #~ msgid "footer"
 #~ msgstr "pied de page"
+
+#~ msgid "graphical representation of the application'schema"
+#~ msgstr "Representación gráfica del esquema de la aplicación"
 
 #~ msgid "header"
 #~ msgstr "en-tÍte de page"
@@ -3230,6 +3340,12 @@ msgstr "deberia probablamente suprimir esta propriedad"
 
 #~ msgid "inlined view"
 #~ msgstr "Vista incluída (en línea)"
+
+#~ msgid "is it an application entity type or not ?"
+#~ msgstr "Es un Tipo de entidad en la aplicación o no ?"
+
+#~ msgid "is it an application relation type or not ?"
+#~ msgstr "Es una relación aplicativa o no ?"
 
 #~ msgid ""
 #~ "link a transition to one or more rql expression allowing to go through "
@@ -3248,8 +3364,17 @@ msgstr "deberia probablamente suprimir esta propriedad"
 #~ msgstr ""
 #~ "nombre maximum d'entitÈs liÈes ‡ afficher dans la vue de restriction"
 
+#~ msgid "meta"
+#~ msgstr "Meta"
+
 #~ msgid "no associated epermissions"
 #~ msgstr "permisos no asociados"
+
+#~ msgid "no possible transition"
+#~ msgstr "transición no posible"
+
+#~ msgid "not specified"
+#~ msgstr "no especificado"
 
 #~ msgid "owned by"
 #~ msgstr "appartient ‡"

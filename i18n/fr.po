@@ -4,7 +4,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: cubicweb 2.46.0\n"
-"PO-Revision-Date: 2008-12-23 18:41+0100\n"
+"PO-Revision-Date: 2009-08-05 08:37+0200\n"
 "Last-Translator: Logilab Team <contact@logilab.fr>\n"
 "Language-Team: fr <contact@logilab.fr>\n"
 "MIME-Version: 1.0\n"
@@ -122,6 +122,9 @@ msgstr "%s résultats pour la requête"
 #, python-format
 msgid "%s software version of the database"
 msgstr "version logicielle de la base pour %s"
+
+msgid "(UNEXISTANT EID)"
+msgstr "(EID INTROUVABLE)"
 
 msgid "**"
 msgstr "0..n 0..n"
@@ -324,6 +327,12 @@ msgstr "entités"
 msgid "Environment"
 msgstr "Environement"
 
+msgid "ExternalUri"
+msgstr "Uri externe"
+
+msgid "ExternalUri_plural"
+msgstr "Uri externes"
+
 msgid "Float"
 msgstr "Nombre flottant"
 
@@ -383,6 +392,9 @@ msgstr "Nouvel utilisateur"
 
 msgid "New EmailAddress"
 msgstr "Nouvelle adresse électronique"
+
+msgid "New ExternalUri"
+msgstr "Nouvelle Uri externe"
 
 msgid "New RQLExpression"
 msgstr "Nouvelle expression rql"
@@ -526,6 +538,9 @@ msgstr "Cet utilisateur"
 msgid "This EmailAddress"
 msgstr "Cette adresse électronique"
 
+msgid "This ExternalUri"
+msgstr "Cette Uri externe"
+
 msgid "This RQLExpression"
 msgstr "Cette expression RQL"
 
@@ -572,8 +587,8 @@ msgstr "Nouveautés"
 msgid "Workflow history"
 msgstr "Historique des changements d'état"
 
-msgid "You are not connected to an application !"
-msgstr "Vous n'êtes pas connecté à une application"
+msgid "You are not connected to an instance !"
+msgstr "Vous n'êtes pas connecté à une instance !"
 
 #, python-format
 msgid "You are now connected to %s"
@@ -630,16 +645,20 @@ msgstr ""
 "représente respectivement l'entité à laquelle on veut appliquer la "
 "transition et l'utilisateur courant."
 
+msgid "a URI representing an object in external data store"
+msgstr "une Uri désignant un objet dans un entrepôt de donné externe"
+
 msgid ""
 "a simple cache entity characterized by a name and a validity date. The "
 "target application is responsible for updating timestamp when necessary to "
-"invalidate the cache (typically in hooks). Also, checkout the AppRsetObject."
+"invalidate the cache (typically in hooks). Also, checkout the AppObject."
 "get_cache() method."
 msgstr ""
-"une simple entité de cache, caractérisées par un nom et une date de "
-"validité. L'application est responsable de la mise à jour de la date quand "
-"il est nécessaire d'invalider le cache (typiquement dans les crochets). Voir "
-"aussi la méthode get_cache() sur la classe AppRsetObject."
+"un cache simple caractérisé par un nom et une date de validité. C'est\n"
+"le code de l'instance qui est responsable de mettre à jour la date de\n"
+"validité lorsque le cache doit être invalidé (en général dans un hook).\n"
+"Pour récupérer un cache, il faut utiliser utiliser la méthode\n"
+"get_cache(cachename)."
 
 msgid "about this site"
 msgstr "à propos de ce site"
@@ -770,6 +789,12 @@ msgstr "configuration du site"
 msgid "actions_siteconfig_description"
 msgstr ""
 
+msgid "actions_siteinfo"
+msgstr ""
+
+msgid "actions_siteinfo_description"
+msgstr ""
+
 msgid "actions_view"
 msgstr "voir"
 
@@ -896,6 +921,9 @@ msgstr "ajouter un utilisateur"
 msgid "add a EmailAddress"
 msgstr "ajouter une adresse email"
 
+msgid "add a ExternalUri"
+msgstr "ajouter une Uri externe"
+
 msgid "add a RQLExpression"
 msgstr "ajouter une expression rql"
 
@@ -990,9 +1018,6 @@ msgstr "anonyme"
 
 msgid "application entities"
 msgstr "entités applicatives"
-
-msgid "application schema"
-msgstr "Schéma de l'application"
 
 msgid "april"
 msgstr "avril"
@@ -1136,6 +1161,9 @@ msgstr "calendrier (hebdo)"
 
 msgid "calendar (year)"
 msgstr "calendrier (annuel)"
+
+msgid "can not resolve entity types:"
+msgstr "impossible d'interpréter les types d'entités :"
 
 #, python-format
 msgid "can't change the %s attribute"
@@ -1527,6 +1555,9 @@ msgstr "description"
 msgid "cwetype-workflow"
 msgstr "workflow"
 
+msgid "cwuri"
+msgstr "uri interne"
+
 msgid "data directory url"
 msgstr "url du répertoire de données"
 
@@ -1559,23 +1590,16 @@ msgstr "défini un groupe d'utilisateur CubicWeb"
 
 msgid ""
 "define a final relation: link a final relation type from a non final entity "
-"to a final entity type. used to build the application schema"
+"to a final entity type. used to build the instance schema"
 msgstr ""
-"définit une relation non finale: lie un type de relation non finaledepuis "
-"une entité vers un type d'entité non final. Utilisé pour construire le "
-"schéma de l'application"
 
 msgid ""
 "define a non final relation: link a non final relation type from a non final "
-"entity to a non final entity type. used to build the application schema"
+"entity to a non final entity type. used to build the instance schema"
 msgstr ""
-"définit une relation 'attribut', utilisé pour construire le schéma de "
-"l'application"
 
-msgid "define a relation type, used to build the application schema"
-msgstr ""
-"définit un type de relation, utilisé pour construire le schéma de "
-"l'application"
+msgid "define a relation type, used to build the instance schema"
+msgstr "définit un type de relation"
 
 msgid "define a rql expression used to define permissions"
 msgstr "RQL expression utilisée pour définir les droits d'accès"
@@ -1586,9 +1610,8 @@ msgstr "définit une contrainte de schema"
 msgid "define a schema constraint type"
 msgstr "définit un type de contrainte de schema"
 
-msgid "define an entity type, used to build the application schema"
+msgid "define an entity type, used to build the instance schema"
 msgstr ""
-"définit un type d'entité, utilisé pour construire le schéma de l'application"
 
 msgid ""
 "defines what's the property is applied for. You must select this first to be "
@@ -1688,6 +1711,9 @@ msgstr "télécharger"
 
 msgid "download icon"
 msgstr "icône de téléchargement"
+
+msgid "download image"
+msgstr "image de téléchargement"
 
 msgid "download schema as owl"
 msgstr "télécharger le schéma OWL"
@@ -1872,6 +1898,9 @@ msgstr "de l'entité"
 msgid "from_entity_object"
 msgstr "relation sujet"
 
+msgid "from_interval_start"
+msgstr "De"
+
 msgid "from_state"
 msgstr "de l'état"
 
@@ -1893,14 +1922,20 @@ msgstr "tracé de courbes standard"
 msgid "generic relation to link one entity to another"
 msgstr "relation générique pour lier une entité à une autre"
 
+msgid ""
+"generic relation to specify that an external entity represent the same "
+"object as a local one: http://www.w3.org/TR/owl-ref/#sameAs-def NOTE: You'll "
+"have to explicitly declare which entity types can have a same_as relation"
+msgstr ""
+
 msgid "go back to the index page"
 msgstr "retourner sur la page d'accueil"
 
 msgid "granted to groups"
 msgstr "accordée aux groupes"
 
-msgid "graphical representation of the application'schema"
-msgstr "représentation graphique du schéma de l'application"
+msgid "graphical representation of the instance'schema"
+msgstr "représentation graphique du schéma de l'instance"
 
 #, python-format
 msgid "graphical schema for %s"
@@ -2062,6 +2097,9 @@ msgid ""
 msgstr ""
 "indique quel état devrait être utilisé par défaut lorsqu'une entité est créée"
 
+msgid "info"
+msgstr "information"
+
 #, python-format
 msgid "initial estimation %s"
 msgstr "estimation initiale %s"
@@ -2078,6 +2116,12 @@ msgstr "état initial de"
 msgid "inlined"
 msgstr "mise en ligne"
 
+msgid "instance schema"
+msgstr "schéma de l'instance"
+
+msgid "internal entity uri"
+msgstr "uri interne"
+
 msgid "internationalizable"
 msgstr "internationalisable"
 
@@ -2090,12 +2134,6 @@ msgstr "cette date n'est pas valide"
 
 msgid "is"
 msgstr "de type"
-
-msgid "is it an application entity type or not ?"
-msgstr "est-ce une entité applicative ou non ?"
-
-msgid "is it an application relation type or not ?"
-msgstr "est-ce une relation applicative ou non ?"
 
 msgid ""
 "is the subject/object entity of the relation composed of the other ? This "
@@ -2257,9 +2295,6 @@ msgstr "nombre maximum d'entités liées à afficher dans la vue primaire"
 msgid "may"
 msgstr "mai"
 
-msgid "meta"
-msgstr "méta"
-
 msgid "milestone"
 msgstr "jalon"
 
@@ -2339,9 +2374,6 @@ msgstr "non"
 
 msgid "no associated permissions"
 msgstr "aucune permission associée"
-
-msgid "no possible transition"
-msgstr "aucune transition possible"
 
 msgid "no related project"
 msgstr "pas de projet rattaché"
@@ -2560,6 +2592,9 @@ msgstr "supprimer cet utilisateur"
 msgid "remove this EmailAddress"
 msgstr "supprimer cette adresse email"
 
+msgid "remove this ExternalUri"
+msgstr "supprimer cette Uri externe"
+
 msgid "remove this RQLExpression"
 msgstr "supprimer cette expression rql"
 
@@ -2629,6 +2664,9 @@ msgstr "conditions rql"
 
 msgid "rss"
 msgstr "RSS"
+
+msgid "same_as"
+msgstr "identique à l'entité externe"
 
 msgid "sample format"
 msgstr "exemple"
@@ -2757,6 +2795,9 @@ msgstr "une propriété spécifique au site ne peut être propre à un utilisate
 msgid "sorry, the server is unable to handle this query"
 msgstr "désolé, le serveur ne peut traiter cette requête"
 
+msgid "sparql xml"
+msgstr "XML Sparql"
+
 msgid "specializes"
 msgstr "dérive de"
 
@@ -2830,6 +2871,9 @@ msgstr "texte pur"
 msgid "text/rest"
 msgstr "ReST"
 
+msgid "the URI of the object"
+msgstr "l'Uri de l'objet"
+
 msgid "the prefered email"
 msgstr "l'adresse électronique principale"
 
@@ -2881,6 +2925,9 @@ msgstr "vers l'entité"
 msgid "to_entity_object"
 msgstr "relation objet"
 
+msgid "to_interval_end"
+msgstr "à"
+
 msgid "to_state"
 msgstr "vers l'état"
 
@@ -2910,6 +2957,9 @@ msgstr "mardi"
 
 msgid "type"
 msgstr "type"
+
+msgid "type here a sparql query"
+msgstr "Tapez une requête sparql"
 
 msgid "ui"
 msgstr "propriétés génériques de l'interface"
@@ -2959,6 +3009,9 @@ msgstr "entité (externe) introuvable"
 msgid "unknown property key"
 msgstr "clé de propriété inconnue"
 
+msgid "unknown vocabulary:"
+msgstr "vocabulaire inconnu : "
+
 msgid "up"
 msgstr "haut"
 
@@ -2980,6 +3033,9 @@ msgstr "à la permission de modifier"
 #, python-format
 msgid "updated %(etype)s #%(eid)s (%(title)s)"
 msgstr "modification de l'entité %(etype)s #%(eid)s (%(title)s)"
+
+msgid "uri"
+msgstr "uri"
 
 msgid "use template languages"
 msgstr "utiliser les langages de template"
@@ -3065,20 +3121,24 @@ msgstr "voir tous"
 msgid "view detail for this entity"
 msgstr "voir les détails de cette entité"
 
+msgid "view history"
+msgstr "voir l'historique"
+
 msgid "view workflow"
 msgstr "voir les états possibles"
 
 msgid "view_index"
 msgstr "accueil"
 
-msgid "view_manage"
-msgstr "gestion du site"
-
 msgid "views"
 msgstr "vues"
 
 msgid "visible"
 msgstr "visible"
+
+msgid "we are not yet ready to handle this query"
+msgstr ""
+"nous ne sommes pas capable de gérer ce type de requête sparql pour le moment"
 
 msgid "wednesday"
 msgstr "mercredi"
@@ -3169,12 +3229,26 @@ msgstr "vous devriez probablement supprimer cette propriété"
 #~ msgid "This Card"
 #~ msgstr "Cette fiche"
 
+#~ msgid "You are not connected to an application !"
+#~ msgstr "Vous n'êtes pas connecté à une application"
+
 #~ msgid ""
 #~ "a card is a textual content used as documentation, reference, procedure "
 #~ "reminder"
 #~ msgstr ""
 #~ "une fiche est un texte utilisé comme documentation, référence, rappel de "
 #~ "procédure..."
+
+#~ msgid ""
+#~ "a simple cache entity characterized by a name and a validity date. The "
+#~ "target application is responsible for updating timestamp when necessary "
+#~ "to invalidate the cache (typically in hooks). Also, checkout the "
+#~ "AppRsetObject.get_cache() method."
+#~ msgstr ""
+#~ "une simple entité de cache, caractérisées par un nom et une date de "
+#~ "validité. L'application est responsable de la mise à jour de la date "
+#~ "quand il est nécessaire d'invalider le cache (typiquement dans les "
+#~ "crochets). Voir aussi la méthode get_cache() sur la classe AppRsetObject."
 
 #~ msgid "actions_addpermission"
 #~ msgstr "ajouter une permission"
@@ -3187,6 +3261,9 @@ msgstr "vous devriez probablement supprimer cette propriété"
 
 #~ msgid "and"
 #~ msgstr "et"
+
+#~ msgid "application schema"
+#~ msgstr "Schéma de l'application"
 
 #~ msgid "at least one relation %s is required on %s(%s)"
 #~ msgstr "au moins une relation %s est nécessaire sur %s(%s)"
@@ -3219,6 +3296,32 @@ msgstr "vous devriez probablement supprimer cette propriété"
 #~ "langue par défaut (regarder le répertoire i18n de l'application pour voir "
 #~ "les langues disponibles)"
 
+#~ msgid ""
+#~ "define a final relation: link a final relation type from a non final "
+#~ "entity to a final entity type. used to build the application schema"
+#~ msgstr ""
+#~ "définit une relation non finale: lie un type de relation non finaledepuis "
+#~ "une entité vers un type d'entité non final. Utilisé pour construire le "
+#~ "schéma de l'application"
+
+#~ msgid ""
+#~ "define a non final relation: link a non final relation type from a non "
+#~ "final entity to a non final entity type. used to build the application "
+#~ "schema"
+#~ msgstr ""
+#~ "définit une relation 'attribut', utilisé pour construire le schéma de "
+#~ "l'application"
+
+#~ msgid "define a relation type, used to build the application schema"
+#~ msgstr ""
+#~ "définit un type de relation, utilisé pour construire le schéma de "
+#~ "l'application"
+
+#~ msgid "define an entity type, used to build the application schema"
+#~ msgstr ""
+#~ "définit un type d'entité, utilisé pour construire le schéma de "
+#~ "l'application"
+
 #~ msgid "detailed schema view"
 #~ msgstr "vue détaillée du schéma"
 
@@ -3227,6 +3330,9 @@ msgstr "vous devriez probablement supprimer cette propriété"
 
 #~ msgid "footer"
 #~ msgstr "pied de page"
+
+#~ msgid "graphical representation of the application'schema"
+#~ msgstr "représentation graphique du schéma de l'application"
 
 #~ msgid "header"
 #~ msgstr "en-tête de page"
@@ -3243,6 +3349,12 @@ msgstr "vous devriez probablement supprimer cette propriété"
 #~ msgid "inlined view"
 #~ msgstr "vue embarquée (en ligne)"
 
+#~ msgid "is it an application entity type or not ?"
+#~ msgstr "est-ce une entité applicative ou non ?"
+
+#~ msgid "is it an application relation type or not ?"
+#~ msgstr "est-ce une relation applicative ou non ?"
+
 #~ msgid "linked"
 #~ msgstr "lié"
 
@@ -3254,8 +3366,14 @@ msgstr "vous devriez probablement supprimer cette propriété"
 #~ msgstr ""
 #~ "nombre maximum d'entités liées à afficher dans la vue de restriction"
 
+#~ msgid "meta"
+#~ msgstr "méta"
+
 #~ msgid "no associated epermissions"
 #~ msgstr "aucune permission spécifique n'est définie"
+
+#~ msgid "no possible transition"
+#~ msgstr "aucune transition possible"
 
 #~ msgid "not specified"
 #~ msgstr "non spécifié"
@@ -3280,6 +3398,9 @@ msgstr "vous devriez probablement supprimer cette propriété"
 
 #~ msgid "synopsis"
 #~ msgstr "synopsis"
+
+#~ msgid "view_manage"
+#~ msgstr "gestion du site"
 
 #~ msgid "wikiid"
 #~ msgstr "identifiant wiki"

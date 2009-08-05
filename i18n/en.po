@@ -5,7 +5,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: 2.0\n"
 "POT-Creation-Date: 2006-01-12 17:35+CET\n"
-"PO-Revision-Date: 2008-12-23 18:43+0100\n"
+"PO-Revision-Date: 2009-08-05 08:39+0200\n"
 "Last-Translator: Sylvain Thenault <sylvain.thenault@logilab.fr>\n"
 "Language-Team: English <devel@logilab.fr.org>\n"
 "MIME-Version: 1.0\n"
@@ -118,6 +118,9 @@ msgstr ""
 msgid "%s software version of the database"
 msgstr ""
 
+msgid "(UNEXISTANT EID)"
+msgstr ""
+
 msgid "**"
 msgstr "0..n 0..n"
 
@@ -218,10 +221,10 @@ msgid "CWAttribute_plural"
 msgstr "Attributes"
 
 msgid "CWCache"
-msgstr ""
+msgstr "CubicWeb Cache"
 
 msgid "CWCache_plural"
-msgstr ""
+msgstr "CubicWeb Caches"
 
 msgid "CWConstraint"
 msgstr "Constraint"
@@ -317,6 +320,12 @@ msgstr ""
 msgid "Environment"
 msgstr ""
 
+msgid "ExternalUri"
+msgstr "External Uri"
+
+msgid "ExternalUri_plural"
+msgstr "External Uris"
+
 msgid "Float"
 msgstr "Float"
 
@@ -376,6 +385,9 @@ msgstr "New user"
 
 msgid "New EmailAddress"
 msgstr "New email address"
+
+msgid "New ExternalUri"
+msgstr ""
 
 msgid "New RQLExpression"
 msgstr "New RQL expression"
@@ -519,6 +531,9 @@ msgstr "This user"
 msgid "This EmailAddress"
 msgstr "This email address"
 
+msgid "This ExternalUri"
+msgstr ""
+
 msgid "This RQLExpression"
 msgstr "This RQL expression"
 
@@ -565,7 +580,7 @@ msgstr ""
 msgid "Workflow history"
 msgstr ""
 
-msgid "You are not connected to an application !"
+msgid "You are not connected to an instance !"
 msgstr ""
 
 #, python-format
@@ -607,10 +622,13 @@ msgid ""
 "represents the current entity and the current user"
 msgstr ""
 
+msgid "a URI representing an object in external data store"
+msgstr ""
+
 msgid ""
 "a simple cache entity characterized by a name and a validity date. The "
 "target application is responsible for updating timestamp when necessary to "
-"invalidate the cache (typically in hooks). Also, checkout the AppRsetObject."
+"invalidate the cache (typically in hooks). Also, checkout the AppObject."
 "get_cache() method."
 msgstr ""
 
@@ -654,7 +672,7 @@ msgid "actions_delete_description"
 msgstr ""
 
 msgid "actions_download_as_owl"
-msgstr ""
+msgstr "download as owl"
 
 msgid "actions_download_as_owl_description"
 msgstr ""
@@ -690,7 +708,7 @@ msgid "actions_manage_description"
 msgstr ""
 
 msgid "actions_managepermission"
-msgstr ""
+msgstr "manage permissions"
 
 msgid "actions_managepermission_description"
 msgstr ""
@@ -714,7 +732,7 @@ msgid "actions_myprefs_description"
 msgstr ""
 
 msgid "actions_prefs"
-msgstr ""
+msgstr "preferences"
 
 msgid "actions_prefs_description"
 msgstr ""
@@ -741,6 +759,12 @@ msgid "actions_siteconfig"
 msgstr "site configuration"
 
 msgid "actions_siteconfig_description"
+msgstr ""
+
+msgid "actions_siteinfo"
+msgstr "site information"
+
+msgid "actions_siteinfo_description"
 msgstr ""
 
 msgid "actions_view"
@@ -837,7 +861,7 @@ msgid "add a CWAttribute"
 msgstr "add an attribute"
 
 msgid "add a CWCache"
-msgstr ""
+msgstr "add a cubicweb cache"
 
 msgid "add a CWConstraint"
 msgstr "add a constraint"
@@ -868,6 +892,9 @@ msgstr "add a user"
 
 msgid "add a EmailAddress"
 msgstr "add an email address"
+
+msgid "add a ExternalUri"
+msgstr "and an external uri"
 
 msgid "add a RQLExpression"
 msgstr "add a rql expression"
@@ -960,9 +987,6 @@ msgid "anonymous"
 msgstr ""
 
 msgid "application entities"
-msgstr ""
-
-msgid "application schema"
 msgstr ""
 
 msgid "april"
@@ -1102,6 +1126,9 @@ msgid "calendar (week)"
 msgstr ""
 
 msgid "calendar (year)"
+msgstr ""
+
+msgid "can not resolve entity types:"
 msgstr ""
 
 #, python-format
@@ -1464,6 +1491,9 @@ msgstr "description"
 msgid "cwetype-workflow"
 msgstr "workflow"
 
+msgid "cwuri"
+msgstr ""
+
 msgid "data directory url"
 msgstr ""
 
@@ -1496,15 +1526,15 @@ msgstr ""
 
 msgid ""
 "define a final relation: link a final relation type from a non final entity "
-"to a final entity type. used to build the application schema"
+"to a final entity type. used to build the instance schema"
 msgstr ""
 
 msgid ""
 "define a non final relation: link a non final relation type from a non final "
-"entity to a non final entity type. used to build the application schema"
+"entity to a non final entity type. used to build the instance schema"
 msgstr ""
 
-msgid "define a relation type, used to build the application schema"
+msgid "define a relation type, used to build the instance schema"
 msgstr ""
 
 msgid "define a rql expression used to define permissions"
@@ -1516,7 +1546,7 @@ msgstr ""
 msgid "define a schema constraint type"
 msgstr ""
 
-msgid "define an entity type, used to build the application schema"
+msgid "define an entity type, used to build the instance schema"
 msgstr ""
 
 msgid ""
@@ -1610,6 +1640,9 @@ msgid "download"
 msgstr ""
 
 msgid "download icon"
+msgstr ""
+
+msgid "download image"
 msgstr ""
 
 msgid "download schema as owl"
@@ -1791,6 +1824,9 @@ msgstr "from entity"
 msgid "from_entity_object"
 msgstr "subjet relation"
 
+msgid "from_interval_start"
+msgstr "from"
+
 msgid "from_state"
 msgstr "from state"
 
@@ -1812,13 +1848,19 @@ msgstr ""
 msgid "generic relation to link one entity to another"
 msgstr ""
 
+msgid ""
+"generic relation to specify that an external entity represent the same "
+"object as a local one: http://www.w3.org/TR/owl-ref/#sameAs-def NOTE: You'll "
+"have to explicitly declare which entity types can have a same_as relation"
+msgstr ""
+
 msgid "go back to the index page"
 msgstr ""
 
 msgid "granted to groups"
 msgstr ""
 
-msgid "graphical representation of the application'schema"
+msgid "graphical representation of the instance'schema"
 msgstr ""
 
 #, python-format
@@ -1971,6 +2013,9 @@ msgid ""
 "is created"
 msgstr ""
 
+msgid "info"
+msgstr ""
+
 #, python-format
 msgid "initial estimation %s"
 msgstr ""
@@ -1987,6 +2032,12 @@ msgstr "initial state of"
 msgid "inlined"
 msgstr ""
 
+msgid "instance schema"
+msgstr ""
+
+msgid "internal entity uri"
+msgstr ""
+
 msgid "internationalizable"
 msgstr ""
 
@@ -1998,12 +2049,6 @@ msgid "invalid date"
 msgstr ""
 
 msgid "is"
-msgstr ""
-
-msgid "is it an application entity type or not ?"
-msgstr ""
-
-msgid "is it an application relation type or not ?"
 msgstr ""
 
 msgid ""
@@ -2156,9 +2201,6 @@ msgstr ""
 msgid "may"
 msgstr ""
 
-msgid "meta"
-msgstr "meta relation"
-
 msgid "milestone"
 msgstr ""
 
@@ -2235,9 +2277,6 @@ msgid "no"
 msgstr ""
 
 msgid "no associated permissions"
-msgstr ""
-
-msgid "no possible transition"
 msgstr ""
 
 msgid "no related project"
@@ -2424,7 +2463,7 @@ msgid "remove this CWAttribute"
 msgstr "remove this attribute"
 
 msgid "remove this CWCache"
-msgstr ""
+msgstr "remove this cubicweb cache"
 
 msgid "remove this CWConstraint"
 msgstr "remove this constraint"
@@ -2455,6 +2494,9 @@ msgstr "remove this user"
 
 msgid "remove this EmailAddress"
 msgstr "remove this email address"
+
+msgid "remove this ExternalUri"
+msgstr ""
 
 msgid "remove this RQLExpression"
 msgstr "remove this RQL expression"
@@ -2515,6 +2557,9 @@ msgid "rql expressions"
 msgstr ""
 
 msgid "rss"
+msgstr ""
+
+msgid "same_as"
 msgstr ""
 
 msgid "sample format"
@@ -2641,6 +2686,9 @@ msgstr ""
 msgid "sorry, the server is unable to handle this query"
 msgstr ""
 
+msgid "sparql xml"
+msgstr ""
+
 msgid "specializes"
 msgstr ""
 
@@ -2714,6 +2762,9 @@ msgstr "plain text"
 msgid "text/rest"
 msgstr "ReST text"
 
+msgid "the URI of the object"
+msgstr ""
+
 msgid "the prefered email"
 msgstr ""
 
@@ -2764,6 +2815,9 @@ msgstr "to entity"
 msgid "to_entity_object"
 msgstr "object relations"
 
+msgid "to_interval_end"
+msgstr "to"
+
 msgid "to_state"
 msgstr "to state"
 
@@ -2792,6 +2846,9 @@ msgid "tuesday"
 msgstr ""
 
 msgid "type"
+msgstr ""
+
+msgid "type here a sparql query"
 msgstr ""
 
 msgid "ui"
@@ -2842,6 +2899,9 @@ msgstr ""
 msgid "unknown property key"
 msgstr ""
 
+msgid "unknown vocabulary:"
+msgstr ""
+
 msgid "up"
 msgstr ""
 
@@ -2862,6 +2922,9 @@ msgstr "has permission to update"
 
 #, python-format
 msgid "updated %(etype)s #%(eid)s (%(title)s)"
+msgstr ""
+
+msgid "uri"
 msgstr ""
 
 msgid "use template languages"
@@ -2940,19 +3003,22 @@ msgstr ""
 msgid "view detail for this entity"
 msgstr ""
 
+msgid "view history"
+msgstr ""
+
 msgid "view workflow"
 msgstr ""
 
 msgid "view_index"
 msgstr "index"
 
-msgid "view_manage"
-msgstr "site management"
-
 msgid "views"
 msgstr ""
 
 msgid "visible"
+msgstr ""
+
+msgid "we are not yet ready to handle this query"
 msgstr ""
 
 msgid "wednesday"
@@ -3026,6 +3092,9 @@ msgstr ""
 #~ msgid "hide meta-data"
 #~ msgstr "hide meta entities and relations"
 
+#~ msgid "meta"
+#~ msgstr "meta relation"
+
 #~ msgid "planned_delivery"
 #~ msgstr "planned delivery"
 
@@ -3034,6 +3103,9 @@ msgstr ""
 
 #~ msgid "show meta-data"
 #~ msgstr "show the complete schema"
+
+#~ msgid "view_manage"
+#~ msgstr "site management"
 
 #~ msgid "wikiid"
 #~ msgstr "wiki identifier"
