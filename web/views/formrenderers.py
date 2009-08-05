@@ -18,7 +18,6 @@ from cubicweb.selectors import entity_implements, yes
 from cubicweb.web import eid_param
 from cubicweb.web import formwidgets as fwdgs
 from cubicweb.web.widgets import checkbox
-from cubicweb.web.formfields import HiddenInitialValueField
 
 
 class FormRenderer(AppObject):
@@ -160,8 +159,6 @@ class FormRenderer(AppObject):
         return tag + '>'
 
     def display_field(self, form, field):
-        if isinstance(field, HiddenInitialValueField):
-            field = field.visible_field
         return (self.display_fields is None
                 or field.name in form.internal_fields
                 or (field.name, field.role) in self.display_fields
@@ -249,8 +246,6 @@ class EntityBaseFormRenderer(BaseFormRenderer):
 
     def display_field(self, form, field):
         if not super(EntityBaseFormRenderer, self).display_field(form, field):
-            if isinstance(field, HiddenInitialValueField):
-                field = field.visible_field
             ismeta = form.edited_entity.e_schema.is_metadata(field.name)
             return ismeta is not None and (
                 ismeta[0] in self.display_fields or

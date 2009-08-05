@@ -68,8 +68,8 @@ class EditController(ViewController):
                 self.handle_relation(rschema, formparams, x, entity, True)
 
         # XXX this processes *all* pending operations of *all* entities
-        if form.has_key('__delete'):
-            todelete += req.list_form_param('__delete', form, pop=True)
+        if req.form.has_key('__delete'):
+            todelete += req.list_form_param('__delete', req.form, pop=True)
         if todelete:
             self.delete_relations(parse_relations_descr(todelete))
         if form.has_key('__insert'):

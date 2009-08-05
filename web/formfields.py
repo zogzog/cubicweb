@@ -425,17 +425,6 @@ class TimeField(DateField):
     widget = TextInput
 
 
-class HiddenInitialValueField(Field):
-    def __init__(self, visible_field):
-        name = 'edit%s-%s' % (visible_field.role[0], visible_field.name)
-        super(HiddenInitialValueField, self).__init__(
-            name=name, widget=HiddenInput, eidparam=True)
-        self.visible_field = visible_field
-
-    def format_single_value(self, req, value):
-        return self.visible_field.format_single_value(req, value)
-
-
 class RelationField(Field):
     def __init__(self, **kwargs):
         kwargs.setdefault('sort', False)

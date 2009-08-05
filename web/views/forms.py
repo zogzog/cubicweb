@@ -394,7 +394,7 @@ class EntityFieldsForm(FieldsForm):
         """return field's *typed* value
 
         overriden to deal with
-        * special eid / __type / edits- / edito- fields
+        * special eid / __type
         * lookup for values on edited entities
         """
         attr = field.name
@@ -403,14 +403,6 @@ class EntityFieldsForm(FieldsForm):
             return entity.eid
         if not field.eidparam:
             return super(EntityFieldsForm, self).form_field_value(field, load_bytes)
-        if attr.startswith('edits-') or attr.startswith('edito-'):
-            # edit[s|o]- fieds must have the actual value stored on the entity
-            assert hasattr(field, 'visible_field')
-            vfield = field.visible_field
-            assert vfield.eidparam
-            if entity.has_eid():
-                return self.form_field_value(vfield)
-            return INTERNAL_FIELD_VALUE
         if attr == '__type':
             return entity.id
         if self.schema.rschema(attr).is_final():
