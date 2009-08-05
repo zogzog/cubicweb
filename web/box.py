@@ -11,6 +11,7 @@ _ = unicode
 from logilab.mtconverter import xml_escape
 
 from cubicweb import Unauthorized, role as get_role, target as get_target
+from cubicweb.schema import display_name
 from cubicweb.selectors import (one_line_rset,  primary_view,
                                 match_context_prop, partial_has_related_entities,
                                 accepts_compat, has_relation_compat,
@@ -219,8 +220,8 @@ class EditRelationBoxTemplate(ReloadableMixIn, EntityBoxTemplate):
             return entity.unrelated(self.rtype, self.etype, get_role(self)).entities()
         # in other cases, use vocabulary functions
         entities = []
-        form = self.vreg.select('forms', 'edition', self.req, rset=self.rset,
-                                row=self.row or 0)
+        form = self.vreg['forms'].select('edition', self.req, rset=self.rset,
+                                         row=self.row or 0)
         field = form.field_by_name(self.rtype, get_role(self), entity.e_schema)
         for _, eid in form.form_field_vocabulary(field):
             if eid is not None:
