@@ -116,11 +116,20 @@ class CookieSessionHandler(object):
     SESSION_VAR = '__session'
 
     def __init__(self, appli):
-        self.session_manager = appli.vreg['components'].select('sessionmanager')
+        self.vreg = appli.vreg
+        self.session_manager = self.vreg['components'].select('sessionmanager')
         global SESSION_MANAGER
         SESSION_MANAGER = self.session_manager
-        if not 'last_login_time' in appli.vreg.schema:
+        if not 'last_login_time' in self.vreg.schema:
             self._update_last_login_time = lambda x: None
+        CW_EVENT_MANAGER.bind('after-registry-reload', self.reset_session_manager)
+
+    def reset_session_manager(self):
+        data = self.session_manager.dump_data()
+        self.session_manager = self.vreg['components'].select('sessionmanager')
+        self.session_manager.restore_data(data)
+        global SESSION_MANAGER
+        SESSION_MANAGER = self.session_manager
 
     def clean_sessions(self):
         """cleanup sessions which has not been unused since a given amount of

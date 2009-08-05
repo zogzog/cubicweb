@@ -22,6 +22,11 @@ class InMemoryRepositorySessionManager(AbstractSessionManager):
         #assert isinstance(self.authmanager, RepositoryAuthenticationManager)
         self._sessions = {}
 
+    def dump_data(self):
+        return self._sessions
+    def restore_data(self, data):
+        self._sessions = data
+
     def current_sessions(self):
         return self._sessions.values()
 
