@@ -28,11 +28,11 @@ from logilab.common.decorators import cached
 from yams import BadSchemaDefinition
 from rql import RQLSyntaxError
 
-from cubicweb import (CW_SOFTWARE_ROOT, UnknownEid, AuthenticationError,
+from cubicweb import (CW_SOFTWARE_ROOT, CW_MIGRATION_MAP, CW_EVENT_MANAGER,
+                      UnknownEid, AuthenticationError, ExecutionError,
                       ETypeNotSupportedBySources, RTypeNotSupportedBySources,
                       BadConnectionId, Unauthorized, ValidationError,
-                      ExecutionError, typed_eid,
-                      CW_MIGRATION_MAP)
+                      typed_eid)
 from cubicweb.cwvreg import CubicWebVRegistry
 from cubicweb.schema import VIRTUAL_RTYPES, CubicWebSchema
 from cubicweb import server
@@ -228,6 +228,7 @@ class Repository(object):
             # register a task to cleanup expired session
             self.looping_task(self.config['session-time']/3.,
                               self.clean_sessions)
+        CW_EVENT_MANAGER.bind('after-registry-load', self.reset_hooks)
 
     # internals ###############################################################
 
@@ -247,7 +248,10 @@ class Repository(object):
             # full reload of all appobjects
             self.vreg.reset()
             self.vreg.set_schema(schema)
-        self.hm.set_schema(schema)
+        self.reset_hooks()
+
+    def reset_hooks(self):
+        self.hm.set_schema(self.schema)
         self.hm.register_system_hooks(self.config)
         # instance specific hooks
         if self.config.instance_hooks:
