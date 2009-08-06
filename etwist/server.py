@@ -370,6 +370,11 @@ def run(config, debug):
     if not debug:
         daemonize()
         if config['pid-file']:
+            # ensure the directory where the pid-file should be set exists (for
+            # instance /var/run/cubicweb may be deleted on computer restart)
+            piddir = os.path.dirname(config['pid-file'])
+            if not os.path.exists(piddir):
+                os.makedirs(piddir)
             file(config['pid-file'], 'w').write(str(os.getpid()))
     if config['profile']:
         prof = hotshot.Profile(config['profile'])
