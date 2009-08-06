@@ -388,7 +388,7 @@ ul.boxListing a {
   padding: 1px 9px 1px 3px;
 }
 
-ul.boxListing a.selected {
+ul.boxListing .selected {
   color: #FF4500;
   font-weight: bold;
 }

@@ -15,7 +15,7 @@ from cubicweb.selectors import (EntitySelector,
     authenticated_user, match_user_groups, match_search_state,
     has_permission, has_add_permission,
     )
-from cubicweb.web import uicfg
+from cubicweb.web import uicfg, controller
 from cubicweb.web.action import Action
 from cubicweb.web.views import linksearch_select_url, vid_from_rset
 from cubicweb.web.views.autoform import AutomaticEntityForm
@@ -112,8 +112,8 @@ class ViewAction(Action):
 
     def url(self):
         params = self.req.form.copy()
-        params.pop('vid', None)
-        params.pop('__message', None)
+        for param in ('vid', '__message') + controller.NAV_FORM_PARAMETERS:
+            params.pop(param, None)
         return self.build_url(self.req.relative_path(includeparams=False),
                               **params)
 

@@ -100,6 +100,16 @@ Constant._ms_table_key = lambda x: str(x.value)
 AbstractSource.dont_cross_relations = ()
 AbstractSource.cross_relations = ()
 
+def need_source_access_relation(vargraph):
+    if not vargraph:
+        return False
+    # check vargraph contains some other relation than the identity relation
+    # test of key nature since it may be a variable name (don't care about that)
+    # or a 2-uple (var1, var2) associated to the relation to traverse to go from
+    # var1 to var2
+    return any(key for key, val in vargraph.iteritems()
+               if isinstance(key, tuple) and val != 'identity')
+
 def need_aggr_step(select, sources, stepdefs=None):
     """return True if a temporary table is necessary to store some partial
     results to execute the given query
@@ -559,7 +569,8 @@ class PartPlanInformation(object):
             # testing for rqlst with nothing in vargraph nor defined_vars is the
             # simplest way the check the condition explained below
             if not self.system_source in self._sourcesterms and \
-                   not self.rqlst.vargraph and not self.rqlst.defined_vars:
+                   not self.rqlst.defined_vars and \
+                   not need_source_access_relation(self.rqlst.vargraph):
                 self._sourcesterms = {self.system_source: {}}
         elif not self.needsplit:
             if not allequals(self._sourcesterms.itervalues()):
