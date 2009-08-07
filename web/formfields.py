@@ -257,7 +257,7 @@ class RichTextField(StringField):
         try:
             return req.data[self]
         except KeyError:
-            fkwargs = {}
+            fkwargs = {'eidparam': self.eidparam}
             if self.use_fckeditor(form):
                 # if fckeditor is used and format field isn't explicitly
                 # deactivated, we want an hidden field for the format
@@ -292,7 +292,8 @@ class RichTextField(StringField):
         format_field = self.get_format_field(form)
         if format_field:
             # XXX we want both fields to remain vertically aligned
-            format_field.widget.attrs['style'] = 'display: block'
+            if format_field.is_visible():
+                format_field.widget.attrs['style'] = 'display: block'
             result = format_field.render(form, renderer)
         else:
             result = u''
