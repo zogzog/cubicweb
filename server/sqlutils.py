@@ -204,7 +204,7 @@ class SQLAdapterMixIn(object):
         if not os.path.exists(backupdir):
             if confirm('%s does not exist. Create it?' % backupdir,
                        abort=False, shell=False):
-                os.mkdir(backupdir)
+                os.makedirs(backupdir)
             else:
                 print '-> failed to backup instance'
                 return
