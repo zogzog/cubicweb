@@ -183,12 +183,12 @@ class MigrationHelper(object):
         if not ask_confirm or self.confirm(msg):
             return meth(*args, **kwargs)
 
-    def confirm(self, question, shell=True, abort=True, retry=False):
+    def confirm(self, question, shell=True, abort=True, retry=False, default='y'):
         """ask for confirmation and return true on positive answer
 
         if `retry` is true the r[etry] answer may return 2
         """
-        possibleanswers = ['Y','n']
+        possibleanswers = ['y','n']
         if abort:
             possibleanswers.append('abort')
         if shell:
@@ -196,7 +196,7 @@ class MigrationHelper(object):
         if retry:
             possibleanswers.append('retry')
         try:
-            answer = ASK.ask(question, possibleanswers, 'Y')
+            answer = ASK.ask(question, possibleanswers, default)
         except (EOFError, KeyboardInterrupt):
             answer = 'abort'
         if answer == 'n':
