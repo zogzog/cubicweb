@@ -248,7 +248,7 @@ class RichTextField(StringField):
         try:
             return req.data[self]
         except KeyError:
-            fkwargs = {}
+            fkwargs = {'eidparam': self.eidparam}
             if self.use_fckeditor(form):
                 # if fckeditor is used and format field isn't explicitly
                 # deactivated, we want an hidden field for the format
