@@ -942,3 +942,7 @@ orig_set_statement_type = stmts.Select.set_statement_type
 def bw_set_statement_type(self, etype):
     return orig_set_statement_type(self, bw_normalize_etype(etype))
 stmts.Select.set_statement_type = bw_set_statement_type
+
+# XXX deprecated
+from yams.constraints import format_constraint
+from yams.buildobjs import RichString
