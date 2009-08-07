@@ -18,14 +18,14 @@ from cubicweb.server.sqlutils import SQL_PREFIX
 
 def dbg_st_search(uri, union, varmap, args, cachekey=None, prefix='rql for'):
     if server.DEBUG & server.DBG_RQL:
-        print '%s %s source: %s' % (prefix, uri, union.as_string())
+        print '  %s %s source: %s' % (prefix, uri, union.as_string())
         if varmap:
-            print '  using varmap', varmap
+            print '    using varmap', varmap
         if server.DEBUG & server.DBG_MORE:
-            print '  args', args
-            print '  cache key', cachekey
-            print '  solutions', ','.join(str(s.solutions)
-                                          for s in union.children)
+            print '    args', args
+            print '    cache key', cachekey
+            print '    solutions', ','.join(str(s.solutions)
+                                            for s in union.children)
     # return true so it can be used as assertion (and so be killed by python -O)
     return True
 
