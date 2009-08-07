@@ -1120,6 +1120,32 @@ WHERE rel_is0.eid_to=2'''),
     ]
 from logilab.common.adbh import ADV_FUNC_HELPER_DIRECTORY
 
+class CWRQLTC(RQLGeneratorTC):
+    schema = schema
+
+    def test_nonregr_sol(self):
+        delete = self.rqlhelper.parse(
+            'DELETE X read_permission READ_PERMISSIONSUBJECT,X add_permission ADD_PERMISSIONSUBJECT,'
+            'X in_basket IN_BASKETSUBJECT,X delete_permission DELETE_PERMISSIONSUBJECT,'
+            'X initial_state INITIAL_STATESUBJECT,X update_permission UPDATE_PERMISSIONSUBJECT,'
+            'X created_by CREATED_BYSUBJECT,X is ISSUBJECT,X is_instance_of IS_INSTANCE_OFSUBJECT,'
+            'X owned_by OWNED_BYSUBJECT,X specializes SPECIALIZESSUBJECT,ISOBJECT is X,'
+            'SPECIALIZESOBJECT specializes X,STATE_OFOBJECT state_of X,IS_INSTANCE_OFOBJECT is_instance_of X,'
+            'TO_ENTITYOBJECT to_entity X,TRANSITION_OFOBJECT transition_of X,FROM_ENTITYOBJECT from_entity X '
+            'WHERE X is CWEType')
+        self.rqlhelper.compute_solutions(delete)
+        def var_sols(var):
+            s = set()
+            for sol in delete.solutions:
+                s.add(sol.get(var))
+            return s
+        self.assertEquals(var_sols('FROM_ENTITYOBJECT'), set(('CWAttribute', 'CWRelation')))
+        self.assertEquals(var_sols('FROM_ENTITYOBJECT'), delete.defined_vars['FROM_ENTITYOBJECT'].stinfo['possibletypes'])
+        self.assertEquals(var_sols('ISOBJECT'),
+                          set(x.type for x in self.schema.entities() if not x.is_final()))
+        self.assertEquals(var_sols('ISOBJECT'), delete.defined_vars['ISOBJECT'].stinfo['possibletypes'])
+
+
 class PostgresSQLGeneratorTC(RQLGeneratorTC):
     schema = schema
 
