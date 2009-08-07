@@ -210,7 +210,7 @@ class SQLAdapterMixIn(object):
                 return
         if os.system(cmd):
             print '-> error trying to backup with command', cmd
-            if not confirm('Continue anyway?', default_is_yes=False):
+            if not confirm('Continue anyway?', default='n'):
                 raise SystemExit(1)
         else:
             print '-> backup file',  backupfile
