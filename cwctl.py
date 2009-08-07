@@ -103,7 +103,7 @@ class InstanceCommand(Command):
         for appid in args:
             if askconfirm:
                 print '*'*72
-                if not confirm('%s instance %r ?' % (self.name, appid)):
+                if not ASK.confirm('%s instance %r ?' % (self.name, appid)):
                     continue
             self.run_arg(appid)
 
@@ -137,7 +137,7 @@ class InstanceCommandFork(InstanceCommand):
         for appid in args:
             if askconfirm:
                 print '*'*72
-                if not confirm('%s instance %r ?' % (self.name, appid)):
+                if not ASK.confirm('%s instance %r ?' % (self.name, appid)):
                     continue
             if forkcmd:
                 status = system('%s %s' % (forkcmd, appid))
@@ -307,8 +307,8 @@ repository and the web server.',
         errors = config.i18ncompile(langs)
         if errors:
             print '\n'.join(errors)
-            if not confirm('error while compiling message catalogs, '
-                           'continue anyway ?'):
+            if not ASK.confirm('error while compiling message catalogs, '
+                               'continue anyway ?'):
                 print 'creation not completed'
                 return
         # create the additional data directory for this instance
@@ -487,7 +487,7 @@ class RestartInstanceCommand(StartInstanceCommand,
         for appid in args:
             if askconfirm:
                 print '*'*72
-                if not confirm('%s instance %r ?' % (self.name, appid)):
+                if not ASK.confirm('%s instance %r ?' % (self.name, appid)):
                     continue
             self.stop_instance(appid)
             stopped.append(appid)
@@ -676,8 +676,8 @@ given, appropriate sources for migration will be automatically selected \
         errors = config.i18ncompile(langs)
         if errors:
             print '\n'.join(errors)
-            if not confirm('Error while compiling message catalogs, '
-                           'continue anyway ?'):
+            if not ASK.confirm('Error while compiling message catalogs, '
+                               'continue anyway ?'):
                 print '-> migration not completed.'
                 return
         mih.shutdown()
