@@ -485,6 +485,7 @@ class CubicWebSchema(Schema):
         for k, v in self._eid_index.items():
             if v == (subjtype, rtype, objtype):
                 del self._eid_index[k]
+                break
         super(CubicWebSchema, self).del_relation_def(subjtype, rtype, objtype)
 
     def del_entity_type(self, etype):
