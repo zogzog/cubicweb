@@ -199,6 +199,7 @@ class UserGroupHooksTC(RepositoryBasedTC):
         self.commit()
         self.failIf(self.execute('Any X WHERE X created_by Y, X eid >= %(x)s', {'x': eid}))
 
+
 class CWPropertyHooksTC(RepositoryBasedTC):
 
     def test_unexistant_eproperty(self):
