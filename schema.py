@@ -850,13 +850,12 @@ class BootstrapSchemaLoader(SchemaLoader):
         """return a Schema instance from the schema definition read
         from <directory>
         """
-        self.lib_directory = join(cubicweb.CW_SOFTWARE_ROOT, 'schemas')
         return super(BootstrapSchemaLoader, self).load(
             path, config.appid, register_base_types=False, **kwargs)
 
     def _load_definition_files(self, cubes=None):
         # bootstraping, ignore cubes
-        filepath = join(self.lib_directory, 'bootstrap.py')
+        filepath = join(cubicweb.CW_SOFTWARE_ROOT, 'schemas', 'bootstrap.py')
         self.info('loading %s', filepath)
         self.handle_file(filepath)
 
@@ -883,13 +882,13 @@ class CubicWebSchemaLoader(BootstrapSchemaLoader):
             return super(CubicWebSchemaLoader, self).load(config, path=path, **kwargs)
         finally:
             # we've to cleanup modules imported from cubicweb.schemas as well
-            cleanup_sys_modules([self.lib_directory])
+            cleanup_sys_modules([join(cubicweb.CW_SOFTWARE_ROOT, 'schemas')])
 
     def _load_definition_files(self, cubes):
-        for filepath in (join(self.lib_directory, 'bootstrap.py'),
-                         join(self.lib_directory, 'base.py'),
-                         join(self.lib_directory, 'workflow.py'),
-                         join(self.lib_directory, 'Bookmark.py')):
+        for filepath in (join(CW_SOFTWARE_ROOT, 'schemas', 'bootstrap.py'),
+                         join(CW_SOFTWARE_ROOT, 'schemas', 'base.py'),
+                         join(CW_SOFTWARE_ROOT, 'schemas', 'workflow.py'),
+                         join(CW_SOFTWARE_ROOT, 'schemas', 'Bookmark.py')):
             self.info('loading %s', filepath)
             self.handle_file(filepath)
         for cube in cubes:

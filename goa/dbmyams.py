@@ -168,7 +168,6 @@ def load_schema(config, schemaclasses=None, extrahook=None):
     for compname in config['included-cubes']:
         __import__('%s.schema' % compname)
     loader = GaeSchemaLoader(use_gauthservice=config['use-google-auth'], db=db)
-    loader.lib_directory = join(CW_SOFTWARE_ROOT, 'schemas')
     if schemaclasses is not None:
         for cls in schemaclasses:
             loader.load_dbmodel(cls.__name__, goadb.extract_dbmodel(cls))
