@@ -945,13 +945,13 @@ class Repository(object):
             if x == 'subject':
                 # don't skip inlined relation so they are regularly
                 # deleted and so hooks are correctly called
-                rql.append('X %s %s' % (rtype, var))
+                selection = 'X %s %s' % (rtype, var)
             else:
-                rql.append('%s %s X' % (var, rtype))
-        rql = 'DELETE %s WHERE X eid %%(x)s' % ','.join(rql)
-        # unsafe_execute since we suppose that if user can delete the entity,
-        # he can delete all its relations without security checking
-        session.unsafe_execute(rql, {'x': eid}, 'x', build_descr=False)
+                selection = '%s %s X' % (var, rtype)
+            rql = 'DELETE %s WHERE X eid %%(x)s' % selection
+            # unsafe_execute since we suppose that if user can delete the entity,
+            # he can delete all its relations without security checking
+            session.unsafe_execute(rql, {'x': eid}, 'x', build_descr=False)
 
     def index_entity(self, session, entity):
         """full text index a modified entity"""
