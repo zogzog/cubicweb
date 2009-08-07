@@ -256,7 +256,7 @@ class LivetestConfiguration(BaseApptestConfiguration):
 
 CubicWebConfiguration.cls_adjust_sys_path()
 
-def install_sqlite_path(querier):
+def install_sqlite_patch(querier):
     """This patch hotfixes the following sqlite bug :
        - http://www.sqlite.org/cvstrac/tktview?tn=1327,33
        (some dates are returned as strings rather thant date objects)
@@ -312,7 +312,7 @@ def init_test_database(driver='sqlite', configdir='data', config=None,
     repo, cnx = in_memory_cnx(vreg or config, unicode(source['admin']['login']),
                               source['admin']['password'] or 'xxx')
     if driver == 'sqlite':
-        install_sqlite_path(repo.querier)
+        install_sqlite_patch(repo.querier)
     return repo, cnx
 
 def init_test_database_postgres(config, source, vreg=None):
