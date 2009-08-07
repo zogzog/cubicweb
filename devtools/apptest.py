@@ -282,6 +282,7 @@ class EnvBasedTC(TestCase):
         self.session().unsafe_execute('DELETE Any X WHERE X eid > %s' % self.maxeid)
         self.commit()
 
+    # global resources accessors ###############################################
 
 # XXX
 try:

@@ -12,9 +12,14 @@ __docformat__ = "restructuredtext en"
 
 import sys
 from os.path import join, exists
+from glob import glob
 
 from logilab.common.modutils import LazyObject
 from logilab.common.textutils import splitstrip
+
+from yams import BASE_GROUPS
+
+from cubicweb import CW_SOFTWARE_ROOT
 
 # server-side debugging #########################################################
 
@@ -92,8 +97,6 @@ def init_repository(config, interactive=True, drop=False, vreg=None):
     with the minimal set of entities (ie at least the schema, base groups and
     a initial user)
     """
-    from glob import glob
-    from yams import BASE_GROUPS
     from cubicweb.dbapi import in_memory_cnx
     from cubicweb.server.repository import Repository
     from cubicweb.server.utils import manager_userpasswd
@@ -140,7 +143,7 @@ def init_repository(config, interactive=True, drop=False, vreg=None):
         #               if not repo.system_source.support_entity(str(e))])
     sqlexec(schemasql, execute, pbtitle=_title)
     # install additional driver specific sql files
-    for fpath in glob(join(config.schemas_lib_dir(), '*.sql.%s' % driver)):
+    for fpath in glob(join(CW_SOFTWARE_ROOT, 'schemas', '*.sql.%s' % driver)):
         print '-> installing', fpath
         sqlexec(open(fpath).read(), execute, False, delimiter=';;')
     for directory in config.cubes_path():

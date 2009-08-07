@@ -14,6 +14,7 @@ from logging import getLogger
 from warnings import warn
 
 from logilab.common.decorators import cached, clear_cache, monkeypatch
+from logilab.common.logging_ext import set_log_methods
 from logilab.common.deprecation import deprecated
 from logilab.common.compat import any
 
@@ -26,8 +27,8 @@ from yams.reader import (CONSTRAINTS, PyFileReader, SchemaLoader,
 
 from rql import parse, nodes, RQLSyntaxError, TypeResolverException
 
+import cubicweb
 from cubicweb import ETYPE_NAME_MAP, ValidationError, Unauthorized
-from cubicweb import set_log_methods
 
 # XXX <3.2 bw compat
 from yams import schema
@@ -849,7 +850,7 @@ class BootstrapSchemaLoader(SchemaLoader):
         """return a Schema instance from the schema definition read
         from <directory>
         """
-        self.lib_directory = config.schemas_lib_dir()
+        self.lib_directory = join(cubicweb.CW_SOFTWARE_ROOT, 'schemas')
         return super(BootstrapSchemaLoader, self).load(
             path, config.appid, register_base_types=False, **kwargs)
 

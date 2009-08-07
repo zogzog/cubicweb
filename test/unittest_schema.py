@@ -130,7 +130,6 @@ class CubicWebSchemaTC(TestCase):
 loader = CubicWebSchemaLoader()
 config = TestConfiguration('data')
 config.bootstrap_cubes()
-loader.lib_directory = config.schemas_lib_dir()
 
 class SQLSchemaReaderClassTest(TestCase):
 

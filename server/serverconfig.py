@@ -77,12 +77,9 @@ class ServerConfiguration(CubicWebConfiguration):
     name = 'repository'
     if os.environ.get('APYCOT_ROOT'):
         root = os.environ['APYCOT_ROOT']
-        SCHEMAS_LIB_DIR = '%s/local/share/cubicweb/schemas/' % root
     elif CubicWebConfiguration.mode == 'dev':
-        SCHEMAS_LIB_DIR = join(CW_SOFTWARE_ROOT, 'schemas')
         BACKUP_DIR = CubicWebConfiguration.RUNTIME_DIR
     else:
-        SCHEMAS_LIB_DIR = '/usr/share/cubicweb/schemas/'
         BACKUP_DIR = '/var/lib/cubicweb/backup/'
 
     cubicweb_appobject_path = CubicWebConfiguration.cubicweb_appobject_path | set(['sobjects'])
@@ -207,11 +204,6 @@ and if not set, it will be choosen randomly',
     def enabled_sources(self, sourceuris=None):
         self._enabled_sources = sourceuris
         clear_cache(self, 'sources')
-
-    @classmethod
-    def schemas_lib_dir(cls):
-        """instance schema directory"""
-        return env_path('CW_SCHEMA_LIB', cls.SCHEMAS_LIB_DIR, 'schemas')
 
     def bootstrap_cubes(self):
         from logilab.common.textutils import splitstrip

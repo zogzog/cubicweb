@@ -160,12 +160,6 @@ class GaeSchemaLoader(CubicWebSchemaLoader):
 import os
 from cubicweb import CW_SOFTWARE_ROOT
 
-if os.environ.get('APYCOT_ROOT'):
-    SCHEMAS_LIB_DIRECTORY = join(os.environ['APYCOT_ROOT'],
-                                 'local', 'share', 'cubicweb', 'schemas')
-else:
-    SCHEMAS_LIB_DIRECTORY = join(CW_SOFTWARE_ROOT, 'schemas')
-
 def load_schema(config, schemaclasses=None, extrahook=None):
     """high level method to load all the schema for a lax instance"""
     # IMPORTANT NOTE: dbmodel schemas must be imported **BEFORE**
@@ -174,7 +168,7 @@ def load_schema(config, schemaclasses=None, extrahook=None):
     for compname in config['included-cubes']:
         __import__('%s.schema' % compname)
     loader = GaeSchemaLoader(use_gauthservice=config['use-google-auth'], db=db)
-    loader.lib_directory = SCHEMAS_LIB_DIRECTORY
+    loader.lib_directory = join(CW_SOFTWARE_ROOT, 'schemas')
     if schemaclasses is not None:
         for cls in schemaclasses:
             loader.load_dbmodel(cls.__name__, goadb.extract_dbmodel(cls))
@@ -188,7 +182,7 @@ def load_schema(config, schemaclasses=None, extrahook=None):
                      'read_permission', 'add_permission',
                      'delete_permission', 'update_permission'):
         loader.import_yams_schema(erschema, 'bootstrap')
-    loader.handle_file(join(SCHEMAS_LIB_DIRECTORY, 'base.py'))
+    loader.handle_file(join(CW_SOFTWARE_ROOT, 'schemas', 'base.py'))
     cubes = config['included-yams-cubes']
     for cube in reversed(config.expand_cubes(cubes)):
         config.info('loading cube %s', cube)

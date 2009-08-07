@@ -13,7 +13,6 @@ from cubicweb.devtools import TestServerConfiguration
 loader = CubicWebSchemaLoader()
 config = TestServerConfiguration('data')
 config.bootstrap_cubes()
-loader.lib_directory = config.schemas_lib_dir()
 schema = loader.load(config)
 
 from cubicweb.server.schemaserial import *
