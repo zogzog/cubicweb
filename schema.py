@@ -946,3 +946,4 @@ stmts.Select.set_statement_type = bw_set_statement_type
 # XXX deprecated
 from yams.constraints import format_constraint
 from yams.buildobjs import RichString
+PyFileReader.context['format_constraint'] = format_constraint
