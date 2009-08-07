@@ -885,10 +885,10 @@ class CubicWebSchemaLoader(BootstrapSchemaLoader):
             cleanup_sys_modules([join(cubicweb.CW_SOFTWARE_ROOT, 'schemas')])
 
     def _load_definition_files(self, cubes):
-        for filepath in (join(CW_SOFTWARE_ROOT, 'schemas', 'bootstrap.py'),
-                         join(CW_SOFTWARE_ROOT, 'schemas', 'base.py'),
-                         join(CW_SOFTWARE_ROOT, 'schemas', 'workflow.py'),
-                         join(CW_SOFTWARE_ROOT, 'schemas', 'Bookmark.py')):
+        for filepath in (join(cubicweb.CW_SOFTWARE_ROOT, 'schemas', 'bootstrap.py'),
+                         join(cubicweb.CW_SOFTWARE_ROOT, 'schemas', 'base.py'),
+                         join(cubicweb.CW_SOFTWARE_ROOT, 'schemas', 'workflow.py'),
+                         join(cubicweb.CW_SOFTWARE_ROOT, 'schemas', 'Bookmark.py')):
             self.info('loading %s', filepath)
             self.handle_file(filepath)
         for cube in cubes:
