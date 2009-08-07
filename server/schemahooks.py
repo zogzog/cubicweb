@@ -772,6 +772,8 @@ def after_del_relation_type(session, rdefeid, rtype, rteid):
     else:
         rdeftype = 'CWRelation'
         if not (subjschema.eid in pendings or objschema.eid in pendings):
+            pending = session.transaction_data.setdefault('pendingrdefs', set())
+            pending.add((subjschema, rschema, objschema))
             session.execute('DELETE X %s Y WHERE X is %s, Y is %s'
                             % (rschema, subjschema, objschema))
     execute = session.unsafe_execute

@@ -90,7 +90,7 @@ class Personne(EntityType):
 
     travaille = SubjectRelation('Societe')
     concerne = SubjectRelation('Affaire')
-    concerne2 = SubjectRelation('Affaire')
+    concerne2 = SubjectRelation(('Affaire', 'Note'), cardinality='1*')
     connait = SubjectRelation('Personne', symetric=True)
 
 class Societe(EntityType):

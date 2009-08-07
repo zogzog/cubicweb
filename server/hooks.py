@@ -313,6 +313,9 @@ def cardinalitycheck_before_del_relation(session, eidfrom, rtype, eidto):
     if rtype in DONT_CHECK_RTYPES_ON_DEL:
         return
     card = rproperty(session, rtype, eidfrom, eidto, 'cardinality')
+    pendingrdefs = session.transaction_data.get('pendingrdefs', ())
+    if (session.describe(eidfrom)[0], rtype, session.describe(eidto)[0]) in pendingrdefs:
+        return
     pendingeids = session.transaction_data.get('pendingeids', ())
     if card[0] in '1+' and not eidfrom in pendingeids:
         checkrel_if_necessary(session, CheckSRelationOp, rtype, eidfrom)

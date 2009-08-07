@@ -177,8 +177,19 @@ class MigrationCommandsTC(RepositoryBasedTC):
         self.mh.cmd_add_relation_definition('Personne', 'concerne2', 'Affaire')
         self.assertEquals(self.schema['concerne2'].subjects(),
                           ('Personne',))
-        self.assertEquals(self.schema['concerne2'].objects(), ('Affaire',))
+        self.assertEquals(self.schema['concerne2'].objects(),
+                          ('Affaire', ))
+        self.assertEquals(self.schema['concerne2'].rproperty('Personne', 'Affaire', 'cardinality'),
+                          '1*')
+        self.mh.cmd_add_relation_definition('Personne', 'concerne2', 'Note')
+        self.assertEquals(sorted(self.schema['concerne2'].objects()), ['Affaire', 'Note'])
+        self.mh.add_entity('Personne', nom=u'tot')
+        self.mh.add_entity('Affaire')
+        self.mh.rqlexec('SET X concerne2 Y WHERE X is Personne, Y is Affaire')
+        self.commit()
         self.mh.cmd_drop_relation_definition('Personne', 'concerne2', 'Affaire')
+        self.failUnless('concerne2' in self.schema)
+        self.mh.cmd_drop_relation_definition('Personne', 'concerne2', 'Note')
         self.failIf('concerne2' in self.schema)
 
     def test_drop_relation_definition_existant_rtype(self):
