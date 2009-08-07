@@ -61,10 +61,8 @@ class NavigationTC(EnvBasedTC):
         rset = self.execute('Any X,N WHERE X name N')
         req = self.request()
         req.form['__start'] = 1000000
-        print 'len', len(rset)
         navcomp = self.vreg['components'].select('navigation', req, rset=rset)
         html = navcomp.render()
-        print html
 
     def test_sorted_navigation_1(self):
         req = self.request()
