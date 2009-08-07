@@ -62,7 +62,8 @@ class ChangeStateFormView(FormViewMixIn, view.EntityView):
             'st1': _(state.name),
             'st2': _(dest.name)}
         self.w(u'<p>%s</p>\n' % msg)
-        self.w(form.form_render(state=dest.eid, trcomment=u''))
+        self.w(form.form_render(state=dest.eid, trcomment=u'',
+                                trcomment_format=self.req.property_value('ui.default-text-format')))
 
     def redirectpath(self, entity):
         return entity.rest_path()
