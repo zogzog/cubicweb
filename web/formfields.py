@@ -283,7 +283,8 @@ class RichTextField(StringField):
         format_field = self.get_format_field(form)
         if format_field:
             # XXX we want both fields to remain vertically aligned
-            format_field.widget.attrs['style'] = 'display: block'
+            if format_field.is_visible():
+                format_field.widget.attrs['style'] = 'display: block'
             result = format_field.render(form, renderer)
         else:
             result = u''
