@@ -920,6 +920,8 @@ def before_update_ertype(session, entity):
 
 
 def after_update_erdef(session, entity):
+    if entity.eid in session.transaction_data.get('pendingeids', ()):
+        return
     desttype = entity.otype.name
     rschema = session.schema[entity.rtype.name]
     newvalues = {}
@@ -928,7 +930,7 @@ def after_update_erdef(session, entity):
             continue
         if prop == 'order':
             prop = 'ordernum'
-        if prop in entity:
+        if prop in entity.edited_attributes:
             newvalues[prop] = entity[prop]
     if newvalues:
         subjtype = entity.stype.name
