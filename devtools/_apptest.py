@@ -65,6 +65,7 @@ def ignore_relations(*relations):
     global SYSTEM_RELATIONS
     SYSTEM_RELATIONS += relations
 
+
 class TestEnvironment(object):
     """TestEnvironment defines a context (e.g. a config + a given connection) in
     which the tests are executed
@@ -176,55 +177,6 @@ class TestEnvironment(object):
         return (self.execute(rql, args, eidkey),
                 self.create_request(rql=rql, **optional_args or {}))
 
-    def check_view(self, rql, vid, optional_args, template='main'):
-        """checks if rendering view raises an exception in this environment
-
-        If any exception is raised in this method, it will be considered
-        as a TestFailure
-        """
-        return self.call_view(vid, rql,
-                              template=template, optional_args=optional_args)
-
-    def call_view(self, vid, rql, template='main', optional_args=None):
-        assert template
-        if optional_args is None:
-            optional_args = {}
-        optional_args['vid'] = vid
-        req = self.create_request(rql=rql, **optional_args)
-        return self.vreg['views'].main_template(req, template)
-
-    def call_edit(self, req):
-        """shortcut for self.app.edit()"""
-        controller = self.vreg.select('controllers', 'edit', req)
-        try:
-            controller.publish()
-        except Redirect:
-            result = 'success'
-        else:
-            raise Exception('edit should raise Redirect on success')
-        req.cnx.commit()
-        return result
-
-    def iter_possible_views(self, req, rset):
-        """returns a list of possible vids for <rql>"""
-        for view in self.vreg['views'].possible_views(req, rset):
-            if view.category == 'startupview':
-                continue
-            yield view.id
-        if rset.rowcount == 1:
-            yield 'edition'
-
-    def iter_startup_views(self, req):
-        """returns the list of startup views"""
-        for view in self.vreg['views'].possible_views(req, None):
-            if view.category != 'startupview':
-                continue
-            yield view.id
-
-    def iter_possible_actions(self, req, rset):
-        """returns a list of possible vids for <rql>"""
-        for action in self.vreg.possible_vobjects('actions', req, rset=rset):
-            yield action
 
 class ExistingTestEnvironment(TestEnvironment):
 
