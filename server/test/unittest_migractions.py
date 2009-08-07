@@ -38,7 +38,6 @@ class MigrationCommandsTC(RepositoryBasedTC):
             migrschema = self.repo.config.load_schema()
             self.repo.config.appid = 'data'
             assert 'Folder' in migrschema
-            self.repo.hm.deactivate_verification_hooks()
         RepositoryBasedTC.setUp(self)
         self.mh = ServerMigrationHelper(self.repo.config, migrschema,
                                         repo=self.repo, cnx=self.cnx,
