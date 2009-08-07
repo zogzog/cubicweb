@@ -237,7 +237,7 @@ class WorkflowableMixIn(object):
         params = params or self.req.form
         self.change_state(typed_eid(params.pop('state')),
                           params.get('trcomment'),
-                          params.get('trcommentformat'))
+                          params.get('trcomment_format'))
         self.req.set_message(self.req._('__msg state changed'))
 
     # specific vocabulary methods #############################################
