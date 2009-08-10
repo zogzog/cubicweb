@@ -160,7 +160,7 @@ class IndexView(ManageView):
 class RegistryView(StartupView):
     id = 'registry'
     title = _('registry')
-    __select__ match_user_groups('managers')
+    __select__ = match_user_groups('managers')
 
     def call(self, **kwargs):
         """The default view representing the instance's management"""
