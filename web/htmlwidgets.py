@@ -58,6 +58,9 @@ class BoxWidget(HTMLWidget):
     def append(self, item):
         self.items.append(item)
 
+    def extend(self, items):
+        self.items.extend(items)
+
     title_class = 'boxTitle'
     main_div_class = 'boxContent'
     listing_class = 'boxListing'
