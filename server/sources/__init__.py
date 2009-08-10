@@ -95,30 +95,11 @@ class AbstractSource(object):
         """method called by the repository once ready to handle request"""
         pass
 
-    def backup_file(self, backupfile=None, timestamp=None):
-        """return a unique file name for a source's dump
-
-        either backupfile or timestamp (used to generated a backup file name if
-        needed) should be specified.
-        """
-        if backupfile is None:
-            config = self.repo.config
-            return join(config.appdatahome, 'backup',
-                        '%s-%s-%s.dump' % (config.appid, timestamp, self.uri))
-        # backup file is the system database backup file, add uri to it if not
-        # already there
-        base, ext = splitext(backupfile)
-        if not base.endswith('-%s' % self.uri):
-            return '%s-%s%s' % (base, self.uri, ext)
-        return backupfile
-
-    def backup(self, confirm, backupfile=None, timestamp=None,
-               askconfirm=False):
+    def backup(self, backupfile):
         """method called to create a backup of source's data"""
         pass
 
-    def restore(self, confirm, backupfile=None, timestamp=None, drop=True,
-               askconfirm=False):
+    def restore(self, backupfile):
         """method called to restore a backup of source's data"""
         pass
 

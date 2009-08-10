@@ -120,39 +120,6 @@ def sqldropschema(schema, driver, text_index=True,
                      skip_relations=skip_relations))
     return '\n'.join(output)
 
-
-def sql_source_backup(source, sqladapter, confirm, backupfile,
-                      askconfirm=False):
-    if exists(backupfile):
-        if not confirm('Backup file %s exists, overwrite it?' % backupfile):
-            return
-    elif askconfirm and not confirm('Backup %s database?'
-                                    % source.repo.config.appid):
-        print '-> no backup done.'
-        return
-    # should close opened connection before backuping
-    source.close_pool_connections()
-    try:
-        sqladapter.backup_to_file(backupfile, confirm)
-    finally:
-        source.open_pool_connections()
-
-def sql_source_restore(source, sqladapter, confirm, backupfile, drop=True,
-                       askconfirm=False):
-    if not exists(backupfile):
-        raise Exception("backup file %s doesn't exist" % backupfile)
-    app = source.repo.config.appid
-    if askconfirm and not confirm('Restore %s %s database from %s ?'
-                                  % (app, source.uri, backupfile)):
-        return
-    # should close opened connection before restoring
-    source.close_pool_connections()
-    try:
-        sqladapter.restore_from_file(backupfile, confirm, drop=drop)
-    finally:
-        source.open_pool_connections()
-
-
 try:
     from mx.DateTime import DateTimeType, DateTimeDeltaType
 except ImportError:
@@ -196,25 +163,12 @@ class SQLAdapterMixIn(object):
         #self.dbapi_module.type_code_test(cnx.cursor())
         return cnx
 
-    def backup_to_file(self, backupfile, confirm):
+    def backup_to_file(self, backupfile):
         cmd = self.dbhelper.backup_command(self.dbname, self.dbhost,
                                            self.dbuser, backupfile,
                                            keepownership=False)
-        backupdir = os.path.dirname(backupfile)
-        if not os.path.exists(backupdir):
-            if confirm('%s does not exist. Create it?' % backupdir,
-                       abort=False, shell=False):
-                os.makedirs(backupdir)
-            else:
-                print '-> failed to backup instance'
-                return
         if os.system(cmd):
-            print '-> error trying to backup with command', cmd
-            if not confirm('Continue anyway?', default='n'):
-                raise SystemExit(1)
-        else:
-            print '-> backup file',  backupfile
-            restrict_perms_to_user(backupfile, self.info)
+            raise Exception('Failed command: %s' % cmd)
 
     def restore_from_file(self, backupfile, confirm, drop=True):
         for cmd in self.dbhelper.restore_commands(self.dbname, self.dbhost,
@@ -222,19 +176,8 @@ class SQLAdapterMixIn(object):
                                                   self.encoding,
                                                   keepownership=False,
                                                   drop=drop):
-            while True:
-                print cmd
-                if os.system(cmd):
-                    print '-> error while restoring the base'
-                    answer = confirm('Continue anyway?',
-                                     shell=False, abort=False, retry=True)
-                    if not answer:
-                        raise SystemExit(1)
-                    if answer == 1: # 1: continue, 2: retry
-                        break
-                else:
-                    break
-        print '-> database restored.'
+            if os.system(cmd):
+                raise Exception('Failed command: %s' % cmd)
 
     def merge_args(self, args, query_args):
         if args is not None:
