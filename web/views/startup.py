@@ -156,3 +156,19 @@ class IndexView(ManageView):
     def display_folders(self):
         return 'Folder' in self.schema and self.req.execute('Any COUNT(X) WHERE X is Folder')[0][0]
 
+
+class RegistryView(StartupView):
+    id = 'registry'
+    title = _('registry')
+
+    def call(self, **kwargs):
+        """The default view representing the instance's management"""
+        self.w(u'<h1>%s</h1>' % _("Registry's content"))
+        keys = sorted(self.vreg)
+        self.w(u'<p>%s</p>' % ' - '.join('<a href="/_registry#%s">%s</a>' % (key, key) for key in keys))
+        for key in keys:
+            self.w(u'<a name="%s"><h2>%s</h2></a><table>' % (key,key))
+            for key, value in sorted(self.vreg[key].items()):
+                self.w(u'<tr><td>%s</td><td>%s</td></tr>' % (key, xml_escape(repr(value))))
+            self.w(u'</table>')
+
