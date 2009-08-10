@@ -127,6 +127,9 @@ class ITree(Interface):
     def children(self):
         """returns the item's children"""
 
+    def children_rql(self):
+        """XXX returns RQL to get children"""
+
     def __iter__(self):
         """iterates over the item's children"""
 
@@ -137,7 +140,7 @@ class ITree(Interface):
         """returns true if this node has no parent"""
 
     def root(self):
-        """return the root object"""
+        """returns the root object"""
 
 
 ## web specific interfaces ####################################################
