@@ -171,11 +171,12 @@ class EditRelationBoxTemplate(ReloadableMixIn, EntityBoxTemplate):
         self.req.add_js('cubicweb.ajax.js')
         entity = self.entity(row, col)
         box = SideBoxWidget(display_name(self.req, self.rtype), self.id)
-        count = self.w_related(box, entity)
-        if count:
+        related = self.related_boxitems(entity)
+        unrelated = self.unrelated_boxitems(entity)
+        box.extend(related)
+        if related and unrelated:
             box.append(BoxSeparator())
-        if not self.w_unrelated(box, entity):
-            del box.items[-1] # remove useless separator
+        box.extend(unrelated)
         box.render(self.w)
 
     def div_id(self):
@@ -192,22 +193,22 @@ class EditRelationBoxTemplate(ReloadableMixIn, EntityBoxTemplate):
                                                etarget.view('incontext'))
         return RawBoxItem(label, liclass=u'invisible')
 
-    def w_related(self, box, entity):
-        """appends existing relations to the `box`"""
+    def related_boxitems(self, entity):
         rql = 'DELETE S %s O WHERE S eid %%(s)s, O eid %%(o)s' % self.rtype
-        related = self.related_entities(entity)
-        for etarget in related:
-            box.append(self.box_item(entity, etarget, rql, u'-'))
-        return len(related)
+        related = []
+        for etarget in self.related_entities(entity):
+            related.append(self.box_item(entity, etarget, rql, u'-'))
+        return related
 
-    def w_unrelated(self, box, entity):
-        """appends unrelated entities to the `box`"""
+    def unrelated_boxitems(self, entity):
         rql = 'SET S %s O WHERE S eid %%(s)s, O eid %%(o)s' % self.rtype
-        i = 0
+        unrelated = []
         for etarget in self.unrelated_entities(entity):
-            box.append(self.box_item(entity, etarget, rql, u'+'))
-            i += 1
-        return i
+            unrelated.append(self.box_item(entity, etarget, rql, u'+'))
+        return unrelated
+
+    def related_entities(self, entity):
+        return entity.related(self.rtype, get_role(self), entities=True)
 
     def unrelated_entities(self, entity):
         """returns the list of unrelated entities
@@ -228,7 +229,4 @@ class EditRelationBoxTemplate(ReloadableMixIn, EntityBoxTemplate):
                 rset = self.req.eid_rset(eid)
                 entities.append(rset.get_entity(0, 0))
         return entities
-
-    def related_entities(self, entity):
-        return entity.related(self.rtype, get_role(self), entities=True)
 
