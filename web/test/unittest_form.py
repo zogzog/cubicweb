@@ -124,12 +124,14 @@ class EntityFieldsFormTC(WebTest):
             creation_date = DateTimeField(widget=DateTimePicker)
         form = CustomChangeStateForm(self.req, redirect_path='perdu.com',
                                      entity=self.entity)
-        form.form_render(state=123, trcomment=u'')
+        form.form_render(state=123, trcomment=u'',
+                         trcomment_format=u'text/plain')
 
     def test_change_state_form(self):
         form = ChangeStateForm(self.req, redirect_path='perdu.com',
                                entity=self.entity)
-        form.form_render(state=123, trcomment=u'')
+        form.form_render(state=123, trcomment=u'',
+                         trcomment_format=u'text/plain')
 
     # fields tests ############################################################
 
@@ -161,7 +163,7 @@ class EntityFieldsFormTC(WebTest):
 
     def test_richtextfield_2(self):
         self.req.use_fckeditor = lambda: True
-        self._test_richtextfield('<input name="description_format:%(eid)s" style="display: block" type="hidden" value="text/rest" /><textarea cols="80" cubicweb:type="wysiwyg" id="description:%(eid)s" name="description:%(eid)s" onkeyup="autogrow(this)" rows="2" tabindex="1"></textarea>')
+        self._test_richtextfield('<input name="description_format:%(eid)s" type="hidden" value="text/rest" /><textarea cols="80" cubicweb:type="wysiwyg" id="description:%(eid)s" name="description:%(eid)s" onkeyup="autogrow(this)" rows="2" tabindex="1"></textarea>')
 
 
     def test_filefield(self):
