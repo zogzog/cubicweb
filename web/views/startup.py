@@ -168,7 +168,7 @@ class RegistryView(StartupView):
         keys = sorted(self.vreg)
         self.w(u'<p>%s</p>' % ' - '.join('<a href="/_registry#%s">%s</a>' % (key, key) for key in keys))
         for key in keys:
-            self.w(u'<a name="%s"><h2>%s</h2></a><table>' % (key,key))
+            self.w(u'<h2><a name="%s">%s</a></h2><table>' % (key,key))
             for key, value in sorted(self.vreg[key].items()):
                 self.w(u'<tr><td>%s</td><td>%s</td></tr>' % (key, xml_escape(repr(value))))
             self.w(u'</table>')
