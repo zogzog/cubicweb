@@ -70,6 +70,9 @@ class SimpleReqRewriter(URLRewriter):
     id = 'simple'
 
     rules = [
+        ('/_', dict(vid='manage')),
+        ('/_registry', dict(vid='registry')),
+#        (rgx('/_([^/]+?)/?'), dict(vid=r'\1')),
         ('/schema',  dict(vid='schema')),
         ('/index', dict(vid='index')),
         ('/myprefs', dict(vid='propertiesform')),

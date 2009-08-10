@@ -365,6 +365,7 @@ class TreePathMixIn(object):
 
 class ProgressMixIn(object):
     """provide default implementations for IProgress interface methods"""
+    # This is an adapter isn't it ?
 
     @property
     def cost(self):
