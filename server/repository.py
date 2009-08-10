@@ -1030,6 +1030,9 @@ class Repository(object):
             if rtype in VIRTUAL_RTYPES:
                 continue
             entity.set_related_cache(rtype, 'object', session.empty_rset())
+        # set inline relation cache before call to after_add_entity
+        for attr, value in relations:
+            session.update_rel_cache_add(entity.eid, attr, value)
         # trigger after_add_entity after after_add_relation
         if source.should_call_hooks:
             self.hm.call_hooks('after_add_entity', etype, session, entity)
@@ -1037,7 +1040,6 @@ class Repository(object):
             for attr, value in relations:
                 self.hm.call_hooks('before_add_relation', attr, session,
                                     entity.eid, attr, value)
-                session.update_rel_cache_add(entity.eid, attr, value)
                 self.hm.call_hooks('after_add_relation', attr, session,
                                     entity.eid, attr, value)
         return entity.eid
