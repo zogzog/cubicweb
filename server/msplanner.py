@@ -267,7 +267,7 @@ class PartPlanInformation(object):
         self._conflicts = []
         if rqlhelper is not None: # else test
             self._insert_identity_variable = rqlhelper._annotator.rewrite_shared_optional
-        if server.DEBUG:
+        if server.DEBUG & server.DBG_MS:
             print 'sourcesterms:'
             self._debug_sourcesterms()
 
@@ -1023,7 +1023,7 @@ class MSPlanner(SSPlanner):
 
         the rqlst should not be tagged at this point
         """
-        if server.DEBUG:
+        if server.DEBUG & server.DBG_MS:
             print '-'*80
             print 'PLANNING', rqlst
         for select in rqlst.children:
@@ -1040,7 +1040,7 @@ class MSPlanner(SSPlanner):
         ppis = [PartPlanInformation(plan, select, self.rqlhelper)
                 for select in rqlst.children]
         steps = self._union_plan(plan, rqlst, ppis)
-        if server.DEBUG:
+        if server.DEBUG & server.DBG_MS:
             from pprint import pprint
             for step in plan.steps:
                 pprint(step.test_repr())
@@ -1235,7 +1235,7 @@ class TermsFiltererVisitor(object):
         return rqlst
 
     def filter(self, sources, terms, rqlst, solindices, needsel, final):
-        if server.DEBUG:
+        if server.DEBUG & server.DBG_MS:
             print 'filter', final and 'final' or '', sources, terms, rqlst, solindices, needsel
         newroot = Select()
         self.sources = sorted(sources)
@@ -1329,7 +1329,7 @@ class TermsFiltererVisitor(object):
                     elif ored:
                         newroot.remove_node(rel)
         add_types_restriction(self.schema, rqlst, newroot, solutions)
-        if server.DEBUG:
+        if server.DEBUG & server.DBG_MS:
             print '--->', newroot
         return newroot, self.insertedvars
 
