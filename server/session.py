@@ -48,7 +48,7 @@ class Session(RequestSessionMixIn):
 
     def __init__(self, user, repo, cnxprops=None, _id=None):
         super(Session, self).__init__(repo.vreg)
-        self.id = _id or make_uid(user.login.encode('UTF8'))
+        self.id = _id or make_uid(user.cwdb.login.encode('UTF8'))
         cnxprops = cnxprops or ConnectionProperties('inmemory')
         self.user = user
         self.repo = repo

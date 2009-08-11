@@ -117,7 +117,7 @@ class ResultSetTC(CubicWebTC):
         rs.req = self.request()
         rs.vreg = self.vreg
         def test_filter(entity):
-            return entity.login != 'nico'
+            return entity.cwdb.login != 'nico'
 
         rs2 = rs.filtered_rset(test_filter)
         self.assertEquals(len(rs2), 2)
@@ -271,11 +271,11 @@ class ResultSetTC(CubicWebTC):
         self.assertEquals(pprelcachedict(e._related_cache),
                           [('created_by_subject', [5])])
         # first level of recursion
-        u = e.created_by[0]
+        u = e.cwdb.created_by[0]
         self.assertEquals(u['login'], 'admin')
         self.assertRaises(KeyError, u.__getitem__, 'firstname')
         # second level of recursion
-        s = u.in_state[0]
+        s = u.cwdb.in_state[0]
         self.assertEquals(s['name'], 'activated')
         self.assertRaises(KeyError, s.__getitem__, 'description')
 

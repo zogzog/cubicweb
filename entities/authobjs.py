@@ -44,7 +44,7 @@ class CWUser(AnyEntity):
         try:
             return self._groups
         except AttributeError:
-            self._groups = set(g.name for g in self.in_group)
+            self._groups = set(g.cwdb.name for g in self.cwdb.in_group)
             return self._groups
 
     @property
@@ -52,7 +52,8 @@ class CWUser(AnyEntity):
         try:
             return self._properties
         except AttributeError:
-            self._properties = dict((p.pkey, p.value) for p in self.reverse_for_user)
+            self._properties = dict((p.cwdb.pkey, p.cwdb.value)
+                                    for p in self.cwdb.reverse_for_user)
             return self._properties
 
     def property_value(self, key):
@@ -63,7 +64,8 @@ class CWUser(AnyEntity):
         except KeyError:
             pass
         except ValueError:
-            self.warning('incorrect value for eproperty %s of user %s', key, self.login)
+            self.warning('incorrect value for property %s of user %s', key,
+                         self.cwdb.login)
         return self.vreg.property_value(key)
 
     def matching_groups(self, groups):
@@ -122,16 +124,17 @@ class CWUser(AnyEntity):
 
     def name(self):
         """construct a name using firstname / surname or login if not defined"""
-
-        if self.firstname and self.surname:
+        surname = self.get_value('surname')
+        firstname = self.get_value('firstname')
+        if firstname and surname:
             return self.req._('%(firstname)s %(surname)s') % {
-                'firstname': self.firstname, 'surname' : self.surname}
-        if self.firstname:
-            return self.firstname
-        return self.login
+                'firstname': firstname, 'surname' : surname}
+        if firstname or surname:
+            return surname or firstname
+        return self.get_value('login')
 
     def dc_title(self):
-        return self.login
+        return self.get_value('login')
 
     dc_long_title = name
 

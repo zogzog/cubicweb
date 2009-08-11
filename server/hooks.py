@@ -67,7 +67,7 @@ class SetCreatorOp(PreCommitOperation):
         if self.entity.eid in session.transaction_data.get('pendingeids', ()):
             # entity have been created and deleted in the same transaction
             return
-        if not self.entity.created_by:
+        if not self.entity.related('created_by'):
             session.add_relation(self.entity.eid, 'created_by', session.user.eid)
 
 

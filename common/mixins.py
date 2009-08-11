@@ -168,7 +168,7 @@ class WorkflowableMixIn(object):
     @property
     def state(self):
         try:
-            return self.in_state[0].name
+            return self.related('in_state', entities=True)[0].get_value('name')
         except IndexError:
             self.warning('entity %s has no state', self)
             return None
@@ -259,10 +259,10 @@ class EmailableMixIn(object):
     __implements__ = (IEmailable,)
 
     def get_email(self):
-        if getattr(self, 'primary_email', None):
-            return self.primary_email[0].address
-        if getattr(self, 'use_email', None):
-            return self.use_email[0].address
+        emails = self.related('primary_email', 'subject', entities=True) or \
+                 self.related('use_email', 'subject', entities=True)
+        if emails:
+            return emails[0].get_value('address')
         return None
 
     @classmethod
@@ -283,7 +283,8 @@ class EmailableMixIn(object):
         NOTE: the dictionary keys should match the list returned by the
         `allowed_massmail_keys` method.
         """
-        return dict( (attr, getattr(self, attr)) for attr in self.allowed_massmail_keys() )
+        return dict( (attr, self.cwgetattr(attr))
+                     for attr in self.allowed_massmail_keys() )
 
 
 

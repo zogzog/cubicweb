@@ -687,7 +687,7 @@ class Repository(object):
         if props is not None:
             self.set_session_props(sessionid, props)
         user = session.user
-        return user.eid, user.login, user.groups, user.properties
+        return user.eid, user.cwdb.login, user.groups, user.properties
 
     def set_session_props(self, sessionid, props):
         """this method should be used by client to:

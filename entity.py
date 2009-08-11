@@ -132,14 +132,20 @@ class _metaentity(type):
         return super(_metaentity, mcs).__new__(mcs, name, bases, classdict)
 
 
-class Entity(AppObject, dict):
-    """an entity instance has e_schema automagically set on
-    the class and instances has access to their issuing cursor.
+_CWDB_CLASSES = {}
 
-    A property is set for each attribute and relation on each entity's type
-    class. Becare that among attributes, 'eid' is *NEITHER* stored in the
-    dict containment (which acts as a cache for other attributes dynamically
-    fetched)
+def cwdb___init__(self, entity):
+    self.entity = entity
+
+class Entity(AppObject, dict):
+    """an entity instance has e_schema automagically set on the class.
+
+    Also its special cwdb attribute provides access to persistent attributes and
+    relation using properties which are set for each attribute and relation
+    according to entity's type schema.
+
+    Beware that among attributes, 'eid' is *NEITHER* stored in the dict
+    containment (which acts as a cache for other attributes dynamically fetched)
 
     :type e_schema: `cubicweb.schema.EntitySchema`
     :ivar e_schema: the entity's schema
@@ -177,24 +183,30 @@ class Entity(AppObject, dict):
         etype = cls.id
         assert etype != 'Any', etype
         cls.e_schema = eschema = cls.schema.eschema(etype)
+        cwdbclsdict = {'__init__': cwdb___init__}
         for rschema, _ in eschema.attribute_definitions():
-            if rschema.type == 'eid':
+            rtype = rschema.type
+            if rtype == 'eid':
                 continue
-            setattr(cls, rschema.type, Attribute(rschema.type))
+            setattr(cls, rtype, DeprecatedAttribute(rtype))
+            cwdbclsdict[rtype] = Attribute(rtype)
         mixins = []
-        for rschema, _, x in eschema.relation_definitions():
-            if (rschema, x) in MI_REL_TRIGGERS:
-                mixin = MI_REL_TRIGGERS[(rschema, x)]
+        for rschema, _, role in eschema.relation_definitions():
+            if (rschema, role) in MI_REL_TRIGGERS:
+                mixin = MI_REL_TRIGGERS[(rschema, role)]
                 if not (issubclass(cls, mixin) or mixin in mixins): # already mixed ?
                     mixins.append(mixin)
                 for iface in getattr(mixin, '__implements__', ()):
                     if not interface.implements(cls, iface):
                         interface.extend(cls, iface)
-            if x == 'subject':
-                setattr(cls, rschema.type, SubjectRelation(rschema))
+            rtype = rschema.type
+            if role == 'object':
+                attr = 'reverse_%s' % rtype
             else:
-                attr = 'reverse_%s' % rschema.type
-                setattr(cls, attr, ObjectRelation(rschema))
+                attr = rtype
+            setattr(cls, attr, DeprecatedRelation(rtype, role))
+            cwdbclsdict[attr] = Relation(rtype, role)
+        _CWDB_CLASSES[etype] = type(etype + 'CWDB', (object,), cwdbclsdict)
         if mixins:
             cls.__bases__ = tuple(mixins + [p for p in cls.__bases__ if not p is object])
             cls.debug('plugged %s mixins on %s', mixins, etype)
@@ -299,6 +311,8 @@ class Entity(AppObject, dict):
         else:
             self.eid = None
         self._is_saved = True
+        if self.id != 'Any':
+            self.cwdb = _CWDB_CLASSES[self.id](self)
 
     def __repr__(self):
         return '<Entity %s %s %s at %s>' % (
@@ -309,6 +323,15 @@ class Entity(AppObject, dict):
 
     def __hash__(self):
         return id(self)
+
+    def cwgetattr(self, attr, default=_marker):
+        """return attribute from either self.cwdb or self"""
+        try:
+            return getattr(self.cwdb, attr)
+        except AttributeError:
+            if default is _marker:
+                return getattr(self, attr)
+            return getattr(self, attr, default)
 
     def pre_add_hook(self):
         """hook called by the repository before doing anything to add the entity
@@ -392,7 +415,7 @@ class Entity(AppObject, dict):
         etype = str(self.e_schema)
         path = etype.lower()
         if mainattr != 'eid':
-            value = getattr(self, mainattr)
+            value = getattr(self.cwdb, mainattr)
             if value is None or unicode(value) == u'':
                 mainattr = 'eid'
                 path += '/eid'
@@ -413,7 +436,7 @@ class Entity(AppObject, dict):
 
     def attr_metadata(self, attr, metadata):
         """return a metadata for an attribute (None if unspecified)"""
-        value = getattr(self, '%s_%s' % (attr, metadata), None)
+        value = self.cwgetattr('%s_%s' % (attr, metadata), None)
         if value is None and metadata == 'encoding':
             value = self.vreg.property_value('ui.encoding')
         return value
@@ -425,14 +448,17 @@ class Entity(AppObject, dict):
         """
         attr = str(attr)
         if value is _marker:
-            value = getattr(self, attr)
+            value = self.cwgetattr(attr)
         if isinstance(value, basestring):
             value = value.strip()
         if value is None or value == '': # don't use "not", 0 is an acceptable value
             return u''
         if attrtype is None:
             attrtype = self.e_schema.destination(attr)
-        props = self.e_schema.rproperties(attr)
+        try:
+            props = self.e_schema.rproperties(attr)
+        except KeyError:
+            props = {}
         if attrtype == 'String':
             # internalinalized *and* formatted string such as schema
             # description...
@@ -473,13 +499,20 @@ class Entity(AppObject, dict):
         assert self.has_eid()
         execute = self.req.execute
         for rschema in self.e_schema.subject_relations():
-            if rschema.is_final() or rschema.meta:
+            # skip final, meta or composite relation
+            if rschema.is_final() or rschema.meta or self.e_schema.subjrproperty(rschema, 'composite'):
                 continue
-            # skip already defined relations
-            if getattr(self, rschema.type):
+            # skip relation with card in ?1 else we either change the copied
+            # object (inlined relation) or inserting some inconsistency
+            if self.e_schema.subjrproperty(rschema, 'cardinality')[1] in '?1':
                 continue
+            # skip if we're told to do so
             if rschema.type in self.skip_copy_for:
                 continue
+            # skip already defined relations
+            if self.related(rschema.type, 'subject'):
+                continue
+            # special case for in_state
             if rschema.type == 'in_state':
                 # if the workflow is defining an initial state (XXX AND we are
                 # not in the managers group? not done to be more consistent)
@@ -487,32 +520,26 @@ class Entity(AppObject, dict):
                 if execute('Any S WHERE S state_of ET, ET initial_state S,'
                            'ET name %(etype)s', {'etype': str(self.e_schema)}):
                     continue
-            # skip composite relation
-            if self.e_schema.subjrproperty(rschema, 'composite'):
-                continue
-            # skip relation with card in ?1 else we either change the copied
-            # object (inlined relation) or inserting some inconsistency
-            if self.e_schema.subjrproperty(rschema, 'cardinality')[1] in '?1':
-                continue
             rql = 'SET X %s V WHERE X eid %%(x)s, Y eid %%(y)s, Y %s V' % (
-                rschema.type, rschema.type)
+                rschema, rschema)
             execute(rql, {'x': self.eid, 'y': ceid}, ('x', 'y'))
             self.clear_related_cache(rschema.type, 'subject')
         for rschema in self.e_schema.object_relations():
-            if rschema.meta:
-                continue
-            # skip already defined relations
-            if getattr(self, 'reverse_%s' % rschema.type):
-                continue
-            # skip composite relation
-            if self.e_schema.objrproperty(rschema, 'composite'):
+            # skip meta or composite
+            if rschema.meta or self.e_schema.objrproperty(rschema, 'composite'):
                 continue
             # skip relation with card in ?1 else we either change the copied
             # object (inlined relation) or inserting some inconsistency
             if self.e_schema.objrproperty(rschema, 'cardinality')[0] in '?1':
                 continue
+            # skip if we're told to do so
+            if rschema.type in self.skip_copy_for:
+                continue
+            # skip already defined relations
+            if self.related(rschema.type, 'object'):
+                continue
             rql = 'SET V %s X WHERE X eid %%(x)s, Y eid %%(y)s, V %s Y' % (
-                rschema.type, rschema.type)
+                rschema, rschema)
             execute(rql, {'x': self.eid, 'y': ceid}, ('x', 'y'))
             self.clear_related_cache(rschema.type, 'object')
 
@@ -877,9 +904,9 @@ class Entity(AppObject, dict):
             yielded = False
             for rschema, target in containers:
                 if target == 'object':
-                    targets = getattr(self, rschema.type)
+                    targets = self.related(rschema.type, 'subject', entities=True)
                 else:
-                    targets = getattr(self, 'reverse_%s' % rschema)
+                    targets = self.related(rschema.type, 'object', entities=True)
                 for entity in targets:
                     if entity.eid in _done:
                         continue
@@ -915,61 +942,73 @@ class Entity(AppObject, dict):
                 words += tokenize(value)
 
         for rschema, role in self.e_schema.fulltext_relations():
-            if role == 'subject':
-                for entity in getattr(self, rschema.type):
-                    words += entity.get_words()
-            else: # if role == 'object':
-                for entity in getattr(self, 'reverse_%s' % rschema.type):
-                    words += entity.get_words()
+            for entity in self.related(rschema.type, role, entities=True):
+                words += entity.get_words()
         return words
 
 
 # attribute and relation descriptors ##########################################
 
+
 class Attribute(object):
     """descriptor that controls schema attribute access"""
 
-    def __init__(self, attrname):
-        assert attrname != 'eid'
-        self._attrname = attrname
+    def __init__(self, rtype):
+        assert rtype != 'eid'
+        self._rtype = rtype
 
-    def __get__(self, eobj, eclass):
-        if eobj is None:
+    def __get__(self, cwdbobj, eclass):
+        if cwdbobj is None:
             return self
-        return eobj.get_value(self._attrname)
-
-    def __set__(self, eobj, value):
-        # XXX bw compat
-        # would be better to generate UPDATE queries than the current behaviour
-        eobj.warning("deprecated usage, don't use 'entity.attr = val' notation)")
-        eobj[self._attrname] = value
-
-
-class Relation(object):
-    """descriptor that controls schema relation access"""
-    _role = None # for pylint
-
-    def __init__(self, rschema):
-        self._rschema = rschema
-        self._rtype = rschema.type
-
-    def __get__(self, eobj, eclass):
-        if eobj is None:
-            raise AttributeError('%s cannot be only be accessed from instances'
-                                 % self._rtype)
-        return eobj.related(self._rtype, self._role, entities=True)
+        return cwdbobj.entity.get_value(self._rtype)
 
     def __set__(self, eobj, value):
         raise NotImplementedError
 
 
-class SubjectRelation(Relation):
+class Relation(Attribute):
     """descriptor that controls schema relation access"""
-    _role = 'subject'
 
-class ObjectRelation(Relation):
+    def __init__(self, rtype, role):
+        super(Relation, self).__init__(rtype)
+        self._role = role
+
+    def __get__(self, cwdbobj, eclass):
+        if cwdbobj is None:
+            raise AttributeError('%s cannot be only be accessed from instances'
+                                 % self._rtype)
+        return cwdbobj.entity.related(self._rtype, self._role, entities=True)
+
+
+class DeprecatedAttribute(Attribute):
+    """descriptor that controls schema attribute access"""
+
+    def __get__(self, eobj, eclass):
+        rtype = self._rtype
+        warn('entity.%s is deprecated, use entity.cwdb.%s' % (rtype, rtype),
+             DeprecationWarning, stacklevel=2)
+        if eobj is None:
+            return self
+        return eobj.get_value(self._rtype)
+
+    def __set__(self, eobj, value):
+        # XXX bw compat
+        # would be better to generate UPDATE queries than the current behaviour
+        eobj.warning("deprecated usage, don't use 'entity.attr = val' notation)")
+        eobj[self._rtype] = value
+
+
+class DeprecatedRelation(Relation):
     """descriptor that controls schema relation access"""
-    _role = 'object'
+
+    def __get__(self, eobj, eclass):
+        rtype = self._rtype
+        warn('entity.[reverse_]%s is deprecated, use entity.cwdb.[reverse_]%s'
+             % (rtype, rtype), DeprecationWarning, stacklevel=2)
+        if eobj is None:
+            raise AttributeError('%s cannot be only be accessed from instances'
+                                 % self._rtype)
+        return eobj.related(rtype, self._role, entities=True)
 
 from logging import getLogger
 from cubicweb import set_log_methods
