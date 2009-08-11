@@ -25,6 +25,8 @@ class AutomaticEntityForm(forms.EntityFieldsForm):
     * rtags (rcategories, rfields, rwidgets, inlined, rpermissions)
     * various standard form parameters
 
+    XXX s/rtags/uicfg/ ?
+
     You can also easily customise it by adding/removing fields in
     AutomaticEntityForm instances.
     """
