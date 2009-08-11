@@ -24,11 +24,12 @@ from cubicweb import CW_SOFTWARE_ROOT
 # server-side debugging #########################################################
 
 # server debugging flags. They may be combined using binary operators.
-DBG_NONE = 0 # no debug information
-DBG_RQL = 1  # rql execution information
-DBG_SQL = 2  # executed sql
-DBG_REPO = 4 # repository events
-DBG_MORE = 8 # repository events
+DBG_NONE = 0  # no debug information
+DBG_RQL = 1   # rql execution information
+DBG_SQL = 2   # executed sql
+DBG_REPO = 4  # repository events
+DBG_MS = 8    # multi-sources
+DBG_MORE = 16 # repository events
 
 # current debug mode
 DEBUG = 0

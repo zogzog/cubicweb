@@ -181,6 +181,7 @@ directory (default to once a day).',
 
     def reset_caches(self):
         """method called during test to reset potential source caches"""
+        self._cache = {}
         self._query_cache = TimedCache(2*60)
 
     def init(self):

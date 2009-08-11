@@ -35,13 +35,13 @@ class ConnectionWrapper(object):
 
     def commit(self):
         if self._cnx is not None:
-            if server.DEBUG & server.DBG_SQL:
+            if server.DEBUG & (server.DBG_SQL | server.DBG_RQL):
                 print 'sql cnx COMMIT', self._cnx
             self._cnx.commit()
 
     def rollback(self):
         if self._cnx is not None:
-            if server.DEBUG & server.DBG_SQL:
+            if server.DEBUG & (server.DBG_SQL | server.DBG_RQL):
                 print 'sql cnx ROLLBACK', self._cnx
             self._cnx.rollback()
 

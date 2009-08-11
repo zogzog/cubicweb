@@ -208,9 +208,9 @@ class Session(RequestSessionMixIn):
         """connections pool, set according to transaction mode for each query"""
         return getattr(self._threaddata, 'pool', None)
 
-    def set_pool(self):
+    def set_pool(self, checkclosed=True):
         """the session need a pool to execute some queries"""
-        if self._closed:
+        if checkclosed and self._closed:
             raise Exception('try to set pool on a closed session')
         if self.pool is None:
             # get pool first to avoid race-condition
@@ -335,7 +335,7 @@ class Session(RequestSessionMixIn):
                 csession = ChildSession(self)
             self._threaddata.childsession = csession
         # need shared pool set
-        self.set_pool()
+        self.set_pool(checkclosed=False)
         return csession
 
     def unsafe_execute(self, rql, kwargs=None, eid_key=None, build_descr=True,

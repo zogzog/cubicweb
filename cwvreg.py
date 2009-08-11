@@ -250,8 +250,8 @@ class CubicWebVRegistry(VRegistry):
     def itervalues(self):
         return (value for key, value in self.items())
 
-    def reset(self):
-        super(CubicWebVRegistry, self).reset()
+    def reset(self, path=None, force_reload=None):
+        super(CubicWebVRegistry, self).reset(path, force_reload)
         self._needs_iface = {}
         # two special registries, propertydefs which care all the property
         # definitions, and propertyvals which contains values for those
@@ -260,13 +260,26 @@ class CubicWebVRegistry(VRegistry):
         self['propertyvalues'] = self.eprop_values = {}
         for key, propdef in self.config.eproperty_definitions():
             self.register_property(key, **propdef)
+        if path is not None and force_reload:
+            cleanup_sys_modules(path)
+            cubes = self.config.cubes()
+            # if the fs code use some cubes not yet registered into the instance
+            # we should cleanup sys.modules for those as well to avoid potential
+            # bad class reference pb after reloading
+            cfg = self.config
+            for cube in cfg.expand_cubes(cubes, with_recommends=True):
+                if not cube in cubes:
+                    cpath = cfg.build_vregistry_cube_path([cfg.cube_dir(cube)])
+                    cleanup_sys_modules(cpath)
 
     def set_schema(self, schema):
         """set instance'schema and load application objects"""
         self.schema = schema
         clear_cache(self, 'rqlhelper')
         # now we can load application's web objects
-        self.register_objects(self.config.vregistry_path())
+        searchpath = self.config.vregistry_path()
+        self.reset(searchpath, force_reload=False)
+        self.register_objects(searchpath, force_reload=False)
         # map lowered entity type names to their actual name
         self.case_insensitive_etypes = {}
         for etype in self.schema.entities():
@@ -302,13 +315,14 @@ class CubicWebVRegistry(VRegistry):
 
     def register_objects(self, path, force_reload=None):
         """overriden to remove objects requiring a missing interface"""
+        if force_reload is None:
+            force_reload = self.config.mode == 'dev'
         try:
             self._register_objects(path, force_reload)
         except RegistryOutOfDate:
             CW_EVENT_MANAGER.emit('before-registry-reload')
             # modification detected, reset and reload
-            self.reset()
-            cleanup_sys_modules(path)
+            self.reset(path, force_reload)
             self._register_objects(path, force_reload)
             CW_EVENT_MANAGER.emit('after-registry-reload')
 
