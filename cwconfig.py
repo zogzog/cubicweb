@@ -316,7 +316,7 @@ this option is set to yes",
         return getattr(cls.cube_pkginfo(cube), '__recommend__', ())
 
     @classmethod
-    def expand_cubes(cls, cubes):
+    def expand_cubes(cls, cubes, with_recommends=False):
         """expand the given list of top level cubes used by adding recursivly
         each cube dependencies
         """
@@ -329,6 +329,12 @@ this option is set to yes",
                     depcube = CW_MIGRATION_MAP.get(depcube, depcube)
                     cubes.append(depcube)
                     todo.append(depcube)
+            if with_recommends:
+                for depcube in cls.cube_recommends(cube):
+                    if depcube not in cubes:
+                        depcube = CW_MIGRATION_MAP.get(depcube, depcube)
+                        cubes.append(depcube)
+                        todo.append(depcube)
         return cubes
 
     @classmethod
