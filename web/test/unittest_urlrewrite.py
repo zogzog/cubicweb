@@ -29,6 +29,8 @@ class UrlRewriteTC(TestCase):
         self.assertListEquals(rules, [
             ('foo' , dict(rql='Foo F')),
             ('/index' , dict(vid='index2')),
+            ('/_', dict(vid='manage')),
+            ('/_registry', dict(vid='registry')),
             ('/schema', dict(vid='schema')),
             ('/myprefs', dict(vid='propertiesform')),
             ('/siteconfig', dict(vid='systempropertiesform')),

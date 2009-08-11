@@ -74,6 +74,7 @@ class VRegistryTC(ViewSelectorTC):
                               ('manage', startup.ManageView),
                               ('owl', owl.OWLView),
                               ('propertiesform', cwproperties.CWPropertiesForm),
+                              ('registry', startup.RegistryView),
                               ('schema', schema.SchemaView),
                               ('systempropertiesform', cwproperties.SystemCWPropertiesForm)])
 
