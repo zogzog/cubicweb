@@ -206,7 +206,7 @@ class VRegistry(dict):
         super(VRegistry, self).__init__()
         self.config = config
 
-    def reset(self, force_reload=None):
+    def reset(self, path=None, force_reload=None):
         self.clear()
         self._lastmodifs = {}
 
@@ -318,14 +318,7 @@ class VRegistry(dict):
         self._loadedmods = {}
         return filemods
 
-    def register_objects(self, path, force_reload=None, extrapath=None):
-        if force_reload is None:
-            force_reload = self.config.mode == 'dev'
-        elif not force_reload:
-            # force_reload == False usually mean modules have been reloaded
-            # by another connection, so we want to update the registry
-            # content even if there has been no module content modification
-            self.reset()
+    def register_objects(self, path, force_reload, extrapath=None):
         # need to clean sys.path this to avoid import confusion pb (i.e.
         # having the same module loaded as 'cubicweb.web.views' subpackage and
         # as views'  or 'web.views' subpackage
