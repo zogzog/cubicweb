@@ -114,8 +114,9 @@ class Session(RequestSessionMixIn):
         if rcache is not None:
             rset, entities = rcache
             rset.rows.append([targeteid])
-            if isinstance(rset.description, list): # else description not set
-                rset.description.append([self.describe(targeteid)[0]])
+            if not isinstance(rset.description, list): # else description not set
+                rset.description = list(rset.description)
+            rset.description.append([self.describe(targeteid)[0]])
             rset.rowcount += 1
             targetentity = self.entity_from_eid(targeteid)
             entities.append(targetentity)
