@@ -10,10 +10,10 @@
 from datetime import datetime
 
 from cubicweb import Binary
-from cubicweb.devtools.apptest import EnvBasedTC
+from cubicweb.devtools.testlib import CubicWebTC
 from cubicweb.common.mttransforms import HAS_TAL
 
-class EntityTC(EnvBasedTC):
+class EntityTC(CubicWebTC):
 
 ##     def setup_database(self):
 ##         self.add_entity('Personne', nom=u'di mascio', prenom=u'adrien')
@@ -23,18 +23,18 @@ class EntityTC(EnvBasedTC):
 ##                         embed=False)
 
     def test_boolean_value(self):
-        e = self.etype_instance('CWUser')
+        e = self.vreg['etypes'].etype_class('CWUser')(self.request())
         self.failUnless(e)
 
     def test_yams_inheritance(self):
         from entities import Note
-        e = self.etype_instance('SubNote')
+        e = self.vreg['etypes'].etype_class('SubNote')(self.request())
         self.assertIsInstance(e, Note)
-        e2 = self.etype_instance('SubNote')
+        e2 = self.vreg['etypes'].etype_class('SubNote')(self.request())
         self.assertIs(e.__class__, e2.__class__)
 
     def test_has_eid(self):
-        e = self.etype_instance('CWUser')
+        e = self.vreg['etypes'].etype_class('CWUser')(self.request())
         self.assertEquals(e.eid, None)
         self.assertEquals(e.has_eid(), False)
         e.eid = 'X'
@@ -208,7 +208,7 @@ class EntityTC(EnvBasedTC):
                           1)
 
     def test_new_entity_unrelated(self):
-        e = self.etype_instance('CWUser')
+        e = self.vreg['etypes'].etype_class('CWUser')(self.request())
         unrelated = [r[0] for r in e.unrelated('in_group', 'CWGroup', 'subject')]
         # should be default groups but owners, i.e. managers, users, guests
         self.assertEquals(len(unrelated), 3)
@@ -227,7 +227,6 @@ class EntityTC(EnvBasedTC):
         self.assertEquals(e.printable_value('content'),
                           '<p>\ndu *texte*\n</p>')
         e['title'] = 'zou'
-        #e = self.etype_instance('Task')
         e['content'] = '''\
 a title
 =======
@@ -303,7 +302,7 @@ du :eid:`1:*ReST*`'''
 
 
     def test_fulltextindex(self):
-        e = self.etype_instance('File')
+        e = self.vreg['etypes'].etype_class('File')(self.request())
         e['name'] = 'an html file'
         e['description'] = 'du <em>html</em>'
         e['description_format'] = 'text/html'
@@ -324,7 +323,7 @@ du :eid:`1:*ReST*`'''
     def test_complete_relation(self):
         self.execute('SET RT add_permission G WHERE RT name "wf_info_for", G name "managers"')
         self.commit()
-        session = self.session()
+        session = self.session
         try:
             eid = session.unsafe_execute(
                 'INSERT TrInfo X: X comment "zou", X wf_info_for U, X from_state S1, X to_state S2 '

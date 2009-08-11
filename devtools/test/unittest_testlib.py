@@ -10,11 +10,11 @@ from cStringIO import StringIO
 from unittest import TestSuite
 
 
-from logilab.common.testlib import (TestCase, unittest_main, mock_object,
+from logilab.common.testlib import (TestCase, unittest_main, 
                                     SkipAwareTextTestRunner)
-from cubicweb.devtools import htmlparser
 
-from cubicweb.devtools.testlib import WebTest, EnvBasedTC
+from cubicweb.devtools import htmlparser
+from cubicweb.devtools.testlib import CubicWebTC
 
 class WebTestTC(TestCase):
 
@@ -23,7 +23,7 @@ class WebTestTC(TestCase):
         self.runner = SkipAwareTextTestRunner(stream=output)
 
     def test_error_raised(self):
-        class MyWebTest(WebTest):
+        class MyWebTest(CubicWebTC):
 
             def test_error_view(self):
                 self.add_entity('Bug', title=u"bt")
@@ -39,7 +39,7 @@ class WebTestTC(TestCase):
         self.assertEquals(len(result.failures), 1)
 
 
-class TestLibTC(EnvBasedTC):
+class TestLibTC(CubicWebTC):
     def test_add_entity_with_relation(self):
         bug = self.add_entity(u'Bug', title=u"toto")
         self.add_entity(u'Bug', title=u"tata", identical_to=bug)

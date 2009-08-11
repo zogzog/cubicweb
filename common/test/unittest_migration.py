@@ -10,8 +10,6 @@ from os.path import abspath
 from logilab.common.testlib import TestCase, unittest_main
 
 from cubicweb.devtools import TestServerConfiguration
-from cubicweb.devtools.apptest import TestEnvironment
-
 from cubicweb.cwconfig import CubicWebConfiguration
 from cubicweb.common.migration import MigrationHelper, filter_scripts
 from cubicweb.server.migractions import ServerMigrationHelper
@@ -98,8 +96,8 @@ class BaseCreationTC(TestCase):
         config = ApptestConfiguration('data')
         source = config.sources()['system']
         self.assertEquals(source['db-driver'], 'sqlite')
-        cleanup_sqlite(source['db-name'], removecube=True)
-        init_test_database(driver=source['db-driver'], config=config)
+        cleanup_sqlite(source['db-name'], removetemplate=True)
+        init_test_database(config=config)
 
 
 if __name__ == '__main__':

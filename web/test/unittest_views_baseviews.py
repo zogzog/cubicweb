@@ -10,7 +10,7 @@ from simplejson import loads
 from logilab.common.testlib import unittest_main
 from logilab.mtconverter import html_unescape
 
-from cubicweb.devtools.apptest import EnvBasedTC
+from cubicweb.devtools.testlib import CubicWebTC
 
 from cubicweb.web.htmlwidgets import TableWidget
 from cubicweb.web.views import vid_from_rset
@@ -18,7 +18,7 @@ from cubicweb.web.views import vid_from_rset
 def loadjson(value):
     return loads(html_unescape(value))
 
-class VidFromRsetTC(EnvBasedTC):
+class VidFromRsetTC(CubicWebTC):
 
     def test_no_rset(self):
         req = self.request()
@@ -84,7 +84,7 @@ class VidFromRsetTC(EnvBasedTC):
         self.assertEquals(vid_from_rset(req, rset, self.schema), 'table')
 
 
-class TableViewTC(EnvBasedTC):
+class TableViewTC(CubicWebTC):
 
     def _prepare_entity(self):
         e = self.add_entity("State", name=u'<toto>', description=u'loo"ong blabla')

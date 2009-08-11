@@ -6,7 +6,7 @@
 :license: GNU Lesser General Public License, v2.1 - http://www.gnu.org/licenses
 """
 
-from cubicweb.devtools.testlib import WebTest, AutomaticWebTest
+from cubicweb.devtools.testlib import CubicWebTC, AutoPopulateTest, AutomaticWebTest
 from cubicweb.view import AnyRsetView
 
 AutomaticWebTest.application_rql = [
@@ -15,7 +15,7 @@ AutomaticWebTest.application_rql = [
     'Any COUNT(X) WHERE X is CWUser',
     ]
 
-class ComposityCopy(WebTest):
+class ComposityCopy(CubicWebTC):
 
     def test_regr_copy_view(self):
         """regression test: make sure we can ask a copy of a
@@ -34,7 +34,7 @@ class SomeView(AnyRsetView):
         self.req.add_js('spam.js')
 
 
-class ManualWebTests(WebTest):
+class ManualCubicWebTCs(AutoPopulateTest):
     def setup_database(self):
         self.auto_populate(10)
 
@@ -59,7 +59,7 @@ class ManualWebTests(WebTest):
 
 
 
-class ExplicitViewsTest(WebTest):
+class ExplicitViewsTest(CubicWebTC):
 
     def test_unrelateddivs(self):
         rset = self.execute('Any X WHERE X is CWUser, X login "admin"')

@@ -6,7 +6,7 @@ from logilab.common.testlib import TestCase, unittest_main
 
 from cubicweb.server.hooksmanager import HooksManager, Hook
 from cubicweb.devtools import TestServerConfiguration
-from cubicweb.devtools.apptest import RepositoryBasedTC
+from cubicweb.devtools.testlib import CubicWebTC
 
 class HookCalled(Exception): pass
 
@@ -144,7 +144,7 @@ class RelationHookTC(TestCase):
         self.called.append((subject, r_type, object))
 
 
-class SystemHooksTC(RepositoryBasedTC):
+class SystemHooksTC(CubicWebTC):
 
     def test_startup_shutdown(self):
         import hooks # cubicweb/server/test/data/hooks.py
@@ -168,7 +168,7 @@ class MyHook(Hook):
     events = ('whatever', 'another')
     accepts = ('Societe', 'Division')
 
-class HookTC(RepositoryBasedTC):
+class HookTC(CubicWebTC):
     def test_inheritance(self):
         self.assertEquals(list(MyHook.register_to()),
                           zip(repeat('whatever'), ('Societe', 'Division', 'SubDivision'))

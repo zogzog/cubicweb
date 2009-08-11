@@ -7,9 +7,9 @@
 """
 from logilab.common.testlib import unittest_main
 
-from cubicweb.devtools.apptest import EnvBasedTC
+from cubicweb.devtools.testlib import CubicWebTC
 
-class ActionsTC(EnvBasedTC):
+class ActionsTC(CubicWebTC):
     def test_view_action(self):
         req = self.request(__message='bla bla bla', vid='rss', rql='CWUser X')
         rset = self.execute('CWUser X')

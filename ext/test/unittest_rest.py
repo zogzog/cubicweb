@@ -6,11 +6,11 @@
 :license: GNU Lesser General Public License, v2.1 - http://www.gnu.org/licenses
 """
 from logilab.common.testlib import unittest_main
-from cubicweb.devtools.apptest import EnvBasedTC
+from cubicweb.devtools.testlib import CubicWebTC
 
 from cubicweb.ext.rest import rest_publish
 
-class RestTC(EnvBasedTC):
+class RestTC(CubicWebTC):
     def context(self):
         return self.execute('CWUser X WHERE X login "admin"').get_entity(0, 0)
 

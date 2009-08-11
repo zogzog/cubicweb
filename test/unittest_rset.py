@@ -10,7 +10,7 @@
 
 from logilab.common.testlib import TestCase, unittest_main
 
-from cubicweb.devtools.apptest import EnvBasedTC
+from cubicweb.devtools.testlib import CubicWebTC
 from cubicweb.selectors import traced_selection
 
 from urlparse import urlsplit
@@ -55,7 +55,7 @@ class AttrDescIteratorTC(TestCase):
 
 
 
-class ResultSetTC(EnvBasedTC):
+class ResultSetTC(CubicWebTC):
 
     def setUp(self):
         super(ResultSetTC, self).setUp()
@@ -100,7 +100,7 @@ class ResultSetTC(EnvBasedTC):
                        'Any U,L where U is CWUser, U login L',
                        description=[['CWUser', 'String']] * 3)
         rs.req = self.request()
-        rs.vreg = self.env.vreg
+        rs.vreg = self.vreg
 
         self.assertEquals(rs.limit(2).rows, [[12000, 'adim'], [13000, 'syt']])
         rs2 = rs.limit(2, offset=1)
@@ -115,7 +115,7 @@ class ResultSetTC(EnvBasedTC):
                        'Any U,L where U is CWUser, U login L',
                        description=[['CWUser', 'String']] * 3)
         rs.req = self.request()
-        rs.vreg = self.env.vreg
+        rs.vreg = self.vreg
         def test_filter(entity):
             return entity.login != 'nico'
 
@@ -140,7 +140,7 @@ class ResultSetTC(EnvBasedTC):
                        'Any U,L where U is CWUser, U login L',
                        description=[['CWUser', 'String']] * 3)
         rs.req = self.request()
-        rs.vreg = self.env.vreg
+        rs.vreg = self.vreg
 
         rs2 = rs.sorted_rset(lambda e:e['login'])
         self.assertEquals(len(rs2), 3)
@@ -170,7 +170,7 @@ class ResultSetTC(EnvBasedTC):
                        'D created_by U, D title T',
                        description=[['CWUser', 'String', 'String']] * 5)
         rs.req = self.request()
-        rs.vreg = self.env.vreg
+        rs.vreg = self.vreg
 
         rsets = rs.split_rset(lambda e:e['login'])
         self.assertEquals(len(rsets), 3)

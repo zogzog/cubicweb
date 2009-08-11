@@ -13,7 +13,7 @@ from cubicweb.devtools import init_test_database
 
 from cubicweb.server.checkintegrity import check
 
-repo, cnx = init_test_database('sqlite')
+repo, cnx = init_test_database()
 
 class CheckIntegrityTC(TestCase):
     def test(self):

@@ -7,8 +7,8 @@
 """
 from logilab.common.testlib import TestCase, unittest_main
 
-from cubicweb.devtools._apptest import FakeRequest
-from cubicweb.devtools.apptest import EnvBasedTC
+from cubicweb.devtools.testlib import CubicWebTC
+from cubicweb.devtools.fake import FakeRequest
 
 from cubicweb.web.views.urlrewrite import SimpleReqRewriter, SchemaBasedRewriter, rgx, rgx_action
 
@@ -82,7 +82,7 @@ class UrlRewriteTC(TestCase):
 
 
 
-class RgxActionRewriteTC(EnvBasedTC):
+class RgxActionRewriteTC(CubicWebTC):
 
     def setup_database(self):
         self.p1 = self.create_user(u'user1')

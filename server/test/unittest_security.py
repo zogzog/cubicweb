@@ -4,21 +4,21 @@
 import sys
 
 from logilab.common.testlib import unittest_main, TestCase
-from cubicweb.devtools.apptest import RepositoryBasedTC
+from cubicweb.devtools.testlib import CubicWebTC
 
 from cubicweb import Unauthorized, ValidationError
 from cubicweb.server.querier import check_read_access
 
-class BaseSecurityTC(RepositoryBasedTC):
+class BaseSecurityTC(CubicWebTC):
 
     def setUp(self):
-        RepositoryBasedTC.setUp(self)
+        CubicWebTC.setUp(self)
         self.create_user('iaminusersgrouponly')
         self.readoriggroups = self.schema['Personne'].get_groups('read')
         self.addoriggroups = self.schema['Personne'].get_groups('add')
 
     def tearDown(self):
-        RepositoryBasedTC.tearDown(self)
+        CubicWebTC.tearDown(self)
         self.schema['Personne'].set_groups('read', self.readoriggroups)
         self.schema['Personne'].set_groups('add', self.addoriggroups)
 
@@ -37,7 +37,7 @@ class LowLevelSecurityFunctionTC(BaseSecurityTC):
         cu = cnx.cursor()
         self.assertRaises(Unauthorized,
                           check_read_access,
-                          self.schema, cnx.user(self.current_session()), rqlst, solution)
+                          self.schema, cnx.user(self.session), rqlst, solution)
         self.assertRaises(Unauthorized, cu.execute, rql)
 
     def test_upassword_not_selectable(self):
@@ -165,7 +165,7 @@ class SecurityTC(BaseSecurityTC):
 
     def test_insert_relation_rql_permission(self):
         cnx = self.login('iaminusersgrouponly')
-        session = self.current_session()
+        session = self.session
         cu = cnx.cursor(session)
         cu.execute("SET A concerne S WHERE A is Affaire, S is Societe")
         # should raise Unauthorized since user don't own S
@@ -210,7 +210,7 @@ class SecurityTC(BaseSecurityTC):
 
 
     def test_user_can_change_its_upassword(self):
-        ueid = self.create_user('user')
+        ueid = self.create_user('user').eid
         cnx = self.login('user')
         cu = cnx.cursor()
         cu.execute('SET X upassword %(passwd)s WHERE X eid %(x)s',
@@ -220,7 +220,7 @@ class SecurityTC(BaseSecurityTC):
         cnx = self.login('user', 'newpwd')
 
     def test_user_cant_change_other_upassword(self):
-        ueid = self.create_user('otheruser')
+        ueid = self.create_user('otheruser').eid
         cnx = self.login('iaminusersgrouponly')
         cu = cnx.cursor()
         cu.execute('SET X upassword %(passwd)s WHERE X eid %(x)s',
@@ -416,7 +416,7 @@ class BaseSchemaSecurityTC(BaseSecurityTC):
 
     def test_users_and_groups_non_readable_by_guests(self):
         cnx = self.login('anon')
-        anon = cnx.user(self.current_session())
+        anon = cnx.user(self.session)
         cu = cnx.cursor()
         # anonymous user can only read itself
         rset = cu.execute('Any L WHERE X owned_by U, U login L')
@@ -426,7 +426,7 @@ class BaseSchemaSecurityTC(BaseSecurityTC):
         # anonymous user can read groups (necessary to check allowed transitions for instance)
         self.assert_(cu.execute('CWGroup X'))
         # should only be able to read the anonymous user, not another one
-        origuser = self.session.user
+        origuser = self.adminsession.user
         self.assertRaises(Unauthorized,
                           cu.execute, 'CWUser X WHERE X eid %(x)s', {'x': origuser.eid}, 'x')
         # nothing selected, nothing updated, no exception raised
@@ -462,7 +462,7 @@ class BaseSchemaSecurityTC(BaseSecurityTC):
         self.commit()
         cnx = self.login('anon')
         cu = cnx.cursor()
-        anoneid = self.current_session().user.eid
+        anoneid = self.session.user.eid
         self.assertEquals(cu.execute('Any T,P ORDERBY lower(T) WHERE B is Bookmark,B title T,B path P,'
                                      'B bookmarked_by U, U eid %s' % anoneid).rows,
                           [['index', '?vid=index']])
@@ -491,7 +491,7 @@ class BaseSchemaSecurityTC(BaseSecurityTC):
         eid = self.execute('INSERT Affaire X: X ref "ARCT01"')[0][0]
         self.commit()
         cnx = self.login('iaminusersgrouponly')
-        session = self.current_session()
+        session = self.session
         # needed to avoid check_perm error
         session.set_pool()
         # needed to remove rql expr granting update perm to the user
@@ -506,7 +506,7 @@ class BaseSchemaSecurityTC(BaseSecurityTC):
         # XXX wether it should raise Unauthorized or ValidationError is not clear
         # the best would probably ValidationError if the transition doesn't exist
         # from the current state but Unauthorized if it exists but user can't pass it
-        self.assertRaises(ValidationError, cu.execute, rql, {'x': cnx.user(self.current_session()).eid}, 'x')
+        self.assertRaises(ValidationError, cu.execute, rql, {'x': cnx.user(self.session).eid}, 'x')
 
     def test_trinfo_security(self):
         aff = self.execute('INSERT Affaire X: X ref "ARCT01"').get_entity(0, 0)

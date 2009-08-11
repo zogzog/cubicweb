@@ -5,11 +5,11 @@
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 :license: GNU Lesser General Public License, v2.1 - http://www.gnu.org/licenses
 """
-from cubicweb.devtools.apptest import EnvBasedTC
+from cubicweb.devtools.testlib import CubicWebTC
 from cubicweb.web.facet import insert_attr_select_relation, prepare_facets_rqlst
 
 
-class InsertAttrRelationTC(EnvBasedTC):
+class InsertAttrRelationTC(CubicWebTC):
 
     def parse(self, query):
         rqlst = self.vreg.parse(self.session, query)

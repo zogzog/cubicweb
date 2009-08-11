@@ -46,7 +46,7 @@ class MakeSchemaTC(TestCase):
                           ('C0 text,C1 integer', {'A': 'table0.C0', 'B': 'table0.C1'}))
 
 
-repo, cnx = init_test_database('sqlite')
+repo, cnx = init_test_database()
 
 
 

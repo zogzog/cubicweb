@@ -401,11 +401,11 @@ class EditControllerTC(GAEBasedTC):
             #    which fires a Redirect
             # 2/ When re-publishing the copy form, the publisher implicitly commits
             try:
-                self.env.app.publish('edit', self.req)
+                self.app.publish('edit', self.req)
             except Redirect:
                 self.req.form['rql'] = 'Any X WHERE X eid %s' % p.eid
                 self.req.form['vid'] = 'copy'
-                self.env.app.publish('view', self.req)
+                self.app.publish('view', self.req)
             rset = self.req.execute('CWUser P WHERE P surname "Boom"')
             self.assertEquals(len(rset), 0)
         finally:

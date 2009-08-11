@@ -14,7 +14,7 @@ from urllib import unquote
 from logilab.common.testlib import TestCase, unittest_main
 from logilab.common.decorators import clear_cache
 
-from cubicweb.devtools.apptest import EnvBasedTC
+from cubicweb.devtools.testlib import CubicWebTC
 from cubicweb.devtools.fake import FakeRequest
 from cubicweb.web import Redirect, AuthenticationError, ExplicitLogin, INTERNAL_FIELD_VALUE
 from cubicweb.web.views.basecontrollers import ViewController
@@ -134,7 +134,7 @@ class UtilsTC(TestCase):
                            for i in (12, 13, 14)])
 
 
-class ApplicationTC(EnvBasedTC):
+class ApplicationTC(CubicWebTC):
 
     def publish(self, req, path='view'):
         return self.app.publish(path, req)

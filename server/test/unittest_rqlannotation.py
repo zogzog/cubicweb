@@ -6,7 +6,7 @@
 from cubicweb.devtools import init_test_database
 from cubicweb.devtools.repotest import BaseQuerierTC
 
-repo, cnx = init_test_database('sqlite')
+repo, cnx = init_test_database()
 
 class SQLGenAnnotatorTC(BaseQuerierTC):
     repo = repo

@@ -9,12 +9,12 @@
 import re
 
 from logilab.common.testlib import unittest_main
-from cubicweb.devtools.apptest import EnvBasedTC
+from cubicweb.devtools.testlib import CubicWebTC
 
 from cubicweb.sobjects.supervising import SendMailOp, SupervisionMailOp
 
 
-class SupervisingTC(EnvBasedTC):
+class SupervisingTC(CubicWebTC):
 
     def setup_database(self):
         self.add_entity('Card', title=u"une news !", content=u"cubicweb c'est beau")
@@ -26,7 +26,7 @@ class SupervisingTC(EnvBasedTC):
 
 
     def test_supervision(self):
-        session = self.session()
+        session = self.session
         # do some modification
         ueid = self.execute('INSERT CWUser X: X login "toto", X upassword "sosafe", X in_group G, X in_state S '
                             'WHERE G name "users", S name "activated"')[0][0]
@@ -75,7 +75,7 @@ class SupervisingTC(EnvBasedTC):
         self.assertEquals(op.to_send[0][1], ['test@logilab.fr'])
 
     def test_nonregr1(self):
-        session = self.session()
+        session = self.session
         # do some unlogged modification
         self.execute('SET X last_login_time NOW WHERE X eid %(x)s', {'x': session.user.eid}, 'x')
         self.commit() # no crash
