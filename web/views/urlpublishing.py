@@ -217,6 +217,7 @@ class ActionPathEvaluator(URLPathEvaluator):
             raise PathDontMatch()
         # remove last part and see if this is something like an actions
         # if so, call
+        # XXX bad smell: refactor to simpler code
         try:
             actionsreg = self.vreg['actions']
             requested = parts.pop(-1)
@@ -232,7 +233,7 @@ class ActionPathEvaluator(URLPathEvaluator):
                 continue
             else:
                 try:
-                    action = actionsreg.select_best(actions, req, rset=rset)
+                    action = actionsreg._select_best(actions, req, rset=rset)
                 except RegistryException:
                     continue
                 else:

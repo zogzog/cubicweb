@@ -19,7 +19,10 @@ __docformat__ = "restructuredtext en"
 
 import sys
 import os
-from os.path import join, exists
+import tarfile
+import tempfile
+import shutil
+import os.path as osp
 from datetime import datetime
 
 from logilab.common.deprecation import deprecated
@@ -110,25 +113,77 @@ class ServerMigrationHelper(MigrationHelper):
     def backup_database(self, backupfile=None, askconfirm=True):
         config = self.config
         repo = self.repo_connect()
+        # paths
         timestamp = datetime.now().strftime('%Y-%m-%d_%H:%M:%S')
+        instbkdir = osp.join(config.appdatahome, 'backup')
+        if not osp.exists(instbkdir):
+            os.makedirs(instbkdir)
+        backupfile = backupfile or osp.join(instbkdir, '%s-%s.tar.gz'
+                                            % (config.appid, timestamp))
+        # check backup has to be done
+        if osp.exists(backupfile) and not \
+                self.confirm('Backup file %s exists, overwrite it?' % backupfile):
+            print '-> no backup done.'
+            return
+        elif askconfirm and not self.confirm('Backup %s database?' % config.appid):
+            print '-> no backup done.'
+            return
+        open(backupfile,'w').close() # kinda lock
+        os.chmod(backupfile, 0600)
+        # backup
+        tmpdir = tempfile.mkdtemp(dir=instbkdir)
         for source in repo.sources:
-            source.backup(self.confirm, backupfile, timestamp,
-                          askconfirm=askconfirm)
+            try:
+                source.backup(osp.join(tmpdir,source.uri))
+            except Exception, exc:
+                print '-> error trying to backup [%s]' % exc
+                if not self.confirm('Continue anyway?', default='n'):
+                    raise SystemExit(1)
+        bkup = tarfile.open(backupfile, 'w|gz')
+        for filename in os.listdir(tmpdir):
+            bkup.add(osp.join(tmpdir,filename), filename)
+        bkup.close()
+        shutil.rmtree(tmpdir)
+        # call hooks
         repo.hm.call_hooks('server_backup', repo=repo, timestamp=timestamp)
+        # done
+        print '-> backup file',  backupfile
 
     def restore_database(self, backupfile, drop=True, systemonly=True,
                          askconfirm=True):
         config = self.config
         repo = self.repo_connect()
+        # check
+        if not osp.exists(backupfile):
+            raise Exception("Backup file %s doesn't exist" % backupfile)
+            return
+        if askconfirm and not self.confirm('Restore %s database from %s ?'
+                                           % (config.appid, backupfile)):
+            return
+        # unpack backup
+        bkup = tarfile.open(backupfile, 'r|gz')
+        for name in bkup.getnames():
+            if name[0] in '/.':
+                raise Exception('Security check failed, path starts with "/" or "."')
+        bkup.close() # XXX seek error if not close+open !?!
+        bkup = tarfile.open(backupfile, 'r|gz')
+        tmpdir = tempfile.mkdtemp()
+        bkup.extractall(path=tmpdir)
         if systemonly:
-            repo.system_source.restore(self.confirm, backupfile=backupfile,
-                                       drop=drop, askconfirm=askconfirm)
+            repo.system_source.restore(osp.join(tmpdir,'system'), drop=drop)
         else:
-            # in that case, backup file is expected to be a time stamp
             for source in repo.sources:
-                source.backup(self.confirm, timestamp=backupfile, drop=drop,
-                              askconfirm=askconfirm)
-            repo.hm.call_hooks('server_restore', repo=repo, timestamp=backupfile)
+                try:
+                    source.restore(osp.join(tmpdir, source.uri), drop=drop)
+                except Exception, exc:
+                    print '-> error trying to restore [%s]' % exc
+                    if not self.confirm('Continue anyway?', default='n'):
+                        raise SystemExit(1)
+        bkup.close()
+        shutil.rmtree(tmpdir)
+        # call hooks
+        repo.hm.call_hooks('server_restore', repo=repo, timestamp=backupfile)
+        print '-> database restored.'
 
     @property
     def cnx(self):
@@ -213,10 +268,10 @@ class ServerMigrationHelper(MigrationHelper):
     def exec_event_script(self, event, cubepath=None, funcname=None,
                           *args, **kwargs):
         if cubepath:
-            apc = join(cubepath, 'migration', '%s.py' % event)
+            apc = osp.join(cubepath, 'migration', '%s.py' % event)
         else:
-            apc = join(self.config.migration_scripts_dir(), '%s.py' % event)
-        if exists(apc):
+            apc = osp.join(self.config.migration_scripts_dir(), '%s.py' % event)
+        if osp.exists(apc):
             if self.config.free_wheel:
                 from cubicweb.server.hooks import setowner_after_add_entity
                 self.repo.hm.unregister_hook(setowner_after_add_entity,

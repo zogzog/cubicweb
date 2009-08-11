@@ -154,12 +154,11 @@ class TheMainTemplate(MainTemplate):
         w(u'<div id="page"><table width="100%" border="0" id="mainLayout"><tr>\n')
         self.nav_column(view, 'left')
         w(u'<td id="contentcol">\n')
-        rqlcomp = self.vreg['components'].select_object('rqlinput', self.req,
-                                                        rset=self.rset)
+        components = self.vreg['components']
+        rqlcomp = components.select_or_none('rqlinput', self.req, rset=self.rset)
         if rqlcomp:
             rqlcomp.render(w=self.w, view=view)
-        msgcomp = self.vreg['components'].select_object('applmessages',
-                                                        self.req, rset=self.rset)
+        msgcomp = components.select_or_none('applmessages', self.req, rset=self.rset)
         if msgcomp:
             msgcomp.render(w=self.w)
         self.content_header(view)
@@ -299,8 +298,8 @@ class HTMLHeader(View):
             self.req.add_js(jscript, localfile=False)
 
     def alternates(self):
-        urlgetter = self.vreg['components'].select_object('rss_feed_url',
-                                            self.req, rset=self.rset)
+        urlgetter = self.vreg['components'].select_or_none('rss_feed_url',
+                                                           self.req, rset=self.rset)
         if urlgetter is not None:
             self.whead(u'<link rel="alternate" type="application/rss+xml" title="RSS feed" href="%s"/>\n'
                        %  xml_escape(urlgetter.feed_url()))

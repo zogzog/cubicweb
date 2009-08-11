@@ -42,9 +42,9 @@ def multiple_connections_fix():
     registries.
     """
     defaultcls = cwvreg.VRegistry.REGISTRY_FACTORY[None]
-    orig_select_best = defaultcls.orig_select_best = defaultcls.select_best
+    orig_select_best = defaultcls.orig_select_best = defaultcls._select_best
     @monkeypatch(defaultcls)
-    def select_best(self, appobjects, *args, **kwargs):
+    def _select_best(self, appobjects, *args, **kwargs):
         """return an instance of the most specific object according
         to parameters
 

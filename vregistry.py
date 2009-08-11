@@ -125,6 +125,7 @@ class Registry(dict):
 
     # dynamic selection methods ################################################
 
+    @deprecated('use select instead of object_by_id')
     def object_by_id(self, oid, *args, **kwargs):
         """return object with the given oid. Only one object is expected to be
         found.
@@ -143,9 +144,9 @@ class Registry(dict):
         raise `ObjectNotFound` if not object with id <oid> in <registry>
         raise `NoSelectableObject` if not object apply
         """
-        return self.select_best(self[oid], *args, **kwargs)
+        return self._select_best(self[oid], *args, **kwargs)
 
-    def select_object(self, oid, *args, **kwargs):
+    def select_or_none(self, oid, *args, **kwargs):
         """return the most specific object among those with the given oid
         according to the given context, or None if no object applies.
         """
@@ -153,6 +154,8 @@ class Registry(dict):
             return self.select(oid, *args, **kwargs)
         except (NoSelectableObject, ObjectNotFound):
             return None
+    select_object = deprecated('use select_or_none instead of select_object'
+                               )(select_or_none)
 
     def possible_objects(self, *args, **kwargs):
         """return an iterator on possible objects in this registry for the given
@@ -160,11 +163,11 @@ class Registry(dict):
         """
         for appobjects in self.itervalues():
             try:
-                yield self.select_best(appobjects, *args, **kwargs)
+                yield self._select_best(appobjects, *args, **kwargs)
             except NoSelectableObject:
                 continue
 
-    def select_best(self, appobjects, *args, **kwargs):
+    def _select_best(self, appobjects, *args, **kwargs):
         """return an instance of the most specific object according
         to parameters
 
@@ -194,7 +197,7 @@ class Registry(dict):
                                    [repr(v) for v in winners]))
         # return the result of calling the appobject
         return winners[0](*args, **kwargs)
-
+    select_best = deprecated('select_best is now private')(_select_best)
 
 class VRegistry(dict):
     """class responsible to register, propose and select the various
@@ -240,12 +243,12 @@ class VRegistry(dict):
         """
         return self[registry].select(oid, *args, **kwargs)
 
-    @deprecated('use vreg[registry].select_object(oid, *args, **kwargs)')
+    @deprecated('use vreg[registry].select_or_none(oid, *args, **kwargs)')
     def select_object(self, registry, oid, *args, **kwargs):
         """return the most specific object in <registry>.<oid> according to
         the given context, or None if no object apply
         """
-        return self[registry].select_object(oid, *args, **kwargs)
+        return self[registry].select_or_none(oid, *args, **kwargs)
 
     @deprecated('use vreg[registry].possible_objects(*args, **kwargs)')
     def possible_objects(self, registry, *args, **kwargs):

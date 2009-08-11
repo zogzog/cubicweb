@@ -116,7 +116,7 @@ class CubicWebRootResource(resource.PostableResource):
         start_task(interval, self.appli.session_handler.clean_sessions)
 
     def set_url_rewriter(self):
-        self.url_rewriter = self.appli.vreg['components'].select_object('urlrewriter')
+        self.url_rewriter = self.appli.vreg['components'].select_or_none('urlrewriter')
 
     def shutdown_event(self):
         """callback fired when the server is shutting down to properly

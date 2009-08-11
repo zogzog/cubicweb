@@ -11,8 +11,7 @@ __docformat__ = "restructuredtext en"
 from os.path import join, exists
 
 from cubicweb import server
-from cubicweb.server.sqlutils import (SQL_PREFIX, SQLAdapterMixIn, sqlexec,
-                                      sql_source_backup, sql_source_restore)
+from cubicweb.server.sqlutils import SQL_PREFIX, SQLAdapterMixIn, sqlexec
 from cubicweb.server.sources import native, rql2sql
 from cubicweb.server.sources import AbstractSource, dbg_st_search, dbg_results
 
@@ -94,18 +93,21 @@ repository.',
         AbstractSource.__init__(self, repo, appschema, source_config,
                                 *args, **kwargs)
 
-    def backup(self, confirm, backupfile=None, timestamp=None, askconfirm=False):
-        """method called to create a backup of source's data"""
-        backupfile = self.backup_file(backupfile, timestamp)
-        sql_source_backup(self, self.sqladapter, confirm, backupfile,
-                          askconfirm)
+    def backup(self, backupfile):
+        """method called to create a backup of the source's data"""
+        self.close_pool_connections()
+        try:
+            self.sqladapter.backup_to_file(backupfile)
+        finally:
+            self.open_pool_connections()
 
-    def restore(self, confirm, backupfile=None, timestamp=None, drop=True,
-               askconfirm=False):
+    def restore(self, backupfile, drop):
         """method called to restore a backup of source's data"""
-        backupfile = self.backup_file(backupfile, timestamp)
-        sql_source_restore(self, self.sqladapter, confirm, backupfile, drop,
-                           askconfirm)
+        self.close_pool_connections()
+        try:
+            self.sqladapter.restore_from_file(backupfile, drop)
+        finally:
+            self.open_pool_connections()
 
     @property
     def _sqlcnx(self):

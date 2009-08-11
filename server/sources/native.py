@@ -25,8 +25,7 @@ from indexer import get_indexer
 
 from cubicweb import UnknownEid, AuthenticationError, Binary, server
 from cubicweb.server.utils import crypt_password
-from cubicweb.server.sqlutils import (SQL_PREFIX, SQLAdapterMixIn,
-                                      sql_source_backup, sql_source_restore)
+from cubicweb.server.sqlutils import SQL_PREFIX, SQLAdapterMixIn
 from cubicweb.server.rqlannotation import set_qdata
 from cubicweb.server.sources import AbstractSource, dbg_st_search, dbg_results
 from cubicweb.server.sources.rql2sql import SQLGenerator
@@ -207,17 +206,21 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
         pool.pool_reset()
         self.repo._free_pool(pool)
 
-    def backup(self, confirm, backupfile=None, timestamp=None,
-               askconfirm=False):
-        """method called to create a backup of source's data"""
-        backupfile = self.backup_file(backupfile, timestamp)
-        sql_source_backup(self, self, confirm, backupfile, askconfirm)
+    def backup(self, backupfile):
+        """method called to create a backup of the source's data"""
+        self.close_pool_connections()
+        try:
+            self.backup_to_file(backupfile)
+        finally:
+            self.open_pool_connections()
 
-    def restore(self, confirm, backupfile=None, timestamp=None, drop=True,
-               askconfirm=False):
+    def restore(self, backupfile, drop):
         """method called to restore a backup of source's data"""
-        backupfile = self.backup_file(backupfile, timestamp)
-        sql_source_restore(self, self, confirm, backupfile, drop, askconfirm)
+        self.close_pool_connections()
+        try:
+            self.restore_from_file(backupfile, drop)
+        finally:
+            self.open_pool_connections()
 
     def init(self):
         self.init_creating()
