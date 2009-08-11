@@ -6,9 +6,10 @@
 :license: GNU Lesser General Public License, v2.1 - http://www.gnu.org/licenses
 """
 
+import os
 import socket
 import logging
-from os.path import join, dirname, exists
+from os.path import join, dirname, normpath, abspath
 from StringIO import StringIO
 
 #from twisted.application import service, strports
@@ -21,10 +22,9 @@ from twisted.internet.error import CannotListenError
 
 from logilab.common.testlib import TestCase
 
-import cubicweb.web
 from cubicweb.dbapi import in_memory_cnx
 from cubicweb.etwist.server import CubicWebRootResource
-from cubicweb.devtools import LivetestConfiguration, init_test_database
+from cubicweb.devtools import BaseApptestConfiguration, init_test_database
 
 
 
@@ -50,25 +50,57 @@ class LivetestResource(CubicWebRootResource):
 
 
 
+class LivetestConfiguration(BaseApptestConfiguration):
+    init_repository = False
+
+    def __init__(self, cube=None, sourcefile=None, pyro_name=None,
+                 log_threshold=logging.CRITICAL):
+        BaseApptestConfiguration.__init__(self, cube, log_threshold=log_threshold)
+        self.appid = pyro_name or cube
+        # don't change this, else some symlink problems may arise in some
+        # environment (e.g. mine (syt) ;o)
+        # XXX I'm afraid this test will prevent to run test from a production
+        # environment
+        self._sources = None
+        # instance cube test
+        if cube is not None:
+            self.apphome = self.cube_dir(cube)
+        elif 'web' in os.getcwd().split(os.sep):
+            # web test
+            self.apphome = join(normpath(join(dirname(__file__), '..')), 'web')
+        else:
+            # cube test
+            self.apphome = abspath('..')
+        self.sourcefile = sourcefile
+        self.global_set_option('realm', '')
+        self.use_pyro = pyro_name is not None
+
+    def pyro_enabled(self):
+        if self.use_pyro:
+            return True
+        else:
+            return False
+
+
+
 def make_site(cube, options=None):
     from cubicweb.etwist import twconfig # trigger configuration registration
-    sourcefile = options.sourcefile
-    config = LivetestConfiguration(cube, sourcefile,
+    config = LivetestConfiguration(cube, options.sourcefile,
                                    pyro_name=options.pyro_name,
                                    log_threshold=logging.DEBUG)
-    source = config.sources()['system']
-    init_test_database(driver=source['db-driver'], config=config)
+    init_test_database(config=config)
     # if '-n' in sys.argv: # debug mode
     cubicweb = LivetestResource(config, debug=True)
     toplevel = cubicweb
     website = server.Site(toplevel)
     cube_dir = config.cube_dir(cube)
+    source = config.sources()['system']
     for port in xrange(7777, 7798):
         try:
             reactor.listenTCP(port, channel.HTTPFactory(website))
             saveconf(cube_dir, port, source['db-user'], source['db-password'])
             break
-        except CannotListenError, exc:
+        except CannotListenError:
             print "port %s already in use, I will try another one" % port
     else:
         raise

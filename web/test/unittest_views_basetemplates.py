@@ -5,11 +5,11 @@
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 :license: GNU Lesser General Public License, v2.1 - http://www.gnu.org/licenses
 """
-from cubicweb.devtools.testlib import WebTest
+from cubicweb.devtools.testlib import CubicWebTC
 from cubicweb.devtools.htmlparser import DTDValidator
 
 
-class LogFormTemplateTC(WebTest):
+class LogFormTemplateTC(CubicWebTC):
 
     def _login_labels(self):
         valid = self.content_type_validators.get('text/html', DTDValidator)()

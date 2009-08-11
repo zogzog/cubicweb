@@ -13,21 +13,17 @@ from logilab.common.testlib import TestCase, unittest_main
 
 from rql import BadRQLQuery, RQLSyntaxError
 
-from cubicweb.devtools.apptest import EnvBasedTC, TestEnvironment
+from cubicweb.devtools.testlib import CubicWebTC
 
 
 translations = {
     u'CWUser' : u"Utilisateur",
-#    u'Workcase' : u"Affaire",
     u'EmailAddress' : u"Adresse",
-#    u'Division' : u"Division",
-#    u'Comment' : u"Commentaire",
     u'name' : u"nom",
     u'alias' : u"nom",
     u'surname' : u"nom",
     u'firstname' : u"prÃ©nom",
     u'state' : u"Ã©tat",
-#    u'subject' : u"sujet",
     u'address' : u"adresse",
     u'use_email' : u"adel",
     }
@@ -37,12 +33,12 @@ def _translate(msgid):
 
 from cubicweb.web.views.magicsearch import translate_rql_tree, QSPreProcessor, QueryTranslator
 
-class QueryTranslatorTC(EnvBasedTC):
+class QueryTranslatorTC(CubicWebTC):
     """test suite for QueryTranslatorTC"""
 
     def setUp(self):
         super(QueryTranslatorTC, self).setUp()
-        self.req = self.env.create_request()
+        self.req = self.request()
         self.vreg.config.translations = {'en': _translate}
         proc = self.vreg['components'].select('magicsearch', self.req)
         self.proc = [p for p in proc.processors if isinstance(p, QueryTranslator)][0]
@@ -63,7 +59,7 @@ class QueryTranslatorTC(EnvBasedTC):
         self.assertEquals(rql, "Any P WHERE P is CWUser, P use_email C, P surname 'Smith'")
 
 
-class QSPreProcessorTC(EnvBasedTC):
+class QSPreProcessorTC(CubicWebTC):
     """test suite for QSPreProcessor"""
     def setUp(self):
         super(QSPreProcessorTC, self).setUp()
@@ -88,7 +84,6 @@ class QSPreProcessorTC(EnvBasedTC):
         eschema = self.schema.eschema('CWUser')
         self.assertEquals(translate(u'prÃ©nom', eschema), "firstname")
         self.assertEquals(translate(u'nom', eschema), 'surname')
-        #self.assert_(translate(u'nom') in ('name', 'surname'))
         eschema = self.schema.eschema('EmailAddress')
         self.assertEquals(translate(u'adresse', eschema), "address")
         self.assertEquals(translate(u'nom', eschema), 'alias')
@@ -125,7 +120,6 @@ class QSPreProcessorTC(EnvBasedTC):
         self.assertEquals(transform(u'adresse', 'Logi%'),
                           ('EmailAddress E WHERE E alias LIKE %(text)s', {'text': 'Logi%'}))
         self.assertRaises(BadRQLQuery, transform, "pers", "taratata")
-        #self.assertEquals(transform('CWUser', '%mi'), 'CWUser E WHERE P surname LIKE "%mi"')
 
     def test_three_words_query(self):
         """tests the 'three words shortcut queries'"""
@@ -180,7 +174,7 @@ class QSPreProcessorTC(EnvBasedTC):
 ## Processor Chains tests ############################################
 
 
-class ProcessorChainTC(EnvBasedTC):
+class ProcessorChainTC(CubicWebTC):
     """test suite for magic_search's processor chains"""
 
     def setUp(self):
@@ -195,7 +189,7 @@ class ProcessorChainTC(EnvBasedTC):
             (u'foo',
              ("Any X WHERE X has_text %(text)s", {'text': u'foo'})),
             # XXX this sounds like a language translator test...
-            # and it fail
+            # and it fails
             (u'Utilisateur Smith',
              ('CWUser C WHERE C has_text %(text)s', {'text': u'Smith'})),
             (u'utilisateur nom Smith',

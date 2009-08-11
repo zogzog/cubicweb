@@ -2,13 +2,14 @@
 :license: GNU Lesser General Public License, v2.1 - http://www.gnu.org/licenses
 """
 
+from copy import deepcopy
 from datetime import date
 from os.path import join
 
 from logilab.common.testlib import TestCase, unittest_main
 
 from cubicweb import ConfigurationError
-from cubicweb.devtools.apptest import RepositoryBasedTC, get_versions
+from cubicweb.devtools.testlib import CubicWebTC, get_versions
 from cubicweb.schema import CubicWebSchemaLoader
 from cubicweb.server.sqlutils import SQL_PREFIX
 from cubicweb.server.repository import Repository
@@ -23,22 +24,28 @@ def teardown_module(*args):
     Repository.get_versions = orig_get_versions
 
 
-class MigrationCommandsTC(RepositoryBasedTC):
+class MigrationCommandsTC(CubicWebTC):
+
+    @classmethod
+    def init_config(cls, config):
+        super(MigrationCommandsTC, cls).init_config(config)
+        config._cubes = None
+        cls.repo.fill_schema()
+        cls.origschema = deepcopy(cls.repo.schema)
+        # hack to read the schema from data/migrschema
+        config.appid = join('data', 'migratedapp')
+        global migrschema
+        migrschema = config.load_schema()
+        config.appid = 'data'
+        assert 'Folder' in migrschema
+
+    @classmethod
+    def _refresh_repo(cls):
+        super(MigrationCommandsTC, cls)._refresh_repo()
+        cls.repo.schema = cls.vreg.schema = deepcopy(cls.origschema)
 
     def setUp(self):
-        if not hasattr(self, '_repo'):
-            # first initialization
-            repo = self.repo # set by the RepositoryBasedTC metaclass
-            # force to read schema from the database
-            repo.config._cubes = None
-            repo.fill_schema()
-            # hack to read the schema from data/migrschema
-            self.repo.config.appid = join('data', 'migratedapp')
-            global migrschema
-            migrschema = self.repo.config.load_schema()
-            self.repo.config.appid = 'data'
-            assert 'Folder' in migrschema
-        RepositoryBasedTC.setUp(self)
+        CubicWebTC.setUp(self)
         self.mh = ServerMigrationHelper(self.repo.config, migrschema,
                                         repo=self.repo, cnx=self.cnx,
                                         interactive=False)
@@ -280,7 +287,7 @@ class MigrationCommandsTC(RepositoryBasedTC):
             'Any N ORDERBY O WHERE X is CWAttribute, X relation_type RT, RT name N,'
             'X from_entity FE, FE name "Personne",'
             'X ordernum O')]
-        expected = [u'nom', u'prenom', u'promo', u'ass', u'adel', u'titre',
+        expected = [u'nom', u'prenom', u'sexe', u'promo', u'ass', u'adel', u'titre',
                     u'web', u'tel', u'fax', u'datenaiss', u'test', 'description', u'firstname',
                     u'creation_date', 'cwuri', u'modification_date']
         self.assertEquals(rinorder, expected)

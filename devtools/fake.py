@@ -7,7 +7,6 @@
 """
 __docformat__ = "restructuredtext en"
 
-from logilab.common.testlib import mock_object as Mock
 from logilab.common.adbh import get_adv_func_helper
 
 from indexer import get_indexer

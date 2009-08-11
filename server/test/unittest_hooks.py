@@ -11,7 +11,7 @@ from datetime import datetime
 
 from cubicweb import (ConnectionError, RepositoryError, ValidationError,
                       AuthenticationError, BadConnectionId)
-from cubicweb.devtools.apptest import RepositoryBasedTC, get_versions
+from cubicweb.devtools.testlib import CubicWebTC, get_versions
 
 from cubicweb.server.sqlutils import SQL_PREFIX
 from cubicweb.server.repository import Repository
@@ -26,7 +26,7 @@ def teardown_module(*args):
 
 
 
-class CoreHooksTC(RepositoryBasedTC):
+class CoreHooksTC(CubicWebTC):
 
     def test_delete_internal_entities(self):
         self.assertRaises(RepositoryError, self.execute,
@@ -62,7 +62,7 @@ class CoreHooksTC(RepositoryBasedTC):
 
     def test_delete_if_singlecard1(self):
         self.assertEquals(self.repo.schema['in_state'].inlined, False)
-        ueid = self.create_user('toto')
+        ueid = self.create_user('toto').eid
         self.commit()
         self.execute('SET X in_state S WHERE S name "deactivated", X eid %(x)s', {'x': ueid})
         rset = self.execute('Any S WHERE X in_state S, X eid %(x)s', {'x': ueid})
@@ -156,7 +156,7 @@ class CoreHooksTC(RepositoryBasedTC):
 
 
 
-class UserGroupHooksTC(RepositoryBasedTC):
+class UserGroupHooksTC(CubicWebTC):
 
     def test_user_synchronization(self):
         self.create_user('toto', password='hop', commit=False)
@@ -164,7 +164,7 @@ class UserGroupHooksTC(RepositoryBasedTC):
                           self.repo.connect, u'toto', 'hop')
         self.commit()
         cnxid = self.repo.connect(u'toto', 'hop')
-        self.failIfEqual(cnxid, self.cnxid)
+        self.failIfEqual(cnxid, self.session.id)
         self.execute('DELETE CWUser X WHERE X login "toto"')
         self.repo.execute(cnxid, 'State X')
         self.commit()
@@ -184,7 +184,7 @@ class UserGroupHooksTC(RepositoryBasedTC):
         self.assertEquals(user.groups, set(('managers',)))
 
     def test_user_composite_owner(self):
-        ueid = self.create_user('toto')
+        ueid = self.create_user('toto').eid
         # composite of euser should be owned by the euser regardless of who created it
         self.execute('INSERT EmailAddress X: X address "toto@logilab.fr", U use_email X '
                      'WHERE U login "toto"')
@@ -200,7 +200,7 @@ class UserGroupHooksTC(RepositoryBasedTC):
         self.failIf(self.execute('Any X WHERE X created_by Y, X eid >= %(x)s', {'x': eid}))
 
 
-class CWPropertyHooksTC(RepositoryBasedTC):
+class CWPropertyHooksTC(CubicWebTC):
 
     def test_unexistant_eproperty(self):
         ex = self.assertRaises(ValidationError,
@@ -224,7 +224,7 @@ class CWPropertyHooksTC(RepositoryBasedTC):
         self.assertEquals(ex.errors, {'value': u'unauthorized value'})
 
 
-class SchemaHooksTC(RepositoryBasedTC):
+class SchemaHooksTC(CubicWebTC):
 
     def test_duplicate_etype_error(self):
         # check we can't add a CWEType or CWRType entity if it already exists one
@@ -246,24 +246,23 @@ class SchemaHooksTC(RepositoryBasedTC):
             self.assertEquals(ex.errors, {'login': 'the value "admin" is already used, use another one'})
 
 
-class SchemaModificationHooksTC(RepositoryBasedTC):
+class SchemaModificationHooksTC(CubicWebTC):
 
-    def setUp(self):
-        if not hasattr(self, '_repo'):
-            # first initialization
-            repo = self.repo # set by the RepositoryBasedTC metaclass
-            # force to read schema from the database to get proper eid set on schema instances
-            repo.config._cubes = None
-            repo.fill_schema()
-        RepositoryBasedTC.setUp(self)
+    @classmethod
+    def init_config(cls, config):
+        super(SchemaModificationHooksTC, cls).init_config(config)
+        config._cubes = None
+        cls.repo.fill_schema()
 
     def index_exists(self, etype, attr, unique=False):
+        self.session.set_pool()
         dbhelper = self.session.pool.source('system').dbhelper
         sqlcursor = self.session.pool['system']
         return dbhelper.index_exists(sqlcursor, SQL_PREFIX + etype, SQL_PREFIX + attr, unique=unique)
 
     def test_base(self):
         schema = self.repo.schema
+        self.session.set_pool()
         dbhelper = self.session.pool.source('system').dbhelper
         sqlcursor = self.session.pool['system']
         self.failIf(schema.has_entity('Societe2'))
@@ -381,6 +380,7 @@ class SchemaModificationHooksTC(RepositoryBasedTC):
     # schema modification hooks tests #########################################
 
     def test_uninline_relation(self):
+        self.session.set_pool()
         dbhelper = self.session.pool.source('system').dbhelper
         sqlcursor = self.session.pool['system']
         # Personne inline2 Affaire inline
@@ -415,6 +415,7 @@ class SchemaModificationHooksTC(RepositoryBasedTC):
             self.assertEquals(rset.rows[0], [peid, aeid])
 
     def test_indexed_change(self):
+        self.session.set_pool()
         dbhelper = self.session.pool.source('system').dbhelper
         sqlcursor = self.session.pool['system']
         try:
@@ -433,6 +434,7 @@ class SchemaModificationHooksTC(RepositoryBasedTC):
             self.failIf(self.index_exists('Affaire', 'sujet'))
 
     def test_unique_change(self):
+        self.session.set_pool()
         dbhelper = self.session.pool.source('system').dbhelper
         sqlcursor = self.session.pool['system']
         try:
@@ -481,10 +483,9 @@ class SchemaModificationHooksTC(RepositoryBasedTC):
         self.commit()
 
 
-class WorkflowHooksTC(RepositoryBasedTC):
+class WorkflowHooksTC(CubicWebTC):
 
-    def setUp(self):
-        RepositoryBasedTC.setUp(self)
+    def setup_database(self):
         self.s_activated = self.execute('State X WHERE X name "activated"')[0][0]
         self.s_deactivated = self.execute('State X WHERE X name "deactivated"')[0][0]
         self.s_dummy = self.execute('INSERT State X: X name "dummy", X state_of E WHERE E name "CWUser"')[0][0]
@@ -493,12 +494,6 @@ class WorkflowHooksTC(RepositoryBasedTC):
         # so we can test wf enforcing on euser (managers don't have anymore this
         # enforcement
         self.execute('SET X require_group G WHERE G name "users", X transition_of ET, ET name "CWUser"')
-        self.commit()
-
-    def tearDown(self):
-        self.execute('DELETE X require_group G WHERE G name "users", X transition_of ET, ET name "CWUser"')
-        self.commit()
-        RepositoryBasedTC.tearDown(self)
 
     def test_set_initial_state(self):
         ueid = self.execute('INSERT CWUser E: E login "x", E upassword "x", E in_group G '
@@ -511,13 +506,12 @@ class WorkflowHooksTC(RepositoryBasedTC):
         self.assertEquals(initialstate, u'activated')
 
     def test_initial_state(self):
-        cnx = self.login('stduser')
-        cu = cnx.cursor()
-        self.assertRaises(ValidationError, cu.execute,
+        self.login('stduser')
+        self.assertRaises(ValidationError, self.execute,
                           'INSERT CWUser X: X login "badaboum", X upassword %(pwd)s, '
                           'X in_state S WHERE S name "deactivated"', {'pwd': 'oops'})
-        cnx.close()
         # though managers can do whatever he want
+        self.restore_connection()
         self.execute('INSERT CWUser X: X login "badaboum", X upassword %(pwd)s, '
                      'X in_state S, X in_group G WHERE S name "deactivated", G name "users"', {'pwd': 'oops'})
         self.commit()
@@ -526,7 +520,7 @@ class WorkflowHooksTC(RepositoryBasedTC):
     def test_transition_checking1(self):
         cnx = self.login('stduser')
         cu = cnx.cursor()
-        ueid = cnx.user(self.current_session()).eid
+        ueid = cnx.user(self.session).eid
         self.assertRaises(ValidationError,
                           cu.execute, 'SET X in_state S WHERE X eid %(x)s, S eid %(s)s',
                           {'x': ueid, 's': self.s_activated}, 'x')
@@ -535,7 +529,7 @@ class WorkflowHooksTC(RepositoryBasedTC):
     def test_transition_checking2(self):
         cnx = self.login('stduser')
         cu = cnx.cursor()
-        ueid = cnx.user(self.current_session()).eid
+        ueid = cnx.user(self.session).eid
         self.assertRaises(ValidationError,
                           cu.execute, 'SET X in_state S WHERE X eid %(x)s, S eid %(s)s',
                           {'x': ueid, 's': self.s_dummy}, 'x')
@@ -544,7 +538,7 @@ class WorkflowHooksTC(RepositoryBasedTC):
     def test_transition_checking3(self):
         cnx = self.login('stduser')
         cu = cnx.cursor()
-        ueid = cnx.user(self.current_session()).eid
+        ueid = cnx.user(self.session).eid
         cu.execute('SET X in_state S WHERE X eid %(x)s, S eid %(s)s',
                       {'x': ueid, 's': self.s_deactivated}, 'x')
         cnx.commit()
@@ -560,7 +554,7 @@ class WorkflowHooksTC(RepositoryBasedTC):
     def test_transition_checking4(self):
         cnx = self.login('stduser')
         cu = cnx.cursor()
-        ueid = cnx.user(self.current_session()).eid
+        ueid = cnx.user(self.session).eid
         cu.execute('SET X in_state S WHERE X eid %(x)s, S eid %(s)s',
                    {'x': ueid, 's': self.s_deactivated}, 'x')
         cnx.commit()
@@ -602,7 +596,7 @@ class WorkflowHooksTC(RepositoryBasedTC):
         self.assertEquals(tr.owned_by[0].login, 'admin')
 
     def test_transition_information_on_creation(self):
-        ueid = self.create_user('toto')
+        ueid = self.create_user('toto').eid
         rset = self.execute('TrInfo T WHERE T wf_info_for X, X eid %(x)s', {'x': ueid})
         self.assertEquals(len(rset), 1)
         tr = rset.get_entity(0, 0)

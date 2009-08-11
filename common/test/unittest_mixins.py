@@ -6,9 +6,9 @@
 :license: GNU Lesser General Public License, v2.1 - http://www.gnu.org/licenses
 """
 from logilab.common.testlib import unittest_main
-from cubicweb.devtools.apptest import EnvBasedTC
+from cubicweb.devtools.testlib import CubicWebTC
 
-class WorkfloableMixInTC(EnvBasedTC):
+class WorkfloableMixInTC(CubicWebTC):
     def test_wf_state(self):
         s = self.add_entity('State', name=u'activated')
         self.execute('SET X state_of ET WHERE ET name "Bookmark", X eid %(x)s',

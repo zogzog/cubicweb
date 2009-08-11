@@ -169,3 +169,5 @@ class PageInfo(object):
                 except KeyError:
                     continue
         return False
+
+VALMAP = {None: None, 'dtd': DTDValidator, 'xml': SaxOnlyValidator}

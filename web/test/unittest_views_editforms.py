@@ -6,14 +6,13 @@
 :license: GNU Lesser General Public License, v2.1 - http://www.gnu.org/licenses
 """
 from logilab.common.testlib import unittest_main
-from cubicweb.devtools.apptest import EnvBasedTC
-from cubicweb.devtools.testlib import WebTest
+from cubicweb.devtools.testlib import CubicWebTC
 from cubicweb.web.views.autoform import AutomaticEntityForm as AEF
 from cubicweb.web.formwidgets import AutoCompletionWidget
 def rbc(entity, category):
     return [(rschema.type, x) for rschema, tschemas, x in AEF.erelations_by_category(entity, category)]
 
-class AutomaticEntityFormTC(EnvBasedTC):
+class AutomaticEntityFormTC(CubicWebTC):
 
     def test_custom_widget(self):
         AEF.rfields_kwargs.tag_subject_of(('CWUser', 'login', '*'),
@@ -29,7 +28,7 @@ class AutomaticEntityFormTC(EnvBasedTC):
         #for (rtype, role, stype, otype), tag in AEF.rcategories._tagdefs.items():
         #    if rtype == 'tags':
         #        print rtype, role, stype, otype, ':', tag
-        e = self.etype_instance('CWUser')
+        e = self.vreg['etypes'].etype_class('CWUser')(self.request())
         # see custom configuration in views.cwuser
         self.assertEquals(rbc(e, 'primary'),
                           [('login', 'subject'),
@@ -76,7 +75,7 @@ class AutomaticEntityFormTC(EnvBasedTC):
         self.failIf(AEF.rinlined.etype_get('CWUser', 'primary_email', 'subject'))
 
     def test_personne_relations_by_category(self):
-        e = self.etype_instance('Personne')
+        e = self.vreg['etypes'].etype_class('Personne')(self.request())
         self.assertListEquals(rbc(e, 'primary'),
                               [('nom', 'subject'),
                                ('eid', 'subject')
@@ -124,7 +123,7 @@ class AutomaticEntityFormTC(EnvBasedTC):
         self.failIf(any(f for f in form.fields if f is None))
 
 
-class FormViewsTC(WebTest):
+class FormViewsTC(CubicWebTC):
     def test_delete_conf_formview(self):
         rset = self.execute('CWGroup X')
         self.view('deleteconf', rset, template=None).source

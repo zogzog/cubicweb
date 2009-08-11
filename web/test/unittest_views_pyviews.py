@@ -1,7 +1,7 @@
 from logilab.common.testlib import unittest_main
-from cubicweb.devtools.apptest import EnvBasedTC
+from cubicweb.devtools.testlib import CubicWebTC
 
-class PyViewsTC(EnvBasedTC):
+class PyViewsTC(CubicWebTC):
 
     def test_pyvaltable(self):
         content = self.vreg['views'].render('pyvaltable', self.request(),

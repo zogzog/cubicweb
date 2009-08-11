@@ -13,20 +13,54 @@ from datetime import timedelta
 from os.path import (abspath, join, exists, basename, dirname, normpath, split,
                      isfile, isabs)
 
-from cubicweb import CW_SOFTWARE_ROOT, ConfigurationError
+from cubicweb import CW_SOFTWARE_ROOT, ConfigurationError, schema, cwconfig
 from cubicweb.utils import strptime
-from cubicweb.toolsutils import read_config
-from cubicweb.cwconfig import CubicWebConfiguration, merge_options
 from cubicweb.server.serverconfig import ServerConfiguration
 from cubicweb.etwist.twconfig import TwistedConfiguration
+
+cwconfig.CubicWebConfiguration.cls_adjust_sys_path()
+
+# db auto-population configuration #############################################
+
+SYSTEM_ENTITIES = schema.SCHEMA_TYPES | set((
+    'CWGroup', 'CWUser', 'CWProperty',
+    'State', 'Transition', 'TrInfo',
+    ))
+
+SYSTEM_RELATIONS = schema.META_RTYPES | set((
+    # workflow related
+    'state_of', 'transition_of', 'initial_state', 'allowed_transition',
+    'destination_state', 'in_state', 'wf_info_for', 'from_state', 'to_state',
+    'condition',
+    # cwproperty
+    'for_user',
+    # schema definition
+    'specializes',
+    'relation_type', 'from_entity', 'to_entity',
+    'constrained_by', 'cstrtype', 'widget',
+    'read_permission', 'update_permission', 'delete_permission', 'add_permission',
+    # permission
+    'in_group', 'require_group', 'require_permission',
+    # deducted from other relations
+    'primary_email',
+    ))
+
+# content validation configuration #############################################
 
 # validators are used to validate (XML, DTD, whatever) view's content
 # validators availables are :
 #  'dtd' : validates XML + declared DTD
 #  'xml' : guarantees XML is well formed
 #  None : do not try to validate anything
+
+# {'vid': validator}
 VIEW_VALIDATORS = {}
+
+
+# cubicweb test configuration ##################################################
+
 BASE_URL = 'http://testing.fr/cubicweb/'
+
 DEFAULT_SOURCES = {'system': {'adapter' : 'native',
                               'db-encoding' : 'UTF-8', #'ISO-8859-1',
                               'db-user' : u'admin',
@@ -40,13 +74,14 @@ DEFAULT_SOURCES = {'system': {'adapter' : 'native',
                               },
                    }
 
+
 class TestServerConfiguration(ServerConfiguration):
     mode = 'test'
     set_language = False
     read_instance_schema = False
     bootstrap_schema = False
     init_repository = True
-    options = merge_options(ServerConfiguration.options + (
+    options = cwconfig.merge_options(ServerConfiguration.options + (
         ('anonymous-user',
          {'type' : 'string',
           'default': None,
@@ -66,7 +101,6 @@ class TestServerConfiguration(ServerConfiguration):
 
     def __init__(self, appid, log_threshold=logging.CRITICAL+10):
         ServerConfiguration.__init__(self, appid)
-        self.global_set_option('log-file', None)
         self.init_log(log_threshold, force=True)
         # need this, usually triggered by cubicweb-ctl
         self.load_cwctl_plugins()
@@ -118,30 +152,11 @@ class TestServerConfiguration(ServerConfiguration):
             sources = DEFAULT_SOURCES
         return sources
 
-    def load_defaults(self):
-        super(TestServerConfiguration, self).load_defaults()
-        # note: don't call global set option here, OptionManager may not yet be initialized
-        # add anonymous user
-        self.set_option('anonymous-user', 'anon')
-        self.set_option('anonymous-password', 'anon')
-        # uncomment the line below if you want rql queries to be logged
-        #self.set_option('query-log-file', '/tmp/test_rql_log.' + `os.getpid()`)
-        self.set_option('sender-name', 'cubicweb-test')
-        self.set_option('sender-addr', 'cubicweb-test@logilab.fr')
-        try:
-            send_to =  '%s@logilab.fr' % os.getlogin()
-        except OSError:
-            send_to =  '%s@logilab.fr' % (os.environ.get('USER')
-                                          or os.environ.get('USERNAME')
-                                          or os.environ.get('LOGNAME'))
-        self.set_option('sender-addr', send_to)
-        self.set_option('default-dest-addrs', send_to)
-        self.set_option('base-url', BASE_URL)
-
 
 class BaseApptestConfiguration(TestServerConfiguration, TwistedConfiguration):
     repo_method = 'inmemory'
-    options = merge_options(TestServerConfiguration.options + TwistedConfiguration.options)
+    options = cwconfig.merge_options(TestServerConfiguration.options
+                                     + TwistedConfiguration.options)
     cubicweb_appobject_path = TestServerConfiguration.cubicweb_appobject_path | TwistedConfiguration.cubicweb_appobject_path
     cube_appobject_path = TestServerConfiguration.cube_appobject_path | TwistedConfiguration.cube_appobject_path
 
@@ -163,98 +178,91 @@ class ApptestConfiguration(BaseApptestConfiguration):
         BaseApptestConfiguration.__init__(self, appid, log_threshold=log_threshold)
         self.init_repository = sourcefile is None
         self.sourcefile = sourcefile
-        import re
-        self.global_set_option('embed-allowed', re.compile('.*'))
+        self.global_set_option('anonymous-user', 'anon')
+        self.global_set_option('anonymous-password', 'anon')
+
+    def load_configuration(self):
+        super(ApptestConfiguration, self).load_configuration()
+        self.global_set_option('anonymous-user', 'anon')
+        self.global_set_option('anonymous-password', 'anon')
 
 
-class RealDatabaseConfiguration(ApptestConfiguration):
-    init_repository = False
-    sourcesdef =  {'system': {'adapter' : 'native',
-                              'db-encoding' : 'UTF-8', #'ISO-8859-1',
-                              'db-user' : u'admin',
-                              'db-password' : 'gingkow',
-                              'db-name' : 'seotest',
-                              'db-driver' : 'postgres',
-                              'db-host' : None,
-                              },
-                   'admin' : {'login': u'admin',
-                              'password': u'gingkow',
-                              },
-                   }
+# test database handling #######################################################
 
-    def __init__(self, appid, log_threshold=logging.CRITICAL, sourcefile=None):
-        ApptestConfiguration.__init__(self, appid)
-        self.init_repository = False
-
-
-    def sources(self):
-        """
-        By default, we run tests with the sqlite DB backend.
-        One may use its own configuration by just creating a
-        'sources' file in the test directory from wich tests are
-        launched.
-        """
-        self._sources = self.sourcesdef
-        return self._sources
+def init_test_database(config=None, configdir='data'):
+    """init a test database for a specific driver"""
+    from cubicweb.dbapi import in_memory_cnx
+    config = config or TestServerConfiguration(configdir)
+    sources = config.sources()
+    driver = sources['system']['db-driver']
+    if driver == 'sqlite':
+        init_test_database_sqlite(config)
+    elif driver == 'postgres':
+        init_test_database_postgres(config)
+    else:
+        raise ValueError('no initialization function for driver %r' % driver)
+    config._cubes = None # avoid assertion error
+    repo, cnx = in_memory_cnx(config, unicode(sources['admin']['login']),
+                              sources['admin']['password'] or 'xxx')
+    if driver == 'sqlite':
+        install_sqlite_patch(repo.querier)
+    return repo, cnx
 
 
-def buildconfig(dbuser, dbpassword, dbname, adminuser, adminpassword, dbhost=None):
-    """convenience function that builds a real-db configuration class"""
-    sourcesdef =  {'system': {'adapter' : 'native',
-                              'db-encoding' : 'UTF-8', #'ISO-8859-1',
-                              'db-user' : dbuser,
-                              'db-password' : dbpassword,
-                              'db-name' : dbname,
-                              'db-driver' : 'postgres',
-                              'db-host' : dbhost,
-                              },
-                   'admin' : {'login': adminuser,
-                              'password': adminpassword,
-                              },
-                   }
-    return type('MyRealDBConfig', (RealDatabaseConfiguration,),
-                {'sourcesdef': sourcesdef})
-
-def loadconfig(filename):
-    """convenience function that builds a real-db configuration class
-    from a file
-    """
-    return type('MyRealDBConfig', (RealDatabaseConfiguration,),
-                {'sourcesdef': read_config(filename)})
+def reset_test_database(config):
+    """init a test database for a specific driver"""
+    driver = config.sources()['system']['db-driver']
+    if driver == 'sqlite':
+        reset_test_database_sqlite(config)
+    else:
+        raise ValueError('no reset function for driver %r' % driver)
 
 
-class LivetestConfiguration(BaseApptestConfiguration):
-    init_repository = False
+### postgres test database handling ############################################
 
-    def __init__(self, cube=None, sourcefile=None, pyro_name=None,
-                 log_threshold=logging.CRITICAL):
-        TestServerConfiguration.__init__(self, cube, log_threshold=log_threshold)
-        self.appid = pyro_name or cube
-        # don't change this, else some symlink problems may arise in some
-        # environment (e.g. mine (syt) ;o)
-        # XXX I'm afraid this test will prevent to run test from a production
-        # environment
-        self._sources = None
-        # instance cube test
-        if cube is not None:
-            self.apphome = self.cube_dir(cube)
-        elif 'web' in os.getcwd().split(os.sep):
-            # web test
-            self.apphome = join(normpath(join(dirname(__file__), '..')), 'web')
-        else:
-            # cube test
-            self.apphome = abspath('..')
-        self.sourcefile = sourcefile
-        self.global_set_option('realm', '')
-        self.use_pyro = pyro_name is not None
+def init_test_database_postgres(config):
+    """initialize a fresh sqlite databse used for testing purpose"""
+    if config.init_repository:
+        from cubicweb.server import init_repository
+        init_repository(config, interactive=False, drop=True)
 
-    def pyro_enabled(self):
-        if self.use_pyro:
-            return True
-        else:
-            return False
 
-CubicWebConfiguration.cls_adjust_sys_path()
+### sqlite test database handling ##############################################
+
+def cleanup_sqlite(dbfile, removetemplate=False):
+    try:
+        os.remove(dbfile)
+        os.remove('%s-journal' % dbfile)
+    except OSError:
+        pass
+    if removetemplate:
+        try:
+            os.remove('%s-template' % dbfile)
+        except OSError:
+            pass
+
+def reset_test_database_sqlite(config):
+    import shutil
+    dbfile = config.sources()['system']['db-name']
+    cleanup_sqlite(dbfile)
+    template = '%s-template' % dbfile
+    if exists(template):
+        shutil.copy(template, dbfile)
+        return True
+    return False
+
+def init_test_database_sqlite(config):
+    """initialize a fresh sqlite databse used for testing purpose"""
+    # remove database file if it exists
+    dbfile = config.sources()['system']['db-name']
+    if not reset_test_database_sqlite(config):
+        # initialize the database
+        import shutil
+        from cubicweb.server import init_repository
+        init_repository(config, interactive=False)
+        dbfile = config.sources()['system']['db-name']
+        shutil.copy(dbfile, '%s-template' % dbfile)
+
 
 def install_sqlite_patch(querier):
     """This patch hotfixes the following sqlite bug :
@@ -293,57 +301,3 @@ def install_sqlite_patch(querier):
         return new_execute
     querier.__class__.execute = wrap_execute(querier.__class__.execute)
     querier.__class__._devtools_sqlite_patched = True
-
-def init_test_database(driver='sqlite', configdir='data', config=None,
-                       vreg=None):
-    """init a test database for a specific driver"""
-    from cubicweb.dbapi import in_memory_cnx
-    if vreg and not config:
-        config = vreg.config
-    config = config or TestServerConfiguration(configdir)
-    source = config.sources()
-    if driver == 'sqlite':
-        init_test_database_sqlite(config, source)
-    elif driver == 'postgres':
-        init_test_database_postgres(config, source)
-    else:
-        raise ValueError('no initialization function for driver %r' % driver)
-    config._cubes = None # avoid assertion error
-    repo, cnx = in_memory_cnx(vreg or config, unicode(source['admin']['login']),
-                              source['admin']['password'] or 'xxx')
-    if driver == 'sqlite':
-        install_sqlite_patch(repo.querier)
-    return repo, cnx
-
-def init_test_database_postgres(config, source, vreg=None):
-    """initialize a fresh sqlite databse used for testing purpose"""
-    if config.init_repository:
-        from cubicweb.server import init_repository
-        init_repository(config, interactive=False, drop=True, vreg=vreg)
-
-def cleanup_sqlite(dbfile, removecube=False):
-    try:
-        os.remove(dbfile)
-        os.remove('%s-journal' % dbfile)
-    except OSError:
-        pass
-    if removecube:
-        try:
-            os.remove('%s-template' % dbfile)
-        except OSError:
-            pass
-
-def init_test_database_sqlite(config, source, vreg=None):
-    """initialize a fresh sqlite databse used for testing purpose"""
-    import shutil
-    # remove database file if it exists (actually I know driver == 'sqlite' :)
-    dbfile = source['system']['db-name']
-    cleanup_sqlite(dbfile)
-    template = '%s-template' % dbfile
-    if exists(template):
-        shutil.copy(template, dbfile)
-    else:
-        # initialize the database
-        from cubicweb.server import init_repository
-        init_repository(config, interactive=False, vreg=vreg)
-        shutil.copy(dbfile, template)

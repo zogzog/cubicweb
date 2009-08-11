@@ -6,9 +6,9 @@
 :license: GNU Lesser General Public License, v2.1 - http://www.gnu.org/licenses
 """
 from logilab.common.testlib import unittest_main
-from cubicweb.devtools.apptest import EnvBasedTC
+from cubicweb.devtools.testlib import CubicWebTC
 
-class HooksTC(EnvBasedTC):
+class HooksTC(CubicWebTC):
 
     def test_euser_login_stripped(self):
         u = self.create_user('  joe  ')

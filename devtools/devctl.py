@@ -119,6 +119,7 @@ def _generate_schema_pot(w, vreg, schema, libconfig=None, cube=None):
         libschema = libconfig.load_schema(remove_unused_rtypes=False)
         entities = [e for e in schema.entities() if not e in libschema]
     else:
+        libschema = None
         entities = schema.entities()
     done = set()
     for eschema in sorted(entities):
