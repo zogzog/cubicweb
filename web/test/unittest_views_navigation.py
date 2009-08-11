@@ -40,10 +40,10 @@ class NavigationTC(EnvBasedTC):
     def test_navigation_selection_not_enough(self):
         req = self.request()
         rset = self.execute('Any X,N LIMIT 10 WHERE X name N')
-        navcomp = self.vreg['components'].select_object('navigation', req, rset=rset)
+        navcomp = self.vreg['components'].select_or_none('navigation', req, rset=rset)
         self.assertEquals(navcomp, None)
         req.set_search_state('W:X:Y:Z')
-        navcomp = self.vreg['components'].select_object('navigation', req, rset=rset)
+        navcomp = self.vreg['components'].select_or_none('navigation', req, rset=rset)
         self.assertEquals(navcomp, None)
         req.set_search_state('normal')
 

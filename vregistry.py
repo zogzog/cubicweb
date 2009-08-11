@@ -243,12 +243,12 @@ class VRegistry(dict):
         """
         return self[registry].select(oid, *args, **kwargs)
 
-    @deprecated('use vreg[registry].select_object(oid, *args, **kwargs)')
+    @deprecated('use vreg[registry].select_or_none(oid, *args, **kwargs)')
     def select_object(self, registry, oid, *args, **kwargs):
         """return the most specific object in <registry>.<oid> according to
         the given context, or None if no object apply
         """
-        return self[registry].select_object(oid, *args, **kwargs)
+        return self[registry].select_or_none(oid, *args, **kwargs)
 
     @deprecated('use vreg[registry].possible_objects(*args, **kwargs)')
     def possible_objects(self, registry, *args, **kwargs):

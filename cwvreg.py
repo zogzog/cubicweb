@@ -69,7 +69,7 @@ class CWRegistry(Registry):
         return obj.render(**kwargs)
 
     def select_vobject(self, oid, *args, **kwargs):
-        selected = self.select_object(oid, *args, **kwargs)
+        selected = self.select_or_none(oid, *args, **kwargs)
         if selected and selected.propval('visible'):
             return selected
         return None
@@ -172,7 +172,7 @@ class ViewsRegistry(CWRegistry):
             if vid[0] == '_':
                 continue
             try:
-                view = self.select_best(views, req, rset=rset, **kwargs)
+                view = self._select_best(views, req, rset=rset, **kwargs)
                 if view.linkable():
                     yield view
             except NoSelectableObject:
@@ -389,17 +389,17 @@ class CubicWebVRegistry(VRegistry):
     def possible_actions(self, req, rset=None, **kwargs):
         return self["actions"].possible_actions(req, rest=rset, **kwargs)
 
-    @deprecated("use vreg['boxes'].select_object(...)")
+    @deprecated("use vreg['boxes'].select_or_none(...)")
     def select_box(self, oid, *args, **kwargs):
-        return self['boxes'].select_object(oid, *args, **kwargs)
+        return self['boxes'].select_or_none(oid, *args, **kwargs)
 
-    @deprecated("use vreg['components'].select_object(...)")
+    @deprecated("use vreg['components'].select_or_none(...)")
     def select_component(self, cid, *args, **kwargs):
-        return self['components'].select_object(cid, *args, **kwargs)
+        return self['components'].select_or_none(cid, *args, **kwargs)
 
-    @deprecated("use vreg['actions'].select_object(...)")
+    @deprecated("use vreg['actions'].select_or_none(...)")
     def select_action(self, oid, *args, **kwargs):
-        return self['actions'].select_object(oid, *args, **kwargs)
+        return self['actions'].select_or_none(oid, *args, **kwargs)
 
     @deprecated("use vreg['views'].select(...)")
     def select_view(self, __vid, req, rset=None, **kwargs):

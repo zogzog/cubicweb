@@ -377,8 +377,8 @@ class AppObject(object):
         # try to get page boundaries from the navigation component
         # XXX we should probably not have a ref to this component here (eg in
         #     cubicweb.common)
-        nav = self.vreg['components'].select_object('navigation', self.req,
-                                                    rset=self.rset)
+        nav = self.vreg['components'].select_or_none('navigation', self.req,
+                                                     rset=self.rset)
         if nav:
             start, stop = nav.page_boundaries()
             rql = self._limit_offset_rql(stop - start, start)

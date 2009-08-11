@@ -64,8 +64,8 @@ def filtered_variable(rqlst):
 
 
 def get_facet(req, facetid, rqlst, mainvar):
-    return req.vreg['facets'].object_by_id(facetid, req, rqlst=rqlst,
-                                           filtered_variable=mainvar)
+    return req.vreg['facets'].select(facetid, req, rqlst=rqlst,
+                                     filtered_variable=mainvar)
 
 
 def filter_hiddens(w, **kwargs):
