@@ -277,7 +277,9 @@ class CubicWebVRegistry(VRegistry):
         self.schema = schema
         clear_cache(self, 'rqlhelper')
         # now we can load application's web objects
-        self.register_objects(self.config.vregistry_path())
+        searchpath = self.config.vregistry_path()
+        self.reset(searchpath, force_reload=False)
+        self.register_objects(searchpath, force_reload=False)
         # map lowered entity type names to their actual name
         self.case_insensitive_etypes = {}
         for etype in self.schema.entities():
