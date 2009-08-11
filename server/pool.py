@@ -33,6 +33,17 @@ class ConnectionsPool(object):
             self.source_cnxs['system'] = self.source_cnxs[sources[0].uri]
         self._cursors = {}
 
+    def __getitem__(self, uri):
+        """subscription notation provide access to sources'cursors"""
+        try:
+            cursor = self._cursors[uri]
+        except KeyError:
+            cursor = self.source_cnxs[uri][1].cursor()
+            if cursor is not None:
+                # None possible on sources without cursor support such as ldap
+                self._cursors[uri] = cursor
+        return cursor
+
     def commit(self):
         """commit the current transaction for this user"""
         # FIXME: what happends if a commit fail
@@ -77,22 +88,11 @@ class ConnectionsPool(object):
         for source, cnx in self.source_cnxs.values():
             source.pool_reset(cnx)
 
-    def __getitem__(self, uri):
-        """subscription notation provide access to sources'cursors"""
-        try:
-            cursor = self._cursors[uri]
-        except KeyError:
-            cursor = self.source_cnxs[uri][1].cursor()
-            if cursor is not None:
-                # None possible on sources without cursor support such as ldap
-                self._cursors[uri] = cursor
-        return cursor
-
     def sources(self):
         """return the source objects handled by this pool"""
         # implementation details of flying insert requires the system source
         # first
-        yield self.source_cnxs['system']
+        yield self.source_cnxs['system'][0]
         for uri, (source, cursor) in self.source_cnxs.items():
             if uri == 'system':
                 continue
@@ -107,11 +107,17 @@ class ConnectionsPool(object):
         """return the connection on the source object with the given uri"""
         return self.source_cnxs[uid][1]
 
-    def reconnect(self, source):
-        """reopen a connection for this source"""
-        source.info('trying to reconnect')
-        self.source_cnxs[source.uri] = (source, source.get_connection())
-        del self._cursors[source.uri]
+    def reconnect(self, source=None):
+        """reopen a connection for this source or all sources if none specified
+        """
+        if source is None:
+            sources = self.sources()
+        else:
+            sources = (source,)
+        for source in sources:
+            source.info('trying to reconnect')
+            self.source_cnxs[source.uri] = (source, source.get_connection())
+            self._cursors.pop(source.uri, None)
 
     def check_connections(self):
         for source, cnx in self.source_cnxs.itervalues():
