@@ -150,7 +150,7 @@ class RelatedEntityBoxTemplate(EntityBoxTemplate):
     __select__ = EntityBoxTemplate.__select__ & partial_has_related_entities()
 
     def cell_call(self, row, col, **kwargs):
-        entity = self.entity(row, col)
+        entity = self.rset.get_entity(row, col)
         limit = self.req.property_value('navigation.related-limit') + 1
         role = get_role(self)
         self.w(u'<div class="sideBox">')
@@ -169,7 +169,7 @@ class EditRelationBoxTemplate(ReloadableMixIn, EntityBoxTemplate):
 
     def cell_call(self, row, col, view=None, **kwargs):
         self.req.add_js('cubicweb.ajax.js')
-        entity = self.entity(row, col)
+        entity = self.rset.get_entity(row, col)
         box = SideBoxWidget(display_name(self.req, self.rtype), self.id)
         related = self.related_boxitems(entity)
         unrelated = self.unrelated_boxitems(entity)

@@ -43,7 +43,7 @@ class SearchForAssociationView(EntityView):
 
     @cached
     def filter_box_context_info(self):
-        entity = self.entity(0, 0)
+        entity = self.rset.get_entity(0, 0)
         role, eid, rtype, etype = self.req.search_state[1]
         assert entity.eid == typed_eid(eid)
         # the default behaviour is to fetch all unrelated entities and display
@@ -60,7 +60,7 @@ class SearchForAssociationView(EntityView):
 class OutOfContextSearch(EntityView):
     id = 'outofcontext-search'
     def cell_call(self, row, col):
-        entity = self.entity(row, col)
+        entity = self.rset.get_entity(row, col)
         erset = entity.as_rset()
         if self.req.match_search_state(erset):
             self.w(u'<a href="%s" title="%s">%s</a>&nbsp;<a href="%s" title="%s">[...]</a>' % (
@@ -78,7 +78,7 @@ class UnrelatedDivs(EntityView):
     __select__ = match_form_params('relation')
 
     def cell_call(self, row, col):
-        entity = self.entity(row, col)
+        entity = self.rset.get_entity(row, col)
         relname, target = self.req.form.get('relation').rsplit('_', 1)
         rschema = self.schema.rschema(relname)
         hidden = 'hidden' in self.req.form

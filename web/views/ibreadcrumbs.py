@@ -36,7 +36,7 @@ class BreadCrumbEntityVComponent(EntityVComponent):
     separator = u'&nbsp;&gt;&nbsp;'
 
     def call(self, view=None, first_separator=True):
-        entity = self.entity(0)
+        entity = self.rset.get_entity(0,0)
         path = entity.breadcrumbs(view)
         if path:
             self.w(u'<span class="pathbar">')
@@ -80,7 +80,7 @@ class BreadCrumbView(EntityView):
     id = 'breadcrumbs'
 
     def cell_call(self, row, col):
-        entity = self.entity(row, col)
+        entity = self.rset.get_entity(row, col)
         desc = xml_escape(cut(entity.dc_description(), 50))
         self.w(u'<a href="%s" title="%s">%s</a>' % (
             xml_escape(entity.absolute_url()), desc, bc_title(entity)))

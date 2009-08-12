@@ -238,7 +238,7 @@ To do so, please apply the following changes:
         return entity.view('reledit', rtype='content_format')
 
     def cell_call(self, row, col):
-        entity = self.entity(row, col)
+        entity = self.rset.get_entity(row, col)
 
         # display entity attributes with prefixes
         self.w(u'<h1>%s</h1>' % entity.title)

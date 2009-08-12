@@ -162,7 +162,7 @@ class ClickAndEditFormView(FormViewMixIn, EntityView):
         assert role in ('subject', 'object')
         if default is None:
             default = xml_escape(self.req._('<no value>'))
-        entity = self.entity(row, col)
+        entity = self.rset.get_entity(row, col)
         rschema = entity.schema.rschema(rtype)
         lzone = self._build_landing_zone(landing_zone)
         # compute value, checking perms, build form
@@ -457,7 +457,7 @@ class InlineEntityEditionFormView(FormViewMixIn, EntityView):
         :param rtype: the relation bridging `etype` and `peid`
         :param role: the role played by the `peid` in the relation
         """
-        entity = self.entity(row, col)
+        entity = self.rset.get_entity(row, col)
         divonclick = "restoreInlinedEntity('%s', '%s', '%s')" % (peid, rtype,
                                                                  entity.eid)
         self.render_form(entity, peid, rtype, role, divonclick=divonclick)

@@ -47,7 +47,7 @@ class ChangeStateFormView(FormViewMixIn, view.EntityView):
     __select__ = implements(IWorkflowable) & match_form_params('treid')
 
     def cell_call(self, row, col):
-        entity = self.entity(row, col)
+        entity = self.rset.get_entity(row, col)
         state = entity.in_state[0]
         transition = self.req.entity_from_eid(self.req.form['treid'])
         dest = transition.destination()
@@ -118,7 +118,7 @@ class CellView(view.EntityView):
     __select__ = implements('TrInfo')
 
     def cell_call(self, row, col, cellvid=None):
-        self.w(self.entity(row, col).view('reledit', rtype='comment'))
+        self.w(self.rset.get_entity(row, col).view('reledit', rtype='comment'))
 
 
 class StateInContextView(view.EntityView):
@@ -150,7 +150,7 @@ class CWETypeWorkflowView(view.EntityView):
     cache_max_age = 60*60*2 # stay in http cache for 2 hours by default
 
     def cell_call(self, row, col, **kwargs):
-        entity = self.entity(row, col)
+        entity = self.rset.get_entity(row, col)
         self.w(u'<h1>%s</h1>' % (self.req._('workflow for %s')
                                  % display_name(self.req, entity.name)))
         self.w(u'<img src="%s" alt="%s"/>' % (
@@ -217,7 +217,7 @@ class CWETypeWorkflowImageView(TmpFileViewMixin, view.EntityView):
 
     def _generate(self, tmpfile):
         """display schema information for an entity"""
-        entity = self.entity(self.row, self.col)
+        entity = self.rset.get_entity(self.row, self.col)
         visitor = WorkflowVisitor(entity)
         prophdlr = WorkflowDotPropsHandler(self.req)
         generator = GraphGenerator(DotBackend('workflow', 'LR',

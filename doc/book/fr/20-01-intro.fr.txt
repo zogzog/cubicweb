@@ -37,7 +37,7 @@ Ouvrir le fichier ``myapp/schema.py`` afin de définir le schéma des
 données manipulées. La syntaxe de la définition est la même que celle
 proposée par `Google AppEngine` mais il faut remplacer la ligne
 d'import::
-  
+
   from google.appengine.ext import db
 
 par celle-ci::
@@ -48,7 +48,7 @@ par celle-ci::
 Un exemple de schéma de données pour un ``Blog`` pourrait être::
 
   from ginco.goa import db
-  
+
   class BlogEntry(db.Model):
       # un titre à donner à l'entrée
       title = db.StringProperty(required=True)
@@ -57,8 +57,8 @@ Un exemple de schéma de données pour un ``Blog`` pourrait être::
       # le contenu de l'entrée
       content = db.TextProperty()
       # une entrée peut en citer une autre
-      cites = db.SelfReferenceProperty() 
-      
+      cites = db.SelfReferenceProperty()
+
 
 Personnalisation des vues
 -------------------------
@@ -75,7 +75,7 @@ Une vue se caractèrise par :
 - un identifiant (tous les objets dans `LAX` sont enregistrés
   dans un registre et cet identifiant sert de clé pour y retrouver
   la vue)
-  
+
 - une description des types de données auxquels elle s'applique
 
 Il existe dans `LAX` des vues prédéfinies et utilisées par le moteur
@@ -87,17 +87,17 @@ page principale de consultation d'un objet.
 Par exemple, si on souhaite modifier la page principale d'une entrée de
 blog, il faut surcharger la vue ``primary`` des objets ``BlogEntry`` dans
 le fichier ``myapp/views.py``::
-  
+
   from ginco.web.views import baseviews
-  
+
   class BlogEntryPrimaryView(baseviews.PrimaryView):
       accepts = ('BlogEntry',)
-      
+
       def cell_call(self, row, col):
-          entity = self.entity(row, col)
+          entity = self.rset.get_entity(row, col)
           self.w(u'<h1>%s</h1>' % entity.title)
           self.w(u'<div>%s</div>' entity.content)
-    
+
 
 Génération du graphique de schéma
 ---------------------------------
@@ -105,13 +105,13 @@ Génération du graphique de schéma
 Il existe une vue ``schema`` qui permet d'afficher un graphique
 représantant les différents types d'entités définis dans le schéma
 ainsi que les relations entre ces types. Ce graphique doit être généré
-statiquement. Le script à utiliser pour générer ce schéma est 
+statiquement. Le script à utiliser pour générer ce schéma est
 dans ``myapp/tools``. Ce script nécessite d'avoir accès aux
 bibliothèques fournies par le SDK de ``Google AppEngine``. Il faut
 donc modifier son PYTHONPATH::
 
   $ export PYTHONPATH=GAE_ROOT/google:GAE_ROOT/lib/yaml
-  $ python tools/generate_schema_img.py 
+  $ python tools/generate_schema_img.py
 
 
 Génération des fichiers de traduction

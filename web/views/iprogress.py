@@ -59,7 +59,7 @@ class ProgressTableView(EntityView):
 
     def cell_call(self, row, col):
         _ = self.req._
-        entity = self.entity(row, col)
+        entity = self.rset.get_entity(row, col)
         infos = {}
         for col in self.columns:
             meth = getattr(self, 'build_%s_cell' % col, None)
@@ -186,7 +186,7 @@ class ProgressBarView(EntityView):
 
     def cell_call(self, row, col):
         self.req.add_css('cubicweb.iprogress.css')
-        entity = self.entity(row, col)
+        entity = self.rset.get_entity(row, col)
         widget = ProgressBarWidget(entity.done, entity.todo,
                                    entity.revised_cost)
         self.w(widget.render())

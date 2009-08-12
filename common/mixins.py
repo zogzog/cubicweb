@@ -299,7 +299,7 @@ def _done_init(done, view, row, col):
     """handle an infinite recursion safety belt"""
     if done is None:
         done = set()
-    entity = view.entity(row, col)
+    entity = view.rset.get_entity(row, col)
     if entity.eid in done:
         msg = entity.req._('loop in %(rel)s relation (%(eid)s)') % {
             'rel': entity.tree_attribute,

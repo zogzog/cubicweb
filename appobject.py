@@ -465,7 +465,7 @@ class AppObject(object):
         """short cut to get an completed entity instance for a particular
         row (all instance's attributes have been fetched)
         """
-        entity = self.entity(row, col)
+        entity = self.rset.get_entity(row, col)
         entity.complete(skip_bytes=skip_bytes)
         return entity
 

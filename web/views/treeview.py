@@ -63,7 +63,7 @@ class FileItemInnerView(EntityView):
     id = 'filetree-oneline'
 
     def cell_call(self, row, col):
-        entity = self.entity(row, col)
+        entity = self.rset.get_entity(row, col)
         if ITree.is_implemented_by(entity.__class__) and not entity.is_leaf():
             self.w(u'<div class="folder">%s</div>\n' % entity.view('oneline'))
         else:
@@ -77,7 +77,7 @@ class DefaultTreeViewItemView(EntityView):
 
     def cell_call(self, row, col, vid='oneline', parentvid='treeview', treeid=None):
         assert treeid is not None
-        entity = self.entity(row, col)
+        entity = self.rset.get_entity(row, col)
         itemview = self.view(vid, self.rset, row=row, col=col)
         if row == len(self.rset) - 1:
             self.w(u'<li class="last">%s</li>' % itemview)
@@ -102,7 +102,7 @@ class TreeViewItemView(EntityView):
 
     def cell_call(self, row, col, treeid, vid='oneline', parentvid='treeview'):
         w = self.w
-        entity = self.entity(row, col)
+        entity = self.rset.get_entity(row, col)
         liclasses = []
         is_last = row == len(self.rset) - 1
         is_open = self.open_state(entity.eid, treeid)

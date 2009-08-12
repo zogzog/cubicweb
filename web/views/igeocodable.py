@@ -40,7 +40,7 @@ class GeocodingJsonView(EntityView):
         self.w(simplejson.dumps(geodata))
 
     def build_marker_data(self, row, extraparams):
-        entity = self.entity(row, 0)
+        entity = self.rset.get_entity(row, 0)
         return {'latitude': entity.latitude, 'longitude': entity.longitude,
                 'title': entity.dc_long_title(),
                 #icon defines : (icon._url, icon.size,  icon.iconAncho', icon.shadow)
@@ -55,7 +55,7 @@ class GoogleMapBubbleView(EntityView):
     __select__ = implements(IGeocodable)
 
     def cell_call(self, row, col):
-        entity = self.entity(row, col)
+        entity = self.rset.get_entity(row, col)
         self.w(u'<div>%s</div>' % entity.view('oneline'))
         # FIXME: we should call something like address-view if available
 

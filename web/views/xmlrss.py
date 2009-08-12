@@ -117,7 +117,7 @@ class RSSEntityFeedURL(Component):
     __select__ = non_final_entity() & one_line_rset()
 
     def feed_url(self):
-        return self.entity(0, 0).rss_feed_url()
+        return self.rset.get_entity(0, 0).rss_feed_url()
 
 
 class RSSIconBox(box.BoxTemplate):

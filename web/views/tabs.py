@@ -160,7 +160,7 @@ class EntityRelationView(EntityView):
     vid = 'list'
 
     def cell_call(self, row, col):
-        rset = self.entity(row, col).related(self.rtype, role(self))
+        rset = self.rset.get_entity(row, col).related(self.rtype, role(self))
         self.w(u'<div class="mainInfo">')
         if self.title:
             self.w(tags.h1(self.req._(self.title)))

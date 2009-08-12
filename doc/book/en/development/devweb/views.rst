@@ -124,7 +124,7 @@ the method ``cell_call()`` of the view ``primary`` in ``BlogDemo/views.py``:
        __select__ =implements('Blog')
 
        def cell_call(self, row, col):
-           entity = self.entity(row, col)
+           entity = self.rset.get_entity(row, col)
            self.w(u'<h1>%s</h1>' % entity.title)
            self.w(u'<p>published on %s in category %s</p>' % \
                   (entity.publish_date.strftime('%Y-%m-%d'), entity.category))
@@ -155,7 +155,7 @@ Let us now improve the primary view of a blog
      __select__ =implements('Blog')
 
      def cell_call(self, row, col):
-         entity = self.entity(row, col)
+         entity = self.rset.get_entity(row, col)
          self.w(u'<h1>%s</h1>' % entity.title)
          self.w(u'<p>%s</p>' % entity.description)
          rset = self.req.execute('Any E WHERE E entry_of B, B eid "%s"' % entity.eid)

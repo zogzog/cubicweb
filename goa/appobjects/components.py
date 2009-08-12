@@ -28,7 +28,7 @@ class SearchForAssociationView(EntityView):
     __select__ = one_line_rset() & match_search_state('linksearch') & accept
 
     def cell_call(self, row, col):
-        entity = self.entity(0, 0)
+        entity = self.rset.get_entity(0, 0)
         role, eid, rtype, etype = self.req.search_state[1]
         assert entity.eid == typed_eid(eid)
         rset = entity.unrelated(rtype, etype, role, ordermethod='fetch_order')

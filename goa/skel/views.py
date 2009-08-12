@@ -19,7 +19,7 @@ class BlogEntryPrimaryView(baseviews.PrimaryView):
     accepts = ('BlogEntry',)
 
     def cell_call(self, row, col):
-        entity = self.entity(row, col)
+        entity = self.rset.get_entity(row, col)
         self.w(u'<h1>%s</h1>' % entity.dc_title())
         entity.view('metadata', w=self.w)
         self.w(entity.printable_value('text'))

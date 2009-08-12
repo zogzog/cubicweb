@@ -110,7 +110,7 @@ class SecondaryView(EntityView):
         """the secondary view for an entity
         secondary = icon + view(oneline)
         """
-        entity = self.entity(row, col)
+        entity = self.rset.get_entity(row, col)
         self.w(u'&nbsp;')
         self.wview('oneline', self.rset, row=row, col=col)
 
@@ -122,7 +122,7 @@ class OneLineView(EntityView):
     def cell_call(self, row, col):
         """the one line view for an entity: linked text view
         """
-        entity = self.entity(row, col)
+        entity = self.rset.get_entity(row, col)
         self.w(u'<a href="%s">' % xml_escape(entity.absolute_url()))
         self.w(xml_escape(self.view('text', self.rset, row=row, col=col)))
         self.w(u'</a>')
@@ -150,7 +150,7 @@ class TextView(EntityView):
                 self.w(u"\n")
 
     def cell_call(self, row, col=0, **kwargs):
-        entity = self.entity(row, col)
+        entity = self.rset.get_entity(row, col)
         self.w(cut(entity.dc_title(),
                    self.req.property_value('navigation.short-line-size')))
 
@@ -162,7 +162,7 @@ class MetaDataView(EntityView):
 
     def cell_call(self, row, col):
         _ = self.req._
-        entity = self.entity(row, col)
+        entity = self.rset.get_entity(row, col)
         self.w(u'<div class="metadata">')
         if self.show_eid:
             self.w(u'#%s - ' % entity.eid)
@@ -185,7 +185,7 @@ class InContextTextView(TextView):
     id = 'textincontext'
     title = None # not listed as a possible view
     def cell_call(self, row, col):
-        entity = self.entity(row, col)
+        entity = self.rset.get_entity(row, col)
         self.w(entity.dc_title())
 
 
@@ -193,7 +193,7 @@ class OutOfContextTextView(InContextTextView):
     id = 'textoutofcontext'
 
     def cell_call(self, row, col):
-        entity = self.entity(row, col)
+        entity = self.rset.get_entity(row, col)
         self.w(entity.dc_long_title())
 
 
@@ -201,7 +201,7 @@ class InContextView(EntityView):
     id = 'incontext'
 
     def cell_call(self, row, col):
-        entity = self.entity(row, col)
+        entity = self.rset.get_entity(row, col)
         desc = cut(entity.dc_description(), 50)
         self.w(u'<a href="%s" title="%s">' % (
             xml_escape(entity.absolute_url()), xml_escape(desc)))
@@ -214,7 +214,7 @@ class OutOfContextView(EntityView):
     id = 'outofcontext'
 
     def cell_call(self, row, col):
-        entity = self.entity(row, col)
+        entity = self.rset.get_entity(row, col)
         desc = cut(entity.dc_description(), 50)
         self.w(u'<a href="%s" title="%s">' % (
             xml_escape(entity.absolute_url()), xml_escape(desc)))

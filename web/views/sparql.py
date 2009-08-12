@@ -108,7 +108,7 @@ class SparqlResultXmlView(AnyRsetView):
                                        datatype=xmlschema(celltype)),
                              name=varname)
         else:
-            entity = self.entity(row, col)
+            entity = self.rset.get_entity(row, col)
             return E.binding(E.uri(entity.absolute_url()), name=varname)
 
     def set_request_content_type(self):

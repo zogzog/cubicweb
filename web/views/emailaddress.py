@@ -76,7 +76,7 @@ class EmailAddressOneLineView(baseviews.OneLineView):
     __select__ = implements('EmailAddress')
 
     def cell_call(self, row, col, **kwargs):
-        entity = self.entity(row, col)
+        entity = self.rset.get_entity(row, col)
         if entity.reverse_primary_email:
             self.w(u'<b>')
         if entity.alias:
@@ -96,7 +96,7 @@ class EmailAddressMailToView(baseviews.OneLineView):
     __select__ = implements('EmailAddress')
 
     def cell_call(self, row, col, **kwargs):
-        entity = self.entity(row, col)
+        entity = self.rset.get_entity(row, col)
         if entity.reverse_primary_email:
             self.w(u'<b>')
         if entity.alias:
@@ -119,4 +119,4 @@ class EmailAddressTextView(baseviews.TextView):
     __select__ = implements('EmailAddress')
 
     def cell_call(self, row, col, **kwargs):
-        self.w(self.entity(row, col).display_address())
+        self.w(self.rset.get_entity(row, col).display_address())
