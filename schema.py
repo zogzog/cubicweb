@@ -79,7 +79,7 @@ def display_name(req, key, form=''):
     # ensure unicode
     # added .lower() in case no translation are available
     return unicode(req._(key)).lower()
-__builtins__['display_name'] = deprecated('display_name should be imported from cubicweb.schema')(display_name)
+__builtins__['display_name'] = deprecated('[3.4] display_name should be imported from cubicweb.schema')(display_name)
 
 def ERSchema_display_name(self, req, form=''):
     """return a internationalized string for the entity/relation type name in
@@ -949,5 +949,6 @@ stmts.Select.set_statement_type = bw_set_statement_type
 
 # XXX deprecated
 from yams.constraints import format_constraint
+format_constraint = deprecated('[3.4] use RichString instead of format_constraint')(format_constraint)
 from yams.buildobjs import RichString
 PyFileReader.context['format_constraint'] = format_constraint

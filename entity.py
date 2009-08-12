@@ -715,7 +715,7 @@ class Entity(AppObject, dict):
 
     # generic vocabulary methods ##############################################
 
-    @deprecated('see new form api')
+    @deprecated('[3.4] see new form api')
     def vocabulary(self, rtype, role='subject', limit=None):
         """vocabulary functions must return a list of couples
         (label, eid) that will typically be used to fill the
@@ -941,7 +941,7 @@ class Attribute(object):
     def __set__(self, eobj, value):
         # XXX bw compat
         # would be better to generate UPDATE queries than the current behaviour
-        eobj.warning("deprecated usage, don't use 'entity.attr = val' notation)")
+        eobj.warning("[3.4] deprecated usage, don't use 'entity.attr = val' notation)")
         eobj[self._attrname] = value
 
 

@@ -552,12 +552,12 @@ class Session(RequestSessionMixIn):
             description.append(tuple(row_descr))
         return description
 
-    @deprecated("use vreg['etypes'].etype_class(etype)")
+    @deprecated("[3.4] use vreg['etypes'].etype_class(etype)")
     def etype_class(self, etype):
         """return an entity class for the given entity type"""
         return self.vreg['etypes'].etype_class(etype)
 
-    @deprecated('use direct access to session.transaction_data')
+    @deprecated('[3.4] use direct access to session.transaction_data')
     def query_data(self, key, default=None, setdefault=False, pop=False):
         if setdefault:
             assert not pop
@@ -567,7 +567,7 @@ class Session(RequestSessionMixIn):
         else:
             return self.transaction_data.get(key, default)
 
-    @deprecated('use entity_from_eid(eid, etype=None)')
+    @deprecated('[3.4] use entity_from_eid(eid, etype=None)')
     def entity(self, eid):
         """return a result set for the given eid"""
         return self.entity_from_eid(eid)

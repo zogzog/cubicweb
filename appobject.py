@@ -327,7 +327,7 @@ class AppObject(object):
         return '%s.%s.%s' % (cls.__registry__, cls.id, propid)
 
     @classproperty
-    @deprecated('use __select__ and & or | operators')
+    @deprecated('[3.4] use __select__ and & or | operators')
     def __selectors__(cls):
         selector = cls.__select__
         if isinstance(selector, AndSelector):
@@ -454,7 +454,7 @@ class AppObject(object):
 
     # various resources accessors #############################################
 
-    @deprecated('use self.rset.get_entity(row,col) instead')
+    @deprecated('[3.5] use self.rset.get_entity(row,col) instead')
     def entity(self, row, col=0):
         """short cut to get an entity instance for a particular row/column
         (col default to 0)

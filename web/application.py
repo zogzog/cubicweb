@@ -289,7 +289,7 @@ class CubicWebPublisher(object):
             finally:
                 self._logfile_lock.release()
 
-    @deprecated("use vreg.select('controllers', ...)")
+    @deprecated("[3.4] use vreg['controllers'].select(...)")
     def select_controller(self, oid, req):
         try:
             return self.vreg['controllers'].select(oid, req=req, appli=self)

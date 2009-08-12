@@ -151,7 +151,7 @@ class View(AppObject):
         if stream is not None:
             return self._stream.getvalue()
 
-    dispatch = deprecated('.dispatch is deprecated, use .render')(render)
+    dispatch = deprecated('[3.4] .dispatch is deprecated, use .render')(render)
 
     # should default .call() method add a <div classs="section"> around each
     # rset item
@@ -230,7 +230,7 @@ class View(AppObject):
         self.view(__vid, rset, __fallback_vid, w=self.w, **kwargs)
 
     # XXX Template bw compat
-    template = deprecated('.template is deprecated, use .view')(wview)
+    template = deprecated('[3.4] .template is deprecated, use .view')(wview)
 
     def whead(self, data):
         self.req.html_headers.write(data)

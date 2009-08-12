@@ -254,9 +254,9 @@ class ServerMigrationHelper(MigrationHelper):
                         'fsschema': self.fs_schema,
                         'session' : self.session,
                         'repo' : self.repo,
-                        'synchronize_schema': deprecated()(self.cmd_sync_schema_props_perms),
-                        'synchronize_eschema': deprecated()(self.cmd_sync_schema_props_perms),
-                        'synchronize_rschema': deprecated()(self.cmd_sync_schema_props_perms),
+                        'synchronize_schema': deprecated()(self.cmd_sync_schema_props_perms), # 3.4
+                        'synchronize_eschema': deprecated()(self.cmd_sync_schema_props_perms), # 3.4
+                        'synchronize_rschema': deprecated()(self.cmd_sync_schema_props_perms), # 3.4
                         })
         return context
 
@@ -909,7 +909,7 @@ class ServerMigrationHelper(MigrationHelper):
         if commit:
             self.commit()
 
-    @deprecated('use sync_schema_props_perms(ertype, syncprops=False)')
+    @deprecated('[3.4] use sync_schema_props_perms(ertype, syncprops=False)')
     def cmd_synchronize_permissions(self, ertype, commit=True):
         self.cmd_sync_schema_props_perms(ertype, syncprops=False, commit=commit)
 

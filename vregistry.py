@@ -125,7 +125,7 @@ class Registry(dict):
 
     # dynamic selection methods ################################################
 
-    @deprecated('use select instead of object_by_id')
+    @deprecated('[3.5] use select instead of object_by_id')
     def object_by_id(self, oid, *args, **kwargs):
         """return object with the given oid. Only one object is expected to be
         found.
@@ -154,7 +154,7 @@ class Registry(dict):
             return self.select(oid, *args, **kwargs)
         except (NoSelectableObject, ObjectNotFound):
             return None
-    select_object = deprecated('use select_or_none instead of select_object'
+    select_object = deprecated('[3.5] use select_or_none instead of select_object'
                                )(select_or_none)
 
     def possible_objects(self, *args, **kwargs):
@@ -197,7 +197,7 @@ class Registry(dict):
                                    [repr(v) for v in winners]))
         # return the result of calling the appobject
         return winners[0](*args, **kwargs)
-    select_best = deprecated('select_best is now private')(_select_best)
+    select_best = deprecated('[3.5] select_best is now private')(_select_best)
 
 class VRegistry(dict):
     """class responsible to register, propose and select the various
@@ -224,7 +224,7 @@ class VRegistry(dict):
 
     # dynamic selection methods ################################################
 
-    @deprecated('use vreg[registry].object_by_id(oid, *args, **kwargs)')
+    @deprecated('[3.4] use vreg[registry].object_by_id(oid, *args, **kwargs)')
     def object_by_id(self, registry, oid, *args, **kwargs):
         """return object in <registry>.<oid>
 
@@ -233,7 +233,7 @@ class VRegistry(dict):
         """
         return self[registry].object_by_id(oid)
 
-    @deprecated('use vreg[registry].select(oid, *args, **kwargs)')
+    @deprecated('[3.4] use vreg[registry].select(oid, *args, **kwargs)')
     def select(self, registry, oid, *args, **kwargs):
         """return the most specific object in <registry>.<oid> according to
         the given context
@@ -243,14 +243,14 @@ class VRegistry(dict):
         """
         return self[registry].select(oid, *args, **kwargs)
 
-    @deprecated('use vreg[registry].select_or_none(oid, *args, **kwargs)')
+    @deprecated('[3.4] use vreg[registry].select_or_none(oid, *args, **kwargs)')
     def select_object(self, registry, oid, *args, **kwargs):
         """return the most specific object in <registry>.<oid> according to
         the given context, or None if no object apply
         """
         return self[registry].select_or_none(oid, *args, **kwargs)
 
-    @deprecated('use vreg[registry].possible_objects(*args, **kwargs)')
+    @deprecated('[3.4] use vreg[registry].possible_objects(*args, **kwargs)')
     def possible_objects(self, registry, *args, **kwargs):
         """return an iterator on possible objects in <registry> for the given
         context
@@ -434,11 +434,11 @@ set_log_methods(Registry, getLogger('cubicweb.registry'))
 
 from cubicweb.appobject import objectify_selector, AndSelector, OrSelector, Selector
 
-objectify_selector = deprecated('objectify_selector has been moved to appobject module')(objectify_selector)
+objectify_selector = deprecated('[3.4] objectify_selector has been moved to appobject module')(objectify_selector)
 
 Selector = class_moved(Selector)
 
-@deprecated('use & operator (binary and)')
+@deprecated('[3.4] use & operator (binary and)')
 def chainall(*selectors, **kwargs):
     """return a selector chaining given selectors. If one of
     the selectors fail, selection will fail, else the returned score
@@ -451,7 +451,7 @@ def chainall(*selectors, **kwargs):
         selector.__name__ = kwargs['name']
     return selector
 
-@deprecated('use | operator (binary or)')
+@deprecated('[3.4] use | operator (binary or)')
 def chainfirst(*selectors, **kwargs):
     """return a selector chaining given selectors. If all
     the selectors fail, selection will fail, else the returned score

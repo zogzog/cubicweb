@@ -629,7 +629,7 @@ class CubicWebRequestBase(DBAPIRequest):
                            auth, ex.__class__.__name__, ex)
         return None, None
 
-    @deprecated("use parse_accept_header('Accept-Language')")
+    @deprecated("[3.4] use parse_accept_header('Accept-Language')")
     def header_accept_language(self):
         """returns an ordered list of preferred languages"""
         return [value.split('-')[0] for value in
