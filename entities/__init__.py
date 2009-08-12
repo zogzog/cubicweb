@@ -225,22 +225,22 @@ class AnyEntity(Entity):
             wdg = widget(cls.vreg, tschema, rschema, cls, 'object')
         return wdg
 
-    @deprecated('use EntityFieldsForm.subject_relation_vocabulary')
+    @deprecated('[3.4] use EntityFieldsForm.subject_relation_vocabulary')
     def subject_relation_vocabulary(self, rtype, limit):
         form = self.vreg.select('forms', 'edition', self.req, entity=self)
         return form.subject_relation_vocabulary(rtype, limit)
 
-    @deprecated('use EntityFieldsForm.object_relation_vocabulary')
+    @deprecated('[3.4] use EntityFieldsForm.object_relation_vocabulary')
     def object_relation_vocabulary(self, rtype, limit):
         form = self.vreg.select('forms', 'edition', self.req, entity=self)
         return form.object_relation_vocabulary(rtype, limit)
 
-    @deprecated('use AutomaticEntityForm.[e]relations_by_category')
+    @deprecated('[3.4] use AutomaticEntityForm.[e]relations_by_category')
     def relations_by_category(self, categories=None, permission=None):
         from cubicweb.web.views.autoform import AutomaticEntityForm
         return AutomaticEntityForm.erelations_by_category(self, categories, permission)
 
-    @deprecated('use AutomaticEntityForm.[e]srelations_by_category')
+    @deprecated('[3.4] use AutomaticEntityForm.[e]srelations_by_category')
     def srelations_by_category(self, categories=None, permission=None):
         from cubicweb.web.views.autoform import AutomaticEntityForm
         return AutomaticEntityForm.esrelations_by_category(self, categories, permission)

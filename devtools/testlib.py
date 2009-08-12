@@ -625,7 +625,7 @@ class CubicWebTC(TestCase):
 
     # deprecated ###############################################################
 
-    @deprecated('use self.vreg["etypes"].etype_class(etype)(self.request())')
+    @deprecated('[3.4] use self.vreg["etypes"].etype_class(etype)(self.request())')
     def etype_instance(self, etype, req=None):
         req = req or self.request()
         e = self.vreg['etypes'].etype_class(etype)(req)
@@ -633,7 +633,7 @@ class CubicWebTC(TestCase):
         return e
 
     @nocoverage
-    @deprecated('use req = self.request(); rset = req.execute()')
+    @deprecated('[3.4] use req = self.request(); rset = req.execute()')
     def rset_and_req(self, rql, optional_args=None, args=None, eidkey=None):
         """executes <rql>, builds a resultset, and returns a
         couple (rset, req) where req is a FakeRequest

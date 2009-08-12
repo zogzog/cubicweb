@@ -389,35 +389,35 @@ class CubicWebVRegistry(VRegistry):
                          special_relations={'eid': 'uid', 'has_text': 'fti'})
 
 
-    @deprecated('use vreg["etypes"].etype_class(etype)')
+    @deprecated('[3.4] use vreg["etypes"].etype_class(etype)')
     def etype_class(self, etype):
         return self["etypes"].etype_class(etype)
 
-    @deprecated('use vreg["views"].main_template(*args, **kwargs)')
+    @deprecated('[3.4] use vreg["views"].main_template(*args, **kwargs)')
     def main_template(self, req, oid='main-template', **context):
         return self["views"].main_template(req, oid, **context)
 
-    @deprecated('use vreg[registry].possible_vobjects(*args, **kwargs)')
+    @deprecated('[3.4] use vreg[registry].possible_vobjects(*args, **kwargs)')
     def possible_vobjects(self, registry, *args, **kwargs):
         return self[registry].possible_vobjects(*args, **kwargs)
 
-    @deprecated('use vreg["actions"].possible_actions(*args, **kwargs)')
+    @deprecated('[3.4] use vreg["actions"].possible_actions(*args, **kwargs)')
     def possible_actions(self, req, rset=None, **kwargs):
         return self["actions"].possible_actions(req, rest=rset, **kwargs)
 
-    @deprecated("use vreg['boxes'].select_or_none(...)")
+    @deprecated("[3.4] use vreg['boxes'].select_or_none(...)")
     def select_box(self, oid, *args, **kwargs):
         return self['boxes'].select_or_none(oid, *args, **kwargs)
 
-    @deprecated("use vreg['components'].select_or_none(...)")
+    @deprecated("[3.4] use vreg['components'].select_or_none(...)")
     def select_component(self, cid, *args, **kwargs):
         return self['components'].select_or_none(cid, *args, **kwargs)
 
-    @deprecated("use vreg['actions'].select_or_none(...)")
+    @deprecated("[3.4] use vreg['actions'].select_or_none(...)")
     def select_action(self, oid, *args, **kwargs):
         return self['actions'].select_or_none(oid, *args, **kwargs)
 
-    @deprecated("use vreg['views'].select(...)")
+    @deprecated("[3.4] use vreg['views'].select(...)")
     def select_view(self, __vid, req, rset=None, **kwargs):
         return self['views'].select(__vid, req, rset=rset, **kwargs)
 
