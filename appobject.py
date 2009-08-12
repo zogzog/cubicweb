@@ -454,6 +454,7 @@ class AppObject(object):
 
     # various resources accessors #############################################
 
+    @deprecated('use self.rset.get_entity(row,col) instead')
     def entity(self, row, col=0):
         """short cut to get an entity instance for a particular row/column
         (col default to 0)
