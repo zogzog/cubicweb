@@ -874,6 +874,10 @@ class CubicWebSchemaLoader(BootstrapSchemaLoader):
         from <directory>
         """
         self.info('loading %s schemas', ', '.join(config.cubes()))
+        self.extrapath = {}
+        for cubesdir in config.cubes_search_path():
+            if cubesdir != config.CUBES_DIR:
+                self.extrapath[cubesdir] = 'cubes'
         if config.apphome:
             path = tuple(reversed([config.apphome] + config.cubes_path()))
         else:
