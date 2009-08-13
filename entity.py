@@ -157,7 +157,8 @@ class Entity(AppObject, dict):
                     continue
                 if card == '?':
                     restrictions[-1] += '?' # left outer join if not mandatory
-                destcls = cls.vreg['etypes'].etype_class(desttype)
+                # XXX user.req.vreg iiiirk
+                destcls = user.req.vreg['etypes'].etype_class(desttype)
                 destcls._fetch_restrictions(var, varmaker, destcls.fetch_attrs,
                                             selection, orderby, restrictions,
                                             user, ordermethod, visited=visited)
