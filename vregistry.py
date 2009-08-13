@@ -54,6 +54,10 @@ def _toload_info(path, extrapath, _toload=None):
     return _toload
 
 
+def classid(cls):
+    """returns a unique identifier for an appobject class"""
+    return '%s.%s' % (cls.__module__, cls.__name__)
+
 class Registry(dict):
 
     def __init__(self, config):
@@ -88,11 +92,11 @@ class Registry(dict):
         # XXXFIXME this is a duplication of unregister()
         # remove register_and_replace in favor of unregister + register
         # or simplify by calling unregister then register here
-        if hasattr(replaced, 'classid'):
-            replaced = replaced.classid()
+        if not isinstance(replaced, basestring):
+            replaced = classid(replaced)
         registered_objs = self.get(obj.id, ())
         for index, registered in enumerate(registered_objs):
-            if registered.classid() == replaced:
+            if classid(registered) == replaced:
                 del registered_objs[index]
                 break
         else:
@@ -101,11 +105,11 @@ class Registry(dict):
         self.register(obj)
 
     def unregister(self, obj):
-        oid = obj.classid()
+        oid = classid(obj)
         for registered in self.get(obj.id, ()):
             # use classid() to compare classes because vreg will probably
             # have its own version of the class, loaded through execfile
-            if registered.classid() == oid:
+            if classid(registered) == oid:
                 # XXX automatic reloading management
                 self[obj.id].remove(registered)
                 break

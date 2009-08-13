@@ -240,11 +240,6 @@ class AppObject(object):
     __select__ = yes()
 
     @classmethod
-    def classid(cls):
-        """returns a unique identifier for the appobject"""
-        return '%s.%s' % (cls.__module__, cls.__name__)
-
-    @classmethod
     def __registered__(cls, registry):
         """called by the registry when the appobject has been registered.
 
