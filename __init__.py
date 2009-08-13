@@ -18,7 +18,6 @@ CW_SOFTWARE_ROOT = __path__[0]
 
 import sys, os, logging
 from StringIO import StringIO
-from urllib import quote as urlquote, unquote as urlunquote
 
 from logilab.common.logging_ext import set_log_methods
 

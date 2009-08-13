@@ -12,7 +12,6 @@ __docformat__ = "restructuredtext en"
 
 import csv
 import re
-from urllib import quote as urlquote
 from StringIO import StringIO
 
 from logilab.mtconverter import xml_escape, html_unescape

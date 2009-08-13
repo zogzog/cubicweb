@@ -7,6 +7,7 @@
 """
 __docformat__ = "restructuredtext en"
 
+from urllib import quote as urlquote, unquote as urlunquote
 from datetime import time, datetime, timedelta
 
 from logilab.common.decorators import cached

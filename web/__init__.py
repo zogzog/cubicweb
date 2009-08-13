@@ -13,10 +13,10 @@ _ = unicode
 from decimal import Decimal
 from datetime import datetime, date, timedelta
 from simplejson import dumps
+from urllib import quote as urlquote
 
 from logilab.common.deprecation import deprecated
 
-from cubicweb.common.uilib import urlquote
 from cubicweb.web._exceptions import *
 
 

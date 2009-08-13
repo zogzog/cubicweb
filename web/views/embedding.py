@@ -12,10 +12,10 @@ __docformat__ = "restructuredtext en"
 import re
 from urlparse import urljoin
 from urllib2 import urlopen, Request, HTTPError
+from urllib import quote as urlquote # XXX should use view.url_quote method
 
 from logilab.mtconverter import guess_encoding
 
-from cubicweb import urlquote # XXX should use view.url_quote method
 from cubicweb.selectors import (one_line_rset, score_entity,
                                 match_search_state, implements)
 from cubicweb.interfaces import IEmbedable
