@@ -267,14 +267,6 @@ class Entity(AppObject, dict):
 
     @classmethod
     @cached
-    def parent_classes(cls):
-        parents = [cls.vreg['etypes'].etype_class(e.type)
-                   for e in cls.e_schema.ancestors()]
-        parents.append(cls.vreg['etypes'].etype_class('Any'))
-        return parents
-
-    @classmethod
-    @cached
     def _rest_attr_info(cls):
         mainattr, needcheck = 'eid', True
         if cls.rest_attr:

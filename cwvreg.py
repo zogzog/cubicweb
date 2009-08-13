@@ -105,6 +105,13 @@ class ETypeRegistry(CWRegistry):
         super(ETypeRegistry, self).register(obj, **kwargs)
 
     @cached
+    def parent_classes(self, etype):
+        eschema = self.schema.eschema(etype)
+        parents = [cls.etype_class(e.type) for e in eschema.ancestors()]
+        parents.append(self.etype_class('Any'))
+        return parents
+
+    @cached
     def etype_class(self, etype):
         """return an entity class for the given entity type.
 
