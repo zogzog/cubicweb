@@ -68,6 +68,7 @@ class CWRegistry(Registry):
             obj = self.select(__fallback_oid, req, **kwargs)
         return obj.render(**kwargs)
 
+    @deprecated('[3.5] use select_or_none and test for obj.propval("visible")')
     def select_vobject(self, oid, *args, **kwargs):
         selected = self.select_or_none(oid, *args, **kwargs)
         if selected and selected.propval('visible'):
