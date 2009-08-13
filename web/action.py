@@ -22,7 +22,7 @@ class Action(AppObject):
     __registry__ = 'actions'
     __select__ = match_search_state('normal')
 
-    property_defs = {
+    cw_property_defs = {
         'visible':  dict(type='Boolean', default=True,
                          help=_('display the action or not')),
         'order':    dict(type='Int', default=99,

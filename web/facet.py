@@ -244,7 +244,7 @@ def _cleanup_rqlst(rqlst, mainvar):
 class AbstractFacet(AppObject):
     __abstract__ = True
     __registry__ = 'facets'
-    property_defs = {
+    cw_property_defs = {
         _('visible'): dict(type='Boolean', default=True,
                            help=_('display the box or not')),
         _('order'):   dict(type='Int', default=99,

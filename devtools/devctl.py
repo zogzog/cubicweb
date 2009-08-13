@@ -205,7 +205,7 @@ def _iter_vreg_objids(vreg, done, prefix=None):
                 objid = '%s_%s' % (reg, obj.id)
                 if objid in done:
                     break
-                if obj.property_defs:
+                if obj.cw_property_defs:
                     yield objid
                     done.add(objid)
                     break

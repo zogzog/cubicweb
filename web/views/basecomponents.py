@@ -29,7 +29,7 @@ VISIBLE_PROP_DEF = {
 class RQLInputForm(component.Component):
     """build the rql input form, usually displayed in the header"""
     id = 'rqlinput'
-    property_defs = VISIBLE_PROP_DEF
+    cw_property_defs = VISIBLE_PROP_DEF
     visible = False
 
     def call(self, view=None):
@@ -59,7 +59,7 @@ class RQLInputForm(component.Component):
 class ApplLogo(component.Component):
     """build the instance logo, usually displayed in the header"""
     id = 'logo'
-    property_defs = VISIBLE_PROP_DEF
+    cw_property_defs = VISIBLE_PROP_DEF
     # don't want user to hide this component using an cwproperty
     site_wide = True
 
@@ -71,7 +71,7 @@ class ApplLogo(component.Component):
 class ApplHelp(component.Component):
     """build the help button, usually displayed in the header"""
     id = 'help'
-    property_defs = VISIBLE_PROP_DEF
+    cw_property_defs = VISIBLE_PROP_DEF
     def call(self):
         self.w(u'<a href="%s" class="help" title="%s">&nbsp;</a>'
                % (self.build_url(_restpath='doc/main'),
@@ -82,7 +82,7 @@ class UserLink(component.Component):
     """if the user is the anonymous user, build a link to login
     else a link to the connected user object with a loggout link
     """
-    property_defs = VISIBLE_PROP_DEF
+    cw_property_defs = VISIBLE_PROP_DEF
     # don't want user to hide this component using an cwproperty
     site_wide = True
     id = 'loggeduserlink'
@@ -124,7 +124,7 @@ class ApplicationMessage(component.Component):
     __select__ = yes()
     id = 'applmessages'
     # don't want user to hide this component using an cwproperty
-    property_defs = {}
+    cw_property_defs = {}
 
     def call(self):
         msgs = [msg for msg in (self.req.get_shared_data('sources_error', pop=True),
@@ -140,7 +140,7 @@ class ApplicationMessage(component.Component):
 class ApplicationName(component.Component):
     """display the instance name"""
     id = 'appliname'
-    property_defs = VISIBLE_PROP_DEF
+    cw_property_defs = VISIBLE_PROP_DEF
     # don't want user to hide this component using an cwproperty
     site_wide = True
 
@@ -170,7 +170,7 @@ class EtypeRestrictionComponent(component.Component):
     id = 'etypenavigation'
     __select__ = two_etypes_rset() | match_form_params('__restrtype', '__restrtypes',
                                                        '__restrrql')
-    property_defs = VISIBLE_PROP_DEF
+    cw_property_defs = VISIBLE_PROP_DEF
     # don't want user to hide this component using an cwproperty
     site_wide = True
     visible = False # disabled by default

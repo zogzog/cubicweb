@@ -35,7 +35,7 @@ class EntityVComponent(Component):
     __select__ = one_line_rset() & primary_view() & match_context_prop()
     registered = accepts_compat(has_relation_compat(condition_compat(View.registered)))
 
-    property_defs = {
+    cw_property_defs = {
         _('visible'):  dict(type='Boolean', default=True,
                             help=_('display the component or not')),
         _('order'):    dict(type='Int', default=99,
@@ -63,7 +63,7 @@ class NavigationComponent(Component):
     id = 'navigation'
     __select__ = paginated_rset()
 
-    property_defs = {
+    cw_property_defs = {
         _('visible'):  dict(type='Boolean', default=True,
                             help=_('display the component or not')),
         }

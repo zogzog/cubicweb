@@ -277,37 +277,17 @@ class AppObject(object):
         """
         cls.build___select__()
         cls.vreg = registry.vreg
-        cls.register_properties()
+        pdefs = getattr(cls, 'cw_property_defs', {})
+        for propid, pdef in pdefs:
+            pdef = pdef.copy() # may be shared
+            pdef['default'] = getattr(cls, propid, pdef['default'])
+            pdef['sitewide'] = getattr(cls, 'site_wide', pdef.get('sitewide'))
+            registry.vreg.register_property(cls._cwpropkey(propid), **pdef)
         return cls
 
     @classmethod
     def vreg_initialization_completed(cls):
         pass
-
-    # properties definition:
-    # key: id of the property (the actual CWProperty key is build using
-    #      <registry name>.<obj id>.<property id>
-    # value: tuple (property type, vocabfunc, default value, property description)
-    #        possible types are those used by `logilab.common.configuration`
-    #
-    # notice that when it exists multiple objects with the same id (adaptation,
-    # overriding) only the first encountered definition is considered, so those
-    # objects can't try to have different default values for instance.
-
-    property_defs = {}
-
-    @classmethod
-    def register_properties(cls):
-        for propid, pdef in cls.property_defs.items():
-            pdef = pdef.copy() # may be shared
-            pdef['default'] = getattr(cls, propid, pdef['default'])
-            pdef['sitewide'] = getattr(cls, 'site_wide', pdef.get('sitewide'))
-            cls.vreg.register_property(cls.propkey(propid), **pdef)
-
-    @classmethod
-    def propkey(cls, propid):
-        return '%s.%s.%s' % (cls.__registry__, cls.id, propid)
-
 
     def __init__(self, req=None, rset=None, row=None, col=None, **extra):
         super(AppObject, self).__init__()
@@ -317,15 +297,42 @@ class AppObject(object):
         self.col = col
         self.extra_kwargs = extra
 
-    def propval(self, propid):
-        assert self.req
-        return self.req.property_value(self.propkey(propid))
-
     def view(self, __vid, rset=None, __fallback_oid=None, __registry='views',
              **kwargs):
         """shortcut to self.vreg.view method avoiding to pass self.req"""
         return self.vreg[__registry].render(__vid, self.req, __fallback_oid,
                                             rset=rset, **kwargs)
+
+    # persistent class properties ##############################################
+    #
+    # optional `cw_property_defs` dict on a class defines available persistent
+    # properties for this class:
+    #
+    # * key: id of the property (the actual CWProperty key is build using
+    #        <registry name>.<obj id>.<property id>
+    # * value: tuple (property type, vocabfunc, default value, property description)
+    #         possible types are those used by `logilab.common.configuration`
+    #
+    # notice that when it exists multiple objects with the same id (adaptation,
+    # overriding) only the first encountered definition is considered, so those
+    # objects can't try to have different default values for instance.
+    #
+    # you can then access to a property value using self.propval, where self is
+    # an instance of class
+
+    @classmethod
+    def _cwpropkey(cls, propid):
+        """return cw property key for the property of the given id for this
+        class
+        """
+        return '%s.%s.%s' % (cls.__registry__, cls.id, propid)
+
+    def cw_propval(self, propid):
+        """return cw property value associated to key
+
+        <cls.__registry__>.<cls.id>.<propid>
+        """
+        return self.req.property_value(self._cwpropkey(propid))
 
     # deprecated ###############################################################
 
@@ -396,5 +403,9 @@ class AppObject(object):
     @deprecated('[3.5] use req.parse_datetime')
     def parse_datetime(self, value, etype='Datetime'):
         return self.req.parse_datetime(value, etype)
+
+    @deprecated('[3.5] use self.cw_propval')
+    def propval(self, propid):
+        return self.req.property_value(self._cwpropkey(propid))
 
 set_log_methods(AppObject, getLogger('cubicweb.appobject'))

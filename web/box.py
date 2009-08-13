@@ -42,7 +42,7 @@ class BoxTemplate(View):
     registered = classmethod(require_group_compat(View.registered))
 
     categories_in_order = ()
-    property_defs = {
+    cw_property_defs = {
         _('visible'): dict(type='Boolean', default=True,
                            help=_('display the box or not')),
         _('order'):   dict(type='Int', default=99,
