@@ -56,6 +56,7 @@ class CWRegistry(Registry):
             for appobject in appobjects:
                 appobject.vreg_initialization_completed()
 
+    @deprecated('[3.5] select object, then use obj.render()')
     def render(self, __oid, req, __fallback_oid=None, rset=None, **kwargs):
         """select object, or fallback object if specified and the first one
         isn't selectable, then render it
