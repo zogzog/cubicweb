@@ -75,7 +75,7 @@ class CWRegistry(Registry):
             return selected
         return None
 
-    def possible_vobjects(self, *args, **kwargs):
+    def poss_visible_objects(self, *args, **kwargs):
         """return an ordered list of possible app objects in a given registry,
         supposing they support the 'visible' and 'order' properties (as most
         visualizable objects)
@@ -83,6 +83,7 @@ class CWRegistry(Registry):
         return sorted([x for x in self.possible_objects(*args, **kwargs)
                        if x.propval('visible')],
                       key=lambda x: x.propval('order'))
+    possible_vobjects = deprecated('[3.5] use poss_visible_objects()')(poss_visible_objects)
 
 
 VRegistry.REGISTRY_FACTORY[None] = CWRegistry
