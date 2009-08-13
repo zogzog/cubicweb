@@ -156,14 +156,14 @@ class InitializableDict(dict):
         super(InitializableDict, self).__init__(*args, **kwargs)
         register_rtag(self)
 
-    def init(schema, check=True):
+    def init(self, schema, check=True):
         for eschema in schema.entities():
             if eschema.schema_entity():
-                uicfg.indexview_etype_section.setdefault(eschema, 'schema')
+                self.setdefault(eschema, 'schema')
             elif eschema.is_subobject(strict=True):
-                uicfg.indexview_etype_section.setdefault(eschema, 'subobject')
+                self.setdefault(eschema, 'subobject')
             else:
-                uicfg.indexview_etype_section.setdefault(eschema, 'application')
+                self.setdefault(eschema, 'application')
 
 indexview_etype_section = InitializableDict(EmailAddress='subobject',
                                             CWUser='system',
