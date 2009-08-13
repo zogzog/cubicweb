@@ -84,9 +84,24 @@ class EmailAddress(AnyEntity):
         return super(EmailAddress, self).after_deletion_path()
 
 
-from logilab.common.deprecation import class_renamed
-Emailaddress = class_renamed('Emailaddress', EmailAddress)
-Emailaddress.id = 'Emailaddress'
+class Bookmark(AnyEntity):
+    """customized class for Bookmark entities"""
+    id = 'Bookmark'
+    fetch_attrs, fetch_order = fetch_config(['title', 'path'])
+
+    def actual_url(self):
+        url = self.req.build_url(self.path)
+        if self.title:
+            urlparts = list(urlsplit(url))
+            if urlparts[3]:
+                urlparts[3] += '&vtitle=%s' % self.req.url_quote(self.title)
+            else:
+                urlparts[3] = 'vtitle=%s' % self.req.url_quote(self.title)
+            url = urlunsplit(urlparts)
+        return url
+
+    def action_url(self):
+        return self.absolute_url() + '/follow'
 
 
 class CWProperty(AnyEntity):
@@ -109,26 +124,6 @@ class CWProperty(AnyEntity):
         information when this entity is being deleted
         """
         return 'view', {}
-
-
-class Bookmark(AnyEntity):
-    """customized class for Bookmark entities"""
-    id = 'Bookmark'
-    fetch_attrs, fetch_order = fetch_config(['title', 'path'])
-
-    def actual_url(self):
-        url = self.req.build_url(self.path)
-        if self.title:
-            urlparts = list(urlsplit(url))
-            if urlparts[3]:
-                urlparts[3] += '&vtitle=%s' % self.req.url_quote(self.title)
-            else:
-                urlparts[3] = 'vtitle=%s' % self.req.url_quote(self.title)
-            url = urlunsplit(urlparts)
-        return url
-
-    def action_url(self):
-        return self.absolute_url() + '/follow'
 
 
 class CWCache(AnyEntity):
