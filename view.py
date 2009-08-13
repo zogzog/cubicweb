@@ -481,7 +481,7 @@ class Component(ReloadableMixIn, View):
     __select__ = yes()
 
     def div_class(self):
-        return '%s %s' % (self.propval('htmlclass'), self.id)
+        return '%s %s' % (self.cw_propval('htmlclass'), self.id)
 
     def div_id(self):
         return '%sComponent' % self.id

@@ -115,7 +115,7 @@ class TheMainTemplate(MainTemplate):
         # display entity type restriction component
         etypefilter = self.vreg['components'].select_or_none(
             'etypenavigation', self.req, rset=self.rset)
-        if etypefilter and etypefilter.propval('visible'):
+        if etypefilter and etypefilter.cw_propval('visible'):
             etypefilter.render(w=w)
         self.nav_html = UStringIO()
         if view and view.need_navigation:
@@ -258,7 +258,7 @@ class SimpleMainTemplate(TheMainTemplate):
     def topleft_header(self):
         logo = self.vreg['components'].select_or_none('logo', self.req,
                                                       rset=self.rset)
-        if logo and logo.propval('visible'):
+        if logo and logo.cw_propval('visible'):
             self.w(u'<table id="header"><tr>\n')
             self.w(u'<td>')
             logo.render(w=self.w)
@@ -330,7 +330,7 @@ class HTMLPageHeader(View):
         self.w(u'<td id="firstcolumn">')
         logo = self.vreg['components'].select_or_none(
             'logo', self.req, rset=self.rset)
-        if logo and logo.propval('visible'):
+        if logo and logo.cw_propval('visible'):
             logo.render(w=self.w)
         self.w(u'</td>\n')
         # appliname and breadcrumbs
@@ -338,19 +338,19 @@ class HTMLPageHeader(View):
         for cid in ('appliname', 'breadcrumbs'):
             comp = self.vreg['components'].select_or_none(
                 cid, self.req, rset=self.rset)
-            if comp and comp.propval('visible'):
+            if comp and comp.cw_propval('visible'):
                 comp.render(w=self.w)
         self.w(u'</td>')
         # logged user and help
         self.w(u'<td>\n')
         comp = self.vreg['components'].select_or_none(
             'loggeduserlink', self.req, rset=self.rset)
-        if comp and comp.propval('visible'):
+        if comp and comp.cw_propval('visible'):
             comp.render(w=self.w)
         self.w(u'</td><td>')
         helpcomp = self.vreg['components'].select_or_none(
             'help', self.req, rset=self.rset)
-        if helpcomp and helpcomp.propval('visible'):
+        if helpcomp and helpcomp.cw_propval('visible'):
             helpcomp.render(w=self.w)
         self.w(u'</td>')
         # lastcolumn

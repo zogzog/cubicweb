@@ -77,7 +77,7 @@ class FilterBox(BoxTemplate):
             mainvar, baserql = prepare_facets_rqlst(rqlst, rset.args)
             widgets = []
             for facet in self.get_facets(rset, mainvar):
-                if facet.propval('visible'):
+                if facet.cw_propval('visible'):
                     wdg = facet.get_widget()
                     if wdg is not None:
                         widgets.append(wdg)

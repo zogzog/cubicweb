@@ -65,10 +65,10 @@ class CWRegistry(Registry):
             obj = self.select(__fallback_oid, req, **kwargs)
         return obj.render(**kwargs)
 
-    @deprecated('[3.5] use select_or_none and test for obj.propval("visible")')
+    @deprecated('[3.5] use select_or_none and test for obj.cw_propval("visible")')
     def select_vobject(self, oid, *args, **kwargs):
         selected = self.select_or_none(oid, *args, **kwargs)
-        if selected and selected.propval('visible'):
+        if selected and selected.cw_propval('visible'):
             return selected
         return None
 
@@ -78,8 +78,8 @@ class CWRegistry(Registry):
         visualizable objects)
         """
         return sorted([x for x in self.possible_objects(*args, **kwargs)
-                       if x.propval('visible')],
-                      key=lambda x: x.propval('order'))
+                       if x.cw_propval('visible')],
+                      key=lambda x: x.cw_propval('order'))
     possible_vobjects = deprecated('[3.5] use poss_visible_objects()')(poss_visible_objects)
 
 

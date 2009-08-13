@@ -384,7 +384,7 @@ class Entity(AppObject, dict):
                 kwargs['_restpath'] = self.rest_path()
         else:
             kwargs['rql'] = 'Any X WHERE X eid %s' % self.eid
-        return self.build_url(method, **kwargs)
+        return self.req.build_url(method, **kwargs)
 
     def rest_path(self, use_ext_eid=False):
         """returns a REST-like (relative) path for this entity"""
@@ -682,7 +682,7 @@ class Entity(AppObject, dict):
         return self.related(rtype, role, limit, entities)
 
     def related_rql(self, rtype, role='subject'):
-        rschema = self.schema[rtype]
+        rschema = self.req.vreg.schema[rtype]
         if role == 'subject':
             targettypes = rschema.objects(self.e_schema)
             restriction = 'E eid %%(x)s, E %s X' % rtype
@@ -736,7 +736,7 @@ class Entity(AppObject, dict):
         """
         ordermethod = ordermethod or 'fetch_unrelated_order'
         if isinstance(rtype, basestring):
-            rtype = self.schema.rschema(rtype)
+            rtype = self.req.vreg.schema.rschema(rtype)
         if role == 'subject':
             evar, searchedvar = 'S', 'O'
             subjtype, objtype = self.e_schema, targettype
@@ -801,7 +801,7 @@ class Entity(AppObject, dict):
         """set cached values for the given relation"""
         if rset:
             related = list(rset.entities(col))
-            rschema = self.schema.rschema(rtype)
+            rschema = self.req.vreg.schema.rschema(rtype)
             if role == 'subject':
                 rcard = rschema.rproperty(self.e_schema, related[0].e_schema,
                                           'cardinality')[1]

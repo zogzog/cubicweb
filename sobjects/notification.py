@@ -42,7 +42,7 @@ class RecipientsFinder(Component):
                 'X primary_email E, E address A')
 
     def recipients(self):
-        mode = self.config['default-recipients-mode']
+        mode = self.req.vreg.config['default-recipients-mode']
         if mode == 'users':
             # use unsafe execute else we may don't have the right to see users
             # to notify...
@@ -51,7 +51,7 @@ class RecipientsFinder(Component):
                      for u in execute(self.user_rql, build_descr=True, propagate=True).entities()]
         elif mode == 'default-dest-addrs':
             lang = self.vreg.property_value('ui.language')
-            dests = zip(self.config['default-dest-addrs'], repeat(lang))
+            dests = zip(self.req.vreg.config['default-dest-addrs'], repeat(lang))
         else: # mode == 'none'
             dests = []
         return dests
@@ -171,7 +171,7 @@ class NotificationView(EntityView):
         self.w(self.req._(self.content) % self.context(**kwargs))
 
     def construct_message_id(self, eid):
-        return construct_message_id(self.config.appid, eid, self.msgid_timestamp)
+        return construct_message_id(self.req.vreg.config.appid, eid, self.msgid_timestamp)
 
     def render_and_send(self, **kwargs):
         """generate and send an email message for this view"""
@@ -211,7 +211,7 @@ class NotificationView(EntityView):
             content = self.render(row=0, col=0, **kwargs)
             subject = self.subject()
             msg = format_mail(userdata, [emailaddr], content, subject,
-                              config=self.config, msgid=msgid, references=refs)
+                              config=self.req.vreg.config, msgid=msgid, references=refs)
             self.send([emailaddr], msg)
         # restore language
         self.req.set_language(origlang)

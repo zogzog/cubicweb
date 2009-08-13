@@ -313,8 +313,8 @@ class AppObject(object):
     # overriding) only the first encountered definition is considered, so those
     # objects can't try to have different default values for instance.
     #
-    # you can then access to a property value using self.propval, where self is
-    # an instance of class
+    # you can then access to a property value using self.cw_propval, where self
+    # is an instance of class
 
     @classmethod
     def _cwpropkey(cls, propid):
