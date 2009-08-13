@@ -263,7 +263,7 @@ and if not set, it will be choosen randomly',
         except RegistryNotFound:
             return hooks
         for hookdef in apphookdefs:
-            for event, ertype in hookdef.register_to():
+            for event, ertype in hookdef.register_to(vreg.schema):
                 if ertype == 'Any':
                     ertype = ''
                 cb = hookdef.make_callback(event)

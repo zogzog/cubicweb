@@ -90,7 +90,7 @@ class HooksManager(object):
         class.
         """
         if isinstance(function_or_cls, type) and issubclass(function_or_cls, Hook):
-            for event, ertype in function_or_cls.register_to():
+            for event, ertype in function_or_cls.register_to(self.schema):
                 for hook in self._hooks[event][ertype]:
                     if getattr(hook, 'im_self', None).__class__ is function_or_cls:
                         self._hooks[event][ertype].remove(hook)
@@ -222,7 +222,7 @@ class Hook(AppObject):
         return cls()
 
     @classmethod
-    def register_to(cls):
+    def register_to(cls, schema):
         if not cls.enabled:
             cls.warning('%s hook has been disabled', cls)
             return
@@ -241,7 +241,7 @@ class Hook(AppObject):
                 yield event, ertype
                 done.add((event, ertype))
                 try:
-                    eschema = cls.schema.eschema(ertype)
+                    eschema = schema.eschema(ertype)
                 except KeyError:
                     # relation schema
                     pass

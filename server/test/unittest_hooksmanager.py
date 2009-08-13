@@ -170,7 +170,7 @@ class MyHook(Hook):
 
 class HookTC(CubicWebTC):
     def test_inheritance(self):
-        self.assertEquals(list(MyHook.register_to()),
+        self.assertEquals(list(MyHook.register_to(self.schema)),
                           zip(repeat('whatever'), ('Societe', 'Division', 'SubDivision'))
                           + zip(repeat('another'), ('Societe', 'Division', 'SubDivision')))
 
