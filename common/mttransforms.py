@@ -15,6 +15,7 @@ from logilab.mtconverter import (register_base_transforms,
                                  register_pil_transforms,
                                  register_pygments_transforms)
 
+from cubicweb.utils import UStringIO
 from cubicweb.common.uilib import rest_publish, html_publish
 
 HTML_MIMETYPES = ('text/html', 'text/xhtml', 'application/xhtml+xml')
@@ -43,7 +44,7 @@ ENGINE.add_transform(rest_to_html())
 ENGINE.add_transform(html_to_html())
 
 try:
-    from cubicweb.ext.tal import compile_template
+    from cubicweb.ext.tal import CubicWebContext, compile_template
 except ImportError:
     HAS_TAL = False
     from cubicweb import schema
@@ -57,8 +58,16 @@ else:
         output = 'text/html'
         output_encoding = 'utf-8'
         def _convert(self, trdata):
-            value = trdata.encode(self.output_encoding)
-            return trdata.appobject.tal_render(compile_template(value), {})
+            context = CubicWebContext()
+            appobject = trdata.appobject
+            context.update({'self': appobject, 'rset': appobject.rset,
+                            'req': appobject.req,
+                            '_' : appobject.req._,
+                            'user': appobject.req.user})
+            output = UStringIO()
+            template = compile_template(trdata.encode(self.output_encoding))
+            template.expand(context, output)
+            return output.getvalue()
 
     ENGINE.add_transform(ept_to_html())
 
