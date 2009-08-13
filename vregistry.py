@@ -78,9 +78,7 @@ class Registry(dict):
             appobjects = self[oid] =  []
         else:
             appobjects = self.setdefault(oid, [])
-        # registered() is technically a classmethod but is not declared
-        # as such because we need to compose registered in some cases
-        appobject = obj.registered.im_func(obj, self)
+        appobject = obj.__registered__(self)
         assert not appobject in appobjects, \
                'object %s is already registered' % appobject
         assert callable(appobject.__select__), appobject

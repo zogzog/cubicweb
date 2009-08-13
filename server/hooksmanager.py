@@ -217,8 +217,8 @@ class Hook(AppObject):
         self.event = event
 
     @classmethod
-    def registered(cls, vreg):
-        super(Hook, cls).registered(vreg)
+    def __registered__(cls, vreg):
+        super(Hook, cls).__registered__(vreg)
         return cls()
 
     @classmethod

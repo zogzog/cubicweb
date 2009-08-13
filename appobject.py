@@ -245,7 +245,7 @@ class AppObject(object):
         return '%s.%s' % (cls.__module__, cls.__name__)
 
     @classmethod
-    def registered(cls, registry):
+    def __registered__(cls, registry):
         """called by the registry when the appobject has been registered.
 
         It must return the object that will be actually registered (this may be
