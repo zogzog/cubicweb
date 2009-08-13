@@ -46,7 +46,6 @@ import logging
 from warnings import warn
 
 from logilab.common.compat import all
-from logilab.common.deprecation import deprecated
 from logilab.common.interface import implements as implements_iface
 
 from yams import BASE_TYPES
@@ -962,123 +961,6 @@ class score_entity(EntitySelector):
         super(score_entity, self).__init__(once_is_enough)
         self.score_entity = scorefunc
 
-
-# XXX DEPRECATED in 3.4 ########################################################
-from cubicweb.vregistry import chainall
-
-yes_selector = deprecated()(yes)
-norset_selector = deprecated()(none_rset)
-rset_selector = deprecated()(any_rset)
-anyrset_selector = deprecated()(nonempty_rset)
-emptyrset_selector = deprecated()(empty_rset)
-onelinerset_selector = deprecated()(one_line_rset)
-twolinerset_selector = deprecated()(two_lines_rset)
-twocolrset_selector = deprecated()(two_cols_rset)
-largerset_selector = deprecated()(paginated_rset)
-sortedrset_selector = deprecated()(sorted_rset)
-oneetyperset_selector = deprecated()(one_etype_rset)
-multitype_selector = deprecated()(two_etypes_rset)
-anonymous_selector = deprecated()(anonymous_user)
-not_anonymous_selector = deprecated()(authenticated_user)
-primaryview_selector = deprecated()(primary_view)
-contextprop_selector = deprecated()(match_context_prop)
-
-@deprecated('[3.4] use non_final_entity instead of %s')
-def nfentity_selector(cls, req, rset=None, row=None, col=0, **kwargs):
-    return non_final_entity()(cls, req, rset, row, col)
-
-@deprecated('[3.4] use implements instead of %s')
-def implement_interface(cls, req, rset=None, row=None, col=0, **kwargs):
-    return implements(*cls.accepts_interfaces)(cls, req, rset, row, col)
-_interface_selector = deprecated()(implement_interface)
-interface_selector = deprecated()(implement_interface)
-
-@deprecated('[3.4] use specified_etype_implements instead of %s')
-def accept_etype(cls, req, *args, **kwargs):
-    """check etype presence in request form *and* accepts conformance"""
-    return specified_etype_implements(*cls.accepts)(cls, req, *args)
-etype_form_selector = accept_etype
-
-@deprecated('[3.4] use match_search_state instead of %s')
-def searchstate_selector(cls, req, rset=None, row=None, col=0, **kwargs):
-    return match_search_state(cls.search_states)(cls, req, rset, row, col)
-
-@deprecated('[3.4] use match_user_groups instead of %s')
-def match_user_group(cls, req, rset=None, row=None, col=0, **kwargs):
-    return match_user_groups(*cls.require_groups)(cls, req, rset, row, col, **kwargs)
-in_group_selector = match_user_group
-
-@deprecated('[3.4] use relation_possible instead of %s')
-def has_relation(cls, req, rset=None, row=None, col=0, **kwargs):
-    return relation_possible(cls.rtype, role(cls), cls.etype,
-                             getattr(cls, 'require_permission', 'read'))(cls, req, rset, row, col, **kwargs)
-
-@deprecated('[3.4] use relation_possible instead of %s')
-def one_has_relation(cls, req, rset=None, row=None, col=0, **kwargs):
-    return relation_possible(cls.rtype, role(cls), cls.etype,
-                             getattr(cls, 'require_permission', 'read',
-                                     once_is_enough=True))(cls, req, rset, row, col, **kwargs)
-
-@deprecated('[3.4] use implements instead of %s')
-def accept_rset(cls, req, rset=None, row=None, col=0, **kwargs):
-    """simply delegate to cls.accept_rset method"""
-    return implements(*cls.accepts)(cls, req, rset, row=row, col=col)
-accept_rset_selector = accept_rset
-
-accept = chainall(non_final_entity(), accept_rset, name='accept')
-accept = deprecated('[3.4] use implements selector')(accept)
-accept_selector = deprecated()(accept)
-
-accept_one = deprecated()(chainall(one_line_rset, accept,
-                                   name='accept_one'))
-accept_one_selector = deprecated()(accept_one)
-
-
-def _rql_condition(cls, req, rset=None, row=None, col=0, **kwargs):
-    if cls.condition:
-        return rql_condition(cls.condition)(cls, req, rset, row, col)
-    return 1
-_rqlcondition_selector = deprecated()(_rql_condition)
-
-rqlcondition_selector = deprecated()(chainall(non_final_entity(), one_line_rset, _rql_condition,
-                         name='rql_condition'))
-
-@deprecated('[3.4] use but_etype instead of %s')
-def but_etype_selector(cls, req, rset=None, row=None, col=0, **kwargs):
-    return but_etype(cls.etype)(cls, req, rset, row, col)
-
-@lltrace
-def etype_rtype_selector(cls, req, rset=None, row=None, col=0, **kwargs):
-    schema = cls.schema
-    perm = getattr(cls, 'require_permission', 'read')
-    if hasattr(cls, 'etype'):
-        eschema = schema.eschema(cls.etype)
-        if not (eschema.has_perm(req, perm) or eschema.has_local_role(perm)):
-            return 0
-    if hasattr(cls, 'rtype'):
-        rschema = schema.rschema(cls.rtype)
-        if not (rschema.has_perm(req, perm) or rschema.has_local_role(perm)):
-            return 0
-    return 1
-etype_rtype_selector = deprecated()(etype_rtype_selector)
-
-#req_form_params_selector = deprecated()(match_form_params) # form_params
-#kwargs_selector = deprecated()(match_kwargs) # expected_kwargs
-
-# compound selectors ##########################################################
-
-searchstate_accept = chainall(nonempty_rset(), accept,
-                              name='searchstate_accept')
-searchstate_accept_selector = deprecated()(searchstate_accept)
-
-searchstate_accept_one = chainall(one_line_rset, accept, _rql_condition,
-                                  name='searchstate_accept_one')
-searchstate_accept_one_selector = deprecated()(searchstate_accept_one)
-
-searchstate_accept = deprecated()(searchstate_accept)
-searchstate_accept_one = deprecated()(searchstate_accept_one)
-
-# end of deprecation section ##################################################
 
 def unbind_method(selector):
     def new_selector(registered):
