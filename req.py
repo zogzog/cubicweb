@@ -223,6 +223,12 @@ class RequestSessionBase(object):
 
     # formating methods #######################################################
 
+    def view(self, __vid, rset=None, __fallback_oid=None, __registry='views',
+             **kwargs):
+        """shortcut to self.vreg.view method avoiding to pass the request"""
+        return self.vreg[__registry].render(__vid, self, __fallback_oid,
+                                            rset=rset, **kwargs)
+
     def format_date(self, date, date_format=None, time=False):
         """return a string for a date time according to instance's
         configuration
