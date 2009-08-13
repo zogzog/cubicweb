@@ -89,7 +89,7 @@ class CubicWebRequestBase(DBAPIRequest):
         self.datadir_url = self._datadir_url()
 
     @property
-    def varmaker(self)
+    def varmaker(self):
         varmaker = self.get_page_data('rql_varmaker')
         if varmaker is None:
             varmaker = rqlvar_maker()
