@@ -386,21 +386,6 @@ class AppObject(object):
                 method = self.req.relative_path(includeparams=False) or 'view'
         return self.req.build_url(method, **kwargs)
 
-    # formating methods #######################################################
-
-    def tal_render(self, template, variables):
-        """render a precompiled page template with variables in the given
-        dictionary as context
-        """
-        from cubicweb.ext.tal import CubicWebContext
-        context = CubicWebContext()
-        context.update({'self': self, 'rset': self.rset, '_' : self.req._,
-                        'req': self.req, 'user': self.req.user})
-        context.update(variables)
-        output = UStringIO()
-        template.expand(context, output)
-        return output.getvalue()
-
     # deprecated ###############################################################
 
     @classproperty

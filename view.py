@@ -151,6 +151,19 @@ class View(AppObject):
         if stream is not None:
             return self._stream.getvalue()
 
+    def tal_render(self, template, variables):
+        """render a precompiled page template with variables in the given
+        dictionary as context
+        """
+        from cubicweb.ext.tal import CubicWebContext
+        context = CubicWebContext()
+        context.update({'self': self, 'rset': self.rset, '_' : self.req._,
+                        'req': self.req, 'user': self.req.user})
+        context.update(variables)
+        output = UStringIO()
+        template.expand(context, output)
+        return output.getvalue()
+
     dispatch = deprecated('[3.4] .dispatch is deprecated, use .render')(render)
 
     # should default .call() method add a <div classs="section"> around each
