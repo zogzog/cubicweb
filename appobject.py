@@ -278,7 +278,7 @@ class AppObject(object):
         cls.build___select__()
         cls.vreg = registry.vreg
         pdefs = getattr(cls, 'cw_property_defs', {})
-        for propid, pdef in pdefs:
+        for propid, pdef in pdefs.items():
             pdef = pdef.copy() # may be shared
             pdef['default'] = getattr(cls, propid, pdef['default'])
             pdef['sitewide'] = getattr(cls, 'site_wide', pdef.get('sitewide'))
