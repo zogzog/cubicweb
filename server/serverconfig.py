@@ -263,6 +263,8 @@ and if not set, it will be choosen randomly',
         except RegistryNotFound:
             return hooks
         for hookdef in apphookdefs:
+            # XXX < 3.5 bw compat
+            hookdef.__dict__['config'] = self
             for event, ertype in hookdef.register_to(vreg.schema):
                 if ertype == 'Any':
                     ertype = ''
