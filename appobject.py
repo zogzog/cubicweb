@@ -11,25 +11,12 @@ __docformat__ = "restructuredtext en"
 
 import types
 from logging import getLogger
-from datetime import datetime, timedelta
 
 from logilab.common.decorators import classproperty
 from logilab.common.deprecation import deprecated
 from logilab.common.logging_ext import set_log_methods
 
 from cubicweb import Unauthorized, NoSelectableObject
-from cubicweb.utils import UStringIO
-
-ONESECOND = timedelta(0, 1, 0)
-CACHE_REGISTRY = {}
-
-
-class Cache(dict):
-    def __init__(self):
-        super(Cache, self).__init__()
-        _now = datetime.now()
-        self.cache_creation_date = _now
-        self.latest_cache_lookup = _now
 
 
 # selector base classes and operations ########################################
@@ -330,27 +317,6 @@ class AppObject(object):
         self.col = col
         self.extra_kwargs = extra
 
-    def get_cache(self, cachename):
-        """
-        NOTE: cachename should be dotted names as in :
-        - cubicweb.mycache
-        - cubes.blog.mycache
-        - etc.
-        """
-        if cachename in CACHE_REGISTRY:
-            cache = CACHE_REGISTRY[cachename]
-        else:
-            cache = CACHE_REGISTRY[cachename] = Cache()
-        _now = datetime.now()
-        if _now > cache.latest_cache_lookup + ONESECOND:
-            ecache = self.req.execute('Any C,T WHERE C is CWCache, C name %(name)s, C timestamp T',
-                                      {'name':cachename}).get_entity(0,0)
-            cache.latest_cache_lookup = _now
-            if not ecache.valid(cache.cache_creation_date):
-                cache.clear()
-                cache.cache_creation_date = _now
-        return cache
-
     def propval(self, propid):
         assert self.req
         return self.req.property_value(self.propkey(propid))
@@ -411,6 +377,10 @@ class AppObject(object):
     @deprecated('[3.5] use req.varmaker')
     def initialize_varmaker(self):
         self.varmaker = self.req.varmaker
+
+    @deprecated('[3.5] use req.get_cache')
+    def get_cache(self, cachename):
+        return self.req.get_cache(cachename)
 
     @deprecated('[3.5] use rset.limited_rql')
     def limited_rql(self):

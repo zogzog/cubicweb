@@ -7,13 +7,25 @@
 """
 __docformat__ = "restructuredtext en"
 
-from datetime import time
+from datetime import time, datetime, timedelta
 
 from logilab.common.decorators import cached
 
 from cubicweb import Unauthorized, typed_eid
 from cubicweb.rset import ResultSet
 from cubicweb.utils import ustrftime, strptime, todate, todatetime
+
+ONESECOND = timedelta(0, 1, 0)
+CACHE_REGISTRY = {}
+
+
+class Cache(dict):
+    def __init__(self):
+        super(Cache, self).__init__()
+        _now = datetime.now()
+        self.cache_creation_date = _now
+        self.latest_cache_lookup = _now
+
 
 class RequestSessionBase(object):
     """base class containing stuff shared by server session and web request
@@ -88,6 +100,28 @@ class RequestSessionBase(object):
         first = rql.split(' ', 1)[0].lower()
         if first in ('insert', 'set', 'delete'):
             raise Unauthorized(self._('only select queries are authorized'))
+
+    def get_cache(self, cachename):
+        """
+        NOTE: cachename should be dotted names as in :
+        - cubicweb.mycache
+        - cubes.blog.mycache
+        - etc.
+        """
+        if cachename in CACHE_REGISTRY:
+            cache = CACHE_REGISTRY[cachename]
+        else:
+            cache = CACHE_REGISTRY[cachename] = Cache()
+        _now = datetime.now()
+        if _now > cache.latest_cache_lookup + ONESECOND:
+            ecache = self.execute(
+                'Any C,T WHERE C is CWCache, C name %(name)s, C timestamp T',
+                {'name':cachename}).get_entity(0,0)
+            cache.latest_cache_lookup = _now
+            if not ecache.valid(cache.cache_creation_date):
+                cache.clear()
+                cache.cache_creation_date = _now
+        return cache
 
     # url generation methods ##################################################
 
