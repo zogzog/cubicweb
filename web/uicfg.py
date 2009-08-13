@@ -69,7 +69,7 @@ __docformat__ = "restructuredtext en"
 
 from cubicweb import neg_role, onevent
 from cubicweb.rtags import (RelationTags, RelationTagsBool,
-                            RelationTagsSet, RelationTagsDict)
+                            RelationTagsSet, RelationTagsDict, register_rtag)
 from cubicweb.web import formwidgets
 
 
@@ -151,12 +151,25 @@ primaryview_display_ctrl = DisplayCtrlRelationTags('primaryview_display_ctrl',
 # * 'schema'
 # * 'subobject' (not displayed by default)
 
-indexview_etype_section = {'EmailAddress': 'subobject',
-                           'CWUser': 'system',
-                           'CWGroup': 'system',
-                           'CWPermission': 'system',
-                           }
+class InitializableDict(dict):
+    def __init__(self, *args, **kwargs):
+        super(InitializableDict, self).__init__(*args, **kwargs)
+        register_rtag(self)
 
+    def init(schema, check=True):
+        for eschema in schema.entities():
+            if eschema.schema_entity():
+                uicfg.indexview_etype_section.setdefault(eschema, 'schema')
+            elif eschema.is_subobject(strict=True):
+                uicfg.indexview_etype_section.setdefault(eschema, 'subobject')
+            else:
+                uicfg.indexview_etype_section.setdefault(eschema, 'application')
+
+indexview_etype_section = InitializableDict(EmailAddress='subobject',
+                                            CWUser='system',
+                                            CWGroup='system',
+                                            CWPermission='system',
+                                            )
 
 # autoform.AutomaticEntityForm configuration ##################################
 

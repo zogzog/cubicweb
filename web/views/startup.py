@@ -22,16 +22,6 @@ class ManageView(StartupView):
     title = _('manage')
     http_cache_manager = httpcache.EtagHTTPCacheManager
 
-    @classmethod
-    def vreg_initialization_completed(cls):
-        for eschema in cls.schema.entities():
-            if eschema.schema_entity():
-                uicfg.indexview_etype_section.setdefault(eschema, 'schema')
-            elif eschema.is_subobject(strict=True):
-                uicfg.indexview_etype_section.setdefault(eschema, 'subobject')
-            else:
-                uicfg.indexview_etype_section.setdefault(eschema, 'application')
-
     def display_folders(self):
         return False
 
