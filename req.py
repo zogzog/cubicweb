@@ -30,6 +30,15 @@ class Cache(dict):
 
 class RequestSessionBase(object):
     """base class containing stuff shared by server session and web request
+
+    request/session is the main resources accessor, mainly through it's vreg
+    attribute:
+    :vreg:
+      the instance's registry
+    :vreg.schema:
+      the instance's schema
+    :vreg.config:
+      the instance's configuration
     """
     def __init__(self, vreg):
         self.vreg = vreg

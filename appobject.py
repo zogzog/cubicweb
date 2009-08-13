@@ -213,24 +213,23 @@ class AppObject(object):
     Moreover, the `__abstract__` attribute may be set to True to indicate
     that a appobject is abstract and should not be registered.
 
-    At registration time, the following attributes are set on the class:
-    :vreg:
-      the instance's registry
-    :schema:
-      the instance's schema
-    :config:
-      the instance's configuration
-
     At selection time, the following attributes are set on the instance:
-    :req:
+
+    :cw_req:
       current request
-    :rset:
+    :cw_extra_kwargs:
+      other received arguments
+
+    only if rset is found in arguments (in which case rset/row/col will be
+    removed from cwextra_kwargs):
+
+    :cw_rset:
       context result set or None
-    :row:
+    :cw_row:
       if a result set is set and the context is about a particular cell in the
       result set, and not the result set as a whole, specify the row number we
       are interested in, else None
-    :col:
+    :cw_col:
       if a result set is set and the context is about a particular cell in the
       result set, and not the result set as a whole, specify the col number we
       are interested in, else None
