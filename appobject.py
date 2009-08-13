@@ -285,10 +285,6 @@ class AppObject(object):
             registry.vreg.register_property(cls._cwpropkey(propid), **pdef)
         return cls
 
-    @classmethod
-    def vreg_initialization_completed(cls):
-        pass
-
     def __init__(self, req=None, rset=None, row=None, col=None, **extra):
         super(AppObject, self).__init__()
         self.req = req

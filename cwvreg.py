@@ -50,11 +50,7 @@ class CWRegistry(Registry):
         self.schema = vreg.schema
 
     def initialization_completed(self):
-        # call vreg_initialization_completed on appobjects and print
-        # registry content
-        for appobjects in self.itervalues():
-            for appobject in appobjects:
-                appobject.vreg_initialization_completed()
+        pass
 
     def render(self, __oid, req, __fallback_oid=None, rset=None, **kwargs):
         """select object, or fallback object if specified and the first one
