@@ -21,6 +21,9 @@ from logilab.common.shellutils import ASK
 from cubicweb import warning
 from cubicweb import ConfigurationError, ExecutionError
 
+def underline_title(title, car='-'):
+    return title+'\n'+(car*len(title))
+
 def iter_dir(directory, condition_file=None, ignore=()):
     """iterate on a directory"""
     for sub in listdir(directory):

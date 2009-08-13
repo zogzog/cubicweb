@@ -11,9 +11,10 @@ from os.path import exists, join, isfile, isdir
 from logilab.common.clcommands import register_commands, pop_arg
 from logilab.common.shellutils import ASK
 
-from cubicweb import ConfigurationError, ExecutionError, BadCommandUsage, underline_title
+from cubicweb import ConfigurationError, ExecutionError, BadCommandUsage
 from cubicweb.cwconfig import CubicWebConfiguration as cwcfg, CONFIGURATIONS
-from cubicweb.toolsutils import Command, main_run,  rm, create_dir
+from cubicweb.toolsutils import Command, main_run, rm, create_dir, underline_title
+
 
 def wait_process_end(pid, maxtry=10, waittime=1):
     """wait for a process to actually die"""

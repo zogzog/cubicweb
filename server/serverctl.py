@@ -14,8 +14,8 @@ from logilab.common.configuration import Configuration
 from logilab.common.clcommands import register_commands, cmd_run, pop_arg
 from logilab.common.shellutils import ASK
 
-from cubicweb import AuthenticationError, ExecutionError, ConfigurationError, underline_title
-from cubicweb.toolsutils import Command, CommandHandler
+from cubicweb import AuthenticationError, ExecutionError, ConfigurationError
+from cubicweb.toolsutils import Command, CommandHandler, underline_title
 from cubicweb.server import SOURCE_TYPES
 from cubicweb.server.utils import ask_source_config
 from cubicweb.server.serverconfig import USER_OPTIONS, ServerConfiguration
