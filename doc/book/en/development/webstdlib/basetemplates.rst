@@ -126,8 +126,8 @@ table.
                       title=False, message=False)
 
     def get_searchbox(self, view, context):
-        boxes = list(self.vreg.possible_vobjects('boxes', self.req, self.rset,
-                                                 view=view, context=context))
+        boxes = list(self.vreg.poss_visible_objects('boxes', self.req, self.rset,
+                                                    view=view, context=context))
         if boxes:
             for box in boxes:
                 if box.id == 'search_box':

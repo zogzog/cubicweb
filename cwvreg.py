@@ -52,6 +52,7 @@ class CWRegistry(Registry):
     def initialization_completed(self):
         pass
 
+    @deprecated('[3.5] select object, then use obj.render()')
     def render(self, __oid, req, __fallback_oid=None, rset=None, **kwargs):
         """select object, or fallback object if specified and the first one
         isn't selectable, then render it
@@ -64,13 +65,14 @@ class CWRegistry(Registry):
             obj = self.select(__fallback_oid, req, **kwargs)
         return obj.render(**kwargs)
 
+    @deprecated('[3.5] use select_or_none and test for obj.propval("visible")')
     def select_vobject(self, oid, *args, **kwargs):
         selected = self.select_or_none(oid, *args, **kwargs)
         if selected and selected.propval('visible'):
             return selected
         return None
 
-    def possible_vobjects(self, *args, **kwargs):
+    def poss_visible_objects(self, *args, **kwargs):
         """return an ordered list of possible app objects in a given registry,
         supposing they support the 'visible' and 'order' properties (as most
         visualizable objects)
@@ -78,6 +80,7 @@ class CWRegistry(Registry):
         return sorted([x for x in self.possible_objects(*args, **kwargs)
                        if x.propval('visible')],
                       key=lambda x: x.propval('order'))
+    possible_vobjects = deprecated('[3.5] use poss_visible_objects()')(poss_visible_objects)
 
 
 VRegistry.REGISTRY_FACTORY[None] = CWRegistry
