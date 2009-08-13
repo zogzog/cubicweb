@@ -481,7 +481,9 @@ class StartRepositoryCommand(Command):
 
 def _remote_dump(host, appid, output, sudo=False):
     # XXX generate unique/portable file name
-    dmpcmd = 'cubicweb-ctl db-dump -o /tmp/%s.dump %s' % (appid, appid)
+    from datetime import date
+    filename = '%s-%s.tgz' % (appid, date.today().strftime('%Y-%m-%d'))
+    dmpcmd = 'cubicweb-ctl db-dump -o /tmp/%s %s' % (filename, appid)
     if sudo:
         dmpcmd = 'sudo %s' % (dmpcmd)
     dmpcmd = 'ssh -t %s "%s"' % (host, dmpcmd)
@@ -489,18 +491,17 @@ def _remote_dump(host, appid, output, sudo=False):
     if os.system(dmpcmd):
         raise ExecutionError('Error while dumping the database')
     if output is None:
-        from datetime import date
-        date = date.today().strftime('%Y-%m-%d')
-        output = '%s-%s.dump' % (appid, date)
-    cmd = 'scp %s:/tmp/%s.dump %s' % (host, appid, output)
+        output = filename
+    cmd = 'scp %s:/tmp/%s %s' % (host, filename, output)
     print cmd
     if os.system(cmd):
-        raise ExecutionError('Error while retrieving the dump')
-    rmcmd = 'ssh -t %s "rm -f /tmp/%s.dump"' % (host, appid)
+        raise ExecutionError('Error while retrieving the dump at /tmp/%s' % filename)
+    rmcmd = 'ssh -t %s "rm -f /tmp/%s"' % (host, filename)
     print rmcmd
     if os.system(rmcmd) and not ASK.confirm(
-        'An error occured while deleting remote dump. Continue anyway?'):
-        raise ExecutionError('Error while deleting remote dump')
+        'An error occured while deleting remote dump at /tmp/%s. '
+        'Continue anyway?' % filename):
+        raise ExecutionError('Error while deleting remote dump at /tmp/%s' % filename)
 
 def _local_dump(appid, output):
     config = ServerConfiguration.config_for(appid)
@@ -669,9 +670,7 @@ class DBCopyCommand(Command):
         import tempfile
         srcappid = pop_arg(args, 1, msg='No source instance specified !')
         destappid = pop_arg(args, msg='No destination instance specified !')
-        # XXX -system necessary to match file name modified on source restore.
-        # should not have to expect this.
-        _, output = tempfile.mkstemp('-system.sql')
+        output = tempfile.mkstemp(dir='/tmp/')[1]
         if ':' in srcappid:
             host, srcappid = srcappid.split(':')
             _remote_dump(host, srcappid, output, self.config.sudo)
