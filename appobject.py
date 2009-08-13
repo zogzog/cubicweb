@@ -244,29 +244,6 @@ class AppObject(object):
         """returns a unique identifier for the appobject"""
         return '%s.%s' % (cls.__module__, cls.__name__)
 
-    # XXX bw compat code
-    @classmethod
-    def build___select__(cls):
-        for klass in cls.mro():
-            if klass.__name__ == 'AppObject':
-                continue # the bw compat __selector__ is there
-            klassdict = klass.__dict__
-            if ('__select__' in klassdict and '__selectors__' in klassdict
-                and '__selgenerated__' not in klassdict):
-                raise TypeError("__select__ and __selectors__ can't be used together on class %s" % cls)
-            if '__selectors__' in klassdict and '__selgenerated__' not in klassdict:
-                cls.__selgenerated__ = True
-                # case where __selectors__ is defined locally (but __select__
-                # is in a parent class)
-                selectors = klassdict['__selectors__']
-                if len(selectors) == 1:
-                    # micro optimization: don't bother with AndSelector if there's
-                    # only one selector
-                    select = _instantiate_selector(selectors[0])
-                else:
-                    select = AndSelector(*selectors)
-                cls.__select__ = select
-
     @classmethod
     def registered(cls, registry):
         """called by the registry when the appobject has been registered.

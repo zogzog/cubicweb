@@ -15,10 +15,15 @@ from simplejson import dumps
 from cubicweb.common import tags
 from cubicweb.appobject import AppObject
 from cubicweb.selectors import entity_implements, yes
-from cubicweb.web import eid_param
-from cubicweb.web import formwidgets as fwdgs
-from cubicweb.web.widgets import checkbox
+from cubicweb.web import eid_param, formwidgets as fwdgs
 from cubicweb.web.formfields import HiddenInitialValueField
+
+def checkbox(name, value, attrs='', checked=None):
+    if checked is None:
+        checked = value
+    checked = checked and 'checked="checked"' or ''
+    return u'<input type="checkbox" name="%s" value="%s" %s %s />' % (
+        name, value, checked, attrs)
 
 
 class FormRenderer(AppObject):

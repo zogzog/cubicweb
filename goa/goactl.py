@@ -112,7 +112,6 @@ COPY_CW_FILES = (
     'web/httpcache.py',
     'web/request.py',
     'web/webconfig.py',
-    'web/widgets.py',
 
     'web/views/__init__.py',
     'web/views/actions.py',

@@ -17,7 +17,6 @@ from cubicweb import ValidationError
 from cubicweb.interfaces import IMileStone, IWorkflowable
 from cubicweb.entities import AnyEntity
 from cubicweb.entities.authobjs import CWUser
-from cubicweb.web.widgets import AutoCompletionWidget
 
 
 class BaseEntityTC(CubicWebTC):

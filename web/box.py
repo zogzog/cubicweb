@@ -13,9 +13,7 @@ from logilab.mtconverter import xml_escape
 from cubicweb import Unauthorized, role as get_role, target as get_target
 from cubicweb.schema import display_name
 from cubicweb.selectors import (one_line_rset,  primary_view,
-                                match_context_prop, partial_has_related_entities,
-                                accepts_compat, has_relation_compat,
-                                condition_compat, require_group_compat)
+                                match_context_prop, partial_has_related_entities)
 from cubicweb.view import View, ReloadableMixIn
 
 from cubicweb.web.htmlwidgets import (BoxLink, BoxWidget, SideBoxWidget,
@@ -39,7 +37,6 @@ class BoxTemplate(View):
     """
     __registry__ = 'boxes'
     __select__ = match_context_prop()
-    registered = classmethod(require_group_compat(View.registered))
 
     categories_in_order = ()
     cw_property_defs = {
@@ -138,7 +135,6 @@ class UserRQLBoxTemplate(RQLBoxTemplate):
 class EntityBoxTemplate(BoxTemplate):
     """base class for boxes related to a single entity"""
     __select__ = BoxTemplate.__select__ & one_line_rset() & primary_view()
-    registered = accepts_compat(has_relation_compat(condition_compat(BoxTemplate.registered)))
     context = 'incontext'
 
     def call(self, row=0, col=0, **kwargs):

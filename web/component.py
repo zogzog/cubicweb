@@ -13,11 +13,10 @@ from logilab.mtconverter import xml_escape
 
 from cubicweb import role
 from cubicweb.utils import merge_dicts
-from cubicweb.view import View, Component
+from cubicweb.view import Component
 from cubicweb.selectors import (
     paginated_rset, one_line_rset, primary_view, match_context_prop,
-    partial_has_related_entities, condition_compat, accepts_compat,
-    has_relation_compat)
+    partial_has_related_entities)
 
 
 class EntityVComponent(Component):
@@ -33,7 +32,6 @@ class EntityVComponent(Component):
 
     __registry__ = 'contentnavigation'
     __select__ = one_line_rset() & primary_view() & match_context_prop()
-    registered = accepts_compat(has_relation_compat(condition_compat(View.registered)))
 
     cw_property_defs = {
         _('visible'):  dict(type='Boolean', default=True,

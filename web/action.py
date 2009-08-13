@@ -10,8 +10,7 @@ _ = unicode
 
 from cubicweb import target
 from cubicweb.selectors import (partial_relation_possible, match_search_state,
-                                one_line_rset, partial_may_add_relation, yes,
-                                accepts_compat, condition_compat, deprecate)
+                                one_line_rset, partial_may_add_relation, yes)
 from cubicweb.appobject import AppObject
 
 
@@ -73,8 +72,6 @@ class LinkToEntityAction(Action):
     __select__ = (match_search_state('normal') & one_line_rset()
                   & partial_relation_possible(action='add')
                   & partial_may_add_relation())
-    registered = accepts_compat(Action.registered)
-
     category = 'addrelated'
 
     def url(self):
@@ -84,11 +81,4 @@ class LinkToEntityAction(Action):
                               __linkto=linkto,
                               __redirectpath=current_entity.rest_path(), # should not be url quoted!
                               __redirectvid=self.req.form.get('__redirectvid', ''))
-
-class EntityAction(Action):
-    """DEPRECATED / BACKWARD COMPAT
-    """
-    registered = deprecate(condition_compat(accepts_compat(Action.registered)),
-                           msg='EntityAction is deprecated, use Action with '
-                           'appropriate selectors')
 

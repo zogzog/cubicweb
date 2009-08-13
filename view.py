@@ -17,7 +17,6 @@ from rql import nodes
 
 from cubicweb import NotAnEntity
 from cubicweb.selectors import yes, non_final_entity, nonempty_rset, none_rset
-from cubicweb.selectors import require_group_compat, accepts_compat
 from cubicweb.appobject import AppObject
 from cubicweb.utils import UStringIO, HTMLStream
 from cubicweb.schema import display_name
@@ -93,7 +92,6 @@ class View(AppObject):
     time to a write function to use.
     """
     __registry__ = 'views'
-    registered = require_group_compat(AppObject.registered)
 
     templatable = True
     need_navigation = True
@@ -330,8 +328,6 @@ class View(AppObject):
 class EntityView(View):
     """base class for views applying on an entity (i.e. uniform result set)"""
     __select__ = non_final_entity()
-    registered = accepts_compat(View.registered)
-
     category = 'entityview'
 
 
@@ -340,7 +336,6 @@ class StartupView(View):
     displayed (so they can always be displayed !)
     """
     __select__ = none_rset()
-    registered = require_group_compat(View.registered)
 
     category = 'startupview'
 
@@ -413,7 +408,6 @@ class MainTemplate(View):
     There is usually at least a regular main template and a simple fallback
     one to display error if the first one failed
     """
-    registered = require_group_compat(View.registered)
 
     @property
     def doctype(self):
