@@ -98,14 +98,13 @@ class EmbedAction(Action):
                   & score_entity(entity_has_embedable_url))
 
     title = _('embed')
-    controller = 'embed'
 
     def url(self, row=0):
         entity = self.rset.get_entity(row, 0)
         url = urljoin(self.req.base_url(), entity.embeded_url())
         if self.req.form.has_key('rql'):
-            return self.build_url(url=url, rql=self.req.form['rql'])
-        return self.build_url(url=url)
+            return self.build_url('embed', url=url, rql=self.req.form['rql'])
+        return self.build_url('embed', url=url)
 
 
 

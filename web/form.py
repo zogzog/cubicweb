@@ -16,7 +16,6 @@ from cubicweb.web import stdmsgs, httpcache, formfields
 class FormViewMixIn(object):
     """abstract form view mix-in"""
     category = 'form'
-    controller = 'edit'
     http_cache_manager = httpcache.NoHTTPCacheManager
     add_to_breadcrumbs = False
 
@@ -79,7 +78,6 @@ class FormMixIn(object):
 
     domid = 'entityForm'
     category = 'form'
-    controller = 'edit'
     http_cache_manager = httpcache.NoHTTPCacheManager
     add_to_breadcrumbs = False
 

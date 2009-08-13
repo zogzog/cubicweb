@@ -327,31 +327,6 @@ class AppObject(object):
         return self.vreg[__registry].render(__vid, self.req, __fallback_oid,
                                             rset=rset, **kwargs)
 
-    # url generation methods ##################################################
-
-    controller = 'view'
-
-    def build_url(self, *args, **kwargs):
-        """return an absolute URL using params dictionary key/values as URL
-        parameters. Values are automatically URL quoted, and the
-        publishing method to use may be specified or will be guessed.
-        """
-        # use *args since we don't want first argument to be "anonymous" to
-        # avoid potential clash with kwargs
-        if args:
-            assert len(args) == 1, 'only 0 or 1 non-named-argument expected'
-            method = args[0]
-        else:
-            method = None
-        # XXX I (adim) think that if method is passed explicitly, we should
-        #     not try to process it and directly call req.build_url()
-        if method is None:
-            method = self.controller
-            if method == 'view' and self.req.from_controller() == 'view' and \
-                   not '_restpath' in kwargs:
-                method = self.req.relative_path(includeparams=False) or 'view'
-        return self.req.build_url(method, **kwargs)
-
     # deprecated ###############################################################
 
     @classproperty
@@ -381,6 +356,10 @@ class AppObject(object):
     @deprecated('[3.5] use req.get_cache')
     def get_cache(self, cachename):
         return self.req.get_cache(cachename)
+
+    @deprecated('[3.5] use req.build_url')
+    def build_url(self, *args, **kwargs):
+        return self.req.build_url(*args, **kwargs)
 
     @deprecated('[3.5] use rset.limited_rql')
     def limited_rql(self):
