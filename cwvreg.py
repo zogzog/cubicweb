@@ -18,7 +18,7 @@ from cubicweb import (ETYPE_NAME_MAP, Binary, UnknownProperty, UnknownEid,
                       ObjectNotFound, NoSelectableObject, RegistryNotFound,
                       RegistryOutOfDate, CW_EVENT_MANAGER)
 from cubicweb.utils import dump_class
-from cubicweb.vregistry import VRegistry, Registry
+from cubicweb.vregistry import VRegistry, Registry, class_regid
 from cubicweb.rtags import RTAGS
 
 
@@ -96,10 +96,10 @@ class ETypeRegistry(CWRegistry):
         clear_cache(self, 'etype_class')
 
     def register(self, obj, **kwargs):
-        oid = kwargs.get('oid') or obj.id
+        oid = kwargs.get('oid') or class_regid(obj)
         if oid != 'Any' and not oid in self.schema:
             self.error('don\'t register %s, %s type not defined in the '
-                       'schema', obj, obj.id)
+                       'schema', obj, oid)
             return
         kwargs['clear'] = True
         super(ETypeRegistry, self).register(obj, **kwargs)
@@ -145,11 +145,11 @@ class ETypeRegistry(CWRegistry):
             objects = self['Any']
             assert len(objects) == 1, objects
             cls = objects[0]
-        if cls.id == etype:
+        if cls.__id__ == etype:
             cls.__initialize__(self.schema)
             return cls
         cls = dump_class(cls, etype)
-        cls.id = etype
+        cls.__id__ = etype
         cls.__initialize__(self.schema)
         return cls
 

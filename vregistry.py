@@ -58,6 +58,16 @@ def classid(cls):
     """returns a unique identifier for an appobject class"""
     return '%s.%s' % (cls.__module__, cls.__name__)
 
+def class_regid(cls):
+    """returns a unique identifier for an appobject class"""
+    if 'id' in cls.__dict__:
+        warn('%s: id is deprecated, use __id__')
+        cls.__id__ = cls.id
+    if hasattr(cls, 'id'):
+        return cls.id
+    return cls.__id__
+
+
 class Registry(dict):
 
     def __init__(self, config):
@@ -76,7 +86,7 @@ class Registry(dict):
     def register(self, obj, oid=None, clear=False):
         """base method to add an object in the registry"""
         assert not '__abstract__' in obj.__dict__
-        oid = oid or obj.id
+        oid = oid or class_regid(obj)
         assert oid
         if clear:
             appobjects = self[oid] =  []
@@ -94,7 +104,7 @@ class Registry(dict):
         # or simplify by calling unregister then register here
         if not isinstance(replaced, basestring):
             replaced = classid(replaced)
-        registered_objs = self.get(obj.id, ())
+        registered_objs = self.get(class_regid(obj), ())
         for index, registered in enumerate(registered_objs):
             if classid(registered) == replaced:
                 del registered_objs[index]
@@ -105,17 +115,18 @@ class Registry(dict):
         self.register(obj)
 
     def unregister(self, obj):
-        oid = classid(obj)
-        for registered in self.get(obj.id, ()):
+        clsid = classid(obj)
+        oid = class_regid(obj)
+        for registered in self.get(oid, ()):
             # use classid() to compare classes because vreg will probably
             # have its own version of the class, loaded through execfile
-            if classid(registered) == oid:
+            if classid(registered) == clsid:
                 # XXX automatic reloading management
-                self[obj.id].remove(registered)
+                self[oid].remove(registered)
                 break
         else:
             self.warning('can\'t remove %s, no id %s in the registry',
-                         oid, obj.id)
+                         clsid, oid)
 
     def all_objects(self):
         """return a list containing all objects in this registry.
@@ -286,7 +297,7 @@ class VRegistry(dict):
             try:
                 if obj.__module__ != modname or obj in butclasses:
                     continue
-                oid = obj.id
+                oid = class_regid(obj)
             except AttributeError:
                 continue
             if oid and not '__abstract__' in obj.__dict__:
@@ -420,10 +431,10 @@ class VRegistry(dict):
         to a non empty string to be registered.
         """
         if (cls.__dict__.get('__abstract__') or cls.__name__[0] == '_'
-            or not cls.__registry__ or not cls.id):
+            or not cls.__registry__ or not class_regid(cls)):
             return
         regname = cls.__registry__
-        if '%s.%s' % (regname, cls.id) in self.config['disable-appobjects']:
+        if '%s.%s' % (regname, class_regid(cls)) in self.config['disable-appobjects']:
             return
         self.register(cls)
 

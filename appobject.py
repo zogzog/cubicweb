@@ -204,7 +204,7 @@ class AppObject(object):
     :__registry__:
       name of the registry for this object (string like 'views',
       'templates'...)
-    :id:
+    :__id__:
       object's identifier in the registry (string like 'main',
       'primary', 'folder_box')
     :__select__:
@@ -235,7 +235,7 @@ class AppObject(object):
       are interested in, else None
     """
     __registry__ = None
-    id = None
+    __id__ = None
     __select__ = yes()
 
     @classmethod

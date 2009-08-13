@@ -64,7 +64,6 @@ class Entity(AppObject, dict):
     __select__ = yes()
 
     # class attributes that must be set in class definition
-    id = None
     rest_attr = None
     fetch_attrs = None
     skip_copy_for = ()
@@ -76,7 +75,7 @@ class Entity(AppObject, dict):
         """initialize a specific entity class by adding descriptors to access
         entity type's attributes and relations
         """
-        etype = cls.id
+        etype = cls.__id__
         assert etype != 'Any', etype
         cls.e_schema = eschema = schema.eschema(etype)
         for rschema, _ in eschema.attribute_definitions():
@@ -107,7 +106,7 @@ class Entity(AppObject, dict):
         """return a rql to fetch all entities of the class type"""
         restrictions = restriction or []
         if settype:
-            restrictions.append('%s is %s' % (mainvar, cls.id))
+            restrictions.append('%s is %s' % (mainvar, cls.__id__))
         if fetchattrs is None:
             fetchattrs = cls.fetch_attrs
         selection = [mainvar]
@@ -140,7 +139,7 @@ class Entity(AppObject, dict):
                 rschema = eschema.subject_relation(attr)
             except KeyError:
                 cls.warning('skipping fetch_attr %s defined in %s (not found in schema)',
-                            attr, cls.id)
+                            attr, cls.__id__)
                 continue
             if not user.matching_groups(rschema.get_groups('read')):
                 continue
@@ -274,7 +273,7 @@ class Entity(AppObject, dict):
                 kwargs['_restpath'] = self.rest_path(kwargs.get('base_url'))
             except TypeError:
                 warn('%s: rest_path() now take use_ext_eid argument, '
-                     'please update' % self.id, DeprecationWarning)
+                     'please update' % self.__id__, DeprecationWarning)
                 kwargs['_restpath'] = self.rest_path()
         else:
             kwargs['rql'] = 'Any X WHERE X eid %s' % self.eid
@@ -416,7 +415,7 @@ class Entity(AppObject, dict):
     def as_rset(self):
         """returns a resultset containing `self` information"""
         rset = ResultSet([(self.eid,)], 'Any X WHERE X eid %(x)s',
-                         {'x': self.eid}, [(self.id,)])
+                         {'x': self.eid}, [(self.__id__,)])
         return self.req.decorate_rset(rset)
 
     def to_complete_relations(self):
