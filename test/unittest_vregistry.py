@@ -40,14 +40,6 @@ class VRegistryTC(TestCase):
         self.vreg.initialization_completed()
         self.assertEquals(len(self.vreg['views']['primary']), 1)
 
-    def test___selectors__compat(self):
-        myselector1 = lambda *args: 1
-        myselector2 = lambda *args: 1
-        class AnAppObject(AppObject):
-            __selectors__ = (myselector1, myselector2)
-        AnAppObject.build___select__()
-        self.assertEquals(AnAppObject.__select__(AnAppObject), 2)
-
     def test_properties(self):
         self.failIf('system.version.cubicweb' in self.vreg['propertydefs'])
         self.failUnless(self.vreg.property_info('system.version.cubicweb'))
