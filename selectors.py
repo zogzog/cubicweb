@@ -112,13 +112,13 @@ class traced_selection(object):
         return traceback is None
 
 
-def score_interface(cls_or_inst, cls, iface):
+def score_interface(etypesreg, cls_or_inst, cls, iface):
     """Return XXX if the give object (maybe an instance or class) implements
     the interface.
     """
     if getattr(iface, '__registry__', None) == 'etypes':
         # adjust score if the interface is an entity class
-        parents = cls_or_inst.parent_classes()
+        parents = etypesreg.parent_classes(cls_or_inst.id)
         if iface is cls:
             return len(parents) + 4
         if iface is parents[-1]: # Any
@@ -157,17 +157,18 @@ class ImplementsMixIn(object):
         return '%s(%s)' % (self.__class__.__name__,
                            ','.join(str(s) for s in self.expected_ifaces))
 
-    def score_interfaces(self, cls_or_inst, cls):
+    def score_interfaces(self, req, cls_or_inst, cls):
         score = 0
-        vreg, eschema = cls_or_inst.vreg, cls_or_inst.e_schema
+        etypesreg = req.vreg['etypes']
+        eschema = cls_or_inst.e_schema
         for iface in self.expected_ifaces:
             if isinstance(iface, basestring):
                 # entity type
                 try:
-                    iface = vreg['etypes'].etype_class(iface)
+                    iface = etypesreg.etype_class(iface)
                 except KeyError:
                     continue # entity type not in the schema
-            score += score_interface(cls_or_inst, cls, iface)
+            score += score_interface(etypesreg, cls_or_inst, cls, iface)
         return score
 
 
@@ -211,7 +212,7 @@ class EClassSelector(Selector):
     def score(self, cls, req, etype):
         if etype in BASE_TYPES:
             return 0
-        return self.score_class(cls.vreg['etypes'].etype_class(etype), req)
+        return self.score_class(req.vreg['etypes'].etype_class(etype), req)
 
     def score_class(self, eclass, req):
         raise NotImplementedError()
@@ -560,7 +561,7 @@ class appobject_selectable(Selector):
 
     def __call__(self, cls, req, **kwargs):
         try:
-            cls.vreg[self.registry].select(self.oid, req, **kwargs)
+            req.vreg[self.registry].select(self.oid, req, **kwargs)
             return 1
         except NoSelectableObject:
             return 0
@@ -584,7 +585,7 @@ class implements(ImplementsMixIn, EClassSelector):
           proximity so the most specific object'll be selected
     """
     def score_class(self, eclass, req):
-        return self.score_interfaces(eclass, eclass)
+        return self.score_interfaces(req, eclass, eclass)
 
 
 class specified_etype_implements(implements):
@@ -614,11 +615,11 @@ class specified_etype_implements(implements):
             # only check this is a known type if etype comes from req.form,
             # else we want the error to propagate
             try:
-                etype = cls.vreg.case_insensitive_etypes[etype.lower()]
+                etype = req.vreg.case_insensitive_etypes[etype.lower()]
                 req.form['etype'] = etype
             except KeyError:
                 return 0
-        return self.score_class(cls.vreg['etypes'].etype_class(etype), req)
+        return self.score_class(req.vreg['etypes'].etype_class(etype), req)
 
 
 class entity_implements(ImplementsMixIn, EntitySelector):
@@ -637,7 +638,7 @@ class entity_implements(ImplementsMixIn, EntitySelector):
           proximity so the most specific object'll be selected
     """
     def score_entity(self, entity):
-        return self.score_interfaces(entity, entity.__class__)
+        return self.score_interfaces(entity.req, entity, entity.__class__)
 
 
 class relation_possible(EClassSelector):

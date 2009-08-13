@@ -101,7 +101,7 @@ class View(AppObject):
     category = 'view'
 
     def __init__(self, req=None, rset=None, **kwargs):
-        super(View, self).__init__(req, rset, **kwargs)
+        super(View, self).__init__(req, rset=rset, **kwargs)
         self.w = None
 
     @property

@@ -574,7 +574,7 @@ class Repository(object):
         finally:
             session.close()
         session = Session(user, self, cnxprops)
-        user.req = user.rset.req = session
+        user.cw_req = user.rset.req = session
         user.clear_related_cache()
         self._sessions[session.id] = session
         self.info('opened %s', session)

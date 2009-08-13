@@ -291,7 +291,7 @@ class Entity(AppObject, dict):
         return mainattr, needcheck
 
     def __init__(self, req, rset=None, row=None, col=0):
-        AppObject.__init__(self, req, rset, row, col)
+        AppObject.__init__(self, req, rset=rset, row=row, col=col)
         dict.__init__(self)
         self._related_cache = {}
         if rset is not None:

@@ -247,8 +247,6 @@ class AppObject(object):
         the right hook to create an instance for example). By default the
         appobject is returned without any transformation.
         """
-        cls.build___select__()
-        cls.vreg = registry.vreg
         pdefs = getattr(cls, 'cw_property_defs', {})
         for propid, pdef in pdefs.items():
             pdef = pdef.copy() # may be shared
@@ -257,19 +255,16 @@ class AppObject(object):
             registry.vreg.register_property(cls._cwpropkey(propid), **pdef)
         return cls
 
-    def __init__(self, req=None, rset=None, row=None, col=None, **extra):
+    def __init__(self, req, **extra):
         super(AppObject, self).__init__()
-        self.req = req
-        self.rset = rset
-        self.row = row
-        self.col = col
-        self.extra_kwargs = extra
-
-    def view(self, __vid, rset=None, __fallback_oid=None, __registry='views',
-             **kwargs):
-        """shortcut to self.vreg.view method avoiding to pass self.req"""
-        return self.vreg[__registry].render(__vid, self.req, __fallback_oid,
-                                            rset=rset, **kwargs)
+        self.cw_req = req
+        try:
+            self.cw_rset = extra.pop('rset')
+            self.cw_row = extra.pop('row', None)
+            self.cw_col = extra.pop('col', None)
+        except KeyError:
+            pass
+        self.cw_extra_kwargs = extra
 
     # persistent class properties ##############################################
     #
@@ -315,31 +310,60 @@ class AppObject(object):
         return selector
 
     @property
-    @deprecated('[3.5] use req.vreg')
+    @deprecated('[3.5] use cw_req.vreg')
     def vreg(self):
-        return self.req.vreg
+        return self.cw_req.vreg
 
     @property
-    @deprecated('[3.5] use req.vreg.schema')
+    @deprecated('[3.5] use cw_req.vreg.schema')
     def schema(self):
-        return self.req.vreg.schema
+        return self.cw_req.vreg.schema
 
     @property
-    @deprecated('[3.5] use req.vreg.config')
+    @deprecated('[3.5] use cw_req.vreg.config')
     def config(self):
-        return self.req.vreg.config
+        return self.cw_req.vreg.config
 
-    @deprecated('[3.5] use req.varmaker')
+    @property
+    @deprecated('use self.cw_req')
+    def req(self):
+        return self.cw_req
+
+    @property
+    @deprecated('use self.cw_rset')
+    def rset(self):
+        return self.cw_rset
+
+    @property
+    @deprecated('use self.cw_row')
+    def row(self):
+        return self.cw_row
+
+    @property
+    @deprecated('use self.cw_col')
+    def col(self):
+        return self.cw_col
+
+    @property
+    @deprecated('use self.cw_extra_kwargs')
+    def extra_kwargs(self):
+        return self.cw_extra_kwargs
+
+    @deprecated('[3.5] use cw_req.view')
+    def view(self, *args, **kwargs):
+        return self.cw_req.view(*args, **kwargs)
+
+    @deprecated('[3.5] use cw_req.varmaker')
     def initialize_varmaker(self):
-        self.varmaker = self.req.varmaker
+        self.varmaker = self.cw_req.varmaker
 
-    @deprecated('[3.5] use req.get_cache')
+    @deprecated('[3.5] use cw_req.get_cache')
     def get_cache(self, cachename):
-        return self.req.get_cache(cachename)
+        return self.cw_req.get_cache(cachename)
 
-    @deprecated('[3.5] use req.build_url')
+    @deprecated('[3.5] use cw_req.build_url')
     def build_url(self, *args, **kwargs):
-        return self.req.build_url(*args, **kwargs)
+        return self.cw_req.build_url(*args, **kwargs)
 
     @deprecated('[3.5] use rset.limited_rql')
     def limited_rql(self):
@@ -353,32 +377,32 @@ class AppObject(object):
     def entity(self, row, col=0):
         return self.rset.get_entity(row, col)
 
-    @deprecated('[3.5] use req.user_rql_callback')
+    @deprecated('[3.5] use cw_req.user_rql_callback')
     def user_rql_callback(self, args, msg=None):
-        return self.req.user_rql_callback(args, msg)
+        return self.cw_req.user_rql_callback(args, msg)
 
-    @deprecated('[3.5] use req.user_callback')
+    @deprecated('[3.5] use cw_req.user_callback')
     def user_callback(self, cb, args, msg=None, nonify=False):
-        return self.req.user_callback(cb, args, msg, nonify)
+        return self.cw_req.user_callback(cb, args, msg, nonify)
 
-    @deprecated('[3.5] use req.format_date')
+    @deprecated('[3.5] use cw_req.format_date')
     def format_date(self, date, date_format=None, time=False):
-        return self.req.format_date(date, date_format, time)
+        return self.cw_req.format_date(date, date_format, time)
 
-    @deprecated('[3.5] use req.format_timoe')
+    @deprecated('[3.5] use cw_req.format_timoe')
     def format_time(self, time):
-        return self.req.format_time(time)
+        return self.cw_req.format_time(time)
 
-    @deprecated('[3.5] use req.format_float')
+    @deprecated('[3.5] use cw_req.format_float')
     def format_float(self, num):
-        return self.req.format_float(num)
+        return self.cw_req.format_float(num)
 
-    @deprecated('[3.5] use req.parse_datetime')
+    @deprecated('[3.5] use cw_req.parse_datetime')
     def parse_datetime(self, value, etype='Datetime'):
-        return self.req.parse_datetime(value, etype)
+        return self.cw_req.parse_datetime(value, etype)
 
     @deprecated('[3.5] use self.cw_propval')
     def propval(self, propid):
-        return self.req.property_value(self._cwpropkey(propid))
+        return self.cw_req.property_value(self._cwpropkey(propid))
 
 set_log_methods(AppObject, getLogger('cubicweb.appobject'))

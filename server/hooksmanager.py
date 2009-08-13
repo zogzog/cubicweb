@@ -213,7 +213,7 @@ class Hook(AppObject):
     enabled = True
 
     def __init__(self, event=None):
-        super(Hook, self).__init__()
+        super(Hook, self).__init__(None)
         self.event = event
 
     @classmethod
