@@ -172,7 +172,7 @@ class TheMainTemplate(MainTemplate):
         self.w(u'</body>')
 
     def nav_column(self, view, context):
-        boxes = list(self.vreg['boxes'].possible_vobjects(
+        boxes = list(self.vreg['boxes'].poss_visible_objects(
             self.req, rset=self.rset, view=view, context=context))
         if boxes:
             self.w(u'<td class="navcol"><div class="navboxes">\n')
@@ -241,7 +241,7 @@ class SimpleMainTemplate(TheMainTemplate):
         w(u'<table width="100%" height="100%" border="0"><tr>\n')
         w(u'<td class="navcol">\n')
         self.topleft_header()
-        boxes = list(self.vreg['boxes'].possible_vobjects(
+        boxes = list(self.vreg['boxes'].poss_visible_objects(
             self.req, rset=self.rset, view=view, context='left'))
         if boxes:
             w(u'<div class="navboxes">\n')
@@ -404,7 +404,7 @@ class HTMLContentHeader(View):
 
     def call(self, view, **kwargs):
         """by default, display informal messages in content header"""
-        components = self.vreg['contentnavigation'].possible_vobjects(
+        components = self.vreg['contentnavigation'].poss_visible_objects(
             self.req, rset=self.rset, view=view, context='navtop')
         if components:
             self.w(u'<div id="contentheader">')
@@ -420,7 +420,7 @@ class HTMLContentFooter(View):
     id = 'contentfooter'
 
     def call(self, view, **kwargs):
-        components = self.vreg['contentnavigation'].possible_vobjects(
+        components = self.vreg['contentnavigation'].poss_visible_objects(
             self.req, rset=self.rset, view=view, context='navbottom')
         if components:
             self.w(u'<div id="contentfooter">')

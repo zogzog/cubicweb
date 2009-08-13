@@ -102,12 +102,12 @@ class ContentNavigationTC(CubicWebTC):
         view = mock_object(is_primary=lambda x: True)
         rset = self.execute('CWUser X LIMIT 1')
         req = self.request()
-        objs = self.vreg['contentnavigation'].possible_vobjects(
+        objs = self.vreg['contentnavigation'].poss_visible_objects(
             req, rset=rset, view=view, context='navtop')
         # breadcrumbs should be in headers by default
         clsids = set(obj.id for obj in objs)
         self.failUnless('breadcrumbs' in clsids)
-        objs = self.vreg['contentnavigation'].possible_vobjects(
+        objs = self.vreg['contentnavigation'].poss_visible_objects(
             req, rset=rset, view=view, context='navbottom')
         # breadcrumbs should _NOT_ be in footers by default
         clsids = set(obj.id for obj in objs)
@@ -116,12 +116,12 @@ class ContentNavigationTC(CubicWebTC):
                      'P value "navbottom"')
         # breadcrumbs should now be in footers
         req.cnx.commit()
-        objs = self.vreg['contentnavigation'].possible_vobjects(
+        objs = self.vreg['contentnavigation'].poss_visible_objects(
             req, rset=rset, view=view, context='navbottom')
 
         clsids = [obj.id for obj in objs]
         self.failUnless('breadcrumbs' in clsids)
-        objs = self.vreg['contentnavigation'].possible_vobjects(
+        objs = self.vreg['contentnavigation'].poss_visible_objects(
             req, rset=rset, view=view, context='navtop')
 
         clsids = [obj.id for obj in objs]
