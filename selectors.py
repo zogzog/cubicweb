@@ -664,7 +664,7 @@ class relation_possible(EClassSelector):
 
     @lltrace
     def __call__(self, cls, req, *args, **kwargs):
-        rschema = cls.schema.rschema(self.rtype)
+        rschema = req.vreg.schema.rschema(self.rtype)
         if not (rschema.has_perm(req, self.action)
                 or rschema.has_local_role(self.action)):
             return 0
@@ -853,7 +853,7 @@ class has_permission(EntitySelector):
         if row is None:
             score = 0
             need_local_check = []
-            geteschema = cls.schema.eschema
+            geteschema = req.vreg.schema.eschema
             for etype in rset.column_types(0):
                 if etype in BASE_TYPES:
                     return 0
@@ -891,7 +891,7 @@ class has_add_permission(EClassSelector):
     See `EClassSelector` documentation for behaviour when row is not specified.
     """
     def score(self, cls, req, etype):
-        eschema = cls.schema.eschema(etype)
+        eschema = req.vreg.schema.eschema(etype)
         if not (eschema.is_final() or eschema.is_subobject(strict=True)) \
                and eschema.has_perm(req, 'add'):
             return 1
