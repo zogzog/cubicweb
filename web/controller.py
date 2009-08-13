@@ -90,7 +90,7 @@ class Controller(AppObject):
         # XXX assigning to self really necessary?
         self.rset = None
         if rql:
-            self.ensure_ro_rql(rql)
+            self.req.ensure_ro_rql(rql)
             if not isinstance(rql, unicode):
                 rql = unicode(rql, self.req.encoding)
             pp = self.vreg['components'].select_or_none('magicsearch', self.req)

@@ -293,7 +293,7 @@ class InitialTableView(TableView):
              displaycols=None, displayactions=None, mainindex=None):
         """Dumps a table displaying a composite query"""
         actrql = self.req.form['actualrql']
-        self.ensure_ro_rql(actrql)
+        self.req.ensure_ro_rql(actrql)
         displaycols = self.displaycols(displaycols)
         if displayactions is None and 'displayactions' in self.req.form:
             displayactions = True

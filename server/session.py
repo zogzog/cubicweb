@@ -15,7 +15,8 @@ from logilab.common.deprecation import deprecated
 from rql.nodes import VariableRef, Function, ETYPE_PYOBJ_MAP, etype_from_pyobj
 from yams import BASE_TYPES
 
-from cubicweb import RequestSessionMixIn, Binary, UnknownEid
+from cubicweb import Binary, UnknownEid
+from cubicweb.req import RequestSessionBase
 from cubicweb.dbapi import ConnectionProperties
 from cubicweb.utils import make_uid
 from cubicweb.server.rqlrewrite import RQLRewriter
@@ -41,7 +42,7 @@ def _make_description(selected, args, solution):
     return description
 
 
-class Session(RequestSessionMixIn):
+class Session(RequestSessionBase):
     """tie session id, user, connections pool and other session data all
     together
     """

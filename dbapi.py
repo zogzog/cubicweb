@@ -19,8 +19,9 @@ from logilab.common.logging_ext import set_log_methods
 from logilab.common.decorators import monkeypatch
 from logilab.common.deprecation import deprecated
 
-from cubicweb import ETYPE_NAME_MAP, ConnectionError, RequestSessionMixIn
-from cubicweb import cwvreg, cwconfig
+from cubicweb import ETYPE_NAME_MAP, ConnectionError, cwvreg, cwconfig
+from cubicweb.req import RequestSessionBase
+
 
 _MARKER = object()
 
@@ -174,7 +175,7 @@ def in_memory_cnx(config, login, password):
     return repo, cnx
 
 
-class DBAPIRequest(RequestSessionMixIn):
+class DBAPIRequest(RequestSessionBase):
 
     def __init__(self, vreg, cnx=None):
         super(DBAPIRequest, self).__init__(vreg)

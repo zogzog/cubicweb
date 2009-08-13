@@ -11,17 +11,14 @@ __docformat__ = "restructuredtext en"
 
 import types
 from logging import getLogger
-from datetime import datetime, timedelta, time
+from datetime import datetime, timedelta
 
 from logilab.common.decorators import classproperty
 from logilab.common.deprecation import deprecated
 from logilab.common.logging_ext import set_log_methods
 
-from rql.nodes import VariableRef, SubQuery
-from rql.stmts import Union, Select
-
 from cubicweb import Unauthorized, NoSelectableObject
-from cubicweb.utils import UStringIO, ustrftime, strptime, todate, todatetime
+from cubicweb.utils import UStringIO
 
 ONESECOND = timedelta(0, 1, 0)
 CACHE_REGISTRY = {}
@@ -293,8 +290,6 @@ class AppObject(object):
         """
         cls.build___select__()
         cls.vreg = registry.vreg
-        cls.schema = registry.schema
-        cls.config = registry.config
         cls.register_properties()
         return cls
 
@@ -302,7 +297,7 @@ class AppObject(object):
     def vreg_initialization_completed(cls):
         pass
 
-    # Eproperties definition:
+    # properties definition:
     # key: id of the property (the actual CWProperty key is build using
     #      <registry name>.<obj id>.<property id>
     # value: tuple (property type, vocabfunc, default value, property description)
@@ -326,15 +321,6 @@ class AppObject(object):
     def propkey(cls, propid):
         return '%s.%s.%s' % (cls.__registry__, cls.id, propid)
 
-    @classproperty
-    @deprecated('[3.4] use __select__ and & or | operators')
-    def __selectors__(cls):
-        selector = cls.__select__
-        if isinstance(selector, AndSelector):
-            return tuple(selector.selectors)
-        if not isinstance(selector, tuple):
-            selector = (selector,)
-        return selector
 
     def __init__(self, req=None, rset=None, row=None, col=None, **extra):
         super(AppObject, self).__init__()
@@ -369,63 +355,11 @@ class AppObject(object):
         assert self.req
         return self.req.property_value(self.propkey(propid))
 
-    def limited_rql(self):
-        """return a printable rql for the result set associated to the object,
-        with limit/offset correctly set according to maximum page size and
-        currently displayed page when necessary
-        """
-        # try to get page boundaries from the navigation component
-        # XXX we should probably not have a ref to this component here (eg in
-        #     cubicweb.common)
-        nav = self.vreg['components'].select_or_none('navigation', self.req,
-                                                     rset=self.rset)
-        if nav:
-            start, stop = nav.page_boundaries()
-            rql = self._limit_offset_rql(stop - start, start)
-        # result set may have be limited manually in which case navigation won't
-        # apply
-        elif self.rset.limited:
-            rql = self._limit_offset_rql(*self.rset.limited)
-        # navigation component doesn't apply and rset has not been limited, no
-        # need to limit query
-        else:
-            rql = self.rset.printable_rql()
-        return rql
-
-    def _limit_offset_rql(self, limit, offset):
-        rqlst = self.rset.syntax_tree()
-        if len(rqlst.children) == 1:
-            select = rqlst.children[0]
-            olimit, ooffset = select.limit, select.offset
-            select.limit, select.offset = limit, offset
-            rql = rqlst.as_string(kwargs=self.rset.args)
-            # restore original limit/offset
-            select.limit, select.offset = olimit, ooffset
-        else:
-            newselect = Select()
-            newselect.limit = limit
-            newselect.offset = offset
-            aliases = [VariableRef(newselect.get_variable(vref.name, i))
-                       for i, vref in enumerate(rqlst.selection)]
-            newselect.set_with([SubQuery(aliases, rqlst)], check=False)
-            newunion = Union()
-            newunion.append(newselect)
-            rql = rqlst.as_string(kwargs=self.rset.args)
-            rqlst.parent = None
-        return rql
-
     def view(self, __vid, rset=None, __fallback_oid=None, __registry='views',
              **kwargs):
         """shortcut to self.vreg.view method avoiding to pass self.req"""
         return self.vreg[__registry].render(__vid, self.req, __fallback_oid,
                                             rset=rset, **kwargs)
-
-    def initialize_varmaker(self):
-        varmaker = self.req.get_page_data('rql_varmaker')
-        if varmaker is None:
-            varmaker = self.req.varmaker
-            self.req.set_page_data('rql_varmaker', varmaker)
-        self.varmaker = varmaker
 
     # url generation methods ##################################################
 
@@ -452,42 +386,6 @@ class AppObject(object):
                 method = self.req.relative_path(includeparams=False) or 'view'
         return self.req.build_url(method, **kwargs)
 
-    # various resources accessors #############################################
-
-    @deprecated('[3.5] use self.rset.get_entity(row,col) instead')
-    def entity(self, row, col=0):
-        """short cut to get an entity instance for a particular row/column
-        (col default to 0)
-        """
-        return self.rset.get_entity(row, col)
-
-    def complete_entity(self, row, col=0, skip_bytes=True):
-        """short cut to get an completed entity instance for a particular
-        row (all instance's attributes have been fetched)
-        """
-        entity = self.rset.get_entity(row, col)
-        entity.complete(skip_bytes=skip_bytes)
-        return entity
-
-    def user_rql_callback(self, args, msg=None):
-        """register a user callback to execute some rql query and return an url
-        to call it ready to be inserted in html
-        """
-        def rqlexec(req, rql, args=None, key=None):
-            req.execute(rql, args, key)
-        return self.user_callback(rqlexec, args, msg)
-
-    def user_callback(self, cb, args, msg=None, nonify=False):
-        """register the given user callback and return an url to call it ready to be
-        inserted in html
-        """
-        from simplejson import dumps
-        self.req.add_js('cubicweb.ajax.js')
-        cbname = self.req.register_onetime_callback(cb, *args)
-        msg = dumps(msg or '')
-        return "javascript:userCallbackThenReloadPage('%s', %s)" % (
-            cbname, msg)
-
     # formating methods #######################################################
 
     def tal_render(self, template, variables):
@@ -503,70 +401,66 @@ class AppObject(object):
         template.expand(context, output)
         return output.getvalue()
 
+    # deprecated ###############################################################
+
+    @classproperty
+    @deprecated('[3.4] use __select__ and & or | operators')
+    def __selectors__(cls):
+        selector = cls.__select__
+        if isinstance(selector, AndSelector):
+            return tuple(selector.selectors)
+        if not isinstance(selector, tuple):
+            selector = (selector,)
+        return selector
+
+    @classmethod
+    @deprecated('[3.5] use vreg.schema')
+    def schema(cls):
+        return cls.vreg.schema
+
+    @classmethod
+    @deprecated('[3.5] use vreg.config')
+    def schema(cls):
+        return cls.vreg.config
+
+    @deprecated('[3.5] use req.varmaker')
+    def initialize_varmaker(self):
+        self.varmaker = self.req.varmaker
+
+    @deprecated('[3.5] use rset.limited_rql')
+    def limited_rql(self):
+        return self.rset.limited_rql()
+
+    @deprecated('[3.5] use self.rset.complete_entity(row,col) instead')
+    def complete_entity(self, row, col=0, skip_bytes=True):
+        return self.rset.complete_entity(row, col, skip_bytes)
+
+    @deprecated('[3.5] use self.rset.get_entity(row,col) instead')
+    def entity(self, row, col=0):
+        return self.rset.get_entity(row, col)
+
+    @deprecated('[3.5] use req.user_rql_callback')
+    def user_rql_callback(self, args, msg=None):
+        return self.req.user_rql_callback(args, msg)
+
+    @deprecated('[3.5] use req.user_callback')
+    def user_callback(self, cb, args, msg=None, nonify=False):
+        return self.req.user_callback(cb, args, msg, nonify)
+
+    @deprecated('[3.5] use req.format_date')
     def format_date(self, date, date_format=None, time=False):
-        """return a string for a date time according to instance's
-        configuration
-        """
-        if date:
-            if date_format is None:
-                if time:
-                    date_format = self.req.property_value('ui.datetime-format')
-                else:
-                    date_format = self.req.property_value('ui.date-format')
-            return ustrftime(date, date_format)
-        return u''
+        return self.req.format_date(date, date_format, time)
 
+    @deprecated('[3.5] use req.format_timoe')
     def format_time(self, time):
-        """return a string for a time according to instance's
-        configuration
-        """
-        if time:
-            return ustrftime(time, self.req.property_value('ui.time-format'))
-        return u''
+        return self.req.format_time(time)
 
+    @deprecated('[3.5] use req.format_float')
     def format_float(self, num):
-        """return a string for floating point number according to instance's
-        configuration
-        """
-        if num:
-            return self.req.property_value('ui.float-format') % num
-        return u''
+        return self.req.format_float(num)
 
+    @deprecated('[3.5] use req.parse_datetime')
     def parse_datetime(self, value, etype='Datetime'):
-        """get a datetime or time from a string (according to etype)
-        Datetime formatted as Date are accepted
-        """
-        assert etype in ('Datetime', 'Date', 'Time'), etype
-        # XXX raise proper validation error
-        if etype == 'Datetime':
-            format = self.req.property_value('ui.datetime-format')
-            try:
-                return todatetime(strptime(value, format))
-            except ValueError:
-                pass
-        elif etype == 'Time':
-            format = self.req.property_value('ui.time-format')
-            try:
-                # (adim) I can't find a way to parse a Time with a custom format
-                date = strptime(value, format) # this returns a DateTime
-                return time(date.hour, date.minute, date.second)
-            except ValueError:
-                raise ValueError('can\'t parse %r (expected %s)' % (value, format))
-        try:
-            format = self.req.property_value('ui.date-format')
-            dt = strptime(value, format)
-            if etype == 'Datetime':
-                return todatetime(dt)
-            return todate(dt)
-        except ValueError:
-            raise ValueError('can\'t parse %r (expected %s)' % (value, format))
-
-    # security related methods ################################################
-
-    def ensure_ro_rql(self, rql):
-        """raise an exception if the given rql is not a select query"""
-        first = rql.split(' ', 1)[0].lower()
-        if first in ('insert', 'set', 'delete'):
-            raise Unauthorized(self.req._('only select queries are authorized'))
+        return self.req.parse_datetime(value, etype)
 
 set_log_methods(AppObject, getLogger('cubicweb.appobject'))

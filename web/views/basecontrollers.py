@@ -290,7 +290,7 @@ class JSonController(Controller):
     def _exec(self, rql, args=None, eidkey=None, rocheck=True):
         """json mode: execute RQL and return resultset as json"""
         if rocheck:
-            self.ensure_ro_rql(rql)
+            self.req.ensure_ro_rql(rql)
         try:
             return self.req.execute(rql, args, eidkey)
         except Exception, ex:

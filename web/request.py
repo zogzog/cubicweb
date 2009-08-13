@@ -15,11 +15,12 @@ import base64
 from urlparse import urlsplit
 from itertools import count
 
+from simplejson import dumps
+
 from rql.utils import rqlvar_maker
 
 from logilab.common.decorators import cached
 from logilab.common.deprecation import deprecated
-
 from logilab.mtconverter import xml_escape
 
 from cubicweb.dbapi import DBAPIRequest
@@ -85,8 +86,15 @@ class CubicWebRequestBase(DBAPIRequest):
         self.next_tabindex = self.tabindexgen.next
         # page id, set by htmlheader template
         self.pageid = None
-        self.varmaker = rqlvar_maker()
         self.datadir_url = self._datadir_url()
+
+    @property
+    def varmaker(self)
+        varmaker = self.get_page_data('rql_varmaker')
+        if varmaker is None:
+            varmaker = rqlvar_maker()
+            self.set_page_data('rql_varmaker', varmaker)
+        return varmaker
 
     def set_connection(self, cnx, user=None):
         """method called by the session handler when the user is authenticated
@@ -256,6 +264,24 @@ class CubicWebRequestBase(DBAPIRequest):
         if breadcrumbs:
             return breadcrumbs.pop()
         return self.base_url()
+
+    def user_rql_callback(self, args, msg=None):
+        """register a user callback to execute some rql query and return an url
+        to call it ready to be inserted in html
+        """
+        def rqlexec(req, rql, args=None, key=None):
+            req.execute(rql, args, key)
+        return self.user_callback(rqlexec, args, msg)
+
+    def user_callback(self, cb, args, msg=None, nonify=False):
+        """register the given user callback and return an url to call it ready to be
+        inserted in html
+        """
+        self.add_js('cubicweb.ajax.js')
+        cbname = self.register_onetime_callback(cb, *args)
+        msg = dumps(msg or '')
+        return "javascript:userCallbackThenReloadPage('%s', %s)" % (
+            cbname, msg)
 
     def register_onetime_callback(self, func, *args):
         cbname = 'cb_%s' % (

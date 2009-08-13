@@ -9,7 +9,7 @@ __docformat__ = "restructuredtext en"
 
 from logilab.common.decorators import cached, clear_cache, copy_cache
 
-from rql import nodes
+from rql import nodes, stmts
 
 from cubicweb import NotAnEntity
 
@@ -240,14 +240,57 @@ class ResultSet(object):
                 rset = mapping[key]
             rset.rows.append(self.rows[idx])
             rset.description.append(self.description[idx])
-
-
         for rset in result:
             rset.rowcount = len(rset.rows)
         if return_dict:
             return mapping
         else:
             return result
+
+    def limited_rql(self):
+        """return a printable rql for the result set associated to the object,
+        with limit/offset correctly set according to maximum page size and
+        currently displayed page when necessary
+        """
+        # try to get page boundaries from the navigation component
+        # XXX we should probably not have a ref to this component here (eg in
+        #     cubicweb.common)
+        nav = self.vreg['components'].select_or_none('navigation', self.req,
+                                                     rset=self)
+        if nav:
+            start, stop = nav.page_boundaries()
+            rql = self._limit_offset_rql(stop - start, start)
+        # result set may have be limited manually in which case navigation won't
+        # apply
+        elif self.limited:
+            rql = self._limit_offset_rql(*self.limited)
+        # navigation component doesn't apply and rset has not been limited, no
+        # need to limit query
+        else:
+            rql = self.printable_rql()
+        return rql
+
+    def _limit_offset_rql(self, limit, offset):
+        rqlst = self.syntax_tree()
+        if len(rqlst.children) == 1:
+            select = rqlst.children[0]
+            olimit, ooffset = select.limit, select.offset
+            select.limit, select.offset = limit, offset
+            rql = rqlst.as_string(kwargs=self.args)
+            # restore original limit/offset
+            select.limit, select.offset = olimit, ooffset
+        else:
+            newselect = stmts.Select()
+            newselect.limit = limit
+            newselect.offset = offset
+            aliases = [nodes.VariableRef(newselect.get_variable(vref.name, i))
+                       for i, vref in enumerate(rqlst.selection)]
+            newselect.set_with([nodes.SubQuery(aliases, rqlst)], check=False)
+            newunion = stmts.Union()
+            newunion.append(newselect)
+            rql = rqlst.as_string(kwargs=self.args)
+            rqlst.parent = None
+        return rql
 
     def limit(self, limit, offset=0, inplace=False):
         """limit the result set to the given number of rows optionaly starting
@@ -317,6 +360,14 @@ class ResultSet(object):
             # hacks)
             if self.rows[i][col] is not None:
                 yield self.get_entity(i, col)
+
+    def complete_entity(self, row, col=0, skip_bytes=True):
+        """short cut to get an completed entity instance for a particular
+        row (all instance's attributes have been fetched)
+        """
+        entity = self.get_entity(row, col)
+        entity.complete(skip_bytes=skip_bytes)
+        return entity
 
     @cached
     def get_entity(self, row, col=None):
