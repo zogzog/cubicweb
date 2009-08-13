@@ -12,7 +12,6 @@ from warnings import warn
 from logilab.common import interface
 from logilab.common.compat import all
 from logilab.common.decorators import cached
-from logilab.common.deprecation import deprecated
 from logilab.mtconverter import TransformData, TransformError, xml_escape
 
 from rql.utils import rqlvar_maker
@@ -21,7 +20,7 @@ from cubicweb import Unauthorized
 from cubicweb.rset import ResultSet
 from cubicweb.selectors import yes
 from cubicweb.appobject import AppObject
-from cubicweb.schema import RQLVocabularyConstraint, RQLConstraint, bw_normalize_etype
+from cubicweb.schema import RQLVocabularyConstraint, RQLConstraint
 
 from cubicweb.common.uilib import printable_value, soup2xhtml
 from cubicweb.common.mixins import MI_REL_TRIGGERS
@@ -36,100 +35,6 @@ def greater_card(rschema, subjtypes, objtypes, index):
             if card in '+*':
                 return card
     return '1'
-
-
-_MODE_TAGS = set(('link', 'create'))
-_CATEGORY_TAGS = set(('primary', 'secondary', 'generic', 'generated')) # , 'metadata'))
-
-try:
-    from cubicweb.web import formwidgets, uicfg
-
-    def _dispatch_rtags(tags, rtype, role, stype, otype):
-        for tag in tags:
-            if tag in _MODE_TAGS:
-                uicfg.actionbox_appearsin_addmenu.tag_relation(
-                    (stype, rtype, otype, role), tag == 'create')
-            elif tag in _CATEGORY_TAGS:
-                uicfg.autoform_section.tag_relation((stype, rtype, otype, role),
-                                                    tag)
-            elif tag == 'inlineview':
-                uicfg.autoform_is_inlined.tag_relation((stype, rtype, otype, role), True)
-            else:
-                raise ValueError(tag)
-
-except ImportError:
-
-    _dispatch_rtags = None
-
-def _get_etype(bases, classdict):
-    try:
-        return classdict['id']
-    except KeyError:
-        for base in bases:
-            etype = getattr(base, 'id', None)
-            if etype and etype != 'Any':
-                return etype
-
-def _get_defs(attr, name, bases, classdict):
-    try:
-        yield name, classdict.pop(attr)
-    except KeyError:
-        for base in bases:
-            try:
-                value = getattr(base, attr)
-                delattr(base, attr)
-                yield base.__name__, value
-            except AttributeError:
-                continue
-
-class _metaentity(type):
-    """this metaclass sets the relation tags on the entity class
-    and deals with the `widgets` attribute
-    """
-    def __new__(mcs, name, bases, classdict):
-        # collect baseclass' rtags
-        etype = _get_etype(bases, classdict)
-        if etype and _dispatch_rtags is not None:
-            for name, rtags in _get_defs('__rtags__', name, bases, classdict):
-                warn('%s: __rtags__ is deprecated' % name, DeprecationWarning)
-                for relation, tags in rtags.iteritems():
-                    # tags must become an iterable
-                    if isinstance(tags, basestring):
-                        tags = (tags,)
-                    # relation must become a 3-uple (rtype, targettype, role)
-                    if isinstance(relation, basestring):
-                        _dispatch_rtags(tags, relation, 'subject', etype, '*')
-                        _dispatch_rtags(tags, relation, 'object', '*', etype)
-                    elif len(relation) == 1: # useful ?
-                        _dispatch_rtags(tags, relation[0], 'subject', etype, '*')
-                        _dispatch_rtags(tags, relation[0], 'object', '*', etype)
-                    elif len(relation) == 2:
-                        rtype, ttype = relation
-                        ttype = bw_normalize_etype(ttype) # XXX bw compat
-                        _dispatch_rtags(tags, rtype, 'subject', etype, ttype)
-                        _dispatch_rtags(tags, rtype, 'object', ttype, etype)
-                    elif len(relation) == 3:
-                        rtype, ttype, role = relation
-                        ttype = bw_normalize_etype(ttype)
-                        if role == 'subject':
-                            _dispatch_rtags(tags, rtype, 'subject', etype, ttype)
-                        else:
-                            _dispatch_rtags(tags, rtype, 'object', ttype, etype)
-                    else:
-                        raise ValueError('bad rtag definition (%r)' % (relation,))
-            for name, widgets in _get_defs('widgets', name, bases, classdict):
-                warn('%s: widgets is deprecated' % name, DeprecationWarning)
-                for rtype, wdgname in widgets.iteritems():
-                    if wdgname in ('URLWidget', 'EmbededURLWidget', 'RawDynamicComboBoxWidget'):
-                        warn('%s widget is deprecated' % wdgname, DeprecationWarning)
-                        continue
-                    if wdgname == 'StringWidget':
-                        wdgname = 'TextInput'
-                    widget = getattr(formwidgets, wdgname)
-                    assert hasattr(widget, 'render')
-                    uicfg.autoform_field_kwargs.tag_subject_of(
-                        (etype, rtype, '*'), {'widget': widget})
-        return super(_metaentity, mcs).__new__(mcs, name, bases, classdict)
 
 
 class Entity(AppObject, dict):
@@ -155,7 +60,6 @@ class Entity(AppObject, dict):
                          as composite relations or relations that have '?1' as object
                          cardinality
     """
-    __metaclass__ = _metaentity
     __registry__ = 'etypes'
     __select__ = yes()
 
@@ -167,8 +71,6 @@ class Entity(AppObject, dict):
     # class attributes set automatically at registration time
     e_schema = None
 
-    MODE_TAGS = set(('link', 'create'))
-    CATEGORY_TAGS = set(('primary', 'secondary', 'generic', 'generated')) # , 'metadata'))
     @classmethod
     def __initialize__(cls, schema):
         """initialize a specific entity class by adding descriptors to access
