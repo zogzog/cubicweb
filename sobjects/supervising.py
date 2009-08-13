@@ -23,7 +23,7 @@ class SomethingChangedHook(Hook):
     accepts = ('Any',)
 
     def call(self, session, *args):
-        dest = self.config['supervising-addrs']
+        dest = session.vreg.config['supervising-addrs']
         if not dest: # no supervisors, don't do this for nothing...
             return
         self.session = session
