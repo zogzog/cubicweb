@@ -342,15 +342,20 @@ class AppObject(object):
             selector = (selector,)
         return selector
 
-    @classmethod
-    @deprecated('[3.5] use vreg.schema')
-    def schema(cls):
-        return cls.vreg.schema
+    @property
+    @deprecated('[3.5] use req.vreg')
+    def vreg(self):
+        return self.req.vreg
 
-    @classmethod
-    @deprecated('[3.5] use vreg.config')
-    def schema(cls):
-        return cls.vreg.config
+    @property
+    @deprecated('[3.5] use req.vreg.schema')
+    def schema(self):
+        return self.req.vreg.schema
+
+    @property
+    @deprecated('[3.5] use req.vreg.config')
+    def config(self):
+        return self.req.vreg.config
 
     @deprecated('[3.5] use req.varmaker')
     def initialize_varmaker(self):
