@@ -170,13 +170,13 @@ class Entity(AppObject, dict):
     MODE_TAGS = set(('link', 'create'))
     CATEGORY_TAGS = set(('primary', 'secondary', 'generic', 'generated')) # , 'metadata'))
     @classmethod
-    def __initialize__(cls):
+    def __initialize__(cls, schema):
         """initialize a specific entity class by adding descriptors to access
         entity type's attributes and relations
         """
         etype = cls.id
         assert etype != 'Any', etype
-        cls.e_schema = eschema = cls.schema.eschema(etype)
+        cls.e_schema = eschema = schema.eschema(etype)
         for rschema, _ in eschema.attribute_definitions():
             if rschema.type == 'eid':
                 continue

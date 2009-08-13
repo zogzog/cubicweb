@@ -136,11 +136,11 @@ class ETypeRegistry(CWRegistry):
             assert len(objects) == 1, objects
             cls = objects[0]
         if cls.id == etype:
-            cls.__initialize__()
+            cls.__initialize__(self.schema)
             return cls
         cls = dump_class(cls, etype)
         cls.id = etype
-        cls.__initialize__()
+        cls.__initialize__(self.schema)
         return cls
 
 VRegistry.REGISTRY_FACTORY['etypes'] = ETypeRegistry
