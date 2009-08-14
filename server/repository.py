@@ -33,18 +33,12 @@ from cubicweb import (CW_SOFTWARE_ROOT, CW_MIGRATION_MAP, CW_EVENT_MANAGER,
                       ETypeNotSupportedBySources, RTypeNotSupportedBySources,
                       BadConnectionId, Unauthorized, ValidationError,
                       typed_eid)
-from cubicweb.cwvreg import CubicWebVRegistry
-from cubicweb.schema import VIRTUAL_RTYPES, CubicWebSchema
-from cubicweb import server
-from cubicweb.server.utils import RepoThread, LoopTask
-from cubicweb.server.pool import ConnectionsPool, LateOperation, SingleLastOperation
+from cubicweb import cwvreg, schema, server
+from cubicweb.server import utils, hook, pool, querier, sources
 from cubicweb.server.session import Session, InternalSession
-from cubicweb.server.querier import QuerierHelper
-from cubicweb.server.sources import get_source
-from cubicweb.server.hookhelper import rproperty
 
 
-class CleanupEidTypeCacheOp(SingleLastOperation):
+class CleanupEidTypeCacheOp(hook.SingleLastOperation):
     """on rollback of a insert query or commit of delete query, we have to
     clear repository's cache from no more valid entries
 
@@ -74,7 +68,7 @@ class CleanupEidTypeCacheOp(SingleLastOperation):
             pass
 
 
-class FTIndexEntityOp(LateOperation):
+class FTIndexEntityOp(hook.LateOperation):
     """operation to delay entity full text indexation to commit
 
     since fti indexing may trigger discovery of other entities, it should be
@@ -107,7 +101,7 @@ def del_existing_rel_if_needed(session, eidfrom, rtype, eidto):
     # hooks responsability to ensure they do not violate relation's cardinality
     if session.is_super_session:
         return
-    card = rproperty(session, rtype, eidfrom, eidto, 'cardinality')
+    card = session.schema_rproperty(rtype, eidfrom, eidto, 'cardinality')
     # one may be tented to check for neweids but this may cause more than one
     # relation even with '1?'  cardinality if thoses relations are added in the
     # same transaction where the entity is being created. This never occurs from
@@ -136,7 +130,7 @@ class Repository(object):
     def __init__(self, config, vreg=None, debug=False):
         self.config = config
         if vreg is None:
-            vreg = CubicWebVRegistry(config, debug)
+            vreg = cwvreg.CubicWebVRegistry(config, debug)
         self.vreg = vreg
         self.pyro_registered = False
         self.info('starting repository from %s', self.config.apphome)
@@ -147,9 +141,9 @@ class Repository(object):
         # list of running threads
         self._running_threads = []
         # initial schema, should be build or replaced latter
-        self.schema = CubicWebSchema(config.appid)
+        self.schema = schema.CubicWebSchema(config.appid)
         # querier helper, need to be created after sources initialization
-        self.querier = QuerierHelper(self, self.schema)
+        self.querier = querier.QuerierHelper(self, self.schema)
         # should we reindex in changes?
         self.do_fti = not config['delay-full-text-indexation']
         # sources
@@ -174,7 +168,7 @@ class Repository(object):
         self._extid_cache = {}
         # open some connections pools
         self._available_pools = Queue.Queue()
-        self._available_pools.put_nowait(ConnectionsPool(self.sources))
+        self._available_pools.put_nowait(pool.ConnectionsPool(self.sources))
         if config.read_instance_schema:
             # normal start: load the instance schema from the database
             self.fill_schema()
@@ -216,7 +210,7 @@ class Repository(object):
         # list of available pools (we can't iterated on Queue instance)
         self.pools = []
         for i in xrange(config['connections-pool-size']):
-            self.pools.append(ConnectionsPool(self.sources))
+            self.pools.append(pool.ConnectionsPool(self.sources))
             self._available_pools.put_nowait(self.pools[-1])
         self._shutting_down = False
         self.hm = vreg['hooks']
@@ -231,7 +225,7 @@ class Repository(object):
 
     def get_source(self, uri, source_config):
         source_config['uri'] = uri
-        return get_source(source_config, self.schema, self)
+        return sources.get_source(source_config, self.schema, self)
 
     def set_schema(self, schema, resetvreg=True):
         schema.rebuild_infered_relations()
@@ -250,7 +244,7 @@ class Repository(object):
         """lod schema from the repository"""
         from cubicweb.server.schemaserial import deserialize_schema
         self.info('loading schema from the repository')
-        appschema = CubicWebSchema(self.config.appid)
+        appschema = schema.CubicWebSchema(self.config.appid)
         self.set_schema(self.config.load_bootstrap_schema(), resetvreg=False)
         self.debug('deserializing db schema into %s %#x', appschema.name, id(appschema))
         session = self.internal_session()
@@ -273,7 +267,7 @@ class Repository(object):
     def start_looping_tasks(self):
         assert isinstance(self._looping_tasks, list), 'already started'
         for i, (interval, func, args) in enumerate(self._looping_tasks):
-            self._looping_tasks[i] = task = LoopTask(interval, func, args)
+            self._looping_tasks[i] = task = utils.LoopTask(interval, func, args)
             self.info('starting task %s with interval %.2fs', task.name,
                       interval)
             task.start()
@@ -293,7 +287,7 @@ class Repository(object):
 
     def threaded_task(self, func):
         """start function in a separated thread"""
-        t = RepoThread(func, self._running_threads)
+        t = utils.RepoThread(func, self._running_threads)
         t.start()
 
     #@locked
@@ -898,7 +892,7 @@ class Repository(object):
         pendingrtypes = session.transaction_data.get('pendingrtypes', ())
         for rschema, targetschemas, x in eschema.relation_definitions():
             rtype = rschema.type
-            if rtype in VIRTUAL_RTYPES or rtype in pendingrtypes:
+            if rtype in schema.VIRTUAL_RTYPES or rtype in pendingrtypes:
                 continue
             var = '%s%s' % (rtype.upper(), x.upper())
             if x == 'subject':
@@ -978,7 +972,7 @@ class Repository(object):
         session.set_entity_cache(entity)
         for rschema in eschema.subject_relations():
             rtype = str(rschema)
-            if rtype in VIRTUAL_RTYPES:
+            if rtype in schema.VIRTUAL_RTYPES:
                 continue
             if rschema.is_final():
                 entity.setdefault(rtype, None)
@@ -986,7 +980,7 @@ class Repository(object):
                 entity.set_related_cache(rtype, 'subject', session.empty_rset())
         for rschema in eschema.object_relations():
             rtype = str(rschema)
-            if rtype in VIRTUAL_RTYPES:
+            if rtype in schema.VIRTUAL_RTYPES:
                 continue
             entity.set_related_cache(rtype, 'object', session.empty_rset())
         # set inline relation cache before call to after_add_entity
