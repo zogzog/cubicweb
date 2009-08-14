@@ -422,16 +422,17 @@ class ResultSet(object):
         #     new attributes found in this resultset ?
         try:
             entity = req.entity_cache(eid)
-            if entity.rset is None:
-                # entity has no rset set, this means entity has been cached by
-                # the repository (req is a repository session) which had no rset
-                # info. Add id.
-                entity.rset = self
-                entity.row = row
-                entity.col = col
-            return entity
         except KeyError:
             pass
+        else:
+            if entity.rset is None:
+                # entity has no rset set, this means entity has been created by
+                # the querier (req is a repository session) and so jas no rset
+                # info. Add it.
+                entity.cw_rset = self
+                entity.cw_row = row
+                entity.cw_col = col
+            return entity
         # build entity instance
         etype = self.description[row][col]
         entity = self.vreg['etypes'].etype_class(etype)(req, rset=self,
