@@ -248,6 +248,7 @@ function addInlineCreationForm(peid, ttype, rtype, role) {
     d.addCallback(function (response) {
 	var linknode = getNode('add' + rtype + ':' + peid + 'link');
         var dom = getDomFromResponse(response);
+	preprocessAjaxLoad(null, dom);
 	var form = jQuery(dom);
 	form.css('display', 'none');
 	form.insertBefore(linknode.parentNode).slideDown('fast');
