@@ -243,22 +243,22 @@ function updateInlinedEntitiesCounters(rtype) {
  * @param ttype : the target (inlined) entity type
  * @param rtype : the relation type between both entities
  */
-function addInlineCreationForm(peid, ttype, rtype, role) {
+function addInlineCreationForm(peid, ttype, rtype, role, insertBefore) {
+    insertBefore = insertBefore || getNode('add' + rtype + ':' + peid + 'link').parentNode;
     var d = asyncRemoteExec('inline_creation_form', peid, ttype, rtype, role);
     d.addCallback(function (response) {
-	var linknode = getNode('add' + rtype + ':' + peid + 'link');
         var dom = getDomFromResponse(response);
-	preprocessAjaxLoad(null, dom);
-	var form = jQuery(dom);
-	form.css('display', 'none');
-	form.insertBefore(linknode.parentNode).slideDown('fast');
-	updateInlinedEntitiesCounters(rtype);
-	reorderTabindex();
-	form.trigger('inlinedform-added');
+        preprocessAjaxLoad(null, dom);
+        var form = jQuery(dom);
+        form.css('display', 'none');
+        form.insertBefore(insertBefore).slideDown('fast');
+        updateInlinedEntitiesCounters(rtype);
+        reorderTabindex();
+        form.trigger('inlinedform-added');
         postAjaxLoad(dom);
     });
     d.addErrback(function (xxx) {
-	log('xxx =', xxx);
+        log('xxx =', xxx);
     });
 }
 
