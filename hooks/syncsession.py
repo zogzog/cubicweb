@@ -74,8 +74,8 @@ class SyncInGroupHook(SyncSessionHook):
             opcls = _DeleteGroupOp
         else:
             opcls = _AddGroupOp
-        for session in get_user_sessions(self.cw_req.repo, self.eidfrom):
-            opcls(self.cw_req, cnxuser=session.user, geid=self.eidto)
+        for session in get_user_sessions(self._cw.repo, self.eidfrom):
+            opcls(self._cw, cnxuser=session.user, geid=self.eidto)
 
 
 class _DelUserOp(hook.Operation):
@@ -99,8 +99,8 @@ class CloseDeletedUserSessionsHook(SyncSessionHook):
 
     def __call__(self):
         """modify user permission, need to update users"""
-        for session in get_user_sessions(self.cw_req.repo, self.entity.eid):
-            _DelUserOp(self.cw_req, session.id)
+        for session in get_user_sessions(self._cw.repo, self.entity.eid):
+            _DelUserOp(self._cw, session.id)
 
 
 # CWProperty hooks #############################################################
@@ -143,7 +143,7 @@ class AddCWPropertyHook(SyncSessionHook):
 
     def __call__(self):
         key, value = self.entity.pkey, self.entity.value
-        session = self.cw_req
+        session = self._cw
         try:
             value = session.vreg.typed_value(key, value)
         except UnknownProperty:
@@ -168,7 +168,7 @@ class UpdateCWPropertyHook(AddCWPropertyHook):
                 'value' in entity.edited_attributes):
             return
         key, value = entity.pkey, entity.value
-        session = self.cw_req
+        session = self._cw
         try:
             value = session.vreg.typed_value(key, value)
         except UnknownProperty:
@@ -191,7 +191,7 @@ class DeleteCWPropertyHook(AddCWPropertyHook):
 
     def __call__(self):
         eid = self.entity.eid
-        session = self.cw_req
+        session = self._cw
         for eidfrom, rtype, eidto in session.transaction_data.get('pendingrelations', ()):
             if rtype == 'for_user' and eidfrom == self.entity.eid:
                 # if for_user was set, delete has already been handled
@@ -206,7 +206,7 @@ class AddForUserRelationHook(SyncSessionHook):
     events = ('after_add_relation',)
 
     def __call__(self):
-        session = self.cw_req
+        session = self._cw
         eidfrom = self.eidfrom
         if not session.describe(eidfrom)[0] == 'CWProperty':
             return
@@ -225,7 +225,7 @@ class DelForUserRelationHook(AddForUserRelationHook):
     events = ('after_delete_relation',)
 
     def __call__(self):
-        session = self.cw_req
+        session = self._cw
         key = session.execute('Any K WHERE P eid %(x)s, P pkey K',
                               {'x': self.eidfrom}, 'x')[0][0]
         session.transaction_data.setdefault('pendingrelations', []).append(

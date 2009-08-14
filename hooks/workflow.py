@@ -65,7 +65,7 @@ class SetInitialStateHook(WorkflowHook):
     events = ('after_add_entity',)
 
     def __call__(self):
-        _SetInitialStateOp(self.cw_req, entity=self.entity)
+        _SetInitialStateOp(self._cw, entity=self.entity)
 
 
 class PrepareStateChangeHook(WorkflowHook):
@@ -75,7 +75,7 @@ class PrepareStateChangeHook(WorkflowHook):
     events = ('before_delete_relation',)
 
     def __call__(self):
-        self.cw_req.transaction_data.setdefault('pendingrelations', []).append(
+        self._cw.transaction_data.setdefault('pendingrelations', []).append(
             (self.eidfrom, self.rtype, self.eidto))
 
 
@@ -85,7 +85,7 @@ class FireTransitionHook(PrepareStateChangeHook):
     events = ('before_add_relation',)
 
     def __call__(self):
-        session = self.cw_req
+        session = self._cw
         eidfrom = self.eidfrom
         eidto = self.eidto
         state = previous_state(session, eidfrom)
@@ -134,10 +134,10 @@ class SetModificationDateOnStateChange(WorkflowHook):
     events = ('after_add_relation',)
 
     def __call__(self):
-        if self.cw_req.added_in_transaction(self.eidfrom):
+        if self._cw.added_in_transaction(self.eidfrom):
             # new entity, not needed
             return
-        entity = self.cw_req.entity_from_eid(self.eidfrom)
+        entity = self._cw.entity_from_eid(self.eidfrom)
         try:
             entity.set_attributes(modification_date=datetime.now())
         except RepositoryError, ex:

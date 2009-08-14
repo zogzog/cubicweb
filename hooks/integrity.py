@@ -74,11 +74,11 @@ class CheckCardinalityHook(IntegrityHook):
 
     def checkrel_if_necessary(self, opcls, rtype, eid):
         """check an equivalent operation has not already been added"""
-        for op in self.cw_req.pending_operations:
+        for op in self._cw.pending_operations:
             if isinstance(op, opcls) and op.rtype == rtype and op.eid == eid:
                 break
         else:
-            opcls(self.cw_req, rtype=rtype, eid=eid)
+            opcls(self._cw, rtype=rtype, eid=eid)
 
     def after_add_entity(self):
         eid = self.entity.eid
@@ -105,7 +105,7 @@ class CheckCardinalityHook(IntegrityHook):
         rtype = self.rtype
         if rtype in DONT_CHECK_RTYPES_ON_DEL:
             return
-        session = self.cw_req
+        session = self._cw
         eidfrom, eidto = self.eidfrom, self.eidto
         card = session.schema_rproperty(rtype, eidfrom, eidto, 'cardinality')
         pendingrdefs = session.transaction_data.get('pendingrdefs', ())
@@ -149,10 +149,10 @@ class CheckConstraintHook(IntegrityHook):
     events = ('after_add_relation',)
 
     def __call__(self):
-        constraints = self.cw_req.schema_rproperty(self.rtype, self.eidfrom, self.eidto,
+        constraints = self._cw.schema_rproperty(self.rtype, self.eidfrom, self.eidto,
                                 'constraints')
         if constraints:
-            _CheckConstraintsOp(self.cw_req, constraints=constraints,
+            _CheckConstraintsOp(self._cw, constraints=constraints,
                                rdef=(self.eidfrom, self.rtype, self.eidto))
 
 
@@ -170,9 +170,9 @@ class CheckUniqueHook(IntegrityHook):
             if eschema.subject_relation(attr).is_final() and \
                    eschema.has_unique_values(attr):
                 rql = '%s X WHERE X %s %%(val)s' % (entity.e_schema, attr)
-                rset = self.cw_req.unsafe_execute(rql, {'val': val})
+                rset = self._cw.unsafe_execute(rql, {'val': val})
                 if rset and rset[0][0] != entity.eid:
-                    msg = self.cw_req._('the value "%s" is already used, use another one')
+                    msg = self._cw._('the value "%s" is already used, use another one')
                     raise ValidationError(entity.eid, {attr: msg % val})
 
 
@@ -199,13 +199,13 @@ class DeleteCompositeOrphanHook(IntegrityHook):
     events = ('before_delete_relation',)
 
     def __call__(self):
-        composite = self.cw_req.schema_rproperty(self.rtype, self.eidfrom, self.eidto,
+        composite = self._cw.schema_rproperty(self.rtype, self.eidfrom, self.eidto,
                                                  'composite')
         if composite == 'subject':
-            _DelayedDeleteOp(self.cw_req, eid=self.eidto,
+            _DelayedDeleteOp(self._cw, eid=self.eidto,
                              relation='Y %s X' % self.rtype)
         elif composite == 'object':
-            _DelayedDeleteOp(self.cw_req, eid=self.eidfrom,
+            _DelayedDeleteOp(self._cw, eid=self.eidfrom,
                              relation='X %s Y' % self.rtype)
 
 
@@ -218,12 +218,12 @@ class DontRemoveOwnersGroupHook(IntegrityHook):
 
     def __call__(self):
         if self.event == 'before_delete_entity' and self.entity.name == 'owners':
-            raise ValidationError(self.entity.eid, {None: self.cw_req._('can\'t be deleted')})
+            raise ValidationError(self.entity.eid, {None: self._cw._('can\'t be deleted')})
         elif self.event == 'before_update_entity' and 'name' in self.entity.edited_attribute:
             newname = self.entity.pop('name')
             oldname = self.entity.name
             if oldname == 'owners' and newname != oldname:
-                raise ValidationError(self.entity.eid, {'name': self.cw_req._('can\'t be changed')})
+                raise ValidationError(self.entity.eid, {'name': self._cw._('can\'t be changed')})
             self.entity['name'] = newname
 
 
@@ -243,7 +243,7 @@ class TidyHtmlFields(IntegrityHook):
                     continue # no text to tidy
                 if isinstance(value, unicode): # filter out None and Binary
                     if getattr(entity, str(metaattr)) == 'text/html':
-                        entity[attr] = soup2xhtml(value, self.cw_req.encoding)
+                        entity[attr] = soup2xhtml(value, self._cw.encoding)
 
 
 class StripCWUserLoginHook(IntegrityHook):

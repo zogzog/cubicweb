@@ -43,10 +43,10 @@ class SetPrimaryEmailHook(hook.Hook):
     events = ('after_add_relation',)
 
     def __call__(self):
-        entity = self.cw_req.entity_from_eid(self.eidfrom)
+        entity = self._cw.entity_from_eid(self.eidfrom)
         if 'primary_email' in entity.e_schema.subject_relations():
-            SetPrimaryEmailRelationOp(self.cw_req, entity=entity,
-                                      email=self.cw_req.entity_from_eid(self.eidto))
+            SetPrimaryEmailRelationOp(self._cw, entity=entity,
+                                      email=self._cw.entity_from_eid(self.eidto))
 
 class SetUseEmailHook(hook.Hook):
     """notify when a bug or story or version has its state modified"""
@@ -56,7 +56,7 @@ class SetUseEmailHook(hook.Hook):
     events = ('after_add_relation',)
 
     def __call__(self):
-        entity = self.cw_req.entity_from_eid(self.eidfrom)
+        entity = self._cw.entity_from_eid(self.eidfrom)
         if 'use_email' in entity.e_schema.subject_relations():
-            SetUseEmailRelationOp(self.cw_req, entity=entity,
-                                  email=self.cw_req.entity_from_eid(self.eidto))
+            SetUseEmailRelationOp(self._cw, entity=entity,
+                                  email=self._cw.entity_from_eid(self.eidto))

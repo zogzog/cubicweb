@@ -28,7 +28,7 @@ class NotificationHook(hook.Hook):
     category = 'notification'
 
     def select_view(self, vid, rset, row=0, col=0):
-        return self.cw_req.vreg['views'].select_object(vid, self.cw_req,
+        return self._cw.vreg['views'].select_object(vid, self._cw,
                                                        rset=rset, row=0, col=0)
 
 
@@ -50,7 +50,7 @@ class StatusChangeHook(NotificationHook):
         if comment:
             comment = normalize_text(comment, 80,
                                      rest=entity.comment_format=='text/rest')
-        RenderAndSendNotificationView(self.cw_req, view=view, viewargs={
+        RenderAndSendNotificationView(self._cw, view=view, viewargs={
             'comment': comment, 'previous_state': entity.previous_state.name,
             'current_state': entity.new_state.name})
 
@@ -64,12 +64,12 @@ class RelationChangeHook(NotificationHook):
         """if a notification view is defined for the event, send notification
         email defined by the view
         """
-        rset = self.cw_req.eid_rset(self.eidfrom)
+        rset = self._cw.eid_rset(self.eidfrom)
         view = self.select_view('notif_%s_%s' % (self.event,  self.rtype),
                                 rset=rset, row=0)
         if view is None:
             return
-        RenderAndSendNotificationView(self.cw_req, view=view)
+        RenderAndSendNotificationView(self._cw, view=view)
 
 
 class EntityChangeHook(NotificationHook):
@@ -84,7 +84,7 @@ class EntityChangeHook(NotificationHook):
         view = self.select_view('notif_%s' % self.event, rset=rset, row=0)
         if view is None:
             return
-        RenderAndSendNotificationView(self.cw_req, view=view)
+        RenderAndSendNotificationView(self._cw, view=view)
 
 
 # supervising ##################################################################
@@ -95,16 +95,16 @@ class SomethingChangedHook(NotificationHook):
               'after_add_entity', 'before_update_entity')
 
     def __call__(self):
-        dest = self.cw_req.vreg.config['supervising-addrs']
+        dest = self._cw.vreg.config['supervising-addrs']
         if not dest: # no supervisors, don't do this for nothing...
             return
         if self._call():
-            SupervisionMailOp(self.cw_req)
+            SupervisionMailOp(self._cw)
 
     def _call(self):
         event = self.event.split('_', 1)[1]
         if event == 'update_entity':
-            if self.cw_req.added_in_transaction(self.entity.eid):
+            if self._cw.added_in_transaction(self.entity.eid):
                 return False
             if self.entity.e_schema == 'CWUser':
                 if not (self.entity.edited_attributes - frozenset(('eid', 'modification_date',
@@ -112,7 +112,7 @@ class SomethingChangedHook(NotificationHook):
                     # don't record last_login_time update which are done
                     # automatically at login time
                     return False
-        self.cw_req.transaction_data.setdefault('pendingchanges', []).append(
+        self._cw.transaction_data.setdefault('pendingchanges', []).append(
             (event, self))
         return True
 
@@ -128,6 +128,6 @@ class EntityDeleteHook(SomethingChangedHook):
             # may raise an error during deletion process, for instance due to
             # missing required relation
             title = '#%s' % eid
-        self.cw_req.transaction_data.setdefault('pendingchanges', []).append(
+        self._cw.transaction_data.setdefault('pendingchanges', []).append(
             ('delete_entity', (self.eid, str(self.entity.e_schema), title)))
         return True

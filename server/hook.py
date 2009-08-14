@@ -20,10 +20,10 @@ Relation (eg before_add_relation, after_add_relation, before_delete_relation,
 after_delete_relation) all have `eidfrom`, `rtype`, `eidto` attributes.
 
 Server start/stop hooks (eg server_startup, server_shutdown) have a `repo`
-attribute, but *their `cw_req` attribute is None*.
+attribute, but *their `_cw` attribute is None*.
 
 Backup/restore hooks (eg server_backup, server_restore) have a `repo` and a
-`timestamp` attributes, but *their `cw_req` attribute is None*.
+`timestamp` attributes, but *their `_cw` attribute is None*.
 
 Session hooks (eg session_open, session_close) have no special attribute.
 
@@ -72,10 +72,11 @@ class HooksRegistry(CWRegistry):
 
     def call_hooks(self, event, req=None, **kwargs):
         kwargs['event'] = event
-        # XXX remove .enabled
-        for hook in sorted([x for x in self.possible_objects(req, **kwargs)
-                            if x.enabled], key=lambda x: x.order):
-            hook()
+        for hook in sorted(self.possible_objects(req, **kwargs), key=lambda x: x.order):
+            if hook.enabled:
+                hook()
+            else:
+                warn('[3.5] %s: enabled is deprecated' % cls)
 
 VRegistry.REGISTRY_FACTORY['hooks'] = HooksRegistry
 
@@ -165,15 +166,15 @@ class Hook(AppObject):
         if hasattr(self, 'call'):
             warn('[3.5] %s: call is deprecated, implements __call__' % self.__class__)
             if self.event.endswith('_relation'):
-                self.call(self.cw_req, self.eidfrom, self.rtype, self.eidto)
+                self.call(self._cw, self.eidfrom, self.rtype, self.eidto)
             elif 'delete' in self.event:
-                self.call(self.cw_req, self.entity.eid)
+                self.call(self._cw, self.entity.eid)
             elif self.event.startswith('server_'):
                 self.call(self.repo)
             elif self.event.startswith('session_'):
-                self.call(self.cw_req)
+                self.call(self._cw)
             else:
-                self.call(self.cw_req, self.entity)
+                self.call(self._cw, self.entity)
 
 set_log_methods(Hook, getLogger('cubicweb.hook'))
 

@@ -27,5 +27,5 @@ class DelBookmarkedByHook(hook.Hook):
     events = ('after_delete_relation',)
 
     def __call__(self):
-        AutoDeleteBookmarkOp(self.cw_req,
-                             bookmark=self.cw_req.entity_from_eid(self.eidfrom))
+        AutoDeleteBookmarkOp(self._cw,
+                             bookmark=self._cw.entity_from_eid(self.eidfrom))

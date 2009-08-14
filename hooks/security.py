@@ -60,7 +60,7 @@ class AfterAddEntitySecurityHook(SecurityHook):
     events = ('after_add_entity',)
 
     def __call__(self):
-        _CheckEntityPermissionOp(self.cw_req, entity=self.entity, action='add')
+        _CheckEntityPermissionOp(self._cw, entity=self.entity, action='add')
 
 
 class AfterUpdateEntitySecurityHook(SecurityHook):
@@ -71,10 +71,10 @@ class AfterUpdateEntitySecurityHook(SecurityHook):
         try:
             # check user has permission right now, if not retry at commit time
             self.entity.check_perm('update')
-            check_entity_attributes(self.cw_req, self.entity)
+            check_entity_attributes(self._cw, self.entity)
         except Unauthorized:
             self.entity.clear_local_perm_cache('update')
-            _CheckEntityPermissionOp(self.cw_req, entity=self.entity, action='update')
+            _CheckEntityPermissionOp(self._cw, entity=self.entity, action='update')
 
 
 class BeforeDelEntitySecurityHook(SecurityHook):
@@ -82,7 +82,7 @@ class BeforeDelEntitySecurityHook(SecurityHook):
     events = ('before_delete_entity',)
 
     def __call__(self):
-        self.entity.e_schema.check_perm(self.cw_req, 'delete', eid)
+        self.entity.e_schema.check_perm(self._cw, 'delete', eid)
 
 
 class BeforeAddRelationSecurityHook(SecurityHook):
@@ -91,8 +91,8 @@ class BeforeAddRelationSecurityHook(SecurityHook):
 
     def __call__(self):
         if self.rtype in BEFORE_ADD_RELATIONS:
-            rschema = self.cw_req.repo.schema[self.rtype]
-            rschema.check_perm(self.cw_req, 'add', self.eidfrom, self.eidto)
+            rschema = self._cw.repo.schema[self.rtype]
+            rschema.check_perm(self._cw, 'add', self.eidfrom, self.eidto)
 
 
 class AfterAddRelationSecurityHook(SecurityHook):
@@ -101,14 +101,14 @@ class AfterAddRelationSecurityHook(SecurityHook):
 
     def __call__(self):
         if not self.rtype in BEFORE_ADD_RELATIONS:
-            rschema = self.cw_req.repo.schema[self.rtype]
+            rschema = self._cw.repo.schema[self.rtype]
             if self.rtype in ON_COMMIT_ADD_RELATIONS:
-                _CheckRelationPermissionOp(self.cw_req, action='add',
+                _CheckRelationPermissionOp(self._cw, action='add',
                                            rschema=rschema,
                                            eidfrom=self.eidfrom,
                                            eidto=self.eidto)
             else:
-                rschema.check_perm(self.cw_req, 'add', self.eidfrom, self.eidto)
+                rschema.check_perm(self._cw, 'add', self.eidfrom, self.eidto)
 
 
 class BeforeDelRelationSecurityHook(SecurityHook):
@@ -116,6 +116,6 @@ class BeforeDelRelationSecurityHook(SecurityHook):
     events = ('before_delete_relation',)
 
     def __call__(self):
-        self.cw_req.repo.schema[self.rtype].check_perm(self.cw_req, 'delete',
+        self._cw.repo.schema[self.rtype].check_perm(self._cw, 'delete',
                                                        self.eidfrom, self.eidto)
 

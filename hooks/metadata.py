@@ -43,8 +43,8 @@ class InitMetaAttrsHook(MetaDataHook):
         timestamp = datetime.now()
         self.entity.setdefault('creation_date', timestamp)
         self.entity.setdefault('modification_date', timestamp)
-        if not self.cw_req.get_shared_data('do-not-insert-cwuri'):
-            cwuri = u'%seid/%s' % (self.cw_req.base_url(), self.entity.eid)
+        if not self._cw.get_shared_data('do-not-insert-cwuri'):
+            cwuri = u'%seid/%s' % (self._cw.base_url(), self.entity.eid)
             self.entity.setdefault('cwuri', cwuri)
 
 
@@ -76,7 +76,7 @@ class SetIsHook(MetaDataHook):
     def __call__(self):
         if hasattr(self.entity, '_cw_recreating'):
             return
-        session = self.cw_req
+        session = self._cw
         entity = self.entity
         try:
             session.add_relation(entity.eid, 'is',
@@ -95,9 +95,9 @@ class SetOwnershipHook(MetaDataHook):
     events = ('after_add_entity',)
 
     def __call__(self):
-        asession = self.cw_req.actual_session()
+        asession = self._cw.actual_session()
         if not asession.is_internal_session:
-            self.cw_req.add_relation(self.entity.eid, 'owned_by', asession.user.eid)
+            self._cw.add_relation(self.entity.eid, 'owned_by', asession.user.eid)
             _SetCreatorOp(asession, entity=self.entity)
 
 
@@ -121,11 +121,11 @@ class SyncCompositeOwner(MetaDataHook):
             # skip this special composite relation # XXX (syt) why?
             return
         eidfrom, eidto = self.eidfrom, self.eidto
-        composite = self.cw_req.schema_rproperty(self.rtype, eidfrom, eidto, 'composite')
+        composite = self._cw.schema_rproperty(self.rtype, eidfrom, eidto, 'composite')
         if composite == 'subject':
-            _SyncOwnersOp(self.cw_req, compositeeid=eidfrom, composedeid=eidto)
+            _SyncOwnersOp(self._cw, compositeeid=eidfrom, composedeid=eidto)
         elif composite == 'object':
-            _SyncOwnersOp(self.cw_req, compositeeid=eidto, composedeid=eidfrom)
+            _SyncOwnersOp(self._cw, compositeeid=eidto, composedeid=eidfrom)
 
 
 class FixUserOwnershipHook(MetaDataHook):
@@ -135,7 +135,7 @@ class FixUserOwnershipHook(MetaDataHook):
     events = ('after_add_entity',)
 
     def __call__(self):
-        self.cw_req.add_relation(self.entity.eid, 'owned_by', self.entity.eid)
+        self._cw.add_relation(self.entity.eid, 'owned_by', self.entity.eid)
 
 
 class UpdateFTIHook(MetaDataHook):
@@ -146,7 +146,7 @@ class UpdateFTIHook(MetaDataHook):
 
     def __call__(self):
         rtype = self.rtype
-        session = self.cw_req
+        session = self._cw
         if self.event == 'after_add_relation':
             # Reindexing the contained entity is enough since it will implicitly
             # reindex the container entity.
