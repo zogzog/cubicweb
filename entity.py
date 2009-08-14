@@ -819,9 +819,6 @@ class Attribute(object):
         return eobj.get_value(self._attrname)
 
     def __set__(self, eobj, value):
-        # XXX bw compat
-        # would be better to generate UPDATE queries than the current behaviour
-        eobj.warning("[3.4] deprecated usage, don't use 'entity.attr = val' notation)")
         eobj[self._attrname] = value
 
 
