@@ -228,7 +228,7 @@ class Repository(object):
             # register a task to cleanup expired session
             self.looping_task(self.config['session-time']/3.,
                               self.clean_sessions)
-        CW_EVENT_MANAGER.bind('after-registry-load', self.reset_hooks)
+        CW_EVENT_MANAGER.bind('after-registry-reload', self.reset_hooks)
 
     # internals ###############################################################
 
@@ -251,6 +251,7 @@ class Repository(object):
         self.reset_hooks()
 
     def reset_hooks(self):
+        print 'RESET HOOKS'
         self.hm.set_schema(self.schema)
         self.hm.register_system_hooks(self.config)
         # instance specific hooks
