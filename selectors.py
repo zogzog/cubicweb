@@ -54,6 +54,7 @@ from cubicweb import (Unauthorized, NoSelectableObject, NotAnEntity,
                       role, typed_eid)
 # even if not used, let yes here so it's importable through this module
 from cubicweb.appobject import Selector, objectify_selector, yes
+from cubicweb.vregistry import class_regid
 from cubicweb.cwconfig import CubicWebConfiguration
 from cubicweb.schema import split_expression
 
@@ -74,7 +75,7 @@ def lltrace(selector):
         else:
             selname = selector.__name__
             vobj = cls
-        oid = vobj.id
+        oid = class_regid(vobj)
         ret = selector(cls, *args, **kwargs)
         if TRACED_OIDS == 'all' or oid in TRACED_OIDS:
             #SELECTOR_LOGGER.warning('selector %s returned %s for %s', selname, ret, cls)
