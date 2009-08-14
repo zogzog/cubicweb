@@ -41,10 +41,6 @@ class AbstractSessionManager(component.Component):
         if self.session_time:
             assert self.cleanup_session_time < self.session_time
             assert self.cleanup_anon_session_time < self.session_time
-        self.set_authmanager()
-        CW_EVENT_MANAGER.bind('after-registry-reload', self.set_authmanager)
-
-    def set_authmanager(self):
         self.authmanager = self.vreg['components'].select('authmanager')
 
     def clean_sessions(self):
