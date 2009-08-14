@@ -42,7 +42,7 @@ class SetPrimaryEmailHook(hook.Hook):
     category = 'email'
     events = ('after_add_relation',)
 
-    def call(self, session, eidfrom, rtype, eidto):
+    def __call__(self):
         entity = self.cw_req.entity_from_eid(self.eidfrom)
         if 'primary_email' in entity.e_schema.subject_relations():
             SetPrimaryEmailRelationOp(self.cw_req, entity=entity,
