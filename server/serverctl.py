@@ -529,20 +529,19 @@ def _local_restore(appid, backupfile, drop, systemonly=True):
     status = instance_status(config, eversion, dbversions)
     # * database version > installed software
     if status == 'needsoftupgrade':
-        print "database is using some earlier version than installed software!"
-        print "please upgrade your software and then upgrade the instance"
-        print "using command 'cubicweb-ctl upgrade %s'" % config.appid
+        print "** The database of %s is more recent than the installed software!" % config.appid
+        print "** Upgrade your software, then migrate the database by running the command"
+        print "** 'cubicweb-ctl upgrade %s'" % config.appid
         return
     # * database version < installed software, an upgrade will be necessary
     #   anyway, just rewrite vc.conf and warn user he has to upgrade
-    if status == 'needapplupgrade':
-        print "database is using some older version than installed software."
-        print "You'll have to upgrade the instance using command"
-        print "'cubicweb-ctl upgrade %s'" % config.appid
+    elif status == 'needapplupgrade':
+        print "** The database of %s is older than the installed software." % config.appid
+        print "** Migrate the database by running the command"
+        print "** 'cubicweb-ctl upgrade %s'" % config.appid
         return
     # * database version = installed software, database version = instance fs version
     #   ok!
-
 
 def instance_status(config, cubicwebapplversion, vcconf):
     cubicwebversion = config.cubicweb_version()

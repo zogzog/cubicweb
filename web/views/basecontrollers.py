@@ -298,6 +298,31 @@ class JSonController(Controller):
             return None
         return None
 
+    def _call_view(self, view, **kwargs):
+        req = self.req
+        divid = req.form.get('divid', 'pageContent')
+        # we need to call pagination before with the stream set
+        stream = view.set_stream()
+        if req.form.get('paginate'):
+            if divid == 'pageContent':
+                # mimick main template behaviour
+                stream.write(u'<div id="pageContent">')
+                vtitle = self.req.form.get('vtitle')
+                if vtitle:
+                    stream.write(u'<h1 class="vtitle">%s</h1>\n' % vtitle)
+            view.pagination(req, rset, view.w, not view.need_navigation)
+            if divid == 'pageContent':
+                stream.write(u'<div id="contentmain">')
+        view.render(**kwargs)
+        extresources = req.html_headers.getvalue(skiphead=True)
+        if extresources:
+            stream.write(u'<div class="ajaxHtmlHead">\n') # XXX use a widget ?
+            stream.write(extresources)
+            stream.write(u'</div>\n')
+        if req.form.get('paginate') and divid == 'pageContent':
+            stream.write(u'</div></div>')
+        return stream.getvalue()
+
     @xhtmlize
     def js_view(self):
         # XXX try to use the page-content template
@@ -313,28 +338,7 @@ class JSonController(Controller):
         except NoSelectableObject:
             vid = req.form.get('fallbackvid', 'noresult')
             view = self.vreg['views'].select(vid, req, rset=rset)
-        divid = req.form.get('divid', 'pageContent')
-        # we need to call pagination before with the stream set
-        stream = view.set_stream()
-        if req.form.get('paginate'):
-            if divid == 'pageContent':
-                # mimick main template behaviour
-                stream.write(u'<div id="pageContent">')
-                vtitle = self.req.form.get('vtitle')
-                if vtitle:
-                    stream.write(u'<h1 class="vtitle">%s</h1>\n' % vtitle)
-            view.pagination(req, rset, view.w, not view.need_navigation)
-            if divid == 'pageContent':
-                stream.write(u'<div id="contentmain">')
-        view.render()
-        extresources = req.html_headers.getvalue(skiphead=True)
-        if extresources:
-            stream.write(u'<div class="ajaxHtmlHead">\n') # XXX use a widget ?
-            stream.write(extresources)
-            stream.write(u'</div>\n')
-        if req.form.get('paginate') and divid == 'pageContent':
-            stream.write(u'</div></div>')
-        return stream.getvalue()
+        return self._call_view(view)
 
     @xhtmlize
     def js_prop_widget(self, propkey, varname, tabindex=None):
@@ -370,7 +374,8 @@ class JSonController(Controller):
         view = self.vreg['views'].select('inline-creation', self.req,
                                          etype=ttype, peid=peid, rtype=rtype,
                                          role=role)
-        return view.render(etype=ttype, peid=peid, rtype=rtype, role=role)
+        return self._call_view(view, etype=ttype, peid=peid,
+                               rtype=rtype, role=role)
 
     @jsonize
     def js_validate_form(self, action, names, values):
