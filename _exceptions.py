@@ -79,8 +79,6 @@ class Unauthorized(SecurityError):
     msg = 'You are not allowed to perform this operation'
     msg1 = 'You are not allowed to perform %s operation on %s'
     var = None
-    #def __init__(self, *args):
-    #    self.args = args
 
     def __str__(self):
         try:
@@ -118,9 +116,6 @@ class ObjectNotFound(RegistryException):
     this may be a programming/typo or a misconfiguration error
     """
 
-# class ViewNotFound(ObjectNotFound):
-#     """raised when an unregistered view is called"""
-
 class NoSelectableObject(RegistryException):
     """some views with the given vid have been found but no
     one is applyable to the result set
@@ -149,4 +144,3 @@ class ExecutionError(Exception):
 
 # pylint: disable-msg=W0611
 from logilab.common.clcommands import BadCommandUsage
-
