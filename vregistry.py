@@ -314,8 +314,8 @@ class VRegistry(dict):
         except AttributeError:
             vname = obj.__class__.__name__
         self.debug('registered appobject %s in registry %s with id %s',
-                   vname, registryname, oid or obj.id)
-        self._loadedmods[obj.__module__]['%s.%s' % (obj.__module__, oid)] = obj
+                   vname, registryname, oid or class_regid(obj))
+        self._loadedmods[obj.__module__][classid(obj)] = obj
 
     def unregister(self, obj, registryname=None):
         self[registryname or obj.__registry__].unregister(obj)
@@ -404,10 +404,10 @@ class VRegistry(dict):
                 return
         except TypeError:
             return
-        objname = '%s.%s' % (modname, obj.__name__)
-        if objname in self._loadedmods[modname]:
+        clsid = classid(obj)
+        if clsid in self._loadedmods[modname]:
             return
-        self._loadedmods[modname][objname] = obj
+        self._loadedmods[modname][clsid] = obj
         for parent in obj.__bases__:
             self._load_ancestors_then_object(modname, parent)
         self.load_object(obj)
