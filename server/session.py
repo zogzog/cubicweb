@@ -75,10 +75,6 @@ class Session(RequestSessionBase):
         return '<%ssession %s (%s 0x%x)>' % (self.cnxtype, self.user.login,
                                              self.id, id(self))
 
-    @property
-    def schema(self):
-        return self.repo.schema
-
     def add_relation(self, fromeid, rtype, toeid):
         if self.is_super_session:
             self.repo.glob_add_relation(self, fromeid, rtype, toeid)
@@ -278,6 +274,11 @@ class Session(RequestSessionBase):
 
     # request interface #######################################################
 
+    @property
+    def cursor(self):
+        """return a rql cursor"""
+        return self
+
     def set_entity_cache(self, entity):
         # XXX session level caching may be a pb with multiple repository
         #     instances, but 1. this is probably not the only one :$ and 2. it
@@ -363,11 +364,6 @@ class Session(RequestSessionBase):
         """
         return self.super_session.execute(rql, kwargs, eid_key, build_descr,
                                           propagate)
-
-    @property
-    def cursor(self):
-        """return a rql cursor"""
-        return self
 
     def execute(self, rql, kwargs=None, eid_key=None, build_descr=True,
                 propagate=False):
@@ -485,7 +481,6 @@ class Session(RequestSessionBase):
             self._threaddata.pending_operations = []
             return self._threaddata.pending_operations
 
-
     def add_operation(self, operation, index=None):
         """add an observer"""
         assert self.commit_state != 'commit'
@@ -564,6 +559,13 @@ class Session(RequestSessionBase):
                         row_descr[index] = row[index] = None
             description.append(tuple(row_descr))
         return description
+
+    # deprecated ###############################################################
+
+    @property
+    @deprecated("[3.5] use session.vreg.schema")
+    def schema(self):
+        return self.repo.schema
 
     @deprecated("[3.4] use vreg['etypes'].etype_class(etype)")
     def etype_class(self, etype):

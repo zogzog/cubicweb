@@ -39,6 +39,7 @@ from warnings import warn
 from logging import getLogger
 
 from logilab.common.decorators import classproperty
+from logilab.common.deprecation import deprecated
 from logilab.common.logging_ext import set_log_methods
 
 from cubicweb.cwvreg import CWRegistry, VRegistry
@@ -131,7 +132,7 @@ class Hook(AppObject):
     events = None
     category = None
     order = 0
-    # XXX deprecates
+    # XXX deprecated
     enabled = True
 
     @classproperty
@@ -214,12 +215,6 @@ class Operation(object):
 
     def __init__(self, session, **kwargs):
         self.session = session
-        # XXX deprecates
-        self.user = session.user
-        self.repo = session.repo
-        self.schema = session.repo.schema
-        self.config = session.repo.config
-        # end deprecate
         self.__dict__.update(kwargs)
         self.register(session)
         # execution information
@@ -268,6 +263,26 @@ class Operation(object):
         do nothing by default, the operation will just be removed from the pool
         operation list
         """
+
+    @property
+    @deprecated('[3.5] use self.session.user')
+    def user(self):
+        return self.session.user
+
+    @property
+    @deprecated('[3.5] use self.session.repo')
+    def repo(self):
+        return self.session.repo
+
+    @property
+    @deprecated('[3.5] use self.session.vreg.schema')
+    def schema(self):
+        return self.session.repo.schema
+
+    @property
+    @deprecated('[3.5] use self.session.vreg.config')
+    def config(self):
+        return self.session.repo.config
 
 set_log_methods(Operation, getLogger('cubicweb.session'))
 
