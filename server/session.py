@@ -169,6 +169,18 @@ class Session(RequestSessionBase):
         assert prop == 'lang' # this is the only one changeable property for now
         self.set_language(value)
 
+    def deleted_in_transaction(self, eid):
+        return eid in self.transaction_data.get('pendingeids', ())
+
+    def added_in_transaction(self, eid):
+        return eid in self.transaction_data.get('neweids', ())
+
+    def schema_rproperty(self, rtype, eidfrom, eidto, rprop):
+        rschema = self.repo.schema[rtype]
+        subjtype = self.describe(eidfrom)[0]
+        objtype = self.describe(eidto)[0]
+        return rschema.rproperty(subjtype, objtype, rprop)
+
     # connection management ###################################################
 
     def keep_pool_mode(self, mode):

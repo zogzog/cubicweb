@@ -61,6 +61,10 @@ ALL_HOOKS = ENTITIES_HOOKS | RELATIONS_HOOKS | SYSTEM_HOOKS
 class HooksRegistry(CWRegistry):
 
     def register(self, obj, **kwargs):
+        try:
+            iter(obj.events)
+        except:
+            raise Exception('bad .events attribute %s on %s' % (obj.event, obj))
         for event in obj.events:
             if event not in ALL_HOOKS:
                 raise Exception('bad event %s on %s' % (event, obj))
@@ -209,10 +213,12 @@ class Operation(object):
 
     def __init__(self, session, **kwargs):
         self.session = session
+        # XXX deprecates
         self.user = session.user
         self.repo = session.repo
         self.schema = session.repo.schema
         self.config = session.repo.config
+        # end deprecate
         self.__dict__.update(kwargs)
         self.register(session)
         # execution information
@@ -309,3 +315,27 @@ class SingleLastOperation(SingleOperation):
     """
     def insert_index(self):
         return None
+
+
+class SendMailOp(SingleLastOperation):
+    def __init__(self, session, msg=None, recipients=None, **kwargs):
+        # may not specify msg yet, as
+        # `cubicweb.sobjects.supervision.SupervisionMailOp`
+        if msg is not None:
+            assert recipients
+            self.to_send = [(msg, recipients)]
+        else:
+            assert recipients is None
+            self.to_send = []
+        super(SendMailOp, self).__init__(session, **kwargs)
+
+    def register(self, session):
+        previous = super(SendMailOp, self).register(session)
+        if previous:
+            self.to_send = previous.to_send + self.to_send
+
+    def commit_event(self):
+        self.repo.threaded_task(self.sendmails)
+
+    def sendmails(self):
+        self.config.sendmails(self.to_send)
