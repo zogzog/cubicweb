@@ -9,14 +9,23 @@ __docformat__ = "restructuredtext en"
 
 from cubicweb import UnknownProperty, ValidationError, BadConnectionId
 from cubicweb.selectors import entity_implements
-from cubicweb.server.hook import Hook, match_rtype
-from cubicweb.server.pool import Operation
-from cubicweb.server.hookhelper import get_user_sessions
+from cubicweb.server import hook
+
+
+def get_user_sessions(repo, ueid):
+    for session in repo._sessions.values():
+        if ueid == session.user.eid:
+            yield session
+
+
+class SyncSessionHook(hook.Hook):
+    __abstract__ = True
+    category = 'syncsession'
 
 
 # user/groups synchronisation #################################################
 
-class _GroupOperation(Operation):
+class _GroupOperation(hook.Operation):
     """base class for group operation"""
     geid = None
     def __init__(self, session, *args, **kwargs):
@@ -27,7 +36,7 @@ class _GroupOperation(Operation):
         """
         rql = 'Any N WHERE G eid %(x)s, G name N'
         result = session.execute(rql, {'x': kwargs['geid']}, 'x', build_descr=False)
-        Operation.__init__(self, session, *args, **kwargs)
+        hook.Operation.__init__(self, session, *args, **kwargs)
         self.group = result[0][0]
 
 
@@ -55,11 +64,10 @@ class _AddGroupOp(_GroupOperation):
         groups.add(self.group)
 
 
-class SyncInGroupHook(Hook):
+class SyncInGroupHook(SyncSessionHook):
     __id__ = 'syncingroup'
-    __select__ = Hook.__select__ & match_rtype('in_group')
+    __select__ = SyncSessionHook.__select__ & hook.match_rtype('in_group')
     events = ('after_delete_relation', 'after_add_relation')
-    category = 'syncsession'
 
     def __call__(self):
         if self.event == 'after_delete_relation':
@@ -70,11 +78,11 @@ class SyncInGroupHook(Hook):
             opcls(self.cw_req, cnxuser=session.user, geid=self.eidto)
 
 
-class _DelUserOp(Operation):
+class _DelUserOp(hook.Operation):
     """close associated user's session when it is deleted"""
     def __init__(self, session, cnxid):
         self.cnxid = cnxid
-        Operation.__init__(self, session)
+        hook.Operation.__init__(self, session)
 
     def commit_event(self):
         """the observed connections pool has been commited"""
@@ -84,11 +92,10 @@ class _DelUserOp(Operation):
             pass # already closed
 
 
-class CloseDeletedUserSessionsHook(Hook):
+class CloseDeletedUserSessionsHook(SyncSessionHook):
     __id__ = 'closession'
-    __select__ = Hook.__select__ & entity_implements('CWUser')
+    __select__ = SyncSessionHook.__select__ & entity_implements('CWUser')
     events = ('after_delete_entity',)
-    category = 'syncsession'
 
     def __call__(self):
         """modify user permission, need to update users"""
@@ -99,7 +106,7 @@ class CloseDeletedUserSessionsHook(Hook):
 # CWProperty hooks #############################################################
 
 
-class _DelCWPropertyOp(Operation):
+class _DelCWPropertyOp(hook.Operation):
     """a user's custom properties has been deleted"""
 
     def commit_event(self):
@@ -110,7 +117,7 @@ class _DelCWPropertyOp(Operation):
             self.error('%s has no associated value', self.key)
 
 
-class _ChangeCWPropertyOp(Operation):
+class _ChangeCWPropertyOp(hook.Operation):
     """a user's custom properties has been added/changed"""
 
     def commit_event(self):
@@ -118,7 +125,7 @@ class _ChangeCWPropertyOp(Operation):
         self.epropdict[self.key] = self.value
 
 
-class _AddCWPropertyOp(Operation):
+class _AddCWPropertyOp(hook.Operation):
     """a user's custom properties has been added/changed"""
 
     def commit_event(self):
@@ -129,10 +136,9 @@ class _AddCWPropertyOp(Operation):
         # if for_user is set, update is handled by a ChangeCWPropertyOp operation
 
 
-class AddCWPropertyHook(Hook):
+class AddCWPropertyHook(SyncSessionHook):
     __id__ = 'addcwprop'
-    __select__ = Hook.__select__ & entity_implements('CWProperty')
-    category = 'syncsession'
+    __select__ = SyncSessionHook.__select__ & entity_implements('CWProperty')
     events = ('after_add_entity',)
 
     def __call__(self):
@@ -194,11 +200,10 @@ class DeleteCWPropertyHook(AddCWPropertyHook):
             _DelCWPropertyOp(session, epropdict=session.vreg.eprop_values, key=entity.pkey)
 
 
-class AddForUserRelationHook(Hook):
+class AddForUserRelationHook(SyncSessionHook):
     __id__ = 'addcwpropforuser'
-    __select__ = Hook.__select__ & match_rtype('for_user')
+    __select__ = SyncSessionHook.__select__ & hook.match_rtype('for_user')
     events = ('after_add_relation',)
-    category = 'syncsession'
 
     def __call__(self):
         session = self.cw_req

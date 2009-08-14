@@ -1,4 +1,4 @@
-"""some hooks and views to handle notification on entity's changes
+"""some views to handle notification on data changes
 
 :organization: Logilab
 :copyright: 2001-2009 LOGILAB S.A. (Paris, FRANCE), license is LGPL v2.
@@ -18,16 +18,12 @@ except ImportError:
         return 'XXX'
 
 from logilab.common.textutils import normalize_text
-from logilab.common.deprecation import class_renamed
 
-from cubicweb import RegistryException
-from cubicweb.selectors import implements, yes
+from cubicweb.selectors import yes
 from cubicweb.view import EntityView, Component
 from cubicweb.common.mail import format_mail
 
-from cubicweb.server.pool import PreCommitOperation
 from cubicweb.server.hookhelper import SendMailOp
-from cubicweb.server.hooksmanager import Hook
 
 
 class RecipientsFinder(Component):
@@ -55,72 +51,6 @@ class RecipientsFinder(Component):
         else: # mode == 'none'
             dests = []
         return dests
-
-
-# hooks #######################################################################
-
-class RenderAndSendNotificationView(PreCommitOperation):
-    """delay rendering of notification view until precommit"""
-    def precommit_event(self):
-        if self.view.rset and self.view.rset[0][0] in self.session.transaction_data.get('pendingeids', ()):
-            return # entity added and deleted in the same transaction
-        self.view.render_and_send(**getattr(self, 'viewargs', {}))
-
-class StatusChangeHook(Hook):
-    """notify when a workflowable entity has its state modified"""
-    events = ('after_add_entity',)
-    accepts = ('TrInfo',)
-
-    def call(self, session, entity):
-        if not entity.from_state: # not a transition
-            return
-        rset = entity.related('wf_info_for')
-        try:
-            view = session.vreg['views'].select('notif_status_change', session,
-                                                rset=rset, row=0)
-        except RegistryException:
-            return
-        comment = entity.printable_value('comment', format='text/plain')
-        if comment:
-            comment = normalize_text(comment, 80,
-                                     rest=entity.comment_format=='text/rest')
-        RenderAndSendNotificationView(session, view=view, viewargs={
-            'comment': comment, 'previous_state': entity.previous_state.name,
-            'current_state': entity.new_state.name})
-
-
-class RelationChangeHook(Hook):
-    events = ('before_add_relation', 'after_add_relation',
-              'before_delete_relation', 'after_delete_relation')
-    accepts = ('Any',)
-    def call(self, session, fromeid, rtype, toeid):
-        """if a notification view is defined for the event, send notification
-        email defined by the view
-        """
-        rset = session.eid_rset(fromeid)
-        vid = 'notif_%s_%s' % (self.event,  rtype)
-        try:
-            view = session.vreg['views'].select(vid, session, rset=rset, row=0)
-        except RegistryException:
-            return
-        RenderAndSendNotificationView(session, view=view)
-
-
-class EntityChangeHook(Hook):
-    events = ('after_add_entity',
-              'after_update_entity')
-    accepts = ('Any',)
-    def call(self, session, entity):
-        """if a notification view is defined for the event, send notification
-        email defined by the view
-        """
-        rset = entity.as_rset()
-        vid = 'notif_%s' % self.event
-        try:
-            view = session.vreg['views'].select(vid, session, rset=rset, row=0)
-        except RegistryException:
-            return
-        RenderAndSendNotificationView(session, view=view)
 
 
 # abstract or deactivated notification views and mixin ########################
@@ -296,4 +226,7 @@ url: %(url)s
         return  u'%s #%s (%s)' % (self.req.__('New %s' % entity.e_schema),
                                   entity.eid, self.user_login())
 
+from logilab.common.deprecation import class_renamed, class_moved
 NormalizedTextView = class_renamed('NormalizedTextView', ContentAddedView)
+from cubicweb.hooks.notification import RenderAndSendNotificationView
+RenderAndSendNotificationView = class_moved(RenderAndSendNotificationView)

@@ -7,12 +7,32 @@
 """
 __docformat__ = "restructuredtext en"
 
-from cubicweb import ValidationError
+from datetime import datetime
+
+from cubicweb import RepositoryError, ValidationError
 from cubicweb.interfaces import IWorkflowable
 from cubicweb.selectors import entity_implements
-from cubicweb.server.hook import Hook, match_rtype
-from cubicweb.server.pool import PreCommitOperation
-from cubicweb.server.hookhelper import previous_state
+from cubicweb.server import hook
+
+
+def previous_state(session, eid):
+    """return the state of the entity with the given eid,
+    usually since it's changing in the current transaction. Due to internal
+    relation hooks, the relation may has been deleted at this point, so
+    we have handle that
+    """
+    if session.added_in_transaction(eid):
+        return
+    pending = session.transaction_data.get('pendingrelations', ())
+    for eidfrom, rtype, eidto in reversed(pending):
+        if rtype == 'in_state' and eidfrom == eid:
+            rset = session.execute('Any S,N WHERE S eid %(x)s, S name N',
+                                   {'x': eidto}, 'x')
+            return rset.get_entity(0, 0)
+    rset = session.execute('Any S,N WHERE X eid %(x)s, X in_state S, S name N',
+                           {'x': eid}, 'x')
+    if rset:
+        return rset.get_entity(0, 0)
 
 
 def relation_deleted(session, eidfrom, rtype, eidto):
@@ -20,7 +40,7 @@ def relation_deleted(session, eidfrom, rtype, eidto):
         (eidfrom, rtype, eidto))
 
 
-class _SetInitialStateOp(PreCommitOperation):
+class _SetInitialStateOp(hook.Operation):
     """make initial state be a default state"""
 
     def precommit_event(self):
@@ -28,29 +48,30 @@ class _SetInitialStateOp(PreCommitOperation):
         entity = self.entity
         # if there is an initial state and the entity's state is not set,
         # use the initial state as a default state
-        pendingeids = session.transaction_data.get('pendingeids', ())
-        if not entity.eid in pendingeids and not entity.in_state:
+        if not session.deleted_in_transaction(entity.eid) and not entity.in_state:
             rset = session.execute('Any S WHERE ET initial_state S, ET name %(name)s',
                                    {'name': entity.id})
             if rset:
                 session.add_relation(entity.eid, 'in_state', rset[0][0])
 
-
-class SetInitialStateHook(Hook):
-    __id__ = 'wfsetinitial'
-    __select__ = Hook.__select__ & entity_implements(IWorkflowable)
+class WorkflowHook(hook.Hook):
+    __abstract__ = True
     category = 'worfklow'
+
+
+class SetInitialStateHook(WorkflowHook):
+    __id__ = 'wfsetinitial'
+    __select__ = WorkflowHook.__select__ & entity_implements(IWorkflowable)
     events = ('after_add_entity',)
 
     def __call__(self):
         _SetInitialStateOp(self.cw_req, entity=self.entity)
 
 
-class PrepareStateChangeHook(Hook):
+class PrepareStateChangeHook(WorkflowHook):
     """record previous state information"""
     __id__ = 'cwdelstate'
-    __select__ = Hook.__select__ & match_rtype('in_state')
-    category = 'worfklow'
+    __select__ = WorkflowHook.__select__ & hook.match_rtype('in_state')
     events = ('before_delete_relation',)
 
     def __call__(self):
@@ -104,3 +125,22 @@ class FireTransitionHook(PrepareStateChangeHook):
             args['fs'] = state.eid
         rql = '%s WHERE %s' % (rql, ', '.join(restriction))
         session.unsafe_execute(rql, args, 'e')
+
+
+class SetModificationDateOnStateChange(WorkflowHook):
+    """update entity's modification date after changing its state"""
+    __id__ = 'wfsyncmdate'
+    __select__ = WorkflowHook.__select__ & hook.match_rtype('in_state')
+    events = ('after_add_relation',)
+
+    def __call__(self):
+        if self.cw_req.added_in_transaction(self.eidfrom):
+            # new entity, not needed
+            return
+        entity = self.cw_req.entity_from_eid(self.eidfrom)
+        try:
+            entity.set_attributes(modification_date=datetime.now())
+        except RepositoryError, ex:
+            # usually occurs if entity is coming from a read-only source
+            # (eg ldap user)
+            self.warning('cant change modification date for %s: %s', entity, ex)

@@ -11,9 +11,7 @@ __docformat__ = "restructuredtext en"
 from datetime import datetime
 
 from cubicweb.selectors import entity_implements
-from cubicweb.server.hook import Hook
-from cubicweb.server.pool import Operation, LateOperation, PreCommitOperation
-from cubicweb.server.hookhelper import rproperty
+from cubicweb.server import hook
 from cubicweb.server.repository import FTIndexEntityOp
 
 
@@ -28,14 +26,18 @@ def eschema_type_eid(session, etype):
     return eschema.eid
 
 
-class InitMetaAttrsHook(Hook):
+class MetaDataHook(hook.Hook):
+    __abstract__ = True
+    category = 'metadata'
+
+
+class InitMetaAttrsHook(MetaDataHook):
     """before create a new entity -> set creation and modification date
 
     this is a conveniency hook, you shouldn't have to disable it
     """
-    id = 'metaattrsinit'
+    __id__ = 'metaattrsinit'
     events = ('before_add_entity',)
-    category = 'metadata'
 
     def __call__(self):
         timestamp = datetime.now()
@@ -46,31 +48,31 @@ class InitMetaAttrsHook(Hook):
             self.entity.setdefault('cwuri', cwuri)
 
 
-class UpdateMetaAttrsHook(Hook):
+class UpdateMetaAttrsHook(MetaDataHook):
     """update an entity -> set modification date"""
-    id = 'metaattrsupdate'
+    __id__ = 'metaattrsupdate'
     events = ('before_update_entity',)
-    category = 'metadata'
+
     def __call__(self):
         self.entity.setdefault('modification_date', datetime.now())
 
 
-class _SetCreatorOp(PreCommitOperation):
+class _SetCreatorOp(hook.Operation):
 
     def precommit_event(self):
         session = self.session
-        if self.entity.eid in session.transaction_data.get('pendingeids', ()):
+        if session.deleted_in_transaction(self.entity.eid):
             # entity have been created and deleted in the same transaction
             return
         if not self.entity.created_by:
             session.add_relation(self.entity.eid, 'created_by', session.user.eid)
 
 
-class SetIsHook(Hook):
+class SetIsHook(MetaDataHook):
     """create a new entity -> set is relation"""
-    id = 'setis'
+    __id__ = 'setis'
     events = ('after_add_entity',)
-    category = 'metadata'
+
     def __call__(self):
         if hasattr(self.entity, '_cw_recreating'):
             return
@@ -87,11 +89,11 @@ class SetIsHook(Hook):
                                  eschema_type_eid(session, etype))
 
 
-class SetOwnershipHook(Hook):
+class SetOwnershipHook(MetaDataHook):
     """create a new entity -> set owner and creator metadata"""
-    id = 'setowner'
+    __id__ = 'setowner'
     events = ('after_add_entity',)
-    category = 'metadata'
+
     def __call__(self):
         asession = self.cw_req.actual_session()
         if not asession.is_internal_session:
@@ -99,48 +101,48 @@ class SetOwnershipHook(Hook):
             _SetCreatorOp(asession, entity=self.entity)
 
 
-class _SyncOwnersOp(PreCommitOperation):
+class _SyncOwnersOp(hook.Operation):
     def precommit_event(self):
         self.session.unsafe_execute('SET X owned_by U WHERE C owned_by U, C eid %(c)s,'
                                     'NOT EXISTS(X owned_by U, X eid %(x)s)',
                                     {'c': self.compositeeid, 'x': self.composedeid},
                                     ('c', 'x'))
 
-class SyncCompositeOwner(Hook):
+
+class SyncCompositeOwner(MetaDataHook):
     """when adding composite relation, the composed should have the same owners
     has the composite
     """
-    id = 'synccompositeowner'
+    __id__ = 'synccompositeowner'
     events = ('after_add_relation',)
-    category = 'metadata'
+
     def __call__(self):
         if self.rtype == 'wf_info_for':
             # skip this special composite relation # XXX (syt) why?
             return
         eidfrom, eidto = self.eidfrom, self.eidto
-        composite = rproperty(self.cw_req, self.rtype, eidfrom, eidto, 'composite')
+        composite = self.cw_req.schema_rproperty(self.rtype, eidfrom, eidto, 'composite')
         if composite == 'subject':
             _SyncOwnersOp(self.cw_req, compositeeid=eidfrom, composedeid=eidto)
         elif composite == 'object':
             _SyncOwnersOp(self.cw_req, compositeeid=eidto, composedeid=eidfrom)
 
 
-class FixUserOwnershipHook(Hook):
+class FixUserOwnershipHook(MetaDataHook):
     """when a user has been created, add owned_by relation on itself"""
-    id = 'fixuserowner'
-    __select__ = Hook.__select__ & entity_implements('CWUser')
+    __id__ = 'fixuserowner'
+    __select__ = MetaDataHook.__select__ & entity_implements('CWUser')
     events = ('after_add_entity',)
-    category = 'metadata'
+
     def __call__(self):
         self.cw_req.add_relation(self.entity.eid, 'owned_by', self.entity.eid)
 
 
-class UpdateFTIHook(Hook):
+class UpdateFTIHook(MetaDataHook):
     """sync fulltext index when relevant relation is added / removed
     """
-    id = 'updateftirel'
+    __id__ = 'updateftirel'
     events = ('after_add_relation', 'after_delete_relation')
-    category = 'metadata'
 
     def __call__(self):
         rtype = self.rtype
