@@ -84,11 +84,15 @@ class Selector(object):
         return AndSelector(self, other)
     def __rand__(self, other):
         return AndSelector(other, self)
+    def __iand__(self, other):
+        raise NotImplementedError('cant use inplace & (binary and)')
 
     def __or__(self, other):
         return OrSelector(self, other)
     def __ror__(self, other):
         return OrSelector(other, self)
+    def __ior__(self, other):
+        raise NotImplementedError('cant use inplace | (binary or)')
 
     def __invert__(self):
         return NotSelector(self)
