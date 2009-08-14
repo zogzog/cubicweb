@@ -251,7 +251,6 @@ class Repository(object):
         self.reset_hooks()
 
     def reset_hooks(self):
-        print 'RESET HOOKS'
         self.hm.set_schema(self.schema)
         self.hm.register_system_hooks(self.config)
         # instance specific hooks
