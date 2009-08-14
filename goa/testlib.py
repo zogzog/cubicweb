@@ -6,7 +6,11 @@
 """
 __docformat__ = "restructuredtext en"
 
-from logilab.common.testlib import TestCase
+from logilab.common.testlib import TestCase, TestSkipped
+try:
+    import google.appengine
+except ImportError:
+    raise TestSkipped('Can not import google.appengine. Skip this module')
 
 import os, os.path as osp
 import time
@@ -18,34 +22,17 @@ from cubicweb.goa.overrides import rqlannotation as goarqlannotation
 rqlannotation.SQLGenAnnotator = goarqlannotation.SQLGenAnnotator
 rqlannotation.set_qdata = goarqlannotation.set_qdata
 
-try:
-    from google.appengine.api import apiproxy_stub_map
-    from google.appengine.api import datastore_file_stub
-    from google.appengine.ext import db as gdb
-    from cubicweb.goa import db, do_monkey_patch
-    import_appengine_failed = None
-except ImportError, exc:
-    # XXX necessary ?
-    class db:
-        class Model:
-            pass
-        class DummyProperty:
-            def __init__(self, *args, **kwargs):
-                pass
-        TextProperty = DummyProperty
-        StringProperty = DummyProperty
-        BlobProperty = DummyProperty
-        DateProperty = DummyProperty
-        ReferenceProperty = DummyProperty
-        SelfReferenceProperty = DummyProperty
-    import_appengine_failed = 'cannot import appengine: %s' % exc
-
+from google.appengine.api import apiproxy_stub_map
+from google.appengine.api import datastore_file_stub
+from google.appengine.ext import db as gdb
 
 from cubicweb.devtools.fake import FakeRequest
-from cubicweb.goa.goavreg import GAEVregistry
+
+from cubicweb.goa import db, do_monkey_patch
+from cubicweb.goa.goavreg import GAEVRegistry
 from cubicweb.goa.goaconfig import GAEConfiguration
 from cubicweb.goa.dbinit import (create_user, create_groups, fix_entities,
-                              init_persistent_schema, insert_versions)
+                                 init_persistent_schema, insert_versions)
 
 import logging
 logger = logging.getLogger()
@@ -82,8 +69,6 @@ class GAEBasedTC(TestCase):
         apiproxy_stub_map.apiproxy.RegisterStub('datastore_v3', stub)
 
     def setUp(self):
-        if import_appengine_failed:
-            self.skip(import_appengine_failed)
         # Ensure we're in UTC.
         os.environ['TZ'] = 'UTC'
         time.tzset()
