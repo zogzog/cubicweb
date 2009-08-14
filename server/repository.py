@@ -41,7 +41,6 @@ from cubicweb.server.pool import ConnectionsPool, LateOperation, SingleLastOpera
 from cubicweb.server.session import Session, InternalSession
 from cubicweb.server.querier import QuerierHelper
 from cubicweb.server.sources import get_source
-from cubicweb.server.hooksmanager import HooksManager
 from cubicweb.server.hookhelper import rproperty
 
 
@@ -173,8 +172,6 @@ class Repository(object):
         self._type_source_cache = {}
         # cache (extid, source uri) -> eid
         self._extid_cache = {}
-        # create the hooks manager
-        self.hm = HooksManager(self.schema)
         # open some connections pools
         self._available_pools = Queue.Queue()
         self._available_pools.put_nowait(ConnectionsPool(self.sources))
@@ -185,7 +182,7 @@ class Repository(object):
             # usually during repository creation
             self.warning("set fs instance'schema as bootstrap schema")
             config.bootstrap_cubes()
-            self.set_bootstrap_schema(self.config.load_schema())
+            self.set_schema(self.config.load_schema(), resetvreg=False)
             # need to load the Any and CWUser entity types
             self.vreg.schema = self.schema
             etdirectory = join(CW_SOFTWARE_ROOT, 'entities')
@@ -222,13 +219,13 @@ class Repository(object):
             self.pools.append(ConnectionsPool(self.sources))
             self._available_pools.put_nowait(self.pools[-1])
         self._shutting_down = False
+        self.hm = vreg['hooks']
         if not (config.creating or config.repairing):
             # call instance level initialisation hooks
             self.hm.call_hooks('server_startup', repo=self)
             # register a task to cleanup expired session
             self.looping_task(self.config['session-time']/3.,
                               self.clean_sessions)
-        CW_EVENT_MANAGER.bind('after-registry-load', self.reset_hooks)
 
     # internals ###############################################################
 
@@ -248,22 +245,13 @@ class Repository(object):
             # full reload of all appobjects
             self.vreg.reset()
             self.vreg.set_schema(schema)
-        self.reset_hooks()
-
-    def reset_hooks(self):
-        self.hm.set_schema(self.schema)
-        self.hm.register_system_hooks(self.config)
-        # instance specific hooks
-        if self.config.instance_hooks:
-            self.info('loading instance hooks')
-            self.hm.register_hooks(self.config.load_hooks(self.vreg))
 
     def fill_schema(self):
         """lod schema from the repository"""
         from cubicweb.server.schemaserial import deserialize_schema
         self.info('loading schema from the repository')
         appschema = CubicWebSchema(self.config.appid)
-        self.set_bootstrap_schema(self.config.load_bootstrap_schema())
+        self.set_schema(self.config.load_bootstrap_schema(), resetvreg=False)
         self.debug('deserializing db schema into %s %#x', appschema.name, id(appschema))
         session = self.internal_session()
         try:
@@ -277,39 +265,10 @@ class Repository(object):
                 raise Exception('Is the database initialised ? (cause: %s)' %
                                 (ex.args and ex.args[0].strip() or 'unknown')), \
                                 None, sys.exc_info()[-1]
-            self.info('set the actual schema')
-            # XXX have to do this since CWProperty isn't in the bootstrap schema
-            #     it'll be redone in set_schema
-            self.set_bootstrap_schema(appschema)
-            # 2.49 migration
-            if exists(join(self.config.apphome, 'vc.conf')):
-                session.set_pool()
-                if not 'template' in file(join(self.config.apphome, 'vc.conf')).read():
-                    # remaning from cubicweb < 2.38...
-                    session.execute('DELETE CWProperty X WHERE X pkey "system.version.template"')
-                    session.commit()
         finally:
             session.close()
-        self.config.init_cubes(self.get_cubes())
         self.set_schema(appschema)
-
-    def set_bootstrap_schema(self, schema):
-        """disable hooks when setting a bootstrap schema, but restore
-        the configuration for the next time
-        """
-        config = self.config
-        # XXX refactor
-        config.core_hooks = False
-        config.usergroup_hooks = False
-        config.schema_hooks = False
-        config.notification_hooks = False
-        config.instance_hooks = False
-        self.set_schema(schema, resetvreg=False)
-        config.core_hooks = True
-        config.usergroup_hooks = True
-        config.schema_hooks = True
-        config.notification_hooks = True
-        config.instance_hooks = True
+        self.config.init_cubes(self.get_cubes())
 
     def start_looping_tasks(self):
         assert isinstance(self._looping_tasks, list), 'already started'
@@ -578,7 +537,7 @@ class Repository(object):
         user.clear_related_cache()
         self._sessions[session.id] = session
         self.info('opened %s', session)
-        self.hm.call_hooks('session_open', session=session)
+        self.hm.call_hooks('session_open', session)
         # commit session at this point in case write operation has been done
         # during `session_open` hooks
         session.commit()
@@ -669,7 +628,7 @@ class Repository(object):
                                     checkshuttingdown=checkshuttingdown)
         # operation uncommited before close are rollbacked before hook is called
         session.rollback()
-        self.hm.call_hooks('session_close', session=session)
+        self.hm.call_hooks('session_close', session)
         # commit session at this point in case write operation has been done
         # during `session_close` hooks
         session.commit()
@@ -850,11 +809,11 @@ class Repository(object):
                 entity = source.before_entity_insertion(session, extid, etype, eid)
                 entity._cw_recreating = True
                 if source.should_call_hooks:
-                    self.hm.call_hooks('before_add_entity', etype, session, entity)
+                    self.hm.call_hooks('before_add_entity', session, entity=entity)
                 # XXX add fti op ?
                 source.after_entity_insertion(session, extid, entity)
                 if source.should_call_hooks:
-                    self.hm.call_hooks('after_add_entity', etype, session, entity)
+                    self.hm.call_hooks('after_add_entity', session, entity=entity)
             if reset_pool:
                 session.reset_pool()
             return eid
@@ -875,12 +834,12 @@ class Repository(object):
             self._type_source_cache[eid] = (etype, source.uri, extid)
             entity = source.before_entity_insertion(session, extid, etype, eid)
             if source.should_call_hooks:
-                self.hm.call_hooks('before_add_entity', etype, session, entity)
+                self.hm.call_hooks('before_add_entity', session, entity=entity)
             # XXX call add_info with complete=False ?
             self.add_info(session, entity, source, extid)
             source.after_entity_insertion(session, extid, entity)
             if source.should_call_hooks:
-                self.hm.call_hooks('after_add_entity', etype, session, entity)
+                self.hm.call_hooks('after_add_entity', session, entity=entity)
             else:
                 # minimal meta-data
                 session.execute('SET X is E WHERE X eid %(x)s, E name %(name)s',
@@ -998,13 +957,13 @@ class Repository(object):
         relations = []
         # if inlined relations are specified, fill entity's related cache to
         # avoid unnecessary queries
-        for attr in entity.keys():
+        entity.edited_attributes = set(entity)
+        for attr in entity.edited_attributes:
             rschema = eschema.subject_relation(attr)
             if not rschema.is_final(): # inlined relation
                 relations.append((attr, entity[attr]))
         if source.should_call_hooks:
-            self.hm.call_hooks('before_add_entity', etype, session, entity)
-        entity.edited_attributes = entity.keys()
+            self.hm.call_hooks('before_add_entity', session, entity=entity)
         entity.set_defaults()
         entity.check(creation=True)
         source.add_entity(session, entity)
@@ -1035,13 +994,13 @@ class Repository(object):
             session.update_rel_cache_add(entity.eid, attr, value)
         # trigger after_add_entity after after_add_relation
         if source.should_call_hooks:
-            self.hm.call_hooks('after_add_entity', etype, session, entity)
+            self.hm.call_hooks('after_add_entity', session, entity=entity)
             # call hooks for inlined relations
             for attr, value in relations:
-                self.hm.call_hooks('before_add_relation', attr, session,
-                                    entity.eid, attr, value)
-                self.hm.call_hooks('after_add_relation', attr, session,
-                                    entity.eid, attr, value)
+                self.hm.call_hooks('before_add_relation', session,
+                                    eidfrom=entity.eid, rtype=attr, eidto=value)
+                self.hm.call_hooks('after_add_relation', session,
+                                    eidfrom=entity.eid, rtype=attr, eidto=value)
         return entity.eid
 
     def glob_update_entity(self, session, entity, edited_attributes):
@@ -1074,19 +1033,18 @@ class Repository(object):
                     if previous_value == entity[attr]:
                         previous_value = None
                     else:
-                        self.hm.call_hooks('before_delete_relation', attr,
-                                           session, entity.eid, attr,
-                                           previous_value)
+                        self.hm.call_hooks('before_delete_relation', session,
+                                           eidfrom=entity.eid, rtype=attr,
+                                           eidto=previous_value)
                 relations.append((attr, entity[attr], previous_value))
         source = self.source_from_eid(entity.eid, session)
         if source.should_call_hooks:
             # call hooks for inlined relations
             for attr, value, _ in relations:
-                self.hm.call_hooks('before_add_relation', attr, session,
-                                    entity.eid, attr, value)
+                self.hm.call_hooks('before_add_relation', session,
+                                    eidfrom=entity.eid, rtype=attr, eidto=value)
             if not only_inline_rels:
-                self.hm.call_hooks('before_update_entity', etype, session,
-                                    entity)
+                self.hm.call_hooks('before_update_entity', session, entity=entity)
         source.update_entity(session, entity)
         if not only_inline_rels:
             if need_fti_update and self.do_fti:
@@ -1094,15 +1052,14 @@ class Repository(object):
                 # one indexable attribute
                 FTIndexEntityOp(session, entity=entity)
             if source.should_call_hooks:
-                self.hm.call_hooks('after_update_entity', etype, session,
-                                    entity)
+                self.hm.call_hooks('after_update_entity', session, entity=entity)
         if source.should_call_hooks:
             for attr, value, prevvalue in relations:
                 # if the relation is already cached, update existant cache
                 relcache = entity.relation_cached(attr, 'subject')
                 if prevvalue:
-                    self.hm.call_hooks('after_delete_relation', attr, session,
-                                       entity.eid, attr, prevvalue)
+                    self.hm.call_hooks('after_delete_relation', session,
+                                       eidfrom=entity.eid, rtype=attr, eidto=prevvalue)
                     if relcache is not None:
                         session.update_rel_cache_del(entity.eid, attr, prevvalue)
                 del_existing_rel_if_needed(session, entity.eid, attr, value)
@@ -1111,8 +1068,8 @@ class Repository(object):
                 else:
                     entity.set_related_cache(attr, 'subject',
                                              session.eid_rset(value))
-                self.hm.call_hooks('after_add_relation', attr, session,
-                                    entity.eid, attr, value)
+                self.hm.call_hooks('after_add_relation', session,
+                                    eidfrom=entity.eid, rtype=attr, eidto=value)
 
     def glob_delete_entity(self, session, eid):
         """delete an entity and all related entities from the repository"""
@@ -1125,11 +1082,12 @@ class Repository(object):
                 server.DEBUG |= (server.DBG_SQL | server.DBG_RQL | server.DBG_MORE)
         source = self.sources_by_uri[uri]
         if source.should_call_hooks:
-            self.hm.call_hooks('before_delete_entity', etype, session, eid)
+            entity = session.entity_from_eid(eid)
+            self.hm.call_hooks('before_delete_entity', session, entity=entity)
         self._delete_info(session, eid)
         source.delete_entity(session, etype, eid)
         if source.should_call_hooks:
-            self.hm.call_hooks('after_delete_entity', etype, session, eid)
+            self.hm.call_hooks('after_delete_entity', session, entity=entity)
         # don't clear cache here this is done in a hook on commit
 
     def glob_add_relation(self, session, subject, rtype, object):
@@ -1139,14 +1097,14 @@ class Repository(object):
         source = self.locate_relation_source(session, subject, rtype, object)
         if source.should_call_hooks:
             del_existing_rel_if_needed(session, subject, rtype, object)
-            self.hm.call_hooks('before_add_relation', rtype, session,
-                               subject, rtype, object)
+            self.hm.call_hooks('before_add_relation', session,
+                               eidfrom=subject, rtype=rtype, eidto=object)
         source.add_relation(session, subject, rtype, object)
         rschema = self.schema.rschema(rtype)
         session.update_rel_cache_add(subject, rtype, object, rschema.symetric)
         if source.should_call_hooks:
-            self.hm.call_hooks('after_add_relation', rtype, session,
-                               subject, rtype, object)
+            self.hm.call_hooks('after_add_relation', session,
+                               eidfrom=subject, rtype=rtype, eidto=object)
 
     def glob_delete_relation(self, session, subject, rtype, object):
         """delete a relation from the repository"""
@@ -1154,8 +1112,8 @@ class Repository(object):
             print 'DELETE relation', subject, rtype, object
         source = self.locate_relation_source(session, subject, rtype, object)
         if source.should_call_hooks:
-            self.hm.call_hooks('before_delete_relation', rtype, session,
-                               subject, rtype, object)
+            self.hm.call_hooks('before_delete_relation', session,
+                               eidfrom=subject, rtype=rtype, eidto=object)
         source.delete_relation(session, subject, rtype, object)
         rschema = self.schema.rschema(rtype)
         session.update_rel_cache_del(subject, rtype, object, rschema.symetric)
@@ -1164,8 +1122,8 @@ class Repository(object):
             # stored so try to delete both
             source.delete_relation(session, object, rtype, subject)
         if source.should_call_hooks:
-            self.hm.call_hooks('after_delete_relation', rtype, session,
-                               subject, rtype, object)
+            self.hm.call_hooks('after_delete_relation', session,
+                               eidfrom=subject, rtype=rtype, eidto=object)
 
 
     # pyro handling ###########################################################

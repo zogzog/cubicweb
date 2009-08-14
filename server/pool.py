@@ -1,13 +1,7 @@
-"""CubicWeb server connections pool :
-
-* the rql repository has a limited number of connections pools, each of them
-  dealing with a set of connections on each source used by the repository
-
-* operation may be registered by hooks during a transaction, which will  be
-  fired when the pool is commited or rollbacked
-
-This module defined the `ConnectionsPool` class and a set of abstract classes
-for operation.
+"""CubicWeb server connections pool : the repository has a limited number of
+connections pools, each of them dealing with a set of connections on each source
+used by the repository. A connections pools (`ConnectionsPool`) is an
+abstraction for a group of connection to each source.
 
 
 :organization: Logilab
@@ -129,152 +123,11 @@ class ConnectionsPool(object):
         self.source_cnxs[source.uri] = (source, cnx)
         self._cursors.pop(source.uri, None)
 
-
-class Operation(object):
-    """an operation is triggered on connections pool events related to
-    commit / rollback transations. Possible events are:
-
-    precommit:
-      the pool is preparing to commit. You shouldn't do anything things which
-      has to be reverted if the commit fail at this point, but you can freely
-      do any heavy computation or raise an exception if the commit can't go.
-      You can add some new operation during this phase but their precommit
-      event won't be triggered
-
-    commit:
-      the pool is preparing to commit. You should avoid to do to expensive
-      stuff or something that may cause an exception in this event
-
-    revertcommit:
-      if an operation failed while commited, this event is triggered for
-      all operations which had their commit event already to let them
-      revert things (including the operation which made fail the commit)
-
-    rollback:
-      the transaction has been either rollbacked either
-      * intentionaly
-      * a precommit event failed, all operations are rollbacked
-      * a commit event failed, all operations which are not been triggered for
-        commit are rollbacked
-
-    order of operations may be important, and is controlled according to:
-    * operation's class
-    """
-
-    def __init__(self, session, **kwargs):
-        self.session = session
-        self.user = session.user
-        self.repo = session.repo
-        self.schema = session.repo.schema
-        self.config = session.repo.config
-        self.__dict__.update(kwargs)
-        self.register(session)
-        # execution information
-        self.processed = None # 'precommit', 'commit'
-        self.failed = False
-
-    def register(self, session):
-        session.add_operation(self, self.insert_index())
-
-    def insert_index(self):
-        """return the index of  the lastest instance which is not a
-        LateOperation instance
-        """
-        for i, op in enumerate(self.session.pending_operations):
-            if isinstance(op, (LateOperation, SingleLastOperation)):
-                return i
-        return None
-
-    def handle_event(self, event):
-        """delegate event handling to the opertaion"""
-        getattr(self, event)()
-
-    def precommit_event(self):
-        """the observed connections pool is preparing a commit"""
-
-    def revertprecommit_event(self):
-        """an error went when pre-commiting this operation or a later one
-
-        should revert pre-commit's changes but take care, they may have not
-        been all considered if it's this operation which failed
-        """
-
-    def commit_event(self):
-        """the observed connections pool is commiting"""
-        raise NotImplementedError()
-
-    def revertcommit_event(self):
-        """an error went when commiting this operation or a later one
-
-        should revert commit's changes but take care, they may have not
-        been all considered if it's this operation which failed
-        """
-
-    def rollback_event(self):
-        """the observed connections pool has been rollbacked
-
-        do nothing by default, the operation will just be removed from the pool
-        operation list
-        """
-
-
-class PreCommitOperation(Operation):
-    """base class for operation only defining a precommit operation
-    """
-
-    def precommit_event(self):
-        """the observed connections pool is preparing a commit"""
-        raise NotImplementedError()
-
-    def commit_event(self):
-        """the observed connections pool is commiting"""
-
-
-class LateOperation(Operation):
-    """special operation which should be called after all possible (ie non late)
-    operations
-    """
-    def insert_index(self):
-        """return the index of  the lastest instance which is not a
-        SingleLastOperation instance
-        """
-        for i, op in enumerate(self.session.pending_operations):
-            if isinstance(op, SingleLastOperation):
-                return i
-        return None
-
-
-class SingleOperation(Operation):
-    """special operation which should be called once"""
-    def register(self, session):
-        """override register to handle cases where this operation has already
-        been added
-        """
-        operations = session.pending_operations
-        index = self.equivalent_index(operations)
-        if index is not None:
-            equivalent = operations.pop(index)
-        else:
-            equivalent = None
-        session.add_operation(self, self.insert_index())
-        return equivalent
-
-    def equivalent_index(self, operations):
-        """return the index of the equivalent operation if any"""
-        equivalents = [i for i, op in enumerate(operations)
-                       if op.__class__ is self.__class__]
-        if equivalents:
-            return equivalents[0]
-        return None
-
-
-class SingleLastOperation(SingleOperation):
-    """special operation which should be called once and after all other
-    operations
-    """
-    def insert_index(self):
-        return None
-
-from logging import getLogger
-from cubicweb import set_log_methods
-set_log_methods(Operation, getLogger('cubicweb.session'))
+from cubicweb.server.hook import (Operation, LateOperation, SingleOperation,
+                                  SingleLastOperation)
+from logilab.common.deprecation import class_moved, class_renamed
+Operation = class_moved(Operation)
+PreCommitOperation = class_renamed('PreCommitOperation', Operation)
+LateOperation = class_moved(LateOperation)
+SingleOperation = class_moved(SingleOperation)
+SingleLastOperation = class_moved(SingleLastOperation)

@@ -77,7 +77,7 @@ class CubicWebConfigurationTC(TestCase):
 
     def test_vregistry_path(self):
         self.assertEquals([unabsolutize(p) for p in self.config.vregistry_path()],
-                          ['entities', 'web/views', 'sobjects',
+                          ['entities', 'web/views', 'sobjects', 'hooks',
                            'file/entities.py', 'file/views', 'file/hooks.py',
                            'email/entities.py', 'email/views', 'email/hooks.py',
                            'test/data/entities.py'])

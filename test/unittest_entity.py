@@ -101,7 +101,7 @@ class EntityTC(CubicWebTC):
         user = self.entity('Any X WHERE X eid %(x)s', {'x':self.user().eid}, 'x')
         adeleid = self.execute('INSERT EmailAddress X: X address "toto@logilab.org", U use_email X WHERE U login "admin"')[0][0]
         self.commit()
-        self.assertEquals(user._related_cache.keys(), [])
+        self.assertEquals(user._related_cache, {})
         email = user.primary_email[0]
         self.assertEquals(sorted(user._related_cache), ['primary_email_subject'])
         self.assertEquals(email._related_cache.keys(), ['primary_email_object'])

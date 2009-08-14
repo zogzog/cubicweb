@@ -48,6 +48,7 @@ install: build $(basename $(wildcard debian/*.in))
 
 	# Remove unittests directory (should be available in cubicweb-dev only)
 	rm -rf debian/cubicweb-server/usr/lib/${PY_VERSION}/site-packages/cubicweb/server/test
+	rm -rf debian/cubicweb-server/usr/lib/${PY_VERSION}/site-packages/cubicweb/hooks/test
 	rm -rf debian/cubicweb-server/usr/lib/${PY_VERSION}/site-packages/cubicweb/sobjects/test
 	rm -rf debian/cubicweb-web/usr/lib/${PY_VERSION}/site-packages/cubicweb/web/test
 	rm -rf debian/cubicweb-twisted/usr/lib/${PY_VERSION}/site-packages/cubicweb/etwist/test

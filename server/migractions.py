@@ -276,7 +276,7 @@ class ServerMigrationHelper(MigrationHelper):
                 from cubicweb.server.hooks import setowner_after_add_entity
                 self.repo.hm.unregister_hook(setowner_after_add_entity,
                                              'after_add_entity', '')
-                self.deactivate_verification_hooks()
+                self.cmd_deactivate_verification_hooks()
             self.info('executing %s', apc)
             confirm = self.confirm
             execscript_confirm = self.execscript_confirm
@@ -290,7 +290,7 @@ class ServerMigrationHelper(MigrationHelper):
                 if self.config.free_wheel:
                     self.repo.hm.register_hook(setowner_after_add_entity,
                                                'after_add_entity', '')
-                    self.reactivate_verification_hooks()
+                    self.cmd_reactivate_verification_hooks()
 
     # schema synchronization internals ########################################
 
@@ -1073,10 +1073,10 @@ class ServerMigrationHelper(MigrationHelper):
         return ForRqlIterator(self, rql, None, ask_confirm)
 
     def cmd_deactivate_verification_hooks(self):
-        self.repo.hm.deactivate_verification_hooks()
+        self.config.disabled_hooks_categories.add('integrity')
 
     def cmd_reactivate_verification_hooks(self):
-        self.repo.hm.reactivate_verification_hooks()
+        self.config.disabled_hooks_categories.remove('integrity')
 
     # broken db commands ######################################################
 
