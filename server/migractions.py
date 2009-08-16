@@ -169,16 +169,15 @@ class ServerMigrationHelper(MigrationHelper):
         bkup = tarfile.open(backupfile, 'r|gz')
         tmpdir = tempfile.mkdtemp()
         bkup.extractall(path=tmpdir)
-        if systemonly:
-            repo.system_source.restore(osp.join(tmpdir,'system'), drop=drop)
-        else:
-            for source in repo.sources:
-                try:
-                    source.restore(osp.join(tmpdir, source.uri), drop=drop)
-                except Exception, exc:
-                    print '-> error trying to restore [%s]' % exc
-                    if not self.confirm('Continue anyway?', default='n'):
-                        raise SystemExit(1)
+        for source in repo.sources:
+            if systemonly and source.uri != 'system':
+                continue
+            try:
+                source.restore(osp.join(tmpdir, source.uri), drop=drop)
+            except Exception, exc:
+                print '-> error trying to restore [%s]' % exc
+                if not self.confirm('Continue anyway?', default='n'):
+                    raise SystemExit(1)
         bkup.close()
         shutil.rmtree(tmpdir)
         # call hooks
