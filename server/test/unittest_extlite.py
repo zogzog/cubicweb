@@ -5,7 +5,15 @@ from logilab.common.db import get_connection
 
 class SQLiteTC(TestCase):
     sqlite_file = '_extlite_test.sqlite'
+
+    def _cleanup(self):
+        try:
+            os.remove(self.sqlite_file)
+        except:
+            pass
+
     def setUp(self):
+        self._cleanup()
         cnx1 = get_connection('sqlite', database=self.sqlite_file)
         cu = cnx1.cursor()
         cu.execute('CREATE TABLE toto(name integer);')
@@ -13,10 +21,7 @@ class SQLiteTC(TestCase):
         cnx1.close()
 
     def tearDown(self):
-        try:
-            os.remove(self.sqlite_file)
-        except:
-            pass
+        self._cleanup()
 
     def test(self):
         lock = threading.Lock()
