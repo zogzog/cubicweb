@@ -22,6 +22,8 @@ class GeocodingJsonView(EntityView):
     __select__ = implements(IGeocodable)
 
     def call(self):
+        # remove entities that don't define latitude and longitude
+        self.rset = self.rset.filtered_rset(lambda e: e.latitude and e.longitude)
         zoomlevel = self.req.form.pop('zoomlevel', 8)
         extraparams = self.req.form.copy()
         extraparams.pop('vid', None)
@@ -41,10 +43,15 @@ class GeocodingJsonView(EntityView):
 
     def build_marker_data(self, row, extraparams):
         entity = self.entity(row, 0)
+        icon = None
+        if hasattr(entity, 'marker_icon'):
+            icon = entity.marker_icon()
+        else:
+            icon = (self.req.external_resource('GMARKER_ICON'), (20, 34), (4, 34), None)
         return {'latitude': entity.latitude, 'longitude': entity.longitude,
                 'title': entity.dc_long_title(),
                 #icon defines : (icon._url, icon.size,  icon.iconAncho', icon.shadow)
-                'icon': entity.marker_icon() or (self.req.external_resource('GMARKER_ICON'), (20, 34), (4, 34), None),
+                'icon': icon,
                 'bubbleUrl': entity.absolute_url(vid='gmap-bubble', __notemplate=1, **extraparams),
                 }
 
@@ -67,7 +74,9 @@ class GoogleMapsView(EntityView):
     need_navigation = False
 
     def call(self, gmap_key, width=400, height=400, uselabel=True, urlparams=None):
-        self.req.add_js('http://maps.google.com/maps?file=api&amp;v=2&amp;key=%s' % gmap_key,
+        # remove entities that don't define latitude and longitude
+        self.rset = self.rset.filtered_rset(lambda e: e.latitude and e.longitude)
+        self.req.add_js('http://maps.google.com/maps?sensor=false&file=api&amp;v=2&amp;key=%s' % gmap_key,
                         localfile=False)
         self.req.add_js( ('cubicweb.widgets.js', 'cubicweb.gmap.js', 'gmap.utility.labeledmarker.js') )
         rql = self.rset.printable_rql()
