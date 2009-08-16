@@ -40,14 +40,12 @@ class AddRelationView(EditRelationBoxTemplate):
                 etypes = rschema.subjects(entity.e_schema)
             if len(etypes) == 1:
                 self.etype = etypes[0]
-        fakebox = []
         self.w(u'<div id="%s">' % self.id)
         self.w(u'<h1>%s</h1>' % self.req._('relation %(relname)s of %(ent)s')
                % {'relname': rschema.display_name(self.req, role(self)),
                   'ent': entity.view('incontext')})
         self.w(u'<ul>')
-        self.w_unrelated(fakebox, entity)
-        for boxitem in fakebox:
+        for boxitem in self.unrelated_boxitems(entity):
             boxitem.render(self.w)
         self.w(u'</ul></div>')
 
