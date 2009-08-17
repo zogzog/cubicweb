@@ -254,8 +254,11 @@ class Entity(AppObject, dict):
                     selection.pop()
                     restrictions.pop()
                     continue
-                if card == '?':
-                    restrictions[-1] += '?' # left outer join if not mandatory
+                # XXX we need outer join in case the relation is not mandatory
+                # (card == '?')  *or if the entity is being added*, since in
+                # that case the relation may still be missing. As we miss this
+                # later information here, systematically add it.
+                restrictions[-1] += '?'
                 destcls = cls.vreg['etypes'].etype_class(desttype)
                 destcls._fetch_restrictions(var, varmaker, destcls.fetch_attrs,
                                             selection, orderby, restrictions,
