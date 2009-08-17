@@ -251,6 +251,8 @@ class Entity(AppObject, dict):
                 desttype = rschema.objects(eschema.type)[0]
                 card = rschema.rproperty(eschema, desttype, 'cardinality')[0]
                 if card not in '?1':
+                    self.warning('bad relation %s specified in fetch attrs for %s',
+                                 attr, self.__class__)
                     selection.pop()
                     restrictions.pop()
                     continue
