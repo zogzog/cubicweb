@@ -302,16 +302,6 @@ class AppObject(object):
 
     # deprecated ###############################################################
 
-    @classproperty
-    @deprecated('[3.4] use __select__ and & or | operators')
-    def __selectors__(cls):
-        selector = cls.__select__
-        if isinstance(selector, AndSelector):
-            return tuple(selector.selectors)
-        if not isinstance(selector, tuple):
-            selector = (selector,)
-        return selector
-
     @property
     @deprecated('[3.5] use self._cw.vreg')
     def vreg(self):
