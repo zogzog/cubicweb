@@ -1004,7 +1004,7 @@ class Repository(object):
                 relations.append((attr, entity[attr]))
         if source.should_call_hooks:
             self.hm.call_hooks('before_add_entity', etype, session, entity)
-        entity.edited_attributes = entity.keys()
+        entity.edited_attributes = set(entity)
         entity.set_defaults()
         entity.check(creation=True)
         source.add_entity(session, entity)

@@ -944,11 +944,9 @@ class Attribute(object):
         return eobj.get_value(self._attrname)
 
     def __set__(self, eobj, value):
-        # XXX bw compat
-        # would be better to generate UPDATE queries than the current behaviour
-        eobj.warning("deprecated usage, don't use 'entity.attr = val' notation)")
         eobj[self._attrname] = value
-
+        if hasattr(eobj, 'edited_attributes'):
+            eobj.edited_attributes.add(self._attrname)
 
 class Relation(object):
     """descriptor that controls schema relation access"""
