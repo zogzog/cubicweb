@@ -236,6 +236,8 @@ class Repository(object):
             source.set_schema(schema)
         self.schema = schema
         if resetvreg:
+            if self.config._cubes is None:
+                self.config.init_cubes(self.get_cubes())
             # full reload of all appobjects
             self.vreg.reset()
             self.vreg.set_schema(schema)
@@ -262,7 +264,6 @@ class Repository(object):
         finally:
             session.close()
         self.set_schema(appschema)
-        self.config.init_cubes(self.get_cubes())
 
     def start_looping_tasks(self):
         assert isinstance(self._looping_tasks, list), 'already started'
