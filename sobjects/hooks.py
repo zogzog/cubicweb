@@ -26,7 +26,8 @@ class SetModificationDateOnStateChange(Hook):
             return
         entity = session.entity_from_eid(fromeid)
         try:
-            entity.set_attributes(modification_date=datetime.now())
+            entity.set_attributes(modification_date=datetime.now(),
+                                  _cw_unsafe=True)
         except RepositoryError, ex:
             # usually occurs if entity is coming from a read-only source
             # (eg ldap user)
