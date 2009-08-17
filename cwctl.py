@@ -717,6 +717,11 @@ will connect to all defined sources. If 'migration' is given, appropriate \
 sources for migration will be automatically selected.",
           }),
 
+        ('force',
+         {'short': 'f', 'action' : 'store_true',
+          'default' : False,
+          'help': 'don\'t check instance is up to date.'}
+         ),
         )
     def run(self, args):
         appid = pop_arg(args, 99, msg="No instance specified !")
@@ -729,6 +734,7 @@ sources for migration will be automatically selected.",
         else:
             sources = ('all',)
         config.set_sources_mode(sources)
+        config.repairing = self.config.force
         mih = config.migration_handler()
         if args:
             for arg in args:
