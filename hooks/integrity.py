@@ -219,7 +219,7 @@ class DontRemoveOwnersGroupHook(IntegrityHook):
     def __call__(self):
         if self.event == 'before_delete_entity' and self.entity.name == 'owners':
             raise ValidationError(self.entity.eid, {None: self._cw._('can\'t be deleted')})
-        elif self.event == 'before_update_entity' and 'name' in self.entity.edited_attribute:
+        elif self.event == 'before_update_entity' and 'name' in self.entity.edited_attributes:
             newname = self.entity.pop('name')
             oldname = self.entity.name
             if oldname == 'owners' and newname != oldname:
