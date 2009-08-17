@@ -322,10 +322,13 @@ class AppObject(object):
     def req(self):
         return self._cw
 
-    @property
     @deprecated('[3.5] use self.cw_rset')
-    def rset(self):
+    def get_rset(self):
         return self.cw_rset
+    @deprecated('[3.5] use self.cw_rset')
+    def set_rset(self, rset):
+        self.cw_rset = rset
+    rset = property(get_rset, set_rset)
 
     @property
     @deprecated('[3.5] use self.cw_row')
