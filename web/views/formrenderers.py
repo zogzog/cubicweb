@@ -53,7 +53,7 @@ class FormRenderer(AppObject):
     button_bar_class = u'formButtonBar'
 
     def __init__(self, req=None, rset=None, row=None, col=None, **kwargs):
-        super(FormRenderer, self).__init__(req, rset, row, col)
+        super(FormRenderer, self).__init__(req, rset=rset, row=row, col=col)
         if self._set_options(kwargs):
             raise ValueError('unconsumed arguments %s' % kwargs)
 

@@ -53,7 +53,7 @@ class UnregisteredAction(Action):
     id = None
 
     def __init__(self, req, rset, title, path, **kwargs):
-        Action.__init__(self, req, rset)
+        Action.__init__(self, req, rset=rset)
         self.title = req._(title)
         self._path = path
         self.__dict__.update(kwargs)

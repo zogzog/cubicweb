@@ -261,7 +261,7 @@ class AbstractFacet(AppObject):
 
     def __init__(self, req, rset=None, rqlst=None, filtered_variable=None,
                  **kwargs):
-        super(AbstractFacet, self).__init__(req, rset, **kwargs)
+        super(AbstractFacet, self).__init__(req, rset=rset, **kwargs)
         assert rset is not None or rqlst is not None
         assert filtered_variable
         # facet retreived using `object_by_id` from an ajax call

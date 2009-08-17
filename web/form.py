@@ -47,7 +47,7 @@ class FormMixIn(object):
         return '%s#%s' % (self.req.url(), self.domid)
 
     def __init__(self, req, rset, **kwargs):
-        super(FormMixIn, self).__init__(req, rset, **kwargs)
+        super(FormMixIn, self).__init__(req, rset=rset, **kwargs)
         self.restore_previous_post(self.session_key())
 
     def restore_previous_post(self, sessionkey):

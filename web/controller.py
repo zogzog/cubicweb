@@ -87,15 +87,15 @@ class Controller(AppObject):
     def process_rql(self, rql):
         """execute rql if specified"""
         # XXX assigning to self really necessary?
-        self.rset = None
+        self.cw_rset = None
         if rql:
             self.req.ensure_ro_rql(rql)
             if not isinstance(rql, unicode):
                 rql = unicode(rql, self.req.encoding)
             pp = self.vreg['components'].select_or_none('magicsearch', self.req)
             if pp is not None:
-                self.rset = pp.process_query(rql, self.req)
-        return self.rset
+                self.cw_rset = pp.process_query(rql, self.req)
+        return self.cw_rset
 
     def check_expected_params(self, params):
         """check that the given list of parameters are specified in the form

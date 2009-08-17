@@ -77,7 +77,7 @@ class FieldsForm(form.Form):
     def __init__(self, req, rset=None, row=None, col=None,
                  submitmsg=None, mainform=True,
                  **kwargs):
-        super(FieldsForm, self).__init__(req, rset, row=row, col=col)
+        super(FieldsForm, self).__init__(req, rset=rset, row=row, col=col)
         self.fields = list(self.__class__._fields_)
         for key, val in kwargs.items():
             if key in NAV_FORM_PARAMETERS:

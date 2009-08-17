@@ -412,7 +412,7 @@ class TableEditForm(forms.CompositeForm):
 
     def __init__(self, req, rset, **kwargs):
         kwargs.setdefault('__redirectrql', rset.printable_rql())
-        super(TableEditForm, self).__init__(req, rset, **kwargs)
+        super(TableEditForm, self).__init__(req, rset=rset, **kwargs)
         for row in xrange(len(self.rset)):
             form = self.vreg['forms'].select('edition', self.req,
                                              rset=self.rset, row=row,
