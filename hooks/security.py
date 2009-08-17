@@ -82,7 +82,7 @@ class BeforeDelEntitySecurityHook(SecurityHook):
     events = ('before_delete_entity',)
 
     def __call__(self):
-        self.entity.e_schema.check_perm(self._cw, 'delete', eid)
+        self.entity.check_perm('delete')
 
 
 class BeforeAddRelationSecurityHook(SecurityHook):
