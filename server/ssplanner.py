@@ -482,7 +482,7 @@ class UpdateStep(Step):
         repo = session.repo
         edefs = {}
         # insert relations
-        attributes = [relation.r_type for relation in self.attribute_relations]
+        attributes = set([relation.r_type for relation in self.attribute_relations])
         for row in self.execute_child():
             for relation in self.attribute_relations:
                 lhs, rhs = relation.get_variable_parts()

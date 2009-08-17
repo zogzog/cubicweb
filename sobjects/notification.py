@@ -8,21 +8,15 @@
 __docformat__ = "restructuredtext en"
 _ = unicode
 
-from base64 import b64encode, b64decode
 from itertools import repeat
-from time import time
-try:
-    from socket import gethostname
-except ImportError:
-    def gethostname(): # gae
-        return 'XXX'
 
 from logilab.common.textutils import normalize_text
+from logilab.common.deprecation import class_renamed, deprecated
 
 from cubicweb.selectors import yes
-from cubicweb.view import EntityView, Component
+from cubicweb.view import Component
 from cubicweb.common.mail import format_mail
-
+from cubicweb.common.mail import NotificationView
 from cubicweb.server.hookhelper import SendMailOp
 
 
@@ -55,127 +49,13 @@ class RecipientsFinder(Component):
 
 # abstract or deactivated notification views and mixin ########################
 
-class NotificationView(EntityView):
-    """abstract view implementing the email API
-
-    all you have to do by default is :
-    * set id and accepts attributes to match desired events and entity types
-    * set a content attribute to define the content of the email (unless you
-      override call)
+class NotificationView(NotificationView):
+    """overriden to delay actual sending of mails to a commit operation by
+    default
     """
-    # XXX refactor this class to work with len(rset) > 1
-
-    msgid_timestamp = True
-
-    def recipients(self):
-        finder = self.vreg['components'].select('recipients_finder', self.req,
-                                  rset=self.rset)
-        return finder.recipients()
-
-    def subject(self):
-        entity = self.rset.get_entity(self.row or 0, self.col or 0)
-        subject = self.req._(self.message)
-        etype = entity.dc_type()
-        eid = entity.eid
-        login = self.user_login()
-        return self.req._('%(subject)s %(etype)s #%(eid)s (%(login)s)') % locals()
-
-    def user_login(self):
-        # req is actually a session (we are on the server side), and we have to
-        # prevent nested internal session
-        return self.req.actual_session().user.login
-
-    def context(self, **kwargs):
-        entity = self.rset.get_entity(self.row or 0, self.col or 0)
-        for key, val in kwargs.iteritems():
-            if val and isinstance(val, unicode) and val.strip():
-               kwargs[key] = self.req._(val)
-        kwargs.update({'user': self.user_login(),
-                       'eid': entity.eid,
-                       'etype': entity.dc_type(),
-                       'url': entity.absolute_url(),
-                       'title': entity.dc_long_title(),})
-        return kwargs
-
-    def cell_call(self, row, col=0, **kwargs):
-        self.w(self.req._(self.content) % self.context(**kwargs))
-
-    def construct_message_id(self, eid):
-        return construct_message_id(self.req.vreg.config.appid, eid, self.msgid_timestamp)
-
-    def render_and_send(self, **kwargs):
-        """generate and send an email message for this view"""
-        self._kwargs = kwargs
-        recipients = self.recipients()
-        if not recipients:
-            self.info('skipping %s notification, no recipients', self.id)
-            return
-        if not isinstance(recipients[0], tuple):
-            from warnings import warn
-            warn('recipients should now return a list of 2-uple (email, language)',
-                 DeprecationWarning, stacklevel=1)
-            lang = self.vreg.property_value('ui.language')
-            recipients = zip(recipients, repeat(lang))
-        if self.rset is not None:
-            entity = self.rset.get_entity(self.row or 0, self.col or 0)
-            # if the view is using timestamp in message ids, no way to reference
-            # previous email
-            if not self.msgid_timestamp:
-                refs = [self.construct_message_id(eid)
-                        for eid in entity.notification_references(self)]
-            else:
-                refs = ()
-            msgid = self.construct_message_id(entity.eid)
-        else:
-            refs = ()
-            msgid = None
-        userdata = self.req.user_data()
-        origlang = self.req.lang
-        for emailaddr, lang in recipients:
-            self.req.set_language(lang)
-            # since the same view (eg self) may be called multiple time and we
-            # need a fresh stream at each iteration, reset it explicitly
-            self.w = None
-            # XXX call render before subject to set .row/.col attributes on the
-            #     view
-            content = self.render(row=0, col=0, **kwargs)
-            subject = self.subject()
-            msg = format_mail(userdata, [emailaddr], content, subject,
-                              config=self.req.vreg.config, msgid=msgid, references=refs)
-            self.send([emailaddr], msg)
-        # restore language
-        self.req.set_language(origlang)
-
-    def send(self, recipients, msg):
+    def send_on_commit(self, recipients, msg):
         SendMailOp(self.req, recipients=recipients, msg=msg)
-
-
-def construct_message_id(appid, eid, withtimestamp=True):
-    if withtimestamp:
-        addrpart = 'eid=%s&timestamp=%.10f' % (eid, time())
-    else:
-        addrpart = 'eid=%s' % eid
-    # we don't want any equal sign nor trailing newlines
-    leftpart = b64encode(addrpart, '.-').rstrip().rstrip('=')
-    return '<%s@%s.%s>' % (leftpart, appid, gethostname())
-
-
-def parse_message_id(msgid, appid):
-    if msgid[0] == '<':
-        msgid = msgid[1:]
-    if msgid[-1] == '>':
-        msgid = msgid[:-1]
-    try:
-        values, qualif = msgid.split('@')
-        padding = len(values) % 4
-        values = b64decode(str(values + '='*padding), '.-')
-        values = dict(v.split('=') for v in values.split('&'))
-        fromappid, host = qualif.split('.', 1)
-    except:
-        return None
-    if appid != fromappid or host != gethostname():
-        return None
-    return values
+    send = send_on_commit
 
 
 class StatusChangeMixIn(object):
@@ -201,6 +81,13 @@ url: %(url)s
 # XXX should be based on dc_title/dc_description, no?
 
 class ContentAddedView(NotificationView):
+    """abstract class for notification on entity/relation
+
+    all you have to do by default is :
+    * set id and __select__ attributes to match desired events and entity types
+    * set a content attribute to define the content of the email (unless you
+      override call)
+    """
     __abstract__ = True
     id = 'notif_after_add_entity'
     msgid_timestamp = False
@@ -226,7 +113,11 @@ url: %(url)s
         return  u'%s #%s (%s)' % (self.req.__('New %s' % entity.e_schema),
                                   entity.eid, self.user_login())
 
-from logilab.common.deprecation import class_renamed, class_moved
-NormalizedTextView = class_renamed('NormalizedTextView', ContentAddedView)
+
+from logilab.common.deprecation import class_renamed, class_moved, deprecated
 from cubicweb.hooks.notification import RenderAndSendNotificationView
+from cubicweb.common.mail import parse_message_id
+
+NormalizedTextView = class_renamed('NormalizedTextView', ContentAddedView)
 RenderAndSendNotificationView = class_moved(RenderAndSendNotificationView)
+parse_message_id = deprecated('parse_message_id is now defined in cubicweb.common.mail')

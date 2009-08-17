@@ -310,7 +310,7 @@ class JSonController(Controller):
                 vtitle = self.req.form.get('vtitle')
                 if vtitle:
                     stream.write(u'<h1 class="vtitle">%s</h1>\n' % vtitle)
-            view.pagination(req, self.rset, view.w, not view.need_navigation)
+            view.paginate()
             if divid == 'pageContent':
                 stream.write(u'<div id="contentmain">')
         view.render(**kwargs)

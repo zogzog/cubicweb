@@ -152,11 +152,16 @@ class Entity(AppObject, dict):
                 desttype = rschema.objects(eschema.type)[0]
                 card = rschema.rproperty(eschema, desttype, 'cardinality')[0]
                 if card not in '?1':
+                    self.warning('bad relation %s specified in fetch attrs for %s',
+                                 attr, self.__class__)
                     selection.pop()
                     restrictions.pop()
                     continue
-                if card == '?':
-                    restrictions[-1] += '?' # left outer join if not mandatory
+                # XXX we need outer join in case the relation is not mandatory
+                # (card == '?')  *or if the entity is being added*, since in
+                # that case the relation may still be missing. As we miss this
+                # later information here, systematically add it.
+                restrictions[-1] += '?'
                 # XXX user.req.vreg iiiirk
                 destcls = user.req.vreg['etypes'].etype_class(desttype)
                 destcls._fetch_restrictions(var, varmaker, destcls.fetch_attrs,
@@ -709,7 +714,7 @@ class Entity(AppObject, dict):
 
     # raw edition utilities ###################################################
 
-    def set_attributes(self, **kwargs):
+    def set_attributes(self, _cw_unsafe=False, **kwargs):
         assert kwargs
         relations = []
         for key in kwargs:
@@ -718,8 +723,12 @@ class Entity(AppObject, dict):
         self.update(kwargs)
         # and now update the database
         kwargs['x'] = self.eid
-        self.req.execute('SET %s WHERE X eid %%(x)s' % ','.join(relations),
-                         kwargs, 'x')
+        if _cw_unsafe:
+            self.req.unsafe_execute(
+                'SET %s WHERE X eid %%(x)s' % ','.join(relations), kwargs, 'x')
+        else:
+            self.req.execute('SET %s WHERE X eid %%(x)s' % ','.join(relations),
+                             kwargs, 'x')
 
     def delete(self):
         assert self.has_eid(), self.eid
@@ -820,7 +829,8 @@ class Attribute(object):
 
     def __set__(self, eobj, value):
         eobj[self._attrname] = value
-
+        if hasattr(eobj, 'edited_attributes'):
+            eobj.edited_attributes.add(self._attrname)
 
 class Relation(object):
     """descriptor that controls schema relation access"""

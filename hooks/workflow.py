@@ -15,14 +15,16 @@ from cubicweb.selectors import entity_implements
 from cubicweb.server import hook
 
 
+
 def previous_state(session, eid):
     """return the state of the entity with the given eid,
     usually since it's changing in the current transaction. Due to internal
     relation hooks, the relation may has been deleted at this point, so
     we have handle that
     """
-    if session.added_in_transaction(eid):
-        return
+    # don't check eid has been added in the current transaction, we don't want
+    # to miss previous state of entity whose state change in the same
+    # transaction as it's being created
     pending = session.transaction_data.get('pendingrelations', ())
     for eidfrom, rtype, eidto in reversed(pending):
         if rtype == 'in_state' and eidfrom == eid:
@@ -139,7 +141,8 @@ class SetModificationDateOnStateChange(WorkflowHook):
             return
         entity = self._cw.entity_from_eid(self.eidfrom)
         try:
-            entity.set_attributes(modification_date=datetime.now())
+            entity.set_attributes(modification_date=datetime.now(),
+                                  _cw_unsafe=True)
         except RepositoryError, ex:
             # usually occurs if entity is coming from a read-only source
             # (eg ldap user)

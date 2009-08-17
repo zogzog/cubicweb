@@ -1011,7 +1011,7 @@ class Repository(object):
         session.set_entity_cache(entity)
         only_inline_rels, need_fti_update = True, False
         relations = []
-        for attr in entity.keys():
+        for attr in edited_attributes:
             if attr == 'eid':
                 continue
             rschema = eschema.subject_relation(attr)
@@ -1021,8 +1021,8 @@ class Repository(object):
                 only_inline_rels = False
             else:
                 # inlined relation
-                previous_value = entity.related(attr)
-                if previous_value:
+                previous_value = entity.related(attr) or None
+                if previous_value is not None:
                     previous_value = previous_value[0][0] # got a result set
                     if previous_value == entity[attr]:
                         previous_value = None
@@ -1051,7 +1051,7 @@ class Repository(object):
             for attr, value, prevvalue in relations:
                 # if the relation is already cached, update existant cache
                 relcache = entity.relation_cached(attr, 'subject')
-                if prevvalue:
+                if prevvalue is not None:
                     self.hm.call_hooks('after_delete_relation', session,
                                        eidfrom=entity.eid, rtype=attr, eidto=prevvalue)
                     if relcache is not None:

@@ -344,7 +344,7 @@ class Session(RequestSessionBase):
         try:
             csession = self._threaddata.childsession
         except AttributeError:
-            if self.is_super_session:
+            if isinstance(self, (ChildSession, InternalSession)):
                 csession = self
             else:
                 csession = ChildSession(self)
