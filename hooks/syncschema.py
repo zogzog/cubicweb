@@ -600,7 +600,7 @@ class MemSchemaCWConstraintAdd(MemSchemaOperation):
         # when the relation is added in the same transaction, the constraint
         # object is created by the operation adding the attribute or relation,
         # so there is nothing to do here
-        if session.added_in_transaction(rdef.eid):
+        if self.session.added_in_transaction(rdef.eid):
             self.cancelled = True
             return
         subjtype, rtype, objtype = self.session.schema.schema_by_eid(rdef.eid)
