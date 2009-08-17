@@ -28,8 +28,7 @@ __docformat__ = "restructuredtext en"
 from rql import TypeResolverException
 
 from cubicweb import RegistryException, typed_eid
-from cubicweb.web import NotFound, Redirect
-from cubicweb.web.component import Component, Component
+from cubicweb.web import NotFound, Redirect, component
 
 
 class PathDontMatch(Exception):
@@ -37,7 +36,7 @@ class PathDontMatch(Exception):
     a path
     """
 
-class URLPublisherComponent(Component):
+class URLPublisherComponent(component.Component):
     """associate url's path to view identifier / rql queries,
     by applying a chain of urlpathevaluator components.
 
@@ -51,12 +50,14 @@ class URLPublisherComponent(Component):
     something else than `PathDontMatch` will stop the handlers chain.
     """
     id = 'urlpublisher'
+    vreg = None # XXX necessary until property for deprecation warning is on appobject
 
-    def __init__(self, default_method='view'):
+    def __init__(self, vreg, default_method='view'):
         super(URLPublisherComponent, self).__init__()
+        self.vreg = vreg
         self.default_method = default_method
         evaluators = []
-        for evaluatorcls in self.vreg['components']['urlpathevaluator']:
+        for evaluatorcls in vreg['components']['urlpathevaluator']:
             # instantiation needed
             evaluator = evaluatorcls(self)
             evaluators.append(evaluator)
@@ -98,13 +99,14 @@ class URLPublisherComponent(Component):
         return pmid, rset
 
 
-class URLPathEvaluator(Component):
+class URLPathEvaluator(component.Component):
     __abstract__ = True
     id = 'urlpathevaluator'
+    vreg = None # XXX necessary until property for deprecation warning is on appobject
 
     def __init__(self, urlpublisher):
         self.urlpublisher = urlpublisher
-
+        self.vreg = urlpublisher.vreg
 
 class RawPathEvaluator(URLPathEvaluator):
     """handle path of the form::

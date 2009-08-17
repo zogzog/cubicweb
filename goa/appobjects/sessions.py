@@ -73,9 +73,9 @@ class GAEAuthenticationManager(AbstractAuthenticationManager):
 class GAEPersistentSessionManager(AbstractSessionManager):
     """manage session data associated to a session identifier"""
 
-    def __init__(self, *args, **kwargs):
-        super(GAEPersistentSessionManager, self).__init__(*args, **kwargs)
-        self._repo = self.config.repository(vreg=self.vreg)
+    def __init__(self, vreg, *args, **kwargs):
+        super(GAEPersistentSessionManager, self).__init__(vreg, *args, **kwargs)
+        self._repo = self.config.repository(vreg=vreg)
 
     def get_session(self, req, sessionid):
         """return existing session for the given session identifier"""

@@ -18,9 +18,10 @@ from cubicweb.web.application import AbstractAuthenticationManager
 class RepositoryAuthenticationManager(AbstractAuthenticationManager):
     """authenticate user associated to a request and check session validity"""
 
-    def __init__(self):
-        self.repo = self.config.repository(self.vreg)
-        self.log_queries = self.config['query-log-file']
+    def __init__(self, vreg):
+        super(RepositoryAuthenticationManager, self).__init__(vreg)
+        self.repo = vreg.config.repository(vreg)
+        self.log_queries = vreg.config['query-log-file']
 
     def validate_session(self, req, session):
         """check session validity, and return eventually hijacked session
