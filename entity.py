@@ -834,7 +834,7 @@ class Entity(AppObject, dict):
 
     # raw edition utilities ###################################################
 
-    def set_attributes(self, **kwargs):
+    def set_attributes(self, _cw_unsafe=False, **kwargs):
         assert kwargs
         relations = []
         for key in kwargs:
@@ -843,8 +843,12 @@ class Entity(AppObject, dict):
         self.update(kwargs)
         # and now update the database
         kwargs['x'] = self.eid
-        self.req.execute('SET %s WHERE X eid %%(x)s' % ','.join(relations),
-                         kwargs, 'x')
+        if _cw_unsafe:
+            self.req.unsafe_execute(
+                'SET %s WHERE X eid %%(x)s' % ','.join(relations), kwargs, 'x')
+        else:
+            self.req.execute('SET %s WHERE X eid %%(x)s' % ','.join(relations),
+                             kwargs, 'x')
 
     def delete(self):
         assert self.has_eid(), self.eid
