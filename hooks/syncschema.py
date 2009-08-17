@@ -142,7 +142,6 @@ class MemSchemaNotifyChanges(hook.SingleLastOperation):
     """
 
     def __init__(self, session):
-        self.repo = session.repo
         hook.SingleLastOperation.__init__(self, session)
 
     def commit_event(self):
@@ -152,7 +151,6 @@ class MemSchemaNotifyChanges(hook.SingleLastOperation):
 class MemSchemaOperation(hook.Operation):
     """base class for schema operations"""
     def __init__(self, session, kobj=None, **kwargs):
-        self.schema = session.schema
         self.kobj = kobj
         # once Operation.__init__ has been called, event may be triggered, so
         # do this last !
