@@ -600,6 +600,7 @@ class ChildSession(Session):
         # session which has created this one
         self.parent_session = parent_session
         self.user = InternalManager()
+        self.user.req = self # XXX remove when "vreg = user.req.vreg" hack in entity.py is gone
         self.repo = parent_session.repo
         self.vreg = parent_session.vreg
         self.data = parent_session.data
@@ -669,8 +670,9 @@ class InternalSession(Session):
     """special session created internaly by the repository"""
 
     def __init__(self, repo, cnxprops=None):
-        super(InternalSession, self).__init__(_IMANAGER, repo, cnxprops,
+        super(InternalSession, self).__init__(InternalManager(), repo, cnxprops,
                                               _id='internal')
+        self.user.req = self # XXX remove when "vreg = user.req.vreg" hack in entity.py is gone
         self.cnxtype = 'inmemory'
         self.is_internal_session = True
         self.is_super_session = True
@@ -707,7 +709,6 @@ class InternalManager(object):
             return 'en'
         return None
 
-_IMANAGER = InternalManager()
 
 from logging import getLogger
 from cubicweb import set_log_methods
