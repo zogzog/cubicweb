@@ -265,7 +265,7 @@ class CubicWebVRegistry(VRegistry):
         # definitions, and propertyvals which contains values for those
         # properties
         self['propertydefs'] = {}
-        self['propertyvalues'] = self.eprop_values = {}
+        self['propertyvalues'] = {}
         for key, propdef in self.config.eproperty_definitions():
             self.register_property(key, **propdef)
         if path is not None and force_reload:

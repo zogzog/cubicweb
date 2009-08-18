@@ -112,7 +112,7 @@ class _DelCWPropertyOp(hook.Operation):
     def commit_event(self):
         """the observed connections pool has been commited"""
         try:
-            del self.epropdict[self.key]
+            del self.cwpropdict[self.key]
         except KeyError:
             self.error('%s has no associated value', self.key)
 
@@ -122,7 +122,7 @@ class _ChangeCWPropertyOp(hook.Operation):
 
     def commit_event(self):
         """the observed connections pool has been commited"""
-        self.epropdict[self.key] = self.value
+        self.cwpropdict[self.key] = self.value
 
 
 class _AddCWPropertyOp(hook.Operation):
@@ -130,9 +130,9 @@ class _AddCWPropertyOp(hook.Operation):
 
     def commit_event(self):
         """the observed connections pool has been commited"""
-        eprop = self.eprop
-        if not eprop.for_user:
-            self.repo.vreg.eprop_values[eprop.pkey] = eprop.value
+        cwprop = self.cwprop
+        if not cwprop.for_user:
+            self.repo.vreg['propertyvalues'][cwprop.pkey] = cwprop.value
         # if for_user is set, update is handled by a ChangeCWPropertyOp operation
 
 
@@ -155,7 +155,7 @@ class AddCWPropertyHook(SyncSessionHook):
         if not session.user.matching_groups('managers'):
             session.add_relation(entity.eid, 'for_user', session.user.eid)
         else:
-            _AddCWPropertyOp(session, eprop=entity)
+            _AddCWPropertyOp(session, cwprop=self.entity)
 
 
 class UpdateCWPropertyHook(AddCWPropertyHook):
@@ -177,11 +177,11 @@ class UpdateCWPropertyHook(AddCWPropertyHook):
             raise ValidationError(entity.eid, {'value': session._(str(ex))})
         if entity.for_user:
             for session_ in get_user_sessions(session.repo, entity.for_user[0].eid):
-                _ChangeCWPropertyOp(session, epropdict=session_.user.properties,
+                _ChangeCWPropertyOp(session, cwpropdict=session_.user.properties,
                                   key=key, value=value)
         else:
             # site wide properties
-            _ChangeCWPropertyOp(session, epropdict=session.vreg.eprop_values,
+            _ChangeCWPropertyOp(session, cwpropdict=session.vreg['propertyvalues'],
                               key=key, value=value)
 
 
@@ -197,7 +197,7 @@ class DeleteCWPropertyHook(AddCWPropertyHook):
                 # if for_user was set, delete has already been handled
                 break
         else:
-            _DelCWPropertyOp(session, epropdict=session.vreg.eprop_values, key=entity.pkey)
+            _DelCWPropertyOp(session, cwpropdict=session.vreg['propertyvalues'], key=entity.pkey)
 
 
 class AddForUserRelationHook(SyncSessionHook):
@@ -216,7 +216,7 @@ class AddForUserRelationHook(SyncSessionHook):
             raise ValidationError(eidfrom,
                                   {'for_user': session._("site-wide property can't be set for user")})
         for session_ in get_user_sessions(session.repo, self.eidto):
-            _ChangeCWPropertyOp(session, epropdict=session_.user.properties,
+            _ChangeCWPropertyOp(session, cwpropdict=session_.user.properties,
                               key=key, value=value)
 
 
@@ -231,4 +231,4 @@ class DelForUserRelationHook(AddForUserRelationHook):
         session.transaction_data.setdefault('pendingrelations', []).append(
             (self.eidfrom, self.rtype, self.eidto))
         for session_ in get_user_sessions(session.repo, self.eidto):
-            _DelCWPropertyOp(session, epropdict=session_.user.properties, key=key)
+            _DelCWPropertyOp(session, cwpropdict=session_.user.properties, key=key)
