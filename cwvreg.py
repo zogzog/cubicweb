@@ -228,8 +228,8 @@ class CubicWebVRegistry(VRegistry):
             config.init_log(debug=debug)
         super(CubicWebVRegistry, self).__init__(config)
         self.schema = None
-        self.reset()
         self.initialized = False
+        self.reset()
 
     def setdefault(self, regid):
         try:
@@ -256,10 +256,11 @@ class CubicWebVRegistry(VRegistry):
         # two special registries, propertydefs which care all the property
         # definitions, and propertyvals which contains values for those
         # properties
-        self['propertydefs'] = {}
-        self['propertyvalues'] = self.eprop_values = {}
-        for key, propdef in self.config.eproperty_definitions():
-            self.register_property(key, **propdef)
+        if not self.initialized:
+            self['propertydefs'] = {}
+            self['propertyvalues'] = self.eprop_values = {}
+            for key, propdef in self.config.eproperty_definitions():
+                self.register_property(key, **propdef)
         if path is not None and force_reload:
             cleanup_sys_modules(path)
             cubes = self.config.cubes()

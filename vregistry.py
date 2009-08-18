@@ -207,7 +207,9 @@ class VRegistry(dict):
         self.config = config
 
     def reset(self, path=None, force_reload=None):
-        self.clear()
+        # don't use self.clear, we want to keep existing subdictionaries
+        for subdict in self.itervalues():
+            subdict.clear()
         self._lastmodifs = {}
 
     def __getitem__(self, name):
