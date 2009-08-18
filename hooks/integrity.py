@@ -252,6 +252,7 @@ class StripCWUserLoginHook(IntegrityHook):
     __select__ = IntegrityHook.__select__ & entity_implements('CWUser')
     events = ('before_add_entity', 'before_update_entity',)
 
-    def call(self, session, entity):
-        if 'login' in entity.edited_attributes and entity['login']:
-            entity['login'] = entity['login'].strip()
+    def __call__(self):
+        user = self.entity
+        if 'login' in user.edited_attributes and user.login:
+            entity.login = entity.login.strip()
