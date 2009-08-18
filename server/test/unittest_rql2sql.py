@@ -888,6 +888,10 @@ UNION ALL
 SELECT G.cw_eid AS C0, S.cw_eid AS C1
 FROM cw_Note AS G LEFT OUTER JOIN cw_State AS S ON (G.cw_in_state=S.cw_eid AND S.cw_name=hop) ) AS _T0 ON (rel_tags0.eid_to=_T0.C0)'''),
 
+    ('Any O,AD  WHERE NOT S inline1 O, S eid 123, O todo_by AD?',
+     '''SELECT O.cw_eid, rel_todo_by0.eid_to
+FROM cw_Affaire AS O LEFT OUTER JOIN todo_by_relation AS rel_todo_by0 ON (rel_todo_by0.eid_from=O.cw_eid), cw_Note AS S
+WHERE NOT EXISTS(SELECT 1 WHERE S.cw_inline1=O.cw_eid) AND S.cw_eid=123''')
     ]
 
 VIRTUAL_VARS = [

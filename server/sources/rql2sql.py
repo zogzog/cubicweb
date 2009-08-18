@@ -1146,7 +1146,9 @@ class SQLGenerator(object):
             key = table
         if key in self._state.tables:
             return
-        self._state.tables[key] = (len(self._state.actual_tables) - 1, table)
+        if scope == -1:
+            scope = len(self._state.actual_tables) - 1
+        self._state.tables[key] = (scope, table)
         self._state.actual_tables[scope].append(table)
 
     def replace_tables_by_outer_join(self, substitute, lefttable, *tables):
