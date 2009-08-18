@@ -157,7 +157,7 @@ class MigrationHelper(object):
                     # take care to X.Y.Z_Any.py / X.Y.Z_common.py: we've to call
                     # cube_upgraded once all script of X.Y.Z have been executed
                     if prevversion is not None and version != prevversion:
-                        self.cube_upgraded(cube, version)
+                        self.cube_upgraded(cube, prevversion)
                     prevversion = version
                     self.process_script(script)
                 self.cube_upgraded(cube, toversion)
