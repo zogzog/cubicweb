@@ -934,6 +934,7 @@ class AfterDelRelationTypeHook(SyncSchemaHook):
                 session.execute('DELETE X %s Y WHERE X is %s, Y is %s'
                                 % (rschema, subjschema, objschema))
         execute = session.unsafe_execute
+        rteid = self.eidto
         rset = execute('Any COUNT(X) WHERE X is %s, X relation_type R,'
                        'R eid %%(x)s' % rdeftype, {'x': rteid})
         lastrel = rset[0][0] == 0
