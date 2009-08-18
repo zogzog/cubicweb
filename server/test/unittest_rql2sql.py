@@ -378,12 +378,7 @@ SELECT X.cw_name
 FROM cw_Transition AS X
 ORDER BY 1'''),
 
-#    ('Any XN WHERE X name XN GROUPBY XN',
-#     ''''''),
-#    ('Any XN, COUNT(X) WHERE X name XN GROUPBY XN',
-#     ''''''),
-
-    # DISTINCT, can use relatin under exists scope as principal
+    # DISTINCT, can use relation under exists scope as principal
     ('DISTINCT Any X,Y WHERE X name "CWGroup", Y eid IN(1, 2, 3), EXISTS(X read_permission Y)',
      '''SELECT DISTINCT X.cw_eid, rel_read_permission0.eid_to
 FROM cw_CWEType AS X, read_permission_relation AS rel_read_permission0
@@ -760,14 +755,10 @@ OUTER_JOIN = [
     ('Any X,S WHERE X travaille S?',
      '''SELECT X.cw_eid, rel_travaille0.eid_to
 FROM cw_Personne AS X LEFT OUTER JOIN travaille_relation AS rel_travaille0 ON (rel_travaille0.eid_from=X.cw_eid)'''
-#SELECT X.cw_eid, S.cw_eid
-#FROM cw_Personne AS X LEFT OUTER JOIN travaille_relation AS rel_travaille0 ON (rel_travaille0.eid_from=X.cw_eid) LEFT OUTER JOIN cw_Societe AS S ON (rel_travaille0.eid_to=S.cw_eid)'''
     ),
     ('Any S,X WHERE X? travaille S, S is Societe',
      '''SELECT S.cw_eid, rel_travaille0.eid_from
 FROM cw_Societe AS S LEFT OUTER JOIN travaille_relation AS rel_travaille0 ON (rel_travaille0.eid_to=S.cw_eid)'''
-#SELECT S.cw_eid, X.cw_eid
-#FROM cw_Societe AS S LEFT OUTER JOIN travaille_relation AS rel_travaille0 ON (rel_travaille0.eid_to=S.cw_eid) LEFT OUTER JOIN cw_Personne AS X ON (rel_travaille0.eid_from=X.cw_eid)'''
     ),
 
     ('Any N,A WHERE N inline1 A?',
@@ -803,8 +794,6 @@ WHERE EXISTS(SELECT 1 FROM owned_by_relation AS rel_owned_by0, cw_CWUser AS U, c
     ('Any C,M WHERE C travaille G?, G evaluee M?, G is Societe',
      '''SELECT C.cw_eid, rel_evaluee1.eid_to
 FROM cw_Personne AS C LEFT OUTER JOIN travaille_relation AS rel_travaille0 ON (rel_travaille0.eid_from=C.cw_eid) LEFT OUTER JOIN cw_Societe AS G ON (rel_travaille0.eid_to=G.cw_eid) LEFT OUTER JOIN evaluee_relation AS rel_evaluee1 ON (rel_evaluee1.eid_from=G.cw_eid)'''
-#SELECT C.cw_eid, M.cw_eid
-#FROM cw_Personne AS C LEFT OUTER JOIN travaille_relation AS rel_travaille0 ON (rel_travaille0.eid_from=C.cw_eid) LEFT OUTER JOIN cw_Societe AS G ON (rel_travaille0.eid_to=G.cw_eid) LEFT OUTER JOIN evaluee_relation AS rel_evaluee1 ON (rel_evaluee1.eid_from=G.cw_eid) LEFT OUTER JOIN cw_Note AS M ON (rel_evaluee1.eid_to=M.cw_eid)'''
      ),
 
     ('Any A,C WHERE A documented_by C?, (C is NULL) OR (EXISTS(C require_permission F, '
@@ -817,9 +806,6 @@ WHERE ((rel_documented_by0.eid_to IS NULL) OR (EXISTS(SELECT 1 FROM require_perm
      '''SELECT X.cw_eid
 FROM cw_Personne AS X LEFT OUTER JOIN connait_relation AS rel_connait0 ON (rel_connait0.eid_to=12)
 WHERE X.cw_eid=12'''
-#SELECT 12
-#FROM cw_Personne AS X LEFT OUTER JOIN connait_relation AS rel_connait0 ON (rel_connait0.eid_to=12) LEFT OUTER JOIN Personne AS P ON (rel_connait0.eid_from=P.cw_eid)
-#WHERE X.cw_eid=12'''
     ),
 
     ('Any GN, TN ORDERBY GN WHERE T tags G?, T name TN, G name GN',
@@ -880,10 +866,10 @@ FROM cw_Tag AS T LEFT OUTER JOIN tags_relation AS rel_tags0 ON (rel_tags0.eid_fr
      '''
 SELECT T.cw_eid, _T0.C0, _T0.C1
 FROM cw_Tag AS T LEFT OUTER JOIN tags_relation AS rel_tags0 ON (rel_tags0.eid_from=T.cw_eid) LEFT OUTER JOIN (SELECT G.cw_eid AS C0, S.cw_eid AS C1
-FROM cw_Affaire AS G LEFT OUTER JOIN cw_State AS S ON (G.cw_in_state=S.cw_eid AND S.cw_name=hop) 
+FROM cw_Affaire AS G LEFT OUTER JOIN cw_State AS S ON (G.cw_in_state=S.cw_eid AND S.cw_name=hop)
 UNION ALL
 SELECT G.cw_eid AS C0, S.cw_eid AS C1
-FROM cw_CWUser AS G LEFT OUTER JOIN cw_State AS S ON (G.cw_in_state=S.cw_eid AND S.cw_name=hop) 
+FROM cw_CWUser AS G LEFT OUTER JOIN cw_State AS S ON (G.cw_in_state=S.cw_eid AND S.cw_name=hop)
 UNION ALL
 SELECT G.cw_eid AS C0, S.cw_eid AS C1
 FROM cw_Note AS G LEFT OUTER JOIN cw_State AS S ON (G.cw_in_state=S.cw_eid AND S.cw_name=hop) ) AS _T0 ON (rel_tags0.eid_to=_T0.C0)'''),
@@ -953,10 +939,6 @@ FUNCS = [
     ("Any COUNT(P) WHERE P is Personne",
      '''SELECT COUNT(P.cw_eid)
 FROM cw_Personne AS P'''),
-##     ("Personne X where X nom upper('TOTO')",
-##      '''SELECT X.cw_eid\nFROM cw_Personne AS X\nWHERE UPPER(X.cw_nom) = TOTO'''),
-##     ("Personne X where X nom Y, UPPER(X) prenom upper(Y)",
-##      '''SELECT X.cw_eid\nFROM cw_Personne AS X\nWHERE UPPER(X.cw_prenom) = UPPER(X.cw_nom)'''),
     ]
 
 SYMETRIC = [
@@ -964,13 +946,6 @@ SYMETRIC = [
      '''SELECT DISTINCT P.cw_eid
 FROM connait_relation AS rel_connait0, cw_Personne AS P
 WHERE (rel_connait0.eid_from=0 AND rel_connait0.eid_to=P.cw_eid OR rel_connait0.eid_to=0 AND rel_connait0.eid_from=P.cw_eid)'''
-#      '''SELECT rel_connait0.eid_to
-# FROM connait_relation AS rel_connait0
-# WHERE rel_connait0.eid_from=0
-# UNION
-# SELECT rel_connait0.eid_from
-# FROM connait_relation AS rel_connait0
-# WHERE rel_connait0.eid_to=0'''
      ),
 
     ('Any P WHERE X connait P',
@@ -1175,7 +1150,7 @@ class PostgresSQLGeneratorTC(RQLGeneratorTC):
             r, nargs = self.o.generate(union, args,
                                       varmap=varmap)
             args.update(nargs)
-            self.assertLinesEquals((r % args).strip(), self._norm_sql(sql))
+            self.assertLinesEquals((r % args).strip(), self._norm_sql(sql), striplines=True)
         except Exception, ex:
             if 'r' in locals():
                 try:
@@ -1204,14 +1179,6 @@ class PostgresSQLGeneratorTC(RQLGeneratorTC):
                 print sql[0].strip()
             raise
         return
-#         rqlst, solutions = self._prepare(rql)
-#         for i, sol in enumerate(solutions):
-#             try:
-#                 r, args = self.o.generate([(rqlst, sol)])
-#                 self.assertEqual((r.strip(), args), sqls[i])
-#             except Exception, ex:
-#                 print rql
-#                 raise
 
     def test1(self):
         self._checkall('Any count(RDEF) WHERE RDEF relation_type X, X eid %(x)s',
