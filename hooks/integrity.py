@@ -12,7 +12,6 @@ from cubicweb import ValidationError
 from cubicweb.selectors import entity_implements
 from cubicweb.common.uilib import soup2xhtml
 from cubicweb.server import hook
-from cubicweb.server.pool import LateOperation, PreCommitOperation
 
 # special relations that don't have to be checked for integrity, usually
 # because they are handled internally by hooks (so we trust ourselves)
