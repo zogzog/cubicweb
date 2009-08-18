@@ -66,6 +66,7 @@ class State(AnyEntity):
     rest_attr = 'eid'
 
     def transitions(self, entity, desteid=None):
+        """generates transition that MAY be passed"""
         rql = ('Any T,N,DS where S allowed_transition T, S eid %(x)s, '
                'T name N, T destination_state DS, '
                'T transition_of ET, ET name %(et)s')
