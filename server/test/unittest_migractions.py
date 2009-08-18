@@ -258,7 +258,7 @@ class MigrationCommandsTC(RepositoryBasedTC):
                                               fulltextindexed=False)
 
     def test_sync_schema_props_perms(self):
-        cursor = self.mh.rqlcursor
+        cursor = self.mh.session
         nbrqlexpr_start = len(cursor.execute('RQLExpression X'))
         migrschema['titre']._rproperties[('Personne', 'String')]['order'] = 7
         migrschema['adel']._rproperties[('Personne', 'String')]['order'] = 6
@@ -337,14 +337,14 @@ class MigrationCommandsTC(RepositoryBasedTC):
 
     def _erqlexpr_rset(self, action, ertype):
         rql = 'RQLExpression X WHERE ET is CWEType, ET %s_permission X, ET name %%(name)s' % action
-        return self.mh.rqlcursor.execute(rql, {'name': ertype})
+        return self.mh.session.execute(rql, {'name': ertype})
     def _erqlexpr_entity(self, action, ertype):
         rset = self._erqlexpr_rset(action, ertype)
         self.assertEquals(len(rset), 1)
         return rset.get_entity(0, 0)
     def _rrqlexpr_rset(self, action, ertype):
         rql = 'RQLExpression X WHERE ET is CWRType, ET %s_permission X, ET name %%(name)s' % action
-        return self.mh.rqlcursor.execute(rql, {'name': ertype})
+        return self.mh.session.execute(rql, {'name': ertype})
     def _rrqlexpr_entity(self, action, ertype):
         rset = self._rrqlexpr_rset(action, ertype)
         self.assertEquals(len(rset), 1)

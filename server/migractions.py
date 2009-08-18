@@ -220,15 +220,6 @@ class ServerMigrationHelper(MigrationHelper):
     def session(self):
         return self.repo._get_session(self.cnx.sessionid)
 
-    @property
-    @cached
-    def rqlcursor(self):
-        """lazy rql cursor"""
-        # should not give session as cnx.cursor(), else we may try to execute
-        # some query while no pool is set on the session (eg on entity attribute
-        # access for instance)
-        return self.cnx.cursor()
-
     def commit(self):
         if hasattr(self, '_cnx'):
             self._cnx.commit()
@@ -262,7 +253,8 @@ class ServerMigrationHelper(MigrationHelper):
     @cached
     def group_mapping(self):
         """cached group mapping"""
-        return ss.group_mapping(self.rqlcursor)
+        self.session.set_pool()
+        return ss.group_mapping(self.session)
 
     def exec_event_script(self, event, cubepath=None, funcname=None,
                           *args, **kwargs):
@@ -1055,6 +1047,7 @@ class ServerMigrationHelper(MigrationHelper):
         if not isinstance(rql, (tuple, list)):
             rql = ( (rql, kwargs), )
         res = None
+        self.session.set_pool()
         for rql, kwargs in rql:
             if kwargs:
                 msg = '%s (%s)' % (rql, kwargs)
@@ -1062,7 +1055,7 @@ class ServerMigrationHelper(MigrationHelper):
                 msg = rql
             if not ask_confirm or self.confirm('execute rql: %s ?' % msg):
                 try:
-                    res = self.rqlcursor.execute(rql, kwargs, cachekey)
+                    res = self.session.execute(rql, kwargs, cachekey)
                 except Exception, ex:
                     if self.confirm('error: %s\nabort?' % ex):
                         raise
@@ -1151,8 +1144,9 @@ class ForRqlIterator:
         if self.ask_confirm:
             if not self._h.confirm('execute rql: %s ?' % msg):
                 raise StopIteration
+        self._h.session.set_pool()
         try:
-            rset = self._h.rqlcursor.execute(rql, kwargs)
+            rset = self._h.session.execute(rql, kwargs)
         except Exception, ex:
             if self._h.confirm('error: %s\nabort?' % ex):
                 raise
