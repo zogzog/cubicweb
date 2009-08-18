@@ -112,6 +112,10 @@ msgid "%s error report"
 msgstr "%s rapport d'erreur"
 
 #, python-format
+msgid "%s is not the initial state (%s) for this entity"
+msgstr "%s n'est pas l'état initial (%s) de cette entité"
+
+#, python-format
 msgid "%s not estimated"
 msgstr "%s non estimé(s)"
 
@@ -437,6 +441,9 @@ msgstr "Permissions de lire"
 
 msgid "Recipients:"
 msgstr "Destinataires :"
+
+msgid "Registry's content"
+msgstr "Contenu du registre"
 
 msgid "Relations"
 msgstr "Relations"
@@ -2394,9 +2401,6 @@ msgstr "non autorisé"
 msgid "not selected"
 msgstr "non sélectionné"
 
-msgid "not the initial state for this entity"
-msgstr "n'est pas l'état initial pour cette entité"
-
 msgid "nothing to edit"
 msgstr "rien à éditer"
 
@@ -2533,6 +2537,9 @@ msgstr "permission de lire"
 
 msgid "read_permission_object"
 msgstr "a la permission de lire"
+
+msgid "registry"
+msgstr "registre"
 
 #, python-format
 msgid "relation %(relname)s of %(ent)s"
@@ -2940,8 +2947,9 @@ msgstr "à faire par"
 msgid "toggle check boxes"
 msgstr "inverser les cases à cocher"
 
-msgid "transition is not allowed"
-msgstr "transition non permise"
+#, python-format
+msgid "transition from %s to %s does not exist or is not allowed"
+msgstr "la transition de %s à %s n'existe pas ou n'est pas permise"
 
 msgid "transition_of"
 msgstr "transition de"

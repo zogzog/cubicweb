@@ -112,6 +112,10 @@ msgid "%s error report"
 msgstr "%s reporte de errores"
 
 #, python-format
+msgid "%s is not the initial state (%s) for this entity"
+msgstr ""
+
+#, python-format
 msgid "%s not estimated"
 msgstr "%s no estimado(s)"
 
@@ -438,6 +442,9 @@ msgstr "Autorización de leer"
 
 msgid "Recipients:"
 msgstr "Destinatarios"
+
+msgid "Registry's content"
+msgstr ""
 
 msgid "Relations"
 msgstr "Relaciones"
@@ -2389,9 +2396,6 @@ msgstr "no autorizado"
 msgid "not selected"
 msgstr "no seleccionado"
 
-msgid "not the initial state for this entity"
-msgstr "no el estado inicial para esta entidad"
-
 msgid "nothing to edit"
 msgstr "nada que editar"
 
@@ -2526,6 +2530,9 @@ msgstr "Permiso de lectura"
 
 msgid "read_permission_object"
 msgstr "Objeto_permiso_lectura"
+
+msgid "registry"
+msgstr ""
 
 #, python-format
 msgid "relation %(relname)s of %(ent)s"
@@ -2928,8 +2935,9 @@ msgstr "a hacer por"
 msgid "toggle check boxes"
 msgstr "cambiar valor"
 
-msgid "transition is not allowed"
-msgstr "transition no permitida"
+#, python-format
+msgid "transition from %s to %s does not exist or is not allowed"
+msgstr ""
 
 msgid "transition_of"
 msgstr "transicion de"
@@ -3376,6 +3384,9 @@ msgstr "deberia probablamente suprimir esta propriedad"
 #~ msgid "not specified"
 #~ msgstr "no especificado"
 
+#~ msgid "not the initial state for this entity"
+#~ msgstr "no el estado inicial para esta entidad"
+
 #~ msgid "owned by"
 #~ msgstr "appartient ‡"
 
@@ -3396,6 +3407,9 @@ msgstr "deberia probablamente suprimir esta propriedad"
 
 #~ msgid "synopsis"
 #~ msgstr "sinopsis"
+
+#~ msgid "transition is not allowed"
+#~ msgstr "transition no permitida"
 
 #~ msgid "wikiid"
 #~ msgstr "identificador wiki"
