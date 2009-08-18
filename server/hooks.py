@@ -430,7 +430,9 @@ def before_add_in_state(session, fromeid, rtype, toeid):
             try:
                 iter(state.transitions(entity, toeid)).next()
             except StopIteration:
-                msg = session._('transition is not allowed')
+                _ = session._
+                msg = _('transition from %s to %s does not exist or is not allowed') % (
+                    _(state.name), _(session.entity_from_eid(toeid).name))
                 raise ValidationError(fromeid, {'in_state': msg})
         else:
             # not a transition

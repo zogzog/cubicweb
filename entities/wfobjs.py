@@ -77,6 +77,8 @@ class State(AnyEntity):
         for tr in rset.entities():
             if tr.may_be_passed(entity.eid, self.eid):
                 yield tr
+            else:
+                self.warn('yoo')
 
     def after_deletion_path(self):
         """return (path, parameters) which should be used as redirect
