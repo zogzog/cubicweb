@@ -65,7 +65,7 @@ class CWRegistry(Registry):
         except NoSelectableObject:
             if __fallback_oid is None:
                 raise
-            obj = self.select(__fallback_oid, req, **kwargs)
+            obj = self.select(__fallback_oid, req, rset=rset, **kwargs)
         return obj.render(**kwargs)
 
     def select_vobject(self, oid, *args, **kwargs):
