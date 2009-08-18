@@ -138,14 +138,14 @@ class MemSchemaNotifyChanges(hook.SingleLastOperation):
 
     special operation which should be called once and after all other schema
     operations. It will trigger internal structures rebuilding to consider
-    schema changes
+    schema changes.
     """
 
     def __init__(self, session):
         hook.SingleLastOperation.__init__(self, session)
 
     def commit_event(self):
-        self.repo.set_schema(self.repo.schema)
+        self.session.repo.set_schema(self.session.repo.schema)
 
 
 class MemSchemaOperation(hook.Operation):
@@ -369,9 +369,9 @@ class SourceDbCWRelationAdd(SourceDbCWAttributeAdd):
         session = self.session
         entity = self.entity
         rdef = self.init_rdef(composite=entity.composite)
-        schema = session.schema
+        schema = session.vreg.schema
         rtype = rdef.name
-        rschema = session.schema.rschema(rtype)
+        rschema = session.vreg.schema.rschema(rtype)
         # this have to be done before permissions setting
         if rschema.inlined:
             # need to add a column if the relation is inlined and if this is the
@@ -393,15 +393,15 @@ class SourceDbCWRelationAdd(SourceDbCWAttributeAdd):
             if not (rschema.subjects() or
                     rtype in session.transaction_data.get('createdtables', ())):
                 try:
-                    rschema = session.schema.rschema(rtype)
+                    rschema = session.vreg.schema.rschema(rtype)
                     tablesql = rschema2sql(rschema)
                 except KeyError:
                     # fake we add it to the schema now to get a correctly
                     # initialized schema but remove it before doing anything
                     # more dangerous...
-                    rschema = session.schema.add_relation_type(rdef)
+                    rschema = session.vreg.schema.add_relation_type(rdef)
                     tablesql = rschema2sql(rschema)
-                    session.schema.del_relation_type(rtype)
+                    session.vreg.schema.del_relation_type(rtype)
                 # create the necessary table
                 for sql in tablesql.split(';'):
                     if sql.strip():
@@ -453,7 +453,7 @@ class SourceDbCWConstraintAdd(hook.Operation):
         # so there is nothing to do here
         if session.added_in_transaction(rdef.eid):
             return
-        subjtype, rtype, objtype = session.schema.schema_by_eid(rdef.eid)
+        subjtype, rtype, objtype = session.vreg.schema.schema_by_eid(rdef.eid)
         cstrtype = self.entity.type
         oldcstr = rtype.constraint_by_type(subjtype, objtype, cstrtype)
         newcstr = CONSTRAINTS[cstrtype].deserialize(self.entity.value)
@@ -517,7 +517,7 @@ class MemSchemaCWETypeRename(MemSchemaOperation):
     oldname = newname = None # make pylint happy
 
     def commit_event(self):
-        self.session.schema.rename_entity_type(self.oldname, self.newname)
+        self.session.vreg.schema.rename_entity_type(self.oldname, self.newname)
 
 
 class MemSchemaCWETypeDel(MemSchemaOperation):
@@ -603,7 +603,7 @@ class MemSchemaCWConstraintAdd(MemSchemaOperation):
         if self.session.added_in_transaction(rdef.eid):
             self.cancelled = True
             return
-        subjtype, rtype, objtype = self.session.schema.schema_by_eid(rdef.eid)
+        subjtype, rtype, objtype = self.session.vreg.schema.schema_by_eid(rdef.eid)
         self.prepare_constraints(subjtype, rtype, objtype)
         cstrtype = self.entity.type
         self.cstr = rtype.constraint_by_type(subjtype, objtype, cstrtype)
@@ -921,7 +921,7 @@ class AfterDelRelationTypeHook(SyncSchemaHook):
 
     def __call__(self):
         session = self._cw
-        subjschema, rschema, objschema = session.schema.schema_by_eid(self.eidfrom)
+        subjschema, rschema, objschema = session.vreg.schema.schema_by_eid(self.eidfrom)
         pendings = session.transaction_data.get('pendingeids', ())
         # first delete existing relation if necessary
         if rschema.is_final():
