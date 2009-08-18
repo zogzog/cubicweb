@@ -227,6 +227,7 @@ def initialize_schema(config, schema, mhandler, event='create'):
     for path in reversed(paths):
         mhandler.exec_event_script('pre%s' % event, path)
     # enter instance'schema into the database
+    mhandler.session.set_pool()
     serialize_schema(mhandler.session, schema)
     # execute cubicweb's post<event> script
     mhandler.exec_event_script('post%s' % event)
