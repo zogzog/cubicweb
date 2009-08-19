@@ -268,3 +268,90 @@ from logging import getLogger
 from cubicweb import set_log_methods
 set_log_methods(HooksManager, getLogger('cubicweb.hooksmanager'))
 set_log_methods(Hook, getLogger('cubicweb.hooks'))
+
+# base classes for relation propagation ########################################
+
+from cubicweb.server.pool import PreCommitOperation
+
+class RQLPrecommitOperation(PreCommitOperation):
+    def precommit_event(self):
+        execute = self.session.unsafe_execute
+        for rql in self.rqls:
+            execute(*rql)
+
+
+class PropagateSubjectRelationHook(Hook):
+    """propagate permissions and nosy list when new entity are added"""
+    events = ('after_add_relation',)
+    # to set in concrete class
+    rtype = None
+    subject_relations = None
+    object_relations = None
+    accepts = None # subject_relations + object_relations
+
+    def call(self, session, fromeid, rtype, toeid):
+        for eid in (fromeid, toeid):
+            etype = session.describe(eid)[0]
+            if not self.schema.eschema(etype).has_subject_relation(self.rtype):
+                return
+        if rtype in self.subject_relations:
+            meid, seid = fromeid, toeid
+        else:
+            assert rtype in self.object_relations
+            meid, seid = toeid, fromeid
+        rql = 'SET E %s P WHERE X %s P, X eid %%(x)s, E eid %%(e)s, NOT E %s P'\
+              % (self.rtype, self.rtype, self.rtype)
+        rqls = [(rql, {'x': meid, 'e': seid}, ('x', 'e'))]
+        RQLPrecommitOperation(session, rqls=rqls)
+
+
+class PropagateSubjectRelationAddHook(Hook):
+    """propagate on existing entities when a permission or nosy list is added"""
+    events = ('after_add_relation',)
+    # to set in concrete class
+    rtype = None
+    subject_relations = None
+    object_relations = None
+    accepts = None # (self.rtype,)
+
+    def call(self, session, fromeid, rtype, toeid):
+        eschema = self.schema.eschema(session.describe(fromeid)[0])
+        rqls = []
+        for rel in self.subject_relations:
+            if eschema.has_subject_relation(rel):
+                rqls.append(('SET R %s P WHERE X eid %%(x)s, P eid %%(p)s, '
+                             'X %s R, NOT R %s P' % (rtype, rel, rtype),
+                             {'x': fromeid, 'p': toeid}, 'x'))
+        for rel in self.object_relations:
+            if eschema.has_object_relation(rel):
+                rqls.append(('SET R %s P WHERE X eid %%(x)s, P eid %%(p)s, '
+                             'R %s X, NOT R %s P' % (rtype, rel, rtype),
+                             {'x': fromeid, 'p': toeid}, 'x'))
+        if rqls:
+            RQLPrecommitOperation(session, rqls=rqls)
+
+
+class PropagateSubjectRelationDelHook(Hook):
+    """propagate on existing entities when a permission is deleted"""
+    events = ('after_delete_relation',)
+    # to set in concrete class
+    rtype = None
+    subject_relations = None
+    object_relations = None
+    accepts = None # (self.rtype,)
+
+    def call(self, session, fromeid, rtype, toeid):
+        eschema = self.schema.eschema(session.describe(fromeid)[0])
+        rqls = []
+        for rel in self.subject_relations:
+            if eschema.has_subject_relation(rel):
+                rqls.append(('DELETE R %s P WHERE X eid %%(x)s, P eid %%(p)s, '
+                             'X %s R' % (rtype, rel),
+                             {'x': fromeid, 'p': toeid}, 'x'))
+        for rel in self.object_relations:
+            if eschema.has_object_relation(rel):
+                rqls.append(('DELETE R %s P WHERE X eid %%(x)s, P eid %%(p)s, '
+                             'R %s X' % (rtype, rel),
+                             {'x': fromeid, 'p': toeid}, 'x'))
+        if rqls:
+            RQLPrecommitOperation(session, rqls=rqls)
