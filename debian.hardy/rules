@@ -39,13 +39,20 @@ install: build $(basename $(wildcard debian/*.in))
 	# Put all the python library and data in cubicweb-common
 	# and scripts in cubicweb-server
 	dh_install -vi
-	#dh_lintian XXX not before debhelper 7
+	# cwctl in the cubicweb-ctl package
+	rm -f debian/cubicweb-common/usr/share/pyshared/cubicweb/cwctl.py
+	# hercule in the cubicweb-client package
+	rm -f debian/cubicweb-common/usr/share/pyshared/cubicweb/hercule.py
+
 
 	# Remove unittests directory (should be available in cubicweb-dev only)
 	rm -rf debian/cubicweb-server/usr/lib/${PY_VERSION}/site-packages/cubicweb/server/test
 	rm -rf debian/cubicweb-server/usr/lib/${PY_VERSION}/site-packages/cubicweb/sobjects/test
 	rm -rf debian/cubicweb-web/usr/lib/${PY_VERSION}/site-packages/cubicweb/web/test
+	rm -rf debian/cubicweb-twisted/usr/lib/${PY_VERSION}/site-packages/cubicweb/etwist/test
+	rm -rf debian/cubicweb-common/usr/lib/${PY_VERSION}/site-packages/cubicweb/ext/test
 	rm -rf debian/cubicweb-common/usr/lib/${PY_VERSION}/site-packages/cubicweb/common/test
+	rm -rf debian/cubicweb-common/usr/lib/${PY_VERSION}/site-packages/cubicweb/entities/test
 
 	# cubes directory must be managed as a valid python module
 	touch debian/cubicweb-common/usr/share/cubicweb/cubes/__init__.py
