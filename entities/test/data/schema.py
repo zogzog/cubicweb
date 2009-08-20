@@ -6,6 +6,7 @@
 :license: GNU Lesser General Public License, v2.1 - http://www.gnu.org/licenses
 """
 from yams.buildobjs import EntityType, String
+from cubicweb.schema import make_workflowable
 
 class Company(EntityType):
     name = String()
@@ -16,3 +17,7 @@ class Division(Company):
 class SubDivision(Division):
     __specializes_schema__ = True
 
+
+from cubicweb.schemas import bootstrap, Bookmark
+make_workflowable(bootstrap.CWGroup)
+make_workflowable(Bookmark.Bookmark)

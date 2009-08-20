@@ -49,41 +49,5 @@ class HookHelpersTC(RepositoryBasedTC):
         op5 = hooks.CheckORelationOp(session)
         self.assertEquals(session.pending_operations, [op1, op2, op4, op5, op3])
 
-
-    def test_in_state_notification(self):
-        result = []
-        # test both email notification and transition_information
-        # whatever if we can connect to the default stmp server, transaction
-        # should not fail
-        def in_state_changed(session, eidfrom, rtype, eidto):
-            tr = previous_state(session, eidfrom)
-            if tr is None:
-                result.append(tr)
-                return
-            content = u'trÃ€nsition from %s to %s' % (tr.name, entity_name(session, eidto))
-            result.append(content)
-            SendMailOp(session, msg=content, recipients=['test@logilab.fr'])
-        self.hm.register_hook(in_state_changed,
-                             'before_add_relation', 'in_state')
-        self.execute('INSERT CWUser X: X login "paf", X upassword "wouf", X in_state S, X in_group G WHERE S name "activated", G name "users"')
-        self.assertEquals(result, [None])
-        searchedops = [op for op in self.session.pending_operations
-                       if isinstance(op, SendMailOp)]
-        self.assertEquals(len(searchedops), 0,
-                          self.session.pending_operations)
-        self.commit()
-        self.execute('SET X in_state S WHERE X login "paf", S name "deactivated"')
-        self.assertEquals(result, [None, u'trÃ€nsition from activated to deactivated'])
-        # one to send the mail, one to close the smtp connection
-        searchedops = [op for op in self.session.pending_operations
-                       if isinstance(op, SendMailOp)]
-        self.assertEquals(len(searchedops), 1,
-                          self.session.pending_operations)
-        self.commit()
-        searchedops = [op for op in self.session.pending_operations
-                       if isinstance(op, SendMailOp)]
-        self.assertEquals(len(searchedops), 0,
-                          self.session.pending_operations)
-
 if __name__ == '__main__':
     unittest_main()

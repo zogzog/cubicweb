@@ -812,23 +812,30 @@ class workflowable_definition(ybo.metadefinition):
     This is the default metaclass for WorkflowableEntityType
     """
     def __new__(mcs, name, bases, classdict):
-        abstract = classdict.pop('abstract', False)
-        defclass = super(workflowable_definition, mcs).__new__(mcs, name, bases, classdict)
+        abstract = classdict.pop('__abstract__', False)
+        cls = super(workflowable_definition, mcs).__new__(mcs, name, bases,
+                                                          classdict)
         if not abstract:
-            existing_rels = set(rdef.name for rdef in defclass.__relations__)
-            if 'in_state' not in existing_rels and 'wf_info_for' not in existing_rels:
-                in_state = ybo.SubjectRelation('State', cardinality='1*',
-                                               # XXX automatize this
-                                               constraints=[RQLConstraint('S is ET, O state_of ET')],
-                                               description=_('account state'))
-                yams_add_relation(defclass.__relations__, in_state, 'in_state')
-                wf_info_for = ybo.ObjectRelation('TrInfo', cardinality='1*', composite='object')
-                yams_add_relation(defclass.__relations__, wf_info_for, 'wf_info_for')
-        return defclass
+            make_workflowable(cls)
+        return cls
+
+def make_workflowable(cls):
+    existing_rels = set(rdef.name for rdef in cls.__relations__)
+    # let relation types defined in cw.schemas.workflow carrying
+    # cardinality, constraints and other relation definition properties
+    if 'custom_workflow' not in existing_rels:
+        rdef = ybo.SubjectRelation('Workflow')
+        yams_add_relation(cls.__relations__, rdef, 'custom_workflow')
+    if 'in_state' not in existing_rels:
+        rdef = ybo.SubjectRelation('State')
+        yams_add_relation(cls.__relations__, rdef, 'in_state')
+    if 'wf_info_for' not in existing_rels:
+        rdef = ybo.ObjectRelation('TrInfo')
+        yams_add_relation(cls.__relations__, rdef, 'wf_info_for')
 
 class WorkflowableEntityType(ybo.EntityType):
     __metaclass__ = workflowable_definition
-    abstract = True
+    __abstract__ = True
 
 PyFileReader.context['WorkflowableEntityType'] = WorkflowableEntityType
 

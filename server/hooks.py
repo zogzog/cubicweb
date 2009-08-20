@@ -13,8 +13,8 @@ from datetime import datetime
 from cubicweb import UnknownProperty, ValidationError, BadConnectionId
 
 from cubicweb.server.pool import Operation, LateOperation, PreCommitOperation
-from cubicweb.server.hookhelper import (check_internal_entity, previous_state,
-                                     get_user_sessions, rproperty)
+from cubicweb.server.hookhelper import (check_internal_entity, 
+                                        get_user_sessions, rproperty)
 from cubicweb.server.repository import FTIndexEntityOp
 
 # special relations that don't have to be checked for integrity, usually
@@ -37,7 +37,8 @@ def eschema_type_eid(session, etype):
     # from the database (eg during tests)
     if eschema.eid is None:
         eschema.eid = session.unsafe_execute(
-            'Any X WHERE X is CWEType, X name %(name)s', {'name': etype})[0][0]
+            'Any X WHERE X is CWEType, X name %(name)s',
+            {'name': str(etype)})[0][0]
     return eschema.eid
 
 
@@ -417,51 +418,75 @@ def _register_usergroup_hooks(hm):
 
 # workflow handling ###########################################################
 
-def before_add_in_state(session, fromeid, rtype, toeid):
-    """check the transition is allowed and record transition information
+def before_add_trinfo(session, entity):
+    """check the transition is allowed, add missing information. Expect that:
+    * wf_info_for inlined relation is set
+    * by_transition or to_state (managers only) inlined relation is set
     """
-    assert rtype == 'in_state'
-    state = previous_state(session, fromeid)
-    etype = session.describe(fromeid)[0]
-    if not (session.is_super_session or 'managers' in session.user.groups):
-        if not state is None:
-            entity = session.entity_from_eid(fromeid)
-            # we should find at least one transition going to this state
-            try:
-                iter(state.transitions(entity, toeid)).next()
-            except StopIteration:
-                _ = session._
-                msg = _('transition from %s to %s does not exist or is not allowed') % (
-                    _(state.name), _(session.entity_from_eid(toeid).name))
-                raise ValidationError(fromeid, {'in_state': msg})
-        else:
-            # not a transition
-            # check state is initial state if the workflow defines one
-            isrset = session.unsafe_execute('Any S WHERE ET initial_state S, ET name %(etype)s',
-                                            {'etype': etype})
-            if isrset and not toeid == isrset[0][0]:
-                _ = session._
-                msg = _('%s is not the initial state (%s) for this entity') % (
-                    _(session.entity_from_eid(toeid).name), _(isrset.get_entity(0,0).name))
-                raise ValidationError(fromeid, {'in_state': msg})
-    eschema = session.repo.schema[etype]
-    if not 'wf_info_for' in eschema.object_relations():
-        # workflow history not activated for this entity type
-        return
-    rql = 'INSERT TrInfo T: T wf_info_for E, T to_state DS, T comment %(comment)s'
-    args = {'comment': session.get_shared_data('trcomment', None, pop=True),
-            'e': fromeid, 'ds': toeid}
-    cformat = session.get_shared_data('trcommentformat', None, pop=True)
-    if cformat is not None:
-        args['comment_format'] = cformat
-        rql += ', T comment_format %(comment_format)s'
-    restriction = ['DS eid %(ds)s, E eid %(e)s']
-    if not state is None: # not a transition
-        rql += ', T from_state FS'
-        restriction.append('FS eid %(fs)s')
-        args['fs'] = state.eid
-    rql = '%s WHERE %s' % (rql, ', '.join(restriction))
-    session.unsafe_execute(rql, args, 'e')
+    # first retreive entity to which the state change apply
+    try:
+        foreid = entity['wf_info_for']
+    except KeyError:
+        msg = session._('mandatory relation')
+        raise ValidationError(entity.eid, {'wf_info_for': msg})
+    forentity = session.entity_from_eid(foreid)
+    # then check it has a workflow set
+    wf = forentity.current_workflow
+    if wf is None:
+        msg = session._('related entity has no workflow set')
+        raise ValidationError(entity.eid, {None: msg})
+    # then check it has a state set
+    fromstate = forentity.current_state
+    if fromstate is None:
+        msg = session._('related entity has no state')
+        raise ValidationError(entity.eid, {None: msg})
+    # no investigate the requested state change...
+    try:
+        treid = entity['by_transition']
+    except KeyError:
+        # no transition set, check user is a manager and destination state is
+        # specified (and valid)
+        if not (session.is_super_session or 'managers' in session.user.groups):
+            msg = session._('mandatory relation')
+            raise ValidationError(entity.eid, {'by_transition': msg})
+        deststateeid = entity.get('to_state')
+        if not deststateeid:
+            msg = session._('mandatory relation')
+            raise ValidationError(entity.eid, {'by_transition': msg})
+        deststate = wf.state_by_eid(deststateeid)
+        if deststate is None:
+            msg = session._("state doesn't belong to entity's workflow")
+            raise ValidationError(entity.eid, {'to_state': msg})
+    else:
+        # check transition is valid and allowed
+        tr = wf.transition_by_eid(treid)
+        if tr is None:
+            msg = session._("transition doesn't belong to entity's workflow")
+            raise ValidationError(entity.eid, {'by_transition': msg})
+        if not tr.has_input_state(fromstate):
+            msg = session._("transition isn't allowed")
+            raise ValidationError(entity.eid, {'by_transition': msg})
+        if not tr.may_be_fired(foreid):
+            msg = session._("transition may not be fired")
+            raise ValidationError(entity.eid, {'by_transition': msg})
+        deststateeid = tr.destination().eid
+    # everything is ok, add missing information on the trinfo entity
+    entity['from_state'] = fromstate.eid
+    entity['to_state'] = deststateeid
+    nocheck = session.transaction_data.setdefault('skip-security', set())
+    nocheck.add((entity.eid, 'from_state', fromstate.eid))
+    nocheck.add((entity.eid, 'to_state', deststateeid))
+
+def after_add_trinfo(session, entity):
+    """change related entity state"""
+    # need to delete previous state first, not done automatically since
+    # we're using a super session
+    session.unsafe_execute('DELETE X in_state S WHERE X eid %(x)s, S eid %(s)s',
+                           {'x': entity['wf_info_for'], 's': entity['from_state']},
+                           ('x', 's'))
+    session.unsafe_execute('SET X in_state S WHERE X eid %(x)s, S eid %(s)s',
+                           {'x': entity['wf_info_for'], 's': entity['to_state']},
+                           ('x', 's'))
 
 
 class SetInitialStateOp(PreCommitOperation):
@@ -473,26 +498,35 @@ class SetInitialStateOp(PreCommitOperation):
         # if there is an initial state and the entity's state is not set,
         # use the initial state as a default state
         pendingeids = session.transaction_data.get('pendingeids', ())
-        if not entity.eid in pendingeids and not entity.in_state:
-            rset = session.execute('Any S WHERE ET initial_state S, ET name %(name)s',
-                                   {'name': entity.id})
-            if rset:
-                session.add_relation(entity.eid, 'in_state', rset[0][0])
+        if not entity.eid in pendingeids and not entity.in_state and \
+               entity.current_workflow:
+            state = entity.current_workflow.initial
+            if state:
+                # use super session to by-pass security checks
+                session.super_session.add_relation(entity.eid, 'in_state',
+                                                   state.eid)
 
 
 def set_initial_state_after_add(session, entity):
     SetInitialStateOp(session, entity=entity)
 
+def after_del_workflow(session, eid):
+    # workflow cleanup
+    session.execute('DELETE State X WHERE NOT X state_of Y')
+    session.execute('DELETE Transition X WHERE NOT X transition_of Y')
+
 
 def _register_wf_hooks(hm):
     """register workflow related hooks on the hooks manager"""
     if 'in_state' in hm.schema:
-        hm.register_hook(before_add_in_state, 'before_add_relation', 'in_state')
-        hm.register_hook(relation_deleted, 'before_delete_relation', 'in_state')
+        hm.register_hook(before_add_trinfo, 'before_add_entity', 'TrInfo')
+        hm.register_hook(after_add_trinfo, 'after_add_entity', 'TrInfo')
+        #hm.register_hook(relation_deleted, 'before_delete_relation', 'in_state')
         for eschema in hm.schema.entities():
             if 'in_state' in eschema.subject_relations():
                 hm.register_hook(set_initial_state_after_add, 'after_add_entity',
                                  str(eschema))
+        hm.register_hook(after_del_workflow, 'after_delete_entity', 'Workflow')
 
 
 # CWProperty hooks #############################################################

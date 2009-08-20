@@ -106,23 +106,14 @@ class MigrationCommandsTC(RepositoryBasedTC):
 
 
     def test_workflow_actions(self):
-        foo = self.mh.cmd_add_state(u'foo', ('Personne', 'Email'), initial=True)
+        wf = self.mh.cmd_add_workflow(u'foo', ('Personne', 'Email'))
         for etype in ('Personne', 'Email'):
-            s1 = self.mh.rqlexec('Any N WHERE S state_of ET, ET name "%s", S name N' %
+            s1 = self.mh.rqlexec('Any N WHERE WF workflow_of ET, ET name "%s", WF name N' %
                                  etype)[0][0]
             self.assertEquals(s1, "foo")
-            s1 = self.mh.rqlexec('Any N WHERE ET initial_state S, ET name "%s", S name N' %
+            s1 = self.mh.rqlexec('Any N WHERE WF default_workflow_of ET, ET name "%s", WF name N' %
                                  etype)[0][0]
             self.assertEquals(s1, "foo")
-        bar = self.mh.cmd_add_state(u'bar', ('Personne', 'Email'), initial=True)
-        baz = self.mh.cmd_add_transition(u'baz', ('Personne', 'Email'),
-                                         (foo,), bar, ('managers',))
-        for etype in ('Personne', 'Email'):
-            t1 = self.mh.rqlexec('Any N WHERE T transition_of ET, ET name "%s", T name N' %
-                                 etype)[0][0]
-            self.assertEquals(t1, "baz")
-        gn = self.mh.rqlexec('Any GN WHERE T require_group G, G name GN, T eid %s' % baz)[0][0]
-        self.assertEquals(gn, 'managers')
 
     def test_add_entity_type(self):
         self.failIf('Folder2' in self.schema)
@@ -160,8 +151,9 @@ class MigrationCommandsTC(RepositoryBasedTC):
         self.failIf('Folder2' in self.schema)
         self.failIf(self.execute('CWEType X WHERE X name "Folder2"'))
         # test automatic workflow deletion
-        self.failIf(self.execute('State X WHERE NOT X state_of ET'))
-        self.failIf(self.execute('Transition X WHERE NOT X transition_of ET'))
+        self.failIf(self.execute('Workflow X WHERE NOT X workflow_of ET'))
+        self.failIf(self.execute('State X WHERE NOT X state_of WF'))
+        self.failIf(self.execute('Transition X WHERE NOT X transition_of WF'))
 
     def test_add_drop_relation_type(self):
         self.mh.cmd_add_entity_type('Folder2', auto=False)

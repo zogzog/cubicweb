@@ -194,6 +194,8 @@ class Repository(object):
                                 'cubicweb.entities.__init__')
             self.vreg.load_file(join(etdirectory, 'authobjs.py'),
                                 'cubicweb.entities.authobjs')
+            self.vreg.load_file(join(etdirectory, 'wfobjs.py'),
+                                'cubicweb.entities.wfobjs')
         else:
             # test start: use the file system schema (quicker)
             self.warning("set fs instance'schema")

@@ -163,7 +163,7 @@ class Entity(AppObject, dict):
     id = None
     rest_attr = None
     fetch_attrs = None
-    skip_copy_for = ()
+    skip_copy_for = ('in_state',)
     # class attributes set automatically at registration time
     e_schema = None
 
@@ -485,13 +485,6 @@ class Entity(AppObject, dict):
                 continue
             if rschema.type in self.skip_copy_for:
                 continue
-            if rschema.type == 'in_state':
-                # if the workflow is defining an initial state (XXX AND we are
-                # not in the managers group? not done to be more consistent)
-                # don't try to copy in_state
-                if execute('Any S WHERE S state_of ET, ET initial_state S,'
-                           'ET name %(etype)s', {'etype': str(self.e_schema)}):
-                    continue
             # skip composite relation
             if self.e_schema.subjrproperty(rschema, 'composite'):
                 continue

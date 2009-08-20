@@ -37,8 +37,8 @@ class CoreHooksTC(RepositoryBasedTC):
                           'DELETE CWGroup X WHERE X name "owners"')
 
     def test_delete_required_relations_subject(self):
-        self.execute('INSERT CWUser X: X login "toto", X upassword "hop", X in_group Y, X in_state S '
-                     'WHERE Y name "users", S name "activated"')
+        self.execute('INSERT CWUser X: X login "toto", X upassword "hop", X in_group Y '
+                     'WHERE Y name "users"')
         self.commit()
         self.execute('DELETE X in_group Y WHERE X login "toto", Y name "users"')
         self.assertRaises(ValidationError, self.commit)

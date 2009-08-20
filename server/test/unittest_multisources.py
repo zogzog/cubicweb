@@ -30,7 +30,7 @@ repo2, cnx2 = init_test_database('sqlite', config=ExternalSource1Configuration('
 cu = cnx2.cursor()
 ec1 = cu.execute('INSERT Card X: X title "C3: An external card", X wikiid "aaa"')[0][0]
 cu.execute('INSERT Card X: X title "C4: Ze external card", X wikiid "zzz"')
-aff1 = cu.execute('INSERT Affaire X: X ref "AFFREF", X in_state S WHERE S name "pitetre"')[0][0]
+aff1 = cu.execute('INSERT Affaire X: X ref "AFFREF"')[0][0]
 cnx2.commit()
 
 MTIME = datetime.now() - timedelta(0, 10)
@@ -122,7 +122,7 @@ class TwoSourcesTC(RepositoryBasedTC):
         cu = cnx2.cursor()
         assert cu.execute('Any X WHERE X eid %(x)s', {'x': aff1}, 'x')
         cu.execute('SET X ref "BLAH" WHERE X eid %(x)s', {'x': aff1}, 'x')
-        aff2 = cu.execute('INSERT Affaire X: X ref "AFFREUX", X in_state S WHERE S name "pitetre"')[0][0]
+        aff2 = cu.execute('INSERT Affaire X: X ref "AFFREUX"')[0][0]
         cnx2.commit()
         try:
             # force sync
@@ -267,6 +267,7 @@ class TwoSourcesTC(RepositoryBasedTC):
                      {'x': affaire.eid, 'u': ueid})
 
     def test_nonregr2(self):
+        self.session.user.fire_transition('deactivate')
         treid = self.session.user.latest_trinfo().eid
         rset = self.execute('Any X ORDERBY D DESC WHERE E eid %(x)s, E wf_info_for X, X modification_date D',
                             {'x': treid})

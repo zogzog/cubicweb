@@ -20,50 +20,48 @@ from cubicweb.selectors import (implements, has_related_entities,
 from cubicweb.interfaces import IWorkflowable
 from cubicweb.view import EntityView
 from cubicweb.web import stdmsgs, action, component, form
-from cubicweb.web.form import FormViewMixIn
-from cubicweb.web.formfields import StringField,  RichTextField
-from cubicweb.web.formwidgets import HiddenInput, SubmitButton, Button
+from cubicweb.web import formfields as ff, formwidgets as fwdgs
 from cubicweb.web.views import TmpFileViewMixin, forms
 
 
 # IWorkflowable views #########################################################
 
-class ChangeStateForm(forms.EntityFieldsForm):
+class ChangeStateForm(forms.CompositeEntityForm):
     id = 'changestate'
 
     form_renderer_id = 'base' # don't want EntityFormRenderer
-    form_buttons = [SubmitButton(stdmsgs.YES),
-                     Button(stdmsgs.NO, cwaction='cancel')]
-
-    __method = StringField(name='__method', initial='set_state',
-                           widget=HiddenInput)
-    state = StringField(eidparam=True, widget=HiddenInput)
-    trcomment = RichTextField(label=_('comment:'), eidparam=True)
+    form_buttons = [fwdgs.SubmitButton(stdmsgs.YES),
+                    fwdgs.Button(stdmsgs.NO, cwaction='cancel')]
 
 
-class ChangeStateFormView(FormViewMixIn, view.EntityView):
+class ChangeStateFormView(form.FormViewMixIn, view.EntityView):
     id = 'statuschange'
     title = _('status change')
     __select__ = implements(IWorkflowable) & match_form_params('treid')
 
     def cell_call(self, row, col):
         entity = self.entity(row, col)
-        state = entity.in_state[0]
         transition = self.req.entity_from_eid(self.req.form['treid'])
         dest = transition.destination()
         _ = self.req._
-        form = self.vreg.select('forms', 'changestate', self.req, rset=self.rset,
-                                row=row, col=col, entity=entity,
-                                redirect_path=self.redirectpath(entity))
+        form = self.vreg['forms'].select('changestate', self.req, entity=entity,
+                                         redirect_path=self.redirectpath(entity))
         self.w(form.error_message())
         self.w(u'<h4>%s %s</h4>\n' % (_(transition.name),
                                       entity.view('oneline')))
         msg = _('status will change from %(st1)s to %(st2)s') % {
-            'st1': _(state.name),
+            'st1': _(entity.current_state.name),
             'st2': _(dest.name)}
         self.w(u'<p>%s</p>\n' % msg)
-        self.w(form.form_render(state=dest.eid, trcomment=u'',
-                                trcomment_format=self.req.property_value('ui.default-text-format')))
+        trinfo = self.vreg['etypes'].etype_class('TrInfo')(self.req)
+        self.initialize_varmaker()
+        trinfo.eid = self.varmaker.next()
+        subform = self.vreg['forms'].select('edition', self.req, entity=trinfo,
+                                            mainform=False)
+        subform.field_by_name('by_transition').widget = fwdgs.HiddenInput()
+        form.form_add_subform(subform)
+        self.w(form.form_render(wf_info_for=entity.eid,
+                                by_transition=transition.eid))
 
     def redirectpath(self, entity):
         return entity.rest_path()
@@ -135,7 +133,7 @@ class StateInContextView(view.EntityView):
 
 class ViewWorkflowAction(action.Action):
     id = 'workflow'
-    __select__ = implements('CWEType') & has_related_entities('state_of', 'object')
+    __select__ = implements('CWEType') & has_related_entities('workflow_of', 'object')
 
     category = 'mainactions'
     title = _('view workflow')

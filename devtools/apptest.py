@@ -371,8 +371,7 @@ class RepositoryBasedTC(TestCase):
     def create_user(self, user, groups=('users',), password=None, commit=True):
         if password is None:
             password = user
-        eid = self.execute('INSERT CWUser X: X login %(x)s, X upassword %(p)s,'
-                            'X in_state S WHERE S name "activated"',
+        eid = self.execute('INSERT CWUser X: X login %(x)s, X upassword %(p)s',
                             {'x': unicode(user), 'p': password})[0][0]
         groups = ','.join(repr(group) for group in groups)
         self.execute('SET X in_group Y WHERE X eid %%(x)s, Y name IN (%s)' % groups,

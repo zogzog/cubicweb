@@ -906,78 +906,78 @@ class ServerMigrationHelper(MigrationHelper):
 
     # Workflows handling ######################################################
 
+    def cmd_add_workflow(self, name, wfof, default=True, commit=False,
+                         **kwargs):
+        self.session.set_pool() # ensure pool is set
+        wf = self.cmd_create_entity('Workflow', name=unicode(name),
+                                    **kwargs)
+        if not isinstance(wfof, (list, tuple)):
+            wfof = (wfof,)
+        for etype in wfof:
+            rset = self.rqlexec('SET X workflow_of ET '
+                                'WHERE X eid %(x)s, ET name %(et)s',
+                                {'x': wf.eid, 'et': etype}, 'x')
+            assert rset, 'unexistant entity type %s' % etype
+            if default:
+                rset = self.rqlexec('SET X default_workflow_of ET '
+                                    'WHERE X eid %(x)s, ET name %(et)s',
+                                    {'x': wf.eid, 'et': etype}, 'x')
+        if commit:
+            self.commit()
+        return wf
+
+    # XXX remove once cmd_add_[state|transition] are removed
+    def _get_or_create_wf(self, etypes):
+        self.session.set_pool() # ensure pool is set
+        if not isinstance(etypes, (list, tuple)):
+            etypes = (etypes,)
+        rset = self.rqlexec('Workflow X WHERE X workflow_of ET, ET name %(et)s',
+                            {'et': etypes[0]})
+        if rset:
+            return rset.get_entity(0, 0)
+        return self.cmd_add_workflow('%s workflow' % ';'.join(etypes), etypes)
+
+    @deprecated('use add_workflow and Workflow.add_state method')
     def cmd_add_state(self, name, stateof, initial=False, commit=False, **kwargs):
         """method to ease workflow definition: add a state for one or more
         entity type(s)
         """
-        stateeid = self.cmd_add_entity('State', name=name, **kwargs)
-        if not isinstance(stateof, (list, tuple)):
-            stateof = (stateof,)
-        for etype in stateof:
-            # XXX ensure etype validity
-            self.rqlexec('SET X state_of Y WHERE X eid %(x)s, Y name %(et)s',
-                         {'x': stateeid, 'et': etype}, 'x', ask_confirm=False)
-            if initial:
-                self.rqlexec('SET ET initial_state S WHERE ET name %(et)s, S eid %(x)s',
-                             {'x': stateeid, 'et': etype}, 'x', ask_confirm=False)
+        wf = self._get_or_create_wf(stateof)
+        state = wf.add_state(name, initial, **kwargs)
         if commit:
             self.commit()
-        return stateeid
+        return state.eid
 
+    @deprecated('use add_workflow and Workflow.add_transition method')
     def cmd_add_transition(self, name, transitionof, fromstates, tostate,
                            requiredgroups=(), conditions=(), commit=False, **kwargs):
         """method to ease workflow definition: add a transition for one or more
         entity type(s), from one or more state and to a single state
         """
-        treid = self.cmd_add_entity('Transition', name=name, **kwargs)
-        if not isinstance(transitionof, (list, tuple)):
-            transitionof = (transitionof,)
-        for etype in transitionof:
-            # XXX ensure etype validity
-            self.rqlexec('SET X transition_of Y WHERE X eid %(x)s, Y name %(et)s',
-                         {'x': treid, 'et': etype}, 'x', ask_confirm=False)
-        for stateeid in fromstates:
-            self.rqlexec('SET X allowed_transition Y WHERE X eid %(x)s, Y eid %(y)s',
-                         {'x': stateeid, 'y': treid}, 'x', ask_confirm=False)
-        self.rqlexec('SET X destination_state Y WHERE X eid %(x)s, Y eid %(y)s',
-                     {'x': treid, 'y': tostate}, 'x', ask_confirm=False)
-        self.cmd_set_transition_permissions(treid, requiredgroups, conditions,
-                                            reset=False)
+        wf = self._get_or_create_wf(transitionof)
+        tr = wf.add_transition(name, fromstates, tostate, requiredgroups,
+                               conditions, **kwargs)
         if commit:
             self.commit()
-        return treid
+        return tr.eid
 
+    @deprecated('use Transition.set_transition_permissions method')
     def cmd_set_transition_permissions(self, treid,
                                        requiredgroups=(), conditions=(),
                                        reset=True, commit=False):
         """set or add (if `reset` is False) groups and conditions for a
         transition
         """
-        if reset:
-            self.rqlexec('DELETE T require_group G WHERE T eid %(x)s',
-                         {'x': treid}, 'x', ask_confirm=False)
-            self.rqlexec('DELETE T condition R WHERE T eid %(x)s',
-                         {'x': treid}, 'x', ask_confirm=False)
-        for gname in requiredgroups:
-            ### XXX ensure gname validity
-            self.rqlexec('SET T require_group G WHERE T eid %(x)s, G name %(gn)s',
-                         {'x': treid, 'gn': gname}, 'x', ask_confirm=False)
-        if isinstance(conditions, basestring):
-            conditions = (conditions,)
-        for expr in conditions:
-            if isinstance(expr, str):
-                expr = unicode(expr)
-            self.rqlexec('INSERT RQLExpression X: X exprtype "ERQLExpression", '
-                         'X expression %(expr)s, T condition X '
-                         'WHERE T eid %(x)s',
-                         {'x': treid, 'expr': expr}, 'x', ask_confirm=False)
+        self.session.set_pool() # ensure pool is set
+        tr = self.session.entity_from_eid(treid)
+        tr.set_transition_permissions(requiredgroups, conditions, reset)
         if commit:
             self.commit()
 
+    @deprecated('use entity.change_state("state")')
     def cmd_set_state(self, eid, statename, commit=False):
         self.session.set_pool() # ensure pool is set
-        entity = self.session.entity_from_eid(eid)
-        entity.change_state(entity.wf_state(statename).eid)
+        self.session.entity_from_eid(eid).change_state(statename)
         if commit:
             self.commit()
 
@@ -994,32 +994,26 @@ class ServerMigrationHelper(MigrationHelper):
             prop = self.rqlexec('CWProperty X WHERE X pkey %(k)s', {'k': pkey},
                                 ask_confirm=False).get_entity(0, 0)
         except:
-            self.cmd_add_entity('CWProperty', pkey=unicode(pkey), value=value)
+            self.cmd_create_entity('CWProperty', pkey=unicode(pkey), value=value)
         else:
             self.rqlexec('SET X value %(v)s WHERE X pkey %(k)s',
                          {'k': pkey, 'v': value}, ask_confirm=False)
 
     # other data migration commands ###########################################
 
-    def cmd_add_entity(self, etype, *args, **kwargs):
+    def cmd_create_entity(self, etype, *args, **kwargs):
         """add a new entity of the given type"""
-        rql = 'INSERT %s X' % etype
-        relations = []
-        restrictions = []
-        for rtype, rvar in args:
-            relations.append('X %s %s' % (rtype, rvar))
-            restrictions.append('%s eid %s' % (rvar, kwargs.pop(rvar)))
         commit = kwargs.pop('commit', False)
-        for attr in kwargs:
-            relations.append('X %s %%(%s)s' % (attr, attr))
-        if relations:
-            rql = '%s: %s' % (rql, ', '.join(relations))
-        if restrictions:
-            rql = '%s WHERE %s' % (rql, ', '.join(restrictions))
-        eid = self.rqlexec(rql, kwargs, ask_confirm=self.verbosity>=2).rows[0][0]
+        self.session.set_pool()
+        entity = self.session.create_entity(etype, *args, **kwargs)
         if commit:
             self.commit()
-        return eid
+        return entity
+
+    @deprecated('use create_entity')
+    def cmd_add_entity(self, etype, *args, **kwargs):
+        """add a new entity of the given type"""
+        return self.cmd_create_entity(etype, *args, **kwargs).eid
 
     def sqlexec(self, sql, args=None, ask_confirm=True):
         """execute the given sql if confirmed

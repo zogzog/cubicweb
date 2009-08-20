@@ -339,6 +339,9 @@ WHERE X.cw_login=admin'''),
 
     ('Any XN ORDERBY XN WHERE X name XN',
      '''SELECT X.cw_name
+FROM cw_BaseTransition AS X
+UNION ALL
+SELECT X.cw_name
 FROM cw_Basket AS X
 UNION ALL
 SELECT X.cw_name
@@ -376,6 +379,12 @@ FROM cw_Tag AS X
 UNION ALL
 SELECT X.cw_name
 FROM cw_Transition AS X
+UNION ALL
+SELECT X.cw_name
+FROM cw_Workflow AS X
+UNION ALL
+SELECT X.cw_name
+FROM cw_WorkflowTransition AS X
 ORDER BY 1'''),
 
     # DISTINCT, can use relation under exists scope as principal
@@ -462,6 +471,9 @@ WHERE X.cw_name=CWGroup AND Y.cw_eid IN(1, 2, 3) AND NOT EXISTS(SELECT 1 FROM re
 
     ('Any MAX(X)+MIN(X), N GROUPBY N WHERE X name N;',
      '''SELECT (MAX(T1.C0) + MIN(T1.C0)), T1.C1 FROM (SELECT X.cw_eid AS C0, X.cw_name AS C1
+FROM cw_BaseTransition AS X
+UNION ALL
+SELECT X.cw_eid AS C0, X.cw_name AS C1
 FROM cw_Basket AS X
 UNION ALL
 SELECT X.cw_eid AS C0, X.cw_name AS C1
@@ -498,7 +510,13 @@ SELECT X.cw_eid AS C0, X.cw_name AS C1
 FROM cw_Tag AS X
 UNION ALL
 SELECT X.cw_eid AS C0, X.cw_name AS C1
-FROM cw_Transition AS X) AS T1
+FROM cw_Transition AS X
+UNION ALL
+SELECT X.cw_eid AS C0, X.cw_name AS C1
+FROM cw_Workflow AS X
+UNION ALL
+SELECT X.cw_eid AS C0, X.cw_name AS C1
+FROM cw_WorkflowTransition AS X) AS T1
 GROUP BY T1.C1'''),
 
     ('Any MAX(X)+MIN(LENGTH(D)), N GROUPBY N ORDERBY 1, N, DF WHERE X name N, X data D, X data_format DF;',
@@ -1029,8 +1047,9 @@ WHERE NOT EXISTS(SELECT 1 WHERE N.cw_ecrit_par=P.cw_eid) AND N.cw_eid=512'''),
 
     ('Any S,ES,T WHERE S state_of ET, ET name "CWUser", ES allowed_transition T, T destination_state S',
      '''SELECT T.cw_destination_state, rel_allowed_transition1.eid_from, T.cw_eid
-FROM allowed_transition_relation AS rel_allowed_transition1, cw_CWEType AS ET, cw_Transition AS T, state_of_relation AS rel_state_of0
+FROM allowed_transition_relation AS rel_allowed_transition1, cw_Transition AS T, cw_Workflow AS ET, state_of_relation AS rel_state_of0
 WHERE T.cw_destination_state=rel_state_of0.eid_from AND rel_state_of0.eid_to=ET.cw_eid AND ET.cw_name=CWUser AND rel_allowed_transition1.eid_to=T.cw_eid'''),
+
     ('Any O WHERE S eid 0, S in_state O',
      '''SELECT S.cw_in_state
 FROM cw_Affaire AS S
@@ -1106,11 +1125,11 @@ class CWRQLTC(RQLGeneratorTC):
         delete = self.rqlhelper.parse(
             'DELETE X read_permission READ_PERMISSIONSUBJECT,X add_permission ADD_PERMISSIONSUBJECT,'
             'X in_basket IN_BASKETSUBJECT,X delete_permission DELETE_PERMISSIONSUBJECT,'
-            'X initial_state INITIAL_STATESUBJECT,X update_permission UPDATE_PERMISSIONSUBJECT,'
+            'X update_permission UPDATE_PERMISSIONSUBJECT,'
             'X created_by CREATED_BYSUBJECT,X is ISSUBJECT,X is_instance_of IS_INSTANCE_OFSUBJECT,'
             'X owned_by OWNED_BYSUBJECT,X specializes SPECIALIZESSUBJECT,ISOBJECT is X,'
-            'SPECIALIZESOBJECT specializes X,STATE_OFOBJECT state_of X,IS_INSTANCE_OFOBJECT is_instance_of X,'
-            'TO_ENTITYOBJECT to_entity X,TRANSITION_OFOBJECT transition_of X,FROM_ENTITYOBJECT from_entity X '
+            'SPECIALIZESOBJECT specializes X,IS_INSTANCE_OFOBJECT is_instance_of X,'
+            'TO_ENTITYOBJECT to_entity X,FROM_ENTITYOBJECT from_entity X '
             'WHERE X is CWEType')
         self.rqlhelper.compute_solutions(delete)
         def var_sols(var):
@@ -1379,7 +1398,7 @@ WHERE appears0.words @@ to_tsquery('default', 'toto&tata') AND appears0.uid=X.ei
 FROM appears AS appears0, entities AS X
 WHERE appears0.words @@ to_tsquery('default', 'hip&hop&momo') AND appears0.uid=X.eid AND X.type='Personne'"""),
 
-            ('Any X WHERE X has_text "toto tata", X name "tutu"',
+            ('Any X WHERE X has_text "toto tata", X name "tutu", X is IN (Basket,File,Folder)',
              """SELECT X.cw_eid
 FROM appears AS appears0, cw_Basket AS X
 WHERE appears0.words @@ to_tsquery('default', 'toto&tata') AND appears0.uid=X.cw_eid AND X.cw_name=tutu
@@ -1391,22 +1410,7 @@ UNION ALL
 SELECT X.cw_eid
 FROM appears AS appears0, cw_Folder AS X
 WHERE appears0.words @@ to_tsquery('default', 'toto&tata') AND appears0.uid=X.cw_eid AND X.cw_name=tutu
-UNION ALL
-SELECT X.cw_eid
-FROM appears AS appears0, cw_Image AS X
-WHERE appears0.words @@ to_tsquery('default', 'toto&tata') AND appears0.uid=X.cw_eid AND X.cw_name=tutu
-UNION ALL
-SELECT X.cw_eid
-FROM appears AS appears0, cw_State AS X
-WHERE appears0.words @@ to_tsquery('default', 'toto&tata') AND appears0.uid=X.cw_eid AND X.cw_name=tutu
-UNION ALL
-SELECT X.cw_eid
-FROM appears AS appears0, cw_Tag AS X
-WHERE appears0.words @@ to_tsquery('default', 'toto&tata') AND appears0.uid=X.cw_eid AND X.cw_name=tutu
-UNION ALL
-SELECT X.cw_eid
-FROM appears AS appears0, cw_Transition AS X
-WHERE appears0.words @@ to_tsquery('default', 'toto&tata') AND appears0.uid=X.cw_eid AND X.cw_name=tutu"""),
+"""),
 
             ('Personne X where X has_text %(text)s, X travaille S, S has_text %(text)s',
              """SELECT X.eid
@@ -1543,7 +1547,7 @@ WHERE appears0.word_id IN (SELECT word_id FROM word WHERE word in ('hip', 'hop',
 FROM appears AS appears0, entities AS X
 WHERE appears0.word_id IN (SELECT word_id FROM word WHERE word in ('toto', 'tata')) AND appears0.uid=X.eid AND X.type='Personne'"""),
 
-            ('Any X WHERE X has_text "toto tata", X name "tutu"',
+            ('Any X WHERE X has_text "toto tata", X name "tutu", X is IN (Basket,File,Folder)',
              """SELECT X.cw_eid
 FROM appears AS appears0, cw_Basket AS X
 WHERE appears0.word_id IN (SELECT word_id FROM word WHERE word in ('toto', 'tata')) AND appears0.uid=X.cw_eid AND X.cw_name=tutu
@@ -1555,22 +1559,7 @@ UNION ALL
 SELECT X.cw_eid
 FROM appears AS appears0, cw_Folder AS X
 WHERE appears0.word_id IN (SELECT word_id FROM word WHERE word in ('toto', 'tata')) AND appears0.uid=X.cw_eid AND X.cw_name=tutu
-UNION ALL
-SELECT X.cw_eid
-FROM appears AS appears0, cw_Image AS X
-WHERE appears0.word_id IN (SELECT word_id FROM word WHERE word in ('toto', 'tata')) AND appears0.uid=X.cw_eid AND X.cw_name=tutu
-UNION ALL
-SELECT X.cw_eid
-FROM appears AS appears0, cw_State AS X
-WHERE appears0.word_id IN (SELECT word_id FROM word WHERE word in ('toto', 'tata')) AND appears0.uid=X.cw_eid AND X.cw_name=tutu
-UNION ALL
-SELECT X.cw_eid
-FROM appears AS appears0, cw_Tag AS X
-WHERE appears0.word_id IN (SELECT word_id FROM word WHERE word in ('toto', 'tata')) AND appears0.uid=X.cw_eid AND X.cw_name=tutu
-UNION ALL
-SELECT X.cw_eid
-FROM appears AS appears0, cw_Transition AS X
-WHERE appears0.word_id IN (SELECT word_id FROM word WHERE word in ('toto', 'tata')) AND appears0.uid=X.cw_eid AND X.cw_name=tutu"""),
+"""),
             )):
             yield t
 
@@ -1619,7 +1608,7 @@ WHERE MATCH (appears0.words) AGAINST ('toto tata' IN BOOLEAN MODE) AND appears0.
              """SELECT X.eid
 FROM appears AS appears0, entities AS X
 WHERE MATCH (appears0.words) AGAINST ('hip hop momo' IN BOOLEAN MODE) AND appears0.uid=X.eid AND X.type='Personne'"""),
-            ('Any X WHERE X has_text "toto tata", X name "tutu"',
+            ('Any X WHERE X has_text "toto tata", X name "tutu", X is IN (Basket,File,Folder)',
              """SELECT X.cw_eid
 FROM appears AS appears0, cw_Basket AS X
 WHERE MATCH (appears0.words) AGAINST ('toto tata' IN BOOLEAN MODE) AND appears0.uid=X.cw_eid AND X.cw_name=tutu
@@ -1631,22 +1620,7 @@ UNION ALL
 SELECT X.cw_eid
 FROM appears AS appears0, cw_Folder AS X
 WHERE MATCH (appears0.words) AGAINST ('toto tata' IN BOOLEAN MODE) AND appears0.uid=X.cw_eid AND X.cw_name=tutu
-UNION ALL
-SELECT X.cw_eid
-FROM appears AS appears0, cw_Image AS X
-WHERE MATCH (appears0.words) AGAINST ('toto tata' IN BOOLEAN MODE) AND appears0.uid=X.cw_eid AND X.cw_name=tutu
-UNION ALL
-SELECT X.cw_eid
-FROM appears AS appears0, cw_State AS X
-WHERE MATCH (appears0.words) AGAINST ('toto tata' IN BOOLEAN MODE) AND appears0.uid=X.cw_eid AND X.cw_name=tutu
-UNION ALL
-SELECT X.cw_eid
-FROM appears AS appears0, cw_Tag AS X
-WHERE MATCH (appears0.words) AGAINST ('toto tata' IN BOOLEAN MODE) AND appears0.uid=X.cw_eid AND X.cw_name=tutu
-UNION ALL
-SELECT X.cw_eid
-FROM appears AS appears0, cw_Transition AS X
-WHERE MATCH (appears0.words) AGAINST ('toto tata' IN BOOLEAN MODE) AND appears0.uid=X.cw_eid AND X.cw_name=tutu""")
+""")
             ]
         for t in self._parse(queries):
             yield t

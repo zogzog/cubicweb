@@ -26,7 +26,7 @@ SYSTEM_ENTITIES = ('CWGroup', 'CWUser',
                    'CWAttribute', 'CWRelation',
                    'CWConstraint', 'CWConstraintType', 'CWProperty',
                    'CWEType', 'CWRType',
-                   'State', 'Transition', 'TrInfo',
+                   'Workflow', 'State', 'BaseTransition', 'Transition', 'WorkflowTransition', 'TrInfo', 'SubWorkflowExitPoint',
                    'RQLExpression',
                    )
 SYSTEM_RELATIONS = (
@@ -35,9 +35,9 @@ SYSTEM_RELATIONS = (
     # metadata
     'is', 'is_instance_of', 'owned_by', 'created_by', 'specializes',
     # workflow related
-    'state_of', 'transition_of', 'initial_state', 'allowed_transition',
+    'workflow_of', 'state_of', 'transition_of', 'initial_state', 'allowed_transition',
     'destination_state', 'in_state', 'wf_info_for', 'from_state', 'to_state',
-    'condition',
+    'condition', 'subworkflow', 'subworkflow_state', 'subworkflow_exit',
     # permission
     'in_group', 'require_group', 'require_permission',
     'read_permission', 'update_permission', 'delete_permission', 'add_permission',
@@ -121,8 +121,7 @@ class TestEnvironment(object):
     def create_user(self, login, groups=('users',), req=None):
         req = req or self.create_request()
         cursor = self._orig_cnx.cursor(req)
-        rset = cursor.execute('INSERT CWUser X: X login %(login)s, X upassword %(passwd)s,'
-                              'X in_state S WHERE S name "activated"',
+        rset = cursor.execute('INSERT CWUser X: X login %(login)s, X upassword %(passwd)s',
                               {'login': unicode(login), 'passwd': login.encode('utf8')})
         user = rset.get_entity(0, 0)
         cursor.execute('SET X in_group G WHERE X eid %%(x)s, G name IN(%s)'

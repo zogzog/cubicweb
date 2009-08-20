@@ -102,7 +102,7 @@ class RepositoryTC(RepositoryBasedTC):
     def test_login_upassword_accent(self):
         repo = self.repo
         cnxid = repo.connect(*self.default_user_password())
-        repo.execute(cnxid, 'INSERT CWUser X: X login %(login)s, X upassword %(passwd)s, X in_state S, X in_group G WHERE S name "activated", G name "users"',
+        repo.execute(cnxid, 'INSERT CWUser X: X login %(login)s, X upassword %(passwd)s, X in_group G WHERE G name "users"',
                      {'login': u"barnabé", 'passwd': u"héhéhé".encode('UTF8')})
         repo.commit(cnxid)
         repo.close(cnxid)
@@ -112,7 +112,7 @@ class RepositoryTC(RepositoryBasedTC):
         repo = self.repo
         cnxid = repo.connect(*self.default_user_password())
         # no group
-        repo.execute(cnxid, 'INSERT CWUser X: X login %(login)s, X upassword %(passwd)s, X in_state S WHERE S name "activated"',
+        repo.execute(cnxid, 'INSERT CWUser X: X login %(login)s, X upassword %(passwd)s',
                      {'login': u"tutetute", 'passwd': 'tutetute'})
         self.assertRaises(ValidationError, repo.commit, cnxid)
         rset = repo.execute(cnxid, 'CWUser X WHERE X login "tutetute"')
@@ -190,16 +190,13 @@ class RepositoryTC(RepositoryBasedTC):
         repo = self.repo
         cnxid = repo.connect(*self.default_user_password())
         # rollback state change which trigger TrInfo insertion
-        ueid = repo._get_session(cnxid).user.eid
-        rset = repo.execute(cnxid, 'TrInfo T WHERE T wf_info_for X, X eid %(x)s', {'x': ueid})
+        user = repo._get_session(cnxid).user
+        user.fire_transition('deactivate')
+        rset = repo.execute(cnxid, 'TrInfo T WHERE T wf_info_for X, X eid %(x)s', {'x': user.eid})
         self.assertEquals(len(rset), 1)
-        repo.execute(cnxid, 'SET X in_state S WHERE X eid %(x)s, S name "deactivated"',
-                     {'x': ueid}, 'x')
-        rset = repo.execute(cnxid, 'TrInfo T WHERE T wf_info_for X, X eid %(x)s', {'x': ueid})
-        self.assertEquals(len(rset), 2)
         repo.rollback(cnxid)
-        rset = repo.execute(cnxid, 'TrInfo T WHERE T wf_info_for X, X eid %(x)s', {'x': ueid})
-        self.assertEquals(len(rset), 1)
+        rset = repo.execute(cnxid, 'TrInfo T WHERE T wf_info_for X, X eid %(x)s', {'x': user.eid})
+        self.assertEquals(len(rset), 0)
 
     def test_transaction_interleaved(self):
         self.skip('implement me')
