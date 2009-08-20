@@ -155,6 +155,40 @@ class CoreHooksTC(RepositoryBasedTC):
         self.assertEquals(entity.descr, u'R&amp;D<p>yo</p>')
 
 
+    def test_metadata_cwuri(self):
+        eid = self.execute('INSERT Note X')[0][0]
+        cwuri = self.execute('Any U WHERE X eid %s, X cwuri U' % eid)[0][0]
+        self.assertEquals(cwuri, self.repo.config['base-url'] + 'eid/%s' % eid)
+
+    def test_metadata_creation_modification_date(self):
+        _now = datetime.now()
+        eid = self.execute('INSERT Note X')[0][0]
+        creation_date, modification_date = self.execute('Any CD, MD WHERE X eid %s, '
+                                                        'X creation_date CD, '
+                                                        'X modification_date MD' % eid)[0]
+        self.assertEquals((creation_date - _now).seconds, 0)
+        self.assertEquals((modification_date - _now).seconds, 0)
+
+    def test_metadata__date(self):
+        _now = datetime.now()
+        eid = self.execute('INSERT Note X')[0][0]
+        creation_date = self.execute('Any D WHERE X eid %s, X creation_date D' % eid)[0][0]
+        self.assertEquals((creation_date - _now).seconds, 0)
+
+    def test_metadata_created_by(self):
+        eid = self.execute('INSERT Note X')[0][0]
+        self.commit() # fire operations
+        rset = self.execute('Any U WHERE X eid %s, X created_by U' % eid)
+        self.assertEquals(len(rset), 1) # make sure we have only one creator
+        self.assertEquals(rset[0][0], self.session.user.eid)
+
+    def test_metadata_owned_by(self):
+        eid = self.execute('INSERT Note X')[0][0]
+        self.commit() # fire operations
+        rset = self.execute('Any U WHERE X eid %s, X owned_by U' % eid)
+        self.assertEquals(len(rset), 1) # make sure we have only one owner
+        self.assertEquals(rset[0][0], self.session.user.eid)
+
 
 class UserGroupHooksTC(RepositoryBasedTC):
 
@@ -479,178 +513,6 @@ class SchemaModificationHooksTC(RepositoryBasedTC):
                      'WHERE DEF relation_type RT, DEF from_entity E,'
                      'RT name "prenom", E name "Personne"')
         self.commit()
-
-
-class WorkflowHooksTC(RepositoryBasedTC):
-
-    def setUp(self):
-        RepositoryBasedTC.setUp(self)
-        self.s_activated = self.execute('State X WHERE X name "activated"')[0][0]
-        self.s_deactivated = self.execute('State X WHERE X name "deactivated"')[0][0]
-        self.s_dummy = self.execute('INSERT State X: X name "dummy", X state_of E WHERE E name "CWUser"')[0][0]
-        self.create_user('stduser')
-        # give access to users group on the user's wf transitions
-        # so we can test wf enforcing on euser (managers don't have anymore this
-        # enforcement
-        self.execute('SET X require_group G WHERE G name "users", X transition_of ET, ET name "CWUser"')
-        self.commit()
-
-    def tearDown(self):
-        self.execute('DELETE X require_group G WHERE G name "users", X transition_of ET, ET name "CWUser"')
-        self.commit()
-        RepositoryBasedTC.tearDown(self)
-
-    def test_set_initial_state(self):
-        ueid = self.execute('INSERT CWUser E: E login "x", E upassword "x", E in_group G '
-                            'WHERE G name "users"')[0][0]
-        self.failIf(self.execute('Any N WHERE S name N, X in_state S, X eid %(x)s',
-                                 {'x' : ueid}))
-        self.commit()
-        initialstate = self.execute('Any N WHERE S name N, X in_state S, X eid %(x)s',
-                                    {'x' : ueid})[0][0]
-        self.assertEquals(initialstate, u'activated')
-
-    def test_initial_state(self):
-        cnx = self.login('stduser')
-        cu = cnx.cursor()
-        self.assertRaises(ValidationError, cu.execute,
-                          'INSERT CWUser X: X login "badaboum", X upassword %(pwd)s, '
-                          'X in_state S WHERE S name "deactivated"', {'pwd': 'oops'})
-        cnx.close()
-        # though managers can do whatever he want
-        self.execute('INSERT CWUser X: X login "badaboum", X upassword %(pwd)s, '
-                     'X in_state S, X in_group G WHERE S name "deactivated", G name "users"', {'pwd': 'oops'})
-        self.commit()
-
-    # test that the workflow is correctly enforced
-    def test_transition_checking1(self):
-        cnx = self.login('stduser')
-        cu = cnx.cursor()
-        ueid = cnx.user(self.current_session()).eid
-        self.assertRaises(ValidationError,
-                          cu.execute, 'SET X in_state S WHERE X eid %(x)s, S eid %(s)s',
-                          {'x': ueid, 's': self.s_activated}, 'x')
-        cnx.close()
-
-    def test_transition_checking2(self):
-        cnx = self.login('stduser')
-        cu = cnx.cursor()
-        ueid = cnx.user(self.current_session()).eid
-        self.assertRaises(ValidationError,
-                          cu.execute, 'SET X in_state S WHERE X eid %(x)s, S eid %(s)s',
-                          {'x': ueid, 's': self.s_dummy}, 'x')
-        cnx.close()
-
-    def test_transition_checking3(self):
-        cnx = self.login('stduser')
-        cu = cnx.cursor()
-        ueid = cnx.user(self.current_session()).eid
-        cu.execute('SET X in_state S WHERE X eid %(x)s, S eid %(s)s',
-                      {'x': ueid, 's': self.s_deactivated}, 'x')
-        cnx.commit()
-        self.assertRaises(ValidationError,
-                          cu.execute, 'SET X in_state S WHERE X eid %(x)s, S eid %(s)s',
-                          {'x': ueid, 's': self.s_deactivated}, 'x')
-        # get back now
-        cu.execute('SET X in_state S WHERE X eid %(x)s, S eid %(s)s',
-                      {'x': ueid, 's': self.s_activated}, 'x')
-        cnx.commit()
-        cnx.close()
-
-    def test_transition_checking4(self):
-        cnx = self.login('stduser')
-        cu = cnx.cursor()
-        ueid = cnx.user(self.current_session()).eid
-        cu.execute('SET X in_state S WHERE X eid %(x)s, S eid %(s)s',
-                   {'x': ueid, 's': self.s_deactivated}, 'x')
-        cnx.commit()
-        self.assertRaises(ValidationError,
-                          cu.execute, 'SET X in_state S WHERE X eid %(x)s, S eid %(s)s',
-                          {'x': ueid, 's': self.s_dummy}, 'x')
-        # get back now
-        cu.execute('SET X in_state S WHERE X eid %(x)s, S eid %(s)s',
-                      {'x': ueid, 's': self.s_activated}, 'x')
-        cnx.commit()
-        cnx.close()
-
-    def test_transition_information(self):
-        ueid = self.session.user.eid
-        self.execute('SET X in_state S WHERE X eid %(x)s, S eid %(s)s',
-                      {'x': ueid, 's': self.s_deactivated}, 'x')
-        self.commit()
-        rset = self.execute('TrInfo T ORDERBY T WHERE T wf_info_for X, X eid %(x)s', {'x': ueid})
-        self.assertEquals(len(rset), 2)
-        tr = rset.get_entity(1, 0)
-        #tr.complete()
-        self.assertEquals(tr.comment, None)
-        self.assertEquals(tr.from_state[0].eid, self.s_activated)
-        self.assertEquals(tr.to_state[0].eid, self.s_deactivated)
-
-        self.session.set_shared_data('trcomment', u'il est pas sage celui-la')
-        self.session.set_shared_data('trcommentformat', u'text/plain')
-        self.execute('SET X in_state S WHERE X eid %(x)s, S eid %(s)s',
-                     {'x': ueid, 's': self.s_activated}, 'x')
-        self.commit()
-        rset = self.execute('TrInfo T ORDERBY T WHERE T wf_info_for X, X eid %(x)s', {'x': ueid})
-        self.assertEquals(len(rset), 3)
-        tr = rset.get_entity(2, 0)
-        #tr.complete()
-        self.assertEquals(tr.comment, u'il est pas sage celui-la')
-        self.assertEquals(tr.comment_format, u'text/plain')
-        self.assertEquals(tr.from_state[0].eid, self.s_deactivated)
-        self.assertEquals(tr.to_state[0].eid, self.s_activated)
-        self.assertEquals(tr.owned_by[0].login, 'admin')
-
-    def test_transition_information_on_creation(self):
-        ueid = self.create_user('toto')
-        rset = self.execute('TrInfo T WHERE T wf_info_for X, X eid %(x)s', {'x': ueid})
-        self.assertEquals(len(rset), 1)
-        tr = rset.get_entity(0, 0)
-        #tr.complete()
-        self.assertEquals(tr.comment, None)
-        self.assertEquals(tr.from_state, [])
-        self.assertEquals(tr.to_state[0].eid, self.s_activated)
-
-    def test_std_users_can_create_trinfo(self):
-        self.create_user('toto')
-        cnx = self.login('toto')
-        cu = cnx.cursor()
-        self.failUnless(cu.execute("INSERT Note X: X type 'a', X in_state S WHERE S name 'todo'"))
-        cnx.commit()
-
-    def test_metadata_cwuri(self):
-        eid = self.execute('INSERT Note X')[0][0]
-        cwuri = self.execute('Any U WHERE X eid %s, X cwuri U' % eid)[0][0]
-        self.assertEquals(cwuri, self.repo.config['base-url'] + 'eid/%s' % eid)
-
-    def test_metadata_creation_modification_date(self):
-        _now = datetime.now()
-        eid = self.execute('INSERT Note X')[0][0]
-        creation_date, modification_date = self.execute('Any CD, MD WHERE X eid %s, '
-                                                        'X creation_date CD, '
-                                                        'X modification_date MD' % eid)[0]
-        self.assertEquals((creation_date - _now).seconds, 0)
-        self.assertEquals((modification_date - _now).seconds, 0)
-
-    def test_metadata__date(self):
-        _now = datetime.now()
-        eid = self.execute('INSERT Note X')[0][0]
-        creation_date = self.execute('Any D WHERE X eid %s, X creation_date D' % eid)[0][0]
-        self.assertEquals((creation_date - _now).seconds, 0)
-
-    def test_metadata_created_by(self):
-        eid = self.execute('INSERT Note X')[0][0]
-        self.commit() # fire operations
-        rset = self.execute('Any U WHERE X eid %s, X created_by U' % eid)
-        self.assertEquals(len(rset), 1) # make sure we have only one creator
-        self.assertEquals(rset[0][0], self.session.user.eid)
-
-    def test_metadata_owned_by(self):
-        eid = self.execute('INSERT Note X')[0][0]
-        self.commit() # fire operations
-        rset = self.execute('Any U WHERE X eid %s, X owned_by U' % eid)
-        self.assertEquals(len(rset), 1) # make sure we have only one owner
-        self.assertEquals(rset[0][0], self.session.user.eid)
 
 if __name__ == '__main__':
     unittest_main()

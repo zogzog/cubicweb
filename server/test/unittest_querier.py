@@ -990,17 +990,15 @@ class QuerierTC(BaseQuerierTC):
         peid = self.execute("INSERT Personne Y: Y nom 'toto'")[0][0]
         rset = self.execute('Personne X WHERE X nom "toto"')
         self.assertEqual(len(rset.rows), 1)
-        self.execute("SET X nom 'tutu', X prenom 'original' WHERE X is Personne, X nom 'toto'")
+        rset = self.execute("SET X nom 'tutu', X prenom 'original' WHERE X is Personne, X nom 'toto'")
+        self.assertEqual(tuplify(rset.rows), [(peid, 'tutu', 'original')])
         rset = self.execute('Any Y, Z WHERE X is Personne, X nom Y, X prenom Z')
         self.assertEqual(tuplify(rset.rows), [('tutu', 'original')])
 
     def test_update_2(self):
-        self.execute("INSERT Personne X, Societe Y: X nom 'bidule', Y nom 'toto'")
-        #rset = self.execute('Any X, Y WHERE X nom "bidule", Y nom "toto"')
-        #self.assertEqual(len(rset.rows), 1)
-        #rset = self.execute('Any X, Y WHERE X travaille Y')
-        #self.assertEqual(len(rset.rows), 0)
-        self.execute("SET X travaille Y WHERE X nom 'bidule', Y nom 'toto'")
+        peid, seid = self.execute("INSERT Personne X, Societe Y: X nom 'bidule', Y nom 'toto'")[0]
+        rset = self.execute("SET X travaille Y WHERE X nom 'bidule', Y nom 'toto'")
+        self.assertEquals(tuplify(rset.rows), [(peid, seid)])
         rset = self.execute('Any X, Y WHERE X travaille Y')
         self.assertEqual(len(rset.rows), 1)
 
@@ -1019,9 +1017,6 @@ class QuerierTC(BaseQuerierTC):
                       {'x': unicode(eid1), 'y': unicode(eid2)})
         rset = self.execute('Any X, Y WHERE X travaille Y')
         self.assertEqual(len(rset.rows), 1)
-
-##     def test_update_4(self):
-##         self.execute("SET X know Y WHERE X ami Y")
 
     def test_update_multiple1(self):
         peid1 = self.execute("INSERT Personne Y: Y nom 'tutu'")[0][0]
