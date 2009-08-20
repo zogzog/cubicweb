@@ -70,7 +70,6 @@ class SupervisingTC(EnvBasedTC):
         self.assertEquals(op.to_send[0][1], ['test@logilab.fr'])
         self.commit()
         # some other changes #######
-        print '*'*80
         user.fire_transition('deactivate')
         sentops = [op for op in session.pending_operations
                    if isinstance(op, SupervisionMailOp)]
