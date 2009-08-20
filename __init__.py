@@ -121,6 +121,27 @@ class RequestSessionMixIn(object):
         raise KeyError
     def set_entity_cache(self, entity):
         pass
+
+    def create_entity(self, etype, *args, **kwargs):
+        """add a new entity of the given type"""
+        rql = 'INSERT %s X' % etype
+        relations = []
+        restrictions = []
+        cachekey = []
+        for rtype, rvar in args:
+            relations.append('X %s %s' % (rtype, rvar))
+            restrictions.append('%s eid %%(%s)s' % (rvar, rvar))
+            cachekey.append(rvar)
+        for attr in kwargs:
+            if attr in cachekey:
+                continue
+            relations.append('X %s %%(%s)s' % (attr, attr))
+        if relations:
+            rql = '%s: %s' % (rql, ', '.join(relations))
+        if restrictions:
+            rql = '%s WHERE %s' % (rql, ', '.join(restrictions))
+        return self.execute(rql, kwargs, cachekey).get_entity(0, 0)
+
     # url generation methods ##################################################
 
     def build_url(self, *args, **kwargs):
