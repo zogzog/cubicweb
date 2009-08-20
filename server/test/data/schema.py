@@ -34,7 +34,7 @@ class Affaire(WorkflowableEntityType):
     depends_on = SubjectRelation('Affaire')
     require_permission = SubjectRelation('CWPermission')
     concerne = SubjectRelation(('Societe', 'Note'))
-    todo_by = SubjectRelation('Personne')
+    todo_by = SubjectRelation('Personne', cardinality='?*')
     documented_by = SubjectRelation('Card')
 
 

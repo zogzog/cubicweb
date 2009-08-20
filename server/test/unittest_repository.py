@@ -339,6 +339,22 @@ class RepositoryTC(RepositoryBasedTC):
 #             self.set_debug(False)
 #         print 'test time: %.3f (time) %.3f (cpu)' % ((time() - t), clock() - c)
 
+    def test_delete_if_singlecard1(self):
+        note = self.add_entity('Affaire')
+        p1 = self.add_entity('Personne', nom=u'toto')
+        self.execute('SET A todo_by P WHERE A eid %(x)s, P eid %(p)s',
+                     {'x': note.eid, 'p': p1.eid})
+        rset = self.execute('Any P WHERE A todo_by P, A eid %(x)s',
+                            {'x': note.eid})
+        self.assertEquals(len(rset), 1)
+        p2 = self.add_entity('Personne', nom=u'tutu')
+        self.execute('SET A todo_by P WHERE A eid %(x)s, P eid %(p)s',
+                     {'x': note.eid, 'p': p2.eid})
+        rset = self.execute('Any P WHERE A todo_by P, A eid %(x)s',
+                            {'x': note.eid})
+        self.assertEquals(len(rset), 1)
+        self.assertEquals(rset.rows[0][0], p2.eid)
+
 
 class DataHelpersTC(RepositoryBasedTC):
 
@@ -482,11 +498,11 @@ class InlineRelHooksTC(RepositoryBasedTC):
 
     def test_after_add_inline(self):
         """make sure after_<event>_relation hooks are deferred"""
+        p1 = self.add_entity('Personne', nom=u'toto')
         self.hm.register_hook(self._after_relation_hook,
-                             'after_add_relation', 'in_state')
-        eidp = self.execute('INSERT CWUser X: X login "toto", X upassword "tutu", X in_state S WHERE S name "activated"')[0][0]
-        eids = self.execute('State X WHERE X name "activated"')[0][0]
-        self.assertEquals(self.called, [(eidp, 'in_state', eids,)])
+                             'after_add_relation', 'ecrit_par')
+        eidn = self.execute('INSERT Note N: N ecrit_par P WHERE P nom "toto"')[0][0]
+        self.assertEquals(self.called, [(eidn, 'ecrit_par', p1.eid,)])
 
     def test_before_delete_inline_relation(self):
         """make sure before_<event>_relation hooks are called directly"""

@@ -60,18 +60,6 @@ class CoreHooksTC(RepositoryBasedTC):
         self.assertRaises(ValidationError,
                           self.commit)
 
-    def test_delete_if_singlecard1(self):
-        self.assertEquals(self.repo.schema['in_state'].inlined, False)
-        ueid = self.create_user('toto')
-        self.commit()
-        self.execute('SET X in_state S WHERE S name "deactivated", X eid %(x)s', {'x': ueid})
-        rset = self.execute('Any S WHERE X in_state S, X eid %(x)s', {'x': ueid})
-        self.assertEquals(len(rset), 1)
-        self.commit()
-        self.assertRaises(Exception, self.execute, 'SET X in_state S WHERE S name "deactivated", X eid %s' % ueid)
-        rset2 = self.execute('Any S WHERE X in_state S, X eid %(x)s', {'x': ueid})
-        self.assertEquals(rset.rows, rset2.rows)
-
     def test_inlined(self):
         self.assertEquals(self.repo.schema['sender'].inlined, True)
         self.execute('INSERT EmailAddress X: X address "toto@logilab.fr", X alias "hop"')
