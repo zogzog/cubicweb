@@ -33,7 +33,8 @@ from yams.constraints import SizeConstraint
 from yams.schema2sql import eschema2sql, rschema2sql
 
 from cubicweb import AuthenticationError, ETYPE_NAME_MAP
-from cubicweb.schema import META_RTYPES, VIRTUAL_RTYPES, CubicWebRelationSchema
+from cubicweb.schema import (META_RTYPES, VIRTUAL_RTYPES,
+                             CubicWebRelationSchema, order_eschemas)
 from cubicweb.dbapi import get_repository, repo_connect
 from cubicweb.common.migration import MigrationHelper, yes
 
@@ -518,10 +519,11 @@ class ServerMigrationHelper(MigrationHelper):
             if not rschema in self.repo.schema:
                 self.cmd_add_relation_type(rschema.type)
                 new.add(rschema.type)
-        for eschema in newcubes_schema.entities():
-            if not eschema in self.repo.schema:
-                self.cmd_add_entity_type(eschema.type)
-                new.add(eschema.type)
+        toadd = [eschema for eschema in newcubes_schema.entities()
+                 if not eschema in self.repo.schema]
+        for eschema in order_eschemas(toadd):
+            self.cmd_add_entity_type(eschema.type)
+            new.add(eschema.type)
         # check if attributes has been added to existing entities
         for rschema in newcubes_schema.relations():
             existingschema = self.repo.schema.rschema(rschema.type)
@@ -553,9 +555,11 @@ class ServerMigrationHelper(MigrationHelper):
         for rschema in fsschema.relations():
             if not rschema in removedcubes_schema and rschema in reposchema:
                 self.cmd_drop_relation_type(rschema.type)
-        for eschema in fsschema.entities():
-            if not eschema in removedcubes_schema and eschema in reposchema:
-                self.cmd_drop_entity_type(eschema.type)
+        toremove = [eschema for eschema in fsschema.entities()
+                    if not eschema in removedcubes_schema
+                    and eschema in reposchema]
+        for eschema in reversed(order_eschemas(toremove)):
+            self.cmd_drop_entity_type(eschema.type)
         for rschema in fsschema.relations():
             if rschema in removedcubes_schema and rschema in reposchema:
                 # check if attributes/relations has been added to entities from
