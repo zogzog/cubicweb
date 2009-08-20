@@ -527,6 +527,4 @@ def login_form_url(config, req):
 
 ## vregistry registration callback ############################################
 def registration_callback(vreg):
-    vreg.register_all(globals().values(), __name__, (PdfMainTemplate,) )
-    if can_do_pdf_conversion():
-        vreg.register(PdfMainTemplate)
+    vreg.register_all(globals().values(), __name__)

@@ -328,7 +328,7 @@ def can_do_pdf_conversion(__answer=[None]):
     if __answer[0] is not None:
         return __answer[0]
     try:
-        import pyxmltrf
+        import pysixt
     except ImportError:
         __answer[0] = False
         return False

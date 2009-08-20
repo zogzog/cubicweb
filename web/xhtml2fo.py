@@ -2,11 +2,11 @@ from cubicweb.utils import can_do_pdf_conversion
 assert can_do_pdf_conversion()
 
 from xml.etree.ElementTree import QName, fromstring
-from pyxmltrf.standard.xhtml_xslfo.transformer import XHTML2FOTransformer
-from pyxmltrf.utils.xslfo.standard import cm
-from pyxmltrf.utils.xslfo import SimplePageMaster
-from pyxmltrf.standard.xhtml_xslfo.default_styling import default_styles
-from pyxmltrf.standard.xhtml_xslfo import XHTML_NS
+from pysixt.standard.xhtml_xslfo.transformer import XHTML2FOTransformer
+from pysixt.utils.xslfo.standard import cm
+from pysixt.utils.xslfo import SimplePageMaster
+from pysixt.standard.xhtml_xslfo.default_styling import default_styles
+from pysixt.standard.xhtml_xslfo import XHTML_NS
 
 
 class ReportTransformer(XHTML2FOTransformer):
