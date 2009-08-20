@@ -320,3 +320,27 @@ class HTMLStream(object):
                                                  self.body.getvalue())
 
 
+def can_do_pdf_conversion(__answer=[None]):
+    """pdf conversion depends on
+    * pyxmltrf (python package)
+    * fop 0.9x
+    """
+    if __answer[0] is not None:
+        return __answer[0]
+    try:
+        import pyxmltrf
+    except ImportError:
+        __answer[0] = False
+        return False
+    from subprocess import Popen, STDOUT
+    import os
+    try:
+        Popen(['/usr/bin/fop', '-q'],
+              stdout=open(os.devnull, 'w'),
+              stderr=STDOUT)
+    except OSError, e:
+        print e
+        __answer[0] = False
+        return False
+    __answer[0] = True
+    return True
