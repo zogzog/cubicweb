@@ -320,9 +320,3 @@ class HTMLStream(object):
                                                  self.body.getvalue())
 
 
-class AcceptMixIn(object):
-    """Mixin class for appobjects defining the 'accepts' attribute describing
-    a set of supported entity type (Any by default).
-    """
-    # XXX deprecated, no more necessary
-
