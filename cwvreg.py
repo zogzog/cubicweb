@@ -47,7 +47,10 @@ class CWRegistry(Registry):
     def __init__(self, vreg):
         super(CWRegistry, self).__init__(vreg.config)
         self.vreg = vreg
-        self.schema = vreg.schema
+
+    @property
+    def schema(self):
+        return self.vreg.schema
 
     def initialization_completed(self):
         # call vreg_initialization_completed on appobjects and print

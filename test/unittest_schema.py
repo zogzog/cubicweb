@@ -20,7 +20,7 @@ from yams.reader import PyFileReader
 
 from cubicweb.schema import CubicWebSchema, CubicWebEntitySchema, \
      RQLConstraint, CubicWebSchemaLoader, ERQLExpression, RRQLExpression, \
-     normalize_expression
+     normalize_expression, order_eschemas
 from cubicweb.devtools import TestServerConfiguration as TestConfiguration
 
 DATADIR = join(dirname(__file__), 'data')
@@ -126,12 +126,18 @@ class CubicWebSchemaTC(TestCase):
         expr = RRQLExpression('U has_update_permission O')
         self.assertEquals(str(expr), 'Any O WHERE U has_update_permission O, O eid %(o)s, U eid %(u)s')
 
-
 loader = CubicWebSchemaLoader()
 config = TestConfiguration('data')
 config.bootstrap_cubes()
 
-class SQLSchemaReaderClassTest(TestCase):
+class SchemaReaderClassTest(TestCase):
+
+    def test_order_eschemas(self):
+        schema = loader.load(config)
+        self.assertEquals(order_eschemas([schema['Note'], schema['SubNote']]),
+                                         [schema['Note'], schema['SubNote']])
+        self.assertEquals(order_eschemas([schema['SubNote'], schema['Note']]),
+                                         [schema['Note'], schema['SubNote']])
 
     def test_knownValues_load_schema(self):
         schema = loader.load(config)

@@ -16,6 +16,7 @@ from warnings import warn
 from logilab.common.decorators import cached, clear_cache, monkeypatch
 from logilab.common.logging_ext import set_log_methods
 from logilab.common.deprecation import deprecated
+from logilab.common.graph import get_cycles
 from logilab.common.compat import any
 
 from yams import BadSchemaDefinition, buildobjs as ybo
@@ -58,6 +59,38 @@ _LOGGER = getLogger('cubicweb.schemaloader')
 ybo.ETYPE_PROPERTIES += ('eid',)
 ybo.RTYPE_PROPERTIES += ('eid',)
 ybo.RDEF_PROPERTIES += ('eid',)
+
+
+# XXX same algorithm as in reorder_cubes and probably other place,
+# may probably extract a generic function
+def order_eschemas(eschemas):
+    """return entity schemas ordered such that entity types which specializes an
+    other one appears after that one
+    """
+    graph = {}
+    for eschema in eschemas:
+        if eschema.specializes():
+            graph[eschema] = set((eschema.specializes(),))
+        else:
+            graph[eschema] = set()
+    cycles = get_cycles(graph)
+    if cycles:
+        cycles = '\n'.join(' -> '.join(cycle) for cycle in cycles)
+        raise Exception('cycles in entity schema specialization: %s'
+                        % cycles)
+    eschemas = []
+    while graph:
+        # sorted to get predictable results
+        for eschema, deps in sorted(graph.items()):
+            if not deps:
+                eschemas.append(eschema)
+                del graph[eschema]
+                for deps in graph.itervalues():
+                    try:
+                        deps.remove(eschema)
+                    except KeyError:
+                        continue
+    return eschemas
 
 def bw_normalize_etype(etype):
     if etype in ETYPE_NAME_MAP:
@@ -804,6 +837,7 @@ class RRQLExpression(RQLExpression):
 PyFileReader.context['RRQLExpression'] = yobsolete(RRQLExpression)
 
 # workflow extensions #########################################################
+
 from yams.buildobjs import _add_relation as yams_add_relation
 
 class workflowable_definition(ybo.metadefinition):

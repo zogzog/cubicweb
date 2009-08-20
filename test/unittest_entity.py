@@ -161,7 +161,8 @@ class EntityTC(EnvBasedTC):
                               )
             # testing symetric relation
             Personne.fetch_attrs = ('nom', 'connait')
-            self.assertEquals(Personne.fetch_rql(user), 'Any X,AA,AB ORDERBY AA ASC WHERE X is Personne, X nom AA, X connait AB')
+            self.assertEquals(Personne.fetch_rql(user), 'Any X,AA,AB ORDERBY AA ASC '
+                              'WHERE X is Personne, X nom AA, X connait AB?')
             # testing optional relation
             peschema.subject_relation('travaille').set_rproperty(peschema, seschema, 'cardinality', '?*')
             Personne.fetch_attrs = ('nom', 'prenom', 'travaille')
