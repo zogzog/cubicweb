@@ -1,6 +1,41 @@
 from cubicweb.devtools.apptest import EnvBasedTC
 from cubicweb import ValidationError
 
+class WorkflowBuildingTC(EnvBasedTC):
+
+    def test_wf_construction(self):
+        wf = self.execute('INSERT Workflow X: X name "test"').get_entity(0, 0)
+        self.execute('SET WF workflow_of ET WHERE ET name "Company"')
+        foo = wf.add_state(u'foo', initial=True)
+        bar = wf.add_state(u'bar')
+        self.assertEquals(wf.state_by_name('bar').eid, bar.eid)
+        self.assertEquals(wf.state_by_name('barrr'), None)
+        baz = wf.add_transition(u'baz', (foo,), bar, ('managers',))
+        self.assertEquals(wf.transition_by_name('baz').eid, baz.eid)
+        self.assertEquals(len(baz.require_group), 1)
+        self.assertEquals(baz.require_group[0].name, 'managers')
+
+    def test_duplicated_state(self):
+        wf = self.execute('INSERT Workflow X: X name "test"').get_entity(0, 0)
+        self.execute('SET WF workflow_of ET WHERE ET name "Company"')
+        wf.add_state(u'foo', initial=True)
+        wf.add_state(u'foo')
+        ex = self.assertRaises(ValidationError, self.commit)
+        # XXX enhance message
+        self.assertEquals(ex.errors, {'state_of': 'unique constraint S name N, Y state_of O, Y name N failed'})
+
+    def test_duplicated_transition(self):
+        wf = self.execute('INSERT Workflow X: X name "test"').get_entity(0, 0)
+        self.execute('SET WF workflow_of ET WHERE ET name "Company"')
+        foo = wf.add_state(u'foo', initial=True)
+        bar = wf.add_state(u'bar')
+        wf.add_transition(u'baz', (foo,), bar, ('managers',))
+        wf.add_transition(u'baz', (bar,), foo)
+        ex = self.assertRaises(ValidationError, self.commit)
+        # XXX enhance message
+        self.assertEquals(ex.errors, {'transition_of': 'unique constraint S name N, Y transition_of O, Y name N failed'})
+
+
 class WorkflowTC(EnvBasedTC):
 
     def setup_database(self):
@@ -22,17 +57,6 @@ class WorkflowTC(EnvBasedTC):
         self.assertEquals([tr.comment for tr in e.reverse_wf_info_for],
                           ['deactivate 1', 'activate 1', 'deactivate 2'])
         self.assertEquals(e.latest_trinfo().comment, 'deactivate 2')
-
-    # def test_wf_construction(self): # XXX update or kill me
-    #     bar = self.mh.cmd_add_state(u'bar', ('Personne', 'Email'), initial=True)
-    #     baz = self.mh.cmd_add_transition(u'baz', ('Personne', 'Email'),
-    #                                      (foo,), bar, ('managers',))
-    #     for etype in ('Personne', 'Email'):
-    #         t1 = self.mh.rqlexec('Any N WHERE T transition_of ET, ET name "%s", T name N' %
-    #                              etype)[0][0]
-    #         self.assertEquals(t1, "baz")
-    #     gn = self.mh.rqlexec('Any GN WHERE T require_group G, G name GN, T eid %s' % baz)[0][0]
-    #     self.assertEquals(gn, 'managers')
 
     def test_possible_transitions(self):
         user = self.entity('CWUser X')

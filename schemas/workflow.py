@@ -10,8 +10,9 @@ _ = unicode
 
 from yams.buildobjs import (EntityType, RelationType, SubjectRelation,
                             ObjectRelation, RichString, String)
-from cubicweb.schema import RQLConstraint
-from cubicweb.schemas import META_ETYPE_PERMS, META_RTYPE_PERMS, HOOKS_RTYPE_PERMS
+from cubicweb.schema import RQLConstraint, RQLUniqueConstraint
+from cubicweb.schemas import (META_ETYPE_PERMS, META_RTYPE_PERMS,
+                              HOOKS_RTYPE_PERMS)
 
 class Workflow(EntityType):
     permissions = META_ETYPE_PERMS
@@ -34,7 +35,6 @@ class Workflow(EntityType):
                                    constraints=[RQLConstraint('O state_of S')],
                                    description=_('initial state for this workflow'))
 
-# XXX ensure state/transition name is unique in a given workflow
 
 class State(EntityType):
     """used to associate simple states to an entity type and/or to define
@@ -47,13 +47,14 @@ class State(EntityType):
     description = RichString(fulltextindexed=True, default_format='text/rest',
                              description=_('semantic description of this state'))
 
-    state_of = SubjectRelation('Workflow', cardinality='+*',
-                    description=_('workflow to which this state belongs'))
     # XXX should be on BaseTransition w/ AND/OR selectors when we will
     # implements #345274
     allowed_transition = SubjectRelation('BaseTransition', cardinality='**',
                                          constraints=[RQLConstraint('S state_of WF, O transition_of WF')],
                                          description=_('allowed transitions from this state'))
+    state_of = SubjectRelation('Workflow', cardinality='+*',
+                               description=_('workflow to which this state belongs'),
+                               constraints=[RQLUniqueConstraint('S name N, Y state_of O, Y name N')])
 
 
 class BaseTransition(EntityType):
@@ -75,7 +76,8 @@ class BaseTransition(EntityType):
                                     description=_('group in which a user should be to be '
                                                   'allowed to pass this transition'))
     transition_of = SubjectRelation('Workflow', cardinality='+*',
-                                    description=_('workflow to which this transition belongs'))
+                                    description=_('workflow to which this transition belongs'),
+                                    constraints=[RQLUniqueConstraint('S name N, Y transition_of O, Y name N')])
 
 
 class Transition(BaseTransition):
