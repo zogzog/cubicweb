@@ -120,8 +120,11 @@ class BaseTransition(AnyEntity):
     provides a specific may_be_fired method to check if the relation may be
     fired by the logged user
     """
-    id = 'Transition'
+    id = 'BaseTransition'
     fetch_attrs, fetch_order = fetch_config(['name'])
+
+    def __init__(self, *args, **kwargs):
+        raise Exception('should not be instantiated')
 
     def may_be_fired(self, eid):
         """return true if the logged user may fire this transition
