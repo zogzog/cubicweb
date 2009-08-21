@@ -80,7 +80,7 @@ class Workflow(AnyEntity):
         """method to ease workflow definition: add a state for one or more
         entity type(s)
         """
-        state = self.req.create_entity('State', name=name, **kwargs)
+        state = self.req.create_entity('State', name=unicode(name), **kwargs)
         self.req.execute('SET S state_of WF WHERE S eid %(s)s, WF eid %(wf)s',
                          {'s': state.eid, 'wf': self.eid}, ('s', 'wf'))
         if initial:
@@ -95,7 +95,7 @@ class Workflow(AnyEntity):
         """method to ease workflow definition: add a transition for one or more
         entity type(s), from one or more state and to a single state
         """
-        tr = self.req.create_entity('Transition', name=name, **kwargs)
+        tr = self.req.create_entity('Transition', name=unicode(name), **kwargs)
         self.req.execute('SET T transition_of WF '
                          'WHERE T eid %(t)s, WF eid %(wf)s',
                          {'t': tr.eid, 'wf': self.eid}, ('t', 'wf'))
