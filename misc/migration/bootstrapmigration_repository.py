@@ -30,6 +30,37 @@ if applcubicwebversion < (3, 4, 0) and cubicwebversion >= (3, 4, 0):
     repo.hm.register_hook(uniquecstrcheck_before_modification, 'before_update_entity', '')
     session.set_shared_data('do-not-insert-cwuri', False)
 
+if applcubicwebversion < (3, 5, 0) and cubicwebversion >= (3, 5, 0):
+    add_entity_type('Workflow')
+    add_entity_type('BaseTransition')
+    add_entity_type('WorkflowTransition')
+    add_entity_type('SubWorkflowExitPoint')
+    drop_relation_definition('State', 'allowed_transition', 'Transition') # should be infered
+    schema.rebuild_infered_relations() # need to be explicitly called once everything is in place
+
+    for et in rql('DISTINCT Any ET,ETN WHERE S state_of ET, ET name ETN',
+                  ask_confirm=False).entities():
+        wf = add_workflow(u'default %s workflow' % et.name, et.name,
+                          ask_confirm=False)
+        rql('SET S state_of WF WHERE S state_of ET, ET eid %(et)s, WF eid %(wf)s',
+            {'et': et.eid, 'wf': wf.eid}, 'et', ask_confirm=False)
+        rql('SET T transition_of WF WHERE T transition_of ET, ET eid %(et)s, WF eid %(wf)s',
+            {'et': et.eid, 'wf': wf.eid}, 'et', ask_confirm=False)
+        rql('SET WF initial_state S WHERE ET initial_state S, S state_of ET, ET eid %(et)s, WF eid %(wf)s',
+            {'et': et.eid, 'wf': wf.eid}, 'et', ask_confirm=False)
+
+
+    rql('DELETE TrInfo TI WHERE NOT TI from_state S')
+    rql('SET TI by_transition T WHERE TI from_state FS, TI to_state TS, '
+        'FS allowed_transition T, T destination_state TS')
+    checkpoint()
+
+    drop_relation_definition('State', 'state_of', 'CWEType')
+    drop_relation_definition('Transition', 'transition_of', 'CWEType')
+    drop_relation_definition('CWEType', 'initial_state', 'State')
+
+    sync_schema_props_perms()
+
 if applcubicwebversion < (3, 2, 2) and cubicwebversion >= (3, 2, 1):
     from base64 import b64encode
     for table in ('entities', 'deleted_entities'):
