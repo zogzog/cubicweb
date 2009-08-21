@@ -61,6 +61,7 @@ class ServerMigrationHelper(MigrationHelper):
             assert repo
             self._cnx = cnx
             self.repo = repo
+            self.session.data['rebuild-infered'] = False
         elif connect:
             self.repo_connect()
         if not schema:
@@ -133,33 +134,36 @@ class ServerMigrationHelper(MigrationHelper):
         os.chmod(backupfile, 0600)
         # backup
         tmpdir = tempfile.mkdtemp(dir=instbkdir)
-        for source in repo.sources:
-            try:
-                source.backup(osp.join(tmpdir,source.uri))
-            except Exception, exc:
-                print '-> error trying to backup [%s]' % exc
-                if not self.confirm('Continue anyway?', default='n'):
-                    raise SystemExit(1)
-        bkup = tarfile.open(backupfile, 'w|gz')
-        for filename in os.listdir(tmpdir):
-            bkup.add(osp.join(tmpdir,filename), filename)
-        bkup.close()
-        shutil.rmtree(tmpdir)
-        # call hooks
-        repo.hm.call_hooks('server_backup', repo=repo, timestamp=timestamp)
-        # done
-        print '-> backup file',  backupfile
+        try:
+            for source in repo.sources:
+                try:
+                    source.backup(osp.join(tmpdir, source.uri))
+                except Exception, exc:
+                    print '-> error trying to backup [%s]' % exc
+                    if not self.confirm('Continue anyway?', default='n'):
+                        raise SystemExit(1)
+                    else:
+                        break
+            else:
+                bkup = tarfile.open(backupfile, 'w|gz')
+                for filename in os.listdir(tmpdir):
+                    bkup.add(osp.join(tmpdir,filename), filename)
+                bkup.close()
+                # call hooks
+                repo.hm.call_hooks('server_backup', repo=repo, timestamp=timestamp)
+                # done
+                print '-> backup file',  backupfile
+        finally:
+            shutil.rmtree(tmpdir)
 
     def restore_database(self, backupfile, drop=True, systemonly=True,
                          askconfirm=True):
-        config = self.config
-        repo = self.repo_connect()
         # check
         if not osp.exists(backupfile):
             raise Exception("Backup file %s doesn't exist" % backupfile)
             return
         if askconfirm and not self.confirm('Restore %s database from %s ?'
-                                           % (config.appid, backupfile)):
+                                           % (self.config.appid, backupfile)):
             return
         # unpack backup
         bkup = tarfile.open(backupfile, 'r|gz')
@@ -170,6 +174,9 @@ class ServerMigrationHelper(MigrationHelper):
         bkup = tarfile.open(backupfile, 'r|gz')
         tmpdir = tempfile.mkdtemp()
         bkup.extractall(path=tmpdir)
+
+        self.config.open_connections_pools = False
+        repo = self.repo_connect()
         for source in repo.sources:
             if systemonly and source.uri != 'system':
                 continue
@@ -182,6 +189,7 @@ class ServerMigrationHelper(MigrationHelper):
         bkup.close()
         shutil.rmtree(tmpdir)
         # call hooks
+        repo.open_connections_pools()
         repo.hm.call_hooks('server_restore', repo=repo, timestamp=backupfile)
         print '-> database restored.'
 
@@ -215,6 +223,7 @@ class ServerMigrationHelper(MigrationHelper):
                     print 'aborting...'
                     sys.exit(0)
             self.session.keep_pool_mode('transaction')
+            self.session.data['rebuild-infered'] = False
             return self._cnx
 
     @property
@@ -408,12 +417,12 @@ class ServerMigrationHelper(MigrationHelper):
                          {'x': str(repoeschema), 'y': str(espschema)})
         self.rqlexecall(ss.updateeschema2rql(eschema),
                         ask_confirm=self.verbosity >= 2)
-        for rschema, targettypes, x in eschema.relation_definitions(True):
-            if x == 'subject':
+        for rschema, targettypes, role in eschema.relation_definitions(True):
+            if role == 'subject':
                 if not rschema in repoeschema.subject_relations():
                     continue
                 subjtypes, objtypes = [etype], targettypes
-            else: # x == 'object'
+            else: # role == 'object'
                 if not rschema in repoeschema.object_relations():
                     continue
                 subjtypes, objtypes = targettypes, [etype]
@@ -619,11 +628,13 @@ class ServerMigrationHelper(MigrationHelper):
         in auto mode, automatically register entity's relation where the
         targeted type is known
         """
-        applschema = self.repo.schema
-        if etype in applschema:
-            eschema = applschema[etype]
+        instschema = self.repo.schema
+        if etype in instschema:
+            # XXX (syt) plz explain: if we're adding an entity type, it should
+            # not be there...
+            eschema = instschema[etype]
             if eschema.is_final():
-                applschema.del_entity_type(etype)
+                instschema.del_entity_type(etype)
         else:
             eschema = self.fs_schema.eschema(etype)
         confirm = self.verbosity >= 2
@@ -639,13 +650,46 @@ class ServerMigrationHelper(MigrationHelper):
             # ignore those meta relations, they will be automatically added
             if rschema.type in META_RTYPES:
                 continue
-            if not rschema.type in applschema:
+            if not rschema.type in instschema:
                 # need to add the relation type and to commit to get it
                 # actually in the schema
                 self.cmd_add_relation_type(rschema.type, False, commit=True)
             # register relation definition
             self.rqlexecall(ss.rdef2rql(rschema, etype, attrschema.type),
                             ask_confirm=confirm)
+        # take care to newly introduced base class
+        # XXX some part of this should probably be under the "if auto" block
+        for spschema in eschema.specialized_by(recursive=False):
+            try:
+                instspschema = instschema[spschema]
+            except KeyError:
+                # specialized entity type not in schema, ignore
+                continue
+            if instspschema.specializes() != eschema:
+                self.rqlexec('SET D specializes P WHERE D eid %(d)s, P name %(pn)s',
+                              {'d': instspschema.eid,
+                               'pn': eschema.type}, ask_confirm=confirm)
+                for rschema, tschemas, role in spschema.relation_definitions(True):
+                    for tschema in tschemas:
+                        if not tschema in instschema:
+                            continue
+                        if role == 'subject':
+                            subjschema = spschema
+                            objschema = tschema
+                            if rschema.final and instspschema.has_subject_relation(rschema):
+                                # attribute already set, has_rdef would check if
+                                # it's of the same type, we don't want this so
+                                # simply skip here
+                                continue
+                        elif role == 'object':
+                            subjschema = tschema
+                            objschema = spschema
+                        if (rschema.rproperty(subjschema, objschema, 'infered')
+                            or (instschema.has_relation(rschema) and
+                                instschema[rschema].has_rdef(subjschema, objschema))):
+                                continue
+                        self.cmd_add_relation_definition(
+                            subjschema.type, rschema.type, objschema.type)
         if auto:
             # we have commit here to get relation types actually in the schema
             self.commit()
@@ -655,12 +699,12 @@ class ServerMigrationHelper(MigrationHelper):
                 # 'owned_by'/'created_by' will be automatically added
                 if rschema.final or rschema.type in META_RTYPES:
                     continue
-                rtypeadded = rschema.type in applschema
+                rtypeadded = rschema.type in instschema
                 for targetschema in rschema.objects(etype):
                     # ignore relations where the targeted type is not in the
                     # current instance schema
                     targettype = targetschema.type
-                    if not targettype in applschema and targettype != etype:
+                    if not targettype in instschema and targettype != etype:
                         continue
                     if not rtypeadded:
                         # need to add the relation type and to commit to get it
@@ -675,14 +719,14 @@ class ServerMigrationHelper(MigrationHelper):
                     self.rqlexecall(ss.rdef2rql(rschema, etype, targettype),
                                     ask_confirm=confirm)
             for rschema in eschema.object_relations():
-                rtypeadded = rschema.type in applschema or rschema.type in added
+                rtypeadded = rschema.type in instschema or rschema.type in added
                 for targetschema in rschema.subjects(etype):
                     # ignore relations where the targeted type is not in the
                     # current instance schema
                     targettype = targetschema.type
                     # don't check targettype != etype since in this case the
                     # relation has already been added as a subject relation
-                    if not targettype in applschema:
+                    if not targettype in instschema:
                         continue
                     if not rtypeadded:
                         # need to add the relation type and to commit to get it

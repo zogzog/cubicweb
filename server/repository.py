@@ -176,6 +176,11 @@ class Repository(object):
         # create the hooks manager
         self.hm = HooksManager(self.schema)
         # open some connections pools
+        if config.open_connections_pools:
+            self.open_connections_pools()
+
+    def open_connections_pools(self):
+        config = self.config
         self._available_pools = Queue.Queue()
         self._available_pools.put_nowait(ConnectionsPool(self.sources))
         if config.read_instance_schema:
@@ -185,7 +190,7 @@ class Repository(object):
             # usually during repository creation
             self.warning("set fs instance'schema as bootstrap schema")
             config.bootstrap_cubes()
-            self.set_bootstrap_schema(self.config.load_schema())
+            self.set_bootstrap_schema(config.load_schema())
             # need to load the Any and CWUser entity types
             self.vreg.schema = self.schema
             etdirectory = join(CW_SOFTWARE_ROOT, 'entities')
@@ -200,7 +205,7 @@ class Repository(object):
             # test start: use the file system schema (quicker)
             self.warning("set fs instance'schema")
             config.bootstrap_cubes()
-            self.set_schema(self.config.load_schema())
+            self.set_schema(config.load_schema())
         if not config.creating:
             if 'CWProperty' in self.schema:
                 self.vreg.init_properties(self.properties())
@@ -228,8 +233,7 @@ class Repository(object):
             # call instance level initialisation hooks
             self.hm.call_hooks('server_startup', repo=self)
             # register a task to cleanup expired session
-            self.looping_task(self.config['session-time']/3.,
-                              self.clean_sessions)
+            self.looping_task(config['session-time']/3., self.clean_sessions)
         CW_EVENT_MANAGER.bind('after-registry-reload', self.reset_hooks)
 
     # internals ###############################################################
@@ -238,8 +242,9 @@ class Repository(object):
         source_config['uri'] = uri
         return get_source(source_config, self.schema, self)
 
-    def set_schema(self, schema, resetvreg=True):
-        schema.rebuild_infered_relations()
+    def set_schema(self, schema, resetvreg=True, rebuildinfered=True):
+        if rebuildinfered:
+            schema.rebuild_infered_relations()
         self.info('set schema %s %#x', schema.name, id(schema))
         self.debug(', '.join(sorted(str(e) for e in schema.entities())))
         self.querier.set_schema(schema)

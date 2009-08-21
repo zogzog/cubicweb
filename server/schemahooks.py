@@ -135,7 +135,8 @@ class MemSchemaNotifyChanges(SingleLastOperation):
         SingleLastOperation.__init__(self, session)
 
     def commit_event(self):
-        self.repo.set_schema(self.repo.schema)
+        rebuildinfered = self.session.data.get('rebuild-infered', True)
+        self.repo.set_schema(self.repo.schema, rebuildinfered=rebuildinfered)
 
 
 class MemSchemaOperation(Operation):
@@ -718,6 +719,28 @@ class MemSchemaPermissionRQLExpressionDel(MemSchemaPermissionRQLExpressionAdd):
         erschema.set_rqlexprs(self.perm, rqlexprs)
 
 
+class MemSchemaSpecializesAdd(MemSchemaOperation):
+
+    def commit_event(self):
+        eschema = self.session.schema.schema_by_eid(self.etypeeid)
+        parenteschema = self.session.schema.schema_by_eid(self.parentetypeeid)
+        eschema._specialized_type = parenteschema.type
+        parenteschema._specialized_by.append(eschema.type)
+
+
+class MemSchemaSpecializesDel(MemSchemaOperation):
+
+    def commit_event(self):
+        try:
+            eschema = self.session.schema.schema_by_eid(self.etypeeid)
+            parenteschema = self.session.schema.schema_by_eid(self.parentetypeeid)
+        except KeyError:
+            # etype removed, nothing to do
+            return
+        eschema._specialized_type = None
+        parenteschema._specialized_by.remove(eschema.type)
+
+
 # deletion hooks ###############################################################
 
 def before_del_eetype(session, eid):
@@ -1014,11 +1037,11 @@ def before_del_permission(session, subject, rtype, object):
         MemSchemaPermissionRQLExpressionDel(session, perm, subject, expr)
 
 
-def rebuild_infered_relations(session, subject, rtype, object):
-    # registering a schema operation will trigger a call to
-    # repo.set_schema() on commit which will in turn rebuild
-    # infered relation definitions
-    MemSchemaNotifyChanges(session)
+def after_add_specializes(session, subject, rtype, object):
+    MemSchemaSpecializesAdd(session, etypeeid=subject, parentetypeeid=object)
+
+def after_del_specializes(session, subject, rtype, object):
+    MemSchemaSpecializesDel(session, etypeeid=subject, parentetypeeid=object)
 
 
 def _register_schema_hooks(hm):
@@ -1042,8 +1065,8 @@ def _register_schema_hooks(hm):
     hm.register_hook(after_del_eetype, 'after_delete_entity', 'CWEType')
     hm.register_hook(before_del_ertype, 'before_delete_entity', 'CWRType')
     hm.register_hook(after_del_relation_type, 'after_delete_relation', 'relation_type')
-    hm.register_hook(rebuild_infered_relations, 'after_add_relation', 'specializes')
-    hm.register_hook(rebuild_infered_relations, 'after_delete_relation', 'specializes')
+    hm.register_hook(after_add_specializes, 'after_add_relation', 'specializes')
+    hm.register_hook(after_del_specializes, 'after_delete_relation', 'specializes')
     # constraints synchronization hooks
     hm.register_hook(after_add_econstraint, 'after_add_entity', 'CWConstraint')
     hm.register_hook(after_update_econstraint, 'after_update_entity', 'CWConstraint')
