@@ -52,6 +52,7 @@ class AutomaticEntityFormTC(CubicWebTC):
                                ])
         self.assertListEquals(rbc(e, 'generic'),
                               [('primary_email', 'subject'),
+                               ('custom_workflow', 'subject'),
                                ('connait', 'subject'),
                                ('checked_by', 'object'),
                                ])

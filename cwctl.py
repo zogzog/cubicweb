@@ -723,6 +723,7 @@ sources for migration will be automatically selected.",
           'help': 'don\'t check instance is up to date.'}
          ),
         )
+
     def run(self, args):
         appid = pop_arg(args, 99, msg="No instance specified !")
         config = cwcfg.config_for(appid)

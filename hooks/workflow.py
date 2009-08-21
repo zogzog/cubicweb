@@ -15,31 +15,13 @@ from cubicweb.selectors import entity_implements
 from cubicweb.server import hook
 
 
-
-def previous_state(session, eid):
-    """return the state of the entity with the given eid,
-    usually since it's changing in the current transaction. Due to internal
-    relation hooks, the relation may has been deleted at this point, so
-    we have handle that
-    """
-    # don't check eid has been added in the current transaction, we don't want
-    # to miss previous state of entity whose state change in the same
-    # transaction as it's being created
-    pending = session.transaction_data.get('pendingrelations', ())
-    for eidfrom, rtype, eidto in reversed(pending):
-        if rtype == 'in_state' and eidfrom == eid:
-            rset = session.execute('Any S,N WHERE S eid %(x)s, S name N',
-                                   {'x': eidto}, 'x')
-            return rset.get_entity(0, 0)
-    rset = session.execute('Any S,N WHERE X eid %(x)s, X in_state S, S name N',
-                           {'x': eid}, 'x')
-    if rset:
-        return rset.get_entity(0, 0)
-
-
-def relation_deleted(session, eidfrom, rtype, eidto):
-    session.transaction_data.setdefault('pendingrelations', []).append(
-        (eidfrom, rtype, eidto))
+def _change_state(session, x, oldstate, newstate):
+    nocheck = session.transaction_data.setdefault('skip-security', set())
+    nocheck.add((x, 'in_state', oldstate))
+    nocheck.add((x, 'in_state', newstate))
+    # delete previous state first in case we're using a super session
+    session.delete_relation(x, 'in_state', oldstate)
+    session.add_relation(x, 'in_state', newstate)
 
 
 class _SetInitialStateOp(hook.Operation):
@@ -50,11 +32,44 @@ class _SetInitialStateOp(hook.Operation):
         entity = self.entity
         # if there is an initial state and the entity's state is not set,
         # use the initial state as a default state
-        if not session.deleted_in_transaction(entity.eid) and not entity.in_state:
-            rset = session.execute('Any S WHERE ET initial_state S, ET name %(name)s',
-                                   {'name': entity.id})
-            if rset:
-                session.add_relation(entity.eid, 'in_state', rset[0][0])
+        pendingeids = session.transaction_data.get('pendingeids', ())
+        if not (session.deleted_in_transaction(entity.eid) or entity.in_state) \
+               and entity.current_workflow:
+            state = entity.current_workflow.initial
+            if state:
+                # use super session to by-pass security checks
+                session.super_session.add_relation(entity.eid, 'in_state',
+                                                   state.eid)
+
+class _WorkflowChangedOp(hook.Operation):
+    """fix entity current state when changing its workflow"""
+
+    def precommit_event(self):
+        session = self.session
+        if session.deleted_in_transaction(self.eid):
+            return
+        entity = session.entity_from_eid(self.eid)
+        # notice that enforcment that new workflow apply to the entity's type is
+        # done by schema rule, no need to check it here
+        if entity.current_workflow.eid == self.wfeid:
+            deststate = entity.current_workflow.initial
+            if not deststate:
+                msg = session._('workflow has no initial state')
+                raise ValidationError(entity.eid, {'custom_workflow': msg})
+            if entity.current_workflow.state_by_eid(entity.current_state.eid):
+                # nothing to do
+                return
+            # if there are no history, simply go to new workflow's initial state
+            if not entity.workflow_history:
+                if entity.current_state.eid != deststate.eid:
+                    _change_state(session, entity.eid,
+                                  entity.current_state.eid, deststate.eid)
+                return
+            msg = session._('workflow changed to "%s"')
+            msg %= entity.current_workflow.name
+            entity.change_state(deststate.name, msg)
+
+
 
 class WorkflowHook(hook.Hook):
     __abstract__ = True
@@ -81,52 +96,82 @@ class PrepareStateChangeHook(WorkflowHook):
             (self.eidfrom, self.rtype, self.eidto))
 
 
-class FireTransitionHook(PrepareStateChangeHook):
-    """check the transition is allowed and record transition information"""
+class FireTransitionHook(WorkflowHook):
+    """check the transition is allowed, add missing information. Expect that:
+    * wf_info_for inlined relation is set
+    * by_transition or to_state (managers only) inlined relation is set
+    """
     __id__ = 'wffiretransition'
-    events = ('before_add_relation',)
+    __select__ = WorkflowHook.__select__ & entity_implements('TrInfo')
+    events = ('before_add_entity',)
 
     def __call__(self):
         session = self._cw
-        eidfrom = self.eidfrom
-        eidto = self.eidto
-        state = previous_state(session, eidfrom)
-        etype = session.describe(eidfrom)[0]
-        if not (session.is_super_session or 'managers' in session.user.groups):
-            if not state is None:
-                entity = session.entity_from_eid(eidfrom)
-                # we should find at least one transition going to this state
-                try:
-                    iter(state.transitions(entity, eidto)).next()
-                except StopIteration:
-                    msg = session._('transition is not allowed')
-                    raise ValidationError(eidfrom, {'in_state': msg})
-            else:
-                # not a transition
-                # check state is initial state if the workflow defines one
-                isrset = session.unsafe_execute('Any S WHERE ET initial_state S, ET name %(etype)s',
-                                                {'etype': etype})
-                if isrset and not eidto == isrset[0][0]:
-                    msg = session._('not the initial state for this entity')
-                    raise ValidationError(eidfrom, {'in_state': msg})
-        eschema = session.repo.schema[etype]
-        if not 'wf_info_for' in eschema.object_relations():
-            # workflow history not activated for this entity type
-            return
-        rql = 'INSERT TrInfo T: T wf_info_for E, T to_state DS, T comment %(comment)s'
-        args = {'comment': session.get_shared_data('trcomment', None, pop=True),
-                'e': eidfrom, 'ds': eidto}
-        cformat = session.get_shared_data('trcommentformat', None, pop=True)
-        if cformat is not None:
-            args['comment_format'] = cformat
-            rql += ', T comment_format %(comment_format)s'
-        restriction = ['DS eid %(ds)s, E eid %(e)s']
-        if not state is None: # not a transition
-            rql += ', T from_state FS'
-            restriction.append('FS eid %(fs)s')
-            args['fs'] = state.eid
-        rql = '%s WHERE %s' % (rql, ', '.join(restriction))
-        session.unsafe_execute(rql, args, 'e')
+        entity = self.entity
+        # first retreive entity to which the state change apply
+        try:
+            foreid = entity['wf_info_for']
+        except KeyError:
+            msg = session._('mandatory relation')
+            raise ValidationError(entity.eid, {'wf_info_for': msg})
+        forentity = session.entity_from_eid(foreid)
+        # then check it has a workflow set
+        wf = forentity.current_workflow
+        if wf is None:
+            msg = session._('related entity has no workflow set')
+            raise ValidationError(entity.eid, {None: msg})
+        # then check it has a state set
+        fromstate = forentity.current_state
+        if fromstate is None:
+            msg = session._('related entity has no state')
+            raise ValidationError(entity.eid, {None: msg})
+        # no investigate the requested state change...
+        try:
+            treid = entity['by_transition']
+        except KeyError:
+            # no transition set, check user is a manager and destination state is
+            # specified (and valid)
+            if not (session.is_super_session or 'managers' in session.user.groups):
+                msg = session._('mandatory relation')
+                raise ValidationError(entity.eid, {'by_transition': msg})
+            deststateeid = entity.get('to_state')
+            if not deststateeid:
+                msg = session._('mandatory relation')
+                raise ValidationError(entity.eid, {'by_transition': msg})
+            deststate = wf.state_by_eid(deststateeid)
+            if deststate is None:
+                msg = session._("state doesn't belong to entity's workflow")
+                raise ValidationError(entity.eid, {'to_state': msg})
+        else:
+            # check transition is valid and allowed
+            tr = wf.transition_by_eid(treid)
+            if tr is None:
+                msg = session._("transition doesn't belong to entity's workflow")
+                raise ValidationError(entity.eid, {'by_transition': msg})
+            if not tr.has_input_state(fromstate):
+                msg = session._("transition isn't allowed")
+                raise ValidationError(entity.eid, {'by_transition': msg})
+            if not tr.may_be_fired(foreid):
+                msg = session._("transition may not be fired")
+                raise ValidationError(entity.eid, {'by_transition': msg})
+            deststateeid = tr.destination().eid
+        # everything is ok, add missing information on the trinfo entity
+        entity['from_state'] = fromstate.eid
+        entity['to_state'] = deststateeid
+        nocheck = session.transaction_data.setdefault('skip-security', set())
+        nocheck.add((entity.eid, 'from_state', fromstate.eid))
+        nocheck.add((entity.eid, 'to_state', deststateeid))
+
+
+class FiredTransitionHook(WorkflowHook):
+    """change related entity state"""
+    __id__ = 'wffiretransition'
+    __select__ = WorkflowHook.__select__ & entity_implements('TrInfo')
+    events = ('after_add_entity',)
+
+    def __call__(self):
+        _change_state(self._cw, self.entity['wf_info_for'],
+                      self.entity['from_state'], self.entity['to_state'])
 
 
 class SetModificationDateOnStateChange(WorkflowHook):
@@ -147,3 +192,36 @@ class SetModificationDateOnStateChange(WorkflowHook):
             # usually occurs if entity is coming from a read-only source
             # (eg ldap user)
             self.warning('cant change modification date for %s: %s', entity, ex)
+
+
+class SetCustomWorkflow(WorkflowHook):
+    __id__ = 'wfsetcustom'
+    __select__ = WorkflowHook.__select__ & hook.match_rtype('custom_workflow')
+    events = ('after_add_relation',)
+
+    def __call__(self):
+        _WorkflowChangedOp(self._cw, eid=self.eidfrom, wfeid=self.eidto)
+
+
+class DelCustomWorkflow(SetCustomWorkflow):
+    __id__ = 'wfdelcustom'
+    events = ('after_delete_relation',)
+
+    def __call__(self):
+        entity = self._cw.entity_from_eid(self.eidfrom)
+        typewf = entity.cwetype_workflow()
+        if typewf is not None:
+            _WorkflowChangedOp(self._cw, eid=self.eidfrom, wfeid=typewf.eid)
+
+
+
+class DelWorkflowHook(WorkflowHook):
+    __id__ = 'wfdel'
+    __select__ = WorkflowHook.__select__ & entity_implements('Workflow')
+    events = ('after_delete_entity',)
+
+    def __call__(self):
+        # cleanup unused state and transition
+        self._cw.execute('DELETE State X WHERE NOT X state_of Y')
+        self._cw.execute('DELETE Transition X WHERE NOT X transition_of Y')
+

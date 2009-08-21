@@ -109,10 +109,10 @@ class UtilsTC(BaseQuerierTC):
                                        'X': 'Affaire',
                                        'ET': 'CWEType', 'ETN': 'String'}])
         rql, solutions = partrqls[1]
-        self.assertEquals(rql,  'Any ETN,X WHERE X is ET, ET name ETN, ET is CWEType, '
-                          'X is IN(Bookmark, CWAttribute, CWCache, CWConstraint, CWConstraintType, CWEType, CWGroup, CWPermission, CWProperty, CWRType, CWRelation, CWUser, Card, Comment, Division, Email, EmailAddress, EmailPart, EmailThread, ExternalUri, File, Folder, Image, Note, Personne, RQLExpression, Societe, State, SubDivision, Tag, TrInfo, Transition)')
+        self.assertEquals(rql,  'Any ETN,X WHERE X is ET, ET name ETN, ET is CWEType, X is IN(BaseTransition, Bookmark, CWAttribute, CWCache, CWConstraint, CWConstraintType, CWEType, CWGroup, CWPermission, CWProperty, CWRType, CWRelation, CWUser, Card, Comment, Division, Email, EmailAddress, EmailPart, EmailThread, ExternalUri, File, Folder, Image, Note, Personne, RQLExpression, Societe, State, SubDivision, SubWorkflowExitPoint, Tag, TrInfo, Transition, Workflow, WorkflowTransition)')
         self.assertListEquals(sorted(solutions),
-                              sorted([{'X': 'Bookmark', 'ETN': 'String', 'ET': 'CWEType'},
+                              sorted([{'X': 'BaseTransition', 'ETN': 'String', 'ET': 'CWEType'},
+                                      {'X': 'Bookmark', 'ETN': 'String', 'ET': 'CWEType'},
                                       {'X': 'Card', 'ETN': 'String', 'ET': 'CWEType'},
                                       {'X': 'Comment', 'ETN': 'String', 'ET': 'CWEType'},
                                       {'X': 'Division', 'ETN': 'String', 'ET': 'CWEType'},
@@ -141,9 +141,12 @@ class UtilsTC(BaseQuerierTC):
                                       {'X': 'Societe', 'ETN': 'String', 'ET': 'CWEType'},
                                       {'X': 'State', 'ETN': 'String', 'ET': 'CWEType'},
                                       {'X': 'SubDivision', 'ETN': 'String', 'ET': 'CWEType'},
+                                      {'X': 'SubWorkflowExitPoint', 'ETN': 'String', 'ET': 'CWEType'},
                                       {'X': 'Tag', 'ETN': 'String', 'ET': 'CWEType'},
                                       {'X': 'Transition', 'ETN': 'String', 'ET': 'CWEType'},
-                                      {'X': 'TrInfo', 'ETN': 'String', 'ET': 'CWEType'}]))
+                                      {'X': 'TrInfo', 'ETN': 'String', 'ET': 'CWEType'},
+                                      {'X': 'Workflow', 'ETN': 'String', 'ET': 'CWEType'},
+                                      {'X': 'WorkflowTransition', 'ETN': 'String', 'ET': 'CWEType'}]))
         rql, solutions = partrqls[2]
         self.assertEquals(rql,
                           'Any ETN,X WHERE X is ET, ET name ETN, EXISTS(X owned_by %(C)s), '
@@ -285,8 +288,8 @@ class QuerierTC(BaseQuerierTC):
         self.assert_(('Personne',) in rset.description)
 
     def test_select_not_attr(self):
-        self.execute("INSERT Personne X: X nom 'bidule'")
-        self.execute("INSERT Societe X: X nom 'chouette'")
+        peid = self.execute("INSERT Personne X: X nom 'bidule'")[0][0]
+        seid = self.execute("INSERT Societe X: X nom 'chouette'")[0][0]
         rset = self.execute('Personne X WHERE NOT X nom "bidule"')
         self.assertEquals(len(rset.rows), 0, rset.rows)
         rset = self.execute('Personne X WHERE NOT X nom "bid"')
@@ -350,27 +353,11 @@ class QuerierTC(BaseQuerierTC):
         self.assertEquals(rset.rows, [[peid1]])
 
     def test_select_left_outer_join(self):
-        ueid = self.execute("INSERT CWUser X: X login 'bob', X upassword 'toto', X in_group G "
-                            "WHERE G name 'users'")[0][0]
-        self.commit()
-        try:
-            rset = self.execute('Any FS,TS,C,D,U ORDERBY D DESC '
-                                'WHERE WF wf_info_for X,'
-                                'WF from_state FS?, WF to_state TS, WF comment C,'
-                                'WF creation_date D, WF owned_by U, X eid %(x)s',
-                                {'x': ueid}, 'x')
-            self.assertEquals(len(rset), 1)
-            self.execute('SET X in_state S WHERE X eid %(x)s, S name "deactivated"',
-                         {'x': ueid}, 'x')
-            rset = self.execute('Any FS,TS,C,D,U ORDERBY D DESC '
-                                'WHERE WF wf_info_for X,'
-                                'WF from_state FS?, WF to_state TS, WF comment C,'
-                                'WF creation_date D, WF owned_by U, X eid %(x)s',
-                                {'x': ueid}, 'x')
-            self.assertEquals(len(rset), 2)
-        finally:
-            self.execute('DELETE CWUser X WHERE X eid %s' % ueid)
-            self.commit()
+        rset = self.execute('DISTINCT Any G WHERE U? in_group G')
+        self.assertEquals(len(rset), 4)
+        rset = self.execute('DISTINCT Any G WHERE U? in_group G, U eid %(x)s',
+                            {'x': self.session.user.eid}, 'x')
+        self.assertEquals(len(rset), 4)
 
     def test_select_ambigous_outer_join(self):
         teid = self.execute("INSERT Tag X: X name 'tag'")[0][0]
@@ -466,12 +453,17 @@ class QuerierTC(BaseQuerierTC):
                             'WHERE RT name N, RDEF relation_type RT '
                             'HAVING COUNT(RDEF) > 10')
         self.assertListEquals(rset.rows,
-                              [[u'description', 11],
-                               [u'name', 13], [u'created_by', 34],
-                               [u'creation_date', 34], [u'cwuri', 34],
-                               ['in_basket', 34],
-                               [u'is', 34], [u'is_instance_of', 34],
-                               [u'modification_date', 34], [u'owned_by', 34]])
+                              [[u'description_format', 13],
+                               [u'description', 14],
+                               [u'name', 16],
+                               [u'created_by', 38],
+                               [u'creation_date', 38],
+                               [u'cwuri', 38],
+                               [u'in_basket', 38],
+                               [u'is', 38],
+                               [u'is_instance_of', 38],
+                               [u'modification_date', 38],
+                               [u'owned_by', 38]])
 
     def test_select_aggregat_having_dumb(self):
         # dumb but should not raise an error
@@ -721,9 +713,9 @@ class QuerierTC(BaseQuerierTC):
 
     def test_select_union(self):
         rset = self.execute('Any X,N ORDERBY N WITH X,N BEING '
-                            '((Any X,N WHERE X name N, X transition_of E, E name %(name)s)'
+                            '((Any X,N WHERE X name N, X transition_of WF, WF workflow_of E, E name %(name)s)'
                             ' UNION '
-                            '(Any X,N WHERE X name N, X state_of E, E name %(name)s))',
+                            '(Any X,N WHERE X name N, X state_of WF, WF workflow_of E, E name %(name)s))',
                             {'name': 'CWUser'})
         self.assertEquals([x[1] for x in rset.rows],
                           ['activate', 'activated', 'deactivate', 'deactivated'])
@@ -995,20 +987,18 @@ class QuerierTC(BaseQuerierTC):
     # update queries tests ####################################################
 
     def test_update_1(self):
-        self.execute("INSERT Personne Y: Y nom 'toto'")
+        peid = self.execute("INSERT Personne Y: Y nom 'toto'")[0][0]
         rset = self.execute('Personne X WHERE X nom "toto"')
         self.assertEqual(len(rset.rows), 1)
-        self.execute("SET X nom 'tutu', X prenom 'original' WHERE X is Personne, X nom 'toto'")
+        rset = self.execute("SET X nom 'tutu', X prenom 'original' WHERE X is Personne, X nom 'toto'")
+        self.assertEqual(tuplify(rset.rows), [(peid, 'tutu', 'original')])
         rset = self.execute('Any Y, Z WHERE X is Personne, X nom Y, X prenom Z')
         self.assertEqual(tuplify(rset.rows), [('tutu', 'original')])
 
     def test_update_2(self):
-        self.execute("INSERT Personne X, Societe Y: X nom 'bidule', Y nom 'toto'")
-        #rset = self.execute('Any X, Y WHERE X nom "bidule", Y nom "toto"')
-        #self.assertEqual(len(rset.rows), 1)
-        #rset = self.execute('Any X, Y WHERE X travaille Y')
-        #self.assertEqual(len(rset.rows), 0)
-        self.execute("SET X travaille Y WHERE X nom 'bidule', Y nom 'toto'")
+        peid, seid = self.execute("INSERT Personne X, Societe Y: X nom 'bidule', Y nom 'toto'")[0]
+        rset = self.execute("SET X travaille Y WHERE X nom 'bidule', Y nom 'toto'")
+        self.assertEquals(tuplify(rset.rows), [(peid, seid)])
         rset = self.execute('Any X, Y WHERE X travaille Y')
         self.assertEqual(len(rset.rows), 1)
 
@@ -1027,9 +1017,6 @@ class QuerierTC(BaseQuerierTC):
                       {'x': unicode(eid1), 'y': unicode(eid2)})
         rset = self.execute('Any X, Y WHERE X travaille Y')
         self.assertEqual(len(rset.rows), 1)
-
-##     def test_update_4(self):
-##         self.execute("SET X know Y WHERE X ami Y")
 
     def test_update_multiple1(self):
         peid1 = self.execute("INSERT Personne Y: Y nom 'tutu'")[0][0]
@@ -1130,7 +1117,7 @@ class QuerierTC(BaseQuerierTC):
         """bad sql generated on the second query (destination_state is not
         detected as an inlined relation)
         """
-        rset = self.execute('Any S,ES,T WHERE S state_of ET, ET name "CWUser",'
+        rset = self.execute('Any S,ES,T WHERE S state_of WF, WF workflow_of ET, ET name "CWUser",'
                              'ES allowed_transition T, T destination_state S')
         self.assertEquals(len(rset.rows), 2)
 
@@ -1260,9 +1247,8 @@ class QuerierTC(BaseQuerierTC):
 
     def test_nonregr_set_query(self):
         ueid = self.execute("INSERT CWUser X: X login 'bob', X upassword 'toto'")[0][0]
-        self.execute("SET E in_group G, E in_state S, "
-                      "E firstname %(firstname)s, E surname %(surname)s "
-                      "WHERE E eid %(x)s, G name 'users', S name 'activated'",
+        self.execute("SET E in_group G, E firstname %(firstname)s, E surname %(surname)s "
+                      "WHERE E eid %(x)s, G name 'users'",
                       {'x':ueid, 'firstname': u'jean', 'surname': u'paul'}, 'x')
 
     def test_nonregr_u_owned_by_u(self):

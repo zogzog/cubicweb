@@ -178,6 +178,10 @@ and if not set, it will be choosen randomly',
           }),
         ) + CubicWebConfiguration.options)
 
+    # should we open connections pools (eg connect to sources). This is usually
+    # necessary...
+    open_connections_pools = True
+
     # read the schema from the database
     read_instance_schema = True
     bootstrap_schema = True

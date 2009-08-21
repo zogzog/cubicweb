@@ -15,16 +15,18 @@ add_transition(_('activate'), 'CWUser',
                (deactivatedeid,), activatedeid,
                requiredgroups=('managers',))
 
-# need this since we already have at least one user in the database (the default admin)
-rql('SET X in_state S WHERE X is CWUser, S eid %s' % activatedeid)
-
 # create anonymous user if all-in-one config and anonymous user has been specified
 if hasattr(config, 'anonymous_user'):
     anonlogin, anonpwd = config.anonymous_user()
     if anonlogin:
         rql('INSERT CWUser X: X login %(login)s, X upassword %(pwd)s,'
-            'X in_state S, X in_group G WHERE G name "guests", S name "activated"',
+            'X in_group G WHERE G name "guests"',
             {'login': unicode(anonlogin), 'pwd': anonpwd})
+
+# need this since we already have at least one user in the database (the default admin)
+for user in rql('Any X WHERE X is CWUser').entities():
+    session.unsafe_execute('SET X in_state S WHERE X eid %(x)s, S eid %(s)s',
+                           {'x': user.eid, 's': activatedeid}, 'x')
 
 cfg = config.persistent_options_configuration()
 if interactive_mode:

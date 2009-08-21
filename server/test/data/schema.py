@@ -34,7 +34,7 @@ class Affaire(WorkflowableEntityType):
     depends_on = SubjectRelation('Affaire')
     require_permission = SubjectRelation('CWPermission')
     concerne = SubjectRelation(('Societe', 'Note'))
-    todo_by = SubjectRelation('Personne')
+    todo_by = SubjectRelation('Personne', cardinality='?*')
     documented_by = SubjectRelation('Card')
 
 
@@ -69,7 +69,7 @@ class SubDivision(Division):
 from cubicweb.schemas.base import CWUser
 CWUser.get_relations('login').next().fulltextindexed = True
 
-class Note(EntityType):
+class Note(WorkflowableEntityType):
     date = String(maxsize=10)
     type = String(maxsize=6)
     para = String(maxsize=512)
@@ -145,18 +145,6 @@ class test(RelationType):
     permissions = {'read': ('managers', 'users', 'guests'),
                    'delete': ('managers',),
                    'add': ('managers',)}
-
-
-class in_state(RelationDefinition):
-    subject = 'Note'
-    object = 'State'
-    cardinality = '1*'
-    constraints=[RQLConstraint('S is ET, O state_of ET')]
-
-class wf_info_for(RelationDefinition):
-    subject = 'TrInfo'
-    object = 'Note'
-    cardinality = '1*'
 
 class multisource_rel(RelationDefinition):
     subject = ('Card', 'Note')

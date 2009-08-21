@@ -142,12 +142,11 @@ class EditBox(BoxTemplate):
 
 
     def workflow_actions(self, entity, box):
-        if 'in_state' in entity.e_schema.subject_relations() and entity.in_state:
+        if entity.e_schema.has_subject_relation('in_state') and entity.in_state:
             _ = self.req._
-            state = entity.in_state[0]
-            menu_title = u'%s: %s' % (_('state'), state.view('text'))
+            menu_title = u'%s: %s' % (_('state'), entity.printable_state)
             menu_items = []
-            for tr in state.transitions(entity):
+            for tr in entity.possible_transitions():
                 url = entity.absolute_url(vid='statuschange', treid=tr.eid)
                 menu_items.append(self.mk_action(_(tr.name), url))
             wfurl = self.build_url('cwetype/%s'%entity.e_schema, vid='workflow')

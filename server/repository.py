@@ -167,6 +167,11 @@ class Repository(object):
         # cache (extid, source uri) -> eid
         self._extid_cache = {}
         # open some connections pools
+        if config.open_connections_pools:
+            self.open_connections_pools()
+
+    def open_connections_pools(self):
+        config = self.config
         self._available_pools = Queue.Queue()
         self._available_pools.put_nowait(pool.ConnectionsPool(self.sources))
         if config.read_instance_schema:
@@ -176,7 +181,7 @@ class Repository(object):
             # usually during repository creation
             self.warning("set fs instance'schema as bootstrap schema")
             config.bootstrap_cubes()
-            self.set_schema(self.config.load_schema(), resetvreg=False)
+            self.set_schema(config.load_schema(), resetvreg=False)
             # need to load the Any and CWUser entity types
             self.vreg.schema = self.schema
             etdirectory = join(CW_SOFTWARE_ROOT, 'entities')
@@ -185,11 +190,13 @@ class Repository(object):
                                 'cubicweb.entities.__init__')
             self.vreg.load_file(join(etdirectory, 'authobjs.py'),
                                 'cubicweb.entities.authobjs')
+            self.vreg.load_file(join(etdirectory, 'wfobjs.py'),
+                                'cubicweb.entities.wfobjs')
         else:
             # test start: use the file system schema (quicker)
             self.warning("set fs instance'schema")
             config.bootstrap_cubes()
-            self.set_schema(self.config.load_schema())
+            self.set_schema(config.load_schema())
         if not config.creating:
             if 'CWProperty' in self.schema:
                 self.vreg.init_properties(self.properties())
@@ -213,13 +220,12 @@ class Repository(object):
             self.pools.append(pool.ConnectionsPool(self.sources))
             self._available_pools.put_nowait(self.pools[-1])
         self._shutting_down = False
-        self.hm = vreg['hooks']
+        self.hm = self.vreg['hooks']
         if not (config.creating or config.repairing):
             # call instance level initialisation hooks
             self.hm.call_hooks('server_startup', repo=self)
             # register a task to cleanup expired session
-            self.looping_task(self.config['session-time']/3.,
-                              self.clean_sessions)
+            self.looping_task(config['session-time']/3., self.clean_sessions)
 
     # internals ###############################################################
 
@@ -227,8 +233,9 @@ class Repository(object):
         source_config['uri'] = uri
         return sources.get_source(source_config, self.schema, self)
 
-    def set_schema(self, schema, resetvreg=True):
-        schema.rebuild_infered_relations()
+    def set_schema(self, schema, resetvreg=True, rebuildinfered=True):
+        if rebuildinfered:
+            schema.rebuild_infered_relations()
         self.info('set schema %s %#x', schema.name, id(schema))
         self.debug(', '.join(sorted(str(e) for e in schema.entities())))
         self.querier.set_schema(schema)
@@ -951,15 +958,16 @@ class Repository(object):
             print 'ADD entity', etype, entity.eid, dict(entity)
         entity._is_saved = False # entity has an eid but is not yet saved
         relations = []
-        # if inlined relations are specified, fill entity's related cache to
-        # avoid unnecessary queries
+        # init edited_attributes before calling before_add_entity hooks
         entity.edited_attributes = set(entity)
-        for attr in entity.edited_attributes:
+        if source.should_call_hooks:
+            self.hm.call_hooks('before_add_entity', session, entity=entity)
+        # XXX use entity.keys here since edited_attributes is not updated for
+        # inline relations
+        for attr in entity.keys():
             rschema = eschema.subject_relation(attr)
             if not rschema.is_final(): # inlined relation
                 relations.append((attr, entity[attr]))
-        if source.should_call_hooks:
-            self.hm.call_hooks('before_add_entity', session, entity=entity)
         entity.set_defaults()
         entity.check(creation=True)
         source.add_entity(session, entity)

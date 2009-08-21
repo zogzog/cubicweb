@@ -282,8 +282,7 @@ class CubicWebTC(TestCase):
         if password is None:
             password = login.encode('utf8')
         cursor = self._orig_cnx.cursor(req or self.request())
-        rset = cursor.execute('INSERT CWUser X: X login %(login)s, X upassword %(passwd)s,'
-                              'X in_state S WHERE S name "activated"',
+        rset = cursor.execute('INSERT CWUser X: X login %(login)s, X upassword %(passwd)s',
                               {'login': unicode(login), 'passwd': password})
         user = rset.get_entity(0, 0)
         cursor.execute('SET X in_group G WHERE X eid %%(x)s, G name IN(%s)'

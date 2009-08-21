@@ -113,23 +113,14 @@ class MigrationCommandsTC(CubicWebTC):
 
 
     def test_workflow_actions(self):
-        foo = self.mh.cmd_add_state(u'foo', ('Personne', 'Email'), initial=True)
+        wf = self.mh.cmd_add_workflow(u'foo', ('Personne', 'Email'))
         for etype in ('Personne', 'Email'):
-            s1 = self.mh.rqlexec('Any N WHERE S state_of ET, ET name "%s", S name N' %
+            s1 = self.mh.rqlexec('Any N WHERE WF workflow_of ET, ET name "%s", WF name N' %
                                  etype)[0][0]
             self.assertEquals(s1, "foo")
-            s1 = self.mh.rqlexec('Any N WHERE ET initial_state S, ET name "%s", S name N' %
+            s1 = self.mh.rqlexec('Any N WHERE ET default_workflow WF, ET name "%s", WF name N' %
                                  etype)[0][0]
             self.assertEquals(s1, "foo")
-        bar = self.mh.cmd_add_state(u'bar', ('Personne', 'Email'), initial=True)
-        baz = self.mh.cmd_add_transition(u'baz', ('Personne', 'Email'),
-                                         (foo,), bar, ('managers',))
-        for etype in ('Personne', 'Email'):
-            t1 = self.mh.rqlexec('Any N WHERE T transition_of ET, ET name "%s", T name N' %
-                                 etype)[0][0]
-            self.assertEquals(t1, "baz")
-        gn = self.mh.rqlexec('Any GN WHERE T require_group G, G name GN, T eid %s' % baz)[0][0]
-        self.assertEquals(gn, 'managers')
 
     def test_add_entity_type(self):
         self.failIf('Folder2' in self.schema)
@@ -167,8 +158,9 @@ class MigrationCommandsTC(CubicWebTC):
         self.failIf('Folder2' in self.schema)
         self.failIf(self.execute('CWEType X WHERE X name "Folder2"'))
         # test automatic workflow deletion
-        self.failIf(self.execute('State X WHERE NOT X state_of ET'))
-        self.failIf(self.execute('Transition X WHERE NOT X transition_of ET'))
+        self.failIf(self.execute('Workflow X WHERE NOT X workflow_of ET'))
+        self.failIf(self.execute('State X WHERE NOT X state_of WF'))
+        self.failIf(self.execute('Transition X WHERE NOT X transition_of WF'))
 
     def test_add_drop_relation_type(self):
         self.mh.cmd_add_entity_type('Folder2', auto=False)
@@ -265,7 +257,7 @@ class MigrationCommandsTC(CubicWebTC):
                                               fulltextindexed=False)
 
     def test_sync_schema_props_perms(self):
-        cursor = self.mh.rqlcursor
+        cursor = self.mh.session
         nbrqlexpr_start = len(cursor.execute('RQLExpression X'))
         migrschema['titre']._rproperties[('Personne', 'String')]['order'] = 7
         migrschema['adel']._rproperties[('Personne', 'String')]['order'] = 6
@@ -344,14 +336,14 @@ class MigrationCommandsTC(CubicWebTC):
 
     def _erqlexpr_rset(self, action, ertype):
         rql = 'RQLExpression X WHERE ET is CWEType, ET %s_permission X, ET name %%(name)s' % action
-        return self.mh.rqlcursor.execute(rql, {'name': ertype})
+        return self.mh.session.execute(rql, {'name': ertype})
     def _erqlexpr_entity(self, action, ertype):
         rset = self._erqlexpr_rset(action, ertype)
         self.assertEquals(len(rset), 1)
         return rset.get_entity(0, 0)
     def _rrqlexpr_rset(self, action, ertype):
         rql = 'RQLExpression X WHERE ET is CWRType, ET %s_permission X, ET name %%(name)s' % action
-        return self.mh.rqlcursor.execute(rql, {'name': ertype})
+        return self.mh.session.execute(rql, {'name': ertype})
     def _rrqlexpr_entity(self, action, ertype):
         rset = self._rrqlexpr_rset(action, ertype)
         self.assertEquals(len(rset), 1)
@@ -463,6 +455,48 @@ class MigrationCommandsTC(CubicWebTC):
         self.mh.set_state(user.eid, 'deactivated')
         user.clear_related_cache('in_state', 'subject')
         self.assertEquals(user.state, 'deactivated')
+
+    def test_introduce_base_class(self):
+        self.mh.cmd_add_entity_type('Para')
+        self.mh.repo.schema.rebuild_infered_relations()
+        self.assertEquals(sorted(et.type for et in self.schema['Para'].specialized_by()),
+                          ['Note'])
+        self.assertEquals(self.schema['Note'].specializes().type, 'Para')
+        self.mh.cmd_add_entity_type('Text')
+        self.mh.repo.schema.rebuild_infered_relations()
+        self.assertEquals(sorted(et.type for et in self.schema['Para'].specialized_by()),
+                          ['Note', 'Text'])
+        self.assertEquals(self.schema['Text'].specializes().type, 'Para')
+        # test columns have been actually added
+        text = self.execute('INSERT Text X: X para "hip", X summary "hop", X newattr "momo"').get_entity(0, 0)
+        note = self.execute('INSERT Note X: X para "hip", X shortpara "hop", X newattr "momo"').get_entity(0, 0)
+        aff = self.execute('INSERT Affaire X').get_entity(0, 0)
+        self.failUnless(self.execute('SET X newnotinlined Y WHERE X eid %(x)s, Y eid %(y)s',
+                                     {'x': text.eid, 'y': aff.eid}, 'x'))
+        self.failUnless(self.execute('SET X newnotinlined Y WHERE X eid %(x)s, Y eid %(y)s',
+                                     {'x': note.eid, 'y': aff.eid}, 'x'))
+        self.failUnless(self.execute('SET X newinlined Y WHERE X eid %(x)s, Y eid %(y)s',
+                                     {'x': text.eid, 'y': aff.eid}, 'x'))
+        self.failUnless(self.execute('SET X newinlined Y WHERE X eid %(x)s, Y eid %(y)s',
+                                     {'x': note.eid, 'y': aff.eid}, 'x'))
+        # XXX remove specializes by ourselves, else tearDown fails when removing
+        # Para because of Note inheritance. This could be fixed by putting the
+        # MemSchemaCWETypeDel(session, name) operation in the
+        # after_delete_entity(CWEType) hook, since in that case the MemSchemaSpecializesDel
+        # operation would be removed before, but I'm not sure this is a desired behaviour.
+        #
+        # also we need more tests about introducing/removing base classes or
+        # specialization relationship...
+        self.session.data['rebuild-infered'] = True
+        try:
+            self.execute('DELETE X specializes Y WHERE Y name "Para"')
+            self.commit()
+        finally:
+            self.session.data['rebuild-infered'] = False
+        self.assertEquals(sorted(et.type for et in self.schema['Para'].specialized_by()),
+                          [])
+        self.assertEquals(self.schema['Note'].specializes(), None)
+        self.assertEquals(self.schema['Text'].specializes(), None)
 
 if __name__ == '__main__':
     unittest_main()

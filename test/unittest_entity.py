@@ -76,8 +76,8 @@ class EntityTC(CubicWebTC):
         e = self.entity('Any X WHERE X eid %(x)s', {'x':user.eid}, 'x')
         self.assertEquals(e.use_email[0].address, "toto@logilab.org")
         self.assertEquals(e.use_email[0].eid, adeleid)
-        usereid = self.execute('INSERT CWUser X: X login "toto", X upassword "toto", X in_group G, X in_state S '
-                               'WHERE G name "users", S name "activated"')[0][0]
+        usereid = self.execute('INSERT CWUser X: X login "toto", X upassword "toto", X in_group G '
+                               'WHERE G name "users"')[0][0]
         e = self.entity('Any X WHERE X eid %(x)s', {'x':usereid}, 'x')
         e.copy_relations(user.eid)
         self.failIf(e.use_email)
@@ -85,14 +85,14 @@ class EntityTC(CubicWebTC):
 
     def test_copy_with_non_initial_state(self):
         user = self.user()
-        eid = self.execute('INSERT CWUser X: X login "toto", X upassword %(pwd)s, X in_group G WHERE G name "users"',
-                           {'pwd': 'toto'})[0][0]
+        user = self.execute('INSERT CWUser X: X login "toto", X upassword %(pwd)s, X in_group G WHERE G name "users"',
+                           {'pwd': 'toto'}).get_entity(0, 0)
         self.commit()
-        self.execute('SET X in_state S WHERE X eid %(x)s, S name "deactivated"', {'x': eid}, 'x')
+        user.fire_transition('deactivate')
         self.commit()
         eid2 = self.execute('INSERT CWUser X: X login "tutu", X upassword %(pwd)s', {'pwd': 'toto'})[0][0]
         e = self.entity('Any X WHERE X eid %(x)s', {'x': eid2}, 'x')
-        e.copy_relations(eid)
+        e.copy_relations(user.eid)
         self.commit()
         e.clear_related_cache('in_state', 'subject')
         self.assertEquals(e.state, 'activated')
@@ -132,7 +132,8 @@ class EntityTC(CubicWebTC):
         seschema.subject_relation('evaluee').set_rproperty(seschema, Note.e_schema, 'cardinality', '1*')
         # testing basic fetch_attrs attribute
         self.assertEquals(Personne.fetch_rql(user),
-                          'Any X,AA,AB,AC ORDERBY AA ASC WHERE X is Personne, X nom AA, X prenom AB, X modification_date AC')
+                          'Any X,AA,AB,AC ORDERBY AA ASC '
+                          'WHERE X is Personne, X nom AA, X prenom AB, X modification_date AC')
         pfetch_attrs = Personne.fetch_attrs
         sfetch_attrs = Societe.fetch_attrs
         try:
@@ -142,22 +143,26 @@ class EntityTC(CubicWebTC):
             # testing one non final relation
             Personne.fetch_attrs = ('nom', 'prenom', 'travaille')
             self.assertEquals(Personne.fetch_rql(user),
-                              'Any X,AA,AB,AC,AD ORDERBY AA ASC WHERE X is Personne, X nom AA, X prenom AB, X travaille AC, AC nom AD')
+                              'Any X,AA,AB,AC,AD ORDERBY AA ASC '
+                              'WHERE X is Personne, X nom AA, X prenom AB, X travaille AC?, AC nom AD')
             # testing two non final relations
             Personne.fetch_attrs = ('nom', 'prenom', 'travaille', 'evaluee')
             self.assertEquals(Personne.fetch_rql(user),
-                              'Any X,AA,AB,AC,AD,AE,AF ORDERBY AA ASC,AF DESC WHERE X is Personne, X nom AA, '
-                              'X prenom AB, X travaille AC, AC nom AD, X evaluee AE, AE modification_date AF')
+                              'Any X,AA,AB,AC,AD,AE,AF ORDERBY AA ASC,AF DESC '
+                              'WHERE X is Personne, X nom AA, X prenom AB, X travaille AC?, AC nom AD, '
+                              'X evaluee AE?, AE modification_date AF')
             # testing one non final relation with recursion
             Personne.fetch_attrs = ('nom', 'prenom', 'travaille')
             Societe.fetch_attrs = ('nom', 'evaluee')
             self.assertEquals(Personne.fetch_rql(user),
-                              'Any X,AA,AB,AC,AD,AE,AF ORDERBY AA ASC,AF DESC WHERE X is Personne, X nom AA, X prenom AB, '
-                              'X travaille AC, AC nom AD, AC evaluee AE, AE modification_date AF'
+                              'Any X,AA,AB,AC,AD,AE,AF ORDERBY AA ASC,AF DESC '
+                              'WHERE X is Personne, X nom AA, X prenom AB, X travaille AC?, AC nom AD, '
+                              'AC evaluee AE?, AE modification_date AF'
                               )
             # testing symetric relation
             Personne.fetch_attrs = ('nom', 'connait')
-            self.assertEquals(Personne.fetch_rql(user), 'Any X,AA,AB ORDERBY AA ASC WHERE X is Personne, X nom AA, X connait AB')
+            self.assertEquals(Personne.fetch_rql(user), 'Any X,AA,AB ORDERBY AA ASC '
+                              'WHERE X is Personne, X nom AA, X connait AB?')
             # testing optional relation
             peschema.subject_relation('travaille').set_rproperty(peschema, seschema, 'cardinality', '?*')
             Personne.fetch_attrs = ('nom', 'prenom', 'travaille')
@@ -321,33 +326,17 @@ du :eid:`1:*ReST*`'''
         self.failUnless(not p1.reverse_evaluee)
 
     def test_complete_relation(self):
-        self.execute('SET RT add_permission G WHERE RT name "wf_info_for", G name "managers"')
-        self.commit()
         session = self.session
-        try:
-            eid = session.unsafe_execute(
-                'INSERT TrInfo X: X comment "zou", X wf_info_for U, X from_state S1, X to_state S2 '
-                'WHERE U login "admin", S1 name "activated", S2 name "deactivated"')[0][0]
-            trinfo = self.entity('Any X WHERE X eid %(x)s', {'x': eid}, 'x')
-            trinfo.complete()
-            self.failUnless(trinfo.relation_cached('from_state', 'subject'))
-            self.failUnless(trinfo.relation_cached('to_state', 'subject'))
-            self.failUnless(trinfo.relation_cached('wf_info_for', 'subject'))
-            # check with a missing relation
-            eid = session.unsafe_execute(
-                'INSERT TrInfo X: X comment "zou", X wf_info_for U,X to_state S2 '
-                'WHERE U login "admin", S2 name "activated"')[0][0]
-            trinfo = self.entity('Any X WHERE X eid %(x)s', {'x': eid}, 'x')
-            trinfo.complete()
-            self.failUnless(isinstance(trinfo.creation_date, datetime))
-            self.failUnless(trinfo.relation_cached('from_state', 'subject'))
-            self.failUnless(trinfo.relation_cached('to_state', 'subject'))
-            self.failUnless(trinfo.relation_cached('wf_info_for', 'subject'))
-            self.assertEquals(trinfo.from_state, [])
-        finally:
-            self.rollback()
-            self.execute('DELETE RT add_permission G WHERE RT name "wf_info_for", G name "managers"')
-            self.commit()
+        eid = session.unsafe_execute(
+            'INSERT TrInfo X: X comment "zou", X wf_info_for U, X from_state S1, X to_state S2 '
+            'WHERE U login "admin", S1 name "activated", S2 name "deactivated"')[0][0]
+        trinfo = self.entity('Any X WHERE X eid %(x)s', {'x': eid}, 'x')
+        trinfo.complete()
+        self.failUnless(isinstance(trinfo['creation_date'], datetime))
+        self.failUnless(trinfo.relation_cached('from_state', 'subject'))
+        self.failUnless(trinfo.relation_cached('to_state', 'subject'))
+        self.failUnless(trinfo.relation_cached('wf_info_for', 'subject'))
+        self.assertEquals(trinfo.by_transition, [])
 
     def test_request_cache(self):
         req = self.request()

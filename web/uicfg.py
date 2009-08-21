@@ -149,6 +149,7 @@ primaryview_display_ctrl = DisplayCtrlRelationTags('primaryview_display_ctrl',
 # * 'application'
 # * 'system'
 # * 'schema'
+# * 'hidden'
 # * 'subobject' (not displayed by default)
 
 class InitializableDict(dict):
@@ -169,6 +170,7 @@ indexview_etype_section = InitializableDict(EmailAddress='subobject',
                                             CWUser='system',
                                             CWGroup='system',
                                             CWPermission='system',
+                                            BaseTransition='hidden',
                                             )
 
 # autoform.AutomaticEntityForm configuration ##################################

@@ -839,3 +839,12 @@ input.validateButton {
   border-color:#edecd2 #cfceb7 #cfceb7  #edecd2;
   background: #fffff8 url("button.png") bottom left repeat-x;
 }
+
+
+/********************************/
+/* placement of alt. view icons */
+/********************************/
+
+.otherView {
+  float: right;
+}

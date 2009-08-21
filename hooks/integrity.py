@@ -254,4 +254,4 @@ class StripCWUserLoginHook(IntegrityHook):
     def __call__(self):
         user = self.entity
         if 'login' in user.edited_attributes and user.login:
-            entity.login = entity.login.strip()
+            user.login = user.login.strip()

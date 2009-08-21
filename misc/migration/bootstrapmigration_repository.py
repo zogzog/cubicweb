@@ -27,6 +27,37 @@ if applcubicwebversion < (3, 4, 0) and cubicwebversion >= (3, 4, 0):
     reactivate_verification_hooks()
     session.set_shared_data('do-not-insert-cwuri', False)
 
+if applcubicwebversion < (3, 5, 0) and cubicwebversion >= (3, 5, 0):
+    add_entity_type('Workflow')
+    add_entity_type('BaseTransition')
+    add_entity_type('WorkflowTransition')
+    add_entity_type('SubWorkflowExitPoint')
+    drop_relation_definition('State', 'allowed_transition', 'Transition') # should be infered
+    schema.rebuild_infered_relations() # need to be explicitly called once everything is in place
+
+    for et in rql('DISTINCT Any ET,ETN WHERE S state_of ET, ET name ETN',
+                  ask_confirm=False).entities():
+        wf = add_workflow(u'default %s workflow' % et.name, et.name,
+                          ask_confirm=False)
+        rql('SET S state_of WF WHERE S state_of ET, ET eid %(et)s, WF eid %(wf)s',
+            {'et': et.eid, 'wf': wf.eid}, 'et', ask_confirm=False)
+        rql('SET T transition_of WF WHERE T transition_of ET, ET eid %(et)s, WF eid %(wf)s',
+            {'et': et.eid, 'wf': wf.eid}, 'et', ask_confirm=False)
+        rql('SET WF initial_state S WHERE ET initial_state S, S state_of ET, ET eid %(et)s, WF eid %(wf)s',
+            {'et': et.eid, 'wf': wf.eid}, 'et', ask_confirm=False)
+
+
+    rql('DELETE TrInfo TI WHERE NOT TI from_state S')
+    rql('SET TI by_transition T WHERE TI from_state FS, TI to_state TS, '
+        'FS allowed_transition T, T destination_state TS')
+    checkpoint()
+
+    drop_relation_definition('State', 'state_of', 'CWEType')
+    drop_relation_definition('Transition', 'transition_of', 'CWEType')
+    drop_relation_definition('CWEType', 'initial_state', 'State')
+
+    sync_schema_props_perms()
+
 if applcubicwebversion < (3, 2, 2) and cubicwebversion >= (3, 2, 1):
     from base64 import b64encode
     for table in ('entities', 'deleted_entities'):
@@ -38,37 +69,3 @@ if applcubicwebversion < (3, 2, 2) and cubicwebversion >= (3, 2, 1):
 
 if applcubicwebversion < (3, 2, 0) and cubicwebversion >= (3, 2, 0):
     add_cube('card', update_database=False)
-
-if applcubicwebversion < (2, 47, 0) and cubicwebversion >= (2, 47, 0):
-     from cubicweb.server import schemaserial
-     schemaserial.HAS_FULLTEXT_CONTAINER = False
-     session.set_shared_data('do-not-insert-is_instance_of', True)
-     add_attribute('CWRType', 'fulltext_container')
-     schemaserial.HAS_FULLTEXT_CONTAINER = True
-
-
-
-if applcubicwebversion < (2, 50, 0) and cubicwebversion >= (2, 50, 0):
-     session.set_shared_data('do-not-insert-is_instance_of', True)
-     add_relation_type('is_instance_of')
-     # fill the relation using an efficient sql query instead of using rql
-     sql('INSERT INTO is_instance_of_relation '
-         '  SELECT * from is_relation')
-     checkpoint()
-     session.set_shared_data('do-not-insert-is_instance_of', False)
-
-if applcubicwebversion < (2, 42, 0) and cubicwebversion >= (2, 42, 0):
-     sql('ALTER TABLE entities ADD COLUMN mtime TIMESTAMP')
-     sql('UPDATE entities SET mtime=CURRENT_TIMESTAMP')
-     sql('CREATE INDEX entities_mtime_idx ON entities(mtime)')
-     sql('''CREATE TABLE deleted_entities (
-  eid INTEGER PRIMARY KEY NOT NULL,
-  type VARCHAR(64) NOT NULL,
-  source VARCHAR(64) NOT NULL,
-  dtime TIMESTAMP NOT NULL,
-  extid VARCHAR(256)
-)''')
-     sql('CREATE INDEX deleted_entities_type_idx ON deleted_entities(type)')
-     sql('CREATE INDEX deleted_entities_dtime_idx ON deleted_entities(dtime)')
-     sql('CREATE INDEX deleted_entities_extid_idx ON deleted_entities(extid)')
-     checkpoint()

@@ -13,7 +13,7 @@ from logilab.mtconverter import xml_escape
 from cubicweb.appobject import objectify_selector
 from cubicweb.selectors import match_kwargs
 from cubicweb.view import View, MainTemplate, NOINDEX, NOFOLLOW
-from cubicweb.utils import make_uid, UStringIO
+from cubicweb.utils import make_uid, UStringIO, can_do_pdf_conversion
 
 
 # main templates ##############################################################
@@ -265,6 +265,44 @@ class SimpleMainTemplate(TheMainTemplate):
             self.w(u'</td>\n')
             self.w(u'</tr></table>\n')
 
+if can_do_pdf_conversion():
+    from xml.etree.cElementTree import ElementTree
+    from subprocess import Popen as sub
+    from StringIO import StringIO
+    from tempfile import NamedTemporaryFile
+    from cubicweb.web.xhtml2fo import ReportTransformer
+
+    class PdfMainTemplate(TheMainTemplate):
+        id = 'pdf-main-template'
+
+        def call(self, view):
+            """build the standard view, then when it's all done, convert xhtml to pdf
+            """
+            super(PdfMainTemplate, self).call(view)
+            pdf = self.to_pdf(self._stream)
+            self.req.set_content_type('application/pdf', filename='report.pdf')
+            self.binary = True
+            self.w = None
+            self.set_stream()
+            # pylint needs help
+            self.w(pdf)
+
+        def to_pdf(self, stream, section='contentmain'):
+            # XXX see ticket/345282
+            stream = stream.getvalue().replace('&nbsp;', '&#160;').encode('utf-8')
+            xmltree = ElementTree()
+            xmltree.parse(StringIO(stream))
+            foptree = ReportTransformer(section).transform(xmltree)
+            foptmp = NamedTemporaryFile()
+            pdftmp = NamedTemporaryFile()
+            foptree.write(foptmp)
+            foptmp.flush()
+            fopproc = sub(['/usr/bin/fop', foptmp.name, pdftmp.name])
+            fopproc.wait()
+            pdftmp.seek(0)
+            pdf = pdftmp.read()
+            return pdf
+
 # page parts templates ########################################################
 
 class HTMLHeader(View):
@@ -488,4 +526,4 @@ def login_form_url(config, req):
 
 ## vregistry registration callback ############################################
 def registration_callback(vreg):
-    vreg.register_all(globals().values(), modname=__name__)
+    vreg.register_all(globals().values(), __name__)

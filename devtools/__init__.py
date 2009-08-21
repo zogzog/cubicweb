@@ -24,14 +24,15 @@ cwconfig.CubicWebConfiguration.cls_adjust_sys_path()
 
 SYSTEM_ENTITIES = schema.SCHEMA_TYPES | set((
     'CWGroup', 'CWUser', 'CWProperty',
-    'State', 'Transition', 'TrInfo',
+    'Workflow', 'State', 'BaseTransition', 'Transition', 'WorkflowTransition',
+    'TrInfo', 'SubWorkflowExitPoint',
     ))
 
 SYSTEM_RELATIONS = schema.META_RTYPES | set((
     # workflow related
-    'state_of', 'transition_of', 'initial_state', 'allowed_transition',
+    'workflow_of', 'state_of', 'transition_of', 'initial_state', 'allowed_transition',
     'destination_state', 'in_state', 'wf_info_for', 'from_state', 'to_state',
-    'condition',
+    'condition', 'subworkflow', 'subworkflow_state', 'subworkflow_exit',
     # cwproperty
     'for_user',
     # schema definition

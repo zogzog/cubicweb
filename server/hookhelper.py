@@ -12,16 +12,14 @@ from logilab.common.deprecation import deprecated, class_moved
 from cubicweb import RepositoryError
 
 
-@deprecated('[3.5] entity_name is deprecated, use entity.name')
+@deprecated('[3.6] entity_name is deprecated, use entity.name')
 def entity_name(session, eid):
     """return the "name" attribute of the entity with the given eid"""
     return session.entity_from_eid(eid).name
 
-@deprecated('[3.5] rproperty is deprecated, use session.schema_rproperty')
+@deprecated('[3.6] rproperty is deprecated, use session.schema_rproperty')
 def rproperty(session, rtype, eidfrom, eidto, rprop):
     return session.rproperty(rtype, eidfrom, eidto, rprop)
 
 from cubicweb.server.hook import SendMailOp
-from cubicweb.hooks.workflow import previous_state
 SendMailOp = class_moved(SendMailOp)
-previous_state = deprecated('[3.5] use cubicweb.hooks.workflow.previous_state')(previous_state)

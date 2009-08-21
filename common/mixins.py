@@ -13,7 +13,7 @@ from logilab.common.decorators import cached
 
 from cubicweb import typed_eid
 from cubicweb.selectors import implements
-from cubicweb.interfaces import IWorkflowable, IEmailable, ITree
+from cubicweb.interfaces import IEmailable, ITree
 
 
 class TreeMixIn(object):
@@ -158,97 +158,6 @@ class TreeMixIn(object):
         return self.req.entity_from_eid(self.path()[0])
 
 
-class WorkflowableMixIn(object):
-    """base mixin providing workflow helper methods for workflowable entities.
-    This mixin will be automatically set on class supporting the 'in_state'
-    relation (which implies supporting 'wf_info_for' as well)
-    """
-    __implements__ = (IWorkflowable,)
-
-    @property
-    def state(self):
-        try:
-            return self.in_state[0].name
-        except IndexError:
-            self.warning('entity %s has no state', self)
-            return None
-
-    @property
-    def displayable_state(self):
-        return self.req._(self.state)
-
-    def wf_state(self, statename):
-        rset = self.req.execute('Any S, SN WHERE S name SN, S name %(n)s, S state_of E, E name %(e)s',
-                                {'n': statename, 'e': str(self.e_schema)})
-        if rset:
-            return rset.get_entity(0, 0)
-        return None
-
-    def wf_transition(self, trname):
-        rset = self.req.execute('Any T, TN WHERE T name TN, T name %(n)s, T transition_of E, E name %(e)s',
-                                {'n': trname, 'e': str(self.e_schema)})
-        if rset:
-            return rset.get_entity(0, 0)
-        return None
-
-    def change_state(self, state, trcomment=None, trcommentformat=None):
-        """change the entity's state according to a state defined in given
-        parameters
-        """
-        if isinstance(state, basestring):
-            state = self.wf_state(state)
-            assert state is not None, 'not a %s state: %s' % (self.id, state)
-        if hasattr(state, 'eid'):
-            stateeid = state.eid
-        else:
-            stateeid = state
-        stateeid = typed_eid(stateeid)
-        if trcomment:
-            self.req.set_shared_data('trcomment', trcomment)
-        if trcommentformat:
-            self.req.set_shared_data('trcommentformat', trcommentformat)
-        self.req.execute('SET X in_state S WHERE X eid %(x)s, S eid %(s)s',
-                         {'x': self.eid, 's': stateeid}, 'x')
-
-    def can_pass_transition(self, trname):
-        """return the Transition instance if the current user can pass the
-        transition with the given name, else None
-        """
-        stateeid = self.in_state[0].eid
-        rset = self.req.execute('Any T,N,DS WHERE S allowed_transition T,'
-                                'S eid %(x)s,T name %(trname)s,ET name %(et)s,'
-                                'T name N,T destination_state DS,T transition_of ET',
-                                {'x': stateeid, 'et': str(self.e_schema),
-                                 'trname': trname}, 'x')
-        for tr in rset.entities():
-            if tr.may_be_passed(self.eid, stateeid):
-                return tr
-
-    def latest_trinfo(self):
-        """return the latest transition information for this entity"""
-        return self.reverse_wf_info_for[-1]
-
-    # __method methods ########################################################
-
-    def set_state(self, params=None):
-        """change the entity's state according to a state defined in given
-        parameters, used to be called using __method controler facility
-        """
-        params = params or self.req.form
-        self.change_state(typed_eid(params.pop('state')),
-                          params.get('trcomment'),
-                          params.get('trcomment_format'))
-        self.req.set_message(self.req._('__msg state changed'))
-
-    # specific vocabulary methods #############################################
-
-    @deprecated('use EntityFieldsForm.subject_in_state_vocabulary')
-    def subject_in_state_vocabulary(self, rschema, limit=None):
-        form = self.vreg.select('forms', 'edition', self.req, entity=self)
-        return form.subject_in_state_vocabulary(rschema, limit)
-
-
-
 class EmailableMixIn(object):
     """base mixin providing the default get_email() method used by
     the massmailing view
@@ -288,7 +197,6 @@ class EmailableMixIn(object):
 
 
 MI_REL_TRIGGERS = {
-    ('in_state',    'subject'): WorkflowableMixIn,
     ('primary_email',   'subject'): EmailableMixIn,
     ('use_email',   'subject'): EmailableMixIn,
     }

@@ -47,12 +47,15 @@ class CWRegistry(Registry):
     def __init__(self, vreg):
         super(CWRegistry, self).__init__(vreg.config)
         self.vreg = vreg
-        self.schema = vreg.schema
+
+    @property
+    def schema(self):
+        return self.vreg.schema
 
     def initialization_completed(self):
         pass
 
-    @deprecated('[3.5] select object, then use obj.render()')
+    @deprecated('[3.6] select object, then use obj.render()')
     def render(self, __oid, req, __fallback_oid=None, rset=None, **kwargs):
         """select object, or fallback object if specified and the first one
         isn't selectable, then render it
@@ -62,10 +65,10 @@ class CWRegistry(Registry):
         except NoSelectableObject:
             if __fallback_oid is None:
                 raise
-            obj = self.select(__fallback_oid, req, **kwargs)
+            obj = self.select(__fallback_oid, req, rset=rset, **kwargs)
         return obj.render(**kwargs)
 
-    @deprecated('[3.5] use select_or_none and test for obj.cw_propval("visible")')
+    @deprecated('[3.6] use select_or_none and test for obj.cw_propval("visible")')
     def select_vobject(self, oid, *args, **kwargs):
         selected = self.select_or_none(oid, *args, **kwargs)
         if selected and selected.cw_propval('visible'):
@@ -80,7 +83,7 @@ class CWRegistry(Registry):
         return sorted([x for x in self.possible_objects(*args, **kwargs)
                        if x.cw_propval('visible')],
                       key=lambda x: x.cw_propval('order'))
-    possible_vobjects = deprecated('[3.5] use poss_visible_objects()')(poss_visible_objects)
+    possible_vobjects = deprecated('[3.6] use poss_visible_objects()')(poss_visible_objects)
 
 
 VRegistry.REGISTRY_FACTORY[None] = CWRegistry
@@ -109,7 +112,7 @@ class ETypeRegistry(CWRegistry):
         if etype == 'Any':
             return [self.etype_class('Any')]
         eschema = self.schema.eschema(etype)
-        parents = [cls.etype_class(e.type) for e in eschema.ancestors()]
+        parents = [self.etype_class(e.type) for e in eschema.ancestors()]
         parents.append(self.etype_class('Any'))
         return parents
 
@@ -236,8 +239,8 @@ class CubicWebVRegistry(VRegistry):
             config.init_log(debug=debug)
         super(CubicWebVRegistry, self).__init__(config)
         self.schema = None
-        self.reset()
         self.initialized = False
+        self.reset()
 
     def setdefault(self, regid):
         try:
@@ -264,10 +267,11 @@ class CubicWebVRegistry(VRegistry):
         # two special registries, propertydefs which care all the property
         # definitions, and propertyvals which contains values for those
         # properties
-        self['propertydefs'] = {}
-        self['propertyvalues'] = {}
-        for key, propdef in self.config.eproperty_definitions():
-            self.register_property(key, **propdef)
+        if not self.initialized:
+            self['propertydefs'] = {}
+            self['propertyvalues'] = self.eprop_values = {}
+            for key, propdef in self.config.eproperty_definitions():
+                self.register_property(key, **propdef)
         if path is not None and force_reload:
             cleanup_sys_modules(path)
             cubes = self.config.cubes()

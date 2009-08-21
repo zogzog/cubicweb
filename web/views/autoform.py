@@ -12,9 +12,8 @@ from logilab.common.decorators import iclassmethod
 
 from cubicweb import typed_eid
 from cubicweb.web import stdmsgs, uicfg
-from cubicweb.web.form import FieldNotFound
+from cubicweb.web import form, formwidgets as fwdgs
 from cubicweb.web.formfields import guess_field
-from cubicweb.web import formwidgets
 from cubicweb.web.views import forms, editforms
 
 
@@ -35,9 +34,9 @@ class AutomaticEntityForm(forms.EntityFieldsForm):
     cwtarget = 'eformframe'
     cssclass = 'entityForm'
     copy_nav_params = True
-    form_buttons = [formwidgets.SubmitButton(),
-                    formwidgets.Button(stdmsgs.BUTTON_APPLY, cwaction='apply'),
-                    formwidgets.Button(stdmsgs.BUTTON_CANCEL, cwaction='cancel')]
+    form_buttons = [fwdgs.SubmitButton(),
+                    fwdgs.Button(stdmsgs.BUTTON_APPLY, cwaction='apply'),
+                    fwdgs.Button(stdmsgs.BUTTON_CANCEL, cwaction='cancel')]
     attrcategories = ('primary', 'secondary')
     # class attributes below are actually stored in the uicfg module since we
     # don't want them to be reloaded
@@ -133,7 +132,7 @@ class AutomaticEntityForm(forms.EntityFieldsForm):
         """
         try:
             return super(AutomaticEntityForm, cls_or_self).field_by_name(name, role)
-        except FieldNotFound: # XXX should raise more explicit exception
+        except form.FieldNotFound:
             if eschema is None or not name in cls_or_self.schema:
                 raise
             rschema = cls_or_self.schema.rschema(name)
@@ -163,13 +162,13 @@ class AutomaticEntityForm(forms.EntityFieldsForm):
             try:
                 self.field_by_name(rschema.type, role)
                 continue # explicitly specified
-            except FieldNotFound:
+            except form.FieldNotFound:
                 # has to be guessed
                 try:
                     field = self.field_by_name(rschema.type, role,
                                                eschema=entity.e_schema)
                     self.fields.append(field)
-                except FieldNotFound:
+                except form.FieldNotFound:
                     # meta attribute such as <attr>_format
                     continue
         self.maxrelitems = self.req.property_value('navigation.related-limit')
@@ -330,7 +329,11 @@ uicfg.autoform_section.tag_object_of(('*', 'is_instance_of', '*'), 'generated')
 uicfg.autoform_section.tag_subject_of(('*', 'identity', '*'), 'generated')
 uicfg.autoform_section.tag_object_of(('*', 'identity', '*'), 'generated')
 uicfg.autoform_section.tag_subject_of(('*', 'require_permission', '*'), 'generated')
-uicfg.autoform_section.tag_subject_of(('*', 'wf_info_for', '*'), 'generated')
+uicfg.autoform_section.tag_subject_of(('*', 'by_transition', '*'), 'primary')
+uicfg.autoform_section.tag_object_of(('*', 'by_transition', '*'), 'generated')
+uicfg.autoform_section.tag_object_of(('*', 'from_state', '*'), 'generated')
+uicfg.autoform_section.tag_object_of(('*', 'to_state', '*'), 'generated')
+uicfg.autoform_section.tag_subject_of(('*', 'wf_info_for', '*'), 'primary')
 uicfg.autoform_section.tag_object_of(('*', 'wf_info_for', '*'), 'generated')
 uicfg.autoform_section.tag_subject_of(('*', 'for_user', '*'), 'generated')
 uicfg.autoform_section.tag_object_of(('*', 'for_user', '*'), 'generated')
@@ -349,9 +352,11 @@ uicfg.autoform_section.tag_subject_of(('*', 'use_email', '*'), 'generated') # in
 uicfg.autoform_section.tag_subject_of(('*', 'primary_email', '*'), 'generic')
 
 uicfg.autoform_field_kwargs.tag_attribute(('RQLExpression', 'expression'),
-                                          {'widget': formwidgets.TextInput})
+                                          {'widget': fwdgs.TextInput})
 uicfg.autoform_field_kwargs.tag_attribute(('Bookmark', 'path'),
-                                          {'widget': formwidgets.TextInput})
+                                          {'widget': fwdgs.TextInput})
+uicfg.autoform_field_kwargs.tag_subject_of(('TrInfo', 'wf_info_for', '*'),
+                                           {'widget': fwdgs.HiddenInput})
 
 uicfg.autoform_is_inlined.tag_subject_of(('*', 'use_email', '*'), True)
 uicfg.autoform_is_inlined.tag_subject_of(('CWRelation', 'relation_type', '*'), True)

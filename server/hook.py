@@ -77,7 +77,7 @@ class HooksRegistry(CWRegistry):
             if hook.enabled:
                 hook()
             else:
-                warn('[3.5] %s: enabled is deprecated' % cls)
+                warn('[3.6] %s: enabled is deprecated' % cls)
 
 VRegistry.REGISTRY_FACTORY['hooks'] = HooksRegistry
 
@@ -137,14 +137,14 @@ class Hook(AppObject):
 
     @classproperty
     def __id__(cls):
-        warn('[3.5] %s: please specify an id for your hook' % cls)
+        warn('[3.6] %s: please specify an id for your hook' % cls)
         return str(id(cls))
 
     @classmethod
     def __registered__(cls, vreg):
         super(Hook, cls).__registered__(vreg)
         if getattr(cls, 'accepts', None):
-            warn('[3.5] %s: accepts is deprecated, define proper __select__' % cls)
+            warn('[3.6] %s: accepts is deprecated, define proper __select__' % cls)
             rtypes = []
             for ertype in cls.accepts:
                 if ertype.islower():
@@ -165,7 +165,7 @@ class Hook(AppObject):
 
     def __call__(self):
         if hasattr(self, 'call'):
-            warn('[3.5] %s: call is deprecated, implements __call__' % self.__class__)
+            warn('[3.6] %s: call is deprecated, implements __call__' % self.__class__)
             if self.event.endswith('_relation'):
                 self.call(self._cw, self.eidfrom, self.rtype, self.eidto)
             elif 'delete' in self.event:
@@ -178,6 +178,85 @@ class Hook(AppObject):
                 self.call(self._cw, self.entity)
 
 set_log_methods(Hook, getLogger('cubicweb.hook'))
+
+
+# base classes for relation propagation ########################################
+
+class PropagateSubjectRelationHook(Hook):
+    """propagate permissions and nosy list when new entity are added"""
+    events = ('after_add_relation',)
+    # to set in concrete class
+    rtype = None
+    subject_relations = None
+    object_relations = None
+    accepts = None # subject_relations + object_relations
+
+    def call(self, session, fromeid, rtype, toeid):
+        for eid in (fromeid, toeid):
+            etype = session.describe(eid)[0]
+            if not self.schema.eschema(etype).has_subject_relation(self.rtype):
+                return
+        if rtype in self.subject_relations:
+            meid, seid = fromeid, toeid
+        else:
+            assert rtype in self.object_relations
+            meid, seid = toeid, fromeid
+        rql = 'SET E %s P WHERE X %s P, X eid %%(x)s, E eid %%(e)s, NOT E %s P'\
+              % (self.rtype, self.rtype, self.rtype)
+        rqls = [(rql, {'x': meid, 'e': seid}, ('x', 'e'))]
+        RQLPrecommitOperation(session, rqls=rqls)
+
+
+class PropagateSubjectRelationAddHook(Hook):
+    """propagate on existing entities when a permission or nosy list is added"""
+    events = ('after_add_relation',)
+    # to set in concrete class
+    rtype = None
+    subject_relations = None
+    object_relations = None
+    accepts = None # (self.rtype,)
+
+    def call(self, session, fromeid, rtype, toeid):
+        eschema = self.schema.eschema(session.describe(fromeid)[0])
+        rqls = []
+        for rel in self.subject_relations:
+            if eschema.has_subject_relation(rel):
+                rqls.append(('SET R %s P WHERE X eid %%(x)s, P eid %%(p)s, '
+                             'X %s R, NOT R %s P' % (rtype, rel, rtype),
+                             {'x': fromeid, 'p': toeid}, 'x'))
+        for rel in self.object_relations:
+            if eschema.has_object_relation(rel):
+                rqls.append(('SET R %s P WHERE X eid %%(x)s, P eid %%(p)s, '
+                             'R %s X, NOT R %s P' % (rtype, rel, rtype),
+                             {'x': fromeid, 'p': toeid}, 'x'))
+        if rqls:
+            RQLPrecommitOperation(session, rqls=rqls)
+
+
+class PropagateSubjectRelationDelHook(Hook):
+    """propagate on existing entities when a permission is deleted"""
+    events = ('after_delete_relation',)
+    # to set in concrete class
+    rtype = None
+    subject_relations = None
+    object_relations = None
+    accepts = None # (self.rtype,)
+
+    def call(self, session, fromeid, rtype, toeid):
+        eschema = self.schema.eschema(session.describe(fromeid)[0])
+        rqls = []
+        for rel in self.subject_relations:
+            if eschema.has_subject_relation(rel):
+                rqls.append(('DELETE R %s P WHERE X eid %%(x)s, P eid %%(p)s, '
+                             'X %s R' % (rtype, rel),
+                             {'x': fromeid, 'p': toeid}, 'x'))
+        for rel in self.object_relations:
+            if eschema.has_object_relation(rel):
+                rqls.append(('DELETE R %s P WHERE X eid %%(x)s, P eid %%(p)s, '
+                             'R %s X' % (rtype, rel),
+                             {'x': fromeid, 'p': toeid}, 'x'))
+        if rqls:
+            RQLPrecommitOperation(session, rqls=rqls)
 
 
 # abstract classes for operation ###############################################
@@ -265,22 +344,22 @@ class Operation(object):
         """
 
     @property
-    @deprecated('[3.5] use self.session.user')
+    @deprecated('[3.6] use self.session.user')
     def user(self):
         return self.session.user
 
     @property
-    @deprecated('[3.5] use self.session.repo')
+    @deprecated('[3.6] use self.session.repo')
     def repo(self):
         return self.session.repo
 
     @property
-    @deprecated('[3.5] use self.session.vreg.schema')
+    @deprecated('[3.6] use self.session.vreg.schema')
     def schema(self):
         return self.session.repo.schema
 
     @property
-    @deprecated('[3.5] use self.session.vreg.config')
+    @deprecated('[3.6] use self.session.vreg.config')
     def config(self):
         return self.session.repo.config
 
@@ -355,3 +434,10 @@ class SendMailOp(SingleLastOperation):
 
     def sendmails(self):
         self.config.sendmails(self.to_send)
+
+
+class RQLPrecommitOperation(Operation):
+    def precommit_event(self):
+        execute = self.session.unsafe_execute
+        for rql in self.rqls:
+            execute(*rql)

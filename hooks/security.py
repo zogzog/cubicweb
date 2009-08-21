@@ -91,6 +91,9 @@ class BeforeAddRelationSecurityHook(SecurityHook):
 
     def __call__(self):
         if self.rtype in BEFORE_ADD_RELATIONS:
+            nocheck = self._cw.transaction_data.get('skip-security', ())
+            if (self.eidfrom, self.rtype, self.eidto) in nocheck:
+                return
             rschema = self._cw.repo.schema[self.rtype]
             rschema.check_perm(self._cw, 'add', self.eidfrom, self.eidto)
 
@@ -101,6 +104,9 @@ class AfterAddRelationSecurityHook(SecurityHook):
 
     def __call__(self):
         if not self.rtype in BEFORE_ADD_RELATIONS:
+            nocheck = self._cw.transaction_data.get('skip-security', ())
+            if (self.eidfrom, self.rtype, self.eidto) in nocheck:
+                return
             rschema = self._cw.repo.schema[self.rtype]
             if self.rtype in ON_COMMIT_ADD_RELATIONS:
                 _CheckRelationPermissionOp(self._cw, action='add',
@@ -116,6 +122,9 @@ class BeforeDelRelationSecurityHook(SecurityHook):
     events = ('before_delete_relation',)
 
     def __call__(self):
+        nocheck = self._cw.transaction_data.get('skip-security', ())
+        if (self.eidfrom, self.rtype, self.eidto) in nocheck:
+            return
         self._cw.repo.schema[self.rtype].check_perm(self._cw, 'delete',
                                                        self.eidfrom, self.eidto)
 

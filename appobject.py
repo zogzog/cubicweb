@@ -303,101 +303,101 @@ class AppObject(object):
     # deprecated ###############################################################
 
     @property
-    @deprecated('[3.5] use self._cw.vreg')
+    @deprecated('[3.6] use self._cw.vreg')
     def vreg(self):
         return self._cw.vreg
 
     @property
-    @deprecated('[3.5] use self._cw.vreg.schema')
+    @deprecated('[3.6] use self._cw.vreg.schema')
     def schema(self):
         return self._cw.vreg.schema
 
     @property
-    @deprecated('[3.5] use self._cw.vreg.config')
+    @deprecated('[3.6] use self._cw.vreg.config')
     def config(self):
         return self._cw.vreg.config
 
     @property
-    @deprecated('[3.5] use self._cw')
+    @deprecated('[3.6] use self._cw')
     def req(self):
         return self._cw
 
-    @deprecated('[3.5] use self.cw_rset')
+    @deprecated('[3.6] use self.cw_rset')
     def get_rset(self):
         return self.cw_rset
-    @deprecated('[3.5] use self.cw_rset')
+    @deprecated('[3.6] use self.cw_rset')
     def set_rset(self, rset):
         self.cw_rset = rset
     rset = property(get_rset, set_rset)
 
     @property
-    @deprecated('[3.5] use self.cw_row')
+    @deprecated('[3.6] use self.cw_row')
     def row(self):
         return self.cw_row
 
     @property
-    @deprecated('[3.5] use self.cw_col')
+    @deprecated('[3.6] use self.cw_col')
     def col(self):
         return self.cw_col
 
     @property
-    @deprecated('[3.5] use self.cw_extra_kwargs')
+    @deprecated('[3.6] use self.cw_extra_kwargs')
     def extra_kwargs(self):
         return self.cw_extra_kwargs
 
-    @deprecated('[3.5] use self._cw.view')
+    @deprecated('[3.6] use self._cw.view')
     def view(self, *args, **kwargs):
         return self._cw.view(*args, **kwargs)
 
-    @deprecated('[3.5] use self._cw.varmaker')
+    @deprecated('[3.6] use self._cw.varmaker')
     def initialize_varmaker(self):
         self.varmaker = self._cw.varmaker
 
-    @deprecated('[3.5] use self._cw.get_cache')
+    @deprecated('[3.6] use self._cw.get_cache')
     def get_cache(self, cachename):
         return self._cw.get_cache(cachename)
 
-    @deprecated('[3.5] use self._cw.build_url')
+    @deprecated('[3.6] use self._cw.build_url')
     def build_url(self, *args, **kwargs):
         return self._cw.build_url(*args, **kwargs)
 
-    @deprecated('[3.5] use self.cw_rset.limited_rql')
+    @deprecated('[3.6] use self.cw_rset.limited_rql')
     def limited_rql(self):
         return self.rset.limited_rql()
 
-    @deprecated('[3.5] use self.rset.complete_entity(row,col) instead')
+    @deprecated('[3.6] use self.rset.complete_entity(row,col) instead')
     def complete_entity(self, row, col=0, skip_bytes=True):
         return self.rset.complete_entity(row, col, skip_bytes)
 
-    @deprecated('[3.5] use self.rset.get_entity(row,col) instead')
+    @deprecated('[3.6] use self.rset.get_entity(row,col) instead')
     def entity(self, row, col=0):
         return self.rset.get_entity(row, col)
 
-    @deprecated('[3.5] use self._cw.user_rql_callback')
+    @deprecated('[3.6] use self._cw.user_rql_callback')
     def user_rql_callback(self, args, msg=None):
         return self._cw.user_rql_callback(args, msg)
 
-    @deprecated('[3.5] use self._cw.user_callback')
+    @deprecated('[3.6] use self._cw.user_callback')
     def user_callback(self, cb, args, msg=None, nonify=False):
         return self._cw.user_callback(cb, args, msg, nonify)
 
-    @deprecated('[3.5] use self._cw.format_date')
+    @deprecated('[3.6] use self._cw.format_date')
     def format_date(self, date, date_format=None, time=False):
         return self._cw.format_date(date, date_format, time)
 
-    @deprecated('[3.5] use self._cw.format_timoe')
+    @deprecated('[3.6] use self._cw.format_timoe')
     def format_time(self, time):
         return self._cw.format_time(time)
 
-    @deprecated('[3.5] use self._cw.format_float')
+    @deprecated('[3.6] use self._cw.format_float')
     def format_float(self, num):
         return self._cw.format_float(num)
 
-    @deprecated('[3.5] use self._cw.parse_datetime')
+    @deprecated('[3.6] use self._cw.parse_datetime')
     def parse_datetime(self, value, etype='Datetime'):
         return self._cw.parse_datetime(value, etype)
 
-    @deprecated('[3.5] use self.cw_propval')
+    @deprecated('[3.6] use self.cw_propval')
     def propval(self, propid):
         return self._cw.property_value(self._cwpropkey(propid))
 

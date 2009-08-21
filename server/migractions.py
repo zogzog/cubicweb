@@ -33,7 +33,8 @@ from yams.constraints import SizeConstraint
 from yams.schema2sql import eschema2sql, rschema2sql
 
 from cubicweb import AuthenticationError, ETYPE_NAME_MAP
-from cubicweb.schema import META_RTYPES, VIRTUAL_RTYPES, CubicWebRelationSchema
+from cubicweb.schema import (META_RTYPES, VIRTUAL_RTYPES,
+                             CubicWebRelationSchema, order_eschemas)
 from cubicweb.dbapi import get_repository, repo_connect
 from cubicweb.common.migration import MigrationHelper, yes
 
@@ -60,6 +61,7 @@ class ServerMigrationHelper(MigrationHelper):
             assert repo
             self._cnx = cnx
             self.repo = repo
+            self.session.data['rebuild-infered'] = False
         elif connect:
             self.repo_connect()
         if not schema:
@@ -132,33 +134,36 @@ class ServerMigrationHelper(MigrationHelper):
         os.chmod(backupfile, 0600)
         # backup
         tmpdir = tempfile.mkdtemp(dir=instbkdir)
-        for source in repo.sources:
-            try:
-                source.backup(osp.join(tmpdir,source.uri))
-            except Exception, exc:
-                print '-> error trying to backup [%s]' % exc
-                if not self.confirm('Continue anyway?', default='n'):
-                    raise SystemExit(1)
-        bkup = tarfile.open(backupfile, 'w|gz')
-        for filename in os.listdir(tmpdir):
-            bkup.add(osp.join(tmpdir,filename), filename)
-        bkup.close()
-        shutil.rmtree(tmpdir)
-        # call hooks
-        repo.hm.call_hooks('server_backup', repo=repo, timestamp=timestamp)
-        # done
-        print '-> backup file',  backupfile
+        try:
+            for source in repo.sources:
+                try:
+                    source.backup(osp.join(tmpdir, source.uri))
+                except Exception, exc:
+                    print '-> error trying to backup [%s]' % exc
+                    if not self.confirm('Continue anyway?', default='n'):
+                        raise SystemExit(1)
+                    else:
+                        break
+            else:
+                bkup = tarfile.open(backupfile, 'w|gz')
+                for filename in os.listdir(tmpdir):
+                    bkup.add(osp.join(tmpdir,filename), filename)
+                bkup.close()
+                # call hooks
+                repo.hm.call_hooks('server_backup', repo=repo, timestamp=timestamp)
+                # done
+                print '-> backup file',  backupfile
+        finally:
+            shutil.rmtree(tmpdir)
 
     def restore_database(self, backupfile, drop=True, systemonly=True,
                          askconfirm=True):
-        config = self.config
-        repo = self.repo_connect()
         # check
         if not osp.exists(backupfile):
             raise Exception("Backup file %s doesn't exist" % backupfile)
             return
         if askconfirm and not self.confirm('Restore %s database from %s ?'
-                                           % (config.appid, backupfile)):
+                                           % (self.config.appid, backupfile)):
             return
         # unpack backup
         bkup = tarfile.open(backupfile, 'r|gz')
@@ -169,6 +174,9 @@ class ServerMigrationHelper(MigrationHelper):
         bkup = tarfile.open(backupfile, 'r|gz')
         tmpdir = tempfile.mkdtemp()
         bkup.extractall(path=tmpdir)
+
+        self.config.open_connections_pools = False
+        repo = self.repo_connect()
         for source in repo.sources:
             if systemonly and source.uri != 'system':
                 continue
@@ -181,6 +189,7 @@ class ServerMigrationHelper(MigrationHelper):
         bkup.close()
         shutil.rmtree(tmpdir)
         # call hooks
+        repo.open_connections_pools()
         repo.hm.call_hooks('server_restore', repo=repo, timestamp=backupfile)
         print '-> database restored.'
 
@@ -214,20 +223,12 @@ class ServerMigrationHelper(MigrationHelper):
                     print 'aborting...'
                     sys.exit(0)
             self.session.keep_pool_mode('transaction')
+            self.session.data['rebuild-infered'] = False
             return self._cnx
 
     @property
     def session(self):
         return self.repo._get_session(self.cnx.sessionid)
-
-    @property
-    @cached
-    def rqlcursor(self):
-        """lazy rql cursor"""
-        # should not give session as cnx.cursor(), else we may try to execute
-        # some query while no pool is set on the session (eg on entity attribute
-        # access for instance)
-        return self.cnx.cursor()
 
     def commit(self):
         if hasattr(self, '_cnx'):
@@ -262,7 +263,8 @@ class ServerMigrationHelper(MigrationHelper):
     @cached
     def group_mapping(self):
         """cached group mapping"""
-        return ss.group_mapping(self.rqlcursor)
+        self.session.set_pool()
+        return ss.group_mapping(self.session)
 
     def exec_event_script(self, event, cubepath=None, funcname=None,
                           *args, **kwargs):
@@ -415,12 +417,12 @@ class ServerMigrationHelper(MigrationHelper):
                          {'x': str(repoeschema), 'y': str(espschema)})
         self.rqlexecall(ss.updateeschema2rql(eschema),
                         ask_confirm=self.verbosity >= 2)
-        for rschema, targettypes, x in eschema.relation_definitions(True):
-            if x == 'subject':
+        for rschema, targettypes, role in eschema.relation_definitions(True):
+            if role == 'subject':
                 if not rschema in repoeschema.subject_relations():
                     continue
                 subjtypes, objtypes = [etype], targettypes
-            else: # x == 'object'
+            else: # role == 'object'
                 if not rschema in repoeschema.object_relations():
                     continue
                 subjtypes, objtypes = targettypes, [etype]
@@ -526,10 +528,11 @@ class ServerMigrationHelper(MigrationHelper):
             if not rschema in self.repo.schema:
                 self.cmd_add_relation_type(rschema.type)
                 new.add(rschema.type)
-        for eschema in newcubes_schema.entities():
-            if not eschema in self.repo.schema:
-                self.cmd_add_entity_type(eschema.type)
-                new.add(eschema.type)
+        toadd = [eschema for eschema in newcubes_schema.entities()
+                 if not eschema in self.repo.schema]
+        for eschema in order_eschemas(toadd):
+            self.cmd_add_entity_type(eschema.type)
+            new.add(eschema.type)
         # check if attributes has been added to existing entities
         for rschema in newcubes_schema.relations():
             existingschema = self.repo.schema.rschema(rschema.type)
@@ -561,9 +564,11 @@ class ServerMigrationHelper(MigrationHelper):
         for rschema in fsschema.relations():
             if not rschema in removedcubes_schema and rschema in reposchema:
                 self.cmd_drop_relation_type(rschema.type)
-        for eschema in fsschema.entities():
-            if not eschema in removedcubes_schema and eschema in reposchema:
-                self.cmd_drop_entity_type(eschema.type)
+        toremove = [eschema for eschema in fsschema.entities()
+                    if not eschema in removedcubes_schema
+                    and eschema in reposchema]
+        for eschema in reversed(order_eschemas(toremove)):
+            self.cmd_drop_entity_type(eschema.type)
         for rschema in fsschema.relations():
             if rschema in removedcubes_schema and rschema in reposchema:
                 # check if attributes/relations has been added to entities from
@@ -623,11 +628,13 @@ class ServerMigrationHelper(MigrationHelper):
         in auto mode, automatically register entity's relation where the
         targeted type is known
         """
-        applschema = self.repo.schema
-        if etype in applschema:
-            eschema = applschema[etype]
+        instschema = self.repo.schema
+        if etype in instschema:
+            # XXX (syt) plz explain: if we're adding an entity type, it should
+            # not be there...
+            eschema = instschema[etype]
             if eschema.is_final():
-                applschema.del_entity_type(etype)
+                instschema.del_entity_type(etype)
         else:
             eschema = self.fs_schema.eschema(etype)
         confirm = self.verbosity >= 2
@@ -643,13 +650,46 @@ class ServerMigrationHelper(MigrationHelper):
             # ignore those meta relations, they will be automatically added
             if rschema.type in META_RTYPES:
                 continue
-            if not rschema.type in applschema:
+            if not rschema.type in instschema:
                 # need to add the relation type and to commit to get it
                 # actually in the schema
                 self.cmd_add_relation_type(rschema.type, False, commit=True)
             # register relation definition
             self.rqlexecall(ss.rdef2rql(rschema, etype, attrschema.type),
                             ask_confirm=confirm)
+        # take care to newly introduced base class
+        # XXX some part of this should probably be under the "if auto" block
+        for spschema in eschema.specialized_by(recursive=False):
+            try:
+                instspschema = instschema[spschema]
+            except KeyError:
+                # specialized entity type not in schema, ignore
+                continue
+            if instspschema.specializes() != eschema:
+                self.rqlexec('SET D specializes P WHERE D eid %(d)s, P name %(pn)s',
+                              {'d': instspschema.eid,
+                               'pn': eschema.type}, ask_confirm=confirm)
+                for rschema, tschemas, role in spschema.relation_definitions(True):
+                    for tschema in tschemas:
+                        if not tschema in instschema:
+                            continue
+                        if role == 'subject':
+                            subjschema = spschema
+                            objschema = tschema
+                            if rschema.final and instspschema.has_subject_relation(rschema):
+                                # attribute already set, has_rdef would check if
+                                # it's of the same type, we don't want this so
+                                # simply skip here
+                                continue
+                        elif role == 'object':
+                            subjschema = tschema
+                            objschema = spschema
+                        if (rschema.rproperty(subjschema, objschema, 'infered')
+                            or (instschema.has_relation(rschema) and
+                                instschema[rschema].has_rdef(subjschema, objschema))):
+                                continue
+                        self.cmd_add_relation_definition(
+                            subjschema.type, rschema.type, objschema.type)
         if auto:
             # we have commit here to get relation types actually in the schema
             self.commit()
@@ -659,12 +699,12 @@ class ServerMigrationHelper(MigrationHelper):
                 # 'owned_by'/'created_by' will be automatically added
                 if rschema.final or rschema.type in META_RTYPES:
                     continue
-                rtypeadded = rschema.type in applschema
+                rtypeadded = rschema.type in instschema
                 for targetschema in rschema.objects(etype):
                     # ignore relations where the targeted type is not in the
                     # current instance schema
                     targettype = targetschema.type
-                    if not targettype in applschema and targettype != etype:
+                    if not targettype in instschema and targettype != etype:
                         continue
                     if not rtypeadded:
                         # need to add the relation type and to commit to get it
@@ -679,14 +719,14 @@ class ServerMigrationHelper(MigrationHelper):
                     self.rqlexecall(ss.rdef2rql(rschema, etype, targettype),
                                     ask_confirm=confirm)
             for rschema in eschema.object_relations():
-                rtypeadded = rschema.type in applschema or rschema.type in added
+                rtypeadded = rschema.type in instschema or rschema.type in added
                 for targetschema in rschema.subjects(etype):
                     # ignore relations where the targeted type is not in the
                     # current instance schema
                     targettype = targetschema.type
                     # don't check targettype != etype since in this case the
                     # relation has already been added as a subject relation
-                    if not targettype in applschema:
+                    if not targettype in instschema:
                         continue
                     if not rtypeadded:
                         # need to add the relation type and to commit to get it
@@ -914,78 +954,78 @@ class ServerMigrationHelper(MigrationHelper):
 
     # Workflows handling ######################################################
 
+    def cmd_add_workflow(self, name, wfof, default=True, commit=False,
+                         **kwargs):
+        self.session.set_pool() # ensure pool is set
+        wf = self.cmd_create_entity('Workflow', name=unicode(name),
+                                    **kwargs)
+        if not isinstance(wfof, (list, tuple)):
+            wfof = (wfof,)
+        for etype in wfof:
+            rset = self.rqlexec(
+                'SET X workflow_of ET WHERE X eid %(x)s, ET name %(et)s',
+                {'x': wf.eid, 'et': etype}, 'x', ask_confirm=False)
+            assert rset, 'unexistant entity type %s' % etype
+            if default:
+                self.rqlexec(
+                    'SET ET default_workflow X WHERE X eid %(x)s, ET name %(et)s',
+                    {'x': wf.eid, 'et': etype}, 'x', ask_confirm=False)
+        if commit:
+            self.commit()
+        return wf
+
+    # XXX remove once cmd_add_[state|transition] are removed
+    def _get_or_create_wf(self, etypes):
+        self.session.set_pool() # ensure pool is set
+        if not isinstance(etypes, (list, tuple)):
+            etypes = (etypes,)
+        rset = self.rqlexec('Workflow X WHERE X workflow_of ET, ET name %(et)s',
+                            {'et': etypes[0]})
+        if rset:
+            return rset.get_entity(0, 0)
+        return self.cmd_add_workflow('%s workflow' % ';'.join(etypes), etypes)
+
+    @deprecated('use add_workflow and Workflow.add_state method')
     def cmd_add_state(self, name, stateof, initial=False, commit=False, **kwargs):
         """method to ease workflow definition: add a state for one or more
         entity type(s)
         """
-        stateeid = self.cmd_add_entity('State', name=name, **kwargs)
-        if not isinstance(stateof, (list, tuple)):
-            stateof = (stateof,)
-        for etype in stateof:
-            # XXX ensure etype validity
-            self.rqlexec('SET X state_of Y WHERE X eid %(x)s, Y name %(et)s',
-                         {'x': stateeid, 'et': etype}, 'x', ask_confirm=False)
-            if initial:
-                self.rqlexec('SET ET initial_state S WHERE ET name %(et)s, S eid %(x)s',
-                             {'x': stateeid, 'et': etype}, 'x', ask_confirm=False)
+        wf = self._get_or_create_wf(stateof)
+        state = wf.add_state(name, initial, **kwargs)
         if commit:
             self.commit()
-        return stateeid
+        return state.eid
 
+    @deprecated('use add_workflow and Workflow.add_transition method')
     def cmd_add_transition(self, name, transitionof, fromstates, tostate,
                            requiredgroups=(), conditions=(), commit=False, **kwargs):
         """method to ease workflow definition: add a transition for one or more
         entity type(s), from one or more state and to a single state
         """
-        treid = self.cmd_add_entity('Transition', name=name, **kwargs)
-        if not isinstance(transitionof, (list, tuple)):
-            transitionof = (transitionof,)
-        for etype in transitionof:
-            # XXX ensure etype validity
-            self.rqlexec('SET X transition_of Y WHERE X eid %(x)s, Y name %(et)s',
-                         {'x': treid, 'et': etype}, 'x', ask_confirm=False)
-        for stateeid in fromstates:
-            self.rqlexec('SET X allowed_transition Y WHERE X eid %(x)s, Y eid %(y)s',
-                         {'x': stateeid, 'y': treid}, 'x', ask_confirm=False)
-        self.rqlexec('SET X destination_state Y WHERE X eid %(x)s, Y eid %(y)s',
-                     {'x': treid, 'y': tostate}, 'x', ask_confirm=False)
-        self.cmd_set_transition_permissions(treid, requiredgroups, conditions,
-                                            reset=False)
+        wf = self._get_or_create_wf(transitionof)
+        tr = wf.add_transition(name, fromstates, tostate, requiredgroups,
+                               conditions, **kwargs)
         if commit:
             self.commit()
-        return treid
+        return tr.eid
 
+    @deprecated('use Transition.set_transition_permissions method')
     def cmd_set_transition_permissions(self, treid,
                                        requiredgroups=(), conditions=(),
                                        reset=True, commit=False):
         """set or add (if `reset` is False) groups and conditions for a
         transition
         """
-        if reset:
-            self.rqlexec('DELETE T require_group G WHERE T eid %(x)s',
-                         {'x': treid}, 'x', ask_confirm=False)
-            self.rqlexec('DELETE T condition R WHERE T eid %(x)s',
-                         {'x': treid}, 'x', ask_confirm=False)
-        for gname in requiredgroups:
-            ### XXX ensure gname validity
-            self.rqlexec('SET T require_group G WHERE T eid %(x)s, G name %(gn)s',
-                         {'x': treid, 'gn': gname}, 'x', ask_confirm=False)
-        if isinstance(conditions, basestring):
-            conditions = (conditions,)
-        for expr in conditions:
-            if isinstance(expr, str):
-                expr = unicode(expr)
-            self.rqlexec('INSERT RQLExpression X: X exprtype "ERQLExpression", '
-                         'X expression %(expr)s, T condition X '
-                         'WHERE T eid %(x)s',
-                         {'x': treid, 'expr': expr}, 'x', ask_confirm=False)
+        self.session.set_pool() # ensure pool is set
+        tr = self.session.entity_from_eid(treid)
+        tr.set_transition_permissions(requiredgroups, conditions, reset)
         if commit:
             self.commit()
 
+    @deprecated('use entity.change_state("state")')
     def cmd_set_state(self, eid, statename, commit=False):
         self.session.set_pool() # ensure pool is set
-        entity = self.session.entity_from_eid(eid)
-        entity.change_state(entity.wf_state(statename).eid)
+        self.session.entity_from_eid(eid).change_state(statename)
         if commit:
             self.commit()
 
@@ -1002,32 +1042,26 @@ class ServerMigrationHelper(MigrationHelper):
             prop = self.rqlexec('CWProperty X WHERE X pkey %(k)s', {'k': pkey},
                                 ask_confirm=False).get_entity(0, 0)
         except:
-            self.cmd_add_entity('CWProperty', pkey=unicode(pkey), value=value)
+            self.cmd_create_entity('CWProperty', pkey=unicode(pkey), value=value)
         else:
             self.rqlexec('SET X value %(v)s WHERE X pkey %(k)s',
                          {'k': pkey, 'v': value}, ask_confirm=False)
 
     # other data migration commands ###########################################
 
-    def cmd_add_entity(self, etype, *args, **kwargs):
+    def cmd_create_entity(self, etype, *args, **kwargs):
         """add a new entity of the given type"""
-        rql = 'INSERT %s X' % etype
-        relations = []
-        restrictions = []
-        for rtype, rvar in args:
-            relations.append('X %s %s' % (rtype, rvar))
-            restrictions.append('%s eid %s' % (rvar, kwargs.pop(rvar)))
         commit = kwargs.pop('commit', False)
-        for attr in kwargs:
-            relations.append('X %s %%(%s)s' % (attr, attr))
-        if relations:
-            rql = '%s: %s' % (rql, ', '.join(relations))
-        if restrictions:
-            rql = '%s WHERE %s' % (rql, ', '.join(restrictions))
-        eid = self.rqlexec(rql, kwargs, ask_confirm=self.verbosity>=2).rows[0][0]
+        self.session.set_pool()
+        entity = self.session.create_entity(etype, *args, **kwargs)
         if commit:
             self.commit()
-        return eid
+        return entity
+
+    @deprecated('use create_entity')
+    def cmd_add_entity(self, etype, *args, **kwargs):
+        """add a new entity of the given type"""
+        return self.cmd_create_entity(etype, *args, **kwargs).eid
 
     def sqlexec(self, sql, args=None, ask_confirm=True):
         """execute the given sql if confirmed
@@ -1055,6 +1089,7 @@ class ServerMigrationHelper(MigrationHelper):
         if not isinstance(rql, (tuple, list)):
             rql = ( (rql, kwargs), )
         res = None
+        self.session.set_pool()
         for rql, kwargs in rql:
             if kwargs:
                 msg = '%s (%s)' % (rql, kwargs)
@@ -1062,7 +1097,7 @@ class ServerMigrationHelper(MigrationHelper):
                 msg = rql
             if not ask_confirm or self.confirm('execute rql: %s ?' % msg):
                 try:
-                    res = self.rqlcursor.execute(rql, kwargs, cachekey)
+                    res = self.session.execute(rql, kwargs, cachekey)
                 except Exception, ex:
                     if self.confirm('error: %s\nabort?' % ex):
                         raise
@@ -1151,8 +1186,9 @@ class ForRqlIterator:
         if self.ask_confirm:
             if not self._h.confirm('execute rql: %s ?' % msg):
                 raise StopIteration
+        self._h.session.set_pool()
         try:
-            rset = self._h.rqlcursor.execute(rql, kwargs)
+            rset = self._h.session.execute(rql, kwargs)
         except Exception, ex:
             if self._h.confirm('error: %s\nabort?' % ex):
                 raise

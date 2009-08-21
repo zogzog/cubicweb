@@ -1,0 +1,138 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd" [
+  <!ATTLIST html xmlns:cubicweb CDATA  #FIXED 'http://www.logilab.org/2008/cubicweb'  >
+
+<!ENTITY % coreattrs
+ "id          ID            #IMPLIED
+  class       CDATA         #IMPLIED
+  style       CDATA         #IMPLIED
+  title       CDATA         #IMPLIED
+
+ cubicweb:sortvalue         CDATA   #IMPLIED
+ cubicweb:target            CDATA   #IMPLIED
+ cubicweb:limit             CDATA   #IMPLIED
+ cubicweb:type              CDATA   #IMPLIED
+ cubicweb:loadtype          CDATA   #IMPLIED
+ cubicweb:wdgtype           CDATA   #IMPLIED
+ cubicweb:initfunc          CDATA   #IMPLIED
+ cubicweb:inputid           CDATA   #IMPLIED
+ cubicweb:tindex            CDATA   #IMPLIED
+ cubicweb:inputname         CDATA   #IMPLIED
+ cubicweb:value             CDATA   #IMPLIED
+ cubicweb:required          CDATA   #IMPLIED
+ cubicweb:accesskey         CDATA   #IMPLIED
+ cubicweb:maxlength         CDATA   #IMPLIED
+ cubicweb:variables         CDATA   #IMPLIED
+ cubicweb:displayactions    CDATA   #IMPLIED
+ cubicweb:fallbackvid       CDATA   #IMPLIED
+ cubicweb:fname             CDATA   #IMPLIED
+ cubicweb:vid               CDATA   #IMPLIED
+ cubicweb:rql               CDATA   #IMPLIED
+ cubicweb:actualrql         CDATA   #IMPLIED
+ cubicweb:rooteid           CDATA   #IMPLIED
+ cubicweb:dataurl           CDATA   #IMPLIED
+ cubicweb:size              CDATA   #IMPLIED
+ cubicweb:tlunit            CDATA   #IMPLIED
+ cubicweb:loadurl           CDATA   #IMPLIED
+ cubicweb:uselabel          CDATA   #IMPLIED
+ cubicweb:facetargs         CDATA   #IMPLIED
+ cubicweb:facetName         CDATA   #IMPLIED
+  "> ] >
+
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:cubicweb="http://www.logilab.org/2008/cubicweb" xml:lang="fr" lang="fr">
+<head>
+<base href="http://crater:8888/"></base><meta http-equiv="content-type" content="application/xhtml+xml; charset=UTF-8"/>
+<meta name="ROBOTS" content="NOINDEX" />
+<link rel="shortcut icon" href="http://crater:8888/data0ea37b3fea72bf4b2fde96c64e51f626/favicon.ico"/>
+<link rel="alternate" type="application/rss+xml" title="RSS feed" href="http://crater:8888/project/Comet/0.2.0?vid=rss"/>
+<title>Comet 0.2.0 (unset title)</title>
+<script type="text/javascript"><!--//--><![CDATA[//><!--
+pageid = "0499a5d7add13919a458db30006d9832";
+//--><!]]></script>
+<link rel="stylesheet" type="text/css" media="all" href="http://crater:8888/data0ea37b3fea72bf4b2fde96c64e51f626/cubes.tracker.css"/>
+<link rel="stylesheet" type="text/css" media="print" href="http://crater:8888/data0ea37b3fea72bf4b2fde96c64e51f626/cubicweb.print.css"/>
+<link rel="stylesheet" type="text/css" media="all" href="http://crater:8888/data0ea37b3fea72bf4b2fde96c64e51f626/cubicweb.login.css"/>
+<script type="text/javascript" src="http://crater:8888/data0ea37b3fea72bf4b2fde96c64e51f626/jquery.js"></script>
+<script type="text/javascript" src="http://crater:8888/data0ea37b3fea72bf4b2fde96c64e51f626/jquery.corner.js"></script>
+<script type="text/javascript" src="http://crater:8888/data0ea37b3fea72bf4b2fde96c64e51f626/jquery.json.js"></script>
+<script type="text/javascript" src="http://crater:8888/data0ea37b3fea72bf4b2fde96c64e51f626/cubicweb.compat.js"></script>
+<script type="text/javascript" src="http://crater:8888/data0ea37b3fea72bf4b2fde96c64e51f626/cubicweb.python.js"></script>
+<script type="text/javascript" src="http://crater:8888/data0ea37b3fea72bf4b2fde96c64e51f626/cubicweb.htmlhelpers.js"></script>
+<script type="text/javascript" src="http://crater:8888/data0ea37b3fea72bf4b2fde96c64e51f626/cubicweb.ajax.js"></script>
+<script type="text/javascript" src="http://crater:8888/data0ea37b3fea72bf4b2fde96c64e51f626/cubicweb.bookmarks.js"></script>
+<script type="text/javascript">
+jQuery(document).ready(function () {
+ jQuery("#__login:visible").focus()
+ });
+</script>
+</head>
+
+<body>
+<table id="header"><tr>
+<td id="firstcolumn"><a href="http://crater:8888/"><img class="logo" src="http://crater:8888/data0ea37b3fea72bf4b2fde96c64e51f626/logo.png" alt="logo"/></a></td>
+<td id="headtext"><span id="appliName"><a href="http://crater:8888/">unset title</a></span><span class="pathbar">&#160;&gt;&#160;<a href="http://crater:8888/Project">projets</a>&#160;&gt;&#160;<a href="http://crater:8888/project/Comet" title="">Comet</a>&#160;&gt;&#160;
+0.2.0</span></td><td>
+anonyme&#160;[<a class="logout" href="javascript: popupLoginBox();">s'authentifier</a>]</td><td><a href="http://crater:8888/doc/main" class="help" title="aide">&#160;</a></td><td id="lastcolumn"></td>
+</tr></table>
+<div id="popupLoginBox" class="hidden"><div id="loginContent">
+<form method="post" action="http://crater:8888/project/Comet/0.2.0?vid=statussheet" id="login_form">
+<table>
+<tr>
+<td><label for="__login">identifiant</label></td><td><input name="__login" id="__login" class="data" type="text" /></td></tr><tr>
+<td><label for="__password" >mot de passe</label></td><td><input name="__password" id="__password" class="data" type="password" /></td>
+</tr><tr>
+<td>&#160;</td><td><input type="submit" class="loginButton right" value="s'identifier" />
+</td></tr>
+</table>
+</form>
+</div></div>
+
+  <div id="stateheader">
+  </div>
+  <div id="page"><table width="100%" border="0" id="mainLayout"><tr>
+<td class="navcol"><div class="navboxes">
+<div class="searchBoxFrame" id="search_box"><div class="boxTitle"><span><span onclick="javascript: toggleVisibility('rqlinput')">rechercher</span></span></div><div class="boxContent">
+<form action="http://crater:8888/view">
+<table id="tsearch"><tr><td>
+<input id="norql" type="text" accesskey="q" tabindex="1" title="search text" value="" name="rql" />
+<input type="hidden" name="__fromsearchbox" value="1" />
+<input type="hidden" name="subvid" value="tsearch" />
+</td><td>
+<input tabindex="2" type="submit" id="rqlboxsubmit" class="rqlsubmit" value="" />
+</td></tr></table>
+</form></div>
+<div class="shadow">&#160;</div></div><div class="greyBoxFrame" id="edit_box"><div class="boxTitle"><span>actions - version</span></div><div class="boxContent">
+<ul class="boxListing"><li class="boxMainactions"><a href="http://crater:8888/project/Comet/0.2.0" title="keyword: view">voir</a></li>
+<li class="boxMainactions"><a href="http://crater:8888/project/Comet/0.2.0?vid=edition" title="keyword: edit">modifier</a></li>
+<li class="boxMainactions"><a title="aucune transition possible">état: <i>en cours</i></a></li><li><a href="javascript: toggleVisibility('boxmenu_ajouter')" class="boxMenu">ajouter</a><ul id="boxmenu_ajouter" class="hidden"><li class="boxItem"><a href="http://crater:8888/project/Comet/0.2.0?etype=Ticket&amp;__linkto=done_in%3A789%3Asubject&amp;__redirectvid=statussheet&amp;__redirectpath=project%2FComet%2F0.2.0&amp;vid=creation" title="">ticket</a></li>
+<li class="boxItem"><a href="http://crater:8888/project/Comet/0.2.0?etype=Ticket&amp;__linkto=appeared_in%3A789%3Asubject&amp;__redirectvid=statussheet&amp;__redirectpath=project%2FComet%2F0.2.0&amp;vid=creation" title="">signaler une anomalie</a></li>
+</ul></li><li><a href="javascript: toggleVisibility('boxmenu_plus_dactions')" class="boxMenu">plus d'actions</a><ul id="boxmenu_plus_dactions" class="hidden"><li class="boxMoreactions"><a href="http://crater:8888/project/Comet/0.2.0?vid=security" title="keyword: managepermission">gestion des permissions</a></li>
+<li class="boxMoreactions"><a href="http://crater:8888/project/Comet/0.2.0?vid=deleteconf" title="keyword: delete">supprimer</a></li>
+<li class="boxMoreactions"><a href="http://crater:8888/project/Comet/0.2.0?vid=copy" title="keyword: copy">copier</a></li>
+<li class="boxMoreactions"><a href="http://crater:8888/view?rql=Any%20X%20WHERE%20X%20version_of%20P%2C%20P%20name%20%22Comet%22%2C%20X%20num%20%220.2.0%22%2C%20X%20is%20Version&amp;template=pdf-main-template" title="keyword: pdfexport">export pdf</a></li>
+<li class="boxMoreactions"><a href="http://crater:8888/project/Comet/0.2.0?vid=document" title="keyword: pvrestexport">export ReST</a></li>
+</ul></li></ul>
+</div>
+<div class="shadow">&#160;</div></div><div class="boxFrame" id="bookmarks_box"><div class="boxTitle"><span>signets</span></div><div class="boxContent">
+<ul class="sideBox"><li><a href="javascript: toggleVisibility('boxmenu_gérer_les_signets')" class="boxMenu">gérer les signets</a><ul id="boxmenu_gérer_les_signets" class="hidden"><li class="boxManage"><a href="http://crater:8888/add/Bookmark?__linkto=bookmarked_by%3A5%3Asubject&amp;path=project%2FComet%2F0.2.0%3Fvid%3Dstatussheet" title="keyword: bookmark">poser un signet ici</a></li>
+<li class="boxManage"><a href="http://crater:8888/cwuser/admin?target=subject&amp;vid=xaddrelation&amp;rtype=bookmarked_by" title="">récupérer des signets existants</a></li>
+</ul></li></ul>
+</div>
+<div class="shadow">&#160;</div></div></div></td>
+<td id="contentcol">
+<div id="rqlinput" class="hidden">
+          <form action="http://crater:8888/view">
+<fieldset>
+<input type="text" id="rql" name="rql" value="Any X WHERE X version_of P, P name &quot;Comet&quot;, X num &quot;0.2.0&quot;, X is Version"  title="texte à rechercher ou requête RQL" tabindex="3" accesskey="q" class="searchField" />
+<input type="submit" value="" class="rqlsubmit" tabindex="4" />
+</fieldset>
+</form></div><div id="appMsg" onclick="javascript: toggleVisibility('appMsg')" class="hidden">
+</div><div id="pageContent">
+<div id="contentmain">
+<h2>Fiche de statut</h2><table class="listing"><tr><th rowspan="2">Projets</th><th colspan="2">Version</th><th rowspan="2">Parent</th><th rowspan="2">Tickets ouverts</th><th rowspan="2">Tickets implémentés</th><th rowspan="2">Statut</th></tr><tr><th>actuelle</th><th>ciblée</th></tr><tr><td title=""><a href="http://crater:8888/project/Developper%20manual" title="">Developper manual</a></td><td><a href="http://crater:8888/project/Developper%20manual/0.1.0">0.1.0</a></td><td><a href="http://crater:8888/project/Developper%20manual/0.2.0">0.2.0</a></td><td><a href="http://crater:8888/project/Comet%20documentation" title="">Comet documentation</a></td><td><div title="detail a bit configuration steps"><a href="http://crater:8888/ticket/803">T 803</a></div></td><td></td><td>en cours</td></tr><tr><td title=""><a href="http://crater:8888/project/User%20manual" title="">User manual</a></td><td><a href="http://crater:8888/project/User%20manual/0.2.0">0.2.0</a></td><td><a href="http://crater:8888/project/User%20manual/0.2.0">0.2.0</a></td><td><a href="http://crater:8888/project/Comet%20documentation" title="">Comet documentation</a></td><td></td><td><div title="write a tutorial"><a href="http://crater:8888/ticket/801">T 801</a></div></td><td>livrée</td></tr><tr><td title=""><a href="http://crater:8888/project/Comet%20documentation" title="">Comet documentation</a></td><td><a href="http://crater:8888/project/Comet%20documentation/0.1.0">0.1.0</a></td><td><a href="http://crater:8888/project/Comet%20documentation/0.2.0">0.2.0</a></td><td><a href="http://crater:8888/project/Comet" title="">Comet</a></td><td></td><td></td><td>en cours</td></tr><tr><td title=""><a href="http://crater:8888/project/Lgc" title="">Lgc</a></td><td><a href="http://crater:8888/project/Lgc/0.2.0">0.2.0</a></td><td><a href="http://crater:8888/project/Lgc/0.2.0">0.2.0</a></td><td><a href="http://crater:8888/project/Tracker" title="">Tracker</a></td><td></td><td><div title="add support for xhtml -&gt; pdf conversion"><a href="http://crater:8888/ticket/793">T 793</a></div></td><td>livrée</td></tr><tr><td title=""><a href="http://crater:8888/project/Tracker" title="">Tracker</a></td><td><a href="http://crater:8888/project/Tracker/0.1.0">0.1.0</a></td><td><a href="http://crater:8888/project/Tracker/0.2.0">0.2.0</a></td><td><a href="http://crater:8888/project/Confman" title="">Confman</a></td><td><div title="extract core from forge cube"><a href="http://crater:8888/ticket/795">T 795</a></div></td><td></td><td>en cours</td></tr><tr><td title=""><a href="http://crater:8888/project/Confman" title="">Confman</a></td><td><a href="http://crater:8888/project/Confman/0.1.0">0.1.0</a></td><td><a href="http://crater:8888/project/Confman/0.2.0">0.2.0</a></td><td><a href="http://crater:8888/project/Comet" title="">Comet</a></td><td><div title="have a version status sheet"><a href="http://crater:8888/ticket/797">T 797</a></div></td><td></td><td>en cours</td></tr></table></div>
+</div>
+</td>
+</tr></table></div>
+<div class="footer"><a href="http://crater:8888/changelog">nouveautés</a> | <a href="http://crater:8888/doc/about">à propos de ce site</a> | © 2001-2009 <a href="http://www.logilab.fr">Logilab S.A.</a></div></body>
+</html>

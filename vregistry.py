@@ -138,7 +138,7 @@ class Registry(dict):
 
     # dynamic selection methods ################################################
 
-    @deprecated('[3.5] use select instead of object_by_id')
+    @deprecated('[3.6] use select instead of object_by_id')
     def object_by_id(self, oid, *args, **kwargs):
         """return object with the given oid. Only one object is expected to be
         found.
@@ -167,7 +167,7 @@ class Registry(dict):
             return self.select(oid, *args, **kwargs)
         except (NoSelectableObject, ObjectNotFound):
             return None
-    select_object = deprecated('[3.5] use select_or_none instead of select_object'
+    select_object = deprecated('[3.6] use select_or_none instead of select_object'
                                )(select_or_none)
 
     def possible_objects(self, *args, **kwargs):
@@ -210,7 +210,7 @@ class Registry(dict):
                                    [repr(v) for v in winners]))
         # return the result of calling the appobject
         return winners[0](*args, **kwargs)
-    select_best = deprecated('[3.5] select_best is now private')(_select_best)
+    select_best = deprecated('[3.6] select_best is now private')(_select_best)
 
 class VRegistry(dict):
     """class responsible to register, propose and select the various
@@ -223,7 +223,9 @@ class VRegistry(dict):
         self.config = config
 
     def reset(self, path=None, force_reload=None):
-        self.clear()
+        # don't use self.clear, we want to keep existing subdictionaries
+        for subdict in self.itervalues():
+            subdict.clear()
         self._lastmodifs = {}
 
     def __getitem__(self, name):

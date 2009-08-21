@@ -105,6 +105,28 @@ class RequestSessionBase(object):
     def set_entity_cache(self, entity):
         pass
 
+    # XXX move to CWEntityManager or even better as factory method (unclear
+    # where yet...)
+    def create_entity(self, etype, *args, **kwargs):
+        """add a new entity of the given type"""
+        rql = 'INSERT %s X' % etype
+        relations = []
+        restrictions = []
+        cachekey = []
+        for rtype, rvar in args:
+            relations.append('X %s %s' % (rtype, rvar))
+            restrictions.append('%s eid %%(%s)s' % (rvar, rvar))
+            cachekey.append(rvar)
+        for attr in kwargs:
+            if attr in cachekey:
+                continue
+            relations.append('X %s %%(%s)s' % (attr, attr))
+        if relations:
+            rql = '%s: %s' % (rql, ', '.join(relations))
+        if restrictions:
+            rql = '%s WHERE %s' % (rql, ', '.join(restrictions))
+        return self.execute(rql, kwargs, cachekey).get_entity(0, 0)
+
     def ensure_ro_rql(self, rql):
         """raise an exception if the given rql is not a select query"""
         first = rql.split(' ', 1)[0].lower()

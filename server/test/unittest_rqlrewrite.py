@@ -101,13 +101,12 @@ class RQLRewriteTC(TestCase):
 
     def test_or(self):
         constraint = '(X identity U) OR (X in_state ST, CL identity U, CL in_state ST, ST name "subscribed")'
-        rqlst = parse('Any S WHERE S owned_by C, C eid %(u)s')
+        rqlst = parse('Any S WHERE S owned_by C, C eid %(u)s, S is in (CWUser, CWGroup)')
         rewrite(rqlst, {'C': (constraint,)}, {'u':1})
         self.failUnlessEqual(rqlst.as_string(),
-                             "Any S WHERE S owned_by C, C eid %(u)s, A eid %(B)s, "
+                             "Any S WHERE S owned_by C, C eid %(u)s, S is IN(CWUser, CWGroup), A eid %(B)s, "
                              "EXISTS((C identity A) OR (C in_state D, E identity A, "
-                             "E in_state D, D name 'subscribed'), D is State, E is CWUser), "
-                             "S is IN(Affaire, Basket, Bookmark, CWAttribute, CWCache, CWConstraint, CWConstraintType, CWEType, CWGroup, CWPermission, CWProperty, CWRType, CWRelation, CWUser, Card, Comment, Division, Email, EmailAddress, EmailPart, EmailThread, ExternalUri, File, Folder, Image, Note, Personne, RQLExpression, Societe, State, SubDivision, Tag, TrInfo, Transition)")
+                             "E in_state D, D name 'subscribed'), D is State, E is CWUser)")
 
     def test_simplified_rqlst(self):
         card_constraint = ('X in_state S, U in_group G, P require_state S,'

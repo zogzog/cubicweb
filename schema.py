@@ -16,6 +16,7 @@ from warnings import warn
 from logilab.common.decorators import cached, clear_cache, monkeypatch
 from logilab.common.logging_ext import set_log_methods
 from logilab.common.deprecation import deprecated
+from logilab.common.graph import get_cycles
 from logilab.common.compat import any
 
 from yams import BadSchemaDefinition, buildobjs as ybo
@@ -58,6 +59,38 @@ _LOGGER = getLogger('cubicweb.schemaloader')
 ybo.ETYPE_PROPERTIES += ('eid',)
 ybo.RTYPE_PROPERTIES += ('eid',)
 ybo.RDEF_PROPERTIES += ('eid',)
+
+
+# XXX same algorithm as in reorder_cubes and probably other place,
+# may probably extract a generic function
+def order_eschemas(eschemas):
+    """return entity schemas ordered such that entity types which specializes an
+    other one appears after that one
+    """
+    graph = {}
+    for eschema in eschemas:
+        if eschema.specializes():
+            graph[eschema] = set((eschema.specializes(),))
+        else:
+            graph[eschema] = set()
+    cycles = get_cycles(graph)
+    if cycles:
+        cycles = '\n'.join(' -> '.join(cycle) for cycle in cycles)
+        raise Exception('cycles in entity schema specialization: %s'
+                        % cycles)
+    eschemas = []
+    while graph:
+        # sorted to get predictable results
+        for eschema, deps in sorted(graph.items()):
+            if not deps:
+                eschemas.append(eschema)
+                del graph[eschema]
+                for deps in graph.itervalues():
+                    try:
+                        deps.remove(eschema)
+                    except KeyError:
+                        continue
+    return eschemas
 
 def bw_normalize_etype(etype):
     if etype in ETYPE_NAME_MAP:
@@ -414,6 +447,7 @@ class CubicWebSchema(Schema):
     reading_from_database = False
     entity_class = CubicWebEntitySchema
     relation_class = CubicWebRelationSchema
+    no_specialization_inference = ('identity',)
 
     def __init__(self, *args, **kwargs):
         self._eid_index = {}
@@ -804,6 +838,7 @@ class RRQLExpression(RQLExpression):
 PyFileReader.context['RRQLExpression'] = yobsolete(RRQLExpression)
 
 # workflow extensions #########################################################
+
 from yams.buildobjs import _add_relation as yams_add_relation
 
 class workflowable_definition(ybo.metadefinition):
@@ -812,23 +847,30 @@ class workflowable_definition(ybo.metadefinition):
     This is the default metaclass for WorkflowableEntityType
     """
     def __new__(mcs, name, bases, classdict):
-        abstract = classdict.pop('abstract', False)
-        defclass = super(workflowable_definition, mcs).__new__(mcs, name, bases, classdict)
+        abstract = classdict.pop('__abstract__', False)
+        cls = super(workflowable_definition, mcs).__new__(mcs, name, bases,
+                                                          classdict)
         if not abstract:
-            existing_rels = set(rdef.name for rdef in defclass.__relations__)
-            if 'in_state' not in existing_rels and 'wf_info_for' not in existing_rels:
-                in_state = ybo.SubjectRelation('State', cardinality='1*',
-                                               # XXX automatize this
-                                               constraints=[RQLConstraint('S is ET, O state_of ET')],
-                                               description=_('account state'))
-                yams_add_relation(defclass.__relations__, in_state, 'in_state')
-                wf_info_for = ybo.ObjectRelation('TrInfo', cardinality='1*', composite='object')
-                yams_add_relation(defclass.__relations__, wf_info_for, 'wf_info_for')
-        return defclass
+            make_workflowable(cls)
+        return cls
+
+def make_workflowable(cls, in_state_descr=None):
+    existing_rels = set(rdef.name for rdef in cls.__relations__)
+    # let relation types defined in cw.schemas.workflow carrying
+    # cardinality, constraints and other relation definition properties
+    if 'custom_workflow' not in existing_rels:
+        rdef = ybo.SubjectRelation('Workflow')
+        yams_add_relation(cls.__relations__, rdef, 'custom_workflow')
+    if 'in_state' not in existing_rels:
+        rdef = ybo.SubjectRelation('State', description=in_state_descr)
+        yams_add_relation(cls.__relations__, rdef, 'in_state')
+    if 'wf_info_for' not in existing_rels:
+        rdef = ybo.ObjectRelation('TrInfo')
+        yams_add_relation(cls.__relations__, rdef, 'wf_info_for')
 
 class WorkflowableEntityType(ybo.EntityType):
     __metaclass__ = workflowable_definition
-    abstract = True
+    __abstract__ = True
 
 PyFileReader.context['WorkflowableEntityType'] = WorkflowableEntityType
 

@@ -145,7 +145,8 @@ class MemSchemaNotifyChanges(hook.SingleLastOperation):
         hook.SingleLastOperation.__init__(self, session)
 
     def commit_event(self):
-        self.session.repo.set_schema(self.session.repo.schema)
+        rebuildinfered = self.session.data.get('rebuild-infered', True)
+        self.session.repo.set_schema(self.repo.schema, rebuildinfered=rebuildinfered)
 
 
 class MemSchemaOperation(hook.Operation):
@@ -727,9 +728,32 @@ class MemSchemaPermRQLExpressionDel(MemSchemaPermRQLExpressionAdd):
         erschema.set_rqlexprs(self.perm, rqlexprs)
 
 
+class MemSchemaSpecializesAdd(MemSchemaOperation):
+
+    def commit_event(self):
+        eschema = self.session.schema.schema_by_eid(self.etypeeid)
+        parenteschema = self.session.schema.schema_by_eid(self.parentetypeeid)
+        eschema._specialized_type = parenteschema.type
+        parenteschema._specialized_by.append(eschema.type)
+
+
+class MemSchemaSpecializesDel(MemSchemaOperation):
+
+    def commit_event(self):
+        try:
+            eschema = self.session.schema.schema_by_eid(self.etypeeid)
+            parenteschema = self.session.schema.schema_by_eid(self.parentetypeeid)
+        except KeyError:
+            # etype removed, nothing to do
+            return
+        eschema._specialized_type = None
+        parenteschema._specialized_by.remove(eschema.type)
+
+
 class SyncSchemaHook(hook.Hook):
     __abstract__ = True
     category = 'syncschema'
+
 
 # CWEType hooks ################################################################
 
@@ -760,8 +784,7 @@ class AfterDelCWETypeHook(DelCWETypeHook):
 
     def __call__(self):
         # workflow cleanup
-        self._cw.execute('DELETE State X WHERE NOT X state_of Y')
-        self._cw.execute('DELETE Transition X WHERE NOT X transition_of Y')
+        self._cw.execute('DELETE Workflow X WHERE NOT X workflow_of Y')
 
 
 class AfterAddCWETypeHook(DelCWETypeHook):
@@ -1052,7 +1075,6 @@ class BeforeDeleteConstrainedByHook(AfterAddConstrainedByHook):
 
 # permissions synchronization hooks ############################################
 
-
 class AfterAddPermissionHook(SyncSchemaHook):
     """added entity/relation *_permission, need to update schema"""
     __id__ = 'syncaddperm'
@@ -1089,14 +1111,24 @@ class BeforeDelPermissionHook(AfterAddPermissionHook):
             MemSchemaPermRQLExpressionDel(self._cw, perm, self.eidfrom, expr)
 
 
+# specializes synchronization hooks ############################################
 
-class ModifySpecializesHook(SyncSchemaHook):
-    __id__ = 'syncspecializes'
+
+class AfterAddSpecializesHook(SyncSchemaHook):
+    __id__ = 'syncaddspecializes'
     __select__ = SyncSchemaHook.__select__ & hook.match_rtype('specializes')
-    events = ('after_add_relation', 'after_delete_relation')
+    events = ('after_add_relation',)
 
     def __call__(self):
-        # registering a schema operation will trigger a call to
-        # repo.set_schema() on commit which will in turn rebuild
-        # infered relation definitions
-        MemSchemaNotifyChanges(self._cw)
+        MemSchemaSpecializesAdd(session, etypeeid=self.eidfrom,
+                                parentetypeeid=self.eidto)
+
+
+class AfterAddSpecializesHook(SyncSchemaHook):
+    __id__ = 'syncdelspecializes'
+    __select__ = SyncSchemaHook.__select__ & hook.match_rtype('specializes')
+    events = ('after_delete_relation',)
+
+    def __call__(self):
+        MemSchemaSpecializesDel(session, etypeeid=self.eidfrom,
+                                parentetypeeid=self.eidto)

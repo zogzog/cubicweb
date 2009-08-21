@@ -61,7 +61,7 @@ class TwoSourcesTC(CubicWebTC):
         cu = cnx2.cursor()
         self.ec1 = cu.execute('INSERT Card X: X title "C3: An external card", X wikiid "aaa"')[0][0]
         cu.execute('INSERT Card X: X title "C4: Ze external card", X wikiid "zzz"')
-        self.aff1 = cu.execute('INSERT Affaire X: X ref "AFFREF", X in_state S WHERE S name "pitetre"')[0][0]
+        self.aff1 = cu.execute('INSERT Affaire X: X ref "AFFREF"')[0][0]
         cnx2.commit()
         # trigger discovery
         self.sexecute('Card X')
@@ -124,7 +124,7 @@ class TwoSourcesTC(CubicWebTC):
         cu = cnx2.cursor()
         assert cu.execute('Any X WHERE X eid %(x)s', {'x': self.aff1}, 'x')
         cu.execute('SET X ref "BLAH" WHERE X eid %(x)s', {'x': self.aff1}, 'x')
-        aff2 = cu.execute('INSERT Affaire X: X ref "AFFREUX", X in_state S WHERE S name "pitetre"')[0][0]
+        aff2 = cu.execute('INSERT Affaire X: X ref "AFFREUX"')[0][0]
         cnx2.commit()
         try:
             # force sync
@@ -276,6 +276,7 @@ class TwoSourcesTC(CubicWebTC):
                      {'x': affaire.eid, 'u': ueid})
 
     def test_nonregr2(self):
+        self.session.user.fire_transition('deactivate')
         treid = self.session.user.latest_trinfo().eid
         rset = self.sexecute('Any X ORDERBY D DESC WHERE E eid %(x)s, E wf_info_for X, X modification_date D',
                             {'x': treid})

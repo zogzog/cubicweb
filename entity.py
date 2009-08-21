@@ -66,7 +66,7 @@ class Entity(AppObject, dict):
     # class attributes that must be set in class definition
     rest_attr = None
     fetch_attrs = None
-    skip_copy_for = ()
+    skip_copy_for = ('in_state',)
     # class attributes set automatically at registration time
     e_schema = None
 
@@ -83,15 +83,15 @@ class Entity(AppObject, dict):
                 continue
             setattr(cls, rschema.type, Attribute(rschema.type))
         mixins = []
-        for rschema, _, x in eschema.relation_definitions():
-            if (rschema, x) in MI_REL_TRIGGERS:
-                mixin = MI_REL_TRIGGERS[(rschema, x)]
+        for rschema, _, role in eschema.relation_definitions():
+            if (rschema, role) in MI_REL_TRIGGERS:
+                mixin = MI_REL_TRIGGERS[(rschema, role)]
                 if not (issubclass(cls, mixin) or mixin in mixins): # already mixed ?
                     mixins.append(mixin)
                 for iface in getattr(mixin, '__implements__', ()):
                     if not interface.implements(cls, iface):
                         interface.extend(cls, iface)
-            if x == 'subject':
+            if role == 'subject':
                 setattr(cls, rschema.type, SubjectRelation(rschema))
             else:
                 attr = 'reverse_%s' % rschema.type
@@ -152,8 +152,8 @@ class Entity(AppObject, dict):
                 desttype = rschema.objects(eschema.type)[0]
                 card = rschema.rproperty(eschema, desttype, 'cardinality')[0]
                 if card not in '?1':
-                    self.warning('bad relation %s specified in fetch attrs for %s',
-                                 attr, self.__class__)
+                    cls.warning('bad relation %s specified in fetch attrs for %s',
+                                 attr, cls)
                     selection.pop()
                     restrictions.pop()
                     continue
@@ -379,13 +379,6 @@ class Entity(AppObject, dict):
                 continue
             if rschema.type in self.skip_copy_for:
                 continue
-            if rschema.type == 'in_state':
-                # if the workflow is defining an initial state (XXX AND we are
-                # not in the managers group? not done to be more consistent)
-                # don't try to copy in_state
-                if execute('Any S WHERE S state_of ET, ET initial_state S,'
-                           'ET name %(etype)s', {'etype': str(self.e_schema)}):
-                    continue
             # skip composite relation
             if self.e_schema.subjrproperty(rschema, 'composite'):
                 continue
@@ -516,14 +509,14 @@ class Entity(AppObject, dict):
                 self[str(selected[i-1][0])] = rset[i]
             # handle relations
             for i in xrange(lastattr, len(rset)):
-                rtype, x = selected[i-1][0]
+                rtype, role = selected[i-1][0]
                 value = rset[i]
                 if value is None:
                     rrset = ResultSet([], rql, {'x': self.eid})
                     self.req.decorate_rset(rrset)
                 else:
                     rrset = self.req.eid_rset(value)
-                self.set_related_cache(rtype, x, rrset)
+                self.set_related_cache(rtype, role, rrset)
 
     def get_value(self, name):
         """get value for the attribute relation <name>, query the repository
@@ -711,6 +704,11 @@ class Entity(AppObject, dict):
         else:
             assert role
             self._related_cache.pop('%s_%s' % (rtype, role), None)
+
+    def clear_all_caches(self):
+        self.clear()
+        for rschema, _, role in self.e_schema.relation_definitions():
+            self.clear_related_cache(rschema.type, role)
 
     # raw edition utilities ###################################################
 

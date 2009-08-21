@@ -75,15 +75,42 @@ class Session(RequestSessionBase):
         return '<%ssession %s (%s 0x%x)>' % (self.cnxtype, self.user.login,
                                              self.id, id(self))
 
-    def add_relation(self, fromeid, rtype, toeid):
+    def _change_relation(self, cb, fromeid, rtype, toeid):
         if self.is_super_session:
-            self.repo.glob_add_relation(self, fromeid, rtype, toeid)
+            cb(self, fromeid, rtype, toeid)
             return
         self.is_super_session = True
         try:
-            self.repo.glob_add_relation(self, fromeid, rtype, toeid)
+            cb(self, fromeid, rtype, toeid)
         finally:
             self.is_super_session = False
+
+    def add_relation(self, fromeid, rtype, toeid):
+        """provide direct access to the repository method to add a relation.
+
+        This is equivalent to the following rql query:
+
+          SET X rtype Y WHERE X eid  fromeid, T eid toeid
+
+        without read security check but also all the burden of rql execution.
+        You may use this in hooks when you know both eids of the relation you
+        want to add.
+        """
+        self._change_relation(self.repo.glob_add_relation,
+                              fromeid, rtype, toeid)
+    def delete_relation(self, fromeid, rtype, toeid):
+        """provide direct access to the repository method to delete a relation.
+
+        This is equivalent to the following rql query:
+
+          DELETE X rtype Y WHERE X eid  fromeid, T eid toeid
+
+        without read security check but also all the burden of rql execution.
+        You may use this in hooks when you know both eids of the relation you
+        want to delete.
+        """
+        self._change_relation(self.repo.glob_delete_relation,
+                              fromeid, rtype, toeid)
 
     def update_rel_cache_add(self, subject, rtype, object, symetric=False):
         self._update_entity_rel_cache_add(subject, rtype, 'subject', object)
@@ -563,7 +590,7 @@ class Session(RequestSessionBase):
     # deprecated ###############################################################
 
     @property
-    @deprecated("[3.5] use session.vreg.schema")
+    @deprecated("[3.6] use session.vreg.schema")
     def schema(self):
         return self.repo.schema
 

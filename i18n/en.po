@@ -107,6 +107,10 @@ msgid "%s error report"
 msgstr ""
 
 #, python-format
+msgid "%s is not the initial state (%s) for this entity"
+msgstr ""
+
+#, python-format
 msgid "%s not estimated"
 msgstr ""
 
@@ -429,6 +433,9 @@ msgid "Read permissions"
 msgstr ""
 
 msgid "Recipients:"
+msgstr ""
+
+msgid "Registry's content"
 msgstr ""
 
 msgid "Relations"
@@ -2298,9 +2305,6 @@ msgstr ""
 msgid "not selected"
 msgstr ""
 
-msgid "not the initial state for this entity"
-msgstr ""
-
 msgid "nothing to edit"
 msgstr ""
 
@@ -2436,6 +2440,9 @@ msgstr "can be read by"
 
 msgid "read_permission_object"
 msgstr "has permission to delete"
+
+msgid "registry"
+msgstr ""
 
 #, python-format
 msgid "relation %(relname)s of %(ent)s"
@@ -2830,7 +2837,8 @@ msgstr "to do by"
 msgid "toggle check boxes"
 msgstr ""
 
-msgid "transition is not allowed"
+#, python-format
+msgid "transition from %s to %s does not exist or is not allowed"
 msgstr ""
 
 msgid "transition_of"
