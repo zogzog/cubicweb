@@ -176,6 +176,11 @@ class Repository(object):
         # create the hooks manager
         self.hm = HooksManager(self.schema)
         # open some connections pools
+        if config.open_connections_pools:
+            self.open_connections_pools()
+
+    def open_connections_pools(self):
+        config = self.config
         self._available_pools = Queue.Queue()
         self._available_pools.put_nowait(ConnectionsPool(self.sources))
         if config.read_instance_schema:

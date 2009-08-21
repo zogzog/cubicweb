@@ -152,14 +152,12 @@ class ServerMigrationHelper(MigrationHelper):
 
     def restore_database(self, backupfile, drop=True, systemonly=True,
                          askconfirm=True):
-        config = self.config
-        repo = self.repo_connect()
         # check
         if not osp.exists(backupfile):
             raise Exception("Backup file %s doesn't exist" % backupfile)
             return
         if askconfirm and not self.confirm('Restore %s database from %s ?'
-                                           % (config.appid, backupfile)):
+                                           % (self.config.appid, backupfile)):
             return
         # unpack backup
         bkup = tarfile.open(backupfile, 'r|gz')
@@ -170,6 +168,9 @@ class ServerMigrationHelper(MigrationHelper):
         bkup = tarfile.open(backupfile, 'r|gz')
         tmpdir = tempfile.mkdtemp()
         bkup.extractall(path=tmpdir)
+
+        self.config.open_connections_pools = False
+        repo = self.repo_connect()
         for source in repo.sources:
             if systemonly and source.uri != 'system':
                 continue
@@ -182,6 +183,7 @@ class ServerMigrationHelper(MigrationHelper):
         bkup.close()
         shutil.rmtree(tmpdir)
         # call hooks
+        repo.open_connections_pools()
         repo.hm.call_hooks('server_restore', repo=repo, timestamp=backupfile)
         print '-> database restored.'
 

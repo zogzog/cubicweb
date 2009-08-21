@@ -216,11 +216,13 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
 
     def restore(self, backupfile, drop):
         """method called to restore a backup of source's data"""
-        self.close_pool_connections()
+        if self.repo.config.open_connections_pools:
+            self.close_pool_connections()
         try:
             self.restore_from_file(backupfile, drop)
         finally:
-            self.open_pool_connections()
+            if self.repo.config.open_connections_pools:
+                self.open_pool_connections()
 
     def init(self):
         self.init_creating()
