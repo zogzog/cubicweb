@@ -198,6 +198,7 @@ class WorkflowTC(EnvBasedTC):
         self.assertEquals(len(transitions), 1)
         self.assertEquals(transitions[0].name, 'tr1')
 
+
 class CustomWorkflowTC(EnvBasedTC):
 
     def setup_database(self):

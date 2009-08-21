@@ -124,7 +124,9 @@ class BaseTransition(AnyEntity):
     fetch_attrs, fetch_order = fetch_config(['name'])
 
     def __init__(self, *args, **kwargs):
-        raise Exception('should not be instantiated')
+        if self.id == 'BaseTransition':
+            raise Exception('should not be instantiated')
+        super(BaseTransition, self).__init__(*args, **kwargs)
 
     def may_be_fired(self, eid):
         """return true if the logged user may fire this transition
