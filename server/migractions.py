@@ -918,14 +918,14 @@ class ServerMigrationHelper(MigrationHelper):
         if not isinstance(wfof, (list, tuple)):
             wfof = (wfof,)
         for etype in wfof:
-            rset = self.rqlexec('SET X workflow_of ET '
-                                'WHERE X eid %(x)s, ET name %(et)s',
-                                {'x': wf.eid, 'et': etype}, 'x')
+            rset = self.rqlexec(
+                'SET X workflow_of ET WHERE X eid %(x)s, ET name %(et)s',
+                {'x': wf.eid, 'et': etype}, 'x', ask_confirm=False)
             assert rset, 'unexistant entity type %s' % etype
             if default:
-                rset = self.rqlexec('SET ET default_workflow X '
-                                    'WHERE X eid %(x)s, ET name %(et)s',
-                                    {'x': wf.eid, 'et': etype}, 'x')
+                self.rqlexec(
+                    'SET ET default_workflow X WHERE X eid %(x)s, ET name %(et)s',
+                    {'x': wf.eid, 'et': etype}, 'x', ask_confirm=False)
         if commit:
             self.commit()
         return wf
