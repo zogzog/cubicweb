@@ -23,7 +23,7 @@ class Workflow(AnyEntity):
     @property
     def initial(self):
         """return the initial state for this workflow"""
-        return self.initial_state and self.initial_state[0]
+        return self.initial_state and self.initial_state[0] or None
 
     def is_default_workflow_of(self, etype):
         """return True if this workflow is the default workflow for the given
