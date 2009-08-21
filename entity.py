@@ -825,6 +825,11 @@ class Entity(AppObject, dict):
             assert role
             self._related_cache.pop('%s_%s' % (rtype, role), None)
 
+    def clear_all_caches(self):
+        self.clear()
+        for rschema, _, role in self.e_schema.relation_definitions():
+            self.clear_related_cache(rschema.type, role)
+
     # raw edition utilities ###################################################
 
     def set_attributes(self, _cw_unsafe=False, **kwargs):
