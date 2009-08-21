@@ -133,22 +133,27 @@ class ServerMigrationHelper(MigrationHelper):
         os.chmod(backupfile, 0600)
         # backup
         tmpdir = tempfile.mkdtemp(dir=instbkdir)
-        for source in repo.sources:
-            try:
-                source.backup(osp.join(tmpdir,source.uri))
-            except Exception, exc:
-                print '-> error trying to backup [%s]' % exc
-                if not self.confirm('Continue anyway?', default='n'):
-                    raise SystemExit(1)
-        bkup = tarfile.open(backupfile, 'w|gz')
-        for filename in os.listdir(tmpdir):
-            bkup.add(osp.join(tmpdir,filename), filename)
-        bkup.close()
-        shutil.rmtree(tmpdir)
-        # call hooks
-        repo.hm.call_hooks('server_backup', repo=repo, timestamp=timestamp)
-        # done
-        print '-> backup file',  backupfile
+        try:
+            for source in repo.sources:
+                try:
+                    source.backup(osp.join(tmpdir, source.uri))
+                except Exception, exc:
+                    print '-> error trying to backup [%s]' % exc
+                    if not self.confirm('Continue anyway?', default='n'):
+                        raise SystemExit(1)
+                    else:
+                        break
+            else:
+                bkup = tarfile.open(backupfile, 'w|gz')
+                for filename in os.listdir(tmpdir):
+                    bkup.add(osp.join(tmpdir,filename), filename)
+                bkup.close()
+                # call hooks
+                repo.hm.call_hooks('server_backup', repo=repo, timestamp=timestamp)
+                # done
+                print '-> backup file',  backupfile
+        finally:
+            shutil.rmtree(tmpdir)
 
     def restore_database(self, backupfile, drop=True, systemonly=True,
                          askconfirm=True):
