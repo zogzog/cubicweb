@@ -9,7 +9,7 @@ __docformat__ = "restructuredtext en"
 
 from warnings import warn
 
-from logilab.common.decorators import cached
+from logilab.common.decorators import cached, clear_cache
 from logilab.common.deprecation import deprecated
 
 from cubicweb.entities import AnyEntity, fetch_config
@@ -369,6 +369,11 @@ class WorkflowableMixIn(object):
         self.req.create_entity('TrInfo', ('to_state', 'S'),
                                ('wf_info_for', 'E'), S=state.eid, E=self.eid,
                                **self._get_tr_kwargs(comment, commentformat))
+
+
+    def clear_all_caches(self):
+        super(WorkflowableMixIn, self).clear_all_caches()
+        clear_cache(self, 'cwetype_workflow')
 
     @deprecated('get transition from current workflow and use its may_be_fired method')
     def can_pass_transition(self, trname):
