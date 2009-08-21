@@ -415,12 +415,12 @@ class ServerMigrationHelper(MigrationHelper):
                          {'x': str(repoeschema), 'y': str(espschema)})
         self.rqlexecall(ss.updateeschema2rql(eschema),
                         ask_confirm=self.verbosity >= 2)
-        for rschema, targettypes, x in eschema.relation_definitions(True):
-            if x == 'subject':
+        for rschema, targettypes, role in eschema.relation_definitions(True):
+            if role == 'subject':
                 if not rschema in repoeschema.subject_relations():
                     continue
                 subjtypes, objtypes = [etype], targettypes
-            else: # x == 'object'
+            else: # role == 'object'
                 if not rschema in repoeschema.object_relations():
                     continue
                 subjtypes, objtypes = targettypes, [etype]
