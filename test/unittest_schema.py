@@ -166,7 +166,7 @@ class SchemaReaderClassTest(TestCase):
                               'composite', 'condition', 'connait', 'constrained_by', 'content',
                               'content_format', 'created_by', 'creation_date', 'cstrtype', 'custom_workflow', 'cwuri',
 
-                              'data', 'data_encoding', 'data_format', 'default_workflow_of', 'defaultval', 'delete_permission',
+                              'data', 'data_encoding', 'data_format', 'default_workflow', 'defaultval', 'delete_permission',
                               'description', 'description_format', 'destination_state',
 
                               'ecrit_par', 'eid', 'evaluee', 'expression', 'exprtype',

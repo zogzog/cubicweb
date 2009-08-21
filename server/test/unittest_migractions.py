@@ -111,7 +111,7 @@ class MigrationCommandsTC(RepositoryBasedTC):
             s1 = self.mh.rqlexec('Any N WHERE WF workflow_of ET, ET name "%s", WF name N' %
                                  etype)[0][0]
             self.assertEquals(s1, "foo")
-            s1 = self.mh.rqlexec('Any N WHERE WF default_workflow_of ET, ET name "%s", WF name N' %
+            s1 = self.mh.rqlexec('Any N WHERE ET default_workflow WF, ET name "%s", WF name N' %
                                  etype)[0][0]
             self.assertEquals(s1, "foo")
 

@@ -29,7 +29,8 @@ class Workflow(AnyEntity):
         """return True if this workflow is the default workflow for the given
         entity type
         """
-        return any(et for et in self.default_workflow_of if et.name == etype)
+        return any(et for et in self.reverse_default_workflow
+                   if et.name == etype)
 
     def after_deletion_path(self):
         """return (path, parameters) which should be used as redirect

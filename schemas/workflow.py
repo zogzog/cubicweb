@@ -26,14 +26,20 @@ class Workflow(EntityType):
                                   description=_('entity types which may use this workflow'),
                                   constraints=[RQLConstraint('O final FALSE')])
 
-    default_workflow_of = SubjectRelation('CWEType', cardinality='*?',
-                                          description=_('which entity types use this workflow by default'),
-                                          constraints=[RQLConstraint('O final FALSE')])
-
     initial_state = SubjectRelation('State', cardinality='?*',
                                    # S initial_state O, O state_of S
                                    constraints=[RQLConstraint('O state_of S')],
                                    description=_('initial state for this workflow'))
+
+
+class default_workflow(RelationType):
+    """default workflow for this entity types"""
+    permissions = META_RTYPE_PERMS
+
+    subject = 'CWEType'
+    object = 'Workflow'
+    cardinality = '?*'
+    constraints = [RQLConstraint('S final FALSE, O workflow_of S')]
 
 
 class State(EntityType):
