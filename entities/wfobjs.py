@@ -261,23 +261,11 @@ class WorkflowableMixIn(object):
     __implements__ = (IWorkflowable,)
 
     @property
-    @cached
     def current_workflow(self):
         """return current workflow applied to this entity"""
         if self.custom_workflow:
             return self.custom_workflow[0]
-        wfrset = self.req.execute('Any WF WHERE X is ET, X eid %(x)s, WF workflow_of ET',
-                                  {'x': self.eid}, 'x')
-        if len(wfrset) == 1:
-            return wfrset.get_entity(0, 0)
-        if len(wfrset) > 1:
-            for wf in wfrset.entities():
-                if wf.is_default_workflow_of(self.id):
-                    return wf
-            self.warning("can't find default workflow for %s", self.id)
-        else:
-            self.warning("can't find any workflow for %s", self.id)
-        return None
+        return self.cwetype_workflow()
 
     @property
     def current_state(self):
@@ -304,6 +292,23 @@ class WorkflowableMixIn(object):
     def latest_trinfo(self):
         """return the latest transition information for this entity"""
         return self.reverse_wf_info_for[-1]
+
+    @cached
+    def cwetype_workflow(self):
+        """return the default workflow for entities of this type"""
+        # XXX CWEType method
+        wfrset = self.req.execute('Any WF WHERE X is ET, X eid %(x)s, '
+                                  'WF workflow_of ET', {'x': self.eid}, 'x')
+        if len(wfrset) == 1:
+            return wfrset.get_entity(0, 0)
+        if len(wfrset) > 1:
+            for wf in wfrset.entities():
+                if wf.is_default_workflow_of(self.id):
+                    return wf
+            self.warning("can't find default workflow for %s", self.id)
+        else:
+            self.warning("can't find any workflow for %s", self.id)
+        return None
 
     def possible_transitions(self):
         """generates transition that MAY be fired for the given entity,
