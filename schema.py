@@ -447,6 +447,7 @@ class CubicWebSchema(Schema):
     reading_from_database = False
     entity_class = CubicWebEntitySchema
     relation_class = CubicWebRelationSchema
+    no_specialization_inference = ('identity',)
 
     def __init__(self, *args, **kwargs):
         self._eid_index = {}
