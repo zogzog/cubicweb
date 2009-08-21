@@ -418,6 +418,15 @@ def _register_usergroup_hooks(hm):
 
 # workflow handling ###########################################################
 
+def _change_state(session, x, oldstate, newstate):
+    nocheck = session.transaction_data.setdefault('skip-security', set())
+    nocheck.add((x, 'in_state', oldstate))
+    nocheck.add((x, 'in_state', newstate))
+    # delete previous state first in case we're using a super session
+    session.delete_relation(x, 'in_state', oldstate)
+    session.add_relation(x, 'in_state', newstate)
+
+
 def before_add_trinfo(session, entity):
     """check the transition is allowed, add missing information. Expect that:
     * wf_info_for inlined relation is set
@@ -477,16 +486,11 @@ def before_add_trinfo(session, entity):
     nocheck.add((entity.eid, 'from_state', fromstate.eid))
     nocheck.add((entity.eid, 'to_state', deststateeid))
 
+
 def after_add_trinfo(session, entity):
     """change related entity state"""
-    # need to delete previous state first, not done automatically since
-    # we're using a super session
-    session.unsafe_execute('DELETE X in_state S WHERE X eid %(x)s, S eid %(s)s',
-                           {'x': entity['wf_info_for'], 's': entity['from_state']},
-                           ('x', 's'))
-    session.unsafe_execute('SET X in_state S WHERE X eid %(x)s, S eid %(s)s',
-                           {'x': entity['wf_info_for'], 's': entity['to_state']},
-                           ('x', 's'))
+    _change_state(session, entity['wf_info_for'],
+                  entity['from_state'], entity['to_state'])
 
 
 class SetInitialStateOp(PreCommitOperation):
@@ -510,6 +514,48 @@ class SetInitialStateOp(PreCommitOperation):
 def set_initial_state_after_add(session, entity):
     SetInitialStateOp(session, entity=entity)
 
+
+class WorkflowChangedOp(PreCommitOperation):
+    """fix entity current state when changing its workflow"""
+
+    def precommit_event(self):
+        session = self.session
+        pendingeids = session.transaction_data.get('pendingeids', ())
+        if self.eid in pendingeids:
+            return
+        entity = session.entity_from_eid(self.eid)
+        # notice that enforcment that new workflow apply to the entity's type is
+        # done by schema rule, no need to check it here
+        if entity.current_workflow.eid == self.wfeid:
+            deststate = entity.current_workflow.initial
+            if not deststate:
+                msg = session._('workflow has no initial state')
+                raise ValidationError(entity.eid, {'custom_workflow': msg})
+            if entity.current_workflow.state_by_eid(entity.current_state.eid):
+                # nothing to do
+                return
+            # if there are no history, simply go to new workflow's initial state
+            if not entity.workflow_history:
+                if entity.current_state.eid != deststate.eid:
+                    _change_state(session, entity.eid,
+                                  entity.current_state.eid, deststate.eid)
+                return
+            msg = session._('workflow changed to "%s"')
+            msg %= entity.current_workflow.name
+            entity.change_state(deststate.name, msg)
+
+
+def set_custom_workflow(session, eidfrom, rtype, eidto):
+    WorkflowChangedOp(session, eid=eidfrom, wfeid=eidto)
+
+
+def del_custom_workflow(session, eidfrom, rtype, eidto):
+    entity = session.entity_from_eid(eidfrom)
+    typewf = entity.cwetype_workflow()
+    if typewf is not None:
+        WorkflowChangedOp(session, eid=eidfrom, wfeid=typewf.eid)
+
+
 def after_del_workflow(session, eid):
     # workflow cleanup
     session.execute('DELETE State X WHERE NOT X state_of Y')
@@ -526,6 +572,8 @@ def _register_wf_hooks(hm):
             if 'in_state' in eschema.subject_relations():
                 hm.register_hook(set_initial_state_after_add, 'after_add_entity',
                                  str(eschema))
+        hm.register_hook(set_custom_workflow, 'after_add_relation', 'custom_workflow')
+        hm.register_hook(del_custom_workflow, 'after_delete_relation', 'custom_workflow')
         hm.register_hook(after_del_workflow, 'after_delete_entity', 'Workflow')
 
 
