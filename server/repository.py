@@ -240,8 +240,9 @@ class Repository(object):
         source_config['uri'] = uri
         return get_source(source_config, self.schema, self)
 
-    def set_schema(self, schema, resetvreg=True):
-        schema.rebuild_infered_relations()
+    def set_schema(self, schema, resetvreg=True, rebuildinfered=True):
+        if rebuildinfered:
+            schema.rebuild_infered_relations()
         self.info('set schema %s %#x', schema.name, id(schema))
         self.debug(', '.join(sorted(str(e) for e in schema.entities())))
         self.querier.set_schema(schema)

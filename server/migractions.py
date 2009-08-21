@@ -61,6 +61,7 @@ class ServerMigrationHelper(MigrationHelper):
             assert repo
             self._cnx = cnx
             self.repo = repo
+            self.session.data['rebuild-infered'] = False
         elif connect:
             self.repo_connect()
         if not schema:
@@ -222,6 +223,7 @@ class ServerMigrationHelper(MigrationHelper):
                     print 'aborting...'
                     sys.exit(0)
             self.session.keep_pool_mode('transaction')
+            self.session.data['rebuild-infered'] = False
             return self._cnx
 
     @property
@@ -626,11 +628,13 @@ class ServerMigrationHelper(MigrationHelper):
         in auto mode, automatically register entity's relation where the
         targeted type is known
         """
-        applschema = self.repo.schema
-        if etype in applschema:
-            eschema = applschema[etype]
+        instschema = self.repo.schema
+        if etype in instschema:
+            # XXX (syt) plz explain: if we're adding an entity type, it should
+            # not be there...
+            eschema = instschema[etype]
             if eschema.is_final():
-                applschema.del_entity_type(etype)
+                instschema.del_entity_type(etype)
         else:
             eschema = self.fs_schema.eschema(etype)
         confirm = self.verbosity >= 2
@@ -646,13 +650,46 @@ class ServerMigrationHelper(MigrationHelper):
             # ignore those meta relations, they will be automatically added
             if rschema.type in META_RTYPES:
                 continue
-            if not rschema.type in applschema:
+            if not rschema.type in instschema:
                 # need to add the relation type and to commit to get it
                 # actually in the schema
                 self.cmd_add_relation_type(rschema.type, False, commit=True)
             # register relation definition
             self.rqlexecall(ss.rdef2rql(rschema, etype, attrschema.type),
                             ask_confirm=confirm)
+        # take care to newly introduced base class
+        # XXX some part of this should probably be under the "if auto" block
+        for spschema in eschema.specialized_by(recursive=False):
+            try:
+                instspschema = instschema[spschema]
+            except KeyError:
+                # specialized entity type not in schema, ignore
+                continue
+            if instspschema.specializes() != eschema:
+                self.rqlexec('SET D specializes P WHERE D eid %(d)s, P name %(pn)s',
+                              {'d': instspschema.eid,
+                               'pn': eschema.type}, ask_confirm=confirm)
+                for rschema, tschemas, role in spschema.relation_definitions(True):
+                    for tschema in tschemas:
+                        if not tschema in instschema:
+                            continue
+                        if role == 'subject':
+                            subjschema = spschema
+                            objschema = tschema
+                            if rschema.final and instspschema.has_subject_relation(rschema):
+                                # attribute already set, has_rdef would check if
+                                # it's of the same type, we don't want this so
+                                # simply skip here
+                                continue
+                        elif role == 'object':
+                            subjschema = tschema
+                            objschema = spschema
+                        if (rschema.rproperty(subjschema, objschema, 'infered')
+                            or (instschema.has_relation(rschema) and
+                                instschema[rschema].has_rdef(subjschema, objschema))):
+                                continue
+                        self.cmd_add_relation_definition(
+                            subjschema.type, rschema.type, objschema.type)
         if auto:
             # we have commit here to get relation types actually in the schema
             self.commit()
@@ -662,12 +699,12 @@ class ServerMigrationHelper(MigrationHelper):
                 # 'owned_by'/'created_by' will be automatically added
                 if rschema.final or rschema.type in META_RTYPES:
                     continue
-                rtypeadded = rschema.type in applschema
+                rtypeadded = rschema.type in instschema
                 for targetschema in rschema.objects(etype):
                     # ignore relations where the targeted type is not in the
                     # current instance schema
                     targettype = targetschema.type
-                    if not targettype in applschema and targettype != etype:
+                    if not targettype in instschema and targettype != etype:
                         continue
                     if not rtypeadded:
                         # need to add the relation type and to commit to get it
@@ -682,14 +719,14 @@ class ServerMigrationHelper(MigrationHelper):
                     self.rqlexecall(ss.rdef2rql(rschema, etype, targettype),
                                     ask_confirm=confirm)
             for rschema in eschema.object_relations():
-                rtypeadded = rschema.type in applschema or rschema.type in added
+                rtypeadded = rschema.type in instschema or rschema.type in added
                 for targetschema in rschema.subjects(etype):
                     # ignore relations where the targeted type is not in the
                     # current instance schema
                     targettype = targetschema.type
                     # don't check targettype != etype since in this case the
                     # relation has already been added as a subject relation
-                    if not targettype in applschema:
+                    if not targettype in instschema:
                         continue
                     if not rtypeadded:
                         # need to add the relation type and to commit to get it
