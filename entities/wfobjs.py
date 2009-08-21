@@ -289,6 +289,13 @@ class WorkflowableMixIn(object):
             return self.req._(state.name)
         return u''
 
+    @property
+    def workflow_history(self):
+        """return the workflow history for this entity (eg ordered list of
+        TrInfo entities)
+        """
+        return self.reverse_wf_info_for
+
     def latest_trinfo(self):
         """return the latest transition information for this entity"""
         return self.reverse_wf_info_for[-1]
