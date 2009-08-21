@@ -190,7 +190,7 @@ class Repository(object):
             # usually during repository creation
             self.warning("set fs instance'schema as bootstrap schema")
             config.bootstrap_cubes()
-            self.set_bootstrap_schema(self.config.load_schema())
+            self.set_bootstrap_schema(config.load_schema())
             # need to load the Any and CWUser entity types
             self.vreg.schema = self.schema
             etdirectory = join(CW_SOFTWARE_ROOT, 'entities')
@@ -203,7 +203,7 @@ class Repository(object):
             # test start: use the file system schema (quicker)
             self.warning("set fs instance'schema")
             config.bootstrap_cubes()
-            self.set_schema(self.config.load_schema())
+            self.set_schema(config.load_schema())
         if not config.creating:
             if 'CWProperty' in self.schema:
                 self.vreg.init_properties(self.properties())
@@ -231,8 +231,7 @@ class Repository(object):
             # call instance level initialisation hooks
             self.hm.call_hooks('server_startup', repo=self)
             # register a task to cleanup expired session
-            self.looping_task(self.config['session-time']/3.,
-                              self.clean_sessions)
+            self.looping_task(config['session-time']/3., self.clean_sessions)
         CW_EVENT_MANAGER.bind('after-registry-reload', self.reset_hooks)
 
     # internals ###############################################################
