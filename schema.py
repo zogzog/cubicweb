@@ -853,7 +853,7 @@ class workflowable_definition(ybo.metadefinition):
             make_workflowable(cls)
         return cls
 
-def make_workflowable(cls):
+def make_workflowable(cls, in_state_descr=None):
     existing_rels = set(rdef.name for rdef in cls.__relations__)
     # let relation types defined in cw.schemas.workflow carrying
     # cardinality, constraints and other relation definition properties
@@ -861,7 +861,7 @@ def make_workflowable(cls):
         rdef = ybo.SubjectRelation('Workflow')
         yams_add_relation(cls.__relations__, rdef, 'custom_workflow')
     if 'in_state' not in existing_rels:
-        rdef = ybo.SubjectRelation('State')
+        rdef = ybo.SubjectRelation('State', description=in_state_descr)
         yams_add_relation(cls.__relations__, rdef, 'in_state')
     if 'wf_info_for' not in existing_rels:
         rdef = ybo.ObjectRelation('TrInfo')
