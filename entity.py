@@ -182,15 +182,15 @@ class Entity(AppObject, dict):
                 continue
             setattr(cls, rschema.type, Attribute(rschema.type))
         mixins = []
-        for rschema, _, x in eschema.relation_definitions():
-            if (rschema, x) in MI_REL_TRIGGERS:
-                mixin = MI_REL_TRIGGERS[(rschema, x)]
+        for rschema, _, role in eschema.relation_definitions():
+            if (rschema, role) in MI_REL_TRIGGERS:
+                mixin = MI_REL_TRIGGERS[(rschema, role)]
                 if not (issubclass(cls, mixin) or mixin in mixins): # already mixed ?
                     mixins.append(mixin)
                 for iface in getattr(mixin, '__implements__', ()):
                     if not interface.implements(cls, iface):
                         interface.extend(cls, iface)
-            if x == 'subject':
+            if role == 'subject':
                 setattr(cls, rschema.type, SubjectRelation(rschema))
             else:
                 attr = 'reverse_%s' % rschema.type
@@ -615,14 +615,14 @@ class Entity(AppObject, dict):
                 self[str(selected[i-1][0])] = rset[i]
             # handle relations
             for i in xrange(lastattr, len(rset)):
-                rtype, x = selected[i-1][0]
+                rtype, role = selected[i-1][0]
                 value = rset[i]
                 if value is None:
                     rrset = ResultSet([], rql, {'x': self.eid})
                     self.req.decorate_rset(rrset)
                 else:
                     rrset = self.req.eid_rset(value)
-                self.set_related_cache(rtype, x, rrset)
+                self.set_related_cache(rtype, role, rrset)
 
     def get_value(self, name):
         """get value for the attribute relation <name>, query the repository
