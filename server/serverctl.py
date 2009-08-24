@@ -257,12 +257,19 @@ class CreateInstanceDBCommand(Command):
           'help': 'verbose mode: will ask all possible configuration questions',
           }
          ),
+        ('automatic',
+         {'short': 'a', 'type' : 'yn', 'metavar': '<auto>',
+          'default': 'n',
+          'help': 'automatic mode: never ask and use default answer to every question',
+          }
+         ),
         )
     def run(self, args):
         """run the command with its specific arguments"""
         from logilab.common.adbh import get_adv_func_helper
         from indexer import get_indexer
         verbose = self.get('verbose')
+        automatic = self.get('automatic')
         appid = pop_arg(args, msg='No instance specified !')
         config = ServerConfiguration.config_for(appid)
         create_db = self.config.create_db
@@ -277,13 +284,13 @@ class CreateInstanceDBCommand(Command):
             try:
                 if helper.users_support:
                     user = source['db-user']
-                    if not helper.user_exists(cursor, user) and \
-                           ASK.confirm('Create db user %s ?' % user, default_is_yes=False):
+                    if not helper.user_exists(cursor, user) and (automatic or \
+                           ASK.confirm('Create db user %s ?' % user, default_is_yes=False)):
                         helper.create_user(source['db-user'], source['db-password'])
                         print '-> user %s created.' % user
                 dbname = source['db-name']
                 if dbname in helper.list_databases(cursor):
-                    if ASK.confirm('Database %s already exists -- do you want to drop it ?' % dbname):
+                    if automatic or ASK.confirm('Database %s already exists -- do you want to drop it ?' % dbname):
                         cursor.execute('DROP DATABASE %s' % dbname)
                     else:
                         return
@@ -311,7 +318,7 @@ class CreateInstanceDBCommand(Command):
         cnx.commit()
         print '-> database for instance %s created and necessary extensions installed.' % appid
         print
-        if ASK.confirm('Run db-init to initialize the system database ?'):
+        if automatic or ASK.confirm('Run db-init to initialize the system database ?'):
             cmd_run('db-init', config.appid)
         else:
             print ('-> nevermind, you can do it later with '
