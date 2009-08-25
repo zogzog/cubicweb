@@ -515,6 +515,26 @@ class SetInitialStateOp(PreCommitOperation):
                                                    state.eid)
 
 
+def before_add_in_state(session, eidfrom, rtype, eidto):
+    """check state apply"""
+    nocheck = session.transaction_data.setdefault('skip-security', ())
+    if (eidfrom, 'in_state', eidto) in nocheck:
+        # state changed through TrInfo insertion, so we already know it's ok
+        print 'skip in_state check'
+        return
+    entity = session.entity_from_eid(eidfrom)
+    mainwf = entity.main_workflow
+    if mainwf is None:
+        msg = session._('entity has no workflow set')
+        raise ValidationError(entity.eid, {None: msg})
+    for wf in mainwf.iter_workflows():
+        if wf.state_by_eid(eidto):
+            break
+    else:
+        msg = session._("state doesn't belong to entity's workflow. You may "
+                        "want to set a custom workflow for this entity first.")
+        raise ValidationError(eidfrom, {'in_state': msg})
+
 def set_initial_state_after_add(session, entity):
     SetInitialStateOp(session, entity=entity)
 
@@ -581,6 +601,7 @@ def _register_wf_hooks(hm):
         hm.register_hook(set_custom_workflow, 'after_add_relation', 'custom_workflow')
         hm.register_hook(del_custom_workflow, 'after_delete_relation', 'custom_workflow')
         hm.register_hook(after_del_workflow, 'after_delete_entity', 'Workflow')
+        hm.register_hook(before_add_in_state, 'before_add_relation', 'in_state')
 
 
 # CWProperty hooks #############################################################

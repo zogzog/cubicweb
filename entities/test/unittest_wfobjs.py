@@ -103,6 +103,16 @@ class WorkflowTC(EnvBasedTC):
         trinfo = self._test_manager_deactivate(user)
         self.assertEquals(trinfo.transition, None)
 
+    def test_set_in_state_bad_wf(self):
+        wf = add_wf(self, 'CWUser')
+        s = wf.add_state(u'foo', initial=True)
+        self.commit()
+        ex = self.assertRaises(ValidationError, self.session().unsafe_execute,
+                               'SET X in_state S WHERE X eid %(x)s, S eid %(s)s',
+                               {'x': self.user().eid, 's': s.eid}, 'x')
+        self.assertEquals(ex.errors, {'in_state': "state doesn't belong to entity's workflow. "
+                                      "You may want to set a custom workflow for this entity first."})
+
     def test_fire_transition(self):
         user = self.user()
         user.fire_transition('deactivate', comment=u'deactivate user')
