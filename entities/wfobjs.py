@@ -476,6 +476,26 @@ class WorkflowableMixIn(object):
         # XXX try to find matching transition?
         return self._add_trinfo(comment, commentformat, tr and tr.eid, stateeid)
 
+    def subworkflow_input_transition(self):
+        """return the transition which has went through the current sub-workflow
+        """
+        if self.main_workflow.eid == self.current_workflow.eid:
+            return # doesn't make sense
+        subwfentries = []
+        for trinfo in reversed(self.workflow_history):
+            if (trinfo.transition and
+                trinfo.previous_state.workflow.eid != trinfo.new_state.workflow.eid):
+                # entering or leaving a subworkflow
+                if (subwfentries and
+                    subwfentries[-1].new_state.workflow.eid == trinfo.previous_state.workflow.eid):
+                    # leave
+                    del subwfentries[-1]
+                else:
+                    # enter
+                    subwfentries.append(trinfo)
+        if not subwfentries:
+            return None
+        return subwfentries[-1].transition
 
     def clear_all_caches(self):
         super(WorkflowableMixIn, self).clear_all_caches()
