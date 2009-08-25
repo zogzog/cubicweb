@@ -1,4 +1,4 @@
- """mixins of entity/views organized somewhat in a graph or tree structure
+"""mixins of entity/views organized somewhat in a graph or tree structure
 
 
 :organization: Logilab
