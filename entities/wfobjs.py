@@ -429,13 +429,21 @@ class WorkflowableMixIn(object):
             if tr.may_be_fired(self.eid):
                 yield tr
 
-    def _get_tr_kwargs(self, comment, commentformat):
+    def _add_trinfo(self, comment, commentformat, treid=None, tseid=None):
         kwargs = {}
         if comment is not None:
             kwargs['comment'] = comment
             if commentformat is not None:
                 kwargs['comment_format'] = commentformat
-        return kwargs
+        args = [('wf_info_for', 'E')]
+        kwargs['E'] = self.eid
+        if treid is not None:
+            args.append( ('by_transition', 'T') )
+            kwargs['T'] = treid
+        if tseid is not None:
+            args.append( ('to_state', 'S') )
+            kwargs['S'] = tseid
+        return self.req.create_entity('TrInfo', *args, **kwargs)
 
     def fire_transition(self, trname, comment=None, commentformat=None):
         """change the entity's state by firing transition of the given name in
@@ -443,13 +451,10 @@ class WorkflowableMixIn(object):
         """
         assert self.current_workflow
         tr = self.current_workflow.transition_by_name(trname)
-        assert tr is not None, 'not a %s transition: %s' % (self.id, state)
-        # XXX try to find matching transition?
-        self.req.create_entity('TrInfo', ('by_transition', 'T'),
-                               ('wf_info_for', 'E'), T=tr.eid, E=self.eid,
-                               **self._get_tr_kwargs(comment, commentformat))
+        assert tr is not None, 'not a %s transition: %s' % (self.id, trname)
+        return self._add_trinfo(comment, commentformat, tr.eid)
 
-    def change_state(self, statename, comment=None, commentformat=None):
+    def change_state(self, statename, comment=None, commentformat=None, tr=None):
         """change the entity's state to the given state (name or entity) in
         entity's workflow. This method should only by used by manager to fix an
         entity's state when their is no matching transition, otherwise
@@ -465,12 +470,11 @@ class WorkflowableMixIn(object):
             else:
                 state = self.current_workflow.state_by_name(statename)
             if state is None:
-                raise Exception('not a %s state: %s' % (self.id, statename))
+                raise WorkflowException('not a %s state: %s' % (self.id,
+                                                                statename))
             stateeid = state.eid
         # XXX try to find matching transition?
-        self.req.create_entity('TrInfo', ('to_state', 'S'),
-                               ('wf_info_for', 'E'), S=stateeid, E=self.eid,
-                               **self._get_tr_kwargs(comment, commentformat))
+        return self._add_trinfo(comment, commentformat, tr and tr.eid, stateeid)
 
 
     def clear_all_caches(self):
