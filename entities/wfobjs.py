@@ -16,6 +16,7 @@ from cubicweb.entities import AnyEntity, fetch_config
 from cubicweb.interfaces import IWorkflowable
 from cubicweb.common.mixins import MI_REL_TRIGGERS
 
+class WorkflowException(Exception): pass
 
 class Workflow(AnyEntity):
     id = 'Workflow'
@@ -160,7 +161,7 @@ class BaseTransition(AnyEntity):
 
     def __init__(self, *args, **kwargs):
         if self.id == 'BaseTransition':
-            raise Exception('should not be instantiated')
+            raise WorkflowException('should not be instantiated')
         super(BaseTransition, self).__init__(*args, **kwargs)
 
     @property
