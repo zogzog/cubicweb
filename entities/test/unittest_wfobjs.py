@@ -106,6 +106,7 @@ class WorkflowTC(EnvBasedTC):
     def test_fire_transition(self):
         user = self.user()
         user.fire_transition('deactivate', comment=u'deactivate user')
+        user.clear_all_caches()
         self.assertEquals(user.state, 'deactivated')
         self._test_manager_deactivate(user)
         trinfo = self._test_manager_deactivate(user)
