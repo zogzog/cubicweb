@@ -31,10 +31,15 @@ class WorkflowBuildingTC(EnvBasedTC):
     def test_duplicated_state(self):
         wf = add_wf(self, 'Company')
         wf.add_state(u'foo', initial=True)
+        self.commit()
         wf.add_state(u'foo')
         ex = self.assertRaises(ValidationError, self.commit)
         # XXX enhance message
         self.assertEquals(ex.errors, {'state_of': 'unique constraint S name N, Y state_of O, Y name N failed'})
+        # no pb if not in the same workflow
+        wf2 = add_wf(self, 'Company')
+        foo = wf2.add_state(u'foo', initial=True)
+        self.commit()
 
     def test_duplicated_transition(self):
         wf = add_wf(self, 'Company')
