@@ -388,21 +388,26 @@ class WorkflowableMixIn(object):
                                **self._get_tr_kwargs(comment, commentformat))
 
     def change_state(self, statename, comment=None, commentformat=None):
-        """change the entity's state to the state of the given name in entity's
-        workflow. This method should only by used by manager to fix an entity's
-        state when their is no matching transition, otherwise fire_transition
-        should be used.
+        """change the entity's state to the given state (name or entity) in
+        entity's workflow. This method should only by used by manager to fix an
+        entity's state when their is no matching transition, otherwise
+        fire_transition should be used.
         """
         assert self.current_workflow
-        if not isinstance(statename, basestring):
-            warn('give a state name')
-            state = self.current_workflow.state_by_eid(statename)
-            assert state is not None, 'not a %s state: %s' % (self.id, state)
+        if hasattr(statename, 'eid'):
+            stateeid = statename.eid
         else:
-            state = self.current_workflow.state_by_name(statename)
+            if not isinstance(statename, basestring):
+                warn('give a state name')
+                state = self.current_workflow.state_by_eid(statename)
+            else:
+                state = self.current_workflow.state_by_name(statename)
+            if state is None:
+                raise Exception('not a %s state: %s' % (self.id, statename))
+            stateeid = state.eid
         # XXX try to find matching transition?
         self.req.create_entity('TrInfo', ('to_state', 'S'),
-                               ('wf_info_for', 'E'), S=state.eid, E=self.eid,
+                               ('wf_info_for', 'E'), S=stateeid, E=self.eid,
                                **self._get_tr_kwargs(comment, commentformat))
 
 
