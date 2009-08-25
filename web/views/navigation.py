@@ -40,9 +40,9 @@ class PageNavigation(NavigationComponent):
                                             self.index_display(start, stop)))
             start = stop + 1
         w(u'<div class="pagination">')
-        w(u'%s&nbsp;' % self.previous_link(params))
-        w(u'[&nbsp;%s&nbsp;]' % u'&nbsp;| '.join(blocklist))
-        w(u'&nbsp;%s' % self.next_link(params))
+        w(u'%s&#160;' % self.previous_link(params))
+        w(u'[&#160;%s&#160;]' % u'&#160;| '.join(blocklist))
+        w(u'&#160;%s' % self.next_link(params))
         w(u'</div>')
 
     def index_display(self, start, stop):
@@ -140,9 +140,9 @@ class SortedNavigation(NavigationComponent):
 
     def write_links(self, params, blocklist):
         self.w(u'<div class="pagination">')
-        self.w(u'%s&nbsp;' % self.previous_link(params))
-        self.w(u'[&nbsp;%s&nbsp;]' % u'&nbsp;| '.join(blocklist))
-        self.w(u'&nbsp;%s' % self.next_link(params))
+        self.w(u'%s&#160;' % self.previous_link(params))
+        self.w(u'[&#160;%s&#160;]' % u'&#160;| '.join(blocklist))
+        self.w(u'&#160;%s' % self.next_link(params))
         self.w(u'</div>')
 
 

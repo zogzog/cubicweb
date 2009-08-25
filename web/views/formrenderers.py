@@ -104,7 +104,7 @@ class FormRenderer(AppObject):
         if example:
             help.append('<div class="helper">(%s: %s)</div>'
                         % (self.req._('sample format'), example))
-        return u'&nbsp;'.join(help)
+        return u'&#160;'.join(help)
 
     # specific methods (mostly to ease overriding) #############################
 
@@ -125,7 +125,7 @@ class FormRenderer(AppObject):
                 if len(errors) > 1:
                     templstr = '<li>%s</li>\n'
                 else:
-                    templstr = '&nbsp;%s\n'
+                    templstr = '&#160;%s\n'
                 for field, err in errors:
                     if field is None:
                         errormsg += templstr % err
@@ -279,7 +279,7 @@ class HTableFormRenderer(FormRenderer):
             if self.display_help:
                 w(self.render_help(form, field))
         # empty slot for buttons
-        w(u'<th class="labelCol">&nbsp;</th>')
+        w(u'<th class="labelCol">&#160;</th>')
         w(u'</tr>')
         w(u'<tr>')
         for field in fields:
@@ -436,7 +436,7 @@ class EntityFormRenderer(EntityBaseFormRenderer):
                 w(u'</tr>')
         pendings = list(form.restore_pending_inserts())
         if not pendings:
-            w(u'<tr><th>&nbsp;</th><td>&nbsp;</td></tr>')
+            w(u'<tr><th>&#160;</th><td>&#160;</td></tr>')
         else:
             for row in pendings:
                 # soon to be linked to entities
@@ -514,7 +514,7 @@ class EntityFormRenderer(EntityBaseFormRenderer):
             w(u'<a class="addEntity" id="add%s:%slink" href="javascript: %s" >+ %s.</a>'
               % (rschema, entity.eid, js, __('add a %s' % targettype)))
             w(u'</div>')
-            w(u'<div class="trame_grise">&nbsp;</div>')
+            w(u'<div class="trame_grise">&#160;</div>')
         w(u'</div>')
 
 

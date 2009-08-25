@@ -63,7 +63,7 @@ class OutOfContextSearch(EntityView):
         entity = self.entity(row, col)
         erset = entity.as_rset()
         if self.req.match_search_state(erset):
-            self.w(u'<a href="%s" title="%s">%s</a>&nbsp;<a href="%s" title="%s">[...]</a>' % (
+            self.w(u'<a href="%s" title="%s">%s</a>&#160;<a href="%s" title="%s">[...]</a>' % (
                 xml_escape(linksearch_select_url(self.req, erset)),
                 self.req._('select this entity'),
                 xml_escape(entity.view('textoutofcontext')),

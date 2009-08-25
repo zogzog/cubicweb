@@ -357,9 +357,9 @@ def render_HTML_tree(tree, selected_node=None, render_node=None, caption=None):
                 else:
                     s += '<td class="tree_cell" rowspan="2"><div class="tree_cell">%s</div></td>' % (render_node(cell.id))
             else:
-                s += '<td rowspan="2">&nbsp;</td>'
-            s += '<td class="tree_cell_%d_1">&nbsp;</td>' % link_cell
-            s += '<td class="tree_cell_%d_2">&nbsp;</td>' % link_cell
+                s += '<td rowspan="2">&#160;</td>'
+            s += '<td class="tree_cell_%d_1">&#160;</td>' % link_cell
+            s += '<td class="tree_cell_%d_2">&#160;</td>' % link_cell
 
         cell = line[-1]
         if cell:
@@ -368,14 +368,14 @@ def render_HTML_tree(tree, selected_node=None, render_node=None, caption=None):
             else:
                 s += '<td class="tree_cell" rowspan="2"><div class="tree_cell">%s</div></td>' % (render_node(cell.id))
         else:
-            s += '<td rowspan="2">&nbsp;</td>'
+            s += '<td rowspan="2">&#160;</td>'
 
         s += '</tr>\n'
         if link_line:
             s += '<tr>'
             for j, link_cell in enumerate(link_line):
-                s += '<td class="tree_cell_%d_3">&nbsp;</td>' % link_cell
-                s += '<td class="tree_cell_%d_4">&nbsp;</td>' % link_cell
+                s += '<td class="tree_cell_%d_3">&#160;</td>' % link_cell
+                s += '<td class="tree_cell_%d_4">&#160;</td>' % link_cell
             s += '</tr>\n'
 
     s += '</table>'
@@ -428,7 +428,7 @@ def html_traceback(info, exception, title='',
             xml_escape(stackentry[0]), stackentry[1], xml_escape(stackentry[2])))
         if stackentry[3]:
             string = xml_escape(stackentry[3]).decode('utf-8', 'replace')
-            strings.append(u'&nbsp;&nbsp;%s<br/>\n' % (string))
+            strings.append(u'&#160;&#160;%s<br/>\n' % (string))
         # add locals info for each entry
         try:
             local_context = tcbk.tb_frame.f_locals

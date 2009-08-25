@@ -73,7 +73,7 @@ class ApplHelp(component.Component):
     id = 'help'
     property_defs = VISIBLE_PROP_DEF
     def call(self):
-        self.w(u'<a href="%s" class="help" title="%s">&nbsp;</a>'
+        self.w(u'<a href="%s" class="help" title="%s">&#160;</a>'
                % (self.build_url(_restpath='doc/main'),
                   self.req._(u'help'),))
 
@@ -109,11 +109,11 @@ class UserLink(component.Component):
     def anon_user_link(self):
         if self.config['auth-mode'] == 'cookie':
             self.w(self.req._('anonymous'))
-            self.w(u'''&nbsp;[<a class="logout" href="javascript: popupLoginBox();">%s</a>]'''
+            self.w(u'''&#160;[<a class="logout" href="javascript: popupLoginBox();">%s</a>]'''
                    % (self.req._('i18n_login_popup')))
         else:
             self.w(self.req._('anonymous'))
-            self.w(u'&nbsp;[<a class="logout" href="%s">%s</a>]'
+            self.w(u'&#160;[<a class="logout" href="%s">%s</a>]'
                    % (self.build_url('login'), self.req._('login')))
 
 
@@ -211,7 +211,7 @@ class EtypeRestrictionComponent(component.Component):
                     url, _('Any')))
         else:
             html.insert(0, u'<span class="selected">%s</span>' % _('Any'))
-        self.w(u'&nbsp;|&nbsp;'.join(html))
+        self.w(u'&#160;|&#160;'.join(html))
         self.w(u'</div>')
 
 

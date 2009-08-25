@@ -139,7 +139,7 @@ class SecurityManagementView(EntityView, SecurityViewMixIn):
                 # don't give __delete value to build_url else it will be urlquoted
                 # and this will replace %s by %25s
                 delurl += '&__delete=%s:require_permission:%%s' % entity.eid
-                dellinktempl = u'[<a href="%s" title="%s">-</a>]&nbsp;' % (
+                dellinktempl = u'[<a href="%s" title="%s">-</a>]&#160;' % (
                     xml_escape(delurl), _('delete this permission'))
             else:
                 dellinktempl = None

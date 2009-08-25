@@ -133,7 +133,7 @@ class TimeTableView(AnyRsetView):
         """ render column headers """
         self.w(u'<tr class="header">\n')
 
-        self.w(u'<th class="ttdate">&nbsp;</th>\n')
+        self.w(u'<th class="ttdate">&#160;</th>\n')
         columns = []
         for user, width in zip(users, widths):
             self.w(u'<th colspan="%s">' % max(MIN_COLS, width))
@@ -191,13 +191,13 @@ class TimeTableView(AnyRsetView):
                         task_descr, first_row = value
                         if first_row:
                             url = xml_escape(task_descr.task.absolute_url(vid="edition"))
-                            self.w(u'<td rowspan="%d" class="%s %s" onclick="document.location=\'%s\'">&nbsp;<div>' % (
+                            self.w(u'<td rowspan="%d" class="%s %s" onclick="document.location=\'%s\'">&#160;<div>' % (
                                 task_descr.lines, task_descr.color, filled_klasses[kj], url))
                             task_descr.task.view('tooltip', w=self.w)
                             self.w(u'</div></td>')
                     else:
                         if empty_line:
-                            self.w(u'<td class="ttempty">&nbsp;</td>')
+                            self.w(u'<td class="ttempty">&#160;</td>')
                         else:
-                            self.w(u'<td class="%s">&nbsp;</td>' % empty_klasses[kj] )
+                            self.w(u'<td class="%s">&#160;</td>' % empty_klasses[kj] )
             self.w(u'</tr>\n')

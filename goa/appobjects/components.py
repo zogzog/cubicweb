@@ -74,7 +74,7 @@ def entity_types_no_count(self, eschemas):
         label = display_name(req, etype, 'plural')
         view = self.vreg.select('views', 'list', req, req.etype_rset(etype))
         url = view.url()
-        etypelink = u'&nbsp;<a href="%s">%s</a>' % (xml_escape(url), label)
+        etypelink = u'&#160;<a href="%s">%s</a>' % (xml_escape(url), label)
         yield (label, etypelink, self.add_entity_link(eschema, req))
 
 ManageView.entity_types = entity_types_no_count

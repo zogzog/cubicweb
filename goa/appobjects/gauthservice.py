@@ -17,7 +17,7 @@ class GACWUserLink(UserLink):
 
     def anon_user_link(self):
         self.w(self.req._('anonymous'))
-        self.w(u'&nbsp;[<a class="logout" href="%s">%s</a>]'
+        self.w(u'&#160;[<a class="logout" href="%s">%s</a>]'
                % (users.create_login_url(self.req.url()), self.req._('login')))
 
 class GAELogoutAction(LogoutAction):
