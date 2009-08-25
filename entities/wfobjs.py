@@ -111,6 +111,9 @@ class Workflow(AnyEntity):
         self.req.execute('SET T transition_of WF '
                          'WHERE T eid %(t)s, WF eid %(wf)s',
                          {'t': tr.eid, 'wf': self.eid}, ('t', 'wf'))
+        assert fromstates, fromstates
+        if not isinstance(fromstates, (tuple, list)):
+            fromstates = (fromstates,)
         for state in fromstates:
             if hasattr(state, 'eid'):
                 state = state.eid
