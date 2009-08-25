@@ -27,8 +27,8 @@ Example of use (run this with `cubicweb-ctl shell instance import-script.py`):
           ctl.store.add('CWUser', entity)
           email = {'address': row['email']}
           ctl.store.add('EmailAddress', email)
-          ctl.store.relate(entity['uid'], 'use_email', email['uid'])
-          ctl.store.rql('SET U in_group G WHERE G name "users", U eid %(x)s', {'x':entity['uid']})
+          ctl.store.relate(entity['eid'], 'use_email', email['eid'])
+          ctl.store.rql('SET U in_group G WHERE G name "users", U eid %(x)s', {'x':entity['eid']})
 
   CHK = [('login', check_doubles, 'Utilisateurs Login',
           'Deux utilisateurs ne devraient pas avoir le même login.'),
@@ -135,12 +135,12 @@ class ObjectStore(object):
     >>> store.add('CWUser', user)
     >>> group = {'name': 'unknown'}
     >>> store.add('CWUser', group)
-    >>> store.relate(user['uid'], 'in_group', group['uid'])
+    >>> store.relate(user['eid'], 'in_group', group['eid'])
     """
 
     def __init__(self):
         self.items = []
-        self.uids = {}
+        self.eids = {}
         self.types = {}
         self.relations = set()
         self.indexes = {}
@@ -153,28 +153,28 @@ class ObjectStore(object):
 
     def add(self, type, item):
         assert isinstance(item, dict), item
-        uid = item['uid'] = self._put(type, item)
-        self.uids[uid] = item
-        self.types.setdefault(type, []).append(uid)
+        eid = item['eid'] = self._put(type, item)
+        self.eids[eid] = item
+        self.types.setdefault(type, []).append(eid)
 
-    def relate(self, uid_from, rtype, uid_to):
-        uids_valid = (uid_from < len(self.items) and uid_to <= len(self.items))
-        assert uids_valid, 'uid error %s %s' % (uid_from, uid_to)
-        self.relations.add( (uid_from, rtype, uid_to) )
+    def relate(self, eid_from, rtype, eid_to):
+        eids_valid = (eid_from < len(self.items) and eid_to <= len(self.items))
+        assert eids_valid, 'eid error %s %s' % (eid_from, eid_to)
+        self.relations.add( (eid_from, rtype, eid_to) )
 
     def build_index(self, name, type, func):
         index = {}
-        for uid in self.types[type]:
-            index.setdefault(func(self.uids[uid]), []).append(uid)
+        for eid in self.types[type]:
+            index.setdefault(func(self.eids[eid]), []).append(eid)
         self.indexes[name] = index
 
     def get_many(self, name, key):
         return self.indexes[name].get(key, [])
 
     def get_one(self, name, key):
-        uids = self.indexes[name].get(key, [])
-        assert len(uids) == 1
-        return uids[0]
+        eids = self.indexes[name].get(key, [])
+        assert len(eids) == 1
+        return eids[0]
 
     def find(self, type, key, value):
         for idx in self.types[type]:
@@ -197,10 +197,10 @@ class RQLObjectStore(ObjectStore):
         query = ('INSERT %s X: ' % type) + ', '.join(['X %s %%(%s)s' % (key,key) for key in item])
         return self.rql(query, item)[0][0]
 
-    def relate(self, uid_from, rtype, uid_to):
+    def relate(self, eid_from, rtype, eid_to):
         query = 'SET X %s Y WHERE X eid %%(from)s, Y eid %%(to)s' % rtype
-        self.rql(query, {'from': int(uid_from), 'to': int(uid_to)})
-        self.relations.add( (uid_from, rtype, uid_to) )
+        self.rql(query, {'from': int(eid_from), 'to': int(eid_to)})
+        self.relations.add( (eid_from, rtype, eid_to) )
 
 # import controller #####
 
@@ -255,7 +255,7 @@ class CWImportController(object):
             self.store.checkpoint()
         errors = sum(len(err[1]) for err in self.errors.values())
         self.tell('Importation terminée. (%i objets, %i types, %i relations et %i erreurs).'
-                  % (len(self.store.uids), len(self.store.types),
+                  % (len(self.store.eids), len(self.store.types),
                      len(self.store.relations), errors))
         if self.errors and self.askerror and confirm('Afficher les erreurs ?'):
             import pprint
