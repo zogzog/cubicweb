@@ -128,6 +128,10 @@ class BaseTransition(AnyEntity):
             raise Exception('should not be instantiated')
         super(BaseTransition, self).__init__(*args, **kwargs)
 
+    @property
+    def workflow(self):
+        return self.transition_of[0]
+
     def may_be_fired(self, eid):
         """return true if the logged user may fire this transition
 
@@ -217,6 +221,10 @@ class State(AnyEntity):
     id = 'State'
     fetch_attrs, fetch_order = fetch_config(['name'])
     rest_attr = 'eid'
+
+    @property
+    def workflow(self):
+        return self.state_of[0]
 
     def after_deletion_path(self):
         """return (path, parameters) which should be used as redirect
