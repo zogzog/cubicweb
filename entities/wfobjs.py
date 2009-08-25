@@ -168,6 +168,11 @@ class BaseTransition(AnyEntity):
     def workflow(self):
         return self.transition_of[0]
 
+    def has_input_state(self, state):
+        if hasattr(state, 'eid'):
+            state = state.eid
+        return any(s for s in self.reverse_allowed_transition if s.eid == state)
+
     def may_be_fired(self, eid):
         """return true if the logged user may fire this transition
 
@@ -232,11 +237,6 @@ class Transition(BaseTransition):
 
     def destination(self):
         return self.destination_state[0]
-
-    def has_input_state(self, state):
-        if hasattr(state, 'eid'):
-            state = state.eid
-        return any(s for s in self.reverse_allowed_transition if s.eid == state)
 
 
 class WorkflowTransition(BaseTransition):
@@ -362,7 +362,7 @@ class WorkflowableMixIn(object):
     @property
     def current_workflow(self):
         """return current workflow applied to this entity"""
-        return self.current_state.workflow
+        return self.current_state and self.current_state.workflow or self.main_workflow
 
     @property
     def current_state(self):
