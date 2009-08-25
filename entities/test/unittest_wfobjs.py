@@ -139,64 +139,6 @@ class WorkflowTC(EnvBasedTC):
                      'WHERE T name "deactivate"')
         self._test_stduser_deactivate()
 
-    def _init_wf_with_shared_state_or_tr(self):
-        req = self.request()
-        etypes = dict(self.execute('Any N, ET WHERE ET is CWEType, ET name N'
-                                   ', ET name IN ("CWGroup", "Bookmark")'))
-        self.grpwf = req.create_entity('Workflow', ('workflow_of', 'ET'),
-                                       ET=etypes['CWGroup'], name=u'group workflow')
-        self.bmkwf = req.execute('Any X WHERE X is Workflow, X workflow_of ET, ET name "Bookmark"').get_entity(0, 0)
-        self.state1 = self.grpwf.add_state(u'state1', initial=True)
-        self.execute('SET S state_of WF WHERE S eid %(s)s, WF eid %(wf)s',
-                     {'s': self.state1.eid, 'wf': self.bmkwf.eid})
-        self.execute('SET WF initial_state S WHERE S eid %(s)s, WF eid %(wf)s',
-                     {'s': self.state1.eid, 'wf': self.bmkwf.eid})
-        self.state2 = self.grpwf.add_state(u'state2')
-        self.group = self.add_entity('CWGroup', name=u't1')
-        self.bookmark = self.add_entity('Bookmark', title=u'111', path=u'/view')
-        # commit to link to the initial state
-        self.commit()
-
-    def test_transitions_selection(self):
-        """
-        ------------------------  tr1    -----------------
-        | state1 (CWGroup, Bookmark) | ------> | state2 (CWGroup) |
-        ------------------------         -----------------
-                  |  tr2    ------------------
-                  `------>  | state3 (Bookmark) |
-                            ------------------
-        """
-        self._init_wf_with_shared_state_or_tr()
-        state3 = self.bmkwf.add_state(u'state3')
-        tr1 = self.grpwf.add_transition(u'tr1', (self.state1,), self.state2)
-        tr2 = self.bmkwf.add_transition(u'tr2', (self.state1,), state3)
-        transitions = list(self.group.possible_transitions())
-        self.assertEquals(len(transitions), 1)
-        self.assertEquals(transitions[0].name, 'tr1')
-        transitions = list(self.bookmark.possible_transitions())
-        self.assertEquals(len(transitions), 1)
-        self.assertEquals(transitions[0].name, 'tr2')
-
-
-    def test_transitions_selection2(self):
-        """
-        ------------------------  tr1 (Bookmark)   -----------------------
-        | state1 (CWGroup, Bookmark) | -------------> | state2 (CWGroup,Bookmark) |
-        ------------------------                -----------------------
-                  |  tr2 (CWGroup)                     |
-                  `---------------------------------/
-        """
-        self._init_wf_with_shared_state_or_tr()
-        self.execute('SET S state_of WF WHERE S eid %(s)s, WF eid %(wf)s',
-                     {'s': self.state2.eid, 'wf': self.bmkwf.eid})
-        tr1 = self.bmkwf.add_transition(u'tr1', (self.state1,), self.state2)
-        tr2 = self.grpwf.add_transition(u'tr2', (self.state1,), self.state2)
-        transitions = list(self.group.possible_transitions())
-        self.assertEquals(len(transitions), 1)
-        self.assertEquals(transitions[0].name, 'tr2')
-        transitions = list(self.bookmark.possible_transitions())
-        self.assertEquals(len(transitions), 1)
-        self.assertEquals(transitions[0].name, 'tr1')
 
 
 class CustomWorkflowTC(EnvBasedTC):
