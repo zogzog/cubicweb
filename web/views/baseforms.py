@@ -239,7 +239,7 @@ class EditionForm(FormMixIn, EntityView):
                 w(u'</tr>')
         pendings = list(self.restore_pending_inserts(entity))
         if not pendings:
-            w(u'<tr><th>&nbsp;</th><td>&nbsp;</td></tr>')
+            w(u'<tr><th>&#160;</th><td>&#160;</td></tr>')
         else:
             for row in pendings:
                 # soon to be linked to entities
@@ -314,7 +314,7 @@ class EditionForm(FormMixIn, EntityView):
                                   % (rschema, entity.eid, js,
                                      self.req.__('add a %s' % targettype)))
                     result.append(u'</div>')
-                    result.append(u'<div class="trame_grise">&nbsp;</div>')
+                    result.append(u'<div class="trame_grise">&#160;</div>')
                 result.append(u'</div>')
         return '\n'.join(result)
 

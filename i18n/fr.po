@@ -80,32 +80,32 @@ msgid "%d years"
 msgstr "%d années"
 
 #, python-format
-msgid "%d&nbsp;days"
-msgstr "%d&nbsp;jours"
+msgid "%d&#160;days"
+msgstr "%d&#160;jours"
 
 #, python-format
-msgid "%d&nbsp;hours"
-msgstr "%d&nbsp;heures"
+msgid "%d&#160;hours"
+msgstr "%d&#160;heures"
 
 #, python-format
-msgid "%d&nbsp;minutes"
-msgstr "%d&nbsp;minutes"
+msgid "%d&#160;minutes"
+msgstr "%d&#160;minutes"
 
 #, python-format
-msgid "%d&nbsp;months"
-msgstr "%d&nbsp;mois"
+msgid "%d&#160;months"
+msgstr "%d&#160;mois"
 
 #, python-format
-msgid "%d&nbsp;seconds"
-msgstr "%d&nbsp;secondes"
+msgid "%d&#160;seconds"
+msgstr "%d&#160;secondes"
 
 #, python-format
-msgid "%d&nbsp;weeks"
-msgstr "%d&nbsp;semaines"
+msgid "%d&#160;weeks"
+msgstr "%d&#160;semaines"
 
 #, python-format
-msgid "%d&nbsp;years"
-msgstr "%d&nbsp;années"
+msgid "%d&#160;years"
+msgstr "%d&#160;années"
 
 #, python-format
 msgid "%s error report"

@@ -81,8 +81,6 @@ quis nostrud exercitation ullamco laboris nisi"),
             got = uilib.text_cut(text, 30)
             self.assertEquals(got, expected)
 
-
-
 if __name__ == '__main__':
     unittest_main()
 

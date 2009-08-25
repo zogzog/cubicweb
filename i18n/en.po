@@ -75,31 +75,31 @@ msgid "%d years"
 msgstr ""
 
 #, python-format
-msgid "%d&nbsp;days"
+msgid "%d&#160;days"
 msgstr ""
 
 #, python-format
-msgid "%d&nbsp;hours"
+msgid "%d&#160;hours"
 msgstr ""
 
 #, python-format
-msgid "%d&nbsp;minutes"
+msgid "%d&#160;minutes"
 msgstr ""
 
 #, python-format
-msgid "%d&nbsp;months"
+msgid "%d&#160;months"
 msgstr ""
 
 #, python-format
-msgid "%d&nbsp;seconds"
+msgid "%d&#160;seconds"
 msgstr ""
 
 #, python-format
-msgid "%d&nbsp;weeks"
+msgid "%d&#160;weeks"
 msgstr ""
 
 #, python-format
-msgid "%d&nbsp;years"
+msgid "%d&#160;years"
 msgstr ""
 
 #, python-format

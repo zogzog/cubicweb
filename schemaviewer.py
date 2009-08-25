@@ -104,7 +104,7 @@ class SchemaViewer(object):
         """get a layout for an entity schema"""
         etype = eschema.type
         layout = Section(children=' ', klass='clear')
-        layout.append(Link(etype,'&nbsp;' , id=etype)) # anchor
+        layout.append(Link(etype,'&#160;' , id=etype)) # anchor
         title = Link(self.eschema_link_url(eschema), etype)
         boxchild = [Section(children=(title, ' (%s)'% eschema.display_name(self.req)), klass='title')]
         table = Table(cols=4, rheaders=1,

@@ -75,7 +75,7 @@ class BoxWidget(HTMLWidget):
             self.w(u'</ul>\n')
         self.w(u'</div>\n')
         if self.shadow:
-            self.w(u'<div class="shadow">&nbsp;</div>')
+            self.w(u'<div class="shadow">&#160;</div>')
 
     def _render(self):
         if self.id:
@@ -191,7 +191,7 @@ class BoxField(HTMLWidget):
         self.value = value
 
     def _render(self):
-        self.w(u'<li><div><span class="label">%s</span>&nbsp;'
+        self.w(u'<li><div><span class="label">%s</span>&#160;'
                u'<span class="value">%s</span></div></li>'
                % (self.label, self.value))
 

@@ -33,7 +33,7 @@ class BreadCrumbEntityVComponent(EntityVComponent):
     context = 'navtop'
     order = 5
     visible = False
-    separator = u'&nbsp;&gt;&nbsp;'
+    separator = u'&#160;&gt;&#160;'
 
     def call(self, view=None, first_separator=True):
         entity = self.entity(0)

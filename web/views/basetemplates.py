@@ -479,7 +479,7 @@ class LogFormTemplate(View):
         self.w(u'<div id="%s" class="%s">' % (id, klass))
         if title:
             self.w(u'<div id="loginTitle">%s</div>'
-                   % (self.req.property_value('ui.site-title') or u'&nbsp;'))
+                   % (self.req.property_value('ui.site-title') or u'&#160;'))
         self.w(u'<div id="loginContent">\n')
 
         if message:
@@ -510,7 +510,7 @@ class LogFormTemplate(View):
         self.w(u'<td><label for="__password" >%s</label></td>' % _('password'))
         self.w(u'<td><input name="__password" id="__password" class="data" type="password" /></td>\n')
         self.w(u'</tr><tr>\n')
-        self.w(u'<td>&nbsp;</td><td><input type="submit" class="loginButton right" value="%s" />\n</td>' % _('log in'))
+        self.w(u'<td>&#160;</td><td><input type="submit" class="loginButton right" value="%s" />\n</td>' % _('log in'))
         self.w(u'</tr>\n')
         self.w(u'</table>\n')
         self.w(u'</form>\n')

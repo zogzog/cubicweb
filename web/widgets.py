@@ -154,7 +154,7 @@ class Widget(object):
             help.append(u'<span>(%s: %s)</span>'
                         % (req._('sample format'), example))
         help.append(u'</div>')
-        return u'&nbsp;'.join(help)
+        return u'&#160;'.join(help)
 
     def render_example(self, req):
         return u''
@@ -372,7 +372,7 @@ class PasswordWidget(InputWidget):
     def _edit_render(self, entity):
         html = super(PasswordWidget, self)._edit_render(entity)
         name = eid_param(self.name + '-confirm', entity.eid)
-        return u'%s<br/>\n<input type="%s" name="%s" id="%s" tabindex="%s"/>&nbsp;<span class="emphasis">(%s)</span>' % (
+        return u'%s<br/>\n<input type="%s" name="%s" id="%s" tabindex="%s"/>&#160;<span class="emphasis">(%s)</span>' % (
             html, self.input_type, name, name, entity.req.next_tabindex(),
             entity.req._('confirm password'))
 
@@ -662,7 +662,7 @@ class AddComboBoxWidget(DynamicComboBoxWidget):
         res.append(u'</select>')
         res.append(u'<div id="newvalue">')
         res.append(u'<input type="text" id="newopt" />')
-        res.append(u'<a href="javascript:noop()" id="add_newopt">&nbsp;</a></div>')
+        res.append(u'<a href="javascript:noop()" id="add_newopt">&#160;</a></div>')
         return '\n'.join(res)
 
 
@@ -761,7 +761,7 @@ class DateWidget(StringWidget):
             help.append('<span>(%s: %s)</span>'
                         % (req._('sample format'), example))
         help.append(u'</div>')
-        return u'&nbsp;'.join(help)
+        return u'&#160;'.join(help)
 
     def render_calendar_popup(self, entity):
         """calendar popup widget"""

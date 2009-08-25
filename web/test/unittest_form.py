@@ -219,7 +219,7 @@ detach attached file
                               '''<input id="upassword:%(eid)s" name="upassword:%(eid)s" tabindex="1" type="password" value="__cubicweb_internal_field__" />
 <br/>
 <input name="upassword-confirm:%(eid)s" tabindex="1" type="password" value="__cubicweb_internal_field__" />
-&nbsp;
+&#160;
 <span class="emphasis">confirm password</span>''' % {'eid': self.entity.eid})
 
 

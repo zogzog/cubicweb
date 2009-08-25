@@ -293,7 +293,7 @@ class OneMonthCal(EntityView):
                                  __redirectvid=self.id
                                  )
             self.w(u'<div class="cmd"><a href="%s">%s</a></div>' % (xml_escape(url), self.req._(u'add')))
-            self.w(u'&nbsp;')
+            self.w(u'&#160;')
         self.w(u'</div>')
         self.w(u'<div class="cellContent">')
         for task_descr in rows:
@@ -312,7 +312,7 @@ class OneMonthCal(EntityView):
                 self.w(u'</div>')
             else:
                 self.w(u'<div class="task">')
-                self.w(u"&nbsp;")
+                self.w(u"&#160;")
             self.w(u'</div>')
         self.w(u'</div>')
         self.w(u'</td>')
@@ -443,7 +443,7 @@ class OneWeekCal(EntityView):
         self.w(u'</tr>')
         self.w(u'</table></div>')
         self.w(u'<div id="coord"></div>')
-        self.w(u'<div id="debug">&nbsp;</div>')
+        self.w(u'<div id="debug">&#160;</div>')
 
     def _build_calendar_cell(self, date, task_descrs):
         inday_tasks = [t for t in task_descrs if t.is_one_day_task() and  t.in_working_hours()]

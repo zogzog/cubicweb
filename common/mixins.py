@@ -251,7 +251,7 @@ class TreePathMixIn(object):
     """a recursive path view"""
     id = 'path'
     item_vid = 'oneline'
-    separator = u'&nbsp;&gt;&nbsp;'
+    separator = u'&#160;&gt;&#160;'
 
     def call(self, **kwargs):
         self.w(u'<div class="pathbar">')
