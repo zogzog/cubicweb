@@ -65,17 +65,8 @@ class EditBox(BoxTemplate):
                not self.schema[self.rset.description[0][0]].is_final() and \
                searchstate == 'normal':
             entity = self.rset.get_entity(0, 0)
-            #entity.complete()
-            if add_menu.items:
-                self.info('explicit actions defined, ignoring potential rtags for %s',
-                          entity.e_schema)
-            else:
-                # some addrelated actions may be specified but no one is selectable
-                # in which case we should not fallback to schema_actions. The proper
-                # way to avoid this is to override add_related_schemas() on the
-                # entity class to return an empty list
-                for action in self.schema_actions(entity):
-                    add_menu.append(action)
+            for action in self.schema_actions(entity):
+                add_menu.append(action)
             self.workflow_actions(entity, box)
         if box.is_empty() and not other_menu.is_empty():
             box.items = other_menu.items
@@ -113,9 +104,9 @@ class EditBox(BoxTemplate):
         """this is actually used ui method to generate 'addrelated' actions from
         the schema.
 
-        If you're using explicit 'addrelated' actions for an entity types, you
-        should probably overrides this method to return an empty list else you
-        may get some unexpected actions.
+        If you don't want any auto-generated actions, you should overrides this
+        method to return an empty list. If you only want some, you can configure
+        them by using uicfg.actionbox_appearsin_addmenu
         """
         req = self.req
         eschema = entity.e_schema
