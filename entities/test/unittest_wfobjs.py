@@ -201,25 +201,6 @@ class CustomWorkflowTC(EnvBasedTC):
                            ('deactivated', 'activated', 'activate', None),
                            ('activated', 'asleep', None, 'workflow changed to "CWUser"')])
 
-    def test_custom_wf_shared_state(self):
-        """member in some state shared by the new workflow, nothing has to be
-        done
-        """
-        self.member.fire_transition('deactivate')
-        self.assertEquals(self.member.state, 'deactivated')
-        wf = add_wf(self, 'CWUser')
-        wf.add_state('asleep', initial=True)
-        self.execute('SET S state_of WF WHERE S name "deactivated", WF eid %(wf)s',
-                     {'wf': wf.eid})
-        self.execute('SET X custom_workflow WF WHERE X eid %(x)s, WF eid %(wf)s',
-                     {'wf': wf.eid, 'x': self.member.eid})
-        self.commit()
-        self.member.clear_all_caches()
-        self.assertEquals(self.member.current_workflow.eid, wf.eid)
-        self.assertEquals(self.member.state, 'deactivated')
-        self.assertEquals(parse_hist(self.member.workflow_history),
-                          [('activated', 'deactivated', 'deactivate', None)])
-
     def test_custom_wf_no_initial_state(self):
         """try to set a custom workflow which has no initial state"""
         self.member.fire_transition('deactivate')
