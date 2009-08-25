@@ -418,6 +418,8 @@ def _register_usergroup_hooks(hm):
 
 # workflow handling ###########################################################
 
+from cubicweb.entities.wfobjs import WorkflowTransition, WorkflowException
+
 def _change_state(session, x, oldstate, newstate):
     nocheck = session.transaction_data.setdefault('skip-security', set())
     nocheck.add((x, 'in_state', oldstate))
@@ -439,7 +441,8 @@ def before_add_trinfo(session, entity):
         msg = session._('mandatory relation')
         raise ValidationError(entity.eid, {'wf_info_for': msg})
     forentity = session.entity_from_eid(foreid)
-    # then check it has a workflow set
+    # then check it has a workflow set, unless we're in the process of changing
+    # entity's workflow
     if session.transaction_data.get((forentity.eid, 'customwf')):
         wfeid = session.transaction_data[(forentity.eid, 'customwf')]
         wf = session.entity_from_eid(wfeid)
@@ -453,13 +456,16 @@ def before_add_trinfo(session, entity):
     if fromstate is None:
         msg = session._('related entity has no state')
         raise ValidationError(entity.eid, {None: msg})
+    # True if we are coming back from subworkflow
+    swtr = session.transaction_data.pop((forentity.eid, 'subwfentrytr'), None)
+    cowpowers = session.is_super_session or 'managers' in session.user.groups
     # no investigate the requested state change...
     try:
         treid = entity['by_transition']
     except KeyError:
         # no transition set, check user is a manager and destination state is
         # specified (and valid)
-        if not (session.is_super_session or 'managers' in session.user.groups):
+        if not cowpowers:
             msg = session._('mandatory relation')
             raise ValidationError(entity.eid, {'by_transition': msg})
         deststateeid = entity.get('to_state')
@@ -467,22 +473,35 @@ def before_add_trinfo(session, entity):
             msg = session._('mandatory relation')
             raise ValidationError(entity.eid, {'by_transition': msg})
         deststate = wf.state_by_eid(deststateeid)
-        if deststate is None:
-            msg = session._("state doesn't belong to entity's workflow")
+        if not cowpowers and deststate is None:
+            msg = entity.req._("state doesn't belong to entity's workflow")
             raise ValidationError(entity.eid, {'to_state': msg})
     else:
-        # check transition is valid and allowed
-        tr = wf.transition_by_eid(treid)
-        if tr is None:
-            msg = session._("transition doesn't belong to entity's workflow")
-            raise ValidationError(entity.eid, {'by_transition': msg})
-        if not tr.has_input_state(fromstate):
-            msg = session._("transition isn't allowed")
-            raise ValidationError(entity.eid, {'by_transition': msg})
-        if not tr.may_be_fired(foreid):
-            msg = session._("transition may not be fired")
-            raise ValidationError(entity.eid, {'by_transition': msg})
-        deststateeid = tr.destination().eid
+        # check transition is valid and allowed, unless we're coming back from
+        # subworkflow
+        tr = session.entity_from_eid(treid)
+        if swtr is None:
+            if tr is None:
+                msg = session._("transition doesn't belong to entity's workflow")
+                raise ValidationError(entity.eid, {'by_transition': msg})
+            if not tr.has_input_state(fromstate):
+                msg = session._("transition isn't allowed")
+                raise ValidationError(entity.eid, {'by_transition': msg})
+            if not tr.may_be_fired(foreid):
+                msg = session._("transition may not be fired")
+                raise ValidationError(entity.eid, {'by_transition': msg})
+        if entity.get('to_state'):
+            deststateeid = entity['to_state']
+            if not cowpowers and deststateeid != tr.destination().eid:
+                msg = session._("transition isn't allowed")
+                raise ValidationError(entity.eid, {'by_transition': msg})
+            if swtr is None:
+                deststate = session.entity_from_eid(deststateeid)
+                if not cowpowers and deststate is None:
+                    msg = entity.req._("state doesn't belong to entity's workflow")
+                    raise ValidationError(entity.eid, {'to_state': msg})
+        else:
+            deststateeid = tr.destination().eid
     # everything is ok, add missing information on the trinfo entity
     entity['from_state'] = fromstate.eid
     entity['to_state'] = deststateeid
@@ -490,11 +509,33 @@ def before_add_trinfo(session, entity):
     nocheck.add((entity.eid, 'from_state', fromstate.eid))
     nocheck.add((entity.eid, 'to_state', deststateeid))
 
-
 def after_add_trinfo(session, entity):
     """change related entity state"""
     _change_state(session, entity['wf_info_for'],
                   entity['from_state'], entity['to_state'])
+    forentity = session.entity_from_eid(entity['wf_info_for'])
+    assert forentity.current_state.eid == entity['to_state']
+    if forentity.main_workflow.eid != forentity.current_workflow.eid:
+        # we're in a subworkflow, check if we've reached an exit point
+        wftr = forentity.subworkflow_input_transition()
+        if wftr is None:
+            # inconsistency detected
+            msg = entity.req._("state doesn't belong to entity's current workflow")
+            raise ValidationError(entity.eid, {'to_state': msg})
+        tostate = wftr.get_exit_point(entity['to_state'])
+        if tostate is not None:
+            # reached an exit point
+            msg = session._('exiting from subworkflow %s')
+            msg %= session._(forentity.current_workflow.name)
+            session.transaction_data[(forentity.eid, 'subwfentrytr')] = True
+            # XXX iirk
+            req = forentity.req
+            forentity.req = session.super_session
+            try:
+                trinfo = forentity.change_state(tostate, msg, u'text/plain',
+                                                tr=wftr)
+            finally:
+                forentity.req = req
 
 
 class SetInitialStateOp(PreCommitOperation):
@@ -520,11 +561,11 @@ def set_initial_state_after_add(session, entity):
 
 
 def before_add_in_state(session, eidfrom, rtype, eidto):
-    """check state apply"""
+    """check state apply, in case of direct in_state change using unsafe_execute
+    """
     nocheck = session.transaction_data.setdefault('skip-security', ())
     if (eidfrom, 'in_state', eidto) in nocheck:
         # state changed through TrInfo insertion, so we already know it's ok
-        print 'skip in_state check'
         return
     entity = session.entity_from_eid(eidfrom)
     mainwf = entity.main_workflow
@@ -538,6 +579,25 @@ def before_add_in_state(session, eidfrom, rtype, eidto):
         msg = session._("state doesn't belong to entity's workflow. You may "
                         "want to set a custom workflow for this entity first.")
         raise ValidationError(eidfrom, {'in_state': msg})
+    if entity.current_workflow and wf.eid != entity.current_workflow.eid:
+        msg = session._("state doesn't belong to entity's current workflow")
+        raise ValidationError(eidfrom, {'in_state': msg})
+
+
+class CheckTrExitPoint(PreCommitOperation):
+
+    def precommit_event(self):
+        tr = self.session.entity_from_eid(self.treid)
+        outputs = set()
+        for ep in tr.subworkflow_exit:
+            if ep.subwf_state.eid in outputs:
+                msg = self.session._("can't have multiple exits on the same state")
+                raise ValidationError(self.treid, {'subworkflow_exit': msg})
+            outputs.add(ep.subwf_state.eid)
+
+
+def after_add_subworkflow_exit(session, eidfrom, rtype, eidto):
+    CheckTrExitPoint(session, treid=eidfrom)
 
 
 class WorkflowChangedOp(PreCommitOperation):
@@ -571,7 +631,7 @@ class WorkflowChangedOp(PreCommitOperation):
             msg = session._('workflow changed to "%s"')
             msg %= session._(mainwf.name)
             session.transaction_data[(entity.eid, 'customwf')] = self.wfeid
-            entity.change_state(deststate, msg)
+            entity.change_state(deststate, msg, u'text/plain')
 
 
 def set_custom_workflow(session, eidfrom, rtype, eidto):
@@ -605,6 +665,7 @@ def _register_wf_hooks(hm):
         hm.register_hook(del_custom_workflow, 'after_delete_relation', 'custom_workflow')
         hm.register_hook(after_del_workflow, 'after_delete_entity', 'Workflow')
         hm.register_hook(before_add_in_state, 'before_add_relation', 'in_state')
+        hm.register_hook(after_add_subworkflow_exit, 'after_add_relation', 'subworkflow_exit')
 
 
 # CWProperty hooks #############################################################

@@ -1,12 +1,15 @@
 from cubicweb.devtools.apptest import EnvBasedTC
 from cubicweb import ValidationError
 
-def add_wf(self, etype, name=None):
+def add_wf(self, etype, name=None, default=False):
     if name is None:
-        name = unicode(etype)
-    wf = self.execute('INSERT Workflow X: X name %(n)s', {'n': name}).get_entity(0, 0)
+        name = etype
+    wf = self.execute('INSERT Workflow X: X name %(n)s', {'n': unicode(name)}).get_entity(0, 0)
     self.execute('SET WF workflow_of ET WHERE WF eid %(wf)s, ET name %(et)s',
                  {'wf': wf.eid, 'et': etype})
+    if default:
+        self.execute('SET ET default_workflow WF WHERE WF eid %(wf)s, ET name %(et)s',
+                     {'wf': wf.eid, 'et': etype})
     return wf
 
 def parse_hist(wfhist):
@@ -155,6 +158,102 @@ class WorkflowTC(EnvBasedTC):
                      'WHERE T name "deactivate"')
         self._test_stduser_deactivate()
 
+    def test_subworkflow_base(self):
+        """subworkflow
+
+        +-----------+  tr1   +-----------+
+        | swfstate1 | ------>| swfstate2 |
+        +-----------+        +-----------+
+                  |  tr2  +-----------+
+                  `------>| swfstate3 |
+                          +-----------+
+
+        main workflow
+
+        +--------+  swftr1             +--------+
+        | state1 | -------[swfstate2]->| state2 |
+        +--------+     |               +--------+
+                       |               +--------+
+                       `-[swfstate3]-->| state3 |
+                                       +--------+
+        """
+        # sub-workflow
+        swf = add_wf(self, 'CWGroup', name='subworkflow')
+        swfstate1 = swf.add_state(u'swfstate1', initial=True)
+        swfstate2 = swf.add_state(u'swfstate2')
+        swfstate3 = swf.add_state(u'swfstate3')
+        tr1 = swf.add_transition(u'tr1', (swfstate1,), swfstate2)
+        tr2 = swf.add_transition(u'tr2', (swfstate1,), swfstate3)
+        # main workflow
+        mwf = add_wf(self, 'CWGroup', name='main workflow', default=True)
+        state1 = mwf.add_state(u'state1', initial=True)
+        state2 = mwf.add_state(u'state2')
+        state3 = mwf.add_state(u'state3')
+        swftr1 = mwf.add_wftransition(u'swftr1', swf, state1,
+                                      [(swfstate2, state2), (swfstate3, state3)])
+        self.assertEquals(swftr1.destination().eid, swfstate1.eid)
+        # workflows built, begin test
+        self.group = self.add_entity('CWGroup', name=u'grp1')
+        self.commit()
+        self.assertEquals(self.group.current_state.eid, state1.eid)
+        self.assertEquals(self.group.current_workflow.eid, mwf.eid)
+        self.assertEquals(self.group.main_workflow.eid, mwf.eid)
+        self.assertEquals(self.group.subworkflow_input_transition(), None)
+        self.group.fire_transition('swftr1', u'go')
+        self.commit()
+        self.group.clear_all_caches()
+        self.assertEquals(self.group.current_state.eid, swfstate1.eid)
+        self.assertEquals(self.group.current_workflow.eid, swf.eid)
+        self.assertEquals(self.group.main_workflow.eid, mwf.eid)
+        self.assertEquals(self.group.subworkflow_input_transition().eid, swftr1.eid)
+        self.group.fire_transition('tr1', u'go')
+        self.commit()
+        self.group.clear_all_caches()
+        self.assertEquals(self.group.current_state.eid, state2.eid)
+        self.assertEquals(self.group.current_workflow.eid, mwf.eid)
+        self.assertEquals(self.group.main_workflow.eid, mwf.eid)
+        self.assertEquals(self.group.subworkflow_input_transition(), None)
+        # force back to swfstate1 is impossible since we can't any more find
+        # subworkflow input transition
+        ex = self.assertRaises(ValidationError,
+                               self.group.change_state, swfstate1, u'gadget')
+        self.assertEquals(ex.errors, {'to_state': "state doesn't belong to entity's current workflow"})
+        self.rollback()
+        # force back to state1
+        self.group.change_state('state1', u'gadget')
+        self.group.fire_transition('swftr1', u'au')
+        self.group.clear_all_caches()
+        self.group.fire_transition('tr2', u'chapeau')
+        self.commit()
+        self.group.clear_all_caches()
+        self.assertEquals(self.group.current_state.eid, state3.eid)
+        self.assertEquals(self.group.current_workflow.eid, mwf.eid)
+        self.assertEquals(self.group.main_workflow.eid, mwf.eid)
+        self.assertListEquals(parse_hist(self.group.workflow_history),
+                              [('state1', 'swfstate1', 'swftr1', 'go'),
+                               ('swfstate1', 'swfstate2', 'tr1', 'go'),
+                               ('swfstate2', 'state2', 'swftr1', 'exiting from subworkflow subworkflow'),
+                               ('state2', 'state1', None, 'gadget'),
+                               ('state1', 'swfstate1', 'swftr1', 'au'),
+                               ('swfstate1', 'swfstate3', 'tr2', 'chapeau'),
+                               ('swfstate3', 'state3', 'swftr1', 'exiting from subworkflow subworkflow'),
+                               ])
+
+    def test_subworkflow_exit_consistency(self):
+        # sub-workflow
+        swf = add_wf(self, 'CWGroup', name='subworkflow')
+        swfstate1 = swf.add_state(u'swfstate1', initial=True)
+        swfstate2 = swf.add_state(u'swfstate2')
+        tr1 = swf.add_transition(u'tr1', (swfstate1,), swfstate2)
+        # main workflow
+        mwf = add_wf(self, 'CWGroup', name='main workflow', default=True)
+        state1 = mwf.add_state(u'state1', initial=True)
+        state2 = mwf.add_state(u'state2')
+        state3 = mwf.add_state(u'state3')
+        mwf.add_wftransition(u'swftr1', swf, state1,
+                             [(swfstate2, state2), (swfstate2, state3)])
+        ex = self.assertRaises(ValidationError, self.commit)
+        self.assertEquals(ex.errors, {'subworkflow_exit': u"can't have multiple exits on the same state"})
 
 
 class CustomWorkflowTC(EnvBasedTC):
