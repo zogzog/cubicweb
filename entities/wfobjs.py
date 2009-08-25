@@ -94,9 +94,7 @@ class Workflow(AnyEntity):
     # wf construction methods ##################################################
 
     def add_state(self, name, initial=False, **kwargs):
-        """method to ease workflow definition: add a state for one or more
-        entity type(s)
-        """
+        """add a state to this workflow"""
         state = self.req.create_entity('State', name=unicode(name), **kwargs)
         self.req.execute('SET S state_of WF WHERE S eid %(s)s, WF eid %(wf)s',
                          {'s': state.eid, 'wf': self.eid}, ('s', 'wf'))
@@ -107,12 +105,9 @@ class Workflow(AnyEntity):
                              {'s': state.eid, 'wf': self.eid}, ('s', 'wf'))
         return state
 
-    def add_transition(self, name, fromstates, tostate,
-                       requiredgroups=(), conditions=(), **kwargs):
-        """method to ease workflow definition: add a transition for one or more
-        entity type(s), from one or more state and to a single state
-        """
-        tr = self.req.create_entity('Transition', name=unicode(name), **kwargs)
+    def _add_transition(self, trtype, name, fromstates,
+                        requiredgroups=(), conditions=(), **kwargs):
+        tr = self.req.create_entity(trtype, name=unicode(name), **kwargs)
         self.req.execute('SET T transition_of WF '
                          'WHERE T eid %(t)s, WF eid %(wf)s',
                          {'t': tr.eid, 'wf': self.eid}, ('t', 'wf'))
@@ -122,12 +117,32 @@ class Workflow(AnyEntity):
             self.req.execute('SET S allowed_transition T '
                              'WHERE S eid %(s)s, T eid %(t)s',
                              {'s': state, 't': tr.eid}, ('s', 't'))
+        tr.set_transition_permissions(requiredgroups, conditions, reset=False)
+        return tr
+
+    def add_transition(self, name, fromstates, tostate,
+                       requiredgroups=(), conditions=(), **kwargs):
+        """add a transition to this workflow from some state(s) to another"""
+        tr = self._add_transition('Transition', name, fromstates,
+                                  requiredgroups, conditions, **kwargs)
         if hasattr(tostate, 'eid'):
             tostate = tostate.eid
         self.req.execute('SET T destination_state S '
                          'WHERE S eid %(s)s, T eid %(t)s',
                          {'t': tr.eid, 's': tostate}, ('s', 't'))
-        tr.set_transition_permissions(requiredgroups, conditions, reset=False)
+        return tr
+
+    def add_wftransition(self, name, subworkflow, fromstates, exitpoints,
+                       requiredgroups=(), conditions=(), **kwargs):
+        """add a workflow transition to this workflow"""
+        tr = self._add_transition('WorkflowTransition', name, fromstates,
+                                  requiredgroups, conditions, **kwargs)
+        if hasattr(subworkflow, 'eid'):
+            subworkflow = subworkflow.eid
+        self.req.execute('SET T subworkflow WF WHERE WF eid %(wf)s,T eid %(t)s',
+                         {'t': tr.eid, 'wf': subworkflow}, ('wf', 't'))
+        for fromstate, tostate in exitpoints:
+            tr.add_exit_point(fromstate, tostate)
         return tr
 
 
@@ -191,7 +206,6 @@ class BaseTransition(AnyEntity):
             self.req.execute('DELETE T condition R WHERE T eid %(x)s',
                              {'x': self.eid}, 'x')
         for gname in requiredgroups:
-            ### XXX ensure gname validity
             rset = self.req.execute('SET T require_group G '
                                     'WHERE T eid %(x)s, G name %(gn)s',
                                     {'x': self.eid, 'gn': gname}, 'x')
@@ -231,6 +245,50 @@ class WorkflowTransition(BaseTransition):
 
     def destination(self):
         return self.subwf.initial
+
+    def add_exit_point(self, fromstate, tostate):
+        if hasattr(fromstate, 'eid'):
+            fromstate = fromstate.eid
+        if hasattr(tostate, 'eid'):
+            tostate = tostate.eid
+        self.req.execute('INSERT SubWorkflowExitPoint X: T subworkflow_exit X, '
+                         'X subworkflow_state FS, X destination_state TS '
+                         'WHERE T eid %(t)s, FS eid %(fs)s, TS eid %(ts)s',
+                         {'t': self.eid, 'fs': fromstate, 'ts': tostate},
+                         ('t', 'fs', 'ts'))
+
+    def get_exit_point(self, state):
+        """if state is an exit point, return its associated destination state"""
+        if hasattr(state, 'eid'):
+            state = state.eid
+        stateeid = self.exit_points().get(state)
+        if stateeid is not None:
+            return self.req.entity_from_eid(stateeid)
+        return None
+
+    @cached
+    def exit_points(self):
+        result = {}
+        for ep in self.subworkflow_exit:
+            result[ep.subwf_state.eid] = ep.destination.eid
+        return result
+
+    def clear_all_caches(self):
+        super(WorkflowableMixIn, self).clear_all_caches()
+        clear_cache(self, 'exit_points')
+
+
+class SubWorkflowExitPoint(AnyEntity):
+    """customized class for SubWorkflowExitPoint entities"""
+    id = 'SubWorkflowExitPoint'
+
+    @property
+    def subwf_state(self):
+        return self.subworkflow_state[0]
+
+    @property
+    def destination(self):
+        return self.destination_state[0]
 
 
 class State(AnyEntity):
