@@ -1022,7 +1022,7 @@ class ServerMigrationHelper(MigrationHelper):
         if commit:
             self.commit()
 
-    @deprecated('use entity.change_state("state")')
+    @deprecated('use entity.fire_transition("transition") or entity.change_state("state")')
     def cmd_set_state(self, eid, statename, commit=False):
         self.session.set_pool() # ensure pool is set
         self.session.entity_from_eid(eid).change_state(statename)
