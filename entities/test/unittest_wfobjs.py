@@ -212,8 +212,7 @@ class CustomWorkflowTC(EnvBasedTC):
         self.assertEquals(ex.errors, {'custom_workflow': u'workflow has no initial state'})
 
     def test_custom_wf_bad_etype(self):
-        """try to set a custom workflow which has no initial state"""
-        self.member.fire_transition('deactivate')
+        """try to set a custom workflow which doesn't apply to entity type"""
         wf = add_wf(self, 'Company')
         wf.add_state('asleep', initial=True)
         self.execute('SET X custom_workflow WF WHERE X eid %(x)s, WF eid %(wf)s',

@@ -515,6 +515,10 @@ class SetInitialStateOp(PreCommitOperation):
                                                    state.eid)
 
 
+def set_initial_state_after_add(session, entity):
+    SetInitialStateOp(session, entity=entity)
+
+
 def before_add_in_state(session, eidfrom, rtype, eidto):
     """check state apply"""
     nocheck = session.transaction_data.setdefault('skip-security', ())
@@ -535,14 +539,13 @@ def before_add_in_state(session, eidfrom, rtype, eidto):
                         "want to set a custom workflow for this entity first.")
         raise ValidationError(eidfrom, {'in_state': msg})
 
-def set_initial_state_after_add(session, entity):
-    SetInitialStateOp(session, entity=entity)
-
 
 class WorkflowChangedOp(PreCommitOperation):
     """fix entity current state when changing its workflow"""
 
     def precommit_event(self):
+        # notice that enforcement that new workflow apply to the entity's type is
+        # done by schema rule, no need to check it here
         session = self.session
         pendingeids = session.transaction_data.get('pendingeids', ())
         if self.eid in pendingeids:
