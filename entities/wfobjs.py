@@ -291,11 +291,16 @@ class WorkflowableMixIn(object):
     __implements__ = (IWorkflowable,)
 
     @property
-    def current_workflow(self):
+    def main_workflow(self):
         """return current workflow applied to this entity"""
         if self.custom_workflow:
             return self.custom_workflow[0]
         return self.cwetype_workflow()
+
+    @property
+    def current_workflow(self):
+        """return current workflow applied to this entity"""
+        return self.current_state.workflow
 
     @property
     def current_state(self):

@@ -440,7 +440,11 @@ def before_add_trinfo(session, entity):
         raise ValidationError(entity.eid, {'wf_info_for': msg})
     forentity = session.entity_from_eid(foreid)
     # then check it has a workflow set
-    wf = forentity.current_workflow
+    if session.transaction_data.get((forentity.eid, 'customwf')):
+        wfeid = session.transaction_data[(forentity.eid, 'customwf')]
+        wf = session.entity_from_eid(wfeid)
+    else:
+        wf = forentity.current_workflow
     if wf is None:
         msg = session._('related entity has no workflow set')
         raise ValidationError(entity.eid, {None: msg})
@@ -503,8 +507,8 @@ class SetInitialStateOp(PreCommitOperation):
         # use the initial state as a default state
         pendingeids = session.transaction_data.get('pendingeids', ())
         if not entity.eid in pendingeids and not entity.in_state and \
-               entity.current_workflow:
-            state = entity.current_workflow.initial
+               entity.main_workflow:
+            state = entity.main_workflow.initial
             if state:
                 # use super session to by-pass security checks
                 session.super_session.add_relation(entity.eid, 'in_state',
@@ -524,14 +528,15 @@ class WorkflowChangedOp(PreCommitOperation):
         if self.eid in pendingeids:
             return
         entity = session.entity_from_eid(self.eid)
-        # notice that enforcment that new workflow apply to the entity's type is
-        # done by schema rule, no need to check it here
-        if entity.current_workflow.eid == self.wfeid:
-            deststate = entity.current_workflow.initial
+        # check custom workflow has not been rechanged to another one in the same
+        # transaction
+        mainwf = entity.main_workflow
+        if mainwf.eid == self.wfeid:
+            deststate = mainwf.initial
             if not deststate:
                 msg = session._('workflow has no initial state')
                 raise ValidationError(entity.eid, {'custom_workflow': msg})
-            if entity.current_workflow.state_by_eid(entity.current_state.eid):
+            if mainwf.state_by_eid(entity.current_state.eid):
                 # nothing to do
                 return
             # if there are no history, simply go to new workflow's initial state
@@ -541,8 +546,9 @@ class WorkflowChangedOp(PreCommitOperation):
                                   entity.current_state.eid, deststate.eid)
                 return
             msg = session._('workflow changed to "%s"')
-            msg %= entity.current_workflow.name
-            entity.change_state(deststate.name, msg)
+            msg %= session._(mainwf.name)
+            session.transaction_data[(entity.eid, 'customwf')] = self.wfeid
+            entity.change_state(deststate, msg)
 
 
 def set_custom_workflow(session, eidfrom, rtype, eidto):
