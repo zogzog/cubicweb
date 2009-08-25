@@ -40,6 +40,23 @@ class Workflow(AnyEntity):
             return self.workflow_of[0].rest_path(), {'vid': 'workflow'}
         return super(Workflow, self).after_deletion_path()
 
+    def iter_workflows(self, _done=None):
+        """return an iterator on actual workflows, eg this workflow and its
+        subworkflows
+        """
+        # infinite loop safety belt
+        if _done is None:
+            _done = set()
+        yield self
+        _done.add(self.eid)
+        for tr in self.req.execute('Any T WHERE T is WorkflowTransition, '
+                                   'T transition_of WF, WF eid %(wf)s',
+                                   {'wf': self.eid}).entities():
+            if tr.subwf.eid in _done:
+                continue
+            for subwf in tr.subwf.iter_workflows(_done):
+                yield subwf
+
     # state / transitions accessors ############################################
 
     def state_by_name(self, statename):
