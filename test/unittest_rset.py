@@ -328,10 +328,19 @@ class ResultSetTC(EnvBasedTC):
         entity, rtype = rset.related_entity(1, 1)
         self.assertEquals(entity.id, 'CWGroup')
         self.assertEquals(rtype, 'name')
+        #
         rset = self.execute('Any X,N ORDERBY N WHERE X is Bookmark WITH X,N BEING '
                             '((Any X,N WHERE X is CWGroup, X name N)'
                             ' UNION '
                             ' (Any X,N WHERE X is Bookmark, X title N))')
+        entity, rtype = rset.related_entity(0, 1)
+        self.assertEquals(entity.eid, e.eid)
+        self.assertEquals(rtype, 'title')
+        #
+        rset = self.execute('Any X,N ORDERBY N WITH N,X BEING '
+                            '((Any N,X WHERE X is CWGroup, X name N)'
+                            ' UNION '
+                            ' (Any N,X WHERE X is Bookmark, X title N))')
         entity, rtype = rset.related_entity(0, 1)
         self.assertEquals(entity.eid, e.eid)
         self.assertEquals(rtype, 'title')
