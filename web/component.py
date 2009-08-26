@@ -134,25 +134,21 @@ class NavigationComponent(Component):
             return self.selected_page_link_templ % (url, content, content)
         return self.page_link_templ % (url, content, content)
 
-    def previous_link(self, params, content='&lt;&lt;', title=_('previous_results')):
+    def previous_link(self, path, params, content='&lt;&lt;', title=_('previous_results')):
         start = self.starting_from
         if not start :
             return self.no_previous_page_link
         start = max(0, start - self.page_size)
         stop = start + self.page_size - 1
-        url = self.build_url(**merge_dicts(params, {self.start_param : start,
-                                                    self.stop_param : stop,}))
-        url = xml_escape(url)
+        url = xml_escape(self.page_url(path, params, start, stop))
         return self.previous_page_link_templ % (url, title, content)
 
-    def next_link(self, params, content='&gt;&gt;', title=_('next_results')):
+    def next_link(self, path, params, content='&gt;&gt;', title=_('next_results')):
         start = self.starting_from + self.page_size
         if start >= self.total:
             return self.no_next_page_link
         stop = start + self.page_size - 1
-        url = self.build_url(**merge_dicts(params, {self.start_param : start,
-                                                    self.stop_param : stop,}))
-        url = xml_escape(url)
+        url = xml_escape(self.page_url(path, params, start, stop))
         return self.next_page_link_templ % (url, title, content)
 
 
