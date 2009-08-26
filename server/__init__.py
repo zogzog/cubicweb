@@ -180,22 +180,6 @@ def init_repository(config, interactive=True, drop=False, vreg=None):
     handler = config.migration_handler(schema, interactive=False,
                                        cnx=cnx, repo=repo)
     initialize_schema(config, schema, handler)
-    # insert versions
-    handler.cmd_add_entity('CWProperty', pkey=u'system.version.cubicweb',
-                           value=unicode(config.cubicweb_version()))
-    for cube in config.cubes():
-        handler.cmd_add_entity('CWProperty',
-                               pkey=u'system.version.%s' % cube.lower(),
-                               value=unicode(config.cube_version(cube)))
-    # some entities have been added before schema entities, fix the 'is' and
-    # 'is_instance_of' relations
-    for rtype in ('is', 'is_instance_of'):
-        handler.sqlexec(
-            'INSERT INTO %s_relation '
-            'SELECT X.eid, ET.cw_eid FROM entities as X, cw_CWEType as ET '
-            'WHERE X.type=ET.cw_name AND NOT EXISTS('
-            '      SELECT 1 from is_relation '
-            '      WHERE eid_from=X.eid AND eid_to=ET.cw_eid)' % rtype)
     # yoo !
     cnx.commit()
     config.enabled_sources = None
