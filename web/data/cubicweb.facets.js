@@ -220,4 +220,4 @@ function reorderFacetsItems(root){
 // of his, so we use this small anonymous function instead.
 jQuery(document).ready(function() {initFacetBoxEvents();});
 
-CubicWeb.provide('formfilter.js');
+CubicWeb.provide('facets.js');

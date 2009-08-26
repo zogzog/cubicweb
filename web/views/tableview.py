@@ -51,7 +51,7 @@ class TableView(AnyRsetView):
         """display a form to filter table's content. This should only
         occurs when a context eid is given
         """
-        self.req.add_js( ('cubicweb.ajax.js', 'cubicweb.formfilter.js'))
+        self.req.add_js( ('cubicweb.ajax.js', 'cubicweb.facets.js'))
         # drop False / None values from vidargs
         vidargs = dict((k, v) for k, v in vidargs.iteritems() if v)
         self.w(u'<form method="post" cubicweb:facetargs="%s" action="">' %
