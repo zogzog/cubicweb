@@ -66,7 +66,16 @@ function postAjaxLoad(node) {
     jQuery(CubicWeb).trigger('ajax-loaded');
 }
 
-// cubicweb loadxhtml plugin to make jquery handle xhtml response
+/* cubicweb loadxhtml plugin to make jquery handle xhtml response
+ *
+ * fetches `url` and replaces this's content with the result
+ *
+ * @param mode how the replacement should be done (default is 'replace')
+ *  Possible values are :
+ *    - 'replace' to replace the node's content with the generated HTML
+ *    - 'swap' to replace the node itself with the generated HTML
+ *    - 'append' to append the generated HTML to the node's content
+ */
 jQuery.fn.loadxhtml = function(url, data, reqtype, mode) {
     var ajax = null;
     if (reqtype == 'post') {
@@ -323,7 +332,7 @@ function replacePageChunk(nodeId, rql, vid, extraparams, /* ... */ swap, callbac
     }
 }
 
-/*
+/* XXX deprecates?
  * fetches `url` and replaces `nodeid`'s content with the result
  * @param replacemode how the replacement should be done (default is 'replace')
  *  Possible values are :

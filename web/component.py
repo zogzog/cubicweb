@@ -8,6 +8,8 @@
 __docformat__ = "restructuredtext en"
 _ = unicode
 
+from simplejson import dumps
+
 from logilab.common.deprecation import class_renamed
 from logilab.mtconverter import xml_escape
 
@@ -45,8 +47,6 @@ class EntityVComponent(Component):
                                         _('navcontenttop'), _('navcontentbottom')),
                             #vocabulary=(_('header'), _('incontext'), _('footer')),
                             help=_('context where this component should be displayed')),
-        _('htmlclass'):dict(type='String', default='mainRelated',
-                            help=_('html class of the component')),
     }
 
     context = 'navcontentbottom' # 'footer' | 'header' | 'incontext'
@@ -74,7 +74,8 @@ class NavigationComponent(Component):
     page_link_templ = u'<span class="slice"><a href="%s" title="%s">%s</a></span>'
     selected_page_link_templ = u'<span class="selectedSlice"><a href="%s" title="%s">%s</a></span>'
     previous_page_link_templ = next_page_link_templ = page_link_templ
-    no_previous_page_link = no_next_page_link = u''
+    no_previous_page_link = u'&lt;&lt;'
+    no_next_page_link = u'&gt;&gt;'
 
     def __init__(self, req, rset, **kwargs):
         super(NavigationComponent, self).__init__(req, rset, **kwargs)
@@ -114,33 +115,40 @@ class NavigationComponent(Component):
         if self.stop_param in params:
             del params[self.stop_param]
 
+    def page_url(self, path, params, start, stop):
+        params = merge_dicts(params, {self.start_param : start,
+                                      self.stop_param : stop,})
+        if path == 'json':
+            rql = params.pop('rql', self.rset.printable_rql())
+            # latest 'true' used for 'swap' mode
+            url = 'javascript: replacePageChunk(%s, %s, %s, %s, true)' % (
+                dumps(params.get('divid', 'paginated-content')),
+                dumps(rql), dumps(params.pop('vid', None)), dumps(params))
+        else:
+            url = self.build_url(path, **params)
+        return url
+
     def page_link(self, path, params, start, stop, content):
-        url = self.build_url(path, **merge_dicts(params, {self.start_param : start,
-                                                          self.stop_param : stop,}))
-        url = xml_escape(url)
+        url = xml_escape(self.page_url(path, params, start, stop))
         if start == self.starting_from:
             return self.selected_page_link_templ % (url, content, content)
         return self.page_link_templ % (url, content, content)
 
-    def previous_link(self, params, content='&lt;&lt;', title=_('previous_results')):
+    def previous_link(self, path, params, content='&lt;&lt;', title=_('previous_results')):
         start = self.starting_from
         if not start :
             return self.no_previous_page_link
         start = max(0, start - self.page_size)
         stop = start + self.page_size - 1
-        url = self.build_url(**merge_dicts(params, {self.start_param : start,
-                                                    self.stop_param : stop,}))
-        url = xml_escape(url)
+        url = xml_escape(self.page_url(path, params, start, stop))
         return self.previous_page_link_templ % (url, title, content)
 
-    def next_link(self, params, content='&gt;&gt;', title=_('next_results')):
+    def next_link(self, path, params, content='&gt;&gt;', title=_('next_results')):
         start = self.starting_from + self.page_size
         if start >= self.total:
             return self.no_next_page_link
         stop = start + self.page_size - 1
-        url = self.build_url(**merge_dicts(params, {self.start_param : start,
-                                                    self.stop_param : stop,}))
-        url = xml_escape(url)
+        url = xml_escape(self.page_url(path, params, start, stop))
         return self.next_page_link_templ % (url, title, content)
 
 
