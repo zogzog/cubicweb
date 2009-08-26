@@ -80,9 +80,8 @@ function buildRQL(divid, vid, paginate, vidargs) {
 		reloadComponent('edit_box', rql, 'boxes', 'edit_box');
 	    }
 	    if (jQuery('#breadcrumbs').length) {
-		log('reloading breadcrumbs!', rql);
 		reloadComponent('breadcrumbs', rql, 'components', 'breadcrumbs');
-	    } else { log('breadcrumbs not found!'); }
+	    }
 	}
 	var d = asyncRemoteExec('filter_select_content', toupdate, rql);
 	d.addCallback(function(updateMap) {
