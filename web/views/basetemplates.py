@@ -392,7 +392,7 @@ class HTMLPageFooter(View):
                                             req._(ChangeLogView.title).lower()))
         self.w(u'<a href="%s">%s</a> | ' % (req.build_url('doc/about'),
                                             req._('about this site')))
-        self.w(u'© 2001-2009 <a href="http://www.logilab.fr">Logilab S.A.</a>')
+        self.w(u'<a href="http://www.cubicweb.org">%s</a>' % req._('powered by CubicWeb'))
         self.w(u'</div>')
 
 
