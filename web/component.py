@@ -8,6 +8,8 @@
 __docformat__ = "restructuredtext en"
 _ = unicode
 
+from simplejson import dumps
+
 from logilab.common.deprecation import class_renamed
 from logilab.mtconverter import xml_escape
 
@@ -113,10 +115,21 @@ class NavigationComponent(Component):
         if self.stop_param in params:
             del params[self.stop_param]
 
+    def page_url(self, path, params, start, stop):
+        params = merge_dicts(params, {self.start_param : start,
+                                      self.stop_param : stop,})
+        if path == 'json':
+            rql = params.pop('rql', self.rset.printable_rql())
+            # latest 'true' used for 'swap' mode
+            url = 'javascript: replacePageChunk(%s, %s, %s, %s, true)' % (
+                dumps(params.get('divid', 'paginated-content')),
+                dumps(rql), dumps(params.pop('vid', None)), dumps(params))
+        else:
+            url = self.build_url(path, **params)
+        return url
+
     def page_link(self, path, params, start, stop, content):
-        url = self.build_url(path, **merge_dicts(params, {self.start_param : start,
-                                                          self.stop_param : stop,}))
-        url = xml_escape(url)
+        url = xml_escape(self.page_url(path, params, start, stop))
         if start == self.starting_from:
             return self.selected_page_link_templ % (url, content, content)
         return self.page_link_templ % (url, content, content)
