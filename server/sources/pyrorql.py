@@ -26,6 +26,12 @@ from cubicweb.cwconfig import register_persistent_options
 from cubicweb.server.sources import (AbstractSource, ConnectionWrapper,
                                      TimedCache, dbg_st_search, dbg_results)
 
+
+def uidtype(union, col, etype, args):
+    select, col = union.locate_subquery(col, etype, args)
+    return getattr(select.selection[col], 'uidtype', None)
+
+
 class ReplaceByInOperator(Exception):
     def __init__(self, eids):
         self.eids = eids
@@ -295,8 +301,8 @@ repository (default to 5 minutes).',
             needtranslation = []
             rows = rset.rows
             for i, etype in enumerate(descr[0]):
-                if (etype is None or not self.schema.eschema(etype).is_final() or
-                    getattr(union.locate_subquery(i, etype, args).selection[i], 'uidtype', None)):
+                if (etype is None or not self.schema.eschema(etype).is_final()
+                    or uidtype(union, i, etype, args)):
                     needtranslation.append(i)
             if needtranslation:
                 cnx = session.pool.connection(self.uri)
