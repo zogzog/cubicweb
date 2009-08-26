@@ -72,7 +72,8 @@ class NavigationComponent(Component):
     page_link_templ = u'<span class="slice"><a href="%s" title="%s">%s</a></span>'
     selected_page_link_templ = u'<span class="selectedSlice"><a href="%s" title="%s">%s</a></span>'
     previous_page_link_templ = next_page_link_templ = page_link_templ
-    no_previous_page_link = no_next_page_link = u''
+    no_previous_page_link = u'&lt;&lt;'
+    no_next_page_link = u'&gt;&gt;'
 
     def __init__(self, req, rset, **kwargs):
         super(NavigationComponent, self).__init__(req, rset, **kwargs)
