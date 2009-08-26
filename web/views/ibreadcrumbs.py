@@ -10,49 +10,54 @@ _ = unicode
 
 from logilab.mtconverter import xml_escape
 
-# don't use AnyEntity since this may cause bug with isinstance() due to reloading
 from cubicweb.interfaces import IBreadCrumbs
-from cubicweb.selectors import match_context_prop, one_line_rset, implements
+from cubicweb.selectors import (one_line_rset, implements, one_etype_rset,
+                                two_lines_rset, any_rset)
+from cubicweb.view import EntityView, Component
+# don't use AnyEntity since this may cause bug with isinstance() due to reloading
 from cubicweb.entity import Entity
-from cubicweb.view import EntityView
 from cubicweb.common.uilib import cut
-from cubicweb.web.component import EntityVComponent
 
 
 def bc_title(entity):
     textsize = entity.req.property_value('navigation.short-line-size')
     return xml_escape(cut(entity.dc_title(), textsize))
 
+# XXX only provides the component version
 
-class BreadCrumbEntityVComponent(EntityVComponent):
+class BreadCrumbEntityVComponent(Component):
     id = 'breadcrumbs'
-    # register msg not generated since no entity implements IPrevNext in cubicweb itself
+    __select__ = one_line_rset() & implements(IBreadCrumbs)
+
+    property_defs = {
+        _('visible'):  dict(type='Boolean', default=True,
+                            help=_('display the component or not')),
+        }
     title = _('contentnavigation_breadcrumbs')
     help = _('contentnavigation_breadcrumbs_description')
-    __select__ = (one_line_rset() & match_context_prop() & implements(IBreadCrumbs))
-    context = 'navtop'
-    order = 5
-    visible = False
     separator = u'&#160;&gt;&#160;'
 
     def call(self, view=None, first_separator=True):
         entity = self.entity(0)
         path = entity.breadcrumbs(view)
         if path:
-            self.w(u'<span class="pathbar">')
+            self.w(u'<span id="breadcrumbs" class="pathbar">')
             if first_separator:
                 self.w(self.separator)
-            root = path.pop(0)
-            if isinstance(root, Entity):
-                self.w(u'<a href="%s">%s</a>' % (self.req.build_url(root.id),
-                                                 root.dc_type('plural')))
-                self.w(self.separator)
-            self.wpath_part(root, entity, not path)
-            for i, parent in enumerate(path):
-                self.w(self.separator)
-                self.w(u"\n")
-                self.wpath_part(parent, entity, i == len(path) - 1)
+            self.render_breadcrumbs(entity, path)
             self.w(u'</span>')
+
+    def render_breadcrumbs(self, contextentity, path):
+        root = path.pop(0)
+        if isinstance(root, Entity):
+            self.w(u'<a href="%s">%s</a>' % (self.req.build_url(root.id),
+                                             root.dc_type('plural')))
+            self.w(self.separator)
+        self.wpath_part(root, contextentity, not path)
+        for i, parent in enumerate(path):
+            self.w(self.separator)
+            self.w(u"\n")
+            self.wpath_part(parent, contextentity, i == len(path) - 1)
 
     def wpath_part(self, part, contextentity, last=False):
         if isinstance(part, Entity):
@@ -70,10 +75,24 @@ class BreadCrumbEntityVComponent(EntityVComponent):
             self.w(cut(unicode(part), textsize))
 
 
-class BreadCrumbComponent(BreadCrumbEntityVComponent):
-    __registry__ = 'components'
-    __select__ = (one_line_rset() & implements(IBreadCrumbs))
-    visible = True
+class BreadCrumbETypeVComponent(BreadCrumbEntityVComponent):
+    __select__ = two_lines_rset() & one_etype_rset() & implements(IBreadCrumbs)
+
+    def render_breadcrumbs(self, contextentity, path):
+        # XXX hack: only display etype name or first non entity path part
+        root = path.pop(0)
+        if isinstance(root, Entity):
+            self.w(u'<a href="%s">%s</a>' % (self.req.build_url(root.id),
+                                             root.dc_type('plural')))
+        else:
+            self.wpath_part(root, entity, not path)
+
+
+class BreadCrumbAnyRSetVComponent(BreadCrumbEntityVComponent):
+    __select__ = any_rset()
+
+    def render_breadcrumbs(self, contextentity, path):
+        self.w(self.req._('search'))
 
 
 class BreadCrumbView(EntityView):
