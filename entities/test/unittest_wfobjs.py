@@ -110,7 +110,7 @@ class WorkflowTC(CubicWebTC):
         wf = add_wf(self, 'CWUser')
         s = wf.add_state(u'foo', initial=True)
         self.commit()
-        ex = self.assertRaises(ValidationError, self.session().unsafe_execute,
+        ex = self.assertRaises(ValidationError, self.session.unsafe_execute,
                                'SET X in_state S WHERE X eid %(x)s, S eid %(s)s',
                                {'x': self.user().eid, 's': s.eid}, 'x')
         self.assertEquals(ex.errors, {'in_state': "state doesn't belong to entity's workflow. "
