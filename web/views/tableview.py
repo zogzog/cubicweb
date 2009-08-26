@@ -129,8 +129,7 @@ class TableView(AnyRsetView):
         # replace the inner div, so don't regenerate everything under the if
         # below
         if not fromformfilter:
-            div_class = 'section'
-            self.w(u'<div class="%s">' % div_class)
+            self.w(u'<div class="section">')
             if not title and 'title' in req.form:
                 title = req.form['title']
             if title:
