@@ -47,9 +47,10 @@ class StatusChangeHook(NotificationHook):
         if view is None:
             return
         comment = entity.printable_value('comment', format='text/plain')
-        if comment:
-            comment = normalize_text(comment, 80,
-                                     rest=entity.comment_format=='text/rest')
+        # XXX don't try to wrap rest until we've a proper transformation (see
+        # #103822)
+        if comment and entity.comment_format != 'text/rest':
+            comment = normalize_text(comment, 80)
         RenderAndSendNotificationView(self._cw, view=view, viewargs={
             'comment': comment, 'previous_state': entity.previous_state.name,
             'current_state': entity.new_state.name})

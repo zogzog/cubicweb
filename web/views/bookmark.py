@@ -33,7 +33,7 @@ class BookmarkPrimaryView(primary.PrimaryView):
     def cell_call(self, row, col):
         """the primary view for bookmark entity"""
         entity = self.complete_entity(row, col)
-        self.w(u'&nbsp;')
+        self.w(u'&#160;')
         self.w(u"<span class='title'><b>")
         self.w(u"%s : %s" % (self.req._('Bookmark'), xml_escape(entity.title)))
         self.w(u"</b></span>")

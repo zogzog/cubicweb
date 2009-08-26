@@ -157,6 +157,7 @@ class EditController(ViewController):
         errorurl = self.req.form.get('__errorurl')
         if errorurl:
             self.req.cancel_edition(errorurl)
+        self.req.message = self.req._('edit canceled')
         return self.reset()
 
     def _action_delete(self):

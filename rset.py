@@ -447,7 +447,7 @@ class ResultSet(object):
             if rqlst.TYPE == 'select':
                 # UNION query, find the subquery from which this entity has been
                 # found
-                rqlst = rqlst.locate_subquery(col, etype, self.args)
+                rqlst, col = rqlst.locate_subquery(col, etype, self.args)
             # take care, due to outer join support, we may find None
             # values for non final relation
             for i, attr, x in attr_desc_iterator(rqlst, col):
@@ -547,7 +547,8 @@ class ResultSet(object):
                     if len(self.column_types(i)) > 1:
                         break
         # UNION query, find the subquery from which this entity has been found
-        select = rqlst.locate_subquery(locate_query_col, etype, self.args)
+        select = rqlst.locate_subquery(locate_query_col, etype, self.args)[0]
+        col = rqlst.subquery_selection_index(select, col)
         try:
             myvar = select.selection[col].variable
         except AttributeError:
@@ -555,7 +556,7 @@ class ResultSet(object):
             return None, None
         rel = myvar.main_relation()
         if rel is not None:
-            index = rel.children[0].variable.selected_index()
+            index = rel.children[0].root_selection_index()
             if index is not None and self.rows[row][index]:
                 return self.get_entity(row, index), rel.r_type
         return None, None

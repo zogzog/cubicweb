@@ -110,7 +110,7 @@ class PasswordInput(Input):
                   '<br/>',
                   tags.input(name=confirmname, value=values[0], type=self.type,
                              **attrs),
-                  '&nbsp;', tags.span(form.req._('confirm password'),
+                  '&#160;', tags.span(form.req._('confirm password'),
                                       **{'class': 'emphasis'})]
         return u'\n'.join(inputs)
 
@@ -437,7 +437,7 @@ class AddComboBoxWidget(Select):
         return super(AddComboBoxWidget, self).render(form, field, renderer) + u'''
 <div id="newvalue">
   <input type="text" id="newopt" />
-  <a href="javascript:noop()" id="add_newopt">&nbsp;</a></div>
+  <a href="javascript:noop()" id="add_newopt">&#160;</a></div>
 '''
 
 # buttons ######################################################################

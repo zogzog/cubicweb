@@ -40,7 +40,7 @@ class FilterBox(BoxTemplate):
     roundcorners = True
 
     needs_css = 'cubicweb.facets.css'
-    needs_js = ('cubicweb.ajax.js', 'cubicweb.formfilter.js')
+    needs_js = ('cubicweb.ajax.js', 'cubicweb.facets.js')
 
     bk_linkbox_template = u'<div class="facetTitle">%s</div>'
 

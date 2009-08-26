@@ -22,11 +22,14 @@ cd /tmp
 # Check if we are sure to not want the start-stop-daemon machinery here
 # Refer to Debian Policy Manual section 9.3.2 (Writing the scripts) for details.
 
-case "$1" in
-	"force-reload")
-		/usr/bin/cubicweb-ctl reload --force
-		;;
-	"*|restart")
-		/usr/bin/cubicweb-ctl $1 --force
-		;;
+case $1 in
+    force-reload)
+        /usr/bin/cubicweb-ctl reload --force
+        ;;
+    status)
+        /usr/bin/cubicweb-ctl status
+        ;;
+    *)
+        /usr/bin/cubicweb-ctl $1 --force
+        ;;
 esac

@@ -104,8 +104,12 @@ url: %(url)s
         entity = self.rset.get_entity(self.row or 0, self.col or 0)
         content = entity.printable_value(self.content_attr, format='text/plain')
         if content:
-            contentformat = getattr(entity, self.content_attr + '_format', 'text/rest')
-            content = normalize_text(content, 80, rest=contentformat=='text/rest')
+            contentformat = getattr(entity, self.content_attr + '_format',
+                                    'text/rest')
+            # XXX don't try to wrap rest until we've a proper transformation (see
+            # #103822)
+            if contentformat != 'text/rest':
+                content = normalize_text(content, 80)
         return super(ContentAddedView, self).context(content=content, **kwargs)
 
     def subject(self):

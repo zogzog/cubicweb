@@ -51,13 +51,13 @@ class FinalView(AnyRsetView):
     """
     id = 'final'
     # record generated i18n catalog messages
-    _('%d&nbsp;years')
-    _('%d&nbsp;months')
-    _('%d&nbsp;weeks')
-    _('%d&nbsp;days')
-    _('%d&nbsp;hours')
-    _('%d&nbsp;minutes')
-    _('%d&nbsp;seconds')
+    _('%d&#160;years')
+    _('%d&#160;months')
+    _('%d&#160;weeks')
+    _('%d&#160;days')
+    _('%d&#160;hours')
+    _('%d&#160;minutes')
+    _('%d&#160;seconds')
     _('%d years')
     _('%d months')
     _('%d weeks')
@@ -80,7 +80,7 @@ class FinalView(AnyRsetView):
             # value is DateTimeDelta but we have no idea about what is the
             # reference date here, so we can only approximate years and months
             if format == 'text/html':
-                space = '&nbsp;'
+                space = '&#160;'
             else:
                 space = ' '
             if value.days > 730: # 2 years
@@ -111,7 +111,7 @@ class SecondaryView(EntityView):
         secondary = icon + view(oneline)
         """
         entity = self.rset.get_entity(row, col)
-        self.w(u'&nbsp;')
+        self.w(u'&#160;')
         self.wview('oneline', self.rset, row=row, col=col)
 
 

@@ -167,10 +167,10 @@ class InContextProgressTableView(ProgressTableView):
     """
     id = 'ic_progress_table_view'
 
-    def call(self):
+    def call(self, columns=None):
         view = self.vreg['views'].select('progress_table_view', self.req,
                                          rset=self.rset)
-        columns = list(view.columns)
+        columns = list(columns or view.columns)
         try:
             columns.remove('project')
         except ValueError:

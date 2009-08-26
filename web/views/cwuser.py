@@ -11,9 +11,10 @@ from logilab.mtconverter import xml_escape
 
 from cubicweb.selectors import one_line_rset, implements, match_user_groups
 from cubicweb.view import EntityView
-from cubicweb.web import action
+from cubicweb.web import action, uicfg
 from cubicweb.web.views import primary
 
+uicfg.primaryview_section.tag_attribute(('CWUser', 'login'), 'hidden')
 
 class UserPreferencesEntityAction(action.Action):
     id = 'prefs'

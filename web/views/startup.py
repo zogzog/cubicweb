@@ -52,10 +52,10 @@ class ManageView(StartupView):
             self.wview('inlined', rset, row=0)
         else:
             self.entities()
-            self.w(u'<div class="hr">&nbsp;</div>')
+            self.w(u'<div class="hr">&#160;</div>')
             self.startup_views()
         if manager and 'Card' in self.schema:
-            self.w(u'<div class="hr">&nbsp;</div>')
+            self.w(u'<div class="hr">&#160;</div>')
             if rset:
                 href = rset.get_entity(0, 0).absolute_url(vid='edition')
                 label = self.req._('edit the index page')
@@ -104,7 +104,7 @@ class ManageView(StartupView):
                        key=lambda (l,a,e):unormalize(l))
         q, r = divmod(len(infos), 2)
         if r:
-            infos.append( (None, '&nbsp;', '&nbsp;') )
+            infos.append( (None, '&#160;', '&#160;') )
         infos = zip(infos[:q+r], infos[q+r:])
         for (_, etypelink, addlink), (_, etypelink2, addlink2) in infos:
             self.w(u'<tr>\n')
@@ -126,7 +126,7 @@ class ManageView(StartupView):
             label = display_name(req, etype, 'plural')
             nb = req.execute('Any COUNT(X) WHERE X is %s' % etype)[0][0]
             url = self.build_url(etype)
-            etypelink = u'&nbsp;<a href="%s">%s</a> (%d)' % (
+            etypelink = u'&#160;<a href="%s">%s</a> (%d)' % (
                 xml_escape(url), label, nb)
             yield (label, etypelink, self.add_entity_link(eschema, req))
 

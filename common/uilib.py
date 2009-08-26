@@ -263,7 +263,6 @@ def ureport_as_html(layout):
         res = unicode(res, 'UTF8')
     return res
 
-
 # traceback formatting ########################################################
 
 import traceback
@@ -309,7 +308,7 @@ def html_traceback(info, exception, title='',
             xml_escape(stackentry[0]), stackentry[1], xml_escape(stackentry[2])))
         if stackentry[3]:
             string = xml_escape(stackentry[3]).decode('utf-8', 'replace')
-            strings.append(u'&nbsp;&nbsp;%s<br/>\n' % (string))
+            strings.append(u'&#160;&#160;%s<br/>\n' % (string))
         # add locals info for each entry
         try:
             local_context = tcbk.tb_frame.f_locals

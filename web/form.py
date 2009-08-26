@@ -162,7 +162,7 @@ class FormMixIn(object):
                 if len(errors) > 1:
                     templstr = '<li>%s</li>\n'
                 else:
-                    templstr = '&nbsp;%s\n'
+                    templstr = '&#160;%s\n'
                 for field, err in errors:
                     if field is None:
                         errormsg += templstr % err

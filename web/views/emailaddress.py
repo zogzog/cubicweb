@@ -27,7 +27,7 @@ class EmailAddressPrimaryView(primary.PrimaryView):
         if not entity.canonical:
             canonemailaddr = entity.canonical_form()
             if canonemailaddr:
-                self.w(u'&nbsp;(<i>%s</i>)' % canonemailaddr.view('oneline'))
+                self.w(u'&#160;(<i>%s</i>)' % canonemailaddr.view('oneline'))
             self.w(u'</h3>')
         elif entity.identical_to:
             self.w(u'</h3>')

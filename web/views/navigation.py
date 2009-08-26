@@ -40,9 +40,9 @@ class PageNavigation(NavigationComponent):
                                             self.index_display(start, stop)))
             start = stop + 1
         w(u'<div class="pagination">')
-        w(u'%s&nbsp;' % self.previous_link(params))
-        w(u'[&nbsp;%s&nbsp;]' % u'&nbsp;| '.join(blocklist))
-        w(u'&nbsp;%s' % self.next_link(params))
+        w(u'%s&#160;' % self.previous_link(basepath, params))
+        w(u'[&#160;%s&#160;]' % u'&#160;| '.join(blocklist))
+        w(u'&#160;%s' % self.next_link(basepath, params))
         w(u'</div>')
 
     def index_display(self, start, stop):
@@ -131,18 +131,18 @@ class SortedNavigation(NavigationComponent):
             cell = self.format_link_content(index_display(start), index_display(stop))
             blocklist.append(self.page_link(basepath, params, start, stop, cell))
             start = stop + 1
-        self.write_links(params, blocklist)
+        self.write_links(basepath, params, blocklist)
 
     def format_link_content(self, startstr, stopstr):
         text = u'%s - %s' % (startstr.lower()[:self.nb_chars],
                              stopstr.lower()[:self.nb_chars])
         return xml_escape(text)
 
-    def write_links(self, params, blocklist):
+    def write_links(self, basepath, params, blocklist):
         self.w(u'<div class="pagination">')
-        self.w(u'%s&nbsp;' % self.previous_link(params))
-        self.w(u'[&nbsp;%s&nbsp;]' % u'&nbsp;| '.join(blocklist))
-        self.w(u'&nbsp;%s' % self.next_link(params))
+        self.w(u'%s&#160;' % self.previous_link(basepath, params))
+        self.w(u'[&#160;%s&#160;]' % u'&#160;| '.join(blocklist))
+        self.w(u'&#160;%s' % self.next_link(basepath, params))
         self.w(u'</div>')
 
 
@@ -160,7 +160,7 @@ def limit_rset_using_paged_nav(self, req, rset, w, forcedisplay=False,
             # make a link to see them all
             if show_all_option:
                 url = xml_escape(self.build_url(__force_display=1, **params))
-                w(u'<p><a href="%s">%s</a></p>\n'
+                w(u'<span><a href="%s">%s</a></span>\n'
                   % (url, req._('show %s results') % len(rset)))
             rset.limit(offset=start, limit=stop-start, inplace=True)
 

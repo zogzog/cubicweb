@@ -209,6 +209,9 @@ class Entity(AppObject, dict):
     def __hash__(self):
         return id(self)
 
+    def __cmp__(self):
+        raise NotImplementedError('comparison not implemented for %s' % self.__class__)
+
     def pre_add_hook(self):
         """hook called by the repository before doing anything to add the entity
         (before_add entity hooks have not been called yet). This give the
