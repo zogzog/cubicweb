@@ -468,8 +468,10 @@ class Component(ReloadableMixIn, View):
     __select__ = yes()
     property_defs = {}
 
+    # XXX huummm, much probably useless
+    htmlclass = 'mainRelated'
     def div_class(self):
-        return '%s %s' % (self.propval('htmlclass'), self.id)
-
+        return '%s %s' % (self.htmlclass, self.id)
+    # XXX a generic '%s%s' % (self.id, self.__registry__.capitalize()) would probably be nicer
     def div_id(self):
         return '%sComponent' % self.id

@@ -45,8 +45,6 @@ class EntityVComponent(Component):
                                         _('navcontenttop'), _('navcontentbottom')),
                             #vocabulary=(_('header'), _('incontext'), _('footer')),
                             help=_('context where this component should be displayed')),
-        _('htmlclass'):dict(type='String', default='mainRelated',
-                            help=_('html class of the component')),
     }
 
     context = 'navcontentbottom' # 'footer' | 'header' | 'incontext'
