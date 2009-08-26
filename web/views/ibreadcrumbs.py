@@ -91,8 +91,12 @@ class BreadCrumbETypeVComponent(BreadCrumbEntityVComponent):
 class BreadCrumbAnyRSetVComponent(BreadCrumbEntityVComponent):
     __select__ = any_rset()
 
-    def render_breadcrumbs(self, contextentity, path):
+    def call(self, view=None, first_separator=True):
+        self.w(u'<span id="breadcrumbs" class="pathbar">')
+        if first_separator:
+            self.w(self.separator)
         self.w(self.req._('search'))
+        self.w(u'</span>')
 
 
 class BreadCrumbView(EntityView):
