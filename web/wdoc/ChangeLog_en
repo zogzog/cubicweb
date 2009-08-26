@@ -1,27 +1,34 @@
 .. -*- coding: utf-8 -*-
-.. _`user preferences`: myprefs#fieldset_ui
+.. _`user preferences`: myprefs
+.. _here: sparql
+.. _SPARQL: http://www.w3.org/TR/rdf-sparql-query/
+.. _schema: schema
+.. _OWL: http://www.w3.org/TR/owl-features/
 
-2008-09-25  --  2.50.0
-    * jQuery replaces MochiKit
-    * schema inheritance support
+2009-08-07  --  3.4.0
 
-2008-05-13  --  2.48.0
-    * web pages are now served with the ``xhtml+xml`` content type
+    * support for SPARQL_. Click here_ to test it.
 
-2008-03-27  --  2.47.0
-    * fckeditor is now integrated to edit rich text fields. If you don't see it,
-      check your `user preferences`_.
+    * and another step toward the semantic web: new `ExternalUri` entity type
+      with its associated `same_as` relation. See
+      http://www.w3.org/TR/owl-ref/#sameAs-def for more information and check
+      this instance schema_ to see on which entity types it may be applied
 
-2008-03-13  --  2.46.0
-    * new calendar and timetable views.
-    
-    * click-and-edit functionalities : if you see the text edit cursor when
-      you're over a fied, try to double-click!
-      
-    * automatic facets oriented search : a filter box should appear when you're
-      looking for something and more than one entity are displayed.
+    * new "view workflow" and "view history" items in the workflow
+      sub-menu of the actions box
 
-2008-02-15  --  2.44.0
-    * new internationalized online help system. Click the question mark on the
-      right top corner! Hopefuly some new documentation will appear as time is
-      going. 
+    * you can now edit comments of workflow transition afterward (if authorized,
+      of course)
+
+    * modification date of an entity is updated when its state is changed
+
+
+2009-02-26  --  3.1.0
+
+    * schema may be exported as OWL_
+
+    * new ajax interface for site configuration / `user preferences`_
+
+
+2008-10-24  --  2.99.0
+    * cubicweb is now open source !
