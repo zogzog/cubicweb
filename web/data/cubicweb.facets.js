@@ -67,7 +67,8 @@ function buildRQL(divid, vid, paginate, vidargs) {
 	copyParam(zipped, extraparams, 'divid');
 	copyParam(zipped, extraparams, 'subvid');
 	// paginate used to know if the filter box is acting, in which case we
-	// want to reload action box to match current selection
+	// want to reload action box to match current selection (we don't want
+	// this from a table filter)
 	replacePageChunk(divid, rql, vid, extraparams, true, function() {
 	  jQuery(CubicWeb).trigger('facets-content-loaded', [divid, rql, vid, extraparams]);
 	});
@@ -78,6 +79,10 @@ function buildRQL(divid, vid, paginate, vidargs) {
 	    if (jQuery('#edit_box').length) {
 		reloadComponent('edit_box', rql, 'boxes', 'edit_box');
 	    }
+	    if (jQuery('#breadcrumbs').length) {
+		log('reloading breadcrumbs!', rql);
+		reloadComponent('breadcrumbs', rql, 'components', 'breadcrumbs');
+	    } else { log('breadcrumbs not found!'); }
 	}
 	var d = asyncRemoteExec('filter_select_content', toupdate, rql);
 	d.addCallback(function(updateMap) {
