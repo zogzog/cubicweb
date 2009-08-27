@@ -595,7 +595,7 @@ msgid "Workflow history"
 msgstr "Historique des changements d'état"
 
 msgid "You are not connected to an instance !"
-msgstr "Vous n'êtes pas connecté à une instance !"
+msgstr "Vous n'êtes pas connecté à une instance"
 
 #, python-format
 msgid "You are now connected to %s"
@@ -797,7 +797,7 @@ msgid "actions_siteconfig_description"
 msgstr ""
 
 msgid "actions_siteinfo"
-msgstr ""
+msgstr "information sur ce site"
 
 msgid "actions_siteinfo_description"
 msgstr ""
@@ -1599,11 +1599,16 @@ msgid ""
 "define a final relation: link a final relation type from a non final entity "
 "to a final entity type. used to build the instance schema"
 msgstr ""
+"définit une relation non finale: lie un type de relation non finaledepuis "
+"une entité vers un type d'entité non final. Utilisé pour construire le "
+"schéma de l'instance"
 
 msgid ""
 "define a non final relation: link a non final relation type from a non final "
 "entity to a non final entity type. used to build the instance schema"
 msgstr ""
+"définit une relation 'attribut', utilisé pour construire le schéma de "
+"l'instance"
 
 msgid "define a relation type, used to build the instance schema"
 msgstr "définit un type de relation"
@@ -1618,7 +1623,7 @@ msgid "define a schema constraint type"
 msgstr "définit un type de contrainte de schema"
 
 msgid "define an entity type, used to build the instance schema"
-msgstr ""
+msgstr "définit un type d'entité"
 
 msgid ""
 "defines what's the property is applied for. You must select this first to be "
@@ -1727,6 +1732,9 @@ msgstr "télécharger le schéma OWL"
 
 msgid "edit bookmarks"
 msgstr "éditer les signets"
+
+msgid "edit canceled"
+msgstr "édition annulée"
 
 msgid "edit the index page"
 msgstr "éditer la page d'accueil"
@@ -2017,12 +2025,6 @@ msgid "how to format time in the ui (\"man strftime\" for format description)"
 msgstr ""
 "comment formater l'heure dans l'interface (\"man strftime\" pour la "
 "description du format)"
-
-msgid "html class of the component"
-msgstr "classe HTML de ce composant"
-
-msgid "htmlclass"
-msgstr "classe html"
 
 msgid "i18n_login_popup"
 msgstr "s'authentifier"
@@ -2501,6 +2503,9 @@ msgstr "veuillez corriger les erreurs suivantes :"
 
 msgid "possible views"
 msgstr "vues possibles"
+
+msgid "powered by CubicWeb"
+msgstr ""
 
 msgid "preferences"
 msgstr "préférences"
@@ -3194,224 +3199,3 @@ msgstr "vous avez été déconnecté"
 
 msgid "you should probably delete that property"
 msgstr "vous devriez probablement supprimer cette propriété"
-
-#~ msgid "%s constraint failed"
-#~ msgstr "La contrainte %s n'est pas satisfaite"
-
-#~ msgid "%s constraint failed for value %r"
-#~ msgstr "contrainte %s n'est pas respectée par valeur %r"
-
-#~ msgid "%s, or without time: %s"
-#~ msgstr "%s, ou bien sans préciser d'heure: %s"
-
-#~ msgid "Card"
-#~ msgstr "Fiche"
-
-#~ msgid "Card_plural"
-#~ msgstr "Fiches"
-
-#~ msgid "Email body: "
-#~ msgstr "Contenu du courriel : "
-
-#~ msgid "From: "
-#~ msgstr "De : "
-
-#~ msgid "Loading"
-#~ msgstr "chargement"
-
-#~ msgid "New Card"
-#~ msgstr "Nouvelle fiche"
-
-#~ msgid "Problem occured"
-#~ msgstr "Une erreur est survenue"
-
-#~ msgid "Problem occured while setting new value"
-#~ msgstr "Un problème est survenu lors de la mise à jour"
-
-#~ msgid "Recipients: "
-#~ msgstr "Destinataires : "
-
-#~ msgid "Subject: "
-#~ msgstr "Sujet : "
-
-#~ msgid "This Card"
-#~ msgstr "Cette fiche"
-
-#~ msgid "You are not connected to an application !"
-#~ msgstr "Vous n'êtes pas connecté à une application"
-
-#~ msgid ""
-#~ "a card is a textual content used as documentation, reference, procedure "
-#~ "reminder"
-#~ msgstr ""
-#~ "une fiche est un texte utilisé comme documentation, référence, rappel de "
-#~ "procédure..."
-
-#~ msgid ""
-#~ "a simple cache entity characterized by a name and a validity date. The "
-#~ "target application is responsible for updating timestamp when necessary "
-#~ "to invalidate the cache (typically in hooks). Also, checkout the "
-#~ "AppRsetObject.get_cache() method."
-#~ msgstr ""
-#~ "une simple entité de cache, caractérisées par un nom et une date de "
-#~ "validité. L'application est responsable de la mise à jour de la date "
-#~ "quand il est nécessaire d'invalider le cache (typiquement dans les "
-#~ "crochets). Voir aussi la méthode get_cache() sur la classe AppRsetObject."
-
-#~ msgid "actions_addpermission"
-#~ msgstr "ajouter une permission"
-
-#~ msgid "add a Card"
-#~ msgstr "ajouter une fiche"
-
-#~ msgid "an abstract for this card"
-#~ msgstr "un résumé pour cette fiche"
-
-#~ msgid "and"
-#~ msgstr "et"
-
-#~ msgid "application schema"
-#~ msgstr "Schéma de l'application"
-
-#~ msgid "at least one relation %s is required on %s(%s)"
-#~ msgstr "au moins une relation %s est nécessaire sur %s(%s)"
-
-#~ msgid "cancel edition"
-#~ msgstr "annuler l'édition"
-
-#~ msgid "close all"
-#~ msgstr "tout fermer"
-
-#~ msgid "components_applmessages"
-#~ msgstr "messages applicatifs"
-
-#~ msgid "components_applmessages_description"
-#~ msgstr "affiche les messages applicatifs"
-
-#~ msgid "components_rss_feed_url"
-#~ msgstr "syndication rss"
-
-#~ msgid "content"
-#~ msgstr "contenu"
-
-#~ msgid "content_format"
-#~ msgstr "format"
-
-#~ msgid ""
-#~ "default language (look at the i18n directory of the application to see "
-#~ "available languages)"
-#~ msgstr ""
-#~ "langue par défaut (regarder le répertoire i18n de l'application pour voir "
-#~ "les langues disponibles)"
-
-#~ msgid ""
-#~ "define a final relation: link a final relation type from a non final "
-#~ "entity to a final entity type. used to build the application schema"
-#~ msgstr ""
-#~ "définit une relation non finale: lie un type de relation non finaledepuis "
-#~ "une entité vers un type d'entité non final. Utilisé pour construire le "
-#~ "schéma de l'application"
-
-#~ msgid ""
-#~ "define a non final relation: link a non final relation type from a non "
-#~ "final entity to a non final entity type. used to build the application "
-#~ "schema"
-#~ msgstr ""
-#~ "définit une relation 'attribut', utilisé pour construire le schéma de "
-#~ "l'application"
-
-#~ msgid "define a relation type, used to build the application schema"
-#~ msgstr ""
-#~ "définit un type de relation, utilisé pour construire le schéma de "
-#~ "l'application"
-
-#~ msgid "define an entity type, used to build the application schema"
-#~ msgstr ""
-#~ "définit un type d'entité, utilisé pour construire le schéma de "
-#~ "l'application"
-
-#~ msgid "detailed schema view"
-#~ msgstr "vue détaillée du schéma"
-
-#~ msgid "filter"
-#~ msgstr "filtrer"
-
-#~ msgid "footer"
-#~ msgstr "pied de page"
-
-#~ msgid "graphical representation of the application'schema"
-#~ msgstr "représentation graphique du schéma de l'application"
-
-#~ msgid "header"
-#~ msgstr "en-tête de page"
-
-#~ msgid "hide meta-data"
-#~ msgstr "cacher les entités et relations \"méta\""
-
-#~ msgid "iCal"
-#~ msgstr "iCal"
-
-#~ msgid "incorrect value for type \"%s\""
-#~ msgstr "valeur incorrecte pour le type \"%s\""
-
-#~ msgid "inlined view"
-#~ msgstr "vue embarquée (en ligne)"
-
-#~ msgid "is it an application entity type or not ?"
-#~ msgstr "est-ce une entité applicative ou non ?"
-
-#~ msgid "is it an application relation type or not ?"
-#~ msgstr "est-ce une relation applicative ou non ?"
-
-#~ msgid "linked"
-#~ msgstr "lié"
-
-#~ msgid "loop in %s relation (%s)"
-#~ msgstr "boucle dans la relation %s (%s)"
-
-#~ msgid ""
-#~ "maximum number of related entities to display in in the restriction view"
-#~ msgstr ""
-#~ "nombre maximum d'entités liées à afficher dans la vue de restriction"
-
-#~ msgid "meta"
-#~ msgstr "méta"
-
-#~ msgid "no associated epermissions"
-#~ msgstr "aucune permission spécifique n'est définie"
-
-#~ msgid "no possible transition"
-#~ msgstr "aucune transition possible"
-
-#~ msgid "not specified"
-#~ msgstr "non spécifié"
-
-#~ msgid "owned by"
-#~ msgstr "appartient à"
-
-#~ msgid "planned_delivery"
-#~ msgstr "livraison prévue"
-
-#~ msgid "remove this Card"
-#~ msgstr "supprimer cette fiche"
-
-#~ msgid "see also"
-#~ msgstr "voir aussi"
-
-#~ msgid "show meta-data"
-#~ msgstr "afficher le schéma complet"
-
-#~ msgid "status will change from %s to %s"
-#~ msgstr "l'état va passer de %s à %s"
-
-#~ msgid "synopsis"
-#~ msgstr "synopsis"
-
-#~ msgid "view_manage"
-#~ msgstr "gestion du site"
-
-#~ msgid "wikiid"
-#~ msgstr "identifiant wiki"
-
-#~ msgid "workflow history"
-#~ msgstr "historique du workflow"
