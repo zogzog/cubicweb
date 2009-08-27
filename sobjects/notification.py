@@ -56,7 +56,10 @@ class RecipientsFinder(Component):
 class RenderAndSendNotificationView(PreCommitOperation):
     """delay rendering of notification view until precommit"""
     def precommit_event(self):
-        if self.view.rset and self.view.rset[0][0] in self.session.transaction_data.get('pendingeids', ()):
+        view = self.view
+        if view.rset is not None and not view.rset:
+            return # entity added and deleted in the same transaction (cache effect)
+        if view.rset and view.rset[0][0] in self.session.transaction_data.get('pendingeids', ()):
             return # entity added and deleted in the same transaction
         self.view.render_and_send(**getattr(self, 'viewargs', {}))
 
