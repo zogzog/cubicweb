@@ -425,7 +425,12 @@ def _change_state(session, x, oldstate, newstate):
     nocheck.add((x, 'in_state', oldstate))
     nocheck.add((x, 'in_state', newstate))
     # delete previous state first in case we're using a super session
-    session.delete_relation(x, 'in_state', oldstate)
+    fromsource = session.describe(x)[1]
+    # don't try to remove previous state if in_state isn't stored in the system
+    # source
+    if fromsource == 'system' or \
+       not session.repo.sources_by_uri[fromsource].support_relation('in_state'):
+        session.delete_relation(x, 'in_state', oldstate)
     session.add_relation(x, 'in_state', newstate)
 
 
@@ -514,7 +519,7 @@ def after_add_trinfo(session, entity):
     _change_state(session, entity['wf_info_for'],
                   entity['from_state'], entity['to_state'])
     forentity = session.entity_from_eid(entity['wf_info_for'])
-    assert forentity.current_state.eid == entity['to_state']
+    assert forentity.current_state.eid == entity['to_state'], forentity.current_state.name
     if forentity.main_workflow.eid != forentity.current_workflow.eid:
         # we're in a subworkflow, check if we've reached an exit point
         wftr = forentity.subworkflow_input_transition()
