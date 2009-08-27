@@ -130,13 +130,14 @@ class TabsMixin(LazyViewMixin):
         # call the set_tab() JS function *after* each tab is generated
         # because the callback binding needs to be done before
         # XXX make work history: true
-        self.req.add_onload(u'''
+        self.req.add_onload(u"""
   jQuery('#entity-tabs-%(eeid)s > ul').tabs( { selected: %(tabindex)s });
   set_tab('%(vid)s', '%(cookiename)s');
-''' % {'tabindex'   : tabs.index(active_tab),
+""" % {'tabindex'   : tabs.index(active_tab),
        'vid'        : active_tab,
        'eeid'       : (entity and entity.eid or uid),
        'cookiename' : self.cookie_name})
+
 
 class EntityRelationView(EntityView):
     """view displaying entity related stuff.

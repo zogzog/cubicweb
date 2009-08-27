@@ -36,14 +36,9 @@ Example of use (run this with `cubicweb-ctl shell instance import-script.py`):
 
   GENERATORS.append( (gen_users, CHK) )
 
-  # progress callback
-  def tell(msg):
-      print msg
-
   # create controller
   ctl = CWImportController(RQLObjectStore())
   ctl.askerror = True
-  ctl._tell = tell
   ctl.generators = GENERATORS
   ctl.store._checkpoint = checkpoint
   ctl.store._rql = rql
@@ -74,6 +69,9 @@ def lazytable(reader):
     header = reader.next()
     for row in reader:
         yield dict(zip(header, row))
+
+def tell(msg):
+    print msg
 
 # base sanitizing functions #####
 
@@ -219,6 +217,7 @@ class CWImportController(object):
         self.data = {}
         self.errors = None
         self.askerror = False
+        self._tell = tell
 
     def check(self, type, key, value):
         self._checks.setdefault(type, {}).setdefault(key, []).append(value)

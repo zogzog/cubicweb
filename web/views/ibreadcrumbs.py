@@ -85,7 +85,7 @@ class BreadCrumbETypeVComponent(BreadCrumbEntityVComponent):
             self.w(u'<a href="%s">%s</a>' % (self.req.build_url(root.id),
                                              root.dc_type('plural')))
         else:
-            self.wpath_part(root, entity, not path)
+            self.wpath_part(root, contextentity, not path)
 
 
 class BreadCrumbAnyRSetVComponent(BreadCrumbEntityVComponent):
