@@ -142,9 +142,9 @@ class ETypeRegistry(CWRegistry):
             objects = self['Any']
             assert len(objects) == 1, objects
             cls = objects[0]
-        if cls.id == etype:
-            cls.__initialize__()
-            return cls
+        # make a copy event if cls.id == etype, else we may have pb for client
+        # application using multiple connections to different repositories (eg
+        # shingouz)
         cls = dump_class(cls, etype)
         cls.id = etype
         cls.__initialize__()
