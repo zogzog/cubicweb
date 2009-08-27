@@ -171,7 +171,7 @@ class Registry(dict):
         raise `NoSelectableObject` if not object apply
         """
         if len(args) > 1:
-            warn('only the request param can not be named when calling select',
+            warn('[2.5] only the request param can not be named when calling select*',
                  DeprecationWarning, stacklevel=3)
         score, winners = 0, []
         for appobject in appobjects:
