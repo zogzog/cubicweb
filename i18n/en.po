@@ -1658,6 +1658,9 @@ msgstr ""
 msgid "edit bookmarks"
 msgstr ""
 
+msgid "edit canceled"
+msgstr ""
+
 msgid "edit the index page"
 msgstr ""
 
@@ -1935,12 +1938,6 @@ msgid "how to format float numbers in the ui"
 msgstr ""
 
 msgid "how to format time in the ui (\"man strftime\" for format description)"
-msgstr ""
-
-msgid "html class of the component"
-msgstr ""
-
-msgid "htmlclass"
 msgstr ""
 
 msgid "i18n_login_popup"
@@ -2403,6 +2400,9 @@ msgid "please correct the following errors:"
 msgstr ""
 
 msgid "possible views"
+msgstr ""
+
+msgid "powered by CubicWeb"
 msgstr ""
 
 msgid "preferences"
@@ -3072,48 +3072,3 @@ msgstr ""
 
 msgid "you should probably delete that property"
 msgstr ""
-
-#~ msgid "Card"
-#~ msgstr "Card"
-
-#~ msgid "Card_plural"
-#~ msgstr "Cards"
-
-#~ msgid "New Card"
-#~ msgstr "New card"
-
-#~ msgid "This Card"
-#~ msgstr "This card"
-
-#~ msgid "add a Card"
-#~ msgstr "add a card"
-
-#~ msgid "components_applmessages"
-#~ msgstr "application messages"
-
-#~ msgid "components_applmessages_description"
-#~ msgstr "display the application messages"
-
-#~ msgid "content_format"
-#~ msgstr "content format"
-
-#~ msgid "hide meta-data"
-#~ msgstr "hide meta entities and relations"
-
-#~ msgid "meta"
-#~ msgstr "meta relation"
-
-#~ msgid "planned_delivery"
-#~ msgstr "planned delivery"
-
-#~ msgid "remove this Card"
-#~ msgstr "remove this card"
-
-#~ msgid "show meta-data"
-#~ msgstr "show the complete schema"
-
-#~ msgid "view_manage"
-#~ msgstr "site management"
-
-#~ msgid "wikiid"
-#~ msgstr "wiki identifier"

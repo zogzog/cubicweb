@@ -1720,6 +1720,9 @@ msgstr "Descargar esquema en OWL"
 msgid "edit bookmarks"
 msgstr "Editar favoritos"
 
+msgid "edit canceled"
+msgstr ""
+
 msgid "edit the index page"
 msgstr "Modificar la página de inicio"
 
@@ -2009,12 +2012,6 @@ msgid "how to format time in the ui (\"man strftime\" for format description)"
 msgstr ""
 "Como formatear la hora en la interface (\"man strftime\" por la descripción "
 "del formato)"
-
-msgid "html class of the component"
-msgstr "Clase HTML de este componente"
-
-msgid "htmlclass"
-msgstr "Clase html"
 
 msgid "i18n_login_popup"
 msgstr "Identificarse"
@@ -2494,6 +2491,9 @@ msgstr "Favor de corregir los siguientes errores :"
 
 msgid "possible views"
 msgstr "Vistas posibles"
+
+msgid "powered by CubicWeb"
+msgstr ""
 
 msgid "preferences"
 msgstr "Preferencias"
@@ -3183,236 +3183,3 @@ msgstr "ha terminado la sesion"
 
 msgid "you should probably delete that property"
 msgstr "deberia probablamente suprimir esta propriedad"
-
-#~ msgid "%s constraint failed"
-#~ msgstr "La contrainte %s n'est pas satisfaite"
-
-#~ msgid "%s constraint failed for value %r"
-#~ msgstr "contrainte %s n'est pas respectÈe par valeur %r"
-
-#~ msgid "%s, or without time: %s"
-#~ msgstr "%s, ou bien sans prÈciser d'heure: %s"
-
-#~ msgid "Card"
-#~ msgstr "Ficha"
-
-#~ msgid "Card_plural"
-#~ msgstr "Fichas"
-
-#~ msgid "Email body: "
-#~ msgstr "Contenido del correo electrónico : "
-
-#~ msgid "From: "
-#~ msgstr "De : "
-
-#~ msgid "Loading"
-#~ msgstr "chargement"
-
-#~ msgid "New Card"
-#~ msgstr "Agregar Ficha"
-
-#~ msgid "Problem occured"
-#~ msgstr "Ha ocurrido un error"
-
-#~ msgid "Problem occured while setting new value"
-#~ msgstr "Un problËme est survenu lors de la mise ‡ jour"
-
-#~ msgid "Recipients: "
-#~ msgstr "Destinatarios : "
-
-#~ msgid "Subject: "
-#~ msgstr "Objeto : "
-
-#~ msgid "This Card"
-#~ msgstr "Esta Ficha"
-
-#~ msgid "You are not connected to an application !"
-#~ msgstr "Usted no esta conectado a una aplicación"
-
-#~ msgid ""
-#~ "a card is a textual content used as documentation, reference, procedure "
-#~ "reminder"
-#~ msgstr ""
-#~ "una ficha es un texto utilizado como documentación, referencia, memoria "
-#~ "de algún procedimiento..."
-
-#~ msgid ""
-#~ "a simple cache entity characterized by a name and a validity date. The "
-#~ "target application is responsible for updating timestamp when necessary "
-#~ "to invalidate the cache (typically in hooks). Also, checkout the "
-#~ "AppRsetObject.get_cache() method."
-#~ msgstr ""
-#~ "una entidad cache simple caracterizada por un nombre y una fecha "
-#~ "correcta. El sistema objetivo es responsable de actualizar timestamp "
-#~ "cuand se necesario para invalidar el cache (usualmente en hooks)."
-#~ "Recomendamos revisar el METODO  AppRsetObject.get_cache()."
-
-#~ msgid "add a Card"
-#~ msgstr "Agregar una ficha"
-
-#~ msgid "an abstract for this card"
-#~ msgstr "un resumen para esta ficha"
-
-#~ msgid "and"
-#~ msgstr "et"
-
-#~ msgid "application schema"
-#~ msgstr "Esquema de la aplicación"
-
-#~ msgid "at least one relation %s is required on %s(%s)"
-#~ msgstr "au moins une relation %s est nÈcessaire sur %s(%s)"
-
-#~ msgid "cancel edition"
-#~ msgstr "annuler l'Èdition"
-
-#~ msgid "components_applmessages"
-#~ msgstr "Mensajes de la aplicación"
-
-#~ msgid "components_applmessages_description"
-#~ msgstr "Muestra los mensajes de la aplicación"
-
-#~ msgid "components_rss_feed_url"
-#~ msgstr "RSS FEED URL"
-
-#~ msgid "components_rss_feed_url_description"
-#~ msgstr "El espacio para administrar RSS"
-
-#~ msgid "content"
-#~ msgstr "Contenido"
-
-#~ msgid "content_format"
-#~ msgstr "Formato"
-
-#~ msgid ""
-#~ "default language (look at the i18n directory of the application to see "
-#~ "available languages)"
-#~ msgstr ""
-#~ "langue par dÈfaut (regarder le rÈpertoire i18n de l'application pour voir "
-#~ "les langues disponibles)"
-
-#~ msgid ""
-#~ "define a final relation: link a final relation type from a non final "
-#~ "entity to a final entity type. used to build the application schema"
-#~ msgstr ""
-#~ "Define una relación no final: liga un tipo de relación no final desde una "
-#~ "entidad hacia un tipo de entidad no final. Utilizada para construir el "
-#~ "esquema de la aplicación"
-
-#~ msgid ""
-#~ "define a non final relation: link a non final relation type from a non "
-#~ "final entity to a non final entity type. used to build the application "
-#~ "schema"
-#~ msgstr ""
-#~ "Define una relación 'atributo', utilizada para construir el esquema dela "
-#~ "aplicación"
-
-#~ msgid "define a relation type, used to build the application schema"
-#~ msgstr ""
-#~ "Define un tipo de relación, utilizada para construir el esquema de la "
-#~ "aplicación"
-
-#~ msgid "define an entity type, used to build the application schema"
-#~ msgstr ""
-#~ "Define un tipo de entidad, utilizada para construir el esquema de la "
-#~ "aplicación"
-
-#~ msgid "detailed schema view"
-#~ msgstr "Vista detallada del esquema"
-
-#~ msgid "facets_cwmeta-facet"
-#~ msgstr "faceta \"meta\""
-
-#~ msgid "facets_cwmeta-facet_description"
-#~ msgstr "faceta para las entidades \"meta\""
-
-#~ msgid "filter"
-#~ msgstr "filtrer"
-
-#~ msgid "footer"
-#~ msgstr "pied de page"
-
-#~ msgid "graphical representation of the application'schema"
-#~ msgstr "Representación gráfica del esquema de la aplicación"
-
-#~ msgid "header"
-#~ msgstr "en-tÍte de page"
-
-#~ msgid "hide meta-data"
-#~ msgstr "Esconder los meta-datos"
-
-#~ msgid "iCal"
-#~ msgstr "iCal"
-
-#~ msgid "incorrect value for type \"%s\""
-#~ msgstr "valeur incorrecte pour le type \"%s\""
-
-#~ msgid "inlined view"
-#~ msgstr "Vista incluída (en línea)"
-
-#~ msgid "is it an application entity type or not ?"
-#~ msgstr "Es un Tipo de entidad en la aplicación o no ?"
-
-#~ msgid "is it an application relation type or not ?"
-#~ msgstr "Es una relación aplicativa o no ?"
-
-#~ msgid ""
-#~ "link a transition to one or more rql expression allowing to go through "
-#~ "this transition"
-#~ msgstr ""
-#~ "liga una transición a una o mas expresiones RQL permitiendo que funcione"
-
-#~ msgid "linked"
-#~ msgstr "liÈ"
-
-#~ msgid "loop in %s relation (%s)"
-#~ msgstr "boucle dans la relation %s (%s)"
-
-#~ msgid ""
-#~ "maximum number of related entities to display in in the restriction view"
-#~ msgstr ""
-#~ "nombre maximum d'entitÈs liÈes ‡ afficher dans la vue de restriction"
-
-#~ msgid "meta"
-#~ msgstr "Meta"
-
-#~ msgid "no associated epermissions"
-#~ msgstr "permisos no asociados"
-
-#~ msgid "no possible transition"
-#~ msgstr "transición no posible"
-
-#~ msgid "not specified"
-#~ msgstr "no especificado"
-
-#~ msgid "not the initial state for this entity"
-#~ msgstr "no el estado inicial para esta entidad"
-
-#~ msgid "owned by"
-#~ msgstr "appartient ‡"
-
-#~ msgid "planned_delivery"
-#~ msgstr "entrega planeada"
-
-#~ msgid "remove this Card"
-#~ msgstr "Eliminar esta Ficha"
-
-#~ msgid "see also"
-#~ msgstr "voir aussi"
-
-#~ msgid "show meta-data"
-#~ msgstr "mostrar meta-data"
-
-#~ msgid "status will change from %s to %s"
-#~ msgstr "l'Ètat va passer de %s ‡ %s"
-
-#~ msgid "synopsis"
-#~ msgstr "sinopsis"
-
-#~ msgid "transition is not allowed"
-#~ msgstr "transition no permitida"
-
-#~ msgid "wikiid"
-#~ msgstr "identificador wiki"
-
-#~ msgid "workflow history"
-#~ msgstr "historique du workflow"
