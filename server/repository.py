@@ -30,7 +30,7 @@ from rql import RQLSyntaxError
 
 from cubicweb import (CW_SOFTWARE_ROOT, CW_MIGRATION_MAP, CW_EVENT_MANAGER,
                       UnknownEid, AuthenticationError, ExecutionError,
-                      ETypeNotSupportedBySources, RTypeNotSupportedBySources,
+                      ETypeNotSupportedBySources, MultiSourcesError,
                       BadConnectionId, Unauthorized, ValidationError,
                       typed_eid)
 from cubicweb.cwvreg import CubicWebVRegistry
@@ -972,12 +972,21 @@ class Repository(object):
     def locate_relation_source(self, session, subject, rtype, object):
         subjsource = self.source_from_eid(subject, session)
         objsource = self.source_from_eid(object, session)
-        if not (subjsource is objsource and subjsource.support_relation(rtype, 1)):
+        if not subjsource is objsource:
             source = self.system_source
-            if not source.support_relation(rtype, 1):
-                raise RTypeNotSupportedBySources(rtype)
+            if not (subjsource.may_cross_relation(rtype) 
+                    and objsource.may_cross_relation(rtype)):
+                raise MultiSourcesError(
+                    "relation %s can't be crossed among sources"
+                    % rtype)
+        elif not subjsource.support_relation(rtype):
+            source = self.system_source
         else:
             source = subjsource
+        if not source.support_relation(rtype, True):
+            raise MultiSourcesError(
+                "source %s doesn't support write of %s relation"
+                % (source.uri, rtype))
         return source
 
     def locate_etype_source(self, etype):
