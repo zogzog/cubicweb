@@ -80,6 +80,11 @@ class AbstractSource(object):
     # a reference to the instance'schema (may differs from the source'schema)
     schema = None
 
+    # multi-sources planning control
+    dont_cross_relations = ()
+    cross_relations = ()
+
+
     def __init__(self, repo, appschema, source_config, *args, **kwargs):
         self.repo = repo
         self.uri = source_config['uri']
