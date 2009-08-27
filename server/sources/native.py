@@ -268,6 +268,9 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
         # can't claim not supporting a relation
         return True #not rtype == 'content_for'
 
+    def may_cross_relation(self, rtype):
+        return True
+
     def authenticate(self, session, login, password):
         """return CWUser eid for the given login/password if this account is
         defined in this source, else raise `AuthenticationError`
