@@ -1,4 +1,4 @@
-.. -*- coding: utf-8 -*-
+. -*- coding: utf-8 -*-
 
 The VRegistry
 --------------
@@ -94,69 +94,94 @@ Example
 
 XXX this part needs to be translated
 
-Le but final : quand on est sur un Blog, on veut que le lien rss de celui-ci pointe
-vers les entrées de ce blog, non vers l'entité blog elle-mÃªme.
+The goal : when on a Blog, one wants the RSS link to refer to blog
+entries, not to the blog entity itself.
 
-L'idée générale pour résoudre Ã§a : on définit une méthode sur les classes d'entité
-qui renvoie l'url du flux rss pour l'entité en question. Avec une implémentation
-par défaut sur AnyEntity et une implémentation particuliÃ¨re sur Blog qui fera ce
-qu'on veut.
+To do that, one defines a method on entity classes that returns the
+RSS stream url for a given entity. With a default implementation on
+AnyEntity and a specific implementation on Blog, which will do what we
+want.
 
-La limitation : on est embÃªté dans le cas ou par ex. on a un result set qui contient
-plusieurs entités Blog (ou autre chose), car on ne sait pas sur quelle entité appeler
-la méthode sus-citée. Dans ce cas, on va conserver le comportement actuel (eg appel
-Ã  limited_rql)
+There's a limitation to this schema : when we have a result set
+containing several Blog entities (or different entities), we don't
+know on which entity to call the aforementioned method. In this case,
+we keep the current behaviour (e.g : call to limited_rql).
 
-Donc : on veut deux cas ici, l'un pour un rset qui contient une et une seule entité,
-l'autre pour un rset qui contient plusieurs entité.
+Hence we want two cases here, one for a single-entity rsets, the other
+for multi-entities rsets.
 
-Donc... On a déja dans web/views/boxes.py la classe RSSIconBox qui fonctionne. Son
-sélecteur ::
+In web/views/boxes.py lies the RSSIconBox class. Look at its selector ::
 
   class RSSIconBox(ExtResourcesBoxTemplate):
     """just display the RSS icon on uniform result set"""
     __select__ = ExtResourcesBoxTemplate.__select__ & non_final_entity()
 
+It takes into account :
 
-indique qu'il prend en compte :
+* the inherited selection criteria (one has to look them up in the
+  class hierarchy to know the details)
 
-* les conditions d'apparition de la boite (faut remonter dans les classes parentes
-  pour voir le détail)
-* non_final_entity, qui filtre sur des rset contenant une liste d'entité non finale
+* non_final_entity, which filters on rsets containing non final
+  entities (a 'final entity' being synonym for entity attribute)
 
-Ã§a correspond donc Ã  notre 2eme cas. Reste Ã  fournir un composant plus spécifique
-pour le 1er cas ::
+This matches our second case. Hence we have to provide a specific
+component for the first case ::
 
   class EntityRSSIconBox(RSSIconBox):
     """just display the RSS icon on uniform result set for a single entity"""
     __select__ = RSSIconBox.__select__ & one_line_rset()
 
+Here, one adds the one_line_rset selector, which filters result sets
+of size 1. When one chains selectors, the final score is the sum of
+the score of each individual selector (unless one of them returns 0,
+in which case the object is non selectable). Thus, on a multiple
+entities selector, one_line_rset makes the EntityRSSIconBox class non
+selectable. For an rset with one entity, the EntityRSSIconBox class
+will have a higher score then RSSIconBox, which is what we wanted.
 
-Ici, on ajoute le selector one_line_rset, qui filtre sur des result set de taille 1. Il faut
-savoir que quand on chaine des selecteurs, le score final est la somme des scores
-renvoyés par chaque sélecteur (sauf si l'un renvoie zéro, auquel cas l'objet est
-non sélectionnable). Donc ici, sur un rset avec plusieurs entités, onelinerset_selector
-rendra la classe EntityRSSIconBox non sélectionnable, et on obtiendra bien la
-classe RSSIconBox. Pour un rset avec une entité, la classe EntityRSSIconBox aura un
-score supérieur Ã  RSSIconBox et c'est donc bien elle qui sera sélectionnée.
+Of course, once this is done, you have to ::
 
-Voili voilou, il reste donc pour finir tout Ã§a :
+* fill in the call method of EntityRSSIconBox
 
-* Ã  définir le contenu de la méthode call de EntityRSSIconBox
-* fournir l'implémentation par défaut de la méthode renvoyant l'url du flux rss sur
-  AnyEntity
-* surcharger cette methode dans blog.Blog
+* provide the default implementation of the method returning the RSS
+  stream url on AnyEntity
 
+* redefine this method on Blog.
 
 When to use selectors?
 ```````````````````````
 
-Il faut utiliser les sélecteurs pour faire des choses différentes en
-fonction de ce qu'on a en entrée. DÃ¨s qu'on a un "if" qui teste la
-nature de `self.rset` dans un objet, il faut trÃ¨s sérieusement se
-poser la question s'il ne vaut pas mieux avoir deux objets différent
-avec des sélecteurs approprié.
+Selectors are to be used whenever arises the need of dispatching on
+the shape or content of a result set.
 
 Debugging
 `````````
-XXX explain traced_selection context manager
+
+Once in a while, one needs to understand why a view (or any AppObject)
+is, or is not selected appropriately. Looking at which selectors fired
+(or did not) is the way. There exists a traced_selection context
+manager to help with that.
+
+Here is an example ::
+
+.. sourcecode:: python
+
+    def possible_objects(self, registry, *args, **kwargs):
+        """return an iterator on possible objects in a registry for this result set
+
+        actions returned are classes, not instances
+        """
+        from cubicweb.selectors import traced_selection
+        with traced_selection():
+            for vobjects in self.registry(registry).values():
+                try:
+                    yield self.select(vobjects, *args, **kwargs)
+                except NoSelectableObject:
+                    continue
+
+Don't forget the 'from __future__ import with_statement' at the module
+top-level.
+
+This will yield additional WARNINGs in the logs, like this::
+
+    2009-01-09 16:43:52 - (cubicweb.selectors) WARNING: selector one_line_rset returned 0 for <class 'cubicweb.web.views.basecomponents.WFHistoryVComponent'>
