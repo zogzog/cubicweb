@@ -37,7 +37,7 @@ def eschema_type_eid(session, etype):
     # from the database (eg during tests)
     if eschema.eid is None:
         eschema.eid = session.unsafe_execute(
-            'Any X WHERE X is CWEType, X name %(name)s', {'name': etype})[0][0]
+            'Any X WHERE X is CWEType, X name %(name)s', {'name': str(etype)})[0][0]
     return eschema.eid
 
 
