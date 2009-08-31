@@ -256,13 +256,17 @@ div#stateheader{
 }
 
 /* Popup on login box and userActionBox */
+div.popupWrapper{
+ position:relative;
+ z-index:100;
+}
+
 div.popup {
   position: absolute;
-  z-index: 400;
   background: #fff;
   border: 1px solid black;
   text-align: left;
-  float:left;
+  z-index:400;
 }
 
 div.popup ul li a {
