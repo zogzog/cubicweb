@@ -352,6 +352,7 @@ class HTMLHeader(View):
 class HTMLPageHeader(View):
     """default html page header"""
     id = 'header'
+    main_cell_components = ('appliname', 'breadcrumbs')
 
     def call(self, view, **kwargs):
         self.main_header(view)
@@ -373,7 +374,7 @@ class HTMLPageHeader(View):
         self.w(u'</td>\n')
         # appliname and breadcrumbs
         self.w(u'<td id="headtext">')
-        for cid in ('appliname', 'breadcrumbs'):
+        for cid in self.main_cell_components:
             comp = self.vreg['components'].select_or_none(
                 cid, self.req, rset=self.rset)
             if comp and comp.cw_propval('visible'):

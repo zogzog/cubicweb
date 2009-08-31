@@ -226,10 +226,10 @@ class PdfViewComponent(component.Component):
     }
 
     def call(self, vid):
-        self.req.add_css('cubes.confman.css')
         entity = self.entity(0,0)
-        self.w(u'<a href="%s" class="otherView"><img src="data/pdf_icon.gif"/></a>' %
-               (xml_escape(entity.absolute_url() + '?vid=%s&__template=pdf-main-template' % vid)))
+        url = entity.absolute_url(vid=vid, __template='pdf-main-template')
+        self.w(u'<a href="%s" class="otherView"><img src="data/pdf_icon.gif" alt="%s"/></a>' %
+               (xml_escape(url), self.req._('download page as pdf')))
 
 
 

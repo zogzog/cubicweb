@@ -303,7 +303,8 @@ class State(AnyEntity):
 
     @property
     def workflow(self):
-        return self.state_of[0]
+        # take care, may be missing in multi-sources configuration
+        return self.state_of and self.state_of[0]
 
     def after_deletion_path(self):
         """return (path, parameters) which should be used as redirect

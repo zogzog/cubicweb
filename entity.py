@@ -209,7 +209,7 @@ class Entity(AppObject, dict):
     def __hash__(self):
         return id(self)
 
-    def __cmp__(self):
+    def __cmp__(self, other):
         raise NotImplementedError('comparison not implemented for %s' % self.__class__)
 
     def pre_add_hook(self):

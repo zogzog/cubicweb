@@ -52,6 +52,7 @@ class PrimaryView(EntityView):
         boxes = self._prepare_side_boxes(entity)
         if boxes or hasattr(self, 'render_side_related'):
             self.w(u'<table width="100%"><tr><td style="width: 75%">')
+        self.render_entity_summary(entity)
         self.w(u'<div class="mainInfo">')
         self.content_navigation_components('navcontenttop')
         self.render_entity_attributes(entity)
@@ -91,6 +92,8 @@ class PrimaryView(EntityView):
 
     def render_entity_metadata(self, entity):
         entity.view('metadata', w=self.w)
+
+    def render_entity_summary(self, entity):
         summary = self.summary(entity) # deprecate summary?
         if summary:
             self.w(u'<div class="summary">%s</div>' % summary)

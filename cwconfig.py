@@ -134,6 +134,9 @@ CFGTYPE2ETYPE_MAP = {
     'float' : 'Float',
     }
 
+_forced_mode = os.environ.get('CW_MODE')
+assert _forced_mode in (None, 'system', 'user')
+
 class CubicWebNoAppConfiguration(ConfigurationMixIn):
     """base class for cubicweb configuration without a specific instance directory
     """
@@ -150,7 +153,7 @@ class CubicWebNoAppConfiguration(ConfigurationMixIn):
         CUBES_DIR = '%(APYCOT_ROOT)s/local/share/cubicweb/cubes/' % os.environ
         # create __init__ file
         file(join(CUBES_DIR, '__init__.py'), 'w').close()
-    elif exists(join(CW_SOFTWARE_ROOT, '.hg')) or os.environ.get('CW_MODE') == 'user':
+    elif (exists(join(CW_SOFTWARE_ROOT, '.hg')) and _forced_mode != 'system') or _forced_mode == 'user':
         mode = 'dev'
         CUBES_DIR = abspath(normpath(join(CW_SOFTWARE_ROOT, '../cubes')))
     else:

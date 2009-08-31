@@ -18,6 +18,8 @@ class RenderAndSendNotificationView(hook.Operation):
     """delay rendering of notification view until precommit"""
     def precommit_event(self):
         view = self.view
+        if view.rset is not None and not view.rset:
+            return # entity added and deleted in the same transaction (cache effect)
         if view.cw_rset and self.session.deleted_in_transaction(view.cw_rset[cw_rset.cw_row or 0][cw_rset.cw_col or 0]):
             return # entity added and deleted in the same transaction
         self.view.render_and_send(**getattr(self, 'viewargs', {}))

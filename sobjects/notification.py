@@ -19,6 +19,8 @@ from cubicweb.common.mail import format_mail
 from cubicweb.common.mail import NotificationView
 from cubicweb.server.hookhelper import SendMailOp
 
+parse_message_id = deprecated('parse_message_id is now defined in cubicweb.common.mail')(parse_message_id)
+
 
 class RecipientsFinder(Component):
     """this component is responsible to find recipients of a notification

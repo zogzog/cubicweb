@@ -187,7 +187,7 @@ class Registry(dict):
         raise `NoSelectableObject` if not object apply
         """
         if len(args) > 1:
-            warn('only the request param can not be named when calling select',
+            warn('[3.5] only the request param can not be named when calling select*',
                  DeprecationWarning, stacklevel=3)
         score, winners = 0, []
         for appobject in appobjects:
@@ -210,7 +210,9 @@ class Registry(dict):
                                    [repr(v) for v in winners]))
         # return the result of calling the appobject
         return winners[0](*args, **kwargs)
+
     select_best = deprecated('[3.6] select_best is now private')(_select_best)
+
 
 class VRegistry(dict):
     """class responsible to register, propose and select the various
@@ -300,10 +302,11 @@ class VRegistry(dict):
                 if obj.__module__ != modname or obj in butclasses:
                     continue
                 oid = class_regid(obj)
+                registryname = obj.__registry__
             except AttributeError:
                 continue
             if oid and not '__abstract__' in obj.__dict__:
-                self.register(obj)
+                self.register(obj, registryname)
 
     def register(self, obj, registryname=None, oid=None, clear=False):
         """base method to add an object in the registry"""

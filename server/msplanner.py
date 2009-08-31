@@ -97,9 +97,6 @@ Relation._ms_table_key = lambda x: x.r_type
 # str() Constant.value to ensure generated table name won't be unicode
 Constant._ms_table_key = lambda x: str(x.value)
 
-AbstractSource.dont_cross_relations = ()
-AbstractSource.cross_relations = ()
-
 def need_source_access_relation(vargraph):
     if not vargraph:
         return False

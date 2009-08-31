@@ -371,6 +371,8 @@ class CopyFormView(EditionFormView):
     entity
     """
     id = 'copy'
+    warning_message = _('Please note that this is only a shallow copy')
+
     def render_form(self, entity):
         """fetch and render the form"""
         # make a copy of entity to avoid altering the entity in the
@@ -381,7 +383,7 @@ class CopyFormView(EditionFormView):
         self.initialize_varmaker()
         self.newentity.eid = self.varmaker.next()
         self.w(u'<script type="text/javascript">updateMessage("%s");</script>\n'
-               % self.req._('Please note that this is only a shallow copy'))
+               % self.req._(self.warning_message))
         super(CopyFormView, self).render_form(self.newentity)
         del self.newentity
 
