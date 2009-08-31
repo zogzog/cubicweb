@@ -16,10 +16,16 @@ from rql import RQLHelper
 
 from cubicweb import (ETYPE_NAME_MAP, Binary, UnknownProperty, UnknownEid,
                       ObjectNotFound, NoSelectableObject, RegistryNotFound,
-                      RegistryOutOfDate, CW_EVENT_MANAGER)
+                      RegistryOutOfDate, CW_EVENT_MANAGER, onevent)
 from cubicweb.utils import dump_class
 from cubicweb.vregistry import VRegistry, Registry
 from cubicweb.rtags import RTAGS
+
+
+@onevent('before-registry-reload')
+def clear_rtag_objects():
+    for rtag in RTAGS:
+        rtag.clear()
 
 
 def use_interfaces(obj):
@@ -310,8 +316,8 @@ class CubicWebVRegistry(VRegistry):
         else:
             self._needs_iface[obj] = ifaces
 
-    def register(self, obj, **kwargs):
-        super(CubicWebVRegistry, self).register(obj, **kwargs)
+    def register(self, obj, *args, **kwargs):
+        super(CubicWebVRegistry, self).register(obj, *args, **kwargs)
         # XXX bw compat
         ifaces = use_interfaces(obj)
         if ifaces:

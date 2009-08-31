@@ -284,10 +284,11 @@ class VRegistry(dict):
                 if obj.__module__ != modname or obj in butclasses:
                     continue
                 oid = obj.id
+                registryname = obj.__registry__
             except AttributeError:
                 continue
             if oid and not '__abstract__' in obj.__dict__:
-                self.register(obj)
+                self.register(obj, registryname)
 
     def register(self, obj, registryname=None, oid=None, clear=False):
         """base method to add an object in the registry"""
