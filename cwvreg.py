@@ -310,8 +310,8 @@ class CubicWebVRegistry(VRegistry):
         else:
             self._needs_iface[obj] = ifaces
 
-    def register(self, obj, **kwargs):
-        super(CubicWebVRegistry, self).register(obj, **kwargs)
+    def register(self, obj, *args, **kwargs):
+        super(CubicWebVRegistry, self).register(obj, *args, **kwargs)
         # XXX bw compat
         ifaces = use_interfaces(obj)
         if ifaces:
