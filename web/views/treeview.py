@@ -37,12 +37,13 @@ class TreeView(EntityView):
             self.wview(self.itemvid, self.rset, row=rowidx, col=0,
                        vid=subvid, parentvid=self.id, treeid=treeid)
         self.w(u'</ul>')
-        if initial_load and not self.req.form.get('fname'):
+        toplevel_thru_ajax = self.req.form.pop('treeview_top', False)
+        if (initial_load and not self.req.form.get('fname')) or toplevel_thru_ajax:
             self.req.add_css('jquery.treeview.css')
             self.req.add_js(('cubicweb.ajax.js', 'cubicweb.widgets.js', 'jquery.treeview.js'))
             self.req.html_headers.add_onload(u"""
-jQuery("#tree-%s").treeview({toggle: toggleTree, prerendered: true});""" % treeid)
-
+jQuery("#tree-%s").treeview({toggle: toggleTree, prerendered: true});""" % treeid,
+                                             jsoncall=toplevel_thru_ajax)
 
 class FileTreeView(TreeView):
     """specific version of the treeview to display file trees
