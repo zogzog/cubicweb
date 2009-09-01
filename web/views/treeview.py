@@ -92,14 +92,15 @@ class TreeViewItemView(EntityView):
     (each item should be expandable if it's not a tree leaf)
     """
     id = 'treeitemview'
-    __select__ = EntityView.__select__ & implements(ITree) # XXX
+    default_branch_state_is_open = False
+    __select__ = EntityView.__select__ & implements(ITree)
 
     def open_state(self, eeid, treeid):
         cookies = self.req.get_cookie()
         treestate = cookies.get(treecookiename(treeid))
         if treestate:
             return str(eeid) in treestate.value.split(';')
-        return False
+        return self.default_branch_state_is_open
 
     def cell_call(self, row, col, treeid, vid='oneline', parentvid='treeview'):
         w = self.w
