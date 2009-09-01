@@ -7,7 +7,7 @@ from subprocess import Popen as sub
 
 from cubicweb.utils import can_do_pdf_conversion
 
-from cubicweb.web.xhtml2fo import ReportTransformer
+from cubicweb.ext.xhtml2fo import ReportTransformer
 
 DATADIR = osp.join(osp.dirname(__file__), 'data')
 
