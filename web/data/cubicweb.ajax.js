@@ -390,9 +390,10 @@ function stripEmptyTextNodes(nodelist) {
 /* convenience function that returns a DOM node based on req's result. */
 function getDomFromResponse(response) {
     if (typeof(response) == 'string') {
-	return html2dom(response);
+	var doc = html2dom(response);
+    } else {
+        var doc = response.documentElement;
     }
-    var doc = response.documentElement;
     var children = doc.childNodes;
     if (!children.length) {
 	// no child (error cases) => return the whole document
