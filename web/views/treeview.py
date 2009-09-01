@@ -32,13 +32,17 @@ class TreeView(EntityView):
             if treeid is None:
                 self.warning('Tree state won\'t be properly restored after next reload')
                 treeid = make_uid('throw away uid')
-        self.w(u'<ul id="tree-%s" class="%s">' % (treeid, self.css_classes))
+        toplevel_thru_ajax = self.req.form.pop('treeview_top', False)
+        toplevel = toplevel_thru_ajax or (initial_load and not self.req.form.get('fname'))
+        ulid = ' '
+        if toplevel:
+            ulid = ' id="tree-%s"' % treeid
+        self.w(u'<ul%s class="%s">' % (ulid, self.css_classes))
         for rowidx in xrange(len(self.rset)):
             self.wview(self.itemvid, self.rset, row=rowidx, col=0,
                        vid=subvid, parentvid=self.id, treeid=treeid)
         self.w(u'</ul>')
-        toplevel_thru_ajax = self.req.form.pop('treeview_top', False)
-        if (initial_load and not self.req.form.get('fname')) or toplevel_thru_ajax:
+        if toplevel:
             self.req.add_css('jquery.treeview.css')
             self.req.add_js(('cubicweb.ajax.js', 'cubicweb.widgets.js', 'jquery.treeview.js'))
             self.req.html_headers.add_onload(u"""
