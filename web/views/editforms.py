@@ -327,13 +327,13 @@ class CreationFormView(EditionFormView):
         """creation view for an entity"""
         etype = kwargs.pop('etype', self.req.form.get('etype'))
         try:
-            entity = self.vreg['etypes'].etype_class(etype)(self.req)
-        except:
-            self.w(self.req._('no such entity type %s') % etype)
-        else:
-            self.initialize_varmaker()
-            entity.eid = self.varmaker.next()
-            self.render_form(entity)
+            etype = self.vreg.case_insensitive_etypes[etype.lower()]
+        except KeyError:
+            raise RequestError(self.req._('no such entity type %s') % etype)
+        entity = self.vreg['etypes'].etype_class(etype)(self.req)
+        self.initialize_varmaker()
+        entity.eid = self.varmaker.next()
+        self.render_form(entity)
 
     def form_title(self, entity):
         """the form view title"""
