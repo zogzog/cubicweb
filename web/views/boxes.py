@@ -140,10 +140,13 @@ class EditBox(BoxTemplate):
             for tr in entity.possible_transitions():
                 url = entity.absolute_url(vid='statuschange', treid=tr.eid)
                 menu_items.append(self.mk_action(_(tr.name), url))
-            wfurl = self.build_url('cwetype/%s'%entity.e_schema, vid='workflow')
-            menu_items.append(self.mk_action(_('view workflow'), wfurl))
-            wfurl = entity.absolute_url(vid='wfhistory')
-            menu_items.append(self.mk_action(_('view history'), wfurl))
+            # don't propose to see wf if user can't pass any transition
+            if menu_items:
+                wfurl = self.build_url('cwetype/%s'%entity.e_schema, vid='workflow')
+                menu_items.append(self.mk_action(_('view workflow'), wfurl))
+            if entity.workflow_history:
+                wfurl = entity.absolute_url(vid='wfhistory')
+                menu_items.append(self.mk_action(_('view history'), wfurl))
             box.append(BoxMenu(menu_title, menu_items))
         return None
 

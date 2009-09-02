@@ -63,7 +63,12 @@ function postAjaxLoad(node) {
 	roundedCorners(node);
     }
     loadDynamicFragments(node);
-    jQuery(CubicWeb).trigger('ajax-loaded');
+    // XXX simulates document.ready, but the former
+    // only runs once, this one potentially many times
+    // we probably need to unbind the fired events
+    // When this is done, jquery.treeview.js (for instance)
+    // can be unpatched.
+  jQuery(CubicWeb).trigger('ajax-loaded');
 }
 
 /* cubicweb loadxhtml plugin to make jquery handle xhtml response
@@ -390,9 +395,10 @@ function stripEmptyTextNodes(nodelist) {
 /* convenience function that returns a DOM node based on req's result. */
 function getDomFromResponse(response) {
     if (typeof(response) == 'string') {
-	return html2dom(response);
+	var doc = html2dom(response);
+    } else {
+        var doc = response.documentElement;
     }
-    var doc = response.documentElement;
     var children = doc.childNodes;
     if (!children.length) {
 	// no child (error cases) => return the whole document

@@ -270,7 +270,7 @@ if can_do_pdf_conversion():
     from subprocess import Popen as sub
     from StringIO import StringIO
     from tempfile import NamedTemporaryFile
-    from cubicweb.web.xhtml2fo import ReportTransformer
+    from cubicweb.ext.xhtml2fo import ReportTransformer
 
     class PdfMainTemplate(TheMainTemplate):
         id = 'pdf-main-template'
@@ -279,7 +279,8 @@ if can_do_pdf_conversion():
             """build the standard view, then when it's all done, convert xhtml to pdf
             """
             super(PdfMainTemplate, self).call(view)
-            pdf = self.to_pdf(self._stream)
+            section = self.req.form.pop('section', 'contentmain')
+            pdf = self.to_pdf(self._stream, section)
             self.req.set_content_type('application/pdf', filename='report.pdf')
             self.binary = True
             self.w = None
@@ -287,7 +288,7 @@ if can_do_pdf_conversion():
             # pylint needs help
             self.w(pdf)
 
-        def to_pdf(self, stream, section='contentmain'):
+        def to_pdf(self, stream, section):
             # XXX see ticket/345282
             stream = stream.getvalue().replace('&nbsp;', '&#160;').encode('utf-8')
             xmltree = ElementTree()
