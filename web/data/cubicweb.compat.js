@@ -172,7 +172,7 @@ function createDomFunction(tag) {
 		}
 		node[key] = value;
 	    } else { // normal node attribute
-		node.setAttribute(key, params[key]);
+		jQuery(node).attr(key, params[key]);
 	    }
 	}
 	if (children) {
