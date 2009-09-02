@@ -7,6 +7,8 @@
 """
 __docformat__ = "restructuredtext en"
 
+from logilab.mtconverter import xml_escape
+
 import locale
 from md5 import md5
 from datetime import datetime, timedelta, date
@@ -262,17 +264,18 @@ class HTMLHead(UStringIO):
         # 2/ css files
         for cssfile, media in self.cssfiles:
             w(u'<link rel="stylesheet" type="text/css" media="%s" href="%s"/>\n' %
-              (media, cssfile))
+              (media, xml_escape(cssfile)))
         # 3/ ie css if necessary
         if self.ie_cssfiles:
             w(u'<!--[if lt IE 8]>\n')
             for cssfile, media in self.ie_cssfiles:
                 w(u'<link rel="stylesheet" type="text/css" media="%s" href="%s"/>\n' %
-                  (media, cssfile))
+                  (media, xml_escape(cssfile)))
             w(u'<![endif]--> \n')
         # 4/ js files
         for jsfile in self.jsfiles:
-            w(u'<script type="text/javascript" src="%s"></script>\n' % jsfile)
+            w(u'<script type="text/javascript" src="%s"></script>\n' %
+              xml_escape(jsfile))
         # 5/ post inlined scripts (i.e. scripts depending on other JS files)
         if self.post_inlined_scripts:
             w(u'<script type="text/javascript">\n')
