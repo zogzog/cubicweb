@@ -74,6 +74,7 @@ class GoogleMapsView(EntityView):
     need_navigation = False
 
     def call(self, gmap_key, width=400, height=400, uselabel=True, urlparams=None):
+        self.req.demote_to_html()
         # remove entities that don't define latitude and longitude
         self.rset = self.rset.filtered_rset(lambda e: e.latitude and e.longitude)
         self.req.add_js('http://maps.google.com/maps?sensor=false&file=api&amp;v=2&amp;key=%s' % gmap_key,

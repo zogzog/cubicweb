@@ -308,7 +308,8 @@ class HTMLStream(object):
         self.htmltag = u'<html xmlns="http://www.w3.org/1999/xhtml" ' \
                        'xmlns:cubicweb="http://www.logilab.org/2008/cubicweb" ' \
                        'xml:lang="%s" lang="%s">' % (req.lang, req.lang)
-
+        # keep main_stream's reference on req for easier text/html demoting
+        req.main_stream = self
 
     def write(self, data):
         """StringIO interface: this method will be assigned to self.w
