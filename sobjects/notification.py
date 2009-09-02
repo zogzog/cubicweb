@@ -21,7 +21,7 @@ from cubicweb.server.pool import PreCommitOperation
 from cubicweb.server.hookhelper import SendMailOp
 from cubicweb.server.hooksmanager import Hook
 
-parse_message_id = deprecated('parse_message_id is now defined in cubicweb.common.mail')
+parse_message_id = deprecated('parse_message_id is now defined in cubicweb.common.mail')(parse_message_id)
 
 
 class RecipientsFinder(Component):

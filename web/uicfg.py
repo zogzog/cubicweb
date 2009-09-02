@@ -67,7 +67,7 @@ Automatic form configuration
 """
 __docformat__ = "restructuredtext en"
 
-from cubicweb import neg_role, onevent
+from cubicweb import neg_role
 from cubicweb.rtags import (RelationTags, RelationTagsBool,
                             RelationTagsSet, RelationTagsDict)
 from cubicweb.web import formwidgets
@@ -216,14 +216,3 @@ def init_actionbox_appearsin_addmenu(rtag, sschema, rschema, oschema, role):
 
 actionbox_appearsin_addmenu = RelationTagsBool('actionbox_appearsin_addmenu',
                                                init_actionbox_appearsin_addmenu)
-
-@onevent('before-registry-reload')
-def clear_rtag_objects():
-    primaryview_section.clear()
-    primaryview_display_ctrl.clear()
-    autoform_section.clear()
-    autoform_field.clear()
-    autoform_field_kwargs.clear()
-    autoform_is_inlined.clear()
-    autoform_permissions_overrides.clear()
-    actionbox_appearsin_addmenu.clear()

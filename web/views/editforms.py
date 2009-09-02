@@ -20,7 +20,8 @@ from cubicweb.selectors import (match_kwargs, one_line_rset, non_final_entity,
 from cubicweb.utils import make_uid
 from cubicweb.view import EntityView
 from cubicweb.common import tags
-from cubicweb.web import INTERNAL_FIELD_VALUE, stdmsgs, eid_param, uicfg
+from cubicweb.web import INTERNAL_FIELD_VALUE, RequestError, stdmsgs, eid_param
+from cubicweb.web import uicfg
 from cubicweb.web.form import FormViewMixIn, FieldNotFound
 from cubicweb.web.formfields import guess_field
 from cubicweb.web.formwidgets import Button, SubmitButton, ResetButton
@@ -327,13 +328,13 @@ class CreationFormView(EditionFormView):
         """creation view for an entity"""
         etype = kwargs.pop('etype', self.req.form.get('etype'))
         try:
-            entity = self.vreg['etypes'].etype_class(etype)(self.req)
-        except:
-            self.w(self.req._('no such entity type %s') % etype)
-        else:
-            self.initialize_varmaker()
-            entity.eid = self.varmaker.next()
-            self.render_form(entity)
+            etype = self.vreg.case_insensitive_etypes[etype.lower()]
+        except KeyError:
+            raise RequestError(self.req._('no such entity type %s') % etype)
+        entity = self.vreg['etypes'].etype_class(etype)(self.req)
+        self.initialize_varmaker()
+        entity.eid = self.varmaker.next()
+        self.render_form(entity)
 
     def form_title(self, entity):
         """the form view title"""
@@ -371,6 +372,8 @@ class CopyFormView(EditionFormView):
     entity
     """
     id = 'copy'
+    warning_message = _('Please note that this is only a shallow copy')
+
     def render_form(self, entity):
         """fetch and render the form"""
         # make a copy of entity to avoid altering the entity in the
@@ -381,7 +384,7 @@ class CopyFormView(EditionFormView):
         self.initialize_varmaker()
         self.newentity.eid = self.varmaker.next()
         self.w(u'<script type="text/javascript">updateMessage("%s");</script>\n'
-               % self.req._('Please note that this is only a shallow copy'))
+               % self.req._(self.warning_message))
         super(CopyFormView, self).render_form(self.newentity)
         del self.newentity
 

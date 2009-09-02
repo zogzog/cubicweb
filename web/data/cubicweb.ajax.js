@@ -51,7 +51,7 @@ function postAjaxLoad(node) {
     }
     // find textareas and wrap them if there are some
     if (typeof(FCKeditor) != 'undefined') {
-	buildWysiwygEditors(node);
+	buildWysiwygEditors();
     }
     if (typeof initFacetBoxEvents != 'undefined') {
 	initFacetBoxEvents(node);
@@ -351,7 +351,10 @@ function loadxhtml(nodeid, url, /* ... */ replacemode) {
  */
 function buildWysiwygEditors(parent) {
     jQuery('textarea').each(function () {
-	if (this.getAttribute('cubicweb:type', 'wysiwyg')) {
+	if (this.getAttribute('cubicweb:type') == 'wysiwyg') {
+            // mark editor as instanciated, we may be called a number of times
+            // (see postAjaxLoad)
+            this.setAttribute('cubicweb:type', 'fckeditor');
 	    if (typeof FCKeditor != "undefined") {
 		var fck = new FCKeditor(this.id);
 		fck.Config['CustomConfigurationsPath'] = fckconfigpath;
@@ -387,9 +390,10 @@ function stripEmptyTextNodes(nodelist) {
 /* convenience function that returns a DOM node based on req's result. */
 function getDomFromResponse(response) {
     if (typeof(response) == 'string') {
-	return html2dom(response);
+	var doc = html2dom(response);
+    } else {
+        var doc = response.documentElement;
     }
-    var doc = response.documentElement;
     var children = doc.childNodes;
     if (!children.length) {
 	// no child (error cases) => return the whole document
