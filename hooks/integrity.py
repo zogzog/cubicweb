@@ -163,11 +163,11 @@ class CheckUniqueHook(IntegrityHook):
         entity = self.entity
         eschema = entity.e_schema
         for attr in entity.edited_attributes:
-            val = entity[attr]
-            if val is None:
-                continue
             if eschema.subject_relation(attr).is_final() and \
                    eschema.has_unique_values(attr):
+                val = entity[attr]
+                if val is None:
+                    continue
                 rql = '%s X WHERE X %s %%(val)s' % (entity.e_schema, attr)
                 rset = self._cw.unsafe_execute(rql, {'val': val})
                 if rset and rset[0][0] != entity.eid:
