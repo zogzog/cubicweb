@@ -112,7 +112,8 @@ Calendar = function(containerId, inputId, year, month, cssclass) {
 	this.domtable = TABLE({'class': this.cssclass},
 			      THEAD(null, TR(null,
 					     TH(null, A({'href' : prevlink}, "<<")),
-					     TH({'colspan' : 5, 'style' : "text-align: center;"}, monthname),
+					     // IE 6/7 requires colSpan instead of colspan
+					     TH({'colSpan': 5, 'colspan':5, 'style' : "text-align: center;"}, monthname),
 					     TH(null, A({'href' : nextlink}, ">>")))),
 			      TBODY(null,
 				    this._headdisplay(),
