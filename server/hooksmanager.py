@@ -5,3 +5,4 @@ PropagateSubjectRelationHook = class_renamed('PropagateSubjectRelationHook', Hoo
 PropagateSubjectRelationAddHook = class_renamed('PropagateSubjectRelationAddHook', Hook)
 PropagateSubjectRelationDelHook = class_renamed('PropagateSubjectRelationDelHook', Hook)
 Hook = class_moved(Hook)
+

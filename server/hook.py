@@ -202,10 +202,10 @@ class PropagateSubjectRelationHook(Hook):
         else:
             assert rtype in self.object_relations
             meid, seid = toeid, fromeid
-        rql = 'SET E %s P WHERE X %s P, X eid %%(x)s, E eid %%(e)s, NOT E %s P'\
-              % (self.rtype, self.rtype, self.rtype)
-        rqls = [(rql, {'x': meid, 'e': seid}, ('x', 'e'))]
-        RQLPrecommitOperation(session, rqls=rqls)
+        session.unsafe_execute(
+            'SET E %s P WHERE X %s P, X eid %%(x)s, E eid %%(e)s, NOT E %s P'\
+            % (self.rtype, self.rtype, self.rtype),
+            {'x': meid, 'e': seid}, ('x', 'e'))
 
 
 class PropagateSubjectRelationAddHook(Hook):
@@ -219,19 +219,17 @@ class PropagateSubjectRelationAddHook(Hook):
 
     def call(self, session, fromeid, rtype, toeid):
         eschema = self.schema.eschema(session.describe(fromeid)[0])
-        rqls = []
+        execute = session.unsafe_execute
         for rel in self.subject_relations:
             if eschema.has_subject_relation(rel):
-                rqls.append(('SET R %s P WHERE X eid %%(x)s, P eid %%(p)s, '
-                             'X %s R, NOT R %s P' % (rtype, rel, rtype),
-                             {'x': fromeid, 'p': toeid}, 'x'))
+                execute('SET R %s P WHERE X eid %%(x)s, P eid %%(p)s, '
+                        'X %s R, NOT R %s P' % (rtype, rel, rtype),
+                        {'x': fromeid, 'p': toeid}, 'x')
         for rel in self.object_relations:
             if eschema.has_object_relation(rel):
-                rqls.append(('SET R %s P WHERE X eid %%(x)s, P eid %%(p)s, '
-                             'R %s X, NOT R %s P' % (rtype, rel, rtype),
-                             {'x': fromeid, 'p': toeid}, 'x'))
-        if rqls:
-            RQLPrecommitOperation(session, rqls=rqls)
+                execute('SET R %s P WHERE X eid %%(x)s, P eid %%(p)s, '
+                        'R %s X, NOT R %s P' % (rtype, rel, rtype),
+                        {'x': fromeid, 'p': toeid}, 'x')
 
 
 class PropagateSubjectRelationDelHook(Hook):
@@ -245,19 +243,17 @@ class PropagateSubjectRelationDelHook(Hook):
 
     def call(self, session, fromeid, rtype, toeid):
         eschema = self.schema.eschema(session.describe(fromeid)[0])
-        rqls = []
+        execute = session.unsafe_execute
         for rel in self.subject_relations:
             if eschema.has_subject_relation(rel):
-                rqls.append(('DELETE R %s P WHERE X eid %%(x)s, P eid %%(p)s, '
-                             'X %s R' % (rtype, rel),
-                             {'x': fromeid, 'p': toeid}, 'x'))
+                execute('DELETE R %s P WHERE X eid %%(x)s, P eid %%(p)s, '
+                        'X %s R' % (rtype, rel),
+                        {'x': fromeid, 'p': toeid}, 'x')
         for rel in self.object_relations:
             if eschema.has_object_relation(rel):
-                rqls.append(('DELETE R %s P WHERE X eid %%(x)s, P eid %%(p)s, '
-                             'R %s X' % (rtype, rel),
-                             {'x': fromeid, 'p': toeid}, 'x'))
-        if rqls:
-            RQLPrecommitOperation(session, rqls=rqls)
+                execute('DELETE R %s P WHERE X eid %%(x)s, P eid %%(p)s, '
+                        'R %s X' % (rtype, rel),
+                        {'x': fromeid, 'p': toeid}, 'x')
 
 
 # abstract classes for operation ###############################################
