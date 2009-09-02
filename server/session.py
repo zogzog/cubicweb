@@ -156,8 +156,11 @@ class Session(RequestSessionMixIn):
                 if row[0] == targeteid:
                     break
             else:
-                raise Exception('cache inconsistency for %s %s %s %s' %
-                                (eid, rtype, role, targeteid))
+                # this may occurs if the cache has been filed by a hook
+                # after the database update
+                self.debug('cache inconsistency for %s %s %s %s', eid, rtype,
+                           role, targeteid)
+                return
             del rset.rows[idx]
             if isinstance(rset.description, list): # else description not set
                 del rset.description[idx]
