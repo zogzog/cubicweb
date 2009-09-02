@@ -19,8 +19,6 @@ from cubicweb.common.mail import format_mail
 from cubicweb.common.mail import NotificationView
 from cubicweb.server.hookhelper import SendMailOp
 
-parse_message_id = deprecated('parse_message_id is now defined in cubicweb.common.mail')(parse_message_id)
-
 
 class RecipientsFinder(Component):
     """this component is responsible to find recipients of a notification
@@ -126,4 +124,5 @@ from cubicweb.common.mail import parse_message_id
 
 NormalizedTextView = class_renamed('NormalizedTextView', ContentAddedView)
 RenderAndSendNotificationView = class_moved(RenderAndSendNotificationView)
-parse_message_id = deprecated('parse_message_id is now defined in cubicweb.common.mail')
+parse_message_id = deprecated('parse_message_id is now defined in cubicweb.common.mail')(parse_message_id)
+
