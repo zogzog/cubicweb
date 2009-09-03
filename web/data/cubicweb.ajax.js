@@ -397,15 +397,18 @@ function getDomFromResponse(response) {
     var children = doc.childNodes;
     if (!children.length) {
 	// no child (error cases) => return the whole document
-	return doc.cloneNode(true);
+	return jQuery(doc).clone().context;
     }
     children = stripEmptyTextNodes(children);
     if (children.length == 1) {
 	// only one child => return it
-	return children[0].cloneNode(true);
+	return jQuery(children[0]).clone().context;
     }
     // several children => wrap them in a single node and return the wrap
-    return DIV(null, map(methodcaller('cloneNode', true), children));
+    return DIV(null, map(function(node) {
+                           return jQuery(node).clone().context;
+                         },
+                         children));
 }
 
 function postJSON(url, data, callback) {
