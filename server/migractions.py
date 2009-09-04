@@ -166,14 +166,20 @@ class ServerMigrationHelper(MigrationHelper):
                                            % (self.config.appid, backupfile)):
             return
         # unpack backup
-        bkup = tarfile.open(backupfile, 'r|gz')
-        for name in bkup.getnames():
-            if name[0] in '/.':
-                raise Exception('Security check failed, path starts with "/" or "."')
-        bkup.close() # XXX seek error if not close+open !?!
-        bkup = tarfile.open(backupfile, 'r|gz')
         tmpdir = tempfile.mkdtemp()
-        bkup.extractall(path=tmpdir)
+        try:
+            bkup = tarfile.open(backupfile, 'r|gz')
+        except tarfile.ReadError:
+            # assume restoring old backup
+            shutil.copy(backupfile, osp.join(tmpdir, 'system'))  
+        else:
+            for name in bkup.getnames():
+                if name[0] in '/.':
+                    raise Exception('Security check failed, path starts with "/" or "."')
+            bkup.close() # XXX seek error if not close+open !?!
+            bkup = tarfile.open(backupfile, 'r|gz')
+            bkup.extractall(path=tmpdir)
+            bkup.close()
 
         self.config.open_connections_pools = False
         repo = self.repo_connect()
@@ -186,7 +192,6 @@ class ServerMigrationHelper(MigrationHelper):
                 print '-> error trying to restore [%s]' % exc
                 if not self.confirm('Continue anyway?', default='n'):
                     raise SystemExit(1)
-        bkup.close()
         shutil.rmtree(tmpdir)
         # call hooks
         repo.open_connections_pools()
