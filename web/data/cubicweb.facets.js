@@ -130,9 +130,10 @@ function initFacetBoxEvents(root) {
 		});
 		facet.find('div.facetCheckBox').click(function () {
 		    var $this = jQuery(this);
-		    if ($this.hasClass('facetValueDisabled')){
-		     	    return
-		    }
+		    // NOTE : add test on the facet operator (i.e. OR, AND)
+		    // if ($this.hasClass('facetValueDisabled')){
+		    //  	    return
+		    // }
 		    if ($this.hasClass('facetValueSelected')) {
 			$this.removeClass('facetValueSelected');
 			$this.find('img').each(function (i){
