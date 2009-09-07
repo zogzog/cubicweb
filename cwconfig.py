@@ -20,6 +20,7 @@ import logging
 from smtplib import SMTP
 from threading import Lock
 from os.path import exists, join, expanduser, abspath, normpath, basename, isdir
+import tempfile
 
 from logilab.common.decorators import cached
 from logilab.common.deprecation import deprecated
@@ -526,13 +527,13 @@ class CubicWebConfiguration(CubicWebNoAppConfiguration):
     if CubicWebNoAppConfiguration.mode == 'test':
         root = os.environ['APYCOT_ROOT']
         REGISTRY_DIR = '%s/etc/cubicweb.d/' % root
-        RUNTIME_DIR = '/tmp/'
+        RUNTIME_DIR = tempfile.gettempdir()
         MIGRATION_DIR = '%s/local/share/cubicweb/migration/' % root
         if not exists(REGISTRY_DIR):
             os.makedirs(REGISTRY_DIR)
     elif CubicWebNoAppConfiguration.mode == 'dev':
         REGISTRY_DIR = expanduser('~/etc/cubicweb.d/')
-        RUNTIME_DIR = '/tmp/'
+        RUNTIME_DIR = tempfile.gettempdir()
         MIGRATION_DIR = join(CW_SOFTWARE_ROOT, 'misc', 'migration')
     else: #mode = 'installed'
         REGISTRY_DIR = '/etc/cubicweb.d/'
@@ -651,7 +652,7 @@ the repository',
     def default_log_file(self):
         """return default path to the log file of the instance'server"""
         if self.mode == 'dev':
-            basepath = '/tmp/%s-%s' % (basename(self.appid), self.name)
+            basepath = join(tempfile.gettempdir(), '%s-%s' % (basename(self.appid), self.name))
             path = basepath + '.log'
             i = 1
             while exists(path) and i < 100: # arbitrary limit to avoid infinite loop

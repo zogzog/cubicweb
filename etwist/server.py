@@ -16,7 +16,10 @@ from urlparse import urlsplit, urlunsplit
 import hotshot
 
 from twisted.application import service, strports
-from twisted.scripts._twistd_unix import daemonize
+try:
+    from twisted.scripts._twistd_unix import daemonize
+except ImportError:
+    pass
 from twisted.internet import reactor, task, threads
 from twisted.internet.defer import maybeDeferred
 from twisted.web2 import channel, http, server, iweb

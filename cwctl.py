@@ -5,7 +5,13 @@ CubicWeb main instances controller.
 %s"""
 
 import sys
-from os import remove, listdir, system, kill, getpgid, pathsep
+from os import remove, listdir, system, pathsep
+try:
+    from os import kill, getpgid
+except ImportError:
+    def kill(*args): pass
+    def getpgid(): pass
+
 from os.path import exists, join, isfile, isdir
 
 from logilab.common.clcommands import register_commands, pop_arg
