@@ -15,11 +15,13 @@ from datetime import date, timedelta
 from urlparse import urlsplit, urlunsplit
 import hotshot
 
-from twisted.application import service, strports
+from twisted.application import strports
 try:
     from twisted.scripts._twistd_unix import daemonize
 except ImportError:
-    pass
+    def daemonize():
+        raise NotImplementedError('not yet for win32')
+
 from twisted.internet import reactor, task, threads
 from twisted.internet.defer import maybeDeferred
 from twisted.web2 import channel, http, server, iweb

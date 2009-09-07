@@ -260,6 +260,7 @@ class UpdateCubicWebCatalogCommand(Command):
         from logilab.common.shellutils import globfind, find, rm
         from cubicweb.common.i18n import extract_from_tal, execute
         tempdir = tempfile.mkdtemp()
+        assert exists(tempdir)
         potfiles = [join(I18NDIR, 'static-messages.pot')]
         print '-> extract schema messages.'
         schemapot = join(tempdir, 'schema.pot')
@@ -283,22 +284,23 @@ class UpdateCubicWebCatalogCommand(Command):
             if lang is not None:
                 cmd += ' -L %s' % lang
             potfile = join(tempdir, '%s.pot' % id)
-            execute(cmd % (potfile, ' '.join(files)))
+            execute(cmd % (potfile, ' '.join('"%s"' % f for f in files)))
             if exists(potfile):
                 potfiles.append(potfile)
             else:
                 print '-> WARNING: %s file was not generated' % potfile
         print '-> merging %i .pot files' % len(potfiles)
         cubicwebpot = join(tempdir, 'cubicweb.pot')
-        execute('msgcat %s > %s' % (' '.join(potfiles), cubicwebpot))
+        execute('msgcat -o %s %s' % (cubicwebpot, ' '.join('"%s"' % f for f in potfiles)))
         print '-> merging main pot file with existing translations.'
         chdir(I18NDIR)
         toedit = []
         for lang in LANGS:
             target = '%s.po' % lang
-            execute('msgmerge -N --sort-output  %s %s > %snew' % (target, cubicwebpot, target))
+            execute('msgmerge -N --sort-output -o %snew %s %s' % (target, cubicwebpot, target))
             ensure_fs_mode(target)
             shutil.move('%snew' % target, target)
+            assert exists(target)
             toedit.append(abspath(target))
         # cleanup
         rm(tempdir)
@@ -395,7 +397,8 @@ def update_cube_catalogs(cubedir):
         potfiles.append(tmppotfile)
     potfile = join(tempdir, 'cube.pot')
     print '-> merging %i .pot files:' % len(potfiles)
-    execute('msgcat %s > %s' % (' '.join(potfiles), potfile))
+    execute('msgcat -o %s %s' % (potfile,
+                                 ' '.join('"%s"' % f for f in potfiles)))
     print '-> merging main pot file with existing translations:'
     chdir('i18n')
     for lang in LANGS:
@@ -404,7 +407,7 @@ def update_cube_catalogs(cubedir):
         if not exists(cubepo):
             shutil.copy(potfile, cubepo)
         else:
-            execute('msgmerge -N -s %s %s > %snew' % (cubepo, potfile, cubepo))
+            execute('msgmerge -N -s -o %snew %s %s' % (cubepo, potfile, cubepo))
             ensure_fs_mode(cubepo)
             shutil.move('%snew' % cubepo, cubepo)
         toedit.append(abspath(cubepo))

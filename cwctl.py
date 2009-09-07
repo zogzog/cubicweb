@@ -29,7 +29,7 @@ def wait_process_end(pid, maxtry=10, waittime=1):
     while nbtry < maxtry:
         try:
             kill(pid, signal.SIGUSR1)
-        except OSError:
+        except (OSError, AttributeError): # XXX win32
             break
         nbtry += 1
         sleep(waittime)
