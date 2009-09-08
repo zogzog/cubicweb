@@ -21,6 +21,7 @@ except ImportError:
         return 'XXX'
 
 from cubicweb.view import EntityView
+from cubicweb.entity import Entity
 
 def header(ustring):
     return Header(ustring.encode('UTF-8'), 'UTF-8')
@@ -183,18 +184,12 @@ class NotificationView(EntityView):
         return construct_message_id(self.config.appid, eid, self.msgid_timestamp)
 
     def render_emails(self, **kwargs):
-        """generate and send an email message for this view"""
+        """generate and send emails for this view (one per recipient)"""
         self._kwargs = kwargs
         recipients = self.recipients()
         if not recipients:
             self.info('skipping %s notification, no recipients', self.id)
             return
-        if not isinstance(recipients[0], tuple):
-            from warnings import warn
-            warn('recipients should now return a list of 2-uple (email, language)',
-                 DeprecationWarning, stacklevel=1)
-            lang = self.vreg.property_value('ui.language')
-            recipients = zip(recipients, repeat(lang))
         if self.rset is not None:
             entity = self.entity(self.row or 0, self.col or 0)
             # if the view is using timestamp in message ids, no way to reference
@@ -208,22 +203,32 @@ class NotificationView(EntityView):
         else:
             refs = ()
             msgid = None
-        userdata = self.req.user_data()
-        origlang = self.req.lang
-        for emailaddr, lang in recipients:
-            self.req.set_language(lang)
+        req = self.req
+        self.user_data = req.user_data()
+        origlang = req.lang
+        for something in recipients:
+            if isinstance(something, Entity):
+                # hi-jack self.req to get a session for the returned user
+                self.req = self.req.hijack_user(something)
+                emailaddr = something.get_email()
+            else:
+                emailaddr, lang = something
+                self.req.set_language(lang)
             # since the same view (eg self) may be called multiple time and we
             # need a fresh stream at each iteration, reset it explicitly
             self.w = None
             # XXX call render before subject to set .row/.col attributes on the
             #     view
-            content = self.render(row=0, col=0, **kwargs)
-            subject = self.subject()
-            msg = format_mail(userdata, [emailaddr], content, subject,
+            try:
+                content = self.render(row=0, col=0, **kwargs)
+                subject = self.subject()
+            except SkipEmail:
+                continue
+            msg = format_mail(self.user_data, [emailaddr], content, subject,
                               config=self.config, msgid=msgid, references=refs)
             yield [emailaddr], msg
         # restore language
-        self.req.set_language(origlang)
+        req.set_language(origlang)
 
     def render_and_send(self, **kwargs):
         """generate and send an email message for this view"""
