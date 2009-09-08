@@ -212,18 +212,9 @@ class RequestSessionMixIn(object):
             userinfo['email'] = ""
             return userinfo
         user = self.actual_session().user
-        rql = "Any F,S,A where U eid %(x)s, U firstname F, U surname S, U primary_email E, E address A"
-        try:
-            firstname, lastname, email = self.execute(rql, {'x': user.eid}, 'x')[0]
-            if firstname is None and lastname is None:
-                userinfo['name'] = ''
-            else:
-                userinfo['name'] = ("%s %s" % (firstname, lastname))
-            userinfo['email'] = email
-        except IndexError:
-            userinfo['name'] = None
-            userinfo['email'] = None
         userinfo['login'] = user.login
+        userinfo['name'] = user.name()
+        userinfo['email'] = user.get_email()
         return userinfo
 
     def is_internal_session(self):
