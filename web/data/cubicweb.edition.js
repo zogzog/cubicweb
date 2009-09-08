@@ -255,6 +255,11 @@ function addInlineCreationForm(peid, ttype, rtype, role, insertBefore) {
         updateInlinedEntitiesCounters(rtype);
         reorderTabindex();
         form.trigger('inlinedform-added');
+        // if the inlined form contains a file input, we must force
+        // the form enctype to multipart/form-data
+        if (form.find('input:file').length) {
+            form.closest('form').attr('enctype', 'multipart/form-data');
+        }
         postAjaxLoad(dom);
     });
     d.addErrback(function (xxx) {
