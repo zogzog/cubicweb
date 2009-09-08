@@ -392,7 +392,9 @@ function stripEmptyTextNodes(nodelist) {
     return stripped;
 }
 
-/* convenience function that returns a DOM node based on req's result. */
+/* convenience function that returns a DOM node based on req's result.
+ * XXX clarify the need to clone
+ * */
 function getDomFromResponse(response) {
     if (typeof(response) == 'string') {
 	var doc = html2dom(response);

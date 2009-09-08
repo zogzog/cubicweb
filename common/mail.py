@@ -256,5 +256,6 @@ class NotificationView(EntityView):
                        'title': entity.dc_long_title(),})
         return kwargs
 
+
 class SkipEmail(Exception):
     """raise this if you decide to skip an email during its generation"""
