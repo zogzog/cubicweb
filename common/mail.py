@@ -142,14 +142,6 @@ class NotificationView(EntityView):
 
     msgid_timestamp = True
 
-    def user_login(self):
-        try:
-            # if req is actually a session (we are on the server side), and we
-            # have to prevent nested internal session
-            return self.req.actual_session().user.login
-        except AttributeError:
-            return self.req.user.login
-
     def recipients(self):
         finder = self.vreg['components'].select('recipients_finder', self.req,
                                                 rset=self.rset,
@@ -162,7 +154,7 @@ class NotificationView(EntityView):
         subject = self.req._(self.message)
         etype = entity.dc_type()
         eid = entity.eid
-        login = self.user_login()
+        login = self.user_data['login']
         return self.req._('%(subject)s %(etype)s #%(eid)s (%(login)s)') % locals()
 
     def context(self, **kwargs):
@@ -170,7 +162,7 @@ class NotificationView(EntityView):
         for key, val in kwargs.iteritems():
             if val and isinstance(val, unicode) and val.strip():
                kwargs[key] = self.req._(val)
-        kwargs.update({'user': self.user_login(),
+        kwargs.update({'user': self.user_data['login'],
                        'eid': entity.eid,
                        'etype': entity.dc_type(),
                        'url': entity.absolute_url(),
