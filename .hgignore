@@ -1,0 +1,10 @@
+\.svn
+^build$
+^dist$
+\.pyc$
+\.pyo$
+\.bak$
+\.old$
+\~$
+\#.*?\#$
+\.swp$
