@@ -795,8 +795,8 @@ the repository',
         from glob import glob
         yield 'en' # ensure 'en' is yielded even if no .mo found
         for path in glob(join(self.apphome, 'i18n',
-                              '*', 'LC_MESSAGES', 'cubicweb.mo')):
-            lang = path.split(os.sep)[-3]
+                              '*', 'LC_MESSAGES')):
+            lang = path.split(os.sep)[-2]
             if lang != 'en':
                 yield lang
 

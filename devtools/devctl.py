@@ -10,7 +10,7 @@ __docformat__ = "restructuredtext en"
 
 import sys
 from datetime import datetime
-from os import mkdir, chdir
+from os import mkdir, chdir, getcwd
 from os.path import join, exists, abspath, basename, normpath, split, isdir
 from warnings import warn
 
@@ -260,7 +260,6 @@ class UpdateCubicWebCatalogCommand(Command):
         from logilab.common.shellutils import globfind, find, rm
         from cubicweb.common.i18n import extract_from_tal, execute
         tempdir = tempfile.mkdtemp()
-        assert exists(tempdir)
         potfiles = [join(I18NDIR, 'static-messages.pot')]
         print '-> extract schema messages.'
         schemapot = join(tempdir, 'schema.pot')
@@ -297,10 +296,9 @@ class UpdateCubicWebCatalogCommand(Command):
         toedit = []
         for lang in LANGS:
             target = '%s.po' % lang
-            execute('msgmerge -N --sort-output -o %snew %s %s' % (target, cubicwebpot, target))
+            execute('msgmerge -N --sort-output -o "%snew" "%s" "%s"' % (target, target, cubicwebpot))
             ensure_fs_mode(target)
             shutil.move('%snew' % target, target)
-            assert exists(target)
             toedit.append(abspath(target))
         # cleanup
         rm(tempdir)
@@ -392,7 +390,7 @@ def update_cube_catalogs(cubedir):
     cubefiles = find('.', '.py', blacklist=STD_BLACKLIST+('test',))
     cubefiles.append(tali18nfile)
     execute('xgettext --no-location --omit-header -k_ -o %s %s'
-            % (tmppotfile, ' '.join(cubefiles)))
+            % (tmppotfile, ' '.join('"%s"' % f for f in cubefiles)))
     if exists(tmppotfile): # doesn't exists of no translation string found
         potfiles.append(tmppotfile)
     potfile = join(tempdir, 'cube.pot')
@@ -407,7 +405,7 @@ def update_cube_catalogs(cubedir):
         if not exists(cubepo):
             shutil.copy(potfile, cubepo)
         else:
-            execute('msgmerge -N -s -o %snew %s %s' % (cubepo, potfile, cubepo))
+            execute('msgmerge -N -s -o %snew %s %s' % (cubepo, cubepo, potfile))
             ensure_fs_mode(cubepo)
             shutil.move('%snew' % cubepo, cubepo)
         toedit.append(abspath(cubepo))
