@@ -190,6 +190,6 @@ url: %(url)s
     def subject(self):
         entity = self.entity(self.row or 0, self.col or 0)
         return  u'%s #%s (%s)' % (self.req.__('New %s' % entity.e_schema),
-                                  entity.eid, self.user_login())
+                                  entity.eid, self.user_data['login'])
 
 NormalizedTextView = class_renamed('NormalizedTextView', ContentAddedView)

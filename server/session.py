@@ -78,6 +78,12 @@ class Session(RequestSessionMixIn):
     def schema(self):
         return self.repo.schema
 
+    def hijack_user(self, user):
+        """return a fake request/session using specified user"""
+        session = Session(user, self.repo)
+        session._threaddata = self._threaddata
+        return session
+
     def _change_relation(self, cb, fromeid, rtype, toeid):
         if self.is_super_session:
             cb(self, fromeid, rtype, toeid)
@@ -114,6 +120,8 @@ class Session(RequestSessionMixIn):
         """
         self._change_relation(self.repo.glob_delete_relation,
                               fromeid, rtype, toeid)
+
+    # relations cache handling #################################################
 
     def update_rel_cache_add(self, subject, rtype, object, symetric=False):
         self._update_entity_rel_cache_add(subject, rtype, 'subject', object)

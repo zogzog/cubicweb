@@ -284,6 +284,12 @@ class DBAPIRequest(RequestSessionMixIn):
 
     # server session compat layer #############################################
 
+    def hijack_user(self, user):
+        """return a fake request/session using specified user"""
+        req = DBAPIRequest(self.vreg)
+        req.set_connection(self.cnx, user)
+        return req
+
     @property
     def user(self):
         if self._user is None and self.cnx:
