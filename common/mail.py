@@ -240,3 +240,7 @@ class NotificationView(EntityView):
         raise NotImplementedError
 
     send = send_now
+
+
+class SkipEmail(Exception):
+    """raise this if you decide to skip an email during its generation"""
