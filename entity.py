@@ -427,7 +427,7 @@ class Entity(AppObject, dict):
         return value
 
     def printable_value(self, attr, value=_marker, attrtype=None,
-                        format='text/html', displaytime=True):
+                        format='text/html'):
         """return a displayable value (i.e. unicode string) which may contains
         html tags
         """
@@ -457,7 +457,7 @@ class Entity(AppObject, dict):
                 return self.mtc_transform(value.getvalue(), attrformat, format,
                                           encoding)
             return u''
-        value = printable_value(self.req, attrtype, value, props, displaytime)
+        value = printable_value(self.req, attrtype, value, props)
         if format == 'text/html':
             value = xml_escape(value)
         return value
