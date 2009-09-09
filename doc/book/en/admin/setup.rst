@@ -122,10 +122,22 @@ The python drivers for posgtresql are to be found there::
 Please be careful to select the right python (2.5) and postgres (8.4)
 versions.
 
+To access LDAP/Active directory directories, we need the python-ldap
+package. Windows binaries are available from::
+
+  http://www.osuch.org/python-ldap
+
+Check out the latest release.
+
 Having graphviz will allow schema drawings, which is quite recommended
 (albeit not mandatory). You should get an msi installer there::
 
   http://www.graphviz.org/Download_windows.php
+
+Simplejson will be provided within the forest, but a win32 compiled
+version will run much faster::
+
+  http://www.osuch.org/python-simplejson%3Awin32
 
 Tools
 _____
