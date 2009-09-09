@@ -11,6 +11,7 @@ from logilab.mtconverter import xml_escape
 
 import locale
 from md5 import md5
+import sys
 from datetime import datetime, timedelta, date
 from time import time, mktime
 from random import randint, seed
@@ -103,11 +104,17 @@ def ustrftime(date, fmt='%Y-%m-%d'):
     encoding = locale.getpreferredencoding(do_setlocale=False) or 'UTF-8'
     return unicode(date.strftime(str(fmt)), encoding)
 
-def make_uid(key):
-    """forge a unique identifier"""
-    msg = str(key) + "%.10f" % time() + str(randint(0, 1000000))
-    return md5(msg).hexdigest()
 
+if sys.version_info[:2] < (2, 5):
+    def make_uid(key):
+        """forge a unique identifier
+        not that unique on win32"""
+        msg = str(key) + "%.10f" % time() + str(randint(0, 1000000))
+        return md5(msg).hexdigest()
+else:
+    from uuid import uuid4
+    def make_uid(key):
+        return key + str(uuid4())
 
 def dump_class(cls, clsname):
     """create copy of a class by creating an empty class inheriting
