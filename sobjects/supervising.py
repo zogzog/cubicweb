@@ -23,6 +23,8 @@ class SomethingChangedHook(Hook):
     accepts = ('Any',)
 
     def call(self, session, *args):
+        if session.is_super_session or session.repo.config.repairing:
+            return # ignore changes triggered by hooks or maintainance shell
         dest = self.config['supervising-addrs']
         if not dest: # no supervisors, don't do this for nothing...
             return
