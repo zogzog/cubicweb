@@ -66,6 +66,7 @@ function buildRQL(divid, vid, paginate, vidargs) {
 	extraparams['divid'] = divid;
 	copyParam(zipped, extraparams, 'divid');
 	copyParam(zipped, extraparams, 'subvid');
+	copyParam(zipped, extraparams, 'fromformfilter');
 	// paginate used to know if the filter box is acting, in which case we
 	// want to reload action box to match current selection (we don't want
 	// this from a table filter)

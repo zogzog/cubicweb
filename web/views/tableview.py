@@ -59,7 +59,9 @@ class TableView(AnyRsetView):
                xml_escape(dumps([divid, 'table', False, vidargs])))
         self.w(u'<fieldset id="%sForm" class="%s">' % (divid, hidden and 'hidden' or ''))
         self.w(u'<input type="hidden" name="divid" value="%s" />' % divid)
-        filter_hiddens(self.w, facets=','.join(wdg.facet.id for wdg in fwidgets), baserql=baserql)
+        self.w(u'<input type="hidden" name="fromformfilter" value="1" />')
+        filter_hiddens(self.w, facets=','.join(wdg.facet.id for wdg in fwidgets),
+                       baserql=baserql)
         self.w(u'<table class="filter">\n')
         self.w(u'<tr>\n')
         for wdg in fwidgets:
