@@ -130,7 +130,7 @@ class TestServerConfiguration(ServerConfiguration):
         self.set_option('sender-addr', 'cubicweb-test@logilab.fr')
         try:
             send_to =  '%s@logilab.fr' % os.getlogin()
-        except OSError:
+        except (OSError, AttributeError):
             send_to =  '%s@logilab.fr' % (os.environ.get('USER')
                                           or os.environ.get('USERNAME')
                                           or os.environ.get('LOGNAME'))
