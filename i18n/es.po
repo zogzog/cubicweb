@@ -1708,11 +1708,12 @@ msgstr ""
 msgid "download"
 msgstr "Descargar"
 
+#, python-format
+msgid "download %s"
+msgstr ""
+
 msgid "download icon"
 msgstr "ícono de descarga"
-
-msgid "download image"
-msgstr ""
 
 msgid "download schema as owl"
 msgstr "Descargar esquema en OWL"
@@ -2127,6 +2128,12 @@ msgstr "Acción %r invalida"
 
 msgid "invalid date"
 msgstr "Esta fecha no es válida"
+
+msgid "invalid float value"
+msgstr ""
+
+msgid "invalid integer value"
+msgstr ""
 
 msgid "is"
 msgstr "es"

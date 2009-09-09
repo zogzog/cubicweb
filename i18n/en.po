@@ -1646,10 +1646,11 @@ msgstr ""
 msgid "download"
 msgstr ""
 
-msgid "download icon"
+#, python-format
+msgid "download %s"
 msgstr ""
 
-msgid "download image"
+msgid "download icon"
 msgstr ""
 
 msgid "download schema as owl"
@@ -2050,6 +2051,12 @@ msgid "invalid action %r"
 msgstr ""
 
 msgid "invalid date"
+msgstr ""
+
+msgid "invalid float value"
+msgstr ""
+
+msgid "invalid integer value"
 msgstr ""
 
 msgid "is"
