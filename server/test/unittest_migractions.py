@@ -47,17 +47,24 @@ class MigrationCommandsTC(RepositoryBasedTC):
 
     def test_add_attribute_int(self):
         self.failIf('whatever' in self.schema)
-        paraordernum = self.mh.rqlexec('Any O WHERE X name "Note", RT name "para", RDEF from_entity X, RDEF relation_type RT, RDEF ordernum O')[0][0]
+        orderdict = dict(self.mh.rqlexec('Any RTN, O WHERE X name "Note", RDEF from_entity X, '
+                                         'RDEF relation_type RT, RDEF ordernum O, RT name RTN'))
         self.mh.cmd_add_attribute('Note', 'whatever')
         self.failUnless('whatever' in self.schema)
         self.assertEquals(self.schema['whatever'].subjects(), ('Note',))
         self.assertEquals(self.schema['whatever'].objects(), ('Int',))
-        paraordernum2 = self.mh.rqlexec('Any O WHERE X name "Note", RT name "para", RDEF from_entity X, RDEF relation_type RT, RDEF ordernum O')[0][0]
-        self.assertEquals(paraordernum2, paraordernum+1)
+        orderdict2 = dict(self.mh.rqlexec('Any RTN, O WHERE X name "Note", RDEF from_entity X, '
+                                          'RDEF relation_type RT, RDEF ordernum O, RT name RTN'))
+        whateverorder = migrschema['whatever'].rproperty('Note', 'Int', 'order')
+        for k, v in orderdict.iteritems():
+            if v >= whateverorder:
+                orderdict[k] = v+1
+        orderdict['whatever'] = whateverorder
+        self.assertDictEquals(orderdict, orderdict2)
         #self.assertEquals([r.type for r in self.schema['Note'].ordered_relations()],
         #                  ['modification_date', 'creation_date', 'owned_by',
         #                   'eid', 'ecrit_par', 'inline1', 'date', 'type',
-        #                   'whatever', 'para', 'in_basket'])
+        #                   'whatever', 'date', 'in_basket'])
         # NB: commit instead of rollback make following test fail with py2.5
         #     this sounds like a pysqlite/2.5 bug (the same eid is affected to
         #     two different entities)

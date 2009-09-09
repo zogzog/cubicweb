@@ -50,9 +50,9 @@ class Note(Para):
                                              'PE require_permission P, P name "add_note", '
                                              'P require_group G'),)}
 
+    whatever = Int()  # keep it before `date` for unittest_migraction.test_add_attribute_int
     date = Datetime()
     type = String(maxsize=1)
-    whatever = Int()
     mydate = Date(default='TODAY')
     shortpara = String(maxsize=64)
     ecrit_par = SubjectRelation('Personne', constraints=[RQLConstraint('S concerne A, O concerne A')])
