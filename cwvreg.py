@@ -138,7 +138,12 @@ class ETypeRegistry(CWRegistry):
             try:
                 objects = self[btype]
                 assert len(objects) == 1, objects
-                cls = objects[0]
+                if btype == etype:
+                    cls = objects[0]
+                else:
+                    # recurse to ensure issubclass(etype_class('Child'),
+                    #                              etype_class('Parent'))
+                    cls = self.etype_class(btype)
                 break
             except ObjectNotFound:
                 pass
