@@ -164,23 +164,28 @@ indexview_etype_section = {'EmailAddress': 'subobject',
 
 def init_autoform_section(rtag, sschema, rschema, oschema, role):
     if rtag.get(sschema, rschema, oschema, role) is None:
-        if role == 'subject':
-            card = rschema.rproperty(sschema, oschema, 'cardinality')[0]
-            composed = rschema.rproperty(sschema, oschema, 'composite') == 'object'
-        else:
-            card = rschema.rproperty(sschema, oschema, 'cardinality')[1]
-            composed = rschema.rproperty(sschema, oschema, 'composite') == 'subject'
-        if sschema.is_metadata(rschema):
+        if autoform_is_inlined.get(sschema, rschema, oschema, role):
+            section = 'generated'
+        elif sschema.is_metadata(rschema):
             section = 'metadata'
-        elif card in '1+':
-            if not rschema.is_final() and composed:
-                section = 'generated'
-            else:
-                section = 'primary'
-        elif rschema.is_final():
-            section = 'secondary'
         else:
-            section = 'generic'
+            if role == 'subject':
+                card = rschema.rproperty(sschema, oschema, 'cardinality')[0]
+                composed = rschema.rproperty(sschema, oschema, 'composite') == 'object'
+            else:
+                card = rschema.rproperty(sschema, oschema, 'cardinality')[1]
+                composed = rschema.rproperty(sschema, oschema, 'composite') == 'subject'
+            if card in '1+':
+                if not rschema.is_final() and composed:
+                    # XXX why? probably because we want it unlined, though this
+                    # is not the case by default
+                    section = 'generated'
+                else:
+                    section = 'primary'
+            elif rschema.is_final():
+                section = 'secondary'
+            else:
+                section = 'generic'
         rtag.tag_relation((sschema, rschema, oschema, role), section)
 
 autoform_section = RelationTags('autoform_section', init_autoform_section,
