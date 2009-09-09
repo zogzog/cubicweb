@@ -118,7 +118,7 @@ class ObjectNotFound(RegistryException):
 
 class NoSelectableObject(RegistryException):
     """some views with the given vid have been found but no
-    one is applyable to the result set
+    one is applicable to the result set
     """
 
 class UnknownProperty(RegistryException):

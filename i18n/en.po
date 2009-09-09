@@ -608,7 +608,9 @@ msgstr ""
 msgid "You can use any of the following substitutions in your text"
 msgstr ""
 
-msgid "You have no access to this view or it's not applyable to current data"
+msgid ""
+"You have no access to this view or it can not be used to display the current "
+"data."
 msgstr ""
 
 msgid ""
