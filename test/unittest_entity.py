@@ -132,7 +132,8 @@ class EntityTC(EnvBasedTC):
         seschema.subject_relation('evaluee').set_rproperty(seschema, Note.e_schema, 'cardinality', '1*')
         # testing basic fetch_attrs attribute
         self.assertEquals(Personne.fetch_rql(user),
-                          'Any X,AA,AB,AC ORDERBY AA ASC WHERE X is Personne, X nom AA, X prenom AB, X modification_date AC')
+                          'Any X,AA,AB,AC ORDERBY AA ASC '
+                          'WHERE X is Personne, X nom AA, X prenom AB, X modification_date AC')
         pfetch_attrs = Personne.fetch_attrs
         sfetch_attrs = Societe.fetch_attrs
         try:
@@ -142,18 +143,21 @@ class EntityTC(EnvBasedTC):
             # testing one non final relation
             Personne.fetch_attrs = ('nom', 'prenom', 'travaille')
             self.assertEquals(Personne.fetch_rql(user),
-                              'Any X,AA,AB,AC,AD ORDERBY AA ASC WHERE X is Personne, X nom AA, X prenom AB, X travaille AC, AC nom AD')
+                              'Any X,AA,AB,AC,AD ORDERBY AA ASC '
+                              'WHERE X is Personne, X nom AA, X prenom AB, X travaille AC?, AC nom AD')
             # testing two non final relations
             Personne.fetch_attrs = ('nom', 'prenom', 'travaille', 'evaluee')
             self.assertEquals(Personne.fetch_rql(user),
-                              'Any X,AA,AB,AC,AD,AE,AF ORDERBY AA ASC,AF DESC WHERE X is Personne, X nom AA, '
-                              'X prenom AB, X travaille AC, AC nom AD, X evaluee AE, AE modification_date AF')
+                              'Any X,AA,AB,AC,AD,AE,AF ORDERBY AA ASC,AF DESC '
+                              'WHERE X is Personne, X nom AA, X prenom AB, X travaille AC?, AC nom AD, '
+                              'X evaluee AE?, AE modification_date AF')
             # testing one non final relation with recursion
             Personne.fetch_attrs = ('nom', 'prenom', 'travaille')
             Societe.fetch_attrs = ('nom', 'evaluee')
             self.assertEquals(Personne.fetch_rql(user),
-                              'Any X,AA,AB,AC,AD,AE,AF ORDERBY AA ASC,AF DESC WHERE X is Personne, X nom AA, X prenom AB, '
-                              'X travaille AC, AC nom AD, AC evaluee AE, AE modification_date AF'
+                              'Any X,AA,AB,AC,AD,AE,AF ORDERBY AA ASC,AF DESC '
+                              'WHERE X is Personne, X nom AA, X prenom AB, X travaille AC?, AC nom AD, '
+                              'AC evaluee AE?, AE modification_date AF'
                               )
             # testing symetric relation
             Personne.fetch_attrs = ('nom', 'connait')
@@ -178,15 +182,16 @@ class EntityTC(EnvBasedTC):
         from cubicweb.entities import fetch_config
         Personne = self.vreg['etypes'].etype_class('Personne')
         Note = self.vreg['etypes'].etype_class('Note')
+        self.failUnless(issubclass(self.vreg['etypes'].etype_class('SubNote'), Note))
         Personne.fetch_attrs, Personne.fetch_order = fetch_config(('nom', 'type'))
         Note.fetch_attrs, Note.fetch_order = fetch_config(('type',))
-        aff = self.add_entity('Personne', nom=u'pouet')
-        self.assertEquals(aff.related_rql('evaluee'),
+        p = self.add_entity('Personne', nom=u'pouet')
+        self.assertEquals(p.related_rql('evaluee'),
                           'Any X,AA,AB ORDERBY AA ASC WHERE E eid %(x)s, E evaluee X, '
                           'X type AA, X modification_date AB')
         Personne.fetch_attrs, Personne.fetch_order = fetch_config(('nom', ))
         # XXX
-        self.assertEquals(aff.related_rql('evaluee'),
+        self.assertEquals(p.related_rql('evaluee'),
                           'Any X,AA ORDERBY Z DESC WHERE X modification_date Z, E eid %(x)s, E evaluee X, X modification_date AA')
 
     def test_entity_unrelated(self):
