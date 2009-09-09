@@ -122,6 +122,11 @@ The python drivers for posgtresql are to be found there::
 Please be careful to select the right python (2.5) and postgres (8.4)
 versions.
 
+Pyro enable remote access to cubicweb repository instances. Get it
+there::
+
+  http://sourceforge.net/projects/pyro/files/
+
 To access LDAP/Active directory directories, we need the python-ldap
 package. Windows binaries are available from::
 
