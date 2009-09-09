@@ -51,6 +51,7 @@ class TableView(AnyRsetView):
         """display a form to filter table's content. This should only
         occurs when a context eid is given
         """
+        self.req.add_css('cubicweb.facets.css')
         self.req.add_js( ('cubicweb.ajax.js', 'cubicweb.facets.js'))
         # drop False / None values from vidargs
         vidargs = dict((k, v) for k, v in vidargs.iteritems() if v)
@@ -138,7 +139,6 @@ class TableView(AnyRsetView):
                 actions += self.form_filter(divid, displaycols, displayfilter,
                                             displayactions)
         elif displayfilter:
-            req.add_css('cubicweb.facets.css')
             actions += self.show_hide_actions(divid, True)
         self.w(u'<div id="%s"' % divid)
         if displayactions:
