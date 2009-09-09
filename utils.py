@@ -114,7 +114,7 @@ if sys.version_info[:2] < (2, 5):
 else:
     from uuid import uuid4
     def make_uid(key):
-        return key + str(uuid4())
+        return str(key) + str(uuid4())
 
 def dump_class(cls, clsname):
     """create copy of a class by creating an empty class inheriting
