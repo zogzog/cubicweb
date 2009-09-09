@@ -24,35 +24,34 @@ class SQLiteTC(TestCase):
         self._cleanup()
 
     def test(self):
-        lock = threading.Lock()
-
+        lock1 = threading.Lock()
+        lock2 = threading.Lock()
+        
         def run_thread():
             cnx2 = get_connection('sqlite', database=self.sqlite_file)
-            lock.acquire()
+            lock1.acquire()
             cu = cnx2.cursor()
             cu.execute('SELECT name FROM toto')
             self.failIf(cu.fetchall())
             cnx2.commit()
-            lock.release()
-            time.sleep(0.1)
-            lock.acquire()
+            lock1.release()
+            lock2.acquire()
             cu.execute('SELECT name FROM toto')
             self.failUnless(cu.fetchall())
-            lock.release()
+            lock2.release()
 
         cnx1 = get_connection('sqlite', database=self.sqlite_file)
-        lock.acquire()
+        lock1.acquire()
+        lock2.acquire()
         thread = threading.Thread(target=run_thread)
         thread.start()
         cu = cnx1.cursor()
         cu.execute('SELECT name FROM toto')
-        lock.release()
-        time.sleep(0.1)
+        lock1.release()
         cnx1.commit()
-        lock.acquire()
         cu.execute("INSERT INTO toto(name) VALUES ('toto')")
         cnx1.commit()
-        lock.release()
+        lock2.release()
 
 if __name__ == '__main__':
     unittest_main()
