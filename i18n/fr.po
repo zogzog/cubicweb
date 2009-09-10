@@ -624,9 +624,10 @@ msgstr ""
 "Vous pouvez utiliser n'importe quelle substitution parmi la liste suivante "
 "dans le contenu de votre courriel."
 
-msgid "You have no access to this view or it's not applyable to current data"
-msgstr ""
-"Vous n'avez pas accès à cette vue ou elle ne s'applique pas aux données"
+msgid ""
+"You have no access to this view or it can not be used to display the current "
+"data."
+msgstr "Vous n'avez pas accès à cette vue ou elle ne peut pas afficher ces données."
 
 msgid ""
 "You're not authorized to access this page. If you think you should, please "
@@ -1721,11 +1722,12 @@ msgstr ""
 msgid "download"
 msgstr "télécharger"
 
+#, python-format
+msgid "download %s"
+msgstr "télécharger %s"
+
 msgid "download icon"
 msgstr "icône de téléchargement"
-
-msgid "download image"
-msgstr "image de téléchargement"
 
 msgid "download schema as owl"
 msgstr "télécharger le schéma OWL"
@@ -2140,6 +2142,12 @@ msgstr "action %r invalide"
 
 msgid "invalid date"
 msgstr "cette date n'est pas valide"
+
+msgid "invalid float value"
+msgstr "nombre flottant non valide"
+
+msgid "invalid integer value"
+msgstr "nombre entier non valide"
 
 msgid "is"
 msgstr "de type"
@@ -3199,3 +3207,11 @@ msgstr "vous avez été déconnecté"
 
 msgid "you should probably delete that property"
 msgstr "vous devriez probablement supprimer cette propriété"
+
+#~ msgid ""
+#~ "You have no access to this view or it's not applyable to current data"
+#~ msgstr ""
+#~ "Vous n'avez pas accès à cette vue ou elle ne s'applique pas aux données"
+
+#~ msgid "download image"
+#~ msgstr "image de téléchargement"

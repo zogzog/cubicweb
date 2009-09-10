@@ -83,10 +83,10 @@ function _parseDate(datestring, format) {
     var skip0 = new RegExp('^0*[0-9]+');
     var parsed = {};
     for (var i1=0,i2=0;i1<format.length;i1++,i2++) {
-	var c1 = format[i1];
-	var c2 = datestring[i2];
+	var c1 = format.charAt(i1);
+	var c2 = datestring.charAt(i2);
 	if (c1 == '%') {
-	    c1 = format[++i1];
+	    c1 = format.charAt(++i1);
 	    var data = _DATE_FORMAT_REGXES[c1].exec(datestring.substring(i2));
 	    if (!data.length) {
 		return null;

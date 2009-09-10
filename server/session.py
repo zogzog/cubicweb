@@ -81,7 +81,7 @@ class Session(RequestSessionMixIn):
     def hijack_user(self, user):
         """return a fake request/session using specified user"""
         session = Session(user, self.repo)
-        session._threaddata = self._threaddata
+        session._threaddata = self.actual_session()._threaddata
         return session
 
     def _change_relation(self, cb, fromeid, rtype, toeid):
