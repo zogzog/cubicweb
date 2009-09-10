@@ -390,7 +390,7 @@ this entity type is as follow : ::
 	require_group = SubjectRelation('CWGroup', cardinality='+*',
 					description=_('groups to which the permission is granted'))
 	require_state = SubjectRelation('State',
-				    description=_("entity'state in which the permission is applyable"))
+                                        description=_("entity's state in which the permission is applicable"))
 	# can be used on any entity
 	require_permission = ObjectRelation('**', cardinality='*1', composite='subject',
 					    description=_("link a permission to the entity. This "
