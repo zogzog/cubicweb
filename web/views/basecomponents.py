@@ -148,7 +148,7 @@ class ApplicationName(component.Component):
         title = self.req.property_value('ui.site-title')
         if title:
             self.w(u'<span id="appliName"><a href="%s">%s</a></span>' % (
-                self.req.base_url(), title))
+                self.req.base_url(), xml_escape(title)))
 
 
 class SeeAlsoVComponent(component.RelatedObjectsVComponent):
