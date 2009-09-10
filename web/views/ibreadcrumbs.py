@@ -109,4 +109,4 @@ class BreadCrumbTextView(EntityView):
     def cell_call(self, row, col):
         entity = self.rset.get_entity(row, col)
         textsize = self.req.property_value('navigation.short-line-size')
-        self.w(uilib.cut(entity.dc_title(), textsize))
+        self.w(xml_escape(uilib.cut(entity.dc_title(), textsize)))
