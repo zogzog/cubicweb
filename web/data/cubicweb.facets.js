@@ -66,6 +66,7 @@ function buildRQL(divid, vid, paginate, vidargs) {
 	extraparams['divid'] = divid;
 	copyParam(zipped, extraparams, 'divid');
 	copyParam(zipped, extraparams, 'subvid');
+	copyParam(zipped, extraparams, 'fromformfilter');
 	// paginate used to know if the filter box is acting, in which case we
 	// want to reload action box to match current selection (we don't want
 	// this from a table filter)
@@ -130,9 +131,10 @@ function initFacetBoxEvents(root) {
 		});
 		facet.find('div.facetCheckBox').click(function () {
 		    var $this = jQuery(this);
-		    if ($this.hasClass('facetValueDisabled')){
-		     	    return
-		    }
+		    // NOTE : add test on the facet operator (i.e. OR, AND)
+		    // if ($this.hasClass('facetValueDisabled')){
+		    //  	    return
+		    // }
 		    if ($this.hasClass('facetValueSelected')) {
 			$this.removeClass('facetValueSelected');
 			$this.find('img').each(function (i){

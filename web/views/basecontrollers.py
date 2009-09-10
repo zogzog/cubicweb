@@ -129,7 +129,8 @@ class ViewController(Controller):
             if rset:
                 req.set_message(req._("The view %s can not be applied to this query") % vid)
             else:
-                req.set_message(req._("You have no access to this view or it's not applyable to current data"))
+                req.set_message(req._("You have no access to this view or it can not "
+                                      "be used to display the current data."))
             self.warning("the view %s can not be applied to this query", vid)
             vid = vid_from_rset(req, rset, self.schema)
             view = self.vreg['views'].select(vid, req, rset=rset)

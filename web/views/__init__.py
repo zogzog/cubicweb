@@ -8,8 +8,8 @@
 __docformat__ = "restructuredtext en"
 
 import os
+import sys
 import tempfile
-
 from rql import nodes
 
 
@@ -110,13 +110,9 @@ class TmpFileViewMixin(object):
         self.cell_call()
 
     def cell_call(self, row=0, col=0):
-        self.row, self.col = row, col # in case one need it
-        _, tmpfile = tempfile.mkstemp('.png')
-        try:
-            self._generate(tmpfile)
-            self.w(open(tmpfile).read())
-        finally:
-            try:
-                os.unlink(tmpfile)
-            except Exception, ex:
-                self.warning('cant delete %s: %s', tmpfile, ex)
+        self.row, self.col = row, col # in case one needs it
+        fd, tmpfile = tempfile.mkstemp('.png')
+        os.close(fd)
+        self._generate(tmpfile)
+        self.w(open(tmpfile, 'rb').read())
+        os.unlink(tmpfile)

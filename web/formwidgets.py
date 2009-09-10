@@ -430,8 +430,9 @@ class AddComboBoxWidget(Select):
         # XXX entity form specific
         entity = form.edited_entity
         attrs['cubicweb:etype_to'] = entity.e_schema
-        etype_from = entity.e_schema.subject_relation(self.name).objects(entity.e_schema)[0]
+        etype_from = entity.e_schema.subject_relation(field.name).objects(entity.e_schema)[0]
         attrs['cubicweb:etype_from'] = etype_from
+        return name, values, attrs
 
     def render(self, form, field, renderer):
         return super(AddComboBoxWidget, self).render(form, field, renderer) + u'''

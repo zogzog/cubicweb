@@ -103,7 +103,7 @@ jQuery("#%(figid)s").bind("plothover", onPlotHover);
 
     def _render(self, req, width=500, height=400):
         # XXX IE requires excanvas.js
-        req.add_js( ('jquery.flot.js', 'cubicweb.flot.js') )
+        req.add_js( ('jquery.flot.js', 'cubicweb.flot.js', 'excanvas.js') )
         figid = u'figure%s' % make_uid('foo')
         plotdefs = []
         plotdata = []

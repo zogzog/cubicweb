@@ -7,8 +7,11 @@
 """
 __docformat__ = "restructuredtext en"
 
+from logilab.mtconverter import xml_escape
+
 import locale
 from md5 import md5
+import sys
 from datetime import datetime, timedelta, date
 from time import time, mktime
 from random import randint, seed
@@ -101,11 +104,17 @@ def ustrftime(date, fmt='%Y-%m-%d'):
     encoding = locale.getpreferredencoding(do_setlocale=False) or 'UTF-8'
     return unicode(date.strftime(str(fmt)), encoding)
 
-def make_uid(key):
-    """forge a unique identifier"""
-    msg = str(key) + "%.10f" % time() + str(randint(0, 1000000))
-    return md5(msg).hexdigest()
 
+if sys.version_info[:2] < (2, 5):
+    def make_uid(key):
+        """forge a unique identifier
+        not that unique on win32"""
+        msg = str(key) + "%.10f" % time() + str(randint(0, 1000000))
+        return md5(msg).hexdigest()
+else:
+    from uuid import uuid4
+    def make_uid(key):
+        return str(key) + str(uuid4())
 
 def dump_class(cls, clsname):
     """create copy of a class by creating an empty class inheriting
@@ -262,17 +271,18 @@ class HTMLHead(UStringIO):
         # 2/ css files
         for cssfile, media in self.cssfiles:
             w(u'<link rel="stylesheet" type="text/css" media="%s" href="%s"/>\n' %
-              (media, cssfile))
+              (media, xml_escape(cssfile)))
         # 3/ ie css if necessary
         if self.ie_cssfiles:
             w(u'<!--[if lt IE 8]>\n')
             for cssfile, media in self.ie_cssfiles:
                 w(u'<link rel="stylesheet" type="text/css" media="%s" href="%s"/>\n' %
-                  (media, cssfile))
+                  (media, xml_escape(cssfile)))
             w(u'<![endif]--> \n')
         # 4/ js files
         for jsfile in self.jsfiles:
-            w(u'<script type="text/javascript" src="%s"></script>\n' % jsfile)
+            w(u'<script type="text/javascript" src="%s"></script>\n' %
+              xml_escape(jsfile))
         # 5/ post inlined scripts (i.e. scripts depending on other JS files)
         if self.post_inlined_scripts:
             w(u'<script type="text/javascript">\n')
@@ -305,7 +315,8 @@ class HTMLStream(object):
         self.htmltag = u'<html xmlns="http://www.w3.org/1999/xhtml" ' \
                        'xmlns:cubicweb="http://www.logilab.org/2008/cubicweb" ' \
                        'xml:lang="%s" lang="%s">' % (req.lang, req.lang)
-
+        # keep main_stream's reference on req for easier text/html demoting
+        req.main_stream = self
 
     def write(self, data):
         """StringIO interface: this method will be assigned to self.w

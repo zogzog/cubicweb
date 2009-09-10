@@ -180,14 +180,16 @@ class CubicWebTC(TestCase):
         cls.admlogin = unicode(source['db-user'])
         cls.admpassword = source['db-password']
         # uncomment the line below if you want rql queries to be logged
-        #config.global_set_option('query-log-file', '/tmp/test_rql_log.' + `os.getpid()`)
+        #config.global_set_option('query-log-file',
+        #                         '/tmp/test_rql_log.' + `os.getpid()`)
         config.global_set_option('log-file', None)
         # set default-dest-addrs to a dumb email address to avoid mailbox or
         # mail queue pollution
         config.global_set_option('default-dest-addrs', ['whatever'])
         try:
             send_to =  '%s@logilab.fr' % os.getlogin()
-        except OSError:
+            # AttributeError since getlogin not available under all platforms
+        except (OSError, AttributeError):
             send_to =  '%s@logilab.fr' % (os.environ.get('USER')
                                           or os.environ.get('USERNAME')
                                           or os.environ.get('LOGNAME'))

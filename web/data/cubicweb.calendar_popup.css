@@ -24,16 +24,15 @@ div.calpopup {
 table.popupCalendar {
   text-align: center;
   border: 1px solid #ccc;
-  z-index: 100;
+  z-index: 400;
 }
 
-
 table.popupCalendar th {
+  border:1px solid #ccc;
   background : #d9d9c1;
   color: black;
   padding: 2px 3px;
 }
-
 
 table.popupCalendar th.calTitle,
 table.popupCalendar th.prev,
@@ -51,12 +50,12 @@ table.popupCalendar th.next {
   padding: 2px 0px;
 }
 
-
 table.popupCalendar td {
   width: 2em;
   height: 2em;
   background : #f6f5e1;
   font-size: 85%;
+  border:1px solid #ccc;
 }
 
 table.popupCalendar td.today {

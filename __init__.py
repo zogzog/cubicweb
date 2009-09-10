@@ -55,8 +55,7 @@ class Binary(StringIO):
                "Binary objects must use raw strings, not %s" % data.__class__
         StringIO.write(self, data)
 
-
-# XXX 2.45 is allowing nicer entity type names, use this map for bw compat
+# use this dictionary for renaming of entity types while keeping bw compath
 ETYPE_NAME_MAP = {# 3.2 migration
                   'ECache': 'CWCache',
                   'EUser': 'CWUser',
@@ -69,31 +68,19 @@ ETYPE_NAME_MAP = {# 3.2 migration
                   'EConstraintType': 'CWConstraintType',
                   'EConstraint': 'CWConstraint',
                   'EPermission': 'CWPermission',
-                   # 2.45 migration
-                  'Eetype': 'CWEType',
-                  'Ertype': 'CWRType',
-                  'Efrdef': 'CWAttribute',
-                  'Enfrdef': 'CWRelation',
-                  'Econstraint': 'CWConstraint',
-                  'Econstrainttype': 'CWConstraintType',
-                  'Epermission': 'CWPermission',
-                  'Egroup': 'CWGroup',
-                  'Euser': 'CWUser',
-                  'Eproperty': 'CWProperty',
-                  'Emailaddress': 'EmailAddress',
-                  'Rqlexpression': 'RQLExpression',
-                  'Trinfo': 'TrInfo',
                   }
 
 
 
 # XXX cubic web cube migration map
 CW_MIGRATION_MAP = {'erudi': 'cubicweb',
-
                     'eaddressbook': 'addressbook',
                     'ebasket': 'basket',
                     'eblog': 'blog',
                     'ebook': 'book',
+                    'eclassschemes': 'keyword',
+                    'eclassfolders': 'folder',
+                    'eclasstags': 'tag',
                     'ecomment': 'comment',
                     'ecompany': 'company',
                     'econference':  'conference',
@@ -113,20 +100,6 @@ CW_MIGRATION_MAP = {'erudi': 'cubicweb',
                     'ezone': 'zone',
                     'i18ncontent': 'i18ncontent',
                     'svnfile': 'vcsfile',
-
-                    'eclassschemes': 'keyword',
-                    'eclassfolders': 'folder',
-                    'eclasstags': 'tag',
-
-                    'jpl': 'jpl',
-                    'jplintra': 'jplintra',
-                    'jplextra': 'jplextra',
-                    'jplorg': 'jplorg',
-                    'jplrecia': 'jplrecia',
-                    'crm': 'crm',
-                    'agueol': 'agueol',
-                    'docaster': 'docaster',
-                    'asteretud': 'asteretud',
                     }
 
 def neg_role(role):

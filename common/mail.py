@@ -21,6 +21,7 @@ except ImportError:
         return 'XXX'
 
 from cubicweb.view import EntityView
+from cubicweb.entity import Entity
 
 def header(ustring):
     return Header(ustring.encode('UTF-8'), 'UTF-8')
@@ -176,28 +177,38 @@ class NotificationView(EntityView):
         else:
             refs = ()
             msgid = None
-        userdata = self.req.user_data()
-        origlang = self.req.lang
-        for emailaddr, lang in recipients:
-            self.req.set_language(lang)
+        req = self.req
+        self.user_data = req.user_data()
+        origlang = req.lang
+        for something in recipients:
+            if isinstance(something, Entity):
+                # hi-jack self.req to get a session for the returned user
+                self.req = self.req.hijack_user(something)
+                emailaddr = something.get_email()
+            else:
+                emailaddr, lang = something
+                self.req.set_language(lang)
             # since the same view (eg self) may be called multiple time and we
             # need a fresh stream at each iteration, reset it explicitly
             self.w = None
             # XXX call render before subject to set .row/.col attributes on the
             #     view
-            content = self.render(row=0, col=0, **kwargs)
-            subject = self.subject()
-            msg = format_mail(userdata, [emailaddr], content, subject,
+            try:
+                content = self.render(row=0, col=0, **kwargs)
+                subject = self.subject()
+            except SkipEmail:
+                continue
+            msg = format_mail(self.user_data, [emailaddr], content, subject,
                               config=self.config, msgid=msgid, references=refs)
             yield [emailaddr], msg
         # restore language
-        self.req.set_language(origlang)
+        req.set_language(origlang)
 
     # recipients / email sending ###############################################
 
     def recipients(self):
-        """return a list of 2-uple (email, language) to who this email should be
-        sent
+        """return a list of either 2-uple (email, language) or user entity to
+        who this email should be sent
         """
         finder = self.vreg['components'].select('recipients_finder', self.req,
                                                 rset=self.rset,
@@ -230,7 +241,7 @@ class NotificationView(EntityView):
         subject = self.req._(self.message)
         etype = entity.dc_type()
         eid = entity.eid
-        login = self.user_login()
+        login = self.user_data['login']
         return self.req._('%(subject)s %(etype)s #%(eid)s (%(login)s)') % locals()
 
     def context(self, **kwargs):
@@ -238,17 +249,13 @@ class NotificationView(EntityView):
         for key, val in kwargs.iteritems():
             if val and isinstance(val, unicode) and val.strip():
                kwargs[key] = self.req._(val)
-        kwargs.update({'user': self.user_login(),
+        kwargs.update({'user': self.user_data['login'],
                        'eid': entity.eid,
                        'etype': entity.dc_type(),
                        'url': entity.absolute_url(),
                        'title': entity.dc_long_title(),})
         return kwargs
 
-    def user_login(self):
-        try:
-            # if req is actually a session (we are on the server side), and we
-            # have to prevent nested internal session
-            return self.req.actual_session().user.login
-        except AttributeError:
-            return self.req.user.login
+
+class SkipEmail(Exception):
+    """raise this if you decide to skip an email during its generation"""

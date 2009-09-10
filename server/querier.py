@@ -608,6 +608,8 @@ class QuerierHelper(object):
                     # return an empty result instead of raising UnknownEid
                     return empty_rset(session, rql, args)
                 cachekey.append(etype)
+                # ensure eid is correctly typed in args
+                args[key] = typed_eid(args[key])
             cachekey = tuple(cachekey)
         else:
             cachekey = rql

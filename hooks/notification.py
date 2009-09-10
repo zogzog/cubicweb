@@ -98,6 +98,9 @@ class SomethingChangedHook(NotificationHook):
               'after_add_entity', 'before_update_entity')
 
     def __call__(self):
+        # XXX use proper selectors
+        if self._cw.is_super_session or self._cw.repo.config.repairing:
+            return # ignore changes triggered by hooks or maintainance shell
         dest = self._cw.vreg.config['supervising-addrs']
         if not dest: # no supervisors, don't do this for nothing...
             return

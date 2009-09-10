@@ -576,14 +576,16 @@ class Entity(AppObject, dict):
         self.set_related_cache(rtype, role, rset)
         return self.related(rtype, role, limit, entities)
 
-    def related_rql(self, rtype, role='subject'):
+    def related_rql(self, rtype, role='subject', targettypes=None):
         rschema = self.req.vreg.schema[rtype]
         if role == 'subject':
-            targettypes = rschema.objects(self.e_schema)
+            if targettypes is None:
+                targettypes = rschema.objects(self.e_schema)
             restriction = 'E eid %%(x)s, E %s X' % rtype
             card = greater_card(rschema, (self.e_schema,), targettypes, 0)
         else:
-            targettypes = rschema.subjects(self.e_schema)
+            if targettypes is None:
+                targettypes = rschema.subjects(self.e_schema)
             restriction = 'E eid %%(x)s, X %s E' % rtype
             card = greater_card(rschema, targettypes, (self.e_schema,), 1)
         if len(targettypes) > 1:

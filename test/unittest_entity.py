@@ -182,15 +182,16 @@ class EntityTC(CubicWebTC):
         from cubicweb.entities import fetch_config
         Personne = self.vreg['etypes'].etype_class('Personne')
         Note = self.vreg['etypes'].etype_class('Note')
+        self.failUnless(issubclass(self.vreg['etypes'].etype_class('SubNote'), Note))
         Personne.fetch_attrs, Personne.fetch_order = fetch_config(('nom', 'type'))
         Note.fetch_attrs, Note.fetch_order = fetch_config(('type',))
-        aff = self.add_entity('Personne', nom=u'pouet')
-        self.assertEquals(aff.related_rql('evaluee'),
+        p = self.add_entity('Personne', nom=u'pouet')
+        self.assertEquals(p.related_rql('evaluee'),
                           'Any X,AA,AB ORDERBY AA ASC WHERE E eid %(x)s, E evaluee X, '
                           'X type AA, X modification_date AB')
         Personne.fetch_attrs, Personne.fetch_order = fetch_config(('nom', ))
         # XXX
-        self.assertEquals(aff.related_rql('evaluee'),
+        self.assertEquals(p.related_rql('evaluee'),
                           'Any X,AA ORDERBY Z DESC WHERE X modification_date Z, E eid %(x)s, E evaluee X, X modification_date AA')
 
     def test_entity_unrelated(self):

@@ -27,7 +27,7 @@ from cubicweb.dbapi import DBAPIRequest
 from cubicweb.common.mail import header
 from cubicweb.common.uilib import remove_html_tags
 from cubicweb.utils import SizeConstrainedList, HTMLHead
-from cubicweb.view import STRICT_DOCTYPE
+from cubicweb.view import STRICT_DOCTYPE, TRANSITIONAL_DOCTYPE_NOEXT
 from cubicweb.web import (INTERNAL_FIELD_VALUE, LOGGER, NothingToEdit,
                           RequestError, StatusResponse)
 
@@ -688,6 +688,16 @@ class CubicWebRequestBase(DBAPIRequest):
         mx date time value (GMT), else return None
         """
         raise NotImplementedError()
+
+    def demote_to_html(self):
+        """helper method to dynamically set request content type to text/html
+
+        The global doctype and xmldec must also be changed otherwise the browser
+        will display '<[' at the beginning of the page
+        """
+        self.set_content_type('text/html')
+        self.main_stream.doctype = TRANSITIONAL_DOCTYPE_NOEXT
+        self.main_stream.xmldecl = u''
 
     # page data management ####################################################
 

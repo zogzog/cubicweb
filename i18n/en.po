@@ -608,7 +608,9 @@ msgstr ""
 msgid "You can use any of the following substitutions in your text"
 msgstr ""
 
-msgid "You have no access to this view or it's not applyable to current data"
+msgid ""
+"You have no access to this view or it can not be used to display the current "
+"data."
 msgstr ""
 
 msgid ""
@@ -1646,10 +1648,11 @@ msgstr ""
 msgid "download"
 msgstr ""
 
-msgid "download icon"
+#, python-format
+msgid "download %s"
 msgstr ""
 
-msgid "download image"
+msgid "download icon"
 msgstr ""
 
 msgid "download schema as owl"
@@ -2050,6 +2053,12 @@ msgid "invalid action %r"
 msgstr ""
 
 msgid "invalid date"
+msgstr ""
+
+msgid "invalid float value"
+msgstr ""
+
+msgid "invalid integer value"
 msgstr ""
 
 msgid "is"

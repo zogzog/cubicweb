@@ -213,6 +213,11 @@ class QuerierTC(BaseQuerierTC):
         # should return an empty result set
         self.failIf(self.execute('Any X WHERE X eid 99999999'))
 
+    def test_typed_eid(self):
+        # should return an empty result set
+        rset = self.execute('Any X WHERE X eid %(x)s', {'x': '1'}, 'x')
+        self.assertIsInstance(rset[0][0], (int, long))
+
     def test_bytes_storage(self):
         feid = self.execute('INSERT File X: X name "foo.pdf", X data_format "text/plain", X data %(data)s',
                             {'data': Binary("xxx")})[0][0]

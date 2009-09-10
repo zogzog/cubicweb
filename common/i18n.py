@@ -9,6 +9,7 @@ __docformat__ = "restructuredtext en"
 
 import re
 import os
+import sys
 from os.path import join, basename, splitext, exists
 from glob import glob
 
@@ -44,9 +45,13 @@ def execute(cmd):
     status != 0
     """
     print cmd.replace(os.getcwd() + os.sep, '')
-    status = os.system(cmd)
+    if sys.platform == 'win32':
+        from subprocess import call
+    else:
+        call = os.system
+    status = call(cmd)
     if status != 0:
-        raise Exception()
+        raise Exception('status = %s' % status)
 
 
 def available_catalogs(i18ndir=None):
@@ -74,15 +79,15 @@ def compile_i18n_catalogs(sourcedirs, destdir, langs):
         mergedpo = join(destdir, '%s_merged.po' % lang)
         try:
             # merge instance/cubes messages catalogs with the stdlib's one
-            execute('msgcat --use-first --sort-output --strict %s > %s'
-                    % (' '.join(pofiles), mergedpo))
-            # make sure the .mo file is writeable and compile with *msgfmt*
+            execute('msgcat --use-first --sort-output --strict -o "%s" %s'
+                    % (mergedpo, ' '.join('"%s"' % f for f in pofiles)))
+            # make sure the .mo file is writeable and compiles with *msgfmt*
             applmo = join(destdir, lang, 'LC_MESSAGES', 'cubicweb.mo')
             try:
                 ensure_fs_mode(applmo)
             except OSError:
                 pass # suppose not exists
-            execute('msgfmt %s -o %s' % (mergedpo, applmo))
+            execute('msgfmt "%s" -o "%s"' % (mergedpo, applmo))
         except Exception, ex:
             errors.append('while handling language %s: %s' % (lang, ex))
         try:

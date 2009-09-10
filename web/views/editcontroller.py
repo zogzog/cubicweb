@@ -191,7 +191,22 @@ class EditController(ViewController):
             return
         attrtype = rschema.objects(entity.e_schema)[0].type
         # on checkbox or selection, the field may not be in params
-        if attrtype == 'Boolean':
+        # NOTE: raising ValidationError here is not a good solution because
+        #       we can't gather all errors at once. Hopefully, the new 3.6.x
+        #       form handling will fix that
+        if value and attrtype == 'Int':
+            try:
+                value = int(value)
+            except ValueError:
+                raise ValidationError(entity.eid,
+                                      {attr: self.req._("invalid integer value")})
+        elif value and attrtype == 'Float':
+            try:
+                value = float(value)
+            except ValueError:
+                raise ValidationError(entity.eid,
+                                      {attr: self.req._("invalid float value")})
+        elif attrtype == 'Boolean':
             value = bool(value)
         elif attrtype == 'Decimal':
             value = Decimal(value)
