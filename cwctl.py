@@ -675,7 +675,7 @@ given, appropriate sources for migration will be automatically selected \
         print
         print '-> instance migrated.'
         if not (cwcfg.mode == 'dev' or self.config.nostartstop):
-            StartCommand().start_instance(appid)
+            StartInstanceCommand().start_instance(appid)
         print
 
 
