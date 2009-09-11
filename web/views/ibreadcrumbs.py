@@ -16,14 +16,8 @@ from cubicweb.selectors import (one_line_rset, implements, one_etype_rset,
 from cubicweb.view import EntityView, Component
 # don't use AnyEntity since this may cause bug with isinstance() due to reloading
 from cubicweb.entity import Entity
-from cubicweb.common.uilib import cut
+from cubicweb.common import tags, uilib
 
-
-def bc_title(entity):
-    textsize = entity.req.property_value('navigation.short-line-size')
-    return xml_escape(cut(entity.dc_title(), textsize))
-
-# XXX only provides the component version
 
 class BreadCrumbEntityVComponent(Component):
     id = 'breadcrumbs'
@@ -38,7 +32,7 @@ class BreadCrumbEntityVComponent(Component):
     separator = u'&#160;&gt;&#160;'
 
     def call(self, view=None, first_separator=True):
-        entity = self.entity(0)
+        entity = self.rset.get_entity(0, 0)
         path = entity.breadcrumbs(view)
         if path:
             self.w(u'<span id="breadcrumbs" class="pathbar">')
@@ -62,17 +56,17 @@ class BreadCrumbEntityVComponent(Component):
     def wpath_part(self, part, contextentity, last=False):
         if isinstance(part, Entity):
             if last and part.eid == contextentity.eid:
-                self.w(bc_title(part))
+                self.w(xml_escape(part.view('breadcrumbtext')))
             else:
-                part.view('breadcrumbs', w=self.w)
+                self.w(part.view('breadcrumbs'))
         elif isinstance(part, tuple):
             url, title = part
             textsize = self.req.property_value('navigation.short-line-size')
             self.w(u'<a href="%s">%s</a>' % (
-                xml_escape(url), xml_escape(cut(title, textsize))))
+                xml_escape(url), xml_escape(uilib.cut(title, textsize))))
         else:
             textsize = self.req.property_value('navigation.short-line-size')
-            self.w(cut(unicode(part), textsize))
+            self.w(uilib.cut(unicode(part), textsize))
 
 
 class BreadCrumbETypeVComponent(BreadCrumbEntityVComponent):
@@ -103,7 +97,17 @@ class BreadCrumbView(EntityView):
     id = 'breadcrumbs'
 
     def cell_call(self, row, col):
-        entity = self.entity(row, col)
-        desc = xml_escape(cut(entity.dc_description(), 50))
-        self.w(u'<a href="%s" title="%s">%s</a>' % (
-            xml_escape(entity.absolute_url()), desc, bc_title(entity)))
+        entity = self.rset.get_entity(row, col)
+        desc = xml_escape(uilib.cut(entity.dc_description(), 50))
+        # XXX remember camember : tags.a autoescapes !
+        self.w(tags.a(entity.view('breadcrumbtext'),
+                      href=entity.absolute_url(), title=desc))
+
+
+class BreadCrumbTextView(EntityView):
+    id = 'breadcrumbtext'
+
+    def cell_call(self, row, col):
+        entity = self.rset.get_entity(row, col)
+        textsize = self.req.property_value('navigation.short-line-size')
+        self.w(uilib.cut(entity.dc_title(), textsize))
