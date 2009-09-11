@@ -130,19 +130,23 @@ class ETypeRegistry(CWRegistry):
         baseschemas = [eschema] + eschema.ancestors()
         # browse ancestors from most specific to most generic and try to find an
         # associated custom entity class
+        cls = None
         for baseschema in baseschemas:
             try:
                 btype = ETYPE_NAME_MAP[baseschema]
             except KeyError:
                 btype = str(baseschema)
-            try:
-                objects = self[btype]
-                assert len(objects) == 1, objects
-                cls = objects[0]
-                break
-            except ObjectNotFound:
-                pass
-        else:
+            if cls is None:
+                try:
+                    objects = self[btype]
+                    assert len(objects) == 1, objects
+                    cls = objects[0]
+                except ObjectNotFound:
+                    pass
+            else:
+                # ensure parent classes are built first
+                self.etype_class(btype)
+        if cls is None:
             # no entity class for any of the ancestors, fallback to the default
             # one
             objects = self['Any']

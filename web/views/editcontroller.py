@@ -194,19 +194,7 @@ class EditController(ViewController):
         # NOTE: raising ValidationError here is not a good solution because
         #       we can't gather all errors at once. Hopefully, the new 3.6.x
         #       form handling will fix that
-        if attrtype == 'Int':
-            try:
-                value = int(value)
-            except ValueError:
-                raise ValidationError(entity.eid,
-                                      {attr: self.req._("invalid integer value")})
-        elif attrtype == 'Float':
-            try:
-                value = float(value)
-            except ValueError:
-                raise ValidationError(entity.eid,
-                                      {attr: self.req._("invalid float value")})
-        elif attrtype == 'Boolean':
+        if attrtype == 'Boolean':
             value = bool(value)
         elif attrtype == 'Decimal':
             value = Decimal(value)
@@ -248,6 +236,18 @@ class EditController(ViewController):
                 # no specified value, skip
                 return
         elif value is not None:
+            if attrtype == 'Int':
+                try:
+                    value = int(value)
+                except ValueError:
+                    raise ValidationError(entity.eid,
+                                          {attr: self.req._("invalid integer value")})
+            elif attrtype == 'Float':
+                try:
+                    value = float(value)
+                except ValueError:
+                    raise ValidationError(entity.eid,
+                                          {attr: self.req._("invalid float value")})
             if attrtype in ('Date', 'Datetime', 'Time'):
                 try:
                     value = self.parse_datetime(value, attrtype)

@@ -625,8 +625,10 @@ msgstr ""
 "Puede realizar cualquiera de las siguientes sustituciones en el contenido de "
 "su email."
 
-msgid "You have no access to this view or it's not applyable to current data"
-msgstr "No tiene acceso a esta vista o No es aplicable a los datos actuales"
+msgid ""
+"You have no access to this view or it can not be used to display the current "
+"data."
+msgstr "No tiene acceso a esta vista o No se puede utilizare para los datos actuales."
 
 msgid ""
 "You're not authorized to access this page. If you think you should, please "
@@ -1708,11 +1710,12 @@ msgstr ""
 msgid "download"
 msgstr "Descargar"
 
+#, python-format
+msgid "download %s"
+msgstr ""
+
 msgid "download icon"
 msgstr "ícono de descarga"
-
-msgid "download image"
-msgstr ""
 
 msgid "download schema as owl"
 msgstr "Descargar esquema en OWL"
@@ -2127,6 +2130,12 @@ msgstr "Acción %r invalida"
 
 msgid "invalid date"
 msgstr "Esta fecha no es válida"
+
+msgid "invalid float value"
+msgstr ""
+
+msgid "invalid integer value"
+msgstr ""
 
 msgid "is"
 msgstr "es"
@@ -3183,3 +3192,7 @@ msgstr "ha terminado la sesion"
 
 msgid "you should probably delete that property"
 msgstr "deberia probablamente suprimir esta propriedad"
+
+#~ msgid ""
+#~ "You have no access to this view or it's not applyable to current data"
+#~ msgstr "No tiene acceso a esta vista o No es aplicable a los datos actuales"
