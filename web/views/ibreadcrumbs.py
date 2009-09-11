@@ -56,9 +56,9 @@ class BreadCrumbEntityVComponent(Component):
     def wpath_part(self, part, contextentity, last=False):
         if isinstance(part, Entity):
             if last and part.eid == contextentity.eid:
-                part.view('breadcrumbtext', w=self.w)
+                self.w(xml_escape(part.view('breadcrumbtext')))
             else:
-                part.view('breadcrumbs', w=self.w)
+                self.w(part.view('breadcrumbs'))
         elif isinstance(part, tuple):
             url, title = part
             textsize = self.req.property_value('navigation.short-line-size')
@@ -99,8 +99,9 @@ class BreadCrumbView(EntityView):
     def cell_call(self, row, col):
         entity = self.rset.get_entity(row, col)
         desc = xml_escape(uilib.cut(entity.dc_description(), 50))
-        self.w(tags.a(entity.view('breadcrumbtext'), href=entity.absolute_url(),
-                      title=desc))
+        # XXX remember camember : tags.a autoescapes !
+        self.w(tags.a(entity.view('breadcrumbtext'),
+                      href=entity.absolute_url(), title=desc))
 
 
 class BreadCrumbTextView(EntityView):

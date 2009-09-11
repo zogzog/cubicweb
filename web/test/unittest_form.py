@@ -54,6 +54,7 @@ class EntityFieldsFormTC(CubicWebTC):
         unrelated = [reid for rview, reid in form2.object_relation_vocabulary('tags')]
         self.failIf(t.eid in unrelated, unrelated)
 
+
     def test_form_field_vocabulary_new_entity(self):
         e = self.vreg['etypes'].etype_class('CWUser')(self.request())
         form = EntityFieldsForm(e.req, None, entity=e)

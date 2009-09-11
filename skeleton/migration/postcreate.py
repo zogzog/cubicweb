@@ -1,4 +1,4 @@
-# postcreate script. You could setup a workflow here for example
+# postcreate script. You could setup site properties or a workflow here for example
 """
 
 :organization: Logilab
@@ -6,4 +6,7 @@
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
 :license: GNU Lesser General Public License, v2.1 - http://www.gnu.org/licenses
 """
+
+# Example of site property change
+#set_property('ui.site-title', "<sitename>")
 

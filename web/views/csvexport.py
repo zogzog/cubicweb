@@ -51,7 +51,7 @@ class CSVRsetView(CSVMixIn, AnyRsetView):
                                         row=rowindex, col=colindex)
                 else:
                     content = self.view('final', rset,
-                                        displaytime=True, format='text/plain',
+                                        format='text/plain',
                                         row=rowindex, col=colindex)
                 csvrow.append(content)
             writer.writerow(csvrow)

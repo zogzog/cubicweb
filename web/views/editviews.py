@@ -198,9 +198,9 @@ class EditableFinalView(FinalView):
     """same as FinalView but enables inplace-edition when possible"""
     id = 'editable-final'
 
-    def cell_call(self, row, col, props=None, displaytime=False):
+    def cell_call(self, row, col, props=None):
         entity, rtype = self.rset.related_entity(row, col)
         if entity is not None:
             self.w(entity.view('reledit', rtype=rtype))
         else:
-            super(EditableFinalView, self).cell_call(row, col, props, displaytime)
+            super(EditableFinalView, self).cell_call(row, col, props)

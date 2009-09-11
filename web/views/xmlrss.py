@@ -95,8 +95,8 @@ class XMLRsetView(AnyRsetView):
                     val = self.view('textincontext', rset,
                                     row=rowindex, col=colindex)
                 else:
-                    val = self.view('final', rset, displaytime=True,
-                                    row=rowindex, col=colindex, format='text/plain')
+                    val = self.view('final', rset, row=rowindex,
+                                    col=colindex, format='text/plain')
                 w(simple_sgml_tag(tag, val, **attrs))
             w(u' </row>\n')
         w(u'</%s>\n' % self.xml_root)

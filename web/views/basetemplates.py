@@ -479,8 +479,12 @@ class LogFormTemplate(View):
         self.req.add_css('cubicweb.login.css')
         self.w(u'<div id="%s" class="%s">' % (id, klass))
         if title:
-            self.w(u'<div id="loginTitle">%s</div>'
-                   % (self.req.property_value('ui.site-title') or u'&#160;'))
+            stitle = self.req.property_value('ui.site-title')
+            if stitle:
+                stitle = xml_escape(stitle)
+            else:
+                stitle = u'&#160;'
+            self.w(u'<div id="loginTitle">%s</div>' % stitle)
         self.w(u'<div id="loginContent">\n')
 
         if message:

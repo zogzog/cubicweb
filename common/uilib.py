@@ -31,7 +31,7 @@ def rql_for_eid(eid):
     return 'Any X WHERE X eid %s' % eid
 
 
-def printable_value(req, attrtype, value, props=None, displaytime=True):
+def printable_value(req, attrtype, value, props=None):
     """return a displayable value (i.e. unicode string)"""
     if value is None or attrtype == 'Bytes':
         return u''
@@ -46,8 +46,6 @@ def printable_value(req, attrtype, value, props=None, displaytime=True):
     if attrtype == 'Time':
         return ustrftime(value, req.property_value('ui.time-format'))
     if attrtype == 'Datetime':
-        if not displaytime:
-            return ustrftime(value, req.property_value('ui.date-format'))
         return ustrftime(value, req.property_value('ui.datetime-format'))
     if attrtype == 'Boolean':
         if value:

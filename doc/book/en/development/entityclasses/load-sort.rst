@@ -16,18 +16,30 @@ Loaded attributes and default sorting management
   `None` if we do not want to sort on the attribute given in the parameter.
   By default, the entities are sorted according to their creation date.
 
-* The class method `fetch_unrelated_order(attr, var)` is similar to the
-  method `fetch_order` except that it is essentially used to control
-  the sorting of drop-down lists enabling relations creation in
-  the editing view of an entity.
+* The class method `fetch_unrelated_order(attr, var)` is similar to
+  the method `fetch_order` except that it is essentially used to
+  control the sorting of drop-down lists enabling relations creation
+  in the editing view of an entity. The default implementation uses
+  the modification date. Here's how to adapt it for one entity (sort
+  on the name attribute): ::
+
+   class MyEntity(AnyEntity):
+       fetch_attrs = ('modification_date', 'name')
+
+       @classmethod
+       def fetch_unrelated_order(cls, attr, var):
+           if attr == 'name':
+              return '%s ASC' % var
+           return None
+
 
 The function `fetch_config(fetchattrs, mainattr=None)` simplifies the
 definition of the attributes to load and the sorting by returning a
-list of attributes to pre-load (considering automatically the attributes
-of `AnyEntity`) and a sorting function based on the main attribute
-(the second parameter if specified otherwisethe first attribute from
-the list `fetchattrs`).
-This function is defined in `cubicweb.entities`.
+list of attributes to pre-load (considering automatically the
+attributes of `AnyEntity`) and a sorting function based on the main
+attribute (the second parameter if specified, otherwise the first
+attribute from the list `fetchattrs`). This function is defined in
+`cubicweb.entities`.
 
 For example: ::
 

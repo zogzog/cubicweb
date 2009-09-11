@@ -166,6 +166,7 @@ class InitializableDict(dict):
             else:
                 self.setdefault(eschema, 'application')
 
+
 indexview_etype_section = InitializableDict(EmailAddress='subobject',
                                             CWUser='system',
                                             CWGroup='system',
