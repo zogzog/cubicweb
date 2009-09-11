@@ -16,7 +16,6 @@ from urlparse import urlsplit, urlunsplit
 import hotshot
 
 from twisted.application import service, strports
-from twisted.scripts._twistd_unix import daemonize
 from twisted.internet import reactor, task, threads
 from twisted.internet.defer import maybeDeferred
 from twisted.web2 import channel, http, server, iweb
@@ -30,6 +29,36 @@ from cubicweb.web.application import CubicWebPublisher
 
 from cubicweb.etwist.request import CubicWebTwistedRequestAdapter
 
+def daemonize(uid):
+    # XXX unix specific
+    # XXX factorize w/ code in cw.server.server and cw.server.serverctl
+    # (start-repository command)
+    if uid is not None:
+        try:
+            uid = int(uid)
+        except ValueError:
+            from pwd import getpwnam
+            uid = getpwnam(uid).pw_uid
+        os.setuid(uid)
+    # See http://www.erlenstar.demon.co.uk/unix/faq_toc.html#TOC16
+    if os.fork():   # launch child and...
+        return -1
+    os.setsid()
+    if os.fork():   # launch child and...
+        os._exit(0) # kill off parent again.
+    # move to the root to avoit mount pb
+    os.chdir('/')
+    # set paranoid umask
+    os.umask(077)
+    null = os.open('/dev/null', os.O_RDWR)
+    for i in range(3):
+        try:
+            os.dup2(null, i)
+        except OSError, e:
+            if e.errno != errno.EBADF:
+                raise
+    os.close(null)
+    return None
 
 def start_task(interval, func):
     lc = task.LoopingCall(func)
@@ -368,7 +397,9 @@ def run(config, debug):
     logger = getLogger('cubicweb.twisted')
     logger.info('instance started on %s', baseurl)
     if not debug:
-        daemonize()
+        if daemonize(config['uid']):
+            # child process
+            return
         if config['pid-file']:
             # ensure the directory where the pid-file should be set exists (for
             # instance /var/run/cubicweb may be deleted on computer restart)
