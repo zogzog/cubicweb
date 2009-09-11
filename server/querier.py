@@ -508,7 +508,7 @@ class InsertPlan(ExecutionPlan):
             if repo.schema.rschema(rtype).inlined:
                 entity = session.entity_from_eid(subj)
                 entity[rtype] = obj
-                repo.glob_update_entity(session, entity)
+                repo.glob_update_entity(session, entity, set((rtype,)))
             else:
                 repo.glob_add_relation(session, subj, rtype, obj)
 
