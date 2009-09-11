@@ -392,17 +392,15 @@ running.'}),
 
     def start_instance(self, appid):
         """start the instance's server"""
-        # use get() since start may be used from other commands (eg upgrade)
-        # without all options defined
-        debug = self.get('debug')
-        force = self.get('force')
-        loglevel = self.get('loglevel')
+        debug = self['debug']
+        force = self['force']
+        loglevel = self['loglevel']
         config = cwcfg.config_for(appid)
         if loglevel is not None:
             loglevel = 'LOG_%s' % loglevel.upper()
             config.global_set_option('log-threshold', loglevel)
             config.init_log(loglevel, debug=debug, force=True)
-        if self.get('profile'):
+        if self['profile']:
             config.global_set_option('profile', self.config.profile)
         helper = self.config_helper(config, cmdname='start')
         pidf = config['pid-file']
@@ -485,7 +483,6 @@ class RestartInstanceCommand(StartInstanceCommand):
         print ('some specific start order is specified, will first stop all '
                'instances then restart them.')
         # get instances in startorder
-        stopped = []
         for appid in args:
             if askconfirm:
                 print '*'*72
@@ -608,10 +605,6 @@ given, appropriate sources for migration will be automatically selected \
 (recommended). If 'all' is given, will connect to all defined sources.",
           }),
         )
-
-    def ordered_instances(self):
-        # need this since mro return StopInstanceCommand implementation
-        return InstanceCommand.ordered_instances(self)
 
     def upgrade_instance(self, appid):
         print '\n' + underline_title('Upgrading the instance %s' % appid)
