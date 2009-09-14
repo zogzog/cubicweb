@@ -166,7 +166,7 @@ class Hook(AppObject):
     def __call__(self):
         if hasattr(self, 'call'):
             warn('[3.6] %s: call is deprecated, implements __call__' % self.__class__,
-                 DeprecationWarning))
+                 DeprecationWarning)
             if self.event.endswith('_relation'):
                 self.call(self._cw, self.eidfrom, self.rtype, self.eidto)
             elif 'delete' in self.event:
