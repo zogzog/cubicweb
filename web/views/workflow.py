@@ -19,9 +19,10 @@ from cubicweb.selectors import (implements, has_related_entities,
                                 relation_possible, match_form_params)
 from cubicweb.interfaces import IWorkflowable
 from cubicweb.view import EntityView
-from cubicweb.web import stdmsgs, action, component, form
+from cubicweb.schema import display_name
+from cubicweb.web import stdmsgs, action, component, form, action
 from cubicweb.web import formfields as ff, formwidgets as fwdgs
-from cubicweb.web.views import TmpFileViewMixin, forms
+from cubicweb.web.views import TmpFileViewMixin, forms, primary
 
 
 # IWorkflowable views #########################################################
@@ -129,32 +130,18 @@ class StateInContextView(view.EntityView):
                                      row=row, col=col)))
 
 
-# workflow images #############################################################
-
-class ViewWorkflowAction(action.Action):
+class WorkflowPrimaryView(primary.PrimaryView):
     id = 'workflow'
-    __select__ = implements('CWEType') & has_related_entities('workflow_of', 'object')
-
-    category = 'mainactions'
-    title = _('view workflow')
-    def url(self):
-        entity = self.rset.get_entity(self.row or 0, self.col or 0)
-        return entity.absolute_url(vid='workflow')
-
-
-class CWETypeWorkflowView(view.EntityView):
-    id = 'workflow'
-    __select__ = implements('CWEType')
+    __select__ = implements('Workflow')
     cache_max_age = 60*60*2 # stay in http cache for 2 hours by default
 
-    def cell_call(self, row, col, **kwargs):
-        entity = self.entity(row, col)
-        self.w(u'<h1>%s</h1>' % (self.req._('workflow for %s')
-                                 % display_name(self.req, entity.name)))
+    def render_entity_attributes(self, entity):
         self.w(u'<img src="%s" alt="%s"/>' % (
-            xml_escape(entity.absolute_url(vid='ewfgraph')),
+            xml_escape(entity.absolute_url(vid='wfgraph')),
             xml_escape(self.req._('graphical workflow for %s') % entity.name)))
 
+
+# workflow images ##############################################################
 
 class WorkflowDotPropsHandler(object):
     def __init__(self, req):
@@ -208,10 +195,10 @@ class WorkflowVisitor:
             yield transition.eid, transition.destination().eid, transition
 
 
-class CWETypeWorkflowImageView(TmpFileViewMixin, view.EntityView):
-    id = 'ewfgraph'
+class WorkflowImageView(TmpFileViewMixin, view.EntityView):
+    id = 'wfgraph'
     content_type = 'image/png'
-    __select__ = implements('CWEType')
+    __select__ = implements('Workflow')
 
     def _generate(self, tmpfile):
         """display schema information for an entity"""
