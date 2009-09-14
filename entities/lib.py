@@ -10,7 +10,6 @@ __docformat__ = "restructuredtext en"
 from urlparse import urlsplit, urlunsplit
 from datetime import datetime
 
-from logilab.common.decorators import cached
 from logilab.common.deprecation import deprecated
 
 from cubicweb import UnknownProperty
