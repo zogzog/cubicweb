@@ -152,8 +152,12 @@ class Session(RequestSessionMixIn):
             if not isinstance(rset.description, list): # else description not set
                 rset.description = list(rset.description)
             rset.description.append([self.describe(targeteid)[0]])
-            rset.rowcount += 1
             targetentity = self.entity_from_eid(targeteid)
+            if targetentity.rset is None:
+                targetentity.rset = rset
+                targetentity.row = rset.rowcount
+                targetentity.col = 0
+            rset.rowcount += 1
             entities.append(targetentity)
 
     def _update_entity_rel_cache_del(self, eid, rtype, role, targeteid):
