@@ -29,17 +29,10 @@ from cubicweb.web.application import CubicWebPublisher
 
 from cubicweb.etwist.request import CubicWebTwistedRequestAdapter
 
-def daemonize(uid):
+def daemonize():
     # XXX unix specific
     # XXX factorize w/ code in cw.server.server and cw.server.serverctl
     # (start-repository command)
-    if uid is not None:
-        try:
-            uid = int(uid)
-        except ValueError:
-            from pwd import getpwnam
-            uid = getpwnam(uid).pw_uid
-        os.setuid(uid)
     # See http://www.erlenstar.demon.co.uk/unix/faq_toc.html#TOC16
     if os.fork():   # launch child and...
         return -1
@@ -397,7 +390,7 @@ def run(config, debug):
     logger = getLogger('cubicweb.twisted')
     logger.info('instance started on %s', baseurl)
     if not debug:
-        if daemonize(config['uid']):
+        if daemonize():
             # child process
             return
         if config['pid-file']:
@@ -407,6 +400,13 @@ def run(config, debug):
             if not os.path.exists(piddir):
                 os.makedirs(piddir)
             file(config['pid-file'], 'w').write(str(os.getpid()))
+    if config['uid'] is not None:
+        try:
+            uid = int(config['uid'])
+        except ValueError:
+            from pwd import getpwnam
+            uid = getpwnam(config['uid']).pw_uid
+        os.setuid(uid)
     if config['profile']:
         prof = hotshot.Profile(config['profile'])
         prof.runcall(reactor.run)

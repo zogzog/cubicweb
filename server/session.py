@@ -84,13 +84,13 @@ class Session(RequestSessionMixIn):
         session._threaddata = self.actual_session()._threaddata
         return session
 
-    def _change_relation(self, cb, fromeid, rtype, toeid):
+    def _super_call(self, __cb, *args, **kwargs):
         if self.is_super_session:
-            cb(self, fromeid, rtype, toeid)
+            __cb(self, *args, **kwargs)
             return
         self.is_super_session = True
         try:
-            cb(self, fromeid, rtype, toeid)
+            __cb(self, *args, **kwargs)
         finally:
             self.is_super_session = False
 
@@ -105,8 +105,15 @@ class Session(RequestSessionMixIn):
         You may use this in hooks when you know both eids of the relation you
         want to add.
         """
-        self._change_relation(self.repo.glob_add_relation,
-                              fromeid, rtype, toeid)
+        if self.vreg.schema[rtype].inlined:
+            entity = self.entity_from_eid(fromeid)
+            entity[rtype] = toeid
+            self._super_call(self.repo.glob_update_entity,
+                             entity, set((rtype,)))
+        else:
+            self._super_call(self.repo.glob_add_relation,
+                             fromeid, rtype, toeid)
+
     def delete_relation(self, fromeid, rtype, toeid):
         """provide direct access to the repository method to delete a relation.
 
@@ -118,8 +125,14 @@ class Session(RequestSessionMixIn):
         You may use this in hooks when you know both eids of the relation you
         want to delete.
         """
-        self._change_relation(self.repo.glob_delete_relation,
-                              fromeid, rtype, toeid)
+        if self.vreg.schema[rtype].inlined:
+            entity = self.entity_from_eid(fromeid)
+            entity[rtype] = None
+            self._super_call(self.repo.glob_update_entity,
+                             entity, set((rtype,)))
+        else:
+            self._super_call(self.repo.glob_delete_relation,
+                             fromeid, rtype, toeid)
 
     # relations cache handling #################################################
 
@@ -152,8 +165,12 @@ class Session(RequestSessionMixIn):
             if not isinstance(rset.description, list): # else description not set
                 rset.description = list(rset.description)
             rset.description.append([self.describe(targeteid)[0]])
-            rset.rowcount += 1
             targetentity = self.entity_from_eid(targeteid)
+            if targetentity.rset is None:
+                targetentity.rset = rset
+                targetentity.row = rset.rowcount
+                targetentity.col = 0
+            rset.rowcount += 1
             entities.append(targetentity)
 
     def _update_entity_rel_cache_del(self, eid, rtype, role, targeteid):
