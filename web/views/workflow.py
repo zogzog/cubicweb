@@ -15,7 +15,7 @@ from logilab.mtconverter import xml_escape
 from logilab.common.graph import escape, GraphGenerator, DotBackend
 
 from cubicweb import Unauthorized, view
-from cubicweb.selectors import (implements, has_related_entities,
+from cubicweb.selectors import (implements, has_related_entities, one_line_rset,
                                 relation_possible, match_form_params)
 from cubicweb.interfaces import IWorkflowable
 from cubicweb.view import EntityView
@@ -110,7 +110,36 @@ class WFHistoryVComponent(component.EntityVComponent):
     def cell_call(self, row, col, view=None):
         self.wview('wfhistory', self.rset, row=row, col=col, view=view)
 
-# workflow entity types views #################################################
+
+# workflow actions #############################################################
+
+class WorkflowActions(action.Action):
+    """fill 'workflow' sub-menu of the actions box"""
+    id = 'workflow'
+    __select__ = (action.Action.__select__ & one_line_rset() &
+                  relation_possible('in_state'))
+
+    submenu = _('workflow')
+    order = 10
+
+    def fill_menu(self, box, menu):
+        req = self.req
+        entity = self.rset.get_entity(self.row or 0, self.col or 0)
+        menu.label = u'%s: %s' % (req._('state'), entity.printable_state)
+        menu.append_anyway = True
+        for tr in entity.possible_transitions():
+            url = entity.absolute_url(vid='statuschange', treid=tr.eid)
+            menu.append(box.mk_action(req._(tr.name), url))
+        # don't propose to see wf if user can't pass any transition
+        if menu.items:
+            wfurl = entity.current_workflow.absolute_url()
+            menu.append(box.mk_action(req._('view workflow'), wfurl))
+        if entity.workflow_history:
+            wfurl = entity.absolute_url(vid='wfhistory')
+            menu.append(box.mk_action(req._('view history'), wfurl))
+
+
+# workflow entity types views ##################################################
 
 class CellView(view.EntityView):
     id = 'cell'
@@ -131,7 +160,6 @@ class StateInContextView(view.EntityView):
 
 
 class WorkflowPrimaryView(primary.PrimaryView):
-    id = 'workflow'
     __select__ = implements('Workflow')
     cache_max_age = 60*60*2 # stay in http cache for 2 hours by default
 
