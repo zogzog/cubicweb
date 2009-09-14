@@ -200,7 +200,7 @@ class CWETypeOneLineView(baseviews.OneLineView):
     __select__ = implements('CWEType')
 
     def cell_call(self, row, col, **kwargs):
-        entity = self.entity(row, col)
+        entity = self.rset.get_entity(row, col)
         final = entity.final
         if final:
             self.w(u'<em class="finalentity">')
@@ -228,7 +228,7 @@ class CWETypeSTextView(EntityView):
     __select__ = EntityView.__select__ & implements('CWEType')
 
     def cell_call(self, row, col):
-        entity = self.entity(row, col)
+        entity = self.rset.get_entity(row, col)
         self.w(u'<h2>%s</h2>' % _('Attributes'))
         rset = self.req.execute('Any N,F,D,I,J,DE,A '
                                 'ORDERBY AA WHERE A is CWAttribute, '
@@ -264,7 +264,7 @@ class CWETypeSImageView(EntityView):
     __select__ = EntityView.__select__ & implements('CWEType')
 
     def cell_call(self, row, col):
-        entity = self.entity(row, col)
+        entity = self.rset.get_entity(row, col)
         url = entity.absolute_url(vid='schemagraph')
         self.w(u'<img src="%s" alt="%s"/>' % (
             xml_escape(url),
@@ -276,7 +276,7 @@ class CWETypeSPermView(EntityView):
     __select__ = EntityView.__select__ & implements('CWEType')
 
     def cell_call(self, row, col):
-        entity = self.entity(row, col)
+        entity = self.rset.get_entity(row, col)
         self.w(u'<h2>%s</h2>' % _('Add permissions'))
         rset = self.req.execute('Any P WHERE X add_permission P, '
                                 'X eid %(x)s',
@@ -305,7 +305,7 @@ class CWETypeSWorkflowView(EntityView):
                   has_related_entities('workflow_of', 'object'))
 
     def cell_call(self, row, col):
-        entity = self.entity(row, col)
+        entity = self.rset.get_entity(row, col)
         if entity.default_workflow:
             wf = entity.default_workflow[0]
             self.w(u'<h1>%s (%s)</h1>' % (wf.name, self.req._('default')))
@@ -389,7 +389,7 @@ class CWETypeSchemaImageView(TmpFileViewMixin, EntityView):
 
     def _generate(self, tmpfile):
         """display schema information for an entity"""
-        entity = self.entity(self.row, self.col)
+        entity = self.rset.get_entity(self.row, self.col)
         eschema = self.vreg.schema.eschema(entity.name)
         visitor = OneHopESchemaVisitor(self.req, eschema,
                                        skiptypes=skip_types(self.req))
@@ -401,7 +401,7 @@ class CWRTypeSchemaImageView(CWETypeSchemaImageView):
 
     def _generate(self, tmpfile):
         """display schema information for an entity"""
-        entity = self.entity(self.row, self.col)
+        entity = self.rset.get_entity(self.row, self.col)
         rschema = self.vreg.schema.rschema(entity.name)
         visitor = OneHopRSchemaVisitor(self.req, rschema)
         s2d.schema2dot(outputfile=tmpfile, visitor=visitor)

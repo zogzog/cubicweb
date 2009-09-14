@@ -41,7 +41,7 @@ class ChangeStateFormView(form.FormViewMixIn, view.EntityView):
     __select__ = implements(IWorkflowable) & match_form_params('treid')
 
     def cell_call(self, row, col):
-        entity = self.entity(row, col)
+        entity = self.rset.get_entity(row, col)
         transition = self.req.entity_from_eid(self.req.form['treid'])
         dest = transition.destination()
         _ = self.req._
@@ -146,7 +146,7 @@ class CellView(view.EntityView):
     __select__ = implements('TrInfo')
 
     def cell_call(self, row, col, cellvid=None):
-        self.w(self.entity(row, col).view('reledit', rtype='comment'))
+        self.w(self.rset.get_entity(row, col).view('reledit', rtype='comment'))
 
 
 class StateInContextView(view.EntityView):
@@ -161,9 +161,9 @@ class StateInContextView(view.EntityView):
 
 class WorkflowPrimaryView(primary.PrimaryView):
     __select__ = implements('Workflow')
-    cache_max_age = 60*60*2 # stay in http cache for 2 hours by default
 
     def render_entity_attributes(self, entity):
+        self.w(entity.view('reledit', rtype='description'))
         self.w(u'<img src="%s" alt="%s"/>' % (
             xml_escape(entity.absolute_url(vid='wfgraph')),
             xml_escape(self.req._('graphical workflow for %s') % entity.name)))
@@ -232,7 +232,7 @@ class WorkflowImageView(TmpFileViewMixin, view.EntityView):
 
     def _generate(self, tmpfile):
         """display schema information for an entity"""
-        entity = self.entity(self.row, self.col)
+        entity = self.rset.get_entity(self.row, self.col)
         visitor = WorkflowVisitor(entity)
         prophdlr = WorkflowDotPropsHandler(self.req)
         generator = GraphGenerator(DotBackend('workflow', 'LR',

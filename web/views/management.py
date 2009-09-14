@@ -79,7 +79,7 @@ class SecurityManagementView(EntityView, SecurityViewMixIn):
     def cell_call(self, row, col):
         self.req.add_js('cubicweb.edition.js')
         self.req.add_css('cubicweb.acl.css')
-        entity = self.entity(row, col)
+        entity = self.rset.get_entity(row, col)
         w = self.w
         _ = self.req._
         w(u'<h1><span class="etype">%s</span> <a href="%s">%s</a></h1>'

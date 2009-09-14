@@ -32,7 +32,7 @@ class Action(AppObject):
                                      'useractions', 'siteactions', 'hidden'),
                          help=_('context where this component should be displayed')),
     }
-    site_wide = True # don't want user to configuration actions eproperties
+    site_wide = True # don't want user to configurate actions
     category = 'moreactions'
     # actions in category 'moreactions' can specify a sub-menu in which they should be filed
     submenu = None
