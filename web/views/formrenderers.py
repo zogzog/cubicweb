@@ -501,6 +501,7 @@ class EntityFormRenderer(EntityBaseFormRenderer):
             w(form.view('inline-creation', None, etype=targettype,
                         peid=entity.eid, ptype=entity.e_schema,
                         rtype=rschema, role=role))
+            existant = True
         # we can create more than one related entity, we thus display a link
         # to add new related entities
         if form.should_display_add_new_relation_link(rschema, existant, card):
