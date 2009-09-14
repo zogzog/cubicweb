@@ -39,7 +39,7 @@ class EmailAddress(AnyEntity):
 
     @property
     def prefered(self):
-        return self.prefered_form and self.prefered_form[0] or None
+        return self.prefered_form and self.prefered_form[0] or self
 
     @deprecated('use .prefered')
     def canonical_form(self):
