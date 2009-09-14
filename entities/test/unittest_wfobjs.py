@@ -335,12 +335,12 @@ class CustomWorkflowTC(EnvBasedTC):
         self.assertEquals(self.member.state, 'asleep')# no change before commit
         self.commit()
         self.member.clear_all_caches()
-        self.assertEquals(self.member.current_workflow.name, "CWUser workflow")
+        self.assertEquals(self.member.current_workflow.name, "default user workflow")
         self.assertEquals(self.member.state, 'activated')
         self.assertEquals(parse_hist(self.member.workflow_history),
                           [('activated', 'deactivated', 'deactivate', None),
                            ('deactivated', 'asleep', None, 'workflow changed to "CWUser"'),
-                           ('asleep', 'activated', None, 'workflow changed to "CWUser workflow"'),])
+                           ('asleep', 'activated', None, 'workflow changed to "default user workflow"'),])
 
 
 from cubicweb.devtools.apptest import RepositoryBasedTC
