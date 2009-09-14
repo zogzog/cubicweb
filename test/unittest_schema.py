@@ -162,7 +162,7 @@ class SchemaReaderClassTest(TestCase):
         expected_relations = ['add_permission', 'address', 'alias', 'allowed_transition',
                               'bookmarked_by', 'by_transition',
 
-                              'canonical', 'cardinality', 'comment', 'comment_format',
+                              'cardinality', 'comment', 'comment_format',
                               'composite', 'condition', 'connait', 'constrained_by', 'content',
                               'content_format', 'created_by', 'creation_date', 'cstrtype', 'custom_workflow', 'cwuri',
 
@@ -175,7 +175,7 @@ class SchemaReaderClassTest(TestCase):
                               'from_entity', 'from_state', 'fulltext_container', 'fulltextindexed',
 
                               'has_text',
-                              'identical_to', 'identity', 'in_group', 'in_state', 'indexed',
+                              'identity', 'in_group', 'in_state', 'indexed',
                               'initial_state', 'inlined', 'internationalizable', 'is', 'is_instance_of',
 
                               'label', 'last_login_time', 'login',
@@ -186,7 +186,7 @@ class SchemaReaderClassTest(TestCase):
 
                               'ordernum', 'owned_by',
 
-                              'path', 'pkey', 'prenom', 'primary_email',
+                              'path', 'pkey', 'prefered_form', 'prenom', 'primary_email',
 
                               'read_permission', 'relation_type', 'require_group',
 

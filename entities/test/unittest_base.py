@@ -60,16 +60,13 @@ class CWUserTC(BaseEntityTC):
 
 class EmailAddressTC(BaseEntityTC):
     def test_canonical_form(self):
-        eid1 = self.execute('INSERT EmailAddress X: X address "maarten.ter.huurne@philips.com"')[0][0]
-        eid2 = self.execute('INSERT EmailAddress X: X address "maarten@philips.com", X canonical TRUE')[0][0]
-        self.execute('SET X identical_to Y WHERE X eid %s, Y eid %s' % (eid1, eid2))
-        email1 = self.entity('Any X WHERE X eid %(x)s', {'x':eid1}, 'x')
-        email2 = self.entity('Any X WHERE X eid %(x)s', {'x':eid2}, 'x')
-        self.assertEquals(email1.canonical_form().eid, eid2)
-        self.assertEquals(email2.canonical_form(), email2)
-        eid3 = self.execute('INSERT EmailAddress X: X address "toto@logilab.fr"')[0][0]
-        email3 = self.entity('Any X WHERE X eid %s'%eid3)
-        self.assertEquals(email3.canonical_form(), None)
+        email1 = self.execute('INSERT EmailAddress X: X address "maarten.ter.huurne@philips.com"').get_entity(0, 0)
+        email2 = self.execute('INSERT EmailAddress X: X address "maarten@philips.com"').get_entity(0, 0)
+        email3 = self.execute('INSERT EmailAddress X: X address "toto@logilab.fr"').get_entity(0, 0)
+        self.execute('SET X prefered_form Y WHERE X eid %s, Y eid %s' % (email1.eid, email2.eid))
+        self.assertEquals(email1.canonical_form().eid, email2.eid)
+        self.assertEquals(email2.canonical_form(), email2.eid)
+        self.assertEquals(email3.canonical_form(), email3.eid)
 
     def test_mangling(self):
         eid = self.execute('INSERT EmailAddress X: X address "maarten.ter.huurne@philips.com"')[0][0]

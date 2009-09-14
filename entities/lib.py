@@ -11,6 +11,7 @@ from urlparse import urlsplit, urlunsplit
 from datetime import datetime
 
 from logilab.common.decorators import cached
+from logilab.common.deprecation import deprecated
 
 from cubicweb import UnknownProperty
 from cubicweb.entity import _marker
@@ -25,7 +26,7 @@ def mangle_email(address):
 
 class EmailAddress(AnyEntity):
     id = 'EmailAddress'
-    fetch_attrs, fetch_order = fetch_config(['address', 'alias', 'canonical'])
+    fetch_attrs, fetch_order = fetch_config(['address', 'alias'])
 
     def dc_title(self):
         if self.alias:
@@ -36,15 +37,13 @@ class EmailAddress(AnyEntity):
     def email_of(self):
         return self.reverse_use_email and self.reverse_use_email[0]
 
-    @cached
+    @property
+    def prefered(self):
+        return self.prefered_form and self.prefered_form[0] or None
+
+    @deprecated('use .prefered')
     def canonical_form(self):
-        if self.canonical:
-            return self
-        rql = 'EmailAddress X WHERE X identical_to Y, X canonical TRUE, Y eid %(y)s'
-        cnrset = self.req.execute(rql, {'y': self.eid}, 'y')
-        if cnrset:
-            return cnrset.get_entity(0, 0)
-        return None
+        return self.prefered_form and self.prefered_form[0] or self
 
     def related_emails(self, skipeids=None):
         # XXX move to eemail

@@ -52,11 +52,10 @@ class EmailAddress(EntityType):
     alias   = String(fulltextindexed=True, maxsize=56)
     address = String(required=True, fulltextindexed=True,
                      indexed=True, unique=True, maxsize=128)
-    canonical = Boolean(default=False,
-                        description=_('when multiple addresses are equivalent \
+    prefered_form = SubjectRelation('EmailAddress', cardinality='?*',
+                                    description=_('when multiple addresses are equivalent \
 (such as python-projects@logilab.org and python-projects@lists.logilab.org), set this \
-to true on one of them which is the preferred form.'))
-    identical_to = SubjectRelation('EmailAddress')
+to indicate which is the preferred form.'))
 
 class use_email(RelationType):
     """ """
@@ -71,9 +70,7 @@ class primary_email(RelationType):
     """the prefered email"""
     permissions = use_email.permissions
 
-class identical_to(RelationType):
-    """identical_to"""
-    symetric = True
+class prefered_form(RelationType):
     permissions = {
         'read':   ('managers', 'users', 'guests',),
         # XXX should have update permissions on both subject and object,
@@ -207,10 +204,6 @@ class require_group(RelationType):
         }
 
 
-class see_also(RelationType):
-    """generic relation to link one entity to another"""
-    symetric = True
-
 class ExternalUri(EntityType):
     """a URI representing an object in external data store"""
     uri = String(required=True, unique=True, maxsize=256,
@@ -254,3 +247,25 @@ class CWCache(EntityType):
     name = String(required=True, unique=True, indexed=True,  maxsize=128,
                   description=_('name of the cache'))
     timestamp = Datetime(default='NOW')
+
+
+# "abtract" relation types, not used in cubicweb itself
+
+class identical_to(RelationType):
+    """identical to"""
+    symetric = True
+    permissions = {
+        'read':   ('managers', 'users', 'guests',),
+        # XXX should have update permissions on both subject and object,
+        #     though by doing this we will probably have no way to add
+        #     this relation in the web ui. The easiest way to acheive this
+        #     is probably to be able to have "U has_update_permission O" as
+        #     RQLConstraint of the relation definition, though this is not yet
+        #     possible
+        'add':    ('managers', RRQLExpression('U has_update_permission S'),),
+        'delete': ('managers', RRQLExpression('U has_update_permission S'),),
+        }
+
+class see_also(RelationType):
+    """generic relation to link one entity to another"""
+    symetric = True
