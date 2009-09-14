@@ -140,9 +140,12 @@ class ETypeRegistry(CWRegistry):
                 try:
                     objects = self[btype]
                     assert len(objects) == 1, objects
-                    cls = objects[0]
+                    if btype == etype:
+                        cls = objects[0]
+                    else:
+                        cls = self.etype_class(btype)
                 except ObjectNotFound:
-                    pass
+                    continue
             else:
                 # ensure parent classes are built first
                 self.etype_class(btype)
