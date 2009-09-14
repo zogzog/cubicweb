@@ -45,7 +45,7 @@ def execute(cmd):
     """
     print cmd.replace(os.getcwd() + os.sep, '')
     from subprocess import call
-    status = call(cmd)
+    status = call(cmd, shell=True)
     if status != 0:
         raise Exception('status = %s' % status)
 
