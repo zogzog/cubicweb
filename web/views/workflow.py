@@ -165,7 +165,9 @@ class WorkflowDotPropsHandler(object):
                     self._('groups:'),
                     ','.join(g.name for g in tr.require_group)))
             if tr.condition:
-                descr.append('%s %s'% (self._('condition:'), tr.condition))
+                descr.append('%s %s'% (
+                    self._('condition:'),
+                    ' | '.join(e.expression for e in tr.condition)))
             if descr:
                 props['label'] += escape('\n'.join(descr))
         return props
