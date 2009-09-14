@@ -160,18 +160,6 @@ leave it blank if you don\'t want the embedding feature, or set it to ".*" \
 if you want to allow everything',
           'group': 'web', 'inputlevel': 1,
           }),
-        ('submit-url',
-         {'type' : 'string',
-          'default': Method('default_submit_url'),
-          'help': ('URL that may be used to report bug in this instance '
-                   'by direct access to the project\'s (jpl) tracker, '
-                   'if you want this feature on. The url should looks like '
-                   'http://mytracker.com/view?__linkto=concerns:1234:subject&etype=Ticket&type=bug&vid=creation '
-                   'where 1234 should be replaced by the eid of your project in '
-                   'the tracker. If you have no idea about what I\'am talking '
-                   'about, you should probably let no value for this option.'),
-          'group': 'web', 'inputlevel': 2,
-          }),
         ('submit-mail',
          {'type' : 'string',
           'default': None,
@@ -195,16 +183,6 @@ if you want to allow everything',
           'group': 'web', 'inputlevel': 2,
           }),
         ))
-
-    def default_submit_url(self):
-        try:
-            cube = self.cubes()[0]
-            cubeeid = self.cube_pkginfo(cube).cube_eid
-        except Exception:
-            return None
-        if cubeeid:
-            return 'http://intranet.logilab.fr/jpl/view?__linkto=concerns:%s:subject&etype=Ticket&type=bug&vid=creation' % cubeeid
-        return None
 
     def fckeditor_installed(self):
         return exists(self.ext_resources['FCKEDITOR_PATH'])
