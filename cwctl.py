@@ -659,7 +659,7 @@ given, appropriate sources for migration will be automatically selected \
             print '-> migration needed from %s to %s for %s' % (fromversion, toversion, cube)
         # only stop once we're sure we have something to do
         if not (cwcfg.mode == 'dev' or self.config.nostartstop):
-            StopCommand().stop_instance(appid)
+            StopInstanceCommand().stop_instance(appid)
         # run cubicweb/componants migration scripts
         mih.migrate(vcconf, reversed(toupgrade), self.config)
         # rewrite main configuration file
@@ -682,7 +682,7 @@ given, appropriate sources for migration will be automatically selected \
         print
         print '-> instance migrated.'
         if not (cwcfg.mode == 'dev' or self.config.nostartstop):
-            StartCommand().start_instance(appid)
+            StartInstanceCommand().start_instance(appid)
         print
 
 

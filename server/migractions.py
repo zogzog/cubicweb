@@ -116,7 +116,7 @@ class ServerMigrationHelper(MigrationHelper):
         config = self.config
         repo = self.repo_connect()
         # paths
-        timestamp = datetime.now().strftime('%Y-%m-%d_%H:%M:%S')
+        timestamp = datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
         instbkdir = osp.join(config.appdatahome, 'backup')
         if not osp.exists(instbkdir):
             os.makedirs(instbkdir)

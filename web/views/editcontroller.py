@@ -248,7 +248,7 @@ class EditController(ViewController):
                 except ValueError:
                     raise ValidationError(entity.eid,
                                           {attr: self.req._("invalid float value")})
-            if attrtype in ('Date', 'Datetime', 'Time'):
+            elif attrtype in ('Date', 'Datetime', 'Time'):
                 try:
                     value = self.parse_datetime(value, attrtype)
                 except ValueError:
