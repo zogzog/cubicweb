@@ -11,16 +11,14 @@ object to handle publication.
 __docformat__ = "restructuredtext en"
 
 from smtplib import SMTP
-import datetime
 
 import simplejson
 
 from logilab.common.decorators import cached
 
 from cubicweb import NoSelectableObject, ValidationError, ObjectNotFound, typed_eid
-from cubicweb.utils import strptime
+from cubicweb.utils import strptime, CubicWebJsonEncoder
 from cubicweb.selectors import yes, match_user_groups
-from cubicweb.view import STRICT_DOCTYPE, STRICT_DOCTYPE_NOEXT
 from cubicweb.common.mail import format_mail
 from cubicweb.web import ExplicitLogin, Redirect, RemoteCallFailed, json_dumps
 from cubicweb.web.controller import Controller
