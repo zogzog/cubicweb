@@ -82,6 +82,9 @@ class FinalView(AnyRsetView):
             if etype == 'Interval' and isinstance(value, (int, long)):
                 # `date - date`, unlike `datetime - datetime` gives an int
                 # (number of days), not a timedelta
+                # XXX should rql be fixed to return Int instead of Interval in
+                #     that case? that would be probably the proper fix but we
+                #     loose information on the way...
                 value = timedelta(days=value)
             # value is DateTimeDelta but we have no idea about what is the
             # reference date here, so we can only approximate years and months
