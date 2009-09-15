@@ -95,37 +95,37 @@ class NavigationTC(EnvBasedTC):
         html = navcomp.render()
 
 
+# XXX deactivate, contextual component has been removed
+# class ContentNavigationTC(EnvBasedTC):
 
-class ContentNavigationTC(EnvBasedTC):
+#     def test_component_context(self):
+#         view = mock_object(is_primary=lambda x: True)
+#         rset = self.execute('CWUser X LIMIT 1')
+#         req = self.request()
+#         objs = self.vreg['contentnavigation'].possible_vobjects(
+#             req, rset=rset, view=view, context='navtop')
+#         # breadcrumbs should be in headers by default
+#         clsids = set(obj.id for obj in objs)
+#         self.failUnless('breadcrumbs' in clsids)
+#         objs = self.vreg['contentnavigation'].possible_vobjects(
+#             req, rset=rset, view=view, context='navbottom')
+#         # breadcrumbs should _NOT_ be in footers by default
+#         clsids = set(obj.id for obj in objs)
+#         self.failIf('breadcrumbs' in clsids)
+#         self.execute('INSERT CWProperty P: P pkey "contentnavigation.breadcrumbs.context", '
+#                      'P value "navbottom"')
+#         # breadcrumbs should now be in footers
+#         req.cnx.commit()
+#         objs = self.vreg['contentnavigation'].possible_vobjects(
+#             req, rset=rset, view=view, context='navbottom')
 
-    def test_component_context(self):
-        view = mock_object(is_primary=lambda x: True)
-        rset = self.execute('CWUser X LIMIT 1')
-        req = self.request()
-        objs = self.vreg['contentnavigation'].possible_vobjects(
-            req, rset=rset, view=view, context='navtop')
-        # breadcrumbs should be in headers by default
-        clsids = set(obj.id for obj in objs)
-        self.failUnless('breadcrumbs' in clsids)
-        objs = self.vreg['contentnavigation'].possible_vobjects(
-            req, rset=rset, view=view, context='navbottom')
-        # breadcrumbs should _NOT_ be in footers by default
-        clsids = set(obj.id for obj in objs)
-        self.failIf('breadcrumbs' in clsids)
-        self.execute('INSERT CWProperty P: P pkey "contentnavigation.breadcrumbs.context", '
-                     'P value "navbottom"')
-        # breadcrumbs should now be in footers
-        req.cnx.commit()
-        objs = self.vreg['contentnavigation'].possible_vobjects(
-            req, rset=rset, view=view, context='navbottom')
+#         clsids = [obj.id for obj in objs]
+#         self.failUnless('breadcrumbs' in clsids)
+#         objs = self.vreg['contentnavigation'].possible_vobjects(
+#             req, rset=rset, view=view, context='navtop')
 
-        clsids = [obj.id for obj in objs]
-        self.failUnless('breadcrumbs' in clsids)
-        objs = self.vreg['contentnavigation'].possible_vobjects(
-            req, rset=rset, view=view, context='navtop')
-
-        clsids = [obj.id for obj in objs]
-        self.failIf('breadcrumbs' in clsids)
+#         clsids = [obj.id for obj in objs]
+#         self.failIf('breadcrumbs' in clsids)
 
 
 if __name__ == '__main__':
