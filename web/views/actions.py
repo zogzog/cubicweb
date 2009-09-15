@@ -238,10 +238,10 @@ class AddRelatedActions(Action):
         # when there is only one item in the sub-menu, replace the sub-menu by
         # item's title prefixed by 'add'
         menu.label_prefix = self.req._('add')
+        super(AddRelatedActions, self).fill_menu(box, menu)
+
+    def actual_actions(self):
         entity = self.rset.get_entity(self.row or 0, self.col or 0)
-        user = self.req.user
-        actions = []
-        _ = self.req._
         eschema = entity.e_schema
         for rschema, teschema, x in self.add_related_schemas(entity):
             if x == 'subject':
@@ -250,7 +250,7 @@ class AddRelatedActions(Action):
             else:
                 label = 'add %s %s %s %s' % (teschema, rschema, eschema, x)
                 url = self.linkto_url(entity, rschema, teschema, 'subject')
-            menu.append(box.mk_action(_(label), url))
+            yield self.build_action(self.req._(label), url)
 
     def add_related_schemas(self, entity):
         """this is actually used ui method to generate 'addrelated' actions from

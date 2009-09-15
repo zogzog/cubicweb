@@ -37,9 +37,13 @@ class Action(AppObject):
     # actions in category 'moreactions' can specify a sub-menu in which they should be filed
     submenu = None
 
+    def actual_actions(self):
+        yield self
+
     def fill_menu(self, box, menu):
         """add action(s) to the given submenu of the given box"""
-        menu.append(box.box_action(self))
+        for action in self.actual_actions():
+            menu.append(box.box_action(action))
 
     def url(self):
         """return the url associated with this action"""
@@ -50,6 +54,9 @@ class Action(AppObject):
             return 'selected'
         if self.category:
             return 'box' + self.category.capitalize()
+
+    def build_action(self, title, path, **kwargs):
+        return UnregisteredAction(self.req, self.rset, title, path, **kwargs)
 
 
 class UnregisteredAction(Action):
