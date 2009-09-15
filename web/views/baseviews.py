@@ -15,6 +15,8 @@
 __docformat__ = "restructuredtext en"
 _ = unicode
 
+from datetime import timedelta
+
 from rql import nodes
 
 from logilab.mtconverter import TransformError, xml_escape, xml_escape
@@ -77,6 +79,10 @@ class FinalView(AnyRsetView):
                 self.w(entity.printable_value(rtype, value, format=format))
                 return
         if etype in ('Time', 'Interval'):
+            if etype == 'Interval' and isinstance(value, (int, long)):
+                # `date - date`, unlike `datetime - datetime` gives an int
+                # (number of days), not a timedelta
+                value = timedelta(days=value)
             # value is DateTimeDelta but we have no idea about what is the
             # reference date here, so we can only approximate years and months
             if format == 'text/html':
