@@ -123,20 +123,25 @@ class WorkflowActions(action.Action):
     order = 10
 
     def fill_menu(self, box, menu):
-        req = self.req
         entity = self.rset.get_entity(self.row or 0, self.col or 0)
-        menu.label = u'%s: %s' % (req._('state'), entity.printable_state)
+        menu.label = u'%s: %s' % (self.req._('state'), entity.printable_state)
         menu.append_anyway = True
+        super(WorkflowActions, self).fill_menu(box, menu)
+
+    def actual_actions(self):
+        entity = self.rset.get_entity(self.row or 0, self.col or 0)
+        hastr = False
         for tr in entity.possible_transitions():
             url = entity.absolute_url(vid='statuschange', treid=tr.eid)
-            menu.append(box.mk_action(req._(tr.name), url))
+            yield self.build_action(self.req._(tr.name), url)
+            hastr = True
         # don't propose to see wf if user can't pass any transition
-        if menu.items:
+        if hastr:
             wfurl = entity.current_workflow.absolute_url()
-            menu.append(box.mk_action(req._('view workflow'), wfurl))
+            yield self.build_action(self.req._('view workflow'), wfurl)
         if entity.workflow_history:
             wfurl = entity.absolute_url(vid='wfhistory')
-            menu.append(box.mk_action(req._('view history'), wfurl))
+            yield self.build_action(self.req._('view history'), wfurl)
 
 
 # workflow entity types views ##################################################
