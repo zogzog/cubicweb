@@ -12,7 +12,8 @@ from itertools import cycle
 from logilab.mtconverter import xml_escape
 from yams import BASE_TYPES, schema2dot as s2d
 
-from cubicweb.selectors import implements, yes, match_user_groups
+from cubicweb.selectors import (implements, yes, match_user_groups,
+                                has_related_entities)
 from cubicweb.schema import META_RTYPES, SCHEMA_TYPES
 from cubicweb.schemaviewer import SchemaViewer
 from cubicweb.view import EntityView, StartupView
@@ -269,6 +270,7 @@ class CWETypeSImageView(EntityView):
             xml_escape(url),
             xml_escape(self.req._('graphical schema for %s') % entity.name)))
 
+
 class CWETypeSPermView(EntityView):
     id = 'cwetype-schema-permissions'
     __select__ = EntityView.__select__ & implements('CWEType')
@@ -296,18 +298,29 @@ class CWETypeSPermView(EntityView):
                                 {'x': entity.eid})
         self.wview('outofcontext', rset, 'null')
 
+
 class CWETypeSWorkflowView(EntityView):
     id = 'cwetype-workflow'
-    __select__ = EntityView.__select__ & implements('CWEType')
+    __select__ = (EntityView.__select__ & implements('CWEType') &
+                  has_related_entities('workflow_of', 'object'))
 
     def cell_call(self, row, col):
         entity = self.rset.get_entity(row, col)
-        if entity.reverse_state_of:
-            self.w(u'<img src="%s" alt="%s"/>' % (
-                    xml_escape(entity.absolute_url(vid='ewfgraph')),
-                    xml_escape(self.req._('graphical workflow for %s') % entity.name)))
-        else:
-            self.w(u'<p>%s</p>' % _('There is no workflow defined for this entity.'))
+        if entity.default_workflow:
+            wf = entity.default_workflow[0]
+            self.w(u'<h1>%s (%s)</h1>' % (wf.name, self.req._('default')))
+            self.wf_image(wf)
+        for altwf in entity.reverse_workflow_of:
+            if altwf.eid == wf.eid:
+                continue
+            self.w(u'<h1>%s</h1>' % altwf.name)
+            self.wf_image(altwf)
+
+    def wf_image(self, wf):
+        self.w(u'<img src="%s" alt="%s"/>' % (
+            xml_escape(wf.absolute_url(vid='wfgraph')),
+            xml_escape(self.req._('graphical representation of %s') % wf.name)))
+
 
 # CWRType ######################################################################
 

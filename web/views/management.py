@@ -237,10 +237,8 @@ class ErrorView(AnyRsetView):
             w(u"<b>Package %s version:</b> %s<br/>\n" % (cube, cubeversion))
             cversions.append((cube, cubeversion))
         w(u"</div>")
-        # creates a bug submission link if SUBMIT_URL is set
-        submiturl = self.config['submit-url']
-        submitmail = self.config['submit-mail']
-        if submiturl or submitmail:
+        # creates a bug submission link if submit-mail is set
+        if self.config['submit-mail']:
             form = self.vreg['forms'].select('base', self.req, rset=None,
                                              mainform=False)
             binfo = text_error_description(ex, excinfo, req, eversion, cversions)
@@ -248,15 +246,9 @@ class ErrorView(AnyRsetView):
                                  # we must use a text area to keep line breaks
                                  widget=wdgs.TextArea({'class': 'hidden'}))
             form.form_add_hidden('__bugreporting', '1')
-            if submitmail:
-                form.form_buttons = [wdgs.SubmitButton(MAIL_SUBMIT_MSGID)]
-                form.action = req.build_url('reportbug')
-                w(form.form_render())
-            if submiturl:
-                form.form_add_hidden('description_format', 'text/rest')
-                form.form_buttons = [wdgs.SubmitButton(SUBMIT_MSGID)]
-                form.action = submiturl
-                w(form.form_render())
+            form.form_buttons = [wdgs.SubmitButton(MAIL_SUBMIT_MSGID)]
+            form.action = req.build_url('reportbug')
+            w(form.form_render())
 
 
 def exc_message(ex, encoding):

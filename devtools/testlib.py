@@ -408,6 +408,23 @@ class CubicWebTC(TestCase):
                 res.setdefault(a.category, []).append(a.__class__)
         return res
 
+    def action_submenu(self, req, rset, id):
+        return self._test_action(self.vreg['actions'].select(id, req, rset=rset))
+
+    def _test_action(self, action):
+        class fake_menu(list):
+            @property
+            def items(self):
+                return self
+        class fake_box(object):
+            def mk_action(self, label, url, **kwargs):
+                return (label, url)
+            def box_action(self, action, **kwargs):
+                return (action.title, action.url())
+        submenu = fake_menu()
+        action.fill_menu(fake_box(), submenu)
+        return submenu
+
     def list_views_for(self, rset):
         """returns the list of views that can be applied on `rset`"""
         req = rset.req
@@ -784,7 +801,7 @@ class AutoPopulateTest(CubicWebTC):
             # resultset's syntax tree
             rset = backup_rset
         for action in self.list_actions_for(rset):
-            yield InnerTest(self._testname(rset, action.id, 'action'), action.url)
+            yield InnerTest(self._testname(rset, action.id, 'action'), self._test_action, action)
         for box in self.list_boxes_for(rset):
             yield InnerTest(self._testname(rset, box.id, 'box'), box.render)
 

@@ -228,7 +228,10 @@ class MigrationHelper(object):
         else:
             readline.set_completer(Completer(local_ctx).complete)
             readline.parse_and_bind('tab: complete')
-            histfile = os.path.join(os.environ["HOME"], ".eshellhist")
+            home_key = 'HOME'
+            if sys.platform == 'win32':
+                home_key = 'USERPROFILE'
+            histfile = os.path.join(os.environ[home_key], ".eshellhist")
             try:
                 readline.read_history_file(histfile)
             except IOError:

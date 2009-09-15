@@ -138,7 +138,6 @@ class ETypeRegistry(CWRegistry):
         baseschemas = [eschema] + eschema.ancestors()
         # browse ancestors from most specific to most generic and try to find an
         # associated custom entity class
-        cls = None
         for baseschema in baseschemas:
             try:
                 btype = ETYPE_NAME_MAP[baseschema]

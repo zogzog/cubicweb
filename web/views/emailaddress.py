@@ -24,17 +24,9 @@ class EmailAddressPrimaryView(primary.PrimaryView):
     def render_entity_attributes(self, entity):
         self.w(u'<h3>')
         entity.view('oneline', w=self.w)
-        if not entity.canonical:
-            canonemailaddr = entity.canonical_form()
-            if canonemailaddr:
-                self.w(u'&#160;(<i>%s</i>)' % canonemailaddr.view('oneline'))
-            self.w(u'</h3>')
-        elif entity.identical_to:
-            self.w(u'</h3>')
-            identicaladdr = [e.view('oneline') for e in entity.identical_to]
-            self.field('identical_to', ', '.join(identicaladdr))
-        else:
-            self.w(u'</h3>')
+        if entity.prefered:
+            self.w(u'&#160;(<i>%s</i>)' % entity.prefered.view('oneline'))
+        self.w(u'</h3>')
         try:
             persons = entity.reverse_primary_email
         except Unauthorized:
@@ -87,6 +79,7 @@ class EmailAddressOneLineView(baseviews.OneLineView):
             self.w(u'&gt;\n')
         if entity.reverse_primary_email:
             self.w(u'</b>')
+
 
 class EmailAddressMailToView(baseviews.OneLineView):
     """A one line view that builds a user clickable URL for an email with

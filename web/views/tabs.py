@@ -71,6 +71,9 @@ class TabsMixin(LazyViewMixin):
         return str('%s_active_tab' % self.config.appid)
 
     def active_tab(self, tabs, default):
+        formtab = self.req.form.get('tab')
+        if formtab in tabs:
+            return formtab
         cookies = self.req.get_cookie()
         cookiename = self.cookie_name
         activetab = cookies.get(cookiename)
@@ -112,7 +115,7 @@ class TabsMixin(LazyViewMixin):
         w(u'<ul>')
         for tab in tabs:
             w(u'<li>')
-            w(u'<a href="#as-%s">' % tab)
+            w(u'<a href="#%s">' % tab)
             w(u'<span onclick="set_tab(\'%s\', \'%s\')">' % (tab, self.cookie_name))
             w(self.req._(tab))
             w(u'</span>')
@@ -121,7 +124,7 @@ class TabsMixin(LazyViewMixin):
         w(u'</ul>')
         w(u'</div>')
         for tab in tabs:
-            w(u'<div id="as-%s">' % tab)
+            w(u'<div id="%s">' % tab)
             if entity:
                 self.lazyview(tab, eid=entity.eid)
             else:
@@ -153,7 +156,7 @@ class EntityRelationView(EntityView):
         role = 'subject'
         vid = 'gallery'
 
-    in this example, entities related to project entity by the'screenshot'
+    in this example, entities related to project entity by the 'screenshot'
     relation (where the project is subject of the relation) will be displayed
     using the 'gallery' view.
     """

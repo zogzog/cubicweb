@@ -44,12 +44,9 @@ def execute(cmd):
     """display the command, execute it and raise an Exception if returned
     status != 0
     """
+    from subprocess import call
     print cmd.replace(os.getcwd() + os.sep, '')
-    if sys.platform == 'win32':
-        from subprocess import call
-    else:
-        call = os.system
-    status = call(cmd)
+    status = call(cmd, shell=True)
     if status != 0:
         raise Exception('status = %s' % status)
 

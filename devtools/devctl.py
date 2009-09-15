@@ -153,7 +153,8 @@ def _generate_schema_pot(w, vreg, schema, libconfig=None, cube=None):
             add_msg(w, rschema.description)
     w('# add related box generated message\n')
     w('\n')
-    actionbox = vreg['boxes']['edit_box'][0]
+    from cubicweb.web import uicfg
+    appearsin_addmenu = uicfg.actionbox_appearsin_addmenu
     for eschema in schema.entities():
         if eschema.is_final():
             continue
@@ -172,8 +173,8 @@ def _generate_schema_pot(w, vreg, schema, libconfig=None, cube=None):
                             subjtype, objtype = teschema, eschema
                         if librschema.has_rdef(subjtype, objtype):
                             continue
-                    if actionbox.appearsin_addmenu.etype_get(eschema, rschema,
-                                                             role, teschema):
+                    if appearsin_addmenu.etype_get(eschema, rschema, role,
+                                                   teschema):
                         if role == 'subject':
                             label = 'add %s %s %s %s' % (eschema, rschema,
                                                          teschema, role)

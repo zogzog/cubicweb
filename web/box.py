@@ -57,7 +57,8 @@ class BoxTemplate(View):
         result = []
         actions_by_cat = {}
         for action in actions:
-            actions_by_cat.setdefault(action.category, []).append((action.title, action))
+            actions_by_cat.setdefault(action.category, []).append(
+                (action.title, action) )
         for key, values in actions_by_cat.items():
             actions_by_cat[key] = [act for title, act in sorted(values)]
         for cat in self.categories_in_order:
