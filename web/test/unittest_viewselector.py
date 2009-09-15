@@ -17,6 +17,8 @@ from cubicweb.web.views import (primary, baseviews, tableview, editforms,
                                 treeview, idownloadable, wdoc, debug,
                                 cwproperties, workflow, xmlrss, csvexport)
 
+from cubes.folder import views as folderviews
+
 USERACTIONS = [('myprefs', actions.UserPreferencesAction),
                ('myinfos', actions.UserInfoAction),
                ('logout', actions.LogoutAction)]
@@ -76,7 +78,9 @@ class VRegistryTC(ViewSelectorTC):
                               ('propertiesform', cwproperties.CWPropertiesForm),
                               ('registry', startup.RegistryView),
                               ('schema', schema.SchemaView),
-                              ('systempropertiesform', cwproperties.SystemCWPropertiesForm)])
+                              ('systempropertiesform', cwproperties.SystemCWPropertiesForm),
+                              ('tree', folderviews.FolderTreeView),
+                              ])
 
     def test_possible_views_noresult(self):
         rset, req = self.env.get_rset_and_req('Any X WHERE X eid 999999')
@@ -254,9 +258,9 @@ class VRegistryTC(ViewSelectorTC):
         self.assertDictEqual(self.pactions(req, rset),
                              {'useractions': USERACTIONS,
                               'siteactions': SITEACTIONS,
-                              'mainactions': [('edit', actions.ModifyAction),
-                                              ('workflow', workflow.ViewWorkflowAction),],
+                              'mainactions': [('edit', actions.ModifyAction)],
                               'moreactions': [('managepermission', actions.ManagePermissionsAction),
+                                              ('addrelated', actions.AddRelatedActions),
                                               ('delete', actions.DeleteAction),
                                               ('copy', actions.CopyAction),
                                               ],
@@ -445,6 +449,7 @@ class RQLActionTC(ViewSelectorTC):
                               'siteactions': SITEACTIONS,
                               'mainactions': [('edit', actions.ModifyAction)],
                               'moreactions': [('managepermission', actions.ManagePermissionsAction),
+                                              ('addrelated', actions.AddRelatedActions),
                                               ('delete', actions.DeleteAction),
                                               ('copy', actions.CopyAction),
                                               ('testaction', CWETypeRQLAction),
@@ -456,6 +461,7 @@ class RQLActionTC(ViewSelectorTC):
                               'siteactions': SITEACTIONS,
                               'mainactions': [('edit', actions.ModifyAction)],
                               'moreactions': [('managepermission', actions.ManagePermissionsAction),
+                                              ('addrelated', actions.AddRelatedActions),
                                               ('delete', actions.DeleteAction),
                                               ('copy', actions.CopyAction),
                                               ],
