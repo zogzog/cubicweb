@@ -11,10 +11,14 @@ from logilab.mtconverter import xml_escape
 
 import locale
 from md5 import md5
+import datetime as pydatetime
 from datetime import datetime, timedelta, date
 from time import time, mktime
 from random import randint, seed
 from calendar import monthrange
+import decimal
+
+import simplejson
 
 # initialize random seed from current time
 seed()
@@ -348,3 +352,22 @@ def can_do_pdf_conversion(__answer=[None]):
         return False
     __answer[0] = True
     return True
+
+
+class CubicWebJsonEncoder(simplejson.JSONEncoder):
+    """define a simplejson encoder to be able to encode yams std types"""
+    def default(self, obj):
+        if isinstance(obj, pydatetime.datetime):
+            return obj.strftime('%Y/%m/%d %H:%M:%S')
+        elif isinstance(obj, pydatetime.date):
+            return obj.strftime('%Y/%m/%d')
+        elif isinstance(obj, pydatetime.time):
+            return obj.strftime('%H:%M:%S')
+        elif isinstance(obj, decimal.Decimal):
+            return float(obj)
+        try:
+            return simplejson.JSONEncoder.default(self, obj)
+        except TypeError:
+            # we never ever want to fail because of an unknown type,
+            # just return None in those cases.
+            return None
