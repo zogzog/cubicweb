@@ -230,6 +230,23 @@ class EnvBasedTC(TestCase):
         return [(a.id, a.__class__) for a in self.vreg['actions'].possible_vobjects(req, rset=rset)
                 if a.category not in skipcategories]
 
+    def action_submenu(self, req, rset, id):
+        return self._test_action(self.vreg['actions'].select(id, req, rset=rset))
+
+    def _test_action(self, action):
+        class fake_menu(list):
+            @property
+            def items(self):
+                return self
+        class fake_box(object):
+            def mk_action(self, label, url, **kwargs):
+                return (label, url)
+            def box_action(self, action, **kwargs):
+                return (action.title, action.url())
+        submenu = fake_menu()
+        action.fill_menu(fake_box(), submenu)
+        return submenu
+
     def pactions_by_cats(self, req, rset, categories=('addrelated',)):
         return [(a.id, a.__class__) for a in self.vreg['actions'].possible_vobjects(req, rset=rset)
                 if a.category in categories]
