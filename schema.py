@@ -100,7 +100,7 @@ def bw_normalize_etype(etype):
         etype = ETYPE_NAME_MAP[etype]
     return etype
 
-def display_name(req, key, form=''):
+def display_name(req, key, form='', context=None):
     """return a internationalized string for the key (schema entity or relation
     name) in a given form
     """
@@ -111,7 +111,11 @@ def display_name(req, key, form=''):
         key = key + '_' + form
     # ensure unicode
     # added .lower() in case no translation are available
-    return unicode(req._(key)).lower()
+    if context:
+        return req.pgettext(context, key).lower()
+    else:
+        return unicode(req._(key)).lower()
+
 __builtins__['display_name'] = deprecated('display_name should be imported from cubicweb.schema')(display_name)
 
 def ERSchema_display_name(self, req, form=''):

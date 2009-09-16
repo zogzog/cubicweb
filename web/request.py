@@ -114,7 +114,8 @@ class CubicWebRequestBase(DBAPIRequest):
         self.set_default_language(vreg)
 
     def set_language(self, lang):
-        self._ = self.__ = self.translations[lang]
+        gettext, self.pgettext = self.translations[lang]
+        self._ = self.__ = gettext
         self.lang = lang
         self.cnx.set_session_props(lang=lang)
         self.debug('request language: %s', lang)

@@ -812,7 +812,7 @@ the repository',
             self.info("loading language %s", language)
             try:
                 tr = translation('cubicweb', path, languages=[language])
-                self.translations[language] = tr.ugettext
+                self.translations[language] = (tr.ugettext, tr.upgettext)
             except (ImportError, AttributeError, IOError):
                 self.exception('localisation support error for language %s',
                                language)

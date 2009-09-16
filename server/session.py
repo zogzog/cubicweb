@@ -210,13 +210,18 @@ class Session(RequestSessionMixIn):
         vreg = self.vreg
         language = language or self.user.property_value('ui.language')
         try:
-            self._ = self.__ = vreg.config.translations[language]
+            gettext, pgettext = vreg.config.translations[language]
+            self._ = self.__ = gettext
+            self.pgettext = pgettext
         except KeyError:
             language = vreg.property_value('ui.language')
             try:
-                self._ = self.__ = vreg.config.translations[language]
+                gettext, pgettext = vreg.config.translations[language]
+                self._ = self.__ = gettext
+                self.pgettext = pgettext
             except KeyError:
                 self._ = self.__ = unicode
+                self.pgettext = lambda x,y: y
         self.lang = language
 
     def change_property(self, prop, value):
