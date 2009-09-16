@@ -59,15 +59,15 @@ and data (back-end) instances can be set-up to share the load.
 
 .. image:: ../../images/archi_globale.en.png
 
-The command ``cubicweb-ctl list`` displays the list of instances installed on
-your system.
+The command ``cubicweb-ctl list`` also displays the list of instances
+installed on your system.
 
 On a Unix system, the instances are usually stored in the directory
 :file:`/etc/cubicweb.d/`. During development, the :file:`~/etc/cubicweb.d/`
 directory is looked up, as well as the paths in :envvar:`CW_INSTANCES_DIR`
 environment variable.
 
-The term application is used to refer at "something that should do something as a
+The term application is used to refer to "something that should do something as a
 whole", eg more like a project and so can refer to an instance or to a cube,
 depending on the context. This book will try to use *application*, *cube* and
 *instance* as appropriate.
@@ -77,7 +77,7 @@ Data Repository
 
 The data repository [#]_ provides access to one or more data sources (including
 SQL databases, LDAP repositories, Mercurial or Subversion version control
-systems, other CubicWeb repositories, GAE's DataStore, etc).
+systems, other CubicWeb instance repositories, GAE's DataStore, etc).
 
 All interactions with the repository are done using the Relation Query Language
 (RQL). The repository federates the data sources and hides them from the
@@ -99,13 +99,13 @@ send email notifications when the state of an object changes. See `Hooks` below.
 Web Engine
 ----------
 
-The web engine replies to http requests and runs the user interface and most of
-the application logic.
+The web engine replies to http requests and runs the user interface
+and most of the application logic.
 
-By default the web engine provides a generated user interface based on the data
-model of the instance. Entities can be created, displayed, updated and
-deleted. As the default user interface is not very fancy, it is usually
-necessary to develop your own.
+By default the web engine provides a default user interface based on
+the data model of the instance. Entities can be created, displayed,
+updated and deleted. As the default user interface is not very fancy,
+it is usually necessary to develop your own.
 
 Schema (Data Model)
 -------------------
@@ -120,7 +120,7 @@ Attributes may be of the following types: `String`, `Int`, `Float`, `Boolean`,
 `Date`, `Time`, `Datetime`, `Interval`, `Password`, `Bytes`, `RichString`. See
 :ref:`yams.BASE_TYPES` for details.
 
-A `relation type` is used to define a binary oriented relation between two
+A `relation type` is used to define an oriented binary relation between two
 entity types.  The left-hand part of a relation is named the `subject` and the
 right-hand part is named the `object`.
 
@@ -143,8 +143,6 @@ run the upgrade process for the instance.
 Registries and Objects
 ----------------------
 
-XXX registry, register, registries, registers ???
-
 Application objects
 ~~~~~~~~~~~~~~~~~~~
 
@@ -159,15 +157,15 @@ Application objects are stored in the registry using a two-level hierarchy :
 
   object's `__registry__` : object's `id` : [list of app objects]
 
-The base class of appobjects is `AppRsetObject` (module `cubicweb.appobject`).
+The base class of appobjects is `AppObject` (module `cubicweb.appobject`).
 
 The `vregistry`
 ~~~~~~~~~~~~~~~
 
-At startup, the `registry` or registers base, inspects a number of directories
-looking for compatible classes definition. After a recording process, the objects
-are assigned to registers so that they can be selected dynamically while the
-instance is running.
+At startup, the `registry` inspects a number of directories looking
+for compatible classes definition. After a recording process, the
+objects are assigned to registers so that they can be selected
+dynamically while the instance is running.
 
 Selectors
 ~~~~~~~~~
@@ -185,7 +183,7 @@ There are three common ways to retrieve some appobject from the repository:
   that case, the object with the greatest score is selected. There should always
   be a single appobject with a greater score than others.
 
-* get all appobjects applying to a context by specifying a registry.In
+* get all appobjects applying to a context by specifying a registry. In
   that case, every object with the a postive score is selected.
 
 * get the object within a particular registry/identifier. In that case no
@@ -195,10 +193,9 @@ There are three common ways to retrieve some appobject from the repository:
 Selector sets are the glue that tie views to the data model. Using them
 appropriately is an essential part of the construction of well behaved cubes.
 
-
 When no score is higher than the others, an exception is raised in development
 mode to let you know that the engine was not able to identify the view to
-apply. This error is silented in production mode and one of the objects with the
+apply. This error is silenced in production mode and one of the objects with the
 higher score is picked.
 
 If no object has a positive score, ``NoSelectableObject`` exception is raised.
@@ -231,7 +228,14 @@ XXX feed me
 Result set
 ~~~~~~~~~~
 
-XXX feed me
+Every request made (using RQL) to the data repository returns an
+object we call a Result Set. It enables easy use of the retrieved
+data, providing a translation layer between the backend's native
+datatypes and *CubicWeb* schema's EntityTypes.
+
+Result sets provide access to the raw data, yielding either basic
+Python data types, or schema-defined high-level entities, in a
+straightforward way.
 
 
 Views
@@ -246,4 +250,31 @@ Hooks
 -----
 ** *CubicWeb* provides an extensible data repository **
 
-XXX feed me.
+The data model defined using Yams types allows to express the data
+model in a comfortable way. However several aspects of the data model
+can not be expressed there. For instance:
+
+* managing computed attributes
+
+* enforcing complicated structural invariants
+
+* real-world side-effects linked to data events (email notification
+  being a prime example)
+
+The hook system is much like the triggers of an SQL database engine,
+except that:
+
+* it is not limited to one specific SQL backend (every one of them
+  having an idiomatic way to encode triggers), nor to SQL backends at
+  all (think about LDAP or a Subversion repository)
+
+* it is well-coupled to the rest of the framework
+
+Hooks are basically functions that dispatch on both:
+
+* events : after/before add/update/delete on entities/relations
+
+* entity or relation types
+
+They are an essential building block of any moderately complicated
+cubicweb application.

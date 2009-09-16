@@ -156,6 +156,7 @@ indexview_etype_section = {'EmailAddress': 'subobject',
                            'CWUser': 'system',
                            'CWGroup': 'system',
                            'CWPermission': 'system',
+                           'CWCache': 'system',
                            'BaseTransition': 'hidden',
                            }
 
