@@ -393,7 +393,7 @@ class JSonController(Controller):
 
     @jsonize
     def js_edit_field(self, action, names, values, rtype, eid, default):
-        success, args = self.validate_form(action, names, values)
+        success, args, _ = self.validate_form(action, names, values)
         if success:
             # Any X,N where we don't seem to use N is an optimisation
             # printable_value won't need to query N again
