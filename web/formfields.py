@@ -438,9 +438,16 @@ class HiddenInitialValueField(Field):
 
 
 class RelationField(Field):
-    def __init__(self, **kwargs):
-        kwargs.setdefault('sort', False)
-        super(RelationField, self).__init__(**kwargs)
+    # XXX (syt): iirc, we originaly don't sort relation vocabulary since we want
+    # to let entity.unrelated_rql control this, usually to get most recently
+    # modified entities in the select box instead of by alphabetical order. Now,
+    # we first use unrelated_rql to get the vocabulary, which may be limited
+    # (hence we get the latest modified entities) and we can sort here for
+    # better readability
+    #
+    # def __init__(self, **kwargs):
+    #     kwargs.setdefault('sort', False)
+    #     super(RelationField, self).__init__(**kwargs)
 
     @staticmethod
     def fromcardinality(card, **kwargs):
