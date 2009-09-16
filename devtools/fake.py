@@ -36,32 +36,6 @@ class FakeConfig(dict, BaseApptestConfiguration):
     def sources(self):
         return {}
 
-class FakeVReg(dict):
-    def __init__(self, schema=None, config=None):
-        self.schema = schema
-        self.config = config or FakeConfig()
-        self.properties = {'ui.encoding': 'UTF8',
-                           'ui.language': 'en',
-                           }
-        self.update({
-            'controllers' : {'login': []},
-            'views' : {},
-            })
-
-    def property_value(self, key):
-        return self.properties[key]
-
-    def etype_class(self, etype):
-        class Entity(dict):
-            e_schema = self.schema[etype]
-            def __init__(self, session, eid, row=0, col=0):
-                self.req = session
-                self.eid = eid
-                self.row, self.col = row, col
-            def set_eid(self, eid):
-                self.eid = self['eid'] = eid
-        return Entity
-
 
 class FakeRequest(CubicWebRequestBase):
     """test implementation of an cubicweb request object"""
@@ -149,25 +123,6 @@ class FakeRequest(CubicWebRequestBase):
         return self.execute(*args, **kwargs)
 
 
-# class FakeRequestNoCnx(FakeRequest):
-#     def get_session_data(self, key, default=None, pop=False):
-#         """return value associated to `key` in session data"""
-#         if pop:
-#             return self._session_data.pop(key, default)
-#         else:
-#             return self._session_data.get(key, default)
-
-#     def set_session_data(self, key, value):
-#         """set value associated to `key` in session data"""
-#         self._session_data[key] = value
-
-#     def del_session_data(self, key):
-#         try:
-#             del self._session_data[key]
-#         except KeyError:
-#             pass
-
-
 class FakeUser(object):
     login = 'toto'
     eid = 0
@@ -251,10 +206,3 @@ class FakeSource(object):
 class FakePool(object):
     def source(self, uri):
         return FakeSource(uri)
-
-# commented until proven to be useful
-## from logging import getLogger
-## from cubicweb import set_log_methods
-## for cls in (FakeConfig, FakeVReg, FakeRequest, FakeSession, FakeRepo,
-##             FakeSource, FakePool):
-##     set_log_methods(cls, getLogger('fake'))
