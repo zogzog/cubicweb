@@ -867,28 +867,28 @@ msgid "add CWUser in_group CWGroup object"
 msgstr "utilisateur"
 
 msgid "add CWUser use_email EmailAddress subject"
-msgstr "ajouter une addresse email"
+msgstr "addresse email"
 
 msgid "add State allowed_transition Transition object"
-msgstr "ajouter un état en entrée"
+msgstr "état en entrée"
 
 msgid "add State allowed_transition Transition subject"
-msgstr "ajouter une transition en sortie"
+msgstr "transition en sortie"
 
 msgid "add State state_of CWEType object"
-msgstr "ajouter un état"
+msgstr "état"
 
 msgid "add Transition condition RQLExpression subject"
-msgstr "ajouter une condition"
+msgstr "condition"
 
 msgid "add Transition destination_state State object"
-msgstr "ajouter une transition en entrée"
+msgstr "transition en entrée"
 
 msgid "add Transition destination_state State subject"
-msgstr "ajouter l'état de sortie"
+msgstr "état de sortie"
 
 msgid "add Transition transition_of CWEType object"
-msgstr "ajouter une transition"
+msgstr "transition"
 
 msgid "add a Bookmark"
 msgstr "ajouter un signet"

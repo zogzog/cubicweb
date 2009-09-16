@@ -829,28 +829,28 @@ msgid "add CWAttribute relation_type CWRType object"
 msgstr "Definición de atributo"
 
 msgid "add CWEType add_permission RQLExpression subject"
-msgstr "Agregar una autorización"
+msgstr "Expresión RQL de agregación"
 
 msgid "add CWEType delete_permission RQLExpression subject"
-msgstr "Eliminar una autorización"
+msgstr "Expresión RQL de eliminación"
 
 msgid "add CWEType read_permission RQLExpression subject"
-msgstr "Definir una expresión RQL de lectura"
+msgstr "Expresión RQL de lectura"
 
 msgid "add CWEType update_permission RQLExpression subject"
 msgstr "Definir una expresión RQL de actualización"
 
 msgid "add CWProperty for_user CWUser object"
-msgstr "Agregar Propiedad"
+msgstr "Propiedad"
 
 msgid "add CWRType add_permission RQLExpression subject"
-msgstr "Agregar expresión RQL de agregación"
+msgstr "Expresión RQL de agregación"
 
 msgid "add CWRType delete_permission RQLExpression subject"
-msgstr "Agregar expresión RQL de eliminación"
+msgstr "Expresión RQL de eliminación"
 
 msgid "add CWRType read_permission RQLExpression subject"
-msgstr "Agregar expresión RQL de lectura"
+msgstr "Expresión RQL de lectura"
 
 msgid "add CWRelation constrained_by CWConstraint subject"
 msgstr "Restricción"
@@ -859,31 +859,31 @@ msgid "add CWRelation relation_type CWRType object"
 msgstr "Definición de relación"
 
 msgid "add CWUser in_group CWGroup object"
-msgstr "Agregar usuario"
+msgstr "Usuario"
 
 msgid "add CWUser use_email EmailAddress subject"
-msgstr "Agregar email"
+msgstr "Email"
 
 msgid "add State allowed_transition Transition object"
-msgstr "Agregar un estado en entrada"
+msgstr "Estado en entrada"
 
 msgid "add State allowed_transition Transition subject"
-msgstr "Agregar una transición en salida"
+msgstr "Transición en salida"
 
 msgid "add State state_of CWEType object"
-msgstr "Agregar un estado"
+msgstr "Estado"
 
 msgid "add Transition condition RQLExpression subject"
-msgstr "Agregar una Restricción"
+msgstr "Restricción"
 
 msgid "add Transition destination_state State object"
-msgstr "Agregar una transición de entrada"
+msgstr "Transición de entrada"
 
 msgid "add Transition destination_state State subject"
-msgstr "Agregar el estado de salida"
+msgstr "Estado de salida"
 
 msgid "add Transition transition_of CWEType object"
-msgstr "Agregar una transición"
+msgstr "Transición"
 
 msgid "add a Bookmark"
 msgstr "Agregar un Favorito"
