@@ -395,7 +395,7 @@ this option is set to yes",
                 try:
                     load_module_from_file(join(CW_SOFTWARE_ROOT, ctlfile))
                 except ImportError, err:
-                    cls.warning('could not import the command provider %s (cause : %s)' %
+                    cls.critical('could not import the command provider %s (cause : %s)' %
                                 (ctlfile, err))
                 cls.info('loaded cubicweb-ctl plugin %s', ctlfile)
         for cube in cls.available_cubes():

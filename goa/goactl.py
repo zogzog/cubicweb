@@ -8,7 +8,6 @@
 __docformat__ = "restructuredtext en"
 
 from os.path import exists, join, split, basename, normpath, abspath
-
 from logilab.common.clcommands import register_commands
 
 from cubicweb import CW_SOFTWARE_ROOT, BadCommandUsage
@@ -19,9 +18,9 @@ from cubicweb.cwconfig import CubicWebConfiguration
 from logilab import common as lgc
 from logilab import constraint as lgcstr
 from logilab import mtconverter as lgmtc
-import rql, yams, yapps, simplejson, dateutil, vobject, docutils, roman
+import rql, yams, yapps, simplejson, docutils, roman, voject
 
-SLINK_DIRECTORIES = (
+SLINK_DIRECTORIES = [
     (lgc.__path__[0], 'logilab/common'),
     (lgmtc.__path__[0], 'logilab/mtconverter'),
     (lgcstr.__path__[0], 'logilab/constraint'),
@@ -29,8 +28,6 @@ SLINK_DIRECTORIES = (
     (simplejson.__path__[0], 'simplejson'),
     (yams.__path__[0], 'yams'),
     (yapps.__path__[0], 'yapps'),
-    (dateutil.__path__[0], 'dateutil'),
-    (vobject.__path__[0], 'vobject'),
     (docutils.__path__[0], 'docutils'),
     (roman.__file__.replace('.pyc', '.py'), 'roman.py'),
 
@@ -42,7 +39,15 @@ SLINK_DIRECTORIES = (
     (join(CW_SOFTWARE_ROOT, 'i18n'), join('cubes', 'shared', 'i18n')),
     (join(CW_SOFTWARE_ROOT, 'goa', 'tools'), 'tools'),
     (join(CW_SOFTWARE_ROOT, 'goa', 'bin'), 'bin'),
-    )
+    ]
+
+try:
+    import dateutil
+    import vobject
+    SLINK_DIRECTORIES.extend([ (dateutil.__path__[0], 'dateutil'),
+                               (vobject.__path__[0], 'vobject') ] )
+except ImportError:
+    pass
 
 COPY_CW_FILES = (
     '__init__.py',
