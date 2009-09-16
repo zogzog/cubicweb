@@ -108,6 +108,9 @@ def del_existing_rel_if_needed(session, eidfrom, rtype, eidto):
     # hooks responsability to ensure they do not violate relation's cardinality
     if session.is_super_session:
         return
+    ensure_card_respected(session.unsafe_execute, session, eidfrom, rtype, eidto)
+
+def ensure_card_respected(execute, session, eidfrom, rtype, eidto):
     card = rproperty(session, rtype, eidfrom, eidto, 'cardinality')
     # one may be tented to check for neweids but this may cause more than one
     # relation even with '1?'  cardinality if thoses relations are added in the
@@ -118,14 +121,11 @@ def del_existing_rel_if_needed(session, eidfrom, rtype, eidto):
     if card[0] in '1?':
         rschema = session.repo.schema.rschema(rtype)
         if not rschema.inlined:
-            session.unsafe_execute(
-                'DELETE X %s Y WHERE X eid %%(x)s, NOT Y eid %%(y)s' % rtype,
-                {'x': eidfrom, 'y': eidto}, 'x')
+            execute('DELETE X %s Y WHERE X eid %%(x)s,NOT Y eid %%(y)s' % rtype,
+                    {'x': eidfrom, 'y': eidto}, 'x')
     if card[1] in '1?':
-        session.unsafe_execute(
-            'DELETE X %s Y WHERE NOT X eid %%(x)s, Y eid %%(y)s' % rtype,
-            {'x': eidfrom, 'y': eidto}, 'y')
-
+        execute('DELETE X %s Y WHERE NOT X eid %%(x)s, Y eid %%(y)s' % rtype,
+                {'x': eidfrom, 'y': eidto}, 'y')
 
 class Repository(object):
     """a repository provides access to a set of persistent storages for
