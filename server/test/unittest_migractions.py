@@ -123,6 +123,7 @@ class MigrationCommandsTC(RepositoryBasedTC):
         self.failUnless(self.execute('CWEType X WHERE X name "Folder2"'))
         self.failUnless('filed_under2' in self.schema)
         self.failUnless(self.execute('CWRType X WHERE X name "filed_under2"'))
+        self.schema.rebuild_infered_relations()
         self.assertEquals(sorted(str(rs) for rs in self.schema['Folder2'].subject_relations()),
                           ['created_by', 'creation_date', 'cwuri',
                            'description', 'description_format',
@@ -159,6 +160,7 @@ class MigrationCommandsTC(RepositoryBasedTC):
     def test_add_drop_relation_type(self):
         self.mh.cmd_add_entity_type('Folder2', auto=False)
         self.mh.cmd_add_relation_type('filed_under2')
+        self.schema.rebuild_infered_relations()
         self.failUnless('filed_under2' in self.schema)
         self.assertEquals(sorted(str(e) for e in self.schema['filed_under2'].subjects()),
                           sorted(str(e) for e in self.schema.entities() if not e.is_final()))
@@ -212,10 +214,16 @@ class MigrationCommandsTC(RepositoryBasedTC):
         self.assertEquals(sorted(str(e) for e in self.schema['concerne'].subjects()),
                           ['Affaire', 'Personne'])
         self.assertEquals(sorted(str(e) for e in self.schema['concerne'].objects()),
+                          ['Affaire', 'Division', 'Note', 'SubDivision'])
+        self.schema.rebuild_infered_relations() # need to be explicitly called once everything is in place
+        self.assertEquals(sorted(str(e) for e in self.schema['concerne'].objects()),
                           ['Affaire', 'Note'])
         self.mh.cmd_add_relation_definition('Affaire', 'concerne', 'Societe')
         self.assertEquals(sorted(str(e) for e in self.schema['concerne'].subjects()),
                           ['Affaire', 'Personne'])
+        self.assertEquals(sorted(str(e) for e in self.schema['concerne'].objects()),
+                          ['Affaire', 'Note', 'Societe'])
+        self.schema.rebuild_infered_relations() # need to be explicitly called once everything is in place
         self.assertEquals(sorted(str(e) for e in self.schema['concerne'].objects()),
                           ['Affaire', 'Division', 'Note', 'Societe', 'SubDivision'])
         # trick: overwrite self.maxeid to avoid deletion of just reintroduced types
