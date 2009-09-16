@@ -13,6 +13,7 @@ from logilab.common.adbh import get_adv_func_helper
 from indexer import get_indexer
 
 from cubicweb import RequestSessionMixIn
+from cubicweb.cwvreg import CubicWebVRegistry
 from cubicweb.web.request import CubicWebRequestBase
 from cubicweb.devtools import BASE_URL, BaseApptestConfiguration
 
@@ -67,7 +68,7 @@ class FakeRequest(CubicWebRequestBase):
 
     def __init__(self, *args, **kwargs):
         if not (args or 'vreg' in kwargs):
-            kwargs['vreg'] = FakeVReg()
+            kwargs['vreg'] = CubicWebVRegistry(FakeConfig(), initlog=False)
         kwargs['https'] = False
         self._url = kwargs.pop('url', 'view?rql=Blop&vid=blop')
         super(FakeRequest, self).__init__(*args, **kwargs)
@@ -177,7 +178,7 @@ class FakeUser(object):
 class FakeSession(RequestSessionMixIn):
     def __init__(self, repo=None, user=None):
         self.repo = repo
-        self.vreg = getattr(self.repo, 'vreg', FakeVReg())
+        self.vreg = getattr(self.repo, 'vreg', CubicWebVRegistry(FakeConfig(), initlog=False))
         self.pool = FakePool()
         self.user = user or FakeUser()
         self.is_internal_session = False
@@ -210,8 +211,9 @@ class FakeRepo(object):
         self.eids = {}
         self._count = 0
         self.schema = schema
-        self.vreg = vreg or FakeVReg()
         self.config = config or FakeConfig()
+        self.vreg = vreg or CubicWebVRegistry(self.config, initlog=False)
+        self.vreg.schema = schema
 
     def internal_session(self):
         return FakeSession(self)

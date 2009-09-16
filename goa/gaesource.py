@@ -149,7 +149,7 @@ class GAESource(AbstractSource):
     # ISource interface #######################################################
 
     def compile_rql(self, rql):
-        rqlst = self.repo.querier._rqlhelper.parse(rql)
+        rqlst = self.repo.vreg.parse(rql)
         rqlst.restricted_vars = ()
         rqlst.children[0].solutions = self._sols
         return rqlst

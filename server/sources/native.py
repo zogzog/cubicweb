@@ -231,7 +231,7 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
     # ISource interface #######################################################
 
     def compile_rql(self, rql):
-        rqlst = self.repo.querier._rqlhelper.parse(rql)
+        rqlst = self.repo.vreg.rqlhelper.parse(rql)
         rqlst.restricted_vars = ()
         rqlst.children[0].solutions = self._sols
         self.repo.querier.sqlgen_annotate(rqlst)

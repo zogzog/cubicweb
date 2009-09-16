@@ -348,7 +348,7 @@ class MSPlannerTC(BaseMSPlannerTC):
 
     def setUp(self):
         BaseMSPlannerTC.setUp(self)
-        self.planner = MSPlanner(self.o.schema, self.o._rqlhelper)
+        self.planner = MSPlanner(self.o.schema, self.repo.vreg.rqlhelper)
 
     _test = test_plan
 
@@ -1989,7 +1989,7 @@ class MSPlannerTwoSameExternalSourcesTC(BasePlannerTC):
         self.setup()
         self.add_source(FakeCardSource, 'cards')
         self.add_source(FakeCardSource, 'cards2')
-        self.planner = MSPlanner(self.o.schema, self.o._rqlhelper)
+        self.planner = MSPlanner(self.o.schema, self.repo.vreg.rqlhelper)
         assert repo.sources_by_uri['cards2'].support_relation('multisource_crossed_rel')
         assert 'multisource_crossed_rel' in repo.sources_by_uri['cards2'].cross_relations
         assert repo.sources_by_uri['cards'].support_relation('multisource_crossed_rel')
@@ -2142,7 +2142,7 @@ class MSPlannerVCSSource(BasePlannerTC):
     def setUp(self):
         self.setup()
         self.add_source(FakeVCSSource, 'vcs')
-        self.planner = MSPlanner(self.o.schema, self.o._rqlhelper)
+        self.planner = MSPlanner(self.o.schema, self.repo.vreg.rqlhelper)
     _test = test_plan
 
     def test_multisource_inlined_rel_skipped(self):

@@ -138,8 +138,8 @@ class ExecutionPlan(object):
         # various resource accesors
         self.querier = querier
         self.schema = querier.schema
-        self.rqlhelper = querier._rqlhelper
         self.sqlannotate = querier.sqlgen_annotate
+        self.rqlhelper = session.vreg.rqlhelper
 
     def annotate_rqlst(self):
         if not self.rqlst.annotated:
@@ -265,6 +265,8 @@ class ExecutionPlan(object):
                     myrqlst = select.copy(solutions=lchecksolutions)
                     myunion.append(myrqlst)
                     # in-place rewrite + annotation / simplification
+                    lcheckdef = [((varmap, 'X'), rqlexprs)
+                                 for varmap, rqlexprs in lcheckdef]
                     rewrite(myrqlst, lcheckdef, lchecksolutions, self.args)
                     noinvariant.update(noinvariant_vars(restricted, myrqlst, nbtrees))
                 if () in localchecks:
@@ -524,36 +526,32 @@ class QuerierHelper(object):
 
     def set_schema(self, schema):
         self.schema = schema
+        repo = self._repo
         # rql parsing / analysing helper
-        self._rqlhelper = RQLHelper(schema, special_relations={'eid': 'uid',
-                                                               'has_text': 'fti'})
-        self._rql_cache = Cache(self._repo.config['rql-cache-size'])
+        self.solutions = repo.vreg.solutions
+        self._rql_cache = Cache(repo.config['rql-cache-size'])
         self.cache_hit, self.cache_miss = 0, 0
         # rql planner
         # note: don't use repo.sources, may not be built yet, and also "admin"
         #       isn't an actual source
-        if len([uri for uri in self._repo.config.sources() if uri != 'admin']) < 2:
+        rqlhelper = repo.vreg.rqlhelper
+        self._parse = rqlhelper.parse
+        self._annotate = rqlhelper.annotate
+        if len([uri for uri in repo.config.sources() if uri != 'admin']) < 2:
             from cubicweb.server.ssplanner import SSPlanner
-            self._planner = SSPlanner(schema, self._rqlhelper)
+            self._planner = SSPlanner(schema, rqlhelper)
         else:
             from cubicweb.server.msplanner import MSPlanner
-            self._planner = MSPlanner(schema, self._rqlhelper)
+            self._planner = MSPlanner(schema, rqlhelper)
         # sql generation annotator
         self.sqlgen_annotate = SQLGenAnnotator(schema).annotate
 
     def parse(self, rql, annotate=False):
         """return a rql syntax tree for the given rql"""
         try:
-            return self._rqlhelper.parse(unicode(rql), annotate=annotate)
+            return self._parse(unicode(rql), annotate=annotate)
         except UnicodeError:
             raise RQLSyntaxError(rql)
-
-    def solutions(self, session, rqlst, args):
-        assert session is not None
-        def type_from_eid(eid, type_from_eid=self._repo.type_from_eid,
-                          session=session):
-            return type_from_eid(eid, session)
-        self._rqlhelper.compute_solutions(rqlst, {'eid': type_from_eid}, args)
 
     def plan_factory(self, rqlst, args, session):
         """create an execution plan for an INSERT RQL query"""
@@ -642,7 +640,7 @@ class QuerierHelper(object):
             # bother modifying it. This is not necessary on write queries since
             # a new syntax tree is built from them.
             rqlst = rqlst.copy()
-            self._rqlhelper.annotate(rqlst)
+            self._annotate(rqlst)
         # make an execution plan
         plan = self.plan_factory(rqlst, args, session)
         plan.cache_key = cachekey
