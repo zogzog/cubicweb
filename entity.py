@@ -15,12 +15,14 @@ from logilab.common.decorators import cached
 from logilab.common.deprecation import deprecated
 from logilab.mtconverter import TransformData, TransformError, xml_escape
 
+from rql import parse
 from rql.utils import rqlvar_maker
 
 from cubicweb import Unauthorized
 from cubicweb.rset import ResultSet
 from cubicweb.selectors import yes
 from cubicweb.appobject import AppObject
+from cubicweb.rqlrewrite import RQLRewriter
 from cubicweb.schema import RQLVocabularyConstraint, RQLConstraint, bw_normalize_etype
 
 from cubicweb.common.uilib import printable_value, soup2xhtml
@@ -736,7 +738,10 @@ class Entity(AppObject, dict):
     def unrelated_rql(self, rtype, targettype, role, ordermethod=None,
                       vocabconstraints=True):
         """build a rql to fetch `targettype` entities unrelated to this entity
-        using (rtype, role) relation
+        using (rtype, role) relation.
+
+        Consider relation permissions so that returned entities may be actually
+        linked by `rtype`.
         """
         ordermethod = ordermethod or 'fetch_unrelated_order'
         if isinstance(rtype, basestring):
@@ -749,8 +754,17 @@ class Entity(AppObject, dict):
             objtype, subjtype = self.e_schema, targettype
         if self.has_eid():
             restriction = ['NOT S %s O' % rtype, '%s eid %%(x)s' % evar]
+            args = {'x': self.eid}
+            if role == 'subject':
+                securitycheck_args = {'fromeid': self.eid}
+            else:
+                securitycheck_args = {'toeid': self.eid}
         else:
             restriction = []
+            args = {}
+            securitycheck_args = {}
+        insertsecurity = (rtype.has_local_role('add') and not
+                          rtype.has_perm(self.req, 'add', **securitycheck_args))
         constraints = rtype.rproperty(subjtype, objtype, 'constraints')
         if vocabconstraints:
             # RQLConstraint is a subclass for RQLVocabularyConstraint, so they
@@ -767,20 +781,29 @@ class Entity(AppObject, dict):
         if not ' ORDERBY ' in rql:
             before, after = rql.split(' WHERE ', 1)
             rql = '%s ORDERBY %s WHERE %s' % (before, searchedvar, after)
-        return rql
+        if insertsecurity:
+            rqlexprs = rtype.get_rqlexprs('add')
+            rewriter = RQLRewriter(self.req)
+            rqlst = self.req.vreg.parse(self.req, rql, args)
+            for select in rqlst.children:
+                rewriter.rewrite(select, [((searchedvar, searchedvar), rqlexprs)],
+                                 select.solutions, args)
+            rql = rqlst.as_string()
+        return rql, args
 
     def unrelated(self, rtype, targettype, role='subject', limit=None,
                   ordermethod=None):
         """return a result set of target type objects that may be related
         by a given relation, with self as subject or object
         """
-        rql = self.unrelated_rql(rtype, targettype, role, ordermethod)
+        try:
+            rql, args = self.unrelated_rql(rtype, targettype, role, ordermethod)
+        except Unauthorized:
+            return self.req.empty_rset()
         if limit is not None:
             before, after = rql.split(' WHERE ', 1)
             rql = '%s LIMIT %s WHERE %s' % (before, limit, after)
-        if self.has_eid():
-            return self.req.execute(rql, {'x': self.eid})
-        return self.req.execute(rql)
+        return self.req.execute(rql, args, tuple(args.keys()))
 
     # relations cache handling ################################################
 

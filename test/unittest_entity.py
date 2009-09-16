@@ -9,9 +9,10 @@
 
 from datetime import datetime
 
-from cubicweb import Binary
+from cubicweb import Binary, Unauthorized
 from cubicweb.devtools.apptest import EnvBasedTC
 from cubicweb.common.mttransforms import HAS_TAL
+from cubicweb.entities import fetch_config
 
 class EntityTC(EnvBasedTC):
 
@@ -179,7 +180,6 @@ class EntityTC(EnvBasedTC):
             Societe.fetch_attrs = sfetch_attrs
 
     def test_related_rql(self):
-        from cubicweb.entities import fetch_config
         Personne = self.vreg['etypes'].etype_class('Personne')
         Note = self.vreg['etypes'].etype_class('Note')
         self.failUnless(issubclass(self.vreg['etypes'].etype_class('SubNote'), Note))
@@ -194,7 +194,40 @@ class EntityTC(EnvBasedTC):
         self.assertEquals(p.related_rql('evaluee'),
                           'Any X,AA ORDERBY Z DESC WHERE X modification_date Z, E eid %(x)s, E evaluee X, X modification_date AA')
 
-    def test_entity_unrelated(self):
+    def test_unrelated_rql_security_1(self):
+        user = self.request().user
+        rql = user.unrelated_rql('use_email', 'EmailAddress', 'subject')[0]
+        self.assertEquals(rql, 'Any O,AA,AB,AC ORDERBY AC DESC '
+                          'WHERE NOT S use_email O, S eid %(x)s, O is EmailAddress, O address AA, O alias AB, O modification_date AC')
+        self.create_user('toto')
+        self.login('toto')
+        user = self.request().user
+        rql = user.unrelated_rql('use_email', 'EmailAddress', 'subject')[0]
+        self.assertEquals(rql, 'Any O,AA,AB,AC ORDERBY AC DESC '
+                          'WHERE NOT S use_email O, S eid %(x)s, O is EmailAddress, O address AA, O alias AB, O modification_date AC')
+        user = self.execute('Any X WHERE X login "admin"').get_entity(0, 0)
+        self.assertRaises(Unauthorized, user.unrelated_rql, 'use_email', 'EmailAddress', 'subject')
+        self.login('anon')
+        user = self.request().user
+        self.assertRaises(Unauthorized, user.unrelated_rql, 'use_email', 'EmailAddress', 'subject')
+
+    def test_unrelated_rql_security_2(self):
+        email = self.execute('INSERT EmailAddress X: X address "hop"').get_entity(0, 0)
+        rql = email.unrelated_rql('use_email', 'CWUser', 'object')[0]
+        self.assertEquals(rql, 'Any S,AA,AB,AC,AD ORDERBY AA ASC '
+                          'WHERE NOT S use_email O, O eid %(x)s, S is CWUser, S login AA, S firstname AB, S surname AC, S modification_date AD')
+        #rql = email.unrelated_rql('use_email', 'Person', 'object')[0]
+        #self.assertEquals(rql, '')
+        self.login('anon')
+        email = self.execute('Any X WHERE X eid %(x)s', {'x': email.eid}, 'x').get_entity(0, 0)
+        rql = email.unrelated_rql('use_email', 'CWUser', 'object')[0]
+        self.assertEquals(rql, 'Any S,AA,AB,AC,AD ORDERBY AA '
+                          'WHERE NOT S use_email O, O eid %(x)s, S is CWUser, S login AA, S firstname AB, S surname AC, S modification_date AD, '
+                          'A eid %(B)s, EXISTS(S identity A, NOT A in_group C, C name "guests", C is CWGroup)')
+        #rql = email.unrelated_rql('use_email', 'Person', 'object')[0]
+        #self.assertEquals(rql, '')
+
+    def test_unrelated_base(self):
         p = self.add_entity('Personne', nom=u'di mascio', prenom=u'adrien')
         e = self.add_entity('Tag', name=u'x')
         related = [r.eid for r in e.tags]
@@ -206,14 +239,40 @@ class EntityTC(EnvBasedTC):
         unrelated = [r[0] for r in e.unrelated('tags', 'Personne', 'subject')]
         self.failIf(p.eid in unrelated)
 
-    def test_entity_unrelated_limit(self):
+    def test_unrelated_limit(self):
         e = self.add_entity('Tag', name=u'x')
         self.add_entity('Personne', nom=u'di mascio', prenom=u'adrien')
-        self.add_entity('Personne', nom=u'di mascio', prenom=u'gwen')
+        self.add_entity('Personne', nom=u'thenault', prenom=u'sylvain')
         self.assertEquals(len(e.unrelated('tags', 'Personne', 'subject', limit=1)),
                           1)
 
-    def test_new_entity_unrelated(self):
+    def test_unrelated_security(self):
+        email = self.execute('INSERT EmailAddress X: X address "hop"').get_entity(0, 0)
+        rset = email.unrelated('use_email', 'CWUser', 'object')
+        self.assertEquals([x.login for x in rset.entities()], [u'admin', u'anon'])
+        user = self.request().user
+        rset = user.unrelated('use_email', 'EmailAddress', 'subject')
+        self.assertEquals([x.address for x in rset.entities()], [u'hop'])
+        self.create_user('toto')
+        self.login('toto')
+        email = self.execute('Any X WHERE X eid %(x)s', {'x': email.eid}, 'x').get_entity(0, 0)
+        rset = email.unrelated('use_email', 'CWUser', 'object')
+        self.assertEquals([x.login for x in rset.entities()], ['toto'])
+        user = self.request().user
+        rset = user.unrelated('use_email', 'EmailAddress', 'subject')
+        self.assertEquals([x.address for x in rset.entities()], ['hop'])
+        user = self.execute('Any X WHERE X login "admin"').get_entity(0, 0)
+        rset = user.unrelated('use_email', 'EmailAddress', 'subject')
+        self.assertEquals([x.address for x in rset.entities()], [])
+        self.login('anon')
+        email = self.execute('Any X WHERE X eid %(x)s', {'x': email.eid}, 'x').get_entity(0, 0)
+        rset = email.unrelated('use_email', 'CWUser', 'object')
+        self.assertEquals([x.login for x in rset.entities()], [])
+        user = self.request().user
+        rset = user.unrelated('use_email', 'EmailAddress', 'subject')
+        self.assertEquals([x.address for x in rset.entities()], [])
+
+    def test_unrelated_new_entity(self):
         e = self.etype_instance('CWUser')
         unrelated = [r[0] for r in e.unrelated('in_group', 'CWGroup', 'subject')]
         # should be default groups but owners, i.e. managers, users, guests
