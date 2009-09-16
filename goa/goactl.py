@@ -18,7 +18,7 @@ from cubicweb.cwconfig import CubicWebConfiguration
 from logilab import common as lgc
 from logilab import constraint as lgcstr
 from logilab import mtconverter as lgmtc
-import rql, yams, yapps, simplejson, docutils, roman, voject
+import rql, yams, yapps, simplejson, docutils, roman
 
 SLINK_DIRECTORIES = [
     (lgc.__path__[0], 'logilab/common'),
