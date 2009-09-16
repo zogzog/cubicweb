@@ -14,7 +14,7 @@ from cubicweb.appobject import objectify_selector
 from cubicweb.selectors import match_kwargs
 from cubicweb.view import View, MainTemplate, NOINDEX, NOFOLLOW
 from cubicweb.utils import make_uid, UStringIO, can_do_pdf_conversion
-
+from cubicweb.schema import display_name
 
 # main templates ##############################################################
 
