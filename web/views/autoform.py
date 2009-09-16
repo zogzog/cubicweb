@@ -48,9 +48,12 @@ class AutomaticEntityForm(forms.EntityFieldsForm):
 
     @classmethod
     def erelations_by_category(cls, entity, categories=None, permission=None,
-                               rtags=None):
+                               rtags=None, strict=False):
         """return a list of (relation schema, target schemas, role) matching
         categories and permission
+
+        `strict`:
+          bool telling if having local role is enough (strict = False) or not
         """
         if categories is not None:
             if not isinstance(categories, (list, tuple, set, frozenset)):
@@ -65,6 +68,7 @@ class AutomaticEntityForm(forms.EntityFieldsForm):
             eid = entity.eid
         else:
             eid = None
+            strict = False
         for rschema, targetschemas, role in eschema.relation_definitions(True):
             # check category first, potentially lower cost than checking
             # permission which may imply rql queries
@@ -84,7 +88,7 @@ class AutomaticEntityForm(forms.EntityFieldsForm):
                     if not rschema.has_perm(entity.req, permission, eid):
                         continue
                 elif role == 'subject':
-                    if not ((eid is None and rschema.has_local_role(permission)) or
+                    if not ((not strict and rschema.has_local_role(permission)) or
                             rschema.has_perm(entity.req, permission, fromeid=eid)):
                         continue
                     # on relation with cardinality 1 or ?, we need delete perm as well
@@ -96,7 +100,7 @@ class AutomaticEntityForm(forms.EntityFieldsForm):
                                                  toeid=entity.related(rschema.type, role)[0][0])):
                         continue
                 elif role == 'object':
-                    if not ((eid is None and rschema.has_local_role(permission)) or
+                    if not ((not strict and rschema.has_local_role(permission)) or
                             rschema.has_perm(entity.req, permission, toeid=eid)):
                         continue
                     # on relation with cardinality 1 or ?, we need delete perm as well
@@ -110,7 +114,8 @@ class AutomaticEntityForm(forms.EntityFieldsForm):
             yield (rschema, targetschemas, role)
 
     @classmethod
-    def esrelations_by_category(cls, entity, categories=None, permission=None):
+    def esrelations_by_category(cls, entity, categories=None, permission=None,
+                                strict=False):
         """filter out result of relations_by_category(categories, permission) by
         removing final relations
 
@@ -118,7 +123,7 @@ class AutomaticEntityForm(forms.EntityFieldsForm):
         """
         result = []
         for rschema, ttypes, role in cls.erelations_by_category(
-            entity, categories, permission):
+            entity, categories, permission, strict=strict):
             if rschema.is_final():
                 continue
             result.append((rschema.display_name(entity.req, role), rschema, role))
@@ -196,14 +201,15 @@ class AutomaticEntityForm(forms.EntityFieldsForm):
         return self.erelations_by_category(self.edited_entity, True, 'add',
                                            self.rinlined)
 
-    def srelations_by_category(self, categories=None, permission=None):
+    def srelations_by_category(self, categories=None, permission=None,
+                               strict=False):
         """filter out result of relations_by_category(categories, permission) by
         removing final relations
 
         return a sorted list of (relation's label, relation'schema, role)
         """
         return self.esrelations_by_category(self.edited_entity, categories,
-                                           permission)
+                                           permission, strict=strict)
 
     def action(self):
         """return the form's action attribute. Default to validateform if not
@@ -235,7 +241,8 @@ class AutomaticEntityForm(forms.EntityFieldsForm):
         """
         entity = self.edited_entity
         pending_deletes = self.req.get_pending_deletes(entity.eid)
-        for label, rschema, role in self.srelations_by_category('generic', 'add'):
+        for label, rschema, role in self.srelations_by_category('generic', 'add',
+                                                                strict=True):
             relatedrset = entity.related(rschema, role, limit=self.related_limit)
             if rschema.has_perm(self.req, 'delete'):
                 toggleable_rel_link_func = editforms.toggleable_relation_link
