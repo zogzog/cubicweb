@@ -93,8 +93,7 @@ class LinkToEntityAction(Action):
     def url(self):
         current_entity = self.rset.get_entity(self.row or 0, self.col or 0)
         linkto = '%s:%s:%s' % (self.rtype, current_entity.eid, target(self))
-        return self.build_url(vid='creation', etype=self.etype,
-                              __linkto=linkto,
+        return self.build_url('add/%s' % self.etype, __linkto=linkto,
                               __redirectpath=current_entity.rest_path(), # should not be url quoted!
                               __redirectvid=self.req.form.get('__redirectvid', ''))
 

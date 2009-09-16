@@ -285,7 +285,7 @@ class AddRelatedActions(Action):
                         yield rschema, teschema, role
 
     def linkto_url(self, entity, rtype, etype, target):
-        return self.build_url(vid='creation', etype=etype,
+        return self.build_url('add/%s' % etype,
                               __linkto='%s:%s:%s' % (rtype, entity.eid, target),
                               __redirectpath=entity.rest_path(), # should not be url quoted!
                               __redirectvid=self.req.form.get('vid', ''))
