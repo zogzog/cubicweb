@@ -360,7 +360,7 @@ paramstyle = 'pyformat'
 # connection object ###########################################################
 
 class Connection(object):
-    """DB-API 2.0 compatible Connection object for CubicWebt
+    """DB-API 2.0 compatible Connection object for CubicWeb
     """
     # make exceptions available through the connection object
     ProgrammingError = ProgrammingError

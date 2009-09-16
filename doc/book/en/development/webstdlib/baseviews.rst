@@ -30,10 +30,11 @@ Special views
 Entity views
 ````````````
 *incontext, outofcontext*
-    Those are used to display a link to an entity, depending if the entity is
-    considered as displayed in or out of context (of another entity).  By default
-    it respectively returns the result of `textincontext` and `textoutofcontext`
-    wrapped in a link leading to the primary view of the entity.
+    Those are used to display a link to an entity, depending on the
+    entity having to be displayed in or out of context
+    (of another entity).  By default it respectively returns the
+    result of `textincontext` and `textoutofcontext` wrapped in a link
+    leading to the primary view of the entity.
 
 *oneline*
     This view is used when we can't tell if the entity should be considered as
@@ -55,6 +56,12 @@ List
 
 *adaptedlistitem*
     This view redirects by default to the `outofcontext` view.
+
+*csv*
+    This view applies to entity groups, which are individually
+    displayed using the `incontext` view. It displays each entity as a
+    coma separated list. It is NOT related to the well-known text file
+    format.
 
 Text entity views
 ~~~~~~~~~~~~~~~~~

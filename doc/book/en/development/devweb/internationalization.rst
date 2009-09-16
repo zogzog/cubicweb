@@ -45,7 +45,8 @@ marked in one of the following ways :
 
 The goal of the *built-in* function `_` is only **to mark the
 translatable strings**, it will only return the string to translate
-it-self, but not its translation (it's actually refering to the `unicode` builtin).
+itself, but not its translation (it's actually another name for the
+`unicode` builtin).
 
 In the other hand the request's method `self.req._` is meant to retrieve the
 proper translation of translation strings in the requested language.
@@ -81,8 +82,8 @@ purpose:
 
 
 * `i18ncubicweb` updates Cubicweb framework's translation
-  catalogs. Unless you work on the framework development, you don't
-  need to use this command.
+  catalogs. Unless you actually work on the framework itself, you
+  don't need to use this command.
 
 * `i18ncube` updates the translation catalogs of *one particular
   cube* (or of all cubes). After this command is
@@ -90,7 +91,7 @@ purpose:
   directory of your template. This command will of course not remove
   existing translations still in use.
 
-* `i18ninstance` recompile the translation catalogs of *one particular
+* `i18ninstance` recompiles the translation catalogs of *one particular
   instance* (or of all instances) after the translation catalogs of
   its cubes have been updated. This command is automatically
   called every time you create or update your instance. The compiled
