@@ -392,7 +392,11 @@ this option is set to yes",
                         'server/serverctl.py', 'hercule.py',
                         'devtools/devctl.py', 'goa/goactl.py'):
             if exists(join(CW_SOFTWARE_ROOT, ctlfile)):
-                load_module_from_file(join(CW_SOFTWARE_ROOT, ctlfile))
+                try:
+                    load_module_from_file(join(CW_SOFTWARE_ROOT, ctlfile))
+                except ImportError, err:
+                    cls.warning('could not import the command provider %s (cause : %s)' %
+                                (ctlfile, err))
                 cls.info('loaded cubicweb-ctl plugin %s', ctlfile)
         for cube in cls.available_cubes():
             pluginfile = join(cls.cube_dir(cube), 'ecplugin.py')
