@@ -336,7 +336,7 @@ directory (default to once a day).',
                 if sol[varname] == 'CWUser':
                     mainvars.append(varname)
                     break
-        assert mainvars
+        assert mainvars, rqlst
         columns, globtransforms = self.prepare_columns(mainvars, rqlst)
         eidfilters = []
         allresults = []

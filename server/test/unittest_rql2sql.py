@@ -163,7 +163,6 @@ WHERE X.cw_prenom=lulu AND NOT EXISTS(SELECT 1 FROM owned_by_relation AS rel_own
 ]
 
 ADVANCED= [
-
     ("Societe S WHERE S nom 'Logilab' OR S nom 'Caesium'",
      '''SELECT S.cw_eid
 FROM cw_Societe AS S

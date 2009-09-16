@@ -656,10 +656,6 @@ class SQLGenerator(object):
                 sql = self._visit_outer_join_relation(relation, rschema)
             elif rschema.inlined:
                 sql = self._visit_inlined_relation(relation)
-#             elif isinstance(relation.parent, Not):
-#                 self._state.done.add(relation.parent)
-#                 # NOT relation
-#                 sql = self._visit_not_relation(relation, rschema)
             else:
                 # regular (non final) relation
                 sql = self._visit_relation(relation, rschema)
@@ -1104,7 +1100,8 @@ class SQLGenerator(object):
                 raise BadRQLQuery(var.stmt.root)
             table = var.name
             sql = '%s.%seid' % (table, SQL_PREFIX)
-            self.add_table('%s%s AS %s' % (SQL_PREFIX, etype, table), table, scope=scope)
+            self.add_table('%s%s AS %s' % (SQL_PREFIX, etype, table), table,
+                           scope=scope)
         return sql, table
 
     def _inlined_var_sql(self, var, rtype):
