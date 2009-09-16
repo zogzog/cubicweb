@@ -149,7 +149,7 @@ class RQLRewriter(object):
                         self.insert_snippet(varmap, rqlexpr.snippet_rqlst, exists)
             if varexistsmap is None and not inserted:
                 # no rql expression found matching rql solutions. User has no access right
-                raise Unauthorized(str((varmap, str(self.select), [expr.expression for expr in rqlexprs])))
+                raise Unauthorized()
 
     def insert_snippet(self, varmap, snippetrqlst, parent=None):
         new = snippetrqlst.where.accept(self)
