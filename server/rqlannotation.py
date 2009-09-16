@@ -331,7 +331,7 @@ class IsAmbData(object):
         if isinstance(term, VariableRef) and self.is_ambiguous(term.variable):
             var = term.variable
             if len(var.stinfo['relations'] - var.stinfo['typerels']) == 1 \
-                   or rel.sqlscope is var.sqlscope:
+                   or rel.sqlscope is var.sqlscope or rel.r_type == 'identity':
                 self.restrict(var, frozenset(etypes_func()))
                 try:
                     self.maydeambrels[var].add(rel)
