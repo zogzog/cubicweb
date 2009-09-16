@@ -412,7 +412,8 @@ class EntityFormRenderer(EntityBaseFormRenderer):
             return u''
         req = self.req
         _ = req._
-        label = u'%s :' % _('This %s' % form.edited_entity.e_schema).capitalize()
+        __ = _
+        label = u'%s :' % __('This %s' % form.edited_entity.e_schema).capitalize()
         eid = form.edited_entity.eid
         w(u'<fieldset class="subentity">')
         w(u'<legend class="iformTitle">%s</legend>' % label)

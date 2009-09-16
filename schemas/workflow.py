@@ -33,7 +33,7 @@ class Workflow(EntityType):
 
 
 class default_workflow(RelationType):
-    """default workflow for this entity types"""
+    """default workflow for an entity type"""
     permissions = META_RTYPE_PERMS
 
     subject = 'CWEType'

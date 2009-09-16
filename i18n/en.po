@@ -107,10 +107,6 @@ msgid "%s error report"
 msgstr ""
 
 #, python-format
-msgid "%s is not the initial state (%s) for this entity"
-msgstr ""
-
-#, python-format
 msgid "%s not estimated"
 msgstr ""
 
@@ -196,6 +192,15 @@ msgstr ""
 
 msgid "Attributes"
 msgstr ""
+
+# schema pot file, generated on 2009-09-16 16:46:55
+#
+# singular and plural forms for each entity type
+msgid "BaseTransition"
+msgstr "Transition (abstract)"
+
+msgid "BaseTransition_plural"
+msgstr "Transitions (abstract)"
 
 msgid "Bookmark"
 msgstr "Bookmark"
@@ -351,6 +356,9 @@ msgstr "Interval"
 msgid "Interval_plural"
 msgstr "Intervals"
 
+msgid "New BaseTransition"
+msgstr "XXX"
+
 msgid "New Bookmark"
 msgstr "New bookmark"
 
@@ -358,7 +366,7 @@ msgid "New CWAttribute"
 msgstr "New attribute"
 
 msgid "New CWCache"
-msgstr ""
+msgstr "New cache"
 
 msgid "New CWConstraint"
 msgstr "New constraint"
@@ -399,11 +407,20 @@ msgstr "New RQL expression"
 msgid "New State"
 msgstr "New state"
 
+msgid "New SubWorkflowExitPoint"
+msgstr "New subworkflow exit-point"
+
 msgid "New TrInfo"
 msgstr "New transition information"
 
 msgid "New Transition"
 msgstr "New transition"
+
+msgid "New Workflow"
+msgstr "New workflow"
+
+msgid "New WorkflowTransition"
+msgstr "New workflow-transition"
 
 msgid "No query has been executed"
 msgstr ""
@@ -472,6 +489,12 @@ msgstr "String"
 msgid "String_plural"
 msgstr "Strings"
 
+msgid "SubWorkflowExitPoint"
+msgstr "Subworkflow exit-point"
+
+msgid "SubWorkflowExitPoint_plural"
+msgstr "subworkflow exit-points"
+
 msgid "Subject:"
 msgstr ""
 
@@ -492,12 +515,12 @@ msgstr ""
 msgid "The view %s could not be found"
 msgstr ""
 
-msgid "There is no workflow defined for this entity."
-msgstr ""
-
 #, python-format
 msgid "This %s"
 msgstr ""
+
+msgid "This BaseTransition"
+msgstr "This abstract transition"
 
 msgid "This Bookmark"
 msgstr "This bookmark"
@@ -506,7 +529,7 @@ msgid "This CWAttribute"
 msgstr "This attribute"
 
 msgid "This CWCache"
-msgstr ""
+msgstr "This cache"
 
 msgid "This CWConstraint"
 msgstr "This constraint"
@@ -547,11 +570,20 @@ msgstr "This RQL expression"
 msgid "This State"
 msgstr "This state"
 
+msgid "This SubWorkflowExitPoint"
+msgstr "This subworkflow exit-point"
+
 msgid "This TrInfo"
 msgstr "This transition information"
 
 msgid "This Transition"
 msgstr "This transition"
+
+msgid "This Workflow"
+msgstr "This workflow"
+
+msgid "This WorkflowTransition"
+msgstr "This workflow-transition"
 
 msgid "Time"
 msgstr "Time"
@@ -584,8 +616,20 @@ msgstr ""
 msgid "What's new?"
 msgstr ""
 
+msgid "Workflow"
+msgstr "Workflow"
+
 msgid "Workflow history"
 msgstr ""
+
+msgid "WorkflowTransition"
+msgstr "Workflow-transition"
+
+msgid "WorkflowTransition_plural"
+msgstr "Workflow-transitions"
+
+msgid "Workflow_plural"
+msgstr "Workflows"
 
 msgid "You are not connected to an instance !"
 msgstr ""
@@ -622,9 +666,6 @@ msgstr ""
 msgid "[%s supervision] changes summary"
 msgstr ""
 
-msgid "__msg state changed"
-msgstr "state changed"
-
 msgid ""
 "a RQL expression which should return some results, else the transition won't "
 "be available. This query may use X and U variables that will respectivly "
@@ -644,10 +685,10 @@ msgstr ""
 msgid "about this site"
 msgstr ""
 
-msgid "access type"
+msgid "abstract base class for transitions"
 msgstr ""
 
-msgid "account state"
+msgid "access type"
 msgstr ""
 
 msgid "action(s) on this selection"
@@ -660,6 +701,12 @@ msgid "actions_addentity"
 msgstr "add an entity of this type"
 
 msgid "actions_addentity_description"
+msgstr ""
+
+msgid "actions_addrelated"
+msgstr ""
+
+msgid "actions_addrelated_description"
 msgstr ""
 
 msgid "actions_cancel"
@@ -848,8 +895,8 @@ msgstr "incoming state"
 msgid "add State allowed_transition Transition subject"
 msgstr "allowed transition"
 
-msgid "add State state_of CWEType object"
-msgstr "state"
+msgid "add State allowed_transition WorkflowTransition subject"
+msgstr "workflow-transition"
 
 msgid "add Transition condition RQLExpression subject"
 msgstr "condition"
@@ -860,8 +907,14 @@ msgstr "incoming transition"
 msgid "add Transition destination_state State subject"
 msgstr "destination state"
 
-msgid "add Transition transition_of CWEType object"
-msgstr "transition"
+msgid "add WorkflowTransition condition RQLExpression subject"
+msgstr "workflow-transition"
+
+msgid "add WorkflowTransition subworkflow_exit SubWorkflowExitPoint subject"
+msgstr "subworkflow exit-point"
+
+msgid "add a BaseTransition"
+msgstr "XXX"
 
 msgid "add a Bookmark"
 msgstr "add a bookmark"
@@ -911,11 +964,20 @@ msgstr "add a rql expression"
 msgid "add a State"
 msgstr "add a state"
 
+msgid "add a SubWorkflowExitPoint"
+msgstr "add a subworkflow exit-point"
+
 msgid "add a TrInfo"
 msgstr "add a transition information"
 
 msgid "add a Transition"
 msgstr "add a transition"
+
+msgid "add a Workflow"
+msgstr "add a workflow"
+
+msgid "add a WorkflowTransition"
+msgstr "add a workflow-transition"
 
 msgid "add a new permission"
 msgstr ""
@@ -944,10 +1006,16 @@ msgid ""
 "(toeid)s"
 msgstr ""
 
+msgid "addrelated"
+msgstr ""
+
 msgid "address"
 msgstr ""
 
 msgid "alias"
+msgstr ""
+
+msgid "allow to set a specific workflow for an entity"
 msgstr ""
 
 msgid "allowed transition from this state"
@@ -1122,6 +1190,12 @@ msgstr ""
 msgid "by relation"
 msgstr ""
 
+msgid "by_transition"
+msgstr ""
+
+msgid "by_transition_object"
+msgstr ""
+
 msgid "calendar"
 msgstr ""
 
@@ -1152,6 +1226,9 @@ msgstr ""
 msgid "can't display data, unexpected error: %s"
 msgstr ""
 
+msgid "can't have multiple exits on the same state"
+msgstr ""
+
 #, python-format
 msgid ""
 "can't set inlined=%(inlined)s, %(stype)s %(rtype)s %(otype)s has cardinality="
@@ -1162,9 +1239,6 @@ msgid "cancel select"
 msgstr ""
 
 msgid "cancel this insert"
-msgstr ""
-
-msgid "canonical"
 msgstr ""
 
 msgid "cardinality"
@@ -1190,9 +1264,6 @@ msgid "click to edit this field"
 msgstr ""
 
 msgid "comment"
-msgstr ""
-
-msgid "comment:"
 msgstr ""
 
 msgid "comment_format"
@@ -1245,6 +1316,12 @@ msgstr "page navigation"
 
 msgid "components_navigation_description"
 msgstr "pagination component for large resultsets"
+
+msgid "components_pdfview"
+msgstr ""
+
+msgid "components_pdfview_description"
+msgstr ""
 
 msgid "components_rqlinput"
 msgstr "rql input box"
@@ -1445,14 +1522,21 @@ msgstr "creating rql expression for read permission on relations %(linkto)s"
 msgid "creating RQLExpression (Transition %(linkto)s condition RQLExpression)"
 msgstr "creating rql expression for transition %(linkto)s"
 
+msgid ""
+"creating RQLExpression (WorkflowTransition %(linkto)s condition "
+"RQLExpression)"
+msgstr "creating rql expression for workflow-transition %(linkto)s"
+
 msgid "creating State (State allowed_transition Transition %(linkto)s)"
 msgstr "creating a state able to trigger transition %(linkto)s"
 
-msgid "creating State (State state_of CWEType %(linkto)s)"
-msgstr "creating state for the %(linkto)s entity type"
-
 msgid "creating State (Transition %(linkto)s destination_state State)"
 msgstr "creating destination state for transition %(linkto)s"
+
+msgid ""
+"creating SubWorkflowExitPoint (WorkflowTransition %(linkto)s "
+"subworkflow_exit SubWorkflowExitPoint)"
+msgstr "creating subworkflow exit-point for workflow-transition %(linkto)s"
 
 msgid "creating Transition (State %(linkto)s allowed_transition Transition)"
 msgstr "creating triggerable transition for state %(linkto)s"
@@ -1460,8 +1544,10 @@ msgstr "creating triggerable transition for state %(linkto)s"
 msgid "creating Transition (Transition destination_state State %(linkto)s)"
 msgstr "creating transition leading to state %(linkto)s"
 
-msgid "creating Transition (Transition transition_of CWEType %(linkto)s)"
-msgstr "creating transition for the %(linkto)s entity type"
+msgid ""
+"creating WorkflowTransition (State %(linkto)s allowed_transition "
+"WorkflowTransition)"
+msgstr "creating workflow-transition leading to state %(linkto)s"
 
 msgid "creation"
 msgstr ""
@@ -1487,6 +1573,12 @@ msgstr ""
 #, python-format
 msgid "currently attached file: %s"
 msgstr ""
+
+msgid "custom_workflow"
+msgstr "custom workflow"
+
+msgid "custom_workflow_object"
+msgstr "custom workflow of"
 
 msgid "cwetype-schema-image"
 msgstr "schema"
@@ -1524,6 +1616,18 @@ msgstr ""
 msgid "default text format for rich text fields."
 msgstr ""
 
+msgid "default user workflow"
+msgstr ""
+
+msgid "default workflow for this entity types"
+msgstr ""
+
+msgid "default_workflow"
+msgstr "default workflow"
+
+msgid "default_workflow_object"
+msgstr "default workflow of"
+
 msgid "defaultval"
 msgstr "default value"
 
@@ -1556,6 +1660,9 @@ msgid "define a schema constraint type"
 msgstr ""
 
 msgid "define an entity type, used to build the instance schema"
+msgstr ""
+
+msgid "define how we get out from a sub-workflow"
 msgstr ""
 
 msgid ""
@@ -1603,6 +1710,9 @@ msgstr ""
 msgid "description_format"
 msgstr "format"
 
+msgid "destination state"
+msgstr ""
+
 msgid "destination state for this transition"
 msgstr ""
 
@@ -1640,6 +1750,9 @@ msgstr ""
 msgid "display the component or not"
 msgstr ""
 
+msgid "display the pdf icon or not"
+msgstr ""
+
 msgid ""
 "distinct label to distinguate between other permission entity of the same "
 "name"
@@ -1653,6 +1766,9 @@ msgid "download %s"
 msgstr ""
 
 msgid "download icon"
+msgstr ""
+
+msgid "download page as pdf"
 msgstr ""
 
 msgid "download schema as owl"
@@ -1712,6 +1828,9 @@ msgstr ""
 msgid "entity edited"
 msgstr ""
 
+msgid "entity has no workflow set"
+msgstr ""
+
 msgid "entity linked"
 msgstr ""
 
@@ -1723,10 +1842,7 @@ msgid ""
 "configuration"
 msgstr ""
 
-msgid "entity types which may use this state"
-msgstr ""
-
-msgid "entity types which may use this transition"
+msgid "entity types which may use this workflow"
 msgstr ""
 
 msgid "error while embedding page"
@@ -1744,6 +1860,16 @@ msgid "error while querying source %s, some data may be missing"
 msgstr ""
 
 msgid "eta_date"
+msgstr ""
+
+msgid "exit_point"
+msgstr ""
+
+msgid "exit_point_object"
+msgstr ""
+
+#, python-format
+msgid "exiting from subworkflow %s"
 msgstr ""
 
 msgid "expected:"
@@ -1873,6 +1999,10 @@ msgstr ""
 msgid "granted to groups"
 msgstr ""
 
+#, python-format
+msgid "graphical representation of %s"
+msgstr ""
+
 msgid "graphical representation of the instance'schema"
 msgstr ""
 
@@ -1961,6 +2091,9 @@ msgstr ""
 msgid "id of main template used to render pages"
 msgstr ""
 
+msgid "identical to"
+msgstr ""
+
 msgid "identical_to"
 msgstr "identical to"
 
@@ -2027,7 +2160,7 @@ msgstr ""
 msgid "initial estimation %s"
 msgstr ""
 
-msgid "initial state for entities of this type"
+msgid "initial state for this workflow"
 msgstr ""
 
 msgid "initial_state"
@@ -2138,13 +2271,16 @@ msgstr ""
 msgid "link a relation definition to its subject entity type"
 msgstr ""
 
-msgid "link a state to one or more entity type"
+msgid "link a state to one or more workflow"
 msgstr ""
 
 msgid "link a transition information to its object"
 msgstr ""
 
-msgid "link a transition to one or more entity type"
+msgid "link a transition to one or more workflow"
+msgstr ""
+
+msgid "link a workflow to one or more entity type"
 msgstr ""
 
 msgid "link to each item in"
@@ -2194,6 +2330,9 @@ msgid "manage security"
 msgstr ""
 
 msgid "managers"
+msgstr ""
+
+msgid "mandatory relation"
 msgstr ""
 
 msgid "march"
@@ -2414,6 +2553,12 @@ msgstr ""
 msgid "powered by CubicWeb"
 msgstr ""
 
+msgid "prefered_form"
+msgstr ""
+
+msgid "prefered_form_object"
+msgstr ""
+
 msgid "preferences"
 msgstr ""
 
@@ -2453,6 +2598,12 @@ msgstr "has permission to delete"
 msgid "registry"
 msgstr ""
 
+msgid "related entity has no state"
+msgstr ""
+
+msgid "related entity has no workflow set"
+msgstr ""
+
 #, python-format
 msgid "relation %(relname)s of %(ent)s"
 msgstr ""
@@ -2470,6 +2621,9 @@ msgid "relations deleted"
 msgstr ""
 
 msgid "relative url of the bookmarked page"
+msgstr ""
+
+msgid "remove this BaseTransition"
 msgstr ""
 
 msgid "remove this Bookmark"
@@ -2512,7 +2666,7 @@ msgid "remove this EmailAddress"
 msgstr "remove this email address"
 
 msgid "remove this ExternalUri"
-msgstr ""
+msgstr "remove this external uri"
 
 msgid "remove this RQLExpression"
 msgstr "remove this RQL expression"
@@ -2520,11 +2674,20 @@ msgstr "remove this RQL expression"
 msgid "remove this State"
 msgstr "remove this state"
 
+msgid "remove this SubWorkflowExitPoint"
+msgstr "remove this subworkflow exit-point"
+
 msgid "remove this TrInfo"
 msgstr "remove this transition information"
 
 msgid "remove this Transition"
 msgstr "remove this transition"
+
+msgid "remove this Workflow"
+msgstr "remove this workflow"
+
+msgid "remove this WorkflowTransition"
+msgstr "remove this workflow-transition"
 
 msgid "require_group"
 msgstr "require the group"
@@ -2533,10 +2696,10 @@ msgid "require_group_object"
 msgstr "required by"
 
 msgid "require_permission"
-msgstr ""
+msgstr "require permission"
 
 msgid "require_permission_object"
-msgstr ""
+msgstr "required by"
 
 msgid "required attribute"
 msgstr ""
@@ -2653,6 +2816,9 @@ msgstr ""
 msgid "semantic description of this transition"
 msgstr ""
 
+msgid "semantic description of this workflow"
+msgstr ""
+
 msgid "send email"
 msgstr ""
 
@@ -2705,6 +2871,9 @@ msgstr ""
 msgid "sparql xml"
 msgstr ""
 
+msgid "special transition allowing to go through a sub-workflow"
+msgstr ""
+
 msgid "specializes"
 msgstr ""
 
@@ -2715,6 +2884,17 @@ msgid "startup views"
 msgstr ""
 
 msgid "state"
+msgstr ""
+
+msgid "state doesn't belong to entity's current workflow"
+msgstr ""
+
+msgid "state doesn't belong to entity's workflow"
+msgstr ""
+
+msgid ""
+"state doesn't belong to entity's workflow. You may want to set a custom "
+"workflow for this entity first."
 msgstr ""
 
 msgid "state_of"
@@ -2741,6 +2921,27 @@ msgstr ""
 
 msgid "subject_plural:"
 msgstr "subjects:"
+
+msgid "subworkflow"
+msgstr ""
+
+msgid "subworkflow state"
+msgstr ""
+
+msgid "subworkflow_exit"
+msgstr "subworkflow exit"
+
+msgid "subworkflow_exit_object"
+msgstr "subworkflow exit of"
+
+msgid "subworkflow_object"
+msgstr "subworkflow of"
+
+msgid "subworkflow_state"
+msgstr "subworkflow state"
+
+msgid "subworkflow_state_object"
+msgstr ""
 
 msgid "sunday"
 msgstr ""
@@ -2846,8 +3047,13 @@ msgstr "to do by"
 msgid "toggle check boxes"
 msgstr ""
 
-#, python-format
-msgid "transition from %s to %s does not exist or is not allowed"
+msgid "transition doesn't belong to entity's workflow"
+msgstr ""
+
+msgid "transition isn't allowed"
+msgstr ""
+
+msgid "transition may not be fired"
 msgstr ""
 
 msgid "transition_of"
@@ -3056,12 +3262,33 @@ msgstr "workflow history"
 
 msgid ""
 "when multiple addresses are equivalent (such as python-projects@logilab.org "
-"and python-projects@lists.logilab.org), set this to true on one of them "
-"which is the preferred form."
+"and python-projects@lists.logilab.org), set this to indicate which is the "
+"preferred form."
+msgstr ""
+
+msgid "workflow"
 msgstr ""
 
 #, python-format
-msgid "workflow for %s"
+msgid "workflow changed to \"%s\""
+msgstr ""
+
+msgid "workflow has no initial state"
+msgstr ""
+
+msgid "workflow history item"
+msgstr ""
+
+msgid "workflow to which this state belongs"
+msgstr ""
+
+msgid "workflow to which this transition belongs"
+msgstr ""
+
+msgid "workflow_of"
+msgstr ""
+
+msgid "workflow_of_object"
 msgstr ""
 
 msgid "xbel"

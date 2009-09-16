@@ -216,7 +216,8 @@ class EditionForm(FormMixIn, EntityView):
             return u''
         req = self.req
         _ = self.req._
-        label = u'%s :' % _('This %s' % entity.e_schema).capitalize()
+        __ = _
+        label = u'%s :' % __('This %s' % entity.e_schema).capitalize()
         eid = entity.eid
         html = []
         w = html.append
