@@ -141,10 +141,11 @@ class MigrationCommandsTC(RepositoryBasedTC):
 
     def test_add_drop_entity_type(self):
         self.mh.cmd_add_entity_type('Folder2')
-        todoeid = self.mh.cmd_add_state(u'todo', 'Folder2', initial=True)
-        doneeid = self.mh.cmd_add_state(u'done', 'Folder2')
-        self.mh.cmd_add_transition(u'redoit', 'Folder2', (doneeid,), todoeid)
-        self.mh.cmd_add_transition(u'markasdone', 'Folder2', (todoeid,), doneeid)
+        wf = self.mh.cmd_add_workflow(u'folder2 wf', 'Folder2')
+        todo = wf.add_state(u'todo', initial=True)
+        done = wf.add_state(u'done')
+        wf.add_transition(u'redoit', done, todo)
+        wf.add_transition(u'markasdone', todo, done)
         self.commit()
         eschema = self.schema.eschema('Folder2')
         self.mh.cmd_drop_entity_type('Folder2')
@@ -175,8 +176,8 @@ class MigrationCommandsTC(RepositoryBasedTC):
                           '1*')
         self.mh.cmd_add_relation_definition('Personne', 'concerne2', 'Note')
         self.assertEquals(sorted(self.schema['concerne2'].objects()), ['Affaire', 'Note'])
-        self.mh.add_entity('Personne', nom=u'tot')
-        self.mh.add_entity('Affaire')
+        self.mh.create_entity('Personne', nom=u'tot')
+        self.mh.create_entity('Affaire')
         self.mh.rqlexec('SET X concerne2 Y WHERE X is Personne, Y is Affaire')
         self.commit()
         self.mh.cmd_drop_relation_definition('Personne', 'concerne2', 'Affaire')
@@ -442,12 +443,6 @@ class MigrationCommandsTC(RepositoryBasedTC):
     def test_remove_dep_cube(self):
         ex = self.assertRaises(ConfigurationError, self.mh.cmd_remove_cube, 'file')
         self.assertEquals(str(ex), "can't remove cube file, used as a dependency")
-
-    def test_set_state(self):
-        user = self.session.user
-        self.mh.set_state(user.eid, 'deactivated')
-        user.clear_related_cache('in_state', 'subject')
-        self.assertEquals(user.state, 'deactivated')
 
     def test_introduce_base_class(self):
         self.mh.cmd_add_entity_type('Para')

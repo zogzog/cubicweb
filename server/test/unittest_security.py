@@ -27,10 +27,10 @@ class LowLevelSecurityFunctionTC(BaseSecurityTC):
 
     def test_check_read_access(self):
         rql = u'Personne U where U nom "managers"'
-        rqlst = self.repo.querier._rqlhelper.parse(rql).children[0]
+        rqlst = self.repo.vreg.rqlhelper.parse(rql).children[0]
         origgroups = self.schema['Personne'].get_groups('read')
         self.schema['Personne'].set_groups('read', ('users', 'managers'))
-        self.repo.querier._rqlhelper.compute_solutions(rqlst)
+        self.repo.vreg.rqlhelper.compute_solutions(rqlst)
         solution = rqlst.solutions[0]
         check_read_access(self.schema, self.session.user, rqlst, solution)
         cnx = self.login('anon')

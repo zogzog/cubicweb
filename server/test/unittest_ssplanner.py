@@ -18,7 +18,7 @@ class SSPlannerTC(BasePlannerTC):
 
     def setUp(self):
         BasePlannerTC.setUp(self)
-        self.planner = SSPlanner(self.o.schema, self.o._rqlhelper)
+        self.planner = SSPlanner(self.o.schema, self.repo.vreg.rqlhelper)
         self.system = self.o._repo.system_source
 
     def tearDown(self):
