@@ -24,7 +24,7 @@ class TreeView(EntityView):
     css_classes = 'treeview widget'
     title = _('tree view')
 
-    def call(self, subvid=None, treeid=None, initial_load=True):
+    def call(self, subvid=None, treeid=None, initial_load=True, initial_thru_ajax=False):
         if subvid is None:
             subvid = self.req.form.pop('treesubvid', 'oneline') # consume it
         if treeid is None:
@@ -32,17 +32,22 @@ class TreeView(EntityView):
             if treeid is None:
                 self.warning('Tree state won\'t be properly restored after next reload')
                 treeid = make_uid('throw away uid')
-        self.w(u'<ul id="tree-%s" class="%s">' % (treeid, self.css_classes))
+        toplevel_thru_ajax = self.req.form.pop('treeview_top', False) or initial_thru_ajax
+        toplevel = toplevel_thru_ajax or (initial_load and not self.req.form.get('fname'))
+        ulid = ' '
+        if toplevel:
+            ulid = ' id="tree-%s"' % treeid
+        self.w(u'<ul%s class="%s">' % (ulid, self.css_classes))
         for rowidx in xrange(len(self.rset)):
             self.wview(self.itemvid, self.rset, row=rowidx, col=0,
                        vid=subvid, parentvid=self.id, treeid=treeid)
         self.w(u'</ul>')
-        if initial_load and not self.req.form.get('fname'):
+        if toplevel:
             self.req.add_css('jquery.treeview.css')
             self.req.add_js(('cubicweb.ajax.js', 'cubicweb.widgets.js', 'jquery.treeview.js'))
             self.req.html_headers.add_onload(u"""
-jQuery("#tree-%s").treeview({toggle: toggleTree, prerendered: true});""" % treeid)
-
+jQuery("#tree-%s").treeview({toggle: toggleTree, prerendered: true});""" % treeid,
+                                             jsoncall=toplevel_thru_ajax)
 
 class FileTreeView(TreeView):
     """specific version of the treeview to display file trees
@@ -91,16 +96,18 @@ class TreeViewItemView(EntityView):
     (each item should be expandable if it's not a tree leaf)
     """
     id = 'treeitemview'
-    __select__ = EntityView.__select__ & implements(ITree) # XXX
+    default_branch_state_is_open = False
+    __select__ = EntityView.__select__ & implements(ITree)
 
     def open_state(self, eeid, treeid):
         cookies = self.req.get_cookie()
         treestate = cookies.get(treecookiename(treeid))
         if treestate:
             return str(eeid) in treestate.value.split(';')
-        return False
+        return self.default_branch_state_is_open
 
-    def cell_call(self, row, col, treeid, vid='oneline', parentvid='treeview'):
+    def cell_call(self, row, col, treeid, vid='oneline', parentvid='treeview',
+                  **kwargs):
         w = self.w
         entity = self.entity(row, col)
         liclasses = []
@@ -145,7 +152,7 @@ class TreeViewItemView(EntityView):
             if not is_open:
                 w(u'<ul class="placeholder"><li>place holder</li></ul>')
         # the local node info
-        self.wview(vid, self.rset, row=row, col=col)
+        self.wview(vid, self.rset, row=row, col=col, **kwargs)
         if is_open and not is_leaf: #  => rql is defined
             self.wview(parentvid, self.req.execute(rql), treeid=treeid, initial_load=False)
         w(u'</li>')
