@@ -89,7 +89,7 @@ Properties defined below are accessible through the following api:
     * `*`: 0..n
 
   - `meta` : boolean indicating that the relation is a meta-relation (false by
-    default)
+    default, will disappear in *CubicWeb* 3.5)
 
 * optional properties for attributes :
 
@@ -216,8 +216,8 @@ It is also possible to use specific groups if they are defined in the precreate
 of the cube (``migration/precreate.py``).
 
 
-Use of RQL expression for writing rights
-`````````````````````````````````````````
+Use of RQL expression for write permissions
+```````````````````````````````````````````
 It is possible to define RQL expression to provide update permission
 (`add`, `delete` and `update`) on relation and entity types.
 
@@ -249,7 +249,7 @@ for the following :
 * we can also defined rights on attributes of an entity (non-final relation),
   knowing that :
 
-  - to defines RQL expression, we have to use the class `RQLExpression`
+  - to define RQL expression, we have to use the class `RQLExpression`
     in which X represents the entity the attribute belongs to
 
   - the permissions `add` and `delete` are equivalent. Only `add`/`read`
@@ -321,7 +321,7 @@ An attribute is defined in the schema as follows::
     attr_name = attr_type(properties*)
 
 where `attr_type` is one of the type listed above and `properties` is
-a list of  the attribute needs to statisfy (see :ref:`properties`
+a list of the attribute needs to statisfy (see :ref:`properties`
 for more details).
 
 
@@ -434,6 +434,6 @@ new versions on this project to specific groups. It is important to notice that 
 * in such case, we have to protect both the entity type "Version" and the relation
   associating a version to a project ("version_of")
 
-* because of the genricity of the entity type `CWPermission`, we have to execute
+* because of the genericity of the entity type `CWPermission`, we have to execute
   a unification with the groups and/or the states if necessary in the expression
   ("U in_group G, P require_group G" in the above example)

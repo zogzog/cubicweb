@@ -243,6 +243,10 @@ Views
 
 ** *CubicWeb* is data driven **
 
+The view system is loosely coupled to data through a selection
+system. Views are, in essence, defined by an id, a selection predicate
+and an entry point (generaly producing html).
+
 XXX feed me.
 
 

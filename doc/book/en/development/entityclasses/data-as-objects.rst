@@ -1,7 +1,8 @@
 Access to persistent data
 --------------------------
 
-XXX is provided by the :class:`Entity <cubicweb.entity.entity>` class
+Python-level access to persistent data is provided by the
+:class:`Entity <cubicweb.entity>` class.
 
 An entity class is bound to a schema entity type.  Descriptors are added when
 classes are registered in order to initialize the class according to its schema:
@@ -22,8 +23,6 @@ classes are registered in order to initialize the class according to its schema:
 
   * `rest_path()`, returns a relative REST URL to get the entity
 
-  * `format(attr)`, returns the format (MIME type) of the field given un parameter
-
   * `printable_value(attr, value=_marker, attrtype=None, format='text/html')`,
     returns a string enabling the display of an attribute value in a given format
     (the value is automatically recovered if necessary)
@@ -33,7 +32,7 @@ classes are registered in order to initialize the class according to its schema:
   * `as_rset()`, converts the entity into an equivalent result set simulating the
      request `Any X WHERE X eid _eid_`
 
-  * `complete(skip_bytes=True)`, executes a request that recovers in one time
+  * `complete(skip_bytes=True)`, executes a request that recovers all at once
     all the missing attributes of an entity
 
   * `get_value(name)`, returns the value associated to the attribute name given
@@ -52,9 +51,6 @@ classes are registered in order to initialize the class according to its schema:
   * `copy_relations(ceid)`, copies the relations of the entities having the eid
     given in the parameters on the current entity
 
-  * `last_modified(view)`, returns the date the object has been modified
-    (used by HTTP cache handling)
-
   * `delete()` allows to delete the entity
 
 
@@ -66,24 +62,25 @@ inheriting from `cubicweb.entities.AnyEntity`. In general, we define this class
 in `mycube.entities` module (or in a submodule if we want to split code among
 multiple files) so that it will be available on both server and client side.
 
-The class `AnyEntity` is loaded dynamically from the class `Entity`
-(`cubciweb.entity`). We define a sub-class to add methods or to
-specialize the handling of a given entity type
+The class `AnyEntity` is a sub-class of Entity that add methods to it,
+and helps specializing (by further subclassing) the handling of a
+given entity type.
 
-The methods defined for `AnyEntity` or `Entity` are the following ones:
+The methods defined for `AnyEntity`, in addition to `Entity`, are the
+following ones:
 
 :Standard meta-data (Dublin Core):
 
-  * `dc_title()`, returns a unicode string corresponding to the meta-data
-    `Title` (used by default the first attribute non-meta of the entity
-    schema)
+  * `dc_title()`, returns a unicode string corresponding to the
+    meta-data `Title` (used by default is the first non-meta attribute
+    of the entity schema)
 
   * `dc_long_title()`, same as dc_title but can return a more
-    detailled title
+    detailed title
 
   * `dc_description(format='text/plain')`, returns a unicode string
-    corresponding to the meta-data `Description` (look for a description
-    attribute by default)
+    corresponding to the meta-data `Description` (looks for a
+    description attribute by default)
 
   * `dc_authors()`, returns a unicode string corresponding to the meta-data
     `Authors` (owners by default)
