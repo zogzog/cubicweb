@@ -110,9 +110,9 @@ def display_name(req, key, form='', context=None):
     if form:
         key = key + '_' + form
     # ensure unicode
-    # added .lower() in case no translation are available
-    if context:
-        return req.pgettext(context, key).lower()
+    # .lower() in case no translation are available XXX done whatever a translation is there or not!
+    if context is not None:
+        return unicode(req.pgettext(context, key)).lower()
     else:
         return unicode(req._(key)).lower()
 
