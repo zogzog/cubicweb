@@ -5,7 +5,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: 2.0\n"
 "POT-Creation-Date: 2006-01-12 17:35+CET\n"
-"PO-Revision-Date: 2009-08-05 08:39+0200\n"
+"PO-Revision-Date: 2009-09-17 11:53+0200\n"
 "Last-Translator: Sylvain Thenault <sylvain.thenault@logilab.fr>\n"
 "Language-Team: English <devel@logilab.fr.org>\n"
 "MIME-Version: 1.0\n"
@@ -515,10 +515,6 @@ msgstr ""
 msgid "The view %s could not be found"
 msgstr ""
 
-#, python-format
-msgid "This %s"
-msgstr ""
-
 msgid "This BaseTransition"
 msgstr "This abstract transition"
 
@@ -913,71 +909,21 @@ msgstr "workflow-transition"
 msgid "add WorkflowTransition subworkflow_exit SubWorkflowExitPoint subject"
 msgstr "subworkflow exit-point"
 
-msgid "add a BaseTransition"
-msgstr "XXX"
-
-msgid "add a Bookmark"
-msgstr "add a bookmark"
-
-msgid "add a CWAttribute"
-msgstr "add an attribute"
-
-msgid "add a CWCache"
-msgstr "add a cubicweb cache"
-
-msgid "add a CWConstraint"
-msgstr "add a constraint"
-
-msgid "add a CWConstraintType"
-msgstr "add a constraint type"
-
+msgctxt "inlined:CWRelation.from_entity.subject"
 msgid "add a CWEType"
 msgstr "add an entity type"
 
-msgid "add a CWGroup"
-msgstr "add a group"
+msgctxt "inlined:CWRelation.to_entity.subject"
+msgid "add a CWEType"
+msgstr "add an entity type"
 
-msgid "add a CWPermission"
-msgstr "add a permission"
-
-msgid "add a CWProperty"
-msgstr "add a property"
-
+msgctxt "inlined:CWRelation.relation_type.subject"
 msgid "add a CWRType"
 msgstr "add a relation type"
 
-msgid "add a CWRelation"
-msgstr "add a relation"
-
-msgid "add a CWUser"
-msgstr "add a user"
-
+msgctxt "inlined:CWUser.use_email.subject"
 msgid "add a EmailAddress"
 msgstr "add an email address"
-
-msgid "add a ExternalUri"
-msgstr "and an external uri"
-
-msgid "add a RQLExpression"
-msgstr "add a rql expression"
-
-msgid "add a State"
-msgstr "add a state"
-
-msgid "add a SubWorkflowExitPoint"
-msgstr "add a subworkflow exit-point"
-
-msgid "add a TrInfo"
-msgstr "add a transition information"
-
-msgid "add a Transition"
-msgstr "add a transition"
-
-msgid "add a Workflow"
-msgstr "add a workflow"
-
-msgid "add a WorkflowTransition"
-msgstr "add a workflow-transition"
 
 msgid "add a new permission"
 msgstr ""
@@ -992,6 +938,24 @@ msgstr "add permission"
 # (no object form for final relation types)
 msgid "add_permission"
 msgstr "can be added by"
+
+# subject and object forms for each relation type
+# (no object form for final relation types)
+msgctxt "CWEType"
+msgid "add_permission"
+msgstr ""
+
+msgctxt "CWRType"
+msgid "add_permission"
+msgstr ""
+
+msgctxt "CWGroup"
+msgid "add_permission_object"
+msgstr ""
+
+msgctxt "RQLExpression"
+msgid "add_permission_object"
+msgstr ""
 
 msgid "add_permission_object"
 msgstr "has permission to add"
@@ -1012,6 +976,14 @@ msgstr ""
 msgid "address"
 msgstr ""
 
+msgctxt "EmailAddress"
+msgid "address"
+msgstr ""
+
+msgid "alias"
+msgstr ""
+
+msgctxt "EmailAddress"
 msgid "alias"
 msgstr ""
 
@@ -1026,6 +998,22 @@ msgstr ""
 
 msgid "allowed_transition"
 msgstr "allowed transition"
+
+msgctxt "State"
+msgid "allowed_transition"
+msgstr ""
+
+msgctxt "BaseTransition"
+msgid "allowed_transition_object"
+msgstr ""
+
+msgctxt "Transition"
+msgid "allowed_transition_object"
+msgstr ""
+
+msgctxt "WorkflowTransition"
+msgid "allowed_transition_object"
+msgstr ""
 
 msgid "allowed_transition_object"
 msgstr "incoming states"
@@ -1105,6 +1093,14 @@ msgstr ""
 
 msgid "bookmarked_by"
 msgstr "bookmarked by"
+
+msgctxt "Bookmark"
+msgid "bookmarked_by"
+msgstr "bookmarked by"
+
+msgctxt "CWUser"
+msgid "bookmarked_by_object"
+msgstr ""
 
 msgid "bookmarked_by_object"
 msgstr "has bookmarks"
@@ -1193,8 +1189,24 @@ msgstr ""
 msgid "by_transition"
 msgstr ""
 
+msgctxt "TrInfo"
+msgid "by_transition"
+msgstr "by transition"
+
+msgctxt "BaseTransition"
 msgid "by_transition_object"
 msgstr ""
+
+msgctxt "Transition"
+msgid "by_transition_object"
+msgstr ""
+
+msgctxt "WorkflowTransition"
+msgid "by_transition_object"
+msgstr ""
+
+msgid "by_transition_object"
+msgstr "transition information"
 
 msgid "calendar"
 msgstr ""
@@ -1244,6 +1256,14 @@ msgstr ""
 msgid "cardinality"
 msgstr ""
 
+msgctxt "CWAttribute"
+msgid "cardinality"
+msgstr "cardinality"
+
+msgctxt "CWRelation"
+msgid "cardinality"
+msgstr ""
+
 msgid "category"
 msgstr ""
 
@@ -1266,6 +1286,14 @@ msgstr ""
 msgid "comment"
 msgstr ""
 
+msgctxt "TrInfo"
+msgid "comment"
+msgstr ""
+
+msgid "comment_format"
+msgstr "format"
+
+msgctxt "TrInfo"
 msgid "comment_format"
 msgstr "format"
 
@@ -1332,10 +1360,30 @@ msgstr "the rql box in the page's header"
 msgid "composite"
 msgstr ""
 
+msgctxt "CWRelation"
+msgid "composite"
+msgstr ""
+
+msgid "condition"
+msgstr ""
+
+msgctxt "BaseTransition"
+msgid "condition"
+msgstr ""
+
+msgctxt "Transition"
+msgid "condition"
+msgstr ""
+
+msgctxt "WorkflowTransition"
 msgid "condition"
 msgstr ""
 
 msgid "condition:"
+msgstr ""
+
+msgctxt "RQLExpression"
+msgid "condition_object"
 msgstr ""
 
 msgid "condition_object"
@@ -1346,6 +1394,18 @@ msgstr ""
 
 msgid "constrained_by"
 msgstr "constrained by"
+
+msgctxt "CWAttribute"
+msgid "constrained_by"
+msgstr "constrained by"
+
+msgctxt "CWRelation"
+msgid "constrained_by"
+msgstr "constrained by"
+
+msgctxt "CWConstraint"
+msgid "constrained_by_object"
+msgstr ""
 
 msgid "constrained_by_object"
 msgstr "constraints"
@@ -1462,6 +1522,10 @@ msgstr ""
 msgid "created_by"
 msgstr "created by"
 
+msgctxt "CWUser"
+msgid "created_by_object"
+msgstr ""
+
 msgid "created_by_object"
 msgstr "has created"
 
@@ -1561,6 +1625,14 @@ msgstr "creation date"
 msgid "cstrtype"
 msgstr "constraint's type"
 
+msgctxt "CWConstraint"
+msgid "cstrtype"
+msgstr ""
+
+msgctxt "CWConstraintType"
+msgid "cstrtype_object"
+msgstr ""
+
 msgid "cstrtype_object"
 msgstr "used by"
 
@@ -1576,6 +1648,14 @@ msgstr ""
 
 msgid "custom_workflow"
 msgstr "custom workflow"
+
+msgctxt "CWUser"
+msgid "custom_workflow"
+msgstr "custom workflow"
+
+msgctxt "Workflow"
+msgid "custom_workflow_object"
+msgstr ""
 
 msgid "custom_workflow_object"
 msgstr "custom workflow of"
@@ -1619,15 +1699,27 @@ msgstr ""
 msgid "default user workflow"
 msgstr ""
 
-msgid "default workflow for this entity types"
+msgid "default workflow for an entity type"
 msgstr ""
 
 msgid "default_workflow"
 msgstr "default workflow"
 
+msgctxt "CWEType"
+msgid "default_workflow"
+msgstr "default workflow"
+
+msgctxt "Workflow"
+msgid "default_workflow_object"
+msgstr ""
+
 msgid "default_workflow_object"
 msgstr "default workflow of"
 
+msgid "defaultval"
+msgstr "default value"
+
+msgctxt "CWAttribute"
 msgid "defaultval"
 msgstr "default value"
 
@@ -1688,6 +1780,22 @@ msgstr "delete permission"
 msgid "delete_permission"
 msgstr "can be deleted by"
 
+msgctxt "CWEType"
+msgid "delete_permission"
+msgstr "delete permission"
+
+msgctxt "CWRType"
+msgid "delete_permission"
+msgstr ""
+
+msgctxt "CWGroup"
+msgid "delete_permission_object"
+msgstr ""
+
+msgctxt "RQLExpression"
+msgid "delete_permission_object"
+msgstr ""
+
 msgid "delete_permission_object"
 msgstr "has permission to delete"
 
@@ -1707,6 +1815,78 @@ msgstr ""
 msgid "description"
 msgstr ""
 
+msgctxt "CWEType"
+msgid "description"
+msgstr ""
+
+msgctxt "CWRelation"
+msgid "description"
+msgstr ""
+
+msgctxt "Workflow"
+msgid "description"
+msgstr ""
+
+msgctxt "CWAttribute"
+msgid "description"
+msgstr ""
+
+msgctxt "Transition"
+msgid "description"
+msgstr ""
+
+msgctxt "WorkflowTransition"
+msgid "description"
+msgstr ""
+
+msgctxt "State"
+msgid "description"
+msgstr ""
+
+msgctxt "CWRType"
+msgid "description"
+msgstr ""
+
+msgctxt "BaseTransition"
+msgid "description"
+msgstr ""
+
+msgid "description_format"
+msgstr "format"
+
+msgctxt "CWEType"
+msgid "description_format"
+msgstr ""
+
+msgctxt "CWRelation"
+msgid "description_format"
+msgstr ""
+
+msgctxt "Workflow"
+msgid "description_format"
+msgstr "format"
+
+msgctxt "CWAttribute"
+msgid "description_format"
+msgstr "format"
+
+msgctxt "Transition"
+msgid "description_format"
+msgstr "format"
+
+msgctxt "WorkflowTransition"
+msgid "description_format"
+msgstr "format"
+
+msgctxt "State"
+msgid "description_format"
+msgstr "format"
+
+msgctxt "CWRType"
+msgid "description_format"
+msgstr "format"
+
+msgctxt "BaseTransition"
 msgid "description_format"
 msgstr "format"
 
@@ -1721,6 +1901,18 @@ msgstr ""
 
 msgid "destination_state"
 msgstr "destination state"
+
+msgctxt "Transition"
+msgid "destination_state"
+msgstr ""
+
+msgctxt "SubWorkflowExitPoint"
+msgid "destination_state"
+msgstr "destination state"
+
+msgctxt "State"
+msgid "destination_state_object"
+msgstr ""
 
 msgid "destination_state_object"
 msgstr "destination of"
@@ -1878,8 +2070,16 @@ msgstr ""
 msgid "expression"
 msgstr ""
 
+msgctxt "RQLExpression"
+msgid "expression"
+msgstr ""
+
 msgid "exprtype"
 msgstr "expression's type"
+
+msgctxt "RQLExpression"
+msgid "exprtype"
+msgstr ""
 
 msgid "external page"
 msgstr ""
@@ -1932,6 +2132,18 @@ msgstr ""
 msgid "final"
 msgstr ""
 
+msgctxt "CWEType"
+msgid "final"
+msgstr ""
+
+msgctxt "CWRType"
+msgid "final"
+msgstr ""
+
+msgid "firstname"
+msgstr ""
+
+msgctxt "CWUser"
 msgid "firstname"
 msgstr ""
 
@@ -1943,6 +2155,14 @@ msgstr ""
 
 msgid "for_user"
 msgstr "for user"
+
+msgctxt "CWProperty"
+msgid "for_user"
+msgstr ""
+
+msgctxt "CWUser"
+msgid "for_user_object"
+msgstr ""
 
 msgid "for_user_object"
 msgstr "use properties"
@@ -1960,6 +2180,18 @@ msgstr ""
 msgid "from_entity"
 msgstr "from entity"
 
+msgctxt "CWAttribute"
+msgid "from_entity"
+msgstr "from entity"
+
+msgctxt "CWRelation"
+msgid "from_entity"
+msgstr "from entity"
+
+msgctxt "CWEType"
+msgid "from_entity_object"
+msgstr ""
+
 msgid "from_entity_object"
 msgstr "subjet relation"
 
@@ -1968,6 +2200,14 @@ msgstr "from"
 
 msgid "from_state"
 msgstr "from state"
+
+msgctxt "TrInfo"
+msgid "from_state"
+msgstr "from state"
+
+msgctxt "State"
+msgid "from_state_object"
+msgstr ""
 
 msgid "from_state_object"
 msgstr "transitions from this state"
@@ -1978,8 +2218,16 @@ msgstr ""
 msgid "fulltext_container"
 msgstr ""
 
+msgctxt "CWRType"
+msgid "fulltext_container"
+msgstr "fulltext container"
+
 msgid "fulltextindexed"
 msgstr "fulltext indexed"
+
+msgctxt "CWAttribute"
+msgid "fulltextindexed"
+msgstr ""
 
 msgid "generic plot"
 msgstr ""
@@ -2100,6 +2348,94 @@ msgstr "identical to"
 msgid "identity"
 msgstr ""
 
+msgctxt "CWRelation"
+msgid "identity_object"
+msgstr ""
+
+msgctxt "Bookmark"
+msgid "identity_object"
+msgstr ""
+
+msgctxt "CWAttribute"
+msgid "identity_object"
+msgstr ""
+
+msgctxt "CWConstraintType"
+msgid "identity_object"
+msgstr ""
+
+msgctxt "State"
+msgid "identity_object"
+msgstr ""
+
+msgctxt "BaseTransition"
+msgid "identity_object"
+msgstr ""
+
+msgctxt "CWEType"
+msgid "identity_object"
+msgstr ""
+
+msgctxt "Workflow"
+msgid "identity_object"
+msgstr ""
+
+msgctxt "CWGroup"
+msgid "identity_object"
+msgstr ""
+
+msgctxt "TrInfo"
+msgid "identity_object"
+msgstr ""
+
+msgctxt "CWConstraint"
+msgid "identity_object"
+msgstr ""
+
+msgctxt "CWUser"
+msgid "identity_object"
+msgstr ""
+
+msgctxt "Transition"
+msgid "identity_object"
+msgstr ""
+
+msgctxt "CWRType"
+msgid "identity_object"
+msgstr ""
+
+msgctxt "SubWorkflowExitPoint"
+msgid "identity_object"
+msgstr ""
+
+msgctxt "ExternalUri"
+msgid "identity_object"
+msgstr ""
+
+msgctxt "CWCache"
+msgid "identity_object"
+msgstr ""
+
+msgctxt "WorkflowTransition"
+msgid "identity_object"
+msgstr ""
+
+msgctxt "RQLExpression"
+msgid "identity_object"
+msgstr ""
+
+msgctxt "CWPermission"
+msgid "identity_object"
+msgstr ""
+
+msgctxt "EmailAddress"
+msgid "identity_object"
+msgstr ""
+
+msgctxt "CWProperty"
+msgid "identity_object"
+msgstr ""
+
 msgid "identity_object"
 msgstr "identity"
 
@@ -2120,11 +2456,27 @@ msgstr ""
 msgid "in_group"
 msgstr "in group"
 
+msgctxt "CWUser"
+msgid "in_group"
+msgstr "in group"
+
+msgctxt "CWGroup"
+msgid "in_group_object"
+msgstr ""
+
 msgid "in_group_object"
 msgstr "contains"
 
 msgid "in_state"
 msgstr "in state"
+
+msgctxt "CWUser"
+msgid "in_state"
+msgstr "in state"
+
+msgctxt "State"
+msgid "in_state_object"
+msgstr ""
 
 msgid "in_state_object"
 msgstr "state of"
@@ -2142,6 +2494,10 @@ msgstr ""
 msgid "index this attribute's value in the plain text index"
 msgstr ""
 
+msgid "indexed"
+msgstr ""
+
+msgctxt "CWAttribute"
 msgid "indexed"
 msgstr ""
 
@@ -2166,9 +2522,21 @@ msgstr ""
 msgid "initial_state"
 msgstr "initial state"
 
+msgctxt "Workflow"
+msgid "initial_state"
+msgstr "initial state"
+
+msgctxt "State"
+msgid "initial_state_object"
+msgstr ""
+
 msgid "initial_state_object"
 msgstr "initial state of"
 
+msgid "inlined"
+msgstr ""
+
+msgctxt "CWRType"
 msgid "inlined"
 msgstr ""
 
@@ -2178,6 +2546,10 @@ msgstr ""
 msgid "internal entity uri"
 msgstr ""
 
+msgid "internationalizable"
+msgstr ""
+
+msgctxt "CWAttribute"
 msgid "internationalizable"
 msgstr ""
 
@@ -2216,7 +2588,15 @@ msgstr ""
 msgid "is_instance_of"
 msgstr ""
 
+msgctxt "CWEType"
 msgid "is_instance_of_object"
+msgstr ""
+
+msgid "is_instance_of_object"
+msgstr "is instance of"
+
+msgctxt "CWEType"
+msgid "is_object"
 msgstr ""
 
 msgid "is_object"
@@ -2234,12 +2614,20 @@ msgstr ""
 msgid "label"
 msgstr ""
 
+msgctxt "CWPermission"
+msgid "label"
+msgstr ""
+
 msgid "language of the user interface"
 msgstr ""
 
 msgid "last connection date"
 msgstr ""
 
+msgid "last_login_time"
+msgstr "last login time"
+
+msgctxt "CWUser"
 msgid "last_login_time"
 msgstr "last login time"
 
@@ -2298,6 +2686,10 @@ msgstr ""
 msgid "login"
 msgstr ""
 
+msgctxt "CWUser"
+msgid "login"
+msgstr ""
+
 msgid "login or email"
 msgstr ""
 
@@ -2314,6 +2706,10 @@ msgstr ""
 msgid "main informations"
 msgstr ""
 
+msgid "mainvars"
+msgstr ""
+
+msgctxt "RQLExpression"
 msgid "mainvars"
 msgstr ""
 
@@ -2378,6 +2774,50 @@ msgstr ""
 msgid "my custom search"
 msgstr ""
 
+msgid "name"
+msgstr ""
+
+msgctxt "CWEType"
+msgid "name"
+msgstr ""
+
+msgctxt "Transition"
+msgid "name"
+msgstr ""
+
+msgctxt "Workflow"
+msgid "name"
+msgstr ""
+
+msgctxt "CWGroup"
+msgid "name"
+msgstr ""
+
+msgctxt "CWConstraintType"
+msgid "name"
+msgstr ""
+
+msgctxt "WorkflowTransition"
+msgid "name"
+msgstr ""
+
+msgctxt "State"
+msgid "name"
+msgstr ""
+
+msgctxt "CWPermission"
+msgid "name"
+msgstr ""
+
+msgctxt "CWRType"
+msgid "name"
+msgstr ""
+
+msgctxt "BaseTransition"
+msgid "name"
+msgstr ""
+
+msgctxt "CWCache"
 msgid "name"
 msgstr ""
 
@@ -2486,6 +2926,14 @@ msgstr ""
 msgid "ordernum"
 msgstr "order"
 
+msgctxt "CWAttribute"
+msgid "ordernum"
+msgstr ""
+
+msgctxt "CWRelation"
+msgid "ordernum"
+msgstr ""
+
 msgid "owl"
 msgstr ""
 
@@ -2494,6 +2942,10 @@ msgstr ""
 
 msgid "owned_by"
 msgstr "owned by"
+
+msgctxt "CWUser"
+msgid "owned_by_object"
+msgstr ""
 
 msgid "owned_by_object"
 msgstr "owns"
@@ -2520,6 +2972,10 @@ msgstr ""
 msgid "path"
 msgstr ""
 
+msgctxt "Bookmark"
+msgid "path"
+msgstr ""
+
 msgid "permission"
 msgstr ""
 
@@ -2541,6 +2997,10 @@ msgstr ""
 msgid "pkey"
 msgstr "key"
 
+msgctxt "CWProperty"
+msgid "pkey"
+msgstr ""
+
 msgid "please correct errors below"
 msgstr ""
 
@@ -2554,6 +3014,14 @@ msgid "powered by CubicWeb"
 msgstr ""
 
 msgid "prefered_form"
+msgstr ""
+
+msgctxt "EmailAddress"
+msgid "prefered_form"
+msgstr ""
+
+msgctxt "EmailAddress"
+msgid "prefered_form_object"
 msgstr ""
 
 msgid "prefered_form_object"
@@ -2571,6 +3039,14 @@ msgstr ""
 msgid "primary_email"
 msgstr "primary email"
 
+msgctxt "CWUser"
+msgid "primary_email"
+msgstr "primary email"
+
+msgctxt "EmailAddress"
+msgid "primary_email_object"
+msgstr ""
+
 msgid "primary_email_object"
 msgstr "primary email of"
 
@@ -2587,10 +3063,26 @@ msgid "read"
 msgstr ""
 
 msgid "read_perm"
-msgstr ""
+msgstr "read perm"
 
 msgid "read_permission"
 msgstr "can be read by"
+
+msgctxt "CWEType"
+msgid "read_permission"
+msgstr "read permission"
+
+msgctxt "CWRType"
+msgid "read_permission"
+msgstr "read permission"
+
+msgctxt "CWGroup"
+msgid "read_permission_object"
+msgstr ""
+
+msgctxt "RQLExpression"
+msgid "read_permission_object"
+msgstr ""
 
 msgid "read_permission_object"
 msgstr "has permission to delete"
@@ -2611,6 +3103,18 @@ msgstr ""
 msgid "relation_type"
 msgstr "relation type"
 
+msgctxt "CWAttribute"
+msgid "relation_type"
+msgstr "relation type"
+
+msgctxt "CWRelation"
+msgid "relation_type"
+msgstr "relation type"
+
+msgctxt "CWRType"
+msgid "relation_type_object"
+msgstr ""
+
 msgid "relation_type_object"
 msgstr "relation definitions"
 
@@ -2623,74 +3127,44 @@ msgstr ""
 msgid "relative url of the bookmarked page"
 msgstr ""
 
-msgid "remove this BaseTransition"
-msgstr ""
-
-msgid "remove this Bookmark"
-msgstr "remove this bookmark"
-
-msgid "remove this CWAttribute"
-msgstr "remove this attribute"
-
-msgid "remove this CWCache"
-msgstr "remove this cubicweb cache"
-
-msgid "remove this CWConstraint"
-msgstr "remove this constraint"
-
-msgid "remove this CWConstraintType"
-msgstr "remove this constraint type"
-
+msgctxt "inlined:CWRelation:from_entity:subject"
 msgid "remove this CWEType"
 msgstr "remove this entity type"
 
-msgid "remove this CWGroup"
-msgstr "remove this group"
+msgctxt "inlined:CWRelation:to_entity:subject"
+msgid "remove this CWEType"
+msgstr "remove this entity type"
 
-msgid "remove this CWPermission"
-msgstr "remove this permission"
-
-msgid "remove this CWProperty"
-msgstr "remove this property"
-
+msgctxt "inlined:CWRelation:relation_type:subject"
 msgid "remove this CWRType"
 msgstr "remove this relation type"
 
-msgid "remove this CWRelation"
-msgstr "remove this relation"
-
-msgid "remove this CWUser"
-msgstr "remove this user"
-
+msgctxt "inlined:CWUser:use_email:subject"
 msgid "remove this EmailAddress"
 msgstr "remove this email address"
 
-msgid "remove this ExternalUri"
-msgstr "remove this external uri"
-
-msgid "remove this RQLExpression"
-msgstr "remove this RQL expression"
-
-msgid "remove this State"
-msgstr "remove this state"
-
-msgid "remove this SubWorkflowExitPoint"
-msgstr "remove this subworkflow exit-point"
-
-msgid "remove this TrInfo"
-msgstr "remove this transition information"
-
-msgid "remove this Transition"
-msgstr "remove this transition"
-
-msgid "remove this Workflow"
-msgstr "remove this workflow"
-
-msgid "remove this WorkflowTransition"
-msgstr "remove this workflow-transition"
-
 msgid "require_group"
 msgstr "require the group"
+
+msgctxt "BaseTransition"
+msgid "require_group"
+msgstr "require group"
+
+msgctxt "Transition"
+msgid "require_group"
+msgstr "require group"
+
+msgctxt "CWPermission"
+msgid "require_group"
+msgstr "require group"
+
+msgctxt "WorkflowTransition"
+msgid "require_group"
+msgstr "require group"
+
+msgctxt "CWGroup"
+msgid "require_group_object"
+msgstr ""
 
 msgid "require_group_object"
 msgstr "required by"
@@ -2877,8 +3351,16 @@ msgstr ""
 msgid "specializes"
 msgstr ""
 
+msgctxt "CWEType"
+msgid "specializes"
+msgstr ""
+
+msgctxt "CWEType"
 msgid "specializes_object"
 msgstr ""
+
+msgid "specializes_object"
+msgstr "specialized by"
 
 msgid "startup views"
 msgstr ""
@@ -2899,6 +3381,14 @@ msgstr ""
 
 msgid "state_of"
 msgstr "state of"
+
+msgctxt "State"
+msgid "state_of"
+msgstr ""
+
+msgctxt "Workflow"
+msgid "state_of_object"
+msgstr ""
 
 msgid "state_of_object"
 msgstr "use states"
@@ -2925,20 +3415,44 @@ msgstr "subjects:"
 msgid "subworkflow"
 msgstr ""
 
+msgctxt "WorkflowTransition"
+msgid "subworkflow"
+msgstr ""
+
 msgid "subworkflow state"
 msgstr ""
 
 msgid "subworkflow_exit"
 msgstr "subworkflow exit"
 
+msgctxt "WorkflowTransition"
+msgid "subworkflow_exit"
+msgstr ""
+
+msgctxt "SubWorkflowExitPoint"
+msgid "subworkflow_exit_object"
+msgstr ""
+
 msgid "subworkflow_exit_object"
 msgstr "subworkflow exit of"
+
+msgctxt "Workflow"
+msgid "subworkflow_object"
+msgstr ""
 
 msgid "subworkflow_object"
 msgstr "subworkflow of"
 
 msgid "subworkflow_state"
 msgstr "subworkflow state"
+
+msgctxt "SubWorkflowExitPoint"
+msgid "subworkflow_state"
+msgstr "subworkflow state"
+
+msgctxt "State"
+msgid "subworkflow_state_object"
+msgstr ""
 
 msgid "subworkflow_state_object"
 msgstr ""
@@ -2949,6 +3463,14 @@ msgstr ""
 msgid "surname"
 msgstr ""
 
+msgctxt "CWUser"
+msgid "surname"
+msgstr ""
+
+msgid "symetric"
+msgstr ""
+
+msgctxt "CWRType"
 msgid "symetric"
 msgstr ""
 
@@ -3007,12 +3529,20 @@ msgstr ""
 msgid "timestamp"
 msgstr ""
 
+msgctxt "CWCache"
+msgid "timestamp"
+msgstr ""
+
 msgid "timestamp of the latest source synchronization."
 msgstr ""
 
 msgid "timetable"
 msgstr ""
 
+msgid "title"
+msgstr ""
+
+msgctxt "Bookmark"
 msgid "title"
 msgstr ""
 
@@ -3029,6 +3559,18 @@ msgstr ""
 msgid "to_entity"
 msgstr "to entity"
 
+msgctxt "CWAttribute"
+msgid "to_entity"
+msgstr "to entity"
+
+msgctxt "CWRelation"
+msgid "to_entity"
+msgstr "to entity"
+
+msgctxt "CWEType"
+msgid "to_entity_object"
+msgstr ""
+
 msgid "to_entity_object"
 msgstr "object relations"
 
@@ -3037,6 +3579,14 @@ msgstr "to"
 
 msgid "to_state"
 msgstr "to state"
+
+msgctxt "TrInfo"
+msgid "to_state"
+msgstr ""
+
+msgctxt "State"
+msgid "to_state_object"
+msgstr ""
 
 msgid "to_state_object"
 msgstr "transitions to this state"
@@ -3058,6 +3608,22 @@ msgstr ""
 
 msgid "transition_of"
 msgstr "transition of"
+
+msgctxt "BaseTransition"
+msgid "transition_of"
+msgstr "transition of"
+
+msgctxt "Transition"
+msgid "transition_of"
+msgstr "transition of"
+
+msgctxt "WorkflowTransition"
+msgid "transition_of"
+msgstr ""
+
+msgctxt "Workflow"
+msgid "transition_of_object"
+msgstr ""
 
 msgid "transition_of_object"
 msgstr "use transitions"
@@ -3131,6 +3697,10 @@ msgstr ""
 msgid "upassword"
 msgstr "password"
 
+msgctxt "CWUser"
+msgid "upassword"
+msgstr ""
+
 msgid "update"
 msgstr ""
 
@@ -3140,6 +3710,18 @@ msgstr "update permission"
 msgid "update_permission"
 msgstr "can be updated by"
 
+msgctxt "CWEType"
+msgid "update_permission"
+msgstr ""
+
+msgctxt "CWGroup"
+msgid "update_permission_object"
+msgstr ""
+
+msgctxt "RQLExpression"
+msgid "update_permission_object"
+msgstr ""
+
 msgid "update_permission_object"
 msgstr "has permission to update"
 
@@ -3147,6 +3729,10 @@ msgstr "has permission to update"
 msgid "updated %(etype)s #%(eid)s (%(title)s)"
 msgstr ""
 
+msgid "uri"
+msgstr ""
+
+msgctxt "ExternalUri"
 msgid "uri"
 msgstr ""
 
@@ -3160,6 +3746,14 @@ msgstr ""
 
 msgid "use_email"
 msgstr "use email"
+
+msgctxt "CWUser"
+msgid "use_email"
+msgstr ""
+
+msgctxt "EmailAddress"
+msgid "use_email_object"
+msgstr ""
 
 msgid "use_email_object"
 msgstr "used by"
@@ -3211,6 +3805,14 @@ msgstr ""
 msgid "value"
 msgstr ""
 
+msgctxt "CWConstraint"
+msgid "value"
+msgstr ""
+
+msgctxt "CWProperty"
+msgid "value"
+msgstr ""
+
 msgid "value associated to this key is not editable manually"
 msgstr ""
 
@@ -3257,6 +3859,14 @@ msgstr ""
 msgid "wf_info_for"
 msgstr "record for"
 
+msgctxt "TrInfo"
+msgid "wf_info_for"
+msgstr ""
+
+msgctxt "CWUser"
+msgid "wf_info_for_object"
+msgstr ""
+
 msgid "wf_info_for_object"
 msgstr "workflow history"
 
@@ -3288,6 +3898,14 @@ msgstr ""
 msgid "workflow_of"
 msgstr ""
 
+msgctxt "Workflow"
+msgid "workflow_of"
+msgstr ""
+
+msgctxt "CWEType"
+msgid "workflow_of_object"
+msgstr ""
+
 msgid "workflow_of_object"
 msgstr ""
 
@@ -3308,3 +3926,132 @@ msgstr ""
 
 msgid "you should probably delete that property"
 msgstr ""
+
+#~ msgid "add a BaseTransition"
+#~ msgstr "XXX"
+
+#~ msgid "add a Bookmark"
+#~ msgstr "add a bookmark"
+
+#~ msgid "add a CWAttribute"
+#~ msgstr "add an attribute"
+
+#~ msgid "add a CWCache"
+#~ msgstr "add a cubicweb cache"
+
+#~ msgid "add a CWConstraint"
+#~ msgstr "add a constraint"
+
+#~ msgid "add a CWConstraintType"
+#~ msgstr "add a constraint type"
+
+#~ msgid "add a CWEType"
+#~ msgstr "add an entity type"
+
+#~ msgid "add a CWGroup"
+#~ msgstr "add a group"
+
+#~ msgid "add a CWPermission"
+#~ msgstr "add a permission"
+
+#~ msgid "add a CWProperty"
+#~ msgstr "add a property"
+
+#~ msgid "add a CWRType"
+#~ msgstr "add a relation type"
+
+#~ msgid "add a CWRelation"
+#~ msgstr "add a relation"
+
+#~ msgid "add a CWUser"
+#~ msgstr "add a user"
+
+#~ msgid "add a EmailAddress"
+#~ msgstr "add an email address"
+
+#~ msgid "add a ExternalUri"
+#~ msgstr "and an external uri"
+
+#~ msgid "add a RQLExpression"
+#~ msgstr "add a rql expression"
+
+#~ msgid "add a State"
+#~ msgstr "add a state"
+
+#~ msgid "add a SubWorkflowExitPoint"
+#~ msgstr "add a subworkflow exit-point"
+
+#~ msgid "add a TrInfo"
+#~ msgstr "add a transition information"
+
+#~ msgid "add a Transition"
+#~ msgstr "add a transition"
+
+#~ msgid "add a Workflow"
+#~ msgstr "add a workflow"
+
+#~ msgid "add a WorkflowTransition"
+#~ msgstr "add a workflow-transition"
+
+#~ msgid "remove this Bookmark"
+#~ msgstr "remove this bookmark"
+
+#~ msgid "remove this CWAttribute"
+#~ msgstr "remove this attribute"
+
+#~ msgid "remove this CWCache"
+#~ msgstr "remove this cubicweb cache"
+
+#~ msgid "remove this CWConstraint"
+#~ msgstr "remove this constraint"
+
+#~ msgid "remove this CWConstraintType"
+#~ msgstr "remove this constraint type"
+
+#~ msgid "remove this CWEType"
+#~ msgstr "remove this entity type"
+
+#~ msgid "remove this CWGroup"
+#~ msgstr "remove this group"
+
+#~ msgid "remove this CWPermission"
+#~ msgstr "remove this permission"
+
+#~ msgid "remove this CWProperty"
+#~ msgstr "remove this property"
+
+#~ msgid "remove this CWRType"
+#~ msgstr "remove this relation type"
+
+#~ msgid "remove this CWRelation"
+#~ msgstr "remove this relation"
+
+#~ msgid "remove this CWUser"
+#~ msgstr "remove this user"
+
+#~ msgid "remove this EmailAddress"
+#~ msgstr "remove this email address"
+
+#~ msgid "remove this ExternalUri"
+#~ msgstr "remove this external uri"
+
+#~ msgid "remove this RQLExpression"
+#~ msgstr "remove this RQL expression"
+
+#~ msgid "remove this State"
+#~ msgstr "remove this state"
+
+#~ msgid "remove this SubWorkflowExitPoint"
+#~ msgstr "remove this subworkflow exit-point"
+
+#~ msgid "remove this TrInfo"
+#~ msgstr "remove this transition information"
+
+#~ msgid "remove this Transition"
+#~ msgstr "remove this transition"
+
+#~ msgid "remove this Workflow"
+#~ msgstr "remove this workflow"
+
+#~ msgid "remove this WorkflowTransition"
+#~ msgstr "remove this workflow-transition"
