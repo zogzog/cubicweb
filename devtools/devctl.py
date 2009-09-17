@@ -20,7 +20,9 @@ from logilab.common.textutils import splitstrip
 from logilab.common.shellutils import ASK
 from logilab.common.clcommands import register_commands
 
-from cubicweb import CW_SOFTWARE_ROOT as BASEDIR, BadCommandUsage, underline_title
+from cubicweb import (CW_SOFTWARE_ROOT as BASEDIR, BadCommandUsage,
+                      underline_title)
+from cubicweb.schema import META_RTYPES
 from cubicweb.__pkginfo__ import version as cubicwebversion
 from cubicweb.toolsutils import Command, copy_skeleton
 from cubicweb.web import uicfg
@@ -150,10 +152,12 @@ def _generate_schema_pot(w, vreg, schema, libconfig=None, cube=None):
         relations = schema.relations()
     for rschema in sorted(set(relations)):
         rtype = rschema.type
-        for subjschema in rschema.subjects():
-            add_msg(w, rtype, subjschema.type)
-            # bw compat, necessary until all translation of relation are done properly...
+        # bw compat, necessary until all translation of relation are done properly...
         add_msg(w, rtype)
+        # add context information only for non-metadata rtypes
+        if rschema not in META_RTYPES:
+            for subjschema in rschema.subjects():
+                add_msg(w, rtype, subjschema.type)
         done.add(rtype)
         if not (schema.rschema(rtype).is_final() or rschema.symetric):
             for objschema in rschema.objects():
