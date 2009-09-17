@@ -12,6 +12,7 @@ import sys
 from datetime import datetime
 from os import mkdir, chdir, getcwd
 from os.path import join, exists, abspath, basename, normpath, split, isdir
+from copy import deepcopy
 from warnings import warn
 
 from logilab.common import STD_BLACKLIST
@@ -25,7 +26,6 @@ from cubicweb import (CW_SOFTWARE_ROOT as BASEDIR, BadCommandUsage,
 from cubicweb.schema import META_RTYPES
 from cubicweb.__pkginfo__ import version as cubicwebversion
 from cubicweb.toolsutils import Command, copy_skeleton
-from cubicweb.web import uicfg
 from cubicweb.web.webconfig import WebConfiguration
 from cubicweb.server.serverconfig import ServerConfiguration
 
@@ -114,103 +114,99 @@ def generate_schema_pot(w, cubedir=None):
 
 def _generate_schema_pot(w, vreg, schema, libconfig=None, cube=None):
     from cubicweb.common.i18n import add_msg
+    from cubicweb.web import uicfg
     w('# schema pot file, generated on %s\n' % datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
     w('# \n')
     w('# singular and plural forms for each entity type\n')
     w('\n')
+    vregdone = set()
     if libconfig is not None:
+        from cubicweb.cwvreg import CubicWebVRegistry, clear_rtag_objects
         libschema = libconfig.load_schema(remove_unused_rtypes=False)
-        entities = [e for e in schema.entities() if not e in libschema]
+        rinlined = deepcopy(uicfg.autoform_is_inlined)
+        appearsin_addmenu = deepcopy(uicfg.actionbox_appearsin_addmenu)
+        clear_rtag_objects()
+        cleanup_sys_modules(libconfig)
+        print 'hoppp', libconfig.cubes()
+        libvreg = CubicWebVRegistry(libconfig)
+        libvreg.set_schema(libschema) # trigger objects registration
+        librinlined = uicfg.autoform_is_inlined
+        libappearsin_addmenu = uicfg.actionbox_appearsin_addmenu
+        # prefill vregdone set
+        list(_iter_vreg_objids(libvreg, vregdone))
     else:
-        entities = schema.entities()
-    rinlined = uicfg.autoform_is_inlined
+        libschema = {}
+        rinlined = uicfg.autoform_is_inlined
+        appearsin_addmenu = uicfg.actionbox_appearsin_addmenu
     done = set()
-    for eschema in sorted(entities):
+    for eschema in sorted(schema.entities()):
         etype = eschema.type
-        add_msg(w, etype)
-        add_msg(w, '%s_plural' % etype)
-        if not eschema.is_final():
-            add_msg(w, 'This %s' % etype)
-            add_msg(w, 'New %s' % etype)
-            for rschema, targetschemas, role in eschema.relation_definitions(True):
-                targetschemas = [tschema for tschema in targetschemas
-                                 if rinlined.etype_get(eschema, rschema, role, tschema)]
-                for tschema in targetschemas:
+        if etype not in libschema:
+            add_msg(w, etype)
+            add_msg(w, '%s_plural' % etype)
+            if not eschema.is_final():
+                add_msg(w, 'This %s' % etype)
+                add_msg(w, 'New %s' % etype)
+            if eschema.description and not eschema.description in done:
+                done.add(eschema.description)
+                add_msg(w, eschema.description)
+        if eschema.is_final():
+            continue
+        for rschema, targetschemas, role in eschema.relation_definitions(True):
+            for tschema in targetschemas:
+                if rinlined.etype_get(eschema, rschema, role, tschema) and \
+                       (libconfig is None or not
+                        librinlined.etype_get(eschema, rschema, role, tschema)):
                     add_msg(w, 'add a %s' % tschema,
                             'inlined:%s.%s.%s' % (etype, rschema, role))
                     add_msg(w, 'remove this %s' % tschema,
                             'inlined:%s:%s:%s' % (etype, rschema, role))
-        if eschema.description and not eschema.description in done:
-            done.add(eschema.description)
-            add_msg(w, eschema.description)
+                if appearsin_addmenu.etype_get(eschema, rschema, role, tschema) and \
+                       (libconfig is None or not
+                        libappearsin_addmenu.etype_get(eschema, rschema, role, tschema)):
+                    if role == 'subject':
+                        label = 'add %s %s %s %s' % (eschema, rschema,
+                                                     tschema, role)
+                        label2 = "creating %s (%s %%(linkto)s %s %s)" % (
+                            tschema, eschema, rschema, tschema)
+                    else:
+                        label = 'add %s %s %s %s' % (tschema, rschema,
+                                                     eschema, role)
+                        label2 = "creating %s (%s %s %s %%(linkto)s)" % (
+                            tschema, tschema, rschema, eschema)
+                    add_msg(w, label)
+                    add_msg(w, label2)
     w('# subject and object forms for each relation type\n')
-    w('# (no object form for final relation types)\n')
+    w('# (no object form for final or symetric relation types)\n')
     w('\n')
-    if libconfig is not None:
-        relations = [r for r in schema.relations() if not r in libschema]
-    else:
-        relations = schema.relations()
-    for rschema in sorted(set(relations)):
+    for rschema in sorted(schema.relations()):
         rtype = rschema.type
-        # bw compat, necessary until all translation of relation are done properly...
-        add_msg(w, rtype)
+        if rtype not in libschema:
+            # bw compat, necessary until all translation of relation are done properly...
+            add_msg(w, rtype)
+            if rschema.description and rschema.description not in done:
+                done.add(rschema.description)
+                add_msg(w, rschema.description)
+            done.add(rtype)
+            librschema = None
+        else:
+            librschema = libschema.rschema(rtype)
         # add context information only for non-metadata rtypes
         if rschema not in META_RTYPES:
+            libsubjects = librschema and librschema.subjects() or ()
             for subjschema in rschema.subjects():
-                add_msg(w, rtype, subjschema.type)
-        done.add(rtype)
+                if not subjschema in libsubjects:
+                    add_msg(w, rtype, subjschema.type)
         if not (schema.rschema(rtype).is_final() or rschema.symetric):
-            for objschema in rschema.objects():
-                add_msg(w, '%s_object' % rtype, objschema.type)
-            # bw compat, necessary until all translation of relation are done properly...
-            add_msg(w, '%s_object' % rtype)
-        if rschema.description and rschema.description not in done:
-            done.add(rschema.description)
-            add_msg(w, rschema.description)
-    w('# add related box generated message\n')
-    w('\n')
-    appearsin_addmenu = uicfg.actionbox_appearsin_addmenu
-    for eschema in schema.entities():
-        if eschema.is_final():
-            continue
-        for role, rschemas in (('subject', eschema.subject_relations()),
-                               ('object', eschema.object_relations())):
-            for rschema in rschemas:
-                if rschema.is_final():
-                    continue
-                if libconfig is not None:
-                    librschema = libschema.get(rschema)
-                for teschema in rschema.targets(eschema, role):
-                    if libconfig is not None and librschema is not None:
-                        if role == 'subject':
-                            subjtype, objtype = eschema, teschema
-                        else:
-                            subjtype, objtype = teschema, eschema
-                        if librschema.has_rdef(subjtype, objtype):
-                            continue
-                    if appearsin_addmenu.etype_get(eschema, rschema, role,
-                                                   teschema):
-                        if role == 'subject':
-                            label = 'add %s %s %s %s' % (eschema, rschema,
-                                                         teschema, role)
-                            label2 = "creating %s (%s %%(linkto)s %s %s)" % (
-                                teschema, eschema, rschema, teschema)
-                        else:
-                            label = 'add %s %s %s %s' % (teschema, rschema,
-                                                         eschema, role)
-                            label2 = "creating %s (%s %s %s %%(linkto)s)" % (
-                                teschema, teschema, rschema, eschema)
-                        add_msg(w, label)
-                        add_msg(w, label2)
-    #cube = (cube and 'cubes.%s.' % cube or 'cubicweb.')
-    done = set()
-    if libconfig is not None:
-        from cubicweb.cwvreg import CubicWebVRegistry
-        libvreg = CubicWebVRegistry(libconfig)
-        libvreg.set_schema(libschema) # trigger objects registration
-        # prefill done set
-        list(_iter_vreg_objids(libvreg, done))
-    for objid in _iter_vreg_objids(vreg, done):
+            if rschema not in META_RTYPES:
+                libobjects = librschema and librschema.objects() or ()
+                for objschema in rschema.objects():
+                    if not objschema in libobjects:
+                        add_msg(w, '%s_object' % rtype, objschema.type)
+            if rtype not in libschema:
+                # bw compat, necessary until all translation of relation are done properly...
+                add_msg(w, '%s_object' % rtype)
+    for objid in _iter_vreg_objids(vreg, vregdone):
         add_msg(w, '%s_description' % objid)
         add_msg(w, objid)
 
