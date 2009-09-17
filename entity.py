@@ -12,6 +12,7 @@ from warnings import warn
 from logilab.common import interface
 from logilab.common.compat import all
 from logilab.common.decorators import cached
+from logilab.common.deprecation import deprecated
 from logilab.mtconverter import TransformData, TransformError, xml_escape
 
 from rql import parse
