@@ -14,7 +14,7 @@ from yams import BASE_TYPES, schema2dot as s2d
 
 from cubicweb.selectors import (implements, yes, match_user_groups,
                                 has_related_entities)
-from cubicweb.schema import META_RTYPES, SCHEMA_TYPES
+from cubicweb.schema import META_RTYPES, SCHEMA_TYPES, SYSTEM_RTYPES
 from cubicweb.schemaviewer import SchemaViewer
 from cubicweb.view import EntityView, StartupView
 from cubicweb.common import tags, uilib
@@ -23,7 +23,7 @@ from cubicweb.web.views import TmpFileViewMixin
 from cubicweb.web.views import primary, baseviews, tabs, management
 
 ALWAYS_SKIP_TYPES = BASE_TYPES | SCHEMA_TYPES
-SKIP_TYPES = ALWAYS_SKIP_TYPES | META_RTYPES
+SKIP_TYPES = ALWAYS_SKIP_TYPES | META_RTYPES | SYSTEM_RTYPES
 SKIP_TYPES.update(set(('Transition', 'State', 'TrInfo',
                        'CWUser', 'CWGroup',
                        'CWCache', 'CWProperty', 'CWPermission',
