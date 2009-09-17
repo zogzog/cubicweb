@@ -269,3 +269,8 @@ class identical_to(RelationType):
 class see_also(RelationType):
     """generic relation to link one entity to another"""
     symetric = True
+    permissions = {
+        'read':   ('managers', 'users', 'guests',),
+        'add':    ('managers', RRQLExpression('U has_update_permission S'),),
+        'delete': ('managers', RRQLExpression('U has_update_permission S'),),
+        }

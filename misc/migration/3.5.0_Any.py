@@ -5,3 +5,6 @@ checkpoint()
 
 drop_attribute('EmailAddress', 'canonical')
 drop_relation_definition('EmailAddress', 'identical_to', 'EmailAddress')
+
+if 'see_also' in schema:
+    sync_schema_props_perms('see_also', syncprops=False, syncrdefs=False)
