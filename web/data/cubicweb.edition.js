@@ -481,10 +481,10 @@ function inlineValidateAttributeForm(rtype, eid, divid, reload, default_value) {
 	return false;
     }
     d.addCallback(function (result, req) {
-        handleFormValidationResponse(divid+'-form', noop, noop, result);
-	if (reload) {
+        if (handleFormValidationResponse(divid+'-form', noop, noop, result)) {
+          if (reload) {
 	    document.location.href = result[1].split('?')[0];
-	} else {
+	  } else {
 	    var fieldview = getNode('value-' + divid);
 	    // XXX using innerHTML is very fragile and won't work if
 	    // we mix XHTML and HTML
@@ -494,7 +494,8 @@ function inlineValidateAttributeForm(rtype, eid, divid, reload, default_value) {
 		// hide global error messages
 		hideInlineEdit(eid, rtype, divid);
 	    }
-	}
+	  }
+        }
 	return false;
     });
     return false;
