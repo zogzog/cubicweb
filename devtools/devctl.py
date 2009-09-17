@@ -127,7 +127,6 @@ def _generate_schema_pot(w, vreg, schema, libconfig=None, cube=None):
         appearsin_addmenu = deepcopy(uicfg.actionbox_appearsin_addmenu)
         clear_rtag_objects()
         cleanup_sys_modules(libconfig)
-        print 'hoppp', libconfig.cubes()
         libvreg = CubicWebVRegistry(libconfig)
         libvreg.set_schema(libschema) # trigger objects registration
         librinlined = uicfg.autoform_is_inlined
