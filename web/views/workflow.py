@@ -20,10 +20,15 @@ from cubicweb.selectors import (implements, has_related_entities, one_line_rset,
 from cubicweb.interfaces import IWorkflowable
 from cubicweb.view import EntityView
 from cubicweb.schema import display_name
-from cubicweb.web import stdmsgs, action, component, form, action
+from cubicweb.web import uicfg, stdmsgs, action, component, form, action
 from cubicweb.web import formfields as ff, formwidgets as fwdgs
 from cubicweb.web.views import TmpFileViewMixin, forms, primary
 
+_abaa = uicfg.actionbox_appearsin_addmenu
+_abaa.tag_subject_of(('BaseTransition', 'condition', 'RQLExpression'), False)
+_abaa.tag_subject_of(('State', 'allowed_transition', 'BaseTransition'), False)
+_abaa.tag_object_of(('SubWorkflowExitPoint', 'destination_state', 'State'),
+                    False)
 
 # IWorkflowable views #########################################################
 

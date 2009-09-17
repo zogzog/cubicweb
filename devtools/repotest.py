@@ -108,9 +108,10 @@ class RQLGeneratorTC(TestCase):
     schema = None # set this in concret test
 
     def setUp(self):
+        self.repo = FakeRepo(self.schema)
         self.rqlhelper = RQLHelper(self.schema, special_relations={'eid': 'uid',
                                                                    'has_text': 'fti'})
-        self.qhelper = QuerierHelper(FakeRepo(self.schema), self.schema)
+        self.qhelper = QuerierHelper(self.repo, self.schema)
         ExecutionPlan._check_permissions = _dummy_check_permissions
         rqlannotation._select_principal = _select_principal
 
@@ -129,7 +130,7 @@ class RQLGeneratorTC(TestCase):
         #print '********* solutions', solutions
         self.rqlhelper.simplify(union)
         #print '********* simplified', union.as_string()
-        plan = self.qhelper.plan_factory(union, {}, FakeSession())
+        plan = self.qhelper.plan_factory(union, {}, FakeSession(self.repo))
         plan.preprocess(union)
         for select in union.children:
             select.solutions.sort()
@@ -167,7 +168,7 @@ class BaseQuerierTC(TestCase):
         set_debug(debug)
 
     def _rqlhelper(self):
-        rqlhelper = self.o._rqlhelper
+        rqlhelper = self.repo.vreg.rqlhelper
         # reset uid_func so it don't try to get type from eids
         rqlhelper._analyser.uid_func = None
         rqlhelper._analyser.uid_func_mapping = {}
@@ -241,7 +242,7 @@ class BasePlannerTC(BaseQuerierTC):
         rqlst = self.o.parse(rql, annotate=True)
         self.o.solutions(self.session, rqlst, kwargs)
         if rqlst.TYPE == 'select':
-            self.o._rqlhelper.annotate(rqlst)
+            self.repo.vreg.rqlhelper.annotate(rqlst)
             for select in rqlst.children:
                 select.solutions.sort()
         else:
@@ -251,7 +252,7 @@ class BasePlannerTC(BaseQuerierTC):
 
 # monkey patch some methods to get predicatable results #######################
 
-from cubicweb.server.rqlrewrite import RQLRewriter
+from cubicweb.rqlrewrite import RQLRewriter
 _orig_insert_snippets = RQLRewriter.insert_snippets
 _orig_build_variantes = RQLRewriter.build_variantes
 

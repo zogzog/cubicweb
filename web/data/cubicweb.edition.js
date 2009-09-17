@@ -354,7 +354,7 @@ function handleFormValidationResponse(formid, onsuccess, onfailure, result) {
     // Success
     if (result[0]) {
 	if (onsuccess) {
-             onsuccess(result[1], formid);
+             onsuccess(result, formid);
 	} else {
 	    document.location.href = result[1];
 	}

@@ -95,6 +95,11 @@ class SQLGenAnnotatorTC(BaseQuerierTC):
         self.assertEquals(rqlst.defined_vars['X']._q_invariant, False)
         self.assertEquals(rqlst.defined_vars['Y']._q_invariant, False)
 
+    def test_diff_scope_identity_deamb(self):
+        rqlst = self._prepare('Any X WHERE X concerne Y, Y is Note, EXISTS(Y identity Z, Z migrated_from N)')
+        self.assertEquals(rqlst.defined_vars['Z']._q_invariant, True)
+        self.assertEquals(rqlst.defined_vars['Y']._q_invariant, True)
+
     def test_optional_inlined(self):
         rqlst = self._prepare('Any X,S where X from_state S?')
         self.assertEquals(rqlst.defined_vars['X']._q_invariant, False)

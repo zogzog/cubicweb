@@ -163,7 +163,6 @@ WHERE X.cw_prenom=lulu AND NOT EXISTS(SELECT 1 FROM owned_by_relation AS rel_own
 ]
 
 ADVANCED= [
-
     ("Societe S WHERE S nom 'Logilab' OR S nom 'Caesium'",
      '''SELECT S.cw_eid
 FROM cw_Societe AS S
@@ -642,6 +641,13 @@ FROM cw_Note AS X, cw_State AS S
 WHERE X.cw_in_state=S.cw_eid
 ORDER BY 2) AS T1'''),
 
+    ('Any O,AA,AB,AC ORDERBY AC DESC '
+     'WHERE NOT S use_email O, S eid 1, O is EmailAddress, O address AA, O alias AB, O modification_date AC, '
+     'EXISTS(A use_email O, EXISTS(A identity B, NOT B in_group D, D name "guests", D is CWGroup), A is CWUser), B eid 2',
+     '''SELECT O.cw_eid, O.cw_address, O.cw_alias, O.cw_modification_date
+FROM cw_EmailAddress AS O
+WHERE NOT EXISTS(SELECT 1 FROM use_email_relation AS rel_use_email0 WHERE rel_use_email0.eid_from=1 AND rel_use_email0.eid_to=O.cw_eid) AND EXISTS(SELECT 1 FROM use_email_relation AS rel_use_email1 WHERE rel_use_email1.eid_to=O.cw_eid AND EXISTS(SELECT 1 FROM cw_CWGroup AS D WHERE rel_use_email1.eid_from=2 AND NOT EXISTS(SELECT 1 FROM in_group_relation AS rel_in_group2 WHERE rel_in_group2.eid_from=2 AND rel_in_group2.eid_to=D.cw_eid) AND D.cw_name=guests))
+ORDER BY 4 DESC'''),
     ]
 
 MULTIPLE_SEL = [

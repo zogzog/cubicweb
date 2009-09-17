@@ -392,7 +392,11 @@ this option is set to yes",
                         'server/serverctl.py', 'hercule.py',
                         'devtools/devctl.py', 'goa/goactl.py'):
             if exists(join(CW_SOFTWARE_ROOT, ctlfile)):
-                load_module_from_file(join(CW_SOFTWARE_ROOT, ctlfile))
+                try:
+                    load_module_from_file(join(CW_SOFTWARE_ROOT, ctlfile))
+                except ImportError, err:
+                    cls.critical('could not import the command provider %s (cause : %s)' %
+                                (ctlfile, err))
                 cls.info('loaded cubicweb-ctl plugin %s', ctlfile)
         for cube in cls.available_cubes():
             pluginfile = join(cls.cube_dir(cube), 'ecplugin.py')
@@ -808,7 +812,7 @@ the repository',
             self.info("loading language %s", language)
             try:
                 tr = translation('cubicweb', path, languages=[language])
-                self.translations[language] = tr.ugettext
+                self.translations[language] = (tr.ugettext, tr.upgettext)
             except (ImportError, AttributeError, IOError):
                 self.exception('localisation support error for language %s',
                                language)

@@ -12,6 +12,7 @@ from logilab.common.adbh import get_adv_func_helper
 from indexer import get_indexer
 
 from cubicweb.req import RequestSessionBase
+from cubicweb.cwvreg import CubicWebVRegistry
 from cubicweb.web.request import CubicWebRequestBase
 from cubicweb.devtools import BASE_URL, BaseApptestConfiguration
 
@@ -34,39 +35,13 @@ class FakeConfig(dict, BaseApptestConfiguration):
     def sources(self):
         return {}
 
-class FakeVReg(dict):
-    def __init__(self, schema=None, config=None):
-        self.schema = schema
-        self.config = config or FakeConfig()
-        self.properties = {'ui.encoding': 'UTF8',
-                           'ui.language': 'en',
-                           }
-        self.update({
-            'controllers' : {'login': []},
-            'views' : {},
-            })
-
-    def property_value(self, key):
-        return self.properties[key]
-
-    def etype_class(self, etype):
-        class Entity(dict):
-            e_schema = self.schema[etype]
-            def __init__(self, session, eid, row=0, col=0):
-                self.req = session
-                self.eid = eid
-                self.row, self.col = row, col
-            def set_eid(self, eid):
-                self.eid = self['eid'] = eid
-        return Entity
-
 
 class FakeRequest(CubicWebRequestBase):
     """test implementation of an cubicweb request object"""
 
     def __init__(self, *args, **kwargs):
         if not (args or 'vreg' in kwargs):
-            kwargs['vreg'] = FakeVReg()
+            kwargs['vreg'] = CubicWebVRegistry(FakeConfig(), initlog=False)
         kwargs['https'] = False
         self._url = kwargs.pop('url', 'view?rql=Blop&vid=blop')
         super(FakeRequest, self).__init__(*args, **kwargs)
@@ -147,25 +122,6 @@ class FakeRequest(CubicWebRequestBase):
         return self.execute(*args, **kwargs)
 
 
-# class FakeRequestNoCnx(FakeRequest):
-#     def get_session_data(self, key, default=None, pop=False):
-#         """return value associated to `key` in session data"""
-#         if pop:
-#             return self._session_data.pop(key, default)
-#         else:
-#             return self._session_data.get(key, default)
-
-#     def set_session_data(self, key, value):
-#         """set value associated to `key` in session data"""
-#         self._session_data[key] = value
-
-#     def del_session_data(self, key):
-#         try:
-#             del self._session_data[key]
-#         except KeyError:
-#             pass
-
-
 class FakeUser(object):
     login = 'toto'
     eid = 0
@@ -176,7 +132,7 @@ class FakeUser(object):
 class FakeSession(RequestSessionBase):
     def __init__(self, repo=None, user=None):
         self.repo = repo
-        self.vreg = getattr(self.repo, 'vreg', FakeVReg())
+        self.vreg = getattr(self.repo, 'vreg', CubicWebVRegistry(FakeConfig(), initlog=False))
         self.pool = FakePool()
         self.user = user or FakeUser()
         self.is_internal_session = False
@@ -209,8 +165,9 @@ class FakeRepo(object):
         self.eids = {}
         self._count = 0
         self.schema = schema
-        self.vreg = vreg or FakeVReg()
         self.config = config or FakeConfig()
+        self.vreg = vreg or CubicWebVRegistry(self.config, initlog=False)
+        self.vreg.schema = schema
 
     def internal_session(self):
         return FakeSession(self)
@@ -248,10 +205,3 @@ class FakeSource(object):
 class FakePool(object):
     def source(self, uri):
         return FakeSource(uri)
-
-# commented until proven to be useful
-## from logging import getLogger
-## from cubicweb import set_log_methods
-## for cls in (FakeConfig, FakeVReg, FakeRequest, FakeSession, FakeRepo,
-##             FakeSource, FakePool):
-##     set_log_methods(cls, getLogger('fake'))

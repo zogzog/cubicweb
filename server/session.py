@@ -19,7 +19,7 @@ from cubicweb import Binary, UnknownEid
 from cubicweb.req import RequestSessionBase
 from cubicweb.dbapi import ConnectionProperties
 from cubicweb.utils import make_uid
-from cubicweb.server.rqlrewrite import RQLRewriter
+from cubicweb.rqlrewrite import RQLRewriter
 
 ETYPE_PYOBJ_MAP[Binary] = 'Bytes'
 
@@ -207,13 +207,18 @@ class Session(RequestSessionBase):
         vreg = self.vreg
         language = language or self.user.property_value('ui.language')
         try:
-            self._ = self.__ = vreg.config.translations[language]
+            gettext, pgettext = vreg.config.translations[language]
+            self._ = self.__ = gettext
+            self.pgettext = pgettext
         except KeyError:
             language = vreg.property_value('ui.language')
             try:
-                self._ = self.__ = vreg.config.translations[language]
+                gettext, pgettext = vreg.config.translations[language]
+                self._ = self.__ = gettext
+                self.pgettext = pgettext
             except KeyError:
                 self._ = self.__ = unicode
+                self.pgettext = lambda x,y: y
         self.lang = language
 
     def change_property(self, prop, value):
@@ -551,7 +556,7 @@ class Session(RequestSessionBase):
         try:
             return self._threaddata._rewriter
         except AttributeError:
-            self._threaddata._rewriter = RQLRewriter(self.repo.querier, self)
+            self._threaddata._rewriter = RQLRewriter(self)
             return self._threaddata._rewriter
 
     def build_description(self, rqlst, args, result):

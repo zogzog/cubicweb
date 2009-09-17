@@ -348,7 +348,7 @@ class MSPlannerTC(BaseMSPlannerTC):
 
     def setUp(self):
         BaseMSPlannerTC.setUp(self)
-        self.planner = MSPlanner(self.o.schema, self.o._rqlhelper)
+        self.planner = MSPlanner(self.o.schema, self.repo.vreg.rqlhelper)
 
     _test = test_plan
 
@@ -1961,12 +1961,22 @@ class MSPlannerTC(BaseMSPlannerTC):
                      None, None, [self.system], {}, [])],
                    {'x': 999998, 'u': 999999})
 
-    def test_nonregr_identity_no_source_access(self):
+    def test_nonregr_identity_no_source_access_1(self):
         repo._type_source_cache[999999] = ('CWUser', 'ldap', 999998)
         self._test('Any S WHERE S identity U, S eid %(s)s, U eid %(u)s',
                    [('OneFetchStep', [('Any 999999 WHERE 999999 identity 999999', [{}])],
                      None, None, [self.system], {}, [])],
                    {'s': 999999, 'u': 999999})
+
+    def test_nonregr_identity_no_source_access_2(self):
+        repo._type_source_cache[999999] = ('EmailAddress', 'system', 999999)
+        repo._type_source_cache[999998] = ('CWUser', 'ldap', 999998)
+        self._test('Any X WHERE O use_email X, ((EXISTS(O identity U)) OR (EXISTS(O in_group G, G name IN("managers", "staff")))) OR (EXISTS(O in_group G2, U in_group G2, NOT G2 name "users")), X eid %(x)s, U eid %(u)s',
+                   [('OneFetchStep', [('Any 999999 WHERE O use_email 999999, ((EXISTS(O identity 999998)) OR (EXISTS(O in_group G, G name IN("managers", "staff")))) OR (EXISTS(O in_group G2, 999998 in_group G2, NOT G2 name "users"))',
+                                       [{'G': 'CWGroup', 'G2': 'CWGroup', 'O': 'CWUser'}])],
+                     None, None, [self.system], {}, [])],
+                   {'x': 999999, 'u': 999998})
+
 
 class MSPlannerTwoSameExternalSourcesTC(BasePlannerTC):
     """test planner related feature on a 3-sources repository:
@@ -1979,7 +1989,7 @@ class MSPlannerTwoSameExternalSourcesTC(BasePlannerTC):
         self.setup()
         self.add_source(FakeCardSource, 'cards')
         self.add_source(FakeCardSource, 'cards2')
-        self.planner = MSPlanner(self.o.schema, self.o._rqlhelper)
+        self.planner = MSPlanner(self.o.schema, self.repo.vreg.rqlhelper)
         assert repo.sources_by_uri['cards2'].support_relation('multisource_crossed_rel')
         assert 'multisource_crossed_rel' in repo.sources_by_uri['cards2'].cross_relations
         assert repo.sources_by_uri['cards'].support_relation('multisource_crossed_rel')
@@ -2132,7 +2142,7 @@ class MSPlannerVCSSource(BasePlannerTC):
     def setUp(self):
         self.setup()
         self.add_source(FakeVCSSource, 'vcs')
-        self.planner = MSPlanner(self.o.schema, self.o._rqlhelper)
+        self.planner = MSPlanner(self.o.schema, self.repo.vreg.rqlhelper)
     _test = test_plan
 
     def test_multisource_inlined_rel_skipped(self):

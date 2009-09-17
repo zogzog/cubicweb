@@ -52,6 +52,7 @@ class MigrationCommandsTC(CubicWebTC):
         assert self.cnx is self.mh._cnx
         assert self.session is self.mh.session, (self.session.id, self.mh.session.id)
 
+
     def test_add_attribute_int(self):
         self.failIf('whatever' in self.schema)
         orderdict = dict(self.mh.rqlexec('Any RTN, O WHERE X name "Note", RDEF from_entity X, '
@@ -137,6 +138,7 @@ class MigrationCommandsTC(CubicWebTC):
         self.failUnless(self.execute('CWEType X WHERE X name "Folder2"'))
         self.failUnless('filed_under2' in self.schema)
         self.failUnless(self.execute('CWRType X WHERE X name "filed_under2"'))
+        self.schema.rebuild_infered_relations()
         self.assertEquals(sorted(str(rs) for rs in self.schema['Folder2'].subject_relations()),
                           ['created_by', 'creation_date', 'cwuri',
                            'description', 'description_format',
@@ -155,10 +157,11 @@ class MigrationCommandsTC(CubicWebTC):
 
     def test_add_drop_entity_type(self):
         self.mh.cmd_add_entity_type('Folder2')
-        todoeid = self.mh.cmd_add_state(u'todo', 'Folder2', initial=True)
-        doneeid = self.mh.cmd_add_state(u'done', 'Folder2')
-        self.mh.cmd_add_transition(u'redoit', 'Folder2', (doneeid,), todoeid)
-        self.mh.cmd_add_transition(u'markasdone', 'Folder2', (todoeid,), doneeid)
+        wf = self.mh.cmd_add_workflow(u'folder2 wf', 'Folder2')
+        todo = wf.add_state(u'todo', initial=True)
+        done = wf.add_state(u'done')
+        wf.add_transition(u'redoit', done, todo)
+        wf.add_transition(u'markasdone', todo, done)
         self.commit()
         eschema = self.schema.eschema('Folder2')
         self.mh.cmd_drop_entity_type('Folder2')
@@ -172,6 +175,7 @@ class MigrationCommandsTC(CubicWebTC):
     def test_add_drop_relation_type(self):
         self.mh.cmd_add_entity_type('Folder2', auto=False)
         self.mh.cmd_add_relation_type('filed_under2')
+        self.schema.rebuild_infered_relations()
         self.failUnless('filed_under2' in self.schema)
         self.assertEquals(sorted(str(e) for e in self.schema['filed_under2'].subjects()),
                           sorted(str(e) for e in self.schema.entities() if not e.is_final()))
@@ -189,8 +193,8 @@ class MigrationCommandsTC(CubicWebTC):
                           '1*')
         self.mh.cmd_add_relation_definition('Personne', 'concerne2', 'Note')
         self.assertEquals(sorted(self.schema['concerne2'].objects()), ['Affaire', 'Note'])
-        self.mh.add_entity('Personne', nom=u'tot')
-        self.mh.add_entity('Affaire')
+        self.mh.create_entity('Personne', nom=u'tot')
+        self.mh.create_entity('Affaire')
         self.mh.rqlexec('SET X concerne2 Y WHERE X is Personne, Y is Affaire')
         self.commit()
         self.mh.cmd_drop_relation_definition('Personne', 'concerne2', 'Affaire')
@@ -225,10 +229,16 @@ class MigrationCommandsTC(CubicWebTC):
         self.assertEquals(sorted(str(e) for e in self.schema['concerne'].subjects()),
                           ['Affaire', 'Personne'])
         self.assertEquals(sorted(str(e) for e in self.schema['concerne'].objects()),
+                          ['Affaire', 'Division', 'Note', 'SubDivision'])
+        self.schema.rebuild_infered_relations() # need to be explicitly called once everything is in place
+        self.assertEquals(sorted(str(e) for e in self.schema['concerne'].objects()),
                           ['Affaire', 'Note'])
         self.mh.cmd_add_relation_definition('Affaire', 'concerne', 'Societe')
         self.assertEquals(sorted(str(e) for e in self.schema['concerne'].subjects()),
                           ['Affaire', 'Personne'])
+        self.assertEquals(sorted(str(e) for e in self.schema['concerne'].objects()),
+                          ['Affaire', 'Note', 'Societe'])
+        self.schema.rebuild_infered_relations() # need to be explicitly called once everything is in place
         self.assertEquals(sorted(str(e) for e in self.schema['concerne'].objects()),
                           ['Affaire', 'Division', 'Note', 'Societe', 'SubDivision'])
         # trick: overwrite self.maxeid to avoid deletion of just reintroduced types
@@ -460,12 +470,6 @@ class MigrationCommandsTC(CubicWebTC):
     def test_remove_dep_cube(self):
         ex = self.assertRaises(ConfigurationError, self.mh.cmd_remove_cube, 'file')
         self.assertEquals(str(ex), "can't remove cube file, used as a dependency")
-
-    def test_set_state(self):
-        user = self.session.user
-        self.mh.set_state(user.eid, 'deactivated')
-        user.clear_related_cache('in_state', 'subject')
-        self.assertEquals(user.state, 'deactivated')
 
     def test_introduce_base_class(self):
         self.mh.cmd_add_entity_type('Para')

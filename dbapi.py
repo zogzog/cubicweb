@@ -215,10 +215,13 @@ class DBAPIRequest(RequestSessionBase):
             self.lang = 'en'
         # use req.__ to translate a message without registering it to the catalog
         try:
-            self._ = self.__ = self.translations[self.lang]
+            gettext, pgettext = self.translations[self.lang]
+            self._ = self.__ = gettext
+            self.pgettext = pgettext
         except KeyError:
             # this occurs usually during test execution
             self._ = self.__ = unicode
+            self.pgettext = lambda x,y: y
         self.debug('request default language: %s', self.lang)
 
     def decorate_rset(self, rset):
@@ -361,7 +364,7 @@ paramstyle = 'pyformat'
 # connection object ###########################################################
 
 class Connection(object):
-    """DB-API 2.0 compatible Connection object for CubicWebt
+    """DB-API 2.0 compatible Connection object for CubicWeb
     """
     # make exceptions available through the connection object
     ProgrammingError = ProgrammingError

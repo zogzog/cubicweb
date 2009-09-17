@@ -32,10 +32,10 @@ class has_editable_relation(EntitySelector):
         # if user has no update right but it can modify some relation,
         # display action anyway
         for dummy in AutomaticEntityForm.esrelations_by_category(
-            entity, 'generic', 'add'):
+            entity, 'generic', 'add', strict=True):
             return 1
         for rschema, targetschemas, role in AutomaticEntityForm.erelations_by_category(
-            entity, ('primary', 'secondary'), 'add'):
+            entity, ('primary', 'secondary'), 'add', strict=True):
             if not rschema.is_final():
                 return 1
         return 0
@@ -284,7 +284,7 @@ class AddRelatedActions(Action):
                         yield rschema, teschema, role
 
     def linkto_url(self, entity, rtype, etype, target):
-        return self.build_url(vid='creation', etype=etype,
+        return self.build_url('add/%s' % etype,
                               __linkto='%s:%s:%s' % (rtype, entity.eid, target),
                               __redirectpath=entity.rest_path(), # should not be url quoted!
                               __redirectvid=self.req.form.get('vid', ''))

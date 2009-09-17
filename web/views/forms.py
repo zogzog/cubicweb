@@ -486,6 +486,7 @@ class EntityFieldsForm(FieldsForm):
         #       cases, it doesn't make sense to sort results afterwards.
         return vocabfunc(rtype, limit)
 
+    # XXX should be on the field, no?
     def subject_relation_vocabulary(self, rtype, limit=None):
         """defaut vocabulary method for the given relation, looking for
         relation's object entities (i.e. self is the subject)
@@ -528,25 +529,6 @@ class EntityFieldsForm(FieldsForm):
             if limit is not None and len(result) >= limit:
                 break
         return result
-
-    # def subject_in_state_vocabulary(self, rtype, limit=None):
-    #     """vocabulary method for the in_state relation, looking for relation's
-    #     object entities (i.e. self is the subject) according to initial_state,
-    #     state_of and next_state relation
-    #     """
-    #     entity = self.edited_entity
-    #     if not entity.has_eid() or not entity.in_state:
-    #         # get the initial state
-    #         rql = 'Any S where S state_of ET, ET name %(etype)s, ET initial_state S'
-    #         rset = self.req.execute(rql, {'etype': str(entity.e_schema)})
-    #         if rset:
-    #             return [(rset.get_entity(0, 0).view('combobox'), rset[0][0])]
-    #         return []
-    #     results = []
-    #     for tr in entity.in_state[0].transitions(entity):
-    #         state = tr.destination_state[0]
-    #         results.append((state.view('combobox'), state.eid))
-    #     return sorted(results)
 
     def srelations_by_category(self, categories=None, permission=None):
         return ()

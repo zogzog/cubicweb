@@ -3,12 +3,12 @@
 Create your cube
 ----------------
 
-The packages ``cubicweb`` and ``cubicweb-dev`` installs a command line tool
-for *CubicWeb* called ``cubicweb-ctl``. This tool provides a wide range of
-commands described in details in :ref:`cubicweb-ctl`.
+The packages ``cubicweb`` and ``cubicweb-dev`` install a command line
+tool for *CubicWeb* called ``cubicweb-ctl``. This tool provides a wide
+range of commands described in details in :ref:`cubicweb-ctl`.
 
-Once your *CubicWeb* development environment is set up, you can create a new
-cube::
+Once your *CubicWeb* development environment is set up, you can create
+a new cube::
 
   cubicweb-ctl newcube blog
 
@@ -40,15 +40,15 @@ The data model of your cube ``blog`` is defined in the file ``schema.py``:
 
 
 A Blog has a title and a description. The title is a string that is
-required by the class EntityType and must be less than 50 characters.
-The description is a string that is not constrained.
+required and must be less than 50 characters.  The
+description is a string that is not constrained.
 
 A BlogEntry has a title, a publish_date and a content. The title is a
 string that is required and must be less than 100 characters. The
 publish_date is a Date with a default value of TODAY, meaning that
 when a BlogEntry is created, its publish_date will be the current day
 unless it is modified. The content is a string that will be indexed in
-the full-text index and has no constraint.
+the database full-text index and has no constraint.
 
 A BlogEntry also has a relationship ``entry_of`` that links it to a
 Blog. The cardinality ``?*`` means that a BlogEntry can be part of
@@ -172,9 +172,9 @@ point your browser to the URL http://localhost:8080/schema
 Define your entity views
 ------------------------
 
-Each entity defined in a model inherits default views allowing
-different rendering of the data. You can redefine each of them
-according to your needs and preferences. So let's see how the
+Each entity defined in a model is associated with default views
+allowing different rendering of the data. You can redefine each of
+them according to your needs and preferences. So let's see how the
 views are defined.
 
 
@@ -183,72 +183,74 @@ The view selection principle
 
 A view is defined by a Python class which includes:
 
-  - an identifier (all objects in *CubicWeb* are entered in a registry
-    and this identifier will be used as a key)
+  - an identifier (all objects in *CubicWeb* are recorded in a
+    registry and this identifier will be used as a key)
 
   - a filter to select the result sets it can be applied to
 
-A view has a set of methods complying
-with the `View` class interface (`cubicweb.common.view`).
+A view has a set of methods complying with the `View` class interface
+(`cubicweb.common.view`).
 
 *CubicWeb* provides a lot of standard views for the type `EntityView`;
 for a complete list, read the code in directory ``cubicweb/web/views/``.
 
-A view is applied on a `result set` which contains a set of
-entities we are trying to display. *CubicWeb* uses a selector
-mechanism which computes for each available view a score:
-the view with the highest score is then used to display the given `result set`.
-The standard library of selectors is in
-``cubicweb.common.selector`` and a library of methods used to
-compute scores is available in ``cubicweb.vregistry.vreq``.
+A view is applied on a `result set` which contains a set of entities
+we are trying to display. *CubicWeb* uses a selector mechanism which
+computes for each available view a score: the view with the highest
+score is then used to display the given `result set`.  The standard
+library of selectors is in ``cubicweb.selector``.
 
 It is possible to define multiple views for the same identifier
 and to associate selectors and filters to allow the application
-to find the best way to render the data.
+to find the most appropriate way to render the data.
 
-For example, the view named ``primary`` is the one used to display
-a single entity. We will now show you how to customize this view.
+For example, the view named ``primary`` is the one used to display a
+single entity. We will now show you how to create a primary view for
+BlogEntry.
 
 
-View customization
-~~~~~~~~~~~~~~~~~~
+Primary view customization
+~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-If you wish to modify the way a `BlogEntry` is rendered, you will have to
-overwrite the `primary` view defined in the module ``views`` of the cube
-``cubes/blog/views.py``.
+If you wish to modify the way a `BlogEntry` is rendered, you will have
+to subclass the `primary` view, for instance in the module ``views``
+of the cube ``cubes/blog/views.py``.
 
-We can for example add in front of the publication date a prefix specifying
-that the date we see is the publication date.
+The standard primary view is the most sophisticated view of all. It
+has more than a call() method. It is a template. Actually the entry
+point calls the following sequence of (redefinable) methods:
+
+ * render_entity_title
+
+ * render_entity_metadata
+
+ * render_entity_attributes
+
+ * render_entity_relations
+
+ * render_side_boxes
+
+Excepted side boxes, we can see all of them already in action in the
+blog entry view. This is all described in more details in
+:ref:`primary`.
+
+We can for example add in front of the publication date a prefix
+specifying that the date we see is the publication date.
 
 To do so, please apply the following changes:
 
 .. sourcecode:: python
 
-  from cubicweb.web.views import baseviews
+  from cubicweb.selectors import implements
+  from cubicweb.web.views import primary
 
+  class BlogEntryPrimaryView(primary.PrimaryView):
+    __select__ = implements('BlogEntry')
 
-  class BlogEntryPrimaryView(baseviews.PrimaryView):
-
-    accepts = ('BlogEntry',)
-
-    def render_entity_title(self, entity):
-        self.w(u'<h1>%s</h1>' % html_escape(entity.dc_title()))
-
-    def content_format(self, entity):
-        return entity.view('reledit', rtype='content_format')
-
-    def cell_call(self, row, col):
-        entity = self.rset.get_entity(row, col)
-
-        # display entity attributes with prefixes
-        self.w(u'<h1>%s</h1>' % entity.title)
-        self.w(u'<p>published on %s</p>' % entity.publish_date.strftime('%Y-%m-%d'))
-        self.w(u'<p>%s</p>' % entity.content)
-
-        # display relations
-        siderelations = []
-        if self.main_related_section:
-            self.render_entity_relations(entity, siderelations)
+      def render_entity_attributes(self, entity):
+          self.w(u'<p>published on %s</p>' %
+                 entity.publish_date.strftime('%Y-%m-%d'))
+          super(BlogEntryPrimaryView, self).render_entity_attributes(entity)
 
 .. note::
   When a view is modified, it is not required to restart the instance

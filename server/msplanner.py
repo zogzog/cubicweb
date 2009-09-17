@@ -344,7 +344,7 @@ class PartPlanInformation(object):
                         # * at least one supported relation specified
                         if not varobj._q_invariant or \
                                any(imap(source.support_relation,
-                                        (r.r_type for r in rels if r.r_type != 'eid'))):
+                                        (r.r_type for r in rels if r.r_type not in ('identity', 'eid')))):
                             sourcesterms.setdefault(source, {}).setdefault(varobj, set()).add(i)
                         # if variable is not invariant and is used by a relation
                         # not supported by this source, we'll have to split the

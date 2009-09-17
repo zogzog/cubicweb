@@ -12,9 +12,12 @@ from logilab.mtconverter import xml_escape
 from cubicweb import Unauthorized
 from cubicweb.selectors import implements
 from cubicweb.web.htmlwidgets import BoxWidget, BoxMenu, RawBoxItem
-from cubicweb.web import action, box
+from cubicweb.web import action, box, uicfg
 from cubicweb.web.views import primary
 
+_abaa = uicfg.actionbox_appearsin_addmenu
+_abaa.tag_subject_of(('*', 'bookmarked_by', '*'), False)
+_abaa.tag_object_of(('*', 'bookmarked_by', '*'), False)
 
 class FollowAction(action.Action):
     id = 'follow'

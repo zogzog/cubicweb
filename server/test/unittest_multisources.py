@@ -237,11 +237,12 @@ class TwoSourcesTC(CubicWebTC):
 
     def test_not_relation(self):
         states = set(tuple(x) for x in self.sexecute('Any S,SN WHERE S is State, S name SN'))
+        self.session.user.clear_all_caches()
         userstate = self.session.user.in_state[0]
         states.remove((userstate.eid, userstate.name))
         notstates = set(tuple(x) for x in self.sexecute('Any S,SN WHERE S is State, S name SN, NOT X in_state S, X eid %(x)s',
                                                        {'x': self.session.user.eid}, 'x'))
-        self.assertEquals(notstates, states)
+        self.assertSetEquals(notstates, states)
         aff1 = self.sexecute('Any X WHERE X is Affaire, X ref "AFFREF"')[0][0]
         aff1stateeid, aff1statename = self.sexecute('Any S,SN WHERE X eid %(x)s, X in_state S, S name SN', {'x': aff1}, 'x')[0]
         self.assertEquals(aff1statename, 'pitetre')
