@@ -152,8 +152,13 @@ def _generate_schema_pot(w, vreg, schema, libconfig=None, cube=None):
         rtype = rschema.type
         for subjschema in rschema.subjects():
             add_msg(w, rtype, subjschema.type)
+            # bw compat, necessary until all translation of relation are done properly...
+        add_msg(w, rtype)
         done.add(rtype)
         if not (schema.rschema(rtype).is_final() or rschema.symetric):
+            for objschema in rschema.objects():
+                add_msg(w, '%s_object' % rtype, objschema.type)
+            # bw compat, necessary until all translation of relation are done properly...
             add_msg(w, '%s_object' % rtype)
         if rschema.description and rschema.description not in done:
             done.add(rschema.description)
