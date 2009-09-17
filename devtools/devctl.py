@@ -121,6 +121,7 @@ def _generate_schema_pot(w, vreg, schema, libconfig=None, cube=None):
         entities = [e for e in schema.entities() if not e in libschema]
     else:
         entities = schema.entities()
+    rinlined = uicfg.autoform_is_inlined
     done = set()
     for eschema in sorted(entities):
         etype = eschema.type
@@ -129,8 +130,14 @@ def _generate_schema_pot(w, vreg, schema, libconfig=None, cube=None):
         if not eschema.is_final():
             add_msg(w, 'This %s' % etype)
             add_msg(w, 'New %s' % etype)
-            add_msg(w, 'add a %s' % etype)
-            add_msg(w, 'remove this %s' % etype)
+            for rschema, targetschemas, role in eschema.relation_definitions(True):
+                targetschemas = [tschema for tschema in targetschemas
+                                 if rinlined.etype_get(eschema, rschema, role, tschema)]
+                for tschema in targetschemas:
+                    add_msg(w, 'add a %s' % tschema,
+                            'inlined:%s.%s.%s' % (etype, rschema, role))
+                    add_msg(w, 'remove this %s' % tschema,
+                            'inlined:%s:%s:%s' % (etype, rschema, role))
         if eschema.description and not eschema.description in done:
             done.add(eschema.description)
             add_msg(w, eschema.description)
@@ -143,7 +150,8 @@ def _generate_schema_pot(w, vreg, schema, libconfig=None, cube=None):
         relations = schema.relations()
     for rschema in sorted(set(relations)):
         rtype = rschema.type
-        add_msg(w, rtype)
+        for subjschema in rschema.subjects():
+            add_msg(w, rtype, subjschema.type)
         done.add(rtype)
         if not (schema.rschema(rtype).is_final() or rschema.symetric):
             add_msg(w, '%s_object' % rtype)
@@ -157,7 +165,7 @@ def _generate_schema_pot(w, vreg, schema, libconfig=None, cube=None):
         if eschema.is_final():
             continue
         for role, rschemas in (('subject', eschema.subject_relations()),
-                            ('object', eschema.object_relations())):
+                               ('object', eschema.object_relations())):
             for rschema in rschemas:
                 if rschema.is_final():
                     continue
