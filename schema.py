@@ -44,6 +44,7 @@ META_RTYPES = set((
     'owned_by', 'created_by', 'is', 'is_instance_of', 'identity',
     'eid', 'creation_date', 'modification_date', 'has_text', 'cwuri',
     ))
+SYSTEM_RTYPES = set(('require_permission', 'custom_workflow', 'in_state', 'wf_info_for'))
 
 #  set of entity and relation types used to build the schema
 SCHEMA_TYPES = set((

@@ -23,7 +23,6 @@ from logilab.common.clcommands import register_commands
 
 from cubicweb import (CW_SOFTWARE_ROOT as BASEDIR, BadCommandUsage,
                       underline_title)
-from cubicweb.schema import META_RTYPES
 from cubicweb.__pkginfo__ import version as cubicwebversion
 from cubicweb.toolsutils import Command, copy_skeleton
 from cubicweb.web.webconfig import WebConfiguration
@@ -115,6 +114,8 @@ def generate_schema_pot(w, cubedir=None):
 def _generate_schema_pot(w, vreg, schema, libconfig=None, cube=None):
     from cubicweb.common.i18n import add_msg
     from cubicweb.web import uicfg
+    from cubicweb.schema import META_RTYPES, SYSTEM_RTYPES
+    no_context_rtypes = META_RTYPES | SYSTEM_RTYPES
     w('# schema pot file, generated on %s\n' % datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
     w('# \n')
     w('# singular and plural forms for each entity type\n')
@@ -191,13 +192,13 @@ def _generate_schema_pot(w, vreg, schema, libconfig=None, cube=None):
         else:
             librschema = libschema.rschema(rtype)
         # add context information only for non-metadata rtypes
-        if rschema not in META_RTYPES:
+        if rschema not in no_context_rtypes:
             libsubjects = librschema and librschema.subjects() or ()
             for subjschema in rschema.subjects():
                 if not subjschema in libsubjects:
                     add_msg(w, rtype, subjschema.type)
         if not (schema.rschema(rtype).is_final() or rschema.symetric):
-            if rschema not in META_RTYPES:
+            if rschema not in no_context_rtypes:
                 libobjects = librschema and librschema.objects() or ()
                 for objschema in rschema.objects():
                     if not objschema in libobjects:
