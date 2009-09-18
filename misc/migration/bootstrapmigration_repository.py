@@ -56,7 +56,7 @@ if applcubicwebversion < (3, 5, 0) and cubicwebversion >= (3, 5, 0):
             {'et': et.eid, 'wf': wf.eid}, 'et', ask_confirm=False)
         rql('SET T transition_of WF WHERE T transition_of ET, ET eid %(et)s, WF eid %(wf)s',
             {'et': et.eid, 'wf': wf.eid}, 'et', ask_confirm=False)
-        rql('SET WF initial_state S WHERE ET initial_state S, S state_of ET, ET eid %(et)s, WF eid %(wf)s',
+        rql('SET WF initial_state S WHERE ET initial_state S, ET eid %(et)s, WF eid %(wf)s',
             {'et': et.eid, 'wf': wf.eid}, 'et', ask_confirm=False)
 
 
