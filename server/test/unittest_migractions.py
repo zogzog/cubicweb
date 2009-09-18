@@ -383,7 +383,9 @@ class MigrationCommandsTC(RepositoryBasedTC):
                 self.mh.cmd_remove_cube('email', removedeps=True)
                 # file was there because it's an email dependancy, should have been removed
                 self.failIf('email' in self.config.cubes())
+                self.failIf(self.config.cube_dir('email') in self.config.cubes_path())
                 self.failIf('file' in self.config.cubes())
+                self.failIf(self.config.cube_dir('file') in self.config.cubes_path())
                 for ertype in ('Email', 'EmailThread', 'EmailPart', 'File', 'Image',
                                'sender', 'in_thread', 'reply_to', 'data_format'):
                     self.failIf(ertype in schema, ertype)
@@ -404,7 +406,9 @@ class MigrationCommandsTC(RepositoryBasedTC):
         finally:
             self.mh.cmd_add_cube('email')
             self.failUnless('email' in self.config.cubes())
+            self.failUnless(self.config.cube_dir('email') in self.config.cubes_path())
             self.failUnless('file' in self.config.cubes())
+            self.failUnless(self.config.cube_dir('file') in self.config.cubes_path())
             for ertype in ('Email', 'EmailThread', 'EmailPart', 'File', 'Image',
                            'sender', 'in_thread', 'reply_to', 'data_format'):
                 self.failUnless(ertype in schema, ertype)
