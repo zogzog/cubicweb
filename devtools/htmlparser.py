@@ -7,6 +7,7 @@
 """
 
 import re
+import sys
 
 from lxml import etree
 
