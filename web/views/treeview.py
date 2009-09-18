@@ -111,7 +111,8 @@ class TreeViewItemView(EntityView):
             return str(eeid) in treestate.value.split(';')
         return self.default_branch_state_is_open
 
-    def cell_call(self, row, col, treeid, vid='oneline', parentvid='treeview'):
+    def cell_call(self, row, col, treeid, vid='oneline', parentvid='treeview',
+                  **kwargs):
         w = self.w
         entity = self.entity(row, col)
         liclasses = []
@@ -156,7 +157,7 @@ class TreeViewItemView(EntityView):
             if not is_open:
                 w(u'<ul class="placeholder"><li>place holder</li></ul>')
         # the local node info
-        self.wview(vid, self.rset, row=row, col=col)
+        self.wview(vid, self.rset, row=row, col=col, **kwargs)
         if is_open and not is_leaf: #  => rql is defined
             self.wview(parentvid, self.req.execute(rql), treeid=treeid, initial_load=False)
         w(u'</li>')
