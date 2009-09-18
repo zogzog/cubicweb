@@ -176,7 +176,15 @@ def _set_orderby(rqlst, newvar, sortasc, sortfuncname):
 
 def insert_attr_select_relation(rqlst, mainvar, rtype, role, attrname,
                                 sortfuncname=None, sortasc=True):
-    """modify a syntax tree to retrieve only relevant attribute `attr` of `var`"""
+    """modify a syntax tree to :
+    * link a new variable to `mainvar` through `rtype` (where mainvar has `role`)
+    * retrieve only the newly inserted variable and its `attrname`
+
+    Sorting:
+    * on `attrname` ascendant (`sortasc`=True) or descendant (`sortasc`=False)
+    * on `sortfuncname`(`attrname`) if `sortfuncname` is specified
+    * no sort if `sortasc` is None
+    """
     _cleanup_rqlst(rqlst, mainvar)
     var = _prepare_vocabulary_rqlst(rqlst, mainvar, rtype, role)
     # not found, create one
@@ -186,7 +194,8 @@ def insert_attr_select_relation(rqlst, mainvar, rtype, role, attrname,
     if rqlst.groupby:
         if not attrvar in rqlst.groupby:
             rqlst.add_group_var(attrvar)
-    _set_orderby(rqlst, attrvar, sortasc, sortfuncname)
+    if sortasc is not None:
+        _set_orderby(rqlst, attrvar, sortasc, sortfuncname)
     # add attribute variable to selection
     rqlst.add_selected(attrvar)
     # add is restriction if necessary
@@ -358,10 +367,14 @@ class RelationFacet(VocabularyFacet):
         """
         rqlst = self.rqlst
         rqlst.save_state()
+        if self.label_vid is not None and self.sortfunc is None:
+            sort = None # will be sorted on label
+        else:
+            sort = self.sortasc
         try:
             mainvar = self.filtered_variable
             insert_attr_select_relation(rqlst, mainvar, self.rtype, self.role,
-                                        self.target_attr, self.sortfunc, self.sortasc)
+                                        self.target_attr, self.sortfunc, sort)
             try:
                 rset = self.rqlexec(rqlst.as_string(), self.rset.args, self.rset.cachekey)
             except:
@@ -539,6 +552,7 @@ class RangeFacet(AttributeFacet):
                                             self.formatvalue(supvalue),
                                             self.attrtype, '<=')
 
+
 class DateRangeFacet(RangeFacet):
     attrtype = 'Date' # only date types are supported
 
@@ -578,6 +592,7 @@ class HasRelationFacet(AbstractFacet):
             self.rqlst.add_relation(self.filtered_variable, self.rtype, var)
         else:
             self.rqlst.add_relation(var, self.rtype, self.filtered_variable)
+
 
 ## html widets ################################################################
 
@@ -730,6 +745,7 @@ class FacetItem(HTMLWidget):
         self.w(u'<a href="javascript: {}">%s</a>' % xml_escape(self.label))
         self.w(u'</div>')
 
+
 class CheckBoxFacetWidget(HTMLWidget):
     selected_img = "black-check.png"
     unselected_img = "black-uncheck.png"
@@ -760,6 +776,7 @@ class CheckBoxFacetWidget(HTMLWidget):
         self.w(u'</div>\n')
         self.w(u'</div>\n')
         self.w(u'</div>\n')
+
 
 class FacetSeparator(HTMLWidget):
     def __init__(self, label=None):
