@@ -8,7 +8,7 @@
 """
 
 import os
-import pwd
+import sys
 
 from logilab.common.testlib import unittest_main
 from logilab.common.umessage import message_from_string
@@ -22,7 +22,11 @@ def getlogin():
     (man 3 getlogin)
     Another solution would be to use $LOGNAME, $USER or $USERNAME
     """
-    return pwd.getpwuid(os.getuid())[0]
+    if sys.platform != 'win32':
+        import pwd
+        return pwd.getpwuid(os.getuid())[0]
+    else:
+        return os.environ.get('USERNAME')
 
 
 class EmailTC(EnvBasedTC):

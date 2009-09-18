@@ -1,10 +1,8 @@
 #########################################################
 """
-
+XXX clarify this header
 :organization: Logilab
-:copyright: 2001-2009 LOGILAB S.A. (Paris, FRANCE), license is LGPL v2.
 :contact: http://www.logilab.fr/ -- mailto:contact@logilab.fr
-:license: GNU Lesser General Public License, v2.1 - http://www.gnu.org/licenses
 """
 # md5crypt.py
 #
@@ -58,8 +56,9 @@ def to64 (v, n):
         v = v >> 6
     return ret
 
-
 def crypt(pw, salt, magic=None):
+    if isinstance(pw, unicode):
+        pw = pw.encode('utf-8')
     if magic is None:
         magic = MAGIC
     # Take care of the magic string if present

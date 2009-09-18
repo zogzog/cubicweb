@@ -355,7 +355,6 @@ uicfg.autoform_section.tag_object_of(('*', 'owned_by', 'CWUser'), 'generated')
 uicfg.autoform_section.tag_object_of(('*', 'created_by', 'CWUser'), 'generated')
 uicfg.autoform_section.tag_object_of(('*', 'bookmarked_by', 'CWUser'), 'metadata')
 uicfg.autoform_section.tag_attribute(('Bookmark', 'path'), 'primary')
-uicfg.autoform_section.tag_subject_of(('*', 'use_email', '*'), 'generated') # inlined actually
 uicfg.autoform_section.tag_subject_of(('*', 'primary_email', '*'), 'generic')
 
 uicfg.autoform_field_kwargs.tag_attribute(('RQLExpression', 'expression'),

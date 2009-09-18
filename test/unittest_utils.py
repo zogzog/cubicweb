@@ -21,12 +21,12 @@ class MakeUidTC(TestCase):
         self.assertNotEquals(make_uid('xyz'), make_uid('xyz'))
 
     def test_2(self):
-        d = {}
+        d = set()
         while len(d)<10000:
             uid = make_uid('xyz')
-            if d.has_key(uid):
+            if uid in d:
                 self.fail(len(d))
-            d[uid] = 1
+            d.add(uid)
 
 
 class UStringIOTC(TestCase):
