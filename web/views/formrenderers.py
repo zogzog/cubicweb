@@ -489,6 +489,7 @@ class EntityFormRenderer(EntityBaseFormRenderer):
     def inline_relation_form(self, w, form, rschema, targettype, role):
         entity = form.edited_entity
         __ = self.req.pgettext
+        i18nctx = 'inlined:%s.%s.%s' % (entity.e_schema, rschema, role)
         w(u'<div id="inline%sslot">' % rschema)
         existant = entity.has_eid() and entity.related(rschema)
         if existant:
@@ -504,7 +505,7 @@ class EntityFormRenderer(EntityBaseFormRenderer):
         if form.should_display_inline_creation_form(rschema, existant, card):
             w(form.view('inline-creation', None, etype=targettype,
                         peid=entity.eid, ptype=entity.e_schema,
-                        rtype=rschema, role=role))
+                        rtype=rschema, role=role, i18nctx=i18nctx))
             existant = True
         # we can create more than one related entity, we thus display a link
         # to add new related entities
@@ -512,13 +513,12 @@ class EntityFormRenderer(EntityBaseFormRenderer):
             divid = "addNew%s%s%s:%s" % (targettype, rschema, role, entity.eid)
             w(u'<div class="inlinedform" id="%s" cubicweb:limit="true">'
               % divid)
-            js = "addInlineCreationForm('%s', '%s', '%s', '%s')" % (
-                entity.eid, targettype, rschema, role)
-            if card in '1?':
+            js = "addInlineCreationForm('%s', '%s', '%s', '%s', '%s')" % (
+                entity.eid, targettype, rschema, role, i18nctx)
+            if form.should_hide_add_new_relation_link(rschema, card):
                 js = "toggleVisibility('%s'); %s" % (divid, js)
-            ctx = 'inlined:%s.%s.%s' % (entity.e_schema, rschema, role)
             w(u'<a class="addEntity" id="add%s:%slink" href="javascript: %s" >+ %s.</a>'
-              % (rschema, entity.eid, js, __(ctx, 'add a %s' % targettype)))
+              % (rschema, entity.eid, js, __(i18nctx, 'add a %s' % targettype)))
             w(u'</div>')
             w(u'<div class="trame_grise">&#160;</div>')
         w(u'</div>')
@@ -542,7 +542,9 @@ class EntityInlinedFormRenderer(EntityFormRenderer):
             w(u'<div id="notice-%s" class="notice">%s</div>' % (
                 values['divid'], self.req._('click on the box to cancel the deletion')))
         w(u'<div class="iformBody">')
-        values['removemsg'] = self.req.__('remove this %s' % form.edited_entity.e_schema)
+        eschema = form.edited_entity.e_schema
+        ctx = values.pop('i18nctx')
+        values['removemsg'] = self.req.pgettext(ctx, 'remove this %s' % eschema)
         w(u'<div class="iformTitle"><span>%(title)s</span> '
           '#<span class="icounter">%(counter)s</span> '
           '[<a href="javascript: %(removejs)s;noop();">%(removemsg)s</a>]</div>'

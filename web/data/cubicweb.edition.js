@@ -243,9 +243,9 @@ function updateInlinedEntitiesCounters(rtype) {
  * @param ttype : the target (inlined) entity type
  * @param rtype : the relation type between both entities
  */
-function addInlineCreationForm(peid, ttype, rtype, role, insertBefore) {
+function addInlineCreationForm(peid, ttype, rtype, role, i18nctx, insertBefore) {
     insertBefore = insertBefore || getNode('add' + rtype + ':' + peid + 'link').parentNode;
-    var d = asyncRemoteExec('inline_creation_form', peid, ttype, rtype, role);
+    var d = asyncRemoteExec('inline_creation_form', peid, ttype, rtype, role, i18nctx);
     d.addCallback(function (response) {
         var dom = getDomFromResponse(response);
         preprocessAjaxLoad(null, dom);
