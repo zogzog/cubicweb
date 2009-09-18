@@ -54,7 +54,6 @@ jQuery("#tree-%s").treeview({toggle: toggleTree, prerendered: true});""" % treei
              initial_load=True, initial_thru_ajax=False, **morekwargs):
         subvid, treeid, toplevel_thru_ajax, toplevel = self._init_params(
             subvid, treeid, initial_load, initial_thru_ajax, morekwargs)
-        print 'TREEVIEW', subvid, morekwargs
         ulid = ' '
         if toplevel:
             self._init_headers(treeid, toplevel_thru_ajax)
