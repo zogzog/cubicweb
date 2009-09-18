@@ -346,6 +346,8 @@ class RelationFacet(VocabularyFacet):
     sortfunc = None
     # ascendant/descendant sorting
     sortasc = True
+    # if you want to call a view on the entity instead of using `target_attr`
+    label_vid = None
 
     @property
     def title(self):
@@ -384,8 +386,14 @@ class RelationFacet(VocabularyFacet):
             rqlst.recover()
 
     def rset_vocabulary(self, rset):
-        _ = self.req._
-        return [(_(label), eid) for eid, label in rset]
+        if self.label_vid is None:
+            _ = self.req._
+            return [(_(label), eid) for eid, label in rset]
+        if self.sortfunc is None:
+            return sorted((entity.view(self.label_vid), entity.eid)
+                          for entity in rset.entities())
+        return [(entity.view(self.label_vid), entity.eid)
+                for entity in rset.entities()]
 
     @cached
     def support_and(self):
