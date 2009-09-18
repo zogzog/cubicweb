@@ -312,7 +312,7 @@ class CreateInstanceDBCommand(Command):
         # postgres specific stuff
         if driver == 'postgres':
             # install plpythonu/plpgsql language if not installed by the cube
-            langs = sys.platform == 'win32' and ('plpgsql',) or ('plpythonu', 'plpgsql') 
+            langs = sys.platform == 'win32' and ('plpgsql',) or ('plpythonu', 'plpgsql')
             for extlang in langs:
                 helper.create_language(cursor, extlang)
         cursor.close()

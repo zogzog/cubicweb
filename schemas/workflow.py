@@ -27,7 +27,6 @@ class Workflow(EntityType):
                                   constraints=[RQLConstraint('O final FALSE')])
 
     initial_state = SubjectRelation('State', cardinality='?*',
-                                   # S initial_state O, O state_of S
                                    constraints=[RQLConstraint('O state_of S')],
                                    description=_('initial state for this workflow'))
 
