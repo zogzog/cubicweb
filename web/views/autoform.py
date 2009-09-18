@@ -311,6 +311,14 @@ class AutomaticEntityForm(forms.EntityFieldsForm):
         """
         return not existant or card in '+*'
 
+    def should_hide_add_new_relation_link(self, rschema, card):
+        """return true if once an inlined creation form is added, the 'add new'
+        link should be hidden
+
+        by default true if the relation has single cardinality
+        """
+        return card in '1?'
+
 
 def etype_relation_field(etype, rtype, role='subject'):
     eschema = AutomaticEntityForm.schema.eschema(etype)
