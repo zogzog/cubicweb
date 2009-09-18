@@ -491,11 +491,16 @@ class EntityFormRenderer(EntityBaseFormRenderer):
         __ = self.req.pgettext
         i18nctx = 'inlined:%s.%s.%s' % (entity.e_schema, rschema, role)
         w(u'<div id="inline%sslot">' % rschema)
-        existant = entity.has_eid() and entity.related(rschema)
-        if existant:
+        existant = False
+        related = entity.has_eid() and entity.related(rschema, role)
+        if related:
             # display inline-edition view for all existing related entities
-            w(form.view('inline-edition', existant, rtype=rschema, role=role,
-                        ptype=entity.e_schema, peid=entity.eid))
+            for i, relentity in enumerate(related.entities()):
+                if relentity.has_perm('update'):
+                    w(form.view('inline-edition', related, row=i, col=0,
+                                rtype=rschema, role=role, ptype=entity.e_schema,
+                                peid=entity.eid, i18nctx=i18nctx))
+                    existant = True
         if role == 'subject':
             card = rschema.rproperty(entity.e_schema, targettype, 'cardinality')[0]
         else:
@@ -522,6 +527,7 @@ class EntityFormRenderer(EntityBaseFormRenderer):
             w(u'</div>')
             w(u'<div class="trame_grise">&#160;</div>')
         w(u'</div>')
+
 
 
 class EntityInlinedFormRenderer(EntityFormRenderer):
