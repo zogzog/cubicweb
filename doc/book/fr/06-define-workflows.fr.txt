@@ -2,11 +2,92 @@
 
 Définition de workflow
 ======================
-On peut mettre une condition rql ou/et un groupe auquel doit appartenir l'utilisateur.
 
-Si on met à la fois un(ou plusieurs) groupe et une condition RQL, il faut que les deux soient respectés.
+Avant-propos
+------------
 
-Si on met plusieurs groupes, il faut que l'utilisateur soit dans un des groupes.
+Un worflow décrit comment les entités vont être utilisés à travers différents états. Nous avons donc pour un workflow donné un ensemble d'états, un "graphe de transition" c'est-à-dire la liste des transitions possibles d'un état à un autre.
+
+Nous allons définir ici un simple workflow pour l'exemple du blog avec seulement deux états: `en attente` et `publié`. Il est nécessaire d'avoir préalablement créé une application simple *CubicWeb* en dix minutes (voir :ref:`BlogFiveMinutes`).
+
+Mise en place du workflow
+-------------------------
+
+Nous allons créer un workflow pour contrôler la qualité des BlogEntry soumis à l'instance. Lorsque un BlogEntry est créé par un utilisateur, son état doit être `en attente`. Pour être visible par tous, il doit être ensuite mis à l'état `publié`. Pour le changement d'état d'`en attente` à `publié`, nous avons besoin d'une transition que nous appellerons `approuve_blogentry`.
+
+Un état BlogEntry ne doit pas pouvoir être modifiable par les utilisateurs. Nous allons donc créé un groupe de modération `moderateurs` et ce groupe aura les permissions idoines pour publier un BlogEntry.
+
+Il existe deux manières de créer un workflow: depuis l'interface utilisateur ou en le définissant dans le fichier ``migration/postcreate.py``.
+Ce script est exécuté à chaque lancement de la commande ``cubicweb-ctl db-init``.
+Nous encourageons vivement la création dans ``migration/postcreate.py`` que nous allons vous montrer ici. Lire `Sous le capot`_ pour en comprendre les raisons.
+
+L'état d'une entité est sauvegardé par l'attribut `in_state` qui peut être ajouté à votre schéma d'entité par deux façons:
+
+* héritage direct en utilisant la classe `cubicweb.schema.WorkflowableEntityType`
+* par délégation en utilisant `cubicweb.schema.make_worflowable` (utilisable comme un décorateur également)
+
+Pour notre exemple de BlogEntry, nous devons avoir:
+
+.. sourcecode:: python
+
+  from cubicweb.schema import WorkflowableEntityType
+
+  class BlogEntry(EntityType, WorkflowableEntityType):
+      ...
+
+
+Création des états, transitions et les permissions de groupe
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Le script ``postcreate.py`` est exécuté dans un environnement spécial où plusieurs primitives *CubicWeb* peuvent être utilsées.
+Elles sont toutes définies dans ``class ServerMigrationHelper``.
+Nous allons maintenant voir dans le prochain example celles utilisées pour créer un workflow.
+
+Pour définir notre workflow pour BlogDemo, veuillez ajouter les lignes suivantes au script ``migration/postcreate.py``:
+
+.. sourcecode:: python
+
+  _ = unicode
+
+  moderators = add_entity('CWGroup', name=u"modérateurs")
+
+Cela va ajouter le groupe utilisateur `moderators`.
+
+.. sourcecode:: python
+
+  wf = add_workflow(u'une description succincte de votre workflow', 'BlogEntry')
+
+Ceci va premièrement instancier un nouvel objet workflow avec une description sommaire mais pertinente et le type d'entité concerné (un tuple pour être utilisé pour des valeurs multiples).
+
+.. sourcecode:: python
+
+  submitted = wf.add_state(_('submitted'), initial=True)
+  published = wf.add_state(_('published'))
+
+``add_state`` attend comme premier argument le nom de l'état que vous voulez créer et un argument optionnel pour signifier si c'est l'état initial supposé pour ce type d'entité.
+
+.. sourcecode:: python
+
+  wf.add_transition(_('approuve_blogentry'), (submitted,), published, ('moderators', 'managers'),)
+
+``add_transition`` attend:
+
+  * comme premier argument le nom de la transition
+  * ensuite la liste des états pour lesquels les transitions peuvent être tirées,
+  * l'état attendu en fin de transition,
+  * et les permissions
+    (c'est-à-dire la liste des goupes utilisateurs qui peuvnet appliquer la transition; l'utilisateur devant appartenir à l'un des groupes listés pour être autoriser à exécuter l'action).
+
+.. sourcecode:: python
+
+
+  checkpoint()
+
+.. note::
+  Dans le script de création d'un workflow, penser à mettre `_()` autour des noms d'états et de transitions pour que ceux si soient pris en compte par les scripts de gestion des catalogues i18n.
+
+En complément de condition sur des groupes utilisateur dont l'utilisateur doit appartenir à l'in d'entre eux, vous pouvez utiliser une RQL condition.
+Dans ce cas, l'utilisateur peut seulement exécuter une action si les deux conditions sont satisfaites.
 
 Pour la condition RQL sur une transition, on peut y mettre les substitutions suivantes :
 
@@ -14,141 +95,35 @@ Pour la condition RQL sur une transition, on peut y mettre les substitutions sui
 * `%(ueid)s`, eid de l'utilisateur qui fait la requête
 * `%(seid)s`, eid de l'état courant de l'objet
 
-Dans le script de création d'un workflow, penser à mettre `_()` autour des noms d'états et de transitions
-pour que ceux si soient pris en compte par les scripts de gestion des catalogues i18n.
+.. image:: ../../images/03-transitions-view.en.png
 
-General
--------
-
-A workflow can be defined in a `LAX` application thanks to the system 
-entities ``State`` and ``Transition``. Those are defined within all 
-LAX application and can be set-up through the main administrator interface.
-
-Once your schema is defined, you can start creating the set of states and
-the required transitions for your applications entities.
-
-You first need to define the states and then the transitions between those
-to complete your workflow.
-
-A ``State`` defines the status of an entity. While creating a new state, 
-you will be first given the option to select the entity type the state
-can be applied to. By choosing ``Apply``, a new section will be displayed
-in the editing screen to enable you to add relation to the state you are
-creating.
-
-A ``Transition`` is also based on an entity type it can be applied to.
-By choosing ``Apply``, a new section will be displayed in the editing 
-screen to enable you to add relation to the transition you are
-creating.
-
-At the transition level you will also define the group of user which can
-aplly this transition to an object.
+Vous pouvez remarqué que dans la boîte d'action d'un BlogEntry, l'état est maintenant listé ainsi que les possibles transitions définis pour l'état en cours dans le workflow. Les transitions ne sont seulement affichées pour les utilisateurs ayant les bonnes permissions.
+Dans notre exemple, la transition `approuve_blogentry` sera seulement affichée pour les utilisateurs appartenant au groupe `moderators` or `managers`.
 
 
-Example of a simple workflow
-----------------------------
+Sous le capot
+~~~~~~~~~~~~~
 
-Please see the tutorial to view and example of a simple workflow.
+Un workflow est une collection d'entités de type `State`` et ``Transition`` qui sont des types d'entités standards de *CubicWeb*.
 
+Par exemple, les lignes précédentes:
 
-[Create a simple workflow for BlogDemo, to have a moderator approve new blog 
-entry to be published. This implies, specify a dedicated group of blog
-moderator as well as hide the view of a blog entry to the user until
-it reaches the state published]
+.. sourcecode:: python
 
-Set-up a workflow
------------------
+  submitted = wf.add_state(_('en attente'), initial=True)
+  published = wf.add_state(_('publié'))
 
-Before starting, make sure you refresh your mind by reading [link to
-definition_workflow chapter].
+vont créé deux entités de type ``State``, l'une avec le nom 'submitted' et l'autre avec le nom 'published'. Tandis que:
 
-We want to create a workflow to control the quality of the BlogEntry 
-submitted on your application. When a BlogEntry is created by a user
-its state should be `submitted`. To be visible to all, it needs to
-be in the state `published`. To move from `submitted` to `published`
-we need a transition that we can name `approve_blogentry`.
+.. sourcecode:: python
 
-We do not want every user to be allowed to change the state of a 
-BlogEntry. We need to define a group of user, `moderators`, and 
-this group will have appropriate permissions to approve BlogEntry
-to be published and visible to all.
+  wf.add_transition(_('approuve_blogentry'), (submitted,), published, ('moderators', 'managers'),)
 
-There are two ways to create a workflow, form the user interface,
-and also by defining it in ``migration/postcreate.py``. This script
-is executed each time a new ``./bin/laxctl db-init`` is done. 
-If you create the states and transitions through the user interface
-this means that next time you will need to initialize the database
-you will have to re-create all the entities. 
-We strongly recommand you create the workflow in ``migration\postcreate.py``
-and we will now show you how.
-The user interface would only be a reference for you to view the states 
-and transitions but is not the appropriate interface to define your
-application workflow.
+va créé une entité de type ``Transition`` avec le nom `approuve_blogentry` qui sera relié aux entités ``State`` créées précédemment.
 
-Update the schema
-~~~~~~~~~~~~~~~~~
-To enable a BlogEntry to have a State, we have to define a relation
-``in_state`` in the schema of BlogEntry. Please do as follows, add
-the line ``in_state (...)``::
+Dès lors, nous pouvons utiliser l'interface d'administration pour ces opérations. Mais ce n'est pas recommandé à cause de la complexité superflue et du fait que ces changements ne seront locaux qu'à cette instance.
 
-  class BlogEntry(EntityType):
-      title = String(maxsize=100, required=True)
-      publish_date = Date(default='TODAY')
-      text_format = String(meta=True, internationalizable=True, maxsize=50,
-                           default='text/rest', constraints=[format_constraint])
-      text = String(fulltextindexed=True)
-      category = String(vocabulary=('important','business'))
-      entry_of = SubjectRelation('Blog', cardinality='?*')
-      in_state = SubjectRelation('State', cardinality='1*')
-
-As you updated the schema, you will have re-execute ``./bin/laxctl db-init``
-to initialize the database and migrate your existing entities.
-[WRITE ABOUT MIGRATION]
-
-Create states, transitions and group permissions
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-At the time the ``postcreate.py`` script is executed, several methods
-can be used. They are all defined in the ``class ServerMigrationHelper``.
-We will only discuss the method we use to create a wrokflow here.
-
-To define our workflow for BlogDemo, please add the following lines
-to ``migration/postcreate.py``::
-  
-  _ = unicode
-
-  moderators      = add_entity('CWGroup', name=u"moderators")
-
-  submitted = add_state(_('submitted'), 'BlogEntry', initial=True)
-  published = add_state(_('published'), 'BlogEntry')
-
-  add_transition(_('approve_blogentry'), 'BlogEntry', (submitted,), published, ('moderators', 'managers'),)
-
-  checkpoint()
-
-``add_entity`` is used here to define the new group of users that we
-need to define the transitions, `moderators`.
-If this group required by the transition is not defined before the
-transition is created, it will not create the relation `transition 
-require the group moderator`.
-
-``add_state`` expects as the first argument the name of the state you are
-willing to create, then the entity type on which the state can be applied, 
-and an optionnal argument to set if the state is the initial state
-of the entity type or not.
-
-``add_transition`` expects as the first argument the name of the 
-transition, then the entity type on which we can apply the transition,
-then the list of possible initial states from which the transition
-can be applied, the target state of the transition, and the permissions
-(e.g. list of the groups of users who can apply the transition).
-
-.. image:: images/lax-book.03-transitions-view.fr.png
-
-You can now notice that in the actions box of a BlogEntry, the state
-is now listed as well as the possible transitions from this state
-defined by the workflow. This transition, as defined in the workflow,
-will only being displayed for the users belonging to the group
-moderators of managers.
+En effet, si vous créez les états et les transitions à travers l'interface utilisateur, la prochaine initialisation de la base de données vous oblige à recréer toutes les entités.
+L'interface utilisateur devrait être seulement connu par vous pour la visualisation des états et transitions, mais ce n'est pas celle appropriée pour définir vos workflows applicatifs.
 
 
