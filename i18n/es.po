@@ -917,6 +917,9 @@ msgstr "Transición en salida"
 msgid "add State allowed_transition WorkflowTransition subject"
 msgstr ""
 
+msgid "add State state_of Workflow object"
+msgstr ""
+
 msgid "add Transition condition RQLExpression subject"
 msgstr "Restricción"
 
@@ -926,10 +929,16 @@ msgstr "Transición de entrada"
 msgid "add Transition destination_state State subject"
 msgstr "Estado de salida"
 
+msgid "add Transition transition_of Workflow object"
+msgstr ""
+
 msgid "add WorkflowTransition condition RQLExpression subject"
 msgstr ""
 
 msgid "add WorkflowTransition subworkflow_exit SubWorkflowExitPoint subject"
+msgstr ""
+
+msgid "add WorkflowTransition transition_of Workflow object"
 msgstr ""
 
 msgctxt "inlined:CWRelation.from_entity.subject"
@@ -1571,10 +1580,6 @@ msgstr "Creado el"
 msgid "created_by"
 msgstr "creado por"
 
-msgctxt "CWUser"
-msgid "created_by_object"
-msgstr ""
-
 msgid "created_by_object"
 msgstr "ha creado"
 
@@ -1651,6 +1656,9 @@ msgstr ""
 msgid "creating State (State allowed_transition Transition %(linkto)s)"
 msgstr "Creación de un estado que pueda ir hacia la transición %(linkto)s"
 
+msgid "creating State (State state_of Workflow %(linkto)s)"
+msgstr ""
+
 msgid "creating State (Transition %(linkto)s destination_state State)"
 msgstr "Creación de un estado destinación de la transición %(linkto)s"
 
@@ -1665,9 +1673,17 @@ msgstr "Creación de una transición autorizada desde el estado %(linkto)s"
 msgid "creating Transition (Transition destination_state State %(linkto)s)"
 msgstr "Creación de un transición hacia el estado %(linkto)s"
 
+msgid "creating Transition (Transition transition_of Workflow %(linkto)s)"
+msgstr ""
+
 msgid ""
 "creating WorkflowTransition (State %(linkto)s allowed_transition "
 "WorkflowTransition)"
+msgstr ""
+
+msgid ""
+"creating WorkflowTransition (WorkflowTransition transition_of Workflow %"
+"(linkto)s)"
 msgstr ""
 
 msgid "creation"
@@ -1704,14 +1720,6 @@ msgid "currently attached file: %s"
 msgstr "archivo adjunto: %s"
 
 msgid "custom_workflow"
-msgstr ""
-
-msgctxt "CWUser"
-msgid "custom_workflow"
-msgstr ""
-
-msgctxt "Workflow"
-msgid "custom_workflow_object"
 msgstr ""
 
 msgid "custom_workflow_object"
@@ -2422,94 +2430,6 @@ msgstr "idéntico a"
 msgid "identity"
 msgstr "es idéntico a"
 
-msgctxt "CWRelation"
-msgid "identity_object"
-msgstr ""
-
-msgctxt "Bookmark"
-msgid "identity_object"
-msgstr ""
-
-msgctxt "CWAttribute"
-msgid "identity_object"
-msgstr ""
-
-msgctxt "CWConstraintType"
-msgid "identity_object"
-msgstr ""
-
-msgctxt "State"
-msgid "identity_object"
-msgstr ""
-
-msgctxt "BaseTransition"
-msgid "identity_object"
-msgstr ""
-
-msgctxt "CWEType"
-msgid "identity_object"
-msgstr ""
-
-msgctxt "Workflow"
-msgid "identity_object"
-msgstr ""
-
-msgctxt "CWGroup"
-msgid "identity_object"
-msgstr ""
-
-msgctxt "TrInfo"
-msgid "identity_object"
-msgstr ""
-
-msgctxt "CWConstraint"
-msgid "identity_object"
-msgstr ""
-
-msgctxt "CWUser"
-msgid "identity_object"
-msgstr ""
-
-msgctxt "Transition"
-msgid "identity_object"
-msgstr ""
-
-msgctxt "CWRType"
-msgid "identity_object"
-msgstr ""
-
-msgctxt "SubWorkflowExitPoint"
-msgid "identity_object"
-msgstr ""
-
-msgctxt "ExternalUri"
-msgid "identity_object"
-msgstr ""
-
-msgctxt "CWCache"
-msgid "identity_object"
-msgstr ""
-
-msgctxt "WorkflowTransition"
-msgid "identity_object"
-msgstr ""
-
-msgctxt "RQLExpression"
-msgid "identity_object"
-msgstr ""
-
-msgctxt "CWPermission"
-msgid "identity_object"
-msgstr ""
-
-msgctxt "EmailAddress"
-msgid "identity_object"
-msgstr ""
-
-msgctxt "CWProperty"
-msgid "identity_object"
-msgstr ""
-
 msgid "identity_object"
 msgstr "es idéntico a"
 
@@ -2545,14 +2465,6 @@ msgstr "Miembros"
 
 msgid "in_state"
 msgstr "estado"
-
-msgctxt "CWUser"
-msgid "in_state"
-msgstr ""
-
-msgctxt "State"
-msgid "in_state_object"
-msgstr ""
 
 msgid "in_state_object"
 msgstr "estado de"
@@ -2669,16 +2581,8 @@ msgstr ""
 msgid "is_instance_of"
 msgstr "es una instancia de"
 
-msgctxt "CWEType"
-msgid "is_instance_of_object"
-msgstr ""
-
 msgid "is_instance_of_object"
 msgstr "tiene como instancias"
-
-msgctxt "CWEType"
-msgid "is_object"
-msgstr ""
 
 msgid "is_object"
 msgstr "tiene por instancia"
@@ -3034,10 +2938,6 @@ msgstr "owlabox"
 
 msgid "owned_by"
 msgstr "pertenece a"
-
-msgctxt "CWUser"
-msgid "owned_by_object"
-msgstr ""
 
 msgid "owned_by_object"
 msgstr "pertenece al objeto"
@@ -3968,14 +3868,6 @@ msgstr "bienvenido %s !"
 msgid "wf_info_for"
 msgstr "historial de"
 
-msgctxt "TrInfo"
-msgid "wf_info_for"
-msgstr ""
-
-msgctxt "CWUser"
-msgid "wf_info_for_object"
-msgstr ""
-
 msgid "wf_info_for_object"
 msgstr "historial de transiciones"
 
@@ -4038,9 +3930,6 @@ msgstr "deberia probablamente suprimir esta propriedad"
 
 #~ msgid "There is no workflow defined for this entity."
 #~ msgstr "No hay workflow para este entidad"
-
-#~ msgid "This %s"
-#~ msgstr "Este %s"
 
 #~ msgid ""
 #~ "You have no access to this view or it's not applyable to current data"
