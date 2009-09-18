@@ -11,6 +11,7 @@ Example of use (run this with `cubicweb-ctl shell instance import-script.py`):
 
 .. sourcecode:: python
 
+  from cubicweb.devtools.dataimport import *
   # define data generators
   GENERATORS = []
 
