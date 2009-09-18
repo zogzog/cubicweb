@@ -521,10 +521,11 @@ class InlineEntityCreationFormView(InlineEntityEditionFormView):
         :param role: the role played by the `peid` in the relation
         """
         try:
-            entity = self.vreg['etypes'].etype_class(etype)(self.req, None, None)
+            cls = self.vreg['etypes'].etype_class(etype)
         except:
             self.w(self.req._('no such entity type %s') % etype)
             return
         self.initialize_varmaker()
+        entity = cls(self.req)
         entity.eid = self.varmaker.next()
         self.render_form(entity, peid, rtype, role, i18nctx)
