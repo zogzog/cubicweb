@@ -187,7 +187,7 @@ class WorkflowDotPropsHandler(object):
 
     def node_properties(self, stateortransition):
         """return default DOT drawing options for a state or transition"""
-        props = {'label': stateortransition.name,
+        props = {'label': stateortransition.printable_value('name'),
                  'fontname': 'Courier'}
         if hasattr(stateortransition, 'state_of'):
             props['shape'] = 'box'
