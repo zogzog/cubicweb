@@ -210,7 +210,7 @@ class WorkflowDotPropsHandler(object):
             if tr.require_group:
                 descr.append('%s %s'% (
                     self._('groups:'),
-                    ','.join(g.name for g in tr.require_group)))
+                    ','.join(g.printable_value('name') for g in tr.require_group)))
             if tr.condition:
                 descr.append('%s %s'% (
                     self._('condition:'),
