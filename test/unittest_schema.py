@@ -145,7 +145,7 @@ class SchemaReaderClassTest(TestCase):
         self.assertEquals(schema.name, 'data')
         entities = [str(e) for e in schema.entities()]
         entities.sort()
-        expected_entities = ['Bookmark', 'Boolean', 'Bytes', 'Card',
+        expected_entities = ['BaseTransition', 'Bookmark', 'Boolean', 'Bytes', 'Card',
                              'Date', 'Datetime', 'Decimal',
                              'CWCache', 'CWConstraint', 'CWConstraintType', 'CWEType',
                              'CWAttribute', 'CWGroup', 'EmailAddress', 'CWRelation',
@@ -153,19 +153,20 @@ class SchemaReaderClassTest(TestCase):
                              'ExternalUri', 'File', 'Float', 'Image', 'Int', 'Interval', 'Note',
                              'Password', 'Personne',
                              'RQLExpression',
-                             'Societe', 'State', 'String', 'SubNote', 'Tag', 'Time',
-                             'Transition', 'TrInfo']
+                             'Societe', 'State', 'String', 'SubNote', 'SubWorkflowExitPoint',
+                             'Tag', 'Time', 'Transition', 'TrInfo',
+                             'Workflow', 'WorkflowTransition']
         self.assertListEquals(entities, sorted(expected_entities))
         relations = [str(r) for r in schema.relations()]
         relations.sort()
-        expected_relations = ['add_permission', 'address', 'alias',
-                              'allowed_transition', 'bookmarked_by', 'canonical',
+        expected_relations = ['add_permission', 'address', 'alias', 'allowed_transition',
+                              'bookmarked_by', 'by_transition',
 
                               'cardinality', 'comment', 'comment_format',
                               'composite', 'condition', 'connait', 'constrained_by', 'content',
-                              'content_format', 'created_by', 'creation_date', 'cstrtype', 'cwuri',
+                              'content_format', 'created_by', 'creation_date', 'cstrtype', 'custom_workflow', 'cwuri',
 
-                              'data', 'data_encoding', 'data_format', 'defaultval', 'delete_permission',
+                              'data', 'data_encoding', 'data_format', 'default_workflow', 'defaultval', 'delete_permission',
                               'description', 'description_format', 'destination_state',
 
                               'ecrit_par', 'eid', 'evaluee', 'expression', 'exprtype',
@@ -174,7 +175,7 @@ class SchemaReaderClassTest(TestCase):
                               'from_entity', 'from_state', 'fulltext_container', 'fulltextindexed',
 
                               'has_text',
-                              'identical_to', 'identity', 'in_group', 'in_state', 'indexed',
+                              'identity', 'in_group', 'in_state', 'indexed',
                               'initial_state', 'inlined', 'internationalizable', 'is', 'is_instance_of',
 
                               'label', 'last_login_time', 'login',
@@ -185,11 +186,11 @@ class SchemaReaderClassTest(TestCase):
 
                               'ordernum', 'owned_by',
 
-                              'path', 'pkey', 'prenom', 'primary_email',
+                              'path', 'pkey', 'prefered_form', 'prenom', 'primary_email',
 
                               'read_permission', 'relation_type', 'require_group',
 
-                              'specializes', 'state_of', 'surname', 'symetric', 'synopsis',
+                              'specializes', 'state_of', 'subworkflow', 'subworkflow_exit', 'subworkflow_state', 'surname', 'symetric', 'synopsis',
 
                               'tags', 'timestamp', 'title', 'to_entity', 'to_state', 'transition_of', 'travaille', 'type',
 
@@ -197,13 +198,13 @@ class SchemaReaderClassTest(TestCase):
 
                               'value',
 
-                              'wf_info_for', 'wikiid']
+                              'wf_info_for', 'wikiid', 'workflow_of']
 
         self.assertListEquals(relations, expected_relations)
 
         eschema = schema.eschema('CWUser')
         rels = sorted(str(r) for r in eschema.subject_relations())
-        self.assertListEquals(rels, ['created_by', 'creation_date', 'cwuri', 'eid',
+        self.assertListEquals(rels, ['created_by', 'creation_date', 'custom_workflow', 'cwuri', 'eid',
                                      'evaluee', 'firstname', 'has_text', 'identity',
                                      'in_group', 'in_state', 'is',
                                      'is_instance_of', 'last_login_time',

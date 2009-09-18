@@ -333,7 +333,7 @@ class WebTest(EnvBasedTC):
             # resultset's syntax tree
             rset = backup_rset
         for action in self.list_actions_for(rset):
-            yield InnerTest(self._testname(rset, action.id, 'action'), action.url)
+            yield InnerTest(self._testname(rset, action.id, 'action'), self._test_action, action)
         for box in self.list_boxes_for(rset):
             yield InnerTest(self._testname(rset, box.id, 'box'), box.render)
 

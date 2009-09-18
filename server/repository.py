@@ -30,7 +30,7 @@ from rql import RQLSyntaxError
 
 from cubicweb import (CW_SOFTWARE_ROOT, CW_MIGRATION_MAP, CW_EVENT_MANAGER,
                       UnknownEid, AuthenticationError, ExecutionError,
-                      ETypeNotSupportedBySources, RTypeNotSupportedBySources,
+                      ETypeNotSupportedBySources, MultiSourcesError,
                       BadConnectionId, Unauthorized, ValidationError,
                       typed_eid)
 from cubicweb.cwvreg import CubicWebVRegistry
@@ -108,6 +108,9 @@ def del_existing_rel_if_needed(session, eidfrom, rtype, eidto):
     # hooks responsability to ensure they do not violate relation's cardinality
     if session.is_super_session:
         return
+    ensure_card_respected(session.unsafe_execute, session, eidfrom, rtype, eidto)
+
+def ensure_card_respected(execute, session, eidfrom, rtype, eidto):
     card = rproperty(session, rtype, eidfrom, eidto, 'cardinality')
     # one may be tented to check for neweids but this may cause more than one
     # relation even with '1?'  cardinality if thoses relations are added in the
@@ -118,14 +121,11 @@ def del_existing_rel_if_needed(session, eidfrom, rtype, eidto):
     if card[0] in '1?':
         rschema = session.repo.schema.rschema(rtype)
         if not rschema.inlined:
-            session.unsafe_execute(
-                'DELETE X %s Y WHERE X eid %%(x)s, NOT Y eid %%(y)s' % rtype,
-                {'x': eidfrom, 'y': eidto}, 'x')
+            execute('DELETE X %s Y WHERE X eid %%(x)s,NOT Y eid %%(y)s' % rtype,
+                    {'x': eidfrom, 'y': eidto}, 'x')
     if card[1] in '1?':
-        session.unsafe_execute(
-            'DELETE X %s Y WHERE NOT X eid %%(x)s, Y eid %%(y)s' % rtype,
-            {'x': eidfrom, 'y': eidto}, 'y')
-
+        execute('DELETE X %s Y WHERE NOT X eid %%(x)s, Y eid %%(y)s' % rtype,
+                {'x': eidfrom, 'y': eidto}, 'y')
 
 class Repository(object):
     """a repository provides access to a set of persistent storages for
@@ -149,6 +149,7 @@ class Repository(object):
         self._running_threads = []
         # initial schema, should be build or replaced latter
         self.schema = CubicWebSchema(config.appid)
+        self.vreg.schema = self.schema # until actual schema is loaded...
         # querier helper, need to be created after sources initialization
         self.querier = QuerierHelper(self, self.schema)
         # should we reindex in changes?
@@ -192,13 +193,14 @@ class Repository(object):
             config.bootstrap_cubes()
             self.set_bootstrap_schema(config.load_schema())
             # need to load the Any and CWUser entity types
-            self.vreg.schema = self.schema
             etdirectory = join(CW_SOFTWARE_ROOT, 'entities')
             self.vreg.init_registration([etdirectory])
             self.vreg.load_file(join(etdirectory, '__init__.py'),
                                 'cubicweb.entities.__init__')
             self.vreg.load_file(join(etdirectory, 'authobjs.py'),
                                 'cubicweb.entities.authobjs')
+            self.vreg.load_file(join(etdirectory, 'wfobjs.py'),
+                                'cubicweb.entities.wfobjs')
         else:
             # test start: use the file system schema (quicker)
             self.warning("set fs instance'schema")
@@ -244,15 +246,16 @@ class Repository(object):
         if rebuildinfered:
             schema.rebuild_infered_relations()
         self.info('set schema %s %#x', schema.name, id(schema))
-        self.debug(', '.join(sorted(str(e) for e in schema.entities())))
-        self.querier.set_schema(schema)
-        for source in self.sources:
-            source.set_schema(schema)
-        self.schema = schema
         if resetvreg:
             # full reload of all appobjects
             self.vreg.reset()
             self.vreg.set_schema(schema)
+        else:
+            self.vreg._set_schema(schema)
+        self.querier.set_schema(schema)
+        for source in self.sources:
+            source.set_schema(schema)
+        self.schema = schema
         self.reset_hooks()
 
     def reset_hooks(self):
@@ -970,12 +973,21 @@ class Repository(object):
     def locate_relation_source(self, session, subject, rtype, object):
         subjsource = self.source_from_eid(subject, session)
         objsource = self.source_from_eid(object, session)
-        if not (subjsource is objsource and subjsource.support_relation(rtype, 1)):
+        if not subjsource is objsource:
             source = self.system_source
-            if not source.support_relation(rtype, 1):
-                raise RTypeNotSupportedBySources(rtype)
+            if not (subjsource.may_cross_relation(rtype) 
+                    and objsource.may_cross_relation(rtype)):
+                raise MultiSourcesError(
+                    "relation %s can't be crossed among sources"
+                    % rtype)
+        elif not subjsource.support_relation(rtype):
+            source = self.system_source
         else:
             source = subjsource
+        if not source.support_relation(rtype, True):
+            raise MultiSourcesError(
+                "source %s doesn't support write of %s relation"
+                % (source.uri, rtype))
         return source
 
     def locate_etype_source(self, etype):

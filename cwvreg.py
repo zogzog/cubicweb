@@ -140,9 +140,12 @@ class ETypeRegistry(CWRegistry):
                 try:
                     objects = self[btype]
                     assert len(objects) == 1, objects
-                    cls = objects[0]
+                    if btype == etype:
+                        cls = objects[0]
+                    else:
+                        cls = self.etype_class(btype)
                 except ObjectNotFound:
-                    pass
+                    continue
             else:
                 # ensure parent classes are built first
                 self.etype_class(btype)
@@ -152,9 +155,9 @@ class ETypeRegistry(CWRegistry):
             objects = self['Any']
             assert len(objects) == 1, objects
             cls = objects[0]
-        if cls.id == etype:
-            cls.__initialize__()
-            return cls
+        # make a copy event if cls.id == etype, else we may have pb for client
+        # application using multiple connections to different repositories (eg
+        # shingouz)
         cls = dump_class(cls, etype)
         cls.id = etype
         cls.__initialize__()
@@ -288,8 +291,7 @@ class CubicWebVRegistry(VRegistry):
 
     def set_schema(self, schema):
         """set instance'schema and load application objects"""
-        self.schema = schema
-        clear_cache(self, 'rqlhelper')
+        self._set_schema(schema)
         # now we can load application's web objects
         searchpath = self.config.vregistry_path()
         self.reset(searchpath, force_reload=False)
@@ -299,6 +301,11 @@ class CubicWebVRegistry(VRegistry):
         for etype in self.schema.entities():
             etype = str(etype)
             self.case_insensitive_etypes[etype.lower()] = etype
+
+    def _set_schema(self, schema):
+        """set instance'schema"""
+        self.schema = schema
+        clear_cache(self, 'rqlhelper')
 
     def update_schema(self, schema):
         """update .schema attribute on registered objects, necessary for some
@@ -383,16 +390,7 @@ class CubicWebVRegistry(VRegistry):
         # objects on automatic reloading
         self._needs_iface.clear()
 
-    def parse(self, session, rql, args=None):
-        rqlst = self.rqlhelper.parse(rql)
-        def type_from_eid(eid, session=session):
-            return session.describe(eid)[0]
-        try:
-            self.rqlhelper.compute_solutions(rqlst, {'eid': type_from_eid}, args)
-        except UnknownEid:
-            for select in rqlst.children:
-                select.solutions = []
-        return rqlst
+    # rql parsing utilities ####################################################
 
     @property
     @cached
@@ -400,38 +398,19 @@ class CubicWebVRegistry(VRegistry):
         return RQLHelper(self.schema,
                          special_relations={'eid': 'uid', 'has_text': 'fti'})
 
+    def solutions(self, req, rqlst, args):
+        def type_from_eid(eid, req=req):
+            return req.describe(eid)[0]
+        self.rqlhelper.compute_solutions(rqlst, {'eid': type_from_eid}, args)
 
-    @deprecated('use vreg["etypes"].etype_class(etype)')
-    def etype_class(self, etype):
-        return self["etypes"].etype_class(etype)
-
-    @deprecated('use vreg["views"].main_template(*args, **kwargs)')
-    def main_template(self, req, oid='main-template', **context):
-        return self["views"].main_template(req, oid, **context)
-
-    @deprecated('use vreg[registry].possible_vobjects(*args, **kwargs)')
-    def possible_vobjects(self, registry, *args, **kwargs):
-        return self[registry].possible_vobjects(*args, **kwargs)
-
-    @deprecated('use vreg["actions"].possible_actions(*args, **kwargs)')
-    def possible_actions(self, req, rset=None, **kwargs):
-        return self["actions"].possible_actions(req, rest=rset, **kwargs)
-
-    @deprecated("use vreg['boxes'].select_object(...)")
-    def select_box(self, oid, *args, **kwargs):
-        return self['boxes'].select_object(oid, *args, **kwargs)
-
-    @deprecated("use vreg['components'].select_object(...)")
-    def select_component(self, cid, *args, **kwargs):
-        return self['components'].select_object(cid, *args, **kwargs)
-
-    @deprecated("use vreg['actions'].select_object(...)")
-    def select_action(self, oid, *args, **kwargs):
-        return self['actions'].select_object(oid, *args, **kwargs)
-
-    @deprecated("use vreg['views'].select(...)")
-    def select_view(self, __vid, req, rset=None, **kwargs):
-        return self['views'].select(__vid, req, rset=rset, **kwargs)
+    def parse(self, req, rql, args=None):
+        rqlst = self.rqlhelper.parse(rql)
+        try:
+            self.solutions(req, rqlst, args)
+        except UnknownEid:
+            for select in rqlst.children:
+                select.solutions = []
+        return rqlst
 
     # properties handling #####################################################
 
@@ -503,6 +482,40 @@ class CubicWebVRegistry(VRegistry):
             except UnknownProperty, ex:
                 self.warning('%s (you should probably delete that property '
                              'from the database)', ex)
+
+    # deprecated code ####################################################
+
+    @deprecated('[3.4] use vreg["etypes"].etype_class(etype)')
+    def etype_class(self, etype):
+        return self["etypes"].etype_class(etype)
+
+    @deprecated('[3.4] use vreg["views"].main_template(*args, **kwargs)')
+    def main_template(self, req, oid='main-template', **context):
+        return self["views"].main_template(req, oid, **context)
+
+    @deprecated('[3.4] use vreg[registry].possible_vobjects(*args, **kwargs)')
+    def possible_vobjects(self, registry, *args, **kwargs):
+        return self[registry].possible_vobjects(*args, **kwargs)
+
+    @deprecated('[3.4] use vreg["actions"].possible_actions(*args, **kwargs)')
+    def possible_actions(self, req, rset=None, **kwargs):
+        return self["actions"].possible_actions(req, rest=rset, **kwargs)
+
+    @deprecated('[3.4] use vreg["boxes"].select_object(...)')
+    def select_box(self, oid, *args, **kwargs):
+        return self['boxes'].select_object(oid, *args, **kwargs)
+
+    @deprecated('[3.4] use vreg["components"].select_object(...)')
+    def select_component(self, cid, *args, **kwargs):
+        return self['components'].select_object(cid, *args, **kwargs)
+
+    @deprecated('[3.4] use vreg["actions"].select_object(...)')
+    def select_action(self, oid, *args, **kwargs):
+        return self['actions'].select_object(oid, *args, **kwargs)
+
+    @deprecated('[3.4] use vreg["views"].select(...)')
+    def select_view(self, __vid, req, rset=None, **kwargs):
+        return self['views'].select(__vid, req, rset=rset, **kwargs)
 
 
 from datetime import datetime, date, time, timedelta

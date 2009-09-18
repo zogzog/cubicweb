@@ -77,6 +77,133 @@ if you do not intend to develop the framework itself.
 In both cases, make sure you have installed the dependencies (see appendixes for
 the list).
 
+Windows installation
+````````````````````
+
+Base elements
+_____________
+
+Setting up a windows development environment is not too complicated
+but requires a series of small steps. What is proposed there is only
+an example of what can be done. We assume everything goes into C:\ in
+this document. Adjusting the installation drive should be
+straightforward.
+
+You should start by downloading and installing the Python(x,y)
+distribution. It contains python 2.5 plus numerous useful third-party
+modules and applications::
+
+  http://www.pythonxy.com/download_fr.php
+
+At the time of this writting, one gets version 2.1.15. Among the many
+things provided, one finds Eclipse + pydev (an arguably good IDE for
+python under windows).
+
+Then you must grab Twisted. There is a windows installer directly
+available from this page::
+
+  http://twistedmatrix.com/trac/
+
+A windows installer for lxml will be found there::
+
+  http://pypi.python.org/pypi/lxml/2.2.1
+
+Check out the lxml-2.2.1-win32-py2.5.exe file. More recent bugfix
+releases should probably work, too.
+
+You should find postgresql 8.4 there::
+
+  http://www.enterprisedb.com/products/pgdownload.do#windows
+
+The python drivers for posgtresql are to be found there::
+
+  http://www.stickpeople.com/projects/python/win-psycopg/#Version2
+
+Please be careful to select the right python (2.5) and postgres (8.4)
+versions.
+
+Having graphviz will allow schema drawings, which is quite recommended
+(albeit not mandatory). You should get an msi installer there::
+
+  http://www.graphviz.org/Download_windows.php
+
+Tools
+_____
+
+Get mercurial + its standard windows GUI (TortoiseHG) there (the
+latest is the greatest)::
+
+  http://bitbucket.org/tortoisehg/stable/wiki/download
+
+If you need to peruse mercurial over ssh, it can be helpful to get an
+ssh client like Putty::
+
+  http://www.putty.org/
+
+Integration of mercurial and Eclipse is convenient enough that we want
+it. Instructions are set there, in the `Download & Install` section::
+
+  http://www.vectrace.com/mercurialeclipse/
+
+Setting up the sources
+______________________
+
+You need to enable the mercurial forest extension. To do this, edit
+the file::
+
+  C:\Program Files\TortoiseHg\Mercurial.ini
+
+In the [extensions] section, add the following line::
+
+  forest=C:\Program Files\TortoiseHg\ext\forest\forest.py
+
+Now, you need to clone the cubicweb repository. We assume that you use
+Eclipse. From the IDE, choose File -> Import. In the box, select
+`Mercurial/Clone repository using MercurialEclipse`.
+
+In the import main panel you just have to:
+
+* fill the URL field with http://www.logilab.org/hg/forests/cubicwin32
+
+* check the 'Repository is a forest' box.
+
+Then, click on 'Finish'. It might take some time to get it all. Note
+that the `cubicwin32` forest contains additional python packages such
+as yapps, vobject, simplejson and twisted-web2 which are not provided
+with Python(x,y). This is provided for convenience, as we do not
+ensure the up-to-dateness of these packages, especially with respect
+to security fixes.
+
+Environment variables
+_____________________
+
+You will need some convenience environment variables once all is set
+up. These variables are settable through the GUI by getting at the
+'System properties' window (by righ-clicking on 'My Computer' ->
+properties).
+
+In the 'advanced' tab, there is an 'Environment variables'
+button. Click on it. That opens a small window allowing edition of
+user-related and system-wide variables.
+
+We will consider only user variables. First, the PATH variable. You
+should ensure it contains, separated by semi-colons, and assuming you
+are logged in as user Jane::
+
+  C:\Documents and Settings\Jane\My Documents\Python\cubicweb\cubicweb\bin
+  C:\Program Files\Graphviz2.24\bin
+
+The PYTHONPATH variable should also contain::
+
+  C:\Documents and Settings\Jane\My Documents\Python\cubicweb\
+
+From now, on a fresh `cmd` shell, you should be able to type::
+
+  cubicweb-ctl list
+
+... and get a meaningful output.
+
+
 PostgreSQL installation
 ```````````````````````
 
@@ -134,8 +261,6 @@ development by setting the following environment variable::
 
 Databases configuration
 -----------------------
-
-
 
 .. _ConfigurationPostgresql:
 

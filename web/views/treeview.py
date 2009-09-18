@@ -24,7 +24,7 @@ class TreeView(EntityView):
     css_classes = 'treeview widget'
     title = _('tree view')
 
-    def call(self, subvid=None, treeid=None, initial_load=True, initial_thru_ajax=False):
+    def _init_params(self, subvid, treeid, initial_load, initial_thru_ajax):
         if subvid is None:
             subvid = self.req.form.pop('treesubvid', 'oneline') # consume it
         if treeid is None:
@@ -34,6 +34,11 @@ class TreeView(EntityView):
                 treeid = make_uid('throw away uid')
         toplevel_thru_ajax = self.req.form.pop('treeview_top', False) or initial_thru_ajax
         toplevel = toplevel_thru_ajax or (initial_load and not self.req.form.get('fname'))
+        return subvid, treeid, toplevel_thru_ajax, toplevel
+
+    def call(self, subvid=None, treeid=None, initial_load=True, initial_thru_ajax=False):
+        subvid, treeid, toplevel_thru_ajax, toplevel = self._init_params(
+            subvid, treeid, initial_load, initial_thru_ajax)
         ulid = ' '
         if toplevel:
             ulid = ' id="tree-%s"' % treeid

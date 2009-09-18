@@ -377,7 +377,7 @@ class RelationsStep(Step):
     previous FetchStep
 
     relations values comes from the latest result, with one columns for
-    each relation defined in self.r_defs
+    each relation defined in self.rdefs
 
     for one entity definition, we'll construct N entity, where N is the
     number of the latest result
@@ -387,33 +387,35 @@ class RelationsStep(Step):
     RELATION = 1
     REVERSE_RELATION = 2
 
-    def __init__(self, plan, e_def, r_defs):
+    def __init__(self, plan, edef, rdefs):
         Step.__init__(self, plan)
         # partial entity definition to expand
-        self.e_def = e_def
+        self.edef = edef
         # definition of relations to complete
-        self.r_defs = r_defs
+        self.rdefs = rdefs
 
     def execute(self):
         """execute this step"""
-        base_e_def = self.e_def
-        result = []
-        for row in self.execute_child():
+        base_edef = self.edef
+        edefs = []
+        result = self.execute_child()
+        for row in result:
             # get a new entity definition for this row
-            e_def = copy(base_e_def)
+            edef = copy(base_edef)
             # complete this entity def using row values
-            for i in range(len(self.r_defs)):
-                rtype, rorder = self.r_defs[i]
+            for i in range(len(self.rdefs)):
+                rtype, rorder = self.rdefs[i]
                 if rorder == RelationsStep.FINAL:
-                    e_def[rtype] = row[i]
+                    edef[rtype] = row[i]
                 elif rorder == RelationsStep.RELATION:
-                    self.plan.add_relation_def( (e_def, rtype, row[i]) )
-                    e_def.querier_pending_relations[(rtype, 'subject')] = row[i]
+                    self.plan.add_relation_def( (edef, rtype, row[i]) )
+                    edef.querier_pending_relations[(rtype, 'subject')] = row[i]
                 else:
-                    self.plan.add_relation_def( (row[i], rtype, e_def) )
-                    e_def.querier_pending_relations[(rtype, 'object')] = row[i]
-            result.append(e_def)
-        self.plan.substitute_entity_def(base_e_def, result)
+                    self.plan.add_relation_def( (row[i], rtype, edef) )
+                    edef.querier_pending_relations[(rtype, 'object')] = row[i]
+            edefs.append(edef)
+        self.plan.substitute_entity_def(base_edef, edefs)
+        return result
 
 
 class InsertStep(Step):
@@ -483,7 +485,8 @@ class UpdateStep(Step):
         edefs = {}
         # insert relations
         attributes = set([relation.r_type for relation in self.attribute_relations])
-        for row in self.execute_child():
+        result = self.execute_child()
+        for row in result:
             for relation in self.attribute_relations:
                 lhs, rhs = relation.get_variable_parts()
                 eid = typed_eid(row[self.selected_index[str(lhs)]])
@@ -502,8 +505,6 @@ class UpdateStep(Step):
                 obj = row[self.selected_index[str(relation.children[1])]]
                 repo.glob_add_relation(session, subj, relation.r_type, obj)
         # update entities
-        result = []
         for eid, edef in edefs.iteritems():
             repo.glob_update_entity(session, edef, attributes)
-            result.append( (eid,) )
         return result

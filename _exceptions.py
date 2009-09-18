@@ -65,9 +65,8 @@ class ETypeNotSupportedBySources(RepositoryError, InternalError):
     """no source support an entity type"""
     msg = 'No source supports %r entity\'s type'
 
-class RTypeNotSupportedBySources(RepositoryError, InternalError):
-    """no source support a relation type"""
-    msg = 'No source supports %r relation\'s type'
+class MultiSourcesError(RepositoryError, InternalError):
+    """usually due to bad multisources configuration or rql query"""
 
 
 # security exceptions #########################################################

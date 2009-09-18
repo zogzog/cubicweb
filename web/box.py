@@ -60,7 +60,8 @@ class BoxTemplate(View):
         result = []
         actions_by_cat = {}
         for action in actions:
-            actions_by_cat.setdefault(action.category, []).append((action.title, action))
+            actions_by_cat.setdefault(action.category, []).append(
+                (action.title, action) )
         for key, values in actions_by_cat.items():
             actions_by_cat[key] = [act for title, act in sorted(values)]
         for cat in self.categories_in_order:
@@ -150,7 +151,7 @@ class RelatedEntityBoxTemplate(EntityBoxTemplate):
     __select__ = EntityBoxTemplate.__select__ & partial_has_related_entities()
 
     def cell_call(self, row, col, **kwargs):
-        entity = self.entity(row, col)
+        entity = self.rset.get_entity(row, col)
         limit = self.req.property_value('navigation.related-limit') + 1
         role = get_role(self)
         self.w(u'<div class="sideBox">')
@@ -169,7 +170,7 @@ class EditRelationBoxTemplate(ReloadableMixIn, EntityBoxTemplate):
 
     def cell_call(self, row, col, view=None, **kwargs):
         self.req.add_js('cubicweb.ajax.js')
-        entity = self.entity(row, col)
+        entity = self.rset.get_entity(row, col)
         box = SideBoxWidget(display_name(self.req, self.rtype), self.id)
         related = self.related_boxitems(entity)
         unrelated = self.unrelated_boxitems(entity)

@@ -25,10 +25,14 @@ def extract_from_tal(files, output_file):
     output.close()
 
 
-def add_msg(w, msgid):
+def add_msg(w, msgid, msgctx=None):
     """write an empty pot msgid definition"""
     if isinstance(msgid, unicode):
         msgid = msgid.encode('utf-8')
+    if msgctx:
+        if isinstance(msgctx, unicode):
+            msgctx = msgctx.encode('utf-8')
+        w('msgctxt "%s"\n' % msgctx)
     msgid = msgid.replace('"', r'\"').splitlines()
     if len(msgid) > 1:
         w('msgid ""\n')
@@ -44,9 +48,10 @@ def execute(cmd):
     status != 0
     """
     print cmd.replace(os.getcwd() + os.sep, '')
-    status = os.system(cmd)
+    from subprocess import call
+    status = call(cmd, shell=True)
     if status != 0:
-        raise Exception()
+        raise Exception('status = %s' % status)
 
 
 def available_catalogs(i18ndir=None):
@@ -74,15 +79,15 @@ def compile_i18n_catalogs(sourcedirs, destdir, langs):
         mergedpo = join(destdir, '%s_merged.po' % lang)
         try:
             # merge instance/cubes messages catalogs with the stdlib's one
-            execute('msgcat --use-first --sort-output --strict %s > %s'
-                    % (' '.join(pofiles), mergedpo))
-            # make sure the .mo file is writeable and compile with *msgfmt*
+            execute('msgcat --use-first --sort-output --strict -o "%s" %s'
+                    % (mergedpo, ' '.join('"%s"' % f for f in pofiles)))
+            # make sure the .mo file is writeable and compiles with *msgfmt*
             applmo = join(destdir, lang, 'LC_MESSAGES', 'cubicweb.mo')
             try:
                 ensure_fs_mode(applmo)
             except OSError:
                 pass # suppose not exists
-            execute('msgfmt %s -o %s' % (mergedpo, applmo))
+            execute('msgfmt "%s" -o "%s"' % (mergedpo, applmo))
         except Exception, ex:
             errors.append('while handling language %s: %s' % (lang, ex))
         try:

@@ -70,11 +70,17 @@ def before_del_entity(session, eid):
 
 def before_add_relation(session, fromeid, rtype, toeid):
     if rtype in BEFORE_ADD_RELATIONS and not session.is_super_session:
+        nocheck = session.transaction_data.get('skip-security', ())
+        if (fromeid, rtype, toeid) in nocheck:
+            return
         rschema = session.repo.schema[rtype]
         rschema.check_perm(session, 'add', fromeid, toeid)
 
 def after_add_relation(session, fromeid, rtype, toeid):
     if not rtype in BEFORE_ADD_RELATIONS and not session.is_super_session:
+        nocheck = session.transaction_data.get('skip-security', ())
+        if (fromeid, rtype, toeid) in nocheck:
+            return
         rschema = session.repo.schema[rtype]
         if rtype in ON_COMMIT_ADD_RELATIONS:
             CheckRelationPermissionOp(session, action='add', rschema=rschema,
@@ -84,6 +90,9 @@ def after_add_relation(session, fromeid, rtype, toeid):
 
 def before_del_relation(session, fromeid, rtype, toeid):
     if not session.is_super_session:
+        nocheck = session.transaction_data.get('skip-security', ())
+        if (fromeid, rtype, toeid) in nocheck:
+            return
         session.repo.schema[rtype].check_perm(session, 'delete', fromeid, toeid)
 
 def register_security_hooks(hm):

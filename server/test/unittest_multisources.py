@@ -30,7 +30,7 @@ repo2, cnx2 = init_test_database('sqlite', config=ExternalSource1Configuration('
 cu = cnx2.cursor()
 ec1 = cu.execute('INSERT Card X: X title "C3: An external card", X wikiid "aaa"')[0][0]
 cu.execute('INSERT Card X: X title "C4: Ze external card", X wikiid "zzz"')
-aff1 = cu.execute('INSERT Affaire X: X ref "AFFREF", X in_state S WHERE S name "pitetre"')[0][0]
+aff1 = cu.execute('INSERT Affaire X: X ref "AFFREF"')[0][0]
 cnx2.commit()
 
 MTIME = datetime.now() - timedelta(0, 10)
@@ -122,7 +122,7 @@ class TwoSourcesTC(RepositoryBasedTC):
         cu = cnx2.cursor()
         assert cu.execute('Any X WHERE X eid %(x)s', {'x': aff1}, 'x')
         cu.execute('SET X ref "BLAH" WHERE X eid %(x)s', {'x': aff1}, 'x')
-        aff2 = cu.execute('INSERT Affaire X: X ref "AFFREUX", X in_state S WHERE S name "pitetre"')[0][0]
+        aff2 = cu.execute('INSERT Affaire X: X ref "AFFREUX"')[0][0]
         cnx2.commit()
         try:
             # force sync
@@ -233,11 +233,12 @@ class TwoSourcesTC(RepositoryBasedTC):
 
     def test_not_relation(self):
         states = set(tuple(x) for x in self.execute('Any S,SN WHERE S is State, S name SN'))
+        self.session.user.clear_all_caches()
         userstate = self.session.user.in_state[0]
         states.remove((userstate.eid, userstate.name))
         notstates = set(tuple(x) for x in self.execute('Any S,SN WHERE S is State, S name SN, NOT X in_state S, X eid %(x)s',
                                                        {'x': self.session.user.eid}, 'x'))
-        self.assertEquals(notstates, states)
+        self.assertSetEquals(notstates, states)
         aff1 = self.execute('Any X WHERE X is Affaire, X ref "AFFREF"')[0][0]
         aff1stateeid, aff1statename = self.execute('Any S,SN WHERE X eid %(x)s, X in_state S, S name SN', {'x': aff1}, 'x')[0]
         self.assertEquals(aff1statename, 'pitetre')
@@ -267,6 +268,7 @@ class TwoSourcesTC(RepositoryBasedTC):
                      {'x': affaire.eid, 'u': ueid})
 
     def test_nonregr2(self):
+        self.session.user.fire_transition('deactivate')
         treid = self.session.user.latest_trinfo().eid
         rset = self.execute('Any X ORDERBY D DESC WHERE E eid %(x)s, E wf_info_for X, X modification_date D',
                             {'x': treid})

@@ -156,7 +156,8 @@ class LDAPUserSourceTC(RepositoryBasedTC):
         self.patch_authenticate()
         cnx = self.login('syt', 'dummypassword')
         cu = cnx.cursor()
-        cu.execute('SET X in_state S WHERE X login "alf", S name "deactivated"')
+        alf = cu.execute('Any X WHERE X login "alf"').get_entity(0, 0)
+        alf.fire_transition('deactivate')
         try:
             cnx.commit()
             alf = self.execute('CWUser X WHERE X login "alf"').get_entity(0, 0)
@@ -172,7 +173,8 @@ class LDAPUserSourceTC(RepositoryBasedTC):
         finally:
             # restore db state
             self.restore_connection()
-            self.execute('SET X in_state S WHERE X login "alf", S name "activated"')
+            alf = self.execute('Any X WHERE X login "alf"').get_entity(0, 0)
+            alf.fire_transition('activate')
             self.execute('DELETE X in_group G WHERE X login "syt", G name "managers"')
 
     def test_same_column_names(self):

@@ -312,7 +312,8 @@ class CreateInstanceDBCommand(Command):
         # postgres specific stuff
         if driver == 'postgres':
             # install plpythonu/plpgsql language if not installed by the cube
-            for extlang in ('plpythonu', 'plpgsql'):
+            langs = sys.platform == 'win32' and ('plpgsql',) or ('plpythonu', 'plpgsql')
+            for extlang in langs:
                 helper.create_language(cursor, extlang)
         cursor.close()
         cnx.commit()
@@ -676,7 +677,7 @@ class DBCopyCommand(Command):
         import tempfile
         srcappid = pop_arg(args, 1, msg='No source instance specified !')
         destappid = pop_arg(args, msg='No destination instance specified !')
-        output = tempfile.mkstemp(dir='/tmp/')[1]
+        output = tempfile.mkstemp()[1]
         if ':' in srcappid:
             host, srcappid = srcappid.split(':')
             _remote_dump(host, srcappid, output, self.config.sudo)

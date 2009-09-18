@@ -345,6 +345,7 @@ repository (default to 5 minutes).',
         cu.execute('SET %s WHERE X eid %%(x)s' % ','.join(relations),
                    kwargs, 'x')
         self._query_cache.clear()
+        entity.clear_all_caches()
 
     def delete_entity(self, session, etype, eid):
         """delete an entity from the source"""
@@ -360,6 +361,8 @@ repository (default to 5 minutes).',
                    {'x': self.eid2extid(subject, session),
                     'y': self.eid2extid(object, session)}, ('x', 'y'))
         self._query_cache.clear()
+        session.entity_from_eid(subject).clear_all_caches()
+        session.entity_from_eid(object).clear_all_caches()
 
     def delete_relation(self, session, subject, rtype, object):
         """delete a relation from the source"""
@@ -368,6 +371,8 @@ repository (default to 5 minutes).',
                    {'x': self.eid2extid(subject, session),
                     'y': self.eid2extid(object, session)}, ('x', 'y'))
         self._query_cache.clear()
+        session.entity_from_eid(subject).clear_all_caches()
+        session.entity_from_eid(object).clear_all_caches()
 
 
 class RQL2RQL(object):

@@ -43,18 +43,19 @@ class FakeCardSource(AbstractSource):
     def syntax_tree_search(self, *args, **kwargs):
         return []
 
-X_ALL_SOLS = sorted([{'X': 'Affaire'}, {'X': 'Basket'}, {'X': 'Bookmark'},
+X_ALL_SOLS = sorted([{'X': 'Affaire'}, {'X': 'BaseTransition'}, {'X': 'Basket'},
+                     {'X': 'Bookmark'}, {'X': 'CWAttribute'}, {'X': 'CWCache'},
+                     {'X': 'CWConstraint'}, {'X': 'CWConstraintType'}, {'X': 'CWEType'},
+                     {'X': 'CWGroup'}, {'X': 'CWPermission'}, {'X': 'CWProperty'},
+                     {'X': 'CWRType'}, {'X': 'CWRelation'}, {'X': 'CWUser'},
                      {'X': 'Card'}, {'X': 'Comment'}, {'X': 'Division'},
-                     {'X': 'CWCache'}, {'X': 'CWConstraint'}, {'X': 'CWConstraintType'},
-                     {'X': 'CWEType'}, {'X': 'CWAttribute'}, {'X': 'CWGroup'},
-                     {'X': 'CWRelation'}, {'X': 'CWPermission'}, {'X': 'CWProperty'},
-                     {'X': 'CWRType'}, {'X': 'CWUser'}, {'X': 'Email'},
-                     {'X': 'EmailAddress'}, {'X': 'EmailPart'}, {'X': 'EmailThread'},
-                     {'X': 'ExternalUri'},
-                     {'X': 'File'}, {'X': 'Folder'}, {'X': 'Image'},
-                     {'X': 'Note'}, {'X': 'Personne'}, {'X': 'RQLExpression'},
-                     {'X': 'Societe'}, {'X': 'State'}, {'X': 'SubDivision'},
-                     {'X': 'Tag'}, {'X': 'TrInfo'}, {'X': 'Transition'}])
+                     {'X': 'Email'}, {'X': 'EmailAddress'}, {'X': 'EmailPart'},
+                     {'X': 'EmailThread'}, {'X': 'ExternalUri'}, {'X': 'File'},
+                     {'X': 'Folder'}, {'X': 'Image'}, {'X': 'Note'},
+                     {'X': 'Personne'}, {'X': 'RQLExpression'}, {'X': 'Societe'},
+                     {'X': 'State'}, {'X': 'SubDivision'}, {'X': 'SubWorkflowExitPoint'},
+                     {'X': 'Tag'}, {'X': 'TrInfo'}, {'X': 'Transition'},
+                     {'X': 'Workflow'}, {'X': 'WorkflowTransition'}])
 
 
 # keep cnx so it's not garbage collected and the associated session is closed
@@ -347,7 +348,7 @@ class MSPlannerTC(BaseMSPlannerTC):
 
     def setUp(self):
         BaseMSPlannerTC.setUp(self)
-        self.planner = MSPlanner(self.o.schema, self.o._rqlhelper)
+        self.planner = MSPlanner(self.o.schema, self.repo.vreg.rqlhelper)
 
     _test = test_plan
 
@@ -770,12 +771,13 @@ class MSPlannerTC(BaseMSPlannerTC):
                          [{'X': 'Basket'}]),
                         ('Any X WHERE X has_text "bla", EXISTS(X owned_by 5), X is CWUser',
                          [{'X': 'CWUser'}]),
-                        ('Any X WHERE X has_text "bla", X is IN(Card, Comment, Division, Email, EmailThread, File, Folder, Image, Note, Personne, Societe, State, SubDivision, Tag, Transition)',
-                         [{'X': 'Card'}, {'X': 'Comment'}, {'X': 'Division'},
-                          {'X': 'Email'}, {'X': 'EmailThread'}, {'X': 'File'},
-                          {'X': 'Folder'}, {'X': 'Image'}, {'X': 'Note'},
-                          {'X': 'Personne'}, {'X': 'Societe'}, {'X': 'State'},
-                          {'X': 'SubDivision'}, {'X': 'Tag'}, {'X': 'Transition'}]),],
+                        ('Any X WHERE X has_text "bla", X is IN(BaseTransition, Card, Comment, Division, Email, EmailThread, File, Folder, Image, Note, Personne, Societe, State, SubDivision, Tag, Transition, Workflow, WorkflowTransition)',
+                         [{'X': 'BaseTransition'}, {'X': 'Card'}, {'X': 'Comment'},
+                          {'X': 'Division'}, {'X': 'Email'}, {'X': 'EmailThread'},
+                          {'X': 'File'}, {'X': 'Folder'}, {'X': 'Image'},
+                          {'X': 'Note'}, {'X': 'Personne'}, {'X': 'Societe'},
+                          {'X': 'State'}, {'X': 'SubDivision'}, {'X': 'Tag'},
+                          {'X': 'Transition'}, {'X': 'Workflow'}, {'X': 'WorkflowTransition'}]),],
                        None, None, [self.system], {}, []),
                       ])
                      ])
@@ -793,25 +795,27 @@ class MSPlannerTC(BaseMSPlannerTC):
                           [self.system], {'E': 'table1.C0'}, {'X': 'table0.C0'}, []),
                          ('FetchStep',
                           [('Any X WHERE X has_text "bla", EXISTS(X owned_by 5), X is Basket',
-                         [{'X': 'Basket'}]),
-                        ('Any X WHERE X has_text "bla", EXISTS(X owned_by 5), X is CWUser',
-                         [{'X': 'CWUser'}]),
-                        ('Any X WHERE X has_text "bla", X is IN(Card, Comment, Division, Email, EmailThread, File, Folder, Image, Note, Personne, Societe, State, SubDivision, Tag, Transition)',
-                         [{'X': 'Card'}, {'X': 'Comment'}, {'X': 'Division'},
-                          {'X': 'Email'}, {'X': 'EmailThread'}, {'X': 'File'},
-                          {'X': 'Folder'}, {'X': 'Image'}, {'X': 'Note'},
-                          {'X': 'Personne'}, {'X': 'Societe'}, {'X': 'State'},
-                          {'X': 'SubDivision'}, {'X': 'Tag'}, {'X': 'Transition'}]),],
+                            [{'X': 'Basket'}]),
+                           ('Any X WHERE X has_text "bla", EXISTS(X owned_by 5), X is CWUser',
+                            [{'X': 'CWUser'}]),
+                           ('Any X WHERE X has_text "bla", X is IN(BaseTransition, Card, Comment, Division, Email, EmailThread, File, Folder, Image, Note, Personne, Societe, State, SubDivision, Tag, Transition, Workflow, WorkflowTransition)',
+                            [{'X': 'BaseTransition'}, {'X': 'Card'}, {'X': 'Comment'},
+                             {'X': 'Division'}, {'X': 'Email'}, {'X': 'EmailThread'},
+                             {'X': 'File'}, {'X': 'Folder'}, {'X': 'Image'},
+                             {'X': 'Note'}, {'X': 'Personne'}, {'X': 'Societe'},
+                             {'X': 'State'}, {'X': 'SubDivision'}, {'X': 'Tag'},
+                             {'X': 'Transition'}, {'X': 'Workflow'}, {'X': 'WorkflowTransition'}])],
                           [self.system], {}, {'X': 'table0.C0'}, []),
                          ]),
                     ('OneFetchStep',
                      [('Any X LIMIT 10 OFFSET 10',
-                       [{'X': 'Affaire'}, {'X': 'Basket'}, {'X': 'Card'},
-                        {'X': 'Comment'}, {'X': 'Division'}, {'X': 'CWUser'},
-                        {'X': 'Email'}, {'X': 'EmailThread'}, {'X': 'File'},
-                        {'X': 'Folder'}, {'X': 'Image'}, {'X': 'Note'},
-                        {'X': 'Personne'}, {'X': 'Societe'}, {'X': 'State'},
-                        {'X': 'SubDivision'}, {'X': 'Tag'}, {'X': 'Transition'}])],
+                       [{'X': 'Affaire'}, {'X': 'BaseTransition'}, {'X': 'Basket'},
+                        {'X': 'CWUser'}, {'X': 'Card'}, {'X': 'Comment'},
+                        {'X': 'Division'}, {'X': 'Email'}, {'X': 'EmailThread'},
+                        {'X': 'File'}, {'X': 'Folder'}, {'X': 'Image'},
+                        {'X': 'Note'}, {'X': 'Personne'}, {'X': 'Societe'},
+                        {'X': 'State'}, {'X': 'SubDivision'}, {'X': 'Tag'},
+                        {'X': 'Transition'}, {'X': 'Workflow'}, {'X': 'WorkflowTransition'}])],
                      10, 10, [self.system], {'X': 'table0.C0'}, [])
                      ])
 
@@ -874,16 +878,23 @@ class MSPlannerTC(BaseMSPlannerTC):
                                           [{'X': 'Card'}, {'X': 'Note'}, {'X': 'State'}])],
                            [self.cards, self.system], {}, {'X': 'table0.C0'}, []),
                           ('FetchStep',
-                           [('Any X WHERE X is IN(Bookmark, CWAttribute, CWCache, CWConstraint, CWConstraintType, CWEType, CWGroup, CWPermission, CWProperty, CWRType, CWRelation, Comment, Division, Email, EmailAddress, EmailPart, EmailThread, ExternalUri, File, Folder, Image, Personne, RQLExpression, Societe, SubDivision, Tag, TrInfo, Transition)',
-                             sorted([{'X': 'Bookmark'}, {'X': 'Comment'}, {'X': 'Division'},
-                                      {'X': 'CWCache'}, {'X': 'CWConstraint'}, {'X': 'CWConstraintType'},
-                                      {'X': 'CWEType'}, {'X': 'CWAttribute'}, {'X': 'CWGroup'},
-                                      {'X': 'CWRelation'}, {'X': 'CWPermission'}, {'X': 'CWProperty'},
-                                      {'X': 'CWRType'}, {'X': 'Email'}, {'X': 'EmailAddress'},
-                                      {'X': 'EmailPart'}, {'X': 'EmailThread'}, {'X': 'ExternalUri'}, {'X': 'File'},
-                                      {'X': 'Folder'}, {'X': 'Image'}, {'X': 'Personne'},
-                                      {'X': 'RQLExpression'}, {'X': 'Societe'}, {'X': 'SubDivision'},
-                                      {'X': 'Tag'}, {'X': 'TrInfo'}, {'X': 'Transition'}]))],
+                           [('Any X WHERE X is IN(BaseTransition, Bookmark, CWAttribute, CWCache, CWConstraint, CWConstraintType, CWEType, CWGroup, CWPermission, CWProperty, CWRType, CWRelation, Comment, Division, Email, EmailAddress, EmailPart, EmailThread, ExternalUri, File, Folder, Image, Personne, RQLExpression, Societe, SubDivision, SubWorkflowExitPoint, Tag, TrInfo, Transition, Workflow, WorkflowTransition)',
+                             [{'X': 'BaseTransition'}, {'X': 'Bookmark'},
+                              {'X': 'CWAttribute'}, {'X': 'CWCache'},
+                              {'X': 'CWConstraint'}, {'X': 'CWConstraintType'},
+                              {'X': 'CWEType'}, {'X': 'CWGroup'},
+                              {'X': 'CWPermission'}, {'X': 'CWProperty'},
+                              {'X': 'CWRType'}, {'X': 'CWRelation'},
+                              {'X': 'Comment'}, {'X': 'Division'},
+                              {'X': 'Email'}, {'X': 'EmailAddress'},
+                              {'X': 'EmailPart'}, {'X': 'EmailThread'},
+                              {'X': 'ExternalUri'}, {'X': 'File'},
+                              {'X': 'Folder'}, {'X': 'Image'},
+                              {'X': 'Personne'}, {'X': 'RQLExpression'},
+                              {'X': 'Societe'}, {'X': 'SubDivision'},
+                              {'X': 'SubWorkflowExitPoint'}, {'X': 'Tag'},
+                              {'X': 'TrInfo'}, {'X': 'Transition'},
+                              {'X': 'Workflow'}, {'X': 'WorkflowTransition'}])],
                            [self.system], {}, {'X': 'table0.C0'}, []),
                           ]),
                         ('FetchStep', [('Any X WHERE EXISTS(X owned_by 5), X is CWUser', [{'X': 'CWUser'}])],
@@ -899,6 +910,11 @@ class MSPlannerTC(BaseMSPlannerTC):
     def test_security_complex_aggregat2(self):
         # use a guest user
         self.session = self._user_session()[1]
+        X_ET_ALL_SOLS = []
+        for s in X_ALL_SOLS:
+            ets = {'ET': 'CWEType'}
+            ets.update(s)
+            X_ET_ALL_SOLS.append(ets)
         self._test('Any ET, COUNT(X) GROUPBY ET ORDERBY ET WHERE X is ET',
                    [('FetchStep', [('Any X WHERE X is IN(Card, Note, State)',
                                     [{'X': 'Card'}, {'X': 'Note'}, {'X': 'State'}])],
@@ -923,23 +939,24 @@ class MSPlannerTC(BaseMSPlannerTC):
                        [self.system], {'X': 'table3.C0'}, {'ET': 'table0.C0', 'X': 'table0.C1'}, []),
                       # extra UnionFetchStep could be avoided but has no cost, so don't care
                       ('UnionFetchStep',
-                       [('FetchStep', [('Any ET,X WHERE X is ET, ET is CWEType, X is IN(Bookmark, CWAttribute, CWCache, CWConstraint, CWConstraintType, CWEType, CWGroup, CWPermission, CWProperty, CWRType, CWRelation, Comment, Division, Email, EmailAddress, EmailPart, EmailThread, ExternalUri, File, Folder, Image, Personne, RQLExpression, Societe, SubDivision, Tag, TrInfo, Transition)',
-                                        [{'X': 'Bookmark', 'ET': 'CWEType'}, {'X': 'Comment', 'ET': 'CWEType'},
-                                         {'X': 'Division', 'ET': 'CWEType'}, {'X': 'CWCache', 'ET': 'CWEType'},
-                                         {'X': 'CWConstraint', 'ET': 'CWEType'}, {'X': 'CWConstraintType', 'ET': 'CWEType'},
-                                         {'X': 'CWEType', 'ET': 'CWEType'}, {'X': 'CWAttribute', 'ET': 'CWEType'},
-                                         {'X': 'CWGroup', 'ET': 'CWEType'}, {'X': 'CWRelation', 'ET': 'CWEType'},
-                                         {'X': 'CWPermission', 'ET': 'CWEType'}, {'X': 'CWProperty', 'ET': 'CWEType'},
-                                         {'X': 'CWRType', 'ET': 'CWEType'}, {'X': 'Email', 'ET': 'CWEType'},
+                       [('FetchStep', [('Any ET,X WHERE X is ET, ET is CWEType, X is IN(BaseTransition, Bookmark, CWAttribute, CWCache, CWConstraint, CWConstraintType, CWEType, CWGroup, CWPermission, CWProperty, CWRType, CWRelation, Comment, Division, Email, EmailAddress, EmailPart, EmailThread, ExternalUri, File, Folder, Image, Personne, RQLExpression, Societe, SubDivision, SubWorkflowExitPoint, Tag, TrInfo, Transition, Workflow, WorkflowTransition)',
+                                        [{'X': 'BaseTransition', 'ET': 'CWEType'},
+                                         {'X': 'Bookmark', 'ET': 'CWEType'}, {'X': 'CWAttribute', 'ET': 'CWEType'},
+                                         {'X': 'CWCache', 'ET': 'CWEType'}, {'X': 'CWConstraint', 'ET': 'CWEType'},
+                                         {'X': 'CWConstraintType', 'ET': 'CWEType'}, {'X': 'CWEType', 'ET': 'CWEType'},
+                                         {'X': 'CWGroup', 'ET': 'CWEType'}, {'X': 'CWPermission', 'ET': 'CWEType'},
+                                         {'X': 'CWProperty', 'ET': 'CWEType'}, {'X': 'CWRType', 'ET': 'CWEType'},
+                                         {'X': 'CWRelation', 'ET': 'CWEType'}, {'X': 'Comment', 'ET': 'CWEType'},
+                                         {'X': 'Division', 'ET': 'CWEType'}, {'X': 'Email', 'ET': 'CWEType'},
                                          {'X': 'EmailAddress', 'ET': 'CWEType'}, {'X': 'EmailPart', 'ET': 'CWEType'},
-                                         {'X': 'EmailThread', 'ET': 'CWEType'},
-                                         {'ET': 'CWEType', 'X': 'ExternalUri'},
-                                         {'X': 'File', 'ET': 'CWEType'},
-                                         {'X': 'Folder', 'ET': 'CWEType'}, {'X': 'Image', 'ET': 'CWEType'},
-                                         {'X': 'Personne', 'ET': 'CWEType'}, {'X': 'RQLExpression', 'ET': 'CWEType'},
-                                         {'X': 'Societe', 'ET': 'CWEType'}, {'X': 'SubDivision', 'ET': 'CWEType'},
+                                         {'X': 'EmailThread', 'ET': 'CWEType'}, {'X': 'ExternalUri', 'ET': 'CWEType'},
+                                         {'X': 'File', 'ET': 'CWEType'}, {'X': 'Folder', 'ET': 'CWEType'},
+                                         {'X': 'Image', 'ET': 'CWEType'}, {'X': 'Personne', 'ET': 'CWEType'},
+                                         {'X': 'RQLExpression', 'ET': 'CWEType'}, {'X': 'Societe', 'ET': 'CWEType'},
+                                         {'X': 'SubDivision', 'ET': 'CWEType'}, {'X': 'SubWorkflowExitPoint', 'ET': 'CWEType'},
                                          {'X': 'Tag', 'ET': 'CWEType'}, {'X': 'TrInfo', 'ET': 'CWEType'},
-                                         {'X': 'Transition', 'ET': 'CWEType'}])],
+                                         {'X': 'Transition', 'ET': 'CWEType'}, {'X': 'Workflow', 'ET': 'CWEType'},
+                                         {'X': 'WorkflowTransition', 'ET': 'CWEType'}])],
                          [self.system], {}, {'ET': 'table0.C0', 'X': 'table0.C1'}, []),
                         ('FetchStep',
                          [('Any ET,X WHERE X is ET, ET is CWEType, X is IN(Card, Note, State)',
@@ -950,26 +967,7 @@ class MSPlannerTC(BaseMSPlannerTC):
                         ]),
                     ]),
                     ('OneFetchStep',
-                     [('Any ET,COUNT(X) GROUPBY ET ORDERBY ET',
-                       sorted([{'ET': 'CWEType', 'X': 'Affaire'}, {'ET': 'CWEType', 'X': 'Basket'},
-                               {'ET': 'CWEType', 'X': 'Bookmark'}, {'ET': 'CWEType', 'X': 'Card'},
-                               {'ET': 'CWEType', 'X': 'Comment'}, {'ET': 'CWEType', 'X': 'Division'},
-                               {'ET': 'CWEType', 'X': 'CWCache'}, {'ET': 'CWEType', 'X': 'CWConstraint'},
-                               {'ET': 'CWEType', 'X': 'CWConstraintType'}, {'ET': 'CWEType', 'X': 'CWEType'},
-                               {'ET': 'CWEType', 'X': 'CWAttribute'}, {'ET': 'CWEType', 'X': 'CWGroup'},
-                               {'ET': 'CWEType', 'X': 'CWRelation'}, {'ET': 'CWEType', 'X': 'CWPermission'},
-                               {'ET': 'CWEType', 'X': 'CWProperty'}, {'ET': 'CWEType', 'X': 'CWRType'},
-                               {'ET': 'CWEType', 'X': 'CWUser'}, {'ET': 'CWEType', 'X': 'Email'},
-                               {'ET': 'CWEType', 'X': 'EmailAddress'}, {'ET': 'CWEType', 'X': 'EmailPart'},
-                               {'ET': 'CWEType', 'X': 'EmailThread'},
-                               {'ET': 'CWEType', 'X': 'ExternalUri'},
-                               {'ET': 'CWEType', 'X': 'File'},
-                               {'ET': 'CWEType', 'X': 'Folder'}, {'ET': 'CWEType', 'X': 'Image'},
-                               {'ET': 'CWEType', 'X': 'Note'}, {'ET': 'CWEType', 'X': 'Personne'},
-                               {'ET': 'CWEType', 'X': 'RQLExpression'}, {'ET': 'CWEType', 'X': 'Societe'},
-                               {'ET': 'CWEType', 'X': 'State'}, {'ET': 'CWEType', 'X': 'SubDivision'},
-                               {'ET': 'CWEType', 'X': 'Tag'}, {'ET': 'CWEType', 'X': 'TrInfo'},
-                               {'ET': 'CWEType', 'X': 'Transition'}]))],
+                     [('Any ET,COUNT(X) GROUPBY ET ORDERBY ET', X_ET_ALL_SOLS)],
                      None, None, [self.system], {'ET': 'table0.C0', 'X': 'table0.C1'}, [])
                     ])
 
@@ -1707,6 +1705,7 @@ class MSPlannerTC(BaseMSPlannerTC):
                     ])
 
     def test_nonregr2(self):
+        self.session.user.fire_transition('deactivate')
         treid = self.session.user.latest_trinfo().eid
         self._test('Any X ORDERBY D DESC WHERE E eid %(x)s, E wf_info_for X, X modification_date D',
                    [('FetchStep', [('Any X,D WHERE X modification_date D, X is Note',
@@ -1962,12 +1961,22 @@ class MSPlannerTC(BaseMSPlannerTC):
                      None, None, [self.system], {}, [])],
                    {'x': 999998, 'u': 999999})
 
-    def test_nonregr_identity_no_source_access(self):
+    def test_nonregr_identity_no_source_access_1(self):
         repo._type_source_cache[999999] = ('CWUser', 'ldap', 999998)
         self._test('Any S WHERE S identity U, S eid %(s)s, U eid %(u)s',
                    [('OneFetchStep', [('Any 999999 WHERE 999999 identity 999999', [{}])],
                      None, None, [self.system], {}, [])],
                    {'s': 999999, 'u': 999999})
+
+    def test_nonregr_identity_no_source_access_2(self):
+        repo._type_source_cache[999999] = ('EmailAddress', 'system', 999999)
+        repo._type_source_cache[999998] = ('CWUser', 'ldap', 999998)
+        self._test('Any X WHERE O use_email X, ((EXISTS(O identity U)) OR (EXISTS(O in_group G, G name IN("managers", "staff")))) OR (EXISTS(O in_group G2, U in_group G2, NOT G2 name "users")), X eid %(x)s, U eid %(u)s',
+                   [('OneFetchStep', [('Any 999999 WHERE O use_email 999999, ((EXISTS(O identity 999998)) OR (EXISTS(O in_group G, G name IN("managers", "staff")))) OR (EXISTS(O in_group G2, 999998 in_group G2, NOT G2 name "users"))',
+                                       [{'G': 'CWGroup', 'G2': 'CWGroup', 'O': 'CWUser'}])],
+                     None, None, [self.system], {}, [])],
+                   {'x': 999999, 'u': 999998})
+
 
 class MSPlannerTwoSameExternalSourcesTC(BasePlannerTC):
     """test planner related feature on a 3-sources repository:
@@ -1980,7 +1989,7 @@ class MSPlannerTwoSameExternalSourcesTC(BasePlannerTC):
         self.setup()
         self.add_source(FakeCardSource, 'cards')
         self.add_source(FakeCardSource, 'cards2')
-        self.planner = MSPlanner(self.o.schema, self.o._rqlhelper)
+        self.planner = MSPlanner(self.o.schema, self.repo.vreg.rqlhelper)
         assert repo.sources_by_uri['cards2'].support_relation('multisource_crossed_rel')
         assert 'multisource_crossed_rel' in repo.sources_by_uri['cards2'].cross_relations
         assert repo.sources_by_uri['cards'].support_relation('multisource_crossed_rel')
@@ -2133,7 +2142,7 @@ class MSPlannerVCSSource(BasePlannerTC):
     def setUp(self):
         self.setup()
         self.add_source(FakeVCSSource, 'vcs')
-        self.planner = MSPlanner(self.o.schema, self.o._rqlhelper)
+        self.planner = MSPlanner(self.o.schema, self.repo.vreg.rqlhelper)
     _test = test_plan
 
     def test_multisource_inlined_rel_skipped(self):

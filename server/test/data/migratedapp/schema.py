@@ -50,9 +50,9 @@ class Note(Para):
                                              'PE require_permission P, P name "add_note", '
                                              'P require_group G'),)}
 
+    whatever = Int()  # keep it before `date` for unittest_migraction.test_add_attribute_int
     date = Datetime()
     type = String(maxsize=1)
-    whatever = Int()
     mydate = Date(default='TODAY')
     shortpara = String(maxsize=64)
     ecrit_par = SubjectRelation('Personne', constraints=[RQLConstraint('S concerne A, O concerne A')])
@@ -104,7 +104,7 @@ class Personne(EntityType):
     concerne2 = SubjectRelation(('Affaire', 'Note'), cardinality='1*')
     connait = SubjectRelation('Personne', symetric=True)
 
-class Societe(EntityType):
+class Societe(WorkflowableEntityType):
     permissions = {
         'read': ('managers', 'users', 'guests'),
         'update': ('managers', 'owners'),
@@ -123,7 +123,6 @@ class Societe(EntityType):
     cp   = String(maxsize=12)
     ville= String(maxsize=32)
 
-    in_state = SubjectRelation('State', cardinality='?*')
 
 class evaluee(RelationDefinition):
     subject = ('Personne', 'CWUser', 'Societe')

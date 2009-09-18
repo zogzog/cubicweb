@@ -94,8 +94,6 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
     """adapter for source using the native cubicweb schema (see below)
     """
     sqlgen_class = SQLGenerator
-    # need default value on class since migration doesn't call init method
-    has_deleted_entitites_table = True
 
     passwd_rql = "Any P WHERE X is CWUser, X login %(login)s, X upassword P"
     auth_rql = "Any X WHERE X is CWUser, X login %(login)s, X upassword %(pwd)s"
@@ -226,15 +224,6 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
 
     def init(self):
         self.init_creating()
-        pool = self.repo._get_pool()
-        pool.pool_set()
-        # XXX cubicweb < 2.42 compat
-        if 'deleted_entities' in self.dbhelper.list_tables(pool['system']):
-            self.has_deleted_entitites_table = True
-        else:
-            self.has_deleted_entitites_table = False
-        pool.pool_reset()
-        self.repo._free_pool(pool)
 
     def map_attribute(self, etype, attr, cb):
         self._rql_sqlgen.attr_map['%s.%s' % (etype, attr)] = cb
@@ -242,7 +231,7 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
     # ISource interface #######################################################
 
     def compile_rql(self, rql):
-        rqlst = self.repo.querier._rqlhelper.parse(rql)
+        rqlst = self.repo.vreg.rqlhelper.parse(rql)
         rqlst.restricted_vars = ()
         rqlst.children[0].solutions = self._sols
         self.repo.querier.sqlgen_annotate(rqlst)
@@ -278,6 +267,9 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
         # due to current multi-sources implementation, the system source
         # can't claim not supporting a relation
         return True #not rtype == 'content_for'
+
+    def may_cross_relation(self, rtype):
+        return True
 
     def authenticate(self, session, login, password):
         """return CWUser eid for the given login/password if this account is
@@ -549,13 +541,12 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
         """
         attrs = {'eid': eid}
         session.system_sql(self.sqlgen.delete('entities', attrs), attrs)
-        if self.has_deleted_entitites_table:
-            if extid is not None:
-                assert isinstance(extid, str), type(extid)
-                extid = b64encode(extid)
-            attrs = {'type': etype, 'eid': eid, 'extid': extid,
-                     'source': uri, 'dtime': datetime.now()}
-            session.system_sql(self.sqlgen.insert('deleted_entities', attrs), attrs)
+        if extid is not None:
+            assert isinstance(extid, str), type(extid)
+            extid = b64encode(extid)
+        attrs = {'type': etype, 'eid': eid, 'extid': extid,
+                 'source': uri, 'dtime': datetime.now()}
+        session.system_sql(self.sqlgen.insert('deleted_entities', attrs), attrs)
 
     def fti_unindex_entity(self, session, eid):
         """remove text content for entity with the given eid from the full text

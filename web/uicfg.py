@@ -149,6 +149,7 @@ primaryview_display_ctrl = DisplayCtrlRelationTags('primaryview_display_ctrl',
 # * 'application'
 # * 'system'
 # * 'schema'
+# * 'hidden'
 # * 'subobject' (not displayed by default)
 
 indexview_etype_section = {'EmailAddress': 'subobject',
@@ -156,6 +157,7 @@ indexview_etype_section = {'EmailAddress': 'subobject',
                            'CWGroup': 'system',
                            'CWPermission': 'system',
                            'CWCache': 'system',
+                           'BaseTransition': 'hidden',
                            }
 
 

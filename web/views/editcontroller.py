@@ -51,7 +51,8 @@ class EditController(ViewController):
         try:
             methodname = form.pop('__method', None)
             for eid in req.edited_eids():
-                formparams = req.extract_entity_params(eid)
+                # __type and eid
+                formparams = req.extract_entity_params(eid, minparams=2)
                 if methodname is not None:
                     entity = req.entity_from_eid(eid)
                     method = getattr(entity, methodname)

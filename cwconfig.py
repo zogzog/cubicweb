@@ -20,6 +20,7 @@ import logging
 from smtplib import SMTP
 from threading import Lock
 from os.path import exists, join, expanduser, abspath, normpath, basename, isdir
+import tempfile
 
 from logilab.common.decorators import cached
 from logilab.common.deprecation import deprecated
@@ -391,7 +392,11 @@ this option is set to yes",
                         'server/serverctl.py', 'hercule.py',
                         'devtools/devctl.py', 'goa/goactl.py'):
             if exists(join(CW_SOFTWARE_ROOT, ctlfile)):
-                load_module_from_file(join(CW_SOFTWARE_ROOT, ctlfile))
+                try:
+                    load_module_from_file(join(CW_SOFTWARE_ROOT, ctlfile))
+                except ImportError, err:
+                    cls.critical('could not import the command provider %s (cause : %s)' %
+                                (ctlfile, err))
                 cls.info('loaded cubicweb-ctl plugin %s', ctlfile)
         for cube in cls.available_cubes():
             pluginfile = join(cls.cube_dir(cube), 'ecplugin.py')
@@ -526,13 +531,13 @@ class CubicWebConfiguration(CubicWebNoAppConfiguration):
     if CubicWebNoAppConfiguration.mode == 'test':
         root = os.environ['APYCOT_ROOT']
         REGISTRY_DIR = '%s/etc/cubicweb.d/' % root
-        RUNTIME_DIR = '/tmp/'
+        RUNTIME_DIR = tempfile.gettempdir()
         MIGRATION_DIR = '%s/local/share/cubicweb/migration/' % root
         if not exists(REGISTRY_DIR):
             os.makedirs(REGISTRY_DIR)
     elif CubicWebNoAppConfiguration.mode == 'dev':
         REGISTRY_DIR = expanduser('~/etc/cubicweb.d/')
-        RUNTIME_DIR = '/tmp/'
+        RUNTIME_DIR = tempfile.gettempdir()
         MIGRATION_DIR = join(CW_SOFTWARE_ROOT, 'misc', 'migration')
     else: #mode = 'installed'
         REGISTRY_DIR = '/etc/cubicweb.d/'
@@ -651,7 +656,7 @@ the repository',
     def default_log_file(self):
         """return default path to the log file of the instance'server"""
         if self.mode == 'dev':
-            basepath = '/tmp/%s-%s' % (basename(self.appid), self.name)
+            basepath = join(tempfile.gettempdir(), '%s-%s' % (basename(self.appid), self.name))
             path = basepath + '.log'
             i = 1
             while exists(path) and i < 100: # arbitrary limit to avoid infinite loop
@@ -794,8 +799,8 @@ the repository',
         from glob import glob
         yield 'en' # ensure 'en' is yielded even if no .mo found
         for path in glob(join(self.apphome, 'i18n',
-                              '*', 'LC_MESSAGES', 'cubicweb.mo')):
-            lang = path.split(os.sep)[-3]
+                              '*', 'LC_MESSAGES')):
+            lang = path.split(os.sep)[-2]
             if lang != 'en':
                 yield lang
 
@@ -807,7 +812,7 @@ the repository',
             self.info("loading language %s", language)
             try:
                 tr = translation('cubicweb', path, languages=[language])
-                self.translations[language] = tr.ugettext
+                self.translations[language] = (tr.ugettext, tr.upgettext)
             except (ImportError, AttributeError, IOError):
                 self.exception('localisation support error for language %s',
                                language)

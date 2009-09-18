@@ -44,6 +44,7 @@ META_RTYPES = set((
     'owned_by', 'created_by', 'is', 'is_instance_of', 'identity',
     'eid', 'creation_date', 'modification_date', 'has_text', 'cwuri',
     ))
+SYSTEM_RTYPES = set(('require_permission', 'custom_workflow', 'in_state', 'wf_info_for'))
 
 #  set of entity and relation types used to build the schema
 SCHEMA_TYPES = set((
@@ -100,7 +101,7 @@ def bw_normalize_etype(etype):
         etype = ETYPE_NAME_MAP[etype]
     return etype
 
-def display_name(req, key, form=''):
+def display_name(req, key, form='', context=None):
     """return a internationalized string for the key (schema entity or relation
     name) in a given form
     """
@@ -110,8 +111,12 @@ def display_name(req, key, form=''):
     if form:
         key = key + '_' + form
     # ensure unicode
-    # added .lower() in case no translation are available
-    return unicode(req._(key)).lower()
+    # .lower() in case no translation are available XXX done whatever a translation is there or not!
+    if context is not None:
+        return unicode(req.pgettext(context, key)).lower()
+    else:
+        return unicode(req._(key)).lower()
+
 __builtins__['display_name'] = deprecated('display_name should be imported from cubicweb.schema')(display_name)
 
 def ERSchema_display_name(self, req, form=''):
@@ -642,6 +647,8 @@ class RQLExpression(object):
             if len(self.rqlst.defined_vars[mainvar].references()) <= 2:
                 _LOGGER.warn('You did not use the %s variable in your RQL '
                              'expression %s', mainvar, self)
+        # syntax tree used by read security (inserted in queries when necessary
+        self.snippet_rqlst = parse(self.minimal_rql, print_errors=False).children[0]
 
     def __str__(self):
         return self.full_rql
@@ -767,8 +774,6 @@ class RQLExpression(object):
 class ERQLExpression(RQLExpression):
     def __init__(self, expression, mainvars=None, eid=None):
         RQLExpression.__init__(self, expression, mainvars or 'X', eid)
-        # syntax tree used by read security (inserted in queries when necessary
-        self.snippet_rqlst = parse(self.minimal_rql, print_errors=False).children[0]
 
     @property
     def full_rql(self):
@@ -847,23 +852,30 @@ class workflowable_definition(ybo.metadefinition):
     This is the default metaclass for WorkflowableEntityType
     """
     def __new__(mcs, name, bases, classdict):
-        abstract = classdict.pop('abstract', False)
-        defclass = super(workflowable_definition, mcs).__new__(mcs, name, bases, classdict)
+        abstract = classdict.pop('__abstract__', False)
+        cls = super(workflowable_definition, mcs).__new__(mcs, name, bases,
+                                                          classdict)
         if not abstract:
-            existing_rels = set(rdef.name for rdef in defclass.__relations__)
-            if 'in_state' not in existing_rels and 'wf_info_for' not in existing_rels:
-                in_state = ybo.SubjectRelation('State', cardinality='1*',
-                                               # XXX automatize this
-                                               constraints=[RQLConstraint('S is ET, O state_of ET')],
-                                               description=_('account state'))
-                yams_add_relation(defclass.__relations__, in_state, 'in_state')
-                wf_info_for = ybo.ObjectRelation('TrInfo', cardinality='1*', composite='object')
-                yams_add_relation(defclass.__relations__, wf_info_for, 'wf_info_for')
-        return defclass
+            make_workflowable(cls)
+        return cls
+
+def make_workflowable(cls, in_state_descr=None):
+    existing_rels = set(rdef.name for rdef in cls.__relations__)
+    # let relation types defined in cw.schemas.workflow carrying
+    # cardinality, constraints and other relation definition properties
+    if 'custom_workflow' not in existing_rels:
+        rdef = ybo.SubjectRelation('Workflow')
+        yams_add_relation(cls.__relations__, rdef, 'custom_workflow')
+    if 'in_state' not in existing_rels:
+        rdef = ybo.SubjectRelation('State', description=in_state_descr)
+        yams_add_relation(cls.__relations__, rdef, 'in_state')
+    if 'wf_info_for' not in existing_rels:
+        rdef = ybo.ObjectRelation('TrInfo')
+        yams_add_relation(cls.__relations__, rdef, 'wf_info_for')
 
 class WorkflowableEntityType(ybo.EntityType):
     __metaclass__ = workflowable_definition
-    abstract = True
+    __abstract__ = True
 
 PyFileReader.context['WorkflowableEntityType'] = WorkflowableEntityType
 

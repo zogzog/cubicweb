@@ -16,7 +16,7 @@ from simplejson import dumps
 
 from logilab.common.deprecation import deprecated
 
-from cubicweb.common.uilib import urlquote
+from urllib import quote as urlquote
 from cubicweb.web._exceptions import *
 
 

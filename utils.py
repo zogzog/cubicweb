@@ -11,10 +11,14 @@ from logilab.mtconverter import xml_escape
 
 import locale
 from md5 import md5
+import datetime as pydatetime
 from datetime import datetime, timedelta, date
 from time import time, mktime
 from random import randint, seed
 from calendar import monthrange
+import decimal
+
+import simplejson
 
 # initialize random seed from current time
 seed()
@@ -324,9 +328,46 @@ class HTMLStream(object):
                                                  self.body.getvalue())
 
 
-class AcceptMixIn(object):
-    """Mixin class for appobjects defining the 'accepts' attribute describing
-    a set of supported entity type (Any by default).
+def can_do_pdf_conversion(__answer=[None]):
+    """pdf conversion depends on
+    * pyxmltrf (python package)
+    * fop 0.9x
     """
-    # XXX deprecated, no more necessary
+    if __answer[0] is not None:
+        return __answer[0]
+    try:
+        import pysixt
+    except ImportError:
+        __answer[0] = False
+        return False
+    from subprocess import Popen, STDOUT
+    import os
+    try:
+        Popen(['/usr/bin/fop', '-q'],
+              stdout=open(os.devnull, 'w'),
+              stderr=STDOUT)
+    except OSError, e:
+        print e
+        __answer[0] = False
+        return False
+    __answer[0] = True
+    return True
 
+
+class CubicWebJsonEncoder(simplejson.JSONEncoder):
+    """define a simplejson encoder to be able to encode yams std types"""
+    def default(self, obj):
+        if isinstance(obj, pydatetime.datetime):
+            return obj.strftime('%Y/%m/%d %H:%M:%S')
+        elif isinstance(obj, pydatetime.date):
+            return obj.strftime('%Y/%m/%d')
+        elif isinstance(obj, pydatetime.time):
+            return obj.strftime('%H:%M:%S')
+        elif isinstance(obj, decimal.Decimal):
+            return float(obj)
+        try:
+            return simplejson.JSONEncoder.default(self, obj)
+        except TypeError:
+            # we never ever want to fail because of an unknown type,
+            # just return None in those cases.
+            return None

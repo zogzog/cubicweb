@@ -960,7 +960,14 @@ class score_entity(EntitySelector):
     """
     def __init__(self, scorefunc, once_is_enough=False):
         super(score_entity, self).__init__(once_is_enough)
-        self.score_entity = scorefunc
+        def intscore(*args, **kwargs):
+            score = scorefunc(*args, **kwargs)
+            if not score:
+                return 0
+            if isinstance(score, (int, long)):
+                return score
+            return 1
+        self.score_entity = intscore
 
 
 # XXX DEPRECATED ##############################################################

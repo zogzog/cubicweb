@@ -10,8 +10,14 @@ __docformat__ = "restructuredtext en"
 # XXX move most of this in logilab.common (shellutils ?)
 
 import os, sys
-from os import listdir, makedirs, symlink, environ, chmod, walk, remove
+from os import listdir, makedirs, environ, chmod, walk, remove
 from os.path import exists, join, abspath, normpath
+
+try:
+    from os import symlink
+except ImportError:
+    def symlink(*args):
+        raise NotImplementedError
 
 from logilab.common.clcommands import Command as BaseCommand, \
      main_run as base_main_run

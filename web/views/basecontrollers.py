@@ -17,9 +17,8 @@ import simplejson
 from logilab.common.decorators import cached
 
 from cubicweb import NoSelectableObject, ValidationError, ObjectNotFound, typed_eid
-from cubicweb.utils import strptime
+from cubicweb.utils import strptime, CubicWebJsonEncoder
 from cubicweb.selectors import yes, match_user_groups
-from cubicweb.view import STRICT_DOCTYPE, STRICT_DOCTYPE_NOEXT
 from cubicweb.common.mail import format_mail
 from cubicweb.web import ExplicitLogin, Redirect, RemoteCallFailed, json_dumps
 from cubicweb.web.controller import Controller
@@ -181,48 +180,54 @@ def _validation_error(req, ex):
             break
     return (foreid, ex.errors)
 
+
 def _validate_form(req, vreg):
     # XXX should use the `RemoteCallFailed` mechanism
     try:
         ctrl = vreg['controllers'].select('edit', req=req)
     except NoSelectableObject:
-        return (False, {None: req._('not authorized')})
+        return (False, {None: req._('not authorized')}, None)
     try:
         ctrl.publish(None)
     except ValidationError, ex:
-        return (False, _validation_error(req, ex))
+        return (False, _validation_error(req, ex), ctrl._edited_entity)
     except Redirect, ex:
+        if ctrl._edited_entity:
+            ctrl._edited_entity.complete()
         try:
             req.cnx.commit() # ValidationError may be raise on commit
         except ValidationError, ex:
-            return (False, _validation_error(req, ex))
+            return (False, _validation_error(req, ex), ctrl._edited_entity)
         else:
-            return (True, ex.location)
+            return (True, ex.location, ctrl._edited_entity)
     except Exception, ex:
         req.cnx.rollback()
         req.exception('unexpected error while validating form')
-        return (False, req._(str(ex).decode('utf-8')))
-    return (False, '???')
+        return (False, req._(str(ex).decode('utf-8')), ctrl._edited_entity)
+    return (False, '???', None)
 
 
 class FormValidatorController(Controller):
     id = 'validateform'
 
-    def response(self, domid, status, args):
+    def response(self, domid, status, args, entity):
+        callback = str(self.req.form.get('__onsuccess', 'null'))
+        errback = str(self.req.form.get('__onfailure', 'null'))
         self.req.set_content_type('text/html')
-        jsargs = simplejson.dumps( (status, args) )
+        jsargs = simplejson.dumps((status, args, entity), cls=CubicWebJsonEncoder)
         return """<script type="text/javascript">
- window.parent.handleFormValidationResponse('%s', null, null, %s);
-</script>""" %  (domid, jsargs)
+ wp = window.parent;
+ window.parent.handleFormValidationResponse('%s', %s, %s, %s);
+</script>""" %  (domid, callback, errback, jsargs)
 
     def publish(self, rset=None):
         self.req.json_request = True
         # XXX unclear why we have a separated controller here vs
         # js_validate_form on the json controller
-        status, args = _validate_form(self.req, self.vreg)
+        status, args, entity = _validate_form(self.req, self.vreg)
         domid = self.req.form.get('__domid', 'entityForm').encode(
             self.req.encoding)
-        return self.response(domid, status, args)
+        return self.response(domid, status, args, entity)
 
 
 class JSonController(Controller):
@@ -388,7 +393,7 @@ class JSonController(Controller):
 
     @jsonize
     def js_edit_field(self, action, names, values, rtype, eid, default):
-        success, args = self.validate_form(action, names, values)
+        success, args, _ = self.validate_form(action, names, values)
         if success:
             # Any X,N where we don't seem to use N is an optimisation
             # printable_value won't need to query N again

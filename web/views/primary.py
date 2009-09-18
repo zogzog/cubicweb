@@ -232,9 +232,9 @@ class RelatedView(EntityView):
 
 for rtype in ('eid', 'creation_date', 'modification_date', 'cwuri',
               'is', 'is_instance_of', 'identity',
-              'owned_by', 'created_by',
-              'in_state', 'wf_info_for', 'require_permission',
-              'from_entity', 'to_entity',
+              'owned_by', 'created_by', 'in_state',
+              'wf_info_for', 'by_transition', 'from_state', 'to_state',
+              'require_permission', 'from_entity', 'to_entity',
               'see_also'):
     uicfg.primaryview_section.tag_subject_of(('*', rtype, '*'), 'hidden')
     uicfg.primaryview_section.tag_object_of(('*', rtype, '*'), 'hidden')

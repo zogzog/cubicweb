@@ -45,19 +45,27 @@ class MigrationCommandsTC(RepositoryBasedTC):
         assert self.cnx is self.mh._cnx
         assert self.session is self.mh.session, (self.session.id, self.mh.session.id)
 
+
     def test_add_attribute_int(self):
         self.failIf('whatever' in self.schema)
-        paraordernum = self.mh.rqlexec('Any O WHERE X name "Note", RT name "para", RDEF from_entity X, RDEF relation_type RT, RDEF ordernum O')[0][0]
+        orderdict = dict(self.mh.rqlexec('Any RTN, O WHERE X name "Note", RDEF from_entity X, '
+                                         'RDEF relation_type RT, RDEF ordernum O, RT name RTN'))
         self.mh.cmd_add_attribute('Note', 'whatever')
         self.failUnless('whatever' in self.schema)
         self.assertEquals(self.schema['whatever'].subjects(), ('Note',))
         self.assertEquals(self.schema['whatever'].objects(), ('Int',))
-        paraordernum2 = self.mh.rqlexec('Any O WHERE X name "Note", RT name "para", RDEF from_entity X, RDEF relation_type RT, RDEF ordernum O')[0][0]
-        self.assertEquals(paraordernum2, paraordernum+1)
+        orderdict2 = dict(self.mh.rqlexec('Any RTN, O WHERE X name "Note", RDEF from_entity X, '
+                                          'RDEF relation_type RT, RDEF ordernum O, RT name RTN'))
+        whateverorder = migrschema['whatever'].rproperty('Note', 'Int', 'order')
+        for k, v in orderdict.iteritems():
+            if v >= whateverorder:
+                orderdict[k] = v+1
+        orderdict['whatever'] = whateverorder
+        self.assertDictEquals(orderdict, orderdict2)
         #self.assertEquals([r.type for r in self.schema['Note'].ordered_relations()],
         #                  ['modification_date', 'creation_date', 'owned_by',
         #                   'eid', 'ecrit_par', 'inline1', 'date', 'type',
-        #                   'whatever', 'para', 'in_basket'])
+        #                   'whatever', 'date', 'in_basket'])
         # NB: commit instead of rollback make following test fail with py2.5
         #     this sounds like a pysqlite/2.5 bug (the same eid is affected to
         #     two different entities)
@@ -106,23 +114,14 @@ class MigrationCommandsTC(RepositoryBasedTC):
 
 
     def test_workflow_actions(self):
-        foo = self.mh.cmd_add_state(u'foo', ('Personne', 'Email'), initial=True)
+        wf = self.mh.cmd_add_workflow(u'foo', ('Personne', 'Email'))
         for etype in ('Personne', 'Email'):
-            s1 = self.mh.rqlexec('Any N WHERE S state_of ET, ET name "%s", S name N' %
+            s1 = self.mh.rqlexec('Any N WHERE WF workflow_of ET, ET name "%s", WF name N' %
                                  etype)[0][0]
             self.assertEquals(s1, "foo")
-            s1 = self.mh.rqlexec('Any N WHERE ET initial_state S, ET name "%s", S name N' %
+            s1 = self.mh.rqlexec('Any N WHERE ET default_workflow WF, ET name "%s", WF name N' %
                                  etype)[0][0]
             self.assertEquals(s1, "foo")
-        bar = self.mh.cmd_add_state(u'bar', ('Personne', 'Email'), initial=True)
-        baz = self.mh.cmd_add_transition(u'baz', ('Personne', 'Email'),
-                                         (foo,), bar, ('managers',))
-        for etype in ('Personne', 'Email'):
-            t1 = self.mh.rqlexec('Any N WHERE T transition_of ET, ET name "%s", T name N' %
-                                 etype)[0][0]
-            self.assertEquals(t1, "baz")
-        gn = self.mh.rqlexec('Any GN WHERE T require_group G, G name GN, T eid %s' % baz)[0][0]
-        self.assertEquals(gn, 'managers')
 
     def test_add_entity_type(self):
         self.failIf('Folder2' in self.schema)
@@ -132,6 +131,7 @@ class MigrationCommandsTC(RepositoryBasedTC):
         self.failUnless(self.execute('CWEType X WHERE X name "Folder2"'))
         self.failUnless('filed_under2' in self.schema)
         self.failUnless(self.execute('CWRType X WHERE X name "filed_under2"'))
+        self.schema.rebuild_infered_relations()
         self.assertEquals(sorted(str(rs) for rs in self.schema['Folder2'].subject_relations()),
                           ['created_by', 'creation_date', 'cwuri',
                            'description', 'description_format',
@@ -150,22 +150,25 @@ class MigrationCommandsTC(RepositoryBasedTC):
 
     def test_add_drop_entity_type(self):
         self.mh.cmd_add_entity_type('Folder2')
-        todoeid = self.mh.cmd_add_state(u'todo', 'Folder2', initial=True)
-        doneeid = self.mh.cmd_add_state(u'done', 'Folder2')
-        self.mh.cmd_add_transition(u'redoit', 'Folder2', (doneeid,), todoeid)
-        self.mh.cmd_add_transition(u'markasdone', 'Folder2', (todoeid,), doneeid)
+        wf = self.mh.cmd_add_workflow(u'folder2 wf', 'Folder2')
+        todo = wf.add_state(u'todo', initial=True)
+        done = wf.add_state(u'done')
+        wf.add_transition(u'redoit', done, todo)
+        wf.add_transition(u'markasdone', todo, done)
         self.commit()
         eschema = self.schema.eschema('Folder2')
         self.mh.cmd_drop_entity_type('Folder2')
         self.failIf('Folder2' in self.schema)
         self.failIf(self.execute('CWEType X WHERE X name "Folder2"'))
         # test automatic workflow deletion
-        self.failIf(self.execute('State X WHERE NOT X state_of ET'))
-        self.failIf(self.execute('Transition X WHERE NOT X transition_of ET'))
+        self.failIf(self.execute('Workflow X WHERE NOT X workflow_of ET'))
+        self.failIf(self.execute('State X WHERE NOT X state_of WF'))
+        self.failIf(self.execute('Transition X WHERE NOT X transition_of WF'))
 
     def test_add_drop_relation_type(self):
         self.mh.cmd_add_entity_type('Folder2', auto=False)
         self.mh.cmd_add_relation_type('filed_under2')
+        self.schema.rebuild_infered_relations()
         self.failUnless('filed_under2' in self.schema)
         self.assertEquals(sorted(str(e) for e in self.schema['filed_under2'].subjects()),
                           sorted(str(e) for e in self.schema.entities() if not e.is_final()))
@@ -183,8 +186,8 @@ class MigrationCommandsTC(RepositoryBasedTC):
                           '1*')
         self.mh.cmd_add_relation_definition('Personne', 'concerne2', 'Note')
         self.assertEquals(sorted(self.schema['concerne2'].objects()), ['Affaire', 'Note'])
-        self.mh.add_entity('Personne', nom=u'tot')
-        self.mh.add_entity('Affaire')
+        self.mh.create_entity('Personne', nom=u'tot')
+        self.mh.create_entity('Affaire')
         self.mh.rqlexec('SET X concerne2 Y WHERE X is Personne, Y is Affaire')
         self.commit()
         self.mh.cmd_drop_relation_definition('Personne', 'concerne2', 'Affaire')
@@ -219,10 +222,16 @@ class MigrationCommandsTC(RepositoryBasedTC):
         self.assertEquals(sorted(str(e) for e in self.schema['concerne'].subjects()),
                           ['Affaire', 'Personne'])
         self.assertEquals(sorted(str(e) for e in self.schema['concerne'].objects()),
+                          ['Affaire', 'Division', 'Note', 'SubDivision'])
+        self.schema.rebuild_infered_relations() # need to be explicitly called once everything is in place
+        self.assertEquals(sorted(str(e) for e in self.schema['concerne'].objects()),
                           ['Affaire', 'Note'])
         self.mh.cmd_add_relation_definition('Affaire', 'concerne', 'Societe')
         self.assertEquals(sorted(str(e) for e in self.schema['concerne'].subjects()),
                           ['Affaire', 'Personne'])
+        self.assertEquals(sorted(str(e) for e in self.schema['concerne'].objects()),
+                          ['Affaire', 'Note', 'Societe'])
+        self.schema.rebuild_infered_relations() # need to be explicitly called once everything is in place
         self.assertEquals(sorted(str(e) for e in self.schema['concerne'].objects()),
                           ['Affaire', 'Division', 'Note', 'Societe', 'SubDivision'])
         # trick: overwrite self.maxeid to avoid deletion of just reintroduced types
@@ -450,12 +459,6 @@ class MigrationCommandsTC(RepositoryBasedTC):
     def test_remove_dep_cube(self):
         ex = self.assertRaises(ConfigurationError, self.mh.cmd_remove_cube, 'file')
         self.assertEquals(str(ex), "can't remove cube file, used as a dependency")
-
-    def test_set_state(self):
-        user = self.session.user
-        self.mh.set_state(user.eid, 'deactivated')
-        user.clear_related_cache('in_state', 'subject')
-        self.assertEquals(user.state, 'deactivated')
 
     def test_introduce_base_class(self):
         self.mh.cmd_add_entity_type('Para')

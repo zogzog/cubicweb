@@ -9,6 +9,7 @@ __docformat__ = "restructuredtext en"
 
 from cubicweb.server.hooksmanager import Hook
 from cubicweb.server.pool import PreCommitOperation
+from cubicweb.server.repository import ensure_card_respected
 
 class SetUseEmailRelationOp(PreCommitOperation):
     """delay this operation to commit to avoid conflict with a late rql query
@@ -26,6 +27,11 @@ class SetUseEmailRelationOp(PreCommitOperation):
     def precommit_event(self):
         session = self.session
         if self.condition():
+            # we've to handle cardinaly by ourselves since we're using unsafe_execute
+            # but use session.execute and not session.unsafe_execute to check we
+            # can change the relation
+            ensure_card_respected(session.execute, session,
+                                  self.fromeid, self.rtype, self.toeid)
             session.unsafe_execute(
                 'SET X %s Y WHERE X eid %%(x)s, Y eid %%(y)s' % self.rtype,
                 {'x': self.fromeid, 'y': self.toeid}, 'x')

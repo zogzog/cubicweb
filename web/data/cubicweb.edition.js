@@ -60,7 +60,7 @@ function showMatchingSelect(selectedValue, eid) {
 	if (!divNode.length) {
 	    var args = {vid: 'unrelateddivs', relation: selectedValue,
 			rql: rql_for_eid(eid), '__notemplate': 1,
-			callback: function() {_showMatchingSelect(eid, jQuery('#' + divId))}};
+			callback: function() {_showMatchingSelect(eid, jQuery('#' + divId));}};
 	    jQuery('#unrelatedDivs_' + eid).loadxhtml(baseuri() + 'view', args, 'post', 'append');
 	} else {
 	    _showMatchingSelect(eid, divNode);
@@ -354,11 +354,11 @@ function handleFormValidationResponse(formid, onsuccess, onfailure, result) {
     // Success
     if (result[0]) {
 	if (onsuccess) {
-             onsuccess(result[1], formid);
+             onsuccess(result, formid);
 	} else {
 	    document.location.href = result[1];
 	}
-      return;
+      return true;
     }
     unfreezeFormButtons(formid);
     // Failures
@@ -368,15 +368,15 @@ function handleFormValidationResponse(formid, onsuccess, onfailure, result) {
     if ( !isArrayLike(descr) || descr.length != 2 ) {
 	log('got strange error :', descr);
 	updateMessage(descr);
-	return;
+	return false;
     }
     _displayValidationerrors(formid, descr[0], descr[1]);
-    updateMessage(_("please correct errors below"));
+    updateMessage(_('please correct errors below'));
     document.location.hash = '#header';
-    if (onfailure){
+    if (onfailure) {
 	onfailure(formid);
     }
-    return;
+    return false;
 }
 
 
@@ -481,10 +481,10 @@ function inlineValidateAttributeForm(rtype, eid, divid, reload, default_value) {
 	return false;
     }
     d.addCallback(function (result, req) {
-        handleFormValidationResponse(divid+'-form', noop, noop, result);
-	if (reload) {
+        if (handleFormValidationResponse(divid+'-form', noop, noop, result)) {
+          if (reload) {
 	    document.location.href = result[1].split('?')[0];
-	} else {
+	  } else {
 	    var fieldview = getNode('value-' + divid);
 	    // XXX using innerHTML is very fragile and won't work if
 	    // we mix XHTML and HTML
@@ -492,11 +492,10 @@ function inlineValidateAttributeForm(rtype, eid, divid, reload, default_value) {
 	    // switch inline form off only if no error
 	    if (result[0]) {
 		// hide global error messages
-		jQuery('div.errorMessage').remove();
-		jQuery('#appMsg').hide();
 		hideInlineEdit(eid, rtype, divid);
 	    }
-	}
+	  }
+        }
 	return false;
     });
     return false;
@@ -511,15 +510,13 @@ function inlineValidateRelationForm(rtype, role, eid, divid, reload, vid,
 	var zipped = formContents(form);
 	var d = asyncRemoteExec('validate_form', 'apply', zipped[0], zipped[1]);
     } catch (ex) {
-	log('got exception', ex);
 	return false;
     }
     d.addCallback(function (result, req) {
-        handleFormValidationResponse(divid+'-form', noop, noop, result);
-        if (reload) {
-          document.location.href = result[1];
-        } else {
-	  if (result[0]) {
+	if (handleFormValidationResponse(divid+'-form', noop, noop, result)) {
+          if (reload) {
+            document.location.href = result[1].split('?')[0];
+          } else {
             var d = asyncRemoteExec('reledit_form', eid, rtype, role, default_value, lzone);
             d.addCallback(function (result) {
               // XXX brittle ... replace with loadxhtml
@@ -540,6 +537,8 @@ function showInlineEditionForm(eid, rtype, divid) {
 }
 
 function hideInlineEdit(eid, rtype, divid) {
+    jQuery('#appMsg').hide();
+    jQuery('div.errorMessage').remove();
     jQuery('#' + divid).show();
     jQuery('#' + divid+'-form').hide();
 }

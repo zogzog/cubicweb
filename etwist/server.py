@@ -15,7 +15,7 @@ from datetime import date, timedelta
 from urlparse import urlsplit, urlunsplit
 import hotshot
 
-from twisted.application import service, strports
+from twisted.application import strports
 from twisted.internet import reactor, task, threads
 from twisted.internet.defer import maybeDeferred
 from twisted.web2 import channel, http, server, iweb

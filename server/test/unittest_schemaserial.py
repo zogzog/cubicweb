@@ -33,12 +33,17 @@ class Schema2RQLTC(TestCase):
                  {'description': u'', 'final': True, 'name': u'String'})])
 
     def test_eschema2rql_specialization(self):
-        self.assertListEquals(list(specialize2rql(schema)),
-                              [
-                ('SET X specializes ET WHERE X name %(x)s, ET name %(et)s',
-                 {'x': 'Division', 'et': 'Societe'}),
-                ('SET X specializes ET WHERE X name %(x)s, ET name %(et)s',
-                 {'x': 'SubDivision', 'et': 'Division'})])
+        self.assertListEquals(sorted(specialize2rql(schema)),
+                              [('SET X specializes ET WHERE X name %(x)s, ET name %(et)s',
+                                {'et': 'BaseTransition', 'x': 'Transition'}),
+                               ('SET X specializes ET WHERE X name %(x)s, ET name %(et)s',
+                                {'et': 'BaseTransition', 'x': 'WorkflowTransition'}),
+                               ('SET X specializes ET WHERE X name %(x)s, ET name %(et)s',
+                                {'et': 'Division', 'x': 'SubDivision'}),
+                               # ('SET X specializes ET WHERE X name %(x)s, ET name %(et)s',
+                               #  {'et': 'File', 'x': 'Image'}),
+                               ('SET X specializes ET WHERE X name %(x)s, ET name %(et)s',
+                                {'et': 'Societe', 'x': 'Division'})])
 
     def test_rschema2rql1(self):
         self.assertListEquals(list(rschema2rql(schema.rschema('relation_type'))),

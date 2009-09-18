@@ -16,6 +16,8 @@ additional (disabled by default) boxes
 __docformat__ = "restructuredtext en"
 _ = unicode
 
+from warnings import warn
+
 from logilab.mtconverter import xml_escape
 
 from cubicweb.selectors import match_user_groups, non_final_entity
@@ -26,7 +28,7 @@ from cubicweb.web import uicfg
 from cubicweb.web.box import BoxTemplate
 
 
-class EditBox(BoxTemplate):
+class EditBox(BoxTemplate): # XXX rename to ActionsBox
     """
     box with all actions impacting the entity displayed: edit, copy, delete
     change state, add related entities
@@ -36,9 +38,6 @@ class EditBox(BoxTemplate):
 
     title = _('actions')
     order = 2
-    # class attributes below are actually stored in the uicfg module since we
-    # don't want them to be reloaded
-    appearsin_addmenu = uicfg.actionbox_appearsin_addmenu
 
     def call(self, view=None, **kwargs):
         _ = self.req._
@@ -50,118 +49,59 @@ class EditBox(BoxTemplate):
                 etypelabel = display_name(self.req, iter(etypes).next(), plural)
                 title = u'%s - %s' % (title, etypelabel.lower())
         box = BoxWidget(title, self.id, _class="greyBoxFrame")
+        self._menus_in_order = []
+        self._menus_by_id = {}
         # build list of actions
         actions = self.vreg['actions'].possible_actions(self.req, self.rset,
                                                         view=view)
-        add_menu = BoxMenu(_('add')) # 'addrelated' category
-        other_menu = BoxMenu(_('more actions')) # 'moreactions' category
-        searchstate = self.req.search_state[0]
-        for category, menu in (('mainactions', box),
-                               ('addrelated', add_menu),
-                               ('moreactions', other_menu)):
+        other_menu = self._get_menu('moreactions', _('more actions'))
+        for category, defaultmenu in (('mainactions', box),
+                                      ('moreactions', other_menu),
+                                      ('addrelated', None)):
             for action in actions.get(category, ()):
-                menu.append(self.box_action(action))
-        if self.rset and self.rset.rowcount == 1 and \
-               not self.schema[self.rset.description[0][0]].is_final() and \
-               searchstate == 'normal':
-            entity = self.rset.get_entity(0, 0)
-            #entity.complete()
-            if add_menu.items:
-                self.info('explicit actions defined, ignoring potential rtags for %s',
-                          entity.e_schema)
-            else:
-                # some addrelated actions may be specified but no one is selectable
-                # in which case we should not fallback to schema_actions. The proper
-                # way to avoid this is to override add_related_schemas() on the
-                # entity class to return an empty list
-                for action in self.schema_actions(entity):
-                    add_menu.append(action)
-            self.workflow_actions(entity, box)
+                if category == 'addrelated':
+                    warn('"addrelated" category is deprecated, use "moreaction"'
+                         ' category w/ "addrelated" submenu',
+                         DeprecationWarning)
+                    defaultmenu = self._get_menu('addrelated', _('add'), _('add'))
+                if action.submenu:
+                    menu = self._get_menu(action.submenu)
+                else:
+                    menu = defaultmenu
+                action.fill_menu(self, menu)
         if box.is_empty() and not other_menu.is_empty():
             box.items = other_menu.items
             other_menu.items = []
-        self.add_submenu(box, add_menu, _('add'))
-        self.add_submenu(box, other_menu)
+        else: # ensure 'more actions' menu appears last
+            self._menus_in_order.remove(other_menu)
+            self._menus_in_order.append(other_menu)
+        for submenu in self._menus_in_order:
+            self.add_submenu(box, submenu)
         if not box.is_empty():
             box.render(self.w)
 
+    def _get_menu(self, id, title=None, label_prefix=None):
+        try:
+            return self._menus_by_id[id]
+        except KeyError:
+            if title is None:
+                title = self.req._(id)
+            self._menus_by_id[id] = menu = BoxMenu(title)
+            menu.label_prefix = label_prefix
+            self._menus_in_order.append(menu)
+            return menu
+
     def add_submenu(self, box, submenu, label_prefix=None):
-        if len(submenu.items) == 1:
+        appendanyway = getattr(submenu, 'append_anyway', False)
+        if len(submenu.items) == 1 and not appendanyway:
             boxlink = submenu.items[0]
-            if label_prefix:
-                boxlink.label = u'%s %s' % (label_prefix, boxlink.label)
+            if submenu.label_prefix:
+                boxlink.label = u'%s %s' % (submenu.label_prefix, boxlink.label)
             box.append(boxlink)
         elif submenu.items:
             box.append(submenu)
-
-    def schema_actions(self, entity):
-        user = self.req.user
-        actions = []
-        _ = self.req._
-        eschema = entity.e_schema
-        for rschema, teschema, x in self.add_related_schemas(entity):
-            if x == 'subject':
-                label = 'add %s %s %s %s' % (eschema, rschema, teschema, x)
-                url = self.linkto_url(entity, rschema, teschema, 'object')
-            else:
-                label = 'add %s %s %s %s' % (teschema, rschema, eschema, x)
-                url = self.linkto_url(entity, rschema, teschema, 'subject')
-            actions.append(self.mk_action(_(label), url))
-        return actions
-
-    def add_related_schemas(self, entity):
-        """this is actually used ui method to generate 'addrelated' actions from
-        the schema.
-
-        If you're using explicit 'addrelated' actions for an entity types, you
-        should probably overrides this method to return an empty list else you
-        may get some unexpected actions.
-        """
-        req = self.req
-        eschema = entity.e_schema
-        for role, rschemas in (('subject', eschema.subject_relations()),
-                               ('object', eschema.object_relations())):
-            for rschema in rschemas:
-                if rschema.is_final():
-                    continue
-                # check the relation can be added as well
-                # XXX consider autoform_permissions_overrides?
-                if role == 'subject'and not rschema.has_perm(req, 'add',
-                                                             fromeid=entity.eid):
-                    continue
-                if role == 'object'and not rschema.has_perm(req, 'add',
-                                                            toeid=entity.eid):
-                    continue
-                # check the target types can be added as well
-                for teschema in rschema.targets(eschema, role):
-                    if not self.appearsin_addmenu.etype_get(eschema, rschema,
-                                                            role, teschema):
-                        continue
-                    if teschema.has_local_role('add') or teschema.has_perm(req, 'add'):
-                        yield rschema, teschema, role
-
-
-    def workflow_actions(self, entity, box):
-        if 'in_state' in entity.e_schema.subject_relations() and entity.in_state:
-            _ = self.req._
-            state = entity.in_state[0]
-            menu_title = u'%s: %s' % (_('state'), state.view('text'))
-            menu_items = []
-            for tr in state.transitions(entity):
-                url = entity.absolute_url(vid='statuschange', treid=tr.eid)
-                menu_items.append(self.mk_action(_(tr.name), url))
-            wfurl = self.build_url('cwetype/%s'%entity.e_schema, vid='workflow')
-            menu_items.append(self.mk_action(_('view workflow'), wfurl))
-            wfurl = entity.absolute_url(vid='wfhistory')
-            menu_items.append(self.mk_action(_('view history'), wfurl))
-            box.append(BoxMenu(menu_title, menu_items))
-        return None
-
-    def linkto_url(self, entity, rtype, etype, target):
-        return self.build_url(vid='creation', etype=etype,
-                              __linkto='%s:%s:%s' % (rtype, entity.eid, target),
-                              __redirectpath=entity.rest_path(), # should not be url quoted!
-                              __redirectvid=self.req.form.get('vid', ''))
+        elif appendanyway:
+            box.append(RawBoxItem(xml_escape(submenu.label)))
 
 
 class SearchBox(BoxTemplate):

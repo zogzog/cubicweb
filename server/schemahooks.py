@@ -759,8 +759,7 @@ def before_del_eetype(session, eid):
 
 def after_del_eetype(session, eid):
     # workflow cleanup
-    session.execute('DELETE State X WHERE NOT X state_of Y')
-    session.execute('DELETE Transition X WHERE NOT X transition_of Y')
+    session.execute('DELETE Workflow X WHERE NOT X workflow_of Y')
 
 
 def before_del_ertype(session, eid):

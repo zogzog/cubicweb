@@ -2,6 +2,7 @@
 
 * the rql input form
 * the logged user link
+* pdf view link
 
 :organization: Logilab
 :copyright: 2001-2009 LOGILAB S.A. (Paris, FRANCE), license is LGPL v2.
@@ -213,6 +214,23 @@ class EtypeRestrictionComponent(component.Component):
             html.insert(0, u'<span class="selected">%s</span>' % _('Any'))
         self.w(u'&#160;|&#160;'.join(html))
         self.w(u'</div>')
+
+class PdfViewComponent(component.Component):
+    id = 'pdfview'
+    __select__ = yes()
+
+    context = 'header'
+    property_defs = {
+        _('visible'):  dict(type='Boolean', default=True,
+                            help=_('display the pdf icon or not')),
+    }
+
+    def call(self, vid):
+        entity = self.entity(0,0)
+        url = entity.absolute_url(vid=vid, __template='pdf-main-template')
+        self.w(u'<a href="%s" class="otherView"><img src="data/pdf_icon.gif" alt="%s"/></a>' %
+               (xml_escape(url), self.req._('download page as pdf')))
+
 
 
 def registration_callback(vreg):

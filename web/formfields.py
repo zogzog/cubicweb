@@ -165,6 +165,7 @@ class Field(object):
         try:
             return widget.render(form, self, renderer)
         except TypeError:
+            raise
             warn('widget.render now take the renderer as third argument, please update %s implementation'
                  % widget.__class__.__name__, DeprecationWarning)
             return widget.render(form, self)
@@ -438,9 +439,16 @@ class HiddenInitialValueField(Field):
 
 
 class RelationField(Field):
-    def __init__(self, **kwargs):
-        kwargs.setdefault('sort', False)
-        super(RelationField, self).__init__(**kwargs)
+    # XXX (syt): iirc, we originaly don't sort relation vocabulary since we want
+    # to let entity.unrelated_rql control this, usually to get most recently
+    # modified entities in the select box instead of by alphabetical order. Now,
+    # we first use unrelated_rql to get the vocabulary, which may be limited
+    # (hence we get the latest modified entities) and we can sort here for
+    # better readability
+    #
+    # def __init__(self, **kwargs):
+    #     kwargs.setdefault('sort', False)
+    #     super(RelationField, self).__init__(**kwargs)
 
     @staticmethod
     def fromcardinality(card, **kwargs):
@@ -506,6 +514,10 @@ def guess_field(eschema, rschema, role='subject', skip_meta_attr=True, **kwargs)
         help = rschema.rproperty(targetschema, eschema, 'description')
     kwargs['required'] = card in '1+'
     kwargs['name'] = rschema.type
+    if role == 'object':
+        kwargs['label'] = (eschema.type + '_object', rschema.type)
+    else:
+        kwargs['label'] = (eschema.type, rschema.type)
     kwargs.setdefault('help', help)
     if rschema.is_final():
         if skip_meta_attr and rschema in eschema.meta_attributes():

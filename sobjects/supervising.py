@@ -85,27 +85,18 @@ def filter_changes(changes):
             added.add(entity.eid)
             if entity.e_schema == 'TrInfo':
                 changes.remove(change)
-                if entity.from_state:
-                    try:
-                        changes.remove( ('delete_relation',
-                                         (entity.wf_info_for[0].eid, 'in_state',
-                                          entity.from_state[0].eid)) )
-                    except ValueError:
-                        pass
-                    try:
-                        changes.remove( ('add_relation',
-                                         (entity.wf_info_for[0].eid, 'in_state',
-                                          entity.to_state[0].eid)) )
-                    except ValueError:
-                        pass
-                    event = 'change_state'
-                    change = (event,
-                              (entity.wf_info_for[0],
-                               entity.from_state[0], entity.to_state[0]))
-                    changes.append(change)
+                event = 'change_state'
+                change = (event,
+                          (entity.wf_info_for[0],
+                           entity.from_state[0], entity.to_state[0]))
+                changes.append(change)
         elif event == 'delete_entity':
             deleted.add(changedescr[0])
         index.setdefault(event, set()).add(change)
+    for key in ('delete_relation', 'add_relation'):
+        for change in index.get(key, {}).copy():
+            if change[1][1] == 'in_state':
+                index[key].remove(change)
     # filter changes
     for eid in added:
         try:
@@ -114,13 +105,9 @@ def filter_changes(changes):
                 # skip meta-relations which are set automatically
                 # XXX generate list below using rtags (category = 'generated')
                 if changedescr[1] in ('created_by', 'owned_by', 'is', 'is_instance_of',
-                                      'from_state', 'to_state', 'wf_info_for',) \
+                                      'from_state', 'to_state', 'by_transition',
+                                      'wf_info_for') \
                        and changedescr[0] == eid:
-                    index['add_relation'].remove(change)
-                # skip in_state relation if the entity is being created
-                # XXX this may be automatized by skipping all mandatory relation
-                #     at entity creation time
-                elif changedescr[1] == 'in_state' and changedescr[0] in added:
                     index['add_relation'].remove(change)
 
         except KeyError:

@@ -87,7 +87,10 @@ class FormRenderer(AppObject):
     def render_label(self, form, field):
         if field.label is None:
             return u''
-        label = self.req._(field.label)
+        if isinstance(field.label, tuple): # i.e. needs contextual translation
+            label = self.req.pgettext(*field.label)
+        else:
+            label = self.req._(field.label)
         attrs = {'for': form.context[field]['id']}
         if field.required:
             attrs['class'] = 'required'
@@ -407,12 +410,13 @@ class EntityFormRenderer(EntityBaseFormRenderer):
             super(EntityFormRenderer, self).render_buttons(w, form)
 
     def relations_form(self, w, form):
-        srels_by_cat = form.srelations_by_category('generic', 'add')
+        srels_by_cat = form.srelations_by_category('generic', 'add', strict=True)
         if not srels_by_cat:
             return u''
         req = self.req
         _ = req._
-        label = u'%s :' % _('This %s' % form.edited_entity.e_schema).capitalize()
+        __ = _
+        label = u'%s :' % __('This %s' % form.edited_entity.e_schema).capitalize()
         eid = form.edited_entity.eid
         w(u'<fieldset class="subentity">')
         w(u'<legend class="iformTitle">%s</legend>' % label)
@@ -484,7 +488,7 @@ class EntityFormRenderer(EntityBaseFormRenderer):
 
     def inline_relation_form(self, w, form, rschema, targettype, role):
         entity = form.edited_entity
-        __ = self.req.__
+        __ = self.req.pgettext
         w(u'<div id="inline%sslot">' % rschema)
         existant = entity.has_eid() and entity.related(rschema)
         if existant:
@@ -512,8 +516,9 @@ class EntityFormRenderer(EntityBaseFormRenderer):
                 entity.eid, targettype, rschema, role)
             if card in '1?':
                 js = "toggleVisibility('%s'); %s" % (divid, js)
+            ctx = 'inlined:%s.%s.%s' % (entity.e_schema, rschema, role)
             w(u'<a class="addEntity" id="add%s:%slink" href="javascript: %s" >+ %s.</a>'
-              % (rschema, entity.eid, js, __('add a %s' % targettype)))
+              % (rschema, entity.eid, js, __(ctx, 'add a %s' % targettype)))
             w(u'</div>')
             w(u'<div class="trame_grise">&#160;</div>')
         w(u'</div>')

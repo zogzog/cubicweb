@@ -68,7 +68,7 @@ class FinalView(AnyRsetView):
     _('%d minutes')
     _('%d seconds')
 
-    def cell_call(self, row, col, props=None, displaytime=False, format='text/html'):
+    def cell_call(self, row, col, props=None, format='text/html'):
         etype = self.rset.description[row][col]
         value = self.rset.rows[row][col]
 
@@ -107,7 +107,7 @@ class FinalView(AnyRsetView):
             else:
                 self.w(self.req.__('%%d%sseconds' % space) % int(value.seconds))
             return
-        self.wdata(printable_value(self.req, etype, value, props, displaytime=displaytime))
+        self.wdata(printable_value(self.req, etype, value, props))
 
 
 # XXX deprecated

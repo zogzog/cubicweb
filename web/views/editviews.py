@@ -50,10 +50,10 @@ class SearchForAssociationView(EntityView):
         # them. Use fetch_order and not fetch_unrelated_order as sort method
         # since the latter is mainly there to select relevant items in the combo
         # box, it doesn't give interesting result in this context
-        rql = entity.unrelated_rql(rtype, etype, role,
+        rql, args = entity.unrelated_rql(rtype, etype, role,
                                    ordermethod='fetch_order',
                                    vocabconstraints=False)
-        rset = self.req.execute(rql, {'x' : entity.eid}, 'x')
+        rset = self.req.execute(rql, args, tuple(args))
         return rset, 'list', "search-associate-content", True
 
 
@@ -198,9 +198,9 @@ class EditableFinalView(FinalView):
     """same as FinalView but enables inplace-edition when possible"""
     id = 'editable-final'
 
-    def cell_call(self, row, col, props=None, displaytime=False):
+    def cell_call(self, row, col, props=None):
         entity, rtype = self.rset.related_entity(row, col)
         if entity is not None:
             self.w(entity.view('reledit', rtype=rtype))
         else:
-            super(EditableFinalView, self).cell_call(row, col, props, displaytime)
+            super(EditableFinalView, self).cell_call(row, col, props)

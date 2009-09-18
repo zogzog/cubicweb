@@ -142,38 +142,20 @@ class NotificationView(EntityView):
 
     msgid_timestamp = True
 
-    def recipients(self):
-        finder = self.vreg['components'].select('recipients_finder', self.req,
-                                                rset=self.rset,
-                                                row=self.row or 0,
-                                                col=self.col or 0)
-        return finder.recipients()
-
-    def subject(self):
-        entity = self.entity(self.row or 0, self.col or 0)
-        subject = self.req._(self.message)
-        etype = entity.dc_type()
-        eid = entity.eid
-        login = self.user_data['login']
-        return self.req._('%(subject)s %(etype)s #%(eid)s (%(login)s)') % locals()
-
-    def context(self, **kwargs):
-        entity = self.entity(self.row or 0, self.col or 0)
-        for key, val in kwargs.iteritems():
-            if val and isinstance(val, unicode) and val.strip():
-               kwargs[key] = self.req._(val)
-        kwargs.update({'user': self.user_data['login'],
-                       'eid': entity.eid,
-                       'etype': entity.dc_type(),
-                       'url': entity.absolute_url(),
-                       'title': entity.dc_long_title(),})
-        return kwargs
+    # this is usually the method to call
+    def render_and_send(self, **kwargs):
+        """generate and send an email message for this view"""
+        delayed = kwargs.pop('delay_to_commit', None)
+        for recipients, msg in self.render_emails(**kwargs):
+            if delayed is None:
+                self.send(recipients, msg)
+            elif delayed:
+                self.send_on_commit(recipients, msg)
+            else:
+                self.send_now(recipients, msg)
 
     def cell_call(self, row, col=0, **kwargs):
         self.w(self.req._(self.content) % self.context(**kwargs))
-
-    def construct_message_id(self, eid):
-        return construct_message_id(self.config.appid, eid, self.msgid_timestamp)
 
     def render_emails(self, **kwargs):
         """generate and send emails for this view (one per recipient)"""
@@ -222,16 +204,17 @@ class NotificationView(EntityView):
         # restore language
         req.set_language(origlang)
 
-    def render_and_send(self, **kwargs):
-        """generate and send an email message for this view"""
-        delayed = kwargs.pop('delay_to_commit', None)
-        for recipients, msg in self.render_emails(**kwargs):
-            if delayed is None:
-                self.send(recipients, msg)
-            elif delayed:
-                self.send_on_commit(recipients, msg)
-            else:
-                self.send_now(recipients, msg)
+    # recipients / email sending ###############################################
+
+    def recipients(self):
+        """return a list of either 2-uple (email, language) or user entity to
+        who this email should be sent
+        """
+        finder = self.vreg['components'].select('recipients_finder', self.req,
+                                                rset=self.rset,
+                                                row=self.row or 0,
+                                                col=self.col or 0)
+        return finder.recipients()
 
     def send_now(self, recipients, msg):
         self.config.sendmails([(msg, recipients)])
@@ -240,6 +223,38 @@ class NotificationView(EntityView):
         raise NotImplementedError
 
     send = send_now
+
+    # email generation helpers #################################################
+
+    def construct_message_id(self, eid):
+        return construct_message_id(self.config.appid, eid, self.msgid_timestamp)
+
+    def format_field(self, attr, value):
+        return ':%(attr)s: %(value)s' % {'attr': attr, 'value': value}
+
+    def format_section(self, attr, value):
+        return '%(attr)s\n%(ul)s\n%(value)s\n' % {
+            'attr': attr, 'ul': '-'*len(attr), 'value': value}
+
+    def subject(self):
+        entity = self.entity(self.row or 0, self.col or 0)
+        subject = self.req._(self.message)
+        etype = entity.dc_type()
+        eid = entity.eid
+        login = self.user_data['login']
+        return self.req._('%(subject)s %(etype)s #%(eid)s (%(login)s)') % locals()
+
+    def context(self, **kwargs):
+        entity = self.entity(self.row or 0, self.col or 0)
+        for key, val in kwargs.iteritems():
+            if val and isinstance(val, unicode) and val.strip():
+               kwargs[key] = self.req._(val)
+        kwargs.update({'user': self.user_data['login'],
+                       'eid': entity.eid,
+                       'etype': entity.dc_type(),
+                       'url': entity.absolute_url(),
+                       'title': entity.dc_long_title(),})
+        return kwargs
 
 
 class SkipEmail(Exception):

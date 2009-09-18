@@ -102,7 +102,7 @@ class RepositoryTC(RepositoryBasedTC):
     def test_login_upassword_accent(self):
         repo = self.repo
         cnxid = repo.connect(*self.default_user_password())
-        repo.execute(cnxid, 'INSERT CWUser X: X login %(login)s, X upassword %(passwd)s, X in_state S, X in_group G WHERE S name "activated", G name "users"',
+        repo.execute(cnxid, 'INSERT CWUser X: X login %(login)s, X upassword %(passwd)s, X in_group G WHERE G name "users"',
                      {'login': u"barnabé", 'passwd': u"héhéhé".encode('UTF8')})
         repo.commit(cnxid)
         repo.close(cnxid)
@@ -112,7 +112,7 @@ class RepositoryTC(RepositoryBasedTC):
         repo = self.repo
         cnxid = repo.connect(*self.default_user_password())
         # no group
-        repo.execute(cnxid, 'INSERT CWUser X: X login %(login)s, X upassword %(passwd)s, X in_state S WHERE S name "activated"',
+        repo.execute(cnxid, 'INSERT CWUser X: X login %(login)s, X upassword %(passwd)s',
                      {'login': u"tutetute", 'passwd': 'tutetute'})
         self.assertRaises(ValidationError, repo.commit, cnxid)
         rset = repo.execute(cnxid, 'CWUser X WHERE X login "tutetute"')
@@ -190,16 +190,13 @@ class RepositoryTC(RepositoryBasedTC):
         repo = self.repo
         cnxid = repo.connect(*self.default_user_password())
         # rollback state change which trigger TrInfo insertion
-        ueid = repo._get_session(cnxid).user.eid
-        rset = repo.execute(cnxid, 'TrInfo T WHERE T wf_info_for X, X eid %(x)s', {'x': ueid})
+        user = repo._get_session(cnxid).user
+        user.fire_transition('deactivate')
+        rset = repo.execute(cnxid, 'TrInfo T WHERE T wf_info_for X, X eid %(x)s', {'x': user.eid})
         self.assertEquals(len(rset), 1)
-        repo.execute(cnxid, 'SET X in_state S WHERE X eid %(x)s, S name "deactivated"',
-                     {'x': ueid}, 'x')
-        rset = repo.execute(cnxid, 'TrInfo T WHERE T wf_info_for X, X eid %(x)s', {'x': ueid})
-        self.assertEquals(len(rset), 2)
         repo.rollback(cnxid)
-        rset = repo.execute(cnxid, 'TrInfo T WHERE T wf_info_for X, X eid %(x)s', {'x': ueid})
-        self.assertEquals(len(rset), 1)
+        rset = repo.execute(cnxid, 'TrInfo T WHERE T wf_info_for X, X eid %(x)s', {'x': user.eid})
+        self.assertEquals(len(rset), 0)
 
     def test_transaction_interleaved(self):
         self.skip('implement me')
@@ -341,6 +338,22 @@ class RepositoryTC(RepositoryBasedTC):
 #         finally:
 #             self.set_debug(False)
 #         print 'test time: %.3f (time) %.3f (cpu)' % ((time() - t), clock() - c)
+
+    def test_delete_if_singlecard1(self):
+        note = self.add_entity('Affaire')
+        p1 = self.add_entity('Personne', nom=u'toto')
+        self.execute('SET A todo_by P WHERE A eid %(x)s, P eid %(p)s',
+                     {'x': note.eid, 'p': p1.eid})
+        rset = self.execute('Any P WHERE A todo_by P, A eid %(x)s',
+                            {'x': note.eid})
+        self.assertEquals(len(rset), 1)
+        p2 = self.add_entity('Personne', nom=u'tutu')
+        self.execute('SET A todo_by P WHERE A eid %(x)s, P eid %(p)s',
+                     {'x': note.eid, 'p': p2.eid})
+        rset = self.execute('Any P WHERE A todo_by P, A eid %(x)s',
+                            {'x': note.eid})
+        self.assertEquals(len(rset), 1)
+        self.assertEquals(rset.rows[0][0], p2.eid)
 
 
 class DataHelpersTC(RepositoryBasedTC):
@@ -485,11 +498,11 @@ class InlineRelHooksTC(RepositoryBasedTC):
 
     def test_after_add_inline(self):
         """make sure after_<event>_relation hooks are deferred"""
+        p1 = self.add_entity('Personne', nom=u'toto')
         self.hm.register_hook(self._after_relation_hook,
-                             'after_add_relation', 'in_state')
-        eidp = self.execute('INSERT CWUser X: X login "toto", X upassword "tutu", X in_state S WHERE S name "activated"')[0][0]
-        eids = self.execute('State X WHERE X name "activated"')[0][0]
-        self.assertEquals(self.called, [(eidp, 'in_state', eids,)])
+                             'after_add_relation', 'ecrit_par')
+        eidn = self.execute('INSERT Note N: N ecrit_par P WHERE P nom "toto"')[0][0]
+        self.assertEquals(self.called, [(eidn, 'ecrit_par', p1.eid,)])
 
     def test_before_delete_inline_relation(self):
         """make sure before_<event>_relation hooks are called directly"""
