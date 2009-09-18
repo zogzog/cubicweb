@@ -111,13 +111,8 @@ class TmpFileViewMixin(object):
 
     def cell_call(self, row=0, col=0):
         self.row, self.col = row, col # in case one needs it
-        _, tmpfile = tempfile.mkstemp('.png')
-        try:
-            self._generate(tmpfile)
-            self.w(open(tmpfile, 'rb').read())
-        finally:
-            try:
-                os.unlink(tmpfile)
-            except Exception, ex:
-                if sys.platform != 'win32':
-                      self.warning("can't delete %s : %s" % (tmpfile, ex))
+        fd, tmpfile = tempfile.mkstemp('.png')
+        os.close(fd)
+        self._generate(tmpfile)
+        self.w(open(tmpfile, 'rb').read())
+        os.unlink(tmpfile)

@@ -9,6 +9,7 @@ __docformat__ = "restructuredtext en"
 
 import re
 import os
+import sys
 from os.path import join, basename, splitext, exists
 from glob import glob
 

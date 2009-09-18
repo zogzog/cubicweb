@@ -1,6 +1,3 @@
-from cubicweb.utils import can_do_pdf_conversion
-assert can_do_pdf_conversion()
-
 from xml.etree.ElementTree import QName, fromstring
 from pysixt.standard.xhtml_xslfo.transformer import XHTML2FOTransformer
 from pysixt.utils.xslfo.standard import cm
