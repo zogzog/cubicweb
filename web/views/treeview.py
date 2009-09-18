@@ -7,9 +7,10 @@
 """
 __docformat__ = "restructuredtext en"
 
+import simplejson as json
+
 from logilab.common.decorators import monkeypatch
 from logilab.mtconverter import xml_escape
-
 from cubicweb.utils import make_uid
 from cubicweb.interfaces import ITree
 from cubicweb.selectors import implements
@@ -21,38 +22,55 @@ def treecookiename(treeid):
 class TreeView(EntityView):
     id = 'treeview'
     itemvid = 'treeitemview'
+    subvid = 'oneline'
     css_classes = 'treeview widget'
     title = _('tree view')
 
-    def _init_params(self, subvid, treeid, initial_load, initial_thru_ajax):
+    def _init_params(self, subvid, treeid, initial_load, initial_thru_ajax, morekwargs):
+        form = self.req.form
         if subvid is None:
-            subvid = self.req.form.pop('treesubvid', 'oneline') # consume it
+            subvid = form.pop('treesubvid', self.subvid) # consume it
         if treeid is None:
-            treeid = self.req.form.pop('treeid', None)
+            treeid = form.pop('treeid', None)
             if treeid is None:
-                self.warning('Tree state won\'t be properly restored after next reload')
-                treeid = make_uid('throw away uid')
-        toplevel_thru_ajax = self.req.form.pop('treeview_top', False) or initial_thru_ajax
-        toplevel = toplevel_thru_ajax or (initial_load and not self.req.form.get('fname'))
+                treeid = 'throw_away' + make_uid('uid')
+        if 'morekwargs' in self.req.form:
+            ajaxargs = json.loads(form.pop('morekwargs'))
+            # got unicode & python keywords must be strings
+            morekwargs.update(dict((str(k), v)
+                                   for k, v in ajaxargs.iteritems()))
+        toplevel_thru_ajax = form.pop('treeview_top', False) or initial_thru_ajax
+        toplevel = toplevel_thru_ajax or (initial_load and not form.get('fname'))
         return subvid, treeid, toplevel_thru_ajax, toplevel
 
-    def call(self, subvid=None, treeid=None, initial_load=True, initial_thru_ajax=False):
+    def _init_headers(self, treeid, toplevel_thru_ajax):
+        self.req.add_css('jquery.treeview.css')
+        self.req.add_js(('cubicweb.ajax.js', 'cubicweb.widgets.js', 'jquery.treeview.js'))
+        self.req.html_headers.add_onload(u"""
+jQuery("#tree-%s").treeview({toggle: toggleTree, prerendered: true});""" % treeid,
+                                         jsoncall=toplevel_thru_ajax)
+
+    def call(self, subvid=None, treeid=None,
+             initial_load=True, initial_thru_ajax=False, **morekwargs):
         subvid, treeid, toplevel_thru_ajax, toplevel = self._init_params(
-            subvid, treeid, initial_load, initial_thru_ajax)
+            subvid, treeid, initial_load, initial_thru_ajax, morekwargs)
+        print 'TREEVIEW', subvid, morekwargs
         ulid = ' '
         if toplevel:
+            self._init_headers(treeid, toplevel_thru_ajax)
             ulid = ' id="tree-%s"' % treeid
         self.w(u'<ul%s class="%s">' % (ulid, self.css_classes))
         for rowidx in xrange(len(self.rset)):
             self.wview(self.itemvid, self.rset, row=rowidx, col=0,
-                       vid=subvid, parentvid=self.id, treeid=treeid)
+                       vid=subvid, parentvid=self.id, treeid=treeid, **morekwargs)
         self.w(u'</ul>')
-        if toplevel:
-            self.req.add_css('jquery.treeview.css')
-            self.req.add_js(('cubicweb.ajax.js', 'cubicweb.widgets.js', 'jquery.treeview.js'))
-            self.req.html_headers.add_onload(u"""
-jQuery("#tree-%s").treeview({toggle: toggleTree, prerendered: true});""" % treeid,
-                                             jsoncall=toplevel_thru_ajax)
+
+    def cell_call(self, *args, **allargs):
+        """ does not makes much sense until you have to invoke
+        somentity.view('treeview') """
+        allargs.pop('row')
+        allargs.pop('col')
+        self.call(*args, **allargs)
 
 class FileTreeView(TreeView):
     """specific version of the treeview to display file trees
@@ -61,8 +79,9 @@ class FileTreeView(TreeView):
     css_classes = 'treeview widget filetree'
     title = _('file tree view')
 
-    def call(self, subvid=None, treeid=None, initial_load=True):
-        super(FileTreeView, self).call(treeid=treeid, subvid='filetree-oneline', initial_load=initial_load)
+    def call(self, subvid=None, treeid=None, initial_load=True, **kwargs):
+        super(FileTreeView, self).call(treeid=treeid, subvid='filetree-oneline',
+                                       initial_load=initial_load, **kwargs)
 
 class FileItemInnerView(EntityView):
     """inner view used by the TreeItemView instead of oneline view
@@ -111,8 +130,7 @@ class TreeViewItemView(EntityView):
             return str(eeid) in treestate.value.split(';')
         return self.default_branch_state_is_open
 
-    def cell_call(self, row, col, treeid, vid='oneline', parentvid='treeview',
-                  **kwargs):
+    def cell_call(self, row, col, treeid, vid='oneline', parentvid='treeview', **morekwargs):
         w = self.w
         entity = self.entity(row, col)
         liclasses = []
@@ -126,10 +144,11 @@ class TreeViewItemView(EntityView):
         else:
             rql = entity.children_rql() % {'x': entity.eid}
             url = xml_escape(self.build_url('json', rql=rql, vid=parentvid,
-                                             pageid=self.req.pageid,
-                                             treeid=treeid,
-                                             fname='view',
-                                             treesubvid=vid))
+                                            pageid=self.req.pageid,
+                                            treeid=treeid,
+                                            fname='view',
+                                            treesubvid=vid,
+                                            morekwargs=json.dumps(morekwargs)))
             divclasses = ['hitarea']
             if is_open:
                 liclasses.append('collapsable')
@@ -148,8 +167,11 @@ class TreeViewItemView(EntityView):
                 w(u'<li class="%s">' % u' '.join(liclasses))
             else:
                 w(u'<li cubicweb:loadurl="%s" class="%s">' % (url, u' '.join(liclasses)))
-            divtail = """ onclick="asyncRemoteExec('node_clicked', '%s', '%s')" """ %\
-                (treeid, entity.eid)
+            if treeid.startswith('throw_away'):
+                divtail = ''
+            else:
+                divtail = """ onclick="asyncRemoteExec('node_clicked', '%s', '%s')" """ %\
+                    (treeid, entity.eid)
             w(u'<div class="%s"%s></div>' % (u' '.join(divclasses), divtail))
 
             # add empty <ul> because jquery's treeview plugin checks for
@@ -157,8 +179,8 @@ class TreeViewItemView(EntityView):
             if not is_open:
                 w(u'<ul class="placeholder"><li>place holder</li></ul>')
         # the local node info
-        self.wview(vid, self.rset, row=row, col=col, **kwargs)
+        self.wview(vid, self.rset, row=row, col=col, **morekwargs)
         if is_open and not is_leaf: #  => rql is defined
-            self.wview(parentvid, self.req.execute(rql), treeid=treeid, initial_load=False)
+            self.wview(parentvid, self.req.execute(rql), treeid=treeid, initial_load=False, **morekwargs)
         w(u'</li>')
 
