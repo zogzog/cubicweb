@@ -128,5 +128,16 @@ class MoreFieldsTC(EnvBasedTC):
         self.commit()
         self.assertEquals(description_format_field.initial(form), 'text/rest')
 
+
+class UtilsTC(TestCase):
+    def test_vocab_sort(self):
+        self.assertEquals(vocab_sort([('Z', 1), ('A', 2),
+                                      ('Group 1', None), ('Y', 3), ('B', 4),
+                                      ('Group 2', None), ('X', 5), ('C', 6)]),
+                          [('A', 2), ('Z', 1),
+                           ('Group 1', None), ('B', 4), ('Y', 3),
+                           ('Group 2', None), ('C', 6), ('X', 5)]
+                          )
+
 if __name__ == '__main__':
     unittest_main()
