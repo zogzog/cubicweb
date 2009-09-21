@@ -527,12 +527,10 @@ class match_transition(match_search_state):
     @lltrace
     def __call__(self, cls, req, rset=None, row=None, col=0, **kwargs):
         try:
-            trname = req.execute('Any XN WHERE X is Transition, X eid %(x)s, X name XN',
-                                 {'x': typed_eid(req.form['treid'])})[0][0]
-        except (KeyError, IndexError):
-            return 0
-        # XXX check this is a transition that apply to the object?
-        if not trname in self.expected:
+            # XXX check this is a transition that apply to the object?
+            if not kwargs['transition'].name in self.expected:
+                return 0
+        except KeyError:
             return 0
         return 1
 

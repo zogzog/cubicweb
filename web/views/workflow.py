@@ -64,7 +64,7 @@ class ChangeStateFormView(form.FormViewMixIn, view.EntityView):
         # not entity_implements) is used on custom form
         form = self.vreg['forms'].select(
             'changestate', self.req, rset=self.rset, row=row, col=col,
-            entity=entity, treid=transition.eid,
+            entity=entity, transition=transition,
             redirect_path=self.redirectpath(entity))
         self.w(form.error_message())
         self.w(u'<h4>%s %s</h4>\n' % (_(transition.name),
