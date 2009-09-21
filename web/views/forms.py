@@ -531,7 +531,8 @@ class EntityFieldsForm(FieldsForm):
                 break
         return result
 
-    def srelations_by_category(self, categories=None, permission=None):
+    def srelations_by_category(self, categories=None, permission=None,
+                               strict=False):
         return ()
 
     def should_display_add_new_relation_link(self, rschema, existant, card):
