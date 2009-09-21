@@ -167,7 +167,8 @@ indexview_etype_section = {'EmailAddress': 'subobject',
 
 def init_autoform_section(rtag, sschema, rschema, oschema, role):
     if rtag.get(sschema, rschema, oschema, role) is None:
-        if autoform_is_inlined.get(sschema, rschema, oschema, role):
+        if autoform_is_inlined.get(sschema, rschema, oschema, role) or \
+               autoform_is_inlined.get(sschema, rschema, oschema, neg_role(role)):
             section = 'generated'
         elif sschema.is_metadata(rschema):
             section = 'metadata'
