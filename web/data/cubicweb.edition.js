@@ -350,11 +350,11 @@ function _displayValidationerrors(formid, eid, errors) {
 }
 
 
-function handleFormValidationResponse(formid, onsuccess, onfailure, result) {
+function handleFormValidationResponse(formid, onsuccess, onfailure, result, cbargs) {
     // Success
     if (result[0]) {
 	if (onsuccess) {
-             onsuccess(result, formid);
+             onsuccess(result, formid, cbargs);
 	} else {
 	    document.location.href = result[1];
 	}
@@ -374,7 +374,7 @@ function handleFormValidationResponse(formid, onsuccess, onfailure, result) {
     updateMessage(_('please correct errors below'));
     document.location.hash = '#header';
     if (onfailure) {
-	onfailure(formid);
+	onfailure(formid, cbargs);
     }
     return false;
 }
