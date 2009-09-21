@@ -213,12 +213,13 @@ class FormValidatorController(Controller):
     def response(self, domid, status, args, entity):
         callback = str(self.req.form.get('__onsuccess', 'null'))
         errback = str(self.req.form.get('__onfailure', 'null'))
+        cbargs = str(self.req.form.get('__cbargs', 'null'))
         self.req.set_content_type('text/html')
         jsargs = simplejson.dumps((status, args, entity), cls=CubicWebJsonEncoder)
         return """<script type="text/javascript">
  wp = window.parent;
- window.parent.handleFormValidationResponse('%s', %s, %s, %s);
-</script>""" %  (domid, callback, errback, jsargs)
+ window.parent.handleFormValidationResponse('%s', %s, %s, %s, %s);
+</script>""" %  (domid, callback, errback, jsargs, cbargs)
 
     def publish(self, rset=None):
         self.req.json_request = True

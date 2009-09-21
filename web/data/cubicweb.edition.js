@@ -254,7 +254,7 @@ function addInlineCreationForm(peid, ttype, rtype, role, i18nctx, insertBefore) 
         form.insertBefore(insertBefore).slideDown('fast');
         updateInlinedEntitiesCounters(rtype);
         reorderTabindex();
-        form.trigger('inlinedform-added');
+        jQuery(CubicWeb).trigger('inlinedform-added', form);
         // if the inlined form contains a file input, we must force
         // the form enctype to multipart/form-data
         if (form.find('input:file').length) {
@@ -350,11 +350,11 @@ function _displayValidationerrors(formid, eid, errors) {
 }
 
 
-function handleFormValidationResponse(formid, onsuccess, onfailure, result) {
+function handleFormValidationResponse(formid, onsuccess, onfailure, result, cbargs) {
     // Success
     if (result[0]) {
 	if (onsuccess) {
-             onsuccess(result, formid);
+             onsuccess(result, formid, cbargs);
 	} else {
 	    document.location.href = result[1];
 	}
@@ -374,7 +374,7 @@ function handleFormValidationResponse(formid, onsuccess, onfailure, result) {
     updateMessage(_('please correct errors below'));
     document.location.hash = '#header';
     if (onfailure) {
-	onfailure(formid);
+	onfailure(formid, cbargs);
     }
     return false;
 }
