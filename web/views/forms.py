@@ -82,9 +82,10 @@ class FieldsForm(form.Form):
         for key, val in kwargs.items():
             if key in NAV_FORM_PARAMETERS:
                 self.form_add_hidden(key, val)
-            else:
-                assert hasattr(self.__class__, key) and not key[0] == '_', key
+            elif hasattr(self.__class__, key) and not key[0] == '_':
                 setattr(self, key, val)
+            # skip other parameters, usually given for selection
+            # (else write a custom class to handle them)
         if mainform:
             self.form_add_hidden('__errorurl', self.session_key())
             self.form_add_hidden('__domid', self.domid)
