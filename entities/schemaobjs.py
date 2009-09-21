@@ -63,14 +63,18 @@ class CWRType(AnyEntity):
         * raise ValidationError if inlining is'nt possible
         * eventually return True
         """
-        rtype = self.name
-        rschema = self.schema.rschema(rtype)
+        rschema = self.schema.rschema(self.name)
         if inlined == rschema.inlined:
             return False
         if inlined:
-            for (stype, otype) in rschema.iter_rdefs():
-                card = rschema.rproperty(stype, otype, 'cardinality')[0]
+            # don't use the persistent schema, we may miss cardinality changes
+            # in the same transaction
+            for rdef in self.reverse_relation_type:
+                card = rdef.cardinality[0]
                 if not card in '?1':
+                    rtype = self.name
+                    stype = rdef.stype
+                    otype = rdef.otype
                     msg = self.req._("can't set inlined=%(inlined)s, "
                                      "%(stype)s %(rtype)s %(otype)s "
                                      "has cardinality=%(card)s")
