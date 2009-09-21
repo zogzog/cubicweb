@@ -302,6 +302,13 @@ class AutomaticEntityForm(forms.EntityFieldsForm):
         """
         return not existant and card in '1+' or self.req.form.has_key('force_%s_display' % rschema)
 
+    def display_inline_creation_form(self, w, rschema, targettype, role,
+                                     i18nctx):
+        entity = self.edited_entity
+        w(self.view('inline-creation', None, etype=targettype,
+                    peid=entity.eid, ptype=entity.e_schema,
+                    rtype=rschema, role=role, i18nctx=i18nctx))
+
     def should_display_add_new_relation_link(self, rschema, existant, card):
         """return true if we should add a link to add a new creation form
         (through ajax call)

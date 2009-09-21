@@ -508,9 +508,8 @@ class EntityFormRenderer(EntityBaseFormRenderer):
         # there is no related entity and we need at least one: we need to
         # display one explicit inline-creation view
         if form.should_display_inline_creation_form(rschema, existant, card):
-            w(form.view('inline-creation', None, etype=targettype,
-                        peid=entity.eid, ptype=entity.e_schema,
-                        rtype=rschema, role=role, i18nctx=i18nctx))
+            form.display_inline_creation_form(w, rschema, targettype,
+                                              role, i18nctx)
             existant = True
         # we can create more than one related entity, we thus display a link
         # to add new related entities
@@ -527,7 +526,6 @@ class EntityFormRenderer(EntityBaseFormRenderer):
             w(u'</div>')
             w(u'<div class="trame_grise">&#160;</div>')
         w(u'</div>')
-
 
 
 class EntityInlinedFormRenderer(EntityFormRenderer):
