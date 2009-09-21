@@ -326,11 +326,9 @@ class CreationFormView(EditionFormView):
 
     def call(self, **kwargs):
         """creation view for an entity"""
+        # at this point we know etype is a valid entity type, thanks to our
+        # selector
         etype = kwargs.pop('etype', self.req.form.get('etype'))
-        try:
-            etype = self.vreg.case_insensitive_etypes[etype.lower()]
-        except KeyError:
-            raise RequestError(self.req._('no such entity type %s') % etype)
         entity = self.vreg['etypes'].etype_class(etype)(self.req)
         self.initialize_varmaker()
         entity.eid = self.varmaker.next()
