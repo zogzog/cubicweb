@@ -679,7 +679,7 @@ class FacetRangeWidget(HTMLWidget):
         facet = self.facet
         facet.req.add_js('ui.slider.js')
         facet.req.add_css('ui.all.css')
-        sliderid = make_uid('the slider')
+        sliderid = make_uid('theslider')
         facetid = xml_escape(self.facet.id)
         facet.req.html_headers.add_onload(self.onload % {
             'sliderid': sliderid,
