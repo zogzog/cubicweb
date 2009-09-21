@@ -181,7 +181,6 @@ class Field(object):
         try:
             return widget.render(form, self, renderer)
         except TypeError:
-            raise
             warn('widget.render now take the renderer as third argument, please update %s implementation'
                  % widget.__class__.__name__, DeprecationWarning)
             return widget.render(form, self)
