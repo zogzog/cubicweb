@@ -526,4 +526,4 @@ class InlineEntityCreationFormView(InlineEntityEditionFormView):
         self.initialize_varmaker()
         entity = cls(self.req)
         entity.eid = self.varmaker.next()
-        self.render_form(entity, peid, rtype, role, i18nctx)
+        self.render_form(entity, peid, rtype, role, i18nctx, **kwargs)
