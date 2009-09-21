@@ -52,7 +52,8 @@ class ChangeStateForm(forms.CompositeEntityForm):
 class ChangeStateFormView(form.FormViewMixIn, view.EntityView):
     id = 'statuschange'
     title = _('status change')
-    __select__ = implements(IWorkflowable) & match_form_params('treid')
+    __select__ = (one_line_rset() & implements(IWorkflowable)
+                  & match_form_params('treid'))
 
     def cell_call(self, row, col):
         entity = self.rset.get_entity(row, col)
