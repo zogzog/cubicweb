@@ -60,8 +60,12 @@ class ChangeStateFormView(form.FormViewMixIn, view.EntityView):
         transition = self.req.entity_from_eid(self.req.form['treid'])
         dest = transition.destination()
         _ = self.req._
-        form = self.vreg['forms'].select('changestate', self.req, entity=entity,
-                                         redirect_path=self.redirectpath(entity))
+        # specify both rset/row/col and entity in case implements selector (and
+        # not entity_implements) is used on custom form
+        form = self.vreg['forms'].select(
+            'changestate', self.req, rset=self.rset, row=row, col=col,
+            entity=entity, treid=transition.eid,
+            redirect_path=self.redirectpath(entity))
         self.w(form.error_message())
         self.w(u'<h4>%s %s</h4>\n' % (_(transition.name),
                                       entity.view('oneline')))
