@@ -115,7 +115,7 @@ fallback_safe_cut = safe_cut
 try:
     from lxml import etree
 except (ImportError, AttributeError):
-    # gae environment: lxml not availabel
+    # gae environment: lxml not available
     pass
 else:
 
