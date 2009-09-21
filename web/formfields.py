@@ -283,7 +283,7 @@ class RichTextField(StringField):
                 # else we want a format selector
                 fkwargs['widget'] = Select()
                 fcstr = FormatConstraint()
-                fkwargs['choices'] = fcstr.vocabulary(req=req)
+                fkwargs['choices'] = fcstr.vocabulary(form=form)
                 fkwargs['internationalizable'] = True
                 fkwargs['initial'] = lambda f: f.form_field_format(self)
             field = StringField(name=self.name + '_format', **fkwargs)
