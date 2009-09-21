@@ -319,6 +319,33 @@ class AutomaticEntityForm(forms.EntityFieldsForm):
         """
         return card in '1?'
 
+    @property
+    def form_needs_multipart(self):
+        """true if the form needs enctype=multipart/form-data"""
+        if super(AutomaticEntityForm, self).form_needs_multipart:
+            return True
+        # take a look at inlined forms to check (recursively) if they
+        # need multipart handling.
+        # XXX: this is very suboptimal because inlined forms will be
+        #      selected / instantiated twice : here and during form rendering.
+        #      Potential solutions:
+        #       -> use subforms for inlined forms to get easiser access
+        #       -> use a simple onload js function to check if there is
+        #          a input type=file in the form
+        #       -> generate the <form> node when the content is rendered
+        #          and we know the correct enctype (formrenderer's w attribute
+        #          is not a StringIO)
+        for rschema, targettypes, role in self.inlined_relations():
+            # inlined forms don't handle multiple target types
+            if len(targettypes) != 1:
+                continue
+            targettype = targettypes[0]
+            if self.should_inline_relation_form(rschema, targettype, role):
+                entity = self.vreg['etypes'].etype_class(targettype)(self.req)
+                subform = self.vreg['forms'].select('edition', self.req, entity=entity)
+                if subform.form_needs_multipart:
+                    return True
+        return False
 
 def etype_relation_field(etype, rtype, role='subject'):
     eschema = AutomaticEntityForm.schema.eschema(etype)
