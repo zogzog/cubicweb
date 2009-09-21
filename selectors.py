@@ -669,6 +669,10 @@ class relation_possible(EClassSelector):
         if not (rschema.has_perm(req, self.action)
                 or rschema.has_local_role(self.action)):
             return 0
+        if self.action != 'read':
+            if not (rschema.has_perm(req, 'read')
+                    or rschema.has_local_role('read')):
+                return 0
         score = super(relation_possible, self).__call__(cls, req, *args, **kwargs)
         return score
 
