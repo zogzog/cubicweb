@@ -152,11 +152,13 @@ class FormViewsTC(WebTest):
     def test_automatic_inline_edit_formview(self):
         geid = self.execute('CWGroup X LIMIT 1')[0][0]
         rset = self.execute('CWUser X LIMIT 1')
-        self.view('inline-edition', rset, row=0, rtype='in_group', peid=geid, template=None).source
+        self.view('inline-edition', rset, row=0, col=0, rtype='in_group',
+                  peid=geid, role='subject', template=None, i18nctx='').source
 
     def test_automatic_inline_creation_formview(self):
         geid = self.execute('CWGroup X LIMIT 1')[0][0]
-        self.view('inline-creation', None, etype='CWUser', rtype='in_group', peid=geid, template=None).source
+        self.view('inline-creation', None, etype='CWUser', rtype='in_group',
+                  peid=geid, template=None, i18nctx='', role='subject').source
 
 
 if __name__ == '__main__':
