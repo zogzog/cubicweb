@@ -164,9 +164,9 @@ class Session(RequestSessionBase):
             rset.description.append([self.describe(targeteid)[0]])
             targetentity = self.entity_from_eid(targeteid)
             if targetentity.rset is None:
-                targetentity.rset = rset
-                targetentity.row = rset.rowcount
-                targetentity.col = 0
+                targetentity.cw_rset = rset
+                targetentity.cw_row = rset.rowcount
+                targetentity.cw_col = 0
             rset.rowcount += 1
             entities.append(targetentity)
 
