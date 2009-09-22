@@ -118,7 +118,10 @@ if sys.version_info[:2] < (2, 5):
 else:
     from uuid import uuid4
     def make_uid(key):
-        return str(key) + str(uuid4())
+        # remove dash, generated uid are used as identifier sometimes (sql table
+        # names at least)
+        return str(key) + str(uuid4()).replace('-', '')
+
 
 def dump_class(cls, clsname):
     """create copy of a class by creating an empty class inheriting
