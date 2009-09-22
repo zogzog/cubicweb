@@ -31,9 +31,12 @@ translations = {
     u'address' : u"adresse",
     u'use_email' : u"adel",
     }
+
 def _translate(msgid):
     return translations.get(msgid, msgid)
 
+def _ctxtranslate(ctx, msgid):
+    return _translate(msgid)
 
 from cubicweb.web.views.magicsearch import translate_rql_tree, QSPreProcessor, QueryTranslator
 
@@ -43,7 +46,7 @@ class QueryTranslatorTC(EnvBasedTC):
     def setUp(self):
         super(QueryTranslatorTC, self).setUp()
         self.req = self.env.create_request()
-        self.vreg.config.translations = {'en': _translate}
+        self.vreg.config.translations = {'en': (_translate, _ctxtranslate)}
         proc = self.vreg['components'].select('magicsearch', self.req)
         self.proc = [p for p in proc.processors if isinstance(p, QueryTranslator)][0]
 
@@ -67,7 +70,7 @@ class QSPreProcessorTC(EnvBasedTC):
     """test suite for QSPreProcessor"""
     def setUp(self):
         super(QSPreProcessorTC, self).setUp()
-        self.vreg.config.translations = {'en': _translate}
+        self.vreg.config.translations = {'en': (_translate, _ctxtranslate)}
         self.req = self.request()
         proc = self.vreg['components'].select('magicsearch', self.req)
         self.proc = [p for p in proc.processors if isinstance(p, QSPreProcessor)][0]
@@ -185,7 +188,7 @@ class ProcessorChainTC(EnvBasedTC):
 
     def setUp(self):
         super(ProcessorChainTC, self).setUp()
-        self.vreg.config.translations = {'en': _translate}
+        self.vreg.config.translations = {'en': (_translate, _ctxtranslate)}
         self.req = self.request()
         self.proc = self.vreg['components'].select('magicsearch', self.req)
 
