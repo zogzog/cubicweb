@@ -19,6 +19,10 @@ class RequestError(PublishException):
 class NothingToEdit(RequestError):
     """raised when an edit request doesn't specify any eid to edit"""
 
+class ProcessFormError(RequestError):
+    """raised when posted data can't be processed by the corresponding field
+    """
+
 class NotFound(RequestError):
     """raised when a 404 error should be returned"""
 

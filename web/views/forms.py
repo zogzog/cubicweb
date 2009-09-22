@@ -16,7 +16,7 @@ from cubicweb.selectors import non_final_entity, match_kwargs, one_line_rset
 from cubicweb.web import INTERNAL_FIELD_VALUE, eid_param
 from cubicweb.web import form, formwidgets as fwdgs
 from cubicweb.web.controller import NAV_FORM_PARAMETERS
-from cubicweb.web.formfields import HiddenInitialValueField, StringField
+from cubicweb.web.formfields import StringField
 
 
 class FieldsForm(form.Form):
@@ -281,6 +281,9 @@ class FieldsForm(form.Form):
         """
         raise NotImplementedError
 
+    def form_field_modified(self, field):
+        return field.is_visible()
+
     def _field_has_error(self, field):
         """return true if the field has some error in given validation exception
         """
@@ -372,30 +375,26 @@ class EntityFieldsForm(FieldsForm):
             self.form_renderer_id, self.req, rset=self.rset, row=self.row,
             col=self.col, entity=self.edited_entity)
 
-    def form_build_context(self, values=None):
-        """overriden to add edit[s|o] hidden fields and to ensure schema fields
-        have eidparam set to True
-
-        edit[s|o] hidden fields are used to indicate the value for the
-        associated field before the (potential) modification made when
-        submitting the form.
-        """
-        eschema = self.edited_entity.e_schema
-        for field in self.fields[:]:
-            for field in field.actual_fields(self):
-                fieldname = field.name
-                if fieldname != 'eid' and (
-                    (eschema.has_subject_relation(fieldname) or
-                     eschema.has_object_relation(fieldname))):
-                    field.eidparam = True
-                    self.fields.append(HiddenInitialValueField(field))
-        return super(EntityFieldsForm, self).form_build_context(values)
+##    def form_build_context(self, values=None):
+##        """overriden to add edit[s|o] hidden fields and to ensure schema fields
+##        have eidparam set to True
+##        """
+##        eschema = self.edited_entity.e_schema
+##        for field in self.fields[:]:
+##            for field in field.actual_fields(self):
+##                fieldname = field.name
+##                if fieldname != 'eid' and (
+##                    (eschema.has_subject_relation(fieldname) or
+##                     eschema.has_object_relation(fieldname))):
+##                    # XXX why do we need to do this here ?
+##                    field.eidparam = True
+##        return super(EntityFieldsForm, self).form_build_context(values)
 
     def form_field_value(self, field, load_bytes=False):
         """return field's *typed* value
 
         overriden to deal with
-        * special eid / __type / edits- / edito- fields
+        * special eid / __type
         * lookup for values on edited entities
         """
         attr = field.name
@@ -404,14 +403,6 @@ class EntityFieldsForm(FieldsForm):
             return entity.eid
         if not field.eidparam:
             return super(EntityFieldsForm, self).form_field_value(field, load_bytes)
-        if attr.startswith('edits-') or attr.startswith('edito-'):
-            # edit[s|o]- fieds must have the actual value stored on the entity
-            assert hasattr(field, 'visible_field')
-            vfield = field.visible_field
-            assert vfield.eidparam
-            if entity.has_eid():
-                return self.form_field_value(vfield)
-            return INTERNAL_FIELD_VALUE
         if attr == '__type':
             return entity.id
         if self.schema.rschema(attr).is_final():
@@ -487,7 +478,32 @@ class EntityFieldsForm(FieldsForm):
         #       cases, it doesn't make sense to sort results afterwards.
         return vocabfunc(rtype, limit)
 
-    # XXX should be on the field, no?
+    def form_field_modified(self, field):
+        if field.is_visible():
+            # fields not corresponding to an entity attribute / relations
+            # are considered modified
+            if not field.eidparam:
+                return True # XXX
+            try:
+                if field.role == 'subject':
+                    previous_value = getattr(self.edited_entity, field.name)
+                else:
+                    previous_value = getattr(self.edited_entity,
+                                             'reverse_%s' % field.name)
+            except AttributeError:
+                # fields with eidparam=True but not corresponding to an actual
+                # attribute or relation
+                return True
+            # if it's a non final relation, we need the eids
+            if isinstance(previous_value, list):
+                # widget should return untyped eids
+                previous_value = set(unicode(e.eid) for e in previous_value)
+            new_value = field.process_form_value(self)
+            if self.edited_entity.has_eid() and (previous_value == new_value):
+                return False # not modified
+            return True
+        return False
+
     def subject_relation_vocabulary(self, rtype, limit=None):
         """defaut vocabulary method for the given relation, looking for
         relation's object entities (i.e. self is the subject)

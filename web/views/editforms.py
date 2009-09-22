@@ -484,12 +484,6 @@ class InlineEntityEditionFormView(FormViewMixIn, EntityView):
 
     def add_hiddens(self, form, entity, peid, rtype, role):
         # to ease overriding (see cubes.vcsfile.views.forms for instance)
-        if self.keep_entity(form, entity, peid, rtype):
-            if entity.has_eid():
-                rval = entity.eid
-            else:
-                rval = INTERNAL_FIELD_VALUE
-            form.form_add_hidden('edit%s-%s:%s' % (role[0], rtype, peid), rval)
         form.form_add_hidden(name='%s:%s' % (rtype, peid), value=entity.eid,
                              id='rel-%s-%s-%s'  % (peid, rtype, entity.eid))
 
