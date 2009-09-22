@@ -160,7 +160,9 @@ def _generate_schema_pot(w, vreg, schema, libconfig=None, cube=None):
                     add_msg(w, 'add a %s' % tschema,
                             'inlined:%s.%s.%s' % (etype, rschema, role))
                     add_msg(w, 'remove this %s' % tschema,
-                            'inlined:%s:%s:%s' % (etype, rschema, role))
+                            'inlined:%s.%s.%s' % (etype, rschema, role))
+                    add_msg(w, 'This %s' % tschema,
+                            'inlined:%s.%s.%s' % (etype, rschema, role))
                 if appearsin_addmenu.etype_get(eschema, rschema, role, tschema) and \
                        (libconfig is None or not
                         libappearsin_addmenu.etype_get(eschema, rschema, role, tschema)):

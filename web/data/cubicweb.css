@@ -526,6 +526,20 @@ div#userActionsBox a.popupMenu {
   text-decoration: underline;
 }
 
+/* download box XXX move to its own file? */
+div.downloadBoxTitle{
+ background : #8FBC8F;
+ font-weight: bold;
+}
+
+div.downloadBox{
+ font-weight: bold;
+}
+
+div.downloadBox div.sideBoxBody{
+ background : #EEFED9;
+}
+
 /**************/
 /* navigation */
 /**************/

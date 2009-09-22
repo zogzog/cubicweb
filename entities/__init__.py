@@ -150,15 +150,15 @@ class AnyEntity(Entity):
 
     # edition helper functions ################################################
 
-    def linked_to(self, rtype, target, remove=True):
+    def linked_to(self, rtype, role, remove=True):
         """if entity should be linked to another using __linkto form param for
-        the given relation/target, return eids of related entities
+        the given relation/role, return eids of related entities
 
         This method is consuming matching link-to information from form params
         if `remove` is True (by default).
         """
         try:
-            return self.__linkto[(rtype, target)]
+            return self.__linkto[(rtype, role)]
         except AttributeError:
             self.__linkto = {}
         except KeyError:
@@ -166,15 +166,15 @@ class AnyEntity(Entity):
         linktos = list(self.req.list_form_param('__linkto'))
         linkedto = []
         for linkto in linktos[:]:
-            ltrtype, eid, lttarget = linkto.split(':')
-            if rtype == ltrtype and target == lttarget:
+            ltrtype, eid, ltrole = linkto.split(':')
+            if rtype == ltrtype and role == ltrole:
                 # delete __linkto from form param to avoid it being added as
                 # hidden input
                 if remove:
                     linktos.remove(linkto)
                     self.req.form['__linkto'] = linktos
                 linkedto.append(typed_eid(eid))
-        self.__linkto[(rtype, target)] = linkedto
+        self.__linkto[(rtype, role)] = linkedto
         return linkedto
 
     # edit controller callbacks ###############################################

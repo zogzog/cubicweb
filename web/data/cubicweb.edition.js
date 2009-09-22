@@ -243,9 +243,9 @@ function updateInlinedEntitiesCounters(rtype) {
  * @param ttype : the target (inlined) entity type
  * @param rtype : the relation type between both entities
  */
-function addInlineCreationForm(peid, ttype, rtype, role, insertBefore) {
+function addInlineCreationForm(peid, ttype, rtype, role, i18nctx, insertBefore) {
     insertBefore = insertBefore || getNode('add' + rtype + ':' + peid + 'link').parentNode;
-    var d = asyncRemoteExec('inline_creation_form', peid, ttype, rtype, role);
+    var d = asyncRemoteExec('inline_creation_form', peid, ttype, rtype, role, i18nctx);
     d.addCallback(function (response) {
         var dom = getDomFromResponse(response);
         preprocessAjaxLoad(null, dom);
@@ -254,7 +254,7 @@ function addInlineCreationForm(peid, ttype, rtype, role, insertBefore) {
         form.insertBefore(insertBefore).slideDown('fast');
         updateInlinedEntitiesCounters(rtype);
         reorderTabindex();
-        form.trigger('inlinedform-added');
+        jQuery(CubicWeb).trigger('inlinedform-added', form);
         // if the inlined form contains a file input, we must force
         // the form enctype to multipart/form-data
         if (form.find('input:file').length) {
@@ -350,11 +350,11 @@ function _displayValidationerrors(formid, eid, errors) {
 }
 
 
-function handleFormValidationResponse(formid, onsuccess, onfailure, result) {
+function handleFormValidationResponse(formid, onsuccess, onfailure, result, cbargs) {
     // Success
     if (result[0]) {
 	if (onsuccess) {
-             onsuccess(result, formid);
+             onsuccess(result, formid, cbargs);
 	} else {
 	    document.location.href = result[1];
 	}
@@ -374,7 +374,7 @@ function handleFormValidationResponse(formid, onsuccess, onfailure, result) {
     updateMessage(_('please correct errors below'));
     document.location.hash = '#header';
     if (onfailure) {
-	onfailure(formid);
+	onfailure(formid, cbargs);
     }
     return false;
 }
@@ -481,10 +481,10 @@ function inlineValidateAttributeForm(rtype, eid, divid, reload, default_value) {
 	return false;
     }
     d.addCallback(function (result, req) {
-        handleFormValidationResponse(divid+'-form', noop, noop, result);
-	if (reload) {
+        if (handleFormValidationResponse(divid+'-form', noop, noop, result)) {
+          if (reload) {
 	    document.location.href = result[1].split('?')[0];
-	} else {
+	  } else {
 	    var fieldview = getNode('value-' + divid);
 	    // XXX using innerHTML is very fragile and won't work if
 	    // we mix XHTML and HTML
@@ -494,7 +494,8 @@ function inlineValidateAttributeForm(rtype, eid, divid, reload, default_value) {
 		// hide global error messages
 		hideInlineEdit(eid, rtype, divid);
 	    }
-	}
+	  }
+        }
 	return false;
     });
     return false;

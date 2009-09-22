@@ -22,6 +22,22 @@ from cubicweb.web.formwidgets import (
     Radio, Select, DateTimePicker)
 
 
+def vocab_sort(vocab):
+    """sort vocabulary, considering option groups"""
+    result = []
+    partresult = []
+    for label, value in vocab:
+        if value is None: # opt group start
+            if partresult:
+                result += sorted(partresult)
+                partresult = []
+            result.append( (label, value) )
+        else:
+            partresult.append( (label, value) )
+    result += sorted(partresult)
+    return result
+
+
 class Field(object):
     """field class is introduced to control what's displayed in forms. It makes
     the link between something to edit and its display in the form. Actual
@@ -189,7 +205,7 @@ class Field(object):
         if self.internationalizable:
             vocab = [(form.req._(label), value) for label, value in vocab]
         if self.sort:
-            vocab = sorted(vocab)
+            vocab = vocab_sort(vocab)
         return vocab
 
     def form_init(self, form):
@@ -267,7 +283,7 @@ class RichTextField(StringField):
                 # else we want a format selector
                 fkwargs['widget'] = Select()
                 fcstr = FormatConstraint()
-                fkwargs['choices'] = fcstr.vocabulary(req=req)
+                fkwargs['choices'] = fcstr.vocabulary(form=form)
                 fkwargs['internationalizable'] = True
                 fkwargs['initial'] = lambda f: f.form_field_format(self)
             field = StringField(name=self.name + '_format', **fkwargs)
@@ -474,7 +490,7 @@ class RelationField(Field):
             relatedvocab = []
         vocab = res + form.form_field_vocabulary(self) + relatedvocab
         if self.sort:
-            vocab = sorted(vocab)
+            vocab = vocab_sort(vocab)
         return vocab
 
     def format_single_value(self, req, value):
@@ -513,7 +529,10 @@ def guess_field(eschema, rschema, role='subject', skip_meta_attr=True, **kwargs)
         help = rschema.rproperty(targetschema, eschema, 'description')
     kwargs['required'] = card in '1+'
     kwargs['name'] = rschema.type
-    kwargs['label'] = (eschema.type, rschema.type)
+    if role == 'object':
+        kwargs['label'] = (eschema.type + '_object', rschema.type)
+    else:
+        kwargs['label'] = (eschema.type, rschema.type)
     kwargs.setdefault('help', help)
     if rschema.is_final():
         if skip_meta_attr and rschema in eschema.meta_attributes():

@@ -29,6 +29,15 @@ _abaa.tag_subject_of(('BaseTransition', 'condition', 'RQLExpression'), False)
 _abaa.tag_subject_of(('State', 'allowed_transition', 'BaseTransition'), False)
 _abaa.tag_object_of(('SubWorkflowExitPoint', 'destination_state', 'State'),
                     False)
+_abaa.tag_object_of(('State', 'state_of', 'Workflow'), True)
+_abaa.tag_object_of(('Transition', 'transition_of', 'Workflow'), True)
+_abaa.tag_object_of(('WorkflowTransition', 'transition_of', 'Workflow'), True)
+
+_afs = uicfg.autoform_section
+_afs.tag_subject_of(('TrInfo', 'to_state', '*'), 'generated')
+_afs.tag_subject_of(('TrInfo', 'from_state', '*'), 'generated')
+_afs.tag_object_of(('State', 'allowed_transition', '*'), 'primary')
+
 
 # IWorkflowable views #########################################################
 
@@ -43,15 +52,20 @@ class ChangeStateForm(forms.CompositeEntityForm):
 class ChangeStateFormView(form.FormViewMixIn, view.EntityView):
     id = 'statuschange'
     title = _('status change')
-    __select__ = implements(IWorkflowable) & match_form_params('treid')
+    __select__ = (one_line_rset() & implements(IWorkflowable)
+                  & match_form_params('treid'))
 
     def cell_call(self, row, col):
         entity = self.rset.get_entity(row, col)
         transition = self.req.entity_from_eid(self.req.form['treid'])
         dest = transition.destination()
         _ = self.req._
-        form = self.vreg['forms'].select('changestate', self.req, entity=entity,
-                                         redirect_path=self.redirectpath(entity))
+        # specify both rset/row/col and entity in case implements selector (and
+        # not entity_implements) is used on custom form
+        form = self.vreg['forms'].select(
+            'changestate', self.req, rset=self.rset, row=row, col=col,
+            entity=entity, transition=transition,
+            redirect_path=self.redirectpath(entity))
         self.w(form.error_message())
         self.w(u'<h4>%s %s</h4>\n' % (_(transition.name),
                                       entity.view('oneline')))
@@ -187,7 +201,7 @@ class WorkflowDotPropsHandler(object):
 
     def node_properties(self, stateortransition):
         """return default DOT drawing options for a state or transition"""
-        props = {'label': stateortransition.name,
+        props = {'label': stateortransition.printable_value('name'),
                  'fontname': 'Courier'}
         if hasattr(stateortransition, 'state_of'):
             props['shape'] = 'box'
@@ -201,7 +215,7 @@ class WorkflowDotPropsHandler(object):
             if tr.require_group:
                 descr.append('%s %s'% (
                     self._('groups:'),
-                    ','.join(g.name for g in tr.require_group)))
+                    ','.join(g.printable_value('name') for g in tr.require_group)))
             if tr.condition:
                 descr.append('%s %s'% (
                     self._('condition:'),

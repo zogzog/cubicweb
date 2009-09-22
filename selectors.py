@@ -528,12 +528,10 @@ class match_transition(match_search_state):
     @lltrace
     def __call__(self, cls, req, rset=None, row=None, col=0, **kwargs):
         try:
-            trname = req.execute('Any XN WHERE X is Transition, X eid %(x)s, X name XN',
-                                 {'x': typed_eid(req.form['treid'])})[0][0]
-        except (KeyError, IndexError):
-            return 0
-        # XXX check this is a transition that apply to the object?
-        if not trname in self.expected:
+            # XXX check this is a transition that apply to the object?
+            if not kwargs['transition'].name in self.expected:
+                return 0
+        except KeyError:
             return 0
         return 1
 
@@ -612,15 +610,15 @@ class specified_etype_implements(implements):
                 etype = req.form['etype']
             except KeyError:
                 return 0
-        else:
-            # only check this is a known type if etype comes from req.form,
-            # else we want the error to propagate
-            try:
-                etype = req.vreg.case_insensitive_etypes[etype.lower()]
-                req.form['etype'] = etype
-            except KeyError:
-                return 0
-        return self.score_class(req.vreg['etypes'].etype_class(etype), req)
+            else:
+                # only check this is a known type if etype comes from req.form,
+                # else we want the error to propagate
+                try:
+                    etype = cls.vreg.case_insensitive_etypes[etype.lower()]
+                    req.form['etype'] = etype
+                except KeyError:
+                    return 0
+        return self.score_class(cls.vreg['etypes'].etype_class(etype), req)
 
 
 class entity_implements(ImplementsMixIn, EntitySelector):
@@ -670,6 +668,10 @@ class relation_possible(EClassSelector):
         if not (rschema.has_perm(req, self.action)
                 or rschema.has_local_role(self.action)):
             return 0
+        if self.action != 'read':
+            if not (rschema.has_perm(req, 'read')
+                    or rschema.has_local_role('read')):
+                return 0
         score = super(relation_possible, self).__call__(cls, req, *args, **kwargs)
         return score
 

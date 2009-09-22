@@ -6,18 +6,20 @@
 :license: GNU Lesser General Public License, v2.1 - http://www.gnu.org/licenses
 """
 
-todoeid = add_state(u'todo', 'Note', initial=True)
-doneeid = add_state(u'done', 'Note')
-add_transition(u'redoit', 'Note', (doneeid,), todoeid)
-add_transition(u'markasdone', 'Note', (todoeid,), doneeid)
+wf = add_workflow(u'note workflow', 'Note')
+todo = wf.add_state(u'todo', initial=True)
+done = wf.add_state(u'done')
+wf.add_transition(u'redoit', done, todo)
+wf.add_transition(u'markasdone', todo, done)
 checkpoint()
 
-pitetre = add_state(u'pitetre', 'Affaire', initial=True)
-encours = add_state(u'en cours', 'Affaire')
-finie = add_state(u'finie', 'Affaire')
-bennon = add_state(u'ben non', 'Affaire')
-add_transition(u'abort', 'Affaire', (pitetre,), bennon)
-add_transition(u'start', 'Affaire', (pitetre,), encours)
-add_transition(u'end', 'Affaire', (encours,), finie)
+wf = add_workflow(u'affaire workflow', 'Affaire')
+pitetre = wf.add_state(u'pitetre', initial=True)
+encours = wf.add_state(u'en cours')
+finie = wf.add_state(u'finie')
+bennon = wf.add_state(u'ben non')
+wf.add_transition(u'abort', pitetre, bennon)
+wf.add_transition(u'start', pitetre, encours)
+wf.add_transition(u'end', encours, finie)
 checkpoint()
 

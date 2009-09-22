@@ -348,6 +348,18 @@ du :eid:`1:*ReST*`'''
         e['content'] = u'C&apos;est un exemple s&eacute;rieux'
         self.assertEquals(tidy(e.printable_value('content')),
                           u"C'est un exemple sérieux")
+        e['content'] = u'<div x:foo="bar">ms orifice produces weird html</div>'
+        self.assertEquals(tidy(e.printable_value('content')),
+                          u'<div>ms orifice produces weird html</div>')
+        import tidy as tidymod # apt-get install python-tidy
+        tidy = lambda x: str(tidymod.parseString(x.encode('utf-8'),
+                                                 **{'drop_proprietary_attributes': True,
+                                                    'output_xhtml': True,
+                                                    'show_body_only' : True,
+                                                    'quote-nbsp' : False,
+                                                    'char_encoding' : 'utf8'})).decode('utf-8').strip()
+        self.assertEquals(tidy(e.printable_value('content')),
+                          u'<div>ms orifice produces weird html</div>')
         # make sure valid xhtml is left untouched
         e['content'] = u'<div>R&amp;D<br/></div>'
         self.assertEquals(e.printable_value('content'), e['content'])

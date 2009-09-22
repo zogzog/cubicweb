@@ -10,14 +10,17 @@ __docformat__ = "restructuredtext en"
 from logilab.mtconverter import xml_escape
 
 import locale
-from md5 import md5
 import sys
+import decimal
 import datetime as pydatetime
+from md5 import md5
 from datetime import datetime, timedelta, date
 from time import time, mktime
 from random import randint, seed
 from calendar import monthrange
 import decimal
+
+import simplejson
 
 # initialize random seed from current time
 seed()
@@ -116,7 +119,10 @@ if sys.version_info[:2] < (2, 5):
 else:
     from uuid import uuid4
     def make_uid(key):
-        return str(key) + str(uuid4())
+        # remove dash, generated uid are used as identifier sometimes (sql table
+        # names at least)
+        return str(key) + str(uuid4()).replace('-', '')
+
 
 def dump_class(cls, clsname):
     """create copy of a class by creating an empty class inheriting

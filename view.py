@@ -313,7 +313,7 @@ class View(AppObject):
             w = self.w
         if row:
             w(u'<div class="row">')
-        if show_label:
+        if show_label and label:
             if tr:
                 label = display_name(self.req, label)
             w(u'<span class="label">%s</span>' % label)
