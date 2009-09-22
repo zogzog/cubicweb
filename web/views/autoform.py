@@ -46,6 +46,8 @@ class AutomaticEntityForm(forms.EntityFieldsForm):
     rinlined = uicfg.autoform_is_inlined
     rpermissions_overrides = uicfg.autoform_permissions_overrides
 
+    # class methods mapping schema relations to fields in the form ############
+
     @classmethod
     def erelations_by_category(cls, entity, categories=None, permission=None,
                                rtags=None, strict=False):
@@ -158,6 +160,8 @@ class AutomaticEntityForm(forms.EntityFieldsForm):
                 raise
             return field
 
+    # base automatic entity form methods #######################################
+
     def __init__(self, *args, **kwargs):
         super(AutomaticEntityForm, self).__init__(*args, **kwargs)
         entity = self.edited_entity
@@ -185,6 +189,51 @@ class AutomaticEntityForm(forms.EntityFieldsForm):
             return None
         return self.maxrelitems + 1
 
+    @property
+    def form_needs_multipart(self):
+        """true if the form needs enctype=multipart/form-data"""
+        if super(AutomaticEntityForm, self).form_needs_multipart:
+            return True
+        # take a look at inlined forms to check (recursively) if they
+        # need multipart handling.
+        # XXX: this is very suboptimal because inlined forms will be
+        #      selected / instantiated twice : here and during form rendering.
+        #      Potential solutions:
+        #       -> use subforms for inlined forms to get easiser access
+        #       -> use a simple onload js function to check if there is
+        #          a input type=file in the form
+        #       -> generate the <form> node when the content is rendered
+        #          and we know the correct enctype (formrenderer's w attribute
+        #          is not a StringIO)
+        for rschema, targettypes, role in self.inlined_relations():
+            # inlined forms don't handle multiple target types
+            if len(targettypes) != 1:
+                continue
+            targettype = targettypes[0]
+            if self.should_inline_relation_form(rschema, targettype, role):
+                entity = self.vreg['etypes'].etype_class(targettype)(self.req)
+                subform = self.vreg['forms'].select('edition', self.req, entity=entity)
+                if subform.form_needs_multipart:
+                    return True
+        return False
+
+    def action(self):
+        """return the form's action attribute. Default to validateform if not
+        explicitly overriden.
+        """
+        try:
+            return self._action
+        except AttributeError:
+            return self.build_url('validateform')
+
+    def set_action(self, value):
+        """override default action"""
+        self._action = value
+
+    action = property(action, set_action)
+
+    # methods mapping edited entity relations to fields in the form ############
+
     def relations_by_category(self, categories=None, permission=None):
         """return a list of (relation schema, target schemas, role) matching
         given category(ies) and permission
@@ -211,25 +260,12 @@ class AutomaticEntityForm(forms.EntityFieldsForm):
         return self.esrelations_by_category(self.edited_entity, categories,
                                            permission, strict=strict)
 
-    def action(self):
-        """return the form's action attribute. Default to validateform if not
-        explicitly overriden.
-        """
-        try:
-            return self._action
-        except AttributeError:
-            return self.build_url('validateform')
-
-    def set_action(self, value):
-        """override default action"""
-        self._action = value
-
-    action = property(action, set_action)
-
     def editable_attributes(self):
         """return a list of (relation schema, role) to edit for the entity"""
         return [(rschema, role) for rschema, _, role in self.relations_by_category(
                 self.attrcategories, 'add') if rschema != 'eid']
+
+    # generic relations modifier ###############################################
 
     def relations_table(self):
         """yiels 3-tuples (rtype, target, related_list)
@@ -287,7 +323,7 @@ class AutomaticEntityForm(forms.EntityFieldsForm):
                 eview = '%s (%s)' % (eview, display_name(self.req, 'Basket'))
             yield rtype, pendingid, jscall, label, reid, eview
 
-    # should_* method extracted to allow overriding
+    # inlined forms support ####################################################
 
     def should_inline_relation_form(self, rschema, targettype, role):
         """return true if the given relation with entity has role and a
@@ -324,6 +360,10 @@ class AutomaticEntityForm(forms.EntityFieldsForm):
 
     def display_inline_creation_form(self, w, rschema, targettype, role,
                                      i18nctx):
+        """display inline forms to a newly related (hence created) entity.
+
+        Return True if some inlined form are actually displayed
+        """
         entity = self.edited_entity
         w(self.view('inline-creation', None, etype=targettype,
                     peid=entity.eid, ptype=entity.e_schema,
@@ -346,33 +386,6 @@ class AutomaticEntityForm(forms.EntityFieldsForm):
         """
         return card in '1?'
 
-    @property
-    def form_needs_multipart(self):
-        """true if the form needs enctype=multipart/form-data"""
-        if super(AutomaticEntityForm, self).form_needs_multipart:
-            return True
-        # take a look at inlined forms to check (recursively) if they
-        # need multipart handling.
-        # XXX: this is very suboptimal because inlined forms will be
-        #      selected / instantiated twice : here and during form rendering.
-        #      Potential solutions:
-        #       -> use subforms for inlined forms to get easiser access
-        #       -> use a simple onload js function to check if there is
-        #          a input type=file in the form
-        #       -> generate the <form> node when the content is rendered
-        #          and we know the correct enctype (formrenderer's w attribute
-        #          is not a StringIO)
-        for rschema, targettypes, role in self.inlined_relations():
-            # inlined forms don't handle multiple target types
-            if len(targettypes) != 1:
-                continue
-            targettype = targettypes[0]
-            if self.should_inline_relation_form(rschema, targettype, role):
-                entity = self.vreg['etypes'].etype_class(targettype)(self.req)
-                subform = self.vreg['forms'].select('edition', self.req, entity=entity)
-                if subform.form_needs_multipart:
-                    return True
-        return False
 
 def etype_relation_field(etype, rtype, role='subject'):
     eschema = AutomaticEntityForm.schema.eschema(etype)

@@ -470,6 +470,9 @@ class EntityFormRenderer(EntityBaseFormRenderer):
         w(u'</table>')
         w(u'</fieldset>')
 
+    # NOTE: should_* and display_* method extracted and moved to the form to
+    # ease overriding
+
     def inline_entities_form(self, w, form):
         """create a form to edit entity's inlined relations"""
         if not hasattr(form, 'inlined_relations'):
