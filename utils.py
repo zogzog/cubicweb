@@ -361,7 +361,7 @@ def can_do_pdf_conversion(__answer=[None]):
     return True
 
 try:
-    # may not be there if cubicwbeb-web not installed
+    # may not be there if cubicweb-web not installed
     from simplejson import dumps, JSONEncoder
 except ImportError:
     pass
