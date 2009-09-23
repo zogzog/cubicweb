@@ -159,9 +159,9 @@ class TextView(EntityView):
                 self.w(u"\n")
 
     def cell_call(self, row, col=0, **kwargs):
-        entity = self.rset.get_entity(row, col)
+        entity = self.cw_rset.get_entity(row, col)
         self.w(cut(entity.dc_title(),
-                   self.req.property_value('navigation.short-line-size')))
+                   self._cw.property_value('navigation.short-line-size')))
 
 
 class MetaDataView(EntityView):

@@ -263,8 +263,8 @@ class Entity(AppObject, dict):
 
     def view(self, vid, __registry='views', **kwargs):
         """shortcut to apply a view on this entity"""
-        return self._cw.vreg[__registry].render(
-            vid, self._cw, rset=self.rset, row=self.row, col=self.col, **kwargs)
+        view = self._cw.vreg[__registry].select(vid, self._cw, rset=self.cw_rset)
+        return view.render(row=self.cw_row, col=self.cw_col, **kwargs)
 
     def absolute_url(self, *args, **kwargs):
         """return an absolute url to view this entity"""

@@ -86,7 +86,7 @@ class AnyEntity(Entity):
 
     def dc_type(self, form=''):
         """return the display name for the type of this entity (translated)"""
-        return self.e_schema.display_name(self.req, form)
+        return self.e_schema.display_name(self._cw, form)
 
     def dc_language(self):
         """return language used by this entity (translated)"""
@@ -95,8 +95,8 @@ class AnyEntity(Entity):
         for rschema, attrschema in self.e_schema.attribute_definitions():
             if rschema.rproperty(self.e_schema, attrschema,
                                  'internationalizable'):
-                return self.req._(self.req.user.property_value('ui.language'))
-        return self.req._(self.vreg.property_value('ui.language'))
+                return self._cw._(self.req.user.property_value('ui.language'))
+        return self._cw._(self._cw.vreg.property_value('ui.language'))
 
     @property
     def creator(self):
@@ -122,11 +122,11 @@ class AnyEntity(Entity):
                     path = parent.breadcrumbs(view) + [self]
         if not recurs:
             if view is None:
-                if 'vtitle' in self.req.form:
+                if 'vtitle' in self._cw.form:
                     # embeding for instance
-                    path.append( self.req.form['vtitle'] )
+                    path.append( self._cw.form['vtitle'] )
             elif view.id != 'primary' and hasattr(view, 'title'):
-                path.append( self.req._(view.title) )
+                path.append( self._cw._(view.title) )
         return path
 
     ## IFeed interface ########################################################
@@ -163,7 +163,7 @@ class AnyEntity(Entity):
             self.__linkto = {}
         except KeyError:
             pass
-        linktos = list(self.req.list_form_param('__linkto'))
+        linktos = list(self._cw.list_form_param('__linkto'))
         linkedto = []
         for linkto in linktos[:]:
             ltrtype, eid, ltrole = linkto.split(':')
@@ -172,7 +172,7 @@ class AnyEntity(Entity):
                 # hidden input
                 if remove:
                     linktos.remove(linkto)
-                    self.req.form['__linkto'] = linktos
+                    self._cw.form['__linkto'] = linktos
                 linkedto.append(typed_eid(eid))
         self.__linkto[(rtype, role)] = linkedto
         return linkedto

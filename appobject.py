@@ -305,7 +305,7 @@ class AppObject(object):
 
         <cls.__registry__>.<cls.id>.<propid>
         """
-        return self.req.property_value(self._cwpropkey(propid))
+        return self._cw.property_value(self._cwpropkey(propid))
 
     # deprecated ###############################################################
 

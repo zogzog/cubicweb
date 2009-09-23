@@ -107,7 +107,7 @@ class MatchUserGroupsTC(CubicWebTC):
     def test_owners_group(self):
         """tests usage of 'owners' group with match_user_group"""
         class SomeAction(action.Action):
-            id = 'yo'
+            __regid__ = 'yo'
             category = 'foo'
             __select__ = match_user_groups('owners')
         self.vreg._loadedmods[__name__] = {}
@@ -118,19 +118,22 @@ class MatchUserGroupsTC(CubicWebTC):
             self.create_user('john')
             self.login('john')
             # it should not be possible to use SomeAction not owned objects
-            rset, req = self.rset_and_req('Any G WHERE G is CWGroup, G name "managers"')
+            req = self.request()
+            rset = req.execute('Any G WHERE G is CWGroup, G name "managers"')
             self.failIf('yo' in dict(self.pactions(req, rset)))
             # insert a new card, and check that we can use SomeAction on our object
             self.execute('INSERT Card C: C title "zoubidou"')
             self.commit()
-            rset, req = self.rset_and_req('Card C WHERE C title "zoubidou"')
+            req = self.request()
+            rset = req.execute('Card C WHERE C title "zoubidou"')
             self.failUnless('yo' in dict(self.pactions(req, rset)), self.pactions(req, rset))
             # make sure even managers can't use the action
             self.restore_connection()
-            rset, req = self.rset_and_req('Card C WHERE C title "zoubidou"')
+            req = self.request()
+            rset = req.execute('Card C WHERE C title "zoubidou"')
             self.failIf('yo' in dict(self.pactions(req, rset)))
         finally:
-            del self.vreg[SomeAction.__registry__][SomeAction.id]
+            del self.vreg[SomeAction.__registry__][SomeAction.__regid__]
 
 if __name__ == '__main__':
     unittest_main()

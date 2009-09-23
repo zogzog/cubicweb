@@ -105,7 +105,7 @@ class ResultSetTC(CubicWebTC):
         self.assertEquals(rs.limit(2).rows, [[12000, 'adim'], [13000, 'syt']])
         rs2 = rs.limit(2, offset=1)
         self.assertEquals(rs2.rows, [[13000, 'syt'], [14000, 'nico']])
-        self.assertEquals(rs2.get_entity(0, 0).row, 0)
+        self.assertEquals(rs2.get_entity(0, 0).cw_row, 0)
         self.assertEquals(rs.limit(2, offset=2).rows, [[14000, 'nico']])
         self.assertEquals(rs.limit(2, offset=3).rows, [])
 
@@ -229,16 +229,16 @@ class ResultSetTC(CubicWebTC):
         rset = self.execute('Any X,Y,XT,YN WHERE X bookmarked_by Y, X title XT, Y login YN')
 
         e = rset.get_entity(0, 0)
-        self.assertEquals(e.row, 0)
-        self.assertEquals(e.col, 0)
+        self.assertEquals(e.cw_row, 0)
+        self.assertEquals(e.cw_col, 0)
         self.assertEquals(e['title'], 'zou')
         self.assertRaises(KeyError, e.__getitem__, 'path')
         self.assertEquals(e.view('text'), 'zou')
         self.assertEquals(pprelcachedict(e._related_cache), [])
 
         e = rset.get_entity(0, 1)
-        self.assertEquals(e.row, 0)
-        self.assertEquals(e.col, 1)
+        self.assertEquals(e.cw_row, 0)
+        self.assertEquals(e.cw_col, 1)
         self.assertEquals(e['login'], 'anon')
         self.assertRaises(KeyError, e.__getitem__, 'firstname')
         self.assertEquals(pprelcachedict(e._related_cache),
@@ -304,8 +304,8 @@ class ResultSetTC(CubicWebTC):
                     ('Bookmark', 'manger'), ('CWGroup', 'owners'),
                     ('CWGroup', 'users'))
         for entity in rset.entities(): # test get_entity for each row actually
-            etype, n = expected[entity.row]
-            self.assertEquals(entity.id, etype)
+            etype, n = expected[entity.cw_row]
+            self.assertEquals(entity.__regid__, etype)
             attr = etype == 'Bookmark' and 'title' or 'name'
             self.assertEquals(entity[attr], n)
 
@@ -326,7 +326,7 @@ class ResultSetTC(CubicWebTC):
         self.assertEquals(entity.eid, e.eid)
         self.assertEquals(rtype, 'title')
         entity, rtype = rset.related_entity(1, 1)
-        self.assertEquals(entity.id, 'CWGroup')
+        self.assertEquals(entity.__regid__, 'CWGroup')
         self.assertEquals(rtype, 'name')
         #
         rset = self.execute('Any X,N ORDERBY N WHERE X is Bookmark WITH X,N BEING '

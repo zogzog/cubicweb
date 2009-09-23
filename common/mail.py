@@ -155,7 +155,7 @@ class NotificationView(EntityView):
                 self.send_now(recipients, msg)
 
     def cell_call(self, row, col=0, **kwargs):
-        self.w(self.req._(self.content) % self.context(**kwargs))
+        self.w(self._cw._(self.content) % self.context(**kwargs))
 
     def render_emails(self, **kwargs):
         """generate and send emails for this view (one per recipient)"""
@@ -164,8 +164,8 @@ class NotificationView(EntityView):
         if not recipients:
             self.info('skipping %s notification, no recipients', self.id)
             return
-        if self.rset is not None:
-            entity = self.entity(self.row or 0, self.col or 0)
+        if self.cw_rset is not None:
+            entity = self.cw_rset.get_entity(self.cw_row or 0, self.cw_col or 0)
             # if the view is using timestamp in message ids, no way to reference
             # previous email
             if not self.msgid_timestamp:
@@ -177,17 +177,17 @@ class NotificationView(EntityView):
         else:
             refs = ()
             msgid = None
-        req = self.req
+        req = self._cw
         self.user_data = req.user_data()
         origlang = req.lang
         for something in recipients:
             if isinstance(something, Entity):
-                # hi-jack self.req to get a session for the returned user
-                self.req = self.req.hijack_user(something)
+                # hi-jack self._cw to get a session for the returned user
+                self._cw = self._cw.hijack_user(something)
                 emailaddr = something.get_email()
             else:
                 emailaddr, lang = something
-                self.req.set_language(lang)
+                self._cw.set_language(lang)
             # since the same view (eg self) may be called multiple time and we
             # need a fresh stream at each iteration, reset it explicitly
             self.w = None
@@ -199,7 +199,7 @@ class NotificationView(EntityView):
             except SkipEmail:
                 continue
             msg = format_mail(self.user_data, [emailaddr], content, subject,
-                              config=self.config, msgid=msgid, references=refs)
+                              config=self._cw.vreg.config, msgid=msgid, references=refs)
             yield [emailaddr], msg
         # restore language
         req.set_language(origlang)
@@ -213,17 +213,17 @@ class NotificationView(EntityView):
         # use super_session when available, we don't want to consider security
         # when selecting recipients_finder
         try:
-            req = self.req.super_session
+            req = self._cw.super_session
         except AttributeError:
-            req = self.req
-        finder = self.vreg['components'].select('recipients_finder', req,
-                                                rset=self.rset,
-                                                row=self.row or 0,
-                                                col=self.col or 0)
+            req = self._cw
+        finder = self._cw.vreg['components'].select('recipients_finder', req,
+                                                    rset=self.cw_rset,
+                                                    row=self.cw_row or 0,
+                                                    col=self.cw_col or 0)
         return finder.recipients()
 
     def send_now(self, recipients, msg):
-        self.config.sendmails([(msg, recipients)])
+        self._cw.vreg.config.sendmails([(msg, recipients)])
 
     def send_on_commit(self, recipients, msg):
         raise NotImplementedError
@@ -233,7 +233,7 @@ class NotificationView(EntityView):
     # email generation helpers #################################################
 
     def construct_message_id(self, eid):
-        return construct_message_id(self.config.appid, eid, self.msgid_timestamp)
+        return construct_message_id(self._cw.vreg.config.appid, eid, self.msgid_timestamp)
 
     def format_field(self, attr, value):
         return ':%(attr)s: %(value)s' % {'attr': attr, 'value': value}
@@ -243,18 +243,18 @@ class NotificationView(EntityView):
             'attr': attr, 'ul': '-'*len(attr), 'value': value}
 
     def subject(self):
-        entity = self.entity(self.row or 0, self.col or 0)
-        subject = self.req._(self.message)
+        entity = self.cw_rset.get_entity(self.cw_row or 0, self.cw_col or 0)
+        subject = self._cw._(self.message)
         etype = entity.dc_type()
         eid = entity.eid
         login = self.user_data['login']
-        return self.req._('%(subject)s %(etype)s #%(eid)s (%(login)s)') % locals()
+        return self._cw._('%(subject)s %(etype)s #%(eid)s (%(login)s)') % locals()
 
     def context(self, **kwargs):
-        entity = self.entity(self.row or 0, self.col or 0)
+        entity = self.cw_rset.get_entity(self.cw_row or 0, self.cw_col or 0)
         for key, val in kwargs.iteritems():
             if val and isinstance(val, unicode) and val.strip():
-               kwargs[key] = self.req._(val)
+               kwargs[key] = self._cw._(val)
         kwargs.update({'user': self.user_data['login'],
                        'eid': entity.eid,
                        'etype': entity.dc_type(),

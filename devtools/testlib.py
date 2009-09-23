@@ -391,12 +391,12 @@ class CubicWebTC(TestCase):
 
     def pactions(self, req, rset,
                  skipcategories=('addrelated', 'siteactions', 'useractions')):
-        return [(a.id, a.__class__)
+        return [(a.__regid__, a.__class__)
                 for a in self.vreg['actions'].poss_visible_objects(req, rset=rset)
                 if a.category not in skipcategories]
 
     def pactions_by_cats(self, req, rset, categories=('addrelated',)):
-        return [(a.id, a.__class__)
+        return [(a.__regid__, a.__class__)
                 for a in self.vreg['actions'].poss_visible_objects(req, rset=rset)
                 if a.category in categories]
 
@@ -468,7 +468,7 @@ class CubicWebTC(TestCase):
         req = self.request()
         for view in self.vreg['views'].possible_views(req, None):
             if view.category == 'startupview':
-                yield view.id
+                yield view.__regid__
             else:
                 not_selected(self.vreg, view)
 
@@ -605,9 +605,9 @@ class CubicWebTC(TestCase):
             # is not an AssertionError
             klass, exc, tcbk = sys.exc_info()
             try:
-                msg = '[%s in %s] %s' % (klass, view.id, exc)
+                msg = '[%s in %s] %s' % (klass, view.__regid__, exc)
             except:
-                msg = '[%s in %s] undisplayable exception' % (klass, view.id)
+                msg = '[%s in %s] undisplayable exception' % (klass, view.__regid__)
             if output is not None:
                 position = getattr(exc, "position", (0,))[0]
                 if position:
@@ -628,7 +628,7 @@ class CubicWebTC(TestCase):
     def _check_html(self, output, view, template='main-template'):
         """raises an exception if the HTML is invalid"""
         try:
-            validatorclass = self.vid_validators[view.id]
+            validatorclass = self.vid_validators[view.__regid__]
         except KeyError:
             if template is None:
                 default_validator = htmlparser.HTMLValidator
@@ -794,16 +794,16 @@ class AutoPopulateTest(CubicWebTC):
                 propdefs[k]['default'] = True
         for view in self.list_views_for(rset):
             backup_rset = rset._prepare_copy(rset.rows, rset.description)
-            yield InnerTest(self._testname(rset, view.id, 'view'),
-                            self.view, view.id, rset,
+            yield InnerTest(self._testname(rset, view.__regid__, 'view'),
+                            self.view, view.__regid__, rset,
                             rset.req.reset_headers(), 'main-template')
             # We have to do this because some views modify the
             # resultset's syntax tree
             rset = backup_rset
         for action in self.list_actions_for(rset):
-            yield InnerTest(self._testname(rset, action.id, 'action'), self._test_action, action)
+            yield InnerTest(self._testname(rset, action.__regid__, 'action'), self._test_action, action)
         for box in self.list_boxes_for(rset):
-            yield InnerTest(self._testname(rset, box.id, 'box'), box.render)
+            yield InnerTest(self._testname(rset, box.__regid__, 'box'), box.render)
 
     @staticmethod
     def _testname(rset, objid, objtype):

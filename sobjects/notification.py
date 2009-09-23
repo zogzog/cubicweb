@@ -17,7 +17,7 @@ from cubicweb.selectors import yes
 from cubicweb.view import Component
 from cubicweb.common.mail import format_mail
 from cubicweb.common.mail import NotificationView
-from cubicweb.server.hookhelper import SendMailOp
+from cubicweb.server.hook import SendMailOp
 
 
 class RecipientsFinder(Component):
@@ -32,16 +32,16 @@ class RecipientsFinder(Component):
                 'X primary_email E, E address A')
 
     def recipients(self):
-        mode = self.req.vreg.config['default-recipients-mode']
+        mode = self._cw.vreg.config['default-recipients-mode']
         if mode == 'users':
             # use unsafe execute else we may don't have the right to see users
             # to notify...
-            execute = self.req.unsafe_execute
+            execute = self._cw.unsafe_execute
             dests = [(u.get_email(), u.property_value('ui.language'))
                      for u in execute(self.user_rql, build_descr=True, propagate=True).entities()]
         elif mode == 'default-dest-addrs':
-            lang = self.vreg.property_value('ui.language')
-            dests = zip(self.req.vreg.config['default-dest-addrs'], repeat(lang))
+            lang = self._cw.vreg.property_value('ui.language')
+            dests = zip(self._cw.vreg.config['default-dest-addrs'], repeat(lang))
         else: # mode == 'none'
             dests = []
         return dests
@@ -54,7 +54,7 @@ class NotificationView(NotificationView):
     default
     """
     def send_on_commit(self, recipients, msg):
-        SendMailOp(self.req, recipients=recipients, msg=msg)
+        SendMailOp(self._cw, recipients=recipients, msg=msg)
     send = send_on_commit
 
 
@@ -101,7 +101,7 @@ url: %(url)s
 """
 
     def context(self, **kwargs):
-        entity = self.rset.get_entity(self.row or 0, self.col or 0)
+        entity = self.cw_rset.get_entity(self.cw_row or 0, self.cw_col or 0)
         content = entity.printable_value(self.content_attr, format='text/plain')
         if content:
             contentformat = getattr(entity, self.content_attr + '_format',
@@ -113,8 +113,8 @@ url: %(url)s
         return super(ContentAddedView, self).context(content=content, **kwargs)
 
     def subject(self):
-        entity = self.rset.get_entity(self.row or 0, self.col or 0)
-        return  u'%s #%s (%s)' % (self.req.__('New %s' % entity.e_schema),
+        entity = self.cw_rset.get_entity(self.cw_row or 0, self.cw_col or 0)
+        return  u'%s #%s (%s)' % (self._cw.__('New %s' % entity.e_schema),
                                   entity.eid, self.user_data['login'])
 
 

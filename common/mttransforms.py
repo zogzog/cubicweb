@@ -60,10 +60,10 @@ else:
         def _convert(self, trdata):
             context = CubicWebContext()
             appobject = trdata.appobject
-            context.update({'self': appobject, 'rset': appobject.rset,
-                            'req': appobject.req,
-                            '_' : appobject.req._,
-                            'user': appobject.req.user})
+            context.update({'self': appobject, 'rset': appobject.cw_rset,
+                            'req': appobject._cw,
+                            '_' : appobject._cw._,
+                            'user': appobject._cw.user})
             output = UStringIO()
             template = compile_template(trdata.encode(self.output_encoding))
             template.expand(context, output)
@@ -88,7 +88,7 @@ try:
     def patch_convert(cls):
         def _convert(self, trdata, origconvert=cls._convert):
             try:
-                trdata.appobject.req.add_css('pygments.css')
+                trdata.appobject._cw.add_css('pygments.css')
             except AttributeError: # session has no add_css, only http request
                 pass
             return origconvert(self, trdata)

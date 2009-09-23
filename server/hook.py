@@ -432,10 +432,10 @@ class SendMailOp(SingleLastOperation):
             self.to_send = previous.to_send + self.to_send
 
     def commit_event(self):
-        self.repo.threaded_task(self.sendmails)
+        self.session.repo.threaded_task(self.sendmails)
 
     def sendmails(self):
-        self.config.sendmails(self.to_send)
+        self.session.vreg.config.sendmails(self.to_send)
 
 
 class RQLPrecommitOperation(Operation):

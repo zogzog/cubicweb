@@ -62,7 +62,7 @@ class EmailAddress(AnyEntity):
             yield rset.get_entity(i, 0)
 
     def display_address(self):
-        if self.vreg.config['mangle-emails']:
+        if self._cw.vreg.config['mangle-emails']:
             return mangle_email(self.address)
         return self.address
 

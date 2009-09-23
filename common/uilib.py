@@ -81,7 +81,7 @@ def remove_html_tags(text):
 REF_PROG = re.compile(r"<ref\s+rql=([\'\"])([^\1]*?)\1\s*>([^<]*)</ref>", re.U)
 def _subst_rql(view, obj):
     delim, rql, descr = obj.groups()
-    return u'<a href="%s">%s</a>' % (view.build_url(rql=rql), descr)
+    return u'<a href="%s">%s</a>' % (view._cw.build_url(rql=rql), descr)
 
 def html_publish(view, text):
     """replace <ref rql=''> links by <a href="...">"""

@@ -70,10 +70,10 @@ def eid_reference_role(role, rawtext, text, lineno, inliner,
     # Base URL mainly used by inliner.pep_reference; so this is correct:
     context = inliner.document.settings.context
     try:
-        refedentity = context.req.entity_from_eid(eid_num)
+        refedentity = context._cw.entity_from_eid(eid_num)
     except UnknownEid:
         ref = '#'
-        rest += u' ' + context.req._('(UNEXISTANT EID)')
+        rest += u' ' + context._cw._('(UNEXISTANT EID)')
     else:
         ref = refedentity.absolute_url()
     set_classes(options)
@@ -210,7 +210,7 @@ def rest_publish(context, data):
     :return:
       the data formatted as HTML or the original data if an error occured
     """
-    req = context.req
+    req = context._cw
     if isinstance(data, unicode):
         encoding = 'unicode'
         # remove unprintable characters unauthorized in xml

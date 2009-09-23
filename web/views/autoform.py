@@ -87,30 +87,30 @@ class AutomaticEntityForm(forms.EntityFieldsForm):
                     yield (rschema, targetschemas, role)
                     continue
                 if rschema.is_final():
-                    if not rschema.has_perm(entity.req, permission, eid):
+                    if not rschema.has_perm(entity._cw, permission, eid):
                         continue
                 elif role == 'subject':
                     if not ((not strict and rschema.has_local_role(permission)) or
-                            rschema.has_perm(entity.req, permission, fromeid=eid)):
+                            rschema.has_perm(entity._cw, permission, fromeid=eid)):
                         continue
                     # on relation with cardinality 1 or ?, we need delete perm as well
                     # if the relation is already set
                     if (permission == 'add'
                         and rschema.cardinality(eschema, targetschemas[0], role) in '1?'
                         and eid and entity.related(rschema.type, role)
-                        and not rschema.has_perm(entity.req, 'delete', fromeid=eid,
+                        and not rschema.has_perm(entity._cw, 'delete', fromeid=eid,
                                                  toeid=entity.related(rschema.type, role)[0][0])):
                         continue
                 elif role == 'object':
                     if not ((not strict and rschema.has_local_role(permission)) or
-                            rschema.has_perm(entity.req, permission, toeid=eid)):
+                            rschema.has_perm(entity._cw, permission, toeid=eid)):
                         continue
                     # on relation with cardinality 1 or ?, we need delete perm as well
                     # if the relation is already set
                     if (permission == 'add'
                         and rschema.cardinality(targetschemas[0], eschema, role) in '1?'
                         and eid and entity.related(rschema.type, role)
-                        and not rschema.has_perm(entity.req, 'delete', toeid=eid,
+                        and not rschema.has_perm(entity._cw, 'delete', toeid=eid,
                                                  fromeid=entity.related(rschema.type, role)[0][0])):
                         continue
             yield (rschema, targetschemas, role)
@@ -128,7 +128,7 @@ class AutomaticEntityForm(forms.EntityFieldsForm):
             entity, categories, permission, strict=strict):
             if rschema.is_final():
                 continue
-            result.append((rschema.display_name(entity.req, role), rschema, role))
+            result.append((rschema.display_name(entity._cw, role), rschema, role))
         return sorted(result)
 
     @iclassmethod
@@ -180,8 +180,8 @@ class AutomaticEntityForm(forms.EntityFieldsForm):
                 except form.FieldNotFound:
                     # meta attribute such as <attr>_format
                     continue
-        self.maxrelitems = self.req.property_value('navigation.related-limit')
-        self.force_display = bool(self.req.form.get('__force_display'))
+        self.maxrelitems = self._cw.property_value('navigation.related-limit')
+        self.force_display = bool(self._cw.form.get('__force_display'))
 
     @property
     def related_limit(self):
@@ -211,8 +211,8 @@ class AutomaticEntityForm(forms.EntityFieldsForm):
                 continue
             targettype = targettypes[0]
             if self.should_inline_relation_form(rschema, targettype, role):
-                entity = self.vreg['etypes'].etype_class(targettype)(self.req)
-                subform = self.vreg['forms'].select('edition', self.req, entity=entity)
+                entity = self.vreg['etypes'].etype_class(targettype)(self._cw)
+                subform = self.vreg['forms'].select('edition', self._cw, entity=entity)
                 if subform.form_needs_multipart:
                     return True
         return False
@@ -276,11 +276,11 @@ class AutomaticEntityForm(forms.EntityFieldsForm):
           - oneline view of related entity
         """
         entity = self.edited_entity
-        pending_deletes = self.req.get_pending_deletes(entity.eid)
+        pending_deletes = self._cw.get_pending_deletes(entity.eid)
         for label, rschema, role in self.srelations_by_category('generic', 'add',
                                                                 strict=True):
             relatedrset = entity.related(rschema, role, limit=self.related_limit)
-            if rschema.has_perm(self.req, 'delete'):
+            if rschema.has_perm(self._cw, 'delete'):
                 toggleable_rel_link_func = editforms.toggleable_relation_link
             else:
                 toggleable_rel_link_func = lambda x, y, z: u''
@@ -305,22 +305,22 @@ class AutomaticEntityForm(forms.EntityFieldsForm):
         """
         eid = self.edited_entity.eid
         cell = cell and "div_insert_" or "tr"
-        pending_inserts = set(self.req.get_pending_inserts(eid))
+        pending_inserts = set(self._cw.get_pending_inserts(eid))
         for pendingid in pending_inserts:
             eidfrom, rtype, eidto = pendingid.split(':')
             if typed_eid(eidfrom) == eid: # subject
-                label = display_name(self.req, rtype, 'subject')
+                label = display_name(self._cw, rtype, 'subject')
                 reid = eidto
             else:
-                label = display_name(self.req, rtype, 'object')
+                label = display_name(self._cw, rtype, 'object')
                 reid = eidfrom
             jscall = "javascript: cancelPendingInsert('%s', '%s', null, %s);" \
                      % (pendingid, cell, eid)
-            rset = self.req.eid_rset(reid)
+            rset = self._cw.eid_rset(reid)
             eview = self.view('text', rset, row=0)
             # XXX find a clean way to handle baskets
             if rset.description[0][0] == 'Basket':
-                eview = '%s (%s)' % (eview, display_name(self.req, 'Basket'))
+                eview = '%s (%s)' % (eview, display_name(self._cw, 'Basket'))
             yield rtype, pendingid, jscall, label, reid, eview
 
     # inlined forms support ####################################################
@@ -356,7 +356,7 @@ class AutomaticEntityForm(forms.EntityFieldsForm):
 
         by default true if there is no related entity and we need at least one
         """
-        return not existant and card in '1+' or self.req.form.has_key('force_%s_display' % rschema)
+        return not existant and card in '1+' or self._cw.form.has_key('force_%s_display' % rschema)
 
     def display_inline_creation_form(self, w, rschema, targettype, role,
                                      i18nctx):
