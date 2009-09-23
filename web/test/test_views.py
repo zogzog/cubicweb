@@ -27,7 +27,7 @@ class ComposityCopy(CubicWebTC):
 
 
 class SomeView(AnyRsetView):
-    id = 'someview'
+    __regid__ = 'someview'
 
     def call(self):
         self.req.add_js('spam.js')

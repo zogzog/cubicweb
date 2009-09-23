@@ -150,7 +150,7 @@ class EntityRelationView(EntityView):
 
     class ProjectScreenshotsView(EntityRelationView):
         '''display project's screenshots'''
-        id = title = _('projectscreenshots')
+        __regid__ = title = _('projectscreenshots')
         __select__ = EntityRelationView.__select__ & implements('Project')
         rtype = 'screenshot'
         role = 'subject'

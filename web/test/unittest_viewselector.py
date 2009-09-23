@@ -427,7 +427,7 @@ class VRegistryTC(ViewSelectorTC):
 
 
 class CWETypeRQLAction(Action):
-    id = 'testaction'
+    __regid__ = 'testaction'
     __select__ = implements('CWEType') & rql_condition('X name "CWEType"')
     title = 'bla'
 

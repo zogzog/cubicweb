@@ -16,7 +16,7 @@ VCARD_PHONE_TYPES = {'home': 'HOME', 'office': 'WORK', 'mobile': 'CELL', 'fax': 
 
 class VCardCWUserView(EntityView):
     """export a person information as a vcard"""
-    id = 'vcard'
+    __regid__ = 'vcard'
     title = _('vcard')
     templatable = False
     content_type = 'text/x-vcard'

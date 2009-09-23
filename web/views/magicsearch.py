@@ -343,7 +343,7 @@ class FullTextTranslator(BaseQueryProcessor):
 
 
 class MagicSearchComponent(Component):
-    id  = 'magicsearch'
+    __regid__  = 'magicsearch'
     def __init__(self, req, rset=None):
         super(MagicSearchComponent, self).__init__(req, rset=rset)
         processors = []

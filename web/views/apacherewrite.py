@@ -85,7 +85,7 @@ class ApacheURLRewrite(Component):
         ]
     """
     __abstract__ = True
-    id = 'urlrewriter'
+    __regid__ = 'urlrewriter'
     rules = []
 
     def get_rules(self, req):

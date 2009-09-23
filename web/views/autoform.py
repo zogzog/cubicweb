@@ -29,7 +29,7 @@ class AutomaticEntityForm(forms.EntityFieldsForm):
     You can also easily customise it by adding/removing fields in
     AutomaticEntityForm instances.
     """
-    id = 'edition'
+    __regid__ = 'edition'
 
     cwtarget = 'eformframe'
     cssclass = 'entityForm'

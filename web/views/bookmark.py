@@ -20,7 +20,7 @@ _abaa.tag_subject_of(('*', 'bookmarked_by', '*'), False)
 _abaa.tag_object_of(('*', 'bookmarked_by', '*'), False)
 
 class FollowAction(action.Action):
-    id = 'follow'
+    __regid__ = 'follow'
     __select__ = implements('Bookmark')
 
     title = _('follow')
@@ -50,7 +50,7 @@ class BookmarkPrimaryView(primary.PrimaryView):
 
 class BookmarksBox(box.UserRQLBoxTemplate):
     """display a box containing all user's bookmarks"""
-    id = 'bookmarks_box'
+    __regid__ = 'bookmarks_box'
     order = 40
     title = _('bookmarks')
     rql = ('Any B,T,P ORDERBY lower(T) '

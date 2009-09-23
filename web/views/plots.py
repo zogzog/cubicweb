@@ -121,7 +121,7 @@ jQuery("#%(figid)s").bind("plothover", onPlotHover);
 
 
 class PlotView(baseviews.AnyRsetView):
-    id = 'plot'
+    __regid__ = 'plot'
     title = _('generic plot')
     __select__ = at_least_two_columns() & all_columns_are_numbers()
     timemode = False
@@ -170,7 +170,7 @@ else:
             self.w(u'<img src="%s" />' % xml_escape(piechart.url))
 
     class PieChartView(baseviews.AnyRsetView):
-        id = 'piechart'
+        __regid__ = 'piechart'
         pieclass = Pie
 
         __select__ = at_least_two_columns() & second_column_is_number()
@@ -199,5 +199,5 @@ else:
 
 
     class PieChart3DView(PieChartView):
-        id = 'piechart3D'
+        __regid__ = 'piechart3D'
         pieclass = Pie3D

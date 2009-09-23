@@ -58,7 +58,7 @@ class EntityVComponent(Component):
 
 class NavigationComponent(Component):
     """abstract base class for navigation components"""
-    id = 'navigation'
+    __regid__ = 'navigation'
     __select__ = paginated_rset()
 
     cw_property_defs = {

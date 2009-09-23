@@ -29,7 +29,7 @@ SESSION_MANAGER = None
 
 class AbstractSessionManager(component.Component):
     """manage session data associated to a session identifier"""
-    id = 'sessionmanager'
+    __regid__ = 'sessionmanager'
 
     def __init__(self, vreg):
         self.session_time = vreg.config['http-session-time'] or None
