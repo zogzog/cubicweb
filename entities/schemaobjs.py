@@ -20,11 +20,11 @@ class CWEType(AnyEntity):
     fetch_attrs, fetch_order = fetch_config(['name'])
 
     def dc_title(self):
-        return u'%s (%s)' % (self.name, self.req._(self.name))
+        return u'%s (%s)' % (self.name, self._cw._(self.name))
 
     def dc_long_title(self):
         stereotypes = []
-        _ = self.req._
+        _ = self._cw._
         if self.final:
             stereotypes.append(_('final'))
         if stereotypes:
@@ -41,11 +41,11 @@ class CWRType(AnyEntity):
     fetch_attrs, fetch_order = fetch_config(['name'])
 
     def dc_title(self):
-        return u'%s (%s)' % (self.name, self.req._(self.name))
+        return u'%s (%s)' % (self.name, self._cw._(self.name))
 
     def dc_long_title(self):
         stereotypes = []
-        _ = self.req._
+        _ = self._cw._
         if self.symetric:
             stereotypes.append(_('symetric'))
         if self.inlined:
@@ -63,7 +63,7 @@ class CWRType(AnyEntity):
         * raise ValidationError if inlining is'nt possible
         * eventually return True
         """
-        rschema = self.schema.rschema(self.name)
+        rschema = self._cw.vreg.schema.rschema(self.name)
         if inlined == rschema.inlined:
             return False
         if inlined:
@@ -75,7 +75,7 @@ class CWRType(AnyEntity):
                     rtype = self.name
                     stype = rdef.stype
                     otype = rdef.otype
-                    msg = self.req._("can't set inlined=%(inlined)s, "
+                    msg = self._cw._("can't set inlined=%(inlined)s, "
                                      "%(stype)s %(rtype)s %(otype)s "
                                      "has cardinality=%(card)s")
                     raise ValidationError(self.eid, {'inlined': msg % locals()})
@@ -203,8 +203,8 @@ class CWPermission(AnyEntity):
 
     def dc_title(self):
         if self.label:
-            return '%s (%s)' % (self.req._(self.name), self.label)
-        return self.req._(self.name)
+            return '%s (%s)' % (self._cw._(self.name), self.label)
+        return self._cw._(self.name)
 
     def after_deletion_path(self):
         """return (path, parameters) which should be used as redirect
