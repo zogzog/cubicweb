@@ -50,7 +50,7 @@ class Workflow(AnyEntity):
             _done = set()
         yield self
         _done.add(self.eid)
-        for tr in self.req.execute('Any T WHERE T is WorkflowTransition, '
+        for tr in self._cw.execute('Any T WHERE T is WorkflowTransition, '
                                    'T transition_of WF, WF eid %(wf)s',
                                    {'wf': self.eid}).entities():
             if tr.subwf.eid in _done:
@@ -61,7 +61,7 @@ class Workflow(AnyEntity):
     # state / transitions accessors ############################################
 
     def state_by_name(self, statename):
-        rset = self.req.execute('Any S, SN WHERE S name SN, S name %(n)s, '
+        rset = self._cw.execute('Any S, SN WHERE S name SN, S name %(n)s, '
                                 'S state_of WF, WF eid %(wf)s',
                                 {'n': statename, 'wf': self.eid}, 'wf')
         if rset:
@@ -69,7 +69,7 @@ class Workflow(AnyEntity):
         return None
 
     def state_by_eid(self, eid):
-        rset = self.req.execute('Any S, SN WHERE S name SN, S eid %(s)s, '
+        rset = self._cw.execute('Any S, SN WHERE S name SN, S eid %(s)s, '
                                 'S state_of WF, WF eid %(wf)s',
                                 {'s': eid, 'wf': self.eid}, ('wf', 's'))
         if rset:
@@ -77,7 +77,7 @@ class Workflow(AnyEntity):
         return None
 
     def transition_by_name(self, trname):
-        rset = self.req.execute('Any T, TN WHERE T name TN, T name %(n)s, '
+        rset = self._cw.execute('Any T, TN WHERE T name TN, T name %(n)s, '
                                 'T transition_of WF, WF eid %(wf)s',
                                 {'n': trname, 'wf': self.eid}, 'wf')
         if rset:
@@ -85,7 +85,7 @@ class Workflow(AnyEntity):
         return None
 
     def transition_by_eid(self, eid):
-        rset = self.req.execute('Any T, TN WHERE T name TN, T eid %(t)s, '
+        rset = self._cw.execute('Any T, TN WHERE T name TN, T eid %(t)s, '
                                 'T transition_of WF, WF eid %(wf)s',
                                 {'t': eid, 'wf': self.eid}, ('wf', 't'))
         if rset:
@@ -96,20 +96,20 @@ class Workflow(AnyEntity):
 
     def add_state(self, name, initial=False, **kwargs):
         """add a state to this workflow"""
-        state = self.req.create_entity('State', name=unicode(name), **kwargs)
-        self.req.execute('SET S state_of WF WHERE S eid %(s)s, WF eid %(wf)s',
+        state = self._cw.create_entity('State', name=unicode(name), **kwargs)
+        self._cw.execute('SET S state_of WF WHERE S eid %(s)s, WF eid %(wf)s',
                          {'s': state.eid, 'wf': self.eid}, ('s', 'wf'))
         if initial:
             assert not self.initial
-            self.req.execute('SET WF initial_state S '
+            self._cw.execute('SET WF initial_state S '
                              'WHERE S eid %(s)s, WF eid %(wf)s',
                              {'s': state.eid, 'wf': self.eid}, ('s', 'wf'))
         return state
 
     def _add_transition(self, trtype, name, fromstates,
                         requiredgroups=(), conditions=(), **kwargs):
-        tr = self.req.create_entity(trtype, name=unicode(name), **kwargs)
-        self.req.execute('SET T transition_of WF '
+        tr = self._cw.create_entity(trtype, name=unicode(name), **kwargs)
+        self._cw.execute('SET T transition_of WF '
                          'WHERE T eid %(t)s, WF eid %(wf)s',
                          {'t': tr.eid, 'wf': self.eid}, ('t', 'wf'))
         assert fromstates, fromstates
@@ -118,7 +118,7 @@ class Workflow(AnyEntity):
         for state in fromstates:
             if hasattr(state, 'eid'):
                 state = state.eid
-            self.req.execute('SET S allowed_transition T '
+            self._cw.execute('SET S allowed_transition T '
                              'WHERE S eid %(s)s, T eid %(t)s',
                              {'s': state, 't': tr.eid}, ('s', 't'))
         tr.set_transition_permissions(requiredgroups, conditions, reset=False)
@@ -131,7 +131,7 @@ class Workflow(AnyEntity):
                                   requiredgroups, conditions, **kwargs)
         if hasattr(tostate, 'eid'):
             tostate = tostate.eid
-        self.req.execute('SET T destination_state S '
+        self._cw.execute('SET T destination_state S '
                          'WHERE S eid %(s)s, T eid %(t)s',
                          {'t': tr.eid, 's': tostate}, ('s', 't'))
         return tr
@@ -143,7 +143,7 @@ class Workflow(AnyEntity):
                                   requiredgroups, conditions, **kwargs)
         if hasattr(subworkflow, 'eid'):
             subworkflow = subworkflow.eid
-        self.req.execute('SET T subworkflow WF WHERE WF eid %(wf)s,T eid %(t)s',
+        self._cw.execute('SET T subworkflow WF WHERE WF eid %(wf)s,T eid %(t)s',
                          {'t': tr.eid, 'wf': subworkflow}, ('wf', 't'))
         for fromstate, tostate in exitpoints:
             tr.add_exit_point(fromstate, tostate)
@@ -178,7 +178,7 @@ class BaseTransition(AnyEntity):
 
         `eid` is the eid of the object on which we may fire the transition
         """
-        user = self.req.user
+        user = self._cw.user
         # check user is at least in one of the required groups if any
         groups = frozenset(g.name for g in self.require_group)
         if groups:
@@ -190,7 +190,7 @@ class BaseTransition(AnyEntity):
         # check one of the rql expression conditions matches if any
         if self.condition:
             for rqlexpr in self.condition:
-                if rqlexpr.check_expression(self.req, eid):
+                if rqlexpr.check_expression(self._cw, eid):
                     return True
         if self.condition or groups:
             return False
@@ -210,12 +210,12 @@ class BaseTransition(AnyEntity):
         transition
         """
         if reset:
-            self.req.execute('DELETE T require_group G WHERE T eid %(x)s',
+            self._cw.execute('DELETE T require_group G WHERE T eid %(x)s',
                              {'x': self.eid}, 'x')
-            self.req.execute('DELETE T condition R WHERE T eid %(x)s',
+            self._cw.execute('DELETE T condition R WHERE T eid %(x)s',
                              {'x': self.eid}, 'x')
         for gname in requiredgroups:
-            rset = self.req.execute('SET T require_group G '
+            rset = self._cw.execute('SET T require_group G '
                                     'WHERE T eid %(x)s, G name %(gn)s',
                                     {'x': self.eid, 'gn': gname}, 'x')
             assert rset, '%s is not a known group' % gname
@@ -224,7 +224,7 @@ class BaseTransition(AnyEntity):
         for expr in conditions:
             if isinstance(expr, str):
                 expr = unicode(expr)
-            self.req.execute('INSERT RQLExpression X: X exprtype "ERQLExpression", '
+            self._cw.execute('INSERT RQLExpression X: X exprtype "ERQLExpression", '
                              'X expression %(expr)s, T condition X '
                              'WHERE T eid %(x)s',
                              {'x': self.eid, 'expr': expr}, 'x')
@@ -255,7 +255,7 @@ class WorkflowTransition(BaseTransition):
             fromstate = fromstate.eid
         if hasattr(tostate, 'eid'):
             tostate = tostate.eid
-        self.req.execute('INSERT SubWorkflowExitPoint X: T subworkflow_exit X, '
+        self._cw.execute('INSERT SubWorkflowExitPoint X: T subworkflow_exit X, '
                          'X subworkflow_state FS, X destination_state TS '
                          'WHERE T eid %(t)s, FS eid %(fs)s, TS eid %(ts)s',
                          {'t': self.eid, 'fs': fromstate, 'ts': tostate},
@@ -267,7 +267,7 @@ class WorkflowTransition(BaseTransition):
             state = state.eid
         stateeid = self.exit_points().get(state)
         if stateeid is not None:
-            return self.req.entity_from_eid(stateeid)
+            return self._cw.entity_from_eid(stateeid)
         return None
 
     @cached
@@ -384,7 +384,7 @@ class WorkflowableMixIn(object):
         """return current state name translated to context's language"""
         state = self.current_state
         if state:
-            return self.req._(state.name)
+            return self._cw._(state.name)
         return u''
 
     @property
@@ -402,7 +402,7 @@ class WorkflowableMixIn(object):
     def cwetype_workflow(self):
         """return the default workflow for entities of this type"""
         # XXX CWEType method
-        wfrset = self.req.execute('Any WF WHERE X is ET, X eid %(x)s, '
+        wfrset = self._cw.execute('Any WF WHERE X is ET, X eid %(x)s, '
                                   'WF workflow_of ET', {'x': self.eid}, 'x')
         if len(wfrset) == 1:
             return wfrset.get_entity(0, 0)
@@ -421,7 +421,7 @@ class WorkflowableMixIn(object):
         """
         if self.current_state is None or self.current_workflow is None:
             return
-        rset = self.req.execute(
+        rset = self._cw.execute(
             'Any T,N WHERE S allowed_transition T, S eid %(x)s, '
             'T name N, T transition_of WF, WF eid %(wfeid)s',
             {'x': self.current_state.eid,
@@ -444,7 +444,7 @@ class WorkflowableMixIn(object):
         if tseid is not None:
             args.append( ('to_state', 'S') )
             kwargs['S'] = tseid
-        return self.req.create_entity('TrInfo', *args, **kwargs)
+        return self._cw.create_entity('TrInfo', *args, **kwargs)
 
     def fire_transition(self, trname, comment=None, commentformat=None):
         """change the entity's state by firing transition of the given name in
@@ -514,6 +514,6 @@ class WorkflowableMixIn(object):
     @property
     @deprecated('[3.5] use printable_state')
     def displayable_state(self):
-        return self.req._(self.state)
+        return self._cw._(self.state)
 
 MI_REL_TRIGGERS[('in_state', 'subject')] = WorkflowableMixIn
