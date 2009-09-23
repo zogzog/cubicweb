@@ -64,8 +64,10 @@ class HooksRegistry(CWRegistry):
     def register(self, obj, **kwargs):
         try:
             iter(obj.events)
+        except AttributeError:
+            raise
         except:
-            raise Exception('bad .events attribute %s on %s' % (obj.event, obj))
+            raise Exception('bad .events attribute %s on %s' % (obj.events, obj))
         for event in obj.events:
             if event not in ALL_HOOKS:
                 raise Exception('bad event %s on %s' % (event, obj))
