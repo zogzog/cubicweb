@@ -63,13 +63,13 @@ def filter_changes(changes):
     for eid in deleted:
         try:
             for change in index['delete_relation'].copy():
-                if change.eidfrom == eid:
+                if change[1].eidfrom == eid:
                     index['delete_relation'].remove(change)
-                elif change.eidto == eid:
+                elif change[1].eidto == eid:
                     index['delete_relation'].remove(change)
-                    if change.rtype == 'wf_info_for':
+                    if change[1].rtype == 'wf_info_for':
                         for change_ in index['delete_entity'].copy():
-                            if change_[1].eidfrom == change.eidfrom:
+                            if change_[1].eidfrom == change[1].eidfrom:
                                 index['delete_entity'].remove(change_)
         except KeyError:
             break
@@ -149,8 +149,8 @@ class SupervisionEmailView(Component):
         msg = self.req._('added relation %(rtype)s from %(frometype)s #%(eidfrom)s to %(toetype)s #%(eidto)s')
         self.w(msg % self._relation_context(changedescr))
 
-    def delete_relation(self, eidfrom, rtype, eidto):
         msg = self.req._('deleted relation %(rtype)s from %(frometype)s #%(eidfrom)s to %(toetype)s #%(eidto)s')
+    def delete_relation(self, changedescr):
         self.w(msg % self._relation_context(changedescr))
 
 
