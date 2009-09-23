@@ -74,7 +74,7 @@ class SelectAction(Action):
     any size entity result search it the current state is 'linksearch'
     if accept match.
     """
-    id = 'select'
+    __regid__ = 'select'
     __select__ = match_search_state('linksearch') & nonempty_rset() & match_searched_etype()
 
     title = _('select')
@@ -86,7 +86,7 @@ class SelectAction(Action):
 
 
 class CancelSelectAction(Action):
-    id = 'cancel'
+    __regid__ = 'cancel'
     __select__ = match_search_state('linksearch')
 
     title = _('cancel select')
@@ -100,7 +100,7 @@ class CancelSelectAction(Action):
 
 
 class ViewAction(Action):
-    id = 'view'
+    __regid__ = 'view'
     __select__ = (match_search_state('normal') &
                   match_user_groups('users', 'managers') &
                   view_is_not_default_view() &
@@ -119,7 +119,7 @@ class ViewAction(Action):
 
 
 class ModifyAction(Action):
-    id = 'edit'
+    __regid__ = 'edit'
     __select__ = (match_search_state('normal') &
                   one_line_rset() &
                   (has_permission('update') | has_editable_relation('add')))
@@ -134,7 +134,7 @@ class ModifyAction(Action):
 
 
 class MultipleEditAction(Action):
-    id = 'muledit' # XXX get strange conflicts if id='edit'
+    __regid__ = 'muledit' # XXX get strange conflicts if id='edit'
     __select__ = (match_search_state('normal') &
                   two_lines_rset() & one_etype_rset() &
                   has_permission('update'))
@@ -150,7 +150,7 @@ class MultipleEditAction(Action):
 # generic "more" actions #######################################################
 
 class ManagePermissionsAction(Action):
-    id = 'managepermission'
+    __regid__ = 'managepermission'
     __select__ = one_line_rset() & non_final_entity() & match_user_groups('managers')
 
     title = _('manage permissions')
@@ -171,7 +171,7 @@ class ManagePermissionsAction(Action):
 
 
 class DeleteAction(Action):
-    id = 'delete'
+    __regid__ = 'delete'
     __select__ = has_permission('delete')
 
     title = _('delete')
@@ -186,7 +186,7 @@ class DeleteAction(Action):
 
 
 class CopyAction(Action):
-    id = 'copy'
+    __regid__ = 'copy'
     __select__ = one_line_rset() & has_permission('add')
 
     title = _('copy')
@@ -202,7 +202,7 @@ class AddNewAction(MultipleEditAction):
     """when we're seeing more than one entity with the same type, propose to
     add a new one
     """
-    id = 'addentity'
+    __regid__ = 'addentity'
     __select__ = (match_search_state('normal') &
                   (addable_etype_empty_rset()
                    | (two_lines_rset() & one_etype_rset & has_add_permission()))
@@ -227,7 +227,7 @@ class AddNewAction(MultipleEditAction):
 
 class AddRelatedActions(Action):
     """fill 'addrelated' sub-menu of the actions box"""
-    id = 'addrelated'
+    __regid__ = 'addrelated'
     __select__ = Action.__select__ & one_line_rset() & non_final_entity()
 
     submenu = _('addrelated')
@@ -293,7 +293,7 @@ class AddRelatedActions(Action):
 # logged user actions #########################################################
 
 class UserPreferencesAction(Action):
-    id = 'myprefs'
+    __regid__ = 'myprefs'
     __select__ = authenticated_user()
 
     title = _('user preferences')
@@ -305,7 +305,7 @@ class UserPreferencesAction(Action):
 
 
 class UserInfoAction(Action):
-    id = 'myinfos'
+    __regid__ = 'myinfos'
     __select__ = authenticated_user()
 
     title = _('personnal informations')
@@ -317,7 +317,7 @@ class UserInfoAction(Action):
 
 
 class LogoutAction(Action):
-    id = 'logout'
+    __regid__ = 'logout'
     __select__ = authenticated_user()
 
     title = _('logout')
@@ -341,21 +341,21 @@ class ManagersAction(Action):
 
 
 class SiteConfigurationAction(ManagersAction):
-    id = 'siteconfig'
+    __regid__ = 'siteconfig'
     title = _('site configuration')
     order = 10
 
 
 class ManageAction(ManagersAction):
-    id = 'manage'
+    __regid__ = 'manage'
     title = _('manage')
     order = 20
 
 class SiteInfoAction(ManagersAction):
-    id = 'siteinfo'
+    __regid__ = 'siteinfo'
+    __select__ = match_user_groups('users','managers')
     title = _('info')
     order = 30
-    __select__ = match_user_groups('users','managers')
 
 
 from logilab.common.deprecation import class_moved

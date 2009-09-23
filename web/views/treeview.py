@@ -20,7 +20,7 @@ def treecookiename(treeid):
     return str('%s-treestate' % treeid)
 
 class TreeView(EntityView):
-    id = 'treeview'
+    __regid__ = 'treeview'
     itemvid = 'treeitemview'
     subvid = 'oneline'
     css_classes = 'treeview widget'
@@ -74,7 +74,7 @@ jQuery("#tree-%s").treeview({toggle: toggleTree, prerendered: true});""" % treei
 class FileTreeView(TreeView):
     """specific version of the treeview to display file trees
     """
-    id = 'filetree'
+    __regid__ = 'filetree'
     css_classes = 'treeview widget filetree'
     title = _('file tree view')
 
@@ -88,7 +88,7 @@ class FileItemInnerView(EntityView):
     This view adds an enclosing <span> with some specific CSS classes
     around the oneline view. This is needed by the jquery treeview plugin.
     """
-    id = 'filetree-oneline'
+    __regid__ = 'filetree-oneline'
 
     def cell_call(self, row, col):
         entity = self.rset.get_entity(row, col)
@@ -101,7 +101,7 @@ class FileItemInnerView(EntityView):
 
 class DefaultTreeViewItemView(EntityView):
     """default treeitem view for entities which don't implement ITree"""
-    id = 'treeitemview'
+    __regid__ = 'treeitemview'
 
     def cell_call(self, row, col, vid='oneline', parentvid='treeview', treeid=None):
         assert treeid is not None
@@ -118,9 +118,9 @@ class TreeViewItemView(EntityView):
 
     (each item should be expandable if it's not a tree leaf)
     """
-    id = 'treeitemview'
-    default_branch_state_is_open = False
+    __regid__ = 'treeitemview'
     __select__ = EntityView.__select__ & implements(ITree)
+    default_branch_state_is_open = False
 
     def open_state(self, eeid, treeid):
         cookies = self.req.get_cookie()

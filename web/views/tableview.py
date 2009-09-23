@@ -22,7 +22,7 @@ from cubicweb.web.htmlwidgets import (TableWidget, TableColumn, MenuWidget,
 from cubicweb.web.facet import prepare_facets_rqlst, filter_hiddens
 
 class TableView(AnyRsetView):
-    id = 'table'
+    __regid__ = 'table'
     title = _('table')
     finalview = 'final'
 
@@ -247,15 +247,14 @@ class TableView(AnyRsetView):
 
 
 class EditableTableView(TableView):
-    id = 'editable-table'
+    __regid__ = 'editable-table'
     finalview = 'editable-final'
     title = _('editable-table')
 
 
 class CellView(EntityView):
+    __regid__ = 'cell'
     __select__ = nonempty_rset()
-
-    id = 'cell'
 
     def cell_call(self, row, col, cellvid=None):
         """
@@ -287,7 +286,7 @@ class InitialTableView(TableView):
     * the actual query (`actualrql` form parameter) whose results will be
       displayed with default restrictions set
     """
-    id = 'initialtable'
+    __regid__ = 'initialtable'
     __select__ = nonempty_rset() & match_form_params('actualrql')
     # should not be displayed in possible view since it expects some specific
     # parameters
@@ -325,5 +324,5 @@ class InitialTableView(TableView):
 
 
 class EditableInitialTableTableView(InitialTableView):
-    id = 'editable-initialtable'
+    __regid__ = 'editable-initialtable'
     finalview = 'editable-final'

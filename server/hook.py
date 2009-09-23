@@ -138,15 +138,17 @@ class Hook(AppObject):
     enabled = True
 
     @classproperty
-    def __id__(cls):
-        warn('[3.6] %s: please specify an id for your hook' % cls)
+    def __regid__(cls):
+        warn('[3.6] %s.%s: please specify an id for your hook'
+             % (cls.__module__, cls.__name__), DeprecationWarning)
         return str(id(cls))
 
     @classmethod
     def __registered__(cls, vreg):
         super(Hook, cls).__registered__(vreg)
         if getattr(cls, 'accepts', None):
-            warn('[3.6] %s: accepts is deprecated, define proper __select__' % cls)
+            warn('[3.6] %s.%s: accepts is deprecated, define proper __select__'
+                 % (cls.__module__, cls.__name__), DeprecationWarning)
             rtypes = []
             for ertype in cls.accepts:
                 if ertype.islower():
@@ -167,8 +169,9 @@ class Hook(AppObject):
 
     def __call__(self):
         if hasattr(self, 'call'):
-            warn('[3.6] %s: call is deprecated, implements __call__' % self.__class__,
-                 DeprecationWarning)
+            cls = self.__class__
+            warn('[3.6] %s.%s: call is deprecated, implements __call__'
+                 % (cls.__module__, cls.__name__), DeprecationWarning)
             if self.event.endswith('_relation'):
                 self.call(self._cw, self.eidfrom, self.rtype, self.eidto)
             elif 'delete' in self.event:

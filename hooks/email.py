@@ -43,7 +43,7 @@ class SetPrimaryEmailRelationOp(SetUseEmailRelationOp):
 
 class SetPrimaryEmailHook(hook.Hook):
     """notify when a bug or story or version has its state modified"""
-    __id__ = 'setprimaryemail'
+    __regid__ = 'setprimaryemail'
     __select__ = hook.Hook.__select__ & hook.match_rtype('use_email')
     category = 'email'
     events = ('after_add_relation',)
@@ -56,7 +56,7 @@ class SetPrimaryEmailHook(hook.Hook):
 
 class SetUseEmailHook(hook.Hook):
     """notify when a bug or story or version has its state modified"""
-    __id__ = 'setprimaryemail'
+    __regid__ = 'setprimaryemail'
     __select__ = hook.Hook.__select__ & hook.match_rtype('primary_email')
     category = 'email'
     events = ('after_add_relation',)

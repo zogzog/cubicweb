@@ -34,7 +34,7 @@ class ProgressTableView(EntityView):
     header_for_COLNAME methods allow to customize header's label
     """
 
-    id = 'progress_table_view'
+    __regid__ = 'progress_table_view'
     title = _('task progression')
     __select__ = implements(IMileStone)
 
@@ -165,7 +165,7 @@ class InContextProgressTableView(ProgressTableView):
     """this views redirects to ``progress_table_view`` but removes
     the ``project`` column
     """
-    id = 'ic_progress_table_view'
+    __regid__ = 'ic_progress_table_view'
 
     def call(self, columns=None):
         view = self.vreg['views'].select('progress_table_view', self.req,
@@ -180,7 +180,7 @@ class InContextProgressTableView(ProgressTableView):
 
 class ProgressBarView(EntityView):
     """displays a progress bar"""
-    id = 'progressbar'
+    __regid__ = 'progressbar'
     title = _('progress bar')
     __select__ = implements(IProgress)
 

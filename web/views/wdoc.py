@@ -87,7 +87,7 @@ def subsections(node):
 
 class InlineHelpView(StartupView):
     __select__ = match_form_params('fid')
-    id = 'wdoc'
+    __regid__ = 'wdoc'
     title = _('site documentation')
 
     def call(self):
@@ -163,7 +163,7 @@ class InlineHelpView(StartupView):
 
 
 class InlineHelpImageView(StartupView):
-    id = 'wdocimages'
+    __regid__ = 'wdocimages'
     __select__ = match_form_params('fid')
     binary = True
     templatable = False
@@ -183,7 +183,7 @@ class InlineHelpImageView(StartupView):
 
 
 class ChangeLogView(StartupView):
-    id = 'changelog'
+    __regid__ = 'changelog'
     title = _('What\'s new?')
     maxentries = 25
 

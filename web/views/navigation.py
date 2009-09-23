@@ -177,7 +177,7 @@ def paginate(view, show_all_option=True, w=None, page_size=None):
 View.paginate = paginate
 
 class NextPrevNavigationComponent(EntityVComponent):
-    id = 'prevnext'
+    __regid__ = 'prevnext'
     # register msg not generated since no entity implements IPrevNext in cubicweb
     # itself
     title = _('contentnavigation_prevnext')

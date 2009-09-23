@@ -20,7 +20,7 @@ from cubicweb.web import uicfg
 
 class PrimaryView(EntityView):
     """the full view of an non final entity"""
-    id = 'primary'
+    __regid__ = 'primary'
     title = _('primary')
     show_attr_label = True
     show_rel_label = True
@@ -204,7 +204,7 @@ class PrimaryView(EntityView):
 
 
 class RelatedView(EntityView):
-    id = 'autolimited'
+    __regid__ = 'autolimited'
     def call(self, title=None, **kwargs):
         # if not too many entities, show them all in a list
         maxrelated = self.req.property_value('navigation.related-limit')

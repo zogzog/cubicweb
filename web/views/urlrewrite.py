@@ -67,7 +67,7 @@ class SimpleReqRewriter(URLRewriter):
 
     If the input uri is a regexp, group substitution is allowed
     """
-    id = 'simple'
+    __regid__ = 'simple'
 
     rules = [
         ('/_', dict(vid='manage')),
@@ -179,7 +179,7 @@ class SchemaBasedRewriter(URLRewriter):
     """Here, the rules dict maps regexps or plain strings to
     callbacks that will be called with (input, uri, req, schema)
     """
-    id = 'schemabased'
+    __regid__ = 'schemabased'
     rules = [
         # rgxp : callback
         (rgx('/search/(.+)'), build_rset(rql=r'Any X WHERE X has_text %(text)s',

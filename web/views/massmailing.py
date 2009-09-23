@@ -22,7 +22,7 @@ from cubicweb.web.views import forms, formrenderers
 
 
 class SendEmailAction(Action):
-    id = 'sendemail'
+    __regid__ = 'sendemail'
     # XXX should check email is set as well
     __select__ = implements(IEmailable) & match_user_groups('managers', 'users')
 
@@ -38,7 +38,7 @@ class SendEmailAction(Action):
 
 
 class MassMailingForm(forms.FieldsForm):
-    id = 'massmailing'
+    __regid__ = 'massmailing'
 
     sender = StringField(widget=TextInput({'disabled': 'disabled'}), label=_('From:'))
     recipient = StringField(widget=CheckBox(), label=_('Recipients:'))
@@ -82,7 +82,7 @@ class MassMailingForm(forms.FieldsForm):
 
 
 class MassMailingFormRenderer(formrenderers.FormRenderer):
-    id = 'massmailing'
+    __regid__ = 'massmailing'
     button_bar_class = u'toolbar'
 
     def _render_fields(self, fields, w, form):
@@ -118,7 +118,7 @@ class MassMailingFormRenderer(formrenderers.FormRenderer):
         pass
 
 class MassMailingFormView(FormViewMixIn, EntityView):
-    id = 'massmailing'
+    __regid__ = 'massmailing'
     __select__ = implements(IEmailable) & match_user_groups('managers', 'users')
 
     def call(self):

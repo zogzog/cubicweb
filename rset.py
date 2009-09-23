@@ -322,7 +322,7 @@ class ResultSet(object):
             # we also have to fix/remove from the request entity cache entities
             # which get a wrong rset reference by this limit call
             for entity in self.req.cached_entities():
-                if entity.rset is self:
+                if entity.cw_rset is self:
                     if offset <= entity.row < stop:
                         entity.row = entity.row - offset
                     else:
@@ -425,7 +425,7 @@ class ResultSet(object):
         except KeyError:
             pass
         else:
-            if entity.rset is None:
+            if entity.cw_rset is None:
                 # entity has no rset set, this means entity has been created by
                 # the querier (req is a repository session) and so jas no rset
                 # info. Add it.

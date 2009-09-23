@@ -16,7 +16,7 @@ from cubicweb.entities import AnyEntity, fetch_config
 
 
 class CWEType(AnyEntity):
-    id = 'CWEType'
+    __regid__ = 'CWEType'
     fetch_attrs, fetch_order = fetch_config(['name'])
 
     def dc_title(self):
@@ -37,7 +37,7 @@ class CWEType(AnyEntity):
 
 
 class CWRType(AnyEntity):
-    id = 'CWRType'
+    __regid__ = 'CWRType'
     fetch_attrs, fetch_order = fetch_config(['name'])
 
     def dc_title(self):
@@ -87,7 +87,7 @@ class CWRType(AnyEntity):
 
 
 class CWRelation(AnyEntity):
-    id = 'CWRelation'
+    __regid__ = 'CWRelation'
     fetch_attrs = fetch_config(['cardinality'])[0]
 
     def dc_title(self):
@@ -130,7 +130,7 @@ class CWRelation(AnyEntity):
 
 
 class CWAttribute(CWRelation):
-    id = 'CWAttribute'
+    __regid__ = 'CWAttribute'
 
     def dc_long_title(self):
         card = self.cardinality
@@ -144,7 +144,7 @@ class CWAttribute(CWRelation):
 
 
 class CWConstraint(AnyEntity):
-    id = 'CWConstraint'
+    __regid__ = 'CWConstraint'
     fetch_attrs, fetch_order = fetch_config(['value'])
 
     def dc_title(self):
@@ -164,7 +164,7 @@ class CWConstraint(AnyEntity):
 
 
 class RQLExpression(AnyEntity):
-    id = 'RQLExpression'
+    __regid__ = 'RQLExpression'
     fetch_attrs, fetch_order = fetch_config(['exprtype', 'mainvars', 'expression'])
 
     def dc_title(self):
@@ -198,7 +198,7 @@ class RQLExpression(AnyEntity):
 
 
 class CWPermission(AnyEntity):
-    id = 'CWPermission'
+    __regid__ = 'CWPermission'
     fetch_attrs, fetch_order = fetch_config(['name', 'label'])
 
     def dc_title(self):

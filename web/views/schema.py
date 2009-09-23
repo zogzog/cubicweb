@@ -37,7 +37,7 @@ def skip_types(req):
 # global schema view ###########################################################
 
 class SchemaView(tabs.TabsMixin, StartupView):
-    id = 'schema'
+    __regid__ = 'schema'
     title = _('instance schema')
     tabs = [_('schema-text'), _('schema-image')]
     default_tab = 'schema-text'
@@ -51,7 +51,7 @@ class SchemaView(tabs.TabsMixin, StartupView):
 
 
 class SchemaTabImageView(StartupView):
-    id = 'schema-image'
+    __regid__ = 'schema-image'
 
     def call(self):
         self.w(_(u'<div>This schema of the data model <em>excludes</em> the '
@@ -64,7 +64,7 @@ class SchemaTabImageView(StartupView):
 
 
 class SchemaTabTextView(StartupView):
-    id = 'schema-text'
+    __regid__ = 'schema-text'
 
     def call(self):
         rset = self.req.execute('Any X ORDERBY N WHERE X is CWEType, X name N, '
@@ -73,7 +73,7 @@ class SchemaTabTextView(StartupView):
 
 
 class ManagerSchemaPermissionsView(StartupView, management.SecurityViewMixIn):
-    id = 'schema-security'
+    __regid__ = 'schema-security'
     __select__ = StartupView.__select__ & match_user_groups('managers')
 
     def call(self, display_relations=True):
@@ -173,7 +173,7 @@ class ManagerSchemaPermissionsView(StartupView, management.SecurityViewMixIn):
 
 
 class SchemaUreportsView(StartupView):
-    id = 'schema-block'
+    __regid__ = 'schema-block'
 
     def call(self):
         viewer = SchemaViewer(self.req)
@@ -224,7 +224,7 @@ class CWETypePrimaryView(tabs.TabsMixin, primary.PrimaryView):
 
 
 class CWETypeSTextView(EntityView):
-    id = 'cwetype-schema-text'
+    __regid__ = 'cwetype-schema-text'
     __select__ = EntityView.__select__ & implements('CWEType')
 
     def cell_call(self, row, col):
@@ -260,7 +260,7 @@ class CWETypeSTextView(EntityView):
 
 
 class CWETypeSImageView(EntityView):
-    id = 'cwetype-schema-image'
+    __regid__ = 'cwetype-schema-image'
     __select__ = EntityView.__select__ & implements('CWEType')
 
     def cell_call(self, row, col):
@@ -272,7 +272,7 @@ class CWETypeSImageView(EntityView):
 
 
 class CWETypeSPermView(EntityView):
-    id = 'cwetype-schema-permissions'
+    __regid__ = 'cwetype-schema-permissions'
     __select__ = EntityView.__select__ & implements('CWEType')
 
     def cell_call(self, row, col):
@@ -300,7 +300,7 @@ class CWETypeSPermView(EntityView):
 
 
 class CWETypeSWorkflowView(EntityView):
-    id = 'cwetype-workflow'
+    __regid__ = 'cwetype-workflow'
     __select__ = (EntityView.__select__ & implements('CWEType') &
                   has_related_entities('workflow_of', 'object'))
 
@@ -372,7 +372,7 @@ class OneHopRSchemaVisitor(RestrictedSchemaVisitorMixIn,
 
 
 class SchemaImageView(TmpFileViewMixin, StartupView):
-    id = 'schemagraph'
+    __regid__ = 'schemagraph'
     content_type = 'image/png'
 
     def _generate(self, tmpfile):
@@ -384,7 +384,7 @@ class SchemaImageView(TmpFileViewMixin, StartupView):
 
 
 class CWETypeSchemaImageView(TmpFileViewMixin, EntityView):
-    id = 'schemagraph'
+    __regid__ = 'schemagraph'
     __select__ = implements('CWEType')
     content_type = 'image/png'
 
@@ -411,12 +411,12 @@ class CWRTypeSchemaImageView(CWETypeSchemaImageView):
 # misc: facets, actions ########################################################
 
 class CWFinalFacet(facet.AttributeFacet):
-    id = 'cwfinal-facet'
+    __regid__ = 'cwfinal-facet'
     __select__ = facet.AttributeFacet.__select__ & implements('CWEType', 'CWRType')
     rtype = 'final'
 
 class ViewSchemaAction(action.Action):
-    id = 'schema'
+    __regid__ = 'schema'
     __select__ = yes()
 
     title = _("site schema")

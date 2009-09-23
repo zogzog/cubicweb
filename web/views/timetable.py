@@ -24,7 +24,7 @@ class _TaskEntry(object):
 MIN_COLS = 3  # minimum number of task columns for a single user
 
 class TimeTableView(AnyRsetView):
-    id = 'timetable'
+    __regid__ = 'timetable'
     title = _('timetable')
     __select__ = implements(ITimetableViews)
     need_navigation = False

@@ -22,7 +22,7 @@ from cubicweb.web import httpcache, box
 
 class XMLView(EntityView):
     """xml view for entities"""
-    id = 'xml'
+    __regid__ = 'xml'
     title = _('xml')
     templatable = False
     content_type = 'text/xml'
@@ -42,7 +42,7 @@ class XMLView(EntityView):
 
 
 class XMLItemView(EntityView):
-    id = 'xmlitem'
+    __regid__ = 'xmlitem'
 
     def cell_call(self, row, col):
         """ element as an item for an xml feed """
@@ -67,7 +67,7 @@ class XMLItemView(EntityView):
 
 class XMLRsetView(AnyRsetView):
     """dumps raw rset as xml"""
-    id = 'rsetxml'
+    __regid__ = 'rsetxml'
     title = _('xml export')
     templatable = False
     content_type = 'text/xml'
@@ -105,7 +105,7 @@ class XMLRsetView(AnyRsetView):
 # RSS stuff ###################################################################
 
 class RSSFeedURL(Component):
-    id = 'rss_feed_url'
+    __regid__ = 'rss_feed_url'
     __select__ = non_final_entity()
 
     def feed_url(self):
@@ -113,7 +113,7 @@ class RSSFeedURL(Component):
 
 
 class RSSEntityFeedURL(Component):
-    id = 'rss_feed_url'
+    __regid__ = 'rss_feed_url'
     __select__ = non_final_entity() & one_line_rset()
 
     def feed_url(self):
@@ -122,7 +122,7 @@ class RSSEntityFeedURL(Component):
 
 class RSSIconBox(box.BoxTemplate):
     """just display the RSS icon on uniform result set"""
-    id = 'rss'
+    __regid__ = 'rss'
     __select__ = (box.BoxTemplate.__select__
                   & appobject_selectable('components', 'rss_feed_url'))
 
@@ -142,7 +142,7 @@ class RSSIconBox(box.BoxTemplate):
 
 
 class RSSView(XMLView):
-    id = 'rss'
+    __regid__ = 'rss'
     title = _('rss')
     templatable = False
     content_type = 'text/xml'
@@ -178,7 +178,7 @@ class RSSView(XMLView):
 
 
 class RSSItemView(EntityView):
-    id = 'rssitem'
+    __regid__ = 'rssitem'
     date_format = '%%Y-%%m-%%dT%%H:%%M%+03i:00' % (timezone / 3600)
     add_div_section = False
 

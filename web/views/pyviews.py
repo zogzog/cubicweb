@@ -11,7 +11,7 @@ from cubicweb.view import View
 from cubicweb.selectors import match_kwargs
 
 class PyValTableView(View):
-    id = 'pyvaltable'
+    __regid__ = 'pyvaltable'
     __select__ = match_kwargs('pyvalue')
 
     def call(self, pyvalue, headers=None):
@@ -32,7 +32,7 @@ class PyValTableView(View):
 
 
 class PyValListView(View):
-    id = 'pyvallist'
+    __regid__ = 'pyvallist'
     __select__ = match_kwargs('pyvalue')
 
     def call(self, pyvalue):

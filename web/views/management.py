@@ -67,7 +67,7 @@ class SecurityViewMixIn(object):
 
 class SecurityManagementView(EntityView, SecurityViewMixIn):
     """display security information for a given entity"""
-    id = 'security'
+    __regid__ = 'security'
     __select__ = EntityView.__select__ & authenticated_user()
 
     title = _('security')
@@ -191,7 +191,7 @@ class SecurityManagementView(EntityView, SecurityViewMixIn):
 class ErrorView(AnyRsetView):
     """default view when no result has been found"""
     __select__ = yes()
-    id = 'error'
+    __regid__ = 'error'
 
     def page_title(self):
         """returns a title according to the result set - used for the
@@ -274,7 +274,7 @@ def text_error_description(ex, excinfo, req, eversion, cubes):
 
 
 class ProcessInformationView(StartupView):
-    id = 'info'
+    __regid__ = 'info'
     __select__ = none_rset() & match_user_groups('users', 'managers')
 
     title = _('server information')

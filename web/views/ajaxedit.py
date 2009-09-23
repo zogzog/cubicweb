@@ -19,10 +19,10 @@ class AddRelationView(EditRelationBoxTemplate):
     class attributes.
     """
     __registry__ = 'views'
+    __regid__ = 'xaddrelation'
     __select__ = (match_form_params('rtype', 'target')
                   | match_kwargs('rtype', 'target'))
     cw_property_defs = {} # don't want to inherit this from Box
-    id = 'xaddrelation'
     expected_kwargs = form_params = ('rtype', 'target')
 
     build_js = EditRelationBoxTemplate.build_reload_js_call

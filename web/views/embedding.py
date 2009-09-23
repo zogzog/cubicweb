@@ -29,7 +29,7 @@ from cubicweb.web.views import basetemplates
 class ExternalTemplate(basetemplates.TheMainTemplate):
     """template embeding an external web pages into CubicWeb web interface
     """
-    id = 'external'
+    __regid__ = 'external'
 
     def call(self, body):
         # XXX fallback to HTML 4 mode when embeding ?
@@ -44,7 +44,7 @@ class ExternalTemplate(basetemplates.TheMainTemplate):
 
 
 class EmbedController(Controller):
-    id = 'embed'
+    __regid__ = 'embed'
     template = 'external'
 
     def publish(self, rset=None):
@@ -92,7 +92,7 @@ class EmbedAction(Action):
     """display an 'embed' link on entity implementing `embeded_url` method
     if the returned url match embeding configuration
     """
-    id = 'embed'
+    __regid__ = 'embed'
     __select__ = (one_line_rset() & match_search_state('normal')
                   & implements(IEmbedable)
                   & score_entity(entity_has_embedable_url))

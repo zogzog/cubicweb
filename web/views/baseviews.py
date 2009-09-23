@@ -30,7 +30,7 @@ from cubicweb.common.uilib import cut, printable_value
 
 class NullView(AnyRsetView):
     """default view when no result has been found"""
-    id = 'null'
+    __regid__ = 'null'
     __select__ = yes()
     def call(self, **kwargs):
         pass
@@ -40,7 +40,7 @@ class NullView(AnyRsetView):
 class NoResultView(View):
     """default view when no result has been found"""
     __select__ = empty_rset()
-    id = 'noresult'
+    __regid__ = 'noresult'
 
     def call(self, **kwargs):
         self.w(u'<div class="searchMessage"><strong>%s</strong></div>\n'
@@ -51,7 +51,7 @@ class FinalView(AnyRsetView):
     """display values without any transformation (i.e. get a number for
     entities)
     """
-    id = 'final'
+    __regid__ = 'final'
     # record generated i18n catalog messages
     _('%d&#160;years')
     _('%d&#160;months')
@@ -112,7 +112,7 @@ class FinalView(AnyRsetView):
 
 # XXX deprecated
 class SecondaryView(EntityView):
-    id = 'secondary'
+    __regid__ = 'secondary'
     title = _('secondary')
 
     def cell_call(self, row, col):
@@ -125,7 +125,7 @@ class SecondaryView(EntityView):
 
 
 class OneLineView(EntityView):
-    id = 'oneline'
+    __regid__ = 'oneline'
     title = _('oneline')
 
     def cell_call(self, row, col):
@@ -139,7 +139,7 @@ class OneLineView(EntityView):
 
 class TextView(EntityView):
     """the simplest text view for an entity"""
-    id = 'text'
+    __regid__ = 'text'
     title = _('text')
     content_type = 'text/plain'
 
@@ -166,7 +166,7 @@ class TextView(EntityView):
 
 class MetaDataView(EntityView):
     """paragraph view of some metadata"""
-    id = 'metadata'
+    __regid__ = 'metadata'
     show_eid = True
 
     def cell_call(self, row, col):
@@ -191,7 +191,7 @@ class MetaDataView(EntityView):
 
 
 class InContextTextView(TextView):
-    id = 'textincontext'
+    __regid__ = 'textincontext'
     title = None # not listed as a possible view
     def cell_call(self, row, col):
         entity = self.rset.get_entity(row, col)
@@ -199,7 +199,7 @@ class InContextTextView(TextView):
 
 
 class OutOfContextTextView(InContextTextView):
-    id = 'textoutofcontext'
+    __regid__ = 'textoutofcontext'
 
     def cell_call(self, row, col):
         entity = self.rset.get_entity(row, col)
@@ -207,7 +207,7 @@ class OutOfContextTextView(InContextTextView):
 
 
 class InContextView(EntityView):
-    id = 'incontext'
+    __regid__ = 'incontext'
 
     def cell_call(self, row, col):
         entity = self.rset.get_entity(row, col)
@@ -220,7 +220,7 @@ class InContextView(EntityView):
 
 
 class OutOfContextView(EntityView):
-    id = 'outofcontext'
+    __regid__ = 'outofcontext'
 
     def cell_call(self, row, col):
         entity = self.rset.get_entity(row, col)
@@ -235,7 +235,7 @@ class OutOfContextView(EntityView):
 # list views ##################################################################
 
 class ListView(EntityView):
-    id = 'list'
+    __regid__ = 'list'
     title = _('list')
     item_vid = 'listitem'
 
@@ -269,7 +269,7 @@ class ListView(EntityView):
 
 
 class ListItemView(EntityView):
-    id = 'listitem'
+    __regid__ = 'listitem'
 
     @property
     def redirect_vid(self):
@@ -290,13 +290,13 @@ class ListItemView(EntityView):
 
 class SimpleListView(ListItemView):
     """list without bullets"""
-    id = 'simplelist'
+    __regid__ = 'simplelist'
     redirect_vid = 'incontext'
 
 
 class AdaptedListView(EntityView):
     """list of entities of the same type"""
-    id = 'adaptedlist'
+    __regid__ = 'adaptedlist'
     __select__ = EntityView.__select__ & one_etype_rset()
     item_vid = 'adaptedlistitem'
 
@@ -316,11 +316,11 @@ class AdaptedListView(EntityView):
 
 
 class AdaptedListItemView(ListItemView):
-    id = 'adaptedlistitem'
+    __regid__ = 'adaptedlistitem'
 
 
 class CSVView(SimpleListView):
-    id = 'csv'
+    __regid__ = 'csv'
     redirect_vid = 'incontext'
 
     def call(self, **kwargs):
@@ -332,7 +332,7 @@ class CSVView(SimpleListView):
 
 
 class TreeItemView(ListItemView):
-    id = 'treeitem'
+    __regid__ = 'treeitem'
 
     def cell_call(self, row, col):
         self.wview('incontext', self.rset, row=row, col=col)
@@ -344,7 +344,7 @@ class TextSearchResultView(EntityView):
 
     XXX: finish me (fixed line width, fixed number of lines, CSS, etc.)
     """
-    id = 'tsearch'
+    __regid__ = 'tsearch'
 
     def cell_call(self, row, col, **kwargs):
         entity = self.complete_entity(row, col)
@@ -374,7 +374,7 @@ class TextSearchResultView(EntityView):
 
 class TooltipView(EntityView):
     """A entity view used in a tooltip"""
-    id = 'tooltip'
+    __regid__ = 'tooltip'
     def cell_call(self, row, col):
         self.wview('oneline', self.rset, row=row, col=col)
 

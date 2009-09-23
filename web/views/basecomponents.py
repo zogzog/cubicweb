@@ -29,7 +29,7 @@ VISIBLE_PROP_DEF = {
 
 class RQLInputForm(component.Component):
     """build the rql input form, usually displayed in the header"""
-    id = 'rqlinput'
+    __regid__ = 'rqlinput'
     cw_property_defs = VISIBLE_PROP_DEF
     visible = False
 
@@ -59,7 +59,7 @@ class RQLInputForm(component.Component):
 
 class ApplLogo(component.Component):
     """build the instance logo, usually displayed in the header"""
-    id = 'logo'
+    __regid__ = 'logo'
     cw_property_defs = VISIBLE_PROP_DEF
     # don't want user to hide this component using an cwproperty
     site_wide = True
@@ -71,7 +71,7 @@ class ApplLogo(component.Component):
 
 class ApplHelp(component.Component):
     """build the help button, usually displayed in the header"""
-    id = 'help'
+    __regid__ = 'help'
     cw_property_defs = VISIBLE_PROP_DEF
     def call(self):
         self.w(u'<a href="%s" class="help" title="%s">&#160;</a>'
@@ -86,7 +86,7 @@ class UserLink(component.Component):
     cw_property_defs = VISIBLE_PROP_DEF
     # don't want user to hide this component using an cwproperty
     site_wide = True
-    id = 'loggeduserlink'
+    __regid__ = 'loggeduserlink'
 
     def call(self):
         if not self.req.cnx.anonymous_connection:
@@ -123,7 +123,7 @@ class ApplicationMessage(component.Component):
     section
     """
     __select__ = yes()
-    id = 'applmessages'
+    __regid__ = 'applmessages'
     # don't want user to hide this component using an cwproperty
     cw_property_defs = {}
 
@@ -140,7 +140,7 @@ class ApplicationMessage(component.Component):
 
 class ApplicationName(component.Component):
     """display the instance name"""
-    id = 'appliname'
+    __regid__ = 'appliname'
     cw_property_defs = VISIBLE_PROP_DEF
     # don't want user to hide this component using an cwproperty
     site_wide = True
@@ -154,7 +154,7 @@ class ApplicationName(component.Component):
 
 class SeeAlsoVComponent(component.RelatedObjectsVComponent):
     """display any entity's see also"""
-    id = 'seealso'
+    __regid__ = 'seealso'
     context = 'navcontentbottom'
     rtype = 'see_also'
     role = 'subject'
@@ -168,7 +168,7 @@ class EtypeRestrictionComponent(component.Component):
     """displays the list of entity types contained in the resultset
     to be able to filter accordingly.
     """
-    id = 'etypenavigation'
+    __regid__ = 'etypenavigation'
     __select__ = two_etypes_rset() | match_form_params('__restrtype', '__restrtypes',
                                                        '__restrrql')
     cw_property_defs = VISIBLE_PROP_DEF
@@ -216,7 +216,7 @@ class EtypeRestrictionComponent(component.Component):
         self.w(u'</div>')
 
 class PdfViewComponent(component.Component):
-    id = 'pdfview'
+    __regid__ = 'pdfview'
     __select__ = yes()
 
     context = 'header'

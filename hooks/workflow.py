@@ -101,7 +101,7 @@ class WorkflowHook(hook.Hook):
 
 
 class SetInitialStateHook(WorkflowHook):
-    __id__ = 'wfsetinitial'
+    __regid__ = 'wfsetinitial'
     __select__ = WorkflowHook.__select__ & entity_implements(IWorkflowable)
     events = ('after_add_entity',)
 
@@ -111,7 +111,7 @@ class SetInitialStateHook(WorkflowHook):
 
 class PrepareStateChangeHook(WorkflowHook):
     """record previous state information"""
-    __id__ = 'cwdelstate'
+    __regid__ = 'cwdelstate'
     __select__ = WorkflowHook.__select__ & hook.match_rtype('in_state')
     events = ('before_delete_relation',)
 
@@ -125,7 +125,7 @@ class FireTransitionHook(WorkflowHook):
     * wf_info_for inlined relation is set
     * by_transition or to_state (managers only) inlined relation is set
     """
-    __id__ = 'wffiretransition'
+    __regid__ = 'wffiretransition'
     __select__ = WorkflowHook.__select__ & entity_implements('TrInfo')
     events = ('before_add_entity',)
 
@@ -210,7 +210,7 @@ class FireTransitionHook(WorkflowHook):
 
 class FiredTransitionHook(WorkflowHook):
     """change related entity state"""
-    __id__ = 'wffiretransition'
+    __regid__ = 'wffiretransition'
     __select__ = WorkflowHook.__select__ & entity_implements('TrInfo')
     events = ('after_add_entity',)
 
@@ -247,7 +247,7 @@ class FiredTransitionHook(WorkflowHook):
 class CheckInStateChangeAllowed(WorkflowHook):
     """check state apply, in case of direct in_state change using unsafe_execute
     """
-    __id__ = 'wfcheckinstate'
+    __regid__ = 'wfcheckinstate'
     __select__ = WorkflowHook.__select__ & hook.match_rtype('in_state')
     events = ('before_add_relation',)
 
@@ -276,7 +276,7 @@ class CheckInStateChangeAllowed(WorkflowHook):
 
 class SetModificationDateOnStateChange(WorkflowHook):
     """update entity's modification date after changing its state"""
-    __id__ = 'wfsyncmdate'
+    __regid__ = 'wfsyncmdate'
     __select__ = WorkflowHook.__select__ & hook.match_rtype('in_state')
     events = ('after_add_relation',)
 
@@ -296,7 +296,7 @@ class SetModificationDateOnStateChange(WorkflowHook):
 
 class CheckWorkflowTransitionExitPoint(WorkflowHook):
     """check that there is no multiple exits from the same state"""
-    __id__ = 'wfcheckwftrexit'
+    __regid__ = 'wfcheckwftrexit'
     __select__ = WorkflowHook.__select__ & hook.match_rtype('subworkflow_exit')
     events = ('after_add_relation',)
 
@@ -305,7 +305,7 @@ class CheckWorkflowTransitionExitPoint(WorkflowHook):
 
 
 class SetCustomWorkflow(WorkflowHook):
-    __id__ = 'wfsetcustom'
+    __regid__ = 'wfsetcustom'
     __select__ = WorkflowHook.__select__ & hook.match_rtype('custom_workflow')
     events = ('after_add_relation',)
 
@@ -314,7 +314,7 @@ class SetCustomWorkflow(WorkflowHook):
 
 
 class DelCustomWorkflow(SetCustomWorkflow):
-    __id__ = 'wfdelcustom'
+    __regid__ = 'wfdelcustom'
     events = ('after_delete_relation',)
 
     def __call__(self):
@@ -326,7 +326,7 @@ class DelCustomWorkflow(SetCustomWorkflow):
 
 
 class DelWorkflowHook(WorkflowHook):
-    __id__ = 'wfdel'
+    __regid__ = 'wfdel'
     __select__ = WorkflowHook.__select__ & entity_implements('Workflow')
     events = ('after_delete_entity',)
 

@@ -23,7 +23,7 @@ except ImportError:
     Sparql2rqlTranslator = None
 
 class SparqlForm(forms.FieldsForm):
-    id = 'sparql'
+    __regid__ = 'sparql'
     sparql = formfields.StringField(help=_('type here a sparql query'))
     resultvid = formfields.StringField(choices=((_('table'), 'table'),
                                                 (_('sparql xml'), 'sparqlxml')),
@@ -36,7 +36,7 @@ class SparqlForm(forms.FieldsForm):
 
 
 class SparqlFormView(form.FormViewMixIn, StartupView):
-    id = 'sparql'
+    __regid__ = 'sparql'
     def call(self):
         form = self.vreg.select('forms', 'sparql', self.req)
         self.w(form.form_render())
@@ -81,7 +81,7 @@ def xmlschema(yamstype):
 class SparqlResultXmlView(AnyRsetView):
     """The spec can be found here: http://www.w3.org/TR/rdf-sparql-XMLres/
     """
-    id = 'sparqlxml'
+    __regid__ = 'sparqlxml'
     content_type = 'application/sparql-results+xml'
     templatable = False
 

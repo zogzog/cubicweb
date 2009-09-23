@@ -11,7 +11,7 @@ __docformat__ = "restructuredtext en"
 from cubicweb.view import StartupView
 
 class FourOhFour(StartupView):
-    id = '404'
+    __regid__ = '404'
 
     def call(self):
         _ = self.req._
@@ -19,7 +19,7 @@ class FourOhFour(StartupView):
 
 
 class ErrorOccured(StartupView):
-    id = '500'
+    __regid__ = '500'
 
     def call(self):
         _ = self.req._

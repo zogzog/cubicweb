@@ -49,7 +49,7 @@ class URLPublisherComponent(component.Component):
     lower priority.  The first evaluator returning a result or raising
     something else than `PathDontMatch` will stop the handlers chain.
     """
-    id = 'urlpublisher'
+    __regid__ = 'urlpublisher'
     vreg = None # XXX necessary until property for deprecation warning is on appobject
 
     def __init__(self, vreg, default_method='view'):
@@ -101,7 +101,7 @@ class URLPublisherComponent(component.Component):
 
 class URLPathEvaluator(component.Component):
     __abstract__ = True
-    id = 'urlpathevaluator'
+    __regid__ = 'urlpathevaluator'
     vreg = None # XXX necessary until property for deprecation warning is on appobject
 
     def __init__(self, urlpublisher):

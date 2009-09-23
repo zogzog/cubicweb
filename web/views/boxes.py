@@ -33,7 +33,7 @@ class EditBox(BoxTemplate): # XXX rename to ActionsBox
     box with all actions impacting the entity displayed: edit, copy, delete
     change state, add related entities
     """
-    id = 'edit_box'
+    __regid__ = 'edit_box'
     __select__ = BoxTemplate.__select__ & non_final_entity()
 
     title = _('actions')
@@ -106,7 +106,7 @@ class EditBox(BoxTemplate): # XXX rename to ActionsBox
 
 class SearchBox(BoxTemplate):
     """display a box with a simple search form"""
-    id = 'search_box'
+    __regid__ = 'search_box'
 
     visible = True # enabled by default
     title = _('search')
@@ -139,7 +139,7 @@ class SearchBox(BoxTemplate):
 
 class PossibleViewsBox(BoxTemplate):
     """display a box containing links to all possible views"""
-    id = 'possible_views_box'
+    __regid__ = 'possible_views_box'
     __select__ = BoxTemplate.__select__ & match_user_groups('users', 'managers')
 
     visible = False
@@ -162,7 +162,7 @@ class PossibleViewsBox(BoxTemplate):
 
 class StartupViewsBox(BoxTemplate):
     """display a box containing links to all startup views"""
-    id = 'startup_views_box'
+    __regid__ = 'startup_views_box'
     visible = False # disabled by default
     title = _('startup views')
     order = 70
@@ -181,7 +181,7 @@ class StartupViewsBox(BoxTemplate):
 
 class SideBoxView(EntityView):
     """helper view class to display some entities in a sidebox"""
-    id = 'sidebox'
+    __regid__ = 'sidebox'
 
     def call(self, boxclass='sideBox', title=u''):
         """display a list of entities by calling their <item_vid> view"""

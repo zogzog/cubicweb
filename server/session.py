@@ -163,7 +163,7 @@ class Session(RequestSessionBase):
                 rset.description = list(rset.description)
             rset.description.append([self.describe(targeteid)[0]])
             targetentity = self.entity_from_eid(targeteid)
-            if targetentity.rset is None:
+            if targetentity.cw_rset is None:
                 targetentity.cw_rset = rset
                 targetentity.cw_row = rset.rowcount
                 targetentity.cw_col = 0
