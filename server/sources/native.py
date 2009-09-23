@@ -531,7 +531,7 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
         if extid is not None:
             assert isinstance(extid, str)
             extid = b64encode(extid)
-        attrs = {'type': entity.id, 'eid': entity.eid, 'extid': extid,
+        attrs = {'type': entity.__regid__, 'eid': entity.eid, 'extid': extid,
                  'source': source.uri, 'mtime': datetime.now()}
         session.system_sql(self.sqlgen.insert('entities', attrs), attrs)
 

@@ -298,7 +298,7 @@ class AppObject(object):
         """return cw property key for the property of the given id for this
         class
         """
-        return '%s.%s.%s' % (cls.__registry__, cls.id, propid)
+        return '%s.%s.%s' % (cls.__registry__, cls.__regid__, propid)
 
     def cw_propval(self, propid):
         """return cw property value associated to key

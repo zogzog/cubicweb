@@ -119,7 +119,7 @@ def score_interface(etypesreg, cls_or_inst, cls, iface):
     """
     if getattr(iface, '__registry__', None) == 'etypes':
         # adjust score if the interface is an entity class
-        parents = etypesreg.parent_classes(cls_or_inst.id)
+        parents = etypesreg.parent_classes(cls_or_inst.__regid__)
         if iface is cls:
             return len(parents) + 4
         if iface is parents[-1]: # Any
@@ -427,7 +427,8 @@ def match_context_prop(cls, req, rset=None, row=None, col=0, context=None,
     * context (`basestring`) is matching the context property value for the
       given cls
     """
-    propval = req.property_value('%s.%s.context' % (cls.__registry__, cls.id))
+    propval = req.property_value('%s.%s.context' % (cls.__registry__,
+                                                    cls.__regid__))
     if not propval:
         propval = cls.context
     if context is not None and propval and context != propval:
@@ -542,7 +543,7 @@ class match_view(match_search_state):
     """
     @lltrace
     def __call__(self, cls, req, rset=None, row=None, col=0, view=None, **kwargs):
-        if view is None or not view.id in self.expected:
+        if view is None or not view.__regid__ in self.expected:
             return 0
         return 1
 
