@@ -146,7 +146,8 @@ class MemSchemaNotifyChanges(hook.SingleLastOperation):
 
     def commit_event(self):
         rebuildinfered = self.session.data.get('rebuild-infered', True)
-        self.session.repo.set_schema(self.repo.schema, rebuildinfered=rebuildinfered)
+        repo = self.session.repo
+        repo.set_schema(repo.schema, rebuildinfered=rebuildinfered)
 
 
 class MemSchemaOperation(hook.Operation):
@@ -510,7 +511,7 @@ class MemSchemaCWETypeAdd(MemSchemaEarlyOperation):
     """actually add the entity type to the instance's schema"""
     eid = None # make pylint happy
     def commit_event(self):
-        self.schema.add_entity_type(self.kobj)
+        self.session.vreg.schema.add_entity_type(self.kobj)
 
 
 class MemSchemaCWETypeRename(MemSchemaOperation):
@@ -526,7 +527,7 @@ class MemSchemaCWETypeDel(MemSchemaOperation):
     def commit_event(self):
         try:
             # del_entity_type also removes entity's relations
-            self.schema.del_entity_type(self.kobj)
+            self.session.vreg.schema.del_entity_type(self.kobj)
         except KeyError:
             # s/o entity type have already been deleted
             pass
@@ -536,7 +537,7 @@ class MemSchemaCWRTypeAdd(MemSchemaEarlyOperation):
     """actually add the relation type to the instance's schema"""
     eid = None # make pylint happy
     def commit_event(self):
-        rschema = self.schema.add_relation_type(self.kobj)
+        rschema = self.session.vreg.schema.add_relation_type(self.kobj)
         rschema.set_default_groups()
 
 
@@ -554,7 +555,7 @@ class MemSchemaCWRTypeDel(MemSchemaOperation):
     """actually remove the relation type from the instance's schema"""
     def commit_event(self):
         try:
-            self.schema.del_relation_type(self.kobj)
+            self.session.vreg.schema.del_relation_type(self.kobj)
         except KeyError:
             # s/o entity type have already been deleted
             pass
@@ -565,7 +566,7 @@ class MemSchemaRDefAdd(MemSchemaEarlyOperation):
     schema
     """
     def commit_event(self):
-        self.schema.add_relation_def(self.kobj)
+        self.session.vreg.schema.add_relation_def(self.kobj)
 
 
 class MemSchemaRDefUpdate(MemSchemaOperation):
@@ -583,7 +584,7 @@ class MemSchemaRDefDel(MemSchemaOperation):
     def commit_event(self):
         subjtype, rtype, objtype = self.kobj
         try:
-            self.schema.del_relation_def(subjtype, rtype, objtype)
+            self.session.vreg.schema.del_relation_def(subjtype, rtype, objtype)
         except KeyError:
             # relation type may have been already deleted
             pass
@@ -644,7 +645,7 @@ class MemSchemaPermCWGroupAdd(MemSchemaPermOperation):
     def commit_event(self):
         """the observed connections pool has been commited"""
         try:
-            erschema = self.schema[self.name]
+            erschema = self.session.vreg.schema[self.name]
         except KeyError:
             # duh, schema not found, log error and skip operation
             self.error('no schema for %s', self.name)
@@ -667,7 +668,7 @@ class MemSchemaPermCWGroupDel(MemSchemaPermCWGroupAdd):
     def commit_event(self):
         """the observed connections pool has been commited"""
         try:
-            erschema = self.schema[self.name]
+            erschema = self.session.vreg.schema[self.name]
         except KeyError:
             # duh, schema not found, log error and skip operation
             self.error('no schema for %s', self.name)
@@ -693,7 +694,7 @@ class MemSchemaPermRQLExpressionAdd(MemSchemaPermOperation):
     def commit_event(self):
         """the observed connections pool has been commited"""
         try:
-            erschema = self.schema[self.name]
+            erschema = self.session.vreg.schema[self.name]
         except KeyError:
             # duh, schema not found, log error and skip operation
             self.error('no schema for %s', self.name)
@@ -711,7 +712,7 @@ class MemSchemaPermRQLExpressionDel(MemSchemaPermRQLExpressionAdd):
     def commit_event(self):
         """the observed connections pool has been commited"""
         try:
-            erschema = self.schema[self.name]
+            erschema = self.session.vreg.schema[self.name]
         except KeyError:
             # duh, schema not found, log error and skip operation
             self.error('no schema for %s', self.name)
@@ -731,8 +732,8 @@ class MemSchemaPermRQLExpressionDel(MemSchemaPermRQLExpressionAdd):
 class MemSchemaSpecializesAdd(MemSchemaOperation):
 
     def commit_event(self):
-        eschema = self.session.schema.schema_by_eid(self.etypeeid)
-        parenteschema = self.session.schema.schema_by_eid(self.parentetypeeid)
+        eschema = self.session.vreg.schema.schema_by_eid(self.etypeeid)
+        parenteschema = self.session.vreg.schema.schema_by_eid(self.parentetypeeid)
         eschema._specialized_type = parenteschema.type
         parenteschema._specialized_by.append(eschema.type)
 
@@ -741,8 +742,8 @@ class MemSchemaSpecializesDel(MemSchemaOperation):
 
     def commit_event(self):
         try:
-            eschema = self.session.schema.schema_by_eid(self.etypeeid)
-            parenteschema = self.session.schema.schema_by_eid(self.parentetypeeid)
+            eschema = self.session.vreg.schema.schema_by_eid(self.etypeeid)
+            parenteschema = self.session.vreg.schema.schema_by_eid(self.parentetypeeid)
         except KeyError:
             # etype removed, nothing to do
             return
@@ -803,13 +804,13 @@ class AfterAddCWETypeHook(DelCWETypeHook):
         entity = self.entity
         if entity.get('final'):
             return
-        schema = self._cw.schema
+        schema = self._cw.vreg.schema
         name = entity['name']
         etype = EntityType(name=name, description=entity.get('description'),
                            meta=entity.get('meta')) # don't care about final
         # fake we add it to the schema now to get a correctly initialized schema
         # but remove it before doing anything more dangerous...
-        schema = self._cw.schema
+        schema = self._cw.vreg.schema
         eschema = schema.add_entity_type(etype)
         eschema.set_default_groups()
         # generate table sql and rql to add metadata
@@ -916,7 +917,7 @@ class AfterUpdateCWRTypeHook(DelCWRTypeHook):
 
     def __call__(self):
         entity = self.entity
-        rschema = self._cw.schema.rschema(entity.name)
+        rschema = self._cw.vreg.schema.rschema(entity.name)
         newvalues = {}
         for prop in ('meta', 'symetric', 'inlined'):
             if prop in entity:
@@ -1012,7 +1013,7 @@ class AfterUpdateCWRDefHook(SyncSchemaHook):
         if self._cw.deleted_in_transaction(entity.eid):
             return
         desttype = entity.otype.name
-        rschema = self._cw.schema[entity.rtype.name]
+        rschema = self._cw.vreg.schema[entity.rtype.name]
         newvalues = {}
         for prop in rschema.rproperty_defs(desttype):
             if prop == 'constraints':
@@ -1058,7 +1059,7 @@ class BeforeDeleteConstrainedByHook(AfterAddConstrainedByHook):
     def __call__(self):
         if self._cw.deleted_in_transaction(self.eidfrom):
             return
-        schema = self._cw.schema
+        schema = self._cw.vreg.schema
         entity = self._cw.entity_from_eid(self.eidto)
         subjtype, rtype, objtype = schema.schema_by_eid(self.eidfrom)
         try:
