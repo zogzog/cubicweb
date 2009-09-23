@@ -24,7 +24,7 @@ from cubicweb.schema import CubicWebSchema, RQLConstraint
 from cubicweb.dbapi import connect, repo_connect, multiple_connections_unfix
 from cubicweb.devtools.testlib import CubicWebTC
 from cubicweb.devtools.repotest import tuplify
-from cubicweb.server import repository
+from cubicweb.server import repository, hook
 from cubicweb.server.sqlutils import SQL_PREFIX
 
 
@@ -449,70 +449,42 @@ class DBInitTC(CubicWebTC):
                            u'system.version.file', u'system.version.folder',
                            u'system.version.tag'])
 
+CALLED = []
+class EcritParHook(hook.Hook):
+    __regid__ = 'inlinedrelhook'
+    __select__ = hook.Hook.__select__ & hook.match_rtype('ecrit_par')
+    events = ('before_add_relation', 'after_add_relation',
+              'before_delete_relation', 'after_delete_relation')
+    def __call__(self):
+        CALLED.append((self.event, self.eidfrom, self.rtype, self.eidto))
+
 class InlineRelHooksTC(CubicWebTC):
     """test relation hooks are called for inlined relations
     """
     def setUp(self):
         CubicWebTC.setUp(self)
         self.hm = self.repo.hm
-        self.called = []
-
-    def _before_relation_hook(self, pool, fromeid, rtype, toeid):
-        self.called.append((fromeid, rtype, toeid))
+        CALLED[:] = ()
 
     def _after_relation_hook(self, pool, fromeid, rtype, toeid):
         self.called.append((fromeid, rtype, toeid))
 
-    def test_before_add_inline_relation(self):
-        """make sure before_<event>_relation hooks are called directly"""
-        self.hm.register_hook(self._before_relation_hook,
-                             'before_add_relation', 'ecrit_par')
+    def test_inline_relation(self):
+        """make sure <event>_relation hooks are called for inlined relation"""
+        self.hm.register(EcritParHook)
         eidp = self.execute('INSERT Personne X: X nom "toto"')[0][0]
         eidn = self.execute('INSERT Note X: X type "T"')[0][0]
         self.execute('SET N ecrit_par Y WHERE N type "T", Y nom "toto"')
-        self.assertEquals(self.called, [(eidn, 'ecrit_par', eidp)])
-
-    def test_after_add_inline_relation(self):
-        """make sure after_<event>_relation hooks are deferred"""
-        self.hm.register_hook(self._after_relation_hook,
-                             'after_add_relation', 'ecrit_par')
-        eidp = self.execute('INSERT Personne X: X nom "toto"')[0][0]
-        eidn = self.execute('INSERT Note X: X type "T"')[0][0]
-        self.assertEquals(self.called, [])
-        self.execute('SET N ecrit_par Y WHERE N type "T", Y nom "toto"')
-        self.assertEquals(self.called, [(eidn, 'ecrit_par', eidp,)])
-
-    def test_after_add_inline(self):
-        """make sure after_<event>_relation hooks are deferred"""
-        p1 = self.add_entity('Personne', nom=u'toto')
-        self.hm.register_hook(self._after_relation_hook,
-                             'after_add_relation', 'ecrit_par')
+        self.assertEquals(CALLED, [('before_add_relation', eidn, 'ecrit_par', eidp),
+                                   ('after_add_relation', eidn, 'ecrit_par', eidp)])
+        CALLED[:] = ()
+        self.execute('DELETE N ecrit_par Y WHERE N type "T", Y nom "toto"')
+        self.assertEquals(CALLED, [('before_delete_relation', eidn, 'ecrit_par', eidp),
+                                   ('after_delete_relation', eidn, 'ecrit_par', eidp)])
+        CALLED[:] = ()
         eidn = self.execute('INSERT Note N: N ecrit_par P WHERE P nom "toto"')[0][0]
-        self.assertEquals(self.called, [(eidn, 'ecrit_par', p1.eid,)])
-
-    def test_before_delete_inline_relation(self):
-        """make sure before_<event>_relation hooks are called directly"""
-        self.hm.register_hook(self._before_relation_hook,
-                             'before_delete_relation', 'ecrit_par')
-        eidp = self.execute('INSERT Personne X: X nom "toto"')[0][0]
-        eidn = self.execute('INSERT Note X: X type "T"')[0][0]
-        self.execute('SET N ecrit_par Y WHERE N type "T", Y nom "toto"')
-        self.execute('DELETE N ecrit_par Y WHERE N type "T", Y nom "toto"')
-        self.assertEquals(self.called, [(eidn, 'ecrit_par', eidp)])
-        rset = self.execute('Any Y where N ecrit_par Y, N type "T", Y nom "toto"')
-        # make sure the relation is really deleted
-        self.failUnless(len(rset) == 0, "failed to delete inline relation")
-
-    def test_after_delete_inline_relation(self):
-        """make sure after_<event>_relation hooks are deferred"""
-        self.hm.register_hook(self._after_relation_hook,
-                             'after_delete_relation', 'ecrit_par')
-        eidp = self.execute('INSERT Personne X: X nom "toto"')[0][0]
-        eidn = self.execute('INSERT Note X: X type "T"')[0][0]
-        self.execute('SET N ecrit_par Y WHERE N type "T", Y nom "toto"')
-        self.assertEquals(self.called, [])
-        self.execute('DELETE N ecrit_par Y WHERE N type "T", Y nom "toto"')
-        self.assertEquals(self.called, [(eidn, 'ecrit_par', eidp,)])
+        self.assertEquals(CALLED, [('before_add_relation', eidn, 'ecrit_par', eidp),
+                                   ('after_add_relation', eidn, 'ecrit_par', eidp)])
 
 
 if __name__ == '__main__':
