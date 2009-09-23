@@ -959,12 +959,12 @@ NEED_PERM_FORMATS = [_('text/cubicweb-page-template')]
 
 @monkeypatch(FormatConstraint)
 def vocabulary(self, entity=None, form=None):
-    req = None
+    cw = None
     if form is None and entity is not None:
-        req = entity.req
+        cw = entity._cw
     elif form is not None:
-        req = form.req
-    if req is not None and req.user.has_permission(PERM_USE_TEMPLATE_FORMAT):
+        cw = form._cw
+    if cw is not None and cw.user.has_permission(PERM_USE_TEMPLATE_FORMAT):
         return self.regular_formats + tuple(NEED_PERM_FORMATS)
     return self.regular_formats
 
