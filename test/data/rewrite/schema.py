@@ -9,8 +9,7 @@ class Affaire(EntityType):
         'update': ('managers', 'owners', ERQLExpression('X in_state S, S name in ("pitetre", "en cours")')),
         'delete': ('managers', 'owners', ERQLExpression('X concerne S, S owned_by U')),
         }
-    ref = String(fulltextindexed=True, indexed=True,
-                 constraints=[SizeConstraint(16)])
+    ref = String(fulltextindexed=True, indexed=True, maxsize=16)
     documented_by = SubjectRelation('Card')
     concerne = SubjectRelation(('Societe', 'Note'))
 
