@@ -854,7 +854,7 @@ class Repository(object):
             else:
                 # minimal meta-data
                 session.execute('SET X is E WHERE X eid %(x)s, E name %(name)s',
-                                {'x': entity.eid, 'name': entity.id}, 'x')
+                                {'x': entity.eid, 'name': entity.__regid__}, 'x')
             session.commit(reset_pool)
             return eid
         except:
