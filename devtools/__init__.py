@@ -105,6 +105,8 @@ class TestServerConfiguration(ServerConfiguration):
         self.init_log(log_threshold, force=True)
         # need this, usually triggered by cubicweb-ctl
         self.load_cwctl_plugins()
+        self.global_set_option('anonymous-user', 'anon')
+        self.global_set_option('anonymous-password', 'anon')
 
     anonymous_user = TwistedConfiguration.anonymous_user.im_func
 
@@ -115,6 +117,11 @@ class TestServerConfiguration(ServerConfiguration):
         # cube test
         return abspath('..')
     appdatahome = apphome
+
+    def load_configuration(self):
+        super(TestServerConfiguration, self).load_configuration()
+        self.global_set_option('anonymous-user', 'anon')
+        self.global_set_option('anonymous-password', 'anon')
 
     def main_config_file(self):
         """return instance's control configuration file"""
@@ -179,13 +186,6 @@ class ApptestConfiguration(BaseApptestConfiguration):
         BaseApptestConfiguration.__init__(self, appid, log_threshold=log_threshold)
         self.init_repository = sourcefile is None
         self.sourcefile = sourcefile
-        self.global_set_option('anonymous-user', 'anon')
-        self.global_set_option('anonymous-password', 'anon')
-
-    def load_configuration(self):
-        super(ApptestConfiguration, self).load_configuration()
-        self.global_set_option('anonymous-user', 'anon')
-        self.global_set_option('anonymous-password', 'anon')
 
 
 # test database handling #######################################################
