@@ -204,8 +204,6 @@ class Repository(object):
             self.warning("set fs instance'schema")
             config.bootstrap_cubes()
             self.set_schema(config.load_schema())
-            # make sure we have a hook registry in tests
-            self.vreg['hooks'] = hook.HooksRegistry(self.vreg)
         if not config.creating:
             if 'CWProperty' in self.schema:
                 self.vreg.init_properties(self.properties())
