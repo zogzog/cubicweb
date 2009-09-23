@@ -614,11 +614,11 @@ class specified_etype_implements(implements):
                 # only check this is a known type if etype comes from req.form,
                 # else we want the error to propagate
                 try:
-                    etype = cls.vreg.case_insensitive_etypes[etype.lower()]
+                    etype = req.vreg.case_insensitive_etypes[etype.lower()]
                     req.form['etype'] = etype
                 except KeyError:
                     return 0
-        return self.score_class(cls.vreg['etypes'].etype_class(etype), req)
+        return self.score_class(req.vreg['etypes'].etype_class(etype), req)
 
 
 class entity_implements(ImplementsMixIn, EntitySelector):
