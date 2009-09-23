@@ -504,7 +504,7 @@ class BaseSchemaSecurityTC(BaseSecurityTC):
             aff.fire_transition('abort')
             cnx.commit()
             # though changing a user state (even logged user) is reserved to managers
-            user = cnx.user(self.current_session())
+            user = cnx.user(self.session)
             # XXX wether it should raise Unauthorized or ValidationError is not clear
             # the best would probably ValidationError if the transition doesn't exist
             # from the current state but Unauthorized if it exists but user can't pass it

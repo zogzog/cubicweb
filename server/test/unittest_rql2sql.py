@@ -34,6 +34,7 @@ config = TestServerConfiguration('data')
 config.bootstrap_cubes()
 schema = config.load_schema()
 schema['in_state'].inlined = True
+schema['state_of'].inlined = False
 schema['comments'].inlined = False
 
 PARSER = [
