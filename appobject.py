@@ -370,15 +370,15 @@ class AppObject(object):
 
     @deprecated('[3.6] use self.cw_rset.limited_rql')
     def limited_rql(self):
-        return self.rset.limited_rql()
+        return self.cw_rset.limited_rql()
 
     @deprecated('[3.6] use self.cw_rset.complete_entity(row,col) instead')
     def complete_entity(self, row, col=0, skip_bytes=True):
-        return self.rset.complete_entity(row, col, skip_bytes)
+        return self.cw_rset.complete_entity(row, col, skip_bytes)
 
     @deprecated('[3.6] use self.cw_rset.get_entity(row,col) instead')
     def entity(self, row, col=0):
-        return self.rset.get_entity(row, col)
+        return self.cw_rset.get_entity(row, col)
 
     @deprecated('[3.6] use self._cw.user_rql_callback')
     def user_rql_callback(self, args, msg=None):

@@ -12,7 +12,7 @@ from logilab.common.textutils import normalize_text
 from cubicweb import RegistryException
 from cubicweb.selectors import entity_implements
 from cubicweb.server import hook
-
+from cubicweb.sobjects.supervising import SupervisionMailOp
 
 class RenderAndSendNotificationView(hook.Operation):
     """delay rendering of notification view until precommit"""
@@ -135,5 +135,5 @@ class EntityDeleteHook(SomethingChangedHook):
             # missing required relation
             title = '#%s' % eid
         self._cw.transaction_data.setdefault('pendingchanges', []).append(
-            ('delete_entity', (self.eid, str(self.entity.e_schema), title)))
+            ('delete_entity', (self.entity.eid, str(self.entity.e_schema), title)))
         return True

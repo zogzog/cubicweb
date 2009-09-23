@@ -155,7 +155,7 @@ class TreeMixIn(object):
 
     def root(self):
         """return the root object"""
-        return self.req.entity_from_eid(self.path()[0])
+        return self._cw.entity_from_eid(self.path()[0])
 
 
 class EmailableMixIn(object):
@@ -209,7 +209,7 @@ def _done_init(done, view, row, col):
         done = set()
     entity = view.rset.get_entity(row, col)
     if entity.eid in done:
-        msg = entity.req._('loop in %(rel)s relation (%(eid)s)') % {
+        msg = entity._cw._('loop in %(rel)s relation (%(eid)s)') % {
             'rel': entity.tree_attribute,
             'eid': entity.eid
             }
