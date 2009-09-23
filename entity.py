@@ -78,7 +78,7 @@ class Entity(AppObject, dict):
         """initialize a specific entity class by adding descriptors to access
         entity type's attributes and relations
         """
-        etype = cls.__id__
+        etype = cls.__regid__
         assert etype != 'Any', etype
         cls.e_schema = eschema = schema.eschema(etype)
         for rschema, _ in eschema.attribute_definitions():
@@ -109,7 +109,7 @@ class Entity(AppObject, dict):
         """return a rql to fetch all entities of the class type"""
         restrictions = restriction or []
         if settype:
-            restrictions.append('%s is %s' % (mainvar, cls.__id__))
+            restrictions.append('%s is %s' % (mainvar, cls.__regid__))
         if fetchattrs is None:
             fetchattrs = cls.fetch_attrs
         selection = [mainvar]
@@ -142,7 +142,7 @@ class Entity(AppObject, dict):
                 rschema = eschema.subject_relation(attr)
             except KeyError:
                 cls.warning('skipping fetch_attr %s defined in %s (not found in schema)',
-                            attr, cls.__id__)
+                            attr, cls.__regid__)
                 continue
             if not user.matching_groups(rschema.get_groups('read')):
                 continue
@@ -285,7 +285,7 @@ class Entity(AppObject, dict):
                 kwargs['_restpath'] = self.rest_path(kwargs.get('base_url'))
             except TypeError:
                 warn('%s: rest_path() now take use_ext_eid argument, '
-                     'please update' % self.__id__, DeprecationWarning)
+                     'please update' % self.__regid__, DeprecationWarning)
                 kwargs['_restpath'] = self.rest_path()
         else:
             kwargs['rql'] = 'Any X WHERE X eid %s' % self.eid
@@ -421,7 +421,7 @@ class Entity(AppObject, dict):
     def as_rset(self):
         """returns a resultset containing `self` information"""
         rset = ResultSet([(self.eid,)], 'Any X WHERE X eid %(x)s',
-                         {'x': self.eid}, [(self.__id__,)])
+                         {'x': self.eid}, [(self.__regid__,)])
         return self.req.decorate_rset(rset)
 
     def to_complete_relations(self):

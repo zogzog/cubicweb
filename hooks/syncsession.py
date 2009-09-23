@@ -65,7 +65,7 @@ class _AddGroupOp(_GroupOperation):
 
 
 class SyncInGroupHook(SyncSessionHook):
-    __id__ = 'syncingroup'
+    __regid__ = 'syncingroup'
     __select__ = SyncSessionHook.__select__ & hook.match_rtype('in_group')
     events = ('after_delete_relation', 'after_add_relation')
 
@@ -93,7 +93,7 @@ class _DelUserOp(hook.Operation):
 
 
 class CloseDeletedUserSessionsHook(SyncSessionHook):
-    __id__ = 'closession'
+    __regid__ = 'closession'
     __select__ = SyncSessionHook.__select__ & entity_implements('CWUser')
     events = ('after_delete_entity',)
 
@@ -137,7 +137,7 @@ class _AddCWPropertyOp(hook.Operation):
 
 
 class AddCWPropertyHook(SyncSessionHook):
-    __id__ = 'addcwprop'
+    __regid__ = 'addcwprop'
     __select__ = SyncSessionHook.__select__ & entity_implements('CWProperty')
     events = ('after_add_entity',)
 
@@ -159,7 +159,7 @@ class AddCWPropertyHook(SyncSessionHook):
 
 
 class UpdateCWPropertyHook(AddCWPropertyHook):
-    __id__ = 'updatecwprop'
+    __regid__ = 'updatecwprop'
     events = ('after_update_entity',)
 
     def __call__(self):
@@ -186,7 +186,7 @@ class UpdateCWPropertyHook(AddCWPropertyHook):
 
 
 class DeleteCWPropertyHook(AddCWPropertyHook):
-    __id__ = 'delcwprop'
+    __regid__ = 'delcwprop'
     events = ('before_delete_entity',)
 
     def __call__(self):
@@ -201,7 +201,7 @@ class DeleteCWPropertyHook(AddCWPropertyHook):
 
 
 class AddForUserRelationHook(SyncSessionHook):
-    __id__ = 'addcwpropforuser'
+    __regid__ = 'addcwpropforuser'
     __select__ = SyncSessionHook.__select__ & hook.match_rtype('for_user')
     events = ('after_add_relation',)
 
@@ -221,7 +221,7 @@ class AddForUserRelationHook(SyncSessionHook):
 
 
 class DelForUserRelationHook(AddForUserRelationHook):
-    __id__ = 'delcwpropforuser'
+    __regid__ = 'delcwpropforuser'
     events = ('after_delete_relation',)
 
     def __call__(self):

@@ -37,7 +37,7 @@ class InitMetaAttrsHook(MetaDataHook):
 
     this is a conveniency hook, you shouldn't have to disable it
     """
-    __id__ = 'metaattrsinit'
+    __regid__ = 'metaattrsinit'
     events = ('before_add_entity',)
 
     def __call__(self):
@@ -51,7 +51,7 @@ class InitMetaAttrsHook(MetaDataHook):
 
 class UpdateMetaAttrsHook(MetaDataHook):
     """update an entity -> set modification date"""
-    __id__ = 'metaattrsupdate'
+    __regid__ = 'metaattrsupdate'
     events = ('before_update_entity',)
 
     def __call__(self):
@@ -71,7 +71,7 @@ class _SetCreatorOp(hook.Operation):
 
 class SetIsHook(MetaDataHook):
     """create a new entity -> set is relation"""
-    __id__ = 'setis'
+    __regid__ = 'setis'
     events = ('after_add_entity',)
 
     def __call__(self):
@@ -92,7 +92,7 @@ class SetIsHook(MetaDataHook):
 
 class SetOwnershipHook(MetaDataHook):
     """create a new entity -> set owner and creator metadata"""
-    __id__ = 'setowner'
+    __regid__ = 'setowner'
     events = ('after_add_entity',)
 
     def __call__(self):
@@ -114,7 +114,7 @@ class SyncCompositeOwner(MetaDataHook):
     """when adding composite relation, the composed should have the same owners
     has the composite
     """
-    __id__ = 'synccompositeowner'
+    __regid__ = 'synccompositeowner'
     events = ('after_add_relation',)
 
     def __call__(self):
@@ -131,7 +131,7 @@ class SyncCompositeOwner(MetaDataHook):
 
 class FixUserOwnershipHook(MetaDataHook):
     """when a user has been created, add owned_by relation on itself"""
-    __id__ = 'fixuserowner'
+    __regid__ = 'fixuserowner'
     __select__ = MetaDataHook.__select__ & entity_implements('CWUser')
     events = ('after_add_entity',)
 
@@ -142,7 +142,7 @@ class FixUserOwnershipHook(MetaDataHook):
 class UpdateFTIHook(MetaDataHook):
     """sync fulltext index when relevant relation is added / removed
     """
-    __id__ = 'updateftirel'
+    __regid__ = 'updateftirel'
     events = ('after_add_relation', 'after_delete_relation')
 
     def __call__(self):

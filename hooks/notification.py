@@ -36,7 +36,7 @@ class NotificationHook(hook.Hook):
 
 class StatusChangeHook(NotificationHook):
     """notify when a workflowable entity has its state modified"""
-    __id__ = 'notifystatuschange'
+    __regid__ = 'notifystatuschange'
     __select__ = NotificationHook.__select__ & entity_implements('TrInfo')
     events = ('after_add_entity',)
 
@@ -59,7 +59,7 @@ class StatusChangeHook(NotificationHook):
 
 
 class RelationChangeHook(NotificationHook):
-    __id__ = 'notifyrelationchange'
+    __regid__ = 'notifyrelationchange'
     events = ('before_add_relation', 'after_add_relation',
               'before_delete_relation', 'after_delete_relation')
 
@@ -79,7 +79,7 @@ class EntityChangeHook(NotificationHook):
     """if a notification view is defined for the event, send notification
     email defined by the view
     """
-    __id__ = 'notifyentitychange'
+    __regid__ = 'notifyentitychange'
     events = ('after_add_entity', 'after_update_entity')
 
     def __call__(self):
@@ -93,7 +93,7 @@ class EntityChangeHook(NotificationHook):
 # supervising ##################################################################
 
 class SomethingChangedHook(NotificationHook):
-    __id__ = 'supervising'
+    __regid__ = 'supervising'
     events = ('before_add_relation', 'before_delete_relation',
               'after_add_entity', 'before_update_entity')
 
@@ -124,7 +124,7 @@ class SomethingChangedHook(NotificationHook):
 
 
 class EntityDeleteHook(SomethingChangedHook):
-    __id__ = 'supervisingentitydel'
+    __regid__ = 'supervisingentitydel'
     events = ('before_delete_entity',)
 
     def _call(self):

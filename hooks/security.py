@@ -56,7 +56,7 @@ class SecurityHook(hook.Hook):
 
 
 class AfterAddEntitySecurityHook(SecurityHook):
-    __id__ = 'securityafteraddentity'
+    __regid__ = 'securityafteraddentity'
     events = ('after_add_entity',)
 
     def __call__(self):
@@ -64,7 +64,7 @@ class AfterAddEntitySecurityHook(SecurityHook):
 
 
 class AfterUpdateEntitySecurityHook(SecurityHook):
-    __id__ = 'securityafterupdateentity'
+    __regid__ = 'securityafterupdateentity'
     events = ('after_update_entity',)
 
     def __call__(self):
@@ -78,7 +78,7 @@ class AfterUpdateEntitySecurityHook(SecurityHook):
 
 
 class BeforeDelEntitySecurityHook(SecurityHook):
-    __id__ = 'securitybeforedelentity'
+    __regid__ = 'securitybeforedelentity'
     events = ('before_delete_entity',)
 
     def __call__(self):
@@ -86,7 +86,7 @@ class BeforeDelEntitySecurityHook(SecurityHook):
 
 
 class BeforeAddRelationSecurityHook(SecurityHook):
-    __id__ = 'securitybeforeaddrelation'
+    __regid__ = 'securitybeforeaddrelation'
     events = ('before_add_relation',)
 
     def __call__(self):
@@ -99,7 +99,7 @@ class BeforeAddRelationSecurityHook(SecurityHook):
 
 
 class AfterAddRelationSecurityHook(SecurityHook):
-    __id__ = 'securityafteraddrelation'
+    __regid__ = 'securityafteraddrelation'
     events = ('after_add_relation',)
 
     def __call__(self):
@@ -118,7 +118,7 @@ class AfterAddRelationSecurityHook(SecurityHook):
 
 
 class BeforeDelRelationSecurityHook(SecurityHook):
-    __id__ = 'securitybeforedelrelation'
+    __regid__ = 'securitybeforedelrelation'
     events = ('before_delete_relation',)
 
     def __call__(self):

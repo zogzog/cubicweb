@@ -21,7 +21,7 @@ class AutoDeleteBookmarkOp(hook.Operation):
 
 class DelBookmarkedByHook(hook.Hook):
     """ensure user logins are stripped"""
-    __id__ = 'autodelbookmark'
+    __regid__ = 'autodelbookmark'
     __select__ = hook.Hook.__select__ & entity_implements('bookmarked_by',)
     category = 'bookmark'
     events = ('after_delete_relation',)

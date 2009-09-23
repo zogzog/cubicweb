@@ -136,7 +136,7 @@ class Hook(AppObject):
     enabled = True
 
     @classproperty
-    def __id__(cls):
+    def __regid__(cls):
         warn('[3.6] %s: please specify an id for your hook' % cls)
         return str(id(cls))
 

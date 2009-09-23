@@ -65,7 +65,7 @@ class IntegrityHook(hook.Hook):
 
 class CheckCardinalityHook(IntegrityHook):
     """check cardinalities are satisfied"""
-    __id__ = 'checkcard'
+    __regid__ = 'checkcard'
     events = ('after_add_entity', 'before_delete_relation')
 
     def __call__(self):
@@ -144,7 +144,7 @@ class CheckConstraintHook(IntegrityHook):
     this is delayed to a precommit time operation since other relation which
     will make constraint satisfied may be added later.
     """
-    __id__ = 'checkconstraint'
+    __regid__ = 'checkconstraint'
     events = ('after_add_relation',)
 
     def __call__(self):
@@ -156,7 +156,7 @@ class CheckConstraintHook(IntegrityHook):
 
 
 class CheckUniqueHook(IntegrityHook):
-    __id__ = 'checkunique'
+    __regid__ = 'checkunique'
     events = ('before_add_entity', 'before_update_entity')
 
     def __call__(self):
@@ -194,7 +194,7 @@ class _DelayedDeleteOp(hook.Operation):
 class DeleteCompositeOrphanHook(IntegrityHook):
     """delete the composed of a composite relation when this relation is deleted
     """
-    __id__ = 'deletecomposite'
+    __regid__ = 'deletecomposite'
     events = ('before_delete_relation',)
 
     def __call__(self):
@@ -211,7 +211,7 @@ class DeleteCompositeOrphanHook(IntegrityHook):
 class DontRemoveOwnersGroupHook(IntegrityHook):
     """delete the composed of a composite relation when this relation is deleted
     """
-    __id__ = 'checkownersgroup'
+    __regid__ = 'checkownersgroup'
     __select__ = IntegrityHook.__select__ & entity_implements('CWGroup')
     events = ('before_delete_entity', 'before_update_entity')
 
@@ -228,7 +228,7 @@ class DontRemoveOwnersGroupHook(IntegrityHook):
 
 class TidyHtmlFields(IntegrityHook):
     """tidy HTML in rich text strings"""
-    __id__ = 'htmltidy'
+    __regid__ = 'htmltidy'
     events = ('before_add_entity', 'before_update_entity')
 
     def __call__(self):
@@ -247,7 +247,7 @@ class TidyHtmlFields(IntegrityHook):
 
 class StripCWUserLoginHook(IntegrityHook):
     """ensure user logins are stripped"""
-    __id__ = 'stripuserlogin'
+    __regid__ = 'stripuserlogin'
     __select__ = IntegrityHook.__select__ & entity_implements('CWUser')
     events = ('before_add_entity', 'before_update_entity',)
 

@@ -763,7 +763,7 @@ class DelCWETypeHook(SyncSchemaHook):
     * cascade to delete related CWAttribute and CWRelation entities
     * instantiate an operation to delete the entity type on commit
     """
-    __id__ = 'syncdelcwetype'
+    __regid__ = 'syncdelcwetype'
     __select__ = SyncSchemaHook.__select__ & entity_implements('CWEType')
     events = ('before_delete_entity',)
 
@@ -779,7 +779,7 @@ class DelCWETypeHook(SyncSchemaHook):
 
 
 class AfterDelCWETypeHook(DelCWETypeHook):
-    __id__ = 'wfcleanup'
+    __regid__ = 'wfcleanup'
     events = ('after_delete_entity',)
 
     def __call__(self):
@@ -796,7 +796,7 @@ class AfterAddCWETypeHook(DelCWETypeHook):
     * register an operation to add the entity type to the instance's
       schema on commit
     """
-    __id__ = 'syncaddcwetype'
+    __regid__ = 'syncaddcwetype'
     events = ('before_add_entity',)
 
     def __call__(self):
@@ -840,7 +840,7 @@ class AfterAddCWETypeHook(DelCWETypeHook):
 
 class BeforeUpdateCWETypeHook(DelCWETypeHook):
     """check name change, handle final"""
-    __id__ = 'syncupdatecwetype'
+    __regid__ = 'syncupdatecwetype'
     events = ('before_update_entity',)
 
     def __call__(self):
@@ -864,7 +864,7 @@ class DelCWRTypeHook(SyncSchemaHook):
     * cascade to delete related CWAttribute and CWRelation entities
     * instantiate an operation to delete the relation type on commit
     """
-    __id__ = 'syncdelcwrtype'
+    __regid__ = 'syncdelcwrtype'
     __select__ = SyncSchemaHook.__select__ & entity_implements('CWRType')
     events = ('before_delete_entity',)
 
@@ -887,7 +887,7 @@ class AfterAddCWRTypeHook(DelCWRTypeHook):
 
     We don't know yet this point if a table is necessary
     """
-    __id__ = 'syncaddcwrtype'
+    __regid__ = 'syncaddcwrtype'
     events = ('after_add_entity',)
 
     def __call__(self):
@@ -903,7 +903,7 @@ class AfterAddCWRTypeHook(DelCWRTypeHook):
 
 class BeforeUpdateCWRTypeHook(DelCWRTypeHook):
     """check name change, handle final"""
-    __id__ = 'checkupdatecwrtype'
+    __regid__ = 'checkupdatecwrtype'
     events = ('before_update_entity',)
 
     def __call__(self):
@@ -911,7 +911,7 @@ class BeforeUpdateCWRTypeHook(DelCWRTypeHook):
 
 
 class AfterUpdateCWRTypeHook(DelCWRTypeHook):
-    __id__ = 'syncupdatecwrtype'
+    __regid__ = 'syncupdatecwrtype'
     events = ('after_update_entity',)
 
     def __call__(self):
@@ -938,7 +938,7 @@ class AfterDelRelationTypeHook(SyncSchemaHook):
     * instantiate an operation to delete the relation definition on commit
     * delete the associated relation type when necessary
     """
-    __id__ = 'syncdelrelationtype'
+    __regid__ = 'syncdelrelationtype'
     __select__ = SyncSchemaHook.__select__ & hook.match_rtype('relation_type')
     events = ('after_delete_relation',)
 
@@ -985,7 +985,7 @@ class AfterDelRelationTypeHook(SyncSchemaHook):
 # CWAttribute / CWRelation hooks ###############################################
 
 class AfterAddCWAttributeHook(SyncSchemaHook):
-    __id__ = 'syncaddcwattribute'
+    __regid__ = 'syncaddcwattribute'
     __select__ = SyncSchemaHook.__select__ & entity_implements('CWAttribute')
     events = ('after_add_entity',)
 
@@ -994,7 +994,7 @@ class AfterAddCWAttributeHook(SyncSchemaHook):
 
 
 class AfterAddCWRelationHook(AfterAddCWAttributeHook):
-    __id__ = 'syncaddcwrelation'
+    __regid__ = 'syncaddcwrelation'
     __select__ = SyncSchemaHook.__select__ & entity_implements('CWRelation')
 
     def __call__(self):
@@ -1002,7 +1002,7 @@ class AfterAddCWRelationHook(AfterAddCWAttributeHook):
 
 
 class AfterUpdateCWRDefHook(SyncSchemaHook):
-    __id__ = 'syncaddcwattribute'
+    __regid__ = 'syncaddcwattribute'
     __select__ = SyncSchemaHook.__select__ & entity_implements('CWAttribute',
                                                                'CWRelation')
     events = ('after_update_entity',)
@@ -1032,7 +1032,7 @@ class AfterUpdateCWRDefHook(SyncSchemaHook):
 # constraints synchronization hooks ############################################
 
 class AfterAddCWConstraintHook(SyncSchemaHook):
-    __id__ = 'syncaddcwconstraint'
+    __regid__ = 'syncaddcwconstraint'
     __select__ = SyncSchemaHook.__select__ & entity_implements('CWConstraint')
     events = ('after_add_entity', 'after_update_entity')
 
@@ -1042,7 +1042,7 @@ class AfterAddCWConstraintHook(SyncSchemaHook):
 
 
 class AfterAddConstrainedByHook(SyncSchemaHook):
-    __id__ = 'syncdelconstrainedby'
+    __regid__ = 'syncdelconstrainedby'
     __select__ = SyncSchemaHook.__select__ & hook.match_rtype('constrainted_by')
     events = ('after_add_relation',)
 
@@ -1052,7 +1052,7 @@ class AfterAddConstrainedByHook(SyncSchemaHook):
 
 
 class BeforeDeleteConstrainedByHook(AfterAddConstrainedByHook):
-    __id__ = 'syncdelconstrainedby'
+    __regid__ = 'syncdelconstrainedby'
     events = ('before_delete_relation',)
 
     def __call__(self):
@@ -1077,7 +1077,7 @@ class BeforeDeleteConstrainedByHook(AfterAddConstrainedByHook):
 
 class AfterAddPermissionHook(SyncSchemaHook):
     """added entity/relation *_permission, need to update schema"""
-    __id__ = 'syncaddperm'
+    __regid__ = 'syncaddperm'
     __select__ = SyncSchemaHook.__select__ & hook.match_rtype(
         'read_permission', 'add_permission', 'delete_permission',
         'update_permission')
@@ -1097,7 +1097,7 @@ class BeforeDelPermissionHook(AfterAddPermissionHook):
 
     skip the operation if the related type is being deleted
     """
-    __id__ = 'syncdelperm'
+    __regid__ = 'syncdelperm'
     events = ('before_delete_relation',)
 
     def __call__(self):
@@ -1115,7 +1115,7 @@ class BeforeDelPermissionHook(AfterAddPermissionHook):
 
 
 class AfterAddSpecializesHook(SyncSchemaHook):
-    __id__ = 'syncaddspecializes'
+    __regid__ = 'syncaddspecializes'
     __select__ = SyncSchemaHook.__select__ & hook.match_rtype('specializes')
     events = ('after_add_relation',)
 
@@ -1125,7 +1125,7 @@ class AfterAddSpecializesHook(SyncSchemaHook):
 
 
 class AfterAddSpecializesHook(SyncSchemaHook):
-    __id__ = 'syncdelspecializes'
+    __regid__ = 'syncdelspecializes'
     __select__ = SyncSchemaHook.__select__ & hook.match_rtype('specializes')
     events = ('after_delete_relation',)
 
