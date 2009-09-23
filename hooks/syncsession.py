@@ -197,7 +197,8 @@ class DeleteCWPropertyHook(AddCWPropertyHook):
                 # if for_user was set, delete has already been handled
                 break
         else:
-            _DelCWPropertyOp(session, cwpropdict=session.vreg['propertyvalues'], key=entity.pkey)
+            _DelCWPropertyOp(session, cwpropdict=session.vreg['propertyvalues'],
+                             key=self.entity.pkey)
 
 
 class AddForUserRelationHook(SyncSessionHook):

@@ -1121,7 +1121,7 @@ class AfterAddSpecializesHook(SyncSchemaHook):
     events = ('after_add_relation',)
 
     def __call__(self):
-        MemSchemaSpecializesAdd(session, etypeeid=self.eidfrom,
+        MemSchemaSpecializesAdd(self._cw, etypeeid=self.eidfrom,
                                 parentetypeeid=self.eidto)
 
 
@@ -1131,5 +1131,5 @@ class AfterAddSpecializesHook(SyncSchemaHook):
     events = ('after_delete_relation',)
 
     def __call__(self):
-        MemSchemaSpecializesDel(session, etypeeid=self.eidfrom,
+        MemSchemaSpecializesDel(self._cw, etypeeid=self.eidfrom,
                                 parentetypeeid=self.eidto)
