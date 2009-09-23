@@ -172,7 +172,7 @@ class FireTransitionHook(WorkflowHook):
                 raise ValidationError(entity.eid, {'by_transition': msg})
             deststate = wf.state_by_eid(deststateeid)
             if not cowpowers and deststate is None:
-                msg = entity.req._("state doesn't belong to entity's workflow")
+                msg = session._("state doesn't belong to entity's workflow")
                 raise ValidationError(entity.eid, {'to_state': msg})
         else:
             # check transition is valid and allowed, unless we're coming back from
@@ -196,7 +196,7 @@ class FireTransitionHook(WorkflowHook):
                 if swtr is None:
                     deststate = session.entity_from_eid(deststateeid)
                     if not cowpowers and deststate is None:
-                        msg = entity.req._("state doesn't belong to entity's workflow")
+                        msg = session._("state doesn't belong to entity's workflow")
                         raise ValidationError(entity.eid, {'to_state': msg})
             else:
                 deststateeid = tr.destination().eid
@@ -226,7 +226,7 @@ class FiredTransitionHook(WorkflowHook):
             wftr = forentity.subworkflow_input_transition()
             if wftr is None:
                 # inconsistency detected
-                msg = entity.req._("state doesn't belong to entity's current workflow")
+                msg = session._("state doesn't belong to entity's current workflow")
                 raise ValidationError(entity.eid, {'to_state': msg})
             tostate = wftr.get_exit_point(entity['to_state'])
             if tostate is not None:
