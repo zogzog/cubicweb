@@ -54,7 +54,8 @@ class CleanupEidTypeCacheOp(hook.SingleLastOperation):
         remove inserted eid from repository type/source cache
         """
         try:
-            self.repo.clear_caches(self.session.transaction_data['pendingeids'])
+            self.session.repo.clear_caches(
+                self.session.transaction_data['pendingeids'])
         except KeyError:
             pass
 
@@ -63,7 +64,8 @@ class CleanupEidTypeCacheOp(hook.SingleLastOperation):
         remove inserted eid from repository type/source cache
         """
         try:
-            self.repo.clear_caches(self.session.transaction_data['neweids'])
+            self.session.repo.clear_caches(
+                self.session.transaction_data['neweids'])
         except KeyError:
             pass
 
