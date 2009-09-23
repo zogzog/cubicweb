@@ -162,7 +162,7 @@ class NotificationView(EntityView):
         self._kwargs = kwargs
         recipients = self.recipients()
         if not recipients:
-            self.info('skipping %s notification, no recipients', self.id)
+            self.info('skipping %s notification, no recipients', self.__regid__)
             return
         if self.cw_rset is not None:
             entity = self.cw_rset.get_entity(self.cw_row or 0, self.cw_col or 0)
