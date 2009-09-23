@@ -136,19 +136,72 @@ class RQLRewriteTC(TestCase):
                              "(Any C,T WHERE C in_state B, D in_group F, G require_state B, G name 'read', "
                              "G require_group F, C title T, D eid %(A)s, C is Card)")
 
-    def test_relation_optimization(self):
+    def test_relation_optimization_1_lhs(self):
         # since Card in_state State as monovalued cardinality, the in_state
         # relation used in the rql expression can be ignored and S replaced by
         # the variable from the incoming query
-        card_constraint = ('X in_state S, U in_group G, P require_state S,'
-                           'P name "read", P require_group G')
+        snippet = ('X in_state S, S name "hop"')
         rqlst = parse('Card C WHERE C in_state STATE')
-        rewrite(rqlst, {('C', 'X'): (card_constraint,)}, {})
+        rewrite(rqlst, {('C', 'X'): (snippet,)}, {})
         self.failUnlessEqual(rqlst.as_string(),
-                             u"Any C WHERE C in_state STATE, C is Card, A eid %(B)s, "
-                             "EXISTS(A in_group D, E require_state STATE, "
-                             "E name 'read', E require_group D, D is CWGroup, E is CWPermission), "
-                             "STATE is State")
+                             "Any C WHERE C in_state STATE, C is Card, "
+                             "EXISTS(STATE name 'hop'), STATE is State")
+    def test_relation_optimization_1_rhs(self):
+        snippet = ('TW subworkflow_exit X, TW name "hop"')
+        rqlst = parse('WorkflowTransition C WHERE C subworkflow_exit EXIT')
+        rewrite(rqlst, {('EXIT', 'X'): (snippet,)}, {})
+        self.failUnlessEqual(rqlst.as_string(),
+                             "Any C WHERE C subworkflow_exit EXIT, C is WorkflowTransition, "
+                             "EXISTS(C name 'hop'), EXIT is SubWorkflowExitPoint")
+
+    def test_relation_optimization_2_lhs(self):
+        # optional relation can be shared if also optional in the snippet
+        snippet = ('X in_state S?, S name "hop"')
+        rqlst = parse('Card C WHERE C in_state STATE?')
+        rewrite(rqlst, {('C', 'X'): (snippet,)}, {})
+        self.failUnlessEqual(rqlst.as_string(),
+                             "Any C WHERE C in_state STATE?, C is Card, "
+                             "EXISTS(STATE name 'hop'), STATE is State")
+    def test_relation_optimization_2_rhs(self):
+        snippet = ('TW? subworkflow_exit X, TW name "hop"')
+        rqlst = parse('SubWorkflowExitPoint EXIT WHERE C? subworkflow_exit EXIT')
+        rewrite(rqlst, {('EXIT', 'X'): (snippet,)}, {})
+        self.failUnlessEqual(rqlst.as_string(),
+                             "Any EXIT WHERE C? subworkflow_exit EXIT, EXIT is SubWorkflowExitPoint, "
+                             "EXISTS(C name 'hop'), C is WorkflowTransition")
+
+    def test_relation_optimization_3_lhs(self):
+        # optional relation in the snippet but not in the orig tree can be shared
+        snippet = ('X in_state S?, S name "hop"')
+        rqlst = parse('Card C WHERE C in_state STATE')
+        rewrite(rqlst, {('C', 'X'): (snippet,)}, {})
+        self.failUnlessEqual(rqlst.as_string(),
+                             "Any C WHERE C in_state STATE, C is Card, "
+                             "EXISTS(STATE name 'hop'), STATE is State")
+    def test_relation_optimization_3_rhs(self):
+        snippet = ('TW? subworkflow_exit X, TW name "hop"')
+        rqlst = parse('WorkflowTransition C WHERE C subworkflow_exit EXIT')
+        rewrite(rqlst, {('EXIT', 'X'): (snippet,)}, {})
+        self.failUnlessEqual(rqlst.as_string(),
+                             "Any C WHERE C subworkflow_exit EXIT, C is WorkflowTransition, "
+                             "EXISTS(C name 'hop'), EXIT is SubWorkflowExitPoint")
+
+    def test_relation_non_optimization_1_lhs(self):
+        # but optional relation in the orig tree but not in the snippet can't be shared
+        snippet = ('X in_state S, S name "hop"')
+        rqlst = parse('Card C WHERE C in_state STATE?')
+        rewrite(rqlst, {('C', 'X'): (snippet,)}, {})
+        self.failUnlessEqual(rqlst.as_string(),
+                             "Any C WHERE C in_state STATE?, C is Card, "
+                             "EXISTS(C in_state A, A name 'hop', A is State), STATE is State")
+    def test_relation_non_optimization_1_rhs(self):
+        snippet = ('TW subworkflow_exit X, TW name "hop"')
+        rqlst = parse('SubWorkflowExitPoint EXIT WHERE C? subworkflow_exit EXIT')
+        rewrite(rqlst, {('EXIT', 'X'): (snippet,)}, {})
+        self.failUnlessEqual(rqlst.as_string(),
+                             "Any EXIT WHERE C? subworkflow_exit EXIT, EXIT is SubWorkflowExitPoint, "
+                             "EXISTS(A subworkflow_exit EXIT, A name 'hop', A is WorkflowTransition), "
+                             "C is WorkflowTransition")
 
     def test_unsupported_constraint_1(self):
         # CWUser doesn't have require_permission

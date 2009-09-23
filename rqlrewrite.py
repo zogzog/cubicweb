@@ -384,28 +384,38 @@ class RQLRewriter(object):
                 # no more references, undefine the variable
                 del self.select.defined_vars[vref.name]
 
-    def _may_be_shared(self, relation, target, searchedvarname):
-        """return True if the snippet relation can be skipped to use a relation
-        from the original query
+    def _may_be_shared_with(self, sniprel, target, searchedvarname):
+        """if the snippet relation can be skipped to use a relation from the
+        original query, return that relation node
         """
-        # if cardinality is in '?1', we can ignore the relation and use variable
-        # from the original query
-        rschema = self.schema.rschema(relation.r_type)
-        if target == 'object':
-            cardindex = 0
-            ttypes_func = rschema.objects
-            rprop = rschema.rproperty
-        else: # target == 'subject':
-            cardindex = 1
-            ttypes_func = rschema.subjects
-            rprop = lambda x, y, z: rschema.rproperty(y, x, z)
+        rschema = self.schema.rschema(sniprel.r_type)
+        try:
+            if target == 'object':
+                orel = self.varinfo['lhs_rels'][sniprel.r_type]
+                cardindex = 0
+                ttypes_func = rschema.objects
+                rprop = rschema.rproperty
+            else: # target == 'subject':
+                orel = self.varinfo['rhs_rels'][sniprel.r_type]
+                cardindex = 1
+                ttypes_func = rschema.subjects
+                rprop = lambda x, y, z: rschema.rproperty(y, x, z)
+        except KeyError, ex:
+            # may be raised by self.varinfo['xhs_rels'][sniprel.r_type]
+            return None
+        # can't share neged relation or relations with different outer join
+        if (orel.neged(strict=True) or sniprel.neged(strict=True)
+            or (orel.optional and orel.optional != sniprel.optional)):
+            return None
+        # if cardinality is in '?1', we can ignore the snippet relation and use
+        # variable from the original query
         for etype in self.varinfo['stinfo']['possibletypes']:
             for ttype in ttypes_func(etype):
                 if rprop(etype, ttype, 'cardinality')[cardindex] in '+*':
-                    return False
-        return True
+                    return None
+        return orel
 
-    def _use_outer_term(self, snippet_varname, term):
+    def _use_orig_term(self, snippet_varname, term):
         key = (self.current_expr, self.varmap, snippet_varname)
         if key in self.rewritten:
             insertedvar = self.select.defined_vars.pop(self.rewritten[key])
@@ -479,27 +489,17 @@ class RQLRewriter(object):
             key = (self.current_expr, self.varmap, rhs.name)
             self.pending_keys.append( (key, action) )
             return
-        if lhs.name in self.revvarmap:
-            # on lhs
-            # see if we can reuse this relation
-            rels = self.varinfo['lhs_rels']
-            if (node.r_type in rels and isinstance(rhs, n.VariableRef)
-                and rhs.name != 'U' and not rels[node.r_type].neged(strict=True)
-                and self._may_be_shared(node, 'object', lhs.name)):
-                # ok, can share variable
-                term = rels[node.r_type].children[1].children[0]
-                self._use_outer_term(rhs.name, term)
-                return
-        elif isinstance(rhs, n.VariableRef) and rhs.name in self.revvarmap and lhs.name != 'U':
-            # on rhs
-            # see if we can reuse this relation
-            rels = self.varinfo['rhs_rels']
-            if (node.r_type in rels and not rels[node.r_type].neged(strict=True)
-                and self._may_be_shared(node, 'subject', rhs.name)):
-                # ok, can share variable
-                term = rels[node.r_type].children[0]
-                self._use_outer_term(lhs.name, term)
-                return
+        if isinstance(rhs, n.VariableRef):
+            if lhs.name in self.revvarmap and rhs.name != 'U':
+                orel = self._may_be_shared_with(node, 'object', lhs.name)
+                if orel is not None:
+                    self._use_orig_term(rhs.name, orel.children[1].children[0])
+                    return
+            elif rhs.name in self.revvarmap and lhs.name != 'U':
+                orel = self._may_be_shared_with(node, 'subject', rhs.name)
+                if orel is not None:
+                    self._use_orig_term(lhs.name, orel.children[0])
+                    return
         rel = n.Relation(node.r_type, node.optional)
         for c in node.children:
             rel.append(c.accept(self))
