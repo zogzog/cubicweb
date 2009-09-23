@@ -798,7 +798,7 @@ class AfterAddCWETypeHook(DelCWETypeHook):
       schema on commit
     """
     __regid__ = 'syncaddcwetype'
-    events = ('before_add_entity',)
+    events = ('after_add_entity',)
 
     def __call__(self):
         entity = self.entity
