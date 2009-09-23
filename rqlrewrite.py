@@ -196,8 +196,6 @@ class RQLRewriter(object):
                     try:
                         new = self.insert_snippet(varmap, rqlexpr.snippet_rqlst, parent)
                     except Unsupported:
-                        import traceback
-                        traceback.print_exc()
                         continue
                     inserted = True
                     if new is not None:

@@ -221,7 +221,7 @@ class wf_info_for(RelationType):
     }
     inlined = True
 
-    cardinality='1*'
+    cardinality = '1*'
     composite = 'object'
     fulltext_container = composite
     subject = 'TrInfo'
