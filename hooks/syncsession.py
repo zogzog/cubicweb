@@ -87,7 +87,7 @@ class _DelUserOp(hook.Operation):
     def commit_event(self):
         """the observed connections pool has been commited"""
         try:
-            self.repo.close(self.cnxid)
+            self.session.repo.close(self.cnxid)
         except BadConnectionId:
             pass # already closed
 
@@ -132,7 +132,7 @@ class _AddCWPropertyOp(hook.Operation):
         """the observed connections pool has been commited"""
         cwprop = self.cwprop
         if not cwprop.for_user:
-            self.repo.vreg['propertyvalues'][cwprop.pkey] = cwprop.value
+            self.session.vreg['propertyvalues'][cwprop.pkey] = cwprop.value
         # if for_user is set, update is handled by a ChangeCWPropertyOp operation
 
 
