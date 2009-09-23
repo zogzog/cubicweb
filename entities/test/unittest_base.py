@@ -142,7 +142,7 @@ class SpecializedEntityClassesTC(CubicWebTC):
                 self.assertEquals(eclass.__bases__[0].__bases__, (Foo,))
         # check Division eclass is still selected for plain Division entities
         eclass = self.select_eclass('Division')
-        self.assertEquals(eclass.id, 'Division')
+        self.assertEquals(eclass.__regid__, 'Division')
 
 if __name__ == '__main__':
     unittest_main()

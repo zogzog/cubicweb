@@ -24,7 +24,7 @@ class VCardCWUserView(EntityView):
 
     def set_request_content_type(self):
         """overriden to set a .vcf filename"""
-        self.req.set_content_type(self.content_type, filename='vcard.vcf')
+        self._cw.set_content_type(self.content_type, filename='vcard.vcf')
 
     def cell_call(self, row, col):
         self.vcard_header()

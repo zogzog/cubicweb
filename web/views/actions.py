@@ -48,7 +48,7 @@ def match_searched_etype(cls, req, rset=None, **kwargs):
 def view_is_not_default_view(cls, req, rset=None, **kwargs):
     # interesting if it propose another view than the current one
     vid = req.form.get('vid')
-    if vid and vid != vid_from_rset(req, rset, cls.schema):
+    if vid and vid != vid_from_rset(req, rset, req.vreg.schema):
         return 1
     return 0
 
@@ -61,7 +61,7 @@ def addable_etype_empty_rset(cls, req, rset=None, **kwargs):
         select = rqlst.children[0]
         if len(select.defined_vars) == 1 and len(select.solutions) == 1:
             rset._searched_etype = select.solutions[0].itervalues().next()
-            eschema = cls.schema.eschema(rset._searched_etype)
+            eschema = req.schema.eschema(rset._searched_etype)
             if not (eschema.is_final() or eschema.is_subobject(strict=True)) \
                    and eschema.has_perm(req, 'add'):
                 return 1
@@ -82,7 +82,7 @@ class SelectAction(Action):
     order = 0
 
     def url(self):
-        return linksearch_select_url(self.req, self.rset)
+        return linksearch_select_url(self._cw, self.cw_rset)
 
 
 class CancelSelectAction(Action):
@@ -94,9 +94,9 @@ class CancelSelectAction(Action):
     order = 10
 
     def url(self):
-        target, eid, r_type, searched_type = self.req.search_state[1]
-        return self.build_url(str(eid),
-                              vid='edition', __mode='normal')
+        target, eid, r_type, searched_type = self._cw.search_state[1]
+        return self._cw.build_url(str(eid),
+                                  vid='edition', __mode='normal')
 
 
 class ViewAction(Action):
@@ -111,11 +111,11 @@ class ViewAction(Action):
     order = 0
 
     def url(self):
-        params = self.req.form.copy()
+        params = self._cw.form.copy()
         for param in ('vid', '__message') + controller.NAV_FORM_PARAMETERS:
             params.pop(param, None)
-        return self.build_url(self.req.relative_path(includeparams=False),
-                              **params)
+        return self._cw.build_url(self._cw.relative_path(includeparams=False),
+                                  **params)
 
 
 class ModifyAction(Action):
@@ -129,7 +129,7 @@ class ModifyAction(Action):
     order = 10
 
     def url(self):
-        entity = self.rset.get_entity(self.row or 0, self.col or 0)
+        entity = self.cw_rset.get_entity(self.cw_row or 0, self.cw_col or 0)
         return entity.absolute_url(vid='edition')
 
 
@@ -144,7 +144,7 @@ class MultipleEditAction(Action):
     order = 10
 
     def url(self):
-        return self.build_url('view', rql=self.rset.rql, vid='muledit')
+        return self._cw.build_url('view', rql=self.cw_rset.rql, vid='muledit')
 
 
 # generic "more" actions #######################################################
@@ -167,7 +167,7 @@ class ManagePermissionsAction(Action):
         return super(ManagePermissionsAction, cls).__registered__(vreg)
 
     def url(self):
-        return self.rset.get_entity(self.row or 0, self.col or 0).absolute_url(vid='security')
+        return self.cw_rset.get_entity(self.cw_row or 0, self.cw_col or 0).absolute_url(vid='security')
 
 
 class DeleteAction(Action):
@@ -179,10 +179,10 @@ class DeleteAction(Action):
     order = 20
 
     def url(self):
-        if len(self.rset) == 1:
-            entity = self.rset.get_entity(self.row or 0, self.col or 0)
-            return self.build_url(entity.rest_path(), vid='deleteconf')
-        return self.build_url(rql=self.rset.printable_rql(), vid='deleteconf')
+        if len(self.cw_rset) == 1:
+            entity = self.cw_rset.get_entity(self.cw_row or 0, self.cw_col or 0)
+            return self._cw.build_url(entity.rest_path(), vid='deleteconf')
+        return self._cw.build_url(rql=self.cw_rset.printable_rql(), vid='deleteconf')
 
 
 class CopyAction(Action):
@@ -194,7 +194,7 @@ class CopyAction(Action):
     order = 30
 
     def url(self):
-        entity = self.rset.get_entity(self.row or 0, self.col or 0)
+        entity = self.cw_rset.get_entity(self.cw_row or 0, self.cw_col or 0)
         return entity.absolute_url(vid='copy')
 
 
@@ -213,16 +213,16 @@ class AddNewAction(MultipleEditAction):
 
     @property
     def rsettype(self):
-        if self.rset:
-            return self.rset.description[0][0]
-        return self.rset._searched_etype
+        if self.cw_rset:
+            return self.cw_rset.description[0][0]
+        return self.cw_rset._searched_etype
 
     @property
     def title(self):
-        return self.req.__('add a %s' % self.rsettype) # generated msgid
+        return self._cw.__('add a %s' % self.rsettype) # generated msgid
 
     def url(self):
-        return self.build_url('add/%s' % self.rsettype)
+        return self._cw.build_url('add/%s' % self.rsettype)
 
 
 class AddRelatedActions(Action):
@@ -236,11 +236,11 @@ class AddRelatedActions(Action):
     def fill_menu(self, box, menu):
         # when there is only one item in the sub-menu, replace the sub-menu by
         # item's title prefixed by 'add'
-        menu.label_prefix = self.req._('add')
+        menu.label_prefix = self._cw._('add')
         super(AddRelatedActions, self).fill_menu(box, menu)
 
     def actual_actions(self):
-        entity = self.rset.get_entity(self.row or 0, self.col or 0)
+        entity = self.cw_rset.get_entity(self.cw_row or 0, self.cw_col or 0)
         eschema = entity.e_schema
         for rschema, teschema, x in self.add_related_schemas(entity):
             if x == 'subject':
@@ -249,7 +249,7 @@ class AddRelatedActions(Action):
             else:
                 label = 'add %s %s %s %s' % (teschema, rschema, eschema, x)
                 url = self.linkto_url(entity, rschema, teschema, 'subject')
-            yield self.build_action(self.req._(label), url)
+            yield self.build_action(self._cw._(label), url)
 
     def add_related_schemas(self, entity):
         """this is actually used ui method to generate 'addrelated' actions from
@@ -260,7 +260,7 @@ class AddRelatedActions(Action):
         them by using uicfg.actionbox_appearsin_addmenu
         """
         appearsin_addmenu = uicfg.actionbox_appearsin_addmenu
-        req = self.req
+        req = self._cw
         eschema = entity.e_schema
         for role, rschemas in (('subject', eschema.subject_relations()),
                                ('object', eschema.object_relations())):
@@ -284,10 +284,10 @@ class AddRelatedActions(Action):
                         yield rschema, teschema, role
 
     def linkto_url(self, entity, rtype, etype, target):
-        return self.build_url('add/%s' % etype,
-                              __linkto='%s:%s:%s' % (rtype, entity.eid, target),
-                              __redirectpath=entity.rest_path(), # should not be url quoted!
-                              __redirectvid=self.req.form.get('vid', ''))
+        return self._cw.build_url('add/%s' % etype,
+                                  __linkto='%s:%s:%s' % (rtype, entity.eid, target),
+                                  __redirectpath=entity.rest_path(), # should not be url quoted!
+                                  __redirectvid=self._cw.form.get('vid', ''))
 
 
 # logged user actions #########################################################
@@ -301,7 +301,7 @@ class UserPreferencesAction(Action):
     order = 10
 
     def url(self):
-        return self.build_url(self.id)
+        return self._cw.build_url(self.__regid__)
 
 
 class UserInfoAction(Action):
@@ -313,7 +313,7 @@ class UserInfoAction(Action):
     order = 20
 
     def url(self):
-        return self.build_url('cwuser/%s'%self.req.user.login, vid='edition')
+        return self._cw.build_url('cwuser/%s'%self._cw.user.login, vid='edition')
 
 
 class LogoutAction(Action):
@@ -325,7 +325,7 @@ class LogoutAction(Action):
     order = 30
 
     def url(self):
-        return self.build_url(self.id)
+        return self._cw.build_url(self.__regid__)
 
 
 # site actions ################################################################
@@ -337,7 +337,7 @@ class ManagersAction(Action):
     category = 'siteactions'
 
     def url(self):
-        return self.build_url(self.id)
+        return self._cw.build_url(self.__regid__)
 
 
 class SiteConfigurationAction(ManagersAction):

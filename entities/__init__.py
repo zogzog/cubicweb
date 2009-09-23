@@ -82,7 +82,7 @@ class AnyEntity(Entity):
 
     def dc_date(self, date_format=None):# XXX default to ISO 8601 ?
         """return latest modification date of this entity"""
-        return self.format_date(self.modification_date, date_format=date_format)
+        return self._cw.format_date(self.modification_date, date_format=date_format)
 
     def dc_type(self, form=''):
         """return the display name for the type of this entity (translated)"""
@@ -95,7 +95,7 @@ class AnyEntity(Entity):
         for rschema, attrschema in self.e_schema.attribute_definitions():
             if rschema.rproperty(self.e_schema, attrschema,
                                  'internationalizable'):
-                return self._cw._(self.req.user.property_value('ui.language'))
+                return self._cw._(self._cw.user.property_value('ui.language'))
         return self._cw._(self._cw.vreg.property_value('ui.language'))
 
     @property
@@ -125,7 +125,7 @@ class AnyEntity(Entity):
                 if 'vtitle' in self._cw.form:
                     # embeding for instance
                     path.append( self._cw.form['vtitle'] )
-            elif view.id != 'primary' and hasattr(view, 'title'):
+            elif view.__regid__ != 'primary' and hasattr(view, 'title'):
                 path.append( self._cw._(view.title) )
         return path
 

@@ -16,7 +16,7 @@ class PyValTableView(View):
 
     def call(self, pyvalue, headers=None):
         if headers is None:
-            headers = self.req.form.get('headers')
+            headers = self._cw.form.get('headers')
         self.w(u'<table class="listing">\n')
         if headers:
             self.w(u'<tr>')

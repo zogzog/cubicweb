@@ -171,9 +171,9 @@ class QueryTranslator(BaseQueryProcessor):
     priority = 2
     def preprocess_query(self, uquery, req):
         rqlst = parse(uquery, print_errors=False)
-        schema = self.vreg.schema
+        schema = self._cw.vreg.schema
         # rql syntax tree will be modified in place if necessary
-        translate_rql_tree(rqlst, trmap(self.config, schema, req.lang), schema)
+        translate_rql_tree(rqlst, trmap(self._cw.config, schema, req.lang), schema)
         return rqlst.as_string(),
 
 
@@ -187,7 +187,7 @@ class QSPreProcessor(BaseQueryProcessor):
     def preprocess_query(self, uquery, req):
         """try to get rql from an unicode query string"""
         args = None
-        self.req = req
+        self._cw = req
         try:
             # Process as if there was a quoted part
             args = self._quoted_words_query(uquery)
@@ -210,7 +210,7 @@ class QSPreProcessor(BaseQueryProcessor):
         """
         etype = word.capitalize()
         try:
-            return trmap(self.config, self.vreg.schema, self.req.lang)[etype]
+            return trmap(self._cw.config, self._cw.vreg.schema, self._cw.lang)[etype]
         except KeyError:
             raise BadRQLQuery('%s is not a valid entity name' % etype)
 
@@ -222,7 +222,7 @@ class QSPreProcessor(BaseQueryProcessor):
         # Need to convert from unicode to string (could be whatever)
         rtype = word.lower()
         # Find the entity name as stored in the DB
-        translations = trmap(self.config, self.vreg.schema, self.req.lang)
+        translations = trmap(self._cw.config, self._cw.vreg.schema, self._cw.lang)
         try:
             translations = translations[rtype]
         except KeyError:
@@ -249,9 +249,9 @@ class QSPreProcessor(BaseQueryProcessor):
         searchop = ''
         if '%' in searchstr:
             if rtype:
-                possible_etypes = self.schema.rschema(rtype).objects(etype)
+                possible_etypes = self._cw.schema.rschema(rtype).objects(etype)
             else:
-                possible_etypes = [self.schema.eschema(etype)]
+                possible_etypes = [self._cw.schema.eschema(etype)]
             if searchattr or len(possible_etypes) == 1:
                 searchattr = searchattr or possible_etypes[0].main_attribute()
                 searchop = 'LIKE '
@@ -275,10 +275,10 @@ class QSPreProcessor(BaseQueryProcessor):
         """Specific process for three words query (case (3) of preprocess_rql)
         """
         etype = self._get_entity_type(word1)
-        eschema = self.schema.eschema(etype)
+        eschema = self._cw.schema.eschema(etype)
         rtype = self._get_attribute_name(word2, eschema)
         # expand shortcut if rtype is a non final relation
-        if not self.schema.rschema(rtype).is_final():
+        if not self._cw.schema.rschema(rtype).is_final():
             return self._expand_shortcut(etype, rtype, word3)
         if '%' in word3:
             searchop = 'LIKE '
@@ -348,7 +348,7 @@ class MagicSearchComponent(Component):
         super(MagicSearchComponent, self).__init__(req, rset=rset)
         processors = []
         self.by_name = {}
-        for processorcls in self.vreg['components']['magicsearch_processor']:
+        for processorcls in self._cw.vreg['components']['magicsearch_processor']:
             # instantiation needed
             processor = processorcls()
             processors.append(processor)

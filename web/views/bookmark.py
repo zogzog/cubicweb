@@ -27,7 +27,7 @@ class FollowAction(action.Action):
     category = 'mainactions'
 
     def url(self):
-        return self.rset.get_entity(self.row or 0, self.col or 0).actual_url()
+        return self.cw_rset.get_entity(self.cw_row or 0, self.cw_col or 0).actual_url()
 
 
 class BookmarkPrimaryView(primary.PrimaryView):
@@ -35,15 +35,15 @@ class BookmarkPrimaryView(primary.PrimaryView):
 
     def cell_call(self, row, col):
         """the primary view for bookmark entity"""
-        entity = self.complete_entity(row, col)
+        entity = self.cw_rset.complete_entity(row, col)
         self.w(u'&#160;')
         self.w(u"<span class='title'><b>")
-        self.w(u"%s : %s" % (self.req._('Bookmark'), xml_escape(entity.title)))
+        self.w(u"%s : %s" % (self._cw._('Bookmark'), xml_escape(entity.title)))
         self.w(u"</b></span>")
         self.w(u'<br/><br/><div class="content"><a href="%s">' % (
             xml_escape(entity.actual_url())))
         self.w(u'</a>')
-        self.w(u'<p>%s%s</p>' % (self.req._('Used by:'), ', '.join(xml_escape(u.name())
+        self.w(u'<p>%s%s</p>' % (self._cw._('Used by:'), ', '.join(xml_escape(u.name())
                                                                    for u in entity.bookmarked_by)))
         self.w(u'</div>')
 
@@ -61,17 +61,17 @@ class BookmarksBox(box.UserRQLBoxTemplate):
 
 
     def call(self, **kwargs):
-        req = self.req
+        req = self._cw
         ueid = req.user.eid
         try:
             rset = req.execute(self.rql, {'x': ueid})
         except Unauthorized:
             # can't access to something in the query, forget this box
             return
-        box = BoxWidget(req._(self.title), self.id)
+        box = BoxWidget(req._(self.title), self.__regid__)
         box.listing_class = 'sideBox'
-        rschema = self.schema.rschema(self.rtype)
-        eschema = self.schema.eschema(self.etype)
+        rschema = self._cw.schema.rschema(self.rtype)
+        eschema = self._cw.schema.eschema(self.etype)
         candelete = rschema.has_perm(req, 'delete', toeid=ueid)
         if candelete:
             req.add_js( ('cubicweb.ajax.js', 'cubicweb.bookmarks.js') )
@@ -105,11 +105,11 @@ class BookmarksBox(box.UserRQLBoxTemplate):
                                                 build_descr=False)
                     bookmarksrql %= {'x': ueid}
                 if erset:
-                    url = self.build_url(vid='muledit', rql=bookmarksrql)
-                    boxmenu.append(self.mk_action(self.req._('edit bookmarks'), url, category='manage'))
+                    url = self._cw.build_url(vid='muledit', rql=bookmarksrql)
+                    boxmenu.append(self.mk_action(self._cw._('edit bookmarks'), url, category='manage'))
             url = req.user.absolute_url(vid='xaddrelation', rtype='bookmarked_by',
                                         target='subject')
-            boxmenu.append(self.mk_action(self.req._('pick existing bookmarks'), url, category='manage'))
+            boxmenu.append(self.mk_action(self._cw._('pick existing bookmarks'), url, category='manage'))
             box.append(boxmenu)
         if not box.is_empty():
             box.render(self.w)

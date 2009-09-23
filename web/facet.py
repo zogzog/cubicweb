@@ -282,7 +282,7 @@ class AbstractFacet(AppObject):
         self.filtered_variable = filtered_variable
 
     def init_from_rset(self):
-        self.rqlst = self.rset.syntax_tree().children[0]
+        self.rqlst = self.cw_rset.syntax_tree().children[0]
 
     def init_from_form(self, rqlst):
         self.rqlst = rqlst
@@ -290,7 +290,7 @@ class AbstractFacet(AppObject):
     @property
     def operator(self):
         # OR between selected values by default
-        return self.req.form.get(self.id + '_andor', 'OR')
+        return self._cw.form.get(self.__regid__ + '_andor', 'OR')
 
     def get_widget(self):
         """return the widget instance to use to display this facet
@@ -315,12 +315,12 @@ class VocabularyFacet(AbstractFacet):
         if len(vocab) <= 1:
             return None
         wdg = FacetVocabularyWidget(self)
-        selected = frozenset(typed_eid(eid) for eid in self.req.list_form_param(self.id))
+        selected = frozenset(typed_eid(eid) for eid in self._cw.list_form_param(self.__regid__))
         for label, value in vocab:
             if value is None:
                 wdg.append(FacetSeparator(label))
             else:
-                wdg.append(FacetItem(self.req, label, value, value in selected))
+                wdg.append(FacetItem(self._cw, label, value, value in selected))
         return wdg
 
     def vocabulary(self):
@@ -339,7 +339,7 @@ class VocabularyFacet(AbstractFacet):
 
     def rqlexec(self, rql, args=None, cachekey=None):
         try:
-            return self.req.execute(rql, args, cachekey)
+            return self._cw.execute(rql, args, cachekey)
         except Unauthorized:
             return []
 
@@ -360,7 +360,7 @@ class RelationFacet(VocabularyFacet):
 
     @property
     def title(self):
-        return display_name(self.req, self.rtype, form=self.role)
+        return display_name(self._cw, self.rtype, form=self.role)
 
     def vocabulary(self):
         """return vocabulary for this facet, eg a list of 2-uple (label, value)
@@ -376,14 +376,14 @@ class RelationFacet(VocabularyFacet):
             insert_attr_select_relation(rqlst, mainvar, self.rtype, self.role,
                                         self.target_attr, self.sortfunc, sort)
             try:
-                rset = self.rqlexec(rqlst.as_string(), self.rset.args, self.rset.cachekey)
+                rset = self.rqlexec(rqlst.as_string(), self.cw_rset.args, self.cw_rset.cachekey)
             except:
                 self.exception('error while getting vocabulary for %s, rql: %s',
                                self, rqlst.as_string())
                 return ()
         finally:
             rqlst.recover()
-        return self.rset_vocabulary(rset)
+        return self.cw_rset_vocabulary(rset)
 
     def possible_values(self):
         """return a list of possible values (as string since it's used to
@@ -400,7 +400,7 @@ class RelationFacet(VocabularyFacet):
 
     def rset_vocabulary(self, rset):
         if self.label_vid is None:
-            _ = self.req._
+            _ = self._cw._
             return [(_(label), eid) for eid, label in rset]
         if self.sortfunc is None:
             return sorted((entity.view(self.label_vid), entity.eid)
@@ -416,7 +416,7 @@ class RelationFacet(VocabularyFacet):
         else:
             cardidx = 1
         # XXX when called via ajax, no rset to compute possible types
-        possibletypes = self.rset and self.rset.column_types(0)
+        possibletypes = self.cw_rset and self.cw_rset.column_types(0)
         for subjtype, objtype in rschema.iter_rdefs():
             if possibletypes is not None:
                 if self.role == 'subject':
@@ -430,7 +430,7 @@ class RelationFacet(VocabularyFacet):
 
     def add_rql_restrictions(self):
         """add restriction for this facet into the rql syntax tree"""
-        value = self.req.form.get(self.id)
+        value = self._cw.form.get(self.__regid__)
         if not value:
             return
         mainvar = self.filtered_variable
@@ -469,17 +469,17 @@ class AttributeFacet(RelationFacet):
             newvar = _prepare_vocabulary_rqlst(rqlst, mainvar, self.rtype, self.role)
             _set_orderby(rqlst, newvar, self.sortasc, self.sortfunc)
             try:
-                rset = self.rqlexec(rqlst.as_string(), self.rset.args, self.rset.cachekey)
+                rset = self.rqlexec(rqlst.as_string(), self.cw_rset.args, self.cw_rset.cachekey)
             except:
                 self.exception('error while getting vocabulary for %s, rql: %s',
                                self, rqlst.as_string())
                 return ()
         finally:
             rqlst.recover()
-        return self.rset_vocabulary(rset)
+        return self.cw_rset_vocabulary(rset)
 
     def rset_vocabulary(self, rset):
-        _ = self.req._
+        _ = self._cw._
         return [(_(value), value) for value, in rset]
 
     def support_and(self):
@@ -487,7 +487,7 @@ class AttributeFacet(RelationFacet):
 
     def add_rql_restrictions(self):
         """add restriction for this facet into the rql syntax tree"""
-        value = self.req.form.get(self.id)
+        value = self._cw.form.get(self.__regid__)
         if not value:
             return
         mainvar = self.filtered_variable
@@ -499,16 +499,16 @@ class FilterRQLBuilder(object):
     """called by javascript to get a rql string from filter form"""
 
     def __init__(self, req):
-        self.req = req
+        self._cw = req
 
     def build_rql(self):#, tablefilter=False):
-        form = self.req.form
+        form = self._cw.form
         facetids = form['facets'].split(',')
         select = parse(form['baserql']).children[0] # XXX Union unsupported yet
         mainvar = filtered_variable(select)
         toupdate = []
         for facetid in facetids:
-            facet = get_facet(self.req, facetid, select, mainvar)
+            facet = get_facet(self._cw, facetid, select, mainvar)
             facet.add_rql_restrictions()
             if facet.needs_update:
                 toupdate.append(facetid)
@@ -529,10 +529,10 @@ class RangeFacet(AttributeFacet):
         return self.wdgclass(self, min(values), max(values))
 
     def infvalue(self):
-        return self.req.form.get('%s_inf' % self.id)
+        return self._cw.form.get('%s_inf' % self.__regid__)
 
     def supvalue(self):
-        return self.req.form.get('%s_sup' % self.id)
+        return self._cw.form.get('%s_sup' % self.__regid__)
 
     def formatvalue(self, value):
         """format `value` before in order to insert it in the RQL query"""
@@ -571,20 +571,20 @@ class HasRelationFacet(AbstractFacet):
 
     @property
     def title(self):
-        return display_name(self.req, self.rtype, self.role)
+        return display_name(self._cw, self.rtype, self.role)
 
     def support_and(self):
         return False
 
     def get_widget(self):
-        return CheckBoxFacetWidget(self.req, self,
+        return CheckBoxFacetWidget(self._cw, self,
                                    '%s:%s' % (self.rtype, self),
-                                   self.req.form.get(self.id))
+                                   self._cw.form.get(self.__regid__))
 
     def add_rql_restrictions(self):
         """add restriction for this facet into the rql syntax tree"""
         self.rqlst.set_distinct(True) # XXX
-        value = self.req.form.get(self.id)
+        value = self._cw.form.get(self.__regid__)
         if not value: # no value sent for this facet
             return
         var = self.rqlst.make_variable()
@@ -607,12 +607,12 @@ class FacetVocabularyWidget(HTMLWidget):
 
     def _render(self):
         title = xml_escape(self.facet.title)
-        facetid = xml_escape(self.facet.id)
+        facetid = xml_escape(self.facet.__regid__)
         self.w(u'<div id="%s" class="facet">\n' % facetid)
         self.w(u'<div class="facetTitle" cubicweb:facetName="%s">%s</div>\n' %
                (xml_escape(facetid), title))
         if self.facet.support_and():
-            _ = self.facet.req._
+            _ = self.facet._cw._
             self.w(u'''<select name="%s" class="radio facetOperator" title="%s">
   <option value="OR">%s</option>
   <option value="AND">%s</option>
@@ -637,7 +637,7 @@ class FacetStringWidget(HTMLWidget):
 
     def _render(self):
         title = xml_escape(self.facet.title)
-        facetid = xml_escape(self.facet.id)
+        facetid = xml_escape(self.facet.__regid__)
         self.w(u'<div id="%s" class="facet">\n' % facetid)
         self.w(u'<div class="facetTitle" cubicweb:facetName="%s">%s</div>\n' %
                (facetid, title))
@@ -677,11 +677,11 @@ class FacetRangeWidget(HTMLWidget):
 
     def _render(self):
         facet = self.facet
-        facet.req.add_js('ui.slider.js')
-        facet.req.add_css('ui.all.css')
+        facet._cw.add_js('ui.slider.js')
+        facet._cw.add_css('ui.all.css')
         sliderid = make_uid('theslider')
-        facetid = xml_escape(self.facet.id)
-        facet.req.html_headers.add_onload(self.onload % {
+        facetid = xml_escape(self.facet.__regid__)
+        facet._cw.html_headers.add_onload(self.onload % {
             'sliderid': sliderid,
             'facetid': facetid,
             'minvalue': self.minvalue,
@@ -715,8 +715,8 @@ class DateFacetRangeWidget(FacetRangeWidget):
         super(DateFacetRangeWidget, self).__init__(facet,
                                                    datetime2ticks(minvalue),
                                                    datetime2ticks(maxvalue))
-        fmt = facet.req.property_value('ui.date-format')
-        facet.req.html_headers.define_var('DATE_FMT', fmt)
+        fmt = facet._cw.property_value('ui.date-format')
+        facet._cw.html_headers.define_var('DATE_FMT', fmt)
 
 
 class FacetItem(HTMLWidget):
@@ -725,7 +725,7 @@ class FacetItem(HTMLWidget):
     unselected_img = "no-check-no-border.png"
 
     def __init__(self, req, label, value, selected=False):
-        self.req = req
+        self._cw = req
         self.label = label
         self.value = value
         self.selected = selected
@@ -733,12 +733,12 @@ class FacetItem(HTMLWidget):
     def _render(self):
         if self.selected:
             cssclass = ' facetValueSelected'
-            imgsrc = self.req.datadir_url + self.selected_img
-            imgalt = self.req._('selected')
+            imgsrc = self._cw.datadir_url + self.selected_img
+            imgalt = self._cw._('selected')
         else:
             cssclass = ''
-            imgsrc = self.req.datadir_url + self.unselected_img
-            imgalt = self.req._('not selected')
+            imgsrc = self._cw.datadir_url + self.unselected_img
+            imgalt = self._cw._('not selected')
         self.w(u'<div class="facetValue facetCheckBox%s" cubicweb:value="%s">\n'
                % (cssclass, xml_escape(unicode(self.value))))
         self.w(u'<img src="%s" alt="%s"/>&#160;' % (imgsrc, imgalt))
@@ -751,23 +751,23 @@ class CheckBoxFacetWidget(HTMLWidget):
     unselected_img = "black-uncheck.png"
 
     def __init__(self, req, facet, value, selected):
-        self.req = req
+        self._cw = req
         self.facet = facet
         self.value = value
         self.selected = selected
 
     def _render(self):
         title = xml_escape(self.facet.title)
-        facetid = xml_escape(self.facet.id)
+        facetid = xml_escape(self.facet.__regid__)
         self.w(u'<div id="%s" class="facet">\n' % facetid)
         if self.selected:
             cssclass = ' facetValueSelected'
-            imgsrc = self.req.datadir_url + self.selected_img
-            imgalt = self.req._('selected')
+            imgsrc = self._cw.datadir_url + self.selected_img
+            imgalt = self._cw._('selected')
         else:
             cssclass = ''
-            imgsrc = self.req.datadir_url + self.unselected_img
-            imgalt = self.req._('not selected')
+            imgsrc = self._cw.datadir_url + self.unselected_img
+            imgalt = self._cw._('not selected')
         self.w(u'<div class="facetValue facetCheckBox%s" cubicweb:value="%s">\n'
                % (cssclass, xml_escape(unicode(self.value))))
         self.w(u'<div class="facetCheckBoxWidget">')

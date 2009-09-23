@@ -195,7 +195,7 @@ class Field(object):
                 except TypeError:
                     warn('vocabulary method (eg field.choices) should now take '
                          'the form instance as argument', DeprecationWarning)
-                    vocab = self.choices(req=form.req)
+                    vocab = self.choices(req=form._cw)
             else:
                 vocab = self.choices
             if vocab and not isinstance(vocab[0], (list, tuple)):
@@ -203,7 +203,7 @@ class Field(object):
         else:
             vocab = form.form_field_vocabulary(self)
         if self.internationalizable:
-            vocab = [(form.req._(label), value) for label, value in vocab]
+            vocab = [(form._cw._(label), value) for label, value in vocab]
         if self.sort:
             vocab = vocab_sort(vocab)
         return vocab
@@ -284,7 +284,7 @@ class RichTextField(StringField):
             return self.format_field
         # we have to cache generated field since it's use as key in the
         # context dictionnary
-        req = form.req
+        req = form._cw
         try:
             return req.data[self]
         except KeyError:
@@ -316,7 +316,7 @@ class RichTextField(StringField):
         """return True if fckeditor should be used to edit entity's attribute named
         `attr`, according to user preferences
         """
-        if form.req.use_fckeditor():
+        if form._cw.use_fckeditor():
             return form.form_field_format(self) == 'text/html'
         return False
 
@@ -354,9 +354,9 @@ class FileField(StringField):
             divid = '%s-advanced' % form.context[self]['name']
             wdgs.append(u'<a href="%s" title="%s"><img src="%s" alt="%s"/></a>' %
                         (xml_escape(uilib.toggle_action(divid)),
-                         form.req._('show advanced fields'),
-                         xml_escape(form.req.build_url('data/puce_down.png')),
-                         form.req._('show advanced fields')))
+                         form._cw._('show advanced fields'),
+                         xml_escape(form._cw.build_url('data/puce_down.png')),
+                         form._cw._('show advanced fields')))
             wdgs.append(u'<div id="%s" class="hidden">' % divid)
             if self.format_field:
                 wdgs.append(self.render_subfield(form, self.format_field, renderer))
@@ -368,7 +368,7 @@ class FileField(StringField):
             wdgs.append(u'<br/>')
             wdgs.append(tags.input(name=u'%s__detach' % form.context[self]['name'],
                                    type=u'checkbox'))
-            wdgs.append(form.req._('detach attached file'))
+            wdgs.append(form._cw._('detach attached file'))
         return u'\n'.join(wdgs)
 
     def render_subfield(self, form, field, renderer):
@@ -378,7 +378,7 @@ class FileField(StringField):
                 + u'<br/>')
 
     def process_form_value(self, form):
-        posted = form.req.form
+        posted = form._cw.form
         value = posted.get(form.form_field_name(self))
         formkey = form.form_field_name(self)
         if ('%s__detach' % form.context[self]['name']) in posted:
@@ -412,13 +412,13 @@ class EditableFileField(FileField):
                     pass
                 else:
                     if not self.required:
-                        msg = form.req._(
+                        msg = form._cw._(
                             'You can either submit a new file using the browse button above'
                             ', or choose to remove already uploaded file by checking the '
                             '"detach attached file" check-box, or edit file content online '
                             'with the widget below.')
                     else:
-                        msg = form.req._(
+                        msg = form._cw._(
                             'You can either submit a new file using the browse button above'
                             ', or edit file content online with the widget below.')
                     wdgs.append(u'<p><b>%s</b></p>' % msg)
@@ -427,7 +427,7 @@ class EditableFileField(FileField):
         return '\n'.join(wdgs)
 
     def process_form_value(self, form):
-        value = form.req.form.get(form.form_field_name(self))
+        value = form._cw.form.get(form.form_field_name(self))
         if isinstance(value, unicode):
             # file modified using a text widget
             encoding = form.form_field_encoding(self)
@@ -453,7 +453,7 @@ class BooleanField(Field):
     def vocabulary(self, form):
         if self.choices:
             return self.choices
-        return [(form.req._('yes'), '1'), (form.req._('no'), '')]
+        return [(form._cw._('yes'), '1'), (form._cw._('no'), '')]
 
     def process_form_value(self, form):
         return bool(Field.process_form_value(self, form))
@@ -534,7 +534,7 @@ class RelationField(Field):
 
     def vocabulary(self, form):
         entity = form.edited_entity
-        req = entity.req
+        req = entity._cw
         # first see if its specified by __linkto form parameters
         linkedto = entity.linked_to(self.name, self.role)
         if linkedto:

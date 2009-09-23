@@ -73,10 +73,10 @@ class FormRenderer(AppObject):
         w = data.append
         w(self.open_form(form, values))
         if self.display_progress_div:
-            w(u'<div id="progress">%s</div>' % self.req._('validating...'))
+            w(u'<div id="progress">%s</div>' % self._cw._('validating...'))
         w(u'<fieldset>')
         w(tags.input(type=u'hidden', name=u'__form_id',
-                     value=values.get('formvid', form.id)))
+                     value=values.get('formvid', form.__regid__)))
         if form.redirect_path:
             w(tags.input(type='hidden', name='__redirectpath', value=form.redirect_path))
         self.render_fields(w, form, values)
@@ -92,9 +92,9 @@ class FormRenderer(AppObject):
         if field.label is None:
             return u''
         if isinstance(field.label, tuple): # i.e. needs contextual translation
-            label = self.req.pgettext(*field.label)
+            label = self._cw.pgettext(*field.label)
         else:
-            label = self.req._(field.label)
+            label = self._cw._(field.label)
         attrs = {'for': form.context[field]['id']}
         if field.required:
             attrs['class'] = 'required'
@@ -106,11 +106,11 @@ class FormRenderer(AppObject):
         if callable(descr):
             descr = descr(form)
         if descr:
-            help.append('<div class="helper">%s</div>' % self.req._(descr))
-        example = field.example_format(self.req)
+            help.append('<div class="helper">%s</div>' % self._cw._(descr))
+        example = field.example_format(self._cw)
         if example:
             help.append('<div class="helper">(%s: %s)</div>'
-                        % (self.req._('sample format'), example))
+                        % (self._cw._('sample format'), example))
         return u'&#160;'.join(help)
 
     # specific methods (mostly to ease overriding) #############################
@@ -120,7 +120,7 @@ class FormRenderer(AppObject):
 
         This method should be called once inlined field errors has been consumed
         """
-        req = self.req
+        req = self._cw
         errex = form.form_valerror
         # get extra errors
         if errex is not None:
@@ -149,7 +149,7 @@ class FormRenderer(AppObject):
         else:
             enctype = 'application/x-www-form-urlencoded'
         if form.action is None:
-            action = self.req.build_url('edit')
+            action = self._cw.build_url('edit')
         else:
             action = form.action
         tag = ('<form action="%s" method="post" enctype="%s"' % (
@@ -210,7 +210,7 @@ class FormRenderer(AppObject):
                 continue
             w(u'<fieldset class="%s">' % (fieldset or u'default'))
             if fieldset:
-                w(u'<legend>%s</legend>' % self.req._(fieldset))
+                w(u'<legend>%s</legend>' % self._cw._(fieldset))
             w(u'<table class="%s">' % self.table_class)
             for field in fields:
                 w(u'<tr class="%s_%s_row">' % (field.name, field.role))
@@ -322,10 +322,10 @@ class EntityCompositeFormRenderer(FormRenderer):
                 w(u'<tr class="header">')
                 w(u'<th align="left">%s</th>' %
                   tags.input(type='checkbox',
-                             title=self.req._('toggle check boxes'),
+                             title=self._cw._('toggle check boxes'),
                              onclick="setCheckboxesState('eid', this.checked)"))
                 for field in subfields:
-                    w(u'<th>%s</th>' % self.req._(field.label))
+                    w(u'<th>%s</th>' % self._cw._(field.label))
                 w(u'</tr>')
         super(EntityCompositeFormRenderer, self).render_fields(w, form, values)
         if not form.is_subform:
@@ -380,7 +380,7 @@ class EntityFormRenderer(EntityBaseFormRenderer):
 
     def open_form(self, form, values):
         attrs_fs_label = ('<div class="iformTitle"><span>%s</span></div>'
-                          % self.req._('main informations'))
+                          % self._cw._('main informations'))
         attrs_fs_label += '<div class="formBody">'
         return attrs_fs_label + super(EntityFormRenderer, self).open_form(form, values)
 
@@ -413,7 +413,7 @@ class EntityFormRenderer(EntityBaseFormRenderer):
         srels_by_cat = form.srelations_by_category('generic', 'add', strict=True)
         if not srels_by_cat:
             return u''
-        req = self.req
+        req = self._cw
         _ = req._
         __ = _
         label = u'%s :' % __('This %s' % form.edited_entity.e_schema).capitalize()
@@ -433,7 +433,7 @@ class EntityFormRenderer(EntityBaseFormRenderer):
                 if not form.force_display and form.maxrelitems < len(related):
                     link = (u'<span class="invisible">'
                             '[<a href="javascript: window.location.href+=\'&amp;__force_display=1\'">%s</a>]'
-                            '</span>' % self.req._('view all'))
+                            '</span>' % self._cw._('view all'))
                     w(u'<li class="invisible">%s</li>' % link)
                 w(u'</ul>')
                 w(u'</td>')
@@ -491,7 +491,7 @@ class EntityFormRenderer(EntityBaseFormRenderer):
 
     def inline_relation_form(self, w, form, rschema, targettype, role):
         entity = form.edited_entity
-        __ = self.req.pgettext
+        __ = self._cw.pgettext
         i18nctx = 'inlined:%s.%s.%s' % (entity.e_schema, rschema, role)
         w(u'<div id="inline%sslot">' % rschema)
         existant = form.display_inline_edition_form(w, rschema, targettype,
@@ -539,11 +539,11 @@ class EntityInlinedFormRenderer(EntityFormRenderer):
             w(u'<div id="div-%(divid)s">' % values)
         else:
             w(u'<div id="notice-%s" class="notice">%s</div>' % (
-                values['divid'], self.req._('click on the box to cancel the deletion')))
+                values['divid'], self._cw._('click on the box to cancel the deletion')))
         w(u'<div class="iformBody">')
         eschema = form.edited_entity.e_schema
         ctx = values.pop('i18nctx')
-        values['removemsg'] = self.req.pgettext(ctx, 'remove this %s' % eschema)
+        values['removemsg'] = self._cw.pgettext(ctx, 'remove this %s' % eschema)
         w(u'<div class="iformTitle"><span>%(title)s</span> '
           '#<span class="icounter">%(counter)s</span> '
           '[<a href="javascript: %(removejs)s;noop();">%(removemsg)s</a>]</div>'

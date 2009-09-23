@@ -91,16 +91,16 @@ class InlineHelpView(StartupView):
     title = _('site documentation')
 
     def call(self):
-        fid = self.req.form['fid']
-        for lang in chain((self.req.lang, self.vreg.property_value('ui.language')),
-                          self.config.available_languages()):
+        fid = self._cw.form['fid']
+        for lang in chain((self._cw.lang, self._cw.vreg.property_value('ui.language')),
+                          self._cw.config.available_languages()):
             rid = '%s_%s.rst' % (fid, lang)
-            resourcedir = self.config.locate_doc_file(rid)
+            resourcedir = self._cw.config.locate_doc_file(rid)
             if resourcedir:
                 break
         else:
             raise NotFound
-        self.tocindex = build_toc(self.config)
+        self.tocindex = build_toc(self._cw.config)
         try:
             node = self.tocindex[fid]
         except KeyError:
@@ -108,7 +108,7 @@ class InlineHelpView(StartupView):
         else:
             self.navigation_links(node)
             self.w(u'<div class="hr"></div>')
-            self.w(u'<h1>%s</h1>' % (title_for_lang(node, self.req.lang)))
+            self.w(u'<h1>%s</h1>' % (title_for_lang(node, self._cw.lang)))
         data = open(join(resourcedir, rid)).read()
         self.w(rest_publish(self, data))
         if node is not None:
@@ -117,7 +117,7 @@ class InlineHelpView(StartupView):
             self.navigation_links(node)
 
     def navigation_links(self, node):
-        req = self.req
+        req = self._cw
         parent = node.parent
         if parent is None:
             return
@@ -139,10 +139,10 @@ class InlineHelpView(StartupView):
     def navsection(self, node, navtype):
         htmlclass, imgpath, msgid = self.navinfo[navtype]
         self.w(u'<span class="%s">' % htmlclass)
-        self.w(u'%s : ' % self.req._(msgid))
+        self.w(u'%s : ' % self._cw._(msgid))
         self.w(u'<a href="%s">%s</a>' % (
-            self.req.build_url('doc/'+node.attrib['resource']),
-            title_for_lang(node, self.req.lang)))
+            self._cw.build_url('doc/'+node.attrib['resource']),
+            title_for_lang(node, self._cw.lang)))
         self.w(u'</span>\n')
 
     def subsections_links(self, node, first=True):
@@ -154,8 +154,8 @@ class InlineHelpView(StartupView):
         self.w(u'<ul class="docsum">')
         for child in sub:
             self.w(u'<li><a href="%s">%s</a>' % (
-                self.req.build_url('doc/'+child.attrib['resource']),
-                title_for_lang(child, self.req.lang)))
+                self._cw.build_url('doc/'+child.attrib['resource']),
+                title_for_lang(child, self._cw.lang)))
             self.subsections_links(child, False)
             self.w(u'</li>')
         self.w(u'</ul>\n')
@@ -170,11 +170,11 @@ class InlineHelpImageView(StartupView):
     content_type = 'image/png'
 
     def call(self):
-        fid = self.req.form['fid']
-        for lang in chain((self.req.lang, self.vreg.property_value('ui.language')),
-                          self.config.available_languages()):
+        fid = self._cw.form['fid']
+        for lang in chain((self._cw.lang, self._cw.vreg.property_value('ui.language')),
+                          self._cw.config.available_languages()):
             rid = join('images', '%s_%s.png' % (fid, lang))
-            resourcedir = self.config.locate_doc_file(rid)
+            resourcedir = self._cw.config.locate_doc_file(rid)
             if resourcedir:
                 break
         else:
@@ -188,13 +188,13 @@ class ChangeLogView(StartupView):
     maxentries = 25
 
     def call(self):
-        rid = 'ChangeLog_%s' % (self.req.lang)
+        rid = 'ChangeLog_%s' % (self._cw.lang)
         allentries = []
-        title = self.req._(self.title)
+        title = self._cw._(self.title)
         restdata = ['.. -*- coding: utf-8 -*-', '', title, '='*len(title), '']
         w = restdata.append
         today = date.today()
-        for fpath in self.config.locate_all_files(rid):
+        for fpath in self._cw.config.locate_all_files(rid):
             cl = ChangeLog(fpath)
             encoding = 'utf-8'
             # additional content may be found in title

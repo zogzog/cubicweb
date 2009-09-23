@@ -53,28 +53,28 @@ class EditController(ViewController):
 
     def publish(self, rset=None):
         """edit / create / copy / delete entity / relations"""
-        for key in self.req.form:
+        for key in self._cw.form:
             # There should be 0 or 1 action
             if key.startswith('__action_'):
                 cbname = key[1:]
                 try:
                     callback = getattr(self, cbname)
                 except AttributeError:
-                    raise RequestError(self.req._('invalid action %r' % key))
+                    raise RequestError(self._cw._('invalid action %r' % key))
                 else:
                     return callback()
         self._default_publish()
         self.reset()
 
     def _default_publish(self):
-        req = self.req
+        req = self._cw
         self.errors = []
         self.relations_rql = []
         # no specific action, generic edition
         self._to_create = req.data['eidmap'] = {}
         self._pending_relations = []
-        todelete = self.req.get_pending_deletes()
-        toinsert = self.req.get_pending_inserts()
+        todelete = self._cw.get_pending_deletes()
+        toinsert = self._cw.get_pending_inserts()
         try:
             methodname = req.form.pop('__method', None)
             for eid in req.edited_eids():
@@ -91,13 +91,13 @@ class EditController(ViewController):
             elif not ('__delete' in req.form or '__insert' in req.form or todelete or toinsert):
                 raise ValidationError(None, {None: req._('nothing to edit')})
         for querydef in self.relations_rql:
-            self.req.execute(*querydef)
+            self._cw.execute(*querydef)
         # handle relations in newly created entities
         # XXX find a way to merge _pending_relations and relations_rql
         if self._pending_relations:
             for form, field, entity in self._pending_relations:
                 for querydef in self.handle_relation(form, field, entity, True):
-                    self.req.execute(*querydef)
+                    self._cw.execute(*querydef)
         # XXX this processes *all* pending operations of *all* entities
         if req.form.has_key('__delete'):
             todelete += req.list_form_param('__delete', req.form, pop=True)
@@ -107,18 +107,18 @@ class EditController(ViewController):
             toinsert = req.list_form_param('__insert', req.form, pop=True)
         if toinsert:
             self.insert_relations(parse_relations_descr(toinsert))
-        self.req.remove_pending_operations()
+        self._cw.remove_pending_operations()
 
     def _insert_entity(self, etype, eid, rqlquery):
         rql = rqlquery.insert_query(etype)
         try:
             # get the new entity (in some cases, the type might have
             # changed as for the File --> Image mutation)
-            entity = self.req.execute(rql, rqlquery.kwargs).get_entity(0, 0)
+            entity = self._cw.execute(rql, rqlquery.kwargs).get_entity(0, 0)
             neweid = entity.eid
         except ValidationError, ex:
             self._to_create[eid] = ex.entity
-            if self.req.json_request: # XXX (syt) why?
+            if self._cw.json_request: # XXX (syt) why?
                 ex.entity = eid
             raise
         self._to_create[eid] = neweid
@@ -126,15 +126,15 @@ class EditController(ViewController):
 
     def _update_entity(self, eid, rqlquery):
         rql = rqlquery.update_query(eid)
-        self.req.execute(rql, rqlquery.kwargs)
+        self._cw.execute(rql, rqlquery.kwargs)
 
     def edit_entity(self, formparams, multiple=False):
         """edit / create / copy an entity and return its eid"""
         etype = formparams['__type']
-        entity = self.vreg['etypes'].etype_class(etype)(self.req)
+        entity = self._cw.vreg['etypes'].etype_class(etype)(self._cw)
         entity.eid = formparams['eid']
         eid = self._get_eid(entity.eid)
-        is_main_entity = self.req.form.get('__maineid') == formparams['eid']
+        is_main_entity = self._cw.form.get('__maineid') == formparams['eid']
         # let a chance to do some entity specific stuff.tn
         entity.pre_web_edit()
         # create a rql query from parameters
@@ -142,8 +142,8 @@ class EditController(ViewController):
         # process inlined relations at the same time as attributes
         # this will generate less rql queries and might be useful in
         # a few dark corners
-        formid = self.req.form.get('__form_id', 'edition')
-        form = self.vreg['forms'].select(formid, self.req, entity=entity)
+        formid = self._cw.form.get('__form_id', 'edition')
+        form = self._cw.vreg['forms'].select(formid, self._cw, entity=entity)
         for field in form.fields:
             if form.form_field_modified(field):
                 self.handle_formfield(form, field, entity, rqlquery)
@@ -154,12 +154,12 @@ class EditController(ViewController):
         if is_main_entity:
             self.notify_edited(entity)
         if formparams.has_key('__delete'):
-            todelete = self.req.list_form_param('__delete', formparams, pop=True)
+            todelete = self._cw.list_form_param('__delete', formparams, pop=True)
             self.delete_relations(parse_relations_descr(todelete))
         if formparams.has_key('__cloned_eid'):
             entity.copy_relations(formparams['__cloned_eid'])
         if formparams.has_key('__insert'):
-            toinsert = self.req.list_form_param('__insert', formparams, pop=True)
+            toinsert = self._cw.list_form_param('__insert', formparams, pop=True)
             self.insert_relations(parse_relations_descr(toinsert))
         if is_main_entity: # only execute linkto for the main entity
             self.execute_linkto(eid)
@@ -174,7 +174,7 @@ class EditController(ViewController):
                     or
                     (field.role == 'object' and eschema.has_object_relation(field.name))):
                     continue
-                rschema = self.schema.rschema(field.name)
+                rschema = self._cw.schema.rschema(field.name)
                 if rschema.is_final():
                     rqlquery.kwargs[attr] = value
                     rqlquery.edited.append('X %s %%(%s)s' % (attr, attr))
@@ -191,14 +191,14 @@ class EditController(ViewController):
         self.reset()
 
     def _action_cancel(self):
-        errorurl = self.req.form.get('__errorurl')
+        errorurl = self._cw.form.get('__errorurl')
         if errorurl:
-            self.req.cancel_edition(errorurl)
-        self.req.message = self.req._('edit canceled')
+            self._cw.cancel_edition(errorurl)
+        self._cw.message = self._cw._('edit canceled')
         return self.reset()
 
     def _action_delete(self):
-        self.delete_entities(self.req.edited_eids(withtype=True))
+        self.delete_entities(self._cw.edited_eids(withtype=True))
         return self.reset()
 
     def _relation_values(self, form, field, entity, late=False):
@@ -242,7 +242,7 @@ class EditController(ViewController):
         if values is None or values == origvalues:
             return # not edited / not modified / to do later
         etype = entity.e_schema
-        rschema = self.schema.rschema(field.name)
+        rschema = self._cw.schema.rschema(field.name)
         if field.role == 'subject':
             desttype = rschema.objects(etype)[0]
             card = rschema.rproperty(etype, desttype, 'cardinality')[0]

@@ -33,18 +33,18 @@ class EmailAddressPrimaryView(primary.PrimaryView):
             persons = []
         if persons:
             emailof = persons[0]
-            self.field(display_name(self.req, 'primary_email', 'object'), emailof.view('oneline'))
+            self.field(display_name(self._cw, 'primary_email', 'object'), emailof.view('oneline'))
             pemaileid = emailof.eid
         else:
             pemaileid = None
         try:
-            emailof = 'use_email' in self.schema and entity.reverse_use_email or ()
+            emailof = 'use_email' in self._cw.schema and entity.reverse_use_email or ()
             emailof = [e for e in emailof if not e.eid == pemaileid]
         except Unauthorized:
             emailof = []
         if emailof:
             emailofstr = ', '.join(e.view('oneline') for e in emailof)
-            self.field(display_name(self.req, 'use_email', 'object'), emailofstr)
+            self.field(display_name(self._cw, 'use_email', 'object'), emailofstr)
 
     def render_entity_relations(self, entity):
         for i, email in enumerate(entity.related_emails(self.skipeids)):
@@ -68,7 +68,7 @@ class EmailAddressOneLineView(baseviews.OneLineView):
     __select__ = implements('EmailAddress')
 
     def cell_call(self, row, col, **kwargs):
-        entity = self.rset.get_entity(row, col)
+        entity = self.cw_rset.get_entity(row, col)
         if entity.reverse_primary_email:
             self.w(u'<b>')
         if entity.alias:
@@ -89,7 +89,7 @@ class EmailAddressMailToView(baseviews.OneLineView):
     __select__ = implements('EmailAddress')
 
     def cell_call(self, row, col, **kwargs):
-        entity = self.rset.get_entity(row, col)
+        entity = self.cw_rset.get_entity(row, col)
         if entity.reverse_primary_email:
             self.w(u'<b>')
         if entity.alias:
@@ -112,4 +112,4 @@ class EmailAddressTextView(baseviews.TextView):
     __select__ = implements('EmailAddress')
 
     def cell_call(self, row, col, **kwargs):
-        self.w(self.rset.get_entity(row, col).display_address())
+        self.w(self.cw_rset.get_entity(row, col).display_address())

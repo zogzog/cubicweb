@@ -408,11 +408,11 @@ class WorkflowableMixIn(object):
             return wfrset.get_entity(0, 0)
         if len(wfrset) > 1:
             for wf in wfrset.entities():
-                if wf.is_default_workflow_of(self.id):
+                if wf.is_default_workflow_of(self.__regid__):
                     return wf
-            self.warning("can't find default workflow for %s", self.id)
+            self.warning("can't find default workflow for %s", self.__regid__)
         else:
-            self.warning("can't find any workflow for %s", self.id)
+            self.warning("can't find any workflow for %s", self.__regid__)
         return None
 
     def possible_transitions(self):
@@ -452,7 +452,7 @@ class WorkflowableMixIn(object):
         """
         assert self.current_workflow
         tr = self.current_workflow.transition_by_name(trname)
-        assert tr is not None, 'not a %s transition: %s' % (self.id, trname)
+        assert tr is not None, 'not a %s transition: %s' % (self.__regid__, trname)
         return self._add_trinfo(comment, commentformat, tr.eid)
 
     def change_state(self, statename, comment=None, commentformat=None, tr=None):
@@ -471,7 +471,7 @@ class WorkflowableMixIn(object):
             else:
                 state = self.current_workflow.state_by_name(statename)
             if state is None:
-                raise WorkflowException('not a %s state: %s' % (self.id,
+                raise WorkflowException('not a %s state: %s' % (self.__regid__,
                                                                 statename))
             stateeid = state.eid
         # XXX try to find matching transition?

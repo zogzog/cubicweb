@@ -45,21 +45,21 @@ class ProgressTableView(EntityView):
 
     def call(self, columns=None):
         """displays all versions in a table"""
-        self.req.add_css('cubicweb.iprogress.css')
-        _ = self.req._
+        self._cw.add_css('cubicweb.iprogress.css')
+        _ = self._cw._
         self.columns = columns or self.columns
-        ecls = self.vreg['etypes'].etype_class(self.rset.description[0][0])
+        ecls = self._cw.vreg['etypes'].etype_class(self.cw_rset.description[0][0])
         self.w(u'<table class="progress">')
         self.table_header(ecls)
         self.w(u'<tbody>')
-        for row in xrange(self.rset.rowcount):
+        for row in xrange(self.cw_rset.rowcount):
             self.cell_call(row=row, col=0)
         self.w(u'</tbody>')
         self.w(u'</table>')
 
     def cell_call(self, row, col):
-        _ = self.req._
-        entity = self.rset.get_entity(row, col)
+        _ = self._cw._
+        entity = self.cw_rset.get_entity(row, col)
         infos = {}
         for col in self.columns:
             meth = getattr(self, 'build_%s_cell' % col, None)
@@ -83,16 +83,16 @@ class ProgressTableView(EntityView):
 
     def header_for_project(self, ecls):
         """use entity's parent type as label"""
-        return display_name(self.req, ecls.parent_type)
+        return display_name(self._cw, ecls.parent_type)
 
     def header_for_milestone(self, ecls):
         """use entity's type as label"""
-        return display_name(self.req, ecls.id)
+        return display_name(self._cw, ecls.id)
 
     def table_header(self, ecls):
         """builds the table's header"""
         self.w(u'<thead><tr>')
-        _ = self.req._
+        _ = self._cw._
         for column in self.columns:
             meth = getattr(self, 'header_for_%s' % column, None)
             if meth:
@@ -109,7 +109,7 @@ class ProgressTableView(EntityView):
         project = entity.get_main_task()
         if project:
             return project.view('incontext')
-        return self.req._('no related project')
+        return self._cw._('no related project')
 
     def build_milestone_cell(self, entity):
         """``milestone`` column cell renderer"""
@@ -117,7 +117,7 @@ class ProgressTableView(EntityView):
 
     def build_state_cell(self, entity):
         """``state`` column cell renderer"""
-        return xml_escape(self.req._(entity.state))
+        return xml_escape(self._cw._(entity.state))
 
     def build_eta_date_cell(self, entity):
         """``eta_date`` column cell renderer"""
@@ -126,7 +126,7 @@ class ProgressTableView(EntityView):
         formated_date = self.format_date(entity.initial_prevision_date())
         if entity.in_progress():
             eta_date = self.format_date(entity.eta_date())
-            _ = self.req._
+            _ = self._cw._
             if formated_date:
                 formated_date += u' (%s %s)' % (_('expected:'), eta_date)
             else:
@@ -139,7 +139,7 @@ class ProgressTableView(EntityView):
 
     def build_cost_cell(self, entity):
         """``cost`` column cell renderer"""
-        _ = self.req._
+        _ = self._cw._
         pinfo = entity.progress_info()
         totalcost = pinfo.get('estimatedcorrected', pinfo['estimated'])
         missing = pinfo.get('notestimatedcorrected', pinfo.get('notestimated', 0))
@@ -168,8 +168,8 @@ class InContextProgressTableView(ProgressTableView):
     __regid__ = 'ic_progress_table_view'
 
     def call(self, columns=None):
-        view = self.vreg['views'].select('progress_table_view', self.req,
-                                         rset=self.rset)
+        view = self._cw.vreg['views'].select('progress_table_view', self._cw,
+                                         rset=self.cw_rset)
         columns = list(columns or view.columns)
         try:
             columns.remove('project')
@@ -185,8 +185,8 @@ class ProgressBarView(EntityView):
     __select__ = implements(IProgress)
 
     def cell_call(self, row, col):
-        self.req.add_css('cubicweb.iprogress.css')
-        entity = self.rset.get_entity(row, col)
+        self._cw.add_css('cubicweb.iprogress.css')
+        entity = self.cw_rset.get_entity(row, col)
         widget = ProgressBarWidget(entity.done, entity.todo,
                                    entity.revised_cost)
         self.w(widget.render())

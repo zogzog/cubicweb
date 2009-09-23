@@ -49,13 +49,13 @@ class Action(AppObject):
         raise NotImplementedError
 
     def html_class(self):
-        if self.req.selected(self.url()):
+        if self._cw.selected(self.url()):
             return 'selected'
         if self.category:
             return 'box' + self.category.capitalize()
 
     def build_action(self, title, path, **kwargs):
-        return UnregisteredAction(self.req, self.rset, title, path, **kwargs)
+        return UnregisteredAction(self._cw, self.cw_rset, title, path, **kwargs)
 
 
 class UnregisteredAction(Action):
@@ -89,9 +89,9 @@ class LinkToEntityAction(Action):
     submenu = 'addrelated'
 
     def url(self):
-        current_entity = self.rset.get_entity(self.row or 0, self.col or 0)
+        current_entity = self.cw_rset.get_entity(self.cw_row or 0, self.cw_col or 0)
         linkto = '%s:%s:%s' % (self.rtype, current_entity.eid, target(self))
         return self.build_url('add/%s' % self.etype, __linkto=linkto,
                               __redirectpath=current_entity.rest_path(), # should not be url quoted!
-                              __redirectvid=self.req.form.get('__redirectvid', ''))
+                              __redirectvid=self._cw.form.get('__redirectvid', ''))
 

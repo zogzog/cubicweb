@@ -14,7 +14,7 @@ class FourOhFour(StartupView):
     __regid__ = '404'
 
     def call(self):
-        _ = self.req._
+        _ = self._cw._
         self.w(u"<h1>%s</h1>" % _('this resource does not exist'))
 
 
@@ -22,6 +22,6 @@ class ErrorOccured(StartupView):
     __regid__ = '500'
 
     def call(self):
-        _ = self.req._
+        _ = self._cw._
         self.w(u"<h1>%s</h1>" %
                _('an error occured, the request cannot be fulfilled'))

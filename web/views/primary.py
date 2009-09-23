@@ -40,8 +40,8 @@ class PrimaryView(EntityView):
     def cell_call(self, row, col):
         self.cw_row = row
         self.cw_col = col
-        self.maxrelated = self.req.property_value('navigation.related-limit')
-        entity = self.complete_entity(row, col)
+        self.maxrelated = self._cw.property_value('navigation.related-limit')
+        entity = self.cw_rset.complete_entity(row, col)
         self.render_entity(entity)
 
     def render_entity(self, entity):
@@ -73,10 +73,10 @@ class PrimaryView(EntityView):
 
     def content_navigation_components(self, context):
         self.w(u'<div class="%s">' % context)
-        for comp in self.vreg['contentnavigation'].poss_visible_objects(
-            self.req, rset=self.rset, row=self.row, view=self, context=context):
+        for comp in self._cw.vreg['contentnavigation'].poss_visible_objects(
+            self._cw, rset=self.cw_rset, row=self.cw_row, view=self, context=context):
             try:
-                comp.render(w=self.w, row=self.row, view=self)
+                comp.render(w=self.w, row=self.cw_row, view=self)
             except NotImplementedError:
                 warn('component %s doesnt implement cell_call, please update'
                      % comp.__class__, DeprecationWarning)
@@ -136,7 +136,7 @@ class PrimaryView(EntityView):
                 self.w(u'</div>')
             else:
                 try:
-                    box.render(w=self.w, row=self.row)
+                    box.render(w=self.w, row=self.cw_row)
                 except NotImplementedError:
                     # much probably a context insensitive box, which only implements
                     # .call() and not cell_call()
@@ -148,11 +148,11 @@ class PrimaryView(EntityView):
             rset = self._relation_rset(entity, rschema, role, dispctrl)
             if not rset:
                 continue
-            label = display_name(self.req, rschema.type, role)
+            label = display_name(self._cw, rschema.type, role)
             vid = dispctrl.get('vid', 'sidebox')
             sideboxes.append( (label, rset, vid) )
-        sideboxes += self.vreg['boxes'].poss_visible_objects(
-            self.req, rset=self.rset, row=self.row, view=self,
+        sideboxes += self._cw.vreg['boxes'].poss_visible_objects(
+            self._cw, rset=self.cw_rset, row=self.cw_row, view=self,
             context='incontext')
         return sideboxes
 
@@ -190,7 +190,7 @@ class PrimaryView(EntityView):
     def _render_relation(self, rset, dispctrl, defaultvid, showlabel):
         self.w(u'<div class="section">')
         if showlabel:
-            self.w(u'<h4>%s</h4>' % self.req._(dispctrl['label']))
+            self.w(u'<h4>%s</h4>' % self._cw._(dispctrl['label']))
         self.wview(dispctrl.get('vid', defaultvid), rset)
         self.w(u'</div>')
 
@@ -199,7 +199,7 @@ class PrimaryView(EntityView):
             show_label = self.show_attr_label
         else:
             show_label = self.show_rel_label
-        label = display_name(self.req, rschema.type, role)
+        label = display_name(self._cw, rschema.type, role)
         self.field(label, value, show_label=show_label, tr=False)
 
 
@@ -207,26 +207,26 @@ class RelatedView(EntityView):
     __regid__ = 'autolimited'
     def call(self, title=None, **kwargs):
         # if not too many entities, show them all in a list
-        maxrelated = self.req.property_value('navigation.related-limit')
+        maxrelated = self._cw.property_value('navigation.related-limit')
         if title:
             self.w(u'<div class="title"><span>%s</span></div>' % title)
-        if self.rset.rowcount <= maxrelated:
-            if self.rset.rowcount == 1:
-                self.wview('incontext', self.rset, row=0)
-            elif 1 < self.rset.rowcount <= 5:
-                self.wview('csv', self.rset)
+        if self.cw_rset.rowcount <= maxrelated:
+            if self.cw_rset.rowcount == 1:
+                self.wview('incontext', self.cw_rset, row=0)
+            elif 1 < self.cw_rset.rowcount <= 5:
+                self.wview('csv', self.cw_rset)
             else:
                 self.w(u'<div>')
-                self.wview('simplelist', self.rset)
+                self.wview('simplelist', self.cw_rset)
                 self.w(u'</div>')
         # else show links to display related entities
         else:
-            rql = self.rset.printable_rql()
-            self.rset.limit(maxrelated)
+            rql = self.cw_rset.printable_rql()
+            self.cw_rset.limit(maxrelated)
             self.w(u'<div>')
-            self.wview('simplelist', self.rset)
-            self.w(u'[<a href="%s">%s</a>]' % (self.build_url(rql=rql),
-                                               self.req._('see them all')))
+            self.wview('simplelist', self.cw_rset)
+            self.w(u'[<a href="%s">%s</a>]' % (self._cw.build_url(rql=rql),
+                                               self._cw._('see them all')))
             self.w(u'</div>')
 
 ## default primary ui configuration ###########################################

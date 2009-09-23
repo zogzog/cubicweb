@@ -210,7 +210,7 @@ class ActionsRegistry(CWRegistry):
 
     def possible_actions(self, req, rset=None, **kwargs):
         if rset is None:
-            actions = self.possible_vobjects(req, rset=rset, **kwargs)
+            actions = self.poss_visible_objects(req, rset=rset, **kwargs)
         else:
             actions = rset.possible_actions(**kwargs) # cached implementation
         result = {}

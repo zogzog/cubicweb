@@ -24,7 +24,7 @@ class LazyViewMixin(object):
     """
 
     def _prepare_bindings(self, vid, reloadable):
-        self.req.add_onload(u"""
+        self._cw.add_onload(u"""
   jQuery('#lazy-%(vid)s').bind('%(event)s', function(event) {
      load_now('#lazy-%(vid)s', '#%(vid)s-hole', %(reloadable)s);
   });""" % {'event': 'load_%s' % vid, 'vid': vid,
@@ -38,7 +38,7 @@ class LazyViewMixin(object):
         assert rql or eid or rset or static, \
             'lazyview wants at least : rql, or an eid, or an rset -- or call it with static=True'
         w = w or self.w
-        self.req.add_js('cubicweb.lazy.js')
+        self._cw.add_js('cubicweb.lazy.js')
         urlparams = {'vid' : vid, 'fname' : 'view'}
         if rql:
             urlparams['rql'] = rql
@@ -50,7 +50,7 @@ class LazyViewMixin(object):
             vid, xml_escape(self.build_url('json', **urlparams))))
         if show_spinbox:
             w(u'<img src="data/loading.gif" id="%s-hole" alt="%s"/>'
-              % (vid, self.req._('loading')))
+              % (vid, self._cw._('loading')))
         w(u'</div>')
         self._prepare_bindings(vid, reloadable)
 
@@ -58,8 +58,8 @@ class LazyViewMixin(object):
         """trigger an event that will force immediate loading of the view
         on dom readyness
         """
-        self.req.add_js('cubicweb.lazy.js')
-        self.req.add_onload("trigger_load('%s');" % vid)
+        self._cw.add_js('cubicweb.lazy.js')
+        self._cw.add_onload("trigger_load('%s');" % vid)
 
 
 class TabsMixin(LazyViewMixin):
@@ -68,18 +68,18 @@ class TabsMixin(LazyViewMixin):
 
     @property
     def cookie_name(self):
-        return str('%s_active_tab' % self.config.appid)
+        return str('%s_active_tab' % self._cw.config.appid)
 
     def active_tab(self, tabs, default):
-        formtab = self.req.form.get('tab')
+        formtab = self._cw.form.get('tab')
         if formtab in tabs:
             return formtab
-        cookies = self.req.get_cookie()
+        cookies = self._cw.get_cookie()
         cookiename = self.cookie_name
         activetab = cookies.get(cookiename)
         if activetab is None:
             cookies[cookiename] = default
-            self.req.set_cookie(cookies, cookiename)
+            self._cw.set_cookie(cookies, cookiename)
             tab = default
         else:
             tab = activetab.value
@@ -89,7 +89,7 @@ class TabsMixin(LazyViewMixin):
         selected_tabs = []
         for tab in tabs:
             try:
-                self.vreg['views'].select(tab, self.req, rset=self.rset)
+                self._cw.vreg['views'].select(tab, self._cw, rset=self.cw_rset)
                 selected_tabs.append(tab)
             except NoSelectableObject:
                 continue
@@ -98,11 +98,11 @@ class TabsMixin(LazyViewMixin):
     def render_tabs(self, tabs, default, entity=None):
         # delegate to the default tab if there is more than one entity
         # in the result set (tabs are pretty useless there)
-        if entity and len(self.rset) > 1:
+        if entity and len(self.cw_rset) > 1:
             entity.view(default, w=self.w)
             return
-        self.req.add_css('ui.tabs.css')
-        self.req.add_js(('ui.core.js', 'ui.tabs.js',
+        self._cw.add_css('ui.tabs.css')
+        self._cw.add_js(('ui.core.js', 'ui.tabs.js',
                          'cubicweb.ajax.js', 'cubicweb.tabs.js', 'cubicweb.lazy.js'))
         # prune tabs : not all are to be shown
         tabs = self.prune_tabs(tabs)
@@ -117,7 +117,7 @@ class TabsMixin(LazyViewMixin):
             w(u'<li>')
             w(u'<a href="#%s">' % tab)
             w(u'<span onclick="set_tab(\'%s\', \'%s\')">' % (tab, self.cookie_name))
-            w(self.req._(tab))
+            w(self._cw._(tab))
             w(u'</span>')
             w(u'</a>')
             w(u'</li>')
@@ -133,7 +133,7 @@ class TabsMixin(LazyViewMixin):
         # call the set_tab() JS function *after* each tab is generated
         # because the callback binding needs to be done before
         # XXX make work history: true
-        self.req.add_onload(u"""
+        self._cw.add_onload(u"""
   jQuery('#entity-tabs-%(eeid)s > ul').tabs( { selected: %(tabindex)s });
   set_tab('%(vid)s', '%(cookiename)s');
 """ % {'tabindex'   : tabs.index(active_tab),
@@ -164,9 +164,9 @@ class EntityRelationView(EntityView):
     vid = 'list'
 
     def cell_call(self, row, col):
-        rset = self.rset.get_entity(row, col).related(self.rtype, role(self))
+        rset = self.cw_rset.get_entity(row, col).related(self.rtype, role(self))
         self.w(u'<div class="mainInfo">')
         if self.title:
-            self.w(tags.h1(self.req._(self.title)))
+            self.w(tags.h1(self._cw._(self.title)))
         self.wview(self.vid, rset, 'noresult')
         self.w(u'</div>')

@@ -86,10 +86,10 @@ class NavigationComponent(Component):
         except AttributeError:
             page_size = self.extra_kwargs.get('page_size')
             if page_size is None:
-                if 'page_size' in self.req.form:
-                    page_size = int(self.req.form['page_size'])
+                if 'page_size' in self._cw.form:
+                    page_size = int(self._cw.form['page_size'])
                 else:
-                    page_size = self.req.property_value(self.page_size_property)
+                    page_size = self._cw.property_value(self.page_size_property)
             self._page_size = page_size
             return page_size
 
@@ -100,8 +100,8 @@ class NavigationComponent(Component):
 
     def page_boundaries(self):
         try:
-            stop = int(self.req.form[self.stop_param]) + 1
-            start = int(self.req.form[self.start_param])
+            stop = int(self._cw.form[self.stop_param]) + 1
+            start = int(self._cw.form[self.start_param])
         except KeyError:
             start, stop = 0, self.page_size
         self.starting_from = start
@@ -117,7 +117,7 @@ class NavigationComponent(Component):
         params = merge_dicts(params, {self.start_param : start,
                                       self.stop_param : stop,})
         if path == 'json':
-            rql = params.pop('rql', self.rset.printable_rql())
+            rql = params.pop('rql', self.cw_rset.printable_rql())
             # latest 'true' used for 'swap' mode
             url = 'javascript: replacePageChunk(%s, %s, %s, %s, true)' % (
                 dumps(params.get('divid', 'paginated-content')),
@@ -163,15 +163,15 @@ class RelatedObjectsVComponent(EntityVComponent):
     def cell_call(self, row, col, view=None):
         rql = self.rql()
         if rql is None:
-            entity = self.rset.get_entity(row, col)
+            entity = self.cw_rset.get_entity(row, col)
             rset = entity.related(self.rtype, role(self))
         else:
-            eid = self.rset[row][col]
-            rset = self.req.execute(self.rql(), {'x': eid}, 'x')
+            eid = self.cw_rset[row][col]
+            rset = self._cw.execute(self.rql(), {'x': eid}, 'x')
         if not rset.rowcount:
             return
         self.w(u'<div class="%s">' % self.div_class())
-        self.wview(self.vid, rset, title=self.req._(self.title).capitalize())
+        self.wview(self.vid, rset, title=self._cw._(self.title).capitalize())
         self.w(u'</div>')
 
 

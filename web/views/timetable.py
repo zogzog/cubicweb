@@ -32,16 +32,16 @@ class TimeTableView(AnyRsetView):
     def call(self, title=None):
         """Dumps a timetable from a resultset composed of a note (anything
         with start/stop) and a user (anything)"""
-        self.req.add_css('cubicweb.timetable.css')
+        self._cw.add_css('cubicweb.timetable.css')
         dates = {}
         users = []
         users_max = {}
 
         # XXX: try refactoring with calendar.py:OneMonthCal
-        for row in xrange(self.rset.rowcount):
-            task = self.rset.get_entity(row, 0)
-            if len(self.rset[row])>1:
-                user = self.rset.get_entity(row, 1)
+        for row in xrange(self.cw_rset.rowcount):
+            task = self.cw_rset.get_entity(row, 0)
+            if len(self.cw_rset[row])>1:
+                user = self.cw_rset.get_entity(row, 1)
             else:
                 user = u"*"
             the_dates = []

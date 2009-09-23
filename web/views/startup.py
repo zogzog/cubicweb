@@ -27,7 +27,7 @@ class ManageView(StartupView):
 
     def call(self, **kwargs):
         """The default view representing the instance's management"""
-        self.req.add_css('cubicweb.manageview.css')
+        self._cw.add_css('cubicweb.manageview.css')
         self.w(u'<div>\n')
         if not self.display_folders():
             self._main_index()
@@ -42,10 +42,10 @@ class ManageView(StartupView):
         self.w(u'</div>\n')
 
     def _main_index(self):
-        req = self.req
+        req = self._cw
         manager = req.user.matching_groups('managers')
-        if not manager and 'Card' in self.schema:
-            rset = self.req.execute('Card X WHERE X wikiid "index"')
+        if not manager and 'Card' in self._cw.schema:
+            rset = self._cw.execute('Card X WHERE X wikiid "index"')
         else:
             rset = None
         if rset:
@@ -54,46 +54,46 @@ class ManageView(StartupView):
             self.entities()
             self.w(u'<div class="hr">&#160;</div>')
             self.startup_views()
-        if manager and 'Card' in self.schema:
+        if manager and 'Card' in self._cw.schema:
             self.w(u'<div class="hr">&#160;</div>')
             if rset:
                 href = rset.get_entity(0, 0).absolute_url(vid='edition')
-                label = self.req._('edit the index page')
+                label = self._cw._('edit the index page')
             else:
                 href = req.build_url('view', vid='creation', etype='Card', wikiid='index')
-                label = self.req._('create an index page')
+                label = self._cw._('create an index page')
             self.w(u'<br/><a href="%s">%s</a>\n' % (xml_escape(href), label))
 
     def folders(self):
-        self.w(u'<h4>%s</h4>\n' % self.req._('Browse by category'))
-        self.vreg['views'].select('tree', self.req).render(w=self.w)
+        self.w(u'<h4>%s</h4>\n' % self._cw._('Browse by category'))
+        self._cw.vreg['views'].select('tree', self._cw).render(w=self.w)
 
     def startup_views(self):
-        self.w(u'<h4>%s</h4>\n' % self.req._('Startup views'))
+        self.w(u'<h4>%s</h4>\n' % self._cw._('Startup views'))
         self.startupviews_table()
 
     def startupviews_table(self):
-        for v in self.vreg['views'].possible_views(self.req, None):
+        for v in self._cw.vreg['views'].possible_views(self._cw, None):
             if v.category != 'startupview' or v.id in ('index', 'tree', 'manage'):
                 continue
             self.w('<p><a href="%s">%s</a></p>' % (
-                xml_escape(v.url()), xml_escape(self.req._(v.title).capitalize())))
+                xml_escape(v.url()), xml_escape(self._cw._(v.title).capitalize())))
 
     def entities(self):
-        schema = self.schema
-        self.w(u'<h4>%s</h4>\n' % self.req._('The repository holds the following entities'))
-        manager = self.req.user.matching_groups('managers')
+        schema = self._cw.schema
+        self.w(u'<h4>%s</h4>\n' % self._cw._('The repository holds the following entities'))
+        manager = self._cw.user.matching_groups('managers')
         self.w(u'<table class="startup">')
         if manager:
-            self.w(u'<tr><th colspan="4">%s</th></tr>\n' % self.req._('application entities'))
+            self.w(u'<tr><th colspan="4">%s</th></tr>\n' % self._cw._('application entities'))
         self.entity_types_table(eschema for eschema in schema.entities()
                                 if uicfg.indexview_etype_section.get(eschema) == 'application')
         if manager:
-            self.w(u'<tr><th colspan="4">%s</th></tr>\n' % self.req._('system entities'))
+            self.w(u'<tr><th colspan="4">%s</th></tr>\n' % self._cw._('system entities'))
             self.entity_types_table(eschema for eschema in schema.entities()
                                 if uicfg.indexview_etype_section.get(eschema) == 'system')
             if 'CWAttribute' in schema: # check schema support
-                self.w(u'<tr><th colspan="4">%s</th></tr>\n' % self.req._('schema entities'))
+                self.w(u'<tr><th colspan="4">%s</th></tr>\n' % self._cw._('schema entities'))
                 self.entity_types_table(eschema for eschema in schema.entities()
                                         if uicfg.indexview_etype_section.get(eschema) == 'schema')
         self.w(u'</table>')
@@ -117,7 +117,7 @@ class ManageView(StartupView):
         """return a list of formatted links to get a list of entities of
         a each entity's types
         """
-        req = self.req
+        req = self._cw
         for eschema in eschemas:
             if eschema.is_final() or (not eschema.has_perm(req, 'read') and
                                       not eschema.has_local_role('read')):
@@ -136,7 +136,7 @@ class ManageView(StartupView):
             return u''
         return u'[<a href="%s" title="%s">+</a>]' % (
             xml_escape(self.create_url(eschema.type)),
-            self.req.__('add a %s' % eschema))
+            self._cw.__('add a %s' % eschema))
 
 
 class IndexView(ManageView):
@@ -144,5 +144,5 @@ class IndexView(ManageView):
     title = _('view_index')
 
     def display_folders(self):
-        return 'Folder' in self.schema and self.req.execute('Any COUNT(X) WHERE X is Folder')[0][0]
+        return 'Folder' in self._cw.schema and self._cw.execute('Any COUNT(X) WHERE X is Folder')[0][0]
 

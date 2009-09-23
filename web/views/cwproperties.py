@@ -76,34 +76,34 @@ class SystemCWPropertiesForm(FormViewMixIn, StartupView):
 
     def url(self):
         """return the url associated with this view. We can omit rql here"""
-        return self.build_url('view', vid=self.id)
+        return self._cw.build_url('view', vid=self.__regid__)
 
     def _cookie_name(self, somestr):
-        return str('%s_property_%s' % (self.config.appid, somestr))
+        return str('%s_property_%s' % (self._cw.config.appid, somestr))
 
     def _group_status(self, group, default=u'hidden'):
         """return css class name 'hidden' (collapsed), or '' (open)"""
-        cookies = self.req.get_cookie()
+        cookies = self._cw.get_cookie()
         cookiename = self._cookie_name(group)
         cookie = cookies.get(cookiename)
         if cookie is None:
             cookies[cookiename] = default
-            self.req.set_cookie(cookies, cookiename, maxage=None)
+            self._cw.set_cookie(cookies, cookiename, maxage=None)
             status = default
         else:
             status = cookie.value
         return status
 
     def call(self, **kwargs):
-        self.req.add_js(('cubicweb.edition.js', 'cubicweb.preferences.js', 'cubicweb.ajax.js'))
-        self.req.add_css('cubicweb.preferences.css')
-        vreg = self.vreg
+        self._cw.add_js(('cubicweb.edition.js', 'cubicweb.preferences.js', 'cubicweb.ajax.js'))
+        self._cw.add_css('cubicweb.preferences.css')
+        vreg = self._cw.vreg
         values = self.defined_keys
         groupedopts = {}
         mainopts = {}
         # "self.id=='systempropertiesform'" to skip site wide properties on
         # user's preference but not site's configuration
-        for key in vreg.user_property_keys(self.id=='systempropertiesform'):
+        for key in vreg.user_property_keys(self.__regid__=='systempropertiesform'):
             parts = key.split('.')
             if parts[0] in vreg:
                 # appobject configuration
@@ -120,7 +120,7 @@ class SystemCWPropertiesForm(FormViewMixIn, StartupView):
                 groupedopts[group][oid] = self.form(group + '-' + oid, keys, True)
 
         w = self.w
-        req = self.req
+        req = self._cw
         _ = req._
         w(u'<h1>%s</h1>\n' % _(self.title))
         for label, group, form in sorted((_(g), g, f)
@@ -140,7 +140,7 @@ class SystemCWPropertiesForm(FormViewMixIn, StartupView):
               (make_togglable_link('fieldset_' + group, label.capitalize())))
             w(u'<div id="fieldset_%s" %s>' % (group, status))
             # create selection
-            sorted_objects =  sorted((self.req.__('%s_%s' % (group, o)), o, f)
+            sorted_objects =  sorted((self._cw.__('%s_%s' % (group, o)), o, f)
                                            for o, f in objects.iteritems())
             for label, oid, form in sorted_objects:
                 w(u'<div class="component">')
@@ -165,7 +165,7 @@ class SystemCWPropertiesForm(FormViewMixIn, StartupView):
     @property
     @cached
     def cwprops_rset(self):
-        return self.req.execute('Any P,K,V WHERE P is CWProperty, P pkey K, '
+        return self._cw.execute('Any P,K,V WHERE P is CWProperty, P pkey K, '
                                 'P value V, NOT P for_user U')
 
     @property
@@ -180,27 +180,27 @@ class SystemCWPropertiesForm(FormViewMixIn, StartupView):
         if key in values:
             entity = self.cwprops_rset.get_entity(values[key], 0)
         else:
-            entity = self.vreg['etypes'].etype_class('CWProperty')(self.req)
-            entity.eid = self.req.varmaker.next()
+            entity = self._cw.vreg['etypes'].etype_class('CWProperty')(self._cw)
+            entity.eid = self._cw.varmaker.next()
             entity['pkey'] = key
-            entity['value'] = self.vreg.property_value(key)
+            entity['value'] = self._cw.vreg.property_value(key)
         return entity
 
     def form(self, formid, keys, splitlabel=False):
         buttons = [SubmitButton()]
-        form = self.vreg['forms'].select(
-            'composite', self.req, domid=formid, action=self.build_url(),
+        form = self._cw.vreg['forms'].select(
+            'composite', self._cw, domid=formid, action=self._cw.build_url(),
             form_buttons=buttons,
             onsubmit="return validatePrefsForm('%s')" % formid,
-            submitmsg=self.req._('changes applied'))
-        path = self.req.relative_path()
+            submitmsg=self._cw._('changes applied'))
+        path = self._cw.relative_path()
         if '?' in path:
             path, params = path.split('?', 1)
             form.form_add_hidden('__redirectparams', params)
         form.form_add_hidden('__redirectpath', path)
         for key in keys:
             self.form_row(form, key, splitlabel)
-        renderer = self.vreg['formrenderers'].select('cwproperties', self.req,
+        renderer = self._cw.vreg['formrenderers'].select('cwproperties', self._cw,
                                                      display_progress_div=False)
         return form.form_render(renderer=renderer)
 
@@ -210,11 +210,11 @@ class SystemCWPropertiesForm(FormViewMixIn, StartupView):
             label = key.split('.')[-1]
         else:
             label = key
-        subform = self.vreg['forms'].select('base', self.req, entity=entity,
+        subform = self._cw.vreg['forms'].select('base', self._cw, entity=entity,
                                             mainform=False)
         subform.append_field(PropertyValueField(name='value', label=label,
                                                 eidparam=True))
-        subform.vreg = self.vreg
+        subform.vreg = self._cw.vreg
         subform.form_add_hidden('pkey', key, eidparam=True)
         form.form_add_subform(subform)
         return subform
@@ -238,14 +238,14 @@ class CWPropertiesForm(SystemCWPropertiesForm):
 
     @property
     def user(self):
-        if self.rset is None:
-            return self.req.user
-        return self.rset.get_entity(self.row or 0, self.col or 0)
+        if self.cw_rset is None:
+            return self._cw.user
+        return self.cw_rset.get_entity(self.cw_row or 0, self.cw_col or 0)
 
     @property
     @cached
     def cwprops_rset(self):
-        return self.req.execute('Any P,K,V WHERE P is CWProperty, P pkey K, P value V,'
+        return self._cw.execute('Any P,K,V WHERE P is CWProperty, P pkey K, P value V,'
                                 'P for_user U, U eid %(x)s', {'x': self.user.eid})
 
     def form_row(self, form, key, splitlabel):

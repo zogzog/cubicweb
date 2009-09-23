@@ -32,29 +32,29 @@ class SparqlForm(forms.FieldsForm):
     form_buttons = [fwdgs.SubmitButton()]
     @property
     def action(self):
-        return self.req.url()
+        return self._cw.url()
 
 
 class SparqlFormView(form.FormViewMixIn, StartupView):
     __regid__ = 'sparql'
     def call(self):
-        form = self.vreg.select('forms', 'sparql', self.req)
+        form = self._cw.vreg.select('forms', 'sparql', self._cw)
         self.w(form.form_render())
-        sparql = self.req.form.get('sparql')
-        vid = self.req.form.get('resultvid', 'table')
+        sparql = self._cw.form.get('sparql')
+        vid = self._cw.form.get('resultvid', 'table')
         if sparql:
             try:
-                qinfo = Sparql2rqlTranslator(self.schema).translate(sparql)
+                qinfo = Sparql2rqlTranslator(self._cw.schema).translate(sparql)
             except rql.TypeResolverException, ex:
-                self.w(self.req._('can not resolve entity types:') + u' ' + unicode('ex'))
+                self.w(self._cw._('can not resolve entity types:') + u' ' + unicode('ex'))
             except UnsupportedQuery:
-                self.w(self.req._('we are not yet ready to handle this query'))
+                self.w(self._cw._('we are not yet ready to handle this query'))
             except xy.UnsupportedVocabulary, ex:
-                self.w(self.req._('unknown vocabulary:') + u' ' + unicode('ex'))
+                self.w(self._cw._('unknown vocabulary:') + u' ' + unicode('ex'))
             if vid == 'sparqlxml':
                 url = self.build_url('view', rql=qinfo.finalize(), vid=vid)
                 raise Redirect(url)
-            rset = self.req.execute(qinfo.finalize())
+            rset = self._cw.execute(qinfo.finalize())
             self.wview(vid, rset, 'null')
 
 
@@ -87,10 +87,10 @@ class SparqlResultXmlView(AnyRsetView):
 
     def call(self):
         # XXX handle UNION
-        rqlst = self.rset.syntax_tree().children[0]
+        rqlst = self.cw_rset.syntax_tree().children[0]
         varnames = [var.name for var in rqlst.selection]
         results = E.results()
-        for rowidx in xrange(len(self.rset)):
+        for rowidx in xrange(len(self.cw_rset)):
             result = E.result()
             for colidx, varname in enumerate(varnames):
                 result.append(self.cell_binding(rowidx, colidx, varname))
@@ -101,21 +101,21 @@ class SparqlResultXmlView(AnyRsetView):
         self.w(etree.tostring(sparql, encoding=unicode, pretty_print=True))
 
     def cell_binding(self, row, col, varname):
-        celltype = self.rset.description[row][col]
-        if self.schema.eschema(celltype).is_final():
-            cellcontent = self.view('cell', self.rset, row=row, col=col)
+        celltype = self.cw_rset.description[row][col]
+        if self._cw.schema.eschema(celltype).is_final():
+            cellcontent = self.view('cell', self.cw_rset, row=row, col=col)
             return E.binding(E.literal(cellcontent,
                                        datatype=xmlschema(celltype)),
                              name=varname)
         else:
-            entity = self.rset.get_entity(row, col)
+            entity = self.cw_rset.get_entity(row, col)
             return E.binding(E.uri(entity.absolute_url()), name=varname)
 
     def set_request_content_type(self):
         """overriden to set the correct filetype and filename"""
-        self.req.set_content_type(self.content_type,
+        self._cw.set_content_type(self.content_type,
                                   filename='sparql.xml',
-                                  encoding=self.req.encoding)
+                                  encoding=self._cw.encoding)
 
 def registration_callback(vreg):
     if Sparql2rqlTranslator is not None:

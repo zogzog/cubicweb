@@ -55,13 +55,13 @@ class FilterBox(BoxTemplate):
         if context:
             rset, vid, divid, paginate = context
         else:
-            rset = self.rset
+            rset = self.cw_rset
             vid, divid = None, 'pageContent'
             paginate = view and view.need_navigation
         return rset, vid, divid, paginate
 
     def call(self, view=None):
-        req = self.req
+        req = self._cw
         req.add_js( self.needs_js )
         req.add_css( self.needs_css)
         if self.roundcorners:
@@ -89,7 +89,7 @@ class FilterBox(BoxTemplate):
             w(u'<form method="post" id="%sForm" cubicweb:facetargs="%s" action="">'  % (
                 divid, xml_escape(dumps([divid, vid, paginate, self.facetargs()]))))
             w(u'<fieldset>')
-            hiddens = {'facets': ','.join(wdg.facet.id for wdg in widgets),
+            hiddens = {'facets': ','.join(wdg.facet.__regid__ for wdg in widgets),
                        'baserql': baserql}
             for param in ('subvid', 'vtitle'):
                 if param in req.form:
@@ -104,21 +104,21 @@ class FilterBox(BoxTemplate):
             cubicweb.info('after facets with rql: %s' % repr(rqlst))
 
     def display_bookmark_link(self, rset):
-        eschema = self.schema.eschema('Bookmark')
-        if eschema.has_perm(self.req, 'add'):
+        eschema = self._cw.schema.eschema('Bookmark')
+        if eschema.has_perm(self._cw, 'add'):
             bk_path = 'view?rql=%s' % rset.printable_rql()
-            bk_title = self.req._('my custom search')
-            linkto = 'bookmarked_by:%s:subject' % self.req.user.eid
+            bk_title = self._cw._('my custom search')
+            linkto = 'bookmarked_by:%s:subject' % self._cw.user.eid
             bk_add_url = self.build_url('add/Bookmark', path=bk_path, title=bk_title, __linkto=linkto)
             bk_base_url = self.build_url('add/Bookmark', title=bk_title, __linkto=linkto)
             bk_link = u'<a cubicweb:target="%s" id="facetBkLink" href="%s">%s</a>' % (
                     xml_escape(bk_base_url),
                     xml_escape(bk_add_url),
-                    self.req._('bookmark this search'))
+                    self._cw._('bookmark this search'))
             self.w(self.bk_linkbox_template % bk_link)
 
     def get_facets(self, rset, mainvar):
-        return self.vreg['facets'].poss_visible_objects(self.req, rset=rset,
+        return self._cw.vreg['facets'].poss_visible_objects(self._cw, rset=rset,
                                                         context='facetbox',
                                                         filtered_variable=mainvar)
 
@@ -149,17 +149,17 @@ class ETypeFacet(RelationFacet):
 
     @property
     def title(self):
-        return self.req._('entity type')
+        return self._cw._('entity type')
 
     def vocabulary(self):
         """return vocabulary for this facet, eg a list of 2-uple (label, value)
         """
-        etypes = self.rset.column_types(0)
-        return sorted((self.req._(etype), etype) for etype in etypes)
+        etypes = self.cw_rset.column_types(0)
+        return sorted((self._cw._(etype), etype) for etype in etypes)
 
     def add_rql_restrictions(self):
         """add restriction for this facet into the rql syntax tree"""
-        value = self.req.form.get(self.id)
+        value = self._cw.form.get(self.__regid__)
         if not value:
             return
         self.rqlst.add_type_restriction(self.filtered_variable, value)
@@ -188,7 +188,7 @@ class HasTextFacet(AbstractFacet):
     order = 0
     @property
     def title(self):
-        return self.req._('has_text')
+        return self._cw._('has_text')
 
     def get_widget(self):
         """return the widget instance to use to display this facet
@@ -200,7 +200,7 @@ class HasTextFacet(AbstractFacet):
 
     def add_rql_restrictions(self):
         """add restriction for this facet into the rql syntax tree"""
-        value = self.req.form.get(self.id)
+        value = self._cw.form.get(self.__regid__)
         if not value:
             return
         self.rqlst.add_constant_restriction(self.filtered_variable, 'has_text', value, 'String')

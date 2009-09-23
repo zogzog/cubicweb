@@ -30,13 +30,13 @@ class XMLView(EntityView):
     item_vid = 'xmlitem'
 
     def cell_call(self, row, col):
-        self.wview(self.item_vid, self.rset, row=row, col=col)
+        self.wview(self.item_vid, self.cw_rset, row=row, col=col)
 
     def call(self):
         """display a list of entities by calling their <item_vid> view"""
-        self.w(u'<?xml version="1.0" encoding="%s"?>\n' % self.req.encoding)
-        self.w(u'<%s size="%s">\n' % (self.xml_root, len(self.rset)))
-        for i in xrange(self.rset.rowcount):
+        self.w(u'<?xml version="1.0" encoding="%s"?>\n' % self._cw.encoding)
+        self.w(u'<%s size="%s">\n' % (self.xml_root, len(self.cw_rset)))
+        for i in xrange(self.cw_rset.rowcount):
             self.cell_call(i, 0)
         self.w(u'</%s>\n' % self.xml_root)
 
@@ -46,7 +46,7 @@ class XMLItemView(EntityView):
 
     def cell_call(self, row, col):
         """ element as an item for an xml feed """
-        entity = self.complete_entity(row, col)
+        entity = self.cw_rset.complete_entity(row, col)
         self.w(u'<%s>\n' % (entity.e_schema))
         for rschema, attrschema in entity.e_schema.attribute_definitions():
             attr = rschema.type
@@ -75,12 +75,12 @@ class XMLRsetView(AnyRsetView):
 
     def call(self):
         w = self.w
-        rset, descr = self.rset, self.rset.description
-        eschema = self.schema.eschema
+        rset, descr = self.cw_rset, self.cw_rset.description
+        eschema = self._cw.schema.eschema
         labels = self.columns_labels(tr=False)
-        w(u'<?xml version="1.0" encoding="%s"?>\n' % self.req.encoding)
+        w(u'<?xml version="1.0" encoding="%s"?>\n' % self._cw.encoding)
         w(u'<%s query="%s">\n' % (self.xml_root, xml_escape(rset.printable_rql())))
-        for rowindex, row in enumerate(self.rset):
+        for rowindex, row in enumerate(self.cw_rset):
             w(u' <row>\n')
             for colindex, val in enumerate(row):
                 etype = descr[rowindex][colindex]
@@ -92,11 +92,11 @@ class XMLRsetView(AnyRsetView):
                 if val is not None and not eschema(etype).is_final():
                     attrs['eid'] = val
                     # csvrow.append(val) # val is eid in that case
-                    val = self.view('textincontext', rset,
-                                    row=rowindex, col=colindex)
+                    val = self._cw.view('textincontext', rset,
+                                        row=rowindex, col=colindex)
                 else:
-                    val = self.view('final', rset, row=rowindex,
-                                    col=colindex, format='text/plain')
+                    val = self._cw.view('final', rset, row=rowindex,
+                                        col=colindex, format='text/plain')
                 w(simple_sgml_tag(tag, val, **attrs))
             w(u' </row>\n')
         w(u'</%s>\n' % self.xml_root)
@@ -109,7 +109,7 @@ class RSSFeedURL(Component):
     __select__ = non_final_entity()
 
     def feed_url(self):
-        return self.build_url(rql=self.limited_rql(), vid='rss')
+        return self._cw.build_url(rql=self.limited_rql(), vid='rss')
 
 
 class RSSEntityFeedURL(Component):
@@ -117,7 +117,7 @@ class RSSEntityFeedURL(Component):
     __select__ = non_final_entity() & one_line_rset()
 
     def feed_url(self):
-        return self.rset.get_entity(0, 0).rss_feed_url()
+        return self.cw_rset.get_entity(0, 0).rss_feed_url()
 
 
 class RSSIconBox(box.BoxTemplate):
@@ -131,12 +131,12 @@ class RSSIconBox(box.BoxTemplate):
 
     def call(self, **kwargs):
         try:
-            rss = self.req.external_resource('RSS_LOGO')
+            rss = self._cw.external_resource('RSS_LOGO')
         except KeyError:
             self.error('missing RSS_LOGO external resource')
             return
-        urlgetter = self.vreg['components'].select('rss_feed_url', self.req,
-                                                   rset=self.rset)
+        urlgetter = self._cw.vreg['components'].select('rss_feed_url', self._cw,
+                                                   rset=self.cw_rset)
         url = urlgetter.feed_url()
         self.w(u'<a href="%s"><img src="%s" alt="rss"/></a>\n' % (xml_escape(url), rss))
 
@@ -150,7 +150,7 @@ class RSSView(XMLView):
     cache_max_age = 60*60*2 # stay in http cache for 2 hours by default
 
     def _open(self):
-        req = self.req
+        req = self._cw
         self.w(u'<?xml version="1.0" encoding="%s"?>\n' % req.encoding)
         self.w(u'<rss version="2.0" xmlns:dc="http://purl.org/dc/elements/1.1/">\n')
         self.w(u'  <channel>\n')
@@ -160,7 +160,7 @@ class RSSView(XMLView):
                % xml_escape(req.form.get('vtitle', '')))
         params = req.form.copy()
         params.pop('vid', None)
-        self.w(u'    <link>%s</link>\n' % xml_escape(self.build_url(**params)))
+        self.w(u'    <link>%s</link>\n' % xml_escape(self._cw.build_url(**params)))
 
     def _close(self):
         self.w(u'  </channel>\n')
@@ -169,12 +169,12 @@ class RSSView(XMLView):
     def call(self):
         """display a list of entities by calling their <item_vid> view"""
         self._open()
-        for i in xrange(self.rset.rowcount):
+        for i in xrange(self.cw_rset.rowcount):
             self.cell_call(i, 0)
         self._close()
 
     def cell_call(self, row, col):
-        self.wview('rssitem', self.rset, row=row, col=col)
+        self.wview('rssitem', self.cw_rset, row=row, col=col)
 
 
 class RSSItemView(EntityView):
@@ -183,7 +183,7 @@ class RSSItemView(EntityView):
     add_div_section = False
 
     def cell_call(self, row, col):
-        entity = self.complete_entity(row, col)
+        entity = self.cw_rset.complete_entity(row, col)
         self.w(u'<item>\n')
         self.w(u'<guid isPermaLink="true">%s</guid>\n'
                % xml_escape(entity.absolute_url()))

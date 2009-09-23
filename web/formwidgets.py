@@ -39,9 +39,9 @@ class FieldWidget(object):
     def add_media(self, form):
         """adds media (CSS & JS) required by this widget"""
         if self.needs_js:
-            form.req.add_js(self.needs_js)
+            form._cw.add_js(self.needs_js)
         if self.needs_css:
-            form.req.add_css(self.needs_css)
+            form._cw.add_css(self.needs_css)
 
     def render(self, form, field, renderer):
         """render the widget for the given `field` of `form`.
@@ -60,12 +60,12 @@ class FieldWidget(object):
         if self.setdomid:
             attrs['id'] = form.context[field]['id']
         if self.settabindex and not 'tabindex' in attrs:
-            attrs['tabindex'] = form.req.next_tabindex()
+            attrs['tabindex'] = form._cw.next_tabindex()
         return name, values, attrs
 
     def process_field_data(self, form, field):
         formkey = form.form_field_name(field)
-        posted = form.req.form
+        posted = form._cw.form
         return posted.get(formkey)
 
 class Input(FieldWidget):
@@ -114,19 +114,19 @@ class PasswordInput(Input):
                   '<br/>',
                   tags.input(name=confirmname, value=values[0], type=self.type,
                              **attrs),
-                  '&#160;', tags.span(form.req._('confirm password'),
+                  '&#160;', tags.span(form._cw._('confirm password'),
                                       **{'class': 'emphasis'})]
         return u'\n'.join(inputs)
 
     def process_field_data(self, form, field):
         passwd1 = super(PasswordInput, self).process_field_data(form, field)
         fieldname = form.form_field_name(field)
-        passwd2 = form.req.form[fieldname+'-confirm']
+        passwd2 = form._cw.form[fieldname+'-confirm']
         if passwd1 == passwd2:
             if passwd1 is None:
                 return None
             return passwd1.encode('utf-8')
-        raise ProcessFormError(form.req._("password and confirmation don't match"))
+        raise ProcessFormError(form._cw._("password and confirmation don't match"))
 
 class PasswordSingleInput(Input):
     """<input type='password'> without a confirmation field"""
@@ -192,7 +192,7 @@ class FCKEditor(TextArea):
         self.attrs['cubicweb:type'] = 'wysiwyg'
 
     def render(self, form, field, renderer):
-        form.req.fckeditor_config()
+        form._cw.fckeditor_config()
         return super(FCKEditor, self).render(form, field, renderer)
 
 
@@ -293,9 +293,9 @@ autoform_section.tag_attribute(('Concert', 'maxprice'), 'generated')
         actual_fields = field.fields
         assert len(actual_fields) == 2
         return u'<div>%s %s %s %s</div>' % (
-            form.req._('from_interval_start'),
+            form._cw._('from_interval_start'),
             actual_fields[0].render(form, renderer),
-            form.req._('to_interval_end'),
+            form._cw._('to_interval_end'),
             actual_fields[1].render(form, renderer),
             )
 
@@ -342,7 +342,7 @@ class DateTimePicker(TextInput):
 
     def render(self, form, field, renderer):
         txtwidget = super(DateTimePicker, self).render(form, field, renderer)
-        self.add_localized_infos(form.req)
+        self.add_localized_infos(form._cw)
         cal_button = self._render_calendar_popup(form, field)
         return txtwidget + cal_button
 
@@ -356,8 +356,8 @@ class DateTimePicker(TextInput):
         return (u"""<a onclick="toggleCalendar('%s', '%s', %s, %s);" class="calhelper">
 <img src="%s" title="%s" alt="" /></a><div class="calpopup hidden" id="%s"></div>"""
                 % (helperid, inputid, year, month,
-                   form.req.external_resource('CALENDAR_ICON'),
-                   form.req._('calendar'), helperid) )
+                   form._cw.external_resource('CALENDAR_ICON'),
+                   form._cw._('calendar'), helperid) )
 
 
 
@@ -419,8 +419,8 @@ class AutoCompletionWidget(TextInput):
             fname = entity.autocomplete_initfuncs[field.name]
         else:
             fname = self.autocomplete_initfunc
-        return entity.req.build_url('json', fname=fname, mode='remote',
-                                    pageid=entity.req.pageid)
+        return entity._cw.build_url('json', fname=fname, mode='remote',
+                                    pageid=entity._cw.pageid)
 
 
 class StaticFileAutoCompletionWidget(AutoCompletionWidget):
@@ -433,7 +433,7 @@ class StaticFileAutoCompletionWidget(AutoCompletionWidget):
             fname = entity.autocomplete_initfuncs[field.name]
         else:
             fname = self.autocomplete_initfunc
-        return entity.req.datadir_url + fname
+        return entity._cw.datadir_url + fname
 
 
 class RestrictedAutoCompletionWidget(AutoCompletionWidget):
@@ -480,7 +480,7 @@ class Button(Input):
         self.attrs.setdefault('klass', 'validateButton')
 
     def render(self, form, field=None, renderer=None):
-        label = form.req._(self.label)
+        label = form._cw._(self.label)
         attrs = self.attrs.copy()
         if self.cwaction:
             assert self.onclick is None
@@ -493,7 +493,7 @@ class Button(Input):
             if self.setdomid:
                 attrs['id'] = self.name
         if self.settabindex and not 'tabindex' in attrs:
-            attrs['tabindex'] = form.req.next_tabindex()
+            attrs['tabindex'] = form._cw.next_tabindex()
         return tags.input(value=label, type=self.type, **attrs)
 
 
@@ -523,8 +523,8 @@ class ImgButton(object):
         self.label = label
 
     def render(self, form, field=None, renderer=None):
-        label = form.req._(self.label)
-        imgsrc = form.req.external_resource(self.imgressource)
+        label = form._cw._(self.label)
+        imgsrc = form._cw.external_resource(self.imgressource)
         return '<a id="%(domid)s" href="%(href)s">'\
                '<img src="%(imgsrc)s" alt="%(label)s"/>%(label)s</a>' % {
             'label': label, 'imgsrc': imgsrc,

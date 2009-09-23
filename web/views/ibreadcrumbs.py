@@ -32,7 +32,7 @@ class BreadCrumbEntityVComponent(Component):
     separator = u'&#160;&gt;&#160;'
 
     def call(self, view=None, first_separator=True):
-        entity = self.rset.get_entity(0, 0)
+        entity = self.cw_rset.get_entity(0, 0)
         path = entity.breadcrumbs(view)
         if path:
             self.w(u'<span id="breadcrumbs" class="pathbar">')
@@ -44,7 +44,7 @@ class BreadCrumbEntityVComponent(Component):
     def render_breadcrumbs(self, contextentity, path):
         root = path.pop(0)
         if isinstance(root, Entity):
-            self.w(u'<a href="%s">%s</a>' % (self.req.build_url(root.id),
+            self.w(u'<a href="%s">%s</a>' % (self._cw.build_url(root.id),
                                              root.dc_type('plural')))
             self.w(self.separator)
         self.wpath_part(root, contextentity, not path)
@@ -61,11 +61,11 @@ class BreadCrumbEntityVComponent(Component):
                 self.w(part.view('breadcrumbs'))
         elif isinstance(part, tuple):
             url, title = part
-            textsize = self.req.property_value('navigation.short-line-size')
+            textsize = self._cw.property_value('navigation.short-line-size')
             self.w(u'<a href="%s">%s</a>' % (
                 xml_escape(url), xml_escape(uilib.cut(title, textsize))))
         else:
-            textsize = self.req.property_value('navigation.short-line-size')
+            textsize = self._cw.property_value('navigation.short-line-size')
             self.w(uilib.cut(unicode(part), textsize))
 
 
@@ -76,7 +76,7 @@ class BreadCrumbETypeVComponent(BreadCrumbEntityVComponent):
         # XXX hack: only display etype name or first non entity path part
         root = path.pop(0)
         if isinstance(root, Entity):
-            self.w(u'<a href="%s">%s</a>' % (self.req.build_url(root.id),
+            self.w(u'<a href="%s">%s</a>' % (self._cw.build_url(root.id),
                                              root.dc_type('plural')))
         else:
             self.wpath_part(root, contextentity, not path)
@@ -89,7 +89,7 @@ class BreadCrumbAnyRSetVComponent(BreadCrumbEntityVComponent):
         self.w(u'<span id="breadcrumbs" class="pathbar">')
         if first_separator:
             self.w(self.separator)
-        self.w(self.req._('search'))
+        self.w(self._cw._('search'))
         self.w(u'</span>')
 
 
@@ -97,7 +97,7 @@ class BreadCrumbView(EntityView):
     __regid__ = 'breadcrumbs'
 
     def cell_call(self, row, col):
-        entity = self.rset.get_entity(row, col)
+        entity = self.cw_rset.get_entity(row, col)
         desc = xml_escape(uilib.cut(entity.dc_description(), 50))
         # XXX remember camember : tags.a autoescapes !
         self.w(tags.a(entity.view('breadcrumbtext'),
@@ -108,6 +108,6 @@ class BreadCrumbTextView(EntityView):
     __regid__ = 'breadcrumbtext'
 
     def cell_call(self, row, col):
-        entity = self.rset.get_entity(row, col)
-        textsize = self.req.property_value('navigation.short-line-size')
+        entity = self.cw_rset.get_entity(row, col)
+        textsize = self._cw.property_value('navigation.short-line-size')
         self.w(uilib.cut(entity.dc_title(), textsize))

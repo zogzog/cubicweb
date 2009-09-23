@@ -23,12 +23,12 @@ class CSVMixIn(object):
 
     def set_request_content_type(self):
         """overriden to set a .csv filename"""
-        self.req.set_content_type(self.content_type, filename='cubicwebexport.csv')
+        self._cw.set_content_type(self.content_type, filename='cubicwebexport.csv')
 
     def csvwriter(self, **kwargs):
         params = self.csv_params.copy()
         params.update(kwargs)
-        return UnicodeCSVWriter(self.w, self.req.encoding, **params)
+        return UnicodeCSVWriter(self.w, self._cw.encoding, **params)
 
 
 class CSVRsetView(CSVMixIn, AnyRsetView):
@@ -39,20 +39,20 @@ class CSVRsetView(CSVMixIn, AnyRsetView):
     def call(self):
         writer = self.csvwriter()
         writer.writerow(self.columns_labels())
-        rset, descr = self.rset, self.rset.description
-        eschema = self.schema.eschema
+        rset, descr = self.cw_rset, self.cw_rset.description
+        eschema = self._cw.schema.eschema
         for rowindex, row in enumerate(rset):
             csvrow = []
             for colindex, val in enumerate(row):
                 etype = descr[rowindex][colindex]
                 if val is not None and not eschema(etype).is_final():
                     # csvrow.append(val) # val is eid in that case
-                    content = self.view('textincontext', rset,
-                                        row=rowindex, col=colindex)
+                    content = self._cw.view('textincontext', rset,
+                                            row=rowindex, col=colindex)
                 else:
-                    content = self.view('final', rset,
-                                        format='text/plain',
-                                        row=rowindex, col=colindex)
+                    content = self._cw.view('final', rset,
+                                            format='text/plain',
+                                            row=rowindex, col=colindex)
                 csvrow.append(content)
             writer.writerow(csvrow)
 
@@ -68,12 +68,12 @@ class CSVEntityView(CSVMixIn, EntityView):
     title = _('csv entities export')
 
     def call(self):
-        req = self.req
+        req = self._cw
         rows_by_type = {}
         writer = self.csvwriter()
         rowdef_by_type = {}
-        for index in xrange(len(self.rset)):
-            entity = self.complete_entity(index)
+        for index in xrange(len(self.cw_rset)):
+            entity = self.cw_rset.complete_entity(index)
             if entity.e_schema not in rows_by_type:
                 rowdef_by_type[entity.e_schema] = [rs for rs, at in entity.e_schema.attribute_definitions()
                                                    if at != 'Bytes']

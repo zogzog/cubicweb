@@ -44,7 +44,7 @@ class FormMixIn(object):
         """return the key that may be used to store / retreive data about a
         previous post which failed because of a validation error
         """
-        return '%s#%s' % (self.req.url(), self.domid)
+        return '%s#%s' % (self._cw.url(), self.domid)
 
     def __init__(self, req, rset, **kwargs):
         super(FormMixIn, self).__init__(req, rset=rset, **kwargs)
@@ -55,12 +55,12 @@ class FormMixIn(object):
         # deleting validation errors here breaks form reloading (errors are
         # no more available), they have to be deleted by application's publish
         # method on successful commit
-        forminfo = self.req.get_session_data(sessionkey, pop=True)
+        forminfo = self._cw.get_session_data(sessionkey, pop=True)
         if forminfo:
             # XXX remove req.data assigment once cw.web.widget is killed
-            self.req.data['formvalues'] = self.form_previous_values = forminfo['values']
-            self.req.data['formerrors'] = self.form_valerror = forminfo['errors']
-            self.req.data['displayederrors'] = self.form_displayed_errors = set()
+            self._cw.data['formvalues'] = self.form_previous_values = forminfo['values']
+            self._cw.data['formerrors'] = self.form_valerror = forminfo['errors']
+            self._cw.data['displayederrors'] = self.form_displayed_errors = set()
             # if some validation error occured on entity creation, we have to
             # get the original variable name from its attributed eid
             foreid = self.form_valerror.entity
@@ -98,7 +98,7 @@ class FormMixIn(object):
 
     def button(self, label, klass='validateButton', tabindex=None, **kwargs):
         if tabindex is None:
-            tabindex = self.req.next_tabindex()
+            tabindex = self._cw.next_tabindex()
         return tags.input(value=label, klass=klass, **kwargs)
 
     def action_button(self, label, onclick=None, __action=None, **kwargs):
@@ -109,24 +109,24 @@ class FormMixIn(object):
 
     def button_ok(self, label=None, type='submit', name='defaultsubmit',
                   **kwargs):
-        label = self.req._(label or stdmsgs.BUTTON_OK).capitalize()
+        label = self._cw._(label or stdmsgs.BUTTON_OK).capitalize()
         return self.button(label, name=name, type=type, **kwargs)
 
     def button_apply(self, label=None, type='button', **kwargs):
-        label = self.req._(label or stdmsgs.BUTTON_APPLY).capitalize()
+        label = self._cw._(label or stdmsgs.BUTTON_APPLY).capitalize()
         return self.action_button(label, __action='apply', type=type, **kwargs)
 
     def button_delete(self, label=None, type='button', **kwargs):
-        label = self.req._(label or stdmsgs.BUTTON_DELETE).capitalize()
+        label = self._cw._(label or stdmsgs.BUTTON_DELETE).capitalize()
         return self.action_button(label, __action='delete', type=type, **kwargs)
 
     def button_cancel(self, label=None, type='button', **kwargs):
-        label = self.req._(label or stdmsgs.BUTTON_CANCEL).capitalize()
+        label = self._cw._(label or stdmsgs.BUTTON_CANCEL).capitalize()
         return self.action_button(label, __action='cancel', type=type, **kwargs)
 
     def button_reset(self, label=None, type='reset', name='__action_cancel',
                      **kwargs):
-        label = self.req._(label or stdmsgs.BUTTON_CANCEL).capitalize()
+        label = self._cw._(label or stdmsgs.BUTTON_CANCEL).capitalize()
         return self.button(label, type=type, **kwargs)
 
     def need_multipart(self, entity, categories=('primary', 'secondary')):
@@ -140,7 +140,7 @@ class FormMixIn(object):
             assert len(targettypes) == 1, \
                    "I'm not able to deal with several targets and inlineview"
             ttype = targettypes[0]
-            inlined_entity = self.vreg.etype_class(ttype)(self.req, None, None)
+            inlined_entity = self.vreg.etype_class(ttype)(self._cw, None, None)
             for irschema, _, x in inlined_entity.relations_by_category(categories):
                 if inlined_entity.get_widget(irschema, x).need_multipart:
                     return True
@@ -151,11 +151,11 @@ class FormMixIn(object):
 
         This method should be called once inlined field errors has been consumed
         """
-        errex = self.req.data.get('formerrors') or self.form_valerror
+        errex = self._cw.data.get('formerrors') or self.form_valerror
         # get extra errors
         if errex is not None:
-            errormsg = self.req._('please correct the following errors:')
-            displayed = self.req.data.get('displayederrors') or self.form_displayed_errors
+            errormsg = self._cw._('please correct the following errors:')
+            displayed = self._cw.data.get('displayederrors') or self.form_displayed_errors
             errors = sorted((field, err) for field, err in errex.errors.items()
                             if not field in displayed)
             if errors:
@@ -167,7 +167,7 @@ class FormMixIn(object):
                     if field is None:
                         errormsg += templstr % err
                     else:
-                        errormsg += templstr % '%s: %s' % (self.req._(field), err)
+                        errormsg += templstr % '%s: %s' % (self._cw._(field), err)
                 if len(errors) > 1:
                     errormsg = '<ul>%s</ul>' % errormsg
             return u'<div class="errorMessage">%s</div>' % errormsg

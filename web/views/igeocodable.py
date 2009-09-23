@@ -23,13 +23,13 @@ class GeocodingJsonView(EntityView):
 
     def call(self):
         # remove entities that don't define latitude and longitude
-        self.rset = self.rset.filtered_rset(lambda e: e.latitude and e.longitude)
-        zoomlevel = self.req.form.pop('zoomlevel', 8)
-        extraparams = self.req.form.copy()
+        self.cw_rset = self.cw_rset.filtered_rset(lambda e: e.latitude and e.longitude)
+        zoomlevel = self._cw.form.pop('zoomlevel', 8)
+        extraparams = self._cw.form.copy()
         extraparams.pop('vid', None)
         extraparams.pop('rql', None)
         markers = [self.build_marker_data(rowidx, extraparams)
-                   for rowidx in xrange(len(self.rset))]
+                   for rowidx in xrange(len(self.cw_rset))]
         center = {
             'latitude': sum(marker['latitude'] for marker in markers) / len(markers),
             'longitude': sum(marker['longitude'] for marker in markers) / len(markers),
@@ -42,12 +42,12 @@ class GeocodingJsonView(EntityView):
         self.w(simplejson.dumps(geodata))
 
     def build_marker_data(self, row, extraparams):
-        entity = self.rset.get_entity(row, 0)
+        entity = self.cw_rset.get_entity(row, 0)
         icon = None
         if hasattr(entity, 'marker_icon'):
             icon = entity.marker_icon()
         else:
-            icon = (self.req.external_resource('GMARKER_ICON'), (20, 34), (4, 34), None)
+            icon = (self._cw.external_resource('GMARKER_ICON'), (20, 34), (4, 34), None)
         return {'latitude': entity.latitude, 'longitude': entity.longitude,
                 'title': entity.dc_long_title(),
                 #icon defines : (icon._url, icon.size,  icon.iconAncho', icon.shadow)
@@ -61,7 +61,7 @@ class GoogleMapBubbleView(EntityView):
     __select__ = implements(IGeocodable)
 
     def cell_call(self, row, col):
-        entity = self.rset.get_entity(row, col)
+        entity = self.cw_rset.get_entity(row, col)
         self.w(u'<div>%s</div>' % entity.view('oneline'))
         # FIXME: we should call something like address-view if available
 
@@ -73,13 +73,13 @@ class GoogleMapsView(EntityView):
     need_navigation = False
 
     def call(self, gmap_key, width=400, height=400, uselabel=True, urlparams=None):
-        self.req.demote_to_html()
+        self._cw.demote_to_html()
         # remove entities that don't define latitude and longitude
-        self.rset = self.rset.filtered_rset(lambda e: e.latitude and e.longitude)
-        self.req.add_js('http://maps.google.com/maps?sensor=false&file=api&amp;v=2&amp;key=%s' % gmap_key,
+        self.cw_rset = self.cw_rset.filtered_rset(lambda e: e.latitude and e.longitude)
+        self._cw.add_js('http://maps.google.com/maps?sensor=false&file=api&amp;v=2&amp;key=%s' % gmap_key,
                         localfile=False)
-        self.req.add_js( ('cubicweb.widgets.js', 'cubicweb.gmap.js', 'gmap.utility.labeledmarker.js') )
-        rql = self.rset.printable_rql()
+        self._cw.add_js( ('cubicweb.widgets.js', 'cubicweb.gmap.js', 'gmap.utility.labeledmarker.js') )
+        rql = self.cw_rset.printable_rql()
         if urlparams is None:
             loadurl = self.build_url(rql=rql, vid='geocoding-json')
         else:
@@ -94,8 +94,8 @@ class GoogeMapsLegend(EntityView):
 
     def call(self):
         self.w(u'<ol>')
-        for rowidx in xrange(len(self.rset)):
+        for rowidx in xrange(len(self.cw_rset)):
             self.w(u'<li>')
-            self.wview('listitem', self.rset, row=rowidx, col=0)
+            self.wview('listitem', self.cw_rset, row=rowidx, col=0)
             self.w(u'</li>')
         self.w(u'</ol>')

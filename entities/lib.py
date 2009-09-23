@@ -51,7 +51,7 @@ class EmailAddress(AnyEntity):
         if not ('sender' in subjrels and 'recipients' in subjrels):
             return
         rql = 'DISTINCT Any X, S, D ORDERBY D DESC WHERE X sender Y or X recipients Y, X subject S, X date D, Y eid %(y)s'
-        rset = self.req.execute(rql, {'y': self.eid}, 'y')
+        rset = self._cw.execute(rql, {'y': self.eid}, 'y')
         if skipeids is None:
             skipeids = set()
         for i in xrange(len(rset)):
@@ -88,13 +88,13 @@ class Bookmark(AnyEntity):
     fetch_attrs, fetch_order = fetch_config(['title', 'path'])
 
     def actual_url(self):
-        url = self.req.build_url(self.path)
+        url = self._cw.build_url(self.path)
         if self.title:
             urlparts = list(urlsplit(url))
             if urlparts[3]:
-                urlparts[3] += '&vtitle=%s' % self.req.url_quote(self.title)
+                urlparts[3] += '&vtitle=%s' % self._cw.url_quote(self.title)
             else:
-                urlparts[3] = 'vtitle=%s' % self.req.url_quote(self.title)
+                urlparts[3] = 'vtitle=%s' % self._cw.url_quote(self.title)
             url = urlunsplit(urlparts)
         return url
 
@@ -113,7 +113,7 @@ class CWProperty(AnyEntity):
 
     def dc_description(self, format='text/plain'):
         try:
-            return self.req._(self.vreg.property_info(self.pkey)['help'])
+            return self._cw._(self.vreg.property_info(self.pkey)['help'])
         except UnknownProperty:
             return u''
 
@@ -130,7 +130,7 @@ class CWCache(AnyEntity):
     fetch_attrs, fetch_order = fetch_config(['name'])
 
     def touch(self):
-        self.req.execute('SET X timestamp %(t)s WHERE X eid %(x)s',
+        self._cw.execute('SET X timestamp %(t)s WHERE X eid %(x)s',
                          {'t': datetime.now(), 'x': self.eid}, 'x')
 
     def valid(self, date):

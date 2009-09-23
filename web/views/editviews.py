@@ -35,7 +35,7 @@ class SearchForAssociationView(EntityView):
 
     def cell_call(self, row, col):
         rset, vid, divid, paginate = self.filter_box_context_info()
-        self.rset = rset
+        self.cw_rset = rset
         self.w(u'<div id="%s">' % divid)
         self.paginate()
         self.wview(vid, rset, 'noresult')
@@ -43,8 +43,8 @@ class SearchForAssociationView(EntityView):
 
     @cached
     def filter_box_context_info(self):
-        entity = self.rset.get_entity(0, 0)
-        role, eid, rtype, etype = self.req.search_state[1]
+        entity = self.cw_rset.get_entity(0, 0)
+        role, eid, rtype, etype = self._cw.search_state[1]
         assert entity.eid == typed_eid(eid)
         # the default behaviour is to fetch all unrelated entities and display
         # them. Use fetch_order and not fetch_unrelated_order as sort method
@@ -53,22 +53,22 @@ class SearchForAssociationView(EntityView):
         rql, args = entity.unrelated_rql(rtype, etype, role,
                                    ordermethod='fetch_order',
                                    vocabconstraints=False)
-        rset = self.req.execute(rql, args, tuple(args))
+        rset = self._cw.execute(rql, args, tuple(args))
         return rset, 'list', "search-associate-content", True
 
 
 class OutOfContextSearch(EntityView):
     __regid__ = 'outofcontext-search'
     def cell_call(self, row, col):
-        entity = self.rset.get_entity(row, col)
+        entity = self.cw_rset.get_entity(row, col)
         erset = entity.as_rset()
-        if self.req.match_search_state(erset):
+        if self._cw.match_search_state(erset):
             self.w(u'<a href="%s" title="%s">%s</a>&#160;<a href="%s" title="%s">[...]</a>' % (
-                xml_escape(linksearch_select_url(self.req, erset)),
-                self.req._('select this entity'),
+                xml_escape(linksearch_select_url(self._cw, erset)),
+                self._cw._('select this entity'),
                 xml_escape(entity.view('textoutofcontext')),
                 xml_escape(entity.absolute_url(vid='primary')),
-                self.req._('view detail for this entity')))
+                self._cw._('view detail for this entity')))
         else:
             entity.view('outofcontext', w=self.w)
 
@@ -78,11 +78,11 @@ class UnrelatedDivs(EntityView):
     __select__ = match_form_params('relation')
 
     def cell_call(self, row, col):
-        entity = self.rset.get_entity(row, col)
-        relname, target = self.req.form.get('relation').rsplit('_', 1)
-        rschema = self.schema.rschema(relname)
-        hidden = 'hidden' in self.req.form
-        is_cell = 'is_cell' in self.req.form
+        entity = self.cw_rset.get_entity(row, col)
+        relname, target = self._cw.form.get('relation').rsplit('_', 1)
+        rschema = self._cw.schema.rschema(relname)
+        hidden = 'hidden' in self._cw.form
+        is_cell = 'is_cell' in self._cw.form
         self.w(self.build_unrelated_select_div(entity, rschema, target,
                                                is_cell=is_cell, hidden=hidden))
 
@@ -93,17 +93,17 @@ class UnrelatedDivs(EntityView):
         selectid = 'select%s_%s_%s' % (rschema.type, target, entity.eid)
         if rschema.symetric or target == 'subject':
             targettypes = rschema.objects(entity.e_schema)
-            etypes = '/'.join(sorted(etype.display_name(self.req) for etype in targettypes))
+            etypes = '/'.join(sorted(etype.display_name(self._cw) for etype in targettypes))
         else:
             targettypes = rschema.subjects(entity.e_schema)
-            etypes = '/'.join(sorted(etype.display_name(self.req) for etype in targettypes))
-        etypes = cut(etypes, self.req.property_value('navigation.short-line-size'))
-        options.append('<option>%s %s</option>' % (self.req._('select a'), etypes))
+            etypes = '/'.join(sorted(etype.display_name(self._cw) for etype in targettypes))
+        etypes = cut(etypes, self._cw.property_value('navigation.short-line-size'))
+        options.append('<option>%s %s</option>' % (self._cw._('select a'), etypes))
         options += self._get_select_options(entity, rschema, target)
         options += self._get_search_options(entity, rschema, target, targettypes)
-        if 'Basket' in self.schema: # XXX
+        if 'Basket' in self._cw.schema: # XXX
             options += self._get_basket_options(entity, rschema, target, targettypes)
-        relname, target = self.req.form.get('relation').rsplit('_', 1)
+        relname, target = self._cw.form.get('relation').rsplit('_', 1)
         return u"""\
 <div class="%s" id="%s">
   <select id="%s" onchange="javascript: addPendingInsert(this.options[this.selectedIndex], %s, %s, '%s');">
@@ -118,11 +118,11 @@ class UnrelatedDivs(EntityView):
         """add options to search among all entities of each possible type"""
         options = []
         eid = entity.eid
-        pending_inserts = self.req.get_pending_inserts(eid)
+        pending_inserts = self._cw.get_pending_inserts(eid)
         rtype = rschema.type
-        form = self.vreg['forms'].select('edition', self.req, entity=entity)
+        form = self._cw.vreg['forms'].select('edition', self._cw, entity=entity)
         field = form.field_by_name(rschema, target, entity.e_schema)
-        limit = self.req.property_value('navigation.combobox-limit')
+        limit = self._cw.property_value('navigation.combobox-limit')
         for eview, reid in form.form_field_vocabulary(field, limit):
             if reid is None:
                 options.append('<option class="separator">-- %s --</option>'
@@ -138,21 +138,21 @@ class UnrelatedDivs(EntityView):
     def _get_search_options(self, entity, rschema, target, targettypes):
         """add options to search among all entities of each possible type"""
         options = []
-        _ = self.req._
+        _ = self._cw._
         for eschema in targettypes:
             mode = '%s:%s:%s:%s' % (target, entity.eid, rschema.type, eschema)
             url = self.build_url(entity.rest_path(), vid='search-associate',
                                  __mode=mode)
-            options.append((eschema.display_name(self.req),
+            options.append((eschema.display_name(self._cw),
                             '<option value="%s">%s %s</option>' % (
-                xml_escape(url), _('Search for'), eschema.display_name(self.req))))
+                xml_escape(url), _('Search for'), eschema.display_name(self._cw))))
         return [o for l, o in sorted(options)]
 
     def _get_basket_options(self, entity, rschema, target, targettypes):
         options = []
         rtype = rschema.type
-        _ = self.req._
-        for basketeid, basketname in self._get_basket_links(self.req.user.eid,
+        _ = self._cw._
+        for basketeid, basketname in self._get_basket_links(self._cw.user.eid,
                                                             target, targettypes):
             optionid = relation_id(entity.eid, rtype, target, basketeid)
             options.append('<option id="%s" value="%s">%s %s</option>' % (
@@ -171,10 +171,10 @@ class UnrelatedDivs(EntityView):
     def _get_basket_info(self, ueid):
         basketref = []
         basketrql = 'Any B,N WHERE B is Basket, B owned_by U, U eid %(x)s, B name N'
-        basketresultset = self.req.execute(basketrql, {'x': ueid}, 'x')
+        basketresultset = self._cw.execute(basketrql, {'x': ueid}, 'x')
         for result in basketresultset:
             basketitemsrql = 'Any X WHERE X in_basket B, B eid %(x)s'
-            rset = self.req.execute(basketitemsrql, {'x': result[0]}, 'x')
+            rset = self._cw.execute(basketitemsrql, {'x': result[0]}, 'x')
             basketref.append((result[0], result[1], rset))
         return basketref
 
@@ -191,7 +191,7 @@ class ComboboxView(EntityView):
         """the combo-box view for an entity: same as text out of context view
         by default
         """
-        self.wview('textoutofcontext', self.rset, row=row, col=col)
+        self.wview('textoutofcontext', self.cw_rset, row=row, col=col)
 
 
 class EditableFinalView(FinalView):
@@ -199,7 +199,7 @@ class EditableFinalView(FinalView):
     __regid__ = 'editable-final'
 
     def cell_call(self, row, col, props=None):
-        entity, rtype = self.rset.related_entity(row, col)
+        entity, rtype = self.cw_rset.related_entity(row, col)
         if entity is not None:
             self.w(entity.view('reledit', rtype=rtype))
         else:

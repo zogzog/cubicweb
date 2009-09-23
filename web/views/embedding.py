@@ -34,8 +34,8 @@ class ExternalTemplate(basetemplates.TheMainTemplate):
     def call(self, body):
         # XXX fallback to HTML 4 mode when embeding ?
         self.set_request_content_type()
-        self.req.search_state = ('normal',)
-        self.template_header(self.content_type, None, self.req._('external page'),
+        self._cw.search_state = ('normal',)
+        self.template_header(self.content_type, None, self._cw._('external page'),
                              [NOINDEX, NOFOLLOW])
         self.content_header()
         self.w(body)
@@ -48,18 +48,18 @@ class EmbedController(Controller):
     template = 'external'
 
     def publish(self, rset=None):
-        req = self.req
+        req = self._cw
         if 'custom_css' in req.form:
             req.add_css(req.form['custom_css'])
         embedded_url = req.form['url']
-        allowed = self.config['embed-allowed']
+        allowed = self._cw.config['embed-allowed']
         _ = req._
         if allowed is None or not allowed.match(embedded_url):
             body = '<h2>%s</h2><h3>%s</h3>' % (
                 _('error while embedding page'),
                 _('embedding this url is forbidden'))
         else:
-            prefix = req.build_url(self.id, url='')
+            prefix = req.build_url(self.__regid__, url='')
             authorization = req.get_header('Authorization')
             if authorization:
                 headers = {'Authorization' : authorization}
@@ -68,13 +68,13 @@ class EmbedController(Controller):
             try:
                 body = embed_external_page(embedded_url, prefix,
                                            headers, req.form.get('custom_css'))
-                body = soup2xhtml(body, self.req.encoding)
+                body = soup2xhtml(body, self._cw.encoding)
             except HTTPError, err:
                 body = '<h2>%s</h2><h3>%s</h3>' % (
                     _('error while embedding page'), err)
         self.process_rql(req.form.get('rql'))
-        return self.vreg['views'].main_template(req, self.template,
-                                                rset=self.rset, body=body)
+        return self._cw.vreg['views'].main_template(req, self.template,
+                                                rset=self.cw_rset, body=body)
 
 
 def entity_has_embedable_url(entity):
@@ -100,10 +100,10 @@ class EmbedAction(Action):
     title = _('embed')
 
     def url(self, row=0):
-        entity = self.rset.get_entity(row, 0)
-        url = urljoin(self.req.base_url(), entity.embeded_url())
-        if self.req.form.has_key('rql'):
-            return self.build_url('embed', url=url, rql=self.req.form['rql'])
+        entity = self.cw_rset.get_entity(row, 0)
+        url = urljoin(self._cw.base_url(), entity.embeded_url())
+        if self._cw.form.has_key('rql'):
+            return self.build_url('embed', url=url, rql=self._cw.form['rql'])
         return self.build_url('embed', url=url)
 
 

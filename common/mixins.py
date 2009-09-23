@@ -38,7 +38,7 @@ class TreeMixIn(object):
                            entities=entities)
         if entities:
             return [e for e in res if e.e_schema != self.e_schema]
-        return res.filtered_rset(lambda x: x.e_schema != self.e_schema, self.col)
+        return res.filtered_rset(lambda x: x.e_schema != self.e_schema, self.cw_col)
 
     def same_type_children(self, entities=True):
         """return children entities of the same type as this entity.
@@ -50,7 +50,7 @@ class TreeMixIn(object):
                            entities=entities)
         if entities:
             return [e for e in res if e.e_schema == self.e_schema]
-        return res.filtered_rset(lambda x: x.e_schema == self.e_schema, self.col)
+        return res.filtered_rset(lambda x: x.e_schema == self.e_schema, self.cw_col)
 
     def iterchildren(self, _done=None):
         if _done is None:
@@ -249,7 +249,7 @@ class TreeViewMixIn(object):
 
 class TreePathMixIn(object):
     """a recursive path view"""
-    id = 'path'
+    __regid__ = 'path'
     item_vid = 'oneline'
     separator = u'&#160;&gt;&#160;'
 

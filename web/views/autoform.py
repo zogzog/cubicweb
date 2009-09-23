@@ -140,9 +140,9 @@ class AutomaticEntityForm(forms.EntityFieldsForm):
         try:
             return super(AutomaticEntityForm, cls_or_self).field_by_name(name, role)
         except form.FieldNotFound:
-            if eschema is None or not name in cls_or_self.schema:
+            if eschema is None or not name in cls_or_self._cw.schema:
                 raise
-            rschema = cls_or_self.schema.rschema(name)
+            rschema = cls_or_self._cw.schema.rschema(name)
             # XXX use a sample target type. Document this.
             tschemas = rschema.targets(eschema, role)
             fieldcls = cls_or_self.rfields.etype_get(eschema, rschema, role,
@@ -211,8 +211,8 @@ class AutomaticEntityForm(forms.EntityFieldsForm):
                 continue
             targettype = targettypes[0]
             if self.should_inline_relation_form(rschema, targettype, role):
-                entity = self.vreg['etypes'].etype_class(targettype)(self._cw)
-                subform = self.vreg['forms'].select('edition', self._cw, entity=entity)
+                entity = self._cw.vreg['etypes'].etype_class(targettype)(self._cw)
+                subform = self._cw.vreg['forms'].select('edition', self._cw, entity=entity)
                 if subform.form_needs_multipart:
                     return True
         return False
@@ -245,8 +245,6 @@ class AutomaticEntityForm(forms.EntityFieldsForm):
         """return a list of (relation schema, target schemas, role) matching
         given category(ies) and permission
         """
-        # we'll need an initialized varmaker if there are some inlined relation
-        self.initialize_varmaker()
         return self.erelations_by_category(self.edited_entity, True, 'add',
                                            self.rinlined)
 
@@ -329,7 +327,7 @@ class AutomaticEntityForm(forms.EntityFieldsForm):
         """return true if the given relation with entity has role and a
         targettype target should be inlined
         """
-        return self.rinlined.etype_get(self.edited_entity.id, rschema, role,
+        return self.rinlined.etype_get(self.edited_entity.__regid__, rschema, role,
                                        targettype)
 
     def display_inline_edition_form(self, w, rschema, targettype, role,
