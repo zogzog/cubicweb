@@ -383,7 +383,7 @@ class RelationFacet(VocabularyFacet):
                 return ()
         finally:
             rqlst.recover()
-        return self.cw_rset_vocabulary(rset)
+        return self.rset_vocabulary(rset)
 
     def possible_values(self):
         """return a list of possible values (as string since it's used to
@@ -410,7 +410,7 @@ class RelationFacet(VocabularyFacet):
 
     @cached
     def support_and(self):
-        rschema = self.schema.rschema(self.rtype)
+        rschema = self._cw.vreg.schema.rschema(self.rtype)
         if self.role == 'subject':
             cardidx = 0
         else:
@@ -476,7 +476,7 @@ class AttributeFacet(RelationFacet):
                 return ()
         finally:
             rqlst.recover()
-        return self.cw_rset_vocabulary(rset)
+        return self.rset_vocabulary(rset)
 
     def rset_vocabulary(self, rset):
         _ = self._cw._
