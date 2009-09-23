@@ -1125,7 +1125,7 @@ class AfterAddSpecializesHook(SyncSchemaHook):
                                 parentetypeeid=self.eidto)
 
 
-class AfterAddSpecializesHook(SyncSchemaHook):
+class AfterDelSpecializesHook(SyncSchemaHook):
     __regid__ = 'syncdelspecializes'
     __select__ = SyncSchemaHook.__select__ & hook.match_rtype('specializes')
     events = ('after_delete_relation',)
