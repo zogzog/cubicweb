@@ -1,8 +1,10 @@
 from logilab.common.deprecation import class_renamed, class_moved
-from cubicweb.server.hook import Hook
-SystemHook = class_renamed('SystemHook', Hook)
-PropagateSubjectRelationHook = class_renamed('PropagateSubjectRelationHook', Hook)
-PropagateSubjectRelationAddHook = class_renamed('PropagateSubjectRelationAddHook', Hook)
-PropagateSubjectRelationDelHook = class_renamed('PropagateSubjectRelationDelHook', Hook)
-Hook = class_moved(Hook)
-
+from cubicweb.server import hook
+SystemHook = class_renamed('SystemHook', hook.Hook)
+PropagateSubjectRelationHook = class_renamed('PropagateSubjectRelationHook',
+                                             hook.PropagateSubjectRelationHook)
+PropagateSubjectRelationAddHook = class_renamed('PropagateSubjectRelationAddHook',
+                                                hook.PropagateSubjectRelationAddHook)
+PropagateSubjectRelationDelHook = class_renamed('PropagateSubjectRelationDelHook',
+                                                hook.PropagateSubjectRelationDelHook)
+Hook = class_moved(hook.Hook)
