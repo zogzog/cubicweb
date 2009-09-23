@@ -35,14 +35,22 @@ if applcubicwebversion < (3, 5, 0) and cubicwebversion >= (3, 5, 0):
     # drop explicit 'State allowed_transition Transition' since it should be
     # infered due to yams inheritance.  However we've to disable the schema
     # sync hook first to avoid to destroy existing data...
-    from cubicweb.server.schemahooks import after_del_relation_type
-    repo.hm.unregister_hook(after_del_relation_type,
-                            'after_delete_relation', 'relation_type')
     try:
-        drop_relation_definition('State', 'allowed_transition', 'Transition')
-    finally:
-        repo.hm.register_hook(after_del_relation_type,
-                              'after_delete_relation', 'relation_type')
+        from cubicweb.hooks import syncschema
+        repo.vreg.unregister(syncschema.AfterDelRelationTypeHook)
+        try:
+            drop_relation_definition('State', 'allowed_transition', 'Transition')
+        finally:
+            repo.vreg.register(syncschema.AfterDelRelationTypeHook)
+    except ImportError: # syncschema is in CW >= 3.6 only
+        from cubicweb.server.schemahooks import after_del_relation_type
+        repo.hm.unregister_hook(after_del_relation_type,
+                                'after_delete_relation', 'relation_type')
+        try:
+            drop_relation_definition('State', 'allowed_transition', 'Transition')
+        finally:
+            repo.hm.register_hook(after_del_relation_type,
+                                  'after_delete_relation', 'relation_type')
     schema.rebuild_infered_relations() # need to be explicitly called once everything is in place
 
     for et in rql('DISTINCT Any ET,ETN WHERE S state_of ET, ET name ETN',
