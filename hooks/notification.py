@@ -20,7 +20,7 @@ class RenderAndSendNotificationView(hook.Operation):
         view = self.view
         if view.cw_rset is not None and not view.cw_rset:
             return # entity added and deleted in the same transaction (cache effect)
-        if view.cw_rset and self.session.deleted_in_transaction(view.cw_rset[cw_rset.cw_row or 0][cw_rset.cw_col or 0]):
+        if view.cw_rset and self.session.deleted_in_transaction(view.cw_rset[view.cw_row or 0][view.cw_col or 0]):
             return # entity added and deleted in the same transaction
         self.view.render_and_send(**getattr(self, 'viewargs', {}))
 
