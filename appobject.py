@@ -372,11 +372,11 @@ class AppObject(object):
     def limited_rql(self):
         return self.rset.limited_rql()
 
-    @deprecated('[3.6] use self.rset.complete_entity(row,col) instead')
+    @deprecated('[3.6] use self.cw_rset.complete_entity(row,col) instead')
     def complete_entity(self, row, col=0, skip_bytes=True):
         return self.rset.complete_entity(row, col, skip_bytes)
 
-    @deprecated('[3.6] use self.rset.get_entity(row,col) instead')
+    @deprecated('[3.6] use self.cw_rset.get_entity(row,col) instead')
     def entity(self, row, col=0):
         return self.rset.get_entity(row, col)
 
