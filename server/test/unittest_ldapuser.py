@@ -247,7 +247,9 @@ class LDAPUserSourceTC(CubicWebTC):
 
     def test_cd_restriction(self):
         rset = self.sexecute('CWUser X WHERE X creation_date > "2009-02-01"')
-        self.assertEquals(len(rset), 2) # admin/anon but no ldap user since it doesn't support creation_date
+        # admin/anon but no ldap user since it doesn't support creation_date
+        self.assertEquals(sorted(e.login for e in rset.entities()),
+                          ['admin', 'anon'])
 
     def test_union(self):
         afeids = self.sexecute('State X')
