@@ -70,8 +70,8 @@ class RecipientsFinderTC(CubicWebTC):
 class StatusChangeViewsTC(CubicWebTC):
 
     def test_status_change_view(self):
-        req = self.session()
-        u = self.create_user('toto', req=req, commit=False)
+        req = self.request()
+        u = self.create_user('toto', req=req)
         u.fire_transition('deactivate', comment=u'yeah')
         self.failIf(MAILBOX)
         self.commit()
