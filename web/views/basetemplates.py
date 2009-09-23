@@ -43,7 +43,7 @@ class LogInOutTemplate(MainTemplate):
 
 
 class LogInTemplate(LogInOutTemplate):
-    id = 'login'
+    __regid__ = 'login'
     title = 'log in'
 
     def content(self, w):
@@ -51,7 +51,7 @@ class LogInTemplate(LogInOutTemplate):
 
 
 class LoggedOutTemplate(LogInOutTemplate):
-    id = 'loggedout'
+    __regid__ = 'loggedout'
     title = 'logged out'
 
     def content(self, w):
@@ -78,7 +78,7 @@ def templatable_view(cls, req, rset, *args, **kwargs):
 
 class NonTemplatableViewTemplate(MainTemplate):
     """main template for any non templatable views (xml, binaries, etc.)"""
-    id = 'main-template'
+    __regid__ = 'main-template'
     __select__ = ~templatable_view()
 
     def call(self, view):
@@ -101,7 +101,7 @@ class TheMainTemplate(MainTemplate):
 
     - call header / footer templates
     """
-    id = 'main-template'
+    __regid__ = 'main-template'
     __select__ = templatable_view()
 
     def call(self, view):
@@ -193,7 +193,7 @@ class ErrorTemplate(TheMainTemplate):
     main template. This template may be called for authentication error,
     which means that req.cnx and req.user may not be set.
     """
-    id = 'error-template'
+    __regid__ = 'error-template'
 
     def call(self):
         """display an unexpected error"""
@@ -222,7 +222,7 @@ class ErrorTemplate(TheMainTemplate):
 
 class SimpleMainTemplate(TheMainTemplate):
 
-    id = 'main-no-top'
+    __regid__ = 'main-no-top'
 
     def template_header(self, content_type, view=None, page_title='', additional_headers=()):
         page_title = page_title or view.page_title()
@@ -273,7 +273,7 @@ if can_do_pdf_conversion():
     from cubicweb.ext.xhtml2fo import ReportTransformer
 
     class PdfMainTemplate(TheMainTemplate):
-        id = 'pdf-main-template'
+        __regid__ = 'pdf-main-template'
 
         def call(self, view):
             """build the standard view, then when it's all done, convert xhtml to pdf
@@ -308,7 +308,7 @@ if can_do_pdf_conversion():
 
 class HTMLHeader(View):
     """default html headers"""
-    id = 'htmlheader'
+    __regid__ = 'htmlheader'
 
     def call(self, **kwargs):
         self.favicon()
@@ -352,7 +352,7 @@ class HTMLHeader(View):
 
 class HTMLPageHeader(View):
     """default html page header"""
-    id = 'header'
+    __regid__ = 'header'
     main_cell_components = ('appliname', 'breadcrumbs')
 
     def call(self, view, **kwargs):
@@ -419,7 +419,7 @@ class HTMLPageHeader(View):
 class HTMLPageFooter(View):
     """default html page footer: include logo if any, and close the HTML body
     """
-    id = 'footer'
+    __regid__ = 'footer'
 
     def call(self, **kwargs):
         req = self.req
@@ -440,7 +440,7 @@ class HTMLContentHeader(View):
     * include message component if selectable for this request
     * include selectable content navigation components
     """
-    id = 'contentheader'
+    __regid__ = 'contentheader'
 
     def call(self, view, **kwargs):
         """by default, display informal messages in content header"""
@@ -457,7 +457,7 @@ class HTMLContentFooter(View):
     """default html page content footer: include selectable content navigation
     components
     """
-    id = 'contentfooter'
+    __regid__ = 'contentfooter'
 
     def call(self, view, **kwargs):
         components = self.vreg['contentnavigation'].poss_visible_objects(
@@ -470,7 +470,7 @@ class HTMLContentFooter(View):
 
 
 class LogFormTemplate(View):
-    id = 'logform'
+    __regid__ = 'logform'
     __select__ = match_kwargs('id', 'klass')
 
     title = 'log in'

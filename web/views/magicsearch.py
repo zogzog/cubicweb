@@ -15,7 +15,7 @@ from logging import getLogger
 from rql import RQLSyntaxError, BadRQLQuery, parse
 from rql.nodes import Relation
 
-from cubicweb import Unauthorized
+from cubicweb import Unauthorized, typed_eid
 from cubicweb.view import Component
 
 LOGGER = getLogger('cubicweb.magicsearch')
@@ -135,7 +135,7 @@ def trmap(config, schema, lang):
 
 class BaseQueryProcessor(Component):
     __abstract__ = True
-    id = 'magicsearch_processor'
+    __regid__ = 'magicsearch_processor'
     # set something if you want explicit component search facility for the
     # component
     name = None
@@ -239,7 +239,7 @@ class QSPreProcessor(BaseQueryProcessor):
         """
         # if this is an integer, then directly go to eid
         try:
-            eid = int(word)
+            eid = typed_eid(word)
             return 'Any X WHERE X eid %(x)s', {'x': eid}, 'x'
         except ValueError:
             etype = self._get_entity_type(word)

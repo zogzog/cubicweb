@@ -58,7 +58,7 @@ OWL_CLOSING_ROOT = u'</rdf:RDF>'
 
 class OWLView(StartupView):
     """This view export in owl format schema database. It is the TBOX"""
-    id = 'owl'
+    __regid__ = 'owl'
     title = _('owl')
     templatable = False
     content_type = 'application/xml' # 'text/xml'
@@ -145,7 +145,7 @@ class OWLView(StartupView):
 
 class OWLABOXView(EntityView):
     '''This view represents a part of the ABOX for a given entity.'''
-    id = 'owlabox'
+    __regid__ = 'owlabox'
     title = _('owlabox')
     templatable = False
     content_type = 'application/xml' # 'text/xml'
@@ -162,7 +162,7 @@ class OWLABOXView(EntityView):
 
 class OWLABOXItemView(EntityView):
     '''This view represents a part of the ABOX for a given entity.'''
-    id = 'owlaboxitem'
+    __regid__ = 'owlaboxitem'
     templatable = False
     content_type = 'application/xml' # 'text/xml'
 
@@ -201,7 +201,7 @@ class OWLABOXItemView(EntityView):
 
 
 class DownloadOWLSchemaAction(Action):
-    id = 'download_as_owl'
+    __regid__ = 'download_as_owl'
     __select__ = none_rset() & match_view('schema')
 
     category = 'mainactions'

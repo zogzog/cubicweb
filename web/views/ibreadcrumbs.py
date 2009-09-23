@@ -20,7 +20,7 @@ from cubicweb.common import tags, uilib
 
 
 class BreadCrumbEntityVComponent(Component):
-    id = 'breadcrumbs'
+    __regid__ = 'breadcrumbs'
     __select__ = one_line_rset() & implements(IBreadCrumbs)
 
     property_defs = {
@@ -94,7 +94,7 @@ class BreadCrumbAnyRSetVComponent(BreadCrumbEntityVComponent):
 
 
 class BreadCrumbView(EntityView):
-    id = 'breadcrumbs'
+    __regid__ = 'breadcrumbs'
 
     def cell_call(self, row, col):
         entity = self.rset.get_entity(row, col)
@@ -105,7 +105,7 @@ class BreadCrumbView(EntityView):
 
 
 class BreadCrumbTextView(EntityView):
-    id = 'breadcrumbtext'
+    __regid__ = 'breadcrumbtext'
 
     def cell_call(self, row, col):
         entity = self.rset.get_entity(row, col)

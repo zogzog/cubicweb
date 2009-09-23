@@ -16,7 +16,7 @@ from cubicweb.web.views.xmlrss import XMLView
 
 
 class XbelView(XMLView):
-    id = 'xbel'
+    __regid__ = 'xbel'
     title = _('xbel')
     templatable = False
     content_type = 'text/xml' #application/xbel+xml
@@ -38,7 +38,7 @@ class XbelView(XMLView):
 
 
 class XbelItemView(EntityView):
-    id = 'xbelitem'
+    __regid__ = 'xbelitem'
 
     def cell_call(self, row, col):
         entity = self.complete_entity(row, col)

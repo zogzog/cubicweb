@@ -42,7 +42,7 @@ _afs.tag_object_of(('State', 'allowed_transition', '*'), 'primary')
 # IWorkflowable views #########################################################
 
 class ChangeStateForm(forms.CompositeEntityForm):
-    id = 'changestate'
+    __regid__ = 'changestate'
 
     form_renderer_id = 'base' # don't want EntityFormRenderer
     form_buttons = [fwdgs.SubmitButton(stdmsgs.YES),
@@ -50,7 +50,7 @@ class ChangeStateForm(forms.CompositeEntityForm):
 
 
 class ChangeStateFormView(form.FormViewMixIn, view.EntityView):
-    id = 'statuschange'
+    __regid__ = 'statuschange'
     title = _('status change')
     __select__ = (one_line_rset() & implements(IWorkflowable)
                   & match_form_params('treid'))
@@ -88,7 +88,7 @@ class ChangeStateFormView(form.FormViewMixIn, view.EntityView):
 
 
 class WFHistoryView(EntityView):
-    id = 'wfhistory'
+    __regid__ = 'wfhistory'
     __select__ = relation_possible('wf_info_for', role='object')
     title = _('Workflow history')
 
@@ -121,7 +121,7 @@ class WFHistoryView(EntityView):
 
 class WFHistoryVComponent(component.EntityVComponent):
     """display the workflow history for entities supporting it"""
-    id = 'wfhistory'
+    __regid__ = 'wfhistory'
     __select__ = WFHistoryView.__select__ & component.EntityVComponent.__select__
     context = 'navcontentbottom'
     title = _('Workflow history')
@@ -134,7 +134,7 @@ class WFHistoryVComponent(component.EntityVComponent):
 
 class WorkflowActions(action.Action):
     """fill 'workflow' sub-menu of the actions box"""
-    id = 'workflow'
+    __regid__ = 'workflow'
     __select__ = (action.Action.__select__ & one_line_rset() &
                   relation_possible('in_state'))
 
@@ -166,7 +166,7 @@ class WorkflowActions(action.Action):
 # workflow entity types views ##################################################
 
 class CellView(view.EntityView):
-    id = 'cell'
+    __regid__ = 'cell'
     __select__ = implements('TrInfo')
 
     def cell_call(self, row, col, cellvid=None):
@@ -175,7 +175,7 @@ class CellView(view.EntityView):
 
 class StateInContextView(view.EntityView):
     """convenience trick, State's incontext view should not be clickable"""
-    id = 'incontext'
+    __regid__ = 'incontext'
     __select__ = implements('State')
 
     def cell_call(self, row, col):
@@ -250,9 +250,9 @@ class WorkflowVisitor:
 
 
 class WorkflowImageView(TmpFileViewMixin, view.EntityView):
-    id = 'wfgraph'
-    content_type = 'image/png'
+    __regid__ = 'wfgraph'
     __select__ = implements('Workflow')
+    content_type = 'image/png'
 
     def _generate(self, tmpfile):
         """display schema information for an entity"""

@@ -27,7 +27,7 @@ class SearchForAssociationView(EntityView):
     """view called by the edition view when the user asks to search for
     something to link to the edited eid
     """
-    id = 'search-associate'
+    __regid__ = 'search-associate'
     __select__ = (one_line_rset() & match_search_state('linksearch')
                   & non_final_entity())
 
@@ -58,7 +58,7 @@ class SearchForAssociationView(EntityView):
 
 
 class OutOfContextSearch(EntityView):
-    id = 'outofcontext-search'
+    __regid__ = 'outofcontext-search'
     def cell_call(self, row, col):
         entity = self.rset.get_entity(row, col)
         erset = entity.as_rset()
@@ -74,7 +74,7 @@ class OutOfContextSearch(EntityView):
 
 
 class UnrelatedDivs(EntityView):
-    id = 'unrelateddivs'
+    __regid__ = 'unrelateddivs'
     __select__ = match_form_params('relation')
 
     def cell_call(self, row, col):
@@ -184,7 +184,7 @@ class ComboboxView(EntityView):
 
     THIS IS A TEXT VIEW. DO NOT HTML_ESCAPE
     """
-    id = 'combobox'
+    __regid__ = 'combobox'
     title = None
 
     def cell_call(self, row, col):
@@ -196,7 +196,7 @@ class ComboboxView(EntityView):
 
 class EditableFinalView(FinalView):
     """same as FinalView but enables inplace-edition when possible"""
-    id = 'editable-final'
+    __regid__ = 'editable-final'
 
     def cell_call(self, row, col, props=None):
         entity, rtype = self.rset.related_entity(row, col)

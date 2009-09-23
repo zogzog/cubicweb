@@ -19,7 +19,7 @@ from cubicweb.common.mixins import MI_REL_TRIGGERS
 class WorkflowException(Exception): pass
 
 class Workflow(AnyEntity):
-    id = 'Workflow'
+    __regid__ = 'Workflow'
 
     @property
     def initial(self):
@@ -156,11 +156,11 @@ class BaseTransition(AnyEntity):
     provides a specific may_be_fired method to check if the relation may be
     fired by the logged user
     """
-    id = 'BaseTransition'
+    __regid__ = 'BaseTransition'
     fetch_attrs, fetch_order = fetch_config(['name'])
 
     def __init__(self, *args, **kwargs):
-        if self.id == 'BaseTransition':
+        if self.__regid__ == 'BaseTransition':
             raise WorkflowException('should not be instantiated')
         super(BaseTransition, self).__init__(*args, **kwargs)
 
@@ -233,7 +233,7 @@ class BaseTransition(AnyEntity):
 
 class Transition(BaseTransition):
     """customized class for Transition entities"""
-    id = 'Transition'
+    __regid__ = 'Transition'
 
     def destination(self):
         return self.destination_state[0]
@@ -241,7 +241,7 @@ class Transition(BaseTransition):
 
 class WorkflowTransition(BaseTransition):
     """customized class for WorkflowTransition entities"""
-    id = 'WorkflowTransition'
+    __regid__ = 'WorkflowTransition'
 
     @property
     def subwf(self):
@@ -284,7 +284,7 @@ class WorkflowTransition(BaseTransition):
 
 class SubWorkflowExitPoint(AnyEntity):
     """customized class for SubWorkflowExitPoint entities"""
-    id = 'SubWorkflowExitPoint'
+    __regid__ = 'SubWorkflowExitPoint'
 
     @property
     def subwf_state(self):
@@ -297,7 +297,7 @@ class SubWorkflowExitPoint(AnyEntity):
 
 class State(AnyEntity):
     """customized class for State entities"""
-    id = 'State'
+    __regid__ = 'State'
     fetch_attrs, fetch_order = fetch_config(['name'])
     rest_attr = 'eid'
 
@@ -318,7 +318,7 @@ class State(AnyEntity):
 class TrInfo(AnyEntity):
     """customized class for Transition information entities
     """
-    id = 'TrInfo'
+    __regid__ = 'TrInfo'
     fetch_attrs, fetch_order = fetch_config(['creation_date', 'comment'],
                                             pclass=None) # don't want modification_date
     @property

@@ -65,7 +65,7 @@ class CWPropertyPrimaryView(primary.PrimaryView):
 
 class SystemCWPropertiesForm(FormViewMixIn, StartupView):
     """site-wide properties edition form"""
-    id = 'systempropertiesform'
+    __regid__ = 'systempropertiesform'
     __select__ = none_rset() & match_user_groups('managers')
 
     title = _('site configuration')
@@ -227,7 +227,7 @@ def is_user_prefs(cls, req, rset=None, row=None, col=0, **kwargs):
 
 class CWPropertiesForm(SystemCWPropertiesForm):
     """user's preferences properties edition form"""
-    id = 'propertiesform'
+    __regid__ = 'propertiesform'
     __select__ = (
         (none_rset() & match_user_groups('users','managers'))
         | (one_line_rset() & match_user_groups('users') & is_user_prefs())
@@ -360,7 +360,7 @@ uicfg.autoform_field.tag_attribute(('CWProperty', 'value'), PropertyValueField)
 
 class CWPropertiesFormRenderer(formrenderers.FormRenderer):
     """specific renderer for properties"""
-    id = 'cwproperties'
+    __regid__ = 'cwproperties'
 
     def open_form(self, form, values):
         err = '<div class="formsg"></div>'

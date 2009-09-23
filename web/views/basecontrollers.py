@@ -64,7 +64,7 @@ def check_pageid(func):
 
 
 class LoginController(Controller):
-    id = 'login'
+    __regid__ = 'login'
 
     def publish(self, rset=None):
         """log in the instance"""
@@ -77,7 +77,7 @@ class LoginController(Controller):
 
 
 class LogoutController(Controller):
-    id = 'logout'
+    __regid__ = 'logout'
 
     def publish(self, rset=None):
         """logout from the instance"""
@@ -89,7 +89,7 @@ class ViewController(Controller):
     - build result set
     - select and call main template
     """
-    id = 'view'
+    __regid__ = 'view'
     template = 'main-template'
 
     def publish(self, rset=None):
@@ -208,7 +208,7 @@ def _validate_form(req, vreg):
 
 
 class FormValidatorController(Controller):
-    id = 'validateform'
+    __regid__ = 'validateform'
 
     def response(self, domid, status, args, entity):
         callback = str(self.req.form.get('__onsuccess', 'null'))
@@ -232,7 +232,7 @@ class FormValidatorController(Controller):
 
 
 class JSonController(Controller):
-    id = 'json'
+    __regid__ = 'json'
 
     def publish(self, rset=None):
         """call js_* methods. Expected form keys:
@@ -539,7 +539,7 @@ class JSonController(Controller):
 
 
 class SendMailController(Controller):
-    id = 'sendmail'
+    __regid__ = 'sendmail'
     __select__ = match_user_groups('managers', 'users')
 
     def recipients(self):
@@ -588,7 +588,7 @@ class SendMailController(Controller):
 
 
 class MailBugReportController(SendMailController):
-    id = 'reportbug'
+    __regid__ = 'reportbug'
     __select__ = yes()
 
     def publish(self, rset=None):

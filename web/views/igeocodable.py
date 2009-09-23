@@ -14,12 +14,12 @@ from cubicweb.view import EntityView
 from cubicweb.selectors import implements
 
 class GeocodingJsonView(EntityView):
-    id = 'geocoding-json'
+    __regid__ = 'geocoding-json'
+    __select__ = implements(IGeocodable)
+
     binary = True
     templatable = False
     content_type = 'application/json'
-
-    __select__ = implements(IGeocodable)
 
     def call(self):
         # remove entities that don't define latitude and longitude
@@ -57,8 +57,7 @@ class GeocodingJsonView(EntityView):
 
 
 class GoogleMapBubbleView(EntityView):
-    id = 'gmap-bubble'
-
+    __regid__ = 'gmap-bubble'
     __select__ = implements(IGeocodable)
 
     def cell_call(self, row, col):
@@ -68,9 +67,9 @@ class GoogleMapBubbleView(EntityView):
 
 
 class GoogleMapsView(EntityView):
-    id = 'gmap-view'
-
+    __regid__ = 'gmap-view'
     __select__ = implements(IGeocodable)
+
     need_navigation = False
 
     def call(self, gmap_key, width=400, height=400, uselabel=True, urlparams=None):
@@ -91,7 +90,7 @@ class GoogleMapsView(EntityView):
 
 
 class GoogeMapsLegend(EntityView):
-    id = 'gmap-legend'
+    __regid__ = 'gmap-legend'
 
     def call(self):
         self.w(u'<ol>')

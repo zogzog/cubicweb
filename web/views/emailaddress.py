@@ -55,7 +55,7 @@ class EmailAddressPrimaryView(primary.PrimaryView):
 
 class EmailAddressShortPrimaryView(EmailAddressPrimaryView):
     __select__ = implements('EmailAddress')
-    id = 'shortprimary'
+    __regid__ = 'shortprimary'
     title = None # hidden view
 
     def render_entity_attributes(self, entity):
@@ -85,7 +85,7 @@ class EmailAddressMailToView(baseviews.OneLineView):
     """A one line view that builds a user clickable URL for an email with
     'mailto:'"""
 
-    id = 'mailto'
+    __regid__ = 'mailto'
     __select__ = implements('EmailAddress')
 
     def cell_call(self, row, col, **kwargs):

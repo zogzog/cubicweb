@@ -29,7 +29,7 @@ def contextview_selector(cls, req, rset=None, row=None, col=None, view=None,
 
 class FilterBox(BoxTemplate):
     """filter results of a query"""
-    id = 'filter_box'
+    __regid__ = 'filter_box'
     __select__ = (((non_final_entity() & two_lines_rset())
                    | contextview_selector()
                    ) & match_context_prop())
@@ -125,23 +125,23 @@ class FilterBox(BoxTemplate):
 # facets ######################################################################
 
 class CreatedByFacet(RelationFacet):
-    id = 'created_by-facet'
+    __regid__ = 'created_by-facet'
     rtype = 'created_by'
     target_attr = 'login'
 
 class InGroupFacet(RelationFacet):
-    id = 'in_group-facet'
+    __regid__ = 'in_group-facet'
     rtype = 'in_group'
     target_attr = 'name'
 
 class InStateFacet(RelationFacet):
-    id = 'in_state-facet'
+    __regid__ = 'in_state-facet'
     rtype = 'in_state'
     target_attr = 'name'
 
 # inherit from RelationFacet to benefit from its possible_values implementation
 class ETypeFacet(RelationFacet):
-    id = 'etype-facet'
+    __regid__ = 'etype-facet'
     __select__ = yes()
     order = 1
     rtype = 'is'
@@ -182,7 +182,7 @@ class ETypeFacet(RelationFacet):
 
 class HasTextFacet(AbstractFacet):
     __select__ = relation_possible('has_text', 'subject') & match_context_prop()
-    id = 'has_text-facet'
+    __regid__ = 'has_text-facet'
     rtype = 'has_text'
     role = 'subject'
     order = 0

@@ -44,7 +44,7 @@ try:
         content_type = 'text/calendar'
         title = _('iCalendar')
         templatable = False
-        id = 'ical'
+        __regid__ = 'ical'
 
         def call(self):
             ical = iCalendar()
@@ -71,7 +71,7 @@ class hCalView(EntityView):
 
     Does apply to ICalendarable compatible entities
     """
-    id = 'hcal'
+    __regid__ = 'hcal'
     __select__ = implements(ICalendarable)
     need_navigation = False
     title = _('hCalendar')
@@ -94,7 +94,7 @@ class hCalView(EntityView):
 
 
 class CalendarItemView(EntityView):
-    id = 'calendaritem'
+    __regid__ = 'calendaritem'
 
     def cell_call(self, row, col, dates=False):
         task = self.complete_entity(row)
@@ -106,7 +106,7 @@ class CalendarItemView(EntityView):
                 self.w('<br/>to %s'%self.format_date(task.stop))
 
 class CalendarLargeItemView(CalendarItemView):
-    id = 'calendarlargeitem'
+    __regid__ = 'calendarlargeitem'
 
 
 class _TaskEntry(object):
@@ -129,7 +129,7 @@ class _TaskEntry(object):
 
 class OneMonthCal(EntityView):
     """At some point, this view will probably replace ampm calendars"""
-    id = 'onemonthcal'
+    __regid__ = 'onemonthcal'
     __select__ = implements(ICalendarable)
     need_navigation = False
     title = _('one month')
@@ -320,7 +320,7 @@ class OneMonthCal(EntityView):
 
 class OneWeekCal(EntityView):
     """At some point, this view will probably replace ampm calendars"""
-    id = 'oneweekcal'
+    __regid__ = 'oneweekcal'
     __select__ = implements(ICalendarable)
     need_navigation = False
     title = _('one week')

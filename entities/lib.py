@@ -24,7 +24,7 @@ def mangle_email(address):
     return '%s at %s' % (name, host.replace('.', ' dot '))
 
 class EmailAddress(AnyEntity):
-    id = 'EmailAddress'
+    __regid__ = 'EmailAddress'
     fetch_attrs, fetch_order = fetch_config(['address', 'alias'])
 
     def dc_title(self):
@@ -84,7 +84,7 @@ class EmailAddress(AnyEntity):
 
 class Bookmark(AnyEntity):
     """customized class for Bookmark entities"""
-    id = 'Bookmark'
+    __regid__ = 'Bookmark'
     fetch_attrs, fetch_order = fetch_config(['title', 'path'])
 
     def actual_url(self):
@@ -103,7 +103,7 @@ class Bookmark(AnyEntity):
 
 
 class CWProperty(AnyEntity):
-    id = 'CWProperty'
+    __regid__ = 'CWProperty'
 
     fetch_attrs, fetch_order = fetch_config(['pkey', 'value'])
     rest_attr = 'pkey'
@@ -126,7 +126,7 @@ class CWProperty(AnyEntity):
 
 class CWCache(AnyEntity):
     """Cache"""
-    id = 'CWCache'
+    __regid__ = 'CWCache'
     fetch_attrs, fetch_order = fetch_config(['name'])
 
     def touch(self):

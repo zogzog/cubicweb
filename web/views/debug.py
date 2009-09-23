@@ -26,7 +26,7 @@ def dict_to_html(w, dict):
 
 
 class DebugView(StartupView):
-    id = 'debug'
+    __regid__ = 'debug'
     __select__ = none_rset() & match_user_groups('managers')
     title = _('server debug information')
 
@@ -60,3 +60,27 @@ class DebugView(StartupView):
             w(u'</ul>')
         else:
             w(u'<p>no web sessions found</p>')
+
+
+class RegistryView(StartupView):
+    __regid__ = 'registry'
+    __select__ = StartupView.__select__ & match_user_groups('managers')
+    title = _('registry')
+
+    def call(self, **kwargs):
+        """The default view representing the instance's management"""
+        self.w(u'<h1>%s</h1>' % _("Registry's content"))
+        keys = sorted(self.vreg)
+        self.w(u'<p>%s</p>\n' % ' - '.join('<a href="/_registry#%s">%s</a>'
+                                           % (key, key) for key in keys))
+        for key in keys:
+            self.w(u'<h2><a name="%s">%s</a></h2>' % (key,key))
+            items = self.vreg[key].items()
+            if items:
+                self.w(u'<table><tbody>')
+                for key, value in sorted(items):
+                    self.w(u'<tr><td>%s</td><td>%s</td></tr>'
+                           % (key, xml_escape(repr(value))))
+                self.w(u'</tbody></table>\n')
+            else:
+                self.w(u'<p>Empty</p>\n')

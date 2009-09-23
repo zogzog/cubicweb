@@ -54,7 +54,7 @@ class FieldsForm(form.Form):
 
     * `fieldsets_in_order`: fieldset name sequence, to control order
     """
-    id = 'base'
+    __regid__ = 'base'
 
     is_subform = False
     internal_fields = ('__errorurl',) + NAV_FORM_PARAMETERS
@@ -288,7 +288,7 @@ class FieldsForm(form.Form):
 
 
 class EntityFieldsForm(FieldsForm):
-    id = 'base'
+    __regid__ = 'base'
     __select__ = (match_kwargs('entity')
                   | (one_line_rset() & non_final_entity()))
 
@@ -541,7 +541,7 @@ class EntityFieldsForm(FieldsForm):
 
 class CompositeForm(FieldsForm):
     """form composed of sub-forms"""
-    id = 'composite'
+    __regid__ = 'composite'
     form_renderer_id = id
 
     def __init__(self, *args, **kwargs):
@@ -556,7 +556,7 @@ class CompositeForm(FieldsForm):
 
 class CompositeEntityForm(EntityFieldsForm):
     """form composed of sub-forms"""
-    id = 'composite'
+    __regid__ = 'composite'
     form_renderer_id = id
 
     def __init__(self, *args, **kwargs):

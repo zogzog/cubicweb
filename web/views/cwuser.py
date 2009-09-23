@@ -17,7 +17,7 @@ from cubicweb.web.views import primary
 uicfg.primaryview_section.tag_attribute(('CWUser', 'login'), 'hidden')
 
 class UserPreferencesEntityAction(action.Action):
-    id = 'prefs'
+    __regid__ = 'prefs'
     __select__ = (one_line_rset() & implements('CWUser') &
                   match_user_groups('owners', 'managers'))
 
@@ -30,7 +30,7 @@ class UserPreferencesEntityAction(action.Action):
 
 
 class FoafView(EntityView):
-    id = 'foaf'
+    __regid__ = 'foaf'
     __select__ = implements('CWUser')
 
     title = _('foaf')

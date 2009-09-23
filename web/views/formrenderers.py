@@ -39,7 +39,7 @@ class FormRenderer(AppObject):
     +---------+
     """
     __registry__ = 'formrenderers'
-    id = 'default'
+    __regid__ = 'default'
 
     _options = ('display_fields', 'display_label', 'display_help',
                 'display_progress_div', 'table_class', 'button_bar_class',
@@ -246,7 +246,7 @@ class BaseFormRenderer(FormRenderer):
     """use form_renderer_id = 'base' if you want base FormRenderer layout even
     when selected for an entity
     """
-    id = 'base'
+    __regid__ = 'base'
 
 
 class EntityBaseFormRenderer(BaseFormRenderer):
@@ -275,7 +275,7 @@ class HTableFormRenderer(FormRenderer):
     | field1 input | field2 input | buttons
     +--------------+--------------+---------+
     """
-    id = 'htable'
+    __regid__ = 'htable'
 
     display_help = False
     def _render_fields(self, fields, w, form):
@@ -312,7 +312,7 @@ class HTableFormRenderer(FormRenderer):
 
 class EntityCompositeFormRenderer(FormRenderer):
     """specific renderer for multiple entities edition form (muledit)"""
-    id = 'composite'
+    __regid__ = 'composite'
 
     _main_display_fields = None
 
@@ -372,7 +372,7 @@ class EntityCompositeFormRenderer(FormRenderer):
 
 class EntityFormRenderer(EntityBaseFormRenderer):
     """specific renderer for entity edition form (edition)"""
-    id = 'default'
+    __regid__ = 'default'
     # needs some additional points in some case (XXX explain cases)
     __select__ = EntityBaseFormRenderer.__select__ & yes()
 
@@ -532,7 +532,7 @@ class EntityInlinedFormRenderer(EntityFormRenderer):
     """specific renderer for entity inlined edition form
     (inline-[creation|edition])
     """
-    id = 'inline'
+    __regid__ = 'inline'
 
     def render(self, form, values):
         form.add_media()

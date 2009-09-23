@@ -82,8 +82,8 @@ def filter_changes(changes):
 class SupervisionEmailView(Component):
     """view implementing the email API for data changes supervision notification
     """
+    __regid__ = 'supervision_notif'
     __select__ = none_rset()
-    id = 'supervision_notif'
 
     def recipients(self):
         return self.config['supervising-addrs']

@@ -22,7 +22,7 @@ class AnyEntity(Entity):
     """an entity instance has e_schema automagically set on the class and
     instances have access to their issuing cursor
     """
-    id = 'Any'
+    __regid__ = 'Any'
     __implements__ = (IBreadCrumbs, IFeed)
 
     fetch_attrs = ('modification_date',)

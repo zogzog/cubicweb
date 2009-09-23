@@ -14,7 +14,7 @@ from cubicweb.selectors import implements
 from cubicweb.interfaces import ISiocItem, ISiocContainer
 
 class SIOCView(EntityView):
-    id = 'sioc'
+    __regid__ = 'sioc'
     __select__ = EntityView.__select__ & implements(ISiocItem, ISiocContainer)
     title = _('sioc')
     templatable = False
@@ -38,7 +38,7 @@ class SIOCView(EntityView):
         self.wview('sioc_element', self.rset, row=row, col=col)
 
 class SIOCContainerView(EntityView):
-    id = 'sioc_element'
+    __regid__ = 'sioc_element'
     __select__ = EntityView.__select__ & implements(ISiocContainer)
     templatable = False
     content_type = 'text/xml'
@@ -59,7 +59,7 @@ class SIOCContainerView(EntityView):
 
 
 class SIOCItemView(EntityView):
-    id = 'sioc_element'
+    __regid__ = 'sioc_element'
     __select__ = EntityView.__select__ & implements(ISiocItem)
     templatable = False
     content_type = 'text/xml'

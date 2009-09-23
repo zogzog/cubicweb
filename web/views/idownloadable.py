@@ -42,7 +42,7 @@ def download_box(w, entity, title=None, label=None):
 
 
 class DownloadBox(EntityBoxTemplate):
-    id = 'download_box'
+    __regid__ = 'download_box'
     # no download box for images
     # XXX primary_view selector ?
     __select__ = (one_line_rset() & implements(IDownloadable) &
@@ -58,7 +58,7 @@ class DownloadView(EntityView):
     """this view is replacing the deprecated 'download' controller and allow
     downloading of entities providing the necessary interface
     """
-    id = 'download'
+    __regid__ = 'download'
     __select__ = one_line_rset() & implements(IDownloadable)
 
     templatable = False
@@ -85,7 +85,7 @@ class DownloadView(EntityView):
 
 class DownloadLinkView(EntityView):
     """view displaying a link to download the file"""
-    id = 'downloadlink'
+    __regid__ = 'downloadlink'
     __select__ = implements(IDownloadable)
     title = None # should not be listed in possible views
 
@@ -132,7 +132,7 @@ class IDownloadableLineView(baseviews.OneLineView):
 
 
 class ImageView(EntityView):
-    id = 'image'
+    __regid__ = 'image'
     __select__ = implements(IDownloadable) & score_entity(is_image)
 
     title = _('image')

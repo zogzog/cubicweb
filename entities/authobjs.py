@@ -13,7 +13,7 @@ from cubicweb import Unauthorized
 from cubicweb.entities import AnyEntity, fetch_config
 
 class CWGroup(AnyEntity):
-    id = 'CWGroup'
+    __regid__ = 'CWGroup'
     fetch_attrs, fetch_order = fetch_config(['name'])
     fetch_unrelated_order = fetch_order
 
@@ -22,7 +22,7 @@ class CWGroup(AnyEntity):
         return self.get('name')
 
 class CWUser(AnyEntity):
-    id = 'CWUser'
+    __regid__ = 'CWUser'
     fetch_attrs, fetch_order = fetch_config(['login', 'firstname', 'surname'])
     fetch_unrelated_order = fetch_order
 

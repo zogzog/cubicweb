@@ -162,7 +162,7 @@ class _CalendarView(EntityView):
 
 
 class YearCalendarView(_CalendarView):
-    id = 'calendaryear'
+    __regid__ = 'calendaryear'
     title = _('calendar (year)')
 
     def call(self, year=None, month=None):
@@ -181,7 +181,7 @@ class SemesterCalendarView(_CalendarView):
     """this view renders three semesters as three rows of six columns,
     one column per month
     """
-    id = 'calendarsemester'
+    __regid__ = 'calendarsemester'
     title = _('calendar (semester)')
 
     def call(self, year=None, month=None):
@@ -229,7 +229,7 @@ class SemesterCalendarView(_CalendarView):
 
 class MonthCalendarView(_CalendarView):
     """this view renders a 3x1 calendars' table"""
-    id = 'calendarmonth'
+    __regid__ = 'calendarmonth'
     title = _('calendar (month)')
 
     def call(self, year=None, month=None):
@@ -246,7 +246,7 @@ class MonthCalendarView(_CalendarView):
 
 class WeekCalendarView(_CalendarView):
     """this view renders a calendar for week events"""
-    id = 'calendarweek'
+    __regid__ = 'calendarweek'
     title = _('calendar (week)')
 
     def call(self, year=None, week=None):
@@ -303,7 +303,7 @@ class WeekCalendarView(_CalendarView):
 
 
 class AMPMYearCalendarView(YearCalendarView):
-    id = 'ampmcalendaryear'
+    __regid__ = 'ampmcalendaryear'
     title = _('am/pm calendar (year)')
 
     def build_calendar(self, schedule, first_day):
@@ -357,7 +357,7 @@ class AMPMYearCalendarView(YearCalendarView):
 
 class AMPMSemesterCalendarView(SemesterCalendarView):
     """this view renders a 3x1 calendars' table"""
-    id = 'ampmcalendarsemester'
+    __regid__ = 'ampmcalendarsemester'
     title = _('am/pm calendar (semester)')
 
     def build_calendars(self, schedule, begin, end):
@@ -394,7 +394,7 @@ class AMPMSemesterCalendarView(SemesterCalendarView):
 
 class AMPMMonthCalendarView(MonthCalendarView):
     """this view renders a 3x1 calendars' table"""
-    id = 'ampmcalendarmonth'
+    __regid__ = 'ampmcalendarmonth'
     title = _('am/pm calendar (month)')
 
     def build_calendar(self, schedule, first_day):
@@ -450,7 +450,7 @@ class AMPMMonthCalendarView(MonthCalendarView):
 
 class AMPMWeekCalendarView(WeekCalendarView):
     """this view renders a 3x1 calendars' table"""
-    id = 'ampmcalendarweek'
+    __regid__ = 'ampmcalendarweek'
     title = _('am/pm calendar (week)')
 
     def build_calendar(self, schedule, weeks):

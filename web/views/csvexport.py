@@ -33,7 +33,7 @@ class CSVMixIn(object):
 
 class CSVRsetView(CSVMixIn, AnyRsetView):
     """dumps raw result set in CSV"""
-    id = 'csvexport'
+    __regid__ = 'csvexport'
     title = _('csv export')
 
     def call(self):
@@ -64,7 +64,7 @@ class CSVEntityView(CSVMixIn, EntityView):
     resultset. ('table' here only means empty lines separation between table
     contents)
     """
-    id = 'ecsvexport'
+    __regid__ = 'ecsvexport'
     title = _('csv entities export')
 
     def call(self):

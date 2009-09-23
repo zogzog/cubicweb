@@ -26,7 +26,7 @@ class RecipientsFinder(Component):
     by default user's with their email set are notified if any, else the default
     email addresses specified in the configuration are used
     """
-    id = 'recipients_finder'
+    __regid__ = 'recipients_finder'
     __select__ = yes()
     user_rql = ('Any X,E,A WHERE X is CWUser, X in_state S, S name "activated",'
                 'X primary_email E, E address A')
@@ -59,7 +59,7 @@ class NotificationView(NotificationView):
 
 
 class StatusChangeMixIn(object):
-    id = 'notif_status_change'
+    __regid__ = 'notif_status_change'
     msgid_timestamp = True
     message = _('status changed')
     content = _("""
@@ -89,7 +89,7 @@ class ContentAddedView(NotificationView):
       override call)
     """
     __abstract__ = True
-    id = 'notif_after_add_entity'
+    __regid__ = 'notif_after_add_entity'
     msgid_timestamp = False
     message = _('new')
     content = """

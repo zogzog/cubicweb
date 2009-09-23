@@ -23,7 +23,7 @@ class ToDoLater(Exception):
     """
 
 class EditController(ViewController):
-    id = 'edit'
+    __regid__ = 'edit'
 
     def publish(self, rset=None):
         """edit / create / copy / delete entity / relations"""

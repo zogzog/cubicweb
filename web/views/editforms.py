@@ -45,7 +45,7 @@ def toggleable_relation_link(eid, nodeid, label='x'):
 
 
 class DeleteConfForm(forms.CompositeForm):
-    id = 'deleteconf'
+    __regid__ = 'deleteconf'
     __select__ = non_final_entity()
 
     domid = 'deleteconf'
@@ -70,7 +70,7 @@ class DeleteConfForm(forms.CompositeForm):
 
 class DeleteConfFormView(FormViewMixIn, EntityView):
     """form used to confirm deletion of some entities"""
-    id = 'deleteconf'
+    __regid__ = 'deleteconf'
     title = _('delete')
     # don't use navigation, all entities asked to be deleted should be displayed
     # else we will only delete the displayed page
@@ -101,7 +101,7 @@ class ClickAndEditFormView(FormViewMixIn, EntityView):
 
     (double-click on the field to see an appropriate edition widget).
     """
-    id = 'doreledit'
+    __regid__ = 'doreledit'
     __select__ = non_final_entity() & match_kwargs('rtype')
     # FIXME editableField class could be toggleable from userprefs
 
@@ -262,7 +262,7 @@ class AutoClickAndEditFormView(ClickAndEditFormView):
     """same as ClickAndEditFormView but checking if the view *should* be applied
     by checking uicfg configuration and composite relation property.
     """
-    id = 'reledit'
+    __regid__ = 'reledit'
 
     def should_edit_relation(self, entity, rschema, role, rvid):
         eschema = entity.e_schema
@@ -282,7 +282,7 @@ class AutoClickAndEditFormView(ClickAndEditFormView):
 
 class EditionFormView(FormViewMixIn, EntityView):
     """display primary entity edition form"""
-    id = 'edition'
+    __regid__ = 'edition'
     # add yes() so it takes precedence over deprecated views in baseforms,
     # though not baseforms based customized view
     __select__ = one_line_rset() & non_final_entity() & yes()
@@ -319,7 +319,7 @@ class EditionFormView(FormViewMixIn, EntityView):
 
 class CreationFormView(EditionFormView):
     """display primary entity creation form"""
-    id = 'creation'
+    __regid__ = 'creation'
     __select__ = specified_etype_implements('Any') & yes()
 
     title = _('creation')
@@ -369,7 +369,7 @@ class CopyFormView(EditionFormView):
     """display primary entity creation form initialized with values from another
     entity
     """
-    id = 'copy'
+    __regid__ = 'copy'
     warning_message = _('Please note that this is only a shallow copy')
 
     def render_form(self, entity):
@@ -405,7 +405,7 @@ class CopyFormView(EditionFormView):
 
 
 class TableEditForm(forms.CompositeForm):
-    id = 'muledit'
+    __regid__ = 'muledit'
     domid = 'entityForm'
     onsubmit = "return validateForm('%s', null);" % domid
     form_buttons = [SubmitButton(_('validate modifications on selected items')),
@@ -425,7 +425,7 @@ class TableEditForm(forms.CompositeForm):
 
 
 class TableEditFormView(FormViewMixIn, EntityView):
-    id = 'muledit'
+    __regid__ = 'muledit'
     __select__ = EntityView.__select__ & yes()
     title = _('multiple edit')
 
@@ -439,7 +439,7 @@ class TableEditFormView(FormViewMixIn, EntityView):
 
 
 class InlineEntityEditionFormView(FormViewMixIn, EntityView):
-    id = 'inline-edition'
+    __regid__ = 'inline-edition'
     __select__ = non_final_entity() & match_kwargs('peid', 'rtype')
     removejs = "removeInlinedEntity('%s', '%s', '%s')"
 
@@ -506,7 +506,7 @@ class InlineEntityEditionFormView(FormViewMixIn, EntityView):
 
 
 class InlineEntityCreationFormView(InlineEntityEditionFormView):
-    id = 'inline-creation'
+    __regid__ = 'inline-creation'
     __select__ = (match_kwargs('peid', 'rtype')
                   & specified_etype_implements('Any'))
     removejs = "removeInlineForm('%s', '%s', '%s')"
