@@ -33,6 +33,7 @@ class SetUseEmailRelationOp(hook.Operation):
                 'SET X %s Y WHERE X eid %%(x)s, Y eid %%(y)s' % self.rtype,
                 {'x': self.entity.eid, 'y': self.email.eid}, 'x')
 
+
 class SetPrimaryEmailRelationOp(SetUseEmailRelationOp):
     rtype = 'primary_email'
 

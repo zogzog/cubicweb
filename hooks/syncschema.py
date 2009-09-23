@@ -871,7 +871,7 @@ class DelCWRTypeHook(SyncSchemaHook):
 
     def __call__(self):
         name = self.entity.name
-        if name in CORE_ETYPES:
+        if name in CORE_RTYPES:
             raise ValidationError(self.entity.eid, {None: self._cw._('can\'t be deleted')})
         # delete relation definitions using this relation type
         self._cw.execute('DELETE CWAttribute X WHERE X relation_type Y, Y eid %(x)s',

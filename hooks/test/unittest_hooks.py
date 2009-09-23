@@ -9,8 +9,8 @@ from logilab.common.testlib import TestCase, unittest_main
 
 from datetime import datetime
 
-from cubicweb import (ConnectionError, RepositoryError, ValidationError,
-                      AuthenticationError, BadConnectionId)
+from cubicweb import (ConnectionError, ValidationError, AuthenticationError,
+                      BadConnectionId)
 from cubicweb.devtools.testlib import CubicWebTC, get_versions
 
 from cubicweb.server.sqlutils import SQL_PREFIX
@@ -29,11 +29,11 @@ def teardown_module(*args):
 class CoreHooksTC(CubicWebTC):
 
     def test_delete_internal_entities(self):
-        self.assertRaises(RepositoryError, self.execute,
+        self.assertRaises(ValidationError, self.execute,
                           'DELETE CWEType X WHERE X name "CWEType"')
-        self.assertRaises(RepositoryError, self.execute,
+        self.assertRaises(ValidationError, self.execute,
                           'DELETE CWRType X WHERE X name "relation_type"')
-        self.assertRaises(RepositoryError, self.execute,
+        self.assertRaises(ValidationError, self.execute,
                           'DELETE CWGroup X WHERE X name "owners"')
 
     def test_delete_required_relations_subject(self):
@@ -113,69 +113,59 @@ class CoreHooksTC(CubicWebTC):
 
     def test_unsatisfied_constraints(self):
         self.execute('INSERT CWRelation X: X from_entity FE, X relation_type RT, X to_entity TE '
-                     'WHERE FE name "Affaire", RT name "concerne", TE name "String"')
-        self.assertRaises(ValidationError,
-                          self.commit)
-
+                     'WHERE FE name "CWUser", RT name "in_group", TE name "String"')
+        ex = self.assertRaises(ValidationError,
+                               self.commit)
+        self.assertEquals(str(ex), '612 (to_entity): constraint O final FALSE failed')
 
     def test_html_tidy_hook(self):
-        entity = self.execute('INSERT Affaire A: A descr_format "text/html", A descr "yo"').get_entity(0, 0)
-        self.assertEquals(entity.descr, u'yo')
-        entity = self.execute('INSERT Affaire A: A descr_format "text/html", A descr "<b>yo"').get_entity(0, 0)
-        self.assertEquals(entity.descr, u'<b>yo</b>')
-        entity = self.execute('INSERT Affaire A: A descr_format "text/html", A descr "<b>yo</b>"').get_entity(0, 0)
-        self.assertEquals(entity.descr, u'<b>yo</b>')
-        entity = self.execute('INSERT Affaire A: A descr_format "text/html", A descr "<b>R&D</b>"').get_entity(0, 0)
-        self.assertEquals(entity.descr, u'<b>R&amp;D</b>')
-        xml = u"<div>c&apos;est <b>l'ét&eacute;"
-        entity = self.execute('INSERT Affaire A: A descr_format "text/html", A descr %(d)s',
-                              {'d': xml}).get_entity(0, 0)
-        self.assertEquals(entity.descr, u"<div>c'est <b>l'été</b></div>")
+        entity = self.add_entity('Workflow', name=u'wf1', description_format=u'text/html',
+                                 description=u'yo')
+        self.assertEquals(entity.description, u'yo')
+        entity = self.add_entity('Workflow', name=u'wf2', description_format=u'text/html',
+                                 description=u'<b>yo')
+        self.assertEquals(entity.description, u'<b>yo</b>')
+        entity = self.add_entity('Workflow', name=u'wf3', description_format=u'text/html',
+                                 description=u'<b>yo</b>')
+        self.assertEquals(entity.description, u'<b>yo</b>')
+        entity = self.add_entity('Workflow', name=u'wf4', description_format=u'text/html',
+                                 description=u'<b>R&D</b>')
+        self.assertEquals(entity.description, u'<b>R&amp;D</b>')
+        entity = self.add_entity('Workflow', name=u'wf5', description_format=u'text/html',
+                                 description=u"<div>c&apos;est <b>l'ét&eacute;")
+        self.assertEquals(entity.description, u"<div>c'est <b>l'été</b></div>")
 
     def test_nonregr_html_tidy_hook_no_update(self):
-        entity = self.execute('INSERT Affaire A: A descr_format "text/html", A descr "yo"').get_entity(0, 0)
-        self.assertEquals(entity.descr, u'yo')
-        self.execute('SET A ref "REF" WHERE A eid %s' % entity.eid)
-        entity = self.execute('Any A WHERE A eid %s' % entity.eid).get_entity(0, 0)
-        self.assertEquals(entity.descr, u'yo')
-        self.execute('SET A descr "R&D<p>yo" WHERE A eid %s' % entity.eid)
-        entity = self.execute('Any A WHERE A eid %s' % entity.eid).get_entity(0, 0)
-        self.assertEquals(entity.descr, u'R&amp;D<p>yo</p>')
+        entity = self.add_entity('Workflow', name=u'wf1', description_format=u'text/html',
+                                 description=u'yo')
+        entity.set_attributes(name=u'wf2')
+        self.assertEquals(entity.description, u'yo')
+        entity.set_attributes(description=u'R&D<p>yo')
+        entity.pop('description')
+        self.assertEquals(entity.description, u'R&amp;D<p>yo</p>')
 
 
     def test_metadata_cwuri(self):
-        eid = self.execute('INSERT Note X')[0][0]
-        cwuri = self.execute('Any U WHERE X eid %s, X cwuri U' % eid)[0][0]
-        self.assertEquals(cwuri, self.repo.config['base-url'] + 'eid/%s' % eid)
+        entity = self.add_entity('Workflow', name=u'wf1')
+        self.assertEquals(entity.cwuri, self.repo.config['base-url'] + 'eid/%s' % entity.eid)
 
     def test_metadata_creation_modification_date(self):
         _now = datetime.now()
-        eid = self.execute('INSERT Note X')[0][0]
-        creation_date, modification_date = self.execute('Any CD, MD WHERE X eid %s, '
-                                                        'X creation_date CD, '
-                                                        'X modification_date MD' % eid)[0]
-        self.assertEquals((creation_date - _now).seconds, 0)
-        self.assertEquals((modification_date - _now).seconds, 0)
-
-    def test_metadata__date(self):
-        _now = datetime.now()
-        eid = self.execute('INSERT Note X')[0][0]
-        creation_date = self.execute('Any D WHERE X eid %s, X creation_date D' % eid)[0][0]
-        self.assertEquals((creation_date - _now).seconds, 0)
+        entity = self.add_entity('Workflow', name=u'wf1')
+        self.assertEquals((entity.creation_date - _now).seconds, 0)
+        self.assertEquals((entity.modification_date - _now).seconds, 0)
 
     def test_metadata_created_by(self):
-        eid = self.execute('INSERT Note X')[0][0]
+        entity = self.add_entity('Bookmark', title=u'wf1', path=u'/view')
         self.commit() # fire operations
-        rset = self.execute('Any U WHERE X eid %s, X created_by U' % eid)
-        self.assertEquals(len(rset), 1) # make sure we have only one creator
-        self.assertEquals(rset[0][0], self.session.user.eid)
+        self.assertEquals(len(entity.created_by), 1) # make sure we have only one creator
+        self.assertEquals(entity.created_by[0].eid, self.session.user.eid)
 
     def test_metadata_owned_by(self):
-        eid = self.execute('INSERT Note X')[0][0]
+        entity = self.add_entity('Bookmark', title=u'wf1', path=u'/view')
         self.commit() # fire operations
-        rset = self.execute('Any U WHERE X eid %s, X owned_by U' % eid)
-        self.assertEquals(len(rset), 1) # make sure we have only one owner
-        self.assertEquals(rset[0][0], self.session.user.eid)
+        self.assertEquals(len(entity.owned_by), 1) # make sure we have only one owner
+        self.assertEquals(entity.owned_by[0].eid, self.session.user.eid)
 
 
 
@@ -252,11 +242,9 @@ class SchemaHooksTC(CubicWebTC):
     def test_duplicate_etype_error(self):
         # check we can't add a CWEType or CWRType entity if it already exists one
         # with the same name
-        #
-        # according to hook order, we'll get a repository or validation error
-        self.assertRaises((ValidationError, RepositoryError),
-                          self.execute, 'INSERT CWEType X: X name "Societe"')
-        self.assertRaises((ValidationError, RepositoryError),
+        self.assertRaises(ValidationError,
+                          self.execute, 'INSERT CWEType X: X name "CWUser"')
+        self.assertRaises(ValidationError,
                           self.execute, 'INSERT CWRType X: X name "in_group"')
 
     def test_validation_unique_constraint(self):
@@ -306,58 +294,53 @@ class SchemaModificationHooksTC(CubicWebTC):
         self.failUnless(schema.has_entity('Societe2'))
         self.failUnless(schema.has_relation('concerne2'))
         self.execute('INSERT CWAttribute X: X cardinality "11", X defaultval "noname", X indexed TRUE, X relation_type RT, X from_entity E, X to_entity F '
-                     'WHERE RT name "nom", E name "Societe2", F name "String"')
+                     'WHERE RT name "name", E name "Societe2", F name "String"')
         concerne2_rdef_eid = self.execute(
             'INSERT CWRelation X: X cardinality "**", X relation_type RT, X from_entity E, X to_entity E '
             'WHERE RT name "concerne2", E name "Societe2"')[0][0]
-        self.execute('INSERT CWRelation X: X cardinality "?*", X relation_type RT, X from_entity E, X to_entity C '
-                     'WHERE RT name "comments", E name "Societe2", C name "Comment"')
-        self.failIf('nom' in schema['Societe2'].subject_relations())
+        self.failIf('name' in schema['Societe2'].subject_relations())
         self.failIf('concerne2' in schema['Societe2'].subject_relations())
-        self.failIf(self.index_exists('Societe2', 'nom'))
+        self.failIf(self.index_exists('Societe2', 'name'))
         self.commit()
-        self.failUnless('nom' in schema['Societe2'].subject_relations())
+        self.failUnless('name' in schema['Societe2'].subject_relations())
         self.failUnless('concerne2' in schema['Societe2'].subject_relations())
-        self.failUnless(self.index_exists('Societe2', 'nom'))
+        self.failUnless(self.index_exists('Societe2', 'name'))
         # now we should be able to insert and query Societe2
-        s2eid = self.execute('INSERT Societe2 X: X nom "logilab"')[0][0]
-        self.execute('Societe2 X WHERE X nom "logilab"')
-        self.execute('SET X concerne2 X WHERE X nom "logilab"')
+        s2eid = self.execute('INSERT Societe2 X: X name "logilab"')[0][0]
+        self.execute('Societe2 X WHERE X name "logilab"')
+        self.execute('SET X concerne2 X WHERE X name "logilab"')
         rset = self.execute('Any X WHERE X concerne2 Y')
         self.assertEquals(rset.rows, [[s2eid]])
         # check that when a relation definition is deleted, existing relations are deleted
         self.execute('INSERT CWRelation X: X cardinality "**", X relation_type RT, X from_entity E, X to_entity E '
-                     'WHERE RT name "concerne2", E name "Societe"')
+                     'WHERE RT name "concerne2", E name "CWUser"')
         self.commit()
         self.execute('DELETE CWRelation X WHERE X eid %(x)s', {'x': concerne2_rdef_eid}, 'x')
         self.commit()
-        self.failUnless('concerne2' in schema['Societe'].subject_relations())
+        self.failUnless('concerne2' in schema['CWUser'].subject_relations())
         self.failIf('concerne2' in schema['Societe2'].subject_relations())
         self.failIf(self.execute('Any X WHERE X concerne2 Y'))
         # schema should be cleaned on delete (after commit)
         self.execute('DELETE CWEType X WHERE X name "Societe2"')
         self.execute('DELETE CWRType X WHERE X name "concerne2"')
-        self.failUnless(self.index_exists('Societe2', 'nom'))
+        self.failUnless(self.index_exists('Societe2', 'name'))
         self.failUnless(schema.has_entity('Societe2'))
         self.failUnless(schema.has_relation('concerne2'))
         self.commit()
-        self.failIf(self.index_exists('Societe2', 'nom'))
+        self.failIf(self.index_exists('Societe2', 'name'))
         self.failIf(schema.has_entity('Societe2'))
         self.failIf(schema.has_entity('concerne2'))
+        self.failIf('concerne2' in schema['CWUser'].subject_relations())
 
     def test_is_instance_of_insertions(self):
-        seid = self.execute('INSERT SubDivision S: S nom "subdiv"')[0][0]
+        seid = self.execute('INSERT Transition T: T name "subdiv"')[0][0]
         is_etypes = [etype for etype, in self.execute('Any ETN WHERE X eid %s, X is ET, ET name ETN' % seid)]
-        self.assertEquals(is_etypes, ['SubDivision'])
+        self.assertEquals(is_etypes, ['Transition'])
         instanceof_etypes = [etype for etype, in self.execute('Any ETN WHERE X eid %s, X is_instance_of ET, ET name ETN' % seid)]
-        self.assertEquals(sorted(instanceof_etypes), ['Division', 'Societe', 'SubDivision'])
-        snames = [name for name, in self.execute('Any N WHERE S is Societe, S nom N')]
+        self.assertEquals(sorted(instanceof_etypes), ['BaseTransition', 'Transition'])
+        snames = [name for name, in self.execute('Any N WHERE S is BaseTransition, S name N')]
         self.failIf('subdiv' in snames)
-        snames = [name for name, in self.execute('Any N WHERE S is Division, S nom N')]
-        self.failIf('subdiv' in snames)
-        snames = [name for name, in self.execute('Any N WHERE S is_instance_of Societe, S nom N')]
-        self.failUnless('subdiv' in snames)
-        snames = [name for name, in self.execute('Any N WHERE S is_instance_of Division, S nom N')]
+        snames = [name for name, in self.execute('Any N WHERE S is_instance_of BaseTransition, S name N')]
         self.failUnless('subdiv' in snames)
 
 
@@ -406,103 +389,85 @@ class SchemaModificationHooksTC(CubicWebTC):
         self.session.set_pool()
         dbhelper = self.session.pool.source('system').dbhelper
         sqlcursor = self.session.pool['system']
-        # Personne inline2 Affaire inline
-        # insert a person without inline2 relation (not mandatory)
-        self.execute('INSERT Personne X: X nom "toto"')
-        peid = self.execute('INSERT Personne X: X nom "tutu"')[0][0]
-        aeid = self.execute('INSERT Affaire X: X ref "tata"')[0][0]
-        self.execute('SET X inline2 Y WHERE X eid %(x)s, Y eid %(y)s', {'x': peid, 'y': aeid})
-        self.failUnless(self.schema['inline2'].inlined)
+        self.failUnless(self.schema['state_of'].inlined)
         try:
-            try:
-                self.execute('SET X inlined FALSE WHERE X name "inline2"')
-                self.failUnless(self.schema['inline2'].inlined)
-                self.commit()
-                self.failIf(self.schema['inline2'].inlined)
-                self.failIf(self.index_exists('Personne', 'inline2'))
-                rset = self.execute('Any X, Y WHERE X inline2 Y')
-                self.assertEquals(len(rset), 1)
-                self.assertEquals(rset.rows[0], [peid, aeid])
-            except:
-                import traceback
-                traceback.print_exc()
-                raise
-        finally:
-            self.execute('SET X inlined TRUE WHERE X name "inline2"')
-            self.failIf(self.schema['inline2'].inlined)
+            self.execute('SET X inlined FALSE WHERE X name "state_of"')
+            self.failUnless(self.schema['state_of'].inlined)
             self.commit()
-            self.failUnless(self.schema['inline2'].inlined)
-            self.failUnless(self.index_exists('Personne', 'inline2'))
-            rset = self.execute('Any X, Y WHERE X inline2 Y')
-            self.assertEquals(len(rset), 1)
-            self.assertEquals(rset.rows[0], [peid, aeid])
+            self.failIf(self.schema['state_of'].inlined)
+            self.failIf(self.index_exists('State', 'state_of'))
+            rset = self.execute('Any X, Y WHERE X state_of Y')
+            self.assertEquals(len(rset), 2) # user states
+        finally:
+            self.execute('SET X inlined TRUE WHERE X name "state_of"')
+            self.failIf(self.schema['state_of'].inlined)
+            self.commit()
+            self.failUnless(self.schema['state_of'].inlined)
+            self.failUnless(self.index_exists('State', 'state_of'))
+            rset = self.execute('Any X, Y WHERE X state_of Y')
+            self.assertEquals(len(rset), 2)
 
     def test_indexed_change(self):
         self.session.set_pool()
         dbhelper = self.session.pool.source('system').dbhelper
         sqlcursor = self.session.pool['system']
         try:
-            self.execute('SET X indexed TRUE WHERE X relation_type R, R name "sujet"')
-            self.failIf(self.schema['sujet'].rproperty('Affaire', 'String', 'indexed'))
-            self.failIf(self.index_exists('Affaire', 'sujet'))
+            self.execute('SET X indexed FALSE WHERE X relation_type R, R name "name"')
+            self.failUnless(self.schema['name'].rproperty('Workflow', 'String', 'indexed'))
+            self.failUnless(self.index_exists('Workflow', 'name'))
             self.commit()
-            self.failUnless(self.schema['sujet'].rproperty('Affaire', 'String', 'indexed'))
-            self.failUnless(self.index_exists('Affaire', 'sujet'))
+            self.failIf(self.schema['name'].rproperty('Workflow', 'String', 'indexed'))
+            self.failIf(self.index_exists('Workflow', 'name'))
         finally:
-            self.execute('SET X indexed FALSE WHERE X relation_type R, R name "sujet"')
-            self.failUnless(self.schema['sujet'].rproperty('Affaire', 'String', 'indexed'))
-            self.failUnless(self.index_exists('Affaire', 'sujet'))
+            self.execute('SET X indexed TRUE WHERE X relation_type R, R name "name"')
+            self.failIf(self.schema['name'].rproperty('Workflow', 'String', 'indexed'))
+            self.failIf(self.index_exists('Workflow', 'name'))
             self.commit()
-            self.failIf(self.schema['sujet'].rproperty('Affaire', 'String', 'indexed'))
-            self.failIf(self.index_exists('Affaire', 'sujet'))
+            self.failUnless(self.schema['name'].rproperty('Workflow', 'String', 'indexed'))
+            self.failUnless(self.index_exists('Workflow', 'name'))
 
     def test_unique_change(self):
         self.session.set_pool()
         dbhelper = self.session.pool.source('system').dbhelper
         sqlcursor = self.session.pool['system']
         try:
-            try:
-                self.execute('INSERT CWConstraint X: X cstrtype CT, DEF constrained_by X '
-                             'WHERE CT name "UniqueConstraint", DEF relation_type RT, DEF from_entity E,'
-                             'RT name "sujet", E name "Affaire"')
-                self.failIf(self.schema['Affaire'].has_unique_values('sujet'))
-                self.failIf(self.index_exists('Affaire', 'sujet', unique=True))
-                self.commit()
-                self.failUnless(self.schema['Affaire'].has_unique_values('sujet'))
-                self.failUnless(self.index_exists('Affaire', 'sujet', unique=True))
-            except:
-                import traceback
-                traceback.print_exc()
-                raise
+            self.execute('INSERT CWConstraint X: X cstrtype CT, DEF constrained_by X '
+                         'WHERE CT name "UniqueConstraint", DEF relation_type RT, DEF from_entity E,'
+                         'RT name "name", E name "Workflow"')
+            self.failIf(self.schema['Workflow'].has_unique_values('name'))
+            self.failIf(self.index_exists('Workflow', 'name', unique=True))
+            self.commit()
+            self.failUnless(self.schema['Workflow'].has_unique_values('name'))
+            self.failUnless(self.index_exists('Workflow', 'name', unique=True))
         finally:
             self.execute('DELETE DEF constrained_by X WHERE X cstrtype CT, '
                          'CT name "UniqueConstraint", DEF relation_type RT, DEF from_entity E,'
-                         'RT name "sujet", E name "Affaire"')
-            self.failUnless(self.schema['Affaire'].has_unique_values('sujet'))
-            self.failUnless(self.index_exists('Affaire', 'sujet', unique=True))
+                         'RT name "name", E name "Workflow"')
+            self.failUnless(self.schema['Workflow'].has_unique_values('name'))
+            self.failUnless(self.index_exists('Workflow', 'name', unique=True))
             self.commit()
-            self.failIf(self.schema['Affaire'].has_unique_values('sujet'))
-            self.failIf(self.index_exists('Affaire', 'sujet', unique=True))
+            self.failIf(self.schema['Workflow'].has_unique_values('name'))
+            self.failIf(self.index_exists('Workflow', 'name', unique=True))
 
     def test_required_change_1(self):
         self.execute('SET DEF cardinality "?1" '
                      'WHERE DEF relation_type RT, DEF from_entity E,'
-                     'RT name "nom", E name "Personne"')
+                     'RT name "title", E name "Bookmark"')
         self.commit()
-        # should now be able to add personne without nom
-        self.execute('INSERT Personne X')
+        # should now be able to add bookmark without title
+        self.execute('INSERT Bookmark X: X path "/view"')
         self.commit()
 
     def test_required_change_2(self):
         self.execute('SET DEF cardinality "11" '
                      'WHERE DEF relation_type RT, DEF from_entity E,'
-                     'RT name "prenom", E name "Personne"')
+                     'RT name "surname", E name "CWUser"')
         self.commit()
-        # should not be able anymore to add personne without prenom
-        self.assertRaises(ValidationError, self.execute, 'INSERT Personne X: X nom "toto"')
+        # should not be able anymore to add cwuser without surname
+        self.assertRaises(ValidationError, self.create_user, "toto")
         self.execute('SET DEF cardinality "?1" '
                      'WHERE DEF relation_type RT, DEF from_entity E,'
-                     'RT name "prenom", E name "Personne"')
+                     'RT name "surname", E name "CWUser"')
         self.commit()
 
 if __name__ == '__main__':
