@@ -386,7 +386,7 @@ class ResultSet(object):
         """
         if col is None:
             from warnings import warn
-            msg = 'col parameter will become mandatory in future version'
+            msg = '[3.2] col parameter will become mandatory in future version'
             warn(msg, DeprecationWarning, stacklevel=3)
             col = 0
         etype = self.description[row][col]

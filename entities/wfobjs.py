@@ -502,7 +502,7 @@ class WorkflowableMixIn(object):
         super(WorkflowableMixIn, self).clear_all_caches()
         clear_cache(self, 'cwetype_workflow')
 
-    @deprecated('get transition from current workflow and use its may_be_fired method')
+    @deprecated('[3.5] get transition from current workflow and use its may_be_fired method')
     def can_pass_transition(self, trname):
         """return the Transition instance if the current user can fire the
         transition with the given name, else None
@@ -512,7 +512,7 @@ class WorkflowableMixIn(object):
             return tr
 
     @property
-    @deprecated('use printable_state')
+    @deprecated('[3.5] use printable_state')
     def displayable_state(self):
         return self.req._(self.state)
 

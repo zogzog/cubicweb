@@ -284,7 +284,7 @@ class Entity(AppObject, dict):
             try:
                 kwargs['_restpath'] = self.rest_path(kwargs.get('base_url'))
             except TypeError:
-                warn('%s: rest_path() now take use_ext_eid argument, '
+                warn('[3.4] %s: rest_path() now take use_ext_eid argument, '
                      'please update' % self.__regid__, DeprecationWarning)
                 kwargs['_restpath'] = self.rest_path()
         else:
