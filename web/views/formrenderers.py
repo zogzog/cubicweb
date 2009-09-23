@@ -16,7 +16,6 @@ from cubicweb.common import tags
 from cubicweb.appobject import AppObject
 from cubicweb.selectors import entity_implements, yes
 from cubicweb.web import eid_param, formwidgets as fwdgs
-from cubicweb.web.widgets import checkbox
 
 def checkbox(name, value, attrs='', checked=None):
     if checked is None:
