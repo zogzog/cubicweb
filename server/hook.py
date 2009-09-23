@@ -103,7 +103,7 @@ def enabled_category(cls, req, **kwargs):
         config = kwargs['repo'].config
     else:
         config = req.vreg.config
-    if enabled_category in config.disabled_hooks_categories:
+    if cls.category in config.disabled_hooks_categories:
         return 0
     return 1
 
