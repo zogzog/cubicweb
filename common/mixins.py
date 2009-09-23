@@ -57,7 +57,7 @@ class TreeMixIn(object):
             _done = set()
         for child in self.children():
             if child.eid in _done:
-                self.error('loop in %s tree', self.id.lower())
+                self.error('loop in %s tree', self.__regid__.lower())
                 continue
             yield child
             _done.add(child.eid)
@@ -83,7 +83,7 @@ class TreeMixIn(object):
         parent = self
         while parent:
             if parent.eid in path:
-                self.error('loop in %s tree', self.id.lower())
+                self.error('loop in %s tree', self.__regid__.lower())
                 break
             path.append(parent.eid)
             try:
@@ -220,7 +220,7 @@ def _done_init(done, view, row, col):
 
 class TreeViewMixIn(object):
     """a recursive tree view"""
-    id = 'tree'
+    __regid__ = 'tree'
     item_vid = 'treeitem'
     __select__ = implements(ITree)
 
@@ -238,11 +238,11 @@ class TreeViewMixIn(object):
         self.open_item(entity)
         entity.view(vid or self.item_vid, w=self.w, **kwargs)
         relatedrset = entity.children(entities=False)
-        self.wview(self.id, relatedrset, 'null', done=done, **kwargs)
+        self.wview(self.__regid__, relatedrset, 'null', done=done, **kwargs)
         self.close_item(entity)
 
     def open_item(self, entity):
-        self.w(u'<li class="%s">\n' % entity.id.lower())
+        self.w(u'<li class="%s">\n' % entity.__regid__.lower())
     def close_item(self, entity):
         self.w(u'</li>\n')
 
@@ -266,7 +266,7 @@ class TreePathMixIn(object):
             return
         parent = entity.parent()
         if parent:
-            parent.view(self.id, w=self.w, done=done)
+            parent.view(self.__regid__, w=self.w, done=done)
             self.w(self.separator)
         entity.view(vid or self.item_vid, w=self.w)
 

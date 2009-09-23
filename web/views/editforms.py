@@ -54,7 +54,7 @@ class DeleteConfForm(forms.CompositeForm):
                     Button(stdmsgs.NO, cwaction='cancel')]
     @property
     def action(self):
-        return self.build_url('edit')
+        return self._cw.build_url('edit')
 
     def __init__(self, *args, **kwargs):
         super(DeleteConfForm, self).__init__(*args, **kwargs)
@@ -291,15 +291,15 @@ class EditionFormView(FormViewMixIn, EntityView):
     title = _('edition')
 
     def cell_call(self, row, col, **kwargs):
-        entity = self.complete_entity(row, col)
+        entity = self.cw_rset.complete_entity(row, col)
         self.render_form(entity)
 
     def render_form(self, entity):
         """fetch and render the form"""
         self.form_title(entity)
         form = self._cw.vreg['forms'].select('edition', self._cw, rset=entity.rset,
-                                         row=entity.row, col=entity.col, entity=entity,
-                                         submitmsg=self.submited_message())
+                                             row=entity.row, col=entity.col, entity=entity,
+                                             submitmsg=self.submited_message())
         self.init_form(form, entity)
         self.w(form.form_render(formvid=u'edition'))
 

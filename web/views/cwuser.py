@@ -47,7 +47,7 @@ class FoafView(EntityView):
         self.w(u'</rdf:RDF>\n')
 
     def cell_call(self, row, col):
-        entity = self.complete_entity(row, col)
+        entity = self.cw_rset.complete_entity(row, col)
         self.w(u'''<foaf:PersonalProfileDocument rdf:about="">
                       <foaf:maker rdf:resource="%s"/>
                       <foaf:primaryTopic rdf:resource="%s"/>

@@ -49,7 +49,7 @@ try:
         def call(self):
             ical = iCalendar()
             for i in range(len(self.cw_rset.rows)):
-                task = self.complete_entity(i)
+                task = self.cw_rset.complete_entity(i, 0)
                 event = ical.add('vevent')
                 event.add('summary').value = task.dc_title()
                 event.add('description').value = task.dc_description()
@@ -80,15 +80,15 @@ class hCalView(EntityView):
     def call(self):
         self.w(u'<div class="hcalendar">')
         for i in range(len(self.cw_rset.rows)):
-            task = self.complete_entity(i)
+            task = self.cw_rset.complete_entity(i, 0)
             self.w(u'<div class="vevent">')
             self.w(u'<h3 class="summary">%s</h3>' % xml_escape(task.dc_title()))
             self.w(u'<div class="description">%s</div>'
                    % task.dc_description(format='text/html'))
             if task.start:
-                self.w(u'<abbr class="dtstart" title="%s">%s</abbr>' % (task.start.isoformat(), self.format_date(task.start)))
+                self.w(u'<abbr class="dtstart" title="%s">%s</abbr>' % (task.start.isoformat(), self._cw.format_date(task.start)))
             if task.stop:
-                self.w(u'<abbr class="dtstop" title="%s">%s</abbr>' % (task.stop.isoformat(), self.format_date(task.stop)))
+                self.w(u'<abbr class="dtstop" title="%s">%s</abbr>' % (task.stop.isoformat(), self._cw.format_date(task.stop)))
             self.w(u'</div>')
         self.w(u'</div>')
 
@@ -97,13 +97,13 @@ class CalendarItemView(EntityView):
     __regid__ = 'calendaritem'
 
     def cell_call(self, row, col, dates=False):
-        task = self.complete_entity(row)
+        task = self.cw_rset.complete_entity(row, 0)
         task.view('oneline', w=self.w)
         if dates:
             if task.start and task.stop:
-                self.w('<br/>' % self._cw._('from %(date)s' % {'date': self.format_date(task.start)}))
-                self.w('<br/>' % self._cw._('to %(date)s' % {'date': self.format_date(task.stop)}))
-                self.w('<br/>to %s'%self.format_date(task.stop))
+                self.w('<br/>' % self._cw._('from %(date)s' % {'date': self._cw.format_date(task.start)}))
+                self.w('<br/>' % self._cw._('to %(date)s' % {'date': self._cw.format_date(task.stop)}))
+                self.w('<br/>to %s'%self._cw.format_date(task.stop))
 
 class CalendarLargeItemView(CalendarItemView):
     __regid__ = 'calendarlargeitem'
@@ -287,7 +287,7 @@ class OneMonthCal(EntityView):
             etype = list(self.cw_rset.column_types(0))[0]
             url = self.build_url(vid='creation', etype=etype,
                                  schedule=True,
-                                 start=self.format_date(celldate), stop=self.format_date(celldate),
+                                 start=self._cw.format_date(celldate), stop=self._cw.format_date(celldate),
                                  __redirectrql=self.cw_rset.printable_rql(),
                                  __redirectparams=self._cw.build_url_params(year=curdate.year, month=curmonth),
                                  __redirectvid=self.__regid__
@@ -399,9 +399,9 @@ class OneWeekCal(EntityView):
         for i, day in enumerate(WEEKDAYS):
             wdate = first_day_of_week + timedelta(i)
             if wdate.isocalendar() == _today.isocalendar():
-                self.w(u'<th class="today">%s<br/>%s</th>' % (self._cw._(day), self.format_date(wdate)))
+                self.w(u'<th class="today">%s<br/>%s</th>' % (self._cw._(day), self._cw.format_date(wdate)))
             else:
-                self.w(u'<th>%s<br/>%s</th>' % (self._cw._(day), self.format_date(wdate)))
+                self.w(u'<th>%s<br/>%s</th>' % (self._cw._(day), self._cw.format_date(wdate)))
         self.w(u'</tr>')
 
         # build week calendar

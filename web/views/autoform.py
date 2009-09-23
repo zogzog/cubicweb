@@ -224,7 +224,7 @@ class AutomaticEntityForm(forms.EntityFieldsForm):
         try:
             return self._action
         except AttributeError:
-            return self.build_url('validateform')
+            return self._cw.build_url('validateform')
 
     def set_action(self, value):
         """override default action"""

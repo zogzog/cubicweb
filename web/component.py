@@ -123,7 +123,7 @@ class NavigationComponent(Component):
                 dumps(params.get('divid', 'paginated-content')),
                 dumps(rql), dumps(params.pop('vid', None)), dumps(params))
         else:
-            url = self.build_url(path, **params)
+            url = self._cw.build_url(path, **params)
         return url
 
     def page_link(self, path, params, start, stop, content):

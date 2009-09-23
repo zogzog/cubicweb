@@ -159,7 +159,7 @@ def limit_rset_using_paged_nav(self, req, rset, w, forcedisplay=False,
             nav.clean_params(params)
             # make a link to see them all
             if show_all_option:
-                url = xml_escape(self.build_url(__force_display=1, **params))
+                url = xml_escape(self._cw.build_url(__force_display=1, **params))
                 w(u'<span><a href="%s">%s</a></span>\n'
                   % (url, req._('show %s results') % len(rset)))
             rset.limit(offset=start, limit=stop-start, inplace=True)

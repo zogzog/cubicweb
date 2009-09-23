@@ -33,8 +33,8 @@ class SendEmailAction(Action):
         params = {'vid': 'massmailing', '__force_display': 1}
         if self._cw.form.has_key('rql'):
             params['rql'] = self._cw.form['rql']
-        return self.build_url(self._cw.relative_path(includeparams=False),
-                              **params)
+        return self._cw.build_url(self._cw.relative_path(includeparams=False),
+                                  **params)
 
 
 class MassMailingForm(forms.FieldsForm):

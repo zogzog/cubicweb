@@ -74,7 +74,7 @@ class ManageView(StartupView):
 
     def startupviews_table(self):
         for v in self._cw.vreg['views'].possible_views(self._cw, None):
-            if v.category != 'startupview' or v.id in ('index', 'tree', 'manage'):
+            if v.category != 'startupview' or v.__regid__ in ('index', 'tree', 'manage'):
                 continue
             self.w('<p><a href="%s">%s</a></p>' % (
                 xml_escape(v.url()), xml_escape(self._cw._(v.title).capitalize())))

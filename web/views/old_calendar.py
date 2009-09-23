@@ -46,14 +46,14 @@ class _CalendarView(EntityView):
         next2 = next_month(date, bigshift)
         rql = self.cw_rset.printable_rql()
         return self.NAV_HEADER % (
-            xml_escape(self.build_url(rql=rql, vid=self.__regid__, year=prev2.year,
-                                       month=prev2.month)),
-            xml_escape(self.build_url(rql=rql, vid=self.__regid__, year=prev1.year,
-                                       month=prev1.month)),
-            xml_escape(self.build_url(rql=rql, vid=self.__regid__, year=next1.year,
-                                       month=next1.month)),
-            xml_escape(self.build_url(rql=rql, vid=self.__regid__, year=next2.year,
-                                       month=next2.month)))
+            xml_escape(self._cw.build_url(rql=rql, vid=self.__regid__, year=prev2.year,
+                                          month=prev2.month)),
+            xml_escape(self._cw.build_url(rql=rql, vid=self.__regid__, year=prev1.year,
+                                          month=prev1.month)),
+            xml_escape(self._cw.build_url(rql=rql, vid=self.__regid__, year=next1.year,
+                                          month=next1.month)),
+            xml_escape(self._cw.build_url(rql=rql, vid=self.__regid__, year=next2.year,
+                                          month=next2.month)))
 
 
     # Calendar building methods ##############################################
@@ -69,7 +69,7 @@ class _CalendarView(EntityView):
         """method responsible for building *one* HTML calendar"""
         # FIXME  iterates between [first_day-first_day.day_of_week ;
         #                          last_day+6-last_day.day_of_week]
-        umonth = self.format_date(first_day, '%B %Y') # localized month name
+        umonth = self._cw.format_date(first_day, '%B %Y') # localized month name
         rows = []
         current_row = [NO_CELL] * first_day.weekday()
         for daynum in xrange(0, days_in_month(first_day)):
@@ -89,8 +89,8 @@ class _CalendarView(EntityView):
         rql = self.cw_rset.printable_rql()
         if day.weekday() != 6:
             rows.append(u'<tr>%s%s</tr>' % (WEEKNUM_CELL % day.isocalendar()[1], ''.join(current_row)))
-        url = self.build_url(rql=rql, vid='calendarmonth',
-                             year=first_day.year, month=first_day.month)
+        url = self._cw.build_url(rql=rql, vid='calendarmonth',
+                                 year=first_day.year, month=first_day.month)
         monthlink = u'<a href="%s">%s</a>' % (xml_escape(url), umonth)
         return CALENDAR(self._cw) % (monthlink, '\n'.join(rows))
 
@@ -111,7 +111,7 @@ class _CalendarView(EntityView):
         for row in xrange(len(self.cw_rset.rows)):
             entity = self.cw_rset.get_entity(row,0)
             infos = u'<div class="event">'
-            infos += self.view(itemvid, self.cw_rset, row=row)
+            infos += self._cw.view(itemvid, self.cw_rset, row=row)
             infos += u'</div>'
             for date_ in entity.matching_dates(begin, end):
                 day = date(date_.year, date_.month, date_.day)
@@ -200,9 +200,9 @@ class SemesterCalendarView(_CalendarView):
         self.w(u'<tr>')
         rql = self.cw_rset.printable_rql()
         for cur_month in date_range(begin, end, incmonth=1):
-            umonth = u'%s&#160;%s' % (self.format_date(cur_month, '%B'), cur_month.year)
-            url = self.build_url(rql=rql, vid=self.__regid__,
-                                 year=cur_month.year, month=cur_month.month)
+            umonth = u'%s&#160;%s' % (self._cw.format_date(cur_month, '%B'), cur_month.year)
+            url = self._cw.build_url(rql=rql, vid=self.__regid__,
+                                     year=cur_month.year, month=cur_month.month)
             self.w(u'<th colspan="2"><a href="%s">%s</a></th>' % (xml_escape(url),
                                                                   umonth))
         self.w(u'</tr>')
@@ -269,9 +269,9 @@ class WeekCalendarView(_CalendarView):
         rql = self.cw_rset.printable_rql()
         _ = self._cw._
         for monday, sunday in weeks:
-            umonth = self.format_date(monday, '%B %Y')
-            url = self.build_url(rql=rql, vid='calendarmonth',
-                                 year=monday.year, month=monday.month)
+            umonth = self._cw.format_date(monday, '%B %Y')
+            url = self._cw.build_url(rql=rql, vid='calendarmonth',
+                                     year=monday.year, month=monday.month)
             monthlink = '<a href="%s">%s</a>' % (xml_escape(url), umonth)
             self.w(u'<tr><th colspan="3">%s %s (%s)</th></tr>' \
                   % (_('week'), monday.isocalendar()[1], monthlink))
@@ -295,10 +295,10 @@ class WeekCalendarView(_CalendarView):
         next2 = date + ONEWEEK * bigshift
         rql = self.cw_rset.printable_rql()
         return self.NAV_HEADER % (
-            xml_escape(self.build_url(rql=rql, vid=self.__regid__, year=prev2.year, week=prev2.isocalendar()[1])),
-            xml_escape(self.build_url(rql=rql, vid=self.__regid__, year=prev1.year, week=prev1.isocalendar()[1])),
-            xml_escape(self.build_url(rql=rql, vid=self.__regid__, year=next1.year, week=next1.isocalendar()[1])),
-            xml_escape(self.build_url(rql=rql, vid=self.__regid__, year=next2.year, week=next2.isocalendar()[1])))
+            xml_escape(self._cw.build_url(rql=rql, vid=self.__regid__, year=prev2.year, week=prev2.isocalendar()[1])),
+            xml_escape(self._cw.build_url(rql=rql, vid=self.__regid__, year=prev1.year, week=prev1.isocalendar()[1])),
+            xml_escape(self._cw.build_url(rql=rql, vid=self.__regid__, year=next1.year, week=next1.isocalendar()[1])),
+            xml_escape(self._cw.build_url(rql=rql, vid=self.__regid__, year=next2.year, week=next2.isocalendar()[1])))
 
 
 
@@ -308,7 +308,7 @@ class AMPMYearCalendarView(YearCalendarView):
 
     def build_calendar(self, schedule, first_day):
         """method responsible for building *one* HTML calendar"""
-        umonth = self.format_date(first_day, '%B %Y') # localized month name
+        umonth = self._cw.format_date(first_day, '%B %Y') # localized month name
         rows = [] # each row is: (am,pm), (am,pm) ... week_title
         current_row = [(NO_CELL, NO_CELL, NO_CELL)] * first_day.weekday()
         rql = self.cw_rset.printable_rql()
@@ -324,7 +324,7 @@ class AMPMYearCalendarView(YearCalendarView):
                                     AMPM_EMPTY % ("pmCell", "pm")))
             # store & reset current row on Sundays
             if day.weekday() == 6:
-                url = self.build_url(rql=rql, vid='ampmcalendarweek',
+                url = self._cw.build_url(rql=rql, vid='ampmcalendarweek',
                                      year=day.year, week=day.isocalendar()[1])
                 weeklink = '<a href="%s">%s</a>' % (xml_escape(url),
                                                     day.isocalendar()[1])
@@ -332,7 +332,7 @@ class AMPMYearCalendarView(YearCalendarView):
                 rows.append(current_row)
                 current_row = []
         current_row.extend([(NO_CELL, NO_CELL, NO_CELL)] * (6-day.weekday()))
-        url = self.build_url(rql=rql, vid='ampmcalendarweek',
+        url = self._cw.build_url(rql=rql, vid='ampmcalendarweek',
                              year=day.year, week=day.isocalendar()[1])
         weeklink = '<a href="%s">%s</a>' % (xml_escape(url), day.isocalendar()[1])
         current_row.append(WEEKNUM_CELL % weeklink)
@@ -348,7 +348,7 @@ class AMPMYearCalendarView(YearCalendarView):
             formatted_rows.append('<tr class="amRow"><td>&#160;</td>%s</tr>'% '\n'.join(am_row))
             formatted_rows.append('<tr class="pmRow"><td>&#160;</td>%s</tr>'% '\n'.join(pm_row))
         # tigh everything together
-        url = self.build_url(rql=rql, vid='ampmcalendarmonth',
+        url = self._cw.build_url(rql=rql, vid='ampmcalendarmonth',
                              year=first_day.year, month=first_day.month)
         monthlink = '<a href="%s">%s</a>' % (xml_escape(url), umonth)
         return CALENDAR(self._cw) % (monthlink, '\n'.join(formatted_rows))
@@ -364,8 +364,8 @@ class AMPMSemesterCalendarView(SemesterCalendarView):
         self.w(u'<tr>')
         rql = self.cw_rset.printable_rql()
         for cur_month in date_range(begin, end, incmonth=1):
-            umonth = u'%s&#160;%s' % (self.format_date(cur_month, '%B'), cur_month.year)
-            url = self.build_url(rql=rql, vid=self.__regid__,
+            umonth = u'%s&#160;%s' % (self._cw.format_date(cur_month, '%B'), cur_month.year)
+            url = self._cw.build_url(rql=rql, vid=self.__regid__,
                                  year=cur_month.year, month=cur_month.month)
             self.w(u'<th colspan="3"><a href="%s">%s</a></th>' % (xml_escape(url),
                                                                   umonth))
@@ -399,7 +399,7 @@ class AMPMMonthCalendarView(MonthCalendarView):
 
     def build_calendar(self, schedule, first_day):
         """method responsible for building *one* HTML calendar"""
-        umonth = self.format_date(first_day, '%B %Y') # localized month name
+        umonth = self._cw.format_date(first_day, '%B %Y') # localized month name
         rows = [] # each row is: (am,pm), (am,pm) ... week_title
         current_row = [(NO_CELL, NO_CELL, NO_CELL)] * first_day.weekday()
         rql = self.cw_rset.printable_rql()
@@ -415,16 +415,16 @@ class AMPMMonthCalendarView(MonthCalendarView):
                                     AMPM_EMPTY % ("pmCell", "pm")))
             # store & reset current row on Sundays
             if day.weekday() == 6:
-                url = self.build_url(rql=rql, vid='ampmcalendarweek',
-                                     year=day.year, week=day.isocalendar()[1])
+                url = self._cw.build_url(rql=rql, vid='ampmcalendarweek',
+                                         year=day.year, week=day.isocalendar()[1])
                 weeklink = '<a href="%s">%s</a>' % (xml_escape(url),
                                                     day.isocalendar()[1])
                 current_row.append(WEEKNUM_CELL % weeklink)
                 rows.append(current_row)
                 current_row = []
         current_row.extend([(NO_CELL, NO_CELL, NO_CELL)] * (6-day.weekday()))
-        url = self.build_url(rql=rql, vid='ampmcalendarweek',
-                             year=day.year, week=day.isocalendar()[1])
+        url = self._cw.build_url(rql=rql, vid='ampmcalendarweek',
+                                 year=day.year, week=day.isocalendar()[1])
         weeklink = '<a href="%s">%s</a>' % (xml_escape(url),
                                             day.isocalendar()[1])
         current_row.append(WEEKNUM_CELL % weeklink)
@@ -440,8 +440,8 @@ class AMPMMonthCalendarView(MonthCalendarView):
             formatted_rows.append('<tr class="amRow"><td>&#160;</td>%s</tr>'% '\n'.join(am_row))
             formatted_rows.append('<tr class="pmRow"><td>&#160;</td>%s</tr>'% '\n'.join(pm_row))
         # tigh everything together
-        url = self.build_url(rql=rql, vid='ampmcalendarmonth',
-                             year=first_day.year, month=first_day.month)
+        url = self._cw.build_url(rql=rql, vid='ampmcalendarmonth',
+                                 year=first_day.year, month=first_day.month)
         monthlink = '<a href="%s">%s</a>' % (xml_escape(url),
                                              umonth)
         return CALENDAR(self._cw) % (monthlink, '\n'.join(formatted_rows))
@@ -458,9 +458,9 @@ class AMPMWeekCalendarView(WeekCalendarView):
         w = self.w
         _ = self._cw._
         for monday, sunday in weeks:
-            umonth = self.format_date(monday, '%B %Y')
-            url = self.build_url(rql=rql, vid='ampmcalendarmonth',
-                                 year=monday.year, month=monday.month)
+            umonth = self._cw.format_date(monday, '%B %Y')
+            url = self._cw.build_url(rql=rql, vid='ampmcalendarmonth',
+                                     year=monday.year, month=monday.month)
             monthlink = '<a href="%s">%s</a>' % (xml_escape(url), umonth)
             w(u'<tr>%s</tr>' % (
                 WEEK_TITLE % (_('week'), monday.isocalendar()[1], monthlink)))
@@ -474,7 +474,7 @@ class AMPMWeekCalendarView(WeekCalendarView):
                     hours.sort()
                     w(AMPM_DAYWEEK % (
                         len(hours), _(WEEKDAYS[day.weekday()]),
-                        self.format_date(day)))
+                        self._cw.format_date(day)))
                     w(AMPM_WEEK_CELL % (
                         hours[0].hour, hours[0].minute,
                         '\n'.join(events[hours[0]])))
@@ -486,7 +486,7 @@ class AMPMWeekCalendarView(WeekCalendarView):
                 else:
                     w(AMPM_DAYWEEK_EMPTY % (
                         _(WEEKDAYS[day.weekday()]),
-                        self.format_date(day)))
+                        self._cw.format_date(day)))
                     w(WEEK_EMPTY_CELL)
                     w(u'</tr>')
 

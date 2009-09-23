@@ -60,7 +60,7 @@ class TableView(AnyRsetView):
         self.w(u'<fieldset id="%sForm" class="%s">' % (divid, hidden and 'hidden' or ''))
         self.w(u'<input type="hidden" name="divid" value="%s" />' % divid)
         self.w(u'<input type="hidden" name="fromformfilter" value="1" />')
-        filter_hiddens(self.w, facets=','.join(wdg.facet.id for wdg in fwidgets),
+        filter_hiddens(self.w, facets=','.join(wdg.facet.__regid__ for wdg in fwidgets),
                        baserql=baserql)
         self.w(u'<table class="filter">\n')
         self.w(u'<tr>\n')
@@ -164,7 +164,6 @@ class TableView(AnyRsetView):
         self.w(u'</div>\n')
         if not fromformfilter:
             self.w(u'</div>\n')
-
 
     def show_hide_actions(self, divid, currentlydisplayed=False):
         showhide = u';'.join(toggle_action('%s%s' % (divid, what))[11:]
