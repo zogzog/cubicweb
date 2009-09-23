@@ -840,20 +840,6 @@ class Entity(AppObject, dict):
                     words += entity.get_words()
         return words
 
-    @deprecated('[3.2] see new form api')
-    def vocabulary(self, rtype, role='subject', limit=None):
-        """vocabulary functions must return a list of couples
-        (label, eid) that will typically be used to fill the
-        edition view's combobox.
-
-        If `eid` is None in one of these couples, it should be
-        interpreted as a separator in case vocabulary results are grouped
-        """
-        from logilab.common.testlib import mock_object
-        form = self.vreg.select('forms', 'edition', self.req, entity=self)
-        field = mock_object(name=rtype, role=role)
-        return form.form_field_vocabulary(field, limit)
-
 
 # attribute and relation descriptors ##########################################
 
