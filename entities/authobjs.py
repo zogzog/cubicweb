@@ -59,12 +59,13 @@ class CWUser(AnyEntity):
         try:
             # properties stored on the user aren't correctly typed
             # (e.g. all values are unicode string)
-            return self.vreg.typed_value(key, self.properties[key])
+            return self._cw.vreg.typed_value(key, self.properties[key])
         except KeyError:
             pass
         except ValueError:
-            self.warning('incorrect value for eproperty %s of user %s', key, self.login)
-        return self.vreg.property_value(key)
+            self.warning('incorrect value for eproperty %s of user %s',
+                         key, self.login)
+        return self._cw.vreg.property_value(key)
 
     def matching_groups(self, groups):
         """return the number of the given group(s) in which the user is
