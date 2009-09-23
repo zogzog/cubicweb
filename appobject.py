@@ -11,6 +11,7 @@ __docformat__ = "restructuredtext en"
 
 import types
 from logging import getLogger
+from warnings import warn
 
 from logilab.common.decorators import classproperty
 from logilab.common.deprecation import deprecated
@@ -250,7 +251,13 @@ class AppObject(object):
         the right hook to create an instance for example). By default the
         appobject is returned without any transformation.
         """
-        pdefs = getattr(cls, 'cw_property_defs', {})
+        try:
+            pdefs = cls.property_defs
+        except AttributeError:
+            pdefs = getattr(cls, 'cw_property_defs', {})
+        else:
+            warn('property_defs is deprecated, use cw_property_defs in %s'
+                 % cls, DeprecationWarning)
         for propid, pdef in pdefs.items():
             pdef = pdef.copy() # may be shared
             pdef['default'] = getattr(cls, propid, pdef['default'])
