@@ -1,6 +1,6 @@
-from cubicweb.devtools.testlib import WebTest
+from cubicweb.devtools.testlib import CubicWebTC
 
-class BreadCrumbsTC(WebTest):
+class BreadCrumbsTC(CubicWebTC):
 
     def test_base(self):
         f1 = self.add_entity('Folder', name=u'par&ent')

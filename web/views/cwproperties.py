@@ -211,10 +211,10 @@ class SystemCWPropertiesForm(FormViewMixIn, StartupView):
         else:
             label = key
         subform = self._cw.vreg['forms'].select('base', self._cw, entity=entity,
-                                            mainform=False)
+                                                mainform=False)
         subform.append_field(PropertyValueField(name='value', label=label,
                                                 eidparam=True))
-        subform.vreg = self._cw.vreg
+        #subform.vreg = self._cw.vreg
         subform.form_add_hidden('pkey', key, eidparam=True)
         form.form_add_subform(subform)
         return subform
@@ -265,7 +265,7 @@ class PlaceHolderWidget(object):
         # empty span as well else html validation fail (label is refering to
         # this id)
         return '<div id="div:%s"><span id="%s">%s</span></div>' % (
-            domid, domid, form.req._('select a key first'))
+            domid, domid, form._cw._('select a key first'))
 
 
 class NotEditableWidget(object):
@@ -289,17 +289,17 @@ class PropertyKeyField(StringField):
 
     def render(self, form, renderer):
         wdg = self.get_widget(form)
-        wdg.attrs['tabindex'] = form.req.next_tabindex()
+        wdg.attrs['tabindex'] = form._cw.next_tabindex()
         wdg.attrs['onchange'] = "javascript:setPropValueWidget('%s', %s)" % (
-            form.edited_entity.eid, form.req.next_tabindex())
+            form.edited_entity.eid, form._cw.next_tabindex())
         return wdg.render(form, self, renderer)
 
     def vocabulary(self, form):
         entity = form.edited_entity
-        _ = form.req._
+        _ = form._cw._
         if entity.has_eid():
             return [(_(entity.pkey), entity.pkey)]
-        choices = entity.vreg.user_property_keys()
+        choices = entity._cw.vreg.user_property_keys()
         return [(u'', u'')] + sorted(zip((_(v) for v in choices), choices))
 
 
@@ -322,15 +322,15 @@ class PropertyValueField(StringField):
             # on key selection
             return
         try:
-            pdef = form.vreg.property_info(entity.pkey)
+            pdef = form._cw.vreg.property_info(entity.pkey)
         except UnknownProperty, ex:
             self.warning('%s (you should probably delete that property '
                          'from the database)', ex)
-            msg = form.req._('you should probably delete that property')
+            msg = form._cw._('you should probably delete that property')
             self.widget = NotEditableWidget(entity.printable_value('value'),
                                             '%s (%s)' % (msg, ex))
         if entity.pkey.startswith('system.'):
-            msg = form.req._('value associated to this key is not editable '
+            msg = form._cw._('value associated to this key is not editable '
                              'manually')
             self.widget = NotEditableWidget(entity.printable_value('value'), msg)
         # XXX race condition when used from CWPropertyForm, should not rely on
@@ -341,7 +341,7 @@ class PropertyValueField(StringField):
         if vocab is not None:
             if callable(vocab):
                 # list() just in case its a generator function
-                self.choices = list(vocab(form.req))
+                self.choices = list(vocab(form._cw))
             else:
                 self.choices = vocab
             wdg = Select()

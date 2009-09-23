@@ -109,7 +109,7 @@ class RSSFeedURL(Component):
     __select__ = non_final_entity()
 
     def feed_url(self):
-        return self._cw.build_url(rql=self.limited_rql(), vid='rss')
+        return self._cw.build_url(rql=self.cw_rset.limited_rql(), vid='rss')
 
 
 class RSSEntityFeedURL(Component):

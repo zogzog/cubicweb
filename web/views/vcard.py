@@ -28,7 +28,7 @@ class VCardCWUserView(EntityView):
 
     def cell_call(self, row, col):
         self.vcard_header()
-        self.vcard_content(self.complete_entity(row, col))
+        self.vcard_content(self.cw_rset.complete_entity(row, col))
         self.vcard_footer()
 
     def vcard_header(self):

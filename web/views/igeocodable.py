@@ -81,9 +81,9 @@ class GoogleMapsView(EntityView):
         self._cw.add_js( ('cubicweb.widgets.js', 'cubicweb.gmap.js', 'gmap.utility.labeledmarker.js') )
         rql = self.cw_rset.printable_rql()
         if urlparams is None:
-            loadurl = self.build_url(rql=rql, vid='geocoding-json')
+            loadurl = self._cw.build_url(rql=rql, vid='geocoding-json')
         else:
-            loadurl = self.build_url(rql=rql, vid='geocoding-json', **urlparams)
+            loadurl = self._cw.build_url(rql=rql, vid='geocoding-json', **urlparams)
         self.w(u'<div style="width: %spx; height: %spx;" class="widget gmap" '
                u'cubicweb:wdgtype="GMapWidget" cubicweb:loadtype="auto" '
                u'cubicweb:loadurl="%s" cubicweb:uselabel="%s"> </div>' % (width, height, loadurl, uselabel))

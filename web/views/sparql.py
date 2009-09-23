@@ -52,7 +52,7 @@ class SparqlFormView(form.FormViewMixIn, StartupView):
             except xy.UnsupportedVocabulary, ex:
                 self.w(self._cw._('unknown vocabulary:') + u' ' + unicode('ex'))
             if vid == 'sparqlxml':
-                url = self.build_url('view', rql=qinfo.finalize(), vid=vid)
+                url = self._cw.build_url('view', rql=qinfo.finalize(), vid=vid)
                 raise Redirect(url)
             rset = self._cw.execute(qinfo.finalize())
             self.wview(vid, rset, 'null')

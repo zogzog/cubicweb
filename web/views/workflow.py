@@ -178,8 +178,8 @@ class StateInContextView(view.EntityView):
     __select__ = implements('State')
 
     def cell_call(self, row, col):
-        self.w(xml_escape(self.view('textincontext', self.cw_rset,
-                                     row=row, col=col)))
+        self.w(xml_escape(self._cw.view('textincontext', self.cw_rset,
+                                        row=row, col=col)))
 
 
 class WorkflowPrimaryView(primary.PrimaryView):

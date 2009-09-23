@@ -109,11 +109,11 @@ class CWProperty(AnyEntity):
     rest_attr = 'pkey'
 
     def typed_value(self):
-        return self.vreg.typed_value(self.pkey, self.value)
+        return self._cw.vreg.typed_value(self.pkey, self.value)
 
     def dc_description(self, format='text/plain'):
         try:
-            return self._cw._(self.vreg.property_info(self.pkey)['help'])
+            return self._cw._(self._cw.vreg.property_info(self.pkey)['help'])
         except UnknownProperty:
             return u''
 

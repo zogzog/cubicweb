@@ -103,8 +103,8 @@ class EmbedAction(Action):
         entity = self.cw_rset.get_entity(row, 0)
         url = urljoin(self._cw.base_url(), entity.embeded_url())
         if self._cw.form.has_key('rql'):
-            return self.build_url('embed', url=url, rql=self._cw.form['rql'])
-        return self.build_url('embed', url=url)
+            return self._cw.build_url('embed', url=url, rql=self._cw.form['rql'])
+        return self._cw.build_url('embed', url=url)
 
 
 

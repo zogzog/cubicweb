@@ -17,7 +17,7 @@ class NoHTTPCacheManager(object):
     """default cache manager: set no-cache cache control policy"""
     def __init__(self, view):
         self.view = view
-        self.req = view.req
+        self.req = view._cw
         self.cw_rset = view.rset
 
     def set_headers(self):
@@ -42,7 +42,7 @@ class EtagHTTPCacheManager(NoHTTPCacheManager):
     date_format = "%a, %d %b %Y %H:%M:%S GMT"
 
     def etag(self):
-        return self.view.id + '/' + ','.join(sorted(self.req.user.groups))
+        return self.view.__regid__ + '/' + ','.join(sorted(self.req.user.groups))
 
     def max_age(self):
         # 0 to actually force revalidation

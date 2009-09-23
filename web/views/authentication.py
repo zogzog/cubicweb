@@ -73,19 +73,19 @@ class RepositoryAuthenticationManager(AbstractAuthenticationManager):
             login, password = req.get_authorization()
         if not login:
             # No session and no login -> try anonymous
-            login, password = self._cw.vreg.config.anonymous_user()
+            login, password = self.vreg.config.anonymous_user()
             if not login: # anonymous not authorized
                 raise ExplicitLogin()
         # remove possibly cached cursor coming from closed connection
         clear_cache(req, 'cursor')
-        cnxprops = ConnectionProperties(self._cw.vreg.config.repo_method,
+        cnxprops = ConnectionProperties(self.vreg.config.repo_method,
                                         close=False, log=self.log_queries)
         try:
             cnx = repo_connect(self.repo, login, password, cnxprops=cnxprops)
         except AuthenticationError:
             req.set_message(req._('authentication failure'))
             # restore an anonymous connection if possible
-            anonlogin, anonpassword = self._cw.vreg.config.anonymous_user()
+            anonlogin, anonpassword = self.vreg.config.anonymous_user()
             if anonlogin and anonlogin != login:
                 cnx = repo_connect(self.repo, anonlogin, anonpassword,
                                    cnxprops=cnxprops)
@@ -100,9 +100,9 @@ class RepositoryAuthenticationManager(AbstractAuthenticationManager):
 
     def _init_cnx(self, cnx, login, password):
         # decorate connection
-        if login == self._cw.vreg.config.anonymous_user()[0]:
+        if login == self.vreg.config.anonymous_user()[0]:
             cnx.anonymous_connection = True
-        cnx.vreg = self._cw.vreg
+        cnx.vreg = self.vreg
         cnx.login = login
         cnx.password = password
 

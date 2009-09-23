@@ -208,4 +208,4 @@ class DownloadOWLSchemaAction(Action):
     title = _('download schema as owl')
 
     def url(self):
-        return self.build_url('view', vid='owl')
+        return self._cw.build_url('view', vid='owl')

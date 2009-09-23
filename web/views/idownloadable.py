@@ -26,7 +26,7 @@ def is_image(entity):
     return 1
 
 def download_box(w, entity, title=None, label=None):
-    req = entity.req
+    req = entity._cw
     w(u'<div class="sideBox">')
     if title is None:
         title = req._('download')
@@ -104,9 +104,9 @@ class IDownloadablePrimaryView(primary.PrimaryView):
         self.w(u'<div class="content">')
         contenttype = entity.download_content_type()
         if contenttype.startswith('image/'):
-            self.wview('image', entity.rset, row=entity.row)
+            self.wview('image', entity.cw_rset, row=entity.cw_row)
         else:
-            self.wview('downloadlink', entity.rset, title=self._cw._('download'), row=entity.row)
+            self.wview('downloadlink', entity.cw_rset, title=self._cw._('download'), row=entity.cw_row)
             try:
                 if ENGINE.has_input(contenttype):
                     self.w(entity.printable_value('data'))

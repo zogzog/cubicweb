@@ -122,10 +122,10 @@ class ProgressTableView(EntityView):
     def build_eta_date_cell(self, entity):
         """``eta_date`` column cell renderer"""
         if entity.finished():
-            return self.format_date(entity.completion_date())
-        formated_date = self.format_date(entity.initial_prevision_date())
+            return self._cw.format_date(entity.completion_date())
+        formated_date = self._cw.format_date(entity.initial_prevision_date())
         if entity.in_progress():
-            eta_date = self.format_date(entity.eta_date())
+            eta_date = self._cw.format_date(entity.eta_date())
             _ = self._cw._
             if formated_date:
                 formated_date += u' (%s %s)' % (_('expected:'), eta_date)

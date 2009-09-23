@@ -142,12 +142,12 @@ class TreeViewItemView(EntityView):
             w(u'<li class="%s">' % u' '.join(liclasses))
         else:
             rql = entity.children_rql() % {'x': entity.eid}
-            url = xml_escape(self.build_url('json', rql=rql, vid=parentvid,
-                                            pageid=self._cw.pageid,
-                                            treeid=treeid,
-                                            fname='view',
-                                            treesubvid=vid,
-                                            morekwargs=json.dumps(morekwargs)))
+            url = xml_escape(self._cw.build_url('json', rql=rql, vid=parentvid,
+                                                pageid=self._cw.pageid,
+                                                treeid=treeid,
+                                                fname='view',
+                                                treesubvid=vid,
+                                                morekwargs=json.dumps(morekwargs)))
             divclasses = ['hitarea']
             if is_open:
                 liclasses.append('collapsable')

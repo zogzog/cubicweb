@@ -47,7 +47,7 @@ class LazyViewMixin(object):
         elif rset:
             urlparams['rql'] = rset.printable_rql()
         w(u'<div id="lazy-%s" cubicweb:loadurl="%s">' % (
-            vid, xml_escape(self.build_url('json', **urlparams))))
+            vid, xml_escape(self._cw.build_url('json', **urlparams))))
         if show_spinbox:
             w(u'<img src="data/loading.gif" id="%s-hole" alt="%s"/>'
               % (vid, self._cw._('loading')))

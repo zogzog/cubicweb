@@ -109,7 +109,7 @@ class TimelineView(TimelineViewMixIn, EntityView):
     def call(self, tlunit=None):
         self._cw.html_headers.define_var('Timeline_urlPrefix', self._cw.datadir_url)
         rql = self.cw_rset.printable_rql()
-        loadurl = self.build_url(rql=rql, vid='timeline-json')
+        loadurl = self._cw.build_url(rql=rql, vid='timeline-json')
         self.render_url(loadurl, tlunit)
 
 

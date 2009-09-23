@@ -297,8 +297,9 @@ class EditionFormView(FormViewMixIn, EntityView):
     def render_form(self, entity):
         """fetch and render the form"""
         self.form_title(entity)
-        form = self._cw.vreg['forms'].select('edition', self._cw, rset=entity.rset,
-                                             row=entity.row, col=entity.col, entity=entity,
+        form = self._cw.vreg['forms'].select('edition', self._cw, rset=entity.cw_rset,
+                                             row=entity.cw_row, col=entity.cw_col,
+                                             entity=entity,
                                              submitmsg=self.submited_message())
         self.init_form(form, entity)
         self.w(form.form_render(formvid=u'edition'))

@@ -125,7 +125,7 @@ class ManageView(StartupView):
             etype = eschema.type
             label = display_name(req, etype, 'plural')
             nb = req.execute('Any COUNT(X) WHERE X is %s' % etype)[0][0]
-            url = self.build_url(etype)
+            url = self._cw.build_url(etype)
             etypelink = u'&#160;<a href="%s">%s</a> (%d)' % (
                 xml_escape(url), label, nb)
             yield (label, etypelink, self.add_entity_link(eschema, req))

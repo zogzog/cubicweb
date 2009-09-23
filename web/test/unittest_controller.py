@@ -13,7 +13,7 @@ class BaseControllerTC(testlib.CubicWebTC):
 
     def test_parse_datetime_ok(self):
         ctrl = self.vreg['controllers'].select('view', self.request())
-        pd = ctrl.parse_datetime
+        pd = ctrl._cw.parse_datetime
         self.assertIsInstance(pd('2006/06/24 12:18'), datetime)
         self.assertIsInstance(pd('2006/06/24'), date)
         self.assertIsInstance(pd('2006/06/24 12:18', 'Datetime'), datetime)
@@ -23,7 +23,7 @@ class BaseControllerTC(testlib.CubicWebTC):
 
     def test_parse_datetime_ko(self):
         ctrl = self.vreg['controllers'].select('view', self.request())
-        pd = ctrl.parse_datetime
+        pd = ctrl._cw.parse_datetime
         self.assertRaises(ValueError,
                           pd, '2006/06/24 12:188', 'Datetime')
         self.assertRaises(ValueError,

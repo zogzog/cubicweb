@@ -422,7 +422,7 @@ class JSonController(Controller):
     def js_format_date(self, strdate):
         """returns the formatted date for `msgid`"""
         date = strptime(strdate, '%Y-%m-%d %H:%M:%S')
-        return self.format_date(date)
+        return self._cw.format_date(date)
 
     @jsonize
     def js_external_resource(self, resource):
@@ -563,7 +563,7 @@ class SendMailController(Controller):
         except Exception, ex:
             self.exception("can't connect to smtp server %s:%s (%s)",
                              mailhost, port, ex)
-            url = self.build_url(__message=self._cw._('could not connect to the SMTP server'))
+            url = self._cw.build_url(__message=self._cw._('could not connect to the SMTP server'))
             raise Redirect(url)
 
     def sendmail(self, recipient, subject, body):
@@ -583,7 +583,7 @@ class SendMailController(Controller):
             text = body % recipient.as_email_context()
             self.sendmail(recipient.get_email(), subject, text)
         # breadcrumbs = self._cw.get_session_data('breadcrumbs', None)
-        url = self.build_url(__message=self._cw._('emails successfully sent'))
+        url = self._cw.build_url(__message=self._cw._('emails successfully sent'))
         raise Redirect(url)
 
 
@@ -594,6 +594,6 @@ class MailBugReportController(SendMailController):
     def publish(self, rset=None):
         body = self._cw.form['description']
         self.sendmail(self._cw.config['submit-mail'], _('%s error report') % self._cw.config.appid, body)
-        url = self.build_url(__message=self._cw._('bug report sent'))
+        url = self._cw.build_url(__message=self._cw._('bug report sent'))
         raise Redirect(url)
 

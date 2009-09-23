@@ -224,7 +224,7 @@ class ChangeLogView(StartupView):
         i = 0
         for edate, messages in reversed(allentries):
             if latestdate != edate:
-                fdate = self.format_date(edate)
+                fdate = self._cw.format_date(edate)
                 w(u'\n%s' % fdate)
                 w('~' * len(fdate))
                 latestdate = edate

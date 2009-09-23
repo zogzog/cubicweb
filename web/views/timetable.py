@@ -171,7 +171,7 @@ class TimeTableView(AnyRsetView):
             odd = not odd
 
             if not empty_line:
-                self.w(u'<th class="ttdate">%s</th>' % self.format_date(date) )
+                self.w(u'<th class="ttdate">%s</th>' % self._cw.format_date(date) )
             else:
                 self.w(u'<th>...</th>'  )
                 previous_is_empty = True

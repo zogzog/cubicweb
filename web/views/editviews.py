@@ -141,7 +141,7 @@ class UnrelatedDivs(EntityView):
         _ = self._cw._
         for eschema in targettypes:
             mode = '%s:%s:%s:%s' % (target, entity.eid, rschema.type, eschema)
-            url = self.build_url(entity.rest_path(), vid='search-associate',
+            url = self._cw.build_url(entity.rest_path(), vid='search-associate',
                                  __mode=mode)
             options.append((eschema.display_name(self._cw),
                             '<option value="%s">%s %s</option>' % (

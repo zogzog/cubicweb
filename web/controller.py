@@ -198,7 +198,7 @@ class Controller(AppObject):
             path = self._edited_entity.rest_path()
         else:
             path = 'view'
-        url = self.build_url(path, **newparams)
+        url = self._cw.build_url(path, **newparams)
         url = append_url_params(url, self.req.form.get('__redirectparams'))
         raise Redirect(url)
 
@@ -223,7 +223,7 @@ class Controller(AppObject):
         for redirectparam in NAV_FORM_PARAMETERS:
             if redirectparam in form:
                 newparams[redirectparam] = form[redirectparam]
-        raise Redirect(self.build_url(path, **newparams))
+        raise Redirect(self._cw.build_url(path, **newparams))
 
 
     def _return_to_lastpage(self, newparams):
@@ -235,7 +235,7 @@ class Controller(AppObject):
         if '__redirectpath' in self.req.form:
             # if redirect path was explicitly specified in the form, use it
             path = self.req.form['__redirectpath']
-            url = self.build_url(path, **newparams)
+            url = self._cw.build_url(path, **newparams)
             url = append_url_params(url, self.req.form.get('__redirectparams'))
         else:
             url = self.req.last_visited_page()

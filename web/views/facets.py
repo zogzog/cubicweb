@@ -109,8 +109,8 @@ class FilterBox(BoxTemplate):
             bk_path = 'view?rql=%s' % rset.printable_rql()
             bk_title = self._cw._('my custom search')
             linkto = 'bookmarked_by:%s:subject' % self._cw.user.eid
-            bk_add_url = self.build_url('add/Bookmark', path=bk_path, title=bk_title, __linkto=linkto)
-            bk_base_url = self.build_url('add/Bookmark', title=bk_title, __linkto=linkto)
+            bk_add_url = self._cw.build_url('add/Bookmark', path=bk_path, title=bk_title, __linkto=linkto)
+            bk_base_url = self._cw.build_url('add/Bookmark', title=bk_title, __linkto=linkto)
             bk_link = u'<a cubicweb:target="%s" id="facetBkLink" href="%s">%s</a>' % (
                     xml_escape(bk_base_url),
                     xml_escape(bk_add_url),

@@ -44,7 +44,7 @@ class BreadCrumbEntityVComponent(Component):
     def render_breadcrumbs(self, contextentity, path):
         root = path.pop(0)
         if isinstance(root, Entity):
-            self.w(u'<a href="%s">%s</a>' % (self._cw.build_url(root.id),
+            self.w(u'<a href="%s">%s</a>' % (self._cw.build_url(root.__regid__),
                                              root.dc_type('plural')))
             self.w(self.separator)
         self.wpath_part(root, contextentity, not path)
@@ -76,7 +76,7 @@ class BreadCrumbETypeVComponent(BreadCrumbEntityVComponent):
         # XXX hack: only display etype name or first non entity path part
         root = path.pop(0)
         if isinstance(root, Entity):
-            self.w(u'<a href="%s">%s</a>' % (self._cw.build_url(root.id),
+            self.w(u'<a href="%s">%s</a>' % (self._cw.build_url(root.__regid__),
                                              root.dc_type('plural')))
         else:
             self.wpath_part(root, contextentity, not path)

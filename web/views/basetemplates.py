@@ -59,7 +59,7 @@ class LoggedOutTemplate(LogInOutTemplate):
         msg = self._cw._('you have been logged out')
         w(u'<h2>%s</h2>\n' % msg)
         if self._cw.config['anonymous-user']:
-            indexurl = self.build_url('view', vid='index', __message=msg)
+            indexurl = self._cw.build_url('view', vid='index', __message=msg)
             w(u'<p><a href="%s">%s</a><p>' % (
                 xml_escape(indexurl),
                 self._cw._('go back to the index page')))

@@ -285,13 +285,13 @@ class OneMonthCal(EntityView):
 
         if len(self.cw_rset.column_types(0)) == 1:
             etype = list(self.cw_rset.column_types(0))[0]
-            url = self.build_url(vid='creation', etype=etype,
-                                 schedule=True,
-                                 start=self._cw.format_date(celldate), stop=self._cw.format_date(celldate),
-                                 __redirectrql=self.cw_rset.printable_rql(),
-                                 __redirectparams=self._cw.build_url_params(year=curdate.year, month=curmonth),
-                                 __redirectvid=self.__regid__
-                                 )
+            url = self._cw.build_url(vid='creation', etype=etype,
+                                     schedule=True,
+                                     start=self._cw.format_date(celldate), stop=self._cw.format_date(celldate),
+                                     __redirectrql=self.cw_rset.printable_rql(),
+                                     __redirectparams=self._cw.build_url_params(year=curdate.year, month=curmonth),
+                                     __redirectvid=self.__regid__
+                                     )
             self.w(u'<div class="cmd"><a href="%s">%s</a></div>' % (xml_escape(url), self._cw._(u'add')))
             self.w(u'&#160;')
         self.w(u'</div>')
@@ -422,12 +422,12 @@ class OneWeekCal(EntityView):
             self.w(u'<td class="column %s" id="%s">' % (classes, day))
             if len(self.cw_rset.column_types(0)) == 1:
                 etype = list(self.cw_rset.column_types(0))[0]
-                url = self.build_url(vid='creation', etype=etype,
-                                     schedule=True,
-                                     __redirectrql=self.cw_rset.printable_rql(),
-                                     __redirectparams=self._cw.build_url_params(year=year, week=week),
-                                     __redirectvid=self.__regid__
-                                     )
+                url = self._cw.build_url(vid='creation', etype=etype,
+                                         schedule=True,
+                                         __redirectrql=self.cw_rset.printable_rql(),
+                                         __redirectparams=self._cw.build_url_params(year=year, week=week),
+                                         __redirectvid=self.__regid__
+                                         )
                 extra = ' ondblclick="addCalendarItem(event, hmin=8, hmax=20, year=%s, month=%s, day=%s, duration=2, baseurl=\'%s\')"' % (
                     wdate.year, wdate.month, wdate.day, xml_escape(url))
             else:
