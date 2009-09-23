@@ -356,9 +356,10 @@ class AppObject(object):
     def view(self, *args, **kwargs):
         return self._cw.view(*args, **kwargs)
 
+    @property
     @deprecated('[3.6] use self._cw.varmaker')
-    def initialize_varmaker(self):
-        self.varmaker = self._cw.varmaker
+    def varmaker(self):
+        return self._cw.varmaker
 
     @deprecated('[3.6] use self._cw.get_cache')
     def get_cache(self, cachename):
