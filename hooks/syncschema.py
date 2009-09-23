@@ -1044,7 +1044,7 @@ class AfterAddCWConstraintHook(SyncSchemaHook):
 
 class AfterAddConstrainedByHook(SyncSchemaHook):
     __regid__ = 'syncdelconstrainedby'
-    __select__ = SyncSchemaHook.__select__ & hook.match_rtype('constrainted_by')
+    __select__ = SyncSchemaHook.__select__ & hook.match_rtype('constrained_by')
     events = ('after_add_relation',)
 
     def __call__(self):
