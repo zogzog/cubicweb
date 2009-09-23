@@ -134,31 +134,7 @@ class cwuri(RelationType):
     subject = '*'
     object = 'String'
 
-
-class CWProperty(EntityType):
-    """used for cubicweb configuration. Once a property has been created you
-    can't change the key.
-    """
-    permissions = {
-        'read':   ('managers', 'users', 'guests'),
-        'add':    ('managers', 'users',),
-        'update': ('managers', 'owners',),
-        'delete': ('managers', 'owners',),
-        }
-    # key is a reserved word for mysql
-    pkey = String(required=True, internationalizable=True, maxsize=256,
-                  description=_('defines what\'s the property is applied for. '
-                                'You must select this first to be able to set '
-                                'value'))
-    value = String(internationalizable=True, maxsize=256)
-
-    for_user = SubjectRelation('CWUser', cardinality='?*', composite='object',
-                               description=_('user for which this property is '
-                                             'applying. If this relation is not '
-                                             'set, the property is considered as'
-                                             ' a global property'))
-
-
+# XXX find a better relation name
 class for_user(RelationType):
     """link a property to the user which want this property customization. Unless
     you're a site manager, this relation will be handled automatically.
@@ -169,7 +145,10 @@ class for_user(RelationType):
         'delete': ('managers',),
         }
     inlined = True
-
+    subject = 'CWProperty'
+    object = 'CWUser'
+    composite = 'object'
+    cardinality = '?*'
 
 class CWPermission(EntityType):
     """entity type that may be used to construct some advanced security configuration

@@ -173,6 +173,23 @@ class CWGroup(EntityType):
 
 
 
+class CWProperty(EntityType):
+    """used for cubicweb configuration. Once a property has been created you
+    can't change the key.
+    """
+    permissions = {
+        'read':   ('managers', 'users', 'guests'),
+        'add':    ('managers', 'users',),
+        'update': ('managers', 'owners',),
+        'delete': ('managers', 'owners',),
+        }
+    # key is a reserved word for mysql
+    pkey = String(required=True, internationalizable=True, maxsize=256,
+                  description=_('defines what\'s the property is applied for. '
+                                'You must select this first to be able to set '
+                                'value'))
+    value = String(internationalizable=True, maxsize=256)
+
 class relation_type(RelationType):
     """link a relation definition to its relation type"""
     permissions = META_RTYPE_PERMS
