@@ -220,7 +220,7 @@ class PdfViewComponent(component.Component):
     __select__ = yes()
 
     context = 'header'
-    property_defs = {
+    cw_property_defs = {
         _('visible'):  dict(type='Boolean', default=True,
                             help=_('display the pdf icon or not')),
     }

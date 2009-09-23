@@ -23,7 +23,7 @@ class BreadCrumbEntityVComponent(Component):
     __regid__ = 'breadcrumbs'
     __select__ = one_line_rset() & implements(IBreadCrumbs)
 
-    property_defs = {
+    cw_property_defs = {
         _('visible'):  dict(type='Boolean', default=True,
                             help=_('display the component or not')),
         }
