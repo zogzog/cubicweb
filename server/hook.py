@@ -67,10 +67,12 @@ class HooksRegistry(CWRegistry):
         except AttributeError:
             raise
         except:
-            raise Exception('bad .events attribute %s on %s' % (obj.events, obj))
+            raise Exception('bad .events attribute %s on %s.%s' % (
+                obj.events, obj.__module__, obj.__name__))
         for event in obj.events:
             if event not in ALL_HOOKS:
-                raise Exception('bad event %s on %s' % (event, obj))
+                raise Exception('bad event %s on %s.%s' % (
+                    event, obj.__module__, obj.__name__))
         super(HooksRegistry, self).register(obj, **kwargs)
 
     def call_hooks(self, event, req=None, **kwargs):
@@ -101,7 +103,7 @@ def enabled_category(cls, req, **kwargs):
         config = kwargs['repo'].config
     else:
         config = req.vreg.config
-    if enabled_category in config.disabled_hooks_categories:
+    if cls.category in config.disabled_hooks_categories:
         return 0
     return 1
 
