@@ -173,6 +173,13 @@ class Repository(object):
         if config.open_connections_pools:
             self.open_connections_pools()
 
+    def _boostrap_hook_registry(self):
+        """called during bootstrap since we need the metadata hooks"""
+        hooksdirectory = join(CW_SOFTWARE_ROOT, 'hooks')
+        self.vreg.init_registration([hooksdirectory])
+        self.vreg.load_file(join(hooksdirectory, 'metadata.py'),
+                            'cubicweb.hooks.metadata')
+
     def open_connections_pools(self):
         config = self.config
         self._available_pools = Queue.Queue()
@@ -191,15 +198,14 @@ class Repository(object):
             for modname in ('__init__', 'authobjs', 'wfobjs'):
                 self.vreg.load_file(join(etdirectory, '%s.py' % modname),
                                 'cubicweb.entities.%s' % modname)
-            hooksdirectory = join(CW_SOFTWARE_ROOT, 'hooks')
-            self.vreg.init_registration([hooksdirectory])
-            self.vreg.load_file(join(hooksdirectory, 'metadata.py'),
-                                'cubicweb.hooks.metadata')
+            self._boostrap_hook_registry()
         else:
             # test start: use the file system schema (quicker)
             self.warning("set fs instance'schema")
             config.bootstrap_cubes()
             self.set_schema(config.load_schema())
+            # make sure we have a hook registry in tests
+            self.vreg['hooks'] = hook.HooksRegistry(self.vreg)
         if not config.creating:
             if 'CWProperty' in self.schema:
                 self.vreg.init_properties(self.properties())
