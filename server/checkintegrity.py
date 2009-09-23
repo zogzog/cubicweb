@@ -211,8 +211,8 @@ def check_relations(schema, session, eids, fix=1):
                     if not has_eid(cursor, eid, eids):
                         bad_related_msg(rschema, 'object', eid, fix)
                         if fix:
-                            sql = 'UPDATE %s SET %s = NULL WHERE %seid=%s;' % (
-                                table, column, SQL_PREFIX, eid)
+                            sql = 'UPDATE %s SET %s=NULL WHERE %s=%s;' % (
+                                table, column, column, eid)
                             session.system_sql(sql)
             continue
         cursor = session.system_sql('SELECT eid_from FROM %s_relation;' % rschema)
