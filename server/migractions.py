@@ -673,8 +673,8 @@ class ServerMigrationHelper(MigrationHelper):
                 continue
             if instspschema.specializes() != eschema:
                 self.rqlexec('SET D specializes P WHERE D eid %(d)s, P name %(pn)s',
-                              {'d': instspschema.eid,
-                               'pn': eschema.type}, ask_confirm=confirm)
+                             {'d': instspschema.eid,
+                              'pn': eschema.type}, ask_confirm=confirm)
                 for rschema, tschemas, role in spschema.relation_definitions(True):
                     for tschema in tschemas:
                         if not tschema in instschema:
