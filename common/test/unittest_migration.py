@@ -63,7 +63,6 @@ class MigrationToolsTC(TestCase):
                                ((0, 0, 4), TMIGRDIR+'0.0.4_Any.py')])
 
     def test_filter_scripts_for_mode(self):
-        self.assertIsInstance(self.config.migration_handler(), ServerMigrationHelper)
         config = CubicWebConfiguration('data')
         config.verbosity = 0
         self.assert_(not isinstance(config.migration_handler(), ServerMigrationHelper))
