@@ -61,7 +61,8 @@ def classid(cls):
 def class_regid(cls):
     """returns a unique identifier for an appobject class"""
     if 'id' in cls.__dict__:
-        warn('%s: id is deprecated, use __regid__')
+        warn('%s.%s: id is deprecated, use __regid__'
+             % (cls.__module__, cls.__name__), DeprecationWarning)
         cls.__regid__ = cls.id
     if hasattr(cls, 'id'):
         return cls.id
