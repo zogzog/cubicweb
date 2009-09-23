@@ -13,7 +13,7 @@ from cubicweb.selectors import none_rset
 from cubicweb.schema import display_name
 from cubicweb.view import Component
 from cubicweb.common.mail import format_mail
-from cubicweb.server.hookhelper import SendMailOp
+from cubicweb.server.hook import SendMailOp
 
 
 def filter_changes(changes):
@@ -86,14 +86,14 @@ class SupervisionEmailView(Component):
     __select__ = none_rset()
 
     def recipients(self):
-        return self.config['supervising-addrs']
+        return self._cw.vreg.config['supervising-addrs']
 
     def subject(self):
-        return self.req._('[%s supervision] changes summary') % self.config.appid
+        return self._cw._('[%s supervision] changes summary') % self._cw.vreg.config.appid
 
     def call(self, changes):
-        user = self.req.actual_session().user
-        self.w(self.req._('user %s has made the following change(s):\n\n')
+        user = self._cw.actual_session().user
+        self.w(self._cw._('user %s has made the following change(s):\n\n')
                % user.login)
         for event, changedescr in filter_changes(changes):
             self.w(u'* ')
@@ -106,31 +106,31 @@ class SupervisionEmailView(Component):
                 'title': entity.dc_title()}
 
     def add_entity(self, changedescr):
-        msg = self.req._('added %(etype)s #%(eid)s (%(title)s)')
+        msg = self._cw._('added %(etype)s #%(eid)s (%(title)s)')
         self.w(u'%s\n' % (msg % self._entity_context(changedescr.entity)))
         self.w(u'  %s' % changedescr.entity.absolute_url())
 
     def update_entity(self, changedescr):
-        msg = self.req._('updated %(etype)s #%(eid)s (%(title)s)')
+        msg = self._cw._('updated %(etype)s #%(eid)s (%(title)s)')
         self.w(u'%s\n' % (msg % self._entity_context(changedescr.entity)))
         # XXX print changes
         self.w(u'  %s' % changedescr.entity.absolute_url())
 
     def delete_entity(self, (eid, etype, title)):
-        msg = self.req._('deleted %(etype)s #%(eid)s (%(title)s)')
-        etype = display_name(self.req, etype).lower()
+        msg = self._cw._('deleted %(etype)s #%(eid)s (%(title)s)')
+        etype = display_name(self._cw, etype).lower()
         self.w(msg % locals())
 
     def change_state(self, (entity, fromstate, tostate)):
-        msg = self.req._('changed state of %(etype)s #%(eid)s (%(title)s)')
+        msg = self._cw._('changed state of %(etype)s #%(eid)s (%(title)s)')
         self.w(u'%s\n' % (msg % self._entity_context(entity)))
         self.w(_('  from state %(fromstate)s to state %(tostate)s\n' %
                  {'fromstate': _(fromstate.name), 'tostate': _(tostate.name)}))
         self.w(u'  %s' % entity.absolute_url())
 
     def _relation_context(self, changedescr):
-        _ = self.req._
-        session = self.req.actual_session()
+        _ = self._cw._
+        session = self._cw.actual_session()
         def describe(eid):
             try:
                 return _(session.describe(eid)[0]).lower()
@@ -146,11 +146,11 @@ class SupervisionEmailView(Component):
                 'toetype': describe(eidto)}
 
     def add_relation(self, changedescr):
-        msg = self.req._('added relation %(rtype)s from %(frometype)s #%(eidfrom)s to %(toetype)s #%(eidto)s')
+        msg = self._cw._('added relation %(rtype)s from %(frometype)s #%(eidfrom)s to %(toetype)s #%(eidto)s')
         self.w(msg % self._relation_context(changedescr))
 
-        msg = self.req._('deleted relation %(rtype)s from %(frometype)s #%(eidfrom)s to %(toetype)s #%(eidto)s')
     def delete_relation(self, changedescr):
+        msg = self._cw._('deleted relation %(rtype)s from %(frometype)s #%(eidfrom)s to %(toetype)s #%(eidto)s')
         self.w(msg % self._relation_context(changedescr))
 
 
