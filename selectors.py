@@ -637,7 +637,7 @@ class entity_implements(ImplementsMixIn, EntitySelector):
           proximity so the most specific object'll be selected
     """
     def score_entity(self, entity):
-        return self.score_interfaces(entity.req, entity, entity.__class__)
+        return self.score_interfaces(entity._cw, entity, entity.__class__)
 
 
 class relation_possible(EClassSelector):
@@ -742,9 +742,9 @@ class may_add_relation(EntitySelector):
     def score_entity(self, entity):
         rschema = entity.schema.rschema(self.rtype)
         if self.role == 'subject':
-            if not rschema.has_perm(entity.req, 'add', fromeid=entity.eid):
+            if not rschema.has_perm(entity._cw, 'add', fromeid=entity.eid):
                 return 0
-        elif not rschema.has_perm(entity.req, 'add', toeid=entity.eid):
+        elif not rschema.has_perm(entity._cw, 'add', toeid=entity.eid):
             return 0
         return 1
 
@@ -795,7 +795,7 @@ class has_related_entities(EntitySelector):
 
     def score_entity(self, entity):
         relpossel = relation_possible(self.rtype, self.role, self.target_etype)
-        if not relpossel.score_class(entity.__class__, entity.req):
+        if not relpossel.score_class(entity.__class__, entity._cw):
             return 0
         rset = entity.related(self.rtype, self.role)
         if self.target_etype:
