@@ -438,7 +438,7 @@ class CubicWebTC(TestCase):
                 continue
             views = [view for view in views
                      if view.category != 'startupview'
-                     and not issubclass(view, NotificationView)]
+                     and not issubclass(view, notification.NotificationView)]
             if views:
                 try:
                     view = viewsvreg._select_best(views, req, rset=rset)
