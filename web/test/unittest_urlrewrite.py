@@ -13,7 +13,7 @@ from cubicweb.devtools.fake import FakeRequest
 from cubicweb.web.views.urlrewrite import SimpleReqRewriter, SchemaBasedRewriter, rgx, rgx_action
 
 
-class UrlRewriteTC(TestCase):
+class UrlRewriteTC(CubicWebTC):
 
     def test_auto_extend_rules(self):
         class Rewriter(SimpleReqRewriter):
@@ -64,8 +64,8 @@ class UrlRewriteTC(TestCase):
 
     def test_basic_transformation(self):
         """test simple string-based rewrite"""
-        rewriter = SimpleReqRewriter()
         req = FakeRequest()
+        rewriter = SimpleReqRewriter(req)
         self.assertRaises(KeyError, rewriter.rewrite, req, '/view?vid=whatever')
         self.assertEquals(req.form, {})
         rewriter.rewrite(req, '/index')
@@ -73,8 +73,8 @@ class UrlRewriteTC(TestCase):
 
     def test_regexp_transformation(self):
         """test regexp-based rewrite"""
-        rewriter = SimpleReqRewriter()
         req = FakeRequest()
+        rewriter = SimpleReqRewriter(req)
         rewriter.rewrite(req, '/add/Task')
         self.assertEquals(req.form, {'vid' : "creation", 'etype' : "Task"})
         req = FakeRequest()
@@ -100,8 +100,8 @@ class RgxActionRewriteTC(CubicWebTC):
                                                                              transforms={'sn' : unicode.capitalize,
                                                                                          'fn' : unicode.lower,})),
                 ]
-        rewriter = TestSchemaBasedRewriter()
         req = self.request()
+        rewriter = TestSchemaBasedRewriter(req)
         pmid, rset = rewriter.rewrite(req, u'/DaLToN/JoE')
         self.assertEquals(len(rset), 1)
         self.assertEquals(rset[0][0], self.p1.eid)
@@ -125,8 +125,8 @@ class RgxActionRewriteTC(CubicWebTC):
                 ),
                 ]
 
-        rewriter = Rewriter()
         req = self.request()
+        rewriter = Rewriter(req)
         pmid, rset = rewriter.rewrite(req, '/collector')
         self.assertEquals(rset.rql, RQL1)
         self.assertEquals(req.form, {'vid' : "baseindex"})
@@ -159,8 +159,8 @@ class RgxActionRewriteTC(CubicWebTC):
                 ),
                 ]
 
-        rewriter = Rewriter()
         req = self.request()
+        rewriter = Rewriter(req)
         pmid, rset = rewriter.rewrite(req, '/collector')
         self.assertEquals(rset.rql, RQL2)
         self.assertEquals(req.form, {'vid' : "index"})
