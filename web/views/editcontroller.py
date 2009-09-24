@@ -205,7 +205,7 @@ class EditController(ViewController):
         """handle edition for the (rschema, x) relation of the given entity
         """
         values = set()
-        for eid in field.process_form_data(form):
+        for eid in field.process_form_value(form):
             if not eid: # AutoCompletionWidget
                 continue
             typed_eid = self._get_eid(eid)
