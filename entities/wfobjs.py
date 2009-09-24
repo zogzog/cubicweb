@@ -452,7 +452,9 @@ class WorkflowableMixIn(object):
         """
         assert self.current_workflow
         tr = self.current_workflow.transition_by_name(trname)
-        assert tr is not None, 'not a %s transition: %s' % (self.__regid__, trname)
+        if tr is None:
+            raise WorkflowException('not a %s transition: %s' % (self.__regid__,
+                                                                 trname))
         return self._add_trinfo(comment, commentformat, tr.eid)
 
     def change_state(self, statename, comment=None, commentformat=None, tr=None):
