@@ -19,13 +19,13 @@ from cubicweb.web.views import (primary, baseviews, tableview, editforms,
 
 from cubes.folder import views as folderviews
 
-USERACTIONS = [('myprefs', actions.UserPreferencesAction),
-               ('myinfos', actions.UserInfoAction),
-               ('logout', actions.LogoutAction)]
-SITEACTIONS = [('siteconfig', actions.SiteConfigurationAction),
-               ('manage', actions.ManageAction),
-               ('schema', schema.ViewSchemaAction),
-               ('siteinfo', actions.SiteInfoAction),
+USERACTIONS = [actions.UserPreferencesAction,
+               actions.UserInfoAction,
+               actions.LogoutAction]
+SITEACTIONS = [actions.SiteConfigurationAction,
+               actions.ManageAction,
+               schema.ViewSchemaAction,
+               actions.SiteInfoAction,
                ]
 
 class ViewSelectorTC(CubicWebTC):
@@ -35,13 +35,6 @@ class ViewSelectorTC(CubicWebTC):
         self.add_entity('Bookmark', title=u"un signet !", path=u"view?vid=index")
         self.add_entity('EmailAddress', address=u"devel@logilab.fr", alias=u'devel')
         self.add_entity('Tag', name=u'x')
-
-    def pactions(self, req, rset):
-        resdict = self.vreg['actions'].possible_actions(req, rset)
-        for cat, actions in resdict.items():
-            resdict[cat] = [(a.id, a.__class__) for a in actions]
-        return resdict
-
 
 class VRegistryTC(ViewSelectorTC):
     """test the view selector"""
@@ -76,7 +69,7 @@ class VRegistryTC(ViewSelectorTC):
                               ('manage', startup.ManageView),
                               ('owl', owl.OWLView),
                               ('propertiesform', cwproperties.CWPropertiesForm),
-                              ('registry', startup.RegistryView),
+                              ('registry', debug.RegistryView),
                               ('schema', schema.SchemaView),
                               ('systempropertiesform', cwproperties.SystemCWPropertiesForm),
                               ('tree', folderviews.FolderTreeView),
@@ -229,7 +222,7 @@ class VRegistryTC(ViewSelectorTC):
 
     def test_possible_actions_none_rset(self):
         req = self.request()
-        self.assertDictEqual(self.pactions(req, None),
+        self.assertDictEqual(self.pactionsdict(req, None, skipcategories=()),
                              {'useractions': USERACTIONS,
                               'siteactions': SITEACTIONS,
 
@@ -237,7 +230,7 @@ class VRegistryTC(ViewSelectorTC):
     def test_possible_actions_no_entity(self):
         req = self.request()
         rset = req.execute('Any X WHERE X eid 999999')
-        self.assertDictEqual(self.pactions(req, rset),
+        self.assertDictEqual(self.pactionsdict(req, rset, skipcategories=()),
                              {'useractions': USERACTIONS,
                               'siteactions': SITEACTIONS,
                               })
@@ -245,41 +238,41 @@ class VRegistryTC(ViewSelectorTC):
     def test_possible_actions_same_type_entities(self):
         req = self.request()
         rset = req.execute('CWGroup X')
-        self.assertDictEqual(self.pactions(req, rset),
+        self.assertDictEqual(self.pactionsdict(req, rset, skipcategories=()),
                              {'useractions': USERACTIONS,
                               'siteactions': SITEACTIONS,
-                              'mainactions': [('muledit', actions.MultipleEditAction)],
-                              'moreactions': [('delete', actions.DeleteAction),
-                                              ('addentity', actions.AddNewAction)],
+                              'mainactions': [actions.MultipleEditAction],
+                              'moreactions': [actions.DeleteAction,
+                                              actions.AddNewAction],
                               })
 
     def test_possible_actions_different_types_entities(self):
         req = self.request()
         rset = req.execute('Any X')
-        self.assertDictEqual(self.pactions(req, rset),
+        self.assertDictEqual(self.pactionsdict(req, rset, skipcategories=()),
                              {'useractions': USERACTIONS,
                               'siteactions': SITEACTIONS,
-                              'moreactions': [('delete', actions.DeleteAction)],
+                              'moreactions': [actions.DeleteAction],
                               })
 
     def test_possible_actions_final_entities(self):
         req = self.request()
         rset = req.execute('Any N, X WHERE X in_group Y, Y name N')
-        self.assertDictEqual(self.pactions(req, rset),
+        self.assertDictEqual(self.pactionsdict(req, rset, skipcategories=()),
                              {'useractions': USERACTIONS,
                               'siteactions': SITEACTIONS})
 
     def test_possible_actions_eetype_cwuser_entity(self):
         req = self.request()
         rset = req.execute('CWEType X WHERE X name "CWUser"')
-        self.assertDictEqual(self.pactions(req, rset),
+        self.assertDictEqual(self.pactionsdict(req, rset, skipcategories=()),
                              {'useractions': USERACTIONS,
                               'siteactions': SITEACTIONS,
-                              'mainactions': [('edit', actions.ModifyAction)],
-                              'moreactions': [('managepermission', actions.ManagePermissionsAction),
-                                              ('addrelated', actions.AddRelatedActions),
-                                              ('delete', actions.DeleteAction),
-                                              ('copy', actions.CopyAction),
+                              'mainactions': [actions.ModifyAction],
+                              'moreactions': [actions.ManagePermissionsAction,
+                                              actions.AddRelatedActions,
+                                              actions.DeleteAction,
+                                              actions.CopyAction,
                                               ],
                               })
 
@@ -472,27 +465,27 @@ class RQLActionTC(ViewSelectorTC):
     def test(self):
         req = self.request()
         rset = req.execute('CWEType X WHERE X name "CWEType"')
-        self.assertDictEqual(self.pactions(req, rset),
+        self.assertDictEqual(self.pactionsdict(req, rset, skipcategories=()),
                              {'useractions': USERACTIONS,
                               'siteactions': SITEACTIONS,
-                              'mainactions': [('edit', actions.ModifyAction)],
-                              'moreactions': [('managepermission', actions.ManagePermissionsAction),
-                                              ('addrelated', actions.AddRelatedActions),
-                                              ('delete', actions.DeleteAction),
-                                              ('copy', actions.CopyAction),
-                                              ('testaction', CWETypeRQLAction),
+                              'mainactions': [actions.ModifyAction],
+                              'moreactions': [actions.ManagePermissionsAction,
+                                              actions.AddRelatedActions,
+                                              actions.DeleteAction,
+                                              actions.CopyAction,
+                                              CWETypeRQLAction,
                                               ],
                               })
         req = self.request()
         rset = req.execute('CWEType X WHERE X name "CWRType"')
-        self.assertDictEqual(self.pactions(req, rset),
+        self.assertDictEqual(self.pactionsdict(req, rset, skipcategories=()),
                              {'useractions': USERACTIONS,
                               'siteactions': SITEACTIONS,
-                              'mainactions': [('edit', actions.ModifyAction)],
-                              'moreactions': [('managepermission', actions.ManagePermissionsAction),
-                                              ('addrelated', actions.AddRelatedActions),
-                                              ('delete', actions.DeleteAction),
-                                              ('copy', actions.CopyAction),
+                              'mainactions': [actions.ModifyAction],
+                              'moreactions': [actions.ManagePermissionsAction,
+                                              actions.AddRelatedActions,
+                                              actions.DeleteAction,
+                                              actions.CopyAction,
                                               ],
                               })
 

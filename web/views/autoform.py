@@ -293,7 +293,7 @@ class AutomaticEntityForm(forms.EntityFieldsForm):
                     status = u''
                     label = 'x'
                 dellink = toggleable_rel_link_func(entity.eid, nodeid, label)
-                eview = self.view('oneline', relatedrset, row=row)
+                eview = self._cw.view('oneline', relatedrset, row=row)
                 related.append((nodeid, dellink, status, eview))
             yield (rschema, role, related)
 
@@ -315,7 +315,7 @@ class AutomaticEntityForm(forms.EntityFieldsForm):
             jscall = "javascript: cancelPendingInsert('%s', '%s', null, %s);" \
                      % (pendingid, cell, eid)
             rset = self._cw.eid_rset(reid)
-            eview = self.view('text', rset, row=0)
+            eview = self._cw.view('text', rset, row=0)
             # XXX find a clean way to handle baskets
             if rset.description[0][0] == 'Basket':
                 eview = '%s (%s)' % (eview, display_name(self._cw, 'Basket'))
@@ -343,9 +343,9 @@ class AutomaticEntityForm(forms.EntityFieldsForm):
             # display inline-edition view for all existing related entities
             for i, relentity in enumerate(related.entities()):
                 if relentity.has_perm('update'):
-                    w(self.view('inline-edition', related, row=i, col=0,
-                                rtype=rschema, role=role, ptype=entity.e_schema,
-                                peid=entity.eid, i18nctx=i18nctx))
+                    w(self._cw.view('inline-edition', related, row=i, col=0,
+                                    rtype=rschema, role=role, ptype=entity.e_schema,
+                                    peid=entity.eid, i18nctx=i18nctx))
                     existant = True
         return existant
 
@@ -363,9 +363,9 @@ class AutomaticEntityForm(forms.EntityFieldsForm):
         Return True if some inlined form are actually displayed
         """
         entity = self.edited_entity
-        w(self.view('inline-creation', None, etype=targettype,
-                    peid=entity.eid, ptype=entity.e_schema,
-                    rtype=rschema, role=role, i18nctx=i18nctx))
+        w(self._cw.view('inline-creation', None, etype=targettype,
+                        peid=entity.eid, ptype=entity.e_schema,
+                        rtype=rschema, role=role, i18nctx=i18nctx))
 
     def should_display_add_new_relation_link(self, rschema, existant, card):
         """return true if we should add a link to add a new creation form

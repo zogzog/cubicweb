@@ -84,7 +84,7 @@ class NavigationComponent(Component):
         try:
             return self._page_size
         except AttributeError:
-            page_size = self.extra_kwargs.get('page_size')
+            page_size = self.cw_extra_kwargs.get('page_size')
             if page_size is None:
                 if 'page_size' in self._cw.form:
                     page_size = int(self._cw.form['page_size'])

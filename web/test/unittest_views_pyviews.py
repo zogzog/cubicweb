@@ -4,9 +4,10 @@ from cubicweb.devtools.testlib import CubicWebTC
 class PyViewsTC(CubicWebTC):
 
     def test_pyvaltable(self):
-        content = self.vreg['views'].render('pyvaltable', self.request(),
-                                            pyvalue=[[1, 'a'], [2, 'b']],
-                                            headers=['num', 'char'])
+        view = self.vreg['views'].select('pyvaltable', self.request(),
+                                         pyvalue=[[1, 'a'], [2, 'b']])
+        content = view.render(pyvalue=[[1, 'a'], [2, 'b']],
+                              headers=['num', 'char'])
         self.assertEquals(content.strip(), '''<table class="listing">
 <tr><th>num</th><th>char</th></tr>
 <tr><td>1</td><td>a</td></tr>
@@ -14,8 +15,9 @@ class PyViewsTC(CubicWebTC):
 </table>''')
 
     def test_pyvallist(self):
-        content = self.vreg['views'].render('pyvallist', self.request(),
-                                            pyvalue=[1, 'a'])
+        view = self.vreg['views'].select('pyvallist', self.request(),
+                                         pyvalue=[1, 'a'])
+        content = view.render(pyvalue=[1, 'a'])
         self.assertEquals(content.strip(), '''<ul>
 <li>1</li>
 <li>a</li>

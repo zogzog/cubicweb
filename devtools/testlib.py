@@ -386,7 +386,7 @@ class CubicWebTC(TestCase):
     # vregistry inspection utilities ###########################################
 
     def pviews(self, req, rset):
-        return sorted((a.id, a.__class__)
+        return sorted((a.__regid__, a.__class__)
                       for a in self.vreg['views'].possible_views(req, rset=rset))
 
     def pactions(self, req, rset,
