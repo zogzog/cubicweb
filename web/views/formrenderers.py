@@ -341,7 +341,7 @@ class EntityCompositeFormRenderer(FormRenderer):
             qeid = eid_param('eid', entity.eid)
             cbsetstate = "setCheckboxesState2('eid', %s, 'checked')" % \
                          xml_escape(dumps(entity.eid))
-            w(u'<tr class="%s">' % (entity.row % 2 and u'even' or u'odd'))
+            w(u'<tr class="%s">' % (entity.cw_row % 2 and u'even' or u'odd'))
             # XXX turn this into a widget used on the eid field
             w(u'<td>%s</td>' % checkbox('eid', entity.eid,
                                         checked=qeid in values))

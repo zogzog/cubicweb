@@ -181,8 +181,8 @@ class FieldsForm(form.Form):
 
     def form_default_renderer(self):
         return self._cw.vreg['formrenderers'].select(self.form_renderer_id,
-                                                self._cw, rset=self.cw_rset,
-                                                row=self.cw_row, col=self.cw_col)
+                                                     self._cw, rset=self.cw_rset,
+                                                     row=self.cw_row, col=self.cw_col)
 
     def form_build_context(self, rendervalues=None):
         """build form context values (the .context attribute which is a
@@ -303,7 +303,7 @@ class EntityFieldsForm(FieldsForm):
         msg = kwargs.pop('submitmsg', None)
         super(EntityFieldsForm, self).__init__(*args, **kwargs)
         if self.edited_entity is None:
-            self.edited_entity = self.complete_entity(self.cw_row or 0, self.cw_col or 0)
+            self.edited_entity = self.cw_rset.complete_entity(self.cw_row or 0, self.cw_col or 0)
         self.form_add_hidden('__type', eidparam=True)
         self.form_add_hidden('eid')
         if kwargs.get('mainform', True): # mainform default to true in parent
@@ -558,7 +558,7 @@ class EntityFieldsForm(FieldsForm):
 class CompositeForm(FieldsForm):
     """form composed of sub-forms"""
     __regid__ = 'composite'
-    form_renderer_id = id
+    form_renderer_id = __regid__
 
     def __init__(self, *args, **kwargs):
         super(CompositeForm, self).__init__(*args, **kwargs)
@@ -573,7 +573,7 @@ class CompositeForm(FieldsForm):
 class CompositeEntityForm(EntityFieldsForm):
     """form composed of sub-forms"""
     __regid__ = 'composite'
-    form_renderer_id = id
+    form_renderer_id = __regid__
 
     def __init__(self, *args, **kwargs):
         super(CompositeEntityForm, self).__init__(*args, **kwargs)
