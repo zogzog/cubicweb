@@ -70,7 +70,7 @@ class QSPreProcessorTC(CubicWebTC):
         self.req = self.request()
         proc = self.vreg['components'].select('magicsearch', self.req)
         self.proc = [p for p in proc.processors if isinstance(p, QSPreProcessor)][0]
-        self.proc.req = self.req
+        self.proc._cw = self.req
 
     def test_entity_translation(self):
         """tests QSPreProcessor._get_entity_name()"""

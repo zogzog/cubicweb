@@ -37,25 +37,25 @@ class MockCursor:
 class FakeController(ViewController):
 
     def __init__(self, form=None):
-        self.req = FakeRequest()
-        self.req.form = form or {}
-        self._cursor = self.req.cursor = MockCursor()
+        self._cw = FakeRequest()
+        self._cw.form = form or {}
+        self._cursor = self._cw.cursor = MockCursor()
 
     def new_cursor(self):
-        self._cursor = self.req.cursor = MockCursor()
+        self._cursor = self._cw.cursor = MockCursor()
 
     def set_form(self, form):
-        self.req.form = form
+        self._cw.form = form
 
 
 class RequestBaseTC(TestCase):
     def setUp(self):
-        self.req = FakeRequest()
+        self._cw = FakeRequest()
 
 
     def test_list_arg(self):
         """tests the list_arg() function"""
-        list_arg = self.req.list_form_param
+        list_arg = self._cw.list_form_param
         self.assertEquals(list_arg('arg3', {}), [])
         d = {'arg1' : "value1",
              'arg2' : ('foo', INTERNAL_FIELD_VALUE,),
@@ -69,8 +69,8 @@ class RequestBaseTC(TestCase):
 
 
     def test_from_controller(self):
-        self.req.vreg['controllers'] = {'view': 1, 'login': 1}
-        self.assertEquals(self.req.from_controller(), 'view')
+        self._cw.vreg['controllers'] = {'view': 1, 'login': 1}
+        self.assertEquals(self._cw.from_controller(), 'view')
         req = FakeRequest(url='project?vid=list')
         req.vreg['controllers'] = {'view': 1, 'login': 1}
         # this assertion is just to make sure that relative_path can be
@@ -123,7 +123,7 @@ class UtilsTC(TestCase):
 
 
         self.ctrl.new_cursor()
-        self.ctrl.req.form = {'__linkto' : 'works_for:12_13_14:object'}
+        self.ctrl._cw.form = {'__linkto' : 'works_for:12_13_14:object'}
         self.ctrl.execute_linkto(eid=8)
         self.assertEquals(self.ctrl._cursor.executed,
                           ['SET Y works_for X WHERE X eid 8, Y eid %s' % i

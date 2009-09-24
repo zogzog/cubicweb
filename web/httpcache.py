@@ -18,7 +18,7 @@ class NoHTTPCacheManager(object):
     def __init__(self, view):
         self.view = view
         self.req = view._cw
-        self.cw_rset = view.rset
+        self.cw_rset = view.cw_rset
 
     def set_headers(self):
         self.req.set_header('Cache-control', 'no-cache')
@@ -108,7 +108,7 @@ def last_modified(self):
     # XXX check view module's file modification time in dev mod ?
     ctime = datetime.utcnow()
     if self.cache_max_age:
-        mtime = self.req.header_if_modified_since()
+        mtime = self._cw.header_if_modified_since()
         if mtime:
             tdelta = (ctime - mtime)
             if tdelta.days * 24*60*60 + tdelta.seconds > self.cache_max_age:

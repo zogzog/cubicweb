@@ -350,7 +350,7 @@ class MagicSearchComponent(Component):
         self.by_name = {}
         for processorcls in self._cw.vreg['components']['magicsearch_processor']:
             # instantiation needed
-            processor = processorcls()
+            processor = processorcls(self._cw)
             processors.append(processor)
             if processor.name is not None:
                 assert not processor.name in self.by_name
