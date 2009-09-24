@@ -1,7 +1,7 @@
-from cubicweb.devtools.apptest import EnvBasedTC
+from cubicweb.devtools.testlib import CubicWebTC
 from cubicweb.web import uicfg
 
-class UICFGTC(EnvBasedTC):
+class UICFGTC(CubicWebTC):
 
     def test_autoform_section_inlined(self):
         self.assertEquals(uicfg.autoform_is_inlined.etype_get('CWUser', 'use_email', 'subject', 'EmailAddress'),
