@@ -128,7 +128,7 @@ class ClickAndEditFormView(FormViewMixIn, EntityView):
             display_help=False, table_class='',
             button_bar_class='buttonbar', display_progress_div=False)
 
-    def _build_form(self, entity, rtype, role, formid, default, onsubmit, reload,
+    def _build_form(self, entity, rtype, role, default, onsubmit, reload,
                   extradata=None, **formargs):
         divid = 'd%s' % make_uid('%s-%s' % (rtype, entity.eid))
         event_data = {'divid' : divid, 'eid' : entity.eid, 'rtype' : rtype,
@@ -139,7 +139,7 @@ class ClickAndEditFormView(FormViewMixIn, EntityView):
         cancelclick = "hideInlineEdit(%s,\'%s\',\'%s\')" % (entity.eid, rtype,
                                                             divid)
         form = self._cw.vreg['forms'].select(
-            formid, self._cw, entity=entity, domid='%s-form' % divid,
+            'edition', self._cw, entity=entity, domid='%s-form' % divid,
             cssstyle='display: none', onsubmit=onsubmit, action='#',
             display_fields=[(rtype, role)],
             form_buttons=[SubmitButton(), Button(stdmsgs.BUTTON_CANCEL,
@@ -188,10 +188,8 @@ class ClickAndEditFormView(FormViewMixIn, EntityView):
             onsubmit = ("return inlineValidateRelationForm('%(rtype)s', '%(role)s', '%(eid)s', "
                         "'%(divid)s', %(reload)s, '%(vid)s', '%(default)s', '%(lzone)s');")
             form = self._build_form(
-                entity, rtype, role, 'base', default, onsubmit, reload,
+                entity, rtype, role, default, onsubmit, reload,
                 dict(vid=rvid, role=role, lzone=lzone))
-            field = guess_field(entity.e_schema, schema.rschema(rtype), role)
-            form.append_field(field)
             self.relation_form(lzone, value, form,
                                self._build_renderer(entity, rtype, role))
 
