@@ -151,7 +151,7 @@ class ObjectStore(object):
         return len(self.items) - 1
 
     def add(self, type, item):
-        assert isinstance(item, dict), item
+        assert isinstance(item, dict), 'item is not a dict but a %s' % type(item)
         eid = item['eid'] = self._put(type, item)
         self.eids[eid] = item
         self.types.setdefault(type, []).append(eid)
@@ -172,7 +172,7 @@ class ObjectStore(object):
 
     def get_one(self, name, key):
         eids = self.indexes[name].get(key, [])
-        assert len(eids) == 1
+        assert len(eids) == 1, 'expected a single one got %i' % len(eids)
         return eids[0]
 
     def find(self, type, key, value):
