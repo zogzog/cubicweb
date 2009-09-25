@@ -410,6 +410,9 @@ autoform_permissions_overrides = RelationTagsSet('autoform_permissions_overrides
 # 'link' / 'create' relation tags, used to control the "add entity" submenu
 def init_actionbox_appearsin_addmenu(rtag, sschema, rschema, oschema, role):
     if rtag.get(sschema, rschema, oschema, role) is None:
+        if rschema in META_RTYPES:
+            rtag.tag_relation((sschema, rschema, oschema, role), False)
+            return
         card = rschema.rproperty(sschema, oschema, 'cardinality')[role == 'object']
         if not card in '?1' and \
                rschema.rproperty(sschema, oschema, 'composite') == role:
