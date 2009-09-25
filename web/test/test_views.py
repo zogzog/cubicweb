@@ -30,8 +30,8 @@ class SomeView(AnyRsetView):
     __regid__ = 'someview'
 
     def call(self):
-        self.req.add_js('spam.js')
-        self.req.add_js('spam.js')
+        self._cw.add_js('spam.js')
+        self._cw.add_js('spam.js')
 
 
 class ManualCubicWebTCs(AutoPopulateTest):
