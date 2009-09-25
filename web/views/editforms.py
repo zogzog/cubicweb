@@ -125,7 +125,7 @@ class ClickAndEditFormView(FormViewMixIn, EntityView):
     def _build_renderer(self, entity, rtype, role):
         return self._cw.vreg['formrenderers'].select(
             'base', self._cw, entity=entity, display_label=False,
-            display_help=False, display_fields=[(rtype, role)], table_class='',
+            display_help=False, table_class='',
             button_bar_class='buttonbar', display_progress_div=False)
 
     def _build_form(self, entity, rtype, role, formid, default, onsubmit, reload,
@@ -141,6 +141,7 @@ class ClickAndEditFormView(FormViewMixIn, EntityView):
         form = self._cw.vreg['forms'].select(
             formid, self._cw, entity=entity, domid='%s-form' % divid,
             cssstyle='display: none', onsubmit=onsubmit, action='#',
+            display_fields=[(rtype, role)],
             form_buttons=[SubmitButton(), Button(stdmsgs.BUTTON_CANCEL,
                                                  onclick=cancelclick)],
             **formargs)

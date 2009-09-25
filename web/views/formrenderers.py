@@ -7,6 +7,8 @@
 """
 __docformat__ = "restructuredtext en"
 
+from warnings import warn
+
 from logilab.common import dictattr
 from logilab.mtconverter import xml_escape
 
@@ -16,6 +18,7 @@ from cubicweb.common import tags
 from cubicweb.appobject import AppObject
 from cubicweb.selectors import entity_implements, yes
 from cubicweb.web import eid_param, formwidgets as fwdgs
+
 
 def checkbox(name, value, attrs='', checked=None):
     if checked is None:
@@ -40,11 +43,10 @@ class FormRenderer(AppObject):
     __registry__ = 'formrenderers'
     __regid__ = 'default'
 
-    _options = ('display_fields', 'display_label', 'display_help',
+    _options = ('display_label', 'display_help',
                 'display_progress_div', 'table_class', 'button_bar_class',
                 # add entity since it may be given to select the renderer
                 'entity')
-    display_fields = None # None -> all fields
     display_label = True
     display_help = True
     display_progress_div = True
@@ -166,12 +168,6 @@ class FormRenderer(AppObject):
             tag += ' cubicweb:target="%s"' % xml_escape(form.cwtarget)
         return tag + '>'
 
-    def display_field(self, form, field):
-        return (self.display_fields is None
-                or field.name in form.internal_fields
-                or (field.name, field.role) in self.display_fields
-                or (field.name, field.role) in form.internal_fields)
-
     def render_fields(self, w, form, values):
         form.form_build_context(values)
         fields = self._render_hidden_fields(w, form)
@@ -187,9 +183,7 @@ class FormRenderer(AppObject):
     def _render_hidden_fields(self, w, form):
         fields = form.fields[:]
         for field in form.fields:
-            if not self.display_field(form, field):
-                fields.remove(field)
-            elif not field.is_visible():
+            if not field.is_visible():
                 w(field.render(form, self))
                 fields.remove(field)
         return fields
@@ -245,20 +239,6 @@ class BaseFormRenderer(FormRenderer):
     """
     __regid__ = 'base'
 
-
-class EntityBaseFormRenderer(BaseFormRenderer):
-    """use form_renderer_id = 'base' if you want base FormRenderer layout even
-    when selected for an entity
-    """
-    __select__ = entity_implements('Any')
-
-    def display_field(self, form, field):
-        if not super(EntityBaseFormRenderer, self).display_field(form, field):
-            ismeta = form.edited_entity.e_schema.is_metadata(field.name)
-            return ismeta is not None and (
-                ismeta[0] in self.display_fields or
-                (ismeta[0], 'subject') in self.display_fields)
-        return True
 
 
 class HTableFormRenderer(FormRenderer):
@@ -365,11 +345,11 @@ class EntityCompositeFormRenderer(FormRenderer):
             self._main_display_fields = fields
 
 
-class EntityFormRenderer(EntityBaseFormRenderer):
+class EntityFormRenderer(BaseFormRenderer):
     """specific renderer for entity edition form (edition)"""
     __regid__ = 'default'
     # needs some additional points in some case (XXX explain cases)
-    __select__ = EntityBaseFormRenderer.__select__ & yes()
+    __select__ = entity_implements('Any') & yes()
 
     _options = FormRenderer._options + ('display_relations_form',)
     display_relations_form = True
