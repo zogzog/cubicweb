@@ -119,11 +119,11 @@ def display_name(req, key, form='', context=None):
 
 __builtins__['display_name'] = deprecated('[3.4] display_name should be imported from cubicweb.schema')(display_name)
 
-def ERSchema_display_name(self, req, form=''):
+def ERSchema_display_name(self, req, form='', context=None):
     """return a internationalized string for the entity/relation type name in
     a given form
     """
-    return display_name(req, self.type, form)
+    return display_name(req, self.type, form, context)
 ERSchema.display_name = ERSchema_display_name
 
 @cached
