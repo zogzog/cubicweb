@@ -15,8 +15,7 @@ from cubicweb.selectors import (EntitySelector,
     authenticated_user, match_user_groups, match_search_state,
     has_permission, has_add_permission,
     )
-from cubicweb.web import uicfg, controller
-from cubicweb.web.action import Action
+from cubicweb.web import uicfg, controller, action
 from cubicweb.web.views import linksearch_select_url, vid_from_rset
 
 
@@ -74,13 +73,14 @@ def addable_etype_empty_rset(cls, req, rset=None, **kwargs):
 
 # generic 'main' actions #######################################################
 
-class SelectAction(Action):
+class SelectAction(action.Action):
     """base class for link search actions. By default apply on
     any size entity result search it the current state is 'linksearch'
     if accept match.
     """
     __regid__ = 'select'
-    __select__ = match_search_state('linksearch') & nonempty_rset() & match_searched_etype()
+    __select__ = (match_search_state('linksearch') & nonempty_rset()
+                  & match_searched_etype())
 
     title = _('select')
     category = 'mainactions'
@@ -90,7 +90,7 @@ class SelectAction(Action):
         return linksearch_select_url(self._cw, self.cw_rset)
 
 
-class CancelSelectAction(Action):
+class CancelSelectAction(action.Action):
     __regid__ = 'cancel'
     __select__ = match_search_state('linksearch')
 
@@ -104,9 +104,9 @@ class CancelSelectAction(Action):
                                   vid='edition', __mode='normal')
 
 
-class ViewAction(Action):
+class ViewAction(action.Action):
     __regid__ = 'view'
-    __select__ = (match_search_state('normal') &
+    __select__ = (action.Action.__select__ &
                   match_user_groups('users', 'managers') &
                   view_is_not_default_view() &
                   non_final_entity())
@@ -123,10 +123,9 @@ class ViewAction(Action):
                                   **params)
 
 
-class ModifyAction(Action):
+class ModifyAction(action.Action):
     __regid__ = 'edit'
-    __select__ = (match_search_state('normal') &
-                  one_line_rset() &
+    __select__ = (action.Action.__select__ & one_line_rset() &
                   (has_permission('update') | has_editable_relation('add')))
 
     title = _('modify')
@@ -138,11 +137,10 @@ class ModifyAction(Action):
         return entity.absolute_url(vid='edition')
 
 
-class MultipleEditAction(Action):
+class MultipleEditAction(action.Action):
     __regid__ = 'muledit' # XXX get strange conflicts if id='edit'
-    __select__ = (match_search_state('normal') &
-                  two_lines_rset() & one_etype_rset() &
-                  has_permission('update'))
+    __select__ = (action.Action.__select__ & two_lines_rset() &
+                  one_etype_rset() & has_permission('update'))
 
     title = _('modify')
     category = 'mainactions'
@@ -154,9 +152,10 @@ class MultipleEditAction(Action):
 
 # generic "more" actions #######################################################
 
-class ManagePermissionsAction(Action):
+class ManagePermissionsAction(action.Action):
     __regid__ = 'managepermission'
-    __select__ = one_line_rset() & non_final_entity() & match_user_groups('managers')
+    __select__ = (action.Action.__select__ & one_line_rset() &
+                  non_final_entity() & match_user_groups('managers'))
 
     title = _('manage permissions')
     category = 'moreactions'
@@ -175,9 +174,9 @@ class ManagePermissionsAction(Action):
         return self.cw_rset.get_entity(self.cw_row or 0, self.cw_col or 0).absolute_url(vid='security')
 
 
-class DeleteAction(Action):
+class DeleteAction(action.Action):
     __regid__ = 'delete'
-    __select__ = has_permission('delete')
+    __select__ = action.Action.__select__ & has_permission('delete')
 
     title = _('delete')
     category = 'moreactions'
@@ -190,9 +189,10 @@ class DeleteAction(Action):
         return self._cw.build_url(rql=self.cw_rset.printable_rql(), vid='deleteconf')
 
 
-class CopyAction(Action):
+class CopyAction(action.Action):
     __regid__ = 'copy'
-    __select__ = one_line_rset() & has_permission('add')
+    __select__ = (action.Action.__select__ & one_line_rset()
+                  & has_permission('add'))
 
     title = _('copy')
     category = 'moreactions'
@@ -208,7 +208,7 @@ class AddNewAction(MultipleEditAction):
     add a new one
     """
     __regid__ = 'addentity'
-    __select__ = (match_search_state('normal') &
+    __select__ = (action.Action.__select__ &
                   (addable_etype_empty_rset()
                    | (two_lines_rset() & one_etype_rset & has_add_permission()))
                   )
@@ -230,7 +230,7 @@ class AddNewAction(MultipleEditAction):
         return self._cw.build_url('add/%s' % self.rsettype)
 
 
-class AddRelatedActions(Action):
+class AddRelatedActions(action.Action):
     """fill 'addrelated' sub-menu of the actions box"""
     __regid__ = 'addrelated'
     __select__ = Action.__select__ & one_line_rset() & non_final_entity()
