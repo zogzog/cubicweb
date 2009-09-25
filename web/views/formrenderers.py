@@ -410,7 +410,12 @@ class EntityFormRenderer(EntityBaseFormRenderer):
             super(EntityFormRenderer, self).render_buttons(w, form)
 
     def relations_form(self, w, form):
-        srels_by_cat = form.srelations_by_category('generic', 'add', strict=True)
+        try:
+            srels_by_cat = form.srelations_by_category('generic', 'add', strict=True)
+            warn('[3.6] %s: srelations_by_category is deprecated, override '
+                 'editable_relations instead' % classid(form), DeprecationWarning)
+        except AttributeError:
+            srels_by_cat = form.editable_relations()
         if not srels_by_cat:
             return u''
         req = self._cw
