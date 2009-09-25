@@ -192,6 +192,11 @@ class AutomaticEntityForm(forms.EntityFieldsForm):
     @property
     def form_needs_multipart(self):
         """true if the form needs enctype=multipart/form-data"""
+        return self._subform_needs_multipart()
+
+    def _subform_needs_multipart(self, _tested=None):
+        if _tested is None:
+            _tested = set()
         if super(AutomaticEntityForm, self).form_needs_multipart:
             return True
         # take a look at inlined forms to check (recursively) if they
@@ -210,10 +215,17 @@ class AutomaticEntityForm(forms.EntityFieldsForm):
             if len(targettypes) != 1:
                 continue
             targettype = targettypes[0]
+            if targettype in _tested:
+                continue
+            _tested.add(targettype)
             if self.should_inline_relation_form(rschema, targettype, role):
                 entity = self.vreg['etypes'].etype_class(targettype)(self.req)
                 subform = self.vreg['forms'].select('edition', self.req, entity=entity)
-                if subform.form_needs_multipart:
+                if hasattr(subform, '_subform_needs_multipart'):
+                    needs_multipart = subform._subform_needs_multipart(_tested)
+                else:
+                    needs_multipart = subform.form_needs_multipart
+                if needs_multipart:
                     return True
         return False
 
