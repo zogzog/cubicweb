@@ -250,9 +250,11 @@ class AutomaticEntityForm(forms.EntityFieldsForm):
     def should_inline_relation_form(self, rschema, targettype, role):
         """return true if the given relation with entity has role and a
         targettype target should be inlined
+
+        At this point we now relation has inlined_attributes tag (eg is returned
+        by `inlined_relations()`. Overrides this for more finer control.
         """
-        return self.rinlined.etype_get(self.edited_entity.__regid__, rschema, role,
-                                       targettype)
+        return True
 
     def display_inline_edition_form(self, w, rschema, targettype, role,
                                      i18nctx):
