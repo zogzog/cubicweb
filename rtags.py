@@ -28,12 +28,14 @@ class RelationTags(object):
     This class associates a single tag to each key.
     """
     _allowed_values = None
+    _initfunc = None
     def __init__(self, name=None, initfunc=None, allowed_values=None):
         self._name = name or '<unknown>'
         self._tagdefs = {}
         if allowed_values is not None:
             self._allowed_values = allowed_values
-        self._initfunc = initfunc
+        if initfunc is not None:
+            self._initfunc = initfunc
         register_rtag(self)
 
     def __repr__(self):
@@ -82,20 +84,20 @@ class RelationTags(object):
 
     # rtag declaration api ####################################################
 
-    def tag_attribute(self, key, tag):
+    def tag_attribute(self, key, *args, **kwargs):
         key = list(key)
         key.append('*')
-        self.tag_subject_of(key, tag)
+        self.tag_subject_of(key, *args, **kwargs)
 
-    def tag_subject_of(self, key, tag):
+    def tag_subject_of(self, key, *args, **kwargs):
         key = list(key)
         key.append('subject')
-        self.tag_relation(key, tag)
+        self.tag_relation(key, *args, **kwargs)
 
-    def tag_object_of(self, key, tag):
+    def tag_object_of(self, key, *args, **kwargs):
         key = list(key)
         key.append('object')
-        self.tag_relation(key, tag)
+        self.tag_relation(key, *args, **kwargs)
 
     def tag_relation(self, key, tag):
         #if isinstance(key, basestring):
@@ -114,8 +116,8 @@ class RelationTags(object):
     def del_rtag(self, *key):
         del self._tagdefs[key]
 
-    def get(self, stype, rtype, otype, tagged):
-        for key in reversed(self._get_keys(stype, rtype, otype, tagged)):
+    def get(self, *key):
+        for key in reversed(self._get_keys(*key)):
             try:
                 return self._tagdefs[key]
             except KeyError:
