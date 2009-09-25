@@ -229,10 +229,12 @@ class AutomaticEntityForm(forms.EntityFieldsForm):
         for pendingid in pending_inserts:
             eidfrom, rtype, eidto = pendingid.split(':')
             if typed_eid(eidfrom) == eid: # subject
-                label = display_name(self._cw, rtype, 'subject')
+                label = display_name(self._cw, rtype, 'subject',
+                                     self.edited_entity.__regid__)
                 reid = eidto
             else:
-                label = display_name(self._cw, rtype, 'object')
+                label = display_name(self._cw, rtype, 'object',
+                                     self.edited_entity.__regid__)
                 reid = eidfrom
             jscall = "javascript: cancelPendingInsert('%s', '%s', null, %s);" \
                      % (pendingid, cell, eid)
