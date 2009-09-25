@@ -11,6 +11,7 @@ __docformat__ = "restructuredtext en"
 
 import re
 from logging import getLogger
+from warnings import warn
 
 from rql import RQLSyntaxError, BadRQLQuery, parse
 from rql.nodes import Relation
@@ -140,15 +141,15 @@ class BaseQueryProcessor(Component):
     # component
     name = None
 
-    def process_query(self, uquery, req):
-        args = self.preprocess_query(uquery, req)
+    def process_query(self, uquery):
+        args = self.preprocess_query(uquery)
         try:
-            return req.execute(*args)
+            return self._cw.execute(*args)
         finally:
             # rollback necessary to avoid leaving the connection in a bad state
-            req.cnx.rollback()
+            self._cw.cnx.rollback()
 
-    def preprocess_query(self, uquery, req):
+    def preprocess_query(self, uquery):
         raise NotImplementedError()
 
 
@@ -160,7 +161,7 @@ class DoNotPreprocess(BaseQueryProcessor):
     """
     name = 'rql'
     priority = 0
-    def preprocess_query(self, uquery, req):
+    def preprocess_query(self, uquery):
         return uquery,
 
 
@@ -169,11 +170,12 @@ class QueryTranslator(BaseQueryProcessor):
     and attributes
     """
     priority = 2
-    def preprocess_query(self, uquery, req):
+    def preprocess_query(self, uquery):
         rqlst = parse(uquery, print_errors=False)
-        schema = self._cw.vreg.schema
+        schema = self._cw.schema
         # rql syntax tree will be modified in place if necessary
-        translate_rql_tree(rqlst, trmap(self._cw.config, schema, req.lang), schema)
+        translate_rql_tree(rqlst, trmap(self._cw.config, schema, self._cw.lang),
+                           schema)
         return rqlst.as_string(),
 
 
@@ -184,10 +186,9 @@ class QSPreProcessor(BaseQueryProcessor):
     """
     priority = 4
 
-    def preprocess_query(self, uquery, req):
+    def preprocess_query(self, uquery):
         """try to get rql from an unicode query string"""
         args = None
-        self._cw = req
         try:
             # Process as if there was a quoted part
             args = self._quoted_words_query(uquery)
@@ -336,7 +337,7 @@ class FullTextTranslator(BaseQueryProcessor):
     priority = 10
     name = 'text'
 
-    def preprocess_query(self, uquery, req):
+    def preprocess_query(self, uquery):
         """suppose it's a plain text query"""
         return 'Any X WHERE X has_text %(text)s', {'text': uquery}
 
@@ -357,7 +358,7 @@ class MagicSearchComponent(Component):
                 self.by_name[processor.name.lower()] = processor
         self.processors = sorted(processors, key=lambda x: x.priority)
 
-    def process_query(self, uquery, req):
+    def process_query(self, uquery):
         assert isinstance(uquery, unicode)
         try:
             procname, query = uquery.split(':', 1)
@@ -368,7 +369,15 @@ class MagicSearchComponent(Component):
             unauthorized = None
             for proc in self.processors:
                 try:
-                    return proc.process_query(uquery, req)
+                    try:
+                        return proc.process_query(uquery)
+                    except TypeError, exc: # cw 3.5 compat
+                        print "EXC", exc
+                        warn("[3.6] %s.%s.process_query() should now accept uquery "
+                             "as unique argument, use self._cw instead of req"
+                             % (proc.__module__, proc.__class__.__name__),
+                             DeprecationWarning)
+                        return proc.process_query(uquery, self._cw)
                 # FIXME : we don't want to catch any exception type here !
                 except (RQLSyntaxError, BadRQLQuery):
                     pass
@@ -381,6 +390,6 @@ class MagicSearchComponent(Component):
             if unauthorized:
                 raise unauthorized
         else:
-            # let exception propagate
-            return proc.process_query(uquery, req)
-        raise BadRQLQuery(req._('sorry, the server is unable to handle this query'))
+            # explicitly specified processor: don't try to catch the exception
+            return proc.process_query(uquery)
+        raise BadRQLQuery(self._cw._('sorry, the server is unable to handle this query'))

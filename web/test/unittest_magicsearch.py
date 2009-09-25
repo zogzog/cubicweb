@@ -49,16 +49,16 @@ class QueryTranslatorTC(CubicWebTC):
     def test_basic_translations(self):
         """tests basic translations (no ambiguities)"""
         rql = "Any C WHERE C is Adresse, P adel C, C adresse 'Logilab'"
-        rql, = self.proc.preprocess_query(rql, self.req)
+        rql, = self.proc.preprocess_query(rql)
         self.assertEquals(rql, "Any C WHERE C is EmailAddress, P use_email C, C address 'Logilab'")
 
     def test_ambiguous_translations(self):
         """tests possibly ambiguous translations"""
         rql = "Any P WHERE P adel C, C is EmailAddress, C nom 'Logilab'"
-        rql, = self.proc.preprocess_query(rql, self.req)
+        rql, = self.proc.preprocess_query(rql)
         self.assertEquals(rql, "Any P WHERE P use_email C, C is EmailAddress, C alias 'Logilab'")
         rql = "Any P WHERE P is Utilisateur, P adel C, P nom 'Smith'"
-        rql, = self.proc.preprocess_query(rql, self.req)
+        rql, = self.proc.preprocess_query(rql)
         self.assertEquals(rql, "Any P WHERE P is CWUser, P use_email C, P surname 'Smith'")
 
 
@@ -168,9 +168,9 @@ class QSPreProcessorTC(CubicWebTC):
             (u'CWUser prÃ©nom cubicweb', (u'CWUser C WHERE C firstname %(text)s', {'text': 'cubicweb'},)),
             ]
         for query, expected in queries:
-            self.assertEquals(self.proc.preprocess_query(query, self.req), expected)
+            self.assertEquals(self.proc.preprocess_query(query), expected)
         self.assertRaises(BadRQLQuery,
-                          self.proc.preprocess_query, 'Any X WHERE X is Something', self.req)
+                          self.proc.preprocess_query, 'Any X WHERE X is Something')
 
 
 
@@ -201,21 +201,21 @@ class ProcessorChainTC(CubicWebTC):
              ('Any P WHERE P is CWUser, P surname "Smith"', None)),
             ]
         for query, expected in queries:
-            rset = self.proc.process_query(query, self.req)
+            rset = self.proc.process_query(query)
             self.assertEquals((rset.rql, rset.args), expected)
 
     def test_iso88591_fulltext(self):
         """we must be able to type accentuated characters in the search field"""
-        rset = self.proc.process_query(u'Ã©crire', self.req)
+        rset = self.proc.process_query(u'Ã©crire')
         self.assertEquals(rset.rql, "Any X WHERE X has_text %(text)s")
         self.assertEquals(rset.args, {'text': u'Ã©crire'})
 
     def test_explicit_component(self):
         self.assertRaises(RQLSyntaxError,
-                          self.proc.process_query, u'rql: CWUser E WHERE E noattr "Smith",', self.req)
+                          self.proc.process_query, u'rql: CWUser E WHERE E noattr "Smith",')
         self.assertRaises(BadRQLQuery,
-                          self.proc.process_query, u'rql: CWUser E WHERE E noattr "Smith"', self.req)
-        rset = self.proc.process_query(u'text: utilisateur Smith', self.req)
+                          self.proc.process_query, u'rql: CWUser E WHERE E noattr "Smith"')
+        rset = self.proc.process_query(u'text: utilisateur Smith')
         self.assertEquals(rset.rql, 'Any X WHERE X has_text %(text)s')
         self.assertEquals(rset.args, {'text': u'utilisateur Smith'})
 
