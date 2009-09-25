@@ -18,7 +18,6 @@ from cubicweb.selectors import (EntitySelector,
 from cubicweb.web import uicfg, controller
 from cubicweb.web.action import Action
 from cubicweb.web.views import linksearch_select_url, vid_from_rset
-from cubicweb.web.views.autoform import AutomaticEntityForm
 
 
 class has_editable_relation(EntitySelector):
@@ -31,11 +30,17 @@ class has_editable_relation(EntitySelector):
     def score_entity(self, entity):
         # if user has no update right but it can modify some relation,
         # display action anyway
-        for dummy in AutomaticEntityForm.esrelations_by_category(
-            entity, 'generic', 'add', strict=True):
+        form = self._cw.vreg['forms'].select('edition', self._cw,
+                                             entity=entity)
+        for dummy in form.editable_relations():
             return 1
-        for rschema, targetschemas, role in AutomaticEntityForm.erelations_by_category(
-            entity, ('primary', 'secondary'), 'add', strict=True):
+        try:
+            editableattrs = form.editable_attributes(strict=True)
+        except TypeError:
+            warn('[3.6] %s: editable_attributes now take strict=False as '
+                 'optional argument', DeprecationWarning)
+            editableattrs = form.editable_attributes()
+        for rschema, targetschemas, role in editableattrs:
             if not rschema.is_final():
                 return 1
         return 0

@@ -124,19 +124,19 @@ def _generate_schema_pot(w, vreg, schema, libconfig=None, cube=None):
     if libconfig is not None:
         from cubicweb.cwvreg import CubicWebVRegistry, clear_rtag_objects
         libschema = libconfig.load_schema(remove_unused_rtypes=False)
-        rinlined = deepcopy(uicfg.autoform_is_inlined)
+        afs = deepcopy(uicfg.autoform_section)
         appearsin_addmenu = deepcopy(uicfg.actionbox_appearsin_addmenu)
         clear_rtag_objects()
         cleanup_sys_modules(libconfig)
         libvreg = CubicWebVRegistry(libconfig)
         libvreg.set_schema(libschema) # trigger objects registration
-        librinlined = uicfg.autoform_is_inlined
+        libafs = uicfg.autoform_section
         libappearsin_addmenu = uicfg.actionbox_appearsin_addmenu
         # prefill vregdone set
         list(_iter_vreg_objids(libvreg, vregdone))
     else:
         libschema = {}
-        rinlined = uicfg.autoform_is_inlined
+        afs = uicfg.autoform_section
         appearsin_addmenu = uicfg.actionbox_appearsin_addmenu
     done = set()
     for eschema in sorted(schema.entities()):
@@ -154,9 +154,11 @@ def _generate_schema_pot(w, vreg, schema, libconfig=None, cube=None):
             continue
         for rschema, targetschemas, role in eschema.relation_definitions(True):
             for tschema in targetschemas:
-                if rinlined.etype_get(eschema, rschema, role, tschema) and \
+                fsections = afs.etype_get(eschema, rschema, role, tschema)
+                if 'inlined_attributes' in fsections and \
                        (libconfig is None or not
-                        librinlined.etype_get(eschema, rschema, role, tschema)):
+                        'inlined_attributes' in libafs.etype_get(
+                            eschema, rschema, role, tschema)):
                     add_msg(w, 'add a %s' % tschema,
                             'inlined:%s.%s.%s' % (etype, rschema, role))
                     add_msg(w, 'remove this %s' % tschema,

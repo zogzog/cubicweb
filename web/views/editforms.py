@@ -105,10 +105,6 @@ class ClickAndEditFormView(FormViewMixIn, EntityView):
     __select__ = non_final_entity() & match_kwargs('rtype')
     # FIXME editableField class could be toggleable from userprefs
 
-    # add metadata to allow edition of metadata attributes (not considered by
-    # edition form by default)
-    attrcategories = ('primary', 'secondary', 'metadata')
-
     _onclick = u"showInlineEditionForm(%(eid)s, '%(rtype)s', '%(divid)s')"
     _defaultlandingzone = (u'<img title="%(msg)s" '
                            'src="data/accessories-text-editor.png" '
@@ -172,8 +168,7 @@ class ClickAndEditFormView(FormViewMixIn, EntityView):
             onsubmit = ("return inlineValidateAttributeForm('%(rtype)s', '%(eid)s', '%(divid)s', "
                         "%(reload)s, '%(default)s');")
             form = self._build_form(
-                entity, rtype, role, 'edition', default, onsubmit, reload,
-                attrcategories=self.attrcategories)
+                entity, rtype, role, default, onsubmit, reload)
             if not self.should_edit_attribute(entity, rschema, role, form):
                 return
             value = entity.printable_value(rtype) or default
@@ -203,7 +198,7 @@ class ClickAndEditFormView(FormViewMixIn, EntityView):
         rtype = str(rschema)
         ttype = rschema.targets(entity.__regid__, role)[0]
         afs = uicfg.autoform_section.etype_get(entity.__regid__, rtype, role, ttype)
-        if not (afs in self.attrcategories and entity.has_perm('update')):
+        if 'main_hidden' in afs or not entity.has_perm('update'):
             self.w(entity.printable_value(rtype))
             return False
         try:
@@ -392,8 +387,7 @@ class CopyFormView(EditionFormView):
         if entity.eid == self.newentity.eid:
             form.form_add_hidden(eid_param('__cloned_eid', entity.eid),
                                  self.copying.eid)
-        for rschema, _, role in form.relations_by_category(form.attrcategories,
-                                                           'add'):
+        for rschema, role in form.editable_attributes():
             if not rschema.is_final():
                 # ensure relation cache is filed
                 rset = self.copying.related(rschema, role)
@@ -416,9 +410,9 @@ class TableEditForm(forms.CompositeForm):
         super(TableEditForm, self).__init__(req, rset=rset, **kwargs)
         for row in xrange(len(self.cw_rset)):
             form = self._cw.vreg['forms'].select('edition', self._cw,
-                                             rset=self.cw_rset, row=row,
-                                             attrcategories=('primary',),
-                                             mainform=False)
+                                                 rset=self.cw_rset, row=row,
+                                                 formtype='muledit',
+                                                 mainform=False)
             # XXX rely on the EntityCompositeFormRenderer to put the eid input
             form.remove_field(form.field_by_name('eid'))
             self.form_add_subform(form)
@@ -467,8 +461,10 @@ class InlineEntityEditionFormView(FormViewMixIn, EntityView):
     def render_form(self, entity, peid, rtype, role, i18nctx, **kwargs):
         """fetch and render the form"""
         form = self._cw.vreg['forms'].select('edition', self._cw, entity=entity,
-                                         form_renderer_id='inline',
-                                         mainform=False, copy_nav_params=False)
+                                             form_renderer_id='inline',
+                                             formtype='inlined',
+                                             mainform=False,
+                                             copy_nav_params=False)
         self.add_hiddens(form, entity, peid, rtype, role)
         divid = '%s-%s-%s' % (peid, rtype, entity.eid)
         title = self._cw.pgettext(i18nctx, 'This %s' % entity.e_schema)

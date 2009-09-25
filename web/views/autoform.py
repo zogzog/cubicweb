@@ -16,18 +16,19 @@ from cubicweb.web import form, formwidgets as fwdgs
 from cubicweb.web.formfields import guess_field
 from cubicweb.web.views import forms, editforms
 
+_afs = uicfg.autoform_section
 
 class AutomaticEntityForm(forms.EntityFieldsForm):
     """base automatic form to edit any entity.
 
     Designed to be fully generated from schema but highly configurable through:
-    * rtags (rcategories, rfields, rwidgets, inlined, rpermissions)
-    * various standard form parameters
 
-    XXX s/rtags/uicfg/ ?
+    * uicfg (autoform_* relation tags)
+    * various standard form parameters
+    * overriding
 
     You can also easily customise it by adding/removing fields in
-    AutomaticEntityForm instances.
+    AutomaticEntityForm instances or by inheriting from it.
     """
     __regid__ = 'edition'
 
@@ -37,99 +38,17 @@ class AutomaticEntityForm(forms.EntityFieldsForm):
     form_buttons = [fwdgs.SubmitButton(),
                     fwdgs.Button(stdmsgs.BUTTON_APPLY, cwaction='apply'),
                     fwdgs.Button(stdmsgs.BUTTON_CANCEL, cwaction='cancel')]
-    attrcategories = ('primary', 'secondary')
+    # for attributes selection when searching in uicfg.autoform_section
+    formtype = 'main'
+    # set this to a list of [(relation, role)] if you want to explictily tell
+    # which relations should be edited
+    display_fields = None
     # class attributes below are actually stored in the uicfg module since we
     # don't want them to be reloaded
-    rcategories = uicfg.autoform_section
     rfields = uicfg.autoform_field
     rfields_kwargs = uicfg.autoform_field_kwargs
-    rinlined = uicfg.autoform_is_inlined
-    rpermissions_overrides = uicfg.autoform_permissions_overrides
 
     # class methods mapping schema relations to fields in the form ############
-
-    @classmethod
-    def erelations_by_category(cls, entity, categories=None, permission=None,
-                               rtags=None, strict=False):
-        """return a list of (relation schema, target schemas, role) matching
-        categories and permission
-
-        `strict`:
-          bool telling if having local role is enough (strict = False) or not
-        """
-        if categories is not None:
-            if not isinstance(categories, (list, tuple, set, frozenset)):
-                categories = (categories,)
-            if not isinstance(categories, (set, frozenset)):
-                categories = frozenset(categories)
-        eschema  = entity.e_schema
-        if rtags is None:
-            rtags = cls.rcategories
-        permsoverrides = cls.rpermissions_overrides
-        if entity.has_eid():
-            eid = entity.eid
-        else:
-            eid = None
-            strict = False
-        for rschema, targetschemas, role in eschema.relation_definitions(True):
-            # check category first, potentially lower cost than checking
-            # permission which may imply rql queries
-            if categories is not None:
-                targetschemas = [tschema for tschema in targetschemas
-                                 if rtags.etype_get(eschema, rschema, role, tschema) in categories]
-                if not targetschemas:
-                    continue
-            if permission is not None:
-                # tag allowing to hijack the permission machinery when
-                # permission is not verifiable until the entity is actually
-                # created...
-                if eid is None and '%s_on_new' % permission in permsoverrides.etype_get(eschema, rschema, role):
-                    yield (rschema, targetschemas, role)
-                    continue
-                if rschema.is_final():
-                    if not rschema.has_perm(entity._cw, permission, eid):
-                        continue
-                elif role == 'subject':
-                    if not ((not strict and rschema.has_local_role(permission)) or
-                            rschema.has_perm(entity._cw, permission, fromeid=eid)):
-                        continue
-                    # on relation with cardinality 1 or ?, we need delete perm as well
-                    # if the relation is already set
-                    if (permission == 'add'
-                        and rschema.cardinality(eschema, targetschemas[0], role) in '1?'
-                        and eid and entity.related(rschema.type, role)
-                        and not rschema.has_perm(entity._cw, 'delete', fromeid=eid,
-                                                 toeid=entity.related(rschema.type, role)[0][0])):
-                        continue
-                elif role == 'object':
-                    if not ((not strict and rschema.has_local_role(permission)) or
-                            rschema.has_perm(entity._cw, permission, toeid=eid)):
-                        continue
-                    # on relation with cardinality 1 or ?, we need delete perm as well
-                    # if the relation is already set
-                    if (permission == 'add'
-                        and rschema.cardinality(targetschemas[0], eschema, role) in '1?'
-                        and eid and entity.related(rschema.type, role)
-                        and not rschema.has_perm(entity._cw, 'delete', toeid=eid,
-                                                 fromeid=entity.related(rschema.type, role)[0][0])):
-                        continue
-            yield (rschema, targetschemas, role)
-
-    @classmethod
-    def esrelations_by_category(cls, entity, categories=None, permission=None,
-                                strict=False):
-        """filter out result of relations_by_category(categories, permission) by
-        removing final relations
-
-        return a sorted list of (relation's label, relation'schema, role)
-        """
-        result = []
-        for rschema, ttypes, role in cls.erelations_by_category(
-            entity, categories, permission, strict=strict):
-            if rschema.is_final():
-                continue
-            result.append((rschema.display_name(entity._cw, role), rschema, role))
-        return sorted(result)
 
     @iclassmethod
     def field_by_name(cls_or_self, name, role='subject', eschema=None):
@@ -167,14 +86,14 @@ class AutomaticEntityForm(forms.EntityFieldsForm):
         entity = self.edited_entity
         if entity.has_eid():
             entity.complete()
-        for rschema, role in self.editable_attributes():
+        for rtype, role in self.editable_attributes():
             try:
-                self.field_by_name(rschema.type, role)
+                self.field_by_name(str(rtype), role)
                 continue # explicitly specified
             except form.FieldNotFound:
                 # has to be guessed
                 try:
-                    field = self.field_by_name(rschema.type, role,
+                    field = self.field_by_name(str(rtype), role,
                                                eschema=entity.e_schema)
                     self.fields.append(field)
                 except form.FieldNotFound:
@@ -234,34 +153,38 @@ class AutomaticEntityForm(forms.EntityFieldsForm):
 
     # methods mapping edited entity relations to fields in the form ############
 
-    def relations_by_category(self, categories=None, permission=None):
+    def _relations_by_section(self, section, permission='add', strict=False):
         """return a list of (relation schema, target schemas, role) matching
         given category(ies) and permission
         """
-        return self.erelations_by_category(self.edited_entity, categories,
-                                           permission)
+        return _afs.relations_by_section(
+            self.edited_entity, self.formtype, section, permission, strict)
+
+    def editable_attributes(self, strict=False):
+        """return a list of (relation schema, role) to edit for the entity"""
+        if self.display_fields is not None:
+            return self.display_fields
+        # XXX we should simply put eid in the generated section, no?
+        return [(rtype, role) for rtype, _, role in self._relations_by_section(
+            'attributes', strict=strict) if rtype != 'eid']
+
+    def editable_relations(self):
+        """return a sorted list of (relation's label, relation'schema, role) for
+        relations in the 'relations' section
+        """
+        result = []
+        for rschema, _, role in self._relations_by_section('relations',
+                                                           strict=True):
+            result.append( (rschema.display_name(entity._cw, role,
+                                                 entity.__regid__),
+                            rschema, role) )
+        return sorted(result)
 
     def inlined_relations(self):
         """return a list of (relation schema, target schemas, role) matching
         given category(ies) and permission
         """
-        return self.erelations_by_category(self.edited_entity, True, 'add',
-                                           self.rinlined)
-
-    def srelations_by_category(self, categories=None, permission=None,
-                               strict=False):
-        """filter out result of relations_by_category(categories, permission) by
-        removing final relations
-
-        return a sorted list of (relation's label, relation'schema, role)
-        """
-        return self.esrelations_by_category(self.edited_entity, categories,
-                                           permission, strict=strict)
-
-    def editable_attributes(self):
-        """return a list of (relation schema, role) to edit for the entity"""
-        return [(rschema, role) for rschema, _, role in self.relations_by_category(
-                self.attrcategories, 'add') if rschema != 'eid']
+        return self._relations_by_section('inlined')
 
     # generic relations modifier ###############################################
 
@@ -275,8 +198,7 @@ class AutomaticEntityForm(forms.EntityFieldsForm):
         """
         entity = self.edited_entity
         pending_deletes = self._cw.get_pending_deletes(entity.eid)
-        for label, rschema, role in self.srelations_by_category('generic', 'add',
-                                                                strict=True):
+        for label, rschema, role in self.editable_relations():
             relatedrset = entity.related(rschema, role, limit=self.related_limit)
             if rschema.has_perm(self._cw, 'delete'):
                 toggleable_rel_link_func = editforms.toggleable_relation_link
