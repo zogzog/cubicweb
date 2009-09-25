@@ -63,8 +63,9 @@ class DeleteConfForm(forms.CompositeForm):
             if entity.eid in done:
                 continue
             done.add(entity.eid)
-            subform = self._cw.vreg['forms'].select('base', self._cw, entity=entity,
-                                                mainform=False)
+            subform = self._cw.vreg['forms'].select('base', self._cw,
+                                                    entity=entity,
+                                                    mainform=False)
             self.form_add_subform(subform)
 
 
@@ -84,11 +85,13 @@ class DeleteConfFormView(FormViewMixIn, EntityView):
           % _('this action is not reversible!'))
         # XXX above message should have style of a warning
         w(u'<h4>%s</h4>\n' % _('Do you want to delete the following element(s) ?'))
-        form = self._cw.vreg['forms'].select(self.__regid__, req, rset=self.cw_rset,
-                                         onsubmit=onsubmit)
+        form = self._cw.vreg['forms'].select(self.__regid__, req,
+                                             rset=self.cw_rset,
+                                             onsubmit=onsubmit)
         w(u'<ul>\n')
         for entity in self.cw_rset.entities():
-            # don't use outofcontext view or any other that may contain inline edition form
+            # don't use outofcontext view or any other that may contain inline
+            # edition form
             w(u'<li>%s</li>' % tags.a(entity.view('textoutofcontext'),
                                       href=entity.absolute_url()))
         w(u'</ul>\n')
@@ -120,7 +123,8 @@ class ClickAndEditFormView(FormViewMixIn, EntityView):
         return self._one_rvid
 
     def _build_landing_zone(self, lzone):
-        return lzone or self._defaultlandingzone % {'msg' : xml_escape(self._cw._(self._landingzonemsg))}
+        return lzone or self._defaultlandingzone % {
+            'msg': xml_escape(self._cw._(self._landingzonemsg))}
 
     def _build_renderer(self, entity, rtype, role):
         return self._cw.vreg['formrenderers'].select(

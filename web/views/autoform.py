@@ -131,7 +131,8 @@ class AutomaticEntityForm(forms.EntityFieldsForm):
             targettype = targettypes[0]
             if self.should_inline_relation_form(rschema, targettype, role):
                 entity = self._cw.vreg['etypes'].etype_class(targettype)(self._cw)
-                subform = self._cw.vreg['forms'].select('edition', self._cw, entity=entity)
+                subform = self._cw.vreg['forms'].select('edition', self._cw,
+                                                        entity=entity)
                 if subform.form_needs_multipart:
                     return True
         return False
