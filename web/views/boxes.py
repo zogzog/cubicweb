@@ -53,7 +53,7 @@ class EditBox(BoxTemplate): # XXX rename to ActionsBox
         self._menus_by_id = {}
         # build list of actions
         actions = self._cw.vreg['actions'].possible_actions(self._cw, self.cw_rset,
-                                                        view=view)
+                                                            view=view)
         other_menu = self._get_menu('moreactions', _('more actions'))
         for category, defaultmenu in (('mainactions', box),
                                       ('moreactions', other_menu),
