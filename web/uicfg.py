@@ -77,6 +77,8 @@ Automatic form configuration
    * 'relations', display in the relations section, using the generic relation
      selector combobox (available in main form only, and not for attribute
      relation)
+   * 'inlined', display target entity of the relation in an inlined form
+     (available in main form only, and not for attribute relation)
    * 'metadata', display in a special metadata form (NOT YET IMPLEMENTED,
      subject to changes)
 
@@ -84,7 +86,6 @@ Automatic form configuration
   specify a custom field instance to use for a relation
 
 :autoform_field_kwargs:
-
   specify a dictionnary of arguments to give to the field constructor for a
   relation. You usually want to use either `autoform_field` or
   `autoform_field_kwargs`, not both. The later won't have any effect if the
@@ -388,7 +389,6 @@ class AutoformSectionRelationTags(RelationTagsSet):
                                                  fromeid=entity.related(rschema.type, role)[0][0])):
                         continue
             yield (rschema, targetschemas, role)
-
 
 
 autoform_section = AutoformSectionRelationTags('autoform_section')
