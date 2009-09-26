@@ -10,10 +10,10 @@ __docformat__ = "restructuredtext en"
 import sys
 import os
 import select
+import hotshot
 from time import mktime
 from datetime import date, timedelta
 from urlparse import urlsplit, urlunsplit
-import hotshot
 
 from twisted.application import strports
 from twisted.internet import reactor, task, threads
@@ -55,20 +55,9 @@ def daemonize():
 
 def start_task(interval, func):
     lc = task.LoopingCall(func)
-    lc.start(interval)
-
-def start_looping_tasks(repo):
-    for interval, func, args in repo._looping_tasks:
-        repo.info('starting twisted task %s with interval %.2fs',
-                  func.__name__, interval)
-        def catch_error_func(repo=repo, func=func, args=args):
-            try:
-                func(*args)
-            except:
-                repo.exception('error in looping task')
-        start_task(interval, catch_error_func)
-    # ensure no tasks will be further added
-    repo._looping_tasks = ()
+    # wait until interval has expired to actually start the task, else we have
+    # to wait all task to be finished for the server to be actually started
+    lc.start(interval, now=False)
 
 def host_prefixed_baseurl(baseurl, host):
     scheme, netloc, url, query, fragment = urlsplit(baseurl)
@@ -122,14 +111,14 @@ class CubicWebRootResource(resource.PostableResource):
             reactor.addSystemEventTrigger('before', 'shutdown',
                                           self.shutdown_event)
             # monkey patch start_looping_task to get proper reactor integration
-            self.appli.repo.__class__.start_looping_tasks = start_looping_tasks
+            #self.appli.repo.__class__.start_looping_tasks = start_looping_tasks
             if config.pyro_enabled():
                 # if pyro is enabled, we have to register to the pyro name
                 # server, create a pyro daemon, and create a task to handle pyro
                 # requests
                 self.pyro_daemon = self.appli.repo.pyro_register()
                 self.pyro_listen_timeout = 0.02
-                start_task(1, self.pyro_loop_event)
+                self.repo.looping_task(1, self.pyro_loop_event)
             self.appli.repo.start_looping_tasks()
         self.set_url_rewriter()
         CW_EVENT_MANAGER.bind('after-registry-reload', self.set_url_rewriter)
