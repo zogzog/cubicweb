@@ -7,4 +7,4 @@
 :license: GNU Lesser General Public License, v2.1 - http://www.gnu.org/licenses
 """
 # You could create your own groups here, like in :
-#   add_entity('CWGroup', name=u'mygroup')
+#   create_entity('CWGroup', name=u'mygroup')
