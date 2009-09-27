@@ -63,19 +63,26 @@ You can download the archive containing the sources from our `ftp site`_ at::
 
 .. _`ftp site`: http://ftp.logilab.org/pub/cubicweb/
 
-or keep up to date with on-going development by using Mercurial and its forest
-extension::
+Make sure you have installed the dependencies (see appendixes for the list).
+
+Install from version control system
+```````````````````````````````````
+
+You can keep up to date with on-going development by using Mercurial and its
+forest extension::
 
   hg fclone http://www.logilab.org/hg/forests/cubicweb
 
 See :ref:`MercurialPresentation` for more details about Mercurial.
+
 When cloning a repository, you might be set in a development branch
 (the 'default' branch). You should check that the branches of the
 repositories are set to 'stable' (using `hg up stable` for each one)
 if you do not intend to develop the framework itself.
 
-In both cases, make sure you have installed the dependencies (see appendixes for
-the list).
+Do not forget to update the forest itself (using `cd path/to/forest ; hg up`).
+
+Make sure you have installed the dependencies (see appendixes for the list).
 
 Windows installation
 ````````````````````
