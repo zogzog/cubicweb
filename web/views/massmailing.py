@@ -13,18 +13,16 @@ import operator
 from cubicweb.interfaces import IEmailable
 from cubicweb.selectors import implements, match_user_groups
 from cubicweb.view import EntityView
-from cubicweb.web import stdmsgs
-from cubicweb.web.action import Action
-from cubicweb.web.form import FormViewMixIn
-from cubicweb.web.formfields import StringField
+from cubicweb.web import stdmsgs, action, form, formfields as ff
 from cubicweb.web.formwidgets import CheckBox, TextInput, AjaxWidget, ImgButton
 from cubicweb.web.views import forms, formrenderers
 
 
-class SendEmailAction(Action):
+class SendEmailAction(action.Action):
     id = 'sendemail'
     # XXX should check email is set as well
-    __select__ = implements(IEmailable) & match_user_groups('managers', 'users')
+    __select__ = (action.Action.__select__ & implements(IEmailable)
+                  & match_user_groups('managers', 'users'))
 
     title = _('send email')
     category = 'mainactions'
@@ -40,11 +38,12 @@ class SendEmailAction(Action):
 class MassMailingForm(forms.FieldsForm):
     id = 'massmailing'
 
-    sender = StringField(widget=TextInput({'disabled': 'disabled'}), label=_('From:'))
-    recipient = StringField(widget=CheckBox(), label=_('Recipients:'))
-    subject = StringField(label=_('Subject:'), max_length=256)
-    mailbody = StringField(widget=AjaxWidget(wdgtype='TemplateTextField',
-                                             inputid='mailbody'))
+    sender = ff.StringField(widget=TextInput({'disabled': 'disabled'}),
+                            label=_('From:'))
+    recipient = ff.StringField(widget=CheckBox(), label=_('Recipients:'))
+    subject = ff.StringField(label=_('Subject:'), max_length=256)
+    mailbody = ff.StringField(widget=AjaxWidget(wdgtype='TemplateTextField',
+                                                inputid='mailbody'))
 
     form_buttons = [ImgButton('sendbutton', "javascript: $('#sendmail').submit()",
                               _('send email'), 'SEND_EMAIL_ICON'),
@@ -117,7 +116,7 @@ class MassMailingFormRenderer(formrenderers.FormRenderer):
     def render_buttons(self, w, form):
         pass
 
-class MassMailingFormView(FormViewMixIn, EntityView):
+class MassMailingFormView(form.FormViewMixIn, EntityView):
     id = 'massmailing'
     __select__ = implements(IEmailable) & match_user_groups('managers', 'users')
 
