@@ -24,6 +24,11 @@ from cubicweb.web import uicfg, stdmsgs, action, component, form, action
 from cubicweb.web import formfields as ff, formwidgets as fwdgs
 from cubicweb.web.views import TmpFileViewMixin, forms, primary
 
+_pvs = uicfg.primaryview_section
+_pvs.tag_subject_of(('Workflow', 'initial_state', '*'), 'hidden')
+_pvs.tag_object_of(('*', 'state_of', 'Workflow'), 'hidden')
+_pvs.tag_object_of(('*', 'transition_of', 'Workflow'), 'hidden')
+
 _abaa = uicfg.actionbox_appearsin_addmenu
 _abaa.tag_subject_of(('BaseTransition', 'condition', 'RQLExpression'), False)
 _abaa.tag_subject_of(('State', 'allowed_transition', 'BaseTransition'), False)

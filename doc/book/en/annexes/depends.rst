@@ -47,5 +47,17 @@ to have installed in order for CubicWeb to work:
 * fyzz - http://www.logilab.org/project/fyzz - http://pypi.python.org/pypi/fyzz
   - included in the forest
 
+* psycopg2 - http://initd.org/projects/psycopg2 - http://pypi.python.org/pypi/psycopg2
+
+* docsutils - http://docutils.sourceforge.net/ - http://pypi.python.org/pypi/docutils
+
+For the google-appengine extension to be available, you also need:
+
+* dateutil - http://labix.org/python-dateutil -
+  http://pypi.python.org/pypi/python-dateutil/
+
+* vobject - http://vobject.skyhouseconsulting.com/ -
+  http://pypi.python.org/pypi/vobject
+
 Any help with the packaging of CubicWeb for more than Debian/Ubuntu (including
 eggs, buildouts, etc) will be greatly appreciated.
