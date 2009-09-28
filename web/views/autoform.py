@@ -188,8 +188,8 @@ class AutomaticEntityForm(forms.EntityFieldsForm):
         result = []
         for rschema, _, role in self._relations_by_section('relations',
                                                            strict=True):
-            result.append( (rschema.display_name(entity._cw, role,
-                                                 entity.__regid__),
+            result.append( (rschema.display_name(self.edited_entity._cw, role,
+                                                 self.edited_entity.__regid__),
                             rschema, role) )
         return sorted(result)
 
