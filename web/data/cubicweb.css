@@ -482,22 +482,6 @@ div.sideBox table td {
   padding-right: 1em;
 }
 
-div.boxPref {
-  margin: 10px 0px 0px;
-}
-
-div.boxPrefTitle {
-  font-weight: bold;
-  background: #cfceb7;
-  margin-bottom: 6px;
-  padding-bottom: 0.2em;
-  overflow: hidden;
-}
-
-div.boxPrefTitle span{
- padding:0px 5px;
-}
-
 input.rqlsubmit{
   background: #fffff8 url("go.png") 50% 50% no-repeat;
   width: 20px;
