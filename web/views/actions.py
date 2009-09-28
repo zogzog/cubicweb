@@ -29,7 +29,7 @@ class has_editable_relation(EntitySelector):
     def score_entity(self, entity):
         # if user has no update right but it can modify some relation,
         # display action anyway
-        form = self._cw.vreg['forms'].select('edition', self._cw,
+        form = entity._cw.vreg['forms'].select('edition', entity._cw,
                                              entity=entity)
         for dummy in form.editable_relations():
             return 1
@@ -233,7 +233,7 @@ class AddNewAction(MultipleEditAction):
 class AddRelatedActions(action.Action):
     """fill 'addrelated' sub-menu of the actions box"""
     __regid__ = 'addrelated'
-    __select__ = Action.__select__ & one_line_rset() & non_final_entity()
+    __select__ = action.Action.__select__ & one_line_rset() & non_final_entity()
 
     submenu = _('addrelated')
     order = 20
@@ -297,7 +297,7 @@ class AddRelatedActions(action.Action):
 
 # logged user actions #########################################################
 
-class UserPreferencesAction(Action):
+class UserPreferencesAction(action.Action):
     __regid__ = 'myprefs'
     __select__ = authenticated_user()
 
@@ -309,7 +309,7 @@ class UserPreferencesAction(Action):
         return self._cw.build_url(self.__regid__)
 
 
-class UserInfoAction(Action):
+class UserInfoAction(action.Action):
     __regid__ = 'myinfos'
     __select__ = authenticated_user()
 
@@ -321,7 +321,7 @@ class UserInfoAction(Action):
         return self._cw.build_url('cwuser/%s'%self._cw.user.login, vid='edition')
 
 
-class LogoutAction(Action):
+class LogoutAction(action.Action):
     __regid__ = 'logout'
     __select__ = authenticated_user()
 
@@ -335,7 +335,7 @@ class LogoutAction(Action):
 
 # site actions ################################################################
 
-class ManagersAction(Action):
+class ManagersAction(action.Action):
     __abstract__ = True
     __select__ = match_user_groups('managers')
 
@@ -363,7 +363,9 @@ class SiteInfoAction(ManagersAction):
     order = 30
 
 
-class PoweredByAction(Action):
+# footer actions ###############################################################
+
+class PoweredByAction(action.Action):
     id = 'poweredby'
     __select__ = yes()
 
@@ -374,10 +376,6 @@ class PoweredByAction(Action):
     def url(self):
         return 'http://www.cubicweb.org'
 
-
-from logilab.common.deprecation import class_moved
-from cubicweb.web.views.bookmark import FollowAction
-FollowAction = class_moved(FollowAction)
 
 ## default actions ui configuration ###########################################
 
