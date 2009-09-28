@@ -21,6 +21,7 @@ class ManageView(StartupView):
     id = 'manage'
     title = _('manage')
     http_cache_manager = httpcache.EtagHTTPCacheManager
+    add_etype_links = ()
 
     @classmethod
     def vreg_initialization_completed(cls):
@@ -77,6 +78,16 @@ class ManageView(StartupView):
     def folders(self):
         self.w(u'<h4>%s</h4>\n' % self.req._('Browse by category'))
         self.vreg['views'].select('tree', self.req).render(w=self.w)
+
+    def create_links(self):
+        self.w(u'<ul class="createLink">')
+        for etype in self.add_etype_links:
+            eschema = self.schema.eschema(etype)
+            if eschema.has_perm(self.req, 'add'):
+                self.w(u'<li><a href="%s">%s</a></li>' % (
+                        self.req.build_url('add/%s' % eschema),
+                        self.req.__('add a %s' % eschema).capitalize()))
+        self.w(u'</ul>')
 
     def startup_views(self):
         self.w(u'<h4>%s</h4>\n' % self.req._('Startup views'))
