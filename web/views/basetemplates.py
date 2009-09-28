@@ -425,14 +425,13 @@ class HTMLPageFooter(View):
     def call(self, **kwargs):
         req = self.req
         self.w(u'<div class="footer">')
-        # XXX Take object from the registry if in there? would be
-        #     better anyway
-        from cubicweb.web.views.wdoc import ChangeLogView
-        self.w(u'<a href="%s">%s</a> | ' % (req.build_url('changelog'),
-                                            req._(ChangeLogView.title).lower()))
-        self.w(u'<a href="%s">%s</a> | ' % (req.build_url('doc/about'),
-                                            req._('about this site')))
-        self.w(u'<a href="http://www.cubicweb.org">%s</a>' % req._('powered by CubicWeb'))
+        actions = self.vreg['actions'].possible_actions(self.req, rset=self.rset)
+        footeractions = actions.get('footer', ())
+        for i, action in enumerate(footeractions):
+            self.w(u'<a href="%s">%s</a>' % (action.url(),
+                                             self.req._(action.title)))
+            if i < (len(footeractions) - 1):
+                self.w(u' | ')
         self.w(u'</div>')
 
 

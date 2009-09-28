@@ -9,7 +9,7 @@ __docformat__ = "restructuredtext en"
 _ = unicode
 
 from cubicweb.appobject import objectify_selector
-from cubicweb.selectors import (EntitySelector,
+from cubicweb.selectors import (EntitySelector, yes,
     one_line_rset, two_lines_rset, one_etype_rset, relation_possible,
     nonempty_rset, non_final_entity,
     authenticated_user, match_user_groups, match_search_state,
@@ -357,6 +357,18 @@ class SiteInfoAction(ManagersAction):
     title = _('info')
     order = 30
     __select__ = match_user_groups('users','managers')
+
+
+class PoweredByAction(Action):
+    id = 'poweredby'
+    __select__ = yes()
+
+    category = 'footer'
+    order = 3
+    title = _('powered by CubicWeb')
+
+    def url(self):
+        return 'http://www.cubicweb.org'
 
 
 from logilab.common.deprecation import class_moved

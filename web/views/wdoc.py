@@ -15,12 +15,11 @@ from datetime import date
 from logilab.common.changelog import ChangeLog
 from logilab.mtconverter import CHARSET_DECL_RGX
 
-from cubicweb.selectors import match_form_params
+from cubicweb.selectors import match_form_params, yes
 from cubicweb.view import StartupView
 from cubicweb.utils import strptime, todate
 from cubicweb.common.uilib import rest_publish
-from cubicweb.web import NotFound
-
+from cubicweb.web import NotFound, action
 _ = unicode
 
 # table of content management #################################################
@@ -235,3 +234,28 @@ class ChangeLogView(StartupView):
                     break
         w('') # blank line
         self.w(rest_publish(self, '\n'.join(restdata)))
+
+
+class ChangeLogAction(action.Action):
+    id = 'changelog'
+    __select__ = yes()
+
+    category = 'footer'
+    order = 1
+    title = ChangeLogView.title
+
+    def url(self):
+        return self.req.build_url('changelog')
+
+
+class AboutAction(action.Action):
+    id = 'about'
+    __select__ = yes()
+
+    category = 'footer'
+    order = 2
+    title = _('about this site')
+
+    def url(self):
+        return self.req.build_url('doc/about')
+
