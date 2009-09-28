@@ -528,8 +528,3 @@ def login_form_url(config, req):
     if config.get('https-url'):
         return req.url().replace(req.base_url(), config['https-url'])
     return req.url()
-
-
-## vregistry registration callback ############################################
-def registration_callback(vreg):
-    vreg.register_all(globals().values(), __name__)
