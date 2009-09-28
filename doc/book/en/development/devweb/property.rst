@@ -1,4 +1,4 @@
-The property mecanims
+The property mecanism
 ---------------------
 XXX CWProperty and co
 

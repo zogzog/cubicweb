@@ -43,8 +43,8 @@ for dirname in ('entities', 'views', 'sobjects', 'hooks', 'schema', 'data', 'i18
 # Note: here, you'll need to add subdirectories if you want
 # them to be included in the debian package
 
-
-cube_eid = None # <=== FIXME if you need direct bug-subscription
+__depends_cubes__ = {}
+__depends__ = {'cubicweb': '>= 3.5.0'}
 __use__ = (%(dependancies)s)
 __recommend__ = ()
 

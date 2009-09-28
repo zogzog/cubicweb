@@ -23,7 +23,7 @@ the cube, like this : 'cube.mycube.js', so as to avoid name clashes.
 
 XXX external_resources variable (which needs love)
 
-CubicWeb javascrip api
+CubicWeb javascript api
 ~~~~~~~~~~~~~~~~~~~~~~
 
 Javascript resources are typically loaded on demand, from views. The

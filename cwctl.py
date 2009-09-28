@@ -172,8 +172,7 @@ class ListCommand(Command):
         """run the command with its specific arguments"""
         if args:
             raise BadCommandUsage('Too much arguments')
-        print 'CubicWeb version:', cwcfg.cubicweb_version()
-        print 'Detected mode:', cwcfg.mode
+        print 'CubicWeb %s (%s mode)' % (cwcfg.cubicweb_version(), cwcfg.mode)
         print
         print 'Available configurations:'
         for config in CONFIGURATIONS:

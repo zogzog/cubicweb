@@ -336,10 +336,12 @@ class FileField(StringField):
     widget = FileInput
     needs_multipart = True
 
-    def __init__(self, format_field=None, encoding_field=None, **kwargs):
+    def __init__(self, format_field=None, encoding_field=None, name_field=None,
+                 **kwargs):
         super(FileField, self).__init__(**kwargs)
         self.format_field = format_field
         self.encoding_field = encoding_field
+        self.name_field = name_field
 
     def actual_fields(self, form):
         yield self
@@ -347,6 +349,8 @@ class FileField(StringField):
             yield self.format_field
         if self.encoding_field:
             yield self.encoding_field
+        if self.name_field:
+            yield self.name_field
 
     def render(self, form, renderer):
         wdgs = [self.get_widget(form).render(form, self, renderer)]
@@ -358,6 +362,8 @@ class FileField(StringField):
                          xml_escape(form._cw.build_url('data/puce_down.png')),
                          form._cw._('show advanced fields')))
             wdgs.append(u'<div id="%s" class="hidden">' % divid)
+            if self.name_field:
+                wdgs.append(self.render_subfield(form, self.name_field, renderer))
             if self.format_field:
                 wdgs.append(self.render_subfield(form, self.format_field, renderer))
             if self.encoding_field:
@@ -626,7 +632,7 @@ def guess_field(eschema, rschema, role='subject', skip_meta_attr=True, **kwargs)
                     kwargs['max_length'] = cstr.max
             return StringField(**kwargs)
         if fieldclass is FileField:
-            for metadata in ('format', 'encoding'):
+            for metadata in ('format', 'encoding', 'name'):
                 metaschema = eschema.has_metadata(rschema, metadata)
                 if metaschema is not None:
                     kwargs['%s_field' % metadata] = guess_field(eschema, metaschema,

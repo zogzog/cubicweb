@@ -14,8 +14,74 @@ from rql import nodes as n, stmts, TypeResolverException
 
 from logilab.common.compat import any
 
-from cubicweb import Unauthorized, server, typed_eid
-from cubicweb.server.ssplanner import add_types_restriction
+from cubicweb import Unauthorized, typed_eid
+
+
+def add_types_restriction(schema, rqlst, newroot=None, solutions=None):
+    if newroot is None:
+        assert solutions is None
+        if hasattr(rqlst, '_types_restr_added'):
+            return
+        solutions = rqlst.solutions
+        newroot = rqlst
+        rqlst._types_restr_added = True
+    else:
+        assert solutions is not None
+        rqlst = rqlst.stmt
+    eschema = schema.eschema
+    allpossibletypes = {}
+    for solution in solutions:
+        for varname, etype in solution.iteritems():
+            if not varname in newroot.defined_vars or eschema(etype).is_final():
+                continue
+            allpossibletypes.setdefault(varname, set()).add(etype)
+    for varname in sorted(allpossibletypes):
+        try:
+            var = newroot.defined_vars[varname]
+        except KeyError:
+            continue
+        stinfo = var.stinfo
+        if stinfo.get('uidrels'):
+            continue # eid specified, no need for additional type specification
+        try:
+            typerels = rqlst.defined_vars[varname].stinfo.get('typerels')
+        except KeyError:
+            assert varname in rqlst.aliases
+            continue
+        if newroot is rqlst and typerels:
+            mytyperel = iter(typerels).next()
+        else:
+            for vref in newroot.defined_vars[varname].references():
+                rel = vref.relation()
+                if rel and rel.is_types_restriction():
+                    mytyperel = rel
+                    break
+            else:
+                mytyperel = None
+        possibletypes = allpossibletypes[varname]
+        if mytyperel is not None:
+            # variable as already some types restriction. new possible types
+            # can only be a subset of existing ones, so only remove no more
+            # possible types
+            for cst in mytyperel.get_nodes(n.Constant):
+                if not cst.value in possibletypes:
+                    cst.parent.remove(cst)
+                    try:
+                        stinfo['possibletypes'].remove(cst.value)
+                    except KeyError:
+                        # restriction on a type not used by this query, may
+                        # occurs with X is IN(...)
+                        pass
+        else:
+            # we have to add types restriction
+            if stinfo.get('scope') is not None:
+                rel = var.scope.add_type_restriction(var, possibletypes)
+            else:
+                # tree is not annotated yet, no scope set so add the restriction
+                # to the root
+                rel = newroot.add_type_restriction(var, possibletypes)
+            stinfo['typerels'] = frozenset((rel,))
+            stinfo['possibletypes'] = possibletypes
 
 
 def remove_solutions(origsolutions, solutions, defined):
@@ -73,8 +139,6 @@ class RQLRewriter(object):
         snippets: (varmap, list of rql expression)
                   with varmap a *tuple* (select var, snippet var)
         """
-        if server.DEBUG:
-            print '---- rewrite', select, snippets, solutions
         self.select = self.insert_scope = select
         self.solutions = solutions
         self.kwargs = kwargs
@@ -102,8 +166,6 @@ class RQLRewriter(object):
             newsolutions = self.remove_ambiguities(snippets, newsolutions)
         select.solutions = newsolutions
         add_types_restriction(self.schema, select)
-        if server.DEBUG:
-            print '---- rewriten', select
 
     def insert_snippets(self, snippets, varexistsmap=None):
         self.rewritten = {}
@@ -134,8 +196,6 @@ class RQLRewriter(object):
                     try:
                         new = self.insert_snippet(varmap, rqlexpr.snippet_rqlst, parent)
                     except Unsupported:
-                        import traceback
-                        traceback.print_exc()
                         continue
                     inserted = True
                     if new is not None:
@@ -322,28 +382,38 @@ class RQLRewriter(object):
                 # no more references, undefine the variable
                 del self.select.defined_vars[vref.name]
 
-    def _may_be_shared(self, relation, target, searchedvarname):
-        """return True if the snippet relation can be skipped to use a relation
-        from the original query
+    def _may_be_shared_with(self, sniprel, target, searchedvarname):
+        """if the snippet relation can be skipped to use a relation from the
+        original query, return that relation node
         """
-        # if cardinality is in '?1', we can ignore the relation and use variable
-        # from the original query
-        rschema = self.schema.rschema(relation.r_type)
-        if target == 'object':
-            cardindex = 0
-            ttypes_func = rschema.objects
-            rprop = rschema.rproperty
-        else: # target == 'subject':
-            cardindex = 1
-            ttypes_func = rschema.subjects
-            rprop = lambda x, y, z: rschema.rproperty(y, x, z)
+        rschema = self.schema.rschema(sniprel.r_type)
+        try:
+            if target == 'object':
+                orel = self.varinfo['lhs_rels'][sniprel.r_type]
+                cardindex = 0
+                ttypes_func = rschema.objects
+                rprop = rschema.rproperty
+            else: # target == 'subject':
+                orel = self.varinfo['rhs_rels'][sniprel.r_type]
+                cardindex = 1
+                ttypes_func = rschema.subjects
+                rprop = lambda x, y, z: rschema.rproperty(y, x, z)
+        except KeyError, ex:
+            # may be raised by self.varinfo['xhs_rels'][sniprel.r_type]
+            return None
+        # can't share neged relation or relations with different outer join
+        if (orel.neged(strict=True) or sniprel.neged(strict=True)
+            or (orel.optional and orel.optional != sniprel.optional)):
+            return None
+        # if cardinality is in '?1', we can ignore the snippet relation and use
+        # variable from the original query
         for etype in self.varinfo['stinfo']['possibletypes']:
             for ttype in ttypes_func(etype):
                 if rprop(etype, ttype, 'cardinality')[cardindex] in '+*':
-                    return False
-        return True
+                    return None
+        return orel
 
-    def _use_outer_term(self, snippet_varname, term):
+    def _use_orig_term(self, snippet_varname, term):
         key = (self.current_expr, self.varmap, snippet_varname)
         if key in self.rewritten:
             insertedvar = self.select.defined_vars.pop(self.rewritten[key])
@@ -417,27 +487,17 @@ class RQLRewriter(object):
             key = (self.current_expr, self.varmap, rhs.name)
             self.pending_keys.append( (key, action) )
             return
-        if lhs.name in self.revvarmap:
-            # on lhs
-            # see if we can reuse this relation
-            rels = self.varinfo['lhs_rels']
-            if (node.r_type in rels and isinstance(rhs, n.VariableRef)
-                and rhs.name != 'U' and not rels[node.r_type].neged(strict=True)
-                and self._may_be_shared(node, 'object', lhs.name)):
-                # ok, can share variable
-                term = rels[node.r_type].children[1].children[0]
-                self._use_outer_term(rhs.name, term)
-                return
-        elif isinstance(rhs, n.VariableRef) and rhs.name in self.revvarmap and lhs.name != 'U':
-            # on rhs
-            # see if we can reuse this relation
-            rels = self.varinfo['rhs_rels']
-            if (node.r_type in rels and not rels[node.r_type].neged(strict=True)
-                and self._may_be_shared(node, 'subject', rhs.name)):
-                # ok, can share variable
-                term = rels[node.r_type].children[0]
-                self._use_outer_term(lhs.name, term)
-                return
+        if isinstance(rhs, n.VariableRef):
+            if lhs.name in self.revvarmap and rhs.name != 'U':
+                orel = self._may_be_shared_with(node, 'object', lhs.name)
+                if orel is not None:
+                    self._use_orig_term(rhs.name, orel.children[1].children[0])
+                    return
+            elif rhs.name in self.revvarmap and lhs.name != 'U':
+                orel = self._may_be_shared_with(node, 'subject', rhs.name)
+                if orel is not None:
+                    self._use_orig_term(lhs.name, orel.children[0])
+                    return
         rel = n.Relation(node.r_type, node.optional)
         for c in node.children:
             rel.append(c.accept(self))

@@ -8,10 +8,5 @@ Core APIs
    appobject.rst
    selectors.rst
    dbapi.rst
+   cwconfig.rst
 
-
-:mod:`Configuration <cubicweb.cwconfig>`
-----------------------------------------
-
-.. automodule:: cubicweb.cwconfig
-   :members:

@@ -207,12 +207,24 @@ class InitializableDict(dict):
             else:
                 self.setdefault(eschema, 'application')
 
+indexview_etype_section = {'EmailAddress': 'subobject',
+                           'CWUser': 'system',
+                           'CWGroup': 'system',
+                           'CWPermission': 'system',
+                           'CWCache': 'system',
+                           'Workflow': 'system',
+                           'State': 'hidden',
+                           'BaseTransition': 'hidden',
+                           'Transition': 'hidden',
+                           'WorkflowTransition': 'hidden',
+                           }
+
 indexview_etype_section = InitializableDict(EmailAddress='subobject',
                                             CWUser='system',
                                             CWGroup='system',
                                             CWPermission='system',
                                             CWCache='system',
-                                            BaseTransition='hidden',
+                                            Workflow='system',
                                             )
 
 # autoform.AutomaticEntityForm configuration ##################################

@@ -57,7 +57,7 @@ class State(EntityType):
     allowed_transition = SubjectRelation('BaseTransition', cardinality='**',
                                          constraints=[RQLConstraint('S state_of WF, O transition_of WF')],
                                          description=_('allowed transitions from this state'))
-    state_of = SubjectRelation('Workflow', cardinality='1*',
+    state_of = SubjectRelation('Workflow', cardinality='1*', composite='object',
                                description=_('workflow to which this state belongs'),
                                constraints=[RQLUniqueConstraint('S name N, Y state_of O, Y name N')])
 
@@ -80,7 +80,7 @@ class BaseTransition(EntityType):
     require_group = SubjectRelation('CWGroup', cardinality='**',
                                     description=_('group in which a user should be to be '
                                                   'allowed to pass this transition'))
-    transition_of = SubjectRelation('Workflow', cardinality='1*',
+    transition_of = SubjectRelation('Workflow', cardinality='1*', composite='object',
                                     description=_('workflow to which this transition belongs'),
                                     constraints=[RQLUniqueConstraint('S name N, Y transition_of O, Y name N')])
 
@@ -223,7 +223,7 @@ class wf_info_for(RelationType):
     }
     inlined = True
 
-    cardinality='1*'
+    cardinality = '1*'
     composite = 'object'
     fulltext_container = composite
     subject = 'TrInfo'

@@ -154,7 +154,7 @@ function autogrow(area) {
 
 CubicWeb.rounded = [
 		    ['div.sideBoxBody', 'bottom 6px'],
-		    ['div.boxTitle, div.boxPrefTitle, div.sideBoxTitle, th.month', 'top 6px']
+		    ['div.boxTitle, div.sideBoxTitle, th.month', 'top 6px']
 		    ];
 
 function roundedCorners(node) {

@@ -554,7 +554,7 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
         """
         try:
             self.indexer.cursor_unindex_object(eid, session.pool['system'])
-        except:
+        except Exception: # let KeyboardInterrupt / SystemExit propagate
             if self.indexer is not None:
                 self.exception('error while unindexing %s', eid)
 
@@ -565,7 +565,7 @@ class NativeSQLSource(SQLAdapterMixIn, AbstractSource):
         try:
             self.indexer.cursor_reindex_object(entity.eid, entity,
                                                session.pool['system'])
-        except:
+        except Exception: # let KeyboardInterrupt / SystemExit propagate
             if self.indexer is not None:
                 self.exception('error while reindexing %s', entity)
         # update entities.mtime
