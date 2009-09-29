@@ -55,7 +55,6 @@ class FieldsForm(form.Form):
     """
     id = 'base'
 
-    is_subform = False
     internal_fields = ('__errorurl',) + NAV_FORM_PARAMETERS
 
     # attributes overrideable by subclasses or through __init__
@@ -506,9 +505,9 @@ class CompositeFormMixIn(object):
         super(CompositeFormMixIn, self).__init__(*args, **kwargs)
         self.forms = []
 
-    def form_add_subform(self, subform):
+    def add_subform(self, subform):
         """mark given form as a subform and append it"""
-        subform.is_subform = True
+        subform.parent_form = self
         self.forms.append(subform)
 
     def build_context(self, rendervalues=None):

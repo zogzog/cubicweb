@@ -65,7 +65,7 @@ class DeleteConfForm(forms.CompositeForm):
             done.add(entity.eid)
             subform = self.vreg['forms'].select('base', self.req, entity=entity,
                                                 mainform=False)
-            self.form_add_subform(subform)
+            self.add_subform(subform)
 
 
 class DeleteConfFormView(FormViewMixIn, EntityView):
@@ -421,7 +421,7 @@ class TableEditForm(forms.CompositeForm):
                                              mainform=False)
             # XXX rely on the EntityCompositeFormRenderer to put the eid input
             form.remove_field(form.field_by_name('eid'))
-            self.form_add_subform(form)
+            self.add_subform(form)
 
 
 class TableEditFormView(FormViewMixIn, EntityView):

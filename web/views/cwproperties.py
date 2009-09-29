@@ -216,7 +216,7 @@ class SystemCWPropertiesForm(FormViewMixIn, StartupView):
                                                 eidparam=True))
         subform.vreg = self.vreg
         subform.form_add_hidden('pkey', key, eidparam=True)
-        form.form_add_subform(subform)
+        form.add_subform(subform)
         return subform
 
 

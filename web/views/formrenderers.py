@@ -311,7 +311,7 @@ class EntityCompositeFormRenderer(FormRenderer):
     _main_display_fields = None
 
     def render_fields(self, w, form, values):
-        if not form.is_subform:
+        if form.parent_form is None:
             w(u'<table class="listing">')
             subfields = [field for field in form.forms[0].fields
                          if self.display_field(form, field)
@@ -327,14 +327,14 @@ class EntityCompositeFormRenderer(FormRenderer):
                     w(u'<th>%s</th>' % self.req._(field.label))
                 w(u'</tr>')
         super(EntityCompositeFormRenderer, self).render_fields(w, form, values)
-        if not form.is_subform:
+        if form.parent_form is None:
             w(u'</table>')
             if self._main_display_fields:
                 super(EntityCompositeFormRenderer, self)._render_fields(
                     self._main_display_fields, w, form)
 
     def _render_fields(self, fields, w, form):
-        if form.is_subform:
+        if form.parent_form is not None:
             entity = form.edited_entity
             values = form.form_previous_values
             qeid = eid_param('eid', entity.eid)
