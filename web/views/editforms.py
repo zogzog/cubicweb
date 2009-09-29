@@ -14,6 +14,7 @@ from copy import copy
 from simplejson import dumps
 
 from logilab.mtconverter import xml_escape
+from logilab.common.decorators import cached
 
 from cubicweb.selectors import (match_kwargs, one_line_rset, non_final_entity,
                                 specified_etype_implements, yes)
@@ -66,7 +67,7 @@ class DeleteConfForm(forms.CompositeForm):
             subform = self._cw.vreg['forms'].select('base', self._cw,
                                                     entity=entity,
                                                     mainform=False)
-            self.form_add_subform(subform)
+            self.add_subform(subform)
 
 
 class DeleteConfFormView(FormViewMixIn, EntityView):
@@ -418,7 +419,7 @@ class TableEditForm(forms.CompositeForm):
                                                  mainform=False)
             # XXX rely on the EntityCompositeFormRenderer to put the eid input
             form.remove_field(form.field_by_name('eid'))
-            self.form_add_subform(form)
+            self.add_subform(form)
 
 
 class TableEditFormView(FormViewMixIn, EntityView):
@@ -436,62 +437,83 @@ class TableEditFormView(FormViewMixIn, EntityView):
 
 
 class InlineEntityEditionFormView(FormViewMixIn, EntityView):
+    """
+    :attr peid: the parent entity's eid hosting the inline form
+    :attr rtype: the relation bridging `etype` and `peid`
+    :attr role: the role played by the `peid` in the relation
+    :attr pform: the parent form where this inlined form is being displayed
+    """
     __regid__ = 'inline-edition'
     __select__ = non_final_entity() & match_kwargs('peid', 'rtype')
+
+    _select_attrs = ('peid', 'rtype', 'role', 'pform')
     removejs = "removeInlinedEntity('%s', '%s', '%s')"
 
-    def call(self, **kwargs):
-        """redefine default call() method to avoid automatic
-        insertions of <div class="section"> between each row of
-        the resultset
-        """
-        rset = self.cw_rset
-        for i in xrange(len(rset)):
-            self.wview(self.__regid__, rset, row=i, **kwargs)
+    def __init__(self, *args, **kwargs):
+        for attr in self._select_attrs:
+            setattr(self, attr, kwargs.pop(attr, None))
+        super(InlineEntityEditionFormView, self).__init__(*args, **kwargs)
 
-    def cell_call(self, row, col, peid, rtype, role, i18nctx, **kwargs):
+    def _entity(self):
+        assert self.cw_row is not None, self
+        return self.cw_rset.get_entity(self.cw_row, self.cw_col)
+
+    @property
+    @cached
+    def form(self):
+        entity = self._entity()
+        form = self.vreg['forms'].select('edition', self._cw,
+                                         entity=entity,
+                                         form_renderer_id='inline',
+                                         mainform=False, copy_nav_params=False,
+                                         **self.extra_kwargs)
+        form.parent_form = self.pform
+        self.add_hiddens(form, entity)
+        return form
+
+    def cell_call(self, row, col, i18nctx, **kwargs):
         """
         :param peid: the parent entity's eid hosting the inline form
         :param rtype: the relation bridging `etype` and `peid`
         :param role: the role played by the `peid` in the relation
         """
-        entity = self.cw_rset.get_entity(row, col)
-        divonclick = "restoreInlinedEntity('%s', '%s', '%s')" % (peid, rtype,
-                                                                 entity.eid)
-        self.render_form(entity, peid, rtype, role, i18nctx,
-                         divonclick=divonclick)
+        entity = self._entity()
+        divonclick = "restoreInlinedEntity('%s', '%s', '%s')" % (
+            self.peid, self.rtype, entity.eid)
+        self.render_form(i18nctx, divonclick=divonclick, **kwargs)
 
-    def render_form(self, entity, peid, rtype, role, i18nctx, **kwargs):
+    def render_form(self, i18nctx, **kwargs):
         """fetch and render the form"""
-        form = self._cw.vreg['forms'].select('edition', self._cw, entity=entity,
-                                             form_renderer_id='inline',
-                                             formtype='inlined',
-                                             mainform=False,
-                                             copy_nav_params=False)
-        self.add_hiddens(form, entity, peid, rtype, role)
-        divid = '%s-%s-%s' % (peid, rtype, entity.eid)
-        title = self._cw.pgettext(i18nctx, 'This %s' % entity.e_schema)
-        removejs = self.removejs % (peid, rtype, entity.eid)
-        countkey = '%s_count' % rtype
+        entity = self._entity()
+        divid = '%s-%s-%s' % (self.peid, self.rtype, entity.eid)
+        title = self.req.pgettext(i18nctx, 'This %s' % entity.e_schema)
+        removejs = self.removejs % (self.peid, self.rtype, entity.eid)
+        countkey = '%s_count' % self.rtype
         try:
             self._cw.data[countkey] += 1
         except:
             self._cw.data[countkey] = 1
-        self.w(form.form_render(divid=divid, title=title, removejs=removejs,
-                                i18nctx=i18nctx,
-                                counter=self._cw.data[countkey], **kwargs))
+        self.w(self.form.form_render(
+            divid=divid, title=title, removejs=removejs, i18nctx=i18nctx,
+            counter=self.req.data[countkey], **kwargs))
 
-    def add_hiddens(self, form, entity, peid, rtype, role):
+    def add_hiddens(self, form, entity):
         # to ease overriding (see cubes.vcsfile.views.forms for instance)
-        form.form_add_hidden(name='%s:%s' % (rtype, peid), value=entity.eid,
-                             id='rel-%s-%s-%s'  % (peid, rtype, entity.eid))
+        if self.keep_entity(form, entity):
+            if entity.has_eid():
+                rval = entity.eid
+            else:
+                rval = INTERNAL_FIELD_VALUE
+            form.form_add_hidden('edit%s-%s:%s' % (self.role[0], self.rtype, self.peid), rval)
+        form.form_add_hidden(name='%s:%s' % (self.rtype, self.peid), value=entity.eid,
+                             id='rel-%s-%s-%s'  % (self.peid, self.rtype, entity.eid))
 
-    def keep_entity(self, form, entity, peid, rtype):
+    def keep_entity(self, form, entity):
         if not entity.has_eid():
             return True
         # are we regenerating form because of a validation error ?
         if form.form_previous_values:
-            cdvalues = self._cw.list_form_param(eid_param(rtype, peid),
+            cdvalues = self._cw.list_form_param(eid_param(self.rtype, self.peid),
                                                 form.form_previous_values)
             if unicode(entity.eid) not in cdvalues:
                 return False
@@ -499,23 +521,52 @@ class InlineEntityEditionFormView(FormViewMixIn, EntityView):
 
 
 class InlineEntityCreationFormView(InlineEntityEditionFormView):
+    """
+    :attr etype: the entity type being created in the inline form
+    """
     __regid__ = 'inline-creation'
     __select__ = (match_kwargs('peid', 'rtype')
                   & specified_etype_implements('Any'))
+    _select_attrs = InlineEntityEditionFormView._select_attrs + ('etype',)
     removejs = "removeInlineForm('%s', '%s', '%s')"
 
-    def call(self, etype, peid, rtype, role, i18nctx, **kwargs):
-        """
-        :param etype: the entity type being created in the inline form
-        :param peid: the parent entity's eid hosting the inline form
-        :param rtype: the relation bridging `etype` and `peid`
-        :param role: the role played by the `peid` in the relation
-        """
+    @cached
+    def _entity(self):
         try:
-            cls = self._cw.vreg['etypes'].etype_class(etype)
+            cls = self._cw.vreg['etypes'].etype_class(self.etype)
         except:
             self.w(self._cw._('no such entity type %s') % etype)
             return
-        entity = cls(self._cw)
-        entity.eid = self._cw.varmaker.next()
-        self.render_form(entity, peid, rtype, role, i18nctx, **kwargs)
+        self.initialize_varmaker()
+        entity = cls(self.req)
+        entity.eid = self.varmaker.next()
+        return entity
+
+    def call(self, i18nctx, **kwargs):
+        self.render_form(i18nctx, **kwargs)
+
+
+class InlineAddNewLinkView(InlineEntityCreationFormView):
+    """
+    :attr card: the cardinality of the relation according to role of `peid`
+    """
+    __regid__ = 'inline-addnew-link'
+    __select__ = (match_kwargs('peid', 'rtype')
+                  & specified_etype_implements('Any'))
+
+    _select_attrs = InlineEntityCreationFormView._select_attrs + ('card',)
+    form = None # no actual form wrapped
+
+    def call(self, i18nctx, **kwargs):
+        divid = "addNew%s%s%s:%s" % (self.etype, self.rtype, self.role, self.peid)
+        self.w(u'<div class="inlinedform" id="%s" cubicweb:limit="true">'
+          % divid)
+        js = "addInlineCreationForm('%s', '%s', '%s', '%s', '%s')" % (
+            self.peid, self.etype, self.rtype, self.role, i18nctx)
+        if self.pform.should_hide_add_new_relation_link(self.rtype, self.card):
+            js = "toggleVisibility('%s'); %s" % (divid, js)
+        __ = self.req.pgettext
+        self.w(u'<a class="addEntity" id="add%s:%slink" href="javascript: %s" >+ %s.</a>'
+          % (self.rtype, self.peid, js, __(i18nctx, 'add a %s' % self.etype)))
+        self.w(u'</div>')
+        self.w(u'<div class="trame_grise">&#160;</div>')

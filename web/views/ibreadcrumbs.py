@@ -21,7 +21,7 @@ from cubicweb.common import tags, uilib
 
 class BreadCrumbEntityVComponent(Component):
     __regid__ = 'breadcrumbs'
-    __select__ = one_line_rset() & implements(IBreadCrumbs)
+    __select__ = one_line_rset() & implements(IBreadCrumbs, accept_none=False)
 
     cw_property_defs = {
         _('visible'):  dict(type='Boolean', default=True,
@@ -70,7 +70,8 @@ class BreadCrumbEntityVComponent(Component):
 
 
 class BreadCrumbETypeVComponent(BreadCrumbEntityVComponent):
-    __select__ = two_lines_rset() & one_etype_rset() & implements(IBreadCrumbs)
+    __select__ = two_lines_rset() & one_etype_rset() & \
+                 implements(IBreadCrumbs, accept_none=False)
 
     def render_breadcrumbs(self, contextentity, path):
         # XXX hack: only display etype name or first non entity path part

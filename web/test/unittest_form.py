@@ -82,7 +82,7 @@ class EntityFieldsFormTC(CubicWebTC):
         form = EntityFieldsForm(self.request(login=u'toto'), None, entity=e)
         field = StringField(name='login', eidparam=True)
         form.append_field(field)
-        form.form_build_context({})
+        form.build_context({})
         self.assertEquals(form.form_field_display_value(field, {}), 'toto')
 
 
@@ -137,7 +137,7 @@ class EntityFieldsFormTC(CubicWebTC):
     # fields tests ############################################################
 
     def _render_entity_field(self, name, form):
-        form.form_build_context({})
+        form.build_context({})
         renderer = FormRenderer(self.req)
         return form.field_by_name(name).render(form, renderer)
 
@@ -171,7 +171,7 @@ class EntityFieldsFormTC(CubicWebTC):
         class FFForm(EntityFieldsForm):
             data = FileField(format_field=StringField(name='data_format', max_length=50),
                              encoding_field=StringField(name='data_encoding', max_length=20))
-        file = self.add_entity('File', name=u"pouet.txt", data_encoding=u'UTF-8',
+        file = self.add_entity('File', data_name=u"pouet.txt", data_encoding=u'UTF-8',
                                data=Binary('new widgets system'))
         form = FFForm(self.req, redirect_path='perdu.com', entity=file)
         self.assertTextEquals(self._render_entity_field('data', form),
@@ -195,7 +195,7 @@ detach attached file
                 return 'ascii'
             def form_field_format(self, field):
                 return 'text/plain'
-        file = self.add_entity('File', name=u"pouet.txt", data_encoding=u'UTF-8',
+        file = self.add_entity('File', data_name=u"pouet.txt", data_encoding=u'UTF-8',
                                data=Binary('new widgets system'))
         form = EFFForm(self.req, redirect_path='perdu.com', entity=file)
         self.assertTextEquals(self._render_entity_field('data', form),

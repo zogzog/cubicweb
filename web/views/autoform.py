@@ -8,7 +8,7 @@
 __docformat__ = "restructuredtext en"
 _ = unicode
 
-from logilab.common.decorators import iclassmethod
+from logilab.common.decorators import iclassmethod, cached
 
 from cubicweb import typed_eid
 from cubicweb.web import stdmsgs, uicfg
@@ -112,6 +112,11 @@ class AutomaticEntityForm(forms.EntityFieldsForm):
     def form_needs_multipart(self):
         """true if the form needs enctype=multipart/form-data"""
         return self._subform_needs_multipart()
+
+    def build_context(self, rendervalues=None):
+        super(AutomaticEntityForm, self).build_context(rendervalues)
+        for form in self.inlined_forms():
+            form.build_context(rendervalues)
 
     def _subform_needs_multipart(self, _tested=None):
         if _tested is None:
@@ -260,6 +265,46 @@ class AutomaticEntityForm(forms.EntityFieldsForm):
 
     # inlined forms support ####################################################
 
+    @cached
+    def inlined_form_views(self):
+        """compute and return list of inlined form views (hosting the inlined form object)
+        """
+        formviews = []
+        entity = self.edited_entity
+        for rschema, ttypes, role in self.inlined_relations():
+            # show inline forms only if there's one possible target type
+            # for rschema
+            if len(ttypes) != 1:
+                self.warning('entity related by the %s relation should have '
+                             'inlined form but there is multiple target types, '
+                             'dunno what to do', rschema)
+                continue
+            ttype = ttypes[0].type
+            if self.should_inline_relation_form(rschema, ttype, role):
+                formviews += self.inline_edition_form_view(rschema, ttype, role)
+                if role == 'subject':
+                    card = rschema.rproperty(entity.e_schema, ttype, 'cardinality')[0]
+                else:
+                    card = rschema.rproperty(ttype, entity.e_schema, 'cardinality')[1]
+                # there is no related entity and we need at least one: we need to
+                # display one explicit inline-creation view
+                if self.should_display_inline_creation_form(rschema, formviews, card):
+                    formviews += self.inline_creation_form_view(rschema, ttype, role)
+                # we can create more than one related entity, we thus display a link
+                # to add new related entities
+                if self.should_display_add_new_relation_link(rschema, formviews, card):
+                    addnewlink = self.vreg['views'].select(
+                        'inline-addnew-link', self.req,
+                        etype=ttype, rtype=rschema, role=role,
+                        peid=self.edited_entity.eid, pform=self, card=card)
+                    formviews.append(addnewlink)
+        return formviews
+
+    def inlined_forms(self):
+        for formview in self.inlined_form_views():
+            if formview.form: # may be None for the addnew_link artefact form
+                yield formview.form
+
     def should_inline_relation_form(self, rschema, targettype, role):
         """return true if the given relation with entity has role and a
         targettype target should be inlined
@@ -269,42 +314,12 @@ class AutomaticEntityForm(forms.EntityFieldsForm):
         """
         return True
 
-    def display_inline_edition_form(self, w, rschema, targettype, role,
-                                     i18nctx):
-        """display inline forms for already related entities.
-
-        Return True if some inlined form are actually displayed
-        """
-        existant = False
-        entity = self.edited_entity
-        related = entity.has_eid() and entity.related(rschema, role)
-        if related:
-            # display inline-edition view for all existing related entities
-            for i, relentity in enumerate(related.entities()):
-                if relentity.has_perm('update'):
-                    w(self._cw.view('inline-edition', related, row=i, col=0,
-                                    rtype=rschema, role=role, ptype=entity.e_schema,
-                                    peid=entity.eid, i18nctx=i18nctx))
-                    existant = True
-        return existant
-
     def should_display_inline_creation_form(self, rschema, existant, card):
         """return true if a creation form should be inlined
 
         by default true if there is no related entity and we need at least one
         """
         return not existant and card in '1+' or self._cw.form.has_key('force_%s_display' % rschema)
-
-    def display_inline_creation_form(self, w, rschema, targettype, role,
-                                     i18nctx):
-        """display inline forms to a newly related (hence created) entity.
-
-        Return True if some inlined form are actually displayed
-        """
-        entity = self.edited_entity
-        w(self._cw.view('inline-creation', None, etype=targettype,
-                        peid=entity.eid, ptype=entity.e_schema,
-                        rtype=rschema, role=role, i18nctx=i18nctx))
 
     def should_display_add_new_relation_link(self, rschema, existant, card):
         """return true if we should add a link to add a new creation form
@@ -323,6 +338,29 @@ class AutomaticEntityForm(forms.EntityFieldsForm):
         """
         return card in '1?'
 
+    def inline_edition_form_view(self, rschema, ttype, role):
+        """yield inline form views for already related entities through the
+        given relation
+        """
+        entity = self.edited_entity
+        related = entity.has_eid() and entity.related(rschema, role)
+        if related:
+            vvreg = self._cw.vreg['views']
+            # display inline-edition view for all existing related entities
+            for i, relentity in enumerate(related.entities()):
+                if relentity.has_perm('update'):
+                    yield vvreg.select('inline-edition', self._cw, related,
+                                       row=i, col=0, rtype=rschema, role=role,
+                                       peid=entity.eid, pform=self)
+
+    def inline_creation_form_view(self, rschema, ttype, role):
+        """yield inline form views to a newly related (hence created) entity
+        through the given relation
+        """
+        yield self._cw.vreg['views'].select('inline-creation', self._cw,
+                                            etype=ttype, rtype=rschema, role=role,
+                                            peid=self.edited_entity.eid, pform=self)
+
 
 def etype_relation_field(etype, rtype, role='subject'):
     eschema = AutomaticEntityForm.schema.eschema(etype)
@@ -337,7 +375,8 @@ uicfg.autoform_section.tag_attribute(('*', 'description'), 'secondary')
 uicfg.autoform_section.tag_attribute(('*', 'creation_date'), 'metadata')
 uicfg.autoform_section.tag_attribute(('*', 'modification_date'), 'metadata')
 uicfg.autoform_section.tag_attribute(('*', 'cwuri'), 'metadata')
-uicfg.autoform_section.tag_subject_of(('*', 'in_state', '*'), 'primary')
+uicfg.autoform_section.tag_attribute(('*', 'has_text'), 'generated')
+uicfg.autoform_section.tag_subject_of(('*', 'in_state', '*'), 'generated')
 uicfg.autoform_section.tag_subject_of(('*', 'owned_by', '*'), 'metadata')
 uicfg.autoform_section.tag_subject_of(('*', 'created_by', '*'), 'metadata')
 uicfg.autoform_section.tag_subject_of(('*', 'require_permission', '*'), 'generated')

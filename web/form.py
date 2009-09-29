@@ -7,6 +7,8 @@
 """
 __docformat__ = "restructuredtext en"
 
+from logilab.common.decorators import iclassmethod
+
 from cubicweb.appobject import AppObject
 from cubicweb.view import NOINDEX, NOFOLLOW
 from cubicweb.common import tags
@@ -62,9 +64,64 @@ class Form(AppObject):
     __metaclass__ = metafieldsform
     __registry__ = 'forms'
 
+    parent_form = None
+
     def __init__(self, req, rset, **kwargs):
         super(Form, self).__init__(req, rset=rset, **kwargs)
         self.restore_previous_post(self.session_key())
+
+    @property
+    def root_form(self):
+        """return the root form"""
+        if self.parent_form is None:
+            return self
+        return self.parent_form.root_form
+
+    @iclassmethod
+    def _fieldsattr(cls_or_self):
+        if isinstance(cls_or_self, type):
+            fields = cls_or_self._fields_
+        else:
+            fields = cls_or_self.fields
+        return fields
+
+    @iclassmethod
+    def field_by_name(cls_or_self, name, role='subject'):
+        """return field with the given name and role.
+        Raise FieldNotFound if the field can't be found.
+        """
+        for field in cls_or_self._fieldsattr():
+            if field.name == name and field.role == role:
+                return field
+        raise FieldNotFound(name)
+
+    @iclassmethod
+    def fields_by_name(cls_or_self, name, role='subject'):
+        """return a list of fields with the given name and role"""
+        return [field for field in cls_or_self._fieldsattr()
+                if field.name == name and field.role == role]
+
+    @iclassmethod
+    def remove_field(cls_or_self, field):
+        """remove a field from form class or instance"""
+        cls_or_self._fieldsattr().remove(field)
+
+    @iclassmethod
+    def append_field(cls_or_self, field):
+        """append a field to form class or instance"""
+        cls_or_self._fieldsattr().append(field)
+
+    @iclassmethod
+    def insert_field_before(cls_or_self, new_field, name, role='subject'):
+        field = cls_or_self.field_by_name(name, role)
+        fields = cls_or_self._fieldsattr()
+        fields.insert(fields.index(field), new_field)
+
+    @iclassmethod
+    def insert_field_after(cls_or_self, new_field, name, role='subject'):
+        field = cls_or_self.field_by_name(name, role)
+        fields = cls_or_self._fieldsattr()
+        fields.insert(fields.index(field)+1, new_field)
 
     def session_key(self):
         """return the key that may be used to store / retreive data about a

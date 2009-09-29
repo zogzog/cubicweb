@@ -83,7 +83,7 @@ class ChangeStateFormView(form.FormViewMixIn, view.EntityView):
         subform = self._cw.vreg['forms'].select('edition', self._cw, entity=trinfo,
                                             mainform=False)
         subform.field_by_name('by_transition').widget = fwdgs.HiddenInput()
-        form.form_add_subform(subform)
+        form.add_subform(subform)
         self.w(form.form_render(wf_info_for=entity.eid,
                                 by_transition=transition.eid))
 

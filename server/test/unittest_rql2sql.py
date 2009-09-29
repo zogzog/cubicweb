@@ -583,17 +583,13 @@ WHERE X.eid>12'''),
 FROM entities AS X
 WHERE X.type='Note' AND X.eid>12"""),
 
-    ('Any X, T WHERE X eid > 12, X title T',
+    ('Any X, T WHERE X eid > 12, X title T, X is IN (Bookmark, Card)',
      """SELECT X.cw_eid, X.cw_title
 FROM cw_Bookmark AS X
 WHERE X.cw_eid>12
 UNION ALL
 SELECT X.cw_eid, X.cw_title
 FROM cw_Card AS X
-WHERE X.cw_eid>12
-UNION ALL
-SELECT X.cw_eid, X.cw_title
-FROM cw_EmailThread AS X
 WHERE X.cw_eid>12"""),
 
     ('Any X',
@@ -754,12 +750,10 @@ WHERE NOT EXISTS(SELECT 1 FROM evaluee_relation AS rel_evaluee0 WHERE rel_evalue
 FROM cw_Note AS X
 WHERE NOT EXISTS(SELECT 1 FROM evaluee_relation AS rel_evaluee0,cw_CWUser AS Y WHERE rel_evaluee0.eid_from=Y.cw_eid AND rel_evaluee0.eid_to=X.cw_eid)'''),
 
-    ('Any X,T WHERE X title T, NOT X is Bookmark',
-     '''SELECT X.cw_eid, X.cw_title
-FROM cw_Card AS X
-UNION ALL
-SELECT X.cw_eid, X.cw_title
-FROM cw_EmailThread AS X'''),
+    ('Any X,RT WHERE X relation_type RT, NOT X is CWAttribute',
+     '''SELECT X.cw_eid, X.cw_relation_type
+FROM cw_CWRelation AS X
+WHERE X.cw_relation_type IS NOT NULL'''),
 
     ('Any K,V WHERE P is CWProperty, P pkey K, P value V, NOT P for_user U',
      '''SELECT P.cw_pkey, P.cw_value
@@ -774,7 +768,17 @@ INTERSECT
 SELECT S.cw_eid
 FROM cw_State AS S
 WHERE NOT EXISTS(SELECT 1 FROM cw_CWUser AS X WHERE X.cw_in_state=S.cw_eid)'''),
-    ]
+
+    ('Any S WHERE NOT(X in_state S, S name "somename"), X is CWUser',
+     '''SELECT S.cw_eid
+FROM cw_State AS S
+WHERE NOT EXISTS(SELECT 1 FROM cw_CWUser AS X WHERE X.cw_in_state=S.cw_eid AND S.cw_name=somename)'''),
+   
+# XXXFIXME fail
+#         ('Any X,RT WHERE X relation_type RT?, NOT X is CWAttribute',
+#      '''SELECT X.cw_eid, X.cw_relation_type
+# FROM cw_CWRelation AS X'''),
+]
 
 OUTER_JOIN = [
     ('Any X,S WHERE X travaille S?',

@@ -209,7 +209,7 @@ class Field(object):
         return vocab
 
     def form_init(self, form):
-        """method called before by form_build_context to trigger potential field
+        """method called before by build_context to trigger potential field
         initialization requiring the form instance
         """
         pass

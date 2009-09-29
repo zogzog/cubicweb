@@ -10,7 +10,6 @@ __docformat__ = "restructuredtext en"
 from warnings import warn
 
 from logilab.common.compat import any
-from logilab.common.decorators import iclassmethod
 
 from cubicweb.selectors import non_final_entity, match_kwargs, one_line_rset
 from cubicweb.web import INTERNAL_FIELD_VALUE, eid_param
@@ -56,7 +55,6 @@ class FieldsForm(form.Form):
     """
     __regid__ = 'base'
 
-    is_subform = False
     internal_fields = ('__errorurl',) + NAV_FORM_PARAMETERS
 
     # attributes overrideable by subclasses or through __init__
@@ -84,6 +82,8 @@ class FieldsForm(form.Form):
                 self.form_add_hidden(key, val)
             elif hasattr(self.__class__, key) and not key[0] == '_':
                 setattr(self, key, val)
+            else:
+                self.extra_kwargs[key] = val
             # skip other parameters, usually given for selection
             # (else write a custom class to handle them)
         if mainform:
@@ -100,52 +100,6 @@ class FieldsForm(form.Form):
         self.context = None
         if 'domid' in kwargs:# session key changed
             self.restore_previous_post(self.session_key())
-
-    @iclassmethod
-    def _fieldsattr(cls_or_self):
-        if isinstance(cls_or_self, type):
-            fields = cls_or_self._fields_
-        else:
-            fields = cls_or_self.fields
-        return fields
-
-    @iclassmethod
-    def field_by_name(cls_or_self, name, role='subject'):
-        """return field with the given name and role.
-        Raise FieldNotFound if the field can't be found.
-        """
-        for field in cls_or_self._fieldsattr():
-            if field.name == name and field.role == role:
-                return field
-        raise form.FieldNotFound(name)
-
-    @iclassmethod
-    def fields_by_name(cls_or_self, name, role='subject'):
-        """return a list of fields with the given name and role"""
-        return [field for field in cls_or_self._fieldsattr()
-                if field.name == name and field.role == role]
-
-    @iclassmethod
-    def remove_field(cls_or_self, field):
-        """remove a field from form class or instance"""
-        cls_or_self._fieldsattr().remove(field)
-
-    @iclassmethod
-    def append_field(cls_or_self, field):
-        """append a field to form class or instance"""
-        cls_or_self._fieldsattr().append(field)
-
-    @iclassmethod
-    def insert_field_before(cls_or_self, new_field, name, role='subject'):
-        field = cls_or_self.field_by_name(name, role)
-        fields = cls_or_self._fieldsattr()
-        fields.insert(fields.index(field), new_field)
-
-    @iclassmethod
-    def insert_field_after(cls_or_self, new_field, name, role='subject'):
-        field = cls_or_self.field_by_name(name, role)
-        fields = cls_or_self._fieldsattr()
-        fields.insert(fields.index(field)+1, new_field)
 
     @property
     def form_needs_multipart(self):
@@ -174,6 +128,7 @@ class FieldsForm(form.Form):
         """render this form, using the renderer given in args or the default
         FormRenderer()
         """
+        self.build_context(values)
         renderer = values.pop('renderer', None)
         if renderer is None:
             renderer = self.form_default_renderer()
@@ -184,7 +139,7 @@ class FieldsForm(form.Form):
                                                      self._cw, rset=self.cw_rset,
                                                      row=self.cw_row, col=self.cw_col)
 
-    def form_build_context(self, rendervalues=None):
+    def build_context(self, rendervalues=None):
         """build form context values (the .context attribute which is a
         dictionary with field instance as key associated to a dictionary
         containing field 'name' (qualified), 'id', 'value' (for display, always
@@ -193,6 +148,8 @@ class FieldsForm(form.Form):
         rendervalues is an optional dictionary containing extra kwargs given to
         form_render()
         """
+        if self.context is not None:
+            return # already built
         self.context = context = {}
         # ensure rendervalues is a dict
         if rendervalues is None:
@@ -224,6 +181,8 @@ class FieldsForm(form.Form):
         if value is None:
             if field.name in rendervalues:
                 value = rendervalues[field.name]
+            elif field.name in self.extra_kwargs:
+                value = self.extra_kwargs[field.name]
             else:
                 value = self.form_field_value(field, load_bytes)
                 if callable(value):
@@ -349,9 +308,9 @@ class EntityFieldsForm(FieldsForm):
                 searchedvalues = ['%s:%s:%s' % (field.name, eid, field.role)
                                   for eid in value]
                 # remove associated __linkto hidden fields
-                for field in self.fields_by_name('__linkto'):
+                for field in self.root_form.fields_by_name('__linkto'):
                     if field.initial in searchedvalues:
-                        self.remove_field(field)
+                        self.root_form.remove_field(field)
             else:
                 value = None
         return value
@@ -374,21 +333,6 @@ class EntityFieldsForm(FieldsForm):
         return self._cw.vreg['formrenderers'].select(
             self.form_renderer_id, self._cw, rset=self.cw_rset, row=self.cw_row,
             col=self.cw_col, entity=self.edited_entity)
-
-##    def form_build_context(self, values=None):
-##        """overriden to add edit[s|o] hidden fields and to ensure schema fields
-##        have eidparam set to True
-##        """
-##        eschema = self.edited_entity.e_schema
-##        for field in self.fields[:]:
-##            for field in field.actual_fields(self):
-##                fieldname = field.name
-##                if fieldname != 'eid' and (
-##                    (eschema.has_subject_relation(fieldname) or
-##                     eschema.has_object_relation(fieldname))):
-##                    # XXX why do we need to do this here ?
-##                    field.eidparam = True
-##        return super(EntityFieldsForm, self).form_build_context(values)
 
     def form_field_value(self, field, load_bytes=False):
         """return field's *typed* value
@@ -554,31 +498,28 @@ class EntityFieldsForm(FieldsForm):
         return False
 
 
-class CompositeForm(FieldsForm):
+class CompositeFormMixIn(object):
     """form composed of sub-forms"""
     __regid__ = 'composite'
     form_renderer_id = __regid__
 
     def __init__(self, *args, **kwargs):
-        super(CompositeForm, self).__init__(*args, **kwargs)
+        super(CompositeFormMixIn, self).__init__(*args, **kwargs)
         self.forms = []
 
-    def form_add_subform(self, subform):
+    def add_subform(self, subform):
         """mark given form as a subform and append it"""
-        subform.is_subform = True
+        subform.parent_form = self
         self.forms.append(subform)
 
+    def build_context(self, rendervalues=None):
+        super(CompositeFormMixIn, self).build_context(rendervalues)
+        for form in self.forms:
+            form.build_context(rendervalues)
 
-class CompositeEntityForm(EntityFieldsForm):
-    """form composed of sub-forms"""
-    __regid__ = 'composite'
-    form_renderer_id = __regid__
 
-    def __init__(self, *args, **kwargs):
-        super(CompositeEntityForm, self).__init__(*args, **kwargs)
-        self.forms = []
+class CompositeForm(CompositeFormMixIn, FieldsForm):
+    pass
 
-    def form_add_subform(self, subform):
-        """mark given form as a subform and append it"""
-        subform.is_subform = True
-        self.forms.append(subform)
+class CompositeEntityForm(CompositeFormMixIn, EntityFieldsForm):
+    pass # XXX why is this class necessary?

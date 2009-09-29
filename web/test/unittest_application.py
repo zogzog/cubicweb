@@ -138,6 +138,11 @@ class UtilsTC(TestCase):
 
 
 class ApplicationTC(CubicWebTC):
+    def setUp(self):
+        super(ApplicationTC, self).setUp()
+        def raise_hdlr(*args, **kwargs):
+            raise
+        self.app.error_handler = raise_hdlr
 
     def publish(self, req, path='view'):
         return self.app.publish(path, req)
@@ -411,6 +416,12 @@ class ApplicationTC(CubicWebTC):
         self.assertRaises(AuthenticationError, self.publish, req, 'logout')
         self.assertEquals(len(self.open_sessions), 0)
 
+    def test_non_regr_optional_first_var(self):
+        req = self.request()
+        # expect a rset with None in [0][0]
+        req.form['rql'] = 'rql:Any OV1, X WHERE X custom_workflow OV1?'
+        self.publish(req)
+        print 'yuea'
 
 if __name__ == '__main__':
     unittest_main()

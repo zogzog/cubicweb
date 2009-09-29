@@ -354,7 +354,7 @@ class JSonController(Controller):
         entity.eid = varname
         entity['pkey'] = propkey
         form = self._cw.vreg['forms'].select('edition', self._cw, entity=entity)
-        form.form_build_context()
+        form.build_context()
         vfield = form.field_by_name('value')
         renderer = FormRenderer(self._cw)
         return vfield.render(form, renderer, tabindex=tabindex) \
@@ -381,8 +381,7 @@ class JSonController(Controller):
         view = self._cw.vreg['views'].select('inline-creation', self._cw,
                                          etype=ttype, peid=peid, rtype=rtype,
                                          role=role)
-        return self._call_view(view, etype=ttype, peid=peid,
-                               rtype=rtype, role=role, i18nctx=i18nctx)
+        return self._call_view(view, i18nctx=i18nctx)
 
     @jsonize
     def js_validate_form(self, action, names, values):
