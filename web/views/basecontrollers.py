@@ -381,8 +381,7 @@ class JSonController(Controller):
         view = self.vreg['views'].select('inline-creation', self.req,
                                          etype=ttype, peid=peid, rtype=rtype,
                                          role=role)
-        return self._call_view(view, etype=ttype, peid=peid,
-                               rtype=rtype, role=role, i18nctx=i18nctx)
+        return self._call_view(view, i18nctx=i18nctx)
 
     @jsonize
     def js_validate_form(self, action, names, values):
