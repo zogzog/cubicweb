@@ -10,7 +10,6 @@ __docformat__ = "restructuredtext en"
 from warnings import warn
 
 from logilab.common.compat import any
-from logilab.common.decorators import iclassmethod
 
 from cubicweb.selectors import non_final_entity, match_kwargs, one_line_rset
 from cubicweb.web import INTERNAL_FIELD_VALUE, eid_param
@@ -100,52 +99,6 @@ class FieldsForm(form.Form):
         self.context = None
         if 'domid' in kwargs:# session key changed
             self.restore_previous_post(self.session_key())
-
-    @iclassmethod
-    def _fieldsattr(cls_or_self):
-        if isinstance(cls_or_self, type):
-            fields = cls_or_self._fields_
-        else:
-            fields = cls_or_self.fields
-        return fields
-
-    @iclassmethod
-    def field_by_name(cls_or_self, name, role='subject'):
-        """return field with the given name and role.
-        Raise FieldNotFound if the field can't be found.
-        """
-        for field in cls_or_self._fieldsattr():
-            if field.name == name and field.role == role:
-                return field
-        raise form.FieldNotFound(name)
-
-    @iclassmethod
-    def fields_by_name(cls_or_self, name, role='subject'):
-        """return a list of fields with the given name and role"""
-        return [field for field in cls_or_self._fieldsattr()
-                if field.name == name and field.role == role]
-
-    @iclassmethod
-    def remove_field(cls_or_self, field):
-        """remove a field from form class or instance"""
-        cls_or_self._fieldsattr().remove(field)
-
-    @iclassmethod
-    def append_field(cls_or_self, field):
-        """append a field to form class or instance"""
-        cls_or_self._fieldsattr().append(field)
-
-    @iclassmethod
-    def insert_field_before(cls_or_self, new_field, name, role='subject'):
-        field = cls_or_self.field_by_name(name, role)
-        fields = cls_or_self._fieldsattr()
-        fields.insert(fields.index(field), new_field)
-
-    @iclassmethod
-    def insert_field_after(cls_or_self, new_field, name, role='subject'):
-        field = cls_or_self.field_by_name(name, role)
-        fields = cls_or_self._fieldsattr()
-        fields.insert(fields.index(field)+1, new_field)
 
     @property
     def form_needs_multipart(self):
