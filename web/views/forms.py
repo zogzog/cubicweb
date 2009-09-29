@@ -305,9 +305,9 @@ class EntityFieldsForm(FieldsForm):
                 searchedvalues = ['%s:%s:%s' % (field.name, eid, field.role)
                                   for eid in value]
                 # remove associated __linkto hidden fields
-                for field in self.fields_by_name('__linkto'):
+                for field in self.root_form.fields_by_name('__linkto'):
                     if field.initial in searchedvalues:
-                        self.remove_field(field)
+                        self.root_form.remove_field(field)
             else:
                 value = None
         return value
