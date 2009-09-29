@@ -150,8 +150,8 @@ class PartialSelectorMixIn(object):
 class ImplementsMixIn(object):
     """mix-in class for selectors checking implemented interfaces of something
     """
-    def __init__(self, *expected_ifaces):
-        super(ImplementsMixIn, self).__init__()
+    def __init__(self, *expected_ifaces, **kwargs):
+        super(ImplementsMixIn, self).__init__(**kwargs)
         self.expected_ifaces = expected_ifaces
 
     def __str__(self):
@@ -185,8 +185,9 @@ class EClassSelector(Selector):
       - `once_is_enough` is False, in which case if score_class return 0, 0 is
         returned
     """
-    def __init__(self, once_is_enough=False):
+    def __init__(self, once_is_enough=False, accept_none=True):
         self.once_is_enough = once_is_enough
+        self.accept_none = accept_none
 
     @lltrace
     def __call__(self, cls, req, rset=None, row=None, col=0, **kwargs):
@@ -194,9 +195,12 @@ class EClassSelector(Selector):
             return 0
         score = 0
         if row is None:
+            if not self.accept_none:
+                if any(rset[i][col] is None for i in xrange(len(rset))):
+                    return 0
             for etype in rset.column_types(col):
                 if etype is None: # outer join
-                    continue
+                    return 0
                 escore = self.score(cls, req, etype)
                 if not escore and not self.once_is_enough:
                     return 0
