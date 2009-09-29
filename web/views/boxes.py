@@ -60,8 +60,8 @@ class EditBox(BoxTemplate): # XXX rename to ActionsBox
                                       ('addrelated', None)):
             for action in actions.get(category, ()):
                 if category == 'addrelated':
-                    warn('"addrelated" category is deprecated, use "moreaction"'
-                         ' category w/ "addrelated" submenu',
+                    warn('[3.5] "addrelated" category is deprecated, use '
+                         '"moreactions" category w/ "addrelated" submenu',
                          DeprecationWarning)
                     defaultmenu = self._get_menu('addrelated', _('add'), _('add'))
                 if action.submenu:
