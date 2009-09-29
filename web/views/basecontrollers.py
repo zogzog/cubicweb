@@ -354,7 +354,7 @@ class JSonController(Controller):
         entity.eid = varname
         entity['pkey'] = propkey
         form = self.vreg['forms'].select('edition', self.req, entity=entity)
-        form.form_build_context()
+        form.build_context()
         vfield = form.field_by_name('value')
         renderer = FormRenderer(self.req)
         return vfield.render(form, renderer, tabindex=tabindex) \
