@@ -568,7 +568,7 @@ def set_initial_state_after_add(session, entity):
 def before_add_in_state(session, eidfrom, rtype, eidto):
     """check state apply, in case of direct in_state change using unsafe_execute
     """
-    nocheck = session.transaction_data.setdefault('skip-security', ())
+    nocheck = session.transaction_data.setdefault('skip-security', set())
     if (eidfrom, 'in_state', eidto) in nocheck:
         # state changed through TrInfo insertion, so we already know it's ok
         return
