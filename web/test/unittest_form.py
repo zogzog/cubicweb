@@ -171,7 +171,7 @@ class EntityFieldsFormTC(WebTest):
         class FFForm(EntityFieldsForm):
             data = FileField(format_field=StringField(name='data_format', max_length=50),
                              encoding_field=StringField(name='data_encoding', max_length=20))
-        file = self.add_entity('File', name=u"pouet.txt", data_encoding=u'UTF-8',
+        file = self.add_entity('File', data_name=u"pouet.txt", data_encoding=u'UTF-8',
                                data=Binary('new widgets system'))
         form = FFForm(self.req, redirect_path='perdu.com', entity=file)
         self.assertTextEquals(self._render_entity_field('data', form),
@@ -195,7 +195,7 @@ detach attached file
                 return 'ascii'
             def form_field_format(self, field):
                 return 'text/plain'
-        file = self.add_entity('File', name=u"pouet.txt", data_encoding=u'UTF-8',
+        file = self.add_entity('File', data_name=u"pouet.txt", data_encoding=u'UTF-8',
                                data=Binary('new widgets system'))
         form = EFFForm(self.req, redirect_path='perdu.com', entity=file)
         self.assertTextEquals(self._render_entity_field('data', form),
