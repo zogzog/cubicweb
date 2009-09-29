@@ -171,7 +171,6 @@ class FormRenderer(AppObject):
                 or (field.name, field.role) in form.internal_fields)
 
     def render_fields(self, w, form, values):
-        form.form_build_context(values)
         fields = self._render_hidden_fields(w, form)
         if fields:
             self._render_fields(fields, w, form)
@@ -556,7 +555,6 @@ class EntityInlinedFormRenderer(EntityFormRenderer):
         return '\n'.join(data)
 
     def render_fields(self, w, form, values):
-        form.form_build_context(values)
         w(u'<fieldset id="fs-%(divid)s">' % values)
         fields = self._render_hidden_fields(w, form)
         w(u'</fieldset>')

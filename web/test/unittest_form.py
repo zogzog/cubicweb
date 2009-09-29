@@ -82,7 +82,7 @@ class EntityFieldsFormTC(WebTest):
         form = EntityFieldsForm(self.request(login=u'toto'), None, entity=e)
         field = StringField(name='login', eidparam=True)
         form.append_field(field)
-        form.form_build_context({})
+        form.build_context({})
         self.assertEquals(form.form_field_display_value(field, {}), 'toto')
 
 
@@ -137,7 +137,7 @@ class EntityFieldsFormTC(WebTest):
     # fields tests ############################################################
 
     def _render_entity_field(self, name, form):
-        form.form_build_context({})
+        form.build_context({})
         renderer = FormRenderer(self.req)
         return form.field_by_name(name).render(form, renderer)
 

@@ -174,6 +174,7 @@ class FieldsForm(form.Form):
         """render this form, using the renderer given in args or the default
         FormRenderer()
         """
+        self.build_context(values)
         renderer = values.pop('renderer', None)
         if renderer is None:
             renderer = self.form_default_renderer()
@@ -184,7 +185,7 @@ class FieldsForm(form.Form):
                                                 self.req, rset=self.rset,
                                                 row=self.row, col=self.col)
 
-    def form_build_context(self, rendervalues=None):
+    def build_context(self, rendervalues=None):
         """build form context values (the .context attribute which is a
         dictionary with field instance as key associated to a dictionary
         containing field 'name' (qualified), 'id', 'value' (for display, always
@@ -193,6 +194,8 @@ class FieldsForm(form.Form):
         rendervalues is an optional dictionary containing extra kwargs given to
         form_render()
         """
+        if self.context is not None:
+            return # already built
         self.context = context = {}
         # ensure rendervalues is a dict
         if rendervalues is None:
@@ -372,7 +375,7 @@ class EntityFieldsForm(FieldsForm):
             self.form_renderer_id, self.req, rset=self.rset, row=self.row,
             col=self.col, entity=self.edited_entity)
 
-    def form_build_context(self, values=None):
+    def build_context(self, values=None):
         """overriden to add edit[s|o] hidden fields and to ensure schema fields
         have eidparam set to True
 
@@ -380,6 +383,8 @@ class EntityFieldsForm(FieldsForm):
         associated field before the (potential) modification made when
         submitting the form.
         """
+        if self.context is not None:
+            return
         eschema = self.edited_entity.e_schema
         for field in self.fields[:]:
             for field in field.actual_fields(self):
@@ -389,7 +394,7 @@ class EntityFieldsForm(FieldsForm):
                      eschema.has_object_relation(fieldname))):
                     field.eidparam = True
                     self.fields.append(HiddenInitialValueField(field))
-        return super(EntityFieldsForm, self).form_build_context(values)
+        return super(EntityFieldsForm, self).build_context(values)
 
     def form_field_value(self, field, load_bytes=False):
         """return field's *typed* value
@@ -539,13 +544,13 @@ class EntityFieldsForm(FieldsForm):
         return False
 
 
-class CompositeForm(FieldsForm):
+class CompositeFormMixIn(object):
     """form composed of sub-forms"""
     id = 'composite'
     form_renderer_id = id
 
     def __init__(self, *args, **kwargs):
-        super(CompositeForm, self).__init__(*args, **kwargs)
+        super(CompositeFormMixIn, self).__init__(*args, **kwargs)
         self.forms = []
 
     def form_add_subform(self, subform):
@@ -553,17 +558,14 @@ class CompositeForm(FieldsForm):
         subform.is_subform = True
         self.forms.append(subform)
 
+    def build_context(self, rendervalues=None):
+        super(CompositeFormMixIn, self).build_context(rendervalues)
+        for form in self.forms:
+            form.build_context(rendervalues)
 
-class CompositeEntityForm(EntityFieldsForm):
-    """form composed of sub-forms"""
-    id = 'composite'
-    form_renderer_id = id
 
-    def __init__(self, *args, **kwargs):
-        super(CompositeEntityForm, self).__init__(*args, **kwargs)
-        self.forms = []
+class CompositeForm(CompositeFormMixIn, FieldsForm):
+    pass
 
-    def form_add_subform(self, subform):
-        """mark given form as a subform and append it"""
-        subform.is_subform = True
-        self.forms.append(subform)
+class CompositeEntityForm(CompositeFormMixIn, EntityFieldsForm):
+    pass # XXX why is this class necessary?
