@@ -371,16 +371,19 @@ class EntityFormRenderer(EntityBaseFormRenderer):
     # needs some additional points in some case (XXX explain cases)
     __select__ = EntityBaseFormRenderer.__select__ & yes()
 
-    _options = FormRenderer._options + ('display_relations_form',)
+    _options = FormRenderer._options + ('display_relations_form', 'main_form_title')
     display_relations_form = True
+    main_form_title = _('main information')
 
     def render(self, form, values):
         rendered = super(EntityFormRenderer, self).render(form, values)
         return rendered + u'</div>' # close extra div introducted by open_form
 
     def open_form(self, form, values):
-        attrs_fs_label = ('<div class="iformTitle"><span>%s</span></div>'
-                          % self.req._('main informations'))
+        attrs_fs_label = ''
+        if self.main_form_title:
+            attrs_fs_label += ('<div class="iformTitle"><span>%s</span></div>'
+                               % self.req._(self.main_form_title))
         attrs_fs_label += '<div class="formBody">'
         return attrs_fs_label + super(EntityFormRenderer, self).open_form(form, values)
 
