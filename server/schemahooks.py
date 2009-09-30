@@ -307,10 +307,11 @@ class SourceDbCWAttributeAdd(PreCommitOperation):
         default = entity.defaultval
         if default is not None:
             default = TYPE_CONVERTER[entity.otype.name](default)
-        rdef = self.init_rdef(default=default,
-                              indexed=entity.indexed,
-                              fulltextindexed=entity.fulltextindexed,
-                              internationalizable=entity.internationalizable)
+        props = {'default': default,
+                 'indexed': entity.indexed,
+                 'fulltextindexed': entity.fulltextindexed,
+                 'internationalizable': entity.internationalizable}
+        rdef = self.init_rdef(**props)
         sysource = session.pool.source('system')
         attrtype = type_from_constraints(sysource.dbhelper, rdef.object,
                                          rdef.constraints)
@@ -343,6 +344,20 @@ class SourceDbCWAttributeAdd(PreCommitOperation):
             except Exception, ex:
                 self.error('error while creating index for %s.%s: %s',
                            table, column, ex)
+        # final relations are not infered, propagate
+        rschema = self.schema.rschema(rdef.name)
+        eschema = self.schema.eschema(rdef.subject)
+        props.update({'constraints': rdef.constraints,
+                      'description': rdef.description,
+                      'cardinality': rdef.cardinality,
+                      'constraints': rdef.constraints,
+                      'order': rdef.order})
+        for specialization in eschema.specialized_by(False):
+            if rschema.has_rdef(specialization, rdef.object):
+                continue
+            for rql, args in ss.frdef2rql(rschema, str(specialization),
+                                          rdef.object, props):
+                session.execute(rql, args)
 
 
 class SourceDbCWRelationAdd(SourceDbCWAttributeAdd):
