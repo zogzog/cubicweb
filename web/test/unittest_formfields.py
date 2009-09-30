@@ -80,12 +80,15 @@ class GuessFieldTC(TestCase):
         self.assertEquals(data_format_field, None)
         data_encoding_field = guess_field(schema['File'], schema['data_encoding'])
         self.assertEquals(data_encoding_field, None)
+        data_name_field = guess_field(schema['File'], schema['data_name'])
+        self.assertEquals(data_name_field, None)
 
         data_field = guess_field(schema['File'], schema['data'])
         self.assertIsInstance(data_field, FileField)
         self.assertEquals(data_field.required, True)
         self.assertIsInstance(data_field.format_field, StringField)
         self.assertIsInstance(data_field.encoding_field, StringField)
+        self.assertIsInstance(data_field.name_field, StringField)
 
     def test_constraints_priority(self):
         salesterm_field = guess_field(schema['Salesterm'], schema['reason'])
