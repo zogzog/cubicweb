@@ -345,8 +345,11 @@ class SourceDbCWAttributeAdd(PreCommitOperation):
                 self.error('error while creating index for %s.%s: %s',
                            table, column, ex)
         # final relations are not infered, propagate
+        try:
+            eschema = self.schema.eschema(rdef.subject)
+        except KeyError:
+            return # entity type currently being added
         rschema = self.schema.rschema(rdef.name)
-        eschema = self.schema.eschema(rdef.subject)
         props.update({'constraints': rdef.constraints,
                       'description': rdef.description,
                       'cardinality': rdef.cardinality,
