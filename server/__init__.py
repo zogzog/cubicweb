@@ -147,7 +147,7 @@ def init_repository(config, interactive=True, drop=False, vreg=None):
     for fpath in glob(join(CW_SOFTWARE_ROOT, 'schemas', '*.sql.%s' % driver)):
         print '-> installing', fpath
         sqlexec(open(fpath).read(), execute, False, delimiter=';;')
-    for directory in config.cubes_path():
+    for directory in reversed(config.cubes_path()):
         for fpath in glob(join(directory, 'schema', '*.sql.%s' % driver)):
             print '-> installing', fpath
             sqlexec(open(fpath).read(), execute, False, delimiter=';;')
