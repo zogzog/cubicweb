@@ -181,8 +181,8 @@ class Field(object):
         try:
             return widget.render(form, self, renderer)
         except TypeError:
-            warn('widget.render now take the renderer as third argument, please update %s implementation'
-                 % widget.__class__.__name__, DeprecationWarning)
+            warn('[3.3] %s: widget.render now take the renderer as third argument, '
+                 'please update implementation' % widget, DeprecationWarning)
             return widget.render(form, self)
 
     def vocabulary(self, form):
@@ -193,7 +193,7 @@ class Field(object):
                 try:
                     vocab = self.choices(form=form)
                 except TypeError:
-                    warn('vocabulary method (eg field.choices) should now take '
+                    warn('[3.3] vocabulary method (eg field.choices) should now take '
                          'the form instance as argument', DeprecationWarning)
                     vocab = self.choices(req=form.req)
             else:
