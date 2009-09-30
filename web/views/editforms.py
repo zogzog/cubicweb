@@ -16,6 +16,7 @@ from simplejson import dumps
 from logilab.mtconverter import xml_escape
 from logilab.common.decorators import cached
 
+from cubicweb import neg_role
 from cubicweb.selectors import (match_kwargs, one_line_rset, non_final_entity,
                                 specified_etype_implements, yes)
 from cubicweb.utils import make_uid
@@ -501,15 +502,12 @@ class InlineEntityEditionFormView(FormViewMixIn, EntityView):
             counter=self.req.data[countkey], **kwargs))
 
     def add_hiddens(self, form, entity):
-        # to ease overriding (see cubes.vcsfile.views.forms for instance)
-        if self.keep_entity(form, entity):
-            if entity.has_eid():
-                rval = entity.eid
-            else:
-                rval = INTERNAL_FIELD_VALUE
-            form.form_add_hidden('edit%s-%s:%s' % (self.role[0], self.rtype, self.peid), rval)
-        form.form_add_hidden(name='%s:%s' % (self.rtype, self.peid), value=entity.eid,
-                             id='rel-%s-%s-%s'  % (self.peid, self.rtype, entity.eid))
+        """to ease overriding (see cubes.vcsfile.views.forms for instance)"""
+        iid = 'rel-%s-%s-%s' % (self.peid, self.rtype, entity.eid)
+        form.form_add_hidden(name=self.rtype, value=self.peid,
+                             # role is the for parent entity, we want the role
+                             # of the inlined entity
+                             role=neg_role(self.role), eidparam=True, id=iid)
 
     def keep_entity(self, form, entity):
         if not entity.has_eid():
