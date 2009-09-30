@@ -90,6 +90,52 @@ class EntityChangeHook(NotificationHook):
         RenderAndSendNotificationView(self._cw, view=view)
 
 
+class EntityUpdatedNotificationOp(hook.SingleLastOperation):
+
+    def precommit_event(self):
+        session = self.session
+        for eid in session.transaction_data['changes']:
+            view = session.vreg['views'].select('notif_entity_updated', session,
+                                                rset=session.eid_rset(eid),
+                                                row=0)
+            RenderAndSendNotificationView(session, view=view)
+
+
+class EntityUpdateHook(NotificationHook):
+    __regid__ = 'notifentityupdated'
+    __abstract__ = True # do not register by default
+
+    events = ('before_update_entity',)
+    skip_attrs = set()
+
+    def __call__(self):
+        session = self._cw
+        if self.entity.eid in session.transaction_data.get('neweids', ()):
+            return # entity is being created
+        if session.is_super_session:
+            return # ignore changes triggered by hooks
+        # then compute changes
+        changes = session.transaction_data.setdefault('changes', {})
+        thisentitychanges = changes.setdefault(self.entity.eid, set())
+        attrs = [k for k in self.entity.edited_attributes if not k in self.skip_attrs]
+        if not attrs:
+            return
+        rqlsel, rqlrestr = [], ['X eid %(x)s']
+        for i, attr in enumerate(attrs):
+            var = chr(65+i)
+            rqlsel.append(var)
+            rqlrestr.append('X %s %s' % (attr, var))
+        rql = 'Any %s WHERE %s' % (','.join(rqlsel), ','.join(rqlrestr))
+        rset = session.execute(rql, {'x': self.entity.eid}, 'x')
+        for i, attr in enumerate(attrs):
+            oldvalue = rset[0][i]
+            newvalue = self.entity[attr]
+            if oldvalue != newvalue:
+                thisentitychanges.add((attr, oldvalue, newvalue))
+        if thisentitychanges:
+            EntityUpdatedNotificationOp(session)
+
+
 # supervising ##################################################################
 
 class SomethingChangedHook(NotificationHook):

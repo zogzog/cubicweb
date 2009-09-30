@@ -218,6 +218,8 @@ repository (default to 5 minutes).',
         """open and return a connection to the source"""
         nshost = self.config.get('pyro-ns-host') or self.repo.config['pyro-ns-host']
         nsgroup = self.config.get('pyro-ns-group') or self.repo.config['pyro-ns-group']
+        self.info('connecting to instance :%s.%s for user %s',
+                  nsgroup, nshost, self.config['cubicweb-user'])
         #cnxprops = ConnectionProperties(cnxtype=self.config['cnx-type'])
         return dbapi.connect(database=self.config['pyro-ns-id'],
                              login=self.config['cubicweb-user'],

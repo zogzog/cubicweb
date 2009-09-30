@@ -470,5 +470,15 @@ class SchemaModificationHooksTC(CubicWebTC):
                      'RT name "surname", E name "CWUser"')
         self.commit()
 
+
+    def test_add_attribute_to_base_class(self):
+        self.execute('INSERT CWAttribute X: X cardinality "11", X defaultval "noname", X indexed TRUE, X relation_type RT, X from_entity E, X to_entity F '
+                     'WHERE RT name "nom", E name "BaseTransition", F name "String"')
+        self.commit()
+        self.schema.rebuild_infered_relations()
+        self.failUnless('Transition' in self.schema['nom'].subjects())
+        self.failUnless('WorkflowTransition' in self.schema['nom'].subjects())
+        self.execute('Any X WHERE X is_instance_of BaseTransition, X nom "hop"')
+
 if __name__ == '__main__':
     unittest_main()

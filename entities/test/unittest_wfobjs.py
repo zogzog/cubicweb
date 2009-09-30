@@ -339,6 +339,46 @@ class CustomWorkflowTC(CubicWebTC):
                            ('asleep', 'activated', None, 'workflow changed to "default user workflow"'),])
 
 
+class AutoTransitionTC(CubicWebTC):
+
+    def setup_database(self):
+        self.wf = add_wf(self, 'CWUser')
+        asleep = self.wf.add_state('asleep', initial=True)
+        dead = self.wf.add_state('dead')
+        self.wf.add_transition('rest', asleep, asleep)
+        self.wf.add_transition('sick', asleep, dead, type=u'auto',
+                               conditions=({'expr': u'U surname "toto"',
+                                            'mainvars': u'U'},))
+
+    def test_auto_transition_fired(self):
+        user = self.create_user('member')
+        self.execute('SET X custom_workflow WF WHERE X eid %(x)s, WF eid %(wf)s',
+                     {'wf': self.wf.eid, 'x': user.eid})
+        self.commit()
+        user.clear_all_caches()
+        self.assertEquals(user.state, 'asleep')
+        self.assertEquals([t.name for t in user.possible_transitions()],
+                          ['rest'])
+        user.fire_transition('rest')
+        self.commit()
+        user.clear_all_caches()
+        self.assertEquals(user.state, 'asleep')
+        self.assertEquals([t.name for t in user.possible_transitions()],
+                          ['rest'])
+        self.assertEquals(parse_hist(user.workflow_history),
+                          [('asleep', 'asleep', 'rest', None)])
+        self.request().user.set_attributes(surname=u'toto') # fulfill condition
+        self.commit()
+        user.fire_transition('rest')
+        self.commit()
+        user.clear_all_caches()
+        self.assertEquals(user.state, 'dead')
+        self.assertEquals(parse_hist(user.workflow_history),
+                          [('asleep', 'asleep', 'rest', None),
+                           ('asleep', 'asleep', 'rest', None),
+                           ('asleep', 'dead', 'sick', None),])
+
+
 class WorkflowHooksTC(CubicWebTC):
 
     def setUp(self):

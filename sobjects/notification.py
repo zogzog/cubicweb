@@ -19,6 +19,8 @@ from cubicweb.common.mail import format_mail
 from cubicweb.common.mail import NotificationView
 from cubicweb.server.hook import SendMailOp
 
+parse_message_id = deprecated('parse_message_id is now defined in cubicweb.common.mail')(parse_message_id)
+
 
 class RecipientsFinder(Component):
     """this component is responsible to find recipients of a notification
@@ -115,6 +117,70 @@ url: %(url)s
     def subject(self):
         entity = self.cw_rset.get_entity(self.cw_row or 0, self.cw_col or 0)
         return  u'%s #%s (%s)' % (self._cw.__('New %s' % entity.e_schema),
+                                  entity.eid, self.user_data['login'])
+
+
+def format_value(value):
+    if isinstance(value, unicode):
+        return u'"%s"' % value
+    return value
+
+
+class EntityUpdatedNotificationView(NotificationView):
+    """abstract class for notification on entity/relation
+
+    all you have to do by default is :
+    * set id and __select__ attributes to match desired events and entity types
+    * set a content attribute to define the content of the email (unless you
+      override call)
+    """
+    __abstract__ = True
+    id = 'notif_entity_updated'
+    msgid_timestamp = False
+    message = _('updated')
+    no_detailed_change_attrs = ()
+    content = """
+Properties have been updated by %(user)s:
+
+%(changes)s
+
+url: %(url)s
+"""
+
+    def context(self, **kwargs):
+        context = super(EntityUpdatedNotificationView, self).context(**kwargs)
+        changes = self.req.transaction_data['changes'][self.rset[0][0]]
+        _ = self.req._
+        formatted_changes = []
+        for attr, oldvalue, newvalue in sorted(changes):
+            # check current user has permission to see the attribute
+            rschema = self.vreg.schema[attr]
+            if rschema.is_final():
+                if not rschema.has_perm(self.req, 'read', eid=self.rset[0][0]):
+                    continue
+            # XXX suppose it's a subject relation...
+            elif not rschema.has_perm(self.req, 'read', fromeid=self.rset[0][0]):
+                continue
+            if attr in self.no_detailed_change_attrs:
+                msg = _('%s updated') % _(attr)
+            elif oldvalue not in (None, ''):
+                msg = _('%(attr)s updated from %(oldvalue)s to %(newvalue)s') % {
+                    'attr': _(attr),
+                    'oldvalue': format_value(oldvalue),
+                    'newvalue': format_value(newvalue)}
+            else:
+                msg = _('%(attr)s set to %(newvalue)s') % {
+                    'attr': _(attr), 'newvalue': format_value(newvalue)}
+            formatted_changes.append('* ' + msg)
+        if not formatted_changes:
+            # current user isn't allowed to see changes, skip this notification
+            raise SkipEmail()
+        context['changes'] = '\n'.join(formatted_changes)
+        return context
+
+    def subject(self):
+        entity = self.entity(self.row or 0, self.col or 0)
+        return  u'%s #%s (%s)' % (self.req.__('Updated %s' % entity.e_schema),
                                   entity.eid, self.user_data['login'])
 
 

@@ -68,6 +68,7 @@ class BaseTransition(EntityType):
 
     name = String(required=True, indexed=True, internationalizable=True,
                   maxsize=256)
+    type = String(vocabulary=(_('normal'), _('auto')), default='normal')
     description = RichString(fulltextindexed=True,
                          description=_('semantic description of this transition'))
     condition = SubjectRelation('RQLExpression', cardinality='*?', composite='subject',
@@ -116,15 +117,13 @@ class SubWorkflowExitPoint(EntityType):
                                         description=_('destination state'))
 
 
-# XXX should we allow managers to delete TrInfo?
-
 class TrInfo(EntityType):
     """workflow history item"""
     # 'add' security actually done by hooks
     permissions = {
         'read':   ('managers', 'users', 'guests',), # XXX U has_read_permission O ?
         'add':    ('managers', 'users', 'guests',),
-        'delete': (),
+        'delete': (), # XXX should we allow managers to delete TrInfo?
         'update': ('managers', 'owners',),
     }
 

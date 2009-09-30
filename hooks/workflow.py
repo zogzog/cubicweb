@@ -47,6 +47,19 @@ class _SetInitialStateOp(hook.Operation):
                 session.super_session.add_relation(entity.eid, 'in_state',
                                                    state.eid)
 
+
+class _FireAutotransitionOp(PreCommitOperation):
+    """try to fire auto transition after state changes"""
+
+    def precommit_event(self):
+        session = self.session
+        entity = self.entity
+        autotrs = list(entity.possible_transitions('auto'))
+        if autotrs:
+            assert len(autotrs) == 1
+            entity.fire_transition(autotrs[0])
+
+
 class _WorkflowChangedOp(hook.Operation):
     """fix entity current state when changing its workflow"""
 
@@ -206,6 +219,7 @@ class FireTransitionHook(WorkflowHook):
         nocheck = session.transaction_data.setdefault('skip-security', set())
         nocheck.add((entity.eid, 'from_state', fromstate.eid))
         nocheck.add((entity.eid, 'to_state', deststateeid))
+        FireAutotransitionOp(session, entity=forentity)
 
 
 class FiredTransitionHook(WorkflowHook):
