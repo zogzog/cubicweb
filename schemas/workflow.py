@@ -117,15 +117,13 @@ class SubWorkflowExitPoint(EntityType):
                                         description=_('destination state'))
 
 
-# XXX should we allow managers to delete TrInfo?
-
 class TrInfo(EntityType):
     """workflow history item"""
     # 'add' security actually done by hooks
     permissions = {
         'read':   ('managers', 'users', 'guests',), # XXX U has_read_permission O ?
         'add':    ('managers', 'users', 'guests',),
-        'delete': (),
+        'delete': (), # XXX should we allow managers to delete TrInfo?
         'update': ('managers', 'owners',),
     }
 
