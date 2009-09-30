@@ -434,6 +434,18 @@ def _change_state(session, x, oldstate, newstate):
     session.add_relation(x, 'in_state', newstate)
 
 
+class FireAutotransitionOp(PreCommitOperation):
+    """try to fire auto transition after state changes"""
+
+    def precommit_event(self):
+        session = self.session
+        entity = self.entity
+        autotrs = list(entity.possible_transitions('auto'))
+        if autotrs:
+            assert len(autotrs) == 1
+            entity.fire_transition(autotrs[0])
+
+
 def before_add_trinfo(session, entity):
     """check the transition is allowed, add missing information. Expect that:
     * wf_info_for inlined relation is set
@@ -513,6 +525,8 @@ def before_add_trinfo(session, entity):
     nocheck = session.transaction_data.setdefault('skip-security', set())
     nocheck.add((entity.eid, 'from_state', fromstate.eid))
     nocheck.add((entity.eid, 'to_state', deststateeid))
+    FireAutotransitionOp(session, entity=forentity)
+
 
 def after_add_trinfo(session, entity):
     """change related entity state"""

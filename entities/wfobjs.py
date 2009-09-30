@@ -223,11 +223,14 @@ class BaseTransition(AnyEntity):
             conditions = (conditions,)
         for expr in conditions:
             if isinstance(expr, str):
-                expr = unicode(expr)
+                kwargs = {'expr': unicode(expr)}
+            elif isinstance(expr, dict):
+                kwargs = expr
+            kwargs['x'] = self.eid
+            kwargs.setdefault('mainvars', u'X')
             self.req.execute('INSERT RQLExpression X: X exprtype "ERQLExpression", '
-                             'X expression %(expr)s, T condition X '
-                             'WHERE T eid %(x)s',
-                             {'x': self.eid, 'expr': expr}, 'x')
+                             'X expression %(expr)s, X mainvars %(mainvars)s, '
+                             'T condition X WHERE T eid %(x)s', kwargs, 'x')
         # XXX clear caches?
 
 
@@ -415,16 +418,17 @@ class WorkflowableMixIn(object):
             self.warning("can't find any workflow for %s", self.id)
         return None
 
-    def possible_transitions(self):
+    def possible_transitions(self, type='normal'):
         """generates transition that MAY be fired for the given entity,
         expected to be in this state
         """
         if self.current_state is None or self.current_workflow is None:
             return
         rset = self.req.execute(
-            'Any T,N WHERE S allowed_transition T, S eid %(x)s, '
-            'T name N, T transition_of WF, WF eid %(wfeid)s',
-            {'x': self.current_state.eid,
+            'Any T,TT, TN WHERE S allowed_transition T, S eid %(x)s, '
+            'T type TT, T type %(type)s, '
+            'T name TN, T transition_of WF, WF eid %(wfeid)s',
+            {'x': self.current_state.eid, 'type': type,
              'wfeid': self.current_workflow.eid}, 'x')
         for tr in rset.entities():
             if tr.may_be_fired(self.eid):
@@ -446,13 +450,14 @@ class WorkflowableMixIn(object):
             kwargs['S'] = tseid
         return self.req.create_entity('TrInfo', *args, **kwargs)
 
-    def fire_transition(self, trname, comment=None, commentformat=None):
+    def fire_transition(self, tr, comment=None, commentformat=None):
         """change the entity's state by firing transition of the given name in
         entity's workflow
         """
         assert self.current_workflow
-        tr = self.current_workflow.transition_by_name(trname)
-        assert tr is not None, 'not a %s transition: %s' % (self.id, trname)
+        if isinstance(tr, basestring):
+            tr = self.current_workflow.transition_by_name(tr)
+        assert tr is not None, 'not a %s transition: %s' % (self.id, tr)
         return self._add_trinfo(comment, commentformat, tr.eid)
 
     def change_state(self, statename, comment=None, commentformat=None, tr=None):

@@ -68,6 +68,7 @@ class BaseTransition(EntityType):
 
     name = String(required=True, indexed=True, internationalizable=True,
                   maxsize=256)
+    type = String(vocabulary=(_('normal'), _('auto')), default='normal')
     description = RichString(fulltextindexed=True,
                          description=_('semantic description of this transition'))
     condition = SubjectRelation('RQLExpression', cardinality='*?', composite='subject',
