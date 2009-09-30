@@ -18,8 +18,9 @@ div.tree_cell {
   padding-right: 5px;
 }
 
-#selected {
+div.selected {
   border: 2px solid black;
+  background-color: #ccc;
 }
 
 table.tree td.tree_cell {
