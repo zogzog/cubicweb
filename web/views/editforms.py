@@ -504,9 +504,10 @@ class InlineEntityEditionFormView(FormViewMixIn, EntityView):
     def add_hiddens(self, form, entity):
         """to ease overriding (see cubes.vcsfile.views.forms for instance)"""
         iid = 'rel-%s-%s-%s' % (self.peid, self.rtype, entity.eid)
-        form.form_add_hidden(name=self.rtype, value=self.peid,
-                             # role is the for parent entity, we want the role
-                             # of the inlined entity
+        #  * str(self.rtype) in case it's a schema object 
+        #  * neged_role() since role is the for parent entity, we want the role
+        #    of the inlined entity
+        form.form_add_hidden(name=str(self.rtype), value=self.peid,
                              role=neg_role(self.role), eidparam=True, id=iid)
 
     def keep_entity(self, form, entity):
