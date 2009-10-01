@@ -86,12 +86,6 @@ class WebConfiguration(CubicWebConfiguration):
           'help': 'web instance query log file',
           'group': 'main', 'inputlevel': 2,
           }),
-        ('pyro-instance-id',
-         {'type' : 'string',
-          'default': Method('default_instance_id'),
-          'help': 'CubicWeb instance identifier in the Pyro name server',
-          'group': 'pyro-client', 'inputlevel': 1,
-          }),
         # web configuration
         ('https-url',
          {'type' : 'string',

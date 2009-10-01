@@ -126,8 +126,11 @@ class RepositoryCreateHandler(CommandHandler):
         config = self.config
         print underline_title('Configuring the repository')
         config.input_config('email', inputlevel)
-        if config.pyro_enabled():
-            config.input_config('pyro-server', inputlevel)
+        # ask for pyro configuration if pyro is activated and we're not using a
+        # all-in-one config, in which case this is done by the web side command
+        # handler
+        if config.pyro_enabled() and config.name != 'all-in-one':
+            config.input_config('pyro', inputlevel)
         print '\n'+underline_title('Configuring the sources')
         sourcesfile = config.sources_file()
         sconfig = Configuration(options=SOURCE_TYPES['native'].options)

@@ -17,7 +17,7 @@ from cubicweb.server.serverconfig import ServerConfiguration
 from cubicweb.goa.dbmyams import load_schema
 
 UNSUPPORTED_OPTIONS = set(('connections-pool-size',
-                           'pyro-host', 'pyro-id', 'pyro-instance-id',
+                           'pyro-host', 'pyro-instance-id',
                            'pyro-ns-host', 'pyro-ns-group',
                            'https-url', 'host', 'pid-file', 'uid', 'base-url', 'log-file',
                            'smtp-host', 'smtp-port',
