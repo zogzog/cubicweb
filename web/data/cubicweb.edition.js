@@ -288,8 +288,9 @@ function removeInlinedEntity(peid, rtype, eid) {
     // XXX work around the eid_param thing (eid + ':' + eid) for #471746
     var nodeid = ['rel', peid, rtype, eid + ':' + eid].join('-');
     var node = jqNode(nodeid);
-    if (node && node.length) {
-	node.remove();
+    if (! node.attr('cubicweb:type')) {
+        node.attr('cubicweb:type', node.val());
+        node.val('');
 	var divid = ['div', peid, rtype, eid].join('-');
 	jqNode(divid).fadeTo('fast', 0.5);
 	var noticeid = ['notice', peid, rtype, eid].join('-');
@@ -301,9 +302,9 @@ function restoreInlinedEntity(peid, rtype, eid) {
     // XXX work around the eid_param thing (eid + ':' + eid) for #471746
     var nodeid = ['rel', peid, rtype, eid + ':' + eid].join('-');
     var node = jqNode(nodeid);
-    if (!(node && node.length)) {
-	node = INPUT({type: 'hidden', id: nodeid,
-		      name: rtype+':'+peid, value: eid});
+    if (node.attr('cubicweb:type')) {
+        node.val(node.attr('cubicweb:type'));
+        node.attr('cubicweb:type', '');
 	jqNode(['fs', peid, rtype, eid].join('-')).append(node);
         var divid = ['div', peid, rtype, eid].join('-');
 	jqNode(divid).fadeTo('fast', 1);
