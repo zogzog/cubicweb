@@ -222,9 +222,10 @@ class BaseTransition(AnyEntity):
         if isinstance(conditions, basestring):
             conditions = (conditions,)
         for expr in conditions:
-            if isinstance(expr, str):
+            if isinstance(expr, basestring):
                 kwargs = {'expr': unicode(expr)}
-            elif isinstance(expr, dict):
+            else:
+                assert isinstance(expr, dict)
                 kwargs = expr
             kwargs['x'] = self.eid
             kwargs.setdefault('mainvars', u'X')
