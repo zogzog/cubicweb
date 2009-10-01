@@ -226,7 +226,7 @@ class EnvBasedTC(TestCase):
     def pviews(self, req, rset):
         return sorted((a.id, a.__class__) for a in self.vreg['views'].possible_views(req, rset=rset))
 
-    def pactions(self, req, rset, skipcategories=('addrelated', 'siteactions', 'useractions')):
+    def pactions(self, req, rset, skipcategories=('addrelated', 'siteactions', 'useractions', 'footer')):
         return [(a.id, a.__class__) for a in self.vreg['actions'].possible_vobjects(req, rset=rset)
                 if a.category not in skipcategories]
 
