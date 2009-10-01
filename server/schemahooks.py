@@ -349,6 +349,7 @@ class SourceDbCWAttributeAdd(PreCommitOperation):
             eschema = self.schema.eschema(rdef.subject)
         except KeyError:
             return # entity type currently being added
+        # propagate attribute to children classes
         rschema = self.schema.rschema(rdef.name)
         props.update({'constraints': rdef.constraints,
                       'description': rdef.description,
@@ -361,6 +362,11 @@ class SourceDbCWAttributeAdd(PreCommitOperation):
             for rql, args in ss.frdef2rql(rschema, str(specialization),
                                           rdef.object, props):
                 session.execute(rql, args)
+        # set default value, using sql for performance and to avoid
+        # modification_date update
+        if default:
+            session.system_sql('UPDATE %s SET %s=%%(default)s' % (table, column),
+                               {'default': default})
 
 
 class SourceDbCWRelationAdd(SourceDbCWAttributeAdd):

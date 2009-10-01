@@ -48,12 +48,17 @@ class MigrationCommandsTC(RepositoryBasedTC):
 
     def test_add_attribute_int(self):
         self.failIf('whatever' in self.schema)
+        self.add_entity('Note')
+        self.commit()
         orderdict = dict(self.mh.rqlexec('Any RTN, O WHERE X name "Note", RDEF from_entity X, '
                                          'RDEF relation_type RT, RDEF ordernum O, RT name RTN'))
         self.mh.cmd_add_attribute('Note', 'whatever')
         self.failUnless('whatever' in self.schema)
         self.assertEquals(self.schema['whatever'].subjects(), ('Note',))
         self.assertEquals(self.schema['whatever'].objects(), ('Int',))
+        self.assertEquals(self.schema['Note'].default('whatever'), 2)
+        note = self.execute('Note X').get_entity(0, 0)
+        self.assertEquals(note.whatever, 2)
         orderdict2 = dict(self.mh.rqlexec('Any RTN, O WHERE X name "Note", RDEF from_entity X, '
                                           'RDEF relation_type RT, RDEF ordernum O, RT name RTN'))
         whateverorder = migrschema['whatever'].rproperty('Note', 'Int', 'order')

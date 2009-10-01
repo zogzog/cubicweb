@@ -50,7 +50,7 @@ class Note(Para):
                                              'PE require_permission P, P name "add_note", '
                                              'P require_group G'),)}
 
-    whatever = Int()  # keep it before `date` for unittest_migraction.test_add_attribute_int
+    whatever = Int(default=2)  # keep it before `date` for unittest_migraction.test_add_attribute_int
     date = Datetime()
     type = String(maxsize=1)
     mydate = Date(default='TODAY')
