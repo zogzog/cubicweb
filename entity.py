@@ -924,8 +924,12 @@ class Entity(AppObject, dict):
         :return: the list of indexable word of this entity
         """
         from indexer.query_objects import tokenize
+        # take care to cases where we're modyfying the schema
+        pending = self.req.transaction_data.setdefault('pendingrdefs', set())
         words = []
         for rschema in self.e_schema.indexable_attributes():
+            if (self.e_schema, rschema) in pending:
+                continue
             try:
                 value = self.printable_value(rschema, format='text/plain')
             except TransformError:
