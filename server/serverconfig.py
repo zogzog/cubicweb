@@ -163,7 +163,7 @@ notified of every changes.',
           }),
         # pyro server.serverconfig
         ('pyro-host',
-         {'type' : 'int',
+         {'type' : 'string',
           'default': None,
           'help': 'Pyro server host, if not detectable correctly through \
 gethostname(). It may contains port information using <host>:<port> notation, \
