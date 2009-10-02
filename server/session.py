@@ -150,17 +150,16 @@ class Session(RequestSessionMixIn):
         else:
             self._update_entity_rel_cache_del(object, rtype, 'object', subject)
 
-    def _rel_cache(self, eid, rtype, role):
+    def _update_entity_rel_cache_add(self, eid, rtype, role, targeteid):
         try:
             entity = self.entity_cache(eid)
         except KeyError:
             return
-        return entity.relation_cached(rtype, role)
-
-    def _update_entity_rel_cache_add(self, eid, rtype, role, targeteid):
-        rcache = self._rel_cache(eid, rtype, role)
+        rcache = entity.relation_cached(rtype, role)
         if rcache is not None:
             rset, entities = rcache
+            rset = rset.copy()
+            entities = list(entities)
             rset.rows.append([targeteid])
             if not isinstance(rset.description, list): # else description not set
                 rset.description = list(rset.description)
@@ -172,9 +171,14 @@ class Session(RequestSessionMixIn):
                 targetentity.col = 0
             rset.rowcount += 1
             entities.append(targetentity)
+            entity._related_cache['%s_%s' % (rtype, role)] = (rset, tuple(entities))
 
     def _update_entity_rel_cache_del(self, eid, rtype, role, targeteid):
-        rcache = self._rel_cache(eid, rtype, role)
+        try:
+            entity = self.entity_cache(eid)
+        except KeyError:
+            return
+        rcache = entity.relation_cached(rtype, role)
         if rcache is not None:
             rset, entities = rcache
             for idx, row in enumerate(rset.rows):
@@ -186,11 +190,14 @@ class Session(RequestSessionMixIn):
                 self.debug('cache inconsistency for %s %s %s %s', eid, rtype,
                            role, targeteid)
                 return
+            rset = rset.copy()
+            entities = list(entities)
             del rset.rows[idx]
             if isinstance(rset.description, list): # else description not set
                 del rset.description[idx]
             del entities[idx]
             rset.rowcount -= 1
+            entity._related_cache['%s_%s' % (rtype, role)] = (rset, tuple(entities))
 
     # resource accessors ######################################################
 
