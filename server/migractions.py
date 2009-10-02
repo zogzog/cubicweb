@@ -626,6 +626,10 @@ class ServerMigrationHelper(MigrationHelper):
         if card == '1':
             rql += ', NOT X %s NULL' % oldname
         self.rqlexec(rql, ask_confirm=self.verbosity>=2)
+        # XXX if both attributes fulltext indexed, should skip fti rebuild
+        # XXX if old attribute was fti indexed but not the new one old value
+        # won't be removed from the index (this occurs on other kind of
+        # fulltextindexed change...)
         self.cmd_drop_attribute(etype, oldname, commit=commit)
 
     def cmd_add_entity_type(self, etype, auto=True, commit=True):
