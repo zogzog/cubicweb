@@ -351,6 +351,10 @@ class SourceDbCWAttributeAdd(PreCommitOperation):
             return # entity type currently being added
         # propagate attribute to children classes
         rschema = self.schema.rschema(rdef.name)
+        # if relation type has been inserted in the same transaction, its final
+        # attribute is still set to False, so we've to ensure it's False
+        rschema.final = True
+        # XXX 'infered': True/False, not clear actually
         props.update({'constraints': rdef.constraints,
                       'description': rdef.description,
                       'cardinality': rdef.cardinality,
