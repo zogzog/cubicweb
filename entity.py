@@ -804,7 +804,7 @@ class Entity(AppObject, dict):
         else raise `KeyError`
         """
         res = self._related_cache['%s_%s' % (rtype, role)][entities]
-        if limit:
+        if limit is not None:
             if entities:
                 res = res[:limit]
             else:
@@ -814,7 +814,7 @@ class Entity(AppObject, dict):
     def set_related_cache(self, rtype, role, rset, col=0):
         """set cached values for the given relation"""
         if rset:
-            related = list(rset.entities(col))
+            related = tuple(rset.entities(col))
             rschema = self.schema.rschema(rtype)
             if role == 'subject':
                 rcard = rschema.rproperty(self.e_schema, related[0].e_schema,
@@ -826,9 +826,10 @@ class Entity(AppObject, dict):
                 target = 'subject'
             if rcard in '?1':
                 for rentity in related:
-                    rentity._related_cache['%s_%s' % (rtype, target)] = (self.as_rset(), [self])
+                    rentity._related_cache['%s_%s' % (rtype, target)] = (
+                        self.as_rset(), (self,))
         else:
-            related = []
+            related = ()
         self._related_cache['%s_%s' % (rtype, role)] = (rset, related)
 
     def clear_related_cache(self, rtype=None, role=None):
