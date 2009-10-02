@@ -557,11 +557,6 @@ class RQLVocabularyConstraint(BaseConstraint):
     def __init__(self, restriction):
         self.restriction = restriction
 
-    def check_consistency(self, subjschema, objschema, rdef):
-        if objschema.is_final():
-            raise BadSchemaDefinition("unique constraint doesn't apply to "
-                                      "final entity type")
-
     def serialize(self):
         return self.restriction
 
@@ -577,7 +572,7 @@ class RQLVocabularyConstraint(BaseConstraint):
     def repo_check(self, session, eidfrom, rtype, eidto):
         """raise ValidationError if the relation doesn't satisfy the constraint
         """
-        pass # this is a vocabulary constraint, not enforce
+        pass # this is a vocabulary constraint, not enforce XXX why?
 
     def __str__(self):
         return self.restriction
@@ -591,13 +586,17 @@ class RQLConstraint(RQLVocabularyConstraint):
     are also enforced at the repository level
     """
     def exec_query(self, session, eidfrom, eidto):
+        if eidto is None:
+            rql = 'Any S WHERE S eid %(s)s, ' + self.restriction
+            return session.unsafe_execute(rql, {'s': eidfrom}, 's',
+                                          build_descr=False)
         rql = 'Any S,O WHERE S eid %(s)s, O eid %(o)s, ' + self.restriction
         return session.unsafe_execute(rql, {'s': eidfrom, 'o': eidto},
                                       ('s', 'o'), build_descr=False)
     def error(self, eid, rtype, msg):
         raise ValidationError(eid, {rtype: msg})
 
-    def repo_check(self, session, eidfrom, rtype, eidto):
+    def repo_check(self, session, eidfrom, rtype, eidto=None):
         """raise ValidationError if the relation doesn't satisfy the constraint
         """
         if not self.exec_query(session, eidfrom, eidto):
@@ -610,7 +609,7 @@ class RQLUniqueConstraint(RQLConstraint):
     """the unique rql constraint check that the result of the query isn't
     greater than one
     """
-    def repo_check(self, session, eidfrom, rtype, eidto):
+    def repo_check(self, session, eidfrom, rtype, eidto=None):
         """raise ValidationError if the relation doesn't satisfy the constraint
         """
         if len(self.exec_query(session, eidfrom, eidto)) > 1:

@@ -11,7 +11,7 @@ __docformat__ = "restructuredtext en"
 from datetime import datetime
 
 from cubicweb import UnknownProperty, ValidationError, BadConnectionId
-
+from cubicweb.schema import RQLVocabularyConstraint
 from cubicweb.server.pool import Operation, LateOperation, PreCommitOperation
 from cubicweb.server.hookhelper import (check_internal_entity, 
                                         get_user_sessions, rproperty)
@@ -241,6 +241,16 @@ def uniquecstrcheck_before_modification(session, entity):
                 msg = session._('the value "%s" is already used, use another one')
                 raise ValidationError(entity.eid, {attr: msg % val})
 
+def cstrcheck_after_update_attributes(session, entity):
+    schema = session.vreg.schema
+    for attr in entity.edited_attributes:
+        if schema.rschema(attr).is_final():
+            constraints = [c for c in entity.e_schema.constraints(attr)
+                           if isinstance(c, RQLVocabularyConstraint)]
+            if constraints:
+                CheckConstraintsOperation(session, rdef=(entity.eid, attr, None),
+                                          constraints=constraints)
+
 
 class CheckRequiredRelationOperation(LateOperation):
     """checking relation cardinality has to be done after commit in
@@ -334,7 +344,8 @@ def _register_core_hooks(hm):
     hm.register_hook(cstrcheck_after_add_relation, 'after_add_relation', '')
     hm.register_hook(uniquecstrcheck_before_modification, 'before_add_entity', '')
     hm.register_hook(uniquecstrcheck_before_modification, 'before_update_entity', '')
-
+    hm.register_hook(cstrcheck_after_update_attributes, 'after_add_entity', '')
+    hm.register_hook(cstrcheck_after_update_attributes, 'after_update_entity', '')
 
 # user/groups synchronisation #################################################
 
