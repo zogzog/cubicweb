@@ -10,7 +10,7 @@ SPHINXOPTS    =
 SPHINXBUILD   = sphinx-build
 PAPER         =
 #BUILDDIR      = build
-BUILDDIR      = /tmp/cwdoc
+BUILDDIR      = ~/tmp/cwdoc
 
 # Internal variables for sphinx
 PAPEROPT_a4     = -D latex_paper_size=a4
