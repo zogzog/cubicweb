@@ -7,7 +7,7 @@ CubicWeb main instances controller.
 import sys
 from os import remove, listdir, system, pathsep
 try:
-    from os import kill, getpgid
+    from os import kill, getpgi
 except ImportError:
     def kill(*args): pass
     def getpgid(): pass
@@ -414,9 +414,6 @@ running.'}),
 the --force option."
             raise ExecutionError(msg % (appid, pidf))
         helper.start_server(config, debug)
-        if not debug:
-            # in debug mode, we reach this point once the instance is stopped...
-            print 'instance %s %s' % (appid, self.actionverb)
 
 
 class StopInstanceCommand(InstanceCommand):
