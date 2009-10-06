@@ -183,7 +183,7 @@ class AnyEntity(Entity):
         """return (path, parameters) which should be used as redirect
         information when this entity is being deleted
         """
-        if self.parent():
+        if hasattr(self, 'parent') and self.parent():
             return self.parent().rest_path(), {}
         return str(self.e_schema).lower(), {}
 
