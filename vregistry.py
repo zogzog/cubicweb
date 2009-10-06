@@ -361,10 +361,13 @@ class VRegistry(dict):
             # if it was modified, raise RegistryOutOfDate to reload everything
             self.info('File %s changed since last visit', filepath)
             raise RegistryOutOfDate()
+        # set update time before module loading, else we get some reloading
+        # weirdness in case of syntax error or other error while importing the
+        # module
+        self._lastmodifs[filepath] = modified_on
         # load the module
         module = load_module_from_name(modname, use_sys=not force_reload)
         self.load_module(module)
-        self._lastmodifs[filepath] = modified_on
         return True
 
     def load_module(self, module):
