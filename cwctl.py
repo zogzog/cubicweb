@@ -7,7 +7,7 @@ CubicWeb main instances controller.
 import sys
 from os import remove, listdir, system, pathsep
 try:
-    from os import kill, getpgi
+    from os import kill, getpgid
 except ImportError:
     def kill(*args): pass
     def getpgid(): pass
