@@ -747,6 +747,21 @@ table.listing td.top {
   top: -1px;
 }
 
+table.htableForm {
+  vertical-align: middle;
+}
+table.htableForm td{
+  padding-left: 1em;
+  padding-top: 0.5em;
+}
+table.htableForm th{
+  padding-left: 1em;
+}
+table.htableForm .validateButton {
+  margin-right: 0.2em;
+  vertical-align: top;
+  margin-bottom: 0.2em; /* because vertical-align doesn't seems to have any effect */
+}
 
 /***************************************/
 /* error view (views/management.py)    */
