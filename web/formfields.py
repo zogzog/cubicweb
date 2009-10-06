@@ -576,8 +576,6 @@ def guess_field(eschema, rschema, role='subject', skip_meta_attr=True, **kwargs)
                                                                 skip_meta_attr=False)
         return fieldclass(**kwargs)
     kwargs['role'] = role
-    if role == 'object': # tag the type with '_object' instead of the type
-        kwargs['label'] = (eschema.type, rschema.type + '_object')
     return RelationField.fromcardinality(card, **kwargs)
 
 
