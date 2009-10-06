@@ -173,18 +173,25 @@ class DelayedDeleteOp(PreCommitOperation):
         if not (self.eid in session.transaction_data.get('pendingeids', ()) or
                 self.eid in session.transaction_data.get('neweids', ())):
             etype = session.describe(self.eid)[0]
-            session.unsafe_execute('DELETE %s X WHERE X eid %%(x)s, NOT %s'
-                                   % (etype, self.relation),
-                                   {'x': self.eid}, 'x')
+            if self.role == 'subject':
+                rql = 'DELETE %s X WHERE X eid %%(x)s, NOT X %s Y'
+            else: # self.role == 'object':
+                rql = 'DELETE %s X WHERE X eid %%(x)s, NOT Y %s X'
+            session.unsafe_execute(rql % (etype, self.rtype), {'x': self.eid}, 'x')
 
 
 def handle_composite_before_del_relation(session, eidfrom, rtype, eidto):
     """delete the object of composite relation"""
+    # if the relation is being delete, don't delete composite's components
+    # automatically
+    pendingrdefs = session.transaction_data.get('pendingrdefs', ())
+    if (session.describe(eidfrom)[0], rtype, session.describe(eidto)[0]) in pendingrdefs:
+        return
     composite = rproperty(session, rtype, eidfrom, eidto, 'composite')
     if composite == 'subject':
-        DelayedDeleteOp(session, eid=eidto, relation='Y %s X' % rtype)
+        DelayedDeleteOp(session, eid=eidto, rtype=rtype, role='object')
     elif composite == 'object':
-        DelayedDeleteOp(session, eid=eidfrom, relation='X %s Y' % rtype)
+        DelayedDeleteOp(session, eid=eidfrom, rtype=rtype, role='subject')
 
 
 def before_del_group(session, eid):
@@ -317,7 +324,6 @@ def cardinalitycheck_after_add_entity(session, entity):
         card = rschema.rproperty(subjtype, objtype, 'cardinality')
         if card[cardindex] in '1+':
             checkrel_if_necessary(session, opcls, rschema.type, eid)
-
 
 def cardinalitycheck_before_del_relation(session, eidfrom, rtype, eidto):
     """check cardinalities are satisfied"""
@@ -544,7 +550,8 @@ def after_add_trinfo(session, entity):
     _change_state(session, entity['wf_info_for'],
                   entity['from_state'], entity['to_state'])
     forentity = session.entity_from_eid(entity['wf_info_for'])
-    assert forentity.current_state.eid == entity['to_state'], forentity.current_state.name
+    assert forentity.current_state.eid == entity['to_state'], (
+        forentity.eid, forentity.current_state.name)
     if forentity.main_workflow.eid != forentity.current_workflow.eid:
         # we're in a subworkflow, check if we've reached an exit point
         wftr = forentity.subworkflow_input_transition()
