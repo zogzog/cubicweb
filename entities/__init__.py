@@ -183,6 +183,8 @@ class AnyEntity(Entity):
         """return (path, parameters) which should be used as redirect
         information when this entity is being deleted
         """
+        if self.parent():
+            return self.parent().rest_path(), {}
         return str(self.e_schema).lower(), {}
 
     def pre_web_edit(self):
