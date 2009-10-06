@@ -882,6 +882,8 @@ class Repository(object):
             self._extid_cache[cachekey] = eid
             self._type_source_cache[eid] = (etype, source.uri, extid)
             entity = source.before_entity_insertion(session, extid, etype, eid)
+            if not hasattr(entity, 'edited_attributes'):
+                entity.edited_attributes = set()
             if source.should_call_hooks:
                 self.hm.call_hooks('before_add_entity', etype, session, entity)
             # XXX call add_info with complete=False ?
