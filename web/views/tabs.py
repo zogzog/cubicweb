@@ -15,6 +15,7 @@ from cubicweb.selectors import partial_has_related_entities
 from cubicweb.view import EntityView
 from cubicweb.common import tags, uilib
 from cubicweb.utils import make_uid
+from cubicweb.web.views import primary
 
 class LazyViewMixin(object):
     """provides two convenience methods for the tab machinery
@@ -178,3 +179,30 @@ class EntityRelationView(EntityView):
             self.w(tags.h1(self.req._(self.title)))
         self.wview(self.vid, rset, 'noresult')
         self.w(u'</div>')
+
+
+class TabedPrimaryView(TabsMixin, primary.PrimaryView):
+    __abstract__ = True # don't register
+
+    tabs = ['main_tab']
+    default_tab = 'main_tab'
+
+    def cell_call(self, row, col):
+        entity = self.complete_entity(row, col)
+        self.render_entity_title(entity)
+        self.render_entity_metadata(entity)
+        self.render_tabs(self.tabs, self.default_tab, entity)
+
+
+class PrimaryTab(primary.PrimaryView):
+    id = 'main_tab'
+
+    def is_primary(self):
+        return True
+
+    def render_entity_title(self, entity):
+        pass
+
+    def render_entity_metadata(self, entity):
+        pass
+
