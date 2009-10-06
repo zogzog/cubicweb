@@ -529,6 +529,11 @@ this option is set to yes",
                 vocab = getattr(self, vocab.method, ())
         return CFGTYPE2ETYPE_MAP[optdict['type']], vocab
 
+    def default_instance_id(self):
+        """return the instance identifier, useful for option which need this
+        as default value
+        """
+        return None
 
 class CubicWebConfiguration(CubicWebNoAppConfiguration):
     """base class for cubicweb server and web configurations"""
