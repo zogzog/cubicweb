@@ -1005,6 +1005,9 @@ class Repository(object):
         the entity eid should originaly be None and a unique eid is assigned to
         the entity instance
         """
+        # init edited_attributes before calling before_add_entity hooks
+        entity._is_saved = False # entity has an eid but is not yet saved
+        entity.edited_attributes = set(entity)
         entity = entity.pre_add_hook()
         eschema = entity.e_schema
         etype = str(eschema)
@@ -1013,10 +1016,7 @@ class Repository(object):
         entity.set_eid(self.system_source.create_eid(session))
         if server.DEBUG & server.DBG_REPO:
             print 'ADD entity', etype, entity.eid, dict(entity)
-        entity._is_saved = False # entity has an eid but is not yet saved
         relations = []
-        # init edited_attributes before calling before_add_entity hooks
-        entity.edited_attributes = set(entity)
         if source.should_call_hooks:
             self.hm.call_hooks('before_add_entity', etype, session, entity)
         # XXX use entity.keys here since edited_attributes is not updated for
