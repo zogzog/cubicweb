@@ -966,6 +966,21 @@ class ServerMigrationHelper(MigrationHelper):
 
     def cmd_add_workflow(self, name, wfof, default=True, commit=False,
                          **kwargs):
+        """
+        create a new workflow and links it to entity types
+         :type name: unicode
+         :param name: name of the workflow
+
+         :type wfof: string or list/tuple of strings
+         :param wfof: entity type(s) having this workflow
+
+         :type default: bool
+         :param default: tells wether this is the default workflow
+                   for the specified entity type(s); set it to false in
+                   the case of a subworkflow
+
+         :rtype: `Workflow`
+        """
         self.session.set_pool() # ensure pool is set
         wf = self.cmd_create_entity('Workflow', name=unicode(name),
                                     **kwargs)
