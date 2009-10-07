@@ -106,6 +106,8 @@ class NavigationComponent(Component):
             start = int(self.req.form[self.start_param])
         except KeyError:
             start, stop = 0, self.page_size
+        if start >= len(self.rset):
+            start, stop = 0, self.page_size
         self.starting_from = start
         return start, stop
 
