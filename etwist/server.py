@@ -35,10 +35,10 @@ def daemonize():
     # (start-repository command)
     # See http://www.erlenstar.demon.co.uk/unix/faq_toc.html#TOC16
     if os.fork():   # launch child and...
-        os._exit(0)
+        return 1
     os.setsid()
-    if os.fork():   # launch child and...
-        os._exit(0) # kill off parent again.
+    if os.fork():   # launch child again.
+        return 1
     # move to the root to avoit mount pb
     os.chdir('/')
     # set paranoid umask
@@ -97,14 +97,17 @@ class CubicWebRootResource(resource.PostableResource):
     addSlash = False
 
     def __init__(self, config, debug=None):
-        self.appli = CubicWebPublisher(config, debug=debug)
         self.debugmode = debug
         self.config = config
         self.base_url = config['base-url'] or config.default_base_url()
-        self.versioned_datadir = 'data%s' % config.instance_md5_version()
         assert self.base_url[-1] == '/'
         self.https_url = config['https-url']
         assert not self.https_url or self.https_url[-1] == '/'
+
+    def init_publisher(self):
+        config = self.config
+        self.appli = CubicWebPublisher(config, debug=self.debugmode)
+        self.versioned_datadir = 'data%s' % config.instance_md5_version()
         # when we have an in-memory repository, clean unused sessions every XX
         # seconds and properly shutdown the server
         if config.repo_method == 'inmemory':
@@ -122,6 +125,9 @@ class CubicWebRootResource(resource.PostableResource):
             self.appli.repo.start_looping_tasks()
         self.set_url_rewriter()
         CW_EVENT_MANAGER.bind('after-registry-reload', self.set_url_rewriter)
+
+    def start_service(self):
+        config = self.config
         interval = min(config['cleanup-session-time'] or 120,
                        config['cleanup-anonymous-session-time'] or 720) / 2.
         start_task(interval, self.appli.session_handler.clean_sessions)
@@ -375,12 +381,12 @@ def run(config, debug):
     # serve it via standard HTTP on port set in the configuration
     port = config['port'] or 8080
     reactor.listenTCP(port, channel.HTTPFactory(website))
-    baseurl = config['base-url'] or config.default_base_url()
     logger = getLogger('cubicweb.twisted')
-    logger.info('instance started on %s', baseurl)
+    logger.info('instance started on %s', root_resource.base_url)
     if not debug:
         print 'instance starting in the background'
-        daemonize()
+        if daemonize():
+            return # child process
         if config['pid-file']:
             # ensure the directory where the pid-file should be set exists (for
             # instance /var/run/cubicweb may be deleted on computer restart) 
@@ -388,6 +394,7 @@ def run(config, debug):
             if not os.path.exists(piddir):
                 os.makedirs(piddir)
             file(config['pid-file'], 'w').write(str(os.getpid()))
+    root_resource.init_publisher() # before changing uid
     if config['uid'] is not None:
         try:
             uid = int(config['uid'])
@@ -395,6 +402,7 @@ def run(config, debug):
             from pwd import getpwnam
             uid = getpwnam(config['uid']).pw_uid
         os.setuid(uid)
+    root_resource.start_service()
     if config['profile']:
         prof = hotshot.Profile(config['profile'])
         prof.runcall(reactor.run)

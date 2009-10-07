@@ -1192,7 +1192,9 @@ class Repository(object):
 
     def pyro_register(self, host=''):
         """register the repository as a pyro object"""
-        from logilab.common.pyro_ext import register_object
+        import tempfile
+        from logilab.common.pyro_ext import register_object, config
+        config.PYRO_STORAGE = tempfile.gettempdir() # XXX until lgc > 0.45.1 is out
         appid = self.config['pyro-instance-id'] or self.config.appid
         daemon = register_object(self, appid, self.config['pyro-ns-group'],
                                  self.config['pyro-host'],
