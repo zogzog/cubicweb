@@ -27,6 +27,9 @@ SITEACTIONS = [actions.SiteConfigurationAction,
                schema.ViewSchemaAction,
                actions.SiteInfoAction,
                ]
+FOOTERACTIONS = [wdoc.ChangeLogAction,
+                 wdoc.AboutAction,
+                 actions.PoweredByAction]
 
 class ViewSelectorTC(CubicWebTC):
 
@@ -225,6 +228,7 @@ class VRegistryTC(ViewSelectorTC):
         self.assertDictEqual(self.pactionsdict(req, None, skipcategories=()),
                              {'useractions': USERACTIONS,
                               'siteactions': SITEACTIONS,
+                              'footer': FOOTERACTIONS,
 
                               })
     def test_possible_actions_no_entity(self):
@@ -233,6 +237,7 @@ class VRegistryTC(ViewSelectorTC):
         self.assertDictEqual(self.pactionsdict(req, rset, skipcategories=()),
                              {'useractions': USERACTIONS,
                               'siteactions': SITEACTIONS,
+                              'footer': FOOTERACTIONS,
                               })
 
     def test_possible_actions_same_type_entities(self):
@@ -241,6 +246,7 @@ class VRegistryTC(ViewSelectorTC):
         self.assertDictEqual(self.pactionsdict(req, rset, skipcategories=()),
                              {'useractions': USERACTIONS,
                               'siteactions': SITEACTIONS,
+                              'footer': FOOTERACTIONS,
                               'mainactions': [actions.MultipleEditAction],
                               'moreactions': [actions.DeleteAction,
                                               actions.AddNewAction],
@@ -252,6 +258,7 @@ class VRegistryTC(ViewSelectorTC):
         self.assertDictEqual(self.pactionsdict(req, rset, skipcategories=()),
                              {'useractions': USERACTIONS,
                               'siteactions': SITEACTIONS,
+                              'footer': FOOTERACTIONS,
                               'moreactions': [actions.DeleteAction],
                               })
 
@@ -260,7 +267,9 @@ class VRegistryTC(ViewSelectorTC):
         rset = req.execute('Any N, X WHERE X in_group Y, Y name N')
         self.assertDictEqual(self.pactionsdict(req, rset, skipcategories=()),
                              {'useractions': USERACTIONS,
-                              'siteactions': SITEACTIONS})
+                              'siteactions': SITEACTIONS,
+                              'footer': FOOTERACTIONS,
+                              })
 
     def test_possible_actions_eetype_cwuser_entity(self):
         req = self.request()
@@ -268,6 +277,7 @@ class VRegistryTC(ViewSelectorTC):
         self.assertDictEqual(self.pactionsdict(req, rset, skipcategories=()),
                              {'useractions': USERACTIONS,
                               'siteactions': SITEACTIONS,
+                              'footer': FOOTERACTIONS,
                               'mainactions': [actions.ModifyAction],
                               'moreactions': [actions.ManagePermissionsAction,
                                               actions.AddRelatedActions,
@@ -381,25 +391,25 @@ class VRegistryTC(ViewSelectorTC):
                               tableview.TableView)
 
     def test_interface_selector(self):
-        image = self.add_entity('Image', name=u'bim.png', data=Binary('bim'))
+        image = self.add_entity('Image', data_name=u'bim.png', data=Binary('bim'))
         # image primary view priority
         req = self.request()
-        rset = req.execute('Image X WHERE X name "bim.png"')
+        rset = req.execute('Image X WHERE X data_name "bim.png"')
         self.assertIsInstance(self.vreg['views'].select('primary', req, rset=rset),
                               idownloadable.IDownloadablePrimaryView)
 
 
     def test_score_entity_selector(self):
-        image = self.add_entity('Image', name=u'bim.png', data=Binary('bim'))
+        image = self.add_entity('Image', data_name=u'bim.png', data=Binary('bim'))
         # image primary view priority
         req = self.request()
-        rset = req.execute('Image X WHERE X name "bim.png"')
+        rset = req.execute('Image X WHERE X data_name "bim.png"')
         self.assertIsInstance(self.vreg['views'].select('image', req, rset=rset),
                               idownloadable.ImageView)
-        fileobj = self.add_entity('File', name=u'bim.txt', data=Binary('bim'))
+        fileobj = self.add_entity('File', data_name=u'bim.txt', data=Binary('bim'))
         # image primary view priority
         req = self.request()
-        rset = req.execute('File X WHERE X name "bim.txt"')
+        rset = req.execute('File X WHERE X data_name "bim.txt"')
         self.assertRaises(NoSelectableObject, self.vreg['views'].select, 'image', req, rset=rset)
 
 
@@ -468,6 +478,7 @@ class RQLActionTC(ViewSelectorTC):
         self.assertDictEqual(self.pactionsdict(req, rset, skipcategories=()),
                              {'useractions': USERACTIONS,
                               'siteactions': SITEACTIONS,
+                              'footer': FOOTERACTIONS,
                               'mainactions': [actions.ModifyAction],
                               'moreactions': [actions.ManagePermissionsAction,
                                               actions.AddRelatedActions,
@@ -481,12 +492,12 @@ class RQLActionTC(ViewSelectorTC):
         self.assertDictEqual(self.pactionsdict(req, rset, skipcategories=()),
                              {'useractions': USERACTIONS,
                               'siteactions': SITEACTIONS,
+                              'footer': FOOTERACTIONS,
                               'mainactions': [actions.ModifyAction],
                               'moreactions': [actions.ManagePermissionsAction,
                                               actions.AddRelatedActions,
                                               actions.DeleteAction,
                                               actions.CopyAction,
-                                              ],
                               })
 
 

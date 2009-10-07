@@ -219,7 +219,7 @@ class QuerierTC(BaseQuerierTC):
         self.assertIsInstance(rset[0][0], (int, long))
 
     def test_bytes_storage(self):
-        feid = self.execute('INSERT File X: X name "foo.pdf", X data_format "text/plain", X data %(data)s',
+        feid = self.execute('INSERT File X: X data_name "foo.pdf", X data_format "text/plain", X data %(data)s',
                             {'data': Binary("xxx")})[0][0]
         fdata = self.execute('Any D WHERE X data D, X eid %(x)s', {'x': feid}, 'x')[0][0]
         self.assertIsInstance(fdata, Binary)
@@ -460,7 +460,7 @@ class QuerierTC(BaseQuerierTC):
         self.assertListEquals(rset.rows,
                               [[u'description_format', 13],
                                [u'description', 14],
-                               [u'name', 16],
+                               [u'name', 14],
                                [u'created_by', 38],
                                [u'creation_date', 38],
                                [u'cwuri', 38],

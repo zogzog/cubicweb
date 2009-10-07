@@ -275,7 +275,7 @@ class CustomWorkflowTC(CubicWebTC):
         self.member.clear_all_caches()
         self.assertEquals(self.member.current_workflow.eid, wf.eid)
         self.assertEquals(self.member.state, 'asleep')
-        self.assertEquals(self.member.workflow_history, [])
+        self.assertEquals(self.member.workflow_history, ())
 
     def test_custom_wf_replace_state_keep_history(self):
         """member in inital state with some history, state is redirected and

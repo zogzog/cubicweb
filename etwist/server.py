@@ -35,7 +35,7 @@ def daemonize():
     # (start-repository command)
     # See http://www.erlenstar.demon.co.uk/unix/faq_toc.html#TOC16
     if os.fork():   # launch child and...
-        return -1
+        os._exit(0)
     os.setsid()
     if os.fork():   # launch child and...
         os._exit(0) # kill off parent again.
@@ -379,12 +379,11 @@ def run(config, debug):
     logger = getLogger('cubicweb.twisted')
     logger.info('instance started on %s', baseurl)
     if not debug:
-        if daemonize():
-            # child process
-            return
+        print 'instance starting in the background'
+        daemonize()
         if config['pid-file']:
             # ensure the directory where the pid-file should be set exists (for
-            # instance /var/run/cubicweb may be deleted on computer restart)
+            # instance /var/run/cubicweb may be deleted on computer restart) 
             piddir = os.path.dirname(config['pid-file'])
             if not os.path.exists(piddir):
                 os.makedirs(piddir)

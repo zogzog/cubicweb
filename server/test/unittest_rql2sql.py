@@ -337,54 +337,15 @@ WHERE X.cw_login=admin AND NOT X.cw_eid=Y.cw_eid'''),
 FROM cw_CWUser AS X LEFT OUTER JOIN cw_CWUser AS Y ON (X.cw_eid=Y.cw_eid)
 WHERE X.cw_login=admin'''),
 
-    ('Any XN ORDERBY XN WHERE X name XN',
+    ('Any XN ORDERBY XN WHERE X name XN, X is IN (Basket,Folder,Tag)',
      '''SELECT X.cw_name
-FROM cw_BaseTransition AS X
-UNION ALL
-SELECT X.cw_name
 FROM cw_Basket AS X
-UNION ALL
-SELECT X.cw_name
-FROM cw_CWCache AS X
-UNION ALL
-SELECT X.cw_name
-FROM cw_CWConstraintType AS X
-UNION ALL
-SELECT X.cw_name
-FROM cw_CWEType AS X
-UNION ALL
-SELECT X.cw_name
-FROM cw_CWGroup AS X
-UNION ALL
-SELECT X.cw_name
-FROM cw_CWPermission AS X
-UNION ALL
-SELECT X.cw_name
-FROM cw_CWRType AS X
-UNION ALL
-SELECT X.cw_name
-FROM cw_File AS X
 UNION ALL
 SELECT X.cw_name
 FROM cw_Folder AS X
 UNION ALL
 SELECT X.cw_name
-FROM cw_Image AS X
-UNION ALL
-SELECT X.cw_name
-FROM cw_State AS X
-UNION ALL
-SELECT X.cw_name
 FROM cw_Tag AS X
-UNION ALL
-SELECT X.cw_name
-FROM cw_Transition AS X
-UNION ALL
-SELECT X.cw_name
-FROM cw_Workflow AS X
-UNION ALL
-SELECT X.cw_name
-FROM cw_WorkflowTransition AS X
 ORDER BY 1'''),
 
     # DISTINCT, can use relation under exists scope as principal
@@ -469,61 +430,22 @@ SELECT X.cw_eid, Y.cw_eid
 FROM cw_CWRType AS X, cw_RQLExpression AS Y
 WHERE X.cw_name=CWGroup AND Y.cw_eid IN(1, 2, 3) AND NOT EXISTS(SELECT 1 FROM read_permission_relation AS rel_read_permission0 WHERE rel_read_permission0.eid_from=X.cw_eid AND rel_read_permission0.eid_to=Y.cw_eid)'''),
 
-    ('Any MAX(X)+MIN(X), N GROUPBY N WHERE X name N;',
+    ('Any MAX(X)+MIN(X), N GROUPBY N WHERE X name N, X is IN (Basket, Folder, Tag);',
      '''SELECT (MAX(T1.C0) + MIN(T1.C0)), T1.C1 FROM (SELECT X.cw_eid AS C0, X.cw_name AS C1
-FROM cw_BaseTransition AS X
-UNION ALL
-SELECT X.cw_eid AS C0, X.cw_name AS C1
 FROM cw_Basket AS X
-UNION ALL
-SELECT X.cw_eid AS C0, X.cw_name AS C1
-FROM cw_CWCache AS X
-UNION ALL
-SELECT X.cw_eid AS C0, X.cw_name AS C1
-FROM cw_CWConstraintType AS X
-UNION ALL
-SELECT X.cw_eid AS C0, X.cw_name AS C1
-FROM cw_CWEType AS X
-UNION ALL
-SELECT X.cw_eid AS C0, X.cw_name AS C1
-FROM cw_CWGroup AS X
-UNION ALL
-SELECT X.cw_eid AS C0, X.cw_name AS C1
-FROM cw_CWPermission AS X
-UNION ALL
-SELECT X.cw_eid AS C0, X.cw_name AS C1
-FROM cw_CWRType AS X
-UNION ALL
-SELECT X.cw_eid AS C0, X.cw_name AS C1
-FROM cw_File AS X
 UNION ALL
 SELECT X.cw_eid AS C0, X.cw_name AS C1
 FROM cw_Folder AS X
 UNION ALL
 SELECT X.cw_eid AS C0, X.cw_name AS C1
-FROM cw_Image AS X
-UNION ALL
-SELECT X.cw_eid AS C0, X.cw_name AS C1
-FROM cw_State AS X
-UNION ALL
-SELECT X.cw_eid AS C0, X.cw_name AS C1
-FROM cw_Tag AS X
-UNION ALL
-SELECT X.cw_eid AS C0, X.cw_name AS C1
-FROM cw_Transition AS X
-UNION ALL
-SELECT X.cw_eid AS C0, X.cw_name AS C1
-FROM cw_Workflow AS X
-UNION ALL
-SELECT X.cw_eid AS C0, X.cw_name AS C1
-FROM cw_WorkflowTransition AS X) AS T1
+FROM cw_Tag AS X) AS T1
 GROUP BY T1.C1'''),
 
-    ('Any MAX(X)+MIN(LENGTH(D)), N GROUPBY N ORDERBY 1, N, DF WHERE X name N, X data D, X data_format DF;',
-     '''SELECT (MAX(T1.C1) + MIN(LENGTH(T1.C0))), T1.C2 FROM (SELECT X.cw_data AS C0, X.cw_eid AS C1, X.cw_name AS C2, X.cw_data_format AS C3
+    ('Any MAX(X)+MIN(LENGTH(D)), N GROUPBY N ORDERBY 1, N, DF WHERE X data_name N, X data D, X data_format DF;',
+     '''SELECT (MAX(T1.C1) + MIN(LENGTH(T1.C0))), T1.C2 FROM (SELECT X.cw_data AS C0, X.cw_eid AS C1, X.cw_data_name AS C2, X.cw_data_format AS C3
 FROM cw_File AS X
 UNION ALL
-SELECT X.cw_data AS C0, X.cw_eid AS C1, X.cw_name AS C2, X.cw_data_format AS C3
+SELECT X.cw_data AS C0, X.cw_eid AS C1, X.cw_data_name AS C2, X.cw_data_format AS C3
 FROM cw_Image AS X) AS T1
 GROUP BY T1.C2
 ORDER BY 1,2,T1.C3'''),
@@ -533,11 +455,11 @@ ORDER BY 1,2,T1.C3'''),
 FROM cw_Affaire AS A
 ORDER BY 2) AS T1'''),
 
-    ('DISTINCT Any MAX(X)+MIN(LENGTH(D)), N GROUPBY N ORDERBY 2, DF WHERE X name N, X data D, X data_format DF;',
-     '''SELECT T1.C0,T1.C1 FROM (SELECT DISTINCT (MAX(T1.C1) + MIN(LENGTH(T1.C0))) AS C0, T1.C2 AS C1, T1.C3 AS C2 FROM (SELECT DISTINCT X.cw_data AS C0, X.cw_eid AS C1, X.cw_name AS C2, X.cw_data_format AS C3
+    ('DISTINCT Any MAX(X)+MIN(LENGTH(D)), N GROUPBY N ORDERBY 2, DF WHERE X data_name N, X data D, X data_format DF;',
+     '''SELECT T1.C0,T1.C1 FROM (SELECT DISTINCT (MAX(T1.C1) + MIN(LENGTH(T1.C0))) AS C0, T1.C2 AS C1, T1.C3 AS C2 FROM (SELECT DISTINCT X.cw_data AS C0, X.cw_eid AS C1, X.cw_data_name AS C2, X.cw_data_format AS C3
 FROM cw_File AS X
 UNION
-SELECT DISTINCT X.cw_data AS C0, X.cw_eid AS C1, X.cw_name AS C2, X.cw_data_format AS C3
+SELECT DISTINCT X.cw_data AS C0, X.cw_eid AS C1, X.cw_data_name AS C2, X.cw_data_format AS C3
 FROM cw_Image AS X) AS T1
 GROUP BY T1.C2,T1.C3
 ORDER BY 2,3) AS T1
@@ -1409,13 +1331,9 @@ WHERE appears0.words @@ to_tsquery('default', 'toto&tata') AND appears0.uid=X.ei
 FROM appears AS appears0, entities AS X
 WHERE appears0.words @@ to_tsquery('default', 'hip&hop&momo') AND appears0.uid=X.eid AND X.type='Personne'"""),
 
-            ('Any X WHERE X has_text "toto tata", X name "tutu", X is IN (Basket,File,Folder)',
+            ('Any X WHERE X has_text "toto tata", X name "tutu", X is IN (Basket,Folder)',
              """SELECT X.cw_eid
 FROM appears AS appears0, cw_Basket AS X
-WHERE appears0.words @@ to_tsquery('default', 'toto&tata') AND appears0.uid=X.cw_eid AND X.cw_name=tutu
-UNION ALL
-SELECT X.cw_eid
-FROM appears AS appears0, cw_File AS X
 WHERE appears0.words @@ to_tsquery('default', 'toto&tata') AND appears0.uid=X.cw_eid AND X.cw_name=tutu
 UNION ALL
 SELECT X.cw_eid
@@ -1558,13 +1476,9 @@ WHERE appears0.word_id IN (SELECT word_id FROM word WHERE word in ('hip', 'hop',
 FROM appears AS appears0, entities AS X
 WHERE appears0.word_id IN (SELECT word_id FROM word WHERE word in ('toto', 'tata')) AND appears0.uid=X.eid AND X.type='Personne'"""),
 
-            ('Any X WHERE X has_text "toto tata", X name "tutu", X is IN (Basket,File,Folder)',
+            ('Any X WHERE X has_text "toto tata", X name "tutu", X is IN (Basket,Folder)',
              """SELECT X.cw_eid
 FROM appears AS appears0, cw_Basket AS X
-WHERE appears0.word_id IN (SELECT word_id FROM word WHERE word in ('toto', 'tata')) AND appears0.uid=X.cw_eid AND X.cw_name=tutu
-UNION ALL
-SELECT X.cw_eid
-FROM appears AS appears0, cw_File AS X
 WHERE appears0.word_id IN (SELECT word_id FROM word WHERE word in ('toto', 'tata')) AND appears0.uid=X.cw_eid AND X.cw_name=tutu
 UNION ALL
 SELECT X.cw_eid
@@ -1619,13 +1533,9 @@ WHERE MATCH (appears0.words) AGAINST ('toto tata' IN BOOLEAN MODE) AND appears0.
              """SELECT X.eid
 FROM appears AS appears0, entities AS X
 WHERE MATCH (appears0.words) AGAINST ('hip hop momo' IN BOOLEAN MODE) AND appears0.uid=X.eid AND X.type='Personne'"""),
-            ('Any X WHERE X has_text "toto tata", X name "tutu", X is IN (Basket,File,Folder)',
+            ('Any X WHERE X has_text "toto tata", X name "tutu", X is IN (Basket,Folder)',
              """SELECT X.cw_eid
 FROM appears AS appears0, cw_Basket AS X
-WHERE MATCH (appears0.words) AGAINST ('toto tata' IN BOOLEAN MODE) AND appears0.uid=X.cw_eid AND X.cw_name=tutu
-UNION ALL
-SELECT X.cw_eid
-FROM appears AS appears0, cw_File AS X
 WHERE MATCH (appears0.words) AGAINST ('toto tata' IN BOOLEAN MODE) AND appears0.uid=X.cw_eid AND X.cw_name=tutu
 UNION ALL
 SELECT X.cw_eid

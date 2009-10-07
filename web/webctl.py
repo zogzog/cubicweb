@@ -16,11 +16,11 @@ class WebCreateHandler(CommandHandler):
 
     def bootstrap(self, cubes, inputlevel=0):
         """bootstrap this configuration"""
-        print '\n'+underline_title('Generic web configuration')
+        print '\n' + underline_title('Generic web configuration')
         config = self.config
         if config.repo_method == 'pyro':
-            print '\n'+underline_title('Repository server configuration')
-            config.input_config('pyro-client', inputlevel)
+            print '\n' + underline_title('Pyro configuration')
+            config.input_config('pyro', inputlevel)
         if ASK.confirm('Allow anonymous access ?', False):
             config.global_set_option('anonymous-user', 'anon')
             config.global_set_option('anonymous-password', 'anon')

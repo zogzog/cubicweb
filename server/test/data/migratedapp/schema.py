@@ -50,7 +50,7 @@ class Note(Para):
                                              'PE require_permission P, P name "add_note", '
                                              'P require_group G'),)}
 
-    whatever = Int()  # keep it before `date` for unittest_migraction.test_add_attribute_int
+    whatever = Int(default=2)  # keep it before `date` for unittest_migraction.test_add_attribute_int
     date = Datetime()
     type = String(maxsize=1)
     mydate = Date(default='TODAY')
@@ -88,7 +88,7 @@ class Folder2(EntityType):
 class Personne(EntityType):
     nom    = String(fulltextindexed=True, required=True, maxsize=64)
     prenom = String(fulltextindexed=True, maxsize=64)
-    civility   = String(maxsize=1, default='M')
+    civility   = String(maxsize=1, default='M', fulltextindexed=True)
     promo  = String(vocabulary=('bon','pasbon'))
     titre  = String(fulltextindexed=True, maxsize=128)
     adel   = String(maxsize=128)

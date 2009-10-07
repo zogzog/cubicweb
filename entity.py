@@ -700,7 +700,7 @@ class Entity(AppObject, dict):
         else raise `KeyError`
         """
         res = self._related_cache['%s_%s' % (rtype, role)][entities]
-        if limit:
+        if limit is not None:
             if entities:
                 res = res[:limit]
             else:
@@ -722,9 +722,10 @@ class Entity(AppObject, dict):
                 target = 'subject'
             if rcard in '?1':
                 for rentity in related:
-                    rentity._related_cache['%s_%s' % (rtype, target)] = (self.as_rset(), [self])
+                    rentity._related_cache['%s_%s' % (rtype, target)] = (
+                        self.as_rset(), (self,))
         else:
-            related = []
+            related = ()
         self._related_cache['%s_%s' % (rtype, role)] = (rset, related)
 
     def clear_related_cache(self, rtype=None, role=None):
@@ -820,8 +821,12 @@ class Entity(AppObject, dict):
         :return: the list of indexable word of this entity
         """
         from indexer.query_objects import tokenize
+        # take care to cases where we're modyfying the schema
+        pending = self.req.transaction_data.setdefault('pendingrdefs', set())
         words = []
         for rschema in self.e_schema.indexable_attributes():
+            if (self.e_schema, rschema) in pending:
+                continue
             try:
                 value = self.printable_value(rschema, format='text/plain')
             except TransformError:

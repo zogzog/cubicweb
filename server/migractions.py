@@ -626,6 +626,10 @@ class ServerMigrationHelper(MigrationHelper):
         if card == '1':
             rql += ', NOT X %s NULL' % oldname
         self.rqlexec(rql, ask_confirm=self.verbosity>=2)
+        # XXX if both attributes fulltext indexed, should skip fti rebuild
+        # XXX if old attribute was fti indexed but not the new one old value
+        # won't be removed from the index (this occurs on other kind of
+        # fulltextindexed change...)
         self.cmd_drop_attribute(etype, oldname, commit=commit)
 
     def cmd_add_entity_type(self, etype, auto=True, commit=True):
@@ -954,7 +958,7 @@ class ServerMigrationHelper(MigrationHelper):
         if commit:
             self.commit()
 
-    @deprecated('[3.4] use sync_schema_props_perms(ertype, syncprops=False)')
+    @deprecated('[3.2] use sync_schema_props_perms(ertype, syncprops=False)')
     def cmd_synchronize_permissions(self, ertype, commit=True):
         self.cmd_sync_schema_props_perms(ertype, syncprops=False, commit=commit)
 
@@ -962,6 +966,21 @@ class ServerMigrationHelper(MigrationHelper):
 
     def cmd_add_workflow(self, name, wfof, default=True, commit=False,
                          **kwargs):
+        """
+        create a new workflow and links it to entity types
+         :type name: unicode
+         :param name: name of the workflow
+
+         :type wfof: string or list/tuple of strings
+         :param wfof: entity type(s) having this workflow
+
+         :type default: bool
+         :param default: tells wether this is the default workflow
+                   for the specified entity type(s); set it to false in
+                   the case of a subworkflow
+
+         :rtype: `Workflow`
+        """
         self.session.set_pool() # ensure pool is set
         wf = self.cmd_create_entity('Workflow', name=unicode(name),
                                     **kwargs)
@@ -991,7 +1010,7 @@ class ServerMigrationHelper(MigrationHelper):
             return rset.get_entity(0, 0)
         return self.cmd_add_workflow('%s workflow' % ';'.join(etypes), etypes)
 
-    @deprecated('use add_workflow and Workflow.add_state method')
+    @deprecated('[3.5] use add_workflow and Workflow.add_state method')
     def cmd_add_state(self, name, stateof, initial=False, commit=False, **kwargs):
         """method to ease workflow definition: add a state for one or more
         entity type(s)
@@ -1002,7 +1021,7 @@ class ServerMigrationHelper(MigrationHelper):
             self.commit()
         return state.eid
 
-    @deprecated('use add_workflow and Workflow.add_transition method')
+    @deprecated('[3.5] use add_workflow and Workflow.add_transition method')
     def cmd_add_transition(self, name, transitionof, fromstates, tostate,
                            requiredgroups=(), conditions=(), commit=False, **kwargs):
         """method to ease workflow definition: add a transition for one or more
@@ -1015,7 +1034,7 @@ class ServerMigrationHelper(MigrationHelper):
             self.commit()
         return tr.eid
 
-    @deprecated('use Transition.set_transition_permissions method')
+    @deprecated('[3.5] use Transition.set_transition_permissions method')
     def cmd_set_transition_permissions(self, treid,
                                        requiredgroups=(), conditions=(),
                                        reset=True, commit=False):
@@ -1028,7 +1047,7 @@ class ServerMigrationHelper(MigrationHelper):
         if commit:
             self.commit()
 
-    @deprecated('use entity.fire_transition("transition") or entity.change_state("state")')
+    @deprecated('[3.5] use entity.fire_transition("transition") or entity.change_state("state")')
     def cmd_set_state(self, eid, statename, commit=False):
         self.session.set_pool() # ensure pool is set
         self.session.entity_from_eid(eid).change_state(statename)

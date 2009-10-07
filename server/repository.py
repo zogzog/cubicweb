@@ -843,6 +843,8 @@ class Repository(object):
             self._extid_cache[cachekey] = eid
             self._type_source_cache[eid] = (etype, source.uri, extid)
             entity = source.before_entity_insertion(session, extid, etype, eid)
+            if not hasattr(entity, 'edited_attributes'):
+                entity.edited_attributes = set()
             if source.should_call_hooks:
                 entity.edited_attributes = set(entity)
                 self.hm.call_hooks('before_add_entity', session, entity=entity)
@@ -965,6 +967,9 @@ class Repository(object):
         the entity eid should originaly be None and a unique eid is assigned to
         the entity instance
         """
+        # init edited_attributes before calling before_add_entity hooks
+        entity._is_saved = False # entity has an eid but is not yet saved
+        entity.edited_attributes = set(entity)
         entity = entity.pre_add_hook()
         eschema = entity.e_schema
         etype = str(eschema)
@@ -973,10 +978,7 @@ class Repository(object):
         entity.set_eid(self.system_source.create_eid(session))
         if server.DEBUG & server.DBG_REPO:
             print 'ADD entity', etype, entity.eid, dict(entity)
-        entity._is_saved = False # entity has an eid but is not yet saved
         relations = []
-        # init edited_attributes before calling before_add_entity hooks
-        entity.edited_attributes = set(entity)
         if source.should_call_hooks:
             self.hm.call_hooks('before_add_entity', session, entity=entity)
         # XXX use entity.keys here since edited_attributes is not updated for
@@ -1152,7 +1154,7 @@ class Repository(object):
     def pyro_register(self, host=''):
         """register the repository as a pyro object"""
         from logilab.common.pyro_ext import register_object
-        appid = self.config['pyro-id'] or self.config.appid
+        appid = self.config['pyro-instance-id'] or self.config.appid
         daemon = register_object(self, appid, self.config['pyro-ns-group'],
                                  self.config['pyro-host'],
                                  self.config['pyro-ns-host'])
@@ -1185,7 +1187,7 @@ class Repository(object):
 def pyro_unregister(config):
     """unregister the repository from the pyro name server"""
     from logilab.common.pyro_ext import ns_unregister
-    appid = config['pyro-id'] or config.appid
+    appid = config['pyro-instance-id'] or config.appid
     ns_unregister(appid, config['pyro-ns-group'], config['pyro-ns-host'])
 
 

@@ -138,7 +138,7 @@ entities selector, one_line_rset makes the EntityRSSIconBox class non
 selectable. For an rset with one entity, the EntityRSSIconBox class
 will have a higher score then RSSIconBox, which is what we wanted.
 
-Of course, once this is done, you have to ::
+Of course, once this is done, you have to:
 
 * fill in the call method of EntityRSSIconBox
 
@@ -161,7 +161,7 @@ is, or is not selected appropriately. Looking at which selectors fired
 (or did not) is the way. There exists a traced_selection context
 manager to help with that.
 
-Here is an example ::
+Here is an example:
 
 .. sourcecode:: python
 

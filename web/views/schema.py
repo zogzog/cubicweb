@@ -24,7 +24,9 @@ from cubicweb.web.views import primary, baseviews, tabs, management
 
 ALWAYS_SKIP_TYPES = BASE_TYPES | SCHEMA_TYPES
 SKIP_TYPES = ALWAYS_SKIP_TYPES | META_RTYPES | SYSTEM_RTYPES
-SKIP_TYPES.update(set(('Transition', 'State', 'TrInfo',
+SKIP_TYPES.update(set(('Transition', 'State', 'TrInfo', 'Workflow',
+                       'WorkflowTransition', 'BaseTransition',
+                       'SubWorkflowExitPoint',
                        'CWUser', 'CWGroup',
                        'CWCache', 'CWProperty', 'CWPermission',
                        'ExternalUri')))

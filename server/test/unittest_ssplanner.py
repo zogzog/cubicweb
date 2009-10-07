@@ -25,19 +25,19 @@ class SSPlannerTC(BasePlannerTC):
         BasePlannerTC.tearDown(self)
 
     def test_ordered_ambigous_sol(self):
-        self._test('Any XN ORDERBY XN WHERE X name XN, X is IN (Basket, File, Folder)',
-                   [('OneFetchStep', [('Any XN ORDERBY XN WHERE X name XN, X is IN(Basket, File, Folder)',
+        self._test('Any XN ORDERBY XN WHERE X name XN, X is IN (Basket, State, Folder)',
+                   [('OneFetchStep', [('Any XN ORDERBY XN WHERE X name XN, X is IN(Basket, State, Folder)',
                                        [{'X': 'Basket', 'XN': 'String'},
-                                        {'X': 'File', 'XN': 'String'},
+                                        {'X': 'State', 'XN': 'String'},
                                         {'X': 'Folder', 'XN': 'String'}])],
                      None, None,
                      [self.system], None, [])])
 
     def test_groupeded_ambigous_sol(self):
-        self._test('Any XN,COUNT(X) GROUPBY XN WHERE X name XN, X is IN (Basket, File, Folder)',
-                   [('OneFetchStep', [('Any XN,COUNT(X) GROUPBY XN WHERE X name XN, X is IN(Basket, File, Folder)',
+        self._test('Any XN,COUNT(X) GROUPBY XN WHERE X name XN, X is IN (Basket, State, Folder)',
+                   [('OneFetchStep', [('Any XN,COUNT(X) GROUPBY XN WHERE X name XN, X is IN(Basket, State, Folder)',
                                        [{'X': 'Basket', 'XN': 'String'},
-                                        {'X': 'File', 'XN': 'String'},
+                                        {'X': 'State', 'XN': 'String'},
                                         {'X': 'Folder', 'XN': 'String'}])],
                      None, None,
                      [self.system], None, [])])

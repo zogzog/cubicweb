@@ -390,7 +390,7 @@ class CubicWebTC(TestCase):
                       for a in self.vreg['views'].possible_views(req, rset=rset))
 
     def pactions(self, req, rset,
-                 skipcategories=('addrelated', 'siteactions', 'useractions')):
+                 skipcategories=('addrelated', 'siteactions', 'useractions', 'footer')):
         return [(a.__regid__, a.__class__)
                 for a in self.vreg['actions'].poss_visible_objects(req, rset=rset)
                 if a.category not in skipcategories]
@@ -401,7 +401,7 @@ class CubicWebTC(TestCase):
                 if a.category in categories]
 
     def pactionsdict(self, req, rset,
-                     skipcategories=('addrelated', 'siteactions', 'useractions')):
+                     skipcategories=('addrelated', 'siteactions', 'useractions', 'footer')):
         res = {}
         for a in self.vreg['actions'].poss_visible_objects(req, rset=rset):
             if a.category not in skipcategories:

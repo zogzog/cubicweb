@@ -137,7 +137,7 @@ class Workflow(AnyEntity):
         return tr
 
     def add_wftransition(self, name, subworkflow, fromstates, exitpoints,
-                       requiredgroups=(), conditions=(), **kwargs):
+                         requiredgroups=(), conditions=(), **kwargs):
         """add a workflow transition to this workflow"""
         tr = self._add_transition('WorkflowTransition', name, fromstates,
                                   requiredgroups, conditions, **kwargs)
@@ -222,9 +222,10 @@ class BaseTransition(AnyEntity):
         if isinstance(conditions, basestring):
             conditions = (conditions,)
         for expr in conditions:
-            if isinstance(expr, str):
+            if isinstance(expr, basestring):
                 kwargs = {'expr': unicode(expr)}
-            elif isinstance(expr, dict):
+            else:
+                assert isinstance(expr, dict)
                 kwargs = expr
             kwargs['x'] = self.eid
             kwargs.setdefault('mainvars', u'X')
@@ -425,18 +426,11 @@ class WorkflowableMixIn(object):
         """
         if self.current_state is None or self.current_workflow is None:
             return
-<<<<<<< /home/syt/src/fcubicweb/cubicweb/entities/wfobjs.py
         rset = self._cw.execute(
-            'Any T,N WHERE S allowed_transition T, S eid %(x)s, '
-            'T name N, T transition_of WF, WF eid %(wfeid)s',
-            {'x': self.current_state.eid,
-=======
-        rset = self.req.execute(
             'Any T,TT, TN WHERE S allowed_transition T, S eid %(x)s, '
             'T type TT, T type %(type)s, '
             'T name TN, T transition_of WF, WF eid %(wfeid)s',
             {'x': self.current_state.eid, 'type': type,
->>>>>>> /tmp/wfobjs.py~other.TyHPqT
              'wfeid': self.current_workflow.eid}, 'x')
         for tr in rset.entities():
             if tr.may_be_fired(self.eid):
@@ -463,16 +457,12 @@ class WorkflowableMixIn(object):
         entity's workflow
         """
         assert self.current_workflow
-<<<<<<< /home/syt/src/fcubicweb/cubicweb/entities/wfobjs.py
+        if isinstance(tr, basestring):
+            tr = self.current_workflow.transition_by_name(tr)
         tr = self.current_workflow.transition_by_name(trname)
         if tr is None:
             raise WorkflowException('not a %s transition: %s' % (self.__regid__,
                                                                  trname))
-=======
-        if isinstance(tr, basestring):
-            tr = self.current_workflow.transition_by_name(tr)
-        assert tr is not None, 'not a %s transition: %s' % (self.id, tr)
->>>>>>> /tmp/wfobjs.py~other.TyHPqT
         return self._add_trinfo(comment, commentformat, tr.eid)
 
     def change_state(self, statename, comment=None, commentformat=None, tr=None):

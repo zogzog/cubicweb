@@ -253,7 +253,7 @@ class HTableFormRenderer(FormRenderer):
 
     display_help = False
     def _render_fields(self, fields, w, form):
-        w(u'<table border="0">')
+        w(u'<table border="0" class="htableForm">')
         w(u'<tr>')
         for field in fields:
             if self.display_label:

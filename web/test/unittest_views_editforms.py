@@ -34,7 +34,6 @@ class AutomaticEntityFormTC(CubicWebTC):
                           [('login', 'subject'),
                            ('upassword', 'subject'),
                            ('in_group', 'subject'),
-                           ('in_state', 'subject'),
                            ('eid', 'subject'),
                            ])
         self.assertListEquals(rbc(e, 'secondary'),
@@ -59,6 +58,7 @@ class AutomaticEntityFormTC(CubicWebTC):
         # owned_by is defined both as subject and object relations on CWUser
         self.assertListEquals(rbc(e, 'generated'),
                               [('use_email', 'subject'),
+                               ('in_state', 'subject'),
                                ('has_text', 'subject'),
                                ('identity', 'subject'),
                                ('is', 'subject'),
@@ -152,12 +152,12 @@ class FormViewsTC(CubicWebTC):
         geid = self.execute('CWGroup X LIMIT 1')[0][0]
         rset = self.execute('CWUser X LIMIT 1')
         self.view('inline-edition', rset, row=0, col=0, rtype='in_group',
-                  peid=geid, role='subject', template=None, i18nctx='').source
+                  peid=geid, role='object', template=None, i18nctx='').source
 
     def test_automatic_inline_creation_formview(self):
         geid = self.execute('CWGroup X LIMIT 1')[0][0]
         self.view('inline-creation', None, etype='CWUser', rtype='in_group',
-                  peid=geid, template=None, i18nctx='', role='subject').source
+                  peid=geid, template=None, i18nctx='', role='object').source
 
 
 if __name__ == '__main__':

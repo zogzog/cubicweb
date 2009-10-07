@@ -163,18 +163,12 @@ notified of every changes.',
           }),
         # pyro server.serverconfig
         ('pyro-host',
-         {'type' : 'int',
+         {'type' : 'string',
           'default': None,
           'help': 'Pyro server host, if not detectable correctly through \
 gethostname(). It may contains port information using <host>:<port> notation, \
 and if not set, it will be choosen randomly',
-          'group': 'pyro-server', 'inputlevel': 2,
-          }),
-        ('pyro-id', # XXX reuse pyro-instance-id
-         {'type' : 'string',
-          'default': None,
-          'help': 'identifier of the repository in the pyro name server',
-          'group': 'pyro-server', 'inputlevel': 2,
+          'group': 'pyro', 'inputlevel': 2,
           }),
         ) + CubicWebConfiguration.options)
 

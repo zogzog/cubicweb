@@ -198,6 +198,10 @@ def _validate_form(req, vreg):
             req.cnx.commit() # ValidationError may be raise on commit
         except ValidationError, ex:
             return (False, _validation_error(req, ex), ctrl._edited_entity)
+        except Exception, ex:
+            req.cnx.rollback()
+            req.exception('unexpected error while validating form')
+            return (False, req._(str(ex).decode('utf-8')), ctrl._edited_entity)
         else:
             return (True, ex.location, ctrl._edited_entity)
     except Exception, ex:

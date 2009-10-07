@@ -173,7 +173,7 @@ title
     def generate_bytes(self, attrname, index, format=None):
         # modpython way
         fakefile = Binary("%s%s" % (attrname, index))
-        fakefile.filename = "file_%s" % attrname
+        fakefile.filename = u"file_%s" % attrname
         fakefile.value = fakefile.getvalue()
         return fakefile
 

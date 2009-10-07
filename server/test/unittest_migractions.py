@@ -55,12 +55,17 @@ class MigrationCommandsTC(CubicWebTC):
 
     def test_add_attribute_int(self):
         self.failIf('whatever' in self.schema)
+        self.add_entity('Note')
+        self.commit()
         orderdict = dict(self.mh.rqlexec('Any RTN, O WHERE X name "Note", RDEF from_entity X, '
                                          'RDEF relation_type RT, RDEF ordernum O, RT name RTN'))
         self.mh.cmd_add_attribute('Note', 'whatever')
         self.failUnless('whatever' in self.schema)
         self.assertEquals(self.schema['whatever'].subjects(), ('Note',))
         self.assertEquals(self.schema['whatever'].objects(), ('Int',))
+        self.assertEquals(self.schema['Note'].default('whatever'), 2)
+        note = self.execute('Note X').get_entity(0, 0)
+        self.assertEquals(note.whatever, 2)
         orderdict2 = dict(self.mh.rqlexec('Any RTN, O WHERE X name "Note", RDEF from_entity X, '
                                           'RDEF relation_type RT, RDEF ordernum O, RT name RTN'))
         whateverorder = migrschema['whatever'].rproperty('Note', 'Int', 'order')
@@ -308,9 +313,9 @@ class MigrationCommandsTC(CubicWebTC):
                           'X ecrit_part PE, U in_group G, '
                           'PE require_permission P, P name "add_note", P require_group G')
         self.assertEquals([et.name for et in eexpr.reverse_add_permission], ['Note'])
-        self.assertEquals(eexpr.reverse_read_permission, [])
-        self.assertEquals(eexpr.reverse_delete_permission, [])
-        self.assertEquals(eexpr.reverse_update_permission, [])
+        self.assertEquals(eexpr.reverse_read_permission, ())
+        self.assertEquals(eexpr.reverse_delete_permission, ())
+        self.assertEquals(eexpr.reverse_update_permission, ())
         # no more rqlexpr to delete and add para attribute
         self.failIf(self._rrqlexpr_rset('add', 'para'))
         self.failIf(self._rrqlexpr_rset('delete', 'para'))
@@ -320,8 +325,8 @@ class MigrationCommandsTC(CubicWebTC):
                           'O require_permission P, P name "add_note", '
                           'U in_group G, P require_group G')
         self.assertEquals([rt.name for rt in rexpr.reverse_add_permission], ['ecrit_par'])
-        self.assertEquals(rexpr.reverse_read_permission, [])
-        self.assertEquals(rexpr.reverse_delete_permission, [])
+        self.assertEquals(rexpr.reverse_read_permission, ())
+        self.assertEquals(rexpr.reverse_delete_permission, ())
         # no more rqlexpr to delete and add travaille relation
         self.failIf(self._rrqlexpr_rset('add', 'travaille'))
         self.failIf(self._rrqlexpr_rset('delete', 'travaille'))

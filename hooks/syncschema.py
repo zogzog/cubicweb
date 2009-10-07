@@ -359,7 +359,12 @@ class SourceDbCWAttributeAdd(hook.Operation):
             eschema = self.schema.eschema(rdef.subject)
         except KeyError:
             return # entity type currently being added
+        # propagate attribute to children classes
         rschema = self.schema.rschema(rdef.name)
+        # if relation type has been inserted in the same transaction, its final
+        # attribute is still set to False, so we've to ensure it's False
+        rschema.final = True
+        # XXX 'infered': True/False, not clear actually
         props.update({'constraints': rdef.constraints,
                       'description': rdef.description,
                       'cardinality': rdef.cardinality,
@@ -371,6 +376,11 @@ class SourceDbCWAttributeAdd(hook.Operation):
             for rql, args in ss.frdef2rql(rschema, str(specialization),
                                           rdef.object, props):
                 session.execute(rql, args)
+        # set default value, using sql for performance and to avoid
+        # modification_date update
+        if default:
+            session.system_sql('UPDATE %s SET %s=%%(default)s' % (table, column),
+                               {'default': default})
 
 
 class SourceDbCWRelationAdd(SourceDbCWAttributeAdd):
@@ -965,14 +975,15 @@ class AfterDelRelationTypeHook(SyncSchemaHook):
         session = self._cw
         subjschema, rschema, objschema = session.vreg.schema.schema_by_eid(self.eidfrom)
         pendings = session.transaction_data.get('pendingeids', ())
+        pendingrdefs = session.transaction_data.setdefault('pendingrdefs', set())
         # first delete existing relation if necessary
         if rschema.is_final():
             rdeftype = 'CWAttribute'
+            pendingrdefs.add((subjschema, rschema))
         else:
             rdeftype = 'CWRelation'
+            pendingrdefs.add((subjschema, rschema, objschema))
             if not (subjschema.eid in pendings or objschema.eid in pendings):
-                pending = session.transaction_data.setdefault('pendingrdefs', set())
-                pending.add((subjschema, rschema, objschema))
                 session.execute('DELETE X %s Y WHERE X is %s, Y is %s'
                                 % (rschema, subjschema, objschema))
         execute = session.unsafe_execute

@@ -48,7 +48,7 @@ class _SetInitialStateOp(hook.Operation):
                                                    state.eid)
 
 
-class _FireAutotransitionOp(PreCommitOperation):
+class _FireAutotransitionOp(hook.Operation):
     """try to fire auto transition after state changes"""
 
     def precommit_event(self):

@@ -169,6 +169,8 @@ def rgx_action(rql=None, args=None, cachekey=None, argsgroups=(), setuser=False,
             match = inputurl.match(uri)
             for key in formgroups:
                 form2[key] = match.group(key)
+        if "vtitle" in form2:
+            form2['vtitle'] = req._(form2['vtitle'])
         if form2:
             req.form.update(form2)
         return controller, rset

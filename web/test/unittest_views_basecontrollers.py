@@ -206,7 +206,7 @@ class EditControllerTC(CubicWebTC):
 
 
     def test_interval_bound_constraint_success(self):
-        feid = self.execute('INSERT File X: X name "toto.txt", X data %(data)s',
+        feid = self.execute('INSERT File X: X data_name "toto.txt", X data %(data)s',
                             {'data': Binary('yo')})[0][0]
         req = self.request()
         req.form = {'eid': ['X'],

@@ -598,9 +598,9 @@ def guess_field(eschema, rschema, role='subject', skip_meta_attr=True, **kwargs)
     kwargs['required'] = card in '1+'
     kwargs['name'] = rschema.type
     if role == 'object':
-        kwargs['label'] = (eschema.type + '_object', rschema.type)
+        kwargs.setdefault('label', (eschema.type, rschema.type + '_object'))
     else:
-        kwargs['label'] = (eschema.type, rschema.type)
+        kwargs.setdefault('label', (eschema.type, rschema.type))
     kwargs['eidparam'] = True
     kwargs.setdefault('help', help)
     if rschema.is_final():

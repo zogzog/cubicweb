@@ -133,6 +133,7 @@ class RepoThread(Thread):
 
     def start(self):
         self.running_threads.append(self)
+        self.daemon = True
         Thread.start(self)
 
     @property

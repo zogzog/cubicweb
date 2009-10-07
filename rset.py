@@ -117,6 +117,10 @@ class ResultSet(object):
                          self.description +rset.description)
         return self.req.decorate_rset(rset)
 
+    def copy(self):
+        rset = ResultSet(self.rows[:], self.rql, self.args, self.description[:])
+        return self.req.decorate_rset(rset)
+
     def _prepare_copy(self, rows, descr):
         rset = ResultSet(rows, self.rql, self.args, descr)
         return self.req.decorate_rset(rset)

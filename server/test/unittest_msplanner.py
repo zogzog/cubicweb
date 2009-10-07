@@ -682,7 +682,7 @@ class MSPlannerTC(BaseMSPlannerTC):
 
 
     def test_3sources_ambigous(self):
-        self._test('Any X,T WHERE X owned_by U, U login "syt", X title T',
+        self._test('Any X,T WHERE X owned_by U, U login "syt", X title T, X is IN(Bookmark, Card, EmailThread)',
                    [('FetchStep', [('Any X,T WHERE X title T, X is Card', [{'X': 'Card', 'T': 'String'}])],
                      [self.cards, self.system], None,
                      {'T': 'table0.C1', 'X': 'table0.C0', 'X.title': 'table0.C1'}, []),
@@ -1275,7 +1275,7 @@ class MSPlannerTC(BaseMSPlannerTC):
                      None, None, [self.system], {}, [])])
 
     def test_has_text_3(self):
-        self._test('Any X WHERE X has_text "toto", X title "zoubidou"',
+        self._test('Any X WHERE X has_text "toto", X title "zoubidou", X is IN (Card, EmailThread)',
                    [('FetchStep', [(u'Any X WHERE X title "zoubidou", X is Card',
                                     [{'X': 'Card'}])],
                      [self.cards, self.system], None, {'X': 'table0.C0'}, []),
@@ -1299,7 +1299,7 @@ class MSPlannerTC(BaseMSPlannerTC):
                     ])
 
     def test_ambigous_sort_func(self):
-        self._test('Any X ORDERBY DUMB_SORT(RF) WHERE X title RF',
+        self._test('Any X ORDERBY DUMB_SORT(RF) WHERE X title RF, X is IN (Bookmark, Card, EmailThread)',
                    [('AggrStep', 'Any X ORDERBY DUMB_SORT(RF)',
                      None, None, 'table0', None,
                      [('FetchStep', [('Any X,RF WHERE X title RF, X is Card',

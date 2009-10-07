@@ -15,11 +15,8 @@ from logilab.common.deprecation import class_renamed, deprecated
 
 from cubicweb.selectors import yes
 from cubicweb.view import Component
-from cubicweb.common.mail import format_mail
-from cubicweb.common.mail import NotificationView
+from cubicweb.common.mail import NotificationView, SkipEmail
 from cubicweb.server.hook import SendMailOp
-
-parse_message_id = deprecated('parse_message_id is now defined in cubicweb.common.mail')(parse_message_id)
 
 
 class RecipientsFinder(Component):
