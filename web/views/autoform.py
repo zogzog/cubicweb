@@ -378,8 +378,7 @@ class AutomaticEntityForm(forms.EntityFieldsForm):
         """return true if the given relation with entity has role and a
         targettype target should be inlined
         """
-        return self.rinlined.etype_get(self.edited_entity.id, rschema, role,
-                                       targettype)
+        return True
 
     def should_display_inline_creation_form(self, rschema, existant, card):
         """return true if a creation form should be inlined
