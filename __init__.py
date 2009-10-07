@@ -123,7 +123,14 @@ class RequestSessionMixIn(object):
         pass
 
     def create_entity(self, etype, *args, **kwargs):
-        """add a new entity of the given type"""
+        """add a new entity of the given type
+        
+        Example (in a shell session):
+
+        c = create_entity('Company', name='Logilab')
+        create_entity('Person', ('works_for', 'Y'), Y=c.eid, firstname='John', lastname='Doe')
+
+        """
         rql = 'INSERT %s X' % etype
         relations = []
         restrictions = []
