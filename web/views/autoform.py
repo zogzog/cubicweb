@@ -424,7 +424,7 @@ class AutomaticEntityForm(forms.EntityFieldsForm):
             # display inline-edition view for all existing related entities
             for i, relentity in enumerate(related.entities()):
                 if relentity.has_perm('update'):
-                    yield vvreg.select('inline-edition', self.req, related,
+                    yield vvreg.select('inline-edition', self.req, rset=related,
                                        row=i, col=0, rtype=rschema, role=role,
                                        peid=entity.eid, pform=self)
 
