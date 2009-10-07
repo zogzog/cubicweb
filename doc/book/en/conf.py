@@ -49,9 +49,9 @@ copyright = '2008-2009, Logilab'
 # other places throughout the built documents.
 #
 # The short X.Y version.
-version = '0.54'
+version = '3.5'
 # The full version, including alpha/beta/rc tags.
-release = '3.4'
+release = '3.5'
 
 # There are two options for replacing |today|: either, you set today to some
 # non-false value, then it is used:
