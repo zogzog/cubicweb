@@ -143,8 +143,8 @@ class Workflow(AnyEntity):
                                   requiredgroups, conditions, **kwargs)
         if hasattr(subworkflow, 'eid'):
             subworkflow = subworkflow.eid
-        self.req.execute('SET T subworkflow WF WHERE WF eid %(wf)s,T eid %(t)s',
-                         {'t': tr.eid, 'wf': subworkflow}, ('wf', 't'))
+        assert self.req.execute('SET T subworkflow WF WHERE WF eid %(wf)s,T eid %(t)s',
+                                {'t': tr.eid, 'wf': subworkflow}, ('wf', 't'))
         for fromstate, tostate in exitpoints:
             tr.add_exit_point(fromstate, tostate)
         return tr
