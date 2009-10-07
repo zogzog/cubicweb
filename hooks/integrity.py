@@ -201,7 +201,8 @@ class DeleteCompositeOrphanHook(IntegrityHook):
         # if the relation is being delete, don't delete composite's components
         # automatically
         pendingrdefs = self._cw.transaction_data.get('pendingrdefs', ())
-        if (self._cw.describe(eidfrom)[0], rtype, self._cw.describe(eidto)[0]) in pendingrdefs:
+        if (self._cw.describe(self.eidfrom)[0], self.rtype,
+            self._cw.describe(self.eidto)[0]) in pendingrdefs:
             return
         composite = self._cw.schema_rproperty(self.rtype, self.eidfrom, self.eidto,
                                                  'composite')
