@@ -201,6 +201,10 @@ def _validate_form(req, vreg):
             req.exception('unexpected error while validating form')
             return (False, req._(str(ex).decode('utf-8')), ctrl._edited_entity)
         else:
+            # complete entity: it can be used in js callbacks where we might
+            # want every possible information
+            if ctrl._edited_entity:
+                ctrl._edited_entity.complete()
             return (True, ex.location, ctrl._edited_entity)
     except Exception, ex:
         req.cnx.rollback()
