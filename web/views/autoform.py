@@ -215,21 +215,12 @@ class AutomaticEntityForm(forms.EntityFieldsForm):
         #       -> generate the <form> node when the content is rendered
         #          and we know the correct enctype (formrenderer's w attribute
         #          is not a StringIO)
-        for rschema, targettypes, role in self.inlined_relations():
-            # inlined forms don't handle multiple target types
-            if len(targettypes) != 1:
-                continue
-            targettype = targettypes[0]
-            if targettype in _tested:
-                continue
-            _tested.add(targettype)
-            if self.should_inline_relation_form(rschema, targettype, role):
-                entity = self.vreg['etypes'].etype_class(targettype)(self.req)
-                subform = self.vreg['forms'].select('edition', self.req, entity=entity)
-                if hasattr(subform, '_subform_needs_multipart'):
-                    needs_multipart = subform._subform_needs_multipart(_tested)
+        for formview in self.inlined_form_views():
+            if formview.form:
+                if hasattr(formview.form, '_subform_needs_multipart'):
+                    needs_multipart = formview.form._subform_needs_multipart(_tested)
                 else:
-                    needs_multipart = subform.form_needs_multipart
+                    needs_multipart = formview.form.form_needs_multipart
                 if needs_multipart:
                     return True
         return False
