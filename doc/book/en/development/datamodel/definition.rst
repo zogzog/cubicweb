@@ -74,7 +74,7 @@ Properties defined below are accessible through the following api:
     function `_` to be properly internationalized.
 
   - `constraints` : a list of conditions/constraints that the relation has to
-    satisfy (c.f. `Contraints`_)
+    satisfy (c.f. `Constraints`_)
 
   - `cardinality` : a two character string which specify the cardinality of the
     relation. The first character defines the cardinality of the relation on

@@ -2,7 +2,6 @@
 
 .. _internationalization:
 
-
 Internationalization
 ---------------------
 

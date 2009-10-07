@@ -25,9 +25,10 @@ Possible events are:
   commit)
 
 * rollback: the transaction has been either rollbacked either
-  * intentionaly
-  * a precommit event failed, all operations are rollbacked
-  * a commit event failed, all operations which are not been triggered
+
+  - intentionaly
+  - a precommit event failed, all operations are rollbacked
+  - a commit event failed, all operations which are not been triggered
     for commit are rollbacked
 
 Exceptions signaled from within a rollback are logged and swallowed.

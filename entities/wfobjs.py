@@ -137,7 +137,7 @@ class Workflow(AnyEntity):
         return tr
 
     def add_wftransition(self, name, subworkflow, fromstates, exitpoints,
-                       requiredgroups=(), conditions=(), **kwargs):
+                         requiredgroups=(), conditions=(), **kwargs):
         """add a workflow transition to this workflow"""
         tr = self._add_transition('WorkflowTransition', name, fromstates,
                                   requiredgroups, conditions, **kwargs)

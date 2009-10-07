@@ -16,7 +16,7 @@ from logilab.common.deprecation import class_renamed, deprecated
 from cubicweb import RegistryException
 from cubicweb.selectors import implements, yes
 from cubicweb.view import Component
-from cubicweb.common.mail import NotificationView, parse_message_id
+from cubicweb.common.mail import NotificationView, parse_message_id, SkipEmail
 from cubicweb.server.pool import PreCommitOperation, SingleLastOperation
 from cubicweb.server.hookhelper import SendMailOp
 from cubicweb.server.hooksmanager import Hook
