@@ -306,9 +306,9 @@ class MigrationCommandsTC(RepositoryBasedTC):
                           'X ecrit_part PE, U in_group G, '
                           'PE require_permission P, P name "add_note", P require_group G')
         self.assertEquals([et.name for et in eexpr.reverse_add_permission], ['Note'])
-        self.assertEquals(eexpr.reverse_read_permission, [])
-        self.assertEquals(eexpr.reverse_delete_permission, [])
-        self.assertEquals(eexpr.reverse_update_permission, [])
+        self.assertEquals(eexpr.reverse_read_permission, ())
+        self.assertEquals(eexpr.reverse_delete_permission, ())
+        self.assertEquals(eexpr.reverse_update_permission, ())
         # no more rqlexpr to delete and add para attribute
         self.failIf(self._rrqlexpr_rset('add', 'para'))
         self.failIf(self._rrqlexpr_rset('delete', 'para'))
@@ -318,8 +318,8 @@ class MigrationCommandsTC(RepositoryBasedTC):
                           'O require_permission P, P name "add_note", '
                           'U in_group G, P require_group G')
         self.assertEquals([rt.name for rt in rexpr.reverse_add_permission], ['ecrit_par'])
-        self.assertEquals(rexpr.reverse_read_permission, [])
-        self.assertEquals(rexpr.reverse_delete_permission, [])
+        self.assertEquals(rexpr.reverse_read_permission, ())
+        self.assertEquals(rexpr.reverse_delete_permission, ())
         # no more rqlexpr to delete and add travaille relation
         self.failIf(self._rrqlexpr_rset('add', 'travaille'))
         self.failIf(self._rrqlexpr_rset('delete', 'travaille'))

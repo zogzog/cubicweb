@@ -287,7 +287,7 @@ class ResultSetTC(EnvBasedTC):
         e = rset.get_entity(0, 0)
         # if any of the assertion below fails with a KeyError, the relation is not cached
         # related entities should be an empty list
-        self.assertEquals(e.related_cache('primary_email', 'subject', True), [])
+        self.assertEquals(e.related_cache('primary_email', 'subject', True), ())
         # related rset should be an empty rset
         cached = e.related_cache('primary_email', 'subject', False)
         self.assertIsInstance(cached, ResultSet)

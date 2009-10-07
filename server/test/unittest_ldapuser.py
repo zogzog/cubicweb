@@ -82,7 +82,7 @@ class LDAPUserSourceTC(RepositoryBasedTC):
         self.assertEquals(e.surname, None)
         self.assertEquals(e.in_group[0].name, 'users')
         self.assertEquals(e.owned_by[0].login, 'syt')
-        self.assertEquals(e.created_by, [])
+        self.assertEquals(e.created_by, ())
         self.assertEquals(e.primary_email[0].address, 'Sylvain Thenault')
         # email content should be indexed on the user
         rset = self.execute('CWUser X WHERE X has_text "thenault"')
