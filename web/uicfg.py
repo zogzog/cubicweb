@@ -184,12 +184,7 @@ def init_autoform_section(rtag, sschema, rschema, oschema, role):
                 card = rschema.rproperty(sschema, oschema, 'cardinality')[1]
                 composed = rschema.rproperty(sschema, oschema, 'composite') == 'subject'
             if card in '1+':
-                if not rschema.is_final() and composed:
-                    # XXX why? probably because we want it unlined, though this
-                    # is not the case by default
-                    section = 'generated'
-                else:
-                    section = 'primary'
+                section = 'primary'
             elif rschema.is_final():
                 section = 'secondary'
             else:
