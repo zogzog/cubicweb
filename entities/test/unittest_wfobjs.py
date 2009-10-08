@@ -173,15 +173,19 @@ class WorkflowTC(EnvBasedTC):
         created    = twf.add_state(_('created'), initial=True)
         identified = twf.add_state(_('identified'))
         released   = twf.add_state(_('released'))
+        closed   = twf.add_state(_('closed'))
         twf.add_wftransition(_('identify'), subwf, (created,),
                              [(xsigned, identified), (xaborted, created)])
         twf.add_wftransition(_('release'), subwf, (identified,),
                              [(xsigned, released), (xaborted, identified)])
+        twf.add_wftransition(_('close'), subwf, (released,),
+                             [(xsigned, closed), (xaborted, released)])
         self.commit()
         group = self.add_entity('CWGroup', name=u'grp1')
         self.commit()
-        for trans in ('identify', 'release'):
+        for trans in ('identify', 'release', 'close'):
             group.fire_transition(trans)
+            self.commit()
 
     def test_subworkflow_base(self):
         """subworkflow
