@@ -158,6 +158,31 @@ class WorkflowTC(EnvBasedTC):
                      'WHERE T name "deactivate"')
         self._test_stduser_deactivate()
 
+    def test_swf_fire_in_a_row(self):
+        # sub-workflow
+        subwf = add_wf(self, 'CWGroup', name='subworkflow')
+        xsigning = subwf.add_state('xsigning', initial=True)
+        xaborted = subwf.add_state('xaborted')
+        xsigned = subwf.add_state('xsigned')
+        xabort = subwf.add_transition('xabort', (xsigning,), xaborted)
+        xsign = subwf.add_transition('xsign', (xsigning,), xsigning)
+        xcomplete = subwf.add_transition('xcomplete', (xsigning,), xsigned,
+                                         type=u'auto')
+        # main workflow
+        twf = add_wf(self, 'CWGroup', name='mainwf', default=True)
+        created    = twf.add_state(_('created'), initial=True)
+        identified = twf.add_state(_('identified'))
+        released   = twf.add_state(_('released'))
+        twf.add_wftransition(_('identify'), subwf, (created,),
+                             [(xsigned, identified), (xaborted, created)])
+        twf.add_wftransition(_('release'), subwf, (identified,),
+                             [(xsigned, released), (xaborted, identified)])
+        self.commit()
+        group = self.add_entity('CWGroup', name=u'grp1')
+        self.commit()
+        for trans in ('identify', 'release'):
+            group.fire_transition(trans)
+
     def test_subworkflow_base(self):
         """subworkflow
 
