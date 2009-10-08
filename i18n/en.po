@@ -1029,7 +1029,7 @@ msgid ""
 msgstr ""
 
 msgid "addrelated"
-msgstr ""
+msgstr "add"
 
 msgid "address"
 msgstr ""
