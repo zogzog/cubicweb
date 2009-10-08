@@ -33,7 +33,8 @@ lgc.USE_MX_DATETIME = False
 SQL_PREFIX = 'cw_'
 
 
-def sqlexec(sqlstmts, cursor_or_execute, withpb=True, pbtitle='', delimiter=';'):
+def sqlexec(sqlstmts, cursor_or_execute, withpb=not os.environ.get('APYCOT_ROOT'),
+            pbtitle='', delimiter=';'):
     """execute sql statements ignoring DROP/ CREATE GROUP or USER statements
     error. If a cnx is given, commit at each statement
     """
