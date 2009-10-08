@@ -520,7 +520,6 @@ def before_add_trinfo(session, entity):
                 raise ValidationError(entity.eid, {'by_transition': msg})
             if not tr.has_input_state(fromstate):
                 msg = session._("transition isn't allowed")
-                print tr.name, fromstate.name, entity.by_transition
                 raise ValidationError(entity.eid, {'by_transition': msg})
             if not tr.may_be_fired(foreid):
                 msg = session._("transition may not be fired")

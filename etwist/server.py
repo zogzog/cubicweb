@@ -167,7 +167,7 @@ class CubicWebRootResource(resource.PostableResource):
                         datadir = self.config.locate_resource(segments[1])
                         if datadir is None:
                             return None, []
-                    #self.info('static file %s from %s', segments[-1], datadir)
+                    self.info('static file %s from %s', segments[-1], datadir)
                     if segments[0] == 'data':
                         return static.File(str(datadir)), segments[1:]
                     else:
