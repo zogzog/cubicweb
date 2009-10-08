@@ -489,12 +489,13 @@ class WorkflowableMixIn(object):
         if self.main_workflow.eid == self.current_workflow.eid:
             return # doesn't make sense
         subwfentries = []
-        for trinfo in reversed(self.workflow_history):
+        for trinfo in self.workflow_history:
             if (trinfo.transition and
                 trinfo.previous_state.workflow.eid != trinfo.new_state.workflow.eid):
                 # entering or leaving a subworkflow
                 if (subwfentries and
-                    subwfentries[-1].new_state.workflow.eid == trinfo.previous_state.workflow.eid):
+                    subwfentries[-1].new_state.workflow.eid == trinfo.previous_state.workflow.eid and
+                    subwfentries[-1].previous_state.workflow.eid == trinfo.new_state.workflow.eid):
                     # leave
                     del subwfentries[-1]
                 else:
