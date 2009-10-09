@@ -71,7 +71,10 @@ class InstanceCommand(Command):
     def ordered_instances(self):
         """return instances in the order in which they should be started,
         considering $REGISTRY_DIR/startorder file if it exists (useful when
-        some instances depends on another as external source
+        some instances depends on another as external source).
+
+        Instance used by another one should appears first in the file (one
+        instance per line)
         """
         regdir = cwcfg.registry_dir()
         _allinstances = list_instances(regdir)

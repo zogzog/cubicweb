@@ -284,14 +284,9 @@ class AutoformSectionRelationTags(RelationTagsSet):
             else:
                 card, composed = _card_and_comp(sschema, rschema, oschema, role)
                 if card in '1+':
-                    if not rschema.is_final() and composed:
-                        # XXX why? probably because we want it unlined, though
-                        # this is not the case by default
-                        sectdict['main'] = 'hidden'
-                    else:
-                        sectdict['main'] = 'attributes'
-                        if not 'muledit' in sectdict:
-                            sectdict['muledit'] = 'attributes'
+                    sectdict['main'] = 'attributes'
+                    if not 'muledit' in sectdict:
+                        sectdict['muledit'] = 'attributes'
                 elif rschema.is_final():
                     sectdict['main'] = 'attributes'
                 else:
@@ -401,7 +396,6 @@ class AutoformSectionRelationTags(RelationTagsSet):
                                                  fromeid=entity.related(rschema.type, role)[0][0])):
                         continue
             yield (rschema, targetschemas, role)
-
 
 autoform_section = AutoformSectionRelationTags('autoform_section')
 

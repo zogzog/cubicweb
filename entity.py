@@ -61,7 +61,7 @@ class Entity(AppObject, dict):
     :cvar skip_copy_for: a list of relations that should be skipped when copying
                          this kind of entity. Note that some relations such
                          as composite relations or relations that have '?1' as object
-                         cardinality
+                         cardinality are always skipped. 
     """
     __registry__ = 'etypes'
     __select__ = yes()
@@ -373,7 +373,9 @@ class Entity(AppObject, dict):
     # entity cloning ##########################################################
 
     def copy_relations(self, ceid):
-        """copy relations of the object with the given eid on this object
+        """copy relations of the object with the given eid on this
+        object (this method is called on the newly created copy, and
+        ceid designates the original entity).
 
         By default meta and composite relations are skipped.
         Overrides this if you want another behaviour

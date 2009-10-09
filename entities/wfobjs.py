@@ -124,27 +124,28 @@ class Workflow(AnyEntity):
         tr.set_transition_permissions(requiredgroups, conditions, reset=False)
         return tr
 
-    def add_transition(self, name, fromstates, tostate,
+    def add_transition(self, name, fromstates, tostate=None,
                        requiredgroups=(), conditions=(), **kwargs):
         """add a transition to this workflow from some state(s) to another"""
         tr = self._add_transition('Transition', name, fromstates,
                                   requiredgroups, conditions, **kwargs)
-        if hasattr(tostate, 'eid'):
-            tostate = tostate.eid
-        self._cw.execute('SET T destination_state S '
-                         'WHERE S eid %(s)s, T eid %(t)s',
-                         {'t': tr.eid, 's': tostate}, ('s', 't'))
+        if tostate is not None:
+            if hasattr(tostate, 'eid'):
+                tostate = tostate.eid
+            self._cw.execute('SET T destination_state S '
+                             'WHERE S eid %(s)s, T eid %(t)s',
+                             {'t': tr.eid, 's': tostate}, ('s', 't'))
         return tr
 
-    def add_wftransition(self, name, subworkflow, fromstates, exitpoints,
+    def add_wftransition(self, name, subworkflow, fromstates, exitpoints=(),
                          requiredgroups=(), conditions=(), **kwargs):
         """add a workflow transition to this workflow"""
         tr = self._add_transition('WorkflowTransition', name, fromstates,
                                   requiredgroups, conditions, **kwargs)
         if hasattr(subworkflow, 'eid'):
             subworkflow = subworkflow.eid
-        self._cw.execute('SET T subworkflow WF WHERE WF eid %(wf)s,T eid %(t)s',
-                         {'t': tr.eid, 'wf': subworkflow}, ('wf', 't'))
+        assert _cw.req.execute('SET T subworkflow WF WHERE WF eid %(wf)s,T eid %(t)s',
+                               {'t': tr.eid, 'wf': subworkflow}, ('wf', 't'))
         for fromstate, tostate in exitpoints:
             tr.add_exit_point(fromstate, tostate)
         return tr
@@ -258,28 +259,37 @@ class WorkflowTransition(BaseTransition):
     def add_exit_point(self, fromstate, tostate):
         if hasattr(fromstate, 'eid'):
             fromstate = fromstate.eid
-        if hasattr(tostate, 'eid'):
-            tostate = tostate.eid
-        self._cw.execute('INSERT SubWorkflowExitPoint X: T subworkflow_exit X, '
-                         'X subworkflow_state FS, X destination_state TS '
-                         'WHERE T eid %(t)s, FS eid %(fs)s, TS eid %(ts)s',
-                         {'t': self.eid, 'fs': fromstate, 'ts': tostate},
-                         ('t', 'fs', 'ts'))
+        if tostate is None:
+            self._cw.execute('INSERT SubWorkflowExitPoint X: T subworkflow_exit X, '
+                             'X subworkflow_state FS WHERE T eid %(t)s, FS eid %(fs)s',
+                             {'t': self.eid, 'fs': fromstate}, ('t', 'fs'))
+        else:
+            if hasattr(tostate, 'eid'):
+                tostate = tostate.eid
+            self._cw.execute('INSERT SubWorkflowExitPoint X: T subworkflow_exit X, '
+                             'X subworkflow_state FS, X destination_state TS '
+                             'WHERE T eid %(t)s, FS eid %(fs)s, TS eid %(ts)s',
+                             {'t': self.eid, 'fs': fromstate, 'ts': tostate},
+                             ('t', 'fs', 'ts'))
 
-    def get_exit_point(self, state):
+    def get_exit_point(self, entity, stateeid):
         """if state is an exit point, return its associated destination state"""
-        if hasattr(state, 'eid'):
-            state = state.eid
-        stateeid = self.exit_points().get(state)
-        if stateeid is not None:
-            return self._cw.entity_from_eid(stateeid)
-        return None
+        if hasattr(stateeid, 'eid'):
+            stateeid = stateeid.eid
+        try:
+            tostateeid = self.exit_points()[stateeid]
+        except KeyError:
+            return None
+        if tostateeid is None:
+            # go back to state from which we've entered the subworkflow
+            return entity.subworkflow_input_trinfo().previous_state
+        return self._cw.entity_from_eid(tostateeid)
 
     @cached
     def exit_points(self):
         result = {}
         for ep in self.subworkflow_exit:
-            result[ep.subwf_state.eid] = ep.destination.eid
+            result[ep.subwf_state.eid] = ep.destination and ep.destination.eid
         return result
 
     def clear_all_caches(self):
@@ -297,7 +307,7 @@ class SubWorkflowExitPoint(AnyEntity):
 
     @property
     def destination(self):
-        return self.destination_state[0]
+        return self.destination_state and self.destination_state[0] or None
 
 
 class State(AnyEntity):
@@ -458,11 +468,10 @@ class WorkflowableMixIn(object):
         """
         assert self.current_workflow
         if isinstance(tr, basestring):
-            tr = self.current_workflow.transition_by_name(tr)
-        tr = self.current_workflow.transition_by_name(trname)
-        if tr is None:
-            raise WorkflowException('not a %s transition: %s' % (self.__regid__,
-                                                                 trname))
+            _tr = self.current_workflow.transition_by_name(tr)
+            assert _tr is not None, 'not a %s transition: %s' % (
+                self.__regid__, tr)
+            tr = _tr
         return self._add_trinfo(comment, commentformat, tr.eid)
 
     def change_state(self, statename, comment=None, commentformat=None, tr=None):
@@ -487,18 +496,20 @@ class WorkflowableMixIn(object):
         # XXX try to find matching transition?
         return self._add_trinfo(comment, commentformat, tr and tr.eid, stateeid)
 
-    def subworkflow_input_transition(self):
-        """return the transition which has went through the current sub-workflow
+    def subworkflow_input_trinfo(self):
+        """return the TrInfo which has be recorded when this entity went into
+        the current sub-workflow
         """
         if self.main_workflow.eid == self.current_workflow.eid:
             return # doesn't make sense
         subwfentries = []
-        for trinfo in reversed(self.workflow_history):
+        for trinfo in self.workflow_history:
             if (trinfo.transition and
                 trinfo.previous_state.workflow.eid != trinfo.new_state.workflow.eid):
                 # entering or leaving a subworkflow
                 if (subwfentries and
-                    subwfentries[-1].new_state.workflow.eid == trinfo.previous_state.workflow.eid):
+                    subwfentries[-1].new_state.workflow.eid == trinfo.previous_state.workflow.eid and
+                    subwfentries[-1].previous_state.workflow.eid == trinfo.new_state.workflow.eid):
                     # leave
                     del subwfentries[-1]
                 else:
@@ -506,7 +517,12 @@ class WorkflowableMixIn(object):
                     subwfentries.append(trinfo)
         if not subwfentries:
             return None
-        return subwfentries[-1].transition
+        return subwfentries[-1]
+
+    def subworkflow_input_transition(self):
+        """return the transition which has went through the current sub-workflow
+        """
+        return getattr(self.subworkflow_input_trinfo(), 'transition', None)
 
     def clear_all_caches(self):
         super(WorkflowableMixIn, self).clear_all_caches()

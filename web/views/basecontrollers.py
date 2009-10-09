@@ -192,8 +192,6 @@ def _validate_form(req, vreg):
     except ValidationError, ex:
         return (False, _validation_error(req, ex), ctrl._edited_entity)
     except Redirect, ex:
-        if ctrl._edited_entity:
-            ctrl._edited_entity.complete()
         try:
             req.cnx.commit() # ValidationError may be raise on commit
         except ValidationError, ex:
@@ -203,6 +201,10 @@ def _validate_form(req, vreg):
             req.exception('unexpected error while validating form')
             return (False, req._(str(ex).decode('utf-8')), ctrl._edited_entity)
         else:
+            # complete entity: it can be used in js callbacks where we might
+            # want every possible information
+            if ctrl._edited_entity:
+                ctrl._edited_entity.complete()
             return (True, ex.location, ctrl._edited_entity)
     except Exception, ex:
         req.cnx.rollback()
@@ -554,7 +556,6 @@ class SendMailController(Controller):
         rql = 'Any X WHERE X eid in (%s)' % (','.join(eids))
         rset = self._cw.execute(rql)
         for entity in rset.entities():
-            entity.complete() # XXX really?
             yield entity
 
     @property

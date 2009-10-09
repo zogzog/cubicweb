@@ -352,7 +352,7 @@ class EntityFormRenderer(BaseFormRenderer):
 
     _options = FormRenderer._options + ('display_relations_form', 'main_form_title')
     display_relations_form = True
-    main_form_title = _('main information')
+    main_form_title = _('main informations')
 
     def render(self, form, values):
         rendered = super(EntityFormRenderer, self).render(form, values)

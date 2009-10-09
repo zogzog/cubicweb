@@ -55,7 +55,7 @@ class Binary(StringIO):
                "Binary objects must use raw strings, not %s" % data.__class__
         StringIO.write(self, data)
 
-# use this dictionary for renaming of entity types while keeping bw compath
+# use this dictionary for renaming of entity types while keeping bw compat
 ETYPE_NAME_MAP = {# 3.2 migration
                   'ECache': 'CWCache',
                   'EUser': 'CWUser',

@@ -636,7 +636,7 @@ class PartPlanInformation(object):
                 sourcesterms[source][term].remove(solindex)
             except KeyError:
                 import rql.base as rqlb
-                assert isinstance(term, rqlb.BaseNode), repr(term)
+                assert isinstance(term, (rqlb.BaseNode, Variable)), repr(term)
                 continue # may occur with subquery column alias
             if not sourcesterms[source][term]:
                 del sourcesterms[source][term]

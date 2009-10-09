@@ -134,22 +134,12 @@ class AutomaticEntityForm(forms.EntityFieldsForm):
         #       -> generate the <form> node when the content is rendered
         #          and we know the correct enctype (formrenderer's w attribute
         #          is not a StringIO)
-        for rschema, targettypes, role in self.inlined_relations():
-            # inlined forms don't handle multiple target types
-            if len(targettypes) != 1:
-                continue
-            targettype = targettypes[0]
-            if targettype in _tested:
-                continue
-            _tested.add(targettype)
-            if self.should_inline_relation_form(rschema, targettype, role):
-                entity = self._cw.vreg['etypes'].etype_class(targettype)(self._cw)
-                subform = self._cw.vreg['forms'].select('edition', self._cw,
-                                                        entity=entity)
-                if hasattr(subform, '_subform_needs_multipart'):
-                    needs_multipart = subform._subform_needs_multipart(_tested)
+        for formview in self.inlined_form_views():
+            if formview.form:
+                if hasattr(formview.form, '_subform_needs_multipart'):
+                    needs_multipart = formview.form._subform_needs_multipart(_tested)
                 else:
-                    needs_multipart = subform.form_needs_multipart
+                    needs_multipart = formview.form.form_needs_multipart
                 if needs_multipart:
                     return True
         return False
@@ -269,7 +259,7 @@ class AutomaticEntityForm(forms.EntityFieldsForm):
     def inlined_form_views(self):
         """compute and return list of inlined form views (hosting the inlined form object)
         """
-        formviews = []
+        allformviews = []
         entity = self.edited_entity
         for rschema, ttypes, role in self.inlined_relations():
             # show inline forms only if there's one possible target type
@@ -281,7 +271,7 @@ class AutomaticEntityForm(forms.EntityFieldsForm):
                 continue
             ttype = ttypes[0].type
             if self.should_inline_relation_form(rschema, ttype, role):
-                formviews += self.inline_edition_form_view(rschema, ttype, role)
+                formviews = list(self.inline_edition_form_view(rschema, ttype, role))
                 if role == 'subject':
                     card = rschema.rproperty(entity.e_schema, ttype, 'cardinality')[0]
                 else:
@@ -298,7 +288,8 @@ class AutomaticEntityForm(forms.EntityFieldsForm):
                         etype=ttype, rtype=rschema, role=role,
                         peid=self.edited_entity.eid, pform=self, card=card)
                     formviews.append(addnewlink)
-        return formviews
+                allformviews += formviews
+        return allformviews
 
     def inlined_forms(self):
         for formview in self.inlined_form_views():

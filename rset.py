@@ -451,14 +451,19 @@ class ResultSet(object):
             if rqlst.TYPE == 'select':
                 # UNION query, find the subquery from which this entity has been
                 # found
-                rqlst, col = rqlst.locate_subquery(col, etype, self.args)
+                select, col = rqlst.locate_subquery(col, etype, self.args)
+            else:
+                select = rqlst
             # take care, due to outer join support, we may find None
             # values for non final relation
-            for i, attr, x in attr_desc_iterator(rqlst, col):
+            for i, attr, x in attr_desc_iterator(select, col):
+                outerselidx = rqlst.subquery_selection_index(select, i)
+                if outerselidx is None:
+                    continue
                 if x == 'subject':
                     rschema = eschema.subject_relation(attr)
                     if rschema.is_final():
-                        entity[attr] = rowvalues[i]
+                        entity[attr] = rowvalues[outerselidx]
                         continue
                     tetype = rschema.objects(etype)[0]
                     card = rschema.rproperty(etype, tetype, 'cardinality')[0]
@@ -468,7 +473,7 @@ class ResultSet(object):
                     card = rschema.rproperty(tetype, etype, 'cardinality')[1]
                 # only keep value if it can't be multivalued
                 if card in '1?':
-                    if rowvalues[i] is None:
+                    if rowvalues[outerselidx] is None:
                         if x == 'subject':
                             rql = 'Any Y WHERE X %s Y, X eid %s'
                         else:
@@ -476,7 +481,7 @@ class ResultSet(object):
                         rrset = ResultSet([], rql % (attr, entity.eid))
                         req.decorate_rset(rrset)
                     else:
-                        rrset = self._build_entity(row, i).as_rset()
+                        rrset = self._build_entity(row, outerselidx).as_rset()
                     entity.set_related_cache(attr, x, rrset)
         return entity
 
@@ -602,7 +607,6 @@ def attr_desc_iterator(rqlst, index=0):
             break
         else:
             continue
-        #varname = var.name
         for ref in var.references():
             rel = ref.relation()
             if rel is None or rel.is_types_restriction():

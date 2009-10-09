@@ -242,7 +242,7 @@ class FiredTransitionHook(WorkflowHook):
                 # inconsistency detected
                 msg = session._("state doesn't belong to entity's current workflow")
                 raise ValidationError(entity.eid, {'to_state': msg})
-            tostate = wftr.get_exit_point(entity['to_state'])
+            tostate = wftr.get_exit_point(forentity, entity['to_state'])
             if tostate is not None:
                 # reached an exit point
                 msg = session._('exiting from subworkflow %s')
