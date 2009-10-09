@@ -372,6 +372,7 @@ class CopyFormView(EditionFormView):
     entity
     """
     id = 'copy'
+    title = _('copy')
     warning_message = _('Please note that this is only a shallow copy')
 
     def render_form(self, entity):
