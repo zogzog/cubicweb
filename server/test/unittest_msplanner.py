@@ -37,7 +37,7 @@ class FakeCardSource(AbstractSource):
     support_entities = {'Card': True, 'Note': True, 'State': True}
     support_relations = {'in_state': True, 'multisource_rel': True, 'multisource_inlined_rel': True,
                          'multisource_crossed_rel': True}
-    dont_cross_relations = set(('fiche', 'in_state'))
+    dont_cross_relations = set(('fiche', 'state_of'))
     cross_relations = set(('multisource_crossed_rel',))
 
     def syntax_tree_search(self, *args, **kwargs):
@@ -1977,6 +1977,14 @@ class MSPlannerTC(BaseMSPlannerTC):
                      None, None, [self.system], {}, [])],
                    {'x': 999999, 'u': 999998})
 
+    def test_state_of_cross(self):
+        self._test('DELETE State X WHERE NOT X state_of Y',
+                   [('DeleteEntitiesStep',
+                     [('OneFetchStep',
+                       [('Any X WHERE NOT X state_of Y, X is State, Y is Workflow',
+                         [{'X': 'State', 'Y': 'Workflow'}])],
+                       None, None, [self.system], {}, [])])]
+                   )
 
 class MSPlannerTwoSameExternalSourcesTC(BasePlannerTC):
     """test planner related feature on a 3-sources repository:

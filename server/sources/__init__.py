@@ -191,6 +191,9 @@ class AbstractSource(object):
         * if this source doesn't support the relation, can be crossed unless
           explicitly specified in .dont_cross_relations
         """
+        # XXX find a way to have relation such as state_of in dont cross
+        #     relation (eg composite relation without both end type available?
+        #     card 1 relation ? ...)
         if self.support_relation(rtype):
             return rtype in self.cross_relations
         return rtype not in self.dont_cross_relations
