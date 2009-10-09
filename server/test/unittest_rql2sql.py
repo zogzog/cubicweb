@@ -566,6 +566,15 @@ ORDER BY 2) AS T1'''),
 FROM cw_EmailAddress AS O
 WHERE NOT EXISTS(SELECT 1 FROM use_email_relation AS rel_use_email0 WHERE rel_use_email0.eid_from=1 AND rel_use_email0.eid_to=O.cw_eid) AND EXISTS(SELECT 1 FROM use_email_relation AS rel_use_email1 WHERE rel_use_email1.eid_to=O.cw_eid AND EXISTS(SELECT 1 FROM cw_CWGroup AS D WHERE rel_use_email1.eid_from=2 AND NOT EXISTS(SELECT 1 FROM in_group_relation AS rel_in_group2 WHERE rel_in_group2.eid_from=2 AND rel_in_group2.eid_to=D.cw_eid) AND D.cw_name=guests))
 ORDER BY 4 DESC'''),
+
+
+    ("Any X WHERE X eid 0, X eid 0",
+     '''SELECT 0'''),
+
+    ("Any X WHERE X eid 0, X eid 0, X test TRUE",
+     '''SELECT X.cw_eid
+FROM cw_Personne AS X
+WHERE X.cw_eid=0 AND X.cw_eid=0 AND X.cw_test='''),
     ]
 
 MULTIPLE_SEL = [
