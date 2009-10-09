@@ -142,17 +142,36 @@ class CheckConstraintHook(IntegrityHook):
     """check the relation satisfy its constraints
 
     this is delayed to a precommit time operation since other relation which
-    will make constraint satisfied may be added later.
+    will make constraint satisfied (or unsatisfied) may be added later.
     """
     __regid__ = 'checkconstraint'
     events = ('after_add_relation',)
 
     def __call__(self):
         constraints = self._cw.schema_rproperty(self.rtype, self.eidfrom, self.eidto,
-                                'constraints')
+                                                'constraints')
         if constraints:
             _CheckConstraintsOp(self._cw, constraints=constraints,
                                rdef=(self.eidfrom, self.rtype, self.eidto))
+
+class CheckAttributeConstraintHook(IntegrityHook):
+    """check the attribute relation satisfy its constraints
+
+    this is delayed to a precommit time operation since other relation which
+    will make constraint satisfied (or unsatisfied) may be added later.
+    """
+    __regid__ = 'checkattrconstraint'
+    events = ('after_add_entity', 'after_update_entity')
+
+    def __call__(self):
+        schema = self._cw.vreg.schema
+        for attr in self.entity.edited_attributes:
+            if schema.rschema(attr).is_final():
+                constraints = [c for c in entity.e_schema.constraints(attr)
+                               if isinstance(c, RQLVocabularyConstraint)]
+                if constraints:
+                    _CheckConstraintsOp(self._cw, constraints=constraints,
+                                        rdef=(entity.eid, attr, None))
 
 
 class CheckUniqueHook(IntegrityHook):
