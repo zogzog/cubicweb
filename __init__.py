@@ -133,11 +133,13 @@ class RequestSessionMixIn(object):
         """
         rql = 'INSERT %s X' % etype
         relations = []
-        restrictions = []
+        restrictions = set()
         cachekey = []
         for rtype, rvar in args:
             relations.append('X %s %s' % (rtype, rvar))
-            restrictions.append('%s eid %%(%s)s' % (rvar, rvar))
+            restriction = '%s eid %%(%s)s' % (rvar, rvar)
+            if not restriction in restrictions:
+                restrictions.add(restriction)
             cachekey.append(rvar)
         for attr in kwargs:
             if attr in cachekey:
