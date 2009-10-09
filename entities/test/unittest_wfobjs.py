@@ -158,36 +158,7 @@ class WorkflowTC(EnvBasedTC):
                      'WHERE T name "deactivate"')
         self._test_stduser_deactivate()
 
-    def test_swf_fire_in_a_row(self):
-        # sub-workflow
-        subwf = add_wf(self, 'CWGroup', name='subworkflow')
-        xsigning = subwf.add_state('xsigning', initial=True)
-        xaborted = subwf.add_state('xaborted')
-        xsigned = subwf.add_state('xsigned')
-        xabort = subwf.add_transition('xabort', (xsigning,), xaborted)
-        xsign = subwf.add_transition('xsign', (xsigning,), xsigning)
-        xcomplete = subwf.add_transition('xcomplete', (xsigning,), xsigned,
-                                         type=u'auto')
-        # main workflow
-        twf = add_wf(self, 'CWGroup', name='mainwf', default=True)
-        created    = twf.add_state(_('created'), initial=True)
-        identified = twf.add_state(_('identified'))
-        released   = twf.add_state(_('released'))
-        closed   = twf.add_state(_('closed'))
-        twf.add_wftransition(_('identify'), subwf, (created,),
-                             [(xsigned, identified), (xaborted, created)])
-        twf.add_wftransition(_('release'), subwf, (identified,),
-                             [(xsigned, released), (xaborted, identified)])
-        twf.add_wftransition(_('close'), subwf, (released,),
-                             [(xsigned, closed), (xaborted, released)])
-        self.commit()
-        group = self.add_entity('CWGroup', name=u'grp1')
-        self.commit()
-        for trans in ('identify', 'release', 'close'):
-            group.fire_transition(trans)
-            self.commit()
-
-    def test_subworkflow_base(self):
+    def test_swf_base(self):
         """subworkflow
 
         +-----------+  tr1   +-----------+
@@ -268,7 +239,7 @@ class WorkflowTC(EnvBasedTC):
                                ('swfstate3', 'state3', 'swftr1', 'exiting from subworkflow subworkflow'),
                                ])
 
-    def test_subworkflow_exit_consistency(self):
+    def test_swf_exit_consistency(self):
         # sub-workflow
         swf = add_wf(self, 'CWGroup', name='subworkflow')
         swfstate1 = swf.add_state(u'swfstate1', initial=True)
@@ -283,6 +254,68 @@ class WorkflowTC(EnvBasedTC):
                              [(swfstate2, state2), (swfstate2, state3)])
         ex = self.assertRaises(ValidationError, self.commit)
         self.assertEquals(ex.errors, {'subworkflow_exit': u"can't have multiple exits on the same state"})
+
+    def test_swf_fire_in_a_row(self):
+        # sub-workflow
+        subwf = add_wf(self, 'CWGroup', name='subworkflow')
+        xsigning = subwf.add_state('xsigning', initial=True)
+        xaborted = subwf.add_state('xaborted')
+        xsigned = subwf.add_state('xsigned')
+        xabort = subwf.add_transition('xabort', (xsigning,), xaborted)
+        xsign = subwf.add_transition('xsign', (xsigning,), xsigning)
+        xcomplete = subwf.add_transition('xcomplete', (xsigning,), xsigned,
+                                         type=u'auto')
+        # main workflow
+        twf = add_wf(self, 'CWGroup', name='mainwf', default=True)
+        created    = twf.add_state(_('created'), initial=True)
+        identified = twf.add_state(_('identified'))
+        released   = twf.add_state(_('released'))
+        closed   = twf.add_state(_('closed'))
+        twf.add_wftransition(_('identify'), subwf, (created,),
+                             [(xsigned, identified), (xaborted, created)])
+        twf.add_wftransition(_('release'), subwf, (identified,),
+                             [(xsigned, released), (xaborted, identified)])
+        twf.add_wftransition(_('close'), subwf, (released,),
+                             [(xsigned, closed), (xaborted, released)])
+        self.commit()
+        group = self.add_entity('CWGroup', name=u'grp1')
+        self.commit()
+        for trans in ('identify', 'release', 'close'):
+            group.fire_transition(trans)
+            self.commit()
+
+
+    def test_swf_magic_tr(self):
+        # sub-workflow
+        subwf = add_wf(self, 'CWGroup', name='subworkflow')
+        xsigning = subwf.add_state('xsigning', initial=True)
+        xaborted = subwf.add_state('xaborted')
+        xsigned = subwf.add_state('xsigned')
+        xabort = subwf.add_transition('xabort', (xsigning,), xaborted)
+        xsign = subwf.add_transition('xsign', (xsigning,), xsigned)
+        # main workflow
+        twf = add_wf(self, 'CWGroup', name='mainwf', default=True)
+        created    = twf.add_state(_('created'), initial=True)
+        identified = twf.add_state(_('identified'))
+        released   = twf.add_state(_('released'))
+        twf.add_wftransition(_('identify'), subwf, created,
+                             [(xaborted, None), (xsigned, identified)])
+        twf.add_wftransition(_('release'), subwf, identified,
+                             [(xaborted, None)])
+        self.commit()
+        group = self.add_entity('CWGroup', name=u'grp1')
+        self.commit()
+        for trans, nextstate in (('identify', 'xsigning'),
+                                 ('xabort', 'created'),
+                                 ('identify', 'xsigning'),
+                                 ('xsign', 'identified'),
+                                 ('release', 'xsigning'),
+                                 ('xabort', 'identified')
+                                 ):
+            group.fire_transition(trans)
+            self.commit()
+            group.clear_all_caches()
+            self.assertEquals(group.state, nextstate)
 
 
 class CustomWorkflowTC(EnvBasedTC):

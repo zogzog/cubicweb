@@ -92,9 +92,10 @@ class Transition(BaseTransition):
     """
     __specializes_schema__ = True
 
-    destination_state = SubjectRelation('State', cardinality='1*',
-                                        constraints=[RQLConstraint('S transition_of WF, O state_of WF')],
-                                        description=_('destination state for this transition'))
+    destination_state = SubjectRelation(
+        'State', cardinality='1*',
+        constraints=[RQLConstraint('S transition_of WF, O state_of WF')],
+        description=_('destination state for this transition'))
 
 
 class WorkflowTransition(BaseTransition):
@@ -103,18 +104,23 @@ class WorkflowTransition(BaseTransition):
 
     subworkflow = SubjectRelation('Workflow', cardinality='1*',
                                   constraints=[RQLConstraint('S transition_of WF, WF workflow_of ET, O workflow_of ET')])
-    subworkflow_exit = SubjectRelation('SubWorkflowExitPoint', cardinality='+1',
+    # XXX use exit_of and inline it
+    subworkflow_exit = SubjectRelation('SubWorkflowExitPoint', cardinality='*1',
                                        composite='subject')
 
 
 class SubWorkflowExitPoint(EntityType):
     """define how we get out from a sub-workflow"""
-    subworkflow_state = SubjectRelation('State', cardinality='1*',
-                                        constraints=[RQLConstraint('T subworkflow_exit S, T subworkflow WF, O state_of WF')],
-                                        description=_('subworkflow state'))
-    destination_state = SubjectRelation('State', cardinality='1*',
-                                        constraints=[RQLConstraint('T subworkflow_exit S, T transition_of WF, O state_of WF')],
-                                        description=_('destination state'))
+    subworkflow_state = SubjectRelation(
+        'State', cardinality='1*',
+        constraints=[RQLConstraint('T subworkflow_exit S, T subworkflow WF, O state_of WF')],
+        description=_('subworkflow state'))
+    destination_state = SubjectRelation(
+        'State', cardinality='?*',
+        constraints=[RQLConstraint('T subworkflow_exit S, T transition_of WF, O state_of WF')],
+        description=_('destination state. No destination state means that transition '
+                      'should go back to the state from which we\'ve entered the '
+                      'subworkflow.'))
 
 
 class TrInfo(EntityType):
