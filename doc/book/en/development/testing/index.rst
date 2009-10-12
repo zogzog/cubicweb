@@ -56,7 +56,7 @@ Usually it looks like this:
     # the default admin connection and one may be tempted to close it
     self.restore_connection()
 
-Take care of the references kept to the entities created with a connection or the other.
+Do not use the references kept to the entities created with a connection from another.
 
 
 Email notifications tests
