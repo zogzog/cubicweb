@@ -185,7 +185,7 @@ class Registry(dict):
                                      % (args, kwargs.keys(),
                                         [repr(v) for v in appobjects]))
         if len(winners) > 1:
-            if self.config.debug:
+            if self.config.debugmode:
                 self.error('select ambiguity, args: %s\nkwargs: %s %s',
                            args, kwargs.keys(), [repr(v) for v in winners])
             else:

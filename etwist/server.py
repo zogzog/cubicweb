@@ -181,7 +181,7 @@ class CubicWebRootResource(resource.PostableResource):
     def render(self, request):
         """Render a page from the root resource"""
         # reload modified files in debug mode
-        if self.config.debug:
+        if self.debugmode:
             self.appli.vreg.register_objects(self.config.vregistry_path())
         if self.config['profile']: # default profiler don't trace threads
             return self.render_request(request)

@@ -12,7 +12,7 @@ import os
 from os.path import join, exists, split
 
 from logilab.common.configuration import Method
-from logilab.common.decorators import cached
+from logilab.common.de corators import cached
 
 from cubicweb.toolsutils import read_config
 from cubicweb.cwconfig import CubicWebConfiguration, register_persistent_options, merge_options

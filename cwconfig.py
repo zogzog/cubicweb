@@ -212,7 +212,7 @@ class CubicWebNoAppConfiguration(ConfigurationMixIn):
     # nor remove appobjects based on unused interface
     cleanup_interface_sobjects = True
     # debug mode
-    debug = False
+    debugmode = False
 
     if os.environ.get('APYCOT_ROOT'):
         mode = 'test'
@@ -565,7 +565,7 @@ this option is set to yes",
                 logthreshold = 'DEBUG'
             else:
                 logthreshold = self['log-threshold']
-        self.debug = debug
+        self.debugmode = debug
         init_log(debug, syslog, logthreshold, logfile, self.log_format)
         # configure simpleTal logger
         logging.getLogger('simpleTAL').setLevel(logging.ERROR)
