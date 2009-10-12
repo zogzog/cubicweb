@@ -36,7 +36,7 @@ environment variable, to:
 * use local checkout of cubicweb on system wide instances (requires root
   privileges on the system (`export CW_MODE=system`)
 
- Here is the default resource directories settings according to start mode:
+ Here is the default resource directories settings according to mode:
 
 * 'system': ::
 
@@ -50,9 +50,25 @@ environment variable, to:
         CW_INSTANCES_DATA_DIR = ~/etc/cubicweb.d/
         CW_RUNTIME_DIR = /tmp
 
-.. envvar:: CW_CUBES_PATH
 
+.. envvar:: CW_MODE
+   Resource mode: user or system
+
+.. envvar:: CW_CUBES_PATH
    Augments the default search path for cubes
+
+.. envvar:: CW_INSTANCES_DIR
+   Directory where cubicweb instances will be found
+
+.. envvar:: CW_INSTANCES_DATA_DIR
+   Directory where cubicweb instances data will be written
+
+.. envvar:: CW_RUNTIME_DIR
+   Directory where pid files will be written
+
+.. envvar:: CW_MIGRATION_DIR
+   Directory where cubicweb migration files will be found
+
 
 :license: GNU Lesser General Public License, v2.1 - http://www.gnu.org/licenses
 """
