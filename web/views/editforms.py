@@ -176,7 +176,7 @@ class ClickAndEditFormView(FormViewMixIn, EntityView):
                 entity, rtype, role, 'edition', default, onsubmit, reload,
                 attrcategories=self.attrcategories)
             if not self.should_edit_attribute(entity, rschema, role, form):
-                self.w(self.entity.printable_value(rtype))
+                self.w(entity.printable_value(rtype))
                 return
             value = entity.printable_value(rtype) or default
             self.attribute_form(lzone, value, form,
