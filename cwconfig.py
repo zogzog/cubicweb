@@ -619,7 +619,7 @@ class CubicWebConfiguration(CubicWebNoAppConfiguration):
         if CubicWebNoAppConfiguration.mode == 'user':
             REGISTRY_DIR = expanduser('~/etc/cubicweb.d/')
             RUNTIME_DIR = tempfile.gettempdir()
-            INSTANCES_DATA_DIR = cls.REGISTRY_DIR
+            INSTANCES_DATA_DIR = REGISTRY_DIR
         else: #mode = 'system'
             REGISTRY_DIR = '/etc/cubicweb.d/'
             RUNTIME_DIR = '/var/run/cubicweb/'
