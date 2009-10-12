@@ -176,6 +176,7 @@ class ClickAndEditFormView(FormViewMixIn, EntityView):
                 entity, rtype, role, 'edition', default, onsubmit, reload,
                 attrcategories=self.attrcategories)
             if not self.should_edit_attribute(entity, rschema, role, form):
+                self.w(self.entity.printable_value(rtype))
                 return
             value = entity.printable_value(rtype) or default
             self.attribute_form(lzone, value, form,
@@ -183,13 +184,15 @@ class ClickAndEditFormView(FormViewMixIn, EntityView):
         else:
             if rvid is None:
                 rvid = self._compute_best_vid(entity.e_schema, rschema, role)
-            if not self.should_edit_relation(entity, rschema, role, rvid):
-                return
             rset = entity.related(rtype, role)
             if rset:
                 value = self.view(rvid, rset)
             else:
                 value = default
+            if not self.should_edit_relation(entity, rschema, role, rvid):
+                if rset:
+                    self.w(value)
+                return
             onsubmit = ("return inlineValidateRelationForm('%(rtype)s', '%(role)s', '%(eid)s', "
                         "'%(divid)s', %(reload)s, '%(vid)s', '%(default)s', '%(lzone)s');")
             form = self._build_form(
