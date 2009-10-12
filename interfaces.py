@@ -127,7 +127,7 @@ class ITree(Interface):
     def children_rql(self):
         """XXX returns RQL to get children"""
 
-    def __iter__(self):
+    def iterchildren(self):
         """iterates over the item's children"""
 
     def is_leaf(self):
